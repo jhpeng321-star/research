@@ -25,6 +25,17 @@ feedback inference adapters; source entries are no longer required in prediction
 `episode.py` commits each model pick before exact truth is computed, measures only
 the registered three clocks, and checks all main branches against the LIVE prefix.
 CPU core33testsPASS; host-specific model/transport adapters are still unvalidated.
+Main capture now projects both native half-second ticks (CAV self, nearest
+same-lane neighbour sensing, RSU zones) and requires all121ticks over60s.
+Inference-side `observable.py` uses the existing anonymous BeliefTracker: true HDV
+IDs are discarded before association, no true length/type or penetration enters.
+Remote CPU19testsPASS, including HDV-ID noninterference and raw unseen-row
+noninterference; local33PASS/1module skipped (no local torch). Existing cpuQ
+Python used, no environment created, SUMO calls intercepted, GPU0.
+These new sources live beside the immutable running Step0, not inside it.
+`cpuops collect` exports exact completed-state receipts/observable conditions;
+`python -m tools.c1switch.headroom` independently verifies complete16-state
+prefix/repeat/accounting gates and emits CSVs, refusing a partial panel.
 
 ## Historical full-rerun staging (MAIN 17:53; never dispatched)
 

@@ -9,6 +9,7 @@ import tarfile
 from .design import BUDGET, sha
 from .ops import EVIDENCE, REG, ssh
 from .storage import write
+from .storage import canonical
 
 REMOTE = '/home/ubuntu/c1switch20261031/fullrerun_v3'
 REG_MARK = 'S-C1SWITCH cpuQ v3 REGISTERED BEFORE DISPATCH'
@@ -201,7 +202,45 @@ print(json.dumps(out))
                           gate=result.get('STEP0_GATE.json'), stopped='STOP' in result), indent=2))
 
 
+def verify_build():
+    """CPU-only candidate verification beside, never inside, the running deployment."""
+    paths = sorted(Path('tools/c1switch').glob('*.py')) + [
+        Path('tests/test_c1switch.py'),Path('tests/test_c1switch_observable.py')]
+    sources = {p.as_posix():sha(p) for p in paths}
+    version = canonical(sources)[:12]
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf,mode='w:gz') as tar:
+        for p in paths:tar.add(p,arcname=p.as_posix())
+    raw = base64.b64encode(buf.getvalue()).decode()
+    result = ssh('cpuQ', f'''import base64,contextlib,hashlib,io,json,os,sys,tarfile
+from pathlib import Path
+root=Path({REMOTE!r}).parent/('cpucheck_'+{version!r});assert root.parent.is_dir()
+if root.exists():
+ assert (root/'CPU.json').exists(),'incomplete CPU check, reconcile instead of repeating'
+ print((root/'CPU.json').read_text());raise SystemExit
+root.mkdir()
+with tarfile.open(fileobj=io.BytesIO(base64.b64decode({raw!r})),mode='r:gz') as tar:tar.extractall(root,filter='data')
+sources={sources!r};assert all(hashlib.sha256((root/n).read_bytes()).hexdigest()==h for n,h in sources.items())
+os.nice(19);os.environ.update({ENV!r});sys.path.insert(0,str(root))
+from tools.c1switch.sumo import setup
+setup()
+import traci
+def forbidden(*a,**kw):raise AssertionError('candidate CPU check attempted SUMO')
+traci.start=forbidden;traci.simulationStep=forbidden
+from traffic_shepherd import simulation
+simulation.start_sumo=forbidden
+import pytest
+log=io.StringIO()
+with contextlib.redirect_stdout(log),contextlib.redirect_stderr(log):
+ code=pytest.main(['-q',str(root/'tests/test_c1switch.py'),str(root/'tests/test_c1switch_observable.py')])
+out=dict(returncode=code,output=log.getvalue(),sources=sources,new_sim_s=0,device='cpu',root=str(root))
+(root/'CPU.json').write_text(json.dumps(out,indent=2));print(json.dumps(out))
+''', timeout=90)
+    write(EVIDENCE/'CPUQ_BUILD_CPU.json', result)
+    print(json.dumps({k:v for k,v in result.items() if k != 'sources'}, indent=2))
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('mode', choices=('inspect','stage','cpu','launch','progress','collect'))
+    parser.add_argument('mode', choices=('inspect','stage','cpu','launch','progress','collect','verify_build'))
     globals()[parser.parse_args().mode]()
