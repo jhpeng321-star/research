@@ -8,18 +8,11 @@
 - gpuA ES code is isolated in `wmfixmerge20261031/es_cpu_v3`; cpuQ owns
   `/home/ubuntu/wmfix_es`. No SUMO, prohibited inputs, deletions or push.
 
-## Throughput — correction and genuine K8 measurement
-- Earlier `es/PROBE_*_group0.json` claims of K8 were wrong: Runtime used K1.
-- Valid K1 measurements: gpuA 1920.0 s/group, max RSS 1775 MB; cpuQ 1766.6 s,
-  max RSS 1372 MB; two paired arms x {120,300} s, entry path/mix ON, threads=1.
-- Genuine K8 now dispatched: 8 distinct sticky-future processes per host,
-  each running that same four-cell workload from one common eight-future plan.
-- cpuQ PIDs 3030648-3030655; gpuA 193235-193242. `probe_k8/DISPATCH.json`,
-  per-future PID/log/PROBE receipts. Completion/timings still pending.
-- Prior ~33 min combined 52-world panel estimate omitted K8 and heterogeneous
-  arm counts; withdrawn. K8 CPU extrapolation is ~8x K1 CPU work, not free.
-- Requested GPU comparison reference: ~28.5 min/panel; its pilot code is K1,
-  so it is not evidence of measured K8 GPU throughput.
+## Throughput — genuine K8 measurement in progress
+- Completed futures: cpuQ 0/8; gpuA 1/8. Eight sticky processes per host.
+- Each process: two paired arms x {120,300} s, entry path/mix ON, threads=1.
+- Prior K1 measurements: cpuQ 1766.6 s/1372 MB; gpuA 1920.0 s/1775 MB.
+  Prior K8/~33-min aggregate claims withdrawn; full K8 receipts pending.
 
 ## Full-corpus ES protocol — fixed before first combined generation
 - Verified combined registry: original FIT doc SHA 7bbd41f3 + wmdata d3ad5638;
@@ -43,16 +36,12 @@
   per generation, canonical reload; no validation feedback.
 
 ## ES curve / verdict / recommendation
-- Full ES driver gpuA PID 195604, `es_cpu_v3/es_run_full`; generation 0 running.
-- ES curve: no complete combined generation yet; earlier partial FIT cells are
-  excluded. All four wmdata arms smoke PASS (31.2-31.9 s); 20 unit tests PASS.
-- Verdict: INCOMPLETE, not adoptable. A vs WM2 AND entry, B SPEEDHEAD eight
-  worlds, C1 and canonical accept.py remain the unchanged mandatory gates.
-- Actual unchanged-plan preflight: missing ACCEPT_PANEL.json, c1_cohort.json,
-  c1_runner.json and candidate quartet COMPLETE.json (the latter is not run yet).
-- MAIN input request: bind the registered C1 cohort/runner and canonical accept
-  panel. `ES_VERDICT_PREFLIGHT.json` is an infrastructure receipt, not a verdict.
-- MAIN GPU-slot request: reserve A/B evaluation after selected ES-WM checkpoint;
-  corrected K8 CPU cost cannot support the prior optimistic deadline estimate.
-- Recommendation: finish full-corpus CPU ES, report measured curve and long-
-  horizon transfer honestly; adopt only if the registered A/B/C1/accept verdict passes.
+- Calibration: RUNNING (gpuA driver PID 195604); `es_cpu_v3/es_run_full`, cpuQ `es_run_full`.
+- Curve (generation winner by objective, TRAIN paired J MAE veh-s): pending generation 0.
+- Source contrast MAE reported separately: pending.
+- Scoring-ready selected checkpoint: pending; 20 CPUQ + 3 receipt checks PASS.
+- Verdict INCOMPLETE / NOT ADOPTABLE; unchanged A vs WM2 AND entry, B, C1/accept.
+- Missing registered inputs: accept panel, C1 cohort/runner, candidate quartet completion.
+- MAIN: bind C1/accept inputs and allocate A/B GPU slot after checkpoint readiness.
+- Recommendation: retain WM2 until registered independent A/B/C1/accept PASS;
+  120 s TRAIN calibration alone does not establish 300/600 s response quality.
