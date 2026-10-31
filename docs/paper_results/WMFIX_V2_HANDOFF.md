@@ -1,5 +1,15 @@
 # PILOT v2 handoff (Claude -> GLM executor), 2026-10-31 ~15:20 +08
 
+## CURRENT SCOPE: MAIN17:52 gate ONLY (noticed19:20 coordination read)
+- Shared REGISTRATION.md MAIN17:52 synthesis restricts Track1 to finishing its
+  registered30-step gate ONLY. It supersedes the historical auto-continuation
+  instructions below. No gate outcome observed at this amendment.
+- External gate_only_watch.py will identity-pin223222 and stop its post-PASS
+  continuation using pidfd/SIGINT after the complete gate receipt. FAIL exits
+  normally. Panel code/processes remain intact. Three CPU tests PASS.
+- Watcher dispatch PID follows in WMFIX_PILOT_V2DATA.md; read its GATE_ONLY_*
+  receipts before recovery. No post-gate training/verdict dispatch under this scope.
+
 ## SUPERSEDING MAIN17:05 recovery / Sol17:17 gpuA clock
 - Old dispatcher197030 FINISHED/exit1 after exact parity PASS and4 updates;
   step0 panel failed because WMDATA CTRL0 entrant feedback was unbound.

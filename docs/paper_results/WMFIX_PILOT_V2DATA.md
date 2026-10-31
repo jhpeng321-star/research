@@ -1,5 +1,18 @@
 # PILOT v2-DATA — MAIN authorization 2026-10-31 15:25
 
+## Current scope — MAIN17:52 supersedes automatic continuation below
+- Shared REGISTRATION.md MAIN17:52 synthesis says Track1 **finishes its registered
+  thirty-step gate ONLY**. Discovered during the19:20 exact-file coordination read;
+  no gate score has landed, so this is applied before observing efficacy results.
+- The already-running driver predates that scope restriction and would continue
+  after PASS. New external `gate_only_watch.py --execute` watches PILOT_V2.json,
+  pins trainer PID/start ticks/exact command/output/recovery hash, and uses pidfd
+  SIGINT of that owned main on a bound thirty-step PASS. FAIL keeps ordinary exit.
+  Panel jobs/scoring code are untouched; no CUDA allocation or current interruption.
+- Three CPU tests PASS (bound gate, PID reuse/foreign job/output rejection, pidfd
+  final ownership check). Watcher records GATE_ONLY_WATCH/RESULT.json separately.
+  No post-gate curriculum/verdict dispatch is authorised by the current scope.
+
 ## Resume / binding
 - Resumed clean `c4/wmfixmerge` at f373b47e; prior audit/design/implementation and
   failed v1/smoothed-v2 receipts retained. No prior training was relaunched.
