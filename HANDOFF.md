@@ -106,8 +106,8 @@ still live (26tasks/three complete K8 worlds at06:29). No cpuQ dependency.
 
 <!-- NOON-COLLECTOR:BEGIN -->
 ## Bounded noon collector
-2026-11-01T06:42:24+08:00; read-only remote collection, no inference dispatch.
-Latest publication `docs/rbint/noon/20261101T064224+0800/PUBLICATION.json`; 08interim `PENDING`,09:30freeze `PENDING`.
+2026-11-01T07:07:17+08:00; read-only remote collection, no inference dispatch.
+Latest publication `docs/rbint/noon/20261101T070717+0800/PUBLICATION.json`; 08interim `PENDING`,09:30freeze `PENDING`.
 Source22cc32f6 FULL-v4 and prior A/B/C/FULL sources remain immutable.
 Scored-world-only fixed-stratum CIs; singleton uncertainty NA; prior CIs retracted.
 Existing remote supervisors retain own-PID11:30 deadline. Final collection11:35, report by11:45.
