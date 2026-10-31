@@ -1,0 +1,44 @@
+{
+  "root": "/root/autodl-tmp/c4/wmfixmerge20261031/es_cpu_v3/es_run_full",
+  "observed_unix": 1793434341.3635015,
+  "generations": [
+    {
+      "gen": 0,
+      "seconds": 1980.4,
+      "stale": 0,
+      "improved": true,
+      "candidates": {
+        "0": {
+          "fitness": 0.36886510466470945,
+          "paired_J_MAE": 237.69286111684946,
+          "source_contrast_MAE": 26.620192307692307,
+          "cells": 184
+        }
+      },
+      "best": {
+        "gen": 0,
+        "cand": 0
+      }
+    }
+  ],
+  "cells": {
+    "g000_c000_fit": 24,
+    "g000_c000_wm": 160,
+    "g001_c000_fit": 24,
+    "g001_c000_wm": 111,
+    "g001_c001_fit": 24,
+    "g001_c001_wm": 6
+  },
+  "driver_pid": 195604,
+  "elapsed_s": 3264.8,
+  "failed_sweeps": {},
+  "completed_sweeps": 50,
+  "ES_ABORT": null,
+  "ES_FINAL": null,
+  "FINAL": null,
+  "SCORING_READY": null,
+  "VERDICT_PREFLIGHT_FINAL": null,
+  "active_receipted_es_pids": [
+    195604
+  ]
+}

@@ -78,3 +78,17 @@
   updates <=60-line WMFIX_ES.md. Six-hour cap, exclusive PID file, no dispatches.
   Optional commits inspect status/diff/log and stage only report/receipt files;
   foreign edits defer commits or stop report overwrites. No push.
+
+## Fresh-session live audit — 2026-10-31 16:11 +08
+- Clean resume at 30d3bb72; all previous commits/artifacts retained. Read required
+  design/review/retarget/feasibility/pilot/runtime/panel code and task receipts.
+- gpuA original driver 195604 and finalizer 199849 are live. Local collector
+  25836 is live (`--watch --commit`); no replacement watcher/driver dispatched.
+- Generation 0 completed all 184 contrasts in 1980.4 s: objective .36886510,
+  equal-world TRAIN paired J MAE 237.69286, source contrast MAE 26.62019.
+- Generation 1 sweeps are active on cpuQ; no failed-sweep receipt observed.
+- WMDATA COMPLETE receipt confirms 40 wmdata_fit worlds/all 5 arms and corpus
+  acceptance. Existing combined registry already includes them; no preparation
+  or completed K8 probes repeated. No foreign PID signalling/GPU/SUMO launch.
+- `es_status.py` adds compact, read-only run summaries from owned receipts and
+  receipt-identified ES PIDs; no checkpoint/tape reads, launch or automatic retry.
