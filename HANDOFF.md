@@ -1,5 +1,18 @@
 # S-COOPFREE resume receipt
 
+## OWNER01:48 HOLD-credit migration (fresh-session priority)
+The inherited u1 arms use MAPPO counterfactuals. Any inherited `policy_u001.pt`
+is a **legacy MAPPO-credit checkpoint**, not the requested HOLD-credit learner.
+Legacy local publisher17964 was identity-checked and stopped before this migration.
+One-shot cpuQ boundary gate591782/start48339232 waits for the existing batch to drain,
+then writes YIELD and parks ONLY exact owned supervisor339173, after its current arm
+closes and before new legacy dev physics. All existing rollouts/checkpoints are retained.
+See `tools/coopfree_hold_ops.py status`; do not duplicate the original pipeline.
+New exact HOLD baselines can reuse the joint trials for objective2D_G. Existing solos
+leave nonexploring members on MAPPO: their C_G is NOT exact all-member-HOLD C_G.
+Full replacement of those solos exceeds the remaining2M cap; exact HOLD-credit
+diagnostics must use complete affordable groups and report their sample count.
+
 Branch `c4/coopfree`; preserve every committed/uncommitted file and all remote roots.
 Read `docs/paper_results/COOPFREE.md`, `COOPFREE_DESIGN.md`, and `tools/coopfree/evidence/` first.
 Explicit owner approval is in the shared REGISTRATION.md at the 23:58 COOPFREE budget line.
