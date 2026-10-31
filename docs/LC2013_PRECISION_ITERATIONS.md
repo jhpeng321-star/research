@@ -59,3 +59,12 @@ Compressed keep-right ±2s runs are only73/1612 (precision4.53%), so this is
 not explained solely by repeated positive steps under teacher forcing.
 Panel3 source/aggregate/input/MOBIL/motivation-partition verification PASS;
 worker299672 exited after136.11s. Gate-fix CPU suite23/23 PASS.
+
+Candidate4 completed/verified (worker319957 exited): 44078 proposals,1136
+matches, precision2.5772%, recall34.9002%. The gate removes255 false positives
+and no true positives. Per predicted motivation (precision / recall contribution):
+strategic10.554%/9.770pp (318/3013), cooperative9.069%/2.335pp (76/838),
+speed-gain4.292%/16.559pp (539/12558), keep-right0.734%/6.237pp (203/27669).
+Compressed-run precision16.663%, recall26.452%; this small first fix is
+insufficient. Next investigate geometry/continuation length and lane-change
+source evaluation gates rather than tuning the already-correct thresholds.

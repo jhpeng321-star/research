@@ -3,7 +3,8 @@
 **00:10 precision continuation active:** prior commits/results retained. New
 per-predicted-motivation diagnostics added; source-backed stale keep-right
 request fix implemented (now gated by anticipated lane speeds). Candidate4
-validation pending. Route LENGTH vs remaining-distance audit continues;
+verified: precision2.577% vs2.562%, recall34.900% unchanged (255FP removed).
+Source through `568d0314`; safe small fix, insufficient overall. Route LENGTH vs remaining-distance audit continues;
 see `docs/LC2013_PRECISION_ITERATIONS.md`. Shared helper lcspec now consumed.
 Panel3 attribution verified: keep-right 203/27924 (0.727% precision),
 64.17% of all false-positive steps. Gate-fix CPU tests23/23 PASS.
