@@ -17,8 +17,9 @@ REG = Path('E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md')
 
 
 def ssh(host, code, timeout=60):
+    python = '/home/ubuntu/miniconda3/bin/python' if host == 'cpuQ' else '/root/miniconda3/bin/python'
     result = subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=12', host,
-                             '/root/miniconda3/bin/python -'], input=code, text=True,
+                             python+' -'], input=code, text=True,
                             encoding='utf-8', capture_output=True, timeout=timeout)
     if result.returncode:
         raise RuntimeError(result.stderr+result.stdout)

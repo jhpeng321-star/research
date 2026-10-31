@@ -1,6 +1,26 @@
 # S-C1SWITCH operational receipt
 
-## Current full-rerun continuation (MAIN 17:53)
+## Current cpuQ continuation (MAIN 18:33)
+
+Design commit `ec322b36`, SHA256
+`428f1850cc33350f4bc63c08e89b6270d859cd17a6662c660ddaa1977e478470`
+is registered: total478,410 sim-s, including Step0 47,010; GPU4h hard cap.
+Main16worlds, eight episode arms, no oracle episode; WM/BB172,500 EACH,
+random/five fixed14,400 EACH. WM2b8797242+mix/full60s observable history and
+BBafaaa32c minimize predicted on-road delay; evaluation is full fleet+source.
+This MAIN rule supersedes the historical model/source and budget blocks below.
+
+cpuQ immutable `/home/ubuntu/c1switch20261031/fullrerun_v3` is staged;
+`evidence/CPUQ_STAGE.json` binds sources/imported930 debit. cpuQ13testsPASS,
+28seedguardsPASS, newSUMO0. Existing frozen runtime/controller hashes verify.
+No gpuR v2 dispatch/lock and no additional legacy debit were found on resume.
+Use `python -m tools.c1switch.cpuops progress` for receipts; `... launch` ONCE
+after this build commit, then never re-stage or restart. Initial Step0 one
+nice19 CPU worker, CUDA hidden; MAIN permits <=28workers on cpuQ.
+Main still requires actual Step0 bitwise/headroom gates and real observable
+feedback inference adapters; source entries are no longer required in prediction.
+
+## Historical full-rerun staging (MAIN 17:53; never dispatched)
 
 Design commit `74082ebd` supersedes saved-state execution below. Step0 v2 is
 47,010 sim-s cumulative: 930 retained + 38,400 five-way reruns + 7,680 native

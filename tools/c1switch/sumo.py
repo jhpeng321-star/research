@@ -11,9 +11,9 @@ from .core import Belief, Handover
 from .design import FORBIDDEN, guard, sha
 from .storage import canonical
 
-RUNTIME = Path('/root/autodl-tmp/c4/speedhead20261030/e3final')
-WRAPPERS = Path('/root/wmdata2')
-MAPPO = Path('/root/autodl-tmp/c4/speedhead20261030/mappospeed_final169.pt')
+RUNTIME = Path(os.environ.get('C1SWITCH_RUNTIME', '/root/autodl-tmp/c4/speedhead20261030/e3final'))
+WRAPPERS = Path(os.environ.get('C1SWITCH_WRAPPERS', '/root/wmdata2'))
+MAPPO = Path(os.environ.get('C1SWITCH_MAPPO', '/root/autodl-tmp/c4/speedhead20261030/mappospeed_final169.pt'))
 SOURCE_SHA = 'b3c031adb6bc2b5c2bca160bea308f83ba5567b97c1cd0e853eddcd8367a8193'
 
 
@@ -52,7 +52,7 @@ def setup():
     # the frozen E3 plant. Source hash is bound by the immutable deployment receipt.
     import importlib.util
     import traffic_shepherd.c4 as package
-    root = Path('/root/c1switch20261031')
+    root = Path(os.environ.get('C1SWITCH_ENGINE_ROOT', '/root/c1switch20261031'))
     engine = root/'pytools/engine/branching.py'
     staged = json.loads((root/'STAGED.json').read_text())
     if sha(engine) != staged['engine/branching.py']:
