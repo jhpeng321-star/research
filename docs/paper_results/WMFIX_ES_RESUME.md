@@ -134,3 +134,7 @@
   Staged that single verified file into es_cpu_v3 (SHA256 642e3cdd913e2cab...);
   finalizer invokes it in a new process only after FINAL. Its running process
   and all calibration/other-owner code remain untouched. No dispatch repeated.
+- Immutable 17:02 status receipts retained for both hosts: gpuA driver/finalizer
+  and local collector live; cpuQ has 30 receipt-identified active ES workers.
+  All four registered missing input paths rechecked absent. Final results are
+  still pending; existing collector will pull/commit each completed generation.

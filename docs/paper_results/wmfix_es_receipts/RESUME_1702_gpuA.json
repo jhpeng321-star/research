@@ -1,0 +1,73 @@
+{
+  "root": "/root/autodl-tmp/c4/wmfixmerge20261031/es_cpu_v3/es_run_full",
+  "observed_unix": 1793437323.6680062,
+  "generations": [
+    {
+      "gen": 0,
+      "seconds": 1980.4,
+      "stale": 0,
+      "improved": true,
+      "candidates": {
+        "0": {
+          "fitness": 0.36886510466470945,
+          "paired_J_MAE": 237.69286111684946,
+          "source_contrast_MAE": 26.620192307692307,
+          "cells": 184
+        }
+      },
+      "best": {
+        "gen": 0,
+        "cand": 0
+      }
+    },
+    {
+      "gen": 1,
+      "seconds": 3025.3,
+      "stale": 0,
+      "improved": true,
+      "candidates": {
+        "0": {
+          "fitness": 0.36262736604868756,
+          "paired_J_MAE": 241.52574744591345,
+          "source_contrast_MAE": 26.23076923076923,
+          "cells": 184
+        },
+        "1": {
+          "fitness": 0.33808628247725725,
+          "paired_J_MAE": 243.86706836407,
+          "source_contrast_MAE": 23.665865384615383,
+          "cells": 184
+        }
+      },
+      "best": {
+        "gen": 1,
+        "cand": 1
+      }
+    }
+  ],
+  "cells": {
+    "g000_c000_fit": 24,
+    "g000_c000_wm": 160,
+    "g001_c000_fit": 24,
+    "g001_c000_wm": 160,
+    "g001_c001_fit": 24,
+    "g001_c001_wm": 160,
+    "g002_c000_fit": 24,
+    "g002_c000_wm": 111,
+    "g002_c001_fit": 23,
+    "g002_c001_wm": 10
+  },
+  "driver_pid": 195604,
+  "elapsed_s": 6247.1,
+  "failed_sweeps": {},
+  "completed_sweeps": 97,
+  "ES_ABORT": null,
+  "ES_FINAL": null,
+  "FINAL": null,
+  "SCORING_READY": null,
+  "VERDICT_PREFLIGHT_FINAL": null,
+  "active_receipted_es_pids": [
+    195604,
+    213644
+  ]
+}
