@@ -168,3 +168,27 @@ through 120 s. Membership/request summaries also contain post-t0 release/abort
 outcomes, which are forbidden as forecast inputs. Causal executor restoration
 has not been established. docs/paper_results/C1CLOSED_WALL_INPUTS.md records this
 specific remaining blocker. No wall forecasts or wall panel selection occurred.
+
+## Owner 19:12 throughput expansion (primary and frozen inference unchanged)
+
+Recover and retain the live gpuA dispatcher and sole collector. Add four gpuR
+GPU lanes only after exact full-300 s parity of completed world0/future0/common
+against gpuA (exclude only PID and runtime from equality). Keep gpuR's total
+owned allocation <=8,000,000,000 bytes, physical reserve >=1 GiB; gpuA retains
+two GPU lanes and two spare-core CPU lanes under its original <=12 GB budget.
+Per-process allocator remains the frozen 3 GiB. Shared peer sources are never
+overwritten. Missing inherited config files may be copied byte-identically;
+hash the full config chain and concrete checkpoint/policy inputs.
+
+The original dispatcher has no cross-host claims. To make allocation exclusive,
+pause ONLY its receipt-verified PID/start incarnation, let all its own children
+finish, then freeze deterministic disjoint remaining-task lists for gpuA/gpuR.
+Keep every completed output. Expansion runners execute identical worker.py,
+aggregate code, inputs, K, controller order and seeds. A publication bridge moves
+only checksum-verified, successfully completed gpuR outputs atomically into the
+existing gpuA panel. The existing collector/finalizer source hashes and process
+remain unchanged. The bridge publishes successful COMPLETE only at480/480,
+then retires the paused original owned scheduler. All signals require the exact
+registered owned PID/start identity; never signal a peer or by process name.
+The separate parity run is never counted as a new panel task. No scientific
+outcome inspection, sample reduction, post-hoc selection or retraining is added.

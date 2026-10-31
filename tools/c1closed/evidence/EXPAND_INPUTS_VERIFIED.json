@@ -1,0 +1,53 @@
+{
+ "status": "PASS",
+ "matching_files": 420,
+ "supplemental": {
+  "gpuA": {
+   "binding": {
+    "path": "/root/autodl-tmp/c4/speedhead20261030/mappospeed_final169.pt",
+    "sha256": "d9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca",
+    "iteration": 169,
+    "lane_head": false,
+    "lane_control": "native",
+    "lanes_is_none": true,
+    "preflight_contract_sha256": "f82ab5ab9ab6c500d93d7bd2db83fac96704ec718ceaafae614f923da8231da9",
+    "action_audit": {
+     "acting_cav_slots": 4,
+     "off_cav_nan_slots": 188,
+     "all_acting_finite": true,
+     "sentinel_contract": "frozen PolicyExecutor: NaN off-CAV"
+    }
+   },
+   "hashes": {
+    "/root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml": "f95f7c4cbb501ccb85bb3968e29f3d6ca53db4ecef5f586225f96df1f48193e4",
+    "/root/autodl-tmp/c4/setupaudit20261030/policy_000190.pt": "de235a787024bb0f79d43937132eefcea69267b38205bc020f95bc98d4e8c7d1",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/configs/execparity_cav_idm_v1.json": "f70c2aaf34c21a801f7d970adad237619bebc954f6acf6dd51407d06aadd60b2",
+    "/root/autodl-tmp/c4/speedhead20261030/mappospeed_final169.pt": "d9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca"
+   }
+  },
+  "gpuR": {
+   "binding": {
+    "path": "/root/autodl-tmp/c4/speedhead20261030/mappospeed_final169.pt",
+    "sha256": "d9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca",
+    "iteration": 169,
+    "lane_head": false,
+    "lane_control": "native",
+    "lanes_is_none": true,
+    "preflight_contract_sha256": "f82ab5ab9ab6c500d93d7bd2db83fac96704ec718ceaafae614f923da8231da9",
+    "action_audit": {
+     "acting_cav_slots": 4,
+     "off_cav_nan_slots": 188,
+     "all_acting_finite": true,
+     "sentinel_contract": "frozen PolicyExecutor: NaN off-CAV"
+    }
+   },
+   "hashes": {
+    "/root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml": "f95f7c4cbb501ccb85bb3968e29f3d6ca53db4ecef5f586225f96df1f48193e4",
+    "/root/autodl-tmp/c4/setupaudit20261030/policy_000190.pt": "de235a787024bb0f79d43937132eefcea69267b38205bc020f95bc98d4e8c7d1",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/configs/execparity_cav_idm_v1.json": "f70c2aaf34c21a801f7d970adad237619bebc954f6acf6dd51407d06aadd60b2",
+    "/root/autodl-tmp/c4/speedhead20261030/mappospeed_final169.pt": "d9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca"
+   }
+  }
+ },
+ "binding_difference": "host/source/diagnostic metadata only; executable fields and actual checkpoint identical"
+}

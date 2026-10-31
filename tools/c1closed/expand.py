@@ -1,0 +1,398 @@
+"""Owned multi-host expansion; frozen worker/scoring and one collector retained."""
+from pathlib import Path
+import argparse
+import hashlib
+import json
+import subprocess
+import sys
+import time
+
+from probe import ssh, allowed
+from operate import HERE, REMOTE, scp
+
+
+def save(name, value):
+    with (HERE/'evidence'/name).open('x', encoding='utf-8') as f:
+        json.dump(value, f, indent=1)
+
+
+def audit():
+    code = f'''from pathlib import Path
+import json,os,subprocess,hashlib
+p=Path({REMOTE!r})
+result=dict(host=os.uname().nodename,load=os.getloadavg(),cpus=os.cpu_count(),
+ gpu=subprocess.check_output(['nvidia-smi','--query-gpu=name,memory.used,memory.free','--format=csv,noheader'],text=True),
+ apps=subprocess.check_output(['nvidia-smi','--query-compute-apps=pid,used_memory','--format=csv,noheader,nounits'],text=True))
+if (p/'DISPATCH.json').exists():
+ d=json.loads((p/'DISPATCH.json').read_text());result['dispatch']=d
+ q=Path('/proc/'+str(d['pid'])+'/stat')
+ result['dispatch_stat']=q.read_text() if q.exists() else None
+ result['completed']=len(list((p/'panel').glob('*_h300.json')))
+ result['reference']=json.loads((p/'panel/wm2_common_w0_k0_h300.json').read_text())
+print(json.dumps(result))
+'''
+    a=json.loads(ssh('gpuA', code)); r=json.loads(ssh('gpuR', code))
+    ref=a.pop('reference')
+    paths=set(ref['identity']['runtime_closure']) | set(ref['identity']['dependencies'])
+    paths.update(('/root/autodl-tmp/c4/speedhead20261030/tools/speedhead/wm_gpu_wmcalib.py',
+                  '/root/autodl-tmp/c4/speedhead20261030/tools/speedhead/wm_worker.py',
+                  '/root/autodl-tmp/c4/speedhead20261030/EXPORT_BOUND.json',
+                  '/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt',
+                  '/root/wmcalib/expected_hashes.json','/root/wmcalib/data/design.json'))
+    # The runtime records concrete config/candidate paths in its source.
+    for seed in range(969400,969440):
+        paths.update(f'/root/wmcalib/data/jobs/s{seed}_ctrl0/{n}'
+                     for n in ('start.pt','start_history.npz','result.json'))
+    for p in paths: allowed(p)
+    manifests={}
+    for host in ('gpuA','gpuR'):
+        manifests[host]=json.loads(ssh(host, f'''from pathlib import Path
+import json,hashlib
+paths={sorted(paths)!r}
+print(json.dumps({{n:hashlib.sha256(Path(n).read_bytes()).hexdigest() if Path(n).is_file() else None for n in paths}}))
+'''))
+    differences={p: [manifests[h][p] for h in ('gpuA','gpuR')]
+                 for p in paths if manifests['gpuA'][p] != manifests['gpuR'][p]}
+    save('EXPAND_AUDIT.json',dict(gpuA=a,gpuR=r,manifests=manifests,differences=differences,
+         reference_identity=ref['identity']))
+    print(json.dumps(dict(gpuA=a,gpuR=r,files=len(paths),differences=differences),indent=1))
+
+
+def stage():
+    audit=json.loads((HERE/'evidence/EXPAND_AUDIT.json').read_text())
+    binding='/root/autodl-tmp/c4/speedhead20261030/EXPORT_BOUND.json'
+    assert set(audit['differences']) <= {binding}, 'do not overwrite shared peer runtime'
+    paths=['/root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml',
+           '/root/autodl-tmp/c4/setupaudit20261030/policy_000190.pt',
+           '/root/autodl-tmp/c4/setupaudit20261030/fix/configs/execparity_cav_idm_v1.json',
+           '/root/autodl-tmp/c4/speedhead20261030/mappospeed_final169.pt']
+    extra={}
+    for host in ('gpuA','gpuR'):
+        extra[host]=json.loads(ssh(host,f'''from pathlib import Path
+import hashlib,json
+b=json.loads(Path({binding!r}).read_text())
+keys=('path','sha256','iteration','lane_head','lane_control','lanes_is_none','preflight_contract_sha256','action_audit')
+print(json.dumps(dict(binding={{k:b[k] for k in keys}},hashes={{n:hashlib.sha256(Path(n).read_bytes()).hexdigest() if Path(n).is_file() else None for n in {paths!r}}})))
+'''))
+    for path,expected in extra['gpuA']['hashes'].items():
+        assert expected is not None
+        if extra['gpuR']['hashes'][path] is None:
+            allowed(path)
+            local=HERE/'out'/('expand_input_'+Path(path).name)
+            print(scp(f'gpuA:{path}',local))
+            assert hashlib.sha256(local.read_bytes()).hexdigest()==expected
+            print(ssh('gpuR',f'''from pathlib import Path
+p=Path({path!r});assert Path('/root/autodl-tmp/c4').is_dir();assert not p.exists()
+resolved=p.resolve();assert not any(x in str(resolved).lower() for x in ('sealed','holdout','heldout','cal_split','chunk5','j4b','inc1','hetdata_truth','vtype'))
+print('resolved missing input',p,'=>',resolved)
+assert str(resolved).startswith(('/root/autodl-tmp/c4/','/root/wmcalib/')), 'external symlink needs explicit review'
+resolved.parent.mkdir(parents=True,exist_ok=True)
+print('verified absent input destination',p)
+'''))
+            print(scp(local,f'gpuR:{path}'))
+            actual=ssh('gpuR',f'from pathlib import Path;import hashlib;print(hashlib.sha256(Path({path!r}).read_bytes()).hexdigest())').strip()
+            assert actual==expected
+            extra['gpuR']['hashes'][path]=actual
+    assert extra['gpuA']==extra['gpuR'],'concrete model/config/export mismatch'
+    save('EXPAND_INPUTS_VERIFIED.json',dict(status='PASS',matching_files=len(audit['manifests']['gpuA'])-len(audit['differences']),
+         supplemental=extra,binding_difference='host/source/diagnostic metadata only; executable fields and actual checkpoint identical'))
+    print(ssh('gpuR',f'''from pathlib import Path
+p=Path({REMOTE!r});assert p.parent.is_dir();p.mkdir(exist_ok=True)
+for name in ('evidence','panel','parity','ckpt'):(p/name).mkdir(exist_ok=True)
+assert not (p/'EXPAND_ASSIGNMENT.json').exists()
+print('verified task destination',p)
+'''))
+    for name in ('worker.py','aggregates.py','expand_runner.py'):
+        print(scp(HERE/name,f'gpuR:{REMOTE}/{name}'))
+    print(scp(HERE/'expand_runner.py',f'gpuA:{REMOTE}/expand_runner.py'))
+
+
+def parity():
+    attempt=1
+    while (HERE/'evidence'/f'EXPAND_PARITY{attempt}_OWNED.json').exists() or (attempt==1 and (HERE/'evidence/EXPAND_PARITY_OWNED.json').exists()):
+        attempt+=1
+    code=f'''from pathlib import Path
+import json,os,subprocess,time,hashlib
+p=Path({REMOTE!r});dest=p/'parity';assert dest.is_dir()
+for q in (p/'evidence').glob('EXPAND_PARITY*_OWNED.json'):
+ old=json.loads(q.read_text());stat=Path('/proc/'+str(old['pid'])+'/stat')
+ if stat.exists():
+  s=stat.read_text().split(') ',1)[1].split();assert s[19]!=old['start_ticks'] or s[0]=='Z','existing parity still live'
+free=int(subprocess.check_output(['nvidia-smi','--query-gpu=memory.free','--format=csv,noheader,nounits'],text=True).strip())
+assert free>=5120
+cmd=['nice','-n','19','/root/miniconda3/bin/python','-B','-u',str(p/'worker.py'),'--model','wm2','--world','0','--future','0','--plant','common','--seconds','300','--out','parity','--device','cuda']
+with (p/'evidence/EXPAND_PARITY{attempt}.log').open('x') as log:
+ child=subprocess.Popen(cmd,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,
+  env={{**os.environ,'PYTHONPATH':'/root/autodl-tmp/c4/speedhead20261030/pythondeps','OMP_NUM_THREADS':'1','MKL_NUM_THREADS':'1','OPENBLAS_NUM_THREADS':'1'}})
+ receipt=dict(pid=child.pid,start_ticks=Path(f'/proc/{{child.pid}}/stat').read_text().split(') ',1)[1].split()[19],command=cmd,started=time.time(),role='parity only; never counted in panel')
+ with (p/'evidence/EXPAND_PARITY{attempt}_OWNED.json').open('x') as f:json.dump(receipt,f)
+print(json.dumps(receipt))
+'''
+    receipt=json.loads(ssh('gpuR',code));save(f'EXPAND_PARITY{attempt}_OWNED.json',receipt)
+    print(json.dumps(receipt))
+
+
+def repair_configs():
+    paths=json.loads(ssh('gpuA', '''from pathlib import Path
+import tomllib,json,hashlib
+paths={}
+def read(p):
+ p=p.resolve();assert not any(x in str(p).lower() for x in ('sealed','holdout','heldout','cal_split','chunk5','j4b','inc1','hetdata_truth','vtype'))
+ b=p.read_bytes();paths[str(p)]=hashlib.sha256(b).hexdigest();v=tomllib.loads(b.decode())
+ parent=v.get('extends')
+ if parent:read(p.parent/parent)
+read(Path('/root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml'))
+print(json.dumps(paths))
+'''))
+    actual=json.loads(ssh('gpuR',f'''from pathlib import Path
+import json,hashlib
+print(json.dumps({{p:hashlib.sha256(Path(p).read_bytes()).hexdigest() if Path(p).is_file() else None for p in {list(paths)!r}}}))
+'''))
+    copied=[]
+    for path,digest in paths.items():
+        allowed(path)
+        if actual[path]==digest:continue
+        assert actual[path] is None,'never overwrite a shared config'
+        local=HERE/'out'/('expand_config_'+Path(path).name)
+        print(scp(f'gpuA:{path}',local));assert hashlib.sha256(local.read_bytes()).hexdigest()==digest
+        print(ssh('gpuR',f'from pathlib import Path;p=Path({path!r});assert not p.exists();assert p.parent.is_dir();print(p)'))
+        print(scp(local,f'gpuR:{path}'));copied.append(path)
+        assert ssh('gpuR',f'from pathlib import Path;import hashlib;print(hashlib.sha256(Path({path!r}).read_bytes()).hexdigest())').strip()==digest
+    save('EXPAND_CONFIG_CLOSURE.json',dict(status='PASS',manifest=paths,copied_absent_only=copied,
+         parity_attempt1='failed before inference: missing inherited config; preserved log and exact PID receipt'))
+    print(json.dumps(dict(status='PASS',configs=len(paths),copied=copied)))
+
+
+def verify_parity():
+    target=HERE/'out/expand_parity.json'
+    print(scp(f'gpuR:{REMOTE}/parity/wm2_common_w0_k0_h300.json',target))
+    ref=json.loads(ssh('gpuA',f'from pathlib import Path;print(Path({(REMOTE+"/panel/wm2_common_w0_k0_h300.json")!r}).read_text())'))
+    actual=json.loads(target.read_text())
+    ignored={'runtime_seconds','pid'}
+    assert ref.keys()==actual.keys()
+    differences=[k for k in ref if k not in ignored and ref[k]!=actual[k]]
+    assert not differences, 'cross-host exact parity failed: '+str(differences)
+    receipt=dict(status='PASS',comparison='exact all fields except pid/runtime_seconds',
+                 task='wm2_common_w0_k0_h300',worker_sha256=actual['identity']['source_sha256'],
+                 reference_sha256=hashlib.sha256(json.dumps(ref,sort_keys=True).encode()).hexdigest(),
+                 gpuR_sha256=hashlib.sha256(target.read_bytes()).hexdigest(), counted_panel_tasks=0)
+    save('EXPAND_PARITY_VERIFIED.json',receipt);print(json.dumps(receipt))
+
+
+def freeze():
+    assert json.loads((HERE/'evidence/EXPAND_PARITY_VERIFIED.json').read_text())['status']=='PASS'
+    code=f'''from pathlib import Path
+import os,json,signal,time
+p=Path({REMOTE!r});d=json.loads((p/'DISPATCH.json').read_text());pid=d['pid']
+def stat(pid):
+ try:
+  s=Path(f'/proc/{{pid}}/stat').read_text().split(') ',1)[1].split();return dict(state=s[0],ticks=s[19])
+ except FileNotFoundError:return None
+assert not (p/'COMPLETE.json').exists()
+s=stat(pid);assert s and s['ticks']==d['start_ticks']
+assert b'/dispatch.py' in Path(f'/proc/{{pid}}/cmdline').read_bytes()
+receipt=p/'evidence/EXPAND_HANDOFF.json'
+assert not receipt.exists(), 'existing handoff must be inspected'
+os.kill(pid,signal.SIGSTOP)
+for i in range(100):
+ s=stat(pid)
+ if s['state']=='T':break
+ time.sleep(.05)
+assert s['state']=='T' and s['ticks']==d['start_ticks']
+children=[]
+for q in (p/'evidence').glob('*_OWNED.json'):
+ r=json.loads(q.read_text());s=stat(r['pid'])
+ if s and s['ticks']==r['start_ticks'] and s['state']!='Z':children.append(r)
+r=dict(original_dispatch=d,paused_state=stat(pid),draining_children=children,at=time.time(),
+ reason='disjoint cross-host scheduler handoff; original worker code and single collector unchanged')
+with receipt.open('x') as f:json.dump(r,f,indent=1)
+print(json.dumps(r))
+'''
+    r=json.loads(ssh('gpuA',code));save('EXPAND_HANDOFF.json',r);print(json.dumps(r))
+
+
+def assign():
+    handoff=json.loads((HERE/'evidence/EXPAND_HANDOFF.json').read_text())
+    snapshot=json.loads(ssh('gpuA',f'''from pathlib import Path
+import json,hashlib
+p=Path({REMOTE!r});h=json.loads((p/'evidence/EXPAND_HANDOFF.json').read_text())
+def stat(pid):
+ try:
+  s=Path(f'/proc/{{pid}}/stat').read_text().split(') ',1)[1].split();return dict(state=s[0],ticks=s[19])
+ except FileNotFoundError:return None
+d=h['original_dispatch'];s=stat(d['pid']);assert s==dict(state='T',ticks=d['start_ticks'])
+live=[]
+for r in h['draining_children']:
+ s=stat(r['pid'])
+ if s and s['ticks']==r['start_ticks'] and s['state']!='Z':live.append(r)
+done=[];worker=hashlib.sha256((p/'worker.py').read_bytes()).hexdigest()
+for q in (p/'panel').glob('*_h300.json'):
+ x=json.loads(q.read_text());assert x['identity']['source_sha256']==worker and x['steps']==600
+ done.append([x['model'],x['world'],x['future'],x['plant']])
+print(json.dumps(dict(live=live,done=done,worker_sha256=worker)))
+'''))
+    assert not snapshot['live'],'original exact-owned children still draining; retry without launching'
+    roster=[]
+    for world in range(40):
+        for model in ('wm2','bbtraj','bbid','historical'):
+            roster.extend((model,world,k,'common') for k in range(8 if model=='wm2' else 1))
+        roster.append(('wm2',world,0,'production'))
+    done={tuple(t) for t in snapshot['done']}
+    assert len(done)==len(snapshot['done']) and done <= set(roster)
+    gpu=[t for t in roster if t not in done and t[0]=='wm2']
+    cpu=[t for t in roster if t not in done and t[0]!='wm2']
+    assignments={}
+    for host in ('gpuA','gpuR'):
+        assignments[host]=dict(host=host,worker_sha256=snapshot['worker_sha256'],
+            gpu_lanes=2 if host=='gpuA' else 4,budget_bytes=12_000_000_000 if host=='gpuA' else 8_000_000_000,
+            gpu_tasks=[t for i,t in enumerate(gpu) if (i%3==0)==(host=='gpuA')],cpu_tasks=cpu if host=='gpuA' else [],
+            preserved_completed=len(done),K=8,parity='EXPAND_PARITY_VERIFIED.json PASS')
+    assigned=[tuple(t) for a in assignments.values() for t in a['gpu_tasks']+a['cpu_tasks']]
+    assert len(assigned)==len(set(assigned)) and set(assigned).isdisjoint(done) and set(assigned)|done==set(roster)
+    save('EXPAND_ASSIGNMENTS.json',dict(assignments=assignments,done=sorted(done),handoff=handoff,task_count=len(roster)))
+    for host,a in assignments.items():
+        local=HERE/'out'/f'expand_assignment_{host}.json'
+        with local.open('x') as f:json.dump(a,f,indent=1)
+        print(scp(local,f'{host}:{REMOTE}/EXPAND_ASSIGNMENT.json'))
+    print(json.dumps({h:dict(gpu=len(a['gpu_tasks']),cpu=len(a['cpu_tasks']),lanes=a['gpu_lanes']) for h,a in assignments.items()}))
+
+
+def launch_hosts():
+    a=json.loads((HERE/'evidence/EXPAND_ASSIGNMENTS.json').read_text())
+    for host in ('gpuA','gpuR'):
+        receipt=json.loads(ssh(host,f'''from pathlib import Path
+import os,json,subprocess,time
+p=Path({REMOTE!r});assert (p/'EXPAND_ASSIGNMENT.json').is_file()
+assert not (p/'evidence/EXPAND_LAUNCH.json').exists()
+assert not (p/'EXPAND_DISPATCH.json').exists()
+assert json.loads((p/'EXPAND_ASSIGNMENT.json').read_text())=={a['assignments'][host]!r}
+with (p/'evidence/EXPAND_DISPATCH.log').open('x') as log:
+ child=subprocess.Popen(['nice','-n','19','/root/miniconda3/bin/python','-B','-u',str(p/'expand_runner.py')],
+  stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,
+  env={{**os.environ,'OMP_NUM_THREADS':'1','MKL_NUM_THREADS':'1','OPENBLAS_NUM_THREADS':'1'}})
+ r=dict(pid=child.pid,start_ticks=Path(f'/proc/{{child.pid}}/stat').read_text().split(') ',1)[1].split()[19],started=time.time())
+ with (p/'evidence/EXPAND_LAUNCH.json').open('x') as f:json.dump(r,f)
+print(json.dumps(r))
+'''))
+        save(f'EXPAND_LAUNCH_{host}.json',receipt);print(host,json.dumps(receipt))
+
+
+def host_state(host):
+    return json.loads(ssh(host,f'''from pathlib import Path
+import json,os,subprocess,hashlib
+p=Path({REMOTE!r});launch=p/'evidence/EXPAND_LAUNCH.json'
+r=json.loads(launch.read_text()) if launch.exists() else None
+live=False
+if r:
+ q=Path('/proc/'+str(r['pid'])+'/stat')
+ if q.exists():
+  s=q.read_text().split(') ',1)[1].split();live=s[19]==r['start_ticks'] and s[0]!='Z'
+q=p/'EXPAND_COMPLETE.json'
+done=json.loads(q.read_text()) if q.exists() else None
+names={{}}
+for q in (p/'panel').glob('*_h300.json'):
+ if {host!r}=='gpuR':
+  attempt=p/'evidence'/('EXPAND_'+q.stem+'_attempt1.json')
+  if not attempt.exists():continue
+  if json.loads(attempt.read_text())['returncode']!=0:continue
+ try:x=json.loads(q.read_text())
+ except json.JSONDecodeError:continue
+ assert x['steps']==600
+ names[q.name]=hashlib.sha256(q.read_bytes()).hexdigest()
+print(json.dumps(dict(alive=live,receipt=r,complete=done,outputs=names,load=os.getloadavg(),
+ gpu=subprocess.check_output(['nvidia-smi','--query-gpu=memory.used,memory.free','--format=csv,noheader'],text=True))))
+'''))
+
+
+def publish(states):
+    for name,digest in states['gpuR']['outputs'].items():
+        assert name in {f'{m}_{p}_w{w}_k{k}_h300.json' for m,w,k,p in
+                       json.loads((HERE/'evidence/EXPAND_ASSIGNMENTS.json').read_text())['assignments']['gpuR']['gpu_tasks']}
+        if name in states['gpuA']['outputs']:
+            assert states['gpuA']['outputs'][name]==digest
+            continue
+        local=HERE/'out'/('expand_'+name)
+        print(scp(f'gpuR:{REMOTE}/panel/{name}',local),flush=True)
+        assert hashlib.sha256(local.read_bytes()).hexdigest()==digest
+        partial=REMOTE+'/panel/'+name+'.gpuR_publish'
+        print(scp(local,f'gpuA:{partial}'),flush=True)
+        print(ssh('gpuA',f'''from pathlib import Path
+import hashlib,os
+q=Path({partial!r});dest=q.with_name({name!r});assert hashlib.sha256(q.read_bytes()).hexdigest()=={digest!r}
+assert not dest.exists();os.link(q,dest)
+print('published verified gpuR',dest.name)
+'''),flush=True)
+
+
+def bridge():
+    import msvcrt
+    lock=(HERE/'evidence/EXPAND_BRIDGE.lock').open('a+b');lock.seek(0);msvcrt.locking(lock.fileno(),msvcrt.LK_NBLCK,1)
+    while True:
+        try:
+            states={h:host_state(h) for h in ('gpuA','gpuR')}
+            publish(states)
+            summary={h:dict(alive=s['alive'],completed=len(s['outputs']),gpu=s['gpu'],load=s['load'],
+                           success=s['complete']['success'] if s['complete'] else None) for h,s in states.items()}
+            with (HERE/'evidence/EXPAND_EVENTS.jsonl').open('a') as f:f.write(json.dumps(dict(at=time.time(),hosts=summary))+'\n')
+            print(json.dumps(summary),flush=True)
+            if any(not s['alive'] and s['complete'] is None for s in states.values()):
+                save('EXPAND_BLOCKED.json',dict(reason='expansion dispatcher absent without completion',hosts=summary));return
+            if all(s['complete'] is not None for s in states.values()):
+                assert all(s['complete']['success'] for s in states.values()),'failed task: inspect, no automatic retry'
+                finish();return
+        except (RuntimeError,subprocess.TimeoutExpired,OSError) as exc:
+            print('WAIT',repr(exc),flush=True)
+        time.sleep(60)
+
+
+def finish():
+    print(ssh('gpuA',f'''from pathlib import Path
+import json,hashlib,os,signal,time
+p=Path({REMOTE!r});a=json.loads((p/'EXPAND_ASSIGNMENT.json').read_text());worker=a['worker_sha256']
+results=[]
+for w in range(40):
+ tasks=[(m,k,'common') for m in ('wm2','bbtraj','bbid','historical') for k in range(8 if m=='wm2' else 1)]+[('wm2',0,'production')]
+ for m,k,plant in tasks:
+  name=f'{{m}}_{{plant}}_w{{w}}_k{{k}}_h300';q=p/'panel'/(name+'.json');x=json.loads(q.read_text())
+  assert (x['model'],x['world'],x['future'],x['plant'],x['steps'])==(m,w,k,plant,600)
+  assert x['identity']['source_sha256']==worker
+  results.append(dict(task=name,status='complete'))
+assert len(results)==480 and len(list((p/'panel').glob('*_h300.json')))==480
+assert not (p/'COMPLETE.json').exists()
+with (p/'COMPLETE.json').open('x') as f:
+ json.dump(dict(success=True,count=480,results=results,finished=time.time(),
+  scheduler='disjoint gpuA2+gpuR4 expansion; prior exact-owned scheduler paused and drained; parity PASS'),f)
+ f.flush();os.fsync(f.fileno())
+d=json.loads((p/'DISPATCH.json').read_text());q=Path('/proc/'+str(d['pid'])+'/stat')
+if q.exists():
+ s=q.read_text().split(') ',1)[1].split()
+ assert s[19]==d['start_ticks'] and s[0]=='T'
+ # Only the original, receipt-owned coordinator. All its children have drained.
+ os.kill(d['pid'],signal.SIGTERM);os.kill(d['pid'],signal.SIGCONT)
+print('COMPLETE 480/480; existing single collector will finalize')
+'''),flush=True)
+    save('EXPAND_FINISHED.json',dict(at=time.time(),status='480/480 complete; existing collector handles finalization'))
+
+
+def launch_bridge():
+    from watch import creation
+    assert not (HERE/'evidence/EXPAND_BRIDGE_LAUNCH.json').exists()
+    with (HERE/'evidence/EXPAND_BRIDGE.log').open('x') as log:
+        child=subprocess.Popen([sys.executable,'-B','-u',str(Path(__file__).resolve()),'bridge'],
+            stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
+            creationflags=subprocess.DETACHED_PROCESS|subprocess.CREATE_NEW_PROCESS_GROUP,close_fds=True)
+    identity=creation(child.pid);assert identity is not None
+    r=dict(pid=child.pid,creation_time=identity,at=time.time(),role='scheduler publication only; existing watch remains sole analysis collector')
+    save('EXPAND_BRIDGE_LAUNCH.json',r);print(json.dumps(r))
+
+
+def main():
+    actions={'audit':audit,'stage':stage,'parity':parity,'repair-configs':repair_configs,'verify-parity':verify_parity,'freeze':freeze,
+             'assign':assign,'launch-hosts':launch_hosts,'bridge':bridge,'launch-bridge':launch_bridge,
+             'status':lambda:print(json.dumps({h:host_state(h) for h in ('gpuA','gpuR')}))}
+    p=argparse.ArgumentParser();p.add_argument('action',choices=actions)
+    args=p.parse_args()
+    actions[args.action]()
+
+
+if __name__=='__main__':main()
