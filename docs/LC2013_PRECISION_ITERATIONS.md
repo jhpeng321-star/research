@@ -101,3 +101,24 @@ including independent helper-vector3 numeric counter increments828571 at1s
 and first keep-right wish atstep25, source5s limit for long continuations,
 exact corridor segment positions/lengths, and neutral lanes near route end.
 Candidate source hashes now include the geometry module and physics dependencies.
+
+Candidate5 completed/verified (worker359119 exited,150.22s):1118/39090
+exact, precision2.8601%, recall34.3472% (vs34.9002%). Predicted-reason
+precision/recall contribution: strategic10.554%/9.770pp (318/3013),
+cooperative9.069%/2.335pp (76/838), speed-gain4.419%/16.559pp (539/12196),
+keep-right0.803%/5.684pp (185/23043). Geometry removes4988 proposal steps,
+18 exact matches; retained because the source semantics are now correct,
+not because of outcome selection. Still far too many false keep-right wishes.
+
+## Candidate6: actual SUMO numerical precision
+
+INT's handoff identified SUMO NUMERICAL_EPS=.001, not this subset's1e-6.
+Independently downloaded/read config.h.cmake:236 to confirm (source SHA/path
+in LC2013_SOURCE_NOTES.md). Use .001 in safe-stop margin, IDM gap clamping
+(persist the clamped gap before internal substep subtraction), and the left
+speed-gain positive-gain veto at1854. This source constant prevents an old
+mature left wish from firing on vanishing anticipated advantages. A synthetic
+regression has a safe target, mature wish and positive gain~.00033; SUMO's
+veto rejects it. CPU28/28 PASS. Candidate5 is collected and verified, so the
+next diagnostic can run without overlapping an owned worker; no threshold
+fitted to data.

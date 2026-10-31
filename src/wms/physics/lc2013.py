@@ -20,6 +20,8 @@ from .neighbours import lane_of
 from .lc2013_geometry import corridor_context
 
 PRECISION = 10_000_000
+# SUMO v1_27_1 src/config.h.cmake:236 (general floating comparison).
+NUMERICAL_EPS = 0.001
 STATE_KEYS = ("lc2013_left", "lc2013_right", "lc2013_keep_right",
               "lc2013_lookahead", "lc2013_present", "lc2013_lane",
               "lc2013_identity", "lc2013_advice_accel",
@@ -47,7 +49,7 @@ def brake_gap(speed: Tensor, decel: Tensor, dt: float, *,
 def maximum_safe_stop(gap: Tensor, decel: Tensor, tau: Tensor, dt: float,
                       *, ballistic: bool = False) -> Tensor:
     """LC anticipated speed uses onInsertion=true (MSCFModel.cpp:860-908)."""
-    g = (gap - 1e-6).clamp_min(0)  # SUMO NUMERICAL_EPS, not a behaviour trigger
+    g = (gap - NUMERICAL_EPS).clamp_min(0)
     if ballistic:
         bt = decel * tau
         return torch.sqrt(bt.square() + 2 * decel * g) - bt
@@ -74,8 +76,9 @@ def idm_follow_speed(speed: Tensor, gap: Tensor, leader_speed: Tensor,
         desired = secure_gap(v, leader_speed, accel, decel, tau)
         if respect_min_gap:
             desired = desired + min_gap
-        a = accel * (1 - (v / vmax.clamp_min(1e-6)).pow(4)
-                     - (desired / g.clamp_min(1e-6)).square())
+        g = g.clamp_min(NUMERICAL_EPS)
+        a = accel * (1 - (v / vmax.clamp_min(NUMERICAL_EPS)).pow(4)
+                     - (desired / g).square())
         v = (v + dt / iterations * a).clamp_min(0)
         g = g - (v - leader_speed).clamp_min(0) * dt / iterations
     return v
@@ -311,7 +314,7 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
     keep_request = (right & (this_speed - 5 / 3.6 <= neigh_speed)
                     & (torch.trunc(keep * p["lcKeepRight"]) < -threshold_r))
     gain_request = torch.where(right, right_wish > threshold_r,
-                                (left_wish > threshold_l) & ((relative_gain > 1e-6) | avoid_impulse))
+                                (left_wish > threshold_l) & ((relative_gain > NUMERICAL_EPS) | avoid_impulse))
     gain_request &= target_length / v.clamp_min(0.1) > p["lcSpeedGainRemainTime"]
     early_strategic = route_to_best & (p["lcStrategic"] >= 0) & (relative_gain >= 0)
     early_strategic &= torch.where(right, right_wish, left_wish) > 0

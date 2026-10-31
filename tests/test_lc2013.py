@@ -3,7 +3,7 @@ import torch
 
 from wms.physics.config import PhysicsConfig
 from wms.physics.lc2013 import (COOPERATIVE, KEEP_RIGHT, SPEED_GAIN, STRATEGIC,
-                                brake_gap, lane_change, maximum_safe_stop, secure_gap)
+                                NUMERICAL_EPS, brake_gap, lane_change, maximum_safe_stop, secure_gap)
 
 
 def scene(rows):
@@ -28,7 +28,7 @@ def test_euler_stop_inverts_discrete_braking():
     v = torch.tensor([0., 1., 10., 25.], dtype=torch.float64)
     b, tau = torch.full_like(v, 4.5), torch.full_like(v, 1.)
     gap = brake_gap(v, b, .5, headway=tau)
-    torch.testing.assert_close(maximum_safe_stop(gap + 1e-6, b, tau, .5), v)
+    torch.testing.assert_close(maximum_safe_stop(gap + NUMERICAL_EPS, b, tau, .5), v)
 
 
 def test_required_ramp_strategic_and_geometry():
@@ -107,6 +107,22 @@ def test_mature_keep_right_waits_when_target_lane_becomes_slower():
     resumed = lane_change(k, mask, p, memory=out)
     assert resumed['lc2013_reason'][0, 0] == KEEP_RIGHT
     assert resumed['next_lane'][0, 0] == 1
+
+
+def test_mature_speed_gain_requires_sumo_numerical_epsilon_not_machine_epsilon():
+    # The target's30m/s vs current anticipated29.99m/s yields gain~0.00033:
+    # positive but smaller than SUMO's documented NUMERICAL_EPS0.001.
+    k, mask = scene([(0, 1, 5), (37.426, 1, 30)])
+    p = PhysicsConfig(speed_limit_mps=30)
+    params = {'time_headway': torch.ones((1, 2))}
+    mem = lane_change(k, mask, p, driver_params=params)
+    mem['lc2013_left'][0, 0] = 3_000_000
+    out = lane_change(k, mask, p, memory=mem, driver_params=params)
+    gain = (out['lc2013_target_speed'] - out['lc2013_this_speed']) / out['lc2013_target_speed']
+    assert 1e-6 < gain[0, 0] < NUMERICAL_EPS
+    assert out['lc2013_safe'][0, 0]
+    assert out['lc2013_left'][0, 0] > 2_000_000
+    assert out['next_lane'][0, 0] == 1
 
 
 def test_blocked_wishes_persist_and_identity_or_absence_reset():
