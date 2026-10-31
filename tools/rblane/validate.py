@@ -289,8 +289,10 @@ def main():
                   by_arm={arm: aggregate([r for r in rows if r['arm'] == arm]) for arm in ARMS
                           if any(r['arm'] == arm for r in rows)},
                   elapsed_s=time.time()-start,
-                  source_sha256={str(p): sha(p) for p in (Path(__file__),
-                    Path(__file__).parents[2] / 'src/wms/physics/lc2013.py')})
+                  source_sha256={str(p): sha(p) for p in (Path(__file__), *(
+                    Path(__file__).parents[2] / ('src/wms/physics/' + name)
+                    for name in ('lc2013.py', 'lc2013_geometry.py', 'config.py',
+                                 'mobil.py', 'neighbours.py', 'batched.py')))})
     (args.out / 'SUMMARY.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps(report['aggregate']), flush=True)
 

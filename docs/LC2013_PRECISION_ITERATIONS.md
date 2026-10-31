@@ -91,3 +91,13 @@ Never executed. No scenario routes/types/assignment files read. No behaviour
 threshold inferred or tuned. Also identified source's both-best-lanes-zero
 offset resolution (LC2013.cpp:1144–1155); resolving toward the neighbor must
 not create a route-required urgent/early strategic request (1330/1874).
+
+Candidate5 implements these finite raw lengths and the separate edge-local
+position, including both-best-zero offset resolution. Optional remaining-
+distance inputs retain their documented meaning; new `current_lane_position`
+and `target_best_lane_offset` support explicit alternative route geometries.
+No generic 553.33-s substitution is made in wish updates. CPU27/27 PASS,
+including independent helper-vector3 numeric counter increments828571 at1s
+and first keep-right wish atstep25, source5s limit for long continuations,
+exact corridor segment positions/lengths, and neutral lanes near route end.
+Candidate source hashes now include the geometry module and physics dependencies.

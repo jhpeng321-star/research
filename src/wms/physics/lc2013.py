@@ -17,6 +17,7 @@ from torch import Tensor
 from .config import PhysicsConfig
 from .mobil import body_overlap, physical_target_lane
 from .neighbours import lane_of
+from .lc2013_geometry import corridor_context
 
 PRECISION = 10_000_000
 STATE_KEYS = ("lc2013_left", "lc2013_right", "lc2013_keep_right",
@@ -142,14 +143,19 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
                 remaining_distance: Optional[Tensor] = None,
                 target_remaining_distance: Optional[Tensor] = None,
                 best_lane_offset: Optional[Tensor] = None,
+                target_best_lane_offset: Optional[Tensor] = None,
                 best_occupation: Optional[Tensor] = None,
+                current_lane_position: Optional[Tensor] = None,
                 ballistic: bool = False,
                 allow_overtaking_right: bool = False) -> dict[str, Tensor]:
     """One highway LC2013 decision, including persistent fixed-point wishes.
 
     Optional route inputs are *distances from this snapshot* and offset in WM
-    indexing (negative=left). Geometry-only defaults: ramp must merge before its
-    end, both through lanes continue. Occupation is best-lane queued length in m.
+    indexing (negative=left). Geometry-only defaults use the corridor's actual
+    edge-local position/continuation lengths. Both through lanes continue to
+    the unique exit; ramp must merge. Occupation is best-lane queued length in m.
+    Override ``current_lane_position`` for another geometry: continuation LENGTH
+    is remaining_distance + current_lane_position (SUMO LaneQ semantics).
     Messages are synchronous on the supplied snapshot; SUMO is downstream-first
     sequential. Speed advice is emitted for the NEXT longitudinal update.
     """
@@ -180,16 +186,26 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
     la = look * 10 * p["lcStrategic"] * torch.where(right, 1.0, p["lcLookaheadLeft"])
     la = la + 2 * (length + p["min_gap"])
     la = torch.where(p["lcStrategic"] < 0, -1000.0, la)
-    distance = (torch.where(ramp, (physics.merge_zone_s1_m - s).clamp_min(0),
-                            torch.full_like(v, 1e6))
-                if remaining_distance is None else remaining_distance.to(v))
-    target_distance = (torch.full_like(v, 1e6) if target_remaining_distance is None
+    context = corridor_context(s, lane, physics)
+    position = (context["position"] if current_lane_position is None
+                else current_lane_position.to(v))
+    distance = (context["current_length"] - position if remaining_distance is None
+                else remaining_distance.to(v))
+    target_distance = (context["target_length"] - position if target_remaining_distance is None
                        else target_remaining_distance.to(v))
-    offset = (torch.where(ramp, -torch.ones_like(lane), torch.zeros_like(lane))
-              if best_lane_offset is None else best_lane_offset)
+    current_length, target_length = distance + position, target_distance + position
+    route_offset = (torch.where(ramp, -torch.ones_like(lane), torch.zeros_like(lane))
+                    if best_lane_offset is None else best_lane_offset)
+    target_offset = (torch.zeros_like(lane) if target_best_lane_offset is None
+                     else target_best_lane_offset)
+    # Source 1144-1155 resolves two equally good lanes toward the neighbor,
+    # but 1330/1874 still compare against the ORIGINAL route offset.
+    offset = torch.where((route_offset == 0) & (target_offset == 0),
+                          target - lane, route_offset)
     to_best = (offset != 0) & ((offset > 0) == right)
+    route_to_best = to_best & (offset == route_offset)
     usable = distance if best_occupation is None else distance - best_occupation.to(v)
-    urgent = to_best & (usable / offset.abs().clamp_min(1) < la)
+    urgent = route_to_best & (usable / offset.abs().clamp_min(1) < la)
     stay = (~to_best & (target_distance / (offset.abs() + 2) < la))
     stay = stay | ((offset == 0) & (target_distance * 2 < la))
     gl, il, gf, iff = _neighbours(kin, present, target)
@@ -213,9 +229,9 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
     safe = valid & ~blocked_l & ~blocked_f & ~body_overlap(kin, present, target, 0.0)
     accelerating = ((has_l & (kin[..., 5].gather(-1, il) > 0))
                     | (has_c & (kin[..., 5].gather(-1, ic) > 0)))
-    this_speed = _anticipated(kin, cl - p["min_gap"], ic, distance,
+    this_speed = _anticipated(kin, cl - p["min_gap"], ic, current_length,
                               p, dt, accelerating, ballistic)
-    neigh_speed = _anticipated(kin, gl - p["min_gap"], il, target_distance,
+    neigh_speed = _anticipated(kin, gl - p["min_gap"], il, target_length,
                                p, dt, accelerating, ballistic)
     threshold_l = torch.where(p["lcSpeedGain"] > 0,
                               torch.trunc(0.2 / p["lcSpeedGain"] * PRECISION),
@@ -255,7 +271,7 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
     road_speed_factor = p["v0"] / float(physics.speed_limit_mps)
     acceptance = road_speed_factor * torch.where(p["lcKeepRightAcceptanceTime"] == -1,
                               7 * v.clamp_min(1), p["lcKeepRightAcceptanceTime"])
-    full_gap = (target_distance - brake_gap(p["v0"], p["decel"], dt,
+    full_gap = (target_length - brake_gap(p["v0"], p["decel"], dt,
                headway=p["time_headway"], ballistic=ballistic)).clamp_min(0)
     full_seconds = torch.minimum(acceptance, full_gap / p["v0"])
     full_gap = torch.minimum(full_gap, (gl - p["min_gap"] - secure_gap(
@@ -288,7 +304,7 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
         torch.where(right, left_wish / threshold_r, right_wish / threshold_l)).clamp_max(1)
     cooperative = ((help_right & right) | (help_left & ~right))
     cooperative &= (inconvenience <= p["lcCooperative"]) & (p["lcCooperative"] > 0)
-    cooperative &= to_best | (target_distance / (offset.abs() + 1) > la)
+    cooperative &= to_best | (target_length / (offset.abs() + 1) > la)
     # LC2013.cpp:1785 is INSIDE the non-slower-right-lane branch. A mature
     # keep-right wish persists across a slowdown but cannot request a change
     # until the anticipated speed condition is satisfied again.
@@ -296,8 +312,8 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
                     & (torch.trunc(keep * p["lcKeepRight"]) < -threshold_r))
     gain_request = torch.where(right, right_wish > threshold_r,
                                 (left_wish > threshold_l) & ((relative_gain > 1e-6) | avoid_impulse))
-    gain_request &= target_distance / v.clamp_min(0.1) > p["lcSpeedGainRemainTime"]
-    early_strategic = to_best & (p["lcStrategic"] >= 0) & (relative_gain >= 0)
+    gain_request &= target_length / v.clamp_min(0.1) > p["lcSpeedGainRemainTime"]
+    early_strategic = route_to_best & (p["lcStrategic"] >= 0) & (relative_gain >= 0)
     early_strategic &= torch.where(right, right_wish, left_wish) > 0
     reason = torch.zeros_like(lane)
     for condition, code in ((early_strategic, STRATEGIC), (gain_request, SPEED_GAIN),
@@ -339,6 +355,8 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
                   lc2013_reason=reason, lc2013_wish=wish, lc2013_safe=safe,
                   lc2013_blocked_leader=blocked_l, lc2013_blocked_follower=blocked_f,
                   lc2013_target_lane=target,
+                  lc2013_current_length=current_length, lc2013_target_length=target_length,
+                  lc2013_position=position,
                   lc2013_this_speed=this_speed, lc2013_target_speed=neigh_speed,
                   lc2013_left=torch.where(present, left_wish, 0),
                   lc2013_right=torch.where(present, right_wish, 0),

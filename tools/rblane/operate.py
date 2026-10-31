@@ -109,7 +109,9 @@ print(json.dumps(dict(alive=alive,complete=summary.exists(),
     if report['summary']:
         brief.update(episodes=report['summary']['episodes'],
                      elapsed_s=report['summary']['elapsed_s'],
-                     aggregate=report['summary']['aggregate'])
+                     aggregate={model: {key: value for key, value in scores.items()
+                          if key in ('exact', 'by_motivation', 'positive_runs')}
+                          for model, scores in report['summary']['aggregate'].items()})
     else:
         brief['progress'] = report['progress']
     print(json.dumps(brief, indent=2))

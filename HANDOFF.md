@@ -9,6 +9,13 @@ see `docs/LC2013_PRECISION_ITERATIONS.md`. Shared helper lcspec now consumed.
 Panel3 attribution verified: keep-right 203/27924 (0.727% precision),
 64.17% of all false-positive steps. Gate-fix CPU tests23/23 PASS.
 
+**Candidate5 pending measurement:** finite SUMO continuation LENGTHS
+3197.55/553.33/477.89 by edge, separated from edge-local position for strategic
+remaining-distance tests. New `lc2013_geometry.py`; default legacy unchanged.
+Adapter adds optional `lc2013_current_lane_position` and
+`lc2013_target_best_lane_offset` inputs. 27 lane CPU tests PASS. This consumes
+obsstate helper geometry and lcspec numeric vector, without reading assignments.
+
 Branch `c4/rb-lane`, base `f0db3c82`; source implementation through `127a106f`.
 Owner WM-PHYS authorization REGISTRATION.md:5683 (2026-10-31 23:12).
 

@@ -21,7 +21,9 @@ def evaluate(model, state, kin, present, deciders, params):
                        remaining_distance=state.get("lc2013_remaining_distance"),
                        target_remaining_distance=state.get("lc2013_target_remaining_distance"),
                        best_lane_offset=state.get("lc2013_best_lane_offset"),
-                       best_occupation=state.get("lc2013_best_occupation"))
+                       target_best_lane_offset=state.get("lc2013_target_best_lane_offset"),
+                       best_occupation=state.get("lc2013_best_occupation"),
+                       current_lane_position=state.get("lc2013_current_lane_position"))
 
 
 def forward_output(model, state, kin, present, deciders, params, result):

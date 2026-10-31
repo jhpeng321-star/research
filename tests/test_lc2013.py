@@ -80,9 +80,11 @@ def test_keep_right_source_five_second_accumulator_and_reset():
     p = PhysicsConfig()
     mem = None
     for _ in range(10):
-        mem = lane_change(k, mask, p, memory=mem)
+        mem = lane_change(k, mask, p, memory=mem,
+                          target_remaining_distance=torch.full((1, 1), 1e6))
         assert mem['next_lane'].item() == 0
-    mem = lane_change(k, mask, p, memory=mem)
+    mem = lane_change(k, mask, p, memory=mem,
+                      target_remaining_distance=torch.full((1, 1), 1e6))
     assert mem['next_lane'].item() == 1
     assert mem['lc2013_reason'].item() == KEEP_RIGHT
     k[..., 1], k[..., 2] = 0, 1
