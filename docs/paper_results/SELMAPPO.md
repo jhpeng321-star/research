@@ -1,11 +1,11 @@
 # Fleet PPO controller-selector training status
 
-Observed UTC: 2026-10-31T21:10:31.684454+00:00
+Observed UTC: 2026-10-31T21:15:32.762626+00:00
 - cpuQ supervisor: 645235; alive=True; nice=19.
-- Genuine completed PPO updates: 36/169; final169 eligible=False.
-- New production: 1624 complete, 8 outstanding; failures=0.
-- Charged: 1,512,000 sim-s, including43,200historical; exact total cap7,012,800.
-- Actual sim-s bounds: 1,492,200..1,506,600 (old unknown actuals retained).
+- Genuine completed PPO updates: 37/169; final169 eligible=False.
+- New production: 1687 complete, 6 outstanding; failures=0.
+- Charged: 1,566,900 sim-s, including43,200historical; exact total cap7,012,800.
+- Actual sim-s bounds: 1,548,900..1,561,500 (old unknown actuals retained).
 - MAIN02:08 schedule23+23+167x46; 46fewer gradient episodes than original; final169only.
 - Every reservation yields above0.8cores or below8GiB RAM/2GiB disk; nice19, one thread, CUDA hidden.
 - Training observations are not efficacy results. Evaluation remains exclusively C1SWITCH2-owned.
