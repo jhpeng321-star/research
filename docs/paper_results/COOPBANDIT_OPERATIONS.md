@@ -55,3 +55,18 @@ prefix, before pool expansion. The canary is reused by the pool, never rerun.
 partial/full snapshots; `analyze` runs the registered nested grouped model.
 All raw observable tapes remain on their originating hosts with SHA256 receipts.
 Transport can be resumed; a physics STOP blocks that shard and is never cleared.
+
+## Python scalar metric compatibility diagnosis (gpuA v3 STOP retained)
+All three t300 gates passed; the additional allocated t540 gate passed cpuQ/gpuR
+and stopped gpuA before expansion. Its t300 O1 was unavailable (an exact no-op):
+600 rows of observable geometry, commands and event traces match cpuQ byte-for-byte,
+SHA25611227672bbcefd4861d2d834e29ea2e6e64d2139fe2aac44711aaf5450ffa6f9.
+Only road-delay sums differ at ~1e-12; 100 synthetic frozen-executor cases match
+bitwise across cpuQ/gpuA. Python3.12 changed built-in float sum to compensation;
+the reference is Python3.10. Test a scoped original-order reducer in metric and
+observable-summary modules, leaving all policy/safety code and files untouched.
+Require ALL full1140s checkpoint fields bitwise equal before admitting gpuA again.
+This explicit diagnostic reserves1140; exclude both gpuA v3 labels/attempts, retain
+900+1140 reservations and900+540 actual. Total abandoned4320charged/1806actual;
+successful data1489200 + abandoned4320 + gate1140=1494660<=1.5M. Live99360 yields
+1594020<=1.6M, reserve5980. No metric tolerance or bitwise gate is relaxed.
