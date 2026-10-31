@@ -1,0 +1,18 @@
+{
+ "schema": "wmvalue_progress/1",
+ "time": 1793446818.3812242,
+ "dispatcher_pid": 28924,
+ "claimed": 4,
+ "completed": 0,
+ "expected": 320,
+ "failures": 0,
+ "workers": {
+  "gpuA": {
+   "returncode": 0,
+   "own_process_metadata": "   PID   PPID     ELAPSED %CPU   RSS COMMAND\n251940 251916       01:55  100 921420 /root/miniconda3/bin/python -B -u -\n251994 251979       01:53  100 2700424 /root/miniconda3/bin/python -B -u -\n252054 252030       01:50 99.7 2707836 /root/miniconda3/bin/python -B -u -\n252088 252072       01:48 99.9 914964 /root/miniconda3/bin/python -B -u -\n"
+  }
+ },
+ "launch_sha256": "8e3c9dccc1f728da09cb387ff6350b81a1a875a8db2ceedcbe4d7b93e24a7a12",
+ "complete": false,
+ "frozen_test_written": false
+}

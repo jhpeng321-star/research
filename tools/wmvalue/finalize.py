@@ -14,18 +14,27 @@ def policy_plan(result, task_root):
         d = json.loads((task_root/name).read_text())
         if d['device'] == 'cuda':
             rates.append(d['rollout_seconds']/(5*(900-d['t0'])))
+    benchmark = 'this test: frozen WM2+mix GPU tasks'
     if not rates:
-        return None
+        # Throughput evidence is independent of real outcomes / efficacy. The
+        # already audited cached A is still a valid old GPU timing measurement.
+        reference = safe('E:/agent-work/c4-wmcalib/tools/wmcalib/data/wm40/wm_gpu_shard3/w32_k0.json')
+        assert digest(reference) == 'b4501bc129c2039407c9fef4bd5f50d1580946ae2a277cd697e8cfc1ca6b1c70'
+        d = json.loads(reference.read_text())
+        rates = [d['seconds']/(len(d['arms'])*d['steps']*.5)]
+        benchmark = 'prior WMCALIB WM2+mix GPU w32_k0,484.714s/4arms/600s; includes contention'
     import numpy as np
+    horizon = 60 if 'B' in result['winners'] else 90
+    # Prefer the cheaper horizon only when it passes the complete gate.
     # 25 updates, 1 state, K8, 2 ES directions (4 signed perturbations),
     # paired two-CAV group credit (both, solo1, solo2, none): 3200 arm rollouts.
     lo, hi = np.percentile(rates, [25, 75])
-    hours_lo, hours_hi = 3200*90*lo/3600, 2*3200*90*hi/3600
+    hours_lo, hours_hi = 3200*horizon*lo/3600, 2*3200*horizon*hi/3600
     return '\n'.join([
         '# Conditional WMVALUE policy integration plan (PASS only)', '',
         'A separate owner-visible registration is required before any policy run.',
         '1. In c4-pilotdiag/c4-candB policy14_cli, keep WM2+mix frozen. Replace',
-        '   the300s ES long-credit scorer with registered60/90s imagination.',
+        f'   the300s ES long-credit scorer with the passing{horizon}s imagination.',
         '2. Score each future as accrued full-team cost + frozen V(projected terminal).',
         '   Average K8 AFTER value evaluation. Reuse the audited entry/cost/CRN adapter.',
         '3. For a two-CAV group use both/solo1/solo2/none WM counterfactuals.',
@@ -34,9 +43,10 @@ def policy_plan(result, task_root):
         '4. Keep scalar ES through this tree V (no differentiability claim). Retain',
         '   short-credit/safety terms, and pre-register actor-credit weights before runs.',
         '5. Initial engineering pilot:25updates,1FITstate/update,K8,2ESdirections',
-        '   (4signed perturbations),4group variants =3200arm rollouts at90s.',
+        f'   (4signed perturbations),4group variants =3200arm rollouts at{horizon}s.',
         f'   Measured forward-cost estimate: {hours_lo:.2f}..{hours_hi:.2f} GPU-hours.',
-        '   Lower = current GPU per-arm-second p25; upper =2x p75, including',
+        '   Benchmark: '+benchmark+'.',
+        '   Lower = benchmark GPU per-arm-second p25; upper =2x p75, including',
         '   host/controller overhead. This is a throughput estimate, not an allocation.',
         '   Re-benchmark 5FIT-only updates before registering a longer training budget.',
         '6. Freeze new development worlds before selecting checkpoints. Use real',

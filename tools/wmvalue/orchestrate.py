@@ -46,7 +46,7 @@ def gpu_free():
         return not (pids-OWN_GPU_PIDS)
 
 
-def cpu_free():
+def cpu_free(host='gpuA', reserve_cores=4, reserve_gib=8):
     # Read only cgroup counters, leaving a four-core and eight-GiB admission
     # margin. All four CPU lanes are nice19/single-thread on the gpuA host.
     code = '''
@@ -62,11 +62,12 @@ free=int((r/'memory.max').read_text())-int((r/'memory.current').read_text())
 print(json.dumps(dict(cores=(b-a)/elapsed/1e6,quota=quota,free=free)))
 '''
     try:
-        p = subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=15', 'gpuA',
+        p = subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=15', host,
                             '/root/miniconda3/bin/python -B -'], input=code,
                            text=True, capture_output=True, timeout=30)
         d = json.loads(p.stdout)
-        return not p.returncode and d['cores'] <= d['quota']-4 and d['free'] >= 8*2**30
+        return (not p.returncode and d['cores'] <= d['quota']-reserve_cores
+                and d['free'] >= reserve_gib*2**30)
     except (ValueError, KeyError, subprocess.TimeoutExpired):
         return False
 
@@ -78,15 +79,26 @@ def fetch(host, remote, local):
                     host+':'+remote, str(local)], check=True, timeout=120)
 
 
-def run_task(root, tag, task, host, device, gate):
+def run_task(root, tag, task, host, device, gate, reservation_pid=None):
     key = task_key(task)
     remote = '/root/wmvalue20261031/cells_v1/'+key+'.json'
     claim_path = root/'claims'/(key+'.json')
     with LOCK:
-        if claim_path.exists() or (root/'tasks'/(key+'.json')).exists():
+        if (root/'tasks'/(key+'.json')).exists():
             return False
-        save_new(claim_path, dict(task=list(task), host=host, device=device, remote=remote,
-                                  dispatcher_pid=os.getpid(), time=time.time()))
+        if reservation_pid is None:
+            if claim_path.exists():
+                return False
+            save_new(claim_path, dict(task=list(task), host=host, device=device, remote=remote,
+                                      dispatcher_pid=os.getpid(), time=time.time()))
+        else:
+            # Reserved disjoint CPU-assist partition: a claim is a queued task,
+            # not permission to repeat a previously started SSH/remote process.
+            claim = json.loads(claim_path.read_text())
+            assert claim['dispatcher_pid'] == reservation_pid == os.getpid()
+            assert claim['host'] == host and claim['device'] == device
+            assert claim['task'] == list(task) and claim['remote'] == remote
+            assert not (root/'claims'/(key+'.ssh.json')).exists(), 'already dispatched'
     module = 'tools.wmvalue.worker'
     args = [module, '--prefixes', '/root/wmvalue20261031/reserved_prefix_v1.zip',
             '--gate', '/root/wmvalue20261031/cpu_audit_v3.json',

@@ -1,0 +1,18 @@
+{
+ "schema": "wmvalue_original_WM_binding/1",
+ "verdict": "PASS",
+ "reference_sha256": "14ab8a89f27b4c306775f7b316cd0464c05094b8624922f56071cf22be0911e4",
+ "worker_sha256": "060339cdcecef3875ab0f74fc34896e7995c8310d6ebec66d5e35723b72c90b0",
+ "exact_fields": [
+  "checkpoint_sha256",
+  "config_sha256",
+  "courtesy_state_grad",
+  "courtesy_intent",
+  "courtesy_off",
+  "physics"
+ ],
+ "candidate_exact": true,
+ "mappo_export_exact": true,
+ "all_resolved_physics_fields_identical": true,
+ "test_metrics_examined": false
+}

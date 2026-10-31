@@ -1,8 +1,8 @@
-# S-WMVALUE — INCOMPLETE after causal reconstruction + real fitting (2026-10-31)
+# S-WMVALUE — decisive-test inference RUNNING (2026-10-31)
 
-**The MAIN18:12 observation amendment is implemented; the A–E test is not run.**
+**MAIN18:12/18:52 adapter gates passed; complete-only A–E test is pending inference.**
 The WM-trained cooperative policy remains the target. Original freeze12685912;
-amendment03dd03e0; reconstruction6f334469; frozen real fit a0acedb6.
+amendment03dd03e0; frozen real fit a0acedb6; adapter3d863697; pipeline226b0a8e.
 
 ## Registered comparison: remaining fleet+source delay to absolute t900, veh-s
 
@@ -14,7 +14,7 @@ amendment03dd03e0; reconstruction6f334469; frozen real fit a0acedb6.
 | D: no-WM V + current issued commands | NA | NA | NA | NA |
 | E: FIT arm/time means | NA | NA | NA | NA |
 
-NA = not evaluated, never zero. No reserved969432..969439 real outcomes opened.
+NA = not evaluated, never zero. Reserved200 real cells exported AFTER adapter audit.
 PASS remains: B or C beats EACH A,D,E on sign AND MAE with all six positive
 95% lower bounds; 400 arm pairs, 10,000 whole-world bootstrap draws. No tuning.
 
@@ -35,21 +35,21 @@ Frozen HGB150/15/.05/L2=10 V and command-only D fit once in9.89 CPU seconds;
 FIT-only E fitted too; equal world/arm/time weighting; no selection or test use.
 Model: `_out/wmvalue_frozen_value6f334469.joblib`; hash in `frozen_fit.json`.
 
-## Remaining mechanical/authorization gate
+## Adapter and registered inference execution
 
-Local WMCALIB cache:240/1600 future keys,28/200 complete arm/start cells.
-All are t300 and only CTRL0/MAPPO/PI/CIRCLES; no native or late restart.
-Even completion of peer jobs supplies at most32/200 cells:168 structurally
-missing (8 native@300 +160 cells at360/420/480/540). SPEEDHEAD seeds differ.
-Unconditional cumulative tails cannot represent later-state conditional A.
-MAIN18:12 allows new inference only60/90s, so new long A inference needs an
-explicit amendment or matching cached predictions. Coverage is not parity proof.
-The WM restart/controller/entry adapter is also unfinished; B/C not launched.
+MAIN18:52 authorizes missing matched A to900 and B/C60/90. Cached A was
+keys-only coverage, not cost/CRN certification; aggregate-only exit-clock mismatch
+cannot be repaired. Preserve it; new matched A/B/C share trajectories and CRNs.
+Native121frame60s history, PI/CIRCLES prefix-memory replay, entrant controls,
+real/imagined sensing, boundary-flow splice, exit/source clocks CPU audited.
+32 CPU tests + actual frozen WM CPU repeat +134source cross-host parity PASS.
+All120 reserved real objective clocks reconcile; arrays frozen SHAa61d1846.
+No late true source backlog in WM initialization: warmup queue + prefix-flow prior.
 
-**Recommendation:** supply matched A or authorize missing A continuations while
-retaining this exact test; then bind/audit real-vs-imagined sensing, history,
-entry/exit/cost/CRN and controller continuation before spending the reserved test.
-Keep fitted V/D/E frozen. No PASS, policy coupling/run or GPU-hour claim yet.
-24 CPU tests and ruff PASS. All exports foreground-complete; no pending task job.
-Evidence: `tools/wmvalue/evidence/{frozen_fit,amended_status,a_coverage_final}.json`.
-No SUMO, WM inference, evaluation-seed/prohibited-path access, peer signals or push.
+**Recommendation:** finish the immutable320task test before any policy coupling.
+Durable local dispatcher PID28924; _out/wmvalue_inference_v1/LAUNCH.json.
+gpuA host CPU<=4 nice19/single-thread lanes; gpuR GPU<=3 only absent peer compute.
+Complete tasks automatically trigger frozen400pair test, report/verdict and commit.
+Keep V/D/E frozen. No efficacy PASS/FAIL or policy-training authorization yet.
+Evidence: tools/wmvalue/evidence/{cpu_runtime_audit,cross_host_cpu}.json.
+No SUMO, refit, eval/prohibited-path access, peer signals, policy run or push.
