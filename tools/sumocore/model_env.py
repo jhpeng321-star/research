@@ -45,7 +45,7 @@ class ObservableEnv(CavSumoEnv):
             traci.route.add(rid,vehicle['route'])
             traci.vehicle.add(vid,rid,typeID=vehicle['type'],depart='now',
                 departLane=str(vehicle['lane_index']),departPos=str(vehicle['position']),
-                departSpeed=str(vehicle['speed']))
+                departSpeed='0')
             # moveTo explicitly inserts pending vehicles without a physics tick.
             traci.vehicle.moveTo(vid,vehicle['lane_id'],vehicle['position'])
             traci.vehicle.setPreviousSpeed(vid,vehicle['speed'])
