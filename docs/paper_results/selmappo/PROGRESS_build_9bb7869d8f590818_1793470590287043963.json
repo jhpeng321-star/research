@@ -1,0 +1,210 @@
+{
+  "schema": "selmappo.progress/1",
+  "timestamp_utc": "2026-10-31T18:16:30.286807+00:00",
+  "root": "/home/ubuntu/selmappo20261031/build_9bb7869d8f590818",
+  "source_binding": "9bb7869d8f590818c46980a16a63be00f72e00d3491dec95f903649dfa7bf790",
+  "own_pid": 645235,
+  "own_pid_exists": true,
+  "own_nice": 19,
+  "load_1m": 18.3564453125,
+  "cores": 32,
+  "max_load_fraction": 0.8,
+  "charged_sim_s": 63900,
+  "closed_actual_sim_s": 19800.0,
+  "outstanding_episodes": 1,
+  "outstanding_actual_not_yet_final": true,
+  "historical_charged_sim_s": 43200,
+  "historical_actual_sim_s_lower": 30600,
+  "historical_actual_sim_s_upper": 37800,
+  "inherited_unresolved_reservations": 14,
+  "production_reserved_episodes": 23,
+  "production_closed_episodes": 22,
+  "production_completed_episodes": 22,
+  "production_completed_sim_s": 19800.0,
+  "completed_updates": 0,
+  "latest_update": null,
+  "initial_and_stable_checkpoints": [
+    {
+      "iteration": 0,
+      "path": "/home/ubuntu/selmappo20261031/build_9bb7869d8f590818/training/checkpoint_000.pt",
+      "size": 202049,
+      "sha256": "bdd5af7f40971528d8ed6aefa8fba7353597a3d989234f9341eb2789dc3f8adc"
+    }
+  ],
+  "latest_priority_status": {
+    "cores": 32,
+    "load_1m": 19.49755859375,
+    "pending": 5,
+    "status": "DISPATCH_RESUMED_RESOURCE_PRIORITY"
+  },
+  "failure_count": 0,
+  "failed_worlds": [],
+  "first_failure": null,
+  "worker_receipts": [
+    {
+      "seed": 18000046,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000047,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000048,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000049,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000050,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000051,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000052,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000053,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000054,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000055,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000056,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000057,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000058,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000059,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000060,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000061,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000062,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000063,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000064,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000065,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000066,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000067,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000068,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    }
+  ],
+  "own_processes": [
+    {
+      "pid": 645235,
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.selmappo.train --variant fleet --registration /home/ubuntu/selmappo20261031/build_9bb7869d8f590818/pytools/REGISTRATION.md --c1-root /home/ubuntu/selmappo20261031/build_9bb7869d8f590818/pytools --integration /home/ubuntu/selmappo20261031/build_9bb7869d8f590818/INTEGRATION.json --design-sha 992c05601f03d1d9caad0421b041dbeaa05fa8621ae7e3020be42e3c9f5b41d0 --out /home/ubuntu/selmappo20261031/build_9bb7869d8f590818/training --workers 12 --history-from /home/ubuntu/selmappo20261031/build_3351504cece84e4b "
+    },
+    {
+      "pid": 650060,
+      "command": "/home/ubuntu/miniconda3/lib/python3.10/site-packages/sumo/bin/sumo -c /home/ubuntu/selmappo20261031/build_9bb7869d8f590818/training/18000068/scenarios/s18000068_m1900_mwlexph6/scenario.sumocfg --seed 18000068 --step-length 0.5 --end 2401 --no-step-log true --duration-log.disable true --remote-port 57099 "
+    }
+  ],
+  "actual_sim_s_lower_bound": 50400.0,
+  "actual_sim_s_upper_bound": 58500.0,
+  "completed_result_totals": {
+    "road_delay_vs": 383090.5282594424,
+    "source_wait_vs": 770033.8420359999,
+    "team_delay_vs": 1153124.3702954426,
+    "collisions": 0.0,
+    "teleports": 0.0,
+    "ttc_below_3_vs": 8051.5,
+    "hard_brake_vs": 326.0
+  },
+  "completed_episode_wall_s_mean": 36.71870947759387,
+  "prospective_local_evaluation_sim_s": 14400,
+  "local_evaluation_started": false,
+  "final169_eligible": false,
+  "training_budget_upper_sim_s": 7012800,
+  "mechanics_replayed": false
+}
