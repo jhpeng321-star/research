@@ -1,5 +1,12 @@
 # S-SELMAPPO — new pre-physics stop; explicit MAIN schedule amendment needed
 
+**RESOLVED by shared REGISTRATION.md MAIN02:08:** exact23+23+167x46 schedule is
+acknowledged, and same-cap repairs preserving169updates are pre-acknowledged.
+Fresh-session inventory confirms all four previous fleet supervisors absent.
+Implementation/CPU gates now cover the exact schedule and both immutable ancestor
+ledgers. Continue after registration/staging under unchanged low-priority admission.
+The request below is retained as historical context.
+
 MAIN01:48 was applied once. Own cpuQ606965 has exited without descendants.
 Immutable build3351504cece84e4b/STOP receipt is preserved; do not redispatch it.
 The five originally-unused worlds failed in worker precharge validation before any

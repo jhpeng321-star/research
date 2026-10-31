@@ -1,5 +1,19 @@
 # S-SELMAPPO fleet-picker integration handoff
 
+**MAIN02:08 ACK NOW PRESENT; same-cap continuation implemented and CPU-verified.**
+Fresh-session inventory confirms all four prior fleet supervisors absent; locks retained.
+New schedule is update1 seeds18000046..18000068, update2 seeds18000069..18000091,
+then167x46 seeds18000092..18007773:169 genuine updates/final169only.
+Exact cap remains43,200historical +6,955,200future +14,400UNSTARTED peer evaluation
+=7,012,800sim-s.46fewer gradient episodes than original; no mechanics/replay/refund.
+CPU40/40PASS on cpuQ, real frozen controllers/WALL/seed aliases/current registry and
+old initial-model/RNG parityPASS. Both ancestor ledgers are copied byte-for-byte;
+new HISTORY debit consumes all46production+2mechanics IDs, retaining14unclosed old
+reservations (five independently established zero-physics), actual30,600..37,800 bounds.
+Stage6337986b308bd7fc is CPU-only; progress accounting is being updated before final stage.
+Lowest-priority nice19/each-episode load+pending admission unchanged. Evaluation peer-owned.
+The stop/request paragraphs below are preserved historical records, superseded by MAIN02:08.
+
 **CURRENT: MAIN01:48 continuation STOPPED before physics on HISTORY row reader; own606965 exited.**
 New build3351504cece84e4b passed38/38CPU/real integration and registered before its
 one-use dispatch. All5unused worlds were precharged then failed at budget.reserve

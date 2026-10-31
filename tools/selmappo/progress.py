@@ -20,6 +20,10 @@ def rows(path):
  # A live append may be between write and newline; capture complete rows only.
  return [json.loads(line) for line in raw.splitlines(keepends=True) if line.endswith(bytes([10]))]
 ledger=rows(out/'ledger.jsonl');starts=[r for r in ledger if r['event']=='START']
+history=[r for r in ledger if r['event']=='HISTORY'];assert len(history)<=1
+historical_charge=history[0]['charged_sim_s'] if history else 1800
+historical_low=history[0]['known_actual_sim_s'] if history else 900
+historical_high=history[0]['actual_upper_sim_s'] if history else 900
 ends=[r for r in ledger if r['event']=='END'];ended={{r['id'] for r in ends}}
 production=[r for r in starts if int(r['id'].split(':')[1])<18007998]
 closed=[r for r in production if r['id'] in ended]
@@ -57,10 +61,12 @@ record=dict(schema='selmappo.progress/1',timestamp_utc=datetime.datetime.now(dat
  root=str(root),source_binding=dispatch['binding'],own_pid=pid,own_pid_exists=alive,
  own_nice=os.getpriority(os.PRIO_PROCESS,pid) if alive else None,
  load_1m=os.getloadavg()[0],cores=os.cpu_count(),max_load_fraction=.8,
- charged_sim_s=sum(r['reserved_sim_s'] for r in starts),
+  charged_sim_s=sum(r['reserved_sim_s'] for r in starts)+sum(r['charged_sim_s'] for r in history),
  closed_actual_sim_s=sum(r['actual_sim_s'] for r in ends),
  outstanding_episodes=len(starts)-len(ends),outstanding_actual_not_yet_final=True,
- historical_charged_sim_s=1800,historical_actual_sim_s=900,
+  historical_charged_sim_s=historical_charge,historical_actual_sim_s_lower=historical_low,
+  historical_actual_sim_s_upper=historical_high,
+  inherited_unresolved_reservations=history[0]['unresolved_reservations'] if history else 0,
  production_reserved_episodes=len(production),production_closed_episodes=len(closed),
  production_completed_episodes=len(results),production_completed_sim_s=sum(r['actual_sim_s'] for r in results),
  completed_updates=len(updates),latest_update=updates[-1] if updates else None,
@@ -68,8 +74,8 @@ record=dict(schema='selmappo.progress/1',timestamp_utc=datetime.datetime.now(dat
  failure_count=len(failures),failed_worlds=[r['world']['seed'] for r in failures],
  first_failure=failures[0] if failures else None,worker_receipts=worker_receipts,
  own_processes=own_processes,
- actual_sim_s_lower_bound=900+sum(r['actual'] or 0 for r in worker_receipts),
- actual_sim_s_upper_bound=900+sum(r['actual'] if r['actual'] is not None else 900 for r in worker_receipts),
+  actual_sim_s_lower_bound=historical_low+sum(r['actual'] or 0 for r in worker_receipts),
+  actual_sim_s_upper_bound=historical_high+sum(r['actual'] if r['actual'] is not None else 900 for r in worker_receipts),
  completed_result_totals={{key:sum(r[key] for r in results) for key in
    ('road_delay_vs','source_wait_vs','team_delay_vs','collisions','teleports','ttc_below_3_vs','hard_brake_vs')}},
  completed_episode_wall_s_mean=statistics.mean(r['initialization_warmup_wall_s']+r['control_wall_s'] for r in results) if results else None,

@@ -1,0 +1,108 @@
+{
+  "schema": "selmappo.progress/1",
+  "timestamp_utc": "2026-10-31T18:12:36.297410+00:00",
+  "root": "/home/ubuntu/selmappo20261031/build_3351504cece84e4b",
+  "source_binding": "3351504cece84e4b5c289689dd65350dfe784dd0dfbbb3c93fa16a681df59235",
+  "own_pid": 606965,
+  "own_pid_exists": false,
+  "own_nice": null,
+  "load_1m": 17.18798828125,
+  "cores": 32,
+  "max_load_fraction": 0.8,
+  "charged_sim_s": 43200,
+  "closed_actual_sim_s": 0,
+  "outstanding_episodes": 5,
+  "outstanding_actual_not_yet_final": true,
+  "historical_charged_sim_s": 38700,
+  "historical_actual_sim_s_lower": 30600,
+  "historical_actual_sim_s_upper": 37800,
+  "inherited_unresolved_reservations": 9,
+  "production_reserved_episodes": 5,
+  "production_closed_episodes": 0,
+  "production_completed_episodes": 0,
+  "production_completed_sim_s": 0,
+  "completed_updates": 0,
+  "latest_update": null,
+  "initial_and_stable_checkpoints": [
+    {
+      "iteration": 0,
+      "path": "/home/ubuntu/selmappo20261031/build_3351504cece84e4b/training/checkpoint_000.pt",
+      "size": 202049,
+      "sha256": "bdd5af7f40971528d8ed6aefa8fba7353597a3d989234f9341eb2789dc3f8adc"
+    }
+  ],
+  "latest_priority_status": {
+    "charged_sim_s": 38700,
+    "status": "PRODUCTION_ONLY_ACKNOWLEDGED",
+    "successful_episodes": 0,
+    "wall_s": 4.203303251415491e-05
+  },
+  "failure_count": 5,
+  "failed_worlds": [
+    18000043,
+    18000044,
+    18000045,
+    18000041,
+    18000042
+  ],
+  "first_failure": {
+    "actual": null,
+    "error": "Traceback (most recent call last):\n  File \"/home/ubuntu/selmappo20261031/build_3351504cece84e4b/pytools/tools/selmappo/dispatch.py\", line 31, in job\n    transitions = episode(model, world, args, budget)\n  File \"/home/ubuntu/selmappo20261031/build_3351504cece84e4b/pytools/tools/selmappo/train.py\", line 37, in episode\n    backend = Backend(world=world, variant=args.variant, registration=args.registration,\n  File \"/home/ubuntu/selmappo20261031/build_3351504cece84e4b/pytools/tools/selmappo/runtime.py\", line 135, in __init__\n    budget.reserve(world, variant, evaluation=evaluation, smoke=smoke, panel=panel)\n  File \"/home/ubuntu/selmappo20261031/build_3351504cece84e4b/pytools/tools/selmappo/storage.py\", line 90, in reserve\n    owned = [row for row in records if row['id'] == ident]\n  File \"/home/ubuntu/selmappo20261031/build_3351504cece84e4b/pytools/tools/selmappo/storage.py\", line 90, in <listcomp>\n    owned = [row for row in records if row['id'] == ident]\nKeyError: 'id'\n",
+    "ok": false,
+    "world": {
+      "demand": 2400,
+      "penetration": 0.2,
+      "seed": 18000043
+    }
+  },
+  "worker_receipts": [
+    {
+      "seed": 18000041,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    },
+    {
+      "seed": 18000042,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    },
+    {
+      "seed": 18000043,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    },
+    {
+      "seed": 18000044,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    },
+    {
+      "seed": 18000045,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    }
+  ],
+  "own_processes": [],
+  "actual_sim_s_lower_bound": 30600,
+  "actual_sim_s_upper_bound": 42300,
+  "completed_result_totals": {
+    "road_delay_vs": 0,
+    "source_wait_vs": 0,
+    "team_delay_vs": 0,
+    "collisions": 0,
+    "teleports": 0,
+    "ttc_below_3_vs": 0,
+    "hard_brake_vs": 0
+  },
+  "completed_episode_wall_s_mean": null,
+  "prospective_local_evaluation_sim_s": 14400,
+  "local_evaluation_started": false,
+  "final169_eligible": false,
+  "training_budget_upper_sim_s": 7012800,
+  "mechanics_replayed": false
+}

@@ -15,7 +15,7 @@ from .integration import evaluation_panel, load, registered
 from .observations import ACTOR_DIM, SHARED_DIM, build
 from .protocol import (CAP, TIMES, approval_line, audit_registration,
                        digest, guard_seed, guard_world, safe_path, training_world)
-from .storage import Budget, PrechargedEpisode
+from .storage import Budget, PrechargedEpisode, append
 
 
 def payload(now=300):
@@ -510,10 +510,94 @@ class DiskTests(unittest.TestCase):
             launch.dispatch('build_test', production_only=True)
             launch.dispatch('build_test', transport_only=True)
             launch.dispatch('build_test', transport_only=True, wait_for_resources=True)
+            launch.dispatch('build_test', history_only=True, wait_for_resources=True)
             launch.inventory()
-        self.assertEqual(len(captured), 5)
+        self.assertEqual(len(captured), 6)
         with self.assertRaises(ValueError):
             launch.dispatch('build_test', production_only=True, wait_for_resources=True)
+
+    def test_main0208_schedule_retains169_updates_and_exact_cap(self):
+        from .train import worlds
+        schedule = [worlds('fleet', i, history_continuation=True) for i in range(169)]
+        self.assertEqual([len(batch) for batch in schedule], [23, 23]+[46]*167)
+        seeds = [w['seed'] for batch in schedule for w in batch]
+        self.assertEqual(seeds, list(range(18000046, 18007774)))
+        self.assertEqual(len(seeds), len(set(seeds)))
+        self.assertEqual(43200+900*len(seeds)+14400, CAP)
+        for batch in schedule:
+            for world in batch:
+                guard_world(world, 'fleet')
+        with self.assertRaises(ValueError):
+            worlds('fleet', 169, history_continuation=True)
+
+    def test_main0208_inherits_both_ledgers_worker_precharge_and_rejects_changes(self):
+        from .history_continuation import HISTORY, inherit, validate
+        original = self.root/HISTORY
+        old = original/'training'
+        old.mkdir(parents=True)
+        ancestor = b'original transport ledger bytes preserved without fictitious ENDs\n'
+        (old/'inherited_ledger.jsonl').write_bytes(ancestor)
+        transport_sha = digest(old/'inherited_ledger.jsonl')
+        consumed = {f'fleet:{s}' for s in (*range(18000000, 18000041), 18007998, 18007999)}
+        append(old/'ledger.jsonl', dict(event='HISTORY', charged_sim_s=38700,
+               consumed_ids=sorted(consumed), ledger_sha256=transport_sha))
+        for seed in range(18000041, 18000046):
+            append(old/'ledger.jsonl', dict(event='START', id=f'fleet:{seed}',
+                   world=training_world(seed), reserved_sim_s=900))
+            (old/str(seed)).mkdir()
+        (old/'checkpoint_000.pt').write_bytes(b'exact initial model')
+        (old/'failure.jsonl').write_text('pre-physics worker failures')
+        (original/'training.log').write_text('pre-physics tracebacks')
+        (original/'DISPATCH.json').write_text(json.dumps(dict(pid=999999999)))
+        stop = dict(own_pid=999999999, own_pid_exited=True, own_descendants_remaining=0,
+                    status='STOPPED_BEFORE_PHYSICS_HISTORY_READER', charged_sim_s=43200,
+                    new_charge_sim_s=4500, new_actual_sim_s=0, training_updates=0,
+                    known_actual_sim_s=30600, actual_upper_sim_s=37800, new_open_reservations=5,
+                    final_checkpoint=False, failure_before_env_constructor=True,
+                    failed_seeds=list(range(18000041, 18000046)),
+                    ledger_sha256=digest(old/'ledger.jsonl'), inherited_ledger_sha256=transport_sha,
+                    log_sha256=digest(original/'training.log'), failure_sha256=digest(old/'failure.jsonl'),
+                    initial_checkpoint_sha256=digest(old/'checkpoint_000.pt'))
+        (original/'STOP.json').write_text(json.dumps(stop))
+        reg = self.text('ack0208.md', '- 02:08 MAIN: S-SELMAPPO revised same-cap schedule '
+                        'ACKNOWLEDGED (23 + 23 + 167 x 46 episodes, 169 genuine updates, '
+                        'skip all 46 consumed worlds, total 7,012,800).\n')
+        fresh = self.root/'main0208'
+        fresh.mkdir()
+        preserved = (old/'ledger.jsonl').read_bytes()
+        with patch('tools.selmappo.history_continuation.validate_transport',
+                   return_value=('old authority', dict(actual_unknown_worlds=[18000028]), consumed)), \
+             patch('tools.selmappo.history_continuation.HISTORY_LEDGER_SHA', stop['ledger_sha256']), \
+             patch('tools.selmappo.history_continuation.TRANSPORT_LEDGER_SHA', transport_sha), \
+             patch('tools.selmappo.continuation.TRANSPORT_LEDGER_SHA', transport_sha):
+            with self.assertRaises(PermissionError):
+                validate(original, self.text('no0208.md', 'MAIN01:48 approved'))
+            inherit(fresh, original, reg)
+            with self.assertRaises(FileExistsError):
+                inherit(fresh, original, reg)
+            budget = Budget(fresh)
+            self.assertEqual((budget.charged, len(budget.seen), budget.pending), (43200, 48, {}))
+            for seed in (*range(18000000, 18000046), 18007998, 18007999):
+                with self.assertRaises(ValueError):
+                    budget.reserve(dict(seed=seed), 'fleet', smoke=seed >= 18007998)
+            world = training_world(18000046)
+            budget.reserve(world, 'fleet')
+            worker_root = fresh/str(world['seed'])
+            worker_root.mkdir()
+            worker = PrechargedEpisode(worker_root, world, 'fleet')
+            worker.reserve(world, 'fleet')
+            worker.finish(900)
+            budget.finish(900)
+            self.assertEqual(Budget(fresh).charged, 44100)
+            self.assertEqual((old/'ledger.jsonl').read_bytes(), preserved)
+            self.assertEqual((fresh/'inherited_ledger.jsonl').read_bytes(), preserved)
+            self.assertEqual((fresh/'inherited_transport_ledger.jsonl').read_bytes(), ancestor)
+            (old/'18000041/result.jsonl').write_text('unexpected physics')
+            with self.assertRaises(ValueError):
+                validate(original, reg)
+            (fresh/'inherited_transport_ledger.jsonl').write_bytes(b'changed')
+            with self.assertRaises(ValueError):
+                Budget(fresh)
 
     def test_cap_no_silent_overallocation(self):
         budget = Budget(self.root)

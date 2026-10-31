@@ -28,12 +28,18 @@ class Budget:
                 if row['event'] == 'HISTORY':
                     from .protocol import digest
                     ids = row['consumed_ids']
+                    consumed = {38700: 41, 43200: 46}.get(row['charged_sim_s'])
                     if (self.seen or self.charged or self.pending or
-                            row['charged_sim_s'] != 38700 or len(ids) != 43 or len(set(ids)) != 43 or
+                            consumed is None or len(ids) != consumed+2 or len(set(ids)) != consumed+2 or
                             set(ids) != {f'fleet:{s}' for s in
-                                         (*range(18000000, 18000041), 18007998, 18007999)} or
+                                         (*range(18000000, 18000000+consumed), 18007998, 18007999)} or
                             digest(self.root/'inherited_ledger.jsonl') != row['ledger_sha256']):
                         raise ValueError('invalid immutable transport history charge')
+                    if consumed == 46:
+                        from .continuation import TRANSPORT_LEDGER_SHA
+                        if (row['transport_ledger_sha256'] != TRANSPORT_LEDGER_SHA or
+                                digest(self.root/'inherited_transport_ledger.jsonl') != TRANSPORT_LEDGER_SHA):
+                            raise ValueError('changed transport ancestor ledger')
                     self.charged = row['charged_sim_s']
                     self.seen.update(ids)
                 elif row['event'] == 'START':

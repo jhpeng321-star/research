@@ -81,9 +81,9 @@ def save_tag(stdout, tag, name):
 
 
 def dispatch(build, continuation=False, production_only=False, transport_only=False,
-             wait_for_resources=False):
-    if wait_for_resources and not transport_only:
-        raise ValueError('resource-wait supervisor is only for MAIN01:48 continuation')
+              wait_for_resources=False, history_only=False):
+    if wait_for_resources and not (transport_only or history_only):
+        raise ValueError('resource-wait supervisor requires an acknowledged production continuation')
     result = run('cpuQ', f'''
 import hashlib,json,os,subprocess,sys
 from pathlib import Path
@@ -102,7 +102,8 @@ if 'source_sha256' in stage:
 continuation={continuation!r}
 production_only={production_only!r}
 transport_only={transport_only!r}
-assert sum((continuation,production_only,transport_only))<=1
+history_only={history_only!r}
+assert sum((continuation,production_only,transport_only,history_only))<=1
 original=root.parent/'build_bc4c3aae72073204'
 if continuation:
  sys.path.insert(0,str(root/'pytools'))
@@ -137,12 +138,28 @@ if transport_only:
  for other in root.parent.glob('build_*/DISPATCH.json'):
   old=json.loads(other.read_text())
   assert not (Path('/proc')/str(old['pid'])).exists(),'prior fleet trainer PID still exists'
+if history_only:
+ sys.path.insert(0,str(root/'pytools'))
+ from tools.selmappo.history_continuation import validate,HISTORY
+ from tools.selmappo.protocol import audit_registration
+ from tools.selmappo.dispatch import admitted
+ assert audit_registration(root/'pytools/REGISTRATION.md')['passed']
+ if not {wait_for_resources!r}:assert admitted(root,0),'yield to higher-priority runs or low memory/disk'
+ original=root.parent/HISTORY
+ validate(original,root/'pytools/REGISTRATION.md')
+ assert json.loads((root.parent/'FLEET_TRANSPORT_CONTINUATION_ONCE.json').read_text())['build']==str(original)
+ assert stage.get('source_sha256'),'all source hashes required'
+ for other in root.parent.glob('build_*/DISPATCH.json'):
+  old=json.loads(other.read_text())
+  assert not (Path('/proc')/str(old['pid'])).exists(),'prior fleet trainer PID still exists'
+if transport_only or history_only:
  for proc in Path('/proc').iterdir():
   if proc.name.isdigit():
    try:cmd=(proc/'cmdline').read_bytes().replace(bytes([0]),b' ').decode(errors='replace')
    except (OSError,ProcessLookupError):continue
    assert str(original) not in cmd or '-c import base64' in cmd,'prior owned descendant still live'
-lockname=('FLEET_TRANSPORT_CONTINUATION_ONCE.json' if transport_only else
+lockname=('FLEET_HISTORY_CONTINUATION_ONCE.json' if history_only else
+          'FLEET_TRANSPORT_CONTINUATION_ONCE.json' if transport_only else
           'FLEET_PRODUCTION_ONCE.json' if production_only else
           'FLEET_CONTINUATION_ONCE.json' if continuation else 'FLEET_DISPATCH_ONCE.json')
 with (root.parent/lockname).open('x') as lock:
@@ -152,6 +169,7 @@ command=[sys.executable,'-m','tools.selmappo.train','--variant','fleet','--regis
 if continuation:command+=['--continue-from',str(original)]
 if production_only:command+=['--production-from',str(original)]
 if transport_only:command+=['--transport-from',str(original)]
+if history_only:command+=['--history-from',str(original)]
 log=(root/'training.log').open('x')
 def lower():os.nice(19)
 proc=subprocess.Popen(command,cwd=root/'pytools',env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,preexec_fn=lower)
@@ -245,7 +263,7 @@ print('STOP_RECEIPT',json.dumps(record))
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('action', choices=('stage', 'dispatch', 'continue', 'production', 'inventory',
-                                          'transport', 'status', 'reconcile', 'terminal-stop'))
+                                          'transport', 'history', 'status', 'reconcile', 'terminal-stop'))
     parser.add_argument('--build')
     parser.add_argument('--wait-for-resources', action='store_true')
     args = parser.parse_args()
@@ -259,6 +277,8 @@ if __name__ == '__main__':
         dispatch(args.build, production_only=True)
     elif args.action == 'transport':
         dispatch(args.build, transport_only=True, wait_for_resources=args.wait_for_resources)
+    elif args.action == 'history':
+        dispatch(args.build, history_only=True, wait_for_resources=args.wait_for_resources)
     elif args.action == 'inventory':
         inventory()
     elif args.action == 'reconcile':

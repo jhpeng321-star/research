@@ -67,7 +67,11 @@ def check(root):
         if owner.release_all.call_count != 6:
             raise ValueError('handover releases not exactly once per change')
         from .continuation import TRANSPORT, initial_unchanged, validate_transport
+        from .history_continuation import HISTORY, validate as validate_history
         old = safe_path(root).parent.parent/TRANSPORT
+        history = safe_path(root).parent.parent/HISTORY
+        if history.is_dir():
+            validate_history(history, safe_path(root)/'REGISTRATION.md')
         if old.is_dir():
             validate_transport(old, safe_path(root)/'REGISTRATION.md')
             import torch
@@ -81,7 +85,7 @@ def check(root):
                 real_checkpoint_constructors=True, real_wall_formed=True,
                 wall_incumbent_preserved=True, wall_stop_reset=True,
                 frozen_env_scenario_seed_aliases=True,
-                transport_history_initial_parity=old.is_dir(), new_sumo_seconds=0)
+                 transport_history_initial_parity=old.is_dir(), new_sumo_seconds=0)
 
 
 if __name__ == '__main__':
