@@ -1,8 +1,8 @@
 {
   "load": [
-    0.916015625,
-    0.61083984375,
-    1.44091796875
+    0.22412109375,
+    0.6982421875,
+    1.04833984375
   ],
   "DISPATCH.json": {
     "pid": 3525930,
@@ -15,22 +15,70 @@
     "main_authorized": false
   },
   "STATUS.json": {
-    "status": "RUNNING",
-    "world": {
-      "seed": 969103,
-      "penetration": 0.1,
-      "demand": 1900
+    "status": "COMPLETE",
+    "pass_": true,
+    "unique_wins": {
+      "60": {
+        "native": 2,
+        "ctrl0": 9,
+        "mappo": 3,
+        "pi": 0,
+        "circles": 0
+      },
+      "90": {
+        "native": 2,
+        "ctrl0": 7,
+        "mappo": 1,
+        "pi": 3,
+        "circles": 1
+      }
     },
-    "decision": 300
+    "native_repeat_noise_vs": 0.0,
+    "margin_threshold_vs": 1e-06,
+    "resolved_non_dominant": {
+      "60": 5,
+      "90": 7
+    },
+    "states": 16,
+    "charged_sim_s": 47010,
+    "main_authorized": false
   },
   "TRUNK_GATE.json": {
     "pass_": true,
-    "states": 4,
-    "receipt_sha256": "d03da9b6f33373c8a2e56f9fc82d1c8955483d28c79f6021f195502c6421273b"
+    "states": 16,
+    "receipt_sha256": "71b451b5b287261be9d0030ed8c0418fb7cea38e13c5320040e7a739ebe82d77"
   },
-  "own_pid_exists": true,
-  "charged_sim_s": 12750,
-  "completed_states": 4,
-  "closed_runs": 24,
-  "closed_actual_sim_s_incl_legacy": 12450.0
+  "STEP0_GATE.json": {
+    "pass_": true,
+    "unique_wins": {
+      "60": {
+        "native": 2,
+        "ctrl0": 9,
+        "mappo": 3,
+        "pi": 0,
+        "circles": 0
+      },
+      "90": {
+        "native": 2,
+        "ctrl0": 7,
+        "mappo": 1,
+        "pi": 3,
+        "circles": 1
+      }
+    },
+    "native_repeat_noise_vs": 0.0,
+    "margin_threshold_vs": 1e-06,
+    "resolved_non_dominant": {
+      "60": 5,
+      "90": 7
+    },
+    "states": 16,
+    "charged_sim_s": 47010,
+    "main_authorized": false
+  },
+  "own_pid_exists": false,
+  "charged_sim_s": 47010,
+  "completed_states": 16,
+  "closed_runs": 96,
+  "closed_actual_sim_s_incl_legacy": 47010.0
 }

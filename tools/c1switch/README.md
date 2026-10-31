@@ -16,6 +16,11 @@ cpuQ immutable `/home/ubuntu/c1switch20261031/fullrerun_v3` is staged;
 No gpuR v2 dispatch/lock and no additional legacy debit were found on resume.
 Dispatched ONCE after build `2608bb92`, cpuQ ownedPID3525930; first five-way
 state969101/t300 PASS (native full-rerun+90repeat bitwise, all candidate prefixes).
+Now COMPLETE16/16states,96/96new runs closed; ownPID exited; all bitwise gates
+PASS and headroom gate PASS. Charged=actual47,010sim-s incl retained930; GPU0.
+Unique60s wins native2/CTRL0 9/MAPPO3 +2ties; unique90s native2/CTRL0 7/
+MAPPO1/PI3/CIRCLES1 +2ties. Repeat difference0.0; median margin1.8324/6.8538veh-s.
+Report and CSVs: `docs/paper_results/C1SWITCH_WINNERS.md`, `c1switch/step0b_*`.
 Use `python -m tools.c1switch.cpuops progress` for receipts; never re-stage,
 launch again or restart. Initial Step0 one
 nice19 CPU worker, CUDA hidden; MAIN permits <=28workers on cpuQ.

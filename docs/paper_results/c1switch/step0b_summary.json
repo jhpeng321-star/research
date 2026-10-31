@@ -1,0 +1,34 @@
+{
+  "pass_": true,
+  "unique_wins": {
+    "60": {
+      "native": 2,
+      "ctrl0": 9,
+      "mappo": 3,
+      "pi": 0,
+      "circles": 0
+    },
+    "90": {
+      "native": 2,
+      "ctrl0": 7,
+      "mappo": 1,
+      "pi": 3,
+      "circles": 1
+    }
+  },
+  "noise_vs": 0.0,
+  "noise_threshold_vs": 1e-06,
+  "resolved_non_dominant": {
+    "60": 5,
+    "90": 7
+  },
+  "median_margin_vs": {
+    "60": 1.832371025260045,
+    "90": 6.853774736644027
+  },
+  "states": 16,
+  "charged_sim_s": 47010,
+  "actual_sim_s": 47010.0,
+  "main_authorized": false,
+  "source_sha256": "4b0d484d7a2e4dbcc1b180f0d6ca2586d3cd11d920f0ad4f1b858154b7a0bdc7"
+}
