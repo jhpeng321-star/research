@@ -23,7 +23,7 @@ def learned_proposer(binding):
     from tools.coopfree.policy import SetPointPolicy, encode, decode
     model = SetPointPolicy()
     payload = torch.load(binding['free_checkpoint'],map_location='cpu',weights_only=True)
-    model.load_state_dict(payload['state_dict'])
+    model.load_state_dict(payload['policy'])
     model.eval()
     def propose(state):
         context = encode(state.rows,state.commands)

@@ -98,19 +98,25 @@ class Diagnostics:
         self.delay = dict.fromkeys(members,0.)
         self.speeds = defaultdict(list)
         self.b = b
+        import numpy as np
+        raw = b.env.history.raw(121)
+        kin,mask = raw['kin'],raw['mask']
+        first = float(b.env.now)-.5*(len(kin)-1)
+        for i in range(len(kin)-1):
+            lane = np.argmax(kin[i,:,1:4],axis=-1)
+            keep = mask[i] & (lane < 2) & (kin[i,:,0] < 0)
+            self.speeds[int((first+.5*i)//10)].extend(float(v) for v in kin[i,:,4][keep])
         original = b.env._after_physics
         def observe(after,*args,**kwargs):
+            f = b.env.frame
+            lane = np.where(f.junction,f.lane_carry,f.lane)
+            keep = f.present & (lane < 2) & (f.s < 0)
+            self.speeds[int((after-.5)//10)].extend(float(v) for v in f.v[keep])
             interval = original(after,*args,**kwargs)
             from traffic_shepherd.c4.env import SPEED_LIMIT_MPS
             for vid in members:
                 if vid in b.env._table:
                     self.delay[vid] += .5*max(0.,1-b.env._table[vid]['speed_mps']/SPEED_LIMIT_MPS)
-            # The full public geometry from the builder, never latent driver settings.
-            f = b.env.frame
-            import numpy as np
-            lane = np.where(f.junction,f.lane_carry,f.lane)
-            keep = f.present & (lane < 2) & (f.s < 0)
-            self.speeds[int((after-.5)//10)].extend(float(v) for v in f.v[keep])
             return interval
         b.env._after_physics = observe
 
