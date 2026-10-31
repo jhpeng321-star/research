@@ -43,7 +43,7 @@ Keep the switching decision pending until matched distribution and60s-error evid
   Current eligibility: NOT ESTABLISHED; missing evidence is not a measured regression.
 
 ## Credibility and next steps
-- Integrate S-RB-DECIDE's paired P(strict beats incumbent)>=0.8 plus improved mean delay;
+- S-RB-DECIDE integrated (15CPU tests): paired P(strict beats incumbent)>=0.8 plus improved mean delay;
   calibration/reliability and coverage must be reported separately from this decision rule.
 - Physics is still a highway subset: synchronous LC negotiation and cold initial lane
   memory limit parity. Finish five-arm canary, release new A/B/C/FULL sources, collect

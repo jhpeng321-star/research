@@ -31,6 +31,8 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
 - LANE811cd7e8 merged: finite continuation geometry, stale keep-right gate,
   SUMO numerical epsilon; prior immutable A/B/C runtime remains source-bound.
 - CF742922b6 + EVAL scorer/finalizer integrated; earlier branches retained in Git.
+- DECIDE16dff9ad merged: tools/wmdecide strict paired0.8 win rule, calibration/
+  reliability/coverage reports. **15 CPU tests PASS /4.38s** in INT worktree.
 - A: existing motion encoder EXACT, hidden-driver joint draws + Poisson arrivals.
 - B: inherited physics population point, Poisson arrivals; not encoder centre.
 - C: motion-only pooled_full_v5 point fit (JSON SHA bound), Poisson arrivals.
@@ -64,7 +66,7 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   stop before any old-source inference. INT never signals peers.
 - Owner00:44 schedule supersedes05:00 freeze: interim04:00/08:00, freeze FULL
   around09:30, full evaluation09:30–11:30, final report with credibility11:45.
-- DECIDE handoff ready16dff9ad: credibility tool integration/scoring next.
+- DECIDE credibility scorer ready; run on complete K8 outputs, not single futures.
 - EVAL WM2 gpuR workers706825..706828 and finalizer708801 already live; preserve.
 - SUMOCORE144/144 complete; all supervisors exited; compact results available.
   Physical validity FAIL (18/144 initial-movement collision flags retained).
