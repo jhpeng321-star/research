@@ -1,0 +1,16 @@
+{
+  "variant": "WM-PHYS-B",
+  "host": "gpuR",
+  "entrypoint": "/root/rbeval20261031/phys_code_b0f66943ec30/tools/rbint/evaluate_B.py",
+  "runtime_root": "/root/rbeval20261031/phys_code_b0f66943ec30",
+  "wm": "/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt",
+  "wm_config": "/root/rbeval20261031/phys_code_b0f66943ec30/configs/wm_phys.toml",
+  "model_name": "wm_phys_B",
+  "smoke_receipt": "/root/rbeval20261031/SMOKE_b0f66943ec30.json",
+  "smoke_sha256": "74749fba6e10ca55bcecc6202483157f235c501e62d838491145b19c61e4ca66",
+  "commit": "b0f66943ec300594fc220d3779fb482c26534b1c",
+  "pythonpath": ["/root/autodl-tmp/c4/speedhead20261030/pythondeps"],
+  "sampling": "poisson_arrivals_fixed_population",
+  "driver_settings": "inherited physics population defaults for present and newborn drivers",
+  "harness": "INT callback-capable registered runner inside the immutable runtime"
+}
