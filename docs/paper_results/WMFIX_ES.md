@@ -43,8 +43,9 @@
 
 ## ES curve / verdict / recommendation
 - Calibration: RUNNING (gpuA driver PID 195604); `es_cpu_v3/es_run_full`, cpuQ `es_run_full`.
-- Curve (generation winner by objective, TRAIN paired J MAE veh-s): pending generation 0.
-- Source contrast MAE reported separately: pending.
+- Curve (generation winner by objective, TRAIN paired J MAE veh-s): g0=237.69.
+- Source contrast MAE reported separately: g0=26.62.
+- Selected/best-so-far g0/c0: paired J MAE 237.69 veh-s.
 - Scoring-ready selected checkpoint: pending; 20 CPUQ + 3 receipt checks PASS.
 - Verdict INCOMPLETE / NOT ADOPTABLE; unchanged A vs WM2 AND entry, B, C1/accept.
 - Missing registered inputs: accept panel, C1 cohort/runner, candidate quartet completion.
