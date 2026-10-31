@@ -71,3 +71,21 @@ it does not duplicate or substitute for S-C1CLOSED. Final
 `docs/paper_results/C1PIDIAG.md` <=60 lines, attribution, world-cluster CIs,
 dominant measured cause (or honest unresolved cause), fair-history re-score,
 switch tradeoffs and old-C1 Paper-B recommendation if transfer is still lost.
+
+## Prospective history-recovery addendum (before auxiliary forecasts)
+
+Original pre-t0 60 s is absent, but each fixed episode records the following
+60 s. Add an explicitly separate, outcome-independent clock-shift diagnostic:
+same 70 episode identities, t0' = original t0 + 60 s, all vehicles observed at
+t0' as the new roster. Frames in [t0'-60,t0'] become observed history; frames
+strictly after t0' are prediction targets. No original-t0 prediction receives
+these frames. This does not replace the original fixed panel.
+
+Rebuild stable-ID kin/mask/target-mask arrays from the same arm's recorded
+trajectory, causally carry junction lane labels, and compare snapshot/5/60 s
+x inferred/population for C1/13E/WM2 and frozen BB-traj on these SAME shifted
+starts. Preserve the recorded remaining endpoint clocks: PI 60/120 s, wall
+60 s (last-label tolerance <=0.5 s); unavailable 120 s wall stays unavailable.
+Report endpoint attrition. No component winner is chosen from this auxiliary
+panel; this is the registered full-history test, with 60 s primary. Entries
+remain unavailable. Run sequentially after the original grid, <=24 workers.
