@@ -129,6 +129,17 @@ class WorldBootstrap:
         return result
 
 
+def scored_bootstrap(real, worlds, B=10000):
+    """Keep unscored same-cell peers out of prediction uncertainty.
+
+    Climatology still uses the full development pool. Resampling that pool for
+    partial prediction reports can randomly omit a scored singleton and create
+    spurious variation in a cross-cell mean. Freeze only the scored composition.
+    """
+    worlds = set(worlds)
+    return WorldBootstrap([e for e in real if e['seed'] in worlds], B)
+
+
 def read_predictions(inputs, real, partial):
     lookup = {(e['seed'], e['arm']): e for e in real}
     tasks = {}
@@ -233,10 +244,12 @@ def main():
     out.mkdir(exist_ok=False)
     real = load(HERE/'real_observables.json')['episodes']
     pred, audit = read_predictions(args.inputs, real, args.allow_partial)
+    bootstrap = scored_bootstrap(real, audit['complete_worlds'], args.bootstrap)
+    audit['bootstrap_worlds'] = bootstrap.seeds
+    audit['bootstrap_scope'] = 'scored-world-only fixed demand/penetration/split strata'
     save_new(out/'audit.json', audit)
     lookup = {(e['seed'], e['arm']): e for e in real}
     targets = [e for e in real if (e['seed'], e['arm']) in pred]
-    bootstrap = WorldBootstrap(real, args.bootstrap)
     rng = np.random.default_rng(20261031)
     rows, events, timing, energy = [], [], [], []
     cdf_features, cdf_meta = [], []

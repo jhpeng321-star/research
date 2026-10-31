@@ -33,7 +33,8 @@ handover after the original finalizer's explicit deadline expiry. Worker loss,
 source changes or scoring failures generate alerts rather than retries.
 `ops fetch-reports` also retrieves its `SUPPORT*.json` receipts and log.
 `ops support` is deployment-only and refuses an existing live standby.
-`ops candidate-status` reads the already-claimed A/C status on gpuA; no launch.
+`ops candidate-status` reads candidate shard counts and result/failure markers
+under the existing RUNA/RUNB/INT roots on both hosts; no launch.
 
 ## Score a completed panel (Windows or Linux)
 
@@ -70,7 +71,11 @@ Climatology uses only 969400–969431 and excludes the entire target world.
 Reserved8 labels never enter any baseline. Bootstrap: 10,000, seed20261031,
 demand×penetration×split-stratified worlds, joint max-stat families. Constant or
 singleton cells have no demonstrable sampling uncertainty. K8 future resamples
-are paired across arms for the rate difference. Chunked calculations retain
+are paired across arms for the rate difference. Partial-report bootstrap strata
+contain only complete scored worlds; unscored peers supply climatology but cannot
+create sampling variation. Full20-world bootstrap draws remain unchanged.
+Earlier partial-progress CIs from the unfiltered scorer are superseded.
+Chunked calculations retain
 one joint maximum across the full family and bound working memory.
 
 ## WM-PHYS integration

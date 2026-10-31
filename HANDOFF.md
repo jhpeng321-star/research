@@ -13,12 +13,20 @@
 - INT's current handoff supersedes the historical A/C prerequisite below:
   **A2/C2 RUNA-owned, B2 RUNB-owned; FULL-v1/v3/v4 INT-owned**. gpuR B2 workers
   801887/801888/801889 already live; gpuA has active candidate GPU use. Preserve
-  all claims/runtimes. `ops candidate-status` currently checks historical A/C only;
-  its old failures are not current A2/C2 status.
+  all claims/runtimes. `ops candidate-status` now reads both hosts and all existing
+  RUNA/RUNB/INT candidate roots; historical A/C failures remain explicitly named.
 - Published future-builder API below is already reconciled; no RUNA hook blocker.
   Current launch specifications: `E:/agent-work/rb-shared/evalclaims/WM-PHYS-A2.runa.json`,
   `WM-PHYS-C2.runa.json`, `WM-PHYS-B2.runb.json`. These bind immutable source4015b641.
   INT's newer FULL sources and existing dispatches are listed in its `HANDOFF.md`.
+- Partial-score uncertainty correction now matches INT's scored-world-only rule:
+  `score.scored_bootstrap` filters to complete predicted worlds, retaining the full
+  development climatology. Two scored singleton cells cannot borrow variation
+  from unscored same-cell peers. Earlier partial-progress CIs are superseded;
+  full20-world bootstrap weights are verified exactly unchanged. No live frozen
+  source was replaced. All10 scorer tests PASS/10.98s, including regression and
+  import→gate. Live candidate-status verified A2=67, B2=45, FULL-v1=73,
+  FULL-v3=62, FULL-v4=19 tasks; no new claim/dispatch.
 
 ## Exact candidate CLI (RUNA/RUNB/INT)
 

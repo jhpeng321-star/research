@@ -12,7 +12,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from core import ARMS, HERE, digest, load, save_new
-from score import WorldBootstrap, eligible_peers, rank_stats, read_predictions
+from score import WorldBootstrap, eligible_peers, rank_stats, read_predictions, scored_bootstrap
 import run_wm
 
 
@@ -57,6 +57,20 @@ class ScientificInvariants(unittest.TestCase):
         self.assertIsNotNone(band['low'])
         self.assertLess(band['low'], .5)
         self.assertGreater(band['high'], .5)
+
+    def test_partial_reports_cannot_borrow_unscored_world_variation(self):
+        # Two distinct scored singleton cells have no within-cell sampling
+        # variation. Unscored same-cell peers must not randomly remove a target.
+        worlds = [969420, 969421]
+        boot = scored_bootstrap(self.real, worlds, B=1000)
+        self.assertEqual(boot.seeds, worlds)
+        np.testing.assert_array_equal(boot.weights, np.ones((1000, 2)))
+        band = boot.bands([[(969420, 0.), (969421, 100.)]])[0]
+        self.assertEqual(band['mean'], 50.)
+        self.assertIsNone(band['low'])
+        self.assertFalse(band['uncertainty_available'])
+        full = scored_bootstrap(self.real, range(969420, 969440), B=1000)
+        np.testing.assert_array_equal(full.weights, WorldBootstrap(self.real, B=1000).weights)
 
     def test_chunking_preserves_joint_family_maxstat(self):
         boot = WorldBootstrap(self.real, B=1000)
@@ -115,6 +129,7 @@ class ScientificInvariants(unittest.TestCase):
         gate = load(scratch/'report/gate.json')
         self.assertEqual(gate['verdict'], 'NOT_QUALIFIED')
         self.assertEqual(gate['complete_worlds'], 1)
+        self.assertEqual(load(scratch/'report/audit.json')['bootstrap_worlds'], [969420])
         self.assertIn('incomplete K8 panel', gate['reasons'])
         self.assertTrue((scratch/'report/onset_cdf_bands.csv').is_file())
         # Same code/recipe/name can still select different constructor variants.

@@ -138,27 +138,27 @@ with (root/('ANALYSIS_DISPATCH_'+str(time.time_ns())+'.json')).open('x') as f: j
 print(json.dumps(receipt))
 '''))
     elif args.action == 'candidate-status':
-        print(ssh(f'''
+        for host in ('gpuA', 'gpuR'):
+            print(ssh(f'''
 from pathlib import Path
 import json,os,subprocess
-root=Path({ROOT!r})/'runa'
+root=Path({ROOT!r})
+print('HOST',{host!r})
 print('load',os.getloadavg(),'cpus',os.cpu_count())
 print(subprocess.check_output(['nvidia-smi','--query-gpu=index,memory.used,memory.total,utilization.gpu','--format=csv'],text=True))
-for name in ('WM-PHYS-A','WM-PHYS-C'):
- p=root/name
- if not p.is_dir(): continue
- print('CANDIDATE',name)
- for marker in ('RESULT.json','FAILED.json'):
-  path=p/marker
-  if path.exists(): print(marker,path.read_text())
- for i in range(3):
-  shard=p/f'shard{{i}}'
-  print('SHARD',i,'tasks',len(list(shard.glob('w*_k*.json'))),'complete',(shard/'COMPLETE.json').exists())
-  log=p/f'shard{{i}}.log'
-  if log.exists(): print(log.read_text()[-9000:])
- log=p/'supervisor.log'
- if log.exists(): print('SUPERVISOR',log.read_text()[-2000:])
-''', host='gpuA'))
+for owner in ('runa','runb','int'):
+ for p in sorted((root/owner).glob('WM-PHYS-*')):
+  if not p.is_dir(): continue
+  shards=sorted(d for d in p.glob('shard[0-9]*') if d.is_dir())
+  counts=[len(list(d.glob('w*_k*.json'))) for d in shards]
+  print('CANDIDATE',owner,p.name,'tasks',sum(counts),'shards',counts,
+        'complete',all((d/'COMPLETE.json').exists() for d in shards) if shards else False)
+  for marker in ('RESULT.json','FAILED.json','STOP.json','FINALIZED.json'):
+   path=p/marker
+   if path.exists():
+    receipt=json.loads(path.read_text())
+    print(marker,json.dumps({{k:receipt[k] for k in ('error','reason','report','gate','unix') if k in receipt}}))
+''', host=host))
     elif args.action == 'support':
         source = HERE/'support.py'
         sha = hashlib.sha256(source.read_bytes()).hexdigest()
