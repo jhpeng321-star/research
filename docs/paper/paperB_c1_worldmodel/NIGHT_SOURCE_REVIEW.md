@@ -1,5 +1,44 @@
 # Evening evidence-review receipt
 
+## Fresh-session overnight continuation
+
+Preserved the clean committed evening package. Read Git status/history, this receipt,
+`REFRESH.md`, the owner READ FIRST block, and shared registration through its current
+end before changing claims. The first-package completion line already exists and
+must not be appended again. The inventory reread every original allowlisted source;
+unchanged hashes retain the prior semantic review, while changed reports were read
+in full. Newly named safe reports/exports extend the explicit inventory.
+
+- C1CLOSED is COMPLETE. Its paired endpoint contrasts do not establish current-model
+  superiority at the principal short clock; earliest errors favor BB. Relative
+  aggregate-delay gains coexist with weak direction/selection and large absolute
+  errors. Wall executor restoration and initialization ancestry remain unresolved.
+- WMVALUE is a completed FAIL via a necessary-condition stop. Long-WM comparator A
+  is unavailable, not estimated from its partial outputs. This is sufficient to
+  reject the conjunction and is not a complete A–E numerical comparison.
+- The expanded merge-response pilot stopped after its candidate screen failed;
+  later checkpoints were not scored. Preserve the amended partial-result wording,
+  rather than calling the original complete gate measured.
+- C1SWITCH is terminal: original reference panel incomplete; MAIN authorized only
+  a scheduler-selected all-arm-complete partial analysis. It supplies no full-panel
+  selector efficacy verdict and has no continuation or polling armed.
+- C1SWITCH2 is the new main wall-inclusive switching study. Existing CPU arms are
+  complete, WM picker is running, BB is queued, final RL weights remain pending.
+  Its observers and workers already exist; the paper task starts none of them.
+- WMBREAKDOWN demonstrates distributional WM bias as well as point-error failure;
+  new-panel imagined event rates/timing remain unscorable from saved cost-only
+  futures. Ensemble effect dispersion is not uniformly too narrow.
+- ENSPROBE completed a degenerate configured RNG ensemble. This does not measure
+  uncertainty from hidden settings/future arrivals or real-road randomness, and
+  does not retroactively complete C1FLOOR's failed un-restored-continuation gate.
+- SUMOCORE is complete but has initialization collision flags and is not a clean
+  information ceiling. WM-PHYS is interim/available-case only, with unverified
+  earlier identity mapping and missing adoption conditions; no qualification is
+  inferred from its interim delay improvement.
+
+Exact bytes/hashes and check time are in `SOURCE_REFRESH.json`. Numerical manuscript
+claims are bound separately in `CLAIMS.md`; this receipt records source precedence.
+
 Resume preserved the clean first-package commits and its append-once registration receipt. The evening owner READ FIRST block and shared registration additions since the afternoon were read before editing claims. `SOURCE_REFRESH.json` records the exact allowlisted source cut; the inventory rereads source bytes without dispatching work. Bibliography verification and completed historical artwork are inherited, rather than repeated.
 
 ## Source precedence for this refresh

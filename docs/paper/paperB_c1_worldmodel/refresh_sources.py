@@ -55,6 +55,19 @@ SOURCES = {
     "Companion backup final verdict": "E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_RUN.md",
     "Saved-state and action artifact check": "E:/agent-work/c4-sumocf/docs/paper_results/ARTIFACT_CHECK.md",
     "WM review synthesis": "E:/research-dense/docs/WM_FIX_SYNTHESIS_20261031.md",
+    "Completed feedback bootstrap export": "E:/agent-work/c4-c1closed/docs/paper_results/C1CLOSED_bootstrap.csv",
+    "Completed feedback analysis receipt": "E:/agent-work/c4-c1closed/docs/paper_results/C1CLOSED_ANALYSIS.json",
+    "Terminal reference switching and partial analysis": "E:/agent-work/c4-c1switch/docs/paper_results/C1SWITCH.md",
+    "Reference switching partial estimates": "E:/agent-work/c4-c1switch/docs/paper_results/c1switch/partial_results.json",
+    "Main wall-inclusive switching design": "E:/agent-work/c4-c1switch2/docs/paper_results/C1SWITCH2_DESIGN.md",
+    "Main wall-inclusive switching handoff": "E:/agent-work/c4-c1switch2/HANDOFF.md",
+    "Fleet picker status": "E:/agent-work/c4-selmappo/docs/paper_results/SELMAPPO.md",
+    "Per-CAV picker status": "E:/agent-work/c4-selmappo2/docs/paper_results/SELMAPPO2.md",
+    "Distributional bias diagnosis": "E:/agent-work/c4-wmbreakdown/docs/paper_results/WMBREAKDOWN.md",
+    "Distributional summary CSV": "E:/agent-work/c4-wmbreakdown/docs/paper_results/wmbreakdown/distribution_summary.csv",
+    "Configured RNG ensemble": "E:/agent-work/c4-ensprobe/docs/paper_results/ENSPROBE.md",
+    "Observable-start physics reference": "E:/agent-work/c4-sumocore/docs/paper_results/SUMOCORE.md",
+    "Physics rebuild interim": "E:/agent-work/c4-rb-int/docs/paper_results/WMPHYS_MORNING.md",
 }
 
 
