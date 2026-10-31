@@ -77,6 +77,7 @@ def main():
     parser.add_argument('--panel')
     parser.add_argument('--panel-sha')
     parser.add_argument('--smoke-only', action='store_true')
+    parser.add_argument('--continue-from', help='MAIN-authorized exact stopped original build only')
     parser.add_argument('--workers', type=int, default=12)
     args = parser.parse_args()
     if not 1 <= args.workers <= 12:
@@ -99,11 +100,18 @@ def main():
     with (out/'OWNER.json').open('x', encoding='utf-8') as stream:
         json.dump(dict(pid=os.getpid(), variant=args.variant, approval=approval_line(args.registration),
                        registration_sha256=digest(args.registration)), stream)
+    if args.continue_from:
+        from .continuation import inherit
+        inherit(out, args.continue_from, args.registration)
     budget, model = Budget(out), Selector()
     updater, start = Updater(model), time.monotonic()
     optimization_rng = torch.get_rng_state()
-    for seed in range(BLOCKS[args.variant][1]-1, BLOCKS[args.variant][1]+1):
+    first_smoke = BLOCKS[args.variant][1] if args.continue_from else BLOCKS[args.variant][1]-1
+    for seed in range(first_smoke, BLOCKS[args.variant][1]+1):
         episode(model, dict(seed=seed, penetration=.4, demand=2700), args, budget, smoke=True)
+    append(out/'status.jsonl', dict(status='MECHANICS_COMPLETE', charged_sim_s=budget.charged,
+                                  wall_s=time.monotonic()-start,
+                                  successful_episodes=1 if args.continue_from else 2))
     if args.smoke_only:
         append(out/'status.jsonl', dict(status='SMOKE_COMPLETE', charged_sim_s=budget.charged))
         return

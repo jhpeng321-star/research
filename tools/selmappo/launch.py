@@ -80,7 +80,7 @@ def save_tag(stdout, tag, name):
             json.dump(json.loads(rows[-1]), stream, indent=2)
 
 
-def dispatch(build):
+def dispatch(build, continuation=False):
     result = run('cpuQ', f'''
 import hashlib,json,os,subprocess,sys
 from pathlib import Path
@@ -92,10 +92,20 @@ assert os.getloadavg()[0]<24
 assert __import__('shutil').disk_usage(root).free>=2*1024**3
 for name,expected in receipt['files'].items():
  assert hashlib.sha256((root/'pytools'/name).read_bytes()).hexdigest()==expected
-with (root.parent/'FLEET_DISPATCH_ONCE.json').open('x') as lock:
+continuation={continuation!r}
+original=root.parent/'build_bc4c3aae72073204'
+if continuation:
+ sys.path.insert(0,str(root/'pytools'))
+ from tools.selmappo.continuation import validate
+ validate(original,root/'pytools/REGISTRATION.md')
+ prior=json.loads((root.parent/'FLEET_DISPATCH_ONCE.json').read_text())
+ assert prior['build']==str(original)
+lockname='FLEET_CONTINUATION_ONCE.json' if continuation else 'FLEET_DISPATCH_ONCE.json'
+with (root.parent/lockname).open('x') as lock:
  json.dump(dict(build=str(root),binding=stage['binding']),lock);lock.flush();os.fsync(lock.fileno())
 out=root/'training';assert not out.exists()
 command=[sys.executable,'-m','tools.selmappo.train','--variant','fleet','--registration',str(root/'pytools/REGISTRATION.md'),'--c1-root',str(root/'pytools'),'--integration',str(root/'INTEGRATION.json'),'--design-sha',receipt['design_sha256'],'--out',str(out),'--workers','12']
+if continuation:command+=['--continue-from',str(original)]
 log=(root/'training.log').open('x')
 def lower():os.nice(19)
 proc=subprocess.Popen(command,cwd=root/'pytools',env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,preexec_fn=lower)
@@ -142,13 +152,15 @@ print('STOP_RECEIPT',json.dumps(record))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=('stage', 'dispatch', 'status', 'reconcile'))
+    parser.add_argument('action', choices=('stage', 'dispatch', 'continue', 'status', 'reconcile'))
     parser.add_argument('--build')
     args = parser.parse_args()
     if args.action == 'stage':
         stage()
     elif args.action == 'dispatch':
         dispatch(args.build)
+    elif args.action == 'continue':
+        dispatch(args.build, continuation=True)
     elif args.action == 'reconcile':
         reconcile(args.build)
     else:

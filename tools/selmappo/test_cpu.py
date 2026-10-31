@@ -254,6 +254,35 @@ class DiskTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             restored.reserve(world, 'fleet')
 
+    def test_continuation_retains_charge_and_refuses_replay(self):
+        from .continuation import inherit, ORIGINAL
+        original = self.root/ORIGINAL
+        (original/'training').mkdir(parents=True)
+        old = Budget(original/'training')
+        old.reserve(dict(seed=18007998, demand=2700, penetration=.4), 'fleet', smoke=True)
+        old.finish(0)
+        ledger_sha = digest(old.path)
+        (original/'DISPATCH.json').write_text(json.dumps(dict(pid=999999999)))
+        (original/'STOP.json').write_text(json.dumps(dict(own_pid=999999999,
+            own_pid_exited=True, status='STOPPED_BEFORE_PHYSICS', charged_sim_s=900,
+            actual_sim_s=0, training_episodes=0, checkpoints=0, ledger_sha256=ledger_sha)))
+        reg = self.text('ack.md', "- 00:29 MAIN: MAIN ACKNOWLEDGES S-SELMAPPO's no-retry stop under the same cap: run only the original unused second mechanics episode\n")
+        out = self.root/'new'
+        out.mkdir()
+        with patch('tools.selmappo.continuation.LEDGER_SHA', ledger_sha):
+            inherit(out, original, reg)
+            with self.assertRaises(FileExistsError):
+                inherit(out, original, reg)
+            with self.assertRaises(PermissionError):
+                inherit(out, original, self.text('noack.md', 'budget approved'))
+        continued = Budget(out)
+        self.assertEqual(continued.charged, 900)
+        with self.assertRaises(ValueError):
+            continued.reserve(dict(seed=18007998, demand=2700, penetration=.4), 'fleet', smoke=True)
+        continued.reserve(dict(seed=18007999, demand=2700, penetration=.4), 'fleet', smoke=True)
+        continued.finish(900)
+        self.assertEqual(continued.charged, 1800)
+
     def test_parallel_reservations_close_by_identity(self):
         budget = Budget(self.root)
         a = dict(seed=18000000, demand=1900, penetration=.05)

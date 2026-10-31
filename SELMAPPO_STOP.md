@@ -1,4 +1,4 @@
-# Fleet PPO selector — stopped before physics; repair staged
+# Fleet PPO selector — original stop preserved; MAIN continuation acknowledged
 
 ## Preserved attempt
 Design `7e4def77`, initial implementation `a5dafd3b`, real WALL integration/registration
@@ -28,12 +28,14 @@ binding `914fecba3ffdf4cc975000a86f90db0317e26645b810f572fcfaa0160c03c1d2`.
 **STAGED ONLY. No retry is armed or authorised.** Shared per-CAV hooks and block API
 were also restored at S-SELMAPPO2's request; see `SELMAPPO2_RESPONSE.md`.
 
-## MAIN decision needed
+## MAIN acknowledgement 00:29 (2026-11-01)
 Original design stops on any failed simulation and has no retry/refund reserve.
-Proposed SAME-CAP continuation (not implemented/dispatched): retain failed900, do NOT
+MAIN explicitly accepted SAME-CAP continuation: retain failed900, do NOT
 repeat its seed, run only the already allocated unused second mechanics900, then
 production6,996,600 and evaluation14,400 =>7,012,800charged (7,011,900actual if all finish).
-MAIN must explicitly accept one successful mechanics episode and acknowledge continuation.
+Implementation inherits the exact hash-bound old ledger, refuses the failed seed, and
+uses a separate exclusive continuation lock; the original dispatch/lock are preserved.
+Only the unused second mechanics episode runs; any further failure stops without retry.
 An additional successful replacement smoke without another amendment would exceed the
 conservative cap by900. Budget advance approval alone does not authorise that retry.
 Final169 evaluation still requires the registered16world S-C1SWITCH2 manifest.
