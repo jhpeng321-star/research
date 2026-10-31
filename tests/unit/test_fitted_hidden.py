@@ -17,7 +17,7 @@ def fitted(lane=False):
     post = dict(schema='wm_phys.idm_posteriors.v1', parameter_order=IDM_ORDER,
                 conditioning_end_s=300, drivers={'969400:101': dict(support_indices=[0], weights=[1.])})
     lp = dict(schema='wm_phys.lc2013_population.v1', parameter_order=LC_ORDER,
-              support=[[2., 3., 4., 5., 6.], [.2, .3, .4, .5, .6]], weights=[0., 1.])
+              support=[[2., 1., 4., 5., 6.], [.2, .3, .4, .5, .6]], weights=[0., 1.])
     ls = dict(schema='wm_phys.lc2013_posteriors.v1',
               conditioning_end_s=300, drivers={'969400:101': dict(weights=[1., 0.])})
     return FittedHiddenState(pop, post, lane_population=lp if lane else None,
@@ -71,7 +71,7 @@ def test_lc_joint_persistence_and_newborn_exact_admission_identity():
              row_keys=[969400], vehicle_ids=ids, entrance_histories=histories, queues=queues,
              n_samples=1)[0]
     params = f.kwargs['driver_params']
-    assert [params[n][0, 0].item() for n in LC_ORDER] == [2., 3., 4., 5., 6.]
+    assert [params[n][0, 0].item() for n in LC_ORDER] == [2., 1., 4., 5., 6.]
     mix = f.kwargs['entrant_driver_sampler']
     candidate = f.kwargs['entries'].cfg.learned_admission.candidate(0, 0, 9)
     born = torch.zeros_like(state['present'])
@@ -157,3 +157,38 @@ def test_empty_causal_rebinding_is_population_only_and_hash_is_order_invariant()
     empty = source.with_motion_posteriors({}, t0_s=315)
     assert empty.posterior['drivers'] == {}
     assert empty.draw(969400, 101, generator=torch.Generator()) == dict(zip(IDM_ORDER, [17., .7, .8, 1.1, 1.2]))
+
+
+def test_lc_zero_motivations_preserve_joint_support_and_action_crn():
+    fit = fitted(lane=True)
+    fit.lane_population['support'] = [[0., 0., 0., 0., .5], [1., 1., 1., 1., 2.]]
+    fit.lane_population['weights'] = [1., 0.]
+    model, state, h, _ = fixture(rows=2)
+    futures = plan(model, state, h, fitted_state=fit, t0_s=300,
+                   row_keys=[969400]*2, n_samples=3,
+                   entrance_histories=[build_entrance_history(counter=np.zeros((2, 30))) for _ in range(2)],
+                   vehicle_ids=torch.tensor([[101, 102, 103, 104, -1]]).expand(2, -1))
+    for f in futures:
+        params = f.kwargs['driver_params']
+        for name in LC_ORDER:
+            assert torch.equal(params[name][0], params[name][1])
+        assert [params[n][0, 0].item() for n in LC_ORDER] == [0., 0., 0., 0., .5]
+        birth = f.kwargs['entrant_driver_sampler'].candidate(0, 0, 9)
+        assert [birth[n] for n in LC_ORDER] == [0., 0., 0., 0., .5]
+
+
+@pytest.mark.parametrize('coordinate,value', [(0, -.1), (1, -.1), (1, 1.01),
+                                              (2, -.1), (3, -.1), (4, 0.)])
+def test_invalid_lc_source_domain_is_rejected_without_clipping(coordinate, value):
+    source = fitted(lane=True)
+    source.lane_population['support'][0][coordinate] = value
+    with pytest.raises(ValueError, match='physical support domain'):
+        FittedHiddenState(source.population, source.posterior,
+                          lane_population=source.lane_population, lane_posterior=source.lane_posterior)
+
+
+def test_idm_zero_stays_invalid_when_optional_lc_accepts_zero():
+    source = fitted()
+    source.population['support'][0][0] = 0.
+    with pytest.raises(ValueError, match='physical support domain'):
+        FittedHiddenState(source.population, source.posterior)

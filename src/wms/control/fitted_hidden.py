@@ -84,8 +84,17 @@ class FittedHiddenState:
                 or (indices < 0).any() or (indices >= len(support)).any()
                 or weights.shape != indices.shape or not torch.isfinite(weights).all()
                 or (weights < 0).any() or weights.sum() <= 0
-                or not torch.isfinite(support).all() or (support <= 0).any()):
+                or not torch.isfinite(support).all()):
             raise ValueError('invalid fitted support indices/weights')
+        if tuple(order) == LC_ORDER:
+            # SUMO LC2013 permits disabled motivations at zero; cooperative is
+            # a fraction. Assertiveness divides accepted gaps and must be >0.
+            invalid = ((support[:, :4] < 0).any() or (support[:, 1] > 1).any()
+                       or (support[:, 4] <= 0).any())
+        else:
+            invalid = (support <= 0).any()
+        if invalid:
+            raise ValueError('invalid fitted physical support domain')
         return support[indices], weights
 
     def check_time(self, t0_s):

@@ -124,6 +124,10 @@ futures = plan_hidden_state_futures(
 - New HDVs: fitted population. Current/new CAV plant settings remain the existing
   observed inference, outside the HDV physical fit. Optional named LC settings
   persist for current/new HDVs; no fitted joint IDM/LC dependence is claimed.
+- Optional LC support follows the source domain: first four motivations may be
+  zero; cooperative must be at most one; assertiveness must be strictly positive.
+  No clipping. Old unadopted LC exports with cooperative>1 are rejected. Existing
+  source-bound historical diagnostic receipts remain historical, not new results.
 - Fit artifact records all32 nativeFIT entrance histories using insertions+queue
   conservation. It retains10s time-varying rate estimates and BIC diagnostics.
   Data and documented generator favor the constant pre1200s phase, with no
