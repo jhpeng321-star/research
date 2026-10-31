@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 import torch
 
-from tools.rbint.motion_posterior import condition_population, fit_kernels
+from tools.rbint.motion_posterior import chain_gaps, condition_population, fit_kernels, profile_next_speed
 from wms.control.fitted_hidden import FittedHiddenState, IDM_ORDER
 from wms.physics.motion_fit import MotionFit
 
@@ -38,6 +38,7 @@ def test_unseen_world_conditions_motion_in_local_id_space_without_saved_lookup(t
         assert arrays['is_cav'].tolist() == [[False, False, True]]*3
         rows = np.zeros((2, 11))
         rows[:, 0], rows[:, 1], rows[:, 4], rows[:, 9] = [298., 299.], 51, 1., 1.
+        rows[:, 5], rows[:, 7] = np.inf, -1  # observed free-road intervals
         return rows, {}, {}
     def predict(before, gap, leader, support, dt):
         return np.array([[1., 3.], [1., 3.]])
@@ -70,7 +71,7 @@ def test_future_frames_and_noncausal_selected_intervals_fail_before_inference(tm
             kernels=(future_row, lambda *a: pytest.fail('must not predict'), 'synthetic'))
 
 
-def test_fit_pure_functions_run_without_importing_optional_estimation_dependencies():
+def test_fit_selector_and_active_cf_core_need_no_optional_estimation_dependencies():
     extract, predict, source_sha = fit_kernels()
     params = np.array([[30., 1., 1., 4., 2.], [30., 1., 2., 4., 2.]])
     speeds = predict(np.array([[0.], [10.]]), np.full((2, 1), np.inf),
@@ -78,3 +79,24 @@ def test_fit_pure_functions_run_without_importing_optional_estimation_dependenci
     assert speeds.shape == (2, 2) and np.isfinite(speeds).all()
     assert speeds[0].tolist() == pytest.approx([.5, 1.])
     assert callable(extract) and len(source_sha) == 64
+
+
+def test_runtime_profiles_use_active_sumo_lane_cap_not_the_older_fit_approximation():
+    # At31m/s with30m/s desired speed and b4.5, planMove laneCap is30,
+    # not the gently decelerating raw IDM safe speed (~30.93).
+    profiles = np.array([[30., 1., 1., 4.5, 2.], [30., 1., 2., 4.5, 2.]])
+    predicted = profile_next_speed(np.array([[31.]]), np.array([[np.inf]]),
+                                   np.zeros((1, 1)), profiles, .5)
+    assert predicted.tolist() == [[30., 30.]]
+
+
+def test_conditioning_leader_gap_includes_the_same_registered_link_as_rollout():
+    kin = np.zeros((1, 2, 7), dtype=np.float32)
+    kin[0, :, 0], kin[0, :, 1], kin[0, :, 6] = [-8., 5.], 1., 5.
+    arrays = dict(time_s=np.array([299.5]), veh_kin=kin,
+        vid=np.array([[51, 52]]), veh_mask=np.ones((1, 2), dtype=bool))
+    row = np.zeros((1, 11))
+    row[0, [0, 1, 5, 7]] = [299.5, 51., 8., 52.]
+    converted = chain_gaps(row, arrays)
+    assert converted[0, 5] == 11.  # 13m raw separation+3m link−5m leader length
+    assert row[0, 5] == 8.  # original observed rows are not mutated

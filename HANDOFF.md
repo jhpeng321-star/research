@@ -18,6 +18,10 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   `panel_ops status` is read-only; never repeat canary/continue/monitor dispatch.
 
 ## What exists
+- Runtime posterior profile predictions now use the ACTIVE CF source lane-cap
+  chain and deployed lane/link gap geometry, not the older FIT step approximation.
+  FIT selector/shrinkage API and learned population remain unchanged. Overspeed
+  and cross-link numeric anchors + caller/core suite **27CPU PASS /7.50s**.
 - CF47b7742c/2b898f39 integrated: exact lane-cap/planMove chain, relaxed
   emergency stop fallback and all19 applicable independent idmspec vectors.
   Pure-acceleration diagnostic remains default OFF. **65 CPU PASS /1CUDA skip**;

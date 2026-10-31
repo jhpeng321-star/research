@@ -66,6 +66,10 @@ def load_candidate(checkpoints, configs, device):
         candidate._wmphys_arrival_fit = LearnedArrivalFit.from_file(root/options_full['arrival_json'])
         candidate._wmphys_condition_motion = options_full.get('condition_motion', False)
         if candidate._wmphys_condition_motion:
+            if (physics.cf_model != 'sumo_idm' or physics.sumo_cf_stepping_s != .25
+                    or physics.sumo_cf_emergency_decel_mps2 != 9.
+                    or physics.sumo_cf_vtype_max_mps is not None):
+                raise ValueError('motion-profile predictor must match the frozen SUMO CF recipe')
             from wms.physics.motion_fit import MotionFit
             candidate._wmphys_motion_fit = MotionFit(root/options_full['parameter_directory'])
             candidate._wmphys_shrinkage_policy = root/options_full['parameter_directory']/'idm_shrinkage.json'

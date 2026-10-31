@@ -1,7 +1,7 @@
 """Condition the fitted physical population on a new causal observed history.
 
-Reuse FIT's committed interval selector and faithful profile step verbatim;
-SciPy is needed by FIT's estimator, not by these two pure NumPy functions.
+Reuse FIT's committed interval selector and the ACTIVE SUMO CF profile step;
+SciPy is needed by FIT's estimator, not by causal runtime conditioning.
 No population fitting, saved-driver-ID lookup or future observation is used.
 """
 import ast
@@ -12,20 +12,57 @@ from pathlib import Path
 import numpy as np
 import torch
 
+
+def profile_next_speed(before, gap, leader, support, dt):
+    """Evaluate exactly the deployed SUMO core, including its lane-cap chain."""
+    from dataclasses import replace
+    from wms.control.fitted_hidden import IDM_ORDER
+    from wms.physics.idm_sumo import SumoIDMParams, idm_iterations, sumo_idm_step
+    tensor = lambda value: torch.as_tensor(value, dtype=torch.float64)
+    observed_speed = tensor(before)
+    observed_gap = tensor(gap)
+    has_leader = observed_gap.isfinite()
+    # Same no-leader contract as physics.neighbours (SUMO free-road argument).
+    observed_gap = torch.where(has_leader, observed_gap, torch.full_like(observed_gap, 1e6))
+    leader_speed = torch.where(has_leader, tensor(leader), observed_speed)
+    profiles = tensor(support)
+    params = SumoIDMParams.from_driver_params({n:profiles[:, i] for i, n in enumerate(IDM_ORDER)})
+    params = replace(params, emergency_decel=9.)  # identity-bound WM-PHYS recipe
+    result, _ = sumo_idm_step(observed_speed, observed_gap, leader_speed,
+        params.des_speed, params, dt_s=float(dt), iterations=idm_iterations(float(dt)))
+    return result.numpy()
+
 @lru_cache(maxsize=1)
 def fit_kernels():
     source = Path(__file__).resolve().parents[1]/'rbfit/idm_fit.py'
     raw = source.read_bytes()
     tree = ast.parse(raw, filename=str(source))
-    functions = [n for n in tree.body if isinstance(n, ast.FunctionDef)
-                 and n.name in ('extract_rows', 'next_speed')]
-    constants = [n for n in tree.body if isinstance(n, ast.Assign)
-                 and any(isinstance(t, ast.Name) and t.id == 'EPS' for t in n.targets)]
-    if len(functions) != 2 or len(constants) != 1:
+    functions = [n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == 'extract_rows']
+    if len(functions) != 1:
         raise ValueError('unexpected FIT pure-motion source contract')
     namespace = dict(np=np)
-    exec(compile(ast.Module(body=constants+functions, type_ignores=[]), str(source), 'exec'), namespace)
-    return namespace['extract_rows'], namespace['next_speed'], hashlib.sha256(raw).hexdigest()
+    exec(compile(ast.Module(body=functions, type_ignores=[]), str(source), 'exec'), namespace)
+    return namespace['extract_rows'], profile_next_speed, hashlib.sha256(raw).hexdigest()
+
+
+def chain_gaps(rows, arrays):
+    """Use the deployed CF geometry for stable observed leaders across links."""
+    from wms.physics.lane_chain import chain_s
+    result = rows.copy()
+    kin, vids, present = arrays['veh_kin'], arrays['vid'], arrays['veh_mask']
+    lane = np.asarray(kin[..., 1:4]).argmax(-1)
+    chain = chain_s(torch.as_tensor(lane), torch.as_tensor(kin[..., 0])).double().numpy()
+    maps = [{int(v):i for i, v in enumerate(vids[t]) if present[t, i] and v >= 0}
+            for t in range(len(kin))]
+    for row in result:
+        if row[7] < 0:
+            continue
+        tick = int(np.searchsorted(arrays['time_s'], row[0]))
+        if tick >= len(kin) or arrays['time_s'][tick] != row[0]:
+            raise ValueError('observed interval clock differs')
+        ego, lead = maps[tick][int(row[1])], maps[tick][int(row[7])]
+        row[5] = chain[tick, lead]-chain[tick, ego]-kin[tick, lead, 6]
+    return result
 
 
 def condition_population(base, motion_fit, policy_path, start, history, *, kernels=None):
@@ -53,6 +90,7 @@ def condition_population(base, motion_fit, policy_path, start, history, *, kerne
     rows, _, _ = extract(arrays, start=240., stop=300.)
     if len(rows) and ((rows[:, 0] < 240).any() or (rows[:, 0]+rows[:, 9] > 300).any()):
         raise ValueError('FIT selector returned noncausal intervals')
+    rows = chain_gaps(rows, arrays)
     support = np.asarray(base.population['support'], dtype=float)
     drivers, counts = {}, {}
     for vid in hdv_ids:
@@ -73,7 +111,8 @@ def condition_population(base, motion_fit, policy_path, start, history, *, kerne
     result = base.with_motion_posteriors(drivers, t0_s=300.)
     result.provenance.update(runtime_conditioning=True,
         saved_driver_id_lookup=False, conditioning_interval_s=[240., 300.],
-        motion_kernel_source_sha256=source_sha)
+        motion_kernel_source_sha256=source_sha, motion_profile_step='active_sumo_idm_step',
+        motion_gap_geometry='registered_lane_chain')
     return result, dict(runtime_motion_conditioning=True, saved_driver_id_lookup=False,
         posterior_source='runtime_motion_conditioned_fixed_population',
         motion_rows_by_observed_id=counts, conditioned_drivers=len(drivers),
