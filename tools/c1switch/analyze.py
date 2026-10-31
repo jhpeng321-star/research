@@ -39,24 +39,39 @@ def summarize(root):
     binding = json.loads((root/'BINDING.json').read_text()) if (root/'BINDING.json').exists() else {}
     total = binding.get('total_sim_s',478410)
     retained = binding.get('retained_superseded_sim_s',0)
-    if (total,retained) not in ((478410,0),(490860,12450)):
+    recovery = total in (499260,499680) and binding.get('authorization')=='MAIN23:25'
+    abandoned = binding.get('retained_abandoned_sim_s',0)
+    valid_recovery = recovery and retained==12450 and (total,abandoned) in ((499260,11100),(499680,17820))
+    if (total,retained) not in ((478410,0),(490860,12450)) and not valid_recovery:
         raise ValueError('unregistered continuation accounting')
     rows = {a:[] for a in ARMS}
     ledger = [json.loads(x) for x in (root/'accounting.jsonl').read_text().splitlines()]
     closes = [json.loads(p.read_text()) for p in root.glob('jobs/*/CLOSE.json')]
-    if sum(x['sim_s'] for x in ledger) != total or 47010+retained+sum(x['actual_sim_s'] for x in closes) != total:
+    if sum(x['sim_s'] for x in ledger) != total or 47010+retained+abandoned+sum(x['actual_sim_s'] for x in closes) != total:
         raise ValueError('complete-panel charged/actual accounting required')
+    if any(x['actual_sim_s']!=x['charged_sim_s'] for x in closes):
+        raise ValueError('job actual/charged mismatch')
+    expected_budget = {a:BUDGET[a] for a in ARMS}
+    if recovery:
+        expected_budget.update(wm=175560,bb=180540,random=11700)
+        if total==499680:expected_budget.update(wm=178380,bb=184440,random=5400)
+        if binding['per_arm'] != expected_budget:
+            raise ValueError('recovery per-arm plan mismatch')
     for arm in ARMS:
-        if sum(x['sim_s'] for x in ledger if x['id'].startswith(arm+'_')) != BUDGET[arm]:
+        if sum(x['sim_s'] for x in ledger if x['id'].startswith(arm+'_')) != expected_budget[arm]:
             raise ValueError('per-arm accounting mismatch')
         for world in panel:
+            dropped = range(969118,969128) if total==499680 else (969125,969126,969127)
+            if recovery and arm=='random' and world['seed'] in dropped:
+                rows[arm].append(None)
+                continue
             p = root/'jobs'/f'{arm}_s{world["seed"]}_episode'
             r = json.loads((p/'RESULT.json').read_text())
             if r['world'] != world or len(r['decisions']) != 10:
                 raise ValueError('episode pairing mismatch')
             rows[arm].append(r)
     for i in range(16):
-        if len({canonical(rows[a][i]['decisions'][0]['prefix']) for a in ARMS}) != 1:
+        if len({canonical(rows[a][i]['decisions'][0]['prefix']) for a in ARMS if rows[a][i] is not None}) != 1:
             raise ValueError('paired warmup mismatch')
     fixed = np.array([[rows[a][i]['J600']['team_delay_vs'] for a in CONTROLLERS] for i in range(16)])
     regrets = np.zeros((16,2));contrasts = np.zeros((16,5))
@@ -86,20 +101,27 @@ def summarize(root):
                         pick=d['pick'],regret=true[chosen]-min(true),spearman=rho,
                         direction_correct=int(((pdir[1:]==tdir[1:])&eligible).sum()),
                         direction_n=int(eligible.sum()),direction_tied=int((~eligible).sum())))
-    values = {a:np.array([r['J600']['team_delay_vs'] for r in rows[a]]) for a in ARMS}
+    values = {a:np.array([r['J600']['team_delay_vs'] if r is not None else np.nan for r in rows[a]]) for a in ARMS}
     secondary = {}
-    draws = np.random.default_rng(0).integers(0,16,(2000,16))
     for a in ('wm','bb','random'):
         targets = {c:values[c] for c in CONTROLLERS}
         targets['best_fixed_in_hindsight'] = fixed.min(1)
-        secondary[a] = {b:dict(mean=float((values[a]-v).mean()),
-            ci95=np.quantile((values[a]-v)[draws].mean(1),[.025,.975]).tolist()) for b,v in targets.items()}
-    safety = {a:{k:sum(r['J600'][k] for r in rows[a]) for k in
+        valid = np.isfinite(values[a])
+        arm_draws = np.random.default_rng(0).integers(0,int(valid.sum()),(2000,int(valid.sum())))
+        secondary[a] = {b:dict(mean=float((values[a]-v)[valid].mean()),worlds=int(valid.sum()),
+            ci95=np.quantile((values[a]-v)[valid][arm_draws].mean(1),[.025,.975]).tolist()) for b,v in targets.items()}
+    for a in ('wm','bb'):
+        valid = np.isfinite(values['random'])
+        rd = np.random.default_rng(0).integers(0,int(valid.sum()),(2000,int(valid.sum())))
+        diff = (values[a]-values['random'])[valid]
+        secondary[a]['random'] = dict(mean=float(diff.mean()),worlds=int(valid.sum()),ci95=np.quantile(diff[rd].mean(1),[.025,.975]).tolist())
+    safety = {a:{k:sum(r['J600'][k] for r in rows[a] if r is not None) for k in
                    ('collisions','teleports','ttc_below_3_vs','hard_brake')} for a in ARMS}
     cells = []
     for p,d in sorted({(w['penetration'],w['demand']) for w in panel}):
         ix = [i for i,w in enumerate(panel) if (w['penetration'],w['demand'])==(p,d)]
-        cells.append(dict(penetration=p,demand=d,n=len(ix),J600={a:float(v[ix].mean()) for a,v in values.items()},
+        cells.append(dict(penetration=p,demand=d,n=len(ix),J600={a:float(np.nanmean(v[ix])) if np.isfinite(v[ix]).any() else None for a,v in values.items()},
+                          arm_n={a:int(np.isfinite(v[ix]).sum()) for a,v in values.items()},
                           regret60={a:float(regrets[ix,j].mean()) for j,a in enumerate(('wm','bb'))}))
     accuracy = {}
     for arm in ('wm','bb'):
@@ -112,10 +134,11 @@ def summarize(root):
                 spearman_n=len(rho),direction_accuracy=sum(r['direction_correct'] for r in selected)/n if n else None,
                 direction_n=n,direction_tied=sum(r['direction_tied'] for r in selected))
     result = dict(primary=primary(fixed,regrets,contrasts),secondary_episode_paired=secondary,
-        episode_mean={a:float(v.mean()) for a,v in values.items()},safety=safety,cells=cells,
-        switching_mean={a:sum(r['switching_frequency'] for r in rows[a])/16 for a in ARMS},
+        episode_mean={a:float(np.nanmean(v)) for a,v in values.items()},safety=safety,cells=cells,
+        episode_n={a:int(np.isfinite(v).sum()) for a,v in values.items()},
+        switching_mean={a:sum(r['switching_frequency'] for r in rows[a] if r is not None)/sum(r is not None for r in rows[a]) for a in ARMS},
         measured_decisions=decision_rows,ranking_direction=accuracy,charged_sim_s=total,actual_sim_s=total,
-        retained_superseded_sim_s=retained,
+        retained_superseded_sim_s=retained,retained_abandoned_sim_s=abandoned,
         caveats=['predicted current-belief fleet objective vs true fleet+source evaluation',
                  'WM/BB on-policy decision states differ; world/clock paired',
                  'two exploratory primary contrasts; no multiplicity adjustment',

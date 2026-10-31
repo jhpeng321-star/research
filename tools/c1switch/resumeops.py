@@ -358,7 +358,72 @@ print(json.dumps(dict(updated=True,charged_sim_s=sum(json.loads(x)['sim_s'] for 
     print(json.dumps(dict(gpu=staged,cpu=updated),indent=2))
 
 
+def quiesce():
+    cpu = ssh('cpuQ',f'''import json,time
+from pathlib import Path
+r=Path({CPU!r})
+for a in ('wm','bb'):
+ p=r/'rpc'/a/'STOP'
+ if not p.exists():p.write_text(json.dumps(dict(reason='close own waiters after recovery STOP',unix=time.time())))
+print(json.dumps(dict(stopped_waiters=True)))
+''')
+    gpu = ssh(GPU_HOST,f'''import json,os,signal,time
+from pathlib import Path
+r=Path({GPU!r});out={{}}
+for a in ('wm','bb'):
+ d=json.loads((r/(a+'_gpu_DISPATCH.json')).read_text());pid=d['pid'];alive=Path('/proc',str(pid)).exists()
+ if alive and not (r/'rpc'/a/'GPU_FINISHED.json').exists():
+  cmd=Path('/proc',str(pid),'cmdline').read_bytes().decode().replace(chr(0),' ')
+  assert 'gpu_serve' in cmd and str(r) in cmd
+  os.kill(pid,signal.SIGINT)
+ out[a]=dict(pid=pid,was_alive=alive)
+print(json.dumps(out))
+''')
+    write(EVIDENCE/'V9_QUIESCE.json',dict(cpuQ=cpu,gpuR=gpu))
+    print(json.dumps(dict(cpuQ=cpu,gpuR=gpu),indent=2))
+
+
+def recovery_audit():
+    cpu = ssh('cpuQ',f'''import json,time
+from pathlib import Path
+r=Path({CPU!r});rows=[json.loads(x) for x in (r/'accounting.jsonl').read_text().splitlines()];jobs=[]
+for p in sorted((r/'jobs').iterdir()):
+ close=json.loads((p/'CLOSE.json').read_text()) if (p/'CLOSE.json').exists() else None
+ jobs.append(dict(id=p.name,close=close,result_present=(p/'RESULT.json').exists(),physics_present=(p/'PHYSICS.json').exists()))
+owners=[json.loads(p.read_text()) for p in (r/'recovery').glob('OWN_*.json')]+[json.loads((r/'recovery_DISPATCH.json').read_text())]
+print(json.dumps(dict(unix=time.time(),accounting=rows,jobs=jobs,own_pids={{str(x['pid']):Path('/proc',str(x['pid'])).exists() for x in owners}})))
+''',timeout=90)
+    gpu = ssh(GPU_HOST,f'''import json
+from pathlib import Path
+r=Path({GPU!r});out={{}}
+for a in ('wm','bb'):
+ p=r/'rpc'/a/'GPU_FINISHED.json';assert p.exists();row=json.loads(p.read_text());assert not Path('/proc',str(row['pid'])).exists();out[a]=row
+print(json.dumps(out))
+''')
+    jobs = cpu['jobs']
+    assert not any(cpu['own_pids'].values())
+    assert all(x['close'] is not None for x in jobs)
+    assert all(x['close']['actual_sim_s']==x['close']['charged_sim_s'] for x in jobs)
+    charged = sum(r['sim_s'] for r in cpu['accounting'])
+    assert charged==70560+sum(x['close']['actual_sim_s'] for x in jobs)
+    new_abandoned = sum(x['close']['actual_sim_s'] for x in jobs if not x['result_present'] and not x['physics_present'])
+    projected = 499260+new_abandoned
+    import math
+    drop_more = max(0,math.ceil((projected-500000)/900))
+    dropped = list(range(969125-drop_more,969128))
+    total = projected-900*drop_more
+    prior = json.loads((EVIDENCE/'V9_STAGE.json').read_text())['gpu']['prior_gpu_s']+sum(r['elapsed_s'] for r in gpu.values())
+    summary = dict(charged_sim_s=charged,new_abandoned_sim_s=new_abandoned,
+                   projected_total_sim_s=total,dropped_random_seeds=dropped,
+                   prior_gpu_s=prior,remaining_gpu_s=14400-prior,
+                   complete_episodes=sum(x['id'].endswith('_episode') and x['result_present'] for x in jobs),
+                   complete_physics=sum(x['id'].endswith('_episode') and (x['result_present'] or x['physics_present']) for x in jobs),
+                   complete_branches=sum(not x['id'].endswith('_episode') and x['result_present'] for x in jobs))
+    write(EVIDENCE/'V9_FINAL_AUDIT.json',dict(cpuQ=cpu,gpuR=gpu,summary=summary))
+    print(json.dumps(summary,indent=2))
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('mode', choices=('inspect','dependencies','preflight','stage','import_receipts','cpu','dependency_runtime','wm_gpu','bb_gpu','gate','relay','main_panel','progress','relocate'))
+    parser.add_argument('mode', choices=('inspect','dependencies','preflight','stage','import_receipts','cpu','dependency_runtime','wm_gpu','bb_gpu','gate','relay','main_panel','progress','relocate','quiesce','recovery_audit'))
     globals()[parser.parse_args().mode]()

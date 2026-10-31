@@ -1,12 +1,16 @@
 {
   "cpuQ": {
-    "unix": 1793461695.6364238,
+    "unix": 1793461855.2696152,
     "load": [
-      2.3095703125,
-      2.72412109375,
-      1.60693359375
+      24.9072265625,
+      12.5546875,
+      5.50048828125
     ],
     "receipts": {
+      "STOP": {
+        "reason": "recovery durable STOP or invalid stage",
+        "pid": 211687
+      },
       "recovery_DISPATCH.json": {
         "host": "cpuQ",
         "pid": 211684,
@@ -15,9 +19,8 @@
       },
       "recovery/STATUS.json": {
         "phase": "episodes",
-        "pending": 101,
+        "pending": 100,
         "active": {
-          "bb_s969114_episode": 211685,
           "bb_s969118_episode": 211686,
           "bb_s969121_episode": 211687,
           "bb_s969122_episode": 211688,
@@ -30,32 +33,43 @@
           "wm_s969116_episode": 211696,
           "wm_s969117_episode": 211697,
           "wm_s969118_episode": 211698,
-          "wm_s969119_episode": 211699
+          "wm_s969119_episode": 211699,
+          "wm_s969120_episode": 220776
         },
-        "done": []
+        "done": [
+          "bb_s969114_episode"
+        ]
       }
     },
     "own_pids": {
-      "211684": true
+      "211687": false,
+      "211684": false
     },
     "logs": {},
-    "charged_sim_s": 231510,
-    "actual_closed_sim_s": 227310.0,
+    "charged_sim_s": 234930,
+    "actual_closed_sim_s": 231870.0,
     "episodes": 10,
-    "physics": 0,
+    "physics": 1,
     "branches": 231,
     "picks": {
-      "wm": 10,
-      "bb": 90
+      "wm": 18,
+      "bb": 140
     },
-    "failures": {}
+    "failures": {
+      "recovery/bb_s969123_episode.log": " Retrying in 1 seconds\nTraceback (most recent call last):\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 196, in _run_module_as_main\n    return _run_code(code, main_globals, None,\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 86, in _run_code\n    exec(code, run_globals)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 309, in <module>\n    main()\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 302, in main\n    run_episode(world,args.arm,inputs)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 153, in run_episode\n    result = episode(env,arm,world,predictor=Predictor(arm) if arm in ('wm','bb') else None,\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/episode.py\", line 64, in episode\n    backend.advance(60)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/sumo.py\", line 191, in advance\n    self.reserve(seconds)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/sumo.py\", line 163, in reserve\n    self.ledger.charge(f'{self.ident}_{self.serial:04d}', seconds, self.stage)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 93, in charge\n    raise ValueError('recovery durable STOP or invalid stage')\nValueError: recovery durable STOP or invalid stage\n",
+      "recovery/wm_s969119_episode.log": " Retrying in 1 seconds\nTraceback (most recent call last):\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 196, in _run_module_as_main\n    return _run_code(code, main_globals, None,\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 86, in _run_code\n    exec(code, run_globals)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 309, in <module>\n    main()\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 302, in main\n    run_episode(world,args.arm,inputs)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 153, in run_episode\n    result = episode(env,arm,world,predictor=Predictor(arm) if arm in ('wm','bb') else None,\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/episode.py\", line 64, in episode\n    backend.advance(60)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/sumo.py\", line 191, in advance\n    self.reserve(seconds)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/sumo.py\", line 163, in reserve\n    self.ledger.charge(f'{self.ident}_{self.serial:04d}', seconds, self.stage)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 93, in charge\n    raise ValueError('recovery durable STOP or invalid stage')\nValueError: recovery durable STOP or invalid stage\n",
+      "recovery/bb_s969121_episode.log": " Retrying in 1 seconds\nTraceback (most recent call last):\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 196, in _run_module_as_main\n    return _run_code(code, main_globals, None,\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 86, in _run_code\n    exec(code, run_globals)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 309, in <module>\n    main()\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 302, in main\n    run_episode(world,args.arm,inputs)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 153, in run_episode\n    result = episode(env,arm,world,predictor=Predictor(arm) if arm in ('wm','bb') else None,\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/episode.py\", line 64, in episode\n    backend.advance(60)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/sumo.py\", line 191, in advance\n    self.reserve(seconds)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/sumo.py\", line 163, in reserve\n    self.ledger.charge(f'{self.ident}_{self.serial:04d}', seconds, self.stage)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 93, in charge\n    raise ValueError('recovery durable STOP or invalid stage')\nValueError: recovery durable STOP or invalid stage\n",
+      "recovery/bb_s969122_episode.log": " Retrying in 1 seconds\nTraceback (most recent call last):\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 196, in _run_module_as_main\n    return _run_code(code, main_globals, None,\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 86, in _run_code\n    exec(code, run_globals)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 309, in <module>\n    main()\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 302, in main\n    run_episode(world,args.arm,inputs)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 153, in run_episode\n    result = episode(env,arm,world,predictor=Predictor(arm) if arm in ('wm','bb') else None,\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/episode.py\", line 64, in episode\n    backend.advance(60)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/sumo.py\", line 191, in advance\n    self.reserve(seconds)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/sumo.py\", line 163, in reserve\n    self.ledger.charge(f'{self.ident}_{self.serial:04d}', seconds, self.stage)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 93, in charge\n    raise ValueError('recovery durable STOP or invalid stage')\nValueError: recovery durable STOP or invalid stage\n",
+      "recovery/bb_s969126_episode.log": " Retrying in 1 seconds\nTraceback (most recent call last):\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 196, in _run_module_as_main\n    return _run_code(code, main_globals, None,\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 86, in _run_code\n    exec(code, run_globals)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 309, in <module>\n    main()\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 302, in main\n    run_episode(world,args.arm,inputs)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 153, in run_episode\n    result = episode(env,arm,world,predictor=Predictor(arm) if arm in ('wm','bb') else None,\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/episode.py\", line 64, in episode\n    backend.advance(60)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/sumo.py\", line 191, in advance\n    self.reserve(seconds)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/sumo.py\", line 163, in reserve\n    self.ledger.charge(f'{self.ident}_{self.serial:04d}', seconds, self.stage)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 93, in charge\n    raise ValueError('recovery durable STOP or invalid stage')\nValueError: recovery durable STOP or invalid stage\n",
+      "recovery/bb_s969118_episode.log": " Retrying in 1 seconds\nTraceback (most recent call last):\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 196, in _run_module_as_main\n    return _run_code(code, main_globals, None,\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 86, in _run_code\n    exec(code, run_globals)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 309, in <module>\n    main()\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 302, in main\n    run_episode(world,args.arm,inputs)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 153, in run_episode\n    result = episode(env,arm,world,predictor=Predictor(arm) if arm in ('wm','bb') else None,\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/episode.py\", line 64, in episode\n    backend.advance(60)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/sumo.py\", line 191, in advance\n    self.reserve(seconds)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/sumo.py\", line 163, in reserve\n    self.ledger.charge(f'{self.ident}_{self.serial:04d}', seconds, self.stage)\n  File \"/home/ubuntu/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 93, in charge\n    raise ValueError('recovery durable STOP or invalid stage')\nValueError: recovery durable STOP or invalid stage\n"
+    }
   },
   "gpuR": {
-    "unix": 1793461696.429915,
+    "unix": 1793461856.3951092,
     "load": [
-      21.32470703125,
-      22.73193359375,
-      18.83984375
+      36.30615234375,
+      30.130859375,
+      22.31005859375
     ],
     "receipts": {
       "wm_gpu_DISPATCH.json": {
@@ -80,6 +94,19 @@
         "unix": 1793461618.9414923,
         "cap_s": 200
       },
+      "rpc/bb/GPU_FINISHED.json": {
+        "pid": 709259,
+        "elapsed_s": 200.00307136774063,
+        "unix": 1793461818.9435785
+      },
+      "rpc/wm/STOP": {
+        "reason": "recovery durable STOP or invalid stage",
+        "pid": 211699
+      },
+      "rpc/bb/STOP": {
+        "reason": "shared GPU allocation exhausted",
+        "pid": 709259
+      },
       "rpc/wm/PARITY.json": {
         "pass_": true,
         "bitwise": true,
@@ -93,8 +120,11 @@
     },
     "own_pids": {
       "709203": true,
-      "709259": true
+      "709259": false,
+      "211699": false
     },
-    "logs": {}
+    "logs": {
+      "bb_gpu.log": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/root/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 272, in gpu_serve\n    time.sleep(.1)\n  File \"/root/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 247, in expired\n    raise TimeoutError('shared GPU allocation exhausted')\nTimeoutError: shared GPU allocation exhausted\n"
+    }
   }
 }
