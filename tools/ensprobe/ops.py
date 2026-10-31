@@ -44,7 +44,7 @@ out=dict(load=os.getloadavg(),cpus=os.cpu_count(),manifest_sha256=hashlib.sha256
 names=['traffic_shepherd/scenarios.py','traffic_shepherd/c4/population.py','traffic_shepherd/simulation.py',
  'traffic_shepherd/c4/env.py','traffic_shepherd/c4/seeds.py','traffic_shepherd/seeds.py',
  'traffic_shepherd/metrics.py','traffic_shepherd/config.py','baselines/circles/adapter.json',
- 'traffic_shepherd/c4/evalprep.py','src/wms/control/deploy.py']
+ 'traffic_shepherd/c4/evalprep.py','src/wms/control/deploy.py','traffic_shepherd/research_assets.py']
 manifest=json.loads(m.read_text());out['sources']={}
 for name in names:
  p=r/name;raw=p.read_bytes();digest=hashlib.sha256(raw).hexdigest()
@@ -210,7 +210,10 @@ out['charged_sim_s']=sum(json.loads(s)['sim_s'] for s in p.read_text().splitline
 out['log_tail']=(root/'worker.log').read_text()[-6000:] if (root/'worker.log').exists() else ''
 print(json.dumps(out))
 ''')
-    write((Path(REMOTE).name.replace('recovery_','')+'_' if 'recovery_' in REMOTE else '')+'progress.json',out);print(json.dumps(out,indent=2))
+    write((Path(REMOTE).name.replace('recovery_','')+'_' if 'recovery_' in REMOTE else '')+'progress.json',out)
+    visible={k:v for k,v in out.items() if k not in ('CPU.json','log_tail')}
+    if 'FAILURE.json' in out:visible['log_tail']=out['log_tail']
+    print(json.dumps(visible,indent=2))
 
 
 def diagnose():

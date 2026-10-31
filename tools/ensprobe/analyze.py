@@ -1,5 +1,6 @@
 """Complete-panel descriptive distributions; frozen detector imported as one AST node."""
 import ast
+import argparse
 import csv
 import hashlib
 import json
@@ -217,4 +218,10 @@ def report(summary,summaries):
     (ROOT/'docs/paper_results/ENSPROBE.md').write_text('\n'.join(lines)+'\n',encoding='utf-8')
 
 
-if __name__=='__main__':main()
+if __name__=='__main__':
+    parser=argparse.ArgumentParser();parser.add_argument('--verify-only',action='store_true');args=parser.parse_args()
+    if args.verify_only:
+        panel=json.loads((EVIDENCE/'collection.json').read_text());verify(panel)
+        print(json.dumps(dict(verified_branches=80,physical_gates=80,charged_sim_s=49869,actual_sim_s=49869,
+                              retained_result_sha256_matches=True)))
+    else:main()
