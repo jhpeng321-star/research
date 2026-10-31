@@ -1,8 +1,26 @@
 # S-RB-RUNB handoff
 
-Updated 2026-11-01 00:35 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+Updated 2026-11-01 01:30 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
 
-## Current — WM-PHYS-B claimed / waiting for resources
+## Current — B withdrawn before inference; corrected variant needed
+- INT01:24 reports A's three constructor failures: frozen MAPPO callback requires
+  unsupported `policy_native_lanes`. Independently AST-checked B's immutable
+  bridge: argument absent, no **kwargs. No DISPATCH.json, LAUNCHED or shard exists.
+- Closed ONLY owned waiting supervisor728893 after boot/start-tick/cmdline checks,
+  under shared GPU admission lock, using a pidfd signal. Verified exit and zero
+  inference again. No peer PID touched; existing watcher33076 stays alive.
+- Preserved original claim/runtime/launch/logs. Remote WITHDRAWAL_REQUEST.json
+  and FAILED.json explicitly say WITHDRAWN_BEFORE_INFERENCE/tasks0; shared
+  WM-PHYS-B.failed.json prevents automatic retries. No .done or efficacy claim.
+- INT should remove original B from READY and publish a corrected NEW variant
+  with a five-arm constructor gate; waiting for that publication.
+- Owner00:44 later schedule (registration5736) noted: FULL freeze09:30, evaluate
+ 09:30–11:30; this runner's current in-session monitoring remains through~07:00.
+- One-time operation: tools/rbrunb/withdraw_waiting_b.py. First attempt failed
+  before any signal/write because old remote Python lacks os.pidfd_open; Linux
+  syscall wrapper then succeeded with the same fail-closed ownership checks.
+
+## Historical 00:35 — WM-PHYS-B claimed / waiting for resources
 - INT explicitly published **WM-PHYS-B / RUNB gpuR** at ~00:34. Atomically claimed
   `E:/agent-work/rb-shared/evalclaims/WM-PHYS-B.claim`; owner S-RB-RUNB.
 - Source `b0f66943ec300594fc220d3779fb482c26534b1c`, immutable published B
