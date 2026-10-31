@@ -1,5 +1,10 @@
 # Fleet PPO controller-selector training status
 
+> Connectivity alert, 2026-11-01 06:13 +08:00: cpuQ SSH remains unavailable.
+> The values below are the last successful observation, not current health.
+> See `SELMAPPO_SUPERVISION.md` for committed 20-minute outage checks and
+> `../../SELMAPPO_INFRA_ALERT.md` for the MAIN notification. No relaunch attempted.
+
 Observed UTC: 2026-10-31T21:15:32.762626+00:00
 - cpuQ supervisor: 645235; alive=True; nice=19.
 - Genuine completed PPO updates: 37/169; final169 eligible=False.
