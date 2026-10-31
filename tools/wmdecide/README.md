@@ -129,3 +129,17 @@ checks. Integration uses the trusted local evaluator (`WMS_RBEVAL_ROOT` override
 the sibling worktree), creates a clearly named **synthetic plumbing fixture** from
 its allowed observable receipt, and exercises full validation → CSV/SVG/report.
 Scratch artifacts are preserved under `E:/Temp/opencode`, never deleted.
+
+## Portable report publication
+
+```powershell
+python -B -m tools.wmdecide.publish --reports WM2_REPORT CANDIDATE_REPORT --matched --out NEW_PUBLICATION
+```
+
+This validates every source output checksum, requires scored K8 evidence, and
+copies exact Markdown/figure/reliability bytes into per-model directories so the
+relative links survive inclusion in the morning report. `--matched` rejects
+different scored-world sets. `POOLED.json` contains compact numeric summaries;
+`REPORTS.json` binds the full source reports/audits/manifests, and `FILES.json`
+binds the publication. Output must be NEW under an existing parent. No scoring,
+inference, fitting or input overwriting occurs during publication.

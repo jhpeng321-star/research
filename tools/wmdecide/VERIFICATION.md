@@ -13,6 +13,11 @@ explicit matched-world admission (missing/duplicate/empty/wrong-type rejection).
 The actual external-validator integration also verifies explicit world filtering
 and rejection before output creation. No simulation or inference was launched.
 
+Publication verification: **18 CPU tests PASS /4.582s**, including checksum-bound
+portable output, byte-exact SVG export, duplicate/empty source and overwrite
+rejection, tampered-source failure before destination creation, and singleton-cell
+bootstrap uncertainty rejection. The existing tests were extended, not replaced.
+
 ## Checks completed
 
 ```powershell

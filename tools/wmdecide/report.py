@@ -160,7 +160,10 @@ def credibility_section(model, audit, summaries):
     lines.extend(["Uncertainty: pointwise 95% percentile intervals from 10,000 stratified "
                   "whole-world resamples (seed 20261031); arms and pairs are never independent "
                   "replicates. These CIs condition on the saved ensemble and do not include "
-                  "finite-K resampling or shared model error. No simultaneous gate is implied.", "",
+                   "finite-K resampling or shared model error. No simultaneous gate is implied.", "",
+                  "Bootstrap composition is fixed within split/demand/penetration strata of the "
+                  "scored worlds. Singleton strata supply no resampling variation; a panel of "
+                  "distinct singleton cells cannot support these CIs even if its point scores differ.", "",
                   "Central 50/80/90% empirical-quantile coverage is descriptive at K8. "
                   "Inclusive min–max coverage has continuous exchangeability reference 7/9; "
                   "ties may raise it. Wide coverage alone does not establish useful predictions.", "",

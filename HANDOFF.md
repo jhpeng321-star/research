@@ -2,6 +2,30 @@
 
 Branch `c4/rb-decide`, base `f0db3c82`; owner WM-PHYS registration line5683.
 
+## Latest publication — matched 04:00 snapshot, scored ~05:00 +08
+
+- **Credibility sections now contain real complete-K8 evidence**, for WM2 and
+  WM-PHYS-FULL-v1 on identical worlds969432/433/434/436. Start at
+  `docs/paper_results/wmdecide/INTERIM_0400.md`; portable per-model sections/three
+  SVGs are in `docs/paper_results/wmdecide/matched_0400/`. This supersedes the old
+  blocked progress receipt, without replacing or rerunning any inference.
+- FULL-v1 delay CRPS improves at120/300/600s, but still loses absolute-delay cell
+  climatology and range coverage is10/40/25%. Selected0.8-rule strict wins are
+  **4/13,6/12,10/11** vs mean forecast94.2/96.9/95.5%; all-pair preference Brier
+  worsens at300s. These are four-world diagnostics, not qualification/policy wins.
+- Matched cells are singleton strata: credibility CIs explicitly unavailable.
+  No finite-K or same-state calibration claim; HDV60 adoption gate still required.
+- Code improvement `e8302db3`: strict `--worlds ID ...`, selected-switch Brier/
+  reliability, visible coverage and picker switch-rate/expected/recorded savings.
+  New `python -B -m tools.wmdecide.publish --reports REPORT... --matched --out NEW`
+  exports hash-verified portable sections/figures and pooled receipts without scoring.
+- **18 CPU tests PASS /4.582s** including actual EVAL-validator→report→publication,
+  reverse selected directions/ties, label-blind selection, abstention, exact world
+  admission, immutable exports, tamper rejection and singleton-CI guard.
+- For later A2/B2/C2/FULL-v3: run the credibility CLI separately per immutable
+  identity; use the same explicit scored worlds on WM2 for matched comparisons.
+  Preserve all raw audit/FILES receipts and publish to a NEW version directory.
+
 ## Fresh-session continuation — 2026-11-01 04:44 +08
 
 - Preserved clean HEAD `cbf042f7` and all three implementation/verification commits.

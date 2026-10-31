@@ -11,6 +11,7 @@ import numpy as np
 
 from .__main__ import credibility
 from .metrics import WorldIntervals, brier, crps, interval_coverage, reliability
+from .publish import publish
 from .rbeval_adapter import baseline_worlds, load_harness, observations, safe_path, select_worlds
 from .report import credibility_section, reliability_svg, summarize_rows
 
@@ -90,6 +91,8 @@ class ScoreTests(unittest.TestCase):
         self.assertIsNone(boot.mean(rows[:1]*20, "v")["low"])
         constant = [dict(seed=1, v=.7), dict(seed=2, v=.7)]
         self.assertFalse(boot.mean(constant, "v")["uncertainty_available"])
+        singleton_cells = WorldIntervals({1: ("x",), 2: ("y",)}, repetitions=100)
+        self.assertFalse(singleton_cells.mean(rows, "v")["uncertainty_available"])
 
     def test_baselines_exclude_all_target_arms_and_reserved_labels(self):
         real, _ = synthetic_observations()
@@ -293,6 +296,24 @@ class HarnessIntegrationTests(unittest.TestCase):
         self.assertEqual(core.load(scratch/"pick.json")["selected"], "candidate")
         repeated = subprocess.run(command, capture_output=True, text=True, timeout=30)
         self.assertNotEqual(repeated.returncode, 0)
+        package = publish([scratch/"report"], scratch/"published", matched=True)
+        self.assertEqual(package["reports"][0]["scored_worlds"], [969420])
+        dest = scratch/"published"/package["reports"][0]["directory"]
+        self.assertEqual((dest/"reliability_preference.svg").read_bytes(),
+                         (scratch/"report/reliability_preference.svg").read_bytes())
+        for name, expected in core.load(scratch/"published/FILES.json").items():
+            self.assertEqual(core.digest(scratch/"published"/name), expected)
+        for bad_reports in ([scratch/"report"]*2, []):
+            with self.assertRaises(ValueError):
+                publish(bad_reports, scratch/"bad_publication")
+        with self.assertRaises(ValueError):
+            publish([scratch/"report"], scratch/"published")
+        # A corrupt source must fail before creating a misleading publication.
+        with (scratch/"report/reliability_preference.svg").open("ab") as f:
+            f.write(b"corrupt synthetic fixture for rejection test")
+        with self.assertRaises(ValueError):
+            publish([scratch/"report"], scratch/"corrupt_publication")
+        self.assertFalse((scratch/"corrupt_publication").exists())
 
 
 if __name__ == "__main__":
