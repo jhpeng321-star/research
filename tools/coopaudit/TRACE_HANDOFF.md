@@ -9,7 +9,9 @@ row is one RSU-observable vehicle at a 0.5s physics frame: absolute `t`, stable
 `vid`, downstream-increasing `s` metres, `lane` (0/1 mainline,2 ramp,-1 junction),
 `v` m/s, realised `a` m/s², frozen `member` boolean, `requested_accel` for wall
 commands (null for other controllers). Realised `a` is NOT the policy's raw
-request. No hidden type or simulator assignment is exported.
+request. Production additionally tags `ramp_observed` and retains identities
+observed on lane2 after they merge into lane0/1, so merge-event trajectories are
+not cut at the lane change. No hidden type or simulator assignment is exported.
 
 Coverage: t0-30 through intervention end+30. Include every frozen member and
 ramp vehicles inside the observed approach/merge zone or within300m of a live

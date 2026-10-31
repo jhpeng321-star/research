@@ -6,7 +6,7 @@ import tempfile
 import unittest
 import numpy as np
 from tools.coopaudit.design import interaction, select_group, worlds, SEEDS
-from tools.coopaudit.controllers import WallControl, wall_roster
+from tools.coopaudit.controllers import WallControl, wall_roster, Controller, ctrl0_scope
 from tools.coopaudit.analyze import bootstrap
 from tools.coopaudit.accounting import Ledger
 
@@ -38,8 +38,20 @@ class AuditContracts(unittest.TestCase):
     def test_all_group_not_capped_at_four(self):
         self.assertEqual(len(select_group([row(str(i),-i) for i in range(15)])),15)
 
+    def test_ramp_trace_identity_survives_merge(self):
+        from tools.coopaudit.runner import trace_rows
+        seen=set()
+        prefix=[dict(row('member',0),t=299),dict(row('ramp',-1,2),t=299)]
+        trace_rows(prefix,['member'],ramp_ids=seen)
+        after=[dict(row('member',2),t=300),dict(row('ramp',1,1),t=300),
+               dict(row('ordinary',1,1),t=300)]
+        kept=trace_rows(after,['member'],ramp_ids=seen)
+        self.assertEqual({r['vid'] for r in kept},{'member','ramp'})
+        self.assertTrue(next(r for r in kept if r['vid']=='ramp')['ramp_observed'])
+
     def test_missing_is_not_singleton(self):
         self.assertEqual(select_group([row('a',0)]),[])
+        self.assertEqual(select_group([row('a',0),row('b',1)],4),[])
 
     def test_wall_solos_retain_full_coordinated_context(self):
         rows=[row('front',-10,0),row('rear',-20,1)]
@@ -60,6 +72,25 @@ class AuditContracts(unittest.TestCase):
         self.assertEqual(wall.session.abort_reason,'lane_coverage_violation')
         self.assertEqual(wall.commands(rows,301,set()),{})
 
+    def test_pi_and_circles_bind_exact_subset_and_native_release(self):
+        for name,fallback in (('pi','pi'),('circles','damping')):
+            c=Controller(name,{},[])
+            a,kw,_=c.command(None,frozenset(['one']))
+            self.assertIsNone(a)
+            self.assertEqual(kw,dict(fallback=fallback,fallback_ids=frozenset(['one'])))
+            self.assertEqual(c.command(None,frozenset()),(None,{},{}))
+
+    @unittest.skipIf(os.name=='nt','exact frozen zero.py is available on Linux host')
+    def test_ctrl0_disabled_members_are_not_always_commanded(self):
+        from unittest.mock import patch
+        from wms.control import nativeinit
+        original=nativeinit.sumo_residual_commands
+        with patch.object(nativeinit,'sumo_native_accel',return_value=.25):
+            with ctrl0_scope():
+                result=nativeinit.sumo_residual_commands(None,{'on':0.,'off':np.nan},-3,2.6)
+                self.assertEqual(result,{'on':.25})
+        self.assertIs(nativeinit.sumo_residual_commands,original)
+
     def test_bootstrap_world_cluster_and_missing_stratum(self):
         estimates=bootstrap([[1,2],[1,2],[3,6],[3,6]],[0,0,1,1],100)
         self.assertEqual(estimates[0]['mean'],2.)
@@ -70,6 +101,22 @@ class AuditContracts(unittest.TestCase):
         self.assertEqual(len(worlds()),28)
         self.assertEqual(sum(w['cell']<4 for w in worlds()),24)
         self.assertFalse(SEEDS & (set(range(969200,969625))|set(range(981200,981300))))
+
+    def test_selection_requires_complete_published_probe(self):
+        from tools.coopaudit.continue_audit import selection
+        with self.assertRaises(ValueError):
+            selection(dict(status='PASS',table=[]))
+
+    def test_selection_adopts_probe_and_refuses_different_winner(self):
+        from tools.coopaudit.continue_audit import selection
+        table=[dict(status='ok',grid=i,selection_snr=float(i),sim_s_per_sample=100,
+                    design=['all',60,.5],use_cv=False) for i in range(27)]
+        receipt=dict(status='PASS',table=table,selected=table[-1])
+        self.assertEqual(selection(receipt)['group_size'],'all')
+        self.assertEqual(selection(receipt)['window_s'],60)
+        receipt['selected']=table[0]
+        with self.assertRaises(ValueError):
+            selection(receipt)
 
     @unittest.skipIf(os.name=='nt','fcntl ledger is exercised on Linux host')
     def test_precharge_no_refund_duplicate_or_partial_panel(self):

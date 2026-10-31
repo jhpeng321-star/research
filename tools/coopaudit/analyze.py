@@ -67,7 +67,8 @@ def analyze(root, out):
         for c in CONTROLLERS:
             for outcome in ('300','600','local'):
                 rows.append(dict(seed=w['seed'],cell=w['cell'],controller=c,outcome=outcome,
-                                 group_size=len(r['frozen']['group']),**contrasts(r,c,outcome)))
+                                 group_size=len(r['frozen']['group']),group='|'.join(r['frozen']['group']),
+                                 wall_roster='|'.join(r['frozen']['wall_roster']),**contrasts(r,c,outcome)))
         for branch,clocks in r['metrics'].items():
             for clock,m in clocks.items():
                 if abs(m['team_delay_vs']-m['road_delay_vs']-m['source_wait_vs'])>1e-6:
@@ -93,7 +94,17 @@ def analyze(root, out):
             writer=csv.DictWriter(f,fieldnames=list(data[0]))
             writer.writeheader()
             writer.writerows(data)
-    write(out/'SUMMARY.json',dict(worlds=len(results),charged_sim_s=sum(r['sim_s'] for r in ledger),
+    actual_total=0
+    for p in (root/'jobs').glob('*/*.json'):
+        if p.name in ('result.json','failure.json'):
+            actual_total+=json.loads(p.read_text())['actual_sim_s']
+    charged=sum(r['sim_s'] for r in ledger)
+    if actual_total>charged:
+        raise ValueError('actual progress exceeds durable precharge')
+    write(out/'SUMMARY.json',dict(worlds=len(results),charged_sim_s=charged,actual_total_sim_s=actual_total,
+                                 missing_groups=sum(len(r['frozen']['group'])<2 for r in results),
+                                 wall_feasible_worlds=sum(bool(r['frozen']['wall_roster']) for r in results),
+                                 safety_totals={k:sum(x[k] for x in raw if x['clock']=='600') for k in SAFETY},
                                  summary=summary,actual_main_sim_s=sum(r['actual_sim_s'] for r in results)))
 
 

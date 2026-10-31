@@ -86,7 +86,9 @@ def physics_rows(env):
     return sorted(rows,key=lambda r:(r['t'],r['vid']))
 
 
-def trace_rows(rows, group, commands=None):
+def trace_rows(rows, group, commands=None, ramp_ids=None):
+    ramp_ids=set() if ramp_ids is None else ramp_ids
+    ramp_ids.update(r['vid'] for r in rows if r['lane']==2)
     by_t = {}
     for r in rows:
         by_t.setdefault(r['t'],[]).append(r)
@@ -95,13 +97,16 @@ def trace_rows(rows, group, commands=None):
         positions = [r['s'] for r in cohort if r['vid'] in group]
         for r in cohort:
             member = r['vid'] in group
-            if member or (r['lane']==2 and (-300<=r['s']<=75.44 or
+            if member or (r['vid'] in ramp_ids and (-300<=r['s']<=75.44 or
                                           any(abs(r['s']-s)<=300 for s in positions))):
-                output.append(dict(r,member=member,requested_accel=(commands or {}).get(r['vid'])))
+                output.append(dict(r,member=member,ramp_observed=r['vid'] in ramp_ids,
+                                   requested_accel=(commands or {}).get(r['vid'])))
     return output
 
 
 def wait_spare():
+    if shutil.disk_usage(ROOT).free<1024**3:
+        raise ValueError('owned-root disk admission requires1GiB free')
     while os.getloadavg()[0] > 20 or (ROOT/'YIELD').exists():
         if (ROOT/'STOP').exists():
             raise ValueError('owned STOP')
@@ -137,9 +142,10 @@ def execute(world, mode, selection=None, attempt=1):
     prefix = []
     H = 180 if mode=='canary' else 600
     window = 60 if mode=='canary' else selection['window_s'] if selection else 60
-    env = CavSumoEnv(k_slots=192,controller='direct',extra_sumo_cli=B.SAVE_STATE_CLI,
-                     scenario_root=out/'scenarios',physics_log=False,population='textbook')
+    env = None
     try:
+        env = CavSumoEnv(k_slots=192,controller='direct',extra_sumo_cli=B.SAVE_STATE_CLI,
+                         scenario_root=out/'scenarios',physics_log=False,population='textbook')
         def warmup_hook(e):
             progress['sim_s'] = e.now
             if e.now>270:
@@ -196,18 +202,24 @@ def execute(world, mode, selection=None, attempt=1):
             digest = hashlib.sha256()
             clocks = [180] if mode=='canary' else [300,600]
             values, local, cohort_delay, touched = {}, 0., {}, set()
+            crossed, local_crossing_J = set(), None
             key = controller+'_'+name
             issued = 0
             scope = ctrl0_scope() if controller=='ctrl0' else contextlib.nullcontext()
+            ramp_ids=set()
             with gzip.open(out/'traces'/f'{key}.jsonl.gz','wt') as trace, scope, audit_lanes() as lane_audit:
-                for r in trace_rows(prefix,group):
+                for r in trace_rows(prefix,group,ramp_ids=ramp_ids):
                     trace.write(json.dumps(r)+'\n')
                 for elapsed in range(1,H+1):
+                    if elapsed<=window+120:
+                        crossed.update(r['vid'] for r in observations(env) if 0<=r['s']<=75.44)
                     enabled = members if elapsed<=window else frozenset()
                     a,kw,commands = bound.command(env,enabled) if bound else (None,{}, {})
                     _,info = env.step(a,**kw)
                     progress['sim_s'] += 1
                     m.update(info)
+                    if elapsed==window+120:
+                        local_crossing_J = sum(m.tracker.delay_by_vid.get(v,0.)+m.source.get(v,0.) for v in crossed)
                     observed = physics_rows(env)
                     digest.update(json.dumps(observed,separators=(',',':')).encode())
                     if elapsed<=window+120:
@@ -217,7 +229,7 @@ def execute(world, mode, selection=None, attempt=1):
                                 touched.add(r['vid'])
                             cohort_delay[r['vid']] = cohort_delay.get(r['vid'],0.)+.5*max(0.,1-r['v']/31.29)
                     if elapsed<=window+30:
-                        for r in trace_rows(observed,group,commands):
+                        for r in trace_rows(observed,group,commands,ramp_ids):
                             trace.write(json.dumps(r)+'\n')
                     issued += len(commands)
                     if elapsed in clocks:
@@ -228,7 +240,8 @@ def execute(world, mode, selection=None, attempt=1):
                 if any(lane_audit.values()):
                     raise ValueError('controller lane-call audit failed')
             effects[key] = dict(local_zone_delay_vs=local,cohort_delay=cohort_delay,touched=sorted(touched),
-                                local_cohort_delay_vs=sum(cohort_delay[v] for v in touched),
+                                local_cohort_delay_vs=local_crossing_J,local_crossed=sorted(crossed),
+                                diagnostic_approach_cohort_delay_vs=sum(cohort_delay[v] for v in touched),
                                 wall_events=bound.wall.events if bound and bound.wall else [],
                                 wall_issued_commands=issued,lane_audit=lane_audit)
             metrics[key],hashes[key] = values,digest.hexdigest()
@@ -251,7 +264,8 @@ def execute(world, mode, selection=None, attempt=1):
         write(ROOT/'STOP',dict(job=ident,unix=time.time()))
         raise
     finally:
-        env.close()
+        if env is not None:
+            env.close()
 
 
 def main():

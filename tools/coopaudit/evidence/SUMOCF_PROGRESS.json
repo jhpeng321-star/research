@@ -1,1 +1,38 @@
-{}
+{
+ "STATUS.json": {
+  "unix": 1793434462.606385,
+  "running": [
+   "probe_g04_w2",
+   "probe_g04_w3",
+   "probe_g04_w4",
+   "probe_g05_w1",
+   "probe_g05_w2",
+   "probe_g05_w3",
+   "probe_g05_w4"
+  ],
+  "pending": 0,
+  "capacity": 9,
+  "load": [
+   19.3583984375,
+   17.2958984375,
+   15.00390625
+  ]
+ },
+ "receipts/CANARY_V2.json": {
+  "status": "PASS",
+  "branch_mode": "saved",
+  "saved_bitwise": true,
+  "zero_update_bitwise": true,
+  "J600": 83841.10161736357,
+  "wall_s": 80.15612695366144,
+  "charged_train_sim_s": 2400,
+  "cpu_capacity": 2,
+  "episode_wall_s": 26.0446055829525,
+  "sim_s_per_worker_hour": 124401.96069318641
+ },
+ "receipts/PROBE_PROGRESS.json": {
+  "completed": 24,
+  "total": 162,
+  "charged": 75868
+ }
+}

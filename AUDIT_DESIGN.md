@@ -48,11 +48,13 @@ No positive fleet gain or visually coordinated behaviour substitutes for C_G.
   Bitwise trajectory+metrics repeat canary mandatory. No silent full-rerun fallback.
 
 ## Outcomes and analysis
-- Team fleet+source delay at300/600s; local cohort = observable vehicles visiting
-  s[-150,75.44] during window+120s. Local J is their on-road delay over that same
-  time interval, unnormalised veh-s. Also retain the fixed-zone delay integral
-  and per-identity delay/cohort rows. Bind the precise SNR-selected definition
-  before production; no post-result metric selection.
+- Team fleet+source delay at300/600s; local cohort = observable vehicles in the
+  merge segment s[0,75.44] at a pre-control report during window+120s. Local J is
+  the original Measurement tracker's on-road+source delay for that cohort at
+  window+120s (exact S-SUMOCF oracle.py lines185-208 convention). Retain the
+  fixed-zone integral and approach-cohort diagnostics separately. This definition
+  is frozen before any production; the earlier canary-local number is an
+  approach-cohort diagnostic, not this production crossing-cohort outcome.
 - For every controller and outcome: world mean C_G and95% percentile stratified
   world-bootstrap CI (5000draws, seed20261031, shared resamples), fraction C_G>0,
   D_G and sumD_i, all-world and high-share cohort/cell coverage. Tiny/null gains
@@ -106,3 +108,19 @@ Wall C_G180=-154.834 and local C_G=-173.709veh-s on this one world: the
 coordinated mechanism is detected but is NOT beneficial synergy here. MAPPO
 C_G180/local=0. These are mechanical-canary observations, not panel estimates
 or controller selection. Receipt tools/coopaudit/evidence/CANARY_VERIFIED.json.
+
+## Dependency-controlled continuation
+`tools/coopaudit/continue_audit.py` takes an exclusive local lock and checks the
+requested SUMOCF_DESIGN.md every120s. It requires a published measured-SNR-results
+section AND the complete PASS27-row machine receipt, verifies its predeclared
+winner, binds source-document/table hashes and source commit, and commits that
+binding before dispatch. gpuR is the current authoritative probe host (SUMOCF's
+capacity refinement), with cpuQ support only if that registered host changes.
+Then it runs the native census, admits only the complete exact-cost panel under
+500000 including2580 already charged, executes on one spare nice19 GPU-host CPU,
+and exports complete-panel bootstrap CSVs/report. Below1GiB disk, load>20,
+YIELD/STOP, a failed process, inconsistent census or cap refusal prevents dispatch.
+No retry or truncation is automatic. CPU tests now also verify exact frozen CTRL0
+masking and PI/CIRCLES subset/native release. Production local crossing-cohort
+scoring is aligned to the SNR oracle; no new controller/physics action path was
+introduced after the canary. Pending report is clearly labelled until completion.

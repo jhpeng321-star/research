@@ -52,6 +52,8 @@ def select_group(rows, size='all', lo=-150., hi=75.44):
                 and r['lane'] in (0, 1, 2) and lo <= r['s'] <= hi]
     eligible.sort(key=lambda r: (abs(r['s']), r['vid']))
     chosen = eligible if size == 'all' else eligible[:int(size)]
+    if size != 'all' and len(chosen) < int(size):
+        return []
     return [r['vid'] for r in chosen] if len(chosen) >= 2 else []
 
 
