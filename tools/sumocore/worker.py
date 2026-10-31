@@ -23,9 +23,10 @@ def write(path,doc):
 def run(job):
     assert os.getpriority(os.PRIO_PROCESS,0)==19
     assert os.environ.get('CUDA_VISIBLE_DEVICES')==''
-    assert not (ROOT/'STOP').exists()
+    from admission import amendments
+    amendments()
     while os.getloadavg()[0]>24:
-        time.sleep(20);assert not (ROOT/'STOP').exists()
+        time.sleep(20);amendments()
     os.environ['C4_POLICY_STOCHASTIC']='0';os.environ['C4_POLICY_ACCEL_NOISE']='0'
     os.environ['PATH']='/home/ubuntu/miniconda3/bin:'+os.environ['PATH']
     assert importlib.metadata.version('eclipse-sumo')=='1.27.1'
@@ -35,7 +36,8 @@ def run(job):
     assert any(r['id']==job['id'] and r['charge']>=job['horizon'] for r in rows)
     out=ROOT/'jobs'/job['id']
     out.mkdir(parents=True,exist_ok=False)
-    write(out/'START.json',dict(job=job,pid=os.getpid(),unix=time.time()))
+    write(out/'START.json',dict(job=job,pid=os.getpid(),unix=time.time(),
+        code={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in Path(__file__).parent.glob('*.py')}))
     import torch
     torch.set_num_threads(1)
     from prepare_bundle import prepare

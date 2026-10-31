@@ -29,7 +29,7 @@ class ObservableEnv(CavSumoEnv):
         command=[]
         start_sumo(self.binary,config,seed=seed,config=self.config,api=traci,
                    lock_path=out.parent.parent/'launch.lock',
-                   extra_cli=['--begin','300','--end',str(301+horizon)],command_record=command)
+                   extra_cli=['--begin','300'],command_record=command)
         self.api=traci
         self.done=False
         self.actual_steps=0
