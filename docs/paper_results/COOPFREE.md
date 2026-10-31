@@ -194,6 +194,6 @@ Learned minus comparator; total team delay in vehicle-seconds (negative is bette
 - TRAIN remaining: 240 sim-s; one fresh >=150-window joint-only lower bound: 135000 sim-s (HOLD/solos extra).
 - **Updates3/6/9 are budget-blocked. Prospective owner phase/budget amendment required; no replay or automatic dispatch.**
 - DEV learned-minus-HOLD J600/J900: pending both complete paired panels; no marginal-CI subtraction.
-Budget: 1863600 precharged / 1808400 closed-actual sim-s; hard cap2,000,000; no refunds/retries.
+Budget: 1863600 precharged / 1836000 closed-actual sim-s; hard cap2,000,000; no refunds/retries.
 TRAIN exploration credit is not paired dev-policy performance.
 <!-- COOPFREE PUBLICATIONS END -->
