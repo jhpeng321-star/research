@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="440" viewBox="0 0 920 440" role="img" aria-labelledby="title desc">
+<title id="title">SELMAPPO2 training learning curve</title>
+<desc id="desc">Mean J600 per complete update of 46 fresh training episodes; lower is better. Cumulative actual simulation includes warmup and two smokes. This is training performance, not held-out evaluation.</desc>
+<rect width="920" height="440" fill="white"/>
+<g font-family="sans-serif" font-size="13" fill="#222">
+<text x="100" y="28">SELMAPPO2 — training J600 (lower is better)</text>
+<path d="M100.00,60 V350" stroke="#eee"/>
+<text x="100.00" y="375" text-anchor="middle">0</text>
+<text x="90" y="354.00" text-anchor="end">53,460.4</text>
+<path d="M287.50,60 V350" stroke="#eee"/>
+<text x="287.50" y="375" text-anchor="middle">114,150</text>
+<text x="90" y="281.50" text-anchor="end">55,292.4</text>
+<path d="M475.00,60 V350" stroke="#eee"/>
+<text x="475.00" y="375" text-anchor="middle">228,300</text>
+<text x="90" y="209.00" text-anchor="end">57,124.5</text>
+<path d="M662.50,60 V350" stroke="#eee"/>
+<text x="662.50" y="375" text-anchor="middle">342,450</text>
+<text x="90" y="136.50" text-anchor="end">58,956.6</text>
+<path d="M850.00,60 V350" stroke="#eee"/>
+<text x="850.00" y="375" text-anchor="middle">456,600</text>
+<text x="90" y="64.00" text-anchor="end">60,788.7</text>
+<polyline points="169.97,170.52 237.98,314.98 305.98,144.44 373.98,170.26 441.98,224.69 509.99,139.30 577.99,234.91 645.99,325.83 713.99,162.93 782.00,256.31 850.00,84.17" fill="none" stroke="#176b9b" stroke-width="2"/>
+<circle cx="169.97" cy="170.52" r="2.5" fill="#176b9b"/>
+<circle cx="237.98" cy="314.98" r="2.5" fill="#176b9b"/>
+<circle cx="305.98" cy="144.44" r="2.5" fill="#176b9b"/>
+<circle cx="373.98" cy="170.26" r="2.5" fill="#176b9b"/>
+<circle cx="441.98" cy="224.69" r="2.5" fill="#176b9b"/>
+<circle cx="509.99" cy="139.30" r="2.5" fill="#176b9b"/>
+<circle cx="577.99" cy="234.91" r="2.5" fill="#176b9b"/>
+<circle cx="645.99" cy="325.83" r="2.5" fill="#176b9b"/>
+<circle cx="713.99" cy="162.93" r="2.5" fill="#176b9b"/>
+<circle cx="782.00" cy="256.31" r="2.5" fill="#176b9b"/>
+<circle cx="850.00" cy="84.17" r="2.5" fill="#176b9b"/>
+<path d="M100,60 V350 H850" fill="none" stroke="#222"/>
+<text x="475" y="410" text-anchor="middle">Cumulative actual simulation (s)</text>
+<text transform="translate(22,205) rotate(-90)" text-anchor="middle">Mean J600</text>
+</g></svg>

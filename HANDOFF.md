@@ -5,6 +5,20 @@ Original advance-approved exact cap7,012,800; designSHA09499f2af60311b3690a940dc
 
 ## Current state
 
+**Resume verified 2026-11-01 04:29 +08:00:** existing local watcher12432 has
+the exact recorded executable/command/creation time and remains live. Its latest
+collection Unix1793478465 verifies owned cpuQ606968 live, **11/169 updates,
+517/7774 production successes,7open**,466500actual/473400reserved incl original
+failed900/300. No new failures;518 complete control-window receipts have zero
+collisions/teleports. Update011 checkpointSHA
+`ee90487413bb5717ab7ea7d39539e8bbcb8dd72f6b92666888a7ef58d2d33312`.
+CollectionSHA`5cdbf508667217de6b2472390414e4c5dae31a5930678a22d0a518cacc6f5242`.
+Earlier admission pause at update5 resolved without restart; updates6..11 and
+episode counts are advancing. MAIN04:27 requests active supervision through
+~12:00: inspect existing watcher receipts about every20min, publish/commit progress,
+repair only own failed jobs under MAIN02:08 same-cap/update-count authority.
+No redispatch or second watcher. All previous evidence and peer notices preserved.
+
 **Verified Unix1793470139: training has1complete PPO update,61complete production
 episodes,6openproduction, second smoke successful; owncpuQ606968 still live.**
 Checkpoint001SHA6a0d24753ddd9ee01b9a92cf025c8f8005745ccc69d3ccdd5057633c9ba28ab7;

@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="440" viewBox="0 0 920 440" role="img" aria-labelledby="title desc">
+<title id="title">SELMAPPO2 training learning curve</title>
+<desc id="desc">Mean J600 per complete update of 46 fresh training episodes; lower is better. Cumulative actual simulation includes warmup and two smokes. This is training performance, not held-out evaluation.</desc>
+<rect width="920" height="440" fill="white"/>
+<g font-family="sans-serif" font-size="13" fill="#222">
+<text x="100" y="28">SELMAPPO2 — training J600 (lower is better)</text>
+<path d="M100.00,60 V350" stroke="#eee"/>
+<text x="100.00" y="375" text-anchor="middle">0</text>
+<text x="90" y="354.00" text-anchor="end">53,757.4</text>
+<path d="M287.50,60 V350" stroke="#eee"/>
+<text x="287.50" y="375" text-anchor="middle">62,400</text>
+<text x="90" y="281.50" text-anchor="end">55,161.2</text>
+<path d="M475.00,60 V350" stroke="#eee"/>
+<text x="475.00" y="375" text-anchor="middle">124,800</text>
+<text x="90" y="209.00" text-anchor="end">56,565.0</text>
+<path d="M662.50,60 V350" stroke="#eee"/>
+<text x="662.50" y="375" text-anchor="middle">187,200</text>
+<text x="90" y="136.50" text-anchor="end">57,968.8</text>
+<path d="M850.00,60 V350" stroke="#eee"/>
+<text x="850.00" y="375" text-anchor="middle">249,600</text>
+<text x="90" y="64.00" text-anchor="end">59,372.6</text>
+<polyline points="228.00,131.10 352.40,319.64 476.80,97.06 601.20,130.76 725.60,201.81 850.00,90.36" fill="none" stroke="#176b9b" stroke-width="2"/>
+<circle cx="228.00" cy="131.10" r="2.5" fill="#176b9b"/>
+<circle cx="352.40" cy="319.64" r="2.5" fill="#176b9b"/>
+<circle cx="476.80" cy="97.06" r="2.5" fill="#176b9b"/>
+<circle cx="601.20" cy="130.76" r="2.5" fill="#176b9b"/>
+<circle cx="725.60" cy="201.81" r="2.5" fill="#176b9b"/>
+<circle cx="850.00" cy="90.36" r="2.5" fill="#176b9b"/>
+<path d="M100,60 V350 H850" fill="none" stroke="#222"/>
+<text x="475" y="410" text-anchor="middle">Cumulative actual simulation (s)</text>
+<text transform="translate(22,205) rotate(-90)" text-anchor="middle">Mean J600</text>
+</g></svg>
