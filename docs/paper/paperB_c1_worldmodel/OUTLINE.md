@@ -16,6 +16,15 @@ Editorial allocations, not measured pagination: title/abstract/introduction **0.
 
 At typesetting, shorten prior-attempt history before dropping protocol caveats or negative results. Reserve architecture, feedback comparison/selection, and reliability panels; place expansive qualification history in repository artifacts.
 
+**Space discipline after overnight additions:** the paragraph bullets below are a
+claim map, not instructions to print every diagnostic as a separate long paragraph.
+Keep historical response, completed feedback, and decision-trust limits in the
+main narrative. Merge negative repair/calibration/value outcomes into a compact
+paragraph; keep RNG/observable-start references and partial switching details in
+the linked package unless essential. Add the main WM-versus-RL result only after
+its complete gate; replace lower-priority diagnostic space rather than expanding
+the owner page budget. Final pagination remains a typesetting dependency.
+
 ## Abstract — exact sentence claims
 
 - **A-P1:** New CAV controllers require forecasts of surrounding human responses under changed feedback actions, motivating controller/environment factorization. No novelty priority claim.

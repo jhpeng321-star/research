@@ -1,6 +1,80 @@
 # Paper B — source refresh and end-of-night handoff
 
-## Evening refresh — owner drafting handoff
+## Current overnight handoff
+
+The previous session's clean package, bibliography verification and first-package
+registration are preserved. Fresh-session review and exact safe source hashes are
+in `NIGHT_SOURCE_REVIEW.md` and `SOURCE_REFRESH.json`. All original named reports
+were reread by the inventory; changed reports and new relevant reports were reviewed
+semantically. Current claims supersede the historical evening queues below.
+
+### Completed since the evening cut
+
+- **C1CLOSED complete:** autonomous HDV/entry/exit/source evolution with actual
+  controller feedback under the declared common plant. Principal-clock paired
+  endpoint superiority is inconclusive; earliest clocks favor BB. Relative
+  aggregate-delay gains coexist with weak direction/selection and large errors.
+  Wall executor restoration and initialization lineage remain unresolved.
+- **WMVALUE FAIL:** both short-imagination methods fail necessary no-WM gates.
+  The full conjunction fails regardless of unavailable long-WM A; A remains NA.
+- **Expanded merge pilot stopped:** its candidate screen did not improve both
+  horizons; later checkpoints were not scored. This is an early-stop partial result,
+  not a measured original full-gate PASS/FAIL.
+- **Reference switching terminal/PARTIAL:** corrected execution gates passed,
+  then the budget ended. MAIN's authorized complete-case partial analysis is a
+  scheduler-selected low-penetration cohort, not the planned full-panel verdict.
+  That task has no running jobs or continuation armed.
+- **Distributional diagnosis complete:** WM delay distributions also lose to
+  conditioned baselines; poor absolute coverage coexists with excessive effect
+  dispersion. New-panel imagined event/timing gates cannot be recovered from
+  cost-only futures. The proposed future gate is not passed qualification.
+- **RNG probe complete:** configured reseeding yields identical within-state
+  continuations with drivers/arrivals fixed, not zero observer uncertainty or
+  real-road determinism. Earlier restore/pulse references retain their own scopes.
+- **Observable-start physics reference complete:** short-range improvements
+  coexist with initialization collision flags and long-range effect errors;
+  this is not a clean information ceiling.
+- **Main wall-inclusive switching running:** existing CPU arms complete, WM
+  picker running, BB queued, final RL receipts undelivered at this cut. Existing
+  workers, relay, queue and observers already own execution.
+- **WM-PHYS interim only:** available-case results and missing adoption conditions
+  do not qualify it. Earlier unverified identity mapping and later direct-motion
+  variants must not be conflated.
+- **Artwork delivered:** completed common-plant, distributional and value-tail
+  panels with vector twins, exact source snapshots and backing CSVs. New PNGs
+  visually inspected; package validation passed. No historical artwork was replaced.
+
+### Current insertion queue
+
+- `[[PENDING: complete main wall-inclusive paired WM/BB/fleet-PPO/per-CAV-MAPPO results and final selector/data/training-budget receipts / S-C1SWITCH2 + S-SELMAPPO + S-SELMAPPO2]]`.
+- `[[PENDING: complete identity-bound physics-rebuild qualification, endpoint non-regression and independent switching-adoption receipt / S-RB-INT + S-RB-EVAL + MAIN]]`.
+- `[[PENDING: causal wall executor/memory restoration and eligible autonomous wall feedback / S-C1CLOSED + MAIN]]`.
+- `[[PENDING: unbroken initialization exclusion, exact historical E1 cost/plant binding and original E2 direction-panel/checkpoint/rule binding / S-C1GAP + MAIN]]`.
+- `[[PENDING: matched architecture ablations and original baseline data/compute comparability if claimed / MAIN]]`.
+- `[[PENDING: owner prose, authors, conference template/CFP confirmation and compiled page count / owner]]`.
+
+The original simulator-RNG floor is unavailable under its failed restoration
+contract; the completed separate reseeding probe does not fill it. Unscored repair
+checkpoints and unmeasured long-WM A stay unavailable, rather than open dispatch
+requests. Main closed-loop completion, final calibration and WMVALUE verdict are
+resolved; do not keep waiting for those already delivered reports.
+
+### Reproduce and verify
+
+From the Paper B worktree, use the historical, evening or overnight renderer
+without refresh flags to reproduce the corresponding frozen artwork. The newest
+command is:
+
+```powershell
+python -B "docs/paper/paperB_c1_worldmodel/build_overnight_figures.py"
+python -B "docs/paper/paperB_c1_worldmodel/validate_package.py"
+```
+
+`data/OVERNIGHT_SOURCE_MANIFEST.json` binds new completed-report/CSV bytes;
+`VERIFICATION.json` records all artifact checks. The first-package registration
+still matches its committed receipt exactly; ordinary refreshes append no duplicate.
+
+## Historical evening refresh — superseded by current overnight handoff
 
 The night addendum is incorporated. Exact final check time and source hashes are in `SOURCE_REFRESH.json`; semantic precedence and resume receipts are in `NIGHT_SOURCE_REVIEW.md`. The main checklist/draft are older evidence cuts. The first package and its registration remain preserved.
 
@@ -18,7 +92,7 @@ The night addendum is incorporated. Exact final check time and source hashes are
 
 Final inventory reread found no changed numerical figure source. The shared log added the corrected switching continuation's registration; it still supplies authorization/build evidence rather than efficacy. Focused Python syntax/undefined-name lint and package validation passed. First-package registration remains exactly matched to the committed receipt; no duplicate line was appended.
 
-### Remaining insertion queue
+### Historical evening insertion queue (superseded)
 
 - `[[PENDING: complete autonomous/common-plant C1CLOSED estimates, paired WM–BB uncertainty and finalized causal wall executor / S-C1CLOSED]]`.
 - `[[PENDING: unbroken initialization exclusion chain, exact E1 team-cost/controller/plant binding and original E2 direction-panel/checkpoint/decision binding / S-C1GAP + MAIN]]`. Completed audit status does not imply this lineage was recovered.
@@ -65,10 +139,11 @@ python -B "docs/paper/paperB_c1_worldmodel/refresh_sources.py"
 Then semantically reread newly present/changed reports using their exact paths. The inventory reads the task's fixed safe allowlist; it never starts agents, training, GPU inference, simulator work, monitors or remote jobs, and never automatically promotes a claim.
 
 - Inspect the C1 gap report's latest conclusion, not only its presence; preserve any lineage or comparability caveats. A completed numerical reanalysis can resolve a numerical PENDING field without completing controller exposure proof.
-- Read the feedback report before filling the outline's headline paragraph/table. Require that originals and entrants actually use the claimed feedback/plant/lane contract. Historical recorded-motion evidence must remain labeled historical.
+- C1CLOSED is now complete and incorporated. Future revisions must preserve its plant/cohort/mixed-results scope; only missing causal wall restoration or a separately authorized candidate may change those fields. Historical recorded-motion evidence stays historical.
 - Completed calibration is already incorporated; retain raw-WM/arm-mean comparators, independent transfer, reference arms and cost definitions. Do not replace the final negative verdict with old smoke results.
+- WMVALUE's necessary-condition FAIL and the expanded repair's early-stop partial result are also incorporated. Do not restart them, infer missing A or later-checkpoint values, or wait on their stale historical pending headers.
 - Recheck the model plan/change log, E1/E2 exports, corrected qualification and entry retarget reports. Never silently transfer the frozen direction envelope to a different model or population.
-- If numerical figure inputs changed, review provenance/metrics first, then refresh the appropriate historical/evening builder's explicit allowlist. Otherwise reuse frozen inputs. New result CSVs need an explicit rendering change, not a directory crawl.
+- If numerical figure inputs changed, review provenance/metrics first, then refresh the appropriate historical/evening/overnight builder's explicit allowlist. Otherwise reuse frozen inputs. New result CSVs need an explicit rendering change, not a directory crawl.
 - Update `CLAIMS.md`, affected outline paragraphs/captions, and this handoff; retain failed and missing outcomes. Every numerical insertion needs an adjacent HTML source comment. Mark each remaining missing result `[[PENDING: what / agent]]`.
 - Run `python -B "docs/paper/paperB_c1_worldmodel/validate_package.py"`, inspect any changed PNGs, inspect status/diff/recent commits, and commit only package files. Source snapshots are byte-preserved by local `.gitattributes`; the data directory is intentionally tracked despite the repository's broad local exclusion.
 - The requested first-package registration is append-once; do not append a duplicate completion line during an ordinary refresh. A materially changed scientific verdict should get its own clearly labeled update by the integrating owner.

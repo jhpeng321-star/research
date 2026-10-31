@@ -12,7 +12,7 @@ Verification date: October 31, 2026 (session date). Live pages may change; expli
 
 **Do not claim:** first physics-informed traffic WM; first IDM-plus-neural residual; first traffic policy learned in imagination; first recognition that good-looking trajectories can judge actions incorrectly; universal admissibility certification; superiority to published forecasting or video WMs that were not run.
 
-The intended full-feedback unseen-controller advantage remains `[[PENDING: eligible result / S-C1CLOSED]]`. Literature positioning does not fill that empirical gap.
+The completed C1CLOSED common-plant study does not establish principal-clock paired endpoint superiority. Causal wall feedback and strict initialization lineage remain unresolved; the main wall-inclusive selector comparison is still pending. Literature positioning cannot fill those empirical gaps. The original reference-verification receipts below are preserved.
 
 ## Closest work — physics-informed traffic WMs
 
@@ -102,7 +102,7 @@ The intended full-feedback unseen-controller advantage remains `[[PENDING: eligi
 - `E:/agent-work/c4-paperb/src/wms/model/factory.py`: `blackbox_traj` is the in-house physics-free trajectory model; `blackbox_id` is the controller-ID-conditioned learned-CAV variant. `src/wms/model/spec.py` documents the latter's learned movers.
 - `E:/agent-work/c4-c1gap/docs/paper_results/c1gap/WALL_C1_RESULT.recovered.md`, caveats: BB-id ignores the recorded teacher, whereas BB-traj is teacher matched. An unavailable feedback BB-id comparison is unavailable, not evidence of failure.
 - These models are not implementations of the published forecasters cited above. Their provenance is the project code and training/score receipts; adding an external citation cannot complete missing baseline comparability.
-- `[[PENDING: final C1 baseline architecture/training/corpus/exposure table / S-C1GAP + S-C1CLOSED]]`.
+- C1CLOSED now delivers the current feedback result/plant binding. `[[PENDING: remaining original baseline training/budget comparability and unbroken initialization lineage / S-C1GAP + MAIN]]`.
 
 ## Experimental platform and comparator provenance
 

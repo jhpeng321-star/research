@@ -39,9 +39,26 @@ in full. Newly named safe reports/exports extend the explicit inventory.
 Exact bytes/hashes and check time are in `SOURCE_REFRESH.json`. Numerical manuscript
 claims are bound separately in `CLAIMS.md`; this receipt records source precedence.
 
+### Final bounded reread
+
+The final inventory found unchanged numerical figure sources. Live selector reports
+advanced training only; no final RL handoff or paired efficacy result landed.
+C1SWITCH2's read-only BB waiting observer was corrected by its owner after a
+transport failure; successor observer/monitor receipts are already live. Scientific
+workers and source contracts are unchanged, so no paper-task dispatch is needed.
+The rebuilt-physics report now includes a favorable endpoint contrast for its newer
+interim candidate, but breakdown closeness still does not establish adoption and
+the complete qualification panel is pending. Retain final-model PENDING rather
+than publishing interim numbers as the headline. Shared-log companion audit
+completion does not change Paper B's existing completed scientific verdicts.
+
+New completed-result PNGs were visually inspected. Source/selection/artifact
+validation and focused Python syntax/undefined-name lint passed. The exact first
+registration line still matches the committed receipt and was not appended again.
+
 Resume preserved the clean first-package commits and its append-once registration receipt. The evening owner READ FIRST block and shared registration additions since the afternoon were read before editing claims. `SOURCE_REFRESH.json` records the exact allowlisted source cut; the inventory rereads source bytes without dispatching work. Bibliography verification and completed historical artwork are inherited, rather than repeated.
 
-## Source precedence for this refresh
+## Historical evening source precedence (superseded above)
 
 - `E:/agent-work/c4-c1gap/docs/paper_results/C1_GAPS.md` is now complete: recovered wall uncertainty, independent pairing, adverse PI refresh and incomplete initialization ancestry remain the governing historical evidence. The task-named root delivery path is absent; the delivered report is present.
 - `E:/agent-work/c4-c1pidiag/docs/paper_results/C1PIDIAG.md`: original-start regression is real; old-model/baseline versus newer-model training coverage differs. Genuine history helps WM2 PI on a separately shifted panel. Do not move its later observations into the original start or call reset-controller feedback a validated continuation.
