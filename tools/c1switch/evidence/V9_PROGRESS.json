@@ -1,0 +1,100 @@
+{
+  "cpuQ": {
+    "unix": 1793461695.6364238,
+    "load": [
+      2.3095703125,
+      2.72412109375,
+      1.60693359375
+    ],
+    "receipts": {
+      "recovery_DISPATCH.json": {
+        "host": "cpuQ",
+        "pid": 211684,
+        "unix": 1793461685.5333173,
+        "name": "recovery"
+      },
+      "recovery/STATUS.json": {
+        "phase": "episodes",
+        "pending": 101,
+        "active": {
+          "bb_s969114_episode": 211685,
+          "bb_s969118_episode": 211686,
+          "bb_s969121_episode": 211687,
+          "bb_s969122_episode": 211688,
+          "bb_s969123_episode": 211689,
+          "bb_s969126_episode": 211690,
+          "bb_s969127_episode": 211691,
+          "wm_s969113_episode": 211692,
+          "wm_s969114_episode": 211693,
+          "wm_s969115_episode": 211694,
+          "wm_s969116_episode": 211696,
+          "wm_s969117_episode": 211697,
+          "wm_s969118_episode": 211698,
+          "wm_s969119_episode": 211699
+        },
+        "done": []
+      }
+    },
+    "own_pids": {
+      "211684": true
+    },
+    "logs": {},
+    "charged_sim_s": 231510,
+    "actual_closed_sim_s": 227310.0,
+    "episodes": 10,
+    "physics": 0,
+    "branches": 231,
+    "picks": {
+      "wm": 10,
+      "bb": 90
+    },
+    "failures": {}
+  },
+  "gpuR": {
+    "unix": 1793461696.429915,
+    "load": [
+      21.32470703125,
+      22.73193359375,
+      18.83984375
+    ],
+    "receipts": {
+      "wm_gpu_DISPATCH.json": {
+        "host": "gpuR",
+        "pid": 709203,
+        "unix": 1793461554.9781663,
+        "name": "wm_gpu"
+      },
+      "bb_gpu_DISPATCH.json": {
+        "host": "gpuR",
+        "pid": 709259,
+        "unix": 1793461618.8764296,
+        "name": "bb_gpu"
+      },
+      "rpc/wm/GPU_STARTED.json": {
+        "pid": 709203,
+        "unix": 1793461555.0437965,
+        "cap_s": 4470
+      },
+      "rpc/bb/GPU_STARTED.json": {
+        "pid": 709259,
+        "unix": 1793461618.9414923,
+        "cap_s": 200
+      },
+      "rpc/wm/PARITY.json": {
+        "pass_": true,
+        "bitwise": true,
+        "unix": 1793461633.2595696
+      },
+      "rpc/bb/PARITY.json": {
+        "pass_": true,
+        "bitwise": true,
+        "unix": 1793461628.0934908
+      }
+    },
+    "own_pids": {
+      "709203": true,
+      "709259": true
+    },
+    "logs": {}
+  }
+}

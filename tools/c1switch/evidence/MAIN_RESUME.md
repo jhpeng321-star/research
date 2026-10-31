@@ -1,4 +1,30 @@
-# CURRENT MAIN23:04 continuation: v7 STOPPED / BUDGET BLOCKED
+# CURRENT MAIN23:25 recovery DISPATCHED — inspect before doing anything
+
+- Latest build/stage `c6443e7a`; read design lines74–77 and `V9_PROGRESS.json`.
+- cpuQ recovery `/home/ubuntu/c1switch20261031/recovery_v8`, supervisor211684,
+  14 episode workers then 14 independent evaluation branch workers, nice19.
+- gpuR `/root/c1switch20261031/recovery_v8`, WM709203/BB709259; BOTH full60s
+  anonymous-draw rawK8 original-host parity PASS. cpuQ45/gpuR46CPU tests PASS.
+- Local own relay28584 at `evidence/relay_recovery_v8` is required. It targets
+  gpuR, not gpuA. Its transport errors are retried without repeating physics.
+- `python -B -m tools.c1switch.resumeops progress` inspects current receipts.
+  NEVER run stage, relocate, import_receipts, GPU launch or main_panel again.
+- Exact499260 sim-s; random last3 worlds969125/126/127 omitted prospectively.
+  All16WM/BB/fixed worlds preserved. Reuse10episodes+231branches;11100abandoned
+  original sim-s and12450superseded WM remain charged, no refunds.
+- SharedGPU prior9718.965539s includes gpuA failed parity57.231276s;
+  newWM4470/BB200 partitions imply<=14388.965539s/14400owner cap. Throughput
+  at risk (WM original-host parity78.22s); caps remain enforced.
+- gpuA's separate recovery_v8 root failed cross-host bitwise parity, both own
+  processes exited. Preserve those STOPs, every v4–v7 root and source/ledger.
+- New inference uses frozen v7 scientific adapter; original forecasts cached
+  only with exact observable history equality and committed pick/prefix checks.
+- Physics writes PHYSICS.json; evaluation-only full reruns occur after episode
+  choices. Final RESULT.json requires all registered five-way branches.
+- Final analysis must account for11100 abandoned +12450 superseded +47010Step0
+  separately, and random n13 vs all other arms n16. No partial-panel efficacy.
+
+## Historical MAIN23:04 continuation: v7 STOPPED / BUDGET BLOCKED
 
 - First read `V7_INTERRUPTION_AUDIT.json` and the last four lines of the design.
   All audited remote owned PIDs exited. BB hit its hard3600s GPU allocation cap;

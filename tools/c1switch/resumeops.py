@@ -240,10 +240,19 @@ for a in ('wm','bb'):
  out[a]=dict(parity=parity,attestation=ready['attestation'],pid=ready['pid'])
 print(json.dumps(out))
 ''')
-    expected = json.loads((EVIDENCE/'V8_DEPENDENCIES.json').read_text())['expected']
-    for row in result.values():
+    expected = ssh('gpuR', '''import json
+from pathlib import Path
+r=Path('/root/c1switch20261031/main_v7/rpc')
+print(json.dumps({a:json.loads((r/a/'READY.json').read_text())['attestation'] for a in ('wm','bb')}))
+''')
+    write(EVIDENCE/(PREFIX+'_GPU_GATE_INSPECT.json'),dict(models=result,expected=expected))
+    for arm,row in result.items():
         for key in ('sources','wm_config_sha256','candidate_sha256','mappo_sha256'):
-            assert row['attestation'][key]==expected[key],key
+            if key=='sources':
+                differences = {n:dict(old=h,new=row['attestation'][key].get(n)) for n,h in expected[arm][key].items() if row['attestation'][key].get(n)!=h}
+                assert not differences,(arm,differences)
+            else:
+                assert row['attestation'][key]==expected[arm][key],(arm,key)
     ssh('cpuQ',f'''import json
 from pathlib import Path
 p=Path({CPU!r})/'PARITY_GATE.json';assert not p.exists();p.write_text(json.dumps(dict(pass_=True,models={result!r})))
