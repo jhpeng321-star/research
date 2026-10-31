@@ -90,6 +90,10 @@ Current runner default is `v8end600 --entry-phase after`; earlier version
 directories remain explicit and immutable. `verify_fleet_prefix` checks the saved
 H120 clocks/events/front traces against the600s extension without treating those
 prefixes as independent evidence or claiming unavailable full-trajectory parity.
+`--int-commit <sha>` selects a committed immutable integration snapshot for a
+NEW stage. `--cpu-fast` selects INT's independently parity-checked exact query/
+lane-conflict flags; direct validator/default flags remain unchanged. Stage
+provenance is written to STAGE.json and actual switches are retained per row.
 `python -m tools.rbeval.summarize_full_fleet --panel <collected directory>
 --targets <shared targets> --output <new score.json>` checks complete FIT32,
 collection hashes and conservation before reporting per-world and marginal clocks.

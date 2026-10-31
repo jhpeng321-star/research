@@ -27,6 +27,8 @@ def main():
     p.add_argument('--horizon', type=int, choices=(120, 300, 600), default=600)
     p.add_argument('--slots', type=int, default=512)
     p.add_argument('--entry-phase', choices=('before', 'after'), default='after')
+    p.add_argument('--int-commit', default=INT_COMMIT)
+    p.add_argument('--cpu-fast', action='store_true')
     p.add_argument('--details', action='store_true')
     p.add_argument('--seed', type=int, default=969400)
     p.add_argument('--identity', type=int)
@@ -42,10 +44,11 @@ def main():
     header += f'identity={args.identity!r}\n'
     header += f'horizon={args.horizon!r}\nslots={args.slots!r}\n'
     header += f'entry_phase={args.entry_phase!r}\n'
+    header += f'cpu_fast={args.cpu_fast!r}\n'
     if args.mode == 'status':
         print(remote(header+"print(json.dumps(dict(load=os.getloadavg(), cpus=os.cpu_count(), old_owned_pids={p:Path('/proc/'+str(p)).exists() for p in (200540,233273)}, existing_dispatch=(root/'LAUNCH.json').exists())))"))
     elif args.mode == 'stage':
-        archive = subprocess.check_output(['git', 'archive', '--format=tar', INT_COMMIT, 'src/wms',
+        archive = subprocess.check_output(['git', 'archive', '--format=tar', args.int_commit, 'src/wms',
                                            'configs/native_cav_head_v5.json',
                                            'configs/execparity_cav_idm_v1.json'],
                                            cwd='E:/agent-work/c4-rb-int')
@@ -55,7 +58,9 @@ def main():
         assert hashlib.sha256(checkpoint).hexdigest() == encoder_source['source_sha256'] == 'b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436'
         def lane_file(name):
             return subprocess.check_output(['git', 'show', LANE_ENCODER_COMMIT+':'+name], cwd='E:/agent-work/c4-rb-lane')
-        payload = dict(runtime_archive=base64.b64encode(archive).decode(),
+        payload = dict(int_commit=args.int_commit,
+            merge_commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
+            runtime_archive=base64.b64encode(archive).decode(),
             checkpoint=base64.b64encode(checkpoint).decode(),
             encoder=base64.b64encode(lane_file('tools/rblane/encoder.py')).decode(),
             encoder_tests=base64.b64encode(lane_file('tests/test_lc2013_encoder.py')).decode(),
@@ -77,6 +82,7 @@ def main():
         code += '''import base64,io,tarfile,subprocess,sys
 assert root.parent.is_dir()
 root.mkdir(exist_ok=False)
+(root/'STAGE.json').write_text(json.dumps(dict(int_commit=payload['int_commit'],merge_commit=payload['merge_commit'],encoder_commit='b192e0c8',created_unix=time.time()),indent=2)+'\\n')
 runtime=root/'runtime'
 runtime.mkdir()
 with tarfile.open(fileobj=io.BytesIO(base64.b64decode(payload['runtime_archive']))) as tar:
@@ -151,6 +157,7 @@ with (root/'LAUNCH.json').open('x') as f:
 script=root/'tools/rbeval/full_fleet.py'
 command=[python,'-B',str(script),'--root','/home/ubuntu/wmdata20261031/views','--runtime',str(root/'runtime'),'--targets',str(root/'targets'),'--output',str(root/'results'),'--seeds',*map(str,range(969400,969432)),'--horizon',str(horizon),'--slots',str(slots),'--cf-model','sumo_idm','--warm-lc','--trace-merge','--native-model','sumo','--encoder-checkpoint',str(root/'inputs/wm_s.pt')]
 command += ['--entry-phase',entry_phase]
+if cpu_fast: command += ['--cpu-fast']
 env=dict(os.environ,OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',CUDA_VISIBLE_DEVICES='')
 with (root/'RUN.log').open('x') as log:
     child=subprocess.Popen(command,cwd=root,env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,preexec_fn=lambda:os.nice(19))
@@ -229,7 +236,7 @@ print(json.dumps(dict(contract=report['contract'],worlds=len(report['rows']),fra
         print(remote(code))
     else:
         code = header+'''result=root/'results'
-files=[root/'LAUNCH.json',root/'CPU_TESTS.json',root/'PREFLIGHT.json',root/'INITIAL_GEOMETRY.json',result/'IDENTITY.json',result/'COMPLETE.json',result/'FAILED.json']
+files=[root/'STAGE.json',root/'LAUNCH.json',root/'CPU_TESTS.json',root/'PREFLIGHT.json',root/'INITIAL_GEOMETRY.json',result/'IDENTITY.json',result/'COMPLETE.json',result/'FAILED.json']
 files += [result/(str(s)+'.json') for s in range(969400,969432)]
 print(json.dumps({p.name:dict(content=p.read_text(),sha256=hashlib.sha256(p.read_bytes()).hexdigest()) for p in files if p.exists()}))
 '''

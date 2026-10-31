@@ -18,7 +18,7 @@ def compare(short, extended):
         return ['different world panel']
     by_seed = {r['seed']: r for r in extended}
     invariant = ('arm', 'stream', 'cf_model', 'native_model', 'settings', 'entry_phase',
-                 'lc_memory', 'episode_sha256', 'tape_sha256', 'inferred_settings', 'source_observations')
+                 'lc_memory', 'cpu_fast', 'episode_sha256', 'tape_sha256', 'inferred_settings', 'source_observations')
     for old in short:
         new = by_seed[old['seed']]
         seed = old['seed']

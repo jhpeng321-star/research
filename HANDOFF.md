@@ -18,6 +18,13 @@ Earlier work retained in `docs/rb_merge/HANDOFF_HISTORY_{0100,0315}.md`.
   prefix, not counted as another independent world/future. Three prefix-audit
   CPU tests PASS (changed contracts/checkpoints/birth/trace rejection).
   Do not relaunch any completed version. Old v7 directory is engineering only.
+- Next integrated engineering screen `/tmp/rb-merge-fullfleet-v9latest300`
+  STAGED ONLY: INT**8e964de5** (new CF source lane-cap/link chain + LANE raw
+  origins/position-translation API), current owned kernels/phase/native callback,
+  same frozen encoder and FIT32/H300/512slots/stream190, CPU exact-fast flags.
+  **58 CPU tests PASS /3.13s**, all32 strict input/encoder preflights PASS.
+  Producer INT recorded lane-arbitration parity receipt also PASS; runtime
+  construction names exact source commits in STAGE.json. v8end600 stays frozen.
 
 ## Source increments for INT (keep your own root handoff / adapter)
 - **c8e54017** NEW `model/sumo_departure.py::step_after_movement`: source

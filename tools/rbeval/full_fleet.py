@@ -266,7 +266,7 @@ def observable_source(job):
 
 @torch.no_grad()
 def validate(root, seed, horizon, slots, stream, target_dir, cf_model='legacy', warm_lc=False,
-             trace_merge=False, native_model='head', encoder_checkpoint=None, entry_phase='before'):
+             trace_merge=False, native_model='head', encoder_checkpoint=None, entry_phase='before', cpu_fast=False):
     from wms.model.spec import ModelSpec
     from wms.model.wms import WmSModel
     from wms.physics.config import PhysicsConfig
@@ -298,6 +298,8 @@ def validate(root, seed, horizon, slots, stream, target_dir, cf_model='legacy', 
     options = dict(merge_model='sumo', sumo_fidelity=True, dt_s=dt)
     if cf_model != 'legacy':
         options.update(cf_model=cf_model, sumo_cf_emergency_decel_mps2=9.)
+    if cpu_fast:
+        options.update(sumo_merge_query_fast=True, sumo_lane_conflict_fast=True)
     cfg = PhysicsConfig(**options)
     # CF wiring may arrive in a later INT commit. Bind/report the actual selector.
     model = WmSModel(ModelSpec(lane_model='lc2013', lane_head='off'), physics=cfg).eval()
@@ -444,6 +446,7 @@ def validate(root, seed, horizon, slots, stream, target_dir, cf_model='legacy', 
         initial=initial, max_present=max_present, exits=exits,
         cf_model=getattr(cfg, 'cf_model', 'legacy'), lane_model=model.lane_model, native_model=native_model,
         entry_phase=entry_phase,
+        cpu_fast=cpu_fast,
         settings='frozen_motion_encoder_point' if encoded is not None else 'population_default_no_encoder',
         inferred_settings=parameter_receipt, checkpoints=checkpoints,
         newborn_settings_checked=0 if sampler is None else sampler.births_checked,
@@ -482,6 +485,7 @@ def main():
     p.add_argument('--native-model', choices=('head', 'sumo'), default='head')
     p.add_argument('--encoder-checkpoint')
     p.add_argument('--entry-phase', choices=('before', 'after'), default='before')
+    p.add_argument('--cpu-fast', action='store_true')
     args = p.parse_args()
     if len(args.seeds) != len(set(args.seeds)) or any(not 969400 <= s <= 969431 for s in args.seeds):
         p.error('unique FIT seeds 969400..969431 required')
@@ -531,7 +535,7 @@ def main():
                 time.sleep(15)
             row = validate(safe(args.root), seed, args.horizon, args.slots, args.stream, safe(args.targets),
                            args.cf_model, args.warm_lc, args.trace_merge, args.native_model, args.encoder_checkpoint,
-                           args.entry_phase)
+                           args.entry_phase, args.cpu_fast)
             if any(digest(runtime/name) != sha for name, sha in sources.items()):
                 raise AssertionError('runtime changed during diagnostic')
             if any(digest(name) != sha for name, sha in auxiliary.items()):
