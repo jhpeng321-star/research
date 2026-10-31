@@ -16,6 +16,7 @@ python tools/rbfit/pooled_fit.py --root /home/ubuntu/wmdata20261031/views --init
 python tools/rbfit/revalidate.py --root /home/ubuntu/wmdata20261031/views --fit NEW_GAUSSIAN
 python tools/rbfit/predictive_check.py --root /home/ubuntu/wmdata20261031/views --fit NEW_MIXTURE
 python tools/rbfit/lane_fit.py --root /home/ubuntu/wmdata20261031/views --idm NEW_GAUSSIAN --out NEW_LANE --workers 4 --sobol-power 6
+python tools/rbfit/calibrate_shrinkage.py --root /home/ubuntu/wmdata20261031/views --fit NEW_MIXTURE --out NEW_SHRUNK
 python tools/rbfit/package_artifacts.py NEW_MIXTURE
 python tools/rbfit/verify_artifacts.py --artifacts artifacts/rbfit
 python -m pytest tests/unit/test_rbfit.py -q -p no:cacheprovider
@@ -62,6 +63,26 @@ Neither reader enables a shared model/config switch or alters legacy behavior.
 
 ## Owner00:40 addendum
 
+Preferred delivery is `artifacts/rbfit/shrinkage_v1`: population JSON and fully
+materialized `idm_posteriors.json.gz` in the EXISTING v1 schemas. The fitted
+shrinkage is already applied. On UNC commitf8b6faea or later:
+
+```python
+from wms.control.fitted_hidden import FittedHiddenState
+reader = FittedHiddenState.from_directory("artifacts/rbfit/shrinkage_v1")
+plans = plan_hidden_state_futures(model, state, history_kwargs,
+    future_sampling="hidden_state", fitted_state=reader,
+    vehicle_ids=observed_vids, t0_s=300, row_keys=worlds, n_samples=8, seed=190)
+```
+
+This direct interface uses the SAME learned population for future HDV entrants.
+`lane_directory` stays unset because the updated LC fit fails the baseline.
+`receipts/ADDENDUM_VERIFIED_v2.json` verifies all3,130 weights against the exact
+raw-posterior/population mixture,174 no-evidence fallbacks, every covariance,
+actual committed UNC draws,16paired/replayed planned futures and exited PIDs.
+No full traffic rollout is implied by that interface check.
+
+For older UNC consumers or an explicit policy applied to RAW artifacts:
 `MotionFit(directory, shrinkage_path=POLICY_JSON)` optionally applies
 `wm_phys.idm_shrinkage.v1`: mix the exact raw posterior with the SAME fitted
 population, posterior fraction `n/(n+prior_count)`; zero usable acceleration
@@ -93,7 +114,59 @@ Updated LC reproduction adds `--idm-pooled .../pooled_full_v5/idm_pooled.json`
 and freezes lane811cd7e8 (two LC source files, finite route geometry and epsilon),
 with identical65 numerical profiles. All old source/output versions remain.
 
+Verification uses the existing cpuQ environment plus the frozen committed UNC
+sources (not its working edits): `python tools/rbfit/verify_addendum.py --fit
+RAW_MIXTURE --new NEW_SHRUNK --lane NEW_LANE --out NEW_RECEIPT.json`.
+The local stdlib-only `verify_addendum_mirror.py` checks publication hashes and
+the40-line paper-report limit against that receipt.
+
+## Generic causal posterior when tape VID cannot be resolved
+
+`MotionFit.condition_motion(predicted_next_speed[T,C], speed_before[T],
+speed_after[T], dt_s[T], interval_end_s[T], t0_s=..., policy_path=...)`
+returns a JSON-compatible driver distribution on the stored population support.
+Caller evaluates the faithful CF step for each physical profile (columns in
+EXACT support order) and passes only stable-mainline HDV/leader intervals.
+The implementation derives observed accelerations from speeds, checks finite
+physical motion/nonoverlapping intervals/causal60s, then uses the frozen fitted
+Gaussian scale and learned population-contamination strength. Empty input is
+exactly population. The population is never re-estimated from these inputs.
+
+This runtime inference needs no tape VID and works at other causal start times.
+It can populate `FittedHiddenState(fit.population, posterior)` in memory:
+posterior header is the existing v1 schema/order/conditioning_end_s, and each
+`drivers[world:local_observable_identity]` is the returned distribution. Caller
+supplies the SAME stable numeric identity space to UNC's `vehicle_ids`; it must
+not pretend that a packed slot or local identity is a saved tape VID. A string-ID
+to local-numeric-ID map is only runtime bookkeeping, not a hidden type label.
+Alternatively sample the returned weights directly and cache by original ID.
+Unavailable/uninformative history -> population; no evaluation-world data files
+were read or population parameters fitted to implement or verify this API.
+
 `validation_recorded_endpoints.json` supersedes original Euler-reconstructed
 position scores. `predictive_validation.json` scores physical-profile spread only,
 without injecting fitted residual noise. These conditional FIT checks do not
 qualify future traffic distributions; INT/EVAL must do the free-running checks.
+
+## Owner01:28 LC continuation
+
+`lane_directional.py` fits source-lane conditioned categorical LC decisions
+(stay/target0/target1), so wrong-direction changes are failures. Driver evidence
+is causal [240,300]; prefix240..270→270..300 estimates informative-evidence
+shrinkage before later300..360 scoring. Emissions are discrepancy only; the
+independent `verify_directional.py` rebuilds the likelihood directly from saved
+decisions and reports RAW physical proposal scores separately.
+
+`lane_directional_v3` retains the old65profile search for comparability; cooperative
+values>1 are a known domain gap. Boundary continuation uses `--support-json` for
+documented lcCooperative[0,1], nonnegative behavioral weights, assertive>0;
+`--reuse COMPLETED_V3` reuses exact matching physical profile decisions after
+SHA-checking LC source/geometry/config/pooled-IDM and exact observable alignment.
+Zero-weight faces are legal SUMO parameter settings, not new behavioral rules.
+Only new profiles are evaluated; previous outputs remain untouched.
+
+LC JSON schemas remain v1; all driver weights already include shrinkage.
+Boundary artifacts declare `requires_boundary_aware_lc_reader=true`. FIT's
+`draw_lane_parameters` handles source-legal zero behavioral weights; UNC's
+strict-positive reader requires an LC-only domain update before using those
+artifacts. IDM always remains strictly positive. Neither version is adopted.

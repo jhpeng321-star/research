@@ -1,0 +1,37 @@
+{
+  "status": "PASS",
+  "drivers": 3130,
+  "zero_evidence_population_fallbacks": 174,
+  "maximum_posterior_algebra_error": 7.782663402622347e-14,
+  "unc_source": "f8b6faea",
+  "paired_replayed_real_artifact_futures": 16,
+  "global_rng_unchanged": true,
+  "lane_source_sha256": "1bdded8e9f213372db946079b20c0cbac677120eeb228baf91d468644ac37206",
+  "lane_adopted": false,
+  "processes": [
+    {
+      "name": "lane_v2",
+      "pid": 407617,
+      "state": "exited"
+    },
+    {
+      "name": "shrinkage_v1",
+      "pid": 426309,
+      "state": "exited"
+    }
+  ],
+  "python": "3.10.16 (main, Dec 11 2024, 16:24:50) [GCC 11.2.0]",
+  "artifact_sha256": {
+    "shrinkage_v1/driver_shrinkage.json": "a20f55c0d0ae1f3fcc601477081b067cfc94e8ef68269e962e7a79fadf0dd25a",
+    "shrinkage_v1/validation.json": "9db6302a1b181e13e3b01c188665b2f20550cec71092e540bfe2900e40985abb",
+    "shrinkage_v1/idm_shrinkage.json": "73283ffa206380d53ddaa037f6fb57fb61bbc9876c868253617db089da6cb299",
+    "shrinkage_v1/idm_posteriors.json.gz": "578e1b2bfeced10db9d30e5104a54de7600786ee7ce5a5be82b99b75824e73b9",
+    "shrinkage_v1/idm_population.json": "d8cee1dabe1c064f2da1b3d49af934e2bfd8f9869250ac31f98f3943532cc092",
+    "shrinkage_v1/provenance.json": "1f77f8d0c29f7c2ef1d6540122c1deca0b03588ab6d11c42a2139f1bfc801d44",
+    "lane_v2/lane_events.json": "a2643b4654088c1b0fe4b4cafc693cc2ee7bcc1f1e6da8dd766dcfb368d58457",
+    "lane_v2/validation.json": "ba75bb7be3d3e116d25a54bef4b13ae39d93470a22d8e44203c660611dd9854c",
+    "lane_v2/lc2013_posteriors.json": "8c28e464c58eccd7bac4415ccd93036906c82a9cd576668a21fa83344cd4c64e",
+    "lane_v2/lc2013_population.json": "c1a10cc19ce320911130cb074be0f029d278d0d82a1c695c5130f16a06bb6a0f",
+    "lane_v2/provenance.json": "22a0176cc71a1cb635738112906527f900fbddd86fd894e1f03d9d3a25783406"
+  }
+}

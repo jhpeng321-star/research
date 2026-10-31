@@ -1,0 +1,42 @@
+{
+  "state": "dispatched",
+  "pid": 579949,
+  "proc_start_ticks": "48309982",
+  "timestamp_unix": 1793468822.099463,
+  "argv": [
+    "nice",
+    "-n",
+    "19",
+    "/home/ubuntu/miniconda3/bin/python",
+    "lane_directional.py",
+    "--root",
+    "/home/ubuntu/wmdata20261031/views",
+    "--idm-pooled",
+    "/home/ubuntu/rbfit20261031/pooled_full_v5/idm_pooled.json",
+    "--out",
+    "/home/ubuntu/rbfit20261101_lc_boundaries/lane_boundaries_v4",
+    "--workers",
+    "2",
+    "--support-json",
+    "/home/ubuntu/rbfit20261101_lc_boundaries/support_v4.json",
+    "--reuse",
+    "/home/ubuntu/rbfit20261101_addendum/lane_directional_v3"
+  ],
+  "source_sha256": {
+    "lane_directional.py": "2550e454611662b635cd797d1e3fbccdb1c686b392e425bc11639cd152e04ec7",
+    "idm_fit.py": "3b18a14c92604ecd1329eb811758d876ce3e6ce7aaae853395133dcdb863d2f1",
+    "lane_fit.py": "1c49cbbec67d5f2c1e1c93a636ab0a27ea97c5123263710e8d47e9a43974e97a",
+    "dispatch_boundaries.py": "4cd3eec687b62593e0e73b8693691fed7f1acc02bb0e590bb4af09f7d32e3777",
+    "support_v4.json": "695fa63f446f1842a8ce499880090c01b31f6cdc167ba8a79c00d6ef6b03eb35",
+    "src/wms/physics/lc2013.py": "1bdded8e9f213372db946079b20c0cbac677120eeb228baf91d468644ac37206",
+    "src/wms/physics/lc2013_geometry.py": "337322917bdef62daddd7d6c5bc86b4b3a1b71607041c63b1af2b7c1f6d655db",
+    "src/wms/physics/config.py": "28a064562878bbcfcb508106ddb67520acde798ba043220f0be105b446bc4f32"
+  },
+  "load": [
+    4.50146484375,
+    10.4052734375,
+    10.6552734375
+  ],
+  "gpu": false,
+  "automatic_retry": false
+}

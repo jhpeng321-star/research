@@ -1,0 +1,287 @@
+{
+  "population": {
+    "n": 232648,
+    "expected_acceleration_error_mps2": {
+      "n": 232648,
+      "rmse": 0.3566557358682317,
+      "mae": 0.2512803006163645,
+      "bias": -0.06800149732584841
+    },
+    "physical_profile_acceleration_crps": 0.16559677801567746,
+    "physical_profile_95pct_coverage": 0.9503842715174856,
+    "mean_interval_width_mps2": 1.4628808610236124
+  },
+  "raw_posterior": {
+    "n": 232648,
+    "expected_acceleration_error_mps2": {
+      "n": 232648,
+      "rmse": 0.3777952402910512,
+      "mae": 0.19691211403834447,
+      "bias": -0.06664171794780853
+    },
+    "physical_profile_acceleration_crps": 0.16351415755632842,
+    "physical_profile_95pct_coverage": 0.687592414291118,
+    "mean_interval_width_mps2": 0.6091901339960134
+  },
+  "shrunk_posterior": {
+    "n": 232648,
+    "expected_acceleration_error_mps2": {
+      "n": 232648,
+      "rmse": 0.3478143655349507,
+      "mae": 0.19620384315274153,
+      "bias": -0.06714112675970922
+    },
+    "physical_profile_acceleration_crps": 0.1465668429941582,
+    "physical_profile_95pct_coverage": 0.9048390701832811,
+    "mean_interval_width_mps2": 1.016032951986849
+  },
+  "elapsed_s": 80.36604809761047,
+  "policy": {
+    "schema": "wm_phys.idm_shrinkage.v1",
+    "population_only": false,
+    "prior_count": 19.355678502354067,
+    "formula": "posterior_fraction=n_observations/(n_observations+prior_count); zero evidence -> population",
+    "idm_population_sha256": "d8cee1dabe1c064f2da1b3d49af934e2bfd8f9869250ac31f98f3943532cc092",
+    "fit_worlds": [
+      969400,
+      969401,
+      969402,
+      969403,
+      969404,
+      969405,
+      969406,
+      969407,
+      969408,
+      969409,
+      969410,
+      969411,
+      969412,
+      969413,
+      969414,
+      969415,
+      969416,
+      969417,
+      969418,
+      969419,
+      969420,
+      969421,
+      969422,
+      969423,
+      969424,
+      969425,
+      969426,
+      969427,
+      969428,
+      969429,
+      969430,
+      969431
+    ],
+    "conditioning_end_s": 300,
+    "prefix_interval_s": [
+      240,
+      270
+    ],
+    "calibration_interval_s": [
+      270,
+      300
+    ],
+    "objective": "Physical acceleration-profile CRPS; no runtime residual noise",
+    "qualification": "Internal empirical-Bayes calibration, not coverage or action-effect qualification"
+  },
+  "internal_calibration_crps_sum": 13282.73619663997,
+  "scalar_world_crossfits": [
+    {
+      "world": 969400,
+      "coordinate": 0.9498204004031665,
+      "crps_sum": 585.5046663635585,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969401,
+      "coordinate": 0.9505002528471673,
+      "crps_sum": 630.8523179138468,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969402,
+      "coordinate": 0.9514875581929899,
+      "crps_sum": 323.33656777232477,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969403,
+      "coordinate": 0.949541182715319,
+      "crps_sum": 543.1737718891466,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969404,
+      "coordinate": 0.9501690213915602,
+      "crps_sum": 543.5574154799828,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969405,
+      "coordinate": 0.9504572360688205,
+      "crps_sum": 591.1534096195971,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969406,
+      "coordinate": 0.950693629067792,
+      "crps_sum": 323.5814316623047,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969407,
+      "coordinate": 0.9513960646232044,
+      "crps_sum": 425.78321446013524,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969408,
+      "coordinate": 0.9515690256161439,
+      "crps_sum": 355.8076528519017,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969409,
+      "coordinate": 0.9516406935884473,
+      "crps_sum": 186.70915777005695,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969410,
+      "coordinate": 0.9509290452039079,
+      "crps_sum": 257.85110079144454,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969411,
+      "coordinate": 0.9502308957500226,
+      "crps_sum": 353.7204915510235,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969412,
+      "coordinate": 0.9514266641152755,
+      "crps_sum": 374.150255528627,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969413,
+      "coordinate": 0.9492350508903276,
+      "crps_sum": 615.6627555273107,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969414,
+      "coordinate": 0.9518079111163422,
+      "crps_sum": 364.90285335653584,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969415,
+      "coordinate": 0.950816365130395,
+      "crps_sum": 405.93894287035226,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969416,
+      "coordinate": 0.951116708967501,
+      "crps_sum": 451.87036997812726,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969417,
+      "coordinate": 0.9499508838762405,
+      "crps_sum": 641.6797085293072,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969418,
+      "coordinate": 0.9524163550547377,
+      "crps_sum": 389.25556234287524,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969419,
+      "coordinate": 0.95090566569415,
+      "crps_sum": 445.4059763721926,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969420,
+      "coordinate": 0.9489328314067844,
+      "crps_sum": 577.5567473937048,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969421,
+      "coordinate": 0.9521951350663811,
+      "crps_sum": 106.53862286121513,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969422,
+      "coordinate": 0.951660402158566,
+      "crps_sum": 155.30455416949349,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969423,
+      "coordinate": 0.9506611753658807,
+      "crps_sum": 260.3100028233539,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969424,
+      "coordinate": 0.94953987131981,
+      "crps_sum": 370.16325363762815,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969425,
+      "coordinate": 0.950588362528127,
+      "crps_sum": 462.73367075527517,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969426,
+      "coordinate": 0.9496965219684718,
+      "crps_sum": 542.8158400282284,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969427,
+      "coordinate": 0.950483890143041,
+      "crps_sum": 535.1487502371996,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969428,
+      "coordinate": 0.952770060510063,
+      "crps_sum": 309.9584895060029,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969429,
+      "coordinate": 0.9512796360267832,
+      "crps_sum": 551.658617439617,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969430,
+      "coordinate": 0.9525887490007877,
+      "crps_sum": 257.38626150871227,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    },
+    {
+      "world": 969431,
+      "coordinate": 0.9509162257775994,
+      "crps_sum": 354.2983065084863,
+      "note": "Policy scalar crossfit only; empirical-Bayes population still shared"
+    }
+  ],
+  "qualification": "Internal empirical-Bayes calibration, not coverage or action-effect qualification"
+}

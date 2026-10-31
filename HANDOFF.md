@@ -18,6 +18,11 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   `panel_ops status` is read-only; never repeat canary/continue/monitor dispatch.
 
 ## What exists
+- FIT4aee21a8 integrated: MotionFit.condition_motion generic causal posterior
+  API (no saved tape-ID lookup); source weights and shrinkage exports preserved.
+  New direction-aware/raw LC fitting tools remain diagnostic; LC stays OFF.
+  Producer22CPU PASS; real949-profile no-history fallback API gate PASS in INT.
+  Latest exact INT-stage SciPy suite pending next staging.
 - MERGEda3607eb integrated: source22.22→31.29 ramp limits/speedFactor, EPS
   constants, physics-native opt-in callback and matched native-relative accel.
   Old learned native head's missing-leader dv gathers unrelated slot0 speed:

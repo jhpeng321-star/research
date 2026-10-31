@@ -1,0 +1,38 @@
+{
+  "state": "dispatched",
+  "pid": 426309,
+  "argv": [
+    "nice",
+    "-n",
+    "19",
+    "/home/ubuntu/miniconda3/bin/python",
+    "tools/rbfit/calibrate_shrinkage.py",
+    "--root",
+    "/home/ubuntu/wmdata20261031/views",
+    "--fit",
+    "/home/ubuntu/rbfit20261031/fit_mixture_v4",
+    "--out",
+    "/home/ubuntu/rbfit20261101_addendum/shrinkage_v1"
+  ],
+  "timestamp_unix": 1793465588.1431866,
+  "load": [
+    10.814453125,
+    10.1904296875,
+    10.94384765625
+  ],
+  "source_sha256": {
+    "src/wms/physics/lc2013.py": "1bdded8e9f213372db946079b20c0cbac677120eeb228baf91d468644ac37206",
+    "src/wms/physics/lc2013_geometry.py": "337322917bdef62daddd7d6c5bc86b4b3a1b71607041c63b1af2b7c1f6d655db",
+    "src/wms/physics/config.py": "28a064562878bbcfcb508106ddb67520acde798ba043220f0be105b446bc4f32",
+    "src/wms/physics/mobil.py": "f786dbe67836cf8f66a50644691ca12375f3cd8ce610588a07128cd6ede5ff81",
+    "src/wms/physics/neighbours.py": "16667d7278e68d5796fb7349487ef3ef9f7c766ef21c4509597313d2ee129a0d",
+    "src/wms/physics/batched.py": "95da75d003f24ab77e06af7754c2126348ea4062b0707b48403763616dd335bd",
+    "src/wms/physics/motion_fit.py": "5009f25d8425076891b459f15f3a7e72cf960d3e1655b8b1087f49ac73fe6896",
+    "tools/rbfit/idm_fit.py": "3b18a14c92604ecd1329eb811758d876ce3e6ce7aaae853395133dcdb863d2f1",
+    "tools/rbfit/lane_fit.py": "1c49cbbec67d5f2c1e1c93a636ab0a27ea97c5123263710e8d47e9a43974e97a",
+    "tools/rbfit/calibrate_shrinkage.py": "1c6919b6480f79a0b7e971192440b5169cfc7e6f0f857f3d1d0f2c2c7ab67a4d",
+    "tools/rbfit/dispatch_addendum.py": "02a8836f0dc9e8a12644b01fd63f21a307128714cdd72c8857aea9498b6bc060"
+  },
+  "gpu": false,
+  "automatic_retry": false
+}

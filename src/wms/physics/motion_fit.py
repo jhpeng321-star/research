@@ -32,6 +32,7 @@ class MotionFit:
         root = Path(directory)
         population_bytes = (root / "idm_population.json").read_bytes()
         self.population = json.loads(population_bytes)
+        self._population_sha256 = hashlib.sha256(population_bytes).hexdigest()
         raw_posterior = root / "idm_posteriors.json"
         if raw_posterior.exists():
             self.posterior = json.loads(raw_posterior.read_text())
@@ -125,6 +126,74 @@ class MotionFit:
         result["delta"] = torch.full_like(values[..., 0], float(self.population["delta"]))
         return result
 
+    def condition_motion(self, predicted_next_speed: torch.Tensor, speed_before: torch.Tensor,
+                         speed_after: torch.Tensor, dt_s: torch.Tensor,
+                         interval_end_s: torch.Tensor, *, t0_s: float,
+                         policy_path: str | Path | None = None) -> dict:
+        """Causal posterior for ANY observed identity; no saved-VID lookup.
+
+        Caller evaluates its faithful CF step on population support in its exact
+        stored order: predictions[T,C], observed interval vectors[T]. Supply
+        ONLY stable-mainline HDV/leader intervals with physical gaps and no lane
+        transition, using the actual dt; never a junction virtual-stop leader.
+        All interval endpoints must lie in the last60s and at/before t0.
+        The population and residual scale are frozen motion fits. This is
+        runtime Bayesian inference, not population fitting on evaluation worlds.
+        Return is a plain JSON-compatible driver distribution; numeric identity
+        labels and a crosswalk are unnecessary. No evidence -> population.
+        """
+        if self.population['distribution'] != 'finite_support_mixture':
+            raise ValueError('Motion conditioning requires finite physical support')
+        support = torch.tensor(self.population['support'], dtype=torch.float64,
+                               device=predicted_next_speed.device)
+        prior = torch.tensor(self.population['weights'], dtype=torch.float64,
+                             device=predicted_next_speed.device)
+        n = len(speed_before)
+        if (self.population['distribution'] != 'finite_support_mixture'
+                or predicted_next_speed.shape != (n, len(prior))
+                or any(v.shape != (n,) for v in (speed_before, speed_after, dt_s, interval_end_s))
+                or not math.isfinite(t0_s)
+                or any(not torch.isfinite(v).all() for v in (
+                    predicted_next_speed, speed_before, speed_after, dt_s, interval_end_s))
+                or (dt_s <= 0).any() or (speed_before < 0).any() or (speed_after < 0).any()
+                or (predicted_next_speed < 0).any()):
+            raise ValueError('Invalid causal motion-posterior inputs')
+        if ((interval_end_s > t0_s).any() or (interval_end_s-dt_s < t0_s-60).any()
+                or (n > 1 and (interval_end_s[1:]-dt_s[1:] < interval_end_s[:-1]).any())):
+            raise ValueError('Motion posterior requires nonoverlapping intervals in causal last60s')
+        # Float64 sums prevent deterministic residuals from spuriously deleting
+        # hypotheses solely through low-precision accumulation.
+        support, prior = support.double(), prior.double()
+        y = (speed_after.double()-speed_before.double())/dt_s.double()
+        prediction = (predicted_next_speed.double()-speed_before.double()[:, None])/dt_s.double()[:, None]
+        sigma = float(self.population['sigma_accel_mps2'])
+        if not math.isfinite(sigma) or sigma <= 0:
+            raise ValueError('Invalid fitted acceleration discrepancy scale')
+        posterior = (prior.log()-((prediction-y[:, None])**2).sum(0)/(2*sigma*sigma)).softmax(0)
+        fraction = 1. if n else 0.
+        if policy_path is not None:
+            policy = json.loads(Path(policy_path).read_bytes())
+            # The policy binds original file bytes rather than a reserialization.
+            if (policy.get('schema') != 'wm_phys.idm_shrinkage.v1'
+                    or policy.get('idm_population_sha256') != self._population_sha256):
+                raise ValueError('Motion conditioning policy/population binding mismatch')
+            strength = policy.get('prior_count')
+            if not policy.get('population_only') and (not isinstance(strength, (int, float))
+                                                     or not math.isfinite(strength) or strength < 0):
+                raise ValueError('Invalid learned shrinkage prior count')
+            fraction = 0. if policy.get('population_only') or not n else n/(n+strength)
+        weights = fraction*posterior+(1-fraction)*prior/prior.sum()
+        weights /= weights.sum()
+        mu = weights@support.log()
+        centered = support.log()-mu
+        cov = centered.T@(weights[:, None]*centered)
+        indices = (weights > 0).nonzero().flatten()
+        return dict(support_indices=indices.tolist(), weights=weights[indices].tolist(),
+                    log_mean=mu.tolist(), log_cov=cov.tolist(), n_observations=n,
+                    posterior_fraction=fraction, conditioning_end_s=t0_s,
+                    modal_parameters=dict(zip(IDM_ORDER, support[weights.argmax()].tolist())),
+                    delta=self.population['delta'])
+
     def unc_posterior_samples(self, worlds, vehicle_ids: torch.Tensor, present: torch.Tensor,
                               is_cav: torch.Tensor, point_params: dict[str, torch.Tensor], *,
                               n_samples: int, t0_s: float, seed: int = 0,
@@ -210,7 +279,8 @@ def draw_lane_parameters(population_path: str | Path, posterior_path: str | Path
     probabilities = torch.tensor(candidate.get("weights", pop["weights"]), dtype=torch.float64)
     support = torch.tensor(pop["support"], dtype=torch.float64)
     if (support.shape != (len(probabilities), len(LC_ORDER))
-            or not torch.isfinite(support).all() or not (support > 0).all()
+            or not torch.isfinite(support).all() or not (support[:, :4] >= 0).all()
+            or not (support[:, 4] > 0).all()
             or not torch.isfinite(probabilities).all() or not (probabilities >= 0).all()
             or not probabilities.sum() > 0):
         raise ValueError("Invalid LC physical-fit distribution")
