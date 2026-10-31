@@ -79,3 +79,50 @@ CPU verification:
 No distributional qualification is implied by implementing the right latent
 sources. Across-world real variation includes observable-state differences and
 is not a target for conditional same-state ensemble SD.
+
+## Owner00:40 fitted posterior and learned demand
+
+```python
+from wms.control.fitted_hidden import FittedHiddenState
+from wms.control.arrival_fit import LearnedArrivalFit
+
+fit = FittedHiddenState.from_directory("artifacts/rbfit/finite_mixture_v4")
+# LC is separately opt-in: lane_directory="artifacts/rbfit/lane_v1".
+# FIT LC validation lost to its baseline; it is not silently adopted.
+demand = LearnedArrivalFit.from_file("docs/paper_results/rbunc/observed_arrivals.json")
+futures = plan_hidden_state_futures(
+    model, initial, history_kwargs, future_sampling="hidden_state", n_samples=8,
+    seed=20261031, row_keys=[observable_world] * n_arms,
+    fitted_state=fit, vehicle_ids=observed_numeric_vids, t0_s=300,
+    entrance_histories=observed_histories, queues=observed_queues,
+    arrival_fit=demand)
+```
+
+- Numeric IDs are recorder `vid.npy` identities, **not** indices into route-string
+  `start.vehicle_ids`. Example exact binding: `fitted_probe.observed_ids`.
+- Current HDVs: exact sparse finite-support posterior; unknown or summary-only
+  records use the population. No log-normal moment reinterpretation or additional
+  encoder reliability shrinkage. Nine-coordinate IDM mapping is by name.
+- New HDVs: fitted population. Current/new CAV plant settings remain the existing
+  observed inference, outside the HDV physical fit. Optional named LC settings
+  persist for current/new HDVs; no fitted joint IDM/LC dependence is claimed.
+- Fit artifact records all32 nativeFIT entrance histories using insertions+queue
+  conservation. It retains10s time-varying rate estimates and BIC diagnostics.
+  Data and documented generator favor the constant pre1200s phase, with no
+  supported added overdispersion. Arrival-rate estimation uncertainty uses one
+  Gamma(count+.5, rate=observed exposure) posterior draw per future/entrance;
+  requests are conditional Poisson with exact integrated-intensity inversion.
+- `sample_demand_rate=False` fixes rates at their observed MLE, retaining request
+  randomness. `sample_arrivals=False` fixes rate/request/newcomer draws across K.
+- For a permitted new observation, first call
+  `demand.condition(world, observed_entries, observed_queue_history)`; this only
+  conditions the frozen family on causal counts. A missing world without causal
+  counters fails closed. Requests beyond fitted phase end1200s are refused.
+- Paired candidate actions must share initial observations, numeric IDs, row key,
+  seed, and future index. Rebuild mutable future objects per arm. Hidden rates,
+  incumbent settings, request clocks, and entrant settings then share CRN exactly.
+- CPU suites: `test_fitted_hidden.py`, `test_arrival_fit.py`,
+  `test_hidden_state_futures.py`, `test_c4_futures.py` (34 tests).
+- New fitted-input physical verification and retained failure lineage:
+  `docs/paper_results/RBUNC_ADDENDUM_DESIGN.md`, `rbunc/fitted_source_probe.json`.
+  Complete-panel summaries: `python tools/rbunc/analyze_addendum.py`.

@@ -1,0 +1,96 @@
+{
+ "status": "PASS",
+ "scientific_rollouts": 0,
+ "synthetic_replays": 2,
+ "ticks_per_replay": 5,
+ "exact_admission_motion_identity": true,
+ "global_rng_unchanged": true,
+ "tape_sha256": [
+  "c287780eb651dee928d51ddd78cebd5b4d11489c71f53cb84d851c5e65479aca",
+  "c287780eb651dee928d51ddd78cebd5b4d11489c71f53cb84d851c5e65479aca"
+ ],
+ "assigned": [
+  [
+   {
+    "v0": 31.555925369262695,
+    "time_headway": 1.0106747150421143,
+    "min_gap": 1.5834922790527344,
+    "accel": 1.8953994512557983,
+    "decel": 1.601325273513794,
+    "politeness": 0.21475495398044586,
+    "mobil_threshold": 0.10901867598295212,
+    "merge_gap": 5.020349502563477,
+    "merge_urgency": 1.0319541692733765,
+    "lcStrategic": 6.412862942764488,
+    "lcCooperative": 1.6090142111958385,
+    "lcSpeedGain": 1.5130283430934413,
+    "lcKeepRight": 0.23316137254323893,
+    "lcAssertive": 1.4069759300109068
+   },
+   {
+    "v0": 29.814472198486328,
+    "time_headway": 1.508960247039795,
+    "min_gap": 1.2967307567596436,
+    "accel": 0.6804753541946411,
+    "decel": 2.022351026535034,
+    "politeness": 0.21475495398044586,
+    "mobil_threshold": 0.10901867598295212,
+    "merge_gap": 5.020349502563477,
+    "merge_urgency": 1.0319541692733765,
+    "lcStrategic": 2.80610789791552,
+    "lcCooperative": 0.7305667362801459,
+    "lcSpeedGain": 4.860518750858841,
+    "lcKeepRight": 0.17908083034496255,
+    "lcAssertive": 1.7672118364495835
+   }
+  ],
+  [
+   {
+    "v0": 31.555925369262695,
+    "time_headway": 1.0106747150421143,
+    "min_gap": 1.5834922790527344,
+    "accel": 1.8953994512557983,
+    "decel": 1.601325273513794,
+    "politeness": 0.21475495398044586,
+    "mobil_threshold": 0.10901867598295212,
+    "merge_gap": 5.020349502563477,
+    "merge_urgency": 1.0319541692733765,
+    "lcStrategic": 6.412862942764488,
+    "lcCooperative": 1.6090142111958385,
+    "lcSpeedGain": 1.5130283430934413,
+    "lcKeepRight": 0.23316137254323893,
+    "lcAssertive": 1.4069759300109068
+   },
+   {
+    "v0": 29.814472198486328,
+    "time_headway": 1.508960247039795,
+    "min_gap": 1.2967307567596436,
+    "accel": 0.6804753541946411,
+    "decel": 2.022351026535034,
+    "politeness": 0.21475495398044586,
+    "mobil_threshold": 0.10901867598295212,
+    "merge_gap": 5.020349502563477,
+    "merge_urgency": 1.0319541692733765,
+    "lcStrategic": 2.80610789791552,
+    "lcCooperative": 0.7305667362801459,
+    "lcSpeedGain": 4.860518750858841,
+    "lcKeepRight": 0.17908083034496255,
+    "lcAssertive": 1.7672118364495835
+   }
+  ]
+ ],
+ "sampler_sha256": "5d601f4ab61e063dc0d5df77778836ee9834823b2b04ddf7fe30ddde43d5543c",
+ "runtime_sources": {
+  "E:\\agent-work\\c4-rb-int\\src\\wms\\model\\wms.py": "bd9673d84d71c0d9bf4207be1234e4dec4f25c0bc7a485baf1c91e2179202655",
+  "E:\\agent-work\\c4-rb-int\\src\\wms\\model\\sumo_insertion.py": "7a1593d2dc81adbfee53abd23bfae0516da4dde06d697a09c8e930f34d3ec478"
+ },
+ "cf_model": "sumo_idm",
+ "fitted_artifacts": {
+  "idm_population_sha256": "d8cee1dabe1c064f2da1b3d49af934e2bfd8f9869250ac31f98f3943532cc092",
+  "idm_posterior_sha256": "ae98477a87810e82200baf13d8697ee083f75cbf60c47d48247a688997fa145d",
+  "lc_population_sha256": "09ca64befc74662bee4642e292f8467c51d9bf0e49f793f459497027c4499106",
+  "lc_posterior_sha256": "dc7054a3c73a669178da14edb72faca55da027cac8e35033a0631ba0836c8a61"
+ },
+ "fitted_lc_persistent": true,
+ "fitted_reader_sha256": "31eae66f63b372637a75482b42b2ab4abede426c44813c60c5ebe487b54741ab"
+}

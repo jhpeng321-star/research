@@ -1,9 +1,19 @@
-# S-RB-UNC — baseline READY; owner00:40 addendum IN PROGRESS
+# S-RB-UNC — owner00:40 implementation READY; fitted-input panel RUNNING
 
 Fresh-session resume preserves clean baseline46c33fbe and all completed probes.
 Next: fitted IDM/optional LC posterior + learned entrance-counter process +
 identity-keyed action CRN. Frozen plan: `docs/paper_results/RBUNC_ADDENDUM_DESIGN.md`.
 Remote terminal rechecked: old31children exited0; no old dispatch repeated.
+
+Latest implementation `f0d2a588` (includes `f8b6faea`, `e038da91`): ready for
+INT/DECIDE to integrate. CPU34PASS including original futures regression;
+actual INT SUMO-IDM+LC2013 insertion smoke PASS, persistent fitted LC and exact
+newborn admission/motion, bit-identical replays, global RNG unchanged.
+Receipt: `docs/paper_results/rbunc/addendum_integration_smoke_v2.json`.
+Fitted-input H120 panel runs ONCE in `cpuQ:rbunc20261031/addendum_v2`, own
+supervisor457329/four disjoint nice19CPUworkers, immutable code62ad8c687e9a.
+Old v1 failed BEFORE any rollout due to unidentified-driver missing weights;
+population-fallback correction34CPUtestsPASS; original logs/terminal preserved.
 
 ## Owner00:40 fitted-posterior extension (CPU verified)
 - `FittedHiddenState.from_directory(finite_mixture_v4, lane_directory=None)` in
@@ -37,7 +47,7 @@ Remote terminal rechecked: old31children exited0; no old dispatch repeated.
 - `.condition(world, observed_entries, observed_queue_history)` supports new
   causal starts under the frozen family without reading future labels. Unknown
   worlds otherwise fail closed. Mutable future objects still recreated per arm.
-- Combined CPU suite20PASS; new32-state fitted-source verification pending.
+- Combined CPU suite34PASS; new32-state fitted-source verification running.
 
 Branch `c4/rb-unc`, base `f0db3c82`. Owner registration5683/5694 and WHY +
 ENSPROBE read. Merge the branch; retain INT's own root HANDOFF on conflict.
