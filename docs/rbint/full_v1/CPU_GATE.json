@@ -1,0 +1,19 @@
+{
+  "status": "PASS",
+  "source_commit": "0ec484ab3fc51cdf08c92829556aa24fc86e6c9f",
+  "integration_cpu_tests": 155,
+  "integration_seconds": 18.70,
+  "integration_scope": "all touched LC/CF/merge/full-fleet/insertion/hidden-futures/fitted-arrivals/native-controller/INT audit-recipe-rebuild modules",
+  "staged_fit_tests": 17,
+  "staged_fit_seconds": 1.54,
+  "staged_fit_host": "cpuQ",
+  "staged_fit_root": "/home/ubuntu/rbint20261101/phys_code_0ec484ab3fc5",
+  "evaluator_unittests": 13,
+  "evaluator_skipped": 1,
+  "evaluator_seconds": 6.031,
+  "latest_candidate": "4015b6412cdfa2a94168b7095a59287d0fddcd3b",
+  "candidate_since_cpu_gate": "administrative reserved-first ordering and deployment helper only; same physics/recipe/controller implementation",
+  "training": false,
+  "sumo_runs": 0,
+  "full_panel_outcome_claim": false
+}

@@ -14,3 +14,18 @@ following the 23:18 MAIN helper addendum. Recipe commit: `be78ff0e`.
 The central registration is an existing ignored runtime file in the shared MAIN
 worktree. Its single-line edit is recorded here without changing MAIN's tracked
 files or staging any of its unrelated work.
+
+## Continuous integration / FULL-v1, 2026-11-01 01:24 +08
+
+Added `S-RB-INT CONTINUOUS INTEGRATION / FULL-v1 PRE-INFERENCE` after the owner
+00:45 COOPPLAN approval line. Source4015b641, same20world/fivearm/K8 panel,
+reserved8 processing order first; successful canary reused once, no automatic
+scientific retry. Learned shrinkage posterior/learned counter-arrival family,
+unknown identity population fallback, fitted LC OFF, CPU/smoke gates, all3
+switching conditions and revised09:30/11:45 schedule are explicitly recorded.
+Actual canary launch Unix1793467480.8332493 (01:24:40), PID332674; the line was
+written before launch. An initial approximate01:36 label was corrected to01:24;
+immutable Unix dispatch receipts are authoritative. No outcome-based rule change.
+Successful canary969432/k0 completed206.03s and was skipped in the same-source
+panel continuation Unix1793467741.52, PIDs333463/333464/333465. Sources and all
+failure receipts retained. Main's ignored registration file is not staged here.

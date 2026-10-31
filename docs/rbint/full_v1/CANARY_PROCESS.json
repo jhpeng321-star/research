@@ -1,0 +1,33 @@
+{
+  "pid": 332674,
+  "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+  "start_ticks": "884769499",
+  "argv": [
+    "nice",
+    "-n",
+    "19",
+    "/root/miniconda3/bin/python",
+    "-B",
+    "-u",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/tools/rbint/evaluate_FULL.py",
+    "--out",
+    "/root/rbeval20261031/int/WM-PHYS-FULL-v1/shard0",
+    "--runtime-root",
+    "/root/rbeval20261031/phys_code_4015b6412cdf",
+    "--wm",
+    "/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt",
+    "--wm-config",
+    "/root/rbeval20261031/phys_code_4015b6412cdf/configs/wm_phys.toml",
+    "--model-name",
+    "WM-PHYS-FULL-v1",
+    "--shard",
+    "0",
+    "--shards",
+    "3",
+    "--memory-gib",
+    "5",
+    "--max-tasks",
+    "1"
+  ],
+  "unix": 1793467480.8332493
+}

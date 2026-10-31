@@ -1,0 +1,16 @@
+{
+  "owner": "S-RB-INT",
+  "host": "gpuA",
+  "runtime": "/root/rbeval20261031/phys_code_4015b6412cdf",
+  "stage": {
+    "host": "gpuA",
+    "commit": "4015b6412cdfa2a94168b7095a59287d0fddcd3b",
+    "archive_sha256": "cebb09af0d5388013d37db9399621bdffff3df113dc6d3915ee5e625b1d6e551",
+    "runtime": "/root/rbeval20261031/phys_code_4015b6412cdf"
+  },
+  "smoke_sha256": "8cfb30c91e6d81c9cb4ef2e1d04b7eb6621c36cfa381388533874828037a90eb",
+  "variant": "FULL",
+  "tasks": 160,
+  "world_order": "reserved-first",
+  "training": false
+}
