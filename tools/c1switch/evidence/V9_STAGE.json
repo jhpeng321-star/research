@@ -1,0 +1,27 @@
+{
+  "gpu": {
+    "root": "/root/c1switch20261031/recovery_v8",
+    "source_sha256": "3eba2d74e33c0fff2819bac1ffe82ddee4399971c711327ddd3fc125d9e9ad3d",
+    "prior_gpu_s": 9718.965538907796,
+    "allocations": {
+      "wm": 4470,
+      "bb": 200
+    }
+  },
+  "cpu": {
+    "updated": true,
+    "charged_sim_s": 227310
+  },
+  "gpuA_finish": {
+    "wm": {
+      "pid": 313233,
+      "elapsed_s": 51.81962842494249,
+      "unix": 1793461288.216685
+    },
+    "bb": {
+      "pid": 313211,
+      "elapsed_s": 5.411647167056799,
+      "unix": 1793461235.995062
+    }
+  }
+}

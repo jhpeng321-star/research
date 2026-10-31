@@ -12,6 +12,8 @@ from .storage import canonical, write
 
 CPU = '/home/ubuntu/c1switch20261031/recovery_v8'
 GPU = '/root/c1switch20261031/recovery_v8'
+GPU_HOST = 'gpuR'
+PREFIX = 'V9'
 
 
 def preflight():
@@ -154,7 +156,7 @@ def cpu():
     if (EVIDENCE/'V8_CPU.json').exists():
         write(EVIDENCE/f'V8_CPU_PRIOR_{time.time_ns()}.json',json.loads((EVIDENCE/'V8_CPU.json').read_text()))
     results = {}
-    for host,target in [('cpuQ',CPU),('gpuA',GPU)]:
+    for host,target in [('cpuQ',CPU),(GPU_HOST,GPU)]:
         env = dict(CPU_ENV) if host=='cpuQ' else dict(GPU_ENV,CUDA_VISIBLE_DEVICES='',C1SWITCH_REAL_CPU='1',C1SWITCH_TEST_BUILD=target,
             PYTHONPATH=GPU+'/pydeps:'+GPU_ENV['PYTHONPATH'])
         results[host] = ssh(host,f'''import contextlib,io,json,os,sys
@@ -180,7 +182,7 @@ with contextlib.redirect_stdout(log),contextlib.redirect_stderr(log):
 out=dict(returncode=code,output=log.getvalue(),new_sim_s=0,new_gpu_s=0)
 (r/'CPU.json').write_text(json.dumps(out,indent=2));print(json.dumps(out))
 ''',timeout=120)
-    write(EVIDENCE/'V8_CPU.json',results)
+    write(EVIDENCE/(PREFIX+'_CPU.json'),results)
     print(json.dumps(results,indent=2))
 
 
@@ -214,20 +216,20 @@ with (r/({name!r}+'.log')).open('x') as log:
 out=dict(host={host!r},pid=p.pid,unix=time.time(),name={name!r})
 (r/({name!r}+'_DISPATCH.json')).write_text(json.dumps(out,indent=2));print(json.dumps(out))
 ''')
-    write(EVIDENCE/('V8_'+name.upper()+'_DISPATCH.json'),result)
+    write(EVIDENCE/(PREFIX+'_'+name.upper()+'_DISPATCH.json'),result)
     print(json.dumps(result,indent=2))
 
 
 def wm_gpu():
-    launch('gpuA','wm_gpu',f"from pathlib import Path; from tools.c1switch.resume import gpu_serve; gpu_serve(Path({GPU!r})/'rpc/wm',Path({GPU!r})/'wm_BINDING.json')",True)
+    launch(GPU_HOST,'wm_gpu',f"from pathlib import Path; from tools.c1switch.resume import gpu_serve; gpu_serve(Path({GPU!r})/'rpc/wm',Path({GPU!r})/'wm_BINDING.json')",True)
 
 
 def bb_gpu():
-    launch('gpuA','bb_gpu',f"from pathlib import Path; from tools.c1switch.resume import gpu_serve; gpu_serve(Path({GPU!r})/'rpc/bb',Path({GPU!r})/'bb_BINDING.json')",True)
+    launch(GPU_HOST,'bb_gpu',f"from pathlib import Path; from tools.c1switch.resume import gpu_serve; gpu_serve(Path({GPU!r})/'rpc/bb',Path({GPU!r})/'bb_BINDING.json')",True)
 
 
 def gate():
-    result = ssh('gpuA',f'''import json
+    result = ssh(GPU_HOST,f'''import json
 from pathlib import Path
 r=Path({GPU!r});out={{}}
 for a in ('wm','bb'):
@@ -247,7 +249,7 @@ from pathlib import Path
 p=Path({CPU!r})/'PARITY_GATE.json';assert not p.exists();p.write_text(json.dumps(dict(pass_=True,models={result!r})))
 print(json.dumps(dict(pass_=True)))
 ''')
-    write(EVIDENCE/'V8_GPU_GATE.json',dict(pass_=True,models=result))
+    write(EVIDENCE/(PREFIX+'_GPU_GATE.json'),dict(pass_=True,models=result))
     print(json.dumps(dict(pass_=True,pids={a:r['pid'] for a,r in result.items()}),indent=2))
 
 
@@ -255,7 +257,7 @@ def relay():
     root = EVIDENCE/'relay_recovery_v8'
     assert not root.exists(),'existing relay; inspect own PID'
     root.mkdir()
-    env = dict(os.environ,C1SWITCH_CPU_RPC=CPU+'/rpc',C1SWITCH_GPU_RPC=GPU+'/rpc',C1SWITCH_GPU_HOST='gpuA')
+    env = dict(os.environ,C1SWITCH_CPU_RPC=CPU+'/rpc',C1SWITCH_GPU_RPC=GPU+'/rpc',C1SWITCH_GPU_HOST=GPU_HOST)
     with (root/'relay.log').open('x') as log:
         p = subprocess.Popen([sys.executable,'-B','-u','-m','tools.c1switch.transport','--root',str(root.resolve())],env=env,stdout=log,stderr=subprocess.STDOUT)
     out = dict(pid=p.pid,root=str(root.resolve()),unix=time.time())
@@ -274,7 +276,7 @@ print(json.dumps(dict(pass_=True)))
 
 def progress():
     result = {}
-    for host,target in [('cpuQ',CPU),('gpuA',GPU)]:
+    for host,target in [('cpuQ',CPU),(GPU_HOST,GPU)]:
         result[host] = ssh(host,f'''import json,os,time
 from pathlib import Path
 r=Path({target!r});out=dict(unix=time.time(),load=os.getloadavg())
@@ -291,7 +293,7 @@ if {host!r}=='cpuQ':
  out['failures']={{str(p.relative_to(r)):p.read_text()[-4000:] for p in (r/'recovery').glob('*.log') if 'Traceback' in p.read_text()}}
 print(json.dumps(out))
 ''',timeout=90)
-    write(EVIDENCE/'V8_PROGRESS.json',result)
+    write(EVIDENCE/(PREFIX+'_PROGRESS.json'),result)
     display = json.loads(json.dumps(result))
     for row in display.values():
         status = row['receipts'].get('recovery/STATUS.json')
@@ -300,7 +302,54 @@ print(json.dumps(out))
     print(json.dumps(display,indent=2))
 
 
+def relocate():
+    from .design import sha
+    from .mainops import BB, bundle
+    sources,raw = bundle()
+    design = sha('docs/paper_results/C1SWITCH_DESIGN.md')
+    assert any(design in line and 'ORIGINAL-HOST FALLBACK' in line for line in REG.read_text(encoding='utf-8').splitlines())
+    old = ssh('gpuA',f'''import json
+from pathlib import Path
+r=Path({GPU!r});out={{}}
+for a in ('wm','bb'):
+ finish=json.loads((r/'rpc'/a/'GPU_FINISHED.json').read_text());assert not Path('/proc',str(finish['pid'])).exists()
+ out[a]=dict(finish=finish,binding=json.loads((r/(a+'_BINDING.json')).read_text()),parity=json.loads((r/'rpc'/a/'PARITY_INPUT.json').read_text()))
+assert json.loads((r/'STAGED.json').read_text())['tools/c1switch/resume.py']=={sources['tools/c1switch/resume.py']!r}
+out['physics']=json.loads((r/'physics.json').read_text());print(json.dumps(out))
+''')
+    prior = json.loads((EVIDENCE/'V8_PLAN.json').read_text())['prior_gpu_s']+sum(old[a]['finish']['elapsed_s'] for a in ('wm','bb'))
+    allocations = dict(wm=4470,bb=200)
+    assert prior+sum(allocations.values())<=14400
+    for arm in ('wm','bb'):
+        old[arm]['binding'].update(shared_gpu_prior_s=prior,shared_allocations_s=allocations,recovery_allocation_s=allocations[arm])
+    staged = ssh(GPU_HOST,f'''import base64,hashlib,io,json,tarfile
+from pathlib import Path
+r=Path({GPU!r});assert r.parent.is_dir();assert not r.exists(),'existing fallback; inspect only'
+r.mkdir();s=r/'pytools';s.mkdir()
+with tarfile.open(fileobj=io.BytesIO(base64.b64decode({raw!r})),mode='r:gz') as t:t.extractall(s,filter='data')
+sources={sources!r};assert all(hashlib.sha256((s/n).read_bytes()).hexdigest()==h for n,h in sources.items())
+(r/'STAGED.json').write_text(json.dumps(sources,indent=2))
+for a in ('wm','bb'):
+ (r/'rpc'/a).mkdir(parents=True)
+ (r/(a+'_BINDING.json')).write_text(json.dumps({old!r}[a]['binding'],indent=2))
+ (r/'rpc'/a/'PARITY_INPUT.json').write_text(json.dumps({old!r}[a]['parity']))
+(r/'physics.json').write_text(json.dumps({old!r}['physics']))
+print(json.dumps(dict(root=str(r),source_sha256={canonical(sources)!r},prior_gpu_s={prior!r},allocations={allocations!r})))
+''',timeout=90)
+    subprocess.run(['scp','-o','BatchMode=yes',str(BB),GPU_HOST+':'+GPU+'/bb.pt'],check=True,timeout=90)
+    updated = ssh('cpuQ',f'''import json
+from pathlib import Path
+r=Path({CPU!r});assert not (r/'recovery_DISPATCH.json').exists();assert not (r/'STOP').exists()
+for a in ('wm','bb'):
+ p=r/(a+'_BINDING.json');p.rename(r/(a+'_GPUA_BINDING.json'))
+ p.write_text(json.dumps({old!r}[a]['binding'],indent=2))
+print(json.dumps(dict(updated=True,charged_sim_s=sum(json.loads(x)['sim_s'] for x in (r/'accounting.jsonl').read_text().splitlines()))))
+''')
+    write(EVIDENCE/'V9_STAGE.json',dict(gpu=staged,cpu=updated,gpuA_finish={a:old[a]['finish'] for a in ('wm','bb')}))
+    print(json.dumps(dict(gpu=staged,cpu=updated),indent=2))
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('mode', choices=('inspect','dependencies','preflight','stage','import_receipts','cpu','dependency_runtime','wm_gpu','bb_gpu','gate','relay','main_panel','progress'))
+    parser.add_argument('mode', choices=('inspect','dependencies','preflight','stage','import_receipts','cpu','dependency_runtime','wm_gpu','bb_gpu','gate','relay','main_panel','progress','relocate'))
     globals()[parser.parse_args().mode]()
