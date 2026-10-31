@@ -1,4 +1,16 @@
-# S-RB-UNC — owner00:40 READY; all32 fitted-input states COMPLETE
+# S-RB-UNC — READY; preferred32-state comparison COMPLETE01:47
+
+Latest preferred32/K8/H120 legacy-reference result: within-K teamSD748.35
+[668.54,828.51] vs real across-world4200.50veh-s; source ablations on969400:
+drivers164.22/arrivals874.61/both850.71/fixed0.00, fixed8tapes hash-identical.
+CRPS980.79 vs raw980.68; paired change+0.11 [−24.19,+24.32]veh-s: NO demonstrated
+team traffic improvement. Do not tune conditional SD to marginal across-world SD.
+All280 futures PASS source/conservation/RNG; paired input/request/rate/population/
+identity/target equality independently verified; all4owned workers553092..553095rc0.
+No UNC-owned job remains running. `docs/paper_results/RBUNC_PREFERRED.md`,
+`rbunc/{preferred_source_probe,preferred_summary}.json` contain full receipts.
+INT FULL-v1 is separately live; no complete integrated candidate score yet here.
+No outcome-derived physical sampling-scale change is supported by current evidence.
 
 Resume01:30: clean39dc833e retained; all old32 worlds and four worker rc0
 rechecked on cpuQ. No duplicate jobs. FIT/INT/EVAL handoffs reconciled: preferred
@@ -16,7 +28,7 @@ shrinkage; exact rates/requests/newcomer population retained. Old panels untouch
 cpuQ admission checked load9.67/32, no GPU, all old workers rc0; NEW preferred_v1
 root absent. Preferred panel dispatched ONCE, supervisor553091, immutable source
 `cpuQ:/home/ubuntu/rbunc20261031/code/65f3ddae756c`, output `preferred_v1`.
-Four disjoint workers have started; use preferred_ops.py status, never redispatch.
+Four disjoint workers completed0; preferred_ops.py status/fetch preserve lineage.
 
 NEW integration option: `fit.with_motion_posteriors({(world,vid): dist}, t0_s=t0)`
 binds FIT `condition_motion` outputs in the SAME frozen support order. Clears all
@@ -37,7 +49,7 @@ Delivered: fitted IDM/optional LC posterior + learned entrance-counter process +
 identity-keyed action CRN. Frozen plan: `docs/paper_results/RBUNC_ADDENDUM_DESIGN.md`.
 Remote terminal rechecked: old31children exited0; no old dispatch repeated.
 
-Latest implementation `f0d2a588` (includes `f8b6faea`, `e038da91`): ready for
+Earlier implementation `f0d2a588` (includes `f8b6faea`, `e038da91`): ready for
 INT/DECIDE to integrate. CPU34PASS including original futures regression;
 actual INT SUMO-IDM+LC2013 insertion smoke PASS, persistent fitted LC and exact
 newborn admission/motion, bit-identical replays, global RNG unchanged.
@@ -50,8 +62,8 @@ Raw-posterior reference: mean within-K team SD747.8 [668.7,826.9] vs real across
 world4200.5veh-s; first-state drivers179.1/arrivals893.8/both929.5/fixed0.0.
 All280 futures source/conservation/RNG checks PASS; fixed complete tapes identical.
 Raw reference CRPS980.7 is WORSE than old encoder611.4; not a calibrated WM win.
-Preferred shrinkage artifact has compatibility/smoke evidence, no new traffic
-score here. Report `docs/paper_results/RBUNC_ADDENDUM.md`; raw+96-cell independent
+Preferred shrinkage now also has the separately frozen reference result above.
+Report `docs/paper_results/RBUNC_ADDENDUM.md`; raw+96-cell independent
 verification `rbunc/{fitted_source_probe,fitted_summary}.json`.
 
 ## Owner00:40 fitted-posterior extension (CPU verified)

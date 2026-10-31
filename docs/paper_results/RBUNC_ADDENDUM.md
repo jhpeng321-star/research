@@ -13,6 +13,9 @@ Owner00:40 addendum; baseline `46c33fbe` preserved. Runtime changes:
   `lane_v2` also PASS: `rbunc/preferred_integration_smoke.json`.
   The physical panel below stays frozen to RAW `finite_mixture_v4`; it is never
   relabeled a preferred-posterior traffic result.
+  Subsequent preferred32-state reference comparison is published separately in
+  `RBUNC_PREFERRED.md`: teamCRPS980.79 vs raw980.68, paired change+0.11
+  [−24.19,+24.32]veh-s; no demonstrated improvement or integrated WM-PHYS verdict.
 - Current HDVs: sample the exact S-RB-FIT finite joint posterior once by numeric
   observable world+VID. Missing/summary-only records use its fitted population.
   No summary-covariance log-normal substitution, clipping, or extra shrinkage.
@@ -87,8 +90,9 @@ Owner00:40 addendum; baseline `46c33fbe` preserved. Runtime changes:
   Earlier encoder-input reference bias+332.8/CRPS611.4/coverage59.4%: **wider
   spread did not improve this reference forecast**. Both posterior and rate
   uncertainty changed; this is not an isolated causal contrast or an integrated
-  WM-PHYS verdict. The newly preferred shrinkage posterior has no free-running
-  traffic score in this workstream and must not inherit the raw panel's numbers.
+  WM-PHYS verdict. Preferred shrinkage has a subsequent separately frozen
+  free-running reference score in `RBUNC_PREFERRED.md`; it never inherits raw
+  panel numbers.
 - Independent pairwise variance and empirical-CDF CRPS checks PASS96 metric-world
   cells; original factual targets match exactly. Raw bundle SHA256
   `68b3f13c0b35e9983cdf82dcde041c084be04e45f98597ce6d0f37844c09d387`.

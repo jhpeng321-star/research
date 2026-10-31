@@ -86,7 +86,9 @@ def main():
         assert [r['world'] for r in previous] == [r['world'] for r in records]
         for a, b in zip(records, previous):
             assert a['requests'] == b['requests'], 'arrival CRN changed'
-            assert a['real'] == b['real'] and a['identity'] == b['identity']
+            assert a['receipt'] == b['receipt'], 'start/history/encoder/reference changed'
+            assert a['real'] == b['real'] and a['real_sha256'] == b['real_sha256']
+            assert a['identity'] == b['identity']
             sa, sb = a['source_receipts']['both'], b['source_receipts']['both']
             assert sa['learned_arrival_sha256'] == sb['learned_arrival_sha256']
             assert sa['demand_rate_draws'] == sb['demand_rate_draws']

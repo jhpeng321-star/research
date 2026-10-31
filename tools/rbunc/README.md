@@ -155,3 +155,9 @@ futures = plan_hidden_state_futures(
   ../c4-rb-fit/src/wms/physics/motion_fit.py --directory
   ../c4-rb-fit/artifacts/rbfit/shrinkage_v1 --policy
   ../c4-rb-fit/artifacts/rbfit/shrinkage_v1/idm_shrinkage.json --out NEW_RECEIPT.json`.
+- Preferred32-state panel is COMPLETE in `rbunc/preferred_source_probe.json`.
+  Analysis only: `python -B tools/rbunc/analyze_addendum.py --raw
+  docs/paper_results/rbunc/preferred_source_probe.json --compare-raw
+  docs/paper_results/rbunc/fitted_source_probe.json --out NEW_SUMMARY.json`.
+  Exact source/input equality is checked before reporting paired CRPS changes.
+  Read `RBUNC_PREFERRED.md`; do not redispatch completed `preferred_v1`.
