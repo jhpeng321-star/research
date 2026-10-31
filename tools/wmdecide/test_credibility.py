@@ -11,8 +11,8 @@ import numpy as np
 
 from .__main__ import credibility
 from .metrics import WorldIntervals, brier, crps, interval_coverage, reliability
-from .rbeval_adapter import baseline_worlds, load_harness, observations, safe_path
-from .report import reliability_svg, summarize_rows
+from .rbeval_adapter import baseline_worlds, load_harness, observations, safe_path, select_worlds
+from .report import credibility_section, reliability_svg, summarize_rows
 
 
 def episode(seed, arm, delay, event=False):
@@ -149,6 +149,64 @@ class ScoreTests(unittest.TestCase):
         self.assertIsNone(pref["cell_probability"])
         self.assertIsNone(pref["brier_minus_cell"])
 
+    def test_selected_switch_reverse_direction_ties_and_no_label_feedback(self):
+        real, pred = synthetic_observations()
+        for k, row in enumerate(pred[969420, "b"]):
+            row["clocks"]["120"]["team_delay_vs"] -= 8 if k < 7 else 4
+        data = observations(pred, real, ("a", "b"), (120,), ("upstream",))
+        selected = [r for r in data["events"] if r["target"] == "selected_preference"]
+        self.assertEqual(len(selected), 1)  # One switch; the other incumbent stays.
+        event = selected[0]
+        self.assertEqual((event["action"], event["reference"]), ("b", "a"))
+        self.assertEqual(event["probability"], 7/8)
+        self.assertEqual(event["predicted_tie_probability"], 1/8)
+        self.assertEqual(event["outcome"], 0)  # Prediction confidently wrong in reality.
+        self.assertEqual(event["brier"], (7/8)**2)
+        self.assertEqual(event["cell_probability"], 0)
+        self.assertEqual(event["cell_brier"], 0)
+        self.assertEqual(data["decisions"][0]["observed_saving"], -4)
+        self.assertEqual(data["decisions"][0]["expected_saving"], 3.5)
+        changed = copy.deepcopy(real)
+        for row in changed:
+            if row["seed"] == 969420 and row["arm"] == "b":
+                row["clocks"]["120"]["team_delay_vs"] = 1
+        after = observations(pred, changed, ("a", "b"), (120,), ("upstream",))
+        for before, later in zip(data["decisions"], after["decisions"]):
+            self.assertEqual(before["selected"], later["selected"])
+            self.assertEqual(before["expected_saving"], later["expected_saving"])
+        summaries, _ = summarize_rows(data, bootstrap=100)
+        switch_rate = next(r for r in summaries if r["target"] == "picker"
+                           and r["scope"] == "pooled" and r["metric"] == "switched")
+        self.assertEqual(switch_rate["mean"], .5)
+
+    def test_explicit_world_selection_never_silently_drops_missing_worlds(self):
+        pred = {(969420, "a"): [1], (969421, "a"): [2]}
+        audit = dict(complete_worlds=[969420, 969421])
+        subset, receipt = select_worlds(pred, audit, [969421])
+        self.assertEqual(subset, {(969421, "a"): [2]})
+        self.assertEqual(receipt["scored_worlds"], [969421])
+        self.assertEqual(receipt["excluded_complete_worlds"], [969420])
+        self.assertEqual(audit, dict(complete_worlds=[969420, 969421]))
+        for bad in ([969422], [969420, 969420], [], [True], ["969420"]):
+            with self.assertRaises(ValueError):
+                select_worlds(pred, audit, bad)
+        self.assertEqual(select_worlds({}, dict(complete_worlds=[]))[0], {})
+
+    def test_report_exposes_coverage_and_abstentions_without_fake_wins(self):
+        real, pred = synthetic_observations()
+        for row in pred[969420, "b"]:
+            row["clocks"]["120"]["team_delay_vs"] -= 4
+        data = observations(pred, real, ("a", "b"), (120,), ("upstream",))
+        self.assertFalse(any(r["target"] == "selected_preference" for r in data["events"]))
+        summaries, _ = summarize_rows(data, bootstrap=100)
+        rate = next(r for r in summaries if r["target"] == "picker"
+                    and r["scope"] == "pooled" and r["metric"] == "switched")
+        self.assertEqual(rate["mean"], 0)
+        text = credibility_section("synthetic", dict(complete_worlds=[969420], missing_tasks=[]), summaries)
+        for word in ("min-max coverage", "central 80% coverage", "picker  switched: 0",
+                     "not closed-loop", "selected switches"):
+            self.assertIn(word, text)
+
     def test_prohibited_paths_rejected_before_access(self):
         for word in ("sealed", "holdout", "heldout", "cal_split", "chunk5", "j4b", "inc1",
                      "hetdata_truth", "vehicle_params", "driver_params", "vType_ASSIGNMENT"):
@@ -186,12 +244,19 @@ class HarnessIntegrationTests(unittest.TestCase):
             "--manifest", str(scratch/"manifest.json"), "--out", str(scratch/"normalized")],
             capture_output=True, text=True, timeout=120)
         self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
-        report = credibility(root, [scratch/"normalized"], scratch/"report", allow_partial=True)
+        report = credibility(root, [scratch/"normalized"], scratch/"report", allow_partial=True,
+                             worlds=[969420])
         self.assertEqual(report["audit"]["complete_worlds"], [969420])
         self.assertEqual(report["status"], "DIAGNOSTIC_ONLY")
         self.assertEqual(report["qualification"], "NOT_ASSESSED_USE_RBEVAL_GATE")
+        self.assertEqual(report["audit"]["scored_worlds"], [969420])
         self.assertTrue((scratch/"report/reliability_preference.svg").is_file())
         self.assertTrue((scratch/"report/CREDIBILITY.md").is_file())
+        self.assertTrue((scratch/"report/reliability_selected_preference.svg").is_file())
+        with self.assertRaises(ValueError):
+            credibility(root, [scratch/"normalized"], scratch/"missing_world", allow_partial=True,
+                        worlds=[969421])
+        self.assertFalse((scratch/"missing_world").exists())
         for name in ("breakdown", "preference"):
             svg = ET.parse(scratch/f"report/reliability_{name}.svg")
             circles = svg.findall(".//{http://www.w3.org/2000/svg}circle")

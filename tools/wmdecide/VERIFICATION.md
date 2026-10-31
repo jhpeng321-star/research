@@ -3,6 +3,16 @@
 Source base `f0db3c82`; implementation `df4fa61e` and `16dff9ad` plus final
 verification/handoff commit. All work is CPU-only, with NumPy and existing Python.
 
+## Resume improvement — 2026-11-01 04:50 +08
+
+**18 CPU tests PASS, 0 skips, 5.889 s**, retaining all previous checks. New tests
+verify selected-switch reverse orientation with 7/8 strict wins and a tied future,
+a confidently wrong real outcome, paired climatology, unchanged choices after
+real-label perturbation, zero-switch abstentions, visible interval coverage, and
+explicit matched-world admission (missing/duplicate/empty/wrong-type rejection).
+The actual external-validator integration also verifies explicit world filtering
+and rejection before output creation. No simulation or inference was launched.
+
 ## Checks completed
 
 ```powershell

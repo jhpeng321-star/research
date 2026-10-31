@@ -1,10 +1,14 @@
-# S-RB-INT handoff — 2026-11-01 05:15 +08
+# S-RB-INT handoff — 2026-11-01 05:30 +08
 
 Branch `c4/rb-int`. Retain all prior work and immutable jobs. Earlier detail:
 `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_{0034,0515}.md`.
 Owner schedule: interim04/08, freeze09:30, evaluation through11:30, report11:45.
 
 ## READY FOR EVAL / existing ownership
+- FULL-v4-gpu LIVE source22cc32f65a80af482a1a277c5f22377fa727d0a3:
+  gpuA `/root/rbeval20261031/phys_code_22cc32f65a80/configs/wm_phys.toml`.
+  Own398268/398269/398270, monitor398303; root `/root/rbeval20261031/int/WM-PHYS-FULL-v4-gpu`.
+  Canary370.48s reused. Final LANE +move→LC→emit source phase; do not redispatch.
 - FULL-v3-gpu LIVE, sourcef378ac6033079bdd87c0059627e27e394a1d7cbe:
   gpuA `/root/rbeval20261031/phys_code_f378ac603307/configs/wm_phys.toml`.
   Own370037/370038/370039, monitor370088; root `/root/rbeval20261031/int/WM-PHYS-FULL-v3-gpu`.
@@ -20,7 +24,7 @@ Owner schedule: interim04/08, freeze09:30, evaluation through11:30, report11:45.
   Last05:03 audit45tasks, FULL-v3 34tasks; all workers/monitors live, no STOP.
   Original WM2 H600 panel/finalizer remain EVAL-owned. SUMOCORE144/144 complete.
 
-## Next candidate (not READY until fresh smoke)
+## Current candidate engineering
 - Merged LANE b8037c1d/aefc4bd9: signed keep-right/cooperative early returns,
   float32 endpoint normalization, urgency/message presence and blending.
   Three-value step output reconciled with INT ramp ownership and fast arbitration.
@@ -33,9 +37,9 @@ Owner schedule: interim04/08, freeze09:30, evaluation through11:30, report11:45.
   selects inference-only multi-step adapter (shared model default unchanged).
   Carries settings/history/absolute controller clock; repairs cost observer's
   old-road cohort, preserving exit speed/no birth charge and source ordinals.
-  Phase/recipe/source suite27CPU PASS; fresh smoke/canary still required.
+  Phase/recipe/source suite27CPU PASS;8x60s recorded smoke+fivearm600s canary PASS.
 - Complete touched-module CPU gate287PASS/4skips/60.55s (two local CUDA,
-  optional SciPy prefix diagnostic, unfetched historical GPU canary). Smoke next.
+  optional SciPy prefix diagnostic, unfetched historical GPU canary).
 - CF47b7742c and UNC84ee27b9 already integrated; FULL uses frozen
   FIT shrinkage_v1 population and causal condition_motion, not saved tape IDs.
   Learned strength19.35568 already applied. Fitted LC remains OFF.
@@ -44,12 +48,14 @@ Owner schedule: interim04/08, freeze09:30, evaluation through11:30, report11:45.
   C fitted population point, FULL fitted joint posterior+learned Gamma-Poisson arrivals.
 - Current SUMO-merge HDV integrator ALREADY uses Euler; CAVs retain registered
   executor plant. Legacy/checkpoint paths default unchanged. No training tonight.
+- DECIDEe8302db3 intake: explicit matched --worlds, selected-switch reliability,
+  reverse preference directions/ties and coverage visible in CREDIBILITY.md.
 
 ## Evidence and next actions
 - Recovered100episode factual60s observable targets, committed ee6bb6d2:
   `docs/rbint/hdv60/FACTUAL_065e9853.json`. Extraction not repeated.
   Exact t0 identity/junction carry matching; future targets isolated from forecasts.
-  Existing Miniconda endpoint/protocol suite9PASS. Paired common-K8 scorer next.
+  Existing Miniconda endpoint/protocol suite9PASS; paired common-K8 scorer delivered.
 - ~04 report:4paired reserved worlds, FULL-v1−WM2 CRPS−785/−3512/−11041veh-s;
   300s rate-distance+1.25pp. CORRECTION05:25: old CIs retracted; unscored same-cell
   peers must not create bootstrap variation. Corrected singleton-stratum CIs NA.
@@ -69,8 +75,7 @@ Owner schedule: interim04/08, freeze09:30, evaluation through11:30, report11:45.
   distance−3.75pp. B2 snapshot1world969433:−2492/−8183/−19790,rate-distance−2.5pp.
   All paired world CIs NA/singleton strata; endpoints absent. C2 still pending.
   Reports docs/rbint/variants/{A2,B2}_0528. Different available sets, not rankings.
-- Next: complete source phase integration + CPU suite +8x60s recorded smoke,
-  publish new immutable config/source, collect complete K8 matched worlds,
-  endpoint CIs and DECIDE credibility, update ≤60line WMPHYS_MORNING.md.
+- Next: collect complete K8 matched worlds, scored-world-only endpoint CIs and
+  DECIDE credibility, update ≤60line WMPHYS_MORNING.md at08:00/freeze09:30/final11:45.
 - Remaining parity gaps: synchronous LC, incomplete serial negotiation/internal
   junction state and cold lane memory; no full distributional qualification.
