@@ -203,3 +203,33 @@ conservative9000+900+19800=29700charged,300unallocated. Prefixes all included.
 Original seed guards/exposure apply; no new world/RNG ranges. Shared metric and
 CSV contracts remain unchanged; bootstrap dimension becomes actual fixed panel.
 This prospective binding precedes new simulation; all failures remain charged.
+
+### Amplitude-audit correction (before corrected perturbation dispatch)
+
+The initial (b) implementation requested `setSpeed(v_t0+0.01)`. An independent
+first-tick audit found target speed changes versus native of0.08716 and0m/s:
+that setter specifies next-step desired speed, not an instantaneous +0.01 state
+perturbation. ALL these speed-request draws are quarantined, never pooled into
+the chaos floor. Durable fallback/STOP halted admission without signals: six
+complete1800s worlds plus world969406's600s original reference, no later draws.
+Costs retained: prior2400+a900+11400=14700actual;22500conservative charges.
+
+Corrected method uses SUMO TraCI `setPreviousSpeed(vid,v_t0+0.01,a_t0)`, supplying
+unchanged acceleration. Assert immediately (without a physics step) that SUMO
+getSpeed increased by0.01, acceleration and lane-position are unchanged, and
+all other present vehicle speeds are unchanged. This is a single state pulse:
+no persistent speed override is installed; the next .5s native physics tick
+consumes it, then normal native dynamics continue. Save executed-state receipts.
+Failure to verify the actual instantaneous amplitude stops corrected dispatch.
+
+Fixed corrected panel = first SIX worlds969400–969405, two geometry-fixed target
+HDVs each as above. Reuse their already-bitwise-verified unperturbed references;
+each alternative independently reruns300s prefix+300s continuation, requiring
+the prior original t300 signature before the pulse. No new reference simulation.
+New ledger precharges1200/world under exclusive pulse/RUN.lock, combining ALL
+three ledgers (original/fallback/pulse). Additional7200actual and charged gives
+21900cumulative actual,29700charged;300unallocated. Original six failed charges
+and every quarantined run remain retained. Reduced panel is budget/amplitude-
+mechanics driven, never selected for favorable endpoint outcomes. No estimates
+from the quarantined request draws were used. Exact upstream metric code,
+two-target exclusion and world bootstrap are unchanged, panel dimension6.

@@ -1,0 +1,4 @@
+{
+ "actual_sim_s": 600.0,
+ "traceback": "Traceback (most recent call last):\n  File \"/root/c1floor20261031/fallback.py\", line 128, in execute\n    env.close();wait();sub=out/f'alt{k}';sub.mkdir()\n                ^^^^^^\n  File \"/root/c1floor20261031/fallback.py\", line 21, in wait\n    if (ROOT/'STOP').exists():raise RuntimeError('fallback STOP')\n                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: fallback STOP\n"
+}
