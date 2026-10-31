@@ -59,6 +59,19 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**05:38 shared cpuQ SSH outage:** direct connection is closed before login;
+one approved-host jump attempt also failed. MAIN's shared registration reports
+the same cpuQ outage in S-COOPFREE05:28. Current cpuQ WM status is UNKNOWN;
+do not turn missing observations into zero counts or infer successful closure.
+Immutable completed CPU totals remain112episodes/134400actual, plus4680canary.
+05:37 heartbeat749d9740 retained transport alert; its printed28CPU/2WM counts
+cover ONLY reachablegpuR, not a regression/deletion of the other host's results.
+Both owned WM GPU services remain LIVE/noSTOP,98/90responses at that snapshot;
+relay31696 is LIVE but last successful full status1793481610 is stale while it
+retries cpuQ transport. No scientific restart, replay, refund or cap reset.
+Observer25348 and corrected BB waiter36376 LIVE; BB remains0GPU/physics.
+Pending: restore host access, reconcile exact ownSTOP/open jobs, retain any
+failed reservations; optionalPHYS still unqualified after MAIN05:27 retraction.
 **05:13 BB waiting observer failure diagnosed:** originalWindows43404 exited
 on `RuntimeError: Connection closed by 172.19.0.17 port 11000` while polling WM
 release, BEFORE entering its science try-block. Original START/WAIT/log and
