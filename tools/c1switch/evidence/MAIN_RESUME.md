@@ -1,4 +1,19 @@
-# CURRENT shared_v10 TERMINAL GPU-BUDGET STOP — no compute armed
+# CURRENT MAIN01:28 PARTIAL ANALYSIS COMPLETE — exit, no compute armed
+
+- MAIN01:28 supersedes the historical complete-panel-only reporting restriction:
+  no further SUMO/GPU; compute registered statistics on all-arm-complete worlds.
+- Analysis commit `08de06cc`; `docs/paper_results/C1SWITCH.md` now reports PARTIAL
+  n5 worlds969112..969116, all8arms,15measured decisions/model/150branches.
+- `docs/paper_results/c1switch/partial_results.json`, `partial_worlds.csv`,
+  `partial_decisions.csv` preserve every estimate/CI and selected input hashes.
+- Primary WM-BB regret60 +5.101695[-9.388681,16.745943]veh-s;
+  WM-best-fixed +8.231654[1.692420,18.476727],best=MAPPO169 with draw reselection.
+- CPU12PASS/RuffPASS; newSUMO0/GPU0. No full16world efficacy verdict.
+- Do not run the historical `finish report` generator over the amended report.
+  Receipt-only reproduction is `python -B -m tools.c1switch.partial`.
+- Task is complete under MAIN01:28. Do not poll/relaunch/complete missing worlds.
+
+## Historical shared_v10 TERMINAL GPU-BUDGET STOP
 
 - Read `docs/paper_results/C1SWITCH.md`, final design line79,
   `V10_COLLECTION.json`, `GPU_ACTUAL_SEGMENTS.json`, `V10_RETAINED_QA.json`.
