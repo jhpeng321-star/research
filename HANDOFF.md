@@ -128,3 +128,5 @@ cpuQ claim using the original4680 sim-s reservation, never an automatic retry.
 The initial local exposure regex reported timestamp/negative-evidence false positives, fixed prospectively.
 An exact-file Grep call expanded into the parent tree; incidental numerical matches were not used.
 All subsequent registration reads/audits use exact checked paths; filename scans prune before traversal.
+
+- 2026-11-01T04:32:28+08:00 cpu:episodes=112,decisions=3360,charged=134400,closedactual=134400; wm:episodes=3,decisions=131,charged=5320,closedactual=3600; alerts=0; receipt `tools/c1switch2/evidence/WATCH_MAIN0427/PROGRESS_1793478748.json`.

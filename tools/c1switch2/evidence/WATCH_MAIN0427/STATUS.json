@@ -1,0 +1,226 @@
+{
+  "unix": 1793478748.1648257,
+  "protocol": "S-C1SWITCH2/v2",
+  "hosts": {
+    "cpuQ": {
+      "unix": 1793478748.547559,
+      "host": "cpuQ",
+      "load": [
+        16.27294921875,
+        16.9541015625,
+        16.97998046875
+      ],
+      "cpu": {
+        "cpu": {
+          "root": "/home/ubuntu/c1switch2_run_eb0eda956a815f14",
+          "process": {
+            "pid": 604784,
+            "state": "EXITED"
+          },
+          "complete": true,
+          "stop": null,
+          "episodes": 84,
+          "decisions": 2520,
+          "closed_jobs": 84,
+          "closed_actual_sim_s": 100800.0,
+          "charged_sim_s": 100800,
+          "ledger_sha256": "ae3ad0953482be22a6bbacc50f0c858deb29ba541dbf9c25ee96418a4300cc9f"
+        },
+        "wm": {
+          "root": "/home/ubuntu/c1switch2_run_292bfffe94b13ed8",
+          "process": {
+            "pid": 649272,
+            "state": "S",
+            "start_ticks": 48482059,
+            "uid": 1000,
+            "own_root_in_command": true
+          },
+          "complete": false,
+          "stop": null,
+          "episodes": 2,
+          "decisions": 90,
+          "closed_jobs": 2,
+          "closed_actual_sim_s": 2400.0,
+          "charged_sim_s": 3600,
+          "ledger_sha256": "9979035bb9ccc4afb06b7428e17aff8ec30348957f52b4a96c7e7f32225d5f77"
+        }
+      },
+      "gpu": {}
+    },
+    "gpuR": {
+      "unix": 1793478749.3190846,
+      "host": "gpuR",
+      "load": [
+        12.9794921875,
+        14.29931640625,
+        16.3447265625
+      ],
+      "cpu": {
+        "cpu": {
+          "root": "/root/c1switch2_run_716d39f08986c84f",
+          "process": {
+            "pid": 759845,
+            "state": "EXITED"
+          },
+          "complete": true,
+          "stop": null,
+          "episodes": 28,
+          "decisions": 840,
+          "closed_jobs": 28,
+          "closed_actual_sim_s": 33600.0,
+          "charged_sim_s": 33600,
+          "ledger_sha256": "098f42cd14d79e5fe94398001523c6d8c405eb2687d8aa9ea6c352f109460938"
+        },
+        "wm": {
+          "root": "/root/c1switch2_run_292bfffe94b13ed8",
+          "process": {
+            "pid": 763520,
+            "state": "S",
+            "start_ticks": 4209720651,
+            "uid": 0,
+            "own_root_in_command": true
+          },
+          "complete": false,
+          "stop": null,
+          "episodes": 1,
+          "decisions": 41,
+          "closed_jobs": 1,
+          "closed_actual_sim_s": 1200.0,
+          "charged_sim_s": 1720,
+          "ledger_sha256": "ff1d67ecb7c0c61c4e8007c61a1efef70c4c10c66744df98a71f0c363e8c42ac"
+        }
+      },
+      "gpu": {
+        "wm": {
+          "root": "/root/c1switch2_gpu_wm_95614dbfc754e322",
+          "process": {
+            "pid": 761968,
+            "state": "R",
+            "start_ticks": 4209676600,
+            "uid": 0,
+            "own_root_in_command": true
+          },
+          "started": {
+            "pid": 761968,
+            "cap_s": 28800.0,
+            "unix": 1793470179.259909
+          },
+          "finished": null,
+          "stop": null,
+          "ready": true,
+          "requests": 70,
+          "results": 68,
+          "elapsed_wall_s": 8570.070835113525
+        },
+        "bb": {
+          "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
+          "state": "UNCLAIMED"
+        }
+      }
+    },
+    "gpuA": {
+      "unix": 1793478750.107656,
+      "host": "gpuA",
+      "load": [
+        24.73095703125,
+        20.46435546875,
+        17.3115234375
+      ],
+      "cpu": {},
+      "gpu": {
+        "wm": {
+          "root": "/root/c1switch2_gpu_wm_95614dbfc754e322",
+          "process": {
+            "pid": 342449,
+            "state": "R",
+            "start_ticks": 885038837,
+            "uid": 0,
+            "own_root_in_command": true
+          },
+          "started": {
+            "pid": 342449,
+            "cap_s": 28800.0,
+            "unix": 1793470174.2682555
+          },
+          "finished": null,
+          "stop": null,
+          "ready": true,
+          "requests": 68,
+          "results": 67,
+          "elapsed_wall_s": 8575.840282678604
+        },
+        "bb": {
+          "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
+          "state": "UNCLAIMED"
+        }
+      }
+    }
+  },
+  "alerts": [],
+  "relay": {
+    "unix": 1793478744.353863,
+    "cpus": {
+      "cpuQ": {
+        "stop": null,
+        "episodes": 2,
+        "expected": 12,
+        "complete": false
+      },
+      "gpuR": {
+        "stop": null,
+        "episodes": 1,
+        "expected": 4,
+        "complete": false
+      }
+    },
+    "gpus": {
+      "gpuA": {
+        "stop": null,
+        "finished": null
+      },
+      "gpuR": {
+        "stop": null,
+        "finished": null
+      }
+    },
+    "transferred": 0
+  },
+  "bb_wait": {
+    "unix": 1793478713.2464435,
+    "states": {
+      "gpuA": {
+        "wm_finished": false,
+        "free_mib": 40683
+      },
+      "gpuR": {
+        "wm_finished": false,
+        "free_mib": 20768
+      }
+    }
+  },
+  "bb_stop": null,
+  "bb_complete": null,
+  "local_processes": {
+    "31696": {
+      "pid": 31696,
+      "state": "LIVE",
+      "exit_code": 259
+    },
+    "43404": {
+      "pid": 43404,
+      "state": "LIVE",
+      "exit_code": 259
+    }
+  },
+  "latest_task_registration": [
+    "- S-C1SWITCH2 CPU SUBSET REGISTERED BEFORE DISPATCH (build229e30bd; MAIN01:48): designSHA25695aa84cf801aea773a0c7f9a208396ed4898e5cacdf8b6177940c7d9e1f5a273 and panelSHA2567c780c25237dde73a657937ab577b8e48f71766817f4363f3298982e90144827 unchanged; immutable enabled_arms=native,ctrl0,mappo,pi,circles,wall,random ONLY. Exact134400sim-s=7x16x1200,19200each; cpuQ100800/gpuR33600 by original disjoint world partition; GPU0. Totalbase468380/19GPUh and conditional548180/35GPUh unchanged; existing4680 mechanics retained/no rerun. CPU130PASS/1host-onlyskip on gpuR; final immutable CPU preflight on EACH dispatch host required, plus frozen-v7-source hashes/currentregistry/preallocationexposure/WALL/canary receipts; unused model/RL/parity gates remain PENDING and cannot admit picker physics in this subset. Nice19/CUDAhidden/single-thread, start4cpuQ+1gpuR (<=14/4 caps), yield registered loads28/20 and MAIN cooperation/WM-first priority. One write-once CPU panel claim per host across all task roots; preserve failures/charges/no automatic retry. No new physics at this line; dispatch/progress receipts follow. Final169 RL and real both-GPU model parity still pending; inference only with spare WM-PHYS memory or after11:30, optionalPHYS only independently qualified. No peer signals/newenv/deletions/push.",
+    "- S-C1SWITCH2 CPU PANEL RUNNING (Unix1793469440; build229e30bd/d9c4016b, dispatcha386c5aa): owncpuQ604784 at /home/ubuntu/c1switch2_run_eb0eda956a815f14 (4workers,100800sim-s), owngpuR759845 at /root/c1switch2_run_716d39f08986c84f (1worker,33600sim-s); BOTH live/noSTOP, maincharged1820 at first receipts/open actual not yet reconciled, GPU0. All7CPUarms queued,112episodes on registered panel; both immutable stages CPU130PASS/1skip. Existing mechanics4680 preserved; no duplicate canary/main dispatch or retries. Current registry audited separately from immutable approval snapshot to tolerate unrelated peer appends; first preclaim mismatch retained0physics. Original designSHA95aa84cf/panel7c780c25 and totalbudgets unchanged. Check tools/c1switch2/evidence/STATUS_CURRENT.json and operations cpu-collect; NEVER relaunch either CPU panel. Picker arms await own GPU admission/parity or final169 checkpoints; WM-PHYS priority remains. No peer PID actions/newenv/deletions/push.",
+    "- S-C1SWITCH2 WM ALLOCATION AND BB QUEUE (build53d80d39/c006f648; Unix1793470565): ownGPUservices gpuA342449/gpuR761968 at /root/c1switch2_gpu_wm_95614dbfc754e322 (28800s/card, all validation/idle charged); synthetic real full60s/K8/all6/fresh+incumbentWALL cross-GPU parity PASS SHA2566c64210d77708dddc9fc90fbf0eb733dc24b880f44c96b16fd08ad91de885554. WM CPU stages292bfffe94b13ed8 pass133CPU/1skip EACH; owncpuQ649272 started2workers/63480sim-s cap; original gpuR16320sim-s partition remains UNCLAIMED after preclaimload>=20 refusal, no charge/process there; admit only when spare. Local ownrelay31696 uses WM_EXECUTION_BOUND.json and cannot respawn science. Prospective one-use BB follower may wait until BOTH ownWM services finish and free>=8GiB (context-memory margin only), then use originalunusedBB5400GPU-s/card +79800sim-s ONLY after real syntheticGPUparity/CPU gates; no WM retry/top-up and no fixed/random redispatch. BB ownstages/rootc1switch2_gpu_bb_caeab9eaa303f93c have identical frozenafaaa32c/physics hashes and genuine both-host CPU feedbackPASS; BBGPU/main0 at this line. Base468380/19h and design95aa84cf/panel7c780c25 unchanged; PHYS disabled without independentqualification; final169RL absent. MAIN cooperation/WM-PHYS priority retained, no peer signals/newenv/deletions/push.",
+    "- S-C1SWITCH2 LIVE RECONCILIATION (Unix1793470804; buildc006f648): unused WM gpuR partition admitted after load fell, owngpuR763520/1worker; BOTH WM supervisors649272/763520 live/noSTOP,2validated mainGPU responses/20s decisions observed oncpuQ,79800sim-s cap unchanged. OwnWMservices342449/761968 live under original28800s/card hardcaps; elapsed loading/parity/idle continues charged, finalmonotonicGPUreceipts pending. Localrelay31696 LIVE; one-useBBfollower43404 ARMED per registered queue, BBphysics/GPU0 until ownparity/memory/CPUadmission. Original seven-arm CPUs604784/759845 stilllive/noSTOP,36episodescomplete/43200closedactual,46720charged at separate latestsnapshots; canary4680retained and WM940charged =>52340totalcharged at receipts/47880closedactual excluding openjobs. Four immutable runtime BINDING/GATES/STAGED/PREFLIGHT snapshots archived; finalmodelCPU133PASS/1skip EACH. Fleet MAIN0208 continuation645235 running/no final169, per-CAV continuation606968/no supplied final169; peers retain evaluation ownership agreement. No efficacy claim, incomplete paired panel; never duplicate any dispatch/relay/follower or successfulcanary. Design95aa84cf/panel7c780c25/base468380sim-s+19GPUh unchanged, optionalPHYS independently gated. No peer signals/newenv/deletions/push.",
+    "- S-C1SWITCH2 MODEL-SCOPED ADMISSION REGISTERED BEFORE GPU (build53d80d39; MAIN01:48): existingdesignSHA95aa84cf/panel7c780c25/budgets UNCHANGED. Start WM2 allocation on BOTHgpuA/gpuR only after each immediate free-memory>=7GiB gate (inspection43,565/8,124MiB respectively; peer workloads active/untouched), ownallocator<=2.5GiB, nice19/single-thread. Immutable /root/c1switch2_gpu_wm_95614dbfc754e322 on BOTH hosts; realWM2 CPU K8/full60s/all6/continuedWALL PASS identicalsampleSHA67e20ef7 and checkpoint/config/candidate/MAPPO provenance. HardWMcap28800GPU-s/card=16haggregate INCLUDES loading/validation/idle; no restart/refund; BBcap5400/card=3htotal reserved/unspent. Before mainmodelphysics require synthetic real-GPU all6/K8/fresh+continuedWALL cross-card parity (rtol/atol1e-6 numerical only), commonCPU/WALL/exposure/canary gates, ownmodelinference binding; unusedRL/othermodelgates stayPENDING. LocalCPU133PASS/1skip; finalmodelCPUstage gate required EACHCPUhost. Distinct one-use WM/BB arm claims on originalCPUworld partitions; no fixed/random/canary redispatch. Release own services immediately after16modelepisodes, then finish original fullprefix oracle branches withoutGPU; contenthashrelay cannot respawn scientificjobs. WM79800/BB79800sim-s unchanged, fullteamJ600/J900+oracle, COMMONroad-only predictions/entriesOFF/mixINACTIVE disclosed. OptionalPHYS disabled pending independentrule; final169RL absent. No GPU/WMpickerphysics at this line; no peer signals/newenv/deletions/push."
+  ],
+  "final_checkpoint_receipts": {
+    "SELMAPPO_FINAL.json": false,
+    "SELMAPPO2_FINAL.json": false
+  }
+}
