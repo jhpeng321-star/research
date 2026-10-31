@@ -50,3 +50,32 @@ Execution/verification receipts will be appended after implementation.
   dead/reused/foreign-PID refusal, peer exclusion from GPU accounting and
   post-freeze result collection without admission. Existing claim/concurrency,
   READY ordering,160-task hashes, builder binding and reused-PID tests pass.
+
+## Fresh-session execution audit — 2026-11-01 02:40–02:43 +08
+
+- Preserved clean HEAD `393bf36a`. The previous session DID execute the handover
+  after committing its implementation; recovered its on-disk dispatch receipts
+  rather than invoking either deployment again.
+- Local noon watcher **15824**, created02:14:42, is live with command
+  `python.exe -B -u tools/rbruna/watch.py --continuation-of 44796`.
+  `runs/rbruna/WATCH_15824.json` records admission freeze09:30, deadline11:30,
+  ten-minute polling and owner authority. Original watcher44796 is absent.
+  Polls02:14:43/02:24:43/02:34:43 succeeded; A2 remains active and C2 next.
+- `runs/rbruna/WM-PHYS-A2/NOON_DISPATCH.json` identifies monitor **343598**,
+  boot `a81555d7-176e-4ed8-bc7d-896fc89cc914`, start_ticks `885067965`,
+  immutable stage `/root/rbeval20261031/runa/noon_d5ae5d0c63c9576c`.
+- Remote `NOON_HANDOVER_AUTHORIZED.json` and `NOON_HANDOVER_ACCEPTED.json`
+  confirm parent-only transfer at02:14:25. Supervisor334996 is absent;
+  successor343598 and original workers335002/335003/335004 are live with their
+  registered incarnations. **26 preserved artifact hashes reverified**.
+  Empty monitor log; no RESULT/FAILED marker. No new inference was dispatched.
+- gpuA02:41:22: RTX4090D **5160MiB used/43351MiB free,99%**, load
+  **11.85/14.67/14.66**. Owned A2 allocation **2164MiB** at the subsequent
+  incarnation-bound check; monitor peak through02:34 is2512MiB, below18500 guard.
+  Peer compute PIDs only observed, never signalled.
+- A2 snapshot **22/160 tasks (8/7/7)**; subsequent K8 inspection found complete
+  worlds969432 and969433. These are progress counts, not distributional efficacy.
+  Existing monitor owns04/08 partial scoring and full160-task frozen scoring.
+- Current INT/EVAL handoffs and all shared claims inspected. Existing failed A/C,
+  peer B/B2/FULL-v1 and active A2 are preserved; C2 remains unclaimed, next in
+  list order. Shared `RUNA_NOON_CONTINUATION.json` publishes this recovered state.

@@ -1,8 +1,24 @@
 # S-RB-RUNA handoff
 
-Updated 2026-11-01 00:29 +08:00. Branch `c4/rb-runa`, base `f0db3c82`.
+Updated 2026-11-01 02:43 +08:00. Branch `c4/rb-runa`, base `f0db3c82`.
 
-## Fresh-session resume / launch prerequisite
+## Current: owner-authorized noon continuation VERIFIED
+- Preserved implementation HEAD393bf36a and recovered already-executed handover;
+  no deployment replay, duplicate watcher, inference launch or peer signal.
+- Live local watcher **15824** replaces44796; ten-minute INT/EVAL polls through
+  02:34:43 succeed. Admission freeze **09:30**, supervision through **11:30 +08**.
+- Active **WM-PHYS-A2**, original workers335002/335003/335004; noon monitor
+  **343598** accepted original supervisor334996's lock at02:14:25. Original
+  supervisor is absent. All26 preserved artifact hashes reverified at02:43.
+- A2 **22/160 tasks** at02:41, then two complete K8 worlds observed. No efficacy
+  result yet. Monitor owns **04/08 interim** and frozen full-panel scoring once.
+- gpuA total5160MiB at02:41; own A2 allocation2164MiB at02:43 (guard18500MiB).
+- **C2 next**, unclaimed; B2/FULL-v1 peer claims and failed A/C retained.
+- Full receipt: `docs/rbruna/RESUME_NOON_20261101.md`; local ignored dispatch:
+  `runs/rbruna/WM-PHYS-A2/NOON_DISPATCH.json`. Shared current coordination:
+  `E:/agent-work/rb-shared/evalclaims/RUNA_NOON_CONTINUATION.json`.
+
+## Earlier 00:29 resume / launch prerequisite (historical)
 - Preserved previous commit `d3d8af25` and all ignored run receipts. Worktree was
   clean. Existing watcher PID **44796**, created 23:58:14, remains live with exact
   command `python.exe -B -u tools/rbruna/watch.py`; no second watcher launched.
