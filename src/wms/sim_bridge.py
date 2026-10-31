@@ -175,3 +175,12 @@ def make_cav_controller(kind: ControllerKind,
         raise SimBridgeError(f"unknown CAV controller kind {kind!r}; use 'damping' or 'pi'")
     deps = deps if deps is not None else load_controller_dependencies()
     return DampingController(deps) if kind == "damping" else PiFleetController(deps)
+
+
+def make_switchable_wall():
+    """The same pure wall lifecycle object used by the SUMO library adapter."""
+    try:
+        from traffic_shepherd.c4.switchable_wall import SwitchableWallController
+    except ImportError as exc:
+        raise SimBridgeError("switchable wall sources must be staged alongside the runtime") from exc
+    return SwitchableWallController()

@@ -69,12 +69,25 @@ class Controller:
     """Same direct native-lane policy/fallback contract used by the audit."""
     def __init__(self, name, inputs):
         self.name, self.exe, self.previous = name, None, None
+        if name == 'wall':
+            from traffic_shepherd.c4.switchable_wall import SwitchableWallController
+            self.exe = SwitchableWallController()
         if name in ('mappo', 'ctrl0'):
             from wms.control.policy import load_policy_fn
             self.exe = load_policy_fn(inputs[name], device='cpu')
             self.exe.reset()
 
+    def start(self, *, now_s):
+        if self.name == 'wall':
+            self.exe.start(now_s=now_s)
+
+    def stop(self, *, now_s):
+        if self.name == 'wall':
+            self.exe.stop(now_s=now_s)
+
     def command(self, env):
+        if self.name == 'wall':
+            return self.exe.command(env)
         if self.name in ('native', 'pi', 'circles'):
             return None, dict(fallback={'native':'native', 'pi':'pi', 'circles':'damping'}[self.name])
         if self.name == 'ctrl0':

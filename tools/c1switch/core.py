@@ -53,19 +53,26 @@ class Belief:
 
 
 class Handover:
-    def __init__(self, factory):
+    def __init__(self, factory, *, controllers=CONTROLLERS):
         self.factory, self.name, self.controller = factory, 'native', None
+        self.controllers = tuple(controllers)
         self.switches = 0
 
     def select(self, name, env):
-        if name not in CONTROLLERS:
+        if name not in self.controllers:
             raise ValueError(name)
         if name != self.name:
+            replacement = self.factory(name)
+            now = getattr(env, 'now', 0.)
+            if self.controller is not None and hasattr(self.controller, 'stop'):
+                self.controller.stop(now_s=now)
             env.ownership.release_all(live_ids=env.api.vehicle.getIDList())
             env.ownership.controller = env._circles
             env.pi_session, env._direct_pi = None, False
+            if hasattr(replacement, 'start'):
+                replacement.start(now_s=now)
             self.name = name
-            self.controller = self.factory(name)
+            self.controller = replacement
             self.switches += 1
         return self.controller
 
