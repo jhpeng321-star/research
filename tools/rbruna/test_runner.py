@@ -3,7 +3,10 @@ from concurrent.futures import ThreadPoolExecutor
 import hashlib
 import json
 from pathlib import Path
+import os
+import sys
 import tempfile
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch, Mock
 
@@ -11,6 +14,28 @@ from tools.rbruna import remote, watch
 
 
 class RunnerTests(unittest.TestCase):
+    def test_candidate_preserves_int_variant_and_registered_future_builder(self):
+        calls = []
+        def builder():
+            pass
+        def harness(*, model_loader, identity_sources, future_builder):
+            calls.append((os.environ['WMPHYS_VARIANT'], model_loader, future_builder, identity_sources))
+        source = str(Path(__file__).resolve())
+        loader = Mock()
+        spec = dict(runtime_root='unused', loader_module='fake_recipe',
+                    loader_function='load_candidate', recipe_variant='B',
+                    future_builder_function='candidate_future', identity_sources=[source],
+                    sources={source: 'bound'}, smoke_receipt='smoke.json')
+        modules = {'fake_recipe': SimpleNamespace(load_candidate=loader, candidate_future=builder),
+                   'run_wm': SimpleNamespace(main=harness)}
+        with patch.dict(sys.modules, modules), patch.dict(os.environ), patch.object(sys, 'path', list(sys.path)):
+            remote.candidate(spec)
+        self.assertEqual(calls, [('B', loader, builder, [source, 'smoke.json'])])
+        modules['run_wm'] = SimpleNamespace(main=lambda model_loader, identity_sources: self.fail('legacy harness executed'))
+        with patch.dict(sys.modules, modules), patch.dict(os.environ), patch.object(sys, 'path', list(sys.path)):
+            with self.assertRaisesRegex(AssertionError, 'before READY'):
+                remote.candidate(spec)
+
     def test_atomic_claim_has_exactly_one_winner_and_preserves_owner(self):
         with tempfile.TemporaryDirectory() as tmp, patch.object(watch, 'SHARED', Path(tmp)):
             with ThreadPoolExecutor(max_workers=12) as pool:

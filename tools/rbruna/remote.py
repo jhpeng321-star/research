@@ -2,6 +2,7 @@
 import argparse
 import hashlib
 import importlib
+import inspect
 import json
 import os
 from pathlib import Path
@@ -51,6 +52,9 @@ def gpu(field):
 def preflight(spec):
     assert time.time() < DEADLINE, 'admission closed at07:00'
     assert spec['host'] == 'gpuA'
+    if spec['variant'].upper().startswith('WM-PHYS'):
+        assert spec.get('recipe_variant') in ('A', 'B', 'C'), 'publish the INT recipe variant'
+        assert spec.get('future_builder_function'), 'publish the registered INT future builder'
     assert os.getloadavg()[0] < 16, 'CPU busy (20-core host quota)'
     assert int(gpu('memory.free').splitlines()[0]) >= 19500, 'GPU headroom unavailable'
     paths = [spec[k] for k in ('runtime_root', 'wm', 'wm_config', 'smoke_receipt')]
@@ -79,11 +83,20 @@ def preflight(spec):
 
 def candidate(spec):
     sys.path[:0] = [spec['runtime_root'], str(Path(spec['runtime_root'])/'src')]
+    if spec.get('recipe_variant'):
+        os.environ['WMPHYS_VARIANT'] = spec['recipe_variant']
     module = importlib.import_module(spec['loader_module'])
     loader = getattr(module, spec['loader_function'])
     from run_wm import main
-    main(model_loader=loader, identity_sources=list(dict.fromkeys(
+    options = dict(model_loader=loader, identity_sources=list(dict.fromkeys(
         spec['identity_sources'] + list(spec['sources']) + [spec['smoke_receipt']])))
+    if spec.get('future_builder_function'):
+        assert 'future_builder' in inspect.signature(main).parameters, 'EVAL must publish its future_builder-capable runner before READY'
+        builder_module = importlib.import_module(spec.get('future_builder_module', spec['loader_module']))
+        builder = getattr(builder_module, spec['future_builder_function'])
+        assert str(Path(inspect.getfile(builder)).resolve()) in spec['sources'], 'bind future builder source'
+        options['future_builder'] = builder
+    main(**options)
 
 
 def completed(root):
