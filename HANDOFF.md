@@ -4,6 +4,9 @@ Branch `c4/rb-fit`, base `f0db3c82`; owner amendment REGISTRATION.md:5701.
 Status: owner01:28 continuation ACTIVE; prior outputs/commits preserved.
 Fresh01:30 resume at876b2433: both owned jobs exited; LANE source still811cd7e8.
 Next: direction-aware LC decision likelihood; see receipts/RESUME_0128.md.
+`tools/rbfit/lane_directional.py` adds source-lane categorical decision likelihood
+and prefix-calibrated informative-evidence shrinkage;5new CPU tests PASS.
+Candidate pending smoke/full FIT scoring; no LC adoption change.
 New outputs `artifacts/rbfit/shrinkage_v1` and `lane_v2`; **22 CPU tests PASS**.
 Direct UNC f8b6faea reader verified on ALL3,130 exported drivers and16
 paired/replayed planned futures. `receipts/ADDENDUM_VERIFIED_v2.json` binds SHA;
