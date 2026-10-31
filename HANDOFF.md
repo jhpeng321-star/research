@@ -47,6 +47,12 @@
   queue infer demand over 300s; pre-t0 observed CAV shares. No request XML/type
   assignments are opened. **All32 source preflights PASS**, **6 CPU tests PASS**
   on cpuQ in1.29s. New `/tmp/rb-merge-fullfleet-v3`; old trees left intact.
+- **00:27:53 +08 v3 dispatched once**, owned cpuQ PID**338844**, source
+  `4f78ba0e` / pinned INT `ff8a637f`; validator SHA
+  `280333722b368d217be3a4e632b039720f3b044cab08e4043f69b6449be9e653`.
+  Receipt `/tmp/rb-merge-fullfleet-v3/LAUNCH.json`, results `results/{seed}.json`.
+  One CPU/nice19/CUDA-hidden; launch load10.95/32. First2 worlds completed,
+  process alive. **Do not duplicate or replace this running source snapshot.**
 
 LATEST INTEGRATION INCREMENT: **2977be6d** (source corrections; 28 CPU tests pass).
 INT already reconciled mainline ownership: cherry-pick source corrections from
