@@ -49,6 +49,10 @@
 - UPDATE20:16: baseline shards0/1 done (26/52worlds),10318.0/10112.4s,
   receiptsd4fbf36d/edd2ad75. Step10 shards0/1 now own264542/264730; baseline2/3
   still active. No complete baseline/candidate panel, no gate claim. Deadline unchanged.
+- UPDATE20:20:47: FULL step0 baseline52/52 worlds complete, SHA71ef48ac;
+  MAE120252.1303194486178/3001718.261998103215. FIT40 reference exact. All4
+  step10 shards now264542/264730/265523/265742, no head result yet. Gate-only
+  watcher249622 alive20:24; deadline23:02:20 unchanged, no curriculum/verdict.
 
 ## SUPERSEDING MAIN 15:25 v2-DATA / Sol resume 15:34 gpuA clock
 - MAIN approved DATA ONLY, smoothing OFF, amended v1 30-step pilot gate. Code:

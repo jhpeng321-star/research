@@ -225,3 +225,17 @@ decision. GPU parity/launch/decision remain pending.
 - The measured169-172min per initial shard includes earlier peer contention;
   budget deadline remains23:02:20. Full gate still needs all registered panels.
   MAIN17:52 gate-only watcher249622 remains armed; no curriculum dispatch.
+
+## Complete step0 baseline, 2026-10-31 20:20:47 +08
+- FULL_PANEL_STEP0.json SHA256
+  `71ef48aca45bc20d4c5c2f9a15ebd5e099b76d15eadec9c6dd55649a4b30be64`.
+  All52 worlds x2arms: paired-J MAE **120s252.1303194486178** /
+  **300s1718.261998103215** (104 contrasts per horizon). This is the ZERO-HEAD
+  ENTRY-PATH baseline, not a legacy-entry WM2 evaluation or a qualification result.
+- Shard2 SHA2f5ed956... /9766.9s; shard3 SHA5f5ddf98... /7895.7s.
+  Parent assembler verified checkpoint/prepared/base, exact groups and all208 cells.
+- FIT group40 (original v1 group0) remains EXACT449.62744140625/302.890625,
+  proving this recorded-controller binding repair preserves the reference case.
+- Four step10 shards now live264542/264730/265523/265742. Head10 full result
+  remains pending; steps20/30 are queued. Deadline23:02:20 unchanged; no
+  post-gate continuation under MAIN17:52, watcher249622 verified alive20:24.
