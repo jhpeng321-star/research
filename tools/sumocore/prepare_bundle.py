@@ -21,6 +21,25 @@ CHECKPOINT=Path('/home/ubuntu/e3final/inputs/wm_s_best.pt')
 def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def inverse_geometry(s,lane,lanes,table,offsets):
+    candidates=[]
+    for (edge,index),(model_lane,offset) in table.items():
+        if model_lane!=lane:continue
+        lane_id=f'{edge}_{index}';pos=s+offsets[lane]-offset
+        if lane_id not in lanes:continue
+        length=lanes[lane_id]['length']
+        # The recorded coordinate is float32. Accept only its arithmetic ULP
+        # uncertainty at physical edge endpoints; this is not a driving rule.
+        tol=float(np.spacing(np.float32(max(abs(s),abs(offsets[lane]),abs(offset),1.))))
+        if -tol<=pos<=length+tol:
+            pos=min(length,max(0.,pos))
+            candidates.append((offset,lane_id,pos,edge,index))
+    assert candidates,('observable inverse geometry absent',s,lane)
+    # Coincident edge endpoints are the same observable position. Canonical
+    # downstream edge wins if the visible lane exists there.
+    return max(candidates)
+
+
 def network():
     root=ET.parse(NET).getroot()
     lanes={r.attrib['id']:dict(length=float(r.attrib['length']),edge=e.attrib['id'],
@@ -58,14 +77,7 @@ def prepare(job,out):
     for k in np.flatnonzero(active):
         vid=start['vehicle_ids'][int(raw['vid_index'][-1,k])]
         lane=int(state['lane'][0,k]);s=float(state['s_m'][0,k])
-        candidates=[]
-        for (edge,index),(model_lane,offset) in LANE_TABLE.items():
-            if model_lane!=lane:continue
-            lane_id=f'{edge}_{index}';pos=s+HERE_OFFSETS[lane]-offset
-            if lane_id in lanes and 0<=pos<lanes[lane_id]['length']:
-                candidates.append((offset,lane_id,pos,edge,index))
-        assert len(candidates)==1,('observable inverse geometry ambiguous',vid,s,lane,candidates)
-        _,lane_id,pos,edge,index=candidates[0]
+        _,lane_id,pos,edge,index=inverse_geometry(s,lane,lanes,LANE_TABLE,HERE_OFFSETS)
         cav=bool(state['is_cav'][0,k])
         if cav:cavs.append(vid)
         else:hdv.append(vid)
