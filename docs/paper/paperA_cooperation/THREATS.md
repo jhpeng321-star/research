@@ -1,5 +1,21 @@
 # Threats, reviewer objections and bounded answers
 
+## “The WM is no longer the method; SUMO does the learning.”
+- **Answer:** The owner's primary method is WM-trained cooperation: short imagined subset branches plus a terminal cost-to-go supervised by real simulator outcomes. Exact SUMO is the verifier; oracle-trained S-SUMOCF is the backup/reference. An oracle gain cannot fill the WM-policy claim. Keep offline value prediction, WM policy training and exact traffic/interaction verification as separate gates.
+- **Evidence:** owner MAIN ADDENDUM; `E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md`; `CLAIMS.md` W-VALUE/W-POLICY/W-RISE/W-WIN.
+- **Gap:** [[PENDING: decisive offline test, then separately registered WM policy and paired exact outcomes / S-WMVALUE, MAIN WM policy producer, S-COOPMEASURE, S-COOPEVAL]].
+
+## “A real-trained terminal value just moves the long-horizon bias into a critic.”
+- **Answer:** Real-outcome supervision avoids training the tail entirely from the WM's own biased long rollout; it does not ensure correct continuation values or accurate small differences across imagined states. The frozen offline gate compares short WM+V with full WM, command-aware value-only and FIT-only arm/time baselines on common reserved TRAIN worlds. Missing causal sensing/queue telemetry yields INCOMPLETE, not an enriched global-state substitute.
+- **Evidence:** `E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md`, observation/label gate, models and decisive comparison.
+- **Remaining objection:** offline data use recorded fixed-controller continuation and arm-specific states after the common warmup. A new cooperative policy and its imagined terminal states may be off distribution; unconditioned V may alias continuation actions. Better offline pair prediction is not same-state C_G accuracy, a policy-gradient theorem or a learned-policy result.
+- **Gap:** [[PENDING: observation/label admissibility, full baseline results, value time/continuation contract and transfer to WM policy branches / S-WMVALUE, MAIN WM policy producer]]. Do not tune on the reserved worlds or interpret pair/time rows as independent samples.
+
+## “The WM recovers a percentage of an oracle gain that may be zero.”
+- **Answer:** Show matched WM−MAPPO and oracle−MAPPO effects first. A gain-retention ratio requires compatible metrics, clocks, worlds, controller/input contracts and an established beneficial oracle denominator with uncertainty. If the denominator is absent, nonpositive or poorly resolved, report the ratio as not estimable. A finite-budget oracle-trained policy is an empirical reference, not a certified optimum or mathematical upper bound.
+- **Evidence:** `CLAIMS.md` W-RATIO; owner MAIN ADDENDUM.
+- **Gap:** [[PENDING: corrected oracle/WM policies and jointly paired gain/ratio uncertainty / S-SUMOCF, MAIN WM policy producer, S-COOPEVAL]].
+
 ## “This is just difference rewards / Shapley / COMA.”
 - **Answer:** Counterfactual credit is established prior art. Our proposed object is group excess above singleton effects under an explicit longitudinal simulator intervention and full-population cost, followed by a controller audit and learning test. M_i and C_G are different; C_G is neither a Shapley allocation nor evidence of intentional cooperation. For larger groups it aggregates beyond-singleton interaction terms, not only the highest-order term.
 - **Evidence:** `RELATED_WORK.md`; `CLAIMS.md` M-DEF/R-NOVEL. The equation alone is not sufficient novelty; avoid first-of-kind claims pending full closest-paper comparison.
@@ -18,7 +34,8 @@
 - **Answer:** Branching requires physical and RNG state, identity-coupled requests, controller memory/dwell and ownership release. Simulator state is an offline intervention label; actors must use only declared CAV/RSU observations. Historical native-repeat verification supports that historical implementation, not a new one. Full-state diagnostic initialization is not sparse-sensor deployment validation.
 - **Evidence:** `E:/research-dense/docs/paper_results/COOPMEAS2.md`; `E:/agent-work/c4-coopmeasure/AUDIT_DESIGN.md`; `E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_DESIGN.md`.
 - **Gap:** [[PENDING: complete-panel integrity, observation binding and memory/entrant receipts / S-COOPMEASURE, S-SUMOCF]]. Replay exactness remains simulator- and execution-contract-specific.
-- **Refresh:** producer canaries now pass; full-panel integrity and deployment observation binding remain pending. The audit producer also disclosed that an early exposure scanner opened legacy parameter JSON files; it states no values were used and the scanner was corrected. Preserve that disclosure with publication data-lineage notes. This package did not open those files. <!-- Sources: E:/agent-work/c4-coopmeasure/docs/paper_results/COOPAUDIT.md; E:/agent-work/c4-sumocf/tools/sumocf/evidence/CANARY_V2.json; E:/agent-work/c4-coopmeasure/tools/coopaudit/evidence/EXPOSURE_NOTE.md. -->
+- **Current counterexample:** the learner's earlier canary passed, but later zero-noise saved-state branches failed at the first physical step despite identical commands. Original probe credits are invalid. Corrected full-prefix reruns require state/trajectory and zero-intervention verification; the audit is held pending reviewed release and corrected binding. Full-prefix reruns alone are not proof of paired exactness. <!-- Sources: E:/agent-work/c4-sumocf/docs/paper_results/ARTIFACT_CHECK.md; E:/agent-work/c4-coopmeasure/docs/paper_results/COOPAUDIT.md. -->
+- **Data lineage:** the audit producer disclosed that an early scanner opened legacy parameter JSON; it states no values were used and the scanner was corrected. Preserve the disclosure. This package did not open those files. <!-- Source: E:/agent-work/c4-coopmeasure/tools/coopaudit/evidence/EXPOSURE_NOTE.md. -->
 
 ## “Disabling a wall member changes its planner, invalidating the solo comparison.”
 - **Answer:** The prospective audit retains the full wall roster/context and masks issued member commands; it does not request a singleton wall and call refusal its solo outcome. Record assembly failure, absent coverage and aborts. A coordinated wall mechanism can still have negative interaction or no fleet benefit.
@@ -28,7 +45,7 @@
 ## “Groups or local delay were selected after observing gains.”
 - **Answer:** Freeze geometric eligibility/identities before intervention; keep missing and tiny/null gains. Publish SNR selection rule/table and its exposure boundary. Selection by D_G SNR does not guarantee C_G precision. Local control variates need frozen centering/beta; a policy-dependent expectation can bias credit. Full fleet+source outcome remains primary.
 - **Evidence:** `E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_DESIGN.md`, SNR gate; `E:/agent-work/c4-coopmeasure/AUDIT_DESIGN.md`, WAIT_SUMOCF/coverage.
-- **Gap:** [[PENDING: selected table SHA, group/window/correlation freeze and raw versus CV evidence / S-SUMOCF, S-COOPMEASURE]].
+- **Current evidence:** the initial CV-based selection violated the raw-D_G rule and was corrected deterministically; subsequently the saved-state branch credits themselves were invalidated. Preserve both defects and all original receipts. No original winner establishes a usable signal. [[PENDING: artifact-approved full-rerun probe table/selection SHA and corrected audit binding / S-SUMOCF, S-COOPMEASURE]]. <!-- Source: E:/agent-work/c4-sumocf/docs/paper_results/ARTIFACT_CHECK.md; E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_RUN.md. -->
 
 ## “More vehicles/ticks make the confidence interval artificially narrow.”
 - **Answer:** Use paired world resamples and the original stratification/weighting; worlds, not vehicles/ticks or repeated checkpoints, are independent experimental units. Preserve pointwise/unadjusted secondary interpretation. Historical wide interaction uncertainty is evidence of limited precision, not absence of an effect.
@@ -36,9 +53,9 @@
 - **Gap:** [[PENDING: new complete-panel inference and fixed selection/stop accounting / S-COOPMEASURE, S-COOPEVAL]]. No post-result sample enlargement is justified by the old planning projection.
 
 ## “More training, RSU inputs or correlation caused the gain, not cooperation credit.”
-- **Answer:** A warm-started richer-input actor compared with frozen speed-only MAPPO tests the combined method. Credit-specific attribution additionally needs capacity/input/additional-budget-matched continued MAPPO, credit-off, and correlation controls, with the same safety executor. Separate warm-start and additional training cost; include failures and acquisition.
+- **Answer:** A warm-started richer-input actor compared with frozen speed-only MAPPO tests the combined method. Credit-specific attribution additionally needs capacity/input/additional-budget-matched continued MAPPO, credit-off, and correlation controls, with the same safety executor. WM-specific attribution needs no-WM/value-only and no-tail/long-WM controls. Separate warm-start and additional training cost; include real label acquisition, value fitting, inference and failed branch costs.
 - **Evidence:** `E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_DESIGN.md`; `E:/agent-work/c4-papera/docs/WM_C4_DESIGN.md`.
-- **Gap:** [[PENDING: matched controls, seed replication and total-budget lineage / S-SUMOCF, S-COOPEVAL]]. No equal-budget efficiency ratio is currently established.
+- **Gap:** [[PENDING: WM/oracle matched controls, seed replication and total-budget lineage / S-WMVALUE, MAIN WM policy producer, S-SUMOCF, S-COOPEVAL]]. No equal-budget efficiency ratio is currently established.
 - **Related estimator objection:** correlated exploration requires the correct marginal joint score. The amended fully correlated case is a common-mode projection, not an unrestricted individual-mean score; frozen continuation and any changing local-control-variate expectation also limit unbiased-gradient claims. Report this as the implemented local surrogate unless an applicable proof is supplied. <!-- Source: E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_DESIGN.md:22-60. -->
 
 ## “Your evaluation is used for checkpoint selection.”
@@ -52,9 +69,9 @@
 - **Gap:** [[PENDING: final per-arm execution table / S-COOPMEASURE, S-COOPEVAL]].
 
 ## “Why claim a short-horizon WM success if corrected qualification fails?”
-- **Answer:** Do not make an unqualified success claim. The historical direction-only panel and corrected recorded native-lane intervention panel have different populations/contracts/checkpoint bindings. Preserve both, in separate panels. Direction alone is insufficient for effect magnitude, safety, policy ranking or interaction.
+- **Answer:** Do not make an unqualified success claim. The historical direction-only panel and corrected recorded native-lane intervention panel have different populations/contracts/checkpoint bindings. Preserve both, in separate panels. The proposed short WM+real-value route needs its own verification; shortening imagination does not itself resolve the corrected failure. Direction alone is insufficient for effect magnitude, safety, policy ranking or interaction.
 - **Evidence:** `E:/research-dense/docs/paper_results/E2_direction_horizon.csv`; `E:/agent-work/c4-wmrequal3/docs/paper_results/WMREQUAL3.md`.
-- **Gap:** [[PENDING: final checkpoint-specific native-release C_G validation / S-WMREQUAL3, S-COOPEVAL]]. Current support is a bounded historical result plus a corrected failure.
+- **Gap:** [[PENDING: WMVALUE gate and checkpoint-specific WM+value/native-release C_G validation / S-WMVALUE, MAIN WM policy producer, S-COOPEVAL]]. Current support is a bounded historical result plus a corrected failure.
 
 ## “The merge queue is not a causally isolated failure.”
 - **Answer:** Correct. Regional signed covariance contributions localize error; they do not estimate causal mediation. Source and upstream error cancellation explains why removing source error can worsen total error. The tested entry-path contrast supports residual upstream mismatch, not a unique physical cause or a completed fix.
@@ -62,9 +79,9 @@
 - **Gap:** [[PENDING: trained-head verdict and intervention-matched surrogate comparison / S-WMFIXMERGE, S-COOPEVAL]].
 
 ## “Signatures of yielding or synchrony are being called causal cooperation.”
-- **Answer:** Behavior detectors describe geometry and timing. Accepted-merge timing/gap differences require valid paired member-release branches; cross-lane overlap alone is a wall-like pattern, not useful metering. Selected positive-C_G traces are exploratory exemplars with denominators, censoring and selection disclosed.
+- **Answer:** Behavior detectors describe geometry and timing. Accepted-merge timing/gap differences require valid paired reference branches with explicit native-release or policy-mean semantics; cross-lane overlap alone is a wall-like pattern, not useful metering. Delivered whole-controller counts/exposure are descriptive. Original SUMOCF positive-credit discovery uses invalidated costs and cannot support beneficial cooperation, even if geometric detector outputs reproduce. Corrected outcome-selected exemplars require denominators, censoring and selection disclosure.
 - **Evidence:** `E:/agent-work/c4-coopbehav/docs/paper_results/COOPBEHAV.md`.
-- **Gap:** [[PENDING: paired traces, detector coverage and censoring / S-COOPBEHAV]].
+- **Gap:** [[PENDING: corrected artifact-valid paired traces and matched coverage/censoring / S-COOPBEHAV, corrected trace producer]]. <!-- Sources: E:/agent-work/c4-coopbehav/docs/paper_results/COOPBEHAV.md; E:/agent-work/c4-sumocf/docs/paper_results/ARTIFACT_CHECK.md. -->
 
 ## “Efficiency hides source queues, unfairness or safety deterioration.”
 - **Answer:** Use all requested service, entrant/source bookkeeping and road delay together; report ramp/mainline service, worst-group delay, braking/TTC, collision/teleport/dropped-step totals. Preserve original observed safety outcomes. Incident zeros are not equivalence, certification or a risk bound.
@@ -78,7 +95,8 @@
 
 ## Honest result routing for the owner
 
-- Audit complete, learner pending: the audit and operational measurement can be drafted as results; learning remains a clearly labeled unresolved experiment.
-- Learner improves fleet cost only: report control improvement without claiming interaction discovery.
-- Learner improves C_G only: report interaction change alongside D_G/solos; do not claim MAPPO superiority.
-- Neither improves or intervals remain wide: preserve the negative/inconclusive learning result and the measured-surrogate limits. Package completeness does not convert pending scientific claims into completed contributions.
+- WMVALUE PASS only: report improved offline continuation prediction; WM-policy cooperation/efficacy remain unresolved until separately trained and exactly verified.
+- WMVALUE FAIL or INCOMPLETE: state the decisive result or missing telemetry explicitly. Keep WM as the primary tested route; a successful backup is labeled SUMO-trained.
+- Only oracle backup improves: report that exact-credit learning succeeds within its stated scope; WM learning remains unsupported. No gain-retention ratio without comparable WM outcomes.
+- A policy improves fleet cost only: report control improvement without claiming interaction discovery. A policy improves C_G only: report interaction alongside D_G/solos without MAPPO superiority.
+- Neither improves or intervals remain wide: preserve negative/inconclusive results and reliability limits. Track 3B is already a completed no-accepted-gain result; oracle probe artifacts are mechanics failures, not negative cooperation estimates. Package completeness does not promote pending scientific claims.

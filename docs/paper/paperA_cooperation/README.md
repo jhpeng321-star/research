@@ -8,12 +8,15 @@ This is an evidence-linked drafting package. Start with `OUTLINE.md`, resolve cl
 
 ## Current scientific boundary
 
-- The interaction estimand is defined and a historical exact-branch implementation has completed. The new speed-only audit and learner now have passing mechanics canaries; their full-panel cooperation/efficacy results remain pending. The audit waits for the learner's measured SNR selection table.
-- WM-S is a candidate deployable substitute for the expensive oracle. A historical direction panel supports a bounded horizon, but the corrected native-lane contract is NOT QUALIFIED. Avoid an unconditional deployment or short-horizon accuracy claim.
+- **Primary method:** WM-trained cooperative policy using short imagination plus a terminal cost-to-go trained on real SUMO outcomes. The WMVALUE frozen offline design is present; [[PENDING: decisive offline verdict / S-WMVALUE]], then [[PENDING: separately registered policy run and exact cooperation/efficacy verification / MAIN WM policy producer, S-COOPMEASURE, S-COOPEVAL]].
+- **Backup/reference:** SUMO-oracle cooperative learner. Later zero-noise saved-state branches failed despite identical commands, invalidating the original SNR/interaction values. No optimizer update completed. Corrected full-prefix rerun gates/probe and the audit remain on artifact HOLD. Earlier passing canaries apply only to their checked states.
+- The interaction estimand and historical measurement are supported. Track 3B is now complete with no accepted improvement. Descriptive behavior counts have landed; probe-based positive-credit discovery cannot validate cooperation after the artifact failure.
+- Historical WM direction fidelity was bounded by horizon; corrected native-lane qualification still fails. The new value-tail route is a hypothesis to test, not a validation already supplied by those older results.
 - Keep native release, the forced-command CTRL0 adapter, lane-on historical MAPPO, and the speed-only MAPPO export distinct.
 
 <!-- Sources: E:/agent-work/c4-coopmeasure/AUDIT_DESIGN.md; E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_DESIGN.md (binding amendment); E:/research-dense/docs/paper_results/COOPMEAS2.md; E:/agent-work/c4-wmrequal3/docs/paper_results/WMREQUAL3.md; E:/research-dense/docs/paper_results/E2_direction_horizon.csv. -->
 <!-- Refresh sources: E:/agent-work/c4-coopmeasure/docs/paper_results/COOPAUDIT.md; E:/agent-work/c4-sumocf/tools/sumocf/evidence/CANARY_V2.json. -->
+<!-- Current authority/evidence: owner MAIN ADDENDUM; E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md, OWNER FRAMING; E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md; E:/agent-work/c4-sumocf/docs/paper_results/ARTIFACT_CHECK.md; E:/agent-work/c4-sumoes/docs/paper_results/SUMOES_RUN.md; E:/agent-work/c4-coopbehav/docs/paper_results/COOPBEHAV.md. -->
 
 ## Package conventions
 

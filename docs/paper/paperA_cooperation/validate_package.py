@@ -24,6 +24,22 @@ def main():
                 path = (ROOT / target.split("#", 1)[0]).resolve()
                 assert path.is_relative_to(ROOT), (name, target)
                 assert path.exists(), (name, target)
+    # The primary/backup hierarchy and prerequisite claims must survive refreshes.
+    for claim in ("W-VALUE", "W-POLICY", "W-RISE", "W-WIN", "W-RATIO", "M-ARTIFACT"):
+        assert re.search(r"^### " + claim + r"\b", docs["CLAIMS.md"], re.MULTILINE), claim
+    for name in ("OUTLINE.md", "FIGURES.md", "THREATS.md", "README.md"):
+        assert "WMVALUE" in docs[name], name
+        assert "backup" in docs[name].lower(), name
+    # Verify the immutable report cut offline, without reading live producer inputs.
+    refresh = json.loads((ROOT / "source_refresh.json").read_text(encoding="utf-8"))
+    report_checks = []
+    for key, entry in refresh["reports"].items():
+        if not entry["exists"]:
+            continue
+        path = (ROOT / entry["snapshot"]).resolve()
+        assert path.is_relative_to(ROOT / "source_snapshots"), key
+        assert hashlib.sha256(path.read_bytes()).hexdigest() == entry["sha256"], key
+        report_checks.append(key)
     bib = docs["refs.bib"]
     # Syntax sanity; final conference BibTeX/IEEEtran rendering remains owner's task.
     body = "\n".join(line for line in bib.splitlines() if not line.startswith("%"))
@@ -58,6 +74,7 @@ def main():
     result = {"status": "PASS", "required_documents": required,
               "verified_bibliography_entries": len(keys), "controller_contract_rows": len(controllers),
               "git_index_byte_checks": index_checks,
+              "report_snapshot_checks": report_checks,
               "pending_insertions": {name: text.count("[[PENDING:") for name, text in docs.items()
                                      if name.endswith(".md")},
               "scope": "local links, provenance structure, bibliography identity coverage, CSV schema, plotted source values and hashes",
