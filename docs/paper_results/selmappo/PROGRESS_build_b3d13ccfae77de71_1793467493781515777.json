@@ -1,0 +1,328 @@
+{
+  "schema": "selmappo.progress/1",
+  "timestamp_utc": "2026-10-31T17:24:53.781286+00:00",
+  "root": "/home/ubuntu/selmappo20261031/build_b3d13ccfae77de71",
+  "source_binding": "b3d13ccfae77de71cd8ff70d2ee444de514104855652968aa70965a54aae4aba",
+  "own_pid": 503239,
+  "own_pid_exists": false,
+  "own_nice": null,
+  "load_1m": 7.39404296875,
+  "cores": 32,
+  "max_load_fraction": 0.8,
+  "charged_sim_s": 38700,
+  "closed_actual_sim_s": 29700.0,
+  "outstanding_episodes": 9,
+  "outstanding_actual_not_yet_final": true,
+  "historical_charged_sim_s": 1800,
+  "historical_actual_sim_s": 900,
+  "production_reserved_episodes": 41,
+  "production_closed_episodes": 32,
+  "production_completed_episodes": 33,
+  "production_completed_sim_s": 29700.0,
+  "completed_updates": 0,
+  "latest_update": null,
+  "initial_and_stable_checkpoints": [
+    {
+      "iteration": 0,
+      "path": "/home/ubuntu/selmappo20261031/build_b3d13ccfae77de71/training/checkpoint_000.pt",
+      "size": 202049,
+      "sha256": "bdd5af7f40971528d8ed6aefa8fba7353597a3d989234f9341eb2789dc3f8adc"
+    }
+  ],
+  "latest_priority_status": {
+    "cores": 32,
+    "load_1m": 16.46923828125,
+    "max_load_fraction": 0.8,
+    "next_seed": 18000041,
+    "pending": 9,
+    "status": "DISPATCH_PAUSED_RESOURCE_PRIORITY"
+  },
+  "failure_count": 9,
+  "failed_worlds": [
+    18000036,
+    18000028,
+    18000040,
+    18000038,
+    18000037,
+    18000034,
+    18000032,
+    18000035,
+    18000039
+  ],
+  "first_failure": {
+    "actual": null,
+    "error": "concurrent.futures.process._RemoteTraceback: \n'''\nTraceback (most recent call last):\n  File \"/home/ubuntu/miniconda3/lib/python3.10/concurrent/futures/process.py\", line 392, in wait_result_broken_or_wakeup\n    result_item = result_reader.recv()\n  File \"/home/ubuntu/miniconda3/lib/python3.10/multiprocessing/connection.py\", line 251, in recv\n    return _ForkingPickler.loads(buf.getbuffer())\n  File \"/home/ubuntu/miniconda3/lib/python3.10/site-packages/torch/multiprocessing/reductions.py\", line 540, in rebuild_storage_fd\n    fd = df.detach()\n  File \"/home/ubuntu/miniconda3/lib/python3.10/multiprocessing/resource_sharer.py\", line 58, in detach\n    return reduction.recv_handle(conn)\n  File \"/home/ubuntu/miniconda3/lib/python3.10/multiprocessing/reduction.py\", line 189, in recv_handle\n    return recvfds(s, 1)[0]\n  File \"/home/ubuntu/miniconda3/lib/python3.10/multiprocessing/reduction.py\", line 164, in recvfds\n    raise RuntimeError('received %d items of ancdata' %\nRuntimeError: received 0 items of ancdata\n'''\n\nThe above exception was the direct cause of the following exception:\n\nTraceback (most recent call last):\n  File \"/home/ubuntu/selmappo20261031/build_b3d13ccfae77de71/pytools/tools/selmappo/dispatch.py\", line 73, in wave\n    result = future.result()\n  File \"/home/ubuntu/miniconda3/lib/python3.10/concurrent/futures/_base.py\", line 451, in result\n    return self.__get_result()\n  File \"/home/ubuntu/miniconda3/lib/python3.10/concurrent/futures/_base.py\", line 403, in __get_result\n    raise self._exception\nconcurrent.futures.process.BrokenProcessPool: A process in the process pool was terminated abruptly while the future was running or pending.\n",
+    "ok": false,
+    "world": {
+      "demand": 2400,
+      "penetration": 0.05,
+      "seed": 18000036
+    }
+  },
+  "worker_receipts": [
+    {
+      "seed": 18000000,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000001,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000002,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000003,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000004,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000005,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000006,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000007,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000008,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000009,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000010,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000011,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000012,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000013,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000014,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000015,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000016,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000017,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000018,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000019,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000020,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000021,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000022,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000023,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000024,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000025,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000026,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000027,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000028,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    },
+    {
+      "seed": 18000029,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000030,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000031,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000032,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": false
+    },
+    {
+      "seed": 18000033,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000034,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    },
+    {
+      "seed": 18000035,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    },
+    {
+      "seed": 18000036,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    },
+    {
+      "seed": 18000037,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    },
+    {
+      "seed": 18000038,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    },
+    {
+      "seed": 18000039,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    },
+    {
+      "seed": 18000040,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    }
+  ],
+  "own_processes": [],
+  "actual_sim_s_lower_bound": 30600.0,
+  "actual_sim_s_upper_bound": 37800.0,
+  "completed_result_totals": {
+    "road_delay_vs": 596136.4689897802,
+    "source_wait_vs": 1183220.6832429997,
+    "team_delay_vs": 1779357.1522327804,
+    "collisions": 0.0,
+    "teleports": 0.0,
+    "ttc_below_3_vs": 13568.5,
+    "hard_brake_vs": 583.5
+  },
+  "completed_episode_wall_s_mean": 32.99757439617745,
+  "prospective_local_evaluation_sim_s": 14400,
+  "local_evaluation_started": false,
+  "final169_eligible": false,
+  "training_budget_upper_sim_s": 7012800,
+  "mechanics_replayed": false
+}
