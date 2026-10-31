@@ -1,0 +1,238 @@
+{
+  "checked_at": "2026-10-31T16:15:03+08:00",
+  "scope": "Explicit permitted evidence paths only; no automatic scientific status promotion",
+  "sources": {
+    "C1 gap authoritative report": {
+      "path": "E:/agent-work/c4-c1gap/C1_GAPS.md",
+      "status": "MISSING"
+    },
+    "C1 gap report alternate documented delivery": {
+      "path": "E:/agent-work/c4-c1gap/docs/paper_results/C1_GAPS.md",
+      "status": "PRESENT",
+      "sha256": "f601c1cce9fabcb6a31582b9c566b3570a9c76dc36789c100180968e41c2b91f",
+      "bytes": 7465,
+      "heading": "# C1 gaps — S-C1GAP (2026-10-31)",
+      "changed_since_previous_refresh": true,
+      "matches_figure_snapshot": true
+    },
+    "C1 closed-loop authoritative report": {
+      "path": "E:/agent-work/c4-c1closed/C1CLOSED.md",
+      "status": "MISSING"
+    },
+    "C1 closed-loop report alternate delivery": {
+      "path": "E:/agent-work/c4-c1closed/docs/paper_results/C1CLOSED.md",
+      "status": "MISSING"
+    },
+    "Recovered wall result": {
+      "path": "E:/agent-work/c4-c1gap/docs/paper_results/c1gap/WALL_C1_RESULT.recovered.md",
+      "status": "PRESENT",
+      "sha256": "173ade43c9009aeec1942cd011288de0e04746e80483208dccdd2c887f663ae7",
+      "bytes": 21669,
+      "heading": "# WALL-C1 RESULT - C1 world models on the unseen WALL controller",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": true
+    },
+    "Wall recovery provenance": {
+      "path": "E:/agent-work/c4-c1gap/docs/paper_results/c1gap/recovery.json",
+      "status": "PRESENT",
+      "sha256": "976578934c33fe7a3380b9e703b604dd2c9ef0d1ee548f602d45283b382c8826",
+      "bytes": 7267,
+      "heading": "",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Main claim checklist": {
+      "path": "E:/research-dense/docs/paper/CLAIM_EVIDENCE_CHECKLIST.md",
+      "status": "PRESENT",
+      "sha256": "80f844509300789061ab3734d61a53009d90bc500da0b3e9f70e01e16bcd5597",
+      "bytes": 24097,
+      "heading": "# Claim–Evidence Checklist — IEEE IV Draft",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Main draft": {
+      "path": "E:/research-dense/docs/paper/IEEE_IV_2027_DRAFT.md",
+      "status": "PRESENT",
+      "sha256": "fb2c0effa842de3a88ffb44df0acd9f28adf2715135ff641e8d90d7ed6eb05e3",
+      "bytes": 32482,
+      "heading": "# WM-S: Physics-Informed Prediction of Mixed Traffic under Unseen CAV Controllers",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Model change log": {
+      "path": "E:/research-dense/docs/WM_CHANGE_LOG.md",
+      "status": "PRESENT",
+      "sha256": "ec0c658bdb8950086dd4b90a6766d98f3cad80c4bf61bdb67aa39e7b5d9a4d07",
+      "bytes": 35464,
+      "heading": "# WM-S change log — what we tried, what happened, what not to repeat",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Model state plan": {
+      "path": "E:/research-dense/docs/WM_STATE_PLAN.md",
+      "status": "PRESENT",
+      "sha256": "45b3bf42a75ae4653f0b2cd882192e960688f9d71a1aa2eaf5e2de5bc8e48e38",
+      "bytes": 5951,
+      "heading": "# WM-S: physics-informed next-state world model (owner-approved plan, 2026-10-05)",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "E1 selection Markdown": {
+      "path": "E:/research-dense/docs/paper_results/E1_C1_fair.md",
+      "status": "PRESENT",
+      "sha256": "cfc2db920559b5a710e500fe08b7883c642678e46852579a3e67e1c0ab03d978",
+      "bytes": 214723,
+      "heading": "# E1 C1 fair",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "E1 selection CSV": {
+      "path": "E:/research-dense/docs/paper_results/E1_C1_fair.csv",
+      "status": "PRESENT",
+      "sha256": "2140680fb53ad53282db25b1861a4a7ebcfb18eec65c6bca1385078a90501dbe",
+      "bytes": 245466,
+      "heading": "",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": true
+    },
+    "E1 direction": {
+      "path": "E:/research-dense/docs/paper_results/E1_WM_direction.md",
+      "status": "PRESENT",
+      "sha256": "9b8085e75e2d8c7e17786bb9ed7b70af1b4c6a5262df1d7f847aef6eab2ef103",
+      "bytes": 5294,
+      "heading": "# E1 WM direction",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "E1 fidelity": {
+      "path": "E:/research-dense/docs/paper_results/E1_WM_fidelity.md",
+      "status": "PRESENT",
+      "sha256": "faf78aa5c25dcc55a48414ee79a3a54e2c7498d23baa016d54d6da958b77da8d",
+      "bytes": 1002,
+      "heading": "# E1 WM fidelity",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "E2 direction Markdown": {
+      "path": "E:/research-dense/docs/paper_results/E2_direction_horizon.md",
+      "status": "PRESENT",
+      "sha256": "da1fdc53d2ee9b6e7fb7f580436a399321d61332163f84736c346afdb5a3a01b",
+      "bytes": 718,
+      "heading": "# E2 direction horizon",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "E2 direction CSV": {
+      "path": "E:/research-dense/docs/paper_results/E2_direction_horizon.csv",
+      "status": "PRESENT",
+      "sha256": "96586c7822e4a496790e05455462758020c335d08852f2b84cfd8ab960c22718",
+      "bytes": 797,
+      "heading": "",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": true
+    },
+    "E2 delay": {
+      "path": "E:/research-dense/docs/paper_results/E2_delay_horizon.md",
+      "status": "PRESENT",
+      "sha256": "bb745da4a1ab69625684c3e44bc7c84bcf91701ef3f29da3d09794dad3d36b8a",
+      "bytes": 16605,
+      "heading": "# E2 delay horizon",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Results scope README": {
+      "path": "E:/research-dense/docs/paper_results/README.md",
+      "status": "PRESENT",
+      "sha256": "3b8751ed7dd73b0fd8d680f98fb3cccb148044ae4eb3bd83888ba8e51f976f9c",
+      "bytes": 1185,
+      "heading": "# E1/E2 existing evidence",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Corrected native-lane qualification": {
+      "path": "E:/agent-work/c4-wmrequal3/docs/paper_results/WMREQUAL3.md",
+      "status": "PRESENT",
+      "sha256": "6a692d83b4cc949c5cad1ff37ff972cde15ece91b9142189e8f57e67c497af25",
+      "bytes": 8237,
+      "heading": "# S-WMREQUAL3 — corrected speed-only/native-lane qualification",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": true
+    },
+    "Prior-attempt audit": {
+      "path": "E:/agent-work/c4-wmfixmerge/docs/paper_results/WMFIX_PRIOR.md",
+      "status": "PRESENT",
+      "sha256": "c3d30d9b69b62a060d925c878f2b1eb8972291fa790516f97c6199fa9edfc05b",
+      "bytes": 9030,
+      "heading": "# WMFIX prior-attempt audit — 2026-10-31",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Entry retarget": {
+      "path": "E:/agent-work/c4-wmfixmerge/docs/paper_results/WMFIX_RETARGET.md",
+      "status": "PRESENT",
+      "sha256": "0ec45023b084e04e9fff5201f53a8db1abdda996c5d69afb80a8a752e9b8e634",
+      "bytes": 3390,
+      "heading": "# WMFIX retarget decision — zero-head entry path on the corrected validation panel",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": true
+    },
+    "Failed pilot": {
+      "path": "E:/agent-work/c4-wmfixmerge/docs/paper_results/WMFIX_PILOT_FAIL.md",
+      "status": "PRESENT",
+      "sha256": "03a71df04627133ee5568be6704780e724e092a0722ef1dc790a09914762ec43",
+      "bytes": 3411,
+      "heading": "# S-WMFIX-PILOT FAIL — pre-registered gate, 2026-10-31 13:37 +08",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Failed smoothing feasibility": {
+      "path": "E:/agent-work/c4-wmfixmerge/docs/paper_results/WMFIX_V2_FEAS.md",
+      "status": "PRESENT",
+      "sha256": "72025b1da26676b5c5ce6151d24ccf770b7205f526495d265b476391d05cb0a7",
+      "bytes": 5612,
+      "heading": "# PILOT v2 smoothed-objective FD feasibility, 2026-10-31 14:35-15:05 +08",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Data-only successor status": {
+      "path": "E:/agent-work/c4-wmfixmerge/docs/paper_results/WMFIX_PILOT_V2DATA.md",
+      "status": "PRESENT",
+      "sha256": "caf06a07b3c62bf42c3645022f7a17d1d686e57793cca0c1de0c720019dd7474",
+      "bytes": 5189,
+      "heading": "# PILOT v2-DATA — MAIN authorization 2026-10-31 15:25",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Final calibration": {
+      "path": "E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB.md",
+      "status": "MISSING"
+    },
+    "Calibration handoff": {
+      "path": "E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB_HANDOFF.md",
+      "status": "PRESENT",
+      "sha256": "dc9a4d4f5f9da2d0b4439da0aaaa5e7c90b749743bc507b69e59855606cc721e",
+      "bytes": 4255,
+      "heading": "# S-WMCALIB (Track 2) HANDOFF 2026-10-31 ~15:00 (branch c4/wmcalib, no push)",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Calibration resume": {
+      "path": "E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB_RESUME.md",
+      "status": "PRESENT",
+      "sha256": "f231302caf40e928e2fc6717dc8fed23b20a46c00e81ef84eb97f2f9c6ecc805",
+      "bytes": 4936,
+      "heading": "# S-WMCALIB resume / frozen completion procedure — 2026-10-31",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Speed-only headroom": {
+      "path": "E:/agent-work/c4-speedhead/docs/paper_results/SPEEDHEAD.md",
+      "status": "PRESENT",
+      "sha256": "ddf295ec72024014982f291fd7789c92d2a7acec14ddeaa709171f15a103ea42",
+      "bytes": 7504,
+      "heading": "# SPEEDHEAD — EXPLORATORY TRAIN/development study",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    }
+  }
+}

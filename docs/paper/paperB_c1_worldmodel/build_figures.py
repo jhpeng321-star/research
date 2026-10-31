@@ -27,6 +27,7 @@ INPUTS = {
     "direction.source.csv": "E:/research-dense/docs/paper_results/E2_direction_horizon.csv",
     "fair.source.csv": "E:/research-dense/docs/paper_results/E1_C1_fair.csv",
     "wall.source.md": "E:/agent-work/c4-c1gap/docs/paper_results/c1gap/WALL_C1_RESULT.recovered.md",
+    "c1gap.source.md": "E:/agent-work/c4-c1gap/docs/paper_results/C1_GAPS.md",
     "regional.source.md": "E:/agent-work/c4-wmrequal3/docs/paper_results/WMREQUAL3.md",
     "entry.source.md": "E:/agent-work/c4-wmfixmerge/docs/paper_results/WMFIX_RETARGET.md",
 }

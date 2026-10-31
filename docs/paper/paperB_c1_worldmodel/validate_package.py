@@ -24,7 +24,7 @@ def csv_rows(name: str) -> list[dict]:
 
 def main() -> None:
     checks = []
-    for name in ["README.md", "OUTLINE.md", "CLAIMS.md", "FIGURES.md", "RELATED_WORK.md", "THREATS.md", "refs.bib"]:
+    for name in ["README.md", "OUTLINE.md", "CLAIMS.md", "FIGURES.md", "RELATED_WORK.md", "THREATS.md", "refs.bib", "REFRESH.md", "SOURCE_REFRESH.json", "REGISTRATION_RECEIPT.md"]:
         assert (ROOT / name).stat().st_size > 0, name
     checks.append("required deliverables nonempty")
 
@@ -120,6 +120,16 @@ def main() -> None:
         assert "<!-- Source" in line, phrase
     assert "[[PENDING:" in claims and "S-C1CLOSED" in claims and "S-WMCALIB" in claims
     checks.append("headline numerical claim comments and explicit agent-owned pending fields")
+
+    refresh = json.loads((ROOT / "SOURCE_REFRESH.json").read_text(encoding="utf-8"))
+    assert refresh["sources"]["C1 gap report alternate documented delivery"]["status"] == "PRESENT"
+    for label in ["C1 closed-loop authoritative report", "Final calibration"]:
+        assert refresh["sources"][label]["status"] in ("PRESENT", "MISSING")
+    registration = Path("E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md").read_text(encoding="utf-8-sig")
+    own_lines = [line for line in registration.splitlines() if "S-PAPERB FIRST PACKAGE COMPLETE" in line]
+    assert len(own_lines) == 1
+    assert own_lines[0] in (ROOT / "REGISTRATION_RECEIPT.md").read_text(encoding="utf-8")
+    checks.append("timestamped refresh pending statuses and append-once shared registration match committed receipt")
 
     receipt = {"status":"PASS", "checks":checks,
                "scope":"Package/source-selection/artwork QA only; no scientific requalification or typeset-page verification",

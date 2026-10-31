@@ -15,7 +15,8 @@ Extends `E:/research-dense/docs/paper/CLAIM_EVIDENCE_CHECKLIST.md`; that checkli
 - Paired **BB-traj minus structured** is **+9.98 [5.09,16.78] m**; **BB-id minus structured +31.78 [18.61,45.37] m**; reported world-bootstrap **95%** intervals. These are paired state-error contrasts, not differences of the displayed marginal medians. <!-- Source: E:/agent-work/c4-c1gap/docs/paper_results/c1gap/WALL_C1_RESULT.recovered.md:133-154,280. -->
 - **Evidence identity:** recovered report plus adjacent `recovery.json`, source commit `c55520803f63648a4676f493dce62d5622f4baca`, reported Markdown SHA `173ade43c9009aeec1942cd011288de0e04746e80483208dccdd2c887f663ae7`. Recovery is not a new scoring run.
 - **Caveats:** entries disabled; historical training includes evaluation worlds' other controller arms; no unseen-world claim. BB-traj uses recorded CAV motion, but BB-id learns CAV motion and ignores the teacher; do not call the latter teacher-matched. Wall cohorts overlap and must not be pooled. Wall/seen ratios measure cohort difficulty as well as transfer.
-- **Correction to older checklist:** the original report was previously unavailable; recovered report now supplies paired intervals. Full recovery/exclusion audit remains `[[PENDING: C1_GAPS.md and authoritative eligibility decision / S-C1GAP]]`.
+- **Correction to older checklist:** the original report was previously unavailable; recovered report now supplies paired intervals. The subsequently delivered `E:/agent-work/c4-c1gap/docs/paper_results/C1_GAPS.md` independently reconstructs the wall contrasts and supplies marginal world-bootstrap CIs for the displayed medians: **8.71 [7.10,13.61] / 25.41 [16.96,31.09] / 40.07 [33.61,54.68] m**. <!-- Source: E:/agent-work/c4-c1gap/docs/paper_results/C1_GAPS.md:23-25. -->
+- **Independent decision correction:** historical wall trajectory-error advantage does not imply wall selector advantage: short-clock regrets tie and the recovered report's “every wall beneficial” interpretation conflicts with its costs (native is optimal/tied). Entries are disabled and the historical ranking metric is road-only, not full fleet-plus-source cost. Use the corrected world-cluster reconstruction rather than the original start-resampled ranking intervals. Evidence: C1_GAPS.md, C1-PAIRED. `[[PENDING: unbroken from-initialization exclusion proof / S-C1GAP]]`.
 
 ## C1-PI — Existing PI summaries establish current closed-loop PI transfer
 
@@ -36,13 +37,21 @@ Extends `E:/research-dense/docs/paper/CLAIM_EVIDENCE_CHECKLIST.md`; that checkli
 - **Evidence:** corresponding CSV selectors; main checklist C1-MAPPO and C1-PAIRED; results README.
 - **Scope:** offline selection among evaluated controllers, not deployed receding-horizon selection or proof of a learned controller's efficacy. `team` cost needs its original implementation binding; do not silently rename it all-request fleet-plus-source J.
 - **Refresh correction to the older checklist:** the current export DOES contain a paired strict-history team regret contrast: **WM-13E minus BB-traj −8.412 [−19.23,−0.3071] veh-s**, on the same **21 worlds / 32 starts**. This is **SUPPORTED as an exported exploratory paired advantage**, not a contrast inferred from marginal intervals. <!-- Source: E:/research-dense/docs/paper_results/E1_C1_fair.md:2100; exact values E:/research-dense/docs/paper_results/E1_C1_fair.csv, panel paired_decisions/B_history_strict/60/team/13e_minus_bbtraj, metric regret_oracle. -->
-- **Still pending:** `[[PENDING: original paired-analysis recipe, exact team population/cost, candidate controllers, exposure and execution hashes / S-C1GAP + S-C1CLOSED]]`. The paired export fills the numerical gap; it does not complete zero-shot eligibility or full-feedback plant validation.
+- **Independent reconstruction now SUPPORTED:** C1_GAPS reproduces the paired result using **2,000 whole-world percentile bootstrap draws**, seed **0**, retaining the original state-weighted estimand; equal-world sensitivity is **−8.85 [−19.72,−0.11] veh-s**. <!-- Source: E:/agent-work/c4-c1gap/docs/paper_results/C1_GAPS.md:24,27. -->
+- **Important metric distinction:** on the same B/MAPPO panel the common-HDV endpoint contrast is **−15.35 [−28.21,+1.45] m**, INCONCLUSIVE. Better exploratory regret is not established endpoint-error superiority on that panel. <!-- Source: E:/agent-work/c4-c1gap/docs/paper_results/C1_GAPS.md:28. -->
+- **Still pending:** `[[PENDING: exact team population/cost, candidate controllers, full initialization exposure and feedback execution binding / S-C1GAP + S-C1CLOSED]]`. Numerical pairing and its bootstrap recipe are available; complete zero-shot eligibility/full-feedback plant validation are not.
+
+## C1-LONG — Relative black-box error gains establish long-clock decision trust
+
+- **Status: CONTRADICTED as a general implication.** C1_GAPS reports supported relative absolute traffic-error gains on the later textbook panel while long-clock regret and common-HDV endpoint contrasts remain inconclusive; no common endpoint cohort survives at the longest reported clock. Do not conflate “beats a worse black box on traffic error” with accurate controller verdicts.
+- **Evidence:** `E:/agent-work/c4-c1gap/docs/paper_results/C1_GAPS.md`, C1-PAIRED. These are 13E outputs, not current WM2 measurements; heterogeneous history/data prevent an isolated architecture attribution.
 
 ## C1-EXPOSURE — Controller exclusion is the unit of zero-shot eligibility
 
-- **Status: SUPPORTED (scope constraint); per-result audit PENDING.** Same-world other-controller training is not unseen-world transfer. A checkpoint fitted to an evaluated controller's outcomes is adapted, even if initialized from an eligible earlier checkpoint.
-- **Evidence:** main checklist C1-EXPOSURE; `E:/research-dense/docs/WM_CHANGE_LOG.md`, eval-world list correction; recovered wall report training/caveats.
-- `[[PENDING: checkpoint→corpus→controller-first-exposure→evaluation mapping / S-C1GAP]]`. Do not use a model alias/date alone as proof.
+- **Status: SUPPORTED (scope constraint and newly audited corpora); full initialization lineage PENDING.** Same-world other-controller training is not unseen-world transfer. A checkpoint fitted to an evaluated controller's outcomes is adapted, even if initialized from an eligible earlier checkpoint.
+- **New evidence:** `E:/agent-work/c4-c1gap/docs/paper_results/C1_GAPS.md`, exposure audit. C1FAST `87ed02e0` and its frozen BB corpus contain no wall/PI/MAPPO algorithm; configured but unused wall data are not actual exposure. Audited later `13E b2 FINAL 952ec059` and `WM2 c02 b8797242` corpora also exclude those algorithms; their B/C evaluation worlds do not overlap the audited training worlds. WM2 own-policy data are adaptation for that policy, not MAPPO exposure. No alias-to-evaluation binding is inferred solely from these abbreviated identities.
+- **Remaining audit gap:** copied R16 initialization for WM2, fitted R9 initialization for 13E and an interrupted training stage prevent an unbroken from-initialization hash-linked exclusion proof. `[[PENDING: completed lineage audit and evaluation binding / S-C1GAP + S-C1CLOSED]]`. Do not use a model alias/date alone as proof.
+- **Historical scope preserved:** C1FAST used the wall evaluation worlds under other arms, whereas the audited later B/C corpus relationships differ. Do not turn the historical caveat into a universal assertion that every later evaluation world was seen.
 
 ## WM-SETTINGS — Learned settings caused every historical result
 
@@ -88,6 +97,7 @@ Extends `E:/research-dense/docs/paper/CLAIM_EVIDENCE_CHECKLIST.md`; that checkli
 
 - **Status: CONTRADICTED for completed reviewed candidates.** The pilot failed its registered cross-horizon gate; the smoothed-objective feasibility also failed and its successor pilot was not launched.
 - **Evidence:** `E:/agent-work/c4-wmfixmerge/docs/paper_results/WMFIX_PILOT_FAIL.md`; `WMFIX_V2_FEAS.md`; historical failures in `WMFIX_PRIOR.md`.
+- **Refresh:** `E:/agent-work/c4-wmfixmerge/docs/paper_results/WMFIX_PILOT_V2DATA.md` documents a separately authorized data-only successor waiting for resources; no passing accuracy verdict is reported. Its dispatch/readiness is PENDING efficacy, not another completed failure or a successful repair.
 - **Scope:** retain objective/horizon and hard-event gradient mismatches as failure evidence. Finite gradients, local loss improvement, or passing unit fixtures are not prediction-accuracy qualification. Later candidate outcomes remain `[[PENDING: any completed replacement verdict / S-WMFIXMERGE]]`.
 
 ## WM-CALIB — Calibration restores trustworthy policy credit

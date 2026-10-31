@@ -10,7 +10,7 @@ Each response is an argument the current evidence permits, not polished rebuttal
 ## “Is the excluded controller actually absent from training?”
 
 - **Threat:** reused outcomes, adaptation and same-world other-arm exposure can undermine zero-shot wording.
-- **Answer:** define eligibility by checkpoint and evaluated controller before first exposure. The recovered wall report names the historical training arms; same-world training prevents unseen-world claims. `[[PENDING: hash-linked corpus/exposure audit / S-C1GAP]]`. Later adaptation is a separate result, not retroactive confirmation.
+- **Answer:** define eligibility by checkpoint and evaluated controller before first exposure. The recovered wall report names the historical training arms; historical same-world training prevents unseen-world claims. The newly delivered C1_GAPS audit supports algorithm exclusion in the audited historical/later corpora, and distinguishes own-policy adaptation from MAPPO exposure. `[[PENDING: unbroken initialization lineage and evaluation binding / S-C1GAP + S-C1CLOSED]]`. Later adaptation is a separate result, not retroactive confirmation.
 
 ## “IDM traffic predicted by an IDM prior is an inverse crime.”
 
@@ -30,7 +30,7 @@ Each response is an argument the current evidence permits, not polished rebuttal
 ## “Is the short-clock regret difference statistically established?”
 
 - **Threat:** comparing displayed marginal CIs is not paired inference; changing cost populations or candidate sets changes regret.
-- **Answer:** report the source-specific oracle regret and constant selectors, plus the separately exported paired WM–BB contrast now available in the current E1 export. Use exact strict-history/team selectors only; keep the original analysis recipe and plant/exposure binding pending. Evidence C1-MAPPO. The result supports exploratory offline choice, not deployed selector efficacy or a numerical guarantee on future regret.
+- **Answer:** report the source-specific oracle regret and constant selectors, plus the separately exported paired WM–BB contrast now available in the current E1 export and independently reconstructed by C1_GAPS with world resampling. Use exact strict-history/team selectors only; keep plant/exposure/cost binding pending. The same-panel endpoint contrast is inconclusive and longer-clock regret remains inconclusive. Evidence C1-MAPPO/C1-LONG. The result supports exploratory offline choice, not deployed selector efficacy or a numerical guarantee on future regret.
 
 ## “Does the horizon plot contradict corrected qualification?”
 

@@ -11,6 +11,7 @@ Target: IEEE IV, six pages including references; owner deadline November 15, 202
 - `RELATED_WORK.md`, `refs.bib`: verified literature and defensible positioning.
 - `THREATS.md`: reviewer objections and evidence-bounded answers.
 - `REFRESH.md`: final source refresh and remaining agent dependencies.
+- `SOURCE_REFRESH.json`: timestamped exact-path existence/hash inventory; `refresh_sources.py` updates it without dispatching any runs.
 
 ## Evidence rules for this package
 
@@ -24,6 +25,7 @@ All empirical numbers in Markdown have adjacent HTML source comments. Source-rel
 - Read `E:/agent-work/c4-wmrequal3/docs/paper_results/{WMREQUAL2,WMREQUAL3}.md` and `E:/agent-work/c4-wmfixmerge/docs/paper_results/{WMFIX_PRIOR,WMFIX_RETARGET,WMFIX_PILOT_FAIL,WMFIX_V2_FEAS}.md`.
 - Read `E:/agent-work/c4-speedhead/docs/paper_results/SPEEDHEAD.md` and `E:/agent-work/c4-wmcalib/docs/paper_results/{WMCALIB_HANDOFF,WMCALIB_RESUME}.md`.
 - Requested `E:/agent-work/c4-c1gap/C1_GAPS.md` is absent. A recovered original wall report exists at `E:/agent-work/c4-c1gap/docs/paper_results/c1gap/WALL_C1_RESULT.recovered.md`, with `recovery.json`; this supersedes the older checklist's secondary-source-only restriction for that report, subject to recovery provenance.
+- Refresh found the C1 gap report at the actual delivery path `E:/agent-work/c4-c1gap/docs/paper_results/C1_GAPS.md`: recovery, audited-corpus exposure and independent paired reconstruction are supported; the unbroken initialization lineage remains incomplete. `REFRESH.md` records these status changes.
 - Requested `E:/agent-work/c4-c1closed/C1CLOSED.md` and final `E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB.md` are absent at initial inspection. They remain named refresh dependencies.
 - Local `src/wms/model/{factory,spec}.py` identifies the in-house black-box contracts. External forecasting papers are context references, not implementations of those baselines.
 - No applicable worktree-root or `docs/AGENTS.md` was present. The main repository's scientific constraints were consulted for the shared registration record.
