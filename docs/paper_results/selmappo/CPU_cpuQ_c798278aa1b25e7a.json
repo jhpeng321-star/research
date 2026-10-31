@@ -1,0 +1,18 @@
+{
+  "host": "cpuQ",
+  "root": "/home/ubuntu/selmappo_cpucheck_c798278aa1b25e7a",
+  "binding": "c798278aa1b25e7a30b9ad3d046caf7c69ca0de26d8edc15d1bb63809d84ec03",
+  "design_sha256": "992c05601f03d1d9caad0421b041dbeaa05fa8621ae7e3020be42e3c9f5b41d0",
+  "cpu_returncode": 0,
+  "cpu_stdout": "",
+  "cpu_stderr": "test_approval_not_quoted_or_negative (tools.selmappo.test_cpu.DiskTests) ... ok\ntest_budget_no_replay_and_no_refund (tools.selmappo.test_cpu.DiskTests) ... ok\ntest_cap_no_silent_overallocation (tools.selmappo.test_cpu.DiskTests) ... ok\ntest_forbidden_path_before_open (tools.selmappo.test_cpu.DiskTests) ... ok\ntest_no_unregistered_integration (tools.selmappo.test_cpu.DiskTests) ... ok\ntest_panel_not_old_or_incomplete (tools.selmappo.test_cpu.DiskTests) ... ok\ntest_parallel_reservations_close_by_identity (tools.selmappo.test_cpu.DiskTests) ... ok\ntest_registration_umbrella_collision (tools.selmappo.test_cpu.DiskTests) ... ok\ntest_runtime_missing_integration_before_library (tools.selmappo.test_cpu.DiskTests) ... ok\ntest_seed_cell_schedule_guard (tools.selmappo.test_cpu.DiskTests) ... ok\ntest_seed_roles_and_forbidden (tools.selmappo.test_cpu.DiskTests) ... ok\ntest_invalid_action_atomic (tools.selmappo.test_cpu.EnvironmentTests) ... ok\ntest_off_grid_rejected (tools.selmappo.test_cpu.EnvironmentTests) ... ok\ntest_reward_full_team (tools.selmappo.test_cpu.EnvironmentTests) ... ok\ntest_safety_stops (tools.selmappo.test_cpu.EnvironmentTests) ... ok\ntest_sixth_is_wall (tools.selmappo.test_cpu.EnvironmentTests) ... ok\ntest_thirty_windows_exactly (tools.selmappo.test_cpu.EnvironmentTests) ... ok\ntest_wall_lifecycle_and_incumbent_memory (tools.selmappo.test_cpu.HandoverTests) ... ok\ntest_long_horizon_and_real_optimizer (tools.selmappo.test_cpu.LearningTests) ... ok\ntest_six_way_argmax_tie_and_rng_isolation (tools.selmappo.test_cpu.LearningTests) ... ok\ntest_anonymous_identity_order_noninterference (tools.selmappo.test_cpu.ObservableTests) ... ok\ntest_empty_cav_fleet_still_has_action (tools.selmappo.test_cpu.ObservableTests) ... ok\ntest_future_sensor_rejected (tools.selmappo.test_cpu.ObservableTests) ... ok\ntest_hidden_extra_noninterference (tools.selmappo.test_cpu.ObservableTests) ... ok\ntest_no_truth_counter_fallback (tools.selmappo.test_cpu.ObservableTests) ... ok\ntest_observed_flow (tools.selmappo.test_cpu.ObservableTests) ... ok\ntest_schema (tools.selmappo.test_cpu.ObservableTests) ... ok\n\n----------------------------------------------------------------------\nRan 27 tests in 1.572s\n\nOK\n",
+  "audit_returncode": 0,
+  "audit_stdout": "{\n  \"timestamp\": \"2026-10-31T16:01:27.061869+00:00\",\n  \"inventory\": {\n    \"roots\": [\n      \"/home/ubuntu\"\n    ],\n    \"safe_filenames\": 173421,\n    \"conflicts\": [],\n    \"traversal_errors\": [],\n    \"passed\": true\n  },\n  \"registration\": {\n    \"registration_sha256\": \"9afa8b049d43c51ca8a48a4520f11e16313ffe042fcecc792c1eaf41bb47f305\",\n    \"blocks\": {\n      \"fleet\": [\n        18000000,\n        18007999\n      ]\n    },\n    \"conflicts\": [],\n    \"passed\": true\n  }\n}\n",
+  "audit_stderr": "",
+  "new_sumo_seconds": 0,
+  "load": [
+    2.46630859375,
+    5.60400390625,
+    5.8232421875
+  ]
+}

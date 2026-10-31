@@ -1,11 +1,16 @@
 """Prospective allocation, strict input paths and exact approval boundary."""
 import hashlib
 import re
+import random
 from pathlib import Path
 
-LIBRARY = ('native', 'ctrl0', 'mappo', 'pi', 'circles')
-BLOCKS = {'fleet': (18000000, 18007999), 'per_cav': (18100000, 18107999)}
-PANEL = tuple(range(969112, 969128))
+PROTOCOL = 'S-C1SWITCH2/v2'
+LIBRARY = ('native', 'ctrl0', 'mappo', 'pi', 'circles', 'wall')
+CADENCE = 20
+TIMES = tuple(range(300, 900, CADENCE))
+BLOCKS = {'fleet': (18000000, 18007999)}
+# Evaluation is supplied by the registered S-C1SWITCH2 manifest, never guessed.
+PANEL = ()
 CELLS = tuple((p, d) for p in (.05, .1, .2, .4) for d in (1900, 2400, 2700))
 PANEL_CELLS = CELLS + ((.2, 2400), (.2, 2700), (.4, 2400), (.4, 2700))
 ITERATIONS, EPISODES = 169, 46
@@ -29,22 +34,47 @@ def digest(path):
     return hashlib.sha256(safe_path(path).read_bytes()).hexdigest()
 
 
-def guard_seed(seed, variant, *, evaluation=False, smoke=False):
+def guard_seed(seed, variant, *, evaluation=False, smoke=False, panel=()):
     if type(seed) is not int or 964000 <= seed <= 964199 or seed // 1000 in (962, 977):
         raise ValueError('forbidden seed')
     lo, hi = BLOCKS[variant]
-    allowed = PANEL if evaluation else (range(hi-1, hi+1) if smoke else range(lo, lo+ITERATIONS*EPISODES))
+    if evaluation and smoke:
+        raise ValueError('ambiguous seed role')
+    allowed = panel if evaluation else (range(hi-1, hi+1) if smoke else range(lo, lo+ITERATIONS*EPISODES))
     if seed not in allowed:
         raise ValueError('seed outside exact task allocation')
     return seed
+
+
+def training_world(seed, variant='fleet'):
+    guard_seed(seed, variant)
+    index = seed-BLOCKS[variant][0]
+    iteration, within = divmod(index, EPISODES)
+    cells = list(CELLS)
+    random.Random(iteration).shuffle(cells)
+    p, demand = cells[within % len(cells)]
+    return dict(seed=seed, penetration=p, demand=demand)
+
+
+def guard_world(world, variant, *, evaluation=False, smoke=False, panel=()):
+    guard_seed(world['seed'], variant, evaluation=evaluation, smoke=smoke, panel=panel)
+    if evaluation:
+        if (world['penetration'], world['demand']) not in CELLS:
+            raise ValueError('unknown evaluation cell')
+    else:
+        expected = (dict(seed=world['seed'], penetration=.4, demand=2700) if smoke else
+                    training_world(world['seed'], variant))
+        if world != expected:
+            raise ValueError('seed/cell differs from prospective schedule')
 
 
 def approval_line(registration):
     """A mere quoted proposal/negative sentence does not authorize simulation."""
     lines = safe_path(registration).read_text(encoding='utf-8').splitlines()
     return next((line for line in reversed(lines)
-                 if re.match(r'^-\s*(?:\d\d:\d\d\s+)?MAIN\s*:?\s*'
-                             r'S-SELMAPPO BUDGET APPROVED\b', line)), None)
+                 if (re.match(r'^-\s*(?:\d\d:\d\d\s+)?MAIN\s*:?\s*'
+                              r'S-SELMAPPO BUDGET APPROVED\b', line)
+                     or re.match(r'^-\s*23:42\s+S-SELMAPPO BUDGET APPROVED IN ADVANCE by the owner\b', line))), None)
 
 
 def audit_registration(registration):
@@ -68,4 +98,4 @@ def audit_registration(registration):
             if any(start <= hi and end >= lo for lo, hi in BLOCKS.values()):
                 hits.append(dict(line=number, start=start, end=end))
     return dict(registration_sha256=digest(registration), blocks=BLOCKS,
-                conflicts=hits, passed=not hits)
+                 conflicts=hits, passed=not hits)
