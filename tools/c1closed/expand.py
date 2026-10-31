@@ -179,6 +179,85 @@ def verify_parity():
     save('EXPAND_PARITY_VERIFIED.json',receipt);print(json.dumps(receipt))
 
 
+def diagnose_parity():
+    import numpy as np
+    ref=json.loads(ssh('gpuA',f'from pathlib import Path;print(Path({(REMOTE+"/panel/wm2_common_w0_k0_h300.json")!r}).read_text())'))
+    actual=json.loads((HERE/'out/expand_parity.json').read_text())
+    diffs=[]
+    def compare(a,b,path):
+        if a==b:return
+        if isinstance(a,dict) and isinstance(b,dict):
+            for k in a.keys()|b.keys():compare(a.get(k),b.get(k),path+'/'+k)
+        elif isinstance(a,list) and isinstance(b,list):
+            try:
+                x=np.asarray(a);y=np.asarray(b)
+                if x.shape==y.shape and x.dtype.kind in 'fiub' and y.dtype.kind in 'fiub':
+                    d=np.abs(x.astype(float)-y.astype(float))
+                    diffs.append(dict(path=path,shape=list(x.shape),max_abs=float(d.max()),changed=int((d>0).sum()),
+                                      ref_range=[float(x.min()),float(x.max())]));return
+            except (ValueError,TypeError):pass
+            if len(a)==len(b):
+                for i,(x,y) in enumerate(zip(a,b)):compare(x,y,path+'/'+str(i))
+            else:diffs.append(dict(path=path,ref=a,actual=b))
+        else:diffs.append(dict(path=path,ref=a,actual=b))
+    for key in ('identity','values'):compare(ref[key],actual[key],key)
+    save('EXPAND_PARITY_DIAGNOSTIC.json',dict(status='EXACT_FAILED',differences=diffs))
+    print(json.dumps(diffs,indent=1))
+
+
+def environment():
+    result={}
+    for host in ('gpuA','gpuR'):
+        result[host]=json.loads(ssh(host,'''import sys,os,json
+sys.path.insert(0,'/root/autodl-tmp/c4/speedhead20261030/pythondeps')
+import torch,numpy
+print(json.dumps(dict(python=sys.version,torch=torch.__version__,torch_path=torch.__file__,numpy=numpy.__version__,numpy_path=numpy.__file__,cuda=torch.version.cuda,cudnn=torch.backends.cudnn.version(),gpu=torch.cuda.get_device_name(0),config=torch.__config__.show())))
+'''))
+    save('EXPAND_ENVIRONMENT.json',result);print(json.dumps(result,indent=1))
+
+
+def repeat_parity():
+    for host in ('gpuA','gpuR'):
+        receipt=json.loads(ssh(host,f'''from pathlib import Path
+import os,json,subprocess,time
+p=Path({REMOTE!r});dest=p/'parity_repeat';dest.mkdir(exist_ok=True)
+assert not (dest/'wm2_common_w0_k0_h300.json').exists()
+assert not (p/'evidence/EXPAND_REPEAT_OWNED.json').exists()
+free=int(subprocess.check_output(['nvidia-smi','--query-gpu=memory.free','--format=csv,noheader,nounits'],text=True).strip());assert free>=5120
+cmd=['nice','-n','19','/root/miniconda3/bin/python','-B','-u',str(p/'worker.py'),'--model','wm2','--world','0','--future','0','--plant','common','--seconds','300','--out','parity_repeat','--device','cuda']
+with (p/'evidence/EXPAND_REPEAT.log').open('x') as log:
+ child=subprocess.Popen(cmd,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,
+  env={{**os.environ,'PYTHONPATH':'/root/autodl-tmp/c4/speedhead20261030/pythondeps','OMP_NUM_THREADS':'1','MKL_NUM_THREADS':'1','OPENBLAS_NUM_THREADS':'1'}})
+ r=dict(pid=child.pid,start_ticks=Path(f'/proc/{{child.pid}}/stat').read_text().split(') ',1)[1].split()[19],command=cmd,started=time.time(),role='same-host repeatability diagnostic; never counted as panel task')
+ with (p/'evidence/EXPAND_REPEAT_OWNED.json').open('x') as f:json.dump(r,f)
+print(json.dumps(r))
+'''))
+        save(f'EXPAND_REPEAT_OWNED_{host}.json',receipt);print(host,json.dumps(receipt))
+
+
+def compare_repeats():
+    import numpy as np
+    runs={}
+    for host,folder,tag in (('gpuA','panel','A0'),('gpuA','parity_repeat','A1'),('gpuR','parity','R0'),('gpuR','parity_repeat','R1')):
+        local=HERE/'out'/f'expand_{tag}.json'
+        print(scp(f'{host}:{REMOTE}/{folder}/wm2_common_w0_k0_h300.json',local))
+        runs[tag]=json.loads(local.read_text())
+    result=[]
+    for h in ('10','30','60','90','120','180','300'):
+        row=dict(horizon=int(h))
+        for a,b,label in (('A0','A1','same_A'),('R0','R1','same_R'),('A0','R0','cross')):
+            av=runs[a]['values'][h];bv=runs[b]['values'][h]
+            row[label]=dict(J_max_abs=float(np.max(np.abs(np.array(av['J'])-bv['J']))),
+                J_relative_max=float(np.max(np.abs(np.array(av['J'])-bv['J'])/np.maximum(np.abs(av['J']),1))),
+                position_max_abs=max(float(np.max(np.abs(np.array(x['s'])-y['s']))) for x,y in zip(av['endpoints'],bv['endpoints'])),
+                speed_max_abs=max(float(np.max(np.abs(np.array(x['v'])-y['v']))) for x,y in zip(av['endpoints'],bv['endpoints'])),
+                crossings_max_abs=float(np.max(np.abs(np.array(av['crossings'])-bv['crossings']))),
+                queue_max_abs=float(np.max(np.abs(np.array(av['merge_queue'])-bv['merge_queue']))))
+        result.append(row)
+    save('EXPAND_REPEATABILITY.json',dict(registered_exact_parity='FAIL; no panel expansion authorized',rows=result))
+    print(json.dumps(result,indent=1))
+
+
 def freeze():
     assert json.loads((HERE/'evidence/EXPAND_PARITY_VERIFIED.json').read_text())['status']=='PASS'
     code=f'''from pathlib import Path
@@ -203,6 +282,17 @@ children=[]
 for q in (p/'evidence').glob('*_OWNED.json'):
  r=json.loads(q.read_text());s=stat(r['pid'])
  if s and s['ticks']==r['start_ticks'] and s['state']!='Z':children.append(r)
+# Freeze may land between Popen and its receipt write. Account for every direct
+# child of every stopped scheduler thread as well, so no unreceipted task races.
+known={{r['pid'] for r in children}}
+for q in Path(f'/proc/{{pid}}/task').glob('*/children'):
+ for child in map(int,q.read_text().split()):
+  if child in known:continue
+  s=stat(child)
+  if not s or s['state']=='Z':continue
+  cmd=Path(f'/proc/{{child}}/cmdline').read_bytes().decode().split('\\0')
+  children.append(dict(pid=child,start_ticks=s['ticks'],command=cmd,ownership='direct child of exact stopped owned scheduler',started=None))
+  known.add(child)
 r=dict(original_dispatch=d,paused_state=stat(pid),draining_children=children,at=time.time(),
  reason='disjoint cross-host scheduler handoff; original worker code and single collector unchanged')
 with receipt.open('x') as f:json.dump(r,f,indent=1)
@@ -387,7 +477,7 @@ def launch_bridge():
 
 
 def main():
-    actions={'audit':audit,'stage':stage,'parity':parity,'repair-configs':repair_configs,'verify-parity':verify_parity,'freeze':freeze,
+    actions={'audit':audit,'stage':stage,'parity':parity,'repair-configs':repair_configs,'verify-parity':verify_parity,'diagnose-parity':diagnose_parity,'environment':environment,'repeat-parity':repeat_parity,'compare-repeats':compare_repeats,'freeze':freeze,
              'assign':assign,'launch-hosts':launch_hosts,'bridge':bridge,'launch-bridge':launch_bridge,
              'status':lambda:print(json.dumps({h:host_state(h) for h in ('gpuA','gpuR')}))}
     p=argparse.ArgumentParser();p.add_argument('action',choices=actions)

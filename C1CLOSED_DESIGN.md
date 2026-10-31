@@ -192,3 +192,30 @@ then retires the paused original owned scheduler. All signals require the exact
 registered owned PID/start identity; never signal a peer or by process name.
 The separate parity run is never counted as a new panel task. No scientific
 outcome inspection, sample reduction, post-hoc selection or retraining is added.
+
+### Numerical-parity gate amendment, before gpuR panel allocation
+
+The stricter-than-owner bitwise gate failed on the different 4090/4090D GPUs:
+same-host full300s repeats are bitwise identical, but cross-host roundoff grows
+after60s. Preserve that FAIL and every diagnostic; do not relabel it exact PASS.
+The model/source/input/package hashes match; only the resolved config symlink
+path differs in non-executable metadata. No recorded-SUMO comparison was used.
+
+Before computing the following check, register this separate operational gate:
+all non-timing task metadata/identity exact except that verified config alias;
+through60s require identical discrete states/counts/queues, endpoint |ds|<=.001m,
+|dv|<=.0001m/s, fields speed<=.0001m/s, component/total delay<=.001veh-s.
+At90/120/180/300s require each arm's scalar aggregate discrepancy (all four
+components, total delay, crossings, queue and mean queue) no larger than the
+max-minus-min spread of its already-completed frozen world0 K8 draws, plus
+.001 rounding tolerance for continuous integrals (.0001 for mean queue, zero
+for integer counts). For speed/density fields, compare mean absolute host
+difference per arm over all space-time cells to mean K8 cellwise range plus
+.0001 units. For jointly present original IDs, require endpoint differences
+within the same-ID K8 range plus the early numerical tolerances. Check all
+arms/horizons; no selected metric waiver or SUMO-error-based tolerance.
+
+Only this prospective numerical/ensemble check passing permits disjoint gpuR
+allocation. Export both its verdict and the original exact failure; describe
+the mixed-hardware numerical sensitivity as a limitation, not a SUMO chaos
+floor. If it fails, retain the original gpuA panel/collector without expansion.

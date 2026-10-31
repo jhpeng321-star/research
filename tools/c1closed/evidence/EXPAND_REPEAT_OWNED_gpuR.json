@@ -1,0 +1,29 @@
+{
+ "pid": 557054,
+ "start_ticks": "4207250822",
+ "command": [
+  "nice",
+  "-n",
+  "19",
+  "/root/miniconda3/bin/python",
+  "-B",
+  "-u",
+  "/root/autodl-tmp/c4/c1closed20261031/worker.py",
+  "--model",
+  "wm2",
+  "--world",
+  "0",
+  "--future",
+  "0",
+  "--plant",
+  "common",
+  "--seconds",
+  "300",
+  "--out",
+  "parity_repeat",
+  "--device",
+  "cuda"
+ ],
+ "started": 1793445921.4005542,
+ "role": "same-host repeatability diagnostic; never counted as panel task"
+}
