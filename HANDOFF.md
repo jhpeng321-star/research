@@ -1,8 +1,12 @@
 # S-RB-FIT handoff
 
-Branch `c4/rb-fit`, base `f0db3c82`; owner amendment REGISTRATION.md:5694.
-Status: COMPLETE. Pooled IDM, population/driver distributions and LC parameters
-published; all own fit/lane jobs exited. Report: `docs/paper_results/RBFIT.md`.
+Branch `c4/rb-fit`, base `f0db3c82`; owner amendment REGISTRATION.md:5701.
+Status: RESUMED for owner00:40 addendum; prior outputs/commits preserved.
+Pooled IDM, population/driver distributions and first LC parameters published.
+Fresh cpuQ00:43 audit: all five receipted fit/lane PIDs absent; load8.55/32.
+Remaining: UNC sample adapter, motion-only posterior shrinkage calibration,
+LC refit against committed lane811cd7e8 (finite geometry/epsilon fixes), and
+bounded SUMOCORE sign-reversal diagnosis. Report: `docs/paper_results/RBFIT.md`.
 
 ## Frozen data/estimation contract
 - Only FIT worlds 969400–969431, native arm, from cpuQ
