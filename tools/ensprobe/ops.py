@@ -1,10 +1,13 @@
 """Task-local, short CPU-only SSH operations; never inspect assignment/truth files."""
 import argparse
+import base64
 import hashlib
+import io
 import json
 from pathlib import Path
 import re
 import subprocess
+import tarfile
 
 ROOT = Path(__file__).resolve().parents[2]
 EVIDENCE = ROOT / 'tools/ensprobe/evidence'
@@ -12,6 +15,10 @@ REG = Path('E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md')
 BAD = re.compile(r'sealed|holdout|heldout|cal_split|chunk5|j4b|inc1|hetdata_truth|vehicle_params|driver_params|assignment|requests\.rou|driver_routes', re.I)
 SEEDS = list(range(969040, 969045))
 RNG_SEEDS = list(range(969086, 969094))
+REMOTE='/home/ubuntu/ensprobe20261031'
+ENV=dict(CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',
+         C4_POLICY_STOCHASTIC='0',C4_POLICY_ACCEL_NOISE='0',PYTHONDONTWRITEBYTECODE='1',
+         PATH='/home/ubuntu/miniconda3/bin:/usr/local/bin:/usr/bin:/bin')
 
 
 def write(name, obj):
@@ -106,6 +113,89 @@ print(json.dumps(dict(hits=hits,safe_names_checked=count,guards=guards)))
     print(json.dumps(out,indent=2))
 
 
+def stage():
+    exposure=json.loads((EVIDENCE/'exposure_969040.json').read_text())
+    assert exposure['pass']
+    assert 'S-ENSPROBE EXACT PLAN REGISTERED BEFORE SUMO' in REG.read_text(encoding='utf-8')
+    paths=[ROOT/'tools/ensprobe/worker.py',ROOT/'tests/test_ensprobe.py',ROOT/'docs/paper_results/ENSPROBE_DESIGN.md']
+    sources={str(p.relative_to(ROOT)).replace('\\','/'):hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}
+    buf=io.BytesIO()
+    with tarfile.open(fileobj=buf,mode='w:gz') as tar:
+        for p in paths:tar.add(p,arcname=p.relative_to(ROOT).as_posix())
+    raw=base64.b64encode(buf.getvalue()).decode()
+    out=ssh(f'''import base64,io,json,tarfile,hashlib
+from pathlib import Path
+root=Path({REMOTE!r});assert root.parent.is_dir();assert not root.exists(),'existing task: reconcile, never restage'
+root.mkdir();stage=root/'code';stage.mkdir()
+with tarfile.open(fileobj=io.BytesIO(base64.b64decode({raw!r})),mode='r:gz') as t:t.extractall(stage)
+sources={sources!r}
+assert all(hashlib.sha256((stage/n).read_bytes()).hexdigest()==h for n,h in sources.items())
+binding=dict(sources=sources,exposure={exposure!r},budget_sim_s=49500,cap_sim_s=50000,workers=1)
+(root/'BINDING.json').write_text(json.dumps(binding,indent=2))
+print(json.dumps(dict(root=str(root),sources=sources,new_sim_s=0)))
+''')
+    write('stage.json',out);print(json.dumps(out,indent=2))
+
+
+def cpu():
+    out=ssh(f'''import os,sys,json,contextlib,io
+from pathlib import Path
+root=Path({REMOTE!r});os.environ.update({ENV!r});os.nice(19);sys.path.insert(0,str(root/'code'))
+from tools.ensprobe.worker import setup,MAPPO
+receipt=setup()
+import traci
+def forbidden(*a,**kw):raise AssertionError('CPU gate attempted SUMO')
+traci.start=forbidden;traci.simulationStep=forbidden
+from wms.control.policy import load_policy_fn
+from wms.control.lanes import LaneDwell
+exe=load_policy_fn(MAPPO,device='cpu');dwell=LaneDwell(exe.lane_rules.dwell_s,1.)
+import pytest
+log=io.StringIO()
+with contextlib.redirect_stdout(log),contextlib.redirect_stderr(log):rc=pytest.main(['-q',str(root/'code/tests/test_ensprobe.py')])
+receipt.update(returncode=rc,tests=log.getvalue(),controller_class=type(exe).__name__)
+with (root/'CPU.json').open('x') as f:json.dump(receipt,f,indent=2)
+print(json.dumps(receipt))
+''',timeout=120)
+    write('cpu.json',out);print(json.dumps(out,indent=2))
+
+
+def launch():
+    out=ssh(f'''import os,sys,json,subprocess,time,hashlib
+from pathlib import Path
+root=Path({REMOTE!r});assert not any((root/n).exists() for n in ['LAUNCH.json','STOP','accounting.jsonl'])
+assert json.loads((root/'CPU.json').read_text())['returncode']==0
+binding=json.loads((root/'BINDING.json').read_text());assert binding['exposure']['pass']
+assert all(hashlib.sha256((root/'code'/n).read_bytes()).hexdigest()==h for n,h in binding['sources'].items())
+assert os.getloadavg()[0]<=20
+env=dict(os.environ);env.update({ENV!r})
+with (root/'worker.log').open('x') as log:
+ p=subprocess.Popen([sys.executable,'-B','-u','-m','tools.ensprobe.worker'],cwd=root/'code',env=env,
+                    stdout=log,stderr=subprocess.STDOUT,start_new_session=True,preexec_fn=lambda:os.nice(19))
+ receipt=dict(pid=p.pid,unix=time.time(),root=str(root),workers=1,budget_sim_s=49500,cap_sim_s=50000)
+ with (root/'LAUNCH.json').open('x') as f:json.dump(receipt,f,indent=2)
+print(json.dumps(receipt))
+''')
+    write('launch.json',out);print(json.dumps(out,indent=2))
+
+
+def progress():
+    out=ssh(f'''import json,os
+from pathlib import Path
+root=Path({REMOTE!r});out=dict(load=os.getloadavg())
+for n in ['LAUNCH.json','CPU.json','FAILURE.json','COMPLETE.json']:
+ p=root/n
+ if p.exists():out[n]=json.loads(p.read_text())
+if 'LAUNCH.json' in out:out['own_pid_exists']=Path('/proc',str(out['LAUNCH.json']['pid'])).exists()
+out['branches']=len(list(root.glob('w*/*_RESULT.json')));out['gates']=len(list(root.glob('w*/*_GATE.json')))
+out['trunks']=len(list(root.glob('w*/TRUNK.json')))
+p=root/'accounting.jsonl'
+out['charged_sim_s']=sum(json.loads(s)['sim_s'] for s in p.read_text().splitlines()) if p.exists() else 0
+out['log_tail']=(root/'worker.log').read_text()[-6000:] if (root/'worker.log').exists() else ''
+print(json.dumps(out))
+''')
+    write('progress.json',out);print(json.dumps(out,indent=2))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=['inspect','audit']);a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('action',choices=['inspect','audit','stage','cpu','launch','progress']);a=p.parse_args()
     globals()[a.action]()

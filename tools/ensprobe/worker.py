@@ -1,0 +1,256 @@
+"""Owned one-thread state-conditional ensemble. No assignment/truth file inspection."""
+import copy
+import hashlib
+import importlib.metadata
+import json
+import os
+from pathlib import Path
+import random
+import sys
+import time
+import traceback
+
+ROOT = Path('/home/ubuntu/ensprobe20261031')
+RUNTIME = Path('/home/ubuntu/e3final/runtime')
+MAPPO = Path('/home/ubuntu/mappospeed/production2/policy_latest.pt')
+SOURCE = 'b3c031adb6bc2b5c2bca160bea308f83ba5567b97c1cd0e853eddcd8367a8193'
+WORLD = [(969040,.05,2400),(969041,.10,2700),(969042,.2,2400),(969043,.4,2700),(969044,.2,2700)]
+RNG = list(range(969086,969094))
+MEASURE = None
+
+
+def write(p, obj):
+    with Path(p).open('x', encoding='utf-8') as f:
+        json.dump(obj, f, indent=2, allow_nan=False)
+        f.write('\n'); f.flush(); os.fsync(f.fileno())
+
+
+def sha(p):
+    return hashlib.sha256(Path(p).read_bytes()).hexdigest()
+
+
+def priority_wait():
+    """Read-only priority observation, never signal or modify a peer process."""
+    while True:
+        if (ROOT/'STOP').exists() or (ROOT/'YIELD').exists():
+            if (ROOT/'STOP').exists():raise RuntimeError('durable STOP')
+            time.sleep(5);continue
+        busy = os.getloadavg()[0] > 20
+        for p in Path('/proc').iterdir():
+            if not p.name.isdigit() or int(p.name)==os.getpid():continue
+            try:
+                cmd=(p/'cmdline').read_bytes().replace(b'\0',b' ').decode(errors='replace').lower()
+                state=(p/'stat').read_text().rsplit(')',1)[1].split()[0]
+                if state=='R' and any(x in cmd for x in ('tools.leverprobe','tools.c1switch','tools.c1closed','tools.wmvalue')):
+                    busy=True
+            except (FileNotFoundError,PermissionError,ProcessLookupError):pass
+        if not busy:return
+        time.sleep(5)
+
+
+class Ledger:
+    def __init__(self):self.allowed=0.;self.actual=0.;self.ident=None
+
+    def charge(self, ident, seconds):
+        path=ROOT/'accounting.jsonl'
+        rows=[json.loads(s) for s in path.read_text().splitlines()] if path.exists() else []
+        assert ident not in {r['id'] for r in rows}
+        assert sum(r['sim_s'] for r in rows)+seconds<=49500
+        with path.open('a') as f:
+            f.write(json.dumps(dict(id=ident,sim_s=seconds,unix=time.time()))+'\n');f.flush();os.fsync(f.fileno())
+        self.ident,self.allowed,self.actual=ident,float(seconds),0.
+
+    def receipt(self):
+        return dict(id=self.ident,charged_sim_s=self.allowed,actual_sim_s=self.actual)
+
+
+def physical(env):
+    """Public kinematics/routes/queues only: never query vehicle type or parameters."""
+    api=env.api
+    rows={v:dict(lane=api.vehicle.getLaneID(v),route=list(api.vehicle.getRoute(v)),
+                route_index=api.vehicle.getRouteIndex(v),speed=api.vehicle.getSpeed(v),
+                lane_pos=api.vehicle.getLanePosition(v),xy=list(api.vehicle.getPosition(v)))
+          for v in sorted(api.vehicle.getIDList())}
+    return dict(time=api.simulation.getTime(),vehicles=rows,
+                pending=sorted(api.simulation.getPendingVehicles()),source_queue=env.entry_queue_now(),
+                lane_queues={l:api.lane.getLastStepHaltingNumber(l) for l in api.lane.getIDList()})
+
+
+def compare(trunk, branch):
+    out=dict(ids_equal=set(trunk['vehicles'])==set(branch['vehicles']),max_position_m=0.,max_speed_mps=0.,
+             max_xy_m=0.,lanes_equal=True,routes_equal=True,queues_equal=True,time_error_s=abs(trunk['time']-branch['time']))
+    for v in set(trunk['vehicles']) & set(branch['vehicles']):
+        a,b=trunk['vehicles'][v],branch['vehicles'][v]
+        out['max_position_m']=max(out['max_position_m'],abs(a['lane_pos']-b['lane_pos']))
+        out['max_speed_mps']=max(out['max_speed_mps'],abs(a['speed']-b['speed']))
+        out['max_xy_m']=max(out['max_xy_m'],*(abs(x-y) for x,y in zip(a['xy'],b['xy'])))
+        out['lanes_equal'] &= a['lane']==b['lane']
+        out['routes_equal'] &= (a['route'],a['route_index'])==(b['route'],b['route_index'])
+    out['queues_equal']=all(trunk[k]==branch[k] for k in ('pending','source_queue','lane_queues'))
+    out['pass']=all(out[k] for k in ('ids_equal','lanes_equal','routes_equal','queues_equal')) and \
+        max(out['max_position_m'],out['max_speed_mps'],out['max_xy_m'])<=1e-6 and out['time_error_s']<=1e-9
+    return out
+
+
+class Measurement:
+    def __init__(self, prefix=None):
+        self.sums={k:[0.]*66 for k in ('upstream','merge','ramp','downstream')}
+        self.counts={k:[0]*66 for k in self.sums}
+        if prefix:
+            for k in self.sums:
+                self.sums[k][:6]=prefix.sums[k][:6]
+                self.counts[k][:6]=prefix.counts[k][:6]
+        self.road=self.source=0.;self.clocks={};self.safety={}
+        self.tape=hashlib.sha256()
+
+    def before(self, env, t):
+        from traffic_shepherd.c4.geometry import lane_and_s
+        if not 240<=t<900:return
+        b=int((t-240)//10)
+        for row in env._table.values():
+            if row['lane_id'].startswith(':'):continue
+            lane,s=lane_and_s(row['lane_id'],row['lane_position_m'])
+            if lane not in (0,1,2) or s is None:continue
+            region='ramp' if lane==2 else 'upstream' if s<0 else 'merge' if s<=75.44 else 'downstream'
+            self.sums[region][b]+=float(row['speed_mps']);self.counts[region][b]+=1
+
+    def after(self, env, t, before, interval):
+        if t<=300:return
+        speeds={v:r['speed_mps'] for v,r in env._table.items()}
+        self.road += .5*sum(max(0.,1.-speeds.get(v,speed)/31.29) for v,speed in {**before,**speeds}.items())
+        self.source += .5*env.entry_queue_now()
+        # Entire physical continuation is hashed, not merely its final objective.
+        self.tape.update(json.dumps([t,[(v,r['lane_id'],r['lane_position_m'],r['speed_mps'])
+                                      for v,r in sorted(env._table.items())]],separators=(',',':')).encode())
+        for key in ('collision_involvements','starting_teleports','dropped_vehicle_steps'):
+            self.safety[key]=self.safety.get(key,0)+interval.get(key,0)
+        elapsed=int(round(t-300))
+        if t-300==elapsed and elapsed in (120,300,600):
+            self.clocks[str(elapsed)]=dict(road=self.road,source=self.source,J=self.road+self.source)
+
+    def result(self):
+        return dict(clocks=self.clocks,safety=self.safety,tape_sha256=self.tape.hexdigest(),
+                    speed_bins={k:[s/n if n else None for s,n in zip(self.sums[k],self.counts[k])] for k in self.sums},
+                    bin_counts=self.counts)
+
+
+def setup():
+    import re
+    sys.path[:0]=[str(RUNTIME/'src'),str(RUNTIME)]
+    assert os.getpriority(os.PRIO_PROCESS,0)==19 and os.environ['CUDA_VISIBLE_DEVICES']==''
+    assert importlib.metadata.version('eclipse-sumo')=='1.27.1'
+    assert sha(RUNTIME/'SOURCE_MANIFEST.json')==SOURCE
+    bad=re.compile(r'sealed|holdout|heldout|cal_split|chunk5|j4b|inc1|hetdata_truth|vehicle_params|driver_params|assignment|requests\.rou|driver_routes',re.I)
+    manifest=json.loads((RUNTIME/'SOURCE_MANIFEST.json').read_text())
+    assert len(manifest)==543
+    checked=0
+    for name,h in manifest.items():
+        if not bad.search(name):assert sha(RUNTIME/name)==h;checked+=1
+    assert sha(MAPPO)=='d9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca'
+    import torch
+    torch.set_num_threads(1)
+    from traffic_shepherd.seeds import require_development_case
+    from traffic_shepherd.c4.seeds import check_case
+    for s,p,d in WORLD:
+        require_development_case(s,d,'exposed');check_case(s,d)
+    for s in RNG:require_development_case(s,2400,'exposed');check_case(s,2400)
+    return dict(source_manifest=SOURCE,permitted_sources_verified=checked,worlds=WORLD,rng=RNG,new_sim_s=0)
+
+
+def main():
+    global MEASURE
+    import fcntl
+    lock=(ROOT/'WORKER.lock').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+    assert not (ROOT/'STOP').exists() and not (ROOT/'COMPLETE.json').exists()
+    write(ROOT/'PREFLIGHT.json',setup())
+    import traci
+    import numpy as np
+    import torch
+    from traffic_shepherd.c4.env import CavSumoEnv
+    from traffic_shepherd.simulation import start_sumo
+    from wms.control.policy import load_policy_fn
+    from wms.control.lanes import LaneDwell
+    ledger=Ledger();env=None
+    original_step=traci.simulationStep
+    def counted_step(*a,**kw):
+        assert ledger.actual+.5<=ledger.allowed,'step without precharge'
+        before=traci.simulation.getTime()
+        result=original_step(*a,**kw)
+        ledger.actual+=traci.simulation.getTime()-before
+        return result
+    traci.simulationStep=counted_step
+    original_after=CavSumoEnv._after_physics
+    def observe(e,after,actions,command_time,commanded):
+        MEASURE.before(e,after-.5)
+        before={v:r['speed_mps'] for v,r in getattr(e,'_table',{}).items()}
+        interval=original_after(e,after,actions,command_time,commanded)
+        MEASURE.after(e,after,before,interval)
+        return interval
+    CavSumoEnv._after_physics=observe
+    try:
+        for seed,penetration,demand in WORLD:
+            priority_wait();out=ROOT/f'w{seed}';out.mkdir(exist_ok=False)
+            random.seed(seed);np.random.seed(seed);torch.manual_seed(seed)
+            ledger.charge(f'w{seed}_trunk',300)
+            MEASURE=Measurement()
+            env=CavSumoEnv(k_slots=192,controller='direct',scenario_root=out/'scenarios',
+                           extra_sumo_cli=['--save-state.precision','17','--save-state.rng','false'],
+                           physics_log=False,population='textbook')
+            env.reset(seed=seed,demand_vph=demand,penetration=penetration,warmup_s=300,horizon_s=601,
+                      controller='direct',warmup_hook=lambda e:priority_wait())
+            assert ledger.actual==300
+            trunk=physical(env);prefix=MEASURE
+            write(out/'TRUNK.json',dict(world=seed,penetration=penetration,demand=demand,physical=trunk,**ledger.receipt()))
+            statefile=out/'physical_state.xml'
+            traci.simulation.saveState(str(statefile))  # no Python read/parse/hash of assignment-bearing XML
+            shared={id(env.api):env.api,id(env._circles):env._circles}
+            snap=copy.deepcopy(env.__dict__,shared)
+            for arm in ('native','mappo'):
+                for rng in RNG:
+                    priority_wait();ident=f'w{seed}_{arm}_r{rng}'
+                    ledger.charge(ident,600)
+                    env.close()
+                    start_sumo(env.binary,env.scene,seed=rng,config=env.config,api=traci,
+                               extra_cli=env.extra_sumo_cli)
+                    traci.simulation.loadState(str(statefile))
+                    env.__dict__.update(copy.deepcopy(snap,shared))
+                    env.reader._subscribed=set()
+                    live=set(traci.vehicle.getIDList())
+                    for vid in sorted(env.ownership._mode_configured & live):
+                        traci.vehicle.setSpeedMode(vid,env.ownership.cav_speed_mode)
+                    gate=compare(trunk,physical(env))
+                    gate.update(sumoseed=traci.simulation.getOption('seed'),rng_saved=traci.simulation.getOption('save-state.rng'))
+                    write(out/(ident+'_GATE.json'),gate)
+                    assert gate['pass'],f'physical-state gate failed: {gate}'
+                    assert int(gate['sumoseed'])==rng and gate['rng_saved']=='false'
+                    env.mode='native' if arm=='native' else 'direct'
+                    exe=load_policy_fn(MAPPO,device='cpu') if arm=='mappo' else None
+                    dwell=LaneDwell(exe.lane_rules.dwell_s,1.) if exe else None
+                    MEASURE=Measurement(prefix)
+                    state=env.state()
+                    for _ in range(600):
+                        priority_wait()
+                        ages=dwell.step(state) if dwell is not None else None
+                        command,lanes=exe(state,with_lanes=True,dwell_age=ages) if exe else (None,None)
+                        assert lanes is None,'speed-only MAPPO attempted lane control'
+                        state,info=env.step(command,lanes=lanes)
+                        assert not any(info['lane_commands'].values())
+                        assert not any(MEASURE.safety.values()),'safety or slot anomaly'
+                    assert ledger.actual==600 and env.now==900
+                    write(out/(ident+'_RESULT.json'),dict(world=seed,arm=arm,rng=rng,penetration=penetration,
+                                                        demand=demand,gate=gate,**ledger.receipt(),**MEASURE.result()))
+                    print(json.dumps(dict(complete=ident,actual_sim_s=ledger.actual)),flush=True)
+            env.close();env=None
+        rows=[json.loads(s) for s in (ROOT/'accounting.jsonl').read_text().splitlines()]
+        assert sum(r['sim_s'] for r in rows)==49500
+        write(ROOT/'COMPLETE.json',dict(charged_sim_s=49500,actual_sim_s=49500,branches=80,trunks=5))
+    except BaseException:
+        write(ROOT/'FAILURE.json',dict(traceback=traceback.format_exc(),**ledger.receipt()))
+        with (ROOT/'STOP').open('x') as f:f.write('gate or implementation failure; no automatic retries\n')
+        raise
+    finally:
+        if env is not None:env.close()
+        CavSumoEnv._after_physics=original_after;traci.simulationStep=original_step
+
+
+if __name__=='__main__':main()
