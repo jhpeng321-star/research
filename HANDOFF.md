@@ -13,6 +13,9 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   Real five-arm600s canary969432/k0 PASS206.03s, FULL settings; controller ABI verified.
 - **FULL-v1 INT-owned already running gpuA**: shared exclusive claim; do NOT
   redispatch. Own333463/333464/333465, root `/root/rbeval20261031/int/WM-PHYS-FULL-v1`.
+  Monitor335983 (source9f35ba4f) live: exact owned incarnations/18.5GiB guard,
+  owner11:30 deadline,04/08 complete-K8-only interim + full frozen scorer once.
+  `panel_ops status` is read-only; never repeat canary/continue/monitor dispatch.
 
 ## What exists
 - Ported ONLY existing frozen MAPPO `policy_native_lanes` ownership option
