@@ -85,7 +85,8 @@ def test_lc_joint_persistence_and_newborn_exact_admission_identity():
 
 def test_conditioning_identity_and_schema_fail_closed():
     model, state, h, _ = fixture()
-    kw = dict(fitted_state=fitted(), t0_s=299, row_keys=[969400], vehicle_ids=torch.zeros(1, 5))
+    kw = dict(fitted_state=fitted(), t0_s=299, row_keys=[969400],
+              vehicle_ids=torch.tensor([[101, 102, 103, 104, -1]]))
     with pytest.raises(ValueError, match='conditioning'):
         plan(model, state, h, **kw)
     kw['t0_s'] = 300
@@ -109,3 +110,12 @@ def test_summary_only_unidentified_driver_uses_exact_population_not_moments():
     a = fit.draw(969400, 999, generator=torch.Generator().manual_seed(13))
     b = fit.draw(969400, None, generator=torch.Generator().manual_seed(13))
     assert a == b == dict(zip(IDM_ORDER, [17., .7, .8, 1.1, 1.2]))
+
+
+def test_saved_id_and_supplied_motion_posteriors_cannot_silently_override():
+    model, state, h, params = fixture()
+    samples = torch.stack([params[n] for n in PARAMETER_NAMES], -1)[None]
+    model.encode_drivers = lambda state, **kw: ({'posterior_samples': samples}, None, params)
+    with pytest.raises(ValueError, match='not both'):
+        plan(model, state, h, fitted_state=fitted(), t0_s=300,
+             row_keys=[969400], vehicle_ids=torch.tensor([[101, 102, 103, 104, -1]]))

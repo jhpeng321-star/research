@@ -1,5 +1,15 @@
 # S-RB-UNC — owner00:40 READY; all32 fitted-input states COMPLETE
 
+Resume01:30: clean39dc833e retained; all old32 worlds and four worker rc0
+rechecked on cpuQ. No duplicate jobs. FIT/INT/EVAL handoffs reconciled: preferred
+shrinkage available; integrated EVAL candidate score still unavailable.
+NEW observable-VID CRN also covers supplied causal-motion posterior final draws;
+pass `vehicle_ids=` with `MotionFitForUNC`. Invalid/duplicate present IDs and
+simultaneous saved-ID/supplied posteriors fail closed. Legacy no-ID calls retain
+their slot keys; receipts identify the draw key. Combined40CPUtestsPASS/11.47s,
+including supplied-posterior action/slot permutation, duplicate-ID rejection,
+and saved/supplied-source conflict. No calibrated spread is changed here.
+
 Fresh-session resume preserves clean baseline46c33fbe and all completed probes.
 Delivered: fitted IDM/optional LC posterior + learned entrance-counter process +
 identity-keyed action CRN. Frozen plan: `docs/paper_results/RBUNC_ADDENDUM_DESIGN.md`.

@@ -130,8 +130,14 @@ futures = plan_hidden_state_futures(
 - Paired candidate actions must share initial observations, numeric IDs, row key,
   seed, and future index. Rebuild mutable future objects per arm. Hidden rates,
   incumbent settings, request clocks, and entrant settings then share CRN exactly.
+- Pass `vehicle_ids=` also with supplied causal-motion posteriors: the final
+  draw then keys by observable VID, preserving CRN under packed-slot permutations.
+  Present IDs must be unique nonnegative integers per row; padding IDs are ignored.
+  Legacy callers without IDs retain slot-keyed draws, identified in each receipt
+  as `driver_draw_key='packed_slot'`. Supplying both `fitted_state=` and encoded
+  `posterior_samples` is rejected rather than silently overriding either source.
 - CPU suites: `test_fitted_hidden.py`, `test_arrival_fit.py`,
-  `test_hidden_state_futures.py`, `test_c4_futures.py` (34 tests).
+  `test_hidden_state_futures.py`, `test_c4_futures.py` (40 tests).
 - New fitted-input physical verification and retained failure lineage:
   `docs/paper_results/RBUNC_ADDENDUM_DESIGN.md`, `rbunc/fitted_source_probe.json`.
   Complete-panel summaries: `python tools/rbunc/analyze_addendum.py`.
