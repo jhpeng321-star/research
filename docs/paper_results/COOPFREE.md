@@ -25,8 +25,8 @@ SUMO dispatch follows the source/approval/registration binding; no learned resul
   exact learned-group discovery reruns include every member solo with the joint targets.
 
 ## CPU and provenance
-Final existing cpuQ environment: 17/17 tests PASS, 0 skips, 1.19 s, SUMO0 sim-s.
-`tools/coopfree/evidence/CPU_BUILD4.json` binds all25 staged Python source files.
+Final existing cpuQ environment: 18/18 tests PASS, 0 skips, 1.21 s, SUMO0 sim-s.
+`tools/coopfree/evidence/CPU_BUILD5.json` binds all25 staged Python source files.
 Coverage: real frozen MAPPO first-command parity, off-zone bitwise command/memory parity,
 original safety and CommandOwnership execution, exact multivariate-normal density/gradient,
 credit/anti-gaming, action expiry/exit/solo context, whole-batch caps and no-repeat resume,
@@ -49,7 +49,10 @@ search has not been efficiency-qualified or run; no empirical ES superiority is 
 No learned cooperation, performance or new mechanism is claimed before the paired receipts.
 
 ## Reproducible operations
-Immutable cpuQ root: `/home/ubuntu/coopfree20261101_build4`.
+Immutable cpuQ root: `/home/ubuntu/coopfree20261101_build5`.
+Build4's launch preflight rejected the correct binary's banner because it omitted the word
+"Version"; no Popen/charge/physics occurred. The exact1.27.1 banner check is now regression-tested;
+build4 remains intact and build5 has a fresh source/CPU binding, same scientific plan and budget.
 `python -m tools.coopfree.ops status` reads only that owned dispatch/accounting state.
 `ops bind` requires the actual MAIN approval, CPU/source certificate and fresh exposure audits.
 `ops launch` is one-shot, binary-version/PATH preflighted; it cannot duplicate an existing dispatch.

@@ -7,7 +7,7 @@ from .protocol import checked, sha, worlds, digest, budget, FORBIDDEN, approval_
 from .storage import write
 
 LOCAL = Path(__file__).resolve().parents[2]
-ROOT = '/home/ubuntu/coopfree20261101_build4'
+ROOT = '/home/ubuntu/coopfree20261101_build5'
 REG = Path('E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md')
 ssh.PYTHON['gpuA'] = '/root/miniconda3/bin/python'
 
@@ -147,6 +147,7 @@ r=pathlib.Path({root!r});assert r.is_dir()
 sys.path.insert(0,str(r/'pytools'))
 from tools.coopfree.runner import verify
 from tools.coopfree.storage import write
+from tools.coopfree.protocol import sumo_version_ok
 verify(r)
 assert not (r/'DISPATCH.json').exists(),'already dispatched; inspect owned status, do not duplicate'
 assert not (r/'STOP.json').exists(),'durable STOP'
@@ -154,7 +155,7 @@ import sumo
 home=str(pathlib.Path(sumo.__file__).parent)
 binary=str(pathlib.Path(home)/'bin/sumo')
 version=subprocess.check_output([binary,'--version'],text=True)
-assert 'Version 1.27.1' in version,version
+assert sumo_version_ok(version),version
 env=dict(os.environ,CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',
  PYTHONPATH=str(r/'pytools'),SUMO_HOME=home,PATH=home+'/bin:'+str(pathlib.Path(sys.executable).parent)+':'+os.environ.get('PATH',''))
 log=(r/'SUPERVISOR.log').open('x')

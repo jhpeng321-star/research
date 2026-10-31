@@ -22,6 +22,13 @@ def rows():
 
 
 class ScientificContracts(unittest.TestCase):
+    def test_binary_version_banner(self):
+        from .protocol import sumo_version_ok
+        self.assertTrue(sumo_version_ok('Eclipse SUMO sumo 1.27.1\n Build features: Linux'))
+        self.assertTrue(sumo_version_ok('Eclipse SUMO sumo Version 1.27.1\n'))
+        self.assertFalse(sumo_version_ok('Eclipse SUMO sumo 1.27.10\n'))
+        self.assertFalse(sumo_version_ok('Eclipse SUMO sumo 1.26.0\n'))
+
     def test_approval_and_binding_fail_before_plant(self):
         from .protocol import approval_line
         from .runner import run

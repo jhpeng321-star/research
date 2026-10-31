@@ -70,3 +70,7 @@ def approval_line(text):
                 r'await|pending|not approved|requires|must append|NO SUMO|proposed',line,re.I):
             return line
     raise ValueError('explicit MAIN S-COOPFREE BUDGET APPROVED line absent')
+
+
+def sumo_version_ok(text):
+    return bool(re.search(r'^Eclipse SUMO sumo(?: Version)? 1\.27\.1(?:\s|$)',text))
