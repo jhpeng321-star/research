@@ -136,3 +136,12 @@ Local32PASS/3torch-unavailableSKIP/RuffPASS. CPU-only immutable stage
 receipt`STAGE_59a85b1215ade170.json`, newSUMO0, NOT DISPATCHED.
 This fixes transport but does not implement/arm another continuation; current consumed
 worlds/schedule/accounting require the specific MAIN amendment above first.
+
+## MAIN acknowledgement 01:48 (fresh-session reconciliation)
+REGISTRATION.md explicitly accepts skipping all41 consumed worlds, update1 on the
+5 unused worlds18000041..18000045, then168x46, final169only, same7,012,800 cap.
+Fresh remote inventory confirms all three prior fleet trainer PIDs absent and only
+the original three exclusive locks present. cpuQ load2.38/32cores at inventory;
+no continuation dispatched. Implement a fourth one-use lock and immutable inherited
+history, retaining unknown actual bounds rather than inventing terminal debits.
+The two untracked SELMAPPO2 request files are peer work and are preserved.
