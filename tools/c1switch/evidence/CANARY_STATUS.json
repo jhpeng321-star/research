@@ -1,0 +1,45 @@
+{
+  "CANARY_DISPATCH.json": {
+    "pid": 523094,
+    "unix": 1793439126.4411688,
+    "mode": "canary",
+    "max_sim_s": 480
+  },
+  "accounting.jsonl": "{\"id\": \"canary_s969100_0000\", \"sim_s\": 300, \"stage\": \"step0\", \"unix\": 1793439128.3337069}\n{\"id\": \"canary_s969100_0001\", \"sim_s\": 90, \"stage\": \"step0\", \"unix\": 1793439134.1771798}\n{\"id\": \"canary_s969100_0002\", \"sim_s\": 90, \"stage\": \"step0\", \"unix\": 1793439137.6764717}\n",
+  "canary.log": " Retrying in 1 seconds\n Retrying in 1 seconds\n",
+  "jobs/canary_s969100/START.json": {
+    "world": {
+      "seed": 969100,
+      "penetration": 0.05,
+      "demand": 1900
+    },
+    "arm": null,
+    "mode": "canary",
+    "pid": 523094,
+    "unix": 1793439128.2923605
+  },
+  "jobs/canary_s969100/result.json": {
+    "live": {
+      "team_delay_vs": 2941.159261686626,
+      "road_delay_vs": 2675.0010976866265,
+      "source_wait_vs": 266.15816400000006,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 67.0,
+      "hard_brake": 2.0
+    },
+    "restored": {
+      "team_delay_vs": 2941.159261686626,
+      "road_delay_vs": 2675.0010976866265,
+      "source_wait_vs": 266.15816400000006,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 67.0,
+      "hard_brake": 2.0
+    },
+    "live_tape_sha256": "571a4f28e738e1a080d4bba1109054d726e11984f43354560fbf047f8cf40589",
+    "restored_tape_sha256": "571a4f28e738e1a080d4bba1109054d726e11984f43354560fbf047f8cf40589",
+    "pass": true,
+    "actual_sim_s": 480.0
+  }
+}
