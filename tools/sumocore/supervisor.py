@@ -37,7 +37,7 @@ def main():
     mapping=amendments();panel=[effective(j,mapping) for j in panel]
     todo=panel[:1] if phase=='canary' else panel
     if phase!='canary':assert (ROOT/'jobs'/panel[0]['id']/'result.json').exists()
-    todo=[j for j in todo if not (ROOT/'jobs'/j['id']/'result.json').exists()]
+    todo=[j for j in todo if not any((ROOT/'jobs'/j['id']/name).exists() for name in ('result.json','recovered_result.json'))]
     # Never duplicate a failed, partial or currently-running directory.
     assert not any((ROOT/'jobs'/j['id']).exists() for j in todo)
     with cf.ProcessPoolExecutor(max_workers=1 if phase=='canary' else 8) as pool:

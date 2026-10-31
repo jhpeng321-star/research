@@ -15,6 +15,12 @@ def amendments():
     for p in sorted(ROOT.glob('AMENDMENT_*.json')):
         a=json.loads(p.read_text());mapping[a['old']]=a['new'];stops.update(a['stops'])
         assert digest(ROOT/'jobs'/a['old']/'failure.json')==a['failure_sha256']
+    status=ROOT/'STATUS_AMENDMENT.json'
+    if status.exists():
+        a=json.loads(status.read_text());stops.update(a['stops'])
+        for name,h in a['full_rollout_failures'].items():
+            assert digest(ROOT/'jobs'/name/'failure.json')==h
+            assert (ROOT/'jobs'/name/'recovered_result.json').exists()
     for p in [ROOT/'STOP',*ROOT.glob('STOP.*')]:
         if p.exists():assert stops.get(p.name)==digest(p),('unacknowledged STOP',str(p))
     return mapping

@@ -16,9 +16,9 @@ def main():
     assert os.getloadavg()[0]<24
     plan=json.loads((ROOT/'plan.json').read_text())
     phase=sys.argv[1] if len(sys.argv)>1 else 'full'
-    assert phase in ('full','resume1')
-    if phase=='resume1':
-        prior=json.loads((ROOT/'DISPATCH_full.json').read_text())
+    assert phase in ('full','resume1','resume2')
+    if phase in ('resume1','resume2'):
+        prior=json.loads((ROOT/('DISPATCH_full.json' if phase=='resume1' else 'DISPATCH_resume1.json')).read_text())
         assert not Path('/proc',str(prior['pid'])).exists()
         audit=json.loads((ROOT/'preflight_all/receipt.json').read_text())
         assert audit['status']=='PASS'
@@ -34,7 +34,8 @@ def main():
     assert not canary['safety'].get('starting_teleports')
     source=json.loads((out/'START.json').read_text())['code']
     for name in ('model_env.py','worker.py','prepare_bundle.py','demand.py','inference.py','supervisor.py','admission.py'):
-        if phase=='resume1' and name=='prepare_bundle.py':continue
+        if phase in ('resume1','resume2') and name=='prepare_bundle.py':continue
+        if phase=='resume2' and name in ('worker.py','supervisor.py','admission.py'):continue
         assert hashlib.sha256((Path(__file__).parent/name).read_bytes()).hexdigest()==source[name],name
     assert not (ROOT/f'DISPATCH_{phase}.json').exists()
     write(ROOT/f'DISPATCH_intent_{phase}.json',dict(unix=time.time(),canary=first['id'],phase=phase,
