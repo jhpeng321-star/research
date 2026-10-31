@@ -1,0 +1,70 @@
+{
+ "load": [
+  10.525390625,
+  12.06005859375,
+  13.06103515625
+ ],
+ "canary_PID.json": {
+  "pid": 501334,
+  "version": "1a0e8a5aeeb92615",
+  "code": "/root/coopaudit20261031/code_1a0e8a5aeeb92615",
+  "action": "canary",
+  "unix": 1793433398.9755716,
+  "proc_start_ticks": "4205998579"
+ },
+ "CPU_TESTS.json": {
+  "version": "1a7aeaaec2129b5d",
+  "tests": 11,
+  "failures": 0,
+  "errors": 0,
+  "ok": true
+ },
+ "ledger": [
+  {
+   "id": "canary_s969699_prefix",
+   "sim_s": 300,
+   "unix": 1793433400.9652395
+  },
+  {
+   "id": "canary_s969699_attempt2_prefix",
+   "sim_s": 300,
+   "unix": 1793433563.6890833
+  },
+  {
+   "id": "canary_s969699_attempt2_branches",
+   "sim_s": 1980,
+   "unix": 1793433569.5835047
+  }
+ ],
+ "jobs/canary_s969699_attempt2/result.json": {
+  "ok": true,
+  "actual_sim_s": 2280,
+  "group": [
+   "mainline.108",
+   "mainline.109"
+  ],
+  "hashes": {
+   "mappo_GROUP": "492a573e6be1672852046a878dd24b2e842769bd9ae19b36ffd5486080349596",
+   "mappo_GROUP_repeat": "492a573e6be1672852046a878dd24b2e842769bd9ae19b36ffd5486080349596",
+   "mappo_ONLY:0": "492a573e6be1672852046a878dd24b2e842769bd9ae19b36ffd5486080349596",
+   "mappo_ONLY:1": "f72176863cf4d7225cfb97f2a050d9282ebdcdc9c5e4c7eaded9be530d9dff37",
+   "native_B": "f72176863cf4d7225cfb97f2a050d9282ebdcdc9c5e4c7eaded9be530d9dff37",
+   "native_B_repeat": "f72176863cf4d7225cfb97f2a050d9282ebdcdc9c5e4c7eaded9be530d9dff37",
+   "native_LIVE": "f72176863cf4d7225cfb97f2a050d9282ebdcdc9c5e4c7eaded9be530d9dff37",
+   "wall_GROUP": "67b5efb8bdda91272d446e2741ac39992b1e4c4b3901c002092e0db473d27658",
+   "wall_GROUP_repeat": "67b5efb8bdda91272d446e2741ac39992b1e4c4b3901c002092e0db473d27658",
+   "wall_ONLY:0": "6e2e7b08f7ecab36b97279e1e9e84d501370c682cb5b3453f3b240be0aca5922",
+   "wall_ONLY:1": "a65136634dce6a9c23c5e7d3c956f14090c55063a7af32f4964e467ab599348c"
+  }
+ },
+ "jobs/canary_s969699/failure.json": {
+  "actual_sim_s": 0,
+  "charged_sim_s": 300,
+  "reason": "SUMO executable missing from noninteractive SSH PATH; constructor before reset/start_sumo",
+  "original_attempt": "canary_s969699",
+  "original_log": "canary_1793433398.log",
+  "repair": "one manual zero-step attempt2, original charge retained, same seed, no world replacement"
+ },
+ "canary_1793433337.log": "Traceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/root/coopaudit20261031/code_1dd9a9f5de9b59b0/tools/coopaudit/runner.py\", line 288, in <module>\n    main()\n  File \"/root/coopaudit20261031/code_1dd9a9f5de9b59b0/tools/coopaudit/runner.py\", line 257, in main\n    execute(canary(),'canary')\n  File \"/root/coopaudit20261031/code_1dd9a9f5de9b59b0/tools/coopaudit/runner.py\", line 114, in execute\n    from tools.speedhead.observer import audit_lanes\nModuleNotFoundError: No module named 'tools.speedhead'\n",
+ "canary_1793433398.log": "Traceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/root/coopaudit20261031/code_1a0e8a5aeeb92615/tools/coopaudit/runner.py\", line 291, in <module>\n    main()\n  File \"/root/coopaudit20261031/code_1a0e8a5aeeb92615/tools/coopaudit/runner.py\", line 260, in main\n    execute(canary(),'canary')\n  File \"/root/coopaudit20261031/code_1a0e8a5aeeb92615/tools/coopaudit/runner.py\", line 133, in execute\n    env = CavSumoEnv(k_slots=192,controller='direct',extra_sumo_cli=B.SAVE_STATE_CLI,\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/speedhead20261030/e3final/runtime/traffic_shepherd/c4/env.py\", line 145, in __init__\n    raise CavEnvError(\"SUMO binary not found on PATH\")\ntraffic_shepherd.c4.env.CavEnvError: SUMO binary not found on PATH\n"
+}

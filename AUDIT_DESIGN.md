@@ -86,3 +86,23 @@ No positive fleet gain or visually coordinated behaviour substitutes for C_G.
 - Commit after design, CPU implementation, canary, and completed run/report.
   Final docs/paper_results/COOPAUDIT.md <=60lines and one registration entry.
   Exposure disclosure: tools/coopaudit/evidence/EXPOSURE_NOTE.md.
+
+## Zero-step infrastructure correction (before any SUMO step)
+The first uncharged import-only launch failed on a namespace import. The next
+launch precharged300 but the environment constructor refused because SSH's PATH
+did not contain the existing SUMO executable. Actual0sim-s; original reservation,
+START and traceback retained. One manual setup repair (same969699, new attempt2
+identity, newly precharged; no refund) is permitted within the same20000 canary
+and500000 total caps. PATH/executable/import checks now precede reservations.
+No retry after any simulator step or outcome is authorised. This is an explicit
+infrastructure amendment before observations, not a scientific replacement world.
+
+## Step3 verified canary (2026-10-31)
+gpuR attempt2 seed969699:2280actual/2580charged including retained300 zero-step
+reservation. Native LIVE/B/B_repeat trajectories AND metrics bit-identical;
+wall/MAPPO GROUP repeats bit-identical. Wall106 commands, assembly at307s,
+native handback at353s when a member exits coverage. No collision/teleport/drop.
+Wall C_G180=-154.834 and local C_G=-173.709veh-s on this one world: the
+coordinated mechanism is detected but is NOT beneficial synergy here. MAPPO
+C_G180/local=0. These are mechanical-canary observations, not panel estimates
+or controller selection. Receipt tools/coopaudit/evidence/CANARY_VERIFIED.json.

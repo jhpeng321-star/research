@@ -80,7 +80,7 @@ class BoundController:
 @contextmanager
 def ctrl0_scope():
     """Exact zero.py forced_base_commands; NaN denotes disabled, never forced-native."""
-    from tools.ctrlarm.zero import forced_base_commands
+    from zero import forced_base_commands
     from wms.control import nativeinit
     original = nativeinit.sumo_residual_commands
     def masked(api, residuals, lo, hi, **kwargs):
@@ -105,7 +105,7 @@ class Controller:
             if name == 'mappo':
                 self.bound = BoundController(exe, name)
             else:
-                from tools.ctrlarm.zero import ZeroResidual
+                from zero import ZeroResidual
                 self.zero = ZeroResidual(exe)
 
     def command(self, env, members):

@@ -8,6 +8,7 @@ import json
 import os
 from pathlib import Path
 import sys
+import shutil
 import time
 import traceback
 
@@ -24,7 +25,8 @@ def setup():
     # Preserve this package's tools namespace while adding only frozen sibling tools.
     import tools
     tools.__path__.append(str(WRAPPERS/'tools'))
-    sys.path[:0] = [str(RUNTIME/'runtime/src'),str(RUNTIME/'runtime'),str(WRAPPERS/'tools/speedhead')]
+    sys.path[:0] = [str(RUNTIME/'runtime/src'),str(RUNTIME/'runtime'),str(WRAPPERS/'tools/speedhead'),
+                   str(WRAPPERS/'tools/ctrlarm')]
     import torch
     torch.set_num_threads(1)
     if os.getpriority(os.PRIO_PROCESS,0) != 19 or os.environ.get('CUDA_VISIBLE_DEVICES') != '':
@@ -49,6 +51,10 @@ def setup():
         raise ValueError('controller wrapper/hash mismatch')
     if sha(inputs['ctrl0'])!='64f70af46adc582b426e789f082c19a8dca0525952d5b84e8fb18618b5f9fb5c':
         raise ValueError('CTRL0 input changed')
+    from observer import audit_lanes
+    from zero import forced_base_commands, ZeroResidual
+    if not shutil.which('sumo'):
+        raise ValueError('SUMO not on PATH; refusing BEFORE any reservation')
     return inputs
 
 
@@ -105,17 +111,21 @@ def wait_spare():
         raise ValueError('owned STOP')
 
 
-def execute(world, mode, selection=None):
+def execute(world, mode, selection=None, attempt=1):
     import numpy as np
     from traffic_shepherd.c4 import branching as B
     from traffic_shepherd.c4 import evalprep as E
     from traffic_shepherd.c4.env import CavSumoEnv
     from tools.coopaudit.controllers import Controller, observations, wall_roster, ctrl0_scope
-    from tools.speedhead.observer import audit_lanes
+    from observer import audit_lanes
     inputs = setup()
     guard(world['seed'],world['demand'])
     ledger = Ledger(ROOT)
     ident = f"{mode}_s{world['seed']}"
+    if attempt!=1:
+        if mode!='canary' or attempt!=2 or not (ROOT/'ZERO_STEP_REPAIR.json').exists():
+            raise ValueError('only documented zero-step canary infrastructure repair allowed')
+        ident += '_attempt2'
     out = ROOT/'jobs'/ident
     if out.exists():
         raise ValueError('attempt directory exists; never retry')
@@ -248,13 +258,14 @@ def main():
     import fcntl
     p = argparse.ArgumentParser()
     p.add_argument('mode',choices=('canary','census','main'))
+    p.add_argument('--attempt',type=int,choices=(1,2),default=1)
     a = p.parse_args()
     ROOT.mkdir(parents=True,exist_ok=True)
     with (ROOT/'RUN.lock').open('a') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         setup()
         if a.mode=='canary':
-            execute(canary(),'canary')
+            execute(canary(),'canary',attempt=a.attempt)
             return
         receipt = ROOT/'CANARY_VERIFIED.json'
         if not receipt.exists():

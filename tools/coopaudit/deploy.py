@@ -31,7 +31,7 @@ if not dest.exists():
         for item in tf.getmembers():
             assert item.name.startswith('tools/coopaudit/') and '..' not in item.name
         tf.extractall(dest)
-env=dict(os.environ,PYTHONPATH=str(dest),CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',C4_POLICY_STOCHASTIC='0',C4_POLICY_ACCEL_NOISE='0')
+env=dict(os.environ,PATH='/root/miniconda3/bin:'+os.environ['PATH'],PYTHONPATH=str(dest),CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',C4_POLICY_STOCHASTIC='0',C4_POLICY_ACCEL_NOISE='0')
 if {action!r}=='test':
     os.environ.update(env)
     sys.path.insert(0,str(dest))
@@ -50,7 +50,8 @@ elif {action!r}=='stage':
 else:
     assert not (root/'STOP').exists()
     log=(root/({action!r}+'_'+str(int(time.time()))+'.log')).open('x')
-    proc=subprocess.Popen(['nice','-n','19',sys.executable,'-B','-m','tools.coopaudit.runner',{action!r}],cwd=dest,env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+    args=['canary','--attempt','2'] if {action!r}=='canary-repair' else [{action!r}]
+    proc=subprocess.Popen(['nice','-n','19',sys.executable,'-B','-m','tools.coopaudit.runner']+args,cwd=dest,env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
     receipt=dict(pid=proc.pid,version={version!r},code=str(dest),action={action!r},unix=time.time(),proc_start_ticks=Path('/proc/'+str(proc.pid)+'/stat').read_text().split()[21])
     (root/({action!r}+'_PID.json')).write_text(json.dumps(receipt,indent=1))
     print(json.dumps(receipt))
@@ -66,5 +67,5 @@ else:
 
 if __name__=='__main__':
     p=argparse.ArgumentParser()
-    p.add_argument('action',choices=('stage','test','canary','census','main'))
+    p.add_argument('action',choices=('stage','test','canary','canary-repair','census','main'))
     deploy(p.parse_args().action)

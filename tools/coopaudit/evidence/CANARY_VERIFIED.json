@@ -1,0 +1,85 @@
+{
+ "ok": true,
+ "actual_sim_s": 2280,
+ "charged_sim_s": 2580,
+ "group": [
+  "mainline.108",
+  "mainline.109"
+ ],
+ "window_s": 60,
+ "hashes": {
+  "mappo_GROUP": "492a573e6be1672852046a878dd24b2e842769bd9ae19b36ffd5486080349596",
+  "mappo_GROUP_repeat": "492a573e6be1672852046a878dd24b2e842769bd9ae19b36ffd5486080349596",
+  "mappo_ONLY:0": "492a573e6be1672852046a878dd24b2e842769bd9ae19b36ffd5486080349596",
+  "mappo_ONLY:1": "f72176863cf4d7225cfb97f2a050d9282ebdcdc9c5e4c7eaded9be530d9dff37",
+  "native_B": "f72176863cf4d7225cfb97f2a050d9282ebdcdc9c5e4c7eaded9be530d9dff37",
+  "native_B_repeat": "f72176863cf4d7225cfb97f2a050d9282ebdcdc9c5e4c7eaded9be530d9dff37",
+  "native_LIVE": "f72176863cf4d7225cfb97f2a050d9282ebdcdc9c5e4c7eaded9be530d9dff37",
+  "wall_GROUP": "67b5efb8bdda91272d446e2741ac39992b1e4c4b3901c002092e0db473d27658",
+  "wall_GROUP_repeat": "67b5efb8bdda91272d446e2741ac39992b1e4c4b3901c002092e0db473d27658",
+  "wall_ONLY:0": "6e2e7b08f7ecab36b97279e1e9e84d501370c682cb5b3453f3b240be0aca5922",
+  "wall_ONLY:1": "a65136634dce6a9c23c5e7d3c956f14090c55063a7af32f4964e467ab599348c"
+ },
+ "wall_issued_commands": 106,
+ "wall_events": [
+  {
+   "event": "assembly_start",
+   "kind": "wall_event",
+   "law_version": "wall-v2.1-closure",
+   "timestamp_s": 300.0,
+   "wall_id": "audit-wall",
+   "wall_speed_mps": 12.0
+  },
+  {
+   "event": "assembled",
+   "kind": "wall_event",
+   "law_version": "wall-v2.1-closure",
+   "members": [
+    "mainline.108",
+    "mainline.109"
+   ],
+   "timestamp_s": 307.0,
+   "wall_id": "audit-wall",
+   "wall_speed_mps": 12.0
+  },
+  {
+   "event": "safety_abort",
+   "handback": "native",
+   "kind": "wall_event",
+   "reason": "member_frame_missing",
+   "timestamp_s": 353.0,
+   "wall_id": "audit-wall"
+  }
+ ],
+ "traces": "/root/coopaudit20261031/jobs/canary_s969699_attempt2/traces",
+ "native_live_load_bitwise": true,
+ "controlled_repeats_bitwise": true,
+ "credits": {
+  "wall_180": {
+   "D_G": -196.4517183303833,
+   "sum_D_i": -41.617570877075195,
+   "C_G": -154.8341474533081
+  },
+  "wall_local": {
+   "D_G": -215.201208551302,
+   "sum_D_i": -41.492571190045055,
+   "C_G": -173.70863736125693
+  },
+  "mappo_180": {
+   "D_G": 0.0008230209350585938,
+   "sum_D_i": 0.0008230209350585938,
+   "C_G": 0.0
+  },
+  "mappo_local": {
+   "D_G": 0.0008466640729238861,
+   "sum_D_i": 0.0008466640729238861,
+   "C_G": 0.0
+  }
+ },
+ "safety_totals": {
+  "collisions": 0,
+  "teleports": 0,
+  "dropped_vehicle_steps": 0
+ },
+ "result_sha256": "1ba6af1f25f13676499fc50933b915cd60df7e370b37402f4684cb653db12c29"
+}
