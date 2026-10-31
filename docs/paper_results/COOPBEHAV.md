@@ -240,6 +240,8 @@ overlap is descriptive co-occurrence, not proof that a detector caused the gain.
 - CPU suite: **54 synthetic tests** covering all four detectors, identity/slot
   recycling, native/policy-mean contracts, credit reconstruction, discovery,
   source precision/hashes, complete reports and advancing-index publication.
+  Fresh-session rerun:50detector/discovery/report tests plus4poller/source tests
+  all passed; exact commands/results in `evidence/RESUME_VERIFIED_20261031.json`.
 - Final descriptive runs use the physical closure implementation committed as
   `05a2b210`; executed source and input hashes are embedded in every report.
   Earlier pilot/v2 outputs are preserved as QA history and are not the final

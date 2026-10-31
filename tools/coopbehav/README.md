@@ -4,7 +4,7 @@ Requires the existing Python environment with NumPy and Matplotlib; tests use
 pytest. No model, TraCI, SUMO, hidden driver labels or assignment files are read.
 
 ```
-python -m pytest tests/unit/test_coopbehav.py tests/unit/test_coopbehav_discovery.py tests/unit/test_coopbehav_report.py -q
+python -m pytest tests/unit/test_coopbehav.py tests/unit/test_coopbehav_discovery.py tests/unit/test_coopbehav_report.py tests/unit/test_coopbehav_poll.py tests/unit/test_coopbehav_sources.py -q
 python -m tools.coopbehav.report --views /root/wmdata2/views --label WMDATA2 --out /root/coopbehav20261031_analysis/WMDATA2
 python -m tools.coopbehav.report --views /home/ubuntu/wmdata20261031/views --label WMDATA --out /home/ubuntu/coopbehav20261031_analysis/WMDATA
 python -m tools.coopbehav.report --pairs COOPBEHAV_INDEX.json --out paired_report

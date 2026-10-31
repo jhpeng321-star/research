@@ -1,0 +1,62 @@
+{
+  "task": "S-COOPBEHAV",
+  "recovery_commit": "4b176669",
+  "evidence_selection_commit": "12313e36",
+  "cpu_checks": [
+    {
+      "command": "python -m pytest tests/unit/test_coopbehav.py tests/unit/test_coopbehav_discovery.py tests/unit/test_coopbehav_report.py -q",
+      "passed": 50,
+      "failed": 0,
+      "elapsed_s": 3.87
+    },
+    {
+      "command": "python -m pytest tests/unit/test_coopbehav_poll.py tests/unit/test_coopbehav_sources.py -q",
+      "passed": 4,
+      "failed": 0,
+      "elapsed_s": 0.38
+    }
+  ],
+  "report_reconciliation": {
+    "receipt": "CURRENT_COMPARISON.json",
+    "selected_reports": 4,
+    "all_verified": true,
+    "checks": [
+      "COMPLETE summary SHA256",
+      "Episode/input/summary roster lengths and unique episode identities",
+      "Per-controller event and member-event counts",
+      "CAV exposure reconciled with members.csv",
+      "Positive braking geometry and ordered event intervals",
+      "Output SHA256 inventory including PNGs"
+    ],
+    "visual_check": "Existing u15 yield PNG opens and labels the event observational_candidate",
+    "new_report_generation": false
+  },
+  "polling": {
+    "pid": 29244,
+    "parent_pid": 23892,
+    "creation_local": "2026-10-31T17:07:54",
+    "executable": "C:/Python314/python.exe",
+    "exact_identity_live_after_changes": true,
+    "observed_status_timestamp": 1793448009.3929129,
+    "observed_canonical_state": "complete",
+    "observed_canonical_index_sha256": "1c94ebe359532d3d00e6fa2d72af557791e71709691a78b26196cd4973f76c2e",
+    "observed_source_kinds": ["coopaudit"],
+    "audit_complete_jobs": 30,
+    "audit_pairs": 0,
+    "audit_blocker": "Missing observed lengths, mainline neighbours and non-wall executed-command status",
+    "broad_historical_sumocf_scan_disabled": true,
+    "watch2_stderr_empty": true,
+    "watcher_restarted": false,
+    "new_watcher_or_report_dispatches_by_resume": 0
+  },
+  "interpretation": {
+    "original_probe_discovery": "Invalid branch artifacts; retained only as provenance",
+    "deployed_u03_mechanism_evidence": "No paired-supported events and no positive-credit discovery records",
+    "sampled_u15_discovery": "Two exploratory clusters; one unexplained near-zero-credit singleton, not a demonstrated novel beneficial mechanism",
+    "positive_interaction_is_not_group_benefit": true
+  },
+  "new_simulation_seconds": 0,
+  "process_signals": 0,
+  "research_data_deletions": 0,
+  "pushes": 0
+}
