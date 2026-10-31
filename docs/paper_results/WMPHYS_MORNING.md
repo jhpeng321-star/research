@@ -1,60 +1,49 @@
-# WM-PHYS morning report — interim, 2026-11-01 05:25 +08
-Four matched reserved worlds favor FULL-v3 on delay AND60s-position POINT estimates; switching is not eligible.
-Its300s breakdown rate is farther from real on this subset. Full-panel evidence is still pending.
+# WM-PHYS morning report — interim, 2026-11-01T05:41:24+08:00
+Physics candidates improve several point scores; adoption and calibrated action confidence remain unestablished.
+Latest engineering source is FULL-v4/22cc32f6; current paired diagnostic below is FULL-v3.
 
-## Candidate and engineering evidence
-- Interim FULL-v1 source4015b641: SUMO IDM, LC2013 highway subset, merge/insertion;
-  all learned motion/lane/merge/courtesy/admission/noise corrections OFF.
-- A2(encoder+UNC,source4015):6worlds;ΔCRPS120/300/600−501/−2591/−9243;Δrate-distance300−3.75pp.
-- B2(defaults,source4015):1world;ΔCRPS−2492/−8183/−19790;Δrate-distance300−2.50pp; not comparable to A's set.
-- C2(fitted population point) pending. A/B HDV60 unavailable; their95%world CIs NA; no adoption claim.
-- FULL uses shrinkage_v1 (learned strength19.35568) and observable
-  entrance-counter Poisson family, with Gamma rate uncertainty and action-paired draws.
-- FULL-v1's saved-ID crosswalk remains unverified. NEW FULL-v3 sourcef378ac60 conditions
-  each start's causal motion directly, removes that lookup, and uses physics-native CAVs.
-  Fitted LC remains OFF; no population refit, future-state inputs or neural training.
-- Latest source22cc32f6 integrates final LANE advice and explicit move→LC→emit insertion;
-  touched-module287CPU PASS/4explicit skips. Prior CUDA/recorded dense-fast parity retained.
-  A/B/C/FULL each passed60s on FIT969420/969421: finite, conserved, no learned corrections.
-- FULL-v1/v3 panels retained. FULL-v4 five-arm600s canary PASS370.48s, reused once;
-  workers398268/269/270 +monitor398303 now live on gpuA; source22cc32f6, no efficacy claim yet.
+## Model and engineering
+- SUMO IDM +LC2013 highway subset +merge/insertion; all learned corrections OFF; no neural training.
+- FULL-v4 uses final LANE advice and move→LC→emit, coupled entrant settings, no birth-tick motion/control.
+- FULL posterior: frozen FIT shrinkage_v1 joint support, strength19.35568 already applied, causal own-start motion;
+  unknown drivers/entrants use learned population; Gamma-Poisson arrivals use causal counters. Fitted LC OFF.
+- A encoder+hidden settings; B population default; C motion-fitted population point; FULL fitted posterior.
+- Touched modules287CPU PASS/4explicit skips; later endpoint/bootstrap21PASS/1skip and credibility18PASS.
+- A/B/C/FULL each passed60s on FIT969420/969421 (8rollouts): finite, conserved, no learned corrections.
+- FULL-v4 five-arm600s canary PASS370.48s/reused once; live sources/jobs retained, own-PID11:30 deadline.
 
-## Distribution comparison and interim checkpoints
-- Registered20worlds969420..969439, five arms/K8/H120/300/600; reserved8 separate.
-  FULL processes reserved8 first, without changing membership, seeds or predictions.
-### ~04:00 interim (snapshot03:52)
-- Four complete paired K8 worlds:969432/433/434/436, all five arms. Other worlds are pending;
-  incomplete ensembles excluded. FULL-v1 delay CRPS differences120/300/600 =−785/−3512/−11041veh-s.
-- Upstream300s FULL-v1/WM2/real rates91.875/93.125/100%; closeness is worse in point estimate.
-  CORRECTION05:25: old04:00 CIs were invalid; bootstrap included unscored same-cell peers. Retracted.
-### ~08:00 interim
-- Pending. Final candidate freeze09:30, full evaluation09:30–11:30,
-  final report11:45 per revised owner schedule; this is not the final candidate freeze.
-- Actual05:15:55 FULL-v3 snapshot:4paired K8 worlds969432/433/434/436; WM2 baseline160/160tasks.
-  Native600s upstream speed CRPS3.23 vs cell1.96m/s: clearing/traffic-field parity still fails.
-- S-SUMOCORE is complete on a DIFFERENT8world/3arm/K3 contract: inferred all-arm
-  delay CRPS120/300/600 =647/4635/16728veh-s, population1087/5452/19343;
-  cell climatology1433/4375/9131. These are context, not matched WM-PHYS contrasts.
-- SUMOCORE300s upstream rate inferred84.7%, defaults88.9%, real62.5%; inferred
- 600s MAPPO/PI effects vs native +3450/+825veh-s vs real−2064/−3858. Broad CIs;
- 18/144 initialization collision flags mean this is not a clean information ceiling.
-- Final conditional FIT32 LC diagnostic: default precision3.006%/recall37.942%,
-  encoder2.400%/40.492%; non-urgent keep-right false positives dominate. Not traffic parity.
+## Distributional evidence (per-variant available cases; not a cross-variant ranking)
+- WM2 baseline full20worlds/fivearms/K8; all candidates share registered969420..969439, H120/300/600.
+- Development12/reserved8 remain separate; incomplete ensembles never count as K8. Contrasts below reserved only.
+- A2:n=6, ΔCRPS120/300/600=-501/-2591/-9243veh-s; Δ300s rate-distance=-3.75pp.
+- B2:n=3, ΔCRPS120/300/600=-1488/-2161/-11731veh-s; Δ300s rate-distance=-6.67pp.
+- C2:PENDING complete K8 evidence; 0 saved tasks; no efficacy inferred.
+- FULL-v3:n=5, ΔCRPS120/300/600=-431/-3230/-11808veh-s; Δ300s rate-distance=-0.50pp.
+- FULL-v4:PENDING complete K8 evidence; 8 saved tasks; no efficacy inferred.
+- FULL-v3 native600s upstream speed CRPS=3.03 vs cell=1.92m/s; clearing not qualified.
+- Same native onset-distribution IBS600=0.266 vs cell=0.250; onset-CDF gate retained.
+- Expected600s mappo−native delay=-221 vs recorded=-1426veh-s (same available worlds).
+- Expected600s pi−native delay=-2202 vs recorded=314veh-s (same available worlds).
+- Integrated ramp-delay target remains unavailable; separate nativeFIT32 H300 diagnostic2188 vs2273real is not this panel.
+- Final conditional LC FIT32:default precision3.006%/recall37.942%; encoder2.400%/40.492%; keep-right false positives dominate.
+- SUMOCORE DIFFERENT8world/3arm/K3:inferred CRPS647/4635/16728 vs defaults1087/5452/19343;
+  cell1433/4375/9131.300s rates inferred84.7/default88.9/real62.5%;18/144 startup collisions, validity FAIL.
+  Inferred600s MAPPO/PI effects+3450/+825 vs real−2064/−3858veh-s; not a clean information ceiling.
 
 ## Switching-eligibility rule
-- SAME FULL-v3−WM2 delay CRPS(veh-s):120/300/600 =−573/−3359/−11150;95%world CIs NA.
-  Corrected registered bootstrap uses ONLY scored worlds;4singleton strata have no replication.
-- Breakdown closeness300s: |FULL-v3−real|−|WM2−real|=+2.50pp;95%CI NA; rates90.625/93.125/100%.
-- HDV60s position error FULL-v3−WM2: −33.94m;paired-world95%CI NA (singleton strata);
-  mean-world-median error on574common HDV/arm endpoints;550factual exits/5junctions/41predicted exits censored.
-- All three registered conditions must be satisfied before S-C1SWITCH changes its WM arm.
-  Current eligibility: NOT ESTABLISHED; missing evidence is not a measured regression.
+- FULL-v3−WM2 delay CRPS differences (veh-s),120/300/600:−431/−3230/−11808;95%world CIs NA.
+- 300s breakdown-distance difference (pp):−0.50;95%world CI NA.
+- HDV60 mean-world-median error difference (m):−20.51;95%world CI NA; common HDV/arm endpoints=842.
+- Registered CIs resample only scored worlds within demand×penetration×split; singleton strata yield NA, never PASS.
+- Earlier04:00/first0545-labelled numeric CIs RETRACTED (unscored-peer bootstrap bug); point estimates unchanged.
+- ALL three conditions are required; no automatic S-C1SWITCH adoption. Sparse cells also prevent distributional qualification.
 
-## Credibility and next steps
-- DECIDE SAME4worlds: selected0.8calls win6/11,6/10,9/11 at120/300/600s vs94.3/92.5/97.7%forecast;
-  delay min-max coverage20/40/25%. Confidence is not qualified; credibility world CIs also NA.
-- Physics is still a highway subset: synchronous LC negotiation and cold initial lane
-  memory limit parity. MERGE nativeFIT32 latestH300 ramp2188 vs2273real is a separate1future diagnostic.
-  Complete paired panels, evaluate source phase and controller shifts, then assess the09:30 freeze.
-- Evidence: docs/rbint/full_v3_gpu/{paired_0525_corrected,distribution_0525_corrected,credibility_0516}/;
-  docs/rbint/hdv60/paired_v3_0525_corrected/; HANDOFF.md. Historical0545-labelled outputs superseded.
+## Credibility / schedule
+- Strict paired P(beats incumbent)>=0.8 plus lower expected delay is only a decision rule; calibration must also hold.
+- Same-source selected-switch reliability and50/80/90%/range coverage: E:\agent-work\c4-rb-int\docs\rbint\noon\20261101T054124+0800\FULL-v3\credibility/CREDIBILITY.md.
+- Prior FULL-v3 matched4:0.8calls won6/11,6/10,9/11 vs94.3/92.5/97.7%forecast; range coverage20/40/25%.
+- ~04:00 interim retained:FULL-v1 n4 ΔCRPS−785/−3512/−11041; rate-distance+1.25pp; historical CIs retracted.
+- ~08:00 interim: PENDING; final engineering freeze09:30: PENDING.
+- Final evaluation receipts through11:30, final report11:45; frozen source is not selected by reserved outcome tuning.
+- Remaining gaps:serial LC negotiation/internal junction state/cold memory; finish matched panels and validate action confidence.
+- Audit/source manifests, per-world attrition, timing/speed/shift/gate/credibility files: docs/rbint/noon/20261101T054124+0800.

@@ -44,6 +44,7 @@ def test_foreign_staged_or_uncommitted_work_stops_publication(monkeypatch):
         raise AssertionError(args)
     monkeypatch.setattr(collector, 'git', git)
     collector.guard(allowed=['HANDOFF.md', 'docs/rbint/noon/round'])
+    collector.guard(allowed=['HANDOFF.md', 'docs\\rbint\\noon\\round'])
     with pytest.raises(RuntimeError, match='foreign/uncommitted'):
         collector.guard(allowed=['docs/rbint/noon/round'])
 
@@ -92,3 +93,31 @@ def test_existing_interpreter_needs_no_optional_package_for_own_child_receipt():
     resources = local_resources(.1)
     assert 0 <= resources['cpu_percent'] <= 100
     assert resources['available_bytes'] > 0 and resources['gpu_used'] is False
+
+
+def test_diagnosed_recovery_reuses_committed_scientific_reports_and_rejects_changed_ensemble(tmp_path, monkeypatch):
+    publish = tmp_path/'publish'
+    publish.mkdir()
+    monkeypatch.setattr(collector, 'PUBLISH', publish)
+    monkeypatch.setattr(collector, 'ROOT', tmp_path)
+    monkeypatch.setattr(collector, 'git', lambda *args: '')
+    baseline = receipt(tmp_path/'baseline', [(969432, k) for k in range(8)])
+    endpoint_baseline = receipt(tmp_path/'endpoint_baseline', [(969432, k) for k in range(8)])
+    candidate = receipt(tmp_path/'candidate', [(969432, k) for k in range(8)])
+    compare = publish/'comparison.json'
+    compare.write_text(json.dumps(dict(baseline_audit=dict(inputs=[dict(task=str(baseline/'shard0/w969432_k0.json'))]))))
+    endpoints = publish/'endpoints.json'
+    endpoints.write_text(json.dumps(dict(baseline_audit=dict(inputs=[dict(path=str(endpoint_baseline/'shard0/w969432_k0.json'))]))))
+    item = dict(snapshot=str(candidate), comparison=str(compare), endpoints=str(endpoints),
+                sha256=collector.fingerprint(candidate)['sha256'])
+    publication = publish/'PUBLICATION.json'
+    data = dict(variants={'FULL-v3':item}, interim08='PENDING', freeze='PENDING')
+    publication.write_text(json.dumps(data))
+    state = collector.state_from_publication(publication)
+    assert state['cache']['FULL-v3']['reports']['comparison'] == str(compare)
+    assert state['baseline'] == str(baseline) and state['endpoint_baseline'] == str(endpoint_baseline)
+    assert state['freeze'] is None
+    data['variants']['FULL-v3']['sha256'] = 'tampered'
+    publication.write_text(json.dumps(data))
+    with pytest.raises(AssertionError, match='forecast bytes'):
+        collector.state_from_publication(publication)

@@ -93,19 +93,27 @@ def render(publication):
         '  cell1433/4375/9131.300s rates inferred84.7/default88.9/real62.5%;18/144 startup collisions, validity FAIL.',
         '  Inferred600s MAPPO/PI effects+3450/+825 vs real−2064/−3858veh-s; not a clean information ceiling.', '',
         '## Switching-eligibility rule',
-        f"- {fallback}−WM2 delay CRPS120/300/600="+'/'.join(ci(x) for x in crps)+'veh-s.' if crps else '- Delay CRPS comparison PENDING;95%CIs NA.',
-        f"- 300s breakdown-distance difference={ci({**rate, 'mean':100*rate['mean'], 'low':None if rate['low'] is None else 100*rate['low'], 'high':None if rate['high'] is None else 100*rate['high']},2)}pp." if rate else '- Breakdown-distance comparison PENDING;95%CI NA.',
-        f"- HDV60 mean-world-median error difference={ci(endpoint['primary'],2)}m; common HDV/arm endpoints={endpoint['counts'].get('common_hdv',0)}." if endpoint else '- HDV60 non-regression PENDING;95%CI NA (old A/B/C tasks lack endpoints).',
+        f"- {fallback}−WM2 delay CRPS differences (veh-s),120/300/600:"+' / '.join(ci(x) for x in crps)+'.' if crps else '- Delay CRPS comparison PENDING;95%CIs NA.',
+        f"- 300s breakdown-distance difference (pp): {ci({**rate, 'mean':100*rate['mean'], 'low':None if rate['low'] is None else 100*rate['low'], 'high':None if rate['high'] is None else 100*rate['high']},2)}." if rate else '- Breakdown-distance comparison PENDING;95%CI NA.',
+        f"- HDV60 mean-world-median error difference (m): {ci(endpoint['primary'],2)}; common HDV/arm endpoints={endpoint['counts'].get('common_hdv',0)}." if endpoint else '- HDV60 non-regression PENDING;95%CI NA (old A/B/C tasks lack endpoints).',
         '- Registered CIs resample only scored worlds within demand×penetration×split; singleton strata yield NA, never PASS.',
         '- Earlier04:00/first0545-labelled numeric CIs RETRACTED (unscored-peer bootstrap bug); point estimates unchanged.',
         '- ALL three conditions are required; no automatic S-C1SWITCH adoption. Sparse cells also prevent distributional qualification.', '',
         '## Credibility / schedule',
         '- Strict paired P(beats incumbent)>=0.8 plus lower expected delay is only a decision rule; calibration must also hold.']
     credibility = Path(selected['credibility']) if selected.get('credibility') else None
+    data = [r for r in rows(credibility/'summary.csv' if credibility else None)
+            if r['split'] == 'reserved8' and r['scope'] == 'pooled']
+    def values(target, metric, *, range_only=False):
+        selected_rows = [r for r in data if r['target'] == target and r['metric'] == metric
+                         and (not range_only or r['interval'] != 'central')]
+        return '/'.join(number(100*avg([r for r in selected_rows if r['horizon_s'] == str(h)], 'mean'),1)
+                        if avg([r for r in selected_rows if r['horizon_s'] == str(h)], 'mean') is not None else 'NA'
+                        for h in (120, 300, 600))
     # Raw report/figures retain all selected probabilities, outcomes and coverage;
     # avoid relabeling a forecast win probability as its own empirical validation.
     lines += [f"- Same-source selected-switch reliability and50/80/90%/range coverage: {selected.get('credibility','PENDING')}/CREDIBILITY.md.",
-        '- Prior FULL-v3 matched4:0.8calls won6/11,6/10,9/11 vs94.3/92.5/97.7%forecast; range coverage20/40/25%.',
+        f"- Same-source selected0.8calls observed win%={values('selected_preference','outcome')} vs forecast%={values('selected_preference','probability')}; range coverage%={values('delay','covered',range_only=True)}.",
         '- ~04:00 interim retained:FULL-v1 n4 ΔCRPS−785/−3512/−11041; rate-distance+1.25pp; historical CIs retracted.',
         f"- ~08:00 interim: {publication.get('interim08','PENDING')}; final engineering freeze09:30: {publication.get('freeze','PENDING')}.",
         '- Final evaluation receipts through11:30, final report11:45; frozen source is not selected by reserved outcome tuning.',

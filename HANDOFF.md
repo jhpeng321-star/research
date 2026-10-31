@@ -18,6 +18,9 @@ Owner schedule: interim04/08, freeze09:30, evaluation through11:30, report11:45.
   gpuA `/root/rbeval20261031/int/WM-PHYS-FULL-v1`. Saved-ID crosswalk unverified;
   newer FULL-v3 removes that dependence. Never redispatch either source.
 - A2/C2 owned by RUNA; B2 owned by RUNB. Shared `rb-shared/evalclaims/` binds claims.
+  `E:/agent-work/rb-shared/evalclaims/WM-PHYS-A2.runa.json`
+  `E:/agent-work/rb-shared/evalclaims/WM-PHYS-C2.runa.json`
+  `E:/agent-work/rb-shared/evalclaims/WM-PHYS-B2.runb.json`
   Old failed A/C sources and all STOPs retained. No peer process action.
 - WM2-HDV60 LIVE gpuR, original WM2 runtime, short120step prefix-matched protocol;
   own812962/812963/812964, monitor814672; root `/root/rbeval20261031/int/WM2-HDV60`.
@@ -79,8 +82,22 @@ Owner schedule: interim04/08, freeze09:30, evaluation through11:30, report11:45.
   DECIDE credibility, update ≤60line WMPHYS_MORNING.md at08:00/freeze09:30/final11:45.
 - Remaining parity gaps: synchronous LC, incomplete serial negotiation/internal
   junction state and cold lane memory; no full distributional qualification.
-- Bounded local noon collector prepared (not yet dispatched): read-only snapshots,
+- Bounded local noon collector delivered: read-only snapshots,
   complete-K8-only cached scoring, source-specific endpoint/credibility/traffic
   reports,08:00interim/09:30engineering-freeze/11:35final collection by11:45.
   Foreign-work/branch/staged/source guards; commits only own generated files.
   tests/test_rbint_noon.py+endpoint/bootstrap/credibility gate36PASS/1historical skip.
+- First complete collection/scoring publication retained at docs/rbint/noon/
+  20261101T054124+0800. Local39728 stopped only at Windows allowed-path guard,
+  BEFORE staging; all completed analyses preserved. Diagnosed v3 recovery uses
+  --resume-publication and never repeats unchanged complete-ensemble scores.
+
+<!-- NOON-COLLECTOR:BEGIN -->
+## Bounded noon collector
+2026-11-01T05:41:24+08:00; read-only remote collection, no inference dispatch.
+Latest publication `docs/rbint/noon/20261101T054124+0800/PUBLICATION.json`; 08interim `PENDING`,09:30freeze `PENDING`.
+Source22cc32f6 FULL-v4 and prior A/B/C/FULL sources remain immutable.
+Scored-world-only fixed-stratum CIs; singleton uncertainty NA; prior CIs retracted.
+Existing remote supervisors retain own-PID11:30 deadline. Final collection11:35, report by11:45.
+Collector owns ONLY its local CPU analysis children and publication files; foreign work stops it.
+<!-- NOON-COLLECTOR:END -->

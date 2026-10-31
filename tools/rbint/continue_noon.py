@@ -45,6 +45,7 @@ def git(*args):
 
 
 def guard(head=None, allowed=()):
+    allowed = [p.replace('\\', '/') for p in allowed]
     if git('branch', '--show-current') != 'c4/rb-int':
         raise RuntimeError('foreign branch: collector stopped')
     if head is not None and git('rev-parse', 'HEAD') != head:
@@ -122,10 +123,47 @@ def update_handoff(text, block):
     return text.rstrip()+'\n\n'+first+'\n'+block+'\n'+last+'\n'
 
 
+def state_from_publication(path):
+    """Recover completed analysis after an operational publication failure."""
+    path = Path(path).resolve()
+    assert path.is_relative_to(PUBLISH) and path.name == 'PUBLICATION.json'
+    # Admission requires a clean committed worktree, so the recovered reports
+    # and their task/source manifests are preserved Git artifacts, not WIP.
+    git('ls-files', '--error-unmatch', str(path.relative_to(ROOT)))
+    publication = load(path)
+    cache, baseline, endpoint_baseline = {}, None, None
+    for item in publication['variants'].values():
+        if item.get('comparison'):
+            report = load(item['comparison'])
+            inputs = report['baseline_audit']['inputs']
+            baseline = str(Path(inputs[0]['task']).parent.parent)
+        if item.get('endpoints'):
+            report = load(item['endpoints'])
+            inputs = report['baseline_audit']['inputs']
+            endpoint_baseline = str(Path(inputs[0]['path']).parent.parent)
+    assert baseline and endpoint_baseline, 'complete baseline/endpoint receipts required for recovery'
+    endpoint_info = fingerprint(endpoint_baseline)
+    for key, item in publication['variants'].items():
+        if not item.get('snapshot'):
+            continue
+        info = fingerprint(item['snapshot'])
+        assert info['sha256'] == item['sha256'], 'preserve original forecast bytes'
+        identity = hashlib.sha256((info['sha256']+endpoint_info['sha256']).encode()).hexdigest()
+        cache[key] = dict(identity=identity, reports={name: item[name] for name in
+            ('comparison', 'distribution', 'credibility', 'endpoints') if name in item})
+    return dict(cache=cache, baseline=baseline, endpoint_baseline=endpoint_baseline,
+        interim08=None if publication['interim08'] == 'PENDING' else publication['interim08'],
+        freeze=None if publication['freeze'] == 'PENDING' else publication['freeze'])
+
+
 def collect(state, *, now=None):
     now = time.time() if now is None else now
     if now >= DEADLINE:
         raise RuntimeError('publication deadline expired')
+    dispatch = load(STATE/'DISPATCH_ONCE.json')
+    for path, expected in dispatch.get('source_files', {}).items():
+        if digest(Path(path)) != expected:
+            raise RuntimeError('collector source changed since dispatch; preserve frozen analysis')
     guard()
     resources = local_resources()
     if resources['cpu_percent'] > 75 or resources['available_bytes'] < 2**30:
@@ -251,6 +289,7 @@ def main():
     p.add_argument('action', choices=('start', 'watch'))
     p.add_argument('--state-root', default=str(STATE))
     p.add_argument('--recovery-receipt')
+    p.add_argument('--resume-publication')
     args = p.parse_args()
     STATE = Path(args.state_root).resolve()
     assert STATE.parent == ROOT/'runs'
@@ -266,8 +305,14 @@ def main():
         PUBLISH.mkdir(exist_ok=True)
         save_new(STATE/'DISPATCH_ONCE.json', dict(unix=time.time(), deadline=DEADLINE,
             interval_s=1200, analysis_only=True, automatic_retry=False, head=git('rev-parse', 'HEAD'),
-            source_sha256=digest(Path(__file__))))
+            source_sha256=digest(Path(__file__)), source_files={str(p):digest(p) for p in
+                (Path(__file__), Path(__file__).with_name('noon_report.py'),
+                 Path(__file__).with_name('local_resources.py'), Path(__file__).with_name('compare.py'),
+                 Path(__file__).with_name('score_endpoints.py'), ROOT/'tools/rbeval/score.py')}))
         argv = [sys.executable, '-B', '-u', '-m', 'tools.rbint.continue_noon', 'watch', '--state-root', str(STATE)]
+        if args.resume_publication:
+            assert args.recovery_receipt
+            argv += ['--resume-publication', str(Path(args.resume_publication).resolve())]
         flags = (subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP |
                  subprocess.BELOW_NORMAL_PRIORITY_CLASS) if os.name == 'nt' else 0
         with (STATE/'watch.log').open('x', encoding='utf-8') as log:
@@ -282,6 +327,8 @@ def main():
     save_new(STATE/'WATCH_ONCE.json', dict(pid=os.getpid(), unix=time.time()))
     state = {}
     try:
+        if args.resume_publication:
+            state = state_from_publication(args.resume_publication)
         while time.time() < DEADLINE:
             state = collect(state)
             if state.get('final'):
