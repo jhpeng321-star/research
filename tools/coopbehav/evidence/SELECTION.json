@@ -1,0 +1,77 @@
+{
+  "task": "S-COOPBEHAV",
+  "selection": "2026-10-31 recovery snapshot; supersedes FINAL_COMPARISON paired-probe interpretation",
+  "reconciliation": "CURRENT_COMPARISON.json",
+  "producer_validity_authority": [
+    "E:/agent-work/c4-sumocf/docs/paper_results/ARTIFACT_CHECK.md",
+    "E:/agent-work/c4-sumocf/tools/sumocf/TRACE_HANDOFF.md"
+  ],
+  "selected": [
+    {
+      "report": "WMDATA_final",
+      "role": "Descriptive whole-controller MAPPO versus CTRL0",
+      "episodes": 80,
+      "causal_member_reference": false
+    },
+    {
+      "report": "WMDATA2_final",
+      "role": "Descriptive whole-controller MAPPO versus CTRL0",
+      "episodes": 100,
+      "causal_member_reference": false
+    },
+    {
+      "report": "live/paired_bc782dd4b08fb81b8c2775732fb97b4148acb92707716600f10f20ccc934452d",
+      "producer_index": "gpuR:/root/sumocf20261031/COOPBEHAV_dev_u03_fullfleet_INDEX.json",
+      "source_index_sha256": "bc782dd4b08fb81b8c2775732fb97b4148acb92707716600f10f20ccc934452d",
+      "role": "Deployed u03 mean versus MAPPO mean; corrected full-rerun DEV",
+      "episodes": 2,
+      "attempted_worlds": 3,
+      "missing_groups": 1,
+      "intervention_window_s": 60,
+      "behaviour_crop_s": 90,
+      "credit_horizon_s": 600,
+      "all_paired_supported_counts_zero": true,
+      "positive_credit_records": 0
+    },
+    {
+      "report": "live/paired_1c94ebe359532d3d00e6fa2d72af557791e71709691a78b26196cd4973f76c2e",
+      "producer_index": "gpuR:/root/sumocf20261031/COOPBEHAV_u15_INDEX.json",
+      "source_index_sha256": "1c94ebe359532d3d00e6fa2d72af557791e71709691a78b26196cd4973f76c2e",
+      "role": "Sampled offsets versus same-checkpoint mean; corrected full-rerun TRAIN",
+      "episodes": 31,
+      "attempted_windows": 36,
+      "missing_groups": 5,
+      "unique_worlds": 6,
+      "intervention_window_s": 60,
+      "behaviour_crop_s": 90,
+      "credit_horizon_s": 600,
+      "positive_credit_records": 11,
+      "positive_credit_unique_worlds": 4,
+      "selected_clusters": 2,
+      "unexplained_cluster_ids": ["cluster_2"],
+      "deployed_policy_evidence": false
+    }
+  ],
+  "excluded_from_current_inference": [
+    {
+      "report": "live/paired_a0b825aa936da6d27d01e07fc6b1bbd210150272eb95decf5389a0596f6895da",
+      "reason": "Original saved-state probe: branch artifacts invalidate credits and their discovery interpretation"
+    },
+    {
+      "source": "Original probe_g samples and pre-artifact learner samples",
+      "reason": "Invalidated by producer; retain as provenance, never pool with fixed_uNN samples"
+    },
+    {
+      "source": "Broad source_sumocf historical scans",
+      "reason": "May mix invalid original probes with corrected samples; scanning disabled in live configuration"
+    }
+  ],
+  "continuation": {
+    "watcher_pid": 29244,
+    "interval_s": 120,
+    "canonical_index": "gpuR:/root/sumocf20261031/COOPBEHAV_INDEX.json",
+    "publication": "Existing watcher retains completed-report inventory and step commits; no second watcher",
+    "audit_status": "Blocked until producer publishes complete geometric/action fields"
+  },
+  "new_simulation_seconds": 0
+}

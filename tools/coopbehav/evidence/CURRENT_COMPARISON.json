@@ -1,0 +1,1453 @@
+{
+  "interpretation": "Descriptive source-separated rates; repeated probe designs are not independent worlds",
+  "reports": [
+    {
+      "source": "WMDATA_final",
+      "path": "tools\\coopbehav\\evidence\\WMDATA_final",
+      "verified": true,
+      "episodes": 80,
+      "events": 8810,
+      "controllers": {
+        "ctrl0": {
+          "episodes": 40,
+          "exposure_cav_s": 182159.0,
+          "exposure_episode_s": 12000.0,
+          "ramp_fit_gap_count": 118,
+          "behaviours": {
+            "yield_to_merge": {
+              "count": 4,
+              "member_event_count": 4,
+              "eligible_episodes": 40,
+              "eligible_exposure_cav_s": 182159.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 0.07905181736834305,
+              "member_events_per_cav_hour": 0.07905181736834305,
+              "events_per_episode_hour": 1.2
+            },
+            "gap_creation": {
+              "count": 1008,
+              "member_event_count": 1008,
+              "eligible_episodes": 40,
+              "eligible_exposure_cav_s": 182159.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 19.921057976822446,
+              "member_events_per_cav_hour": 19.921057976822446,
+              "events_per_episode_hour": 302.4
+            },
+            "cross_lane_hold": {
+              "count": 169,
+              "member_event_count": 340,
+              "eligible_episodes": 40,
+              "eligible_exposure_cav_s": 182159.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 3.3399392838124933,
+              "member_events_per_cav_hour": 6.719404476309158,
+              "events_per_episode_hour": 50.7
+            },
+            "wave_damping": {
+              "count": 2124,
+              "member_event_count": 2124,
+              "eligible_episodes": 40,
+              "eligible_exposure_cav_s": 182159.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 41.976515022590156,
+              "member_events_per_cav_hour": 41.976515022590156,
+              "events_per_episode_hour": 637.2
+            }
+          },
+          "geometry": {
+            "yield_to_merge": {
+              "opening_m": {
+                "n": 4,
+                "min": 0.37078094482421875,
+                "median": 7.233684062957764,
+                "max": 13.349927425384521
+              },
+              "headway_change_s": {
+                "n": 4,
+                "min": 0.3670544423678628,
+                "median": 53.89975861844376,
+                "max": 150.88551292942205
+              },
+              "ballistic_braking_contribution_m": {
+                "n": 4,
+                "min": 0.11191633343696594,
+                "median": 1.0156285911798477,
+                "max": 3.0413169860839844
+              },
+              "braking_contribution_over_opening": {
+                "n": 4,
+                "min": 0.026306077860110126,
+                "median": 0.20061014311352585,
+                "max": 1.7543056441490565
+              },
+              "end_reasons": {
+                "accepted": 4
+              }
+            },
+            "gap_creation": {
+              "opening_m": {
+                "n": 1008,
+                "min": 0.000213623046875,
+                "median": 0.2897834777832031,
+                "max": 73.62326049804688
+              },
+              "headway_change_s": {
+                "n": 1007,
+                "min": -398.39935732629283,
+                "median": 0.11893296815452059,
+                "max": 155.67007598762967
+              },
+              "ballistic_braking_contribution_m": {
+                "n": 1008,
+                "min": 2.765655517578125e-05,
+                "median": 0.025786995887756348,
+                "max": 140.4973602294922
+              },
+              "braking_contribution_over_opening": {
+                "n": 1008,
+                "min": 0.0006158038499490705,
+                "median": 0.11436155424412317,
+                "max": 758.65625
+              },
+              "end_reasons": {
+                "identity_or_lane_censored": 138,
+                "gap_closed": 257,
+                "braking_deficit_closed": 556,
+                "slot_changed_censored": 41,
+                "observation_end_censored": 16
+              }
+            }
+          },
+          "registered_group_event_counts": {},
+          "unique_worlds": 40,
+          "cells": [
+            {
+              "penetration": 0.05,
+              "demand_vph": 1900,
+              "count": 4
+            },
+            {
+              "penetration": 0.05,
+              "demand_vph": 2400,
+              "count": 3
+            },
+            {
+              "penetration": 0.05,
+              "demand_vph": 2700,
+              "count": 4
+            },
+            {
+              "penetration": 0.1,
+              "demand_vph": 1900,
+              "count": 3
+            },
+            {
+              "penetration": 0.1,
+              "demand_vph": 2400,
+              "count": 3
+            },
+            {
+              "penetration": 0.1,
+              "demand_vph": 2700,
+              "count": 3
+            },
+            {
+              "penetration": 0.2,
+              "demand_vph": 1900,
+              "count": 3
+            },
+            {
+              "penetration": 0.2,
+              "demand_vph": 2400,
+              "count": 3
+            },
+            {
+              "penetration": 0.2,
+              "demand_vph": 2700,
+              "count": 3
+            },
+            {
+              "penetration": 0.4,
+              "demand_vph": 1900,
+              "count": 4
+            },
+            {
+              "penetration": 0.4,
+              "demand_vph": 2400,
+              "count": 3
+            },
+            {
+              "penetration": 0.4,
+              "demand_vph": 2700,
+              "count": 4
+            }
+          ]
+        },
+        "mappo": {
+          "episodes": 40,
+          "exposure_cav_s": 184676.5,
+          "exposure_episode_s": 12000.0,
+          "ramp_fit_gap_count": 112,
+          "behaviours": {
+            "yield_to_merge": {
+              "count": 11,
+              "member_event_count": 11,
+              "eligible_episodes": 40,
+              "eligible_exposure_cav_s": 184676.5,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 0.21442901506147236,
+              "member_events_per_cav_hour": 0.21442901506147236,
+              "events_per_episode_hour": 3.3
+            },
+            "gap_creation": {
+              "count": 1493,
+              "member_event_count": 1493,
+              "eligible_episodes": 40,
+              "eligible_exposure_cav_s": 184676.5,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 29.10386540788893,
+              "member_events_per_cav_hour": 29.10386540788893,
+              "events_per_episode_hour": 447.9
+            },
+            "cross_lane_hold": {
+              "count": 174,
+              "member_event_count": 349,
+              "eligible_episodes": 40,
+              "eligible_exposure_cav_s": 184676.5,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 3.391877147336017,
+              "member_events_per_cav_hour": 6.803247841495804,
+              "events_per_episode_hour": 52.2
+            },
+            "wave_damping": {
+              "count": 3827,
+              "member_event_count": 3827,
+              "eligible_episodes": 40,
+              "eligible_exposure_cav_s": 184676.5,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 74.60180369456862,
+              "member_events_per_cav_hour": 74.60180369456862,
+              "events_per_episode_hour": 1148.1
+            }
+          },
+          "geometry": {
+            "yield_to_merge": {
+              "opening_m": {
+                "n": 11,
+                "min": 0.17205810546875,
+                "median": 10.673625707626343,
+                "max": 125.06168746948242
+              },
+              "headway_change_s": {
+                "n": 9,
+                "min": 0.21262369444016116,
+                "median": 4.347482849304342,
+                "max": 290.07837808498647
+              },
+              "ballistic_braking_contribution_m": {
+                "n": 11,
+                "min": 0.036256082355976105,
+                "median": 0.2245701253414154,
+                "max": 147.98185443878174
+              },
+              "braking_contribution_over_opening": {
+                "n": 11,
+                "min": 0.0029018428960198065,
+                "median": 0.2222319787005238,
+                "max": 1.5693112605341781
+              },
+              "end_reasons": {
+                "accepted": 11
+              }
+            },
+            "gap_creation": {
+              "opening_m": {
+                "n": 1493,
+                "min": 0.0001220703125,
+                "median": 0.5625286102294922,
+                "max": 62.7320442199707
+              },
+              "headway_change_s": {
+                "n": 1478,
+                "min": -314.803590863418,
+                "median": 0.18573915114058726,
+                "max": 1290.5687845127316
+              },
+              "ballistic_braking_contribution_m": {
+                "n": 1493,
+                "min": 5.364418029785156e-06,
+                "median": 0.0742642879486084,
+                "max": 274.3913879394531
+              },
+              "braking_contribution_over_opening": {
+                "n": 1493,
+                "min": 9.192378088639037e-05,
+                "median": 0.19954319979031665,
+                "max": 123.86364508700102
+              },
+              "end_reasons": {
+                "identity_or_lane_censored": 403,
+                "gap_closed": 386,
+                "braking_deficit_closed": 629,
+                "slot_changed_censored": 54,
+                "observation_end_censored": 21
+              }
+            }
+          },
+          "registered_group_event_counts": {},
+          "unique_worlds": 40,
+          "cells": [
+            {
+              "penetration": 0.05,
+              "demand_vph": 1900,
+              "count": 4
+            },
+            {
+              "penetration": 0.05,
+              "demand_vph": 2400,
+              "count": 3
+            },
+            {
+              "penetration": 0.05,
+              "demand_vph": 2700,
+              "count": 4
+            },
+            {
+              "penetration": 0.1,
+              "demand_vph": 1900,
+              "count": 3
+            },
+            {
+              "penetration": 0.1,
+              "demand_vph": 2400,
+              "count": 3
+            },
+            {
+              "penetration": 0.1,
+              "demand_vph": 2700,
+              "count": 3
+            },
+            {
+              "penetration": 0.2,
+              "demand_vph": 1900,
+              "count": 3
+            },
+            {
+              "penetration": 0.2,
+              "demand_vph": 2400,
+              "count": 3
+            },
+            {
+              "penetration": 0.2,
+              "demand_vph": 2700,
+              "count": 3
+            },
+            {
+              "penetration": 0.4,
+              "demand_vph": 1900,
+              "count": 4
+            },
+            {
+              "penetration": 0.4,
+              "demand_vph": 2400,
+              "count": 3
+            },
+            {
+              "penetration": 0.4,
+              "demand_vph": 2700,
+              "count": 4
+            }
+          ]
+        }
+      },
+      "positive_credit_records": 0,
+      "positive_credit_unique_worlds": 0,
+      "positive_credit_seeds": [],
+      "discovery": {
+        "status": "no_positive_c_g",
+        "method": {
+          "name": "standardized_euclidean_average_linkage_silhouette",
+          "scaling": "finite-observation mean and population std (ddof=0); mean imputation",
+          "constant_rule": "std / max_abs <= float64 epsilon (or all zero)",
+          "k_candidates": [],
+          "selection": "maximum silhouette > N*eps; ties within N*eps prefer smaller k; otherwise k=1",
+          "singleton_silhouette": 0.0,
+          "tie_break": "descending C_G, canonical JSON id, row-major linkage ties",
+          "silhouette_scores": [],
+          "selected_k": 0
+        },
+        "features": [],
+        "clusters": [],
+        "assignments": [],
+        "unanticipated_candidates": [],
+        "counts": {
+          "input": 0,
+          "ranked": 0,
+          "clustered": 0
+        }
+      },
+      "output_sha256": {
+        "COMPLETE.json": "ed1db4115f225e53a89d91377915ec2cdcb37b3e0f60c0bbd0605d23e31f4012",
+        "ctrl0_cross_lane_hold.png": "be64e3b04eb35157090644429dfac2335aa96aaa30bed9fc8f0f75459af93c7b",
+        "ctrl0_gap_creation.png": "360f165caa6792a2256f787f22aed85df88fe79f75706d8867124799150dff10",
+        "ctrl0_wave_damping.png": "c10a3ebc49de1e654477682e6ce87acde695aa35620d9c83cfeb1e284ce24610",
+        "ctrl0_yield_to_merge.png": "35698eaf509b620faf203743bd81cf8e956e85cc4ede8868942bfa98cd06e214",
+        "discovery.json": "f73e57a57b8a911876e2af8f6571fdc11e934fea064e92cfa0d01503995e429a",
+        "episodes.json": "9d7d0136c06103f703c4352e4f43cf33a76b261883a7bc797d3735b2deb234a5",
+        "events.jsonl.gz": "cae43b155bde7dc523a3750091c739f8c3ad01818cff0191f8d22f5a0ac71b5d",
+        "inputs.json": "fab9050940d31f394762c2e1ce83922d5bb9b1b9ea5ebf20da342239093cca23",
+        "mappo_cross_lane_hold.png": "a824b635cbcbcc5bc690e8402802e10057319fe241a420325658b62d9193a0ae",
+        "mappo_gap_creation.png": "1a6083855d27ad24a935fce9b755045f76046ce23641b639cf0719aa55875c3b",
+        "mappo_wave_damping.png": "d56701f9cd772f0dd810edf9d886a49855e18db5a86acde80d63483b4e05c1aa",
+        "mappo_yield_to_merge.png": "00094abeeaa1f7d8d8729d07fb49ca5551fb9c40025b7bbd10322d25c1646343",
+        "members.csv": "75a18fd16b866fd43df410fa52b70fa7cd87b6009387ecf37518326ca38b3398",
+        "signatures.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "summary.json": "f49fac43dff1ea381b1ff9d26fbec5dbea94cea4cedc355b36566d3f5f91bddc"
+      }
+    },
+    {
+      "source": "WMDATA2_final",
+      "path": "tools\\coopbehav\\evidence\\WMDATA2_final",
+      "verified": true,
+      "episodes": 100,
+      "events": 16836,
+      "controllers": {
+        "ctrl0": {
+          "episodes": 50,
+          "exposure_cav_s": 330404.0,
+          "exposure_episode_s": 15000.0,
+          "ramp_fit_gap_count": 131,
+          "behaviours": {
+            "yield_to_merge": {
+              "count": 1,
+              "member_event_count": 1,
+              "eligible_episodes": 50,
+              "eligible_exposure_cav_s": 330404.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 0.010895751867410807,
+              "member_events_per_cav_hour": 0.010895751867410807,
+              "events_per_episode_hour": 0.24
+            },
+            "gap_creation": {
+              "count": 2259,
+              "member_event_count": 2259,
+              "eligible_episodes": 50,
+              "eligible_exposure_cav_s": 330404.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 24.61350346848101,
+              "member_events_per_cav_hour": 24.61350346848101,
+              "events_per_episode_hour": 542.16
+            },
+            "cross_lane_hold": {
+              "count": 501,
+              "member_event_count": 1011,
+              "eligible_episodes": 50,
+              "eligible_exposure_cav_s": 330404.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 5.458771685572814,
+              "member_events_per_cav_hour": 11.015605137952326,
+              "events_per_episode_hour": 120.24
+            },
+            "wave_damping": {
+              "count": 4045,
+              "member_event_count": 4045,
+              "eligible_episodes": 50,
+              "eligible_exposure_cav_s": 330404.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 44.07331630367671,
+              "member_events_per_cav_hour": 44.07331630367671,
+              "events_per_episode_hour": 970.8
+            }
+          },
+          "geometry": {
+            "yield_to_merge": {
+              "opening_m": {
+                "n": 1,
+                "min": 11.564032077789307,
+                "median": 11.564032077789307,
+                "max": 11.564032077789307
+              },
+              "headway_change_s": {
+                "n": 1,
+                "min": 51.85631103508306,
+                "median": 51.85631103508306,
+                "max": 51.85631103508306
+              },
+              "ballistic_braking_contribution_m": {
+                "n": 1,
+                "min": 1.773500919342041,
+                "median": 1.773500919342041,
+                "max": 1.773500919342041
+              },
+              "braking_contribution_over_opening": {
+                "n": 1,
+                "min": 0.15336354200783925,
+                "median": 0.15336354200783925,
+                "max": 0.15336354200783925
+              },
+              "end_reasons": {
+                "accepted": 1
+              }
+            },
+            "gap_creation": {
+              "opening_m": {
+                "n": 2259,
+                "min": 9.5367431640625e-05,
+                "median": 0.20839977264404297,
+                "max": 26.409088134765625
+              },
+              "headway_change_s": {
+                "n": 2259,
+                "min": -2135.0544446978765,
+                "median": 0.10558067120891801,
+                "max": 213.47419797884243
+              },
+              "ballistic_braking_contribution_m": {
+                "n": 2259,
+                "min": 6.020069122314453e-06,
+                "median": 0.015495449304580688,
+                "max": 24.824108123779297
+              },
+              "braking_contribution_over_opening": {
+                "n": 2259,
+                "min": 5.841610629915302e-05,
+                "median": 0.09298412343470483,
+                "max": 205.03181818181818
+              },
+              "end_reasons": {
+                "gap_closed": 456,
+                "identity_or_lane_censored": 180,
+                "braking_deficit_closed": 1534,
+                "slot_changed_censored": 63,
+                "observation_end_censored": 26
+              }
+            }
+          },
+          "registered_group_event_counts": {},
+          "unique_worlds": 50,
+          "cells": [
+            {
+              "penetration": 0.2,
+              "demand_vph": 2400,
+              "count": 10
+            },
+            {
+              "penetration": 0.2,
+              "demand_vph": 2700,
+              "count": 10
+            },
+            {
+              "penetration": 0.4,
+              "demand_vph": 2400,
+              "count": 10
+            },
+            {
+              "penetration": 0.4,
+              "demand_vph": 2700,
+              "count": 10
+            },
+            {
+              "penetration": 0.05,
+              "demand_vph": 1900,
+              "count": 1
+            },
+            {
+              "penetration": 0.05,
+              "demand_vph": 2400,
+              "count": 1
+            },
+            {
+              "penetration": 0.05,
+              "demand_vph": 2700,
+              "count": 2
+            },
+            {
+              "penetration": 0.1,
+              "demand_vph": 1900,
+              "count": 1
+            },
+            {
+              "penetration": 0.1,
+              "demand_vph": 2400,
+              "count": 1
+            },
+            {
+              "penetration": 0.1,
+              "demand_vph": 2700,
+              "count": 2
+            },
+            {
+              "penetration": 0.2,
+              "demand_vph": 1900,
+              "count": 1
+            },
+            {
+              "penetration": 0.4,
+              "demand_vph": 1900,
+              "count": 1
+            }
+          ]
+        },
+        "mappo": {
+          "episodes": 50,
+          "exposure_cav_s": 332004.0,
+          "exposure_episode_s": 15000.0,
+          "ramp_fit_gap_count": 180,
+          "behaviours": {
+            "yield_to_merge": {
+              "count": 10,
+              "member_event_count": 10,
+              "eligible_episodes": 50,
+              "eligible_exposure_cav_s": 332004.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 0.10843242852495753,
+              "member_events_per_cav_hour": 0.10843242852495753,
+              "events_per_episode_hour": 2.4
+            },
+            "gap_creation": {
+              "count": 2965,
+              "member_event_count": 2965,
+              "eligible_episodes": 50,
+              "eligible_exposure_cav_s": 332004.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 32.15021505764991,
+              "member_events_per_cav_hour": 32.15021505764991,
+              "events_per_episode_hour": 711.6
+            },
+            "cross_lane_hold": {
+              "count": 390,
+              "member_event_count": 788,
+              "eligible_episodes": 50,
+              "eligible_exposure_cav_s": 332004.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 4.228864712473344,
+              "member_events_per_cav_hour": 8.544475367766653,
+              "events_per_episode_hour": 93.6
+            },
+            "wave_damping": {
+              "count": 6665,
+              "member_event_count": 6665,
+              "eligible_episodes": 50,
+              "eligible_exposure_cav_s": 332004.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 72.27021361188419,
+              "member_events_per_cav_hour": 72.27021361188419,
+              "events_per_episode_hour": 1599.6
+            }
+          },
+          "geometry": {
+            "yield_to_merge": {
+              "opening_m": {
+                "n": 10,
+                "min": 0.04682159423828125,
+                "median": 4.956829309463501,
+                "max": 13.231796264648438
+              },
+              "headway_change_s": {
+                "n": 8,
+                "min": 0.015650847400753065,
+                "median": 13.961838831228722,
+                "max": 448.0430485572541
+              },
+              "ballistic_braking_contribution_m": {
+                "n": 10,
+                "min": 0.01423335075378418,
+                "median": 0.17876827716827393,
+                "max": 1.3938275873661041
+              },
+              "braking_contribution_over_opening": {
+                "n": 10,
+                "min": 0.0010756930101630728,
+                "median": 0.05663706016877079,
+                "max": 0.3620865243604367
+              },
+              "end_reasons": {
+                "accepted": 10
+              }
+            },
+            "gap_creation": {
+              "opening_m": {
+                "n": 2965,
+                "min": 1.52587890625e-05,
+                "median": 0.35639524459838867,
+                "max": 78.44566798210144
+              },
+              "headway_change_s": {
+                "n": 2922,
+                "min": -64.6856072044019,
+                "median": 0.1602207784480285,
+                "max": 2008.9180227037627
+              },
+              "ballistic_braking_contribution_m": {
+                "n": 2965,
+                "min": 5.4836273193359375e-06,
+                "median": 0.04805368185043335,
+                "max": 126.14075183868408
+              },
+              "braking_contribution_over_opening": {
+                "n": 2965,
+                "min": 6.390450999133122e-05,
+                "median": 0.16329187416203791,
+                "max": 574.2945601851852
+              },
+              "end_reasons": {
+                "gap_closed": 720,
+                "identity_or_lane_censored": 673,
+                "braking_deficit_closed": 1459,
+                "slot_changed_censored": 70,
+                "observation_end_censored": 43
+              }
+            }
+          },
+          "registered_group_event_counts": {},
+          "unique_worlds": 50,
+          "cells": [
+            {
+              "penetration": 0.2,
+              "demand_vph": 2400,
+              "count": 10
+            },
+            {
+              "penetration": 0.2,
+              "demand_vph": 2700,
+              "count": 10
+            },
+            {
+              "penetration": 0.4,
+              "demand_vph": 2400,
+              "count": 10
+            },
+            {
+              "penetration": 0.4,
+              "demand_vph": 2700,
+              "count": 10
+            },
+            {
+              "penetration": 0.05,
+              "demand_vph": 1900,
+              "count": 1
+            },
+            {
+              "penetration": 0.05,
+              "demand_vph": 2400,
+              "count": 1
+            },
+            {
+              "penetration": 0.05,
+              "demand_vph": 2700,
+              "count": 2
+            },
+            {
+              "penetration": 0.1,
+              "demand_vph": 1900,
+              "count": 1
+            },
+            {
+              "penetration": 0.1,
+              "demand_vph": 2400,
+              "count": 1
+            },
+            {
+              "penetration": 0.1,
+              "demand_vph": 2700,
+              "count": 2
+            },
+            {
+              "penetration": 0.2,
+              "demand_vph": 1900,
+              "count": 1
+            },
+            {
+              "penetration": 0.4,
+              "demand_vph": 1900,
+              "count": 1
+            }
+          ]
+        }
+      },
+      "positive_credit_records": 0,
+      "positive_credit_unique_worlds": 0,
+      "positive_credit_seeds": [],
+      "discovery": {
+        "status": "no_positive_c_g",
+        "method": {
+          "name": "standardized_euclidean_average_linkage_silhouette",
+          "scaling": "finite-observation mean and population std (ddof=0); mean imputation",
+          "constant_rule": "std / max_abs <= float64 epsilon (or all zero)",
+          "k_candidates": [],
+          "selection": "maximum silhouette > N*eps; ties within N*eps prefer smaller k; otherwise k=1",
+          "singleton_silhouette": 0.0,
+          "tie_break": "descending C_G, canonical JSON id, row-major linkage ties",
+          "silhouette_scores": [],
+          "selected_k": 0
+        },
+        "features": [],
+        "clusters": [],
+        "assignments": [],
+        "unanticipated_candidates": [],
+        "counts": {
+          "input": 0,
+          "ranked": 0,
+          "clustered": 0
+        }
+      },
+      "output_sha256": {
+        "COMPLETE.json": "be9993e1e1c7dd5fae2940c715d44c35e20e894f276c6fe1337aedd2a5378aa5",
+        "ctrl0_cross_lane_hold.png": "a65c230c22df6b248d94eaa7f6049f340bafc58dd7fa4ecd2332c8d712b95e11",
+        "ctrl0_gap_creation.png": "ac7a8613a84ef81f1a903a3e6c2cdd640691c5f92ec96ac663be9d70551408ab",
+        "ctrl0_wave_damping.png": "416523521bfceb44a8783aab6ee046d5ca7a3a874938bb8db6277dbda0e68e22",
+        "ctrl0_yield_to_merge.png": "87aab7067c8af22b726508a3497cf9ad08ba824f9d91bc7d1697aa21cd3b348a",
+        "discovery.json": "f73e57a57b8a911876e2af8f6571fdc11e934fea064e92cfa0d01503995e429a",
+        "episodes.json": "9f81627b3ce159c207d4bf3ca93a60106389facd797e69cdb8ce147f9d31de48",
+        "events.jsonl.gz": "1e16f4511915244e922a1e4804824b4e139385f7fab77ad4c61e0485978eb48f",
+        "inputs.json": "bcf9d8a61c8dd0a6d2c8a03d2575ed17c0bfb9f438acee55d1c1aed43303d406",
+        "mappo_cross_lane_hold.png": "ad157eaefa658336fcaa894067b2c29121433e64163856f8c553ae02a3517fa2",
+        "mappo_gap_creation.png": "b954d05a5ffe45b72a7ca395855980c0c6c930d3bf75c1d577ab869e6c70f979",
+        "mappo_wave_damping.png": "3df8f8e29cb0c1ffad832322079aa6be70df168b48f4013cc68a23757759740a",
+        "mappo_yield_to_merge.png": "bfc6f3ec86d52c65c7dfbb5fa8a26a47b07a0a2e2690e00144ceeefc06ef444a",
+        "members.csv": "c24e69dcd6d5cc3f756a7a999100abd33412732b70c5b733e7cc1c1041bee64d",
+        "signatures.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "summary.json": "1f0e5c6161f3e8cc319f2841bf14beb56551dc3f9c2de033f38ae84fff7eab22"
+      }
+    },
+    {
+      "source": "paired",
+      "path": "tools\\coopbehav\\evidence\\live\\paired_bc782dd4b08fb81b8c2775732fb97b4148acb92707716600f10f20ccc934452d",
+      "verified": true,
+      "episodes": 2,
+      "events": 96,
+      "controllers": {
+        "sumocf_deployed_u03": {
+          "episodes": 2,
+          "exposure_cav_s": 4498.0,
+          "exposure_episode_s": 180.0,
+          "ramp_fit_gap_count": 2,
+          "behaviours": {
+            "yield_to_merge": {
+              "count": 0,
+              "member_event_count": 0,
+              "eligible_episodes": 2,
+              "eligible_exposure_cav_s": 4498.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 0.0,
+              "member_events_per_cav_hour": 0.0,
+              "events_per_episode_hour": 0.0
+            },
+            "gap_creation": {
+              "count": 32,
+              "member_event_count": 32,
+              "eligible_episodes": 2,
+              "eligible_exposure_cav_s": 4498.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 25.611382836816365,
+              "member_events_per_cav_hour": 25.611382836816365,
+              "events_per_episode_hour": 640.0
+            },
+            "cross_lane_hold": {
+              "count": 4,
+              "member_event_count": 8,
+              "eligible_episodes": 2,
+              "eligible_exposure_cav_s": 4498.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 3.2014228546020456,
+              "member_events_per_cav_hour": 6.402845709204091,
+              "events_per_episode_hour": 80.0
+            },
+            "wave_damping": {
+              "count": 60,
+              "member_event_count": 60,
+              "eligible_episodes": 2,
+              "eligible_exposure_cav_s": 4498.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 48.02134281903068,
+              "member_events_per_cav_hour": 48.02134281903068,
+              "events_per_episode_hour": 1200.0
+            }
+          },
+          "geometry": {
+            "yield_to_merge": {
+              "opening_m": null,
+              "headway_change_s": null,
+              "ballistic_braking_contribution_m": null,
+              "braking_contribution_over_opening": null,
+              "end_reasons": {}
+            },
+            "gap_creation": {
+              "opening_m": {
+                "n": 32,
+                "min": 0.017795099999998953,
+                "median": 0.5367205199999998,
+                "max": 10.2125779
+              },
+              "headway_change_s": {
+                "n": 28,
+                "min": -2.388891562114118,
+                "median": 0.2419167648589038,
+                "max": 36.761856281611784
+              },
+              "ballistic_braking_contribution_m": {
+                "n": 32,
+                "min": 0.0003432600000010666,
+                "median": 0.09440440399999872,
+                "max": 8.024518
+              },
+              "braking_contribution_over_opening": {
+                "n": 32,
+                "min": 0.00040436048703382417,
+                "median": 0.3252084322568155,
+                "max": 5.795870492439185
+              },
+              "end_reasons": {
+                "gap_closed": 12,
+                "identity_or_lane_censored": 7,
+                "braking_deficit_closed": 11,
+                "slot_changed_censored": 1,
+                "observation_end_censored": 1
+              }
+            }
+          },
+          "registered_group_event_counts": {
+            "gap_creation": 4
+          },
+          "unique_worlds": 2,
+          "cells": [
+            {
+              "penetration": null,
+              "demand_vph": null,
+              "count": 2
+            }
+          ]
+        }
+      },
+      "positive_credit_records": 0,
+      "positive_credit_unique_worlds": 0,
+      "positive_credit_seeds": [],
+      "discovery": {
+        "status": "no_positive_c_g",
+        "method": {
+          "name": "standardized_euclidean_average_linkage_silhouette",
+          "scaling": "finite-observation mean and population std (ddof=0); mean imputation",
+          "constant_rule": "std / max_abs <= float64 epsilon (or all zero)",
+          "k_candidates": [],
+          "selection": "maximum silhouette > N*eps; ties within N*eps prefer smaller k; otherwise k=1",
+          "singleton_silhouette": 0.0,
+          "tie_break": "descending C_G, canonical JSON id, row-major linkage ties",
+          "silhouette_scores": [],
+          "selected_k": 0
+        },
+        "features": [],
+        "clusters": [],
+        "assignments": [],
+        "unanticipated_candidates": [],
+        "counts": {
+          "input": 2,
+          "ranked": 0,
+          "clustered": 0
+        }
+      },
+      "output_sha256": {
+        "COMPLETE.json": "b10e261788abc4a73cfa5f2c9238607e9e1e88cb7fd2032107bf4ed3d2d6c335",
+        "discovery.json": "25e85ed75381674603917dd5b056087cf53ade40683f1d9fa61276c7188a968a",
+        "episodes.json": "4c54ba603e56f56c8f70d132cd8bdcbce900824b5db9c273b429a0fc5fda676c",
+        "events.jsonl.gz": "0181de4c0b6e9bda71be688a25d919f3c3d068c8e934e12102758706d8ceceb4",
+        "inputs.json": "1297c044de40f39d710b4d82d9b3730a0abf90b5108aa7b06ce069a9e27a60f5",
+        "members.csv": "d6de4945bbe35765186d60addcbe3afbcccf400da50fc0a7e11599d7439d30b6",
+        "signatures.json": "95e974f201ca6fd91f34c7a800ff9dd43f245bc86c9a7e6c8295915e2345fec1",
+        "summary.json": "94474e9e405f373e2c4e9c7bbf33c33e48e7f95811833ea8c30862670615766a",
+        "sumocf_deployed_u03_cross_lane_hold.png": "ca4f3e68800bde0df18e8f1e962c0b067f610de0a3018863f28e94861f9febaa",
+        "sumocf_deployed_u03_gap_creation.png": "aeea6cd564eed03ea8579bb5b0ad186c3b22a46299b2d13fb615165a11ea306f",
+        "sumocf_deployed_u03_wave_damping.png": "82acdf3f4f00c44853aca9ff5d466b9f16d1cb86a9d47bb726c0a768fd22b03f",
+        "sumocf_deployed_u03_yield_to_merge.png": "bf28837d5a13ed969148b30d735ca7efe37914b938ee0009e45ea18e3a6c64b1"
+      }
+    },
+    {
+      "source": "paired",
+      "path": "tools\\coopbehav\\evidence\\live\\paired_1c94ebe359532d3d00e6fa2d72af557791e71709691a78b26196cd4973f76c2e",
+      "verified": true,
+      "episodes": 31,
+      "events": 2141,
+      "controllers": {
+        "sumocf": {
+          "episodes": 31,
+          "exposure_cav_s": 71120.0,
+          "exposure_episode_s": 2790.0,
+          "ramp_fit_gap_count": 32,
+          "behaviours": {
+            "yield_to_merge": {
+              "count": 4,
+              "member_event_count": 4,
+              "eligible_episodes": 31,
+              "eligible_exposure_cav_s": 71120.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 0.20247469066366705,
+              "member_events_per_cav_hour": 0.20247469066366705,
+              "events_per_episode_hour": 5.161290322580645
+            },
+            "gap_creation": {
+              "count": 569,
+              "member_event_count": 569,
+              "eligible_episodes": 31,
+              "eligible_exposure_cav_s": 71120.0,
+              "paired_supported_count": 1,
+              "events_per_cav_hour": 28.802024746906635,
+              "member_events_per_cav_hour": 28.802024746906635,
+              "events_per_episode_hour": 734.1935483870968
+            },
+            "cross_lane_hold": {
+              "count": 61,
+              "member_event_count": 122,
+              "eligible_episodes": 31,
+              "eligible_exposure_cav_s": 71120.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 3.0877390326209224,
+              "member_events_per_cav_hour": 6.175478065241845,
+              "events_per_episode_hour": 78.70967741935483
+            },
+            "wave_damping": {
+              "count": 1507,
+              "member_event_count": 1507,
+              "eligible_episodes": 31,
+              "eligible_exposure_cav_s": 71120.0,
+              "paired_supported_count": 5,
+              "events_per_cav_hour": 76.28233970753656,
+              "member_events_per_cav_hour": 76.28233970753656,
+              "events_per_episode_hour": 1944.516129032258
+            }
+          },
+          "geometry": {
+            "yield_to_merge": {
+              "opening_m": {
+                "n": 4,
+                "min": 48.95080599999997,
+                "median": 72.000973975,
+                "max": 79.60540304
+              },
+              "headway_change_s": {
+                "n": 4,
+                "min": 4.803936736030892,
+                "median": 8.363727900256439,
+                "max": 12.992039713859077
+              },
+              "ballistic_braking_contribution_m": {
+                "n": 4,
+                "min": 57.85894049999999,
+                "median": 106.53862070000002,
+                "max": 115.05186710000001
+              },
+              "braking_contribution_over_opening": {
+                "n": 4,
+                "min": 1.1819813651280844,
+                "median": 1.445220832473685,
+                "max": 1.5223509023849884
+              },
+              "end_reasons": {
+                "accepted": 4
+              }
+            },
+            "gap_creation": {
+              "opening_m": {
+                "n": 569,
+                "min": 0.0021359999999504,
+                "median": 0.6140746000000021,
+                "max": 68.7042656
+              },
+              "headway_change_s": {
+                "n": 568,
+                "min": -9.474589183066145,
+                "median": 0.2226074561609841,
+                "max": 537.5122293348777
+              },
+              "ballistic_braking_contribution_m": {
+                "n": 569,
+                "min": 0.000160700000151337,
+                "median": 0.14003987999999623,
+                "max": 103.18807779999997
+              },
+              "braking_contribution_over_opening": {
+                "n": 569,
+                "min": 0.0011540211235101158,
+                "median": 0.2939596463847351,
+                "max": 101.92390311172383
+              },
+              "end_reasons": {
+                "braking_deficit_closed": 265,
+                "identity_or_lane_censored": 98,
+                "gap_closed": 152,
+                "slot_changed_censored": 15,
+                "observation_end_censored": 39
+              }
+            }
+          },
+          "registered_group_event_counts": {
+            "gap_creation": 33,
+            "wave_damping": 5
+          },
+          "unique_worlds": 6,
+          "cells": [
+            {
+              "penetration": null,
+              "demand_vph": null,
+              "count": 31
+            }
+          ]
+        }
+      },
+      "positive_credit_records": 11,
+      "positive_credit_unique_worlds": 4,
+      "positive_credit_seeds": [
+        969297,
+        969298,
+        969300,
+        969301
+      ],
+      "discovery": {
+        "status": "ok",
+        "method": {
+          "name": "standardized_euclidean_average_linkage_silhouette",
+          "scaling": "finite-observation mean and population std (ddof=0); mean imputation",
+          "constant_rule": "std / max_abs <= float64 epsilon (or all zero)",
+          "k_candidates": [
+            2,
+            3
+          ],
+          "selection": "maximum silhouette > N*eps; ties within N*eps prefer smaller k; otherwise k=1",
+          "singleton_silhouette": 0.0,
+          "tie_break": "descending C_G, canonical JSON id, row-major linkage ties",
+          "silhouette_scores": [
+            {
+              "k": 2,
+              "score": 0.3098660201584632
+            },
+            {
+              "k": 3,
+              "score": 0.20909646369185972
+            }
+          ],
+          "selected_k": 2
+        },
+        "features": [
+          {
+            "name": "member_command_observed_fraction",
+            "mean": 0.9703285531617659,
+            "scale": 0.014930075140064388,
+            "observed_count": 11,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          },
+          {
+            "name": "member_displacement_m",
+            "mean": 373.60844458772726,
+            "scale": 156.11662818583818,
+            "observed_count": 11,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          },
+          {
+            "name": "member_gap_change_m",
+            "mean": 43.050680700000015,
+            "scale": 0.0,
+            "observed_count": 1,
+            "imputed_count": 10,
+            "used_for_clustering": false
+          },
+          {
+            "name": "member_issued_acceleration_mps2",
+            "mean": 1.663372942886534,
+            "scale": 0.5730447042185511,
+            "observed_count": 11,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          },
+          {
+            "name": "member_lane_changes",
+            "mean": 0.4090909090909091,
+            "scale": 0.41659779045053086,
+            "observed_count": 11,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          },
+          {
+            "name": "member_realized_acceleration_mps2",
+            "mean": 0.3855275611000068,
+            "scale": 0.19562566194764675,
+            "observed_count": 11,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          },
+          {
+            "name": "member_speed_change_mps",
+            "mean": 16.221625651736364,
+            "scale": 7.881971560998126,
+            "observed_count": 11,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          },
+          {
+            "name": "member_speed_mps",
+            "mean": 9.861395863347331,
+            "scale": 5.931524955123887,
+            "observed_count": 11,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          },
+          {
+            "name": "member_temporal_speed_variance_m2_s2",
+            "mean": 48.82838138455264,
+            "scale": 27.532204785528897,
+            "observed_count": 11,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          },
+          {
+            "name": "member_upstream_fraction",
+            "mean": 0.007502083912197833,
+            "scale": 0.01899305915120785,
+            "observed_count": 11,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          },
+          {
+            "name": "nearest_ramp_longitudinal_distance_m",
+            "mean": 100.28571640084704,
+            "scale": 70.65924031035959,
+            "observed_count": 11,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          },
+          {
+            "name": "neighbour_speed_change_mps",
+            "mean": 15.62117010132576,
+            "scale": 7.152755983288342,
+            "observed_count": 11,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          },
+          {
+            "name": "neighbour_speed_mps",
+            "mean": 9.678304596842747,
+            "scale": 5.901149000087699,
+            "observed_count": 11,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          },
+          {
+            "name": "neighbour_temporal_speed_variance_m2_s2",
+            "mean": 46.95716128920639,
+            "scale": 24.372238148574052,
+            "observed_count": 11,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          },
+          {
+            "name": "observed_member_fraction",
+            "mean": 0.7645305514157973,
+            "scale": 0.2064500380238053,
+            "observed_count": 11,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          }
+        ],
+        "clusters": [
+          {
+            "cluster_id": "cluster_1",
+            "member_ids": [
+              "fixed_u15_w1_k3",
+              "fixed_u15_w5_k3",
+              "fixed_u15_w5_k1",
+              "fixed_u15_w5_k0",
+              "fixed_u15_w2_k3",
+              "fixed_u15_w5_k2",
+              "fixed_u15_w1_k5",
+              "fixed_u15_w1_k2",
+              "fixed_u15_w4_k5",
+              "fixed_u15_w4_k1"
+            ],
+            "size": 10,
+            "mean_C_G": 255.68378038406374,
+            "physical_means": {
+              "member_command_observed_fraction": 0.9673614084779425,
+              "member_displacement_m": 409.90091823150004,
+              "member_gap_change_m": 43.050680700000015,
+              "member_issued_acceleration_mps2": 1.8126465715932694,
+              "member_lane_changes": 0.4,
+              "member_realized_acceleration_mps2": 0.42005767543500744,
+              "member_speed_change_mps": 17.60242971041,
+              "member_speed_mps": 10.82915551056023,
+              "member_temporal_speed_variance_m2_s2": 53.676919339503925,
+              "member_upstream_fraction": 0.008252292303417615,
+              "nearest_ramp_longitudinal_distance_m": 110.29541504191536,
+              "neighbour_speed_change_mps": 17.001930580208334,
+              "neighbour_speed_mps": 10.635561440738856,
+              "neighbour_temporal_speed_variance_m2_s2": 51.63905710227679,
+              "observed_member_fraction": 0.740983606557377
+            },
+            "standardized_means": {
+              "member_command_observed_fraction": -0.19873608511595586,
+              "member_displacement_m": 0.23247026319688935,
+              "member_gap_change_m": 0.0,
+              "member_issued_acceleration_mps2": 0.26049211799330163,
+              "member_lane_changes": -0.02182178902359933,
+              "member_realized_acceleration_mps2": 0.17651116929762298,
+              "member_speed_change_mps": 0.17518511047492039,
+              "member_speed_mps": 0.16315528545098787,
+              "member_temporal_speed_variance_m2_s2": 0.1761042383899347,
+              "member_upstream_fraction": 0.03949908149325559,
+              "nearest_ramp_longitudinal_distance_m": 0.14166156608961977,
+              "neighbour_speed_change_mps": 0.19303894640171926,
+              "neighbour_speed_mps": 0.16221533194330173,
+              "neighbour_temporal_speed_variance_m2_s2": 0.19209954311661442,
+              "observed_member_fraction": -0.11405638421682004
+            },
+            "description": "Lower mean member command observed fraction (physical mean +0.967361; -0.199 SD relative to ranked-record mean); Higher mean member displacement m (physical mean +409.901; +0.232 SD relative to ranked-record mean); Baseline mean member gap change m (physical mean +43.0507; +0 SD relative to ranked-record mean); Higher mean member issued acceleration mps2 (physical mean +1.81265; +0.26 SD relative to ranked-record mean); Lower mean member lane changes (physical mean +0.4; -0.0218 SD relative to ranked-record mean); Higher mean member realized acceleration mps2 (physical mean +0.420058; +0.177 SD relative to ranked-record mean); Higher mean member speed change mps (physical mean +17.6024; +0.175 SD relative to ranked-record mean); Higher mean member speed mps (physical mean +10.8292; +0.163 SD relative to ranked-record mean); Higher mean member temporal speed variance m2 s2 (physical mean +53.6769; +0.176 SD relative to ranked-record mean); Higher mean member upstream fraction (physical mean +0.00825229; +0.0395 SD relative to ranked-record mean); Higher mean nearest ramp longitudinal distance m (physical mean +110.295; +0.142 SD relative to ranked-record mean); Higher mean neighbour speed change mps (physical mean +17.0019; +0.193 SD relative to ranked-record mean); Higher mean neighbour speed mps (physical mean +10.6356; +0.162 SD relative to ranked-record mean); Higher mean neighbour temporal speed variance m2 s2 (physical mean +51.6391; +0.192 SD relative to ranked-record mean); Lower mean observed member fraction (physical mean +0.740984; -0.114 SD relative to ranked-record mean).",
+            "explained_by": [
+              "gap_creation",
+              "wave_damping"
+            ],
+            "unexplained": false
+          },
+          {
+            "cluster_id": "cluster_2",
+            "member_ids": [
+              "fixed_u15_w4_k2"
+            ],
+            "size": 1,
+            "mean_C_G": 2.956390380859375e-05,
+            "physical_means": {
+              "member_command_observed_fraction": 1.0,
+              "member_displacement_m": 10.683708149999998,
+              "member_issued_acceleration_mps2": 0.17063665581918033,
+              "member_lane_changes": 0.5,
+              "member_realized_acceleration_mps2": 0.04022641775000001,
+              "member_speed_change_mps": 2.4135850650000004,
+              "member_speed_mps": 0.18379939121836067,
+              "member_temporal_speed_variance_m2_s2": 0.34300183503988996,
+              "member_upstream_fraction": 0.0,
+              "nearest_ramp_longitudinal_distance_m": 0.18872999016393435,
+              "neighbour_speed_change_mps": 1.8135653125,
+              "neighbour_speed_mps": 0.10573615788163934,
+              "neighbour_temporal_speed_variance_m2_s2": 0.13820315850237486,
+              "observed_member_fraction": 1.0
+            },
+            "standardized_means": {
+              "member_command_observed_fraction": 1.9873608511595289,
+              "member_displacement_m": -2.324702631968894,
+              "member_issued_acceleration_mps2": -2.6049211799330148,
+              "member_lane_changes": 0.21821789023599233,
+              "member_realized_acceleration_mps2": -1.765111692976232,
+              "member_speed_change_mps": -1.7518511047492025,
+              "member_speed_mps": -1.631552854509881,
+              "member_temporal_speed_variance_m2_s2": -1.7610423838993448,
+              "member_upstream_fraction": -0.3949908149325562,
+              "nearest_ramp_longitudinal_distance_m": -1.4166156608961948,
+              "neighbour_speed_change_mps": -1.930389464017194,
+              "neighbour_speed_mps": -1.62215331943302,
+              "neighbour_temporal_speed_variance_m2_s2": -1.9209954311661463,
+              "observed_member_fraction": 1.1405638421682018
+            },
+            "description": "Higher mean member command observed fraction (physical mean +1; +1.99 SD relative to ranked-record mean); Lower mean member displacement m (physical mean +10.6837; -2.32 SD relative to ranked-record mean); Lower mean member issued acceleration mps2 (physical mean +0.170637; -2.6 SD relative to ranked-record mean); Higher mean member lane changes (physical mean +0.5; +0.218 SD relative to ranked-record mean); Lower mean member realized acceleration mps2 (physical mean +0.0402264; -1.77 SD relative to ranked-record mean); Lower mean member speed change mps (physical mean +2.41359; -1.75 SD relative to ranked-record mean); Lower mean member speed mps (physical mean +0.183799; -1.63 SD relative to ranked-record mean); Lower mean member temporal speed variance m2 s2 (physical mean +0.343002; -1.76 SD relative to ranked-record mean); Lower mean member upstream fraction (physical mean +0; -0.395 SD relative to ranked-record mean); Lower mean nearest ramp longitudinal distance m (physical mean +0.18873; -1.42 SD relative to ranked-record mean); Lower mean neighbour speed change mps (physical mean +1.81357; -1.93 SD relative to ranked-record mean); Lower mean neighbour speed mps (physical mean +0.105736; -1.62 SD relative to ranked-record mean); Lower mean neighbour temporal speed variance m2 s2 (physical mean +0.138203; -1.92 SD relative to ranked-record mean); Higher mean observed member fraction (physical mean +1; +1.14 SD relative to ranked-record mean).",
+            "explained_by": [],
+            "unexplained": true
+          }
+        ],
+        "assignments": [
+          {
+            "id": "fixed_u15_w1_k3",
+            "rank": 1,
+            "C_G": 2482.0478076934814,
+            "cluster_id": "cluster_1"
+          },
+          {
+            "id": "fixed_u15_w5_k3",
+            "rank": 2,
+            "C_G": 74.7783637046814,
+            "cluster_id": "cluster_1"
+          },
+          {
+            "id": "fixed_u15_w5_k1",
+            "rank": 3,
+            "C_G": 0.004478931427001953,
+            "cluster_id": "cluster_1"
+          },
+          {
+            "id": "fixed_u15_w5_k0",
+            "rank": 4,
+            "C_G": 0.0033326148986816406,
+            "cluster_id": "cluster_1"
+          },
+          {
+            "id": "fixed_u15_w2_k3",
+            "rank": 5,
+            "C_G": 0.0020885467529296875,
+            "cluster_id": "cluster_1"
+          },
+          {
+            "id": "fixed_u15_w5_k2",
+            "rank": 6,
+            "C_G": 0.0009427070617675781,
+            "cluster_id": "cluster_1"
+          },
+          {
+            "id": "fixed_u15_w1_k5",
+            "rank": 7,
+            "C_G": 0.00039958953857421875,
+            "cluster_id": "cluster_1"
+          },
+          {
+            "id": "fixed_u15_w1_k2",
+            "rank": 8,
+            "C_G": 0.0002460479736328125,
+            "cluster_id": "cluster_1"
+          },
+          {
+            "id": "fixed_u15_w4_k5",
+            "rank": 9,
+            "C_G": 8.678436279296875e-05,
+            "cluster_id": "cluster_1"
+          },
+          {
+            "id": "fixed_u15_w4_k1",
+            "rank": 10,
+            "C_G": 5.7220458984375e-05,
+            "cluster_id": "cluster_1"
+          },
+          {
+            "id": "fixed_u15_w4_k2",
+            "rank": 11,
+            "C_G": 2.956390380859375e-05,
+            "cluster_id": "cluster_2"
+          }
+        ],
+        "unanticipated_candidates": [
+          {
+            "cluster_id": "cluster_2",
+            "member_ids": [
+              "fixed_u15_w4_k2"
+            ],
+            "description": "Higher mean member command observed fraction (physical mean +1; +1.99 SD relative to ranked-record mean); Lower mean member displacement m (physical mean +10.6837; -2.32 SD relative to ranked-record mean); Lower mean member issued acceleration mps2 (physical mean +0.170637; -2.6 SD relative to ranked-record mean); Higher mean member lane changes (physical mean +0.5; +0.218 SD relative to ranked-record mean); Lower mean member realized acceleration mps2 (physical mean +0.0402264; -1.77 SD relative to ranked-record mean); Lower mean member speed change mps (physical mean +2.41359; -1.75 SD relative to ranked-record mean); Lower mean member speed mps (physical mean +0.183799; -1.63 SD relative to ranked-record mean); Lower mean member temporal speed variance m2 s2 (physical mean +0.343002; -1.76 SD relative to ranked-record mean); Lower mean member upstream fraction (physical mean +0; -0.395 SD relative to ranked-record mean); Lower mean nearest ramp longitudinal distance m (physical mean +0.18873; -1.42 SD relative to ranked-record mean); Lower mean neighbour speed change mps (physical mean +1.81357; -1.93 SD relative to ranked-record mean); Lower mean neighbour speed mps (physical mean +0.105736; -1.62 SD relative to ranked-record mean); Lower mean neighbour temporal speed variance m2 s2 (physical mean +0.138203; -1.92 SD relative to ranked-record mean); Higher mean observed member fraction (physical mean +1; +1.14 SD relative to ranked-record mean).",
+            "interpretation": "Unanticipated candidate: no member has a detector explanation; not causal proof."
+          }
+        ],
+        "counts": {
+          "input": 31,
+          "ranked": 11,
+          "clustered": 11
+        }
+      },
+      "output_sha256": {
+        "COMPLETE.json": "5ed77694bdca060b482b7d0715d8340e34bf41e95d95ca0b869e17989518dbc8",
+        "discovery.json": "16daf13db2dd474bf7b8330ae39e67755e0cb5acddb680c4a97e2fe70151a671",
+        "episodes.json": "c172abb2881a1dc562d6a8ffafca9f6e82a089bfd86ad1ba3eb5314c0d6c8cf6",
+        "events.jsonl.gz": "0157449e48ee93d706b03c18e4cc0159ffdb2b47e01703158882fcc3087c2308",
+        "inputs.json": "98247acff808b09bf35562e42f362a8a4fb146f5e21a4ca6f9e069a05da9e7f2",
+        "members.csv": "07d72ed78cbf436f1e9d508b723eabe90bf0ad8725bf142ba8c9b1f229527876",
+        "signatures.json": "8f755a2228c557d3d0cfa4d5aa264e7b2edc8b609e7debe2b3e74cb5924c91c4",
+        "summary.json": "7ad31a0f42f221e56c4db0d55a0ead838c960f438edaab0dd248a7205b58a807",
+        "sumocf_cross_lane_hold.png": "96be5f96ed972a103cb6c73992b487398f996dce2287ae692c666f7573e2f4ee",
+        "sumocf_gap_creation.png": "8031fc4bea043d024e69ff875e2f8f2e00262d903a3277e1cc17a40ffc68a3fe",
+        "sumocf_wave_damping.png": "6f78607d18883152f1561d60bdfcb4a00b4a44c2d1165819dfbf1fbc3e276119",
+        "sumocf_yield_to_merge.png": "19d8f5f1ac89ec3e3b55859e9c599ac43a17250311abe9d920cdb749863e8569"
+      }
+    }
+  ]
+}

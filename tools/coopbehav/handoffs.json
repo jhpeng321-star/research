@@ -5,8 +5,10 @@
     "E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_DESIGN.md",
     "E:/agent-work/c4-coopmeasure/AUDIT_DESIGN.md"
   ],
+  "remote_indices": [
+    {"host": "gpuR", "path": "/root/sumocf20261031/COOPBEHAV_INDEX.json"}
+  ],
   "remote_sources": [
-    {"host": "gpuR", "kind": "sumocf", "root": "/root/sumocf20261031"},
     {"host": "gpuR", "kind": "coopaudit", "root": "/root/coopaudit20261031"}
   ],
   "indices": [

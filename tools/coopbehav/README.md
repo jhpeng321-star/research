@@ -76,9 +76,26 @@ unspecified remote roots.
 `sources.py` now also polls the published gpuR SUMOCF job-result/trace root,
 uses the saved subset roster (never fixed branch numbers), independently
 reconstructs group/solo credit and generates ready indices under our own root.
-It waits for closed `result.json` files. The original COOPAUDIT crop is explicitly
+It waits for closed `result.json` files. **The broad SUMOCF result scanner is now
+disabled in `handoffs.json`: it can mix invalid original saved-state probe credits
+with corrected full-rerun samples.** The live watcher consumes the producer's
+canonical `gpuR:/root/sumocf20261031/COOPBEHAV_INDEX.json` instead. Historical
+scanner outputs remain provenance, not current inference. See producer
+`tools/sumocf/TRACE_HANDOFF.md` and this task's `evidence/SELECTION.json`.
+The original COOPAUDIT crop is explicitly
 blocked for missing geometry/neighbour/action fields; no default lengths or
 guessed controller commands are substituted.
 Place `STOP` in the poller's output directory for cooperative exit. Remote
 reporting uses `remote.py` and stores exact owned PID/start-tick receipts; it
 never signals a process or imports a simulator.
+
+## Reconcile the selected paper snapshot
+
+`evidence/SELECTION.json` distinguishes whole-controller descriptions, corrected
+TRAIN exploration, deployed DEV and invalidated history. Do not treat a report's
+successful checksum/count verification as a validation of the producer's branch
+engine. Reproduce its current independent output reconciliation with:
+
+```
+python -m tools.coopbehav.verify --report tools/coopbehav/evidence/WMDATA_final --report tools/coopbehav/evidence/WMDATA2_final --report tools/coopbehav/evidence/live/paired_bc782dd4b08fb81b8c2775732fb97b4148acb92707716600f10f20ccc934452d --report tools/coopbehav/evidence/live/paired_1c94ebe359532d3d00e6fa2d72af557791e71709691a78b26196cd4973f76c2e --out tools/coopbehav/evidence/CURRENT_COMPARISON.json
+```

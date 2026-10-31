@@ -5,6 +5,12 @@ analysis-only worktree `c4/coopbehav`, starting at `bf8c1e20`. No simulator is
 imported or run. Observational patterns do not establish positive interaction
 credit: `C_G = D_G - sum(D_i)` remains a separate, paired-branch measurement.
 
+**Recovery correction (2026-10-31):** producer `ARTIFACT_CHECK.md` and
+`tools/sumocf/TRACE_HANDOFF.md` invalidate the original saved-state probe's
+credits and discovery interpretation. Current evidence is explicitly selected in
+`tools/coopbehav/evidence/SELECTION.json` and independently reconciled in
+`CURRENT_COMPARISON.json`. WMDATA/WMDATA2 descriptions are unaffected.
+
 ## Prospective analysis plan
 
 Read only observable S-E3DATA arrays: time, vehicle identity, presence, CAV
@@ -113,7 +119,7 @@ are never treated as realised physical acceleration.
 ## Completed descriptive MAPPO versus CTRL0 analysis
 
 Final outputs are in `tools/coopbehav/evidence/WMDATA_final/` and
-`WMDATA2_final/`; `FINAL_COMPARISON.json` independently reconciles event and
+`WMDATA2_final/`; `CURRENT_COMPARISON.json` independently reconciles event and
 member counts, exposure and output hashes. All 180 arm-episodes cover 300–600 s,
 at 0.5 s state resolution. Rates below are **events per CAV-hour**, with wall
 events counted once per group; member-event and episode-hour rates are also
@@ -143,59 +149,91 @@ these two corpora are zero because no member-release reference was supplied.
 Their behaviour rates therefore cannot establish which controller cooperates
 more. Example PNGs illustrate extrema, not representative or causal examples.
 
-## Available SUMOCF probe discovery
+## Invalidated original SUMOCF probe (provenance only)
 
-The completed **81 eligible group/reference pairs** are preserved in
-`tools/coopbehav/evidence/live/paired_a0b825aa936da6d27d01e07fc6b1bbd210150272eb95decf5389a0596f6895da/`.
-These reuse **four distinct TRAIN worlds** across probe designs, not81
-independent worlds. Credit is reconstructed from the saved empty/group/solo
-branch costs and checked against supplied `C_G`; only closed results are read.
-The reference is the same-checkpoint policy mean. Traces are 1 Hz observed
-states through intervention end+30 s; the600 s credit extends beyond that
-behaviour observation window. Missing/undersized groups remain missing.
+The original81-pair report beginning `a0b825aa936d` and its six discovery clusters
+are retained on disk and in git, but are **withdrawn as cooperation evidence**.
+The producer's zero-noise checks found identical issued actions but different
+first physical steps after state restoration at later branch times. The resulting
+false credits reproduce the dominant original values, including positive
+`C_G=1555.7834 veh-s`. Arithmetic reconciliation cannot validate a defective
+branch engine. `FINAL_COMPARISON.json` and broad historical `source_sumocf`
+reports must not be used to infer positive interaction or novel cooperation.
+Corrected samples use full same-seed prefixes for every branch, with a passing
+zero-offset bitwise trajectory/cost gate. See the producer's artifact receipts.
 
-Across the observed fleet there are0 accepted-yield candidates,1293 opening
-episodes,123 cross-lane holds and3477 attenuation episodes. Reference-supported
-subsets are0,41,0,702, respectively, and apply only to intervened members.
-These are repeated-design mechanism counts, not independent successful groups.
-`FINAL_COMPARISON.json` also separates registered-group event counts from
-whole-observed-fleet counts.
+## Corrected SUMOCF behaviour evidence
 
-Discovery ranks all36 strictly positive-credit records, from only **two distinct
-worlds**. Tiny positives are retained. Features use each intervention's own
-window: member issued and realised acceleration, speed/change/variance, fixed-
-leader gap change, lane changes, upstream fraction, nearest ramp distance and
-initial immediate-neighbour speed signatures. Missing features are mean-imputed
-after finite-observation mean/population-SD standardization; numerically constant
-columns are removed. Average-linkage Euclidean clustering is deterministic.
-Choose k in2..floor(sqrt(N)) by maximum silhouette, ties toward smaller k;
-nonpositive numerical silhouettes or insufficient data use one cluster.
-No gain value enters the feature distance. Here the rule selects **six clusters**:
+### Deployed-policy DEV (u03)
 
-1. **Short-window release from slow traffic:** mean member speed4.20 m/s,
-   speed gain6.35 m/s, realised acceleration+0.635 m/s², same-leader gap
-   increase29.78 m; neighbours gain3.14 m/s. Overlaps follower attenuation.
-2. **Longer acceleration with neighbours recovering:** mean8.37 m/s, member
-   gain12.64 m/s, neighbours+9.51 m/s; same-leader gap changes−0.18 m.
-   Overlaps gap creation and attenuation episodes.
-3. **Extended recovery with lane changes and departures:** mean5.77 m/s,
-   member gain12.32 m/s and neighbour gain10.42 m/s; member visibility74.6%.
-   Overlaps gap creation and attenuation.
-4. **Nearly steady mainline slowing:** mean13.23 m/s, member change−0.69 m/s,
-   neighbours−0.83 m/s, same-leader gaps−3.81 m. Overlaps attenuation.
-5. **Near-steady motion with lane changes:** mean11.46 m/s, member and neighbour
-   gains about0.55 m/s, gap increase2.56 m, member visibility88.7%.
-   Overlaps attenuation.
-6. **Later acceleration, mostly downstream:** mean13.41 m/s, member
-   gain13.71 m/s and neighbours+12.88 m/s; only2.4% of member frames upstream,
-   member visibility68.9%. Overlaps attenuation.
+Selected report: `tools/coopbehav/evidence/live/paired_bc782dd4b08fb81b8c2775732fb97b4148acb92707716600f10f20ccc934452d/`.
+The producer's immutable `COOPBEHAV_dev_u03_fullfleet_INDEX.json` compares
+deployed learned means with MAPPO means during the60s intervention, followed by
+learned continuation. Of three prospective worlds, two have an eligible group;
+one is missing, not zero-filled. Two90s observable-fleet crops cover4498 CAV-s;
+the credit horizon is600s, substantially beyond the behaviour crop.
 
-Each cluster has six repeated-design records. Clusters1–3 share the same world
-and C_G=1555.7834 veh-s; clusters4–6 share another and C_G=0.0017309 veh-s.
-The clusters align strongly with world and window duration/visibility, and
-are not six independent discovered mechanisms. **No wholly unexplained cluster
-was found under the declared rule.** Detector overlap does not prove it caused
-positive C_G; the accelerating recovery signatures are descriptive hypotheses.
+The observed fleet has **0yield candidates,32openings,4cross-lane holds and
+60attenuation episodes** (rates0/25.611/3.201/48.021 per CAV-hour). Only two
+unaccepted openings contain a geometrically fitting ramp vehicle. **All four
+paired-supported counts are zero** for intervened groups. No positive-credit
+record enters discovery. These data do not establish a learned cooperation
+mechanism. This is the latest deployed full-fleet ready index found at recovery;
+TRAIN update numbers below do not imply later DEV evidence is available.
+
+### Sampled TRAIN exploration (u15 snapshot)
+
+Selected report: `tools/coopbehav/evidence/live/paired_1c94ebe359532d3d00e6fa2d72af557791e71709691a78b26196cd4973f76c2e/`.
+This is the producer's per-update `COOPBEHAV_u15_INDEX.json`: **31eligible
+windows from six TRAIN worlds**, of36attempted windows (five missing groups).
+Each uses a60s sampled-offset intervention versus the same checkpoint's current
+policy mean, with full600s credit and a90s behaviour crop. The report contains
+71120 CAV-s of observed-fleet exposure. It is exploratory and does not measure
+the deployed mean's cooperation relative to MAPPO.
+
+Whole-fleet counts are **4yield candidates,569openings,61cross-lane holds and
+1507attenuation episodes** (rates0.202/28.802/3.088/76.282 per CAV-hour).
+Reference-supported intervened-group subsets are **0/1/0/5**, respectively;
+registered-member overlap counts are0/33/0/5. Only32unaccepted openings contain
+a fitting ramp vehicle. Whole-fleet patterns and group-intervention support are
+distinct quantities; neither is a count of independently beneficial groups.
+
+### Corrected discovery and unanticipated signatures
+
+The unchanged declared algorithm ranks strictly positive `C_G` and uses only
+the intervention window for signatures: member issued/realised acceleration,
+speed/change/variance, fixed-leader gap change, lane changes, upstream fraction,
+nearest ramp distance and initial immediate-neighbour speed signatures. Finite
+feature means/population SDs standardize the data; missing values are mean-imputed
+and numerically constant columns removed. Deterministic average-linkage Euclidean
+clustering chooses k in2..floor(sqrt(N)) by maximum positive silhouette (ties
+toward smaller k; insufficient/nonseparable data use one cluster). No gain enters
+feature distances, and no minimum positive-gain cutoff is fitted.
+
+For u15, **11positive records from four distinct worlds** produce two clusters
+(silhouette0.310 versus0.209 for k=3):
+
+1. **Downstream acceleration with neighbouring traffic recovering** (10records):
+   member mean speed10.83m/s, speed gain17.60m/s, realised acceleration+0.420m/s²;
+   neighbours gain17.00m/s. Members are upstream in only0.83% of observed frames,
+   with74.1% mean member visibility. This cluster overlaps gap-creation and
+   follower-attenuation detections. Same-leader gap change is observed for only
+   one ranked record and excluded from clustering; its imputed centroid must not
+   be interpreted as a common physical opening.
+2. **Near-stationary downstream queue creeping with a lane change** (one record,
+   `fixed_u15_w4_k2`): member mean speed0.184m/s, displacement10.68m, realised
+   acceleration+0.0402m/s² and speed gain2.41m/s; neighbours average0.106m/s and
+   gain1.81m/s. The mean member lane-change count is0.5 and visibility100%.
+   **No detector (1)–(4) overlaps this record**, so it is explicitly reported as
+   an unanticipated-signature candidate. Its `C_G` is only0.0000296veh-s and
+   `D_G=-0.000000954veh-s`; this singleton does not establish a novel beneficial
+   cooperation mechanism.
+
+The largest positive record, `fixed_u15_w1_k3`, has `C_G=2482.05veh-s` but
+`D_G=-3413.52veh-s`: positive interaction does not imply positive group benefit.
+The second-largest has `C_G=74.78veh-s` and `D_G=74.78veh-s`. These post-selected
+training observations require independent deployed-policy replication. Cluster
+overlap is descriptive co-occurrence, not proof that a detector caused the gain.
 
 ## Runtime, checks and continuing handoff
 
@@ -210,13 +248,21 @@ positive C_G; the accelerating recovery signatures are descriptive hypotheses.
 - cpuQ lacked Matplotlib. Plotting dependencies were installed only under our
   `/home/ubuntu/coopbehav20261031_analysis/deps` and used only by our reports.
   Existing interpreters were retained; no environment or simulator was created.
-- Polling is active every120 s through the own Windows watcher; receipt in
+- Recovery independently reverified all four selected reports (180descriptive
+  arm-episodes,2deployed DEV crops and31sampled TRAIN windows), including event/
+  member counts, exposure, summary digests and all derived-output hashes. No
+  completed report or simulation was rerun.
+- Polling is active every120 s through the inherited own Windows watcher; receipt in
   `tools/coopbehav/evidence/WATCHER.json`, live state/logs in
   `runs/coopbehav_poll/`. It watches both design documents, explicit ready indices
-  and the published gpuR roots. Immutable index snapshots, one own paired report
+  and the producer-selected gpuR ready index. The broad SUMOCF historical scanner
+  is disabled in the live config to prevent mixing invalid old probes with
+  corrected cohorts; COOPAUDIT coverage checking continues. Immutable index
+  snapshots, one own paired report
   at a time, verified local publication and task-output-only step commits are
   implemented. All completed snapshots are inventoried even if the live index
-  advances. Source snapshots overlap and must never be pooled as independent data.
+  advances. Historical cumulative snapshots overlap; canonical corrected update
+  cohorts remain distinct from deployed DEV and are never pooled indiscriminately.
 - COOPMEAS2 has costs/hashes but no replayable frames. The current COOPAUDIT
   crop lacks observable lengths, mainline neighbours and non-wall executed
   command status; its geometric analysis is explicitly blocked. A complete
