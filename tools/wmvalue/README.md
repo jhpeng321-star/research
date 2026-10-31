@@ -64,3 +64,10 @@ are inspected. No recursive file scan or truth sibling is opened.
 features/labels and a hash-bound JSON audit; no fitting. `--limit 1` is an explicit
 mechanical canary, never accepted as a complete training corpus. Existing outputs
 are never overwritten. `a_coverage.py` reports missing exact restart/arm/future keys.
+
+`fit_causal.py --wmdata ARRAYS RECEIPT --wmdata2 ARRAYS RECEIPT --out NEW.joblib
+--receipt NEW.json` verifies complete FIT grids, seed roles, exporter/code/array
+hashes and terminal constraints before learning. Produces `Value` wrappers V/D
+and the FIT-only E dictionary. Parameters/weights are frozen; no reserved scoring.
+See `evidence/frozen_fit.json` for the model location/hash and exact inputs.
+Run `python -B -m unittest tools.wmvalue.test_fit_causal` for export split guards.
