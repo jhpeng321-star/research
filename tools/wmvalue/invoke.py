@@ -13,7 +13,8 @@ def main():
     a = p.parse_args()
     home = '/home/ubuntu' if a.host == 'cpuQ' else '/root'
     root = home+'/wmvalue20261031/'+a.tag
-    code = ('import sys,runpy; sys.path.insert(0,'+repr(root)+'); sys.argv='+
+    deps = home+'/autodl-tmp/c4/speedhead20261030/pythondeps'
+    code = ('import sys,runpy; sys.path[:0]=['+repr(root)+','+repr(deps)+']; sys.argv='+
             repr([a.module, *a.args])+'; runpy.run_module('+repr(a.module)+",run_name='__main__')")
     command = ('nice -n 19 env OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 '+
                home+'/miniconda3/bin/python -B -')
