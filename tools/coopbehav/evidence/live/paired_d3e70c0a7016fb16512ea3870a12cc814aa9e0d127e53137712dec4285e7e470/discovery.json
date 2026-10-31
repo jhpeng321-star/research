@@ -1,0 +1,293 @@
+{
+  "status": "ok",
+  "method": {
+    "name": "standardized_euclidean_average_linkage_silhouette",
+    "scaling": "finite-observation mean and population std (ddof=0); mean imputation",
+    "constant_rule": "std / max_abs <= float64 epsilon (or all zero)",
+    "k_candidates": [
+      2
+    ],
+    "selection": "maximum silhouette > N*eps; ties within N*eps prefer smaller k; otherwise k=1",
+    "singleton_silhouette": 0.0,
+    "tie_break": "descending C_G, canonical JSON id, row-major linkage ties",
+    "silhouette_scores": [
+      {
+        "k": 2,
+        "score": 0.3089343469507939
+      }
+    ],
+    "selected_k": 2
+  },
+  "features": [
+    {
+      "name": "member_command_observed_fraction",
+      "mean": 0.9691954209517967,
+      "scale": 0.018196261105054953,
+      "observed_count": 6,
+      "imputed_count": 0,
+      "used_for_clustering": true
+    },
+    {
+      "name": "member_displacement_m",
+      "mean": 468.57085742,
+      "scale": 60.97968505968878,
+      "observed_count": 6,
+      "imputed_count": 0,
+      "used_for_clustering": true
+    },
+    {
+      "name": "member_gap_change_m",
+      "mean": 129.93191736,
+      "scale": 0.0,
+      "observed_count": 1,
+      "imputed_count": 5,
+      "used_for_clustering": false
+    },
+    {
+      "name": "member_issued_acceleration_mps2",
+      "mean": 1.6568079933211957,
+      "scale": 0.4077498095051321,
+      "observed_count": 6,
+      "imputed_count": 0,
+      "used_for_clustering": true
+    },
+    {
+      "name": "member_lane_changes",
+      "mean": 0.4166666666666667,
+      "scale": 0.44876373392787533,
+      "observed_count": 6,
+      "imputed_count": 0,
+      "used_for_clustering": true
+    },
+    {
+      "name": "member_realized_acceleration_mps2",
+      "mean": 0.2975768311703824,
+      "scale": 0.1871053528453358,
+      "observed_count": 6,
+      "imputed_count": 0,
+      "used_for_clustering": true
+    },
+    {
+      "name": "member_speed_change_mps",
+      "mean": 14.38769757675,
+      "scale": 9.941887038896676,
+      "observed_count": 6,
+      "imputed_count": 0,
+      "used_for_clustering": true
+    },
+    {
+      "name": "member_speed_mps",
+      "mean": 12.410843138176432,
+      "scale": 5.423213290310286,
+      "observed_count": 6,
+      "imputed_count": 0,
+      "used_for_clustering": true
+    },
+    {
+      "name": "member_temporal_speed_variance_m2_s2",
+      "mean": 50.07056051749393,
+      "scale": 36.16236407689819,
+      "observed_count": 6,
+      "imputed_count": 0,
+      "used_for_clustering": true
+    },
+    {
+      "name": "member_upstream_fraction",
+      "mean": 0.13094620307905205,
+      "scale": 0.19313211438194644,
+      "observed_count": 6,
+      "imputed_count": 0,
+      "used_for_clustering": true
+    },
+    {
+      "name": "nearest_ramp_longitudinal_distance_m",
+      "mean": 111.90504725372871,
+      "scale": 51.54857648941193,
+      "observed_count": 6,
+      "imputed_count": 0,
+      "used_for_clustering": true
+    },
+    {
+      "name": "neighbour_speed_change_mps",
+      "mean": 15.605061986305552,
+      "scale": 9.982817085439963,
+      "observed_count": 6,
+      "imputed_count": 0,
+      "used_for_clustering": true
+    },
+    {
+      "name": "neighbour_speed_mps",
+      "mean": 13.959261348621537,
+      "scale": 4.9965939125321555,
+      "observed_count": 6,
+      "imputed_count": 0,
+      "used_for_clustering": true
+    },
+    {
+      "name": "neighbour_temporal_speed_variance_m2_s2",
+      "mean": 50.79083804602848,
+      "scale": 37.459101333925204,
+      "observed_count": 6,
+      "imputed_count": 0,
+      "used_for_clustering": true
+    },
+    {
+      "name": "observed_member_fraction",
+      "mean": 0.7185792349726776,
+      "scale": 0.17366391892973446,
+      "observed_count": 6,
+      "imputed_count": 0,
+      "used_for_clustering": true
+    }
+  ],
+  "clusters": [
+    {
+      "cluster_id": "cluster_1",
+      "member_ids": [
+        "fixed_u12_w1_k0",
+        "fixed_u12_w5_k0",
+        "fixed_u12_w0_k2",
+        "fixed_u12_w2_k2",
+        "fixed_u12_w5_k1"
+      ],
+      "size": 5,
+      "mean_C_G": 422.08217458724977,
+      "physical_means": {
+        "member_command_observed_fraction": 0.963034505142156,
+        "member_displacement_m": 461.833069316,
+        "member_gap_change_m": 129.93191736,
+        "member_issued_acceleration_mps2": 1.6895190730627072,
+        "member_lane_changes": 0.5,
+        "member_realized_acceleration_mps2": 0.3487842497854113,
+        "member_speed_change_mps": 17.0907701921,
+        "member_speed_mps": 10.026739101266264,
+        "member_temporal_speed_variance_m2_s2": 60.0421550782823,
+        "member_upstream_fraction": 0.1571354436948625,
+        "nearest_ramp_longitudinal_distance_m": 90.95251718183806,
+        "neighbour_speed_change_mps": 18.658977863566665,
+        "neighbour_speed_mps": 11.816077949254936,
+        "neighbour_temporal_speed_variance_m2_s2": 60.922102328184764,
+        "observed_member_fraction": 0.7901639344262295
+      },
+      "standardized_means": {
+        "member_command_observed_fraction": -0.33858141373499573,
+        "member_displacement_m": -0.1104923401523779,
+        "member_gap_change_m": 0.0,
+        "member_issued_acceleration_mps2": 0.0802234090095878,
+        "member_lane_changes": 0.18569533817705172,
+        "member_realized_acceleration_mps2": 0.2736822749125606,
+        "member_speed_change_mps": 0.2718872790220296,
+        "member_speed_mps": -0.4396109666514265,
+        "member_temporal_speed_variance_m2_s2": 0.27574509618851445,
+        "member_upstream_fraction": 0.13560272303557683,
+        "nearest_ramp_longitudinal_distance_m": -0.40646185595822015,
+        "neighbour_speed_change_mps": 0.30591724271050497,
+        "neighbour_speed_mps": -0.4289288737255987,
+        "neighbour_temporal_speed_variance_m2_s2": 0.2704620218152643,
+        "observed_member_fraction": 0.4122024879705467
+      },
+      "description": "Lower mean member command observed fraction (physical mean +0.963035; -0.339 SD relative to ranked-record mean); Lower mean member displacement m (physical mean +461.833; -0.11 SD relative to ranked-record mean); Baseline mean member gap change m (physical mean +129.932; +0 SD relative to ranked-record mean); Higher mean member issued acceleration mps2 (physical mean +1.68952; +0.0802 SD relative to ranked-record mean); Higher mean member lane changes (physical mean +0.5; +0.186 SD relative to ranked-record mean); Higher mean member realized acceleration mps2 (physical mean +0.348784; +0.274 SD relative to ranked-record mean); Higher mean member speed change mps (physical mean +17.0908; +0.272 SD relative to ranked-record mean); Lower mean member speed mps (physical mean +10.0267; -0.44 SD relative to ranked-record mean); Higher mean member temporal speed variance m2 s2 (physical mean +60.0422; +0.276 SD relative to ranked-record mean); Higher mean member upstream fraction (physical mean +0.157135; +0.136 SD relative to ranked-record mean); Lower mean nearest ramp longitudinal distance m (physical mean +90.9525; -0.406 SD relative to ranked-record mean); Higher mean neighbour speed change mps (physical mean +18.659; +0.306 SD relative to ranked-record mean); Lower mean neighbour speed mps (physical mean +11.8161; -0.429 SD relative to ranked-record mean); Higher mean neighbour temporal speed variance m2 s2 (physical mean +60.9221; +0.27 SD relative to ranked-record mean); Higher mean observed member fraction (physical mean +0.790164; +0.412 SD relative to ranked-record mean).",
+      "explained_by": [
+        "gap_creation",
+        "wave_damping"
+      ],
+      "unexplained": false
+    },
+    {
+      "cluster_id": "cluster_2",
+      "member_ids": [
+        "fixed_u12_w0_k1"
+      ],
+      "size": 1,
+      "mean_C_G": 0.0010356903076171875,
+      "physical_means": {
+        "member_command_observed_fraction": 1.0,
+        "member_displacement_m": 502.25979794,
+        "member_issued_acceleration_mps2": 1.4932525946136366,
+        "member_lane_changes": 0.0,
+        "member_realized_acceleration_mps2": 0.04153973809523805,
+        "member_speed_change_mps": 0.8723344999999991,
+        "member_speed_mps": 24.331363322727274,
+        "member_temporal_speed_variance_m2_s2": 0.21258771355207715,
+        "member_upstream_fraction": 0.0,
+        "nearest_ramp_longitudinal_distance_m": 216.66769761318184,
+        "neighbour_speed_change_mps": 0.33548259999999885,
+        "neighbour_speed_mps": 24.67517834545454,
+        "neighbour_temporal_speed_variance_m2_s2": 0.13451663524714935,
+        "observed_member_fraction": 0.36065573770491804
+      },
+      "standardized_means": {
+        "member_command_observed_fraction": 1.6929070686749907,
+        "member_displacement_m": 0.5524617007618885,
+        "member_issued_acceleration_mps2": -0.4011170450479401,
+        "member_lane_changes": -0.9284766908852594,
+        "member_realized_acceleration_mps2": -1.3684113745628037,
+        "member_speed_change_mps": -1.359436395110148,
+        "member_speed_mps": 2.198054833257133,
+        "member_temporal_speed_variance_m2_s2": -1.3787254809425724,
+        "member_upstream_fraction": -0.6780136151778837,
+        "nearest_ramp_longitudinal_distance_m": 2.0323092797910993,
+        "neighbour_speed_change_mps": -1.5295862135525236,
+        "neighbour_speed_mps": 2.1446443686279943,
+        "neighbour_temporal_speed_variance_m2_s2": -1.3523101090763205,
+        "observed_member_fraction": -2.061012439852735
+      },
+      "description": "Higher mean member command observed fraction (physical mean +1; +1.69 SD relative to ranked-record mean); Higher mean member displacement m (physical mean +502.26; +0.552 SD relative to ranked-record mean); Lower mean member issued acceleration mps2 (physical mean +1.49325; -0.401 SD relative to ranked-record mean); Lower mean member lane changes (physical mean +0; -0.928 SD relative to ranked-record mean); Lower mean member realized acceleration mps2 (physical mean +0.0415397; -1.37 SD relative to ranked-record mean); Lower mean member speed change mps (physical mean +0.872334; -1.36 SD relative to ranked-record mean); Higher mean member speed mps (physical mean +24.3314; +2.2 SD relative to ranked-record mean); Lower mean member temporal speed variance m2 s2 (physical mean +0.212588; -1.38 SD relative to ranked-record mean); Lower mean member upstream fraction (physical mean +0; -0.678 SD relative to ranked-record mean); Higher mean nearest ramp longitudinal distance m (physical mean +216.668; +2.03 SD relative to ranked-record mean); Lower mean neighbour speed change mps (physical mean +0.335483; -1.53 SD relative to ranked-record mean); Higher mean neighbour speed mps (physical mean +24.6752; +2.14 SD relative to ranked-record mean); Lower mean neighbour temporal speed variance m2 s2 (physical mean +0.134517; -1.35 SD relative to ranked-record mean); Lower mean observed member fraction (physical mean +0.360656; -2.06 SD relative to ranked-record mean).",
+      "explained_by": [],
+      "unexplained": true
+    }
+  ],
+  "assignments": [
+    {
+      "id": "fixed_u12_w1_k0",
+      "rank": 1,
+      "C_G": 2110.409448623657,
+      "cluster_id": "cluster_1"
+    },
+    {
+      "id": "fixed_u12_w0_k1",
+      "rank": 2,
+      "C_G": 0.0010356903076171875,
+      "cluster_id": "cluster_2"
+    },
+    {
+      "id": "fixed_u12_w5_k0",
+      "rank": 3,
+      "C_G": 0.000804901123046875,
+      "cluster_id": "cluster_1"
+    },
+    {
+      "id": "fixed_u12_w0_k2",
+      "rank": 4,
+      "C_G": 0.00042819976806640625,
+      "cluster_id": "cluster_1"
+    },
+    {
+      "id": "fixed_u12_w2_k2",
+      "rank": 5,
+      "C_G": 0.00016880035400390625,
+      "cluster_id": "cluster_1"
+    },
+    {
+      "id": "fixed_u12_w5_k1",
+      "rank": 6,
+      "C_G": 2.2411346435546875e-05,
+      "cluster_id": "cluster_1"
+    }
+  ],
+  "unanticipated_candidates": [
+    {
+      "cluster_id": "cluster_2",
+      "member_ids": [
+        "fixed_u12_w0_k1"
+      ],
+      "description": "Higher mean member command observed fraction (physical mean +1; +1.69 SD relative to ranked-record mean); Higher mean member displacement m (physical mean +502.26; +0.552 SD relative to ranked-record mean); Lower mean member issued acceleration mps2 (physical mean +1.49325; -0.401 SD relative to ranked-record mean); Lower mean member lane changes (physical mean +0; -0.928 SD relative to ranked-record mean); Lower mean member realized acceleration mps2 (physical mean +0.0415397; -1.37 SD relative to ranked-record mean); Lower mean member speed change mps (physical mean +0.872334; -1.36 SD relative to ranked-record mean); Higher mean member speed mps (physical mean +24.3314; +2.2 SD relative to ranked-record mean); Lower mean member temporal speed variance m2 s2 (physical mean +0.212588; -1.38 SD relative to ranked-record mean); Lower mean member upstream fraction (physical mean +0; -0.678 SD relative to ranked-record mean); Higher mean nearest ramp longitudinal distance m (physical mean +216.668; +2.03 SD relative to ranked-record mean); Lower mean neighbour speed change mps (physical mean +0.335483; -1.53 SD relative to ranked-record mean); Higher mean neighbour speed mps (physical mean +24.6752; +2.14 SD relative to ranked-record mean); Lower mean neighbour temporal speed variance m2 s2 (physical mean +0.134517; -1.35 SD relative to ranked-record mean); Lower mean observed member fraction (physical mean +0.360656; -2.06 SD relative to ranked-record mean).",
+      "interpretation": "Unanticipated candidate: no member has a detector explanation; not causal proof."
+    }
+  ],
+  "counts": {
+    "input": 21,
+    "ranked": 6,
+    "clustered": 6
+  }
+}
