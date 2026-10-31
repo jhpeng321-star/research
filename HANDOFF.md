@@ -17,6 +17,10 @@ exited. Fullv4 cpuQ579949 (01:47),2nice19CPUworkers; newroot lc_boundaries.
 `draw_lane_parameters` now accepts nonnegative behavioral weights, assertive>0.
 UNC must allow those LC-only zeros before sampling this forthcoming candidate;
 IDM remains strictly positive. No boundary fit adopted before validation.
+Raw-decision LS continuation: `lane_raw_fit.py` fits the physical categorical
+distribution itself (no free-emission score substitution), learns causal
+driver likelihood temperature; all10new tests PASS. Smoke598368 exited/verified,
+raw expected99vs30changes (v4raw301/source-default533); full candidate pendingv4.
 New outputs `artifacts/rbfit/shrinkage_v1` and `lane_v2`; **22 CPU tests PASS**.
 Direct UNC f8b6faea reader verified on ALL3,130 exported drivers and16
 paired/replayed planned futures. `receipts/ADDENDUM_VERIFIED_v2.json` binds SHA;

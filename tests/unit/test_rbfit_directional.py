@@ -124,3 +124,44 @@ def test_source_zero_behavioral_weights_are_sampleable(tmp_path):
     (tmp_path/"pop.json").write_text(json.dumps(population))
     with pytest.raises(ValueError,match="Invalid LC"):
         draw_lane_parameters(tmp_path/"pop.json",tmp_path/"post.json",969400,1,t0_s=300)
+
+
+@pytest.fixture(scope="module")
+def raw_fit():
+    tools = os.environ.get("RBFIT_TOOLS", str(Path(__file__).resolve().parents[2]/"tools"/"rbfit"))
+    spec = importlib.util.spec_from_file_location("rbfit_raw",Path(tools)/"lane_raw_fit.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_physical_simplex_recovers_known_categorical_distribution(raw_fit):
+    weights,receipt = raw_fit.fit_simplex(np.eye(2),np.array([0.2,0.8]))
+    np.testing.assert_allclose(weights,[0.2,0.8],atol=1e-8)
+    assert abs(receipt["categorical_brier"]-0.32) < 1e-10
+    assert receipt["simplex_kkt_gap"] < 1e-8
+    # Observable contexts where all profiles agree cannot invent heterogeneity.
+    weights,_ = raw_fit.fit_simplex(np.ones((3,3)),np.ones(3))
+    np.testing.assert_allclose(weights,[1/3]*3)
+
+
+def test_symmetric_motion_likelihood_has_exact_bayes_and_no_evidence_fallback(raw_fit):
+    prior = np.array([0.2,0.8,0.0])
+    wrong = np.array([[1,3,0],[2,2,2],[0,0,0]])
+    posterior = raw_fit.bayes_weights(wrong,prior,0.7)
+    expected = prior*np.exp(-0.7*wrong)
+    expected /= expected.sum(1,keepdims=True)
+    np.testing.assert_allclose(posterior,expected)
+    np.testing.assert_allclose(posterior[1:],np.tile(prior,(2,1)))
+    np.testing.assert_array_equal(raw_fit.bayes_weights(wrong,prior,0),np.tile(prior,(3,1)))
+    assert not posterior[:,2].any()
+
+
+def test_raw_physics_scores_do_not_use_discrepancy_to_hide_false_events(raw_fit):
+    predictions = np.array([[1,0],[2,0],[0,0]])
+    weights = np.tile([0.25,0.75],(3,1))
+    probability = raw_fit.raw_probabilities(predictions,weights)
+    np.testing.assert_allclose(probability,[[.75,.25,0],[.75,0,.25],[1,0,0]])
+    receipt = raw_fit.metrics(probability,np.array([0,2,0]))
+    assert receipt["expected_event_count"] == 0.5
+    assert abs(receipt["categorical_brier"]-(.125+1.125)/3) < 1e-12

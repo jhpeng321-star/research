@@ -47,7 +47,7 @@ def main():
     assert (support[:,:4] >= 0).all() and (support[:,4] > 0).all()
     if pop.get("requires_boundary_aware_lc_reader"):
         assert (support[:,1] <= 1).all()
-    assert (weights > 0).all() and np.isfinite(weights).all()
+    assert (weights >= 0).all() and np.isfinite(weights).all()
     np.testing.assert_allclose(weights.sum(), 1, rtol=0, atol=1e-12)
     assert emission.shape == (3,3,3) and (emission > 0).all()
     np.testing.assert_allclose(emission.sum(-1), 1, rtol=0, atol=1e-12)
@@ -85,7 +85,9 @@ def main():
             n = int(np.sum(sequence & evidence))
             nn[j] = np.sum(prefix & evidence)
             def posterior(selected):
-                log_joint = np.log(weights)+np.log(emission[
+                log_prior = np.full_like(weights,-np.inf)
+                np.log(weights,out=log_prior,where=weights>0)
+                log_joint = log_prior+np.log(emission[
                     r["source"][selected,None],r["prediction"][selected],r["actual"][selected,None]]).sum(0)
                 result = np.exp(log_joint-log_joint.max())
                 return result/result.sum()
@@ -120,8 +122,9 @@ def main():
         row["raw_physics_source_default"] = scores(default,r["actual"][later])
         # Independently recompute the selected causal prefix-calibration score.
         suffix = (r["time_s"] > 270) & fit
-        p_raw = probabilities(r["prediction"][suffix],r["source"][suffix],before[driver[suffix]],emission)
-        p_pop = probabilities(r["prediction"][suffix],r["source"][suffix],np.tile(weights,(suffix.sum(),1)),emission)
+        calibration_emission = (None if policy.get("calibration_objective","").startswith("raw physical") else emission)
+        p_raw = probabilities(r["prediction"][suffix],r["source"][suffix],before[driver[suffix]],calibration_emission)
+        p_pop = probabilities(r["prediction"][suffix],r["source"][suffix],np.tile(weights,(suffix.sum(),1)),calibration_emission)
         n_prefix = nn[driver[suffix]]
         f = np.divide(n_prefix,n_prefix+strength,out=np.zeros_like(n_prefix,dtype=float),where=n_prefix+strength>0)
         p = f[:,None]*p_raw+(1-f[:,None])*p_pop

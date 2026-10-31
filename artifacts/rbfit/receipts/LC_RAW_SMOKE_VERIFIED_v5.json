@@ -1,0 +1,159 @@
+{
+  "status": "PASS",
+  "drivers": 121,
+  "zero_information_population_fallbacks": 54,
+  "informative_drivers": 67,
+  "validation_only_population_fallbacks": 36,
+  "maximum_direct_sequence_posterior_error": 3.885780586188048e-15,
+  "aggregate": {
+    "likelihood_population": {
+      "n": 9779,
+      "events": 30,
+      "categorical_brier_sum": 167.32857706025027,
+      "event_brier_sum": 83.66428853012513,
+      "negative_log_sum": 755.9181576944397,
+      "expected_event_count": 111.5529643911106,
+      "expected_correct_direction_event_count": 4.940341865599304,
+      "categorical_brier": 0.017111011050235225,
+      "event_brier": 0.008555505525117612,
+      "negative_log_score": 0.07730014906375292
+    },
+    "raw_physics_population": {
+      "n": 9779,
+      "events": 30,
+      "categorical_brier_sum": 167.32857706025027,
+      "event_brier_sum": 83.66428853012513,
+      "negative_log_sum": 8765.935257991436,
+      "expected_event_count": 111.5529643911106,
+      "expected_correct_direction_event_count": 4.940341865599304,
+      "categorical_brier": 0.017111011050235225,
+      "event_brier": 0.008555505525117612,
+      "negative_log_score": 0.8964040554240142
+    },
+    "likelihood_shrunk_posterior": {
+      "n": 9779,
+      "events": 30,
+      "categorical_brier_sum": 162.88760122678795,
+      "event_brier_sum": 81.44380061339399,
+      "negative_log_sum": 775.232587402518,
+      "expected_event_count": 98.53880710205911,
+      "expected_correct_direction_event_count": 5.009371890974598,
+      "categorical_brier": 0.0166568771067377,
+      "event_brier": 0.008328438553368851,
+      "negative_log_score": 0.07927524157915104
+    },
+    "raw_physics_shrunk_posterior": {
+      "n": 9779,
+      "events": 30,
+      "categorical_brier_sum": 162.88760122678795,
+      "event_brier_sum": 81.44380061339399,
+      "negative_log_sum": 8790.922793559062,
+      "expected_event_count": 98.53880710205911,
+      "expected_correct_direction_event_count": 5.009371890974598,
+      "categorical_brier": 0.0166568771067377,
+      "event_brier": 0.008328438553368851,
+      "negative_log_score": 0.8989592794313388
+    },
+    "raw_physics_source_default": {
+      "n": 9779,
+      "events": 30,
+      "categorical_brier_sum": 1082.0,
+      "event_brier_sum": 541.0,
+      "negative_log_sum": 383242.4624259549,
+      "expected_event_count": 533.0,
+      "expected_correct_direction_event_count": 11.0,
+      "categorical_brier": 0.11064526025155946,
+      "event_brier": 0.05532263012577973,
+      "negative_log_score": 39.1903530448875
+    }
+  },
+  "world_scores": [
+    {
+      "world": 969400,
+      "likelihood_population": {
+        "n": 9779,
+        "events": 30,
+        "categorical_brier_sum": 167.32857706025027,
+        "event_brier_sum": 83.66428853012513,
+        "negative_log_sum": 755.9181576944397,
+        "expected_event_count": 111.5529643911106,
+        "expected_correct_direction_event_count": 4.940341865599304
+      },
+      "raw_physics_population": {
+        "n": 9779,
+        "events": 30,
+        "categorical_brier_sum": 167.32857706025027,
+        "event_brier_sum": 83.66428853012513,
+        "negative_log_sum": 8765.935257991436,
+        "expected_event_count": 111.5529643911106,
+        "expected_correct_direction_event_count": 4.940341865599304
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 9779,
+        "events": 30,
+        "categorical_brier_sum": 162.88760122678795,
+        "event_brier_sum": 81.44380061339399,
+        "negative_log_sum": 775.232587402518,
+        "expected_event_count": 98.53880710205911,
+        "expected_correct_direction_event_count": 5.009371890974598
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 9779,
+        "events": 30,
+        "categorical_brier_sum": 162.88760122678795,
+        "event_brier_sum": 81.44380061339399,
+        "negative_log_sum": 8790.922793559062,
+        "expected_event_count": 98.53880710205911,
+        "expected_correct_direction_event_count": 5.009371890974598
+      },
+      "raw_physics_source_default": {
+        "n": 9779,
+        "events": 30,
+        "categorical_brier_sum": 1082.0,
+        "event_brier_sum": 541.0,
+        "negative_log_sum": 383242.4624259549,
+        "expected_event_count": 533.0,
+        "expected_correct_direction_event_count": 11.0
+      }
+    }
+  ],
+  "internal_FIT_posterior_minus_population_categorical_brier_ci95": [
+    -0.00045413394349752713,
+    -0.00045413394349752713
+  ],
+  "population_physical_mean": [
+    1.0165059555340579,
+    0.5632367050849295,
+    2.2343949984114952,
+    0.21066507210686505,
+    0.4841272587773605
+  ],
+  "population_physical_sd": [
+    1.4149154506314818,
+    0.21278148010044248,
+    1.2920452022733628,
+    0.4508280155406493,
+    0.39865427598166675
+  ],
+  "across_driver_posterior_mean_sd": [
+    0.8180464629595477,
+    0.061541038131480166,
+    0.43368221753032477,
+    0.044088198983510775,
+    0.2591913715105304
+  ],
+  "adopted": false,
+  "physical_source_sha256": {
+    "lc2013.py": "1bdded8e9f213372db946079b20c0cbac677120eeb228baf91d468644ac37206",
+    "lc2013_geometry.py": "337322917bdef62daddd7d6c5bc86b4b3a1b71607041c63b1af2b7c1f6d655db",
+    "config.py": "28a064562878bbcfcb508106ddb67520acde798ba043220f0be105b446bc4f32"
+  },
+  "artifact_sha256": {
+    "lc2013_population.json": "b693dd8ca5b8528f0edfa8833d92c0cd66816ebb567ac67b54f53984190c317d",
+    "lc2013_posteriors.json": "3668846ccf7a0078052ed07bea5ca6b03a3373af7779c4f918670f5c939470d8",
+    "lc2013_shrinkage.json": "50095e2ccabdce015dc1879b53ec49d10e172eab7ac4bc5ff1173a9d34430764",
+    "validation.json": "99536ab7e20c9655f6eb077ff159ba1e117c96d02fe654de73c396bba60d982b",
+    "provenance.json": "e8edf3c3fc472a4c138031e721f79074335f86b7b93f6cbc41fee17edd93dfd7",
+    "lane_events.json": "332ffc1e788b5d16344767298abe44d7bf269c9bb5f0318745f55593bc06aa6b"
+  }
+}

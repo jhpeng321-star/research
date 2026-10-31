@@ -1,0 +1,29 @@
+{
+  "state": "dispatched",
+  "pid": 598368,
+  "timestamp_unix": 1793469266.8199015,
+  "argv": [
+    "nice",
+    "-n",
+    "19",
+    "/home/ubuntu/miniconda3/bin/python",
+    "lane_raw_fit.py",
+    "--cache",
+    "/home/ubuntu/rbfit20261101_lc_boundaries/lane_boundaries_smoke_v4",
+    "--out",
+    "/home/ubuntu/rbfit20261101_lc_boundaries/lane_raw_smoke_v5"
+  ],
+  "proc_start_ticks": "48354454",
+  "source_sha256": {
+    "lane_raw_fit.py": "b60c8da13497b5c1590861453db2b5c5784db56fdc672f5bedfbaca6f5567dd7",
+    "dispatch_raw.py": "fdefad0c65fb26ef7181e16d96470a2e6a55f2039c061150fd9a71fbe51981a6"
+  },
+  "cache_receipt_sha256": "2ab4db6d0355275f8889a927e272367a4b0a22144c5ef81b3e1f95833b7b6f9f",
+  "load": [
+    5.87548828125,
+    4.89013671875,
+    7.68896484375
+  ],
+  "gpu": false,
+  "automatic_retry": false
+}
