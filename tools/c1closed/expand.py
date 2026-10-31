@@ -258,8 +258,141 @@ def compare_repeats():
     print(json.dumps(result,indent=1))
 
 
+def numerical_parity():
+    import copy
+    import numpy as np
+    ensemble=[]
+    for k in range(8):
+        local=HERE/'out'/f'expand_K{k}.json'
+        try:value=json.loads(local.read_text())
+        except FileNotFoundError:value=None
+        except json.JSONDecodeError:
+            backup=local.with_name(local.name+'.partial_'+hashlib.sha256(local.read_bytes()).hexdigest()[:12])
+            if not backup.exists():backup.write_bytes(local.read_bytes())
+            value=None
+        if value is None:
+            print(scp(f'gpuA:{REMOTE}/panel/wm2_common_w0_k{k}_h300.json',local),flush=True)
+            value=json.loads(local.read_text())
+        assert (value['world'],value['future'],value['steps'])==(0,k,600)
+        ensemble.append(value)
+    ref=ensemble[0];actual=json.loads((HERE/'out/expand_parity.json').read_text())
+    a=copy.deepcopy(actual);r=copy.deepcopy(ref)
+    # The sole metadata exception is a hash-verified symlink resolution alias.
+    alias='/root/autodl-tmp/c4/longmem300/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml'
+    canonical='/root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml'
+    assert a['identity']['wm_receipt'][0]['config']==alias
+    assert r['identity']['wm_receipt'][0]['config']==canonical
+    a['identity']['wm_receipt'][0]['config']=canonical
+    for x in (a,r):
+        for key in ('values','pid','runtime_seconds'):x.pop(key)
+    assert a==r,'unapproved non-numeric task identity difference'
+    checks=[]
+    def check(name,error,bound):
+        e=np.asarray(error,dtype=float);b=np.asarray(bound,dtype=float)
+        checks.append(dict(name=name,passed=bool(np.all(np.isfinite(e)) and np.all(e<=b)),
+                           error=e.tolist(),bound=b.tolist()))
+    scalars=('source','upstream','merge','discharge','J','crossings','merge_queue','mean_merge_queue')
+    for h in ('10','30','60','90','120','180','300'):
+        x=ref['values'][h];y=actual['values'][h];early=int(h)<=60
+        for key in scalars:
+            error=np.abs(np.array(x[key])-y[key])
+            if early:
+                bound=0. if key in ('crossings','merge_queue','mean_merge_queue') else .001
+            else:
+                spread=np.ptp(np.array([z['values'][h][key] for z in ensemble]),axis=0)
+                tol=0. if key in ('crossings','merge_queue') else .0001 if key=='mean_merge_queue' else .001
+                bound=spread+tol
+            check(h+'/'+key,error,bound)
+        for key in ('speed','density','occupied'):
+            error=np.abs(np.array(x['fields'][key],dtype=float)-np.array(y['fields'][key],dtype=float))
+            if early:
+                check(h+'/field_'+key,error.max(axis=(1,2)),.0001 if key=='speed' else 0.)
+            elif key!='occupied':
+                spread=np.ptp(np.array([z['values'][h]['fields'][key] for z in ensemble]),axis=0)
+                check(h+'/field_'+key,error.mean(axis=(1,2)),spread.mean(axis=(1,2))+.0001)
+        for i,(ex,ey) in enumerate(zip(x['endpoints'],y['endpoints'])):
+            assert ex['ids']==ey['ids']
+            if early:check(f'{h}/arm{i}/present',np.array(ex['present'])!=ey['present'],0.)
+            present=np.ones(len(ex['ids']),dtype=bool) if early else np.array(ex['present'],dtype=bool)&np.array(ey['present'],dtype=bool)
+            for key,tol in (('s',.001),('v',.0001)):
+                error=np.abs(np.array(ex[key])-ey[key])[present]
+                if early:bound=np.full(error.shape,tol)
+                else:
+                    spread=np.ptp(np.array([z['values'][h]['endpoints'][i][key] for z in ensemble]),axis=0)
+                    bound=spread[present]+tol
+                check(f'{h}/arm{i}/{key}',error,bound)
+    passed=all(x['passed'] for x in checks)
+    receipt=dict(status='PASS' if passed else 'FAIL',exact_parity='FAIL_PRESERVED',
+        design_commit='51ba73ca',model_sha256=actual['identity']['model_sha256'],worker_sha256=actual['identity']['source_sha256'],
+        reference_task='wm2_common_w0_k0_h300',ensemble='same-world fixed K0..K7; no recorded SUMO labels used',
+        checks=checks,failures=[x['name'] for x in checks if not x['passed']],
+        reference_output_sha256=hashlib.sha256((HERE/'out/expand_parity.json').read_bytes()).hexdigest())
+    save('EXPAND_NUMERICAL_PARITY.json',receipt)
+    print(json.dumps(dict(status=receipt['status'],checks=len(checks),failures=[x for x in checks if not x['passed']]),indent=1))
+    assert passed,'prospective numerical/ensemble gate failed; no expansion'
+
+
+def stage_legacy():
+    old=Path('E:/research-dense/runs/active/WM-S-C1FAST-20261006/box')
+    from analyze import MODEL_HASHES as HASHES
+    for tag,folder in (('bbtraj','full_bb_traj'),('bbid','full_bb_id'),('historical','full_struct')):
+        print(ssh('gpuR',f'''from pathlib import Path
+p=Path({REMOTE!r})/'ckpt'/{tag!r};assert p.parent.is_dir();p.mkdir(exist_ok=True)
+print(p)
+'''),flush=True)
+        for name in ('wm_s.pt','TRAIN_RECEIPT.json'):
+            local=allowed(old/folder/name);digest=hashlib.sha256(local.read_bytes()).hexdigest()
+            if name=='wm_s.pt':assert digest==HASHES[tag]
+            remote=REMOTE+'/ckpt/'+tag+'/'+name
+            actual=ssh('gpuR',f'from pathlib import Path;import hashlib;p=Path({remote!r});print(hashlib.sha256(p.read_bytes()).hexdigest() if p.exists() else "ABSENT")').strip()
+            if actual==digest:continue
+            assert actual=='ABSENT','never overwrite an existing checkpoint'
+            print(scp(local,f'gpuR:{remote}'),flush=True)
+            assert ssh('gpuR',f'from pathlib import Path;import hashlib;print(hashlib.sha256(Path({remote!r}).read_bytes()).hexdigest())').strip()==digest
+    save('EXPAND_LEGACY_STAGED.json',dict(status='PASS',models=('bbtraj','bbid','historical'),source=str(old),training=False))
+
+
+def legacy_canary():
+    import numpy as np
+    checks=[]
+    for model in ('bbtraj','bbid','historical'):
+        print(ssh('gpuR',f'''from pathlib import Path
+import os,subprocess,json,time
+p=Path({REMOTE!r});out=p/'expansion_smoke';out.mkdir(exist_ok=True)
+assert not (out/{(model+'_common_w0_k0_h10.json')!r}).exists()
+free=int(subprocess.check_output(['nvidia-smi','--query-gpu=memory.free','--format=csv,noheader,nounits'],text=True).strip());assert free>=5120
+cmd=['nice','-n','19','/root/miniconda3/bin/python','-B','-u',str(p/'worker.py'),'--model',{model!r},'--world','0','--seconds','10','--out','expansion_smoke','--device','cuda']
+with (p/'evidence'/{('EXPAND_SMOKE_'+model+'.log')!r}).open('x') as log:
+ child=subprocess.Popen(cmd,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
+  env={{**os.environ,'PYTHONPATH':'/root/autodl-tmp/c4/speedhead20261030/pythondeps','OMP_NUM_THREADS':'1','MKL_NUM_THREADS':'1','OPENBLAS_NUM_THREADS':'1'}})
+ r=dict(pid=child.pid,start_ticks=Path(f'/proc/{{child.pid}}/stat').read_text().split(') ',1)[1].split()[19],command=cmd,started=time.time())
+ with (p/'evidence'/{('EXPAND_SMOKE_'+model+'_OWNED.json')!r}).open('x') as f:json.dump(r,f)
+ code=child.wait(timeout=70)
+ assert code==0,code
+print(json.dumps(dict(model={model!r},returncode=code)))
+'''),flush=True)
+        name=model+'_common_w0_k0_h10.json'
+        ref=json.loads(ssh('gpuA',f'from pathlib import Path;print(Path({(REMOTE+"/cpu_verified/"+name)!r}).read_text())'))
+        actual=json.loads(ssh('gpuR',f'from pathlib import Path;print(Path({(REMOTE+"/expansion_smoke/"+name)!r}).read_text())'))
+        assert ref['identity']['model_sha256']==actual['identity']['model_sha256']
+        x=ref['values']['10'];y=actual['values']['10']
+        errors={}
+        for key in ('source','upstream','merge','discharge','J'):
+            errors[key]=float(np.max(np.abs(np.array(x[key])-y[key])));assert errors[key]<=.001,(model,key,errors[key])
+        for key in ('crossings','merge_queue','mean_merge_queue'):assert x[key]==y[key],(model,key)
+        for key in ('density','occupied'):assert x['fields'][key]==y['fields'][key]
+        errors['field_speed']=float(np.max(np.abs(np.array(x['fields']['speed'])-y['fields']['speed'])));assert errors['field_speed']<=.0001
+        for key,tol in (('s',.001),('v',.0001)):
+            errors[key]=max(float(np.max(np.abs(np.array(a[key])-b[key]))) for a,b in zip(x['endpoints'],y['endpoints']))
+            assert errors[key]<=tol,(model,key,errors[key])
+        assert all(a['ids']==b['ids'] and a['present']==b['present'] for a,b in zip(x['endpoints'],y['endpoints']))
+        checks.append(dict(model=model,passed=True,max_abs=errors))
+    save('EXPAND_LEGACY_CUDA_VERIFIED.json',dict(status='PASS',checks=checks,seconds=10,source='original CPU_VERIFIED paths',training=False))
+    print(json.dumps(checks,indent=1))
+
+
 def freeze():
-    assert json.loads((HERE/'evidence/EXPAND_PARITY_VERIFIED.json').read_text())['status']=='PASS'
+    assert json.loads((HERE/'evidence/EXPAND_NUMERICAL_PARITY.json').read_text())['status']=='PASS'
     code=f'''from pathlib import Path
 import os,json,signal,time
 p=Path({REMOTE!r});d=json.loads((p/'DISPATCH.json').read_text());pid=d['pid']
@@ -302,6 +435,7 @@ print(json.dumps(r))
 
 
 def assign():
+    assert json.loads((HERE/'evidence/EXPAND_LEGACY_CUDA_VERIFIED.json').read_text())['status']=='PASS'
     handoff=json.loads((HERE/'evidence/EXPAND_HANDOFF.json').read_text())
     snapshot=json.loads(ssh('gpuA',f'''from pathlib import Path
 import json,hashlib
@@ -317,29 +451,41 @@ for r in h['draining_children']:
  if s and s['ticks']==r['start_ticks'] and s['state']!='Z':live.append(r)
 done=[];worker=hashlib.sha256((p/'worker.py').read_bytes()).hexdigest()
 for q in (p/'panel').glob('*_h300.json'):
- x=json.loads(q.read_text());assert x['identity']['source_sha256']==worker and x['steps']==600
+ try:x=json.loads(q.read_text())
+ except json.JSONDecodeError:continue
+ assert x['identity']['source_sha256']==worker and x['steps']==600
  done.append([x['model'],x['world'],x['future'],x['plant']])
 print(json.dumps(dict(live=live,done=done,worker_sha256=worker)))
 '''))
-    assert not snapshot['live'],'original exact-owned children still draining; retry without launching'
+    assert not any(r.get('device')=='cuda' for r in snapshot['live']), 'original CUDA children must drain before GPU lane replacement'
     roster=[]
     for world in range(40):
         for model in ('wm2','bbtraj','bbid','historical'):
             roster.extend((model,world,k,'common') for k in range(8 if model=='wm2' else 1))
         roster.append(('wm2',world,0,'production'))
     done={tuple(t) for t in snapshot['done']}
+    draining=set()
+    for r in snapshot['live']:
+        cmd=r['command']
+        assert str(REMOTE+'/worker.py') in cmd,'inspect an unrecognized direct child before assignment'
+        def arg(name):return cmd[cmd.index(name)+1]
+        task=(arg('--model'),int(arg('--world')),int(arg('--future')),arg('--plant'))
+        assert task not in done
+        draining.add(task)
     assert len(done)==len(snapshot['done']) and done <= set(roster)
-    gpu=[t for t in roster if t not in done and t[0]=='wm2']
-    cpu=[t for t in roster if t not in done and t[0]!='wm2']
+    assert draining<=set(roster)
+    gpu=[t for t in roster if t not in done|draining and t[0]=='wm2']
+    legacy=[t for t in roster if t not in done|draining and t[0]!='wm2']
     assignments={}
     for host in ('gpuA','gpuR'):
         assignments[host]=dict(host=host,worker_sha256=snapshot['worker_sha256'],
             gpu_lanes=2 if host=='gpuA' else 4,budget_bytes=12_000_000_000 if host=='gpuA' else 8_000_000_000,
-            gpu_tasks=[t for i,t in enumerate(gpu) if (i%3==0)==(host=='gpuA')],cpu_tasks=cpu if host=='gpuA' else [],
-            preserved_completed=len(done),K=8,parity='EXPAND_PARITY_VERIFIED.json PASS')
+            gpu_tasks=([t for i,t in enumerate(gpu) if i%9==0] if host=='gpuA' else
+                       legacy+[t for i,t in enumerate(gpu) if i%9!=0]),cpu_tasks=[],
+            preserved_completed=len(done),K=8,parity='EXPAND_NUMERICAL_PARITY.json PASS; exact host parity failed and retained')
     assigned=[tuple(t) for a in assignments.values() for t in a['gpu_tasks']+a['cpu_tasks']]
-    assert len(assigned)==len(set(assigned)) and set(assigned).isdisjoint(done) and set(assigned)|done==set(roster)
-    save('EXPAND_ASSIGNMENTS.json',dict(assignments=assignments,done=sorted(done),handoff=handoff,task_count=len(roster)))
+    assert len(assigned)==len(set(assigned)) and set(assigned).isdisjoint(done|draining) and set(assigned)|done|draining==set(roster)
+    save('EXPAND_ASSIGNMENTS.json',dict(assignments=assignments,done=sorted(done),draining_reserved=sorted(draining),handoff=handoff,task_count=len(roster)))
     for host,a in assignments.items():
         local=HERE/'out'/f'expand_assignment_{host}.json'
         with local.open('x') as f:json.dump(a,f,indent=1)
@@ -451,7 +597,7 @@ assert len(results)==480 and len(list((p/'panel').glob('*_h300.json')))==480
 assert not (p/'COMPLETE.json').exists()
 with (p/'COMPLETE.json').open('x') as f:
  json.dump(dict(success=True,count=480,results=results,finished=time.time(),
-  scheduler='disjoint gpuA2+gpuR4 expansion; prior exact-owned scheduler paused and drained; parity PASS'),f)
+  scheduler='disjoint gpuA2+gpuR4 expansion; prior exact-owned scheduler paused and drained; registered numerical/ensemble parity PASS, exact parity FAIL retained'),f)
  f.flush();os.fsync(f.fileno())
 d=json.loads((p/'DISPATCH.json').read_text());q=Path('/proc/'+str(d['pid'])+'/stat')
 if q.exists():
@@ -476,10 +622,43 @@ def launch_bridge():
     save('EXPAND_BRIDGE_LAUNCH.json',r);print(json.dumps(r))
 
 
+def checkpoint():
+    from watch import creation
+    result=dict(at=time.time(),hosts={})
+    for host in ('gpuA','gpuR'):
+        state=host_state(host)
+        usage=json.loads(ssh(host,f'''import sys,json
+from pathlib import Path
+sys.path.insert(0,{REMOTE!r});import expand_runner as r
+free,owned=r.memory();p=Path({REMOTE!r})
+live=[]
+for q in (p/'evidence').glob('EXPAND_*_OWNED.json'):
+ x=json.loads(q.read_text())
+ if r.incarnation(x['pid'])==x['start_ticks']:
+  s=Path('/proc/'+str(x['pid'])+'/stat').read_text().split(') ',1)[1].split()
+  if s[0]!='Z':live.append(dict(pid=x['pid'],ticks=x['start_ticks'],task=x.get('task'),device=x.get('device')))
+print(json.dumps(dict(free_mib=free,owned_mib=owned,live=live)))
+'''))
+        result['hosts'][host]=dict(alive=state['alive'],completed=len(state['outputs']),load=state['load'],
+                                  gpu=state['gpu'],usage=usage,receipt=state['receipt'])
+    watch=json.loads((HERE/'evidence/WATCH_LAUNCH.json').read_text())
+    result['collector_alive']=creation(watch['pid'])==watch['creation_time']
+    result['collector_sources_unchanged']=all(hashlib.sha256((HERE/name).read_bytes()).hexdigest()==value for name,value in watch['source_hashes'].items())
+    b=json.loads((HERE/'evidence/EXPAND_BRIDGE_LAUNCH.json').read_text())
+    result['bridge_alive']=creation(b['pid'])==b['creation_time']
+    result['expansion_source_sha256']=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+    assert result['collector_alive'] and result['collector_sources_unchanged'] and result['bridge_alive']
+    for host in ('gpuA','gpuR'):
+        assert result['hosts'][host]['alive']
+        assert result['hosts'][host]['usage']['owned_mib']*2**20<=(12_000_000_000 if host=='gpuA' else 8_000_000_000)
+        assert result['hosts'][host]['usage']['free_mib']>=1024
+    save('EXPAND_RUNNING_'+str(int(time.time()))+'.json',result);print(json.dumps(result,indent=1))
+
+
 def main():
-    actions={'audit':audit,'stage':stage,'parity':parity,'repair-configs':repair_configs,'verify-parity':verify_parity,'diagnose-parity':diagnose_parity,'environment':environment,'repeat-parity':repeat_parity,'compare-repeats':compare_repeats,'freeze':freeze,
+    actions={'audit':audit,'stage':stage,'parity':parity,'repair-configs':repair_configs,'verify-parity':verify_parity,'diagnose-parity':diagnose_parity,'environment':environment,'repeat-parity':repeat_parity,'compare-repeats':compare_repeats,'numerical-parity':numerical_parity,'stage-legacy':stage_legacy,'legacy-canary':legacy_canary,'freeze':freeze,
              'assign':assign,'launch-hosts':launch_hosts,'bridge':bridge,'launch-bridge':launch_bridge,
-             'status':lambda:print(json.dumps({h:host_state(h) for h in ('gpuA','gpuR')}))}
+             'checkpoint':checkpoint,'status':lambda:print(json.dumps({h:host_state(h) for h in ('gpuA','gpuR')}))}
     p=argparse.ArgumentParser();p.add_argument('action',choices=actions)
     args=p.parse_args()
     actions[args.action]()

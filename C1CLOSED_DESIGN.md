@@ -219,3 +219,17 @@ Only this prospective numerical/ensemble check passing permits disjoint gpuR
 allocation. Export both its verdict and the original exact failure; describe
 the mixed-hardware numerical sensitivity as a limitation, not a SUMO chaos
 floor. If it fails, retain the original gpuA panel/collector without expansion.
+
+Allocation detail before assignment: preserve every drained CPU baseline task;
+remaining frozen legacy forecasts may use gpuR CUDA after all three original
+10s CPU paths match CUDA values under the same early numerical tolerances.
+This changes device only, never weights/controller/plant/K. Existing spare-core
+CPU tasks are allowed to finish. For new tasks, use six GPU lanes: gpuA2/gpuR4.
+Because measured parity runtime is ~57s on gpuR versus minutes on shared gpuA,
+assign every ninth remaining WM task to gpuA and the rest to gpuR; gpuR also
+receives remaining legacy tasks, oldest roster first. This is deterministic
+runtime-based allocation, with no recorded-error or controller-arm selection.
+Slow in-flight CPU tasks may drain concurrently with the new, disjoint GPU
+assignments: reserve their exact task identities outside both assignment lists.
+All prior CUDA children must finish before replacing GPU lanes. The complete
+gate still requires every reserved CPU output; no in-flight task is duplicated.

@@ -1,0 +1,129 @@
+{
+ "original_dispatch": {
+  "pid": 211623,
+  "start_ticks": "881579797",
+  "task_count": 480,
+  "cpu_workers": 2,
+  "gpu_workers": 2,
+  "worker_sha256": "ab822be2f136d96722ea3422a0841093ce61d55166a252d7f0ecdb1d4d61c687",
+  "K": 8,
+  "started": 1793435583.8554823,
+  "reason": "registered complete 40-world panel"
+ },
+ "paused_state": {
+  "state": "T",
+  "ticks": "881579797"
+ },
+ "draining_children": [
+  {
+   "task": "bbtraj_common_w4_k0_h300",
+   "command": [
+    "/root/miniconda3/bin/python",
+    "-B",
+    "-u",
+    "/root/autodl-tmp/c4/c1closed20261031/worker.py",
+    "--model",
+    "bbtraj",
+    "--world",
+    "4",
+    "--future",
+    "0",
+    "--plant",
+    "common",
+    "--seconds",
+    "300",
+    "--out",
+    "panel",
+    "--device",
+    "cpu"
+   ],
+   "pid": 248100,
+   "start_ticks": "882590809",
+   "device": "cpu",
+   "started": 1793445693.938745
+  },
+  {
+   "task": "bbid_common_w4_k0_h300",
+   "command": [
+    "/root/miniconda3/bin/python",
+    "-B",
+    "-u",
+    "/root/autodl-tmp/c4/c1closed20261031/worker.py",
+    "--model",
+    "bbid",
+    "--world",
+    "4",
+    "--future",
+    "0",
+    "--plant",
+    "common",
+    "--seconds",
+    "300",
+    "--out",
+    "panel",
+    "--device",
+    "cpu"
+   ],
+   "pid": 248481,
+   "start_ticks": "882601316",
+   "device": "cpu",
+   "started": 1793445799.010749
+  },
+  {
+   "task": "wm2_common_w9_k5_h300",
+   "command": [
+    "/root/miniconda3/bin/python",
+    "-B",
+    "-u",
+    "/root/autodl-tmp/c4/c1closed20261031/worker.py",
+    "--model",
+    "wm2",
+    "--world",
+    "9",
+    "--future",
+    "5",
+    "--plant",
+    "common",
+    "--seconds",
+    "300",
+    "--out",
+    "panel",
+    "--device",
+    "cuda"
+   ],
+   "pid": 251130,
+   "start_ticks": "882668403",
+   "device": "cuda",
+   "started": 1793446469.881001
+  },
+  {
+   "task": "wm2_common_w9_k6_h300",
+   "command": [
+    "/root/miniconda3/bin/python",
+    "-B",
+    "-u",
+    "/root/autodl-tmp/c4/c1closed20261031/worker.py",
+    "--model",
+    "wm2",
+    "--world",
+    "9",
+    "--future",
+    "6",
+    "--plant",
+    "common",
+    "--seconds",
+    "300",
+    "--out",
+    "panel",
+    "--device",
+    "cuda"
+   ],
+   "pid": 251305,
+   "start_ticks": "882672208",
+   "device": "cuda",
+   "started": 1793446507.9228537
+  }
+ ],
+ "at": 1793446514.5168717,
+ "reason": "disjoint cross-host scheduler handoff; original worker code and single collector unchanged"
+}

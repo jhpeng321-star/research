@@ -15,10 +15,11 @@ launch. Design/compatibility/owner aggregate addendum and CPU checks are committ
 ## Verified and running
 - Four actual-world 10 s CPU paths passed finite/identity/queue/additivity checks;
   PI/CIRCLES/MAPPO callback sensitivity and aggregate-grid checks pass.
-- GPU canary passed at 1160 MiB sampled owned memory; gpuR had insufficient room.
-- One gpuA dispatcher: PID211623 / start881579797; two bounded GPU lanes and
-  two nice19 CPU lanes waiting for spare cores. No duplicate dispatch.
-- First full 300 s task completed in 348 s; 7/480 complete at17:07 +08.
+- GPU canary passed; owner19:12 expansion now uses gpuA2 + gpuR up-to4 GPU lanes.
+- Original scheduler PID211623/start881579797 paused after exact-owned handoff;
+  100 completed tasks retained, two in-flight CPU tasks reserved without duplication.
+- Static disjoint remainder: gpuA31 / gpuR347 tasks. At latest admission receipt,
+  gpuA owned2298MiB, gpuR6078MiB (<8GB), original collector and publication bridge live.
   This is a many-hour panel; a partial panel is not exported as the headline.
 - All 200 recorded world/arm label sets recovered; t300 observed start supplies
   the first left integration boundary of the tape beginning t300.5.
@@ -34,3 +35,5 @@ launch. Design/compatibility/owner aggregate addendum and CPU checks are committ
   unresolved and cached futures stop120s. See `C1CLOSED_WALL_INPUTS.md`.
 - Passing WM-fix secondary and MAIN-supplied SUMO RNG floor remain separate slots;
   WM2 stays the primary. No SUMO, black-box retraining, peer signals or push here.
+- Numerical host/legacy CUDA checks PASS; exact cross-host FAIL is retained.
+  Read `C1CLOSED_RUNTIME.md` for the prospective gate and long-horizon sensitivity.

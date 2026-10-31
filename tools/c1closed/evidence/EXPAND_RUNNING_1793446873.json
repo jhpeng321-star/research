@@ -1,0 +1,81 @@
+{
+ "at": 1793446868.6023345,
+ "hosts": {
+  "gpuA": {
+   "alive": true,
+   "completed": 102,
+   "load": [
+    18.06884765625,
+    13.3994140625,
+    12.7607421875
+   ],
+   "gpu": "8194 MiB, 40317 MiB\n",
+   "usage": {
+    "free_mib": 40315,
+    "owned_mib": 2298,
+    "live": [
+     {
+      "pid": 252300,
+      "ticks": "882699978",
+      "task": "wm2_common_w9_k7_h300",
+      "device": "cuda"
+     },
+     {
+      "pid": 252302,
+      "ticks": "882699983",
+      "task": "wm2_common_w10_k7_h300",
+      "device": "cuda"
+     }
+    ]
+   },
+   "receipt": {
+    "pid": 252290,
+    "start_ticks": "882699960",
+    "started": 1793446785.442989
+   }
+  },
+  "gpuR": {
+   "alive": true,
+   "completed": 1,
+   "load": [
+    58.87158203125,
+    56.0126953125,
+    48.20458984375
+   ],
+   "gpu": "7098 MiB, 16995 MiB\n",
+   "usage": {
+    "free_mib": 16995,
+    "owned_mib": 6078,
+    "live": [
+     {
+      "pid": 564618,
+      "ticks": "4207337335",
+      "task": "bbtraj_common_w5_k0_h300",
+      "device": "cuda"
+     },
+     {
+      "pid": 564619,
+      "ticks": "4207337335",
+      "task": "historical_common_w4_k0_h300",
+      "device": "cuda"
+     },
+     {
+      "pid": 564621,
+      "ticks": "4207337337",
+      "task": "historical_common_w5_k0_h300",
+      "device": "cuda"
+     }
+    ]
+   },
+   "receipt": {
+    "pid": 564599,
+    "start_ticks": "4207337319",
+    "started": 1793446786.3732574
+   }
+  }
+ },
+ "collector_alive": true,
+ "collector_sources_unchanged": true,
+ "bridge_alive": true,
+ "expansion_source_sha256": "a15a0f8464b0b6fffcbfd9226ebe22a8489f23e161fbcd6a42abe19b4c916f5a"
+}

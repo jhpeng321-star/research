@@ -1,0 +1,50 @@
+{
+ "status": "PASS",
+ "checks": [
+  {
+   "model": "bbtraj",
+   "passed": true,
+   "max_abs": {
+    "source": 0.0,
+    "upstream": 4.57763671875e-05,
+    "merge": 2.288818359375e-05,
+    "discharge": 1.9073486328125e-05,
+    "J": 9.1552734375e-05,
+    "field_speed": 1.5751008064057714e-05,
+    "s": 0.00048828125,
+    "v": 6.103515625e-05
+   }
+  },
+  {
+   "model": "bbid",
+   "passed": true,
+   "max_abs": {
+    "source": 0.0,
+    "upstream": 1.52587890625e-05,
+    "merge": 0.0,
+    "discharge": 7.62939453125e-06,
+    "J": 3.0517578125e-05,
+    "field_speed": 4.606426884379289e-06,
+    "s": 0.0003662109375,
+    "v": 9.5367431640625e-06
+   }
+  },
+  {
+   "model": "historical",
+   "passed": true,
+   "max_abs": {
+    "source": 0.0,
+    "upstream": 1.52587890625e-05,
+    "merge": 0.0,
+    "discharge": 0.0,
+    "J": 3.0517578125e-05,
+    "field_speed": 4.88281250099476e-06,
+    "s": 0.0001220703125,
+    "v": 1.1444091796875e-05
+   }
+  }
+ ],
+ "seconds": 10,
+ "source": "original CPU_VERIFIED paths",
+ "training": false
+}
