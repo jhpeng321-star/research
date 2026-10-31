@@ -60,8 +60,16 @@ No WM-PHYS activation without its independently hashed S-RB-EVAL qualification r
 
 ## Current execution state
 Latest resume state: `tools/c1switch2/evidence/STATUS_CURRENT.json` plus task-only `operations status`.
-Mechanics-only canary is RUNNING: owncpuQ PID467748, root
-`/home/ubuntu/c1switch2_run_4ad4ece01d5a9ac1`; cap4680 sim-s, GPU0. Never redispatch it.
+Mechanics-only canary PASS: owncpuQ PID467748 EXITED, root
+`/home/ubuntu/c1switch2_run_4ad4ece01d5a9ac1`; charged=actual4680 sim-s, GPU0. Never redispatch it.
+Both native and full30x20s six-way replay pairs matched bitwise; all6 alternatives passed.
+Original receipt bytes exported as `CANARY_c1switch2_run_4ad4ece01d5a9ac1.json`, SHA256
+`2cdfd15288ac7dc657ed35aa86117ec429698d022fedef3600f0a27bceadb55d`.
+Accounting plus immutable BINDING/GATES/STAGED/PREFLIGHT archived beside it.
+No main jobs, GPU services or background main dispatcher are armed.
+Latest fleet peer delivery: `SELMAPPO_FLEET_STATUS.md` (~01:18). Its first production
+wave stopped in tensor IPC before any PPO update; no final169 exists and peer MAIN ACK is needed.
+Do not substitute checkpoint000 or restart peer work. The peer acknowledges our panel/evaluation ownership.
 Initial PID446935 exited before setup/physics with zero charge; all receipts retained.
 Repair1065f89d was explicitly registered and passed pristine-process CPU construction before dispatch.
 The 23:48 owner approval is present; WALL integrated, final trained selectors pending.

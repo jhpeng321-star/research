@@ -1,0 +1,29 @@
+{
+  "host": "cpuQ",
+  "root": "/home/ubuntu/c1switch2_run_4ad4ece01d5a9ac1",
+  "unix": 1793467017.254688,
+  "pid": 467748,
+  "pid_state": "EXITED",
+  "charged_sim_s": 4680,
+  "closed_jobs": [
+    "native_reference",
+    "native_repeat",
+    "branch_native",
+    "branch_ctrl0",
+    "branch_mappo",
+    "branch_pi",
+    "branch_circles",
+    "branch_wall",
+    "six_way_reference",
+    "six_way_repeat"
+  ],
+  "closed_actual_sim_s": 4680.0,
+  "canary": {
+    "native_repeat": "PASS",
+    "six_way_repeat": "PASS",
+    "planned_sim_s": 4680
+  },
+  "canary_sha256": "2cdfd15288ac7dc657ed35aa86117ec429698d022fedef3600f0a27bceadb55d",
+  "log": "Warning: Environment variable SUMO_HOME is not set properly, disabling XML validation. Set 'auto' or 'always' for web lookups.\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\nWarning: Environment variable SUMO_HOME is not set properly, disabling XML validation. Set 'auto' or 'always' for web lookups.\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\nWarning: Environment variable SUMO_HOME is not set properly, disabling XML validation. Set 'auto' or 'always' for web lookups.\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\nWarning: Environment variable SUMO_HOME is not set properly, disabling XML validation. Set 'auto' or 'always' for web lookups.\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\nWarning: Environment variable SUMO_HOME is not set properly, disabling XML validation. Set 'auto' or 'always' for web lookups.\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\nWarning: Environment variable SUMO_HOME is not set properly, disabling XML validation. Set 'auto' or 'always' for web lookups.\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\nWarning: Environment variable SUMO_HOME is not set properly, disabling XML validation. Set 'auto' or 'always' for web lookups.\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\nWarning: Environment variable SUMO_HOME is not set properly, disabling XML validation. Set 'auto' or 'always' for web lookups.\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\nWarning: Environment variable SUMO_HOME is not set properly, disabling XML validation. Set 'auto' or 'always' for web lookups.\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\nWarning: Environment variable SUMO_HOME is not set properly, disabling XML validation. Set 'auto' or 'always' for web lookups.\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\n",
+  "new_gpu_s": 0
+}

@@ -24,3 +24,8 @@ Repair commit1065f89d registered with the exact old-root predecessor in REGISTRA
 Corrected CPU-only stage: `/home/ubuntu/c1switch2_run_4ad4ece01d5a9ac1`.
 Pristine runner construction PASS; genuine frozen17/17guards; CPU125passed/1skip.
 No physics at staging/preflight. Any dispatch must explicitly name the old zero-debit predecessor.
+
+Corrected ownPID467748 subsequently EXITED successfully: actual=charged4680 sim-s/GPU0,
+native repeat and complete30x20s/six-way repeat both PASS. All10 jobs closed.
+The exported original canary receipt SHA256 is
+`2cdfd15288ac7dc657ed35aa86117ec429698d022fedef3600f0a27bceadb55d`.

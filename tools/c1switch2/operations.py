@@ -29,7 +29,10 @@ for entry in os.scandir({parent!r}):
   root=Path(entry.path);row=dict(root=str(root))
   for name in ('CANARY_DISPATCH_ONCE.json','DISPATCH_CANARY.json','CANARY.json','CANARY_EXIT.json','STOP'):
    p=root/name
-   if p.exists():row[name]=json.loads(p.read_text())
+   if p.exists():
+    data=json.loads(p.read_text())
+    row[name]=({{k:data[k] for k in ('native_repeat','six_way_repeat','planned_sim_s')}}
+               if name=='CANARY.json' else data)
   if 'DISPATCH_CANARY.json' in row:
    pid=row['DISPATCH_CANARY.json']['pid'];row['own_pid_exists']=Path('/proc',str(pid)).exists()
   roots.append(row)
@@ -298,9 +301,58 @@ print(json.dumps(out))
     print(json.dumps(result, indent=2))
 
 
+def export_canary(host, root):
+    """Export completed public mechanics/accounting receipts, never simulator inputs."""
+    result = ssh(host, f'''import base64,hashlib,json
+from pathlib import Path
+root=Path({root!r});assert root.name.startswith('c1switch2_run_')
+path=root/'CANARY.json';row=json.loads(path.read_text())
+assert row['native_repeat']==row['six_way_repeat']=='PASS'
+ledger=[json.loads(line) for line in (root/'accounting.jsonl').read_text().splitlines()]
+closed=[]
+for name in ('native_reference','native_repeat',*['branch_'+c for c in {CONTROLLERS!r}],
+             'six_way_reference','six_way_repeat'):
+ closed.append(json.loads((root/'jobs'/('canary__'+name)/'CLOSE.json').read_text()))
+charged=sum(r['sim_s'] for r in ledger);actual=sum(r['actual_sim_s'] for r in closed)
+assert charged==actual==4680
+print(json.dumps(dict(root=str(root),canary_base64=base64.b64encode(path.read_bytes()).decode(),ledger=ledger,closed=closed,
+ canary_sha256=hashlib.sha256(path.read_bytes()).hexdigest(),charged_sim_s=charged,actual_sim_s=actual,new_gpu_s=0)))
+''', timeout=30)
+    name = Path(root).name
+    path = EVIDENCE/('CANARY_'+name+'.json')
+    ledger_path = EVIDENCE/('CANARY_ACCOUNTING_'+name+'.json')
+    if path.exists() or ledger_path.exists():
+        raise ValueError('preserve exported mechanics receipts')
+    with path.open('xb') as stream:
+        stream.write(base64.b64decode(result['canary_base64']))
+    if sha(path) != result['canary_sha256']:
+        raise ValueError('exported mechanics receipt bytes changed')
+    write(ledger_path, {k: v for k, v in result.items() if k != 'canary_base64'})
+    print(json.dumps({k: v for k, v in result.items() if k not in ('canary_base64', 'ledger', 'closed')}, indent=2))
+
+
+def archive_binding(host, root):
+    result = ssh(host, f'''import hashlib,json
+from pathlib import Path
+root=Path({root!r});assert root.name.startswith('c1switch2_run_')
+out={{name:json.loads((root/name).read_text()) for name in ('BINDING.json','GATES.json','STAGED.json','PREFLIGHT.json')}}
+binding=out['BINDING.json']
+assert hashlib.sha256((root/'REGISTRATION.md').read_bytes()).hexdigest()==binding['registration_sha256']
+assert all(hashlib.sha256((root/'pytools'/name).read_bytes()).hexdigest()==value for name,value in binding['sources'].items())
+out['canary_sha256']=hashlib.sha256((root/'CANARY.json').read_bytes()).hexdigest()
+out['root']=str(root);print(json.dumps(out))
+''', timeout=30)
+    path = EVIDENCE/('CANARY_BINDING_'+Path(root).name+'.json')
+    if path.exists():
+        raise ValueError('preserve archived binding')
+    write(path, result)
+    print(json.dumps(dict(path=str(path), sha256=sha(path), canary_sha256=result['canary_sha256'])))
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('command', choices=('status', 'stage', 'preflight', 'probe', 'canary', 'collect'))
+    parser.add_argument('command', choices=('status', 'stage', 'preflight', 'probe', 'canary', 'collect',
+                                          'export-canary', 'archive-binding'))
     parser.add_argument('--host', choices=('cpuQ', 'gpuR'), required=True)
     parser.add_argument('--root')
     parser.add_argument('--model', choices=('wm', 'bb'))
@@ -317,6 +369,10 @@ def main():
         canary(args.host, args.root, args.predecessor)
     elif args.command == 'collect':
         collect(args.host, args.root)
+    elif args.command == 'export-canary':
+        export_canary(args.host, args.root)
+    elif args.command == 'archive-binding':
+        archive_binding(args.host, args.root)
     else:
         probe(args.host, args.root, args.model, args.steps)
 

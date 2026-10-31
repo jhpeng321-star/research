@@ -1,6 +1,6 @@
 {
   "protocol": "S-C1SWITCH2/v2",
-  "status": "MECHANICS_CANARY_RUNNING_MAIN_DEPENDENCIES_PENDING",
+  "status": "MECHANICS_PASS_MAIN_CHECKPOINTS_AND_GPU_PARITY_PENDING",
   "design_sha256": "95aa84cf801aea773a0c7f9a208396ed4898e5cacdf8b6177940c7d9e1f5a273",
   "panel_sha256": "7c780c25237dde73a657937ab577b8e48f71766817f4363f3298982e90144827",
   "prediction_objective": "on_road_fleet_delay",
@@ -14,9 +14,13 @@
     "root": "/home/ubuntu/c1switch2_run_4ad4ece01d5a9ac1",
     "pid": 467748,
     "cap_sim_s": 4680,
-    "last_receipt": "CANARY_PROGRESS_1793466665.json",
-    "charged_sim_s_at_receipt": 3180,
-    "closed_actual_sim_s_at_receipt": 2880,
+    "state": "EXITED",
+    "native_repeat": "PASS",
+    "six_way_repeat": "PASS",
+    "last_receipt": "CANARY_PROGRESS_1793467017.json",
+    "charged_sim_s_at_receipt": 4680,
+    "closed_actual_sim_s_at_receipt": 4680,
+    "result_sha256": "2cdfd15288ac7dc657ed35aa86117ec429698d022fedef3600f0a27bceadb55d",
     "never_redispatch": true
   },
   "startup_predecessor": {
@@ -31,13 +35,15 @@
   "real_checkpoint_cpu_wm": "PASS_K8_60s_SIX_WAY_AND_WALL_CONTINUATION",
   "real_checkpoint_cpu_bb": "PASS_K8_60s_SIX_WAY_AND_WALL_CONTINUATION",
   "new_gpu_s": 0,
+  "new_actual_sim_s": 4680,
+  "registered_base_remaining_sim_s": 463700,
   "main_dispatched": false,
   "background_main_dispatcher_armed": false,
+  "fleet_peer_status": "SELMAPPO_FLEET_STATUS.md: production tensor-IPC stop before first PPO update; no final169, peer MAIN acknowledgement needed",
   "pending_main": [
     "Genuine final169 fleet PPO checkpoint plus source/config/freeze receipt",
     "Genuine final169 per-CAV MAPPO checkpoint plus frozen shared/mixed source receipts",
-    "Both-device real-checkpoint parity and immutable inference route/service admission",
-    "Complete 4680 sim-s mechanics repeat receipt",
-    "WM-PHYS qualification decision under the registered rule before main outcomes"
-  ]
+    "Both-device real-checkpoint parity and immutable inference route/service admission"
+  ],
+  "optional_wm_phys": "Disabled unless independently qualified under the registered S-RB-EVAL rule before main outcomes"
 }

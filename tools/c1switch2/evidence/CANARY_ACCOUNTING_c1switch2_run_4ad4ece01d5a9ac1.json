@@ -1,0 +1,519 @@
+{
+  "root": "/home/ubuntu/c1switch2_run_4ad4ece01d5a9ac1",
+  "ledger": [
+    {
+      "id": "canary__native_reference_0000",
+      "sim_s": 300,
+      "stage": "main",
+      "unix": 1793466265.9547365
+    },
+    {
+      "id": "canary__native_reference_0001",
+      "sim_s": 60,
+      "stage": "main",
+      "unix": 1793466308.8678699
+    },
+    {
+      "id": "canary__native_repeat_0000",
+      "sim_s": 300,
+      "stage": "main",
+      "unix": 1793466324.4565673
+    },
+    {
+      "id": "canary__native_repeat_0001",
+      "sim_s": 60,
+      "stage": "main",
+      "unix": 1793466361.182649
+    },
+    {
+      "id": "canary__branch_native_0000",
+      "sim_s": 300,
+      "stage": "main",
+      "unix": 1793466373.6819873
+    },
+    {
+      "id": "canary__branch_native_0001",
+      "sim_s": 60,
+      "stage": "main",
+      "unix": 1793466408.5108247
+    },
+    {
+      "id": "canary__branch_ctrl0_0000",
+      "sim_s": 300,
+      "stage": "main",
+      "unix": 1793466419.4370804
+    },
+    {
+      "id": "canary__branch_ctrl0_0001",
+      "sim_s": 60,
+      "stage": "main",
+      "unix": 1793466452.7120364
+    },
+    {
+      "id": "canary__branch_mappo_0000",
+      "sim_s": 300,
+      "stage": "main",
+      "unix": 1793466465.458107
+    },
+    {
+      "id": "canary__branch_mappo_0001",
+      "sim_s": 60,
+      "stage": "main",
+      "unix": 1793466498.390606
+    },
+    {
+      "id": "canary__branch_pi_0000",
+      "sim_s": 300,
+      "stage": "main",
+      "unix": 1793466509.386867
+    },
+    {
+      "id": "canary__branch_pi_0001",
+      "sim_s": 60,
+      "stage": "main",
+      "unix": 1793466543.0934525
+    },
+    {
+      "id": "canary__branch_circles_0000",
+      "sim_s": 300,
+      "stage": "main",
+      "unix": 1793466553.4587114
+    },
+    {
+      "id": "canary__branch_circles_0001",
+      "sim_s": 60,
+      "stage": "main",
+      "unix": 1793466587.346939
+    },
+    {
+      "id": "canary__branch_wall_0000",
+      "sim_s": 300,
+      "stage": "main",
+      "unix": 1793466598.224108
+    },
+    {
+      "id": "canary__branch_wall_0001",
+      "sim_s": 60,
+      "stage": "main",
+      "unix": 1793466631.0459504
+    },
+    {
+      "id": "canary__six_way_reference_0000",
+      "sim_s": 300,
+      "stage": "main",
+      "unix": 1793466641.4305868
+    },
+    {
+      "id": "canary__six_way_reference_0001",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466673.3742814
+    },
+    {
+      "id": "canary__six_way_reference_0002",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466676.8435416
+    },
+    {
+      "id": "canary__six_way_reference_0003",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466680.9703107
+    },
+    {
+      "id": "canary__six_way_reference_0004",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466685.1244602
+    },
+    {
+      "id": "canary__six_way_reference_0005",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466688.7160807
+    },
+    {
+      "id": "canary__six_way_reference_0006",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466692.724142
+    },
+    {
+      "id": "canary__six_way_reference_0007",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466697.079715
+    },
+    {
+      "id": "canary__six_way_reference_0008",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466701.8652709
+    },
+    {
+      "id": "canary__six_way_reference_0009",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466707.653134
+    },
+    {
+      "id": "canary__six_way_reference_0010",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466712.1955664
+    },
+    {
+      "id": "canary__six_way_reference_0011",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466716.7095237
+    },
+    {
+      "id": "canary__six_way_reference_0012",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466721.2655568
+    },
+    {
+      "id": "canary__six_way_reference_0013",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466725.7348628
+    },
+    {
+      "id": "canary__six_way_reference_0014",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466730.2255387
+    },
+    {
+      "id": "canary__six_way_reference_0015",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466735.915597
+    },
+    {
+      "id": "canary__six_way_reference_0016",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466740.56655
+    },
+    {
+      "id": "canary__six_way_reference_0017",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466745.3144608
+    },
+    {
+      "id": "canary__six_way_reference_0018",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466749.4779549
+    },
+    {
+      "id": "canary__six_way_reference_0019",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466753.8364816
+    },
+    {
+      "id": "canary__six_way_reference_0020",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466758.7006922
+    },
+    {
+      "id": "canary__six_way_reference_0021",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466765.3470209
+    },
+    {
+      "id": "canary__six_way_reference_0022",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466770.970491
+    },
+    {
+      "id": "canary__six_way_reference_0023",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466776.3679578
+    },
+    {
+      "id": "canary__six_way_reference_0024",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466781.2835767
+    },
+    {
+      "id": "canary__six_way_reference_0025",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466786.3476608
+    },
+    {
+      "id": "canary__six_way_reference_0026",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466791.165696
+    },
+    {
+      "id": "canary__six_way_reference_0027",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466796.8362536
+    },
+    {
+      "id": "canary__six_way_reference_0028",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466801.2665946
+    },
+    {
+      "id": "canary__six_way_reference_0029",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466805.4204419
+    },
+    {
+      "id": "canary__six_way_reference_0030",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466809.8232315
+    },
+    {
+      "id": "canary__six_way_repeat_0000",
+      "sim_s": 300,
+      "stage": "main",
+      "unix": 1793466814.7566755
+    },
+    {
+      "id": "canary__six_way_repeat_0001",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466852.2930708
+    },
+    {
+      "id": "canary__six_way_repeat_0002",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466856.695425
+    },
+    {
+      "id": "canary__six_way_repeat_0003",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466862.507633
+    },
+    {
+      "id": "canary__six_way_repeat_0004",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466866.6154475
+    },
+    {
+      "id": "canary__six_way_repeat_0005",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466870.853737
+    },
+    {
+      "id": "canary__six_way_repeat_0006",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466874.986467
+    },
+    {
+      "id": "canary__six_way_repeat_0007",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466879.774767
+    },
+    {
+      "id": "canary__six_way_repeat_0008",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466883.7972362
+    },
+    {
+      "id": "canary__six_way_repeat_0009",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466889.838625
+    },
+    {
+      "id": "canary__six_way_repeat_0010",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466895.7183452
+    },
+    {
+      "id": "canary__six_way_repeat_0011",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466901.674915
+    },
+    {
+      "id": "canary__six_way_repeat_0012",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466907.9064229
+    },
+    {
+      "id": "canary__six_way_repeat_0013",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466915.2930174
+    },
+    {
+      "id": "canary__six_way_repeat_0014",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466922.0375028
+    },
+    {
+      "id": "canary__six_way_repeat_0015",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466927.8333256
+    },
+    {
+      "id": "canary__six_way_repeat_0016",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466932.3292878
+    },
+    {
+      "id": "canary__six_way_repeat_0017",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466937.9884527
+    },
+    {
+      "id": "canary__six_way_repeat_0018",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466942.6991394
+    },
+    {
+      "id": "canary__six_way_repeat_0019",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466947.595676
+    },
+    {
+      "id": "canary__six_way_repeat_0020",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466952.360851
+    },
+    {
+      "id": "canary__six_way_repeat_0021",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466958.4021904
+    },
+    {
+      "id": "canary__six_way_repeat_0022",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466963.453478
+    },
+    {
+      "id": "canary__six_way_repeat_0023",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466969.072997
+    },
+    {
+      "id": "canary__six_way_repeat_0024",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466974.1454835
+    },
+    {
+      "id": "canary__six_way_repeat_0025",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466979.52405
+    },
+    {
+      "id": "canary__six_way_repeat_0026",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466984.7980545
+    },
+    {
+      "id": "canary__six_way_repeat_0027",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466990.7240422
+    },
+    {
+      "id": "canary__six_way_repeat_0028",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466995.2204769
+    },
+    {
+      "id": "canary__six_way_repeat_0029",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793466999.9532554
+    },
+    {
+      "id": "canary__six_way_repeat_0030",
+      "sim_s": 20,
+      "stage": "main",
+      "unix": 1793467004.7964144
+    }
+  ],
+  "closed": [
+    {
+      "actual_sim_s": 360.0,
+      "charged_sim_s": 360.0
+    },
+    {
+      "actual_sim_s": 360.0,
+      "charged_sim_s": 360.0
+    },
+    {
+      "actual_sim_s": 360.0,
+      "charged_sim_s": 360.0
+    },
+    {
+      "actual_sim_s": 360.0,
+      "charged_sim_s": 360.0
+    },
+    {
+      "actual_sim_s": 360.0,
+      "charged_sim_s": 360.0
+    },
+    {
+      "actual_sim_s": 360.0,
+      "charged_sim_s": 360.0
+    },
+    {
+      "actual_sim_s": 360.0,
+      "charged_sim_s": 360.0
+    },
+    {
+      "actual_sim_s": 360.0,
+      "charged_sim_s": 360.0
+    },
+    {
+      "actual_sim_s": 900.0,
+      "charged_sim_s": 900.0
+    },
+    {
+      "actual_sim_s": 900.0,
+      "charged_sim_s": 900.0
+    }
+  ],
+  "canary_sha256": "2cdfd15288ac7dc657ed35aa86117ec429698d022fedef3600f0a27bceadb55d",
+  "charged_sim_s": 4680,
+  "actual_sim_s": 4680.0,
+  "new_gpu_s": 0
+}
