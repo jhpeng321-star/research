@@ -74,6 +74,12 @@ intermediate weights. Next owned-job heartbeat due about04:49, then every20min t
 Receipts: CPU_PROGRESS_{cpuQ_1793478517,gpuR_1793478525},
 MODEL_PROGRESS_wm_{cpuQ_1793478535,gpuR_1793478539},
 GPU_PROGRESS_{gpuA_1793478570,gpuR_1793478575}.json.
+`tools.c1switch2.watch` adds read-only20min heartbeats through12:00+08:00,
+with explicit-root/PID identity checks, accounting deltas, STOP/stall alerts,
+current task registration and final-checkpoint receipt presence. Each heartbeat
+appends a short line here and commits ONLY its own explicit evidence paths;
+an already-staged index is preserved and blocks its commit. It cannot dispatch,
+restart, signal or retrain scientific jobs. CPU4/4 and Ruff PASS before launch.
 Latest resume state: `tools/c1switch2/evidence/STATUS_CURRENT.json` plus task-only `operations status`.
 Mechanics-only canary PASS: owncpuQ PID467748 EXITED, root
 `/home/ubuntu/c1switch2_run_4ad4ece01d5a9ac1`; charged=actual4680 sim-s, GPU0. Never redispatch it.
