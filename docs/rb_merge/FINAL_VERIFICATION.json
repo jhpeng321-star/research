@@ -1,0 +1,45 @@
+{
+  "task": "S-RB-MERGE",
+  "branch": "c4/rb-merge",
+  "verified_data_commit": "ce67254d",
+  "status": "owned engineering and validation complete",
+  "distributionally_qualified": false,
+  "local_cpu": {
+    "passed": 69,
+    "seconds": 7.19,
+    "command": "py -3.13 -m pytest tests/unit/test_rb_merge.py tests/unit/test_rb_merge_validation.py tests/unit/test_wmfix_admission.py tests/unit/test_rb_merge_native.py tests/unit/test_rb_merge_departure_phase.py tests/unit/test_rb_merge_encoded_fleet.py tests/unit/test_rb_merge_fleet_receipts.py tests/unit/test_rb_merge_boundary.py tests/unit/test_rb_merge_prefix.py -q"
+  },
+  "staged_runtime_cpu": {
+    "passed": 58,
+    "integrated_sources": ["4015b641", "8e964de5"],
+    "strict_frozen_encoder": true,
+    "fit_input_preflights_passed": 32
+  },
+  "committed_byte_integrity": {
+    "collections": 9,
+    "source_receipts": 303,
+    "all_collection_members_match_sha256": true,
+    "all_published_collection_citations_match": true,
+    "json_bytes_preserved_across_git_checkouts": true
+  },
+  "saved_prefix_check": {
+    "short_version": "v8end120",
+    "extended_version": "v8end600",
+    "worlds_passed": 32,
+    "contract": "bit-exact saved clocks/events/front traces only; full trajectories were not retained",
+    "receipt": "fullfleet_v8_saved_prefix.json"
+  },
+  "owned_jobs": {
+    "v7fast": {"pid": 682380, "worlds_complete": 32, "horizon_s": 600, "exited": true},
+    "v8end120": {"pid": 750052, "worlds_complete": 32, "horizon_s": 120, "exited": true},
+    "v8end600": {"pid": 789747, "worlds_complete": 32, "horizon_s": 600, "exited": true},
+    "v9latest300": {"pid": 840607, "worlds_complete": 32, "horizon_s": 300, "exited": true}
+  },
+  "remaining_owned_inference_dispatches": 0,
+  "limitations": [
+    "One point-settings future per native FIT world; no conditional ensemble qualification.",
+    "Matched mean delay does not establish matched tails, breakdown rates, or expected action shifts.",
+    "First-step target augmentation is explicit and separately reported; original helper tables/reports retained.",
+    "Initial corridor-frame overlaps vanish in chain coordinates; later raw overlap samples are not physical collision logs."
+  ]
+}

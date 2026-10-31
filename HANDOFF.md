@@ -81,6 +81,9 @@ Branch `c4/rb-merge`, basef0db3c82. Prior work fully retained; see
 - **69 local merge/native/phase/identity/receipt/boundary/prefix tests PASS /7.19s**;
   **58 combined runtime CPU tests PASS** on both staged engine versions.
   Original/augmented targets, source hashes, per-world distributions all retained.
+- Committed-byte audit PASS: **9 collections /303 source receipts**, every member
+  SHA256 and published collection citation matches Git HEAD. Final check receipt
+  `docs/rb_merge/FINAL_VERIFICATION.json` records scope and all terminal own PIDs.
 - `docs/rb_merge/SOURCES.md` records public source anchors. CPP read only in NEW
   empty temp dirs, never executed. No GPU/SUMO/training, peer signals, truth or
   assignment reads, newenv, reset/clean/deletion/push. All changes committed.
