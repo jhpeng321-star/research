@@ -5,6 +5,10 @@
  "source_receipt_hashes": "PASS",
  "split_identity_checks": "PASS",
  "finite_csv_checks": "PASS",
+ "report_lines": 47,
+ "report_links": "PASS",
+ "figures": 2,
+ "registration_line": "PASS",
  "gate_rate_design": {
   "cells": 12,
   "arms": 5,
@@ -13,7 +17,8 @@
   "K": 32,
   "epsilon": 0.1,
   "approximate_worlds_per_cell": 341,
-  "assumptions": "Normal planning bound; world-cluster inference required; exact/binomial or bootstrap power recheck before registration"
+  "approximate_worlds_for_80pct_power": 517,
+  "assumptions": "Calibrated shared-state Bernoulli null; normal planning approximation; world-cluster inference and exact/binomial or bootstrap power recheck required before registration"
  },
  "outputs": {
   "distribution_summary.csv": "1c1bdb664fe5fe65d71d14745c451fcaa6de733770bc25eb81679f067726b39c",

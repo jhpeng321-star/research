@@ -3,6 +3,7 @@ import ast
 import csv
 import hashlib
 import json
+import re
 from pathlib import Path
 from statistics import NormalDist
 
@@ -60,10 +61,23 @@ def main():
     # Conservative planning: real Bernoulli plus K-future Monte Carlo uncertainty.
     nd=NormalDist(); K=32; epsilon=.1; M=12*5*3
     n=int(np.ceil(nd.inv_cdf(1-.05/(2*M))**2*.25*(1+1/K)/epsilon**2))
+    n_power=int(np.ceil((nd.inv_cdf(1-.05/(2*M))+nd.inv_cdf(.8))**2*.25*(1+1/K)/epsilon**2))
+    report=a.OUT.parent/'WMBREAKDOWN.md'
+    text=a.read(report).decode('utf-8')
+    assert len(text.splitlines())<=60
+    for target in re.findall(r'\]\(([^)]+)\)',text):
+        assert not any(s in target.lower() for s in a.BAD)
+        assert (report.parent/target).exists(),target
+    assert len(list(a.OUT.glob('*.png')))==2
+    registration=a.read(a.OUT/'registration_receipt.md').decode('utf-8').strip()
+    ledger=a.read(Path('E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md')).decode('utf-8')
+    assert ledger.count(registration)==1
     receipt=dict(detector_rechecks=checked,real_episodes=len(episodes),numerical_crps_checks='PASS',
         source_receipt_hashes='PASS',split_identity_checks='PASS',finite_csv_checks='PASS',
+        report_lines=len(text.splitlines()),report_links='PASS',figures=2,registration_line='PASS',
         gate_rate_design=dict(cells=12,arms=5,horizons=3,tests=M,K=K,epsilon=epsilon,
-            approximate_worlds_per_cell=n,assumptions='Normal planning bound; world-cluster inference required; exact/binomial or bootstrap power recheck before registration'),
+            approximate_worlds_per_cell=n,approximate_worlds_for_80pct_power=n_power,
+            assumptions='Calibrated shared-state Bernoulli null; normal planning approximation; world-cluster inference and exact/binomial or bootstrap power recheck required before registration'),
         outputs={p.name:hashlib.sha256(a.read(p)).hexdigest() for p in sorted(a.OUT.iterdir())
                  if p.suffix in ('.csv','.png','.json') and p.name!='verification.json'})
     (a.OUT/'verification.json').write_text(json.dumps(receipt,indent=1,allow_nan=False))
