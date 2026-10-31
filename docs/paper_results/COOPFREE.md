@@ -4,7 +4,11 @@
 Build and CPU gates complete. MAIN's explicit 23:58 budget approval was observed.
 Frozen design: `COOPFREE_DESIGN.md` (62 lines), SHA256
 `05c729eac9b45c2128b7d8bf0db01f350730fb381d1956709a6a7b7fae9c91e3`.
-SUMO dispatch follows the source/approval/registration binding; no learned result yet.
+Approved SUMO pipeline is running on cpuQ, PID339173/start_ticks47835664, nice19/one thread.
+First1140s baseline and full repeat both closed at charged=actual1140, bitwise-identical
+RESULT SHA256 `a5419ebb2219b3cc765a020e6515c4e38bebcc5aba800b876375fb9d4e328030`.
+Latest saved status: 10screens+first repeat complete,12,540closed actual/41,040precharged,
+no STOP; screening continues. Optimizer updates/dev/discovery are pending, not results.
 
 ## Implemented
 - `tools/coopfree/policy.py`: observable per-CAV continuous speed/log-gap policy,
@@ -53,6 +57,10 @@ Immutable cpuQ root: `/home/ubuntu/coopfree20261101_build5`.
 Build4's launch preflight rejected the correct binary's banner because it omitted the word
 "Version"; no Popen/charge/physics occurred. The exact1.27.1 banner check is now regression-tested;
 build4 remains intact and build5 has a fresh source/CPU binding, same scientific plan and budget.
+Existing peer sklearn1.7.2/scipy1.15.3/joblib/threadpoolctl target is linked read-only into
+build5's import path for comparator/clustering; no install/newvenv or physics restart.
+Additional CPU model-pickle/clustering QA PASS, SUMO0, binding SHA unchanged
+`987a7ae0bd0c056bd06f8c6b4a099f00852ca2ba98961659efd6bb5a1481e05f`.
 `python -m tools.coopfree.ops status` reads only that owned dispatch/accounting state.
 `ops bind` requires the actual MAIN approval, CPU/source certificate and fresh exposure audits.
 `ops launch` is one-shot, binary-version/PATH preflighted; it cannot duplicate an existing dispatch.
