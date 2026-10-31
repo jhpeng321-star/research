@@ -40,7 +40,7 @@ An additional successful replacement smoke without another amendment would excee
 conservative cap by900. Budget advance approval alone does not authorise that retry.
 Final169 evaluation still requires the registered16world S-C1SWITCH2 manifest.
 
-## Second mechanics terminal stop (current)
+## Second mechanics terminal stop (preserved)
 Continuation commit `c082b233` bound source `999584a8cfacaf81`, CPU30/30 and real
 frozen-controller/WALL/seed-alias gate PASS. Own cpuQ PID357398 ran ONLY seed18007999;
 the original failed18007998 START/END was inherited unchanged, not simulated again.
@@ -69,3 +69,16 @@ Same upper cap:1,800 historical +6,996,600production +14,400reserved eval =7,012
 Alternatively MAIN must specify a budget/protocol amendment for another real mechanics gate.
 C1SWITCH2's registered evaluation ownership is now confirmed: keep our14,400 reservation
 unstarted and reuse its paired16world J600/J900 receipts; only final169 is eligible.
+
+## MAIN acknowledgement 01:08 (2026-11-01; current)
+REGISTRATION.md now explicitly acknowledges production-only continuation within7,012,800:
+retain BOTH mechanics charges, run NO additional mechanics episode, then production only.
+Fresh-session reconciliation: git HEAD0422aa41; own second trainer357398 is absent on cpuQ;
+original/second logs and1,800charged/900actual ledger match the preserved stop above.
+No fleet trainer appeared in cpuQ's process inventory at01:09+08:00.
+Implement a separate one-use production lock and exact second-ledger inheritance before
+launch. Both smoke seeds remain permanently consumed. No continuation has yet launched.
+MAIN's priority rule: nice19, single-thread/CUDAhidden, pause new dispatch above0.8xcores;
+cooperation and WM evaluation have priority, then C1SWITCH2, then selector training.
+Evaluation stays peer-owned on registered PANEL_v2.json (16worlds969136..969151,
+SHA2567c780c25237dde73a657937ab577b8e48f71766817f4363f3298982e90144827).

@@ -1,12 +1,14 @@
 # S-SELMAPPO fleet-picker integration handoff
 
-**CURRENT: STOPPED at the second mechanics episode's terminal bookkeeping; no trainer alive.**
+**CURRENT: MAIN01:08 authorizes production-only continuation; no trainer alive yet.**
 MAIN00:29 continuation was used once (commit `c082b233`); second seed reached900actual,
 then the wrapper queried the frozen environment's already-closed clock. Total1,800charged /
 900actual, production0/checkpoints0. Terminal repair commit `d219f5ca` is CPU31/31 plus
 real frozen-controller/WALL/alias-gate PASS, staged ONLY at `build_68394a9568862929`.
-MAIN acknowledgement is needed for production-only continuation; both smoke slots are spent.
-No further continuation is implemented or armed. See `SELMAPPO_STOP.md`.
+MAIN acknowledgement is now present in REGISTRATION.md; both smoke slots are spent.
+Fresh-session reconciliation confirmed own357398 exited and no fleet trainer at01:09+08:00.
+A separate one-use production-only continuation is being built; no launch yet.
+Lowest-priority nice19 dispatch must yield above0.8xcores. See `SELMAPPO_STOP.md`.
 
 Latest scope: **fleet PPO only**, `S-C1SWITCH2/v2`, decisions every20s at300..880,
 library `native, ctrl0, mappo, pi, circles, wall`. Per-CAV belongs to S-SELMAPPO2.
