@@ -21,9 +21,9 @@ still live (26tasks/three complete K8 worlds at06:29). No cpuQ dependency.
   gpuA `/root/rbeval20261031/int/WM-PHYS-FULL-v1`. Saved-ID crosswalk unverified;
   newer FULL-v3 removes that dependence. Never redispatch either source.
 - A2 owned by RUNA; B2 owned by RUNB; C2 handover below. Shared claims bind ownership.
-- C2 HANDOVER PREPARED: still unclaimed; INT exclusive gpuR preflight/claim uses
-  published4015b641 recipe and NEW `/root/rbeval20261031/int/WM-PHYS-C2`.
-  Design `docs/rbint/C2_HANDOVER_DESIGN.md`; no duplicate inference.36CPU PASS.
+- C2 now exclusively INT-owned on gpuR; original4015b641 source+smoke hashes
+  verified; NEW `/root/rbeval20261031/int/WM-PHYS-C2`. Canary842915 live06:40,
+  0tasks; do not redispatch. Design `docs/rbint/C2_HANDOVER_DESIGN.md`;36CPU PASS.
   `E:/agent-work/rb-shared/evalclaims/WM-PHYS-A2.runa.json`
   `E:/agent-work/rb-shared/evalclaims/WM-PHYS-C2.runa.json`
   `E:/agent-work/rb-shared/evalclaims/WM-PHYS-B2.runb.json`
@@ -100,8 +100,9 @@ still live (26tasks/three complete K8 worlds at06:29). No cpuQ dependency.
 
 <!-- NOON-COLLECTOR:BEGIN -->
 ## Bounded noon collector
-2026-11-01T06:09:20+08:00; read-only remote collection, no inference dispatch.
-Latest publication `docs/rbint/noon/20261101T060920+0800/PUBLICATION.json`; 08interim `PENDING`,09:30freeze `PENDING`.
+2026-11-01T06:32:33+08:00 saved analysis retained; owner handover guard stopped v3 before staging.
+Latest publication `docs/rbint/noon/20261101T063233+0800/PUBLICATION.json`; 08interim `PENDING`,09:30freeze `PENDING`.
+Recovery `docs/rbint/noon/OWNER_HANDOVER_0640.md`; next collector resumes cached scores, not inference.
 Source22cc32f6 FULL-v4 and prior A/B/C/FULL sources remain immutable.
 Scored-world-only fixed-stratum CIs; singleton uncertainty NA; prior CIs retracted.
 Existing remote supervisors retain own-PID11:30 deadline. Final collection11:35, report by11:45.

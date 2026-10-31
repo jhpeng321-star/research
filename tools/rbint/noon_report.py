@@ -82,6 +82,25 @@ def render(publication):
                 '/'.join(number(x['mean']) for x in d)+f"veh-s; Δ300s rate-distance={number(100*r['mean'],2)}pp.")
         else:
             lines.append(f"- {key}:PENDING complete K8 evidence; {item.get('tasks', 0)} saved tasks; no efficacy inferred.")
+    if distribution and crps:
+        delay_rows = [r for r in rows(distribution/'distribution_worlds.csv')
+                      if r['split'] == 'reserved8' and r['metric'] == 'team_delay_vs']
+        candidate = [avg([r for r in delay_rows if r['horizon_s'] == str(h)], 'wm_crps')
+                     for h in (120, 300, 600)]
+        if all(x is not None for x in candidate):
+            baseline = [value-row['mean'] for value, row in zip(candidate, crps)]
+            lines.append('- Same-world absolute delay CRPS120/300/600:WM2 '+
+                '/'.join(number(x) for x in baseline)+f"; {fallback} "+
+                '/'.join(number(x) for x in candidate)+'veh-s (all five arms).')
+            bias = avg([r for r in delay_rows if r['horizon_s'] == '600'], 'error')
+            lines.append(f'- Same-world {fallback}600s mean delay bias={number(bias)}veh-s; severity alone does not establish clearing fidelity.')
+    rate_rows = [r for r in comparisons if r['metric'] == 'upstream_rate_distance_difference']
+    if ({r['horizon_s'] for r in rate_rows} == {120, 300, 600}
+            and all(r.get(k) is not None for r in rate_rows
+                    for k in ('real_rate', 'baseline_rate', 'candidate_rate'))):
+        lines.append('- Same-world upstream rates120/300/600 (%):'+ '; '.join(
+            label+' '+ '/'.join(number(100*r[key],1) for r in rate_rows)
+            for label,key in (('real','real_rate'),('WM2','baseline_rate'),(fallback,'candidate_rate')))+'.')
     lines += [f"- {fallback} native600s upstream speed CRPS={number(avg(speed,'wm_crps'),2)} vs cell={number(avg(speed,'cell_crps'),2)}m/s; clearing not qualified.",
         f"- Same native onset-distribution IBS600={number(avg(timing,'wm_ibs'),3)} vs cell={number(avg(timing,'cell_ibs'),3)}; onset-CDF gate retained."]
     for arm in ('mappo', 'pi'):
@@ -122,3 +141,14 @@ def render(publication):
     if len(lines) > 60:
         raise AssertionError(f'report exceeds owner line limit: {len(lines)}')
     return '\n'.join(lines)+'\n'
+
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--publication', required=True)
+    parser.add_argument('--out', required=True)
+    args = parser.parse_args()
+    out = Path(args.out)
+    assert out.parent.is_dir()
+    out.write_text(render(load(args.publication)), encoding='utf-8')
