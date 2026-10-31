@@ -66,6 +66,10 @@ Operational supplement, not an efficacy result. Frozen primary model, K8,
   in the frozen sync cache after every earlier bulk-copy process has exited and
   before remote COMPLETE. This avoids redundant transport, without inference,
   analysis, scientific-source changes or a second collector.
+- The256-file/33,103,907-byte bulk archive transfer timed out after600s; its
+  partial archive/log are retained, never imported. After that process exited,
+  bridge-cache reuse verified314 local publication copies against gpuA hashes:
+  443/467 pre-recovery outputs cached,24 still requiring original collector sync.
 
 ## Separate reference slot
 S-C1FLOOR now supplies an approved native-only tiny-speed-pulse sensitivity on
