@@ -40,6 +40,25 @@ Six-hour cap includes initialization, pilot panels and continuation.
 
 ## CPU verification
 `python -m pytest tests/unit/test_wmfixmerge_pilot_v2.py tests/unit/test_wmfixmerge_pilot.py -q`
-**15 passed**. Covers immutable binding, explicit dispatch/default rejection,
+**16 passed**. Covers immutable binding, explicit dispatch/default rejection,
 unchanged decide(), missing panels, fitting exclusion, and shard startup bounds.
-Focused Ruff check passed. GPU parity/launch/decision remain pending.
+The recovered parity check requires EXACT original per-group values, not rounded
+agreement (449.62744140625 / 302.890625). Focused Ruff check passed.
+
+## Staging / one-shot dispatcher
+The 30-file local/staged tree comparison initially differs in raw hashes solely
+because the existing staged tree mixes LF/CRLF. All normalized source hashes
+match: aggregate `597fcc80b61c992a2fe9f353604cfd572cbcf8741a9e90eea4a333ffb6fb26fa`.
+Preserve staged bytes, which the registered contract already binds. The staged
+raw aggregate is `303830de3670bdef8585863a8b7b8c32bdfff588f29a92dae4e9263231bfac7f`.
+The launcher rechecks BOTH aggregates before dispatch and again before training.
+New driver files are separately hash-bound; full-panel receipts must bind the
+exact checkpoint/prepared/base and every group/horizon/arm exactly once.
+
+`tools.wmfixmerge.launch_data_pilot --execute` creates an exclusive DISPATCH.json,
+waits for >=14 GiB free before the recovered smoke and before pilot launch,
+runs smoke into NEW `v2data/smoke`, and requires exact original-v1 parity.
+Only then does it create NEW `v2data/pilot` and launch with timeout 21570 s,
+trainer allocator 0.16, same-gpuA inference allocators 0.08 (max four processes,
+free-memory-limited). EVENTS.jsonl/STATUS.json persist waits, PIDs, commands and
+decision. GPU parity/launch/decision remain pending.

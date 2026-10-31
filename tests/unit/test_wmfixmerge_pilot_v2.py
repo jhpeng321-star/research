@@ -108,3 +108,19 @@ def test_panel_queue_bounds_startup_reservations(monkeypatch):
     queue.tick()
     queue.tick()
     assert set(panels.running) == {"a"} and len(queue.pending) == 1
+
+
+def test_recovered_smoke_requires_exact_original_values_and_complete_group():
+    from tools.wmfixmerge.launch_data_pilot import parity
+    expected = v(449.62744140625, 302.890625)
+    original = {"panel": {str(h): {"per_group": {"0": value}} for h, value in expected.items()}}
+    smoke = dict(step=0, groups=[40], rows=[dict(group=40, horizon=h, arm=a, contrast=value)
+                                          for h, value in expected.items() for a in (0, 1)])
+    assert parity(smoke, original)["passed"]
+    smoke["rows"][0]["contrast"] += .00001
+    with pytest.raises(ValueError, match="parity failed"):
+        parity(smoke, original)
+    smoke["rows"][0]["contrast"] -= .00001
+    smoke["groups"] = [0]
+    with pytest.raises(ValueError, match="parity failed"):
+        parity(smoke, original)

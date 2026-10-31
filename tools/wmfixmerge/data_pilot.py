@@ -63,6 +63,8 @@ class PanelQueue:
         self.done = set()
 
     def submit(self, name, candidate, groups):
+        if name in self.done or name in self.panels.running or any(row[0] == name for row in self.pending):
+            raise ValueError("duplicate panel dispatch: " + name)
         self.pending.append((name, candidate, groups))
 
     def tick(self):
@@ -187,7 +189,19 @@ def run(args):
         queue.drain()
         scores = {}
         for s in (0, *EVAL_STEPS):
-            panel = assemble([panels.read(f"step{s}_full_s{i}")["rows"] for i in range(4)], range(52))
+            shard_docs = [panels.read(f"step{s}_full_s{i}") for i in range(4)]
+            for i, doc in enumerate(shard_docs):
+                producer = doc["producer"]
+                if doc["step"] != s or doc["groups"] != shards[i] or \
+                        producer["prepared_sha256"] != PREPARED_SHA or \
+                        producer["base_sha256"] != WM2_SHA or \
+                        producer["candidate_sha256"] != digest(out / f"step_{s:06d}.pt"):
+                    raise ValueError("full-panel producer binding mismatch")
+                if len(doc["rows"]) != 4 * len(shards[i]) or {
+                        (r["group"], r["horizon"], r["arm"]) for r in doc["rows"]} != {
+                        (g, h, a) for g in shards[i] for h in (120, 300) for a in (0, 1)}:
+                    raise ValueError("duplicate/missing full-panel cell")
+            panel = assemble([doc["rows"] for doc in shard_docs], range(52))
             write(f"FULL_PANEL_STEP{s}.json", panel)
             scores[s] = {h: panel[str(h)]["paired_J_MAE"] for h in (120, 300)}
         frozen_ok = all(torch.equal(v, rt.model.state_dict()[n].detach().cpu()) for n, v in frozen.items())
