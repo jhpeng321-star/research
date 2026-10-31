@@ -209,9 +209,56 @@ print(json.dumps(out))
     print(json.dumps(result, indent=2))
 
 
+def step0():
+    path = Path('tools/c1switch/step0.py')
+    raw = base64.b64encode(path.read_bytes()).decode()
+    result = ssh('gpuR', f'''import base64, hashlib, json, os, subprocess, sys, time
+from pathlib import Path
+root=Path({ROOT!r}); stage=root/'pytools'; assert stage.is_dir()
+assert json.loads((root/'jobs/canary_s969100/result.json').read_text())['pass']
+assert not (root/'STEP0_DISPATCH.json').exists() and not (root/'STOP').exists()
+target=stage/'tools/c1switch/step0.py'; assert not target.exists()
+data=base64.b64decode({raw!r}); assert hashlib.sha256(data).hexdigest()=={sha(path)!r}
+target.write_bytes(data)
+env=dict(os.environ,CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',PATH='/root/miniconda3/bin:'+os.environ['PATH'])
+with (root/'step0.log').open('x') as log:
+ proc=subprocess.Popen([sys.executable,'-B','-u','-m','tools.c1switch.step0'],cwd=stage,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,preexec_fn=lambda:os.nice(19))
+ row=dict(pid=proc.pid,unix=time.time(),source_sha256={sha(path)!r},max_sim_s=58680,workers=1)
+ (root/'STEP0_DISPATCH.json').write_text(json.dumps(row,indent=2))
+print(json.dumps(row))
+''')
+    write(EVIDENCE/'STEP0_DISPATCH.json', result)
+    print(json.dumps(result))
+
+
+def progress():
+    result = ssh('gpuR', f'''import json
+from pathlib import Path
+root=Path({ROOT!r})
+out={{}}
+for name in ['STEP0_STATUS.json','STOP','step0.log','accounting.jsonl']:
+ p=root/name
+ if p.exists():
+  text=p.read_text()
+  if name=='accounting.jsonl':
+   rows=[json.loads(x) for x in text.splitlines()];out[name]=dict(charged_sim_s=sum(r['sim_s'] for r in rows),segments=len(rows))
+  else: out[name]=text if name.endswith('.log') else json.loads(text)
+out['completed']=[]
+out['decisions']={{}}
+for seed in range(969100,969112):
+ job=root/'jobs'/f'step0_s{{seed}}'
+ if (job/'result.json').exists(): out['completed'].append(json.loads((job/'result.json').read_text()))
+ out['decisions'][str(seed)]=len(list(job.glob('decision_*.json'))) if job.is_dir() else 0
+ if (job/'failure.json').exists():out['failure']=json.loads((job/'failure.json').read_text())
+print(json.dumps(out))
+''')
+    write(EVIDENCE/'STEP0_PROGRESS.json', result)
+    print(json.dumps(result, indent=2))
+
+
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument('action', choices=('audit','deploy','preflight','recorded','cpu','canary','status'))
+    p.add_argument('action', choices=('audit','deploy','preflight','recorded','cpu','canary','status','step0','progress'))
     a = p.parse_args()
     globals()[a.action]()
 
