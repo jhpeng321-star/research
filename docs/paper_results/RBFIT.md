@@ -1,5 +1,5 @@
 # S-RB-FIT — observable-motion physical parameter learning
-**Owner01:28 continuation active: IDM exported; direction-aware LC improves conditional scores but raw proposals still overpredict.**
+**Owner01:28 continuation active: IDM exported; LC conditional scores improve, but physical event-rate/timing deficiencies remain.**
 
 ## Contract
 - Owner WM-PHYS amendment REGISTRATION.md:5701; branch `c4/rb-fit`, base `f0db3c82`; all prior work retained.
