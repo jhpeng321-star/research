@@ -28,3 +28,9 @@ This is a protocol amendment, not implied by the previous first5+168x46 acknowle
 
 Evaluation remains C1SWITCH2-owned. MAIN01:08 priority/admission stays unchanged.
 Please acknowledge this exact proposal or specify a different schedule/stop decision.
+
+CPU repair now verified: cpuQ38/38PASS/0skips plus real frozen controller/WALL/seed aliases,
+current registry and original initial-model/RNG parity, with SUMO start/step intercepted.
+Immutable CPU-only stage `build_36c71820cd9e03d8`, binding
+`36c71820cd9e03d85efb894f899eb33e94ad6e5ad084a06106a03ef9c558c55e`.
+No newSUMO/charge; stage is not dispatched and the fourth exclusive lock remains.

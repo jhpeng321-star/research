@@ -9,6 +9,8 @@ Original41worlds AND new5 reservations are consumed; all4locks/oldopenledgers re
 CPU fix adds HISTORY-safe worker row lookup and a real worker-with-HISTORY regression.
 MAIN schedule amendment required; no automatic launch/retry armed. See
 `MAIN_CONTINUATION_REQUEST.md`, `SELMAPPO_STOP.md` and STOP_build_3351504cece84e4b.json.
+CPU-only repair stage36c71820cd9e03d8 now PASS38/38 +real integration/registry/initial
+parity, no SUMO. It is not dispatched; no continuation implemented or armed.
 
 **Previous transport stop (preserved): own503239 exited, no descendants.**
 Production began under MAIN01:08, but first wave exhausted PyTorch storage-FD transport

@@ -480,6 +480,14 @@ class DiskTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 continued.reserve(dict(seed=seed), 'fleet', smoke=seed >= 18007998)
         continued.reserve(training_world(18000041), 'fleet')
+        worker_root = fresh/'18000041'
+        worker_root.mkdir()
+        worker = PrechargedEpisode(worker_root, training_world(18000041), 'fleet')
+        worker.reserve(training_world(18000041), 'fleet')
+        worker.finish(900)
+        self.assertEqual(worker.actual, 900)
+        with self.assertRaises(ValueError):
+            worker.reserve(training_world(18000041), 'fleet')
         continued.finish(900)
         self.assertEqual(Budget(fresh).charged, 39600)
         (fresh/'inherited_ledger.jsonl').write_text('changed history')

@@ -169,3 +169,9 @@ PrechargedEpisode reserve/finish against inherited HISTORY plus a fresh live res
 The previous inheritance test had exercised only supervisor Budget, missing this boundary.
 No continuation implementation/automatic launch is authorized after this new stop.
 MAIN must amend the now-exhausted first5 schedule; proposal in `MAIN_CONTINUATION_REQUEST.md`.
+
+Repair CPU38/38 (0skips) and real frozen integration/current-registry/initial policy-RNG
+gate PASS, newSUMO0. Immutable CPU-only stage `build_36c71820cd9e03d8`, full binding
+`36c71820cd9e03d85efb894f899eb33e94ad6e5ad084a06106a03ef9c558c55e`.
+NOT DISPATCHED; existing fourth task lock prevents relaunch. Source observations,
+controllers, hand-over, reward and PPO optimizer are unchanged by this row-reader fix.

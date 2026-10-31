@@ -87,7 +87,7 @@ class PrechargedEpisode:
         ident = f'{variant}:{world["seed"]}'
         records = [json.loads(line) for line in
                    (self.root.parent/'ledger.jsonl').read_text(encoding='utf-8').splitlines()]
-        owned = [row for row in records if row['id'] == ident]
+        owned = [row for row in records if row.get('id') == ident]
         if (len(owned) != 1 or owned[0]['event'] != 'START' or
                 owned[0]['reserved_sim_s'] != 900 or owned[0]['world'] != world):
             raise ValueError('worker has no unique supervisor precharge')
