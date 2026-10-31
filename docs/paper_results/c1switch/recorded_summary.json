@@ -1,0 +1,266 @@
+{
+  "source_export_sha256": "92a09ddf804b8b3f0f6a73b89a2d0d9b818fdc33b4c806892ab1c54ddfdf003e",
+  "rows": [
+    {
+      "dataset": "WMDATA",
+      "clock_s": 120,
+      "n_worlds": 40,
+      "unique_wins": {
+        "native": 5,
+        "ctrl0": 17,
+        "mappo": 8,
+        "pi": 6,
+        "circles": 3
+      },
+      "ties": 1,
+      "fractional_win_shares": {
+        "native": 0.13125,
+        "ctrl0": 0.43125,
+        "mappo": 0.20625,
+        "pi": 0.15625,
+        "circles": 0.075
+      },
+      "best_fixed_mean": "ctrl0",
+      "mean_team_delay_vs": {
+        "native": 7314.676394806935,
+        "ctrl0": 7210.743062453104,
+        "mappo": 7237.509884528948,
+        "pi": 7257.11759362681,
+        "circles": 7445.339388685061
+      },
+      "median_margin_vs": 30.78743600845337
+    },
+    {
+      "dataset": "WMDATA",
+      "clock_s": 300,
+      "n_worlds": 40,
+      "unique_wins": {
+        "native": 9,
+        "ctrl0": 12,
+        "mappo": 7,
+        "pi": 11,
+        "circles": 1
+      },
+      "ties": 0,
+      "fractional_win_shares": {
+        "native": 0.225,
+        "ctrl0": 0.3,
+        "mappo": 0.175,
+        "pi": 0.275,
+        "circles": 0.025
+      },
+      "best_fixed_mean": "ctrl0",
+      "mean_team_delay_vs": {
+        "native": 21904.45919643158,
+        "ctrl0": 21494.877858234588,
+        "mappo": 21502.07115076298,
+        "pi": 21500.734817720593,
+        "circles": 22647.704291994512
+      },
+      "median_margin_vs": 258.7493853569031
+    },
+    {
+      "dataset": "WMDATA",
+      "clock_s": 600,
+      "n_worlds": 40,
+      "unique_wins": {
+        "native": 7,
+        "ctrl0": 7,
+        "mappo": 11,
+        "pi": 14,
+        "circles": 1
+      },
+      "ties": 0,
+      "fractional_win_shares": {
+        "native": 0.175,
+        "ctrl0": 0.175,
+        "mappo": 0.275,
+        "pi": 0.35,
+        "circles": 0.025
+      },
+      "best_fixed_mean": "pi",
+      "mean_team_delay_vs": {
+        "native": 54945.56343087917,
+        "ctrl0": 53912.14765715366,
+        "mappo": 53631.315849474726,
+        "pi": 52998.14398739105,
+        "circles": 57082.58724573022
+      },
+      "median_margin_vs": 775.9120063781738
+    },
+    {
+      "dataset": "WMDATA2",
+      "clock_s": 120,
+      "n_worlds": 50,
+      "unique_wins": {
+        "native": 9,
+        "ctrl0": 20,
+        "mappo": 9,
+        "pi": 8,
+        "circles": 3
+      },
+      "ties": 1,
+      "fractional_win_shares": {
+        "native": 0.185,
+        "ctrl0": 0.405,
+        "mappo": 0.185,
+        "pi": 0.165,
+        "circles": 0.06
+      },
+      "best_fixed_mean": "ctrl0",
+      "mean_team_delay_vs": {
+        "native": 9027.224602406293,
+        "ctrl0": 8934.879122269424,
+        "mappo": 8958.973359587462,
+        "pi": 8984.453799603254,
+        "circles": 9228.115662205488
+      },
+      "median_margin_vs": 71.37357521057129
+    },
+    {
+      "dataset": "WMDATA2",
+      "clock_s": 300,
+      "n_worlds": 50,
+      "unique_wins": {
+        "native": 13,
+        "ctrl0": 12,
+        "mappo": 13,
+        "pi": 10,
+        "circles": 2
+      },
+      "ties": 0,
+      "fractional_win_shares": {
+        "native": 0.26,
+        "ctrl0": 0.24,
+        "mappo": 0.26,
+        "pi": 0.2,
+        "circles": 0.04
+      },
+      "best_fixed_mean": "pi",
+      "mean_team_delay_vs": {
+        "native": 27728.076648708113,
+        "ctrl0": 27641.138327241668,
+        "mappo": 27570.544642911682,
+        "pi": 27456.372596956022,
+        "circles": 29157.668920112377
+      },
+      "median_margin_vs": 446.0902976989746
+    },
+    {
+      "dataset": "WMDATA2",
+      "clock_s": 600,
+      "n_worlds": 50,
+      "unique_wins": {
+        "native": 15,
+        "ctrl0": 10,
+        "mappo": 8,
+        "pi": 15,
+        "circles": 2
+      },
+      "ties": 0,
+      "fractional_win_shares": {
+        "native": 0.3,
+        "ctrl0": 0.2,
+        "mappo": 0.16,
+        "pi": 0.3,
+        "circles": 0.04
+      },
+      "best_fixed_mean": "pi",
+      "mean_team_delay_vs": {
+        "native": 71511.4207377519,
+        "ctrl0": 71316.21781289953,
+        "mappo": 70882.57850136656,
+        "pi": 69961.2387875356,
+        "circles": 76058.61443896193
+      },
+      "median_margin_vs": 812.2139008045197
+    },
+    {
+      "dataset": "POOLED",
+      "clock_s": 120,
+      "n_worlds": 90,
+      "unique_wins": {
+        "native": 14,
+        "ctrl0": 37,
+        "mappo": 17,
+        "pi": 14,
+        "circles": 6
+      },
+      "ties": 2,
+      "fractional_win_shares": {
+        "native": 0.16111111111111112,
+        "ctrl0": 0.4166666666666667,
+        "mappo": 0.19444444444444445,
+        "pi": 0.16111111111111112,
+        "circles": 0.06666666666666667
+      },
+      "best_fixed_mean": "ctrl0",
+      "mean_team_delay_vs": {
+        "native": 8266.092065695468,
+        "ctrl0": 8168.596429017725,
+        "mappo": 8193.878481783679,
+        "pi": 8216.74881916928,
+        "circles": 8435.770651751965
+      },
+      "median_margin_vs": 56.84334325790405
+    },
+    {
+      "dataset": "POOLED",
+      "clock_s": 300,
+      "n_worlds": 90,
+      "unique_wins": {
+        "native": 22,
+        "ctrl0": 24,
+        "mappo": 20,
+        "pi": 21,
+        "circles": 3
+      },
+      "ties": 0,
+      "fractional_win_shares": {
+        "native": 0.24444444444444444,
+        "ctrl0": 0.26666666666666666,
+        "mappo": 0.2222222222222222,
+        "pi": 0.23333333333333334,
+        "circles": 0.03333333333333333
+      },
+      "best_fixed_mean": "pi",
+      "mean_team_delay_vs": {
+        "native": 25139.802225474097,
+        "ctrl0": 24909.467007682964,
+        "mappo": 24873.445313067812,
+        "pi": 24809.422472851387,
+        "circles": 26264.35130761555
+      },
+      "median_margin_vs": 323.4320640563965
+    },
+    {
+      "dataset": "POOLED",
+      "clock_s": 600,
+      "n_worlds": 90,
+      "unique_wins": {
+        "native": 22,
+        "ctrl0": 17,
+        "mappo": 19,
+        "pi": 29,
+        "circles": 3
+      },
+      "ties": 0,
+      "fractional_win_shares": {
+        "native": 0.24444444444444444,
+        "ctrl0": 0.18888888888888888,
+        "mappo": 0.2111111111111111,
+        "pi": 0.32222222222222224,
+        "circles": 0.03333333333333333
+      },
+      "best_fixed_mean": "pi",
+      "mean_team_delay_vs": {
+        "native": 64148.81749025291,
+        "ctrl0": 63581.07552145692,
+        "mappo": 63215.3506560813,
+        "pi": 62422.085543026915,
+        "circles": 67624.82457530338
+      },
+      "median_margin_vs": 808.3165395259857
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "source": "E:/agent-work/c4-c1gap/docs/paper_results/C1_GAPS.md#c1-exposure",
+  "source_audit_sha256": "9dd0e4fbff00dd4da3b3633fd07eb3ed33ca02db54babed01053cee9a0c95511",
+  "C1_87ed02e0_and_BBtraj_afaaa32c": {
+    "native": "seen:57 effective native windows",
+    "ctrl0": "exact zero.py forced-native algorithm not established as seen; trajectory/direct command channel seen",
+    "mappo": "algorithm absent in audited effective corpus; direct command channel seen",
+    "pi": "algorithm absent in audited effective corpus; direct command channel seen",
+    "circles": "seen:174 effective damping windows"
+  },
+  "WM2_b8797242_plus_mix": {
+    "native": "seen in audited sources",
+    "ctrl0": "exact zero.py algorithm exposure not established; generic-random/direct command channels seen",
+    "mappo": "algorithm absent in audited sources; own-policy adaptation is not MAPPO exposure",
+    "pi": "algorithm absent in audited sources",
+    "circles": "algorithm absent in eight audited source algorithms"
+  },
+  "limitations": "Audited corpus labels are checkpoint-specific. WM2 initialization chain stops at R16; strict from-initialization zero-shot certification remains provisional. Generic direct commands do not imply exposure to a feedback algorithm. Fresh-world exclusion is separately checked in EXPOSURE.json. No BB-id arm because it cannot execute feedback controllers."
+}
