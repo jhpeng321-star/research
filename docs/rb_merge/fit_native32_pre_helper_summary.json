@@ -1,0 +1,105 @@
+{
+  "version": "d6954af3-before-shared-helper-corrections",
+  "seeds": [
+    969400,
+    969401,
+    969402,
+    969403,
+    969404,
+    969405,
+    969406,
+    969407,
+    969408,
+    969409,
+    969410,
+    969411,
+    969412,
+    969413,
+    969414,
+    969415,
+    969416,
+    969417,
+    969418,
+    969419,
+    969420,
+    969421,
+    969422,
+    969423,
+    969424,
+    969425,
+    969426,
+    969427,
+    969428,
+    969429,
+    969430,
+    969431
+  ],
+  "n_worlds": 32,
+  "cohort": {
+    "real_merges": 200,
+    "predicted_merges": 125,
+    "matched_merges": 124,
+    "time_error_s": {
+      "n": 124,
+      "mean": -19.080645161290324,
+      "q10": -56.8,
+      "q50": -8.5,
+      "q90": 8.350000000000001
+    },
+    "abs_time_error_s": {
+      "n": 124,
+      "mean": 24.516129032258064,
+      "q10": 1.1500000000000004,
+      "q50": 12.0,
+      "q90": 60.900000000000006
+    },
+    "position_error_m": {
+      "n": 124,
+      "mean": 10.673899761611416,
+      "q10": -7.209963989257813,
+      "q50": 3.12835693359375,
+      "q90": 43.92863922119141
+    },
+    "abs_position_error_m": {
+      "n": 124,
+      "mean": 17.212515046038934,
+      "q10": 0.0,
+      "q50": 10.135995864868164,
+      "q90": 48.408703422546395
+    },
+    "real_ramp_lane_speed_loss_veh_s": {
+      "n": 32,
+      "mean": 240.03833008851336,
+      "q10": 64.63075262109726,
+      "q50": 156.67055310636198,
+      "q90": 459.00519808638984
+    },
+    "predicted_ramp_lane_speed_loss_veh_s": {
+      "n": 32,
+      "mean": 761.2809226346785,
+      "q10": 9.394774639386512,
+      "q50": 110.2252391337666,
+      "q90": 2057.5633832022318
+    }
+  },
+  "conditional_recorded_state": {
+    "tp": 410,
+    "fp": 2496,
+    "fn": 625,
+    "tn": 123046,
+    "observed_births": 6154,
+    "admitted_at_observed_birth": 4634
+  },
+  "full_fleet_qualification": false,
+  "limitations": [
+    "Recorded-state diagnostics condition on observed neighbors each tick.",
+    "Cohort rollout excludes entrants and treats all vehicles as native; not full fleet J.",
+    "562.4 vs 1265.4 veh-s references are historical, not matched to this panel.",
+    "Observed-birth admission is recall-only, not autonomous insertion-count calibration.",
+    "MOBIL mainline proposals until LC2013 integration; no training or simulation used."
+  ],
+  "inputs": [
+    "docs/rb_merge/fit_969400_969401_300.json",
+    "docs/rb_merge/fit_969402_969431_300.json"
+  ]
+}

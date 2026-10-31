@@ -4,7 +4,10 @@ from __future__ import annotations
 import hashlib
 import math
 
-from .entries import NOMINAL_LENGTH_M, SUMO_POSITION_EPS_M
+from .entries import NOMINAL_LENGTH_M
+
+# SUMO stddefs POSITION_EPS; legacy entries.py's 0.1 is not source parity.
+POSITION_EPS = .01
 
 
 def follow_speed(speed, bumper_gap, leader_speed, params, dt):
@@ -48,18 +51,18 @@ class SumoInsertion:
 
     Uses its exact identity-keyed sample for admission and records that ordinal
     for newborn motion, preserving the source ledger and FIFO refusal semantics.
-    departLane supports free (max rear gap), best_free and a fixed WM lane.
-    departSpeed supports max (patched), last (patched), and explicit numeric
+    departLane supports free (max rear gap), best_free, first and a fixed WM lane.
+    departSpeed supports max (patched), last/desired (unpatched), and explicit numeric
     speeds (unpatched, refusal if unsafe). Default SUMO departSpeed is 0.
     """
     def __init__(self, physics, mix=None, *, depart_lane='free', depart_speed='max'):
         self.physics = physics
         self.mix = mix
         self.depart_lane = depart_lane
-        self.depart_speed = depart_speed if depart_speed in ('max', 'last') else float(depart_speed)
-        if depart_lane not in ('free', 'best_free', 0, 1, 2):
+        self.depart_speed = depart_speed if depart_speed in ('max', 'last', 'desired') else float(depart_speed)
+        if depart_lane not in ('free', 'best_free', 'first', 0, 1, 2):
             raise ValueError('unsupported SUMO departLane')
-        if depart_speed not in ('max', 'last'):
+        if depart_speed not in ('max', 'last', 'desired'):
             value = float(depart_speed)
             if not math.isfinite(value) or value < 0:
                 raise ValueError('departSpeed must be nonnegative')
@@ -78,22 +81,37 @@ class SumoInsertion:
             raise ValueError('nonphysical motion-inferred insertion settings')
         return params
 
+    @staticmethod
+    def gap(process, work, b, lane, length):
+        rear = process._lane_rear(work, b, lane)
+        if rear is None:
+            return 1e9, 0.
+        s, leader_length, leader_speed, _ = rear
+        return s - leader_length - process.entry_s[lane] - length - POSITION_EPS, leader_speed
+
     def place(self, process, work, b, entrance, lanes, cav, ordinal):
         if not process.cfg.conserve_queue or process.cfg.learned_entry is not None or process.cfg.learned_admission is not None:
             raise ValueError('SUMO insertion requires exact queue and learned admission OFF')
         p = self.candidate(b, entrance, ordinal, cav)
         length = float(NOMINAL_LENGTH_M)
-        lanes = list(lanes)
+        lanes = sorted(lanes, reverse=True)  # SUMO rightmost first, WM indexes reversed
         if isinstance(self.depart_lane, int):
             lanes = [self.depart_lane] if self.depart_lane in lanes else []
-        elif self.depart_lane == 'best_free':
-            lanes = [min(lanes, key=lambda ln: process._lane_occupancy(work, b, ln))]
+        elif self.depart_lane == 'first':
+            lanes = lanes[:1]
         else:
-            lanes.sort(key=lambda ln: -process._entrance_gap(work, b, ln, length)[0])
+            # On this network both mainline entrance lanes have the same
+            # 3000m-capped best continuation; ramp has only one allowed lane.
+            def free_space(lane):
+                rear = process._lane_rear(work, b, lane)
+                return float('inf') if rear is None else rear[0] - process.entry_s[lane]
+            # MSEdge::getFreeLane chooses ONE lane, not a fallback search over
+            # every safe lane. Failed insertions remain pending this step.
+            lanes = [max(lanes, key=free_space)]
         for lane in lanes:
-            gap, leader = process._entrance_gap(work, b, lane, length)
+            gap, leader = self.gap(process, work, b, lane, length)
             cap = min(p['v0'], float(process.cfg.sumo_lane_speed_mps[lane]))
-            if self.depart_speed == 'max':
+            if self.depart_speed in ('max', 'desired'):
                 requested = cap
             elif self.depart_speed == 'last':
                 requested = min(cap, leader if gap < 1e9 else cap)
@@ -102,12 +120,12 @@ class SumoInsertion:
                 if requested > cap:
                     continue
             speed = insertion_speed(requested, gap, leader, p, process.dt)
-            if speed is None or (isinstance(self.depart_speed, (int, float)) and speed < requested):
+            if speed is None or (self.depart_speed != 'max' and speed < requested):
                 continue
             if process._place(work, b, entrance, lane, cav, speed, length):
                 slot = work.inserted[-1][1]
                 work.birth_ordinals[(b, slot)] = int(ordinal)
-                work.s[b, slot] = process.entry_s[lane] + length + SUMO_POSITION_EPS_M
+                work.s[b, slot] = process.entry_s[lane] + length + POSITION_EPS
                 return True
         return False
 

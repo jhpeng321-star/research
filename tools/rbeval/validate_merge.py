@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'src'))
 from wms.model.spec import ModelSpec
 from wms.model.entries import ENTRY_S_M
 from wms.model.wms import WmSModel
-from wms.model.sumo_insertion import insertion_speed
+from wms.model.sumo_insertion import POSITION_EPS, insertion_speed
 from wms.physics.config import PhysicsConfig
 from wms.physics.junction_merge import apply_merge
 from wms.physics.state import state_kin
@@ -182,7 +182,7 @@ def validate(root, seed, arm, horizon, stride, prediction_dir=None):
                 continue
             entry = ENTRY_S_M[lane]
             length = float(kin[j + 1, i, 6])  # observable geometry, never behavior
-            front = entry + length + .1
+            front = entry + length + POSITION_EPS
             occupants = np.flatnonzero(lanes[j, slots] == lane)
             if len(occupants):
                 rear = min(float(k[0, z, 0] - k[0, z, 6]) for z in occupants)

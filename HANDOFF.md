@@ -70,6 +70,24 @@ Base: `f0db3c82`, branch `c4/rb-merge`. Owner registration read (line 5682).
   log `remaining_fit.log`, result `fit_969402_969431_300.json` in that directory.
   Do NOT duplicate this job. Dispatch code commit `5a7db4ee`.
 
+## Shared reference intake / completed first diagnostic
+- PID 200540 exited successfully; all 32 native FIT 300s receipts copied into
+  `docs/rb_merge/`. Version **d6954af3**, BEFORE the shared-reference corrections
+  below. Summary `fit_native32_pre_helper_summary.json`: cohort real/predicted
+  merges 200/125, matched 124; matched time MAE 24.52s, position MAE 17.21m.
+  Cohort ramp-lane speed loss mean 240.04 real / 761.28 predicted veh-s.
+  This candidate is NOT qualified; first-two-world counts did not generalize.
+- The mergespec helper became readable during validation. Consumed spec, test
+  matrix and exact source excerpts; no helper job duplicated. Added source-based
+  urgency /2 with step floor, corrected follower net-gap units, follower pass/
+  eventual-help/fall-behind branches, exact departSpeed last/desired refusal,
+  single chosen departLane and base POSITION_EPS=.01 (legacy .1 was wrong).
+- **28 CPU tests pass**, including helper T3 numeric insertion vector. These
+  changes follow public source, not tuning to the FIT errors. A new versioned
+  diagnostic is warranted after the mechanics changed; previous results retained.
+- `tools/rbeval/summarize_merge.py` refuses duplicate/prohibited seeds and keeps
+  conditional admission recall distinct from autonomous insertion calibration.
+
 ## Status / known gaps
 - Fresh-session recovery: HEAD f0db3c82; only this untracked handoff survived.
   No implementation, evaluation receipt, PID or dispatch exists in this worktree.

@@ -14,6 +14,13 @@ https://github.com/eclipse-sumo/sumo/tree/v1_27_1/src/microsim
   (strategic lookahead), 1294 (usable distance).
 - `MSLane.cpp`: 606–660 (departSpeed), 852–1469 (insertion checks),
   especially 1435–1469 (subtract minGap before insertionFollowSpeed).
+- Shared helper artifacts consumed as they appeared:
+  `E:/agent-work/rb-shared/mergespec/{spec.md,test_cases.md}` and its
+  source excerpt `MSBaseVehicle.cpp:1415-1416` (base front = length + POSITION_EPS).
+  Corrected urgency (remaining time divided by 2, floored at one step),
+  follower gap units, fall-behind branch, last/desired speed refusal and single
+  chosen depart lane. `POSITION_EPS=.01`, unlike the legacy entry adapter's .1.
+  Unit vector T3 (IDM insertion at net gap 2m) independently compared.
 
 ## Geometry and right of way
 
