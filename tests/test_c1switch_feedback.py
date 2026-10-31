@@ -31,6 +31,23 @@ def test_memory_rejects_nonself_and_noncausal_values():
     with pytest.raises(ValueError):validate(p)
 
 
+def test_anonymous_rpc_and_crn_payload_drops_detector_identity_and_truth_extras():
+    from tools.c1switch.observable import anonymous_payload
+    a = payload()
+    b = copy.deepcopy(a)
+    for h in b['history']:
+        h['detections'][0].update(vehicle_id='hidden_relabel',hidden_type='secret')
+    assert anonymous_payload(a) == anonymous_payload(b)
+    assert all('vehicle_id' not in d for h in anonymous_payload(a)['history'] for d in h['detections'])
+
+
+def test_diagnostic_external_seed_cannot_be_used_for_live_picks(tmp_path):
+    from tools.c1switch.rpc import FilePredictor
+    predictor = FilePredictor(tmp_path,dict(team_source_entries=True))
+    with pytest.raises(ValueError,match='external random seed forbidden'):
+        predictor.predict(payload(),'wm_s969112_j0',validation_seed=123)
+
+
 def test_pi_raw_state_continues_only_incumbent():
     p = payload('pi');p['controller_state']['pi'] = dict(self=[27.3,299])
     tracker = NS(tracks={7:NS(cav_id='self',slot=3,is_cav=True)})
@@ -77,6 +94,11 @@ def test_real_frozen_models_cpu(tmp_path):
             samples = adapter.predict(p,steps=4)
             assert len(medians(samples)) == 5
             assert next(adapter.model.parameters()).device == torch.device('cpu')
+            renamed = copy.deepcopy(p)
+            for h in renamed['history']:
+                h['detections'][0]['vehicle_id'] = 'different_hidden_simulator_identity'
+                h['detections'][0]['hidden_type'] = 'must_not_affect_even_random_draws'
+            assert adapter.predict(renamed,steps=4) == samples
             adapter.optimized = False
             assert adapter.predict(p,steps=4) == samples
             adapter.optimized = True

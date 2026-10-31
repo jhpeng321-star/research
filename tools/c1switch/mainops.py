@@ -215,7 +215,8 @@ def launch(phase):
     if phase == 'main':
         gate = json.loads((EVIDENCE/'MAIN_CANARY.json').read_text())
         parity_gate = json.loads((EVIDENCE/'V5_GPU_PARITY.json').read_text())
-        if not gate['pass_'] or not parity_gate['pass_']:
+        observable_gate = json.loads((EVIDENCE/'V5_CANARY_REVALIDATION.json').read_text())
+        if not gate['pass_'] or not parity_gate['pass_'] or not observable_gate['pass_']:
             raise ValueError('one-world canary required')
     env = dict(CPU_ENV,C1SWITCH_ENGINE_ROOT=CPU)
     result = ssh('cpuQ',f'''import hashlib,json,os,subprocess,sys,time
@@ -364,7 +365,9 @@ prior=json.loads({json.dumps(prior)!r});out={{}}
 for a,row in prior.items():
  binding=json.loads((root/(a+'_BINDING.json')).read_text())
  predictor=FilePredictor(root/'rpc'/a,binding,timeout_s=600)
- predictor.predict(row['belief'],'parity_v4_canary_j0')
+ from tools.c1switch.storage import canonical
+ old_seed=int(canonical(row['belief'])[:8],16)&0x7fffffff
+ predictor.predict(row['belief'],'parity_v4_canary_j0',validation_seed=old_seed)
  p=next(p for p in (root/'rpc'/a).glob('*.request.json') if json.loads(p.read_text())['id']=='parity_v4_canary_j0')
  q=json.loads(p.with_name(p.name.replace('.request.','.result.')).read_text())
  assert q['samples']==row['samples'], 'optimized GPU samples differ from frozen canary'
@@ -375,10 +378,91 @@ for a,row in prior.items():
     print(json.dumps(result,indent=2))
 
 
+def revalidate_canary():
+    prior = ssh('gpuR',f'''import json
+from pathlib import Path
+root=Path({GPU_V4!r})/'rpc';out={{}}
+for a in ('wm','bb'):
+ out[a]={{}}
+ for p in (root/a).glob('*.request.json'):
+  r=json.loads(p.read_text());j=int(r['id'].rsplit('_j',1)[1]);out[a][str(j)]=r['belief']
+ assert len(out[a])==10
+print(json.dumps(out))
+''')
+    # Corrections are metadata-only and permitted solely after proving, by
+    # induction over all ten decisions, the exact same real controller schedule.
+    code = f'''import copy,json,sys
+from pathlib import Path
+root=Path({CPU!r});sys.path.insert(0,str(root/'pytools'))
+from tools.c1switch.core import choose
+from tools.c1switch.rpc import FilePredictor
+from tools.c1switch.observable import anonymous_payload
+from tools.c1switch.storage import canonical,write
+prior=json.loads((root/'CANARY_OBSERVABLE_INPUTS.json').read_text());out=dict(pass_=True,decisions=[],new_sim_s=0);corrected={{}}
+for a in ('wm','bb'):
+ path=root/'jobs'/(a+'_s969112_episode')
+ old=json.loads((path/'RESULT.json').read_text());new=copy.deepcopy(old)
+ predictor=FilePredictor(root/'rpc'/a,json.loads((root/(a+'_BINDING.json')).read_text()),timeout_s=600)
+ for j in range(10):
+  payload=anonymous_payload(prior[a][str(j)])
+  costs=predictor.predict(payload,'observable_canary_recheck_'+a+'_j'+str(j))
+  d=old['decisions'][j];pick=choose(costs,d['incumbent'])
+  out['decisions'].append(dict(arm=a,j=j,old_pick=d['pick'],corrected_pick=pick,equal=pick==d['pick']))
+  write(root/'REVALIDATION_PROGRESS.json',out)
+  if pick!=d['pick']:
+   out['pass_']=False
+   write(root/'REVALIDATION.json',out)
+   write(root/'STOP',dict(reason='observable-only seed changes canary pick',arm=a,j=j))
+   print(json.dumps(out));raise SystemExit
+  new['decisions'][j]['predicted_costs']=costs
+  new['decisions'][j]['belief_sha256']=canonical(payload)
+ new['prior_result_sha256']=canonical(old)
+ new['observable_revalidation']='all10 identical picks after HDV-ID-free seed correction; no physics repeated'
+ corrected[a]=new
+for a,new in corrected.items():
+ path=root/'jobs'/(a+'_s969112_episode')
+ write(path/'RESULT.json',new)
+ for d in new['decisions']:
+  write(path/('pick_j'+str(d['j'])+'.json'),{{k:v for k,v in d.items() if k!='branches'}})
+  if 'branches' in d:write(path/('measurement_j'+str(d['j'])+'.json'),d)
+write(root/'REVALIDATION.json',out);print(json.dumps(out))
+'''
+    result = ssh('cpuQ',f'''import json,os,subprocess,sys,time
+from pathlib import Path
+root=Path({CPU!r});assert not (root/'REVALIDATION_DISPATCH.json').exists()
+(root/'CANARY_OBSERVABLE_INPUTS.json').write_text({json.dumps(prior)!r})
+env=dict(os.environ);env.update({CPU_ENV!r})
+with (root/'REVALIDATION.log').open('x') as log:
+ p=subprocess.Popen([sys.executable,'-B','-u','-c',{code!r}],cwd=root/'pytools',env=env,
+  stdout=log,stderr=subprocess.STDOUT,start_new_session=True,preexec_fn=lambda:os.nice(19))
+out=dict(pid=p.pid,unix=time.time(),new_sim_s=0,role='all20 observable-only canary pick check')
+(root/'REVALIDATION_DISPATCH.json').write_text(json.dumps(out,indent=2));print(json.dumps(out))
+''')
+    write(EVIDENCE/'V5_REVALIDATION_DISPATCH.json',result)
+    print(json.dumps(result,indent=2))
+
+
+def revalidation_status():
+    result = ssh('cpuQ',f'''import json
+from pathlib import Path
+root=Path({CPU!r});out={{}}
+for n in ['REVALIDATION_DISPATCH.json','REVALIDATION_PROGRESS.json','REVALIDATION.json','STOP']:
+ p=root/n
+ if p.exists():out[n]=json.loads(p.read_text())
+if 'REVALIDATION_DISPATCH.json' in out:
+ out['own_pid_exists']=Path('/proc',str(out['REVALIDATION_DISPATCH.json']['pid'])).exists()
+ if not out['own_pid_exists']:out['log']=(root/'REVALIDATION.log').read_text()
+print(json.dumps(out))
+''')
+    if 'REVALIDATION.json' in result:
+        write(EVIDENCE/'V5_CANARY_REVALIDATION.json',result['REVALIDATION.json'])
+    print(json.dumps(result,indent=2))
+
+
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
     p.add_argument('mode',choices=('cpu','stage','launch_gpu','relay','canary','main','progress','canary_gate',
-                                 'v4_progress','v4_gate','park_v4','parity'))
+                                 'v4_progress','v4_gate','park_v4','parity','revalidate_canary','revalidation_status'))
     args = p.parse_args()
     if args.mode in ('canary','main'):
         launch(args.mode)

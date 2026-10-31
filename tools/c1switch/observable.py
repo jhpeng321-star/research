@@ -1,12 +1,37 @@
 """Anonymous RSU assimilation; model tensors never use simulator roster identities."""
 import math
+import copy
+
+
+def anonymous_payload(payload):
+    """One allowlist for tensors AND stochastic keys; no detector identity leaks."""
+    if payload.get('schema') != 'c1switch_observable/1':
+        raise ValueError('observable receipt schema required')
+    fields = ('timestamp_s','s_m','lane','v_mps','a_mps2','age_s','source')
+    history = []
+    for row in payload['history']:
+        own = [{k:r[k] for k in ('vehicle_id',)+fields} for r in row['self_reports']]
+        detections = [{k:r[k] for k in fields} for r in row['detections']]
+        detections.sort(key=lambda r:tuple(r[k] for k in fields))
+        coverage = [{k:r[k] for k in ('lane','s0_m','s1_m','timestamp_s')} for r in row['coverage']]
+        counters = row.get('counters')
+        if counters is not None:
+            counters = {k:counters[k] for k in ('timestamp_s','requested','entered')}
+        history.append(dict(now_s=row['now_s'],self_reports=sorted(own,key=lambda r:r['vehicle_id']),
+                            detections=detections,coverage=coverage,counters=counters))
+    result = dict(schema='c1switch_observable/1',history=history)
+    if 'controller_state' in payload:
+        from .feedback import validate
+        validate(payload)
+        result['controller_state'] = copy.deepcopy(payload['controller_state'])
+    return result
 
 
 def tracker_from_payload(payload):
     from wms.control.belief import BeliefConfig, BeliefTracker, CavReport, RsuDetection, Detection
     if payload.get('schema') != 'c1switch_observable/1':
         raise ValueError('observable receipt schema required')
-    history = payload['history']
+    history = anonymous_payload(payload)['history']
     times = [h['now_s'] for h in history]
     if len(times) != 121 or any(abs(b-a-.5) > 1e-8 for a,b in zip(times,times[1:])):
         raise ValueError('genuine full60s half-second observable history required')

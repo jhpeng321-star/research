@@ -29,7 +29,8 @@ def capture(backend):
                     memory['commands'][ids[int(index)]] = [float(mem.accel[0, i]), float(mem.intent[0, i])]
     payload['controller_state'] = memory
     validate(payload)
-    return payload
+    from .observable import anonymous_payload
+    return anonymous_payload(payload)
 
 
 def validate(payload):

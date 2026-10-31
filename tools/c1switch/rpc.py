@@ -29,11 +29,18 @@ class FilePredictor:
         self.root, self.binding, self.timeout_s = checked(root), binding, timeout_s
         validate_objective(binding)
 
-    def predict(self, payload, ident):
+    def predict(self, payload, ident, *, validation_seed=None):
         # Payload must already have passed the Belief allowlist boundary.
         if payload.get('schema') != 'c1switch_observable/1':
             raise ValueError('observable belief required')
-        request = dict(id=ident, belief=payload, binding=self.binding, K=8, horizon_s=60)
+        # Only continuation parity may fix the original arbitrary CRN draw key;
+        # live requests always derive it from anonymous observables themselves.
+        if validation_seed is not None and not ident.startswith('parity_v4_'):
+            raise ValueError('external random seed forbidden for live picks')
+        from .observable import anonymous_payload
+        request = dict(id=ident, belief=anonymous_payload(payload), binding=self.binding, K=8, horizon_s=60)
+        if validation_seed is not None:
+            request['validation_seed'] = validation_seed
         key = canonical(request)
         request['request_sha256'] = key
         path = self.root / (key+'.request.json')
@@ -96,7 +103,12 @@ def serve(root, adapter_name, binding_path, device):
                     key = request.pop('request_sha256')
                     if canonical(request) != key or request['binding'] != binding:
                         raise ValueError('request binding mismatch')
-                    samples = model.predict(request['belief'], K=8, horizon_s=60)
+                    extra = {}
+                    if 'validation_seed' in request:
+                        if not request['id'].startswith('parity_v4_'):
+                            raise ValueError('external seed on live request')
+                        extra['validation_seed'] = request['validation_seed']
+                    samples = model.predict(request['belief'], K=8, horizon_s=60,**extra)
                     medians(samples)
                     write(result_path, dict(request_sha256=key, binding=binding, samples=samples,
                                             elapsed_gpu_s=time.monotonic()-began))

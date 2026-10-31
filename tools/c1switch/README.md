@@ -1,6 +1,30 @@
 # S-C1SWITCH operational receipt
 
-## Current cpuQ continuation (MAIN 18:33)
+## Current MAIN19:12 integration (v4 canary complete; v5 gated)
+
+Builds `db3d8683/4a4fe8cc` executed one paired world969112: real cross-host
+WM2/BB K8, full600s control, all30full-prefix branches and clocks PASS,
+charged=actual71910 cumulative, zero collisions/teleports. No repeated physics.
+`evidence/MAIN_CANARY.json` is the mechanical gate, not a model-benefit result.
+Original GPU services gracefully COMPLETE: WM1899.304206s, BB1339.300185s.
+v5 carries conservative1902/1342s against original10800/3600 caps.
+
+CPU-proven exact callback speedups are in `adapter.py/merge_fast.py`; native
+PI/CIRCLES envelope is model-supplied when available, inferred-head otherwise.
+The end-to-end audit found v4 CRN hashing included discarded detector IDs.
+v5 removes them before both RPC and hashing. MAIN remains blocked until full60s
+GPU original-draw parity AND all20canary picks under corrected anonymous keys
+pass. If any corrected pick differs, STOP; do not repeat/replace the canary.
+The two immutable v4 episodes/branches stay on disk regardless of this gate.
+
+Prospective v5 main: cpuQ14episode+<=14branch workers nice19 (owner<=28), BB
+first for its tighter GPU wall allocation. GPU services2.5GiB each,5GiB combined.
+`mainops stage/launch_gpu/relay/parity/revalidate_canary/revalidation_status`
+are gated, write-once operations; `mainops main` also requires both GPU gates.
+Complete-only `analyze.py` checks all pairing/accounting before seed0/2000-draw
+world bootstrap with best-fixed identity recomputed inside each draw.
+
+## Historical cpuQ Step0 continuation (MAIN 18:33)
 
 Design commit `ec322b36`, SHA256
 `428f1850cc33350f4bc63c08e89b6270d859cd17a6662c660ddaa1977e478470`

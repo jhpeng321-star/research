@@ -12,7 +12,7 @@ from types import MethodType
 
 from .design import CONTROLLERS, FORBIDDEN, sha
 from .feedback import seed_pi, seed_state, validate
-from .observable import rollout_inputs
+from .observable import rollout_inputs, anonymous_payload
 from .storage import canonical
 
 BASE = Path('/root/autodl-tmp/c4/speedhead20261030')
@@ -190,9 +190,10 @@ class Adapter:
             return result
         return callback
 
-    def predict(self, payload, K=8, horizon_s=60, *, steps=None):
+    def predict(self, payload, K=8, horizon_s=60, *, steps=None, validation_seed=None):
         import torch
         validate(payload)
+        payload = anonymous_payload(payload)
         if K != 8 or horizon_s != 60:
             raise ValueError('registered K8/60s required')
         n = 120 if steps is None else steps  # CPU integration gate may use two ticks.
@@ -211,7 +212,7 @@ class Adapter:
         state['exit_s_m'] = torch.full_like(state['s_m'],self.frozen.road_end_exit_bound(self.reference.physics))
         rows = [seed_state(copy.deepcopy(state),tracker,payload,c) for c in CONTROLLERS]
         initial = {key:torch.cat([row[key] for row in rows]) for key in rows[0]}
-        seed = int(canonical(payload)[:8],16) & 0x7fffffff
+        seed = int(canonical(payload)[:8],16) & 0x7fffffff if validation_seed is None else validation_seed
         torch.manual_seed(seed)
         plans = (self.frozen.SampledFutures(self.frozen.FuturesConfig.from_trainer(self.cfg),seed)
                  .plan([self.model],state,kwargs,n)[0]) if self.binding['model'] == 'wm' else [{} for _ in range(8)]
