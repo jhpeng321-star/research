@@ -112,7 +112,14 @@ def collect():
                         ('bb_stop', EVIDENCE / 'BB_FOLLOW/STOP.json'),
                         ('bb_complete', EVIDENCE / 'BB_FOLLOW/COMPLETE.json')]:
         out[label] = read_json(path)
-    out['local_processes'] = {str(pid): local_process(pid) for pid in (31696, 43404)}
+    correction = read_json(EVIDENCE / 'BB_FOLLOW_WAIT_RESUME_DISPATCH.json')
+    follower = correction['pid'] if correction else 43404
+    out['local_processes'] = {str(pid): local_process(pid) for pid in (31696, follower)}
+    relay_complete = read_json(EVIDENCE / 'RELAY_wm/COMPLETE.json')
+    if out['local_processes']['31696']['state'] != 'LIVE' and not relay_complete:
+        out['alerts'].append('WM relay process missing before completion')
+    if out['local_processes'][str(follower)]['state'] != 'LIVE' and not (out['bb_complete'] or out['bb_stop']):
+        out['alerts'].append('current BB follower process missing before completion')
     for host, data in out['hosts'].items():
         for kind in ('cpu', 'gpu'):
             for arm, row in data[kind].items():
@@ -185,10 +192,12 @@ def commit_snapshot(snapshot):
     print(line, end='', flush=True)
 
 
-def run():
+def run(*, resume=False):
     if not WATCH.is_dir():
         raise RuntimeError('watcher must be launched with its existing explicit receipt directory')
-    with (WATCH / 'RUN_ONCE.json').open('x', encoding='utf-8') as stream:
+    if resume and not (WATCH / 'RESUME_ONCE.json').is_file():
+        raise RuntimeError('explicit observer-only continuation claim required')
+    with (WATCH / ('RUN_RESUME_ONCE.json' if resume else 'RUN_ONCE.json')).open('x', encoding='utf-8') as stream:
         json.dump(dict(pid=os.getpid(), unix=time.time(), deadline_unix=DEADLINE, interval_s=1200), stream)
     while True:
         started = time.time()
@@ -203,27 +212,38 @@ def run():
         time.sleep(max(0, min(started + 1200, DEADLINE) - time.time()))
 
 
-def start():
-    if (WATCH / 'DISPATCH.json').exists() or (WATCH / 'RUN_ONCE.json').exists():
+def start(*, resume=False):
+    if not resume and ((WATCH / 'DISPATCH.json').exists() or (WATCH / 'RUN_ONCE.json').exists()):
         raise RuntimeError('owned watcher already dispatched; never duplicate')
+    if resume:
+        original = read_json(WATCH / 'DISPATCH.json')
+        if not original or local_process(original['pid'])['state'] != 'EXITED':
+            raise RuntimeError('previous owned watcher must be exited before replacement')
+        with (WATCH / 'RESUME_ONCE.json').open('x', encoding='utf-8') as stream:
+            json.dump(dict(predecessor=original, unix=time.time(), reason='track corrected follower PID'), stream)
     if not EVIDENCE.is_dir():
         raise RuntimeError('evidence parent absent')
     WATCH.mkdir(exist_ok=True)
-    with (WATCH / 'WATCH.log').open('x', encoding='utf-8') as log:
-        process = subprocess.Popen([sys.executable, '-B', '-u', '-m', 'tools.c1switch2.watch', 'run'],
+    with (WATCH / ('WATCH_RESUME.log' if resume else 'WATCH.log')).open('x', encoding='utf-8') as log:
+        process = subprocess.Popen([sys.executable, '-B', '-u', '-m', 'tools.c1switch2.watch',
+            'run-resume' if resume else 'run'],
             cwd=ROOT, stdout=log, stderr=subprocess.STDOUT,
             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS)
     result = dict(pid=process.pid, unix=time.time(), deadline_unix=DEADLINE, interval_s=1200)
-    write(WATCH / 'DISPATCH.json', result)
+    write(WATCH / ('RESUME_DISPATCH.json' if resume else 'DISPATCH.json'), result)
     print(json.dumps(result))
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('command', choices=('start', 'run', 'once'))
+    parser.add_argument('command', choices=('start', 'run', 'once', 'resume-start', 'run-resume'))
     command = parser.parse_args().command
     if command == 'start':
         start()
+    elif command == 'resume-start':
+        start(resume=True)
+    elif command == 'run-resume':
+        run(resume=True)
     elif command == 'run':
         run()
     else:

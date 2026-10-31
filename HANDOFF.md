@@ -76,6 +76,10 @@ Original43404 is terminal and must not be monitored as the current follower.
 Proof/START/dispatch are `BB_FOLLOW/WAIT_RESUME_{ONCE,STARTED}.json` and
 `BB_FOLLOW_WAIT_RESUME_DISPATCH.json`; error and original receipts preserved.
 This continuation was disclosed in shared REGISTRATION before its launch.
+Read-only monitor follow-up now resolves the current BB follower from its
+correction receipt and alerts on missing local relay/follower processes. Its
+own observer-only replacement path refuses a still-live predecessor and keeps
+all first-run claims/receipts; no science process is restarted. CPU8/8/Ruff PASS.
 **04:29 +08 resume verified (Unix1793478517..1793478575): all112 CPU-panel
 episodes COMPLETE, charged=actual134400sim-s (cpuQ84/100800; gpuR28/33600),
 both supervisors EXITED successfully/noSTOP. NEVER redispatch either CPU panel.**

@@ -45,3 +45,13 @@ def test_start_refuses_duplicate_claim_before_spawning(tmp_path, monkeypatch):
     import pytest
     with pytest.raises(RuntimeError, match='never duplicate'):
         watch.start()
+
+
+def test_monitor_replacement_refuses_live_original(tmp_path, monkeypatch):
+    import pytest
+    monkeypatch.setattr(watch, 'WATCH', tmp_path)
+    (tmp_path / 'DISPATCH.json').write_text('{"pid":27200}')
+    monkeypatch.setattr(watch, 'local_process', lambda pid: dict(state='LIVE'))
+    with pytest.raises(RuntimeError, match='must be exited'):
+        watch.start(resume=True)
+    assert not (tmp_path / 'RESUME_ONCE.json').exists()
