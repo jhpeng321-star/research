@@ -7,7 +7,10 @@ then the wrapper queried the frozen environment's already-closed clock. Total1,8
 real frozen-controller/WALL/alias-gate PASS, staged ONLY at `build_68394a9568862929`.
 MAIN acknowledgement is now present in REGISTRATION.md; both smoke slots are spent.
 Fresh-session reconciliation confirmed own357398 exited and no fleet trainer at01:09+08:00.
-A separate one-use production-only continuation is being built; no launch yet.
+A separate one-use production-only continuation passed CPU34/34 plus the real frozen
+controller/WALL/seed-alias gate on cpuQ; no launch yet. Immutable stage
+`build_b3d13ccfae77de71`, source binding
+`b3d13ccfae77de71cd8ff70d2ee444de514104855652968aa70965a54aae4aba`.
 Lowest-priority nice19 dispatch must yield above0.8xcores. See `SELMAPPO_STOP.md`.
 
 Latest scope: **fleet PPO only**, `S-C1SWITCH2/v2`, decisions every20s at300..880,

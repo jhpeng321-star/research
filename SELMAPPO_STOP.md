@@ -82,3 +82,12 @@ MAIN's priority rule: nice19, single-thread/CUDAhidden, pause new dispatch above
 cooperation and WM evaluation have priority, then C1SWITCH2, then selector training.
 Evaluation stays peer-owned on registered PANEL_v2.json (16worlds969136..969151,
 SHA2567c780c25237dde73a657937ab577b8e48f71766817f4363f3298982e90144827).
+
+Production-only implementation now passes34/34CPU on cpuQ, including real optimizer,
+exact-ledger/no-smoke replay, load admission, and remote-template construction checks;
+real frozen checkpoints/WALL lifecycle/seed-alias integration also PASS with no physics.
+Local32PASS/2torch-unavailableSKIP, RuffPASS. Stage`build_b3d13ccfae77de71`, fullbinding
+`b3d13ccfae77de71cd8ff70d2ee444de514104855652968aa70965a54aae4aba`.
+Dispatch revalidates ALL source hashes, both old locks/exitedPIDs and exact stopped
+ledger/log, then acquires exclusiveFLEET_PRODUCTION_ONCE; no automatic retries.
+No new SUMO at this CPU-only checkpoint. Receipt`STAGE_b3d13ccfae77de71.json`.

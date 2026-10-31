@@ -19,6 +19,13 @@ def worlds(variant, iteration):
     return [training_world(start+i, variant) for i in range(EPISODES)]
 
 
+def mechanics_seeds(variant, *, continuation=False, production_only=False):
+    if production_only:
+        return ()
+    last = BLOCKS[variant][1]
+    return tuple(range(last if continuation else last-1, last+1))
+
+
 def episode(model, world, args, budget, *, evaluation=False, smoke=False):
     import torch
     from .learning import Transition
@@ -77,11 +84,18 @@ def main():
     parser.add_argument('--panel')
     parser.add_argument('--panel-sha')
     parser.add_argument('--smoke-only', action='store_true')
-    parser.add_argument('--continue-from', help='MAIN-authorized exact stopped original build only')
+    continuation = parser.add_mutually_exclusive_group()
+    continuation.add_argument('--continue-from', help='MAIN00:29 exact stopped original build only')
+    continuation.add_argument('--production-from', help='MAIN01:08 exact stopped second build only')
     parser.add_argument('--workers', type=int, default=12)
     args = parser.parse_args()
     if not 1 <= args.workers <= 12:
         raise ValueError('workers must be1..12')
+    if args.production_from:
+        if args.smoke_only or args.panel or args.panel_sha:
+            raise ValueError('production-only continuation: no mechanics or local evaluation')
+        from .continuation import validate_production
+        validate_production(args.production_from, args.registration)
     # Refuse before importing torch, runtime, or creating any simulation directories.
     if not approval_line(args.registration):
         raise PermissionError('S-SELMAPPO approval absent; no SUMO may run')
@@ -103,19 +117,28 @@ def main():
     if args.continue_from:
         from .continuation import inherit
         inherit(out, args.continue_from, args.registration)
+    if args.production_from:
+        from .continuation import inherit_production
+        inherit_production(out, args.production_from, args.registration)
     budget, model = Budget(out), Selector()
     updater, start = Updater(model), time.monotonic()
     optimization_rng = torch.get_rng_state()
-    first_smoke = BLOCKS[args.variant][1] if args.continue_from else BLOCKS[args.variant][1]-1
-    for seed in range(first_smoke, BLOCKS[args.variant][1]+1):
+    seeds = mechanics_seeds(args.variant, continuation=bool(args.continue_from),
+                            production_only=bool(args.production_from))
+    for seed in seeds:
         episode(model, dict(seed=seed, penetration=.4, demand=2700), args, budget, smoke=True)
-    append(out/'status.jsonl', dict(status='MECHANICS_COMPLETE', charged_sim_s=budget.charged,
+    append(out/'status.jsonl', dict(status='PRODUCTION_ONLY_ACKNOWLEDGED' if args.production_from
+                                   else 'MECHANICS_COMPLETE', charged_sim_s=budget.charged,
                                   wall_s=time.monotonic()-start,
-                                  successful_episodes=1 if args.continue_from else 2))
+                                  successful_episodes=len(seeds)))
     if args.smoke_only:
         append(out/'status.jsonl', dict(status='SMOKE_COMPLETE', charged_sim_s=budget.charged))
         return
     torch.set_rng_state(optimization_rng)
+    torch.save(dict(model=model.state_dict(), actor_opt=updater.actor_opt.state_dict(),
+                    critic_opt=updater.critic_opt.state_dict(), scaler=vars(updater.scaler),
+                    iteration=0, protocol='S-C1SWITCH2/v2', library=LIBRARY,
+                    design_sha256=args.design_sha, rng=torch.get_rng_state()), out/'checkpoint_000.pt')
     from .dispatch import wave
     for iteration in range(ITERATIONS):
         if time.monotonic()-start >= 86400 or (out/'STOP_REQUESTED').exists():

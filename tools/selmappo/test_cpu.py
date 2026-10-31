@@ -338,6 +338,77 @@ class DiskTests(unittest.TestCase):
         budget.finish(12, 'fleet:18000000')
         self.assertEqual(Budget(self.root).charged, 1800)
 
+    def test_production_continuation_binds_both_charges_and_skips_all_smoke(self):
+        from .continuation import inherit_production, validate_production, TERMINAL
+        from .train import mechanics_seeds, worlds
+        original = self.root/TERMINAL
+        (original/'training').mkdir(parents=True)
+        old = Budget(original/'training')
+        for seed, actual in ((18007998, 0), (18007999, 900)):
+            old.reserve(dict(seed=seed, demand=2700, penetration=.4), 'fleet', smoke=True)
+            old.finish(actual)
+        ledger_sha = digest(old.path)
+        (original/'training.log').write_text('preserved terminal failure')
+        (original/'DISPATCH.json').write_text(json.dumps(dict(pid=999999999)))
+        (original/'STOP.json').write_text(json.dumps(dict(own_pid=999999999,
+            own_pid_exited=True, status='STOPPED_AT_MECHANICS_TERMINAL', charged_sim_s=1800,
+            actual_sim_s=900, training_episodes=0, checkpoints=0, ledger_sha256=ledger_sha,
+            log_sha256=digest(original/'training.log'), result_complete=False,
+            mechanics_slots_remaining=0)))
+        reg = self.text('production_ack.md', '- 01:08 MAIN: ACKNOWLEDGES S-SELMAPPO production-only continuation; retain both charges, no additional mechanics episode; 7,012,800\n')
+        out = self.root/'production'
+        out.mkdir()
+        with patch('tools.selmappo.continuation.TERMINAL_LEDGER_SHA', ledger_sha):
+            inherit_production(out, original, reg)
+            with self.assertRaises(FileExistsError):
+                inherit_production(out, original, reg)
+            with self.assertRaises(PermissionError):
+                validate_production(original, self.text('old_ack.md', '- 00:29 MAIN: budget approved'))
+            (original/'training.log').write_text('changed')
+            with self.assertRaises(ValueError):
+                validate_production(original, reg)
+        continued = Budget(out)
+        self.assertEqual(continued.charged, 1800)
+        for seed in (18007998, 18007999):
+            with self.assertRaises(ValueError):
+                continued.reserve(dict(seed=seed, demand=2700, penetration=.4), 'fleet', smoke=True)
+        self.assertEqual(mechanics_seeds('fleet', production_only=True), ())
+        self.assertEqual(mechanics_seeds('fleet', continuation=True), (18007999,))
+        all_worlds = [w for iteration in range(169) for w in worlds('fleet', iteration)]
+        self.assertEqual(len({w['seed'] for w in all_worlds}), 7774)
+        self.assertEqual(1800+len(all_worlds)*900+14400, CAP)
+
+    def test_priority_admission_yields_at_eighty_percent_without_precharge(self):
+        from .dispatch import admitted
+        memory = 'MemAvailable: 16777216 kB\n'
+        with patch('tools.selmappo.dispatch.shutil.disk_usage', return_value=SimpleNamespace(free=4*1024**3)), \
+             patch('pathlib.Path.read_text', return_value=memory), \
+             patch('tools.selmappo.dispatch.os.cpu_count', return_value=32), \
+             patch('tools.selmappo.dispatch.os.getloadavg', create=True) as load:
+            load.return_value = (25.6, 20, 20)
+            self.assertFalse(admitted(self.root, 1))
+            load.return_value = (13, 20, 20)
+            self.assertTrue(admitted(self.root, 12))
+            self.assertFalse(admitted(self.root, 13))
+        self.assertFalse((self.root/'ledger.jsonl').exists())
+
+    def test_remote_launch_templates_compile_without_dispatch(self):
+        from . import launch
+        captured = []
+        def intercept(host, code, **kwargs):
+            compile(code, '<remote launch>', 'exec')
+            captured.append(code)
+            return SimpleNamespace(stdout='')
+        with patch.object(launch, 'run', side_effect=intercept), \
+             patch.object(launch, 'registered'), patch.object(launch, 'digest', return_value='a'*64), \
+             patch.object(launch, 'safe_path') as safe, \
+             patch.object(launch, 'bundle', return_value=({}, {}, 'b'*64)):
+            safe.return_value.read_text.return_value = 'registration snapshot'
+            launch.stage()
+            launch.dispatch('build_test', production_only=True)
+            launch.inventory()
+        self.assertEqual(len(captured), 3)
+
     def test_cap_no_silent_overallocation(self):
         budget = Budget(self.root)
         budget.charged = CAP

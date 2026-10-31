@@ -60,7 +60,7 @@ tests=subprocess.run([sys.executable,'-m','unittest','tools.selmappo.test_cpu','
 print(tests.stdout);print(tests.stderr)
 gate=subprocess.run([sys.executable,'-m','tools.selmappo.gate','--root',str(source)],cwd=source,env=env,capture_output=True,text=True,timeout=90)
 print(gate.stdout);print(gate.stderr)
-record=dict(root=str(root),source=str(source),binding={binding!r},design_sha256={sha!r},tests_returncode=tests.returncode,tests_stdout=tests.stdout,tests_stderr=tests.stderr,gate_returncode=gate.returncode,gate_stdout=gate.stdout,gate_stderr=gate.stderr,new_sumo_seconds=0)
+record=dict(root=str(root),source=str(source),binding={binding!r},source_sha256={sources!r},design_sha256={sha!r},tests_returncode=tests.returncode,tests_stdout=tests.stdout,tests_stderr=tests.stderr,gate_returncode=gate.returncode,gate_stdout=gate.stdout,gate_stderr=gate.stderr,new_sumo_seconds=0)
 with (root/'STAGE.json').open('x') as f:json.dump(record,f,indent=2)
 with (root/'ENV.json').open('x') as f:json.dump(env,f,indent=2)
 if tests.returncode==0 and gate.returncode==0:
@@ -80,7 +80,7 @@ def save_tag(stdout, tag, name):
             json.dump(json.loads(rows[-1]), stream, indent=2)
 
 
-def dispatch(build, continuation=False):
+def dispatch(build, continuation=False, production_only=False):
     result = run('cpuQ', f'''
 import hashlib,json,os,subprocess,sys
 from pathlib import Path
@@ -88,11 +88,16 @@ root=Path.home()/'selmappo20261031'/{build!r}
 assert root.parent.is_dir() and root.is_dir() and root.name.startswith('build_')
 stage=json.loads((root/'STAGE.json').read_text());assert stage['tests_returncode']==0 and stage['gate_returncode']==0
 receipt=json.loads((root/'INTEGRATION.json').read_text());env=json.loads((root/'ENV.json').read_text())
-assert os.getloadavg()[0]<24
+assert os.getloadavg()[0]+1<=.8*os.cpu_count(),'yield to higher-priority runs'
 assert __import__('shutil').disk_usage(root).free>=2*1024**3
 for name,expected in receipt['files'].items():
  assert hashlib.sha256((root/'pytools'/name).read_bytes()).hexdigest()==expected
+if 'source_sha256' in stage:
+ for name,expected in stage['source_sha256'].items():
+  assert hashlib.sha256((root/'pytools'/name).read_bytes()).hexdigest()==expected
 continuation={continuation!r}
+production_only={production_only!r}
+assert not (continuation and production_only)
 original=root.parent/'build_bc4c3aae72073204'
 if continuation:
  sys.path.insert(0,str(root/'pytools'))
@@ -100,12 +105,27 @@ if continuation:
  validate(original,root/'pytools/REGISTRATION.md')
  prior=json.loads((root.parent/'FLEET_DISPATCH_ONCE.json').read_text())
  assert prior['build']==str(original)
-lockname='FLEET_CONTINUATION_ONCE.json' if continuation else 'FLEET_DISPATCH_ONCE.json'
+if production_only:
+ sys.path.insert(0,str(root/'pytools'))
+ from tools.selmappo.continuation import validate_production,TERMINAL
+ from tools.selmappo.protocol import audit_registration
+ assert audit_registration(root/'pytools/REGISTRATION.md')['passed']
+ original=root.parent/TERMINAL
+ validate_production(original,root/'pytools/REGISTRATION.md')
+ assert json.loads((root.parent/'FLEET_CONTINUATION_ONCE.json').read_text())['build']==str(original)
+ assert json.loads((root.parent/'FLEET_DISPATCH_ONCE.json').read_text())['build']==str(root.parent/'build_bc4c3aae72073204')
+ assert stage.get('source_sha256'),'all current source hashes required'
+ for other in root.parent.glob('build_*/DISPATCH.json'):
+  old=json.loads(other.read_text())
+  assert not (Path('/proc')/str(old['pid'])).exists(),'prior fleet trainer PID still exists'
+lockname=('FLEET_PRODUCTION_ONCE.json' if production_only else
+          'FLEET_CONTINUATION_ONCE.json' if continuation else 'FLEET_DISPATCH_ONCE.json')
 with (root.parent/lockname).open('x') as lock:
  json.dump(dict(build=str(root),binding=stage['binding']),lock);lock.flush();os.fsync(lock.fileno())
 out=root/'training';assert not out.exists()
 command=[sys.executable,'-m','tools.selmappo.train','--variant','fleet','--registration',str(root/'pytools/REGISTRATION.md'),'--c1-root',str(root/'pytools'),'--integration',str(root/'INTEGRATION.json'),'--design-sha',receipt['design_sha256'],'--out',str(out),'--workers','12']
 if continuation:command+=['--continue-from',str(original)]
+if production_only:command+=['--production-from',str(original)]
 log=(root/'training.log').open('x')
 def lower():os.nice(19)
 proc=subprocess.Popen(command,cwd=root/'pytools',env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,preexec_fn=lower)
@@ -127,6 +147,20 @@ if p.exists():print('CMDLINE',(p/'cmdline').read_bytes().replace(bytes([0]),b' '
 for name in ('training.log','training/ledger.jsonl','training/training.jsonl','training/status.jsonl','training/failure.jsonl'):
  path=root/name
  if path.exists():print(name,path.read_text()[-14000:])
+''')
+
+
+def inventory():
+    run('cpuQ', '''
+import json,os
+from pathlib import Path
+root=Path.home()/'selmappo20261031';assert root.is_dir()
+print('RESOURCE',json.dumps(dict(load=os.getloadavg(),cores=os.cpu_count(),max_load_fraction=.8)))
+for path in sorted(root.glob('*.json')):print('TASK_LOCK',path.name,path.read_text())
+for path in sorted(root.glob('build_*/DISPATCH.json')):
+ record=json.loads(path.read_text());proc=Path('/proc')/str(record['pid'])
+ print('FLEET_DISPATCH',str(path),json.dumps(record),'pid_exists',proc.exists())
+ if proc.exists():print('CMDLINE',(proc/'cmdline').read_bytes().replace(bytes([0]),b' ').decode())
 ''')
 
 
@@ -181,7 +215,8 @@ print('STOP_RECEIPT',json.dumps(record))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=('stage', 'dispatch', 'continue', 'status', 'reconcile', 'terminal-stop'))
+    parser.add_argument('action', choices=('stage', 'dispatch', 'continue', 'production', 'inventory',
+                                          'status', 'reconcile', 'terminal-stop'))
     parser.add_argument('--build')
     args = parser.parse_args()
     if args.action == 'stage':
@@ -190,6 +225,10 @@ if __name__ == '__main__':
         dispatch(args.build)
     elif args.action == 'continue':
         dispatch(args.build, continuation=True)
+    elif args.action == 'production':
+        dispatch(args.build, production_only=True)
+    elif args.action == 'inventory':
+        inventory()
     elif args.action == 'reconcile':
         reconcile(args.build)
     elif args.action == 'terminal-stop':

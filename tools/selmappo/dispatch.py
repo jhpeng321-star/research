@@ -15,7 +15,7 @@ def admitted(root, workers):
     available = next(int(line.split()[1])*1024 for line in
                      safe_path('/proc/meminfo').read_text().splitlines() if line.startswith('MemAvailable:'))
     return (available >= 8*1024**3 and free_disk >= 2*1024**3 and
-            os.getloadavg()[0]+workers <= os.cpu_count()-2)
+            os.getloadavg()[0]+workers <= .8*os.cpu_count())
 
 
 def job(state, world, args):
@@ -35,7 +35,7 @@ def job(state, world, args):
 
 def wave(model, worlds, args, budget, deadline):
     root = safe_path(args.out)
-    pending, results, cursor, failed = {}, {}, 0, False
+    pending, results, cursor, failed, paused = {}, {}, 0, False, False
     with ProcessPoolExecutor(max_workers=args.workers, mp_context=multiprocessing.get_context('spawn')) as pool:
         while cursor < len(worlds) or pending:
             stop = time.monotonic() >= deadline or (root/'STOP_REQUESTED').exists()
@@ -46,7 +46,16 @@ def wave(model, worlds, args, budget, deadline):
                         stream.write('24h wall deadline; no retry\n')
             while not failed and cursor < len(worlds) and len(pending) < args.workers:
                 if not admitted(root, len(pending)+1):
+                    if not paused:
+                        append(root/'status.jsonl', dict(status='DISPATCH_PAUSED_RESOURCE_PRIORITY',
+                               load_1m=os.getloadavg()[0], cores=os.cpu_count(),
+                               max_load_fraction=.8, pending=len(pending), next_seed=worlds[cursor]['seed']))
+                        paused = True
                     break
+                if paused:
+                    append(root/'status.jsonl', dict(status='DISPATCH_RESUMED_RESOURCE_PRIORITY',
+                           load_1m=os.getloadavg()[0], cores=os.cpu_count(), pending=len(pending)))
+                    paused = False
                 world = worlds[cursor]
                 budget.reserve(world, args.variant)
                 future = pool.submit(job, model.state_dict(), world, args)
