@@ -153,6 +153,7 @@ def main():
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--sobol-power", type=int, default=5)
     parser.add_argument("--idm-mode", choices=("pooled", "posterior"), default="pooled")
+    parser.add_argument("--idm-pooled", type=Path, help="Explicit wm_phys.idm_pooled.v1 candidate")
     parser.add_argument("--worlds", type=int, nargs="+", default=list(FIT_WORLDS))
     args = parser.parse_args()
     if not set(args.worlds) <= set(FIT_WORLDS):
@@ -167,6 +168,13 @@ def main():
     support = np.concatenate((np.ones((1, len(LC_NAMES))), np.exp(4*points-2)), axis=0)
     idm_artifact = json.loads((args.idm/"idm_population.json").read_text())
     idm_pop = idm_artifact["pooled_fit_median" if args.idm_mode == "pooled" else "median"]
+    if args.idm_pooled is not None:
+        if args.idm_mode != "pooled":
+            raise ValueError("Explicit pooled candidate requires pooled IDM mode")
+        pooled = json.loads(args.idm_pooled.read_text())
+        if pooled["schema"] != "wm_phys.idm_pooled.v1":
+            raise ValueError("Unsupported pooled IDM schema")
+        idm_pop = pooled["parameters"]
     idm_drivers = ({} if args.idm_mode == "pooled" else
                    json.loads((args.idm/"idm_posteriors.json").read_text())["drivers"])
     jobs = ((str(args.root), w, support, idm_pop, idm_drivers) for w in args.worlds)
@@ -196,6 +204,7 @@ def main():
            "n_events": sum(e["split"] == "fit" for e in events),
            "fit_interval_s": [240,300], "fit_worlds": args.worlds,
            "idm_mode": args.idm_mode,
+           "idm_parameters": idm_pop,
            "lc2013_source_sha256": hashlib.sha256(module_path.read_bytes()).hexdigest(),
            "known_limits": ["finite numerical support, not unrestricted ML", "module is highway LC2013 subset",
                             "wish state left-censored/zero at t=240", "stepwise emission conditional independence",
@@ -209,6 +218,8 @@ def main():
         "fallback": "lc2013_population.json"})
     write_json(args.out/"lane_events.json", {"events": events})
     write_json(args.out/"provenance.json", {"sources": provenance, "idm_artifact_dir": str(args.idm),
+        "idm_pooled_sha256": (hashlib.sha256(args.idm_pooled.read_bytes()).hexdigest()
+                               if args.idm_pooled is not None else None),
         "idm_population_sha256": hashlib.sha256((args.idm/"idm_population.json").read_bytes()).hexdigest(),
         "idm_posteriors_sha256": hashlib.sha256((args.idm/"idm_posteriors.json").read_bytes()).hexdigest()})
     report = {"elapsed_s": time.time()-start, "n_fit_intervals": len(records["fit"]),
