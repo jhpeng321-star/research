@@ -46,6 +46,10 @@ Observer implementation `tools/rbunc/interim_watch.py` / `interim_ops.py`:
 start/future/ledger/noise/CRN/duplicate/explicit-FIT rejection. Pending exclusive
 dispatch; no new inference or full EVAL scoring. Missing causal-counter hashes
 in the immutable old runtime will be recorded unavailable, never invented.
+Initial observer admission stopped BEFORE claim/launch at the conservative16
+load guard; no job or directory created. Read-only inspect confirms root absent,
+208hostCPUs/load13.97. Resource admission now asks for one free CPU using host
+capacity (load+1<CPUcount), rather than a32-core host's inherited absolute limit.
 
 Latest preferred32/K8/H120 legacy-reference result: within-K teamSD748.35
 [668.54,828.51] vs real across-world4200.50veh-s; source ablations on969400:

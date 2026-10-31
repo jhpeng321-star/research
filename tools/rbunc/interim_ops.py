@@ -40,7 +40,7 @@ from pathlib import Path
 import json,os,subprocess
 assert Path({PANEL!r}).is_dir()
 assert not Path({REMOTE!r}).exists(), 'UNC observer already claimed; use status'
-assert os.getloadavg()[0]<16, 'wait for CPU admission'
+assert os.getloadavg()[0]+1<os.cpu_count(), 'wait for a free CPU'
 gpu=subprocess.run(['nvidia-smi','--query-gpu=memory.used,utilization.gpu','--format=csv,noheader'],capture_output=True,text=True)
 print(json.dumps(dict(load=os.getloadavg(),cpus=os.cpu_count(),gpu_status=gpu.returncode,gpu=gpu.stdout,cpu_only=True)))
 '''), flush=True)
@@ -54,7 +54,7 @@ from datetime import datetime
 import base64,hashlib,json,os,subprocess,sys,time
 assert time.time()<datetime.fromisoformat('2026-11-01T09:00:00+08:00').timestamp()
 root=Path({REMOTE!r});assert root.parent.is_dir()
-assert os.getloadavg()[0]<16, 'CPU admission changed'
+assert os.getloadavg()[0]+1<os.cpu_count(), 'CPU admission changed'
 root.mkdir(exist_ok=False)
 hashes={{}}
 for name,encoded in json.load(sys.stdin).items():
@@ -93,10 +93,17 @@ print(json.dumps(dict(remote_root=str(root),live=live,files={{name:json.loads((r
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(__doc__)
-    parser.add_argument('command', choices=('dispatch', 'status', 'fetch'))
+    parser.add_argument('command', choices=('dispatch', 'status', 'fetch', 'inspect'))
     parser.add_argument('--out', type=Path)
     args = parser.parse_args()
-    if args.command == 'dispatch':
+    if args.command == 'inspect':
+        print(ssh(f'''
+from pathlib import Path
+import json,os
+print(json.dumps(dict(root_exists=Path({REMOTE!r}).exists(),panel_exists=Path({PANEL!r}).is_dir(),
+ cpus=os.cpu_count(),load=os.getloadavg(),one_cpu_available=os.getloadavg()[0]+1<os.cpu_count())))
+'''))
+    elif args.command == 'dispatch':
         dispatch()
     else:
         text = snapshot()

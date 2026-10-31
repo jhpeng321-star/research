@@ -137,7 +137,7 @@ def run(panel, out, targets, *, poll_s=1200):
     previous_hashes = {}
     try:
         while True:
-            admitted = os.getloadavg()[0] < 16
+            admitted = os.getloadavg()[0] + 1 < os.cpu_count()
             complete = []
             if admitted:
                 for world in WORLDS:
