@@ -176,12 +176,32 @@ print(json.dumps(dict(host={host!r},mode={mode!r},pid=p.pid,root=str(root))))
 ''')
 
 
+def admit(host):
+    """Copy the successful, already-paid global mechanics receipt; no physics."""
+    origin = HOSTS['cpuQ']['root']
+    receipt = json.loads(remote('cpuQ',f'''import pathlib,json
+p=pathlib.Path({origin!r})/'MECHANICS.json';print(p.read_text())
+'''))
+    assert receipt['pass_'] and receipt['sim_s'] == 2040
+    c = HOSTS[host]
+    return remote(host,f'''import pathlib,sys,json
+root=pathlib.Path({c['root']!r});sys.path.insert(0,str(root/'pytools'))
+from tools.coopplan.storage import read,write
+value=json.loads({json.dumps(receipt)!r})
+p=root/'MECHANICS.json'
+if p.exists():assert read(p)==value
+else:write(p,value)
+print(json.dumps(dict(host={host!r},mechanics_pass=True,mechanics_sim_s=2040,new_sim_s=0)))
+''')
+
+
 def status(host):
     c = HOSTS[host]
     return remote(host,f'''import pathlib,json,time
 root=pathlib.Path({c['root']!r})
 names=('STOP.json','MECHANICS.json','COMPLETE.json','DISPATCH_ONCE.json')
 results={{name:json.loads((root/name).read_text()) for name in names if (root/name).exists()}}
+if 'MECHANICS.json' in results:results['MECHANICS.json']={{k:v for k,v in results['MECHANICS.json'].items() if k in ('pass_','sim_s')}}
 charges=[json.loads(s) for s in (root/'CHARGES.jsonl').read_text().splitlines()] if (root/'CHARGES.jsonl').exists() else []
 closed=[];partial=[]
 for p in (root/'jobs').iterdir():
@@ -194,7 +214,7 @@ print(json.dumps(dict(host={host!r},status=results,charged=sum(s['sim_s'] for s 
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
-    p.add_argument('mode',choices=('manifest','inspect','audit','stage','prepare','cpu','mechanics','launch','status'))
+    p.add_argument('mode',choices=('manifest','inspect','audit','stage','prepare','cpu','mechanics','admit','launch','status'))
     p.add_argument('--host',choices=tuple(HOSTS),default='cpuQ')
     a = p.parse_args()
     if a.mode == 'mechanics':print(launch(a.host,True))
