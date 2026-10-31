@@ -76,12 +76,12 @@ It waits through active physics and publishes updates, paired CIs/safety, and de
 clustering/C_G summaries automatically, then exits on COMPLETE or durable STOP.
 
 <!-- COOPFREE PUBLICATIONS BEGIN -->
-## Automatically published proposal checkpoints
-Consumer guide: `docs/paper_results/COOPFREE_PROPOSALS.md`.
-Public artifacts: `tools/coopfree/publications/`; verify `MANIFEST.json` hashes.
-Frozen remote root: `/home/ubuntu/coopfree20261101_build5` (cpuQ).
-No learned checkpoint yet; the full156-window/all-member-solo first update is running.
-Latest milestone: 136 complete jobs; 1216740 charged/146760.0 closed-actual sim-s.
-Training-window credits describe exploration; they are not paired dev-policy performance.
-The owned supervisor is paused while eight same-host workers drain only disjoint precharged arms; the sidecar resumes it for the optimizer step (see COOPFREE_OPERATIONS.md).
+## Corrected HOLD-credit production
+Public artifacts: `tools/coopfree/publications/hold/`; verify its `MANIFEST.json`.
+Legacy MAPPO-credit checkpoint is retained remotely and excluded from corrected learning.
+Owned cpuQ supervisor PID615088/start48394231; alive=True; four nice19 single-thread workers.
+New HOLD physics: 42/455 complete tasks; 156 baselines; exact solo diagnostics for 66/156 windows.
+Corrected learned checkpoint pending; no zero-update or legacy checkpoint is advertised as corrected.
+Budget: 1690800 precharged / 1260540 closed-actual sim-s; hard cap2,000,000; no refunds/retries.
+TRAIN exploration credit is not paired dev-policy performance.
 <!-- COOPFREE PUBLICATIONS END -->
