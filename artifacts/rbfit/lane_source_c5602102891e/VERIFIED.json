@@ -1,0 +1,1647 @@
+{
+  "status": "PASS",
+  "drivers": 3130,
+  "zero_information_population_fallbacks": 1599,
+  "informative_drivers": 1531,
+  "validation_only_population_fallbacks": 1013,
+  "maximum_direct_sequence_posterior_error": 8.659739592076221e-15,
+  "aggregate": {
+    "likelihood_population": {
+      "n": 258691,
+      "events": 626,
+      "categorical_brier_sum": 1282.055005679962,
+      "event_brier_sum": 641.0275028399814,
+      "negative_log_sum": 3560.9247591381672,
+      "expected_event_count": 1302.1554468009024,
+      "expected_correct_direction_event_count": 80.0289507846217,
+      "categorical_brier": 0.004955932002582084,
+      "event_brier": 0.0024779660012910435,
+      "negative_log_score": 0.013765166778659355
+    },
+    "raw_physics_population": {
+      "n": 258691,
+      "events": 626,
+      "categorical_brier_sum": 4525.387570248069,
+      "event_brier_sum": 2262.693785124036,
+      "negative_log_sum": 139210.64657243487,
+      "expected_event_count": 6385.074659185098,
+      "expected_correct_direction_event_count": 204.04658210925018,
+      "categorical_brier": 0.017493409396724544,
+      "event_brier": 0.008746704698362277,
+      "negative_log_score": 0.538134865814562
+    },
+    "likelihood_shrunk_posterior": {
+      "n": 258691,
+      "events": 626,
+      "categorical_brier_sum": 1210.8589543220544,
+      "event_brier_sum": 605.4294771610273,
+      "negative_log_sum": 3371.572256696434,
+      "expected_event_count": 1080.1909028391212,
+      "expected_correct_direction_event_count": 75.91576887437378,
+      "categorical_brier": 0.004680715426211404,
+      "event_brier": 0.0023403577131057025,
+      "negative_log_score": 0.013033202765834273
+    },
+    "raw_physics_shrunk_posterior": {
+      "n": 258691,
+      "events": 626,
+      "categorical_brier_sum": 3816.1975301170582,
+      "event_brier_sum": 1908.0987650585294,
+      "negative_log_sum": 138089.64735341852,
+      "expected_event_count": 5379.440047847139,
+      "expected_correct_direction_event_count": 194.80686059812754,
+      "categorical_brier": 0.014751953218770882,
+      "event_brier": 0.007375976609385442,
+      "negative_log_score": 0.5338015135950556
+    },
+    "raw_physics_source_default": {
+      "n": 258691,
+      "events": 626,
+      "categorical_brier_sum": 24968.0,
+      "event_brier_sum": 12484.0,
+      "negative_log_sum": 8843620.888956783,
+      "expected_event_count": 12382.0,
+      "expected_correct_direction_event_count": 262.0,
+      "categorical_brier": 0.09651669366154988,
+      "event_brier": 0.04825834683077494,
+      "negative_log_score": 34.1860400592088
+    }
+  },
+  "world_scores": [
+    {
+      "world": 969400,
+      "likelihood_population": {
+        "n": 9779,
+        "events": 30,
+        "categorical_brier_sum": 73.90217408523866,
+        "event_brier_sum": 36.95108704261935,
+        "negative_log_sum": 197.06237467462515,
+        "expected_event_count": 81.27625153278521,
+        "expected_correct_direction_event_count": 3.7913373526642395
+      },
+      "raw_physics_population": {
+        "n": 9779,
+        "events": 30,
+        "categorical_brier_sum": 259.80553819958004,
+        "event_brier_sum": 129.90276909979008,
+        "negative_log_sum": 6807.121800948788,
+        "expected_event_count": 298.54291816365026,
+        "expected_correct_direction_event_count": 9.15847163987606
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 9779,
+        "events": 30,
+        "categorical_brier_sum": 66.61255702979732,
+        "event_brier_sum": 33.306278514898665,
+        "negative_log_sum": 188.1387865916128,
+        "expected_event_count": 68.38036965558635,
+        "expected_correct_direction_event_count": 3.5698267153357786
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 9779,
+        "events": 30,
+        "categorical_brier_sum": 197.85561102298664,
+        "event_brier_sum": 98.92780551149329,
+        "negative_log_sum": 6716.605235030441,
+        "expected_event_count": 248.74954670415877,
+        "expected_correct_direction_event_count": 8.656866465018428
+      },
+      "raw_physics_source_default": {
+        "n": 9779,
+        "events": 30,
+        "categorical_brier_sum": 1096.0,
+        "event_brier_sum": 548.0,
+        "negative_log_sum": 388201.2373556807,
+        "expected_event_count": 546.0,
+        "expected_correct_direction_event_count": 14.0
+      }
+    },
+    {
+      "world": 969401,
+      "likelihood_population": {
+        "n": 10363,
+        "events": 23,
+        "categorical_brier_sum": 38.239959321745765,
+        "event_brier_sum": 19.119979660872882,
+        "negative_log_sum": 112.88447637177744,
+        "expected_event_count": 34.49838912700214,
+        "expected_correct_direction_event_count": 3.984482692412265
+      },
+      "raw_physics_population": {
+        "n": 10363,
+        "events": 23,
+        "categorical_brier_sum": 109.35847121147168,
+        "event_brier_sum": 54.679235605735855,
+        "negative_log_sum": 6583.201982936148,
+        "expected_event_count": 174.53488476091078,
+        "expected_correct_direction_event_count": 8.76744265582354
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 10363,
+        "events": 23,
+        "categorical_brier_sum": 37.260835530315795,
+        "event_brier_sum": 18.6304177651579,
+        "negative_log_sum": 108.29238953133043,
+        "expected_event_count": 30.154884586882808,
+        "expected_correct_direction_event_count": 3.984075044166409
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 10363,
+        "events": 23,
+        "categorical_brier_sum": 88.60861989646058,
+        "event_brier_sum": 44.30430994823031,
+        "negative_log_sum": 6548.854399417059,
+        "expected_event_count": 147.59055269978182,
+        "expected_correct_direction_event_count": 8.75996834858271
+      },
+      "raw_physics_source_default": {
+        "n": 10363,
+        "events": 23,
+        "categorical_brier_sum": 450.0,
+        "event_brier_sum": 225.0,
+        "negative_log_sum": 159389.19416975943,
+        "expected_event_count": 220.0,
+        "expected_correct_direction_event_count": 9.0
+      }
+    },
+    {
+      "world": 969402,
+      "likelihood_population": {
+        "n": 10494,
+        "events": 24,
+        "categorical_brier_sum": 48.17686294917382,
+        "event_brier_sum": 24.088431474586915,
+        "negative_log_sum": 139.21366838053422,
+        "expected_event_count": 46.75551004031618,
+        "expected_correct_direction_event_count": 4.107262627686712
+      },
+      "raw_physics_population": {
+        "n": 10494,
+        "events": 24,
+        "categorical_brier_sum": 143.63101601998193,
+        "event_brier_sum": 71.81550800999102,
+        "negative_log_sum": 10892.679790534727,
+        "expected_event_count": 230.49432390288757,
+        "expected_correct_direction_event_count": 8.283894271288629
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 10494,
+        "events": 24,
+        "categorical_brier_sum": 46.10851428359642,
+        "event_brier_sum": 23.054257141798217,
+        "negative_log_sum": 135.2771146741336,
+        "expected_event_count": 41.49736098384123,
+        "expected_correct_direction_event_count": 3.932342932128482
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 10494,
+        "events": 24,
+        "categorical_brier_sum": 122.62969976501198,
+        "event_brier_sum": 61.314849882506,
+        "negative_log_sum": 10856.674639580717,
+        "expected_event_count": 201.8158877108444,
+        "expected_correct_direction_event_count": 7.913356596348307
+      },
+      "raw_physics_source_default": {
+        "n": 10494,
+        "events": 24,
+        "categorical_brier_sum": 1094.0,
+        "event_brier_sum": 547.0,
+        "negative_log_sum": 387492.84093714843,
+        "expected_event_count": 543.0,
+        "expected_correct_direction_event_count": 10.0
+      }
+    },
+    {
+      "world": 969403,
+      "likelihood_population": {
+        "n": 7971,
+        "events": 20,
+        "categorical_brier_sum": 55.41067960666837,
+        "event_brier_sum": 27.705339803334216,
+        "negative_log_sum": 140.735004670884,
+        "expected_event_count": 80.67387167610507,
+        "expected_correct_direction_event_count": 3.389046847119949
+      },
+      "raw_physics_population": {
+        "n": 7971,
+        "events": 20,
+        "categorical_brier_sum": 230.97398409279072,
+        "event_brier_sum": 115.48699204639541,
+        "negative_log_sum": 2504.371539861712,
+        "expected_event_count": 271.83050633737463,
+        "expected_correct_direction_event_count": 8.915607678247937
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 7971,
+        "events": 20,
+        "categorical_brier_sum": 38.43971073746185,
+        "event_brier_sum": 19.219855368730933,
+        "negative_log_sum": 102.5619509410223,
+        "expected_event_count": 47.05232946868408,
+        "expected_correct_direction_event_count": 3.232312973054076
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 7971,
+        "events": 20,
+        "categorical_brier_sum": 111.39972766425183,
+        "event_brier_sum": 55.699863832125935,
+        "negative_log_sum": 2344.3263916404167,
+        "expected_event_count": 177.8494082599759,
+        "expected_correct_direction_event_count": 8.54471615644118
+      },
+      "raw_physics_source_default": {
+        "n": 7971,
+        "events": 20,
+        "categorical_brier_sum": 1064.0,
+        "event_brier_sum": 532.0,
+        "negative_log_sum": 376866.8946591645,
+        "expected_event_count": 536.0,
+        "expected_correct_direction_event_count": 12.0
+      }
+    },
+    {
+      "world": 969404,
+      "likelihood_population": {
+        "n": 9538,
+        "events": 18,
+        "categorical_brier_sum": 39.414221522387244,
+        "event_brier_sum": 19.707110761193643,
+        "negative_log_sum": 102.43577692098444,
+        "expected_event_count": 52.50612435453569,
+        "expected_correct_direction_event_count": 3.3950912155594737
+      },
+      "raw_physics_population": {
+        "n": 9538,
+        "events": 18,
+        "categorical_brier_sum": 195.80191246278295,
+        "event_brier_sum": 97.90095623139153,
+        "negative_log_sum": 3882.345466310935,
+        "expected_event_count": 264.51776204259255,
+        "expected_correct_direction_event_count": 8.100514588683751
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 9538,
+        "events": 18,
+        "categorical_brier_sum": 38.91211009115324,
+        "event_brier_sum": 19.45605504557663,
+        "negative_log_sum": 99.2064744166706,
+        "expected_event_count": 49.007343121240744,
+        "expected_correct_direction_event_count": 3.3410807827317033
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 9538,
+        "events": 18,
+        "categorical_brier_sum": 231.23186651824776,
+        "event_brier_sum": 115.61593325912388,
+        "negative_log_sum": 3917.8794424074295,
+        "expected_event_count": 268.5539639024302,
+        "expected_correct_direction_event_count": 7.955956528884406
+      },
+      "raw_physics_source_default": {
+        "n": 9538,
+        "events": 18,
+        "categorical_brier_sum": 744.0,
+        "event_brier_sum": 372.0,
+        "negative_log_sum": 263523.46769400226,
+        "expected_event_count": 372.0,
+        "expected_correct_direction_event_count": 9.0
+      }
+    },
+    {
+      "world": 969405,
+      "likelihood_population": {
+        "n": 10312,
+        "events": 19,
+        "categorical_brier_sum": 54.55819012384416,
+        "event_brier_sum": 27.279095061922096,
+        "negative_log_sum": 158.5118776864034,
+        "expected_event_count": 71.74163762464346,
+        "expected_correct_direction_event_count": 2.323372424939319
+      },
+      "raw_physics_population": {
+        "n": 10312,
+        "events": 19,
+        "categorical_brier_sum": 162.71276839348883,
+        "event_brier_sum": 81.35638419674444,
+        "negative_log_sum": 6662.03481872482,
+        "expected_event_count": 220.54530348305764,
+        "expected_correct_direction_event_count": 5.2172395983485895
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 10312,
+        "events": 19,
+        "categorical_brier_sum": 50.03594798711566,
+        "event_brier_sum": 25.01797399355784,
+        "negative_log_sum": 148.0956569121723,
+        "expected_event_count": 60.08530931801508,
+        "expected_correct_direction_event_count": 1.8633557858033512
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 10312,
+        "events": 19,
+        "categorical_brier_sum": 129.14934463048675,
+        "event_brier_sum": 64.5746723152434,
+        "negative_log_sum": 6610.15971503728,
+        "expected_event_count": 184.1662754782023,
+        "expected_correct_direction_event_count": 4.2325286952521965
+      },
+      "raw_physics_source_default": {
+        "n": 10312,
+        "events": 19,
+        "categorical_brier_sum": 644.0,
+        "event_brier_sum": 322.0,
+        "negative_log_sum": 228103.64676738903,
+        "expected_event_count": 319.0,
+        "expected_correct_direction_event_count": 8.0
+      }
+    },
+    {
+      "world": 969406,
+      "likelihood_population": {
+        "n": 5852,
+        "events": 11,
+        "categorical_brier_sum": 22.277071954616552,
+        "event_brier_sum": 11.138535977308281,
+        "negative_log_sum": 68.6863733617553,
+        "expected_event_count": 18.712219124452613,
+        "expected_correct_direction_event_count": 0.39441806653888156
+      },
+      "raw_physics_population": {
+        "n": 5852,
+        "events": 11,
+        "categorical_brier_sum": 76.93660024966367,
+        "event_brier_sum": 38.46830012483186,
+        "negative_log_sum": 2994.12486587641,
+        "expected_event_count": 131.62408523747217,
+        "expected_correct_direction_event_count": 2.0326029273502195
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 5852,
+        "events": 11,
+        "categorical_brier_sum": 22.30563278343586,
+        "event_brier_sum": 11.152816391717932,
+        "negative_log_sum": 67.4342265992465,
+        "expected_event_count": 16.249444662526745,
+        "expected_correct_direction_event_count": 0.3828230074178298
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 5852,
+        "events": 11,
+        "categorical_brier_sum": 62.50673079631126,
+        "event_brier_sum": 31.253365398155644,
+        "negative_log_sum": 2960.3560752227427,
+        "expected_event_count": 100.75254450406771,
+        "expected_correct_direction_event_count": 1.8200053380625518
+      },
+      "raw_physics_source_default": {
+        "n": 5852,
+        "events": 11,
+        "categorical_brier_sum": 610.0,
+        "event_brier_sum": 305.0,
+        "negative_log_sum": 216060.90765234054,
+        "expected_event_count": 300.0,
+        "expected_correct_direction_event_count": 3.0
+      }
+    },
+    {
+      "world": 969407,
+      "likelihood_population": {
+        "n": 8056,
+        "events": 25,
+        "categorical_brier_sum": 47.75750871011965,
+        "event_brier_sum": 23.878754355059826,
+        "negative_log_sum": 139.14660257758604,
+        "expected_event_count": 35.701878925899436,
+        "expected_correct_direction_event_count": 1.6301410967744694
+      },
+      "raw_physics_population": {
+        "n": 8056,
+        "events": 25,
+        "categorical_brier_sum": 190.48273099835723,
+        "event_brier_sum": 95.24136549917864,
+        "negative_log_sum": 5319.33237632405,
+        "expected_event_count": 288.38999621483003,
+        "expected_correct_direction_event_count": 6.078800544306831
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 8056,
+        "events": 25,
+        "categorical_brier_sum": 47.67476961321824,
+        "event_brier_sum": 23.837384806609123,
+        "negative_log_sum": 137.55465746413265,
+        "expected_event_count": 32.04061651718127,
+        "expected_correct_direction_event_count": 1.5059850708819686
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 8056,
+        "events": 25,
+        "categorical_brier_sum": 182.54697416268877,
+        "event_brier_sum": 91.27348708134441,
+        "negative_log_sum": 5302.254296737775,
+        "expected_event_count": 263.7799399213045,
+        "expected_correct_direction_event_count": 6.119206705608413
+      },
+      "raw_physics_source_default": {
+        "n": 8056,
+        "events": 25,
+        "categorical_brier_sum": 1134.0,
+        "event_brier_sum": 567.0,
+        "negative_log_sum": 401660.76930779376,
+        "expected_event_count": 560.0,
+        "expected_correct_direction_event_count": 9.0
+      }
+    },
+    {
+      "world": 969408,
+      "likelihood_population": {
+        "n": 7839,
+        "events": 18,
+        "categorical_brier_sum": 34.10548008607788,
+        "event_brier_sum": 17.052740043038945,
+        "negative_log_sum": 97.53318653299714,
+        "expected_event_count": 25.858252017364748,
+        "expected_correct_direction_event_count": 1.982017716596653
+      },
+      "raw_physics_population": {
+        "n": 7839,
+        "events": 18,
+        "categorical_brier_sum": 68.89080357103208,
+        "event_brier_sum": 34.44540178551604,
+        "negative_log_sum": 4373.315669663686,
+        "expected_event_count": 97.08788271853439,
+        "expected_correct_direction_event_count": 4.961787772599504
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 7839,
+        "events": 18,
+        "categorical_brier_sum": 31.438278633617387,
+        "event_brier_sum": 15.719139316808695,
+        "negative_log_sum": 91.42162876011672,
+        "expected_event_count": 18.69264498169648,
+        "expected_correct_direction_event_count": 1.9229065234704692
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 7839,
+        "events": 18,
+        "categorical_brier_sum": 55.087775692713,
+        "event_brier_sum": 27.543887846356508,
+        "negative_log_sum": 4347.935030686467,
+        "expected_event_count": 75.10941282602165,
+        "expected_correct_direction_event_count": 4.5383381173246935
+      },
+      "raw_physics_source_default": {
+        "n": 7839,
+        "events": 18,
+        "categorical_brier_sum": 346.0,
+        "event_brier_sum": 173.0,
+        "negative_log_sum": 122552.58040608169,
+        "expected_event_count": 167.0,
+        "expected_correct_direction_event_count": 6.0
+      }
+    },
+    {
+      "world": 969409,
+      "likelihood_population": {
+        "n": 4308,
+        "events": 9,
+        "categorical_brier_sum": 17.85032228427626,
+        "event_brier_sum": 8.92516114213814,
+        "negative_log_sum": 51.656296378982404,
+        "expected_event_count": 21.975721855483336,
+        "expected_correct_direction_event_count": 0.7096884509590129
+      },
+      "raw_physics_population": {
+        "n": 4308,
+        "events": 9,
+        "categorical_brier_sum": 90.91855992663193,
+        "event_brier_sum": 45.45927996331598,
+        "negative_log_sum": 889.3127120105082,
+        "expected_event_count": 146.0143653482832,
+        "expected_correct_direction_event_count": 2.6100737895667674
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 4308,
+        "events": 9,
+        "categorical_brier_sum": 16.837581973733634,
+        "event_brier_sum": 8.418790986866822,
+        "negative_log_sum": 47.774251832661065,
+        "expected_event_count": 16.85805651684499,
+        "expected_correct_direction_event_count": 0.6321340809729248
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 4308,
+        "events": 9,
+        "categorical_brier_sum": 111.01680887337642,
+        "event_brier_sum": 55.508404436688195,
+        "negative_log_sum": 905.5401432583852,
+        "expected_event_count": 143.58474569033046,
+        "expected_correct_direction_event_count": 2.30292719669647
+      },
+      "raw_physics_source_default": {
+        "n": 4308,
+        "events": 9,
+        "categorical_brier_sum": 656.0,
+        "event_brier_sum": 328.0,
+        "negative_log_sum": 232354.02527858265,
+        "expected_event_count": 325.0,
+        "expected_correct_direction_event_count": 3.0
+      }
+    },
+    {
+      "world": 969410,
+      "likelihood_population": {
+        "n": 5303,
+        "events": 8,
+        "categorical_brier_sum": 15.898290988126249,
+        "event_brier_sum": 7.949145494063132,
+        "negative_log_sum": 46.52827995271656,
+        "expected_event_count": 20.925005763173,
+        "expected_correct_direction_event_count": 0.6699711256938546
+      },
+      "raw_physics_population": {
+        "n": 5303,
+        "events": 8,
+        "categorical_brier_sum": 82.60640137214236,
+        "event_brier_sum": 41.30320068607121,
+        "negative_log_sum": 875.8974058294586,
+        "expected_event_count": 136.19907962313636,
+        "expected_correct_direction_event_count": 2.1340584574371784
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 5303,
+        "events": 8,
+        "categorical_brier_sum": 15.393403502616877,
+        "event_brier_sum": 7.696701751308444,
+        "negative_log_sum": 43.126343023598466,
+        "expected_event_count": 18.471492419124836,
+        "expected_correct_direction_event_count": 0.7353933783826111
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 5303,
+        "events": 8,
+        "categorical_brier_sum": 69.67086724073542,
+        "event_brier_sum": 34.83543362036772,
+        "negative_log_sum": 852.5663434863749,
+        "expected_event_count": 117.86930403692534,
+        "expected_correct_direction_event_count": 2.309160070611559
+      },
+      "raw_physics_source_default": {
+        "n": 5303,
+        "events": 8,
+        "categorical_brier_sum": 694.0,
+        "event_brier_sum": 347.0,
+        "negative_log_sum": 245813.55723069562,
+        "expected_event_count": 343.0,
+        "expected_correct_direction_event_count": 2.0
+      }
+    },
+    {
+      "world": 969411,
+      "likelihood_population": {
+        "n": 5464,
+        "events": 12,
+        "categorical_brier_sum": 26.113913222802932,
+        "event_brier_sum": 13.05695661140147,
+        "negative_log_sum": 73.88130000137124,
+        "expected_event_count": 24.28804827140131,
+        "expected_correct_direction_event_count": 1.1014989158671236
+      },
+      "raw_physics_population": {
+        "n": 5464,
+        "events": 12,
+        "categorical_brier_sum": 90.69666617760038,
+        "event_brier_sum": 45.348333088800196,
+        "negative_log_sum": 2981.4946109984417,
+        "expected_event_count": 112.54795706604384,
+        "expected_correct_direction_event_count": 3.383212752779243
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 5464,
+        "events": 12,
+        "categorical_brier_sum": 25.997366754746018,
+        "event_brier_sum": 12.998683377373009,
+        "negative_log_sum": 72.93860403301696,
+        "expected_event_count": 23.28434499771928,
+        "expected_correct_direction_event_count": 1.0912825100002903
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 5464,
+        "events": 12,
+        "categorical_brier_sum": 88.14237806198545,
+        "event_brier_sum": 44.071189030992734,
+        "negative_log_sum": 2970.7064586181177,
+        "expected_event_count": 102.4108716328008,
+        "expected_correct_direction_event_count": 3.3558687058440606
+      },
+      "raw_physics_source_default": {
+        "n": 5464,
+        "events": 12,
+        "categorical_brier_sum": 540.0,
+        "event_brier_sum": 270.0,
+        "negative_log_sum": 191267.03300371132,
+        "expected_event_count": 268.0,
+        "expected_correct_direction_event_count": 5.0
+      }
+    },
+    {
+      "world": 969412,
+      "likelihood_population": {
+        "n": 8311,
+        "events": 26,
+        "categorical_brier_sum": 42.70386978019791,
+        "event_brier_sum": 21.351934890098967,
+        "negative_log_sum": 108.0375862265838,
+        "expected_event_count": 36.95111125633265,
+        "expected_correct_direction_event_count": 4.382974638520447
+      },
+      "raw_physics_population": {
+        "n": 8311,
+        "events": 26,
+        "categorical_brier_sum": 112.38425989102917,
+        "event_brier_sum": 56.192129945514615,
+        "negative_log_sum": 3053.7383867697645,
+        "expected_event_count": 180.24556015717712,
+        "expected_correct_direction_event_count": 10.937466221509794
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 8311,
+        "events": 26,
+        "categorical_brier_sum": 42.610015997966016,
+        "event_brier_sum": 21.30500799898301,
+        "negative_log_sum": 106.78761655760174,
+        "expected_event_count": 35.74265140907823,
+        "expected_correct_direction_event_count": 4.39200851365743
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 8311,
+        "events": 26,
+        "categorical_brier_sum": 104.8373883217786,
+        "event_brier_sum": 52.41869416088932,
+        "negative_log_sum": 3033.151201605542,
+        "expected_event_count": 161.90499052124957,
+        "expected_correct_direction_event_count": 10.972080437711732
+      },
+      "raw_physics_source_default": {
+        "n": 8311,
+        "events": 26,
+        "categorical_brier_sum": 780.0,
+        "event_brier_sum": 390.0,
+        "negative_log_sum": 276274.60322758293,
+        "expected_event_count": 392.0,
+        "expected_correct_direction_event_count": 14.0
+      }
+    },
+    {
+      "world": 969413,
+      "likelihood_population": {
+        "n": 10105,
+        "events": 25,
+        "categorical_brier_sum": 54.39314727383067,
+        "event_brier_sum": 27.19657363691534,
+        "negative_log_sum": 148.87879164377534,
+        "expected_event_count": 41.699484516202176,
+        "expected_correct_direction_event_count": 2.0526853146843904
+      },
+      "raw_physics_population": {
+        "n": 10105,
+        "events": 25,
+        "categorical_brier_sum": 148.30571059900615,
+        "event_brier_sum": 74.1528552995031,
+        "negative_log_sum": 7330.069652265469,
+        "expected_event_count": 186.0562185892892,
+        "expected_correct_direction_event_count": 5.960735019953964
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 10105,
+        "events": 25,
+        "categorical_brier_sum": 49.19754164222306,
+        "event_brier_sum": 24.59877082111153,
+        "negative_log_sum": 139.49734170892413,
+        "expected_event_count": 29.083671584090585,
+        "expected_correct_direction_event_count": 1.5544865008933644
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 10105,
+        "events": 25,
+        "categorical_brier_sum": 117.14999208605767,
+        "event_brier_sum": 58.57499604302885,
+        "negative_log_sum": 7282.904484773323,
+        "expected_event_count": 149.1306433458042,
+        "expected_correct_direction_event_count": 4.880011322183797
+      },
+      "raw_physics_source_default": {
+        "n": 10105,
+        "events": 25,
+        "categorical_brier_sum": 800.0,
+        "event_brier_sum": 400.0,
+        "negative_log_sum": 283358.5674129056,
+        "expected_event_count": 389.0,
+        "expected_correct_direction_event_count": 7.0
+      }
+    },
+    {
+      "world": 969414,
+      "likelihood_population": {
+        "n": 8599,
+        "events": 20,
+        "categorical_brier_sum": 42.53641906879652,
+        "event_brier_sum": 21.268209534398277,
+        "negative_log_sum": 116.83209882875474,
+        "expected_event_count": 44.17136524055514,
+        "expected_correct_direction_event_count": 2.5486556570188164
+      },
+      "raw_physics_population": {
+        "n": 8599,
+        "events": 20,
+        "categorical_brier_sum": 140.6155136683906,
+        "event_brier_sum": 70.30775683419533,
+        "negative_log_sum": 3094.8846382083207,
+        "expected_event_count": 200.37913563794046,
+        "expected_correct_direction_event_count": 5.9965672956349705
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 8599,
+        "events": 20,
+        "categorical_brier_sum": 41.53138053986274,
+        "event_brier_sum": 20.765690269931376,
+        "negative_log_sum": 113.99935831567339,
+        "expected_event_count": 40.05611747357173,
+        "expected_correct_direction_event_count": 2.55960808425239
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 8599,
+        "events": 20,
+        "categorical_brier_sum": 168.82319976812886,
+        "event_brier_sum": 84.41159988406444,
+        "negative_log_sum": 3119.664673122966,
+        "expected_event_count": 198.1893915199693,
+        "expected_correct_direction_event_count": 6.258883438965399
+      },
+      "raw_physics_source_default": {
+        "n": 8599,
+        "events": 20,
+        "categorical_brier_sum": 618.0,
+        "event_brier_sum": 309.0,
+        "negative_log_sum": 218894.49332646962,
+        "expected_event_count": 307.0,
+        "expected_correct_direction_event_count": 9.0
+      }
+    },
+    {
+      "world": 969415,
+      "likelihood_population": {
+        "n": 7054,
+        "events": 13,
+        "categorical_brier_sum": 34.82205527376948,
+        "event_brier_sum": 17.411027636884757,
+        "negative_log_sum": 111.86114200246938,
+        "expected_event_count": 48.4667770160883,
+        "expected_correct_direction_event_count": 0.7232535599864316
+      },
+      "raw_physics_population": {
+        "n": 7054,
+        "events": 13,
+        "categorical_brier_sum": 227.50262462410623,
+        "event_brier_sum": 113.75131231205313,
+        "negative_log_sum": 3911.7973664937335,
+        "expected_event_count": 271.1027674271164,
+        "expected_correct_direction_event_count": 3.054951721253365
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 7054,
+        "events": 13,
+        "categorical_brier_sum": 28.507986190955673,
+        "event_brier_sum": 14.253993095477846,
+        "negative_log_sum": 93.6289375366833,
+        "expected_event_count": 31.414673890717655,
+        "expected_correct_direction_event_count": 0.6179019676720706
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 7054,
+        "events": 13,
+        "categorical_brier_sum": 110.0566435424377,
+        "event_brier_sum": 55.028321771218856,
+        "negative_log_sum": 3765.944613360737,
+        "expected_event_count": 185.38200848993128,
+        "expected_correct_direction_event_count": 2.7463306639416265
+      },
+      "raw_physics_source_default": {
+        "n": 7054,
+        "events": 13,
+        "categorical_brier_sum": 932.0,
+        "event_brier_sum": 466.0,
+        "negative_log_sum": 330112.7310360351,
+        "expected_event_count": 463.0,
+        "expected_correct_direction_event_count": 5.0
+      }
+    },
+    {
+      "world": 969416,
+      "likelihood_population": {
+        "n": 10069,
+        "events": 24,
+        "categorical_brier_sum": 51.07864247828358,
+        "event_brier_sum": 25.539321239141806,
+        "negative_log_sum": 117.47532985525278,
+        "expected_event_count": 51.557029592628226,
+        "expected_correct_direction_event_count": 3.231587629378499
+      },
+      "raw_physics_population": {
+        "n": 10069,
+        "events": 24,
+        "categorical_brier_sum": 192.62636225913417,
+        "event_brier_sum": 96.31318112956711,
+        "negative_log_sum": 1755.7668373792235,
+        "expected_event_count": 246.3562199797683,
+        "expected_correct_direction_event_count": 8.773458054361061
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 10069,
+        "events": 24,
+        "categorical_brier_sum": 49.627810371379766,
+        "event_brier_sum": 24.813905185689887,
+        "negative_log_sum": 113.44226826679495,
+        "expected_event_count": 43.392967119589244,
+        "expected_correct_direction_event_count": 2.777692127505374
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 10069,
+        "events": 24,
+        "categorical_brier_sum": 178.6310044580349,
+        "event_brier_sum": 89.31550222901745,
+        "negative_log_sum": 1738.5845698633357,
+        "expected_event_count": 221.6574358824528,
+        "expected_correct_direction_event_count": 7.54794045331319
+      },
+      "raw_physics_source_default": {
+        "n": 10069,
+        "events": 24,
+        "categorical_brier_sum": 882.0,
+        "event_brier_sum": 441.0,
+        "negative_log_sum": 312402.82057272847,
+        "expected_event_count": 443.0,
+        "expected_correct_direction_event_count": 13.0
+      }
+    },
+    {
+      "world": 969417,
+      "likelihood_population": {
+        "n": 9939,
+        "events": 24,
+        "categorical_brier_sum": 43.481820957769855,
+        "event_brier_sum": 21.740910478884935,
+        "negative_log_sum": 109.42182159601785,
+        "expected_event_count": 40.75013514077378,
+        "expected_correct_direction_event_count": 5.105608575405558
+      },
+      "raw_physics_population": {
+        "n": 9939,
+        "events": 24,
+        "categorical_brier_sum": 140.307863953058,
+        "event_brier_sum": 70.15393197652901,
+        "negative_log_sum": 6588.7146375923385,
+        "expected_event_count": 164.36412046052425,
+        "expected_correct_direction_event_count": 11.167621736482872
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 9939,
+        "events": 24,
+        "categorical_brier_sum": 41.61969138150242,
+        "event_brier_sum": 20.809845690751217,
+        "negative_log_sum": 105.02524123744907,
+        "expected_event_count": 35.98938735647271,
+        "expected_correct_direction_event_count": 4.788743403040219
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 9939,
+        "events": 24,
+        "categorical_brier_sum": 126.45721661120457,
+        "event_brier_sum": 63.22860830560229,
+        "negative_log_sum": 6563.707578315443,
+        "expected_event_count": 145.18463401741676,
+        "expected_correct_direction_event_count": 10.544987511413723
+      },
+      "raw_physics_source_default": {
+        "n": 9939,
+        "events": 24,
+        "categorical_brier_sum": 576.0,
+        "event_brier_sum": 288.0,
+        "negative_log_sum": 204018.16853729205,
+        "expected_event_count": 286.0,
+        "expected_correct_direction_event_count": 11.0
+      }
+    },
+    {
+      "world": 969418,
+      "likelihood_population": {
+        "n": 7876,
+        "events": 26,
+        "categorical_brier_sum": 54.94596331100978,
+        "event_brier_sum": 27.4729816555049,
+        "negative_log_sum": 156.02663380547352,
+        "expected_event_count": 52.93671905938647,
+        "expected_correct_direction_event_count": 3.126058464017308
+      },
+      "raw_physics_population": {
+        "n": 7876,
+        "events": 26,
+        "categorical_brier_sum": 151.6995676841081,
+        "event_brier_sum": 75.84978384205408,
+        "negative_log_sum": 7354.900821222906,
+        "expected_event_count": 212.0410107671039,
+        "expected_correct_direction_event_count": 7.073214790091093
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 7876,
+        "events": 26,
+        "categorical_brier_sum": 53.44224839333669,
+        "event_brier_sum": 26.72112419666835,
+        "negative_log_sum": 147.86003051462495,
+        "expected_event_count": 44.20480109818493,
+        "expected_correct_direction_event_count": 2.885061144246495
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 7876,
+        "events": 26,
+        "categorical_brier_sum": 119.33093719147983,
+        "event_brier_sum": 59.665468595739924,
+        "negative_log_sum": 7300.7104447174315,
+        "expected_event_count": 169.72029440397193,
+        "expected_correct_direction_event_count": 6.652844516874373
+      },
+      "raw_physics_source_default": {
+        "n": 7876,
+        "events": 26,
+        "categorical_brier_sum": 976.0,
+        "event_brier_sum": 488.0,
+        "negative_log_sum": 345697.45224374486,
+        "expected_event_count": 480.0,
+        "expected_correct_direction_event_count": 9.0
+      }
+    },
+    {
+      "world": 969419,
+      "likelihood_population": {
+        "n": 8176,
+        "events": 19,
+        "categorical_brier_sum": 31.776686966507153,
+        "event_brier_sum": 15.888343483253593,
+        "negative_log_sum": 91.44810154943104,
+        "expected_event_count": 39.96546040232875,
+        "expected_correct_direction_event_count": 3.875618269009907
+      },
+      "raw_physics_population": {
+        "n": 8176,
+        "events": 19,
+        "categorical_brier_sum": 186.2340246580581,
+        "event_brier_sum": 93.11701232902907,
+        "negative_log_sum": 3167.4173960148905,
+        "expected_event_count": 271.2743937754233,
+        "expected_correct_direction_event_count": 8.303063740001907
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 8176,
+        "events": 19,
+        "categorical_brier_sum": 32.65445719098184,
+        "event_brier_sum": 16.32722859549093,
+        "negative_log_sum": 91.77114730410683,
+        "expected_event_count": 37.565027819186724,
+        "expected_correct_direction_event_count": 3.590350498188774
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 8176,
+        "events": 19,
+        "categorical_brier_sum": 148.49602545098327,
+        "event_brier_sum": 74.24801272549163,
+        "negative_log_sum": 3115.198957084408,
+        "expected_event_count": 230.33763101358787,
+        "expected_correct_direction_event_count": 7.651693527773034
+      },
+      "raw_physics_source_default": {
+        "n": 8176,
+        "events": 19,
+        "categorical_brier_sum": 1344.0,
+        "event_brier_sum": 672.0,
+        "negative_log_sum": 476042.3932536815,
+        "expected_event_count": 673.0,
+        "expected_correct_direction_event_count": 10.0
+      }
+    },
+    {
+      "world": 969420,
+      "likelihood_population": {
+        "n": 9906,
+        "events": 28,
+        "categorical_brier_sum": 56.12446628404216,
+        "event_brier_sum": 28.06223314202108,
+        "negative_log_sum": 158.05907344998496,
+        "expected_event_count": 32.140198627519524,
+        "expected_correct_direction_event_count": 2.252664121412535
+      },
+      "raw_physics_population": {
+        "n": 9906,
+        "events": 28,
+        "categorical_brier_sum": 114.78387915785908,
+        "event_brier_sum": 57.39193957892956,
+        "negative_log_sum": 9381.533236796742,
+        "expected_event_count": 131.92354309339655,
+        "expected_correct_direction_event_count": 6.179401397315413
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 9906,
+        "events": 28,
+        "categorical_brier_sum": 53.98749668837544,
+        "event_brier_sum": 26.99374834418772,
+        "negative_log_sum": 150.7834570589477,
+        "expected_event_count": 25.62999164892465,
+        "expected_correct_direction_event_count": 2.3786554310198005
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 9906,
+        "events": 28,
+        "categorical_brier_sum": 87.21190644184693,
+        "event_brier_sum": 43.60595322092345,
+        "negative_log_sum": 9331.590620761115,
+        "expected_event_count": 92.07351372977526,
+        "expected_correct_direction_event_count": 6.286097479108525
+      },
+      "raw_physics_source_default": {
+        "n": 9906,
+        "events": 28,
+        "categorical_brier_sum": 622.0,
+        "event_brier_sum": 311.0,
+        "negative_log_sum": 220311.28616353413,
+        "expected_event_count": 293.0,
+        "expected_correct_direction_event_count": 5.0
+      }
+    },
+    {
+      "world": 969421,
+      "likelihood_population": {
+        "n": 4720,
+        "events": 20,
+        "categorical_brier_sum": 40.255561908676235,
+        "event_brier_sum": 20.12778095433812,
+        "negative_log_sum": 100.4745557771056,
+        "expected_event_count": 41.74471042826134,
+        "expected_correct_direction_event_count": 2.9855806762766735
+      },
+      "raw_physics_population": {
+        "n": 4720,
+        "events": 20,
+        "categorical_brier_sum": 123.05526834865115,
+        "event_brier_sum": 61.5276341743256,
+        "negative_log_sum": 1635.1412965218567,
+        "expected_event_count": 168.33016988103142,
+        "expected_correct_direction_event_count": 7.95718247817768
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 4720,
+        "events": 20,
+        "categorical_brier_sum": 34.793307650523204,
+        "event_brier_sum": 17.39665382526161,
+        "negative_log_sum": 83.23778788623125,
+        "expected_event_count": 24.41486440182796,
+        "expected_correct_direction_event_count": 2.97226074384266
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 4720,
+        "events": 20,
+        "categorical_brier_sum": 83.35721281023396,
+        "event_brier_sum": 41.678606405116966,
+        "negative_log_sum": 1565.714838559945,
+        "expected_event_count": 102.39613293661864,
+        "expected_correct_direction_event_count": 7.712488866180943
+      },
+      "raw_physics_source_default": {
+        "n": 4720,
+        "events": 20,
+        "categorical_brier_sum": 632.0,
+        "event_brier_sum": 316.0,
+        "negative_log_sum": 223853.26825619547,
+        "expected_event_count": 320.0,
+        "expected_correct_direction_event_count": 12.0
+      }
+    },
+    {
+      "world": 969422,
+      "likelihood_population": {
+        "n": 5716,
+        "events": 11,
+        "categorical_brier_sum": 14.359500666258429,
+        "event_brier_sum": 7.179750333129219,
+        "negative_log_sum": 47.347573465735834,
+        "expected_event_count": 16.776864438171113,
+        "expected_correct_direction_event_count": 2.883006794794388
+      },
+      "raw_physics_population": {
+        "n": 5716,
+        "events": 11,
+        "categorical_brier_sum": 46.27759649994963,
+        "event_brier_sum": 23.138798249974823,
+        "negative_log_sum": 2216.6928345902916,
+        "expected_event_count": 81.13698330629168,
+        "expected_correct_direction_event_count": 5.894657298118331
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 5716,
+        "events": 11,
+        "categorical_brier_sum": 14.140586815626676,
+        "event_brier_sum": 7.070293407813342,
+        "negative_log_sum": 45.43247219332057,
+        "expected_event_count": 14.600502324556505,
+        "expected_correct_direction_event_count": 2.8336242911018297
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 5716,
+        "events": 11,
+        "categorical_brier_sum": 31.62453836400443,
+        "event_brier_sum": 15.812269182002222,
+        "negative_log_sum": 2188.9302045647937,
+        "expected_event_count": 58.10103799288888,
+        "expected_correct_direction_event_count": 5.766270358217773
+      },
+      "raw_physics_source_default": {
+        "n": 5716,
+        "events": 11,
+        "categorical_brier_sum": 344.0,
+        "event_brier_sum": 172.0,
+        "negative_log_sum": 121844.18398754942,
+        "expected_event_count": 175.0,
+        "expected_correct_direction_event_count": 7.0
+      }
+    },
+    {
+      "world": 969423,
+      "likelihood_population": {
+        "n": 5407,
+        "events": 15,
+        "categorical_brier_sum": 29.73643008049402,
+        "event_brier_sum": 14.868215040247014,
+        "negative_log_sum": 93.98457743565399,
+        "expected_event_count": 23.88072435765408,
+        "expected_correct_direction_event_count": 1.0647949628436806
+      },
+      "raw_physics_population": {
+        "n": 5407,
+        "events": 15,
+        "categorical_brier_sum": 87.21316531940077,
+        "event_brier_sum": 43.60658265970039,
+        "negative_log_sum": 4414.1042080451125,
+        "expected_event_count": 131.651447932944,
+        "expected_correct_direction_event_count": 3.240469835283668
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 5407,
+        "events": 15,
+        "categorical_brier_sum": 28.063764148133693,
+        "event_brier_sum": 14.03188207406685,
+        "negative_log_sum": 87.77526142461281,
+        "expected_event_count": 17.490039170585028,
+        "expected_correct_direction_event_count": 1.062733610972137
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 5407,
+        "events": 15,
+        "categorical_brier_sum": 57.00614063058116,
+        "event_brier_sum": 28.503070315290586,
+        "negative_log_sum": 4368.569950590136,
+        "expected_event_count": 96.4347757566482,
+        "expected_correct_direction_event_count": 2.9580905545003024
+      },
+      "raw_physics_source_default": {
+        "n": 5407,
+        "events": 15,
+        "categorical_brier_sum": 696.0,
+        "event_brier_sum": 348.0,
+        "negative_log_sum": 246521.95364922791,
+        "expected_event_count": 341.0,
+        "expected_correct_direction_event_count": 4.0
+      }
+    },
+    {
+      "world": 969424,
+      "likelihood_population": {
+        "n": 8517,
+        "events": 27,
+        "categorical_brier_sum": 45.445732180082054,
+        "event_brier_sum": 22.722866090041034,
+        "negative_log_sum": 119.95037674659797,
+        "expected_event_count": 42.16946715035604,
+        "expected_correct_direction_event_count": 4.232799514773284
+      },
+      "raw_physics_population": {
+        "n": 8517,
+        "events": 27,
+        "categorical_brier_sum": 146.56120630812256,
+        "event_brier_sum": 73.28060315406131,
+        "negative_log_sum": 3136.5325239486924,
+        "expected_event_count": 248.8064123647244,
+        "expected_correct_direction_event_count": 10.833854017771792
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 8517,
+        "events": 27,
+        "categorical_brier_sum": 44.39694443036925,
+        "event_brier_sum": 22.198472215184633,
+        "negative_log_sum": 116.14625529766394,
+        "expected_event_count": 38.049806113374146,
+        "expected_correct_direction_event_count": 4.348091497010097
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 8517,
+        "events": 27,
+        "categorical_brier_sum": 116.01243811182003,
+        "event_brier_sum": 58.00621905591005,
+        "negative_log_sum": 3088.81980141755,
+        "expected_event_count": 212.01979934761277,
+        "expected_correct_direction_event_count": 10.938355487224644
+      },
+      "raw_physics_source_default": {
+        "n": 8517,
+        "events": 27,
+        "categorical_brier_sum": 1126.0,
+        "event_brier_sum": 563.0,
+        "negative_log_sum": 398827.1836336647,
+        "expected_event_count": 564.0,
+        "expected_correct_direction_event_count": 14.0
+      }
+    },
+    {
+      "world": 969425,
+      "likelihood_population": {
+        "n": 9388,
+        "events": 13,
+        "categorical_brier_sum": 26.51633403395342,
+        "event_brier_sum": 13.258167016976723,
+        "negative_log_sum": 89.82211572651917,
+        "expected_event_count": 35.19439147332686,
+        "expected_correct_direction_event_count": 1.1480080680895277
+      },
+      "raw_physics_population": {
+        "n": 9388,
+        "events": 13,
+        "categorical_brier_sum": 124.02419022634402,
+        "event_brier_sum": 62.01209511317202,
+        "negative_log_sum": 3788.163126223642,
+        "expected_event_count": 203.80723308169277,
+        "expected_correct_direction_event_count": 3.246403202403233
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 9388,
+        "events": 13,
+        "categorical_brier_sum": 26.212144603177858,
+        "event_brier_sum": 13.106072301588934,
+        "negative_log_sum": 87.96749249548813,
+        "expected_event_count": 33.12262151193005,
+        "expected_correct_direction_event_count": 1.1363615131345812
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 9388,
+        "events": 13,
+        "categorical_brier_sum": 97.90743962077737,
+        "event_brier_sum": 48.95371981038872,
+        "negative_log_sum": 3751.6248702121216,
+        "expected_event_count": 177.40728947800838,
+        "expected_correct_direction_event_count": 3.1006669282242534
+      },
+      "raw_physics_source_default": {
+        "n": 9388,
+        "events": 13,
+        "categorical_brier_sum": 714.0,
+        "event_brier_sum": 357.0,
+        "negative_log_sum": 252897.52141601828,
+        "expected_event_count": 352.0,
+        "expected_correct_direction_event_count": 4.0
+      }
+    },
+    {
+      "world": 969426,
+      "likelihood_population": {
+        "n": 9375,
+        "events": 25,
+        "categorical_brier_sum": 54.9407914824374,
+        "event_brier_sum": 27.4703957412187,
+        "negative_log_sum": 151.6290769443076,
+        "expected_event_count": 41.515909953615555,
+        "expected_correct_direction_event_count": 1.9358778591916694
+      },
+      "raw_physics_population": {
+        "n": 9375,
+        "events": 25,
+        "categorical_brier_sum": 140.44502619731475,
+        "event_brier_sum": 70.2225130986574,
+        "negative_log_sum": 6634.076843617953,
+        "expected_event_count": 199.71339220542967,
+        "expected_correct_direction_event_count": 5.8256358304259015
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 9375,
+        "events": 25,
+        "categorical_brier_sum": 49.74639075514736,
+        "event_brier_sum": 24.87319537757368,
+        "negative_log_sum": 144.58655448698497,
+        "expected_event_count": 28.823390811704478,
+        "expected_correct_direction_event_count": 1.4516988683747951
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 9375,
+        "events": 25,
+        "categorical_brier_sum": 105.42721481682784,
+        "event_brier_sum": 52.71360740841393,
+        "negative_log_sum": 6577.376733376422,
+        "expected_event_count": 151.6910243056824,
+        "expected_correct_direction_event_count": 4.682715910819931
+      },
+      "raw_physics_source_default": {
+        "n": 9375,
+        "events": 25,
+        "categorical_brier_sum": 658.0,
+        "event_brier_sum": 329.0,
+        "negative_log_sum": 233062.4216971149,
+        "expected_event_count": 320.0,
+        "expected_correct_direction_event_count": 8.0
+      }
+    },
+    {
+      "world": 969427,
+      "likelihood_population": {
+        "n": 8768,
+        "events": 16,
+        "categorical_brier_sum": 30.46881795506666,
+        "event_brier_sum": 15.234408977533338,
+        "negative_log_sum": 90.39661510722537,
+        "expected_event_count": 28.606709312964462,
+        "expected_correct_direction_event_count": 1.7976778948102778
+      },
+      "raw_physics_population": {
+        "n": 8768,
+        "events": 16,
+        "categorical_brier_sum": 94.7321884663336,
+        "event_brier_sum": 47.36609423316683,
+        "negative_log_sum": 5847.157290357887,
+        "expected_event_count": 151.58042476497434,
+        "expected_correct_direction_event_count": 4.701452988378971
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 8768,
+        "events": 16,
+        "categorical_brier_sum": 31.661530358346624,
+        "event_brier_sum": 15.830765179173316,
+        "negative_log_sum": 94.58719000632367,
+        "expected_event_count": 26.55487881357812,
+        "expected_correct_direction_event_count": 1.3687864837465955
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 8768,
+        "events": 16,
+        "categorical_brier_sum": 89.11478915510781,
+        "event_brier_sum": 44.55739457755392,
+        "negative_log_sum": 5837.41175231451,
+        "expected_event_count": 135.53470225182588,
+        "expected_correct_direction_event_count": 3.8663176870638862
+      },
+      "raw_physics_source_default": {
+        "n": 8768,
+        "events": 16,
+        "categorical_brier_sum": 676.0,
+        "event_brier_sum": 338.0,
+        "negative_log_sum": 239437.98946390528,
+        "expected_event_count": 334.0,
+        "expected_correct_direction_event_count": 6.0
+      }
+    },
+    {
+      "world": 969428,
+      "likelihood_population": {
+        "n": 8201,
+        "events": 21,
+        "categorical_brier_sum": 43.00821946148603,
+        "event_brier_sum": 21.504109730743025,
+        "negative_log_sum": 116.3599996364781,
+        "expected_event_count": 38.724314465481044,
+        "expected_correct_direction_event_count": 1.7936098342007067
+      },
+      "raw_physics_population": {
+        "n": 8201,
+        "events": 21,
+        "categorical_brier_sum": 183.6871434308657,
+        "event_brier_sum": 91.8435717154329,
+        "negative_log_sum": 3878.544489530975,
+        "expected_event_count": 257.5274793161841,
+        "expected_correct_direction_event_count": 5.107129448564668
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 8201,
+        "events": 21,
+        "categorical_brier_sum": 42.672438360286094,
+        "event_brier_sum": 21.336219180143047,
+        "negative_log_sum": 113.9709786571893,
+        "expected_event_count": 33.260102175639574,
+        "expected_correct_direction_event_count": 1.5636762434088622
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 8201,
+        "events": 21,
+        "categorical_brier_sum": 137.63649199574428,
+        "event_brier_sum": 68.81824599787214,
+        "negative_log_sum": 3811.4179453196857,
+        "expected_event_count": 206.29471774810003,
+        "expected_correct_direction_event_count": 4.3478172313735035
+      },
+      "raw_physics_source_default": {
+        "n": 8201,
+        "events": 21,
+        "categorical_brier_sum": 1068.0,
+        "event_brier_sum": 534.0,
+        "negative_log_sum": 378283.687496229,
+        "expected_event_count": 525.0,
+        "expected_correct_direction_event_count": 6.0
+      }
+    },
+    {
+      "world": 969429,
+      "likelihood_population": {
+        "n": 8978,
+        "events": 17,
+        "categorical_brier_sum": 39.94307867676768,
+        "event_brier_sum": 19.971539338383863,
+        "negative_log_sum": 112.85263043220995,
+        "expected_event_count": 53.150620232681135,
+        "expected_correct_direction_event_count": 1.7840604571735807
+      },
+      "raw_physics_population": {
+        "n": 8978,
+        "events": 17,
+        "categorical_brier_sum": 171.11098265961544,
+        "event_brier_sum": 85.55549132980775,
+        "negative_log_sum": 2464.231186760714,
+        "expected_event_count": 270.1479540453243,
+        "expected_correct_direction_event_count": 4.825837949427692
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 8978,
+        "events": 17,
+        "categorical_brier_sum": 37.98085261786763,
+        "event_brier_sum": 18.990426308933827,
+        "negative_log_sum": 106.29135877758043,
+        "expected_event_count": 49.42556593498332,
+        "expected_correct_direction_event_count": 1.9615787660621928
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 8978,
+        "events": 17,
+        "categorical_brier_sum": 198.9204893793727,
+        "event_brier_sum": 99.46024468968635,
+        "negative_log_sum": 2539.020703241158,
+        "expected_event_count": 261.3625267426627,
+        "expected_correct_direction_event_count": 6.079192910222651
+      },
+      "raw_physics_source_default": {
+        "n": 8978,
+        "events": 17,
+        "categorical_brier_sum": 920.0,
+        "event_brier_sum": 460.0,
+        "negative_log_sum": 325862.3525248415,
+        "expected_event_count": 451.0,
+        "expected_correct_direction_event_count": 4.0
+      }
+    },
+    {
+      "world": 969430,
+      "likelihood_population": {
+        "n": 7538,
+        "events": 26,
+        "categorical_brier_sum": 47.34771197733713,
+        "event_brier_sum": 23.67385598866858,
+        "negative_log_sum": 123.68394362054966,
+        "expected_event_count": 45.94446388637358,
+        "expected_correct_direction_event_count": 4.0684894034213475
+      },
+      "raw_physics_population": {
+        "n": 7538,
+        "events": 26,
+        "categorical_brier_sum": 169.76579579078134,
+        "event_brier_sum": 84.8828978953907,
+        "negative_log_sum": 3857.6309699587146,
+        "expected_event_count": 257.3822684729241,
+        "expected_correct_direction_event_count": 10.31214492401524
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 7538,
+        "events": 26,
+        "categorical_brier_sum": 46.67769170325485,
+        "event_brier_sum": 23.338845851627433,
+        "negative_log_sum": 121.41645990528588,
+        "expected_event_count": 42.09963806565639,
+        "expected_correct_direction_event_count": 3.9474433734200707
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 7538,
+        "events": 26,
+        "categorical_brier_sum": 181.62945602126268,
+        "event_brier_sum": 90.81472801063137,
+        "negative_log_sum": 3872.9498640447214,
+        "expected_event_count": 241.33735595239438,
+        "expected_correct_direction_event_count": 10.474689712958043
+      },
+      "raw_physics_source_default": {
+        "n": 7538,
+        "events": 26,
+        "categorical_brier_sum": 950.0,
+        "event_brier_sum": 475.0,
+        "negative_log_sum": 336488.29880282545,
+        "expected_event_count": 483.0,
+        "expected_correct_direction_event_count": 17.0
+      }
+    },
+    {
+      "world": 969431,
+      "likelihood_population": {
+        "n": 6769,
+        "events": 13,
+        "categorical_brier_sum": 24.465081008118318,
+        "event_brier_sum": 12.23254050405917,
+        "negative_log_sum": 68.1074977774226,
+        "expected_event_count": 30.89607993703957,
+        "expected_correct_direction_event_count": 1.557610556800729
+      },
+      "raw_physics_population": {
+        "n": 6769,
+        "events": 13,
+        "categorical_brier_sum": 121.23974783041633,
+        "event_brier_sum": 60.61987391520819,
+        "negative_log_sum": 934.3157901159796,
+        "expected_event_count": 178.9188590270641,
+        "expected_correct_direction_event_count": 5.011627483770334
+      },
+      "likelihood_shrunk_posterior": {
+        "n": 6769,
+        "events": 13,
+        "categorical_brier_sum": 24.31796556192912,
+        "event_brier_sum": 12.158982780964568,
+        "negative_log_sum": 65.54296228523252,
+        "expected_event_count": 27.496006886125294,
+        "expected_correct_direction_event_count": 1.5314870084781658
+      },
+      "raw_physics_shrunk_posterior": {
+        "n": 6769,
+        "events": 13,
+        "categorical_brier_sum": 106.72060101411724,
+        "event_brier_sum": 53.36030050705859,
+        "negative_log_sum": 902.4953750499667,
+        "expected_event_count": 151.0476890436937,
+        "expected_correct_direction_event_count": 4.830486675381239
+      },
+      "raw_physics_source_default": {
+        "n": 6769,
+        "events": 13,
+        "categorical_brier_sum": 582.0,
+        "event_brier_sum": 291.0,
+        "negative_log_sum": 206143.35779288886,
+        "expected_event_count": 292.0,
+        "expected_correct_direction_event_count": 7.0
+      }
+    }
+  ],
+  "internal_FIT_posterior_minus_population_categorical_brier_ci95": [
+    -0.00042647524397490793,
+    -0.00014387945815437316
+  ],
+  "population_physical_mean": [
+    2.166885679103624,
+    0.48037988381787566,
+    2.457502092720606,
+    1.430722563886977,
+    0.8209978126783581
+  ],
+  "population_physical_sd": [
+    2.011680005931826,
+    0.2914082675138207,
+    1.8628486869479493,
+    1.942385399506032,
+    0.5061157670708246
+  ],
+  "across_driver_posterior_mean_sd": [
+    0.30636419716888685,
+    0.04285302299741298,
+    0.4707778115475858,
+    0.4756780026512828,
+    0.1590955035359114
+  ],
+  "adopted": false,
+  "physical_source_sha256": {
+    "lc2013.py": "1bb1c7612a5ae250725a05ebfff18dd0abcd145c6e9a6abf46ce6e930d5a2695",
+    "lc2013_geometry.py": "59017d3ec30a0363c794a4ac922148db06902bfcb8a71427f10749764d2f5bf7",
+    "config.py": "28a064562878bbcfcb508106ddb67520acde798ba043220f0be105b446bc4f32"
+  },
+  "artifact_sha256": {
+    "lc2013_population.json": "e5138eff267e312ad749e92c9039b057831f7c5e8e87bdc365ca3b1efe90f280",
+    "lc2013_posteriors.json": "0e42e12edce5c7eb2bb3ff33e8724cd690bcd0a333af1b9f5db8a410e3a31d05",
+    "lc2013_shrinkage.json": "c850693a1fc74824999e7fb58bc867878f4050288d95932a59a58c16440e09f3",
+    "validation.json": "cd91bbefd37986ff5a99072b070cf08dc1385770a563d6276c93a6d7309b8cc8",
+    "provenance.json": "b1a5fbd40813da63a1047d86eba357a37a2ed87b46acf3446d26f438dfa5c0c0",
+    "lane_events.json": "9305f80524cba2686d1eff7480b95c81b38d409979c07ee4e583e1d8f8c681e5"
+  }
+}

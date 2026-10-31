@@ -1,0 +1,21 @@
+{
+  "schema": "wm_phys.lc2013_shrinkage.v1",
+  "prior_count": 0.0,
+  "population_only": false,
+  "evidence": "intervals whose LC2013 decisions differ across physical profiles",
+  "calibration_intervals_s": [
+    [
+      240,
+      270
+    ],
+    [
+      270,
+      300
+    ]
+  ],
+  "categorical_brier": 0.004787201282616827,
+  "raw_brier": 0.004787201282616827,
+  "population_brier": 0.005129140344360167,
+  "internal_empirical_bayes": true,
+  "already_applied": true
+}
