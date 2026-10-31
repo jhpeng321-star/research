@@ -8,7 +8,7 @@ Full earlier handoff preserved at `docs/rb_merge/HANDOFF_HISTORY_0100.md`.
   dv feature gathers slot0 speed (`control/native_cav.py:65,80`), even when that
   car is on an unrelated mainline lane. At the observed ramp-head state, this
   produces a false standstill. A singleton fixture does NOT reproduce it.
-- NEW `model/sumo_native.py::native_physics_controller(dt_s=.5)` explicitly
+- **d7be510a** NEW `model/sumo_native.py::native_physics_controller(dt_s=.5)` explicitly
   delegates the native arm to the existing physics execution ceiling and lane/
   merge streams, retaining the registered project_native executor bounds.
   Opt-in callback only; no shared model/factory change or retraining. INT should
@@ -64,23 +64,28 @@ Full earlier handoff preserved at `docs/rb_merge/HANDOFF_HISTORY_0100.md`.
   `fullfleet_v{3,4}_summary.json`. Four receipt-audit tests PASS (hash, complete
   panel, duplicate/missing world, broken source conservation).
 
-## Live diagnostic v5 — do NOT duplicate
+## Completed diagnostic v5 / next v6
 - **01:04:36 +08 dispatched ONCE**, owned cpuQ PID**468961**, validator SHA
   `f68014b8b0586db5fdd329996c214fefcf7fb61c1e73aed5b4104ab5db21940b`.
-  Receipt `/tmp/rb-merge-fullfleet-v5/LAUNCH.json`. v4 confirmed exited first.
+  Receipt `/tmp/rb-merge-fullfleet-v5/LAUNCH.json`. PID468961 now **exited**,
+  all32 worlds complete; no running prediction dispatch remains at this poll.
 - Source **7d4240ef**, same INTb0f66943 + mechanics3df73a27. Same default settings,
   stream190, SUMO CF and causal LC history; isolates the new network-limit rules.
 - Immutable `/tmp/rb-merge-fullfleet-v5`;33CPUtests and all32 source preflights
   PASS. Ten-second front-ramp traces retain IDs/speed/gaps/required gaps/CAV flag
-  without influencing motion. v4 is confirmed terminal before the next launch.
+  without influencing motion. Score `docs/rb_merge/fullfleet_v5_summary.json`:
+  ramp mean2363.87 predicted /2272.78 recorded; marginalW1 **1197.36** (v4=1306.67),
+  secondary pairedMAE1651.77; timingMAE30.36s (v4=29.56), positionMAE13.03m.
+  All32 source gates pass; same55 corridor overlap samples. Still not qualified.
 - Tool: `py -3.13 tools/rbeval/remote_full_fleet.py status|launch|poll|collect`.
-  Default versionv5; `--version v4` inspects existing v4. Stage/dispatch/results
+  Explicit `--version v5` inspects v5. Stage/dispatch/results
   refuse overwrite. Single CPU nice19/CUDA-hidden, resource admission load<28/32.
   Never relaunch a completed version or overwrite a running snapshot.
 - Early trace identifies a concrete blocker in969400: initial CAV187 stalls
   at s=-1.464m/v=0 before the legal merge zone, from320s through600s despite no
-  ramp leader. Testing inherited learned native-CAV surrogate vs physics-native
-  delegation next; no source/parameter/trace alteration of this running v5.
+  ramp leader. Native-head packing bug reproduced on CPU (above); v5 sources
+  and results remain unchanged. Next v6 stages physics-native delegation plus
+  EPS5870b556; **39 remote CPU tests PASS /2.12s**, all32 preflights PASS.
 
 ## Interfaces / tests / known gaps
 - Entries MUST use `TorchEntryProcessV2(conserve_queue=True, couple_draws=True,

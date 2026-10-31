@@ -69,6 +69,7 @@ def analyze(rows, targets):
                    if not 0 <= e['position_m'] <= upper]
     return dict(worlds=len(rows), horizons_s=[300], arms=['native'],
         source_versions=dict(cf=sorted({r['cf_model'] for r in rows}),
+                             native_model=sorted({r.get('native_model', 'head') for r in rows}),
                              lc_memory=sorted({r['lc_memory'] for r in rows})),
         ramp_origin_full_fleet_delay_veh_s=dict(recorded=stats(recorded_delay), predicted=stats(predicted_delay),
             mean_bias=float((predicted_delay-recorded_delay).mean()),
