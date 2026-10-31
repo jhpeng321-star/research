@@ -47,6 +47,14 @@ default-off/spec checks, lane-logit ownership, fixed CAV lanes and exact chunk p
 causal wish warmup then 60s teacher-forced scoring, paired MOBIL. Smoke finished
 on cpuQ (own PID180907 exited): LC exact7/30 vs MOBIL3/30; full panel pending.
 19 current LC/model/scorer tests pass; empty-onehot connectors are excluded.
+First full FIT panel completed/exited (own cpuQ187712, 187.56s): LC exact931/3255
+(28.60%) vs paired MOBIL244/3255 (7.50%); positive-run ±2s matches711/3255
+(21.84%), precision15.12%, timingMAE0.401s/positionMAE5.531m. Positive-step
+precision only2.32%; this is NOT distributional qualification. Receipts:
+`tools/rblane/receipts/panel_results/`. Historical1.4% is a different panel.
+Next source-only completeness step closes right-overtaking prevention from
+MSVehicle.cpp:1494-1495 + AbstractLCM.cpp:1119-1133 + LC2013.cpp:1335-1356.
+Public extra source read only in two NEW empty temp directories; never executed.
 Source scope: highway, sublane OFF. **Known parity gaps:** synchronous messages
 instead of SUMO downstream-first serial changes; full leader-overtake/fall-behind
 negotiation and right-overtaking prevention not ported; no roundabouts,

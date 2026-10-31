@@ -1,0 +1,24 @@
+{
+  "root": "/home/ubuntu/rblane20261031_panel_14523d0f69a6",
+  "process": {
+    "pid": 187712,
+    "start_ticks": "47540260",
+    "command": [
+      "/usr/bin/nice",
+      "-n",
+      "19",
+      "/home/ubuntu/miniconda3/bin/python",
+      "-B",
+      "-m",
+      "tools.rblane.validate",
+      "--out",
+      "/home/ubuntu/rblane20261031_panel_14523d0f69a6/results"
+    ],
+    "root": "/home/ubuntu/rblane20261031_panel_14523d0f69a6",
+    "started_at": 1793461124.8743048
+  },
+  "bundle_sha256": "14523d0f69a667e3078e4ec7156ca7d7efa2dfcf092da3e2e4614b811070449a",
+  "complete": true,
+  "alive": false,
+  "collected_at": 1793461465.7550495
+}
