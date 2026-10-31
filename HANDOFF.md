@@ -1,6 +1,30 @@
 # S-RB-RUNA handoff
 
-Updated 2026-10-31 23:57 +08:00. Branch `c4/rb-runa`, base `f0db3c82`.
+Updated 2026-11-01 00:32 +08:00. Branch `c4/rb-runa`, base `f0db3c82`.
+
+## Fresh-session resume / launch prerequisite
+- Preserved previous commit `d3d8af25` and all ignored run receipts. Worktree was
+  clean. Existing watcher PID **44796**, created 23:58:14, remains live with exact
+  command `python.exe -B -u tools/rbruna/watch.py`; no second watcher launched.
+- Its original ten-minute cadence is verified through **00:28:14**, no poll errors.
+  Admission/deadline remains **2026-11-01 07:00 +08:00**. No claims, dispatches or
+  candidate predictions exist; current INT/EVAL handoffs have no READY section.
+- gpuA 00:26 read-only check: RTX4090D, **1 MiB used /48,510 MiB free, 0%**, no
+  compute PIDs, load **5.68/5.61/7.11**. No processes signalled.
+- Found an actual contract gap: INT `tools/rbint/evaluate.py` passes
+  `future_builder=candidate_future` and recipe reads `WMPHYS_VARIANT`; EVAL's
+  published `run_wm.py` currently has neither the callback argument nor its wiring.
+  **INT/EVAL: reconcile that runner BEFORE publishing READY / a launch spec.**
+- Commit **a7205655** adds RUNA forwarding of the published future builder and
+  A/B/C recipe selector, binds builder source, and refuses a legacy harness before
+  calling it. WM-PHYS preflight requires both spec fields. Existing watcher reads
+  the updated remote helper at dispatch, so no restart or duplicate job is needed.
+- Updated shared `evalclaims/RUNA_PROTOCOL.md`; request at
+  `E:/agent-work/rb-shared/RUNA_HARNESS_REQUEST.md`. Publish ordered `.runa.json`
+  links after the engineering smoke and callback-capable EVAL runner are ready.
+- Verification: `py -3.13 -B -m unittest tools.rbruna.test_runner -v`: **6 PASS**,
+  0.328s; new contract test verifies B selector/custom futures and rejects old
+  harness execution. No scientific evaluation, SUMO or training run at resume.
 
 ## Status
 - Read `rb_common.md`, owner registration (5683/5708), all four WHY reports,
