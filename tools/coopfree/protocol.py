@@ -1,5 +1,7 @@
 """Prospective worlds and hard budget. Importing this module never starts SUMO."""
 from tools.coopbandit.protocol import canonical, checked, digest, sha, FORBIDDEN, CELLS, HIGH
+import re
+import sys
 
 CAPS = dict(screen=27360, repeat=13680, train=1650000, dev=172800, discovery=91200)
 UNALLOCATED = 44960
@@ -42,6 +44,15 @@ def install_seed_scope():
             return base(seed, demand_vph, 'exposed')
         return original_c(seed, demand_vph)
     s.require_development_case, c.check_case = base, c4
+    # Frozen env/scenario modules may already have captured `from seeds import ...`.
+    # Patch only identical captured functions in this process, retaining original fallback.
+    for name,module in list(sys.modules.items()):
+        if not name.startswith('traffic_shepherd.') or module is None:
+            continue
+        if getattr(module,'check_case',None) is original_c:
+            module.check_case = c4
+        if getattr(module,'require_development_case',None) is original_s:
+            module.require_development_case = base
 
 
 def group(rows):
@@ -51,3 +62,11 @@ def group(rows):
 def budget():
     assert sum(CAPS.values())+UNALLOCATED == CAP
     return dict(caps=CAPS, unallocated=UNALLOCATED, total=CAP)
+
+
+def approval_line(text):
+    for line in text.splitlines():
+        if re.search(r'S-COOPFREE BUDGET APPROVED\b(?![\'\"])',line) and not re.search(
+                r'await|pending|not approved|requires|must append|NO SUMO|proposed',line,re.I):
+            return line
+    raise ValueError('explicit MAIN S-COOPFREE BUDGET APPROVED line absent')

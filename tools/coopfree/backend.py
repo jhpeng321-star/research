@@ -41,6 +41,7 @@ def tick(b, controller=None, trace=None):
     b.command_digest.update(canonical(exact(cmd)).encode())
     slot = {vid:i for i,vid in enumerate(b.env.slot_vehicle_ids())}
     active = {r['vid'] for r in audit}
+    mean_command = {r['vid']:r['mappo_safe'] for r in audit}
     vehicles = []
     for r in rows:
         v = dict(r)
@@ -48,8 +49,9 @@ def tick(b, controller=None, trace=None):
             a = float(np.asarray(cmd).reshape(-1)[slot[r['vid']]])
             if math.isinf(a):
                 raise ValueError('infinite command')
-            v.update(controller='setpoint' if r['vid'] in active else 'policy_mean',
+            v.update(controller=('setpoint' if r['vid'] in active else 'policy_mean') if math.isfinite(a) else 'native',
                      issued_acceleration_mps2=a if math.isfinite(a) else None,
+                     policy_mean_acceleration_mps2=mean_command.get(r['vid'],a) if math.isfinite(a) else None,
                      command_present=math.isfinite(a))
         vehicles.append(v)
     if trace is not None:

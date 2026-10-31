@@ -6,6 +6,7 @@ from pathlib import Path
 import tempfile
 from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 import numpy as np
 import torch
 from .policy import SetPointPolicy, encode, requests, decode, gaussian_log_prob, SIGMA
@@ -21,6 +22,19 @@ def rows():
 
 
 class ScientificContracts(unittest.TestCase):
+    def test_approval_and_binding_fail_before_plant(self):
+        from .protocol import approval_line
+        from .runner import run
+        for text in ('awaiting S-COOPFREE BUDGET APPROVED',
+                     "MAIN must append 'S-COOPFREE BUDGET APPROVED'",'S-COOPBANDIT BUDGET APPROVED'):
+            with self.assertRaises(ValueError): approval_line(text)
+        self.assertEqual(approval_line('- MAIN S-COOPFREE BUDGET APPROVED cap 2,000,000'),
+                         '- MAIN S-COOPFREE BUDGET APPROVED cap 2,000,000')
+        with tempfile.TemporaryDirectory() as d:
+            with patch('tools.coopfree.backend.create',side_effect=AssertionError('unexpected plant')) as plant:
+                with self.assertRaises(FileNotFoundError): run(Path(d),'screen')
+                plant.assert_not_called()
+
     def test_all_lane_whole_zone_groups_and_no_truth_features(self):
         r = rows()
         self.assertEqual(group(r),['a','b','ramp'])
@@ -111,12 +125,17 @@ class ScientificContracts(unittest.TestCase):
         self.assertEqual(next_sigma(sigma,0.,2),(sigma,2))
 
     def test_seed_scope_budget_and_restricted_paths(self):
+        # Load the real frozen aliases BEFORE installing scope, as a resumed host may do.
+        import traffic_shepherd.c4.env as frozen_env
         self.assertEqual(budget()['total'],2000000)
         install_seed_scope()
-        for world in worlds()+worlds(True): guard(world)
+        for world in worlds()+worlds(True):
+            guard(world)
+            frozen_env.check_case(world['seed'],world['demand'])
         for seed in (964000,962100,977100,981000,982048):
             with self.assertRaises(ValueError): guard(dict(seed=seed,demand=2400))
         with self.assertRaises(ValueError): guard(dict(worlds()[0],demand=2700))
+        with self.assertRaises(ValueError): frozen_env.check_case(worlds()[0]['seed'],2700)
         from .protocol import checked
         with self.assertRaises(ValueError): checked('/sealed/example')
 
@@ -131,6 +150,95 @@ class ScientificContracts(unittest.TestCase):
             self.assertIsNone(completed(root,'one'))
             (root/'jobs'/'one').mkdir(parents=True)
             with self.assertRaises(ValueError): completed(root,'one')
+
+    def test_prefix_mismatch_stops_before_treatment_and_closes(self):
+        from .runner import branch
+        fake = SimpleNamespace(env=SimpleNamespace(now=300),fingerprint=lambda:dict(wrong=True),
+                               close=lambda:closed.append(True))
+        closed = []
+        sample = dict(context=encode(rows(),dict(a=0.,b=0.,ramp=0.)),action=[[0.,0.]]*3,window=20)
+        with tempfile.TemporaryDirectory() as d:
+            with patch('tools.coopfree.runner.fresh',return_value=(fake,Path(d))), \
+                 patch('tools.coopfree.backend.advance') as advance, \
+                 patch('tools.coopfree.backend.tick',side_effect=AssertionError('treatment after failed gate')):
+                with self.assertRaisesRegex(ValueError,'BEFORE'):
+                    branch(Path(d),{},'new',worlds()[0],300,dict(prefix={},rows=rows()),sample,['a'])
+                self.assertEqual(advance.call_count,1)
+                self.assertEqual(closed,[True])
+
+    def test_train_orchestration_checkpoint_resume_and_complete_budget(self):
+        from .runner import train
+        from .storage import write,ledger
+        context = encode(rows(),dict(a=0.,b=0.,ramp=0.))
+        state = dict(context=context,prefix={},rows=rows(),features=dict(cav_count=3,density=10,ramp=True))
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            for w in worlds():
+                path = root/'jobs'/f's{w["seed"]}_screen'
+                write(path/'RESULT.json',dict(world=w,states={'300':state},actual_sim_s=1140,
+                    metrics={str(t):dict(team_delay_vs=100.) for t in (300,420,600,900)},
+                    motions={str(t):{'a':[1.,2.]} for t in range(300,331)}))
+                write(path/'CLOSE.json',dict(actual_sim_s=1140,charged_sim_s=1140))
+            calls = []
+            def fake_branch(root,binding,ident,world,t0,state,sample,members):
+                calls.append(ident)
+                return dict(metrics={str(h):dict(team_delay_vs=-40. if len(members)>1 else 10.)
+                                     for h in (120,300,600)},motions={'301':{'a':[2.,2.]}},
+                            execution=dict(requests=3,overrides=0,issued_changed=True))
+            with patch('tools.coopfree.runner.branch',side_effect=fake_branch):
+                report = train(root,{},1)
+                self.assertEqual(report['windows'],156)
+                self.assertEqual(report['worlds'],24)
+                self.assertEqual(len(calls),156*4)
+                self.assertEqual(sum(r['sim_s'] for r in ledger(root)),156*4*900)
+                self.assertEqual(report['C_G']['mean'],70.)
+                self.assertEqual(report['executed_change_share'],1.)
+                resumed = train(root,{},1)
+                self.assertEqual(len(calls),156*4)
+                self.assertEqual(resumed['checkpoint_sha256'],report['checkpoint_sha256'])
+                with self.assertRaisesRegex(ValueError,'budget'):
+                    # Whole second batch would exceed 1.65M after three batches; no partial charge.
+                    from .storage import reserve
+                    reserve(root,[dict(id='over',sim_s=1650000,phase='train')])
+
+    def test_observable_selection_and_world_bootstrap(self):
+        from .selection import select
+        from .evaluation import paired_summary
+        context = encode(rows(),dict(a=0.,b=0.,ramp=0.))
+        screens = [dict(world=w,states={'300':dict(context=context,features=dict(cav_count=3,density=10,ramp=True)),
+                                      '360':dict(context=context,features=dict(cav_count=3,density=2,ramp=False))})
+                   for w in worlds()]
+        chosen,selection = select(screens,np.random.default_rng(1))
+        self.assertEqual(len(chosen),156)
+        self.assertEqual(selection['worlds'],24)
+        self.assertGreater(sum(r['dense'] for r in chosen),len(chosen)/2)
+        records = [dict(world=w,arm=arm,metrics={str(h):dict.fromkeys(
+            ('team_delay_vs','collisions','teleports','ttc_below_3_vs','hard_brake'),value) for h in (600,900)})
+                   for w in worlds(True) for arm,value in (('mappo',10.),('bandit',9.),('learned',8.))]
+        summary = paired_summary(records)
+        self.assertEqual(summary['worlds'],24)
+        self.assertEqual(summary['learned_minus_comparator']['mappo']['600_team_delay_vs']['ci95'],[-2.,-2.])
+
+    def test_detector_adapter_and_train_prior_protection(self):
+        import gzip
+        from .analysis import tape
+        from .prior import fit
+        from .protocol import canonical
+        from tools.coopbehav.detectors import detect
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            path = root/'observable.jsonl.gz'
+            with gzip.open(path,'wt') as f:
+                for t in (300,301,302):
+                    f.write(canonical(dict(time_s=t,vehicles=rows()))+'\n')
+            trace = tape(path,982024)
+            detected = detect(trace)
+            self.assertIsInstance(detected['events'],list)
+            self.assertEqual(detected['coverage']['trace_scope'],'full_observable_fleet')
+            (root/'states.jsonl').write_text(canonical(dict(world_id=982024))+'\n')
+            (root/'labels.csv').write_text('state_id,D,horizon_s,available\n')
+            with self.assertRaisesRegex(ValueError,'TRAIN'):
+                fit(root)
 
 
 class FrozenExecution(unittest.TestCase):
@@ -157,6 +265,20 @@ class FrozenExecution(unittest.TestCase):
                 y,_ = b(state,with_lanes=True)
             self.assertTrue(np.array_equal(x.view(np.uint64),y.view(np.uint64)))
             self.assertEqual(exact(vars(a.memory)),exact(vars(b.memory)))
+
+    def test_actual_mappo_zero_update_first_command_parity(self):
+        a,b = self.load(),self.load()
+        x,_ = a(copy.deepcopy(self.state),with_lanes=True)
+        controller = Controller(policy=SetPointPolicy(),deterministic=True)
+        audit = []
+        with inject(b,self.env,rows(),controller,300,audit):
+            y,_ = b(copy.deepcopy(self.state),with_lanes=True)
+        self.assertTrue(np.allclose(x,y,atol=1e-6,rtol=0.,equal_nan=True))
+        self.assertEqual(len(audit),3)
+        # A held absolute target is intentionally not recalibrated to the next raw MAPPO command.
+        targets = copy.deepcopy(controller.targets)
+        controller.apply(rows(),dict(a=2.,b=2.,ramp=2.),301)
+        self.assertEqual(controller.targets,targets)
 
     def test_real_safety_memory_then_command_ownership(self):
         from traffic_shepherd.ownership import CommandOwnership

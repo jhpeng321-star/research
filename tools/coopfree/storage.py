@@ -2,6 +2,7 @@
 import json
 import math
 import os
+import re
 from pathlib import Path
 import shutil
 import time
@@ -38,7 +39,8 @@ def reserve(root, attempts):
         if len(set(newids)) != len(newids) or set(ids) & set(newids):
             raise ValueError('duplicate or previously charged attempt')
         for row in attempts:
-            if row['phase'] not in CAPS or not math.isfinite(row['sim_s']) or row['sim_s'] <= 0:
+            if not re.fullmatch(r'[A-Za-z0-9_-]+',row['id']) or row['phase'] not in CAPS or \
+                    not math.isfinite(row['sim_s']) or row['sim_s'] <= 0:
                 raise ValueError('invalid charge')
         for phase,cap in CAPS.items():
             if sum(r['sim_s'] for r in old+attempts if r['phase'] == phase) > cap:
@@ -68,8 +70,21 @@ def admission(root, max_load=20.):
 
 def status(root):
     rows = ledger(root)
-    return {phase:dict(cap=cap,charged=sum(r['sim_s'] for r in rows if r['phase'] == phase))
-            for phase,cap in CAPS.items()}
+    out = {}
+    for phase,cap in CAPS.items():
+        selected = [r for r in rows if r['phase'] == phase]
+        actual,unclosed = 0.,0
+        for r in selected:
+            path = checked(root)/'jobs'/r['id']/'CLOSE.json'
+            if path.exists():
+                close = read(path)
+                if close['charged_sim_s'] != r['sim_s'] or not 0 <= close['actual_sim_s'] <= r['sim_s']:
+                    raise ValueError('accounting mismatch '+r['id'])
+                actual += close['actual_sim_s']
+            else:
+                unclosed += 1
+        out[phase] = dict(cap=cap,charged=sum(r['sim_s'] for r in selected),actual_closed=actual,unclosed=unclosed)
+    return out
 
 
 def completed(root, ident):
