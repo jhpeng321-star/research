@@ -23,11 +23,13 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument('mode', choices=('status', 'stage', 'launch', 'poll', 'collect'))
     p.add_argument('--version', default='v5')
+    p.add_argument('--details', action='store_true')
     args = p.parse_args()
     if not args.version.isalnum():
         p.error('version must be alphanumeric')
     header = 'import os,json,time,hashlib\nfrom pathlib import Path\n'
     header += f'root=Path({("/tmp/rb-merge-fullfleet-"+args.version)!r})\n'
+    header += f'details={args.details!r}\n'
     if args.mode == 'status':
         print(remote(header+"print(json.dumps(dict(load=os.getloadavg(), cpus=os.cpu_count(), old_owned_pids={p:Path('/proc/'+str(p)).exists() for p in (200540,233273)}, existing_dispatch=(root/'LAUNCH.json').exists())))"))
     elif args.mode == 'stage':
@@ -117,7 +119,8 @@ summaries=[]
 for seed in rows:
     row=json.loads((result/(str(seed)+'.json')).read_text())
     summaries.append(dict(seed=seed,predicted_ramp=row['delay']['predicted_ramp_veh_s'],recorded_ramp=float(row['delay']['recorded']['ramp_delay_vs']),ramp_source=row['delay']['ramp_source_veh_s'],inserted=row['demand']['inserted'],real_merges=row['merges']['recorded'],predicted_merges=row['merges']['predicted']))
-print(json.dumps(dict(launch=launch,alive=Path('/proc/'+str(pid)).exists(),completed=rows,complete=(result/'COMPLETE.json').exists(),failed=json.loads((result/'FAILED.json').read_text()) if (result/'FAILED.json').exists() else None,rows=summaries,log=(root/'RUN.log').read_text(),load=os.getloadavg())))
+failed=json.loads((result/'FAILED.json').read_text()) if (result/'FAILED.json').exists() else None
+print(json.dumps(dict(pid=pid,alive=Path('/proc/'+str(pid)).exists(),completed=len(rows),complete=(result/'COMPLETE.json').exists(),failed=failed,rows=summaries if details else summaries[-1:],log=(root/'RUN.log').read_text() if failed or details else None,load=os.getloadavg())))
 '''
         print(remote(code))
     else:
