@@ -33,6 +33,16 @@ def rank(values):
     return [1+sum(y<x for y in values)+.5*(sum(y==x for y in values)-1) for x in values]
 
 
+def cell_interval(values):
+    """Within-cell world resampling; n1 degeneracy is disclosed, not hidden."""
+    import numpy as np
+    values=np.asarray(values,float)
+    values=values[np.isfinite(values)]
+    if not len(values):return None
+    draws=np.random.default_rng(0).integers(0,len(values),(2000,len(values)))
+    return np.quantile(values[draws].mean(1),[.025,.975]).tolist()
+
+
 def summarize(root):
     import numpy as np
     panel = worlds('main')
@@ -122,6 +132,8 @@ def summarize(root):
         ix = [i for i,w in enumerate(panel) if (w['penetration'],w['demand'])==(p,d)]
         cells.append(dict(penetration=p,demand=d,n=len(ix),J600={a:float(np.nanmean(v[ix])) if np.isfinite(v[ix]).any() else None for a,v in values.items()},
                           arm_n={a:int(np.isfinite(v[ix]).sum()) for a,v in values.items()},
+                          J600_ci95={a:cell_interval(v[ix]) for a,v in values.items()},
+                          regret60_ci95={a:cell_interval(regrets[ix,j]) for j,a in enumerate(('wm','bb'))},
                           regret60={a:float(regrets[ix,j].mean()) for j,a in enumerate(('wm','bb'))}))
     accuracy = {}
     for arm in ('wm','bb'):
@@ -141,7 +153,8 @@ def summarize(root):
         retained_superseded_sim_s=retained,retained_abandoned_sim_s=abandoned,
         caveats=['predicted current-belief fleet objective vs true fleet+source evaluation',
                  'WM/BB on-policy decision states differ; world/clock paired',
-                 'two exploratory primary contrasts; no multiplicity adjustment',
-                 'native CAV plant/lane forecast approximate; entries OFF and mix dormant'])
+                  'two exploratory primary contrasts; no multiplicity adjustment',
+                  'single-world cells have degenerate empirical bootstrap intervals, not population uncertainty bounds',
+                  'native CAV plant/lane forecast approximate; entries OFF and mix dormant'])
     write(root/'RESULTS.json',result)
     return result

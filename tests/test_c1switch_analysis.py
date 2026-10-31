@@ -55,3 +55,10 @@ def test_recovery_full_panel_accounts_abandoned_and_random_subset(tmp_path):
     p=tmp_path/'jobs/wm_s969127_episode/RESULT.json'
     p.rename(p.with_name('INCOMPLETE.json'))
     with pytest.raises(FileNotFoundError):summarize(tmp_path)
+
+
+def test_sparse_cell_intervals_preserve_absent_random_and_disclose_n1():
+    from tools.c1switch.analyze import cell_interval
+    assert cell_interval([float('nan')]) is None
+    assert cell_interval([10])==[10,10]
+    assert cell_interval([0,100])==[0,100]
