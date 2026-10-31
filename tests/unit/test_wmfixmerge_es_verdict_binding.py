@@ -38,3 +38,27 @@ def test_isolation_preserves_every_other_verdict_binding():
     for path, sha in old["files"].items():
         if Path(path).name not in {"producer_b.py", "quartet_candidate.py"}:
             assert producer["files"][path] == sha
+
+
+def test_missing_registered_inputs_block_before_any_a_rollout(tmp_path):
+    from tools.wmfixmerge.data import digest
+    from tools.wmfixmerge.verdict import run
+    artifact = tmp_path / "artifact.json"
+    artifact.write_text("{}")
+    producer = dict(script=str(artifact), files={str(artifact): digest(artifact)})
+    plan = dict(schema="wmfix_verdict_plan/1", accept_roots=[str(tmp_path)],
+                accept_panel=str(tmp_path / "missing_accept.json"),
+                stages=dict(A={}, SAFETY={},
+                    B=dict(adapter="bound_external", producer=dict(producer,
+                        args=["--candidate-dir", str(tmp_path / "other_candidate")])),
+                    C1=dict(adapter="bound_external", producer=dict(producer,
+                        args=["--cohort", str(tmp_path / "missing_cohort.json"),
+                              "--runner", str(tmp_path / "missing_runner.json")]))))
+    for key in ("reference", "base_config", "controllers", "corrected_report", "harness_contract",
+                "validation_real", "zero_reference"):
+        plan[key] = str(artifact)
+    result = run(plan, artifact, artifact, tmp_path, execute=True)
+    assert result["status"] == "BLOCKED" and result["executed_stages"] == []
+    assert set(result["blockers"]) == {"missing accept_panel", "missing B--candidate-dir",
+                                       "missing C1--cohort", "missing C1--runner"}
+    assert not (tmp_path / "RUN.json").exists()

@@ -17,7 +17,7 @@ def preflight(plan, candidate, config):
         return ["invalid/incomplete A+B+C1+SAFETY plan"]
     for label, path in {"candidate": candidate, "candidate_config": config,
             **{k: plan.get(k) for k in ("reference", "base_config", "controllers", "corrected_report",
-                "harness_contract", "validation_real", "zero_reference")}}.items():
+                "harness_contract", "validation_real", "zero_reference", "accept_panel")}}.items():
         try:
             if not path or not safe(path).is_file():
                 blockers.append("missing " + label)
@@ -39,6 +39,21 @@ def preflight(plan, candidate, config):
         if spec.get("receipt") and (not spec.get("sha256") or not safe(spec["receipt"]).is_file()
                                     or digest(spec["receipt"]) != spec["sha256"]):
             blockers.append(stage + " existing receipt missing/changed")
+        if not spec.get("receipt"):
+            # Check registered producer inputs before A starts any expensive
+            # rollouts; producer closure presence alone does not bind the data.
+            argv = producer.get("args", [])
+            flags = ("--candidate-dir",) if stage == "B" else ("--cohort", "--runner")
+            for flag in flags:
+                label = stage + flag
+                try:
+                    path = argv[argv.index(flag) + 1]
+                    if flag == "--candidate-dir":
+                        path = safe(path) / "COMPLETE.json"
+                    if not safe(path).is_file():
+                        blockers.append("missing " + label)
+                except (ValueError, IndexError):
+                    blockers.append("missing/restricted " + label)
     if not blockers:
         if digest(plan["reference"]) != WM2_SHA:
             blockers.append("reference SHA is not WM2")

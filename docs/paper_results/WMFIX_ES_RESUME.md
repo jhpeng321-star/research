@@ -109,3 +109,9 @@
   on the combined CPUs; B candidate's 8 x 4 x 600 s is ~1.3 h (K8 throughout).
   This is an estimate, not a benchmark; no timely full A/B CPU completion is
   established. Existing WMFIX_ES.md request for MAIN's GPU slot remains active.
+- Actual verdict.py preflight previously checked producer code but not missing
+  accept/C1/quartet input files; A could run expensively before failing later.
+  Added the existing registered input-presence checks to that preflight too;
+  no metric change. Combined verdict/binding regressions: 14 passed (26.0 s).
+  Staged only private ES files. ES-plan preflight reports precisely those four
+  missing inputs; no producer-closure mismatch and no evaluation launch.

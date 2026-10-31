@@ -26,6 +26,7 @@ def main():
     checks = {key: dict(path=value, exists=bool(value and safe(value).is_file()))
               for key, value in required.items()}
     blockers += ["missing " + key for key, value in checks.items() if not value["exists"]]
+    blockers = list(dict.fromkeys(blockers))
     doc = dict(schema="wmfix_es_verdict_preflight/1", status="BLOCKED" if blockers else "READY",
                passed=False, executed_stages=[], blockers=blockers, checks=checks,
                candidate_sha256=digest(args.candidate), config_sha256=digest(args.config),
