@@ -69,6 +69,10 @@ Updated 2026-10-31 23:58 +08:00; branch `c4/rb-int`, base `f0db3c82`.
   Full-panel arrival/source conservation remains a separate required gate.
 
 ## Tests / results
+- Third smoke stage 5f8808abe00e reached the first native CAV callback, then
+  stopped because immutable staging omitted configs/native_cav_head_v5.json.
+  Native head is an existing frozen controller asset; staging and evaluation
+  identity now explicitly include it. No completed rollout/task from this attempt.
 - Second immutable stage c553078f96b5 stopped BEFORE rollout on inherited
   hazard-v5 metadata incompatible with LC2013. Recipe now resets all obsolete
   lane hazard mode/offset/gate metadata to inert ModelSpec defaults; no threshold

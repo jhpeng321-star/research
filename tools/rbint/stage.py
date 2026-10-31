@@ -15,7 +15,8 @@ def main():
     root = Path(__file__).resolve().parents[2]
     sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root, text=True).strip()
     paths = ['src/wms', 'tools/rbint', 'tools/rbeval',
-             'configs/execparity_cav_idm_v1.json', 'configs/wm_phys.toml',
+             'configs/execparity_cav_idm_v1.json', 'configs/native_cav_head_v5.json',
+             'configs/wm_phys.toml',
              'artifacts/rbfit/pooled_full_v5/idm_pooled.json']
     archive = subprocess.check_output(['git', 'archive', '--format=tar', sha, *paths], cwd=root)
     archive_sha = hashlib.sha256(archive).hexdigest()

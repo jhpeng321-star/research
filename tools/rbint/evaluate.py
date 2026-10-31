@@ -13,7 +13,8 @@ from tools.rbeval import run_wm
 
 def main(variant):
     os.environ['WMPHYS_VARIANT'] = variant
-    sources = [ROOT/'tools/rbint/rebuild.py', Path(__file__), Path(sys.argv[0]).resolve()]
+    sources = [ROOT/'tools/rbint/rebuild.py', Path(__file__), Path(sys.argv[0]).resolve(),
+               ROOT/'configs/native_cav_head_v5.json']
     if variant == 'C':
         sources.append(ROOT/'artifacts/rbfit/pooled_full_v5/idm_pooled.json')
     run_wm.main(model_loader=load_candidate, future_builder=candidate_future,
