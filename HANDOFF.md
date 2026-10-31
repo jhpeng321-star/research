@@ -6,8 +6,12 @@ Earlier work retained in `docs/rb_merge/HANDOFF_HISTORY_{0100,0315}.md`.
 ## Status / owned dispatches
 - **v7fast PID682380 EXITED,32/32 H600 worlds complete**, source158d0193.
 - **v8end120 PID750052 EXITED,32/32 H120 worlds complete**, sourcec8e54017.
-- All earlier v3/v4/v5/v6 jobs terminal. No prediction process active at this poll.
-- Next `/tmp/rb-merge-fullfleet-v8end600` STAGED ONLY, same source/operator as
+- All earlier v3/v4/v5/v6 jobs terminal.
+- **v8end600 LIVE,03:26:36 +08**, owned cpuQ PID**789747**, source93693678;
+  validator SHA `b7d4721f500e919e025c57abc3bc357c2d87723d4a93cdad5c012783d9d1db26`.
+  Receipt `/tmp/rb-merge-fullfleet-v8end600/LAUNCH.json`; do not duplicate or
+  modify this snapshot. OneCPU/nice19/CUDA-hidden, load2.11/32 at launch.
+  Same source/operator as
   v8end120; **58 CPU tests PASS /2.46s**, all32 source/strict-encoder preflights PASS.
   H600/512slots/FIT969400–969431/native/stream190; explicit `--entry-phase after`.
   Saved clocks/events/front traces will be checked against the completed H120
@@ -39,7 +43,8 @@ Earlier work retained in `docs/rb_merge/HANDOFF_HISTORY_{0100,0315}.md`.
   source EPS=.001/POSITION_EPS=.1 (not SPEED_EPS=.01).
 - **0090c168** leader overtake time+space / Euler brakeGap(tau) / unblocked
   leader advice. Keep INT's post-motion mainline arbitration; only two hooks:
-  merge_speed_advice lookahead=state['lc2013_lookahead'], apply_merge lookahead=out.
+  merge_speed_advice `lookahead_speed=state.get('lc2013_lookahead')`,
+  apply_merge `lookahead_speed=out.get('lc2013_lookahead')`.
 - `PhysicsConfig.merge_model='sumo'` defaultlegacy; bypass learned merge/courtesy/
   ramp adaptation/admission/motion/noise. Motion-inferred/default settings only.
 
