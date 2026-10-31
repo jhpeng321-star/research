@@ -17,6 +17,15 @@
   independently rechecks all 1,800 WMDATA BIC decisions, CRPS via CDF integral,
   births/exits/invalid-lane/endpoint binning and censoring/precision.
 - gpuR first resource check: GPU 1 MiB/24564 MiB, utilization 0%; host load 18.84.
-  No matching RBEVAL process seen. No inference launched yet.
+  No matching RBEVAL process seen. Canary dispatched once under
+  /root/rbeval20261031/DISPATCH_1793460426125998926.json, PID706072 (now exited).
+  Complete w969420_k0.json: 5 arms, 600s, 145.78s wall, peak4250MiB reserved.
+  CANARY_VERIFIED.json binds saved output and historical four-arm sensitivity:
+  source exact/road within0.00044veh-s at120s; five-vs-four-arm batching diverges
+  up to686.924veh-s team delay at600s. This is a newly run baseline, not claimed
+  byte/numeric parity with historical WMCALIB. BIC decisions rechecked, float
+  coefficients permit1e-8 BLAS tolerance. No canary task will be rerun.
+- Native uses the registered project_native/native_fn background law; all5 arms
+  retain WM-native lanes and coupled entrants/driver/event streams.
 - Reuse S-WMBREAKDOWN observable receipts and registered AST-extracted LRDIAG
   detector. Helpers rb-shared/targets and obsstate will be consumed if available.

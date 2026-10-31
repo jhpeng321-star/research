@@ -1,0 +1,21 @@
+{
+ "seed": 969420,
+ "future": 0,
+ "task_sha256": "35fa2020ce2df461a413b8e3a0bb593ec1501cef0b759cd9fb4f83c0f7f8fdc2",
+ "historical_task_sha256": "cde31df61722e41da6e3c837a51994d0b907da8f07c08b1bfa4de8b284bd91f3",
+ "five_arm_schema": true,
+ "detector_recheck": true,
+ "max_absolute_cost_difference": {
+  "120/real_J": 0.000438690185546875,
+  "120/real_road": 0.000438690185546875,
+  "120/real_source": 0.0,
+  "300/real_J": 12.69582748413086,
+  "300/real_road": 19.69582748413086,
+  "300/real_source": 7.0,
+  "600/real_J": 686.9236755371094,
+  "600/real_road": 1002.9236755371094,
+  "600/real_source": 316.0
+ },
+ "seconds": 145.78300000727177,
+ "peak_reserved_mib": 4250.0
+}
