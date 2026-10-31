@@ -1,10 +1,15 @@
 # S-RB-RUNB handoff
 
-Updated 2026-11-01 00:00 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+Updated 2026-11-01 00:02 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
 
 ## Status
 - Read `rb_common.md`, owner registration and four WHY reports; evaluation only.
 - Polling INT and EVAL handoffs every 600 seconds through 2026-11-01 07:00 +08:00.
+- Durable watcher **LIVE PID33076**, started00:01:32; first poll succeeded,
+  next00:11:32. Deadline receipt:
+  `runs/rbrunb/WATCH_33076_1793462492127996000.json`.
+  Launch receipt: `runs/rbrunb/LAUNCH_1793462491906412900.json`.
+  Implementation commit `18db346d`; initial scope receipt `64f09924`.
 - EVAL harness published; INT has no `READY FOR EVAL` candidate yet. No claim or
   candidate inference launched. RUNA gets the first listed variant; RUNB the next.
 - gpuR checked directly at 23:51: RTX4090, 15690/24564 MiB, 100% utilization;
