@@ -7,6 +7,8 @@ import sys
 from pathlib import Path
 
 from tools.wmfixmerge.data import COMPONENTS, WM2_SHA, digest, safe, verify
+from wms.model.entries import NOMINAL_LENGTH_M, SUMO_V2_MIN_GAP_M
+from wms.train.merge_response import ADMISSION_WIDTH_M
 
 _WMREQUAL = Path(__file__).resolve().parents[1] / "wmrequal"
 if str(_WMREQUAL) not in sys.path:
@@ -16,7 +18,8 @@ if str(_WMREQUAL) not in sys.path:
 
 
 class Runtime:
-    def __init__(self, prepared, config, checkpoint, controllers, device="cpu"):
+    def __init__(self, prepared, config, checkpoint, controllers, device="cpu", *,
+                 smooth_events=False, admission_width_m=None):
         import torch
         from tools.wmcombined.e3_score import load_for_scoring
         from wms.data.c4_pairs import PairedBranchSource
@@ -25,6 +28,13 @@ class Runtime:
             raise ValueError("base is not registered WM2")
         self.device = torch.device(device)
         self.learned_admission = True
+        # S-WMFIX-C fallback 1 (default OFF = exact identity): TRAINING-ONLY
+        # smoothed admission relaxation.  When False (every inference/verdict
+        # path) no surrogate is constructed and the differentiable stack is
+        # bit-identical to the registered behaviour.
+        self.smooth_events = bool(smooth_events)
+        self.admission_width_m = (ADMISSION_WIDTH_M if admission_width_m is None
+                                  else float(admission_width_m))
         self.config, settings, self.model = load_for_scoring(safe(config), safe(checkpoint))
         specs = json.loads(safe(controllers).read_text())
         specs = specs.get("controllers", specs)
@@ -64,7 +74,8 @@ class Runtime:
         from wms.control.futures import SampledFutures, FuturesConfig
         from wms.data.collate import collate
         from wms.train.inputs import prepare_inputs
-        from wms.train.merge_response import smooth_crossings
+        from wms.train.merge_response import (entrance_gap_series, smooth_admission_source,
+                                              smooth_crossings)
         from wms.train.scoring_random import scoring_rng, bind_merge_crn
         import wms.control.entrant as entrant
         entrant.feedback_from_specs = feedback
@@ -87,7 +98,8 @@ class Runtime:
         bind_merge_crn(inp)
         inp.entries.cfg = replace(inp.entries.cfg, conserve_queue=True)
         # TRAIN-only teacher forcing of recorded exogenous demand, never service.
-        inp.entries._emit_due = RecordedDemand([r["due_increments"][:steps] for r in order])
+        due_rows = [r["due_increments"][:steps] for r in order]
+        inp.entries._emit_due = RecordedDemand(due_rows)
         # Shared driver/embedding draws from the native history, never driver labels.
         select = lambda t: t[:1] if torch.is_tensor(t) and t.ndim and t.shape[0] == len(records) else t
         initial = {k: select(v) for k, v in inp.initial.items()}
@@ -108,7 +120,7 @@ class Runtime:
             cav_pool = torch.stack([kw["driver_params"][n][0].cpu()[cav_rows] for n in mix.names], -1)
             mix.cav_pools = [cav_pool.clone() for _ in records]
             inp.entries.cfg = replace(inp.entries.cfg, learned_admission=LearnedAdmission(mix))
-        entries = TrackedEntries(inp.entries)
+        entries = TrackedEntries(inp.entries, track_admission=self.smooth_events)
         with scoring_rng(140014, self.device):
             roll = self.model.rollout(inp.initial, n_steps=steps, entries=entries,
                 cav_teacher=None if inp.teacher is None else inp.teacher[:, :steps + 1],
@@ -133,20 +145,83 @@ class Runtime:
         births = torch.cat((torch.zeros_like(birth[:, :1]), birth), 1)
         lanes = torch.cat((inp.initial["lane"][:, None], roll["lanes"]), 1)
         count = smooth_crossings(crossing_pos, crossing_mask, births, self.doc["crossing_width"], lanes=lanes)
-        predicted = torch.stack((road + source, upstream, source, count, road), 1)
+        gradient_source = source
+        receipt = dict(pair_key=key, arms=[r["arm"] for r in order],
+            queue_conservation=True, source_gradient="zero off hard service events")
+        if self.smooth_events:
+            # S-WMFIX-C fallback 1 (TRAINING ONLY): replace the exact integer
+            # source in the DIFFERENTIABLE stack by the smoothed admission
+            # surrogate; the exact ledger value stays in the receipt.  Inference
+            # and verdicts never set this flag (exact identity when OFF).
+            min_gap = admission_threshold_series(entries.admission_thresholds,
+                                                 len(order), steps, device=self.device)
+            pre = [torch.cat((inp.initial[name][:, None], roll[series]), 1)[:, :steps]
+                   for name, series in (("s_m", "positions"), ("v_mps", "speeds"),
+                                         ("present", "masks"), ("lane", "lanes"))]
+            entrant_pre = torch.cat((torch.zeros_like(birth[:, :1]),
+                                     birth.cumsum(1)[:, :-1] > 0), 1)
+            pre_length = torch.where(entrant_pre,
+                                     pre[0].new_full(pre[0].shape, NOMINAL_LENGTH_M),
+                                     inp.initial["length_m"][:, None, :].expand_as(pre[0])
+                                     .to(pre[0].dtype))
+            gap_end = entrance_gap_series(pre[0], pre[1], pre[2], pre[3], pre_length,
+                                          dt_s=inp.entries.dt)
+            due = torch.as_tensor(np.stack(due_rows, 0), dtype=torch.float32,
+                                  device=self.device)
+            queue0 = torch.as_tensor([r["queue0"] for r in order], dtype=torch.float32,
+                                     device=self.device)
+            gradient_source, _ = smooth_admission_source(
+                queue0, due, gap_end, min_gap, width=self.admission_width_m,
+                dt_s=inp.entries.dt)
+            receipt.update(smooth_events=True, admission_width_m=self.admission_width_m,
+                           exact_source=source.detach().cpu().tolist(),
+                           surrogate_source=gradient_source.detach().cpu().tolist(),
+                           source_gradient="smoothed admission surrogate (training only)")
+        predicted = torch.stack((road + gradient_source, upstream, gradient_source,
+                                 count, road), 1)
         recorded = torch.tensor([[r["values"][str(horizon)][c] for c in COMPONENTS] for r in order],
                                 device=self.device, dtype=torch.float32)
-        return predicted, recorded, [0] * len(order), dict(pair_key=key, arms=[r["arm"] for r in order],
-            queue_conservation=True, source_gradient="zero off hard service events")
+        return predicted, recorded, [0] * len(order), receipt
+
+
+def admission_threshold_series(steps_rows, rows, steps, device="cpu"):
+    """[R, T, 2] hard-path tested admission min-gaps for the smoothed surrogate.
+
+    ``steps_rows`` is :class:`TrackedEntries.admission_thresholds` (per-step
+    ``(row, entrance) -> inferred min_gap`` dicts, last tested attempt).  Steps
+    without an attempt carry the last recorded value forward; before any test
+    the incumbent textbook default (SUMO_V2_MIN_GAP_M) is used.  Detached
+    constants only -- the surrogate's gradient flows through the gap, never
+    through the thresholds.
+    """
+    import numpy as np
+    import torch
+    out = np.full((int(rows), int(steps), 2), float(SUMO_V2_MIN_GAP_M[0]), np.float32)
+    for row in range(int(rows)):
+        for entrance in range(2):
+            last = float(SUMO_V2_MIN_GAP_M[0])
+            for t in range(int(steps)):
+                if t < len(steps_rows or ()):
+                    last = float(steps_rows[t].get((row, entrance), last))
+                out[row, t, entrance] = last
+    return torch.as_tensor(out, dtype=torch.float32, device=device)
 
 
 class TrackedEntries:
-    def __init__(self, process):
+    def __init__(self, process, track_admission=False):
         self.process = process
         self.present, self.pos, self.newborn = [], [], []
         # HARNESS_CONTRACT: sample the pre-rollout Q0 first so the rectangle is
         # the label's left boundary q_0..q_{n-1}, not q_1..q_n (one-tick shift).
         self.queues = [process.pending.copy()]
+        # S-WMFIX-C fallback 1: collect the hard-path tested admission min-gap
+        # per (row, entrance, step) for the smoothed surrogate.  OFF (default)
+        # touches nothing on the process and performs no new work.
+        self.admission_thresholds = None
+        if track_admission:
+            process.track_admission = True
+            process.last_admission_min_gaps = {}
+            self.admission_thresholds = []
 
     def insert(self, state):
         # Same after-service rectangle convention as corrected validation scorer.
@@ -155,6 +230,9 @@ class TrackedEntries:
         self.pos.append(state["s_m"].clone())
         self.queues.append(self.process.pending.copy())
         self.newborn.append(new.clone())
+        if self.admission_thresholds is not None:
+            self.admission_thresholds.append(
+                dict(getattr(self.process, "last_admission_min_gaps", {})))
         return new
 
 

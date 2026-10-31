@@ -36,6 +36,11 @@ class LearnedAdmission:
         if not process.cfg.conserve_queue or process.cfg.learned_entry is not None:
             raise ValueError("learned admission needs conservation and no learned-entry hazard bundle")
         params = self.candidate(b, entrance, ordinal, cav)
+        if getattr(process, "track_admission", False):
+            # S-WMFIX-C fallback 1: the smoothed surrogate consumes the SAME
+            # inferred min-gap the hard test used (brackets the exact event);
+            # never set outside TRAINING rollouts (exact identity otherwise).
+            process.last_admission_min_gaps[(b, entrance)] = float(params["min_gap"])
         length = float(NOMINAL_LENGTH_M)  # incumbent observable geometric nominal, not a driver setting
         if len(lanes) > 1:
             if process.cfg.sumo_lane_mode == "bestfree":

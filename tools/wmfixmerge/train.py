@@ -64,6 +64,11 @@ def main(argv=None):
     parser.add_argument("--enable-merge-response", action="store_true")
     parser.add_argument("--conserve-queue", action="store_true")
     parser.add_argument("--learned-admission", action="store_true")
+    # S-WMFIX-C fallback 1 (default OFF = exact identity): TRAINING-ONLY
+    # smoothed admission relaxation; the verdict/inference paths never set it.
+    parser.add_argument("--smooth-events", action="store_true")
+    parser.add_argument("--admission-width", type=float, default=None,
+                        help="numerical sigmoid width (m) of the admission surrogate")
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cpu")
     args = parser.parse_args(argv)
     install_guard()
@@ -86,8 +91,12 @@ def main(argv=None):
     torch.manual_seed(schedule["seed"])
     from tools.wmfixmerge.runtime import Runtime
     from wms.model.merge_response import freeze_except_response
-    from wms.train.merge_response import objective_terms, paired_objective
-    rt = Runtime(args.prepared, args.config, args.checkpoint, args.controllers, args.device)
+    from wms.train.merge_response import (ADMISSION_WIDTH_M, GRADIENT_COLUMNS,
+                                          SMOOTH_GRADIENT_COLUMNS, objective_terms,
+                                          paired_objective)
+    rt = Runtime(args.prepared, args.config, args.checkpoint, args.controllers, args.device,
+                 smooth_events=args.smooth_events, admission_width_m=args.admission_width)
+    gradient_columns = SMOOTH_GRADIENT_COLUMNS if args.smooth_events else GRADIENT_COLUMNS
     names = freeze_except_response(rt.model)
     optimizer = torch.optim.Adam([p for p in rt.model.parameters() if p.requires_grad], lr=schedule["lr"])
     original = torch.load(safe(args.checkpoint), map_location="cpu", weights_only=True)
@@ -96,7 +105,11 @@ def main(argv=None):
     receipt = dict(optimizer_names=names, prepared_sha256=digest(args.prepared),
                    feasibility_sha256=digest(args.feasibility), review_sha256=digest(args.review),
                    implementation_hashes=implementation_hashes(),
-                   flags=dict(merge_response=True, conserve_queue=True, learned_admission=True))
+                   flags=dict(merge_response=True, conserve_queue=True,
+                              learned_admission=True, smooth_events=bool(args.smooth_events),
+                              admission_width_m=(ADMISSION_WIDTH_M if args.admission_width is None
+                                                 else float(args.admission_width)),
+                              gradient_columns=list(gradient_columns)))
     # A matching nested config is supplied to legacy scorers/accept.py; unknown tensors must reject.
     resolved = asdict(rt.config)
     resolved["model"]["merge_response"] = True
@@ -118,9 +131,11 @@ def main(argv=None):
             predicted, recorded, refs, roll_receipt = rt.rollout(step % len(rt.source.groups), horizon,
                 arm_index=step // len(rt.source.groups))
             loss = paired_objective(predicted, recorded, refs, rt.scales,
-                                    anchor_scales=rt.anchor_scales)
+                                    anchor_scales=rt.anchor_scales,
+                                    gradient_columns=gradient_columns)
             terms = objective_terms(predicted, recorded, refs, rt.scales,
-                                    anchor_scales=rt.anchor_scales)
+                                    anchor_scales=rt.anchor_scales,
+                                    gradient_columns=gradient_columns)
             if step == 0:
                 # WMFIX_REVIEW item 7: the measured gradient-term shares at step0
                 # are part of the run receipt; the paired term must dominate.
