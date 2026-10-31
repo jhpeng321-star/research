@@ -34,3 +34,7 @@ current registry and original initial-model/RNG parity, with SUMO start/step int
 Immutable CPU-only stage `build_36c71820cd9e03d8`, binding
 `36c71820cd9e03d85efb894f899eb33e94ad6e5ad084a06106a03ef9c558c55e`.
 No newSUMO/charge; stage is not dispatched and the fourth exclusive lock remains.
+
+Published the detailed STOP/new-schedule request and current handoff in shared
+REGISTRATION.md. Both peer worktrees received `SELMAPPO_HISTORY_STOP.md` pointing here;
+their existing sources, dispatches and PIDs were not changed. Fleet has no running job.
