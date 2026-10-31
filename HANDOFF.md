@@ -2,6 +2,21 @@
 
 Branch `c4/rb-decide`, base `f0db3c82`; owner WM-PHYS registration line5683.
 
+## Fresh-session continuation — 2026-11-01 04:44 +08
+
+- Preserved clean HEAD `cbf042f7` and all three implementation/verification commits.
+  INT already integrated `16dff9ad` and independently passed the 15 CPU tests.
+- New evidence is available: EVAL's latest fetched WM2 shards now contain complete
+  K8 worlds; INT retains immutable local `runs/rbint_evidence/{wm2_0400,full_v1_0400}`
+  snapshots and a four-world paired comparison. Previous zero-complete-world receipt
+  below is historical, not the current evidence status.
+- Next: score these saved ensembles with the existing credibility CLI, then improve
+  report visibility of coverage and the actual selected 0.8-confidence calls.
+  Existing EVAL/INT/RUNA/RUNB inference and finalizers retain ownership.
+- Owner 00:44 extension applies: improve until ~09:00, integrator freeze ~09:30.
+  Local 04:43 resource check: 22 logical CPUs, 0% load; NVIDIA driver unavailable.
+  Analysis will be CPU-only with one BLAS/OMP thread.
+
 ## READY FOR INTEGRATION
 
 Implementation commits: `df4fa61e` (paired picker), `16dff9ad` (credibility).
