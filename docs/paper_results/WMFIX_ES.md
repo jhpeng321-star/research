@@ -9,7 +9,7 @@
   `/home/ubuntu/wmfix_es`. No SUMO, prohibited inputs, deletions or push.
 
 ## Throughput — genuine K8 measurement in progress
-- Completed futures: cpuQ 0/8; gpuA 8/8. Eight sticky processes per host.
+- Completed futures: cpuQ 6/8; gpuA 8/8. Eight sticky processes per host.
 - Each process: two paired arms x {120,300} s, entry path/mix ON, threads=1.
 - Prior K1 measurements: cpuQ 1766.6 s/1372 MB; gpuA 1920.0 s/1775 MB.
   Prior K8/~33-min aggregate claims withdrawn; full K8 receipts pending.
