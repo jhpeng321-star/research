@@ -80,6 +80,11 @@ Read-only monitor follow-up now resolves the current BB follower from its
 correction receipt and alerts on missing local relay/follower processes. Its
 own observer-only replacement path refuses a still-live predecessor and keeps
 all first-run claims/receipts; no science process is restarted. CPU8/8/Ruff PASS.
+Observer-only replacement complete05:17: old27200 identity/creation-time verified
+and stopped by exactPID; new25348 LIVE through original noon deadline, first
+heartbeat8da4445e: WM4episodes/181decisions,6920charged/4800closedactual,zeroalerts.
+Current BB observer36376 is verifiedLIVE. All science PIDs/allocations unchanged.
+Observer replacement receipts: WATCH_MAIN0427/{RESUME_ONCE,RESUME_DISPATCH,RUN_RESUME_ONCE}.json.
 **04:29 +08 resume verified (Unix1793478517..1793478575): all112 CPU-panel
 episodes COMPLETE, charged=actual134400sim-s (cpuQ84/100800; gpuR28/33600),
 both supervisors EXITED successfully/noSTOP. NEVER redispatch either CPU panel.**
