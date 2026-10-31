@@ -1,0 +1,77 @@
+{
+  "schema": "wmvalue_status/1",
+  "verdict": "INCOMPLETE",
+  "reason": "Missing observed source queues/request counts and sensor contract",
+  "corpora": [
+    {
+      "corpus": "wmdata",
+      "episodes": 160,
+      "archive_exists": 160,
+      "through900": 160,
+      "uniform_half_seconds": 160,
+      "recorded_queue": 0,
+      "recorded_sensor_mask": 0,
+      "recorded_request_counts": 0,
+      "real_objective600_exists": 160,
+      "queue_sidecars": 0,
+      "observation_contracts": 0,
+      "ready": 0
+    },
+    {
+      "corpus": "wmdata2",
+      "episodes": 300,
+      "archive_exists": 300,
+      "through900": 300,
+      "uniform_half_seconds": 300,
+      "recorded_queue": 0,
+      "recorded_sensor_mask": 0,
+      "recorded_request_counts": 0,
+      "real_objective600_exists": 300,
+      "queue_sidecars": 0,
+      "observation_contracts": 0,
+      "ready": 0
+    }
+  ],
+  "real_data_fit": false,
+  "real_data_evaluation": false,
+  "reserved_worlds_opened": false,
+  "sumo_seconds": 0,
+  "policy_training_authorized": false,
+  "methods": {
+    "A": {
+      "sign_accuracy": null,
+      "spearman": null,
+      "mae": null,
+      "ci95": null
+    },
+    "B": {
+      "sign_accuracy": null,
+      "spearman": null,
+      "mae": null,
+      "ci95": null
+    },
+    "C": {
+      "sign_accuracy": null,
+      "spearman": null,
+      "mae": null,
+      "ci95": null
+    },
+    "D": {
+      "sign_accuracy": null,
+      "spearman": null,
+      "mae": null,
+      "ci95": null
+    },
+    "E": {
+      "sign_accuracy": null,
+      "spearman": null,
+      "mae": null,
+      "ci95": null
+    }
+  },
+  "receipt_sha256": {
+    "wmdata_schema_v2.json": "72214bc6d6214c61d7c9628bed9b18473ed4f023fdff2f6d5ae62ac9c3e57a05",
+    "wmdata2_schema_v2.json": "0d3bd2694429364f1c2d1dce7e697b69664af77881feca470690d578bdfcba38"
+  },
+  "design_sha256": "537d46f95ac05be01edc0106be8ffbd550a6a4149d5c1a8d041b475fee4b09c1"
+}
