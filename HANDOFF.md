@@ -1,5 +1,18 @@
 # S-SELMAPPO fleet-picker integration handoff
 
+## Fresh-session supervision — 2026-11-01 04:29 +08:00
+- Existing cpuQ supervisor645235 verified live/nice19 at20:29:09UTC;23/169 genuine
+  updates,1,031 new production episodes complete/8open,0new failures.
+- Charged978,300sim-s including43,200history; actual958,500..972,900bounds.
+  Completed control-window receipts still0collisions/teleports; cap7,012,800unchanged.
+- Existing local observer3668 verified by executable, command line and creation time
+  (02:18:40+08:00); retained its exclusive lock. No duplicate observer or dispatch.
+- Read git status/log, current shared registration incl MAIN02:08 standing same-cap
+  authority, immutable dispatch and observer receipts before taking action.
+- MAIN04:27 requests roughly20-minute progress publication/commits through noon.
+  Training/final169/peer-owned evaluation protocol and priorities remain as registered.
+- Snapshot: `docs/paper_results/selmappo/PROGRESS_build_9bb7869d8f590818_1793478549730251330.json`.
+
 **Latest18:19:31UTC:2/169 genuine PPO updates;46new episodes complete,6open,0failures.**
 OwncpuQ645235 remains live/nice19, total90,000charged (43,200history included),
 actual72,000..84,600bounds. Both reduced23-world batches completed; third46-world

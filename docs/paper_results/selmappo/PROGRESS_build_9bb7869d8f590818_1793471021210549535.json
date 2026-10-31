@@ -1,0 +1,654 @@
+{
+  "schema": "selmappo.progress/1",
+  "timestamp_utc": "2026-10-31T18:23:41.210179+00:00",
+  "root": "/home/ubuntu/selmappo20261031/build_9bb7869d8f590818",
+  "source_binding": "9bb7869d8f590818c46980a16a63be00f72e00d3491dec95f903649dfa7bf790",
+  "own_pid": 645235,
+  "own_pid_exists": true,
+  "own_nice": 19,
+  "load_1m": 19.40576171875,
+  "cores": 32,
+  "max_load_fraction": 0.8,
+  "charged_sim_s": 126000,
+  "closed_actual_sim_s": 79200.0,
+  "outstanding_episodes": 4,
+  "outstanding_actual_not_yet_final": true,
+  "historical_charged_sim_s": 43200,
+  "historical_actual_sim_s_lower": 30600,
+  "historical_actual_sim_s_upper": 37800,
+  "inherited_unresolved_reservations": 14,
+  "production_reserved_episodes": 92,
+  "production_closed_episodes": 88,
+  "production_completed_episodes": 88,
+  "production_completed_sim_s": 79200.0,
+  "completed_updates": 2,
+  "latest_update": {
+    "charged_sim_s": 84600,
+    "episodes": 23,
+    "frames": 690,
+    "iteration": 2,
+    "kl_stopped": false,
+    "loss": 0.6134617030620575,
+    "mean_return": -31297.7890625,
+    "samples": 690,
+    "sim_s_per_hour": 491387.4870107725,
+    "simulation_wall_s": 151.58427814103197,
+    "total_wall_s": 151.65221331402427
+  },
+  "initial_and_stable_checkpoints": [
+    {
+      "iteration": 0,
+      "path": "/home/ubuntu/selmappo20261031/build_9bb7869d8f590818/training/checkpoint_000.pt",
+      "size": 202049,
+      "sha256": "bdd5af7f40971528d8ed6aefa8fba7353597a3d989234f9341eb2789dc3f8adc"
+    },
+    {
+      "iteration": 1,
+      "path": "/home/ubuntu/selmappo20261031/build_9bb7869d8f590818/training/checkpoint_001.pt",
+      "size": 593553,
+      "sha256": "eee9c4a60733d59f00d7127452b8ffaafd1bcff75cf5c0169a76b38e6cb5928a"
+    }
+  ],
+  "latest_priority_status": {
+    "cores": 32,
+    "load_1m": 19.87841796875,
+    "pending": 4,
+    "status": "DISPATCH_RESUMED_RESOURCE_PRIORITY"
+  },
+  "failure_count": 0,
+  "failed_worlds": [],
+  "first_failure": null,
+  "worker_receipts": [
+    {
+      "seed": 18000046,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000047,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000048,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000049,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000050,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000051,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000052,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000053,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000054,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000055,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000056,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000057,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000058,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000059,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000060,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000061,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000062,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000063,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000064,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000065,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000066,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000067,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000068,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000069,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000070,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000071,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000072,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000073,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000074,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000075,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000076,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000077,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000078,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000079,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000080,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000081,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000082,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000083,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000084,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000085,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000086,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000087,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000088,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000089,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000090,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000091,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000092,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000093,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000094,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000095,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000096,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000097,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000098,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000099,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000100,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000101,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000102,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000103,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000104,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000105,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000106,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000107,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000108,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000109,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000110,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000111,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000112,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000113,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000114,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000115,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000116,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000117,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000118,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000119,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000120,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000121,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000122,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000123,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000124,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000125,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000126,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000127,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000128,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000129,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000130,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000131,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000132,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000133,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000134,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    },
+    {
+      "seed": 18000135,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    },
+    {
+      "seed": 18000136,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    },
+    {
+      "seed": 18000137,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    }
+  ],
+  "own_processes": [
+    {
+      "pid": 645235,
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.selmappo.train --variant fleet --registration /home/ubuntu/selmappo20261031/build_9bb7869d8f590818/pytools/REGISTRATION.md --c1-root /home/ubuntu/selmappo20261031/build_9bb7869d8f590818/pytools --integration /home/ubuntu/selmappo20261031/build_9bb7869d8f590818/INTEGRATION.json --design-sha 992c05601f03d1d9caad0421b041dbeaa05fa8621ae7e3020be42e3c9f5b41d0 --out /home/ubuntu/selmappo20261031/build_9bb7869d8f590818/training --workers 12 --history-from /home/ubuntu/selmappo20261031/build_3351504cece84e4b "
+    },
+    {
+      "pid": 670584,
+      "command": "/home/ubuntu/miniconda3/lib/python3.10/site-packages/sumo/bin/sumo -c /home/ubuntu/selmappo20261031/build_9bb7869d8f590818/training/18000134/scenarios/s18000134_m2700_ay4yog38/scenario.sumocfg --seed 18000134 --step-length 0.5 --end 2401 --no-step-log true --duration-log.disable true --remote-port 57239 "
+    },
+    {
+      "pid": 670651,
+      "command": "/home/ubuntu/miniconda3/lib/python3.10/site-packages/sumo/bin/sumo -c /home/ubuntu/selmappo20261031/build_9bb7869d8f590818/training/18000135/scenarios/s18000135_m2700_gyj7fy7d/scenario.sumocfg --seed 18000135 --step-length 0.5 --end 2401 --no-step-log true --duration-log.disable true --remote-port 48473 "
+    },
+    {
+      "pid": 670711,
+      "command": "/home/ubuntu/miniconda3/lib/python3.10/site-packages/sumo/bin/sumo -c /home/ubuntu/selmappo20261031/build_9bb7869d8f590818/training/18000136/scenarios/s18000136_m2700_02fkq6nx/scenario.sumocfg --seed 18000136 --step-length 0.5 --end 2401 --no-step-log true --duration-log.disable true --remote-port 54783 "
+    },
+    {
+      "pid": 670713,
+      "command": "/home/ubuntu/miniconda3/lib/python3.10/site-packages/sumo/bin/sumo -c /home/ubuntu/selmappo20261031/build_9bb7869d8f590818/training/18000137/scenarios/s18000137_m2400_w4x4uarn/scenario.sumocfg --seed 18000137 --step-length 0.5 --end 2401 --no-step-log true --duration-log.disable true --remote-port 44865 "
+    }
+  ],
+  "actual_sim_s_lower_bound": 109800.0,
+  "actual_sim_s_upper_bound": 120600.0,
+  "completed_result_totals": {
+    "road_delay_vs": 1596728.9242192386,
+    "source_wait_vs": 3057777.747868,
+    "team_delay_vs": 4654506.672087238,
+    "collisions": 0.0,
+    "teleports": 0.0,
+    "ttc_below_3_vs": 35274.0,
+    "hard_brake_vs": 1337.5
+  },
+  "completed_episode_wall_s_mean": 34.30949917666426,
+  "prospective_local_evaluation_sim_s": 14400,
+  "local_evaluation_started": false,
+  "final169_eligible": false,
+  "training_budget_upper_sim_s": 7012800,
+  "mechanics_replayed": false
+}

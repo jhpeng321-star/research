@@ -1,0 +1,2584 @@
+{
+  "schema": "selmappo.progress/1",
+  "timestamp_utc": "2026-10-31T19:19:30.039384+00:00",
+  "root": "/home/ubuntu/selmappo20261031/build_9bb7869d8f590818",
+  "source_binding": "9bb7869d8f590818c46980a16a63be00f72e00d3491dec95f903649dfa7bf790",
+  "own_pid": 645235,
+  "own_pid_exists": true,
+  "own_nice": 19,
+  "load_1m": 2.1748046875,
+  "cores": 32,
+  "max_load_fraction": 0.8,
+  "charged_sim_s": 411300,
+  "closed_actual_sim_s": 368100.0,
+  "outstanding_episodes": 0,
+  "outstanding_actual_not_yet_final": true,
+  "historical_charged_sim_s": 43200,
+  "historical_actual_sim_s_lower": 30600,
+  "historical_actual_sim_s_upper": 37800,
+  "inherited_unresolved_reservations": 14,
+  "production_reserved_episodes": 409,
+  "production_closed_episodes": 409,
+  "production_completed_episodes": 409,
+  "production_completed_sim_s": 368100.0,
+  "completed_updates": 9,
+  "latest_update": {
+    "charged_sim_s": 374400,
+    "episodes": 46,
+    "frames": 1380,
+    "iteration": 9,
+    "kl_stopped": false,
+    "loss": 0.11773911654017866,
+    "mean_return": -32364.845703125,
+    "samples": 1380,
+    "sim_s_per_hour": 574714.7794871693,
+    "simulation_wall_s": 259.1546532789944,
+    "total_wall_s": 259.32863625499886
+  },
+  "initial_and_stable_checkpoints": [
+    {
+      "iteration": 0,
+      "path": "/home/ubuntu/selmappo20261031/build_9bb7869d8f590818/training/checkpoint_000.pt",
+      "size": 202049,
+      "sha256": "bdd5af7f40971528d8ed6aefa8fba7353597a3d989234f9341eb2789dc3f8adc"
+    },
+    {
+      "iteration": 1,
+      "path": "/home/ubuntu/selmappo20261031/build_9bb7869d8f590818/training/checkpoint_001.pt",
+      "size": 593553,
+      "sha256": "eee9c4a60733d59f00d7127452b8ffaafd1bcff75cf5c0169a76b38e6cb5928a"
+    },
+    {
+      "iteration": 2,
+      "path": "/home/ubuntu/selmappo20261031/build_9bb7869d8f590818/training/checkpoint_002.pt",
+      "size": 593553,
+      "sha256": "2a1c7cc285e4507d97018d7978c450ed3d9c83f6ccbb2f29e3a973651dbb01ea"
+    },
+    {
+      "iteration": 3,
+      "path": "/home/ubuntu/selmappo20261031/build_9bb7869d8f590818/training/checkpoint_003.pt",
+      "size": 593553,
+      "sha256": "61dfefd71c14e25018c60487de06d36a6f8742c8c0f270be42a4fda062b4e1b0"
+    },
+    {
+      "iteration": 4,
+      "path": "/home/ubuntu/selmappo20261031/build_9bb7869d8f590818/training/checkpoint_004.pt",
+      "size": 593553,
+      "sha256": "520941067ef20f1f76b7d19420daffda527a22b5d3cbb8ea757fa009e0b889cd"
+    },
+    {
+      "iteration": 5,
+      "path": "/home/ubuntu/selmappo20261031/build_9bb7869d8f590818/training/checkpoint_005.pt",
+      "size": 593553,
+      "sha256": "2ff868feffce65b45f2da4436ad0feb2ba5d30dcf27835b36910ad1acc47a94d"
+    },
+    {
+      "iteration": 6,
+      "path": "/home/ubuntu/selmappo20261031/build_9bb7869d8f590818/training/checkpoint_006.pt",
+      "size": 593553,
+      "sha256": "f5fc04318ff966590023299eb9d558c8b6028d4e1172262e148b5d1e9b40756e"
+    },
+    {
+      "iteration": 7,
+      "path": "/home/ubuntu/selmappo20261031/build_9bb7869d8f590818/training/checkpoint_007.pt",
+      "size": 593553,
+      "sha256": "f20a4c050177d79f450e58284128475e649156e29f7ff4426c5cb3f1fe4a9aa7"
+    },
+    {
+      "iteration": 8,
+      "path": "/home/ubuntu/selmappo20261031/build_9bb7869d8f590818/training/checkpoint_008.pt",
+      "size": 593553,
+      "sha256": "5ab77bc011ce33f6f712224032d59985049d5b5ad85bd6ac04c8727236aa0f75"
+    }
+  ],
+  "latest_priority_status": {
+    "cores": 32,
+    "load_1m": 18.59130859375,
+    "max_load_fraction": 0.8,
+    "next_seed": 18000455,
+    "pending": 7,
+    "status": "DISPATCH_PAUSED_RESOURCE_PRIORITY"
+  },
+  "failure_count": 0,
+  "failed_worlds": [],
+  "first_failure": null,
+  "worker_receipts": [
+    {
+      "seed": 18000046,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000047,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000048,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000049,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000050,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000051,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000052,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000053,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000054,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000055,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000056,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000057,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000058,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000059,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000060,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000061,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000062,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000063,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000064,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000065,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000066,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000067,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000068,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000069,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000070,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000071,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000072,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000073,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000074,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000075,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000076,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000077,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000078,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000079,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000080,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000081,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000082,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000083,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000084,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000085,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000086,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000087,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000088,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000089,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000090,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000091,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000092,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000093,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000094,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000095,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000096,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000097,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000098,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000099,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000100,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000101,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000102,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000103,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000104,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000105,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000106,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000107,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000108,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000109,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000110,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000111,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000112,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000113,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000114,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000115,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000116,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000117,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000118,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000119,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000120,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000121,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000122,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000123,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000124,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000125,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000126,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000127,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000128,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000129,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000130,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000131,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000132,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000133,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000134,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000135,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000136,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000137,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000138,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000139,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000140,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000141,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000142,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000143,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000144,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000145,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000146,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000147,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000148,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000149,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000150,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000151,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000152,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000153,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000154,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000155,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000156,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000157,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000158,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000159,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000160,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000161,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000162,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000163,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000164,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000165,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000166,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000167,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000168,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000169,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000170,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000171,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000172,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000173,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000174,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000175,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000176,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000177,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000178,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000179,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000180,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000181,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000182,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000183,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000184,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000185,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000186,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000187,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000188,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000189,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000190,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000191,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000192,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000193,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000194,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000195,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000196,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000197,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000198,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000199,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000200,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000201,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000202,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000203,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000204,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000205,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000206,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000207,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000208,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000209,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000210,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000211,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000212,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000213,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000214,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000215,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000216,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000217,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000218,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000219,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000220,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000221,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000222,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000223,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000224,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000225,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000226,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000227,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000228,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000229,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000230,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000231,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000232,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000233,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000234,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000235,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000236,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000237,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000238,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000239,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000240,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000241,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000242,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000243,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000244,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000245,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000246,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000247,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000248,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000249,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000250,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000251,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000252,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000253,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000254,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000255,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000256,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000257,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000258,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000259,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000260,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000261,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000262,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000263,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000264,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000265,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000266,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000267,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000268,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000269,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000270,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000271,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000272,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000273,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000274,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000275,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000276,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000277,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000278,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000279,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000280,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000281,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000282,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000283,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000284,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000285,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000286,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000287,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000288,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000289,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000290,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000291,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000292,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000293,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000294,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000295,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000296,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000297,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000298,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000299,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000300,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000301,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000302,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000303,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000304,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000305,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000306,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000307,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000308,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000309,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000310,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000311,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000312,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000313,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000314,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000315,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000316,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000317,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000318,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000319,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000320,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000321,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000322,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000323,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000324,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000325,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000326,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000327,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000328,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000329,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000330,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000331,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000332,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000333,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000334,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000335,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000336,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000337,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000338,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000339,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000340,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000341,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000342,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000343,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000344,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000345,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000346,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000347,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000348,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000349,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000350,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000351,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000352,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000353,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000354,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000355,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000356,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000357,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000358,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000359,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000360,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000361,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000362,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000363,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000364,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000365,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000366,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000367,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000368,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000369,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000370,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000371,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000372,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000373,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000374,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000375,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000376,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000377,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000378,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000379,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000380,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000381,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000382,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000383,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000384,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000385,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000386,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000387,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000388,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000389,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000390,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000391,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000392,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000393,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000394,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000395,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000396,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000397,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000398,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000399,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000400,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000401,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000402,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000403,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000404,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000405,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000406,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000407,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000408,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000409,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000410,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000411,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000412,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000413,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000414,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000415,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000416,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000417,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000418,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000419,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000420,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000421,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000422,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000423,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000424,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000425,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000426,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000427,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000428,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000429,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000430,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000431,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000432,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000433,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000434,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000435,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000436,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000437,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000438,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000439,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000440,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000441,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000442,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000443,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000444,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000445,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000446,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000447,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000448,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000449,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000450,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000451,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000452,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000453,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    },
+    {
+      "seed": 18000454,
+      "actual": 900.0,
+      "result_complete": true,
+      "supervisor_closed": true
+    }
+  ],
+  "own_processes": [
+    {
+      "pid": 645235,
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.selmappo.train --variant fleet --registration /home/ubuntu/selmappo20261031/build_9bb7869d8f590818/pytools/REGISTRATION.md --c1-root /home/ubuntu/selmappo20261031/build_9bb7869d8f590818/pytools --integration /home/ubuntu/selmappo20261031/build_9bb7869d8f590818/INTEGRATION.json --design-sha 992c05601f03d1d9caad0421b041dbeaa05fa8621ae7e3020be42e3c9f5b41d0 --out /home/ubuntu/selmappo20261031/build_9bb7869d8f590818/training --workers 12 --history-from /home/ubuntu/selmappo20261031/build_3351504cece84e4b "
+    }
+  ],
+  "actual_sim_s_lower_bound": 398700.0,
+  "actual_sim_s_upper_bound": 405900.0,
+  "completed_result_totals": {
+    "road_delay_vs": 7530238.024868113,
+    "source_wait_vs": 15152976.237782005,
+    "team_delay_vs": 22683214.262650125,
+    "collisions": 0.0,
+    "teleports": 0.0,
+    "ttc_below_3_vs": 167990.5,
+    "hard_brake_vs": 6315.5
+  },
+  "completed_episode_wall_s_mean": 33.65303244181008,
+  "prospective_local_evaluation_sim_s": 14400,
+  "local_evaluation_started": false,
+  "final169_eligible": false,
+  "training_budget_upper_sim_s": 7012800,
+  "mechanics_replayed": false
+}
