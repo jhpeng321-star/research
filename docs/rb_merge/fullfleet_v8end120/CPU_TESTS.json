@@ -1,0 +1,23 @@
+{
+  "command": [
+    "/home/ubuntu/miniconda3/bin/python",
+    "-m",
+    "pytest",
+    "/tmp/rb-merge-fullfleet-v8end120/test_full_fleet.py",
+    "/tmp/rb-merge-fullfleet-v8end120/test_merge_source.py",
+    "/tmp/rb-merge-fullfleet-v8end120/test_native_physics.py",
+    "/tmp/rb-merge-fullfleet-v8end120/test_encoded_fleet.py",
+    "/tmp/rb-merge-fullfleet-v8end120/test_frozen_encoder.py",
+    "/tmp/rb-merge-fullfleet-v8end120/test_departure_phase.py",
+    "-q"
+  ],
+  "returncode": 0,
+  "stdout": "..........................................................               [100%]\n58 passed in 2.45s\n",
+  "stderr": "",
+  "load": [
+    7.88916015625,
+    13.505859375,
+    16.63330078125
+  ],
+  "cpus": 32
+}

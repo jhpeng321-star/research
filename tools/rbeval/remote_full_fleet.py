@@ -22,11 +22,11 @@ def remote(code):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument('mode', choices=('status', 'stage', 'launch', 'poll', 'trace', 'collect'))
-    p.add_argument('--version', default='v7fast')
+    p.add_argument('mode', choices=('status', 'stage', 'launch', 'poll', 'trace', 'initial-geometry', 'collect'))
+    p.add_argument('--version', default='v8end600')
     p.add_argument('--horizon', type=int, choices=(120, 300, 600), default=600)
     p.add_argument('--slots', type=int, default=512)
-    p.add_argument('--entry-phase', choices=('before', 'after'), default='before')
+    p.add_argument('--entry-phase', choices=('before', 'after'), default='after')
     p.add_argument('--details', action='store_true')
     p.add_argument('--seed', type=int, default=969400)
     p.add_argument('--identity', type=int)
@@ -194,9 +194,42 @@ else:
     print(json.dumps(summary))
 '''
         print(remote(code))
+    elif args.mode == 'initial-geometry':
+        code = header+'''import sys
+sys.path[:0]=[str(root/'runtime/src'),str(root)]
+import numpy as np
+import torch
+torch.set_num_threads(1)
+from tools.rbeval.full_fleet import safe,body_overlap_count,digest
+from wms.physics.lane_chain import chain_s
+output=root/'INITIAL_GEOMETRY.json'
+if output.exists():
+    report=json.loads(output.read_text())
+else:
+    views=Path('/home/ubuntu/wmdata20261031/views')
+    rows=[]
+    for seed in range(969400,969432):
+        record=json.loads(safe(views/('world_'+str(seed)+'.json')).read_text())['native']
+        ep=safe(views/'episodes'/record['episode'])
+        meta=json.loads(safe(ep/'episode.json').read_text())
+        assert meta['seed']==seed and meta['arm']=='native'
+        t0=int(meta['t0_index'])
+        kin=np.array(np.load(safe(ep/'veh_kin.npy'),mmap_mode='r',allow_pickle=False)[t0],copy=True)
+        mask=np.load(safe(ep/'veh_mask.npy'),mmap_mode='r',allow_pickle=False)[t0].astype(bool)&(kin[:,1:4].sum(-1)>0)
+        lane=kin[:,1:4].argmax(-1)
+        physical=chain_s(torch.as_tensor(lane),torch.as_tensor(kin[:,0])).numpy()
+        raw=body_overlap_count(kin[:,0],lane,kin[:,6],mask)
+        chained=body_overlap_count(physical,lane,kin[:,6],mask)
+        rows.append(dict(seed=seed,frame_pairs=raw[0],frame_worst_gap=raw[1],chain_pairs=chained[0],chain_worst_gap=chained[1],episode_sha256=digest(ep/'episode.json')))
+    report=dict(contract='Recorded t0 geometry only; body overlap, not SUMO collision logs',rows=rows,frame_pairs=sum(r['frame_pairs'] for r in rows),chain_pairs=sum(r['chain_pairs'] for r in rows))
+    with output.open('x') as f:
+        json.dump(report,f,indent=2)
+print(json.dumps(dict(contract=report['contract'],worlds=len(report['rows']),frame_pairs=report['frame_pairs'],chain_pairs=report['chain_pairs'],affected=[r for r in report['rows'] if r['frame_pairs'] or r['chain_pairs']])))
+'''
+        print(remote(code))
     else:
         code = header+'''result=root/'results'
-files=[root/'LAUNCH.json',root/'CPU_TESTS.json',root/'PREFLIGHT.json',result/'IDENTITY.json',result/'COMPLETE.json',result/'FAILED.json']
+files=[root/'LAUNCH.json',root/'CPU_TESTS.json',root/'PREFLIGHT.json',root/'INITIAL_GEOMETRY.json',result/'IDENTITY.json',result/'COMPLETE.json',result/'FAILED.json']
 files += [result/(str(s)+'.json') for s in range(969400,969432)]
 print(json.dumps({p.name:dict(content=p.read_text(),sha256=hashlib.sha256(p.read_bytes()).hexdigest()) for p in files if p.exists()}))
 '''

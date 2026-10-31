@@ -85,7 +85,11 @@ observations or refit any model. Summaries accept one uniform horizon per panel.
 `step_after_movement` helper. Boundary scoring uses its explicit source_before
 cohort, birth and exit masks. Newborns stay at basePos/departSpeed on birth tick.
 No-arrival dynamics are bit-exact to the original physics step. This operator
-experiment has a separate source identity from the ongoing `v7fast` H600 run.
+experiment has a separate source identity from the completed `v7fast` H600 run.
+Current runner default is `v8end600 --entry-phase after`; earlier version
+directories remain explicit and immutable. `verify_fleet_prefix` checks the saved
+H120 clocks/events/front traces against the600s extension without treating those
+prefixes as independent evidence or claiming unavailable full-trajectory parity.
 `python -m tools.rbeval.summarize_full_fleet --panel <collected directory>
 --targets <shared targets> --output <new score.json>` checks complete FIT32,
 collection hashes and conservation before reporting per-world and marginal clocks.
