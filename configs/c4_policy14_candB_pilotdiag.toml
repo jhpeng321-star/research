@@ -1,0 +1,11 @@
+# S-PILOTDIAG CPU repro only: never used for training or receipts.
+# Identical to c4_policy14_candB.toml except the head is protected on resume
+# (no --new-phase re-zero) and the rankcheck gate is handled by the diagnostic
+# driver with the retained pilot authority receipt.
+extends = "c4_policy14_candB.toml"
+
+[run]
+rankcheck_required = false
+
+[policy14]
+zero_residual_output = false
