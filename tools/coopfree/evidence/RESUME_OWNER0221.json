@@ -1,0 +1,30 @@
+{
+  "date": "2026-11-01",
+  "branch": "c4/coopfree",
+  "starting_commit": "8ad49d72",
+  "starting_worktree_clean": true,
+  "registry_owner_addendum_line": 5777,
+  "physics_dispatched_by_resume": 0,
+  "supervisor": {"host": "cpuQ", "pid": 615088, "start_ticks": "48394231", "identity_verified": true, "nice": 19},
+  "workers": [615093, 615094, 615095, 615096],
+  "workers_all_nice19": true,
+  "publisher": {"pid": 15284, "creation_local": "2026-11-01T02:05:24", "command_verified": true, "hours": 12, "commits_milestones": true},
+  "progress_first_read": {"tasks_closed": 208, "tasks_total": 455, "corrected_update_exists": false, "durable_stop": false},
+  "accounting_later_read": {
+    "screen_charged": 27360,
+    "repeat_charged": 13680,
+    "train_charged": 1649760,
+    "train_cap": 1650000,
+    "train_actual_closed": 1400100,
+    "train_unclosed_reserved_jobs": 239,
+    "dev_charged": 0,
+    "dev_reserved_cap": 172800,
+    "discovery_charged": 0,
+    "discovery_reserved_cap": 91200,
+    "total_charged": 1690800,
+    "overall_cap": 2000000,
+    "unallocated": 44960
+  },
+  "owner0221_blocker": "Only 240 sim-s remain in TRAIN. Corrected u1 can finish; fresh >=150-window updates 2/3/6 cannot fit the registered phase cap. Existing rollouts and legacy charges must be retained; optimizer passes over old samples are not new on-policy updates.",
+  "next": "Keep current production and singleton publisher running; add read-only learning checks and paired learned-vs-HOLD attribution. A further training phase requires prospective owner budget/phase allocation and CPU/source registration; never replay completed physics."
+}
