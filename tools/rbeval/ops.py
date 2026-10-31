@@ -9,8 +9,9 @@ HERE = Path(__file__).resolve().parent
 ROOT = '/root/rbeval20261031'
 
 
-def ssh(code):
-    p = subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=15', 'gpuR',
+def ssh(code, host='gpuR'):
+    assert host in ('gpuR', 'gpuA')
+    p = subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=15', host,
                         '/root/miniconda3/bin/python -B -'], input=code,
                        text=True, capture_output=True, timeout=180)
     if p.returncode:
@@ -21,7 +22,8 @@ def ssh(code):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('action', choices=('audit', 'stage', 'canary', 'launch', 'status', 'fetch',
-                                    'stage-scoring', 'finalize', 'fetch-reports'))
+                                    'stage-scoring', 'finalize', 'fetch-reports', 'support',
+                                    'candidate-status'))
     args = p.parse_args()
     if args.action in ('audit', 'status'):
         print(ssh(f'''
@@ -34,6 +36,9 @@ if p.exists():
  for f in sorted(p.glob('FINAL*.json')): print(f.name,f.read_text())
  log=p/'finalize.log'
  if log.exists(): print('FINALIZER',log.read_text()[-2000:])
+ for f in sorted(p.glob('SUPPORT_[0-9]*.json')): print(f.name,f.read_text())
+ log=p/'support.log'
+ if log.exists(): print('SUPPORT',log.read_text()[-3000:])
  for d in sorted(p.glob('wm2_shard*')):
   if not d.is_dir(): continue
   print(d.name,'tasks',len(list(d.glob('w*_k*.json'))),'complete',(d/'COMPLETE.json').exists())
@@ -132,11 +137,73 @@ receipt=dict(pid=child.pid,argv=argv,unix=time.time())
 with (root/('ANALYSIS_DISPATCH_'+str(time.time_ns())+'.json')).open('x') as f: json.dump(receipt,f,indent=1)
 print(json.dumps(receipt))
 '''))
+    elif args.action == 'candidate-status':
+        print(ssh(f'''
+from pathlib import Path
+import json,os,subprocess
+root=Path({ROOT!r})/'runa'
+print('load',os.getloadavg(),'cpus',os.cpu_count())
+print(subprocess.check_output(['nvidia-smi','--query-gpu=index,memory.used,memory.total,utilization.gpu','--format=csv'],text=True))
+for name in ('WM-PHYS-A','WM-PHYS-C'):
+ p=root/name
+ if not p.is_dir(): continue
+ print('CANDIDATE',name)
+ for marker in ('RESULT.json','FAILED.json'):
+  path=p/marker
+  if path.exists(): print(marker,path.read_text())
+ for i in range(3):
+  shard=p/f'shard{{i}}'
+  print('SHARD',i,'tasks',len(list(shard.glob('w*_k*.json'))),'complete',(shard/'COMPLETE.json').exists())
+  log=p/f'shard{{i}}.log'
+  if log.exists(): print(log.read_text()[-9000:])
+ log=p/'supervisor.log'
+ if log.exists(): print('SUPERVISOR',log.read_text()[-2000:])
+''', host='gpuA'))
+    elif args.action == 'support':
+        source = HERE/'support.py'
+        sha = hashlib.sha256(source.read_bytes()).hexdigest()
+        code = ROOT+'/support_'+sha[:16]
+        print(ssh(f'''
+from pathlib import Path
+import hashlib
+root=Path({ROOT!r}); assert root.is_dir()
+code=Path({code!r}); code.mkdir(exist_ok=True)
+source=code/'support.py'
+if source.exists(): assert hashlib.sha256(source.read_bytes()).hexdigest()=={sha!r}
+print('Admitted immutable own-root CPU standby source')
+'''))
+        subprocess.run(['scp','-o','BatchMode=yes',str(source),f'gpuR:{code}/support.py'], check=True, timeout=60)
+        print(ssh(f'''
+from pathlib import Path
+import fcntl,hashlib,json,os,subprocess,time
+root=Path({ROOT!r})
+lock=(root/'SUPPORT_DISPATCH.lock').open('a'); fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+boot=Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+for path in list(root.glob('SUPPORT_[0-9]*.json'))+list(root.glob('SUPPORT_DISPATCH_[0-9]*.json')):
+ old=json.loads(path.read_text()); proc=Path('/proc')/str(old['pid'])
+ if proc.exists():
+  assert old['boot_id']!=boot or (proc/'stat').read_text().split()[21]!=old['start_ticks'], 'support already alive'
+assert os.getloadavg()[0]<24, 'CPU busy'
+source=Path({code!r})/'support.py'
+assert hashlib.sha256(source.read_bytes()).hexdigest()=={sha!r}
+argv=['nice','-n','19','/root/miniconda3/bin/python','-B','-u',str(source),
+ '--run-root',str(root),'--until','2026-11-01T11:30:00+08:00']
+env=dict(os.environ,OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
+with (root/'support.log').open('a') as log:
+ child=subprocess.Popen(argv,stdout=log,stderr=subprocess.STDOUT,env=env,cwd=root,start_new_session=True)
+receipt=dict(pid=child.pid,boot_id=boot,start_ticks=Path(f'/proc/{{child.pid}}/stat').read_text().split()[21],
+ argv=argv,unix=time.time(),source_sha256={sha!r})
+with (root/('SUPPORT_DISPATCH_'+str(time.time_ns())+'.json')).open('x') as f: json.dump(receipt,f,indent=1)
+print(json.dumps(receipt))
+'''))
     elif args.action == 'fetch-reports':
         target = HERE/'evidence'
         target.mkdir(exist_ok=True)
         subprocess.run(['scp','-o','BatchMode=yes',f'gpuR:{ROOT}/FINAL*.json',f'gpuR:{ROOT}/ANALYSIS_DISPATCH_*.json',
                         f'gpuR:{ROOT}/finalize.log',str(target)], check=True, timeout=60)
+        support = ssh(f"from pathlib import Path; print(int((Path({ROOT!r})/'support.log').exists()))").strip()
+        if support == '1':
+            subprocess.run(['scp','-o','BatchMode=yes',f'gpuR:{ROOT}/SUPPORT*.json',f'gpuR:{ROOT}/support.log',str(target)], check=True, timeout=60)
         available = ssh(f"from pathlib import Path; print(int((Path({ROOT!r})/'reports').is_dir()))").strip()
         if available == '1':
             subprocess.run(['scp','-r','-o','BatchMode=yes',f'gpuR:{ROOT}/reports',str(target)], check=True, timeout=600)

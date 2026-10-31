@@ -2,6 +2,11 @@
 
 ## Exact candidate CLI (RUNA/RUNB/INT)
 
+**Current prerequisite:** b0f66943 A/C both exited before rollout on gpuA
+(`policy_native_lanes` missing from its bridge); zero futures produced.
+INT owns the controller port (commit0ec484ab) and NEW smoke/READY publication.
+The following is the preserved original command shape, not a new READY dispatch:
+
 ```bash
 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 CUDA_VISIBLE_DEVICES=0 nice -n 19 /root/miniconda3/bin/python -B -u /root/rbeval20261031/phys_code_b0f66943ec30/tools/rbint/evaluate_A.py --out /root/rbeval20261031/NEW_phys_A_shard0 --runtime-root /root/rbeval20261031/phys_code_b0f66943ec30 --wm /root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt --wm-config /root/rbeval20261031/phys_code_b0f66943ec30/configs/wm_phys.toml --model-name wm_phys_A --shard 0 --shards 3 --memory-gib 5
 ```
@@ -19,7 +24,7 @@ check resources first and preserve existing candidate dispatches. K8/five arms/
 t0=300/H600 are fixed. Score all four shard directories together with
 `python -B -m tools.rbeval.score --inputs SHARD0 SHARD1 SHARD2 --out NEW_REPORT`.
 
-The command above is the **existing frozen A recipe**, executable on gpuA.
+The command above records the **existing frozen A recipe** on gpuA.
 RUNA owns A/C intake and RUNB already owns B; use their claim protocol, never
 dispatch a second copy. Their immutable runtime already has the compatible hook;
 do not replace any staged source. For a NEW staged candidate, use this EVAL runner:
@@ -132,3 +137,18 @@ rejection, differing-builder pooling rejection and WM2 callback identity guards.
   have complete K8 ensembles; progress report is ignored evidence at
   `tools/rbeval/evidence/progress_resume_7689120b/`. This is an incomplete pilot,
   not the morning full-panel result. Original auto-finalizer still owns scoring.
+- Bounded CPU-only support is now live on gpuR: PID753102,
+  `/root/rbeval20261031/support_390a8bd2dfb01cac/support.py`, deadline11:30+08,
+  poll300s. `SUPPORT_753102.json` binds boot/start ticks and original scorer
+  hashes. Startup reports PRESERVE_LIVE_FINALIZER, all4 workers healthy,
+  59/160 tasks, unchanged frozen scoring sources. Only an explicit original
+  finalizer deadline expiry admits one CPU-only extension; worker/source/scoring
+  failures alert, no inference is retried. Reports are hash-verified on completion.
+- `ops candidate-status` independently inspected gpuA A/C logs: both failed
+  before any rollout (`policy_native_lanes` keyword), 0/160 tasks each; GPU1MiB.
+  Existing INT prerequisite note and bridge port0ec484ab already own this fix;
+  no duplicate port or candidate dispatch. Preserve failed claims/runtime/logs.
+- Support policy + existing160-hash finalizer safety tests:4 PASS /0.35s.
+  Live `ops status`, `ops candidate-status`, support startup and receipt fetch
+  verified. `SUPPORT_DISPATCH_1793467048790814246.json` and `SUPPORT_753102.json` preserve
+  the one standby identity; no second finalizer/inference was started.

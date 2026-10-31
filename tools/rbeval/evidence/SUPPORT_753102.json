@@ -1,0 +1,23 @@
+{
+ "pid": 753102,
+ "boot_id": "d19e6898-efd0-4288-a901-d63b21f11163",
+ "start_ticks": "4209363561",
+ "started_unix": 1793467048.922324,
+ "until": "2026-11-01T11:30:00+08:00",
+ "deadline_unix": 1793503800.0,
+ "argv": [
+  "/root/rbeval20261031/support_390a8bd2dfb01cac/support.py",
+  "--run-root",
+  "/root/rbeval20261031",
+  "--until",
+  "2026-11-01T11:30:00+08:00"
+ ],
+ "support_sha256": "390a8bd2dfb01cacb7422173418203625305ac32ab6246e6241e06bd2f48143f",
+ "frozen_scoring": {
+  "/root/rbeval20261031/analysis_scoring/finalize.py": "62f627d9cd97b031ebbc7dbe0204f86468467430d444d12ba90b5ed4250f40b9",
+  "/root/rbeval20261031/analysis_scoring/score.py": "696cfcd75ba5facfe30fc76a20f9d2f1ee20556a44daa7454de4c37a6e00210e",
+  "/root/rbeval20261031/analysis_scoring/core.py": "f57b8e2e42f9af1719055672056d4a395b1bbd40f66d75d039d9f7631b5d5a5c",
+  "/root/rbeval20261031/analysis_scoring/references.json": "5b1551d7a4e10f2135b358c3a2ae64cc507b83c44bed481e0336aba3ba00cb06",
+  "/root/rbeval20261031/analysis_scoring/real_observables.json": "01d0d2b7027aad9910496c7bc5b9681c0d1ccf08f46b4e16a1113310a67362e9"
+ }
+}

@@ -26,6 +26,15 @@ an incomplete/stopped worker leaves a blocked receipt rather than a false result
 `finalize` while its owned receipt is live. Score sources are isolated from and
 do not modify the identity-bound inference runtime.
 
+Bounded standby PID753102 now covers the original CPU finalizer through
+2026-11-01 11:30 +08:00 (`tools/rbeval/support.py`, poll300s). It preserves live
+finalizers, verifies completed report hashes, and admits only one CPU-only
+handover after the original finalizer's explicit deadline expiry. Worker loss,
+source changes or scoring failures generate alerts rather than retries.
+`ops fetch-reports` also retrieves its `SUPPORT*.json` receipts and log.
+`ops support` is deployment-only and refuses an existing live standby.
+`ops candidate-status` reads the already-claimed A/C status on gpuA; no launch.
+
 ## Score a completed panel (Windows or Linux)
 
 ```powershell
