@@ -24,7 +24,8 @@ digest 2909d4263f072c93 on local worktree and gpuA staged tree, 30 files 0 misma
 - Local tests: tests/unit/test_wmfixmerge_pilot.py 5 passed (+ existing 10).
 
 ## Launch (gpuA free: 1 MiB used before start)
-2026-10-31 ~11:2x +08. CWD /root/autodl-tmp/c4/wmfixmerge20261031, out dir `train`
+2026-10-31 10:45 +08 (RUN.json/ps; the "~11:2x" in the first draft was the
+receipt-writing time, not the launch). CWD /root/autodl-tmp/c4/wmfixmerge20261031, out dir `train`
 (existing, empty; registered verdict name), PYTHONPATH=src:.,
 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True, memory fraction 0.35,
 `timeout --signal=INT --kill-after=30s 21570s`. Launcher PID 147313, python PID
@@ -33,6 +34,10 @@ to the registered training command (TRAIN_PREPARED.json 7bbd41f3..., config
 c4_wm_loop14_r16_ft.toml, checkpoint wm_s.pt b8797242, W5_COMBINED DESIGN.json).
 
 ## Progress (updated as results land)
-- [running] step-0 panel x4 (baseline + 3 reruns) -> STEP0 panels
-- [pending] steps 1-30 + panels at 10/20/30 -> PILOT.json decision
-- [pending] PASS -> curriculum continuation to FINAL.json / FAIL -> stop
+- [done 11:13] PANEL_step0_r0: 120 s MAE 283.288, 300 s MAE 2185.236 (1710 s/panel;
+  matches FEASIBILITY.json pre-step panel exactly — same measurement, same weights).
+- [done 11:41] PANEL_step0_r1: 28.5 min cadence steady.
+- [running] r2 (~12:10), r3 (~12:38) -> STEP0 baseline+noise; then steps 1-30
+  + panels at 10/20/30 -> PILOT.json decision
+- [pending] PASS -> curriculum continuation in place (pilot.py does this itself)
+  to FINAL.json / FAIL -> stop
