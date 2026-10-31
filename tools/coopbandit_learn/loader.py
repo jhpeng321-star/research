@@ -18,6 +18,7 @@ from .schema import (CREDIT, CREDIT_REQUIRED, FORBIDDEN_FEATURES, GROUP_OPTIONS,
 @dataclass
 class Dataset:
     states: pd.DataFrame
+    features: pd.DataFrame
     labels: pd.DataFrame
     credit: pd.DataFrame
     fold_of: dict
@@ -28,8 +29,7 @@ class Dataset:
     def feature_matrix(self, state_ids):
         key = ("X", tuple(state_ids))
         if key not in self._cache:
-            idx = self.states.set_index("state_id").loc[list(state_ids)]
-            self._cache[key] = idx[self.feature_names].to_numpy(dtype=float)
+            self._cache[key] = self.features.loc[list(state_ids), self.feature_names].to_numpy(dtype=float)
         return self._cache[key]
 
     def world_of(self, state_ids):
@@ -148,8 +148,13 @@ def load(data_dir, verify_provenance=True):
     feature_names = sorted(states.iloc[0]["features"])
     if not all(sorted(r["features"]) == feature_names for r in states.to_dict("records")):
         raise ValueError("inconsistent feature keys across states")
+    features = pd.DataFrame([r["features"] for r in states.to_dict("records")])
+    features.index = states.state_id.to_numpy()
+    features = features[feature_names]
+    if not np.isfinite(features.to_numpy(dtype=float)).all():
+        raise ValueError("non-finite feature values")
     for o in GROUP_OPTIONS:
         if o not in states.columns:
             states[o] = states["available"].apply(lambda a: bool(a.get(o)))
-    return Dataset(states=states, labels=labels, credit=credit, fold_of=fold_of,
+    return Dataset(states=states, features=features, labels=labels, credit=credit, fold_of=fold_of,
                    feature_names=feature_names, provenance=provenance)
