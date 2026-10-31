@@ -1,6 +1,17 @@
 # S-RB-RUNB handoff
 
-Updated 2026-11-01 02:11 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+Updated 2026-11-01 04:06 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+
+## 04:00 interim — supervision alive, B2 awaiting resource admission
+- Ten-minute checks continued in-session through04:05:46 (individual immutable
+  OBSERVE/POLL receipts in `runs/rbrunb`). Watcher last poll04:01:35, no error;
+  INT/EVAL READY order remains A2/B2/C2. New INT changes are not yet READY.
+- B2 supervisor762343 alive with11:30 deadline. tasks0, no DISPATCH/workers or
+  terminal receipt. Last admission sample5541MiB/95%/load25.20; independent
+ 04:05:46 sample5557MiB/87%/load23.42. Supervisor rechecks once per minute.
+- Shared interim: `E:/agent-work/rb-shared/evalclaims/RUNB_INTERIM_0400.json`.
+  No complete candidate evidence/key efficacy numbers exist yet; no `.done`.
+- Noon continuation and existing claims/failed-job records remain intact.
 
 ## Fresh-session 02:08 owner noon continuation intake
 - Preserved clean HEAD `f398d8da`, watcher33076 and B2 supervisor755633.
