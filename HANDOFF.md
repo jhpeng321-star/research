@@ -1,4 +1,15 @@
-# S-RB-UNC — READY; preferred32-state comparison COMPLETE01:47
+# S-RB-UNC — READY; resumed02:10, preferred32 COMPLETE
+
+Resume02:10: clean `d3231c74` preserved. Read registration5683/5701/5734,
+WHY/reviews, WMBREAKDOWN, FIT/INT/EVAL handoffs and shared README. Read-only
+preferred status confirms all32 outputs and own553092..553095 terminal rc0;
+no dispatch repeated. INT already owns live FULL-v1; integrated interim scores
+are not yet published in EVAL's handoff. No spread-scale change is justified.
+FIT's02:02 handoff identifies a concrete compatibility gap: source-valid LC2013
+support allows zero strategic/cooperative/speed-gain/keep-right, cooperative≤1,
+assertive>0. Updating the optional LC-only reader; IDM stays strictly positive.
+LC remains explicitly opt-in and not adopted pending FIT's source-refit gate.
+Local CPU load33%/22threads; nvidia-smi reports no loaded local GPU driver.
 
 Latest preferred32/K8/H120 legacy-reference result: within-K teamSD748.35
 [668.54,828.51] vs real across-world4200.50veh-s; source ablations on969400:
