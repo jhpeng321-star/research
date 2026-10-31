@@ -1,0 +1,37 @@
+{
+  "kind": "panel10",
+  "root": "/home/ubuntu/rblane20261031_panel10_750e5bd54607",
+  "bundle_sha256": "750e5bd546076cf2f9f3b90cbb59ddb0fffe7a1ac8a7fca95850fa23a48dc465",
+  "parent_commit": "92a3cd6974f23dfda8b464807e7880a0e766f572",
+  "preflight": {
+    "root": "/home/ubuntu/rblane20261031_panel10_750e5bd54607",
+    "load": [
+      13.5908203125,
+      15.53857421875,
+      13.02490234375
+    ]
+  },
+  "status": "DISPATCHED",
+  "staged_at": 1793470430.9513285,
+  "process": {
+    "pid": 644043,
+    "start_ticks": "48471090",
+    "command": [
+      "/usr/bin/nice",
+      "-n",
+      "19",
+      "/home/ubuntu/miniconda3/bin/python",
+      "-B",
+      "-m",
+      "tools.rblane.validate",
+      "--out",
+      "/home/ubuntu/rblane20261031_panel10_750e5bd54607/results",
+      "--encoder-checkpoint",
+      "/home/ubuntu/rblane20261031_panel10_750e5bd54607/inputs/wm_s.pt",
+      "--pre-signed-kernel",
+      "/home/ubuntu/rblane20261031_panel10_750e5bd54607/inputs/lc2013_before_signed.py"
+    ],
+    "root": "/home/ubuntu/rblane20261031_panel10_750e5bd54607",
+    "started_at": 1793470433.179287
+  }
+}

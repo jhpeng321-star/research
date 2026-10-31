@@ -203,3 +203,9 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   LANE final aefc4bd9 now ready (three-value step_output and advice feedback);
   MERGE post-movement source phase ready. Both need next-candidate integration
   and fresh smoke. CF unchanged. Noon schedule/final09:30 freeze retained.
+- LANE b8037c1d/aefc4bd9 integrated for NEXT candidate: signed keep-right,
+  cooperative early returns, represented endpoint normalization and speed-message
+  presence/blending. Three-value step API reconciled with INT's ramp merge owner
+  and exact fast arbitration. Current running immutable sources unchanged.
+  Targeted lane/geometry/validation/combined/fast suite66CPU PASS/1CUDA skip;
+  new advice feedback still requires recorded smoke before evaluation publication.

@@ -5,6 +5,7 @@ SUMO code. Bind the comparison to an explicit preserved commit, not a mutable
 reference file or another workstream's runtime.
 """
 import hashlib
+import argparse
 import json
 import subprocess
 import sys
@@ -34,7 +35,11 @@ def compare(left, right, counters):
 
 
 def main():
-    out = RECEIPTS/'DEFAULT_OFF_COORDINATES.json'
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--receipt-name', default='DEFAULT_OFF_COORDINATES.json')
+    args = parser.parse_args()
+    assert '/' not in args.receipt_name and '\\' not in args.receipt_name
+    out = RECEIPTS/args.receipt_name
     assert out.parent.is_dir() and not out.exists()
     torch.set_num_threads(1)
     torch.set_num_interop_threads(1)

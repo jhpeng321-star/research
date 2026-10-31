@@ -185,3 +185,103 @@ def test_uncongested_right_overtake_prevention_emits_advice_and_left_wish():
     assert allowed['lc2013_left'][0, 0] == 0
     k[0, 0, 4] = 60 / 3.6 - .01
     assert not lane_change(k, mask, p)['lc2013_own_has_advice'][0, 0]
+
+
+def test_signed_slow_current_leader_cap_suppresses_a_mature_keep_right_wish():
+    # Valid observer-initialized state: inferred desired speeds29/28 while
+    # observed speeds30/31. Source1752 gives(95-2.5)/(29-31)=-46.25s.
+    k, mask = scene([(-500, 0, 30), (-400, 0, 31)])
+    p = PhysicsConfig()
+    params = {'v0': torch.tensor([[29., 28.]])}
+    mem = lane_change(k, mask, p, driver_params=params)
+    mem['lc2013_keep_right'][0, 0] = -20_000_001
+    out = lane_change(k, mask, p, memory=mem, driver_params=params)
+    assert out['lc2013_keep_signed_cap'][0, 0]
+    assert out['lc2013_keep_full_seconds'][0, 0] == -46.25
+    assert out['lc2013_keep_right'][0, 0] > -20_000_001
+    assert out['next_lane'][0, 0] == 0
+
+
+def test_faster_target_leader_does_not_overwrite_the_later_current_leader_gap_cap():
+    k, mask = scene([(-500, 0, 25), (-400, 0, 20), (-470, 1, 35)])
+    p = PhysicsConfig()
+    out = lane_change(k, mask, p, driver_params={'v0': torch.tensor([[30., 25., 35.]])})
+    # Target leader35>vMax30: its nearby gap is ignored by1742, then the own
+    # slow leader caps full-speed time to(95-2.5)/(30-20)=9.25s.
+    assert out['lc2013_keep_full_seconds'][0, 0] == 9.25
+
+
+def test_zero_closing_speed_in_current_leader_cap_keeps_wishes_finite():
+    k, mask = scene([(-500, 0, 25), (-400, 0, 30)])
+    out = lane_change(k, mask, PhysicsConfig(), driver_params={'v0': torch.tensor([[30., 25.]])})
+    assert torch.isfinite(out['lc2013_keep_full_seconds']).all()
+    assert torch.isfinite(out['lc2013_keep_right']).all()
+
+
+def test_float32_ramp_end_representation_does_not_disable_a_strategic_merge():
+    p = PhysicsConfig()
+    kin, mask = scene([(p.merge_zone_s1_m, 2, 0)])
+    reference = lane_change(kin, mask, p)
+    assert reference['next_lane'].item() == 1
+    for observed_kin in (kin.float(), kin.float().double()):
+        observed = lane_change(observed_kin, mask, p)
+        assert observed['next_lane'].item() == 1
+        assert observed['lc2013_reason'].item() == STRATEGIC
+        assert observed['lc2013_position'].item() == p.merge_zone_s1_m
+
+
+def test_float32_one_ulp_beyond_ramp_end_is_not_a_new_merge_window():
+    p = PhysicsConfig()
+    kin, mask = scene([(p.merge_zone_s1_m, 2, 0)])
+    kin = kin.float()
+    kin[..., 0] = torch.nextafter(kin[..., 0], torch.full_like(kin[..., 0], float('inf')))
+    out = lane_change(kin, mask, p)
+    assert out['next_lane'].item() == 2
+    assert not out['lc2013_wish'].item()
+    exact, mask = scene([(p.merge_zone_s1_m, 2, 0)])
+    exact[..., 0] = torch.nextafter(exact[..., 0], torch.full_like(exact[..., 0], float('inf')))
+    assert lane_change(exact, mask, p)['next_lane'].item() == 2
+
+
+def test_cooperative_early_return_does_not_also_accumulate_a_speed_gain_wish():
+    # Ramp request makes its target follower clear left. The follower also has
+    # a slow current leader, but source1669 returns before1820's wish update.
+    kin,mask = scene([(40,2,10),(31,1,10),(60,1,5)])
+    out = lane_change(kin,mask,PhysicsConfig())
+    assert out['lc2013_reason'][0,1] == COOPERATIVE
+    assert out['lc2013_cooperative_return'][0,1]
+    assert out['lc2013_target_speed'][0,1] > out['lc2013_this_speed'][0,1]
+    assert out['lc2013_left'][0,1] == 0
+
+
+def test_source_zero_cost_cooperation_at_zero_parameter_is_not_an_extra_disable_gate():
+    kin,mask = scene([(40,2,10),(31,1,10),(60,1,5)])
+    out = lane_change(kin,mask,PhysicsConfig(),driver_params={'lcCooperative':torch.zeros(1,3)})
+    assert out['lc2013_reason'][0,1] == COOPERATIVE
+    assert out['next_lane'][0,1] == 0
+    assert out['lc2013_left'][0,1] == 0
+
+
+def test_mature_speed_gain_urgency_requests_source_follower_deceleration():
+    kin,mask = scene([(0,1,10),(30,1,5),(-10,0,15)])
+    p = PhysicsConfig()
+    memory = lane_change(kin,mask,p)
+    memory['lc2013_left'][0,0] = 51 * 10_000_000
+    out = lane_change(kin,mask,p,memory=memory)
+    assert out['lc2013_reason'][0,0] == SPEED_GAIN
+    assert out['lc2013_blocked_follower'][0,0]
+    assert out['lc2013_speed_gain_urgent'][0,0]
+    assert out['lc2013_urgent'][0,0]
+    assert out['lc2013_has_advice'][0,2]
+    assert out['lc2013_advice_accel'][0,2] == -p.idm()[1]
+
+
+def test_speed_gain_below_source_urgency_threshold_does_not_request_help():
+    kin,mask = scene([(0,1,10),(30,1,5),(-10,0,15)])
+    p = PhysicsConfig()
+    memory = lane_change(kin,mask,p)
+    memory['lc2013_left'][0,0] = 49 * 10_000_000
+    out = lane_change(kin,mask,p,memory=memory)
+    assert out['lc2013_reason'][0,0] == SPEED_GAIN
+    assert not out['lc2013_speed_gain_urgent'][0,0]
+    assert not out['lc2013_has_advice'][0,2]

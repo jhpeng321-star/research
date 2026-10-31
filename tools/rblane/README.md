@@ -74,3 +74,29 @@ Frozen real-weight encoder/full-source parity is BIT-EXACT for all9 outputs.
 Operate successive unique `panelN` names; every dispatch is immutable. Verify
 each collection using `python -m tools.rblane.verify_receipts --kind panelN`.
 Verification uses immutable bundle bytes, not a newer model in this worktree.
+
+`operate.py panel10 --encoder-checkpoint <wm_s.pt> --compare-pre-signed` freezes
+a same-input ablation of the signed-current-leader-cap fix: both our prior
+0a1e7e93 kernel and current kernel share one causal encoder inference andv2
+snapshot, with independent persistent wish state. The prior OWN project source
+is SHA-pinned before execution; downloaded SUMO code is never executed. Current
+and prior motivation scores are separate. Persistent states must remain finite.
+Encoder source/featurizer fingerprints join checkpoint SHA in the MOBIL-reuse gate.
+
+`--motion-points <MOTION_POINT_TABLE.json> --native-only` is a separate
+sensitivity consuming S-RB-FIT's already published MotionFit point reader.
+It performs no fitting. The export checks the exact32 native input SHA bindings
+against completed lane receipts, retains the reader's deterministic point rule,
+and uses its population point for unseen IDs. CAV and LC defaults stay unchanged.
+Native-only avoids assuming numeric-ID alignment between counterfactual arms;
+these32 episodes must be compared with native-only A/B results. Compatible
+MOBIL cache reuse accepts a selected-arm subset of an already completed panel.
+
+Final runtime message fields add `lc2013_has_advice` and
+`lc2013_advice_weight` to STATE_KEYS. They preserve explicit zero/positive
+messages and source wanted-speed blending; old states keep negative-only
+fallback behavior. Urgent speed-gain follower help and IDM minNextSpeed slack
+are CPU-tested. `check_message_equivalence.py` proves conditional choices/wish
+state unchanged relative to scored source52d2df5c while outward advice changes.
+`finalize_diagnostics.py` assembles only already-verified score receipts; it
+does not repeat inference or establish autonomous distributional fidelity.

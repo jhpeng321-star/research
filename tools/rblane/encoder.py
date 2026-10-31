@@ -9,6 +9,7 @@ not observation of any post-t0 outcome.
 from __future__ import annotations
 
 import hashlib
+import inspect
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -22,9 +23,20 @@ from wms.model.wms import WmSModel
 REGISTERED_WM2_SHA = 'b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436'
 
 
+def encoder_source_hashes():
+    paths = dict(wrapper=Path(__file__),
+                 driver_encoder=Path(inspect.getsourcefile(DriverEncoder)),
+                 history_features=Path(inspect.getsourcefile(long_history_features)))
+    result = {name: hashlib.sha256(path.read_bytes()).hexdigest() for name, path in paths.items()}
+    result['current_interaction'] = hashlib.sha256(
+        inspect.getsource(WmSModel._driver_interaction).encode()).hexdigest()
+    return result
+
+
 class FrozenMotionEncoder:
     def __init__(self, checkpoint: Path, physics, *, required_sha=None):
         self.sha256 = hashlib.sha256(checkpoint.read_bytes()).hexdigest()
+        self.source_sha256 = encoder_source_hashes()
         if required_sha is not None and self.sha256 != required_sha:
             raise ValueError('frozen encoder checkpoint identity mismatch')
         payload = torch.load(checkpoint, map_location='cpu', weights_only=True)

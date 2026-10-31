@@ -15,6 +15,14 @@ def _identity(state):
     return state.get("vehicle_id", state.get("vid"))
 
 
+def minimum_advice_accel(speed, decel, wanted, physics):
+    """Euler IDM minNextSpeed slack (source IDM:82), including safe CF braking."""
+    emergency = getattr(physics, 'sumo_cf_emergency_decel_mps2', None)
+    slack = min(9.0 if emergency is None else float(emergency), 1.5)
+    braking = torch.maximum(decel, torch.full_like(decel, slack))
+    return torch.maximum(-speed / physics.dt_s, torch.minimum(-braking, wanted))
+
+
 def evaluate(model, state, kin, present, deciders, params):
     return lane_change(kin, present, model.physics, memory=state,
                        identity=_identity(state), driver_params=params,
@@ -41,20 +49,24 @@ def forward_output(model, state, kin, present, deciders, params, result):
             same &= ids == state["lc2013_identity"]
         advice = state["lc2013_advice_accel"].to(result["accel_mps2"])
         b = (torch.full_like(advice, model.physics.idm()[1]) if params is None
-             else params["decel"].to(advice))
-        # SUMO patchSpeed ignores advice outside the feasible acceleration range.
-        valid = same & result["hdv_mask"] & torch.isfinite(advice) & (advice >= -b)
-        accel = torch.where(valid, torch.minimum(result["accel_mps2"], advice),
-                             result["accel_mps2"])
-        # Zero advice means no message, not a request to suppress acceleration.
-        result["accel_mps2"] = torch.where(valid & (advice < 0), accel,
-                                             result["accel_mps2"])
+              else params["decel"].to(advice))
+        a = (torch.full_like(advice, model.physics.idm()[0]) if params is None
+             else params["accel"].to(advice))
+        wanted = result["accel_mps2"]
+        lower = minimum_advice_accel(kin[..., 4].to(advice), b, wanted, model.physics)
+        # Source283-300 checks the RAW message before blending foreign advice
+        # with wanted speed. Explicit message presence preserves zero/positive
+        # messages; old carried states retain the old negative-only convention.
+        has = state.get("lc2013_has_advice", advice < 0).bool()
+        weight = state.get("lc2013_advice_weight", torch.ones_like(advice)).to(advice).clamp(0, 1)
+        valid = same & result["hdv_mask"] & has & torch.isfinite(advice) & torch.isfinite(weight)
+        valid &= (advice >= lower) & (advice <= a)
+        blended = advice * weight + wanted * (1 - weight)
+        result["accel_mps2"] = torch.where(valid, torch.minimum(wanted, blended), wanted)
         if "lc2013_own_has_advice" in state:
             own = state["lc2013_own_advice_accel"].to(advice)
-            a = (torch.full_like(advice, model.physics.idm()[0]) if params is None
-                 else params["accel"].to(advice))
             valid = (same & result["hdv_mask"] & state["lc2013_own_has_advice"].bool()
-                     & torch.isfinite(own) & (own >= -b) & (own <= a))
+                     & torch.isfinite(own) & (own >= lower) & (own <= a))
             result["accel_mps2"] = torch.where(valid,
                 torch.minimum(result["accel_mps2"], own), result["accel_mps2"])
         result["accel_delta_mps2"] = result["accel_mps2"] - result["physics_accel_mps2"]
@@ -62,12 +74,6 @@ def forward_output(model, state, kin, present, deciders, params, result):
 
 def step_output(model, state, kin, present, out, next_s, next_v, next_lane, params,
                 *, ramp_owned_by_merge=False):
-    moved = kin.clone()
-    moved[..., 0], moved[..., 4], moved[..., 5] = next_s, next_v, out["accel_mps2"]
-    end = model.physics.merge_zone_s1_m
-    pinned = present & (state["lane"] == model.physics.merge_lane) & (next_s > end)
-    moved[..., 0] = torch.where(pinned, end, moved[..., 0])
-    moved[..., 4] = torch.where(pinned, 0.0, moved[..., 4])
     if params is None and "driver_parameters" in out:
         params = {name: out["driver_parameters"][..., i]
                   for i, name in enumerate(PARAMETER_NAMES)}
@@ -75,7 +81,25 @@ def step_output(model, state, kin, present, out, next_s, next_v, next_lane, para
     delegated = out.get(WM_MERGE_KEY)
     if delegated is not None:
         deciders = deciders | delegated.bool()
-    deciders = deciders & (kin[..., 1:4].sum(-1) > 0)
+    normal = kin[..., 1:4].sum(-1) > 0
+    deciders = deciders & present & normal
+    source = state["lane"].long()
+    end = model.physics.merge_zone_s1_m
+    pinned = deciders & (source == model.physics.merge_lane) & (next_s > end)
+    motion_s = torch.where(pinned, end, next_s)
+    motion_v = torch.where(pinned, 0.0, next_v)
+    applied_a = ((motion_v - kin[..., 4]) / model.physics.dt_s).to(out["accel_mps2"])
+    out["accel_mps2"] = torch.where(pinned, applied_a, out["accel_mps2"])
+    out["accel_delta_mps2"] = out["accel_mps2"] - out["physics_accel_mps2"]
+    moved = kin.clone()
+    moved[..., 0], moved[..., 4], moved[..., 5] = motion_s, motion_v, out["accel_mps2"]
+    # Fixed CAV/controller motion has already executed. Its destination lane,
+    # as well as its position, constrains this HDV decision snapshot. Connector
+    # rows retain their empty one-hot instead of manufacturing a lane0 body.
+    fixed = present & normal & ~deciders
+    fixed_lanes = F.one_hot(next_lane.clamp(0, 2), 3).to(kin)
+    fixed_lanes *= ((next_lane >= 0) & (next_lane < 3)).unsqueeze(-1)
+    moved[..., 1:4] = torch.where(fixed.unsqueeze(-1), fixed_lanes, moved[..., 1:4])
     lc = evaluate(model, state, moved, present, deciders, params)
     proposed = torch.where(deciders, lc["next_lane"], next_lane)
     if ramp_owned_by_merge:
@@ -83,12 +107,13 @@ def step_output(model, state, kin, present, out, next_s, next_v, next_lane, para
         # owner accepts the move against the resolved mainline proposals.
         proposed = torch.where(state["lane"] == model.physics.merge_lane,
                                state["lane"].long(), proposed)
-    resolved, shifted_s = resolve_shifted_lanes(next_s, kin[..., 6], state["lane"].long(),
-                                              proposed, present, deciders, model.physics)
+    resolved, shifted_s = resolve_shifted_lanes(motion_s, kin[..., 6], source,
+                                               proposed, present, deciders, model.physics)
     out.update({k: v for k, v in lc.items() if k != "next_lane"})
-    out['lc2013_position_shift'] = shifted_s - next_s
+    out['lc2013_position_shift'] = shifted_s - motion_s
+    out['lc2013_motion_clamped'] = pinned
     out["lane_probabilities"] = F.one_hot(resolved.clamp(0, 2), 3).float()
-    return resolved, shifted_s
+    return resolved, shifted_s, motion_v
 
 
 def resolve_shifted_lanes(s, length, source, proposed, present, deciders, physics):

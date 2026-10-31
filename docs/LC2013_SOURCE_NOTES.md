@@ -98,3 +98,14 @@ raw position on lane change, requiring the corresponding normalized-s shift.
 Both runtime adapter and scorer now respect that transform. The scorer's
 explicitv2 contract prevents mixing cached MOBIL decisions from old coordinates.
 Source download SHA/path and default-OFF bit-exact proof are in the iteration diary.
+
+## Urgency / message semantics completion
+
+LC2013.cpp:1661/1861 requests explicit follower help for mature left wishes;
+lcSpeedGainUrgency is50 by default, not a fitted threshold. MSCFModel_IDM.cpp:82
+uses max(comfortableDecel,min(emergencyDecel,1.5)) for minNextSpeed. LC2013.cpp:
+283–300 checks raw advice against feasible bounds, then blends foreign advice
+with wanted speed; own advice is unscaled. Explicit presence distinguishes a
+zero-acceleration request from no message. Tests and decision-equivalence scope
+are in the morning report and immutable receipts; complete negotiation is still
+outside this subset's parity claim.

@@ -161,7 +161,7 @@ def load_motion_point(path):
 
 @torch.no_grad()
 def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reuse_mobil=None,
-            motion_parameters=None, encoder=None):
+            motion_parameters=None, encoder=None, prior_kernel=None, motion_points=None):
     hashes = {name: sha(safe_path(path / name, root)) for name in FILES}
     if reuse_mobil is not None and reuse_mobil['input_sha256'] != hashes:
         raise ValueError('MOBIL reuse requires exact observable input hashes')
@@ -182,12 +182,19 @@ def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reus
     if not np.allclose(np.diff(times), physics.dt_s, rtol=0, atol=1e-8):
         raise ValueError('unexpected time discretization')
     encoded = encoder.prepare(kin, mask, ids, times, t0) if encoder is not None else None
+    if motion_points is not None:
+        encoded = motion_points.prepare(int(meta['seed']),meta['arm'],t0,hashes,meta['episode'])
     memory = None
     actual, proposals = [], {'lc2013': [], 'mobil': []}
     motivated = {name: [] for name in MOTIVATIONS.values()}
+    prior_memory = None
+    prior_motivated = {name: [] for name in MOTIVATIONS.values()}
+    if prior_kernel is not None:
+        proposals['lc2013_before_signed'] = []
     exposure = Counter()
     wishes, blocked = Counter(), Counter()
     diagnostics, misses = {}, Counter()
+    branches = Counter()
     for t in range(len(times) - 1):
         if times[t] < t0 - 60 or times[t] >= t0 + horizon:
             continue
@@ -207,9 +214,17 @@ def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reus
                   motion_settings(physics, is_cav, motion_parameters))
         memory = lane_change(k, m, physics, memory=memory, identity=identity,
                              decision_mask=d, driver_params=params)
+        if prior_kernel is not None:
+            prior_memory = prior_kernel(k, m, physics, memory=prior_memory, identity=identity,
+                                        decision_mask=d, driver_params=params)
+        for key in ('lc2013_left', 'lc2013_right', 'lc2013_keep_right', 'lc2013_lookahead'):
+            if not torch.isfinite(memory[key][d]).all():
+                raise RuntimeError('nonfinite LC2013 persistent state: ' + key)
         if times[t] < t0:
             continue
         choices = dict(lc2013=memory['next_lane'][0].numpy())
+        if prior_memory is not None:
+            choices['lc2013_before_signed'] = prior_memory['next_lane'][0].numpy()
         if reuse_mobil is None:
             choices['mobil'] = mobil_merge_logits(k, m, physics, driver_params=params)[0].argmax(-1).numpy()
         source = kin[t, :, 1:4].argmax(-1)
@@ -217,6 +232,12 @@ def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reus
         for j in np.flatnonzero(eligible):
             direction = {0: 'return', 1: 'overtake', 2: 'merge'}[int(source[j])]
             exposure[direction] += 1
+            if 'lc2013_keep_signed_cap' in memory and memory['lc2013_keep_signed_cap'][0, j]:
+                branches['keep_right_signed_current_leader_cap'] += 1
+            if 'lc2013_endpoint_canonicalized' in memory and memory['lc2013_endpoint_canonicalized'][0, j]:
+                branches['ramp_endpoint_canonicalized'] += 1
+            if 'lc2013_cooperative_return' in memory and memory['lc2013_cooperative_return'][0, j]:
+                branches['cooperative_early_return_frozen_wish_update'] += 1
             if memory['lc2013_wish'][0, j]:
                 wishes[direction] += 1
                 if not memory['lc2013_safe'][0, j]:
@@ -241,6 +262,9 @@ def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reus
             for name, choice in choices.items():
                 if choice[j] != source[j]:
                     proposals[name].append(event(choice[j], predicted=True))
+                    if name == 'lc2013_before_signed':
+                        reason = MOTIVATIONS[int(prior_memory['lc2013_reason'][0, j])]
+                        prior_motivated[reason].append(event(choice[j], predicted=True))
                     if name == 'lc2013':
                         reason = MOTIVATIONS[int(memory['lc2013_reason'][0, j])]
                         motivated[reason].append(event(choice[j], predicted=True))
@@ -268,21 +292,22 @@ def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reus
             by_transition={key: match_events([e for e in actual if e[1] == lane],
                 [e for e in events if e[1] == lane], 0)
                 for lane, key in ((0, 'return'), (1, 'overtake'), (2, 'merge'))})
-        if name == 'lc2013':
+        if name.startswith('lc2013'):
+            classified = motivated if name == 'lc2013' else prior_motivated
             scores[name]['by_motivation'] = {
                 reason: dict(exact=match_events(actual, ev, 0),
                              run_window_2s=match_events(actual, compress_proposals(ev, physics.dt_s), 2),
                              proximity=event_proximity(actual, ev))
-                for reason, ev in motivated.items()}
+                for reason, ev in classified.items()}
     return dict(episode=meta['episode'], seed=int(meta['seed']), arm=meta['arm'],
                 input_sha256=hashes, recorded=len(actual), exposure=dict(exposure),
                 wishes=dict(wishes), blocked=dict(blocked), scores=scores,
-                proposal_diagnostics=diagnostics, recorded_outcomes=dict(misses))
+                proposal_diagnostics=diagnostics, recorded_outcomes=dict(misses), branch_counts=dict(branches))
 
 
 def aggregate(rows):
     result = {}
-    for model in ('lc2013', 'mobil'):
+    for model in rows[0]['scores']:
         result[model] = {}
         for key in ('exact', 'window_2s', 'run_window_2s'):
             cells = [r['scores'][model][key] for r in rows]
@@ -303,7 +328,7 @@ def aggregate(rows):
             sums['recall'] = sums['matched'] / sums['recorded'] if sums['recorded'] else None
             sums['precision'] = sums['matched'] / sums['predicted'] if sums['predicted'] else None
             result[model]['by_transition'][transition] = sums
-        if model == 'lc2013' and all('by_motivation' in r['scores'][model] for r in rows):
+        if model.startswith('lc2013') and all('by_motivation' in r['scores'][model] for r in rows):
             result[model]['by_motivation'] = {}
             for motivation in MOTIVATIONS.values():
                 result[model]['by_motivation'][motivation] = {}
@@ -319,7 +344,7 @@ def aggregate(rows):
                     cells = [r['scores'][model]['by_motivation'][motivation]['proximity'] for r in rows]
                     result[model]['by_motivation'][motivation]['proximity'] = {
                         key: sum(c[key] for c in cells) for key in cells[0]}
-            if all('proposal_diagnostics' in r for r in rows):
+            if model == 'lc2013' and all('proposal_diagnostics' in r for r in rows):
                 profile = {}
                 for r in rows:
                     for key, cell in r['proposal_diagnostics'].items():
@@ -329,6 +354,11 @@ def aggregate(rows):
                 for r in rows:
                     misses.update(r['recorded_outcomes'])
                 result[model]['recorded_outcomes'] = dict(misses)
+                if all('branch_counts' in r for r in rows):
+                    branches = Counter()
+                    for r in rows:
+                        branches.update(r['branch_counts'])
+                    result[model]['branch_counts'] = dict(branches)
     return result
 
 
@@ -341,9 +371,18 @@ def main():
     ap.add_argument('--reuse-mobil-from', type=Path)
     ap.add_argument('--idm-parameters', type=Path)
     ap.add_argument('--encoder-checkpoint', type=Path)
+    ap.add_argument('--pre-signed-kernel', type=Path)
+    ap.add_argument('--motion-points',type=Path)
+    ap.add_argument('--native-only',action='store_true')
     args = ap.parse_args()
-    if args.idm_parameters is not None and args.encoder_checkpoint is not None:
+    if sum(x is not None for x in (args.idm_parameters,args.encoder_checkpoint,args.motion_points))>1:
         ap.error('choose one frozen parameter source')
+    prior_kernel = None
+    if args.pre_signed_kernel is not None:
+        if any(term in str(args.pre_signed_kernel.resolve()).lower() for term in FORBIDDEN):
+            raise ValueError('prohibited prior source path')
+        from .prior_kernel import load_prior_kernel
+        prior_kernel = load_prior_kernel(args.pre_signed_kernel)
     torch.set_num_threads(1)
     torch.set_num_interop_threads(1)
     if os.getloadavg()[0] > 20:
@@ -352,8 +391,19 @@ def main():
         raise ValueError('output must be NEW with existing parent')
     args.out.mkdir()
     physics = PhysicsConfig(sumo_fidelity=True, open_road=True)
+    selected_arms = ('native',) if args.native_only else ARMS
+    points = None
+    point_reader = None
+    if args.motion_points is not None:
+        if not args.native_only or any(term in str(args.motion_points.resolve()).lower() for term in FORBIDDEN):
+            raise ValueError('motion point sensitivity requires native-only allowed artifact')
+        from .motion_points import MotionPoints,reader_identity
+        points = MotionPoints(args.motion_points,physics)
+        point_reader = reader_identity()
     motion_parameters = load_motion_point(args.idm_parameters) if args.idm_parameters is not None else None
     parameter_sha = sha(args.idm_parameters) if args.idm_parameters is not None else None
+    if points is not None:
+        parameter_sha = sha(args.motion_points)
     encoder = None
     if args.encoder_checkpoint is not None:
         if any(term in str(args.encoder_checkpoint.resolve()).lower() for term in FORBIDDEN):
@@ -364,9 +414,11 @@ def main():
     baseline = None
     if args.reuse_mobil_from is not None:
         baseline = json.loads((args.reuse_mobil_from / 'SUMMARY.json').read_text())
-        if (baseline['status'] != 'COMPLETE' or baseline['episodes'] != 160
+        previous_arms = baseline.get('diagnostic_arms',list(ARMS))
+        if (baseline['status'] != 'COMPLETE' or baseline['episodes'] != 32*len(previous_arms)
                 or baseline['physics'] != asdict(physics) or baseline['horizon_s'] != args.horizon_s
                 or baseline['snapshot'] != SNAPSHOT_CONTRACT
+                or not set(selected_arms).issubset(previous_arms)
                 or baseline.get('motion_parameter_sha256') != parameter_sha):
             raise ValueError('MOBIL reuse panel/settings mismatch')
     paths = []
@@ -377,6 +429,7 @@ def main():
                 paths.append(safe_path(path, args.views))
     if len(paths) != 160:
         raise ValueError(f'expected 160 FIT episodes, found {len(paths)}')
+    paths = [p for p in paths if p.name.rsplit('__',1)[1] in selected_arms]
     if args.smoke:
         paths = [p for p in paths if p.name.endswith('__native')][:1]
     start = time.time()
@@ -384,19 +437,25 @@ def main():
     for path in paths:
         reuse = (json.loads((args.reuse_mobil_from / (path.name + '.json')).read_text())
                  if baseline is not None else None)
-        row = episode(path, args.views, physics, args.horizon_s, reuse, motion_parameters, encoder)
+        row = episode(path, args.views, physics, args.horizon_s, reuse, motion_parameters, encoder, prior_kernel, points)
         rows.append(row)
         (args.out / (path.name + '.json')).write_text(json.dumps(row, indent=2) + '\n')
         print(json.dumps(dict(completed=len(rows), total=len(paths), episode=path.name,
                               elapsed_s=time.time()-start)), flush=True)
     report = dict(status='COMPLETE', episodes=len(rows), worlds=len({r['seed'] for r in rows}),
                   horizon_s=args.horizon_s, prehistory_s=60,
-                  settings=('frozen WM2 pre-t0 motion encoder; persistent VID settings; CAV/LC defaults'
+                  diagnostic_arms=list(selected_arms),
+                  settings=('published causal native per-driver MotionFit points; persistent settings; CAV/LC defaults'
+                            if points is not None else 'frozen WM2 pre-t0 motion encoder; persistent VID settings; CAV/LC defaults'
                             if encoder is not None else 'inherited population defaults'
                             if motion_parameters is None else
                             'published motion-only pooled IDM point for HDVs; CAV and LC style defaults'),
                   motion_parameters=motion_parameters, motion_parameter_sha256=parameter_sha,
                   encoder_checkpoint_sha256=encoder.sha256 if encoder is not None else None,
+                  encoder_source_sha256=encoder.source_sha256 if encoder is not None else None,
+                  pre_signed_source_sha256=sha(args.pre_signed_kernel) if prior_kernel is not None else None,
+                  motion_points_sha256=sha(args.motion_points) if points is not None else None,
+                  motion_points_reader_sha256=point_reader,
                   snapshot=SNAPSHOT_CONTRACT,
                   cohort='HDV, same identity, normal road in both adjacent frames',
                   motivation_contract='predicted reason; recall contribution uses all recorded events; no observed motivation labels',
@@ -410,6 +469,11 @@ def main():
                     Path(__file__).parents[2] / ('src/wms/physics/' + name)
                     for name in ('lc2013.py', 'lc2013_geometry.py', 'config.py',
                                  'mobil.py', 'neighbours.py', 'batched.py', 'idm.py')))})
+    if prior_kernel is not None:
+        report['source_sha256'][str(args.pre_signed_kernel)] = sha(args.pre_signed_kernel)
+    if points is not None:
+        report['source_sha256'][str(args.motion_points)] = sha(args.motion_points)
+        report['source_sha256'][str(Path(__file__).with_name('motion_points.py'))] = sha(Path(__file__).with_name('motion_points.py'))
     (args.out / 'SUMMARY.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps(report['aggregate']), flush=True)
 

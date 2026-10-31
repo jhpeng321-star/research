@@ -1,0 +1,28 @@
+{
+  "status": "PASS",
+  "baseline_commit": "b192e0c80a88f3d93075ff9620e1c42d0afbd741",
+  "previous_shared_source_sha256": "a71fb8858a4829086f3474cf27fb5878af9fd7754b1dc1e2ec416b53d52cc083",
+  "current_shared_source_sha256": "cb3aa822fd309f40fb2421e156be86e84a618afbd503a15080b2dd9799edeb0a",
+  "cases": [
+    {
+      "case": "legacy",
+      "status": "BIT_EXACT",
+      "tensor_leaves": 134,
+      "tensor_elements": 779184
+    },
+    {
+      "case": "legacy_conflict_enabled",
+      "status": "BIT_EXACT",
+      "tensor_leaves": 134,
+      "tensor_elements": 779184
+    },
+    {
+      "case": "physical_history",
+      "status": "BIT_EXACT",
+      "tensor_leaves": 157,
+      "tensor_elements": 818452
+    }
+  ],
+  "synthetic_only": true,
+  "torch_threads": 1
+}

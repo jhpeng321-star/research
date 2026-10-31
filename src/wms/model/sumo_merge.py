@@ -97,7 +97,7 @@ def step(model, state, out, k_steps, driver_params, action_id, action_command,
             exec_cap=cap, driver_params=driver_params)
     if model.lane_model == 'lc2013':
         from .lc2013_adapter import step_output
-        next_lane, next_s = step_output(model, state, kin, present, out, next_s, next_v,
+        next_lane, next_s, next_v = step_output(model, state, kin, present, out, next_s, next_v,
                                 next_lane, driver_params, ramp_owned_by_merge=True)
     moved = kin.clone()
     moved[..., 0], moved[..., 4] = next_s, next_v

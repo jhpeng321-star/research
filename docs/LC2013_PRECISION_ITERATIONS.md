@@ -282,3 +282,204 @@ bound; counts, precision, recall, timing, inputs, settings and sources remain
 exact. Integrity test rejects even a tiny precision change or one-count change.
 PANEL9_VERIFIED.json retains both differing local floating values and the exact
 original-runtime proof; no metric/result bytes were corrected or rerun.
+
+## Candidate10: signed current-leader cap and paired encoder ablation
+
+Source1749–1752 divides by **vMax-currentLeaderSpeed** without clamping its
+sign. The port's positive-denominator clamp removed negative feedback when
+an observer-inferred desired speed is below the observed leader speed. Source
+then increases the keep-right counter (delaying the wish), while the clamp
+continued accumulating it negatively. A numeric case29/28m/s inferred desired
+speeds vs30/31m/s observed speeds has(95−2.5)/(29−31)=−46.25s; the source cap
+suppresses a mature keep-right wish. No inferred desired-speed clipping is added.
+
+Also corrected1742's nesting: a faster target leader must not overwrite
+fullSpeedGap used by the later current-leader cap. Independent synthetic case
+with target35m/s, ego desired30m/s and current leader20m/s gives9.25s, matching
+source arithmetic. Zero closing speed with positive gap stays finite via the
+source infinity/minimum semantics. Persistent-state finiteness is now audited.
+
+52CPU tests PASS (6.65s, CPU_SIGNED_CAP.xml), including the paired candidate
+scorer with independent wish memories and identical source-frame inputs.
+Source9 vs10 default-population equality:9600 synthetic float32 vehicle
+decisions,259200 compared tensor elements, all old outputs BIT-EXACT
+(POPULATION_EQ_SIGNED_CAP.json). This default-homogeneous result is retained;
+the source change is relevant to heterogeneous/inferred settings.
+
+Next run freezes **existing encoder A**, snapshotv2 and both source kernels
+in the SAME pass: current signed-cap fix vs our pre-fix0a1e7e93 kernel (SHA
+c1aa89fafb69ee18d34ba6b7c75445a6985a10096d41237439e8dd06189e1921), plus
+new matched-setting MOBIL once. The earlier encoder8 used old coordinates and
+cannot replace this paired ablation. Prior kernel is identity-pinned OWN
+project code; no downloaded SUMO code is executed. All settings, current
+geometry, history and observations are shared, and both kernels get independent
+persistent state. Encoder-source fingerprints now protect MOBIL reuse as well
+as checkpoint SHA, inputs, physics and scoring transform.
+
+Candidate10 paired result VERIFIED (worker644043 exited,566.25s). Same encoder,
+snapshotv2 and current geometry, before→after signed-cap:
+- exact precision2.1475%→2.2490%, recall38.7097%→37.4194%;1260/58672→1218/54157.
+- Removes4473 false-positive steps at the cost of42 exact matches (net4515
+  fewer proposals). The signed-cap branch fires25160 scored HDV frames.
+- Per motivation before→after precision / recall contribution:
+  strategic23.461%/14.286pp→same (465/1982); cooperative14.549%/4.117pp→same
+  (134/921); speed-gain2.347%/10.445pp→2.337%/10.445pp (340/14486→340/14550);
+  keep-right0.778%/9.862pp→0.760%/8.571pp (321/41283→279/36704).
+- Current compressed±2s runs914/3586: precision25.488%, recall28.080%,
+  timingMAE0.3972s, positionMAE6.053m. Paired MOBIL108/3118 exact:
+  precision3.464%, recall3.318%. New matched-mode baseline retained.
+- Source/encoder/input/motivation-partition and original-runtime exact
+  reassembly PASS. Non-return transition controls (merge/overtake) are EXACT
+  between ablation kernels, as predicted by the targeted source change.
+
+This source fix improves total positive-step precision slightly, but **does
+not resolve the keep-right problem**. Individual keep-right precision decreases
+because some true positives are removed too. No distributional adoption claim.
+
+## Candidate11: exact represented ramp endpoint / runtime motion consistency
+
+A regression reproduces a real arithmetic legality bug introduced by this LC
+port: float32(75.44)=75.44000244140625, so converting the represented physical
+endpoint to double made it appear OUTSIDE the merge zone. Float64 merged;
+the identical float32 scene stayed trapped. Input-only FIT audit (no WM run,
+ENDPOINT_INPUT_AUDIT.json) counts5881 scored HDV endpoint frames including91
+recorded merges, plus7465 warmup HDV frames/90 merges. All160 episodes and801
+scored recorded ramp changes reconcile. Metadata has no population label;
+no driver-assignment source was opened.
+
+Snap ONLY the exact float32 representation (including already-promoted double
+observation tensors) of the ramp endpoint back to
+its geometric double value. One float32ULP farther remains illegal: no zone
+extension or behavioural cutoff. The ramp end is topologically unique (no
+continuation). Mainline edge-boundary ambiguity is not changed by this fix.
+
+The now-possible merge also exposed a runtime inconsistency: LC decisions
+were evaluated at a stopped/clamped position, then a successful merge released
+the original untraveled overshoot and velocity. The adapter now returns its
+actual clamped position AND speed even after merging, with the applied
+acceleration recorded. Fixed teacher/controller CAV poses stay untouched;
+their executed destination lane is used in the HDV decision geometry.
+`step_output` now returns(next_lane,next_s,next_v), wired by one LC-only wms
+tuple change. Synthetic tests cover retained stop motion and a fixed CAV
+vacating the right lane before the HDV decision.
+
+Targeted30CPU tests PASS, including the pre-fix failing float32 endpoint
+regression. New DEFAULT_OFF_ENDPOINTS.json compares three full default-OFF
+weight/forward/step/rollout cases BIT-EXACT to preserved b192e0c8. Previous
+proofs are unchanged. Fresh default-mode FIT measurement will reuse the
+already-completedv2 MOBIL9 score; no repeated MOBIL compute is necessary.
+
+Final endpoint gate56/56 PASS, including float32 observations promoted to
+double and rejection of the next genuine float32/float64 ULP beyond the end.
+Final JUnit CPU_ENDPOINTS_PROMOTED.xml; initial endpoint gate and all earlier
+receipts retained. No new scoring data or driver settings were fit.
+
+Endpoint measurements VERIFIED, all160 FIT episodes, old MOBIL baselines reused:
+- Default11:1235/41095 exact, precision3.0052%, recall37.9416%; vs9's1134/40246,
+  2.8177%/34.8387%. Strategic TP rises320→411, consistent with the91 observed
+  endpoint merges. Per motivation: strategic10.234%/12.627pp (411/4016),
+  cooperative9.046%/2.826pp (92/1017), speed-gain4.486%/16.621pp (541/12061),
+  keep-right0.796%/5.868pp (191/24001). Paired MOBIL241/3255 recall7.404%.
+- Encoder12:1314/54904 exact, precision2.3933%, recall40.3687%; vs10's1218/54157,
+  2.2490%/37.4194%. Per motivation: strategic20.574%/16.959pp (552/2683),
+  cooperative14.995%/4.547pp (148/987), speed-gain2.306%/10.292pp (335/14530),
+  keep-right0.760%/8.571pp (279/36704). Paired MOBIL108/3255 recall3.318%.
+- Both execute endpoint canonicalization on5881 scored HDV frames, exactly the
+  input-audit count. Both source/encoder/input/motivation and original-runtime
+  reassembly checks PASS; both workers758018/762113 exited. No completed MOBIL
+  inference was repeated. Keep-right remains the dominant precision failure.
+
+## Cross-workstream kinematic identity check (no new WM inference)
+
+Published `docs/LC2013_POSITION_HANDOFF.md` and shared
+`rb-shared/LANE_TO_CF_POSITION_20261101.md` for CF/INT.2,346,379 valid same-edge
+HDV FIT intervals show Euler displacement MAE3.49e-5m vs trapezoid0.0390m;
+public MSVehicle.cpp:4954–4967 confirms the mode. Current inspected INT source
+still used trapezoid; no CF-owned code was changed by LANE. Position audit
+receipt/script committed separately; the lane diagnostic already teacher-forces
+recorded position, so this does not explain away its poor keep-right precision.
+
+## Published physical-inference sensitivity13 (frozen before scoring)
+
+The source-correct keep-right cap depends on latent desired-speed differences;
+existing encoder and homogeneous points leave many false proposals. Consume
+the ALREADY-FINISHED S-RB-FIT finite_mixture_v4 point reader (owner physical-fit
+amendment5700), not another fit. Exported3130 native driver points across32 FIT
+worlds with MotionFit.idm(sample=False), plus its population fallback; source
+reader SHA2c50c732… and artifact/provenance hashes retained in
+MOTION_POINT_TABLE.json. All32 native input hashes match completed PANEL9
+observations exactly. No new training, LC fit, optimizer or label-based tuning.
+
+Freeze native-only32 episodes,240..300 warmup/300..360 score, source82894fab,
+SUMO LC style defaults and original CAV defaults. Native-only avoids assuming
+cross-arm numeric VID alignment. Missing/entrant IDs use the published population
+point. This point is explicitly a sensitivity, NOT substituted into A/B/C or
+claimed as calibrated uncertainty. New-setting matched MOBIL runs once; source,
+arm subset, input SHA and table-reader identity protect future cache reuse.
+Point-table tests cover identity/fallback/CAV defaults and reject foreign-arm,
+out-of-FIT, nonpositive or mismatched-observation inputs.
+
+Sensitivity13 VERIFIED: native-only32worlds/626 events, LC236/7627 exact,
+precision3.0943%, recall37.6997%; matched MOBIL31/770, precision4.0260%,
+recall4.9521%. Same native subset of default11 has236/8193, precision2.8805%
+and identical total recall. Different physical inference removes566 proposal
+steps with the same total match count; this is not proof of identical matched
+identities or a distributional improvement. All identity/artifact/source and
+original-runtime reassembly checks PASS; owned870050 exited. No fitting ran.
+Per motivation (precision / native626-event recall contribution): strategic
+14.808%/13.578pp (85/574); cooperative15.672%/3.355pp (21/134);
+speed-gain2.343%/12.141pp (76/3244); keep-right1.469%/8.626pp (54/3675).
+
+## Cooperative early-return ordering14 (source-frozen before scoring)
+
+Source1643–1669 returns on cooperative clearing BEFORE1694–1826's wish updates.
+The port had accumulated speed-gain wishes while returning COOPERATIVE, then
+used updated counters in inconvenience. Reorder to compute the source condition
+from pre-update wishes and freeze accumulation on that branch, including blocked
+cooperative requests. Source1565's thisSpeed==0 inconvenience convention is also
+retained. Remove the extra positive-parameter disable gate absent from source:
+zero-cost cooperation atlcCooperative0 is permitted by the actual predicate.
+The earlier avoid-overtake-right impulse remains, as it precedes the source's
+cooperative return; only the later ordinary accumulation is skipped.
+
+Independent synthetic cases have an urgent ramp request and its follower behind
+a slow current leader: source returns COOPERATIVE with left wish still0, rather
+than accruing a latent speed-gain manoeuvre. Targeted32physics/model tests PASS.
+This changes no inferred parameters and targets a real accumulation/timing path;
+before/after metrics and per-motivation precision/recall will be reported.
+
+Final cooperative-order passes VERIFIED, all matched MOBIL reused:
+- Default14:1235/41083 exact, precision3.0061%, recall37.9416% (12 fewer false
+  proposal steps than11, same total matches). Per motivation precision/recall
+  contribution: strategic10.234%/12.627pp (411/4016), cooperative9.046%/2.826pp
+  (92/1017), speed-gain4.490%/16.621pp (541/12049), keep-right0.796%/5.868pp
+  (191/24001).
+- Encoder15:1318/54910 exact, precision2.4003%, recall40.4916% (4 more matches,
+  6 more proposals than12). Strategic20.574%/16.959pp (552/2683), cooperative
+  14.995%/4.547pp (148/987), speed-gain2.332%/10.415pp (339/14536), keep-right
+  0.760%/8.571pp (279/36704).
+- Native points16:236/7629, precision3.0935%, recall37.6997% (2 extra false
+  proposals vs13). Strategic14.808%/13.578pp (85/574), cooperative15.672%/3.355pp
+  (21/134), speed-gain2.341%/12.141pp (76/3246), keep-right1.469%/8.626pp (54/3675).
+All input/artifact/source/original-runtime and exact motivation partitions PASS.
+Owned910505/910966/911369 exited. This source-order correction is faithful but
+only marginally improves these conditional metrics; keep-right remains unresolved.
+
+## Final urgency / outward-message completion (no repeated traffic scoring)
+
+Source1661/1861's mature left speed-gain/cooperative request now emits follower
+help using source minNextSpeed slack; lcSpeedGainUrgency is active and urgency
+flags distinguish strategic/cooperative/speed-gain paths. Source283–300 checks
+RAW message bounds before foreign wanted-speed blending. Explicit message
+presence/weight now preserves zero/positive advice instead of conflating it
+with no message; new STATE_KEYS carry those fields, with old-state fallback.
+IDM default passenger minNextSpeed slack1.5 and velocity floor are honored.
+
+69CPU tests PASS (7.76s), including both sides of the urgency threshold, follower
+deceleration, positive/zero/weighted messages and fitted low-decel admission.
+9600 heterogeneous synthetic decisions/288000 non-message elements BIT-EXACT
+to scored source52d2df5c;536 urgent stress frames exercised. Only outward
+message semantics differ. Thus panels14–16 remain the conditional-decision
+metrics, with no redundant traffic scoring. Changed autonomous feedback still
+needs INT/EVAL smoke; no distributional gain is claimed. FINAL_DIAGNOSTICS.json
+binds the verified score receipts and this explicit equivalence scope.
