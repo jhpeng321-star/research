@@ -1,6 +1,17 @@
 # S-RB-RUNB handoff
 
-Updated 2026-11-01 04:06 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+Updated 2026-11-01 04:17 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+
+## Current 04:16 — B2 inference LIVE (one dispatch)
+- Existing noon supervisor762343 admitted B2 at04:15:41 with GPU1064MiB/24%,
+  load20.57;3shards x5GiB, immutable source4015b6412cdf, original claim preserved.
+- Owned workers**801887/801888/801889**; root
+  `/root/rbeval20261031/runb/WM-PHYS-B2`; DISPATCH.json + LAUNCHED_0/1/2.json.
+- Independent04:16:04 audit:6716MiB/100%,load16.31; all3workers live; tasks0
+  during startup, no terminal receipt. Supervisor retains11:30 deadline.
+- Shared coordination: `rb-shared/evalclaims/RUNB_B2_DISPATCHED.md`.
+  Existing supervisor owns full160-task verification + frozen scoring; `.done`
+  follows only complete verified reports. Ten-minute in-session monitoring continues.
 
 ## 04:00 interim — supervision alive, B2 awaiting resource admission
 - Ten-minute checks continued in-session through04:05:46 (individual immutable
