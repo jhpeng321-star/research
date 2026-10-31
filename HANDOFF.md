@@ -59,6 +59,17 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**05:13 BB waiting observer failure diagnosed:** originalWindows43404 exited
+on `RuntimeError: Connection closed by 172.19.0.17 port 11000` while polling WM
+release, BEFORE entering its science try-block. Original START/WAIT/log and
+closed exclusive lock retained. BOTH exact BB GPU roots still have no DISPATCH,
+GPU_STARTED or physics; zero allocation spent. CPU/WM jobs remain untouched.
+`modelops.wait_for_release` now retains transient transport errors and repeats
+only read-only resource observations. `resume-wait-start` permits ONE explicit
+correction after verifying exited43404/config hashes/original error/noSTOP/no
+bound BB execution/no GPU claim or BB physics claim on either GPU host.
+Original BB caps/gates and science no-retry behavior remain enforced. Regression
+CPU7/7 and Ruff PASS; corrected observer dispatch receipt will follow.
 **04:29 +08 resume verified (Unix1793478517..1793478575): all112 CPU-panel
 episodes COMPLETE, charged=actual134400sim-s (cpuQ84/100800; gpuR28/33600),
 both supervisors EXITED successfully/noSTOP. NEVER redispatch either CPU panel.**

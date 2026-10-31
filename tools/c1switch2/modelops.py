@@ -306,7 +306,29 @@ def prepare(config_path):
     return path
 
 
-def follow(config_path, after_config):
+def wait_for_release(after, local):
+    """Transport failure while observing releases spends nothing and may be polled again."""
+    while True:
+        states = {}
+        try:
+            for host, root in after['gpus'].items():
+                states[host] = ssh(host, f'''import json,subprocess
+from pathlib import Path
+root=Path({root!r})
+free=int(subprocess.check_output(['nvidia-smi','--query-gpu=memory.free','--format=csv,noheader,nounits'],text=True).strip())
+print(json.dumps(dict(wm_finished=(root/'rpc/GPU_FINISHED.json').exists(),free_mib=free)))
+''', timeout=30)
+        except Exception as exc:
+            write(local/'WAIT_TRANSPORT_ERROR.json', dict(unix=time.time(), error=repr(exc)))
+            time.sleep(60)
+            continue
+        write(local/'WAIT.json', dict(unix=time.time(), states=states))
+        if all(s['wm_finished'] and s['free_mib'] >= 8*1024 for s in states.values()):
+            return
+        time.sleep(60)
+
+
+def follow(config_path, after_config, *, resume_wait=False):
     """One unused BB arm after WM releases its services; no scientific retry path."""
     from .gpuops import start
     config_path, after_config = checked(config_path), checked(after_config)
@@ -315,26 +337,19 @@ def follow(config_path, after_config):
         raise ValueError('registered WM-then-unused-BB sequence required')
     local = EVIDENCE/'BB_FOLLOW'
     with exclusive(local):
-        if (local/'START.json').exists():
+        if (local/'START.json').exists() and not resume_wait:
             raise ValueError('BB follower already claimed')
         import os
-        write(local/'START.json', dict(pid=os.getpid(), config_sha256=sha(config_path),
-              after_sha256=sha(after_config), unix=time.time()))
-        while True:
-            states = {}
-            for host, root in after['gpus'].items():
-                states[host] = ssh(host, f'''import json,subprocess
-from pathlib import Path
-root=Path({root!r})
-free=int(subprocess.check_output(['nvidia-smi','--query-gpu=memory.free','--format=csv,noheader,nounits'],text=True).strip())
-print(json.dumps(dict(wm_finished=(root/'rpc/GPU_FINISHED.json').exists(),free_mib=free)))
-''', timeout=30)
-            write(local/'WAIT.json', dict(unix=time.time(), states=states))
-            # Context initialization itself needs memory before rpc's actual >=7GiB
-            # admission. This resource margin is not a behavioural/picker rule.
-            if all(s['wm_finished'] and s['free_mib'] >= 8*1024 for s in states.values()):
-                break
-            time.sleep(60)
+        if resume_wait:
+            claim = json.loads((local/'WAIT_RESUME_ONCE.json').read_text())
+            if claim['config_sha256'] != sha(config_path) or claim['after_sha256'] != sha(after_config):
+                raise ValueError('wait correction configuration mismatch')
+            with (local/'WAIT_RESUME_STARTED.json').open('x') as stream:
+                json.dump(dict(pid=os.getpid(), unix=time.time(), claim_sha256=sha(local/'WAIT_RESUME_ONCE.json')), stream)
+        else:
+            write(local/'START.json', dict(pid=os.getpid(), config_sha256=sha(config_path),
+                  after_sha256=sha(after_config), unix=time.time()))
+        wait_for_release(after, local)
         try:
             for host, root in config['gpus'].items():
                 start(host, root)
@@ -387,10 +402,56 @@ def follow_start(config, after_config):
     print(json.dumps(out))
 
 
+def resume_follow_wait(config_path, after_config):
+    """One explicit zero-spend observer correction; never retries claimed BB science."""
+    from .watch import local_process
+    config_path, after_config = checked(config_path).resolve(), checked(after_config).resolve()
+    config = json.loads(config_path.read_text())
+    local = EVIDENCE/'BB_FOLLOW'
+    if (local/'WAIT_RESUME_ONCE.json').exists():
+        raise ValueError('wait correction already claimed; never duplicate')
+    original = json.loads((local/'START.json').read_text())
+    if (config['engine']['model'] != 'bb' or original['pid'] != 43404 or
+            original['config_sha256'] != sha(config_path) or original['after_sha256'] != sha(after_config)):
+        raise ValueError('exact original BB waiting allocation required')
+    if local_process(original['pid'])['state'] != 'EXITED':
+        raise ValueError('original owned follower has not exited')
+    log = EVIDENCE/'BB_FOLLOW.log'
+    if ('RuntimeError: Connection closed by ' not in log.read_text() or
+            (local/'STOP.json').exists() or (local/'COMPLETE.json').exists() or
+            (local/'DISPATCH.lock').exists() or (EVIDENCE/'BB_EXECUTION_BOUND.json').exists()):
+        raise ValueError('only diagnosed pre-dispatch transport exit may resume')
+    proofs = {}
+    for host, root in config['gpus'].items():
+        proofs[host] = ssh(host, f'''import json,os
+from pathlib import Path
+root=Path({root!r});assert root.name=='c1switch2_gpu_bb_caeab9eaa303f93c'
+assert not (root/'DISPATCH.json').exists() and not (root/'rpc/GPU_STARTED.json').exists()
+for entry in os.scandir(root.parent):
+ if entry.name.startswith('c1switch2_run_') and entry.is_dir(follow_symlinks=False):
+  p=Path(entry.path,'MODEL_DISPATCH_ONCE.json')
+  if p.exists():assert json.loads(p.read_text())['arm']!='bb','BB science already claimed'
+print(json.dumps(dict(root=str(root),bb_gpu_claimed=False,bb_physics_claimed=False,new_gpu_s=0,new_sim_s=0)))
+''', timeout=30)
+    claim = dict(unix=time.time(), config_sha256=sha(config_path), after_sha256=sha(after_config),
+                 predecessor_sha256=sha(local/'START.json'), error_sha256=sha(log), proofs=proofs)
+    with (local/'WAIT_RESUME_ONCE.json').open('x') as stream:
+        json.dump(claim, stream, indent=2)
+    with (EVIDENCE/'BB_FOLLOW_WAIT_RESUME.log').open('x') as stream:
+        process = subprocess.Popen([sys.executable, '-B', '-u', '-m', 'tools.c1switch2.modelops',
+            'follow-resume-wait', '--config', str(config_path), '--after-config', str(after_config)],
+            stdout=stream, stderr=subprocess.STDOUT,
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS)
+    out = dict(pid=process.pid, unix=time.time(), claim_sha256=sha(local/'WAIT_RESUME_ONCE.json'))
+    write(EVIDENCE/'BB_FOLLOW_WAIT_RESUME_DISPATCH.json', out)
+    print(json.dumps(out))
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('command', choices=('parity-submit', 'parity-collect', 'dispatch', 'collect', 'relay', 'relay-start',
-                                           'prepare', 'follow', 'follow-start'))
+                                           'prepare', 'follow', 'follow-start', 'resume-wait-start',
+                                           'follow-resume-wait'))
     parser.add_argument('--config')
     parser.add_argument('--after-config')
     parser.add_argument('--host', choices=('cpuQ', 'gpuR'))
@@ -412,5 +473,9 @@ if __name__ == '__main__':
         follow(args.config, args.after_config)
     elif args.command == 'follow-start':
         follow_start(args.config, args.after_config)
+    elif args.command == 'resume-wait-start':
+        resume_follow_wait(args.config, args.after_config)
+    elif args.command == 'follow-resume-wait':
+        follow(args.config, args.after_config, resume_wait=True)
     else:
         relay_start(args.config)
