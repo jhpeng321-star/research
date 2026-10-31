@@ -4,7 +4,16 @@ import json
 import pytest
 
 from tools.wmfixmerge.pilot import HORIZONS, decide
-from tools.wmfixmerge.pilot_continue import step0_panel_runs, validate_step_panel, wait_for_step_panels
+from tools.wmfixmerge.pilot_continue import (is_pilot_run, step0_panel_runs,
+                                             validate_step_panel, wait_for_step_panels)
+
+
+def test_pilot_run_marker_check(tmp_path):
+    tmp_path.joinpath("RUN.json").write_text(
+        json.dumps(dict(pid=1, pilot="S-WMFIX-PILOT option (b), MAIN 10:40")))
+    assert is_pilot_run(tmp_path) is True
+    tmp_path.joinpath("RUN.json").write_text(json.dumps(dict(pid=1, pilot="other")))
+    assert is_pilot_run(tmp_path) is False
 
 
 def panel_doc(step, mae120, mae300, rows=24):

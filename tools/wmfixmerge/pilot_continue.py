@@ -78,6 +78,12 @@ def wait_for_step_panels(out, deadline):
         time.sleep(60)
 
 
+def is_pilot_run(out):
+    """The out dir must be a registered S-WMFIX-PILOT run (RUN.json marker)."""
+    run = json.loads(safe(out).joinpath("RUN.json").read_text())
+    return "S-WMFIX-PILOT" in run.get("pilot", "")
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ("prepared", "config", "checkpoint", "controllers", "out"):
@@ -100,7 +106,7 @@ def main(argv=None):
                     "step_000001.pt", "PANEL_step0_r0_mismatch"):
         if (out / refused).exists():
             raise ValueError("continuation artifacts already exist: " + refused)
-    if "pilot" not in json.loads((out / "RUN.json").read_text()).get("pilot", ""):
+    if not is_pilot_run(out):
         raise ValueError("out dir is not a registered S-WMFIX-PILOT run")
     start = time.monotonic()
     with (out / "CONT_RUN.json").open("x") as stream:
