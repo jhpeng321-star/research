@@ -1,0 +1,16 @@
+{
+  "rule": "MAIN18:33 fixed before switching outcomes",
+  "diagnosis_sha256": "ef442d7dc93c3eddbac15ee5af7ff96c8ee06213639dae180abbe0913b7dac20",
+  "wm_checkpoint_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+  "bb_checkpoint_sha256": "afaaa32cb15079014d1a9e08f78b26e74fd341298d1aa0292a24009d9f783742",
+  "history_s": 60,
+  "K": 8,
+  "horizon_s": 60,
+  "entrant_learned_mix": true,
+  "prediction_objective": "on_road_fleet_delay",
+  "evaluation_objective": "full_team_delay_fleet_plus_source",
+  "team_source_entries": false,
+  "adapter_validated": false,
+  "switching_outcomes_at_selection": 0,
+  "main_authorized_by_task_gates": false
+}

@@ -21,6 +21,10 @@ launch again or restart. Initial Step0 one
 nice19 CPU worker, CUDA hidden; MAIN permits <=28workers on cpuQ.
 Main still requires actual Step0 bitwise/headroom gates and real observable
 feedback inference adapters; source entries are no longer required in prediction.
+`evidence/MODEL_SELECTION.json` records MAIN's fixed choice, not adapter validation.
+`episode.py` commits each model pick before exact truth is computed, measures only
+the registered three clocks, and checks all main branches against the LIVE prefix.
+CPU core33testsPASS; host-specific model/transport adapters are still unvalidated.
 
 ## Historical full-rerun staging (MAIN 17:53; never dispatched)
 

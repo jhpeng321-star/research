@@ -1,8 +1,8 @@
 {
   "load": [
-    0.638671875,
-    0.31884765625,
-    1.52587890625
+    0.916015625,
+    0.61083984375,
+    1.44091796875
   ],
   "DISPATCH.json": {
     "pid": 3525930,
@@ -17,20 +17,20 @@
   "STATUS.json": {
     "status": "RUNNING",
     "world": {
-      "seed": 969101,
-      "penetration": 0.05,
-      "demand": 2400
+      "seed": 969103,
+      "penetration": 0.1,
+      "demand": 1900
     },
-    "decision": 480
+    "decision": 300
   },
   "TRUNK_GATE.json": {
     "pass_": true,
-    "states": 1,
-    "receipt_sha256": "06e2d631c461e82e76f0576b6fff8b7d11f0d1fdced3ec89589b1e5a7898691c"
+    "states": 4,
+    "receipt_sha256": "d03da9b6f33373c8a2e56f9fc82d1c8955483d28c79f6021f195502c6421273b"
   },
   "own_pid_exists": true,
-  "charged_sim_s": 4140,
-  "completed_states": 1,
-  "closed_runs": 7,
-  "closed_actual_sim_s_incl_legacy": 3840.0
+  "charged_sim_s": 12750,
+  "completed_states": 4,
+  "closed_runs": 24,
+  "closed_actual_sim_s_incl_legacy": 12450.0
 }

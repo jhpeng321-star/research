@@ -217,6 +217,61 @@ def test_full_rerun_native_continuation_gate_precedes_nonnative():
     assert made == ['native', 'native_repeat']
 
 
+def test_main_episode_commits_pick_before_truth_and_samples_exact_registered_states():
+    from tools.c1switch.episode import episode
+    world = worlds('main')[0]
+    b = ReplayToy()
+    events = []
+    predicted = []
+    def predict(payload, ident):
+        assert payload == {'observed_speed':7}
+        predicted.append(ident)
+        return {c:float(c != 'pi') for c in CONTROLLERS}
+    def measurement(schedule, prefix):
+        assert events[-1][0] == 'pick' and events[-1][1]['pick'] == 'pi'
+        assert canonical(prefix) == canonical(b.fingerprint())
+        assert len(schedule) in measurement_indices(world['seed'])
+        events.append(('truth', len(schedule)))
+        return dict.fromkeys(CONTROLLERS, {'60':{'team_delay_vs':999.}})
+    result = episode(b, 'wm', world, predictor=SimpleNamespace(predict=predict),
+                     measurement=measurement, receipt=lambda kind,row:events.append((kind,copy.deepcopy(row))))
+    assert len(predicted) == 10 and b.actual == 900
+    assert result['schedule'] == ['pi']*10 and result['switching_frequency'] == 1
+    assert [r['j'] for r in result['decisions'] if 'branches' in r] == measurement_indices(world['seed'])
+    assert [v for kind,v in events if kind == 'truth'] == measurement_indices(world['seed'])
+
+
+def test_main_five_way_measurement_must_match_live_state_without_extra_repeat():
+    from tools.c1switch.episode import measure
+    b = ReplayToy()
+    b.select('pi');b.advance(60)
+    made = []
+    def factory_for(c):
+        def create():
+            made.append(c)
+            return ReplayToy()
+        return create
+    rows = measure(factory_for, ['pi'], b.fingerprint())
+    assert made == list(CONTROLLERS)
+    assert sum(r['actual_sim_s'] for r in rows.values()) == 5*450
+    with pytest.raises(ValueError, match='trunk bitwise'):
+        measure(factory_for, [], b.fingerprint())
+
+
+def test_main_rule_fleet_objective_is_explicit_and_cannot_forge_team_support(tmp_path):
+    from tools.c1switch.model import main_rule, WM2_SHA, BB_SHA
+    from tools.c1switch.rpc import validate_objective
+    binding = main_rule('a'*64)
+    assert binding['wm_checkpoint_sha256'] == WM2_SHA and binding['bb_checkpoint_sha256'] == BB_SHA
+    assert binding['team_source_entries'] is False
+    validate_objective(binding)
+    FilePredictor(tmp_path, binding)
+    with pytest.raises(ValueError):
+        validate_objective(dict(binding, prediction_objective='full_team_delay'))
+    with pytest.raises(ValueError):
+        main_rule('missing')
+
+
 def test_retired_saved_state_runner_cannot_simulate(tmp_path):
     from tools.c1switch.runner import run
     with pytest.raises(ValueError, match='retired'):

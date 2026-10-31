@@ -1,4 +1,4 @@
-"""Hash-bound atomic file inference handshake, with explicit source/entry contract."""
+"""Hash-bound atomic file inference handshake with explicit objective contract."""
 import argparse
 import importlib
 import json
@@ -11,11 +11,22 @@ from .design import checked, sha
 from .storage import canonical, exclusive, write
 
 
+def validate_objective(binding):
+    # Legacy team-support bindings remain explicit; MAIN's fleet-only amendment
+    # must declare the evaluation mismatch rather than falsely attest team support.
+    if binding.get('team_source_entries') is True:
+        return
+    if not (binding.get('prediction_objective') == 'on_road_fleet_delay' and
+            binding.get('evaluation_objective') == 'full_team_delay_fleet_plus_source' and
+            binding.get('history_s') == 60 and binding.get('horizon_s') == 60 and
+            binding.get('K') == 8 and binding.get('rule') == 'MAIN18:33 fixed before switching outcomes'):
+        raise ValueError('unverified prediction/evaluation objective contract')
+
+
 class FilePredictor:
     def __init__(self, root, binding, timeout_s=900):
         self.root, self.binding, self.timeout_s = checked(root), binding, timeout_s
-        if binding.get('team_source_entries') is not True:
-            raise ValueError('source/entry support not verified')
+        validate_objective(binding)
 
     def predict(self, payload, ident):
         # Payload must already have passed the Belief allowlist boundary.
@@ -47,7 +58,8 @@ def serve(root, adapter_name, binding_path, device):
     """
     root = checked(root)
     binding = json.loads(checked(binding_path).read_text())
-    if not binding.get('team_source_entries') or not binding.get('diagnosis_sha256'):
+    validate_objective(binding)
+    if not binding.get('diagnosis_sha256'):
         raise ValueError('missing model-selection/source receipt')
     module, func = adapter_name.split(':')
     mod = importlib.import_module(module)

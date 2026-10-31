@@ -169,7 +169,39 @@ print(json.dumps(out))
     print(json.dumps(result, indent=2))
 
 
+def collect():
+    """Receipt-only export; conditions use the observable native belief only."""
+    result = ssh('cpuQ', f'''import hashlib,json,statistics
+from pathlib import Path
+root=Path({REMOTE!r});out=dict(states=[],sources={{}})
+for p in sorted(root.glob('s*_t*.json')):
+ raw=p.read_bytes();row=json.loads(raw);out['sources'][p.name]=hashlib.sha256(raw).hexdigest()
+ belief=row['branches']['native']['belief'];h=belief['history'][-1]
+ seen={{r['vehicle_id']:r for r in h['detections']}}
+ seen.update({{r['vehicle_id']:r for r in h['self_reports']}})
+ own={{r['vehicle_id'] for r in h['self_reports']}}
+ near=[r for r in seen.values() if -100<=r['s_m']<=75.44]
+ speeds=[r['v_mps'] for r in near]
+ row['observables']=dict(near_count=len(near),near_mean_speed_mps=statistics.mean(speeds) if speeds else None,
+  observed_queue_v_lt5=sum(r['v_mps']<5 for r in near),cav_self_count=len(own),
+  observed_total_count=len(seen),observed_cav_fraction=len(own)/len(seen) if seen else None,
+  oldest_receipt_age_s=max((r['age_s'] for r in seen.values()),default=0),coverage=h['coverage'])
+ for b in row['branches'].values():b.pop('belief')
+ out['states'].append(row)
+for n in ['BINDING.json','STEP0_GATE.json','STATUS.json','STOP','TRUNK_GATE.json','DISPATCH.json']:
+ p=root/n
+ if p.exists():out[n]=json.loads(p.read_text());out['sources'][n]=hashlib.sha256(p.read_bytes()).hexdigest()
+closes=[json.loads(p.read_text()) for p in root.glob('jobs/*/CLOSE.json')]
+out['closed_actual_sim_s_incl_legacy']=930+sum(r['actual_sim_s'] for r in closes)
+out['charged_sim_s']=sum(json.loads(s)['sim_s'] for s in (root/'accounting.jsonl').read_text().splitlines())
+print(json.dumps(out))
+''')
+    write(EVIDENCE/'CPUQ_COLLECT.json', result)
+    print(json.dumps(dict(states=len(result['states']), charged_sim_s=result['charged_sim_s'],
+                          gate=result.get('STEP0_GATE.json'), stopped='STOP' in result), indent=2))
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('mode', choices=('inspect','stage','cpu','launch','progress'))
+    parser.add_argument('mode', choices=('inspect','stage','cpu','launch','progress','collect'))
     globals()[parser.parse_args().mode]()
