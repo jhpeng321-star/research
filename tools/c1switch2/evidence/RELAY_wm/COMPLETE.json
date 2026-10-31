@@ -1,0 +1,15 @@
+{
+  "unix": 1793484032,
+  "episodes_done": false,
+  "failed": true,
+  "reason": "Verified owned gpuR CPU STOP; ordinary global-stop GPU release completed while cpuQ SSH offline",
+  "stop_proof_receipt": "MODEL_PROGRESS_wm_gpuR_1793483964.json",
+  "release_receipt": "GPU_RELEASE_wm_1793484020.json",
+  "relay_pid": 31696,
+  "relay_state": "STOPPED_BY_EXACT_VERIFIED_OWN_PID_AFTER_BOTH_GPU_FINISHED",
+  "cpuQ_current_state": "UNKNOWN_OFFLINE",
+  "gpus": {
+    "gpuA": {"stop": null, "finished": {"pid": 342449, "elapsed_s": 13845.159507265314}},
+    "gpuR": {"stop": null, "finished": {"pid": 761968, "elapsed_s": 13840.939484648407}}
+  }
+}

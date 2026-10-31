@@ -70,6 +70,11 @@ cpuQ WM current charge/actual remainUNKNOWN. Verified total lower bounds only:
 cpuQ4; full panel/oracles/primary WM-vs-RL are INCOMPLETE, no primary efficacy CI.
 Receipts GPU_RELEASE_wm_1793484020 + GPU_PROGRESS_{gpuA1793484027,gpuR1793484032};
 STATUS_CURRENT now distinguishes unknown totals from these historical lower bounds.
+Terminal WM relay31696 creation/command identity verified and stopped by exactPID
+AFTER both GPU_FINISHED receipts, avoiding pointless rapid SSH polling. Its
+RELAY_wm/COMPLETE.json records failed=true/episodes_done=false and verified proof;
+no original claim/log/lock was removed. Only read-only20min observer25348 remains
+active locally for this task; no inference/science redispatch is armed.
 **05:59 WM global-stop release required:** gpuR supervisor763520 EXITED with
 durableSTOP `wm__s969147`; exact worker traceback is inference unavailable timeout.
 Its2completeepisodes/60decisions and2700charged=actual are preserved, including
