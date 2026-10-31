@@ -61,6 +61,9 @@ def publish(exam, learned, dest, refresh=False):
             helpful=sum(r['oracle_D']>0 for r in rr),mean_oracle_D=np.mean([r['oracle_D'] for r in rr]),
             mean_learned_D=np.mean([r['learned_D'] for r in rr])))
     credits=[r for r in csvread(exam/'group_credit.csv') if r['horizon_s']=='600' and r['available']=='True']
+    cooperative=[r for r in credits if float(r['D_G'])>0 and float(r['C_G'])>0]
+    if cooperative:
+        emit_csv('beneficial_interaction_cases.csv',sorted(cooperative,key=lambda r:-float(r['D_G'])))
     summary=dict(states=len(states),worlds=len({r['world_id'] for r in states}),cells=len(cells),
         helpful_states=sum(r['oracle_D']>0 for r in states),options=options,
         available_group_credit_cases=len(credits),

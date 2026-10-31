@@ -15,3 +15,10 @@ Options/rerun runner for S-COOPPLAN: `tools/coopbandit/protocol.py`,
 The exact label sign is D = J(MAPPO) - J(option), positive saves delay.
 Consumers must preserve the unchanged original safety layer, full-rerun
 bitwise prefix gate, option availability and joint-context solo targets.
+
+`EXAM_SCHEMA.md` documents option settings, feature units/missing sentinels,
+source/fleet labels, safety audit scope, world splits and sign/rank scoring.
+`registered-summary/` within each publication contains primary-model plots,
+descriptive per-option/per-cell/state CSVs and any measured examples with BOTH
+positive D_G and positive C_G. Those examples are selected TRAIN exploration,
+not evidence that the learned deployed policy discovers them.
