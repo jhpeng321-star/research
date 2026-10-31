@@ -180,12 +180,16 @@ def panel_batch(trainer, which: int):
     return trainer.start_states._batch([trainer.start_states._load(index)], trainer.device)
 
 
-def instrumented_rollout(trainer, batch, *, horizon_s, deterministic, trace, seed=710003):
+def instrumented_rollout(trainer, batch, *, horizon_s, deterministic, trace, seed=710003,
+                         futures=8):
     """One training-style imagination at a chosen dense horizon with full autograd.
 
     ``rollout_config`` is neutralised so the rollout runs at ``horizon_s`` (the
     dense cotangent beyond the 91 s replay boundary is exactly zero in the
-    production dense-prefix VJP, so the prefix gradient is faithful).
+    production dense-prefix VJP, so the prefix gradient is faithful). ``futures``
+    may be below the production K8: per-future credits/graduates are identical
+    (future tapes are CRN per future index), so a prefix of futures reproduces
+    the exact partial parameter-gradient sum for those futures.
     """
     from dataclasses import replace as dc_replace
     from wms.control import gated300
@@ -195,7 +199,7 @@ def instrumented_rollout(trainer, batch, *, horizon_s, deterministic, trace, see
     old_cfg, old_curriculum = trainer.config, trainer.horizon_curriculum
     old_scoring = getattr(trainer, "_gated300_scoring", False)
     trusted = int(getattr(trainer, "long_credit_trusted_s", 60))
-    cfg = dc_replace(old_cfg, horizon=steps, future_samples=8, future_driver_scale=1.,
+    cfg = dc_replace(old_cfg, horizon=steps, future_samples=futures, future_driver_scale=1.,
                      uncertainty_weight=0., imagination_microbatch=0,
                      imagination_checkpoint_segment=0, imagination_offload_futures=False,
                      imagination_offload_saved_tensors=False, low_penetration_horizon_cap=False)
@@ -266,7 +270,10 @@ def main():
     out.mkdir(parents=True, exist_ok=True)
     torch.manual_seed(965140)
 
+    from time import perf_counter
+    t_build = perf_counter()
     trainer = build_trainer(Path(args.ckpt), out)
+    print(json.dumps({"build_s": round(perf_counter() - t_build, 1)}), flush=True)
     batch = panel_batch(trainer, args.start)
     from wms.control.gated300 import reference_index
     print(json.dumps({"ckpt": str(args.ckpt), "update_count": trainer.update_count,
@@ -314,20 +321,26 @@ def main():
         return 0
 
     report = {"ckpt": str(args.ckpt), "start": PANEL_STARTS[args.start],
-              "deterministic": bool(args.deterministic), "runs": []}
+              "deterministic": bool(args.deterministic), "futures": args.futures,
+              "runs": []}
+    from time import perf_counter
     from wms.control.longgrad import StateTrace, norm as gnorm
     for horizon in args.horizons:
         trace = StateTrace()
+        t0 = perf_counter()
         imagined = instrumented_rollout(trainer, batch, horizon_s=horizon,
-                                        deterministic=args.deterministic, trace=trace)
+                                        deterministic=args.deterministic, trace=trace,
+                                        futures=args.futures)
+        t1 = perf_counter()
         difference, coefficients = dense_difference(trainer, imagined)
         row_terms = -(difference.mean((0, 1)) * coefficients)
         params = [p for p in trainer.actor_parameters if p.requires_grad]
-        total = row_terms.sum() / imagined.get("return_scale", 1.) if False else None
         scale = trainer._return_scale(imagined["returns"][..., :imagined["n_base"]])
         dense_loss = row_terms.sum() / scale
         grads = torch.autograd.grad(dense_loss, params, retain_graph=True, allow_unused=True)
-        entry = {"horizon_s": horizon,
+        t2 = perf_counter()
+        entry = {"horizon_s": horizon, "rollout_s": round(t1 - t0, 1),
+                 "backward_s": round(t2 - t1, 1),
                  "dense_credit_veh_s": float(row_terms.sum().detach()),
                  "dense_loss": float(dense_loss.detach()),
                  "grad_norm_total": gnorm(grads),
@@ -344,6 +357,7 @@ def main():
                 g = torch.autograd.grad(row_terms[r] / scale, params, retain_graph=True,
                                         allow_unused=True)
                 per_row.append(gnorm(g))
+                print(json.dumps({"row_grad": r, "norm": per_row[-1]}), flush=True)
             entry["row_grad_norms"] = per_row
         entry["state_cotangent"] = trace.summary()
         # executed-residual / emergency-floor proximity from the audit record
@@ -357,8 +371,8 @@ def main():
                 "min": float(action.min()) if action.numel() else 0.,
                 "frac_negative": float((action < 0).float().mean()) if action.numel() else 0.}
         report["runs"].append(entry)
-        print(json.dumps(entry)[:1500])
-    (out / "repro_dense.json").write_text(json.dumps(report, indent=1))
+        (out / "repro_dense.json").write_text(json.dumps(report, indent=1))
+        print(json.dumps(entry)[:1500], flush=True)
     del trainer
     return 0
 
