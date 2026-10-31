@@ -80,7 +80,10 @@ def save_tag(stdout, tag, name):
             json.dump(json.loads(rows[-1]), stream, indent=2)
 
 
-def dispatch(build, continuation=False, production_only=False, transport_only=False):
+def dispatch(build, continuation=False, production_only=False, transport_only=False,
+             wait_for_resources=False):
+    if wait_for_resources and not transport_only:
+        raise ValueError('resource-wait supervisor is only for MAIN01:48 continuation')
     result = run('cpuQ', f'''
 import hashlib,json,os,subprocess,sys
 from pathlib import Path
@@ -88,8 +91,9 @@ root=Path.home()/'selmappo20261031'/{build!r}
 assert root.parent.is_dir() and root.is_dir() and root.name.startswith('build_')
 stage=json.loads((root/'STAGE.json').read_text());assert stage['tests_returncode']==0 and stage['gate_returncode']==0
 receipt=json.loads((root/'INTEGRATION.json').read_text());env=json.loads((root/'ENV.json').read_text())
-assert os.getloadavg()[0]+1<=.8*os.cpu_count(),'yield to higher-priority runs'
-assert __import__('shutil').disk_usage(root).free>=2*1024**3
+if not {wait_for_resources!r}:
+ assert os.getloadavg()[0]+1<=.8*os.cpu_count(),'yield to higher-priority runs'
+ assert __import__('shutil').disk_usage(root).free>=2*1024**3
 for name,expected in receipt['files'].items():
  assert hashlib.sha256((root/'pytools'/name).read_bytes()).hexdigest()==expected
 if 'source_sha256' in stage:
@@ -125,7 +129,7 @@ if transport_only:
  from tools.selmappo.protocol import audit_registration
  from tools.selmappo.dispatch import admitted
  assert audit_registration(root/'pytools/REGISTRATION.md')['passed']
- assert admitted(root,0),'yield to higher-priority runs or low memory/disk'
+ if not {wait_for_resources!r}:assert admitted(root,0),'yield to higher-priority runs or low memory/disk'
  original=root.parent/TRANSPORT
  validate_transport(original,root/'pytools/REGISTRATION.md')
  assert json.loads((root.parent/'FLEET_PRODUCTION_ONCE.json').read_text())['build']==str(original)
@@ -151,7 +155,10 @@ if transport_only:command+=['--transport-from',str(original)]
 log=(root/'training.log').open('x')
 def lower():os.nice(19)
 proc=subprocess.Popen(command,cwd=root/'pytools',env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,preexec_fn=lower)
-record=dict(pid=proc.pid,root=str(root),out=str(out),binding=stage['binding'],command=command)
+record=dict(pid=proc.pid,root=str(root),out=str(out),binding=stage['binding'],command=command,
+ resource_wait_supervisor={wait_for_resources!r},
+ startup_disk_free_bytes=__import__('shutil').disk_usage(root).free,
+ startup_load=os.getloadavg(),physics_admission='each episode before precharge; unchanged')
 with (root/'DISPATCH.json').open('x') as f:json.dump(record,f,indent=2)
 print('DISPATCH_RECEIPT',json.dumps(record))
 ''')
@@ -240,6 +247,7 @@ if __name__ == '__main__':
     parser.add_argument('action', choices=('stage', 'dispatch', 'continue', 'production', 'inventory',
                                           'transport', 'status', 'reconcile', 'terminal-stop'))
     parser.add_argument('--build')
+    parser.add_argument('--wait-for-resources', action='store_true')
     args = parser.parse_args()
     if args.action == 'stage':
         stage()
@@ -250,7 +258,7 @@ if __name__ == '__main__':
     elif args.action == 'production':
         dispatch(args.build, production_only=True)
     elif args.action == 'transport':
-        dispatch(args.build, transport_only=True)
+        dispatch(args.build, transport_only=True, wait_for_resources=args.wait_for_resources)
     elif args.action == 'inventory':
         inventory()
     elif args.action == 'reconcile':

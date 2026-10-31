@@ -493,8 +493,11 @@ class DiskTests(unittest.TestCase):
             launch.stage()
             launch.dispatch('build_test', production_only=True)
             launch.dispatch('build_test', transport_only=True)
+            launch.dispatch('build_test', transport_only=True, wait_for_resources=True)
             launch.inventory()
-        self.assertEqual(len(captured), 4)
+        self.assertEqual(len(captured), 5)
+        with self.assertRaises(ValueError):
+            launch.dispatch('build_test', production_only=True, wait_for_resources=True)
 
     def test_cap_no_silent_overallocation(self):
         budget = Budget(self.root)
