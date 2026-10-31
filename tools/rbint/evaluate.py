@@ -19,8 +19,10 @@ def main(variant):
         sources.append(ROOT/'artifacts/rbfit/pooled_full_v5/idm_pooled.json')
     if variant == 'FULL':
         sources += [ROOT/'tools/rbint/observations.py',
+                    ROOT/'tools/rbint/motion_posterior.py', ROOT/'tools/rbfit/idm_fit.py',
                     ROOT/'artifacts/rbfit/shrinkage_v1/idm_population.json',
                     ROOT/'artifacts/rbfit/shrinkage_v1/idm_posteriors.json.gz',
+                    ROOT/'artifacts/rbfit/shrinkage_v1/idm_shrinkage.json',
                     ROOT/'docs/paper_results/rbunc/observed_arrivals.json']
     run_wm.main(model_loader=load_candidate, future_builder=candidate_future,
                 identity_sources=sources)

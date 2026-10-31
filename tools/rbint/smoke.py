@@ -18,7 +18,7 @@ import numpy as np
 import torch
 
 from tools.rbint.audit import audit_closed_cohort, forbid_learned_corrections
-from tools.rbint.recipe import load_candidate, native_controller, fixed_parameters
+from tools.rbint.recipe import load_candidate, native_controller, fixed_parameters, fitted_state_at_start
 from tools.rbeval.core import digest, load, reference, save_new
 from wms.control.hidden_state import plan_hidden_state_futures
 from wms.model.driver_encoder import PARAMETER_NAMES
@@ -66,6 +66,7 @@ def main():
             state = {k: v[:, keep].clone() for k, v in state.items()}
             h, m = namespace['history_tensors'](raw, history_len=model.history_len)
             kwargs = dict(history=h[:, keep], history_mask=m[:, keep])
+            conditioning_receipt = None
             if model.long_history:
                 h, m = namespace['history_tensors'](raw, model.history_s, model.history_stride_s)
                 kwargs.update(driver_history=h[:, keep], driver_history_mask=m[:, keep])
@@ -76,7 +77,8 @@ def main():
                         from tools.rbint.observations import fitted_inputs
                         ids, _, _ = fitted_inputs(state, seed, start['initial_state_sha256'],
                                                   model._wmphys_arrival_fit)
-                        extra = dict(fitted_state=model._wmphys_fitted_state,
+                        fitted, conditioning_receipt = fitted_state_at_start(model, seed)
+                        extra = dict(fitted_state=fitted,
                                      vehicle_ids=ids, t0_s=300.)
                     future = plan_hidden_state_futures(model, state, kwargs,
                         future_sampling='hidden_state', n_samples=1, seed=190,
@@ -90,7 +92,7 @@ def main():
                 state['exit_s_m'] = torch.full_like(state['s_m'], road_end_exit_bound(model.physics))
                 dense_start = time.monotonic()
                 roll = model.rollout(copy.deepcopy(state), n_steps=120,
-                                      cav_controller=native_controller(), **kwargs)
+                                      cav_controller=native_controller(model), **kwargs)
                 dense_seconds = time.monotonic()-dense_start
                 gate = audit_closed_cohort(state['present'], roll, exit_s_m=state['exit_s_m'])
                 assert not roll['raw_residual_mps2'].count_nonzero()
@@ -101,7 +103,7 @@ def main():
                     fast_start = time.monotonic()
                     try:
                         fast_roll = model.rollout(copy.deepcopy(state), n_steps=120,
-                            cav_controller=native_controller(), **kwargs)
+                            cav_controller=native_controller(model), **kwargs)
                     finally:
                         model.physics = original_physics
                     fast_seconds = time.monotonic()-fast_start
@@ -115,7 +117,7 @@ def main():
             results.append(dict(variant=variant, seed=seed, t0=300, horizon_s=60,
                 source_sha256=start['initial_state_sha256'], encoder_calls=len(calls),
                 encoder_exact=receipt['encoder_exact'], guard_pass=True,
-                query_parity=query_parity, **gate))
+                query_parity=query_parity, motion_conditioning=conditioning_receipt, **gate))
     save_new(out, dict(schema='wmphys-smoke/1', passed=True, results=results,
         recipe_sha256=digest(ROOT/'configs/wm_phys.toml'),
         checkpoint_sha256=digest('/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt'),

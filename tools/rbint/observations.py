@@ -63,3 +63,17 @@ def fitted_inputs(initial, seed, initial_sha256, arrival_fit):
     return vehicle_ids, conditioned, dict(observable_hashes=hashes,
         identity_source='recorded start_history numeric vid_index, not packed slot',
         conditioning_end_s=300., present_identities=n)
+
+
+def load_motion_history(seed):
+    start, _, hashes = load_observations(seed)
+    path = Path('/root/wmcalib/data/jobs')/f's{int(seed)}_ctrl0/start_history.npz'
+    with np.load(path, allow_pickle=False) as data:
+        history = {name: np.array(data[name], copy=True)
+                   for name in ('kin', 'mask', 'vid_index')}
+    # The registered exporter stores241 half-second frames ending at observable
+    # t0=300 (180..300), independently bound by its saved artifact hashes.
+    if len(history['kin']) != 241 or digest(path) != hashes['start_history.npz']:
+        raise ValueError('registered causal history contract changed')
+    history['time_s'] = np.arange(241)*.5+180.
+    return start, history

@@ -18,6 +18,12 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   `panel_ops status` is read-only; never repeat canary/continue/monitor dispatch.
 
 ## What exists
+- Next FULL recipe now selects causal runtime motion conditioning + physics-native
+  law (NOT READY until new smoke). Reuses FIT.condition_motion and exact FIT pure
+  interval/IDM functions without SciPy; no saved-driver-ID lookup, no population
+  refit, no future frames. All current HDVs use their own pre-t0 evidence, with
+  learned shrinkage/prior fallback; entrants use learned population.32CPU PASS.
+  FULL-v1's saved-ID crosswalk remains unverified; new recipe removes that reliance.
 - LANE16db471a/0a1e7e93 integrated: raw upstream lane origins, collapsed-link
   neighbor distances and±1.45m lane-change position translation. Reconciled the
   new (next_lane,next_s) adapter API with INT ramp ownership/mainline arbitration.
@@ -72,6 +78,9 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   Full-population ledger/exit/finite audit attached to every candidate task.
 
 ## Verification / receipts
+- Current complete local integration gate **215 PASS /1CUDA skip /25.53s**;
+  all touched physics/model/hidden-source/recipe/monitor/credibility modules.
+  Runtime posterior + physics-native FULL candidate requires fresh recorded smoke.
 - Latest complete touched-module CPU suite **155 PASS /18.70s**. Exact staged
   FIT test file on cpuQ **17 PASS /1.54s** (SciPy from existing environment).
 - New closed-cohort A/B/C/FULL smoke **8x60s PASS**, gpuA CPU source0ec484ab;

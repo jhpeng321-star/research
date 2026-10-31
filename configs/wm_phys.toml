@@ -70,8 +70,10 @@ future_sampling = "fitted_hidden_state_and_learned_arrivals"
 parameter_directory = "artifacts/rbfit/shrinkage_v1"
 arrival_json = "docs/paper_results/rbunc/observed_arrivals.json"
 fitted_lc = false
-# Unknown exported driver identities use the fitted population prior. No refit
-# or outcome-driven selection occurs on the reserved worlds.
+condition_motion = true
+native_model = "sumo_physics"
+# The fixed physical population is conditioned on each start's own causal
+# motion. No saved-ID crosswalk, population refit or future outcomes are used.
 
 [inference]
 training = false

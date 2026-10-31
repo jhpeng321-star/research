@@ -11,8 +11,11 @@ import torch
 from tools.rbint.rebuild import rebuild_with_motion_encoder
 
 
-def native_controller():
-    """Same native CAV command/plant used by the registered five-arm evaluator."""
+def native_controller(model=None):
+    """Native-CAV law selected by the recipe; default is the registered head."""
+    if getattr(model, '_wmphys_native_model', 'registered_head') == 'sumo_physics':
+        from wms.model.sumo_native import native_physics_controller
+        return native_physics_controller(dt_s=model.physics.dt_s)
     from wms.control.counterfactual import native_fn
     from wms.control.continuous import project_native
     from wms.model.cav import WM_MERGE_KEY, WM_LANE_TARGET_KEY
@@ -54,9 +57,23 @@ def load_candidate(checkpoints, configs, device):
         options_full = recipe['variants']['FULL']
         if options_full['fitted_lc']:
             raise ValueError('fitted LC has not passed its baseline')
+        candidate._wmphys_native_model = options_full.get('native_model', 'registered_head')
+        if candidate._wmphys_native_model not in ('registered_head', 'sumo_physics'):
+            raise ValueError('unsupported native-CAV law')
+        receipt['native_model'] = candidate._wmphys_native_model
         candidate._wmphys_fitted_state = FittedHiddenState.from_directory(
             root/options_full['parameter_directory'])
         candidate._wmphys_arrival_fit = LearnedArrivalFit.from_file(root/options_full['arrival_json'])
+        candidate._wmphys_condition_motion = options_full.get('condition_motion', False)
+        if candidate._wmphys_condition_motion:
+            from wms.physics.motion_fit import MotionFit
+            candidate._wmphys_motion_fit = MotionFit(root/options_full['parameter_directory'])
+            candidate._wmphys_shrinkage_policy = root/options_full['parameter_directory']/'idm_shrinkage.json'
+            candidate._wmphys_conditioned_cache = {}
+            receipt['saved_driver_id_lookup'] = False
+            receipt['runtime_motion_conditioning'] = True
+            receipt['shrinkage_policy_sha256'] = hashlib.sha256(
+                candidate._wmphys_shrinkage_policy.read_bytes()).hexdigest()
         receipt['fitted_hidden'] = candidate._wmphys_fitted_state.provenance
         receipt['learned_arrivals_sha256'] = candidate._wmphys_arrival_fit.sha256
     if variant == 'C':
@@ -87,6 +104,19 @@ def fixed_parameters(model, state):
             i = PARAMETER_NAMES.index(name)
             values[..., i] = torch.where(hdv, float(value), values[..., i])
     return values
+
+
+def fitted_state_at_start(model, seed):
+    fitted = model._wmphys_fitted_state
+    if not getattr(model, '_wmphys_condition_motion', False):
+        return fitted, {}
+    from tools.rbint.observations import load_motion_history
+    from tools.rbint.motion_posterior import condition_population
+    if int(seed) not in model._wmphys_conditioned_cache:
+        start, raw = load_motion_history(seed)
+        model._wmphys_conditioned_cache[int(seed)] = condition_population(
+            fitted, model._wmphys_motion_fit, model._wmphys_shrinkage_policy, start, raw)
+    return model._wmphys_conditioned_cache[int(seed)]
 
 
 class InstrumentedEntries:
@@ -160,7 +190,9 @@ def candidate_future(*, model, batch, initial, future, seed, frozen, **unused):
         from tools.rbint.observations import fitted_inputs
         ids, arrivals, observation_receipt = fitted_inputs(initial, seed,
             batch.metadata[0]['initial_state_sha256'], model._wmphys_arrival_fit)
-        extra = dict(fitted_state=model._wmphys_fitted_state, vehicle_ids=ids,
+        fitted, motion_receipt = fitted_state_at_start(model, seed)
+        observation_receipt.update(motion_receipt)
+        extra = dict(fitted_state=fitted, vehicle_ids=ids,
                      t0_s=300., arrival_fit=arrivals)
     if settings in ('B', 'C'):
         defaults = fixed_parameters(model, initial)

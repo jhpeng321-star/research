@@ -180,6 +180,9 @@ def main(model_loader=None, identity_sources=(), future_builder=None):
         save_new(out/'IDENTITY.json', identity)
     identity_sha = digest(out/'IDENTITY.json')
     native = native_fn('head', a_max=1.2)
+    if getattr(model, '_wmphys_native_model', 'registered_head') == 'sumo_physics':
+        from wms.model.sumo_native import native_physics_accel
+        native = native_physics_accel
 
     def controllers(slots):
         def native_call(state):
