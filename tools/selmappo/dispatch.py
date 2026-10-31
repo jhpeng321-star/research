@@ -8,6 +8,7 @@ import traceback
 
 from .protocol import safe_path
 from .storage import PrechargedEpisode, append
+from .transport import pack, retain, unpack
 
 
 def admitted(root, workers):
@@ -24,17 +25,19 @@ def job(state, world, args):
     from .train import episode
     torch.set_num_threads(1)
     model = Selector()
-    model.load_state_dict(state)
+    model.load_state_dict(unpack(state))
     budget = PrechargedEpisode(safe_path(args.out)/str(world['seed']), world, args.variant)
     try:
         transitions = episode(model, world, args, budget)
-        return dict(ok=True, transitions=transitions, actual=budget.actual)
+        blob, sha = retain(safe_path(args.out)/str(world['seed']), transitions)
+        return dict(ok=True, transitions_blob=blob, trajectory_sha256=sha, actual=budget.actual)
     except BaseException:
         return dict(ok=False, error=traceback.format_exc(), actual=budget.actual)
 
 
 def wave(model, worlds, args, budget, deadline):
     root = safe_path(args.out)
+    state = pack(model.state_dict())
     pending, results, cursor, failed, paused = {}, {}, 0, False, False
     with ProcessPoolExecutor(max_workers=args.workers, mp_context=multiprocessing.get_context('spawn')) as pool:
         while cursor < len(worlds) or pending:
@@ -58,7 +61,7 @@ def wave(model, worlds, args, budget, deadline):
                     paused = False
                 world = worlds[cursor]
                 budget.reserve(world, args.variant)
-                future = pool.submit(job, model.state_dict(), world, args)
+                future = pool.submit(job, state, world, args)
                 pending[future] = (cursor, world)
                 cursor += 1
             if not pending:
@@ -81,7 +84,10 @@ def wave(model, worlds, args, budget, deadline):
                     with (root/'STOP_REQUESTED').open('a', encoding='utf-8') as stream:
                         stream.write('worker failure; no retry\n')
                 else:
-                    results[index] = result['transitions']
+                    blob = result['transitions_blob']
+                    if __import__('hashlib').sha256(blob).hexdigest() != result['trajectory_sha256']:
+                        raise ValueError('worker trajectory transport hash mismatch')
+                    results[index] = unpack(blob)
             if failed and not pending:
                 raise RuntimeError('incomplete production wave; all charges retained, no retry')
     return [results[i] for i in range(len(worlds))]

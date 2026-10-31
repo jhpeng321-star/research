@@ -125,3 +125,14 @@ worlds (including successful ones), first update ONLY5unused worlds18000041..180
 then original168x46updates18000046..18007773; final169only. Retain38,700historical
 +7733x900future +14,400unstarted evaluation =7,012,800; no refund/replacements/mechanics.
 This reduces gradient-bearing episodes by41 and must be disclosed/approved explicitly.
+
+Transport repair is now CPU35/35 PASS on cpuQ (46episodes x30decisions through a real
+spawn pool, bitwise model/logp preservation, bounded parentFDs, real worker wire schema,
+durable trajectory/hash/no-overwrite and real1380-framePPO update). Genuine frozen
+checkpoint/WALL lifecycle/seed aliases integration alsoPASS with SUMO intercepted.
+Local32PASS/3torch-unavailableSKIP/RuffPASS. CPU-only immutable stage
+`build_59a85b1215ade170`, binding
+`59a85b1215ade17045f65ea36f22f3f3c418aa3521e9d62094d9190ca5eae123`;
+receipt`STAGE_59a85b1215ade170.json`, newSUMO0, NOT DISPATCHED.
+This fixes transport but does not implement/arm another continuation; current consumed
+worlds/schedule/accounting require the specific MAIN amendment above first.

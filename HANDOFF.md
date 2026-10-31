@@ -7,7 +7,10 @@ near32x30logp tensors against cpuQ softFDlimit1024 (`received0items of ancdata`)
 Charged38,700sim-s; actual bounds30,600..37,800 (8killed workers lack terminal receipts).
 Ledger retains9open reservations; original ledger/logs/results/locks remain immutable.
 No final169 weights, no evaluation, no new retry authorization/automatic launch.
-Byte transport/durable trajectory repair is being CPU-tested ONLY; see`SELMAPPO_STOP.md`.
+Byte transport/durable trajectory repair passed CPU35/35 +real frozen checkpoint/WALL/alias
+integration with SUMO intercepted. CPU-ONLY stage`build_59a85b1215ade170`, fullbinding
+`59a85b1215ade17045f65ea36f22f3f3c418aa3521e9d62094d9190ca5eae123`.
+It is NOT DISPATCHED; the old production lock prevents relaunch. See`SELMAPPO_STOP.md`.
 MAIN00:29 continuation was used once (commit `c082b233`); second seed reached900actual,
 then the wrapper queried the frozen environment's already-closed clock. Total1,800charged /
 900actual, production0/checkpoints0. Terminal repair commit `d219f5ca` is CPU31/31 plus

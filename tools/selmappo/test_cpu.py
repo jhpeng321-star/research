@@ -23,7 +23,13 @@ def payload(now=300):
         return dict(vehicle_id=key, timestamp_s=now, s_m=-100., lane=lane, v_mps=20., a_mps2=-.5)
     return dict(history=[dict(now_s=now, self_reports=[row('cav1')],
                              detections=[row('anonymousA'), row('anonymousB', 1)],
-                             neighbours=[], coverage=[], counters=None)])
+                              neighbours=[], coverage=[], counters=None)])
+
+
+def transport_probe(blob):
+    """Spawn-safe CPU-only exercise of the actual byte boundary, no backend."""
+    from .transport import pack, unpack
+    return pack(unpack(blob))
 
 
 class FakeBackend:
@@ -439,6 +445,59 @@ class DiskTests(unittest.TestCase):
 
 @unittest.skipUnless(importlib.util.find_spec('torch'), 'existing CPU torch environment required')
 class LearningTests(unittest.TestCase):
+    def test_full_wave_inline_transport_is_bitwise_and_descriptor_bounded(self):
+        import multiprocessing
+        from concurrent.futures import ProcessPoolExecutor
+        import torch
+        from .learning import Selector, Transition, Updater
+        from .transport import pack, retain, unpack
+        torch.set_num_threads(1)
+        torch.manual_seed(0)
+        model = Selector()
+        observation = build(payload(), variant='fleet', incumbents={})
+        actions, logp = model.act(observation)
+        episode = [Transition(observation, actions, logp.clone(), -float(j+1)) for j in range(30)]
+        blob = pack((model.state_dict(), episode))
+        descriptors = Path('/proc/self/fd')
+        before = len(list(descriptors.iterdir())) if descriptors.is_dir() else None
+        with ProcessPoolExecutor(max_workers=2, mp_context=multiprocessing.get_context('spawn')) as pool:
+            returned = list(pool.map(transport_probe, [blob]*46))
+        episodes = []
+        for value in returned:
+            state, copied = unpack(value)
+            self.assertTrue(all(torch.equal(state[k], v) for k, v in model.state_dict().items()))
+            self.assertTrue(all(torch.equal(t.old_logp, logp) for t in copied))
+            episodes.append(copied)
+        if before is not None:
+            self.assertLess(len(list(descriptors.iterdir())), before+64)
+        parent = Path(os.environ['SELMAPPO_TEST_ROOT'])
+        root = Path(tempfile.mkdtemp(prefix='selmappo_transport_', dir=parent))
+        retained, sha = retain(root, episodes[0])
+        self.assertEqual(digest(root/'trajectory.pkl'), sha)
+        self.assertTrue(torch.equal(unpack(retained)[0].old_logp, logp))
+        with self.assertRaises(FileExistsError):
+            retain(root, episodes[0])
+        # Exercise the actual worker's wire schema and durable write boundary.
+        from .dispatch import job
+        world = training_world(18000000)
+        supervisor = Budget(root)
+        supervisor.reserve(world, 'fleet')
+        args = SimpleNamespace(out=str(root), variant='fleet')
+        def no_physics(model, world, args, budget):
+            budget.root.mkdir()
+            budget.reserve(world, 'fleet')
+            budget.finish(0)
+            return episodes[0]
+        with patch('tools.selmappo.train.episode', side_effect=no_physics):
+            wire = job(pack(model.state_dict()), world, args)
+        self.assertTrue(wire['ok'])
+        self.assertIsInstance(wire['transitions_blob'], bytes)
+        self.assertEqual(digest(root/str(world['seed'])/'trajectory.pkl'), wire['trajectory_sha256'])
+        self.assertTrue(torch.equal(unpack(wire['transitions_blob'])[0].old_logp, logp))
+        supervisor.finish(0)
+        stats = Updater(model).update(episodes)
+        self.assertEqual(stats['frames'], 46*30)
+
     def test_long_horizon_and_real_optimizer(self):
         import torch
         from .learning import Selector, Transition, Updater, compute_gae
