@@ -1,6 +1,6 @@
 # S-RB-MERGE — full-fleet validation continuation
 
-## Next mechanics increment: network limits / inferred speed-factor semantics
+## Next mechanics increment **3df73a27**: network limits / speed-factor semantics
 - NEW `src/wms/physics/merge_network.py`, used only by the SUMO merge/insertion
   path. Network XML line22: ramp approach22.22m/s; line45: acceleration lane
   froms=0 is31.29m/s. Previously merge stop/advice kernels used the mainline
@@ -15,6 +15,11 @@
   transition, fast-driver mainline/ramp departure and weighted-candidate identity.
 - INT can take the new network module plus junction_merge/sumo_insertion changes;
   no shared wms/spec/factory change. v4 remains immutable under its prior sources.
+- v5 staged separately at `/tmp/rb-merge-fullfleet-v5`: same INTb0f66943 base,
+  new source kernel/network/insertion only, same default settings and stream190.
+  Ten-second front-ramp diagnostic records observable geometry/gaps/IDs without
+  influencing motion. Remote **33 CPU tests PASS /1.83s**, all32 preflights PASS.
+  No v5 predictions launched while v4 is active; next dispatch waits for its exit.
 
 ## v4 RUNNING (SUMO CF + causal LC history)
 - **00:46:48 +08 dispatched ONCE**, owned cpuQ PID**405098**, source

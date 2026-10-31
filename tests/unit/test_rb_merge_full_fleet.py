@@ -141,3 +141,18 @@ def test_body_overlap_is_lane_local_and_touching_is_not_overlap():
     s = np.array([0., 5., 9., 9.])
     lane = np.array([1, 1, 1, 0])
     assert body_overlap_count(s, lane, np.full(4, 5.), np.ones(4, bool)) == (1, -1.)
+
+
+def test_front_trace_is_finite_identity_bound_and_does_not_mutate_state():
+    from tools.rbeval.full_fleet import merge_trace
+    from wms.physics.config import PhysicsConfig
+    state, _ = fixture()
+    state['lane'][0, 0] = 2
+    old = copy.deepcopy(state)
+    trace = merge_trace(state, PhysicsConfig(merge_model='sumo'), 300.)
+    assert len(trace) == 1 and trace[0]['identity'] == 0
+    assert trace[0]['leader'] is None and trace[0]['gap_leader_m'] is None
+    json.dumps(trace, allow_nan=False)
+    for key in old:
+        if torch.is_tensor(old[key]):
+            torch.testing.assert_close(state[key], old[key], rtol=0, atol=0)

@@ -22,7 +22,7 @@ def remote(code):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('mode', choices=('status', 'stage', 'launch', 'poll', 'collect'))
-    p.add_argument('--version', default='v4')
+    p.add_argument('--version', default='v5')
     args = p.parse_args()
     if not args.version.isalnum():
         p.error('version must be alphanumeric')
@@ -37,6 +37,8 @@ def main():
                                            cwd='E:/agent-work/c4-rb-int')
         payload = dict(runtime_archive=base64.b64encode(archive).decode(),
             merge_kernel=base64.b64encode((ROOT/'src/wms/physics/junction_merge.py').read_bytes()).decode(),
+            network=base64.b64encode((ROOT/'src/wms/physics/merge_network.py').read_bytes()).decode(),
+            insertion=base64.b64encode((ROOT/'src/wms/model/sumo_insertion.py').read_bytes()).decode(),
             merge_tests=base64.b64encode((ROOT/'tests/unit/test_rb_merge.py').read_bytes()).decode(),
             validator=base64.b64encode((ROOT/'tools/rbeval/full_fleet.py').read_bytes()).decode(),
             tests=base64.b64encode((ROOT/'tests/unit/test_rb_merge_full_fleet.py').read_bytes()).decode(),
@@ -52,6 +54,8 @@ with tarfile.open(fileobj=io.BytesIO(base64.b64decode(payload['runtime_archive']
     tar.extractall(runtime, filter='data')
 # Overlay only MERGE's owned kernel; keep INT's entrant-identity and lane hooks.
 (runtime/'src/wms/physics/junction_merge.py').write_bytes(base64.b64decode(payload['merge_kernel']))
+(runtime/'src/wms/physics/merge_network.py').write_bytes(base64.b64decode(payload['network']))
+(runtime/'src/wms/model/sumo_insertion.py').write_bytes(base64.b64decode(payload['insertion']))
 adapter=runtime/'src/wms/model/sumo_merge.py'
 text=adapter.read_text()
 old='merge_speed_advice(kin, present, accel, physics, driver_params)'
@@ -81,7 +85,7 @@ assert result.returncode==0
 preflight=subprocess.run([sys.executable,'-B',str(tools/'full_fleet.py'),'--root','/home/ubuntu/wmdata20261031/views','--runtime',str(runtime),'--targets',str(targets),'--seeds',*map(str,range(969400,969432)),'--preflight'],cwd=root,env=env,text=True,capture_output=True)
 pre=dict(command=preflight.args,returncode=preflight.returncode,stdout=preflight.stdout,stderr=preflight.stderr)
 (root/'PREFLIGHT.json').write_text(json.dumps(pre,indent=2)+'\\n')
-print(json.dumps(pre))
+print(json.dumps(dict(preflight_returncode=preflight.returncode,fit_worlds=32,stderr=preflight.stderr)))
 assert preflight.returncode==0
 '''
         print(remote(code))
@@ -95,7 +99,7 @@ assert not (root/'results').exists()
 with (root/'LAUNCH.json').open('x') as f:
     json.dump(dict(state='reserved',owner='S-RB-MERGE'),f)
 script=root/'tools/rbeval/full_fleet.py'
-command=[python,'-B',str(script),'--root','/home/ubuntu/wmdata20261031/views','--runtime',str(root/'runtime'),'--targets',str(root/'targets'),'--output',str(root/'results'),'--seeds',*map(str,range(969400,969432)),'--horizon','300','--slots','320','--cf-model','sumo_idm','--warm-lc']
+command=[python,'-B',str(script),'--root','/home/ubuntu/wmdata20261031/views','--runtime',str(root/'runtime'),'--targets',str(root/'targets'),'--output',str(root/'results'),'--seeds',*map(str,range(969400,969432)),'--horizon','300','--slots','320','--cf-model','sumo_idm','--warm-lc','--trace-merge']
 env=dict(os.environ,OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',CUDA_VISIBLE_DEVICES='')
 with (root/'RUN.log').open('x') as log:
     child=subprocess.Popen(command,cwd=root,env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,preexec_fn=lambda:os.nice(19))
