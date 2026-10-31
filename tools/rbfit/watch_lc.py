@@ -11,6 +11,7 @@ from datetime import datetime
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -28,7 +29,7 @@ ARTIFACTS = ("lc2013_population.json","lc2013_posteriors.json","lc2013_shrinkage
 
 
 def command(argv,timeout=60):
-    completed = subprocess.run(argv,cwd=REPO,capture_output=True,text=True,timeout=timeout)
+    completed = subprocess.run(argv,cwd=REPO,capture_output=True,text=True,encoding="utf-8",errors="replace",timeout=timeout)
     if completed.returncode:
         raise RuntimeError(json.dumps({"argv":argv,"returncode":completed.returncode,
             "stdout":completed.stdout,"stderr":completed.stderr}))
@@ -63,12 +64,15 @@ def publish(job,state):
     command(["scp",*sources,str(local)+"/"],timeout=90)
     verification = json.loads((local/"VERIFIED.json").read_text())
     assert verification["status"]=="PASS"
-    for name,expected in verification["artifact_sha256"].items():
-        assert hashlib.sha256((local/name).read_bytes()).hexdigest()==expected,name
+    for artifact_name,expected in verification["artifact_sha256"].items():
+        assert hashlib.sha256((local/artifact_name).read_bytes()).hexdigest()==expected,artifact_name
     # Mirror the owned dispatch too; data observations remain on cpuQ.
     command(["scp",f"cpuQ:{job['root']}/{job['name']}_process.json",str(local/"process.json")])
     population = json.loads((local/"lc2013_population.json").read_text())
     policy = json.loads((local/"lc2013_shrinkage.json").read_text())
+    method = ("Raw-physical population LS and causal likelihood temperature" if
+        population.get("estimation","").startswith("physical categorical") else
+        "Source-conditioned categorical likelihood and causal evidence shrinkage")
     raw = verification["aggregate"]["raw_physics_shrunk_posterior"]
     likelihood = verification["aggregate"]["likelihood_shrunk_posterior"]
     now = datetime.now().astimezone().isoformat(timespec="seconds")
@@ -97,7 +101,7 @@ def publish(job,state):
             lines[i] = (f"- LC continuation: `{name}/`, snapshot{population.get('snapshot_version','v1')}; "
                 f"{verification['drivers']}posteriors independently verified. RAW physical event Brier "
                 f"{raw['event_brier']:.6f}, expected{raw['expected_event_count']:.1f}vs{raw['events']}events. "
-                "Population LS/categorical likelihood and causal temperature use motion only; no free-running adoption.")
+                f"{method} uses motion only; no free-running adoption.")
     assert len(lines)<=40
     paper.write_text("\n".join(lines)+"\n",encoding="utf-8")
     receipt = local/"PUBLICATION.json"
@@ -163,34 +167,74 @@ def prepare_new_source(commit,digest,state):
     print(json.dumps({"event":"new_source_dispatched","lane_commit":commit,"key":key}),flush=True)
 
 
+def acquire_singleton(namespace="S_RB_FIT_LC_OWNER_20261101"):
+    """OS releases ownership on exit; no lock deletion or process signalling."""
+    if os.name=="nt":
+        import ctypes
+        kernel = ctypes.WinDLL("kernel32",use_last_error=True)
+        kernel.CreateMutexW.restype = ctypes.c_void_p
+        kernel.CreateMutexW.argtypes = [ctypes.c_void_p,ctypes.c_bool,ctypes.c_wchar_p]
+        handle = kernel.CreateMutexW(None,True,"Local\\"+namespace)
+        kernel.CloseHandle.argtypes = [ctypes.c_void_p]
+        kernel.ReleaseMutex.argtypes = [ctypes.c_void_p]
+        if not handle:
+            raise OSError(ctypes.get_last_error(),"Cannot claim continuation mutex")
+        if ctypes.get_last_error()==183:
+            kernel.CloseHandle(handle)
+            raise RuntimeError("Another continuation watcher already owns the OS mutex")
+        def release():
+            kernel.ReleaseMutex(handle)
+            kernel.CloseHandle(handle)
+        return release
+    import fcntl
+    stream = (RECEIPTS/(namespace+".lock")).open("a")
+    try:
+        fcntl.flock(stream,fcntl.LOCK_EX|fcntl.LOCK_NB)
+    except BlockingIOError:
+        stream.close()
+        raise RuntimeError("Another continuation watcher already owns the OS lock")
+    return stream.close
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--until",required=True)
     parser.add_argument("--last-start",required=True)
     parser.add_argument("--poll-seconds",type=int,default=60)
     parser.add_argument("--launch",action="store_true")
+    parser.add_argument("--resume",action="store_true")
+    parser.add_argument("--run-tag",default="0128")
+    parser.add_argument("--drain-until")
     args = parser.parse_args()
     until,last_start = datetime.fromisoformat(args.until),datetime.fromisoformat(args.last_start)
-    if args.poll_seconds <= 0 or not datetime.now().astimezone()<until or not last_start<until:
+    drain_until = datetime.fromisoformat(args.drain_until) if args.drain_until else until
+    if (args.poll_seconds <= 0 or not datetime.now().astimezone()<until or not last_start<until
+            or drain_until<until or not re.fullmatch(r"[a-z0-9_]+",args.run_tag)):
         raise ValueError("Invalid continuation window")
     if args.launch:
         if not RECEIPTS.is_dir():
             raise ValueError("Existing own receipt parent required")
-        receipt = RECEIPTS/"LC_WATCH_0128_process.json"
+        receipt = RECEIPTS/f"LC_WATCH_{args.run_tag}_process.json"
         with receipt.open("x",encoding="utf-8") as stream:
             json.dump({"state":"claimed","until":args.until,"last_start":args.last_start},stream)
         argv = [sys.executable,"-u",str(Path(__file__)),"--until",args.until,"--last-start",args.last_start,
-                "--poll-seconds",str(args.poll_seconds)]
+                "--poll-seconds",str(args.poll_seconds),"--run-tag",args.run_tag]
+        if args.resume:
+            argv.append("--resume")
+        if args.drain_until:
+            argv += ["--drain-until",args.drain_until]
         flags = (subprocess.CREATE_NEW_PROCESS_GROUP|subprocess.DETACHED_PROCESS) if os.name=="nt" else 0
-        with (RECEIPTS/"LC_WATCH_0128.log").open("xb") as log:
+        with (RECEIPTS/f"LC_WATCH_{args.run_tag}.log").open("xb") as log:
             process = subprocess.Popen(argv,cwd=REPO,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
                 creationflags=flags,start_new_session=os.name!="nt")
         data = {"state":"dispatched","pid":process.pid,"argv":argv,"until":args.until,
-                "last_start":args.last_start,"timestamp":datetime.now().astimezone().isoformat(),"automatic_restart":False}
+                "last_start":args.last_start,"drain_until":drain_until.isoformat(),"resume":args.resume,
+                "timestamp":datetime.now().astimezone().isoformat(),"automatic_restart":False}
         receipt.write_text(json.dumps(data,indent=2)+"\n",encoding="utf-8")
         print(json.dumps(data))
         return
-    if STATE_PATH.exists():
+    release = acquire_singleton()
+    if STATE_PATH.exists() and not args.resume:
         raise RuntimeError("Existing durable continuation state: inspect, do not duplicate watcher")
     _,current_digest,_ = source_identity("0a1e7e93")
     state = {"started":datetime.now().astimezone().isoformat(),"until":args.until,"last_start":args.last_start,
@@ -198,9 +242,14 @@ def main():
             dict(root=BOUNDARIES,name="lane_boundaries_v4",publication="lane_boundaries_v4"),
             dict(root="/home/ubuntu/rbfit20261101_lc_source_ec0f2a74974b",name="lane_fit",
                  publication="lane_source_ec0f2a74974b",key="ec0f2a74974b")],"errors":[]}
-    with STATE_PATH.open("x",encoding="utf-8") as stream:
-        json.dump(state,stream,indent=2)
-    while datetime.now().astimezone()<until:
+    if args.resume:
+        state = json.loads(STATE_PATH.read_text(encoding="utf-8"))
+        state.setdefault("resumes",[]).append({"timestamp":datetime.now().astimezone().isoformat(),"run_tag":args.run_tag})
+    else:
+        with STATE_PATH.open("x",encoding="utf-8") as stream:
+            json.dump(state,stream,indent=2)
+    state["drain_until"] = drain_until.isoformat()
+    while datetime.now().astimezone()<drain_until:
         active = False
         for job in list(state["jobs"]):
             if job.get("blocked") or (job.get("published_commit") and (job["name"] in ("lane_raw","lane_raw_v5") or job.get("raw_dispatched"))):
@@ -226,7 +275,8 @@ def main():
                 # Load admission can be retried before a receipt exists; all
                 # other errors require manual reconciliation, never job restart.
                 message = str(exc)
-                if "free-load admission failed" not in message:
+                deferred = ("free-load admission failed","Unfamiliar staged work","Uncommitted handoff/report")
+                if not any(reason in message for reason in deferred):
                     job["blocked"] = message
                 state["errors"].append({"timestamp":datetime.now().astimezone().isoformat(),"job":job["publication"],"error":message})
                 print(json.dumps({"event":"blocked","job":job["publication"],"error":message}),flush=True)
@@ -239,9 +289,14 @@ def main():
             print(json.dumps({"event":"source_check_error","error":str(exc)}),flush=True)
         state["heartbeat"] = datetime.now().astimezone().isoformat()
         save_state(state)
+        pending = any(not j.get("blocked") and (not j.get("published_commit") or
+            (j["name"] in ("lane_fit","lane_boundaries_v4") and not j.get("raw_dispatched"))) for j in state["jobs"])
+        if datetime.now().astimezone()>=until and not pending:
+            break
         time.sleep(args.poll_seconds)
     state["finished"] = datetime.now().astimezone().isoformat()
     save_state(state)
+    release()
     print(json.dumps({"event":"owner_window_complete","finished":state["finished"]}),flush=True)
 
 

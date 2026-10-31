@@ -69,7 +69,7 @@ def main():
     if args.action == "fit":
         command = ["lane_directional.py","--root","/home/ubuntu/wmdata20261031/views",
             "--idm-pooled",str(OLD/"pooled_full_v5/idm_pooled.json"),"--out",str(output),
-            "--support-json",str(root/"support.json"),"--snapshot-version","v2","--workers","2"]
+            "--support-json",str(root/"support.json"),"--snapshot-version","v2","--workers","4"]
     else:
         if not (root/"lane_fit/VERIFIED.json").is_file():
             raise RuntimeError("Independently verified completed physical cache required")

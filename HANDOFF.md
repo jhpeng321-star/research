@@ -1,7 +1,7 @@
 # S-RB-FIT — owner01:28 continuation active
 
 <!-- LC-CONTINUATION:BEGIN -->
-Latest verified `lane_events.json` (2026-11-01T02:15:15+08:00); LC SHA1bdded8e9f21, snapshotv1;3130driver posteriors.
+Latest verified `lane_boundaries_v4` (2026-11-01T02:15:15+08:00); LC SHA1bdded8e9f21, snapshotv1;3130driver posteriors.
 Raw physical expected changes5444.5 vs626recorded; eventBrier0.007423. Likelihood-emission Brier0.002374 is a separate diagnostic. **NOT ADOPTED**; no free-running/action-effect qualification.
 Boundary-aware LC sampler required; weights already conditioned. Inverse temperature=not applicable; IDM preferred delivery remains `shrinkage_v1`. Live receipts:LC_WATCH_0128_STATE.json.
 <!-- LC-CONTINUATION:END -->
@@ -47,8 +47,9 @@ INT freezes09:30. Detailed previous handoff:docs/RBFIT_HANDOFF_ARCHIVE_0205.md.
   and driver weights, conditioning_end_s300. Weights already conditioned.
   Emission probabilities are discrepancy only, NEVER runtime event noise.
 - Boundary-aware reader: first4LC coordinates≥0, assertive>0; cooperative[0,1].
-  FIT `draw_lane_parameters` supports zero weights; UNC strict-positive validator
-  needs its LC-only update. Keep lane_directory unset until a candidate is adopted.
+  FIT `draw_lane_parameters` supports zero behavioral settings. NEW explicit
+  `lc_fit_for_unc.load_boundary_fitted_state` works with actual UNC planning;
+  5tests/8paired-replayed futures PASS, IDM unchanged. LC remains experimental.
 
 ## Evidence / limits
 - Native FIT969400–969431 only, six explicit observable files. No settings labels.
@@ -59,7 +60,7 @@ INT freezes09:30. Detailed previous handoff:docs/RBFIT_HANDOFF_ARCHIVE_0205.md.
 - SUMOCORE six-FIT-state diagnosis: inferred-minus-default600s MAPPO/PI effects
   +4171/+3909veh-s, almost all road. Incumbent/entrant settings changed together;
   culpable parameter unidentified. Shrinkage is not demonstrated sign repair.
-- Prior22CPU tests passed; new11numerical/runtime+4continuation tests PASS.
+- Prior22CPU tests passed; new11numerical/runtime+7continuation+5UNC bridge PASS.
   Initial coordinate overlay missing secure_gap dependency repaired pre-dispatch;
   original failure/success receipts retained. No GPU/SUMO/neural training.
 - Report≤40lines:`docs/paper_results/RBFIT.md`; reproducer/JSON APIs:

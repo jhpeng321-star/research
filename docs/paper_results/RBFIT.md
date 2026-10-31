@@ -28,7 +28,7 @@
 - Population parameters are a fitted discrete joint mixture; per-driver posterior weights retain aliases where histories cannot identify parameters. Observation-emission nuisance probabilities are learned, not runtime driving rules.
 - Later-FIT626 events/258,691 intervals:posterior/population Brier **.002828/.003071**, event-rate baseline **.002414**; log loss .01715/.01895 vs .01700. Improved from lane_v1 posterior.003059, but **LC fit not adopted**.
 - NEW `lane_directional_v3/`: source-conditioned stay/target0/target1 likelihood fixes Boolean wrong-destination matches; causal informative-evidence shrinkage. All3,130 posterior sequences independently verified;1,630 uninformative histories=population. Later-FIT event Brier posterior/population **.002359/.002463**; raw physical proposals still7811vs626observed, versus source-default12095; NOT ADOPTED. Original support permits cooperative>1; v4 corrects domain.
-- LC continuation: `lane_events.json/`, snapshotv1; 3130posteriors independently verified. RAW physical event Brier 0.007423, expected5444.5vs626events. Population LS/categorical likelihood and causal temperature use motion only; no free-running adoption.
+- LC continuation: `lane_boundaries_v4/`, snapshotv1;3130posteriors independently verified. RAW physical event Brier.007423, expected5444.5vs626events. Source-conditioned categorical likelihood uses motion only; not adopted. Raw-physical LS and latest0a1e7e93/snapshotv2 continuation pending.
 
 ## Delivery / limits
 - All paths above are under `artifacts/rbfit/`; formats/API in `HANDOFF.md`, runtime `src/wms/physics/motion_fit.py`, reproduction in `tools/rbfit/README.md`. NEW `condition_motion` conditions fixed profiles on causal60s at arbitrary starts without guessing tape VIDs; real FIT weight parity5.6e−17.
@@ -37,4 +37,4 @@
 - v0 maps to speedFactor by division by actual lane limit; shared CF compatibility note records NUMERICAL_EPS=.001/emergencyDecel9 source defaults.
 - These are conditional held-in FIT engineering results; no unseen-world, intervention, free-running breakdown, queue-clearing or action-value improvement claim. Pooled point candidate is ready for INT/EVAL testing.
 - SUMOCORE saved-six-FIT-state diagnosis: inference changes600s MAPPO/PI effects by **+4171/+3909veh-s**, almost entirely road; native road improves8523 vs controlled4351/4617veh-s. Incumbents+entrant donors changed together; culpable parameter unidentified. See `RBFIT_SUMOCORE_DIAG.md`; no demonstrated sign repair.
-- CPU nice19/single-thread only: completed v3 PID557463 exited; boundary v4 PID579949 active with2workers. Create-once receipts/source hashes preserved; matching completed decisions reused. No GPU/SUMO/neural training/prohibited data/push.
+- CPU nice19/single-thread only: v3PID557463/v4PID579949 exited; latest-source617309 active with2workers. Verified-source cache reuse/create-once receipts preserved. No GPU/SUMO/neural training/prohibited data/push.

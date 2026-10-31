@@ -184,7 +184,8 @@ many runtime lane proposals.
 
 `watch_lc.py` is the durable owner01:28 continuation: inspect existing owned
 receipts first, publish/commit each verified version, re-freeze only when committed
-LANE physics bytes change, stop new starts08:40 and stop polling09:00. It has no
+LANE physics bytes change, stop new starts08:40, normal polling09:00, and allow
+existing jobs to drain/publish through09:25 before INT09:30. It has no
 process-signalling code. Create-once watcher/job claims prohibit duplicate
 restarts; staged user work/edited handoffs block automatic publication commits.
 Live status is `receipts/LC_WATCH_0128_STATE.json`; terminal failures preserve
@@ -206,3 +207,8 @@ cooperative<=1, assertive>0. IDM retains strict positivity. Five tests against
 the committed UNC implementation pass, including sparse driver support,
 population/entrant fallback, invalid-domain rejection,8paired/replayed planned
 futures, unmodified CAV/padding and unchanged global RNG. No LC adoption implied.
+
+Explicit `--resume --run-tag UNIQUE` restores the same durable job state after
+manual reconciliation; an OS singleton excludes concurrent watcher sessions.
+It never restarts an existing remote job. UTF-8 subprocess capture is explicit
+on Windows, and candidate names are not reused as artifact-loop variables.
