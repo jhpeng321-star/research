@@ -1,0 +1,262 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="975" viewBox="0 0 760 975" role="img">
+<title>wm2: breakdown reliability</title>
+<rect width="100%" height="100%" fill="#fff"/>
+<g font-family="sans-serif" font-size="11" fill="#162638">
+<text x="20" y="24" font-size="18">wm2 · breakdown reliability</text>
+<text x="20" y="44">Fixed deciles; dots show forecast vs observed rate; bars: pointwise 95% world CIs.</text>
+<text x="20" y="60">Sparse / constant bins may have no CI. A diagonal-looking small panel does not qualify a model.</text>
+<text x="55" y="87" font-weight="bold">development12 · 120 s</text>
+<path d="M 55 105 V 310 M 55 310 H 260" stroke="#e6ebf0"/>
+<text x="55" y="326" text-anchor="middle">0</text>
+<text x="47" y="314" text-anchor="end">0</text>
+<path d="M 106.25 105 V 310 M 55 258.75 H 260" stroke="#e6ebf0"/>
+<text x="106.25" y="326" text-anchor="middle">0.25</text>
+<text x="47" y="262.75" text-anchor="end">0.25</text>
+<path d="M 157.5 105 V 310 M 55 207.5 H 260" stroke="#e6ebf0"/>
+<text x="157.5" y="326" text-anchor="middle">0.5</text>
+<text x="47" y="211.5" text-anchor="end">0.5</text>
+<path d="M 208.75 105 V 310 M 55 156.25 H 260" stroke="#e6ebf0"/>
+<text x="208.75" y="326" text-anchor="middle">0.75</text>
+<text x="47" y="160.25" text-anchor="end">0.75</text>
+<path d="M 260 105 V 310 M 55 105 H 260" stroke="#e6ebf0"/>
+<text x="260" y="326" text-anchor="middle">1</text>
+<text x="47" y="109" text-anchor="end">1</text>
+<path d="M 55 310 L 260 105" stroke="#8795a5" stroke-dasharray="4 4"/>
+<text x="157.5" y="344" text-anchor="middle">Predicted probability</text>
+<text transform="translate(20 207.5) rotate(-90)" text-anchor="middle">Observed rate</text>
+<circle cx="80.625" cy="310.0" r="4" fill="#176fa7"><title>upstream n=2, worlds=1; pred=0.125, observed=0.000</title></circle>
+<circle cx="183.125" cy="310.0" r="4" fill="#176fa7"><title>upstream n=2, worlds=1; pred=0.625, observed=0.000</title></circle>
+<circle cx="260.0" cy="105.0" r="4" fill="#176fa7"><title>upstream n=1, worlds=1; pred=1.000, observed=1.000</title></circle>
+<circle cx="260.0" cy="187.0" r="4" fill="#d16a13"><title>merge n=5, worlds=1; pred=1.000, observed=0.600</title></circle>
+<circle cx="131.875" cy="310.0" r="4" fill="#5b52ac"><title>ramp n=1, worlds=1; pred=0.375, observed=0.000</title></circle>
+<circle cx="157.5" cy="310.0" r="4" fill="#5b52ac"><title>ramp n=3, worlds=1; pred=0.500, observed=0.000</title></circle>
+<circle cx="208.75" cy="105.0" r="4" fill="#5b52ac"><title>ramp n=1, worlds=1; pred=0.750, observed=1.000</title></circle>
+<text x="270" y="125" fill="#d16a13">merge</text>
+<text x="270" y="143" fill="#5b52ac">ramp</text>
+<text x="270" y="161" fill="#176fa7">upstream</text>
+<text x="435" y="87" font-weight="bold">development12 · 300 s</text>
+<path d="M 435 105 V 310 M 435 310 H 640" stroke="#e6ebf0"/>
+<text x="435" y="326" text-anchor="middle">0</text>
+<text x="427" y="314" text-anchor="end">0</text>
+<path d="M 486.25 105 V 310 M 435 258.75 H 640" stroke="#e6ebf0"/>
+<text x="486.25" y="326" text-anchor="middle">0.25</text>
+<text x="427" y="262.75" text-anchor="end">0.25</text>
+<path d="M 537.5 105 V 310 M 435 207.5 H 640" stroke="#e6ebf0"/>
+<text x="537.5" y="326" text-anchor="middle">0.5</text>
+<text x="427" y="211.5" text-anchor="end">0.5</text>
+<path d="M 588.75 105 V 310 M 435 156.25 H 640" stroke="#e6ebf0"/>
+<text x="588.75" y="326" text-anchor="middle">0.75</text>
+<text x="427" y="160.25" text-anchor="end">0.75</text>
+<path d="M 640 105 V 310 M 435 105 H 640" stroke="#e6ebf0"/>
+<text x="640" y="326" text-anchor="middle">1</text>
+<text x="427" y="109" text-anchor="end">1</text>
+<path d="M 435 310 L 640 105" stroke="#8795a5" stroke-dasharray="4 4"/>
+<text x="537.5" y="344" text-anchor="middle">Predicted probability</text>
+<text transform="translate(400 207.5) rotate(-90)" text-anchor="middle">Observed rate</text>
+<circle cx="588.75" cy="310.0" r="4" fill="#176fa7"><title>upstream n=2, worlds=1; pred=0.750, observed=0.000</title></circle>
+<circle cx="614.375" cy="310.0" r="4" fill="#176fa7"><title>upstream n=1, worlds=1; pred=0.875, observed=0.000</title></circle>
+<circle cx="640.0" cy="310.0" r="4" fill="#176fa7"><title>upstream n=2, worlds=1; pred=1.000, observed=0.000</title></circle>
+<circle cx="614.375" cy="105.0" r="4" fill="#d16a13"><title>merge n=1, worlds=1; pred=0.875, observed=1.000</title></circle>
+<circle cx="640.0" cy="156.25" r="4" fill="#d16a13"><title>merge n=4, worlds=1; pred=1.000, observed=0.750</title></circle>
+<circle cx="511.875" cy="310.0" r="4" fill="#5b52ac"><title>ramp n=1, worlds=1; pred=0.375, observed=0.000</title></circle>
+<circle cx="563.125" cy="310.0" r="4" fill="#5b52ac"><title>ramp n=3, worlds=1; pred=0.625, observed=0.000</title></circle>
+<circle cx="588.75" cy="310.0" r="4" fill="#5b52ac"><title>ramp n=1, worlds=1; pred=0.750, observed=0.000</title></circle>
+<text x="650" y="125" fill="#d16a13">merge</text>
+<text x="650" y="143" fill="#5b52ac">ramp</text>
+<text x="650" y="161" fill="#176fa7">upstream</text>
+<text x="55" y="387" font-weight="bold">development12 · 600 s</text>
+<path d="M 55 405 V 610 M 55 610 H 260" stroke="#e6ebf0"/>
+<text x="55" y="626" text-anchor="middle">0</text>
+<text x="47" y="614" text-anchor="end">0</text>
+<path d="M 106.25 405 V 610 M 55 558.75 H 260" stroke="#e6ebf0"/>
+<text x="106.25" y="626" text-anchor="middle">0.25</text>
+<text x="47" y="562.75" text-anchor="end">0.25</text>
+<path d="M 157.5 405 V 610 M 55 507.5 H 260" stroke="#e6ebf0"/>
+<text x="157.5" y="626" text-anchor="middle">0.5</text>
+<text x="47" y="511.5" text-anchor="end">0.5</text>
+<path d="M 208.75 405 V 610 M 55 456.25 H 260" stroke="#e6ebf0"/>
+<text x="208.75" y="626" text-anchor="middle">0.75</text>
+<text x="47" y="460.25" text-anchor="end">0.75</text>
+<path d="M 260 405 V 610 M 55 405 H 260" stroke="#e6ebf0"/>
+<text x="260" y="626" text-anchor="middle">1</text>
+<text x="47" y="409" text-anchor="end">1</text>
+<path d="M 55 610 L 260 405" stroke="#8795a5" stroke-dasharray="4 4"/>
+<text x="157.5" y="644" text-anchor="middle">Predicted probability</text>
+<text transform="translate(20 507.5) rotate(-90)" text-anchor="middle">Observed rate</text>
+<circle cx="208.75" cy="405.0" r="4" fill="#176fa7"><title>upstream n=2, worlds=1; pred=0.750, observed=1.000</title></circle>
+<circle cx="260.0" cy="473.33333333333337" r="4" fill="#176fa7"><title>upstream n=3, worlds=1; pred=1.000, observed=0.667</title></circle>
+<circle cx="260.0" cy="487.0" r="4" fill="#d16a13"><title>merge n=5, worlds=1; pred=1.000, observed=0.600</title></circle>
+<circle cx="157.5" cy="610.0" r="4" fill="#5b52ac"><title>ramp n=1, worlds=1; pred=0.500, observed=0.000</title></circle>
+<circle cx="183.125" cy="405.0" r="4" fill="#5b52ac"><title>ramp n=1, worlds=1; pred=0.625, observed=1.000</title></circle>
+<circle cx="208.75" cy="610.0" r="4" fill="#5b52ac"><title>ramp n=1, worlds=1; pred=0.750, observed=0.000</title></circle>
+<circle cx="234.375" cy="610.0" r="4" fill="#5b52ac"><title>ramp n=1, worlds=1; pred=0.875, observed=0.000</title></circle>
+<circle cx="260.0" cy="610.0" r="4" fill="#5b52ac"><title>ramp n=1, worlds=1; pred=1.000, observed=0.000</title></circle>
+<text x="270" y="425" fill="#d16a13">merge</text>
+<text x="270" y="443" fill="#5b52ac">ramp</text>
+<text x="270" y="461" fill="#176fa7">upstream</text>
+<text x="435" y="387" font-weight="bold">reserved8 · 120 s</text>
+<path d="M 435 405 V 610 M 435 610 H 640" stroke="#e6ebf0"/>
+<text x="435" y="626" text-anchor="middle">0</text>
+<text x="427" y="614" text-anchor="end">0</text>
+<path d="M 486.25 405 V 610 M 435 558.75 H 640" stroke="#e6ebf0"/>
+<text x="486.25" y="626" text-anchor="middle">0.25</text>
+<text x="427" y="562.75" text-anchor="end">0.25</text>
+<path d="M 537.5 405 V 610 M 435 507.5 H 640" stroke="#e6ebf0"/>
+<text x="537.5" y="626" text-anchor="middle">0.5</text>
+<text x="427" y="511.5" text-anchor="end">0.5</text>
+<path d="M 588.75 405 V 610 M 435 456.25 H 640" stroke="#e6ebf0"/>
+<text x="588.75" y="626" text-anchor="middle">0.75</text>
+<text x="427" y="460.25" text-anchor="end">0.75</text>
+<path d="M 640 405 V 610 M 435 405 H 640" stroke="#e6ebf0"/>
+<text x="640" y="626" text-anchor="middle">1</text>
+<text x="427" y="409" text-anchor="end">1</text>
+<path d="M 435 610 L 640 405" stroke="#8795a5" stroke-dasharray="4 4"/>
+<text x="537.5" y="644" text-anchor="middle">Predicted probability</text>
+<text transform="translate(400 507.5) rotate(-90)" text-anchor="middle">Observed rate</text>
+<circle cx="435.0" cy="610.0" r="4" fill="#176fa7"><title>upstream n=3, worlds=2; pred=0.000, observed=0.000</title></circle>
+<circle cx="460.625" cy="610.0" r="4" fill="#176fa7"><title>upstream n=5, worlds=2; pred=0.125, observed=0.000</title></circle>
+<circle cx="486.25" cy="610.0" r="4" fill="#176fa7"><title>upstream n=1, worlds=1; pred=0.250, observed=0.000</title></circle>
+<path d="M 563.125 558.75 V 507.5" stroke="#176fa7" stroke-width="2"/>
+<circle cx="563.125" cy="541.6666666666667" r="4" fill="#176fa7"><title>upstream n=3, worlds=3; pred=0.625, observed=0.333</title></circle>
+<path d="M 588.75 541.6666666666667 V 405.0" stroke="#176fa7" stroke-width="2"/>
+<circle cx="588.75" cy="473.33333333333337" r="4" fill="#176fa7"><title>upstream n=3, worlds=3; pred=0.750, observed=0.667</title></circle>
+<path d="M 614.375 546.9230769230769 V 498.1818181818182" stroke="#176fa7" stroke-width="2"/>
+<circle cx="614.375" cy="524.5833333333333" r="4" fill="#176fa7"><title>upstream n=12, worlds=5; pred=0.875, observed=0.417</title></circle>
+<path d="M 640.0 489.4117647058823 V 427.77777777777777" stroke="#176fa7" stroke-width="2"/>
+<circle cx="640.0" cy="468.0769230769231" r="4" fill="#176fa7"><title>upstream n=13, worlds=4; pred=1.000, observed=0.692</title></circle>
+<circle cx="435.0" cy="610.0" r="4" fill="#d16a13"><title>merge n=15, worlds=3; pred=0.000, observed=0.000</title></circle>
+<circle cx="460.625" cy="575.8333333333334" r="4" fill="#d16a13"><title>merge n=6, worlds=2; pred=0.125, observed=0.167</title></circle>
+<circle cx="537.5" cy="541.6666666666667" r="4" fill="#d16a13"><title>merge n=3, worlds=1; pred=0.500, observed=0.333</title></circle>
+<circle cx="563.125" cy="405.0" r="4" fill="#d16a13"><title>merge n=1, worlds=1; pred=0.625, observed=1.000</title></circle>
+<circle cx="588.75" cy="580.7142857142858" r="4" fill="#d16a13"><title>merge n=7, worlds=3; pred=0.750, observed=0.143</title></circle>
+<circle cx="614.375" cy="541.6666666666667" r="4" fill="#d16a13"><title>merge n=3, worlds=1; pred=0.875, observed=0.333</title></circle>
+<circle cx="640.0" cy="446.0" r="4" fill="#d16a13"><title>merge n=5, worlds=1; pred=1.000, observed=0.800</title></circle>
+<path d="M 435.0 588.421052631579 V 564.4444444444445" stroke="#5b52ac" stroke-width="2"/>
+<circle cx="435.0" cy="580.7142857142858" r="4" fill="#5b52ac"><title>ramp n=14, worlds=3; pred=0.000, observed=0.143</title></circle>
+<path d="M 460.625 541.6666666666667 V 405.0" stroke="#5b52ac" stroke-width="2"/>
+<circle cx="460.625" cy="507.5" r="4" fill="#5b52ac"><title>ramp n=2, worlds=2; pred=0.125, observed=0.500</title></circle>
+<circle cx="486.25" cy="610.0" r="4" fill="#5b52ac"><title>ramp n=3, worlds=2; pred=0.250, observed=0.000</title></circle>
+<path d="M 511.875 610.0 V 541.6666666666667" stroke="#5b52ac" stroke-width="2"/>
+<circle cx="511.875" cy="558.75" r="4" fill="#5b52ac"><title>ramp n=4, worlds=2; pred=0.375, observed=0.250</title></circle>
+<circle cx="537.5" cy="610.0" r="4" fill="#5b52ac"><title>ramp n=1, worlds=1; pred=0.500, observed=0.000</title></circle>
+<path d="M 563.125 558.75 V 507.5" stroke="#5b52ac" stroke-width="2"/>
+<circle cx="563.125" cy="541.6666666666667" r="4" fill="#5b52ac"><title>ramp n=3, worlds=2; pred=0.625, observed=0.333</title></circle>
+<path d="M 588.75 473.33333333333337 V 446.0" stroke="#5b52ac" stroke-width="2"/>
+<circle cx="588.75" cy="456.25" r="4" fill="#5b52ac"><title>ramp n=4, worlds=3; pred=0.750, observed=0.750</title></circle>
+<path d="M 614.375 487.0 V 405.0" stroke="#5b52ac" stroke-width="2"/>
+<circle cx="614.375" cy="434.2857142857143" r="4" fill="#5b52ac"><title>ramp n=7, worlds=3; pred=0.875, observed=0.857</title></circle>
+<circle cx="640.0" cy="507.5" r="4" fill="#5b52ac"><title>ramp n=2, worlds=1; pred=1.000, observed=0.500</title></circle>
+<text x="650" y="425" fill="#d16a13">merge</text>
+<text x="650" y="443" fill="#5b52ac">ramp</text>
+<text x="650" y="461" fill="#176fa7">upstream</text>
+<text x="55" y="687" font-weight="bold">reserved8 · 300 s</text>
+<path d="M 55 705 V 910 M 55 910 H 260" stroke="#e6ebf0"/>
+<text x="55" y="926" text-anchor="middle">0</text>
+<text x="47" y="914" text-anchor="end">0</text>
+<path d="M 106.25 705 V 910 M 55 858.75 H 260" stroke="#e6ebf0"/>
+<text x="106.25" y="926" text-anchor="middle">0.25</text>
+<text x="47" y="862.75" text-anchor="end">0.25</text>
+<path d="M 157.5 705 V 910 M 55 807.5 H 260" stroke="#e6ebf0"/>
+<text x="157.5" y="926" text-anchor="middle">0.5</text>
+<text x="47" y="811.5" text-anchor="end">0.5</text>
+<path d="M 208.75 705 V 910 M 55 756.25 H 260" stroke="#e6ebf0"/>
+<text x="208.75" y="926" text-anchor="middle">0.75</text>
+<text x="47" y="760.25" text-anchor="end">0.75</text>
+<path d="M 260 705 V 910 M 55 705 H 260" stroke="#e6ebf0"/>
+<text x="260" y="926" text-anchor="middle">1</text>
+<text x="47" y="709" text-anchor="end">1</text>
+<path d="M 55 910 L 260 705" stroke="#8795a5" stroke-dasharray="4 4"/>
+<text x="157.5" y="944" text-anchor="middle">Predicted probability</text>
+<text transform="translate(20 807.5) rotate(-90)" text-anchor="middle">Observed rate</text>
+<path d="M 131.875 910.0 V 828.0" stroke="#176fa7" stroke-width="2"/>
+<circle cx="131.875" cy="841.6666666666667" r="4" fill="#176fa7"><title>upstream n=3, worlds=2; pred=0.375, observed=0.333</title></circle>
+<circle cx="157.5" cy="705.0" r="4" fill="#176fa7"><title>upstream n=1, worlds=1; pred=0.500, observed=1.000</title></circle>
+<path d="M 183.125 910.0 V 773.3333333333334" stroke="#176fa7" stroke-width="2"/>
+<circle cx="183.125" cy="807.5" r="4" fill="#176fa7"><title>upstream n=2, worlds=2; pred=0.625, observed=0.500</title></circle>
+<circle cx="208.75" cy="705.0" r="4" fill="#176fa7"><title>upstream n=6, worlds=4; pred=0.750, observed=1.000</title></circle>
+<circle cx="234.375" cy="705.0" r="4" fill="#176fa7"><title>upstream n=9, worlds=5; pred=0.875, observed=1.000</title></circle>
+<path d="M 260.0 766.5 V 705.0" stroke="#176fa7" stroke-width="2"/>
+<circle cx="260.0" cy="737.3684210526316" r="4" fill="#176fa7"><title>upstream n=19, worlds=6; pred=1.000, observed=0.842</title></circle>
+<path d="M 55.0 910.0 V 773.3333333333334" stroke="#d16a13" stroke-width="2"/>
+<circle cx="55.0" cy="807.5" r="4" fill="#d16a13"><title>merge n=8, worlds=3; pred=0.000, observed=0.500</title></circle>
+<path d="M 80.625 841.6666666666667 V 705.0" stroke="#d16a13" stroke-width="2"/>
+<circle cx="80.625" cy="792.8571428571429" r="4" fill="#d16a13"><title>merge n=7, worlds=3; pred=0.125, observed=0.571</title></circle>
+<circle cx="106.25" cy="773.3333333333334" r="4" fill="#d16a13"><title>merge n=3, worlds=2; pred=0.250, observed=0.667</title></circle>
+<circle cx="131.875" cy="910.0" r="4" fill="#d16a13"><title>merge n=1, worlds=1; pred=0.375, observed=0.000</title></circle>
+<circle cx="157.5" cy="910.0" r="4" fill="#d16a13"><title>merge n=2, worlds=1; pred=0.500, observed=0.000</title></circle>
+<circle cx="183.125" cy="705.0" r="4" fill="#d16a13"><title>merge n=1, worlds=1; pred=0.625, observed=1.000</title></circle>
+<circle cx="208.75" cy="910.0" r="4" fill="#d16a13"><title>merge n=1, worlds=1; pred=0.750, observed=0.000</title></circle>
+<circle cx="234.375" cy="705.0" r="4" fill="#d16a13"><title>merge n=3, worlds=2; pred=0.875, observed=1.000</title></circle>
+<path d="M 260.0 768.0769230769231 V 705.0" stroke="#d16a13" stroke-width="2"/>
+<circle cx="260.0" cy="734.2857142857143" r="4" fill="#d16a13"><title>merge n=14, worlds=4; pred=1.000, observed=0.857</title></circle>
+<path d="M 55.0 831.1538461538462 V 705.0" stroke="#5b52ac" stroke-width="2"/>
+<circle cx="55.0" cy="796.1111111111111" r="4" fill="#5b52ac"><title>ramp n=9, worlds=2; pred=0.000, observed=0.556</title></circle>
+<circle cx="80.625" cy="910.0" r="4" fill="#5b52ac"><title>ramp n=1, worlds=1; pred=0.125, observed=0.000</title></circle>
+<circle cx="106.25" cy="910.0" r="4" fill="#5b52ac"><title>ramp n=3, worlds=2; pred=0.250, observed=0.000</title></circle>
+<path d="M 131.875 807.5 V 705.0" stroke="#5b52ac" stroke-width="2"/>
+<circle cx="131.875" cy="756.25" r="4" fill="#5b52ac"><title>ramp n=4, worlds=4; pred=0.375, observed=0.750</title></circle>
+<circle cx="157.5" cy="763.5714285714286" r="4" fill="#5b52ac"><title>ramp n=7, worlds=3; pred=0.500, observed=0.714</title></circle>
+<circle cx="183.125" cy="705.0" r="4" fill="#5b52ac"><title>ramp n=6, worlds=4; pred=0.625, observed=1.000</title></circle>
+<path d="M 208.75 910.0 V 807.5" stroke="#5b52ac" stroke-width="2"/>
+<circle cx="208.75" cy="869.0" r="4" fill="#5b52ac"><title>ramp n=5, worlds=3; pred=0.750, observed=0.200</title></circle>
+<circle cx="234.375" cy="910.0" r="4" fill="#5b52ac"><title>ramp n=2, worlds=1; pred=0.875, observed=0.000</title></circle>
+<circle cx="260.0" cy="705.0" r="4" fill="#5b52ac"><title>ramp n=3, worlds=2; pred=1.000, observed=1.000</title></circle>
+<text x="270" y="725" fill="#d16a13">merge</text>
+<text x="270" y="743" fill="#5b52ac">ramp</text>
+<text x="270" y="761" fill="#176fa7">upstream</text>
+<text x="435" y="687" font-weight="bold">reserved8 · 600 s</text>
+<path d="M 435 705 V 910 M 435 910 H 640" stroke="#e6ebf0"/>
+<text x="435" y="926" text-anchor="middle">0</text>
+<text x="427" y="914" text-anchor="end">0</text>
+<path d="M 486.25 705 V 910 M 435 858.75 H 640" stroke="#e6ebf0"/>
+<text x="486.25" y="926" text-anchor="middle">0.25</text>
+<text x="427" y="862.75" text-anchor="end">0.25</text>
+<path d="M 537.5 705 V 910 M 435 807.5 H 640" stroke="#e6ebf0"/>
+<text x="537.5" y="926" text-anchor="middle">0.5</text>
+<text x="427" y="811.5" text-anchor="end">0.5</text>
+<path d="M 588.75 705 V 910 M 435 756.25 H 640" stroke="#e6ebf0"/>
+<text x="588.75" y="926" text-anchor="middle">0.75</text>
+<text x="427" y="760.25" text-anchor="end">0.75</text>
+<path d="M 640 705 V 910 M 435 705 H 640" stroke="#e6ebf0"/>
+<text x="640" y="926" text-anchor="middle">1</text>
+<text x="427" y="709" text-anchor="end">1</text>
+<path d="M 435 910 L 640 705" stroke="#8795a5" stroke-dasharray="4 4"/>
+<text x="537.5" y="944" text-anchor="middle">Predicted probability</text>
+<text transform="translate(400 807.5) rotate(-90)" text-anchor="middle">Observed rate</text>
+<circle cx="511.875" cy="705.0" r="4" fill="#176fa7"><title>upstream n=1, worlds=1; pred=0.375, observed=1.000</title></circle>
+<circle cx="537.5" cy="705.0" r="4" fill="#176fa7"><title>upstream n=1, worlds=1; pred=0.500, observed=1.000</title></circle>
+<circle cx="563.125" cy="705.0" r="4" fill="#176fa7"><title>upstream n=1, worlds=1; pred=0.625, observed=1.000</title></circle>
+<path d="M 588.75 858.75 V 807.5" stroke="#176fa7" stroke-width="2"/>
+<circle cx="588.75" cy="841.6666666666667" r="4" fill="#176fa7"><title>upstream n=3, worlds=2; pred=0.750, observed=0.333</title></circle>
+<circle cx="614.375" cy="705.0" r="4" fill="#176fa7"><title>upstream n=5, worlds=5; pred=0.875, observed=1.000</title></circle>
+<circle cx="640.0" cy="705.0" r="4" fill="#176fa7"><title>upstream n=29, worlds=8; pred=1.000, observed=1.000</title></circle>
+<path d="M 435.0 910.0 V 705.0" stroke="#d16a13" stroke-width="2"/>
+<circle cx="435.0" cy="746.0" r="4" fill="#d16a13"><title>merge n=5, worlds=3; pred=0.000, observed=0.800</title></circle>
+<path d="M 460.625 910.0 V 705.0" stroke="#d16a13" stroke-width="2"/>
+<circle cx="460.625" cy="869.0" r="4" fill="#d16a13"><title>merge n=5, worlds=2; pred=0.125, observed=0.200</title></circle>
+<circle cx="486.25" cy="705.0" r="4" fill="#d16a13"><title>merge n=1, worlds=1; pred=0.250, observed=1.000</title></circle>
+<circle cx="511.875" cy="807.5" r="4" fill="#d16a13"><title>merge n=2, worlds=2; pred=0.375, observed=0.500</title></circle>
+<path d="M 537.5 841.6666666666667 V 787.0" stroke="#d16a13" stroke-width="2"/>
+<circle cx="537.5" cy="807.5" r="4" fill="#d16a13"><title>merge n=4, worlds=2; pred=0.500, observed=0.500</title></circle>
+<circle cx="563.125" cy="756.25" r="4" fill="#d16a13"><title>merge n=4, worlds=2; pred=0.625, observed=0.750</title></circle>
+<circle cx="588.75" cy="705.0" r="4" fill="#d16a13"><title>merge n=2, worlds=2; pred=0.750, observed=1.000</title></circle>
+<circle cx="614.375" cy="705.0" r="4" fill="#d16a13"><title>merge n=2, worlds=2; pred=0.875, observed=1.000</title></circle>
+<path d="M 640.0 739.1666666666666 V 705.0" stroke="#d16a13" stroke-width="2"/>
+<circle cx="640.0" cy="718.6666666666666" r="4" fill="#d16a13"><title>merge n=15, worlds=4; pred=1.000, observed=0.933</title></circle>
+<path d="M 435.0 822.1428571428571 V 787.0" stroke="#5b52ac" stroke-width="2"/>
+<circle cx="435.0" cy="807.5" r="4" fill="#5b52ac"><title>ramp n=6, worlds=2; pred=0.000, observed=0.500</title></circle>
+<circle cx="460.625" cy="910.0" r="4" fill="#5b52ac"><title>ramp n=2, worlds=1; pred=0.125, observed=0.000</title></circle>
+<circle cx="511.875" cy="705.0" r="4" fill="#5b52ac"><title>ramp n=1, worlds=1; pred=0.375, observed=1.000</title></circle>
+<path d="M 537.5 828.0 V 746.0" stroke="#5b52ac" stroke-width="2"/>
+<circle cx="537.5" cy="787.0" r="4" fill="#5b52ac"><title>ramp n=5, worlds=3; pred=0.500, observed=0.600</title></circle>
+<path d="M 563.125 872.7272727272727 V 828.0" stroke="#5b52ac" stroke-width="2"/>
+<circle cx="563.125" cy="858.75" r="4" fill="#5b52ac"><title>ramp n=8, worlds=5; pred=0.625, observed=0.250</title></circle>
+<path d="M 588.75 807.5 V 739.1666666666666" stroke="#5b52ac" stroke-width="2"/>
+<circle cx="588.75" cy="787.0" r="4" fill="#5b52ac"><title>ramp n=10, worlds=5; pred=0.750, observed=0.600</title></circle>
+<circle cx="614.375" cy="910.0" r="4" fill="#5b52ac"><title>ramp n=2, worlds=2; pred=0.875, observed=0.000</title></circle>
+<path d="M 640.0 787.0 V 705.0" stroke="#5b52ac" stroke-width="2"/>
+<circle cx="640.0" cy="739.1666666666666" r="4" fill="#5b52ac"><title>ramp n=6, worlds=3; pred=1.000, observed=0.833</title></circle>
+<text x="650" y="725" fill="#d16a13">merge</text>
+<text x="650" y="743" fill="#5b52ac">ramp</text>
+<text x="650" y="761" fill="#176fa7">upstream</text>
+</g></svg>
