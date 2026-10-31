@@ -1,6 +1,6 @@
 # S-COOPFREE — implementation and execution receipt
 
-## Current state
+## Recovery snapshot (before the first optimizer update)
 Build and CPU gates complete. MAIN's explicit 23:58 budget approval was observed.
 Frozen design: `COOPFREE_DESIGN.md` (62 lines), SHA256
 `05c729eac9b45c2128b7d8bf0db01f350730fb381d1956709a6a7b7fae9c91e3`.
@@ -9,6 +9,7 @@ Registered operational sidecar436993/start48005147 now drains1082 disjoint prech
 u1 arms on8 nice19 CPU workers, excluding all started work and the one in-flight arm.
 It resumes the intentionally paused original supervisor for the unchanged optimizer step.
 Original scientific sources, samples,2M budget and prefix/safety gates remain hash-bound.
+The generated publication section below is authoritative for subsequent milestones.
 First1140s baseline and full repeat both closed at charged=actual1140, bitwise-identical
 RESULT SHA256 `a5419ebb2219b3cc765a020e6515c4e38bebcc5aba800b876375fb9d4e328030`.
 Fresh-session status: owned process identity matches, all24 screens/all12 repeats and

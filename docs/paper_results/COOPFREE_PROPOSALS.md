@@ -28,7 +28,7 @@ state = torch.load(checkpoint_path, map_location='cpu', weights_only=True)
 policy = SetPointPolicy()
 policy.load_state_dict(state['policy'])
 policy.eval()
-context = encode(observable_rows, current_mappo_safe_accelerations)
+context = encode(observable_rows, current_mappo_raw_accelerations)
 if context['members']:
     generator = torch.Generator().manual_seed(proposal_seed)
     sample = policy.sample(context, generator, sigma=state['sigma'])
@@ -38,8 +38,10 @@ if context['members']:
 
 `observable_rows` contain `vid`, `is_cav`, `lane`, `s_m`, `v_mps` and optional
 observable `length_m`; use the same coordinate frame as the frozen executor.
-`current_mappo_safe_accelerations` is a dict keyed by CAV vid, in m/s², taken at
-the current decision point. It is the MAPPO anchor, not an invented baseline.
+`current_mappo_raw_accelerations` is a dict keyed by CAV vid, in m/s², taken at
+the executor's current **pre-safety** decision boundary (`execution.inject`).
+This is the actual policy anchor; using post-safety acceleration would shift the
+input distribution. Original safety is applied to the resulting set-point requests.
 The policy's observable-proximity selector includes every in-zone CAV in any lane.
 An empty group means no proposal. `targets[vid]` contains absolute `speed` (m/s)
 and `tau` (seconds), sustained for the sampled10/20/30s window.

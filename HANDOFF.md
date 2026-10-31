@@ -7,8 +7,8 @@ Explicit owner approval is in the shared REGISTRATION.md at the 23:58 COOPFREE b
 ## Live owned run
 - Host cpuQ; immutable `/home/ubuntu/coopfree20261101_build5`.
 - Pipeline PID339173, Linux start_ticks47835664; nice19, one CPU thread.
-- Batch acceleration: sidecar PID436993/start48005147, eight nice19 CPU workers.
-  The original supervisor is intentionally paused (stateT); do not launch another pipeline.
+- Batch acceleration receipt: sidecar PID436993/start48005147, eight nice19 CPU workers.
+  It temporarily pauses the original supervisor (stateT); do not launch another pipeline.
   Sidecar owns1082 disjoint unstarted arms; it excluded the original in-flight
   `u001_w013_solo1` and resumes the exact original supervisor after draining its allocation.
   Read `COOPFREE_OPERATIONS.md` and `BATCH_*` receipts before intervening.
@@ -40,15 +40,20 @@ Commit collected milestones separately; no push or changes to peer PIDs.
 
 ## OWNER00:44 checkpoint consumer
 Publish each completed `policy_uNNN.pt` with its `UPDATE_NNN.json` and SHA256 for
-S-COOPPLAN (`E:/agent-work/c4-coopplan`). The live root currently has no learned
+S-COOPPLAN (`E:/agent-work/c4-coopplan`). At the recovery snapshot there was no learned
 checkpoint: u1 requires all156 windows/all member solos before its optimizer step.
 Never present the zero-initialized proposal distribution as a learned checkpoint.
+For proposal encoding, pass the actual MAPPO **pre-safety** accelerations as anchors,
+matching `execution.inject`; see the consumer guide, not post-safety commands.
 The singleton read-only publisher polls every120s for12h; after verified receipts appear,
 it updates this handoff/report and commits only its publication/documentation paths.
 Its dispatch/log receipt is `tools/coopfree/evidence/PUBLISHER_DISPATCH_<PID>.json`.
 Initial publisher8556 was stopped by exact owned PID after its successful first
 publication to add complete paired-dev/safety/discovery reporting; its receipt/log
 are retained. This observer-only maintenance does not pause/restart any SUMO worker.
+Replacement publisher PID17964 is live; its receipt gives the exact operational log.
+It waits through active physics and publishes updates, paired CIs/safety, and detector/
+clustering/C_G summaries automatically, then exits on COMPLETE or durable STOP.
 
 <!-- COOPFREE PUBLICATIONS BEGIN -->
 ## Automatically published proposal checkpoints
