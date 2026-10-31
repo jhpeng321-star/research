@@ -321,7 +321,7 @@ class PhysicsConfig:
     cf_model: str = "legacy"
     #: SUMO vType ``cf.idmStepping`` default (s); 0.5 s steps -> 2 sub-iterations.
     sumo_cf_stepping_s: float = 0.25
-    #: SUMO vType ``emergencyDecel`` (None = decel, the SUMO default).
+    #: SUMO vType ``emergencyDecel`` (None = the SUMO passenger default 9).
     sumo_cf_emergency_decel_mps2: float | None = None
     #: SUMO vType ``maxSpeed`` cap of ``maxNextSpeed`` (None = unbounded).
     sumo_cf_vtype_max_mps: float | None = None

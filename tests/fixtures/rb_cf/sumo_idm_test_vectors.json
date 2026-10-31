@@ -1,0 +1,258 @@
+{
+ "meta": {
+  "source": "SUMO 1.27.1 MSCFModel_IDM (see spec.md)",
+  "step_length": 0.5,
+  "default_params": {
+   "accel": 2.6,
+   "decel": 4.5,
+   "emergency_decel": 9.0,
+   "tau": 1.0,
+   "min_gap": 2.5,
+   "delta": 4.0,
+   "stepping": 0.25,
+   "speed_factor": 1.0,
+   "lane_limit_50": 13.88888888888889
+  }
+ },
+ "vectors": [
+  {
+   "name": "T01_follow_free",
+   "call": "follow_speed",
+   "inputs": {
+    "speed": 10.0,
+    "net_gap": 50.0,
+    "pred_speed": 10.0,
+    "lane_limit": 13.88888888888889
+   },
+   "expected": 10.837230479311158,
+   "note": "weak interaction; acc ~ free acceleration"
+  },
+  {
+   "name": "T02_follow_hard_brake",
+   "call": "follow_speed",
+   "inputs": {
+    "speed": 13.88888888888889,
+    "net_gap": 5.0,
+    "pred_speed": 0.0,
+    "lane_limit": 13.88888888888889
+   },
+   "expected": 0.5777777777777777,
+   "note": "fast approach of standing leader, small net gap -> strong braking"
+  },
+  {
+   "name": "T03_follow_equilibrium",
+   "call": "follow_speed",
+   "inputs": {
+    "speed": 10.0,
+    "net_gap": 10.0,
+    "pred_speed": 10.0,
+    "lane_limit": 13.88888888888889
+   },
+   "expected": 9.706033955162921,
+   "note": "s* = tau*v exactly (gap=minGap+s*): residual accel from (v/des)^delta only"
+  },
+  {
+   "name": "T04_follow_moderate",
+   "call": "follow_speed",
+   "inputs": {
+    "speed": 8.3333333333,
+    "net_gap": 6.0,
+    "pred_speed": 5.5555555556,
+    "lane_limit": 13.88888888888889
+   },
+   "expected": 6.4587463622146855,
+   "note": "mild closing on slower leader"
+  },
+  {
+   "name": "T05_follow_negative_gap",
+   "call": "follow_speed",
+   "inputs": {
+    "speed": 5.0,
+    "net_gap": -1.0,
+    "pred_speed": 0.0,
+    "lane_limit": 13.88888888888889
+   },
+   "expected": 0.0,
+   "note": "minGap violated; gap clamped to NUMERICAL_EPS in _v"
+  },
+  {
+   "name": "T06_follow_standstill",
+   "call": "follow_speed",
+   "inputs": {
+    "speed": 0.0,
+    "net_gap": 0.0,
+    "pred_speed": 0.0,
+    "lane_limit": 13.88888888888889
+   },
+   "expected": 0.0,
+   "note": "both stopped bumper gap == minGap: acc == 0, stay at 0"
+  },
+  {
+   "name": "T07_stop_approach",
+   "call": "stop_speed",
+   "inputs": {
+    "speed": 10.0,
+    "gap": 20.0
+   },
+   "expected": 9.170888963592361,
+   "note": "braking towards a stop line 20 m ahead (net gap convention)"
+  },
+  {
+   "name": "T08_stop_near_stop_fallback",
+   "call": "stop_speed",
+   "inputs": {
+    "speed": 0.0005,
+    "gap": 1.0
+   },
+   "expected": 0.8301017821871405,
+   "note": "triggers maximumSafeStopSpeed fallback with headway=ASL=0.5 (IDM.cpp:186-189)"
+  },
+  {
+   "name": "T09_stop_zero_gap",
+   "call": "stop_speed",
+   "inputs": {
+    "speed": 10.0,
+    "gap": 0.005
+   },
+   "expected": 0.0,
+   "note": "gap < 0.01 -> immediate 0 (IDM.cpp:181-183)"
+  },
+  {
+   "name": "T10_stop_overshoot_clamp",
+   "call": "stop_speed",
+   "inputs": {
+    "speed": 5.0,
+    "gap": 0.5
+   },
+   "expected": 0.65,
+   "note": "result clamped to gap/TS so the Euler step cannot pass the stop line"
+  },
+  {
+   "name": "T11_free_accelerate",
+   "call": "free_speed",
+   "inputs": {
+    "speed": 10.0,
+    "seen": 100.0,
+    "max_speed": 13.88888888888889,
+    "lane_limit": 13.88888888888889
+   },
+   "expected": 10.9149844610581,
+   "note": "freeSpeed accelerate branch: _v(gap=1e6, pred=maxSpeed)"
+  },
+  {
+   "name": "T12_limit_drop",
+   "call": "free_speed",
+   "inputs": {
+    "speed": 13.88888888888889,
+    "seen": 30.0,
+    "max_speed": 8.333333333333334,
+    "lane_limit": 13.88888888888889
+   },
+   "expected": 11.658882122148476,
+   "note": "decelerate towards a 30 km/h transition 30 m ahead (virtual stopped leader)"
+  },
+  {
+   "name": "T13_limit_close_clamp",
+   "call": "free_speed",
+   "inputs": {
+    "speed": 8.0,
+    "seen": 1.0,
+    "max_speed": 8.333333333333334,
+    "lane_limit": 13.88888888888889
+   },
+   "expected": 8.333333333333334,
+   "note": "seen < secGap -> vSafe additionally clamped to maxSpeed (IDM.cpp:121-124)"
+  },
+  {
+   "name": "T14_step_cruise",
+   "call": "idm_step",
+   "inputs": {
+    "speed": 10.0,
+    "net_gap": 20.0,
+    "pred_speed": 10.0,
+    "lane_limit": 13.88888888888889
+   },
+   "expected": 10.505369042766489,
+   "note": "full step (followSpeed+finalizeSpeed), cruising follower"
+  },
+  {
+   "name": "T15_step_start",
+   "call": "idm_step",
+   "inputs": {
+    "speed": 0.0,
+    "net_gap": 30.0,
+    "pred_speed": 13.88888888888889,
+    "lane_limit": 13.88888888888889
+   },
+   "expected": 1.292304647309232,
+   "note": "startup from standstill, free leader"
+  },
+  {
+   "name": "T16_step_leader_stops",
+   "call": "idm_step",
+   "inputs": {
+    "speed": 10.0,
+    "net_gap": 8.0,
+    "pred_speed": 0.0,
+    "lane_limit": 13.88888888888889
+   },
+   "expected": 5.5,
+   "note": "leader brakes to 0 8 m ahead -> emergency-range decel allowed by vMin"
+  },
+  {
+   "name": "T17_speedfactor_1p2",
+   "call": "idm_step",
+   "inputs": {
+    "speed": 10.0,
+    "net_gap": 20.0,
+    "pred_speed": 10.0,
+    "lane_limit": 13.88888888888889,
+    "speed_factor": 1.2
+   },
+   "expected": 10.684841865711107,
+   "note": "speedFactor=1.2 -> desSpeed = min(55.56, 277.8*1.2, 13.889*1.2)=16.667"
+  },
+  {
+   "name": "T18_asl_1s",
+   "call": "idm_step",
+   "inputs": {
+    "speed": 10.0,
+    "net_gap": 20.0,
+    "pred_speed": 10.0,
+    "lane_limit": 13.88888888888889,
+    "action_step_length": 1.0
+   },
+   "expected": 10.505369042766489,
+   "note": "actionStepLength=1.0 s: aMax budgeted over ASL (BASE.cpp:215), not TS"
+  },
+  {
+   "name": "T19_custom_params",
+   "call": "idm_step",
+   "inputs": {
+    "speed": 9.0,
+    "net_gap": 10.0,
+    "pred_speed": 6.0,
+    "lane_limit": 11.11111111111111,
+    "accel": 1.5,
+    "decel": 2.0,
+    "tau": 1.5,
+    "min_gap": 2.0
+   },
+   "expected": 7.198219766344515,
+   "note": "non-default a,b,tau,minGap (2sqrt(ab)=2*sqrt(3)=3.4641)"
+  },
+  {
+   "name": "T20_step_length_1s",
+   "call": "idm_step",
+   "inputs": {
+    "speed": 10.0,
+    "net_gap": 15.0,
+    "pred_speed": 8.0,
+    "lane_limit": 13.88888888888889,
+    "ts": 1.0
+   },
+   "expected": 9.76782360599685,
+   "note": "TS=1.0 -> myIterations=4 (internal step 0.25 s); full 1 s advance"
+  }
+ ]
+}

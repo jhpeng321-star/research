@@ -64,6 +64,11 @@ class RolloutFlags:
     #: (``lane_decision='sample'``; ignored for argmax models) - every state is scored with
     #: the same, reproducible draws.
     lane_seed: int = 0
+    #: S-RB-CF (default off): drop every learned acceleration correction - the
+    #: HDV acceleration is exactly the physics core (``WmSModel.learned_accel_off``).
+    #: Combine with the ``PURE_SUMO_PHYSICS`` physics overrides of
+    #: :mod:`wms.physics.idm_sumo` for the full SUMO IDM arm.
+    pure_physics: bool = False
 
     def __post_init__(self) -> None:
         if self.entries_v2 and not self.entries:
@@ -137,6 +142,8 @@ class WmsPredictor:
             self.model.diag_residual_bound_mps2 = float(flags.diag_residual_bound_mps2)
         if flags.diag_temporal_tau_s is not None:
             self.model.diag_temporal_tau_s = float(flags.diag_temporal_tau_s)
+        if flags.pure_physics:
+            self.model.learned_accel_off = True
 
     @classmethod
     def from_checkpoint(cls, path: str | Path, flags: RolloutFlags = RolloutFlags(), *,

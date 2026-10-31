@@ -18,6 +18,10 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   `panel_ops status` is read-only; never repeat canary/continue/monitor dispatch.
 
 ## What exists
+- CF47b7742c/2b898f39 integrated: exact lane-cap/planMove chain, relaxed
+  emergency stop fallback and all19 applicable independent idmspec vectors.
+  Pure-acceleration diagnostic remains default OFF. **65 CPU PASS /1CUDA skip**;
+  both legacy/WM2 default-OFF architecture fingerprints still bit-exact.
 - UNC84ee27b9 integrated: canonical causal-motion posterior snapshot binding
   (clears saved IDs/LC), observed-counter snapshot hashes/deep copies, stricter
   identity pairing, source-valid optional LC bounds (LC still OFF). INT generic
