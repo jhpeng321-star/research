@@ -1,0 +1,358 @@
+{
+  "base": {
+    "protocol": "S-C1SWITCH2/v2",
+    "inherited_commit": "1121117f",
+    "library": [
+      "native",
+      "ctrl0",
+      "mappo",
+      "pi",
+      "circles",
+      "wall"
+    ],
+    "cadence_s": 20,
+    "horizon_s": 60,
+    "K": 8,
+    "worlds": [
+      {
+        "seed": 969136,
+        "penetration": 0.05,
+        "demand": 1900
+      },
+      {
+        "seed": 969137,
+        "penetration": 0.05,
+        "demand": 2400
+      },
+      {
+        "seed": 969138,
+        "penetration": 0.05,
+        "demand": 2700
+      },
+      {
+        "seed": 969139,
+        "penetration": 0.1,
+        "demand": 1900
+      },
+      {
+        "seed": 969140,
+        "penetration": 0.1,
+        "demand": 2400
+      },
+      {
+        "seed": 969141,
+        "penetration": 0.1,
+        "demand": 2700
+      },
+      {
+        "seed": 969142,
+        "penetration": 0.2,
+        "demand": 1900
+      },
+      {
+        "seed": 969143,
+        "penetration": 0.2,
+        "demand": 2400
+      },
+      {
+        "seed": 969144,
+        "penetration": 0.2,
+        "demand": 2700
+      },
+      {
+        "seed": 969145,
+        "penetration": 0.4,
+        "demand": 1900
+      },
+      {
+        "seed": 969146,
+        "penetration": 0.4,
+        "demand": 2400
+      },
+      {
+        "seed": 969147,
+        "penetration": 0.4,
+        "demand": 2700
+      },
+      {
+        "seed": 969148,
+        "penetration": 0.2,
+        "demand": 2400
+      },
+      {
+        "seed": 969149,
+        "penetration": 0.2,
+        "demand": 2700
+      },
+      {
+        "seed": 969150,
+        "penetration": 0.4,
+        "demand": 2400
+      },
+      {
+        "seed": 969151,
+        "penetration": 0.4,
+        "demand": 2700
+      }
+    ],
+    "measured": {
+      "969136": [
+        10
+      ],
+      "969137": [
+        12
+      ],
+      "969138": [
+        22
+      ],
+      "969139": [
+        1
+      ],
+      "969140": [
+        6
+      ],
+      "969141": [
+        24
+      ],
+      "969142": [
+        10
+      ],
+      "969143": [
+        13
+      ],
+      "969144": [
+        28
+      ],
+      "969145": [
+        15
+      ],
+      "969146": [
+        5
+      ],
+      "969147": [
+        8
+      ],
+      "969148": [
+        26
+      ],
+      "969149": [
+        19
+      ],
+      "969150": [
+        16
+      ],
+      "969151": [
+        2
+      ]
+    },
+    "sim_s": {
+      "wm": 79800,
+      "bb": 79800,
+      "fleet_ppo": 79800,
+      "cav_mappo": 89900,
+      "native": 19200,
+      "ctrl0": 19200,
+      "mappo": 19200,
+      "pi": 19200,
+      "circles": 19200,
+      "wall": 19200,
+      "random": 19200,
+      "canary": 4680
+    },
+    "total_sim_s": 468380,
+    "gpu_seconds": {
+      "wm": 57600,
+      "bb": 10800,
+      "fleet_ppo": 0,
+      "cav_mappo": 0,
+      "native": 0,
+      "ctrl0": 0,
+      "mappo": 0,
+      "pi": 0,
+      "circles": 0,
+      "wall": 0,
+      "random": 0,
+      "canary": 0
+    },
+    "design_sha256": "85effc76da55da33f92fec4199556e3820bad88874fb14c105037d03849eb29a"
+  },
+  "conditional_wm_phys": {
+    "protocol": "S-C1SWITCH2/v2",
+    "inherited_commit": "1121117f",
+    "library": [
+      "native",
+      "ctrl0",
+      "mappo",
+      "pi",
+      "circles",
+      "wall"
+    ],
+    "cadence_s": 20,
+    "horizon_s": 60,
+    "K": 8,
+    "worlds": [
+      {
+        "seed": 969136,
+        "penetration": 0.05,
+        "demand": 1900
+      },
+      {
+        "seed": 969137,
+        "penetration": 0.05,
+        "demand": 2400
+      },
+      {
+        "seed": 969138,
+        "penetration": 0.05,
+        "demand": 2700
+      },
+      {
+        "seed": 969139,
+        "penetration": 0.1,
+        "demand": 1900
+      },
+      {
+        "seed": 969140,
+        "penetration": 0.1,
+        "demand": 2400
+      },
+      {
+        "seed": 969141,
+        "penetration": 0.1,
+        "demand": 2700
+      },
+      {
+        "seed": 969142,
+        "penetration": 0.2,
+        "demand": 1900
+      },
+      {
+        "seed": 969143,
+        "penetration": 0.2,
+        "demand": 2400
+      },
+      {
+        "seed": 969144,
+        "penetration": 0.2,
+        "demand": 2700
+      },
+      {
+        "seed": 969145,
+        "penetration": 0.4,
+        "demand": 1900
+      },
+      {
+        "seed": 969146,
+        "penetration": 0.4,
+        "demand": 2400
+      },
+      {
+        "seed": 969147,
+        "penetration": 0.4,
+        "demand": 2700
+      },
+      {
+        "seed": 969148,
+        "penetration": 0.2,
+        "demand": 2400
+      },
+      {
+        "seed": 969149,
+        "penetration": 0.2,
+        "demand": 2700
+      },
+      {
+        "seed": 969150,
+        "penetration": 0.4,
+        "demand": 2400
+      },
+      {
+        "seed": 969151,
+        "penetration": 0.4,
+        "demand": 2700
+      }
+    ],
+    "measured": {
+      "969136": [
+        10
+      ],
+      "969137": [
+        12
+      ],
+      "969138": [
+        22
+      ],
+      "969139": [
+        1
+      ],
+      "969140": [
+        6
+      ],
+      "969141": [
+        24
+      ],
+      "969142": [
+        10
+      ],
+      "969143": [
+        13
+      ],
+      "969144": [
+        28
+      ],
+      "969145": [
+        15
+      ],
+      "969146": [
+        5
+      ],
+      "969147": [
+        8
+      ],
+      "969148": [
+        26
+      ],
+      "969149": [
+        19
+      ],
+      "969150": [
+        16
+      ],
+      "969151": [
+        2
+      ]
+    },
+    "sim_s": {
+      "wm": 79800,
+      "bb": 79800,
+      "fleet_ppo": 79800,
+      "cav_mappo": 89900,
+      "native": 19200,
+      "ctrl0": 19200,
+      "mappo": 19200,
+      "pi": 19200,
+      "circles": 19200,
+      "wall": 19200,
+      "random": 19200,
+      "wm_phys": 79800,
+      "canary": 4680
+    },
+    "total_sim_s": 548180,
+    "gpu_seconds": {
+      "wm": 57600,
+      "bb": 10800,
+      "fleet_ppo": 0,
+      "cav_mappo": 0,
+      "native": 0,
+      "ctrl0": 0,
+      "mappo": 0,
+      "pi": 0,
+      "circles": 0,
+      "wall": 0,
+      "random": 0,
+      "wm_phys": 57600,
+      "canary": 0
+    },
+    "design_sha256": "85effc76da55da33f92fec4199556e3820bad88874fb14c105037d03849eb29a"
+  }
+}
