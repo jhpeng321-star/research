@@ -33,7 +33,9 @@ def main():
     p.add_argument('--wm-config', default=str(ROOT/'configs/wm_phys.toml'))
     p.add_argument('--variants', nargs='+', choices=('A', 'B', 'C', 'FULL'),
                    default=('A', 'B', 'C', 'FULL'))
-    p.add_argument('--compare-query-fast', action='store_true')
+    compare = p.add_mutually_exclusive_group()
+    compare.add_argument('--compare-query-fast', action='store_true')
+    compare.add_argument('--compare-lane-fast', action='store_true')
     args = p.parse_args()
     torch.set_num_threads(1)
     out = Path(args.out)
@@ -48,6 +50,8 @@ def main():
         model = models[0]
         if args.compare_query_fast and model.physics.sumo_merge_query_fast:
             raise ValueError('dense reference must have sumo_merge_query_fast=False')
+        if args.compare_lane_fast and model.physics.sumo_lane_conflict_fast:
+            raise ValueError('dense reference must have sumo_lane_conflict_fast=False')
         policy = torch.load('/root/autodl-tmp/c4/setupaudit20261030/policy_000190.pt',
                             map_location='cpu', weights_only=False)
         model.cav_exec_cap = policy['config']['cav_exec_cap']
@@ -97,10 +101,12 @@ def main():
                 dense_seconds = time.monotonic()-dense_start
                 gate = audit_closed_cohort(state['present'], roll, exit_s_m=state['exit_s_m'])
                 assert not roll['raw_residual_mps2'].count_nonzero()
-                query_parity = None
-                if args.compare_query_fast:
+                query_parity, lane_parity = None, None
+                if args.compare_query_fast or args.compare_lane_fast:
                     original_physics = model.physics
-                    model.physics = replace(original_physics, sumo_merge_query_fast=True)
+                    override = (dict(sumo_merge_query_fast=True) if args.compare_query_fast
+                                else dict(sumo_lane_conflict_fast=True))
+                    model.physics = replace(original_physics, **override)
                     fast_start = time.monotonic()
                     try:
                         fast_roll = model.rollout(copy.deepcopy(state), n_steps=120,
@@ -113,12 +119,17 @@ def main():
                         assert torch.equal(roll[field], fast_roll[field]), 'query parity '+field
                     assert audit_closed_cohort(state['present'], fast_roll,
                         exit_s_m=state['exit_s_m']) == gate
-                    query_parity = dict(bit_exact=True, fields=fields, dense_seconds=dense_seconds,
+                    parity = dict(bit_exact=True, fields=fields, dense_seconds=dense_seconds,
                         fast_seconds=fast_seconds, speedup=dense_seconds/fast_seconds)
+                    if args.compare_query_fast:
+                        query_parity = parity
+                    else:
+                        lane_parity = parity
             results.append(dict(variant=variant, seed=seed, t0=300, horizon_s=60,
                 source_sha256=start['initial_state_sha256'], encoder_calls=len(calls),
                 encoder_exact=receipt['encoder_exact'], guard_pass=True,
-                query_parity=query_parity, motion_conditioning=conditioning_receipt, **gate))
+                query_parity=query_parity, lane_parity=lane_parity,
+                motion_conditioning=conditioning_receipt, **gate))
     save_new(out, dict(schema='wmphys-smoke/1', passed=True, results=results,
         recipe_sha256=digest(args.wm_config),
         checkpoint_sha256=digest('/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt'),

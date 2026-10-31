@@ -101,6 +101,14 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   Full-population ledger/exit/finite audit attached to every candidate task.
 
 ## Verification / receipts
+- Latest source95e81e79 recorded A/B/C/FULL CPU-recipe smoke8x60s PASS; FULL
+  causal posteriors condition70/79 and39/44 observed HDVs, remaining9/5 use the
+  learned population, saved-ID lookup FALSE. Physics-native CAV law exercised.
+- CPU v2 throughput canary STOPPED operationally: exact own356826 absent,
+ 0tasks/~782wall seconds; no efficacy scores inspected, no automatic retry.
+  Receipts docs/rbint/full_v2_cpu; old GPU evaluations unchanged.
+- Candidate-only lane arbiter CUDA parity4PASS/1.70s; shared-GPU synthetic
+ 0.534s→0.0303s percall (17.6x). Recorded full-rollout parity/latency gate next.
 - Early matched snapshot02:52: FULL-v1=30tasks/3complete reserved worlds;
   WM2=115tasks/13complete worlds, intersection ONLY969432. Mean five-arm CRPS
   difference120/300/600=+59.93/+635.50/−1671.64veh-s; rate300 distance−7.5pp.
