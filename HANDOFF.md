@@ -1,6 +1,23 @@
 # S-RB-RUNB handoff
 
-Updated 2026-11-01 00:13 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+Updated 2026-11-01 00:35 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+
+## Current — WM-PHYS-B claimed / waiting for resources
+- INT explicitly published **WM-PHYS-B / RUNB gpuR** at ~00:34. Atomically claimed
+  `E:/agent-work/rb-shared/evalclaims/WM-PHYS-B.claim`; owner S-RB-RUNB.
+- Source `b0f66943ec300594fc220d3779fb482c26534b1c`, immutable published B
+  entrypoint/runtime and smoke SHA are bound in that claim. Using the complete
+  INT entrypoint preserves its future-builder hook; no legacy loader substitution.
+- Existing watcher PID33076 retained. Single gpuR supervisor **PID728893** at
+  `/root/rbeval20261031/runb/WM-PHYS-B`, launched once via existing recovery-safe
+  protocol; `LAUNCH.json` and `SUPERVISOR_*.json` own the dispatch identity.
+- Supervisor reports WAITING_RESOURCES: used14,818MiB, utilization100%, load51.93.
+  No DISPATCH.json or candidate inference yet. Latest GPU check14,846MiB/100%.
+  Admission ceiling20,000MiB, capped5GiB allocators, shared lock preserved.
+- B is the only published variant, explicitly assigned to RUNB. Atomic manual
+  intake handles this assignment despite the watcher's default first-item RUNA
+  reservation; all later monitoring resumes the existing owned claim normally.
+- Session stays alive through ~07:00; no completion or efficacy claimed.
 
 ## Fresh-session resume 00:13
 - Preserved clean HEAD `df8bac33` and existing watcher PID33076 (creation
