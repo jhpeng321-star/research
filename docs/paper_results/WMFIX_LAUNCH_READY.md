@@ -1,7 +1,10 @@
-# WMFIX launch readiness — 2026-10-31 ~09:30 (resume session; MAIN reviews and launches)
+# WMFIX launch readiness — 2026-10-31 ~11:15 FINAL (resume session; MAIN decides)
 
-Status: **Gates (a),(c),(d) CLOSED PASS; gate (b) feasibility RUNNING on gpuA.**
-MAIN/Claude replaces the unavailable Astra REVIEW.json after FEASIBILITY lands.
+Status: **NOT LAUNCH READY. Gate (b) real TRAIN feasibility BLOCKED (fail-closed)
+as pre-registered** — see WMFIX_FEAS_BLOCKED.md for the full diagnosis and the
+three options (no-change / amended k-step panel-descent pilot / training-only
+smoothed admission). MAIN/Claude replaces the unavailable Astra REVIEW.json and
+decides; no training was launched by this session.
 
 ## Closed since the draft (receipts in WMFIX_RESUME2/SHARD_STAGING/RETARGET.md)
 1. (c) Zero-head panel COMPLETE 36/36 + DONE.json. gpuA PID 100400 (0-27, 32-35)
@@ -26,16 +29,17 @@ MAIN/Claude replaces the unavailable Astra REVIEW.json after FEASIBILITY lands.
 4. (a) TRAIN_PREPARED.json regenerated earlier (7bbd41f3...); (d) B/C1 producers
    bound (verdict_plan.json f47a8f4c..., C1 fail-closed blockers by design).
 
-## Running gate
-- (b) real TRAIN feasibility, gpuA PID 130682/130684 (launched 09:2x, cuda;
-  box had zero compute apps). Checks: 12x2x{120,300}s panel teacher ceiling,
-  frozen-rerun noise, finite-difference gradient, one Adam step improving total
-  objective AND paired J beyond noise, admission ablation, frozen bitwise parity,
-  clock contract match. Expected duration ~40-100 min; writes FEASIBILITY.json
-  with launch_ready true/false + blocker. If launch_ready=false: STOP, report,
-  no training.
+## Feasibility outcome (gate b) — BLOCKED
+FEASIBILITY.json (sha 65771d02...) ran to completion on gpuA cuda (~31 min).
+PASS: clock contract, frozen-bitwise, finite J/crossing gradients, exact source
+conservation, admission ablation, teacher ceiling BOTH horizons (120 s 283->170;
+300 s 2185->526). FAIL: FD agreement (analytic 0.032 vs FD 1.18; eps sweep shows
+dense hard-event breakpoints — unsatisfiable as written) and one-step panel
+improvement (300 s -497 veh-s, 120 s +25). Diagnosis + options in
+WMFIX_FEAS_BLOCKED.md. Do NOT run the training command until MAIN resolves the
+gate decision per those options.
 
-## Exact launch command (MAIN, after FEASIBILITY launch_ready:true + REVIEW)
+## Exact launch command (only after a passing gate decision per above)
 Unchanged from the draft: gpuA, /root/autodl-tmp/c4/wmfixmerge20261031, timeout
 21570s, `tools.wmfixmerge.train --enable-merge-response --conserve-queue
 --learned-admission --device cuda --prepared TRAIN_PREPARED.json --config
@@ -55,7 +59,8 @@ to gpuA `quartet_candidate/` after COMPLETE.json; then
 unseen-PI/unseen-wall cohort + lineage runner are staged (fail-closed by design).
 
 ## Schedule
-Panel+retarget finished ~4 h earlier than the single-track draft projection
-(gpuR shard + faster late batches). Feasibility lands ~10:10-11:10; with a
-REVIEW by ~11:30, training 12:00-18:00, verdict ~19:30-21:00 — inside the
-owner's evening target with margin for one restart.
+Panel+retarget closed ~4 h earlier than the single-track projection (gpuR shard,
+faster late batches): retarget ~09:10, feasibility verdict ~10:45, diagnosis
+~11:10. If MAIN picks option (b) now: pilot ~30-60 min, review, training could
+still run ~12:30-18:30 with verdict ~20:00-21:30. Option (a) ends the task with
+no adoptable fix; option (c) slips past today.
