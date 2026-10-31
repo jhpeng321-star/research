@@ -59,6 +59,21 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**04:29 +08 resume verified (Unix1793478517..1793478575): all112 CPU-panel
+episodes COMPLETE, charged=actual134400sim-s (cpuQ84/100800; gpuR28/33600),
+both supervisors EXITED successfully/noSTOP. NEVER redispatch either CPU panel.**
+WM supervisors649272/763520 live/noSTOP:3complete episodes,126validated decisions,
+5220charged/3600closedactual; open-job actual excluded. Both own GPU services
+342449/761968 live, noSTOP/FINISHED; elapsed clocks remain charged under original caps.
+Local relay31696 and BB follower43404 alive; BB WAIT fresh at1793478527,
+both WM allocations unfinished, so BB still0physics/0GPU. No duplicate dispatch.
+Total at these receipts:144300charged/142680closedactual including4680canary;
+GPU aggregate elapsed approximately4.66h, finalmonotonic charge pending.
+Peer final169 checkpoints remain undelivered; follow peer observers, never evaluate
+intermediate weights. Next owned-job heartbeat due about04:49, then every20min to noon.
+Receipts: CPU_PROGRESS_{cpuQ_1793478517,gpuR_1793478525},
+MODEL_PROGRESS_wm_{cpuQ_1793478535,gpuR_1793478539},
+GPU_PROGRESS_{gpuA_1793478570,gpuR_1793478575}.json.
 Latest resume state: `tools/c1switch2/evidence/STATUS_CURRENT.json` plus task-only `operations status`.
 Mechanics-only canary PASS: owncpuQ PID467748 EXITED, root
 `/home/ubuntu/c1switch2_run_4ad4ece01d5a9ac1`; charged=actual4680 sim-s, GPU0. Never redispatch it.
