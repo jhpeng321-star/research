@@ -78,7 +78,10 @@
   },
   "bb_arm": {
     "state": "ONE_USE_FOLLOWER_WAITING_FOR_WM_GPU_RELEASE_AND_MEMORY",
-    "local_follower_pid": 43404,
+    "local_follower_pid": 36376,
+    "original_follower_pid": 43404,
+    "original_follower_state": "EXITED_PRE_DISPATCH_SSH_CONNECTION_CLOSED_ZERO_BB_SPEND",
+    "wait_resume_claim_sha256": "bd690a89f2d65526a1769a3a7fed708662a47cdade98899123d0b179bb1abf56",
     "planned_sim_s": 79800,
     "aggregate_gpu_cap_s": 10800,
     "each_gpu_cap_s": 5400,

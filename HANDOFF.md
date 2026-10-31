@@ -70,6 +70,12 @@ correction after verifying exited43404/config hashes/original error/noSTOP/no
 bound BB execution/no GPU claim or BB physics claim on either GPU host.
 Original BB caps/gates and science no-retry behavior remain enforced. Regression
 CPU7/7 and Ruff PASS; corrected observer dispatch receipt will follow.
+**05:15 corrected read-only BB follower36376 LIVE**, one-use claim SHA256
+`bd690a89f2d65526a1769a3a7fed708662a47cdade98899123d0b179bb1abf56`.
+Original43404 is terminal and must not be monitored as the current follower.
+Proof/START/dispatch are `BB_FOLLOW/WAIT_RESUME_{ONCE,STARTED}.json` and
+`BB_FOLLOW_WAIT_RESUME_DISPATCH.json`; error and original receipts preserved.
+This continuation was disclosed in shared REGISTRATION before its launch.
 **04:29 +08 resume verified (Unix1793478517..1793478575): all112 CPU-panel
 episodes COMPLETE, charged=actual134400sim-s (cpuQ84/100800; gpuR28/33600),
 both supervisors EXITED successfully/noSTOP. NEVER redispatch either CPU panel.**
