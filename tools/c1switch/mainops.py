@@ -128,7 +128,7 @@ binding=dict(main_authorized=True,total_sim_s=478410,step0_sim_s=47010,per_arm={
 (root/'BINDING.json').write_text(json.dumps(binding,indent=2))
 for arm,b in {bindings!r}.items():(root/(arm+'_BINDING.json')).write_text(json.dumps(b,indent=2))
 if {host!r}=='cpuQ':
- (root/'accounting.jsonl').write_text(json.dumps(dict(id='retained_step0_47010',sim_s=47010,stage='step0'))+'\n')
+ (root/'accounting.jsonl').write_text(json.dumps(dict(id='retained_step0_47010',sim_s=47010,stage='step0'))+'\\n')
 print(json.dumps(binding))
 ''')
     # Use the exact checkpoint/physics already validated in the GPU CPU gate.
