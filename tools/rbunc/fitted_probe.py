@@ -113,13 +113,15 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument('--out', type=Path, required=True)
     p.add_argument('--worker', type=int, choices=range(4), required=True)
+    p.add_argument('--fit-directory', default=FIT)
+    p.add_argument('--lane-directory', default=LANE)
     args = p.parse_args()
     assert args.out.is_dir()
     os.nice(19)
     torch.set_num_threads(1)
     install_guard()
-    fit = FittedHiddenState.from_directory(FIT)
-    lane = FittedHiddenState.from_directory(FIT, lane_directory=LANE)
+    fit = FittedHiddenState.from_directory(args.fit_directory)
+    lane = FittedHiddenState.from_directory(args.fit_directory, lane_directory=args.lane_directory)
     arrival = LearnedArrivalFit.from_file(args.out/'observed_arrivals.json')
     for world in range(969400+args.worker, 969432, 4):
         assert not (args.out/f'fitted_w{world}.json').exists(), 'preserve finished work'

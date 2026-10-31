@@ -1,5 +1,6 @@
 """Complete-panel-only independent metric/source checks for the fitted variant."""
 from pathlib import Path
+import argparse
 import hashlib
 import json
 
@@ -10,7 +11,12 @@ OUT = ROOT/'docs/paper_results/rbunc'
 
 
 def main():
-    raw = OUT/'fitted_source_probe.json'
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--raw', type=Path, default=OUT/'fitted_source_probe.json')
+    parser.add_argument('--out', type=Path, default=OUT/'fitted_summary.json')
+    parser.add_argument('--compare-raw', type=Path)
+    args = parser.parse_args()
+    raw = args.raw
     bundle = json.loads(raw.read_text())
     records = bundle['records']
     assert [r['world'] for r in records] == list(range(969400, 969432))
@@ -75,7 +81,33 @@ def main():
     summary['checks'] = dict(pairwise_variance=True, independent_cdf_crps=True,
         original_factual_targets_exact=True, source_ablations=True, physical_replay=True,
         exact_numeric_identity=True, paired_hidden_inputs=True, metric_world_cells=96)
-    with (OUT/'fitted_summary.json').open('x', encoding='utf-8') as stream:
+    if args.compare_raw is not None:
+        previous = json.loads(args.compare_raw.read_text())['records']
+        assert [r['world'] for r in previous] == [r['world'] for r in records]
+        for a, b in zip(records, previous):
+            assert a['requests'] == b['requests'], 'arrival CRN changed'
+            assert a['real'] == b['real'] and a['identity'] == b['identity']
+            sa, sb = a['source_receipts']['both'], b['source_receipts']['both']
+            assert sa['learned_arrival_sha256'] == sb['learned_arrival_sha256']
+            assert sa['demand_rate_draws'] == sb['demand_rate_draws']
+            assert sa['fitted_artifacts']['idm_population_sha256'] == sb['fitted_artifacts']['idm_population_sha256']
+            assert sa['fitted_artifacts']['idm_posterior_sha256'] != sb['fitted_artifacts']['idm_posterior_sha256']
+        comparison = dict(reference_sha256=hashlib.sha256(args.compare_raw.read_bytes()).hexdigest(),
+            arrivals_requests_rates_population_identity_targets_exact=True, metrics={})
+        for metric in summary['metrics']:
+            def scores(rows):
+                x = np.array([[f[metric] for f in r['modes']['both']] for r in rows])
+                y = np.array([r['real'][metric] for r in rows])
+                return (np.abs(x-y[:, None]).mean(1) - .5*np.abs(x[:, :, None]-x[:, None, :]).mean((1,2)),
+                        x.mean(1)-y)
+            new_crps, new_bias = scores(records)
+            old_crps, old_bias = scores(previous)
+            delta = new_crps-old_crps
+            comparison['metrics'][metric] = dict(crps_change=float(delta.mean()),
+                crps_change_ci95=np.quantile(delta[indices].mean(1), [.025,.975]).tolist(),
+                bias_change=float((new_bias-old_bias).mean()), worlds_crps_lower=int((delta<0).sum()))
+        summary['paired_posterior_comparison'] = comparison
+    with args.out.open('x', encoding='utf-8') as stream:
         json.dump(summary, stream, indent=1, allow_nan=False)
     print(json.dumps(summary, indent=1))
 

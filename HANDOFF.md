@@ -9,6 +9,12 @@ simultaneous saved-ID/supplied posteriors fail closed. Legacy no-ID calls retain
 their slot keys; receipts identify the draw key. Combined40CPUtestsPASS/11.47s,
 including supplied-posterior action/slot permutation, duplicate-ID rejection,
 and saved/supplied-source conflict. No calibrated spread is changed here.
+Committed pairing update: `e4365034` (merge this after earlier UNC commits).
+Next separately frozen diagnostic: `docs/paper_results/RBUNC_PREFERRED_DESIGN.md`.
+Same FIT32/K8/H120 reference, ONLY existing-driver posterior changes to preferred
+shrinkage; exact rates/requests/newcomer population retained. Old panels untouched.
+cpuQ admission checked load9.67/32, no GPU, all old workers rc0; NEW preferred_v1
+root absent. Dispatch/result status will be published here with owned receipts.
 
 Fresh-session resume preserves clean baseline46c33fbe and all completed probes.
 Delivered: fitted IDM/optional LC posterior + learned entrance-counter process +
