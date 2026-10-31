@@ -15,7 +15,7 @@ def state(t=300):
                                        [100., 1., 29., 1.]]),
                 present=np.array([1, 1, 1]), sensor_mask=np.array([1, 1, 0]),
                 known_cav=np.array([1, 0, 0]), coverage=np.ones((3, 5)),
-                queue=np.array([3, 2]), causal_counts=np.array([[20, 23], [9, 11]]))
+                flow_counts=np.array([[20, 10], [9, 4]]))
 
 
 def test_cells(mode="perfect"):
@@ -52,7 +52,7 @@ class ObservationTests(unittest.TestCase):
         s["penetration"] = .99
         s["hidden_driver_type"] = "unused"
         np.testing.assert_array_equal(expected, features(s))
-        del s["queue"]
+        del s["flow_counts"]
         with self.assertRaises(KeyError):
             features(s)
 

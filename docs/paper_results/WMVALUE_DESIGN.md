@@ -91,6 +91,8 @@ Boundary FLOW = cumulative and trailing-60s first-entry detector counts per
 entrance from the prefix only. Registry IDs are used only for deduplication,
 never as features. Require first appearances at the physical network boundary;
 later first appearances inside the road fail the reconstruction audit.
+Known CAVs with recorded internal-junction lane=-1 remain in the self count;
+they contribute no lane/segment aggregate (no future lane backfill or truth lane).
 V state replaces queue/request channels with these four flow counts. D retains
 only commands issued at t0 (the first 1s decision), not realized accelerations;
 read explicit nullable commands from the recorded action log to avoid zero

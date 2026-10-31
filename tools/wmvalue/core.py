@@ -53,7 +53,7 @@ def features(state):
     # Unobserved values may be NaN: do not inspect or aggregate them.
     visible = present & sensed
     obs = finite(k[visible])
-    if len(obs) and (not np.isin(obs[:, 1], (0, 1, 2)).all() or (obs[:, 2] < 0).any()):
+    if len(obs) and (not np.isin(obs[:, 1], (-1, 0, 1, 2)).all() or (obs[:, 2] < 0).any()):
         raise ValueError("invalid visible lane/speed")
     c = cav[visible]
     values = []
@@ -67,11 +67,12 @@ def features(state):
                            float(v.mean()) if len(v) else 0.,
                            float(v.std()) if len(v) else 0.,
                            float(a.mean()) if len(v) else 0., int(c[mask].sum())])
-    queue = finite(state["queue"], (2,))
-    counters = finite(state["causal_counts"], (2, 2))  # entrance x (insertions, requests)
-    if (queue < 0).any() or (counters < 0).any():
-        raise ValueError("negative queue/count")
-    return np.array([*values, *queue, *counters.ravel(), int(c.sum()), 900-time], dtype=float)
+    if "queue" in state or "causal_counts" in state:
+        raise ValueError("MAIN18:12 prohibits source queue/request features")
+    flow = finite(state["flow_counts"], (2, 2))  # entrance x (cumulative, trailing60)
+    if (flow < 0).any() or (flow[:, 1] > flow[:, 0]).any():
+        raise ValueError("invalid boundary flow count")
+    return np.array([*values, *flow.ravel(), int(c.sum()), 900-time], dtype=float)
 
 
 def action_summary(commands, cav_mask):
