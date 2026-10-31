@@ -1,0 +1,65 @@
+[
+  {
+    "id": "devcg_u03_s969608",
+    "C_G": -0.005177974700927734,
+    "signature_window_s": [
+      367.0,
+      427.0
+    ],
+    "credit_outcome": "600s_team_fleet_plus_source_delay",
+    "features": {
+      "member_speed_mps": 25.84001130638298,
+      "member_temporal_speed_variance_m2_s2": 10.816076102696222,
+      "member_speed_change_mps": 9.13989735,
+      "member_displacement_m": 574.1194468,
+      "member_upstream_fraction": 0.1276595744680851,
+      "member_lane_changes": 0.5,
+      "member_issued_acceleration_mps2": 2.097682849108696,
+      "member_realized_acceleration_mps2": 0.40621766,
+      "nearest_ramp_longitudinal_distance_m": 223.0459041280851,
+      "neighbour_speed_mps": 23.693542740566038,
+      "neighbour_temporal_speed_variance_m2_s2": 6.708928355944106,
+      "neighbour_speed_change_mps": 6.517683750000001,
+      "observed_member_fraction": 0.38524590163934425,
+      "member_command_observed_fraction": 0.9787234042553191
+    },
+    "explained_by": [],
+    "initial_neighbours": [
+      "mainline.150",
+      "mainline.153",
+      "mainline.156",
+      "ramp.34"
+    ]
+  },
+  {
+    "id": "devcg_u03_s969610",
+    "C_G": 0.0,
+    "signature_window_s": [
+      357.0,
+      417.0
+    ],
+    "credit_outcome": "600s_team_fleet_plus_source_delay",
+    "features": {
+      "member_speed_mps": 9.717789790234578,
+      "member_temporal_speed_variance_m2_s2": 89.09597412517043,
+      "member_speed_change_mps": 25.3438245345,
+      "member_displacement_m": 504.19913345,
+      "member_upstream_fraction": 0.0,
+      "member_lane_changes": 0.0,
+      "member_issued_acceleration_mps2": 1.5332767771296156,
+      "member_realized_acceleration_mps2": 0.4827395149428571,
+      "nearest_ramp_longitudinal_distance_m": 96.8787475381028,
+      "neighbour_speed_mps": 9.179857157657963,
+      "neighbour_temporal_speed_variance_m2_s2": 82.52822022049881,
+      "neighbour_speed_change_mps": 24.795765021333334,
+      "observed_member_fraction": 0.8770491803278688,
+      "member_command_observed_fraction": 0.9719626168224299
+    },
+    "explained_by": [],
+    "initial_neighbours": [
+      "mainline.117",
+      "mainline.126",
+      "mainline.127"
+    ]
+  }
+]
