@@ -219,6 +219,10 @@ def main(model_loader=None, identity_sources=(), future_builder=None):
 
     tasks = 0
     selected = [s for i, s in enumerate(SEEDS) if i % args.shards == args.shard]
+    if args.model_name != 'wm2':
+        # Administrative order only: registered panel/partition/RNG stay fixed.
+        # Complete the reserved eight worlds first for the owner's04:00 interim.
+        selected.sort(key=lambda s: (s < 969432, s))
     by_seed = {b.metadata[0]['seed']: (b, i) for i, b in enumerate(batches)}
     for seed in selected:
         source, bi = by_seed[seed]

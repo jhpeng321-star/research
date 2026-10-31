@@ -1,6 +1,6 @@
 # S-RB-INT handoff
 
-Updated 2026-11-01 ~00:49 +08; branch `c4/rb-int`. Owner registration5683/5697/5708/5733/5736.
+Updated 2026-11-01 ~01:35 +08; branch `c4/rb-int`. Owner registration5683/5697/5708/5733/5736.
 Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_0034.md`.
 
 ## READY FOR EVAL
@@ -57,13 +57,18 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   Full-population ledger/exit/finite audit attached to every candidate task.
 
 ## Verification / receipts
+- Latest complete touched-module CPU suite **155 PASS /18.70s**. Exact staged
+  FIT test file on cpuQ **17 PASS /1.54s** (SciPy from existing environment).
+- New closed-cohort A/B/C/FULL smoke **8x60s PASS**, gpuA CPU source0ec484ab;
+  `docs/paper_results/WMPHYS_SMOKE_0ec484ab.json`. All finite/conserved/no corrections.
+  FULL driver identity and learned-arrival conditioning constructors also pass.
 - Controller ownership + recipe **18 PASS**; a broader TimelineControllers
   test needs local onnxruntime (absent). Real five-arm staged smoke still required.
 - FULL recipe integration **26 CPU tests PASS /24.61s**. Checks packed-vs-recorded
   IDs, prior/posterior distinction, untouched CAV settings, action-paired replay,
   learned source conditioning, changed-start/permutation rejection. Smoke next.
-- Existing cpuQ FIT source suite **17 PASS /2.10s**; latest21-test source gate
-  still to run in NEW INT staging (local SciPy absent). UNC adapter20PASS above.
+- Existing cpuQ FIT source suite17PASS/2.10s; new immutable INT staging17PASS
+  above verifies the actual touched file (peer21 count spans additional checks).
 - UNC integration: **34 CPU tests PASS /13.33s**; fitted-IDM/arrivals, legacy
   futures and INT recipe/audit. Test fixture now explicitly eval(), matching
   production loader and the new fail-closed deterministic-future guard.

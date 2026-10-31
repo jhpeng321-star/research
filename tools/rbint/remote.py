@@ -6,8 +6,9 @@ import subprocess
 def ssh(host, code, timeout=45):
     if host not in ('gpuA', 'gpuR', 'cpuQ'):
         raise ValueError(host)
+    python = '/home/ubuntu/miniconda3/bin/python' if host == 'cpuQ' else '/root/miniconda3/bin/python'
     result = subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=15',
-                             host, '/root/miniconda3/bin/python -B -'],
+                             host, python+' -B -'],
                             input=code, text=True, capture_output=True, timeout=timeout)
     if result.returncode:
         raise RuntimeError(result.stdout + '\n' + result.stderr)

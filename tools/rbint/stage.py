@@ -10,7 +10,7 @@ from tools.rbint.remote import ssh
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument('host', choices=('gpuA', 'gpuR'))
+    p.add_argument('host', choices=('gpuA', 'gpuR', 'cpuQ'))
     args = p.parse_args()
     root = Path(__file__).resolve().parents[2]
     sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root, text=True).strip()
@@ -24,7 +24,8 @@ def main():
               'tools/rbfit', 'tests/unit/test_rbfit.py']
     archive = subprocess.check_output(['git', 'archive', '--format=tar', sha, *paths], cwd=root)
     archive_sha = hashlib.sha256(archive).hexdigest()
-    parent = '/root/rbeval20261031'
+    parent = '/home/ubuntu/rbint20261101' if args.host == 'cpuQ' else '/root/rbeval20261031'
+    python = '/home/ubuntu/miniconda3/bin/python' if args.host == 'cpuQ' else '/root/miniconda3/bin/python'
     dest = f'{parent}/phys_code_{sha[:12]}'
     # This archive consists solely of this repository's committed code/data receipts.
     code = f'''
@@ -57,7 +58,7 @@ receipt=dict(host={args.host!r},commit={sha!r},archive_sha256={archive_sha!r},ru
 with (dest/'INT_STAGE.json').open('x') as f: json.dump(receipt,f,indent=2)
 print(json.dumps(receipt))'''
     result = subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=15', args.host,
-        '/root/miniconda3/bin/python', '-B', '-c', __import__('shlex').quote(unpack)],
+        python, '-B', '-c', __import__('shlex').quote(unpack)],
         input=archive, capture_output=True, timeout=120)
     if result.returncode:
         raise RuntimeError(result.stderr.decode() + result.stdout.decode())
