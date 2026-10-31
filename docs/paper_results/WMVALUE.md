@@ -1,6 +1,6 @@
 # S-WMVALUE — decisive-test inference RUNNING (2026-10-31)
 
-**MAIN18:12/18:52 adapter gates passed; complete-only A–E test is pending inference.**
+**MAIN21:12 short-first execution active; complete B/C/D/E gate pending inference.**
 The WM-trained cooperative policy remains the target. Original freeze12685912;
 amendment03dd03e0; frozen real fit a0acedb6; adapter3d863697; pipeline226b0a8e.
 
@@ -42,16 +42,16 @@ keys-only coverage, not cost/CRN certification; aggregate-only exit-clock mismat
 cannot be repaired. Preserve it; new matched A/B/C share trajectories and CRNs.
 Native121frame60s history, PI/CIRCLES prefix-memory replay, entrant controls,
 real/imagined sensing, boundary-flow splice, exit/source clocks CPU audited.
-36 CPU tests + actual frozen WM CPU repeat +134source cross-host parity PASS.
+39 CPU tests + actual frozen WM CPU repeat +134source cross-host parity PASS.
 Actual WM90s CPU synthetic run: both60/90 terminal paths and all five arms PASS.
 All120 reserved real objective clocks reconcile; arrays frozen SHAa61d1846.
 No late true source backlog in WM initialization: warmup queue + prefix-flow prior.
 
-**Recommendation:** finish the immutable320task test before any policy coupling.
-Durable local dispatcher PID28924; _out/wmvalue_inference_v1/LAUNCH.json.
-gpuA host CPU<=4 nice19/single-thread lanes; gpuR GPU<=3 only absent peer compute.
-MAIN19:52 CPU release: disjoint969439/40tasks, gpuR CPU<=8, assistPID27688.
-Complete tasks automatically trigger frozen400pair test, report/verdict and commit.
-Keep V/D/E frozen. No efficacy PASS/FAIL or policy-training authorization yet.
-Evidence: tools/wmvalue/evidence/{cpu_runtime_audit,cross_host_cpu}.json.
+**Recommendation:** complete B/C/D/E first; neither short method clears D/E => FAIL.
+Durable short dispatcher PID29400; _out/wmvalue_short_v1/LAUNCH.json.
+Old schedulers28924/27688 stopped by exact ownership; live workers preserved.
+CPU caps gpuA4/gpuR8 include old workers; GPUs only absent peer compute PIDs.
+Exact90vs120s checkpoint parity PASS on CPU; immutable short_v1 on both hosts.
+Complete320K8-prefix tasks trigger once-only400pair gate/report/verdict commit.
+Only D/E survivors require long A; V/D/E frozen, no efficacy verdict yet.
 No SUMO, refit, eval/prohibited-path access, peer signals, policy run or push.
