@@ -111,7 +111,12 @@ Full earlier handoff preserved at `docs/rb_merge/HANDOFF_HISTORY_0100.md`.
   direct validator default; the versioned v6 runner selects physics-native.
   Model IDs in each row/receipt prevent pooling different native-law contracts.
 
-## Next v7fast prepared — 600s frozen-motion-encoder diagnostic
+## v7fast LIVE — 600s frozen-motion-encoder diagnostic
+- **02:27:05 +08 dispatched ONCE**, owned cpuQ PID**682380**, source**158d0193**.
+  Validator SHA `26fe6e834270b4d6a17a5c919a21c568d4fb8851a5e416ddebc15aa5dadf0168`.
+  Receipt `/tmp/rb-merge-fullfleet-v7fast/LAUNCH.json`; oneCPU/nice19/CUDA-hidden,
+  launch load19.13/32. All previous owned prediction jobs exited first.
+  **Do not duplicate or alter this running snapshot.**
 - Sequential merge arbitration now recomputes geometry ONLY for the candidate
   at that rank, reducing O(ramp_count*slots²) to O(ramp_count*slots). Bit-exact
   full-vs-selected geometry tested with heterogeneous parameters/multiple batch
@@ -120,7 +125,8 @@ Full earlier handoff preserved at `docs/rb_merge/HANDOFF_HISTORY_0100.md`.
   preflights. Earlier v7 engineering stage retained; no v7 prediction launched.
 - New `/tmp/rb-merge-fullfleet-v7`: INT**4015b641** (includes LANE811cd7e8)
   plus current MERGE kernel/network/insertion/native callback. H600,512slots,
-  FIT32/native, same arrival stream190. No prediction launched yet.
+  FIT32/native, same arrival stream190. The old v7 directory is engineering only;
+  v7fast is the sole active prediction dispatch.
 - Reuses LANE's **b192e0c8 FrozenMotionEncoder**, exact registered WM2 SHA
   b8797242…; producer ENCODER_PARITY reports all9 settings bit-exact to the
   strict full model. No duplicate extractor or checkpoint fetch; no training.
