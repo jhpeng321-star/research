@@ -1,0 +1,59 @@
+{
+  "elapsed_s": 15.00028109550476,
+  "n_fit_intervals": 253468,
+  "later_FIT_directional_scores": {
+    "population": {
+      "n": 258691,
+      "events": 626,
+      "categorical_brier": 0.5429010192337249,
+      "event_brier": 0.3611422437627201,
+      "negative_log_score": 0.9203435938855269,
+      "expected_event_count": 155575.6079069607
+    },
+    "shrunk_posterior": {
+      "n": 258691,
+      "events": 626,
+      "categorical_brier": 0.5428243886042929,
+      "event_brier": 0.3610905508434095,
+      "negative_log_score": 0.9202371532280236,
+      "expected_event_count": 155564.09510187202
+    },
+    "source_rate": {
+      "n": 258691,
+      "events": 626,
+      "categorical_brier": 0.004824236499230068,
+      "event_brier": 0.002412118249615034,
+      "negative_log_score": 0.016657533540916546,
+      "expected_event_count": 686.3260989379154
+    }
+  },
+  "later_FIT_raw_physical_scores": {
+    "population": {
+      "n": 258691,
+      "events": 626,
+      "categorical_brier": 0.0046367918508002344,
+      "event_brier": 0.0023183959254001172,
+      "negative_log_score": 0.522457028518803,
+      "expected_event_count": 553.0566364904798
+    },
+    "posterior": {
+      "n": 258691,
+      "events": 626,
+      "categorical_brier": 0.004615867443225645,
+      "event_brier": 0.0023079337216128223,
+      "negative_log_score": 0.5226064235812979,
+      "expected_event_count": 435.8442041444075
+    },
+    "source_default": {
+      "n": 258691,
+      "events": 626,
+      "categorical_brier": 0.09651669366154988,
+      "event_brier": 0.04825834683077494,
+      "negative_log_score": 34.1860400592088,
+      "expected_event_count": 12382.0
+    }
+  },
+  "n_zero_information_drivers": 1599,
+  "adopted": false,
+  "note": "Held-in conditional motion only; INT/EVAL free-running gate required"
+}
