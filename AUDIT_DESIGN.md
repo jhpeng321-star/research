@@ -221,3 +221,14 @@ an explicit versioned-panel migration after PASS is still required. The paused
 - `evidence/CORRECTED_DESIGN.json` binds each census/group/cost and upstream hashes.
   Release only after registration/design commit and CPU tests; corrected canary
   must complete and be committed before the full panel is dispatched.
+
+## Corrected canary VERIFIED (2026-11-01)
+Full-prefix16/16 completed:14400actual=charged; cumulative35580actual/35880charged.
+All16 native prefix trajectories bitwise identical; B/Brepeat, MAPPO-disabled,
+SUMOCF-disabled and all three GROUP repeats match exactly as required. Every
+branch has zero collisions/teleports/dropped steps. Wall106commands, assembly307s,
+native handback353s. Corrected wall J600 D_G+1616.622358, sumD_i-41.617400,
+**C_G+1658.239758veh-s** (solos-18.920193/-22.697207). MAPPO and SUMOCFu15 each
+C_G600=0, D_G.000823. This is one geometry-selected mechanics control, separate
+from panel inference. No old saved-state C_G is reused. Receipt
+`evidence/V2_CANARY_VERIFIED.json` binds every scientific source and raw archive.

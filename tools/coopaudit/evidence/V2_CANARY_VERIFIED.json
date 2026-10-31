@@ -1,0 +1,113 @@
+{
+ "actual_sim_s": 14400,
+ "branch_count": 16,
+ "charged_total_sim_s": 35880,
+ "collection_sha256": "b7bbce11ee51d9ac7b9cb28a06473a988e5c516fe19047ddf8dac09f769a696b",
+ "contrasts": {
+  "mappo": {
+   "300": {
+    "C_G": 0.0,
+    "D_GROUP": 0.0008230209350585938,
+    "D_ONLY": [
+     0.0008230209350585938,
+     0.0
+    ],
+    "sum_D_ONLY": 0.0008230209350585938
+   },
+   "600": {
+    "C_G": 0.0,
+    "D_GROUP": 0.0008230209350585938,
+    "D_ONLY": [
+     0.0008230209350585938,
+     0.0
+    ],
+    "sum_D_ONLY": 0.0008230209350585938
+   }
+  },
+  "sumocf": {
+   "300": {
+    "C_G": 0.0,
+    "D_GROUP": 0.0008230209350585938,
+    "D_ONLY": [
+     0.0008230209350585938,
+     0.0
+    ],
+    "sum_D_ONLY": 0.0008230209350585938
+   },
+   "600": {
+    "C_G": 0.0,
+    "D_GROUP": 0.0008230209350585938,
+    "D_ONLY": [
+     0.0008230209350585938,
+     0.0
+    ],
+    "sum_D_ONLY": 0.0008230209350585938
+   }
+  },
+  "wall": {
+   "300": {
+    "C_G": 1029.5679416656494,
+    "D_GROUP": 987.9504346847534,
+    "D_ONLY": [
+     -18.920263290405273,
+     -22.697243690490723
+    ],
+    "sum_D_ONLY": -41.617506980895996
+   },
+   "600": {
+    "C_G": 1658.239758491516,
+    "D_GROUP": 1616.6223583221436,
+    "D_ONLY": [
+     -18.92019271850586,
+     -22.6972074508667
+    ],
+    "sum_D_ONLY": -41.61740016937256
+   }
+  }
+ },
+ "ok": true,
+ "prefix_sha256": "c6450fb62a51287c836d1f7c6765edb637e9bc582f911143865fcebed99d0068",
+ "repeated_native_and_three_controllers_bitwise": true,
+ "result_sha256": "339ccbb3782140ddf26df7534ad75a662fc7bd6668a3369f38f8062b848c31d8",
+ "scientific_files": {
+  "accounting.py": "5c9326a7434651a334401b6130bc0ab2971f45e393b92822dbf00eb42ad2ed95",
+  "controllers.py": "8b84fc4c91228d546c2c0d78d0bbb4605fdc37882f7ac4db49c6c3349ff29bd2",
+  "design.py": "cc791028205a6fd8a336bf5fada4e8f53174007af7963e414f4446a02f9bb500",
+  "full_rerun.py": "58d7b35680f69fb57858362a92b6f3dfeef6090d1a4b4c472350ad744f85fdb8",
+  "release.py": "119534a3684fc821c5b22b9502524157a840b5ebf39c2d62e06d153b58f3de12",
+  "runner.py": "600281783099055e60555cdc4838eda4f5a1b561c706fcda382953cf89985ae8",
+  "trained.py": "42113360d432df18e71c9339845c6f45d5e6ee57fbca3d4781acce2526131cd2"
+ },
+ "wall_events": [
+  {
+   "event": "assembly_start",
+   "kind": "wall_event",
+   "law_version": "wall-v2.1-closure",
+   "timestamp_s": 300.0,
+   "wall_id": "audit-wall",
+   "wall_speed_mps": 12.0
+  },
+  {
+   "event": "assembled",
+   "kind": "wall_event",
+   "law_version": "wall-v2.1-closure",
+   "members": [
+    "mainline.108",
+    "mainline.109"
+   ],
+   "timestamp_s": 307.0,
+   "wall_id": "audit-wall",
+   "wall_speed_mps": 12.0
+  },
+  {
+   "event": "safety_abort",
+   "handback": "native",
+   "kind": "wall_event",
+   "reason": "member_frame_missing",
+   "timestamp_s": 353.0,
+   "wall_id": "audit-wall"
+  }
+ ],
+ "wall_issued_commands": 106,
+ "zero_effect_bitwise": true
+}

@@ -1,5 +1,26 @@
 # S-COOPBEHAV trace handoff
 
+## Corrected v2 (authoritative)
+- gpuR `/root/autodl-tmp/coopaudit20261101_v2/v2_sSEED/traces/*.jsonl.gz`;
+  same directories linked from `/root/coopaudit20261031/jobs/v2_sSEED/`.
+- Corrected canary: `v2_canary_s969699/traces/`; production seeds969650-969677.
+- Every trace is from a fresh full native300s prefix +600s continuation, no loadState.
+  60s deployed-mean intervention, native release at360s; pair frozen at300s.
+- `requested_accel` now records issued-safe requests for MAPPO and SUMOCF as
+  well as wall. It is not uncapped actor output or realised acceleration.
+- Actual 0.5s timestamps cover (270,390]s; `a` is realised acceleration.
+  Nearby ramp identity is tracked from observable lane2 reports through its merge.
+- Portable local exports: `evidence/v2_canary/jobs/` and
+  `evidence/v2_complete/jobs/` (after completion). Colons in ONLY:i filenames map
+  to underscores on Windows; bytes/metric keys are unchanged, mapped paths and
+  exact remote originals are in COLLECTION.json. Never infer i from slot order:
+  use `FROZEN.json.group[i]`. Final production TRACE_MANIFEST.csv binds every file.
+- Wall canary C_G600+1658.239758; both solos harm, joint helps. This is one
+  selected mechanics world, not a panel estimate. Old saved-state credits below
+  are invalid for scientific cooperation inference, although raw traces survive.
+
+## Historical preserved data (superseded)
+
 Own host/root: gpuR `/root/coopaudit20261031`.
 Canary: `jobs/canary_s969699_attempt2/traces/*.jsonl.gz`.
 Historical main: `jobs/main_s969650/traces/*.jsonl.gz` (one completed world).

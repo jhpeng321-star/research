@@ -1,5 +1,19 @@
 # S-COOPMEASURE — artifact-HOLD handoff
 
+## Current v2 recovery (2026-11-01; supersedes HOLD status below)
+Upstream ARTIFACT_CHECK now PASS for full-prefix reruns only; bound in61e26353.
+Corrected source4f6b7332, registered release239a4726, old exact stopped worker
+retired without resume. Latest final trained checkpointu15 is paired with MAPPO
+and wall. CPU26/26PASS. Corrected full-prefix canary16/16 PASS, zero safety
+events, wall C_G600+1658.239758, MAPPO/SUMOCF C_G0; no panel inference yet.
+Full fixed panel207900sim-s is admitted under the243780combined charged maximum.
+Do not dispatch a second canary or main: inspect `v2-canary_PID.json`,
+`v2-main_PID.json`, the one-shot launch markers and `v2_status.py` first.
+Raw namespace `/root/autodl-tmp/coopaudit20261101_v2` with links under old jobs;
+ledger remains `/root/coopaudit20261031/accounting.jsonl`. Original data preserved.
+
+## Historical HOLD handoff
+
 The audit is **paused**, not complete. `HOLD_VERIFIED.json` is the latest proof.
 No poller/dispatch was restarted in the recovery session. Do not SIGCONT the old
 worker: its immutable code still contains the superseded five-arm/grid6 loop.
