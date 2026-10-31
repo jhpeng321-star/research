@@ -16,19 +16,21 @@
 - FIT-12 preview FEASIBILITY_SMOOTH_FIT12.json (152e7a03): FAIL clearly bad (FD 5.7e17 vs
   analytic 0.0126; loss 0.045 -> 1.3e14 after one Adam step) = eps source scale on FIT-only
   data. Surrogate level is also ~30x low (79.6 vs exact 2375.5 veh-s) on every binding.
-- REGISTERED binding R/v2/FEASIBILITY_V2c.json (PID 189176, log v2/feas_v2c.log): STATUS_AT_HANDOFF
+- REGISTERED binding R/v2/FEASIBILITY_V2c.json (16bf32cd, exited 15:12): **FAIL** - FD -0.213/
+  +3.09/-0.525 (eps 1e-3/1e-4/1e-5) vs analytic -0.0108; one step does not reduce loss.
+  Smoothing only covers the source column (~2% of the gradient); road/upstream stay
+  hard-event dominated. Launcher therefore did NOT start the pilot (PILOT_V2_NOT_LAUNCHED.json).
 
 ## Running PIDs (own; never kill anything else - S-WMCALIB has 12 GPU procs on gpuA)
-- 189176 feasibility V2c; 188758 panel_eval_v2 smoke (FIT group 40 = w973002 with v1
+- 189176 feasibility V2c (exited); 191834 launcher (exited, not launched); 188758 panel_eval_v2 smoke (FIT group 40 = w973002 with v1
   step_000000; parity target from v1 PANEL_step0_r0 group 0: 120 s 449.627 / 300 s 302.891)
   -> R/v2/smoke/SHARD_fit973002_v1step0.json.
-- 191834 launcher v2/launch_pilot_v2.sh: waits for FEASIBILITY_V2c; launches pilot_v2 only if
-  PASS + launch_ready + finite_difference_ok, else writes v2/PILOT_V2_NOT_LAUNCHED.json.
-  Pilot out R/v2/pilot (RUN.json has the python PID), log v2/pilot_v2.log, 21570 s cap.
+- If MAIN approves a pilot later: `bash v2/launch_pilot_v2.sh` pattern (pilot out R/v2/pilot
+  must be new/empty; 21570 s cap; pilot_v2 refuses any non-PASS feasibility receipt).
 
 ## Next steps
 1. Check smoke parity (exact match to v1 values = same eval path) and FEASIBILITY_V2c.
-2. If NOT_LAUNCHED: report to MAIN (do not retune). Repair candidates in WMFIX_V2_FEAS.md
+2. NOT_LAUNCHED (current state): MAIN decides; do not retune gates. Repair candidates in WMFIX_V2_FEAS.md
    (capacity-limited surrogate; or v2 data-only with smoothing OFF) need MAIN approval.
 3. If launched: poll v2/pilot (update_*.json, SHARD_mini_*.json, PILOT_V2.json). PASS ->
    pilot continues the curriculum itself; then run the staged sharded verdict

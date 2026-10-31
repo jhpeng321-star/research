@@ -2,9 +2,17 @@
 
 Two receipts. (A) FIT-12 preview below: FAIL, clearly bad. (B) the REGISTERED v2 binding
 (combined 52-world TRAIN_PREPARED_V2 84751dc7, HARNESS_CONTRACT_V2 e67850f3) is
-`v2/FEASIBILITY_V2c.json` (PID 189176; result pending at handoff - see WMFIX_V2_HANDOFF.md).
-In (B) the source-column scale is 53.98 veh-s (S-WMDATA arms change source waiting), so
-defect 1 below does NOT apply to the registered binding; defect 2 does.
+`v2/FEASIBILITY_V2c.json` sha256 16bf32cd1e357f6d267a3f567656f1cbc398291369b1e21f9e19cd125459dcc7
+(PID 189176, 15:12). **(B) also FAILS FD -> PILOT v2 NOT launched** (v2/PILOT_V2_NOT_LAUNCHED.json).
+In (B) the source-column scale is 53.98 veh-s, so defect 1 does not apply; the FD failure is the
+same hard-event signature as v1 FEAS_BLOCKED: group 0 = w969400 (native vs circles, 60 s),
+analytic -0.01083 vs central FD -0.213 / +3.09 / -0.525 at eps 1e-3 / 1e-4 / 1e-5 (sign flips,
+ratio 20-300x); one Adam step loss 0.01140 -> 0.01200 (optimizer_reduces false) although group
+paired-J |contrast| 9.64 -> 7.63; grad norms J 4.83 / source 0.104 / crossing 0.077 (finite);
+frozen_bitwise true; source_clock_match true. Smoothing replaces only the SOURCE column, whose
+gradient is ~2% of J; the road/upstream columns still flow through hard admission/crossing
+events, so the objective's FD stays event-noise dominated. Surrogate source 1.64 vs exact 1.0
+(recorded 20) on this low-queue world (defect 2 again: level unrelated to the hard ledger).
 
 ## (A) FIT-12 preview
 
