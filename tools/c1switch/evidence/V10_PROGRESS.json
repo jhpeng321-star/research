@@ -1,69 +1,67 @@
 {
   "cpuQ": {
-    "unix": 1793464256.7145982,
+    "unix": 1793466940.0545976,
     "load": [
-      16.18212890625,
-      14.2724609375,
-      13.34716796875
+      18.7236328125,
+      15.20263671875,
+      13.0986328125
     ],
     "receipts": {
+      "STOP": {
+        "reason": "inference stopped/timed out; SUMO stays paused",
+        "pid": 465689
+      },
       "recovery_DISPATCH.json": {
         "pid": 259509,
         "host": "cpuQ",
         "unix": 1793462650.6853619
       },
       "recovery/STATUS.json": {
-        "pending_episodes": 12,
+        "pending_episodes": 9,
         "pending_branches": 0,
-        "done_count": 128,
+        "done_count": 180,
         "active": {
-          "wm_s969114_episode": {
-            "pid": 259511,
+          "wm_s969117_episode": {
+            "pid": 440361,
             "arm": "wm"
           },
-          "wm_s969115_episode": {
-            "pid": 345102,
+          "wm_s969118_episode": {
+            "pid": 465689,
             "arm": "wm"
-          },
-          "wm_s969113_j5_ctrl0": {
-            "pid": 345110,
-            "arm": null
-          },
-          "wm_s969113_j5_mappo": {
-            "pid": 345111,
-            "arm": null
-          },
-          "wm_s969113_j5_native": {
-            "pid": 345112,
-            "arm": null
-          },
-          "wm_s969113_j5_pi": {
-            "pid": 345113,
-            "arm": null
           }
         }
+      },
+      "rpc/bb/STOP": {
+        "reason": "combined owner GPU budget exhausted",
+        "pid": 715850
+      },
+      "rpc/wm/STOP": {
+        "reason": "combined owner GPU budget exhausted",
+        "pid": 715850
       }
     },
     "own_pids": {
-      "259509": true
+      "465689": false,
+      "259509": false,
+      "715850": false
     },
     "rpc": {
       "wm": {
-        "requests": 15,
-        "results": 13
+        "requests": 41,
+        "results": 39
       },
       "bb": {
         "requests": 10,
         "results": 10
       }
     },
-    "charged_sim_s": 350400,
-    "actual_closed_sim_s": 346620.0,
+    "charged_sim_s": 383190,
+    "actual_closed_sim_s": 383190.0,
     "complete_episodes": 10,
-    "complete_physics": 104,
-    "complete_branches": 266,
+    "complete_physics": 107,
+    "complete_branches": 315,
     "physics_by_arm": {
-      "wm": 2,
+      "wm": 5,
       "bb": 16,
       "random": 6,
       "native": 16,
@@ -73,17 +71,20 @@
       "circles": 16
     },
     "picks": {
-      "wm": 29,
+      "wm": 56,
       "bb": 160
     },
-    "failures": {}
+    "failures": {
+      "wm_s969118_episode.log": " Retrying in 1 seconds\nTraceback (most recent call last):\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 196, in _run_module_as_main\n    return _run_code(code, main_globals, None,\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 86, in _run_code\n    exec(code, run_globals)\n  File \"/home/ubuntu/c1switch20261031/shared_v10/pytools/tools/c1switch/shared.py\", line 172, in <module>\n    if __name__=='__main__':main()\n  File \"/home/ubuntu/c1switch20261031/shared_v10/pytools/tools/c1switch/shared.py\", line 169, in main\n    resume.main()\n  File \"/home/ubuntu/c1switch20261031/shared_v10/pytools/tools/c1switch/resume.py\", line 302, in main\n    run_episode(world,args.arm,inputs)\n  File \"/home/ubuntu/c1switch20261031/shared_v10/pytools/tools/c1switch/resume.py\", line 153, in run_episode\n    result = episode(env,arm,world,predictor=Predictor(arm) if arm in ('wm','bb') else None,\n  File \"/home/ubuntu/c1switch20261031/shared_v10/pytools/tools/c1switch/episode.py\", line 42, in episode\n    costs = predictor.predict(payload, f'{arm}_s{world[\"seed\"]}_j{j}')\n  File \"/home/ubuntu/c1switch20261031/shared_v10/pytools/tools/c1switch/resume.py\", line 116, in predict\n    return self.live.predict(payload, ident)\n  File \"/home/ubuntu/c1switch20261031/shared_v10/pytools/tools/c1switch/rpc.py\", line 53, in predict\n    raise TimeoutError('inference stopped/timed out; SUMO stays paused')\nTimeoutError: inference stopped/timed out; SUMO stays paused\n",
+      "wm_s969117_episode.log": " Retrying in 1 seconds\nTraceback (most recent call last):\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 196, in _run_module_as_main\n    return _run_code(code, main_globals, None,\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 86, in _run_code\n    exec(code, run_globals)\n  File \"/home/ubuntu/c1switch20261031/shared_v10/pytools/tools/c1switch/shared.py\", line 172, in <module>\n    if __name__=='__main__':main()\n  File \"/home/ubuntu/c1switch20261031/shared_v10/pytools/tools/c1switch/shared.py\", line 169, in main\n    resume.main()\n  File \"/home/ubuntu/c1switch20261031/shared_v10/pytools/tools/c1switch/resume.py\", line 302, in main\n    run_episode(world,args.arm,inputs)\n  File \"/home/ubuntu/c1switch20261031/shared_v10/pytools/tools/c1switch/resume.py\", line 153, in run_episode\n    result = episode(env,arm,world,predictor=Predictor(arm) if arm in ('wm','bb') else None,\n  File \"/home/ubuntu/c1switch20261031/shared_v10/pytools/tools/c1switch/episode.py\", line 42, in episode\n    costs = predictor.predict(payload, f'{arm}_s{world[\"seed\"]}_j{j}')\n  File \"/home/ubuntu/c1switch20261031/shared_v10/pytools/tools/c1switch/resume.py\", line 116, in predict\n    return self.live.predict(payload, ident)\n  File \"/home/ubuntu/c1switch20261031/shared_v10/pytools/tools/c1switch/rpc.py\", line 53, in predict\n    raise TimeoutError('inference stopped/timed out; SUMO stays paused')\nTimeoutError: inference stopped/timed out; SUMO stays paused\n"
+    }
   },
   "gpuR": {
-    "unix": 1793464257.6941133,
+    "unix": 1793466941.0292692,
     "load": [
-      25.36083984375,
-      19.33935546875,
-      17.056640625
+      14.91748046875,
+      16.31396484375,
+      18.0126953125
     ],
     "receipts": {
       "gpu_DISPATCH.json": {
@@ -96,21 +97,35 @@
         "unix": 1793462789.6574118,
         "cap_s": 4117,
         "prior_gpu_s": 10279.222073864192
+      },
+      "GPU_FINISHED.json": {
+        "pid": 715850,
+        "elapsed_s": 4117.009286567569,
+        "cumulative_gpu_s": 14396.23136043176,
+        "unix": 1793466906.6656337
+      },
+      "rpc/wm/STOP": {
+        "reason": "combined owner GPU budget exhausted",
+        "pid": 715850
+      },
+      "rpc/bb/STOP": {
+        "reason": "combined owner GPU budget exhausted",
+        "pid": 715850
       }
     },
     "own_pids": {
-      "715850": true
+      "715850": false
     },
     "rpc": {
       "wm": {
-        "requests": 15,
-        "results": 13
+        "requests": 41,
+        "results": 39
       },
       "bb": {
         "requests": 10,
         "results": 10
       }
     },
-    "log_tail": ""
+    "log_tail": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/root/c1switch20261031/shared_v10/pytools/tools/c1switch/shared.py\", line 144, in serve\n    samples=models[a].predict(req['belief'],K=8,horizon_s=60)\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/c1switch20261031/shared_v10/pytools/tools/c1switch/adapter.py\", line 242, in predict\n    roll = self.model.rollout(st,n_steps=n,cav_controller=self.callback(payload,tracker,st),**kw)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/wms.py\", line 2584, in rollout\n    else step_fn(current)\n         ^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/wms.py\", line 1853, in step\n    if self.merge_pivot is not None:\n       ^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/site-packages/torch/nn/modules/module.py\", line 1949, in __getattr__\n    def __getattr__(self, name: str) -> Union[Tensor, \"Module\"]:\n\n  File \"/root/c1switch20261031/shared_v10/pytools/tools/c1switch/shared.py\", line 116, in expired\n    raise TimeoutError('combined owner GPU budget exhausted')\nTimeoutError: combined owner GPU budget exhausted\n"
   }
 }

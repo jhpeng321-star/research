@@ -1,0 +1,71 @@
+{
+  "prefix": {
+    "t_s": 300.0,
+    "tape_sha256": "3fccc1a465b9eae5060ff2abe0ca4234af8370f504628206ec77836d32b4d3f3",
+    "belief_sha256": "f74b862e49e947b53802a0ce813108d708de046ff43be1cc805f0d914f50ec6f",
+    "metrics": {
+      "team_delay_vs": 0.0,
+      "road_delay_vs": 0.0,
+      "source_wait_vs": 0.0,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 0.0,
+      "hard_brake": 0.0
+    },
+    "counters": {},
+    "incumbent": "native",
+    "switches": 0
+  },
+  "60": {
+    "team_delay_vs": 5093.621800559693,
+    "road_delay_vs": 1662.4032485596942,
+    "source_wait_vs": 3431.2185519999994,
+    "collisions": 0.0,
+    "teleports": 0.0,
+    "ttc_below_3_vs": 7.0,
+    "hard_brake": 0.0
+  },
+  "90": {
+    "team_delay_vs": 7759.942979514477,
+    "road_delay_vs": 2285.614651514478,
+    "source_wait_vs": 5474.328327999997,
+    "collisions": 0.0,
+    "teleports": 0.0,
+    "ttc_below_3_vs": 12.5,
+    "hard_brake": 0.0
+  },
+  "end": {
+    "t_s": 390.0,
+    "tape_sha256": "be86326fa811dfd6c88a18305579d5c36a7f8aebc8b2e1b2ce809349af41f5cc",
+    "belief_sha256": "67bf62a3189aa768bbd569ab4aba61b029bfb479a8f5d3c995e4b93c58f7a1ff",
+    "metrics": {
+      "team_delay_vs": 7759.942979514477,
+      "road_delay_vs": 2285.614651514478,
+      "source_wait_vs": 5474.328327999997,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 12.5,
+      "hard_brake": 0.0
+    },
+    "counters": {
+      "dropped_vehicle_steps": 0,
+      "braking_vehicle_seconds": 0.0,
+      "acceleration_energy": 2192.025119371057,
+      "speed_deficit_vehicle_seconds": 2285.614651514478,
+      "vehicle_seconds_on_road": 7649.5,
+      "ttc_below_3_vehicle_seconds": 12.5,
+      "requested_not_arrived_vehicle_seconds": 13129.828327999996,
+      "source_wait_vehicle_seconds": 5474.328327999997,
+      "arrivals": 67,
+      "departures": 55,
+      "collision_involvements": 0,
+      "starting_teleports": 0,
+      "mainline_entry_crossings": 49,
+      "mainline_exit_crossings": 63,
+      "ramp_entry_crossings": 6
+    },
+    "incumbent": "pi",
+    "switches": 1
+  },
+  "actual_sim_s": 390.0
+}

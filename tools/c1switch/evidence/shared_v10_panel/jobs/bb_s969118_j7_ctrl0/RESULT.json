@@ -1,0 +1,87 @@
+{
+  "prefix": {
+    "t_s": 720.0,
+    "tape_sha256": "19923e837c8149ba325094fe43c8b36a19c27dcefb0297c89fe064fef690775d",
+    "belief_sha256": "f8ae2c7aec7632e1394ab3cec580c7140bc1a744a0d39a71a8f6f5b436604911",
+    "metrics": {
+      "team_delay_vs": 22032.583343013688,
+      "road_delay_vs": 15556.972032013684,
+      "source_wait_vs": 6475.6113110000015,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 342.5,
+      "hard_brake": 7.5
+    },
+    "counters": {
+      "dropped_vehicle_steps": 0,
+      "braking_vehicle_seconds": 7.5,
+      "acceleration_energy": 12684.238035170467,
+      "speed_deficit_vehicle_seconds": 15556.972032013684,
+      "vehicle_seconds_on_road": 38809.0,
+      "ttc_below_3_vehicle_seconds": 342.5,
+      "requested_not_arrived_vehicle_seconds": 45261.611310999986,
+      "source_wait_vehicle_seconds": 6475.6113110000015,
+      "arrivals": 226,
+      "departures": 272,
+      "collision_involvements": 0,
+      "starting_teleports": 0,
+      "mainline_entry_crossings": 224,
+      "mainline_exit_crossings": 236,
+      "ramp_entry_crossings": 48
+    },
+    "incumbent": "ctrl0",
+    "switches": 5
+  },
+  "60": {
+    "team_delay_vs": 5424.774601610243,
+    "road_delay_vs": 3212.2879176102397,
+    "source_wait_vs": 2212.486683999997,
+    "collisions": 0.0,
+    "teleports": 0.0,
+    "ttc_below_3_vs": 38.0,
+    "hard_brake": 2.5
+  },
+  "90": {
+    "team_delay_vs": 7927.151842338466,
+    "road_delay_vs": 4688.337239338467,
+    "source_wait_vs": 3238.814602999996,
+    "collisions": 0.0,
+    "teleports": 0.0,
+    "ttc_below_3_vs": 54.0,
+    "hard_brake": 2.5
+  },
+  "end": {
+    "t_s": 810.0,
+    "tape_sha256": "46cdda265c4b2cbe9c1c1732de6d99c77a506997446813eb9d436b7f07e2bef0",
+    "belief_sha256": "efa94206095e9cb0d0ca0b16ec7a0e5862726f82a23a4eb7d97984f995108224",
+    "metrics": {
+      "team_delay_vs": 29959.735185352154,
+      "road_delay_vs": 20245.30927135215,
+      "source_wait_vs": 9714.425913999998,
+      "collisions": 0.0,
+      "teleports": 0.0,
+      "ttc_below_3_vs": 396.5,
+      "hard_brake": 10.0
+    },
+    "counters": {
+      "dropped_vehicle_steps": 0,
+      "braking_vehicle_seconds": 10.0,
+      "acceleration_energy": 16396.426593023083,
+      "speed_deficit_vehicle_seconds": 20245.30927135215,
+      "vehicle_seconds_on_road": 48699.0,
+      "ttc_below_3_vehicle_seconds": 396.5,
+      "requested_not_arrived_vehicle_seconds": 58394.42591399999,
+      "source_wait_vehicle_seconds": 9714.425913999998,
+      "arrivals": 287,
+      "departures": 325,
+      "collision_involvements": 0,
+      "starting_teleports": 0,
+      "mainline_entry_crossings": 272,
+      "mainline_exit_crossings": 303,
+      "ramp_entry_crossings": 53
+    },
+    "incumbent": "ctrl0",
+    "switches": 5
+  },
+  "actual_sim_s": 810.0
+}

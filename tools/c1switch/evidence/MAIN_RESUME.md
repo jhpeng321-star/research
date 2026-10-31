@@ -1,4 +1,33 @@
-# CURRENT shared_v10 DISPATCHED — inspect before doing anything
+# CURRENT shared_v10 TERMINAL GPU-BUDGET STOP — no compute armed
+
+- Read `docs/paper_results/C1SWITCH.md`, final design line79,
+  `V10_COLLECTION.json`, `GPU_ACTUAL_SEGMENTS.json`, `V10_RETAINED_QA.json`.
+- All owned cpuQ supervisor259509/children and gpuR715850 exited; local relays
+ 30024/32612/28584 absent, terminal closed-lock receipts retained. No retry armed.
+- Charged=closed actual383190sim-s.107fully evaluated episodes:
+  WM5/16;BB16/16;native/CTRL0/MAPPO/PI/CIRCLES16/16 EACH;random6/6.
+ 315successful branches,WM56/160committed picks,BB160/160;all preserved.
+- Original10episodes+231branches never repeated; superseded WM12450,
+  prior abandoned17820 and terminal abandoned960 remain charged, no refund.
+- Exact ALL-phase GPU allocation wall14382.225540s/3.995063h; conservative
+  admission14396.231360s/3.998953h. Combined4117s alarm ended the shared phase.
+- Standard independent full-rerun completion projection500640sim-s exceeds
+  original500000cap by640, before any further failures; not a universal lower
+  bound for a future validated shared-physics plan. All random episodes retained
+  by the trimmed plan are already complete, so dropping them cannot refund cost.
+- Retained-data QA PASS:107episodes/315unique branches/all16available-arm
+  warmups,exact clocks/schedules/live prefixes/finite metrics/accounting;
+  zero collisions/teleports. CPU49cpuQ/50gpuR;local49PASS/4hostskips;ruffPASS.
+- Full-panel primary/bootstrap/paired efficacy comparisons NOT EVALUATED.
+  This is an operational/budget stop, not a positive/negative model verdict.
+- New MAIN authority for GPU continuation AND a validated SUMO-cap recovery
+  amendment is needed before any compute. Never re-stage or re-dispatch existing
+  roots. Reuse complete PHYSICS, results, forecasts and every historical debit.
+- Local terminal mirror `evidence/shared_v10_panel` contains all complete results
+  and closed job receipts. `finish collect/report/verify` are receipt-only; do not
+  run any old launch command below. Existing model/controller/seed rules unchanged.
+
+## Historical shared_v10 DISPATCHED
 
 - Build31313092/stagea0d078f5; design lines78–79, V10_PLAN/STAGE/CPU/PROGRESS.
 - cpuQ `/home/ubuntu/c1switch20261031/shared_v10`, own supervisor259509;

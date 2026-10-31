@@ -2,11 +2,12 @@
 import argparse
 import csv
 import json
+import math
 from pathlib import Path
 
 from .ops import EVIDENCE, ssh
 from .shared import CPU, GPU
-from .storage import write
+from .storage import canonical, write
 
 MIRROR=EVIDENCE/'shared_v10_panel'
 
@@ -140,6 +141,11 @@ def report():
         '- Own PIDs only; all terminal owned jobs closed. Durable atomic requests, hashes, observable-history cache equality, committed-pick reproduction and live-prefix gates remain enforced.',
         '',
     ]
+    qa_path=EVIDENCE/'V10_RETAINED_QA.json'
+    if qa_path.exists():
+        qa=json.loads(qa_path.read_text())
+        common += ['## Retained-data QA',
+            f'PASS: {qa["episodes"]} complete episodes, {qa["branches"]} unique full-rerun branches, and identical available-arm warmup fingerprints on all {qa["paired_warmup_worlds"]} worlds. Registered clocks, schedules, branch/live prefixes, standalone/embedded results, finite metrics and charged/actual durations match. Retained episodes/branches have zero collisions and teleports. No efficacy statistics were computed.', '']
     if complete:
         from .analyze import summarize
         result=summarize(MIRROR)
@@ -151,18 +157,61 @@ def report():
         with Path('docs/paper_results/c1switch/main_decisions.csv').open('w',newline='',encoding='utf-8') as f:
             rows=result['measured_decisions'];writer=csv.DictWriter(f,fieldnames=list(rows[0]));writer.writeheader();writer.writerows(rows)
     else:
+        arm_counts=summary.get('physics_by_arm',{})
+        picks=summary.get('committed_picks',{})
         common += ['## Efficacy analysis gate',
             'The registered complete-panel bootstrap, WM-versus-BB/best-fixed primary contrasts, and paired episode comparisons are **not evaluated**. Availability depends on the interrupted scheduler/model requests; treating the retained subset as a paired16-world experiment would be invalid.',
-            f'Complete episode physics by arm: {summary.get("physics_by_arm",{})}. Committed switching picks: {summary.get("committed_picks",{})}.',
+            f'- Complete episode physics: WM {arm_counts.get("wm",0)}/16; BB {arm_counts.get("bb",0)}/16; random {arm_counts.get("random",0)}/6; each fixed controller16/16.',
+            f'- Committed switching picks: WM {picks.get("wm",0)}/160; BB {picks.get("bb",0)}/160. Completed counterfactuals: {summary["complete_branches"]}/480.',
             f'Terminal shared-v10 abandoned physics: {summary.get("terminal_abandoned_sim_s",0):,.0f} sim-s (retained, no refund). Standard full-rerun completion projection retaining every successful run: {summary.get("standard_completion_projection_sim_s",499680):,.0f} sim-s. Further compute requires explicit MAIN continuation/budget authority; none is assumed.',
             '', '## Existing paper figure',
-            'Recorded WMDATA/WMDATA2 fixed-controller winner-by-condition figure remains c1switch/recorded_winner_by_condition.png (and PDF), with90 recorded worlds and zero new SUMO. All five fixed controllers win somewhere; this is not evidence that WM switching works.',
+            'Recorded WMDATA/WMDATA2 fixed-controller winner-by-condition figure remains c1switch/recorded_winner_by_condition.png (and PDF), with 90 recorded worlds and zero new SUMO. All five fixed controllers win somewhere; this is not evidence that WM switching works.',
             '', '## Receipts',
             'tools/c1switch/evidence/V10_COLLECTION.json, V10_PROGRESS.json, V10_PLAN.json, V10_STAGE.json, V10_CPU.json and shared_v10_panel/ contain the terminal accounting and retained scientific receipts. Historical V7_INTERRUPTION_AUDIT.json/V9_FINAL_AUDIT.json preserve preceding interruptions.']
     target.write_text('\n'.join(common)+'\n',encoding='utf-8')
     print(json.dumps(dict(report=str(target),complete=complete,charged_sim_s=summary['charged_sim_s'],actual_gpu_s=actual_gpu,conservative_gpu_s=gpu),indent=2))
 
 
+def verify():
+    """Integrity/safety QA only; no inference, SUMO or incomplete-panel effects."""
+    from .design import CONTROLLERS, measurement_indices, worlds
+    panel={w['seed']:w for w in worlds('main')}
+    initial={};episodes=0;branches=set();collisions=teleports=0
+    for p in MIRROR.glob('jobs/*_episode/RESULT.json'):
+        r=json.loads(p.read_text());arm,world=r['arm'],r['world'];seed=world['seed']
+        assert world==panel[seed]
+        assert p.parent.name==f'{arm}_s{seed}_episode'
+        assert not (arm=='random' and seed>=969118)
+        close=json.loads(p.with_name('CLOSE.json').read_text())
+        assert close==dict(actual_sim_s=900.,charged_sim_s=900.)
+        assert len(r['decisions'])==10 and [d['pick'] for d in r['decisions']]==r['schedule']
+        assert all(d['j']==j and d['t_s']==300+60*j for j,d in enumerate(r['decisions']))
+        initial.setdefault(seed,set()).add(canonical(r['decisions'][0]['prefix']))
+        collisions+=r['J600']['collisions'];teleports+=r['J600']['teleports']
+        measured=[d for d in r['decisions'] if 'branches' in d]
+        assert [d['j'] for d in measured]==(measurement_indices(seed) if arm in ('wm','bb') else [])
+        for d in measured:
+            assert set(d['branches'])==set(CONTROLLERS)
+            for c,b in d['branches'].items():
+                bid=f'{arm}_s{seed}_j{d["j"]}_{c}'
+                assert bid not in branches;branches.add(bid)
+                standalone=json.loads((MIRROR/'jobs'/bid/'RESULT.json').read_text())
+                assert canonical(b)==canonical(standalone) and b['prefix']==d['prefix']
+                want=390+60*d['j'];close=json.loads((MIRROR/'jobs'/bid/'CLOSE.json').read_text())
+                assert close==dict(actual_sim_s=want,charged_sim_s=want) and b['actual_sim_s']==want
+                for clock in ('60','90'):
+                    assert all(math.isfinite(value) for value in b[clock].values())
+                    assert b[clock]['collisions']==b[clock]['teleports']==0
+        episodes+=1
+    summary=json.loads((EVIDENCE/'V10_COLLECTION.json').read_text())
+    assert all(len(s)==1 for s in initial.values())
+    assert episodes==summary['complete_episodes'] and len(branches)==summary['complete_branches']
+    assert collisions==teleports==0
+    result=dict(pass_=True,episodes=episodes,branches=len(branches),paired_warmup_worlds=len(initial),
+                collisions=collisions,teleports=teleports,new_sim_s=0,new_gpu_s=0,efficacy_statistics_computed=False)
+    write(EVIDENCE/'V10_RETAINED_QA.json',result);print(json.dumps(result,indent=2))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('collect','report'))
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('collect','report','verify'))
     globals()[p.parse_args().mode]()
