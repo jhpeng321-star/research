@@ -5,6 +5,20 @@ Next: fitted IDM/optional LC posterior + learned entrance-counter process +
 identity-keyed action CRN. Frozen plan: `docs/paper_results/RBUNC_ADDENDUM_DESIGN.md`.
 Remote terminal rechecked: old31children exited0; no old dispatch repeated.
 
+## Owner00:40 fitted-posterior extension (CPU verified)
+- `FittedHiddenState.from_directory(finite_mixture_v4, lane_directory=None)` in
+  `wms.control.fitted_hidden`. Optional explicit `lane_directory=lane_v1` enables
+  named joint LC draws; FIT LC is NOT adopted automatically.
+- Pass `fitted_state=fit, vehicle_ids=observable_numeric_ids[B,slots], t0_s=300`
+  plus numeric world `row_keys` to `plan_hidden_state_futures`. Existing switch
+  remains default-OFF. Existing HDVs use fitted sparse posterior; missing IDs and
+  new HDVs use fitted joint population. No extra encoder reliability mixture.
+- Exact physical order is mapped, not clipped. CAV settings stay preserved.
+  Current draws key on world/VID/future, invariant under slot permutations and
+  candidate actions. Birth draws remain entrance/ordinal-keyed, shared admission
+  and motion. LC block independent of IDM block (FIT supplied no joint coupling).
+- CPU new+existing hidden suite16PASS. Arrival addendum still in progress.
+
 Branch `c4/rb-unc`, base `f0db3c82`. Owner registration5683/5694 and WHY +
 ENSPROBE read. Merge the branch; retain INT's own root HANDOFF on conflict.
 Implementation commits: `1f918969`, `ebea8483`, `9739d304`, `73cb13be`.

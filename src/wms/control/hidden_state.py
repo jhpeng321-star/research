@@ -142,13 +142,14 @@ class BirthMix:
     """
     names = PARAMETER_NAMES
 
-    def __init__(self, population, seed, row_keys):
+    def __init__(self, population, seed, row_keys, fitted_state=None):
         self.seed, self.row_keys = int(seed), list(row_keys)
         self.pools = [p.detach().clone() for p in population.hdv]
         self.weights = [w.detach().double().cpu().clone() for w in population.weights]
         self.cav_pools = [p.detach().clone() for p in population.cav]
         self.counts = [[0, 0] for _ in self.pools]
         self.assigned = [0] * len(self.pools)
+        self.fitted_state = fitted_state
 
     def pool_for(self, b, cav):
         pool = self.cav_pools[b] if cav else self.pools[b]
@@ -163,7 +164,11 @@ class BirthMix:
         u = int.from_bytes(hashlib.sha256(key.encode()).digest()[:8], 'big') / 2**64
         index = int(torch.searchsorted(weights.cumsum(0) / weights.sum(),
                                        torch.tensor(u, dtype=torch.float64)))
-        return dict(zip(self.names, pool[min(index, len(pool) - 1)].detach().cpu().tolist()))
+        values = dict(zip(self.names, pool[min(index, len(pool) - 1)].detach().cpu().tolist()))
+        if self.fitted_state is not None and not cav:
+            values.update(self.fitted_state.draw(self.row_keys[b], None, lane=True,
+                generator=_generator(self.seed, self.row_keys[b], entrance, ordinal, 'birth-lc')))
+        return values
 
     def __call__(self, state, newborn, params, birth_ordinals=None):
         result = {name: value.clone() for name, value in params.items()}
@@ -174,7 +179,7 @@ class BirthMix:
             ordinal = birth_ordinals[b, slot]
             values = self.candidate(
                 b, entrance, ordinal, bool(state['is_cav'][b, slot]))
-            for name in self.names:
+            for name in values:
                 result[name][b, slot] = values[name]
             self.counts[b][entrance] += 1
             self.assigned[b] += 1
@@ -256,7 +261,8 @@ class HiddenFuture:
 def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
                               future_sampling='off', n_samples=8, seed=0, row_keys=None,
                               population=None, entrance_histories=None, queues=None,
-                              entry_config=None, sample_present=True, sample_arrivals=True):
+                              entry_config=None, sample_present=True, sample_arrivals=True,
+                              fitted_state=None, vehicle_ids=None, t0_s=None):
     """Prepare K deterministic conditional futures, with independent latent draws.
 
     Histories/queues MUST be observable at t0. queues.demand_rate is upstream
@@ -295,6 +301,13 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
     mask = args.get('driver_history_mask', args.get('history_mask'))
     if mask is None:
         mask = torch.zeros((*point.shape[:2], 1), dtype=torch.bool, device=point.device)
+    if fitted_state is not None:
+        fitted_state.check_time(t0_s)
+        if vehicle_ids is None or vehicle_ids.shape != state['present'].shape:
+            raise ValueError('fitted posterior requires observable vehicle_ids matching slots')
+        if any(isinstance(key, bool) or int(key) != key for key in row_keys):
+            raise ValueError('fitted posterior requires numeric observed world row_keys')
+        population = fitted_state.as_population(params, state, mask)
     population = population or Population.from_motion(params, state, mask)
     population.validate(batch)
     if entrance_histories is not None and len(entrance_histories) != batch:
@@ -324,6 +337,8 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
         weights = population.weights[b].to(point)
         mean = (pool * (weights / weights.sum())[:, None]).sum(0)
         for slot in (state['present'][b].bool() & ~state['is_cav'][b].bool()).nonzero().flatten().tolist():
+            if fitted_state is not None:
+                continue
             if supplied is not None:
                 candidates = supplied[:, b, slot].to(point)
                 weights_p = torch.ones(len(candidates), device=point.device, dtype=point.dtype)
@@ -350,12 +365,28 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
             values[b, slot] = pool[_pick(w, rng)]
             branches['posterior' if use_posterior else 'population'] += 1
         kwargs = dict(driver_params={name: values[..., i] for i, name in enumerate(PARAMETER_NAMES)})
+        if fitted_state is not None:
+            from .fitted_hidden import LC_ORDER
+            if fitted_state.lane_population is not None:
+                kwargs['driver_params'].update({n: torch.ones_like(values[..., 0]) for n in LC_ORDER})
+            for b, slot in (state['present'].bool() & ~state['is_cav'].bool()).nonzero().tolist():
+                vid = vehicle_ids[b, slot].item()
+                # Identity, not slot/order/action, controls the persistent draw.
+                rng = _generator(seed, row_keys[b], sample if sample_present else 0, 'fit-idm', vid)
+                draw = fitted_state.draw(row_keys[b], vid, generator=rng)
+                if fitted_state.lane_population is not None:
+                    draw.update(fitted_state.draw(row_keys[b], vid, lane=True,
+                        generator=_generator(seed, row_keys[b], sample if sample_present else 0, 'fit-lc', vid)))
+                for name, value in draw.items():
+                    kwargs['driver_params'][name][b, slot] = value
+                key = f'{int(row_keys[b])}:{int(vid)}'
+                branches['posterior' if key in fitted_state.posterior['drivers'] else 'population'] += 1
         if embedding is not None:
             kwargs['driver_embedding'] = embedding.detach().clone()
         arrival_sample = sample if sample_arrivals else 0
         # Entrant parameter uncertainty is part of future arrivals (b).
         birth_seed = seed_of(seed, arrival_sample, 'newcomers')
-        mix = BirthMix(population, birth_seed, row_keys)
+        mix = BirthMix(population, birth_seed, row_keys, fitted_state=fitted_state)
         if entrance_histories is not None:
             q = None if queues is None else [EntranceQueue(
                 np.array(v.backlog, copy=True), np.array(v.demand_rate, copy=True),
@@ -375,7 +406,11 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
             kwargs.update(entries=process, entrant_driver_sampler=mix)
         futures.append(HiddenFuture(kwargs, dict(future_sampling='hidden_state', future=sample,
             seed=int(seed), driver_branches=branches, likelihood=diagnostics,
-            posterior_source='supplied_motion_posterior' if supplied is not None else 'empirical_motion_likelihood',
+            posterior_source=('rbfit_joint_finite_support' if fitted_state is not None else
+                              'supplied_motion_posterior' if supplied is not None else 'empirical_motion_likelihood'),
+            fitted_artifacts=None if fitted_state is None else fitted_state.provenance,
+            fitted_lc=fitted_state is not None and fitted_state.lane_population is not None,
+            idm_lc_joint_coupling='independent_fitted_blocks' if fitted_state is not None else None,
             likelihood_acceleration_limits=limits,
             population_sizes=[len(p) for p in population.hdv],
             arrival_sample=arrival_sample, arrivals='poisson' if entrance_histories is not None else 'closed_cohort',
