@@ -16,6 +16,8 @@ python -B docs/paper/paperA_cooperation/build_figures.py --check
 # Night additions use pinned final report summaries, never overwrite older inputs.
 python -B docs/paper/paperA_cooperation/build_night_figures.py
 python -B docs/paper/paperA_cooperation/build_night_figures.py --check
+# Add only the late expanded-data screen, preserving inherited artwork bytes.
+python -B docs/paper/paperA_cooperation/build_night_figures.py --only F4D
 ```
 
 Initial capture used the same command with `--freeze-inputs`. That option reads only the explicit allowlist in the script and refuses to replace a differing snapshot. It is not needed for a portable rebuild. PNGs are **300 dpi**; PDFs embed TrueType fonts. <!-- Source: E:/agent-work/c4-papera/docs/paper/paperA_cooperation/build_figures.py, save/rcParams. -->
@@ -71,11 +73,11 @@ Initial capture used the same command with `--freeze-inputs`. That option reads 
 ## F3V — decisive offline WM+value test (primary prerequisite)
 
 - **Purpose:** test whether a real-trained tail improves paired long-outcome prediction beyond full WM and no-WM alternatives.
-- **Status: RUNNING — causal reconstruction, real fit and adapter gates complete.** All predictive metrics/CIs remain NA pending the complete once-only test; no performance bars are eligible. [[PENDING: complete A–E predictions/export and frozen verdict / S-WMVALUE existing finalizer]]. <!-- Source: E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md. -->
+- **Status: RUNNING — causal reconstruction, real fit and adapter gates complete; short-first order active.** All predictive metrics/CIs remain NA pending the complete once-only test; no performance bars are eligible. [[PENDING: complete short-first predictions/export and frozen verdict; long A only if needed / S-WMVALUE existing short dispatcher/finalizer]]. <!-- Sources: E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md; E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md:148-159. -->
 - **Delivered source:** `E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md` (RUNNING); amended `WMVALUE_DESIGN.md` in the same directory. Frozen values and reserved label checks are execution receipts, not numerical prediction results. Use the eventual hash-bound complete CSV/receipt.
 - **Layout:** full WM, WM60+V, WM90+V, command-aware no-WM V and FIT-only arm/time means; aligned sign agreement, MAE and ranking, plus paired sign-improvement/MAE-reduction CIs and each gate result. Both short horizons retained. These horizon labels are from the frozen design. <!-- Source: E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md:40-71. -->
 - **Generating command:** [[PENDING: producer's actual schema-bound analysis/export command and package renderer / S-WMVALUE, S-PAPERA]]. This task will not train V or run model rollouts.
-- **Caption requirements:** reserved TRAIN worlds, world-cluster uncertainty, same pair/time rows, real fleet+source cost endpoint, sensor/queue admissibility, recorded arm-specific continuation rather than a same-state policy intervention. Report every baseline; offline PASS does not establish C_G or learned gain.
+- **Caption requirements:** reserved TRAIN worlds, world-cluster uncertainty, same pair/time rows, real fleet+source cost endpoint, sensor/queue admissibility, recorded arm-specific continuation rather than a same-state policy intervention. Show every completed frozen baseline comparison; a decisive short-first FAIL may leave A NA, but no PASS bypasses A. Offline PASS does not establish C_G or learned gain. <!-- Source: E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md:148-159. -->
 - **Placement:** V-B before policy outcomes.
 
 ## F3 — WM-primary policy interaction and traffic efficacy; oracle backup/reference
@@ -124,6 +126,15 @@ Initial capture used the same command with `--freeze-inputs`. That option reads 
 - **Caption claim:** “Grouped-CV raw WM2 versus no-WM arm-mean MAE at **120/300/600 s** is **263/1719/6013** versus **185/999/3298 veh-s**. Selected calibrators fail the frozen SPEEDHEAD gate at every horizon: NOT USABLE. Separate queue prototype on **eight reserved TRAIN worlds/48 contrasts per horizon** has MAE **276/1362/5296** versus state-only **239/932/3642 veh-s**: KILL. These point estimates have different panels and are not a common model curve or C_G-fidelity test.” <!-- Sources: E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB.md:14-50; E:/agent-work/c4-wmqueue/docs/paper_results/WMQUEUE.md:12-32. -->
 - **Scope:** raw WM is not worse on every transfer panel; queue comparison to raw WM has fewer complete worlds and is omitted here rather than mixed. Tiny-pulse floor remains a scoped discussion result, not a blanket irreducible-noise curve.
 
+## F4D — expanded-data merge head: amended early-stop screen
+
+- **Purpose:** replace the stale pending-head slot with the completed screen, keeping the unscored later checkpoints explicit.
+- **Status: GENERATED — completed step10 screen only.** [PNG](figures/F4D_expanded_data_screen.png), [PDF](figures/F4D_expanded_data_screen.pdf), [CSV behind plot](figures/F4D_expanded_data_screen.csv). The renderer pins `source_snapshots/wmfix_v2data_3e0bd4cf680cefa2.md`; original source `E:/agent-work/c4-wmfixmerge/docs/paper_results/WMFIX_PILOT_V2DATA.md:3-42`. Exact values, source line/column, original SHA and immutable snapshot accompany each plotted row.
+- **Generating command:** `python -B docs/paper/paperA_cooperation/build_night_figures.py --only F4D`; validate with `python -B docs/paper/paperA_cooperation/build_night_figures.py --check`. The selective command preserves inherited artwork; source-summary transcription only, no new experiment or statistics.
+- **Layout:** separate short/long MAE panels, entry-path step0 versus trained step10. Both axes start at zero and their different scales are disclosed. No unscored bars or invented CIs.
+- **Caption claim:** “Full **52-world TRAIN panel/104 contrasts per horizon**: paired-J MAE **252.1303→250.6552 veh-s at 120 s**, **1718.2620→1885.3962 at 300 s**. Published changes **−0.585%/+9.727%**. The amended both-horizon screen stops after step10; **steps 20/30 unscored**, not a full-gate PASS/FAIL. All **30** optimizer updates retain finite/frozen receipts; optimizer completion does not supply later-panel accuracy.” <!-- Source: E:/agent-work/c4-wmfixmerge/docs/paper_results/WMFIX_PILOT_V2DATA.md:3-42. -->
+- **Placement:** V-C compact repair inset or artifact if space is tight. This TRAIN-panel screen does not qualify the WM+value route or provide reserved-world generalization.
+
 ## F5 — observable cooperative behavior examples
 
 - **Purpose:** connect measured interaction with an interpretable gap/yield/cross-lane-hold process.
@@ -145,4 +156,4 @@ Initial capture used the same command with `--freeze-inputs`. That option reads 
 
 - Existing winner-by-condition PNG/PDF and CSVs: `E:/agent-work/c4-c1switch/docs/paper_results/c1switch/recorded_winner_by_condition.{png,pdf}`, `recorded_world_winners.csv`, `recorded_cell_winshares.csv`; command `python -m tools.c1switch.winners` in its worktree. Completed recorded/fresh headroom is descriptive, not switching efficacy; keep this figure in Paper B. <!-- Source: E:/agent-work/c4-c1switch/docs/paper_results/C1SWITCH_WINNERS.md:15-19,31-42. -->
 - Recovered C1GAP wall CIs and genuine-history PI results belong to the scoped Paper B prediction panels; they do not fill F3V or F3. C1CLOSED has no complete-panel figure/verdict yet: [[PENDING: complete feedback CSV/PNG / S-C1CLOSED existing finalizer]]. No partial performance plot is imported. <!-- Sources: E:/agent-work/c4-c1gap/docs/paper_results/C1_GAPS.md; E:/agent-work/c4-c1pidiag/docs/paper_results/C1PIDIAG.md; E:/agent-work/c4-c1closed/docs/paper_results/C1CLOSED.md. -->
-- Latest shared-ledger reread: corrected switching canary is now RUNNING; model/BB parity/reuse and complete main dispatch remain gated. This changes operational status only, not headroom or efficacy claims. <!-- Source: E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md, S-C1SWITCH v7 STAGED / WM PARITY PASS / CORRECTED CANARY RUNNING. -->
+- Latest shared-ledger reread: corrected switching canary, both parity gates and independent BB reuse PASS; bounded main dispatch is RUNNING. There is no complete main performance panel, so no switching efficacy figure is imported. New lever/distributional-breakdown follow-ups are prospective and have no result figure eligible for this cut. <!-- Source: E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md, v7 MAIN DISPATCHED/OBSERVED RUNNING; OWNER22:05/S-LEVERPROBE22:07 and OWNER22:10/S-WMBREAKDOWN. -->

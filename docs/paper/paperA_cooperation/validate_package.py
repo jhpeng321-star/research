@@ -27,7 +27,8 @@ def main():
                 assert path.exists(), (name, target)
     # The primary/backup hierarchy and prerequisite claims must survive refreshes.
     for claim in ("W-VALUE", "W-POLICY", "W-RISE", "W-WIN", "W-RATIO", "M-ARTIFACT",
-                  "W-CALIB", "W-QUEUE", "B-TRANSFER", "B-FLOOR", "B-SWITCH", "B-CLOSED"):
+                  "W-CALIB", "W-QUEUE", "W-DATA", "N-FOLLOWUP",
+                  "B-TRANSFER", "B-FLOOR", "B-SWITCH", "B-CLOSED"):
         assert re.search(r"^### " + claim + r"\b", docs["CLAIMS.md"], re.MULTILINE), claim
     for name in ("OUTLINE.md", "FIGURES.md", "THREATS.md", "README.md"):
         assert "WMVALUE" in docs[name], name

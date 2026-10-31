@@ -2,6 +2,7 @@
 
 python -B docs/paper/paperA_cooperation/build_night_figures.py
 python -B docs/paper/paperA_cooperation/build_night_figures.py --check
+python -B docs/paper/paperA_cooperation/build_night_figures.py --only F4D
 
 Pins are immutable report snapshots, independent of later producer refreshes.
 Summary precision and published intervals are preserved; no inferred intervals.
@@ -24,8 +25,11 @@ PINS = {
                     "E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB.md"),
     "queue": ("wmqueue_report_3fbe64e7da2e44f6.md",
               "E:/agent-work/c4-wmqueue/docs/paper_results/WMQUEUE.md"),
+    "data_screen": ("wmfix_v2data_3e0bd4cf680cefa2.md",
+                    "E:/agent-work/c4-wmfixmerge/docs/paper_results/WMFIX_PILOT_V2DATA.md"),
 }
-STEMS = {"F3B": "F3B_stopped_sumo_backup", "F4N": "F4N_failed_tail_remedies"}
+STEMS = {"F3B": "F3B_stopped_sumo_backup", "F4N": "F4N_failed_tail_remedies",
+         "F4D": "F4D_expanded_data_screen"}
 FIELDS = ["figure", "panel", "series", "update", "horizon_s", "estimate", "lo", "hi",
           "n_worlds", "n_missing", "n_contrasts", "unit", "source_path", "source_sha256",
           "snapshot", "source_line", "source_column", "transform", "scope"]
@@ -117,6 +121,20 @@ def extract_night():
     assert len([r for r in rows if r["figure"] == "F3B"]) == 15
     assert len([r for r in rows if r["figure"] == "F4N"]) == 18
     assert {r["update"] for r in rows if r["figure"] == "F3B"} == {3, 7, 12}
+    data_screen = load("data_screen")
+    final = " ".join(data_screen[:42])
+    assert "not a full-gate PASS/FAIL" in final
+    assert "step10 failed; steps 20/30 not scored" in final
+    assert "Full52-world panel,104 contrasts/horizon" in final
+    for line, text in enumerate(data_screen[:42], 1):
+        match = re.search(rf"\*\*(120|300)s({NUM}) -> ({NUM})\*\*", text)
+        if match:
+            for update, value in zip((0, 10), match.groups()[1:]):
+                add("data_screen", "F4D", "data_screen", f"Step {update}", int(match[1]),
+                    float(value), line, f"paired-J MAE; step{update}", update=update,
+                    worlds=52, contrasts=104,
+                    scope="TRAIN panel; amended step10 early STOP; steps20/30 unscored; NOT full-gate verdict")
+    assert len([r for r in rows if r["figure"] == "F4D"]) == 4
     return rows, sources
 
 
@@ -220,16 +238,55 @@ def check_night(rows, sources):
     return result
 
 
+def render_data_screen(rows):
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    plt.rcParams.update({"font.size": 9, "axes.titlesize": 10, "axes.labelsize": 9,
+                         "pdf.fonttype": 42, "axes.spines.top": False,
+                         "axes.spines.right": False})
+    fig, axes = plt.subplots(1, 2, figsize=(8.4, 3.7))
+    fig.subplots_adjust(left=.10, right=.98, bottom=.29, top=.76, wspace=.36)
+    for ax, horizon, title in zip(axes, (120, 300),
+                                 ("(a) Short clock: slight improvement",
+                                  "(b) Long clock: worsened")):
+        cells = [r for r in rows if r["figure"] == "F4D" and r["horizon_s"] == horizon]
+        assert [r["update"] for r in cells] == [0, 10]
+        bars = ax.bar([0, 1], [r["estimate"] for r in cells],
+                      color=["#555555", "#D55E00"], width=.55)
+        ax.bar_label(bars, labels=[f"{r['estimate']:.2f}" for r in cells], padding=4)
+        ax.set(title=title, ylabel="Paired-effect MAE (veh-s)",
+               xlabel=f"Outcome horizon: {horizon} s",
+               xticks=[0, 1], xticklabels=["Entry-path baseline", "Trained step 10"])
+        ax.set_ylim(0, max(r["estimate"] for r in cells) * 1.23)
+    fig.suptitle("Expanded-data merge head: amended step-10 screen stopped", fontsize=11, y=.97)
+    fig.text(.10, .035,
+             "Source: WMFIX_PILOT_V2DATA.md FINAL section · 52 TRAIN worlds · 104 contrasts/clock\n"
+             "Both horizons had to improve. Steps 20/30 unscored: not a full-gate PASS/FAIL.\n"
+             "Published point estimates; no invented CIs. Separate y-axis scales, both starting at zero.",
+             fontsize=8)
+    for suffix in ("png", "pdf"):
+        path = guarded(ROOT / "figures" / (STEMS["F4D"] + "." + suffix), output=True)
+        fig.savefig(path, dpi=300, bbox_inches="tight")
+    plt.close(fig)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true")
+    parser.add_argument("--only", choices=["F4D"], help="Add late panel without rebuilding inherited artwork")
     args = parser.parse_args()
     rows, sources = extract_night()
     if not args.check:
         for figure, stem in STEMS.items():
+            if args.only and figure != args.only:
+                continue
             guarded(ROOT / "figures" / (stem + ".csv"), output=True).write_bytes(
                 serialized([r for r in rows if r["figure"] == figure]))
-        render_night(rows)
+        if not args.only:
+            render_night(rows)
+        render_data_screen(rows)
     print(json.dumps(check_night(rows, sources), indent=2))
 
 

@@ -1,6 +1,6 @@
 {
   "status": "PASS",
-  "source_cells": 33,
+  "source_cells": 37,
   "sources": {
     "backup": {
       "source_path": "E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_RUN.md",
@@ -16,6 +16,11 @@
       "source_path": "E:/agent-work/c4-wmqueue/docs/paper_results/WMQUEUE.md",
       "source_sha256": "3fbe64e7da2e44f673fcc100496d7db90dad8184b2169a1518700286d42eb38d",
       "snapshot": "source_snapshots/wmqueue_report_3fbe64e7da2e44f6.md"
+    },
+    "data_screen": {
+      "source_path": "E:/agent-work/c4-wmfixmerge/docs/paper_results/WMFIX_PILOT_V2DATA.md",
+      "source_sha256": "3e0bd4cf680cefa2a141f52232cf867d2b6e85f900a141ce3ae54770944ec9a8",
+      "snapshot": "source_snapshots/wmfix_v2data_3e0bd4cf680cefa2.md"
     }
   },
   "artifacts": {
@@ -42,6 +47,18 @@
     "figures/F4N_failed_tail_remedies.pdf": {
       "sha256": "c473d974a0b49c93929ce34f6cc306f3e5bb68a4e9e21e83a467f9b1897b75b6",
       "bytes": 26116
+    },
+    "figures/F4D_expanded_data_screen.csv": {
+      "sha256": "241b92f92736ec14ad59ace790e4bc2234e5c7b49595a4fbda593718c0b3400e",
+      "bytes": 1740
+    },
+    "figures/F4D_expanded_data_screen.png": {
+      "sha256": "aeab1b5ab4f56ea1a2f7aebdef7fdbb9aa9428064b8aa8044176efdac0cfb284",
+      "bytes": 165594
+    },
+    "figures/F4D_expanded_data_screen.pdf": {
+      "sha256": "9a282f7e9c8fe302c75daa07072fa8025756836c3885da698251b54d146efecc",
+      "bytes": 21630
     }
   },
   "scope": "Published summary transcription, copied CIs, immutable input hashes, CSV/image integrity; no new statistics",
