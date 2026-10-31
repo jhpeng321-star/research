@@ -161,14 +161,27 @@ terminal failure `STOP.json` (never cleared automatically), budget exit `BUDGET_
 Public artifacts: `tools/coopfree/publications/hold/`; verify its `MANIFEST.json`.
 Legacy MAPPO-credit checkpoint is retained remotely and excluded from corrected learning.
 Owned cpuQ supervisor PID615088/start48394231; alive=True; four nice19 single-thread workers.
-New HOLD physics: 354/455 complete tasks; 156 baselines; exact solo diagnostics for 66/156 windows.
-Corrected learned checkpoint pending; no zero-update or legacy checkpoint is advertised as corrected.
+New HOLD physics: 455/455 complete tasks; 156 baselines; exact solo diagnostics for 66/156 windows.
+### Learned proposal checkpoint u001
+- `tools/coopfree/publications/hold/policy_u001.pt`
+- SHA256 `7b6ff3254311b7f0e8af773cdd51dbfdeca16a8660d0f872c1c8212c8c03e9c1`; receipt `hold/UPDATE_001.json`.
+- 156 windows/24 worlds; D_G is against exact zero-update mean HOLD.
+- Exact HOLD D_i/C_G coverage: 66 windows/24 worlds; remaining windows have no exact solo diagnostic.
+- Executed-change 0.9359; issued-change 0.9936; executed/issued 0.9419354838709677; safety override 0.8489.
+- Sigma [4.5, 0.5] -> [4.5, 0.5]; objective2D_G; continuous Gaussian score; W exogenous.
+- D_G: n=156; mean 90.197; sd 3449.764; min/Q1/median/Q3/max [-8317.091993191709, -1390.1680599792962, 0.0, 1328.7216175734357, 10477.92906897259].
+- sum_D_i: n=66; mean -65.034; sd 5926.824; min/Q1/median/Q3/max [-28846.295312834518, -526.097014879484, 0.0, 1070.5607845780341, 17124.851342755195].
+- C_G: n=66; mean 435.331; sd 4176.503; min/Q1/median/Q3/max [-13926.098354165588, -0.03209833001710649, 0.0, 0.03883376025260077, 22048.17800766611].
+- Exact subset share C_G>0: 0.3333333333333333.
+- HOLD-minus-MAPPO structural gap at120s: mean -8.235 vehicle-s (TRAIN windows, not learned gain).
+- HOLD-minus-MAPPO structural gap at300s: mean -24.527 vehicle-s (TRAIN windows, not learned gain).
+- HOLD-minus-MAPPO structural gap at600s: mean 480.085 vehicle-s (TRAIN windows, not learned gain).
 ### OWNER02:21 learning self-check
-- Completed corrected fresh updates: []; next scheduled check u3.
-- Status: awaiting first corrected update.
+- Completed corrected fresh updates: [1]; next scheduled check u3.
+- Status: insufficient fresh updates for six-update trend.
 - TRAIN remaining: 240 sim-s; one fresh >=150-window joint-only lower bound: 135000 sim-s (HOLD/solos extra).
 - **Updates3/6/9 are budget-blocked. Prospective owner phase/budget amendment required; no replay or automatic dispatch.**
 - DEV learned-minus-HOLD J600/J900: pending both complete paired panels; no marginal-CI subtraction.
-Budget: 1690800 precharged / 1587000 closed-actual sim-s; hard cap2,000,000; no refunds/retries.
+Budget: 1777200 precharged / 1694400 closed-actual sim-s; hard cap2,000,000; no refunds/retries.
 TRAIN exploration credit is not paired dev-policy performance.
 <!-- COOPFREE PUBLICATIONS END -->
