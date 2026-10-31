@@ -80,7 +80,7 @@ def save_tag(stdout, tag, name):
             json.dump(json.loads(rows[-1]), stream, indent=2)
 
 
-def dispatch(build, continuation=False, production_only=False):
+def dispatch(build, continuation=False, production_only=False, transport_only=False):
     result = run('cpuQ', f'''
 import hashlib,json,os,subprocess,sys
 from pathlib import Path
@@ -97,7 +97,8 @@ if 'source_sha256' in stage:
   assert hashlib.sha256((root/'pytools'/name).read_bytes()).hexdigest()==expected
 continuation={continuation!r}
 production_only={production_only!r}
-assert not (continuation and production_only)
+transport_only={transport_only!r}
+assert sum((continuation,production_only,transport_only))<=1
 original=root.parent/'build_bc4c3aae72073204'
 if continuation:
  sys.path.insert(0,str(root/'pytools'))
@@ -118,7 +119,27 @@ if production_only:
  for other in root.parent.glob('build_*/DISPATCH.json'):
   old=json.loads(other.read_text())
   assert not (Path('/proc')/str(old['pid'])).exists(),'prior fleet trainer PID still exists'
-lockname=('FLEET_PRODUCTION_ONCE.json' if production_only else
+if transport_only:
+ sys.path.insert(0,str(root/'pytools'))
+ from tools.selmappo.continuation import validate_transport,TRANSPORT
+ from tools.selmappo.protocol import audit_registration
+ from tools.selmappo.dispatch import admitted
+ assert audit_registration(root/'pytools/REGISTRATION.md')['passed']
+ assert admitted(root,0),'yield to higher-priority runs or low memory/disk'
+ original=root.parent/TRANSPORT
+ validate_transport(original,root/'pytools/REGISTRATION.md')
+ assert json.loads((root.parent/'FLEET_PRODUCTION_ONCE.json').read_text())['build']==str(original)
+ assert stage.get('source_sha256'),'all source hashes required'
+ for other in root.parent.glob('build_*/DISPATCH.json'):
+  old=json.loads(other.read_text())
+  assert not (Path('/proc')/str(old['pid'])).exists(),'prior fleet trainer PID still exists'
+ for proc in Path('/proc').iterdir():
+  if proc.name.isdigit():
+   try:cmd=(proc/'cmdline').read_bytes().replace(bytes([0]),b' ').decode(errors='replace')
+   except (OSError,ProcessLookupError):continue
+   assert str(original) not in cmd or '-c import base64' in cmd,'prior owned descendant still live'
+lockname=('FLEET_TRANSPORT_CONTINUATION_ONCE.json' if transport_only else
+          'FLEET_PRODUCTION_ONCE.json' if production_only else
           'FLEET_CONTINUATION_ONCE.json' if continuation else 'FLEET_DISPATCH_ONCE.json')
 with (root.parent/lockname).open('x') as lock:
  json.dump(dict(build=str(root),binding=stage['binding']),lock);lock.flush();os.fsync(lock.fileno())
@@ -126,6 +147,7 @@ out=root/'training';assert not out.exists()
 command=[sys.executable,'-m','tools.selmappo.train','--variant','fleet','--registration',str(root/'pytools/REGISTRATION.md'),'--c1-root',str(root/'pytools'),'--integration',str(root/'INTEGRATION.json'),'--design-sha',receipt['design_sha256'],'--out',str(out),'--workers','12']
 if continuation:command+=['--continue-from',str(original)]
 if production_only:command+=['--production-from',str(original)]
+if transport_only:command+=['--transport-from',str(original)]
 log=(root/'training.log').open('x')
 def lower():os.nice(19)
 proc=subprocess.Popen(command,cwd=root/'pytools',env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,preexec_fn=lower)
@@ -216,7 +238,7 @@ print('STOP_RECEIPT',json.dumps(record))
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('action', choices=('stage', 'dispatch', 'continue', 'production', 'inventory',
-                                          'status', 'reconcile', 'terminal-stop'))
+                                          'transport', 'status', 'reconcile', 'terminal-stop'))
     parser.add_argument('--build')
     args = parser.parse_args()
     if args.action == 'stage':
@@ -227,6 +249,8 @@ if __name__ == '__main__':
         dispatch(args.build, continuation=True)
     elif args.action == 'production':
         dispatch(args.build, production_only=True)
+    elif args.action == 'transport':
+        dispatch(args.build, transport_only=True)
     elif args.action == 'inventory':
         inventory()
     elif args.action == 'reconcile':

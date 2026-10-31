@@ -14,9 +14,10 @@ from .integration import evaluation_panel, load as load_integration
 from .storage import Budget, append
 
 
-def worlds(variant, iteration):
+def worlds(variant, iteration, *, transport_continuation=False):
     start = BLOCKS[variant][0]+iteration*EPISODES
-    return [training_world(start+i, variant) for i in range(EPISODES)]
+    return [training_world(start+i, variant) for i in range(EPISODES)
+            if not transport_continuation or iteration != 0 or i >= 41]
 
 
 def mechanics_seeds(variant, *, continuation=False, production_only=False):
@@ -87,15 +88,19 @@ def main():
     continuation = parser.add_mutually_exclusive_group()
     continuation.add_argument('--continue-from', help='MAIN00:29 exact stopped original build only')
     continuation.add_argument('--production-from', help='MAIN01:08 exact stopped second build only')
+    continuation.add_argument('--transport-from', help='MAIN01:48 skip41; first5 then168x46 only')
     parser.add_argument('--workers', type=int, default=12)
     args = parser.parse_args()
     if not 1 <= args.workers <= 12:
         raise ValueError('workers must be1..12')
-    if args.production_from:
+    if args.production_from or args.transport_from:
         if args.smoke_only or args.panel or args.panel_sha:
             raise ValueError('production-only continuation: no mechanics or local evaluation')
-        from .continuation import validate_production
-        validate_production(args.production_from, args.registration)
+        from .continuation import validate_production, validate_transport
+        if args.transport_from:
+            validate_transport(args.transport_from, args.registration)
+        else:
+            validate_production(args.production_from, args.registration)
     # Refuse before importing torch, runtime, or creating any simulation directories.
     if not approval_line(args.registration):
         raise PermissionError('S-SELMAPPO approval absent; no SUMO may run')
@@ -120,14 +125,17 @@ def main():
     if args.production_from:
         from .continuation import inherit_production
         inherit_production(out, args.production_from, args.registration)
+    if args.transport_from:
+        from .continuation import inherit_transport
+        inherit_transport(out, args.transport_from, args.registration)
     budget, model = Budget(out), Selector()
     updater, start = Updater(model), time.monotonic()
     optimization_rng = torch.get_rng_state()
     seeds = mechanics_seeds(args.variant, continuation=bool(args.continue_from),
-                            production_only=bool(args.production_from))
+                            production_only=bool(args.production_from or args.transport_from))
     for seed in seeds:
         episode(model, dict(seed=seed, penetration=.4, demand=2700), args, budget, smoke=True)
-    append(out/'status.jsonl', dict(status='PRODUCTION_ONLY_ACKNOWLEDGED' if args.production_from
+    append(out/'status.jsonl', dict(status='PRODUCTION_ONLY_ACKNOWLEDGED' if (args.production_from or args.transport_from)
                                    else 'MECHANICS_COMPLETE', charged_sim_s=budget.charged,
                                   wall_s=time.monotonic()-start,
                                   successful_episodes=len(seeds)))
@@ -138,19 +146,25 @@ def main():
     torch.save(dict(model=model.state_dict(), actor_opt=updater.actor_opt.state_dict(),
                     critic_opt=updater.critic_opt.state_dict(), scaler=vars(updater.scaler),
                     iteration=0, protocol='S-C1SWITCH2/v2', library=LIBRARY,
-                    design_sha256=args.design_sha, rng=torch.get_rng_state()), out/'checkpoint_000.pt')
+                     design_sha256=args.design_sha, rng=torch.get_rng_state()), out/'checkpoint_000.pt')
+    if args.transport_from:
+        # Original run completed zero updates; ensure exact initial weights and RNG.
+        from .continuation import initial_unchanged
+        initial_unchanged(model, args.transport_from)
     from .dispatch import wave
     for iteration in range(ITERATIONS):
         if time.monotonic()-start >= 86400 or (out/'STOP_REQUESTED').exists():
             raise RuntimeError('wall limit or cooperative stop')
         begin = time.monotonic()
-        episodes = wave(model, worlds(args.variant, iteration), args, budget, start+86400)
+        scheduled = worlds(args.variant, iteration, transport_continuation=bool(args.transport_from))
+        episodes = wave(model, scheduled, args, budget, start+86400)
         simulation_wall = time.monotonic()-begin
         stats = updater.update(episodes)
         elapsed = time.monotonic()-begin
         append(out/'training.jsonl', dict(iteration=iteration+1, **stats,
                                          simulation_wall_s=simulation_wall, total_wall_s=elapsed,
-                                         sim_s_per_hour=EPISODES*900/elapsed*3600,
+                                         episodes=len(scheduled),
+                                         sim_s_per_hour=len(scheduled)*900/elapsed*3600,
                                          charged_sim_s=budget.charged))
         # Retain every checkpoint/optimizer/scaler; no rolling deletion.
         torch.save(dict(model=model.state_dict(), actor_opt=updater.actor_opt.state_dict(),

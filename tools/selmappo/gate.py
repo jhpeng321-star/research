@@ -63,10 +63,22 @@ def check(root):
             raise ValueError('outgoing WALL memory/requests retained')
         if owner.release_all.call_count != 6:
             raise ValueError('handover releases not exactly once per change')
+        from .continuation import TRANSPORT, initial_unchanged, validate_transport
+        old = safe_path(root).parent.parent/TRANSPORT
+        if old.is_dir():
+            validate_transport(old, safe_path(root)/'REGISTRATION.md')
+            import torch
+            from .learning import Selector, Updater
+            with torch.random.fork_rng():
+                torch.manual_seed(0)
+                model = Selector()
+                Updater(model)
+                initial_unchanged(model, old)
     return dict(status='CPU_INTEGRATION_PASS', library=list(LIBRARY),
                 real_checkpoint_constructors=True, real_wall_formed=True,
                 wall_incumbent_preserved=True, wall_stop_reset=True,
-                frozen_env_scenario_seed_aliases=True, new_sumo_seconds=0)
+                frozen_env_scenario_seed_aliases=True,
+                transport_history_initial_parity=old.is_dir(), new_sumo_seconds=0)
 
 
 if __name__ == '__main__':

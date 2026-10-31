@@ -2,7 +2,6 @@
 import json
 import math
 import os
-from pathlib import Path
 
 from .protocol import CAP, guard_seed, safe_path
 
@@ -26,7 +25,18 @@ class Budget:
         if self.path.exists():
             for line in self.path.read_text(encoding='utf-8').splitlines():
                 row = json.loads(line)
-                if row['event'] == 'START':
+                if row['event'] == 'HISTORY':
+                    from .protocol import digest
+                    ids = row['consumed_ids']
+                    if (self.seen or self.charged or self.pending or
+                            row['charged_sim_s'] != 38700 or len(ids) != 43 or len(set(ids)) != 43 or
+                            set(ids) != {f'fleet:{s}' for s in
+                                         (*range(18000000, 18000041), 18007998, 18007999)} or
+                            digest(self.root/'inherited_ledger.jsonl') != row['ledger_sha256']):
+                        raise ValueError('invalid immutable transport history charge')
+                    self.charged = row['charged_sim_s']
+                    self.seen.update(ids)
+                elif row['event'] == 'START':
                     if row['id'] in self.seen or row['reserved_sim_s'] != 900:
                         raise ValueError('duplicate/unclosed reservation')
                     self.pending[row['id']] = row

@@ -13,7 +13,7 @@ from .environment import SelectorEnv, action_name, window_reward
 from .handover import FleetHandover
 from .integration import evaluation_panel, load, registered
 from .observations import ACTOR_DIM, SHARED_DIM, build
-from .protocol import (BLOCKS, CAP, LIBRARY, TIMES, approval_line, audit_registration,
+from .protocol import (CAP, TIMES, approval_line, audit_registration,
                        digest, guard_seed, guard_world, safe_path, training_world)
 from .storage import Budget, PrechargedEpisode
 
@@ -398,6 +398,86 @@ class DiskTests(unittest.TestCase):
             self.assertFalse(admitted(self.root, 13))
         self.assertFalse((self.root/'ledger.jsonl').exists())
 
+    def test_transport_schedule_exact_five_then168_full_no_consumed_worlds(self):
+        from .train import worlds
+        schedule = [worlds('fleet', i, transport_continuation=True) for i in range(169)]
+        self.assertEqual([w['seed'] for w in schedule[0]], list(range(18000041, 18000046)))
+        self.assertEqual([len(batch) for batch in schedule], [5]+[46]*168)
+        seeds = [w['seed'] for batch in schedule for w in batch]
+        self.assertEqual(seeds, list(range(18000041, 18007774)))
+        self.assertEqual(len(seeds), len(set(seeds)))
+        self.assertEqual(38700+900*len(seeds)+14400, CAP)
+
+    def test_transport_history_preserves_open_unknowns_charge_and_no_replay(self):
+        from .continuation import inherit_transport, validate_transport, TRANSPORT
+        original = self.root/TRANSPORT
+        out = original/'training'
+        out.mkdir(parents=True)
+        budget = Budget(out)
+        for seed, actual in ((18007998, 0), (18007999, 900)):
+            budget.reserve(dict(seed=seed, demand=2700, penetration=.4), 'fleet', smoke=True)
+            budget.finish(actual)
+        unknown = [18000028, *range(18000034, 18000041)]
+        receipts, results = [], []
+        for seed in range(18000000, 18000041):
+            budget.reserve(training_world(seed), 'fleet')
+            if seed in unknown:
+                continue
+            episode_root = out/str(seed)
+            episode_root.mkdir()
+            for name in ('actual.jsonl', 'result.jsonl'):
+                (episode_root/name).write_text('{"actual_sim_s":900}\n')
+            receipts.append(dict(seed=seed, actual_sim_s=900,
+                                 receipt_sha256=digest(episode_root/'actual.jsonl')))
+            results.append(dict(seed=seed, receipt_sha256=digest(episode_root/'result.jsonl')))
+            if seed != 18000032:
+                budget.finish(900, f'fleet:{seed}')
+        preserved = budget.path.read_bytes()
+        self.assertEqual(len(budget.pending), 9)
+        (original/'DISPATCH.json').write_text(json.dumps(dict(pid=999999999)))
+        (original/'training.log').write_text('preserved IPC stop')
+        (out/'failure.jsonl').write_text('preserved failure')
+        (out/'checkpoint_000.pt').write_bytes(b'original initial checkpoint')
+        stop = dict(own_pid=999999999, own_pid_exited=True, own_descendants_remaining=0,
+                    status='STOPPED_AT_PRODUCTION_TRANSPORT', charged_sim_s=38700,
+                    known_actual_sim_s=30600, actual_upper_sim_s=37800, training_updates=0,
+                    ledger_open_reservations=9, final_checkpoint=False, evaluation_episodes=0,
+                    ledger_sha256=digest(budget.path), log_sha256=digest(original/'training.log'),
+                    failure_sha256=digest(out/'failure.jsonl'),
+                    initial_checkpoint_sha256=digest(out/'checkpoint_000.pt'),
+                    worker_actual_receipts=receipts, successful_result_receipts=results,
+                    actual_unknown_worlds=unknown)
+        (original/'STOP.json').write_text(json.dumps(stop))
+        reg = self.text('transport_ack.md', '- 01:48 MAIN ACKNOWLEDGEMENTS / DECISIONS: '
+                        'S-SELMAPPO same-cap continuation ACKNOWLEDGED (skip the 41 consumed worlds, '
+                        'update 1 on the 5 unused worlds, then 168 x 46 episodes; '
+                        'final-169-only selection; 7,012,800 total incl. reserved eval).\n')
+        fresh = self.root/'transport'
+        fresh.mkdir()
+        with patch('tools.selmappo.continuation.TRANSPORT_LEDGER_SHA', digest(budget.path)):
+            with self.assertRaises(PermissionError):
+                validate_transport(original, self.text('no_transport_ack.md', 'approved budget'))
+            inherit_transport(fresh, original, reg)
+            with self.assertRaises(FileExistsError):
+                inherit_transport(fresh, original, reg)
+            (out/'18000032/result.jsonl').write_text('changed')
+            with self.assertRaises(ValueError):
+                validate_transport(original, reg)
+        continued = Budget(fresh)
+        self.assertEqual(continued.charged, 38700)
+        self.assertEqual(continued.pending, {})
+        self.assertEqual(budget.path.read_bytes(), preserved)
+        self.assertEqual((fresh/'inherited_ledger.jsonl').read_bytes(), preserved)
+        for seed in (*range(18000000, 18000041), 18007998, 18007999):
+            with self.assertRaises(ValueError):
+                continued.reserve(dict(seed=seed), 'fleet', smoke=seed >= 18007998)
+        continued.reserve(training_world(18000041), 'fleet')
+        continued.finish(900)
+        self.assertEqual(Budget(fresh).charged, 39600)
+        (fresh/'inherited_ledger.jsonl').write_text('changed history')
+        with self.assertRaises(ValueError):
+            Budget(fresh)
+
     def test_remote_launch_templates_compile_without_dispatch(self):
         from . import launch
         captured = []
@@ -412,8 +492,9 @@ class DiskTests(unittest.TestCase):
             safe.return_value.read_text.return_value = 'registration snapshot'
             launch.stage()
             launch.dispatch('build_test', production_only=True)
+            launch.dispatch('build_test', transport_only=True)
             launch.inventory()
-        self.assertEqual(len(captured), 3)
+        self.assertEqual(len(captured), 4)
 
     def test_cap_no_silent_overallocation(self):
         budget = Budget(self.root)
