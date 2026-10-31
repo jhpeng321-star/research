@@ -86,8 +86,8 @@ is not a target for conditional same-state ensemble SD.
 from wms.control.fitted_hidden import FittedHiddenState
 from wms.control.arrival_fit import LearnedArrivalFit
 
-fit = FittedHiddenState.from_directory("artifacts/rbfit/finite_mixture_v4")
-# LC is separately opt-in: lane_directory="artifacts/rbfit/lane_v1".
+fit = FittedHiddenState.from_directory("artifacts/rbfit/shrinkage_v1")
+# LC is separately opt-in: lane_directory="artifacts/rbfit/lane_v2".
 # FIT LC validation lost to its baseline; it is not silently adopted.
 demand = LearnedArrivalFit.from_file("docs/paper_results/rbunc/observed_arrivals.json")
 futures = plan_hidden_state_futures(
@@ -103,6 +103,15 @@ futures = plan_hidden_state_futures(
 - Current HDVs: exact sparse finite-support posterior; unknown or summary-only
   records use the population. No log-normal moment reinterpretation or additional
   encoder reliability shrinkage. Nine-coordinate IDM mapping is by name.
+- Preferred S-RB-FIT `shrinkage_v1` already includes learned population mixing
+  n/(n+19.35568); do not apply it again. Raw `finite_mixture_v4` remains supported
+  and is the frozen input of this workstream's new H120 physical diagnostic.
+- Saved-ID posteriors exist only for FIT969400..969431 at300s. For other worlds
+  use FIT's causal `MotionFit.condition_motion`/`MotionFitForUNC` interface and
+  the existing supplied-posterior path, with the fitted `Population` passed via
+  `population=` for newcomers. Do not simultaneously override those supplied
+  samples with `fitted_state=` (the direct saved-ID source). Never fake an ID
+  from a packed slot or from a route-string ordinal.
 - New HDVs: fitted population. Current/new CAV plant settings remain the existing
   observed inference, outside the HDV physical fit. Optional named LC settings
   persist for current/new HDVs; no fitted joint IDM/LC dependence is claimed.

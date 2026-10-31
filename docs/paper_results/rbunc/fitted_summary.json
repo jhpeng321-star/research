@@ -1,0 +1,91 @@
+{
+ "schema": "rbunc_fitted_summary/1",
+ "worlds": 32,
+ "K": 8,
+ "physical_horizon_s": 120,
+ "physical_futures": 280,
+ "raw_sha256": "68b3f13c0b35e9983cdf82dcde041c084be04e45f98597ce6d0f37844c09d387",
+ "metrics": {
+  "team_delay_vs": {
+   "mean_within_K_sd": 747.8395051372066,
+   "mean_within_K_sd_ci95": [
+    668.6837282526461,
+    826.8784009502155
+   ],
+   "rms_within_K_sd": 782.8455184142869,
+   "real_across_world_sd": 4200.498506870949,
+   "mean_bias": 1142.1073727000576,
+   "empirical_crps": 980.6798807337636,
+   "range_coverage": 0.53125
+  },
+  "road_delay_vs": {
+   "mean_within_K_sd": 361.6501004816955,
+   "mean_within_K_sd_ci95": [
+    315.2539608406025,
+    415.6217505334611
+   ],
+   "rms_within_K_sd": 390.4070340142538,
+   "real_across_world_sd": 1140.3744956464996,
+   "mean_bias": 763.555068731308,
+   "empirical_crps": 642.9018574282527,
+   "range_coverage": 0.40625
+  },
+  "source_wait_vs": {
+   "mean_within_K_sd": 594.313839986123,
+   "mean_within_K_sd_ci95": [
+    519.2432213907659,
+    669.072237679496
+   ],
+   "rms_within_K_sd": 632.4500980588099,
+   "real_across_world_sd": 3475.6790759098267,
+   "mean_bias": 378.55230396874936,
+   "empirical_crps": 458.8985547343751,
+   "range_coverage": 0.78125
+  }
+ },
+ "qualification": "source plumbing in deterministic legacy IDM/MOBIL reference only",
+ "first_state_team_sd": {
+  "both": 929.4783966461863,
+  "drivers": 179.10637370595583,
+  "arrivals": 893.8161160363815,
+  "fixed": 0.0
+ },
+ "requests": {
+  "120": {
+   "mean_within_K_sd": 10.507699505385157,
+   "mean_gamma_poisson_predictive_sd": 11.262918548772975
+  },
+  "300": {
+   "mean_within_K_sd": 20.689683542255523,
+   "mean_gamma_poisson_predictive_sd": 21.284915369164136
+  },
+  "600": {
+   "mean_within_K_sd": 34.613235686125826,
+   "mean_gamma_poisson_predictive_sd": 36.866554854195954
+  }
+ },
+ "mean_driver_input_sd": {
+  "v0": 0.9819222893565893,
+  "time_headway": 0.16001122910529375,
+  "accel": 0.13422171375714242,
+  "decel": 0.7646278413012624,
+  "min_gap": 0.3974122777581215
+ },
+ "mean_optional_lc_input_sd": {
+  "lcStrategic": 1.757221281528473,
+  "lcCooperative": 2.085145063698292,
+  "lcSpeedGain": 1.5565295852720737,
+  "lcKeepRight": 0.6963281594216824,
+  "lcAssertive": 0.5175179298967123
+ },
+ "checks": {
+  "pairwise_variance": true,
+  "independent_cdf_crps": true,
+  "original_factual_targets_exact": true,
+  "source_ablations": true,
+  "physical_replay": true,
+  "exact_numeric_identity": true,
+  "paired_hidden_inputs": true,
+  "metric_world_cells": 96
+ }
+}

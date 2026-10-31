@@ -1,7 +1,7 @@
-# S-RB-UNC — owner00:40 implementation READY; fitted-input panel RUNNING
+# S-RB-UNC — owner00:40 READY; all32 fitted-input states COMPLETE
 
 Fresh-session resume preserves clean baseline46c33fbe and all completed probes.
-Next: fitted IDM/optional LC posterior + learned entrance-counter process +
+Delivered: fitted IDM/optional LC posterior + learned entrance-counter process +
 identity-keyed action CRN. Frozen plan: `docs/paper_results/RBUNC_ADDENDUM_DESIGN.md`.
 Remote terminal rechecked: old31children exited0; no old dispatch repeated.
 
@@ -10,14 +10,27 @@ INT/DECIDE to integrate. CPU34PASS including original futures regression;
 actual INT SUMO-IDM+LC2013 insertion smoke PASS, persistent fitted LC and exact
 newborn admission/motion, bit-identical replays, global RNG unchanged.
 Receipt: `docs/paper_results/rbunc/addendum_integration_smoke_v2.json`.
-Fitted-input H120 panel runs ONCE in `cpuQ:rbunc20261031/addendum_v2`, own
-supervisor457329/four disjoint nice19CPUworkers, immutable code62ad8c687e9a.
+Fitted-input H120 panel completed ONCE in `cpuQ:rbunc20261031/addendum_v2`, own
+supervisor457329/four disjoint nice19CPUworkers ALL rc0, code62ad8c687e9a.
 Old v1 failed BEFORE any rollout due to unidentified-driver missing weights;
 population-fallback correction34CPUtestsPASS; original logs/terminal preserved.
+Raw-posterior reference: mean within-K team SD747.8 [668.7,826.9] vs real across-
+world4200.5veh-s; first-state drivers179.1/arrivals893.8/both929.5/fixed0.0.
+All280 futures source/conservation/RNG checks PASS; fixed complete tapes identical.
+Raw reference CRPS980.7 is WORSE than old encoder611.4; not a calibrated WM win.
+Preferred shrinkage artifact has compatibility/smoke evidence, no new traffic
+score here. Report `docs/paper_results/RBUNC_ADDENDUM.md`; raw+96-cell independent
+verification `rbunc/{fitted_source_probe,fitted_summary}.json`.
 
 ## Owner00:40 fitted-posterior extension (CPU verified)
-- `FittedHiddenState.from_directory(finite_mixture_v4, lane_directory=None)` in
-  `wms.control.fitted_hidden`. Optional explicit `lane_directory=lane_v1` enables
+- **Preferred:** `FittedHiddenState.from_directory(shrinkage_v1)` from FIT's
+  owner00:40 output. Its learned population mixing is ALREADY in the weights;
+  do not shrink twice. FIT independently checked all3130drivers+16paired plans
+  against this adapter; receipt `c4-rb-fit/artifacts/rbfit/receipts/ADDENDUM_VERIFIED_v2.json`.
+  Preferred-artifact INT physical persistence smoke PASS:
+  `rbunc/preferred_integration_smoke.json` (posterior SHA578e1b2b).
+- Reader lives in `wms.control.fitted_hidden`; raw `finite_mixture_v4` remains
+  supported and FROZEN in the current H120 diagnostic. `lane_directory=lane_v2` enables
   named joint LC draws; FIT LC is NOT adopted automatically.
 - Pass `fitted_state=fit, vehicle_ids=observable_numeric_ids[B,slots], t0_s=300`
   plus numeric world `row_keys` to `plan_hidden_state_futures`. Existing switch
@@ -27,7 +40,11 @@ population-fallback correction34CPUtestsPASS; original logs/terminal preserved.
   Current draws key on world/VID/future, invariant under slot permutations and
   candidate actions. Birth draws remain entrance/ordinal-keyed, shared admission
   and motion. LC block independent of IDM block (FIT supplied no joint coupling).
-- CPU new+existing hidden suite16PASS.
+- Five fitted-posterior CPU tests PASS; full current suite34PASS.
+- Saved-ID posterior lookup is FIT969400..969431/t300 only. Unknown IDs -> prior.
+  New-world causal-motion inference is FIT's `MotionFitForUNC` supplied-posterior
+  path; pass fitted `population=` for entrants, not a simultaneous saved-ID
+  `fitted_state=` override. Never substitute packed slots for observed VIDs.
 
 ## Owner00:40 learned arrivals (READY)
 - `LearnedArrivalFit.from_file('docs/paper_results/rbunc/observed_arrivals.json')`
@@ -47,7 +64,9 @@ population-fallback correction34CPUtestsPASS; original logs/terminal preserved.
 - `.condition(world, observed_entries, observed_queue_history)` supports new
   causal starts under the frozen family without reading future labels. Unknown
   worlds otherwise fail closed. Mutable future objects still recreated per arm.
-- Combined CPU suite34PASS; new32-state fitted-source verification running.
+- Combined CPU suite34PASS; new32-state fitted-source verification COMPLETE.
+
+## Preserved baseline46c33fbe (historical encoder-input diagnostic)
 
 Branch `c4/rb-unc`, base `f0db3c82`. Owner registration5683/5694 and WHY +
 ENSPROBE read. Merge the branch; retain INT's own root HANDOFF on conflict.

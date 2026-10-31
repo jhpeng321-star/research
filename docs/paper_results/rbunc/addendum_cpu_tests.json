@@ -1,0 +1,14 @@
+{
+ "status": "PASS",
+ "command": "py -3.13 -B -m pytest -q -p no:cacheprovider tests/unit/test_fitted_hidden.py tests/unit/test_hidden_state_futures.py tests/unit/test_arrival_fit.py tests/unit/test_c4_futures.py",
+ "passed": 34,
+ "failed": 0,
+ "seconds": 23.34,
+ "scope": "CPU sampler tests and original futures regression; not WM-PHYS distributional qualification",
+ "suites": {
+  "test_fitted_hidden.py": 5,
+  "test_hidden_state_futures.py": 12,
+  "test_arrival_fit.py": 4,
+  "test_c4_futures.py": 13
+ }
+}
