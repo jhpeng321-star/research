@@ -375,3 +375,84 @@ def action_step_update(v: Tensor, held_accel: Optional[Tensor], p: SumoIDMParams
     v_next = torch_minimum(v_next, max_next_speed(v, p, dt_s=dt_s))
     v_min = min_next_speed(v, p, dt_s=dt_s)
     return torch_maximum(v_next, torch_minimum(v_min, v_next))
+
+
+# ------------------------------------------------------- WM baseline dispatch
+def sumo_idm_baseline_accel(kin: Tensor, present: Tensor, physics,
+                            driver_params: Optional[Mapping[str, Tensor]] = None
+                            ) -> Tensor:
+    """The SUMO IDM core as the WM physics baseline ``[B, K]`` acceleration.
+
+    Mirrors :func:`wms.physics.accel.baseline_accel`'s leader rule (same
+    :func:`~wms.physics.neighbours.lead_neighbour`, including the accel-lane-end
+    standing obstacle and the ``C4_SUMO_LEADER_RULE`` chain coordinates) but
+    evaluates the SUMO composition: a real same-lane leader goes through
+    :func:`sumo_idm_step` (followSpeed + finalizeSpeed bounds); the accel-lane
+    end obstacle goes through SUMO ``stopSpeed`` semantics.  The legacy
+    ``emergency_decel``/``emergency_braking`` envelope and the hand merge-yield
+    rules are NOT applied (SUMO parity is the point of ``cf_model='sumo_idm'``;
+    lane/merge interaction physics composes outside the CF core).
+
+    ``driver_params`` (encoder-inferred) map 1:1; without them the population
+    defaults of the :class:`~wms.physics.config.PhysicsConfig` apply.
+    """
+    from .idm import IDMParams
+    from .neighbours import (MIN_GAP_M, lane_neighbour, lane_of,
+                             lead_neighbour)
+
+    gap, leader_v = lead_neighbour(kin, present, physics)
+    v = kin[..., 4]
+    if driver_params is None:
+        defaults: IDMParams = physics.idm_params()
+        like = v
+        p = SumoIDMParams(
+            accel=torch_full(float(defaults.a_max), like),
+            decel=torch_full(float(defaults.b_comf), like),
+            headway_time=torch_full(float(defaults.time_headway), like),
+            min_gap=torch_full(float(defaults.s0), like),
+            des_speed=torch_full(float(defaults.v0), like),
+            delta=torch_full(float(defaults.delta), like),
+            emergency_decel=(None if physics.sumo_cf_emergency_decel_mps2 is None
+                             else torch_full(float(physics.sumo_cf_emergency_decel_mps2), like)),
+            vtype_max_speed=(None if physics.sumo_cf_vtype_max_mps is None
+                             else torch_full(float(physics.sumo_cf_vtype_max_mps), like)))
+        lane_max = p.des_speed
+    else:
+        p = SumoIDMParams.from_driver_params(driver_params)
+        if physics.sumo_cf_emergency_decel_mps2 is not None:
+            p = SumoIDMParams(
+                **{**p.__dict__, "emergency_decel": torch_full(
+                    float(physics.sumo_cf_emergency_decel_mps2), v)})
+        if physics.sumo_cf_vtype_max_mps is not None:
+            p = SumoIDMParams(
+                **{**p.__dict__, "vtype_max_speed": torch_full(
+                    float(physics.sumo_cf_vtype_max_mps), v)})
+        lane_max = p.des_speed
+    dt_s = float(physics.dt_s)
+    iterations = idm_iterations(dt_s, float(physics.sumo_cf_stepping_s))
+    _, accel = sumo_idm_step(v, gap, leader_v, lane_max, p, dt_s=dt_s,
+                             iterations=iterations)
+    # The accel-lane end is SUMO's stopSpeed case (standing obstacle at the dead
+    # end).  lead_neighbour returns the end gap already merged into `gap`, so the
+    # obstacle is re-derived from the RAW same-lane leader gap exactly like
+    # lead_neighbour selects it.
+    lane = lane_of(kin)
+    from .lane_chain import leader_rule_enabled
+    if leader_rule_enabled():
+        # Same chain-coordinate end obstacle as lead_neighbour (C4_SUMO_LEADER_RULE).
+        from .lane_chain import MERGE_CONNECTOR_RAMP_LEN_M, chain_s
+        chain = chain_s(lane, kin[..., 0])
+        lane_gap, _ = lane_neighbour(kin, present, lane, physics, ahead=True)
+        end_gap = (float(physics.merge_zone_s1_m) + float(MERGE_CONNECTOR_RAMP_LEN_M)
+                   - chain).clamp_min(MIN_GAP_M)
+    else:
+        lane_gap, _ = lane_neighbour(kin, present, lane, physics, ahead=True)
+        end_gap = (float(physics.merge_zone_s1_m) - kin[..., 0]).clamp_min(MIN_GAP_M)
+    obstacle = (lane == int(physics.merge_lane)) & (end_gap < lane_gap)
+    if bool(getattr(physics, "merge_cal", False)):
+        obstacle = obstacle & (end_gap <= float(physics.end_obstacle_range_m))
+    if bool(obstacle.any()):
+        stop_next = stop_speed(v, end_gap, p, dt_s=dt_s, iterations=iterations,
+                               action_step_s=getattr(physics, "sumo_cf_action_step_s", None))
+        accel = torch.where(obstacle, (stop_next - v) / dt_s, accel)
+    return torch.where(present, accel, torch.zeros_like(accel))

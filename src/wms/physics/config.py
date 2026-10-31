@@ -39,6 +39,12 @@ MAINLINE_MERGE_YIELD_DISTANCE_M = 60.0
 MAINLINE_MERGE_YIELD_DECEL_MPS2 = 2.0
 #: Default IDM parameters.
 _DEFAULT_IDM = (2.6, 4.5, 1.1, 2.5, 4)
+#: Car-following core selectors (S-RB-CF, 2026-10-31): ``legacy`` = the WM-S
+#: textbook-IDM baseline (bit-identical default), ``sumo_idm`` = the SUMO
+#: 1.27.1 ``MSCFModel_IDM`` port of :mod:`wms.physics.idm_sumo` (iterated
+#: ``_v`` sub-stepping, SUMO minNextSpeed/emergencyDecel floor, maxNextSpeed
+#: cap, ``stopSpeed`` at the accel-lane end).
+CF_MODELS = ("legacy", "sumo_idm")
 #: Lane-rule selectors (C4): full MOBIL discretionary changes or forced merges only.
 LANE_RULES = ("mobil", "forced_merge_only", "learned_discretionary")
 #: Gap-acceptance rule of the lane-change feasibility mask (GAPRULE): the legacy fixed
@@ -303,6 +309,21 @@ class PhysicsConfig:
     # (``wms.model.entry_learned``) instead of the hand-set sumo_like_v2 rule.  Default off
     # keeps every pre-V10INSERT result bit-identical.
     entry_learned: bool = False
+    # S-RB-CF (2026-10-31, default "legacy" = bit-identical): the longitudinal
+    # car-following core.  ``sumo_idm`` replaces the textbook-IDM core (and its
+    # legacy emergency_decel / emergency-braking envelope and the hand merge-yield
+    # rules) by the faithful SUMO 1.27.1 MSCFModel_IDM step; every other physics
+    # switch (lane/merge models) is unchanged and composes on top.
+    cf_model: str = "legacy"
+    #: SUMO vType ``cf.idmStepping`` default (s); 0.5 s steps -> 2 sub-iterations.
+    sumo_cf_stepping_s: float = 0.25
+    #: SUMO vType ``emergencyDecel`` (None = decel, the SUMO default).
+    sumo_cf_emergency_decel_mps2: float | None = None
+    #: SUMO vType ``maxSpeed`` cap of ``maxNextSpeed`` (None = unbounded).
+    sumo_cf_vtype_max_mps: float | None = None
+    #: SUMO vType ``actionStepLength`` (None = every step, the SUMO default; the
+    #: rollout does not carry the held-acceleration state for larger values yet).
+    sumo_cf_action_step_s: float | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.secure_gap_veto, bool):
@@ -403,6 +424,23 @@ class PhysicsConfig:
             raise ValueError("mainline_courtesy_zone_m must be finite and >= 0")
         if not isinstance(self.entry_learned, bool):
             raise ValueError("entry_learned must be a boolean")
+        if self.cf_model not in CF_MODELS:
+            raise ValueError(f"cf_model must be one of {CF_MODELS}: {self.cf_model!r}")
+        for name in ("sumo_cf_stepping_s",):
+            value = getattr(self, name)
+            if (isinstance(value, bool) or not isinstance(value, (int, float))
+                    or not math.isfinite(value) or value <= 0.0):
+                raise ValueError(f"{name} must be finite and > 0")
+        for name in ("sumo_cf_emergency_decel_mps2", "sumo_cf_vtype_max_mps",
+                     "sumo_cf_action_step_s"):
+            value = getattr(self, name)
+            if value is not None and (isinstance(value, bool)
+                                      or not isinstance(value, (int, float))
+                                      or not math.isfinite(value) or value <= 0.0):
+                raise ValueError(f"{name} must be None or finite and > 0")
+        if self.sumo_cf_action_step_s is not None \
+                and self.sumo_cf_action_step_s < self.dt_s:
+            raise ValueError("sumo_cf_action_step_s must be >= dt_s")
 
     def merge_end_follow_constants(self) -> tuple[float, float]:
         """``(s0, T)`` of the ``merge_end_wait`` follower secure gap (default: road IDM)."""

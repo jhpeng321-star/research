@@ -26,7 +26,15 @@ def baseline_accel(kin: Tensor, present: Tensor, physics: PhysicsConfig,
     the relative stopping distance would consume the clearance above ``s0``;
     emergency IDM is bounded by the configured plant limit. The leader is assumed
     to maintain its current speed (the lane-end obstacle has speed zero).
+
+    S-RB-CF ``physics.cf_model='sumo_idm'`` replaces this whole legacy core
+    (including its emergency/yield add-ons) by the faithful SUMO 1.27.1
+    ``MSCFModel_IDM`` step of :mod:`wms.physics.idm_sumo`; ``driver_params``
+    (encoder-inferred or population defaults) feed it unchanged.
     """
+    if getattr(physics, "cf_model", "legacy") == "sumo_idm":
+        from .idm_sumo import sumo_idm_baseline_accel
+        return sumo_idm_baseline_accel(kin, present, physics, driver_params)
     gap, leader_v = lead_neighbour(kin, present, physics)
     params = (physics.idm_params() if driver_params is None
               else IDMParams.from_driver_params(driver_params))
