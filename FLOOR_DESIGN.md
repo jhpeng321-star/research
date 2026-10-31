@@ -81,3 +81,17 @@ an upstream scorer arriving later requires no new SUMO. Same CSV columns as
 C1CLOSED error-vs-horizon export; mark native arm and SUMO RNG reference clearly.
 Deliver `docs/paper_results/C1FLOOR.md` <=40 lines, CSV and one completion
 registration line. Commit source review, design, tested canary, run, report.
+
+## Zero-step mechanics amendment (before any trajectory outcome)
+
+The first canary attempt stopped at actual 0: the inherited zero wrapper indexes
+`inputs['policy']` even for native (which never loads it). Retain the failed
+attempt directory and its entire 1,500 sim-s precharge; supply the original frozen
+policy path on the repaired native call. This is a manual mechanics repair,
+not an automatic or outcome-dependent retry. Repair canary ID gains `_attempt2`.
+To keep even conservative CHARGES within 30,000, freeze the panel to the first
+23 worlds, 969400–969422, omitting the final index before any scientific result.
+Revised plan: 23 x 1,200 + 300 canary = 27,900 actual; plus retained 1,500
+zero-step failure reservation = 29,400 charged. 600 charged headroom stays
+unallocated. The remaining design/seed mapping is unchanged. No additional
+repair is authorized automatically; all failures remain preserved and reported.

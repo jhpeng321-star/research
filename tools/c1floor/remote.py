@@ -29,16 +29,25 @@ def scp(source, target):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=('inspect', 'stage', 'run', 'status', 'fetch', 'inputs'))
+    parser.add_argument('action', choices=('inspect', 'stage', 'run', 'status', 'fetch', 'inputs', 'references'))
     parser.add_argument('--phase', default='tests')
     a = parser.parse_args()
     if a.action == 'inspect':
-        print(ssh('''import os,json,subprocess
+        print(ssh('''import os,json,subprocess,time
 from pathlib import Path
 print('load',os.getloadavg())
+print('cpus',os.cpu_count(),'affinity',len(os.sched_getaffinity(0)))
+for n in ('cpu.max','cpu.stat'):
+ p=Path('/sys/fs/cgroup')/n;print(n,p.read_text() if p.exists() else 'absent')
+p=Path('/sys/fs/cgroup/cpu.stat')
+if p.exists():
+ def usage():return int(dict(s.split() for s in p.read_text().splitlines())['usage_usec'])
+ before=usage(); t=time.monotonic(); time.sleep(5); print('actual_busy_cpus_5s',(usage()-before)/1e6/(time.monotonic()-t))
 print('SUMO_OPTIONS', '\\n'.join(s for s in subprocess.check_output(['/root/miniconda3/bin/sumo','--help'],text=True).splitlines() if 'rng' in s.lower() or 'precision' in s.lower()))
 for s in ('/root/wmcalib/data','/root/sumocf20261031','/root/coopaudit20261031'):
  p=Path(s); print(s, sorted(q.name for q in p.iterdir() if not any(x in q.name.lower() for x in '''+repr(DENIED)+''')) if p.is_dir() else 'MISSING')
+for s in ('/root/sumocf20261031/STATUS.json','/root/sumocf20261031/SUPERVISOR.json'):
+ p=Path(s); print(s,p.read_text() if p.exists() else 'PENDING')
 '''))
     elif a.action == 'inputs':
         print(ssh('''from pathlib import Path
@@ -58,6 +67,23 @@ print(p)
             p = HERE/name
             if p.exists():
                 print(scp(p, f'gpuR:{REMOTE}/{name}'))
+        print(scp('E:/agent-work/c4-c1closed/tools/c1closed/labels.py',f'gpuR:{REMOTE}/labels.py'))
+        print(scp('E:/agent-work/c4-c1closed/tools/c1closed/aggregates.py',f'gpuR:{REMOTE}/aggregates.py'))
+        print(scp('E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md',f'gpuR:{REMOTE}/REGISTRATION_INPUT.md'))
+    elif a.action == 'references':
+        print(ssh(f'''from pathlib import Path
+p=Path({REMOTE!r})/'reference'; assert p.is_dir()
+for s in range(969400,969424):
+ (p/f's{{s}}_native').mkdir(exist_ok=True)
+'''))
+        # Remote-to-remote via the local transport: no source-machine allocation.
+        for seed in range(969400,969424):
+            for n in ('result.json','traj_base.npz'):
+                p=subprocess.run(['scp','-3','-o','BatchMode=yes','-o','ConnectTimeout=15',
+                   f'cpuQ:/home/ubuntu/wmdata20261031/jobs/s{seed}_native/{n}',
+                   f'gpuR:{REMOTE}/reference/s{seed}_native/{n}'],capture_output=True,text=True,timeout=180)
+                if p.returncode:raise RuntimeError(p.stdout+p.stderr)
+            print('reference',seed,flush=True)
     elif a.action == 'run':
         phase = a.phase
         assert phase in ('tests', 'preflight', 'canary', 'full')
@@ -66,8 +92,9 @@ from pathlib import Path
 r=Path({REMOTE!r}); assert r.is_dir()
 env={{**os.environ,'CUDA_VISIBLE_DEVICES':'','OMP_NUM_THREADS':'1','MKL_NUM_THREADS':'1','OPENBLAS_NUM_THREADS':'1','PATH':'/root/miniconda3/bin:'+os.environ['PATH']}}
 cmd=['nice','-n','19','/root/miniconda3/bin/python','-B','-u',str(r/'run.py'),{phase!r}]
-if {phase!r}=='full':
- with (r/'logs/full.log').open('x') as f:
+if {phase!r} in ('full','canary'):
+ import time
+ with (r/'logs'/({phase!r}+'_'+str(time.time_ns())+'.log')).open('x') as f:
   p=subprocess.Popen(cmd,stdout=f,stderr=subprocess.STDOUT,env=env,start_new_session=True)
  print(json.dumps(dict(pid=p.pid,start_ticks=Path(f'/proc/{{p.pid}}/stat').read_text().split()[21])))
 else:
@@ -81,11 +108,16 @@ r=Path({REMOTE!r}); print('load',os.getloadavg())
 for n in ('STATUS.json','COMPLETE.json','CANARY.json','FAILURE.json'):
  p=r/n; print(n,p.read_text() if p.exists() else 'PENDING')
 print('results',len(list((r/'jobs').glob('*/result.json'))))
+for p in (r/'jobs').glob('*/failure.json'):
+ print(str(p),p.read_text())
+for n in ('canary.log','full.log'):
+ p=r/'logs'/n
+ if p.exists():print(n,p.read_text())
 '''))
     else:
         dest = HERE/'evidence'
         assert dest.is_dir()
-        for n in ('STATUS.json','COMPLETE.json','CANARY.json','PREFLIGHT.json','accounting.jsonl'):
+        for n in ('STATUS.json','COMPLETE.json','CANARY.json','PREFLIGHT_BINDING.json','accounting.jsonl'):
             print(scp(f'gpuR:{REMOTE}/{n}', dest/n))
 
 
