@@ -49,7 +49,7 @@ def available_memory(proc=Path('/proc'), cgroup=Path('/sys/fs/cgroup')):
 def checkpoint_labels(variant, now):
     # Endpoint tasks intentionally have no600s bins/clocks and cannot enter
     # the full distribution scorer, even after a K8 world becomes complete.
-    if variant == 'WM2_HDV60':
+    if variant in ('WM2_HDV60', 'C'):
         return []
     return [label for label, clock in CHECKPOINTS.items() if now >= clock]
 
@@ -131,11 +131,12 @@ def main():
     if root.parent != Path('/root/rbeval20261031/int'):
         raise ValueError('INT panel roots only')
     spec = json.loads((root/'SPEC.json').read_text())
-    if spec['owner'] != 'S-RB-INT' or spec['variant'] not in ('FULL', 'WM2_HDV60'):
+    if spec['owner'] != 'S-RB-INT' or spec['variant'] not in ('FULL', 'WM2_HDV60', 'C'):
         raise ValueError('never supervise peer inference')
     runtime = Path(spec['runtime'])
     workers = json.loads((root/'PANEL_PROCESS.json').read_text())['workers']
-    entry = runtime/'tools/rbint'/('evaluate_WM2_60.py' if spec['variant']=='WM2_HDV60' else 'evaluate_FULL.py')
+    entry_name = {'WM2_HDV60': 'evaluate_WM2_60.py', 'C': 'evaluate_C.py', 'FULL': 'evaluate_FULL.py'}[spec['variant']]
+    entry = runtime/'tools/rbint'/entry_name
     if len(workers) != 3 or any(str(entry) not in r['argv'] for r in workers):
         raise ValueError('worker ownership binding differs')
     for r in workers:
@@ -167,8 +168,9 @@ def main():
             complete = verify_completion(root)
             if not running and not complete:
                 raise RuntimeError('INT worker terminal before complete panel; no automatic retry')
-            if complete and spec['variant'] == 'WM2_HDV60':
-                save(root/'MONITOR_COMPLETE.json', dict(unix=time.time(), endpoint_only=True,
+            if complete and spec['variant'] in ('WM2_HDV60', 'C'):
+                save(root/'MONITOR_COMPLETE.json', dict(unix=time.time(), endpoint_only=spec['variant']=='WM2_HDV60',
+                    external_corrected_scoring=spec['variant']=='C',
                     tasks=160, peak_own_gpu_mib=peak, inference_only=True,
                     complete_hashes={str(p.relative_to(root)):digest(p) for i in range(3)
                         for p in (root/f'shard{i}').glob('w*_k*.json')}))

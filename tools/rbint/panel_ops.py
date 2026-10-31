@@ -10,6 +10,8 @@ import re
 
 from tools.rbint.remote import ssh
 
+SHARED = Path('E:/agent-work/rb-shared/evalclaims')
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -21,14 +23,26 @@ def main():
     parser.add_argument('--recipe', choices=('wm_phys.toml', 'wm_phys_cpu.toml'), default='wm_phys.toml')
     parser.add_argument('--reason', default='')
     parser.add_argument('--baseline-endpoint', action='store_true')
+    parser.add_argument('--variant', choices=('FULL', 'C'), default='FULL')
     args = parser.parse_args()
+    fitted_point = args.variant == 'C'
+    if fitted_point and (args.name != 'WM-PHYS-C2' or args.host != 'gpuR' or args.baseline_endpoint):
+        raise ValueError('INT fitted-point handover is exactly C2 on gpuR')
     if args.baseline_endpoint and args.name != 'WM2-HDV60':
         raise ValueError('baseline endpoint has its own exact INT namespace')
-    if not args.baseline_endpoint and not re.fullmatch(r'WM-PHYS-FULL-[A-Za-z0-9_.-]+', args.name):
+    if not args.baseline_endpoint and not fitted_point and not re.fullmatch(r'WM-PHYS-FULL-[A-Za-z0-9_.-]+', args.name):
         raise ValueError('INT owns FULL candidates only; A/B/C belong to runners')
     if not re.fullmatch(r'/root/rbeval20261031/phys_code_[a-f0-9]{12}', args.runtime):
         raise ValueError('use an immutable INT stage')
     root = '/root/rbeval20261031/int/'+args.name
+    published = None
+    if fitted_point:
+        shared = SHARED
+        published = json.loads((shared/'WM-PHYS-C2.runa.json').read_text(encoding='utf-8'))
+        assert published['runtime_root'] == args.runtime and published['recipe_variant'] == 'C'
+        if args.action != 'canary':
+            claim = json.loads((shared/'WM-PHYS-C2.claim').read_text(encoding='utf-8'))
+            assert claim['owner'] == 'S-RB-INT' and claim['host'] == 'gpuR'
     common = f'''
 from pathlib import Path
 import hashlib,json,os,signal,subprocess,time
@@ -37,7 +51,7 @@ device={args.device!r};recipe={args.recipe!r};baseline_endpoint={args.baseline_e
 if baseline_endpoint: recipe='wm2_original'
 config=(Path('/root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml') if baseline_endpoint else runtime/'configs'/recipe)
 model_runtime=Path('/root/autodl-tmp/c4/setupaudit20261030/fix') if baseline_endpoint else runtime
-entry=runtime/'tools/rbint'/('evaluate_WM2_60.py' if baseline_endpoint else 'evaluate_FULL.py')
+entry=runtime/'tools/rbint'/('evaluate_WM2_60.py' if baseline_endpoint else {('evaluate_C.py' if fitted_point else 'evaluate_FULL.py')!r})
 def save(path,data):
  with path.open('x') as f: json.dump(data,f,indent=2)
 def sha(path): return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -80,6 +94,22 @@ def launch(i,canary):
  return dict(**incarnation(p.pid),argv=argv,unix=time.time())
 '''
     if args.action == 'canary':
+        if fitted_point:
+            # Never steal an active or claimed runner job. Verify the original
+            # immutable sources and resource admission before exclusive handover.
+            preflight = common + f'''
+expected={published['sources']!r}
+assert not root.exists(), 'preserve existing INT root'
+assert not (root.parent.parent/'runa/WM-PHYS-C2').exists(), 'RUNA root already exists'
+for path,expected_sha in expected.items(): assert sha(Path(path))==expected_sha, path
+assert sha(Path({published['smoke_receipt']!r}))=={published['smoke_sha256']!r}
+print(json.dumps(admit(True)))
+'''
+            print(ssh(args.host, preflight, timeout=60))
+            with (shared/'WM-PHYS-C2.claim').open('x', encoding='utf-8') as stream:
+                json.dump(dict(owner='S-RB-INT', host='gpuR', root=root,
+                    source_commit=published['commit'], original_published_spec=published,
+                    reason='unclaimed C2; RUNA sequential A2 queue; no forecasts repeated'), stream, indent=1)
         code = '''
 assert runtime.is_dir() and (runtime/'INT_STAGE.json').is_file()
 resources=admit(True)
@@ -96,7 +126,7 @@ else:
  gate=json.loads(smoke.read_text());assert gate['passed'] and gate['recipe_sha256']==sha(config)
  gate_sha=sha(smoke)
 assert root.parent.parent.is_dir();root.parent.mkdir(exist_ok=True);root.mkdir()
-save(root/'SPEC.json',dict(owner='S-RB-INT',host='''+repr(args.host)+''',runtime=str(runtime),model_runtime=str(model_runtime),stage=json.loads((runtime/'INT_STAGE.json').read_text()),smoke_sha256=gate_sha,variant='WM2_HDV60' if baseline_endpoint else 'FULL',tasks=160,world_order='reserved-first',training=False,device=device,recipe=recipe,resources=resources))
+save(root/'SPEC.json',dict(owner='S-RB-INT',host='''+repr(args.host)+''',runtime=str(runtime),model_runtime=str(model_runtime),stage=json.loads((runtime/'INT_STAGE.json').read_text()),smoke_sha256=gate_sha,variant='WM2_HDV60' if baseline_endpoint else '''+repr(args.variant)+''',tasks=160,world_order='reserved-first',training=False,device=device,recipe=recipe,resources=resources))
 save(root/'CANARY_CLAIM.json',dict(time=time.time(),automatic_retry=False))
 r=launch(0,True);save(root/'CANARY_PROCESS.json',r);print(json.dumps(r))
 '''

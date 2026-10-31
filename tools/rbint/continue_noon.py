@@ -32,7 +32,7 @@ MODEL_SOURCE = '22cc32f65a80af482a1a277c5f22377fa727d0a3'
 VARIANTS = {
     'A2': ('gpuA', '/root/rbeval20261031/runa/WM-PHYS-A2'),
     'B2': ('gpuR', '/root/rbeval20261031/runb/WM-PHYS-B2'),
-    'C2': ('gpuA', '/root/rbeval20261031/runa/WM-PHYS-C2'),
+    'C2': ('gpuR', '/root/rbeval20261031/int/WM-PHYS-C2'),
     'FULL-v3': ('gpuA', '/root/rbeval20261031/int/WM-PHYS-FULL-v3-gpu'),
     'FULL-v4': ('gpuA', '/root/rbeval20261031/int/WM-PHYS-FULL-v4-gpu')}
 
@@ -112,6 +112,41 @@ def snapshot(host, roots, target, round_dir, name, optional=False):
 def next_wake(now):
     future = [x for x in (INTERIM, FREEZE, FINAL) if x > now]
     return min([now+1200, *future])
+
+
+def owner_pause(directory, *, deadline=DEADLINE):
+    """Acknowledge owner edits ONLY between completed publication transactions.
+
+    Immutable PAUSE_<token>.json / PAUSED_<token>.json / RESUME_<token>.json
+    receipts avoid deleting markers or signalling any process. The owner waits
+    for PAUSED before editing, commits, then supplies the matching RESUME.
+    Normal branch/staged/source guards still run before the next collection.
+    """
+    for request in sorted(directory.glob('PAUSE_*.json')):
+        token = request.stem.removeprefix('PAUSE_')
+        resume = directory/f'RESUME_{token}.json'
+        data = load(request)
+        assert data['owner'] == 'S-RB-INT' and data['reason']
+        if resume.exists():
+            assert load(resume)['owner'] == 'S-RB-INT'
+            continue
+        ack = directory/f'PAUSED_{token}.json'
+        if not ack.exists():
+            save_new(ack, dict(owner='S-RB-INT', pid=os.getpid(), unix=time.time(),
+                               request_sha256=digest(request), between_publications=True))
+        while not resume.exists():
+            if time.time() >= deadline:
+                raise RuntimeError('owner pause exceeded publication deadline')
+            time.sleep(1)
+        assert load(resume)['owner'] == 'S-RB-INT'
+
+
+def idle_until(wake, directory):
+    # Check the owner-edit latch during sleep as well as before collection.
+    # Acknowledgement never interrupts scoring or a Git publication transaction.
+    while time.time() < min(wake, DEADLINE):
+        owner_pause(directory)
+        time.sleep(max(.01, min(5, wake-time.time(), DEADLINE-time.time())))
 
 
 def update_handoff(text, block):
@@ -330,11 +365,12 @@ def main():
         if args.resume_publication:
             state = state_from_publication(args.resume_publication)
         while time.time() < DEADLINE:
+            owner_pause(STATE)
             state = collect(state)
             if state.get('final'):
                 save_new(STATE/'COMPLETE.json', dict(unix=time.time(), state=state))
                 return
-            time.sleep(max(1, next_wake(time.time())-time.time()))
+            idle_until(next_wake(time.time()), STATE)
         raise RuntimeError('hard publication deadline reached')
     except Exception as error:
         save_new(STATE/'STOP.json', dict(unix=time.time(), error=repr(error), state=state,

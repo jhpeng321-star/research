@@ -105,3 +105,48 @@ def test_endpoint_monitor_never_sends_short_schema_to_distribution_scorer():
     from tools.rbint.panel_monitor import DEADLINE
     assert checkpoint_labels('WM2_HDV60', DEADLINE) == []
     assert checkpoint_labels('FULL', DEADLINE) == ['04', '08']
+    assert checkpoint_labels('C', DEADLINE) == []  # corrected local scorer owns C2
+
+
+@pytest.mark.parametrize('action', ['canary', 'continue', 'monitor', 'status'])
+def test_unstarted_C2_has_exclusive_int_handover_and_frozen_C_entry(tmp_path, monkeypatch, action):
+    from tools.rbint import panel_ops
+    runtime = '/root/rbeval20261031/phys_code_4015b6412cdf'
+    spec = dict(runtime_root=runtime, recipe_variant='C', sources={'/frozen': 'sha'},
+                smoke_receipt='/smoke', smoke_sha256='smoke-sha', commit='4015b641')
+    (tmp_path/'WM-PHYS-C2.runa.json').write_text(json.dumps(spec))
+    if action != 'canary':
+        (tmp_path/'WM-PHYS-C2.claim').write_text(json.dumps(dict(owner='S-RB-INT', host='gpuR')))
+    monkeypatch.setattr(panel_ops, 'SHARED', tmp_path)
+    seen = []
+    def inspect_only(host, code, **kwargs):
+        assert host == 'gpuR'
+        compile(code, '<C2 handover>', 'exec')
+        assert 'evaluate_C.py' in code
+        seen.append(code)
+        return 'compile-only'
+    monkeypatch.setattr(panel_ops, 'ssh', inspect_only)
+    monkeypatch.setattr(sys, 'argv', ['panel_ops', action, '--runtime', runtime,
+        '--name', 'WM-PHYS-C2', '--host', 'gpuR', '--variant', 'C'])
+    panel_ops.main()
+    claim = json.loads((tmp_path/'WM-PHYS-C2.claim').read_text())
+    assert claim['owner'] == 'S-RB-INT' and claim['host'] == 'gpuR'
+    assert len(seen) == (2 if action == 'canary' else 1)
+
+
+def test_C2_handover_never_overwrites_existing_runner_claim(tmp_path, monkeypatch):
+    from tools.rbint import panel_ops
+    runtime = '/root/rbeval20261031/phys_code_4015b6412cdf'
+    spec = dict(runtime_root=runtime, recipe_variant='C', sources={}, smoke_receipt='/smoke',
+                smoke_sha256='sha', commit='4015b641')
+    (tmp_path/'WM-PHYS-C2.runa.json').write_text(json.dumps(spec))
+    path = tmp_path/'WM-PHYS-C2.claim'
+    path.write_text('{"owner":"S-RB-RUNA"}')
+    original = path.read_bytes()
+    monkeypatch.setattr(panel_ops, 'SHARED', tmp_path)
+    monkeypatch.setattr(panel_ops, 'ssh', lambda *a, **k: 'preflight-only')
+    monkeypatch.setattr(sys, 'argv', ['panel_ops', 'canary', '--runtime', runtime,
+        '--name', 'WM-PHYS-C2', '--host', 'gpuR', '--variant', 'C'])
+    with pytest.raises(FileExistsError):
+        panel_ops.main()
+    assert path.read_bytes() == original

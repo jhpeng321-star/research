@@ -20,7 +20,10 @@ still live (26tasks/three complete K8 worlds at06:29). No cpuQ dependency.
 - FULL-v1 LIVE source4015b641; own333463/333464/333465, monitor335983,
   gpuA `/root/rbeval20261031/int/WM-PHYS-FULL-v1`. Saved-ID crosswalk unverified;
   newer FULL-v3 removes that dependence. Never redispatch either source.
-- A2/C2 owned by RUNA; B2 owned by RUNB. Shared `rb-shared/evalclaims/` binds claims.
+- A2 owned by RUNA; B2 owned by RUNB; C2 handover below. Shared claims bind ownership.
+- C2 HANDOVER PREPARED: still unclaimed; INT exclusive gpuR preflight/claim uses
+  published4015b641 recipe and NEW `/root/rbeval20261031/int/WM-PHYS-C2`.
+  Design `docs/rbint/C2_HANDOVER_DESIGN.md`; no duplicate inference.36CPU PASS.
   `E:/agent-work/rb-shared/evalclaims/WM-PHYS-A2.runa.json`
   `E:/agent-work/rb-shared/evalclaims/WM-PHYS-C2.runa.json`
   `E:/agent-work/rb-shared/evalclaims/WM-PHYS-B2.runb.json`
