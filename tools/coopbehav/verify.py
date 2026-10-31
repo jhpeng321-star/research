@@ -46,6 +46,8 @@ def verify_report(path):
         for e in ee:
             assert e["start_s"]<=e["end_s"]
             assert set(e["members"])
+            if e["behaviour"] in ("yield_to_merge","gap_creation"):
+                assert e["opening_m"]>0 and e["ballistic_braking_contribution_m"]>0
         geometry={}
         for b in ("yield_to_merge","gap_creation"):
             selected=[e for e in ee if e["behaviour"]==b]
@@ -58,6 +60,8 @@ def verify_report(path):
         cells=Counter((records[e["episode"]]["meta"].get("penetration"),
                        records[e["episode"]]["meta"].get("demand_vph")) for e in eps)
         by_arm[arm]=dict(**s,geometry=geometry,
+            registered_group_event_counts=dict(Counter(e["behaviour"] for e in ee
+                if set(e.get("intervention_members",[])) & set(e["members"]))),
             unique_worlds=len({e["seed"] for e in eps}),
             cells=[dict(penetration=p,demand_vph=d,count=n) for (p,d),n in cells.items()])
     discovery=read_json(root/"discovery.json"); signatures=read_json(root/"signatures.json")

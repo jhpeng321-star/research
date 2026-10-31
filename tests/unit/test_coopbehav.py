@@ -43,15 +43,16 @@ def test_member_release_support_and_acceptance_censoring():
     assert ev["reference_acceptance_right_censored"]
 
 
-def test_policy_mean_reference_is_validated_and_not_relabelled_native_release():
+@pytest.mark.parametrize("kind",["policy_mean_intervention","policy_mean_reference"])
+def test_policy_mean_reference_is_validated_and_not_relabelled_native_release(kind):
     a,b=opening(),opening(False,True)
     for r in b.rows: r["c"]=replace(r["c"],controller="policy_mean",issued=0.,policy_mean=0.)
-    ev=events(a,"yield_to_merge",reference=b,released_members=["c"],reference_kind="policy_mean_intervention")[0]
+    ev=events(a,"yield_to_merge",reference=b,released_members=["c"],reference_kind=kind)[0]
     assert ev["evidence"]=="paired_policy_mean_yield_support"
-    assert ev["reference_intervention"]=="policy_mean_intervention"
+    assert ev["reference_intervention"]==kind
     b.rows[1]["c"]=replace(b.rows[1]["c"],issued=-1.)
     with pytest.raises(ValueError,match="differs from policy mean"):
-        detect(a,b,["c"],"policy_mean_intervention")
+        detect(a,b,["c"],kind)
 
 
 def test_no_earlier_acceptance_is_not_supported_yield():

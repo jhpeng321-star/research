@@ -65,7 +65,7 @@ def validate_release(actual: Tape, reference: Tape, members, reference_kind="nat
                 if reference_kind=="native_member_release":
                     if v.controller not in (0,"native") or v.issued is not None:
                         raise ValueError("Reference member has an external command or unknown native status")
-                elif reference_kind=="policy_mean_intervention":
+                elif reference_kind in ("policy_mean_intervention","policy_mean_reference"):
                     if v.controller=="policy_mean":
                         if v.policy_mean is None or v.issued is None or not np.isfinite(v.policy_mean):
                             raise ValueError("Policy-mean baseline needs its recorded unperturbed command")
@@ -305,7 +305,7 @@ def detect(tape, reference=None, released_members=(), reference_kind="native_mem
         for e in events:
             e["reference_intervention"]=reference_kind
             e["intervention_members"]=list(released_members)
-            if reference_kind=="policy_mean_intervention" and e["evidence"].startswith("paired_release_"):
+            if reference_kind in ("policy_mean_intervention","policy_mean_reference") and e["evidence"].startswith("paired_release_"):
                 e["evidence"]=e["evidence"].replace("paired_release_","paired_policy_mean_",1)
     exposure=sum((tape.time[i]-tape.time[i-1])*sum(v.cav for j,v in tape.rows[i-1].items()
                  if j in tape.rows[i]) for i in range(1,len(tape.time)))

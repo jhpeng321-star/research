@@ -44,7 +44,8 @@ def publish(config,entry):
         if r.returncode: raise RuntimeError(r.stderr or r.stdout)
         return r.stdout
     # Observe status/diff/history before every step commit; never stage peer files.
-    if not git("status","--porcelain","--",relative).strip(): return
+    if not git("status","--porcelain","--",relative).strip():
+        entry["commit_state"]="already_committed"; return
     git("status","--short"); git("diff","--",relative); git("log","--oneline","-10")
     if git("diff","--cached","--name-only").strip():
         entry["commit_state"]="waiting_for_clean_index"; return
@@ -54,6 +55,24 @@ def publish(config,entry):
         raise RuntimeError("Unexpected staged path; no commit performed")
     git("commit","-m",f"S-COOPBEHAV: paired trace report {sha[:12]}")
     entry["commit"]=git("rev-parse","HEAD").strip()
+
+
+def report_inventory(host):
+    from .remote import HOSTS,execute
+    _,root=HOSTS[host]
+    code=f'''import json,re
+from pathlib import Path
+root=Path({root!r}); reports=[]
+for receipt in sorted(root.glob('paired_*_PID.json')):
+ match=re.fullmatch(r'paired_([0-9a-f]{{64}})_PID.json',receipt.name)
+ if not match: continue
+ sha=match.group(1); r=json.loads(receipt.read_text()); proc=Path(f"/proc/{{r['pid']}}/stat")
+ done=(root/('paired_'+sha)/'COMPLETE.json').is_file()
+ live=proc.exists() and proc.read_text().split()[21]==r['start_ticks']
+ reports.append(dict(sha256=sha,state='complete' if done else 'running' if live else 'failed'))
+print(json.dumps(reports))
+'''
+    return json.loads(execute(host,code))
 
 
 def remote_poll(host,path):
@@ -161,9 +180,26 @@ print(json.dumps(build_source_index({kind!r},{root!r},{(ownroot+'/source_'+kind)
             status["remote_indices"].append(dict(host=host,**remote_poll(host,entry["index"])))
         except Exception as exc:
             status["sources"].append(dict(host=host,root=root,state="blocked",reason=str(exc)))
-    for entry in status["remote_indices"]:
-        try: publish(config,entry)
-        except Exception as exc: entry["publish_error"]=str(exc)
+    ledger_path=out/"PUBLISHED.json"
+    ledger=read_json(ledger_path) if ledger_path.is_file() else {}
+    hosts={e["host"] for e in status["remote_indices"]}
+    status["owned_reports"]=[]
+    for host in sorted(hosts):
+        try:
+            for raw in report_inventory(host):
+                entry=dict(host=host,**raw); key=host+":"+entry["sha256"]
+                if key in ledger:
+                    entry["published"]=ledger[key]
+                elif entry["state"]=="complete":
+                    try:
+                        publish(config,entry)
+                        if entry.get("verified") and entry.get("commit_state")!="waiting_for_clean_index":
+                            ledger[key]=entry.get("commit",entry.get("commit_state",entry.get("published")))
+                    except Exception as exc: entry["publish_error"]=str(exc)
+                status["owned_reports"].append(entry)
+        except Exception as exc:
+            status["owned_reports"].append(dict(host=host,state="inventory_blocked",reason=str(exc)))
+    write_json(ledger_path,ledger)
     write_json(out/"POLL_STATUS.json",status)
     return status
 

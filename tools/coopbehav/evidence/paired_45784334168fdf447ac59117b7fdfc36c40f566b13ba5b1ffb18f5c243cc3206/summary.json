@@ -1,0 +1,67 @@
+{
+  "source": "paired",
+  "interpretation": "Descriptive; event signs are not positive C_G evidence",
+  "controllers": {
+    "sumocf_d9042cc5a05e": {
+      "episodes": 24,
+      "exposure_cav_s": 26025.0,
+      "exposure_episode_s": 1200.0,
+      "ramp_fit_gap_count": 18,
+      "behaviours": {
+        "yield_to_merge": {
+          "count": 0,
+          "member_event_count": 0,
+          "eligible_episodes": 24,
+          "eligible_exposure_cav_s": 26025.0,
+          "paired_supported_count": 0,
+          "events_per_cav_hour": 0.0,
+          "member_events_per_cav_hour": 0.0,
+          "events_per_episode_hour": 0.0
+        },
+        "gap_creation": {
+          "count": 180,
+          "member_event_count": 180,
+          "eligible_episodes": 24,
+          "eligible_exposure_cav_s": 26025.0,
+          "paired_supported_count": 0,
+          "events_per_cav_hour": 24.89913544668588,
+          "member_events_per_cav_hour": 24.89913544668588,
+          "events_per_episode_hour": 540.0
+        },
+        "cross_lane_hold": {
+          "count": 9,
+          "member_event_count": 18,
+          "eligible_episodes": 24,
+          "eligible_exposure_cav_s": 26025.0,
+          "paired_supported_count": 0,
+          "events_per_cav_hour": 1.244956772334294,
+          "member_events_per_cav_hour": 2.489913544668588,
+          "events_per_episode_hour": 27.0
+        },
+        "wave_damping": {
+          "count": 732,
+          "member_event_count": 732,
+          "eligible_episodes": 24,
+          "eligible_exposure_cav_s": 26025.0,
+          "paired_supported_count": 39,
+          "events_per_cav_hour": 101.25648414985591,
+          "member_events_per_cav_hour": 101.25648414985591,
+          "events_per_episode_hour": 2196.0
+        }
+      }
+    }
+  },
+  "episodes": 24,
+  "events": 921,
+  "rates": "events/CAV-hour; member-events/CAV-hour; groups additionally events/episode-hour",
+  "examples": "largest gap opening, otherwise longest event, first source order breaks ties",
+  "missing_behaviours": "Zero observed events is conditional on recorded coverage, not proof of absence",
+  "analysis_source_sha256": {
+    "report.py": "eb49f0eb99a61b68f6b5a43461528b73bef57d5c09c30740fee230153268db6c",
+    "io.py": "f9221df9d6428c6d5b7710b807a590aee61c61df5a075b1292833286b393c88c",
+    "detectors.py": "d2574b041a24de95e7727fc71f3f260eb427f463dc45311273dff609dd11a078",
+    "discovery.py": "bffa342810c5d372e8a20606f41cb0dccf0c615e0c14e3561d0aa38d7f710f9f"
+  },
+  "source_manifest_sha256": {},
+  "pair_index_sha256": "45784334168fdf447ac59117b7fdfc36c40f566b13ba5b1ffb18f5c243cc3206"
+}

@@ -1,0 +1,1646 @@
+{
+  "interpretation": "Descriptive source-separated rates; repeated probe designs are not independent worlds",
+  "reports": [
+    {
+      "source": "WMDATA_final",
+      "path": "tools\\coopbehav\\evidence\\WMDATA_final",
+      "verified": true,
+      "episodes": 80,
+      "events": 8810,
+      "controllers": {
+        "ctrl0": {
+          "episodes": 40,
+          "exposure_cav_s": 182159.0,
+          "exposure_episode_s": 12000.0,
+          "ramp_fit_gap_count": 118,
+          "behaviours": {
+            "yield_to_merge": {
+              "count": 4,
+              "member_event_count": 4,
+              "eligible_episodes": 40,
+              "eligible_exposure_cav_s": 182159.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 0.07905181736834305,
+              "member_events_per_cav_hour": 0.07905181736834305,
+              "events_per_episode_hour": 1.2
+            },
+            "gap_creation": {
+              "count": 1008,
+              "member_event_count": 1008,
+              "eligible_episodes": 40,
+              "eligible_exposure_cav_s": 182159.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 19.921057976822446,
+              "member_events_per_cav_hour": 19.921057976822446,
+              "events_per_episode_hour": 302.4
+            },
+            "cross_lane_hold": {
+              "count": 169,
+              "member_event_count": 340,
+              "eligible_episodes": 40,
+              "eligible_exposure_cav_s": 182159.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 3.3399392838124933,
+              "member_events_per_cav_hour": 6.719404476309158,
+              "events_per_episode_hour": 50.7
+            },
+            "wave_damping": {
+              "count": 2124,
+              "member_event_count": 2124,
+              "eligible_episodes": 40,
+              "eligible_exposure_cav_s": 182159.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 41.976515022590156,
+              "member_events_per_cav_hour": 41.976515022590156,
+              "events_per_episode_hour": 637.2
+            }
+          },
+          "geometry": {
+            "yield_to_merge": {
+              "opening_m": {
+                "n": 4,
+                "min": 0.37078094482421875,
+                "median": 7.233684062957764,
+                "max": 13.349927425384521
+              },
+              "headway_change_s": {
+                "n": 4,
+                "min": 0.3670544423678628,
+                "median": 53.89975861844376,
+                "max": 150.88551292942205
+              },
+              "ballistic_braking_contribution_m": {
+                "n": 4,
+                "min": 0.11191633343696594,
+                "median": 1.0156285911798477,
+                "max": 3.0413169860839844
+              },
+              "braking_contribution_over_opening": {
+                "n": 4,
+                "min": 0.026306077860110126,
+                "median": 0.20061014311352585,
+                "max": 1.7543056441490565
+              },
+              "end_reasons": {
+                "accepted": 4
+              }
+            },
+            "gap_creation": {
+              "opening_m": {
+                "n": 1008,
+                "min": 0.000213623046875,
+                "median": 0.2897834777832031,
+                "max": 73.62326049804688
+              },
+              "headway_change_s": {
+                "n": 1007,
+                "min": -398.39935732629283,
+                "median": 0.11893296815452059,
+                "max": 155.67007598762967
+              },
+              "ballistic_braking_contribution_m": {
+                "n": 1008,
+                "min": 2.765655517578125e-05,
+                "median": 0.025786995887756348,
+                "max": 140.4973602294922
+              },
+              "braking_contribution_over_opening": {
+                "n": 1008,
+                "min": 0.0006158038499490705,
+                "median": 0.11436155424412317,
+                "max": 758.65625
+              },
+              "end_reasons": {
+                "identity_or_lane_censored": 138,
+                "gap_closed": 257,
+                "braking_deficit_closed": 556,
+                "slot_changed_censored": 41,
+                "observation_end_censored": 16
+              }
+            }
+          },
+          "registered_group_event_counts": {},
+          "unique_worlds": 40,
+          "cells": [
+            {
+              "penetration": 0.05,
+              "demand_vph": 1900,
+              "count": 4
+            },
+            {
+              "penetration": 0.05,
+              "demand_vph": 2400,
+              "count": 3
+            },
+            {
+              "penetration": 0.05,
+              "demand_vph": 2700,
+              "count": 4
+            },
+            {
+              "penetration": 0.1,
+              "demand_vph": 1900,
+              "count": 3
+            },
+            {
+              "penetration": 0.1,
+              "demand_vph": 2400,
+              "count": 3
+            },
+            {
+              "penetration": 0.1,
+              "demand_vph": 2700,
+              "count": 3
+            },
+            {
+              "penetration": 0.2,
+              "demand_vph": 1900,
+              "count": 3
+            },
+            {
+              "penetration": 0.2,
+              "demand_vph": 2400,
+              "count": 3
+            },
+            {
+              "penetration": 0.2,
+              "demand_vph": 2700,
+              "count": 3
+            },
+            {
+              "penetration": 0.4,
+              "demand_vph": 1900,
+              "count": 4
+            },
+            {
+              "penetration": 0.4,
+              "demand_vph": 2400,
+              "count": 3
+            },
+            {
+              "penetration": 0.4,
+              "demand_vph": 2700,
+              "count": 4
+            }
+          ]
+        },
+        "mappo": {
+          "episodes": 40,
+          "exposure_cav_s": 184676.5,
+          "exposure_episode_s": 12000.0,
+          "ramp_fit_gap_count": 112,
+          "behaviours": {
+            "yield_to_merge": {
+              "count": 11,
+              "member_event_count": 11,
+              "eligible_episodes": 40,
+              "eligible_exposure_cav_s": 184676.5,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 0.21442901506147236,
+              "member_events_per_cav_hour": 0.21442901506147236,
+              "events_per_episode_hour": 3.3
+            },
+            "gap_creation": {
+              "count": 1493,
+              "member_event_count": 1493,
+              "eligible_episodes": 40,
+              "eligible_exposure_cav_s": 184676.5,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 29.10386540788893,
+              "member_events_per_cav_hour": 29.10386540788893,
+              "events_per_episode_hour": 447.9
+            },
+            "cross_lane_hold": {
+              "count": 174,
+              "member_event_count": 349,
+              "eligible_episodes": 40,
+              "eligible_exposure_cav_s": 184676.5,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 3.391877147336017,
+              "member_events_per_cav_hour": 6.803247841495804,
+              "events_per_episode_hour": 52.2
+            },
+            "wave_damping": {
+              "count": 3827,
+              "member_event_count": 3827,
+              "eligible_episodes": 40,
+              "eligible_exposure_cav_s": 184676.5,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 74.60180369456862,
+              "member_events_per_cav_hour": 74.60180369456862,
+              "events_per_episode_hour": 1148.1
+            }
+          },
+          "geometry": {
+            "yield_to_merge": {
+              "opening_m": {
+                "n": 11,
+                "min": 0.17205810546875,
+                "median": 10.673625707626343,
+                "max": 125.06168746948242
+              },
+              "headway_change_s": {
+                "n": 9,
+                "min": 0.21262369444016116,
+                "median": 4.347482849304342,
+                "max": 290.07837808498647
+              },
+              "ballistic_braking_contribution_m": {
+                "n": 11,
+                "min": 0.036256082355976105,
+                "median": 0.2245701253414154,
+                "max": 147.98185443878174
+              },
+              "braking_contribution_over_opening": {
+                "n": 11,
+                "min": 0.0029018428960198065,
+                "median": 0.2222319787005238,
+                "max": 1.5693112605341781
+              },
+              "end_reasons": {
+                "accepted": 11
+              }
+            },
+            "gap_creation": {
+              "opening_m": {
+                "n": 1493,
+                "min": 0.0001220703125,
+                "median": 0.5625286102294922,
+                "max": 62.7320442199707
+              },
+              "headway_change_s": {
+                "n": 1478,
+                "min": -314.803590863418,
+                "median": 0.18573915114058726,
+                "max": 1290.5687845127316
+              },
+              "ballistic_braking_contribution_m": {
+                "n": 1493,
+                "min": 5.364418029785156e-06,
+                "median": 0.0742642879486084,
+                "max": 274.3913879394531
+              },
+              "braking_contribution_over_opening": {
+                "n": 1493,
+                "min": 9.192378088639037e-05,
+                "median": 0.19954319979031665,
+                "max": 123.86364508700102
+              },
+              "end_reasons": {
+                "identity_or_lane_censored": 403,
+                "gap_closed": 386,
+                "braking_deficit_closed": 629,
+                "slot_changed_censored": 54,
+                "observation_end_censored": 21
+              }
+            }
+          },
+          "registered_group_event_counts": {},
+          "unique_worlds": 40,
+          "cells": [
+            {
+              "penetration": 0.05,
+              "demand_vph": 1900,
+              "count": 4
+            },
+            {
+              "penetration": 0.05,
+              "demand_vph": 2400,
+              "count": 3
+            },
+            {
+              "penetration": 0.05,
+              "demand_vph": 2700,
+              "count": 4
+            },
+            {
+              "penetration": 0.1,
+              "demand_vph": 1900,
+              "count": 3
+            },
+            {
+              "penetration": 0.1,
+              "demand_vph": 2400,
+              "count": 3
+            },
+            {
+              "penetration": 0.1,
+              "demand_vph": 2700,
+              "count": 3
+            },
+            {
+              "penetration": 0.2,
+              "demand_vph": 1900,
+              "count": 3
+            },
+            {
+              "penetration": 0.2,
+              "demand_vph": 2400,
+              "count": 3
+            },
+            {
+              "penetration": 0.2,
+              "demand_vph": 2700,
+              "count": 3
+            },
+            {
+              "penetration": 0.4,
+              "demand_vph": 1900,
+              "count": 4
+            },
+            {
+              "penetration": 0.4,
+              "demand_vph": 2400,
+              "count": 3
+            },
+            {
+              "penetration": 0.4,
+              "demand_vph": 2700,
+              "count": 4
+            }
+          ]
+        }
+      },
+      "positive_credit_records": 0,
+      "positive_credit_unique_worlds": 0,
+      "positive_credit_seeds": [],
+      "discovery": {
+        "status": "no_positive_c_g",
+        "method": {
+          "name": "standardized_euclidean_average_linkage_silhouette",
+          "scaling": "finite-observation mean and population std (ddof=0); mean imputation",
+          "constant_rule": "std / max_abs <= float64 epsilon (or all zero)",
+          "k_candidates": [],
+          "selection": "maximum silhouette > N*eps; ties within N*eps prefer smaller k; otherwise k=1",
+          "singleton_silhouette": 0.0,
+          "tie_break": "descending C_G, canonical JSON id, row-major linkage ties",
+          "silhouette_scores": [],
+          "selected_k": 0
+        },
+        "features": [],
+        "clusters": [],
+        "assignments": [],
+        "unanticipated_candidates": [],
+        "counts": {
+          "input": 0,
+          "ranked": 0,
+          "clustered": 0
+        }
+      },
+      "output_sha256": {
+        "COMPLETE.json": "ed1db4115f225e53a89d91377915ec2cdcb37b3e0f60c0bbd0605d23e31f4012",
+        "ctrl0_cross_lane_hold.png": "be64e3b04eb35157090644429dfac2335aa96aaa30bed9fc8f0f75459af93c7b",
+        "ctrl0_gap_creation.png": "360f165caa6792a2256f787f22aed85df88fe79f75706d8867124799150dff10",
+        "ctrl0_wave_damping.png": "c10a3ebc49de1e654477682e6ce87acde695aa35620d9c83cfeb1e284ce24610",
+        "ctrl0_yield_to_merge.png": "35698eaf509b620faf203743bd81cf8e956e85cc4ede8868942bfa98cd06e214",
+        "discovery.json": "f73e57a57b8a911876e2af8f6571fdc11e934fea064e92cfa0d01503995e429a",
+        "episodes.json": "9d7d0136c06103f703c4352e4f43cf33a76b261883a7bc797d3735b2deb234a5",
+        "events.jsonl.gz": "cae43b155bde7dc523a3750091c739f8c3ad01818cff0191f8d22f5a0ac71b5d",
+        "inputs.json": "fab9050940d31f394762c2e1ce83922d5bb9b1b9ea5ebf20da342239093cca23",
+        "mappo_cross_lane_hold.png": "a824b635cbcbcc5bc690e8402802e10057319fe241a420325658b62d9193a0ae",
+        "mappo_gap_creation.png": "1a6083855d27ad24a935fce9b755045f76046ce23641b639cf0719aa55875c3b",
+        "mappo_wave_damping.png": "d56701f9cd772f0dd810edf9d886a49855e18db5a86acde80d63483b4e05c1aa",
+        "mappo_yield_to_merge.png": "00094abeeaa1f7d8d8729d07fb49ca5551fb9c40025b7bbd10322d25c1646343",
+        "members.csv": "75a18fd16b866fd43df410fa52b70fa7cd87b6009387ecf37518326ca38b3398",
+        "signatures.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "summary.json": "f49fac43dff1ea381b1ff9d26fbec5dbea94cea4cedc355b36566d3f5f91bddc"
+      }
+    },
+    {
+      "source": "WMDATA2_final",
+      "path": "tools\\coopbehav\\evidence\\WMDATA2_final",
+      "verified": true,
+      "episodes": 100,
+      "events": 16836,
+      "controllers": {
+        "ctrl0": {
+          "episodes": 50,
+          "exposure_cav_s": 330404.0,
+          "exposure_episode_s": 15000.0,
+          "ramp_fit_gap_count": 131,
+          "behaviours": {
+            "yield_to_merge": {
+              "count": 1,
+              "member_event_count": 1,
+              "eligible_episodes": 50,
+              "eligible_exposure_cav_s": 330404.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 0.010895751867410807,
+              "member_events_per_cav_hour": 0.010895751867410807,
+              "events_per_episode_hour": 0.24
+            },
+            "gap_creation": {
+              "count": 2259,
+              "member_event_count": 2259,
+              "eligible_episodes": 50,
+              "eligible_exposure_cav_s": 330404.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 24.61350346848101,
+              "member_events_per_cav_hour": 24.61350346848101,
+              "events_per_episode_hour": 542.16
+            },
+            "cross_lane_hold": {
+              "count": 501,
+              "member_event_count": 1011,
+              "eligible_episodes": 50,
+              "eligible_exposure_cav_s": 330404.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 5.458771685572814,
+              "member_events_per_cav_hour": 11.015605137952326,
+              "events_per_episode_hour": 120.24
+            },
+            "wave_damping": {
+              "count": 4045,
+              "member_event_count": 4045,
+              "eligible_episodes": 50,
+              "eligible_exposure_cav_s": 330404.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 44.07331630367671,
+              "member_events_per_cav_hour": 44.07331630367671,
+              "events_per_episode_hour": 970.8
+            }
+          },
+          "geometry": {
+            "yield_to_merge": {
+              "opening_m": {
+                "n": 1,
+                "min": 11.564032077789307,
+                "median": 11.564032077789307,
+                "max": 11.564032077789307
+              },
+              "headway_change_s": {
+                "n": 1,
+                "min": 51.85631103508306,
+                "median": 51.85631103508306,
+                "max": 51.85631103508306
+              },
+              "ballistic_braking_contribution_m": {
+                "n": 1,
+                "min": 1.773500919342041,
+                "median": 1.773500919342041,
+                "max": 1.773500919342041
+              },
+              "braking_contribution_over_opening": {
+                "n": 1,
+                "min": 0.15336354200783925,
+                "median": 0.15336354200783925,
+                "max": 0.15336354200783925
+              },
+              "end_reasons": {
+                "accepted": 1
+              }
+            },
+            "gap_creation": {
+              "opening_m": {
+                "n": 2259,
+                "min": 9.5367431640625e-05,
+                "median": 0.20839977264404297,
+                "max": 26.409088134765625
+              },
+              "headway_change_s": {
+                "n": 2259,
+                "min": -2135.0544446978765,
+                "median": 0.10558067120891801,
+                "max": 213.47419797884243
+              },
+              "ballistic_braking_contribution_m": {
+                "n": 2259,
+                "min": 6.020069122314453e-06,
+                "median": 0.015495449304580688,
+                "max": 24.824108123779297
+              },
+              "braking_contribution_over_opening": {
+                "n": 2259,
+                "min": 5.841610629915302e-05,
+                "median": 0.09298412343470483,
+                "max": 205.03181818181818
+              },
+              "end_reasons": {
+                "gap_closed": 456,
+                "identity_or_lane_censored": 180,
+                "braking_deficit_closed": 1534,
+                "slot_changed_censored": 63,
+                "observation_end_censored": 26
+              }
+            }
+          },
+          "registered_group_event_counts": {},
+          "unique_worlds": 50,
+          "cells": [
+            {
+              "penetration": 0.2,
+              "demand_vph": 2400,
+              "count": 10
+            },
+            {
+              "penetration": 0.2,
+              "demand_vph": 2700,
+              "count": 10
+            },
+            {
+              "penetration": 0.4,
+              "demand_vph": 2400,
+              "count": 10
+            },
+            {
+              "penetration": 0.4,
+              "demand_vph": 2700,
+              "count": 10
+            },
+            {
+              "penetration": 0.05,
+              "demand_vph": 1900,
+              "count": 1
+            },
+            {
+              "penetration": 0.05,
+              "demand_vph": 2400,
+              "count": 1
+            },
+            {
+              "penetration": 0.05,
+              "demand_vph": 2700,
+              "count": 2
+            },
+            {
+              "penetration": 0.1,
+              "demand_vph": 1900,
+              "count": 1
+            },
+            {
+              "penetration": 0.1,
+              "demand_vph": 2400,
+              "count": 1
+            },
+            {
+              "penetration": 0.1,
+              "demand_vph": 2700,
+              "count": 2
+            },
+            {
+              "penetration": 0.2,
+              "demand_vph": 1900,
+              "count": 1
+            },
+            {
+              "penetration": 0.4,
+              "demand_vph": 1900,
+              "count": 1
+            }
+          ]
+        },
+        "mappo": {
+          "episodes": 50,
+          "exposure_cav_s": 332004.0,
+          "exposure_episode_s": 15000.0,
+          "ramp_fit_gap_count": 180,
+          "behaviours": {
+            "yield_to_merge": {
+              "count": 10,
+              "member_event_count": 10,
+              "eligible_episodes": 50,
+              "eligible_exposure_cav_s": 332004.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 0.10843242852495753,
+              "member_events_per_cav_hour": 0.10843242852495753,
+              "events_per_episode_hour": 2.4
+            },
+            "gap_creation": {
+              "count": 2965,
+              "member_event_count": 2965,
+              "eligible_episodes": 50,
+              "eligible_exposure_cav_s": 332004.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 32.15021505764991,
+              "member_events_per_cav_hour": 32.15021505764991,
+              "events_per_episode_hour": 711.6
+            },
+            "cross_lane_hold": {
+              "count": 390,
+              "member_event_count": 788,
+              "eligible_episodes": 50,
+              "eligible_exposure_cav_s": 332004.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 4.228864712473344,
+              "member_events_per_cav_hour": 8.544475367766653,
+              "events_per_episode_hour": 93.6
+            },
+            "wave_damping": {
+              "count": 6665,
+              "member_event_count": 6665,
+              "eligible_episodes": 50,
+              "eligible_exposure_cav_s": 332004.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 72.27021361188419,
+              "member_events_per_cav_hour": 72.27021361188419,
+              "events_per_episode_hour": 1599.6
+            }
+          },
+          "geometry": {
+            "yield_to_merge": {
+              "opening_m": {
+                "n": 10,
+                "min": 0.04682159423828125,
+                "median": 4.956829309463501,
+                "max": 13.231796264648438
+              },
+              "headway_change_s": {
+                "n": 8,
+                "min": 0.015650847400753065,
+                "median": 13.961838831228722,
+                "max": 448.0430485572541
+              },
+              "ballistic_braking_contribution_m": {
+                "n": 10,
+                "min": 0.01423335075378418,
+                "median": 0.17876827716827393,
+                "max": 1.3938275873661041
+              },
+              "braking_contribution_over_opening": {
+                "n": 10,
+                "min": 0.0010756930101630728,
+                "median": 0.05663706016877079,
+                "max": 0.3620865243604367
+              },
+              "end_reasons": {
+                "accepted": 10
+              }
+            },
+            "gap_creation": {
+              "opening_m": {
+                "n": 2965,
+                "min": 1.52587890625e-05,
+                "median": 0.35639524459838867,
+                "max": 78.44566798210144
+              },
+              "headway_change_s": {
+                "n": 2922,
+                "min": -64.6856072044019,
+                "median": 0.1602207784480285,
+                "max": 2008.9180227037627
+              },
+              "ballistic_braking_contribution_m": {
+                "n": 2965,
+                "min": 5.4836273193359375e-06,
+                "median": 0.04805368185043335,
+                "max": 126.14075183868408
+              },
+              "braking_contribution_over_opening": {
+                "n": 2965,
+                "min": 6.390450999133122e-05,
+                "median": 0.16329187416203791,
+                "max": 574.2945601851852
+              },
+              "end_reasons": {
+                "gap_closed": 720,
+                "identity_or_lane_censored": 673,
+                "braking_deficit_closed": 1459,
+                "slot_changed_censored": 70,
+                "observation_end_censored": 43
+              }
+            }
+          },
+          "registered_group_event_counts": {},
+          "unique_worlds": 50,
+          "cells": [
+            {
+              "penetration": 0.2,
+              "demand_vph": 2400,
+              "count": 10
+            },
+            {
+              "penetration": 0.2,
+              "demand_vph": 2700,
+              "count": 10
+            },
+            {
+              "penetration": 0.4,
+              "demand_vph": 2400,
+              "count": 10
+            },
+            {
+              "penetration": 0.4,
+              "demand_vph": 2700,
+              "count": 10
+            },
+            {
+              "penetration": 0.05,
+              "demand_vph": 1900,
+              "count": 1
+            },
+            {
+              "penetration": 0.05,
+              "demand_vph": 2400,
+              "count": 1
+            },
+            {
+              "penetration": 0.05,
+              "demand_vph": 2700,
+              "count": 2
+            },
+            {
+              "penetration": 0.1,
+              "demand_vph": 1900,
+              "count": 1
+            },
+            {
+              "penetration": 0.1,
+              "demand_vph": 2400,
+              "count": 1
+            },
+            {
+              "penetration": 0.1,
+              "demand_vph": 2700,
+              "count": 2
+            },
+            {
+              "penetration": 0.2,
+              "demand_vph": 1900,
+              "count": 1
+            },
+            {
+              "penetration": 0.4,
+              "demand_vph": 1900,
+              "count": 1
+            }
+          ]
+        }
+      },
+      "positive_credit_records": 0,
+      "positive_credit_unique_worlds": 0,
+      "positive_credit_seeds": [],
+      "discovery": {
+        "status": "no_positive_c_g",
+        "method": {
+          "name": "standardized_euclidean_average_linkage_silhouette",
+          "scaling": "finite-observation mean and population std (ddof=0); mean imputation",
+          "constant_rule": "std / max_abs <= float64 epsilon (or all zero)",
+          "k_candidates": [],
+          "selection": "maximum silhouette > N*eps; ties within N*eps prefer smaller k; otherwise k=1",
+          "singleton_silhouette": 0.0,
+          "tie_break": "descending C_G, canonical JSON id, row-major linkage ties",
+          "silhouette_scores": [],
+          "selected_k": 0
+        },
+        "features": [],
+        "clusters": [],
+        "assignments": [],
+        "unanticipated_candidates": [],
+        "counts": {
+          "input": 0,
+          "ranked": 0,
+          "clustered": 0
+        }
+      },
+      "output_sha256": {
+        "COMPLETE.json": "be9993e1e1c7dd5fae2940c715d44c35e20e894f276c6fe1337aedd2a5378aa5",
+        "ctrl0_cross_lane_hold.png": "a65c230c22df6b248d94eaa7f6049f340bafc58dd7fa4ecd2332c8d712b95e11",
+        "ctrl0_gap_creation.png": "ac7a8613a84ef81f1a903a3e6c2cdd640691c5f92ec96ac663be9d70551408ab",
+        "ctrl0_wave_damping.png": "416523521bfceb44a8783aab6ee046d5ca7a3a874938bb8db6277dbda0e68e22",
+        "ctrl0_yield_to_merge.png": "87aab7067c8af22b726508a3497cf9ad08ba824f9d91bc7d1697aa21cd3b348a",
+        "discovery.json": "f73e57a57b8a911876e2af8f6571fdc11e934fea064e92cfa0d01503995e429a",
+        "episodes.json": "9f81627b3ce159c207d4bf3ca93a60106389facd797e69cdb8ce147f9d31de48",
+        "events.jsonl.gz": "1e16f4511915244e922a1e4804824b4e139385f7fab77ad4c61e0485978eb48f",
+        "inputs.json": "bcf9d8a61c8dd0a6d2c8a03d2575ed17c0bfb9f438acee55d1c1aed43303d406",
+        "mappo_cross_lane_hold.png": "ad157eaefa658336fcaa894067b2c29121433e64163856f8c553ae02a3517fa2",
+        "mappo_gap_creation.png": "b954d05a5ffe45b72a7ca395855980c0c6c930d3bf75c1d577ab869e6c70f979",
+        "mappo_wave_damping.png": "3df8f8e29cb0c1ffad832322079aa6be70df168b48f4013cc68a23757759740a",
+        "mappo_yield_to_merge.png": "bfc6f3ec86d52c65c7dfbb5fa8a26a47b07a0a2e2690e00144ceeefc06ef444a",
+        "members.csv": "c24e69dcd6d5cc3f756a7a999100abd33412732b70c5b733e7cc1c1041bee64d",
+        "signatures.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "summary.json": "1f0e5c6161f3e8cc319f2841bf14beb56551dc3f9c2de033f38ae84fff7eab22"
+      }
+    },
+    {
+      "source": "paired",
+      "path": "tools\\coopbehav\\evidence\\live\\paired_a0b825aa936da6d27d01e07fc6b1bbd210150272eb95decf5389a0596f6895da",
+      "verified": true,
+      "episodes": 81,
+      "events": 4893,
+      "controllers": {
+        "sumocf_d9042cc5a05e": {
+          "episodes": 81,
+          "exposure_cav_s": 119391.0,
+          "exposure_episode_s": 5130.0,
+          "ramp_fit_gap_count": 54,
+          "behaviours": {
+            "yield_to_merge": {
+              "count": 0,
+              "member_event_count": 0,
+              "eligible_episodes": 81,
+              "eligible_exposure_cav_s": 119391.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 0.0,
+              "member_events_per_cav_hour": 0.0,
+              "events_per_episode_hour": 0.0
+            },
+            "gap_creation": {
+              "count": 1293,
+              "member_event_count": 1293,
+              "eligible_episodes": 81,
+              "eligible_exposure_cav_s": 119391.0,
+              "paired_supported_count": 41,
+              "events_per_cav_hour": 38.98786340678946,
+              "member_events_per_cav_hour": 38.98786340678946,
+              "events_per_episode_hour": 907.3684210526316
+            },
+            "cross_lane_hold": {
+              "count": 123,
+              "member_event_count": 246,
+              "eligible_episodes": 81,
+              "eligible_exposure_cav_s": 119391.0,
+              "paired_supported_count": 0,
+              "events_per_cav_hour": 3.708822273035656,
+              "member_events_per_cav_hour": 7.417644546071312,
+              "events_per_episode_hour": 86.3157894736842
+            },
+            "wave_damping": {
+              "count": 3477,
+              "member_event_count": 3477,
+              "eligible_episodes": 81,
+              "eligible_exposure_cav_s": 119391.0,
+              "paired_supported_count": 702,
+              "events_per_cav_hour": 104.84207352312988,
+              "member_events_per_cav_hour": 104.84207352312988,
+              "events_per_episode_hour": 2440.0
+            }
+          },
+          "geometry": {
+            "yield_to_merge": {
+              "opening_m": null,
+              "headway_change_s": null,
+              "ballistic_braking_contribution_m": null,
+              "braking_contribution_over_opening": null,
+              "end_reasons": {}
+            },
+            "gap_creation": {
+              "opening_m": {
+                "n": 1293,
+                "min": 0.00336456298828125,
+                "median": 0.19562149047851562,
+                "max": 13.264389038085938
+              },
+              "headway_change_s": {
+                "n": 1239,
+                "min": -3.8054625957076382,
+                "median": 0.0708455944806965,
+                "max": 758895.504516271
+              },
+              "ballistic_braking_contribution_m": {
+                "n": 1293,
+                "min": 0.0007585287094116211,
+                "median": 0.046230316162109375,
+                "max": 21.25313377380371
+              },
+              "braking_contribution_over_opening": {
+                "n": 1293,
+                "min": 0.008404571199120843,
+                "median": 0.2654177629554407,
+                "max": 40.31853479196557
+              },
+              "end_reasons": {
+                "gap_closed": 288,
+                "observation_end_censored": 78,
+                "braking_deficit_closed": 816,
+                "slot_changed_censored": 36,
+                "identity_or_lane_censored": 75
+              }
+            }
+          },
+          "registered_group_event_counts": {
+            "wave_damping": 702,
+            "gap_creation": 495,
+            "cross_lane_hold": 12
+          },
+          "unique_worlds": 4,
+          "cells": [
+            {
+              "penetration": null,
+              "demand_vph": null,
+              "count": 81
+            }
+          ]
+        }
+      },
+      "positive_credit_records": 36,
+      "positive_credit_unique_worlds": 2,
+      "positive_credit_seeds": [
+        969201,
+        969204
+      ],
+      "discovery": {
+        "status": "ok",
+        "method": {
+          "name": "standardized_euclidean_average_linkage_silhouette",
+          "scaling": "finite-observation mean and population std (ddof=0); mean imputation",
+          "constant_rule": "std / max_abs <= float64 epsilon (or all zero)",
+          "k_candidates": [
+            2,
+            3,
+            4,
+            5,
+            6
+          ],
+          "selection": "maximum silhouette > N*eps; ties within N*eps prefer smaller k; otherwise k=1",
+          "singleton_silhouette": 0.0,
+          "tie_break": "descending C_G, canonical JSON id, row-major linkage ties",
+          "silhouette_scores": [
+            {
+              "k": 2,
+              "score": 0.4081854430640973
+            },
+            {
+              "k": 3,
+              "score": 0.6270506559504349
+            },
+            {
+              "k": 4,
+              "score": 0.7686550288119677
+            },
+            {
+              "k": 5,
+              "score": 0.8975095920561116
+            },
+            {
+              "k": 6,
+              "score": 0.9987389480874699
+            }
+          ],
+          "selected_k": 6
+        },
+        "features": [
+          {
+            "name": "member_command_observed_fraction",
+            "mean": 0.983892246187328,
+            "scale": 0.015629854193851465,
+            "observed_count": 36,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          },
+          {
+            "name": "member_displacement_m",
+            "mean": 250.0650964313083,
+            "scale": 154.8080091961336,
+            "observed_count": 36,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          },
+          {
+            "name": "member_gap_change_m",
+            "mean": 7.088197708129883,
+            "scale": 13.293500755127619,
+            "observed_count": 24,
+            "imputed_count": 12,
+            "used_for_clustering": true
+          },
+          {
+            "name": "member_issued_acceleration_mps2",
+            "mean": 1.1294435956173143,
+            "scale": 0.24491452648818687,
+            "observed_count": 36,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          },
+          {
+            "name": "member_lane_changes",
+            "mean": 0.25,
+            "scale": 0.25,
+            "observed_count": 36,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          },
+          {
+            "name": "member_realized_acceleration_mps2",
+            "mean": 0.2710988649741892,
+            "scale": 0.2378838115803851,
+            "observed_count": 36,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          },
+          {
+            "name": "member_speed_change_mps",
+            "mean": 7.479137281576794,
+            "scale": 5.84202487462515,
+            "observed_count": 36,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          },
+          {
+            "name": "member_speed_mps",
+            "mean": 9.407380483791997,
+            "scale": 3.564524054721699,
+            "observed_count": 36,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          },
+          {
+            "name": "member_temporal_speed_variance_m2_s2",
+            "mean": 20.226037435719462,
+            "scale": 19.092593910406823,
+            "observed_count": 36,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          },
+          {
+            "name": "member_upstream_fraction",
+            "mean": 0.30493477378723266,
+            "scale": 0.2613580389591812,
+            "observed_count": 36,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          },
+          {
+            "name": "nearest_ramp_longitudinal_distance_m",
+            "mean": 75.10696611068717,
+            "scale": 36.109366187644994,
+            "observed_count": 36,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          },
+          {
+            "name": "neighbour_speed_change_mps",
+            "mean": 5.943414852902708,
+            "scale": 5.223307132886646,
+            "observed_count": 36,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          },
+          {
+            "name": "neighbour_speed_mps",
+            "mean": 8.779032493978372,
+            "scale": 3.7084879310188623,
+            "observed_count": 36,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          },
+          {
+            "name": "neighbour_temporal_speed_variance_m2_s2",
+            "mean": 16.698055418572743,
+            "scale": 17.686426954747716,
+            "observed_count": 36,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          },
+          {
+            "name": "observed_member_fraction",
+            "mean": 0.8842323285739466,
+            "scale": 0.12528452246460117,
+            "observed_count": 36,
+            "imputed_count": 0,
+            "used_for_clustering": true
+          }
+        ],
+        "clusters": [
+          {
+            "cluster_id": "cluster_1",
+            "member_ids": [
+              "probe_g00_w4",
+              "probe_g01_w4",
+              "probe_g02_w4",
+              "probe_g18_w4",
+              "probe_g19_w4",
+              "probe_g20_w4"
+            ],
+            "size": 6,
+            "mean_C_G": 1555.7833967208862,
+            "physical_means": {
+              "member_command_observed_fraction": 0.9545454545454546,
+              "member_displacement_m": 39.6270751953125,
+              "member_gap_change_m": 29.777198791503906,
+              "member_issued_acceleration_mps2": 1.3859140390441531,
+              "member_lane_changes": 0.0,
+              "member_realized_acceleration_mps2": 0.6351847916841507,
+              "member_speed_change_mps": 6.351847916841507,
+              "member_speed_mps": 4.199730491096323,
+              "member_temporal_speed_variance_m2_s2": 7.091156593755976,
+              "member_upstream_fraction": 0.5,
+              "nearest_ramp_longitudinal_distance_m": 27.748470826582476,
+              "neighbour_speed_change_mps": 3.138482376933098,
+              "neighbour_speed_mps": 3.9869517555291,
+              "neighbour_temporal_speed_variance_m2_s2": 3.1859942534509575,
+              "observed_member_fraction": 1.0
+            },
+            "standardized_means": {
+              "member_command_observed_fraction": -1.8776113505536045,
+              "member_displacement_m": -1.359348410516551,
+              "member_gap_change_m": 1.7067739718314863,
+              "member_issued_acceleration_mps2": 1.0471834688793324,
+              "member_lane_changes": -1.0,
+              "member_realized_acceleration_mps2": 1.5305199807046577,
+              "member_speed_change_mps": -0.1929620960074427,
+              "member_speed_mps": -1.4609664327548666,
+              "member_temporal_speed_variance_m2_s2": -0.6879568540345921,
+              "member_upstream_fraction": 0.7463525016853704,
+              "nearest_ramp_longitudinal_distance_m": -1.3115293976084423,
+              "neighbour_speed_change_mps": -0.5370031676501229,
+              "neighbour_speed_mps": -1.2921926207085448,
+              "neighbour_temporal_speed_variance_m2_s2": -0.7639791349430604,
+              "observed_member_fraction": 0.9240380946398487
+            },
+            "description": "Lower mean member command observed fraction (physical mean +0.954545; -1.88 SD relative to ranked-record mean); Lower mean member displacement m (physical mean +39.6271; -1.36 SD relative to ranked-record mean); Higher mean member gap change m (physical mean +29.7772; +1.71 SD relative to ranked-record mean); Higher mean member issued acceleration mps2 (physical mean +1.38591; +1.05 SD relative to ranked-record mean); Lower mean member lane changes (physical mean +0; -1 SD relative to ranked-record mean); Higher mean member realized acceleration mps2 (physical mean +0.635185; +1.53 SD relative to ranked-record mean); Lower mean member speed change mps (physical mean +6.35185; -0.193 SD relative to ranked-record mean); Lower mean member speed mps (physical mean +4.19973; -1.46 SD relative to ranked-record mean); Lower mean member temporal speed variance m2 s2 (physical mean +7.09116; -0.688 SD relative to ranked-record mean); Higher mean member upstream fraction (physical mean +0.5; +0.746 SD relative to ranked-record mean); Lower mean nearest ramp longitudinal distance m (physical mean +27.7485; -1.31 SD relative to ranked-record mean); Lower mean neighbour speed change mps (physical mean +3.13848; -0.537 SD relative to ranked-record mean); Lower mean neighbour speed mps (physical mean +3.98695; -1.29 SD relative to ranked-record mean); Lower mean neighbour temporal speed variance m2 s2 (physical mean +3.18599; -0.764 SD relative to ranked-record mean); Higher mean observed member fraction (physical mean +1; +0.924 SD relative to ranked-record mean).",
+            "explained_by": [
+              "wave_damping"
+            ],
+            "unexplained": false
+          },
+          {
+            "cluster_id": "cluster_2",
+            "member_ids": [
+              "probe_g03_w4",
+              "probe_g04_w4",
+              "probe_g05_w4",
+              "probe_g21_w4",
+              "probe_g22_w4",
+              "probe_g23_w4"
+            ],
+            "size": 6,
+            "mean_C_G": 1555.7833967208862,
+            "physical_means": {
+              "member_command_observed_fraction": 0.9836065573770492,
+              "member_displacement_m": 247.2704200744629,
+              "member_gap_change_m": -0.17523193359375,
+              "member_issued_acceleration_mps2": 1.3045126288715336,
+              "member_lane_changes": 0.0,
+              "member_realized_acceleration_mps2": 0.4283467389769473,
+              "member_speed_change_mps": 12.636228799819946,
+              "member_speed_mps": 8.372701406478882,
+              "member_temporal_speed_variance_m2_s2": 30.982274392744934,
+              "member_upstream_fraction": 0.5081967213114754,
+              "nearest_ramp_longitudinal_distance_m": 114.12214456229914,
+              "neighbour_speed_change_mps": 9.513258874416351,
+              "neighbour_speed_mps": 6.057386203855276,
+              "neighbour_temporal_speed_variance_m2_s2": 18.434917821939884,
+              "observed_member_fraction": 0.9838709677419355
+            },
+            "standardized_means": {
+              "member_command_observed_fraction": -0.018278405334784253,
+              "member_displacement_m": -0.018052530817734877,
+              "member_gap_change_m": -0.5463895309083241,
+              "member_issued_acceleration_mps2": 0.7148168618845215,
+              "member_lane_changes": -1.0,
+              "member_realized_acceleration_mps2": 0.6610280580173958,
+              "member_speed_change_mps": 0.8827575419343031,
+              "member_speed_mps": -0.29027131292396285,
+              "member_temporal_speed_variance_m2_s2": 0.5633722168658578,
+              "member_upstream_fraction": 0.7777145418357999,
+              "nearest_ramp_longitudinal_distance_m": 1.0804725358198402,
+              "neighbour_speed_change_mps": 0.6834451681076582,
+              "neighbour_speed_mps": -0.7338964938670723,
+              "neighbour_temporal_speed_variance_m2_s2": 0.09820312535771392,
+              "observed_member_fraction": 0.7952988701867904
+            },
+            "description": "Lower mean member command observed fraction (physical mean +0.983607; -0.0183 SD relative to ranked-record mean); Lower mean member displacement m (physical mean +247.27; -0.0181 SD relative to ranked-record mean); Lower mean member gap change m (physical mean -0.175232; -0.546 SD relative to ranked-record mean); Higher mean member issued acceleration mps2 (physical mean +1.30451; +0.715 SD relative to ranked-record mean); Lower mean member lane changes (physical mean +0; -1 SD relative to ranked-record mean); Higher mean member realized acceleration mps2 (physical mean +0.428347; +0.661 SD relative to ranked-record mean); Higher mean member speed change mps (physical mean +12.6362; +0.883 SD relative to ranked-record mean); Lower mean member speed mps (physical mean +8.3727; -0.29 SD relative to ranked-record mean); Higher mean member temporal speed variance m2 s2 (physical mean +30.9823; +0.563 SD relative to ranked-record mean); Higher mean member upstream fraction (physical mean +0.508197; +0.778 SD relative to ranked-record mean); Higher mean nearest ramp longitudinal distance m (physical mean +114.122; +1.08 SD relative to ranked-record mean); Higher mean neighbour speed change mps (physical mean +9.51326; +0.683 SD relative to ranked-record mean); Lower mean neighbour speed mps (physical mean +6.05739; -0.734 SD relative to ranked-record mean); Higher mean neighbour temporal speed variance m2 s2 (physical mean +18.4349; +0.0982 SD relative to ranked-record mean); Higher mean observed member fraction (physical mean +0.983871; +0.795 SD relative to ranked-record mean).",
+            "explained_by": [
+              "gap_creation",
+              "wave_damping"
+            ],
+            "unexplained": false
+          },
+          {
+            "cluster_id": "cluster_3",
+            "member_ids": [
+              "probe_g06_w4",
+              "probe_g07_w4",
+              "probe_g08_w4",
+              "probe_g24_w4",
+              "probe_g25_w4",
+              "probe_g26_w4"
+            ],
+            "size": 6,
+            "mean_C_G": 1555.7833967208862,
+            "physical_means": {
+              "member_command_observed_fraction": 0.989010989010989,
+              "member_displacement_m": 253.99933242797852,
+              "member_issued_acceleration_mps2": 0.905381761463704,
+              "member_lane_changes": 0.5,
+              "member_realized_acceleration_mps2": 0.2767604971199893,
+              "member_speed_change_mps": 12.315842121839523,
+              "member_speed_mps": 5.773833854676603,
+              "member_temporal_speed_variance_m2_s2": 30.94632726621522,
+              "member_upstream_fraction": 0.6703296703296703,
+              "nearest_ramp_longitudinal_distance_m": 87.88060278158922,
+              "neighbour_speed_change_mps": 10.415178294293582,
+              "neighbour_speed_mps": 5.431879187216206,
+              "neighbour_temporal_speed_variance_m2_s2": 29.806273808949715,
+              "observed_member_fraction": 0.7459016393442623
+            },
+            "standardized_means": {
+              "member_command_observed_fraction": 0.32749779749543184,
+              "member_displacement_m": 0.02541364634232692,
+              "member_issued_acceleration_mps2": -0.914857266191672,
+              "member_lane_changes": 1.0,
+              "member_realized_acceleration_mps2": 0.023799989197192145,
+              "member_speed_change_mps": 0.8279158244037902,
+              "member_speed_mps": -1.0193637560959268,
+              "member_temporal_speed_variance_m2_s2": 0.5614894383026937,
+              "member_upstream_fraction": 1.3980625887673763,
+              "nearest_ramp_longitudinal_distance_m": 0.3537485705100139,
+              "neighbour_speed_change_mps": 0.8561172696960607,
+              "neighbour_speed_mps": -0.9025655116107055,
+              "neighbour_temporal_speed_variance_m2_s2": 0.7411456493680438,
+              "observed_member_fraction": -1.1041323102681682
+            },
+            "description": "Higher mean member command observed fraction (physical mean +0.989011; +0.327 SD relative to ranked-record mean); Higher mean member displacement m (physical mean +253.999; +0.0254 SD relative to ranked-record mean); Lower mean member issued acceleration mps2 (physical mean +0.905382; -0.915 SD relative to ranked-record mean); Higher mean member lane changes (physical mean +0.5; +1 SD relative to ranked-record mean); Higher mean member realized acceleration mps2 (physical mean +0.27676; +0.0238 SD relative to ranked-record mean); Higher mean member speed change mps (physical mean +12.3158; +0.828 SD relative to ranked-record mean); Lower mean member speed mps (physical mean +5.77383; -1.02 SD relative to ranked-record mean); Higher mean member temporal speed variance m2 s2 (physical mean +30.9463; +0.561 SD relative to ranked-record mean); Higher mean member upstream fraction (physical mean +0.67033; +1.4 SD relative to ranked-record mean); Higher mean nearest ramp longitudinal distance m (physical mean +87.8806; +0.354 SD relative to ranked-record mean); Higher mean neighbour speed change mps (physical mean +10.4152; +0.856 SD relative to ranked-record mean); Lower mean neighbour speed mps (physical mean +5.43188; -0.903 SD relative to ranked-record mean); Higher mean neighbour temporal speed variance m2 s2 (physical mean +29.8063; +0.741 SD relative to ranked-record mean); Lower mean observed member fraction (physical mean +0.745902; -1.1 SD relative to ranked-record mean).",
+            "explained_by": [
+              "gap_creation",
+              "wave_damping"
+            ],
+            "unexplained": false
+          },
+          {
+            "cluster_id": "cluster_4",
+            "member_ids": [
+              "probe_g00_w1",
+              "probe_g01_w1",
+              "probe_g02_w1",
+              "probe_g18_w1",
+              "probe_g19_w1",
+              "probe_g20_w1"
+            ],
+            "size": 6,
+            "mean_C_G": 0.0017309188842773438,
+            "physical_means": {
+              "member_command_observed_fraction": 1.0,
+              "member_displacement_m": 126.77838706970215,
+              "member_gap_change_m": -3.814128875732422,
+              "member_issued_acceleration_mps2": 0.8193948377262462,
+              "member_lane_changes": 0.0,
+              "member_realized_acceleration_mps2": -0.06883602142333985,
+              "member_speed_change_mps": -0.6883602142333984,
+              "member_speed_mps": 13.23444297096946,
+              "member_temporal_speed_variance_m2_s2": 0.11939291246780769,
+              "member_upstream_fraction": 0.09090909090909091,
+              "nearest_ramp_longitudinal_distance_m": 25.65055123242465,
+              "neighbour_speed_change_mps": -0.8317740857601166,
+              "neighbour_speed_mps": 13.092791611307554,
+              "neighbour_temporal_speed_variance_m2_s2": 0.16880801776788118,
+              "observed_member_fraction": 1.0
+            },
+            "standardized_means": {
+              "member_command_observed_fraction": 1.030576076583528,
+              "member_displacement_m": -0.7963845669341846,
+              "member_gap_change_m": -0.8201245694936317,
+              "member_issued_acceleration_mps2": -1.265946786974365,
+              "member_lane_changes": -1.0,
+              "member_realized_acceleration_mps2": -1.4289954584936486,
+              "member_speed_change_mps": -1.3980593494707183,
+              "member_speed_mps": 1.0736531521250348,
+              "member_temporal_speed_variance_m2_s2": -1.0531122495771568,
+              "member_upstream_fraction": -0.8188984112769847,
+              "nearest_ramp_longitudinal_distance_m": -1.369628439924938,
+              "neighbour_speed_change_mps": -1.2971071327598798,
+              "neighbour_speed_mps": 1.1632123921039774,
+              "neighbour_temporal_speed_variance_m2_s2": -0.9345724516939685,
+              "observed_member_fraction": 0.9240380946398487
+            },
+            "description": "Higher mean member command observed fraction (physical mean +1; +1.03 SD relative to ranked-record mean); Lower mean member displacement m (physical mean +126.778; -0.796 SD relative to ranked-record mean); Lower mean member gap change m (physical mean -3.81413; -0.82 SD relative to ranked-record mean); Lower mean member issued acceleration mps2 (physical mean +0.819395; -1.27 SD relative to ranked-record mean); Lower mean member lane changes (physical mean +0; -1 SD relative to ranked-record mean); Lower mean member realized acceleration mps2 (physical mean -0.068836; -1.43 SD relative to ranked-record mean); Lower mean member speed change mps (physical mean -0.68836; -1.4 SD relative to ranked-record mean); Higher mean member speed mps (physical mean +13.2344; +1.07 SD relative to ranked-record mean); Lower mean member temporal speed variance m2 s2 (physical mean +0.119393; -1.05 SD relative to ranked-record mean); Lower mean member upstream fraction (physical mean +0.0909091; -0.819 SD relative to ranked-record mean); Lower mean nearest ramp longitudinal distance m (physical mean +25.6506; -1.37 SD relative to ranked-record mean); Lower mean neighbour speed change mps (physical mean -0.831774; -1.3 SD relative to ranked-record mean); Higher mean neighbour speed mps (physical mean +13.0928; +1.16 SD relative to ranked-record mean); Lower mean neighbour temporal speed variance m2 s2 (physical mean +0.168808; -0.935 SD relative to ranked-record mean); Higher mean observed member fraction (physical mean +1; +0.924 SD relative to ranked-record mean).",
+            "explained_by": [
+              "wave_damping"
+            ],
+            "unexplained": false
+          },
+          {
+            "cluster_id": "cluster_5",
+            "member_ids": [
+              "probe_g03_w1",
+              "probe_g04_w1",
+              "probe_g05_w1",
+              "probe_g21_w1",
+              "probe_g22_w1",
+              "probe_g23_w1"
+            ],
+            "size": 6,
+            "mean_C_G": 0.0017309188842773438,
+            "physical_means": {
+              "member_command_observed_fraction": 1.0,
+              "member_displacement_m": 295.9840793609619,
+              "member_gap_change_m": 2.564952850341797,
+              "member_issued_acceleration_mps2": 0.9442559983694193,
+              "member_lane_changes": 0.5,
+              "member_realized_acceleration_mps2": 0.020783410882050136,
+              "member_speed_change_mps": 0.5507603883743286,
+              "member_speed_mps": 11.456678850271485,
+              "member_temporal_speed_variance_m2_s2": 0.5103750585682547,
+              "member_upstream_fraction": 0.03636363636363636,
+              "nearest_ramp_longitudinal_distance_m": 82.86316183263605,
+              "neighbour_speed_change_mps": 0.5481432229280472,
+              "neighbour_speed_mps": 11.381195690398188,
+              "neighbour_temporal_speed_variance_m2_s2": 0.5184315660130766,
+              "observed_member_fraction": 0.8870967741935484
+            },
+            "standardized_means": {
+              "member_command_observed_fraction": 1.030576076583528,
+              "member_displacement_m": 0.2966189098877737,
+              "member_gap_change_m": -0.34025987142953024,
+              "member_issued_acceleration_mps2": -0.7561315365947777,
+              "member_lane_changes": 1.0,
+              "member_realized_acceleration_mps2": -1.0522593043602428,
+              "member_speed_change_mps": -1.1859547060978615,
+              "member_speed_mps": 0.5749150054871736,
+              "member_temporal_speed_variance_m2_s2": -1.0326340396526617,
+              "member_upstream_fraction": -1.0275985330052988,
+              "nearest_ramp_longitudinal_distance_m": 0.21479733766699868,
+              "neighbour_speed_change_mps": -1.0329225321645943,
+              "neighbour_speed_mps": 0.7016776769460601,
+              "neighbour_temporal_speed_variance_m2_s2": -0.9148045500629757,
+              "observed_member_fraction": 0.022863523468440356
+            },
+            "description": "Higher mean member command observed fraction (physical mean +1; +1.03 SD relative to ranked-record mean); Higher mean member displacement m (physical mean +295.984; +0.297 SD relative to ranked-record mean); Lower mean member gap change m (physical mean +2.56495; -0.34 SD relative to ranked-record mean); Lower mean member issued acceleration mps2 (physical mean +0.944256; -0.756 SD relative to ranked-record mean); Higher mean member lane changes (physical mean +0.5; +1 SD relative to ranked-record mean); Lower mean member realized acceleration mps2 (physical mean +0.0207834; -1.05 SD relative to ranked-record mean); Lower mean member speed change mps (physical mean +0.55076; -1.19 SD relative to ranked-record mean); Higher mean member speed mps (physical mean +11.4567; +0.575 SD relative to ranked-record mean); Lower mean member temporal speed variance m2 s2 (physical mean +0.510375; -1.03 SD relative to ranked-record mean); Lower mean member upstream fraction (physical mean +0.0363636; -1.03 SD relative to ranked-record mean); Higher mean nearest ramp longitudinal distance m (physical mean +82.8632; +0.215 SD relative to ranked-record mean); Lower mean neighbour speed change mps (physical mean +0.548143; -1.03 SD relative to ranked-record mean); Higher mean neighbour speed mps (physical mean +11.3812; +0.702 SD relative to ranked-record mean); Lower mean neighbour temporal speed variance m2 s2 (physical mean +0.518432; -0.915 SD relative to ranked-record mean); Higher mean observed member fraction (physical mean +0.887097; +0.0229 SD relative to ranked-record mean).",
+            "explained_by": [
+              "wave_damping"
+            ],
+            "unexplained": false
+          },
+          {
+            "cluster_id": "cluster_6",
+            "member_ids": [
+              "probe_g06_w1",
+              "probe_g07_w1",
+              "probe_g08_w1",
+              "probe_g24_w1",
+              "probe_g25_w1",
+              "probe_g26_w1"
+            ],
+            "size": 6,
+            "mean_C_G": 0.0017309188842773438,
+            "physical_means": {
+              "member_command_observed_fraction": 0.9761904761904762,
+              "member_displacement_m": 536.731284459432,
+              "member_issued_acceleration_mps2": 1.4172023082288299,
+              "member_lane_changes": 0.5,
+              "member_realized_acceleration_mps2": 0.3343537726053378,
+              "member_speed_change_mps": 13.708504676818848,
+              "member_speed_mps": 13.406895329259218,
+              "member_temporal_speed_variance_m2_s2": 51.70669839056459,
+              "member_upstream_fraction": 0.023809523809523808,
+              "nearest_ramp_longitudinal_distance_m": 112.37686542859153,
+              "neighbour_speed_change_mps": 12.87720043460528,
+              "neighbour_speed_mps": 12.723990515563903,
+              "neighbour_temporal_speed_variance_m2_s2": 48.073907043314954,
+              "observed_member_fraction": 0.6885245901639344
+            },
+            "standardized_means": {
+              "member_command_observed_fraction": -0.4927601947740207,
+              "member_displacement_m": 1.8517529520383709,
+              "member_issued_acceleration_mps2": 1.1749352589969597,
+              "member_lane_changes": 1.0,
+              "member_realized_acceleration_mps2": 0.26590673493464506,
+              "member_speed_change_mps": 1.066302785237928,
+              "member_speed_mps": 1.122033344162544,
+              "member_temporal_speed_variance_m2_s2": 1.648841488095859,
+              "member_upstream_fraction": -1.0756326880062599,
+              "nearest_ramp_longitudinal_distance_m": 1.0321393935365293,
+              "neighbour_speed_change_mps": 1.327470394770877,
+              "neighbour_speed_mps": 1.0637645571362828,
+              "neighbour_temporal_speed_variance_m2_s2": 1.774007361974247,
+              "observed_member_fraction": -1.562106272666753
+            },
+            "description": "Lower mean member command observed fraction (physical mean +0.97619; -0.493 SD relative to ranked-record mean); Higher mean member displacement m (physical mean +536.731; +1.85 SD relative to ranked-record mean); Higher mean member issued acceleration mps2 (physical mean +1.4172; +1.17 SD relative to ranked-record mean); Higher mean member lane changes (physical mean +0.5; +1 SD relative to ranked-record mean); Higher mean member realized acceleration mps2 (physical mean +0.334354; +0.266 SD relative to ranked-record mean); Higher mean member speed change mps (physical mean +13.7085; +1.07 SD relative to ranked-record mean); Higher mean member speed mps (physical mean +13.4069; +1.12 SD relative to ranked-record mean); Higher mean member temporal speed variance m2 s2 (physical mean +51.7067; +1.65 SD relative to ranked-record mean); Lower mean member upstream fraction (physical mean +0.0238095; -1.08 SD relative to ranked-record mean); Higher mean nearest ramp longitudinal distance m (physical mean +112.377; +1.03 SD relative to ranked-record mean); Higher mean neighbour speed change mps (physical mean +12.8772; +1.33 SD relative to ranked-record mean); Higher mean neighbour speed mps (physical mean +12.724; +1.06 SD relative to ranked-record mean); Higher mean neighbour temporal speed variance m2 s2 (physical mean +48.0739; +1.77 SD relative to ranked-record mean); Lower mean observed member fraction (physical mean +0.688525; -1.56 SD relative to ranked-record mean).",
+            "explained_by": [
+              "wave_damping"
+            ],
+            "unexplained": false
+          }
+        ],
+        "assignments": [
+          {
+            "id": "probe_g00_w4",
+            "rank": 1,
+            "C_G": 1555.7833967208862,
+            "cluster_id": "cluster_1"
+          },
+          {
+            "id": "probe_g01_w4",
+            "rank": 2,
+            "C_G": 1555.7833967208862,
+            "cluster_id": "cluster_1"
+          },
+          {
+            "id": "probe_g02_w4",
+            "rank": 3,
+            "C_G": 1555.7833967208862,
+            "cluster_id": "cluster_1"
+          },
+          {
+            "id": "probe_g03_w4",
+            "rank": 4,
+            "C_G": 1555.7833967208862,
+            "cluster_id": "cluster_2"
+          },
+          {
+            "id": "probe_g04_w4",
+            "rank": 5,
+            "C_G": 1555.7833967208862,
+            "cluster_id": "cluster_2"
+          },
+          {
+            "id": "probe_g05_w4",
+            "rank": 6,
+            "C_G": 1555.7833967208862,
+            "cluster_id": "cluster_2"
+          },
+          {
+            "id": "probe_g06_w4",
+            "rank": 7,
+            "C_G": 1555.7833967208862,
+            "cluster_id": "cluster_3"
+          },
+          {
+            "id": "probe_g07_w4",
+            "rank": 8,
+            "C_G": 1555.7833967208862,
+            "cluster_id": "cluster_3"
+          },
+          {
+            "id": "probe_g08_w4",
+            "rank": 9,
+            "C_G": 1555.7833967208862,
+            "cluster_id": "cluster_3"
+          },
+          {
+            "id": "probe_g18_w4",
+            "rank": 10,
+            "C_G": 1555.7833967208862,
+            "cluster_id": "cluster_1"
+          },
+          {
+            "id": "probe_g19_w4",
+            "rank": 11,
+            "C_G": 1555.7833967208862,
+            "cluster_id": "cluster_1"
+          },
+          {
+            "id": "probe_g20_w4",
+            "rank": 12,
+            "C_G": 1555.7833967208862,
+            "cluster_id": "cluster_1"
+          },
+          {
+            "id": "probe_g21_w4",
+            "rank": 13,
+            "C_G": 1555.7833967208862,
+            "cluster_id": "cluster_2"
+          },
+          {
+            "id": "probe_g22_w4",
+            "rank": 14,
+            "C_G": 1555.7833967208862,
+            "cluster_id": "cluster_2"
+          },
+          {
+            "id": "probe_g23_w4",
+            "rank": 15,
+            "C_G": 1555.7833967208862,
+            "cluster_id": "cluster_2"
+          },
+          {
+            "id": "probe_g24_w4",
+            "rank": 16,
+            "C_G": 1555.7833967208862,
+            "cluster_id": "cluster_3"
+          },
+          {
+            "id": "probe_g25_w4",
+            "rank": 17,
+            "C_G": 1555.7833967208862,
+            "cluster_id": "cluster_3"
+          },
+          {
+            "id": "probe_g26_w4",
+            "rank": 18,
+            "C_G": 1555.7833967208862,
+            "cluster_id": "cluster_3"
+          },
+          {
+            "id": "probe_g00_w1",
+            "rank": 19,
+            "C_G": 0.0017309188842773438,
+            "cluster_id": "cluster_4"
+          },
+          {
+            "id": "probe_g01_w1",
+            "rank": 20,
+            "C_G": 0.0017309188842773438,
+            "cluster_id": "cluster_4"
+          },
+          {
+            "id": "probe_g02_w1",
+            "rank": 21,
+            "C_G": 0.0017309188842773438,
+            "cluster_id": "cluster_4"
+          },
+          {
+            "id": "probe_g03_w1",
+            "rank": 22,
+            "C_G": 0.0017309188842773438,
+            "cluster_id": "cluster_5"
+          },
+          {
+            "id": "probe_g04_w1",
+            "rank": 23,
+            "C_G": 0.0017309188842773438,
+            "cluster_id": "cluster_5"
+          },
+          {
+            "id": "probe_g05_w1",
+            "rank": 24,
+            "C_G": 0.0017309188842773438,
+            "cluster_id": "cluster_5"
+          },
+          {
+            "id": "probe_g06_w1",
+            "rank": 25,
+            "C_G": 0.0017309188842773438,
+            "cluster_id": "cluster_6"
+          },
+          {
+            "id": "probe_g07_w1",
+            "rank": 26,
+            "C_G": 0.0017309188842773438,
+            "cluster_id": "cluster_6"
+          },
+          {
+            "id": "probe_g08_w1",
+            "rank": 27,
+            "C_G": 0.0017309188842773438,
+            "cluster_id": "cluster_6"
+          },
+          {
+            "id": "probe_g18_w1",
+            "rank": 28,
+            "C_G": 0.0017309188842773438,
+            "cluster_id": "cluster_4"
+          },
+          {
+            "id": "probe_g19_w1",
+            "rank": 29,
+            "C_G": 0.0017309188842773438,
+            "cluster_id": "cluster_4"
+          },
+          {
+            "id": "probe_g20_w1",
+            "rank": 30,
+            "C_G": 0.0017309188842773438,
+            "cluster_id": "cluster_4"
+          },
+          {
+            "id": "probe_g21_w1",
+            "rank": 31,
+            "C_G": 0.0017309188842773438,
+            "cluster_id": "cluster_5"
+          },
+          {
+            "id": "probe_g22_w1",
+            "rank": 32,
+            "C_G": 0.0017309188842773438,
+            "cluster_id": "cluster_5"
+          },
+          {
+            "id": "probe_g23_w1",
+            "rank": 33,
+            "C_G": 0.0017309188842773438,
+            "cluster_id": "cluster_5"
+          },
+          {
+            "id": "probe_g24_w1",
+            "rank": 34,
+            "C_G": 0.0017309188842773438,
+            "cluster_id": "cluster_6"
+          },
+          {
+            "id": "probe_g25_w1",
+            "rank": 35,
+            "C_G": 0.0017309188842773438,
+            "cluster_id": "cluster_6"
+          },
+          {
+            "id": "probe_g26_w1",
+            "rank": 36,
+            "C_G": 0.0017309188842773438,
+            "cluster_id": "cluster_6"
+          }
+        ],
+        "unanticipated_candidates": [],
+        "counts": {
+          "input": 81,
+          "ranked": 36,
+          "clustered": 36
+        }
+      },
+      "output_sha256": {
+        "COMPLETE.json": "cb6e50ff935865d778fc61f69c906b9fdb96e59fb47f3c62ac3a79574edc53d4",
+        "discovery.json": "7d042d4ffa1666cc0facd716a885ad9e37546f34359010fb4094f04fe060609a",
+        "episodes.json": "e866d05c0428f9e5764278536c529073f6b391d94616f46181860626d3fa6ba7",
+        "events.jsonl.gz": "cd1a6f6d5750444d3d530443666b1eb4f18b4a6005c9f628977bc9e9f92f57af",
+        "inputs.json": "1a9b6d5c97ce69f5d29f07a5540681194de556cdc59553db3e7c9a71ec734311",
+        "members.csv": "be680a04000030379715f3cd4a64552bd9dfe3e764cf36591c4cf0669f766757",
+        "signatures.json": "7803a8d5537f93e7284b437e436b08121a96291080385381d2f1d7e53a68c12b",
+        "summary.json": "05ea58697029e30f482f22f8cf6448f3f8649cd62b9b88748eb78137ddad1d42",
+        "sumocf_d9042cc5a05e_cross_lane_hold.png": "f3a81db660632bdede7651184dc62229148a328a399ea1be37980bd7d9e7309a",
+        "sumocf_d9042cc5a05e_gap_creation.png": "4c35e309a6bca4845ed8e736a6738723bd575a5321cec35dadc6ef6acd4d1fe1",
+        "sumocf_d9042cc5a05e_wave_damping.png": "5219326eecd5a7e8e68596c457ab6f93cf86ef4c45f8d4ec497c0ad3965876ad",
+        "sumocf_d9042cc5a05e_yield_to_merge.png": "bf28837d5a13ed969148b30d735ca7efe37914b938ee0009e45ea18e3a6c64b1"
+      }
+    }
+  ]
+}

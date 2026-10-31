@@ -60,7 +60,9 @@ def load_trace(path, meta):
                 float(meta.get("position_dtype_epsilon",np.finfo(np.float64).eps)),
                 {path.name:hashlib.sha256(path.read_bytes()).hexdigest()},
                 dict(trace_scope=meta.get("trace_scope","unspecified"),
-                     limitations=meta.get("trace_limitations",[])))
+                     limitations=meta.get("trace_limitations",[]),
+                     requested_branch_interval_s=[start,end],
+                     recorded_interval_s=[times[keep[0]],times[keep[-1]]]))
 
 
 def signature(tape,members,result):
@@ -217,7 +219,7 @@ def run_report(views,out,pairs=None,arms=("mappo","ctrl0"),label="source"):
     if pairs is not None:
         index=read_json(pairs)
         for pair in index["pairs"]:
-            if pair.get("kind") not in ("native_member_release","policy_mean_intervention"):
+            if pair.get("kind") not in ("native_member_release","policy_mean_intervention","policy_mean_reference"):
                 raise ValueError("Explicit native-release or policy-mean intervention required")
             check_seed(pair["seed"])
             if len(set(pair["members"]))!=len(pair["members"]) or len(pair["members"])<1:
@@ -226,7 +228,15 @@ def run_report(views,out,pairs=None,arms=("mappo","ctrl0"),label="source"):
                 p=Path(pair[name]); return safe(p if p.is_absolute() else Path(pairs).parent/p)
             meta={k:pair[k] for k in ("seed","arm","branch","trace_scope","trace_limitations",
                  "position_dtype_epsilon","source_design","source_initial_state_sha256") if k in pair}
+            for key in ("trace_scope","trace_limitations","position_dtype_epsilon"):
+                if key not in meta and key in index: meta[key]=index[key]
+            if meta.get("trace_scope","").startswith("full_observable_slot_fleet"):
+                meta["trace_scope"]="full_observable_fleet"
             actual,reference=load_trace(resolve("factual"),meta),load_trace(resolve("reference"),meta)
+            for name,tape in (("factual",actual),("reference",reference)):
+                expected=pair.get(name+"_sha256")
+                if expected is not None and (len(tape.hashes)!=1 or next(iter(tape.hashes.values()))!=expected):
+                    raise ValueError("Paired-source trace hash mismatch")
             consume(actual,str(pair["id"]),pair["arm"],reference,list(map(str,pair["members"])),pair)
     summaries={}
     for arm,agg in sorted(aggregate.items()):

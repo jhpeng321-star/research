@@ -1,0 +1,19 @@
+{
+  "task": "S-COOPBEHAV",
+  "pid": 29244,
+  "parent_pid": 23892,
+  "start_local": "2026-10-31T17:07:54",
+  "executable": "C:/Python314/python.exe",
+  "cwd": "E:/agent-work/c4-coopbehav",
+  "interval_s": 120,
+  "config": "tools/coopbehav/handoffs.json",
+  "status": "runs/coopbehav_poll/POLL_STATUS.json",
+  "pid_receipt": "runs/coopbehav_poll/PID.json",
+  "stdout": "runs/coopbehav_poll/watch2.stdout.log",
+  "stderr": "runs/coopbehav_poll/watch2.stderr.log",
+  "cooperative_stop": "runs/coopbehav_poll/STOP",
+  "launch": "Win32_Process.Create, hidden own cmd wrapper; survives terminal return",
+  "prior_launcher": "Start-Process PID44024 completed several polls/publications but did not survive its tool job; logs retained",
+  "authority": "Owner 2026-10-31 15:45; CPU analysis only; zero SUMO",
+  "process_policy": "Only own PID/incarnation receipts; no process signalling"
+}

@@ -23,3 +23,20 @@ def test_poller_observes_readiness_reports_once_and_detects_document_change(tmp_
     assert second["documents"][0]["sha256"]!=first["documents"][0]["sha256"]
     assert len(second["reports"])==1
     assert third["indices"][0]["state"]=="complete" and len(calls)==1
+
+
+def test_completed_previous_snapshot_is_published_when_live_index_has_advanced(tmp_path,monkeypatch):
+    old,new="a"*64,"b"*64
+    monkeypatch.setattr("tools.coopbehav.poll.remote_poll",lambda host,path:
+        dict(state="running",sha256=new,path=path))
+    monkeypatch.setattr("tools.coopbehav.poll.report_inventory",lambda host:
+        [dict(state="complete",sha256=old),dict(state="running",sha256=new)])
+    calls=[]
+    def publish(config,entry):
+        calls.append(entry["sha256"]); entry.update(verified=True,commit="commit-id")
+    monkeypatch.setattr("tools.coopbehav.poll.publish",publish)
+    config=dict(remote_indices=[dict(host="gpuR",path="/analysis/COOPBEHAV_INDEX.json")])
+    poll_once(config,tmp_path/"poll")
+    poll_once(config,tmp_path/"poll")
+    assert calls==[old]
+    assert json.loads((tmp_path/"poll"/"PUBLISHED.json").read_text())["gpuR:"+old]=="commit-id"

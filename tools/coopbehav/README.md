@@ -50,6 +50,8 @@ released native members. The factual and reference initial states and clocks
 must match; missing/unknown release status fails closed. Multiple released
 members support a **group intervention**, not isolated attribution to one CAV.
 Policy-mean baselines from SUMOCF use `kind: "policy_mean_intervention"`.
+The producer's published alias `policy_mean_reference` is also supported,
+including shared top-level scope/precision metadata and bound trace hashes.
 Their reference member frames must carry `controller: "policy_mean"` and an
 `actions` entry whose `vid`, `policy_mean` and recorded issued command agree.
 They are explicitly labelled sampled-window-versus-policy-mean support, never

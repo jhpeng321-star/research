@@ -1,0 +1,23 @@
+{
+  "status": "no_positive_c_g",
+  "method": {
+    "name": "standardized_euclidean_average_linkage_silhouette",
+    "scaling": "finite-observation mean and population std (ddof=0); mean imputation",
+    "constant_rule": "std / max_abs <= float64 epsilon (or all zero)",
+    "k_candidates": [],
+    "selection": "maximum silhouette > N*eps; ties within N*eps prefer smaller k; otherwise k=1",
+    "singleton_silhouette": 0.0,
+    "tie_break": "descending C_G, canonical JSON id, row-major linkage ties",
+    "silhouette_scores": [],
+    "selected_k": 0
+  },
+  "features": [],
+  "clusters": [],
+  "assignments": [],
+  "unanticipated_candidates": [],
+  "counts": {
+    "input": 0,
+    "ranked": 0,
+    "clustered": 0
+  }
+}

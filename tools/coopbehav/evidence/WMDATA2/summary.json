@@ -1,0 +1,89 @@
+{
+  "source": "WMDATA2",
+  "interpretation": "Descriptive; event signs are not positive C_G evidence",
+  "controllers": {
+    "ctrl0": {
+      "episodes": 50,
+      "exposure_cav_s": 330404.0,
+      "exposure_episode_s": 15000.0,
+      "behaviours": {
+        "yield_to_merge": {
+          "count": 1,
+          "member_event_count": 1,
+          "paired_supported_count": 0,
+          "events_per_cav_hour": 0.010895751867410807,
+          "member_events_per_cav_hour": 0.010895751867410807,
+          "events_per_episode_hour": 0.24
+        },
+        "gap_creation": {
+          "count": 1559,
+          "member_event_count": 1559,
+          "paired_supported_count": 0,
+          "events_per_cav_hour": 16.986477161293447,
+          "member_events_per_cav_hour": 16.986477161293447,
+          "events_per_episode_hour": 374.16
+        },
+        "cross_lane_hold": {
+          "count": 503,
+          "member_event_count": 1015,
+          "paired_supported_count": 0,
+          "events_per_cav_hour": 5.480563189307635,
+          "member_events_per_cav_hour": 11.059188145421968,
+          "events_per_episode_hour": 120.72
+        },
+        "wave_damping": {
+          "count": 4010,
+          "member_event_count": 4010,
+          "paired_supported_count": 0,
+          "events_per_cav_hour": 43.69196498831733,
+          "member_events_per_cav_hour": 43.69196498831733,
+          "events_per_episode_hour": 962.4
+        }
+      }
+    },
+    "mappo": {
+      "episodes": 50,
+      "exposure_cav_s": 332004.0,
+      "exposure_episode_s": 15000.0,
+      "behaviours": {
+        "yield_to_merge": {
+          "count": 12,
+          "member_event_count": 12,
+          "paired_supported_count": 0,
+          "events_per_cav_hour": 0.13011891422994903,
+          "member_events_per_cav_hour": 0.13011891422994903,
+          "events_per_episode_hour": 2.88
+        },
+        "gap_creation": {
+          "count": 2310,
+          "member_event_count": 2310,
+          "paired_supported_count": 0,
+          "events_per_cav_hour": 25.04789098926519,
+          "member_events_per_cav_hour": 25.04789098926519,
+          "events_per_episode_hour": 554.4
+        },
+        "cross_lane_hold": {
+          "count": 392,
+          "member_event_count": 792,
+          "paired_supported_count": 0,
+          "events_per_cav_hour": 4.250551198178335,
+          "member_events_per_cav_hour": 8.587848339176636,
+          "events_per_episode_hour": 94.08
+        },
+        "wave_damping": {
+          "count": 6627,
+          "member_event_count": 6627,
+          "paired_supported_count": 0,
+          "events_per_cav_hour": 71.85817038348935,
+          "member_events_per_cav_hour": 71.85817038348935,
+          "events_per_episode_hour": 1590.48
+        }
+      }
+    }
+  },
+  "episodes": 100,
+  "events": 15414,
+  "rates": "events/CAV-hour; member-events/CAV-hour; groups additionally events/episode-hour",
+  "examples": "largest gap opening, otherwise longest event, first source order breaks ties",
+  "missing_behaviours": "Zero observed events is conditional on recorded coverage, not proof of absence"
+}

@@ -1,0 +1,116 @@
+{
+  "source": "WMDATA2_v2",
+  "interpretation": "Descriptive; event signs are not positive C_G evidence",
+  "controllers": {
+    "ctrl0": {
+      "episodes": 50,
+      "exposure_cav_s": 330404.0,
+      "exposure_episode_s": 15000.0,
+      "ramp_fit_gap_count": 207,
+      "behaviours": {
+        "yield_to_merge": {
+          "count": 1,
+          "member_event_count": 1,
+          "eligible_episodes": 50,
+          "eligible_exposure_cav_s": 330404.0,
+          "paired_supported_count": 0,
+          "events_per_cav_hour": 0.010895751867410807,
+          "member_events_per_cav_hour": 0.010895751867410807,
+          "events_per_episode_hour": 0.24
+        },
+        "gap_creation": {
+          "count": 1556,
+          "member_event_count": 1556,
+          "eligible_episodes": 50,
+          "eligible_exposure_cav_s": 330404.0,
+          "paired_supported_count": 0,
+          "events_per_cav_hour": 16.953789905691213,
+          "member_events_per_cav_hour": 16.953789905691213,
+          "events_per_episode_hour": 373.44
+        },
+        "cross_lane_hold": {
+          "count": 501,
+          "member_event_count": 1011,
+          "eligible_episodes": 50,
+          "eligible_exposure_cav_s": 330404.0,
+          "paired_supported_count": 0,
+          "events_per_cav_hour": 5.458771685572814,
+          "member_events_per_cav_hour": 11.015605137952326,
+          "events_per_episode_hour": 120.24
+        },
+        "wave_damping": {
+          "count": 4045,
+          "member_event_count": 4045,
+          "eligible_episodes": 50,
+          "eligible_exposure_cav_s": 330404.0,
+          "paired_supported_count": 0,
+          "events_per_cav_hour": 44.07331630367671,
+          "member_events_per_cav_hour": 44.07331630367671,
+          "events_per_episode_hour": 970.8
+        }
+      }
+    },
+    "mappo": {
+      "episodes": 50,
+      "exposure_cav_s": 332004.0,
+      "exposure_episode_s": 15000.0,
+      "ramp_fit_gap_count": 252,
+      "behaviours": {
+        "yield_to_merge": {
+          "count": 12,
+          "member_event_count": 12,
+          "eligible_episodes": 50,
+          "eligible_exposure_cav_s": 332004.0,
+          "paired_supported_count": 0,
+          "events_per_cav_hour": 0.13011891422994903,
+          "member_events_per_cav_hour": 0.13011891422994903,
+          "events_per_episode_hour": 2.88
+        },
+        "gap_creation": {
+          "count": 2303,
+          "member_event_count": 2303,
+          "eligible_episodes": 50,
+          "eligible_exposure_cav_s": 332004.0,
+          "paired_supported_count": 0,
+          "events_per_cav_hour": 24.97198828929772,
+          "member_events_per_cav_hour": 24.97198828929772,
+          "events_per_episode_hour": 552.72
+        },
+        "cross_lane_hold": {
+          "count": 390,
+          "member_event_count": 788,
+          "eligible_episodes": 50,
+          "eligible_exposure_cav_s": 332004.0,
+          "paired_supported_count": 0,
+          "events_per_cav_hour": 4.228864712473344,
+          "member_events_per_cav_hour": 8.544475367766653,
+          "events_per_episode_hour": 93.6
+        },
+        "wave_damping": {
+          "count": 6665,
+          "member_event_count": 6665,
+          "eligible_episodes": 50,
+          "eligible_exposure_cav_s": 332004.0,
+          "paired_supported_count": 0,
+          "events_per_cav_hour": 72.27021361188419,
+          "member_events_per_cav_hour": 72.27021361188419,
+          "events_per_episode_hour": 1599.6
+        }
+      }
+    }
+  },
+  "episodes": 100,
+  "events": 15473,
+  "rates": "events/CAV-hour; member-events/CAV-hour; groups additionally events/episode-hour",
+  "examples": "largest gap opening, otherwise longest event, first source order breaks ties",
+  "missing_behaviours": "Zero observed events is conditional on recorded coverage, not proof of absence",
+  "analysis_source_sha256": {
+    "report.py": "e882c1085182d4e5d54102afacb1e459106c39865597c430bdf0e2c5b56d275a",
+    "io.py": "90eea640f7ec95f6c2254ed599d8d7de50b3c58476d7065e7d09861be7b1f5f2",
+    "detectors.py": "6cbce83f8c29f6838cd51f9ad6d56f02c8d5ef38855ce826762b76de86a0e7d7",
+    "discovery.py": "bffa342810c5d372e8a20606f41cb0dccf0c615e0c14e3561d0aa38d7f710f9f"
+  },
+  "source_manifest_sha256": {
+    "/root/wmdata2/views": "36894822e007573cd88dc024e962f75d6ae472dda22aa1b2faea6eefa817a9d0"
+  }
+}
