@@ -32,3 +32,20 @@ subsampled and MUST NOT be interpreted as complete insertion/event counts.
 
 The historical 562.4 real / 1265.4 WM2 ramp delay was a different 48-world
 300s fleet contract. No cohort-only score is presented as a matched improvement.
+
+## Committed diagnostic receipts
+
+`docs/rb_merge/fit_native32_post_helper_summary.json` aggregates all 32 native
+FIT worlds for source version 2977be6d. Its runtime source hashes were checked
+against this checkout. Both task-owned cpuQ jobs have exited; do not relaunch
+the retained dispatch scripts to reproduce already completed receipts.
+
+Re-aggregate without running another rollout:
+```
+python -m tools.rbeval.summarize_merge docs/rb_merge/post_helper_fit_300.json --version 2977be6d-source-corrected-population-MOBIL-mainline --dispatch docs/rb_merge/post_helper_fit_dispatch.json --output docs/rb_merge/fit_native32_post_helper_summary.json
+```
+
+Earlier source-version receipts and the adverse first FIT32 screen are retained
+separately. Different versions are not pooled. The ramp-lane speed-loss
+diagnostic uses reference speed 22.22m/s and excludes a ramp vehicle after its
+merge; use full ramp-origin/group clocks for the owner's fleet-delay target.

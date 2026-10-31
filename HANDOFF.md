@@ -1,10 +1,10 @@
-# S-RB-MERGE — in progress (2026-10-31)
+# S-RB-MERGE — implementation and FIT diagnostics complete
 
 LATEST INTEGRATION INCREMENT: **2977be6d** (source corrections; 28 CPU tests pass).
 INT already reconciled mainline ownership: cherry-pick source corrections from
 2977be6d while keeping your root HANDOFF and your integrated sumo_merge hooks.
 This increment changes junction_merge.py / sumo_insertion.py, not sumo_merge.py.
-Current sole owned job: cpuQ **233273**, post-helper FIT32 diagnostic, below.
+Both owned validation jobs exited; no running dispatch remains.
 
 Base: `f0db3c82`, branch `c4/rb-merge`. Owner registration read (line 5682).
 
@@ -104,10 +104,35 @@ Base: `f0db3c82`, branch `c4/rb-merge`. Owner registration read (line 5682).
 - Fresh-session recovery: HEAD f0db3c82; only this untracked handoff survived.
   No implementation, evaluation receipt, PID or dispatch exists in this worktree.
 - Authorization verified at REGISTRATION.md:5683; all four WHY documents read.
-- Implementation increment complete; FIT validation next. No scientific efficacy
-  or 562 veh-s ramp-delay improvement claimed yet.
+- Implementation + FIT32 diagnostics complete. No full-fleet efficacy or
+  historical 562 veh-s ramp-delay qualification claimed.
 - S-RB-LANE and S-RB-INT HANDOFF.md did not exist on initial read (~23:15).
 - Runtime recovered: `py -3.13`, torch 2.15.0+cpu. Use one torch thread.
 - NVIDIA driver unavailable; CPU load 0% at resume resource check.
 - Shared mergespec folder not present on resume; no helper work duplicated.
 - Validation will restrict recorded FIT seeds to 969400–969431 and observable fields.
+
+## Final corrected-version result (2977be6d)
+- Source-hash-verified receipt: `docs/rb_merge/fit_native32_post_helper_summary.json`;
+  raw per-world evidence `post_helper_fit_300.json`, launch receipt
+  `post_helper_fit_dispatch.json`. PID233273 completed in **127.48 s**, exited.
+- All **32 FIT native worlds 969400–969431**, t0=300, horizon=300s. Population
+  default settings; autonomous t0 cohort, no future state feed-back, no entrants,
+  physics MOBIL mainline (LC2013 integration belongs to INT). Every t0 car native.
+- Cohort recorded/predicted merges **200 / 202**, same-ID matches **200**.
+  Matched timing MAE **30.605s**, signed bias **-12.275s**; position MAE
+  **20.236m**, signed bias **+14.040m**. Two extra predicted merges.
+- Named ramp-LANE normalized speed-loss diagnostic: world mean **240.04 real /
+  164.00 predicted veh-s**, per-world/per-vehicle quantiles in receipts. This
+  excludes entrants and ramp-origin traffic after merging; it is NOT the full
+  ramp-ENTRANCE-group delay clock used for historical 562.4/1265.4 values.
+- Recorded-state acceptance TP/FP/FN/TN **410/2496/625/123046**. Physical entrance
+  acceptance at observed births **4865/6154**; recall-only, no false-admission
+  denominator or autonomous count calibration. Full-population NPZ scoring is
+  implemented for the integrator's final rollout, with persistent-ID alignment.
+- **28 CPU tests passed** (11.18s):
+  `py -3.13 -m pytest tests/unit/test_rb_merge.py tests/unit/test_rb_merge_validation.py tests/unit/test_wmfix_admission.py -q`
+  using `PYTHONPATH=src;.` and OMP/MKL threads=1.
+- NOT distributionally qualified. Timing/position errors remain substantial;
+  assess the combined SUMO-IDM + LC2013 + inferred/default settings candidate via
+  INT/EVAL's full-fleet distributional gate. No tuning/training performed here.

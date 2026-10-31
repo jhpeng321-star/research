@@ -1,5 +1,6 @@
 """Aggregate disjoint FIT receipts, retaining scope and version caveats."""
 import argparse
+import hashlib
 import json
 from pathlib import Path
 
@@ -11,6 +12,7 @@ def main():
     p.add_argument('inputs', nargs='+')
     p.add_argument('--version', required=True)
     p.add_argument('--output', required=True)
+    p.add_argument('--dispatch', help='verify frozen runtime source hashes against this checkout')
     args = p.parse_args()
     receipts = [json.loads(Path(path).read_text()) for path in args.inputs]
     rows = [r for receipt in receipts for r in receipt['rows']]
@@ -39,6 +41,16 @@ def main():
         conditional_recorded_state=conditional,
         full_fleet_qualification=False,
         limitations=receipts[0]['limitations'], inputs=args.inputs)
+    if args.dispatch:
+        dispatch = json.loads(Path(args.dispatch).read_text())
+        root = Path(__file__).resolve().parents[2]
+        expected = dict(dispatch['mechanics_sha256'])
+        expected['tools/rbeval/validate_merge.py'] = dispatch['validator_sha256']
+        for path, digest in expected.items():
+            actual = hashlib.sha256((root / path).read_bytes()).hexdigest()
+            if actual != digest:
+                raise ValueError(f'runtime/source hash mismatch: {path}')
+        result['runtime_source_verified'] = expected
     text = json.dumps(result, indent=2, allow_nan=False)
     Path(args.output).write_text(text + '\n')
     print(text)
