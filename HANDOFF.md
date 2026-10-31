@@ -42,6 +42,8 @@ Base: `f0db3c82`, branch `c4/rb-merge`. Owner registration read (line 5682).
   with `PYTHONPATH=src;.` and OMP/MKL threads=1. First pass: 20 tests passed.
 
 ## Integration reconciliation / validation progress (~23:40)
+- Integration reconciliation commit **d6954af3** is REQUIRED after a33e0b55:
+  mainline LC2013 hooks + no duplicate lane-end obstacle. CPU suite now **24 passed**.
 - INT: keep your own root HANDOFF when merging, this task's handoff is a snapshot.
 - S-RB-LANE API now read. SUMO adapter detects `model.lane_model == 'lc2013'`:
   `lc2013_adapter.forward_output/evaluate` owns MAINLINE proposals and persistent
@@ -59,6 +61,14 @@ Base: `f0db3c82`, branch `c4/rb-merge`. Owner registration read (line 5682).
 - Shared targets DONE consumed: `rb-shared/targets/{README.md,DONE.md}`; avoid
   re-extracting target tables. Their 300s ramp-delay fleet clocks differ from
   our explicitly named ramp-lane cohort speed-loss diagnostic.
+- 23:42 first two native FIT 300s checks complete (969400/969401): 17 recorded
+  cohort merges, 17 predicted, 17 same-ID matches. Observed birth admission
+  recall 299/371. This is not full-population insertion calibration.
+- 23:43:41 +08 owned cpuQ PID **200540** runs ONLY remaining native FIT seeds
+  **969402–969431**, 300s, one CPU thread, nice=10. No GPU/SUMO/training.
+  Exclusive launch receipt `/tmp/rb-merge-f2355d13/remaining_fit_dispatch.json`;
+  log `remaining_fit.log`, result `fit_969402_969431_300.json` in that directory.
+  Do NOT duplicate this job. Dispatch code commit `5a7db4ee`.
 
 ## Status / known gaps
 - Fresh-session recovery: HEAD f0db3c82; only this untracked handoff survived.
