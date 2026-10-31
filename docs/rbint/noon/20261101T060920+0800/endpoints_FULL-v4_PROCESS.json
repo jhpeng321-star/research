@@ -1,0 +1,19 @@
+{
+ "pid": 10416,
+ "create_filetime": 134379583435259442,
+ "argv": [
+  "C:\\Users\\jpeng\\miniconda3\\python.exe",
+  "-B",
+  "-m",
+  "tools.rbint.score_endpoints",
+  "--candidate",
+  "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T060920+0800",
+  "--baseline",
+  "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_hdv60_20261101T054124+0800",
+  "--factual",
+  "E:\\agent-work\\c4-rb-int\\docs\\rbint\\hdv60\\FACTUAL_065e9853.json",
+  "--out",
+  "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T060920+0800\\FULL-v4\\endpoints"
+ ],
+ "analysis_only": true
+}
