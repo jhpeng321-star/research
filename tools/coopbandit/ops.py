@@ -8,7 +8,7 @@ from .protocol import checked, digest, sha, worlds, dev_worlds, FORBIDDEN
 LOCAL = Path(__file__).resolve().parents[2]
 REG = Path('E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md')
 PROBE = Path('E:/agent-work/c4-leverprobe/tools/leverprobe')
-ROOT = '/home/ubuntu/coopbandit20261031_v1'
+ROOT = '/home/ubuntu/coopbandit20261031_v2'
 PYTHON = dict(cpuQ='/home/ubuntu/miniconda3/bin/python', gpuR='/root/miniconda3/bin/python', gpuA='/root/miniconda3/bin/python')
 HOSTS = {
     'cpuQ': dict(root=ROOT,runtime='/home/ubuntu/e3final',checkpoint='/home/ubuntu/mappospeed/production2/policy_latest.pt',
@@ -117,6 +117,11 @@ sources={{str(p.relative_to(root/'pytools')):sha(p) for p in (root/'pytools').rg
 binding=dict(host={host!r},runtime={config['runtime']!r},checkpoint={config['checkpoint']!r},deps={config['deps']!r},
  design_sha256=sha(root/'COOPBANDIT_DESIGN.md'),sources=sources,budget=budget(),resources=dict(load_max={config['load_max']},workers={config['workers']}))
 setup(binding)
+import sumo,subprocess
+binary=pathlib.Path(sumo.__file__).parent/'bin/sumo'
+assert binary.is_file()
+version=subprocess.run([str(binary),'--version'],capture_output=True,text=True,check=True).stdout
+assert '1.27.1' in version
 for name,value in [('BINDING.json',binding),('APPROVAL.json',dict(owner_line={owner!r},registration_line={registered!r},
  design_sha256=binding['design_sha256'],registration_sha256={sha(REG)!r}))]:
  if (root/name).exists(): assert read(root/name)==value
@@ -131,7 +136,7 @@ if {host!r}=='cpuQ':
  else: assert read(root/'ALLOCATION.json')==allocation
 admission(root)
 print(json.dumps(dict(host={host!r},runtime_verified=True,checkpoint_verified=True,source_count=len(sources),
- design_sha256=binding['design_sha256'],nice=os.getpriority(os.PRIO_PROCESS,0),sim_s=0)))
+ design_sha256=binding['design_sha256'],nice=os.getpriority(os.PRIO_PROCESS,0),binary=str(binary),sim_s=0)))
 ''')
 
 
@@ -140,8 +145,12 @@ def launch(host,phase,workers=None):
     workers=workers or config['workers']
     return remote(host,f'''import pathlib,json,subprocess,os,sys
 root=pathlib.Path({root!r});assert root.is_dir()
+sys.path[:0]={config['deps']!r}
+import sumo
+sumo_home=str(pathlib.Path(sumo.__file__).parent)
 from_env=dict(os.environ,CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',
- PYTHONPATH=':'.join([{root!r}+'/pytools']+{config['deps']!r}))
+ PYTHONPATH=':'.join([{root!r}+'/pytools']+{config['deps']!r}),SUMO_HOME=sumo_home,
+ PATH=sumo_home+'/bin:'+str(pathlib.Path(sys.executable).parent)+':'+os.environ.get('PATH',''))
 log=(root/{('SUPERVISOR_'+phase+'.log')!r}).open('x')
 p=subprocess.Popen(['nice','-n','19',sys.executable,'-B','-u','-m','tools.coopbandit.runner',str(root),
  '--phase',{phase!r},'--workers',{str(workers)!r}],cwd=root,env=from_env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,stdin=subprocess.DEVNULL)

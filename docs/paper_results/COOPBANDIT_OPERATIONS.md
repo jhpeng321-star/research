@@ -27,3 +27,11 @@ At >=100 states with all four completed option labels, export an explicitly part
 EXAM and run nested world-grouped CV. Completion order makes this exploratory;
 do not treat it as a representative estimate of the complete registered mixture.
 The existing S-COOPBANDIT-LEARN helper receives the same schema and confidence rule.
+
+## Diagnosed infrastructure correction, before further dispatch
+cpuQ v1 PID250743 exited before physics because SSH PATH omitted the installed SUMO
+binary. CLOSE records actual0 and charged1140. Preserve v1 STOP, source and charge.
+Explicit v2 dispatch adds binary-version preflight and exports installed SUMO_HOME/bin
+on PATH; scientific runtime, safety and plan are unchanged. Retain the old1140 charge
+against the reserve: conservative data1,490,340<=1,500,000, plus live99,360 gives
+1,589,700<=1,600,000 (10,300 slack). Successful data remains1,489,200 actual sim-s.
