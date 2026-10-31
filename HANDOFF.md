@@ -1,128 +1,89 @@
-# S-RB-MERGE — live integration handoff
+# S-RB-MERGE — integration handoff / owned validation complete
 
-Branch `c4/rb-merge`, basef0db3c82. Owner registration5683/MAIN00:10.
-Earlier work retained in `docs/rb_merge/HANDOFF_HISTORY_{0100,0315}.md`.
+Branch `c4/rb-merge`, basef0db3c82. Prior work fully retained; see
+`docs/rb_merge/HANDOFF_HISTORY_{0100,0315,FINAL_VALIDATION}.md` and source ledger.
 
-## Status / owned dispatches
-- **v7fast PID682380 EXITED,32/32 H600 worlds complete**, source158d0193.
-- **v8end120 PID750052 EXITED,32/32 H120 worlds complete**, sourcec8e54017.
-- All earlier v3/v4/v5/v6 jobs terminal.
-- **v8end600 COMPLETE32/32, PID789747 EXITED**, source93693678;
-  validator SHA `b7d4721f500e919e025c57abc3bc357c2d87723d4a93cdad5c012783d9d1db26`.
-  Receipt `/tmp/rb-merge-fullfleet-v8end600/LAUNCH.json`; immutable completed
-  snapshot. OneCPU/nice19/CUDA-hidden, load2.11/32 at launch03:26:36 +08.
-  Same source/operator as
-  v8end120; **58 CPU tests PASS /2.46s**, all32 source/strict-encoder preflights PASS.
-  H600/512slots/FIT969400–969431/native/stream190; explicit `--entry-phase after`.
-  Saved clocks/events/front traces will be checked against the completed H120
-  prefix, not counted as another independent world/future. Three prefix-audit
-  CPU tests PASS (changed contracts/checkpoints/birth/trace rejection).
-  **All32 saved clock/event/front-trace prefixes PASS bit-exact** against H120;
-  `docs/rb_merge/fullfleet_v8_saved_prefix.json` (not full trajectory parity).
-  Do not relaunch any completed version. Old v7 directory is engineering only.
-- Latest integrated screen `/tmp/rb-merge-fullfleet-v9latest300` **LIVE**:
-  **03:49:23 +08**, owned cpuQ PID**840607**, source6bb7ce99,
-  validator SHA `ae4d2412050de70baa0de57de38f2de6ac853e506e413ed291d9298a8baa1b14`.
-  Receipt `/tmp/rb-merge-fullfleet-v9latest300/LAUNCH.json`; oneCPU/nice19,
-  load18.03/32; distinct new-source H300 screen, do not duplicate.
-  INT**8e964de5** (new CF source lane-cap/link chain + LANE raw
-  origins/position-translation API), current owned kernels/phase/native callback,
-  same frozen encoder and FIT32/H300/512slots/stream190, CPU exact-fast flags.
-  **58 CPU tests PASS /3.13s**, all32 strict input/encoder preflights PASS.
-  Producer INT recorded lane-arbitration parity receipt also PASS; runtime
-  construction names exact source commits in STAGE.json. v8end600 stays frozen.
+## Status
+- **ALL owned inference jobs EXITED. No running dispatch remains.**
+  v7fast682380 H600, v8end120750052 H120, v8end600789747 H600,
+  v9latest300840607 H300 all32/32 complete. Earlier v3/v4/v5/v6 terminal.
+  Do not redispatch completed versions. Old v7 directory is engineering only.
+- Hash-verified raw receipts and compact scores under `docs/rb_merge/`.
+  v8 H120→H600 saved clocks/events/front traces **32/32 bit-exact PASS**;
+  `fullfleet_v8_saved_prefix.json` (not full-trajectory parity).
+- Source engineering delivered; **NOT distributionally qualified**. Native-only,
+  one point-settings future/world cannot certify rate/timing/action-shift gates.
 
-## Source increments for INT (keep your own root handoff / adapter)
-- **c8e54017** NEW `model/sumo_departure.py::step_after_movement`: source
-  MSNet.cpp order is move → LC → removePending → emitVehicles. Explicit opt-in
-  one-step API: newborns at basePos/departSpeed, no same-tick motion/LC/control.
-  Preserves source generator/FIFO/ordinals/SourceLedger/padding pool. Returns
-  `source_before`, `source_birth_mask`, `source_exit_mask`,
-  `driver_params_after_insertion`. Use those for boundary costs/next-step params;
-  a post-insertion entry-observer snapshot is NOT the old road cohort.
-  Same-tick exit/birth cannot overwrite one logged slot; newborn history resets.
-  **7 dedicated phase tests PASS**,58 combined runtime tests PASS. No shared
-  wms/spec/factory edits. Existing rollout default remains before-phase.
-  API follow-up: explicit/inferred driver settings require a coupled entrant
-  sampler, preventing newborns from inheriting unrelated departed-slot settings.
-  **9 dedicated phase tests PASS /4.34s**; all active screens already provide
-  both, so their frozen input/dynamics contracts are unchanged.
-- **158d0193** candidate-local sequential geometry: O(ramp_count*slots), bit-exact
-  to full-frame geometry with heterogeneous/batched inputs; reservations preserved.
-- **9bdc35e5** exact IDM minNextSpeed low-b bound + causal encoder/600s harness.
-- **d7be510a /0729e09c** native physics callback and `native_physics_accel` for
-  native-relative controls. Frozen native head incorrectly uses slot0 dv without
-  a same-lane leader; unrelated mainline traffic can trap an unled ramp CAV.
-  CPU reproduction + FIT969400/CAV187: old stays at s=-1.464/v0 through600;
-  physics-native merges at326.5/s52.884. No head retrained/modified.
-- **3df73a27 /5870b556** local22.22 ramp-approach →31.29 acceleration-lane
-  speed limits, inferred v0/referenceLimit factor, exact weighted BirthMix draw,
-  source EPS=.001/POSITION_EPS=.1 (not SPEED_EPS=.01).
-- **0090c168** leader overtake time+space / Euler brakeGap(tau) / unblocked
-  leader advice. Keep INT's post-motion mainline arbitration; only two hooks:
-  merge_speed_advice `lookahead_speed=state.get('lc2013_lookahead')`,
-  apply_merge `lookahead_speed=out.get('lc2013_lookahead')`.
-- `PhysicsConfig.merge_model='sumo'` defaultlegacy; bypass learned merge/courtesy/
-  ramp adaptation/admission/motion/noise. Motion-inferred/default settings only.
+## Source increments for INT — keep your root handoff / reconciled adapter
+- **c8e54017 +d1167648** `model/sumo_departure.step_after_movement`:
+  explicit opt-in one-step source order move→LC→emit. Newborns at basePos /
+  departSpeed; no birth-tick movement/LC/control. Exact FIFO/ordinal/SourceLedger,
+  original padding pool restored, no same-frame exit/birth identity overwrite.
+  Returns `source_before`, `source_birth_mask`, `source_exit_mask`,
+  `driver_params_after_insertion`; boundary costs use the old-road cohort,
+  NOT an entry observer's post-motion snapshot. Reset newborn short/LC history.
+  Inferred/fixed settings require a coupled entrant sampler.9 phase tests PASS.
+  No shared wms/spec/factory changes; original rollout default stays before.
+- **d7be510a /0729e09c** `model/sumo_native` callback + `native_physics_accel`:
+  frozen native head's missing-leader dv uses unrelated slot0 speed, causing
+  false ramp-CAV standstill. CPU reproduction and FIT969400/CAV187 evidence:
+  old s=-1.464/v0 through600, physics-native merges326.5/s52.884. Explicit opt-in,
+  same registered executor bounds, no head retraining/modification.
+- **3df73a27 /5870b556** network22.22 approach→31.29 accel-lane limits,
+  existing inferred v0/referenceLimit factor, weighted BirthMix exact candidate,
+  NUMERICAL_EPS=.001/POSITION_EPS=.1 (not SPEED_EPS=.01).
+- **9bdc35e5** source low-b IDM minNextSpeed bound; existing frozen encoder
+  settings and ordinal-verified newcomer point coupling /600s harness.
+- **158d0193** exact selected-ego sequential geometry, O(ramps*slots), full-frame
+  heterogeneous/batched bit parity; keep INT's own query fast path if preferred.
+- **0090c168** leader time+space/Euler-brakeGap(tau)/unblocked-leader advice.
+  Retain INT mainline arbitration; only hooks are `lookahead_speed=state.get(...)`
+  and post-motion `out.get('lc2013_lookahead')`.
+- Switch `PhysicsConfig.merge_model='sumo'` defaultlegacy; learned merge/courtesy/
+  ramp adaptation/admission/motion/noise bypassed. Settings default/motion only.
 
-## Completed FIT32 diagnostics (one future/native only — NOT qualified)
-- First-step target audit found2 genuine transitions missing from helper CSV:
-  969413/VID144 and969419/VID181 at300.5s. Validated from normal-road observable
-  t300/t300.5 views; episode/target SHA-bound, no prediction feedback. Shared
-  CSV/old reports unchanged. New `--boundary-targets` sidecar resolves v6's
-  apparent extra2: **202 recorded/202 predicted/202 matched,0 missed/extra**,
-  timeMAE29.13s /position13.33m. Delay metrics unchanged. See
-  `docs/rb_merge/{boundary_native_fit32,fullfleet_v6_boundary_summary}.json`.
-  Eight boundary/receipt CPU tests PASS; augmentation is explicit, not pooled
-  silently into earlier reported target definitions.
-- v6 population/SUMO-CF/physics-native, H300: all200 recorded t0 merges matched,
-  202predicted; full-fleet merge mean33.16 vs33.06real. Ramp delay1185.32 vs
-  2272.78veh-s real: removed false gridlock but over-clears; W1=1087.46.
-- **v7fast frozen motion encoder + latest LANE811cd7e8**, original before-phase:
-  H120 mean955.84/928.87 real, W1=137.75;
-  H3002451.98/2272.78, W1=497.39;
-  H6005026.36/4670.05, W1=1764.62. H600 predicted q10/50/90=2206/3619/7668,
-  real3058/4513/6103. All200 t0 merges matched; timingMAE41.98s, position13.48m.
-  Broader tails still wrong; multiple source/settings details changed vs v6.
-- **v8end120 post-motion phase**, same frozen encoder/native/LC settings:
-  mean955.17 vs928.87 real, W1=155.26 (no marginal improvement over v7 H120).
-  H120 t0 matches160/193, timeMAE18.55s, position12.34m; censored support differs
-  from H600. Prefer source-correct ordering for fidelity, not outcome tuning.
-- **v8end600 post-motion phase completed**: H120955.17/928.87 real,
-  H3002325.14/2272.78, H600**4663.06/4670.05veh-s**. W1=155.26/454.97/1553.28.
-  Matched mean is NOT matched distribution: H600 q10/50/90 predicted2118/3705/
-  8243 vsreal3058/4513/6103. Explicit boundary-augmented t0:202/202 matched,
-  no missed/extra; timingMAE43.83s, position13.36m. All32 road/source/no-slot
-  gates PASS; no beyond-end merges.69 combined local CPU tests PASS /7.19s.
-  Main report `fullfleet_v8end600_summary.json`, separate boundary report
-  `fullfleet_v8end600_boundary_summary.json`; raw receipts retained.
-- Both new panels:32/32 exact road/source conservation, no discarded demand or
-  slot pressure; no beyond-end merges. Raw corridor-overlap samples are NOT SUMO
-  collision counts. Recorded t0 geometry audit:4 raw-frame overlaps in402/405/
-  419/425, **zero after connector-length chain mapping**. Projection artifacts.
-  That audit proves only initial geometry, not every later overlap sample.
-- Historical562.4/1265.4 is a different panel/clock; matched recorded world values
-  above are primary. No breakdown/controller-shift/conditional-uncertainty PASS.
-- Hash-verified raw `docs/rb_merge/fullfleet_v{7fast,8end120}/`, compact
-  `fullfleet_v{7fast,8end120}_summary.json`. Initial audit in v7fast collection.
-  JSON receipts byte-preserved by local .gitattributes; old records retained.
+## Validation outcomes — matched FIT32/native, t0=300, stream190
+- **v8end600**, INT4015b641 + source phase/native/frozen encoder, H600:
+  ramp mean H120955.17/928.87real, H3002325.14/2272.78,
+  H600**4663.06/4670.05veh-s**. W1=155.26/454.97/1553.28.
+  H600 tails wrong: predicted q10/50/90=2118/3705/8243 vsreal3058/4513/6103.
+  Boundary-augmented t0 **202/202 matched**,0missed/extra; timingMAE43.83s,
+  position13.36m. Matched mean is not matched distribution. Report
+  `fullfleet_v8end600_boundary_summary.json`; unaugmented report retained.
+- **v9latest300**, INT8e964de5 (new CF lane-cap/link chain + LANE raw origins /
+  translated positions), same point encoder/post-phase/native, exact CPU flags:
+  H120927.56/928.87real, W1=135.83; H300**2187.72/2272.78**, W1=522.28.
+  H300 boundary-augmented195/202 t0 matches,7missed,0extra; timingMAE33.55s /
+  position12.60m. q10/50/90=977/1785/3795 vsreal1641/1966/3422. Latest geometry
+  is NOT an across-metric win over old v8 (H300W1=454.97). No outcome tuning.
+  Reports `fullfleet_v9latest300{,_boundary}_summary.json`; H600 not run forv9.
+- Both completed panels:32/32 road/source conservation, no lost demand/no_slot,
+  no beyond-end merges.1-future/native-only screen, not full EVAL qualification.
+- Historical562.4/1265.4 is another panel/clock; matched recorded world clocks
+  above are primary. No held/reserved/forbidden tape paths used.
 
-## Settings / interfaces / checks
-- Reused LANE **b192e0c8** strict extractor, registered WM2 SHA b8797242…;
-  producer parity all9 outputs bit-exact. Preserve trained legacy encoder
-  feature/default geometry; SUMO geometry only for rollout. Initial HDV settings
-  follow public VID /240..300 motion; CAV defaults retained; newcomer HDVs use
-  zero-history encoder centre. No new extraction implementation/fit/training.
-- `EncodedPointBirths` checks admission/newborn ordinal identity for EVERY birth.
-  Entry process requires conserve_queue=True/couple_draws=True/row_seeds.
-- Boundary delay:31.29 reference, no newborn road charge, prior speed on exit,
-  ramp origin retained after merge, fractional source waiting separate.
-- Tools: `remote_full_fleet.py status|poll|trace|initial-geometry|collect --version …`.
-  Current runner defaultv8end600/after; direct validator default remains before.
-  Single-thread/nice19/CUDAhidden; check load before launch. No GPU/SUMO/training,
-  peer signals, truth/assignment paths, newenv, reset/clean/deletion/push.
-- Source ledger `docs/rb_merge/SOURCES.md`; public CPP read-only in NEW empty
-  temp directory, never executed. Coordination pointers in rb-shared/MERGE_*.md.
-- Scope gaps: synchronous LC, complete blocker negotiation, explicit internal
-  junction state/actionStep, calibrated hidden-driver/arrival futures; final
-  distributional gate belongs to INT/FIT/UNC/EVAL, not this point-settings screen.
+## Target / geometry audits and input contract
+- Helper misses2 real first-step300.5s merges:969413/VID144 and969419/VID181.
+  Episode/target SHA-bound views audit; `boundary_native_fit32.json`. Original
+  helper CSV/old reports unchanged; `--boundary-targets` writes separate reports.
+- Recorded t0 audit:4 raw-frame body overlaps (402/405/419/425), **0 in lane-chain
+  coordinates**. Only initial projection artifacts proven; later raw overlap
+  samples are NOT SUMO collision logs or automatically physically exonerated.
+- Reused LANEb192e0c8 extractor / frozen WM2 b8797242…; producer all9 settings
+  bit-exact. Source legacy feature/default geometry for encoding, SUMO for rollout.
+  Initial HDV settings by public VID /240..300 motion; CAV defaults retained;
+  future HDVs frozen zero-history centre. No reimplementation/refit/training.
+- Every admission/newborn shares exact ordinals. Entry process requires
+  conserve_queue=True/couple_draws=True/row_seeds.31.29 delay reference, no newborn
+  road charge, old speed on exit, ramp origin after merge, fractional source wait.
+
+## Verification / scope
+- **69 local merge/native/phase/identity/receipt/boundary/prefix tests PASS /7.19s**;
+  **58 combined runtime CPU tests PASS** on both staged engine versions.
+  Original/augmented targets, source hashes, per-world distributions all retained.
+- `docs/rb_merge/SOURCES.md` records public source anchors. CPP read only in NEW
+  empty temp dirs, never executed. No GPU/SUMO/training, peer signals, truth or
+  assignment reads, newenv, reset/clean/deletion/push. All changes committed.
+- Open parity scope: serial LC /complete blocker negotiation /explicit internal
+  junction state /calibrated hidden-driver+arrival futures. INT/FIT/UNC/EVAL own
+  final FULL qualification. Coordination pointers: `rb-shared/MERGE_*.md`.
