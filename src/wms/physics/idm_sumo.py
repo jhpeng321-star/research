@@ -52,10 +52,15 @@ Conventions/limits (documented gaps, no silent deviation):
   IDMM adaptation, ``patchSpeedBeforeLC`` dawdling, startup delay, stops and
   junction link speeds are not part of car-following parity (IDM defaults are
   no-ops for them; junctions/insertion policy belong to S-RB-MERGE).
-* ``emergencyDecel`` defaults to ``decel`` (SUMO vType default), which pins the
-  IDM's hard-braking floor to the comfortable deceleration exactly like SUMO.
+* ``emergencyDecel`` defaults to **9 m/s^2** (the SUMO passenger-vClass
+  default, ``MSCFModel.cpp:59-60`` + docs; NOT decel — that is apparentDecel's
+  default), so IDM hard braking is floored at 9 m/s^2 per step exactly like a
+  default SUMO passenger vType.
 
 Pure tensor functions; differentiable in the inputs where natural; no RNG.
+Reconciled with the rb-shared ``idmspec`` reference (spec.md, ref_idm.py,
+20 test vectors; NUMERICAL_EPS=0.001 from ``src/config.h.cmake:236`` and
+emergencyDecel=9 confirmed independently by S-RB-FIT).
 """
 from __future__ import annotations
 
@@ -66,12 +71,16 @@ from typing import Mapping, Optional
 import torch
 from torch import Tensor
 
-#: SUMO ``NUMERICAL_EPS`` (utils/common/StdDefs.h).
-NUMERICAL_EPS = 0.01
+#: SUMO ``NUMERICAL_EPS`` (src/config.h.cmake:236 of tag v1_27_1).
+NUMERICAL_EPS = 0.001
 #: SUMO vType ``carFollowModel`` parameter ``cf.idmStepping`` default (s).
 DEFAULT_CF_STEPPING_S = 0.25
 #: IDM ``delta`` exponent default (``SUMO_ATTR_CF_IDM_DELTA``).
 DEFAULT_IDM_DELTA = 4.0
+#: SUMO passenger-vClass default ``emergencyDecel`` (m/s^2).
+DEFAULT_EMERGENCY_DECEL = 9.0
+#: ``EMERGENCY_DECEL_AMPLIFIER`` (MSCFModel.h:35).
+EMERGENCY_DECEL_AMPLIFIER = 1.2
 #: Cap of the comfortable-deceleration relaxations in ``minNextSpeed``
 #: (``MIN2(myEmergencyDecel, 1.5)`` of MSCFModel_IDM.cpp:82).
 MIN_NEXT_SPEED_EMERGENCY_SLACK = 1.5
@@ -95,7 +104,8 @@ class SumoIDMParams:
     the WM's driver ``v0`` (encoder-inferred or the population default) is that
     value.  ``vtype_max_speed`` caps acceleration like SUMO's ``maxNextSpeed``
     (``None`` = unbounded, i.e. the desired speed dominates as on this road).
-    ``emergency_decel`` ``None`` means "use decel" (the SUMO default).
+    ``emergency_decel`` ``None`` means the SUMO passenger-vClass default 9
+    m/s^2 (``DEFAULT_EMERGENCY_DECEL``).
     """
 
     accel: float | Tensor
@@ -124,8 +134,9 @@ class SumoIDMParams:
                    else des_speed)
 
     def effective_emergency_decel(self):
-        """``emergency_decel`` resolved (None -> decel, the SUMO default)."""
-        return self.decel if self.emergency_decel is None else self.emergency_decel
+        """``emergency_decel`` resolved (None -> the SUMO passenger default 9)."""
+        return DEFAULT_EMERGENCY_DECEL if self.emergency_decel is None \
+            else self.emergency_decel
 
 
 def _pair(x: float | Tensor, like: Tensor) -> Tensor:
@@ -214,30 +225,33 @@ def sumo_idm_step(v: Tensor, gap_bumper: Tensor, leader_v: Tensor, lane_max: Ten
     """One full SUMO Euler step of the IDM composition.
 
     ``lane_max`` is ``veh->getLane()->getVehicleMaxSpeed(veh)`` (the desired
-    speed ``des_speed`` of ``_v`` is exactly this; it is passed separately so a
-    caller can hold the desired speed while probing a different limit).  The
-    returned ``(v_next, accel)`` follows ``planMoveInternal`` -> ``adaptToLeader``
-    -> ``finalizeSpeed`` with default ``actionStepLength == TS`` and no stops:
-    ``vNext = clamp(vSafe, vMin, min(vSafe, v + a*TS, vTypeMax))`` with
-    ``vMin = min(minNextSpeed, max(vSafe, vMinEmergency))``.  ``accel`` is
-    ``(v_next - v) / dt``; the WM integrator reproduces the SUMO speed/position
-    update from it.
+    speed ``des_speed`` of ``_v`` is exactly this).  The returned
+    ``(v_next, accel)`` follows ``planMoveInternal`` -> ``adaptToLeader`` ->
+    ``finalizeSpeed`` with default ``actionStepLength == TS`` and no stops.
+    Exact chain (idmspec spec.md section 4):
+
+    * ``laneCap = max(lane_max, minNextSpeed(v))``   (speed limits are not
+      emergencies, MSVehicle.cpp:2289-2290);
+    * ``vPos = min(vSafe, laneCap, maxNextSpeed(v))`` (planMove initialises
+      v = maximumLaneSpeedCF(maxNextSpeed, laneCap), adaptToLeader min-es the
+      leader safe speed in);
+    * ``vMin = min(minNextSpeed(v), max(vPos, minNextSpeedEmergency(v)))``;
+    * ``vNext = max(vMin, min(vPos, maxNextSpeed(v)))`` (finalizeSpeed:
+      ``vMax = MAX2(vMin, vMax)``, ``patchSpeedBeforeLC`` base returns vMax).
+
+    ``accel`` is ``(v_next - v) / dt``; the WM integrator reproduces the SUMO
+    speed/position update from it.
     """
     v_safe = follow_speed(v, gap_bumper, leader_v, lane_max, p, dt_s=dt_s,
                           iterations=iterations)
-    v_max = torch_minimum(torch_minimum(v_safe, max_next_speed(v, p, dt_s=dt_s)),
-                          _lane_cap(lane_max, v_safe))
-    v_min = torch_minimum(min_next_speed(v, p, dt_s=dt_s),
-                          torch_maximum(v_safe, min_next_speed_emergency(v, p, dt_s=dt_s)))
-    # finalizeSpeed: vMax = MAX2(vMin, vMax); vNext = vMax (patchSpeedBeforeLC
-    # base) - the braking-capability floor can override the safe speed.
-    v_next = torch_maximum(v_min, v_max).clamp_min(0.0)
+    floor_c = min_next_speed(v, p, dt_s=dt_s)
+    lane_cap = torch_maximum(lane_max, floor_c)
+    v_pos = torch_minimum(torch_minimum(v_safe, lane_cap), max_next_speed(v, p, dt_s=dt_s))
+    v_cap = torch_minimum(v_pos, max_next_speed(v, p, dt_s=dt_s))
+    v_min = torch_minimum(floor_c,
+                          torch_maximum(v_pos, min_next_speed_emergency(v, p, dt_s=dt_s)))
+    v_next = torch_maximum(v_min, v_cap).clamp_min(0.0)
     return v_next, (v_next - v) / float(dt_s)
-
-
-def _lane_cap(lane_max: Tensor, v_safe: Tensor) -> Tensor:
-    """``MIN3(MAX2(laneMaxSpeed, vPos), ...)`` degenerate term of ``finalizeSpeed``."""
-    return torch_maximum(lane_max, v_safe)
 
 
 def maximum_safe_stop_speed_euler(gap: Tensor, decel: Tensor, headway_time: Tensor,
@@ -258,28 +272,58 @@ def maximum_safe_stop_speed_euler(gap: Tensor, decel: Tensor, headway_time: Tens
                        torch.zeros_like(x), x.clamp_min(0.0))
 
 
+def calculate_emergency_deceleration(gap: Tensor, ego_speed: Tensor, pred_speed: Tensor,
+                                     pred_max_decel: float,
+                                     p: SumoIDMParams) -> Tensor:
+    """``MSCFModel::calculateEmergencyDeceleration`` (MSCFModel.cpp:1037-1086)."""
+    emerg = _pair(p.effective_emergency_decel(), ego_speed)
+    pred_brake = 0.5 * pred_speed * pred_speed / float(pred_max_decel)
+    b1 = 0.5 * ego_speed * ego_speed / (gap + pred_brake).clamp_min(1.0e-12)
+    b2 = 0.5 * (ego_speed * ego_speed - pred_speed * pred_speed) / gap.clamp_min(1.0e-12)
+    out = torch.where(b1 <= float(pred_max_decel), b1, b2)
+    return torch.where(gap <= 0.0, emerg, out)
+
+
+def maximum_safe_stop_speed(gap: Tensor, decel: Tensor, current_speed: Tensor,
+                            p: SumoIDMParams, headway: Tensor, *,
+                            dt_s: float) -> Tensor:
+    """``MSCFModel::maximumSafeStopSpeed`` (MSCFModel.cpp:806-856, Euler branch)
+    including the default ``relaxEmergency=true`` relaxation of :815-844."""
+    vsafe = maximum_safe_stop_speed_euler(gap, decel, headway, dt_s=dt_s)
+    emerg = _pair(p.effective_emergency_decel(), current_speed)
+    relax = torch.not_equal(_pair(p.decel, current_speed), emerg)
+    orig_safe_decel = (current_speed - vsafe) / float(dt_s)
+    need = orig_safe_decel > _pair(p.decel, current_speed) + NUMERICAL_EPS
+    safe_decel = EMERGENCY_DECEL_AMPLIFIER * calculate_emergency_deceleration(
+        gap, current_speed, torch.zeros_like(current_speed), 1.0, p)
+    safe_decel = torch_maximum(safe_decel, _pair(p.decel, current_speed))
+    safe_decel = torch_minimum(safe_decel, orig_safe_decel)
+    relaxed = (current_speed - safe_decel * float(dt_s)).clamp_min(0.0)
+    return torch.where(relax & need, relaxed, vsafe)
+
+
 def stop_speed(v: Tensor, gap: Tensor, p: SumoIDMParams, *, dt_s: float,
                iterations: int, action_step_s: Optional[float] = None) -> Tensor:
     """``MSCFModel_IDM::stopSpeed`` (MSCFModel_IDM.cpp:179-200).
 
     ``gap`` is the raw distance to the standing obstacle (no ``minGap``).
     ``gap < 0.01`` stops immediately; standing vehicles that the IDM cannot
-    resolve fall back to ``maximumSafeStopSpeed`` (Euler) with the vehicle's
-    ACTION-STEP length as the headway argument (the SUMO call passes
-    ``actionStepLengthSecs``, i.e. ``dt_s`` at the default), and the result
-    never exceeds ``gap/TS``.
+    resolve fall back to ``maximumSafeStopSpeed`` (Euler + emergency
+    relaxation) with the vehicle's ACTION-STEP length as the headway argument
+    (the SUMO call passes ``actionStepLengthSecs``, i.e. ``dt_s`` at the
+    default), and the result never exceeds ``gap/TS``.
     """
     like = v
     des = _p_lane_max(p, like)
     result = torch.where(gap < 0.01, torch.zeros_like(v),
                          sumo_idm_v(v, gap, torch.zeros_like(v), des, p, dt_s=dt_s,
                                     iterations=iterations, respect_min_gap=False))
-    standing = (v < NUMERICAL_EPS) & (result < NUMERICAL_EPS) & (gap > 0.0)
+    standing = (v < NUMERICAL_EPS) & (result < NUMERICAL_EPS) & (gap >= 0.01)
     if bool(standing.any()):
         decel = _pair(p.decel, like)
         headway = like.new_full((), float(dt_s if action_step_s is None
                                           else float(action_step_s))).expand_as(like)
-        fallback = maximum_safe_stop_speed_euler(gap, decel, headway, dt_s=dt_s)
+        fallback = maximum_safe_stop_speed(gap, decel, v, p, headway, dt_s=dt_s)
         result = torch.where(standing, fallback, result)
     return torch_minimum(result, gap / float(dt_s)).clamp_min(0.0)
 
