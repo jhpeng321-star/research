@@ -27,6 +27,9 @@
   Checkpoint completion is NOT a full-panel result or pilot PASS.
 - UPDATE18:14:15: step20 saved2c1d1520 (finite/frozen kept);4 baseline shards
   now live incl.233889. Full step10 panel remains queued; no completed shard yet.
+- UPDATE18:30:36: all30 updates complete, step30aa8df951; all finite/frozen.
+  Pilot waits for panel queue; no continuation/decision yet. Aggregate paired
+  loss share .9370, anchor .0630. Full step10 remains pending.
 
 ## SUPERSEDING MAIN 15:25 v2-DATA / Sol resume 15:34 gpuA clock
 - MAIN approved DATA ONLY, smoothing OFF, amended v1 30-step pilot gate. Code:

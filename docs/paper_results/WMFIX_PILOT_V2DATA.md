@@ -165,3 +165,16 @@ decision. GPU parity/launch/decision remain pending.
 - Memory admission has grown to the registered maximum4 baseline shards
   (224101/224982/226871/233889). At18:15 all4 are live; no shard/full panel has
   completed yet. Step10/20 evaluation remains queued; no gate/accuracy claim.
+
+## Thirty updates complete, 2026-10-31 18:30:36 +08
+- step_000030.pt SHA256
+  `aa8df951643bb6eec3d5a341687db407d1d28aa1cd28f8c91851c67c6d7f0120`.
+  All30 update receipts finite_gradients=true/frozen_bitwise=true. Update30
+  81.23s; elapsed5263.41s including original spent budget. No update duplicated.
+- Aggregate training-loss shares (sum of per-update terms, not a panel score):
+  paired gradient .937024 / absolute anchor .062976. Individual paired shares
+  range .006725-.996771; all terms remain available in immutable update JSONs.
+  Source waiting is reported separately; it is not reintroduced into gradients.
+- Four same-gpuA baseline shards remain live; step10/20/30 shards queued.
+  Pilot now waits in panel drain. No full panel/decision/continuation yet;
+  FULL_PANEL_STEP10.json remains the monitored milestone. Budget cap unchanged.
