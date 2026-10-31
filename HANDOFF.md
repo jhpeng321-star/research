@@ -62,6 +62,21 @@ REGISTRATION.md:5683,5694; all four WHY reports and ENSPROBE read.
   queued-work resource gate. `/home/ubuntu/rbunc20261031/fit_probe_v1/`.
 - Exact Poisson request-count spread additionally saved at120/300/600s.
 - Initial remote load2.07/32 CPUs, panel check3.89; no GPU used.
+- v1 complete32/32, 280 physical120s futures including first-world ablations.
+  All fixed-latent first-world tapes identical. Raw v1 preserved in
+  `docs/paper_results/rbunc/fit_h120.json` and remote fit_probe_v1.
+- Found a likelihood-mechanics error in its diagnostics: raw unbounded IDM
+  predictions at compressed/censored gaps gave residual MSE up to1.6e10.
+  Observed acceleration is executed plant motion; likelihood now uses the
+  model's EXISTING acceleration limits, no invented threshold. Regression added.
+  Fresh versioned v2 rerun will preserve all v1 attempts/results, no retuning
+  to factual delay or conditional-spread target.
+- v2 staged `e448360130cc`, own canary252452/supervisor252519, separate
+  `/home/ubuntu/rbunc20261031/fit_probe_v2/`. New-suite12CPUtestsPASS/18.64s.
+- Actual INT-runtime synthetic LC2013+SUMO-insertion smoke PASS: two independent
+  five-tick replays identical; admitted settings equal newborn settings exactly,
+  global RNG unchanged. `docs/paper_results/RBUNC_INTEGRATION_SMOKE.json` binds
+  source hashes (tested bridge commit9739d304; likelihood change is independent).
 
 ## Known gaps
 - Recorded FIT source-attribution outputs being collected; no distributional

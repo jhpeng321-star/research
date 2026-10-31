@@ -69,3 +69,23 @@ No result calibrates the sampling scale or changes this frozen code.
   they must not be tuned to equality. This is not a coverage qualification panel.
 - Integrated WM-PHYS A must use the same adapter in S-RB-INT/S-RB-EVAL for its
   separately frozen120/300/600s efficacy analysis.
+
+## Mechanical likelihood correction / retained v1
+
+All32 v1 worlds completed. Its causal likelihood diagnostics exposed raw-IDM
+residual MSE up to3.18e10 at compressed/censored gaps. The residual compared
+executed observed acceleration against an unbounded internal IDM quantity.
+Correct that mismatch using the model's **existing** plant acceleration bounds;
+do not choose a new threshold or use factual delay to tune any scale. The source
+attribution reference is otherwise unchanged. Regression verifies compressed-gap
+raw acceleration below-1000 becomes the configured plant bound, with the expected
+finite observation residual MSE.
+
+- v2 immutable source: `/home/ubuntu/rbunc20261031/code/e448360130cc`.
+- Separate output directory `fit_probe_v2`, own canary252452/supervisor252519.
+- Same32 identities, K8, H120 and source ablations; all v1 attempts retained.
+- v1 raw output and initial analysis are preserved under `docs/paper_results/rbunc`.
+  A counting-label audit identified recorder `arrivals` as **destination exits**
+  (`env.py:678`, `branching.py:374`), not entrance requests. Request-spread tables
+  must compare with Poisson theory only; any recorded exit SD is separately named
+  and explicitly incomparable. Team/source/road delay comparisons are unaffected.

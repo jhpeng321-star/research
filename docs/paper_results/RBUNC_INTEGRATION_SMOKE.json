@@ -1,0 +1,68 @@
+{
+ "status": "PASS",
+ "scientific_rollouts": 0,
+ "synthetic_replays": 2,
+ "ticks_per_replay": 5,
+ "exact_admission_motion_identity": true,
+ "global_rng_unchanged": true,
+ "tape_sha256": [
+  "316a590bbd1f901a8ef7cf0750868e021e72b236755e1b9a55b5a3ce3ea03636",
+  "316a590bbd1f901a8ef7cf0750868e021e72b236755e1b9a55b5a3ce3ea03636"
+ ],
+ "assigned": [
+  [
+   {
+    "v0": 31.004606246948242,
+    "time_headway": 1.0603018999099731,
+    "min_gap": 2.4749953746795654,
+    "accel": 2.5572400093078613,
+    "decel": 4.444955348968506,
+    "politeness": 0.24936822056770325,
+    "mobil_threshold": 0.09036846458911896,
+    "merge_gap": 5.646902561187744,
+    "merge_urgency": 1.007710337638855
+   },
+   {
+    "v0": 31.095617294311523,
+    "time_headway": 1.065039038658142,
+    "min_gap": 2.4799671173095703,
+    "accel": 2.5665793418884277,
+    "decel": 4.402581214904785,
+    "politeness": 0.2478688806295395,
+    "mobil_threshold": 0.09057889878749847,
+    "merge_gap": 5.693179130554199,
+    "merge_urgency": 1.0106391906738281
+   }
+  ],
+  [
+   {
+    "v0": 31.004606246948242,
+    "time_headway": 1.0603018999099731,
+    "min_gap": 2.4749953746795654,
+    "accel": 2.5572400093078613,
+    "decel": 4.444955348968506,
+    "politeness": 0.24936822056770325,
+    "mobil_threshold": 0.09036846458911896,
+    "merge_gap": 5.646902561187744,
+    "merge_urgency": 1.007710337638855
+   },
+   {
+    "v0": 31.095617294311523,
+    "time_headway": 1.065039038658142,
+    "min_gap": 2.4799671173095703,
+    "accel": 2.5665793418884277,
+    "decel": 4.402581214904785,
+    "politeness": 0.2478688806295395,
+    "mobil_threshold": 0.09057889878749847,
+    "merge_gap": 5.693179130554199,
+    "merge_urgency": 1.0106391906738281
+   }
+  ]
+ ],
+ "sampler_sha256": "37a5524df05b00dff04d0a34ad2cabccbb46ce1caf88cdf37ec01e73c27a0551",
+ "runtime_sources": {
+  "E:\\agent-work\\c4-rb-int\\src\\wms\\model\\wms.py": "bd9673d84d71c0d9bf4207be1234e4dec4f25c0bc7a485baf1c91e2179202655",
+  "E:\\agent-work\\c4-rb-int\\src\\wms\\model\\sumo_insertion.py": "0e861b1a8017b070af6372348e62cce2808a71bea2718e89fb932576873dbd3d"
+ },
+ "cf_model": "legacy"
+}

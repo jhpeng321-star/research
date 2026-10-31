@@ -38,6 +38,8 @@ proxy. No future request schedule, driver labels or assignment paths are read.
   point estimate, constrained by the existing encoder parameter support, with
   acceleration-likelihood weights. The scale is empirical pre-t0 acceleration
   residual MSE; effective sample size accounts for serial residual correlation.
+  The likelihood applies the model's existing plant acceleration bounds: raw
+  IDM values at compressed/censored gaps are not observable executed motion.
   This calibrates a motion-likelihood scale, NOT held-back predictive coverage.
 - Existing encoder reliability `n/(n+shrink_prior_steps)` mixes the local
   posterior and the population. At zero history it is exactly a population draw.

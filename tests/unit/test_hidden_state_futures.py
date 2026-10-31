@@ -251,3 +251,17 @@ def test_sumo_configured_after_planning_uses_exact_weighted_newborn_draw():
     process.cfg.sumo_insertion = SimpleNamespace(mix=object())
     with pytest.raises(ValueError, match='must share'):
         process.insert(state)
+
+
+def test_likelihood_uses_executed_plant_bounds_at_compressed_gap():
+    point = torch.tensor([30., 1.2, 2., 1.2, 2., .4, .2, 8., 1.])
+    history = torch.zeros(10, 9)
+    history[:, 0], history[:, 1], history[:, 5] = .8, -1., .003
+    history[:, 7], history[:, 8] = -.5, 1
+    raw = _prediction(history, point[None])
+    assert raw.min() < -1000
+    bounded = _prediction(history, point[None], (-9., 3.))
+    assert (bounded == -9).all()
+    _, diag = _motion_weights(history, torch.ones(10, dtype=torch.bool),
+        point.repeat(2, 1), point, torch.ones(2)/2, (-9., 3.))
+    assert diag['residual_mse'] == pytest.approx(36.)

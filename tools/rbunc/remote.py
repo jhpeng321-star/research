@@ -9,6 +9,7 @@ import subprocess
 ROOT = Path(__file__).resolve().parents[2]
 PYTHON = '/home/ubuntu/miniconda3/bin/python'
 REMOTE = '/home/ubuntu/rbunc20261031'
+PROBE = 'fit_probe_v2'
 
 
 def ssh(source, data=None, timeout=300):
@@ -67,7 +68,7 @@ print(json.dumps(dict(load=os.getloadavg(),cpus=os.cpu_count(),checkpoint=str(p)
         print(ssh(f'''
 from pathlib import Path
 import json,os
-root=Path({REMOTE!r})/'fit_probe_v1'
+root=Path({REMOTE!r})/{PROBE!r}
 print('LOAD',os.getloadavg())
 print('COMPLETE',[s for s in range(969400,969432) if (root/f'w{{s}}_h{args.horizon}.json').exists()])
 p=root/'w{args.world}_h{args.horizon}.log'
@@ -77,7 +78,7 @@ if p.exists():print(p.read_text())
         text = ssh(f'''
 from pathlib import Path
 import json
-root=Path({REMOTE!r})/'fit_probe_v1'
+root=Path({REMOTE!r})/{PROBE!r}
 records=[]
 for seed in range(969400,969432):
  p=root/f'w{{seed}}_h{args.horizon}.json'
@@ -87,7 +88,7 @@ print(json.dumps(records))
         out = ROOT/'docs/paper_results/rbunc'
         assert out.parent.is_dir()
         out.mkdir(exist_ok=True)
-        with (out/f'fit_h{args.horizon}.json').open('x', encoding='utf-8') as f:
+        with (out/f'fit_h{args.horizon}_{PROBE}.json').open('x', encoding='utf-8') as f:
             f.write(text)
         print('FETCHED', len(json.loads(text)))
     elif args.command == 'panel':
@@ -96,7 +97,7 @@ print(json.dumps(records))
         print(ssh(f'''
 import subprocess,os,json
 from pathlib import Path
-root=Path({REMOTE!r});out=root/'fit_probe_v1';assert out.is_dir()
+root=Path({REMOTE!r});out=root/{PROBE!r};assert out.is_dir()
 assert os.getloadavg()[0]<16,'insufficient free CPUs'
 env=dict(os.environ,OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',
  PYTHONPATH={args.code!r}+'/src:'+{args.code!r})
@@ -116,7 +117,7 @@ print(job.pid)
 import subprocess,os
 from pathlib import Path
 root=Path({REMOTE!r}); assert root.is_dir()
-out=root/'fit_probe_v1'; out.mkdir(exist_ok=True)
+out=root/{PROBE!r}; out.mkdir(exist_ok=True)
 log=out/'w{args.world}_h{args.horizon}.log'
 with log.open('x') as f:
  env=dict(os.environ,OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',

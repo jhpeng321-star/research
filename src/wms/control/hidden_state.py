@@ -86,7 +86,7 @@ class Population:
                 raise ValueError('nonphysical inferred population')
 
 
-def _prediction(history, particles):
+def _prediction(history, particles, acceleration_limits=None):
     """IDM acceleration likelihood, [particles,H]; history is observable [H,9].
 
     Normalisations and leader flag are exactly data.history.long_history_features.
@@ -100,10 +100,14 @@ def _prediction(history, particles):
     desired = gap0 + (v * tau + v * closing / (2 * (accel * decel).sqrt())).clamp_min(0)
     interaction = torch.where(has_leader, (desired / gap.clamp_min(
         torch.finfo(gap.dtype).eps)).square(), torch.zeros_like(desired))
-    return accel * (1 - (v / v0).pow(4) - interaction)
+    prediction = accel * (1 - (v / v0).pow(4) - interaction)
+    # Observed acceleration is executed plant motion, not raw unbounded IDM.
+    # Near a compressed/censored gap raw IDM can be enormous; using that as an
+    # observational residual would falsely inflate uncertainty by many orders.
+    return prediction if acceleration_limits is None else prediction.clamp(*acceleration_limits)
 
 
-def _motion_weights(history, mask, particles, point, prior_weights):
+def _motion_weights(history, mask, particles, point, prior_weights, acceleration_limits=None):
     """Residual-scale calibrated likelihood with serial-correlation effective N.
 
     No supplied observations => prior exactly. Six-channel legacy histories lack
@@ -115,14 +119,14 @@ def _motion_weights(history, mask, particles, point, prior_weights):
     if not torch.isfinite(h).all():
         raise ValueError('nonfinite observed history')
     actual = h[:, 1] * 3
-    residual = actual - _prediction(h, point[None])[0]
+    residual = actual - _prediction(h, point[None], acceleration_limits)[0]
     # Empirical residual MSE includes model discrepancy; NEVER used as runtime noise.
     variance = residual.square().mean().clamp_min(torch.finfo(h.dtype).eps)
     centered = residual - residual.mean()
     rho = ((centered[:-1] * centered[1:]).sum() /
            centered.square().sum().clamp_min(torch.finfo(h.dtype).eps)).clamp(0, 1)
     effective = (len(h) * (1 - rho) / (1 + rho)).clamp_min(1)
-    error = (_prediction(h, particles) - actual[None]).square().mean(-1)
+    error = (_prediction(h, particles, acceleration_limits) - actual[None]).square().mean(-1)
     log_weight = prior_weights.log() - 0.5 * effective * error / variance
     weights = log_weight.softmax(0)
     return weights, dict(residual_mse=float(variance), effective_n=float(effective),
@@ -306,6 +310,9 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
         raise ValueError('encoder reliability prior must be positive')
     count = mask.bool().sum(-1).to(point)
     reliability = count / (count + prior_steps)
+    physics = getattr(model, 'physics', None)
+    limits = ((float(physics.accel_min_mps2), float(physics.accel_max_mps2))
+              if hasattr(physics, 'accel_min_mps2') and hasattr(physics, 'accel_max_mps2') else None)
     posteriors, diagnostics = {}, []
     supplied = None if encoded is None else encoded.get('posterior_samples')
     if supplied is not None and (supplied.ndim != 4 or supplied.shape[1:] != point.shape
@@ -325,7 +332,7 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
                 candidates = (point[b, slot] + pool - mean).clamp(lower, upper)
                 weights_p, diag = _motion_weights(
                     None if history is None else history[b, slot], mask[b, slot],
-                    candidates, point[b, slot], weights / weights.sum())
+                    candidates, point[b, slot], weights / weights.sum(), limits)
             posteriors[b, slot] = candidates, weights_p
             if diag is not None:
                 diagnostics.append(dict(row=b, slot=slot, **diag))
@@ -369,6 +376,7 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
         futures.append(HiddenFuture(kwargs, dict(future_sampling='hidden_state', future=sample,
             seed=int(seed), driver_branches=branches, likelihood=diagnostics,
             posterior_source='supplied_motion_posterior' if supplied is not None else 'empirical_motion_likelihood',
+            likelihood_acceleration_limits=limits,
             population_sizes=[len(p) for p in population.hdv],
             arrival_sample=arrival_sample, arrivals='poisson' if entrance_histories is not None else 'closed_cohort',
             rate_source='observed_request_demand' if queues is not None else 'observed_insertion_proxy',
