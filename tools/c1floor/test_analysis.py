@@ -34,5 +34,16 @@ class ScientificContracts(unittest.TestCase):
         self.assertEqual(list(p),['model','plant','arm','horizon_s','metric','estimate','lo','hi',
                                  'n_worlds','world_stat','units','bootstrap_draws','bootstrap_seed','status'])
 
+    def test_pulse_target_exclusion_and_six_world_clusters(self):
+        pred=dict(endpoints=[dict(ids=[1,2],s=[100.,3.],v=[100.,.2],present=[True,True])]*2)
+        result,ids=A.endpoint(pred,dict(ids=[1,2],s=[0.,0.],v=[0.,0.]),[2])
+        self.assertEqual(ids,{2})
+        self.assertEqual(result['position'],3.)
+        summarize,_=panel_summarizer(A,6)
+        rows=[dict(model='SUMO_tiny_perturbation_chaos',plant='recorded',arm='native',
+                   world=w,seed=969400+w,horizon_s=10,position=3.) for w in range(6)]
+        r=next(r for r in summarize(rows) if r['arm']=='native')
+        self.assertEqual((r['estimate'],r['lo'],r['hi'],r['n_worlds']),(3.,3.,3.,6))
+
 
 if __name__=='__main__':unittest.main()

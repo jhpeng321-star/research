@@ -47,38 +47,44 @@ def panel_summarizer(module,n):
                                       only_change=f'world panel dimension 40->{n}')
 
 
-def analyze(labels_path,out,upstream=UPSTREAM):
+def analyze(labels_path,out,upstream=UPSTREAM,chaos=False):
     A=load_upstream(upstream)
     data=json.loads(labels_path.read_text())
     by={(r['seed'],r['variant']):r for r in data['rows']}
     seeds=sorted({s for s,v in by})
-    assert seeds==list(range(969400,969418)) and len(by)==3*18
+    n=6 if chaos else 18
+    model='SUMO_tiny_perturbation_chaos' if chaos else 'SUMO_RNG_floor'
+    assert seeds==list(range(969400,969400+n)) and len(by)==3*n
     assert all((s,v) in by for s in seeds for v in ('reference','alt0','alt1'))
     raw,draws=[],[]
     for w,s in enumerate(seeds):
         ref=by[s,'reference']
         hdv=[i for i,c in zip(ref['original_ids'],ref['original_cav']) if not c]
+        if chaos:
+            excluded=set(ref['excluded_target_indices'])
+            assert len(excluded)==2 and excluded<=set(hdv)
+            hdv=[i for i in hdv if i not in excluded]
         rows=[task(by[s,v]) for v in ('alt0','alt1')]
         for h in A.HS:
             real=ref['values'][str(h)]
             pred=A.forecast(rows,'native',h)
             ep,_=A.endpoint(pred,real['endpoints'],hdv)
-            raw.append(dict(model='SUMO_RNG_floor',plant='recorded',world=w,seed=s,
+            raw.append(dict(model=model,plant='recorded',world=w,seed=s,
                             arm='native',horizon_s=h,**A.errors(pred,real),**ep,initial_hdv=len(hdv)))
             for k,row in enumerate(rows):
                 p=A.forecast([row],'native',h)
                 e,_=A.endpoint(p,real['endpoints'],hdv)
-                draws.append(dict(model='SUMO_RNG_floor',plant='recorded',world=w,seed=s,
-                                  arm='native',horizon_s=h,draw=k,rng_seed=969050+2*w+k,
+                draws.append(dict(model=model,plant='recorded',world=w,seed=s,
+                                   arm='native',horizon_s=h,draw=k,rng_seed=s if chaos else 969050+2*w+k,
                                   **A.errors(p,real),**e,initial_hdv=len(hdv)))
     summarize,adapter=panel_summarizer(A,len(seeds))
     summary=[r for r in summarize(raw) if r['arm']=='native']
-    assert all(r['model']=='SUMO_RNG_floor' for r in summary)
+    assert all(r['model']==model for r in summary)
     out.mkdir(parents=True,exist_ok=True)
     A.write_csv(out/'C1FLOOR_per_world.csv',raw)
     A.write_csv(out/'C1FLOOR_per_draw.csv',draws)
     A.write_csv(out/'C1FLOOR_error_horizon.csv',summary)
-    receipt=dict(schema='c1floor_analysis/1',worlds=18,draws=2,horizons=list(A.HS),
+    receipt=dict(schema='c1floor_analysis/1',worlds=n,draws=2,horizons=list(A.HS),method=model,
                  labels_sha256=digest(labels_path),upstream_analyzer_sha256=digest(upstream),
                  upstream_labels_sha256=data['source_sha256'],upstream_aggregates_sha256=data['aggregates_sha256'],
                  adapter=adapter,analyzer_sha256=digest(__file__),
@@ -119,10 +125,11 @@ if __name__=='__main__':
     p.add_argument('--blocked-receipt',type=Path)
     p.add_argument('--out',type=Path,required=True)
     p.add_argument('--upstream',type=Path,default=UPSTREAM)
+    p.add_argument('--chaos',action='store_true')
     a=p.parse_args()
     if a.blocked_receipt:
         assert a.labels is None
         blocked(a.blocked_receipt,a.out,a.upstream)
     else:
         assert a.labels is not None
-        analyze(a.labels,a.out,a.upstream)
+        analyze(a.labels,a.out,a.upstream,a.chaos)

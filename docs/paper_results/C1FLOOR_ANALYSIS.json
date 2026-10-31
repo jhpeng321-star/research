@@ -1,15 +1,30 @@
 {
- "status": "BLOCKED_SAVED_STATE_CANARY",
- "scientific_estimates": 0,
- "scientific_intervals": 0,
- "rows": 98,
- "blocked_receipt_sha256": "54fb7c4598cf95e9778171e77877da6c5e8d684a1865c32ba3809a038486e5b4",
+ "schema": "c1floor_analysis/1",
+ "worlds": 6,
+ "draws": 2,
+ "horizons": [
+  10,
+  30,
+  60,
+  90,
+  120,
+  180,
+  300
+ ],
+ "method": "SUMO_tiny_perturbation_chaos",
+ "labels_sha256": "18cc22aec803e980f663dac151f9a0175c52e366cd1130a79186561ff2eef89a",
  "upstream_analyzer_sha256": "97051ce50bbe7597c0d9b790b1e2610754f362e9706a2a70811da4e82d007114",
- "analyzer_sha256": "d644c4f5c75f4684a86735ebf67891863588dc5012d29fcdc2710edc0ebd9712",
+ "upstream_labels_sha256": "ea5a479346b01fa6afe2394af687fd4e528297250edd20438b05e03c46472d2a",
+ "upstream_aggregates_sha256": "dd2d0ed3966b4e00d39df5f4e8f0acc40f9477d1b7b1919dd2c5b1568bb7f379",
  "adapter": {
   "original_sha256": "8a7285edf05f683777bc4c75ec6a4c7598f26e3b2f091ce26857b459a2ab282f",
-  "adapted_sha256": "2d4ff69124fd4c24ad7482becdda50f68e1112ca575274411987626b720f924d",
-  "only_change": "world panel dimension 40->18"
+  "adapted_sha256": "f4414b1258f824b48899ca629f9f7d08f55c968e8cd98097be47c8e8f713acd7",
+  "only_change": "world panel dimension 40->6"
  },
- "csv_sha256": "8298dca0444b3e4b9311d3bac83bde3cecbe81725f4f6c89808e1ea813777004"
+ "analyzer_sha256": "a6342431653bb89bca7a0e0b014a56f2bba2ceda633adc4c00b973c48c0dff7c",
+ "outputs": {
+  "C1FLOOR_error_horizon.csv": "440816365f9105471d3bb85cfe2fd469b7af6aecab97a002a386034f6b0d06d4",
+  "C1FLOOR_per_draw.csv": "5dc3a8ab70ef928bb3bcf536a3fc5ac9e1e7ee550a10819655a831ad33be9a4f",
+  "C1FLOOR_per_world.csv": "2ef330007ce2736995b42c7e52cbf1f409186c4c79d3ba3c5722d784025944b5"
+ }
 }
