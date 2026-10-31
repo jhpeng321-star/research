@@ -276,7 +276,10 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
     if queues is not None and (entrance_histories is None or len(queues) != batch):
         raise ValueError('queues need entrance histories for every row')
     lower, upper = point.new_tensor(PARAMETER_LOWER), point.new_tensor(PARAMETER_UPPER)
-    prior_steps = float(getattr(getattr(model, 'driver_encoder', None), 'shrink_prior_steps', 8))
+    encoder = getattr(model, 'driver_encoder', None)
+    if getattr(encoder, 'driver_param_mode', None) == 'physical':
+        lower[:5], upper[:5] = encoder.physical_lower.to(point), encoder.physical_upper.to(point)
+    prior_steps = float(getattr(encoder, 'shrink_prior_steps', 8))
     if not np.isfinite(prior_steps) or prior_steps <= 0:
         raise ValueError('encoder reliability prior must be positive')
     count = mask.bool().sum(-1).to(point)

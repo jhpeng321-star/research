@@ -39,9 +39,24 @@ REGISTRATION.md:5683,5694; all four WHY reports and ENSPROBE read.
   driver draws; joint population prior for zero history, no global/embedding
   noise; paired-row CRN; admission/newborn identity equality; exact Poisson count
   mean/variance and zero demand; source ablations; legacy futures regression.
+- Follow-up: **23 passed / 36.77s**, adding actual admission+newborn-motion
+  replay, supplied posterior samples without arbitrary caps, and missing donor
+  rejection. Physical-mode candidate support now uses the encoder's actual bounds.
+
+## FIT diagnostic running
+- `docs/paper_results/RBUNC_DESIGN.md`: all32 native FIT969400..969431, K8,
+  H120 deterministic legacy IDM/MOBIL attribution reference; additional three
+  source ablations on first world969400. This is not integrated WM-PHYS efficacy.
+- Uses same available frozen encoder as SUMOCORE (`5b256941...`), authentic60s
+  motion; only pre-t0 request-demand/queue/CAV share, no future arrivals supplied.
+- Own cpuQ canary211301/supervisor215439, max8 single-thread nice19 workers,
+  queued-work resource gate. `/home/ubuntu/rbunc20261031/fit_probe_v1/`.
+- Exact Poisson request-count spread additionally saved at120/300/600s.
+- Initial remote load2.07/32 CPUs, panel check3.89; no GPU used.
 
 ## Known gaps
-- Recorded FIT source-attribution evaluation next.
+- Recorded FIT source-attribution outputs being collected; no distributional
+  qualification or integrated WM-PHYS efficacy claim from this reference probe.
 - Existing untrained uncertainty must not be
   presented as posterior calibration. Across-world variability is descriptive,
   not conditional variability (one real continuation per FIT observation).

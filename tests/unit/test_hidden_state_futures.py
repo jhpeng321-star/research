@@ -176,3 +176,54 @@ def test_real_physics_repeated_future_is_bit_identical_and_sources_change_outcom
             assert torch.isfinite(r['speeds']).all()
             outputs.append(r['positions'])
     assert any(not torch.equal(outputs[0], x) for x in outputs[1:])
+
+
+def test_supplied_motion_posterior_is_used_without_untrained_variance_or_caps():
+    model, state, h, params = fixture()
+    particles = torch.stack([torch.stack([params[n] for n in PARAMETER_NAMES], -1)] * 2)
+    particles[0, :, :, 0] = 12.
+    particles[1, :, :, 0] = 42.
+    def encode(state, **kwargs):
+        return {'posterior_samples': particles}, None, params
+    model.encode_drivers = encode
+    values = [f.kwargs['driver_params']['v0'][0, 0].item()
+              for f in plan(model, state, h, n_samples=64)]
+    assert set(values) == {12., 42.}
+
+
+def test_population_is_required_when_no_motion_donors_exist():
+    model, state, h, _ = fixture()
+    h['driver_history_mask'][:] = False
+    with pytest.raises(ValueError, match='no observed HDV population'):
+        plan(model, state, h)
+
+
+def test_actual_rollout_admits_same_settings_it_later_moves_and_replays_exactly():
+    from wms.model.spec import ModelSpec
+    from wms.model.wms import WmSModel
+    encoder, state, h, _ = fixture()
+    model = WmSModel(ModelSpec(rollout_mode='driver_params')).eval()
+    model.encode_drivers = encoder.encode_drivers
+    histories = [build_entrance_history(counter=np.zeros((2, 30)))]
+    queues = [EntranceQueue(np.array([1., 0.]), np.zeros(2), cav_share=np.zeros(2))]
+    results = []
+    def controller(s):
+        return torch.stack((s['s_m'] + .5 * s['v_mps'], s['lane'].float(),
+                            s['v_mps'], torch.zeros_like(s['s_m'])), -1)
+    before = torch.get_rng_state().clone()
+    for _ in range(2):
+        f = plan(model, state, h, n_samples=1, seed=51,
+                 entrance_histories=histories, queues=queues)[0]
+        expected = f.kwargs['entries'].cfg.learned_admission.candidate(0, 0, 0)
+        with torch.inference_mode():
+            r = model.rollout({k: v.clone() for k, v in state.items()}, n_steps=5,
+                              cav_controller=controller, **f.kwargs)
+        assert r['entrant'][0, 4]
+        assert all(float(r['driver_parameters'][0, 4, j]) == expected[n]
+                   for j, n in enumerate(PARAMETER_NAMES))
+        assert f.kwargs['entries'].stats[0].inserted == 1
+        assert not f.kwargs['entries'].pending.any()
+        results.append(r)
+    assert torch.equal(before, torch.get_rng_state())
+    for key in ('positions', 'speeds', 'lanes', 'masks', 'driver_parameters'):
+        assert torch.equal(results[0][key], results[1][key])
