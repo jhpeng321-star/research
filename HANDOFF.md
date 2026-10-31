@@ -1,7 +1,7 @@
 # S-RB-FIT handoff
 
 Branch `c4/rb-fit`, base `f0db3c82`; owner amendment REGISTRATION.md:5694.
-Status: observable-only extraction and hierarchical physical fitting in progress.
+Status: IDM fitter implemented/tested; cpuQ fit_v1 running (own PID 191785).
 
 ## Frozen data/estimation contract
 - Only FIT worlds 969400–969431, native arm, from cpuQ
@@ -11,6 +11,8 @@ Status: observable-only extraction and hierarchical physical fitting in progress
   Do not combine the five counterfactual arms as independent drivers.
 - Per-driver posterior uses at most the causal 60 s before t=300, shorter when
   absent; unseen/absent drivers use the learned population distribution.
+- IDM fits mainline lanes 0/1 only: ramp/junction virtual-stop constraints are
+  not a same-lane leader observation. Ramp-only histories use population prior.
 - Acceleration target is forward speed difference, not a hidden driver setting.
   Exclude junction/no-lane snapshots, ego lane transitions, changed/absent leaders,
   invalid identities, and negative physical bumper gaps; retain stopped traffic.
@@ -24,6 +26,15 @@ Status: observable-only extraction and hierarchical physical fitting in progress
 Pending: `artifacts/rbfit/idm_population.json`, `idm_posteriors.json`,
 `validation.json`; schemas and measured results will be added after fitting.
 No shared model/spec/factory edits; no switches enabled by this workstream.
+- `tools/rbfit/idm_fit.py`: allowlisted extractor, source-backed NumPy SUMO IDM
+  substepping/free-speed envelope, Gaussian acceleration likelihood, diagonal
+  log-normal population EM, full-covariance per-driver Laplace posteriors.
+- cpuQ command: existing miniconda Python, `--root /home/ubuntu/wmdata20261031/views
+  --out /home/ubuntu/rbfit20261031/fit_v1 --workers 4 --iterations 25`.
+- Tests: cpuQ `python -m pytest tests/unit/test_rbfit.py -q -p no:cacheprovider`
+  **4 passed** (identity/cut-in leakage, FIT guard, identifiable synthetic
+  physical-parameter recovery, free-speed finite behavior). Local default Python
+  lacks SciPy; use cpuQ existing environment. No new environment installed.
 
 ## Resources and gaps
 - cpuQ load 0.07 on 32 CPUs at first check; existing miniconda Python available.
