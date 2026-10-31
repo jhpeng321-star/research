@@ -7,6 +7,13 @@ from pathlib import Path
 
 SEEDS = (973002, 973053, 973060, 973083, 973093, 973123,
          973126, 973133, 973151, 973160, 973190, 973224)
+# S-WMDATA (owner-approved 2026-10-31 12:55): registered FIT corpus for the WM
+# merge/queue fix. Fresh C4_LOOP_TRAIN sub-block; role 'wmdata_fit' admits exactly
+# these seeds with the native reference + the four S-WMDATA arms. The 12-seed FIT
+# allowlist above is unchanged and remains the only admission for role 'fit'.
+WMDATA_ROLE = "wmdata_fit"
+WMDATA_SEEDS = tuple(range(969400, 969440))
+WMDATA_ARMS = ("ctrl0", "mappo", "pi", "circles")
 BAD = ("sealed", "holdout", "heldout", "cal_split", "chunk5", "j4b", "inc1",
        "hetdata_truth", "vtype")
 WM2_SHA = "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436"
@@ -73,25 +80,40 @@ def select(root):
     manifest = json.loads(safe(root / "C4_EPISODES_MANIFEST.json").read_text())
     split = json.loads(safe(root / "SPLIT.json").read_text())
     entries = []
+    fit_seen, wmdata_seen = set(), set()
     for row in manifest["episodes"]:
         seed = int(row["seed"])
-        if seed not in SEEDS:
+        role = split["worlds"].get(str(seed))
+        if seed in SEEDS:
+            # Original 12-seed FIT allowlist path (behavior unchanged).
+            if role != "fit":
+                raise ValueError(f"registered TRAIN seed {seed} is not FIT")
+            if row.get("arm") == "mappo":
+                continue  # WMREQUAL3: lane-head requests missing; diagnostic only, never FIT supervision.
+            if row.get("branch", {}).get("kind") != "B" and row.get("arm") not in (
+                    "ours_c1", "coopoff_c1"):
+                raise ValueError("unregistered TRAIN arm")
+            fit_seen.add(seed)
+        elif role == WMDATA_ROLE:
+            # S-WMDATA registered role: native reference + the four WMDATA arms.
+            if seed not in WMDATA_SEEDS:
+                raise ValueError(f"wmdata_fit seed {seed} outside the registered block")
+            native = row.get("arm") == "native" or row.get("branch", {}).get("kind") == "B"
+            if not native and row.get("arm") not in WMDATA_ARMS:
+                raise ValueError("unregistered wmdata_fit arm")
+            wmdata_seen.add(seed)
+        else:
             continue
-        if split["worlds"].get(str(seed)) != "fit":
-            raise ValueError(f"registered TRAIN seed {seed} is not FIT")
-        if row.get("arm") == "mappo":
-            continue  # WMREQUAL3: lane-head requests missing; diagnostic only, never FIT supervision.
-        if row.get("branch", {}).get("kind") != "B" and row.get("arm") not in (
-                "ours_c1", "coopoff_c1"):
-            raise ValueError("unregistered TRAIN arm")
         path = safe(root / row["dir"]).resolve()
         if not path.is_relative_to(root.resolve()):
             raise ValueError("episode escapes source root")
         if row.get("warmup_s") != 300:
             raise ValueError("exact counter-derived per-entrance Q0 requires t300")
         entries.append(row)
-    if set(int(row["seed"]) for row in entries) != set(SEEDS):
+    if fit_seen and fit_seen != set(SEEDS):
         raise ValueError("registered TRAIN seeds missing")
+    if not fit_seen and not wmdata_seen:
+        raise ValueError("no registered TRAIN rows selected")
     groups = {}
     for row in entries:
         groups.setdefault(row["pair_key"], []).append(row)
@@ -107,8 +129,11 @@ def select(root):
 
 def verify(prepared):
     doc = json.loads(safe(prepared).read_text())
-    if doc.get("schema") != "wmfix_train/1" or tuple(doc["seeds"]) != SEEDS:
+    if doc.get("schema") != "wmfix_train/1":
         raise ValueError("unexpected prepared corpus")
+    selected = select(doc["root"])
+    if set(int(s) for s in doc["seeds"]) != {int(row["seed"]) for row in selected}:
+        raise ValueError("prepared corpus seeds differ from the registered selection")
     if doc["manifest_sha256"] != digest(Path(doc["root"]) / "C4_EPISODES_MANIFEST.json"):
         raise ValueError("source manifest changed")
     if doc["split_sha256"] != digest(Path(doc["root"]) / "SPLIT.json"):
