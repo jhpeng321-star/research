@@ -1,0 +1,32 @@
+{
+  "date": "2026-11-01",
+  "branch": "c4/coopfree",
+  "starting_commit": "0f9f60c2",
+  "initial_worktree_clean": true,
+  "registration_review": "Original 2,000,000 sim-s approved; MAIN03:07 requests +4,000,000, no approval recorded at resume.",
+  "latest_published": {
+    "corrected_updates": [1],
+    "charged_sim_s": 1952433,
+    "closed_actual_sim_s": 1900133,
+    "train_remaining_sim_s": 240,
+    "hold_tasks_complete": 455,
+    "hold_tasks_total": 455,
+    "exact_credit_windows": 66,
+    "total_windows": 156
+  },
+  "publisher_5020": {
+    "local_process_exists": false,
+    "log_terminal_error": "RuntimeError: Connection closed by 1.15.42.207 port 22",
+    "last_archive_verification": {"complete": true, "verified_files": 1593}
+  },
+  "read_only_checks": [
+    {"command": "python -m tools.coopfree_hold_ops status", "result": "SSH connection closed before remote status"},
+    {"command": "Get-CimInstance Win32_Process -Filter ProcessId=5020", "result": "no process"},
+    {"command": "ssh -o BatchMode=yes -o ConnectTimeout=10 cpuQ printf", "result": "SSH connection closed"}
+  ],
+  "remote_supervisor_current_liveness": "unknown; last published alive=true is historical",
+  "discovery_completion": "unknown; no published HOLD_DISCOVERY_001 or HOLD_COMPLETE receipt",
+  "physics_dispatched": 0,
+  "signals_sent": 0,
+  "next_action": "CPU-test observer-only transport recovery, restore singleton publisher, preserve budget and all physics receipts"
+}

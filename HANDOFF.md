@@ -1,5 +1,15 @@
 # S-COOPFREE resume receipt
 
+## Fresh resume: observer transport failure
+Starting `0f9f60c2`, clean worktree. Publisher5020 is absent; its retained log ends
+with SSH `Connection closed`, which escaped as RuntimeError. cpuQ read-only status
+and a separate10s SSH probe both fail the same way. Remote current liveness and
+discovery completion are unknown; generated `alive=True` below is historical.
+Latest publication: corrected u1/checkpoint and both DEV panels complete;
+1,952,433precharged/1,900,133closedactualsim-s. All1,593 relocated tapes were
+verified archived by the previous observer. MAIN03:07 requests+4M, but approval is
+not recorded. No new physics/signals/replays. Receipt: `RESUME_TRANSPORT_BLOCKED.json`.
+
 ## OWNER02:21 fresh resume
 Production615088/start48394231 and workers615093-615096 verified live/nice19;
 publisher15284/creation2026-11-01T02:05:24 was verified, then identity-checked/retired
