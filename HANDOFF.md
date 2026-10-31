@@ -79,3 +79,8 @@ Owner schedule: interim04/08, freeze09:30, evaluation through11:30, report11:45.
   DECIDE credibility, update ≤60line WMPHYS_MORNING.md at08:00/freeze09:30/final11:45.
 - Remaining parity gaps: synchronous LC, incomplete serial negotiation/internal
   junction state and cold lane memory; no full distributional qualification.
+- Bounded local noon collector prepared (not yet dispatched): read-only snapshots,
+  complete-K8-only cached scoring, source-specific endpoint/credibility/traffic
+  reports,08:00interim/09:30engineering-freeze/11:35final collection by11:45.
+  Foreign-work/branch/staged/source guards; commits only own generated files.
+  tests/test_rbint_noon.py+endpoint/bootstrap/credibility gate36PASS/1historical skip.
