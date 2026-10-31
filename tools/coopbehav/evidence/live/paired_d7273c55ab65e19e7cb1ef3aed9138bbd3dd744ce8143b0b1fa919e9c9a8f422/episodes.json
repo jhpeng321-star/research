@@ -1,0 +1,672 @@
+[
+  {
+    "source": "paired",
+    "episode": "fixed_u02_w0_k0",
+    "arm": "sumocf",
+    "seed": 969218,
+    "exposure_cav_s": 2521.0,
+    "exposure_episode_s": 90.0,
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        382.0,
+        982.0
+      ],
+      "recorded_interval_s": [
+        382.0,
+        472.0
+      ],
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 50,
+      "wave_damping": 132,
+      "yield_to_merge": 4,
+      "cross_lane_hold": 1
+    }
+  },
+  {
+    "source": "paired",
+    "episode": "fixed_u02_w0_k1",
+    "arm": "sumocf",
+    "seed": 969218,
+    "exposure_cav_s": 2525.0,
+    "exposure_episode_s": 90.0,
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        385.0,
+        985.0
+      ],
+      "recorded_interval_s": [
+        385.0,
+        475.0
+      ],
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 48,
+      "wave_damping": 132,
+      "yield_to_merge": 4,
+      "cross_lane_hold": 1
+    }
+  },
+  {
+    "source": "paired",
+    "episode": "fixed_u02_w0_k3",
+    "arm": "sumocf",
+    "seed": 969218,
+    "exposure_cav_s": 2778.0,
+    "exposure_episode_s": 90.0,
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        488.0,
+        1088.0
+      ],
+      "recorded_interval_s": [
+        488.0,
+        578.0
+      ],
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 56,
+      "gap_creation": 23,
+      "cross_lane_hold": 6
+    }
+  },
+  {
+    "source": "paired",
+    "episode": "fixed_u02_w0_k4",
+    "arm": "sumocf",
+    "seed": 969218,
+    "exposure_cav_s": 2672.0,
+    "exposure_episode_s": 90.0,
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        472.0,
+        1072.0
+      ],
+      "recorded_interval_s": [
+        472.0,
+        562.0
+      ],
+      "disabled_detectors": []
+    },
+    "counts": {
+      "cross_lane_hold": 3,
+      "wave_damping": 52,
+      "gap_creation": 19
+    }
+  },
+  {
+    "source": "paired",
+    "episode": "fixed_u02_w0_k5",
+    "arm": "sumocf",
+    "seed": 969218,
+    "exposure_cav_s": 4084.0,
+    "exposure_episode_s": 90.0,
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        589.0,
+        1189.0
+      ],
+      "recorded_interval_s": [
+        589.0,
+        679.0
+      ],
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 117,
+      "cross_lane_hold": 22,
+      "gap_creation": 51
+    }
+  },
+  {
+    "source": "paired",
+    "episode": "fixed_u02_w2_k0",
+    "arm": "sumocf",
+    "seed": 969220,
+    "exposure_cav_s": 3022.0,
+    "exposure_episode_s": 90.0,
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        414.0,
+        1014.0
+      ],
+      "recorded_interval_s": [
+        414.0,
+        504.0
+      ],
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 21,
+      "wave_damping": 42,
+      "cross_lane_hold": 1
+    }
+  },
+  {
+    "source": "paired",
+    "episode": "fixed_u02_w2_k1",
+    "arm": "sumocf",
+    "seed": 969220,
+    "exposure_cav_s": 3028.0,
+    "exposure_episode_s": 90.0,
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        434.0,
+        1034.0
+      ],
+      "recorded_interval_s": [
+        434.0,
+        524.0
+      ],
+      "disabled_detectors": []
+    },
+    "counts": {
+      "cross_lane_hold": 2,
+      "gap_creation": 22,
+      "wave_damping": 50
+    }
+  },
+  {
+    "source": "paired",
+    "episode": "fixed_u02_w2_k2",
+    "arm": "sumocf",
+    "seed": 969220,
+    "exposure_cav_s": 3024.0,
+    "exposure_episode_s": 90.0,
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        423.0,
+        1023.0
+      ],
+      "recorded_interval_s": [
+        423.0,
+        513.0
+      ],
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 51,
+      "gap_creation": 22,
+      "cross_lane_hold": 2
+    }
+  },
+  {
+    "source": "paired",
+    "episode": "fixed_u02_w2_k4",
+    "arm": "sumocf",
+    "seed": 969220,
+    "exposure_cav_s": 2976.0,
+    "exposure_episode_s": 90.0,
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        381.0,
+        981.0
+      ],
+      "recorded_interval_s": [
+        381.0,
+        471.0
+      ],
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 42,
+      "gap_creation": 9,
+      "cross_lane_hold": 4
+    }
+  },
+  {
+    "source": "paired",
+    "episode": "fixed_u02_w2_k5",
+    "arm": "sumocf",
+    "seed": 969220,
+    "exposure_cav_s": 2965.0,
+    "exposure_episode_s": 90.0,
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        387.0,
+        987.0
+      ],
+      "recorded_interval_s": [
+        387.0,
+        477.0
+      ],
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 39,
+      "gap_creation": 18,
+      "cross_lane_hold": 2
+    }
+  },
+  {
+    "source": "paired",
+    "episode": "fixed_u02_w3_k0",
+    "arm": "sumocf",
+    "seed": 969221,
+    "exposure_cav_s": 1959.0,
+    "exposure_episode_s": 90.0,
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        426.0,
+        1026.0
+      ],
+      "recorded_interval_s": [
+        426.0,
+        516.0
+      ],
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 42,
+      "gap_creation": 12,
+      "cross_lane_hold": 1
+    }
+  },
+  {
+    "source": "paired",
+    "episode": "fixed_u02_w3_k1",
+    "arm": "sumocf",
+    "seed": 969221,
+    "exposure_cav_s": 1895.0,
+    "exposure_episode_s": 90.0,
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        397.0,
+        997.0
+      ],
+      "recorded_interval_s": [
+        397.0,
+        487.0
+      ],
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 52,
+      "gap_creation": 11,
+      "cross_lane_hold": 1
+    }
+  },
+  {
+    "source": "paired",
+    "episode": "fixed_u02_w3_k2",
+    "arm": "sumocf",
+    "seed": 969221,
+    "exposure_cav_s": 1983.0,
+    "exposure_episode_s": 90.0,
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        588.0,
+        1188.0
+      ],
+      "recorded_interval_s": [
+        588.0,
+        678.0
+      ],
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 11,
+      "wave_damping": 33
+    }
+  },
+  {
+    "source": "paired",
+    "episode": "fixed_u02_w3_k3",
+    "arm": "sumocf",
+    "seed": 969221,
+    "exposure_cav_s": 1919.0,
+    "exposure_episode_s": 90.0,
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        581.0,
+        1181.0
+      ],
+      "recorded_interval_s": [
+        581.0,
+        671.0
+      ],
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 32,
+      "gap_creation": 12
+    }
+  },
+  {
+    "source": "paired",
+    "episode": "fixed_u02_w3_k4",
+    "arm": "sumocf",
+    "seed": 969221,
+    "exposure_cav_s": 1657.0,
+    "exposure_episode_s": 90.0,
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        497.0,
+        1097.0
+      ],
+      "recorded_interval_s": [
+        497.0,
+        587.0
+      ],
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 49,
+      "gap_creation": 8,
+      "cross_lane_hold": 1
+    }
+  },
+  {
+    "source": "paired",
+    "episode": "fixed_u02_w3_k5",
+    "arm": "sumocf",
+    "seed": 969221,
+    "exposure_cav_s": 2121.0,
+    "exposure_episode_s": 90.0,
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        345.0,
+        945.0
+      ],
+      "recorded_interval_s": [
+        345.0,
+        435.0
+      ],
+      "disabled_detectors": []
+    },
+    "counts": {
+      "cross_lane_hold": 2,
+      "gap_creation": 9,
+      "wave_damping": 44
+    }
+  },
+  {
+    "source": "paired",
+    "episode": "fixed_u02_w4_k1",
+    "arm": "sumocf",
+    "seed": 969222,
+    "exposure_cav_s": 1398.0,
+    "exposure_episode_s": 90.0,
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        572.0,
+        1172.0
+      ],
+      "recorded_interval_s": [
+        572.0,
+        662.0
+      ],
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 27,
+      "gap_creation": 12
+    }
+  },
+  {
+    "source": "paired",
+    "episode": "fixed_u02_w4_k2",
+    "arm": "sumocf",
+    "seed": 969222,
+    "exposure_cav_s": 1964.0,
+    "exposure_episode_s": 90.0,
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        335.0,
+        935.0
+      ],
+      "recorded_interval_s": [
+        335.0,
+        425.0
+      ],
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 35,
+      "cross_lane_hold": 3,
+      "gap_creation": 10,
+      "yield_to_merge": 1
+    }
+  },
+  {
+    "source": "paired",
+    "episode": "fixed_u02_w4_k3",
+    "arm": "sumocf",
+    "seed": 969222,
+    "exposure_cav_s": 1366.0,
+    "exposure_episode_s": 90.0,
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        545.0,
+        1145.0
+      ],
+      "recorded_interval_s": [
+        545.0,
+        635.0
+      ],
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 42,
+      "gap_creation": 16
+    }
+  },
+  {
+    "source": "paired",
+    "episode": "fixed_u02_w4_k4",
+    "arm": "sumocf",
+    "seed": 969222,
+    "exposure_cav_s": 2014.0,
+    "exposure_episode_s": 90.0,
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        311.0,
+        911.0
+      ],
+      "recorded_interval_s": [
+        311.0,
+        401.0
+      ],
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 43,
+      "gap_creation": 15,
+      "cross_lane_hold": 3
+    }
+  },
+  {
+    "source": "paired",
+    "episode": "fixed_u02_w4_k5",
+    "arm": "sumocf",
+    "seed": 969222,
+    "exposure_cav_s": 1381.0,
+    "exposure_episode_s": 90.0,
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        585.0,
+        1185.0
+      ],
+      "recorded_interval_s": [
+        585.0,
+        675.0
+      ],
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 23,
+      "gap_creation": 12
+    }
+  }
+]

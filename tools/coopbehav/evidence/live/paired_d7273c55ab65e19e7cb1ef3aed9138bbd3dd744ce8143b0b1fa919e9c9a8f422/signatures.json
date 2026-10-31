@@ -1,0 +1,706 @@
+[
+  {
+    "id": "fixed_u02_w0_k0",
+    "C_G": 0.0002689361572265625,
+    "signature_window_s": [
+      382.0,
+      442.0
+    ],
+    "credit_outcome": "600s_team_fleet_plus_source_delay",
+    "features": {
+      "member_speed_mps": 5.956032928589143,
+      "member_temporal_speed_variance_m2_s2": 41.16132399256485,
+      "member_speed_change_mps": 12.716725945472717,
+      "member_displacement_m": 275.16666984558105,
+      "member_upstream_fraction": 0.0,
+      "member_lane_changes": 0.0,
+      "member_issued_acceleration_mps2": 1.8967606317093397,
+      "member_realized_acceleration_mps2": 0.2734779773219939,
+      "nearest_ramp_longitudinal_distance_m": 61.64206123352051,
+      "neighbour_speed_mps": 6.788304293129723,
+      "neighbour_temporal_speed_variance_m2_s2": 43.06956384496673,
+      "neighbour_speed_change_mps": 18.83225533552468,
+      "observed_member_fraction": 0.7786885245901639,
+      "member_command_observed_fraction": 0.9894736842105263
+    },
+    "explained_by": [
+      "gap_creation"
+    ],
+    "initial_neighbours": [
+      "mainline.86",
+      "ramp.38",
+      "ramp.42",
+      "ramp.44"
+    ]
+  },
+  {
+    "id": "fixed_u02_w0_k1",
+    "C_G": -0.0003490447998046875,
+    "signature_window_s": [
+      385.0,
+      445.0
+    ],
+    "credit_outcome": "600s_team_fleet_plus_source_delay",
+    "features": {
+      "member_speed_mps": 20.933688054482143,
+      "member_temporal_speed_variance_m2_s2": 33.54871042435228,
+      "member_speed_change_mps": 12.990368723869324,
+      "member_displacement_m": 475.42864990234375,
+      "member_upstream_fraction": 0.0,
+      "member_lane_changes": 0.0,
+      "member_issued_acceleration_mps2": 2.50474288108501,
+      "member_realized_acceleration_mps2": 0.5647986401682314,
+      "nearest_ramp_longitudinal_distance_m": 203.56590803464255,
+      "neighbour_speed_mps": 18.750025654122943,
+      "neighbour_temporal_speed_variance_m2_s2": 24.653748401795063,
+      "neighbour_speed_change_mps": 11.132772453129292,
+      "observed_member_fraction": 0.39344262295081966,
+      "member_command_observed_fraction": 0.9791666666666666
+    },
+    "explained_by": [
+      "gap_creation"
+    ],
+    "initial_neighbours": [
+      "mainline.149",
+      "mainline.153",
+      "ramp.34",
+      "ramp.38"
+    ]
+  },
+  {
+    "id": "fixed_u02_w0_k3",
+    "C_G": 7.915496826171875e-05,
+    "signature_window_s": [
+      488.0,
+      548.0
+    ],
+    "credit_outcome": "600s_team_fleet_plus_source_delay",
+    "features": {
+      "member_speed_mps": 9.824450116455555,
+      "member_temporal_speed_variance_m2_s2": 85.72807527773602,
+      "member_speed_change_mps": 25.383146494627,
+      "member_displacement_m": 475.7437324523926,
+      "member_upstream_fraction": 0.0,
+      "member_lane_changes": 0.0,
+      "member_issued_acceleration_mps2": 1.63070747256279,
+      "member_realized_acceleration_mps2": 0.5180233978495306,
+      "nearest_ramp_longitudinal_distance_m": 101.53586395263672,
+      "neighbour_speed_mps": 9.421227934045923,
+      "neighbour_temporal_speed_variance_m2_s2": 73.9016668808678,
+      "neighbour_speed_change_mps": 24.15536032617092,
+      "observed_member_fraction": 0.819672131147541,
+      "member_command_observed_fraction": 0.96
+    },
+    "explained_by": [
+      "gap_creation"
+    ],
+    "initial_neighbours": [
+      "mainline.119",
+      "mainline.122",
+      "mainline.129",
+      "mainline.132"
+    ]
+  },
+  {
+    "id": "fixed_u02_w0_k4",
+    "C_G": 0.0,
+    "signature_window_s": [
+      472.0,
+      532.0
+    ],
+    "credit_outcome": "600s_team_fleet_plus_source_delay",
+    "features": {
+      "member_speed_mps": 11.178744881063379,
+      "member_temporal_speed_variance_m2_s2": 88.0348827397975,
+      "member_speed_change_mps": 22.801784873008728,
+      "member_displacement_m": 501.04083347320557,
+      "member_upstream_fraction": 0.0,
+      "member_lane_changes": 0.5,
+      "member_issued_acceleration_mps2": 1.7350140317772211,
+      "member_realized_acceleration_mps2": 0.5011381290771149,
+      "nearest_ramp_longitudinal_distance_m": 106.84536358617967,
+      "neighbour_speed_mps": 8.353704402517332,
+      "neighbour_temporal_speed_variance_m2_s2": 67.43159493689897,
+      "neighbour_speed_change_mps": 19.100842410698533,
+      "observed_member_fraction": 0.7622950819672131,
+      "member_command_observed_fraction": 0.956989247311828
+    },
+    "explained_by": [
+      "gap_creation"
+    ],
+    "initial_neighbours": [
+      "mainline.119",
+      "mainline.122",
+      "ramp.47",
+      "ramp.54"
+    ]
+  },
+  {
+    "id": "fixed_u02_w0_k5",
+    "C_G": 0.0,
+    "signature_window_s": [
+      589.0,
+      649.0
+    ],
+    "credit_outcome": "600s_team_fleet_plus_source_delay",
+    "features": {
+      "member_speed_mps": 2.5436629477552457,
+      "member_temporal_speed_variance_m2_s2": 22.249940111617693,
+      "member_speed_change_mps": 11.17976175993681,
+      "member_displacement_m": 142.1870756149292,
+      "member_upstream_fraction": 0.0,
+      "member_lane_changes": 1.0,
+      "member_issued_acceleration_mps2": 0.9647597382808554,
+      "member_realized_acceleration_mps2": 0.18632936266561348,
+      "member_gap_change_m": 107.73796844482422,
+      "nearest_ramp_longitudinal_distance_m": 16.88731718845055,
+      "neighbour_speed_mps": 2.334444935632045,
+      "neighbour_temporal_speed_variance_m2_s2": 23.81248453622499,
+      "neighbour_speed_change_mps": 6.941774234175682,
+      "observed_member_fraction": 1.0,
+      "member_command_observed_fraction": 0.9508196721311475
+    },
+    "explained_by": [],
+    "initial_neighbours": [
+      "ramp.56",
+      "ramp.62",
+      "ramp.64"
+    ]
+  },
+  {
+    "id": "fixed_u02_w2_k0",
+    "C_G": -0.002140045166015625,
+    "signature_window_s": [
+      414.0,
+      474.0
+    ],
+    "credit_outcome": "600s_team_fleet_plus_source_delay",
+    "features": {
+      "member_speed_mps": 5.664787250821308,
+      "member_temporal_speed_variance_m2_s2": 30.616044981232708,
+      "member_speed_change_mps": 14.877577424049377,
+      "member_displacement_m": 249.49589157104492,
+      "member_upstream_fraction": 0.0,
+      "member_lane_changes": 0.0,
+      "member_issued_acceleration_mps2": 2.248819036917253,
+      "member_realized_acceleration_mps2": 0.32697972360548083,
+      "nearest_ramp_longitudinal_distance_m": 59.29129417993689,
+      "neighbour_speed_mps": 10.780481394965115,
+      "neighbour_temporal_speed_variance_m2_s2": 74.92428471197982,
+      "neighbour_speed_change_mps": 23.999771669507027,
+      "observed_member_fraction": 0.7622950819672131,
+      "member_command_observed_fraction": 0.946236559139785
+    },
+    "explained_by": [
+      "gap_creation"
+    ],
+    "initial_neighbours": [
+      "mainline.165",
+      "mainline.169",
+      "ramp.45",
+      "ramp.47"
+    ]
+  },
+  {
+    "id": "fixed_u02_w2_k1",
+    "C_G": 0.00119781494140625,
+    "signature_window_s": [
+      434.0,
+      494.0
+    ],
+    "credit_outcome": "600s_team_fleet_plus_source_delay",
+    "features": {
+      "member_speed_mps": 5.783062401679483,
+      "member_temporal_speed_variance_m2_s2": 45.627537398522456,
+      "member_speed_change_mps": 18.660432375967503,
+      "member_displacement_m": 278.8826379776001,
+      "member_upstream_fraction": 0.0,
+      "member_lane_changes": 0.5,
+      "member_issued_acceleration_mps2": 1.030172336432669,
+      "member_realized_acceleration_mps2": 0.37697843183772733,
+      "nearest_ramp_longitudinal_distance_m": 50.73420194115969,
+      "member_gap_change_m": 25.31085777282715,
+      "neighbour_speed_mps": 6.166488743422983,
+      "neighbour_temporal_speed_variance_m2_s2": 46.13445754829924,
+      "neighbour_speed_change_mps": 14.009757399559021,
+      "observed_member_fraction": 0.8278688524590164,
+      "member_command_observed_fraction": 0.9801980198019802
+    },
+    "explained_by": [
+      "gap_creation"
+    ],
+    "initial_neighbours": [
+      "mainline.178",
+      "mainline.186",
+      "ramp.49",
+      "ramp.51"
+    ]
+  },
+  {
+    "id": "fixed_u02_w2_k2",
+    "C_G": 9.5367431640625e-06,
+    "signature_window_s": [
+      423.0,
+      483.0
+    ],
+    "credit_outcome": "600s_team_fleet_plus_source_delay",
+    "features": {
+      "member_speed_mps": 6.295759377078475,
+      "member_temporal_speed_variance_m2_s2": 53.3530823460941,
+      "member_speed_change_mps": 20.504220724105835,
+      "member_displacement_m": 321.95226669311523,
+      "member_upstream_fraction": 0.0,
+      "member_lane_changes": 0.0,
+      "member_issued_acceleration_mps2": 2.2394767400651876,
+      "member_realized_acceleration_mps2": 0.3905565852210635,
+      "nearest_ramp_longitudinal_distance_m": 60.97560108933494,
+      "neighbour_speed_mps": 10.36677113877947,
+      "neighbour_temporal_speed_variance_m2_s2": 81.23531781816858,
+      "neighbour_speed_change_mps": 23.539415041605633,
+      "observed_member_fraction": 0.8770491803278688,
+      "member_command_observed_fraction": 0.9439252336448598
+    },
+    "explained_by": [
+      "gap_creation",
+      "wave_damping"
+    ],
+    "initial_neighbours": [
+      "mainline.172",
+      "mainline.178",
+      "ramp.47"
+    ]
+  },
+  {
+    "id": "fixed_u02_w2_k4",
+    "C_G": -0.008525848388671875,
+    "signature_window_s": [
+      381.0,
+      441.0
+    ],
+    "credit_outcome": "600s_team_fleet_plus_source_delay",
+    "features": {
+      "member_speed_mps": 9.875659943178848,
+      "member_temporal_speed_variance_m2_s2": 20.893162468858304,
+      "member_speed_change_mps": 12.816056549549103,
+      "member_displacement_m": 376.3866024017334,
+      "member_upstream_fraction": 0.0,
+      "member_lane_changes": 0.5,
+      "member_issued_acceleration_mps2": 2.409858522477088,
+      "member_realized_acceleration_mps2": 0.3244571278366861,
+      "nearest_ramp_longitudinal_distance_m": 68.23502462881582,
+      "neighbour_speed_mps": 13.371867896152148,
+      "neighbour_temporal_speed_variance_m2_s2": 23.593357664773542,
+      "neighbour_speed_change_mps": 4.60446360707283,
+      "observed_member_fraction": 0.6639344262295082,
+      "member_command_observed_fraction": 0.9506172839506173
+    },
+    "explained_by": [],
+    "initial_neighbours": [
+      "mainline.153",
+      "mainline.158",
+      "ramp.41",
+      "ramp.46"
+    ]
+  },
+  {
+    "id": "fixed_u02_w2_k5",
+    "C_G": 0.0,
+    "signature_window_s": [
+      387.0,
+      447.0
+    ],
+    "credit_outcome": "600s_team_fleet_plus_source_delay",
+    "features": {
+      "member_speed_mps": 11.93171825645601,
+      "member_temporal_speed_variance_m2_s2": 36.14895159078701,
+      "member_speed_change_mps": 12.104079246520996,
+      "member_displacement_m": 480.06781578063965,
+      "member_upstream_fraction": 0.03529411764705882,
+      "member_lane_changes": 0.0,
+      "member_issued_acceleration_mps2": 2.4476232586837394,
+      "member_realized_acceleration_mps2": 0.29166456015713244,
+      "nearest_ramp_longitudinal_distance_m": 87.05506456038532,
+      "neighbour_speed_mps": 20.250445841030142,
+      "neighbour_temporal_speed_variance_m2_s2": 18.520809489403135,
+      "neighbour_speed_change_mps": 8.866698582967123,
+      "observed_member_fraction": 0.6967213114754098,
+      "member_command_observed_fraction": 0.9647058823529412
+    },
+    "explained_by": [],
+    "initial_neighbours": [
+      "mainline.158",
+      "mainline.162",
+      "ramp.39"
+    ]
+  },
+  {
+    "id": "fixed_u02_w3_k0",
+    "C_G": 0.007506847381591797,
+    "signature_window_s": [
+      426.0,
+      486.0
+    ],
+    "credit_outcome": "600s_team_fleet_plus_source_delay",
+    "features": {
+      "member_speed_mps": 18.91940379694656,
+      "member_temporal_speed_variance_m2_s2": 33.08037633318695,
+      "member_speed_change_mps": 13.913466811180115,
+      "member_displacement_m": 486.37096118927,
+      "member_upstream_fraction": 0.0,
+      "member_lane_changes": 0.0,
+      "member_issued_acceleration_mps2": 2.3849539894324083,
+      "member_realized_acceleration_mps2": 0.5351333388915429,
+      "nearest_ramp_longitudinal_distance_m": 181.96784284379748,
+      "neighbour_speed_mps": 19.05931846981957,
+      "neighbour_temporal_speed_variance_m2_s2": 30.851235063695018,
+      "neighbour_speed_change_mps": 13.304318249225616,
+      "observed_member_fraction": 0.4426229508196721,
+      "member_command_observed_fraction": 0.9629629629629629
+    },
+    "explained_by": [
+      "gap_creation"
+    ],
+    "initial_neighbours": [
+      "mainline.163",
+      "mainline.166",
+      "ramp.43",
+      "ramp.50"
+    ]
+  },
+  {
+    "id": "fixed_u02_w3_k1",
+    "C_G": 0.006690025329589844,
+    "signature_window_s": [
+      397.0,
+      457.0
+    ],
+    "credit_outcome": "600s_team_fleet_plus_source_delay",
+    "features": {
+      "member_speed_mps": 10.462153924008211,
+      "member_temporal_speed_variance_m2_s2": 57.75487237257639,
+      "member_speed_change_mps": 21.424776792526245,
+      "member_displacement_m": 454.32765769958496,
+      "member_upstream_fraction": 0.0,
+      "member_lane_changes": 0.5,
+      "member_issued_acceleration_mps2": 1.65874970219163,
+      "member_realized_acceleration_mps2": 0.4869267452846874,
+      "nearest_ramp_longitudinal_distance_m": 108.82421972486708,
+      "neighbour_speed_mps": 9.25817555445505,
+      "neighbour_temporal_speed_variance_m2_s2": 47.38888967964233,
+      "neighbour_speed_change_mps": 20.558109536767006,
+      "observed_member_fraction": 0.7377049180327869,
+      "member_command_observed_fraction": 0.9555555555555556
+    },
+    "explained_by": [
+      "gap_creation",
+      "wave_damping"
+    ],
+    "initial_neighbours": [
+      "mainline.128",
+      "mainline.140",
+      "ramp.48",
+      "ramp.50"
+    ]
+  },
+  {
+    "id": "fixed_u02_w3_k2",
+    "C_G": -1272.9501140117645,
+    "signature_window_s": [
+      588.0,
+      648.0
+    ],
+    "credit_outcome": "600s_team_fleet_plus_source_delay",
+    "features": {
+      "member_speed_mps": 9.85515142839264,
+      "member_temporal_speed_variance_m2_s2": 21.62841477373579,
+      "member_speed_change_mps": 11.541810035705566,
+      "member_displacement_m": 374.3129825592041,
+      "member_upstream_fraction": 0.0,
+      "member_lane_changes": 0.5,
+      "member_issued_acceleration_mps2": 1.5587532989776287,
+      "member_realized_acceleration_mps2": 0.29219772242292574,
+      "nearest_ramp_longitudinal_distance_m": 97.55690554777782,
+      "neighbour_speed_mps": 14.088334317053002,
+      "neighbour_temporal_speed_variance_m2_s2": 30.41362036726133,
+      "neighbour_speed_change_mps": 9.3179612159729,
+      "observed_member_fraction": 0.6639344262295082,
+      "member_command_observed_fraction": 0.9629629629629629
+    },
+    "explained_by": [
+      "gap_creation",
+      "wave_damping"
+    ],
+    "initial_neighbours": [
+      "mainline.247",
+      "mainline.250",
+      "ramp.57",
+      "ramp.61"
+    ]
+  },
+  {
+    "id": "fixed_u02_w3_k3",
+    "C_G": -1557.4459853172302,
+    "signature_window_s": [
+      581.0,
+      641.0
+    ],
+    "credit_outcome": "600s_team_fleet_plus_source_delay",
+    "features": {
+      "member_speed_mps": 14.9939746260643,
+      "member_temporal_speed_variance_m2_s2": 43.761896812845656,
+      "member_speed_change_mps": 13.526416778564453,
+      "member_displacement_m": 477.1846580505371,
+      "member_upstream_fraction": 0.0,
+      "member_lane_changes": 1.0,
+      "member_issued_acceleration_mps2": 1.8695849455319917,
+      "member_realized_acceleration_mps2": 0.41619743934044473,
+      "nearest_ramp_longitudinal_distance_m": 169.54126749465715,
+      "neighbour_speed_mps": 15.402519756316268,
+      "neighbour_temporal_speed_variance_m2_s2": 35.349087781522,
+      "neighbour_speed_change_mps": 9.416618824005127,
+      "observed_member_fraction": 0.5491803278688525,
+      "member_command_observed_fraction": 0.9701492537313433
+    },
+    "explained_by": [
+      "gap_creation",
+      "wave_damping"
+    ],
+    "initial_neighbours": [
+      "mainline.244",
+      "mainline.246",
+      "ramp.57",
+      "ramp.60"
+    ]
+  },
+  {
+    "id": "fixed_u02_w3_k4",
+    "C_G": 5.4836273193359375e-06,
+    "signature_window_s": [
+      497.0,
+      557.0
+    ],
+    "credit_outcome": "600s_team_fleet_plus_source_delay",
+    "features": {
+      "member_speed_mps": 29.121780014038087,
+      "member_temporal_speed_variance_m2_s2": 0.06598835476729108,
+      "member_speed_change_mps": 1.2050867080688477,
+      "member_displacement_m": 615.2437405586243,
+      "member_upstream_fraction": 0.1111111111111111,
+      "member_lane_changes": 0.5,
+      "member_issued_acceleration_mps2": 2.418520365820991,
+      "member_realized_acceleration_mps2": 0.05605054456134175,
+      "nearest_ramp_longitudinal_distance_m": 201.70004297031298,
+      "neighbour_speed_mps": 29.804552121595904,
+      "neighbour_temporal_speed_variance_m2_s2": 0.13754330491571215,
+      "neighbour_speed_change_mps": 0.3944416046142578,
+      "observed_member_fraction": 0.36885245901639346,
+      "member_command_observed_fraction": 1.0
+    },
+    "explained_by": [],
+    "initial_neighbours": [
+      "mainline.200",
+      "mainline.207"
+    ]
+  },
+  {
+    "id": "fixed_u02_w3_k5",
+    "C_G": -0.0005769729614257812,
+    "signature_window_s": [
+      345.0,
+      405.0
+    ],
+    "credit_outcome": "600s_team_fleet_plus_source_delay",
+    "features": {
+      "member_speed_mps": 5.4949658815172455,
+      "member_temporal_speed_variance_m2_s2": 47.122580869806136,
+      "member_speed_change_mps": 10.88525378704071,
+      "member_displacement_m": 278.91627311706543,
+      "member_upstream_fraction": 0.0,
+      "member_lane_changes": 0.0,
+      "member_issued_acceleration_mps2": 1.7034003321941082,
+      "member_realized_acceleration_mps2": 0.211364151204674,
+      "nearest_ramp_longitudinal_distance_m": 48.23444202968052,
+      "neighbour_speed_mps": 9.140493253301601,
+      "neighbour_temporal_speed_variance_m2_s2": 79.96305538919819,
+      "neighbour_speed_change_mps": 23.615776255726814,
+      "observed_member_fraction": 0.860655737704918,
+      "member_command_observed_fraction": 0.9904761904761905
+    },
+    "explained_by": [
+      "gap_creation"
+    ],
+    "initial_neighbours": [
+      "ramp.38",
+      "ramp.40",
+      "ramp.41",
+      "ramp.44"
+    ]
+  },
+  {
+    "id": "fixed_u02_w4_k1",
+    "C_G": 0.0,
+    "signature_window_s": [
+      572.0,
+      632.0
+    ],
+    "credit_outcome": "600s_team_fleet_plus_source_delay",
+    "features": {
+      "member_speed_mps": 11.426722899907165,
+      "member_temporal_speed_variance_m2_s2": 76.17036536667865,
+      "member_speed_change_mps": 24.785968735814095,
+      "member_displacement_m": 498.81384086608887,
+      "member_upstream_fraction": 0.0,
+      "member_lane_changes": 0.5,
+      "member_issued_acceleration_mps2": 1.8533926538603251,
+      "member_realized_acceleration_mps2": 0.5633174712685022,
+      "nearest_ramp_longitudinal_distance_m": 243.75676883856457,
+      "neighbour_speed_mps": 9.78004468171091,
+      "neighbour_temporal_speed_variance_m2_s2": 74.8820196789755,
+      "neighbour_speed_change_mps": 24.282172232866287,
+      "observed_member_fraction": 0.7377049180327869,
+      "member_command_observed_fraction": 0.9555555555555556
+    },
+    "explained_by": [
+      "gap_creation"
+    ],
+    "initial_neighbours": [
+      "mainline.217",
+      "mainline.222",
+      "ramp.71"
+    ]
+  },
+  {
+    "id": "fixed_u02_w4_k2",
+    "C_G": 9.5367431640625e-07,
+    "signature_window_s": [
+      335.0,
+      395.0
+    ],
+    "credit_outcome": "600s_team_fleet_plus_source_delay",
+    "features": {
+      "member_speed_mps": 12.379858111793345,
+      "member_temporal_speed_variance_m2_s2": 58.191646998058275,
+      "member_speed_change_mps": 23.746593296527863,
+      "member_displacement_m": 528.8339622020721,
+      "member_upstream_fraction": 0.06818181818181818,
+      "member_lane_changes": 0.0,
+      "member_issued_acceleration_mps2": 1.9792881856362026,
+      "member_realized_acceleration_mps2": 0.5522463557332061,
+      "nearest_ramp_longitudinal_distance_m": 158.58022398874164,
+      "neighbour_speed_mps": 13.799808579479686,
+      "neighbour_temporal_speed_variance_m2_s2": 44.200214280815175,
+      "neighbour_speed_change_mps": 18.139963892288506,
+      "observed_member_fraction": 0.7213114754098361,
+      "member_command_observed_fraction": 0.9545454545454546
+    },
+    "explained_by": [],
+    "initial_neighbours": [
+      "mainline.106",
+      "mainline.126",
+      "mainline.99",
+      "ramp.37"
+    ]
+  },
+  {
+    "id": "fixed_u02_w4_k3",
+    "C_G": 3.814697265625e-06,
+    "signature_window_s": [
+      545.0,
+      605.0
+    ],
+    "credit_outcome": "600s_team_fleet_plus_source_delay",
+    "features": {
+      "member_speed_mps": 8.924484669097833,
+      "member_temporal_speed_variance_m2_s2": 4.230353703977293,
+      "member_speed_change_mps": 7.48291403055191,
+      "member_displacement_m": 349.79687690734863,
+      "member_upstream_fraction": 0.15476190476190477,
+      "member_lane_changes": 0.0,
+      "member_issued_acceleration_mps2": 1.0805468201098671,
+      "member_realized_acceleration_mps2": 0.18251009830614415,
+      "member_gap_change_m": 22.42975950241089,
+      "nearest_ramp_longitudinal_distance_m": 115.69072310502331,
+      "neighbour_speed_mps": 9.270789233978684,
+      "neighbour_temporal_speed_variance_m2_s2": 4.434811000790278,
+      "neighbour_speed_change_mps": 7.34653428196907,
+      "observed_member_fraction": 0.6885245901639344,
+      "member_command_observed_fraction": 0.9880952380952381
+    },
+    "explained_by": [
+      "gap_creation",
+      "wave_damping"
+    ],
+    "initial_neighbours": [
+      "mainline.217",
+      "mainline.222",
+      "mainline.240",
+      "mainline.242"
+    ]
+  },
+  {
+    "id": "fixed_u02_w4_k4",
+    "C_G": 0.0,
+    "signature_window_s": [
+      311.0,
+      371.0
+    ],
+    "credit_outcome": "600s_team_fleet_plus_source_delay",
+    "features": {
+      "member_speed_mps": 13.17811289548874,
+      "member_temporal_speed_variance_m2_s2": 89.32197018301918,
+      "member_speed_change_mps": 25.315252423286438,
+      "member_displacement_m": 477.1021556854248,
+      "member_upstream_fraction": 0.0,
+      "member_lane_changes": 0.0,
+      "member_issued_acceleration_mps2": 2.0391251352471365,
+      "member_realized_acceleration_mps2": 0.6935685595420942,
+      "nearest_ramp_longitudinal_distance_m": 145.94038611094157,
+      "neighbour_speed_mps": 10.832884097552817,
+      "neighbour_temporal_speed_variance_m2_s2": 76.26988063571198,
+      "neighbour_speed_change_mps": 24.368838131427765,
+      "observed_member_fraction": 0.6147540983606558,
+      "member_command_observed_fraction": 0.9466666666666667
+    },
+    "explained_by": [
+      "gap_creation"
+    ],
+    "initial_neighbours": [
+      "ramp.29",
+      "ramp.33"
+    ]
+  },
+  {
+    "id": "fixed_u02_w4_k5",
+    "C_G": -2.6702880859375e-05,
+    "signature_window_s": [
+      585.0,
+      645.0
+    ],
+    "credit_outcome": "600s_team_fleet_plus_source_delay",
+    "features": {
+      "member_speed_mps": 11.645112081881493,
+      "member_temporal_speed_variance_m2_s2": 73.75284836494663,
+      "member_speed_change_mps": 25.40191376209259,
+      "member_displacement_m": 524.7461543083191,
+      "member_upstream_fraction": 0.07526881720430108,
+      "member_lane_changes": 0.0,
+      "member_issued_acceleration_mps2": 1.818240099483066,
+      "member_realized_acceleration_mps2": 0.5582838189470899,
+      "nearest_ramp_longitudinal_distance_m": 243.84260978165173,
+      "neighbour_speed_mps": 11.555842731576313,
+      "neighbour_temporal_speed_variance_m2_s2": 69.6797897623336,
+      "neighbour_speed_change_mps": 24.38581518828869,
+      "observed_member_fraction": 0.7622950819672131,
+      "member_command_observed_fraction": 0.967741935483871
+    },
+    "explained_by": [
+      "gap_creation"
+    ],
+    "initial_neighbours": [
+      "mainline.217",
+      "mainline.222",
+      "mainline.227",
+      "mainline.244"
+    ]
+  }
+]
