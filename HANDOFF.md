@@ -19,6 +19,15 @@ episode counts are advancing. MAIN04:27 requests active supervision through
 repair only own failed jobs under MAIN02:08 same-cap/update-count authority.
 No redispatch or second watcher. All previous evidence and peer notices preserved.
 
+### MAIN04:27 supervision log (+08:00)
+
+- 04:48: watcher12432 identity/live rechecked; latest remote observation
+  Unix1793479670 verifies606968live,13/169updates (+2),637production successes
+  (+120),6open.574500actual/580500reserved incl unchanged historical failure;
+  no new failures;638complete control-window receipts zero collisions/teleports.
+  CollectionSHA9c343866b4e33391e962454fb97c046da6cd448625471c65f4dbbae801c48d3c.
+  Existing automatic checkpoint/curve publication progressing; no repair needed.
+
 **Verified Unix1793470139: training has1complete PPO update,61complete production
 episodes,6openproduction, second smoke successful; owncpuQ606968 still live.**
 Checkpoint001SHA6a0d24753ddd9ee01b9a92cf025c8f8005745ccc69d3ccdd5057633c9ba28ab7;
