@@ -37,7 +37,8 @@ Latest engineering source is FULL-v4/22cc32f6; current paired diagnostic below i
 - FULL-v4−WM2 delay CRPS differences (veh-s),120/300/600:-671;95%CI NA / -3811;95%CI NA / -11884;95%CI NA.
 - 300s breakdown-distance difference (pp): -0.83;95%CI NA.
 - HDV60 mean-world-median error difference (m): -41.60;95%CI NA; common HDV/arm endpoints=364.
-- Registered CIs resample only scored worlds within demand×penetration×split; singleton strata yield NA, never PASS.
+- Full-world95%CIs require replication in EVERY scored demand×penetration×split cell; any singleton gives NA here.
+- Detailed mixed-cell bootstrap intervals condition on singleton worlds; they are not full-panel confidence claims.
 - Earlier04:00/first0545-labelled numeric CIs RETRACTED (unscored-peer bootstrap bug); point estimates unchanged.
 - ALL three conditions are required; no automatic S-C1SWITCH adoption. Sparse cells also prevent distributional qualification.
 

@@ -7,6 +7,19 @@ import pytest
 
 from tools.rbint import continue_noon as collector
 from tools.rbint.noon_report import render
+
+
+def test_full_world_ci_requires_every_contributing_cell_to_be_replicated():
+    from tools.rbint.noon_report import replicated_world_cells, world_ci
+    metadata = [dict(seed=s, demand=d, penetration='.2', split='reserved8')
+                for s, d in ((1, '1900'), (2, '1900'), (3, '2300'), (4, '2300'))]
+    assert not replicated_world_cells([1, 2, 3], metadata)  # mixed pair+singleton
+    assert not replicated_world_cells([1, 2, 99], metadata)  # missing metadata
+    assert replicated_world_cells([1, 2, 3, 4], metadata)
+    original = dict(mean=-10., low=-12., high=-8.)
+    assert world_ci(original, False) == dict(mean=-10., low=None, high=None)
+    assert world_ci(original, True) == original
+    assert original['low'] == -12.  # immutable conditional diagnostic retained
 from tools.rbint.local_resources import child_incarnation, local_resources
 
 

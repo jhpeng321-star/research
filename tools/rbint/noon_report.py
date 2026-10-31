@@ -1,5 +1,6 @@
 """Render the owner-requested <=60-line report from source-bound score receipts."""
 import csv
+from collections import Counter
 from pathlib import Path
 
 from tools.rbeval.core import load
@@ -35,6 +36,22 @@ def comparison(item, split='reserved8'):
     return load(item['comparison'])['summaries'][split]
 
 
+def replicated_world_cells(worlds, metadata):
+    """All contributing strata need replication for a full world-level CI.
+
+    Variation from a repeated stratum does not estimate missing within-stratum
+    variance in the singleton strata. Preserve those conditional diagnostics in
+    source reports, but never promote them to full-panel95% CIs here.
+    """
+    by_world = {int(r['seed']): (r['demand'], r['penetration'], r['split']) for r in metadata}
+    counts = Counter(by_world[s] for s in worlds if s in by_world)
+    return bool(worlds) and all(s in by_world for s in worlds) and all(n >= 2 for n in counts.values())
+
+
+def world_ci(row, replicated):
+    return row if replicated else dict(row, low=None, high=None)
+
+
 def render(publication):
     variants = publication['variants']
     full = variants.get('FULL-v4', {})
@@ -47,6 +64,13 @@ def render(publication):
                  and r['horizon_s'] == 300), None)
     endpoint = load(selected['endpoints'])['summaries']['reserved8'] if selected.get('endpoints') else None
     distribution = Path(selected['distribution']) if selected.get('distribution') else None
+    metadata = rows(distribution/'distribution_worlds.csv') if distribution else []
+    replicated = replicated_world_cells(summary.get('worlds', []), metadata)
+    crps = [world_ci(r, replicated) for r in crps]
+    rate = world_ci(rate, replicated) if rate else None
+    if endpoint:
+        endpoint = dict(endpoint, primary=world_ci(endpoint['primary'],
+            replicated_world_cells(endpoint.get('worlds', []), metadata)))
     speed = [r for r in rows(distribution/'distribution_summary.csv' if distribution else None)
              if r['split'] == 'reserved8' and r['level'] == 'arm' and r['arm'] == 'native'
              and r['horizon_s'] == '600' and r['metric'] == 'speed_upstream']
@@ -115,7 +139,8 @@ def render(publication):
         f"- {fallback}−WM2 delay CRPS differences (veh-s),120/300/600:"+' / '.join(ci(x) for x in crps)+'.' if crps else '- Delay CRPS comparison PENDING;95%CIs NA.',
         f"- 300s breakdown-distance difference (pp): {ci({**rate, 'mean':100*rate['mean'], 'low':None if rate['low'] is None else 100*rate['low'], 'high':None if rate['high'] is None else 100*rate['high']},2)}." if rate else '- Breakdown-distance comparison PENDING;95%CI NA.',
         f"- HDV60 mean-world-median error difference (m): {ci(endpoint['primary'],2)}; common HDV/arm endpoints={endpoint['counts'].get('common_hdv',0)}." if endpoint else '- HDV60 non-regression PENDING;95%CI NA (old A/B/C tasks lack endpoints).',
-        '- Registered CIs resample only scored worlds within demand×penetration×split; singleton strata yield NA, never PASS.',
+        '- Full-world95%CIs require replication in EVERY scored demand×penetration×split cell; any singleton gives NA here.',
+        '- Detailed mixed-cell bootstrap intervals condition on singleton worlds; they are not full-panel confidence claims.',
         '- Earlier04:00/first0545-labelled numeric CIs RETRACTED (unscored-peer bootstrap bug); point estimates unchanged.',
         '- ALL three conditions are required; no automatic S-C1SWITCH adoption. Sparse cells also prevent distributional qualification.', '',
         '## Credibility / schedule',

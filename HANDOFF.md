@@ -86,6 +86,9 @@ still live (26tasks/three complete K8 worlds at06:29). No cpuQ dependency.
   Reports docs/rbint/variants/{A2,B2}_0528. Different available sets, not rankings.
 - Next: collect complete K8 matched worlds, scored-world-only endpoint CIs and
   DECIDE credibility, update ≤60line WMPHYS_MORNING.md at08:00/freeze09:30/final11:45.
+- Full-world CI presentation also requires EVERY contributing scored cell to
+  have replication; mixed singleton+replicated bootstrap intervals remain only
+  conditional diagnostics. `docs/rbint/FULL_WORLD_UNCERTAINTY_0650.md`;9CPU PASS.
 - Remaining parity gaps: synchronous LC, incomplete serial negotiation/internal
   junction state and cold lane memory; no full distributional qualification.
 - Bounded local noon collector delivered: read-only snapshots,
