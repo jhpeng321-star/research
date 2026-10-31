@@ -18,3 +18,7 @@
 - launch --resume requires proof the original dispatcher is no longer alive,
   preserves LAUNCH/DISPATCH logs, writes exclusive RESUME receipt/log, and reuses
   existing claims without redispatching them. No peer PID signals or new model.
+- Resume verified at22:10, exact local PID43404; durable RESUME.json/RESUME.log
+  in the same short root. Initial collection87complete/5oldCPU active; then
+ 93complete with7shortCPU+3GPU workers and5oldCPU workers, no new errors.
+  Worker/runtime/evaluator source hashes are identical to the initial short launch.

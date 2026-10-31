@@ -48,7 +48,7 @@ All120 reserved real objective clocks reconcile; arrays frozen SHAa61d1846.
 No late true source backlog in WM initialization: warmup queue + prefix-flow prior.
 
 **Recommendation:** complete B/C/D/E first; neither short method clears D/E => FAIL.
-Durable short dispatcher PID29400; _out/wmvalue_short_v1/LAUNCH.json.
+Durable short dispatcher resumed PID43404; _out/wmvalue_short_v1/RESUME.json.
 Old schedulers28924/27688 stopped by exact ownership; live workers preserved.
 CPU caps gpuA4/gpuR8 include old workers; GPUs only absent peer compute PIDs.
 Exact90vs120s checkpoint parity PASS on CPU; immutable short_v1 on both hosts.
