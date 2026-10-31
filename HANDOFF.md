@@ -1,6 +1,15 @@
 # S-RB-RUNB handoff
 
-Updated 2026-11-01 05:08 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+Updated 2026-11-01 07:10 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+
+### 07:09 continuation checkpoint
+- B2 tasks75/160 (24/27/24), same three owned workers/supervisor alive beyond
+  historical07:00. Verified11:30 deadline1793503800, no terminal receipt or replay.
+- Ten-minute watcher last07:01:35, no error; independent audit4169MiB/95%,load26.71.
+  Noon extension is active, not just a published request.04interim retained;
+  session still alive for08interim,09:30freeze and11:30evaluation cutoff.
+- INT now owns C2 on gpuR and FULL-v4 on gpuA; recognized existing claims and
+  left those running jobs under their owners. No additional RUNB candidate published.
 
 ### 05:07 live progress
 - B2 tasks16/160 (shards5/7/4), original3workers +supervisor live. GPU12263MiB,
