@@ -10,6 +10,8 @@
   `tools.wmfixmerge.recover_data_pilot --execute`, waiting>=14336MiB.
   Authoritative NEW `R/v2data/recovery_1705/{DISPATCH,STATUS}.json`, EVENTS.jsonl.
   At17:17 WAIT_GPU_MEMORY11485MiB. Never start a second dispatcher.
+- UPDATE17:20:12: launched after15337MiB free; timeout223221/python223222,
+  remaining20528s cap. Corpus initializing; read NEW STATUS/logs before action.
 - RECOVERY.json sha056c295c441bff291ec3548a47be2b1c0dffd00c085e53a51e0dd5f59bca0d10;
   prepared84751dc7/baseb8797242 unchanged; new contract3cc03fed changes only
   Runtime hash vs parente67850f3; controllerscd47e8ad binds recorded CTRL0 +

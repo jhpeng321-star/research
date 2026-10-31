@@ -137,4 +137,11 @@ decision. GPU parity/launch/decision remain pending.
   NEW authoritative logs: R/v2data/recovery_1705/{STATUS.json,EVENTS.jsonl,
   dispatcher.log,pilot.log}; pilot.log/child appear only when memory permits.
 - New pilot path R/v2data/recovery_1705/pilot. Remaining timeout20528s after
- 1041.774795s spent. No peer processes signalled, no SUMO, no push.
+1041.774795s spent. No peer processes signalled, no SUMO, no push.
+
+## Recovery launch, 2026-10-31 17:20:12 +08
+- Memory gate opened at15337MiB free. Dispatcher222535 launched timeout223221 /
+  python223222, revalidated RECOVERY056c295c before launch; remaining20528s cap.
+- Initializing the registered corpus on gpuA; no completed step10/full-panel claim
+  yet. CPU-only actual frozen CTRL0 and speed-MAPPO policy_feedback loads also PASS.
+  Monitor `recovery_1705/pilot/{RESUME.json,update_000010.json,FULL_PANEL_STEP10.json}`.
