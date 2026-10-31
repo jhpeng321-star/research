@@ -63,5 +63,10 @@ Cold LC memory and the actual CF selector are explicit in every receipt. No futu
 observation supplies a prediction or driver setting. Exact future identity timing
 is meaningful only for the t0 cohort; synthetic entrants are scored distributionally.
 
-`remote_full_fleet.py status|stage|launch|poll|collect` owns one CPU-only dispatch
-on cpuQ, pinned to INT `ff8a637f`. Stage/launch/result paths refuse replacement.
+`remote_full_fleet.py status|stage|launch|poll|collect --version v4` owns one
+CPU-only dispatch on cpuQ: INT `b0f66943` plus MERGE `0090c168` kernel/two
+lookahead hooks, `--cf-model sumo_idm --warm-lc`. Stage/launch/result paths refuse
+replacement. Earlier v3 (INT `ff8a637f`, legacy CF, cold LC) is retained separately.
+`python -m tools.rbeval.summarize_full_fleet --panel <collected directory>
+--targets <shared targets> --output <new score.json>` checks complete FIT32,
+collection hashes and conservation before reporting per-world and marginal clocks.

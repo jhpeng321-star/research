@@ -1,5 +1,20 @@
 # S-RB-MERGE — full-fleet validation continuation
 
+## v4 prepared (SUMO CF + causal LC history)
+- Immutable `/tmp/rb-merge-fullfleet-v4` combines INT **b0f66943** with MERGE's
+  **0090c168** kernel and just the two lookahead keyword hooks. INT's weighted
+  entrant-identity and post-motion mainline arbitration remain intact.
+- `--cf-model sumo_idm --warm-lc`: source emergencyDecel9, Euler motion,
+  observable60s pre-t0 LC memory, persistent-ID remapping between packed frames.
+  Population-default settings and same arrival stream190; no future state input.
+- Added full-fleet recorded insertion counts, timing/position absolute errors,
+  and per-step geometric overlap samples (distinct from SUMO collision logs).
+- Staged CPU gate **28 PASS /1.81s**, including both CF modes' native-CAV exact
+  chunk parity, prehistory identity recycling and lane-local overlap detection;
+  all32 source preflights PASS. Load8.76/32. v3 PID338844 exited before staging.
+- No v4 prediction launched yet. New version changes multiple source/initial
+  memory details together; no single-mechanism causal attribution will be made.
+
 ## New source-backed mechanics increment **0090c168**
 - Source reconciliation agrees with INT `f2d9a3ff`: POSITION_EPS is **.1**, not
   helper's .01 (SPEED_EPS). Prior cohort/full-fleet versions remain separately bound.

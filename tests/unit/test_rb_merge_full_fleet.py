@@ -68,14 +68,16 @@ def test_observer_detects_external_queue_corruption():
         entries.insert(state)
 
 
-def test_integrated_chunk_memory_matches_long_rollout():
+@pytest.mark.parametrize('cf', ['legacy', 'sumo_idm'])
+def test_integrated_chunk_memory_matches_long_rollout(cf):
     from wms.model.spec import ModelSpec
     from wms.model.wms import WmSModel
     from wms.physics.config import PhysicsConfig
     from tools.rbeval.full_fleet import native_controller
     # This test requires the exact peer integration runtime selected by PYTHONPATH.
+    options = {} if cf == 'legacy' else dict(cf_model=cf, sumo_cf_emergency_decel_mps2=9.)
     model = WmSModel(ModelSpec(lane_model='lc2013', lane_head='off'),
-                     physics=PhysicsConfig(merge_model='sumo', sumo_fidelity=True)).eval()
+                     physics=PhysicsConfig(merge_model='sumo', sumo_fidelity=True, **options)).eval()
     model.cav_exec_cap = 'idm'
     state, _ = fixture()
     state['lane'][0, 0] = 2
@@ -120,3 +122,22 @@ def test_observable_start_source_hash_and_causality(tmp_path):
     (tmp_path/'start.pt').write_bytes(b'changed')
     with pytest.raises(ValueError, match='hash differs'):
         observable_source(tmp_path)
+
+
+def test_prehistory_lc_memory_follows_identity_across_slot_recycling():
+    from tools.rbeval.full_fleet import transfer_lc_memory
+    old = dict(vehicle_id=torch.tensor([[10, 20, -1]]), present=torch.tensor([[True, True, False]]),
+               lc2013_identity=torch.tensor([[10, 20, -1]]),
+               lc2013_present=torch.tensor([[True, True, False]]), lc2013_lookahead=torch.tensor([[3., 8., 0.]]))
+    new = dict(vehicle_id=torch.tensor([[20, 30, 10]]), present=torch.ones(1, 3, dtype=torch.bool))
+    transfer_lc_memory(old, new)
+    assert new['lc2013_lookahead'][0, 0] == 8
+    assert new['lc2013_lookahead'][0, 2] == 3
+    assert not new['lc2013_present'][0, 1]
+
+
+def test_body_overlap_is_lane_local_and_touching_is_not_overlap():
+    from tools.rbeval.full_fleet import body_overlap_count
+    s = np.array([0., 5., 9., 9.])
+    lane = np.array([1, 1, 1, 0])
+    assert body_overlap_count(s, lane, np.full(4, 5.), np.ones(4, bool)) == (1, -1.)

@@ -46,6 +46,54 @@ def road_delay(before, after, born, dt):
     return dt * np.where(before['present'] & ~born, np.maximum(0., 1-speed/31.29), 0.)
 
 
+def body_overlap_count(s, lane, length, present):
+    """Geometric diagnostic, not SUMO's collision-action/collisionMinGap log."""
+    count = 0
+    worst = 0.
+    for ln in (0, 1, 2):
+        ids = np.flatnonzero(present & (lane == ln))
+        ids = ids[np.argsort(s[ids])]
+        gaps = s[ids[1:]]-length[ids[1:]]-s[ids[:-1]]
+        count += int((gaps < 0).sum())
+        if len(gaps):
+            worst = min(worst, float(gaps.min()))
+    return count, worst
+
+
+def transfer_lc_memory(previous, current):
+    """Pre-t0 packed slots reorder/recycle; LC memory follows observable identity."""
+    from wms.physics.lc2013 import STATE_KEYS
+    if previous is None:
+        return
+    old = {int(v): i for i, v in enumerate(previous['vehicle_id'][0])
+           if previous['present'][0, i]}
+    ids = current['vehicle_id'][0].tolist()
+    index = torch.tensor([[old.get(int(v), 0) for v in ids]])
+    found = torch.tensor([[int(v) in old for v in ids]]) & current['present']
+    for key in STATE_KEYS:
+        if key in previous:
+            current[key] = previous[key].gather(-1, index).clone()
+    if 'lc2013_present' in current:
+        current['lc2013_present'] &= found
+
+
+def warm_lc_history(model, arrays, t0, names, state, slots):
+    from wms.physics.lc2013 import STATE_KEYS, lane_change
+    from wms.physics.state import state_kin
+    previous = None
+    times = arrays['time_s']
+    for tick in np.flatnonzero((times >= times[t0]-60) & (times < times[t0])):
+        kin = np.array(arrays['veh_kin'][tick], copy=True)
+        mask = arrays['veh_mask'][tick].astype(bool) & (kin[:, 1:4].sum(-1) > 0)
+        ids = arrays['vid'][tick] if arrays['vid'].ndim == 2 else arrays['vid']
+        current = make_state(kin, mask, ids, arrays['is_cav'][tick].astype(bool), names, slots)
+        transfer_lc_memory(previous, current)
+        lc = lane_change(state_kin(current), current['present'], model.physics,
+                         memory=current, identity=current['vehicle_id'], decision_mask=current['present'])
+        previous = {**current, **{k: lc[k] for k in STATE_KEYS if k in lc}}
+    transfer_lc_memory(previous, state)
+
+
 class ObservedEntries:
     """Preserve the process and SourceLedger, record IDs/origins and exact waiting.
 
@@ -107,6 +155,7 @@ class ObservedEntries:
         state['ramp_origin'] = torch.as_tensor(self.origin[None].copy())
         self.previous = {k: state[k][0].numpy().copy() for k in
                          ('s_m', 'v_mps', 'present', 'lane')}
+        self.length = state['length_m'][0].numpy().copy()
         self.born = born.copy()
         return new
 
@@ -184,7 +233,7 @@ def observable_source(job):
 
 
 @torch.no_grad()
-def validate(root, seed, horizon, slots, stream, target_dir):
+def validate(root, seed, horizon, slots, stream, target_dir, cf_model='legacy', warm_lc=False):
     from wms.model.spec import ModelSpec
     from wms.model.wms import WmSModel
     from wms.physics.config import PhysicsConfig
@@ -213,7 +262,10 @@ def validate(root, seed, horizon, slots, stream, target_dir):
     mask = arrays['veh_mask'][t0].astype(bool) & (k0[:, 1:4].sum(-1) > 0)
     vid = arrays['vid'][t0] if arrays['vid'].ndim == 2 else arrays['vid']
     state = make_state(k0, mask, vid, arrays['is_cav'][t0].astype(bool), names, slots)
-    cfg = PhysicsConfig(merge_model='sumo', sumo_fidelity=True, dt_s=dt)
+    options = dict(merge_model='sumo', sumo_fidelity=True, dt_s=dt)
+    if cf_model != 'legacy':
+        options.update(cf_model=cf_model, sumo_cf_emergency_decel_mps2=9.)
+    cfg = PhysicsConfig(**options)
     # CF wiring may arrive in a later INT commit. Bind/report the actual selector.
     model = WmSModel(ModelSpec(lane_model='lc2013', lane_head='off'), physics=cfg).eval()
     model.requires_grad_(False)
@@ -225,6 +277,8 @@ def validate(root, seed, horizon, slots, stream, target_dir):
             module.register_forward_pre_hook(reject_learned)
     if model.physics.emergency_braking:
         raise ValueError('unexpected extra emergency envelope')
+    if warm_lc:
+        warm_lc_history(model, arrays, t0, names, state, slots)
     queue, source_receipt = observable_source(safe(record['job']))
     rates = queue.demand_rate
     counter = np.array(arrays['counter'][t0])
@@ -241,6 +295,8 @@ def validate(root, seed, horizon, slots, stream, target_dir):
     births = []
     exits = 0
     max_present = initial
+    overlap_samples = 0
+    worst_overlap_gap = 0.
     last = state
     history = history_mask = None
     start = time.monotonic()
@@ -268,6 +324,10 @@ def validate(root, seed, horizon, slots, stream, target_dir):
         if any(s.no_slot or s.dropped_pending for s in process.stats):
             raise AssertionError('slot pressure or discarded demand: enlarge capacity in new version')
         max_present = max(max_present, active)
+        overlaps, worst_gap = body_overlap_count(after['s_m'], after['lane'],
+                                                 entries.length, after['present'])
+        overlap_samples += overlaps
+        worst_overlap_gap = min(worst_overlap_gap, worst_gap)
         charge = road_delay(before, after, entries.born, dt)
         for e in range(2):
             clock[e] += charge[entries.origin == bool(e)].sum()
@@ -289,6 +349,9 @@ def validate(root, seed, horizon, slots, stream, target_dir):
     if len(delay) != 1:
         raise ValueError('missing/duplicate recorded target clock')
     real_merges = [r for r in targets('ramp_merges.csv') if float(r['t_merge_s']) <= 300+horizon]
+    insertions = targets('insertions_10s.csv')
+    real_insertions = [sum(int(r['count']) for r in insertions if r['entrance'] == e
+                           and float(r['t_start_s']) < 300+horizon) for e in ('mainline', 'ramp')]
     rm = {int(r['vid']): r for r in real_merges}
     pm = {r['identity']: r for r in merges if r['identity'] >= 0}
     common = sorted(rm.keys() & pm.keys())
@@ -296,16 +359,19 @@ def validate(root, seed, horizon, slots, stream, target_dir):
     return dict(seed=seed, arm='native', horizon_s=horizon, stream=stream, runtime_s=time.monotonic()-start,
         initial=initial, max_present=max_present, exits=exits,
         cf_model=getattr(cfg, 'cf_model', 'legacy'), lane_model=model.lane_model,
-        settings='population_default_no_encoder', lc_memory='cold_t0_then_persistent',
+        settings='population_default_no_encoder', lc_memory='observable_60s_then_persistent' if warm_lc else 'cold_t0_then_persistent',
+        body_overlap=dict(pair_samples=overlap_samples, worst_bumper_gap_m=worst_overlap_gap),
         demand=dict(rate=rates.tolist(), initial_backlog=queue.backlog.tolist(),
                     cav_share=queue.cav_share.tolist(), inserted=entries.births.tolist(),
                     due=[l.due for l in entries.ledgers], pending=process.pending[0].tolist(),
-                    conserved=True, no_slot=0, dropped=0),
+                    conserved=True, no_slot=0, dropped=0, recorded_insertions=real_insertions),
         delay=dict(predicted_mainline_veh_s=float(predicted[0]), predicted_ramp_veh_s=float(predicted[1]),
                    ramp_road_veh_s=float(clock[1]), ramp_source_veh_s=float(source[1]), recorded=delay[0]),
         merges=dict(recorded=len(real_merges), predicted=len(merges), t0_matched=len(common),
                     t0_time_error_s=stats([pm[i]['time_s']-float(rm[i]['t_merge_s']) for i in common]),
                     t0_position_error_m=stats([pm[i]['position_m']-float(rm[i]['s_merge_m']) for i in common]),
+                    t0_time_abs_error_s=stats([abs(pm[i]['time_s']-float(rm[i]['t_merge_s'])) for i in common]),
+                    t0_position_abs_error_m=stats([abs(pm[i]['position_m']-float(rm[i]['s_merge_m'])) for i in common]),
                     predicted_positions_m=stats([m['position_m'] for m in merges]), events=merges),
         births=births, road_delay_per_identity={str(k): v for k, v in per_vehicle.items()},
         episode_sha256=digest(ep/'episode.json'), tape_sha256=digest(tape), source_observations=source_receipt)
@@ -322,6 +388,8 @@ def main():
     p.add_argument('--horizon', type=int, choices=(120, 300, 600), default=300)
     p.add_argument('--slots', type=int, default=320)
     p.add_argument('--stream', type=int, default=190)
+    p.add_argument('--cf-model', choices=('legacy', 'sumo_idm'), default='legacy')
+    p.add_argument('--warm-lc', action='store_true')
     args = p.parse_args()
     if len(args.seeds) != len(set(args.seeds)) or any(not 969400 <= s <= 969431 for s in args.seeds):
         p.error('unique FIT seeds 969400..969431 required')
@@ -350,14 +418,15 @@ def main():
     sources = {str(path.relative_to(runtime)): digest(path) for path in paths}
     identity = dict(owner='S-RB-MERGE', args=vars(args), sources=sources,
         validator_sha256=digest(__file__), pid=os.getpid(), started_unix=time.time(),
-        targets={n: digest(safe(args.targets)/n) for n in ('ramp_delay_world.csv', 'ramp_merges.csv')})
+        targets={n: digest(safe(args.targets)/n) for n in ('ramp_delay_world.csv', 'ramp_merges.csv', 'insertions_10s.csv')})
     (out/'IDENTITY.json').write_text(json.dumps(identity, indent=2)+'\n')
     rows = []
     try:
         for seed in args.seeds:
             while hasattr(os, 'getloadavg') and os.getloadavg()[0] > 28:
                 time.sleep(15)
-            row = validate(safe(args.root), seed, args.horizon, args.slots, args.stream, safe(args.targets))
+            row = validate(safe(args.root), seed, args.horizon, args.slots, args.stream, safe(args.targets),
+                           args.cf_model, args.warm_lc)
             if any(digest(runtime/name) != sha for name, sha in sources.items()):
                 raise AssertionError('runtime changed during diagnostic')
             (out/f'{seed}.json').write_text(json.dumps(row, indent=2, allow_nan=False)+'\n')
@@ -369,7 +438,7 @@ def main():
             limitations=['One population-default future, native arm only; not distributional qualification.',
                 'Historical 562.4 vs 1265.4 is a different panel; recorded per-world clocks primary.',
                 'Future arrival identities are synthetic; exact timing matches only t0 cohort.',
-                'LC2013 cold at t0; no latent LC state from the real simulator.',
+                'LC2013 memory is inferred only from observable pre-t0 traffic when --warm-lc is selected.',
                 'CF selector reported per row; this is a merge/LC diagnostic, not final WM-PHYS.'])
         (out/'COMPLETE.json').write_text(json.dumps(report, indent=2, allow_nan=False)+'\n')
     except BaseException as exc:
