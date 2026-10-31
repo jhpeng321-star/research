@@ -59,6 +59,16 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**05:59 WM global-stop release required:** gpuR supervisor763520 EXITED with
+durableSTOP `wm__s969147`; exact worker traceback is inference unavailable timeout.
+Its2completeepisodes/60decisions and2700charged=actual are preserved, including
+300s failed native prefix. cpuQ remains unreachable/UNKNOWN. Ordinary relay
+policy releases BOTH GPUs on ANY owned CPU STOP, but its first-host SSH failure
+prevented reaching this check. `gpuops release-after-cpu-stop` applies exactly
+that existing release via hash-bound engine and owned PID/root checks; no reset.
+BB waiter36376 creation/command identity verified and stopped by exactPID while
+still waiting, BEFORE WM release, preserving BB's unused3GPUh/79800sim-s until
+host access returns. Original claims/logs retained; no science replay or restart.
 **05:38 shared cpuQ SSH outage:** direct connection is closed before login;
 one approved-host jump attempt also failed. MAIN's shared registration reports
 the same cpuQ outage in S-COOPFREE05:28. Current cpuQ WM status is UNKNOWN;

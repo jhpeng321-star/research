@@ -1,0 +1,22 @@
+{
+  "host": "gpuR",
+  "root": "/root/c1switch2_run_292bfffe94b13ed8",
+  "arm": "wm",
+  "unix": 1793483964.3621438,
+  "pid": 763520,
+  "pid_state": "EXITED",
+  "charged_sim_s": 2700,
+  "closed_actual_sim_s": 2700.0,
+  "episodes": 2,
+  "decisions": 60,
+  "requests": 61,
+  "results": 60,
+  "complete": false,
+  "stop": {
+    "reason": "child failed",
+    "id": "wm__s969147",
+    "code": 1
+  },
+  "log": "Traceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/root/c1switch2_run_292bfffe94b13ed8/pytools/tools/c1switch2/supervisor.py\", line 81, in <module>\n    run(checked(args.root), args.host, args.workers)\n  File \"/root/c1switch2_run_292bfffe94b13ed8/pytools/tools/c1switch2/supervisor.py\", line 48, in run\n    raise ValueError('durable STOP')\nValueError: durable STOP\n",
+  "failed_log": " Retrying in 1 seconds\nWarning: Environment variable SUMO_HOME is not set properly, disabling XML validation. Set 'auto' or 'always' for web lookups.\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/root/c1switch2_run_292bfffe94b13ed8/pytools/tools/c1switch2/runner.py\", line 152, in <module>\n    main()\n  File \"/root/c1switch2_run_292bfffe94b13ed8/pytools/tools/c1switch2/runner.py\", line 144, in main\n    run_episode(root, binding, a.arm, world)\n  File \"/root/c1switch2_run_292bfffe94b13ed8/pytools/tools/c1switch2/runner.py\", line 99, in run_episode\n    result = episode(env, arm, world, predictor=predictor, selector=selector, receipt=receipt)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/c1switch2_run_292bfffe94b13ed8/pytools/tools/c1switch2/episode.py\", line 33, in episode\n    costs = predictor.predict(copy.deepcopy(payload), f'{arm}_s{world[\"seed\"]}_j{j}')\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/c1switch2_run_292bfffe94b13ed8/pytools/tools/c1switch2/rpc.py\", line 37, in predict\n    raise TimeoutError('inference unavailable; SUMO remains paused')\nTimeoutError: inference unavailable; SUMO remains paused\n"
+}

@@ -5,6 +5,7 @@ import io
 import json
 from pathlib import Path
 import tarfile
+import time
 
 from tools.c1switch.design import checked, sha
 from tools.c1switch.model import WM2_SHA, BB_SHA
@@ -180,10 +181,47 @@ def config(root, model):
     print(json.dumps(dict(path=str(path), sha256=sha(path))))
 
 
+def release_after_cpu_stop(config_path, host):
+    """Apply the relay's existing global-stop release even if another CPU host is offline."""
+    config_path = checked(config_path)
+    config = json.loads(config_path.read_text())
+    cpu_root = config['cpus'][host]
+    proof = ssh(host, f'''import hashlib,json
+from pathlib import Path
+root=Path({cpu_root!r});assert root.name.startswith('c1switch2_run_')
+path=root/'STOP';assert path.is_file(),'verified CPU STOP required before GPU release'
+dispatch=json.loads((root/'DISPATCH_MODEL.json').read_text())
+assert dispatch['arm']=={config['engine']['model']!r}
+print(json.dumps(dict(root=str(root),stop=json.loads(path.read_text()),stop_sha256=hashlib.sha256(path.read_bytes()).hexdigest())))
+''', timeout=30)
+    releases = {}
+    for gpu, root in config['gpus'].items():
+        releases[gpu] = ssh(gpu, f'''import json,time
+from pathlib import Path
+root=Path({root!r});assert root.name.startswith('c1switch2_gpu_')
+assert json.loads((root/'ENGINE.json').read_text())=={config['engine']!r}
+dispatch=json.loads((root/'DISPATCH.json').read_text())
+proc=Path('/proc',str(dispatch['pid']))
+if proc.exists():
+ command=(proc/'cmdline').read_bytes().replace(b'\\0',b' ').decode()
+ assert str(root) in command and 'tools.c1switch2.gpuserver' in command,'owned GPU identity mismatch'
+path=root/'rpc/COMPLETE'
+if not path.exists():
+ with path.open('x') as stream:json.dump(dict(reason='verified owned CPU STOP; ordinary relay release',proof={proof!r},unix=time.time()),stream)
+print(json.dumps(dict(root=str(root),release_requested=True,pid=dispatch['pid'])))
+''', timeout=30)
+    result = dict(unix=time.time(), model=config['engine']['model'], proof=proof,
+                  releases=releases, config_sha256=sha(config_path), new_sim_s=0, new_gpu_allocations=0)
+    write(EVIDENCE/('GPU_RELEASE_'+config['engine']['model']+'_'+str(int(result['unix']))+'.json'), result)
+    print(json.dumps(result, indent=2))
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('command', choices=('inspect', 'stage', 'cpu-probe', 'start', 'collect', 'copy-bb', 'config'))
-    parser.add_argument('--host', choices=('gpuA', 'gpuR'), required=True)
+    parser.add_argument('command', choices=('inspect', 'stage', 'cpu-probe', 'start', 'collect', 'copy-bb', 'config',
+                                           'release-after-cpu-stop'))
+    parser.add_argument('--host', choices=('gpuA', 'gpuR', 'cpuQ'), required=True)
+    parser.add_argument('--config')
     parser.add_argument('--model', choices=('wm', 'bb'))
     parser.add_argument('--root')
     args = parser.parse_args()
@@ -199,5 +237,7 @@ if __name__ == '__main__':
         copy_bb(args.host, args.root)
     elif args.command == 'config':
         config(args.root, args.model)
+    elif args.command == 'release-after-cpu-stop':
+        release_after_cpu_stop(args.config, args.host)
     else:
         collect(args.host, args.root)
