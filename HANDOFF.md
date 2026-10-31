@@ -4,7 +4,7 @@ Branch `c4/rb-merge`; base `f0db3c82`. Owner registration5683 / MAIN00:10.
 Full earlier handoff preserved at `docs/rb_merge/HANDOFF_HISTORY_0100.md`.
 
 ## Integration-ready source
-- NEW opt-in `model/sumo_departure.py::step_after_movement`: tagged SUMO
+- **c8e54017** NEW opt-in `model/sumo_departure.py::step_after_movement`: tagged SUMO
   MSNet::simulationStep confirms movement/LC BEFORE insertion. Existing WM
   entry-before-motion scheduling is retained only as the previous contract.
   New adapter admits against moved geometry, leaves newborns at basePos without
@@ -15,9 +15,14 @@ Full earlier handoff preserved at `docs/rb_merge/HANDOFF_HISTORY_0100.md`.
   **7 local phase tests PASS /5.26s** (moved-gap admission, no birth motion,
   no same-tick slot overwrite, exact no-arrival parity, coupled settings,
   newborn-CAV control timing, legacy/default isolation).
-- Experimental `/tmp/rb-merge-fullfleet-v8end120` is STAGED ONLY: same frozen
+- Experimental `/tmp/rb-merge-fullfleet-v8end120` **LIVE**: same frozen
   encoder/native/LC source, `--entry-phase after`, H120/FIT32/512slots.
   **58 remote CPU tests PASS /2.45s**, all32 preflights PASS. v7fast stays frozen.
+  **03:03:19 +08 dispatched ONCE**, owned cpuQ PID**750052**, sourcec8e54017;
+  validator SHA `b7d4721f500e919e025c57abc3bc357c2d87723d4a93cdad5c012783d9d1db26`.
+  Receipt `/tmp/rb-merge-fullfleet-v8end120/LAUNCH.json`. OneCPU/nice19,
+  load4.60/32; distinct operator/H120 probe alongside the sole H600 v7fast job.
+  Do not duplicate either dispatch or modify their source snapshots.
 - Source advice now uses IDM's exact minNextSpeed bound
   `max(b,min(emergencyDecel,1.5))`, important for motion-inferred low b.
   Three source numeric anchors added; **44 local merge/native tests PASS /5.80s**.
