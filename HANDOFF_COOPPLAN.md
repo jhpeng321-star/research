@@ -77,3 +77,13 @@
   NEVER relaunch these supervisors or the original ones; dispatch receipts are committed.
 - Final result must report extension24 and pooled36 separately, all-group credits with
   whole-world clustering, unchanged causal detectors, safety, budget pruning and full accounting.
+- Backfill13/13 COMPLETE: all19 original actions now have twins; event-weighted mean C_G
+  +46.111598, whole-world-cluster95%CI[3.664586,109.339097],10/19positive in6/12worlds.
+  New immutable receipts: `coopplan/extension/original_all_groups/`; original six-sample
+  artifacts retained. The complete-action estimand differs from the first-action sample.
+- CPUQ resource notice in shared `COOPPLAN_RESOURCE_NOTICE.md` and REGISTRATION:
+  disk below immutable2GiB guard,6/8pairs complete, existing workers wait (no STOP).
+  gpuA all10original backfills complete and new pairs running; gpuR3backfills complete.
+- Collector/analysis: `python -B -m tools.coopplan.extension_report` (progress),
+  `--collect` ONLY after all24pairs, then `--verify`; local35CPU/analysis tests passed.
+  Never recollect into an existing immutable result directory; no live source was changed.

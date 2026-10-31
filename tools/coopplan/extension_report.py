@@ -149,13 +149,7 @@ def build(snapshot):
         assert len(s['backfill'])==len(missing(s['host']))
     original=first_snapshot()
     old,_,_,old_summary=report.build(original)
-    old=deepcopy(old)
-    byseed={r['world']['seed']:r for r in old}
-    for s in snapshot:
-        for c in s['backfill']:
-            r=byseed[c['seed']];r['credits'].append({k:v for k,v in c.items() if k!='seed'})
-        for e in s['backfill_behaviours']:
-            byseed[e['seed']]['causal_behaviours'].append({k:v for k,v in e.items() if k!='seed'})
+    old=enrich_original(old,snapshot)
     new=sorted((r for s in snapshot for r in s['records']),key=lambda r:r['world']['seed'])
     assert [r['world'] for r in new]==extension_worlds()
     assert [r['world'] for r in old]==worlds()
@@ -173,7 +167,48 @@ def build(snapshot):
                  free=snapshot[0]['free'],backfilled_original_groups=13,
                  extension_prefix_passes=sum(len(s['branches']) for s in snapshot),
                  original_prefix_passes=old_summary['exact_prefix_passes'])
+    new_seeds={w['seed'] for w in extension_worlds()}
+    branches=[b for s in snapshot for b in s['branches']]
+    new_solos=sum(b['actual_sim_s'] for b in branches if int(b['id'].split('_')[0][1:]) in new_seeds and '_solo' in b['id'])
+    backfill_cost=sum(b['actual_sim_s'] for b in branches if int(b['id'].split('_')[0][1:]) not in new_seeds)
+    assert backfill_cost==22560
+    summary['extension_costs']=dict(paired_episodes=57600,original_missing_twins=backfill_cost,
+                                    new_group_twins=new_solos,lookahead=sum(b['actual_sim_s'] for b in branches)-backfill_cost-new_solos)
+    assert sum(summary['extension_costs'].values())==summary['extension_charged']
+    summary['host_accounting']={s['host']:dict(actual=s['actual'],charged=s['charged'],cap=s['allocation']['cap'],
+                                              closed_jobs=s['closed_jobs'],outstanding=sum(s['outstanding'].values())) for s in snapshot}
+    wall=np.array([b['wall_s'] for b in branches])
+    summary['branch_cost']=dict(median_wall_s=float(np.median(wall)),max_wall_s=float(wall.max()),
+                               sim_s_per_wall_s=float(sum(b['actual_sim_s'] for b in branches)/wall.sum()),
+                               synchronous_offline=True)
     return cohorts,datasets,summary
+
+
+def enrich_original(records,snapshot):
+    records=deepcopy(records)
+    byseed={r['world']['seed']:r for r in records}
+    for s in snapshot:
+        assert len(s['backfill'])==len(missing(s['host']))
+        for c in s['backfill']:
+            byseed[c['seed']]['credits'].append({k:v for k,v in c.items() if k!='seed'})
+        for e in s['backfill_behaviours']:
+            byseed[e['seed']]['causal_behaviours'].append({k:v for k,v in e.items() if k!='seed'})
+    return records
+
+
+def original_all_groups():
+    """Publish completed new original-panel evidence without selecting unfinished extension worlds."""
+    snapshot=[details(h) for h in HOSTS]
+    records,_,_,_=report.build(first_snapshot())
+    records=enrich_original(records,snapshot)
+    rows,credits,summary=analyze(records)
+    assert len(credits)==19
+    dest=EVIDENCE/'original_all_groups';dest.mkdir()
+    report.save(dest/'BACKFILL_RECEIPTS.json',snapshot)
+    report.save(dest/'SUMMARY.json',summary)
+    report.save(dest/'CREDITS.json',credits)
+    report.save(dest/'BEHAVIOURS.json',[dict(seed=r['world']['seed'],causal=r['causal_behaviours']) for r in records])
+    return summary
 
 
 def figures(datasets,summary,dest):
@@ -243,9 +278,10 @@ def verify():
 
 
 def main():
-    p=argparse.ArgumentParser();p.add_argument('--collect',action='store_true');p.add_argument('--verify',action='store_true')
+    p=argparse.ArgumentParser();p.add_argument('--collect',action='store_true');p.add_argument('--verify',action='store_true');p.add_argument('--original-all-groups',action='store_true')
     a=p.parse_args()
     if a.verify:print(json.dumps(verify()));return
+    if a.original_all_groups:print(json.dumps(original_all_groups()));return
     snapshot=[fetch(h) for h in HOSTS]
     if not all(s['complete'] for s in snapshot):
         print(json.dumps([dict(host=s['host'],complete=s['complete'],stopped=s['stopped'],paired=len(s['records']),
