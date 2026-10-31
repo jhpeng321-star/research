@@ -86,7 +86,7 @@ class Population:
                 raise ValueError('nonphysical inferred population')
 
 
-def _prediction(history, particles):
+def _prediction(history, particles, acceleration_limits=None):
     """IDM acceleration likelihood, [particles,H]; history is observable [H,9].
 
     Normalisations and leader flag are exactly data.history.long_history_features.
@@ -100,10 +100,14 @@ def _prediction(history, particles):
     desired = gap0 + (v * tau + v * closing / (2 * (accel * decel).sqrt())).clamp_min(0)
     interaction = torch.where(has_leader, (desired / gap.clamp_min(
         torch.finfo(gap.dtype).eps)).square(), torch.zeros_like(desired))
-    return accel * (1 - (v / v0).pow(4) - interaction)
+    prediction = accel * (1 - (v / v0).pow(4) - interaction)
+    # Observed acceleration is executed plant motion, not raw unbounded IDM.
+    # Near a compressed/censored gap raw IDM can be enormous; using that as an
+    # observational residual would falsely inflate uncertainty by many orders.
+    return prediction if acceleration_limits is None else prediction.clamp(*acceleration_limits)
 
 
-def _motion_weights(history, mask, particles, point, prior_weights):
+def _motion_weights(history, mask, particles, point, prior_weights, acceleration_limits=None):
     """Residual-scale calibrated likelihood with serial-correlation effective N.
 
     No supplied observations => prior exactly. Six-channel legacy histories lack
@@ -115,14 +119,14 @@ def _motion_weights(history, mask, particles, point, prior_weights):
     if not torch.isfinite(h).all():
         raise ValueError('nonfinite observed history')
     actual = h[:, 1] * 3
-    residual = actual - _prediction(h, point[None])[0]
+    residual = actual - _prediction(h, point[None], acceleration_limits)[0]
     # Empirical residual MSE includes model discrepancy; NEVER used as runtime noise.
     variance = residual.square().mean().clamp_min(torch.finfo(h.dtype).eps)
     centered = residual - residual.mean()
     rho = ((centered[:-1] * centered[1:]).sum() /
            centered.square().sum().clamp_min(torch.finfo(h.dtype).eps)).clamp(0, 1)
     effective = (len(h) * (1 - rho) / (1 + rho)).clamp_min(1)
-    error = (_prediction(h, particles) - actual[None]).square().mean(-1)
+    error = (_prediction(h, particles, acceleration_limits) - actual[None]).square().mean(-1)
     log_weight = prior_weights.log() - 0.5 * effective * error / variance
     weights = log_weight.softmax(0)
     return weights, dict(residual_mse=float(variance), effective_n=float(effective),
@@ -138,13 +142,14 @@ class BirthMix:
     """
     names = PARAMETER_NAMES
 
-    def __init__(self, population, seed, row_keys):
+    def __init__(self, population, seed, row_keys, fitted_state=None):
         self.seed, self.row_keys = int(seed), list(row_keys)
         self.pools = [p.detach().clone() for p in population.hdv]
         self.weights = [w.detach().double().cpu().clone() for w in population.weights]
         self.cav_pools = [p.detach().clone() for p in population.cav]
         self.counts = [[0, 0] for _ in self.pools]
         self.assigned = [0] * len(self.pools)
+        self.fitted_state = fitted_state
 
     def pool_for(self, b, cav):
         pool = self.cav_pools[b] if cav else self.pools[b]
@@ -159,7 +164,11 @@ class BirthMix:
         u = int.from_bytes(hashlib.sha256(key.encode()).digest()[:8], 'big') / 2**64
         index = int(torch.searchsorted(weights.cumsum(0) / weights.sum(),
                                        torch.tensor(u, dtype=torch.float64)))
-        return dict(zip(self.names, pool[min(index, len(pool) - 1)].detach().cpu().tolist()))
+        values = dict(zip(self.names, pool[min(index, len(pool) - 1)].detach().cpu().tolist()))
+        if self.fitted_state is not None and not cav:
+            values.update(self.fitted_state.draw(self.row_keys[b], None, lane=True,
+                generator=_generator(self.seed, self.row_keys[b], entrance, ordinal, 'birth-lc')))
+        return values
 
     def __call__(self, state, newborn, params, birth_ordinals=None):
         result = {name: value.clone() for name, value in params.items()}
@@ -170,7 +179,7 @@ class BirthMix:
             ordinal = birth_ordinals[b, slot]
             values = self.candidate(
                 b, entrance, ordinal, bool(state['is_cav'][b, slot]))
-            for name in self.names:
+            for name in values:
                 result[name][b, slot] = values[name]
             self.counts[b][entrance] += 1
             self.assigned[b] += 1
@@ -214,9 +223,25 @@ class PoissonEntries(TorchEntryProcessV2):
                 self.t_next[b, e] += self._next(b, e)
         return due
 
+    def insert(self, state):
+        # WM-PHYS merge mode configures its deterministic SumoInsertion inside
+        # model.rollout, AFTER the future is planned. Its legacy mix compatibility
+        # reconstructs a uniform-pool hash; a calibrated/weighted posterior may
+        # not use that hash. Bind ONLY this future-owned insertion object's latent
+        # lookup to the exact draw used by newborn motion. Placement is unchanged.
+        insertion = getattr(self.cfg, 'sumo_insertion', None)
+        if insertion is not None:
+            mix = getattr(self, 'birth_mix', None)
+            if mix is None or insertion.mix is not mix:
+                raise ValueError('SUMO insertion and newborn motion must share the future population')
+            insertion.candidate = mix.candidate
+        return super().insert(state)
+
 
 def require_deterministic_physics(model):
     """Fail closed on known stochastic event modules; never mutate model switches."""
+    if getattr(model, 'training', False):
+        raise ValueError('hidden-state futures require evaluation mode')
     if getattr(model, '_samples_lanes', False):
         raise ValueError('hidden-state futures require deterministic lane physics')
     for name in ('merge_pivot', 'merge_threshold', 'merge_frailty', 'merge_core'):
@@ -236,7 +261,9 @@ class HiddenFuture:
 def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
                               future_sampling='off', n_samples=8, seed=0, row_keys=None,
                               population=None, entrance_histories=None, queues=None,
-                              entry_config=None, sample_present=True, sample_arrivals=True):
+                              entry_config=None, sample_present=True, sample_arrivals=True,
+                              fitted_state=None, vehicle_ids=None, t0_s=None,
+                              arrival_fit=None, sample_demand_rate=True):
     """Prepare K deterministic conditional futures, with independent latent draws.
 
     Histories/queues MUST be observable at t0. queues.demand_rate is upstream
@@ -255,6 +282,12 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
     if isinstance(n_samples, bool) or not isinstance(n_samples, int) or n_samples < 1:
         raise ValueError('n_samples must be a positive integer')
     require_deterministic_physics(model)
+    forbidden = ('accel_noise', 'state_noise', 'lane_uniform', 'lane_seed',
+                 'observe_states', 'observe_mask', 'cav_teacher', 'present_seq',
+                 'junction_seq', 'is_cav_seq', 'lane_teacher', 'merge_lane_teacher')
+    if any(history_args.get(key) is not None for key in forbidden) or any(
+            history_args.get(key, 0) != 0 for key in ('state_noise_std_m', 'state_noise_std_mps')):
+        raise ValueError('hidden-state futures reject process noise and future observation overrides')
     keys = ('history', 'history_mask', 'driver_history', 'driver_history_mask', 'driver_defaults')
     args = {key: history_args[key] for key in keys if key in history_args}
     encoded, embedding, params = model.encode_drivers(dict(state), **args)
@@ -269,12 +302,21 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
     mask = args.get('driver_history_mask', args.get('history_mask'))
     if mask is None:
         mask = torch.zeros((*point.shape[:2], 1), dtype=torch.bool, device=point.device)
+    if fitted_state is not None:
+        fitted_state.check_time(t0_s)
+        if vehicle_ids is None or vehicle_ids.shape != state['present'].shape:
+            raise ValueError('fitted posterior requires observable vehicle_ids matching slots')
+        if any(isinstance(key, bool) or int(key) != key for key in row_keys):
+            raise ValueError('fitted posterior requires numeric observed world row_keys')
+        population = fitted_state.as_population(params, state, mask)
     population = population or Population.from_motion(params, state, mask)
     population.validate(batch)
     if entrance_histories is not None and len(entrance_histories) != batch:
         raise ValueError('entrance_histories length mismatch')
     if queues is not None and (entrance_histories is None or len(queues) != batch):
         raise ValueError('queues need entrance histories for every row')
+    if arrival_fit is not None and entrance_histories is None:
+        raise ValueError('learned arrivals require observable entrance histories')
     lower, upper = point.new_tensor(PARAMETER_LOWER), point.new_tensor(PARAMETER_UPPER)
     encoder = getattr(model, 'driver_encoder', None)
     if getattr(encoder, 'driver_param_mode', None) == 'physical':
@@ -284,6 +326,9 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
         raise ValueError('encoder reliability prior must be positive')
     count = mask.bool().sum(-1).to(point)
     reliability = count / (count + prior_steps)
+    physics = getattr(model, 'physics', None)
+    limits = ((float(physics.accel_min_mps2), float(physics.accel_max_mps2))
+              if hasattr(physics, 'accel_min_mps2') and hasattr(physics, 'accel_max_mps2') else None)
     posteriors, diagnostics = {}, []
     supplied = None if encoded is None else encoded.get('posterior_samples')
     if supplied is not None and (supplied.ndim != 4 or supplied.shape[1:] != point.shape
@@ -295,6 +340,8 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
         weights = population.weights[b].to(point)
         mean = (pool * (weights / weights.sum())[:, None]).sum(0)
         for slot in (state['present'][b].bool() & ~state['is_cav'][b].bool()).nonzero().flatten().tolist():
+            if fitted_state is not None:
+                continue
             if supplied is not None:
                 candidates = supplied[:, b, slot].to(point)
                 weights_p = torch.ones(len(candidates), device=point.device, dtype=point.dtype)
@@ -303,7 +350,7 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
                 candidates = (point[b, slot] + pool - mean).clamp(lower, upper)
                 weights_p, diag = _motion_weights(
                     None if history is None else history[b, slot], mask[b, slot],
-                    candidates, point[b, slot], weights / weights.sum())
+                    candidates, point[b, slot], weights / weights.sum(), limits)
             posteriors[b, slot] = candidates, weights_p
             if diag is not None:
                 diagnostics.append(dict(row=b, slot=slot, **diag))
@@ -321,12 +368,28 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
             values[b, slot] = pool[_pick(w, rng)]
             branches['posterior' if use_posterior else 'population'] += 1
         kwargs = dict(driver_params={name: values[..., i] for i, name in enumerate(PARAMETER_NAMES)})
+        if fitted_state is not None:
+            from .fitted_hidden import LC_ORDER
+            if fitted_state.lane_population is not None:
+                kwargs['driver_params'].update({n: torch.ones_like(values[..., 0]) for n in LC_ORDER})
+            for b, slot in (state['present'].bool() & ~state['is_cav'].bool()).nonzero().tolist():
+                vid = vehicle_ids[b, slot].item()
+                # Identity, not slot/order/action, controls the persistent draw.
+                rng = _generator(seed, row_keys[b], sample if sample_present else 0, 'fit-idm', vid)
+                draw = fitted_state.draw(row_keys[b], vid, generator=rng)
+                if fitted_state.lane_population is not None:
+                    draw.update(fitted_state.draw(row_keys[b], vid, lane=True,
+                        generator=_generator(seed, row_keys[b], sample if sample_present else 0, 'fit-lc', vid)))
+                for name, value in draw.items():
+                    kwargs['driver_params'][name][b, slot] = value
+                key = f'{int(row_keys[b])}:{int(vid)}'
+                branches['posterior' if key in fitted_state.posterior['drivers'] else 'population'] += 1
         if embedding is not None:
             kwargs['driver_embedding'] = embedding.detach().clone()
         arrival_sample = sample if sample_arrivals else 0
         # Entrant parameter uncertainty is part of future arrivals (b).
         birth_seed = seed_of(seed, arrival_sample, 'newcomers')
-        mix = BirthMix(population, birth_seed, row_keys)
+        mix = BirthMix(population, birth_seed, row_keys, fitted_state=fitted_state)
         if entrance_histories is not None:
             q = None if queues is None else [EntranceQueue(
                 np.array(v.backlog, copy=True), np.array(v.demand_rate, copy=True),
@@ -339,15 +402,30 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
                 raise ValueError('hidden-state entries need conserved deterministic inferred admission')
             hist = [replace(h, headway_cv=np.ones(2)) for h in entrance_histories]
             row_seeds = [seed_of(seed, key, arrival_sample, 'arrival') for key in row_keys]
-            process = PoissonEntries(histories=hist, queues=q, batch=batch,
+            process_type, extra = PoissonEntries, {}
+            if arrival_fit is not None:
+                from .arrival_fit import FittedEntries
+                process_type = FittedEntries
+                extra['demand_plans'] = [arrival_fit.draw(key, t0_s=t0_s, seed=seed,
+                    sample=arrival_sample, sample_rate=sample_demand_rate) for key in row_keys]
+            process = process_type(histories=hist, queues=q, batch=batch,
                 dt_s=float(model.physics.dt_s), row_seeds=row_seeds, couple_draws=True,
-                cfg=replace(cfg, learned_admission=PopulationAdmission(mix)))
+                cfg=replace(cfg, learned_admission=PopulationAdmission(mix)), **extra)
+            process.birth_mix = mix
             kwargs.update(entries=process, entrant_driver_sampler=mix)
         futures.append(HiddenFuture(kwargs, dict(future_sampling='hidden_state', future=sample,
             seed=int(seed), driver_branches=branches, likelihood=diagnostics,
-            posterior_source='supplied_motion_posterior' if supplied is not None else 'empirical_motion_likelihood',
+            posterior_source=('rbfit_joint_finite_support' if fitted_state is not None else
+                              'supplied_motion_posterior' if supplied is not None else 'empirical_motion_likelihood'),
+            fitted_artifacts=None if fitted_state is None else fitted_state.provenance,
+            fitted_lc=fitted_state is not None and fitted_state.lane_population is not None,
+            idm_lc_joint_coupling='independent_fitted_blocks' if fitted_state is not None else None,
+            likelihood_acceleration_limits=limits,
             population_sizes=[len(p) for p in population.hdv],
             arrival_sample=arrival_sample, arrivals='poisson' if entrance_histories is not None else 'closed_cohort',
-            rate_source='observed_request_demand' if queues is not None else 'observed_insertion_proxy',
+            learned_arrival_sha256=getattr(arrival_fit, 'sha256', None),
+            demand_rate_draws=None if arrival_fit is None else [p.rates.tolist() for p in process.demand_plans],
+            rate_source=('fitted_entrance_counters' if arrival_fit is not None else
+                         'observed_request_demand' if queues is not None else 'observed_insertion_proxy'),
             physics_noise=False, embedding_noise=False)))
     return futures

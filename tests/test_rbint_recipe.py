@@ -69,7 +69,7 @@ def test_poisson_fractional_source_wait_and_wrapper_delegation():
 def test_fixed_population_for_present_and_newborns(variant):
     torch.manual_seed(1)
     model = build_model(ModelSpec(rollout_mode='driver_params', lane_model='lc2013'),
-                        PhysicsConfig(merge_model='sumo'))
+                        PhysicsConfig(merge_model='sumo')).eval()
     model._wmphys_variant = variant
     if variant == 'C':
         artifact = Path(__file__).resolve().parents[1]/'artifacts/rbfit/pooled_full_v5/idm_pooled.json'

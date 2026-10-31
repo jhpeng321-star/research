@@ -22,6 +22,9 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   A/C use the bound compatible runner even with an older EVAL worktree copy.
 
 ## What exists
+- UNCe038da91 integrated: fitted finite-support posterior adapter, identity-keyed
+  existing-driver draws, learned observable-counter arrival family + Gamma rate
+  uncertainty. Default-OFF; FULL recipe wiring next. Optional fitted LC left OFF.
 - MERGE75a24397 integrated (kernel0090c168): Euler brakeGap with tau, overtake
   time+space checks, unblocked-leader cap, persistent lookahead; ONLY two adapter
   keyword hooks, retaining INT's entrant identity and mainline ownership fixes.
@@ -42,6 +45,9 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   Full-population ledger/exit/finite audit attached to every candidate task.
 
 ## Verification / receipts
+- UNC integration: **34 CPU tests PASS /13.33s**; fitted-IDM/arrivals, legacy
+  futures and INT recipe/audit. Test fixture now explicitly eval(), matching
+  production loader and the new fail-closed deterministic-future guard.
 - MERGE integration: **51 CPU tests PASS /16.99s**, including new full-fleet
   diagnostics and combined INT ramp/mainline/correction/source gates.
 - Resumed LANE merge gate: **116 CPU tests PASS /33.30s** (all touched
