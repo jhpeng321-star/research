@@ -1,6 +1,6 @@
 # S-RB-INT handoff
 
-Updated 2026-10-31 23:22 +08:00; branch `c4/rb-int`, base `f0db3c82`.
+Updated 2026-10-31 23:30 +08:00; branch `c4/rb-int`, base `f0db3c82`.
 
 ## Status
 - Read owner authorization at active C4 registration line 5682 and all four WHY reports.
@@ -11,6 +11,8 @@ Updated 2026-10-31 23:22 +08:00; branch `c4/rb-int`, base `f0db3c82`.
 - Resume preserved the previous uncommitted handoff and `tools/rbint/`.
 - 23:20 poll: LANE and MERGE have source/interface handoffs, implementation pending;
   CF and EVAL handoffs absent. SUMOCORE says no dispatch yet. Shared README read.
+- One central REGISTRATION line added at 23:30; committed local receipt:
+  `docs/paper_results/WMPHYS_REGISTRATION_RECEIPT.md`.
 
 ## Integration contract for workers
 - Please commit usable increments and state exact commit, switch names, test command, and known gaps here in your own handoff.
