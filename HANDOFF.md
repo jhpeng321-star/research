@@ -4,7 +4,9 @@ Updated 2026-11-01 ~00:34 +08; branch `c4/rb-int`. Owner registration5683/5697/5
 Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_0034.md`.
 
 ## READY FOR EVAL
+- **WM-PHYS-A / RUNA gpuA**: `E:/agent-work/c4-rb-int/docs/paper_results/WM-PHYS-A.runa.json`.
 - **WM-PHYS-B / RUNB gpuR**: `E:/agent-work/c4-rb-int/docs/paper_results/WM-PHYS-B.runb.json`.
+- **WM-PHYS-C / RUNA gpuA next**: `E:/agent-work/c4-rb-int/docs/paper_results/WM-PHYS-C.runa.json`.
 - Exact candidate source commit **b0f66943ec300594fc220d3779fb482c26534b1c**.
 - Immutable runtime on BOTH hosts: `/root/rbeval20261031/phys_code_b0f66943ec30`.
 - Config: that runtime's `configs/wm_phys.toml`; entrypoint B:
@@ -13,8 +15,11 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   `74749fba6e10ca55bcecc6202483157f235c501e62d838491145b19c61e4ca66`.
 - B population defaults apply to BOTH existing and incoming drivers; Poisson
   future requests from observable demand/backlog. Identity-bound recipe and sampler.
-- A/C passed smoke too, but RUNA publication waits for its callback-capable
-  harness reconciliation; see `E:/agent-work/rb-shared/INT_EVAL_RUNNER_REQUEST.md`.
+- RUNA compatibility independently verified on gpuA: loader_module is
+  `tools.rbint.evaluate`, which selects the immutable staged complete runner
+  BEFORE RUNA's `from run_wm import main`. Resolved path is the staged runtime's
+  tools/rbeval/run_wm.py; signature explicitly includes future_builder. Thus
+  A/C use the bound compatible runner even with an older EVAL worktree copy.
 
 ## What exists
 - CF742922b6, LANE (including right-overtake prevention), MERGE follow-ups,
@@ -53,7 +58,7 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
 - Poll workers about every20min. No peer process action, push, deletion or training.
 
 ## Remaining / known gaps
-- RUNA must use INT future_builder-capable runner before A/C READY manifests.
+- RUNA must retain the published loader module so the verified runner resolves.
 - Matched distributional efficacy, HDV60s non-regression and paired CIs pending.
 - LC2013 is highway subset (synchronous messages; incomplete full negotiation).
 - Historical lane reproduction and ramp delay are different panels, not efficacy

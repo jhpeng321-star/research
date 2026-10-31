@@ -1,0 +1,33 @@
+{
+  "variant": "WM-PHYS-A",
+  "host": "gpuA",
+  "runtime_root": "/root/rbeval20261031/phys_code_b0f66943ec30",
+  "wm": "/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt",
+  "wm_config": "/root/rbeval20261031/phys_code_b0f66943ec30/configs/wm_phys.toml",
+  "loader_module": "tools.rbint.evaluate",
+  "loader_function": "load_candidate",
+  "recipe_variant": "A",
+  "future_builder_module": "tools.rbint.recipe",
+  "future_builder_function": "candidate_future",
+  "identity_sources": [
+    "/root/rbeval20261031/phys_code_b0f66943ec30/tools/rbint/evaluate.py",
+    "/root/rbeval20261031/phys_code_b0f66943ec30/tools/rbint/recipe.py",
+    "/root/rbeval20261031/phys_code_b0f66943ec30/tools/rbint/rebuild.py",
+    "/root/rbeval20261031/phys_code_b0f66943ec30/tools/rbeval/run_wm.py",
+    "/root/rbeval20261031/phys_code_b0f66943ec30/configs/native_cav_head_v5.json"
+  ],
+  "sources": {
+    "/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+    "/root/rbeval20261031/phys_code_b0f66943ec30/configs/wm_phys.toml": "1e2b1e94ebb294857e4141108be1ab934fd692294594ccfcd84106fbc97e5f8b",
+    "/root/rbeval20261031/phys_code_b0f66943ec30/tools/rbint/evaluate.py": "66f06279e2b06dd3c157e2b6ea6ae7fe0afe43ed3c50ce08286d5c4b9ad7574c",
+    "/root/rbeval20261031/phys_code_b0f66943ec30/tools/rbint/recipe.py": "b1945711f9972238c797f9e3b5b5fb701ff9ecd236b421bd9e3da3d277d23a4e",
+    "/root/rbeval20261031/phys_code_b0f66943ec30/tools/rbint/rebuild.py": "fc94c0453657a867bd643e962078d5a7b59b5c359b6e41f367fb4bec0a634cae",
+    "/root/rbeval20261031/phys_code_b0f66943ec30/tools/rbeval/run_wm.py": "e91685408346b1a9829e719609edef18249f08b3cba22d65a5937c701519abe7",
+    "/root/rbeval20261031/phys_code_b0f66943ec30/configs/native_cav_head_v5.json": "4c351a4281abc5e0eb08b59612e175ab60bd75715f5e94241b3a440691fcda00"
+  },
+  "pythonpath": ["/root/autodl-tmp/c4/speedhead20261030/pythondeps"],
+  "smoke_receipt": "/root/rbeval20261031/SMOKE_b0f66943ec30.json",
+  "smoke_sha256": "74749fba6e10ca55bcecc6202483157f235c501e62d838491145b19c61e4ca66",
+  "commit": "b0f66943ec300594fc220d3779fb482c26534b1c",
+  "runner_resolution": "loader module evaluate selects its staged callback-capable tools/rbeval before RUNA imports run_wm; signature verified on gpuA"
+}
