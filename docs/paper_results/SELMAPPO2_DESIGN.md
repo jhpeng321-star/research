@@ -46,9 +46,12 @@ ownership remain in force, with exactly one command writer per CAV per tick.
 - Seeds18107774..18107997 remain unallocated. Every world uses the shared seeded
   per-iteration permutation cycling all12 penetration(.05,.1,.2,.4) x
   demand(1900,2400,2700) cells. Optimization RNG1; no acceleration-policy warmstart.
-- Frozen final169 evaluation:16 x900 = **14,400 sim-s**, on the independently
-  registered S-C1SWITCH2 panel, pinned before access. Do not assume the older
-  C1SWITCH panel is the new panel. No evaluation selection or normalization update.
+- Frozen final169 evaluation: reserve16 x900 = **14,400 sim-s**, on the independently
+  registered S-C1SWITCH2 panel, pinned before access. The peer registration now
+  assigns all evaluation physics to S-C1SWITCH2 (including its extra J900 tail):
+  leave this reservation unstarted and reuse its hash-bound J600 receipts to avoid
+  duplicate simulation. Panel969136..969151 is separate from all TRAIN worlds.
+  No evaluation selection or normalization update.
 - Exact cap **7,012,800 sim-s**, including every warmup, smoke and failure;
   **zero retry/top-up reserve**. No refunds, seed replacement, sweeps or restarts.
   Partial failures retain actual and reserved charges and stop dispatch.
