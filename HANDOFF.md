@@ -1,8 +1,11 @@
-# S-RB-INT handoff — 2026-11-01 05:30 +08
+# S-RB-INT handoff — resumed 2026-11-01 06:32 +08
 
 Branch `c4/rb-int`. Retain all prior work and immutable jobs. Earlier detail:
 `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_{0034,0515}.md`.
 Owner schedule: interim04/08, freeze09:30, evaluation through11:30, report11:45.
+Fresh-session recovery: `docs/rbint/RESUME_0627.md`. Existing local collector21808
+and peer observer retained. WM2-HDV60 now160/160 COMPLETE; FULL-v4 own workers
+still live (26tasks/three complete K8 worlds at06:29). No cpuQ dependency.
 
 ## READY FOR EVAL / existing ownership
 - FULL-v4-gpu LIVE source22cc32f65a80af482a1a277c5f22377fa727d0a3:
