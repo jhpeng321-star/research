@@ -163,6 +163,11 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
 - Poll workers about every20min. No peer process action, push, deletion or training.
 
 ## Remaining / known gaps
+- HDV60_DESIGN.md frozen before endpoint inference/scoring. New short baseline
+  wrapper imports ORIGINAL WM2 runtime on gpuR, retains600s padding/1200-step
+  RNG plans, executes120steps only. Canary must match original first6speed/
+  support bins(all5arms/3regions) before continuation. Separate schema/root;
+  future targets never enter forecasts. Endpoint/protocol/ownership25CPU PASS.
 - New candidate runner exports60s predicted positions by ORIGINAL observed
   string ID, exact halfstep119, with exit/recycled-slot censoring and explicit
   no-factual-future-input provenance. Endpoint exporter2CPU tests PASS. Existing

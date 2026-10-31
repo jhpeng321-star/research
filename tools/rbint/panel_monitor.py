@@ -123,11 +123,12 @@ def main():
     if root.parent != Path('/root/rbeval20261031/int'):
         raise ValueError('INT panel roots only')
     spec = json.loads((root/'SPEC.json').read_text())
-    if spec['owner'] != 'S-RB-INT' or spec['variant'] != 'FULL':
+    if spec['owner'] != 'S-RB-INT' or spec['variant'] not in ('FULL', 'WM2_HDV60'):
         raise ValueError('never supervise peer inference')
     runtime = Path(spec['runtime'])
     workers = json.loads((root/'PANEL_PROCESS.json').read_text())['workers']
-    if len(workers) != 3 or any(str(runtime/'tools/rbint/evaluate_FULL.py') not in r['argv'] for r in workers):
+    entry = runtime/'tools/rbint'/('evaluate_WM2_60.py' if spec['variant']=='WM2_HDV60' else 'evaluate_FULL.py')
+    if len(workers) != 3 or any(str(entry) not in r['argv'] for r in workers):
         raise ValueError('worker ownership binding differs')
     for r in workers:
         if '--out' not in r['argv'] or Path(r['argv'][r['argv'].index('--out')+1]).parent != root:
@@ -158,6 +159,12 @@ def main():
             complete = verify_completion(root)
             if not running and not complete:
                 raise RuntimeError('INT worker terminal before complete panel; no automatic retry')
+            if complete and spec['variant'] == 'WM2_HDV60':
+                save(root/'MONITOR_COMPLETE.json', dict(unix=time.time(), endpoint_only=True,
+                    tasks=160, peak_own_gpu_mib=peak, inference_only=True,
+                    complete_hashes={str(p.relative_to(root)):digest(p) for i in range(3)
+                        for p in (root/f'shard{i}').glob('w*_k*.json')}))
+                break
             for label, clock in CHECKPOINTS.items():
                 if time.time() >= clock:
                     score_once(root, runtime, 'interim'+label, partial=not complete)

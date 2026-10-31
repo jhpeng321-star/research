@@ -40,6 +40,7 @@ def arguments():
     p.add_argument('--shards', type=int, default=1)
     p.add_argument('--memory-gib', type=float, default=5)
     p.add_argument('--max-tasks', type=int)
+    p.add_argument('--endpoint-only', action='store_true', help='separate60s endpoint contract; retain600s padding/RNG prefix')
     p.add_argument('--switches', help='JSON object of explicit model-attribute overrides')
     return p.parse_args()
 
@@ -51,6 +52,9 @@ def main(model_loader=None, identity_sources=(), future_builder=None):
     Live WM2 uses the original independently staged source, never overwritten.
     """
     args = arguments()
+    if args.endpoint_only:
+        assert args.model_name != 'wm2' and 'hdv60' in args.model_name.lower(), 'separate endpoint model identity required'
+    rollout_steps = 120 if args.endpoint_only else 1200
     if model_loader is not None:
         assert args.model_name != 'wm2', 'custom construction requires explicit candidate identity'
         assert callable(model_loader)
@@ -112,7 +116,7 @@ def main(model_loader=None, identity_sources=(), future_builder=None):
     save_new(out/f'PROCESS_{pid}.json', dict(pid=pid, boot_id=boot, start_ticks=start_ticks,
         argv=sys.argv, started_unix=time.time()))
     torch.manual_seed(965140)
-    if args.model_name == 'wm2':
+    if args.model_name in ('wm2', 'wm2_hdv60'):
         assert digest(args.wm) == 'b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436'
     models, receipt = (model_loader or load_members)([args.wm], [args.wm_config], args.device)
     assert len(models) == 1
@@ -148,6 +152,8 @@ def main(model_loader=None, identity_sources=(), future_builder=None):
     source_paths = [Path(__file__), HERE/'core.py', HERE/'references.json',
                     runtime/'configs/execparity_cav_idm_v1.json']
     source_paths += [safe(p) for p in identity_sources]
+    if args.endpoint_only:
+        source_paths += [HERE.parent/'rbint/endpoints.py', HERE.parent/'rbint/observations.py']
     if future_builder is not None:
         source_paths.append(safe(inspect.getfile(future_builder)))
     if model_loader is not None:
@@ -163,7 +169,8 @@ def main(model_loader=None, identity_sources=(), future_builder=None):
         s = p['metadata']['seed']
         if s in SEEDS:
             assert all(real[s, arm]['initial_sha256'] == p['metadata']['initial_state_sha256'] for arm in ARMS)
-    identity = dict(schema='rbeval/1', K=8, horizon=600, t0=300, arms=ARMS,
+    identity = dict(schema='wmphys-hdv60/1' if args.endpoint_only else 'rbeval/1',
+        K=8, horizon=60 if args.endpoint_only else 600, t0=300, arms=ARMS,
         worlds=SEEDS, shard=args.shard, shards=args.shards, model=args.model_name,
         wm=receipt, wm_sha256=digest(args.wm), config_sha256=digest(args.wm_config),
         candidate_sha256=digest(candidate), export_sha256=binding['sha256'],
@@ -234,7 +241,11 @@ def main(model_loader=None, identity_sources=(), future_builder=None):
             if target.exists():
                 old = load(target)
                 assert old['identity_sha256'] == identity_sha and old['seed'] == seed and old['future'] == fi
-                assert len(old['episodes']) == 5 and all(len(e['bins']['upstream']['speed']) == 66 for e in old['episodes'])
+                assert len(old['episodes']) == 5
+                if args.endpoint_only:
+                    assert old['schema'] == 'wmphys-hdv60/1' and all('endpoint60' in e for e in old['episodes'])
+                else:
+                    assert all(len(e['bins']['upstream']['speed']) == 66 for e in old['episodes'])
                 continue
             assert not (out/'STOP').exists(), 'cooperative stop'
             while os.getloadavg()[0] > 24:
@@ -271,14 +282,23 @@ def main(model_loader=None, identity_sources=(), future_builder=None):
                 kw['entrant_driver_sampler'] = make_sampler(model, initial, kw, 190+1000003*fi, [0]*len(ARMS))
             cb = controllers(initial['s_m'].shape[1])
             with torch.no_grad():
-                roll = model.rollout(initial, n_steps=1200, cav_controller=cb, **kw)
+                roll = model.rollout(initial, n_steps=rollout_steps, cav_controller=cb, **kw)
                 assert torch.isfinite(roll['speeds']).all()
-                score = frozen.costs(roll, entries, b.entry_spec['k0'])
+                score = None if args.endpoint_only else frozen.costs(roll, entries, b.entry_spec['k0'])
                 if future_builder is not None:
                     future_receipt['population_audit'] = entries.audit_population(initial, roll)
             arrays = {k: roll[k].detach().cpu().numpy() for k in ('positions', 'speeds', 'lanes', 'masks')}
             episodes = []
             for i, arm in enumerate(ARMS):
+                if args.endpoint_only:
+                    prefix = [np.concatenate((start[s][i:i+1], arrays[r][i, :119]), axis=0)
+                        for s, r in (('s_m', 'positions'), ('v_mps', 'speeds'), ('lane', 'lanes'), ('present', 'masks'))]
+                    prefix_bins = reduce_trajectory(300+np.arange(120)*.5, *prefix)
+                    episodes.append(dict(seed=seed, future=fi, arm=arm,
+                        initial_sha256=source.metadata[0]['initial_state_sha256'],
+                        prefix60_bins={reg:dict(speed=value['speed'][:6], post_counts=value['post_counts'][:6])
+                                       for reg,value in prefix_bins.items()}))
+                    continue
                 pos, speed, lane, present = [np.concatenate((start[s][i:i+1], arrays[r][i, :-1]), axis=0)
                     for s, r in (('s_m', 'positions'), ('v_mps', 'speeds'), ('lane', 'lanes'), ('present', 'masks'))]
                 bins = reduce_trajectory(300+np.arange(1200)*.5, pos, speed, lane, present)
@@ -287,11 +307,12 @@ def main(model_loader=None, identity_sources=(), future_builder=None):
                     road_delay_vs=score[str(h)]['real_road'][i], source_wait_vs=score[str(h)]['real_source'][i]) for h in HS}
                 episodes.append(dict(seed=seed, future=fi, arm=arm,
                     initial_sha256=source.metadata[0]['initial_state_sha256'], bins=bins, clocks=clocks))
-            if getattr(model, '_wmphys_variant', None) in ('A', 'B', 'C', 'FULL'):
+            if args.endpoint_only or getattr(model, '_wmphys_variant', None) in ('A', 'B', 'C', 'FULL'):
                 from tools.rbint.endpoints import attach_endpoints60
                 attach_endpoints60(episodes, arrays, seed, b.entry_spec['k0'])
             assert all(digest(p) == sha for p, sha in sources.items()), 'source changed during task'
-            task = dict(schema='rbeval/1', identity_sha256=identity_sha, seed=seed, future=fi,
+            task = dict(schema='wmphys-hdv60/1' if args.endpoint_only else 'rbeval/1',
+                identity_sha256=identity_sha, seed=seed, future=fi,
                 arms=ARMS, episodes=episodes, costs=score, seconds=time.monotonic()-begin,
                 peak_reserved_mib=torch.cuda.max_memory_reserved()/2**20 if args.device.startswith('cuda') else None)
             if future_receipt is not None:

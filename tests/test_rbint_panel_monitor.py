@@ -1,4 +1,5 @@
 import json
+import sys
 from pathlib import Path
 
 import pytest
@@ -79,3 +80,22 @@ def test_cpu_headroom_respects_container_limit_not_only_host_ram(tmp_path):
     assert available_memory(proc, cgroup) == 2*2**30
     (cgroup/'memory.max').write_text('max')
     assert available_memory(proc, cgroup) == 20*2**30
+
+
+@pytest.mark.parametrize('action', ['canary', 'continue', 'monitor', 'status'])
+def test_endpoint_protocol_has_exact_own_namespace_and_original_model_runtime(monkeypatch, action):
+    from tools.rbint import panel_ops
+    seen = []
+    def inspect_only(host, code, **kwargs):
+        compile(code, '<endpoint orchestration>', 'exec')
+        assert "baseline_endpoint=True" in code
+        assert '/root/autodl-tmp/c4/setupaudit20261030/fix' in code
+        assert 'evaluate_WM2_60.py' in code
+        seen.append(code)
+        return 'compile-only'
+    monkeypatch.setattr(panel_ops, 'ssh', inspect_only)
+    monkeypatch.setattr(sys, 'argv', ['panel_ops', action, '--runtime',
+        '/root/rbeval20261031/phys_code_f378ac603307', '--name', 'WM2-HDV60',
+        '--baseline-endpoint', '--host', 'gpuR'])
+    panel_ops.main()
+    assert len(seen) == 1
