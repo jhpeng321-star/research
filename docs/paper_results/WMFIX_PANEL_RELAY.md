@@ -26,6 +26,12 @@ appear. Out: panels/; log panel_eval_gpuR.log; WATCHER_PID.txt. ~28.5 min per
 panel -> all four done ~14:10 local if relays are prompt; panels never touch
 gpuA (training unblocked; steps measured ~20 s each, 5 updates by 12:08).
 
+## Relay progress (sha256 gpuA == local == gpuR on every hop)
+- 12:26 steps 1-30 DONE on gpuA (PID 160005 healthy; loss 0.0593@1 -> 0.0010@30;
+  STEP0_TERMS paired_share 0.957); continuation now polling 60 s for the panels.
+- step_000010.pt 109d693c... relayed 12:22; step_000020.pt 4ccef722... and
+  step_000030.pt d8abf371... relayed 12:30. All present in gpuR relay_steps/.
+
 Decision afterwards (in pilot_continue on gpuA, unchanged pre-registered
 decide()): baseline = identical r0/r1 mean, SD 0; PASS requires strict
 improvement at BOTH horizons + finite grads + frozen-bitwise. gpuR step-0
