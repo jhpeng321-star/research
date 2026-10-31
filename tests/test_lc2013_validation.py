@@ -88,3 +88,20 @@ def test_motion_point_rejects_post_start_or_out_of_fit_metadata(tmp_path):
     path.write_text(json.dumps(payload))
     with pytest.raises(ValueError, match='causal FIT'):
         load_motion_point(path)
+
+
+def test_verifier_roundoff_allowance_cannot_hide_count_or_precision_changes():
+    import math
+    import pytest
+    from tools.rblane.verify_receipts import check_local_reassembly
+    initial = {'exact': {'matched': 1134, 'precision': .028, 'position_abs_sum_m': 5969.}}
+    changed = {'exact': dict(initial['exact'])}
+    changed['exact']['position_abs_sum_m'] = math.nextafter(5969., math.inf)
+    assert len(check_local_reassembly(initial, changed, 160)) == 1
+    changed['exact']['matched'] += 1
+    with pytest.raises(AssertionError):
+        check_local_reassembly(initial, changed, 160)
+    changed['exact']['matched'] -= 1
+    changed['exact']['precision'] += 1e-15
+    with pytest.raises(AssertionError):
+        check_local_reassembly(initial, changed, 160)

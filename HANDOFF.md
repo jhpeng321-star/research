@@ -47,11 +47,11 @@ WM-PHYS REGISTRATION5683 plus00:10 precision addendum. Source-backed subset;
 - v2 validator undoes recorded upstream lane-origin shifts before decisions,
   then reports each proposal in its destination frame. Old v1 results retained.
   **Fresh matched MOBIL required once per setting**; auto-reuse thereafter needs
-  exact input/physics/setting SHA/snapshot/MOBIL dependency bytes. Candidate9
-  v2 FIT measurement RUNNING: cpuQ own561787, immutable root
-  `/home/ubuntu/rblane20261031_panel9_bab4fd84e76c`; one nice19 thread,
-  fresh matchedv2 MOBIL once. Source/improved-metric claim awaits that result.
-- All owned workers through8 exited. Only six allowlisted observable tape files,
+  exact input/physics/setting SHA/snapshot/MOBIL dependency bytes. Candidate9v2
+  VERIFIED: precision2.818%, recall34.839%,1134/40246; paired MOBIL7.404% recall.
+  Run±2s precision18.109%/recall25.653%. Still poor positive-step precision.
+  Original-runtime exact reassembly PASS; local6e-12m float-sum roundoff retained.
+- All owned workers through9 exited. Only six allowlisted observable tape files,
   published motion-fit artifact/frozen model weights, and road/source code read.
   No SUMO/GPU/training/signals/deletions/push. lcspec/obsstate/targets consumed.
 

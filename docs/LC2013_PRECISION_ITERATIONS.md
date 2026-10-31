@@ -262,3 +262,23 @@ Final candidate9 CPU gate:46/46 PASS, single-thread6.53s, persisted JUnit
 restore their original origin before a rear mover is admitted (otherwise a1m
 post-resolution overlap is possible). All earlier raw/source/scoring receipts
 and the exact real-encoder/default-OFF parity proofs are retained.
+
+Candidate9v2 verified (worker561787 exited,314.94s): LC1134/40246 exact =
+precision2.8177%, recall34.8387%; fresh matched MOBIL241/7623 = precision3.1615%,
+recall7.4040%. Per predicted motivation (precision / all-event recall contribution):
+strategic9.816%/9.831pp (320/3260); cooperative8.511%/2.335pp (76/893);
+speed-gain4.524%/16.805pp (547/12092); keep-right0.796%/5.868pp (191/24001).
+Compressed ±2s runs:835/4611, precision18.109%, recall25.653%, matched
+timingMAE0.4132s/positionMAE7.149m. Exact-position MAE2.05e-5m is coordinate
+rounding, not predictive longitudinal error. This corrected result is still
+far from acceptable positive-step precision.
+
+Verification first found ONLY a6e-12m aggregate position-sum difference between
+local Python3.13 compensated sum and original Python3.10.16 sum. Original
+receipts/results were preserved. Reassembly now additionally runs the immutable
+archived scorer in its original runtime and is **EXACT** there. Local differences
+are restricted to position sums/means within a row-count-derived float64ULP
+bound; counts, precision, recall, timing, inputs, settings and sources remain
+exact. Integrity test rejects even a tiny precision change or one-count change.
+PANEL9_VERIFIED.json retains both differing local floating values and the exact
+original-runtime proof; no metric/result bytes were corrected or rerun.
