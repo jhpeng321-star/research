@@ -37,5 +37,4 @@ _out/brakefix_verification/main2*/command.log -whitespace
 scripts/genrand/*.sh text eol=lf
 
 # Exact EXAM manifests bind original bytes, including CSV CRLF and JSON LF.
-docs/paper_results/coopbandit/** -text
-docs/paper_results/coopbandit/**/*.csv whitespace=cr-at-eol
+docs/paper_results/coopbandit/** -text whitespace=cr-at-eol
