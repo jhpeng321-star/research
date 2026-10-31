@@ -185,3 +185,34 @@ def test_uncongested_right_overtake_prevention_emits_advice_and_left_wish():
     assert allowed['lc2013_left'][0, 0] == 0
     k[0, 0, 4] = 60 / 3.6 - .01
     assert not lane_change(k, mask, p)['lc2013_own_has_advice'][0, 0]
+
+
+def test_signed_slow_current_leader_cap_suppresses_a_mature_keep_right_wish():
+    # Valid observer-initialized state: inferred desired speeds29/28 while
+    # observed speeds30/31. Source1752 gives(95-2.5)/(29-31)=-46.25s.
+    k, mask = scene([(-500, 0, 30), (-400, 0, 31)])
+    p = PhysicsConfig()
+    params = {'v0': torch.tensor([[29., 28.]])}
+    mem = lane_change(k, mask, p, driver_params=params)
+    mem['lc2013_keep_right'][0, 0] = -20_000_001
+    out = lane_change(k, mask, p, memory=mem, driver_params=params)
+    assert out['lc2013_keep_signed_cap'][0, 0]
+    assert out['lc2013_keep_full_seconds'][0, 0] == -46.25
+    assert out['lc2013_keep_right'][0, 0] > -20_000_001
+    assert out['next_lane'][0, 0] == 0
+
+
+def test_faster_target_leader_does_not_overwrite_the_later_current_leader_gap_cap():
+    k, mask = scene([(-500, 0, 25), (-400, 0, 20), (-470, 1, 35)])
+    p = PhysicsConfig()
+    out = lane_change(k, mask, p, driver_params={'v0': torch.tensor([[30., 25., 35.]])})
+    # Target leader35>vMax30: its nearby gap is ignored by1742, then the own
+    # slow leader caps full-speed time to(95-2.5)/(30-20)=9.25s.
+    assert out['lc2013_keep_full_seconds'][0, 0] == 9.25
+
+
+def test_zero_closing_speed_in_current_leader_cap_keeps_wishes_finite():
+    k, mask = scene([(-500, 0, 25), (-400, 0, 30)])
+    out = lane_change(k, mask, PhysicsConfig(), driver_params={'v0': torch.tensor([[30., 25.]])})
+    assert torch.isfinite(out['lc2013_keep_full_seconds']).all()
+    assert torch.isfinite(out['lc2013_keep_right']).all()

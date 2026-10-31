@@ -60,6 +60,7 @@ def main():
                 for key in ('physics', 'snapshot', 'horizon_s'):
                     assert previous[key] == summary[key]
                 assert previous.get('motion_parameter_sha256') == summary.get('motion_parameter_sha256')
+                assert previous.get('encoder_source_sha256') == summary.get('encoder_source_sha256')
                 break
         assert reused_dir is not None, 'unknown MOBIL reuse source'
     for row in rows:
@@ -87,10 +88,17 @@ with zipfile.ZipFile(p/'code.zip') as z:
     if summary.get('encoder_checkpoint_sha256') is not None:
         assert hashlib.sha256(z.read('inputs/wm_s.pt')).hexdigest()==summary['encoder_checkpoint_sha256']
         assert summary['motion_parameter_sha256']==summary['encoder_checkpoint_sha256']
+        if summary.get('encoder_source_sha256') is not None:
+            sys.path[:0]=[str(p/'src'),str(p)]
+            from tools.rblane.encoder import encoder_source_hashes
+            assert encoder_source_hashes()==summary['encoder_source_sha256']
     elif summary.get('motion_parameter_sha256') is not None:
         data=z.read('inputs/idm_pooled.json')
         assert hashlib.sha256(data).hexdigest()==summary['motion_parameter_sha256']
         assert json.loads(data)['parameters']==summary['motion_parameters']
+    if summary.get('pre_signed_source_sha256') is not None:
+        assert hashlib.sha256(z.read('inputs/lc2013_before_signed.py')).hexdigest()==summary['pre_signed_source_sha256']
+        assert summary['pre_signed_source_sha256']=='c1aa89fafb69ee18d34ba6b7c75445a6985a10096d41237439e8dd06189e1921'
 sys.path[:0]=[str(p/'src'),str(p)]
 from tools.rblane.validate import aggregate
 rows=[json.loads(f.read_text()) for f in sorted((p/'results').glob('w*.json'))]
@@ -112,11 +120,11 @@ print(json.dumps(dict(source_bundle_sha256={dispatch['bundle_sha256']!r},
                   target_events_reconciled=targets['scoring_events'],
                   **binding)
     for row in rows:
-        scores = row['scores']['lc2013']
-        if 'by_motivation' in scores:
-            reasons = list(scores['by_motivation'].values())
-            for key in ('predicted', 'matched'):
-                assert sum(r['exact'][key] for r in reasons) == scores['exact'][key]
+        for model, scores in row['scores'].items():
+            if model.startswith('lc2013') and 'by_motivation' in scores:
+                reasons = list(scores['by_motivation'].values())
+                for key in ('predicted', 'matched'):
+                    assert sum(r['exact'][key] for r in reasons) == scores['exact'][key]
     result['exact_motivation_partition'] = 'exact' if 'by_motivation' in rows[0]['scores']['lc2013'] else 'not saved'
     out = RECEIPTS / (args.kind.upper() + '_VERIFIED.json')
     assert not out.exists()

@@ -34,6 +34,8 @@ def compatible_mobil_baseline(parameter_sha):
     from wms.physics.config import PhysicsConfig
     from .snapshot import SNAPSHOT_CONTRACT
     physics = asdict(PhysicsConfig(sumo_fidelity=True, open_road=True))
+    from .encoder import REGISTERED_WM2_SHA, encoder_source_hashes
+    encoder_sources = encoder_source_hashes() if parameter_sha == REGISTERED_WM2_SHA else None
     dependencies = ('mobil.py', 'neighbours.py', 'idm.py', 'config.py')
     current = {name: hashlib.sha256((ROOT/'src/wms/physics'/name).read_bytes()).hexdigest()
                for name in dependencies}
@@ -47,7 +49,8 @@ def compatible_mobil_baseline(parameter_sha):
         if (summary['status'] != 'COMPLETE' or summary['episodes'] != 160
                 or summary['physics'] != physics or summary['horizon_s'] != 60
                 or summary['snapshot'] != SNAPSHOT_CONTRACT
-                or summary.get('motion_parameter_sha256') != parameter_sha):
+                or summary.get('motion_parameter_sha256') != parameter_sha
+                or summary.get('encoder_source_sha256') != encoder_sources):
             continue
         previous = {Path(name).name: digest for name, digest in summary['source_sha256'].items()}
         if all(previous.get(name) == digest for name, digest in current.items()):
@@ -55,7 +58,7 @@ def compatible_mobil_baseline(parameter_sha):
     return max(matches, key=lambda r: r['collected_at'])['root'] + '/results' if matches else None
 
 
-def launch(kind, idm_parameters=None, encoder_checkpoint=None):
+def launch(kind, idm_parameters=None, encoder_checkpoint=None, compare_pre_signed=False):
     from .validate import FORBIDDEN
     RECEIPTS.mkdir(exist_ok=True)
     receipt = RECEIPTS / (kind.upper() + '_DISPATCH.json')
@@ -83,6 +86,11 @@ def launch(kind, idm_parameters=None, encoder_checkpoint=None):
             assert not any(term in str(encoder_checkpoint.resolve()).lower() for term in FORBIDDEN)
             assert hashlib.sha256(encoder_checkpoint.read_bytes()).hexdigest() == REGISTERED_WM2_SHA
             archive.write(encoder_checkpoint, 'inputs/wm_s.pt')
+        if compare_pre_signed:
+            from .prior_kernel import PRE_SIGNED_COMMIT, PRE_SIGNED_SHA
+            source = subprocess.check_output(['git','show',PRE_SIGNED_COMMIT+':src/wms/physics/lc2013.py'],cwd=ROOT)
+            assert hashlib.sha256(source).hexdigest() == PRE_SIGNED_SHA
+            archive.writestr('inputs/lc2013_before_signed.py', source)
     digest = hashlib.sha256(bundle.read_bytes()).hexdigest()
     run = f'/home/ubuntu/rblane20261031_{kind}_{digest[:12]}'
     selected = encoder_checkpoint if encoder_checkpoint is not None else idm_parameters
@@ -114,6 +122,7 @@ cmd=['/usr/bin/nice','-n','19',{PYTHON!r},'-B','-m','tools.rblane.validate',
 if {reuse!r} is not None: cmd += ['--reuse-mobil-from',{reuse!r}]
 if {idm_parameters is not None!r}: cmd += ['--idm-parameters',str(p/'inputs/idm_pooled.json')]
 if {encoder_checkpoint is not None!r}: cmd += ['--encoder-checkpoint',str(p/'inputs/wm_s.pt')]
+if {compare_pre_signed!r}: cmd += ['--pre-signed-kernel',str(p/'inputs/lc2013_before_signed.py')]
 with (p/'run.log').open('x') as log:
     child=subprocess.Popen(cmd,cwd=p,env=env,stdin=subprocess.DEVNULL,
        stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
@@ -171,14 +180,17 @@ def main():
     ap.add_argument('--kind', default='smoke')
     ap.add_argument('--idm-parameters', type=Path)
     ap.add_argument('--encoder-checkpoint', type=Path)
+    ap.add_argument('--compare-pre-signed', action='store_true')
     args = ap.parse_args()
     if args.idm_parameters is not None and args.encoder_checkpoint is not None:
         ap.error('choose one frozen parameter source')
+    if args.compare_pre_signed and args.encoder_checkpoint is None:
+        ap.error('the registered paired ablation uses the frozen motion encoder')
     import re
     if not re.fullmatch(r'smoke|panel(?:[2-9]|[1-9][0-9]+)?', args.kind):
         ap.error('invalid run kind')
     if re.fullmatch(r'smoke|panel(?:[2-9]|[1-9][0-9]+)?', args.command):
-        launch(args.command, args.idm_parameters, args.encoder_checkpoint)
+        launch(args.command, args.idm_parameters, args.encoder_checkpoint, args.compare_pre_signed)
     elif args.command in ('status', 'collect'):
         status(args.kind, args.command=='collect')
     else:

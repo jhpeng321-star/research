@@ -74,3 +74,11 @@ Frozen real-weight encoder/full-source parity is BIT-EXACT for all9 outputs.
 Operate successive unique `panelN` names; every dispatch is immutable. Verify
 each collection using `python -m tools.rblane.verify_receipts --kind panelN`.
 Verification uses immutable bundle bytes, not a newer model in this worktree.
+
+`operate.py panel10 --encoder-checkpoint <wm_s.pt> --compare-pre-signed` freezes
+a same-input ablation of the signed-current-leader-cap fix: both our prior
+0a1e7e93 kernel and current kernel share one causal encoder inference andv2
+snapshot, with independent persistent wish state. The prior OWN project source
+is SHA-pinned before execution; downloaded SUMO code is never executed. Current
+and prior motivation scores are separate. Persistent states must remain finite.
+Encoder source/featurizer fingerprints join checkpoint SHA in the MOBIL-reuse gate.

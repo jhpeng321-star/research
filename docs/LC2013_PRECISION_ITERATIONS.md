@@ -282,3 +282,36 @@ bound; counts, precision, recall, timing, inputs, settings and sources remain
 exact. Integrity test rejects even a tiny precision change or one-count change.
 PANEL9_VERIFIED.json retains both differing local floating values and the exact
 original-runtime proof; no metric/result bytes were corrected or rerun.
+
+## Candidate10: signed current-leader cap and paired encoder ablation
+
+Source1749–1752 divides by **vMax-currentLeaderSpeed** without clamping its
+sign. The port's positive-denominator clamp removed negative feedback when
+an observer-inferred desired speed is below the observed leader speed. Source
+then increases the keep-right counter (delaying the wish), while the clamp
+continued accumulating it negatively. A numeric case29/28m/s inferred desired
+speeds vs30/31m/s observed speeds has(95−2.5)/(29−31)=−46.25s; the source cap
+suppresses a mature keep-right wish. No inferred desired-speed clipping is added.
+
+Also corrected1742's nesting: a faster target leader must not overwrite
+fullSpeedGap used by the later current-leader cap. Independent synthetic case
+with target35m/s, ego desired30m/s and current leader20m/s gives9.25s, matching
+source arithmetic. Zero closing speed with positive gap stays finite via the
+source infinity/minimum semantics. Persistent-state finiteness is now audited.
+
+52CPU tests PASS (6.65s, CPU_SIGNED_CAP.xml), including the paired candidate
+scorer with independent wish memories and identical source-frame inputs.
+Source9 vs10 default-population equality:9600 synthetic float32 vehicle
+decisions,259200 compared tensor elements, all old outputs BIT-EXACT
+(POPULATION_EQ_SIGNED_CAP.json). This default-homogeneous result is retained;
+the source change is relevant to heterogeneous/inferred settings.
+
+Next run freezes **existing encoder A**, snapshotv2 and both source kernels
+in the SAME pass: current signed-cap fix vs our pre-fix0a1e7e93 kernel (SHA
+c1aa89fafb69ee18d34ba6b7c75445a6985a10096d41237439e8dd06189e1921), plus
+new matched-setting MOBIL once. The earlier encoder8 used old coordinates and
+cannot replace this paired ablation. Prior kernel is identity-pinned OWN
+project code; no downloaded SUMO code is executed. All settings, current
+geometry, history and observations are shared, and both kernels get independent
+persistent state. Encoder-source fingerprints now protect MOBIL reuse as well
+as checkpoint SHA, inputs, physics and scoring transform.

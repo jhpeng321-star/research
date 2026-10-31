@@ -55,6 +55,14 @@ WM-PHYS REGISTRATION5683 plus00:10 precision addendum. Source-backed subset;
   published motion-fit artifact/frozen model weights, and road/source code read.
   No SUMO/GPU/training/signals/deletions/push. lcspec/obsstate/targets consumed.
 
+## Candidate10 ready (measurement pending)
+Source1749's current-leader denominator now preserves its SIGN; the old clamp
+incorrectly removed negative keep-right feedback under inferred settings.
+Faster target leaders no longer overwrite the later cap's gap. 52CPU PASS;
+9600 default-population synthetic decisions remain bit-exact to9. Next paired
+encoder-v2 pass compares before/after signed-cap kernels on identical inputs,
+with source-pinned ablation and independent wish states. No setting/threshold fit.
+
 ## Gaps
 Synchronous proposals/messages vs SUMO serial processing; full leader
 overtake/fall-behind/counterchange and follower branches, nonlegacy keep-right,

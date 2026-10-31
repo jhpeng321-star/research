@@ -283,17 +283,25 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
     full_gap = (target_length - brake_gap(p["v0"], p["decel"], dt,
                headway=p["time_headway"], ballistic=ballistic)).clamp_min(0)
     full_seconds = torch.minimum(acceptance, full_gap / p["v0"])
-    full_gap = torch.minimum(full_gap, (gl - p["min_gap"] - secure_gap(
-        p["v0"], vl, p["accel"], p["decel"], p["time_headway"])).clamp_min(0))
-    full_seconds = torch.where(has_l & (vl < p["v0"]), torch.minimum(
-        full_seconds, full_gap / (p["v0"] - vl).clamp_min(1e-9)), full_seconds)
+    slower_target = has_l & (vl < p["v0"])
+    target_full_gap = torch.minimum(full_gap, gl - p["min_gap"] - secure_gap(
+        p["v0"], vl, p["accel"], p["decel"], p["time_headway"])).clamp_min(0)
+    # 1742-1747 modifies BOTH fullSpeedGap and seconds only for a slower
+    # target leader. A faster target leader must not limit the later own-
+    # current-leader cap through an inadvertently overwritten fullSpeedGap.
+    full_gap = torch.where(slower_target, target_full_gap, full_gap)
+    full_seconds = torch.where(slower_target, torch.minimum(
+        full_seconds, full_gap / (p["v0"] - vl)), full_seconds)
     # LC2013.cpp:1748-1752: don't return right if we cannot pass our slow
     # current-lane leader on its right. Only applies where overtaking is banned.
     current_v = v.gather(-1, ic)
     slow_current = avoid_right & has_c & (p["v0"].gather(-1, ic) < p["v0"])
     no_pass_gap = torch.minimum(full_gap, cl - p["min_gap"])
+    # Source 1752 keeps the SIGN of vMax-currentLeaderSpeed. A motion-inferred
+    # desired speed can be below the current observed speed; clamping that
+    # denominator positive removes SUMO's negative keep-right feedback.
     full_seconds = torch.where(slow_current, torch.minimum(full_seconds,
-        no_pass_gap / (p["v0"] - current_v).clamp_min(1e-9)), full_seconds)
+        no_pass_gap / (p["v0"] - current_v)), full_seconds)
     keep_delta = torch.where(p["lcSpeedGain"] > 0,
         threshold_r * (full_seconds / acceptance.clamp_min(1e-9)) / 5, 0.0)
     keep_new = keep - torch.trunc(dt * keep_delta)
@@ -368,6 +376,8 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
                   lc2013_position=position,
                   lc2013_gap_leader=gl, lc2013_gap_follower=gf,
                   lc2013_position_shift=lane_position_shift(s, lane, choice, physics),
+                  lc2013_keep_full_seconds=full_seconds,
+                  lc2013_keep_signed_cap=right & slow_current & (current_v > p["v0"]),
                   lc2013_this_speed=this_speed, lc2013_target_speed=neigh_speed,
                   lc2013_left=torch.where(present, left_wish, 0),
                   lc2013_right=torch.where(present, right_wish, 0),

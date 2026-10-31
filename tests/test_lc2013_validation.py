@@ -43,6 +43,9 @@ def test_motivation_scores_keep_false_positives_and_all_event_denominator():
     assert reason['precision'] == 1 / 3
     assert reason['recall_contribution'] == 1 / 2
     assert reason['predicted'] == 3
+    paired = aggregate([dict(scores=dict(lc2013=lc, mobil=base, lc2013_before_signed=lc))])
+    assert set(paired) == {'lc2013', 'mobil', 'lc2013_before_signed'}
+    assert paired['lc2013_before_signed']['by_motivation'] == result['lc2013']['by_motivation']
 
 
 def test_proximity_does_not_invent_events_for_unobserved_transitions():
@@ -105,3 +108,38 @@ def test_verifier_roundoff_allowance_cannot_hide_count_or_precision_changes():
     changed['exact']['precision'] += 1e-15
     with pytest.raises(AssertionError):
         check_local_reassembly(initial, changed, 160)
+
+
+def test_unbound_prior_kernel_is_rejected_before_any_code_can_run(tmp_path):
+    import pytest
+    from tools.rblane.prior_kernel import load_prior_kernel
+    path = tmp_path/'lc2013_before_signed.py'
+    path.write_text("raise RuntimeError('this code must never execute')")
+    with pytest.raises(ValueError, match='refusing execution'):
+        load_prior_kernel(path)
+
+
+def test_paired_candidates_have_independent_state_and_the_same_coordinate_inputs(tmp_path):
+    import json
+    import numpy as np
+    from tools.rblane.validate import episode
+    from wms.physics.config import PhysicsConfig
+    from wms.physics.lc2013 import lane_change
+    path = tmp_path/'w969400m1900p05t300__native'
+    path.mkdir()
+    times = np.arange(241) * .5 + 240
+    lane = ((times >= 320) & (times < 340)).astype(int)
+    kin = np.zeros((241, 1, 7), np.float32)
+    kin[:, 0, 0] = -2400 + 20 * (times - 240) + lane * 1.45
+    kin[np.arange(241), 0, 1 + lane] = 1
+    kin[:, 0, 4], kin[:, 0, 6] = 20, 5
+    arrays = dict(time_s=times, veh_kin=kin, veh_mask=np.ones((241, 1), np.uint8),
+                  is_cav=np.zeros((241, 1), np.uint8), vid=np.full((241, 1), 11, np.int32))
+    for name, value in arrays.items():
+        np.save(path/(name+'.npy'), value)
+    (path/'episode.json').write_text(json.dumps(dict(seed=969400, arm='native',
+        episode=path.name, branch=dict(t0_s=300))))
+    result = episode(path, tmp_path, PhysicsConfig(sumo_fidelity=True), 60, prior_kernel=lane_change)
+    assert result['recorded'] == 2
+    assert result['scores']['lc2013']['exact']['matched'] == 1
+    assert result['scores']['lc2013'] == result['scores']['lc2013_before_signed']
