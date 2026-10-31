@@ -7,8 +7,9 @@ Frozen design: `COOPFREE_DESIGN.md` (62 lines), SHA256
 Approved SUMO pipeline is running on cpuQ, PID339173/start_ticks47835664, nice19/one thread.
 First1140s baseline and full repeat both closed at charged=actual1140, bitwise-identical
 RESULT SHA256 `a5419ebb2219b3cc765a020e6515c4e38bebcc5aba800b876375fb9d4e328030`.
-Latest saved status: 10screens+first repeat complete,12,540closed actual/41,040precharged,
-no STOP; screening continues. Optimizer updates/dev/discovery are pending, not results.
+Fresh-session status: owned process identity matches, all24 screens/all12 repeats and
+the zero-update canary complete;50,820closed actual/1,216,740precharged, no STOP.
+The whole156-window first update is executing; optimizer/dev/discovery remain pending.
 
 ## Implemented
 - `tools/coopfree/policy.py`: observable per-CAV continuous speed/log-gap policy,
@@ -47,10 +48,19 @@ Hard reservation2,000,000 sim-s: screen27,360 + repeat13,680 + TRAIN1,650,000
 Whole-zone groups can make only one156-window update fit; the pipeline stops before
 an unaffordable full batch rather than shrinking groups or calling a smaller update complete.
 Absolute held targets only approximate changing MAPPO commands. CPU first-command parity
-is not rollout parity; a TRAIN-charged zero-update physical canary measures the drift.
+ is not rollout parity; a TRAIN-charged zero-update physical canary measures the drift.
 Score-function search reuses the mandatory joint+solo rollouts for gradients. ES/population
 search has not been efficiency-qualified or run; no empirical ES superiority is claimed.
 No learned cooperation, performance or new mechanism is claimed before the paired receipts.
+
+### Recovered zero-update canary (one TRAIN world, seed982007)
+First-command error is exactly0, but269/271 compared motion frames differ from MAPPO
+(99.26%). Thus sustained zero-update holds do **not** establish rollout-level MAPPO parity.
+At absolute t900 (600 after activation), total delay is34,858.27 vs39,518.72vehicle-s;
+at t1140 (840 after activation),65,412.28 vs67,278.12. These are cumulative totals,
+not a J900 endpoint, and this single-world drift is not a learned improvement claim.
+Collisions/teleports are0 for both; hard-brake totals18vs14.5 and23vs18 respectively.
+Keep this structural hold effect separate from any subsequent learning attribution.
 
 ## Reproducible operations
 Immutable cpuQ root: `/home/ubuntu/coopfree20261101_build5`.
