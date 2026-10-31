@@ -9,14 +9,18 @@ from __future__ import annotations
 import torch
 from torch import Tensor
 
+from .merge_network import lane_desired_speed, model_lane_limit
+
 
 def parameters(kin, physics, driver_params=None):
     a, b, tau, gap, _ = physics.idm()
     defaults = dict(accel=a, decel=b, time_headway=tau, min_gap=gap,
                     v0=physics.v0_mps)
-    return {name: torch.broadcast_to(torch.as_tensor(
+    out = {name: torch.broadcast_to(torch.as_tensor(
         (driver_params or {}).get(name, value), device=kin.device, dtype=kin.dtype),
         kin.shape[:-1]) for name, value in defaults.items()}
+    out['v0'] = lane_desired_speed(out['v0'], model_lane_limit(kin, physics), physics.speed_limit_mps)
+    return out
 
 
 def secure_gap(speed, leader_speed, accel, decel, tau):

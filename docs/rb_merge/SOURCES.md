@@ -38,6 +38,16 @@ There is **no conflicting minor-priority ramp junction** in this network.
 The relevant right-of-way obligation is the lateral changer's two-sided gap
 acceptance. Do not invent a junction yield deceleration on the mainline.
 
+Speed-limit audit: the same network's line22 sets the ramp APPROACH edge to
+22.22m/s; line45 sets the acceleration lane (s>=0) to31.29m/s. Thus lane2 does
+NOT have one constant limit along its whole route. `merge_network.py` encodes
+this observable geometry. `driver_encoder.py:23-24,66-67` defines physical v0
+relative to the reference road limit, so existing inferred speedFactor is
+v0/referenceLimit. SUMO IDM desired speed and departSpeed=max use the local
+lane limit times that factor. Never clip every driver to the unscaled posted
+limit; equally, never accelerate along the22.22 approach toward31.29 by default.
+These are source/network corrections, not estimates selected against FIT errors.
+
 ## Scope and explicit parity gaps
 
 This implements a source-backed highway subset, not full SUMO state parity.

@@ -11,6 +11,7 @@ from wms.model.wms import WmSModel
 from wms.physics.config import PhysicsConfig
 from wms.physics.junction_merge import apply_merge, brake_gap_euler, merge_geometry, merge_speed_advice, secure_gap
 from wms.physics.state import state_kin
+from wms.physics.junction_merge import parameters
 
 
 def state(positions, lanes, speeds=None):
@@ -207,3 +208,39 @@ def test_strategic_merge_uses_existing_lc_lookahead_memory():
     warm = apply_merge(kin, s['present'], s['lane'], s['present'], cfg,
                        lookahead_speed=torch.tensor([[10.]]))
     assert cold.item() == 2 and warm.item() == 1
+
+
+def test_network_ramp_limit_ends_at_acceleration_lane_start():
+    cfg = PhysicsConfig(merge_model='sumo')
+    s = state([-100., 0., 10., -100.], [2, 2, 2, 1])
+    p = parameters(state_kin(s), cfg, {'v0': torch.full((1, 4), 31.29*1.1)})
+    torch.testing.assert_close(p['v0'], torch.tensor([[22.22*1.1, 31.29*1.1, 31.29*1.1, 31.29*1.1]]))
+
+
+@pytest.mark.parametrize('entrance,expected', [(0, 31.29*1.1), (1, 22.22*1.1)])
+def test_departure_respects_motion_inferred_speed_factor_on_each_edge(entrance, expected):
+    cfg = PhysicsConfig(merge_model='sumo')
+    adapter = SumoInsertion(cfg)
+    adapter.candidate = lambda *args: dict(v0=31.29*1.1, accel=2.6, decel=4.5,
+                                         time_headway=1., min_gap=2.5)
+    process = TorchEntryProcessV2(history=EntranceHistory.defaults(),
+        cfg=EntryConfig(conserve_queue=True, insert_rule='sumo_like_v2', sumo_insertion=adapter),
+        row_seeds=[17], couple_draws=True)
+    s = state([0.] * 4, [0] * 4)
+    s['present'].fill_(False)
+    process._emit_due = lambda b: [entrance]
+    new = process.insert(s)
+    assert new.sum() == 1
+    assert float(s['v_mps'][new][0]) == pytest.approx(expected, abs=1e-5)
+
+
+def test_insertion_preserves_integrated_weighted_candidate_identity():
+    class Births:
+        def candidate(self, row, entrance, ordinal, cav):
+            assert (row, entrance, ordinal, cav) == (0, 1, 9, True)
+            return dict(v0=35., accel=1.2, decel=2., time_headway=1.4, min_gap=3.)
+
+        def pool_for(self, *args):
+            raise AssertionError('must not recompute an unrelated uniform pool draw')
+    p = SumoInsertion(PhysicsConfig(merge_model='sumo'), Births()).candidate(0, 1, 9, True)
+    assert p['v0'] == 35. and p['time_headway'] == 1.4

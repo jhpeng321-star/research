@@ -5,6 +5,7 @@ import hashlib
 import math
 
 from .entries import NOMINAL_LENGTH_M
+from wms.physics.merge_network import lane_desired_speed
 
 # SUMO v1_27_1 config.h.cmake:239 (INT f2d9a3ff source reconciliation).
 # SPEED_EPS=.01 is a different constant; NUMERICAL_EPS=.001.
@@ -73,10 +74,14 @@ class SumoInsertion:
         params = dict(v0=self.physics.v0_mps, accel=a, decel=decel,
                       time_headway=tau, min_gap=gap)
         if self.mix is not None:
-            pool = self.mix.pool_for(b, cav)
-            key = f'errsrc-mix:{self.mix.seed}:{self.mix.row_keys[b]}:{entrance}:{ordinal}'
-            index = int.from_bytes(hashlib.sha256(key.encode()).digest()[:8], 'big') % len(pool)
-            params.update(zip(self.mix.names, pool[index].detach().cpu().tolist()))
+            # Reconcile INT378e1de4: weighted BirthMix owns its identity draw.
+            if callable(getattr(self.mix, 'candidate', None)):
+                params.update(self.mix.candidate(b, entrance, ordinal, cav))
+            else:
+                pool = self.mix.pool_for(b, cav)
+                key = f'errsrc-mix:{self.mix.seed}:{self.mix.row_keys[b]}:{entrance}:{ordinal}'
+                index = int.from_bytes(hashlib.sha256(key.encode()).digest()[:8], 'big') % len(pool)
+                params.update(zip(self.mix.names, pool[index].detach().cpu().tolist()))
         if any(not math.isfinite(params[n]) or params[n] <= 0
                for n in ('v0', 'accel', 'decel', 'time_headway', 'min_gap')):
             raise ValueError('nonphysical motion-inferred insertion settings')
@@ -111,7 +116,8 @@ class SumoInsertion:
             lanes = [max(lanes, key=free_space)]
         for lane in lanes:
             gap, leader = self.gap(process, work, b, lane, length)
-            cap = min(p['v0'], float(process.cfg.sumo_lane_speed_mps[lane]))
+            cap = lane_desired_speed(p['v0'], float(process.cfg.sumo_lane_speed_mps[lane]),
+                                     self.physics.speed_limit_mps)
             if self.depart_speed in ('max', 'desired'):
                 requested = cap
             elif self.depart_speed == 'last':
@@ -120,7 +126,9 @@ class SumoInsertion:
                 requested = float(self.depart_speed)
                 if requested > cap:
                     continue
-            speed = insertion_speed(requested, gap, leader, p, process.dt)
+            # The IDM departure check uses this lane's desired speed too, while
+            # the coupled newborn retains the original reference-speed setting.
+            speed = insertion_speed(requested, gap, leader, {**p, 'v0': cap}, process.dt)
             if speed is None or (self.depart_speed != 'max' and speed < requested):
                 continue
             if process._place(work, b, entrance, lane, cav, speed, length):

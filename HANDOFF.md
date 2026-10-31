@@ -1,5 +1,21 @@
 # S-RB-MERGE — full-fleet validation continuation
 
+## Next mechanics increment: network limits / inferred speed-factor semantics
+- NEW `src/wms/physics/merge_network.py`, used only by the SUMO merge/insertion
+  path. Network XML line22: ramp approach22.22m/s; line45: acceleration lane
+  froms=0 is31.29m/s. Previously merge stop/advice kernels used the mainline
+  desired speed on the entire ramp, and insertion clipped all drivers to the
+  unscaled posted limit. Existing inferred v0/referenceLimit is now mapped to
+  each edge's limit; no behavior threshold or new driver setting is introduced.
+- Departure IDM checks use the same lane-effective desired speed; persistent
+  newborn settings retain their original reference-speed interpretation.
+- Reconciled INT's weighted BirthMix candidate hook into our insertion copy,
+  preserving exact identity/ordinal coupling when this increment is integrated.
+- **36 CPU tests PASS /13.14s**, including both sides of the geometric s=0
+  transition, fast-driver mainline/ramp departure and weighted-candidate identity.
+- INT can take the new network module plus junction_merge/sumo_insertion changes;
+  no shared wms/spec/factory change. v4 remains immutable under its prior sources.
+
 ## v4 RUNNING (SUMO CF + causal LC history)
 - **00:46:48 +08 dispatched ONCE**, owned cpuQ PID**405098**, source
   **75a24397**, validator SHA
