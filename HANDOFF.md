@@ -75,6 +75,12 @@ AFTER both GPU_FINISHED receipts, avoiding pointless rapid SSH polling. Its
 RELAY_wm/COMPLETE.json records failed=true/episodes_done=false and verified proof;
 no original claim/log/lock was removed. Only read-only20min observer25348 remains
 active locally for this task; no inference/science redispatch is armed.
+CPU-only transport correction for future unused BB work: `relay_cycle` now
+isolates each CPU/GPU/route observation. An offline first CPU is UNKNOWN and
+cannot hide another host's durableSTOP/global release or starve its immutable
+RPC routes. No route fallback, scientific retry or engine/controller change.
+Two outage/STOP regressions plus waiting/observer gates:10/10CPU, Ruff PASS.
+This code is not a WM restart and has not launched any BB allocation.
 **05:59 WM global-stop release required:** gpuR supervisor763520 EXITED with
 durableSTOP `wm__s969147`; exact worker traceback is inference unavailable timeout.
 Its2completeepisodes/60decisions and2700charged=actual are preserved, including

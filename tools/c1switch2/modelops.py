@@ -211,6 +211,62 @@ print(json.dumps(dict(count={len(results)})))
     return len(results)
 
 
+def relay_cycle(config):
+    """Isolate host transport failures so one offline CPU cannot hide another's STOP."""
+    statuses, gpu_status, errors = {}, {}, {}
+    for cpu, root in config['cpus'].items():
+        count = sum(assigned(w['seed']) == cpu for w in worlds())
+        try:
+            statuses[cpu] = ssh(cpu, f'''import json
+from pathlib import Path
+root=Path({root!r})
+print(json.dumps(dict(stop=json.loads((root/'STOP').read_text()) if (root/'STOP').exists() else None,episodes=len(list((root/'jobs').glob('*__episode/PHYSICS.json'))),expected={count},complete=(root/'supervisor/COMPLETE.json').exists())))
+''', timeout=30)
+        except Exception as exc:
+            errors[cpu] = repr(exc)
+            statuses[cpu] = dict(unknown=True, stop=None, episodes=None, expected=count, complete=False)
+    done = all(not s.get('unknown') and s['episodes'] == s['expected'] for s in statuses.values())
+    failed = any(s['stop'] for s in statuses.values())
+    for gpu, root in config['gpus'].items():
+        try:
+            gpu_status[gpu] = ssh(gpu, f'''import json
+from pathlib import Path
+root=Path({root!r});path=root/'rpc/COMPLETE'
+if {done or failed!r} and not path.exists():
+ with path.open('x') as stream:json.dump(dict(reason='all model episodes ended or CPU STOP'),stream)
+print(json.dumps(dict(stop=json.loads((root/'rpc/STOP').read_text()) if (root/'rpc/STOP').exists() else None,finished=json.loads((root/'rpc/GPU_FINISHED.json').read_text()) if (root/'rpc/GPU_FINISHED.json').exists() else None)))
+''', timeout=30)
+        except Exception as exc:
+            errors[gpu] = repr(exc)
+    if any(s['stop'] for s in gpu_status.values()):
+        for cpu, root in config['cpus'].items():
+            try:
+                ssh(cpu, f'''import json
+from pathlib import Path
+path=Path({root!r})/'STOP'
+if not path.exists():
+ with path.open('x') as stream:json.dump(dict(reason='owned model GPU service STOP',gpu_status={gpu_status!r}),stream)
+print(json.dumps(dict(stopped=True)))
+''', timeout=30)
+            except Exception as exc:
+                errors[cpu+'/stop'] = repr(exc)
+        failed = True
+    transferred = 0
+    if not done and not failed:
+        for cpu, root in config['cpus'].items():
+            if statuses[cpu].get('unknown'):
+                continue
+            for gpu, gpu_root in config['gpus'].items():
+                if gpu not in gpu_status:
+                    continue
+                try:
+                    transferred += transfer(cpu, root, gpu, gpu_root, config['engine']['model'])
+                except Exception as exc:
+                    errors[cpu+'/'+gpu] = repr(exc)
+    return dict(unix=time.time(), cpus=statuses, gpus=gpu_status, transferred=transferred,
+                transport_errors=errors, episodes_done=done, failed=failed)
+
+
 def relay(config_path):
     config_path = checked(config_path)
     config = json.loads(config_path.read_text())
@@ -222,43 +278,12 @@ def relay(config_path):
         write(local/'START.json', dict(pid=os.getpid(), config_sha256=sha(config_path), unix=time.time()))
         while True:
             try:
-                statuses = {}
-                for cpu, root in config['cpus'].items():
-                    count = sum(assigned(w['seed']) == cpu for w in worlds())
-                    statuses[cpu] = ssh(cpu, f'''import json
-from pathlib import Path
-root=Path({root!r})
-print(json.dumps(dict(stop=json.loads((root/'STOP').read_text()) if (root/'STOP').exists() else None,episodes=len(list((root/'jobs').glob('*__episode/PHYSICS.json'))),expected={count},complete=(root/'supervisor/COMPLETE.json').exists())))
-''', timeout=30)
-                done = all(s['episodes'] == s['expected'] for s in statuses.values())
-                failed = any(s['stop'] for s in statuses.values())
-                gpu_status = {}
-                for gpu, root in config['gpus'].items():
-                    gpu_status[gpu] = ssh(gpu, f'''import json
-from pathlib import Path
-root=Path({root!r});path=root/'rpc/COMPLETE'
-if {done or failed!r} and not path.exists():
- with path.open('x') as stream:json.dump(dict(reason='all model episodes ended or CPU STOP'),stream)
-print(json.dumps(dict(stop=json.loads((root/'rpc/STOP').read_text()) if (root/'rpc/STOP').exists() else None,finished=json.loads((root/'rpc/GPU_FINISHED.json').read_text()) if (root/'rpc/GPU_FINISHED.json').exists() else None)))
-''', timeout=30)
-                if any(s['stop'] for s in gpu_status.values()):
-                    for cpu, root in config['cpus'].items():
-                        ssh(cpu, f'''import json
-from pathlib import Path
-path=Path({root!r})/'STOP'
-if not path.exists():
- with path.open('x') as stream:json.dump(dict(reason='owned model GPU service STOP',gpu_status={gpu_status!r}),stream)
-print(json.dumps(dict(stopped=True)))
-''', timeout=30)
-                    failed = True
-                transferred = 0
-                if not done and not failed:
-                    for cpu, root in config['cpus'].items():
-                        for gpu, gpu_root in config['gpus'].items():
-                            transferred += transfer(cpu, root, gpu, gpu_root, config['engine']['model'])
-                write(local/'STATUS.json', dict(unix=time.time(), cpus=statuses, gpus=gpu_status, transferred=transferred))
-                if failed or (done and all(s['finished'] for s in gpu_status.values())):
-                    write(local/'COMPLETE.json', dict(unix=time.time(), episodes_done=done, failed=failed, gpus=gpu_status))
+                state = relay_cycle(config)
+                write(local/'STATUS.json', state)
+                if state['failed'] or (state['episodes_done'] and
+                        set(state['gpus']) == set(config['gpus']) and
+                        all(s['finished'] for s in state['gpus'].values())):
+                    write(local/'COMPLETE.json', state)
                     return
             except Exception as exc:
                 # Re-send immutable RPC bytes only; never re-spawn physics or GPU services.
