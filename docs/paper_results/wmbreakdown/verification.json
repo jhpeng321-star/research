@@ -1,0 +1,38 @@
+{
+ "detector_rechecks": 4500,
+ "real_episodes": 500,
+ "numerical_crps_checks": "PASS",
+ "source_receipt_hashes": "PASS",
+ "split_identity_checks": "PASS",
+ "finite_csv_checks": "PASS",
+ "gate_rate_design": {
+  "cells": 12,
+  "arms": 5,
+  "horizons": 3,
+  "tests": 180,
+  "K": 32,
+  "epsilon": 0.1,
+  "approximate_worlds_per_cell": 341,
+  "assumptions": "Normal planning bound; world-cluster inference required; exact/binomial or bootstrap power recheck before registration"
+ },
+ "outputs": {
+  "distribution_summary.csv": "1c1bdb664fe5fe65d71d14745c451fcaa6de733770bc25eb81679f067726b39c",
+  "distribution_worlds.csv": "b9f759344baf7b0114fec0af069ba777ebc6bb6f1fbea80f39f32dd1f2303f6e",
+  "expected_effect_skill.csv": "21df011fe1c8f8645c208c0053a45cf474bba9aadc13d9645c374a5ced4899e9",
+  "expected_effects.csv": "eb87a23e46ac467368415b523a61e2a1685d9c18ecefacced23f2674b408daa2",
+  "forecast_audit.json": "ddb132316e4fcb2c122f60f5d89b763f8a8def33216d937b899282a57bf39dce",
+  "forecast_draws.csv": "578180aa564e96ea233bcb7dec46f1be511bd8093324c081228822321dd1df82",
+  "gain_by_breakdown.csv": "94f820dfa3d0351ec372134887c0bec257a5061eefe104e3c54345d1844b5b4f",
+  "pit_histogram.csv": "582373f1353de8bef90fc7523a057d590ae54f5a17b21c707097342b31882c8f",
+  "provenance.json": "5c607c4755a76fa134bbd068be6e43d4cb86fa057519702dd27b338537353c69",
+  "real_breakdown.png": "e73b08604e45e551a769ce87771794979f95d8f0371b0814c59b63e6d537ab9b",
+  "real_events.csv": "b3a4ac1498264deae2341403c6a2d776d27b6b0101972df3078aa7c2401afa99",
+  "real_paired.csv": "5921ac589ac5211aec40cf75d3f8912869c59b0961943a43e8683471f2d64ee0",
+  "real_probability.csv": "b24ac15d8a723751cec0b31ebac4d20c1f727434681f15dd1d374e0074422a16",
+  "real_shifts.csv": "055a79f82c2d29b27d56a1780d8869b52b5d6932d54150fa2ea2574b4670490e",
+  "summary.json": "de80ed777edf1b80319853f27d5dc5b501dd4985da2adc10e6d1ab37bba674ae",
+  "wm_distribution.png": "ae5ec5f26d745975ad0d3400f96403bbbdbb0812ae0edab7e1b66159fe73b9e6",
+  "wmdata2_observables.json": "a2b3ecf7a6ea9d6904fafa44d57a502e77781024b42b9b9469cbddaf44779fb4",
+  "wmdata_observables.json": "01d0d2b7027aad9910496c7bc5b9681c0d1ccf08f46b4e16a1113310a67362e9"
+ }
+}

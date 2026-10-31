@@ -44,6 +44,13 @@ analysis is single-process, low priority, read-only; no process is signalled.
    noise. World-bootstrap paired CRPS differences account for arm dependence.
 
 Reproduce: `python tools/wmbreakdown/collect.py`, then
-`python tools/wmbreakdown/analyze.py`. Requires existing Python with numpy and
+`python tools/wmbreakdown/analyze.py`, then `python tools/wmbreakdown/verify.py`.
+Collection reuses existing receipts; scoring and verification are local-only.
+Verification independently re-evaluates 4,500 BIC outputs and integrates a
+finite-ensemble CDF to check CRPS. Floating-point detector coefficients permit
+1e-8 tolerance across BLAS implementations; event/onset decisions must match.
+One-world cell bootstrap CIs and real SD are unavailable, not zero-width.
+Expected-effect ranks/signs are descriptive with sparse cells, not certification.
+Requires existing Python with numpy and
 matplotlib; SSH uses existing host interpreters. Evidence is task-owned under
 `docs/paper_results/wmbreakdown/`; no raw truth or controller binaries are copied.
