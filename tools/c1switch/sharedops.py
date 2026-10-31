@@ -184,6 +184,7 @@ if {host!r}=='cpuQ':
  out['complete_episodes']=len(list(r.glob('jobs/*_episode/RESULT.json')))
  out['complete_physics']=sum((p/'RESULT.json').exists() or (p/'PHYSICS.json').exists() for p in (r/'jobs').glob('*_episode'))
  out['complete_branches']=len(list(r.glob('jobs/*_j*/RESULT.json')))
+ out['physics_by_arm']={{a:sum((p/'RESULT.json').exists() or (p/'PHYSICS.json').exists() for p in (r/'jobs').glob(a+'_*_episode')) for a in ('wm','bb','random','native','ctrl0','mappo','pi','circles')}}
  out['picks']={{a:len(list(r.glob('jobs/'+a+'_*_episode/pick_j*.json'))) for a in ('wm','bb')}}
  out['failures']={{p.name:p.read_text()[-2000:] for p in (r/'recovery').glob('*.log') if 'Traceback' in p.read_text()}}
 else:

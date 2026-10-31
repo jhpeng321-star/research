@@ -1,10 +1,10 @@
 {
   "cpuQ": {
-    "unix": 1793463139.3375082,
+    "unix": 1793464256.7145982,
     "load": [
-      20.16943359375,
-      17.15283203125,
-      11.81787109375
+      16.18212890625,
+      14.2724609375,
+      13.34716796875
     ],
     "receipts": {
       "recovery_DISPATCH.json": {
@@ -13,64 +13,32 @@
         "unix": 1793462650.6853619
       },
       "recovery/STATUS.json": {
-        "pending_episodes": 82,
+        "pending_episodes": 12,
         "pending_branches": 0,
-        "done_count": 25,
+        "done_count": 128,
         "active": {
-          "wm_s969113_episode": {
-            "pid": 259510,
-            "arm": "wm"
-          },
           "wm_s969114_episode": {
             "pid": 259511,
             "arm": "wm"
           },
-          "bb_s969123_episode": {
-            "pid": 259515,
-            "arm": "bb"
+          "wm_s969115_episode": {
+            "pid": 345102,
+            "arm": "wm"
           },
-          "bb_s969126_episode": {
-            "pid": 259516,
-            "arm": "bb"
-          },
-          "bb_s969127_episode": {
-            "pid": 259517,
-            "arm": "bb"
-          },
-          "bb_s969122_j9_circles": {
-            "pid": 273376,
+          "wm_s969113_j5_ctrl0": {
+            "pid": 345110,
             "arm": null
           },
-          "bb_s969122_j9_ctrl0": {
-            "pid": 275822,
+          "wm_s969113_j5_mappo": {
+            "pid": 345111,
             "arm": null
           },
-          "bb_s969122_j9_mappo": {
-            "pid": 276421,
+          "wm_s969113_j5_native": {
+            "pid": 345112,
             "arm": null
           },
-          "bb_s969122_j9_pi": {
-            "pid": 276486,
-            "arm": null
-          },
-          "pi_s969114_episode": {
-            "pid": 278950,
-            "arm": "pi"
-          },
-          "bb_s969121_j8_circles": {
-            "pid": 280935,
-            "arm": null
-          },
-          "bb_s969121_j8_ctrl0": {
-            "pid": 283160,
-            "arm": null
-          },
-          "bb_s969121_j8_mappo": {
-            "pid": 283359,
-            "arm": null
-          },
-          "bb_s969121_j8_pi": {
-            "pid": 284180,
+          "wm_s969113_j5_pi": {
+            "pid": 345113,
             "arm": null
           }
         }
@@ -81,31 +49,41 @@
     },
     "rpc": {
       "wm": {
-        "requests": 4,
-        "results": 3
+        "requests": 15,
+        "results": 13
       },
       "bb": {
-        "requests": 6,
-        "results": 3
+        "requests": 10,
+        "results": 10
       }
     },
-    "charged_sim_s": 266580,
-    "actual_closed_sim_s": 257610.0,
+    "charged_sim_s": 350400,
+    "actual_closed_sim_s": 346620.0,
     "complete_episodes": 10,
-    "complete_physics": 30,
-    "complete_branches": 237,
+    "complete_physics": 104,
+    "complete_branches": 266,
+    "physics_by_arm": {
+      "wm": 2,
+      "bb": 16,
+      "random": 6,
+      "native": 16,
+      "ctrl0": 16,
+      "mappo": 16,
+      "pi": 16,
+      "circles": 16
+    },
     "picks": {
-      "wm": 18,
-      "bb": 153
+      "wm": 29,
+      "bb": 160
     },
     "failures": {}
   },
   "gpuR": {
-    "unix": 1793463140.4448667,
+    "unix": 1793464257.6941133,
     "load": [
-      15.61328125,
-      14.35546875,
-      18.46435546875
+      25.36083984375,
+      19.33935546875,
+      17.056640625
     ],
     "receipts": {
       "gpu_DISPATCH.json": {
@@ -125,12 +103,12 @@
     },
     "rpc": {
       "wm": {
-        "requests": 4,
-        "results": 3
+        "requests": 15,
+        "results": 13
       },
       "bb": {
-        "requests": 6,
-        "results": 4
+        "requests": 10,
+        "results": 10
       }
     },
     "log_tail": ""
