@@ -21,6 +21,13 @@ Updated 2026-10-31 23:22 +08:00; branch `c4/rb-int`, base `f0db3c82`.
 - Shared-file changes stay opt-in/default-OFF. Existing checkpoint behavior must remain unchanged without the switches.
 - Evaluation must bind a fixed permitted FIT panel before scoring; never open prohibited paths or truth assignments.
 - Need finite/conserved 60 s rollouts from two recorded FIT starts before the registered A/B distributional panel.
+- INT owns `configs/wm_phys.toml`: explicit A=encoder / B=population recipe,
+  learned correction families OFF; currently NOT runnable until worker switches
+  land. Planned `PhysicsConfig.cf_model='sumo_idm'`, `merge_model='sumo'`,
+  `ModelSpec.lane_model='lc2013'`; adapt exact API if worker implementation differs.
+- Smoke identities frozen before predictions: native seeds 969420/969421, t0=300,
+  60 s each A/B, authentic pre-t0 history, closed cohort (no future mask/teacher).
+  Full-panel arrival/source conservation remains a separate required gate.
 
 ## Tests / results
 - `tools/rbint/default_parity.py`: captured and independently compared two CPU
