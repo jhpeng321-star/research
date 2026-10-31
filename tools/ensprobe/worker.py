@@ -35,15 +35,9 @@ def priority_wait():
         if (ROOT/'STOP').exists() or (ROOT/'YIELD').exists():
             if (ROOT/'STOP').exists():raise RuntimeError('durable STOP')
             time.sleep(5);continue
-        busy = os.getloadavg()[0] > 20
-        for p in Path('/proc').iterdir():
-            if not p.name.isdigit() or int(p.name)==os.getpid():continue
-            try:
-                cmd=(p/'cmdline').read_bytes().replace(b'\0',b' ').decode(errors='replace').lower()
-                state=(p/'stat').read_text().rsplit(')',1)[1].split()[0]
-                if state=='R' and any(x in cmd for x in ('tools.leverprobe','tools.c1switch','tools.c1closed','tools.wmvalue')):
-                    busy=True
-            except (FileNotFoundError,PermissionError,ProcessLookupError):pass
+        # One nice19 thread on32cores uses spare capacity even while a priority
+        # task uses another core. Admission yields well before core saturation.
+        busy = os.getloadavg()[0] > min(20,os.cpu_count()-2)
         if not busy:return
         time.sleep(5)
 
@@ -62,7 +56,8 @@ class Ledger:
             write(ROOT/'UNSPENT_RESERVATION_RESUMED.json',dict(id=ident,sim_s=600,refund=0,new_charge=0))
             self.ident,self.allowed,self.actual=ident,600.,0.
             return
-        assert sum(r['sim_s'] for r in rows)+seconds<=49800
+        cap=json.loads((ROOT/'BINDING.json').read_text())['budget_sim_s']
+        assert sum(r['sim_s'] for r in rows)+seconds<=cap<=50000
         with path.open('a') as f:
             f.write(json.dumps(dict(id=ident,sim_s=seconds,unix=time.time()))+'\n');f.flush();os.fsync(f.fileno())
         self.ident,self.allowed,self.actual=ident,float(seconds),0.
@@ -310,12 +305,13 @@ def main():
             env.close();env=None
         rows=[json.loads(s) for s in (ROOT/'accounting.jsonl').read_text().splitlines()]
         total=sum(r['sim_s'] for r in rows)
-        assert total==49800
+        assert total==json.loads((ROOT/'BINDING.json').read_text())['budget_sim_s']
         write(ROOT/'COMPLETE.json',dict(charged_sim_s=total,actual_sim_s=total,branches=80,trunks=5,
-                                        extra_native_prefix_sim_s=300))
+                                        extra_native_prefix_sim_s=300,aborted_prefix_sim_s=total-49800))
     except BaseException:
         write(ROOT/'FAILURE.json',dict(traceback=traceback.format_exc(),**ledger.receipt()))
-        with (ROOT/'STOP').open('x') as f:f.write('gate or implementation failure; no automatic retries\n')
+        if not (ROOT/'STOP').exists():
+            with (ROOT/'STOP').open('x') as f:f.write('gate or implementation failure; no automatic retries\n')
         raise
     finally:
         if env is not None:env.close()

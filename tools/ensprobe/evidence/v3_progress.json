@@ -1,0 +1,72 @@
+{
+  "load": [
+    1.05810546875,
+    0.7353515625,
+    0.5439453125
+  ],
+  "LAUNCH.json": {
+    "pid": 71160,
+    "unix": 1793458555.089327,
+    "root": "/home/ubuntu/ensprobe20261031/recovery_v3",
+    "workers": 1,
+    "budget_sim_s": 49800,
+    "cap_sim_s": 50000
+  },
+  "CPU.json": {
+    "source_manifest": "b3c031adb6bc2b5c2bca160bea308f83ba5567b97c1cd0e853eddcd8367a8193",
+    "permitted_sources_verified": 542,
+    "worlds": [
+      [
+        969040,
+        0.05,
+        2400
+      ],
+      [
+        969041,
+        0.1,
+        2700
+      ],
+      [
+        969042,
+        0.2,
+        2400
+      ],
+      [
+        969043,
+        0.4,
+        2700
+      ],
+      [
+        969044,
+        0.2,
+        2700
+      ]
+    ],
+    "rng": [
+      969086,
+      969087,
+      969088,
+      969089,
+      969090,
+      969091,
+      969092,
+      969093
+    ],
+    "new_sim_s": 0,
+    "returncode": 0,
+    "tests": ".....                                                                    [100%]\n5 passed in 0.02s\n",
+    "controller_class": "PolicyExecutor"
+  },
+  "FAILURE.json": {
+    "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/ensprobe20261031/recovery_v3/code/tools/ensprobe/worker.py\", line 299, in main\n    priority_wait()\n  File \"/home/ubuntu/ensprobe20261031/recovery_v3/code/tools/ensprobe/worker.py\", line 36, in priority_wait\n    if (ROOT/'STOP').exists():raise RuntimeError('durable STOP')\nRuntimeError: durable STOP\n",
+    "id": "w969040_native_r969087",
+    "charged_sim_s": 600.0,
+    "actual_sim_s": 69.0
+  },
+  "own_pid_exists": false,
+  "branches": 1,
+  "gates": 2,
+  "trunks": 1,
+  "charged_sim_s": 1800,
+  "log_tail": " Retrying in 1 seconds\n Retrying in 1 seconds\nTraceback (most recent call last):\n  File \"/home/ubuntu/ensprobe20261031/recovery_v3/code/tools/ensprobe/worker.py\", line 299, in main\n    priority_wait()\n  File \"/home/ubuntu/ensprobe20261031/recovery_v3/code/tools/ensprobe/worker.py\", line 36, in priority_wait\n    if (ROOT/'STOP').exists():raise RuntimeError('durable STOP')\nRuntimeError: durable STOP\n\nDuring handling of the above exception, another exception occurred:\n\nTraceback (most recent call last):\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 196, in _run_module_as_main\n    return _run_code(code, main_globals, None,\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 86, in _run_code\n    exec(code, run_globals)\n  File \"/home/ubuntu/ensprobe20261031/recovery_v3/code/tools/ensprobe/worker.py\", line 325, in <module>\n    if __name__=='__main__':main()\n  File \"/home/ubuntu/ensprobe20261031/recovery_v3/code/tools/ensprobe/worker.py\", line 318, in main\n    with (ROOT/'STOP').open('x') as f:f.write('gate or implementation failure; no automatic retries\\n')\n  File \"/home/ubuntu/miniconda3/lib/python3.10/pathlib.py\", line 1119, in open\n    return self._accessor.open(self, mode, buffering, encoding, errors,\nFileExistsError: [Errno 17] File exists: '/home/ubuntu/ensprobe20261031/recovery_v3/STOP'\n"
+}

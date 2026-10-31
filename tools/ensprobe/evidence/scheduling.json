@@ -1,0 +1,27 @@
+{
+  "load": [
+    1.03759765625,
+    0.62353515625,
+    0.4892578125
+  ],
+  "running_priority_peers": [
+    {
+      "pid": 68753,
+      "command": "/home/ubuntu/miniconda3/bin/python -B -m tools.leverprobe.runner /home/ubuntu/leverprobe20261031_8c90d400 "
+    }
+  ],
+  "owned": [
+    {
+      "pid": 71160,
+      "state": "S",
+      "cpu_ticks": 243,
+      "command": "/home/ubuntu/miniconda3/bin/python -B -u -m tools.ensprobe.worker "
+    },
+    {
+      "pid": 74384,
+      "state": "S",
+      "cpu_ticks": 3,
+      "command": "/home/ubuntu/miniconda3/bin/python /home/ubuntu/miniconda3/bin/sumo -c /home/ubuntu/ensprobe20261031/recovery_v3/w969040/scenarios/s969040_m2400_191dsxf4/scenario.sumocfg --seed 969087 --step-length 0.5 --end 2401 --no-step-log true --duration-log.di"
+    }
+  ]
+}

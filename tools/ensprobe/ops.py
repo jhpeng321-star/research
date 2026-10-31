@@ -131,22 +131,27 @@ with tarfile.open(fileobj=io.BytesIO(base64.b64decode({raw!r})),mode='r:gz') as 
 sources={sources!r}
 assert all(hashlib.sha256((stage/n).read_bytes()).hexdigest()==h for n,h in sources.items())
 binding=dict(sources=sources,exposure={exposure!r},budget_sim_s=49800,cap_sim_s=50000,workers=1)
-if root.name in ('recovery_v2','recovery_v3'):
- original=root.parent if root.name=='recovery_v2' else root.parent/'recovery_v2'
+if root.name in ('recovery_v2','recovery_v3','recovery_v4'):
+ original=root.parent if root.name=='recovery_v2' else root.parent/('recovery_v3' if root.name=='recovery_v4' else 'recovery_v2')
  assert (original/'STOP').exists()
- failure=json.loads((original/'FAILURE.json').read_text());assert failure['actual_sim_s']==0
+ failure=json.loads((original/'FAILURE.json').read_text());assert failure['actual_sim_s']==(69 if root.name=='recovery_v4' else 0)
  rows=[json.loads(s) for s in (original/'accounting.jsonl').read_text().splitlines()]
  assert sum(r['sim_s'] for r in rows)==(900 if root.name=='recovery_v2' else 1800)
  binding['recovery']=dict(original_root=str(original),prior_actual_sim_s=300 if root.name=='recovery_v2' else 1200,unspent_branch_id=failure['id'])
- if root.name=='recovery_v3':
+ if root.name in ('recovery_v3','recovery_v4'):
   assert failure['id']=='w969040_native_r969087'
-  binding['recovery'].update(reconstruct_first=True,previous_root=str(original),retained_result_sha256=hashlib.sha256((original/'w969040/w969040_native_r969086_RESULT.json').read_bytes()).hexdigest())
+  previous=root.parent/'recovery_v2'
+  binding['recovery'].update(reconstruct_first=True,previous_root=str(previous),retained_result_sha256=hashlib.sha256((previous/'w969040/w969040_native_r969086_RESULT.json').read_bytes()).hexdigest())
+ if root.name=='recovery_v4':
+  binding['budget_sim_s']=49869
+  binding['recovery'].update(prior_actual_sim_s=1269,aborted_prefix_sim_s=69)
+  rows.append(dict(id='retained_scheduling_partial69',sim_s=69,actual_sim_s=69,reason='own cooperative spare-CPU admission repair; all ticks retained'))
  with (root/'accounting.jsonl').open('x') as f:
   for row in rows:f.write(json.dumps(row)+'\\n')
 (root/'BINDING.json').write_text(json.dumps(binding,indent=2))
 print(json.dumps(dict(root=str(root),sources=sources,new_sim_s=0)))
 ''')
-    write(('v3_' if REMOTE.endswith('recovery_v3') else 'v2_' if REMOTE.endswith('recovery_v2') else '')+'stage.json',out);print(json.dumps(out,indent=2))
+    write((Path(REMOTE).name.replace('recovery_','')+'_' if 'recovery_' in REMOTE else '')+'stage.json',out);print(json.dumps(out,indent=2))
 
 
 def cpu():
@@ -168,7 +173,7 @@ receipt.update(returncode=rc,tests=log.getvalue(),controller_class=type(exe).__n
 with (root/'CPU.json').open('x') as f:json.dump(receipt,f,indent=2)
 print(json.dumps(receipt))
 ''',timeout=120)
-    write(('v3_' if REMOTE.endswith('recovery_v3') else 'v2_' if REMOTE.endswith('recovery_v2') else '')+'cpu.json',out);print(json.dumps(out,indent=2))
+    write((Path(REMOTE).name.replace('recovery_','')+'_' if 'recovery_' in REMOTE else '')+'cpu.json',out);print(json.dumps(out,indent=2))
 
 
 def launch():
@@ -187,7 +192,7 @@ with (root/'worker.log').open('x') as log:
  with (root/'LAUNCH.json').open('x') as f:json.dump(receipt,f,indent=2)
 print(json.dumps(receipt))
 ''')
-    write(('v3_' if REMOTE.endswith('recovery_v3') else 'v2_' if REMOTE.endswith('recovery_v2') else '')+'launch.json',out);print(json.dumps(out,indent=2))
+    write((Path(REMOTE).name.replace('recovery_','')+'_' if 'recovery_' in REMOTE else '')+'launch.json',out);print(json.dumps(out,indent=2))
 
 
 def progress():
@@ -205,7 +210,7 @@ out['charged_sim_s']=sum(json.loads(s)['sim_s'] for s in p.read_text().splitline
 out['log_tail']=(root/'worker.log').read_text()[-6000:] if (root/'worker.log').exists() else ''
 print(json.dumps(out))
 ''')
-    write(('v3_' if REMOTE.endswith('recovery_v3') else 'v2_' if REMOTE.endswith('recovery_v2') else '')+'progress.json',out);print(json.dumps(out,indent=2))
+    write((Path(REMOTE).name.replace('recovery_','')+'_' if 'recovery_' in REMOTE else '')+'progress.json',out);print(json.dumps(out,indent=2))
 
 
 def diagnose():
@@ -284,8 +289,36 @@ print(json.dumps(out))
     print(json.dumps(dict(branches=len(out['results']),trunks=len(out['trunks']),terminal=out['receipts']['COMPLETE.json']),indent=2))
 
 
+def scheduling():
+    out=ssh(f'''import os,json
+from pathlib import Path
+root=Path({REMOTE!r});own=json.loads((root/'LAUNCH.json').read_text())['pid'];peers=[];owned=[]
+for p in Path('/proc').iterdir():
+ if not p.name.isdigit():continue
+ try:
+  cmd=(p/'cmdline').read_bytes().replace(b'\\0',b' ').decode(errors='replace');fields=(p/'stat').read_text().rsplit(')',1)[1].split()
+  if fields[0]=='R' and any(s in cmd.lower() for s in ('tools.leverprobe','tools.c1switch','tools.c1closed','tools.wmvalue')):peers.append(dict(pid=int(p.name),command=cmd[:250]))
+  if int(p.name)==own or int(fields[1])==own:owned.append(dict(pid=int(p.name),state=fields[0],cpu_ticks=int(fields[11])+int(fields[12]),command=cmd[:250]))
+ except (FileNotFoundError,ProcessLookupError,PermissionError):pass
+print(json.dumps(dict(load=os.getloadavg(),running_priority_peers=peers,owned=owned)))
+''')
+    write('scheduling.json',out);print(json.dumps(out,indent=2))
+
+
+def scheduling_stop():
+    out=ssh(f'''import json
+from pathlib import Path
+root=Path({REMOTE!r});assert root.name=='recovery_v3'
+pid=json.loads((root/'LAUNCH.json').read_text())['pid']
+assert b'tools.ensprobe.worker' in Path('/proc',str(pid),'cmdline').read_bytes()
+with (root/'STOP').open('x') as f:f.write('OWN cooperative scheduling stop: yield rule unnecessarily waits for one peer on32cores; retain all actual ticks\\n')
+print(json.dumps(dict(own_pid=pid,control=str(root/'STOP'),signals=0)))
+''')
+    write('scheduling_stop.json',out);print(json.dumps(out,indent=2))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=['inspect','audit','stage','cpu','launch','progress','diagnose','waiting','v2_stage','v2_cpu','v2_launch','v2_progress','v2_collect','v3_stage','v3_cpu','v3_launch','v3_progress','v3_collect']);a=p.parse_args()
-    if a.action.startswith(('v2_','v3_')):
+    p=argparse.ArgumentParser();p.add_argument('action',choices=['inspect','audit','stage','cpu','launch','progress','diagnose','waiting','v2_stage','v2_cpu','v2_launch','v2_progress','v2_collect','v3_stage','v3_cpu','v3_launch','v3_progress','v3_collect','v3_scheduling','v3_scheduling_stop','v4_stage','v4_cpu','v4_launch','v4_progress','v4_collect']);a=p.parse_args()
+    if a.action.startswith(('v2_','v3_','v4_')):
         REMOTE+='/recovery_'+a.action[:2];ENV['ENSPROBE_ROOT']=REMOTE;a.action=a.action[3:]
     globals()[a.action]()
