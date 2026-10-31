@@ -138,3 +138,20 @@
   and local collector live; cpuQ has 30 receipt-identified active ES workers.
   All four registered missing input paths rechecked absent. Final results are
   still pending; existing collector will pull/commit each completed generation.
+
+## Final resume / MAIN 17:53 shutdown — 2026-10-31
+- Resumed clean at 29faed51; retained all previous work. Read required design,
+  review, feasibility, retarget, pilot and preparation/runtime/panel sources.
+- Generation 2 was already complete on arrival (2810.9 s, 184 contrasts per
+  candidate). Generation 3 had already started in the frozen session; its partial
+  cells are preserved but excluded from selection. No generation was dispatched
+  by this resume. The existing driver has no STOP polling, so signals were needed.
+- `es_stop.py` wrote owned STOP markers, matched RUN/ENV/finalizer PID receipts
+  against exact module/output-root command lines, froze the dispatcher first,
+  then stopped only those verified owned PIDs. Immutable STOP_MAIN_1753 receipts
+  were retained on both hosts and copied to wmfix_es_receipts.
+- gpuA driver 195604 and finalizer 199849 stopped; 30 remaining cpuQ generation-3
+  workers stopped. Exact-root /proc scans found zero active owned processes on
+  either host. Local collectors 18420/25836 were already absent (CIM checked).
+- CPU allocations released; no foreign process signalled, no A/B verdict launch.
+  GEN_002.json retained locally; selected candidate remains generation 1/c1.

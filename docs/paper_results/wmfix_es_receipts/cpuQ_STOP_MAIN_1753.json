@@ -1,0 +1,162 @@
+{
+  "reason": "MAIN 2026-10-31 17:53: stop after generation 2; no A/B dispatch",
+  "host": "VM-0-3-ubuntu",
+  "observed_unix": 1793440486.6109483,
+  "completed_generation_2": false,
+  "targets": [
+    {
+      "pid": 3393126,
+      "receipt": "ENV_g003_cpuQ_w15.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w15.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3387954,
+      "receipt": "ENV_g003_cpuQ_w10.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w10.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3404686,
+      "receipt": "ENV_g003_cpuQ_w27.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w27.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3400696,
+      "receipt": "ENV_g003_cpuQ_w23.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w23.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3402650,
+      "receipt": "ENV_g003_cpuQ_w25.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w25.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3379489,
+      "receipt": "ENV_g003_cpuQ_w1.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w1.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3400372,
+      "receipt": "ENV_g003_cpuQ_w22.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w22.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3391022,
+      "receipt": "ENV_g003_cpuQ_w13.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w13.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3396271,
+      "receipt": "ENV_g003_cpuQ_w18.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w18.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3394207,
+      "receipt": "ENV_g003_cpuQ_w16.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w16.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3377914,
+      "receipt": "ENV_g003_cpuQ_w0.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w0.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3404324,
+      "receipt": "ENV_g003_cpuQ_w26.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w26.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3398326,
+      "receipt": "ENV_g003_cpuQ_w20.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w20.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3406087,
+      "receipt": "ENV_g003_cpuQ_w28.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w28.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3406958,
+      "receipt": "ENV_g003_cpuQ_w29.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w29.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3402281,
+      "receipt": "ENV_g003_cpuQ_w24.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w24.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3381122,
+      "receipt": "ENV_g003_cpuQ_w3.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w3.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3389999,
+      "receipt": "ENV_g003_cpuQ_w12.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w12.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3398788,
+      "receipt": "ENV_g003_cpuQ_w21.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w21.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3385918,
+      "receipt": "ENV_g003_cpuQ_w8.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w8.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3379780,
+      "receipt": "ENV_g003_cpuQ_w2.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w2.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3381847,
+      "receipt": "ENV_g003_cpuQ_w4.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w4.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3383879,
+      "receipt": "ENV_g003_cpuQ_w6.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w6.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3388701,
+      "receipt": "ENV_g003_cpuQ_w11.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w11.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3392145,
+      "receipt": "ENV_g003_cpuQ_w14.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w14.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3396908,
+      "receipt": "ENV_g003_cpuQ_w19.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w19.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3395030,
+      "receipt": "ENV_g003_cpuQ_w17.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w17.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3384809,
+      "receipt": "ENV_g003_cpuQ_w7.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w7.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3383041,
+      "receipt": "ENV_g003_cpuQ_w5.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w5.json --out /home/ubuntu/wmfix_es/es_run_full "
+    },
+    {
+      "pid": 3386566,
+      "receipt": "ENV_g003_cpuQ_w9.json",
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.wmfixmerge.es --mode sweep --prepared /home/ubuntu/wmfix_es/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --manifest /home/ubuntu/wmfix_es/es_run_full/MANIFEST_g003_cpuQ_w9.json --out /home/ubuntu/wmfix_es/es_run_full "
+    }
+  ],
+  "remaining": [],
+  "active_owned_processes": [],
+  "partial_generation_3_preserved": true,
+  "verdict_dispatched": false
+}

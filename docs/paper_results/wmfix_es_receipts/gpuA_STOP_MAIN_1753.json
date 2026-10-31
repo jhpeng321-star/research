@@ -1,0 +1,22 @@
+{
+  "reason": "MAIN 2026-10-31 17:53: stop after generation 2; no A/B dispatch",
+  "host": "autodl-container-cb08468270-873598d1",
+  "observed_unix": 1793440478.7144973,
+  "completed_generation_2": true,
+  "targets": [
+    {
+      "pid": 195604,
+      "receipt": "RUN.json",
+      "command": "/root/miniconda3/bin/python -m tools.wmfixmerge.es --mode drive --config /root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml --checkpoint /root/autodl-tmp/c4/restart20261026/arm/loop/wm/c02/wm_s.pt --controllers /root/autodl-tmp/c4/overnight20261028/W5_COMBINED/DESIGN.json --prepared /root/autodl-tmp/c4/wmfixmerge20261031/TRAIN_PREPARED.json --prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --cpuq-prepared-wmdata /home/ubuntu/wmfix_es/TRAIN_PREPARED_WMDATA.json --registry /root/autodl-tmp/c4/wmfixmerge20261031/es_cpu_v3/TRAIN_PREPARED_COMBINED_FULL.json --wmdata-controllers tools/wmfixmerge/es_wmdata_controllers.json --resolved-config /root/autodl-tmp/c4/wmfixmerge20261031/train/candidate_config.json --out /root/autodl-tmp/c4/wmfixmerge20261031/es_cpu_v3/es_run_full --cpuq-out /home/ubuntu/wmfix_es/es_run_full --gens 8 --popsize 2 --sigma .10 --lr .01 --fitness-horizon 120 --max-seconds 12600 --stop-patience 3 --gpuA-fit-groups 0-11 --cpuq-fit-groups none --gpuA-workers 18 --cpuq-workers 30 --account-for-probes "
+    },
+    {
+      "pid": 199849,
+      "receipt": "FINISH_WATCH_PID.json",
+      "command": "/root/miniconda3/bin/python -m tools.wmfixmerge.es_finish --watch --root /root/autodl-tmp/c4/wmfixmerge20261031/es_cpu_v3/es_run_full "
+    }
+  ],
+  "remaining": [],
+  "active_owned_processes": [],
+  "partial_generation_3_preserved": true,
+  "verdict_dispatched": false
+}
