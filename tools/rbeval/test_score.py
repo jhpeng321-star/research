@@ -112,6 +112,21 @@ class ScientificInvariants(unittest.TestCase):
         self.assertEqual(gate['complete_worlds'], 1)
         self.assertIn('incomplete K8 panel', gate['reasons'])
         self.assertTrue((scratch/'report/onset_cdf_bands.csv').is_file())
+        # Same code/recipe/name can still select different constructor variants.
+        # Their deterministic receipts must prevent pooling across shard roots.
+        roots = []
+        for k, variant in enumerate(('encoder', 'population')):
+            root = scratch/variant
+            root.mkdir()
+            identity = load(scratch/'normalized/IDENTITY.json')
+            identity.update(construction_loader_sha256=digest(HERE/'run_wm.py'), wm={'variant': variant})
+            save_new(root/'IDENTITY.json', identity)
+            task = load(scratch/f'normalized/w969420_k{k}.json')
+            task['identity_sha256'] = digest(root/'IDENTITY.json')
+            save_new(root/f'w969420_k{k}.json', task)
+            roots.append(root)
+        with self.assertRaisesRegex(AssertionError, 'mixed model contracts'):
+            read_predictions(roots, self.real, partial=True)
 
 
 if __name__ == '__main__':

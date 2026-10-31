@@ -102,6 +102,8 @@ candidate, never `wm2`. The loader function's file is automatically hashed, and
 every extra recipe/helper must be supplied in `identity_sources`. Normal config
 loading remains the default. Stage this updated runner into a NEW code directory
 for candidates: the live WM2 runner/source hashes under `code/` must stay intact.
+The construction receipt must be deterministic across shards and include the
+selected variant/settings; scoring compares it as well as the loader source.
 
 The runner currently uses the registered arrival process and learned entrant
 driver mix; it rejects `physics.entry_learned`. A candidate that changes entry

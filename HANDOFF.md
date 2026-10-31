@@ -8,7 +8,9 @@ OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 CUDA_VISIBLE_DEVICES=
 
 INT entrypoint calls `run_wm.main(model_loader=load_candidate,
 identity_sources=[__file__, rebuild_helper, recipe])`; callback returns
-`([frozen_candidate], construction_receipt)`. Stage current runner/core/references/
+`([frozen_candidate], construction_receipt)`. Receipt must be deterministic across
+shards and name selected variant/settings; scorer rejects differing receipts.
+Stage current runner/core/references/
 real_observables/PREPARED in a NEW candidate code directory; README documents
 the callback. For a normal loadable config invoke `tools/rbeval/run_wm.py` directly
 with the same arguments. Use shards 0–3 with distinct NEW output directories;
@@ -91,3 +93,13 @@ t0=300/H600 are fixed. Score all four shard directories together with
   tests): observable-state/route export is for S-SUMOCORE initialization. RBEVAL
   continues scoring its fixed observable contract through `import_external`;
   no duplicate exporter or source-state conversion was started.
+- Fetched11 real inference tasks (55 arm futures) and finalizer receipts; the
+  scorer independently validated every start hash, support/ledger and BIC event.
+  Progress audit: `tools/rbeval/evidence/progress_resume_ff8de578/audit.json`.
+  No complete K8 world yet: `gate.json` correctly reports incomplete evidence,
+  not a measured efficacy failure. Remote finalizer remains responsible for the
+  full160-task report; `python -B -m tools.rbeval.ops fetch-reports` retrieves it.
+- Constructor receipts are now also compared across candidate shards (not just
+  code/recipe hashes); end-to-end test PASS rejects pooling encoder/population
+  receipts even when model name and all source hashes agree. WM2 live sources
+  and original finalizer remain unchanged.
