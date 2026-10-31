@@ -45,18 +45,24 @@ def append(root,event):
 def reserve_actions(root,state,actions):
     """Prune only for affordability, with a fixed outcome-independent cyclic priority."""
     from .storage import verify,ledger_lock
-    verify(root)
+    binding = verify(root)
     assert actions[0]['id'] == 'O0'
     if len(actions) == 1:
         return [],dict(reason='only_MAPPO_available',pruned=[])
     with ledger_lock(root):
         ledger = root/'CHARGES.jsonl'
         charges = [json.loads(s) for s in ledger.read_text().splitlines()] if ledger.exists() else []
-        remaining = read(root/'ALLOCATION.json')['cap']-sum(c['sim_s'] for c in charges)-sum(outstanding(root,charges).values())
+        allocation = read(root/'ALLOCATION.json')
+        pending = outstanding(root,charges)
+        remaining = allocation['cap']-sum(c['sim_s'] for c in charges)-sum(pending.values())
+        if allocation.get('world_caps'):
+            prefix = state.replay_key.split('_t')[0]+'_'
+            world_left = allocation['world_caps'][prefix[:-1]]-sum(c['sim_s'] for c in charges if c['id'].startswith(prefix))-sum(v for k,v in pending.items() if k.startswith(prefix))
+            remaining = min(remaining,world_left)
         alternatives = actions[1:]
         rotation = ((state.time_s-300)//CADENCE) % len(alternatives)
         priority = alternatives[rotation:]+alternatives[:rotation]
-        cost = state.time_s+HORIZON
+        cost = state.time_s+binding.get('horizon_s',HORIZON)
         # O0 + n candidates + BOTH solos (regardless of predicted winner).
         n = min(len(priority),max(0,remaining//cost-3))
         admitted = [actions[0]]+priority[:n] if n else []

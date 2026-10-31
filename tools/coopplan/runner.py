@@ -64,8 +64,9 @@ def episode(root,world):
     try:
         with ProcessPoolExecutor(1,mp_context=ctx,initializer=plant.setup,initargs=(root,)) as oracle:
             predictor = SumoOraclePredictor(plant.RerunClient(root,oracle))
-            planner = Planner(predictor,learned=learned_proposer(plant.BINDING))
-            if plant.BINDING.get('phase') == 'extension':
+            horizon = plant.BINDING.get('horizon_s',HORIZON)
+            planner = Planner(predictor,learned=learned_proposer(plant.BINDING),horizon=horizon)
+            if plant.BINDING.get('phase') in ('extension','h300'):
                 from .quota import reserve_actions
                 planner.admit = lambda state,actions:reserve_actions(root,state,actions)
             with gzip.open(path/'observable.jsonl.gz','xt',encoding='utf-8',compresslevel=3) as tape:
@@ -92,12 +93,12 @@ def episode(root,world):
                                 action = deepcopy(chosen)
                                 action.update(id=chosen['id']+f'_solo{i}',members=[member])
                                 solos.append(action)
-                            single = predictor.predict(state,solos,HORIZON,1)
+                            single = predictor.predict(state,solos,horizon,1)
                             combined = Prediction({**prediction.actions,**single.actions},True,'SUMO-ORACLE')
                             cg = cooperation_credit(combined,chosen['id'],[a['id'] for a in solos])
                             credits.append(dict(time_s=t,action=chosen,members=event['group'],C_G=list(cg.values())[0],
-                                                horizon_s=HORIZON,semantics='all_executed_groups' if plant.BINDING.get('all_credits') else 'first_executed_group_per_world'))
-                        elif plant.BINDING.get('phase') == 'extension' and prediction is not None:
+                                                horizon_s=horizon,semantics='all_executed_groups' if plant.BINDING.get('all_credits') else 'first_executed_group_per_world'))
+                        elif plant.BINDING.get('phase') in ('extension','h300') and prediction is not None:
                             from .quota import release_credit
                             release_credit(root,key+'_CG')
                         write(path/f'DECISION_{t}.json',event)
@@ -125,8 +126,9 @@ def run(root,workers):
     fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     write(root/'DISPATCH_ONCE.json',dict(pid=os.getpid(),unix=time.time()))
     panel = read(root/'ALLOCATION.json')['worlds']
-    from .protocol import extension_worlds
-    assert all(w in (extension_worlds() if binding.get('phase') == 'extension' else worlds()) for w in panel)
+    from .protocol import extension_worlds,h300_worlds
+    allowed = h300_worlds() if binding.get('phase') == 'h300' else extension_worlds() if binding.get('phase') == 'extension' else worlds()
+    assert all(w in allowed for w in panel)
     try:
         if binding.get('phase') == 'extension':
             from .extension import backfill

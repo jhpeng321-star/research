@@ -25,7 +25,11 @@ def verify(root):
     b = read(root/'BINDING.json')
     a = read(root/'APPROVAL.json')
     approval(a['owner_line'])
-    expected = extension_budget() if b.get('phase') == 'extension' else budget()
+    if b.get('phase') == 'h300':
+        from .protocol import h300_budget
+        expected = h300_budget()
+    else:
+        expected = extension_budget() if b.get('phase') == 'extension' else budget()
     if b['budget'] != expected or a['design_sha256'] != sha(root/'COOPPLAN_DESIGN.md'):
         raise ValueError('registered design/budget binding')
     if b['design_sha256'] != a['design_sha256']:

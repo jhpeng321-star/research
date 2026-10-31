@@ -74,8 +74,8 @@ class Predictor(Protocol):
 
 
 def validate_request(state, actions, horizon, K):
-    if type(horizon) is not int or not 60 <= horizon <= 120 or type(K) is not int or K < 1:
-        raise ValueError('short-horizon contract: integer H60..120 and positive K')
+    if type(horizon) is not int or not (60 <= horizon <= 120 or horizon == 300) or type(K) is not int or K < 1:
+        raise ValueError('registered horizon: integer H60..120 or MAIN02:21 H300, positive K')
     if not actions or len({a['id'] for a in actions}) != len(actions):
         raise ValueError('unique nonempty action IDs required')
     cavs = {r['vid'] for r in state.rows if r['is_cav']}

@@ -21,6 +21,22 @@ def extension_budget():
     return dict(cpuQ=193000,gpuA=193000,gpuR=193020)
 
 
+def h300_worlds():
+    # Fresh never-fit block. Higher-share cells first, two worlds per selected cell.
+    cells = [(p,d) for p in (.4,.2,.1) for d in (2700,2400,1900)]
+    confirmation = [dict(seed=983300+i,cell=CELLS.index((p,d)),repeat=r,
+                         penetration=p,demand=d,cohort='confirmation18')
+                    for i,(p,d,r) in enumerate((p,d,r) for p,d in cells for r in range(2))]
+    high = [(.4,2700),(.4,2400),(.2,2700),(.2,2400),(.4,2700),(.4,2400)]
+    wall = [dict(seed=983318+i,cell=CELLS.index((p,d)),repeat=int(i>=4),
+                 penetration=p,demand=d,cohort='wall6') for i,(p,d) in enumerate(high)]
+    return confirmation+wall
+
+
+def h300_budget():
+    return dict(cpuQ=78240,gpuA=78240,gpuR=78240)
+
+
 def budget():
     return dict(episodes=12*2*1200, lookahead=12*6*sum(t+HORIZON for t in TIMES),
                 member_alone=12*2*(max(TIMES)+HORIZON), mechanics=1200+2*(300+HORIZON))
@@ -35,7 +51,7 @@ def approval(text):
 
 
 def guard(world):
-    if world not in worlds()+extension_worlds():
+    if world not in worlds()+extension_worlds()+h300_worlds():
         raise ValueError('not an exact preregistered fresh development world/cell')
     from traffic_shepherd.seeds import require_development_case
     from traffic_shepherd.c4.seeds import check_case
@@ -47,7 +63,7 @@ def install_seed_scope():
     # Same narrow two-guard admission used by COOPBANDIT; no runtime-file edits.
     from traffic_shepherd import seeds as s
     from traffic_shepherd.c4 import seeds as c
-    allowed = {(w['seed'],w['demand']) for w in worlds()+extension_worlds()}
+    allowed = {(w['seed'],w['demand']) for w in worlds()+extension_worlds()+h300_worlds()}
     original_s, original_c = s.require_development_case, c.check_case
     def base(seed,loading,role):
         if type(seed) is int and type(loading) is int and role == 'exposed' and (seed,loading) in allowed:
