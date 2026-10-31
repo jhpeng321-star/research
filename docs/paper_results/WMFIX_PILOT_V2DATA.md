@@ -239,3 +239,11 @@ decision. GPU parity/launch/decision remain pending.
 - Four step10 shards now live264542/264730/265523/265742. Head10 full result
   remains pending; steps20/30 are queued. Deadline23:02:20 unchanged; no
   post-gate continuation under MAIN17:52, watcher249622 verified alive20:24.
+
+## Budget coordination probe, 2026-10-31 21:22 +08
+- All4 step10 workers alive/CPU-active, elapsed61-66min, no completed head shard;
+  pilot223222 and gate-only249622 alive. Steps20/30 queued; no efficacy decision.
+- Deadline23:02:20 leaves~100min. Appended a fresh EOF registration status for
+  MAIN's inference-budget/order review: current measured scoring cost puts the
+  complete0/10/20/30 gate inside that cap at risk. No extension or criterion/order
+  change made. Continue through step10 within the existing scope/budget.
