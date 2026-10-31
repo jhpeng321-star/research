@@ -15,6 +15,14 @@
 - Preflight: gpuA's existing conda Python omits os.pidfd_open; kernel5.15/x86_64
   supports it. Add a fail-closed Linux syscall fallback (no PID-based kill), plus
   kernel-support dry-run before arming. Updated local watcher suite4 PASS.
+- Watcher **gpuA249622/start882627957**, PPID1/SID249622, armed19:27:45+08;
+  own trainer223222/start881862702. Staged watcher tests4 PASS; actual pidfd
+  kernel-support/identity dry-run PASS (no signal). Archive SHA80518d14... matches
+  local+remote; prior watcher archivec152257a... preserved (never executed).
+- GATE_ONLY_WATCH.json binds watcher source331e3c60... and step30aa8df951...;
+  GATE_ONLY_RESULT.json will report the stop/no-extra-update check at gate exit.
+  Original RECOVERY056c295c revalidated after staging: all31 implementation files
+  and6 running drivers unchanged. No panel/result has completed at19:28.
 
 ## Resume / binding
 - Resumed clean `c4/wmfixmerge` at f373b47e; prior audit/design/implementation and

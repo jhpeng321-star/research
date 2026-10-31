@@ -9,6 +9,9 @@
   normally. Panel code/processes remain intact. Three CPU tests PASS.
 - Watcher dispatch PID follows in WMFIX_PILOT_V2DATA.md; read its GATE_ONLY_*
   receipts before recovery. No post-gate training/verdict dispatch under this scope.
+- ARMED19:27:45 gpuA watcher249622/start882627957, PPID1/SID249622; owns only
+  trainer223222/start881862702. Staged4CPU tests + actual pidfd dry-run PASS.
+  Original31 implementation/6 driver hashes revalidated unchanged. No signal yet.
 
 ## SUPERSEDING MAIN17:05 recovery / Sol17:17 gpuA clock
 - Old dispatcher197030 FINISHED/exit1 after exact parity PASS and4 updates;
