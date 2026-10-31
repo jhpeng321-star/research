@@ -1,6 +1,7 @@
 """Two registered FIT starts, 60 s closed cohort, independent no-correction guard."""
 import argparse
 import copy
+from dataclasses import replace
 import os
 from pathlib import Path
 import sys
@@ -29,6 +30,9 @@ from wms.physics.state import state_kin
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--out', required=True)
+    p.add_argument('--variants', nargs='+', choices=('A', 'B', 'C', 'FULL'),
+                   default=('A', 'B', 'C', 'FULL'))
+    p.add_argument('--compare-query-fast', action='store_true')
     args = p.parse_args()
     torch.set_num_threads(1)
     out = Path(args.out)
@@ -36,11 +40,13 @@ def main():
     expected = load('/root/wmcalib/expected_hashes.json')
     results = []
     begin = time.monotonic()
-    for variant in ('A', 'B', 'C', 'FULL'):
+    for variant in args.variants:
         os.environ['WMPHYS_VARIANT'] = variant
         models, receipt = load_candidate(
             ['/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt'], [str(ROOT/'configs/wm_phys.toml')], 'cpu')
         model = models[0]
+        if args.compare_query_fast and model.physics.sumo_merge_query_fast:
+            raise ValueError('dense reference must have sumo_merge_query_fast=False')
         policy = torch.load('/root/autodl-tmp/c4/setupaudit20261030/policy_000190.pt',
                             map_location='cpu', weights_only=False)
         model.cav_exec_cap = policy['config']['cav_exec_cap']
@@ -82,13 +88,34 @@ def main():
                     kwargs.update(driver_embedding=embedding,
                         driver_params={n: defaults[..., i] for i, n in enumerate(PARAMETER_NAMES)})
                 state['exit_s_m'] = torch.full_like(state['s_m'], road_end_exit_bound(model.physics))
+                dense_start = time.monotonic()
                 roll = model.rollout(copy.deepcopy(state), n_steps=120,
-                                     cav_controller=native_controller(), **kwargs)
+                                      cav_controller=native_controller(), **kwargs)
+                dense_seconds = time.monotonic()-dense_start
                 gate = audit_closed_cohort(state['present'], roll, exit_s_m=state['exit_s_m'])
                 assert not roll['raw_residual_mps2'].count_nonzero()
+                query_parity = None
+                if args.compare_query_fast:
+                    original_physics = model.physics
+                    model.physics = replace(original_physics, sumo_merge_query_fast=True)
+                    fast_start = time.monotonic()
+                    try:
+                        fast_roll = model.rollout(copy.deepcopy(state), n_steps=120,
+                            cav_controller=native_controller(), **kwargs)
+                    finally:
+                        model.physics = original_physics
+                    fast_seconds = time.monotonic()-fast_start
+                    fields = ('positions', 'speeds', 'lanes', 'masks', 'accel', 'raw_residual_mps2')
+                    for field in fields:
+                        assert torch.equal(roll[field], fast_roll[field]), 'query parity '+field
+                    assert audit_closed_cohort(state['present'], fast_roll,
+                        exit_s_m=state['exit_s_m']) == gate
+                    query_parity = dict(bit_exact=True, fields=fields, dense_seconds=dense_seconds,
+                        fast_seconds=fast_seconds, speedup=dense_seconds/fast_seconds)
             results.append(dict(variant=variant, seed=seed, t0=300, horizon_s=60,
                 source_sha256=start['initial_state_sha256'], encoder_calls=len(calls),
-                encoder_exact=receipt['encoder_exact'], guard_pass=True, **gate))
+                encoder_exact=receipt['encoder_exact'], guard_pass=True,
+                query_parity=query_parity, **gate))
     save_new(out, dict(schema='wmphys-smoke/1', passed=True, results=results,
         recipe_sha256=digest(ROOT/'configs/wm_phys.toml'),
         checkpoint_sha256=digest('/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt'),
