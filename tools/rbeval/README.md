@@ -94,6 +94,11 @@ prefixes as independent evidence or claiming unavailable full-trajectory parity.
 NEW stage. `--cpu-fast` selects INT's independently parity-checked exact query/
 lane-conflict flags; direct validator/default flags remain unchanged. Stage
 provenance is written to STAGE.json and actual switches are retained per row.
+`boundary-targets` audits only the observed300→300.5 first-step transitions.
+The shared event table omits two native FIT boundary merges. Optional scorer
+`--boundary-targets docs/rb_merge/boundary_native_fit32.json` creates a separate,
+explicitly augmented report with episode/target hash checks; original helper
+CSVs and prior report contracts are retained unchanged.
 `python -m tools.rbeval.summarize_full_fleet --panel <collected directory>
 --targets <shared targets> --output <new score.json>` checks complete FIT32,
 collection hashes and conservation before reporting per-world and marginal clocks.

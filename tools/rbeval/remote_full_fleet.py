@@ -22,7 +22,7 @@ def remote(code):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument('mode', choices=('status', 'stage', 'launch', 'poll', 'trace', 'initial-geometry', 'collect'))
+    p.add_argument('mode', choices=('status', 'stage', 'launch', 'poll', 'trace', 'initial-geometry', 'boundary-targets', 'collect'))
     p.add_argument('--version', default='v8end600')
     p.add_argument('--horizon', type=int, choices=(120, 300, 600), default=600)
     p.add_argument('--slots', type=int, default=512)
@@ -234,9 +234,44 @@ else:
 print(json.dumps(dict(contract=report['contract'],worlds=len(report['rows']),frame_pairs=report['frame_pairs'],chain_pairs=report['chain_pairs'],affected=[r for r in report['rows'] if r['frame_pairs'] or r['chain_pairs']])))
 '''
         print(remote(code))
+    elif args.mode == 'boundary-targets':
+        code = header+'''import sys,csv
+sys.path[:0]=[str(root/'runtime/src'),str(root)]
+import numpy as np
+from tools.rbeval.full_fleet import safe,digest
+output=root/'BOUNDARY_MERGES.json'
+if output.exists():
+    report=json.loads(output.read_text())
+else:
+    views=Path('/home/ubuntu/wmdata20261031/views')
+    with (root/'targets/ramp_merges.csv').open(newline='') as f:
+        helper={(int(r['seed']),int(r['vid'])) for r in csv.DictReader(f) if r['arm']=='native' and float(r['t_merge_s'])<=300.5}
+    events=[]
+    for seed in range(969400,969432):
+        record=json.loads(safe(views/('world_'+str(seed)+'.json')).read_text())['native']
+        ep=safe(views/'episodes'/record['episode'])
+        meta=json.loads(safe(ep/'episode.json').read_text())
+        assert meta['seed']==seed and meta['arm']=='native'
+        t0=int(meta['t0_index'])
+        k=np.array(np.load(safe(ep/'veh_kin.npy'),mmap_mode='r',allow_pickle=False)[t0:t0+2],copy=True)
+        m=np.load(safe(ep/'veh_mask.npy'),mmap_mode='r',allow_pickle=False)[t0:t0+2].astype(bool)&(k[:,:,1:4].sum(-1)>0)
+        ids=np.load(safe(ep/'vid.npy'),mmap_mode='r',allow_pickle=False)[t0:t0+2]
+        times=np.load(safe(ep/'time_s.npy'),mmap_mode='r',allow_pickle=False)[t0:t0+2]
+        assert np.array_equal(times,np.array([300.,300.5]))
+        after={int(ids[1,j]):j for j in np.flatnonzero(m[1])}
+        for i in np.flatnonzero(m[0]&(k[0,:,1:4].argmax(-1)==2)):
+            vid=int(ids[0,i])
+            j=after.get(vid)
+            if j is not None and k[1,j,1:4].argmax()!=2:
+                events.append(dict(seed=seed,vid=vid,time_s=300.5,position_m=float(k[1,j,0]),to_lane=int(k[1,j,1:4].argmax()),in_helper=(seed,vid) in helper,episode_sha256=digest(ep/'episode.json')))
+    report=dict(contract='Validation-only first-step merge transitions from observable views; no prediction feedback',events=events,missing_from_helper=[e for e in events if not e['in_helper']],target_sha256=digest(root/'targets/ramp_merges.csv'))
+    with output.open('x') as f: json.dump(report,f,indent=2)
+print(json.dumps(report))
+'''
+        print(remote(code))
     else:
         code = header+'''result=root/'results'
-files=[root/'STAGE.json',root/'LAUNCH.json',root/'CPU_TESTS.json',root/'PREFLIGHT.json',root/'INITIAL_GEOMETRY.json',result/'IDENTITY.json',result/'COMPLETE.json',result/'FAILED.json']
+files=[root/'STAGE.json',root/'LAUNCH.json',root/'CPU_TESTS.json',root/'PREFLIGHT.json',root/'INITIAL_GEOMETRY.json',root/'BOUNDARY_MERGES.json',result/'IDENTITY.json',result/'COMPLETE.json',result/'FAILED.json']
 files += [result/(str(s)+'.json') for s in range(969400,969432)]
 print(json.dumps({p.name:dict(content=p.read_text(),sha256=hashlib.sha256(p.read_bytes()).hexdigest()) for p in files if p.exists()}))
 '''

@@ -38,11 +38,31 @@ def load_panel(directory):
     return sorted(rows, key=lambda r: r['seed'])
 
 
-def analyze(rows, targets):
+def augment_boundary_events(events, boundary, rows, target_sha):
+    if boundary['target_sha256'] != target_sha:
+        raise ValueError('boundary audit refers to another helper target')
+    episodes = {r['seed']: r['episode_sha256'] for r in rows}
+    keys = {(int(e['seed']), int(e['vid'])) for e in events if e['arm'] == 'native'}
+    added = []
+    for e in boundary['missing_from_helper']:
+        seed, vid = int(e['seed']), int(e['vid'])
+        if seed not in episodes or e['episode_sha256'] != episodes[seed] or e['time_s'] != 300.5:
+            raise ValueError('boundary episode/first-step identity mismatch')
+        if (seed, vid) not in keys:
+            events.append(dict(seed=str(seed), arm='native', vid=str(vid),
+                               t_merge_s=e['time_s'], s_merge_m=e['position_m']))
+            keys.add((seed, vid))
+            added.append(dict(seed=seed, vid=vid))
+    return added
+
+
+def analyze(rows, targets, boundary=None):
     horizon = rows[0]['horizon_s']
     end = 300+horizon
     with safe(targets/'ramp_merges.csv').open(newline='') as f:
         real_merges = list(csv.DictReader(f))
+    added = (augment_boundary_events(real_merges, boundary, rows,
+             hashlib.sha256((targets/'ramp_merges.csv').read_bytes()).hexdigest()) if boundary else [])
     with safe(targets/'insertions_10s.csv').open(newline='') as f:
         real_insertions = list(csv.DictReader(f))
     with safe(targets/'ramp_delay_world.csv').open(newline='') as f:
@@ -81,6 +101,7 @@ def analyze(rows, targets):
             checkpoint_scores[str(h)] = dict(predicted=stats(x), recorded=stats(y),
                 mean_bias=float((x-y).mean()), marginal_wasserstein1=float(np.abs(np.sort(x)-np.sort(y)).mean()))
     return dict(worlds=len(rows), horizons_s=[horizon], arms=['native'],
+        boundary_target_augmentation=added,
         source_versions=dict(cf=sorted({r['cf_model'] for r in rows}),
                              native_model=sorted({r.get('native_model', 'head') for r in rows}),
                              settings=sorted({r.get('settings', 'unspecified') for r in rows}),
@@ -95,7 +116,8 @@ def analyze(rows, targets):
             missed=missed, extra=extra, time_error_s=stats(time_errors), position_error_m=stats(position_errors),
             timing_mae_s=float(np.abs(time_errors).mean()) if time_errors else None,
             position_mae_m=float(np.abs(position_errors).mean()) if position_errors else None),
-        full_fleet_merge_counts=dict(recorded=stats([r['merges']['recorded'] for r in rows]),
+        full_fleet_merge_counts=dict(recorded=stats([r['merges']['recorded']+
+            sum(e['seed'] == r['seed'] for e in added) for r in rows]),
                                      predicted=stats([r['merges']['predicted'] for r in rows])),
         insertions=dict(per_world=insertion,
             recorded_total=np.array([r['recorded'] for r in insertion]).sum(0).tolist(),
@@ -118,10 +140,13 @@ def main():
     parser.add_argument('--panel', required=True)
     parser.add_argument('--targets', required=True)
     parser.add_argument('--output', required=True)
+    parser.add_argument('--boundary-targets', help='optional separately verified first-step target omissions')
     args = parser.parse_args()
     rows = load_panel(Path(args.panel))
     targets = safe(args.targets)
-    result = analyze(rows, targets)
+    boundary = json.loads(safe(args.boundary_targets).read_text()) if args.boundary_targets else None
+    result = analyze(rows, targets, boundary)
+    result['boundary_audit_sha256'] = hashlib.sha256(safe(args.boundary_targets).read_bytes()).hexdigest() if boundary else None
     result['inputs_sha256'] = {n: hashlib.sha256((targets/n).read_bytes()).hexdigest()
                               for n in ('ramp_merges.csv', 'insertions_10s.csv', 'ramp_delay_world.csv')}
     result['collection_sha256'] = hashlib.sha256((Path(args.panel)/'COLLECTION.json').read_bytes()).hexdigest()

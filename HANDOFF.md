@@ -64,6 +64,15 @@ Earlier work retained in `docs/rb_merge/HANDOFF_HISTORY_{0100,0315}.md`.
   ramp adaptation/admission/motion/noise. Motion-inferred/default settings only.
 
 ## Completed FIT32 diagnostics (one future/native only — NOT qualified)
+- First-step target audit found2 genuine transitions missing from helper CSV:
+  969413/VID144 and969419/VID181 at300.5s. Validated from normal-road observable
+  t300/t300.5 views; episode/target SHA-bound, no prediction feedback. Shared
+  CSV/old reports unchanged. New `--boundary-targets` sidecar resolves v6's
+  apparent extra2: **202 recorded/202 predicted/202 matched,0 missed/extra**,
+  timeMAE29.13s /position13.33m. Delay metrics unchanged. See
+  `docs/rb_merge/{boundary_native_fit32,fullfleet_v6_boundary_summary}.json`.
+  Eight boundary/receipt CPU tests PASS; augmentation is explicit, not pooled
+  silently into earlier reported target definitions.
 - v6 population/SUMO-CF/physics-native, H300: all200 recorded t0 merges matched,
   202predicted; full-fleet merge mean33.16 vs33.06real. Ramp delay1185.32 vs
   2272.78veh-s real: removed false gridlock but over-clears; W1=1087.46.
