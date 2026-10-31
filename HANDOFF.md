@@ -1,4 +1,4 @@
-# S-RB-LANE — precision continuation active (~01:25)
+# S-RB-LANE — precision continuation active (~02:14)
 
 Branch `c4/rb-lane`, base `f0db3c82`; coordinate source `0a1e7e93` committed.
 All prior work retained. Owner authority:
@@ -55,13 +55,15 @@ WM-PHYS REGISTRATION5683 plus00:10 precision addendum. Source-backed subset;
   published motion-fit artifact/frozen model weights, and road/source code read.
   No SUMO/GPU/training/signals/deletions/push. lcspec/obsstate/targets consumed.
 
-## Candidate10 ready (measurement pending)
+## Candidate10 RUNNING (source92a3cd69)
 Source1749's current-leader denominator now preserves its SIGN; the old clamp
 incorrectly removed negative keep-right feedback under inferred settings.
 Faster target leaders no longer overwrite the later cap's gap. 52CPU PASS;
 9600 default-population synthetic decisions remain bit-exact to9. Next paired
 encoder-v2 pass compares before/after signed-cap kernels on identical inputs,
-with source-pinned ablation and independent wish states. No setting/threshold fit.
+with source-pinned ablation and independent wish states. cpuQ own644043,
+`/home/ubuntu/rblane20261031_panel10_750e5bd54607`, one nice19 thread; no other
+owned job active. No setting/threshold fit. Preserve dispatch; do not duplicate.
 
 ## Gaps
 Synchronous proposals/messages vs SUMO serial processing; full leader
