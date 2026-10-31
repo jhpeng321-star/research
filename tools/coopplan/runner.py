@@ -65,6 +65,9 @@ def episode(root,world):
         with ProcessPoolExecutor(1,mp_context=ctx,initializer=plant.setup,initargs=(root,)) as oracle:
             predictor = SumoOraclePredictor(plant.RerunClient(root,oracle))
             planner = Planner(predictor,learned=learned_proposer(plant.BINDING))
+            if plant.BINDING.get('phase') == 'extension':
+                from .quota import reserve_actions
+                planner.admit = lambda state,actions:reserve_actions(root,state,actions)
             with gzip.open(path/'observable.jsonl.gz','xt',encoding='utf-8',compresslevel=3) as tape:
                 while b.env.now < 1200:
                     t = int(b.env.now)
@@ -82,7 +85,7 @@ def episode(root,world):
                         event,prediction = planner.step(state)
                         event['initial_rows'] = rows
                         history.append(event)
-                        if event['group'] and not credits:
+                        if event['group'] and (not credits or plant.BINDING.get('all_credits')):
                             chosen = event['executed_action']
                             solos = []
                             for i,member in enumerate(chosen['members']):
@@ -93,7 +96,10 @@ def episode(root,world):
                             combined = Prediction({**prediction.actions,**single.actions},True,'SUMO-ORACLE')
                             cg = cooperation_credit(combined,chosen['id'],[a['id'] for a in solos])
                             credits.append(dict(time_s=t,action=chosen,members=event['group'],C_G=list(cg.values())[0],
-                                                horizon_s=HORIZON,semantics='first_executed_group_per_world'))
+                                                horizon_s=HORIZON,semantics='all_executed_groups' if plant.BINDING.get('all_credits') else 'first_executed_group_per_world'))
+                        elif plant.BINDING.get('phase') == 'extension' and prediction is not None:
+                            from .quota import release_credit
+                            release_credit(root,key+'_CG')
                         write(path/f'DECISION_{t}.json',event)
                     plant.tick(b,history[-1] if history else None,tape)
                 clocks['900'] = dict(b.totals)
@@ -119,8 +125,12 @@ def run(root,workers):
     fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     write(root/'DISPATCH_ONCE.json',dict(pid=os.getpid(),unix=time.time()))
     panel = read(root/'ALLOCATION.json')['worlds']
-    assert all(w in worlds() for w in panel)
+    from .protocol import extension_worlds
+    assert all(w in (extension_worlds() if binding.get('phase') == 'extension' else worlds()) for w in panel)
     try:
+        if binding.get('phase') == 'extension':
+            from .extension import backfill
+            backfill(root)
         ctx = multiprocessing.get_context('spawn')
         with ProcessPoolExecutor(workers,mp_context=ctx) as pool:
             futures = [pool.submit(episode,root,w) for w in panel]

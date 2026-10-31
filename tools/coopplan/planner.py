@@ -64,11 +64,23 @@ class Planner:
     learned: object = None
     log: object = None
     last_time: int | None = None
+    admit: object = None
 
     def step(self, state):
         if state.time_s not in TIMES or (self.last_time is not None and state.time_s <= self.last_time):
             raise ValueError('registered cadence; decisions must be strictly increasing')
         actions = candidates(state,self.learned)
+        admission = None
+        if self.admit is not None:
+            actions,admission = self.admit(state,actions)
+            if not actions:
+                chosen = option('O0',state.rows,0)
+                event = dict(time_s=state.time_s,replay_key=state.replay_key,candidates=[chosen],
+                             group=[],executed_action=chosen,admission=admission,prediction_id=None,
+                             decision=dict(selected='O0',eligible=[],expected_delay={},probability_beats={'O0':0.},
+                                           exact=True,backend='SUMO-ORACLE',confidence=CONFIDENCE))
+                self.last_time = state.time_s
+                return event,None
         prediction = self.predictor.predict(state,actions,HORIZON,self.K)
         decision = decide(prediction)
         chosen = next(a for a in actions if a['id'] == decision['selected'])
@@ -78,6 +90,8 @@ class Planner:
                                                             for a,fs in prediction.actions.items()}))
         if self.log is not None:
             self.log(event)
+        if admission is not None:
+            event['admission'] = admission
         self.last_time = state.time_s
         return event, prediction
 

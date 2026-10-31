@@ -11,6 +11,16 @@ def worlds():
             for c,(p,d) in enumerate(CELLS)]
 
 
+def extension_worlds():
+    return [dict(seed=983200+12*r+c,cell=c,repeat=r+1,penetration=p,demand=d)
+            for r in range(2) for c,(p,d) in enumerate(CELLS)]
+
+
+def extension_budget():
+    # Disjoint host ceilings, not a forecast or a refund of the original preregistration.
+    return dict(cpuQ=193000,gpuA=193000,gpuR=193020)
+
+
 def budget():
     return dict(episodes=12*2*1200, lookahead=12*6*sum(t+HORIZON for t in TIMES),
                 member_alone=12*2*(max(TIMES)+HORIZON), mechanics=1200+2*(300+HORIZON))
@@ -25,7 +35,7 @@ def approval(text):
 
 
 def guard(world):
-    if world not in worlds():
+    if world not in worlds()+extension_worlds():
         raise ValueError('not an exact preregistered fresh development world/cell')
     from traffic_shepherd.seeds import require_development_case
     from traffic_shepherd.c4.seeds import check_case
@@ -37,7 +47,7 @@ def install_seed_scope():
     # Same narrow two-guard admission used by COOPBANDIT; no runtime-file edits.
     from traffic_shepherd import seeds as s
     from traffic_shepherd.c4 import seeds as c
-    allowed = {(w['seed'],w['demand']) for w in worlds()}
+    allowed = {(w['seed'],w['demand']) for w in worlds()+extension_worlds()}
     original_s, original_c = s.require_development_case, c.check_case
     def base(seed,loading,role):
         if type(seed) is int and type(loading) is int and role == 'exposed' and (seed,loading) in allowed:

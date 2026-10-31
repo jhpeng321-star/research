@@ -61,3 +61,4 @@ Exclusive IDs/locks and immutable receipts; stop own admissions on error/YIELD; 
 cpuQ/gpuA/gpuR CPUs, nice19, CUDA hidden, one thread; <=4 world workers/host, oracle runs replace idle live CPU.
 Admit only with >=8GiB free RAM/>=2GiB free disk; yield to load/resource limits and shared jobs.
 No prohibited paths/truth/assignments/seeds, new venv, training, deletion, push or peer process actions.
+Extension: MAIN01:28; see COOPPLAN_EXTENSION_DESIGN.md (separate immutable binding, original unchanged).
