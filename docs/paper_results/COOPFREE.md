@@ -88,7 +88,7 @@ Consumer guide: `docs/paper_results/COOPFREE_PROPOSALS.md`.
 Public artifacts: `tools/coopfree/publications/`; verify `MANIFEST.json` hashes.
 Frozen remote root: `/home/ubuntu/coopfree20261101_build5` (cpuQ).
 No learned checkpoint yet; the full156-window/all-member-solo first update is running.
-Latest milestone: 112 complete jobs; 1216740 charged/120120.0 closed-actual sim-s.
+Latest milestone: 136 complete jobs; 1216740 charged/146760.0 closed-actual sim-s.
 Training-window credits describe exploration; they are not paired dev-policy performance.
 The owned supervisor is paused while eight same-host workers drain only disjoint precharged arms; the sidecar resumes it for the optimizer step (see COOPFREE_OPERATIONS.md).
 <!-- COOPFREE PUBLICATIONS END -->
