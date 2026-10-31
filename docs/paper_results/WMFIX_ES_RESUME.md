@@ -130,3 +130,7 @@
 - Generation 1 selected g1/c1 by registered road/crossing fitness .33808628
   (baseline .36886510); paired J MAE worsens 237.69 -> 243.87 veh-s. Selection
   remains training-objective-only; neither number constitutes a verdict PASS.
+- Private-host preflight had not received the recovered plan-selection fix.
+  Staged that single verified file into es_cpu_v3 (SHA256 642e3cdd913e2cab...);
+  finalizer invokes it in a new process only after FINAL. Its running process
+  and all calibration/other-owner code remain untouched. No dispatch repeated.
