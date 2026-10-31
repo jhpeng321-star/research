@@ -2,6 +2,14 @@
 
 ## Status (2026-11-01)
 
+MAIN01:48 has now **acknowledged** the same-cap continuation: unused second
+smoke18107999 only, then all originally registered production worlds. The explicit
+one-use continuation implementation passes93/93 local CPU tests and Ruff. It
+retains the hash-pinned failed ledger byte-for-byte,900reserved/300actual, and
+never replays18107998. A later failure still stops dispatch. The report validates
+this historical exception separately and retains the600s reserved/actual gap in
+every update. cpuQ staging and dispatch receipts follow separately.
+
 **Stopped during the first mechanics canary; production has not started.**
 Own cpuQ supervisor428649 exited. The first smoke reserved900 sim-s and ran300
 native-warmup seconds; no controlled window or gradient update completed.
@@ -82,8 +90,8 @@ Full collection SHA256:
 `87cebb19f9bbd7ec44458916de6299bbaef631dfb8b4af93f4f1d947f66616f1`.
 The proposed continuation retains this900 charge, uses ONLY the original unused
 second smoke900, and retains production6,996,600 plus unstarted evaluation14,400:
-the original7,012,800 cap is unchanged. MAIN acknowledgement is pending under the
-registered no-retry protocol; no failed world would be replayed or replaced.
+the original7,012,800 cap is unchanged. MAIN01:48 acknowledgement is now recorded
+under the amended no-retry protocol; no failed world is replayed or replaced.
 
 ## Learning curves and evaluation
 

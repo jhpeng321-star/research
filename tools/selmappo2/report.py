@@ -41,8 +41,8 @@ CELLS = tuple((p, d) for p in (.05, .1, .2, .4) for d in (1900, 2400, 2700))
 PANEL_CELLS = CELLS + ((.2, 2400), (.2, 2700), (.4, 2400), (.4, 2700))
 SHA = re.compile(r"[0-9a-f]{64}\Z")
 FIXED = ("DISPATCH.json", "INTEGRATION.json", "training/OWNER.json",
-         "training/TRAIN_OWNER.json", "training/training.jsonl",
-         "training/coordinator.jsonl", "training/FROZEN_FINAL.json")
+          "training/TRAIN_OWNER.json", "training/training.jsonl",
+          "training/coordinator.jsonl", "training/FROZEN_FINAL.json", "CONTINUATION.json")
 SAFETY = ("collisions", "teleports", "ttc_below_3_vs", "hard_brake_vs")
 
 
@@ -176,7 +176,7 @@ def _remote_collect(sources, binding, build, expected_pid):
 
     # Read the final manifest before updates, and updates before the ledger.
     # A final freeze arriving later is intentionally deferred to the next collect.
-    for name in ("DISPATCH.json", "INTEGRATION.json", "training/OWNER.json",
+    for name in ("DISPATCH.json", "INTEGRATION.json", "CONTINUATION.json", "training/OWNER.json",
                  "training/TRAIN_OWNER.json", "training/FROZEN_FINAL.json",
                  "training/training.jsonl"):
         snapshot(name)
@@ -330,6 +330,35 @@ def analyze(payload, build=BUILD, pid=PID, checkpoint_sha=None):
     identity(dispatch, build, pid)
     require(dispatch.get("out") == payload["root"] + "/training", "dispatch output mismatch")
     records = ledger(rows("training/coordinator.jsonl"))
+    continuation = obj("CONTINUATION.json")
+    historical = set()
+    if continuation is not None:
+        old = continuation.get("original", {})
+        require(all(continuation.get(k) == v for k, v in dict(
+                    owner=ops.OWNER, host=ops.HOST, root=payload["root"], binding=payload["binding"],
+                    inherited_reserved_sim_s=900, inherited_actual_sim_s=300,
+                    skipped_seed=ops.HISTORICAL_SEED, only_unused_smoke_seed=SMOKES[1],
+                    production_episodes=COUNT, cap_sim_s=7012800,
+                    evaluation_reserved_unstarted_sim_s=14400).items())
+                and continuation.get("command") == dispatch.get("command")
+                and isinstance(continuation.get("command"), list)
+                and "--continuation" in continuation["command"]
+                and continuation.get("authority", "").startswith("- 01:48 MAIN ACKNOWLEDGEMENTS / DECISIONS:")
+                and "S-SELMAPPO2 same-cap continuation ACKNOWLEDGED (unused second smoke world only, then production)"
+                    in continuation["authority"]
+                and all(old.get(k) == v for k, v in dict(
+                    root=ops.PARENT + "/build_" + ops.HISTORICAL_BINDING,
+                    binding=ops.HISTORICAL_BINDING, pid=ops.HISTORICAL_PID,
+                    ledger_sha256=ops.HISTORICAL_LEDGER_SHA, reserved_sim_s=900,
+                    actual_sim_s=300, seed=ops.HISTORICAL_SEED, status="FAILED").items()),
+                "unacknowledged or mismatched continuation")
+        prefix = b"".join(files.get("training/coordinator.jsonl", b"").splitlines(keepends=True)[:3])
+        # Before training ownership/ledger appears, collection is still safe and partial.
+        if records:
+            require(ops.sha(prefix) == ops.HISTORICAL_LEDGER_SHA,
+                    "continuation historical failure hash mismatch")
+            historical = {ops.HISTORICAL_SEED}
+            issues.append("Acknowledged historical smoke failure retained: 900 reserved / 300 actual s.")
     owner, phase = obj("training/OWNER.json"), obj("training/TRAIN_OWNER.json")
     integration = obj("INTEGRATION.json")
     if owner is not None:
@@ -361,7 +390,10 @@ def analyze(payload, build=BUILD, pid=PID, checkpoint_sha=None):
                 and owner.get("sources") == expected
                 and owner.get("registration_sha256") == sources.get("REGISTRATION.md")
                 and integration.get("registration_sha256") == sources.get("REGISTRATION.md"),
-                "training immutable source mismatch")
+                 "training immutable source mismatch")
+        if continuation is not None:
+            require(continuation.get("registration_sha256") == sources.get("REGISTRATION.md"),
+                    "continuation registration mismatch")
     else:
         require(not records and not files.get("training/training.jsonl")
                 and "training/FROZEN_FINAL.json" not in files, "data without training OWNER")
@@ -389,9 +421,11 @@ def analyze(payload, build=BUILD, pid=PID, checkpoint_sha=None):
                     "charged_sim_s", "actual_sim_s", "simulation_wall_s", "total_wall_s"):
             require(number(row.get(key)) and row[key] >= 0, "invalid complete-update metric")
         expected_s = (len(SMOKES) + index * BATCH) * 900
-        require(row["charged_sim_s"] == row["actual_sim_s"] == expected_s,
+        require(row["charged_sim_s"] == expected_s
+                and row["actual_sim_s"] == expected_s - (600 if historical else 0),
                 "update actual/reserved accounting mismatch")
-        seeds = [*SMOKES, *range(FIRST, FIRST + index * BATCH)]
+        seeds = [*(seed for seed in SMOKES if seed not in historical),
+                 *range(FIRST, FIRST + index * BATCH)]
         if any(seed not in episodes or records[seed]["terminal"] != "RESULT" for seed in seeds):
             issues.append(f"Update {index} lacks a complete receipt prefix; curve stops here.")
             break
@@ -407,7 +441,8 @@ def analyze(payload, build=BUILD, pid=PID, checkpoint_sha=None):
               for key in SAFETY}
     successful = {seed for seed, r in records.items() if r["terminal"] == "RESULT"}
     failed = any(r["terminal"] == "FAILED" or
-                 (r["actual"] is not None and r["actual"] != 900) for r in records.values())
+                 (r["actual"] is not None and r["actual"] != 900)
+                 for seed, r in records.items() if seed not in historical)
     unsafe = safety["collisions"] != 0 or safety["teleports"] != 0
     if failed:
         issues.append("Failed/short episode accounting observed; reservations are not refunded.")
@@ -428,7 +463,7 @@ def analyze(payload, build=BUILD, pid=PID, checkpoint_sha=None):
                 "final169/update checkpoint mismatch")
         if checkpoint_sha is not None:
             require(final_sha == checkpoint_sha, "caller-pinned final checkpoint mismatch")
-    expected_seeds = set(range(FIRST, FIRST + COUNT)) | set(SMOKES)
+    expected_seeds = (set(range(FIRST, FIRST + COUNT)) | set(SMOKES)) - historical
     complete = (len(points) == UPDATES and successful == expected_seeds
                 and set(episodes) == expected_seeds and frozen is not None
                 and not partials and not failed and not unsafe)

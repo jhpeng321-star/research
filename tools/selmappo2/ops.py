@@ -33,6 +33,7 @@ HOME = "/home/ubuntu"
 PARENT = HOME + "/selmappo2_20261101"
 OWNER = "S-SELMAPPO2/per_cav/20261101"
 LOCK = "PER_CAV_DISPATCH_ONCE.json"
+CONTINUATION_LOCK = "PER_CAV_CONTINUATION_ONCE.json"
 HISTORICAL_BINDING = "b42c257b09813c175fcb7261e341c7599d0bb5c4c971529e2856890d2fc8038c"
 HISTORICAL_PID, HISTORICAL_START, HISTORICAL_UID = 428649, 47990900, 1000
 HISTORICAL_SEED = 18107998
@@ -56,7 +57,7 @@ OWN_PY = ("__init__", "shared", "mixed", "training", "ops", "report")
 C1_PY = ("__init__", "core", "design", "storage", "sumo", "library")
 TESTS = ("tests/test_selmappo2_training.py", "tests/test_selmappo2_mixed.py",
          "tests/test_selmappo2_runtime_gate.py", "tests/test_selmappo2_report.py")
-EXPECTED_TESTS, EXPECTED_RUNTIME_TESTS = 86, 10
+EXPECTED_TESTS, EXPECTED_RUNTIME_TESTS = 93, 10
 
 
 def canonical(value):
@@ -352,7 +353,7 @@ def resources():
     cpus, load = os.cpu_count(), os.getloadavg()[0]
     disk = shutil.disk_usage(disk_root).free
     admitted = (cpus is not None and cpus >= 14 and math.isfinite(load)
-                and 0 <= load and load + 1 <= min(cpus - 2, 24)
+                and 0 <= load and load + 1 <= min(.8 * cpus, cpus - 2, 24)
                 and memory >= 8 * 1024**3 and disk >= 2 * 1024**3)
     return dict(host=HOST, owner=OWNER, cpus=cpus, load=load, memory_available=memory,
                 disk_free=disk, admitted=admitted, timestamp_ns=time.time_ns())
@@ -663,23 +664,66 @@ def own_stage(root, sources, binding, *, require_pass=True):
     return source, stage, receipt
 
 
-def training_command(root):
+def continuation_authority(registration):
+    lines = checked(registration).read_text(encoding="utf-8").splitlines()
+    matches = [line for line in lines
+               if line.startswith("- 01:48 MAIN ACKNOWLEDGEMENTS / DECISIONS:")
+               and "S-SELMAPPO2 same-cap continuation ACKNOWLEDGED "
+                   "(unused second smoke world only, then production)" in line]
+    if len(matches) != 1:
+        raise PermissionError("specific MAIN01:48 per-CAV continuation acknowledgement absent")
+    return matches[0]
+
+
+def continuation_record(root, sources, binding):
+    authority = continuation_authority(root / "pytools/REGISTRATION.md")
+    history = historical_failure()
+    if history is None:
+        raise ValueError("exact original stopped run absent")
+    return dict(owner=OWNER, host=HOST, root=str(root), binding=binding,
+                authority=authority, original=history, inherited_reserved_sim_s=900,
+                inherited_actual_sim_s=300, skipped_seed=HISTORICAL_SEED,
+                only_unused_smoke_seed=18107999, production_episodes=7774,
+                cap_sim_s=7012800, evaluation_reserved_unstarted_sim_s=14400,
+                registration_sha256=sources["REGISTRATION.md"],
+                command=training_command(root, continuation=True))
+
+
+def validate_continuation(root, registration):
+    """Revalidate authority, old PID/ledger and exclusive lock in the trainer."""
+    owner = read_json(root / "OWNER.json")
+    source, _, _ = own_stage(root, owner["files"], owner["binding"])
+    if checked(registration) != source / "REGISTRATION.md":
+        raise ValueError("continuation registration outside immutable source")
+    expected = continuation_record(root, owner["files"], owner["binding"])
+    if (read_json(root / "CONTINUATION.json") != expected
+            or read_json(root.parent / CONTINUATION_LOCK) != expected):
+        raise ValueError("continuation receipt/one-use lock mismatch")
+    return expected
+
+
+def training_command(root, *, continuation=False):
     source = root / "pytools"
     return [sys.executable, "-B", "-m", "tools.selmappo2.training",
             "--shared-root", str(source), "--c1-root", str(source),
             "--integration", str(root / "INTEGRATION.json"), "--design-sha", DESIGN_SHA,
             "--registration", str(source / "REGISTRATION.md"),
-            "--out", str(root / "training"), "--workers", "12"]
+            "--out", str(root / "training"), "--workers", "12"] + (
+                ["--continuation"] if continuation else [])
 
 
-def _remote_dispatch(root, sources, binding):
-    try:
-        (root.parent / LOCK).lstat()
-    except FileNotFoundError:
-        pass
+def _remote_dispatch(root, sources, binding, *, continuation=False):
+    if not continuation:
+        try:
+            (root.parent / LOCK).lstat()
+        except FileNotFoundError:
+            pass
+        else:
+            raise FileExistsError("original parent dispatch lock consumed; use explicit approved continuation")
     else:
-        raise FileExistsError("parent dispatch lock consumed; CPU repair checks do not authorize "
-                              "continuation (MAIN same-cap acknowledgement not received)")
+        # Never inspect a new job as a historical failure or remove the old lock.
+        if (root.parent / CONTINUATION_LOCK).exists():
+            raise FileExistsError("one-use continuation lock consumed; no automatic retry")
     source, _, _ = own_stage(root, sources, binding)
     cpu = resources()
     if not cpu["admitted"]:
@@ -703,10 +747,15 @@ def _remote_dispatch(root, sources, binding):
                 "PYTHONDONTWRITEBYTECODE", "PYTEST_DISABLE_PLUGIN_AUTOLOAD")
         if any(saved.get(key) != env[key] for key in keys):
             raise ValueError("staged CPU environment mismatch")
-    command = training_command(root)
+    command = training_command(root, continuation=continuation)
     # Exclusive parent-wide lock is consumed even if spawning subsequently fails.
     lock = dict(owner=OWNER, host=HOST, root=str(root), binding=binding, command=command)
-    exclusive_json(root.parent / LOCK, lock)
+    if continuation:
+        record = continuation_record(root, sources, binding)
+        exclusive_json(root.parent / CONTINUATION_LOCK, record)
+        exclusive_json(root / "CONTINUATION.json", record)
+    else:
+        exclusive_json(root.parent / LOCK, lock)
     os.nice(19)
     verify_sources(source, sources, binding)
     with (root / "training.log").open("x", encoding="utf-8") as log:
@@ -745,10 +794,12 @@ def _remote_status(root, sources, binding):
     if dispatch_path.exists():
         own_stage(root, sources, binding)
         dispatch = read_json(dispatch_path)
-        lock = read_json(root.parent / LOCK)
+        continuation = (root / "CONTINUATION.json").exists()
+        lock = read_json(root.parent / (CONTINUATION_LOCK if continuation else LOCK))
         expected = dict(owner=OWNER, host=HOST, root=str(root), binding=binding,
-                        command=training_command(root))
-        if lock != expected or any(dispatch.get(k) != v for k, v in expected.items()):
+                        command=training_command(root, continuation=continuation))
+        if (any(lock.get(k) != v or dispatch.get(k) != v for k, v in expected.items())
+                or (continuation and lock != validate_continuation(root, root / "pytools/REGISTRATION.md"))):
             raise ValueError("dispatch ownership mismatch")
         pid = dispatch["pid"]
         if type(pid) is not int or pid <= 0 or dispatch.get("uid") != os.getuid():
@@ -836,8 +887,8 @@ def _remote_main(action, sources, binding, build):
         if set(files) != set(sources):
             raise ValueError("transport manifest mismatch")
         _remote_stage(files, sources, binding, root)
-    elif action == "dispatch":
-        _remote_dispatch(root, sources, binding)
+    elif action in ("dispatch", "continue"):
+        _remote_dispatch(root, sources, binding, continuation=action == "continue")
     elif action == "status":
         _remote_status(root, sources, binding)
     else:
@@ -886,14 +937,15 @@ def remote(action, files, sources, binding, build):
         save_receipts(stdout, action, binding)
         raise
     save_receipts(result.stdout, action, binding)
-    if len(tagged(result.stdout, action.upper() + "_RECEIPT")) != 1:
+    tag = "DISPATCH" if action == "continue" else action.upper()
+    if len(tagged(result.stdout, tag + "_RECEIPT")) != 1:
         raise ValueError("missing/ambiguous remote action receipt")
     return result
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--action", required=True, choices=("stage", "dispatch", "status"))
+    parser.add_argument("--action", required=True, choices=("stage", "dispatch", "continue", "status"))
     parser.add_argument("--build", help="exact build_<full source SHA256>; required after staging")
     args = parser.parse_args(argv)
     if args.action != "stage" and args.build is None:

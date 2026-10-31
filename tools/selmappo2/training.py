@@ -199,7 +199,7 @@ def resource_admitted(root, protocol, pending):
         state = host_resources(root, protocol)
         return (state.cpus is not None and state.cpus > CPU_HEADROOM
                 and math.isfinite(state.load) and state.load >= 0
-                and state.load + pending + 1 <= min(state.cpus - CPU_HEADROOM, LOAD_CAP)
+                and state.load + pending + 1 <= min(.8 * state.cpus, state.cpus - CPU_HEADROOM, LOAD_CAP)
                 and state.disk >= MIN_DISK_BYTES and state.memory >= MIN_MEMORY_BYTES)
     except (OSError, ValueError, StopIteration, AttributeError):
         return False
@@ -259,7 +259,7 @@ class Coordinator:
     a runtime can close successfully while the trajectory itself has failed.
     An incomplete, failed or duplicate reservation permanently blocks resumption.
     """
-    def __init__(self, root, shared, panel=()):
+    def __init__(self, root, shared, panel=(), continuation=None):
         self.shared = shared
         self.panel = tuple(panel)
         self.path = shared.protocol.safe_path(shared.protocol.safe_path(root) / "coordinator.jsonl")
@@ -267,11 +267,30 @@ class Coordinator:
         self.charged = 0
         self.records = {}
         self.failed = False
+        self.historical_seed = None
         if self.path.exists():
-            for line in self.path.read_text(encoding="utf-8").splitlines():
+            raw = self.path.read_bytes()
+            if continuation is not None:
+                from . import ops
+                prefix = b"".join(raw.splitlines(keepends=True)[:3])
+                if (ops.sha(prefix) != ops.HISTORICAL_LEDGER_SHA
+                        or continuation.get("original", {}).get("ledger_sha256") != ops.HISTORICAL_LEDGER_SHA
+                        or continuation.get("skipped_seed") != ops.HISTORICAL_SEED
+                        or continuation.get("only_unused_smoke_seed") != SMOKE_SEEDS[1]
+                        or continuation.get("inherited_reserved_sim_s") != 900
+                        or continuation.get("inherited_actual_sim_s") != 300):
+                    raise ValueError("continuation historical ledger/charge mismatch")
+                self.historical_seed = ops.HISTORICAL_SEED
+            for index, line in enumerate(raw.splitlines(), 1):
                 self._apply(json.loads(line))
+                if self.historical_seed is not None and index == 3:
+                    # Only the exact acknowledged historical failure is exempt.
+                    # Its reservation and actual remain in the global totals.
+                    self.failed = False
             if self.failed or any(not row["complete"] for row in self.records.values()):
                 raise ValueError("failed/unclosed reservation; no automatic retry or resumption")
+        elif continuation is not None:
+            raise ValueError("continuation requires inherited original ledger")
 
     def _apply(self, row):
         seed, event = row["seed"], row["event"]
@@ -512,8 +531,8 @@ class Workers:
                 or not coordinator.records[seed]["complete"]
                 or coordinator.records[seed]["actual"] != DURATION
                 or coordinator.records[seed]["reservation"]["mode"] != "smoke"
-                for seed in SMOKE_SEEDS):
-            raise RuntimeError("both single-worker smoke episodes must succeed before expansion")
+                for seed in SMOKE_SEEDS if seed != coordinator.historical_seed):
+            raise RuntimeError("required single-worker smoke episodes must succeed before expansion")
         if any(worker.seed is not None for worker in self.workers):
             raise RuntimeError("cannot expand while episodes are active")
         while len(self.workers) < self.limit:
@@ -701,6 +720,8 @@ def main(argv=None):
     parser.add_argument("--mode", choices=("train", "evaluate"), default="train")
     parser.add_argument("--evaluation-contract")
     parser.add_argument("--evaluation-contract-sha")
+    parser.add_argument("--continuation", action="store_true",
+                        help="MAIN01:48 one-use unused-second-smoke continuation")
     args = parser.parse_args(argv)
     configure_cpu()
     shared = load_shared(args.shared_root)
@@ -730,6 +751,12 @@ def main(argv=None):
     np.random.seed(OPTIMIZATION_SEED)
     torch.manual_seed(OPTIMIZATION_SEED)
     out = shared.protocol.safe_path(args.out)
+    continuation = None
+    if args.continuation:
+        if args.mode != "train" or panel is not None:
+            raise ValueError("continuation is training only; evaluation remains peer-owned")
+        from . import ops
+        continuation = ops.validate_continuation(out.parent, args.registration)
     start = time.monotonic()
     if args.mode == "train":
         out.mkdir(parents=True, exist_ok=False)
@@ -741,7 +768,18 @@ def main(argv=None):
     exclusive_json(out / f"{args.mode.upper()}_OWNER.json", dict(pid=os.getpid()))
     if args.mode == "train" and panel is not None:
         exclusive_json(out / "EVALUATE_OWNER.json", dict(pid=os.getpid()))
-    coordinator = Coordinator(out, shared, panel=tuple(w["seed"] for w in panel) if panel else ())
+    if continuation is not None:
+        original = shared.protocol.safe_path(Path(continuation["original"]["root"]) /
+                                             "training/coordinator.jsonl")
+        raw = original.read_bytes()
+        if shared.protocol.digest(original) != ops.HISTORICAL_LEDGER_SHA:
+            raise ValueError("original debit changed during inheritance")
+        with (out / "coordinator.jsonl").open("xb") as stream:
+            stream.write(raw)
+            stream.flush()
+            os.fsync(stream.fileno())
+    coordinator = Coordinator(out, shared, panel=tuple(w["seed"] for w in panel) if panel else (),
+                              continuation=continuation)
     base = dict(out=str(out), registration=str(shared.protocol.safe_path(args.registration)),
                 c1_root=str(shared.protocol.safe_path(args.c1_root)), sources=sources,
                 integration=str(shared.protocol.safe_path(args.integration)), design_sha=args.design_sha,
@@ -754,7 +792,8 @@ def main(argv=None):
             checkpoint = save_checkpoint(out, 0, model, updater, sources, bindings)
             base.update(checkpoint=str(checkpoint), checkpoint_sha256=shared.protocol.digest(checkpoint),
                         iteration=0)
-            workers.batch([dict(seed=s, penetration=.4, demand=2700) for s in SMOKE_SEEDS],
+            workers.batch([dict(seed=s, penetration=.4, demand=2700) for s in SMOKE_SEEDS
+                           if s != coordinator.historical_seed],
                           "smoke", base, coordinator, shared, sources,
                            start + WALL_SECONDS, out / "STOP_REQUESTED")
             workers.expand(coordinator)

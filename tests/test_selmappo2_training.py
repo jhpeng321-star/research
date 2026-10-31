@@ -501,6 +501,99 @@ def test_checkpoint_is_immutable_and_retains_optimization_state(tmp_path):
     assert len(list(tmp_path.glob("checkpoint_*.pt"))) == 2
 
 
+def continuation_fixture():
+    from tools.selmappo2 import ops
+    seed = ops.HISTORICAL_SEED
+    events = [dict(event="START", seed=seed, mode="smoke",
+                   world=dict(seed=seed, penetration=.4, demand=2700), reserved_sim_s=900, panel=[]),
+              dict(event="ACTUAL", seed=seed, actual_sim_s=300.),
+              dict(event="FAILED", seed=seed, actual_sim_s=300., error=ops.HISTORICAL_ERROR)]
+    raw = "".join(json.dumps(row, sort_keys=True, allow_nan=False) + "\n" for row in events).encode()
+    assert ops.sha(raw) == ops.HISTORICAL_LEDGER_SHA
+    receipt = dict(original=dict(ledger_sha256=ops.HISTORICAL_LEDGER_SHA),
+                   inherited_reserved_sim_s=900, inherited_actual_sim_s=300,
+                   skipped_seed=seed, only_unused_smoke_seed=18107999)
+    return raw, receipt
+
+
+def test_acknowledged_history_keeps_charge_skips_failed_seed_and_requires_second_smoke(tmp_path, ledger_shared):
+    raw, receipt = continuation_fixture()
+    (tmp_path / "coordinator.jsonl").write_bytes(raw)
+    budget = driver.Coordinator(tmp_path, ledger_shared, continuation=receipt)
+    assert budget.charged == 900 and budget.actual_sim_s == 300 and not budget.failed
+    with pytest.raises(ValueError, match="duplicate"):
+        budget.reserve(dict(seed=18107998, penetration=.4, demand=2700), "smoke")
+    pool = driver.Workers.__new__(driver.Workers)
+    pool.workers, pool.limit = [], 1
+    pool._start_worker = lambda: pool.workers.append(SimpleNamespace(seed=None))
+    with pytest.raises(RuntimeError, match="smoke"):
+        pool.expand(budget)
+    budget.reserve(dict(seed=18107999, penetration=.4, demand=2700), "smoke")
+    budget.actual(18107999, 900.)
+    budget.complete(18107999)
+    pool.expand(budget)
+    assert len(pool.workers) == 1
+    assert budget.charged == 1800 and budget.actual_sim_s == 1200
+    assert budget.path.read_bytes().startswith(raw)
+
+
+def test_continuation_does_not_exempt_another_failure_or_an_incomplete_reservation(tmp_path, ledger_shared):
+    raw, receipt = continuation_fixture()
+    (tmp_path / "coordinator.jsonl").write_bytes(raw)
+    budget = driver.Coordinator(tmp_path, ledger_shared, continuation=receipt)
+    budget.reserve(dict(seed=18107999, penetration=.4, demand=2700), "smoke")
+    budget.actual(18107999, 899.)
+    budget.fail(18107999, "another fault")
+    with pytest.raises(ValueError, match="no automatic retry"):
+        driver.Coordinator(tmp_path, ledger_shared, continuation=receipt)
+    with pytest.raises(RuntimeError, match="dispatch stopped"):
+        budget.reserve(world(), "training")
+    assert budget.charged == 1800 and budget.actual_sim_s == 1199
+
+
+def test_continuation_rejects_tampered_historical_bytes_and_inherited_charge(tmp_path, ledger_shared):
+    raw, receipt = continuation_fixture()
+    path = tmp_path / "coordinator.jsonl"
+    path.write_bytes(raw.replace(b"300.0", b"301.0"))
+    with pytest.raises(ValueError, match="historical ledger"):
+        driver.Coordinator(tmp_path, ledger_shared, continuation=receipt)
+    path.write_bytes(raw)
+    with pytest.raises(ValueError, match="historical ledger"):
+        driver.Coordinator(tmp_path, ledger_shared, continuation=dict(receipt, inherited_reserved_sim_s=0))
+    with pytest.raises(ValueError, match="no automatic retry"):
+        driver.Coordinator(tmp_path, ledger_shared)
+
+
+def test_continuation_authority_is_specific_and_one_use_lock_blocks_before_spawn(tmp_path):
+    from tools.selmappo2 import ops
+    reg = tmp_path / "REGISTRATION.md"
+    reg.write_text("- 01:48 MAIN: fleet continuation acknowledged\n")
+    with pytest.raises(PermissionError):
+        ops.continuation_authority(reg)
+    authority = ("- 01:48 MAIN ACKNOWLEDGEMENTS / DECISIONS: (2) S-SELMAPPO2 same-cap "
+                 "continuation ACKNOWLEDGED (unused second smoke world only, then production).")
+    reg.write_text(authority + "\n")
+    assert ops.continuation_authority(reg) == authority
+    lock = tmp_path / ops.CONTINUATION_LOCK
+    ops.exclusive_json(lock, dict(consumed=True))
+    with pytest.raises(FileExistsError, match="one-use continuation lock consumed"):
+        ops._remote_dispatch(tmp_path / ("build_" + "a" * 64), {}, "a" * 64, continuation=True)
+    assert ops.read_json(lock) == dict(consumed=True)
+
+
+def test_per_cav_worker_wire_contains_no_tensor_storage_descriptors():
+    """Actual multiprocessing Pipe serialization stays ordinary inline data."""
+    from multiprocessing.reduction import ForkingPickler
+    torch = pytest.importorskip("torch")
+    shared_obs = SimpleNamespace(keys=("a", "b"), actors=((0., 1.), (1., 0.)), shared=(0.,))
+    frame = dict(keys=shared_obs.keys, actors=shared_obs.actors, shared=shared_obs.shared,
+                 actions=dict(a=0, b=5), old_logp=torch.zeros(2).tolist(), reward=-20.)
+    trajectories = [dict(frames=[frame] * 30, result=dict(J600=600.)) for _ in range(46)]
+    raw = bytes(ForkingPickler.dumps(trajectories))
+    assert b"rebuild_storage" not in raw and b"rebuild_tensor" not in raw
+    assert ForkingPickler.loads(raw) == trajectories
+
+
 def test_evaluation_rejects_non_final_checkpoint_before_runtime(tmp_path, shared):
     torch = pytest.importorskip("torch")
     path = tmp_path / "checkpoint_168.pt"
@@ -590,14 +683,14 @@ def test_both_smokes_run_on_one_worker_before_expanding_to_twelve(tmp_path, ledg
     pool = driver.Workers(12, "unused", {})
     try:
         assert len(created) == len(pool.workers) == 1
-        with pytest.raises(RuntimeError, match="both single-worker"):
+        with pytest.raises(RuntimeError, match="single-worker"):
             pool.expand(budget)
         for index, seed in enumerate(driver.SMOKE_SEEDS):
             pool.batch([dict(seed=seed, penetration=.4, demand=2700)], "smoke", {}, budget,
                        ledger_shared, {}, time.monotonic() + 15, tmp_path / "STOP_REQUESTED")
             assert len(created) == 1
             if index == 0:
-                with pytest.raises(RuntimeError, match="both single-worker"):
+                with pytest.raises(RuntimeError, match="single-worker"):
                     pool.expand(budget)
         pool.expand(budget)
         assert len(created) == len(pool.workers) == 12
@@ -621,7 +714,7 @@ def test_failed_first_canary_never_expands_or_dispatches_second(tmp_path, ledger
             pool.batch([dict(seed=seed, penetration=.4, demand=2700) for seed in driver.SMOKE_SEEDS],
                        "smoke", {}, budget, ledger_shared, {}, time.monotonic() + 15,
                        tmp_path / "STOP_REQUESTED")
-        with pytest.raises(RuntimeError, match="both single-worker"):
+        with pytest.raises(RuntimeError, match="single-worker"):
             pool.expand(budget)
         assert len(created) == len(reservations) == 1
         assert budget.charged == 900 and budget.actual_sim_s == 333

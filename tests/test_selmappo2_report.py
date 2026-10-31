@@ -115,6 +115,71 @@ def test_complete_requires_exact_full_allocation_and_matching_three_hashes(final
         r.analyze(payload, build, checkpoint_sha="0" * 64)
 
 
+def amended_collection(payload):
+    payload = copy.deepcopy(payload)
+    seed = r.ops.HISTORICAL_SEED
+    events = [dict(event="START", seed=seed, mode="smoke", world=r.expected_world(seed, "smoke"),
+                   reserved_sim_s=900, panel=[]),
+              dict(event="ACTUAL", seed=seed, actual_sim_s=300.),
+              dict(event="FAILED", seed=seed, actual_sim_s=300., error=r.ops.HISTORICAL_ERROR)]
+    raw = "".join(json.dumps(row, sort_keys=True) + "\n" for row in events).encode()
+    assert r.ops.sha(raw) == r.ops.HISTORICAL_LEDGER_SHA
+    remaining = get_rows(payload, "training/coordinator.jsonl")[3:]
+    put(payload, "training/coordinator.jsonl", raw + b"".join(
+        (r.ops.canonical(row) + "\n").encode() for row in remaining))
+    payload["files"].pop(f"training/{seed}/result.jsonl")
+    points = get_rows(payload, "training/training.jsonl")
+    for row in points:
+        row["actual_sim_s"] -= 600
+    put_rows(payload, "training/training.jsonl", points)
+    dispatch = json.loads(base64.b64decode(payload["files"]["DISPATCH.json"]["base64"]))
+    dispatch["command"] = ["python", "-m", "tools.selmappo2.training", "--continuation"]
+    put(payload, "DISPATCH.json", dispatch)
+    owner = json.loads(base64.b64decode(payload["files"]["training/OWNER.json"]["base64"]))
+    receipt = {k: payload[k] for k in ("owner", "host", "root", "binding")}
+    receipt.update(original=dict(root=r.ops.PARENT + "/build_" + r.ops.HISTORICAL_BINDING,
+        binding=r.ops.HISTORICAL_BINDING, pid=r.ops.HISTORICAL_PID,
+        ledger_sha256=r.ops.HISTORICAL_LEDGER_SHA, reserved_sim_s=900,
+        actual_sim_s=300, seed=seed, status="FAILED"), inherited_reserved_sim_s=900,
+        inherited_actual_sim_s=300, skipped_seed=seed, only_unused_smoke_seed=r.SMOKES[1],
+        production_episodes=r.COUNT, cap_sim_s=7012800, evaluation_reserved_unstarted_sim_s=14400,
+        registration_sha256=owner["registration_sha256"], command=dispatch["command"],
+        authority="- 01:48 MAIN ACKNOWLEDGEMENTS / DECISIONS: (2) S-SELMAPPO2 same-cap continuation "
+                  "ACKNOWLEDGED (unused second smoke world only, then production).")
+    put(payload, "CONTINUATION.json", receipt)
+    return payload
+
+
+def test_amended_final_accepts_only_hash_bound_historical_failure_and_retains_charge(final):
+    payload, build = final
+    amended = amended_collection(payload)
+    report = r.analyze(amended, build)
+    assert report["state"] == "COMPLETE" and len(report["points"]) == 169
+    assert report["reserved_sim_s"] == 6_998_400
+    assert report["actual_sim_s"] == 6_997_800
+    assert len(report["episodes"]) == 7775
+    assert any("historical smoke failure" in issue for issue in report["issues"])
+
+
+def test_amended_collection_rejects_ledger_tampering_and_new_failure():
+    payload, build = collection(1)
+    amended = amended_collection(payload)
+    bad = copy.deepcopy(amended)
+    raw = base64.b64decode(bad["files"]["training/coordinator.jsonl"]["base64"])
+    put(bad, "training/coordinator.jsonl", raw.replace(b"300.0", b"301.0"))
+    with pytest.raises(ValueError, match="historical failure hash"):
+        r.analyze(bad, build)
+    bad = copy.deepcopy(amended)
+    raw = base64.b64decode(bad["files"]["training/coordinator.jsonl"]["base64"])
+    # Keep the pinned prefix byte-identical; a different failure still fails.
+    lines = raw.splitlines(keepends=True)
+    lines[5] = (r.ops.canonical(dict(event="FAILED", seed=r.SMOKES[1],
+                                   actual_sim_s=900, error="new fault")) + "\n").encode()
+    put(bad, "training/coordinator.jsonl", b"".join(lines))
+    report = r.analyze(bad, build)
+    assert report["state"] == "FAILED" and not report["points"]
+
+
 @pytest.mark.parametrize("target", ["checkpoint", "update", "frozen_sources"])
 def test_reject_final_provenance_mismatches(final, target):
     payload, build = final
