@@ -154,9 +154,11 @@ def sweep(argv=None):
     base = state_hash(rt.model)
     manifest = json.loads(safe(args.manifest).read_text())
     out = safe(args.out)
-    with (out / f"ENV_{manifest['sweep_id']}.json").open("x") as stream:
-        json.dump(dict(host=socket.gethostname(), pid=os.getpid(), torch=torch.__version__,
-                       base_state_sha256=base, physics_incumbents=live), stream)
+    env_path = out / f"ENV_{manifest['sweep_id']}.json"
+    if not env_path.is_file():  # idempotent across driver relaunches
+        with env_path.open("x") as stream:
+            json.dump(dict(host=socket.gethostname(), pid=os.getpid(), torch=torch.__version__,
+                           base_state_sha256=base, physics_incumbents=live), stream)
     original_replace = runtime_mod.replace
     for cell in manifest["cells"]:
         path = out / cell_name(manifest["gen"], cell["cand"], cell["group"],
@@ -360,8 +362,16 @@ def drive(argv=None):
                     subprocess.run(["scp", "-q", str(out / f"MANIFEST_{sweep_id}.json"),
                                     f"cpuQ:{args.cpuq_root}/es_run/MANIFEST_{sweep_id}.json"],
                                    check=True)
-                    subprocess.run(["ssh", "-n", "cpuQ", remote], check=True,
-                                   capture_output=True, timeout=120)
+                    # The remote worker may hold the ssh session open after
+                    # launch; the poll loop (ENV/CELL files) is the liveness
+                    # source of truth, so a lingering ssh here is not an error.
+                    try:
+                        subprocess.run(["ssh", "-n", "cpuQ", remote], check=True,
+                                       timeout=30, stdin=subprocess.DEVNULL,
+                                       stdout=subprocess.DEVNULL,
+                                       stderr=subprocess.DEVNULL)
+                    except subprocess.TimeoutExpired:
+                        pass
                     children.append((sweep_id, None))
             while True:
                 time.sleep(args.poll)
