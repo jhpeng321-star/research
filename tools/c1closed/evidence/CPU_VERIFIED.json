@@ -1,0 +1,60 @@
+{
+ "checks": {
+  "wm2": {
+   "steps": 20,
+   "arms": [
+    "native",
+    "ctrl0",
+    "mappo",
+    "pi",
+    "circles"
+   ],
+   "sha256": "53edd5f792015f324cc30026349a3431839e389ed738bdba7703511aa64765ee",
+   "finite_additive": true
+  },
+  "bbtraj": {
+   "steps": 20,
+   "arms": [
+    "native",
+    "ctrl0",
+    "mappo",
+    "pi",
+    "circles"
+   ],
+   "sha256": "04297209fa935c61c963b9940b4209c5c1a7229bf3f27c84c7974d91d1e45709",
+   "finite_additive": true
+  },
+  "bbid": {
+   "steps": 20,
+   "arms": [
+    "native",
+    "pi",
+    "circles"
+   ],
+   "sha256": "13eb3b3fa8d35356560d62fb51a83c2da1a225311852fe8e26011c03a80f2361",
+   "finite_additive": true
+  },
+  "historical": {
+   "steps": 20,
+   "arms": [
+    "native",
+    "ctrl0",
+    "mappo",
+    "pi",
+    "circles"
+   ],
+   "sha256": "2512b0f664d66df1c34d4d819387844e1dfe3bed5a3f856be4d6e31177f360ba",
+   "finite_additive": true
+  },
+  "feedback_accel_max_change": {
+   "native": 2.24960994720459,
+   "pi": 2.24960994720459,
+   "circles": 2.24960994720459
+  },
+  "production_lane_delegation": true,
+  "gpu_allocated": 0,
+  "aggregate_fixed_grid_and_queue": true
+ },
+ "verifier_sha256": "0bde33c1a11bd90815c61ba99fec7981599873a89a6c3ef503f8912d367861b3",
+ "worker_sha256": "ab822be2f136d96722ea3422a0841093ce61d55166a252d7f0ecdb1d4d61c687"
+}
