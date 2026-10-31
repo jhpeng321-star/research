@@ -1,0 +1,1946 @@
+{
+  "rule": "first 40 PI + first 30 wall sorted world,t0,sid; denied identities excluded",
+  "index_sha256": "c3c7d3f0008b44b9831989c74932502644ae17529183b2da0208c83133c94094",
+  "states": [
+    {
+      "cohort": "pi_u_same",
+      "index": 0,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "151a88500e30d074f3eaf2507ea82574dfda4649f5f449bdf7fdfefc541ca6ef",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8482m2000p02t300__pi\", \"pi\", 300.0]",
+      "key": "truearms_chunk2/w8482m2000p02t300__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "a8043ab2becaf1a6",
+      "source_arm": null,
+      "t0_s": 300.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8482m2000p02t300"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 1,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "ff87475bfeda8f31ee7e4dc6e7437b8213adbe5eb97c56e00f1079321ec5452b",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8483m2700p02t240__pi\", \"pi\", 240.0]",
+      "key": "truearms_chunk2/w8483m2700p02t240__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "73abcec69b96c0d5",
+      "source_arm": null,
+      "t0_s": 240.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8483m2700p02t240"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 2,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "e75d14acb7ff798a213904c2bd6fba18e8540a02a02cad98064b7fd839278483",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8484m2600p02t240__pi\", \"pi\", 240.0]",
+      "key": "truearms_chunk2/w8484m2600p02t240__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "3b321d7f839ea653",
+      "source_arm": null,
+      "t0_s": 240.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8484m2600p02t240"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 3,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "034a54b5203bf4b1ea8e8fd4fbf0b9a85f548dc8048fcebad8eb515c51898d3f",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8485m2700p02t360__pi\", \"pi\", 360.0]",
+      "key": "truearms_chunk2/w8485m2700p02t360__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "5c88137661e1e78f",
+      "source_arm": null,
+      "t0_s": 360.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8485m2700p02t360"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 4,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "9b724dd1a63ce40ee150ccbffbffdf7cbeebb6b96f41155d84db7fa74fc077e1",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8486m2700p02t540__pi\", \"pi\", 540.0]",
+      "key": "truearms_chunk2/w8486m2700p02t540__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "7a149bffb40c9a22",
+      "source_arm": null,
+      "t0_s": 540.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8486m2700p02t540"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 5,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "fbd4fe66fa3703c608be1645822564dc9a8ab258a27f3d29610ee0932991dfd1",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8489m2700p02t420__pi\", \"pi\", 420.0]",
+      "key": "truearms_chunk2/w8489m2700p02t420__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "e09ec2079168805f",
+      "source_arm": null,
+      "t0_s": 420.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8489m2700p02t420"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 6,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "67ee0f2eecfa0b8687b275d62a4d7cb873350f34410379638acb2fcd6d4e0295",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8490m2700p02t420__pi\", \"pi\", 420.0]",
+      "key": "truearms_chunk2/w8490m2700p02t420__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "69b683412bc38f1b",
+      "source_arm": null,
+      "t0_s": 420.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8490m2700p02t420"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 7,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "b0493ce55fedd11bf9b0ab47e3ccbada84cabf9f2bc60bbee2af7d09c4f0e476",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8496m2700p05t300__pi\", \"pi\", 300.0]",
+      "key": "truearms_chunk2/w8496m2700p05t300__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "9908f4be6fae30b1",
+      "source_arm": null,
+      "t0_s": 300.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8496m2700p05t300"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 8,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "fa5c710d6a5e0214b772adfb7fe23a6bc8a4c79cdc26807059377bd72038f7cf",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8497m2400p05t420__pi\", \"pi\", 420.0]",
+      "key": "truearms_chunk2/w8497m2400p05t420__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "4f4827a158b8f160",
+      "source_arm": null,
+      "t0_s": 420.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8497m2400p05t420"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 9,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "6570dd9b33e5b52259b1cd60fc9db36abc5321c31df0efd9865fa710ab089ba8",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8498m2600p05t240__pi\", \"pi\", 240.0]",
+      "key": "truearms_chunk2/w8498m2600p05t240__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "c03b24a6ed030c0a",
+      "source_arm": null,
+      "t0_s": 240.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8498m2600p05t240"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 10,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "cd8b09185421bb7f95f8273e50bd14d3e2bf5d84e0132f1bf08c4395dfd452a3",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8499m2700p05t300__pi\", \"pi\", 300.0]",
+      "key": "truearms_chunk2/w8499m2700p05t300__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "647d32641436e450",
+      "source_arm": null,
+      "t0_s": 300.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8499m2700p05t300"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 11,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "1749e0728d5d108737138d9a2aa79fc32aa8140ec8076418f9e8f66684b2d87d",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8500m2700p05t300__pi\", \"pi\", 300.0]",
+      "key": "truearms_chunk2/w8500m2700p05t300__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "1c1f15c700c28777",
+      "source_arm": null,
+      "t0_s": 300.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8500m2700p05t300"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 12,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "c64325962f57366bd1bfcf50fe08384bd9a8ace354006b9fbe94ff6edcf49598",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8501m2600p05t480__pi\", \"pi\", 480.0]",
+      "key": "truearms_chunk2/w8501m2600p05t480__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "dd747ee46a591b56",
+      "source_arm": null,
+      "t0_s": 480.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8501m2600p05t480"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 13,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "70a657a57e80c932169637c7351926edd90c484e80803f1e87f164f658bd5629",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8502m2700p05t240__pi\", \"pi\", 240.0]",
+      "key": "truearms_chunk2/w8502m2700p05t240__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "1db7359e899ca431",
+      "source_arm": null,
+      "t0_s": 240.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8502m2700p05t240"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 14,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "93b55a7e9b3f5a60a9cf58d35c58b26bca350b1a8d8ff68c125c2d2b1cf3ca39",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8503m2700p05t480__pi\", \"pi\", 480.0]",
+      "key": "truearms_chunk2/w8503m2700p05t480__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "ab4c6504ce294d94",
+      "source_arm": null,
+      "t0_s": 480.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8503m2700p05t480"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 15,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "d843b267509403708e1b71833c1fa4444398d12cad93bf9d7ad2bf196a2b8931",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8504m2600p05t540__pi\", \"pi\", 540.0]",
+      "key": "truearms_chunk2/w8504m2600p05t540__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "98023b0b79c347b0",
+      "source_arm": null,
+      "t0_s": 540.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8504m2600p05t540"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 16,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "40e92771c4530772cd78c5b76086b9085f8b80b972ef1fdafe72f7f1b219f23a",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8509m2700p10t540__pi\", \"pi\", 540.0]",
+      "key": "truearms_chunk2/w8509m2700p10t540__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "a9ccbfc4581c1408",
+      "source_arm": null,
+      "t0_s": 540.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8509m2700p10t540"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 17,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "7c1cafa17bb4d99633b2fca95824f0b20f4cea0844bf5f7df5b2f6fb1dae5111",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8510m2700p10t360__pi\", \"pi\", 360.0]",
+      "key": "truearms_chunk2/w8510m2700p10t360__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "3b00d05788c7c4b3",
+      "source_arm": null,
+      "t0_s": 360.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8510m2700p10t360"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 18,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "b129e328625cfdb2fae32c82401328fd4e869f2ba1958e9210015992411d78b7",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8511m2000p10t240__pi\", \"pi\", 240.0]",
+      "key": "truearms_chunk2/w8511m2000p10t240__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "6d2fc536ec70dc37",
+      "source_arm": null,
+      "t0_s": 240.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8511m2000p10t240"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 19,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "66884a09ed4571ebb83bfa5dfedeba0da5f8f144f11eee44991f344bde83a156",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8512m2700p10t540__pi\", \"pi\", 540.0]",
+      "key": "truearms_chunk2/w8512m2700p10t540__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "08007138e7136cc9",
+      "source_arm": null,
+      "t0_s": 540.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8512m2700p10t540"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 20,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "c4b0638de001aed53a889230dcfd1754262dac3fe32d664bb97d1de4b39ec685",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8513m2600p10t300__pi\", \"pi\", 300.0]",
+      "key": "truearms_chunk2/w8513m2600p10t300__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "506e6472b4df1c1f",
+      "source_arm": null,
+      "t0_s": 300.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8513m2600p10t300"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 21,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "010fbb3f29ea0eb10cc9d631d6735443476467743cce75cd9199fef18def47b0",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8514m2600p10t420__pi\", \"pi\", 420.0]",
+      "key": "truearms_chunk2/w8514m2600p10t420__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "dda8d29417074a2a",
+      "source_arm": null,
+      "t0_s": 420.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8514m2600p10t420"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 22,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "72cc8d14014bafedbf62cccf40895df46c827e8a2ad00cc61ba212d19f737519",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8515m2700p10t480__pi\", \"pi\", 480.0]",
+      "key": "truearms_chunk2/w8515m2700p10t480__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "a4da29c6fb1c1a68",
+      "source_arm": null,
+      "t0_s": 480.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8515m2700p10t480"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 23,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "4fd12bdb53fe036414ebc0b78fc8d8b55088d45c74ccc62e7226a0fccb3267f3",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8516m2600p10t240__pi\", \"pi\", 240.0]",
+      "key": "truearms_chunk2/w8516m2600p10t240__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "4d99583fe4d0f769",
+      "source_arm": null,
+      "t0_s": 240.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8516m2600p10t240"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 24,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "4803092a2086295a6e3a89cfef29118c1a2d9e0a24100c65dbf75044040daf05",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8517m2700p10t480__pi\", \"pi\", 480.0]",
+      "key": "truearms_chunk2/w8517m2700p10t480__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "b8af63462c7068e5",
+      "source_arm": null,
+      "t0_s": 480.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8517m2700p10t480"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 25,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "d3bfbf785dc4e5673b098d306cd1bcefe540e41e5062a53a4164909474053204",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8518m2400p10t420__pi\", \"pi\", 420.0]",
+      "key": "truearms_chunk2/w8518m2400p10t420__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "deac2e128101a11b",
+      "source_arm": null,
+      "t0_s": 420.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8518m2400p10t420"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 26,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "99b4e89773f3e04479d0c5e711048461f0d0ce30c5d1546803325c8991402604",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8524m2600p20t480__pi\", \"pi\", 480.0]",
+      "key": "truearms_chunk2/w8524m2600p20t480__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "a182cf1d2d885793",
+      "source_arm": null,
+      "t0_s": 480.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8524m2600p20t480"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 27,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "5d052a8f4b6d66717bd2d36ebef9084536c77fbd3a8c21d2ae708648c6430075",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8526m2700p20t300__pi\", \"pi\", 300.0]",
+      "key": "truearms_chunk2/w8526m2700p20t300__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "81602a1878e08e38",
+      "source_arm": null,
+      "t0_s": 300.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8526m2700p20t300"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 28,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "da89dd61c9ba044b3406a0bad3e2289d9f9af96d0bda3fa2e1614ef7d904ea69",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8527m2700p20t240__pi\", \"pi\", 240.0]",
+      "key": "truearms_chunk2/w8527m2700p20t240__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "e903e236f8de9406",
+      "source_arm": null,
+      "t0_s": 240.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8527m2700p20t240"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 29,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "f667d06a84f586987de5728045b6c434620912dfd4b78de3e3f52f634623e365",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8529m2600p20t360__pi\", \"pi\", 360.0]",
+      "key": "truearms_chunk2/w8529m2600p20t360__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "3d909a5f3ed962a5",
+      "source_arm": null,
+      "t0_s": 360.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8529m2600p20t360"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 30,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "e9f1648bfcb47698ee49ee68b851d22238a765839b4d73c8ae5001555a32cc20",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8531m2700p20t300__pi\", \"pi\", 300.0]",
+      "key": "truearms_chunk2/w8531m2700p20t300__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "a6ca63e536c1f03d",
+      "source_arm": null,
+      "t0_s": 300.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8531m2700p20t300"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 31,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "94e0ea638a7bb3e9a073c633df8af28bb8387874257bdb3199650fdbbd3f693e",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8532m2600p20t480__pi\", \"pi\", 480.0]",
+      "key": "truearms_chunk2/w8532m2600p20t480__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "e6fc01803c0595bd",
+      "source_arm": null,
+      "t0_s": 480.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8532m2600p20t480"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 32,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "77016cb460fae583db12c0a5090603bb80b9bca1bfa21dad2120e70128104fee",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8537m2600p40t240__pi\", \"pi\", 240.0]",
+      "key": "truearms_chunk2/w8537m2600p40t240__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "85d18d1763179883",
+      "source_arm": null,
+      "t0_s": 240.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8537m2600p40t240"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 33,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "83a6056cf51fa727590eae4d2303755aa2cf1341c54e5ab120cb8762a35efec8",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8539m2700p40t300__pi\", \"pi\", 300.0]",
+      "key": "truearms_chunk2/w8539m2700p40t300__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "a9a88e19542a2bd7",
+      "source_arm": null,
+      "t0_s": 300.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8539m2700p40t300"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 34,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "c142556135bcf130f0ca4726b73ce6dce0282c0d540e1b625ffe90b25f18f2f9",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8540m2700p40t300__pi\", \"pi\", 300.0]",
+      "key": "truearms_chunk2/w8540m2700p40t300__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "1238e19a090b2b2b",
+      "source_arm": null,
+      "t0_s": 300.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8540m2700p40t300"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 35,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "af7ba4714a93634699fe378ccf4c0aa45237920aa47e50a0d17ea68b63b65c9e",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8541m2700p40t240__pi\", \"pi\", 240.0]",
+      "key": "truearms_chunk2/w8541m2700p40t240__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "293c8561edb2eda2",
+      "source_arm": null,
+      "t0_s": 240.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8541m2700p40t240"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 36,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "57066e595a0f5e968436d48640583162026f04bec3f2399f8b0d249826993f3b",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8542m2700p40t420__pi\", \"pi\", 420.0]",
+      "key": "truearms_chunk2/w8542m2700p40t420__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "e75e229b3b25db1d",
+      "source_arm": null,
+      "t0_s": 420.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8542m2700p40t420"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 37,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "743f5b8ea7f8451c0432ab6a11b3fee919b7b379d8c963c62f19264d4cf34cac",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8544m2700p40t300__pi\", \"pi\", 300.0]",
+      "key": "truearms_chunk2/w8544m2700p40t300__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "d4d07bc7d8175df9",
+      "source_arm": null,
+      "t0_s": 300.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8544m2700p40t300"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 38,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "171e8cd0bbcc4e6eb8a13490aa7bf5603eb658e62a86c7c80b0a5e391ed02d03",
+      "has_history": false,
+      "identity": "[\"truearms_chunk2/w8545m2000p40t540__pi\", \"pi\", 540.0]",
+      "key": "truearms_chunk2/w8545m2000p40t540__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "0f7d2b45c714de46",
+      "source_arm": null,
+      "t0_s": 540.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8545m2000p40t540"
+    },
+    {
+      "cohort": "pi_u_same",
+      "index": 39,
+      "arm": "pi",
+      "arms": [
+        "native",
+        "pi"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "fd1b1280033295b6d7a73608ef401ab46197d172d53c040f5c7b975b6e663042",
+      "has_history": false,
+      "identity": "[\"truearms_chunk3/w8551m2000p02t420__pi\", \"pi\", 420.0]",
+      "key": "truearms_chunk3/w8551m2000p02t420__pi",
+      "paired": true,
+      "recorded_steps": {
+        "native": 600,
+        "pi": 600
+      },
+      "sets": [
+        "pi_u_same"
+      ],
+      "sid": "c7be298afba9d930",
+      "source_arm": null,
+      "t0_s": 420.0,
+      "wall_exposure_status": null,
+      "wall_phase_at_t0": null,
+      "world": "w8551m2000p02t420"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 0,
+      "arm": "wall",
+      "arms": [
+        "native",
+        "wall"
+      ],
+      "assembled_rel_s": 97.0,
+      "file_sha256": "daa1ee4afce1d86e10ecc1d48c6371c4bbf1429138f35f249081eb8db50eb3ad",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8660m2700p10t300__w-lo-late\", \"w-lo-late\", 304.5]",
+      "key": "walls_pilot_chunk4/w8660m2700p10t300__w-lo-late",
+      "paired": true,
+      "recorded_steps": {
+        "native": 240,
+        "wall": 240
+      },
+      "sets": [
+        "wall_same",
+        "wall_pilot"
+      ],
+      "sid": "0fb439d97f523c0f",
+      "source_arm": "w-lo-late",
+      "t0_s": 304.5,
+      "wall_exposure_status": "aborted_in_hold",
+      "wall_phase_at_t0": "none",
+      "world": "w8660m2700p10t300"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 1,
+      "arm": "wall",
+      "arms": [
+        "wall"
+      ],
+      "assembled_rel_s": 18.0,
+      "file_sha256": "cd95fe9daa86a95fbdf434d673147958131815ce889ade346dae72d25dcf8574",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8660m2700p10t300__w-mid-early\", \"w-mid-early\", 304.5]",
+      "key": "walls_pilot_chunk4/w8660m2700p10t300__w-mid-early",
+      "paired": false,
+      "recorded_steps": {
+        "wall": 240
+      },
+      "sets": [
+        "wall_same",
+        "wall_pilot"
+      ],
+      "sid": "6cb183de9cf2a1c1",
+      "source_arm": "w-mid-early",
+      "t0_s": 304.5,
+      "wall_exposure_status": "assembled_released",
+      "wall_phase_at_t0": "assembly",
+      "world": "w8660m2700p10t300"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 2,
+      "arm": "wall",
+      "arms": [
+        "wall"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "e12a7aca2808693852e041d3c83d196692ec770a07ddf749f34833fbf79f3eac",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8660m2700p10t300__w-lo-early\", \"w-lo-early\", 304.5]",
+      "key": "walls_pilot_chunk4/w8660m2700p10t300__w-lo-early",
+      "paired": false,
+      "recorded_steps": {
+        "wall": 240
+      },
+      "sets": [
+        "wall_same"
+      ],
+      "sid": "f0748de112421b4f",
+      "source_arm": "w-lo-early",
+      "t0_s": 304.5,
+      "wall_exposure_status": "aborted_in_assembly",
+      "wall_phase_at_t0": "handed_back",
+      "world": "w8660m2700p10t300"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 3,
+      "arm": "wall",
+      "arms": [
+        "wall"
+      ],
+      "assembled_rel_s": 41.0,
+      "file_sha256": "e4edeedfde6df9bbf2f6b9c62939bc0422d38b3ae01a2ff2b445afd489d17171",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8663m2700p10t480__w-lo-early\", \"w-lo-early\", 484.5]",
+      "key": "walls_pilot_chunk4/w8663m2700p10t480__w-lo-early",
+      "paired": false,
+      "recorded_steps": {
+        "wall": 240
+      },
+      "sets": [
+        "wall_same",
+        "wall_pilot"
+      ],
+      "sid": "3afd78d4c6a3528e",
+      "source_arm": "w-lo-early",
+      "t0_s": 484.5,
+      "wall_exposure_status": "aborted_in_hold",
+      "wall_phase_at_t0": "assembly",
+      "world": "w8663m2700p10t480"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 4,
+      "arm": "wall",
+      "arms": [
+        "wall"
+      ],
+      "assembled_rel_s": 38.0,
+      "file_sha256": "2da374a5d5dffb295f4eda4934c19ee81889a8b14cafd7583cf64d1ce4c74926",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8663m2700p10t480__w-mid-early\", \"w-mid-early\", 484.5]",
+      "key": "walls_pilot_chunk4/w8663m2700p10t480__w-mid-early",
+      "paired": false,
+      "recorded_steps": {
+        "wall": 240
+      },
+      "sets": [
+        "wall_same",
+        "wall_pilot"
+      ],
+      "sid": "8da967c1bbccd05b",
+      "source_arm": "w-mid-early",
+      "t0_s": 484.5,
+      "wall_exposure_status": "assembled_released",
+      "wall_phase_at_t0": "assembly",
+      "world": "w8663m2700p10t480"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 5,
+      "arm": "wall",
+      "arms": [
+        "native",
+        "wall"
+      ],
+      "assembled_rel_s": 75.0,
+      "file_sha256": "381fc5d2eb2e64bf6343e0c5081ebc53626ffcce9a42f65a168c0d89e468fde7",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8664m2600p10t360__w-lo-early\", \"w-lo-early\", 364.5]",
+      "key": "walls_pilot_chunk4/w8664m2600p10t360__w-lo-early",
+      "paired": true,
+      "recorded_steps": {
+        "native": 240,
+        "wall": 240
+      },
+      "sets": [
+        "wall_same",
+        "wall_pilot"
+      ],
+      "sid": "6025a965227b6618",
+      "source_arm": "w-lo-early",
+      "t0_s": 364.5,
+      "wall_exposure_status": "aborted_in_hold",
+      "wall_phase_at_t0": "none",
+      "world": "w8664m2600p10t360"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 6,
+      "arm": "wall",
+      "arms": [
+        "native",
+        "wall"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "62ea35361e4f044ecbd5907c536432bc396b79c646a534615da54e1f326c791e",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8665m2700p10t240__w-lo-late\", \"w-lo-late\", 244.5]",
+      "key": "walls_pilot_chunk4/w8665m2700p10t240__w-lo-late",
+      "paired": true,
+      "recorded_steps": {
+        "native": 240,
+        "wall": 240
+      },
+      "sets": [
+        "wall_same"
+      ],
+      "sid": "19521b41527197d5",
+      "source_arm": "w-lo-late",
+      "t0_s": 244.5,
+      "wall_exposure_status": "not_feasible",
+      "wall_phase_at_t0": "none",
+      "world": "w8665m2700p10t240"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 7,
+      "arm": "wall",
+      "arms": [
+        "native",
+        "wall"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "4a9476beffd318cd58adf4d3faf7631a1b3840bc4a42e31cf06aad4c167aea23",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8665m2700p10t240__w-lo-early\", \"w-lo-early\", 244.5]",
+      "key": "walls_pilot_chunk4/w8665m2700p10t240__w-lo-early",
+      "paired": true,
+      "recorded_steps": {
+        "native": 240,
+        "wall": 240
+      },
+      "sets": [
+        "wall_same"
+      ],
+      "sid": "531600373ec11f7a",
+      "source_arm": "w-lo-early",
+      "t0_s": 244.5,
+      "wall_exposure_status": "not_feasible",
+      "wall_phase_at_t0": "none",
+      "world": "w8665m2700p10t240"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 8,
+      "arm": "wall",
+      "arms": [
+        "native",
+        "wall"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "9be6026d574ad3ff6a783f4d5642783b549f57a2462e298b6c8d19a3700b2f75",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8665m2700p10t240__w-mid-early\", \"w-mid-early\", 244.5]",
+      "key": "walls_pilot_chunk4/w8665m2700p10t240__w-mid-early",
+      "paired": true,
+      "recorded_steps": {
+        "native": 240,
+        "wall": 240
+      },
+      "sets": [
+        "wall_same"
+      ],
+      "sid": "9b24dd92f39d32d6",
+      "source_arm": "w-mid-early",
+      "t0_s": 244.5,
+      "wall_exposure_status": "not_feasible",
+      "wall_phase_at_t0": "none",
+      "world": "w8665m2700p10t240"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 9,
+      "arm": "wall",
+      "arms": [
+        "native",
+        "wall"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "44e077b4b9d0c62b4e75934cc9918c3fb7d002184fd362dc291829a37bd61ce0",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8665m2700p10t240__w-mid-late\", \"w-mid-late\", 244.5]",
+      "key": "walls_pilot_chunk4/w8665m2700p10t240__w-mid-late",
+      "paired": true,
+      "recorded_steps": {
+        "native": 240,
+        "wall": 240
+      },
+      "sets": [
+        "wall_same"
+      ],
+      "sid": "b0c5b9bf683a12e8",
+      "source_arm": "w-mid-late",
+      "t0_s": 244.5,
+      "wall_exposure_status": "not_feasible",
+      "wall_phase_at_t0": "none",
+      "world": "w8665m2700p10t240"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 10,
+      "arm": "wall",
+      "arms": [
+        "native",
+        "wall"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "8312e43f1b775d78c3118ad7b0a43faef8aa6a9cec0a8b4d244799c4387b2018",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8668m2600p10t240__w-lo-early\", \"w-lo-early\", 244.5]",
+      "key": "walls_pilot_chunk4/w8668m2600p10t240__w-lo-early",
+      "paired": true,
+      "recorded_steps": {
+        "native": 240,
+        "wall": 240
+      },
+      "sets": [
+        "wall_same"
+      ],
+      "sid": "1f5463ba3356b760",
+      "source_arm": "w-lo-early",
+      "t0_s": 244.5,
+      "wall_exposure_status": "not_feasible",
+      "wall_phase_at_t0": "none",
+      "world": "w8668m2600p10t240"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 11,
+      "arm": "wall",
+      "arms": [
+        "native",
+        "wall"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "5bff70d9926bf8a5f692595c24d0e42371875f7eeb6290abf4c9a507de7f32a2",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8668m2600p10t240__w-mid-early\", \"w-mid-early\", 244.5]",
+      "key": "walls_pilot_chunk4/w8668m2600p10t240__w-mid-early",
+      "paired": true,
+      "recorded_steps": {
+        "native": 240,
+        "wall": 240
+      },
+      "sets": [
+        "wall_same"
+      ],
+      "sid": "38c66b0b749770a1",
+      "source_arm": "w-mid-early",
+      "t0_s": 244.5,
+      "wall_exposure_status": "not_feasible",
+      "wall_phase_at_t0": "none",
+      "world": "w8668m2600p10t240"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 12,
+      "arm": "wall",
+      "arms": [
+        "native",
+        "wall"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "9e5340e6f5f436c6cb6cf4fd0cfffdd531aec43ca98599a637abc86771ae129f",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8668m2600p10t240__w-mid-late\", \"w-mid-late\", 244.5]",
+      "key": "walls_pilot_chunk4/w8668m2600p10t240__w-mid-late",
+      "paired": true,
+      "recorded_steps": {
+        "native": 240,
+        "wall": 240
+      },
+      "sets": [
+        "wall_same"
+      ],
+      "sid": "bfd90213b350ff2a",
+      "source_arm": "w-mid-late",
+      "t0_s": 244.5,
+      "wall_exposure_status": "not_feasible",
+      "wall_phase_at_t0": "none",
+      "world": "w8668m2600p10t240"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 13,
+      "arm": "wall",
+      "arms": [
+        "native",
+        "wall"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "bcd142cac96f40e6f427ff2981bfb8f3185927ef87b8cbf8ddaedda764d68eb0",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8668m2600p10t240__w-lo-late\", \"w-lo-late\", 244.5]",
+      "key": "walls_pilot_chunk4/w8668m2600p10t240__w-lo-late",
+      "paired": true,
+      "recorded_steps": {
+        "native": 240,
+        "wall": 240
+      },
+      "sets": [
+        "wall_same"
+      ],
+      "sid": "d2dd2feec246d202",
+      "source_arm": "w-lo-late",
+      "t0_s": 244.5,
+      "wall_exposure_status": "not_feasible",
+      "wall_phase_at_t0": "none",
+      "world": "w8668m2600p10t240"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 14,
+      "arm": "wall",
+      "arms": [
+        "wall"
+      ],
+      "assembled_rel_s": 14.0,
+      "file_sha256": "f66c6575da2a527fdb5fd961220f2b729fe22c65dbd77d6e053acee370ca0a43",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8676m2700p20t360__w-lo-early\", \"w-lo-early\", 364.5]",
+      "key": "walls_pilot_chunk4/w8676m2700p20t360__w-lo-early",
+      "paired": false,
+      "recorded_steps": {
+        "wall": 240
+      },
+      "sets": [
+        "wall_same",
+        "wall_pilot"
+      ],
+      "sid": "1502c060027e60db",
+      "source_arm": "w-lo-early",
+      "t0_s": 364.5,
+      "wall_exposure_status": "assembled_released",
+      "wall_phase_at_t0": "assembly",
+      "world": "w8676m2700p20t360"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 15,
+      "arm": "wall",
+      "arms": [
+        "wall"
+      ],
+      "assembled_rel_s": 12.0,
+      "file_sha256": "b4e307884d6d1f01e2e527156739f9985ac2b71e146be3bc30f87ac942d20324",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8676m2700p20t360__w-mid-early\", \"w-mid-early\", 364.5]",
+      "key": "walls_pilot_chunk4/w8676m2700p20t360__w-mid-early",
+      "paired": false,
+      "recorded_steps": {
+        "wall": 240
+      },
+      "sets": [
+        "wall_same",
+        "wall_pilot"
+      ],
+      "sid": "b86f9185d63f2280",
+      "source_arm": "w-mid-early",
+      "t0_s": 364.5,
+      "wall_exposure_status": "aborted_in_hold",
+      "wall_phase_at_t0": "assembly",
+      "world": "w8676m2700p20t360"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 16,
+      "arm": "wall",
+      "arms": [
+        "wall"
+      ],
+      "assembled_rel_s": 1.0,
+      "file_sha256": "d519786ea240746d93e8b82c62c4dbfad8d41688263b974b9e8467df82ee28f4",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8677m2700p20t360__w-lo-early\", \"w-lo-early\", 364.5]",
+      "key": "walls_pilot_chunk4/w8677m2700p20t360__w-lo-early",
+      "paired": false,
+      "recorded_steps": {
+        "wall": 240
+      },
+      "sets": [
+        "wall_same",
+        "wall_pilot"
+      ],
+      "sid": "963cf87ac056d31a",
+      "source_arm": "w-lo-early",
+      "t0_s": 364.5,
+      "wall_exposure_status": "assembled_released",
+      "wall_phase_at_t0": "hold",
+      "world": "w8677m2700p20t360"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 17,
+      "arm": "wall",
+      "arms": [
+        "wall"
+      ],
+      "assembled_rel_s": 1.0,
+      "file_sha256": "d0acb678645d1251fd3086e9896864a9e566558636deaaf6ea263238ada48d72",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8677m2700p20t360__w-mid-early\", \"w-mid-early\", 364.5]",
+      "key": "walls_pilot_chunk4/w8677m2700p20t360__w-mid-early",
+      "paired": false,
+      "recorded_steps": {
+        "wall": 240
+      },
+      "sets": [
+        "wall_same",
+        "wall_pilot"
+      ],
+      "sid": "f13486643972d7e5",
+      "source_arm": "w-mid-early",
+      "t0_s": 364.5,
+      "wall_exposure_status": "assembled_released",
+      "wall_phase_at_t0": "hold",
+      "world": "w8677m2700p20t360"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 18,
+      "arm": "wall",
+      "arms": [
+        "wall"
+      ],
+      "assembled_rel_s": 2.0,
+      "file_sha256": "4f5a83fe91e54eb9f99e7144ef54b7f3567590f69b0b6261c3622ebe3a6e3989",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8678m2700p20t300__w-mid-early\", \"w-mid-early\", 304.5]",
+      "key": "walls_pilot_chunk4/w8678m2700p20t300__w-mid-early",
+      "paired": false,
+      "recorded_steps": {
+        "wall": 240
+      },
+      "sets": [
+        "wall_same",
+        "wall_pilot"
+      ],
+      "sid": "185e8a9ec83c0978",
+      "source_arm": "w-mid-early",
+      "t0_s": 304.5,
+      "wall_exposure_status": "assembled_released",
+      "wall_phase_at_t0": "hold",
+      "world": "w8678m2700p20t300"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 19,
+      "arm": "wall",
+      "arms": [
+        "wall"
+      ],
+      "assembled_rel_s": 4.0,
+      "file_sha256": "1dc00a7841b52c8de0453316322d14176f6bd1d188e04b149bd4c201b8158957",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8678m2700p20t300__w-lo-early\", \"w-lo-early\", 304.5]",
+      "key": "walls_pilot_chunk4/w8678m2700p20t300__w-lo-early",
+      "paired": false,
+      "recorded_steps": {
+        "wall": 240
+      },
+      "sets": [
+        "wall_same",
+        "wall_pilot"
+      ],
+      "sid": "6bc45211fd6ec5f9",
+      "source_arm": "w-lo-early",
+      "t0_s": 304.5,
+      "wall_exposure_status": "aborted_in_hold",
+      "wall_phase_at_t0": "hold",
+      "world": "w8678m2700p20t300"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 20,
+      "arm": "wall",
+      "arms": [
+        "wall"
+      ],
+      "assembled_rel_s": 20.0,
+      "file_sha256": "1e47aeffbb9ecbd40b6e0d51287daaf89e8dffa4576bee8e5dc68d8ab655c00e",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8679m2400p20t540__w-mid-early\", \"w-mid-early\", 544.5]",
+      "key": "walls_pilot_chunk4/w8679m2400p20t540__w-mid-early",
+      "paired": false,
+      "recorded_steps": {
+        "wall": 240
+      },
+      "sets": [
+        "wall_same",
+        "wall_pilot"
+      ],
+      "sid": "18ef8b8d75521f76",
+      "source_arm": "w-mid-early",
+      "t0_s": 544.5,
+      "wall_exposure_status": "assembled_released",
+      "wall_phase_at_t0": "assembly",
+      "world": "w8679m2400p20t540"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 21,
+      "arm": "wall",
+      "arms": [
+        "wall"
+      ],
+      "assembled_rel_s": null,
+      "file_sha256": "266f0547c1ae8f87b0229f455ebc30449f063d5e7714f89fbf06fdc3c1f840ca",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8679m2400p20t540__w-lo-early\", \"w-lo-early\", 544.5]",
+      "key": "walls_pilot_chunk4/w8679m2400p20t540__w-lo-early",
+      "paired": false,
+      "recorded_steps": {
+        "wall": 240
+      },
+      "sets": [
+        "wall_same"
+      ],
+      "sid": "fcc0d628ebd4f871",
+      "source_arm": "w-lo-early",
+      "t0_s": 544.5,
+      "wall_exposure_status": "aborted_in_assembly",
+      "wall_phase_at_t0": "assembly",
+      "world": "w8679m2400p20t540"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 22,
+      "arm": "wall",
+      "arms": [
+        "wall"
+      ],
+      "assembled_rel_s": 1.0,
+      "file_sha256": "799c33c62b6dc2c6f8e6907a79c89c68b3cee56b26117778688342196b11cd63",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8680m2600p20t300__w-lo-early\", \"w-lo-early\", 304.5]",
+      "key": "walls_pilot_chunk4/w8680m2600p20t300__w-lo-early",
+      "paired": false,
+      "recorded_steps": {
+        "wall": 240
+      },
+      "sets": [
+        "wall_same",
+        "wall_pilot"
+      ],
+      "sid": "5c77bd137812327e",
+      "source_arm": "w-lo-early",
+      "t0_s": 304.5,
+      "wall_exposure_status": "assembled_released",
+      "wall_phase_at_t0": "hold",
+      "world": "w8680m2600p20t300"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 23,
+      "arm": "wall",
+      "arms": [
+        "wall"
+      ],
+      "assembled_rel_s": 1.0,
+      "file_sha256": "e428658f72ffd6e2c6c80ac18db2a75d376aee3cb686524a78807f4b65deadf1",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8680m2600p20t300__w-mid-early\", \"w-mid-early\", 304.5]",
+      "key": "walls_pilot_chunk4/w8680m2600p20t300__w-mid-early",
+      "paired": false,
+      "recorded_steps": {
+        "wall": 240
+      },
+      "sets": [
+        "wall_same",
+        "wall_pilot"
+      ],
+      "sid": "cdca46eb911eef1f",
+      "source_arm": "w-mid-early",
+      "t0_s": 304.5,
+      "wall_exposure_status": "assembled_released",
+      "wall_phase_at_t0": "hold",
+      "world": "w8680m2600p20t300"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 24,
+      "arm": "wall",
+      "arms": [
+        "wall"
+      ],
+      "assembled_rel_s": 29.0,
+      "file_sha256": "11b360707adf6ca9023cce117f8c4cda79f102974213f16ce1b84392a7997470",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8681m2700p20t420__w-mid-early\", \"w-mid-early\", 424.5]",
+      "key": "walls_pilot_chunk4/w8681m2700p20t420__w-mid-early",
+      "paired": false,
+      "recorded_steps": {
+        "wall": 240
+      },
+      "sets": [
+        "wall_same",
+        "wall_pilot"
+      ],
+      "sid": "5d38facb5fe5fb38",
+      "source_arm": "w-mid-early",
+      "t0_s": 424.5,
+      "wall_exposure_status": "assembled_released",
+      "wall_phase_at_t0": "assembly",
+      "world": "w8681m2700p20t420"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 25,
+      "arm": "wall",
+      "arms": [
+        "wall"
+      ],
+      "assembled_rel_s": 30.0,
+      "file_sha256": "0972343f2d816dcf38052d9e9f66cec075e060a1a6a5f65eb99e21c5cc9ba5ce",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8681m2700p20t420__w-lo-early\", \"w-lo-early\", 424.5]",
+      "key": "walls_pilot_chunk4/w8681m2700p20t420__w-lo-early",
+      "paired": false,
+      "recorded_steps": {
+        "wall": 240
+      },
+      "sets": [
+        "wall_same",
+        "wall_pilot"
+      ],
+      "sid": "f54c0931c0662b99",
+      "source_arm": "w-lo-early",
+      "t0_s": 424.5,
+      "wall_exposure_status": "assembled_released",
+      "wall_phase_at_t0": "assembly",
+      "world": "w8681m2700p20t420"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 26,
+      "arm": "wall",
+      "arms": [
+        "wall"
+      ],
+      "assembled_rel_s": 15.0,
+      "file_sha256": "c08614141229b9eed153af005b0bc1fd69c3d59297f0b67e1c37608ff78b9d09",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8682m2400p20t240__w-lo-early\", \"w-lo-early\", 244.5]",
+      "key": "walls_pilot_chunk4/w8682m2400p20t240__w-lo-early",
+      "paired": false,
+      "recorded_steps": {
+        "wall": 240
+      },
+      "sets": [
+        "wall_same",
+        "wall_pilot"
+      ],
+      "sid": "3cabda9761a8a375",
+      "source_arm": "w-lo-early",
+      "t0_s": 244.5,
+      "wall_exposure_status": "aborted_in_hold",
+      "wall_phase_at_t0": "assembly",
+      "world": "w8682m2400p20t240"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 27,
+      "arm": "wall",
+      "arms": [
+        "wall"
+      ],
+      "assembled_rel_s": 12.0,
+      "file_sha256": "106a95d8640cbba4fd4bab3853d6833d012bf6ebd51971c5054cfb7a52f350ed",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8682m2400p20t240__w-mid-early\", \"w-mid-early\", 244.5]",
+      "key": "walls_pilot_chunk4/w8682m2400p20t240__w-mid-early",
+      "paired": false,
+      "recorded_steps": {
+        "wall": 240
+      },
+      "sets": [
+        "wall_same",
+        "wall_pilot"
+      ],
+      "sid": "40581aaf59af4275",
+      "source_arm": "w-mid-early",
+      "t0_s": 244.5,
+      "wall_exposure_status": "assembled_released",
+      "wall_phase_at_t0": "assembly",
+      "world": "w8682m2400p20t240"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 28,
+      "arm": "wall",
+      "arms": [
+        "wall"
+      ],
+      "assembled_rel_s": 38.0,
+      "file_sha256": "be24a16a9a3a6e988a433c986d8512e9ae61bf5826bb1c87e0e5c6bd094d46fe",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8684m2700p20t360__w-mid-early\", \"w-mid-early\", 364.5]",
+      "key": "walls_pilot_chunk4/w8684m2700p20t360__w-mid-early",
+      "paired": false,
+      "recorded_steps": {
+        "wall": 240
+      },
+      "sets": [
+        "wall_same",
+        "wall_pilot"
+      ],
+      "sid": "5e41db2a6bd5c003",
+      "source_arm": "w-mid-early",
+      "t0_s": 364.5,
+      "wall_exposure_status": "assembled_released",
+      "wall_phase_at_t0": "assembly",
+      "world": "w8684m2700p20t360"
+    },
+    {
+      "cohort": "wall_same",
+      "index": 29,
+      "arm": "wall",
+      "arms": [
+        "wall"
+      ],
+      "assembled_rel_s": 4.0,
+      "file_sha256": "39850379e9488fed379e4d726dd51a91131c0bce700a59b63eec93027fb56296",
+      "has_history": true,
+      "identity": "[\"walls_pilot_chunk4/w8684m2700p20t360__w-lo-early\", \"w-lo-early\", 364.5]",
+      "key": "walls_pilot_chunk4/w8684m2700p20t360__w-lo-early",
+      "paired": false,
+      "recorded_steps": {
+        "wall": 240
+      },
+      "sets": [
+        "wall_same",
+        "wall_pilot"
+      ],
+      "sid": "f3c1bbe578abea0a",
+      "source_arm": "w-lo-early",
+      "t0_s": 364.5,
+      "wall_exposure_status": "aborted_in_hold",
+      "wall_phase_at_t0": "hold",
+      "world": "w8684m2700p20t360"
+    }
+  ]
+}
