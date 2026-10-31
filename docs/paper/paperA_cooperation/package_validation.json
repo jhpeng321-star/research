@@ -36,7 +36,10 @@
     "figures/F3B_stopped_sumo_backup.pdf",
     "figures/F4N_failed_tail_remedies.csv",
     "figures/F4N_failed_tail_remedies.png",
-    "figures/F4N_failed_tail_remedies.pdf"
+    "figures/F4N_failed_tail_remedies.pdf",
+    "figures/F4D_expanded_data_screen.csv",
+    "figures/F4D_expanded_data_screen.png",
+    "figures/F4D_expanded_data_screen.pdf"
   ],
   "report_snapshot_checks": [
     "owner_read_first",
@@ -73,28 +76,28 @@
     "prior_checklist",
     "prior_draft"
   ],
-  "night_figure_source_cells": 33,
+  "night_figure_source_cells": 37,
   "pending_insertions": {
     "README.md": 3,
-    "OUTLINE.md": 13,
-    "CLAIMS.md": 20,
-    "FIGURES.md": 18,
+    "OUTLINE.md": 14,
+    "CLAIMS.md": 24,
+    "FIGURES.md": 19,
     "RELATED_WORK.md": 4,
-    "THREATS.md": 15,
+    "THREATS.md": 19,
     "EVIDENCE_SOURCES.md": 5,
-    "REFRESH.md": 9
+    "REFRESH.md": 12
   },
   "scope": "local links, provenance structure, bibliography identity coverage, CSV schema, plotted source values and hashes",
   "limitations": "Not a scientific efficacy check, exhaustive numerical prose proof, full BibTeX compile, or IEEE pagination check",
   "document_sha256": {
-    "README.md": "5c642c7766c0e6f92e7a41e476fe70b5c1251d1a43629bf248b409fd1710427c",
-    "OUTLINE.md": "c41c166edada7308202f9ac651bf752d77e4218b7f995da21e8fdb62b0e60159",
-    "CLAIMS.md": "982b089c834cf941fc650babdee6809615042613209730e735164e6520c87afd",
-    "FIGURES.md": "3a65d4cab18a0829c20f61af69b1e9e39eaabd7cd86baad466ff97e29a3fc856",
+    "README.md": "780db8ab02a8e2c0a0182262855fd32738f62aa3bc46e4e2528fc6f687534f51",
+    "OUTLINE.md": "b4d229ba94930cb14653891392f40bec27ced792efa46df3f2bfc06deb51ad7c",
+    "CLAIMS.md": "ccd03ba24b4eeefcb744c99163b93797f35eb095e26449368ebb9564e8ac3979",
+    "FIGURES.md": "a540c76bd38d1d8e5981176bd764e0f743b395307a940be4a533d8544ca7aa47",
     "RELATED_WORK.md": "ee3fe1f1c4ba1c9ca56d87c6e2a5c6cf38c6ad5ddce262ed8800c691b40c84ba",
-    "THREATS.md": "ca75cd041cf488bb15d16cf769ce3c96faa285b97487025a4619e899790ee5eb",
-    "EVIDENCE_SOURCES.md": "2b6e06811ecc8806a8c3e102d16392c9f7ca32264f09e01d6d3ef7d2795ff9d7",
-    "REFRESH.md": "9d2fd47c257517264f9854e0b60e2a439e41a756ffae98288721bb2b34613706",
+    "THREATS.md": "419c111b1b2c500b8ee21f8b9413d76ab6dec8a74a3ed13c15e76e051a64f0e1",
+    "EVIDENCE_SOURCES.md": "6353e0e1c27163ee985d0db0a48e466e30ea69b060b1aa11ef0491b694990a88",
+    "REFRESH.md": "522aeedef9245f4e44ba062accc88c31b270adb75dfc19b1efa9fe7593cb8aa2",
     "refs.bib": "2401075b868a49e8b783b12dcdee5a07f137e70eb716bce54ea06f5f0b31ecbc",
     "reference_verification.csv": "cdb4b1409d2850cb965e5d2b94440fc0a708498a3809894dd61ebd5f05e88cab"
   }

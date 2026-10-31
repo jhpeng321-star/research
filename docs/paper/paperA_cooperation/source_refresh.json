@@ -1,5 +1,5 @@
 {
-  "captured_local": "2026-10-31T22:16:57.465878+08:00",
+  "captured_local": "2026-10-31T22:24:36.727653+08:00",
   "reports": {
     "owner_read_first": {
       "path": "E:/research-dense/docs/OWNER_UPDATE_20261030_EVENING.md",
@@ -12,10 +12,10 @@
     "registration": {
       "path": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md",
       "exists": true,
-      "sha256": "cff459cdc8079cf54979ac6853ca0ff6d1afd56f011c953100378d9e026a0c6c",
-      "bytes": 2187621,
-      "modified_local": "2026-10-31T22:10:01.095565+08:00",
-      "snapshot": "source_snapshots/registration_cff459cdc8079cf5.md"
+      "sha256": "8a4f9ee71a8271684b52847f7015d830bb1b25463dd324a52315d92002cd4709",
+      "bytes": 2189523,
+      "modified_local": "2026-10-31T22:22:59.597409+08:00",
+      "snapshot": "source_snapshots/registration_8a4f9ee71a827168.md"
     },
     "wmvalue_design": {
       "path": "E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md",
@@ -271,11 +271,7 @@
     }
   },
   "changed_since_prior_cut": [
-    "owner_read_first",
-    "registration",
-    "wmvalue_design",
-    "wmvalue_report",
-    "wmfix_v2data"
+    "registration"
   ],
   "scope": "explicit local report snapshots only; no simulator/model or restricted input access",
   "claim_review": "manual; file appearance or a canary is not an efficacy result"
