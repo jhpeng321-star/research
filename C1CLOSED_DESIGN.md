@@ -233,3 +233,25 @@ Slow in-flight CPU tasks may drain concurrently with the new, disjoint GPU
 assignments: reserve their exact task identities outside both assignment lists.
 All prior CUDA children must finish before replacing GPU lanes. The complete
 gate still requires every reserved CPU output; no in-flight task is duplicated.
+
+### Fresh-session resource-stop recovery (primary unchanged)
+
+Read-only recovery finds 467/480 distinct completed tasks, all published to gpuA.
+Both expansion coordinators have exited; gpuA completed its31 assigned tasks.
+gpuR preserved334 successes and13 returncode-15 memory-guard stops. Its four-lane
+sampled owned peak reached8708MiB, exceeding the8GB byte budget before guards
+terminated owned workers. This resource-budget excursion is retained, not hidden.
+The bridge exited on the explicit failure gate; the original sole collector is
+still alive with every scientific/finalizer source hash unchanged. Both hosts'
+owned-worker incarnation audits find no live inference; nvidia-smi shows no apps.
+
+Before retries, TAIL_RECOVERY_PLAN.json fixes exactly those13 missing task IDs
+from the original failures, without outcome inspection. Retry on the same gpuR,
+same frozen worker/inputs/K/seeds, only two GPU lanes with serialized admission,
+4GiB per-launch reservation, >=1GiB free reserve, original8GB total-owned guard
+and exact PID/start termination checks. Preserve every original failure and
+successful output; new logs/owned/attempt2 receipts have separate names. No
+automatic retry, sample reduction, new parity run, model change or new collector.
+After all13 succeed and all480 identities/hashes validate, checksum-publish only
+the missing outputs and invoke the original completion gate. The existing sole
+collector performs the registered complete-panel analysis and completion commit.

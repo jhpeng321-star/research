@@ -48,6 +48,14 @@ Operational supplement, not an efficacy result. Frozen primary model, K8,
 - Cached partial panel validates129 tasks against frozen model/source/initial-state
   bindings and all200 recorded label sets. Remaining351 cache tasks block scoring;
   this identity check is not a partial C1 estimate. `CACHE_VALIDATED.json` records it.
+- Fresh-session recovery:467/480 distinct successes; both assigned coordinators
+  exited. gpuR13 tasks stopped with returncode-15/memory_guard_stop. Four-lane
+  sampled peak8708MiB exceeded8GB before own-PID guards acted; retain this budget
+  excursion. Bridge exited on failed-task gate; sole collector39680 remains live
+  with all source hashes unchanged. No inference workers remain; both GPUs idle.
+- `TAIL_RECOVERY_PLAN.json` fixes only the13 missing tasks for same-host frozen
+  retries, two lanes/serialized admission and4GiB launch reservation,8GB guard.
+  Prior outputs/failures remain; complete480 gate and sole finalizer unchanged.
 
 ## Separate reference slot
 S-C1FLOOR now supplies an approved native-only tiny-speed-pulse sensitivity on
