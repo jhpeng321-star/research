@@ -46,7 +46,7 @@ def guard(seed, demand):
     check_case(seed, demand)
 
 
-def select_group(rows, size='all', lo=-300., hi=75.44):
+def select_group(rows, size='all', lo=-150., hi=75.44):
     """Only identity, CAV eligibility and RSU-observable geometry; never outcomes/types."""
     eligible = [r for r in rows if r['is_cav'] and not r['junction']
                 and r['lane'] in (0, 1, 2) and lo <= r['s'] <= hi]
@@ -71,7 +71,7 @@ def document():
     return dict(id='S-COOPMEASURE', cap_sim_s=CAP, worlds=worlds(), canary=canary(),
                 controllers=CONTROLLERS, t0=300, clocks=[300, 600],
                 group_size='WAIT_SUMOCF', window_s='WAIT_SUMOCF',
-                group_zone_m=[-300., 75.44], bootstrap_draws=5000, bootstrap_seed=20261031,
+                group_zone_m=[-150., 75.44], bootstrap_draws=5000, bootstrap_seed=20261031,
                 baseline='native IDM, no TraCI acceleration/lane command; native release after window',
                 mapppo_sha256=MAPPO_SHA, runtime_manifest_sha256=SOURCE_SHA)
 

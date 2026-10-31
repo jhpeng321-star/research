@@ -36,7 +36,8 @@ No positive fleet gain or visually coordinated behaviour substitutes for C_G.
   never964000-964199,962xxx,977xxx, validation/calibration or sealed data.
 - Native prefix t0=300s, one frozen G/world, no outcome-based reselection.
   Only RSU-observable identity/position/lane/junction and CAV eligibility. Zone
-  s in[-300,75.44]m, nearest |s| then identity. Missing |G|<2 stays missing.
+  s in[-150,75.44]m (aligned to the binding SUMOCF amendment), nearest |s|
+  then identity. Missing |G|<2 stays missing.
 - **WAIT_SUMOCF**: adopt the S-SUMOCF selected group size and 10/30/60s window
   from its TRAIN-only SNR table before main dispatch. Prefer the registered
   selected design even if it differs from expectations. All-zone groups are
@@ -47,10 +48,11 @@ No positive fleet gain or visually coordinated behaviour substitutes for C_G.
   Bitwise trajectory+metrics repeat canary mandatory. No silent full-rerun fallback.
 
 ## Outcomes and analysis
-- Team fleet+source delay at300/600s; local zone delay integral over
-  s[-300,75.44] during window+120s (veh-s, unnormalised, all live vehicles).
-  Also retain per-identity delay/cohort rows so SNR-selected local definition can
-  be implemented exactly before production; no post-result metric selection.
+- Team fleet+source delay at300/600s; local cohort = observable vehicles visiting
+  s[-150,75.44] during window+120s. Local J is their on-road delay over that same
+  time interval, unnormalised veh-s. Also retain the fixed-zone delay integral
+  and per-identity delay/cohort rows. Bind the precise SNR-selected definition
+  before production; no post-result metric selection.
 - For every controller and outcome: world mean C_G and95% percentile stratified
   world-bootstrap CI (5000draws, seed20261031, shared resamples), fraction C_G>0,
   D_G and sumD_i, all-world and high-share cohort/cell coverage. Tiny/null gains
@@ -65,9 +67,12 @@ No positive fleet gain or visually coordinated behaviour substitutes for C_G.
 - Combined **500000 actual sim-s HARD CAP**, including all prefixes, canaries,
   failed attempts and any repeats. Durable fsynced precharge under exclusive
   ledger lock before each attempt; no refunds/retries. No other stream's budget.
-- Native-prefix census:28*300=8400sim-s, saved states retained in each worker;
-  exact group cardinality determines reservations before any branches. Each
-  world costs300 +600*(2+5*(|G|+1)) for B/Brepeat and five(G+all solos).
+- Native-prefix census:28*300=8400sim-s; exact group cardinality determines
+  full-panel admission before any main branches. Each production worker reruns
+  ONE300s native prefix (8400additional sim-s), checks census state/group hashes,
+  then saves/restores it for ALL branches, with no branch-prefix reruns. This
+  bounds resident workers to one and avoids serialising live TraCI/ONNX objects. Each
+  production world costs300 +600*(2+5*(|G|+1)) for B/Brepeat and five(G+all solos).
   Canary separately bounded at20000sim-s. Main panel must fit remaining cap as
   a complete fixed allocation; otherwise STOP for budget/design amendment,
   never truncate groups/worlds or silently change600s to300s after outcomes.

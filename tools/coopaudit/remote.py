@@ -9,10 +9,9 @@ PYTHON = {'gpuR': '/root/miniconda3/bin/python',
 
 
 def run(host, code, timeout=120):
-    encoded = base64.b64encode(code.encode()).decode()
-    command = f"echo {encoded} | base64 -d | {PYTHON[host]}"
+    command = f"{PYTHON[host]} -"
     return subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=15',
-                           host, command], capture_output=True, text=True, timeout=timeout)
+                           host, command], input=code, capture_output=True, text=True, timeout=timeout)
 
 
 if __name__ == '__main__':
