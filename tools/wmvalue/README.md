@@ -1,12 +1,22 @@
 # Recorded terminal value experiment
 
+**FINAL: FAIL under MAIN21:12.** All 320 K8 futures / 200 arm cells / 400 pairs completed;
+19 existing long trajectories were reused and 301 new 90s prefixes supplied B/C.
+Neither short method clears both D/E on sign and MAE; full A is waived by the
+registered stopping rule. `docs/paper_results/WMVALUE.md` is the final 38-line table
+and recommendation. V/D/E remain frozen; all owned dispatchers/workers finished.
+`evidence/short_test.json` is the once-only result; `evidence/final_verification.json`
+checks every task hash, all 200 cells, report, frozen artifacts and one verdict line.
+Use `python -B -m tools.wmvalue.verify_short_final --out NEW.json` to verify
+the artifacts without repeating statistics.
+
 Frozen science: `docs/paper_results/WMVALUE_DESIGN.md`. No simulator dependencies.
 Initial status/receipts describe the pre-amendment telemetry gate. MAIN18:12
 authorizes audited causal reconstruction; the current modules implement it.
 `core.py` supplies the fixed value learner, command-only direct baseline, FIT arm
 means, K8 composition, all-pair assembly and exact world-bootstrap decision rule.
-The frozen-WM rollout adapter still requires matching A predictions and late-start
-controller/entry state parity. Coverage is a prerequisite to the reserved test.
+`runtime.py`/`restart.py` implement the audited frozen-WM continuation adapter.
+Late-start sensing/history/controller/entry/cost/CRN CPU gates passed before test.
 
 ## Amended observation adapter
 
@@ -73,10 +83,12 @@ See `evidence/frozen_fit.json` for the model location/hash and exact inputs.
 Run `python -B -m unittest tools.wmvalue.test_fit_causal` for export split guards.
 `python -B -m tools.wmvalue.verify_receipts` checks the existing model's hash and
 serialization roundtrip, frozen sources, both complete exports, and report length
-without fitting or scoring reserved worlds. `amended_status.json` is current.
-# MAIN21:12 recovery
+without fitting or scoring reserved worlds. These are historical pre-inference
+receipts; use `verify_short_final` for the final closed-test artifacts.
 
-The active replacement execution is `short_dispatch` (launched through
+## MAIN21:12 execution
+
+The completed replacement execution used `short_dispatch` (launched through
 `launch --short --original ... --prefix-gate ...`). It first harvests the
 original long dispatch without repeating live tasks, then executes only missing
 90s prefixes using unchanged full-long stochastic plans. `finalize_short`
