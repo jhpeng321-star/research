@@ -4,6 +4,9 @@ Branch `c4/rb-merge`; base `f0db3c82`. Owner registration5683 / MAIN00:10.
 Full earlier handoff preserved at `docs/rb_merge/HANDOFF_HISTORY_0100.md`.
 
 ## Integration-ready source
+- Source advice now uses IDM's exact minNextSpeed bound
+  `max(b,min(emergencyDecel,1.5))`, important for motion-inferred low b.
+  Three source numeric anchors added; **44 local merge/native tests PASS /5.80s**.
 - **Native-CAV blocker reproduced on CPU**: the frozen native head's no-leader
   dv feature gathers slot0 speed (`control/native_cav.py:65,80`), even when that
   car is on an unrelated mainline lane. At the observed ramp-head state, this
@@ -69,13 +72,19 @@ Full earlier handoff preserved at `docs/rb_merge/HANDOFF_HISTORY_0100.md`.
   `fullfleet_v{3,4}_summary.json`. Four receipt-audit tests PASS (hash, complete
   panel, duplicate/missing world, broken source conservation).
 
-## Completed diagnostic v5 / next v6
-- **v6 LIVE,01:21:30 +08**, owned cpuQ PID**522021**, source **3fd7ab03**.
+## Completed diagnostics v5 / v6
+- **v6 complete32/32**, owned cpuQ PID**522021 exited**, source **3fd7ab03**.
   Validator SHA `d35a8a99790696cef19a47a0e460a36b9eb7d4748c63999aa3563c040f2342a1`.
   Receipt `/tmp/rb-merge-fullfleet-v6/LAUNCH.json`; v5 exited first. One CPU,
-  nice19/CUDA-hidden, launch load7.27/32. **Do not duplicate this running job.**
+  nice19/CUDA-hidden, launch load7.27/32. No active prediction dispatch remains.
   Mechanical check969400/CAV187: v6 merges at t326.5/s52.884m, while v5 never
-  merges it and remains at s=-1.464m/v=0 through t600. Full-panel score pending.
+  merges it and remains at s=-1.464m/v=0 through t600.
+  Full score `docs/rb_merge/fullfleet_v6_summary.json`: **200/200 t0 merges
+  matched**,202 predicted; full-fleet merge mean33.16 vs33.06 recorded.
+  TimingMAE29.42s, positionMAE13.45m (matched sets differ across versions).
+  Ramp mean**1185.32 vs2272.78 real**: false gridlock removed, now over-clears.
+  MarginalW1=1087.46, secondary pairedMAE1243.40;46 corridor overlap samples.
+  All32 road/source gates PASS. Still **NOT distributionally qualified**.
 - **01:04:36 +08 dispatched ONCE**, owned cpuQ PID**468961**, validator SHA
   `f68014b8b0586db5fdd329996c214fefcf7fb61c1e73aed5b4104ab5db21940b`.
   Receipt `/tmp/rb-merge-fullfleet-v5/LAUNCH.json`. PID468961 now **exited**,
@@ -101,6 +110,22 @@ Full earlier handoff preserved at `docs/rb_merge/HANDOFF_HISTORY_0100.md`.
   `--native-model sumo` requires `--cf-model sumo_idm`. Old head remains the
   direct validator default; the versioned v6 runner selects physics-native.
   Model IDs in each row/receipt prevent pooling different native-law contracts.
+
+## Next v7 prepared — 600s frozen-motion-encoder diagnostic
+- New `/tmp/rb-merge-fullfleet-v7`: INT**4015b641** (includes LANE811cd7e8)
+  plus current MERGE kernel/network/insertion/native callback. H600,512slots,
+  FIT32/native, same arrival stream190. No prediction launched yet.
+- Reuses LANE's **b192e0c8 FrozenMotionEncoder**, exact registered WM2 SHA
+  b8797242…; producer ENCODER_PARITY reports all9 settings bit-exact to the
+  strict full model. No duplicate extractor or checkpoint fetch; no training.
+- Preserves the trained encoder's legacy feature/default geometry; rollout
+  uses SUMO geometry. Initial HDV settings follow observed VID, CAV defaults
+  unchanged, entrants use the frozen zero-history centre. Actual admissions
+  and newborn settings share one ordinal-verified point sampler.
+- Source-by-source runtime gate **49 CPU tests PASS /2.37s**, all32 input/strict
+  encoder preflights PASS. Additional8 receipt/birth tests PASS locally.
+  Captures120/300/600 clocks in one600s rollout to assess clearing, not only
+  t0 merges. Parameterized motion/lane corrections still forbidden by hooks.
 
 ## Interfaces / tests / known gaps
 - Entries MUST use `TorchEntryProcessV2(conserve_queue=True, couple_draws=True,
