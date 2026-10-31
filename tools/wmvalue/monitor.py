@@ -13,7 +13,8 @@ def main():
     p.add_argument('--out')
     a = p.parse_args()
     root = safe(a.root)
-    launch = json.loads((root/'LAUNCH.json').read_text())
+    launch_path = root/('RESUME.json' if (root/'RESUME.json').exists() else 'LAUNCH.json')
+    launch = json.loads(launch_path.read_text())
     claims = [p for p in (root/'claims').glob('*.json') if p.name.count('.') == 1]
     workers = {}
     for path in claims:
@@ -29,13 +30,21 @@ def main():
             'ps -p '+','.join(map(str, sorted(ids)))+' -o pid,ppid,etime,pcpu,rss,args'],
             capture_output=True, text=True, timeout=30)
         meta[host] = dict(returncode=r.returncode, own_process_metadata=r.stdout)
+    completed = {p.name for p in (root/'tasks').glob('*.json')}
+    original_completed = set()
+    if launch.get('original'):
+        original_completed = {p.name for p in (safe(launch['original'])/'tasks').glob('*.json')}
+    errors = list((root/'claims').glob('*.error.json'))
     result = dict(schema='wmvalue_progress/1', time=time.time(),
         dispatcher_pid=launch['pid'], claimed=len(claims),
-        completed=len(list((root/'tasks').glob('*.json'))), expected=320,
-        failures=len(list((root/'claims').glob('*.error.json'))), workers=meta,
-        launch_sha256=digest(root/'LAUNCH.json'),
+        completed=len(completed | original_completed), short_completed=len(completed),
+        original_completed=len(original_completed), expected=320,
+        failures=len(errors), unresolved_failures=sum(p.name.replace('.error.json', '.json')
+            not in completed for p in errors), workers=meta,
+        launch_sha256=digest(launch_path), active_launch_receipt=launch_path.name,
         complete=(root/'COMPLETE.json').exists(),
-        frozen_test_written=safe(__file__).parent.joinpath('evidence/frozen_test.json').exists())
+        frozen_test_written=safe(__file__).parent.joinpath('evidence/frozen_test.json').exists(),
+        amended_test_written=safe(__file__).parent.joinpath('evidence/short_test.json').exists())
     if a.out:
         with safe(a.out).open('x') as stream:
             json.dump(result, stream, indent=1, allow_nan=False)

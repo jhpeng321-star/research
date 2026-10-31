@@ -1,0 +1,27 @@
+{
+ "schema": "wmvalue_progress/1",
+ "time": 1793456839.5412188,
+ "dispatcher_pid": 43404,
+ "claimed": 168,
+ "completed": 172,
+ "short_completed": 158,
+ "original_completed": 14,
+ "expected": 320,
+ "failures": 1,
+ "unresolved_failures": 0,
+ "workers": {
+  "gpuA": {
+   "returncode": 0,
+   "own_process_metadata": "   PID   PPID     ELAPSED %CPU   RSS COMMAND\n292543 292517       17:26 99.9 2634720 /root/miniconda3/bin/python -B -u -\n292544 292519       17:26 99.9 2361892 /root/miniconda3/bin/python -B -u -\n292554 292518       17:25 99.9 2313408 /root/miniconda3/bin/python -B -u -\n294324 294221       11:44 99.9 1876432 /root/miniconda3/bin/python -B -u -\n"
+  },
+  "gpuR": {
+   "returncode": 0,
+   "own_process_metadata": "   PID   PPID     ELAPSED %CPU   RSS COMMAND\n665842 665721       17:23 99.7 1677208 /root/miniconda3/bin/python -B -u -\n665843 665724       17:23 99.7 2103112 /root/miniconda3/bin/python -B -u -\n665844 665725       17:23 99.7 2541484 /root/miniconda3/bin/python -B -u -\n676852 676827       00:15  104 1501636 /root/miniconda3/bin/python -B -u -\n676883 676828       00:14  105 1478600 /root/miniconda3/bin/python -B -u -\n676884 676829       00:14  104 1505440 /root/miniconda3/bin/python -B -u -\n"
+  }
+ },
+ "launch_sha256": "a8f2f82d78381f3f757be96bed8934b3d2c44dccbef6b10b20fd2180f4bcc60a",
+ "active_launch_receipt": "RESUME.json",
+ "complete": false,
+ "frozen_test_written": false,
+ "amended_test_written": false
+}
