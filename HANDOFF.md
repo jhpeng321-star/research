@@ -157,3 +157,5 @@ Current collection ends in `...1793467168386196000_5bc9500c19944cfea658dcdc2dcd9
 Only final169 eligible; hand checkpoint+FROZEN_FINAL+exact source/config SHA to
 S-C1SWITCH2. Its panel969136..969151/PANEL_v2SHA7c780c25237dde73a657937ab577b8e48f71766817f4363f3298982e90144827
 owns all evaluation physics incl J900 tail; no duplicate local evaluation.
+
+- 2026-11-01 05:05 +08:00 automated supervision: cpuQ606968 alive=True; watcher12432 identity/live=True; 15/169 updates, 717/7774 production, 7 open; 646500 actual/653400 reserved sim-s; failures=1 (original smoke retained), collisions=0/teleports=0; alerts=none. Evidence `docs/paper_results/selmappo2/SUPERVISION_1793480713931629700.json`.
