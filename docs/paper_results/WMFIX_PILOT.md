@@ -37,7 +37,18 @@ c4_wm_loop14_r16_ft.toml, checkpoint wm_s.pt b8797242, W5_COMBINED DESIGN.json).
 - [done 11:13] PANEL_step0_r0: 120 s MAE 283.288, 300 s MAE 2185.236 (1710 s/panel;
   matches FEASIBILITY.json pre-step panel exactly — same measurement, same weights).
 - [done 11:41] PANEL_step0_r1: 28.5 min cadence steady.
-- [running] r2 (~12:10), r3 (~12:38) -> STEP0 baseline+noise; then steps 1-30
-  + panels at 10/20/30 -> PILOT.json decision
-- [pending] PASS -> curriculum continuation in place (pilot.py does this itself)
-  to FINAL.json / FAIL -> stop
+- [11:52 ADDENDUM] r1 == r0 EXACTLY (paired_J_MAE and every per_group value identical;
+  only wallclock meta differs; local sha-verified copies). Frozen-rerun noise = 0 by
+  determinism (all rollout randomness is per-call CRN-seeded). Killed my own PIDs
+  147313/147315 at 11:57:21 mid-r2 (no partial r2 file; record_panel writes only at
+  completion); r2/r3 skipped per MAIN. Step-0 baseline = identical r0/r1 mean, SD 0.
+- [done 12:09] CONTINUATION launched (gpuA): PID 160005 (timeout 21570s fresh cap per
+  addendum item 3; projected PASS at ~2.5 h leaves >= 3 h curriculum), python child of
+  timeout, `tools/wmfixmerge.pilot_continue.py` sha256 1d8be175... (git d4476e43;
+  box tests 8 passed). Steps 1-30 only on gpuA (no inline panels); step-10/20/30 full
+  panels evaluated on gpuR via `panel_eval.py` (same code/inputs/CRN, hash-verified
+  relay) + a gpuR-native step-0 baseline panel as a same-hardware guard;
+  PILOT.json assembled by the unchanged pre-registered decide() (improvement > 2x SD
+  with SD=0 => strict improvement at both horizons). PASS -> curriculum continues
+  in place under the fresh cap; FAIL -> stop, WMFIX_PILOT_FAIL.md, option (c).
+- [pending] steps 1-30 -> relayed panels -> PILOT.json decision -> curriculum/FINAL
