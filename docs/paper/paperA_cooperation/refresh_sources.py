@@ -28,6 +28,7 @@ REPORTS = {
     "eval_horizons": "E:/agent-work/c4-coopeval/tools/coopeval/__init__.py",
     "historical_cooperation": "E:/research-dense/docs/paper_results/COOPMEAS2.md",
     "sumoes_report": "E:/agent-work/c4-sumoes/docs/paper_results/SUMOES_RUN.md",
+    "sumoes_log": "E:/agent-work/c4-sumoes/tools/sumoes/RUN.md",
     "pilotdiag_report": "E:/agent-work/c4-pilotdiag/docs/paper_results/PILOTDIAG.md",
     "wmrequal3_report": "E:/agent-work/c4-wmrequal3/docs/paper_results/WMREQUAL3.md",
     "speedhead_report": "E:/agent-work/c4-speedhead/docs/paper_results/SPEEDHEAD.md",

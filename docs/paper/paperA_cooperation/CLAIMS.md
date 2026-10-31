@@ -92,7 +92,7 @@ Status vocabulary follows the existing checklist but uses the requested three la
 
 ### L-TRACK3 — Track 3 learned an improvement
 - **Evidence:** `E:/agent-work/c4-sumoes/docs/paper_results/SUMOES_RUN.md`.
-- **Status: CONTRADICTED — historical CTRL0-base search; PENDING for MAPPO-base learning.** Historical final head is zero with no accepted update. Track 3B's post-canary logging stop was repaired and explicitly superseded by continuation: its MAPPO-base panel baseline is complete and its first update is in progress. No completed learned-improvement result has landed. Screen-only rejections are not additional measured panel costs. <!-- Source: E:/agent-work/c4-sumoes/docs/paper_results/SUMOES_RUN.md:1-9,94-127. -->
+- **Status: CONTRADICTED — historical CTRL0-base search; PENDING for final MAPPO-base search outcome.** Historical final head is zero with no accepted update. Track 3B resumed after its repaired logging stop; its first real update was subsequently **rejected**, with bitwise rollback to the zero/MAPPO-equivalent head. Candidate-panel mean worsened by **+1602.40324321388 veh-s** under the registered acceptance rule. This is a completed adverse first-update result, not the final search verdict or a paired efficacy CI. Screen-only rejections in the older track are not additional measured panel costs. <!-- Sources: E:/agent-work/c4-sumoes/docs/paper_results/SUMOES_RUN.md:1-11; E:/agent-work/c4-sumoes/tools/sumoes/RUN.md:188-206. -->
 
 ### L-CREDIT — A prior cooperation-loss ablation proved causal benefit
 - **Evidence:** `E:/research-dense/docs/paper/CLAIM_EVIDENCE_CHECKLIST.md`, E5-CREDIT (secondary report pointer).
