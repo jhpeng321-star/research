@@ -58,6 +58,10 @@ proxy. No future request schedule, driver labels or assignment paths are read.
   future, entrance and admission ordinal. Admission and subsequent motion use
   the SAME vector, including when a blocked queue changes slot/birth order.
   Lane/CAV identity draws are fixed latent entrant attributes, not process noise.
+- WM-PHYS's `configure_entries` may replace admission inside rollout. This
+  opt-in Poisson process then binds its own `SumoInsertion.candidate` to its
+  own weighted birth sampler. The old uniform-mix hash is never allowed to
+  silently substitute different admission settings; placement physics is intact.
 - No stochastic lane/merge module or learned insertion hazard is permitted.
   `require_deterministic_physics` fails closed on known stochastic modules.
   Caller must not add `accel_noise`, `state_noise`, teachers or future masks.

@@ -25,6 +25,12 @@ REGISTRATION.md:5683,5694; all four WHY reports and ENSPROBE read.
 - `sample_present=False` / `sample_arrivals=False` give exact source ablations.
 - LC2013 defaults remain defaults: the old encoder's MOBIL outputs cannot
   identify LC2013 settings and are not reinterpreted as those parameters.
+- **SUMO insertion bridge added:** `PoissonEntries.insert` detects the per-future
+  `cfg.sumo_insertion` installed by MERGE inside rollout and binds its `candidate`
+  to the SAME weighted `BirthMix.candidate` used for newborn motion. Without this,
+  SumoInsertion's legacy uniform `errsrc-mix` hash would test a different vector.
+  This changes only the future-owned latent lookup, not placement or shared code.
+  No patch to MERGE's files is required. Rejects a mismatched sampler object.
 
 ## Resources / checks
 - Clean worktree at start; local NVIDIA driver unavailable, initial CPU load94%.
@@ -42,6 +48,9 @@ REGISTRATION.md:5683,5694; all four WHY reports and ENSPROBE read.
 - Follow-up: **23 passed / 36.77s**, adding actual admission+newborn-motion
   replay, supplied posterior samples without arbitrary caps, and missing donor
   rejection. Physical-mode candidate support now uses the encoder's actual bounds.
+- Integration-bridge follow-up: **11 new-suite tests passed / 18.23s**, including
+  post-plan SUMO insertion configuration and train-mode/future-noise rejection.
+  Earlier 13 legacy-futures regression tests remain passing; no shared code changed.
 
 ## FIT diagnostic running
 - `docs/paper_results/RBUNC_DESIGN.md`: all32 native FIT969400..969431, K8,

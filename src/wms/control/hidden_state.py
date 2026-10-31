@@ -214,9 +214,25 @@ class PoissonEntries(TorchEntryProcessV2):
                 self.t_next[b, e] += self._next(b, e)
         return due
 
+    def insert(self, state):
+        # WM-PHYS merge mode configures its deterministic SumoInsertion inside
+        # model.rollout, AFTER the future is planned. Its legacy mix compatibility
+        # reconstructs a uniform-pool hash; a calibrated/weighted posterior may
+        # not use that hash. Bind ONLY this future-owned insertion object's latent
+        # lookup to the exact draw used by newborn motion. Placement is unchanged.
+        insertion = getattr(self.cfg, 'sumo_insertion', None)
+        if insertion is not None:
+            mix = getattr(self, 'birth_mix', None)
+            if mix is None or insertion.mix is not mix:
+                raise ValueError('SUMO insertion and newborn motion must share the future population')
+            insertion.candidate = mix.candidate
+        return super().insert(state)
+
 
 def require_deterministic_physics(model):
     """Fail closed on known stochastic event modules; never mutate model switches."""
+    if getattr(model, 'training', False):
+        raise ValueError('hidden-state futures require evaluation mode')
     if getattr(model, '_samples_lanes', False):
         raise ValueError('hidden-state futures require deterministic lane physics')
     for name in ('merge_pivot', 'merge_threshold', 'merge_frailty', 'merge_core'):
@@ -255,6 +271,12 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
     if isinstance(n_samples, bool) or not isinstance(n_samples, int) or n_samples < 1:
         raise ValueError('n_samples must be a positive integer')
     require_deterministic_physics(model)
+    forbidden = ('accel_noise', 'state_noise', 'lane_uniform', 'lane_seed',
+                 'observe_states', 'observe_mask', 'cav_teacher', 'present_seq',
+                 'junction_seq', 'is_cav_seq', 'lane_teacher', 'merge_lane_teacher')
+    if any(history_args.get(key) is not None for key in forbidden) or any(
+            history_args.get(key, 0) != 0 for key in ('state_noise_std_m', 'state_noise_std_mps')):
+        raise ValueError('hidden-state futures reject process noise and future observation overrides')
     keys = ('history', 'history_mask', 'driver_history', 'driver_history_mask', 'driver_defaults')
     args = {key: history_args[key] for key in keys if key in history_args}
     encoded, embedding, params = model.encode_drivers(dict(state), **args)
@@ -342,6 +364,7 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
             process = PoissonEntries(histories=hist, queues=q, batch=batch,
                 dt_s=float(model.physics.dt_s), row_seeds=row_seeds, couple_draws=True,
                 cfg=replace(cfg, learned_admission=PopulationAdmission(mix)))
+            process.birth_mix = mix
             kwargs.update(entries=process, entrant_driver_sampler=mix)
         futures.append(HiddenFuture(kwargs, dict(future_sampling='hidden_state', future=sample,
             seed=int(seed), driver_branches=branches, likelihood=diagnostics,

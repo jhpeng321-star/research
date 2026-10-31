@@ -56,6 +56,13 @@ def test_off_is_noop_and_rejects_runtime_event_noise():
         with pytest.raises(ValueError, match='require'):
             plan(model, state, h)
         delattr(model, attr)
+    model.training = True
+    with pytest.raises(ValueError, match='evaluation mode'):
+        plan(model, state, h)
+    model.training = False
+    for key in ('accel_noise', 'present_seq', 'observe_states', 'lane_uniform'):
+        with pytest.raises(ValueError, match='reject process noise'):
+            plan(model, state, {**h, key: torch.ones(1)})
 
 
 def test_point_likelihood_identifies_speed_and_preserves_unobserved_lane_prior():
@@ -227,3 +234,20 @@ def test_actual_rollout_admits_same_settings_it_later_moves_and_replays_exactly(
     assert torch.equal(before, torch.get_rng_state())
     for key in ('positions', 'speeds', 'lanes', 'masks', 'driver_parameters'):
         assert torch.equal(results[0][key], results[1][key])
+
+
+def test_sumo_configured_after_planning_uses_exact_weighted_newborn_draw():
+    model, state, h, _ = fixture()
+    histories = [build_entrance_history(counter=np.zeros((2, 30)))]
+    q = [EntranceQueue(np.zeros(2), np.zeros(2), cav_share=np.zeros(2))]
+    f = plan(model, state, h, n_samples=1, entrance_histories=histories, queues=q)[0]
+    process, mix = f.kwargs['entries'], f.kwargs['entrant_driver_sampler']
+    # Emulates the merge adapter's configure_entries call inside rollout.
+    insertion = SimpleNamespace(mix=mix, candidate=lambda *a: {'incorrect': True})
+    process.cfg.sumo_insertion = insertion
+    process.insert({k: v.clone() for k, v in state.items()})
+    for ordinal in (0, 7, 19):
+        assert insertion.candidate(0, 0, ordinal) == mix.candidate(0, 0, ordinal)
+    process.cfg.sumo_insertion = SimpleNamespace(mix=object())
+    with pytest.raises(ValueError, match='must share'):
+        process.insert(state)
