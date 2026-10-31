@@ -1,86 +1,58 @@
-# S-RB-UNC handoff
+# S-RB-UNC — READY for WM-PHYS A
 
-Branch `c4/rb-unc`, base `f0db3c82`. Owner WM-PHYS authorization read at
-REGISTRATION.md:5683,5694; all four WHY reports and ENSPROBE read.
+Branch `c4/rb-unc`, base `f0db3c82`. Owner registration5683/5694 and WHY +
+ENSPROBE read. Merge the branch; retain INT's own root HANDOFF on conflict.
+Implementation commits: `1f918969`, `ebea8483`, `9739d304`, `73cb13be`.
 
-## Implementation (ready for integrator)
-- NEW `wms.control.hidden_state` runtime adapter, opt-in
-  `future_sampling='hidden_state'`; legacy futures remain default.
-- Existing encoder exposes `uncertainty`, but `control/futures.py:94-99`
-  documents that it has no training loss. It is NOT a calibrated posterior.
-- Uses inferred population vectors as joint draws, history-conditioned motion
-  likelihood for present drivers, independent future Poisson request streams;
-  no generic acceleration/embedding/state/lane/merge noise.
-- Integrator can call adapter directly; shared `wms.py/spec.py/factory.py`
-  will not need edits. Adapter will require deterministic WM-PHYS physics.
-- Entrants use persistent entrance/ordinal-keyed learned population draws,
-  compatible with existing `entrant_driver_sampler` / `LearnedAdmission` hooks.
-- Exact integration example and statistical caveats: `tools/rbunc/README.md`.
-- API: `plan_hidden_state_futures(model, initial, history_kwargs,
-  future_sampling='hidden_state', n_samples=8, seed=190, row_keys=world_keys,
-  entrance_histories=histories, queues=queues)` -> list of `HiddenFuture`;
-  each supplies `.kwargs` for rollout and `.receipt` for provenance. OFF -> None.
-- Caller must pad first; freshly construct plans for alternatives/replay (mutable
-  entries), paired rows have equal world keys. No need to edit shared model code.
-- `sample_present=False` / `sample_arrivals=False` give exact source ablations.
-- LC2013 defaults remain defaults: the old encoder's MOBIL outputs cannot
-  identify LC2013 settings and are not reinterpreted as those parameters.
-- **SUMO insertion bridge added:** `PoissonEntries.insert` detects the per-future
-  `cfg.sumo_insertion` installed by MERGE inside rollout and binds its `candidate`
-  to the SAME weighted `BirthMix.candidate` used for newborn motion. Without this,
-  SumoInsertion's legacy uniform `errsrc-mix` hash would test a different vector.
-  This changes only the future-owned latent lookup, not placement or shared code.
-  No patch to MERGE's files is required. Rejects a mismatched sampler object.
+## API / switch
+- NEW `wms.control.hidden_state.plan_hidden_state_futures`:
+  `(model, initial, history_kwargs, future_sampling='hidden_state', n_samples=8,
+  seed=190, row_keys=world_keys, entrance_histories=histories, queues=queues)`.
+  Returns K `HiddenFuture` objects: `.kwargs` for rollout, `.receipt` provenance.
+- Default `future_sampling='off'` -> None, no encoding/RNG work.
+- Caller pads first and supplies observed request-demand/backlog/CAV share.
+  Create fresh plans/controllers per alternative or replay (entries are mutable).
+  Equal row keys + equal starts/pools share drivers/demand/newcomers across arms.
+- `sample_present=False` / `sample_arrivals=False` isolate the two latent sources.
+- No shared wms/spec/factory/trainer changes. API example: `tools/rbunc/README.md`.
 
-## Resources / checks
-- Clean worktree at start; local NVIDIA driver unavailable, initial CPU load94%.
-- Existing Python3.13 CPU runtime available per INT; use one CPU thread/low priority.
-- No simulation, training, download, peer-process action or prohibited data opened.
+## Semantics / integration detail
+- Present HDVs: calibrated supplied posterior samples, else empirical joint
+  population spread around point estimates with pre-t0 motion likelihood.
+  Existing encoder reliability mixes short histories toward population draws.
+  Incumbent untrained uncertainty head ignored; embeddings stay fixed.
+- Future requests: exact Poisson clocks from t0 at observed entrance demand.
+  Newcomer settings drawn from motion-inferred joint population by birth ordinal.
+- **SUMO bridge:** after MERGE configures insertion inside rollout,
+  `PoissonEntries.insert` binds only its future-owned insertion `candidate` to
+  its SAME weighted `BirthMix.candidate`. No legacy uniform-hash mismatch.
+  Actual INT-runtime synthetic insertion/motion identity + replay smoke PASS.
+- Known stochastic modules, train mode, runtime-noise/future-observation kwargs
+  rejected. Physics remains deterministic within each conditional future.
+- Old MOBIL outputs are NOT LC2013 settings; LC defaults stay defaults until
+  motion-inferred LC uncertainty exists. Missing donor pools fail closed.
 
-## Tests
-- `OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 py -3.13 -B -m pytest -q -p no:cacheprovider
-  tests/unit/test_hidden_state_futures.py tests/unit/test_c4_futures.py`:
-  **20 passed / 21.42s**. One harmless pytest cache-plugin-disabled config warning.
-- Covers exact replay of real IDM/MOBIL rollouts, varying outcomes from fixed
-  driver draws; joint population prior for zero history, no global/embedding
-  noise; paired-row CRN; admission/newborn identity equality; exact Poisson count
-  mean/variance and zero demand; source ablations; legacy futures regression.
-- Follow-up: **23 passed / 36.77s**, adding actual admission+newborn-motion
-  replay, supplied posterior samples without arbitrary caps, and missing donor
-  rejection. Physical-mode candidate support now uses the encoder's actual bounds.
-- Integration-bridge follow-up: **11 new-suite tests passed / 18.23s**, including
-  post-plan SUMO insertion configuration and train-mode/future-noise rejection.
-  Earlier 13 legacy-futures regression tests remain passing; no shared code changed.
+## Tests / complete FIT diagnostics
+- Latest new-suite12CPUtestsPASS; earlier legacy-futures13PASS. Single thread.
+- All32 native FIT969400..969431, K8/H120, authentic60s history COMPLETE.
+  Reference deterministic IDM/MOBIL + frozen SUMOCORE encoder5b256941,
+  NOT integrated WM-PHYS efficacy / main EVAL checkpointb8797242.
+- Mean within-K team SD574.4 [506.6,644.9] vs real across-world SD4200.5veh-s.
+  First-state drivers-only134.1, arrivals-only755.6, both696.7, fixed0.0veh-s;
+  fixed futures have identical complete physical tape hashes.
+- Queue conservation, finite dynamics, no missing padding/dropped requests,
+  no global physics RNG consumption; all280v2 futures pass. Independent CRPS/
+  variance/target/source-invariant checks PASS96metric-world cells.
+- V1 retained; corrected raw-IDM likelihood to existing executed-plant bounds
+  (max residual MSE3.18e10 ->42.51). No factual delay used to tune spread.
+- Report `docs/paper_results/RBUNC.md`; final raw/summary/verification and own
+  terminal receipts in `docs/paper_results/rbunc/`. All32 complete/31child rc0.
 
-## FIT diagnostic running
-- `docs/paper_results/RBUNC_DESIGN.md`: all32 native FIT969400..969431, K8,
-  H120 deterministic legacy IDM/MOBIL attribution reference; additional three
-  source ablations on first world969400. This is not integrated WM-PHYS efficacy.
-- Uses same available frozen encoder as SUMOCORE (`5b256941...`), authentic60s
-  motion; only pre-t0 request-demand/queue/CAV share, no future arrivals supplied.
-- Own cpuQ canary211301/supervisor215439, max8 single-thread nice19 workers,
-  queued-work resource gate. `/home/ubuntu/rbunc20261031/fit_probe_v1/`.
-- Exact Poisson request-count spread additionally saved at120/300/600s.
-- Initial remote load2.07/32 CPUs, panel check3.89; no GPU used.
-- v1 complete32/32, 280 physical120s futures including first-world ablations.
-  All fixed-latent first-world tapes identical. Raw v1 preserved in
-  `docs/paper_results/rbunc/fit_h120.json` and remote fit_probe_v1.
-- Found a likelihood-mechanics error in its diagnostics: raw unbounded IDM
-  predictions at compressed/censored gaps gave residual MSE up to1.6e10.
-  Observed acceleration is executed plant motion; likelihood now uses the
-  model's EXISTING acceleration limits, no invented threshold. Regression added.
-  Fresh versioned v2 rerun will preserve all v1 attempts/results, no retuning
-  to factual delay or conditional-spread target.
-- v2 staged `e448360130cc`, own canary252452/supervisor252519, separate
-  `/home/ubuntu/rbunc20261031/fit_probe_v2/`. New-suite12CPUtestsPASS/18.64s.
-- Actual INT-runtime synthetic LC2013+SUMO-insertion smoke PASS: two independent
-  five-tick replays identical; admitted settings equal newborn settings exactly,
-  global RNG unchanged. `docs/paper_results/RBUNC_INTEGRATION_SMOKE.json` binds
-  source hashes (tested bridge commit9739d304; likelihood change is independent).
-
-## Known gaps
-- Recorded FIT source-attribution outputs being collected; no distributional
-  qualification or integrated WM-PHYS efficacy claim from this reference probe.
-- Existing untrained uncertainty must not be
-  presented as posterior calibration. Across-world variability is descriptive,
-  not conditional variability (one real continuation per FIT observation).
+## Scope / remaining integration
+- Reference spread is a source-plumbing diagnostic, not calibrated coverage or
+  a WM-PHYS win. Full120/300/600s WM-PHYS action/distribution panel stays INT/EVAL.
+- Request-clock spread checked120/300/600s; traffic-delay spread here only120s.
+- Across-world SD includes observed-state heterogeneity: never tune conditional
+  SD to equal it. Recorder `arrivals` are destination exits, not entrance demand.
+- No SUMO/GPU/training, prohibited data, downloads, new venvs, deletions, push
+  or peer-process actions. CPU nice19 owned workers; both versions preserved.

@@ -1,0 +1,166 @@
+{
+ "schema": "rbunc_attribution/1",
+ "worlds": 32,
+ "K": 8,
+ "horizon": 120,
+ "input_sha256": "db82294e9e5c47c362192055ca5111ceb8aac17c305313980066e58bf21eb703",
+ "factual_target_sha256": "b16e2a7f65232d61be7baeaa6efe46abab3f9c1caaa40ffb90244bcadb228b5d",
+ "sampler_sha256": "c758e1d9bd3702b2b26e75ed3a3080c6c833d5fb98362ad09bcfa4e4d021e752",
+ "probe_sha256": "281f1e5f19c844efc63503df0aab453734decd1ca8d0046fc96e14ff5c6fda30",
+ "physics": "legacy deterministic IDM/MOBIL attribution reference; NOT integrated WM-PHYS",
+ "checkpoint_sha256": "5b2569418bf651b8ef2c3a2abdc110ac6860c32dd92dca8cdf3b2f48b1c8cbb2",
+ "diagnostic_only": true,
+ "scores": {
+  "team_delay_vs": {
+   "mean_within_K_sd": 574.415204986077,
+   "median_within_K_sd": 559.5414750958789,
+   "rms_within_K_sd": 608.807162438363,
+   "min_within_K_sd": 138.93070613654496,
+   "max_within_K_sd": 1060.62502179733,
+   "mean_within_K_sd_world_bootstrap95": [
+    506.55022405540467,
+    644.8667966616666
+   ],
+   "real_across_world_sd": 4200.498506870949,
+   "real_mean": 7354.8446403156895,
+   "predicted_mean": 7687.672228336334,
+   "mean_bias": 332.8275880206445,
+   "mean_crps": 611.4289998887655,
+   "range_coverage": 0.59375,
+   "mean_within_K_sd_over_real_across_world_sd": 0.13674929393415555
+  },
+  "road_delay_vs": {
+   "mean_within_K_sd": 229.2620936450514,
+   "median_within_K_sd": 218.39442648217815,
+   "rms_within_K_sd": 243.3226632840068,
+   "min_within_K_sd": 112.59130771940669,
+   "max_within_K_sd": 415.9100810476491,
+   "mean_within_K_sd_world_bootstrap95": [
+    202.05395335665798,
+    257.62639458423945
+   ],
+   "real_across_world_sd": 1140.3744956464996,
+   "real_mean": 3154.738741159439,
+   "predicted_mean": 3165.2542595863342,
+   "mean_bias": 10.515518426895142,
+   "mean_crps": 374.20676555112004,
+   "range_coverage": 0.4375,
+   "mean_within_K_sd_over_real_across_world_sd": 0.20104105670574338
+  },
+  "source_wait_vs": {
+   "mean_within_K_sd": 490.3787428956289,
+   "median_within_K_sd": 467.5316687644687,
+   "rms_within_K_sd": 526.8316488371953,
+   "min_within_K_sd": 60.981810812733336,
+   "max_within_K_sd": 976.2234242770161,
+   "mean_within_K_sd_world_bootstrap95": [
+    424.5954280868765,
+    558.3994547973003
+   ],
+   "real_across_world_sd": 3475.6790759098267,
+   "real_mean": 4200.10589915625,
+   "predicted_mean": 4522.41796875,
+   "mean_bias": 322.3120695937494,
+   "mean_crps": 417.38923089062484,
+   "range_coverage": 0.75,
+   "mean_within_K_sd_over_real_across_world_sd": 0.14108861381779406
+  }
+ },
+ "source_ablation": {
+  "both": {
+   "team_delay_sd": 696.6621099945575,
+   "road_delay_sd": 408.13202529769967,
+   "source_wait_sd": 414.6169434808816,
+   "unique_physical_tapes": 8,
+   "driver_v0_mean_sd": 0.84787517786026,
+   "arrival_count_sd": 14.618970063389751
+  },
+  "drivers": {
+   "team_delay_sd": 134.10997897377038,
+   "road_delay_sd": 131.75840465394333,
+   "source_wait_sd": 3.489141318842953,
+   "unique_physical_tapes": 8,
+   "driver_v0_mean_sd": 0.84787517786026,
+   "arrival_count_sd": 0.0
+  },
+  "arrivals": {
+   "team_delay_sd": 755.5701003258338,
+   "road_delay_sd": 488.6926642043311,
+   "source_wait_sd": 423.8877041319855,
+   "unique_physical_tapes": 8,
+   "driver_v0_mean_sd": 0.0,
+   "arrival_count_sd": 14.618970063389751
+  },
+  "fixed": {
+   "team_delay_sd": 0.0,
+   "road_delay_sd": 0.0,
+   "source_wait_sd": 0.0,
+   "unique_physical_tapes": 1,
+   "driver_v0_mean_sd": 0.0,
+   "arrival_count_sd": 0.0
+  }
+ },
+ "request_spread": {
+  "120": {
+   "mean_within_K_sd": 8.818926061814466,
+   "rms_within_K_sd": 9.340203280519571,
+   "mean_poisson_theoretical_sd": 9.49776323017332,
+   "recorded_destination_exit_sd": 5.418010585969487,
+   "recorded_destination_exit_mean": 73.75,
+   "comparison": "recorder arrivals are destination exits, NOT entrance requests; not comparable"
+  },
+  "300": {
+   "mean_within_K_sd": 14.882502823849642,
+   "rms_within_K_sd": 15.56923979128626,
+   "mean_poisson_theoretical_sd": 15.017282242172879,
+   "recorded_destination_exit_sd": 10.905338660047315,
+   "recorded_destination_exit_mean": 187.90625,
+   "comparison": "recorder arrivals are destination exits, NOT entrance requests; not comparable"
+  },
+  "600": {
+   "mean_within_K_sd": 20.478864798896353,
+   "rms_within_K_sd": 21.18321964770363,
+   "mean_poisson_theoretical_sd": 21.237644216865526,
+   "recorded_destination_exit_sd": 19.01431973115814,
+   "recorded_destination_exit_mean": 372.5625,
+   "comparison": "recorder arrivals are destination exits, NOT entrance requests; not comparable"
+  }
+ },
+ "driver_sd": {
+  "v0": 0.8067449387162924,
+  "time_headway": 0.02575803699437529,
+  "min_gap": 0.13763872999697924,
+  "accel": 0.05061708623543382,
+  "decel": 0.1648671051952988,
+  "politeness": 0.04295374598586932,
+  "mobil_threshold": 0.024823246465530246,
+  "merge_gap": 1.535655215382576,
+  "merge_urgency": 0.046546402969397604
+ },
+ "likelihood": {
+  "drivers": 2153,
+  "residual_mse_quantiles": [
+   1.1469292985566426e-05,
+   0.0764252319931984,
+   1.2932668209075926,
+   6.398263759613044,
+   42.51020050048828
+  ],
+  "particle_ess_quantiles": [
+   1.0560792684555054,
+   38.85423278808594,
+   66.19970703125,
+   78.08250427246094
+  ]
+ },
+ "verification": {
+  "worlds_complete": true,
+  "no_slot_or_dropped_requests": true,
+  "fixed_latents_bit_identical": true,
+  "driver_only_arrivals_identical": true,
+  "arrivals_only_present_drivers_identical": true,
+  "physics_rng_unchanged": "asserted on every probe rollout",
+  "queue_conservation": "asserted on every probe rollout",
+  "physical_futures": 280
+ }
+}

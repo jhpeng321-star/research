@@ -47,7 +47,7 @@ print(str(target))
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument('command', choices=('stage', 'inspect', 'run', 'status', 'panel', 'fetch'))
+    p.add_argument('command', choices=('stage', 'inspect', 'run', 'status', 'panel', 'fetch', 'receipts'))
     p.add_argument('--code')
     p.add_argument('--world', type=int, default=969400)
     p.add_argument('--horizon', type=int, default=120)
@@ -74,6 +74,24 @@ print('COMPLETE',[s for s in range(969400,969432) if (root/f'w{{s}}_h{args.horiz
 p=root/'w{args.world}_h{args.horizon}.log'
 if p.exists():print(p.read_text())
 '''))
+    elif args.command == 'receipts':
+        text = ssh(f'''
+from pathlib import Path
+import json,os
+root=Path({REMOTE!r})/{PROBE!r}
+receipts={{name:json.loads((root/name).read_text()) for name in ('PANEL_DISPATCH.json','PANEL_TERMINAL.json')}}
+assert all(rc==0 for seed,rc in receipts['PANEL_TERMINAL.json']['results'])
+assert len(receipts['PANEL_TERMINAL.json']['results'])==31
+receipts['child_pids']=[json.loads((root/f'PID_{{seed}}.json').read_text()) for seed in range(969401,969432)]
+receipts['complete_worlds']=[seed for seed in range(969400,969432) if (root/f'w{{seed}}_h{args.horizon}.json').exists()]
+receipts['host_load_after']=os.getloadavg()
+print(json.dumps(receipts))
+''')
+        out = ROOT/'docs/paper_results/rbunc'
+        assert out.is_dir()
+        with (out/'v2_dispatch_terminal.json').open('x', encoding='utf-8') as f:
+            f.write(text)
+        print('VERIFIED terminal receipts,', len(json.loads(text)['complete_worlds']), 'worlds')
     elif args.command == 'fetch':
         text = ssh(f'''
 from pathlib import Path
