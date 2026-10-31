@@ -1,9 +1,9 @@
 # S-RB-FIT — owner01:28 continuation active
 
 <!-- LC-CONTINUATION:BEGIN -->
-Latest verified `lane_raw_v5` (2026-11-01T02:26:40+08:00); LC SHA1bdded8e9f21, snapshotv1;3130driver posteriors.
-Raw physical expected changes410.2 vs626recorded; eventBrier0.002264. Likelihood-emission Brier0.347310 is a separate diagnostic. **NOT ADOPTED**; no free-running/action-effect qualification.
-Boundary-aware LC sampler required; weights already conditioned. Inverse temperature=0.3310366044855917; IDM preferred delivery remains `shrinkage_v1`. Live receipts:LC_WATCH_0128_STATE.json.
+Latest verified `lane_source_ec0f2a74974b` (2026-11-01T03:38:55+08:00); LC SHAc1aa89fafb69, snapshotv2;3130driver posteriors.
+Raw physical expected changes5238.3 vs626recorded; eventBrier0.007196. Likelihood-emission Brier0.002375 is a separate diagnostic. **NOT ADOPTED**; no free-running/action-effect qualification.
+Boundary-aware LC sampler required; weights already conditioned. Inverse temperature=not applicable; IDM preferred delivery remains `shrinkage_v1`. Live receipts:LC_WATCH_0128_STATE.json.
 <!-- LC-CONTINUATION:END -->
 
 

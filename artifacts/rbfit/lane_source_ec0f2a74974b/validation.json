@@ -1,0 +1,37 @@
+{
+  "elapsed_s": 5763.2111439704895,
+  "n_fit_intervals": 253468,
+  "later_FIT_directional_scores": {
+    "population": {
+      "n": 258691,
+      "events": 626,
+      "categorical_brier": 0.004992768365680384,
+      "event_brier": 0.0024963841828401917,
+      "negative_log_score": 0.0140778226120467
+    },
+    "raw_posterior": {
+      "n": 258691,
+      "events": 626,
+      "categorical_brier": 0.004749152819161763,
+      "event_brier": 0.0023745764095808816,
+      "negative_log_score": 0.013411217944982514
+    },
+    "shrunk_posterior": {
+      "n": 258691,
+      "events": 626,
+      "categorical_brier": 0.004749152819161762,
+      "event_brier": 0.002374576409580881,
+      "negative_log_score": 0.013411217944982526
+    },
+    "source_rate": {
+      "n": 258691,
+      "events": 626,
+      "categorical_brier": 0.004824236499230067,
+      "event_brier": 0.0024121182496150335,
+      "negative_log_score": 0.016657533540916765
+    }
+  },
+  "n_zero_information_drivers": 1621,
+  "adopted": false,
+  "note": "Requires free-running INT/EVAL evidence before adoption"
+}
