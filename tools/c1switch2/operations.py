@@ -103,6 +103,12 @@ def stage(host, predecessor=None):
         design_sha256=digest, registration_sha256=sha(REGISTRATION), sources=sources,
         prediction_objective='on_road_fleet_delay',
         runtime=dict(entry='tools.c1switch2.runtime:create', sha256=sha('tools/c1switch2/runtime.py')),
+        predictors={a:dict(entry='tools.c1switch2.rpc:'+a, sha256=sha('tools/c1switch2/rpc.py'))
+                    for a in ('wm', 'bb')},
+        inference_specs={a:dict(status='PENDING') for a in ('wm', 'bb')},
+        selectors={a:dict(entry='tools.c1switch2.selectors:'+entry,
+                          sha256=sha('tools/c1switch2/selectors.py'))
+                   for a, entry in [('fleet_ppo', 'fleet'), ('cav_mappo', 'per_cav')]},
         selector_specs={a: dict(status='PENDING') for a in ('fleet_ppo', 'cav_mappo')})
     if old is not None:
         binding['startup_predecessor'] = old
@@ -137,6 +143,7 @@ assert not (root/'PREFLIGHT.json').exists(),'preserve prior preflight'
 os.nice(19);os.environ.update({env(host, root)!r})
 os.environ['PATH']=str(Path(sysconfig.get_paths()['purelib'])/'sumo/bin')+':'+os.environ['PATH']
 os.environ['C1SWITCH2_SELECTOR_SOURCE']=str(stage/'peer/selmappo')
+os.environ['C1SWITCH2_CAV_SOURCE']=str(stage/'peer/selmappo2')
 sys.path.insert(0,str(stage));os.chdir(stage)
 log=io.StringIO()
 try:

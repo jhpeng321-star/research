@@ -59,18 +59,23 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
-Build and CPU preparation only; no task SUMO/GPU/physics processes.
+Latest resume state: `tools/c1switch2/evidence/STATUS_CURRENT.json` plus task-only `operations status`.
+Mechanics-only canary is RUNNING: owncpuQ PID467748, root
+`/home/ubuntu/c1switch2_run_4ad4ece01d5a9ac1`; cap4680 sim-s, GPU0. Never redispatch it.
+Initial PID446935 exited before setup/physics with zero charge; all receipts retained.
+Repair1065f89d was explicitly registered and passed pristine-process CPU construction before dispatch.
 The 23:48 owner approval is present; WALL integrated, final trained selectors pending.
 `tools/c1switch2/wall.py` binds the real peer lifecycle and self-ID-only memory;
 missing members remain absent and abort atomically on continuation. No simulator slots cross RPC.
-Resume CPU verification: local AND cpuQ AND gpuR 124 passed/1 host-only skip each.
+Latest cpuQ AND gpuR CPU verification: 127 passed/1 host-only skip each.
 Tests include real wall memory parity, six-row synthetic WM/BB mechanics and actual peer
 feature/model interfaces with clearly synthetic final169 test weights (not trained/evaluated arms).
 `python -B -m tools.c1switch2.gate --polls 1` reports approval without authorizing an unbound runtime.
 CPU preparation/exposure receipts are in `tools/c1switch2/evidence/`; prior versions are preserved.
-Staged mechanics roots (no dispatch at this receipt): cpuQ
-`/home/ubuntu/c1switch2_run_2d2400c953ef2545`, gpuR `/root/c1switch2_run_7e448ccdafc0c1c3`.
-Each passed frozen manifest/checkpoint constructors, both guards17/17 and CPU124/1skip.
+Old cpuQ `/home/ubuntu/c1switch2_run_2d2400c953ef2545` is a retained zero-physics STOP.
+gpuR `/root/c1switch2_run_7e448ccdafc0c1c3` is CPU-only; no GPU services or main jobs armed.
+New CPU-only snapshots `c1switch2_cpu_6b84f28df5d4` on both hosts pass127/1skip,
+including the actual peer grouped-WALL retirement bridge and bound two-GPU RPC factories.
 `operations.py status` inspects task-only dispatch receipts; canary is a write-once
 cpuQ claim using the original4680 sim-s reservation, never an automatic retry.
 The initial local exposure regex reported timestamp/negative-evidence false positives, fixed prospectively.

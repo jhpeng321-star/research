@@ -61,9 +61,10 @@ def cpu(host):
     files += [Path(p) for p in tests]+[Path('traffic_shepherd/c4/switchable_wall.py'),
                                     Path('src/wms/control/wall.py')]
     staged = {p.as_posix(): p for p in files}
-    peer = Path('E:/agent-work/c4-selmappo/tools/selmappo')
-    for name in ('__init__.py', 'selector.py', 'protocol.py', 'observations.py', 'learning.py'):
-        staged['peer/selmappo/'+name] = peer/name
+    for name, location in [('selmappo', 'E:/agent-work/c4-selmappo/tools/selmappo'),
+                           ('selmappo2', 'E:/agent-work/c4-selmappo2/tools/selmappo2')]:
+        for path in Path(location).glob('*.py'):
+            staged['peer/'+name+'/'+path.name] = path
     sources = {name: sha(p) for name, p in staged.items()}
     identity = __import__('hashlib').sha256(json.dumps(sources, sort_keys=True).encode()).hexdigest()[:12]
     parent = '/home/ubuntu' if host == 'cpuQ' else '/root'
@@ -84,6 +85,7 @@ assert all(hashlib.sha256((root/name).read_bytes()).hexdigest()==value for name,
 os.nice(19);os.environ.update(CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
 sys.path[:0]=[str(root),{runtime!r}+'/src',{runtime!r}]
 os.environ['C1SWITCH2_SELECTOR_SOURCE']=str(root/'peer/selmappo')
+os.environ['C1SWITCH2_CAV_SOURCE']=str(root/'peer/selmappo2')
 from tools.c1switch.library import install_wall_extension
 install_wall_extension()
 import subprocess
@@ -100,7 +102,7 @@ with contextlib.redirect_stdout(log),contextlib.redirect_stderr(log):
 out=dict(host={host!r},root=str(root),returncode=int(code),output=log.getvalue(),sources=sources,new_sim_s=0,new_gpu_s=0)
 (root/'CPU.json').write_text(json.dumps(out,indent=2));print(json.dumps(out))
 ''', timeout=120)
-    write(EVIDENCE/('CPU_'+host+'_integration_v1.json'), result)
+    write(EVIDENCE/('CPU_'+host+'_'+identity+'.json'), result)
     print(json.dumps({k: v for k, v in result.items() if k != 'sources'}, indent=2))
 
 

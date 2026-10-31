@@ -96,3 +96,39 @@ def serve(root, binding, factory):
         finally:
             signal.setitimer(signal.ITIMER_REAL, 0)
             write(root/'GPU_FINISHED.json', dict(pid=os.getpid(), elapsed_s=time.monotonic()-began))
+
+
+def client(binding, root, arm):
+    """Runner plugin ABI `(task_binding, task_root)` to the two GPU relay inboxes."""
+    from .selectors import DependencyPending
+    from .wall import Wall
+    spec = binding['inference_specs'][arm]
+    if spec.get('status') != 'FROZEN_READY':
+        raise DependencyPending('hash-bound two-GPU inference/parity routes not ready')
+    engine = spec['engine']
+    validate_engine(engine)
+    if (engine['arm'] != arm or engine['objective'] != binding['prediction_objective'] or
+            engine['objective_design_sha256'] != binding['design_sha256']):
+        raise ValueError('inference objective/design differs from registered task binding')
+    if set(spec['routes']) != {'gpuA', 'gpuR'}:
+        raise ValueError('both registered GPU routes required')
+    root = checked(root).resolve()
+    roots = []
+    for host in ('gpuA', 'gpuR'):
+        path = checked(root/spec['routes'][host]).resolve()
+        if not path.is_relative_to(root) or not path.is_dir():
+            raise ValueError('inference relay inbox must exist inside task root')
+        roots.append(path)
+    return FilePredictor(roots, engine, Wall())
+
+
+def wm(binding, root):
+    return client(binding, root, 'wm')
+
+
+def bb(binding, root):
+    return client(binding, root, 'bb')
+
+
+def wm_phys(binding, root):
+    return client(binding, root, 'wm_phys')
