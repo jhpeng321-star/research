@@ -1,5 +1,11 @@
 # S-SELMAPPO2 MAIN01:48 live continuation handoff
 
+Verified Unix1793470139: checkpoint001/1complete update,61complete production
+episodes,6open; second smokePASS,56,100actual/62,100reserved incl failed history.
+No new failures;62complete control-window receipts0collisions/teleports.
+Read-only local watcher12432 is running and successfully publishing the paper's
+live tail/CSV/SVG; DO NOT duplicate it. Only final169 is evaluation-eligible.
+
 Advance-approved unchanged cap7012800; designSHA09499f2af60311b3690a940dca8d94605d710465afb9c9eb05d5b0a79b23900c.
 One-use continuation launched on cpuQ, supervisor606968/UID1000/startticks48374316.
 Root `/home/ubuntu/selmappo2_20261101/build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29`.

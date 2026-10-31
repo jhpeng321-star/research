@@ -2,6 +2,19 @@
 
 ## Status (2026-11-01)
 
+**Production is learning and remains running.** Verified at Unix1793470139:
+1/169complete PPO updates, checkpoint001SHA256
+`6a0d24753ddd9ee01b9a92cf025c8f8005745ccc69d3ccdd5057633c9ba28ab7`.
+The first update contains46fresh900s worlds/1380decision frames/22144CAV samples;
+J600mean57,995.9043veh-s, standard deviation31,482.3126 across scheduled worlds.
+Measured first-update wall385.17s gives386,949sim-s/hour, roughly18.1h for the full
+production allocation if maintained (early projection; spare-resource priority
+can slow it). This is one training point, not a learning trend or evaluation.
+Full collectionSHA256c60671905071dd55cff1dab4596e7c49c3aac223cba5cca4789cd4fae9809aea
+verifies61production successes +1successful second smoke,6openproduction,
+56,100actual/62,100reserved including original failed900/300. No new failures;
+62complete control-window result receipts have0collisions/teleports.
+
 MAIN01:48 has now **acknowledged and launched** the same-cap continuation: unused second
 smoke18107999 only, then all originally registered production worlds. The explicit
 one-use continuation implementation passes93/93 local CPU tests and Ruff. It
@@ -108,7 +121,8 @@ under the amended no-retry protocol; no failed world is replayed or replaced.
 
 ## Learning curves and evaluation
 
-Production is running. No learning curve can be measured from zero completed updates.
+Production is running; the first verified complete-update point and its CSV/SVG
+are published in the live section below. No efficacy claim follows from it.
 Supervisor records per-update J600 mean/std/range, episode
 return, PPO loss/KL-stop, sim-s/hour, actual/reserved charge and checkpoint SHA256
 in `training/training.jsonl`. Initial000 and every001..169 checkpoint are immutable;
@@ -136,3 +150,95 @@ single-training-seed uncertainty and richer per-CAV action space will be disclos
 Frozen speed-MAPPO library pretraining and WM/BB data/compute are separate costs.
 
 Evidence is under `docs/paper_results/selmappo2/`.
+
+<!-- SELMAPPO2_LIVE_BEGIN -->
+
+## Latest verified live results
+
+
+
+**Training status: PARTIAL**
+
+
+
+Evidence: `selmappo2/COLLECTION_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29_1793470139949439700_a783d47e4f164b76a5cdaf5843e295a3.json`; SHA256 `c60671905071dd55cff1dab4596e7c49c3aac223cba5cca4789cd4fae9809aea`.
+
+Remote root: `/home/ubuntu/selmappo2_20261101/build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29/training`.
+
+Dispatch PID: `606968`; alive at observation: `True`; observation timestamp (ns): `1793470139290518377`.
+
+
+
+## Training progress
+
+
+
+Verified complete updates: 1/169 (46 fresh episodes/update).
+
+Update records observed: 1.
+
+Coordinator successful episodes: 61/7,774 production + 1/2 smoke.
+
+Reservations: 69; unresolved: 6; failed: 1; actual not yet receipted: 6.
+
+Raw newly incurred training + smoke simulation: 56,100.0 actual s; 62,100 reserved s (no refunds).
+
+
+
+Full planned production simulation: 6,996,600 s; smoke: 1,800 s; total training + smoke: 6,998,400 s. The separate 16-world evaluation would cost 14,400 s (combined allocation 7,012,800 s).
+
+Inherited controller-library training and world-model (WM) costs: unknown; excluded from raw new-run simulation, not assumed zero.
+
+Reported simulation includes 300 s native warmup + 600 s control per episode.
+
+Wall times in the curve CSV are measured per-update coordinator wall times; they are not CPU-hours or inherited training costs.
+
+
+
+## Learning curve
+
+
+
+J600 is full-team delay over the 600 s control interval; lower is better. Each point uses a verified complete 46-episode update. The x-axis is cumulative actual simulation seconds, including two smoke episodes and warmup. Fresh scheduled worlds vary between updates; this is training progress, not an efficacy comparison or checkpoint-selection rule.
+
+
+
+![Training learning curve](selmappo2/selmappo2_curve_1793470139964283800_fd161a0279fb432d9b8a4e5ed5ca127d.svg)
+
+
+
+[Complete-update metrics CSV](selmappo2/selmappo2_curve_1793470139964283800_fd161a0279fb432d9b8a4e5ed5ca127d.csv)
+
+
+
+## Safety receipts
+
+
+
+Collected complete episode result receipts: 62. collisions: 0.000; teleports: 0.000; ttc_below_3_vs: 27,071.500; hard_brake_vs: 1,136.000.
+
+These are recorded control-interval components only. Warmup safety and dropped-vehicle counters are not separately recorded in result.jsonl; unrecorded metrics are not asserted to be zero.
+
+
+
+## Frozen final169
+
+
+
+Final169 manifest/checkpoint hash not yet verified.
+
+
+
+## Evaluation
+
+
+
+**PENDING** — peer-owned S-C1SWITCH2 panel seeds 969136..969151. No byte-pinned complete evaluation JSON has been supplied. No final efficacy claim can be made from training progress.
+
+
+
+## Evidence limitations
+
+
+
+- Acknowledged historical smoke failure retained: 900 reserved / 300 actual s.

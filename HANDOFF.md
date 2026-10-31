@@ -5,6 +5,18 @@ Original advance-approved exact cap7,012,800; designSHA09499f2af60311b3690a940dc
 
 ## Current state
 
+**Verified Unix1793470139: training has1complete PPO update,61complete production
+episodes,6openproduction, second smoke successful; owncpuQ606968 still live.**
+Checkpoint001SHA6a0d24753ddd9ee01b9a92cf025c8f8005745ccc69d3ccdd5057633c9ba28ab7;
+first update46worlds/1380frames/22144CAV samples. Global56,100actual/62,100reserved
+incl failed900/300. Initial measured throughput386949sim-s/hour (~18.1h projection
+if maintained, subject to priority). No new failures/control-window collisions/
+teleports in62successful result receipts. Only final169 remains evaluation-eligible.
+Local watcher12432 has successfully collected and published its first live report,
+immutable collection/CSV/SVG/report snapshot. It runs every300s; NEVER duplicate
+it or training. The live tail of docs/paper_results/SELMAPPO2.md is authoritative
+for later progress; intermediate checkpoints MUST NOT be evaluated.
+
 **MAIN01:48 continuation dispatched once** on cpuQ, own supervisor606968,
 UID1000/startticks48374316. Current root is
 `/home/ubuntu/selmappo2_20261101/build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29`.
