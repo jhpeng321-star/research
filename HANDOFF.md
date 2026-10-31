@@ -9,6 +9,12 @@ Latest publication: corrected u1/checkpoint and both DEV panels complete;
 1,952,433precharged/1,900,133closedactualsim-s. All1,593 relocated tapes were
 verified archived by the previous observer. MAIN03:07 requests+4M, but approval is
 not recorded. No new physics/signals/replays. Receipt: `RESUME_TRANSPORT_BLOCKED.json`.
+Observer recovery CPU18/18PASS/0skips/0sim-s; explicit SSH disconnects/timeouts now
+keep polling, while remote Python/integrity/authentication failures still stop.
+Replacement singleton42012/creation2026-11-01T05:26:11 verified with exact command;
+receipt `tools/coopfree/evidence/HOLD_PUBLISHER_42012.json`. First log records the
+same connection closure as recoverable; it remains observer-only for12h and commits
+new hash-bound milestones. Do not spawn another observer or any production worker.
 
 ## OWNER02:21 fresh resume
 Production615088/start48394231 and workers615093-615096 verified live/nice19;
