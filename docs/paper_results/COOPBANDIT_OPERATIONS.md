@@ -70,3 +70,10 @@ This explicit diagnostic reserves1140; exclude both gpuA v3 labels/attempts, ret
 900+1140 reservations and900+540 actual. Total abandoned4320charged/1806actual;
 successful data1489200 + abandoned4320 + gate1140=1494660<=1.5M. Live99360 yields
 1594020<=1.6M, reserve5980. No metric tolerance or bitwise gate is relaxed.
+
+The full1140s gpuA compatibility gate PASSED at every checkpoint with zero field
+differences, including physical/observable/command digests, all metrics/counters,
+MAPPO memory, features and observable-only summaries. Fresh gpuA labels_v4 uses
+the hash-bound scalar reducer and retains the stopped v3 roots. Both allocated
+t300/t540 canaries execute before its eight-worker pool. cpuQ/gpuR completed work
+and live jobs are reused; their existing allocations remain unchanged.

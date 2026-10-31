@@ -17,6 +17,11 @@ EVIDENCE = LOCAL/'tools/coopbandit/evidence'
 AGGREGATE = '/home/ubuntu/coopbandit20261031_aggregate_v3'
 
 
+def active_plan():
+    p=EVIDENCE/'RECOVERY_PLAN.json'
+    return read(p if p.exists() else EVIDENCE/'SHARDS.json')
+
+
 def once(path, value):
     if Path(path).exists():
         if canonical(read(path)) != canonical(value):
@@ -137,7 +142,7 @@ def plan():
 
 
 def install():
-    allocation=read(EVIDENCE/'SHARDS.json')
+    allocation=active_plan()
     # cpuQ labels get a separate immutable allocation; screens retain their original one.
     r=LABEL_ROOTS['cpuQ']
     remote('cpuQ',f'''import pathlib,shutil,json
@@ -175,7 +180,7 @@ print('baseline receipts installed')
 
 
 def canaries():
-    allocation=read(EVIDENCE/'SHARDS.json')
+    allocation=active_plan()
     for host,shard in allocation['shards'].items():
         root=shard['root'];config=dict(HOSTS[host]);config['root']=root
         # Explicit one-job gate before pool expansion, to limit possible cross-host drift cost.
@@ -208,7 +213,7 @@ print(json.dumps(dict(host={host!r},root=str(r),pid=p.pid,phase='branch-canary')
 
 
 def expand():
-    allocation=read(EVIDENCE/'SHARDS.json')
+    allocation=active_plan()
     for host,shard in allocation['shards'].items():
         current=status(host,shard['root'])
         if current['stop']:
@@ -229,7 +234,7 @@ def expand():
 
 
 def collect():
-    allocation=read(EVIDENCE/'SHARDS.json')
+    allocation=active_plan()
     initial=[f'jobs/s{w["seed"]}_screen/{n}' for w in worlds() for n in ('RESULT.json','CLOSE.json')]
     initial += [f'jobs/s{next(w for w in worlds() if w["cell"]==c)["seed"]}_repeat/{n}' for c in range(12) for n in ('RESULT.json','CLOSE.json')]
     remote('cpuQ',f'''import pathlib,shutil,json
@@ -270,8 +275,8 @@ for e in s['worlds']:
 print(json.dumps(dict(states=len(complete),state_ids=complete)))
 '''))
     progress=dict(unix=time.time(),states=result['states'],hosts=counts,
-                  conservative_charged=sum(r['sim_s'] for r in ledgers)+2280,
-                  actual_closed=sum(x['actual_closed'] for x in counts.values())+102000+366)
+                  conservative_charged=sum(r['sim_s'] for r in ledgers)+allocation['abandoned_charged']+allocation.get('diagnostic_charged',0),
+                  actual_closed=sum(x['actual_closed'] for x in counts.values())+102000+allocation['abandoned_actual']+allocation.get('diagnostic_actual',0))
     once(EVIDENCE/f'PROGRESS_{int(progress["unix"])}.json',progress)
     # Unique immutable snapshot at the first >=100-state milestone, and at completion.
     full=all(counts[h]['completed']==len(s['attempts']) for h,s in allocation['shards'].items())
@@ -292,7 +297,7 @@ ledger=json.loads(gzip.decompress(base64.b64decode({payload!r})))
 with (r/'CHARGES.jsonl').open('x') as f:
  for row in ledger: f.write(json.dumps(row)+chr(10))
 export(r,partial={not full!r})
-if {full!r}: write(r/'DATA_COMPLETE.json',dict(states=300,successful_data_sim_s=1489200,abandoned_actual=366,abandoned_charged=2280))
+if {full!r}: write(r/'DATA_COMPLETE.json',dict(states=300,successful_data_sim_s=1489200,abandoned_actual={allocation['abandoned_actual']},abandoned_charged={allocation['abandoned_charged']},diagnostic_charged={allocation.get('diagnostic_charged',0)}))
 print(json.dumps(dict(snapshot=str(r),states={result['states']},partial={not full!r})))
 ''',timeout=120)
         receipt=json.loads(output)
@@ -329,7 +334,7 @@ if __name__=='__main__':
     if a.mode=='status':
         print(canonical(status('cpuQ',SCREEN)))
         if (EVIDENCE/'SHARDS.json').exists():
-            for h,s in read(EVIDENCE/'SHARDS.json')['shards'].items():
+            for h,s in active_plan()['shards'].items():
                 print(canonical(status(h,s['root'])))
     elif a.mode=='audit-gpuA': print(canonical(audit_gpuA()))
     else: globals()[a.mode]()
