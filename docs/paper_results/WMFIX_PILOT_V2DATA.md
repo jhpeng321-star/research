@@ -79,3 +79,20 @@ decision. GPU parity/launch/decision remain pending.
 - Dry-run verified exact input/tree/driver bindings. Append-only registration
   records this dispatch. `STATUS.json` is the current state; `EVENTS.jsonl`
   preserves every transition. Read those before any recovery action.
+
+## Fresh-session reconciliation, 2026-10-31 17:06 +08
+- Clean worktree at df70e103. PID197030 is absent; no launch_data_pilot,
+  pilot_v2, data_pilot or panel_eval_v2 process remains on gpuA.
+- Authoritative STATUS is FINISHED/exit1, not an unexplained dispatcher death.
+  Parity PASSED exactly (PARITY.json smoke SHA f9ea73ef...):
+  449.62744140625 / 302.890625, same original-v1 values and bound prepared data.
+- EVENTS: parity started epoch1793434364; passed1793436331; pilot timeout
+  PID214854/start881654564 launched at1793436331 with16599MiB free;
+  finished1793437373. Four finite-gradient, frozen-bitwise updates were saved.
+- BLOCKED before a gate decision: SHARD_step0_full_s0.log raises
+  `entrant_control needs an explicit feedback controller for direct/mixed arms`
+  in grouped_feedback/inferred_timeline. No full step0 panel or step10 exists.
+  This is an infrastructure failure, NOT measured pilot-gate FAIL.
+- Original v2data outputs/checkpoints remain immutable. No blind redispatch:
+  diagnose WMDATA controller binding, then recover in a new output directory.
+  gpuA free9428MiB at17:06 (<14336); all peer jobs untouched.
