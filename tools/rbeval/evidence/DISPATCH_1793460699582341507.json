@@ -1,0 +1,86 @@
+[
+ {
+  "pid": 706825,
+  "argv": [
+   "nice",
+   "-n",
+   "19",
+   "/root/miniconda3/bin/python",
+   "-B",
+   "-u",
+   "/root/rbeval20261031/code/run_wm.py",
+   "--out",
+   "/root/rbeval20261031/wm2_shard0",
+   "--shard",
+   "0",
+   "--shards",
+   "4",
+   "--memory-gib",
+   "5"
+  ],
+  "unix": 1793460699.5793035
+ },
+ {
+  "pid": 706826,
+  "argv": [
+   "nice",
+   "-n",
+   "19",
+   "/root/miniconda3/bin/python",
+   "-B",
+   "-u",
+   "/root/rbeval20261031/code/run_wm.py",
+   "--out",
+   "/root/rbeval20261031/wm2_shard1",
+   "--shard",
+   "1",
+   "--shards",
+   "4",
+   "--memory-gib",
+   "5"
+  ],
+  "unix": 1793460699.58034
+ },
+ {
+  "pid": 706827,
+  "argv": [
+   "nice",
+   "-n",
+   "19",
+   "/root/miniconda3/bin/python",
+   "-B",
+   "-u",
+   "/root/rbeval20261031/code/run_wm.py",
+   "--out",
+   "/root/rbeval20261031/wm2_shard2",
+   "--shard",
+   "2",
+   "--shards",
+   "4",
+   "--memory-gib",
+   "5"
+  ],
+  "unix": 1793460699.5814936
+ },
+ {
+  "pid": 706828,
+  "argv": [
+   "nice",
+   "-n",
+   "19",
+   "/root/miniconda3/bin/python",
+   "-B",
+   "-u",
+   "/root/rbeval20261031/code/run_wm.py",
+   "--out",
+   "/root/rbeval20261031/wm2_shard3",
+   "--shard",
+   "3",
+   "--shards",
+   "4",
+   "--memory-gib",
+   "5"
+  ],
+  "unix": 1793460699.5823386
+ }
+]

@@ -1,8 +1,15 @@
 # S-RB-INT handoff
 
-Updated 2026-10-31 23:36 +08:00; branch `c4/rb-int`, base `f0db3c82`.
+Updated 2026-10-31 23:58 +08:00; branch `c4/rb-int`, base `f0db3c82`.
 
 ## Status
+- Fresh resume preserved HEAD841be6ea and untracked read-only remote.py. No INT
+  dispatch exists on gpuA; resource check: 48,510MiB free, 0% GPU, load6.40/208.
+- EVAL baseline/finalizer and SUMOCORE production already dispatched by owners;
+  preserve their receipts/jobs. RUNB waits for READY FOR EVAL, no candidate launched.
+- EVAL scorer/finalizer merged; root handoff retained; README preserves both the
+  merge diagnostics and distributional evaluator contracts. CF e9992767 now usable;
+  UNC1f918969 usable; FIT remains running and must not be duplicated.
 - Read owner authorization at active C4 registration line 5682 and all four WHY reports.
 - Integrator worktree initially clean. LANE and MERGE integrated at 23:42.
 - Initial poll: `c4-rb-{lane,merge,cf,eval}/HANDOFF.md` absent; SUMOCORE handoff absent.
