@@ -1,0 +1,66 @@
+{
+  "load": [
+    1.5263671875,
+    0.9736328125,
+    0.666015625
+  ],
+  "LAUNCH.json": {
+    "pid": 93751,
+    "unix": 1793458951.1599038,
+    "root": "/home/ubuntu/ensprobe20261031/recovery_v4",
+    "workers": 1,
+    "budget_sim_s": 49869,
+    "cap_sim_s": 50000
+  },
+  "CPU.json": {
+    "source_manifest": "b3c031adb6bc2b5c2bca160bea308f83ba5567b97c1cd0e853eddcd8367a8193",
+    "permitted_sources_verified": 542,
+    "worlds": [
+      [
+        969040,
+        0.05,
+        2400
+      ],
+      [
+        969041,
+        0.1,
+        2700
+      ],
+      [
+        969042,
+        0.2,
+        2400
+      ],
+      [
+        969043,
+        0.4,
+        2700
+      ],
+      [
+        969044,
+        0.2,
+        2700
+      ]
+    ],
+    "rng": [
+      969086,
+      969087,
+      969088,
+      969089,
+      969090,
+      969091,
+      969092,
+      969093
+    ],
+    "new_sim_s": 0,
+    "returncode": 0,
+    "tests": ".....                                                                    [100%]\n5 passed in 0.02s\n",
+    "controller_class": "PolicyExecutor"
+  },
+  "own_pid_exists": true,
+  "branches": 8,
+  "gates": 9,
+  "trunks": 1,
+  "charged_sim_s": 6069,
+  "log_tail": " Retrying in 1 seconds\n Retrying in 1 seconds\n{\"complete\": \"w969040_native_r969087\", \"actual_sim_s\": 600.0}\n Retrying in 1 seconds\n{\"complete\": \"w969040_native_r969088\", \"actual_sim_s\": 600.0}\n Retrying in 1 seconds\n{\"complete\": \"w969040_native_r969089\", \"actual_sim_s\": 600.0}\n Retrying in 1 seconds\n{\"complete\": \"w969040_native_r969090\", \"actual_sim_s\": 600.0}\n Retrying in 1 seconds\n{\"complete\": \"w969040_native_r969091\", \"actual_sim_s\": 600.0}\n Retrying in 1 seconds\n{\"complete\": \"w969040_native_r969092\", \"actual_sim_s\": 600.0}\n Retrying in 1 seconds\n{\"complete\": \"w969040_native_r969093\", \"actual_sim_s\": 600.0}\n Retrying in 1 seconds\n"
+}
