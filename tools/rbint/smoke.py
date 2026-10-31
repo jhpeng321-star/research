@@ -36,7 +36,7 @@ def main():
     expected = load('/root/wmcalib/expected_hashes.json')
     results = []
     begin = time.monotonic()
-    for variant in ('A', 'B', 'C'):
+    for variant in ('A', 'B', 'C', 'FULL'):
         os.environ['WMPHYS_VARIANT'] = variant
         models, receipt = load_candidate(
             ['/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt'], [str(ROOT/'configs/wm_phys.toml')], 'cpu')
@@ -64,9 +64,17 @@ def main():
                 h, m = namespace['history_tensors'](raw, model.history_s, model.history_stride_s)
                 kwargs.update(driver_history=h[:, keep], driver_history_mask=m[:, keep])
             with torch.no_grad(), forbid_learned_corrections(model) as calls:
-                if variant == 'A':
+                if variant in ('A', 'FULL'):
+                    extra = {}
+                    if variant == 'FULL':
+                        from tools.rbint.observations import fitted_inputs
+                        ids, _, _ = fitted_inputs(state, seed, start['initial_state_sha256'],
+                                                  model._wmphys_arrival_fit)
+                        extra = dict(fitted_state=model._wmphys_fitted_state,
+                                     vehicle_ids=ids, t0_s=300.)
                     future = plan_hidden_state_futures(model, state, kwargs,
-                        future_sampling='hidden_state', n_samples=1, seed=190, row_keys=[seed])[0]
+                        future_sampling='hidden_state', n_samples=1, seed=190,
+                        row_keys=[seed], **extra)[0]
                     kwargs.update(future.kwargs)
                 else:
                     _, embedding, _ = model.encode_drivers(state, **kwargs)

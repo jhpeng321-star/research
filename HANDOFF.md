@@ -22,6 +22,11 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   A/C use the bound compatible runner even with an older EVAL worktree copy.
 
 ## What exists
+- FULL recipe/entrypoint now wired (NOT READY until staged smoke): fitted
+  shrinkage_v1 joint draws + learned entrance-counter/Gamma-rate/Poisson clocks.
+  Reads ONLY hash-bound existing start/history exports; numeric vid_index follows
+  recorded identity through packed/recycled slots. Unknown posterior IDs use the
+  fitted population; reserved-world conditional-motion refit not yet available.
 - FIT50f2cd02 integrated: shrinkage_v1 preferred physical posterior (learned
   strength19.35568, already applied in artifact), UNC bridge and SUMOCORE
   sign diagnosis. Fitted LCv2 remains OFF: still loses its event-rate baseline.
@@ -48,6 +53,9 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   Full-population ledger/exit/finite audit attached to every candidate task.
 
 ## Verification / receipts
+- FULL recipe integration **26 CPU tests PASS /24.61s**. Checks packed-vs-recorded
+  IDs, prior/posterior distinction, untouched CAV settings, action-paired replay,
+  learned source conditioning, changed-start/permutation rejection. Smoke next.
 - Existing cpuQ FIT source suite **17 PASS /2.10s**; latest21-test source gate
   still to run in NEW INT staging (local SciPy absent). UNC adapter20PASS above.
 - UNC integration: **34 CPU tests PASS /13.33s**; fitted-IDM/arrivals, legacy

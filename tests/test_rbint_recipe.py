@@ -102,3 +102,57 @@ def test_fixed_population_for_present_and_newborns(variant):
         rollout = model.rollout(state, n_steps=30, cav_controller=native_controller(), **kw)
     audit = entries.audit_population(state, rollout)
     assert audit['conserved'] and sum(audit['due'][0]) > 0
+
+
+def test_full_recipe_observable_identity_fitted_posterior_and_learned_source(monkeypatch):
+    from tools.rbint import observations
+    from tests.unit.test_fitted_hidden import fitted
+    from wms.control.arrival_fit import LearnedArrivalFit
+    model = build_model(ModelSpec(rollout_mode='driver_params', lane_model='lc2013'),
+                        PhysicsConfig(merge_model='sumo', cf_model='sumo_idm')).eval()
+    model._wmphys_variant = 'FULL'
+    model._wmphys_fitted_state = fitted()
+    post = model._wmphys_fitted_state.posterior['drivers'].pop('969400:101')
+    model._wmphys_fitted_state.posterior['drivers']['969420:42'] = post
+    model._wmphys_arrival_fit = LearnedArrivalFit(dict(
+        schema='wm_phys.observed_arrivals.v1', generator_family='piecewise_constant_poisson',
+        conditioning_end_s=300., observed_phase_end_s=1200., worlds={}))
+    state = dict(s_m=torch.tensor([[-900., -800., 0., 0.]]),
+        v_mps=torch.full((1, 4), 20.), a_mps2=torch.zeros(1, 4),
+        lane=torch.zeros(1, 4, dtype=torch.long), length_m=torch.full((1, 4), 5.),
+        present=torch.tensor([[True, True, False, False]]),
+        is_cav=torch.tensor([[False, True, False, False]]))
+    # Original slots 1/3 pack into 0/1; recorded IDs42/103 are neither ordinal.
+    original = {n:v[:, [2, 0, 3, 1]].clone() for n,v in state.items()}
+    start = dict(state=original, initial_state_sha256='synthetic',
+        past_entries=[dict(time=1., lane=0), dict(time=2., lane=2)],
+        observed_queue_history=[[float(t), 0., 0.] for t in range(10, 301, 10)])
+    monkeypatch.setattr(observations, 'load_observations',
+                        lambda seed: (start, torch.tensor([42, 103]), {'synthetic': 'bound'}))
+    hist = build_entrance_history(counter=np.ones((2, 30)))
+    history = torch.zeros(1, 4, model.history_len, model.history_features)
+    mask = state['present'][..., None].expand(1, 4, model.history_len)
+    batch = SimpleNamespace(rollout_kwargs=dict(history=history, history_mask=mask),
+        metadata=[dict(initial_state_sha256='synthetic')],
+        entry_spec=dict(histories=[hist], queues=[EntranceQueue(
+            np.zeros(2), np.ones(2), cav_share=np.zeros(2))]))
+    kw, entries, receipt = candidate_future(model=model, batch=batch, initial=state,
+        future=2, seed=969420, frozen=observer())
+    assert kw['driver_params']['v0'][0, 0] == 43  # posterior ID42, not population17
+    with torch.no_grad():
+        _, _, original_params = model.encode_drivers(state, **batch.rollout_kwargs)
+    assert kw['driver_params']['v0'][0, 1] == original_params['v0'][0, 1]  # CAV unchanged
+    assert kw['entrant_driver_sampler'].candidate(0, 0, 4)['v0'] == 17
+    assert receipt['rate_source'] == 'fitted_entrance_counters'
+    assert receipt['present_identities'] == 2 and receipt['variant'] == 'FULL'
+    replay, _, replay_receipt = candidate_future(model=model, batch=batch, initial=state,
+        future=2, seed=969420, frozen=observer())
+    assert replay_receipt == receipt
+    assert torch.equal(replay['driver_params']['v0'], kw['driver_params']['v0'])
+    np.testing.assert_array_equal(replay['entries'].t_next, entries.t_next)
+    # Refuse a packed-slot permutation or changed start before drawing futures.
+    with pytest.raises(ValueError, match='cohort differs'):
+        observations.fitted_inputs({n:v[:, [1, 0, 2, 3]] for n,v in state.items()},
+            969420, 'synthetic', model._wmphys_arrival_fit)
+    with pytest.raises(ValueError, match='different registered start'):
+        observations.fitted_inputs(state, 969420, 'other', model._wmphys_arrival_fit)

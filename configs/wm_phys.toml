@@ -64,6 +64,15 @@ driver_settings = "fitted_physics_population_point"
 future_sampling = "poisson_arrivals_fixed_population"
 parameter_json = "artifacts/rbfit/pooled_full_v5/idm_pooled.json"
 
+[variants.FULL]
+driver_settings = "motion_fitted_joint_posterior"
+future_sampling = "fitted_hidden_state_and_learned_arrivals"
+parameter_directory = "artifacts/rbfit/shrinkage_v1"
+arrival_json = "docs/paper_results/rbunc/observed_arrivals.json"
+fitted_lc = false
+# Unknown exported driver identities use the fitted population prior. No refit
+# or outcome-driven selection occurs on the reserved worlds.
+
 [inference]
 training = false
 learned_acceleration_noise = false
@@ -78,7 +87,7 @@ worlds = [969420, 969421]
 arm = "native"
 t0_s = 300
 duration_s = 60
-variants = ["A", "B", "C"]
+variants = ["A", "B", "C", "FULL"]
 arrivals = false
 # Closed-cohort engineering gate; the registered full-panel harness adds demand
 # and its explicit admission/source ledger after this gate passes.

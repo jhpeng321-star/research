@@ -35,7 +35,7 @@ def load_candidate(checkpoints, configs, device):
     from wms.control.policy14_cli import load_members
     recipe = tomllib.loads(Path(configs[0]).read_text(encoding='utf-8'))
     variant = os.environ['WMPHYS_VARIANT']
-    if variant not in ('A', 'B', 'C'):
+    if variant not in ('A', 'B', 'C', 'FULL'):
         raise ValueError('unknown WM-PHYS variant')
     originals, source = load_members(checkpoints, [recipe['source']['config']], device)
     old = originals[0]
@@ -47,6 +47,18 @@ def load_candidate(checkpoints, configs, device):
     candidate, receipt = rebuild_with_motion_encoder(old, spec, physics)
     candidate.requires_grad_(False)
     candidate._wmphys_variant = variant
+    if variant == 'FULL':
+        from wms.control.fitted_hidden import FittedHiddenState
+        from wms.control.arrival_fit import LearnedArrivalFit
+        root = Path(__file__).resolve().parents[2]
+        options_full = recipe['variants']['FULL']
+        if options_full['fitted_lc']:
+            raise ValueError('fitted LC has not passed its baseline')
+        candidate._wmphys_fitted_state = FittedHiddenState.from_directory(
+            root/options_full['parameter_directory'])
+        candidate._wmphys_arrival_fit = LearnedArrivalFit.from_file(root/options_full['arrival_json'])
+        receipt['fitted_hidden'] = candidate._wmphys_fitted_state.provenance
+        receipt['learned_arrivals_sha256'] = candidate._wmphys_arrival_fit.sha256
     if variant == 'C':
         artifact = Path(__file__).resolve().parents[2] / recipe['variants']['C']['parameter_json']
         data = json.loads(artifact.read_text(encoding='utf-8'))
@@ -59,7 +71,8 @@ def load_candidate(checkpoints, configs, device):
             uncertainty=data['uncertainty_note'])
     receipt.update(source=source, variant=variant, recipe=recipe,
                    settings_B='inherited physics population defaults, not encoder centre',
-                   sampling='hidden_state' if variant == 'A' else 'poisson_arrivals_fixed_population')
+                   sampling=('fitted_hidden_state_and_learned_arrivals' if variant == 'FULL' else
+                             'hidden_state' if variant == 'A' else 'poisson_arrivals_fixed_population'))
     return [candidate], receipt
 
 
@@ -141,6 +154,14 @@ def candidate_future(*, model, batch, initial, future, seed, frozen, **unused):
     settings = model._wmphys_variant
     population = None
     defaults = None
+    extra = {}
+    observation_receipt = {}
+    if settings == 'FULL':
+        from tools.rbint.observations import fitted_inputs
+        ids, arrivals, observation_receipt = fitted_inputs(initial, seed,
+            batch.metadata[0]['initial_state_sha256'], model._wmphys_arrival_fit)
+        extra = dict(fitted_state=model._wmphys_fitted_state, vehicle_ids=ids,
+                     t0_s=300., arrival_fit=arrivals)
     if settings in ('B', 'C'):
         defaults = fixed_parameters(model, initial)
         cav_defaults = model._default_driver_parameters(state_kin(initial), *defaults.shape[:2])
@@ -159,14 +180,15 @@ def candidate_future(*, model, batch, initial, future, seed, frozen, **unused):
         seed=190, row_keys=[int(seed)] * rows, population=population,
         entrance_histories=[spec['histories'][0]] * rows,
         queues=[spec['queues'][0]] * rows,
-        sample_present=settings == 'A')
+        sample_present=settings in ('A', 'FULL'), **extra)
     plan = plans[future]
     if defaults is not None:
         plan.kwargs['driver_params'] = {n: defaults[..., i] for i, n in enumerate(PARAMETER_NAMES)}
         plan.receipt.update(posterior_source=('fixed_inherited_physics_population'
             if settings == 'B' else 'motion_fitted_pooled_point'), variant=settings)
     else:
-        plan.receipt['variant'] = 'A'
+        plan.receipt['variant'] = settings
+    plan.receipt.update(observation_receipt)
     process = plan.kwargs.pop('entries')
     entries = InstrumentedEntries(process, frozen.Entries)
     kwargs.update(plan.kwargs, entries=entries)
