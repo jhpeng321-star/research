@@ -46,3 +46,12 @@ Observations after update 0 (for MAIN):
 - sigma=0.07621979740797888; update-driver wall=0.005689 s; sim-s increment0,
   cumulative charged=actual=47,700 / 650,000. Consecutive rejected opportunities=2 (u0,u1).
 - Evidence: request_u01.json, screen_u01.json, u01_state.json; cpuQ driver3042666 exited.
+
+### Update 2 — screen rejection, no step
+- Screen kept[]; braking-side gain medians direction0..7, veh-s:
+  [-10.77,-0.07,-20.23,-24.40,-1.24,-1.54,-2.29,-6.36] (rounded; exact evidence retained).
+- 136 WM rollouts/24 nice19 CPU processes; screenwall102.079500s, driverwall0.004121s.
+- No real-SUMO pairs; no-step, theta bitwise unchanged. Panel before=after46,958.76242850634
+  (cached, not rescored); sigma0.07621979740797888. Increment0sim-s;
+  cumulative47,700charged=actual/650,000. Rejection streak3(u0,u1,u2).
+- Evidence: request_u02.json, screen_u02.json, u02_state.json; driver3050671 exited.
