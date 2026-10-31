@@ -27,6 +27,43 @@ def sha(data):
     return hashlib.sha256(data).hexdigest()
 
 
+def transport_failure(error):
+    """Recognize SSH outages without hiding remote Python/integrity failures."""
+    if isinstance(error, (subprocess.TimeoutExpired, ConnectionError)):
+        return True
+    if isinstance(error, subprocess.CalledProcessError):
+        if error.returncode != 255 or not error.cmd or error.cmd[0] != 'ssh':
+            return False
+        message = error.stderr or ''
+        if isinstance(message, bytes):
+            message = message.decode('utf-8', errors='replace')
+    elif isinstance(error, RuntimeError):
+        message = str(error)
+    else:
+        return False
+    patterns = (
+        r'Connection (?:closed|reset) by \S+(?: port \d+)?',
+        r'ssh: connect to host \S+ port \d+: (?:Connection timed out|Connection refused|No route to host|Network is unreachable)',
+        r'kex_exchange_identification: (?:read: Connection reset by peer|Connection closed by remote host)',
+        r'client_loop: send disconnect: (?:Broken pipe|Connection reset)',
+    )
+    lines = message.strip().splitlines()
+    return bool(lines) and all(any(re.fullmatch(p, line) for p in patterns) for line in lines)
+
+
+def poll_once(commit):
+    try:
+        return once(commit)
+    except DocumentationBusy as error:
+        print(json.dumps(dict(documentation_busy=str(error))), flush=True)
+    except (subprocess.TimeoutExpired, ConnectionError, RuntimeError,
+            subprocess.CalledProcessError) as error:
+        if not transport_failure(error):
+            raise
+        print(json.dumps(dict(transport_error=str(error), no_physics_retry=True)), flush=True)
+    return False
+
+
 def collect(known):
     return json.loads(remote('cpuQ', f'''import pathlib,json,hashlib,base64,os,time
 r=pathlib.Path({ROOT!r});read=lambda p:json.loads(p.read_text())
@@ -86,6 +123,7 @@ def describe(snapshot):
     lines = ['## Corrected HOLD-credit production',
              'Public artifacts: `tools/coopfree/publications/hold/`; verify its `MANIFEST.json`.',
              'Legacy MAPPO-credit checkpoint is retained remotely and excluded from corrected learning.',
+             'Remote status observed at '+time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime(snapshot['unix']))+'.',
              'Owned cpuQ supervisor PID%s/start%s; alive=%s; four nice19 single-thread workers.' %
              (snapshot['dispatch']['pid'], snapshot['dispatch']['start_ticks'], snapshot['owned_alive'])]
     progress = snapshot['progress']
@@ -239,12 +277,7 @@ def main():
             fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         deadline=time.monotonic()+a.hours*3600
         while True:
-            try:
-                done=once(a.commit)
-            except DocumentationBusy as error:
-                print(json.dumps(dict(documentation_busy=str(error))),flush=True);done=False
-            except (subprocess.TimeoutExpired, ConnectionError) as error:
-                print(json.dumps(dict(transport_error=str(error),no_physics_retry=True)),flush=True);done=False
+            done=poll_once(a.commit)
             if done or time.monotonic()>=deadline: return
             time.sleep(60)
 
