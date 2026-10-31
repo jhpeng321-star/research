@@ -3,8 +3,11 @@
 ## OWNER01:48 correction (supersedes inherited live-run narrative)
 CPU22/22 PASS, zero skips,1.28s, SUMO0, including all18 original frozen gates.
 The original156-window batch has drained; its legacy MAPPO-credit checkpoint is
-retained but excluded from corrected learning. The exact supervisor is parked
-between plants, with no unfinished attempts, by the one-shot boundary gate.
+retained but excluded from corrected learning. The exact original supervisor was
+parked between plants, then retired with no unfinished attempts; its gate is retained.
+Corrected production PID615088/start48394231 is RUNNING with4nice19 CPU workers.
+Its455 newtasks reserve156HOLD baselines(161,820sim-s)+299replacement solos,
+giving exact solo diagnostics for66 whole windows; total precharge1,690,800sim-s.
 `tools/coopfree_hold.py` reuses the original joint trials with new exact zero-update
 policy-mean HOLD reruns. Score only Gaussian set-points conditional on exogenous W:
 scoring the categorical duration against a W-dependent baseline would bias its gradient.
@@ -21,8 +24,11 @@ At recovery, the existing batch was blocked by free disk1.974GiB<unchanged2GiB g
 545 closed own observable tapes(629,923,759bytes) were relocated intact to the
 task-specific cpuQ `/dev/shm/coopfree20261101_observable`, with hash-verified symlinks
 preserving original logical paths; no content removed. Disk rose to2,735,427,584bytes.
-Durable external archival of relocated tapes is required before host shutdown.
 The continuation maintains this preserving relocation as needed; never touches peer files.
+ObserverPID15284 stays live12h and archives those tapes with SHA verification to
+`E:/Temp/opencode/coopfree20261101_observable_archive`; first64 verified successfully.
+It publishes corrected checkpoint/update/dev/discovery receipts to `publications/hold/`,
+updates HANDOFF/report and commits each milestone. No physics is dispatched by the observer.
 
 ## Recovery snapshot (before the first optimizer update)
 Build and CPU gates complete. MAIN's explicit 23:58 budget approval was observed.

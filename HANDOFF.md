@@ -18,13 +18,17 @@ diagnostics cover66 complete windows; all156 windows/24worlds drive objective2D_
 New455tasks=156exact HOLD baselines(161,820sim-s)+299exact replacement solos.
 Totalprecharge1,690,800sim-s at dispatch; corrected optimizer/dev/discovery pending.
 Corrected proposals publish under `tools/coopfree/publications/hold/`, NOT legacy exports.
-The new observer also copies relocated tapes to durable `E:/Temp/opencode/` archives.
+New observerPID15284 is live for12h; receipt `HOLD_PUBLISHER_15284.json` records
+its exact command/log. It publishes corrected milestones and commits only its
+publication/documentation paths; it never dispatches physics or retries a failed arm.
+The observer also copies relocated tapes to durable
+`E:/Temp/opencode/coopfree20261101_observable_archive`; first64 files SHA-verified.
 
 Branch `c4/coopfree`; preserve every committed/uncommitted file and all remote roots.
 Read `docs/paper_results/COOPFREE.md`, `COOPFREE_DESIGN.md`, and `tools/coopfree/evidence/` first.
 Explicit owner approval is in the shared REGISTRATION.md at the 23:58 COOPFREE budget line.
 
-## Live owned run
+## Inherited run receipts (historical; superseded by HOLD continuation above)
 - Host cpuQ; immutable `/home/ubuntu/coopfree20261101_build5`.
 - Pipeline PID339173, Linux start_ticks47835664; nice19, one CPU thread.
 - Batch acceleration receipt: sidecar PID436993/start48005147, eight nice19 CPU workers.
@@ -71,7 +75,8 @@ Its dispatch/log receipt is `tools/coopfree/evidence/PUBLISHER_DISPATCH_<PID>.js
 Initial publisher8556 was stopped by exact owned PID after its successful first
 publication to add complete paired-dev/safety/discovery reporting; its receipt/log
 are retained. This observer-only maintenance does not pause/restart any SUMO worker.
-Replacement publisher PID17964 is live; its receipt gives the exact operational log.
+Replacement publisher PID17964 was live before this migration; now retired by exact
+identity-checked PID. Its receipt gives the retained original operational log.
 It waits through active physics and publishes updates, paired CIs/safety, and detector/
 clustering/C_G summaries automatically, then exits on COMPLETE or durable STOP.
 

@@ -34,7 +34,7 @@ print(json.dumps(receipt))
 def status():
     return ssh.remote('cpuQ', f'''import pathlib,json,os,shutil
 r=pathlib.Path({ROOT!r});read=lambda p:json.loads(p.read_text())
-names=['HOLD_GATE_DISPATCH.json','HOLD_GATE_PARKED.json','BATCH_RESUMED.json','STOP.json','HOLD_STOP.json','HOLD_DISPATCH.json','HOLD_RETIRED_LEGACY.json','HOLD_COMPLETE.json','UPDATE_001.json']
+names=['HOLD_GATE_DISPATCH.json','HOLD_GATE_PARKED.json','BATCH_RESUMED.json','STOP.json','HOLD_STOP.json','HOLD_DISPATCH.json','HOLD_RETIRED_LEGACY.json','HOLD_COMPLETE.json','BANDIT.json','UPDATE_001.json']
 out={{n:read(r/n) for n in names if (r/n).exists() and n!='UPDATE_001.json'}}
 out['legacy_update_exists']=(r/'UPDATE_001.json').exists()
 p=pathlib.Path('/proc/339173/stat')

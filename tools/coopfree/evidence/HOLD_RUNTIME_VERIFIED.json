@@ -1,0 +1,25 @@
+{
+  "host": "cpuQ",
+  "supervisor": {"pid": 615088, "start_ticks": "48394231", "nice": 19, "alive": true},
+  "workers": [615093, 615094, 615095, 615096],
+  "all_workers_nice": 19,
+  "new_tasks_complete": 77,
+  "new_tasks_total": 455,
+  "corrected_update_complete": false,
+  "durable_stop": false,
+  "charged_sim_s": 1690800,
+  "comparison_policy": {
+    "scope": "TRAIN",
+    "source": "/home/ubuntu/coopbandit20261031_aggregate_v3/snapshots/full/learned/policy.pkl",
+    "sha256": "03e2070a74b9f65f7e0663ed118c7bd00c9642fb93b1f11d56bcc0c2331bbcbb"
+  },
+  "observer": {
+    "pid": 15284,
+    "hours": 12,
+    "first_publication_commit": "a5936b0f",
+    "first_archival_files_sha_verified": 64,
+    "archive_root": "E:/Temp/opencode/coopfree20261101_observable_archive",
+    "first_archive_receipt": "batch_0001.json",
+    "physics_dispatched": 0
+  }
+}
