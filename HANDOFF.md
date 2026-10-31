@@ -16,6 +16,11 @@ Full earlier handoff preserved at `docs/rb_merge/HANDOFF_HISTORY_0100.md`.
   Regression: old native head stays before s=0; physics-native crosses/merges
   into an empty mainline within10s despite the unrelated packed mainline car.
   **40 combined local CPU tests PASS /14.74s**. Fleet efficacy not yet measured.
+- Matching `native_physics_accel(state, dt_s=.5)` is now exported for
+  native-relative controller prediction, so native and zero-residual plans share
+  one plant. Four native CPU tests PASS /5.50s, including exact zero-residual
+  equality. Callback arithmetic is unchanged by this API extraction.
+  Coordination pointer: `E:/agent-work/rb-shared/MERGE_NATIVE_FINDING.md`.
 - **5870b556** follow-up source constants: eventual follower help uses POSITION_EPS=.1,
   not SPEED_EPS=.01; remaining-seconds denominator uses NUMERICAL_EPS=.001.
   Shared constants live in merge_network.py. **37 CPU tests PASS /9.95s**,
@@ -69,6 +74,8 @@ Full earlier handoff preserved at `docs/rb_merge/HANDOFF_HISTORY_0100.md`.
   Validator SHA `d35a8a99790696cef19a47a0e460a36b9eb7d4748c63999aa3563c040f2342a1`.
   Receipt `/tmp/rb-merge-fullfleet-v6/LAUNCH.json`; v5 exited first. One CPU,
   nice19/CUDA-hidden, launch load7.27/32. **Do not duplicate this running job.**
+  Mechanical check969400/CAV187: v6 merges at t326.5/s52.884m, while v5 never
+  merges it and remains at s=-1.464m/v=0 through t600. Full-panel score pending.
 - **01:04:36 +08 dispatched ONCE**, owned cpuQ PID**468961**, validator SHA
   `f68014b8b0586db5fdd329996c214fefcf7fb61c1e73aed5b4104ab5db21940b`.
   Receipt `/tmp/rb-merge-fullfleet-v5/LAUNCH.json`. PID468961 now **exited**,

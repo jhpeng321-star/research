@@ -6,7 +6,7 @@ import torch
 
 from wms.model.cav import EXEC_CAP_KEY, WM_MERGE_KEY
 from wms.model.spec import ModelSpec
-from wms.model.sumo_native import native_physics_controller
+from wms.model.sumo_native import native_physics_accel, native_physics_controller
 from wms.model.wms import WmSModel
 from wms.model.driver_encoder import PARAMETER_NAMES
 from wms.physics.config import PhysicsConfig
@@ -66,3 +66,15 @@ def test_native_requires_physics_ceiling_and_refuses_nonfinite():
     state[EXEC_CAP_KEY] = torch.full((1, 1), float('nan'))
     with pytest.raises(ValueError, match='nonfinite'):
         native_physics_controller()(state)
+
+
+def test_native_acceleration_plugs_into_zero_residual_execution_exactly():
+    from wms.control.continuous import native_relative
+    state = ramp_head()
+    state['v_mps'].fill_(5.)
+    state[EXEC_CAP_KEY] = torch.full((1, 1), .8)
+    native = native_physics_accel(state)
+    executed = native_relative(state, torch.zeros_like(native), native)
+    torch.testing.assert_close(executed, native, rtol=0, atol=0)
+    output = native_physics_controller()(state)
+    torch.testing.assert_close(output[..., 3], native, rtol=0, atol=1e-6)
