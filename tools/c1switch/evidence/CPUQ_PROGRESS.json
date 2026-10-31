@@ -1,0 +1,36 @@
+{
+  "load": [
+    0.638671875,
+    0.31884765625,
+    1.52587890625
+  ],
+  "DISPATCH.json": {
+    "pid": 3525930,
+    "unix": 1793443111.6503484,
+    "host": "cpuQ",
+    "version": "/home/ubuntu/c1switch20261031/fullrerun_v3",
+    "workers": 1,
+    "new_max_sim_s": 46080,
+    "total_step0_max_sim_s": 47010,
+    "main_authorized": false
+  },
+  "STATUS.json": {
+    "status": "RUNNING",
+    "world": {
+      "seed": 969101,
+      "penetration": 0.05,
+      "demand": 2400
+    },
+    "decision": 480
+  },
+  "TRUNK_GATE.json": {
+    "pass_": true,
+    "states": 1,
+    "receipt_sha256": "06e2d631c461e82e76f0576b6fff8b7d11f0d1fdced3ec89589b1e5a7898691c"
+  },
+  "own_pid_exists": true,
+  "charged_sim_s": 4140,
+  "completed_states": 1,
+  "closed_runs": 7,
+  "closed_actual_sim_s_incl_legacy": 3840.0
+}

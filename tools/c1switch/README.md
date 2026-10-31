@@ -14,8 +14,10 @@ cpuQ immutable `/home/ubuntu/c1switch20261031/fullrerun_v3` is staged;
 `evidence/CPUQ_STAGE.json` binds sources/imported930 debit. cpuQ13testsPASS,
 28seedguardsPASS, newSUMO0. Existing frozen runtime/controller hashes verify.
 No gpuR v2 dispatch/lock and no additional legacy debit were found on resume.
-Use `python -m tools.c1switch.cpuops progress` for receipts; `... launch` ONCE
-after this build commit, then never re-stage or restart. Initial Step0 one
+Dispatched ONCE after build `2608bb92`, cpuQ ownedPID3525930; first five-way
+state969101/t300 PASS (native full-rerun+90repeat bitwise, all candidate prefixes).
+Use `python -m tools.c1switch.cpuops progress` for receipts; never re-stage,
+launch again or restart. Initial Step0 one
 nice19 CPU worker, CUDA hidden; MAIN permits <=28workers on cpuQ.
 Main still requires actual Step0 bitwise/headroom gates and real observable
 feedback inference adapters; source entries are no longer required in prediction.
