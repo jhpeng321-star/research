@@ -2,6 +2,11 @@
 
 Branch `c4/rb-decide`, base `f0db3c82`; owner WM-PHYS registration line5683.
 
+## READY FOR INTEGRATION
+
+Implementation commits: `df4fa61e` (paired picker), `16dff9ad` (credibility).
+Copy/merge `tools/wmdecide/` into the integrated runtime and use the CLI below.
+
 - `tools/wmdecide/decision.py`: `Future`, `summarize`, `decide`; NumPy/CPU only.
 - Shared draw IDs align all candidate actions; missing/duplicate/failed futures
   reject. Full-team expected delay, predictive spread, event probability, paired
@@ -25,8 +30,15 @@ Branch `c4/rb-decide`, base `f0db3c82`; owner WM-PHYS registration line5683.
 - CIs: 10000 pointwise stratified whole-world bootstrap resamples, seed20261031;
   saved futures fixed, no finite-K/model-error claim or simultaneous qualification.
   Existing EVAL adoption/non-regression gate remains authoritative.
-- Verification: combined 14 CPU tests PASS, 0 skips (7.60s), including independent
-  CRPS/CDF/rank checks, leakage guards and real-validator-to-report synthetic
-  integration; Ruff and `git diff --check` PASS. Final packaging checks next.
-- Scientific scores await complete saved K8 worlds. No efficacy result claimed.
+- Verification: combined **15 CPU tests PASS, 0 skips (10.68s)**, independent
+  CRPS/CDF/rank checks, leakage/missing-climate/tie guards, real-validator→report,
+  SVG XML/coordinates, output hashes, public picker CLI and overwrite rejection.
+  Ruff and `git diff --check` PASS. See `tools/wmdecide/VERIFICATION.md`.
+- Fetched WM2 evidence checked with actual CLI: 11 tasks validated, **0 complete
+  K8 worlds**, so **BLOCKED_NO_COMPLETE_K8_WORLD**, no partial-ensemble scores.
+  Receipt: `E:/Temp/opencode/wmdecide-wm2-progress-58cb40f9745e47e1ac1eb43919a495f5/`.
+- Scientific credibility scores await completed saved K8 worlds and local candidate
+  shard paths. Existing EVAL/RUNA/RUNB producers retain their inference ownership.
+  S-RB-INT should run the same command once per model when outputs land, then
+  include each `CREDIBILITY.md` and its figures in the morning report.
 - No simulation/training/remote dispatch or peer-process interaction performed.

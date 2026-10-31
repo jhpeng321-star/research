@@ -5,6 +5,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+import xml.etree.ElementTree as ET
 
 import numpy as np
 
@@ -87,6 +88,8 @@ class ScoreTests(unittest.TestCase):
             self.assertEqual(a[key], b[key])
         self.assertEqual(a["worlds"], 2)
         self.assertIsNone(boot.mean(rows[:1]*20, "v")["low"])
+        constant = [dict(seed=1, v=.7), dict(seed=2, v=.7)]
+        self.assertFalse(boot.mean(constant, "v")["uncertainty_available"])
 
     def test_baselines_exclude_all_target_arms_and_reserved_labels(self):
         real, _ = synthetic_observations()
@@ -131,6 +134,21 @@ class ScoreTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             observations(pred, real, ("a", "b"), (120,), ("upstream",))
 
+    def test_missing_climate_and_real_ties_are_explicit(self):
+        real, pred = synthetic_observations()
+        for r in real:
+            if r["seed"] == 969420:
+                r["clocks"]["120"]["team_delay_vs"] = 12
+        real = [r for r in real if r["seed"] >= 969420]
+        data = observations(pred, real, ("a", "b"), (120,), ("upstream",))
+        pref = next(r for r in data["events"] if r["target"] == "preference")
+        self.assertEqual(pref["real_tie"], 1)
+        self.assertEqual(pref["outcome"], 0)
+        self.assertEqual(pref["brier"], 1)
+        self.assertEqual(pref["cell_n"], 0)
+        self.assertIsNone(pref["cell_probability"])
+        self.assertIsNone(pref["brier_minus_cell"])
+
     def test_prohibited_paths_rejected_before_access(self):
         for word in ("sealed", "holdout", "heldout", "cal_split", "chunk5", "j4b", "inc1",
                      "hetdata_truth", "vehicle_params", "driver_params", "vType_ASSIGNMENT"):
@@ -174,12 +192,42 @@ class HarnessIntegrationTests(unittest.TestCase):
         self.assertEqual(report["qualification"], "NOT_ASSESSED_USE_RBEVAL_GATE")
         self.assertTrue((scratch/"report/reliability_preference.svg").is_file())
         self.assertTrue((scratch/"report/CREDIBILITY.md").is_file())
+        for name in ("breakdown", "preference"):
+            svg = ET.parse(scratch/f"report/reliability_{name}.svg")
+            circles = svg.findall(".//{http://www.w3.org/2000/svg}circle")
+            self.assertTrue(circles)
+            self.assertTrue(all(np.isfinite(float(c.attrib["cx"])) and
+                                np.isfinite(float(c.attrib["cy"])) for c in circles))
+        hashes = core.load(scratch/"report/FILES.json")
+        for name, expected in hashes.items():
+            self.assertEqual(core.digest(scratch/"report"/name), expected)
         with self.assertRaises(ValueError):
             credibility(root, [scratch/"normalized"], scratch/"report", allow_partial=True)
         with self.assertRaises(AssertionError):
             credibility(root, [scratch/"normalized"]*2, scratch/"duplicates", allow_partial=True)
         with self.assertRaises(AssertionError):
             credibility(root, [scratch/"normalized"], scratch/"incomplete_full_panel")
+        # Complete validation with an incomplete K ensemble must yield a blocked
+        # progress report, never a factual score from a single future.
+        single = scratch/"single_future"
+        single.mkdir()
+        for name in ("IDENTITY.json", "w969420_k0.json"):
+            core.save_new(single/name, core.load(scratch/"normalized"/name))
+        blocked = credibility(root, [single], scratch/"blocked", allow_partial=True)
+        self.assertEqual(blocked["status"], "BLOCKED_NO_COMPLETE_K8_WORLD")
+        self.assertEqual(core.load(scratch/"blocked/credibility.json")["summary"], [])
+        # Test the public picker CLI and immutable output as a separate process.
+        payload = {"base": [dict(draw_id=str(i), team_delay=10) for i in range(8)],
+                   "candidate": [dict(draw_id=str(i), team_delay=9) for i in range(8)]}
+        core.save_new(scratch/"pick_input.json", payload)
+        command = [sys.executable, "-B", "-m", "tools.wmdecide", "pick", "--input",
+                   str(scratch/"pick_input.json"), "--incumbent", "base", "--out",
+                   str(scratch/"pick.json")]
+        picked = subprocess.run(command, capture_output=True, text=True, timeout=30)
+        self.assertEqual(picked.returncode, 0, picked.stderr)
+        self.assertEqual(core.load(scratch/"pick.json")["selected"], "candidate")
+        repeated = subprocess.run(command, capture_output=True, text=True, timeout=30)
+        self.assertNotEqual(repeated.returncode, 0)
 
 
 if __name__ == "__main__":
