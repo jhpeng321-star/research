@@ -3,9 +3,9 @@
 Branch `c4/rb-lane`, base `f0db3c82`. Owner authorization: REGISTRATION.md:5682,
 WM-PHYS REBUILD PROGRAM (2026-10-31 23:12). No training.
 
-## In progress
-- Source-backed LC2013 (SUMO **v1_27_1**) implementation, default-off
-  `ModelSpec(lane_model="lc2013")` planned. WM lane IDs are left=0, right=1,
+## Exists (first implementation step)
+- Source-backed LC2013 highway subset (SUMO **v1_27_1**) implemented;
+  default-off `ModelSpec(lane_model="lc2013")` integration next. WM lane IDs are left=0, right=1,
   acceleration lane=2 (opposite to SUMO's native indexing).
 - Public source downloaded for **reading only** into newly created
   `E:/Temp/opencode/sumo-1.27.1-rb-lane`; no downloaded code executed.
@@ -15,8 +15,8 @@ WM-PHYS REBUILD PROGRAM (2026-10-31 23:12). No training.
   Read only `episode.json`, `time_s.npy`, `veh_kin.npy`, `veh_mask.npy`,
   `is_cav.npy`, `vid.npy`. Local CPU busy (91%); use cpuQ, one thread per worker.
 
-## Integration contract (planned)
-- Pure tensor module in `src/wms/physics/lc2013.py`, no learned weights.
+## Integration contract
+- Pure tensor `lane_change` in `src/wms/physics/lc2013.py`, no learned weights.
 - Persistent state in `lc2013_*` tensor keys, reset on absence/identity changes
   and successful lane changes. Caller must carry these across rollout steps.
 - Existing MOBIL/learned lanes remain default. Integrator must disable learned
@@ -26,5 +26,13 @@ WM-PHYS REBUILD PROGRAM (2026-10-31 23:12). No training.
   SUMO population defaults unless explicit comparable inferred keys are supplied.
 
 ## Tests/results/gaps
-Implementation and tape validation pending. Source scope: highway, sublane OFF;
-no roundabouts, pedestrians, opposite-direction driving or TraCI wishes.
+11 source-contract CPU tests passed locally (one CPU thread); integration and
+tape validation pending. Numeric secure-gap, discrete braking inverse,
+strategic ramp, overlap/two-sided safety, assertive, persistent speed-gain,
+5s keep-right, cooperative clearing, identity/absence reset and invalid settings.
+Source scope: highway, sublane OFF. **Known parity gaps:** synchronous messages
+instead of SUMO downstream-first serial changes; full leader-overtake/fall-behind
+negotiation and right-overtaking prevention not ported; no roundabouts,
+pedestrians, opposite-direction driving or TraCI wishes. Optional route
+distances/offset/queued occupation accepted; defaults use scenario ramp end and
+continuing mainline. No SUMO or training launched, no tape result yet.

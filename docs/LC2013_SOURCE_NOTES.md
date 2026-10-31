@@ -30,3 +30,20 @@ report false positives/precision as well as recall, and use recorded motion only
 The historical MOBIL 1.4% came from a different panel; rerun MOBIL on the same
 FIT observations for the paired comparison. Teacher forcing is a lane diagnostic,
 not a long-horizon distributional qualification or counterfactual evaluation.
+
+## Implementation scope (first step)
+`physics/lc2013.py` ports fixed-point left/right/keep-right wishes, 0.9/s
+lookahead memory, strategic route-end lookahead, early strategic return,
+cooperative lane clearing, asymmetric speed gain and five-second keep-right.
+IDM secure-gap safety includes each follower's minGap and ego's lcAssertive.
+Anticipation uses the discrete safe-stop inversion (CFModel.cpp:860-882),
+brakeGapEuler, and IDM internal substeps for accelerating leaders.
+Blocking-follower Euler cut-in-help advice follows LC2013.cpp:712-791.
+Only matching named inferred parameters map; all other LC parameters default.
+`lcImpatience` does not change this LC2013 safety formula.
+
+Explicit parity gaps: synchronous instead of downstream-first serial messages;
+leader overtake/fall-behind/full follower negotiation; right-overtake prohibition;
+arbitrary route best-lane metadata unless supplied by the caller; nonlegacy
+keep-right follower adjustment; speed-gain lookahead extension (default zero);
+nonhighway special cases. This is a testable highway subset, not full parity.
