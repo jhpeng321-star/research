@@ -20,6 +20,7 @@ def main():
     p.add_argument('--short', action='store_true')
     p.add_argument('--original')
     p.add_argument('--prefix-gate')
+    p.add_argument('--resume', action='store_true')
     a = p.parse_args()
     root = safe(a.root)
     assert root.parent.is_dir() and digest(safe(a.model)) == FROZEN_SHA
@@ -30,15 +31,33 @@ def main():
         assert audit['verdict'] == 'PASS' and audit['exact_prefix_parity_futures'] == [0, 3]
         assert audit['runtime_sha256'] == digest(Path(__file__).with_name('runtime.py'))
     root.mkdir(exist_ok=True)
-    if (root/'LAUNCH.json').exists():
+    if (root/'LAUNCH.json').exists() and not a.resume:
         raise ValueError('existing dispatch receipt: inspect PID and task claims, never duplicate')
+    if a.resume:
+        assert a.short and (root/'LAUNCH.json').exists() and not (root/'RESUME.json').exists()
+        old = json.loads((root/'LAUNCH.json').read_text())
+        import ctypes
+        from ctypes import wintypes
+        ctypes.windll.kernel32.OpenProcess.restype = wintypes.HANDLE
+        ctypes.windll.kernel32.GetExitCodeProcess.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
+        ctypes.windll.kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+        handle = ctypes.windll.kernel32.OpenProcess(0x1000, False, old['pid'])
+        if handle:
+            try:
+                exitcode = ctypes.c_ulong()
+                assert ctypes.windll.kernel32.GetExitCodeProcess(handle, ctypes.byref(exitcode))
+                assert exitcode.value != 259, 'original dispatcher still alive: never duplicate'
+            finally:
+                ctypes.windll.kernel32.CloseHandle(handle)
+        else:
+            assert ctypes.windll.kernel32.GetLastError() == 87, 'cannot prove old dispatcher absent'
     cmd = [sys.executable, '-B', '-u', '-m',
            'tools.wmvalue.short_dispatch' if a.short else 'tools.wmvalue.orchestrate',
            '--root', str(root), '--tag', a.tag, '--gate', str(safe(a.gate)),
             '--real', str(safe(a.real)), '--model', str(safe(a.model))]
     if a.short:
         cmd.extend(['--original', str(safe(a.original))])
-    with (root/'DISPATCH.log').open('x', encoding='utf-8') as log:
+    with (root/('RESUME.log' if a.resume else 'DISPATCH.log')).open('x', encoding='utf-8') as log:
         proc = subprocess.Popen(cmd, cwd=Path(__file__).resolve().parents[2],
             stdin=subprocess.DEVNULL, stdout=log, stderr=subprocess.STDOUT,
             creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP)
@@ -56,7 +75,7 @@ def main():
             finalization='complete320prefixes -> frozen400pairs B/C/D/E -> FAIL or complete A',
             short_code_sha256={n: digest(Path(__file__).parent/n) for n in
                 ('short_dispatch.py', 'evaluate_short.py', 'finalize_short.py')})
-    with (root/'LAUNCH.json').open('x') as stream:
+    with (root/('RESUME.json' if a.resume else 'LAUNCH.json')).open('x') as stream:
         json.dump(doc, stream, indent=1, allow_nan=False)
     print(json.dumps(doc), flush=True)
 
