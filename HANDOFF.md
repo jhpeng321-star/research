@@ -1,5 +1,11 @@
 # S-RB-MERGE — in progress (2026-10-31)
 
+LATEST INTEGRATION INCREMENT: **2977be6d** (source corrections; 28 CPU tests pass).
+INT already reconciled mainline ownership: cherry-pick source corrections from
+2977be6d while keeping your root HANDOFF and your integrated sumo_merge hooks.
+This increment changes junction_merge.py / sumo_insertion.py, not sumo_merge.py.
+Current sole owned job: cpuQ **233273**, post-helper FIT32 diagnostic, below.
+
 Base: `f0db3c82`, branch `c4/rb-merge`. Owner registration read (line 5682).
 
 ## Interface reserved for S-RB-INT / S-RB-LANE
@@ -87,6 +93,12 @@ Base: `f0db3c82`, branch `c4/rb-merge`. Owner registration read (line 5682).
   diagnostic is warranted after the mechanics changed; previous results retained.
 - `tools/rbeval/summarize_merge.py` refuses duplicate/prohibited seeds and keeps
   conditional admission recall distinct from autonomous insertion calibration.
+- Corrected source version **2977be6d** frozen; own cpuQ PID **233273** launched
+  23:54:00 +08, one thread, nice=10, 32 FIT native worlds, 300s cohort diagnostics.
+  Exclusive receipt `/tmp/rb-merge-f2355d13/post_helper_fit_dispatch.json` includes
+  exact SHA256s of validator and all four mechanics modules. Output
+  `post_helper_fit_300.json`; previous PID200540 fully exited before any source
+  replacement or this new-version job. CPU load 12.9/32 at launch. No GPU use.
 
 ## Status / known gaps
 - Fresh-session recovery: HEAD f0db3c82; only this untracked handoff survived.
