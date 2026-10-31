@@ -38,6 +38,13 @@ Operational supplement, not an efficacy result. Frozen primary model, K8,
   hash is unchanged. It runs analysis/verification/commit only after480/480 completion.
 - Exact failure, prospective numerical acceptance, assignments and live resource
   receipts: `tools/c1closed/evidence/EXPAND_*.json`; code `tools/c1closed/expand*.py`.
+- `prefetch.py` can bulk-copy immutable own output/receipt files into the frozen
+  sync cache with per-file/archive hashes and safe member validation. One128-file
+  receipt batch verified; a separate one-off200-file transfer is running. It
+  performs no inference/analysis/finalization and cannot change the complete gate.
+- Latest live receipt:157/480 unique tasks complete, both expansion runners and
+  sole collector/bridge live, no failed expansion tasks. Sampled completed-task
+  owned peaks3750MiB (gpuA) /7316MiB (gpuR), below the respective byte budgets.
 
 ## Separate reference slot
 S-C1FLOOR now supplies an approved native-only tiny-speed-pulse sensitivity on

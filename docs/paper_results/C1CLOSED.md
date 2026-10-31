@@ -20,6 +20,7 @@ launch. Design/compatibility/owner aggregate addendum and CPU checks are committ
   100 completed tasks retained, two in-flight CPU tasks reserved without duplication.
 - Static disjoint remainder: gpuA31 / gpuR347 tasks. At latest admission receipt,
   gpuA owned2298MiB, gpuR6078MiB (<8GB), original collector and publication bridge live.
+  Latest verified union157/480 complete; both runners alive, zero expansion failures.
   This is a many-hour panel; a partial panel is not exported as the headline.
 - All 200 recorded world/arm label sets recovered; t300 observed start supplies
   the first left integration boundary of the tape beginning t300.5.

@@ -624,9 +624,10 @@ def launch_bridge():
 
 def checkpoint():
     from watch import creation
-    result=dict(at=time.time(),hosts={})
+    result=dict(at=time.time(),hosts={});completed=set()
     for host in ('gpuA','gpuR'):
         state=host_state(host)
+        completed.update(state['outputs'])
         usage=json.loads(ssh(host,f'''import sys,json
 from pathlib import Path
 sys.path.insert(0,{REMOTE!r});import expand_runner as r
@@ -637,7 +638,10 @@ for q in (p/'evidence').glob('EXPAND_*_OWNED.json'):
  if r.incarnation(x['pid'])==x['start_ticks']:
   s=Path('/proc/'+str(x['pid'])+'/stat').read_text().split(') ',1)[1].split()
   if s[0]!='Z':live.append(dict(pid=x['pid'],ticks=x['start_ticks'],task=x.get('task'),device=x.get('device')))
-print(json.dumps(dict(free_mib=free,owned_mib=owned,live=live)))
+attempts=[json.loads(q.read_text()) for q in (p/'evidence').glob('EXPAND_*_attempt1.json')]
+failed=[dict(task=x['task'],returncode=x['returncode'],memory_guard_stop=x['memory_guard_stop']) for x in attempts if x['status']!='complete']
+print(json.dumps(dict(free_mib=free,owned_mib=owned,live=live,failed=failed,
+ peak_completed_owned_mib=max((x['peak_host_owned_mib'] for x in attempts),default=0))))
 '''))
         result['hosts'][host]=dict(alive=state['alive'],completed=len(state['outputs']),load=state['load'],
                                   gpu=state['gpu'],usage=usage,receipt=state['receipt'])
@@ -646,10 +650,12 @@ print(json.dumps(dict(free_mib=free,owned_mib=owned,live=live)))
     result['collector_sources_unchanged']=all(hashlib.sha256((HERE/name).read_bytes()).hexdigest()==value for name,value in watch['source_hashes'].items())
     b=json.loads((HERE/'evidence/EXPAND_BRIDGE_LAUNCH.json').read_text())
     result['bridge_alive']=creation(b['pid'])==b['creation_time']
+    result['unique_completed_tasks']=len(completed)
     result['expansion_source_sha256']=hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
     assert result['collector_alive'] and result['collector_sources_unchanged'] and result['bridge_alive']
     for host in ('gpuA','gpuR'):
         assert result['hosts'][host]['alive']
+        assert not result['hosts'][host]['usage']['failed'], 'inspect own failed expansion tasks before completion'
         assert result['hosts'][host]['usage']['owned_mib']*2**20<=(12_000_000_000 if host=='gpuA' else 8_000_000_000)
         assert result['hosts'][host]['usage']['free_mib']>=1024
     save('EXPAND_RUNNING_'+str(int(time.time()))+'.json',result);print(json.dumps(result,indent=1))

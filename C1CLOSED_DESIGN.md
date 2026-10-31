@@ -198,7 +198,7 @@ outcome inspection, sample reduction, post-hoc selection or retraining is added.
 The stricter-than-owner bitwise gate failed on the different 4090/4090D GPUs:
 same-host full300s repeats are bitwise identical, but cross-host roundoff grows
 after60s. Preserve that FAIL and every diagnostic; do not relabel it exact PASS.
-The model/source/input/package hashes match; only the resolved config symlink
+The model/source/input hashes and package versions match; only the resolved config symlink
 path differs in non-executable metadata. No recorded-SUMO comparison was used.
 
 Before computing the following check, register this separate operational gate:
