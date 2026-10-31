@@ -48,6 +48,11 @@ future_sampling = "hidden_state"
 driver_settings = "population_default"
 future_sampling = "poisson_arrivals_fixed_population"
 
+[variants.C]
+driver_settings = "fitted_physics_population_point"
+future_sampling = "poisson_arrivals_fixed_population"
+parameter_json = "artifacts/rbfit/pooled_full_v5/idm_pooled.json"
+
 [inference]
 training = false
 learned_acceleration_noise = false
@@ -62,7 +67,7 @@ worlds = [969420, 969421]
 arm = "native"
 t0_s = 300
 duration_s = 60
-variants = ["A", "B"]
+variants = ["A", "B", "C"]
 arrivals = false
 # Closed-cohort engineering gate; the registered full-panel harness adds demand
 # and its explicit admission/source ledger after this gate passes.

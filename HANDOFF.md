@@ -61,6 +61,12 @@ Updated 2026-10-31 23:58 +08:00; branch `c4/rb-int`, base `f0db3c82`.
   Full-panel arrival/source conservation remains a separate required gate.
 
 ## Tests / results
+- C point-physics adapter now consumes the exact pooled_full_v5 JSON, identity
+  binds its SHA, fixes HDV parameters while retaining registered CAV defaults,
+  and gives entrants the same point settings. A/B/C recorded smoke is frozen
+  before predictions. Four independent recipe tests PASS /12.51s, including
+  actual conserved births and unchanged CAV settings; SciPy fitter tests skip
+  locally (worker's full15 CPU tests already passed on cpuQ).
 - Added full-population exact admission/exit/source ledger audit to candidate
   tasks, and thin A/B entrypoints using the existing runner CLI. Meaningful
   integration test now runs actual births/queue and native CAV execution; 12

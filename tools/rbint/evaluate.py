@@ -13,14 +13,16 @@ from tools.rbeval import run_wm
 
 def main(variant):
     os.environ['WMPHYS_VARIANT'] = variant
+    sources = [ROOT/'tools/rbint/rebuild.py', Path(__file__), Path(sys.argv[0]).resolve()]
+    if variant == 'C':
+        sources.append(ROOT/'artifacts/rbfit/pooled_full_v5/idm_pooled.json')
     run_wm.main(model_loader=load_candidate, future_builder=candidate_future,
-                identity_sources=[ROOT/'tools/rbint/rebuild.py', Path(__file__),
-                                  Path(sys.argv[0]).resolve()])
+                identity_sources=sources)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(add_help=False)
-    parser.add_argument('--variant', required=True, choices=('A', 'B'))
+    parser.add_argument('--variant', required=True, choices=('A', 'B', 'C'))
     args, rest = parser.parse_known_args()
     sys.argv = [sys.argv[0], *rest]
     main(args.variant)

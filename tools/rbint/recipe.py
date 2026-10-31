@@ -3,6 +3,8 @@ from dataclasses import replace
 from pathlib import Path
 import os
 import tomllib
+import hashlib
+import json
 
 import torch
 
@@ -33,8 +35,8 @@ def load_candidate(checkpoints, configs, device):
     from wms.control.policy14_cli import load_members
     recipe = tomllib.loads(Path(configs[0]).read_text(encoding='utf-8'))
     variant = os.environ['WMPHYS_VARIANT']
-    if variant not in ('A', 'B'):
-        raise ValueError('fitted C requires its motion-fit artifact before construction')
+    if variant not in ('A', 'B', 'C'):
+        raise ValueError('unknown WM-PHYS variant')
     originals, source = load_members(checkpoints, [recipe['source']['config']], device)
     old = originals[0]
     options = dict(recipe['physics'])
@@ -45,10 +47,33 @@ def load_candidate(checkpoints, configs, device):
     candidate, receipt = rebuild_with_motion_encoder(old, spec, physics)
     candidate.requires_grad_(False)
     candidate._wmphys_variant = variant
+    if variant == 'C':
+        artifact = Path(__file__).resolve().parents[2] / recipe['variants']['C']['parameter_json']
+        data = json.loads(artifact.read_text(encoding='utf-8'))
+        assert data['schema'] == 'wm_phys.idm_pooled.v1'
+        assert data['fit_interval_s'] == [240, 300]
+        assert data['fit_worlds'] == list(range(969400, 969432))
+        candidate._wmphys_fit = data['parameters']
+        receipt['fitted_physics'] = dict(path=str(artifact),
+            sha256=hashlib.sha256(artifact.read_bytes()).hexdigest(), parameters=data['parameters'],
+            uncertainty=data['uncertainty_note'])
     receipt.update(source=source, variant=variant, recipe=recipe,
                    settings_B='inherited physics population defaults, not encoder centre',
                    sampling='hidden_state' if variant == 'A' else 'poisson_arrivals_fixed_population')
     return [candidate], receipt
+
+
+def fixed_parameters(model, state):
+    from wms.physics.state import state_kin
+    kin = state_kin(state)
+    values = model._default_driver_parameters(kin, *kin.shape[:2]).clone()
+    if model._wmphys_variant == 'C':
+        from wms.model.driver_encoder import PARAMETER_NAMES
+        hdv = ~state['is_cav'].bool()
+        for name, value in model._wmphys_fit.items():
+            i = PARAMETER_NAMES.index(name)
+            values[..., i] = torch.where(hdv, float(value), values[..., i])
+    return values
 
 
 class InstrumentedEntries:
@@ -116,12 +141,16 @@ def candidate_future(*, model, batch, initial, future, seed, frozen, **unused):
     settings = model._wmphys_variant
     population = None
     defaults = None
-    if settings == 'B':
-        kin = state_kin(initial)
-        defaults = model._default_driver_parameters(kin, *kin.shape[:2])
+    if settings in ('B', 'C'):
+        defaults = fixed_parameters(model, initial)
+        cav_defaults = model._default_driver_parameters(state_kin(initial), *defaults.shape[:2])
+        hdv_defaults = cav_defaults[:, :1].clone()
+        if settings == 'C':
+            for name, value in model._wmphys_fit.items():
+                hdv_defaults[..., PARAMETER_NAMES.index(name)] = float(value)
         population = Population(
-            [defaults[b, :1].clone() for b in range(rows)],
-            [defaults[b, :1].clone() for b in range(rows)],
+            [hdv_defaults[b].clone() for b in range(rows)],
+            [cav_defaults[b, :1].clone() for b in range(rows)],
             [defaults.new_ones(1) for _ in range(rows)])
     # All arms share a world key. Rebuild streams per task; never reuse mutable entries.
     spec = batch.entry_spec
@@ -134,7 +163,8 @@ def candidate_future(*, model, batch, initial, future, seed, frozen, **unused):
     plan = plans[future]
     if defaults is not None:
         plan.kwargs['driver_params'] = {n: defaults[..., i] for i, n in enumerate(PARAMETER_NAMES)}
-        plan.receipt.update(posterior_source='fixed_inherited_physics_population', variant='B')
+        plan.receipt.update(posterior_source=('fixed_inherited_physics_population'
+            if settings == 'B' else 'motion_fitted_pooled_point'), variant=settings)
     else:
         plan.receipt['variant'] = 'A'
     process = plan.kwargs.pop('entries')

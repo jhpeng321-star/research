@@ -1,7 +1,10 @@
 from types import SimpleNamespace
+from pathlib import Path
+import json
 
 import numpy as np
 import torch
+import pytest
 
 from tools.rbint.recipe import InstrumentedEntries, candidate_future, native_controller
 from tools.rbeval.core import reference
@@ -46,11 +49,15 @@ def test_poisson_fractional_source_wait_and_wrapper_delegation():
     assert entries.last_birth_ordinals == {(0, 3): 7}
 
 
-def test_candidate_B_is_fixed_population_for_present_and_newborns():
+@pytest.mark.parametrize('variant', ['B', 'C'])
+def test_fixed_population_for_present_and_newborns(variant):
     torch.manual_seed(1)
     model = build_model(ModelSpec(rollout_mode='driver_params', lane_model='lc2013'),
                         PhysicsConfig(merge_model='sumo'))
-    model._wmphys_variant = 'B'
+    model._wmphys_variant = variant
+    if variant == 'C':
+        artifact = Path(__file__).resolve().parents[1]/'artifacts/rbfit/pooled_full_v5/idm_pooled.json'
+        model._wmphys_fit = json.loads(artifact.read_text())['parameters']
     model.cav_exec_cap = 'idm'
     state = dict(s_m=torch.tensor([[-900., -800., 0., 0.]]),
         v_mps=torch.full((1, 4), 20.), a_mps2=torch.zeros(1, 4),
@@ -65,10 +72,14 @@ def test_candidate_B_is_fixed_population_for_present_and_newborns():
         entry_spec=dict(histories=[hist], queues=[q]))
     kw, entries, receipt = candidate_future(model=model, batch=batch, initial=state,
                                             future=2, seed=969420, frozen=observer())
-    assert receipt['posterior_source'] == 'fixed_inherited_physics_population'
+    assert receipt['posterior_source'] == ('fixed_inherited_physics_population'
+        if variant == 'B' else 'motion_fitted_pooled_point')
     expected = torch.stack([kw['driver_params'][n] for n in PARAMETER_NAMES], -1)
     birth = kw['entrant_driver_sampler'].candidate(0, 0, 4)
     assert all(float(expected[0, 0, i]) == birth[n] for i, n in enumerate(PARAMETER_NAMES))
+    if variant == 'C':
+        assert float(expected[0, 0, 0]) == pytest.approx(model._wmphys_fit['v0'])
+        assert float(expected[0, 1, 0]) == pytest.approx(model.physics.v0_mps)
     assert entries.process.cfg.conserve_queue
     state['exit_s_m'] = torch.full_like(state['s_m'], 553.33)
     with torch.no_grad():

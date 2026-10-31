@@ -17,7 +17,7 @@ import numpy as np
 import torch
 
 from tools.rbint.audit import audit_closed_cohort, forbid_learned_corrections
-from tools.rbint.recipe import load_candidate, native_controller
+from tools.rbint.recipe import load_candidate, native_controller, fixed_parameters
 from tools.rbeval.core import digest, load, reference, save_new
 from wms.control.hidden_state import plan_hidden_state_futures
 from wms.model.driver_encoder import PARAMETER_NAMES
@@ -36,7 +36,7 @@ def main():
     expected = load('/root/wmcalib/expected_hashes.json')
     results = []
     begin = time.monotonic()
-    for variant in ('A', 'B'):
+    for variant in ('A', 'B', 'C'):
         os.environ['WMPHYS_VARIANT'] = variant
         models, receipt = load_candidate(
             ['/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt'], [str(ROOT/'configs/wm_phys.toml')], 'cpu')
@@ -70,8 +70,7 @@ def main():
                     kwargs.update(future.kwargs)
                 else:
                     _, embedding, _ = model.encode_drivers(state, **kwargs)
-                    kin = state_kin(state)
-                    defaults = model._default_driver_parameters(kin, *kin.shape[:2])
+                    defaults = fixed_parameters(model, state)
                     kwargs.update(driver_embedding=embedding,
                         driver_params={n: defaults[..., i] for i, n in enumerate(PARAMETER_NAMES)})
                 state['exit_s_m'] = torch.full_like(state['s_m'], road_end_exit_bound(model.physics))
