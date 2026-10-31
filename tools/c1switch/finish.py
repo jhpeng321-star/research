@@ -39,7 +39,8 @@ for name in ('BINDING.json','STOP','recovery/COMPLETE.json','recovery/STATUS.jso
  if p.exists():files[name]=json.loads(p.read_text())
 owners=[json.loads(p.read_text()) for p in (r/'recovery').glob('OWN_*.json')]+[json.loads((r/'recovery_DISPATCH.json').read_text())]
 print(json.dumps(dict(files=files,accounting=[json.loads(x) for x in (r/'accounting.jsonl').read_text().splitlines()],
- own_pids={{str(x['pid']):Path('/proc',str(x['pid'])).exists() for x in owners}},unix=time.time())))
+ own_pids={{str(x['pid']):Path('/proc',str(x['pid'])).exists() for x in owners}},
+ picks={{a:len(list(r.glob('jobs/'+a+'_*_episode/pick_j*.json'))) for a in ('wm','bb')}},unix=time.time())))
 ''',timeout=90)
     gpu=ssh('gpuR',f'''import json,time
 from pathlib import Path
@@ -79,9 +80,14 @@ print(json.dumps(out))
     episode_rows={n:r for n,r in files.items() if n.endswith('_episode/RESULT.json')}
     physics_rows={n:r for n,r in files.items() if n.endswith('_episode/PHYSICS.json')}
     physics_ids={n.rsplit('/',1)[0] for n in episode_rows}|{n.rsplit('/',1)[0] for n in physics_rows}
+    terminal_abandoned=sum(row['actual_sim_s'] for n,row in closes.items()
+        if n.rsplit('/',1)[0]+'/RESULT.json' not in files and n.rsplit('/',1)[0]+'/PHYSICS.json' not in files)
+    physics_by_arm={a:sum(p.startswith('jobs/'+a+'_') for p in physics_ids) for a in ('wm','bb','random','native','ctrl0','mappo','pi','circles')}
     summary=dict(charged_sim_s=charged,actual_closed_sim_s=actual,all_cpu_owned_absent=not any(data['own_pids'].values()),
         complete_episodes=len(episode_rows),complete_physics=len(physics_ids),
         complete_branches=sum(n.endswith('/RESULT.json') and '_episode/' not in n for n in files),
+        physics_by_arm=physics_by_arm,committed_picks=data['picks'],terminal_abandoned_sim_s=terminal_abandoned,
+        standard_completion_projection_sim_s=binding['total_sim_s']+terminal_abandoned,
         registered_total_sim_s=binding['total_sim_s'],gpu=gpu,unix=data['unix'])
     if summary['all_cpu_owned_absent'] and charged!=actual:raise ValueError('terminal actual/charged mismatch')
     if 'GPU_FINISHED.json' in gpu and gpu['GPU_FINISHED.json']['cumulative_gpu_s']>14400:raise ValueError('owner GPU cap exceeded')
@@ -147,6 +153,8 @@ def report():
     else:
         common += ['## Efficacy analysis gate',
             'The registered complete-panel bootstrap, WM-versus-BB/best-fixed primary contrasts, and paired episode comparisons are **not evaluated**. Availability depends on the interrupted scheduler/model requests; treating the retained subset as a paired16-world experiment would be invalid.',
+            f'Complete episode physics by arm: {summary.get("physics_by_arm",{})}. Committed switching picks: {summary.get("committed_picks",{})}.',
+            f'Terminal shared-v10 abandoned physics: {summary.get("terminal_abandoned_sim_s",0):,.0f} sim-s (retained, no refund). Standard full-rerun completion projection retaining every successful run: {summary.get("standard_completion_projection_sim_s",499680):,.0f} sim-s. Further compute requires explicit MAIN continuation/budget authority; none is assumed.',
             '', '## Existing paper figure',
             'Recorded WMDATA/WMDATA2 fixed-controller winner-by-condition figure remains c1switch/recorded_winner_by_condition.png (and PDF), with90 recorded worlds and zero new SUMO. All five fixed controllers win somewhere; this is not evidence that WM switching works.',
             '', '## Receipts',
