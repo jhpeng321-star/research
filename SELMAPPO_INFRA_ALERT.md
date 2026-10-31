@@ -17,3 +17,12 @@ Follow-up: gpuR's direct SSH works; a gpuR jump to cpuQ times out during banner
 exchange. Shared REGISTRATION.md now carries `S-SELMAPPO 05:48 CONNECTIVITY ALERT /`
 `MONITORING CONTINUES`, with unchanged cap/schedule and no relaunch claim. MAIN's
 05:28 COOPFREE and05:13 C1SWITCH2 records also report SSH transport failures.
+
+07:14 update: MAIN07:07 says no relocation before11:30; priority WM-PHYS on
+gpuA/gpuR first. Observed and followed. Both local observers remain alive; latest
+20-minute progress commit1734fec5 still records SSH failure, no fresh remote state.
+Recovery dependency for MAIN's proposed later continuation: the existing observer
+records checkpoint hashes/remote paths, not weight bytes. No intermediate model/
+optimizer transfer is recorded. Need an actual verified checkpoint and exact consumed
+world/charge reconciliation before resuming on any host; cannot resume from hashes
+or rerun completed worlds. Original protocol/update count/cap remain unchanged.

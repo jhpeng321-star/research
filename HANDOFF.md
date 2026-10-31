@@ -1,5 +1,16 @@
 # S-SELMAPPO fleet-picker integration handoff
 
+## MAIN07:07 priority decision observed — 2026-11-01 07:14 +08:00
+- Shared registration says NO relocation to gpuA/gpuR before11:30 WM-PHYS priority.
+  Continue read-only monitoring; cpuQ current trainer state remains UNKNOWN.
+- Recovery dependency: existing progress/observer code publishes checkpoint hashes
+  and remote paths, NOT checkpoint weight bytes. No intermediate checkpoint/optimizer
+  transfer is recorded by this task's observer. After11:30, require a verified genuine
+  checkpoint PLUS exact consumed-world/charge reconciliation before any continuation;
+  do not assume a hash-only progress snapshot can resume learning or justify replay.
+- Existing20-minute commits continue (latest07:13 `1734fec5`); both local3668/44716
+  identities remain verified. No relocation, signals, replay or extra physics.
+
 ## Connectivity alert — 2026-11-01 05:34 +08:00
 - cpuQ SSH closes connections (`Connection closed by 1.15.42.207 port 22`),
   independently reproduced with a read-only `ssh ... cpuQ true` probe.
