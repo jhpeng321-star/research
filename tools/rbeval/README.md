@@ -81,6 +81,28 @@ Keep the same absolute runtime paths when resuming. The CLI preserves K8, five
 arms, t0=300 and 600 s open loop. Per-process exclusive locks and completed-task
 checks protect resumes. `--max-tasks 1` is an engineering canary, not a new panel.
 
+INT's `configs/wm_phys.toml` is a **rebuild recipe**, not a normal training config.
+Use its checkpoint-preserving constructor through a small INT-owned entrypoint:
+
+```python
+from tools.rbeval.run_wm import main
+
+def load_candidate(checkpoints, configs, device):
+    # Strictly load WM2, then use INT's tested rebuild_with_motion_encoder.
+    # Apply recipe/variant, freeze with eval().requires_grad_(False).
+    # Return ([candidate], JSON_serializable_construction_receipt).
+    ...
+
+main(model_loader=load_candidate,
+     identity_sources=[__file__, '/path/to/tools/rbint/rebuild.py', '/path/to/recipe.toml'])
+```
+
+The same CLI arguments are parsed by `main`; `--model-name` must identify the
+candidate, never `wm2`. The loader function's file is automatically hashed, and
+every extra recipe/helper must be supplied in `identity_sources`. Normal config
+loading remains the default. Stage this updated runner into a NEW code directory
+for candidates: the live WM2 runner/source hashes under `code/` must stay intact.
+
 The runner currently uses the registered arrival process and learned entrant
 driver mix; it rejects `physics.entry_learned`. A candidate that changes entry
 sampling needs a separately frozen adapter/identity before inference. Candidate

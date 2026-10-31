@@ -6,12 +6,14 @@ import os
 import subprocess
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from core import ARMS, HERE, digest, load, save_new
 from score import WorldBootstrap, eligible_peers, rank_stats, read_predictions
+import run_wm
 
 
 class ScientificInvariants(unittest.TestCase):
@@ -29,6 +31,11 @@ class ScientificInvariants(unittest.TestCase):
                 if cell:
                     self.assertTrue(all((p['arm'], p['demand'], p['penetration']) ==
                         (target['arm'], target['demand'], target['penetration']) for p in peers))
+
+    def test_custom_constructor_cannot_impersonate_wm2(self):
+        with patch.object(sys, 'argv', ['run_wm.py', '--out', 'unused', '--model-name', 'wm2']):
+            with self.assertRaisesRegex(AssertionError, 'explicit candidate identity'):
+                run_wm.main(model_loader=lambda *args: None)
 
     def test_world_pairing_does_not_create_fake_sample_size(self):
         boot = WorldBootstrap(self.real, B=1000)

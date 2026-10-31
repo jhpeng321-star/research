@@ -16,8 +16,12 @@ import sys
 import time
 from types import SimpleNamespace
 
-from core import (ARMS, HERE, HS, SEEDS, attach_events, digest, load, reference,
-                  reduce_trajectory, safe, save_new)
+if __package__:
+    from .core import (ARMS, HERE, HS, SEEDS, attach_events, digest, load, reference,
+                       reduce_trajectory, safe, save_new)
+else:
+    from core import (ARMS, HERE, HS, SEEDS, attach_events, digest, load, reference,
+                      reduce_trajectory, safe, save_new)
 
 BASE = Path('/root/autodl-tmp/c4')
 DEFAULT_RUNTIME = BASE/'setupaudit20261030/fix'
@@ -40,8 +44,16 @@ def arguments():
     return p.parse_args()
 
 
-def main():
+def main(model_loader=None, identity_sources=()):
+    """Optional INT loader has the strict load_members(checkpoints,configs,device)
+    interface. It returns ([frozen_model], JSON receipt); its Python source and
+    explicitly supplied recipe/helper files are bound into the run identity.
+    Live WM2 uses the original independently staged source, never overwritten.
+    """
     args = arguments()
+    if model_loader is not None:
+        assert args.model_name != 'wm2', 'custom construction requires explicit candidate identity'
+        assert callable(model_loader)
     import fcntl
     assert 0 <= args.shard < args.shards
     assert os.getpriority(os.PRIO_PROCESS, 0) == 19
@@ -100,8 +112,11 @@ def main():
     torch.manual_seed(965140)
     if args.model_name == 'wm2':
         assert digest(args.wm) == 'b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436'
-    models, receipt = load_members([args.wm], [args.wm_config], args.device)
+    models, receipt = (model_loader or load_members)([args.wm], [args.wm_config], args.device)
+    assert len(models) == 1
     model = models[0]
+    if model_loader is not None:
+        assert not model.training and all(not p.requires_grad for p in model.parameters()), 'inference-only frozen model required'
     switches = load(args.switches) if args.switches else {}
     for key, value in switches.items():
         assert hasattr(model, key), key
@@ -130,6 +145,9 @@ def main():
                     deps.frame_type, deps.pi_type, deps.u_report_type, deps.pi_params_type)
     source_paths = [Path(__file__), HERE/'core.py', HERE/'references.json',
                     runtime/'configs/execparity_cav_idm_v1.json']
+    source_paths += [safe(p) for p in identity_sources]
+    if model_loader is not None:
+        source_paths.append(safe(inspect.getfile(model_loader)))
     # Bind all Python implementation files in the selected runtime, not just top modules.
     source_paths += sorted((runtime/'src/wms').rglob('*.py'))
     source_paths += [Path(inspect.getfile(x)) for x in
@@ -148,6 +166,8 @@ def main():
         sources=sources, provenance=provenance, switches=switches, device=args.device,
         real_receipt_sha256=digest(HERE/'real_observables.json'), mix=True,
         native_lanes=True, seed=965140, update=190)
+    if model_loader is not None:
+        identity['construction_loader_sha256'] = digest(inspect.getfile(model_loader))
     # Round-trip tuple/list normalization before exact resume identity comparison.
     identity = json.loads(json.dumps(identity))
     if (out/'IDENTITY.json').exists():

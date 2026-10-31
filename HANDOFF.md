@@ -1,5 +1,23 @@
 # S-RB-EVAL handoff
 
+## Exact candidate CLI (RUNA/RUNB/INT)
+
+```bash
+OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 CUDA_VISIBLE_DEVICES=0 nice -n 19 /root/miniconda3/bin/python -B -u /path/to/INT_candidate_entrypoint.py --out /NEW/variant_A_shard0 --runtime-root /path/to/integrated/runtime --wm /path/to/wm_s.pt --wm-config /path/to/wm_phys.toml --model-name wm_phys_A --shard 0 --shards 4 --memory-gib 5
+```
+
+INT entrypoint calls `run_wm.main(model_loader=load_candidate,
+identity_sources=[__file__, rebuild_helper, recipe])`; callback returns
+`([frozen_candidate], construction_receipt)`. Stage current runner/core/references/
+real_observables/PREPARED in a NEW candidate code directory; README documents
+the callback. For a normal loadable config invoke `tools/rbeval/run_wm.py` directly
+with the same arguments. Use shards 0–3 with distinct NEW output directories;
+check resources first and preserve existing candidate dispatches. K8/five arms/
+t0=300/H600 are fixed. Score all four shard directories together with
+`python -B -m tools.rbeval.score --inputs SHARD0 SHARD1 SHARD2 SHARD3 --out NEW_REPORT`.
+
+## Durable implementation and dispatch receipts
+
 - Branch c4/rb-eval, base f0db3c82; fresh-session audit found clean tree and no
   previous RBEVAL implementation/dispatch receipts. Existing WMCALIB cost-only
   tasks lack trajectories and native predictions; they cannot fill this panel.
@@ -55,3 +73,21 @@
   test PASS (all160 hashes verified; changed task rejected; dead worker blocks).
   Latest check:6/160 tasks, all4 workers live, GPU15241MiB; no complete K8 world
   yet, so no factual distribution score claimed. The inference runtime is intact.
+- INT recipe compatibility: `run_wm.main(model_loader=..., identity_sources=...)`
+  accepts INT's strict-load→encoder-preserving rebuild without checkpoint edits;
+  callback API matches load_members and must return ([frozen_model], receipt).
+  Loader source is auto-hashed; add recipe/rebuild/entrypoint files explicitly.
+  See README. Candidate --model-name must differ from wm2. Stage UPDATED runner
+   in a NEW candidate code directory; never replace live WM2 `code/run_wm.py`.
+- Fresh-session audit: all four original WM2 workers and CPU finalizer remain
+  live, 10/160 tasks complete (4/2/2/2); GPU15323/24564MiB at100%, load36.47/224CPUs.
+  Current task times267–461s imply roughly4–5h total at this throughput. No new
+  inference dispatched; exact candidate CLI is now directly at top of this file.
+- Preserved INT-constructor/module-import/scorer-identity updates verified in this
+  resume: all13 CPU tests PASS (13.8s), including candidate identity guard and
+  external import→gate. Existing auto-finalizer retains its original scorer;
+  added constructor identity applies to new candidate scoring only, not WM2.
+- `rb-shared/obsstate/DONE.md` is now available (helper commit541f109f,30 CPU
+  tests): observable-state/route export is for S-SUMOCORE initialization. RBEVAL
+  continues scoring its fixed observable contract through `import_external`;
+  no duplicate exporter or source-state conversion was started.
