@@ -28,6 +28,33 @@ def remote(code):
     return result.stdout
 
 
+def compatible_mobil_baseline(parameter_sha):
+    """Reuse only an already completed identical MOBIL experiment/transform."""
+    from dataclasses import asdict
+    from wms.physics.config import PhysicsConfig
+    from .snapshot import SNAPSHOT_CONTRACT
+    physics = asdict(PhysicsConfig(sumo_fidelity=True, open_road=True))
+    dependencies = ('mobil.py', 'neighbours.py', 'idm.py', 'config.py')
+    current = {name: hashlib.sha256((ROOT/'src/wms/physics'/name).read_bytes()).hexdigest()
+               for name in dependencies}
+    matches = []
+    for receipt in RECEIPTS.glob('PANEL*_COMPLETE.json'):
+        completed = json.loads(receipt.read_text())
+        summary_path = RECEIPTS / (receipt.name.removesuffix('_COMPLETE.json').lower() + '_results/SUMMARY.json')
+        if not completed['complete'] or completed['alive'] or not summary_path.is_file():
+            continue
+        summary = json.loads(summary_path.read_text())
+        if (summary['status'] != 'COMPLETE' or summary['episodes'] != 160
+                or summary['physics'] != physics or summary['horizon_s'] != 60
+                or summary['snapshot'] != SNAPSHOT_CONTRACT
+                or summary.get('motion_parameter_sha256') != parameter_sha):
+            continue
+        previous = {Path(name).name: digest for name, digest in summary['source_sha256'].items()}
+        if all(previous.get(name) == digest for name, digest in current.items()):
+            matches.append(completed)
+    return max(matches, key=lambda r: r['collected_at'])['root'] + '/results' if matches else None
+
+
 def launch(kind, idm_parameters=None, encoder_checkpoint=None):
     from .validate import FORBIDDEN
     RECEIPTS.mkdir(exist_ok=True)
@@ -58,11 +85,9 @@ def launch(kind, idm_parameters=None, encoder_checkpoint=None):
             archive.write(encoder_checkpoint, 'inputs/wm_s.pt')
     digest = hashlib.sha256(bundle.read_bytes()).hexdigest()
     run = f'/home/ubuntu/rblane20261031_{kind}_{digest[:12]}'
-    reuse = None
-    if kind != 'smoke' and kind != 'panel' and idm_parameters is None and encoder_checkpoint is None:
-        first = json.loads((RECEIPTS / 'PANEL_COMPLETE.json').read_text())
-        assert first['complete'] and not first['alive']
-        reuse = first['root'] + '/results'
+    selected = encoder_checkpoint if encoder_checkpoint is not None else idm_parameters
+    parameter_sha = hashlib.sha256(selected.read_bytes()).hexdigest() if selected is not None else None
+    reuse = compatible_mobil_baseline(parameter_sha) if kind != 'smoke' else None
     preflight = remote(f'''import os,pathlib,json
 p=pathlib.Path({run!r})
 assert p.parent.is_dir() and not p.exists(), 'run exists: do not duplicate'

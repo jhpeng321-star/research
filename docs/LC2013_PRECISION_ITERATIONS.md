@@ -206,3 +206,59 @@ learned-yield architecture requires lane_learnable=true; setting that original
 construction flag permits strict load, with no acceleration/LC forward run.
 The extracted encoder retains the diagnostic's original physics defaults;
 its parameters still match the source model exactly. No gate was relaxed.
+
+Candidate8 completed/verified (worker462783 exited,267.49s):1249/58225 exact,
+precision2.1451%, recall38.3717%; matched-setting MOBIL108/3121 exact,
+precision3.4604%, recall3.3180%. Per predicted reason:
+strategic24.215%/14.224pp (463/1912); cooperative15.483%/4.086pp (133/859);
+speed-gain2.334%/10.384pp (338/14484); keep-right0.769%/9.677pp (315/40970).
+The existing encoder improves strategic precision vs defaults, but does not
+resolve free-flow keep-right over-proposal. No parameter mode selected by this
+diagnostic; all results remain explicit sensitivities.
+
+## Candidate9: SUMO lane coordinates and consecutive-edge visibility
+
+Further source-backed coordinate defects found before scoring:
+- Same upstream edge: raw position is s+2645.67 left or s+2644.22 right.
+  Directly subtracting normalized s loses1.45m in neighboring gap checks.
+- Consecutive edges: source gaps include internal links (main entry3m,
+  ramp entry2.93m, downstream8m). SUMO only starts looking into a subsequent
+  normal edge once the preceding normal lane's end is in braking range, but
+  then inspects that edge's first leader regardless of its in-edge position.
+  Source MSLCM/MSLaneChanger and MSLane.cpp:3036,3136–3161 support both rules.
+- MSVehicle.cpp:5617 enterLaneAtLaneChange preserves RAW lane position;
+  normalized upstream s must translate+1.45m for0→1 and−1.45m for1→0.
+  The runtime adapter now returns shifted positions after joint arbitration;
+  rejected moves restore their origin before a fixed-point recheck. Teacher
+  CAV positions are already in their destination frame and are not shifted.
+  Two tiny LC2013-only wms guards wire the returned position and prevent a
+  second legacy arbitration. Three default-OFF cases (legacy, legacy-conflict,
+  physical-long-history) compare weights/forward/step/rollout BIT-EXACT to
+  preserved pre-coordinate commit b192e0c8 (DEFAULT_OFF_COORDINATES.json).
+
+The validator also previously paired POST-change normalized s with PRE-change
+lanes without undoing that origin jump. New snapshot contractv2 restores
+post-motion coordinates to the source lane, and reports each hypothetical
+proposal in its own destination origin. This uses the observed lane label
+only to undo a coordinate transform, not as a motivation/driver input.
+The0.5s movement-before-LC ordering was independently confirmed in public
+MSNet.cpp:872/878/884; it remains unchanged.
+
+**Scoring contract changes:** old panels1–8 remain immutable diagnosticv1.
+Fresh MOBIL scoring is REQUIRED once per parameter mode underv2; old v1
+baseline cannot be silently reused just because raw tape hashes match.
+Subsequent compatible MOBIL results are auto-reused after exact physics,
+parameter SHA, snapshot-contract, and MOBIL/dependency source-byte checks.
+CPU45tests PASS before the final rejection-origin regression was added;
+source reads only, no SUMO or fitting. Extra downloaded sources were stored
+in NEW EMPTY directories and never executed:
+MSLane.cpp SHA845efee31486644e24965462e2cec3ac63da00942db5f73897b535f341982f21
+at E:/Temp/opencode/sumo-1.27.1-lane-neighbours;
+MSNet.cpp SHA33c14a847ea1edf1897285e65236a53e59ff6d534cd807b92d23617dcf60b40b
+at E:/Temp/opencode/sumo-1.27.1-lane-order.
+
+Final candidate9 CPU gate:46/46 PASS, single-thread6.53s, persisted JUnit
+`CPU_COORDINATES.xml`. The extra regression proves rejected front movers must
+restore their original origin before a rear mover is admitted (otherwise a1m
+post-resolution overlap is possible). All earlier raw/source/scoring receipts
+and the exact real-encoder/default-OFF parity proofs are retained.

@@ -1,5 +1,9 @@
 # S-RB-LANE — SUMO LC2013 highway rebuild and FIT diagnostic
 
+> Historical diagnosticv1, preserved. Latest source/scoring corrections and
+> precision results: [iteration diary](../LC2013_PRECISION_ITERATIONS.md) and
+> [current handoff](../../HANDOFF.md). Coordinate contractv2 starts at candidate9.
+
 ## Result for integration
 **Implemented, default OFF; improved recorded-event recall, NOT qualified as
 full SUMO parity or long-horizon distributional fidelity.** Final source model
@@ -85,3 +89,13 @@ stochastic lcOvertakeRight, emergency/nonhighway special cases are outside this
 subset. Source inventory and exact formulas: `docs/LC2013_SOURCE_NOTES.md`.
 Use the integrated CF/merge/LC candidate for S-RB-EVAL's distributional gate;
 this local diagnostic by itself does not establish the owner goal.
+# Precision-continuation notice (2026-11-01)
+
+The original report below is preserved as the completed **diagnosticv1** result.
+Subsequent source fixes, per-motivation false-positive diagnostics, frozen-encoder
+and published motion-point sensitivities are in
+[`../LC2013_PRECISION_ITERATIONS.md`](../LC2013_PRECISION_ITERATIONS.md).
+Candidate9 corrects upstream coordinate origins in both runtime and scorer;
+itsv2 measurements must not be pooled with the old paired baseline. See current
+[`../../HANDOFF.md`](../../HANDOFF.md) for source/tests/live status. Precision
+remains an unresolved issue; no distributional qualification is established.

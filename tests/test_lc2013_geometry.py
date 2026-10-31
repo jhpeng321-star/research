@@ -60,3 +60,35 @@ def test_length_and_remaining_distance_have_separate_source_uses():
     assert out['lc2013_target_length'][0, 0].item() == pytest.approx(477.89)
     assert out['lc2013_position'][0, 0].item() == pytest.approx(424.56)
     assert out['next_lane'][0, 0] == 0
+
+
+def test_upstream_neighbour_gaps_use_sumo_lane_positions_not_shifted_model_positions():
+    k, mask = scene([(-100, 0, 0), (-85, 1, 0), (-115, 1, 0)])
+    out = lane_change(k, mask, PhysicsConfig())
+    assert out['lc2013_gap_leader'][0, 0].item() == pytest.approx(8.55)
+    assert out['lc2013_gap_follower'][0, 0].item() == pytest.approx(11.45)
+
+
+def test_collapsed_junction_length_enters_cross_edge_leader_gap():
+    k, mask = scene([(-5, 1, 10), (10, 0, 10)])
+    out = lane_change(k, mask, PhysicsConfig())
+    assert out['lc2013_gap_leader'][0, 0].item() == pytest.approx(13.)
+
+
+def test_consecutive_edge_search_opens_at_normal_lane_end_not_leader_position():
+    k, mask = scene([(-300, 1, 5), (10, 0, 5)])
+    p = PhysicsConfig()
+    out = lane_change(k, mask, p)
+    assert torch.isinf(out['lc2013_gap_leader'][0, 0])
+    # Once the CURRENT normal edge end is in braking range, SUMO traverses its
+    # internal link and returns the next edge's leader, even100m into that edge.
+    k, mask = scene([(-5, 1, 5), (50, 0, 5)])
+    out = lane_change(k, mask, p)
+    assert out['lc2013_gap_leader'][0, 0].item() == pytest.approx(53.)
+
+
+def test_raw_upstream_body_overlap_cannot_be_hidden_by_lane_origin_shift():
+    k, mask = scene([(-100, 0, 0), (-94, 1, 0)])
+    out = lane_change(k, mask, PhysicsConfig(), driver_params={'min_gap': torch.zeros(1, 2)})
+    assert out['lc2013_gap_leader'][0, 0].item() == pytest.approx(-.45)
+    assert not out['lc2013_safe'][0, 0]

@@ -23,6 +23,7 @@ import torch
 from wms.physics.config import PhysicsConfig
 from wms.physics.lc2013 import lane_change
 from wms.physics.mobil import mobil_merge_logits
+from .snapshot import SNAPSHOT_CONTRACT, postmotion_snapshot, proposal_position
 
 FORBIDDEN = ('hold' + 'out', 'held' + 'out', 'cal' + '_split', 'chunk' + '5',
              'j4' + 'b', 'inc' + '1', 'sealed', 'hetdata' + '_truth',
@@ -196,8 +197,7 @@ def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reus
         # Only known, normal-road bodies appear in the LC decision geometry.
         present = same & normal0 & normal1
         eligible = present & ~cav[t].astype(bool)
-        moved = np.array(kin[t], copy=True)
-        moved[:, [0, 4, 5]] = kin[t + 1, :, [0, 4, 5]].T
+        moved = postmotion_snapshot(kin[t], kin[t + 1], physics)
         k = torch.from_numpy(moved).unsqueeze(0)
         m = torch.from_numpy(present).unsqueeze(0)
         identity = torch.from_numpy(np.array(ids[t], copy=True)).unsqueeze(0)
@@ -221,9 +221,10 @@ def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reus
                 wishes[direction] += 1
                 if not memory['lc2013_safe'][0, j]:
                     blocked[direction] += 1
-            def event(dest):
+            def event(dest, predicted=False):
                 return [int(ids[t, j]), int(source[j]), int(dest),
-                        float(times[t + 1]), float(kin[t + 1, j, 0])]
+                        float(times[t + 1]), float(proposal_position(moved[j, 0], source[j], dest, physics)
+                                                  if predicted else kin[t + 1, j, 0])]
             if destination[j] != source[j]:
                 actual.append(event(destination[j]))
                 if choices['lc2013'][j] == destination[j]:
@@ -239,10 +240,10 @@ def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reus
                 misses[direction + '/' + failure] += 1
             for name, choice in choices.items():
                 if choice[j] != source[j]:
-                    proposals[name].append(event(choice[j]))
+                    proposals[name].append(event(choice[j], predicted=True))
                     if name == 'lc2013':
                         reason = MOTIVATIONS[int(memory['lc2013_reason'][0, j])]
-                        motivated[reason].append(event(choice[j]))
+                        motivated[reason].append(event(choice[j], predicted=True))
                         outcome = 'tp' if choice[j] == destination[j] else 'fp'
                         position = float(moved[j, 0])
                         region = ('upstream' if position < physics.merge_zone_s0_m else
@@ -365,6 +366,7 @@ def main():
         baseline = json.loads((args.reuse_mobil_from / 'SUMMARY.json').read_text())
         if (baseline['status'] != 'COMPLETE' or baseline['episodes'] != 160
                 or baseline['physics'] != asdict(physics) or baseline['horizon_s'] != args.horizon_s
+                or baseline['snapshot'] != SNAPSHOT_CONTRACT
                 or baseline.get('motion_parameter_sha256') != parameter_sha):
             raise ValueError('MOBIL reuse panel/settings mismatch')
     paths = []
@@ -395,7 +397,7 @@ def main():
                             'published motion-only pooled IDM point for HDVs; CAV and LC style defaults'),
                   motion_parameters=motion_parameters, motion_parameter_sha256=parameter_sha,
                   encoder_checkpoint_sha256=encoder.sha256 if encoder is not None else None,
-                  snapshot='recorded post-motion s/v/a with pre-change lanes; teacher forced',
+                  snapshot=SNAPSHOT_CONTRACT,
                   cohort='HDV, same identity, normal road in both adjacent frames',
                   motivation_contract='predicted reason; recall contribution uses all recorded events; no observed motivation labels',
                   mobil_reuse=(str(args.reuse_mobil_from) if baseline is not None else None),
@@ -404,10 +406,10 @@ def main():
                           if any(r['arm'] == arm for r in rows)},
                   elapsed_s=time.time()-start,
                   source_sha256={str(p): sha(p) for p in (Path(__file__),
-                    Path(__file__).with_name('encoder.py'), *(
+                    Path(__file__).with_name('encoder.py'), Path(__file__).with_name('snapshot.py'), *(
                     Path(__file__).parents[2] / ('src/wms/physics/' + name)
                     for name in ('lc2013.py', 'lc2013_geometry.py', 'config.py',
-                                 'mobil.py', 'neighbours.py', 'batched.py')))})
+                                 'mobil.py', 'neighbours.py', 'batched.py', 'idm.py')))})
     (args.out / 'SUMMARY.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps(report['aggregate']), flush=True)
 

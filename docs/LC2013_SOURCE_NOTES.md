@@ -85,3 +85,16 @@ physics, cohort and horizon checks; the original candidate results are retained.
   positive-gain veto. This matches INT's independently discovered source values.
   Downloaded READ ONLY to NEW EMPTY `E:/Temp/opencode/sumo-1.27.1-lane-precision`,
   config.h.cmake SHA2565e48e2b4acfdde7860e6eed0ba3d0ffca529046693151cc65f82b2ad7bc214c3.
+
+## Coordinate / sequencing amendment (candidate9)
+
+MSNet.cpp:872/878/884 confirms plan→execute movement→lane change. The original
+post-motion ordering stays. MSLaneChanger.cpp:682/760 uses raw edge-local lane
+positions for same-edge neighboring gaps; upstream normalization must restore
+the left/right1.45m origin difference. MSLane.cpp:3036/3136–3161 includes internal
+link lengths during consecutive-leader lookup and gates search at the preceding
+normal lane end, not the next leader's position. MSVehicle.cpp:5617–5712 preserves
+raw position on lane change, requiring the corresponding normalized-s shift.
+Both runtime adapter and scorer now respect that transform. The scorer's
+explicitv2 contract prevents mixing cached MOBIL decisions from old coordinates.
+Source download SHA/path and default-OFF bit-exact proof are in the iteration diary.

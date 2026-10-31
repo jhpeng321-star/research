@@ -1,91 +1,59 @@
-# S-RB-LANE handoff — integration-ready highway subset
+# S-RB-LANE — precision continuation active (~01:25)
 
-**00:10 precision continuation active:** prior commits/results retained. New
-per-predicted-motivation diagnostics added; source-backed stale keep-right
-request fix implemented (now gated by anticipated lane speeds). Candidate4
-verified: precision2.577% vs2.562%, recall34.900% unchanged (255FP removed).
-Source through `568d0314`; safe small fix, insufficient overall. Route LENGTH vs remaining-distance audit continues;
-see `docs/LC2013_PRECISION_ITERATIONS.md`. Shared helper lcspec now consumed.
-Panel3 attribution verified: keep-right 203/27924 (0.727% precision),
-64.17% of all false-positive steps. Gate-fix CPU tests23/23 PASS.
+Branch `c4/rb-lane`, base `f0db3c82`; all prior work retained. Owner authority:
+WM-PHYS REGISTRATION5683 plus00:10 precision addendum. Source-backed subset;
+**current FIT precision remains poor, no distributional qualification claim**.
 
-**Candidate5 verified (source740ecc3e):** precision2.860%, recall34.347%,
-1118 exact matches /39090 proposals (prior44333/1136). Finite SUMO continuation LENGTHS
-3197.55/553.33/477.89 by edge, separated from edge-local position for strategic
-remaining-distance tests. New `lc2013_geometry.py`; default legacy unchanged.
-Adapter adds optional `lc2013_current_lane_position` and
-`lc2013_target_best_lane_offset` inputs. 27 lane CPU tests PASS. This consumes
-obsstate helper geometry and lcspec numeric vector, without reading assignments.
-**Candidate6 verified (physics811cd7e8, scorer a7bc0843):** precision2.848%,
-recall34.163% (1112/39045); EPS correction is source-faithful but NOT another
-measured gain. Correct SUMO's
-NUMERICAL_EPS=.001 in safe-stop/IDM anticipation/positive speed-gain veto;
-28 CPU tests PASS. INT's independently found precision constant is confirmed
-from freshly downloaded read-only config.h.cmake. All panel3/4/5/6 workers exited.
-New evidence:21566 keep-right FP are upstream/free-flow (~29.6m/s),19123/23043
-have no recorded same-ID/direction event in60s. Homogeneous desired speeds
-disable source1749's slow-current-leader keep-right cap. Next: distinguish
-source defects from this missing heterogeneity using already-inferred physical
-settings; no LC fitting/threshold tuning. All iterations/reasons retained.
+## Switch / integration
+- `ModelSpec(lane_model="lc2013", lane_head="off", merge_decision="hazard")`.
+  Default unchanged; build a clean spec, disable learned acceleration/merge
+  corrections. No new checkpoint weights; WM lanes left0/right1/ramp2.
+- `lc2013.py`: strategic/cooperative/speed-gain/keep-right, fixed-point wishes,
+  lookahead, IDM secure gaps, follower help, right-overtake prohibition.
+  LC style uses SUMO defaults; only comparable motion-inferred settings map.
+- `lc2013_geometry.py`: actual finite best-lane LENGTHS3197.55/553.33/477.89,
+  edge-local position, both-best-zero route offset resolution, raw neighboring
+  gaps, collapsed3/2.93/8m junction links and source consecutive-leader visibility.
+- Candidate9 coordinate increment: upstream model s translates±1.45m on lane
+  change to preserve SUMO raw lane position. `step_output` now returns
+  **(next_lane,next_s)**; two guarded wms edits consume positions and skip a
+  duplicate legacy arbitration. Fixed CAV teacher positions are not shifted.
+  Rejected moves restore their origin before a monotone joint-feasibility recheck.
+- Step recomputes after longitudinal/CAV motion; ramp cannot pass its lane end.
+  Carry `physics.lc2013.STATE_KEYS`; IDs `vehicle_id` or`vid`, reset absence/
+  identity/observed change/newborn. Messages consumed next step. Optional route
+  distances/offset/occupation plus raw-position and target-offset overrides.
 
-**Parameter sensitivity7 (verified):** INT's already-fitted pooled CF point
-gives LC precision2.015%/recall38.802%,1263/62689; keep-right alone49701
-proposals. Strategic precision improves20.63%, but overall over-proposal
-worsens. Paired new-setting MOBIL187/3255 recall5.745%; old baseline not rerun.
-**Encoder8 ready/pending:** exact registered WM2 b8797242… motion encoder,
-strict weights and authentic240..300 history; static VID settings at300,
-zero-history encoder-centre entrants, CAV/LC defaults. Three independent
-extractor tests PASS (all9 outputs bit-exact to full-model encode_drivers,
-no future dependence, missing-weight rejection); scorer7tests PASS. No training.
+## Verified precision iterations (160 FIT episodes,3255 events, v1 diagnostic)
+- Original2: precision2.562%, recall34.900%,1136/44333 proposals; paired MOBIL
+  recall7.496%. Historical1.4% is another panel/contract.
+- Source gate4: 2.577%/34.900%,1136/44078 (255FP removed, noTP lost).
+- Finite lengths5: 2.860%/34.347%,1118/39090.
+- Correct NUMERICAL_EPS=.001 in6: 2.848%/34.163%,1112/39045.
+- Published pooled CF point7: 2.015%/38.802%,1263/62689 (worse over-proposal).
+- Existing frozen WM2 encoder8: 2.145%/38.372%,1249/58225. Strategic precision
+  improves24.22%, but keep-right315/40970 is still0.769%. New-setting paired
+  MOBIL recall3.318%. No LC fitting/threshold adjustment/black-box training.
+- Per-predicted-motivation precision/recall contributions and TP/FP location/
+  timing diagnostics: `docs/LC2013_PRECISION_ITERATIONS.md`, immutable panels3–8.
+  Actual motivation labels unavailable; contributions use all3255 events.
 
-Branch `c4/rb-lane`, base `f0db3c82`; source implementation through `127a106f`.
-Owner WM-PHYS authorization REGISTRATION.md:5683 (2026-10-31 23:12).
+## Candidate9 gate / scorer correction
+- 46 lane/encoder/scorer CPU tests PASS. Three shared-WM default-OFF cases
+  weights/forward/step/rollout BIT-EXACT to b192e0c8 (DEFAULT_OFF_COORDINATES.json).
+  Real b8797242… encoder:171 source keys strict, all9 outputs bit-exact; inference
+  uses only240..300 history, persistent VID settings, centre fallback for entrants.
+- v2 validator undoes recorded upstream lane-origin shifts before decisions,
+  then reports each proposal in its destination frame. Old v1 results retained.
+  **Fresh matched MOBIL required once per setting**; auto-reuse thereafter needs
+  exact input/physics/setting SHA/snapshot/MOBIL dependency bytes. Candidate9
+  v2 FIT measurement pending; source/improved-metric claim awaits that result.
+- All owned workers through8 exited. Only six allowlisted observable tape files,
+  published motion-fit artifact/frozen model weights, and road/source code read.
+  No SUMO/GPU/training/signals/deletions/push. lcspec/obsstate/targets consumed.
 
-## Exists / switch
-- `src/wms/physics/lc2013.py`: SUMO v1_27_1 highway/sub-lane-OFF subset,
-  strategic ramp/route, cooperative clearing, speed gain, keep-right, persistent
-  fixed-point wishes/lookahead, exact IDM secure gaps, follower-help speed
-  messages, right-overtaking prohibition. No learned weights or fitted cutoffs.
-- `ModelSpec(lane_model="lc2013", lane_head="off")`, default unchanged.
-  `merge_decision="hazard"` (no learned merge module). New adapter; small
-  guarded spec/wms edits. WM lanes left0/right1/ramp2, target never ramp.
-- Only matching motion-inferred settings map. MOBIL politeness/threshold are
-  NOT comparable LC settings: LC style uses SUMO defaults. IDM secure gap:
-  `max(0,v*tau+v*(v-vlead)/(2*sqrt(a*b)))`, not existing braking-distance rule.
-
-## Integrator contract
-- Build LC spec; do NOT just mutate `.lane_model` on an old first-passage/
-  hazard_v5 model retaining conflicting modules. Disable other learned accel/
-  merge corrections in WM-PHYS. Factory unchanged; no new checkpoint weights.
-- Forward diagnostics use current snapshot. Step recomputes AFTER longitudinal
-  motion/CAV execution; fixed CAV lanes preserved, native/delegated masks allowed.
-  Geometric conflicts arbitrated front-to-back; unmerged ramp held at lane end.
-- `rollout` carries `lc2013_*` across steps/chunks, resets newborns. Direct step
-  callers carry `physics.lc2013.STATE_KEYS`. Numeric IDs: `vehicle_id` or `vid`.
-  Reset on absence/identity/observed lane change. Messages consumed next step.
-- Optional route distances/offset/best-lane queued occupation inputs supported;
-  defaults: scenario ramp end plus continuing mainline. No sublane.
-
-## Verified result
-- **62 CPU tests PASS**, JUnit `tools/rblane/receipts/CPU_TESTS.xml`.
-- FIT969400–969431 only,160episodes/5arms;60s warmup+60s teacher forcing.
-  Final exact LC1136/3255=**34.90%** vs paired MOBIL244/3255=**7.50%**;
-  mainline32.36% vs0.37%. Historical1.4% has a different panel/contract.
-- LC positive steps44333, exact precision2.56%. Compressed runs5159,
-  ±2s recall26.45%/precision16.69%, timingMAE0.472s/positionMAE8.242m.
-  Improved recall is NOT full parity/distributional qualification.
-- `receipts/panel2_results/`, source/aggregate/input/MOBIL-reuse checks PASS
-  (`VERIFIED.json`). First candidate+smoke preserved; baseline not rerun.
-- Completed GLM targets cross-check:3220 events agree;35 expected300.5s tape
-  boundary omissions reconciled, original mismatch retained. lcspec absent.
-- All owned cpuQ workers180907/187712/214459 exited. No outstanding jobs.
-  Six allowed observable files only; no hidden data/SUMO/GPU/training/signals.
-
-## Known gaps / references
-Synchronous messages/independent proposal gaps vs SUMO serial lane changer;
-full leader overtake/fall-behind/counterchange reservation and all follower
-branches not ported; nonlegacy keep-right follower adjustment, nonzero speed
-lookahead and nonhighway/emergency/stochastic overtake-right cases omitted.
-Public source read only from NEW empty temp directories, never executed.
-Details: `docs/LC2013_SOURCE_NOTES.md`, `docs/paper_results/RB_LANE.md`.
-Distributional gate belongs to integrated CF+merge+LC via S-RB-EVAL.
+## Gaps
+Synchronous proposals/messages vs SUMO serial processing; full leader
+overtake/fall-behind/counterchange and follower branches, nonlegacy keep-right,
+nonzero speed lookahead, nonhighway/emergency cases remain. See source notes
+and `docs/paper_results/RB_LANE.md`; integrated CF+merge+LC gate is EVAL's.

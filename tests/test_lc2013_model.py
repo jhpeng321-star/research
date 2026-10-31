@@ -80,3 +80,47 @@ def test_right_overtake_advice_is_carried_into_next_longitudinal_update():
     carried = {**s, **{key: first[key] for key in STATE_KEYS if key in first}}
     second = m(carried)
     assert second['accel_mps2'][0, 0] <= first['lc2013_own_advice_accel'][0, 0] + 1e-6
+
+
+@torch.no_grad()
+def test_upstream_lane_change_preserves_sumo_local_position_and_translates_model_s():
+    from wms.physics.lc2013 import lane_change, STATE_KEYS
+    m = model()
+    s = state(lane=0, s=-1000., speed=5.)
+    from wms.physics.state import state_kin
+    memory = lane_change(state_kin(s), s['present'], m.physics, identity=s['vehicle_id'])
+    memory['lc2013_keep_right'][:] = -40_000_000
+    s.update({key: memory[key] for key in STATE_KEYS if key in memory})
+    out = m.step(s)
+    assert out['next_lane'].item() == 1
+    # Longitudinal update plus the coordinate-origin translation only.
+    assert out['lc2013_position_shift'].item() == pytest.approx(1.45, abs=1e-4)
+    assert out['next_s_m'].item() == pytest.approx(
+        -1000 + .5 * (5 + out['next_v_mps'].item()) * m.physics.dt_s + 1.45, abs=1e-4)
+
+
+@torch.no_grad()
+def test_fixed_upstream_teacher_position_is_not_translated_twice():
+    m = model()
+    s = state(lane=0, s=-1000., speed=5.)
+    s['is_cav'][:] = True
+    teacher = torch.tensor([[[-996.05, 1., 5., 0.]]])
+    out = m.step(s, cav_teacher=teacher)
+    assert out['next_lane'].item() == 1
+    assert out['next_s_m'].item() == teacher[0, 0, 0].item()
+    assert out['lc2013_position_shift'].item() == 0
+
+
+def test_rejected_front_move_restores_its_origin_before_rear_move_is_admitted():
+    from wms.model.lc2013_adapter import resolve_shifted_lanes
+    # First pass: front mover is rejected by the fixed right-lane body. Its
+    # hypothetical+1.45m origin shift appears to leave0.45m for the rear mover.
+    # Restoring the front mover's true origin would create a1m overlap, so the
+    # fixed-point pass must reject the rear move as well.
+    s = torch.tensor([[-100., -102.55, -95.]], dtype=torch.float64)
+    source = torch.tensor([[0, 1, 1]])
+    proposed = torch.tensor([[1, 0, 1]])
+    lanes, positions = resolve_shifted_lanes(s, torch.full_like(s, 5.), source,
+        proposed, torch.ones(1, 3).bool(), torch.tensor([[True, True, False]]), PhysicsConfig())
+    assert torch.equal(lanes, source)
+    torch.testing.assert_close(positions, s, rtol=0, atol=0)

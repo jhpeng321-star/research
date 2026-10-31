@@ -93,7 +93,7 @@ def test_keep_right_source_five_second_accumulator_and_reset():
 
 
 def test_mature_keep_right_waits_when_target_lane_becomes_slower():
-    k, mask = scene([(0, 0, 5), (100, 1, 5)])
+    k, mask = scene([(-200, 0, 5), (-100, 1, 5)])
     p = PhysicsConfig()
     mem = lane_change(k, mask, p)
     mem['lc2013_keep_right'][0, 0] = -40_000_000

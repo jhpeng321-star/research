@@ -1,0 +1,26 @@
+{
+  "root": "/home/ubuntu/rblane20261031_panel8_f109af1e2a36",
+  "process": {
+    "pid": 462783,
+    "start_ticks": "48045449",
+    "command": [
+      "/usr/bin/nice",
+      "-n",
+      "19",
+      "/home/ubuntu/miniconda3/bin/python",
+      "-B",
+      "-m",
+      "tools.rblane.validate",
+      "--out",
+      "/home/ubuntu/rblane20261031_panel8_f109af1e2a36/results",
+      "--encoder-checkpoint",
+      "/home/ubuntu/rblane20261031_panel8_f109af1e2a36/inputs/wm_s.pt"
+    ],
+    "root": "/home/ubuntu/rblane20261031_panel8_f109af1e2a36",
+    "started_at": 1793466176.7650497
+  },
+  "bundle_sha256": "f109af1e2a3685000a9406567c217d3e1217476fcafa2739fd02ae1239993938",
+  "complete": true,
+  "alive": false,
+  "collected_at": 1793466645.2441962
+}
