@@ -45,6 +45,11 @@ Updated 2026-10-31 23:58 +08:00; branch `c4/rb-int`, base `f0db3c82`.
   Full-panel arrival/source conservation remains a separate required gate.
 
 ## Tests / results
+- Resume scorer/finalizer suite: 12 run, 11 PASS / 1 optional-dependency skip,
+  15.56s. CF kernel e9992767 + UNC1f918969 integrated; independent CPU suite:
+  52 PASS /39.27s (CF numeric parity, hidden futures, old futures, INT guards).
+- CF worker has its own uncommitted switch wiring in progress; INT will consume
+  that committed increment rather than duplicate shared accel/config edits.
 - `tools/rbint/default_parity.py`: captured and independently compared two CPU
   synthetic legacy/default + WM2-architecture cases; weights, forward and rollout
   tensors bit-exact. Baseline: `docs/paper_results/WMPHYS_DEFAULT_OFF_BASE.json`.
