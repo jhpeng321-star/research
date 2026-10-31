@@ -1,0 +1,9 @@
+{
+  "status": "PASS",
+  "timestamp": "2026-11-01T02:15:15+08:00",
+  "verified_sha256": "5f19f931269a78c14ac9df03b7c9620c6c713c13773d36f786f4b741a3ea35d1",
+  "git_status_before_stage": " M HANDOFF.md\n M docs/paper_results/RBFIT.md\n?? artifacts/rbfit/lane_boundaries_v4/\n?? artifacts/rbfit/receipts/LC_WATCH_0128_STATE.json\n?? src/wms/physics/lc_fit_for_unc.py\n?? tests/unit/test_rbfit_lc_unc.py\n",
+  "git_diff_before_stage": null,
+  "git_log_before_stage": "797e6a3d S-RB-FIT: receipt owned LC continuation through owner morning window\n3e60b4fe S-RB-FIT: bind coordinate-correct LC source and durable continuation\n4aee21a8 S-RB-FIT: fit raw LC decisions directly with causal profile likelihood\n044c9ee4 S-RB-FIT: publish verified directional LC posteriors and physical gaps\n8f451e79 S-RB-FIT: cover source-domain LC boundaries and verify raw decisions\nb7339420 S-RB-FIT: verify directional smoke and receipt unique FIT refit\n9f574a5c S-RB-FIT: add direction-aware LC likelihood and causal shrinkage\n4683987b S-RB-FIT: reconcile owner 01:28 continuation and completed dispatches\n876b2433 S-RB-FIT: publish INT and UNC addendum coordination receipt\n4965c665 S-RB-FIT: publish shrunk posteriors and refreshed LC likelihood fit\n",
+  "paper_lines": 40
+}

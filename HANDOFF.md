@@ -1,5 +1,12 @@
 # S-RB-FIT — owner01:28 continuation active
 
+<!-- LC-CONTINUATION:BEGIN -->
+Latest verified `lane_events.json` (2026-11-01T02:15:15+08:00); LC SHA1bdded8e9f21, snapshotv1;3130driver posteriors.
+Raw physical expected changes5444.5 vs626recorded; eventBrier0.007423. Likelihood-emission Brier0.002374 is a separate diagnostic. **NOT ADOPTED**; no free-running/action-effect qualification.
+Boundary-aware LC sampler required; weights already conditioned. Inverse temperature=not applicable; IDM preferred delivery remains `shrinkage_v1`. Live receipts:LC_WATCH_0128_STATE.json.
+<!-- LC-CONTINUATION:END -->
+
+
 Branch `c4/rb-fit`, basef0db3c82. Prior work preserved; owner instructions in
 REGISTRATION5683/5701/5734/5736. Continue substantive LC source refits through09:00;
 INT freezes09:30. Detailed previous handoff:docs/RBFIT_HANDOFF_ARCHIVE_0205.md.
