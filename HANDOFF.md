@@ -21,7 +21,10 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
 - NEW default-OFF `PhysicsConfig.sumo_merge_query_fast`: exact one-ego geometry
   per reservation rank (junction_query.py). CPU dense/query geometry+reservation
   bit parity PASS;34tests PASS/1CUDA skip. Synthetic640slot kernel benchmark42.3x
-  CPU speedup; full-rollout/GPU speedup unmeasured. NOT in live4015b641 runtime.
+  CPU speedup; recorded FULL60s FIT969420/969421 dense-vs-fast COMPLETE tapes
+  bit-exact (positions/speeds/lanes/masks/accel/residual). Small closed-cohort
+  rollout speedup only1.00–1.03x; padded/GPU speedup unmeasured. Source5a83518e,
+  receipt docs/rbint/QUERY_PARITY_5a83518e.json. NOT in live4015b641 runtime.
 - Ported ONLY existing frozen MAPPO `policy_native_lanes` ownership option
   from c4/speedhead bridge (default OFF). Needed by the unchanged registered
   callback; policy acceleration preserved, WM native lanes delegated.

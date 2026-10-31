@@ -1,0 +1,81 @@
+{
+ "schema": "wmphys-smoke/1",
+ "passed": true,
+ "results": [
+  {
+   "variant": "FULL",
+   "seed": 969420,
+   "t0": 300,
+   "horizon_s": 60,
+   "source_sha256": "b2bcd94fbf1a8b64f7a80e741e88990d797b60731a8f0fa98365748c843bd0a3",
+   "encoder_calls": 1,
+   "encoder_exact": true,
+   "guard_pass": true,
+   "query_parity": {
+    "bit_exact": true,
+    "fields": [
+     "positions",
+     "speeds",
+     "lanes",
+     "masks",
+     "accel",
+     "raw_residual_mps2"
+    ],
+    "dense_seconds": 1.8261825274676085,
+    "fast_seconds": 1.7719309851527214,
+    "speedup": 1.0306171869951306
+   },
+   "finite": true,
+   "conserved": true,
+   "steps": 120,
+   "initial": [
+    94
+   ],
+   "exited": [
+    23
+   ],
+   "final": [
+    71
+   ]
+  },
+  {
+   "variant": "FULL",
+   "seed": 969421,
+   "t0": 300,
+   "horizon_s": 60,
+   "source_sha256": "3c069c9f6457f9bc6aa18e25b8a6d4b31794c358f592649b4904e37b95c9fdac",
+   "encoder_calls": 1,
+   "encoder_exact": true,
+   "guard_pass": true,
+   "query_parity": {
+    "bit_exact": true,
+    "fields": [
+     "positions",
+     "speeds",
+     "lanes",
+     "masks",
+     "accel",
+     "raw_residual_mps2"
+    ],
+    "dense_seconds": 1.6000761911273003,
+    "fast_seconds": 1.5952323470264673,
+    "speedup": 1.0030364505270106
+   },
+   "finite": true,
+   "conserved": true,
+   "steps": 120,
+   "initial": [
+    71
+   ],
+   "exited": [
+    32
+   ],
+   "final": [
+    39
+   ]
+  }
+ ],
+ "recipe_sha256": "e9e2df4fa0bffb494a105c805dff4ff718af656605da2a767ce0db63ca7c7b53",
+ "checkpoint_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+ "seconds": 9.074353940784931
+}
