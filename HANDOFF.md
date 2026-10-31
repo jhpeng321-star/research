@@ -3,7 +3,7 @@
 <!-- wmdecide-refresh:start -->
 ## Latest automated saved-output credibility refresh
 
-- Collected/scored 2026-10-31T21:23:52.196997+00:00; start at `docs/paper_results/wmdecide/refresh_20261031_212218Z/INDEX.md`.
+- Collected/scored 2026-10-31T21:44:42.733094+00:00; start at `docs/paper_results/wmdecide/refresh_20261031_214355Z/INDEX.md`.
 - All scores use validated complete K8 worlds; per-candidate matched WM2
   sections use exactly the candidate's available common worlds.
 - Read-only collection; CPU-only analysis; no inference/dispatch/process control.
@@ -12,7 +12,7 @@
 - full_v1: DIAGNOSTIC_ONLY; 6 scored worlds.
 - full_v3: DIAGNOSTIC_ONLY; 5 scored worlds.
 - a2: DIAGNOSTIC_ONLY; 6 scored worlds.
-- b2: DIAGNOSTIC_ONLY; 1 scored worlds.
+- b2: DIAGNOSTIC_ONLY; 3 scored worlds.
 - c2: UNAVAILABLE_OR_INVALID; 0 scored worlds.
 <!-- wmdecide-refresh:end -->
 Branch `c4/rb-decide`, base `f0db3c82`; owner WM-PHYS registration line5683.
