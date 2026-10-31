@@ -1,0 +1,105 @@
+{
+  "completed": 1793440086.8208828,
+  "canonical_units": 4730,
+  "counts": {
+    "evidence_v2/TF_DONE.json": 1930,
+    "feedback_evidence/COMPLETE.json": 350,
+    "aux_evidence/COMPLETE.json": 1330,
+    "extra_evidence/COMPLETE.json": 630,
+    "legacy_evidence/COMPLETE.json": 210,
+    "aux_feedback_evidence/COMPLETE.json": 280
+  },
+  "all_phase_errors_zero": true,
+  "initial_compatibility_failures_preserved": 195,
+  "raw_sha256": "95ebd1cfaac0be11401abc7a6ffa4f85b9d1644e0e46a4b1e01034213e11cb76",
+  "supplement_sha256": "cd76531474c6422963b04b9b240e2db3653c57c9c50403e8b79ee5aaff5fbae9",
+  "sources": {
+    "/root/autodl-tmp/c4/c1pidiag20261031/feedback_support.py": "51dc6b3b9e47554be189d106afb3511b6200453c1133a7429416743a39c5c3c9",
+    "/root/autodl-tmp/c4/c1pidiag20261031/worker.py": "8422166c27ff73fed1157cce7c6c78e8195269b677524b67f09fc265618cc63b",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/train/cav_drive.py": "7affb448e9f25ccfff8848b6a7376a82a75b958daae0bda21b539f726d7b47b1",
+    "/root/autodl-tmp/c4/speedhead20261030/e3final/runtime/output/controller_verification_v4/pi_external_u.py": "16ff7c6decda5090f70918a19e202cab13b1cc4a4f538ec604b1e368c5cb16d0",
+    "/root/autodl-tmp/c4/speedhead20261030/e3final/runtime/output/controller_verification_v2/pi_saturation_v1.py": "059cf4f82d6e875dfb55c663782b778771ff7b2bb114ab9824673afe8a6f13ce",
+    "/root/autodl-tmp/c4/speedhead20261030/e3final/runtime/traffic_shepherd/damping.py": "e069eee31694d103bba8102f4edfa8d692b1ad888d78aa05744c73832d89f288",
+    "/root/autodl-tmp/c4/c1pidiag20261031/auxiliary.py": "56a8dafeada6ac341c3fd6c01e67cf2ebea7678fab53466e187f9ab9dc534ca4",
+    "/root/autodl-tmp/c4/c1refresh/code/tools/c1refresh/c1r_run.py": "74b70a1caccbfea7aca82cbe58f7e348e8637398ef49a207616cd75c475c7d9b",
+    "/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/wms.py": "2161418a2c96d4537949c7a7737e1fb8841b28555d92e866c4d9282ef7c13ab6",
+    "/root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml": "f95f7c4cbb501ccb85bb3968e29f3d6ca53db4ecef5f586225f96df1f48193e4",
+    "/root/autodl-tmp/c4/c1pidiag20261031/extensions.py": "86cb830229089afe18d5ab393f55ac2c105d7447a2a9d7c58ba74120a8b041c1",
+    "/root/autodl-tmp/c4/c1pidiag20261031/runtime_control.py": "f22719f5197d8c01be030e46dfc47a5c2b5f47e88e6595e83aa296138fe039d6",
+    "/root/autodl-tmp/c4/c1refresh/code/src/wms/model/wms.py": "dfc087b25b459fe0a93f618b902e6fa87a7ee7c890ecb36153b72e6aea595158",
+    "/root/autodl-tmp/c4/c1pidiag20261031/history_feedback.py": "fdcb92884db98405b77efe96a8e8295862cf0948730bc9984078bd986dd391b1"
+  },
+  "owned": {
+    "SMOKE_OWNED.json": {
+      "pid": 213916,
+      "start_ticks": "881635441",
+      "state": null,
+      "active_same_identity": false
+    },
+    "LAUNCH_OWNED.json": {
+      "pid": 214734,
+      "start_ticks": "881652802",
+      "state": null,
+      "active_same_identity": false
+    },
+    "LAUNCH2_OWNED.json": {
+      "pid": 215340,
+      "start_ticks": "881668990",
+      "state": null,
+      "active_same_identity": false
+    },
+    "AUXLAUNCH2_OWNED.json": {
+      "pid": 216929,
+      "start_ticks": "881714171",
+      "state": null,
+      "active_same_identity": false
+    },
+    "EXLAUNCH2_OWNED.json": {
+      "pid": 218522,
+      "start_ticks": "881749503",
+      "state": null,
+      "active_same_identity": false
+    },
+    "AUXLAUNCH3_OWNED.json": {
+      "pid": 220212,
+      "start_ticks": "881791870",
+      "state": null,
+      "active_same_identity": false
+    },
+    "RECOVERFEEDBACK2_OWNED.json": {
+      "pid": 221205,
+      "start_ticks": "881816983",
+      "state": null,
+      "active_same_identity": false
+    },
+    "AUXLAUNCH4_OWNED.json": {
+      "pid": 221276,
+      "start_ticks": "881818161",
+      "state": null,
+      "active_same_identity": false
+    },
+    "EXLAUNCH3_OWNED.json": {
+      "pid": 221336,
+      "start_ticks": "881819241",
+      "state": null,
+      "active_same_identity": false
+    },
+    "RUNTIMECONTROL2_OWNED.json": {
+      "pid": 224093,
+      "start_ticks": "881881731",
+      "state": null,
+      "active_same_identity": false
+    },
+    "HISTORYFEEDBACK2_OWNED.json": {
+      "pid": 227368,
+      "start_ticks": "881970745",
+      "state": null,
+      "active_same_identity": false
+    }
+  },
+  "owned_registered_processes_active": 0,
+  "no_gpu_inference": true,
+  "gpu_initial_free_mib": 10701,
+  "gpu_admission_threshold_mib": 12288,
+  "workers_max": 24
+}

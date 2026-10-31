@@ -40,3 +40,24 @@
   Auxiliary gating then checks the successful TF + recovered-feedback receipts.
   Its prior assertion failure produced zero auxiliary forecasts. Exact-PID-only
   stop/requeue of the waiting extra-switch parent preserves the 24-worker cap.
+- MOBIL is an explicitly bundled lane-pipeline intervention: removing lane-v5
+  also removes its merge-probability cues from residual conditioning. The pivot
+  net remains for courtesy-intent features. No path-specific "lanes alone"
+  causal claim is made. Single built-in longitudinal switches remain separate.
+- Current original-panel snapshot cells give every model a one-tick history;
+  archived refresh's adapter did so only for long-history models. Therefore the
+  legacy source control preserves the *archived replay contract*, and comparison
+  to the current panel measures composite source/protocol sensitivity, not an
+  isolated torch-version effect. Missingness agrees in all 420 archived checks;
+  numerical parity does not. Current diagnostics must not be presented as an
+  exact reproduction of the full historical published panel.
+- The full-history late-start feedback supplement uses the same external code
+  with a freshly reset PI previous-command state. PIExternalU.reset initializes
+  that state from measured ego speed; normalized tapes do not bind the prior
+  commanded speed / writer acknowledgement. Therefore this supplement is a
+  conditional-reset stress test, **not a validated continuation of the recorded
+  PI executor**. Its large 120 s errors are preserved but must not be attributed
+  solely to WM dynamics. The full-history TF contrasts remain valid because
+  they use the recorded CAV future; a fair continuation must bind causal executor
+  state as well as observed driver history. The original-clock feedback checks
+  retain the explicitly scoped refresh common-plant/reset contract.

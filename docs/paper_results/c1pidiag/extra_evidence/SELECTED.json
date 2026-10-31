@@ -1,0 +1,34 @@
+[
+ {
+  "cohort": "pi_u_same",
+  "tag": "wm13e",
+  "component": "residual_net_off",
+  "score60": 39.15578842163086,
+  "baseline60": 44.85315704345703,
+  "improves": true
+ },
+ {
+  "cohort": "pi_u_same",
+  "tag": "wm2",
+  "component": "residual_net_off",
+  "score60": 42.26433086395264,
+  "baseline60": 44.95344543457031,
+  "improves": true
+ },
+ {
+  "cohort": "wall_same",
+  "tag": "wm13e",
+  "component": "residual_net_off",
+  "score60": 29.09827995300293,
+  "baseline60": 34.824424743652344,
+  "improves": true
+ },
+ {
+  "cohort": "wall_same",
+  "tag": "wm2",
+  "component": "yield_off",
+  "score60": 19.786941528320312,
+  "baseline60": 27.272323608398438,
+  "improves": true
+ }
+]

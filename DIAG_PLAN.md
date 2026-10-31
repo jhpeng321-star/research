@@ -114,3 +114,12 @@ current CPU environment, to 120 s; export per-ID endpoints. Compare archived
 source vs current source on the same torch/host, and archived results vs this
 reproduction separately. No states/models/components are selected by discrepancy.
 This 210-cell protocol control cannot change any main-panel selection.
+
+## Full-history feedback completion (before its forecasts)
+
+The fixed shifted-start TF panel shows a WM2 PI history effect. Complete the
+requested feedback check on all SAME 70 shifted starts with exactly full 60 s,
+inferred settings, original components for C1/13E/WM2/frozen BB-traj (280 cells).
+This is a fixed fair-history protocol, not another component search. PI 60/120 s,
+wall 60 s only; same conditional presence/common external CAV plant. It is not
+the autonomous-entry C1CLOSED panel. Keep supplemental outputs separate.

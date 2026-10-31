@@ -32,7 +32,7 @@ def ssh(code, timeout=120):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('action', choices=('select', 'probe', 'read', 'list', 'inspect', 'stage', 'smoke', 'launch', 'auxlaunch', 'auxstop', 'exlaunch', 'recoverfeedback', 'runtimecontrol', 'status', 'fetch', 'fetchraw'))
+    ap.add_argument('action', choices=('select', 'probe', 'read', 'list', 'inspect', 'stage', 'smoke', 'launch', 'auxlaunch', 'auxstop', 'exlaunch', 'recoverfeedback', 'runtimecontrol','historyfeedback', 'status', 'fetch', 'fetchraw'))
     ap.add_argument('--path')
     args = ap.parse_args()
     if args.action == 'select':
@@ -68,9 +68,9 @@ os.kill(pid,signal.SIGTERM)
 with (p/'evidence_v2/{label}_STOPPED.json').open('x') as f:json.dump(dict(pid=pid,start_ticks=r['start_ticks'],stopped=time.time(),reason='adapter correction before queued inference'),f)
 print('stopped owned waiting PID',pid)
 '''))
-    elif args.action in ('smoke', 'launch', 'auxlaunch', 'exlaunch','recoverfeedback','runtimecontrol'):
-        script = {'smoke':'worker.py','launch':'dispatch.py','auxlaunch':'auxiliary.py','exlaunch':'extensions.py','recoverfeedback':'feedback_support.py','runtimecontrol':'runtime_control.py'}[args.action]
-        extra = {'smoke':['--smoke'],'launch':[],'auxlaunch':['--wait'],'exlaunch':[],'recoverfeedback':[],'runtimecontrol':[]}[args.action]
+    elif args.action in ('smoke', 'launch', 'auxlaunch', 'exlaunch','recoverfeedback','runtimecontrol','historyfeedback'):
+        script = {'smoke':'worker.py','launch':'dispatch.py','auxlaunch':'auxiliary.py','exlaunch':'extensions.py','recoverfeedback':'feedback_support.py','runtimecontrol':'runtime_control.py','historyfeedback':'history_feedback.py'}[args.action]
+        extra = {'smoke':['--smoke'],'launch':[],'auxlaunch':['--wait'],'exlaunch':[],'recoverfeedback':[],'runtimecontrol':[],'historyfeedback':[]}[args.action]
         label = args.action.upper()+({'auxlaunch':'4','exlaunch':'3'}.get(args.action,'2'))
         print(ssh(f'''from pathlib import Path
 import os,subprocess,json,time
@@ -88,7 +88,7 @@ with (p/'evidence_v2/{label}.log').open('x') as log:
         print(ssh(f'''from pathlib import Path
 import json,os
 p=Path({REMOTE!r})
-for name in ('LAUNCH2.log','AUXLAUNCH4.log','EXLAUNCH3.log','RECOVERFEEDBACK2.log','RUNTIMECONTROL2.log'):
+for name in ('LAUNCH2.log','AUXLAUNCH4.log','EXLAUNCH3.log','RECOVERFEEDBACK2.log','RUNTIMECONTROL2.log','HISTORYFEEDBACK2.log'):
  q=p/'evidence_v2'/name
  if q.exists():print(name,' | '.join(q.read_text().splitlines()[-6:]))
 for name in ('STATUS.json','COMPLETE.json','TF_DONE.json','PREFLIGHT.json','SELECTED.json'):
@@ -113,12 +113,17 @@ for name in ('PREFLIGHT.json','COMPLETE.json'):
 q=p/'legacy_evidence/COMPLETE.json'
 if q.exists():
  d=json.loads(q.read_text());print('legacy complete',{{**d,'errors':len(d['errors'])}})
+q=p/'aux_feedback_evidence/COMPLETE.json'
+if q.exists():
+ d=json.loads(q.read_text());print('history feedback complete',{{**d,'errors':len(d['errors'])}})
 '''))
     elif args.action == 'fetchraw':
         primary=args.path=='primary'
-        out=ROOT/('_out/c1pidiag/primary' if primary else 'docs/paper_results/c1pidiag')
+        supplement=args.path=='historyfeedback'
+        out=ROOT/('_out/c1pidiag/primary' if primary else ('docs/paper_results/c1pidiag/aux_feedback' if supplement else 'docs/paper_results/c1pidiag'))
         assert out.is_dir()
-        names=('RAW_PRIMARY.jsonl.gz','OUTPUTS_PRIMARY.json') if primary else ('RAW_UNITS.jsonl.gz','OUTPUTS_MANIFEST.json','PID_AUDIT.json')
+        names=('AUX_FEEDBACK.jsonl.gz',) if supplement else (('RAW_PRIMARY.jsonl.gz','OUTPUTS_PRIMARY.json') if primary else ('RAW_UNITS.jsonl.gz','OUTPUTS_MANIFEST.json','PID_AUDIT.json'))
+        if args.path=='audit':names=('FINAL_RUN_AUDIT.json',)
         for name in names:
             assert not (out/name).exists()
             p=subprocess.run(['scp','-o','BatchMode=yes','-o','ConnectTimeout=15',f'gpuA:{REMOTE}/{name}',str(out/name)],text=True,capture_output=True,timeout=180)
@@ -127,7 +132,7 @@ if q.exists():
     elif args.action == 'fetch':
         out=ROOT/'docs/paper_results/c1pidiag'
         assert out.is_dir()
-        for name in ('evidence','evidence_v2','aux_evidence','extra_evidence','feedback_evidence','legacy_evidence'):
+        for name in ('evidence','evidence_v2','aux_evidence','extra_evidence','feedback_evidence','legacy_evidence','aux_feedback_evidence'):
             p=subprocess.run(['scp','-o','BatchMode=yes','-o','ConnectTimeout=15','-r',f'gpuA:{REMOTE}/{name}',str(out)],text=True,capture_output=True,timeout=180)
             if p.returncode:raise RuntimeError(p.stderr)
         print('evidence fetched')
@@ -135,7 +140,7 @@ if q.exists():
         print(ssh(f'''from pathlib import Path
 import hashlib
 p=Path({REMOTE!r});assert p.parent.is_dir();p.mkdir(exist_ok=True)
-for name in ('evidence','units','smoke','evidence_v2','units_v2','aux_evidence','aux_units','extra_evidence','extra_units','feedback_units','feedback_evidence','legacy_units','legacy_evidence'):(p/name).mkdir(exist_ok=True)
+for name in ('evidence','units','smoke','evidence_v2','units_v2','aux_evidence','aux_units','extra_evidence','extra_units','feedback_units','feedback_evidence','legacy_units','legacy_evidence','aux_feedback_units','aux_feedback_evidence'):(p/name).mkdir(exist_ok=True)
 for name in ('worker.py','dispatch.py','operate.py','auxiliary.py','extensions.py'):
  q=p/name
  if q.exists():

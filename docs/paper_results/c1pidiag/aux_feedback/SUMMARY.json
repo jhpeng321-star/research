@@ -1,0 +1,1174 @@
+{
+ "schema": "c1pidiag_analysis/1",
+ "raw_sha256": "cd76531474c6422963b04b9b240e2db3653c57c9c50403e8b79ee5aaff5fbae9",
+ "units": 280,
+ "estimand": "median of per-start HDV medians; paired differences formed within start on common HDV IDs",
+ "bootstrap": {
+  "draws": 2000,
+  "seed": 0,
+  "cluster": "world",
+  "interval": "percentile95"
+ },
+ "summary": [
+  {
+   "panel": "aux",
+   "mode": "aux_clh",
+   "cohort": "pi_u_same",
+   "config": "bbtraj__h60__inf__A1__original__baseline",
+   "tag": "bbtraj",
+   "history": "h60",
+   "population": false,
+   "residual": true,
+   "lanes": "original",
+   "component": "baseline",
+   "horizons": {
+    "60": {
+     "own": {
+      "n": 37,
+      "worlds": 37,
+      "point": 182.79090309143066,
+      "lo": 113.00841522216797,
+      "hi": 259.1714782714844,
+      "equal_world_mean": 220.88309143685007
+     },
+     "common_wm": {
+      "n": 37,
+      "worlds": 37,
+      "point": 182.79090309143066,
+      "lo": 113.00841522216797,
+      "hi": 259.1714782714844,
+      "equal_world_mean": 220.88309143685007
+     },
+     "common_bb": {
+      "n": 37,
+      "worlds": 37,
+      "point": 182.79090309143066,
+      "lo": 113.00841522216797,
+      "hi": 259.1714782714844,
+      "equal_world_mean": 220.88309143685007
+     },
+     "paired_wm_minus_bb": {
+      "n": 37,
+      "worlds": 37,
+      "point": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "equal_world_mean": 0.0
+     },
+     "paired_vs_model_baseline": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_snapshot": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_c1": {
+      "n": 37,
+      "worlds": 37,
+      "point": -17.919066429138184,
+      "lo": -69.47362041473389,
+      "hi": 31.192490577697754,
+      "equal_world_mean": -19.999565662564457
+     },
+     "signed_position_drift": {
+      "n": 37,
+      "worlds": 37,
+      "point": 108.94184875488281,
+      "lo": 76.43322417736054,
+      "hi": 216.41007232666016,
+      "equal_world_mean": 162.11320330645586
+     },
+     "matched_ids_total": 659,
+     "matched_ids_min": 2,
+     "matched_ids_median": 16.0
+    },
+    "120": {
+     "own": {
+      "n": 24,
+      "worlds": 24,
+      "point": 244.8250732421875,
+      "lo": 150.3521795630455,
+      "hi": 312.4055404663086,
+      "equal_world_mean": 243.00416298707327
+     },
+     "common_wm": {
+      "n": 24,
+      "worlds": 24,
+      "point": 244.8250732421875,
+      "lo": 150.3521795630455,
+      "hi": 312.4055404663086,
+      "equal_world_mean": 243.00416298707327
+     },
+     "common_bb": {
+      "n": 24,
+      "worlds": 24,
+      "point": 244.8250732421875,
+      "lo": 150.3521795630455,
+      "hi": 312.4055404663086,
+      "equal_world_mean": 243.00416298707327
+     },
+     "paired_wm_minus_bb": {
+      "n": 24,
+      "worlds": 24,
+      "point": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "equal_world_mean": 0.0
+     },
+     "paired_vs_model_baseline": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_snapshot": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_c1": {
+      "n": 22,
+      "worlds": 22,
+      "point": -54.451210021972656,
+      "lo": -139.7696241378784,
+      "hi": 58.595401763916016,
+      "equal_world_mean": -60.427026987075806
+     },
+     "signed_position_drift": {
+      "n": 24,
+      "worlds": 24,
+      "point": 209.57160997390747,
+      "lo": 40.81985092163086,
+      "hi": 301.1802215576172,
+      "equal_world_mean": 173.04436457157135
+     },
+     "matched_ids_total": 283,
+     "matched_ids_min": 1,
+     "matched_ids_median": 9.0
+    }
+   }
+  },
+  {
+   "panel": "aux",
+   "mode": "aux_clh",
+   "cohort": "pi_u_same",
+   "config": "c1struct__h60__inf__A1__original__baseline",
+   "tag": "c1struct",
+   "history": "h60",
+   "population": false,
+   "residual": true,
+   "lanes": "original",
+   "component": "baseline",
+   "horizons": {
+    "60": {
+     "own": {
+      "n": 37,
+      "worlds": 37,
+      "point": 214.7613754272461,
+      "lo": 158.22354125976562,
+      "hi": 255.71139526367188,
+      "equal_world_mean": 232.94624934325347
+     },
+     "common_wm": {
+      "n": 37,
+      "worlds": 37,
+      "point": 197.54905700683594,
+      "lo": 153.78951263427734,
+      "hi": 284.96995544433594,
+      "equal_world_mean": 231.72100466650886
+     },
+     "common_bb": {
+      "n": 37,
+      "worlds": 37,
+      "point": 177.8219404220581,
+      "lo": 111.41919326782227,
+      "hi": 212.04946517944336,
+      "equal_world_mean": 211.7214390039444
+     },
+     "paired_wm_minus_bb": {
+      "n": 37,
+      "worlds": 37,
+      "point": 17.919066429138184,
+      "lo": -31.192490577697754,
+      "hi": 69.47362041473389,
+      "equal_world_mean": 19.999565662564457
+     },
+     "paired_vs_model_baseline": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_snapshot": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_c1": {
+      "n": 37,
+      "worlds": 37,
+      "point": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "equal_world_mean": 0.0
+     },
+     "signed_position_drift": {
+      "n": 37,
+      "worlds": 37,
+      "point": 195.7410068511963,
+      "lo": 153.78951263427734,
+      "hi": 284.96995544433594,
+      "equal_world_mean": 226.6355382300712
+     },
+     "matched_ids_total": 576,
+     "matched_ids_min": 2,
+     "matched_ids_median": 13.0
+    },
+    "120": {
+     "own": {
+      "n": 23,
+      "worlds": 23,
+      "point": 347.4677734375,
+      "lo": 224.91524505615234,
+      "hi": 404.44097900390625,
+      "equal_world_mean": 306.9685231084409
+     },
+     "common_wm": {
+      "n": 22,
+      "worlds": 22,
+      "point": 354.6500930786133,
+      "lo": 177.59730529785156,
+      "hi": 410.8236999511719,
+      "equal_world_mean": 296.84882077303797
+     },
+     "common_bb": {
+      "n": 22,
+      "worlds": 22,
+      "point": 235.15142059326172,
+      "lo": 135.2625503540039,
+      "hi": 310.15662479400635,
+      "equal_world_mean": 236.4217937859622
+     },
+     "paired_wm_minus_bb": {
+      "n": 22,
+      "worlds": 22,
+      "point": 54.451210021972656,
+      "lo": -58.595401763916016,
+      "hi": 139.7696241378749,
+      "equal_world_mean": 60.427026987075806
+     },
+     "paired_vs_model_baseline": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_snapshot": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_c1": {
+      "n": 22,
+      "worlds": 22,
+      "point": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "equal_world_mean": 0.0
+     },
+     "signed_position_drift": {
+      "n": 22,
+      "worlds": 22,
+      "point": 354.6500930786133,
+      "lo": 176.6006317138672,
+      "hi": 410.8236999511719,
+      "equal_world_mean": 282.06158325888896
+     },
+     "matched_ids_total": 201,
+     "matched_ids_min": 1,
+     "matched_ids_median": 6.0
+    }
+   }
+  },
+  {
+   "panel": "aux",
+   "mode": "aux_clh",
+   "cohort": "pi_u_same",
+   "config": "wm13e__h60__inf__A1__original__baseline",
+   "tag": "wm13e",
+   "history": "h60",
+   "population": false,
+   "residual": true,
+   "lanes": "original",
+   "component": "baseline",
+   "horizons": {
+    "60": {
+     "own": {
+      "n": 37,
+      "worlds": 37,
+      "point": 180.40428924560547,
+      "lo": 129.77064514160156,
+      "hi": 248.3492374420166,
+      "equal_world_mean": 215.75483853108173
+     },
+     "common_wm": {
+      "n": 37,
+      "worlds": 37,
+      "point": 188.5004425048828,
+      "lo": 122.67251586914062,
+      "hi": 248.3492374420166,
+      "equal_world_mean": 219.71466729447647
+     },
+     "common_bb": {
+      "n": 37,
+      "worlds": 37,
+      "point": 177.8219404220581,
+      "lo": 101.8497085571289,
+      "hi": 267.85040283203125,
+      "equal_world_mean": 221.76495471193985
+     },
+     "paired_wm_minus_bb": {
+      "n": 37,
+      "worlds": 37,
+      "point": -6.964447021484375,
+      "lo": -38.997060775756836,
+      "hi": 46.37107849121094,
+      "equal_world_mean": -2.050287417463354
+     },
+     "paired_vs_model_baseline": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_snapshot": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_c1": {
+      "n": 37,
+      "worlds": 37,
+      "point": -28.510345458984375,
+      "lo": -64.59931755065918,
+      "hi": -11.043807983398438,
+      "equal_world_mean": -29.14201831817627
+     },
+     "signed_position_drift": {
+      "n": 37,
+      "worlds": 37,
+      "point": 145.48534393310547,
+      "lo": 90.73771667480469,
+      "hi": 241.02452087402344,
+      "equal_world_mean": 181.3024807491818
+     },
+     "matched_ids_total": 561,
+     "matched_ids_min": 1,
+     "matched_ids_median": 14.0
+    },
+    "120": {
+     "own": {
+      "n": 10,
+      "worlds": 10,
+      "point": 1044.9214630126953,
+      "lo": 404.3295135498047,
+      "hi": 1452.5604965209905,
+      "equal_world_mean": 947.690408706665
+     },
+     "common_wm": {
+      "n": 10,
+      "worlds": 10,
+      "point": 1044.9214630126953,
+      "lo": 404.3295135498047,
+      "hi": 1452.5604965209905,
+      "equal_world_mean": 947.9439571380615
+     },
+     "common_bb": {
+      "n": 10,
+      "worlds": 10,
+      "point": 337.79871290922165,
+      "lo": 183.33245067596442,
+      "hi": 409.81422424316406,
+      "equal_world_mean": 300.9569185137749
+     },
+     "paired_wm_minus_bb": {
+      "n": 10,
+      "worlds": 10,
+      "point": 631.6829702854156,
+      "lo": 86.92179870605469,
+      "hi": 1104.5958557128906,
+      "equal_world_mean": 646.9870386242867
+     },
+     "paired_vs_model_baseline": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_snapshot": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_c1": {
+      "n": 10,
+      "worlds": 10,
+      "point": 614.1377754211426,
+      "lo": 124.4197998046875,
+      "hi": 1070.2335205078125,
+      "equal_world_mean": 597.0691696166992
+     },
+     "signed_position_drift": {
+      "n": 10,
+      "worlds": 10,
+      "point": 1044.9214630126953,
+      "lo": 404.3295135498047,
+      "hi": 1452.5604965209905,
+      "equal_world_mean": 947.9439571380615
+     },
+     "matched_ids_total": 82,
+     "matched_ids_min": 1,
+     "matched_ids_median": 2.5
+    }
+   }
+  },
+  {
+   "panel": "aux",
+   "mode": "aux_clh",
+   "cohort": "pi_u_same",
+   "config": "wm2__h60__inf__A1__original__baseline",
+   "tag": "wm2",
+   "history": "h60",
+   "population": false,
+   "residual": true,
+   "lanes": "original",
+   "component": "baseline",
+   "horizons": {
+    "60": {
+     "own": {
+      "n": 37,
+      "worlds": 37,
+      "point": 205.22882080078125,
+      "lo": 141.45580792427063,
+      "hi": 233.49737548828125,
+      "equal_world_mean": 208.30136639363056
+     },
+     "common_wm": {
+      "n": 37,
+      "worlds": 37,
+      "point": 205.22882080078125,
+      "lo": 151.9950714111328,
+      "hi": 236.38397979736328,
+      "equal_world_mean": 211.79479992711867
+     },
+     "common_bb": {
+      "n": 37,
+      "worlds": 37,
+      "point": 173.32325553894043,
+      "lo": 100.53326606750488,
+      "hi": 244.18792724609375,
+      "equal_world_mean": 214.0403468109466
+     },
+     "paired_wm_minus_bb": {
+      "n": 37,
+      "worlds": 37,
+      "point": 11.160430908203125,
+      "lo": -19.55541229248047,
+      "hi": 26.708656311035156,
+      "equal_world_mean": -2.2455468838279313
+     },
+     "paired_vs_model_baseline": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_snapshot": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_c1": {
+      "n": 37,
+      "worlds": 37,
+      "point": -24.357376098632812,
+      "lo": -52.774749755859375,
+      "hi": 24.859817504882812,
+      "equal_world_mean": -26.060765369518382
+     },
+     "signed_position_drift": {
+      "n": 37,
+      "worlds": 37,
+      "point": 191.2024383544922,
+      "lo": 141.45580792427063,
+      "hi": 225.68144989013672,
+      "equal_world_mean": 179.77911381463747
+     },
+     "matched_ids_total": 619,
+     "matched_ids_min": 2,
+     "matched_ids_median": 15.0
+    },
+    "120": {
+     "own": {
+      "n": 12,
+      "worlds": 12,
+      "point": 579.2494049072266,
+      "lo": 497.7332077026367,
+      "hi": 954.4614562988281,
+      "equal_world_mean": 692.2775522867838
+     },
+     "common_wm": {
+      "n": 12,
+      "worlds": 12,
+      "point": 578.8556594848633,
+      "lo": 497.7332077026367,
+      "hi": 954.4614562988281,
+      "equal_world_mean": 692.8951352437338
+     },
+     "common_bb": {
+      "n": 12,
+      "worlds": 12,
+      "point": 341.03253173828125,
+      "lo": 281.2860839366913,
+      "hi": 457.2341842651367,
+      "equal_world_mean": 335.719611843427
+     },
+     "paired_wm_minus_bb": {
+      "n": 12,
+      "worlds": 12,
+      "point": 201.00077557563782,
+      "lo": 141.72733116149902,
+      "hi": 623.9403991699219,
+      "equal_world_mean": 357.1755234003067
+     },
+     "paired_vs_model_baseline": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_snapshot": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_c1": {
+      "n": 11,
+      "worlds": 11,
+      "point": 409.9014663696289,
+      "lo": 52.37705993652344,
+      "hi": 540.3288230895996,
+      "equal_world_mean": 341.21129192005503
+     },
+     "signed_position_drift": {
+      "n": 12,
+      "worlds": 12,
+      "point": 578.8556594848633,
+      "lo": 497.7332077026367,
+      "hi": 954.4614562988281,
+      "equal_world_mean": 692.8951352437338
+     },
+     "matched_ids_total": 89,
+     "matched_ids_min": 1,
+     "matched_ids_median": 3.0
+    }
+   }
+  },
+  {
+   "panel": "aux",
+   "mode": "aux_clh",
+   "cohort": "wall_same",
+   "config": "bbtraj__h60__inf__A1__original__baseline",
+   "tag": "bbtraj",
+   "history": "h60",
+   "population": false,
+   "residual": true,
+   "lanes": "original",
+   "component": "baseline",
+   "horizons": {
+    "60": {
+     "own": {
+      "n": 29,
+      "worlds": 13,
+      "point": 67.04928970336914,
+      "lo": 56.41663360595703,
+      "hi": 140.1299057006836,
+      "equal_world_mean": 126.01680806966928
+     },
+     "common_wm": {
+      "n": 29,
+      "worlds": 13,
+      "point": 67.04928970336914,
+      "lo": 56.41663360595703,
+      "hi": 140.1299057006836,
+      "equal_world_mean": 126.01680806966928
+     },
+     "common_bb": {
+      "n": 29,
+      "worlds": 13,
+      "point": 67.04928970336914,
+      "lo": 56.41663360595703,
+      "hi": 140.1299057006836,
+      "equal_world_mean": 126.01680806966928
+     },
+     "paired_wm_minus_bb": {
+      "n": 29,
+      "worlds": 13,
+      "point": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "equal_world_mean": 0.0
+     },
+     "paired_vs_model_baseline": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_snapshot": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_c1": {
+      "n": 24,
+      "worlds": 12,
+      "point": -30.751209259033203,
+      "lo": -193.06497192382812,
+      "hi": 9.9940185546875,
+      "equal_world_mean": -46.853904247283936
+     },
+     "signed_position_drift": {
+      "n": 29,
+      "worlds": 13,
+      "point": 37.48590660095215,
+      "lo": -102.12042236328125,
+      "hi": 40.80778503417969,
+      "equal_world_mean": -15.512409797081581
+     },
+     "matched_ids_total": 423,
+     "matched_ids_min": 2,
+     "matched_ids_median": 16.0
+    },
+    "120": {
+     "own": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "common_wm": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "common_bb": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_wm_minus_bb": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_model_baseline": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_snapshot": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_c1": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "signed_position_drift": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "matched_ids_total": 0,
+     "matched_ids_min": 0,
+     "matched_ids_median": null
+    }
+   }
+  },
+  {
+   "panel": "aux",
+   "mode": "aux_clh",
+   "cohort": "wall_same",
+   "config": "c1struct__h60__inf__A1__original__baseline",
+   "tag": "c1struct",
+   "history": "h60",
+   "population": false,
+   "residual": true,
+   "lanes": "original",
+   "component": "baseline",
+   "horizons": {
+    "60": {
+     "own": {
+      "n": 24,
+      "worlds": 12,
+      "point": 142.30545043945312,
+      "lo": 76.12060546875,
+      "hi": 328.9944763183594,
+      "equal_world_mean": 170.91678285598755
+     },
+     "common_wm": {
+      "n": 24,
+      "worlds": 12,
+      "point": 144.09000396728516,
+      "lo": 76.12060546875,
+      "hi": 328.9944763183594,
+      "equal_world_mean": 174.1228051185608
+     },
+     "common_bb": {
+      "n": 24,
+      "worlds": 12,
+      "point": 81.40483856201172,
+      "lo": 62.62600522041321,
+      "hi": 140.1299057006836,
+      "equal_world_mean": 127.26890087127686
+     },
+     "paired_wm_minus_bb": {
+      "n": 24,
+      "worlds": 12,
+      "point": 30.751209259033203,
+      "lo": -9.9940185546875,
+      "hi": 193.06497192382812,
+      "equal_world_mean": 46.853904247283936
+     },
+     "paired_vs_model_baseline": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_snapshot": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_c1": {
+      "n": 24,
+      "worlds": 12,
+      "point": 0.0,
+      "lo": 0.0,
+      "hi": 0.0,
+      "equal_world_mean": 0.0
+     },
+     "signed_position_drift": {
+      "n": 24,
+      "worlds": 12,
+      "point": 112.19964599609375,
+      "lo": 42.057472229003906,
+      "hi": 328.9944763183594,
+      "equal_world_mean": 126.34248701731364
+     },
+     "matched_ids_total": 323,
+     "matched_ids_min": 1,
+     "matched_ids_median": 15.0
+    },
+    "120": {
+     "own": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "common_wm": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "common_bb": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_wm_minus_bb": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_model_baseline": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_snapshot": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_c1": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "signed_position_drift": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "matched_ids_total": 0,
+     "matched_ids_min": 0,
+     "matched_ids_median": null
+    }
+   }
+  },
+  {
+   "panel": "aux",
+   "mode": "aux_clh",
+   "cohort": "wall_same",
+   "config": "wm13e__h60__inf__A1__original__baseline",
+   "tag": "wm13e",
+   "history": "h60",
+   "population": false,
+   "residual": true,
+   "lanes": "original",
+   "component": "baseline",
+   "horizons": {
+    "60": {
+     "own": {
+      "n": 29,
+      "worlds": 13,
+      "point": 108.1815414428711,
+      "lo": 78.56397342681885,
+      "hi": 219.66354370117188,
+      "equal_world_mean": 121.27414433161417
+     },
+     "common_wm": {
+      "n": 29,
+      "worlds": 13,
+      "point": 108.1815414428711,
+      "lo": 78.56397342681885,
+      "hi": 197.1652069091797,
+      "equal_world_mean": 119.32187548661844
+     },
+     "common_bb": {
+      "n": 29,
+      "worlds": 13,
+      "point": 66.61697387695312,
+      "lo": 51.86339569091797,
+      "hi": 140.1299057006836,
+      "equal_world_mean": 119.38089408629979
+     },
+     "paired_wm_minus_bb": {
+      "n": 29,
+      "worlds": 13,
+      "point": 33.559234619140625,
+      "lo": -72.3068618774414,
+      "hi": 68.35848999023438,
+      "equal_world_mean": -0.05901859968136373
+     },
+     "paired_vs_model_baseline": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_snapshot": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_c1": {
+      "n": 24,
+      "worlds": 12,
+      "point": -1.997100830078125,
+      "lo": -220.89857482910156,
+      "hi": 18.26068115234375,
+      "equal_world_mean": -55.30390727519989
+     },
+     "signed_position_drift": {
+      "n": 29,
+      "worlds": 13,
+      "point": 84.34759521484375,
+      "lo": 13.181640625,
+      "hi": 151.8944854736328,
+      "equal_world_mean": 65.75522966262622
+     },
+     "matched_ids_total": 341,
+     "matched_ids_min": 1,
+     "matched_ids_median": 10.0
+    },
+    "120": {
+     "own": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "common_wm": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "common_bb": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_wm_minus_bb": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_model_baseline": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_snapshot": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_c1": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "signed_position_drift": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "matched_ids_total": 0,
+     "matched_ids_min": 0,
+     "matched_ids_median": null
+    }
+   }
+  },
+  {
+   "panel": "aux",
+   "mode": "aux_clh",
+   "cohort": "wall_same",
+   "config": "wm2__h60__inf__A1__original__baseline",
+   "tag": "wm2",
+   "history": "h60",
+   "population": false,
+   "residual": true,
+   "lanes": "original",
+   "component": "baseline",
+   "horizons": {
+    "60": {
+     "own": {
+      "n": 29,
+      "worlds": 13,
+      "point": 105.72500610351562,
+      "lo": 46.30067443847656,
+      "hi": 155.6380157470703,
+      "equal_world_mean": 114.5162728260725
+     },
+     "common_wm": {
+      "n": 29,
+      "worlds": 13,
+      "point": 105.72500610351562,
+      "lo": 45.71909084320068,
+      "hi": 170.62652587890625,
+      "equal_world_mean": 115.77830041983188
+     },
+     "common_bb": {
+      "n": 29,
+      "worlds": 13,
+      "point": 81.22788619995117,
+      "lo": 55.67688274383545,
+      "hi": 144.5529327392578,
+      "equal_world_mean": 124.62723357860858
+     },
+     "paired_wm_minus_bb": {
+      "n": 29,
+      "worlds": 13,
+      "point": -5.5945587158203125,
+      "lo": -52.10923767089844,
+      "hi": 46.2271728515625,
+      "equal_world_mean": -8.848933158776696
+     },
+     "paired_vs_model_baseline": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_snapshot": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_c1": {
+      "n": 24,
+      "worlds": 12,
+      "point": -25.923248291015625,
+      "lo": -156.8383560180664,
+      "hi": 1.439544677734375,
+      "equal_world_mean": -60.37120759487152
+     },
+     "signed_position_drift": {
+      "n": 29,
+      "worlds": 13,
+      "point": 32.317657470703125,
+      "lo": -35.213226318359375,
+      "hi": 152.27720642089844,
+      "equal_world_mean": 55.40288692865616
+     },
+     "matched_ids_total": 373,
+     "matched_ids_min": 2,
+     "matched_ids_median": 12.0
+    },
+    "120": {
+     "own": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "common_wm": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "common_bb": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_wm_minus_bb": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_model_baseline": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_snapshot": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "paired_vs_c1": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "signed_position_drift": {
+      "n": 0,
+      "worlds": 0,
+      "point": null,
+      "lo": null,
+      "hi": null
+     },
+     "matched_ids_total": 0,
+     "matched_ids_min": 0,
+     "matched_ids_median": null
+    }
+   }
+  }
+ ]
+}

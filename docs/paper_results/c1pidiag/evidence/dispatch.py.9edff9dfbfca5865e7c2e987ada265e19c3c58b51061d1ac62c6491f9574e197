@@ -1,0 +1,111 @@
+"""Small fixed-panel teacher-forced grid, then exploratory selected feedback."""
+from concurrent.futures import ProcessPoolExecutor, as_completed
+import json
+import os
+from pathlib import Path
+import time
+import worker as w
+
+
+def grid(panel):
+    units=[]
+    audit=[]
+    for e in panel:
+        r=w.record(e)
+        h=r.get('history') or {}
+        span=float(h.get('available_span_s',0))
+        modes=['snapshot']+[f'h{n}' for n in (5,60) if span>=n]
+        audit.append(dict(sid=e['sid'],world=e['world'],cohort=e['cohort'],
+            span=span, available=modes, recorded_min={a:min(float(f['time_s']) for f in w.recorded_for(r,a)) for a in e['arms']},
+            entry_inputs=sorted(k for k in r if 'queue' in k or 'demand' in k),
+            entries_mix='unavailable: no observed initial source queue/request demand'))
+        for tag in ('c1struct','wm13e','wm2'):
+            for hist in modes:
+                for pop in (False,True):
+                    units.append((e,tag,hist,pop,True,'original','tf'))
+            for pop in (False,True):
+                for residual,lanes in ((False,'original'),(True,'mobil'),(False,'mobil')):
+                    units.append((e,tag,modes[-1],pop,residual,lanes,'tf'))
+        units.append((e,'bbtraj',modes[-1],False,True,'original','tf'))
+    return units,audit
+
+
+def execute(units,pool,phase):
+    futures={pool.submit(w.run,u):u for u in units}
+    errors=[]
+    for i,f in enumerate(as_completed(futures),1):
+        err=f.result()
+        if err:errors.append(dict(unit=futures[f],error=err))
+        if i%25==0 or i==len(futures):
+            print(phase,i,'/',len(futures),'errors',len(errors),flush=True)
+    return errors
+
+
+def best(panel):
+    import numpy as np
+    rows=[json.loads(p.read_text()) for p in (w.ROOT/'units').glob('*.json')]
+    bb={r['sid']:r for r in rows if r['tag']=='bbtraj' and r['mode']=='tf' and not r['error']}
+    candidates={}
+    for r in rows:
+        if r['mode']!='tf' or r['error'] or r['tag'] not in ('wm13e','wm2'):continue
+        k=(r['cohort'],r['tag'],r['history'],r['population'],r['residual'],r['lanes'])
+        ids=set(r['endpoints']['60']['ids']) & set(bb[r['sid']]['endpoints']['60']['ids'])
+        if ids:candidates.setdefault(k,[]).append(float(np.median([abs(r['endpoints']['60']['ids'][i]['ds']) for i in ids])))
+    selected=[]
+    for cohort in ('pi_u_same','wall_same'):
+        n=sum(e['cohort']==cohort for e in panel)
+        for tag in ('wm13e','wm2'):
+            options=[(k,v) for k,v in candidates.items() if k[:2]==(cohort,tag) and len(v)==n]
+            assert options,'no complete config for selection'
+            def ordering(kv):
+                k,v=kv
+                return (float(np.median(v)),int(k[3])+int(not k[4])+int(k[5]!='original'),
+                        -{'snapshot':0,'h5':5,'h60':60}[k[2]],k[3],str(k))
+            k,v=min(options,key=ordering)
+            selected.append(dict(cohort=cohort,tag=tag,history=k[2],population=k[3],residual=k[4],lanes=k[5],score60=float(np.median(v))))
+    w.write(w.ROOT/'evidence/SELECTED.json',selected)
+    units=[]
+    for e in panel:
+        hist='h5' if e['cohort']=='wall_same' else 'snapshot'
+        for tag in ('c1struct','bbtraj','wm13e','wm2'):
+            units.append((e,tag,hist,False,True,'original','clh'))
+        for s in selected:
+            if s['cohort']==e['cohort']:
+                u=(e,s['tag'],s['history'],s['population'],s['residual'],s['lanes'],'clh')
+                if u not in units:units.append(u)
+    return units
+
+
+def main():
+    begin=time.time()
+    assert os.getpriority(os.PRIO_PROCESS,0)==19
+    assert os.getloadavg()[0]<100 and os.cpu_count()>=128
+    panel=json.loads((w.ROOT/'PANEL.json').read_text())['states']
+    units,audit=grid(panel)
+    w.write(w.ROOT/'evidence/INPUT_AUDIT.json',audit)
+    sources={str(p):w.digest(p) for p in (Path(__file__),Path(w.__file__),Path(w.legacy.__file__),
+        Path(w.frozen.FIX/'src/wms/model/wms.py'),w.frozen.WM_CONFIG)}
+    w.write(w.ROOT/'evidence/DISPATCH.json',dict(workers=24,units_tf=len(units),sources=sources,started=begin))
+    with ProcessPoolExecutor(max_workers=24,initializer=w.init) as pool:
+        checks=[]
+        for tag in ('c1struct','wm13e','wm2'):
+            for e in (panel[0],next(e for e in panel if e['cohort']=='wall_same')):
+                hist='h5' if e['cohort']=='wall_same' else 'snapshot'
+                checks.append((e,tag,hist,True,False,'mobil','tf'))
+        preflight=execute(checks,pool,'preflight')
+        w.write(w.ROOT/'evidence/PREFLIGHT.json',dict(errors=preflight,units=len(checks)))
+        if preflight:
+            print('STOP: component preflight failure',flush=True)
+            return
+        errors=execute(units,pool,'tf')
+        w.write(w.ROOT/'evidence/TF_DONE.json',dict(errors=errors,units=len(units),seconds=time.time()-begin))
+        if errors:
+            print('STOP: errors preserved, inspect before feedback',flush=True)
+            return
+        feedback=best(panel)
+        errors=execute(feedback,pool,'clh')
+    assert all(w.digest(p)==h for p,h in sources.items()),'runtime changed'
+    w.write(w.ROOT/'evidence/COMPLETE.json',dict(tf=len(units),clh=len(feedback),errors=errors,seconds=time.time()-begin,sources=sources))
+
+
+if __name__=='__main__':main()

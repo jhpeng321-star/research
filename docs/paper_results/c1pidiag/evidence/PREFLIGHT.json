@@ -1,0 +1,163 @@
+{
+ "errors": [
+  {
+   "unit": [
+    {
+     "cohort": "pi_u_same",
+     "index": 0,
+     "arm": "pi",
+     "arms": [
+      "native",
+      "pi"
+     ],
+     "assembled_rel_s": null,
+     "file_sha256": "151a88500e30d074f3eaf2507ea82574dfda4649f5f449bdf7fdfefc541ca6ef",
+     "has_history": false,
+     "identity": "[\"truearms_chunk2/w8482m2000p02t300__pi\", \"pi\", 300.0]",
+     "key": "truearms_chunk2/w8482m2000p02t300__pi",
+     "paired": true,
+     "recorded_steps": {
+      "native": 600,
+      "pi": 600
+     },
+     "sets": [
+      "pi_u_same"
+     ],
+     "sid": "a8043ab2becaf1a6",
+     "source_arm": null,
+     "t0_s": 300.0,
+     "wall_exposure_status": null,
+     "wall_phase_at_t0": null,
+     "world": "w8482m2000p02t300"
+    },
+    "wm2",
+    "snapshot",
+    true,
+    false,
+    "mobil",
+    "tf"
+   ],
+   "error": "Traceback (most recent call last):\n  File \"/root/autodl-tmp/c4/c1pidiag20261031/worker.py\", line 182, in run\n    pred, info = predictor(tag, pop, residual, lanes)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/c1pidiag20261031/worker.py\", line 127, in predictor\n    m.physics = replace(m.physics, **changes)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/dataclasses.py\", line 1581, in replace\n    return obj.__class__(**changes)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<string>\", line 80, in __init__\n  File \"/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/physics/config.py\", line 315, in __post_init__\n    raise ValueError(\"lane_change_secure_gap requires lane_learnable\")\nValueError: lane_change_secure_gap requires lane_learnable\n"
+  },
+  {
+   "unit": [
+    {
+     "cohort": "pi_u_same",
+     "index": 0,
+     "arm": "pi",
+     "arms": [
+      "native",
+      "pi"
+     ],
+     "assembled_rel_s": null,
+     "file_sha256": "151a88500e30d074f3eaf2507ea82574dfda4649f5f449bdf7fdfefc541ca6ef",
+     "has_history": false,
+     "identity": "[\"truearms_chunk2/w8482m2000p02t300__pi\", \"pi\", 300.0]",
+     "key": "truearms_chunk2/w8482m2000p02t300__pi",
+     "paired": true,
+     "recorded_steps": {
+      "native": 600,
+      "pi": 600
+     },
+     "sets": [
+      "pi_u_same"
+     ],
+     "sid": "a8043ab2becaf1a6",
+     "source_arm": null,
+     "t0_s": 300.0,
+     "wall_exposure_status": null,
+     "wall_phase_at_t0": null,
+     "world": "w8482m2000p02t300"
+    },
+    "wm13e",
+    "snapshot",
+    true,
+    false,
+    "mobil",
+    "tf"
+   ],
+   "error": "Traceback (most recent call last):\n  File \"/root/autodl-tmp/c4/c1pidiag20261031/worker.py\", line 186, in run\n    frames = legacy.predict_teacher(pred, r, e['arm'], 120.)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/c1refresh/code/tools/c1refresh/c1r_run.py\", line 390, in predict_teacher\n    return pred.predict_states(record, controllers, horizon_s, 0)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/predictor.py\", line 272, in predict_states\n    roll = self.model.rollout(\n           ^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/wms.py\", line 2584, in rollout\n    else step_fn(current)\n         ^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/wms.py\", line 1773, in step\n    out = self.forward(state, **forward_kwargs)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/c1pidiag20261031/worker.py\", line 130, in forward\n    out = original(state, **kw)\n          ^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/wms.py\", line 1236, in forward\n    courtesy_intent = pivot_clearance_intent(self.merge_pivot, kin, present,\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/follower_courtesy.py\", line 261, in pivot_clearance_intent\n    params = {name: value.detach() for name, value in pivot_net.named_parameters()}\n                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'NoneType' object has no attribute 'named_parameters'\n"
+  },
+  {
+   "unit": [
+    {
+     "cohort": "wall_same",
+     "index": 0,
+     "arm": "wall",
+     "arms": [
+      "native",
+      "wall"
+     ],
+     "assembled_rel_s": 97.0,
+     "file_sha256": "daa1ee4afce1d86e10ecc1d48c6371c4bbf1429138f35f249081eb8db50eb3ad",
+     "has_history": true,
+     "identity": "[\"walls_pilot_chunk4/w8660m2700p10t300__w-lo-late\", \"w-lo-late\", 304.5]",
+     "key": "walls_pilot_chunk4/w8660m2700p10t300__w-lo-late",
+     "paired": true,
+     "recorded_steps": {
+      "native": 240,
+      "wall": 240
+     },
+     "sets": [
+      "wall_same",
+      "wall_pilot"
+     ],
+     "sid": "0fb439d97f523c0f",
+     "source_arm": "w-lo-late",
+     "t0_s": 304.5,
+     "wall_exposure_status": "aborted_in_hold",
+     "wall_phase_at_t0": "none",
+     "world": "w8660m2700p10t300"
+    },
+    "wm2",
+    "h5",
+    true,
+    false,
+    "mobil",
+    "tf"
+   ],
+   "error": "Traceback (most recent call last):\n  File \"/root/autodl-tmp/c4/c1pidiag20261031/worker.py\", line 182, in run\n    pred, info = predictor(tag, pop, residual, lanes)\n                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/c1pidiag20261031/worker.py\", line 127, in predictor\n    m.physics = replace(m.physics, **changes)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/dataclasses.py\", line 1581, in replace\n    return obj.__class__(**changes)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"<string>\", line 80, in __init__\n  File \"/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/physics/config.py\", line 315, in __post_init__\n    raise ValueError(\"lane_change_secure_gap requires lane_learnable\")\nValueError: lane_change_secure_gap requires lane_learnable\n"
+  },
+  {
+   "unit": [
+    {
+     "cohort": "wall_same",
+     "index": 0,
+     "arm": "wall",
+     "arms": [
+      "native",
+      "wall"
+     ],
+     "assembled_rel_s": 97.0,
+     "file_sha256": "daa1ee4afce1d86e10ecc1d48c6371c4bbf1429138f35f249081eb8db50eb3ad",
+     "has_history": true,
+     "identity": "[\"walls_pilot_chunk4/w8660m2700p10t300__w-lo-late\", \"w-lo-late\", 304.5]",
+     "key": "walls_pilot_chunk4/w8660m2700p10t300__w-lo-late",
+     "paired": true,
+     "recorded_steps": {
+      "native": 240,
+      "wall": 240
+     },
+     "sets": [
+      "wall_same",
+      "wall_pilot"
+     ],
+     "sid": "0fb439d97f523c0f",
+     "source_arm": "w-lo-late",
+     "t0_s": 304.5,
+     "wall_exposure_status": "aborted_in_hold",
+     "wall_phase_at_t0": "none",
+     "world": "w8660m2700p10t300"
+    },
+    "wm13e",
+    "h5",
+    true,
+    false,
+    "mobil",
+    "tf"
+   ],
+   "error": "Traceback (most recent call last):\n  File \"/root/autodl-tmp/c4/c1pidiag20261031/worker.py\", line 186, in run\n    frames = legacy.predict_teacher(pred, r, e['arm'], 120.)\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/c1refresh/code/tools/c1refresh/c1r_run.py\", line 390, in predict_teacher\n    return pred.predict_states(record, controllers, horizon_s, 0)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/eval/predictor.py\", line 272, in predict_states\n    roll = self.model.rollout(\n           ^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/wms.py\", line 2584, in rollout\n    else step_fn(current)\n         ^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/wms.py\", line 1773, in step\n    out = self.forward(state, **forward_kwargs)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/c1pidiag20261031/worker.py\", line 130, in forward\n    out = original(state, **kw)\n          ^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/wms.py\", line 1236, in forward\n    courtesy_intent = pivot_clearance_intent(self.merge_pivot, kin, present,\n                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/autodl-tmp/c4/setupaudit20261030/fix/src/wms/model/follower_courtesy.py\", line 261, in pivot_clearance_intent\n    params = {name: value.detach() for name, value in pivot_net.named_parameters()}\n                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'NoneType' object has no attribute 'named_parameters'\n"
+  }
+ ],
+ "units": 6
+}

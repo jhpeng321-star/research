@@ -25,6 +25,8 @@ def main():
     for _,_,e in phases:
         done=json.loads((ROOT/e).read_text())
         assert not done['errors']
+        if 'sources' in done:
+            assert all(digest(Path(p))==h for p,h in done['sources'].items()),'source changed after scoring'
     target=ROOT/('RAW_PRIMARY.jsonl.gz' if args.primary else 'RAW_UNITS.jsonl.gz')
     assert not target.exists()
     manifest={};counts={}
