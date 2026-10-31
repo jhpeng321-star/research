@@ -3,20 +3,35 @@
 ## Exact candidate CLI (RUNA/RUNB/INT)
 
 ```bash
-OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 CUDA_VISIBLE_DEVICES=0 nice -n 19 /root/miniconda3/bin/python -B -u /path/to/INT_candidate_entrypoint.py --out /NEW/variant_A_shard0 --runtime-root /path/to/integrated/runtime --wm /path/to/wm_s.pt --wm-config /path/to/wm_phys.toml --model-name wm_phys_A --shard 0 --shards 4 --memory-gib 5
+OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 CUDA_VISIBLE_DEVICES=0 nice -n 19 /root/miniconda3/bin/python -B -u /root/rbeval20261031/phys_code_b0f66943ec30/tools/rbint/evaluate_A.py --out /root/rbeval20261031/NEW_phys_A_shard0 --runtime-root /root/rbeval20261031/phys_code_b0f66943ec30 --wm /root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt --wm-config /root/rbeval20261031/phys_code_b0f66943ec30/configs/wm_phys.toml --model-name wm_phys_A --shard 0 --shards 3 --memory-gib 5
 ```
 
-INT entrypoint calls `run_wm.main(model_loader=load_candidate,
+**Future-builder API now available in EVAL source**, matching INT's staged API:
+`run_wm.main(model_loader=load_candidate, future_builder=candidate_future,
 identity_sources=[__file__, rebuild_helper, recipe])`; callback returns
 `([frozen_candidate], construction_receipt)`. Receipt must be deterministic across
 shards and name selected variant/settings; scorer rejects differing receipts.
 Stage current runner/core/references/
 real_observables/PREPARED in a NEW candidate code directory; README documents
 the callback. For a normal loadable config invoke `tools/rbeval/run_wm.py` directly
-with the same arguments. Use shards 0–3 with distinct NEW output directories;
+ with the same arguments. Use shards 0–2 with distinct NEW output directories;
 check resources first and preserve existing candidate dispatches. K8/five arms/
 t0=300/H600 are fixed. Score all four shard directories together with
-`python -B -m tools.rbeval.score --inputs SHARD0 SHARD1 SHARD2 SHARD3 --out NEW_REPORT`.
+`python -B -m tools.rbeval.score --inputs SHARD0 SHARD1 SHARD2 --out NEW_REPORT`.
+
+The command above is the **existing frozen A recipe**, executable on gpuA.
+RUNA owns A/C intake and RUNB already owns B; use their claim protocol, never
+dispatch a second copy. Their immutable runtime already has the compatible hook;
+do not replace any staged source. For a NEW staged candidate, use this EVAL runner:
+builder receives `(model, batch, initial, future, seed, frozen)` as keyword args,
+returns `(kwargs, instrumented_entries, JSON_receipt)`. It owns hidden-settings,
+arrival and entrant draws; the runner bypasses WM2 futures and attaches the
+entry observer's population audit. Builder source is automatically SHA-bound.
+`future_sampling.population_audit` and the source ledger are retained per task;
+the updated scorer independently rejects missing/false/unconserved audits.
+Verification: `python -B -m unittest tools.rbeval.test_core tools.rbeval.test_score
+tools.rbeval.test_finalize -v`: **14 PASS /14.24s**, including source-ledger
+rejection, differing-builder pooling rejection and WM2 callback identity guards.
 
 ## Durable implementation and dispatch receipts
 

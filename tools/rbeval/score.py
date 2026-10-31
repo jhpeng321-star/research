@@ -145,7 +145,7 @@ def read_predictions(inputs, real, partial):
             contract = {k: identity[k] for k in ('model', 'wm_sha256', 'config_sha256', 'K', 'arms', 'mix', 'native_lanes',
                 'sources', 'switches', 'candidate_sha256', 'export_sha256', 'real_receipt_sha256', 'seed', 'update', 't0', 'horizon')}
             contract.update({k: identity[k] for k in ('external_manifest_sha256', 'adapter_sha256',
-                                                     'construction_loader_sha256') if k in identity})
+                                                     'construction_loader_sha256', 'future_builder_sha256') if k in identity})
             if 'construction_loader_sha256' in identity:
                 contract['construction_receipt'] = identity['wm']
             assert contract['K'] == 8 and contract['arms'] == list(ARMS)
@@ -157,6 +157,15 @@ def read_predictions(inputs, real, partial):
             assert key not in tasks, ('duplicate task (never pool duplicate-device copies)', key)
             assert key[0] in SEEDS and key[1] in range(8)
             assert task['arms'] == list(ARMS) and len(task['episodes']) == 5
+            if 'future_builder_sha256' in identity:
+                sampling = task['future_sampling']
+                population = sampling['population_audit']
+                assert population['finite'] is True and population['conserved'] is True
+                ledger = [np.asarray(population[k], float) for k in
+                          ('due', 'initial_backlog', 'admitted', 'final_pending')]
+                assert all(a.shape == (len(ARMS), 2) and np.isfinite(a).all() and
+                           (a >= 0).all() and (a == np.floor(a)).all() for a in ledger)
+                assert np.array_equal(ledger[0]+ledger[1], ledger[2]+ledger[3]), 'source ledger mismatch'
             assert {e['arm'] for e in task['episodes']} == set(ARMS)
             for e in task['episodes']:
                 assert e['seed'] == key[0] and e['future'] == key[1]

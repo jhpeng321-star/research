@@ -93,7 +93,7 @@ def load_candidate(checkpoints, configs, device):
     # Return ([candidate], JSON_serializable_construction_receipt).
     ...
 
-main(model_loader=load_candidate,
+main(model_loader=load_candidate, future_builder=candidate_future,
      identity_sources=[__file__, '/path/to/tools/rbint/rebuild.py', '/path/to/recipe.toml'])
 ```
 
@@ -105,10 +105,21 @@ for candidates: the live WM2 runner/source hashes under `code/` must stay intact
 The construction receipt must be deterministic across shards and include the
 selected variant/settings; scoring compares it as well as the loader source.
 
-The runner currently uses the registered arrival process and learned entrant
-driver mix; it rejects `physics.entry_learned`. A candidate that changes entry
-sampling needs a separately frozen adapter/identity before inference. Candidate
-comparisons must disclose that sampling contract, not silently replace it.
+`future_builder` is optional. Without it, the runner uses the registered WM2
+arrival process and learned entrant mix, rejecting `physics.entry_learned`.
+INT's `tools.rbint.recipe.candidate_future` supplies its frozen hidden-settings /
+Poisson-future contract. It receives keyword arguments `model`, `batch`,
+`initial`, `future` (0–7), `seed` (world ID), `frozen` (reference helpers), returning
+`(kwargs, entries, JSON_receipt)`. `kwargs['entries']` must be the returned
+instrumented observer, exposing `.process` and `.audit_population(initial, roll)`.
+The default WM2 futures, arrivals and driver sampler are bypassed. All five arms
+must share world/future draws. The audit runs after rollout and cost observation;
+its finite/conserved flags and due/backlog/admitted/pending ledger are saved under
+`future_sampling.population_audit`. The scorer independently checks that ledger.
+The builder source is automatically hashed in `sources` and
+`future_builder_sha256`; supply transitive helpers in `identity_sources`.
+Candidate comparisons must disclose this sampling contract. The exact staged
+A CLI and existing RUNA/RUNB ownership are at the top of `HANDOFF.md`.
 
 ## S-SUMOCORE / external observable adapter
 

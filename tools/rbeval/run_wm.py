@@ -44,16 +44,21 @@ def arguments():
     return p.parse_args()
 
 
-def main(model_loader=None, identity_sources=()):
+def main(model_loader=None, identity_sources=(), future_builder=None):
     """Optional INT loader has the strict load_members(checkpoints,configs,device)
     interface. It returns ([frozen_model], JSON receipt); its Python source and
     explicitly supplied recipe/helper files are bound into the run identity.
+    INT's optional future_builder returns (rollout_kwargs, entries, receipt),
+    with entries.audit_population(initial, rollout) enforcing source conservation.
     Live WM2 uses the original independently staged source, never overwritten.
     """
     args = arguments()
     if model_loader is not None:
         assert args.model_name != 'wm2', 'custom construction requires explicit candidate identity'
         assert callable(model_loader)
+    if future_builder is not None:
+        assert args.model_name != 'wm2', 'custom futures require explicit candidate identity'
+        assert callable(future_builder)
     import fcntl
     assert 0 <= args.shard < args.shards
     assert os.getpriority(os.PRIO_PROCESS, 0) == 19
@@ -146,6 +151,8 @@ def main(model_loader=None, identity_sources=()):
     source_paths = [Path(__file__), HERE/'core.py', HERE/'references.json',
                     runtime/'configs/execparity_cav_idm_v1.json']
     source_paths += [safe(p) for p in identity_sources]
+    if future_builder is not None:
+        source_paths.append(safe(inspect.getfile(future_builder)))
     if model_loader is not None:
         source_paths.append(safe(inspect.getfile(model_loader)))
     # Bind all Python implementation files in the selected runtime, not just top modules.
@@ -168,6 +175,8 @@ def main(model_loader=None, identity_sources=()):
         native_lanes=True, seed=965140, update=190)
     if model_loader is not None:
         identity['construction_loader_sha256'] = digest(inspect.getfile(model_loader))
+    if future_builder is not None:
+        identity['future_builder_sha256'] = digest(inspect.getfile(future_builder))
     # Round-trip tuple/list normalization before exact resume identity comparison.
     identity = json.loads(json.dumps(identity))
     if (out/'IDENTITY.json').exists():
@@ -234,29 +243,39 @@ def main(model_loader=None, identity_sources=()):
             b = with_entry_slots(copy.deepcopy(source), 600, 1920,
                 torch.Generator().manual_seed(1_000_003*191), queue_state=True)
             b.state, b.rollout_kwargs = move(b.state), move(b.rollout_kwargs)
-            plan = SampledFutures(FuturesConfig.from_trainer(cfg), 190).plan(
-                models, b.state, b.rollout_kwargs, 1200)[0]
+            plan = (SampledFutures(FuturesConfig.from_trainer(cfg), 190).plan(
+                models, b.state, b.rollout_kwargs, 1200)[0] if future_builder is None else None)
             initial = frozen.expand(b.state, len(ARMS))
             pair_merge_streams(initial, torch.zeros(len(ARMS), dtype=torch.long, device=args.device), 1, 190+fi)
             initial['exit_s_m'] = torch.full_like(initial['s_m'], road_end_exit_bound(model.physics))
             # Snapshot the t0 state before in-place admission/model updates.
             start = {k: initial[k].detach().cpu().numpy().copy() for k in ('s_m', 'v_mps', 'lane', 'present')}
-            kw = frozen.expand({**b.rollout_kwargs, **plan[fi]}, len(ARMS))
-            lanes = lane_uniform_draws(models, 1, 1200, initial['s_m'].shape[1],
-                190+1000003*fi if fi else 190, device=args.device)
-            if lanes is not None:
-                kw['lane_uniform'] = frozen.expand(lanes, len(ARMS))
-            assert not model.physics.entry_learned, 'use a separately frozen adapter for learned insertion'
-            process = _entry_process(b.entry_spec, [0]*len(ARMS), initial['s_m'].shape[1],
-                cfg.entry_insert_rule, None, couple_draws=True, sample_index=fi)
-            entries = frozen.Entries(process)
-            kw['entries'] = entries
-            kw['entrant_driver_sampler'] = make_sampler(model, initial, kw, 190+1000003*fi, [0]*len(ARMS))
+            future_receipt = None
+            if future_builder is not None:
+                kw, entries, future_receipt = future_builder(model=model, batch=b,
+                    initial=initial, future=fi, seed=seed, frozen=frozen)
+                assert isinstance(future_receipt, dict), 'future builder requires JSON receipt'
+                assert kw['entries'] is entries and callable(entries.audit_population)
+                process = entries.process
+            else:
+                kw = frozen.expand({**b.rollout_kwargs, **plan[fi]}, len(ARMS))
+                lanes = lane_uniform_draws(models, 1, 1200, initial['s_m'].shape[1],
+                    190+1000003*fi if fi else 190, device=args.device)
+                if lanes is not None:
+                    kw['lane_uniform'] = frozen.expand(lanes, len(ARMS))
+                assert not model.physics.entry_learned, 'use a separately frozen adapter for learned insertion'
+                process = _entry_process(b.entry_spec, [0]*len(ARMS), initial['s_m'].shape[1],
+                    cfg.entry_insert_rule, None, couple_draws=True, sample_index=fi)
+                entries = frozen.Entries(process)
+                kw['entries'] = entries
+                kw['entrant_driver_sampler'] = make_sampler(model, initial, kw, 190+1000003*fi, [0]*len(ARMS))
             cb = controllers(initial['s_m'].shape[1])
             with torch.no_grad():
                 roll = model.rollout(initial, n_steps=1200, cav_controller=cb, **kw)
                 assert torch.isfinite(roll['speeds']).all()
                 score = frozen.costs(roll, entries, b.entry_spec['k0'])
+                if future_builder is not None:
+                    future_receipt['population_audit'] = entries.audit_population(initial, roll)
             arrays = {k: roll[k].detach().cpu().numpy() for k in ('positions', 'speeds', 'lanes', 'masks')}
             episodes = []
             for i, arm in enumerate(ARMS):
@@ -272,6 +291,8 @@ def main(model_loader=None, identity_sources=()):
             task = dict(schema='rbeval/1', identity_sha256=identity_sha, seed=seed, future=fi,
                 arms=ARMS, episodes=episodes, costs=score, seconds=time.monotonic()-begin,
                 peak_reserved_mib=torch.cuda.max_memory_reserved()/2**20 if args.device.startswith('cuda') else None)
+            if future_receipt is not None:
+                task['future_sampling'] = future_receipt
             save_new(target, task)
             print('DONE', seed, fi, round(task['seconds'], 2), flush=True)
             del roll, entries, process, kw, cb, b, initial, plan, arrays, start

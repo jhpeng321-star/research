@@ -37,6 +37,11 @@ class ScientificInvariants(unittest.TestCase):
             with self.assertRaisesRegex(AssertionError, 'explicit candidate identity'):
                 run_wm.main(model_loader=lambda *args: None)
 
+    def test_custom_futures_cannot_impersonate_wm2(self):
+        with patch.object(sys, 'argv', ['run_wm.py', '--out', 'unused', '--model-name', 'wm2']):
+            with self.assertRaisesRegex(AssertionError, 'explicit candidate identity'):
+                run_wm.main(future_builder=lambda **kwargs: None)
+
     def test_world_pairing_does_not_create_fake_sample_size(self):
         boot = WorldBootstrap(self.real, B=1000)
         pairs = [(969420, 0.), (969426, 2.)]
@@ -127,6 +132,40 @@ class ScientificInvariants(unittest.TestCase):
             roots.append(root)
         with self.assertRaisesRegex(AssertionError, 'mixed model contracts'):
             read_predictions(roots, self.real, partial=True)
+        # A candidate receipt is evidence only if its source ledger conserves.
+        candidate = scratch/'future-builder'
+        candidate.mkdir()
+        identity = load(scratch/'normalized/IDENTITY.json')
+        identity['future_builder_sha256'] = digest(HERE/'run_wm.py')
+        save_new(candidate/'IDENTITY.json', identity)
+        task = load(scratch/'normalized/w969420_k0.json')
+        task['identity_sha256'] = digest(candidate/'IDENTITY.json')
+        task['future_sampling'] = dict(population_audit=dict(finite=True, conserved=True,
+            due=[[5, 2]]*5, initial_backlog=[[1, 0]]*5,
+            admitted=[[4, 1]]*5, final_pending=[[2, 1]]*5))
+        save_new(candidate/'w969420_k0.json', task)
+        _, audit = read_predictions([candidate], self.real, partial=True)
+        self.assertEqual(audit['tasks'], 1)
+        # Construct a distinct immutable failing artifact rather than rewriting.
+        corrupt = scratch/'corrupt-future-ledger'
+        corrupt.mkdir()
+        save_new(corrupt/'IDENTITY.json', identity)
+        task['future_sampling']['population_audit']['admitted'] = [[5, 1]]*5
+        save_new(corrupt/'w969420_k0.json', task)
+        with self.assertRaisesRegex(AssertionError, 'source ledger mismatch'):
+            read_predictions([corrupt], self.real, partial=True)
+        other = scratch/'different-future-builder'
+        other.mkdir()
+        identity['future_builder_sha256'] = digest(HERE/'core.py')
+        save_new(other/'IDENTITY.json', identity)
+        task = load(candidate/'w969420_k0.json')
+        task['identity_sha256'] = digest(other/'IDENTITY.json')
+        task['future'] = 1
+        for e in task['episodes']:
+            e['future'] = 1
+        save_new(other/'w969420_k1.json', task)
+        with self.assertRaisesRegex(AssertionError, 'mixed model contracts'):
+            read_predictions([candidate, other], self.real, partial=True)
 
 
 if __name__ == '__main__':
