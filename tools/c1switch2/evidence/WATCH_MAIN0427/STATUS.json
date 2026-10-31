@@ -1,60 +1,14 @@
 {
-  "unix": 1793481471.824673,
+  "unix": 1793482671.8278005,
   "protocol": "S-C1SWITCH2/v2",
   "hosts": {
-    "cpuQ": {
-      "unix": 1793481471.930851,
-      "host": "cpuQ",
-      "load": [
-        18.85693359375,
-        18.07373046875,
-        17.5625
-      ],
-      "cpu": {
-        "cpu": {
-          "root": "/home/ubuntu/c1switch2_run_eb0eda956a815f14",
-          "process": {
-            "pid": 604784,
-            "state": "EXITED"
-          },
-          "complete": true,
-          "stop": null,
-          "episodes": 84,
-          "decisions": 2520,
-          "closed_jobs": 84,
-          "closed_actual_sim_s": 100800.0,
-          "charged_sim_s": 100800,
-          "ledger_sha256": "ae3ad0953482be22a6bbacc50f0c858deb29ba541dbf9c25ee96418a4300cc9f"
-        },
-        "wm": {
-          "root": "/home/ubuntu/c1switch2_run_292bfffe94b13ed8",
-          "process": {
-            "pid": 649272,
-            "state": "S",
-            "start_ticks": 48482059,
-            "uid": 1000,
-            "own_root_in_command": true
-          },
-          "complete": false,
-          "stop": null,
-          "episodes": 3,
-          "decisions": 122,
-          "closed_jobs": 3,
-          "closed_actual_sim_s": 3600.0,
-          "charged_sim_s": 4840,
-          "ledger_sha256": "c16f362f4c8af8e72e14115ae64b90f64b7ad93c4cf881b5948da74e923f40f9",
-          "no_progress_ticks": 0
-        }
-      },
-      "gpu": {}
-    },
     "gpuR": {
-      "unix": 1793481472.8369937,
+      "unix": 1793482677.2040603,
       "host": "gpuR",
       "load": [
-        19.84716796875,
-        18.55078125,
-        19.81005859375
+        21.56494140625,
+        28.0263671875,
+        25.50830078125
       ],
       "cpu": {
         "cpu": {
@@ -83,12 +37,12 @@
           },
           "complete": false,
           "stop": null,
-          "episodes": 1,
-          "decisions": 59,
-          "closed_jobs": 1,
-          "closed_actual_sim_s": 1200.0,
-          "charged_sim_s": 2080,
-          "ledger_sha256": "4ac67f3b58edf9cd669d80d3e51f1cedf8c740f20e94d4b4567a850558f7f6b4",
+          "episodes": 2,
+          "decisions": 60,
+          "closed_jobs": 2,
+          "closed_actual_sim_s": 2400.0,
+          "charged_sim_s": 2700,
+          "ledger_sha256": "afa389bda63ba104f9435a6e48c5770a7e64b0fd2a419cf7c14240af7b591447",
           "no_progress_ticks": 0
         }
       },
@@ -97,7 +51,7 @@
           "root": "/root/c1switch2_gpu_wm_95614dbfc754e322",
           "process": {
             "pid": 761968,
-            "state": "R",
+            "state": "S",
             "start_ticks": 4209676600,
             "uid": 0,
             "own_root_in_command": true
@@ -111,8 +65,8 @@
           "stop": null,
           "ready": true,
           "requests": 98,
-          "results": 97,
-          "elapsed_wall_s": 11293.589121580124
+          "results": 98,
+          "elapsed_wall_s": 12497.95901298523
         },
         "bb": {
           "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -121,12 +75,12 @@
       }
     },
     "gpuA": {
-      "unix": 1793481473.675402,
+      "unix": 1793482678.0847013,
       "host": "gpuA",
       "load": [
-        30.02685546875,
-        20.78662109375,
-        17.1181640625
+        17.67236328125,
+        18.326171875,
+        17.19140625
       ],
       "cpu": {},
       "gpu": {
@@ -134,7 +88,7 @@
           "root": "/root/c1switch2_gpu_wm_95614dbfc754e322",
           "process": {
             "pid": 342449,
-            "state": "R",
+            "state": "S",
             "start_ticks": 885038837,
             "uid": 0,
             "own_root_in_command": true
@@ -147,9 +101,9 @@
           "finished": null,
           "stop": null,
           "ready": true,
-          "requests": 89,
-          "results": 88,
-          "elapsed_wall_s": 11299.408128976822
+          "requests": 90,
+          "results": 90,
+          "elapsed_wall_s": 12503.817443847656
         },
         "bb": {
           "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -158,13 +112,15 @@
       }
     }
   },
-  "alerts": [],
+  "alerts": [
+    "cpuQ: collection transport error RuntimeError('Connection closed by 1.15.42.207 port 22\\n')"
+  ],
   "relay": {
-    "unix": 1793481468.6591535,
+    "unix": 1793481610.36372,
     "cpus": {
       "cpuQ": {
         "stop": null,
-        "episodes": 3,
+        "episodes": 4,
         "expected": 12,
         "complete": false
       },
@@ -185,18 +141,18 @@
         "finished": null
       }
     },
-    "transferred": 1
+    "transferred": 0
   },
   "bb_wait": {
-    "unix": 1793481415.5476682,
+    "unix": 1793482653.7413807,
     "states": {
       "gpuA": {
         "wm_finished": false,
-        "free_mib": 39742
+        "free_mib": 37843
       },
       "gpuR": {
         "wm_finished": false,
-        "free_mib": 16678
+        "free_mib": 21140
       }
     }
   },
