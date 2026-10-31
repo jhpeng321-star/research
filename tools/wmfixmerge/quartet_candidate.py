@@ -75,11 +75,14 @@ def move(value, device):
 
 
 def main():
+    global OUT
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--candidate", required=True)
     parser.add_argument("--config", required=True)
+    parser.add_argument("--out", default=str(OUT), help="pre-created candidate-specific output directory")
     parser.add_argument("--canary", action="store_true")
     args = parser.parse_args()
+    OUT = Path(args.out)
     for label, path in (("candidate", args.candidate), ("config", args.config)):
         if not Path(path).is_file():
             raise SystemExit("missing " + label + ": " + path)

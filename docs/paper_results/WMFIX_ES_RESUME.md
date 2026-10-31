@@ -92,3 +92,20 @@
   or completed K8 probes repeated. No foreign PID signalling/GPU/SUMO launch.
 - `es_status.py` adds compact, read-only run summaries from owned receipts and
   receipt-identified ES PIDs; no checkpoint/tape reads, launch or automatic retry.
+
+## ES-specific verdict identity isolation
+- Found B reducer did not compare its quartet candidate/config/reference hashes
+  to BINDING.json. Added fail-closed checks; 4 regression tests PASS (Windows).
+- The original plan's candidate directory is shared with S-WMFIXMERGE. Frozen
+  `es_run_full/ES_VERDICT_PLAN.json` now uses private B sources/output only;
+  cohorts, base quartet, C1/accept bindings and all verdict thresholds unchanged.
+- `quartet_candidate.py --out` supports that private output without editing any
+  shared GPU source/process. Private host CLI smoke PASS; no rollout dispatched.
+- MAIN GPU-slot handoff: after SCORING_READY, run the quartet with the selected
+  FINAL checkpoint/config, `--out es_run_full/quartet_candidate`, then verdict
+  with `--plan es_run_full/ES_VERDICT_PLAN.json`. Pre-create output directories;
+  never reuse the other candidate's completion. C1/accept inputs still required.
+- Ideal row-time extrapolation: A's 36 groups x 3 legs x 4 arms x 300 s is ~8.6 h
+  on the combined CPUs; B candidate's 8 x 4 x 600 s is ~1.3 h (K8 throughout).
+  This is an estimate, not a benchmark; no timely full A/B CPU completion is
+  established. Existing WMFIX_ES.md request for MAIN's GPU slot remains active.

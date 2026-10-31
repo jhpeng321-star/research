@@ -59,6 +59,15 @@ def draws(tasks, seed, arm, horizon, component):
     return [float(by_future[f]["costs"][str(horizon)][component][index]) for f in range(8)]
 
 
+def verify_candidate_binding(identity, binding):
+    """Do not relabel a different candidate's complete quartet as this verdict."""
+    for identity_key, binding_key in (("candidate_sha256", "candidate_sha256"),
+                                      ("candidate_config_sha256", "config_sha256"),
+                                      ("base_wm_sha256", "reference_sha256")):
+        if not binding.get(binding_key) or identity.get(identity_key) != binding[binding_key]:
+            raise ValueError("quartet identity/binding mismatch: " + identity_key)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument("--base-dir", required=True)
@@ -73,6 +82,8 @@ def main():
     cand_complete, cand_tasks = load_tasks(args.candidate_dir)
     base_identity = json.loads((Path(args.base_dir) / "IDENTITY.json").read_text())
     cand_identity = json.loads((Path(args.candidate_dir) / "IDENTITY.json").read_text())
+    binding = json.loads(Path(args.binding).read_text())
+    verify_candidate_binding(cand_identity, binding)
     if base_identity.get("provenance") != cand_identity.get("provenance"):
         raise SystemExit("candidate provenance differs from the frozen base panel")
     flags = cand_identity.get("flags")
@@ -134,7 +145,7 @@ def main():
                base_complete_sha256=digest(Path(args.base_dir) / "COMPLETE.json"),
                candidate_complete_sha256=digest(Path(args.candidate_dir) / "COMPLETE.json"),
                real_sha256=digest(args.real), rows=rows, absolute=absolute)
-    doc["binding"] = json.loads(Path(args.binding).read_text())
+    doc["binding"] = binding
     doc["producer"] = json.loads(Path(args.producer).read_text())
     with Path(args.out).open("x") as stream:
         json.dump(doc, stream, allow_nan=False, indent=1)
