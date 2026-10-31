@@ -8,9 +8,21 @@ CELLS = tuple((p, d) for p in (.05, .1, .2, .4) for d in (1900, 2400, 2700))
 HIGH = tuple(c for c in CELLS if c[0] in (.2, .4) and c[1] in (2400, 2700))
 CAP = 500_000
 STEP0_CAP = 60_000
-BUDGET = dict(step0_canary=480, step0_prefix=3600, step0_branches=54000,
-              step0_repeat=1080, wm=115200, bb=115200, oracle=79200,
+BUDGET = dict(step0_retained=930, step0_branches=38400,
+              step0_repeat=7680, wm=257400, bb=257400, oracle=756000,
               random=21600, **{c:21600 for c in CONTROLLERS})
+STEP0_SEEDS = (969101, 969102, 969103, 969105, 969107, 969108, 969110, 969111)
+STEP0_TIMES = (300, 480)
+
+
+def measurement_indices(seed):
+    import random
+    return sorted(random.Random(seed).sample(range(10), 3))
+
+
+def require_main_budget():
+    if sum(BUDGET.values()) > CAP:
+        raise ValueError('full-rerun ten-decision oracle exceeds approved cap; MAIN amendment required')
 FORBIDDEN = re.compile(r'sealed|holdout|heldout|cal_split|chunk5|j4b|inc1|'
                        r'hetdata_truth|vehicle_params|driver_params|vtype|assignment', re.I)
 

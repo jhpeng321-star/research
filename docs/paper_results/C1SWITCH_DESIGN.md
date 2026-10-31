@@ -21,34 +21,34 @@
 20. Publish MODEL_SELECTION.json with diagnosis/checkpoint/mix/adapter hashes and scores BEFORE any WM/BB/random/oracle switching episode.
 21. Exposure: C1_GAPS.md C1-EXPOSURE: C1+BB native/trajectory/damping seen; PI/MAPPO absent. WM2 native/random/own-policy seen, PI/MAPPO/CIRCLES absent in audited corpus.
 22. Direct command channels are seen; incomplete initialization-lineage exclusion remains disclosed; new-world exclusion audited independently of controller exposure.
-23. Fresh proposed TRAIN block969100..969135: Step0 first12 (one per E3 cell); main last24; exact guards+registration interval+safe filename audits before allocation.
+23. TRAIN block969100..969135: reserve/exclude first12 for Step0, main last24; existing exact guards+registry/corpus/safe-name audits passed; no new allocation.
 24. Cells ordered penetration(.05,.1,.2,.4) outer, demand(1900,2400,2700) inner; Step0 seed969100+i -> cell i.
-25. Main969112..969135: all12 cells once, then four high cells(.2/.4 x2400/2700) three extra times each; high cells n4, others n1.
+25. Main969112..969135: all12 cells once, then four high cells(.2/.4 x2400/2700) three extra times each; high cells n4, others n1; dispatch BLOCKED by budget feasibility.
 26. Disjoint from all registered experiment blocks (umbrella C4_LOOP_TRAIN excluded), WMDATA/WMDATA2, SUMOCF, calibration/validation; reject conflicts, never silently replace.
 27. Step0a: recorded WMDATA40 and WMDATA2 50 worlds, common five arms only, cumulative120/300/600, per-world winners/ties/margins and cell win shares; zero new SUMO.
-28. Step0b: 12 native trunks, ten states each, five90s branches/state, exact60/90 metrics; save native branch at60 and reuse it as next native trunk.
-29. Step0b budget: warmups12*300=3,600; branches12*10*5*90=54,000; native repeat at first decision/world12*90=1,080.
-30. Native restore canary on first Step0 world: live90+restored90 plus warmup300=480; prefix will be rerun once for the registered panel; no implicit free prefix.
-31. Step0 TOTAL59,160 <=60,000 sim-s; repeated native branches test replay noise, not an independent stochastic divergence floor.
-32. Gate: same unique controller >=95% of all120 states at60 AND90, or <5% states with noise-resolved non-dominant wins -> STOP main, report headroom absent/unresolved.
-33. Resolve margins using max(1e-6,2*maximum same-state native-repeat absolute delay difference); bitwise canary failure -> STOP immediately, no claimed oracle/noise floor.
+28. MAIN17:53 supersedes ALL saved-state continuations: each alternative starts a fresh SUMO at t0, same seed, replayed controller schedule to the decision, then alternative; never loadState.
+29. Step0b v2: eight unused TRAIN seeds969101/102/103/105/107/108/110/111; native trunks; decision times300/480; five90s branches plus one native90 repeat per state.
+30. Step0 retained cost930 (480old canary+450failed attempt); new five-controller full reruns8*5*((300+90)+(480+90))=38,400; native repeats8*((300+90)+(480+90))=7,680.
+31. Step0 cumulative47,010 <=60,000; all warmups/trunks/repeats/failures counted; GPU0. Exclusive new version/attempt, legacy STOP/ledger/source retained, imported930 debit, no refunds/retries.
+32. First native pair proves bitwise complete warmup+trunk tape, observable belief, counters/metrics and native90 continuation BEFORE any nonnative continuation; then match every candidate prefix before select.
+33. Gate: same unique controller >=95% of16states at60 AND90, or <5% states with noise-resolved non-dominant wins -> STOP main; margin threshold max(1e-6,2*max native-repeat delay difference).
 34. Step0 report WINNERS.md+CSV+winner-by-condition PNG/PDF; describe observed near-merge density/speed/queue/CAV count and observed CAV fraction, never true penetration as policy input.
-35. Main WM:24*300+24*10*5*90=115,200 sim-s, includes all exact-measurement branches; BB-traj same115,200.
-36. Main oracle:24*300+24*10*5*60=79,200; take true minimum60 (greedy clairvoyant reference, not a proven episode-optimal upper bound).
-37. Main random:24*900=21,600; fixed native21,600; CTRL0 21,600; MAPPO21,600; PI21,600; CIRCLES21,600.
-38. Main TOTAL439,200; Step0+main498,360; unallocated cap reserve1,640 sim-s requires prospective amendment before use, no automatic retries.
-39. Budget relies on selected60s branch state becoming trunk, with Python ownership/controller/belief/metric state restored exactly; separately advancing trunk would exceed cap and is forbidden.
-40. WM/BB branches run to90, retaining all five60s snapshots; oracle to60. Measurement branches never feed predictor inputs or controller selection except oracle.
+35. Prospective main measurement subset: sorted random.Random(world_seed).sample(range(10),3), fixed now and shared WM/BB; outcomes cannot change subset. All ten policy decisions retained.
+36. Full-rerun candidate budgets: WM21,600+235,800=257,400; BB257,400; oracle24*5*sum(360+60j,j=0..9)=756,000; oracle resumes live trunk after selection, no continuation reuse.
+37. Main random21,600; fixed native/CTRL0/MAPPO/PI/CIRCLES21,600 EACH. Main total1,400,400; with Step0=1,447,410 >500,000: NOT AUTHORISED; no main dispatch.
+38. Even optimal live-trunk-as-one-oracle-candidate costs24*(900+4*sum(360+60j))=626,400 oracle-only >entire cap; measurement subsampling cannot solve this conflict.
+39. MAIN must reduce oracle decision/world count or increase cap and re-register exact per-arm plan BEFORE main; do not silently relabel a sparse oracle as the ten-decision arm.
+40. Exact60/90 costs are increments from the replayed decision state; measurement outcomes never enter WM/BB input/pick. Any prefix/repeat bitwise mismatch -> durable STOP, no oracle/headroom claim.
 41. GPU cap WM10,800s (3h), BB3,600s(1h), including loading/canary; Step0/fixed/random/oracle0; stop before cap, no partial panel claims.
 42. Hosts: gpuR CPUs only, one nice19 single-thread worker, CUDA hidden; leave priority to SUMOCF/COOPMEASURE. Inference gpuA/gpuR only after free-memory admission.
 43. SUMO pauses at each decision; atomic hash-bound file request/result handshake; separate GPU worker, finite(5,8) cost matrix, matching request/checkpoint/adapter hashes, timeout -> STOP.
 44. Primary: per-decision60s regret (chosen true cost minus min five), WM minus BB and minus best-fixed controller on that arm's same decision states.
 45. Best fixed primary: controller minimizing equal-world J600 over five fixed episodes; recompute identity inside each bootstrap draw; also report all-five contrasts.
 46. Pair WM and BB by world/decision index (different on-policy states disclosed); fixed comparison evaluated by branching at the switching state, not by subtracting unrelated trajectories.
-47. Statistics: equal-world mean of ten regrets; 2,000 paired world-cluster bootstrap draws, numpy seed0, percentile95%CI; exploratory two primary contrasts, multiplicity disclosed.
+47. Statistics: equal-world mean over three registered measured decisions; 2,000 paired world-cluster bootstrap draws, numpy seed0, percentile95%CI; two exploratory primary contrasts, multiplicity disclosed.
 48. Secondary: paired episode J600 vs each fixed and per-world best-fixed-in-hindsight; oracle/random;60/90 direction vs native (ties separate), Spearman midranks.
 49. Safety: collisions/teleports, TTC<3 vehicle-seconds, hard braking; switch count incl/native entries; per-cell means, counts/CIs; single-training checkpoint uncertainty disclosed.
 50. Guards: never seeds964000..964199/962xxx/977xxx, forbidden paths/truth/assignment inputs; no new venvs/deletions/push; own PIDs only.
-51. Mechanical stop: restore mismatch, duplicate IDs/requests, controller lane call, nonfinite output, missing source contract, collision/teleport/drop, ledger/cap/hash/pairing error.
+51. Mechanical stop: full-rerun prefix/repeat mismatch, duplicate IDs/requests, controller lane call, nonfinite output, missing source contract, collision/teleport/drop, ledger/cap/hash/pairing error.
 52. Durable exclusive dispatch lock, fsynced precharge before every prefix/branch, actual half-second accounting incl failures; existing START without terminal result blocks redispatch.
 53. Resume: inspect task receipts/PIDs; reuse finished analyses/jobs without recomputation; register changes before compute; commits after design/build/analysis/canary/results.
