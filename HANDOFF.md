@@ -54,6 +54,14 @@ diagnostics needed. Relocation/restart requires reconciling consumed worlds and
 durable checkpoint/ledger first. Existing per-CAV watcher retries/20min commits
 continue, with no change to cap,169updates or final-only evaluation.
 
+07:45: observed MAIN07:07 decision in shared REGISTRATION: do not relocate cpuQ
+work while gpuA/gpuR prioritize WM-PHYS through11:30. Resume only after cpuQ
+recovery or admitted spare CPUs after11:30, from a verified checkpoint and within
+the original cap/no-replay rules. Current receipts bind checkpoint017's hash,
+not recovered checkpoint bytes or post05:18 consumed-world accounting; these
+must be reconciled before any scientific continuation. Local watcher/supervisor
+identities remain unchanged and live;07:45heartbeat29485edf retains stale alerts.
+
 - 05:02 fresh-session verification: existing watcher12432 executable/command and
   02:03:58 creation time match; latest collection Unix1793480275 validates
   cpuQ606968 live,15/169 updates,690/7774 production successes,8open.
