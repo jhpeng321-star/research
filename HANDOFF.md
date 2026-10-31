@@ -1,6 +1,7 @@
-# S-RB-LANE — precision continuation active (~02:14)
+# S-RB-LANE — precision continuation active (~03:08)
 
-Branch `c4/rb-lane`, base `f0db3c82`; coordinate source `0a1e7e93` committed.
+Branch `c4/rb-lane`, base `f0db3c82`; latest engineering source `82894fab`.
+Coordinate lineage `0a1e7e93`, signed-cap source `92a3cd69`.
 All prior work retained. Owner authority:
 WM-PHYS REGISTRATION5683 plus00:10 precision addendum. Source-backed subset;
 **current FIT precision remains poor, no distributional qualification claim**.
@@ -72,7 +73,7 @@ overtake/fall-behind/counterchange and follower branches, nonlegacy keep-right,
 nonzero speed lookahead, nonhighway/emergency cases remain. See source notes
 and `docs/paper_results/RB_LANE.md`; integrated CF+merge+LC gate is EVAL's.
 
-## Candidate11 endpoint repair (CPU verified; FIT pending)
+## Candidate11 endpoint repair (source82894fab; default FIT running)
 Exact float32 ramp end75.44000244 was incorrectly outside double75.44.
 FIT audit:5881 scored HDV frames/91 recorded merges affected (plus warmup).
 Only the exact represented endpoint is canonicalized; nextULP stays illegal.
@@ -80,4 +81,8 @@ Runtime merges retain clamped stop position/speed instead of releasing free
 overshoot; applied acceleration is consistent, fixed CAV poses/lanes preserved.
 **Adapter API now(next_lane,next_s,next_v)**; merge its one guarded wms tuple
 update. Final56CPU PASS (including promoted float32 input); default-OFF weights/forward/step/rollout bit-exact
-in three cases (DEFAULT_OFF_ENDPOINTS.json). Source11 commit/measurement next.
+in three cases (DEFAULT_OFF_ENDPOINTS.json). Default FIT worker758018,
+`/home/ubuntu/rblane20261031_panel11_2766e0288155`, reuses completed MOBIL9.
+Encoder FIT worker762113,
+`/home/ubuntu/rblane20261031_panel12_4502116981e2`, reuses completed MOBIL10.
+Two distinct settings, two admitted nice19/single-thread CPU jobs (load4/32).
