@@ -196,6 +196,63 @@ print(json.dumps(out))
     write('progress.json',out);print(json.dumps(out,indent=2))
 
 
+def diagnose():
+    """New owned process, zero physics steps; inspect only physical queue getters."""
+    out=ssh(f'''import os,sys,json,contextlib,io
+from pathlib import Path
+root=Path({REMOTE!r});assert (root/'STOP').exists()
+os.environ.update({ENV!r});os.nice(19);sys.path[:0]=[str(root/'code'),'/home/ubuntu/e3final/runtime/src','/home/ubuntu/e3final/runtime']
+import traci
+from traffic_shepherd.simulation import start_sumo
+from traffic_shepherd.config import load_config
+world=root/'w969040';trunk=json.loads((world/'TRUNK.json').read_text())['physical']
+scenes=list((world/'scenarios').glob('*/scenario.sumocfg'));assert len(scenes)==1
+def forbidden(*a,**kw):raise AssertionError('zero-step diagnosis attempted simulationStep')
+traci.simulationStep=forbidden
+with contextlib.redirect_stdout(io.StringIO()):
+ start_sumo('sumo',scenes[0],seed=969086,config=load_config(),api=traci,
+            extra_cli=['--save-state.precision','17','--save-state.rng','false'])
+try:
+ traci.simulation.loadState(str(world/'physical_state.xml'))
+ pending=sorted(traci.simulation.getPendingVehicles())
+ queues={{l:traci.lane.getLastStepHaltingNumber(l) for l in traci.lane.getIDList()}}
+ out=dict(new_sim_s=0,pid=os.getpid(),time=traci.simulation.getTime(),
+          trunk_pending=trunk['pending'],loaded_pending=pending,
+          trunk_source_queue=trunk['source_queue'],lane_queue_differences={{l:[trunk['lane_queues'][l],n] for l,n in queues.items() if trunk['lane_queues'][l]!=n}},
+          lane_vehicle_lists={{l:list(traci.lane.getLastStepVehicleIDs(l)) for l in queues if trunk['lane_queues'][l]!=queues[l]}})
+ with (root/'QUEUE_DIAGNOSIS.json').open('x') as f:json.dump(out,f,indent=2)
+ print(json.dumps(out))
+finally:traci.close()
+''')
+    write('queue_diagnosis.json',out);print(json.dumps(out,indent=2))
+
+
+def waiting():
+    out=ssh(f'''import os,sys,json,contextlib,io
+from pathlib import Path
+root=Path({REMOTE!r});assert (root/'STOP').exists();os.environ.update({ENV!r});os.nice(19)
+sys.path[:0]=['/home/ubuntu/e3final/runtime/src','/home/ubuntu/e3final/runtime']
+import traci
+from traffic_shepherd.simulation import start_sumo
+from traffic_shepherd.config import load_config
+world=root/'w969040';trunk=json.loads((world/'TRUNK.json').read_text())['physical']
+scene=list((world/'scenarios').glob('*/scenario.sumocfg'))[0]
+def forbidden(*a,**kw):raise AssertionError('zero-step queue diagnosis attempted physics')
+traci.simulationStep=forbidden
+with contextlib.redirect_stdout(io.StringIO()):start_sumo('sumo',scene,seed=969086,config=load_config(),api=traci,extra_cli=['--save-state.rng','false'])
+try:
+ traci.simulation.loadState(str(world/'physical_state.xml'));rows=[]
+ for vid in trunk['pending']:
+  try:rows.append(dict(id=vid,lane=traci.vehicle.getLaneID(vid),route=list(traci.vehicle.getRoute(vid)),departure=traci.vehicle.getDeparture(vid)))
+  except traci.TraCIException as e:rows.append(dict(id=vid,error=str(e)))
+ out=dict(new_sim_s=0,pid=os.getpid(),waiting=rows)
+ with (root/'WAITING_DIAGNOSIS.json').open('x') as f:json.dump(out,f,indent=2)
+ print(json.dumps(out))
+finally:traci.close()
+''')
+    write('waiting_diagnosis.json',out);print(json.dumps(out,indent=2))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=['inspect','audit','stage','cpu','launch','progress']);a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('action',choices=['inspect','audit','stage','cpu','launch','progress','diagnose','waiting']);a=p.parse_args()
     globals()[a.action]()
