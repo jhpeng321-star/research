@@ -36,10 +36,15 @@ def rank(values):
 def summarize(root):
     import numpy as np
     panel = worlds('main')
+    binding = json.loads((root/'BINDING.json').read_text()) if (root/'BINDING.json').exists() else {}
+    total = binding.get('total_sim_s',478410)
+    retained = binding.get('retained_superseded_sim_s',0)
+    if (total,retained) not in ((478410,0),(490860,12450)):
+        raise ValueError('unregistered continuation accounting')
     rows = {a:[] for a in ARMS}
     ledger = [json.loads(x) for x in (root/'accounting.jsonl').read_text().splitlines()]
     closes = [json.loads(p.read_text()) for p in root.glob('jobs/*/CLOSE.json')]
-    if sum(x['sim_s'] for x in ledger) != 478410 or 47010+sum(x['actual_sim_s'] for x in closes) != 478410:
+    if sum(x['sim_s'] for x in ledger) != total or 47010+retained+sum(x['actual_sim_s'] for x in closes) != total:
         raise ValueError('complete-panel charged/actual accounting required')
     for arm in ARMS:
         if sum(x['sim_s'] for x in ledger if x['id'].startswith(arm+'_')) != BUDGET[arm]:
@@ -109,7 +114,8 @@ def summarize(root):
     result = dict(primary=primary(fixed,regrets,contrasts),secondary_episode_paired=secondary,
         episode_mean={a:float(v.mean()) for a,v in values.items()},safety=safety,cells=cells,
         switching_mean={a:sum(r['switching_frequency'] for r in rows[a])/16 for a in ARMS},
-        measured_decisions=decision_rows,ranking_direction=accuracy,charged_sim_s=478410,actual_sim_s=478410,
+        measured_decisions=decision_rows,ranking_direction=accuracy,charged_sim_s=total,actual_sim_s=total,
+        retained_superseded_sim_s=retained,
         caveats=['predicted current-belief fleet objective vs true fleet+source evaluation',
                  'WM/BB on-policy decision states differ; world/clock paired',
                  'two exploratory primary contrasts; no multiplicity adjustment',

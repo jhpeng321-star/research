@@ -12,7 +12,7 @@ from .rerun import replay
 from .rpc import FilePredictor
 from .storage import Ledger, exclusive, write
 
-ROOT = Path('/home/ubuntu/c1switch20261031/main_v6')
+ROOT = Path(os.environ.get('C1SWITCH_MAIN_ROOT','/home/ubuntu/c1switch20261031/main_v6'))
 
 
 class MainLedger(Ledger):
@@ -90,7 +90,7 @@ def main():
     from .sumo import setup
     inputs = setup()
     binding = json.loads((ROOT/'BINDING.json').read_text())
-    if binding['total_sim_s'] != 478410 or not binding['main_authorized']:
+    if binding['total_sim_s'] not in (478410,490860) or not binding['main_authorized']:
         raise ValueError('main authorization binding')
     try:
         if args.mode == 'branch':

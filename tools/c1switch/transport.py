@@ -1,14 +1,15 @@
 """Durable cross-host relay for hash-bound file RPC; never dispatches SUMO."""
 import argparse
 import json
+import os
 from pathlib import Path
 import time
 
 from .ops import ssh
 from .storage import write
 
-CPU = '/home/ubuntu/c1switch20261031/main_v6/rpc'
-GPU = '/root/c1switch20261031/main_v6/rpc'
+CPU = os.environ.get('C1SWITCH_CPU_RPC','/home/ubuntu/c1switch20261031/main_v6/rpc')
+GPU = os.environ.get('C1SWITCH_GPU_RPC','/root/c1switch20261031/main_v6/rpc')
 
 
 def markers():

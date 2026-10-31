@@ -33,7 +33,7 @@ def main(phase):
             raise ValueError('existing phase or durable STOP')
         write(root/'START.json',dict(pid=os.getpid(),unix=time.time(),phase=phase))
         panel = worlds('main')[:1] if phase == 'canary' else worlds('main')
-        arms = ('wm','bb') if phase == 'canary' else ARMS
+        arms = tuple(json.loads((ROOT/'BINDING.json').read_text()).get('canary_arms',('wm','bb'))) if phase == 'canary' else ARMS
         tasks = [(arm,w['seed']) for arm in arms for w in panel]
         # BB has the tighter cumulative GPU wall cap. Complete its remaining
         # worlds first, overlapping CPU branches; model draws are payload-keyed.

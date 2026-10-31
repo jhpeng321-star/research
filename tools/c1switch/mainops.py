@@ -31,6 +31,7 @@ def bundle():
         Path('tests/test_c1switch_feedback.py')]
     paths.append(Path('tests/test_c1switch_merge_fast.py'))
     paths.append(Path('tests/test_c1switch_analysis.py'))
+    paths.append(Path('tests/test_c1switch_continuation.py'))
     sources = {p.as_posix():sha(p) for p in paths}
     engine = Path('traffic_shepherd/c4/branching.py')
     sources['engine/branching.py'] = sha(engine)
@@ -91,7 +92,7 @@ else:
 import pytest
 log=io.StringIO()
 with contextlib.redirect_stdout(log),contextlib.redirect_stderr(log):
- code=pytest.main(['-q',str(root/'tests/test_c1switch.py'),str(root/'tests/test_c1switch_observable.py'),str(root/'tests/test_c1switch_feedback.py'),str(root/'tests/test_c1switch_merge_fast.py'),str(root/'tests/test_c1switch_analysis.py')])
+  code=pytest.main(['-q',str(root/'tests/test_c1switch.py'),str(root/'tests/test_c1switch_observable.py'),str(root/'tests/test_c1switch_feedback.py'),str(root/'tests/test_c1switch_merge_fast.py'),str(root/'tests/test_c1switch_analysis.py'),str(root/'tests/test_c1switch_continuation.py')])
 out=dict(returncode=code,output=log.getvalue(),root=str(root),sources={sources!r},new_sim_s=0,GPU_s=0)
 (root/'CPU.json').write_text(json.dumps(out,indent=2));print(json.dumps(out))
 ''',timeout=120)
