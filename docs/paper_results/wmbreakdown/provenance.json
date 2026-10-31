@@ -1,0 +1,20 @@
+{
+ "detector_source": "E:\\agent-work\\c4-entrant\\tools\\lrdiag\\replay.py",
+ "detector_sha256": "6de4df039e108508cf71f94abfe2e81136d5a9a502bb4803980411c0fa5b3f10",
+ "detector_function": "def breakdown(values):\n    \"\"\"BIC-selected downward step + trend vs best constant/linear model.\"\"\"\n    y=np.array([np.nan if x is None else x for x in values],float)\n    ok=np.isfinite(y); t=np.arange(len(y)); n=int(ok.sum())\n    if n<8: return {'event':None,'onset_s':None,'reason':'insufficient_bins'}\n    x=t[ok].astype(float); y=y[ok]\n    def fit(X,k):\n        b=np.linalg.lstsq(X,y,rcond=None)[0]\n        sse=max(float(((y-X@b)**2).sum()),n*np.finfo(float).eps*max(float(np.mean(y*y)),1.))\n        return n*np.log(sse/n)+k*np.log(n),b\n    c,_=fit(np.ones((n,1)),1)\n    lin,_=fit(np.column_stack([np.ones(n),x]),2)\n    null=min(c,lin); choices=[]\n    for cp in range(3,len(values)-2):\n        step=(x>=cp).astype(float)\n        if step.sum()<3 or (1-step).sum()<3: continue\n        bic,b=fit(np.column_stack([np.ones(n),x,step]),4)\n        if b[2]<0: choices.append((bic,cp,float(b[2])))\n    if not choices: return {'event':False,'onset_s':None,'bic_improvement':0.}\n    bic,cp,drop=min(choices)\n    chosen=bic<null; onset=float((cp-6)*10) if chosen else None\n    return {'event':bool(chosen and onset>=0),'onset_s':onset,\n            'preexisting':bool(chosen and onset<0),'drop_mps':drop,\n            'bic_improvement':float(null-bic)}",
+ "analysis": "S-WMBREAKDOWN",
+ "hosts": [
+  {
+   "host": "cpuQ",
+   "root": "/home/ubuntu/wmdata20261031/views",
+   "episodes": 200,
+   "local_receipt_sha256": "01d0d2b7027aad9910496c7bc5b9681c0d1ccf08f46b4e16a1113310a67362e9"
+  },
+  {
+   "host": "gpuR",
+   "root": "/root/wmdata2/views",
+   "episodes": 300,
+   "local_receipt_sha256": "a2b3ecf7a6ea9d6904fafa44d57a502e77781024b42b9b9469cbddaf44779fb4"
+  }
+ ]
+}
