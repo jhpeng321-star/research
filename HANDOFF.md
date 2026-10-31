@@ -4,6 +4,11 @@ Updated 2026-11-01 01:33 +08; branch `c4/rb-int`. Owner registration5683/5697/57
 Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_0034.md`.
 
 ## READY FOR EVAL
+- **INT-owned FULL-v3-gpu LIVE** sourcef378ac6033079bdd87c0059627e27e394a1d7cbe,
+  `/root/rbeval20261031/phys_code_f378ac603307/configs/wm_phys.toml`.
+  Own370037/370038/370039 +monitor370088, root `/root/rbeval20261031/int/WM-PHYS-FULL-v3-gpu`.
+  Canary969432/k0 PASS223.28s, reused once; original observed-ID60s endpoints saved.
+  No peer redispatch; shared FULL-v3-gpu.claim owns this separate source.
 - **WM-PHYS-A2 / RUNA gpuA**: `E:/agent-work/rb-shared/evalclaims/WM-PHYS-A2.runa.json`.
 - **WM-PHYS-B2 / RUNB gpuR**: `E:/agent-work/rb-shared/evalclaims/WM-PHYS-B2.runb.json`.
 - **WM-PHYS-C2 / RUNA gpuA next**: `E:/agent-work/rb-shared/evalclaims/WM-PHYS-C2.runa.json`.
@@ -101,6 +106,12 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   Full-population ledger/exit/finite audit attached to every candidate task.
 
 ## Verification / receipts
+- **~04:00 interim published**: four paired complete reserved K8 worlds
+  969432/433/434/436; FULL-v1−WM2 CRPS120/300/600=−785/−3512/−11041veh-s,
+  paired95%simultaneous world CIs [−1264,−306]/[−5825,−1200]/[−16268,−5815],
+  conditional on saved ensembles/available cases. Rate300 distance difference
+  +1.25pp[−4.17,+6.67] (worse point); HDV60 CI still missing. NOT switch eligible.
+  Report WMPHYS_MORNING.md58lines; exact audit reports/paired_0400/COMPARISON.json.
 - Next-candidate local gate **270 PASS /2CUDA skips /21.53s**. Both CUDA
   kernels separately passed6+4 tests on gpuA. Recorded FULL lane-arbitration
   dense/fast COMPLETE tapes are bit-exact on FIT969420/969421 (source8e964de5),

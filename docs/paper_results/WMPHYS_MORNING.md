@@ -1,30 +1,33 @@
-# WM-PHYS morning report — live integration receipt, 2026-11-01 02:52 +08
-The rebuilt physics runs, but it has not yet shown that it predicts traffic better than WM2.
-Keep the switching decision pending until matched distribution and60s-error evidence exists.
+# WM-PHYS morning report — interim, 2026-11-01 03:55 +08
+Four matched reserved worlds favor FULL-v1 on delay distributions; the switching rule is not satisfied yet.
+Breakdown-rate closeness has not improved on this subset, and60s position-error comparison is pending.
 
 ## Candidate and engineering evidence
 - Interim FULL-v1 source4015b641: SUMO IDM, LC2013 highway subset, merge/insertion;
   all learned motion/lane/merge/courtesy/admission/noise corrections OFF.
 - A: motion encoder + hidden settings/Poisson arrivals; B: population defaults;
   C: motion-fitted pooled point; FULL: fitted joint IDM posterior + learned arrivals.
-- FULL uses shrinkage_v1 (learned strength19.35568, already applied) and observable
+- FULL uses shrinkage_v1 (learned strength19.35568) and observable
   entrance-counter Poisson family, with Gamma rate uncertainty and action-paired draws.
-- Unknown fitted-driver identities use the learned population prior; no reserved-world
-  causal posterior refit yet. Fitted LC remains OFF because it loses its baseline.
-- Latest touched-module CPU gate155PASS; exact staged FIT tests17PASS on cpuQ.
+- FULL-v1's saved-ID crosswalk remains unverified. NEW FULL-v3 sourcef378ac60 conditions
+  each start's causal motion directly, removes that lookup, and uses physics-native CAVs.
+  Fitted LC remains OFF; no population refit, future-state inputs or neural training.
+- Latest touched-module CPU gate270PASS/2CUDA skips; staged FIT tests31PASS on cpuQ;
+  CUDA suites6+4PASS, with bit-exact recorded60s dense/fast motion tapes.
   A/B/C/FULL each passed60s on FIT969420/969421: finite, conserved, no learned corrections.
-- RUNA's original A/C snapshot stopped before rollouts on a missing MAPPO native-lane
-  ownership option. Failures retained; default-OFF source port fixes the constructor.
-- FULL-v1 five-arm600s GPU canary PASSED206.03s; reused in the live three-shard panel.
+- FULL-v1 canary206s reused in its panel. FULL-v3 GPU canary is live; candidate-only
+  lane arbitration is17.6x faster in a synthetic kernel benchmark, not a full-rollout claim.
 
 ## Distribution comparison and interim checkpoints
 - Registered20worlds969420..969439, five arms/K8/H120/300/600; reserved8 separate.
   FULL processes reserved8 first, without changing membership, seeds or predictions.
-- Early partial02:52: FULL-v1 has3complete reserved worlds; WM2 shares only969432.
-  On that ONE paired world, CRPS120/300/600 differences are +60/+635/−1672veh-s;
-  upstream300s rate95% vs WM287.5% vs real100%. World-sampling CIs unavailable.
-- 04:00 interim: pending complete paired K8 worlds; partial ensembles will not be scored.
-- 08:00 interim: pending. Final candidate freeze09:30, full evaluation09:30–11:30,
+### ~04:00 interim (snapshot03:52)
+- Four complete paired K8 worlds:969432/433/434/436, all five arms. Other worlds are pending;
+  incomplete ensembles are excluded. Delay CRPS improves at all three horizons (CIs below).
+- Upstream300s FULL-v1/WM2/real rates91.875/93.125/100%; closeness is worse in point estimate.
+  This is an available-case interim on4of8reserved worlds, not complete-panel adoption evidence.
+### ~08:00 interim
+- Pending. Final candidate freeze09:30, full evaluation09:30–11:30,
   final report11:45 per revised owner schedule; this is not the final candidate freeze.
 - Matched WM2 vs A/B/C/FULL breakdown rate/onset, delay CRPS, clearing/speed fields,
   ramp delay and expected-controller shifts: pending; no win/CI is fabricated.
@@ -38,10 +41,11 @@ Keep the switching decision pending until matched distribution and60s-error evid
   paired historical MOBIL7.50%, but too many proposals remain. Not full traffic parity.
 
 ## Switching-eligibility rule
-- Delay CRPS: early FULL-v1−WM2 +60/+635/−1672 at120/300/600s;95%CIs unavailable(n=1).
-- Breakdown closeness: early300s |FULL-v1−real|−|WM2−real|=−7.5pp;95%CI unavailable(n=1).
+- FULL-v1−WM2 delay CRPS(veh-s):120s −785[−1264,−306];300s −3512[−5825,−1200];
+  600s −11041[−16268,−5815]. Paired95%simultaneous world CIs, conditional on saved K8, n=4.
+- Breakdown closeness300s: |FULL-v1−real|−|WM2−real|=+1.25pp[−4.17,+6.67], same95%CI.
 - HDV60s position error: candidate−WM2, paired-world95%CI: PENDING.
-  Existing saved bin/clock tasks lack endpoints; a separate paired60s gate is requested.
+  Old tasks lack endpoints; new forecasts save observed-ID endpoints; baseline/scoring gate next.
 - All three registered conditions must be satisfied before S-C1SWITCH changes its WM arm.
   Current eligibility: NOT ESTABLISHED; missing evidence is not a measured regression.
 
@@ -51,4 +55,4 @@ Keep the switching decision pending until matched distribution and60s-error evid
 - Physics is still a highway subset: synchronous LC negotiation and cold initial lane
   memory limit parity. Finish five-arm canary, release new A/B/C/FULL sources, collect
   complete K8 worlds, add paired endpoint CIs, and assess expected controller shifts.
-- Evidence: HANDOFF.md; WMPHYS_SMOKE_0ec484ab.json; SUMOCORE peer report; RB_LANE.md.
+- Evidence: docs/rbint/full_v1/reports/paired_0400/COMPARISON.json; HANDOFF.md; peer reports.

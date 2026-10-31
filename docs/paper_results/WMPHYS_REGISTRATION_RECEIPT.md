@@ -29,3 +29,14 @@ immutable Unix dispatch receipts are authoritative. No outcome-based rule change
 Successful canary969432/k0 completed206.03s and was skipped in the same-source
 panel continuation Unix1793467741.52, PIDs333463/333464/333465. Sources and all
 failure receipts retained. Main's ignored registration file is not staged here.
+
+## Subsequent operational/candidate receipts
+
+- Source95e81e79 CPU throughput canary registered03:05 BEFORE launch; exact own
+  PID356826/885381226 stopped after~782wallseconds/0tasks without efficacy inspection.
+  Its separate operational-stop registration and complete local receipts are retained.
+- Sourcef378ac60 FULL-v3 GPU canary registered03:50 BEFORE launch; own367592
+  completed969432/k0 in223.28s. Same-identity continuation reused that task once,
+  own370037/370038/370039 +monitor370088. These are interim candidates, not09:30 freeze.
+- Around04:00, WMPHYS_MORNING.md reports only four matched complete K8 worlds;
+  no incomplete ensemble pooled, no switching claim or CI invented for missing endpoints.
