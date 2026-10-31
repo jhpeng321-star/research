@@ -62,3 +62,20 @@ Only then does it create NEW `v2data/pilot` and launch with timeout 21570 s,
 trainer allocator 0.16, same-gpuA inference allocators 0.08 (max four processes,
 free-memory-limited). EVENTS.jsonl/STATUS.json persist waits, PIDs, commands and
 decision. GPU parity/launch/decision remain pending.
+
+## Dispatch receipt (2026-10-31 15:25:41 +08, gpuA clock)
+- Dispatcher PID **197030**, `/proc` start ticks **881175520**, PPID1/SID197030.
+- State **WAIT_GPU_MEMORY**, 10,843 MiB free <14,336 required at dispatch.
+  No smoke or pilot is claimed launched. Exclusive `v2data/DISPATCH.json` exists;
+  NEVER launch a second dispatcher while this receipt/job is unresolved.
+- Git-archive payload from 6a53549c SHA256
+  `85477f783c99ccea68107f5fa53f0a846da4f43d1df0275c751c95c2feac5359`;
+  local/remote archive hashes match. Previous driver bytes saved in
+  `v2data/pre_data_driver.tar`; no existing implementation byte was replaced.
+- Staged drivers: pilot_v2 `5ff51662...`, data_pilot `315e0f61...`,
+  launch_data_pilot `2e26b007...`; staged pure v2 tests **11 passed**.
+  (First combined remote test invocation found the old v1 test file unstaged;
+  reran only the staged v2 suite. Local combined suite remains 16/16.)
+- Dry-run verified exact input/tree/driver bindings. Append-only registration
+  records this dispatch. `STATUS.json` is the current state; `EVENTS.jsonl`
+  preserves every transition. Read those before any recovery action.

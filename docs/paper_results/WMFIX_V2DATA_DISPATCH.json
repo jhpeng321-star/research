@@ -1,0 +1,53 @@
+{
+  "pid": 197030,
+  "started": 1793431541.0986192,
+  "binding": {
+    "authorization": "MAIN REVIEW 2026-10-31 15:25 v2-DATA; 10:40/11:52 gate",
+    "prepared_sha256": "84751dc7b0c9c27795810575f45a716b1af587f5dd6c886b93b453f4697419cc",
+    "harness_contract_sha256": "e67850f3eaac8595f35eea90e478c3a265dc5e0a250a11a0531127a3a7948155",
+    "base_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+    "smooth_events": false,
+    "implementation_hashes": {
+      "src/wms/model/wms.py": "59c74639d40e85d6ce44d29984b0ee5ae975b1a1a8215bd83016eb5c129f041f",
+      "src/wms/model/entries.py": "7c2a322f60bbe7f49148f955503e4184fcf6e49e2082b5054116fafa915db619",
+      "src/wms/model/merge_response.py": "edf4512cbb186bd80eb7542c8dbefb898d4875f4d48a898c2f0de3eeb5b82098",
+      "src/wms/model/source_ledger.py": "cfb938b5c3458997709f95c59e864552b771316777b114051377cff586a804b4",
+      "src/wms/model/learned_admission.py": "1da31a04820566112cfae6d37dbd5de2daab817df770f2701287762ec20019e5",
+      "src/wms/control/entrant_mix.py": "6565bb538a79ee24ee48b8baf21434ae1ca3f247dfbd6e46c930722490f1b0f7",
+      "src/wms/train/merge_response.py": "45a0b84d7b6a694fd5c198da8fa184593e8520e3a69b4376159f592a3e8af78a",
+      "src/wms/train/inputs.py": "e480e240ab40d2e6961fc762c337bf05fd84331bc1b2ce25affa9fe8b70f7eaf",
+      "tools/errsrc/inference.py": "fe325813de154325e057751b93f6cf99fce8547164ad6e95b65577c051d93c92",
+      "tools/wmrequal/labels.py": "78ee39c0b3ce1e1af9cad632822390c8858ae921bc7b7b07c382b360279c0448",
+      "tools/wmfixmerge/runtime.py": "6310cf868d9d034529c2676cc207304a85e9014f883e27d2f37212e917ec638c",
+      "tools/wmfixmerge/train_config.json": "3f45a3bfa1a655f757abcd12a7e83e0fb4de45643144f887fb3cfe7811253b98",
+      "tools/wmrequal/score.py": "00d0eddde201de6dcc09c840116b56e2a9ac8bb0bb101e1545b93df65346cc77",
+      "tools/wmrequal/native_lanes.py": "db22c00de2b8a1b03efd3ee6716eb8378ef9ebf8ea62cc8a3c257ae23b1c7f53",
+      "src/wms/model/spec.py": "2b6e7fb53b03585e7c6a341395ef9a20107b4cb26ffbf869a0169dba4eabe7b5",
+      "src/wms/config/train.py": "4df1fe1c35bdd9d50d1fd5923e5b922c453163b7dbe0e1ad1fbd8931005e7b09",
+      "src/wms/config/legacy_flat.py": "60e544fb5fefc59914cdf1b7e98eb660d1d4d462df93f066bd42446e37c478df",
+      "tools/wmfixmerge/train.py": "cbe65678521f64dea5a6b0a885e313dcb20b37e057e9130772bfce53980ecb72",
+      "tools/wmfixmerge/feasibility.py": "e870917362354b40a5f1ebac05d8ba676ffbc0ddd595423a87ae1ee206dbf443",
+      "tools/wmfixmerge/data.py": "434520aa474b519d9849ffd6c3b34d54d09a32096294eb86186a6d2eaf0a2a5c",
+      "tools/wmfixmerge/prepare.py": "59648ac30cabdb1dc50bed696a4fd883462321c515d93725a42a71c3e2a0cac3",
+      "src/wms/data/c4_pairs.py": "fc49d31330ccdf66d52f30c1acea9fd88dae2cb1991047a26f0b076666429918",
+      "tools/wmfixmerge/verdict.py": "62bcd2274bf6c1cab76573535d1bd8c1d8797f90cfa95a27ecfe831e6d85a4e6",
+      "tools/wmfixmerge/verdict_metrics.py": "72e96aa642c387c6a7914edad8837c0a710071145d3808a10c7dc25424aada4f",
+      "tools/wmfixmerge/verdict_panels.py": "081d2a9585d189a22d7e3427242866266fbd4471fcdcf00855100e87d200f232",
+      "tools/wmfixmerge/producer_runner.py": "044230438720a81d759b46b1d1f515e93965d5a92d406a0c6c2628525ae8389e",
+      "tools/wmfixmerge/harness_contract.py": "1c552839ea07abda33d6dfcfeefad80b64e25da0e00a81c4ed87f925c65150f8",
+      "tools/wmfixmerge/zero_head_panel.py": "f9ab3f05c14766f8be2d1ac697e1214750d803aadfd30b8ba31504e58ae2afeb",
+      "tools/wmfixmerge/zero_head_compare.py": "8d72e8728769f312e9c05869d5e8b7fd79deee7658e00cfac4443ef16fd30569",
+      "tools/wmfixmerge/verdict_plan.json": "f47a8f4cdc11aa7f32671d6477d147dc93b36cc9f782539469d2a548f9a69e0e"
+    },
+    "normalized_tree_sha256": "597fcc80b61c992a2fe9f353604cfd572cbcf8741a9e90eea4a333ffb6fb26fa",
+    "raw_tree_sha256": "303830de3670bdef8585863a8b7b8c32bdfff588f29a92dae4e9263231bfac7f",
+    "driver_hashes": {
+      "pilot_v2.py": "5ff51662e36aa6fd5d01075035dbadd78a8357bfb0617c1ad38fd850f82419ef",
+      "data_pilot.py": "315e0f611bc77bcf367cfcfcf0fdbab88590287d17083e63d91d9d73bbe557c7",
+      "pilot.py": "07da9e206a1f350cf26b8af8e4f8995f42784ac2e132cf936d96ef9301eda144",
+      "panel_eval_v2.py": "62ab24295f5ddd7a7f383b1c73712396dd1e7bb4e0cc70f695bd399c81559aaf",
+      "launch_data_pilot.py": "2e26b0075cce639e78171827aec154178fa2d3c8506a5731718a6fbacf470a48"
+    }
+  },
+  "proc_start_ticks": "881175520"
+}
