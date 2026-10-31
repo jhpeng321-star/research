@@ -17,9 +17,19 @@ sys.addaudithook(audit)
 
 
 def wait():
-    while os.getloadavg()[0] > 20:
+    while True:
         assert not (ROOT/'STOP').exists()
-        print('YIELD',os.getloadavg(),flush=True)
+        if os.getloadavg()[0] <= 20:break
+        # Host load includes workloads outside this 25-CPU container. Measure
+        # its actual quota consumption; one worker leaves >1 quota CPU free.
+        def usage():
+            return int(dict(s.split() for s in Path('/sys/fs/cgroup/cpu.stat').read_text().splitlines())['usage_usec'])
+        before=usage();begin=time.monotonic();time.sleep(5)
+        busy=(usage()-before)/1e6/(time.monotonic()-begin)
+        if busy < 23:
+            print('SPARE_CAPACITY',dict(host_load=os.getloadavg(),busy_cpus=busy),flush=True)
+            break
+        print('YIELD',dict(host_load=os.getloadavg(),busy_cpus=busy),flush=True)
         time.sleep(60)
     assert not (ROOT/'STOP').exists()
 

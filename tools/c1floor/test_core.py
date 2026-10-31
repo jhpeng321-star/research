@@ -1,5 +1,7 @@
 import unittest
-from core import rng_only, seed_guard, admit
+from contextlib import nullcontext
+from unittest.mock import patch
+from core import rng_only, seed_guard, admit, compare_tapes, audit
 
 
 class Mechanics(unittest.TestCase):
@@ -50,6 +52,26 @@ class Mechanics(unittest.TestCase):
             old.append(dict(id=job['id'],sim_s=job['charge']))
         self.assertEqual(sum(r['sim_s'] for r in old),29400)
         with self.assertRaises(ValueError):admit(old,dict(id='extra_world',charge=1200))
+
+    def test_bitwise_canary_rejects_signed_zero_and_dtype_changes(self):
+        import numpy as np
+        a={k:np.array([300.],dtype=np.float32) for k in ('t','vid','s','v','a','lane')}
+        a['s']=np.array([0.],dtype=np.float32)
+        b={k:v.copy() for k,v in a.items()};b['s'][0]=-0.
+        b['v']=b['v'].astype(np.float64)
+        with patch('numpy.load',side_effect=[nullcontext(a),nullcontext(b)]):
+            check=compare_tapes('one.npz','two.npz')
+        self.assertFalse(check['s']['identical'])
+        self.assertFalse(check['v']['identical'])
+        self.assertTrue(check['t']['identical'])
+
+    def test_generated_definition_write_only_not_read(self):
+        p='/root/c1floor20261031/jobs/test/scenarios/vtypes.add.xml'
+        audit('open',(p,'w',0))
+        for mode in ('r','r+','a+'):
+            with self.assertRaises(PermissionError):audit('open',(p,mode,0))
+        with self.assertRaises(PermissionError):
+            audit('open',('/other/vtypes.add.xml','w',0))
 
 
 if __name__ == '__main__':

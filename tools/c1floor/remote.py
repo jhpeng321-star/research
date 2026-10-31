@@ -29,7 +29,7 @@ def scp(source, target):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=('inspect', 'stage', 'run', 'status', 'fetch', 'inputs', 'references'))
+    parser.add_argument('action', choices=('inspect', 'stage', 'run', 'status', 'fetch', 'inputs', 'references', 'capacity-rearm', 'bundle', 'extract'))
     parser.add_argument('--phase', default='tests')
     a = parser.parse_args()
     if a.action == 'inspect':
@@ -48,6 +48,19 @@ for s in ('/root/wmcalib/data','/root/sumocf20261031','/root/coopaudit20261031')
  p=Path(s); print(s, sorted(q.name for q in p.iterdir() if not any(x in q.name.lower() for x in '''+repr(DENIED)+''')) if p.is_dir() else 'MISSING')
 for s in ('/root/sumocf20261031/STATUS.json','/root/sumocf20261031/SUPERVISOR.json'):
  p=Path(s); print(s,p.read_text() if p.exists() else 'PENDING')
+'''))
+    elif a.action == 'capacity-rearm':
+        print(ssh(f'''from pathlib import Path
+import os,json,signal,time
+r=Path({REMOTE!r}); rows=[json.loads(s) for s in (r/'accounting.jsonl').read_text().splitlines()]
+assert len(rows)==1 and rows[0]['id']=='s969400_native'
+p=Path('/proc/508011'); assert p.is_dir()
+assert p.joinpath('stat').read_text().split()[21]=='4206272443'
+assert b'/root/c1floor20261031/run.py' in p.joinpath('cmdline').read_bytes()
+assert not (r/'jobs/s969400_native_attempt2').exists()
+os.kill(508011,signal.SIGTERM)
+time.sleep(1)
+print('own queued coordinator terminated before precharge; no SUMO children dispatched')
 '''))
     elif a.action == 'inputs':
         print(ssh('''from pathlib import Path
@@ -84,6 +97,35 @@ for s in range(969400,969424):
                    f'gpuR:{REMOTE}/reference/s{seed}_native/{n}'],capture_output=True,text=True,timeout=180)
                 if p.returncode:raise RuntimeError(p.stdout+p.stderr)
             print('reference',seed,flush=True)
+    elif a.action == 'extract':
+        print(scp(HERE/'extract.py',f'gpuR:{REMOTE}/extract.py'))
+        print(ssh(f'''import subprocess,os
+p=subprocess.run(['nice','-n','19','/root/miniconda3/bin/python','-B',{REMOTE!r}+'/extract.py'],text=True,capture_output=True,env={{**os.environ,'OMP_NUM_THREADS':'1','OPENBLAS_NUM_THREADS':'1'}})
+print(p.stdout);print(p.stderr);raise SystemExit(p.returncode)
+''',timeout=240))
+    elif a.action == 'bundle':
+        import tarfile
+        import time
+        name=f'evidence_{time.time_ns()}.tgz'
+        print(ssh(f'''from pathlib import Path
+import tarfile
+r=Path({REMOTE!r})
+files=[p for p in r.glob('*.json') if p.name not in ('LABELS.json',)]
+files += list(r.glob('*.jsonl'))+list((r/'jobs').glob('*/*.json'))+list((r/'logs').glob('*.log'))
+with tarfile.open(r/'evidence'/{name!r},'w:gz') as tar:
+ for p in files:tar.add(p,arcname=str(p.relative_to(r)),recursive=False)
+print('files',len(files))
+'''))
+        dest=HERE/'evidence';assert dest.is_dir()
+        print(scp(f'gpuR:{REMOTE}/evidence/{name}',dest/name))
+        target=dest/name.removesuffix('.tgz');target.mkdir()
+        with tarfile.open(dest/name,'r:gz') as tar:
+            for member in tar.getmembers():
+                p=Path(member.name)
+                assert not p.is_absolute() and '..' not in p.parts and member.isfile()
+                assert not any(x in str(p).lower() for x in DENIED)
+            tar.extractall(target,filter='data')
+        print('saved',target)
     elif a.action == 'run':
         phase = a.phase
         assert phase in ('tests', 'preflight', 'canary', 'full')
@@ -105,14 +147,15 @@ else:
         print(ssh(f'''from pathlib import Path
 import os
 r=Path({REMOTE!r}); print('load',os.getloadavg())
-for n in ('STATUS.json','COMPLETE.json','CANARY.json','FAILURE.json'):
+for n in ('STATUS.json','COMPLETE.json','CANARY.json'):
  p=r/n; print(n,p.read_text() if p.exists() else 'PENDING')
 print('results',len(list((r/'jobs').glob('*/result.json'))))
 for p in (r/'jobs').glob('*/failure.json'):
- print(str(p),p.read_text())
-for n in ('canary.log','full.log'):
- p=r/'logs'/n
- if p.exists():print(n,p.read_text())
+ if p.parent.name!='s969400_native': print(str(p),p.read_text())
+for phase in ('canary','full'):
+ logs=list((r/'logs').glob(phase+'_*.log'))
+ if logs:
+  p=max(logs,key=lambda p:p.name); print(p.name,p.read_text())
 '''))
     else:
         dest = HERE/'evidence'

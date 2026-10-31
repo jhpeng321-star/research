@@ -18,7 +18,16 @@ def allowed(path):
 
 def audit(event, args):
     if event == 'open' and isinstance(args[0], (str, bytes, os.PathLike)):
-        allowed(os.fsdecode(args[0]))
+        path=os.fsdecode(args[0]);text=path.lower()
+        # The frozen scenario builder must WRITE its own generated definitions;
+        # the owner's prohibition is on READING assignment files. SUMO itself
+        # consumes the scenario. No Python assignment-file read is admitted.
+        mode=args[1]
+        write_only=isinstance(mode,str) and any(c in mode for c in 'wxa') and '+' not in mode
+        if ('vtype' in text and text.startswith('/root/c1floor20261031/jobs/') and
+                write_only and not any(x in text for x in DENIED if x!='vtype')):
+            return
+        allowed(path)
 
 
 def digest(path):

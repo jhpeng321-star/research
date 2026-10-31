@@ -95,3 +95,29 @@ Revised plan: 23 x 1,200 + 300 canary = 27,900 actual; plus retained 1,500
 zero-step failure reservation = 29,400 charged. 600 charged headroom stays
 unallocated. The remaining design/seed mapping is unchanged. No additional
 repair is authorized automatically; all failures remain preserved and reported.
+
+Resource-only clarification, still actual 0 before repaired dispatch: gpuR has
+224 host CPUs but a 25-CPU cgroup quota. Host load 21.74 coincided with only
+7.92 actually busy cgroup CPUs over five seconds. Thus admission is host load
+<=20 OR measured five-second cgroup CPU use <18, preserving >=7 quota CPUs
+before adding this ONE nice19 worker. Otherwise yield 60 s. Check each branch.
+Own queued coordinator 507673/start4206262749 was terminated only after proving
+no repaired precharge or worker existed. No peer process was changed.
+
+Final pre-outcome admission refinement: observed cgroup load stabilized near
+20–21 busy CPUs, with 4–5 genuinely idle quota CPUs despite host load >25.
+Use <23 busy CPUs (rather than <18) for ONE worker, leaving >1 CPU headroom
+even after admission; nice19 and before-every-branch checks remain mandatory.
+Own queued 508011/start4206272443 was likewise stopped before any new precharge.
+No simulator has yet advanced; no scientific selection or budget change.
+
+Second zero-step repair, still before SUMO advances: the path audit refused
+the frozen builder's WRITE of its own generated vehicle definitions. The owner
+prohibits READING those files; permit write-only creation inside this task's
+scenario output, while refusing every Python read and all other denied paths.
+A dedicated CPU regression covers read/write/update modes. Both actual-0 failed
+attempts and both 1,500 reservations stay preserved. Manual repaired canary
+uses `_attempt3`; final fixed first-22-world panel 969400–969421, same original
+index RNG mapping (969050–969093). Plan 26,700 actual + 3,000 retained failed
+precharges = 29,700 conservatively charged; 300 unallocated. No outcome exists
+at this amendment. No assignment file was opened by the refused write.
