@@ -7,16 +7,18 @@ Earlier work retained in `docs/rb_merge/HANDOFF_HISTORY_{0100,0315}.md`.
 - **v7fast PID682380 EXITED,32/32 H600 worlds complete**, source158d0193.
 - **v8end120 PID750052 EXITED,32/32 H120 worlds complete**, sourcec8e54017.
 - All earlier v3/v4/v5/v6 jobs terminal.
-- **v8end600 LIVE,03:26:36 +08**, owned cpuQ PID**789747**, source93693678;
+- **v8end600 COMPLETE32/32, PID789747 EXITED**, source93693678;
   validator SHA `b7d4721f500e919e025c57abc3bc357c2d87723d4a93cdad5c012783d9d1db26`.
-  Receipt `/tmp/rb-merge-fullfleet-v8end600/LAUNCH.json`; do not duplicate or
-  modify this snapshot. OneCPU/nice19/CUDA-hidden, load2.11/32 at launch.
+  Receipt `/tmp/rb-merge-fullfleet-v8end600/LAUNCH.json`; immutable completed
+  snapshot. OneCPU/nice19/CUDA-hidden, load2.11/32 at launch03:26:36 +08.
   Same source/operator as
   v8end120; **58 CPU tests PASS /2.46s**, all32 source/strict-encoder preflights PASS.
   H600/512slots/FIT969400–969431/native/stream190; explicit `--entry-phase after`.
   Saved clocks/events/front traces will be checked against the completed H120
   prefix, not counted as another independent world/future. Three prefix-audit
   CPU tests PASS (changed contracts/checkpoints/birth/trace rejection).
+  **All32 saved clock/event/front-trace prefixes PASS bit-exact** against H120;
+  `docs/rb_merge/fullfleet_v8_saved_prefix.json` (not full trajectory parity).
   Do not relaunch any completed version. Old v7 directory is engineering only.
 - Latest integrated screen `/tmp/rb-merge-fullfleet-v9latest300` **LIVE**:
   **03:49:23 +08**, owned cpuQ PID**840607**, source6bb7ce99,
@@ -86,6 +88,14 @@ Earlier work retained in `docs/rb_merge/HANDOFF_HISTORY_{0100,0315}.md`.
   mean955.17 vs928.87 real, W1=155.26 (no marginal improvement over v7 H120).
   H120 t0 matches160/193, timeMAE18.55s, position12.34m; censored support differs
   from H600. Prefer source-correct ordering for fidelity, not outcome tuning.
+- **v8end600 post-motion phase completed**: H120955.17/928.87 real,
+  H3002325.14/2272.78, H600**4663.06/4670.05veh-s**. W1=155.26/454.97/1553.28.
+  Matched mean is NOT matched distribution: H600 q10/50/90 predicted2118/3705/
+  8243 vsreal3058/4513/6103. Explicit boundary-augmented t0:202/202 matched,
+  no missed/extra; timingMAE43.83s, position13.36m. All32 road/source/no-slot
+  gates PASS; no beyond-end merges.69 combined local CPU tests PASS /7.19s.
+  Main report `fullfleet_v8end600_summary.json`, separate boundary report
+  `fullfleet_v8end600_boundary_summary.json`; raw receipts retained.
 - Both new panels:32/32 exact road/source conservation, no discarded demand or
   slot pressure; no beyond-end merges. Raw corridor-overlap samples are NOT SUMO
   collision counts. Recorded t0 geometry audit:4 raw-frame overlaps in402/405/
