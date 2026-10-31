@@ -28,3 +28,18 @@ The shared ledger now also contains `S-SELMAPPO FIRST DISPATCH MECHANICAL STOP /
 repair stage914fecba3ffdf4cc staged only, same-cap continuation proposal awaiting MAIN.
 Post-stop exact design-registration and zero-conflict interval checks PASS;
 registry snapshot SHA256 `ccd1d0814eb524add9df665fc53d4dcae75db4293582c9ac791fbb2ee71da8d5`.
+
+## MAIN acknowledgement and terminal stop
+MAIN00:29 explicitly acknowledged the first stop under the same cap and authorized
+only the unused second mechanics episode, followed by production. Commit `c082b233`
+implemented one-use continuation, inherited the exact first charge, and refused replay.
+Dispatch ownPID357398 reached900actual on the second mechanics episode, then failed
+terminal clock/cleanup bookkeeping because the frozen simulator had already closed api.
+Shared ledger now contains `S-SELMAPPO SECOND MECHANICS TERMINAL STOP / MAIN ACK NEEDED`:
+1,800charged /900actual, zero production/checkpoints, both mechanics slots consumed.
+CPU31/31 and frozen integration PASS at CPU-only stage68394a9568862929; no redispatch.
+Exact design-registration and interval audit PASS after append, registry snapshot SHA256
+`0c23689663962b83f8a95ad2e0e8ecc262a9d4c26868ba3355545fa7ad795cff`.
+Evaluation ownership follows C1SWITCH2's registered line: leave our14,400 reserved sim-s
+unstarted and reuse peer-owned16world receipts. Production-only continuation needs
+MAIN acknowledgement of this new terminal failure; nothing automatically launches.

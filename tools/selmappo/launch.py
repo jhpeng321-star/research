@@ -150,9 +150,38 @@ print('STOP_RECEIPT',json.dumps(record))
     save_tag(result.stdout, 'STOP_RECEIPT', f'STOP_{build}.json')
 
 
+def terminal_stop(build):
+    result = run('cpuQ', f'''
+import hashlib,json
+from pathlib import Path
+root=Path.home()/'selmappo20261031'/{build!r};assert root.is_dir()
+dispatch=json.loads((root/'DISPATCH.json').read_text())
+assert not (Path('/proc')/str(dispatch['pid'])).exists(),'own trainer still alive'
+ledger=root/'training/ledger.jsonl';rows=[json.loads(s) for s in ledger.read_text().splitlines()]
+assert len(rows)==4
+assert [r['event'] for r in rows]==['START','END','START','END']
+assert [r['id'] for r in rows]==['fleet:18007998']*2+['fleet:18007999']*2
+assert rows[0]['reserved_sim_s']==rows[2]['reserved_sim_s']==900
+assert rows[1]['actual_sim_s']==0 and rows[3]['actual_sim_s']==900
+assert not list((root/'training').glob('checkpoint_*.pt'))
+assert not (root/'training/training.jsonl').exists()
+log=(root/'training.log').read_text()
+assert "AttributeError: 'NoneType' object has no attribute 'simulation'" in log
+record=dict(status='STOPPED_AT_MECHANICS_TERMINAL',own_pid=dispatch['pid'],own_pid_exited=True,
+ charged_sim_s=1800,actual_sim_s=900,ledger_sha256=hashlib.sha256(ledger.read_bytes()).hexdigest(),
+ log_sha256=hashlib.sha256((root/'training.log').read_bytes()).hexdigest(),
+ error='frozen environment closes api before returning terminal step; wrapper queried env.now',
+ training_episodes=0,checkpoints=0,retry_authorized=False,root=str(root),
+ result_complete=False,mechanics_slots_remaining=0)
+with (root/'STOP.json').open('x') as f:json.dump(record,f,indent=2)
+print('STOP_RECEIPT',json.dumps(record))
+''')
+    save_tag(result.stdout, 'STOP_RECEIPT', f'STOP_{build}.json')
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=('stage', 'dispatch', 'continue', 'status', 'reconcile'))
+    parser.add_argument('action', choices=('stage', 'dispatch', 'continue', 'status', 'reconcile', 'terminal-stop'))
     parser.add_argument('--build')
     args = parser.parse_args()
     if args.action == 'stage':
@@ -163,5 +192,7 @@ if __name__ == '__main__':
         dispatch(args.build, continuation=True)
     elif args.action == 'reconcile':
         reconcile(args.build)
+    elif args.action == 'terminal-stop':
+        terminal_stop(args.build)
     else:
         status(args.build)

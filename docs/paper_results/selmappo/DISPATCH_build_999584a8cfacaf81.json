@@ -1,0 +1,27 @@
+{
+  "pid": 357398,
+  "root": "/home/ubuntu/selmappo20261031/build_999584a8cfacaf81",
+  "out": "/home/ubuntu/selmappo20261031/build_999584a8cfacaf81/training",
+  "binding": "999584a8cfacaf8120741b6e7bd8bfae1f649e658ca2a2b2170a7e5769033cc8",
+  "command": [
+    "/home/ubuntu/miniconda3/bin/python",
+    "-m",
+    "tools.selmappo.train",
+    "--variant",
+    "fleet",
+    "--registration",
+    "/home/ubuntu/selmappo20261031/build_999584a8cfacaf81/pytools/REGISTRATION.md",
+    "--c1-root",
+    "/home/ubuntu/selmappo20261031/build_999584a8cfacaf81/pytools",
+    "--integration",
+    "/home/ubuntu/selmappo20261031/build_999584a8cfacaf81/INTEGRATION.json",
+    "--design-sha",
+    "992c05601f03d1d9caad0421b041dbeaa05fa8621ae7e3020be42e3c9f5b41d0",
+    "--out",
+    "/home/ubuntu/selmappo20261031/build_999584a8cfacaf81/training",
+    "--workers",
+    "12",
+    "--continue-from",
+    "/home/ubuntu/selmappo20261031/build_bc4c3aae72073204"
+  ]
+}

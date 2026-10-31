@@ -1,0 +1,16 @@
+{
+  "status": "STOPPED_AT_MECHANICS_TERMINAL",
+  "own_pid": 357398,
+  "own_pid_exited": true,
+  "charged_sim_s": 1800,
+  "actual_sim_s": 900,
+  "ledger_sha256": "be3bcd873b401cce95b14a9659f33bcc8de38823eb8a6ca5a830119ca13347ce",
+  "log_sha256": "708b275c5ccd36d9c48db2d16be1dd4848b2984196a9ebc1ea811010e9101329",
+  "error": "frozen environment closes api before returning terminal step; wrapper queried env.now",
+  "training_episodes": 0,
+  "checkpoints": 0,
+  "retry_authorized": false,
+  "root": "/home/ubuntu/selmappo20261031/build_999584a8cfacaf81",
+  "result_complete": false,
+  "mechanics_slots_remaining": 0
+}

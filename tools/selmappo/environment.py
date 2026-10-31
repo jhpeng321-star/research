@@ -64,8 +64,11 @@ class SelectorEnv:
             raise ValueError('window clock mismatch')
         if hasattr(self.backend, 'current_names'):
             self.incumbents = self.backend.current_names()
-        self.observation = self.observe()
-        if self.variant == 'per_cav':
+        # No policy observes or acts after the terminal interval. The frozen
+        # simulator has already released its connection at this boundary.
+        if self.index < len(TIMES):
+            self.observation = self.observe()
+        if self.variant == 'per_cav' and self.index < len(TIMES):
             self.incumbents = {k: self.incumbents.get(k, 'native') for k in self.observation.keys}
         for source, target in (('ttc_below_3_vehicle_seconds', 'ttc_below_3_vs'),
                                ('braking_vehicle_seconds', 'hard_brake_vs'),

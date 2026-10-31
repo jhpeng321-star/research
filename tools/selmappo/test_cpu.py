@@ -40,6 +40,49 @@ class FakeBackend:
 
 
 class EnvironmentTests(unittest.TestCase):
+    def test_closed_terminal_connection_keeps_final_reward_and_closes_once(self):
+        from tools.selmappo.runtime import Backend
+        class ClosingEnv:
+            def __init__(self):
+                self.clock, self.api = 300, object()
+            @property
+            def now(self):
+                if self.api is None:
+                    raise AssertionError('closed SUMO clock queried')
+                return self.clock
+            def step(self, *args, **kwargs):
+                self.clock += 1
+                done = self.clock == 900
+                if done:
+                    self.api = None
+                return None, dict(done=done, time_s=self.clock, lane_commands={},
+                                  interval=dict(speed_deficit_vehicle_seconds=2.,
+                                                source_wait_vehicle_seconds=3.))
+            close = Mock()
+        backend = Backend.__new__(Backend)
+        backend.env, backend.mixed = ClosingEnv(), None
+        backend._terminal_time, backend._closed = None, False
+        backend.timing = dict(controller_wall_s=0., environment_wall_s=0., observable_wall_s=0.)
+        backend.handover = SimpleNamespace(name='wall', controller=Mock())
+        backend.handover.controller.command.return_value = (None, {})
+        backend.lib = SimpleNamespace(Backend=SimpleNamespace(observe=Mock()))
+        backend.observable = lambda: payload(backend.now)
+        backend.select_fleet = Mock()
+        backend.traci = SimpleNamespace(simulationStep=Mock())
+        backend.original_step = Mock()
+        backend.guard_scope = SimpleNamespace(__exit__=Mock())
+        backend.budget, backend.actual = Mock(), 900
+        env = SelectorEnv(backend, 'fleet')
+        rewards = [env.step({'fleet': 5})[1] for _ in TIMES]
+        self.assertEqual(sum(rewards), -3000.)
+        self.assertEqual(backend.now, 900)
+        self.assertEqual(backend.lib.Backend.observe.call_count, 599)
+        backend.close()
+        backend.close()
+        backend.handover.controller.stop.assert_called_once_with(now_s=900)
+        backend.budget.finish.assert_called_once_with(900)
+        self.assertIs(backend.traci.simulationStep, backend.original_step)
+
     def test_thirty_windows_exactly(self):
         backend = FakeBackend()
         env = SelectorEnv(backend, 'fleet')

@@ -130,6 +130,7 @@ class Backend:
         self.timing = dict(controller_wall_s=0., environment_wall_s=0., observable_wall_s=0.)
         self.variant, self.actual, self.budget = variant, 0., budget
         self.env, self.mixed = None, None
+        self._terminal_time, self._closed = None, False
         self.handover = wall_library.make_handover(self.inputs)
         budget.reserve(world, variant, evaluation=evaluation, smoke=smoke, panel=panel)
         # Both definitions AND pre-imported env/scenario aliases must be scoped.
@@ -168,6 +169,8 @@ class Backend:
 
     @property
     def now(self):
+        if self._terminal_time is not None:
+            return self._terminal_time
         return self.env.now
 
     def observable(self):
@@ -218,10 +221,15 @@ class Backend:
         with scope:
             _, info = self.env.step(command, **kwargs)
         self.timing['environment_wall_s'] += time.monotonic()-began
+        # Frozen CavSumoEnv.step closes api before returning its terminal info.
+        # Its returned clock is authoritative; never query the closed connection.
+        if info['done']:
+            self._terminal_time = float(info['time_s'])
         if any(info['lane_commands'].values()) or (info['done'] and self.now != 900):
             raise ValueError('lane call or premature termination')
         began = time.monotonic()
-        self.lib.Backend.observe(self, self.env)
+        if not info['done']:
+            self.lib.Backend.observe(self, self.env)
         self.timing['observable_wall_s'] += time.monotonic()-began
         return info['interval']
 
@@ -231,12 +239,16 @@ class Backend:
         return {'fleet': self.handover.name}
 
     def close(self):
+        if self._closed:
+            return
+        self._closed = True
         try:
             if self.env is not None and self.handover.name == 'wall':
-                self.handover.controller.stop(now_s=self.env.now)
+                self.handover.controller.stop(now_s=self.now)
             if self.mixed:
+                live = set(self.env.api.vehicle.getIDList()) if self.env.api is not None else set()
                 for key, context in self.mixed.handover.contexts.items():
-                    context.close(live=key in set(self.env.api.vehicle.getIDList()))
+                    context.close(live=key in live)
             if self.env is not None:
                 self.env.close()
         finally:

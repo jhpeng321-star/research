@@ -39,3 +39,33 @@ Only the unused second mechanics episode runs; any further failure stops without
 An additional successful replacement smoke without another amendment would exceed the
 conservative cap by900. Budget advance approval alone does not authorise that retry.
 Final169 evaluation still requires the registered16world S-C1SWITCH2 manifest.
+
+## Second mechanics terminal stop (current)
+Continuation commit `c082b233` bound source `999584a8cfacaf81`, CPU30/30 and real
+frozen-controller/WALL/seed-alias gate PASS. Own cpuQ PID357398 ran ONLY seed18007999;
+the original failed18007998 START/END was inherited unchanged, not simulated again.
+Second episode reached900 actual sim-s, then failed in terminal bookkeeping:
+the frozen `CavSumoEnv.step` closes `env.api` before returning `info['done']=True`.
+Our wrapper queried `env.now`, then its WALL cleanup repeated the same closed-clock query.
+This is NOT a successful mechanics result: final reward/safety receipt was not completed.
+The ledger nevertheless closed correctly: **1,800charged /900actual**, zero production,
+zero checkpoints; ownPID357398 exited. Both dispatch locks and all sources/logs remain.
+Ledger SHA256 `be3bcd873b401cce95b14a9659f33bcc8de38823eb8a6ca5a830119ca13347ce`.
+Receipts: `docs/paper_results/selmappo/{DISPATCH,STOP}_build_999584a8cfacaf81.json`.
+
+CPU repair uses returned terminal `time_s`, skips unused terminal sensor collection,
+keeps the final reward interval, and makes cleanup idempotent. CPU31/31 PASS incl a
+600-tick closed-connection/final-reward/cleanup regression; real frozen controller,
+WALL and seed-alias integration PASS, with SUMO start/step intercepted.
+Immutable stage `build_68394a9568862929`, full binding
+`68394a95688629292c307a20861c409d264a3c88104851b719caa5917d44e7a1`.
+**CPU ONLY, NOT DISPATCHED.** No mechanics allocation remains; neither smoke seed may
+run again. No automatic second continuation is implemented or armed.
+
+MAIN acknowledgement needed under the registered stop rule: accept the terminal-only
+mechanics failure after900actual and authorize production-only continuation on the
+CPU-tested fix, retaining both smoke charges; no repeated/replacement mechanics.
+Same upper cap:1,800 historical +6,996,600production +14,400reserved eval =7,012,800.
+Alternatively MAIN must specify a budget/protocol amendment for another real mechanics gate.
+C1SWITCH2's registered evaluation ownership is now confirmed: keep our14,400 reservation
+unstarted and reuse its paired16world J600/J900 receipts; only final169 is eligible.
