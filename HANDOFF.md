@@ -29,6 +29,9 @@ Updated 2026-10-31 23:22 +08:00; branch `c4/rb-int`, base `f0db3c82`.
 - Command: `PYTHONPATH=src OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 python -m tools.rbint.default_parity --compare docs/paper_results/WMPHYS_DEFAULT_OFF_BASE.json`
 - Synthetic long-history fixture explicitly masks all history as missing; this is
   compatibility evidence only, NOT the recorded FIT smoke or an efficacy result.
+- `tools/rbint/audit.py`: closed-cohort conservation/finite/zero-residual gate and
+  temporary hooks rejecting execution of parameterized corrections (encoder allowed).
+  `py -3.13 -m pytest -q tests/test_rbint_audit.py`: 9 passed (5.70 s).
 - Existing local `py -3.13` has torch `2.15.0+cpu`; default Python 3.14 is not the selected runtime.
 - Remote resource check: gpuR RTX4090 24,092 MiB free, 0% utilization; cpuQ load 0.94 / 32 logical CPUs, ~61 GB available. Recheck immediately before dispatch.
 - Resume local load 68%; parity check used a single CPU thread. No running INT
@@ -37,3 +40,11 @@ Updated 2026-10-31 23:22 +08:00; branch `c4/rb-int`, base `f0db3c82`.
 ## Known gaps
 - Worker APIs and registered evaluation panel are not yet available at first poll.
 - No measured WM-PHYS efficacy; historical WM2 statistics are references, not matched-panel results.
+- EVAL freeze now available: `c4-rb-eval/docs/paper_results/RBEVAL_DESIGN.md`,
+  seeds 969420–969439, native/ctrl0/mappo/pi/circles, K8, t0=300, H=600.
+- Worker request: expose checkpoint-preserving construction/runtime switches; CF
+  must bypass parameterized residual/temporal/gate/lane branches, not merely zero
+  final acceleration. INT will run `forbid_learned_corrections` on recorded smoke.
+- LANE/MERGE ownership needs explicit reconciliation: LANE handoff proposes full
+  LC2013 lane model; MERGE owns ramp 2->1. Mainline proposals must survive merge
+  resolution and carry LC2013 persistent state across rollout chunks.
