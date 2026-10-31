@@ -7,6 +7,7 @@ Can also score an integrator's full predictions via --prediction-dir.
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
 import json
 from pathlib import Path
@@ -242,6 +243,8 @@ def main():
     p.add_argument('--stride', type=int, default=1)
     p.add_argument('--prediction-dir')
     p.add_argument('--output')
+    p.add_argument('--target-csv', help='shared helper ramp_delay_world.csv (reuse, never re-extract)')
+    p.add_argument('--quiet', action='store_true')
     p.add_argument('--inspect', action='store_true')
     args = p.parse_args()
     torch.set_num_threads(1)
@@ -255,8 +258,19 @@ def main():
     start = time.monotonic()
     rows = [validate(args.root, seed, args.arm, args.horizon, args.stride, args.prediction_dir)
             for seed in args.seeds]
+    target_receipt = None
+    if args.target_csv:
+        target_path = safe(args.target_csv)
+        if target_path.name != 'ramp_delay_world.csv':
+            p.error('only shared ramp_delay_world.csv is accepted')
+        with target_path.open(newline='') as f:
+            targets = [r for r in csv.DictReader(f) if int(r['seed']) in args.seeds and
+                       r['arm'] == args.arm and float(r['horizon_s']) == args.horizon]
+        target_receipt = dict(sha256=hashlib.sha256(target_path.read_bytes()).hexdigest(),
+            definition='shared helper full ramp-entrance-group delay clock; not cohort ramp-lane speed loss',
+            rows=targets, delay_veh_s=summary([float(r['ramp_delay_vs']) for r in targets]))
     report = dict(task='S-RB-MERGE', runtime_s=time.monotonic() - start,
-        fit_seed_allowlist=[969400, 969431], rows=rows,
+        fit_seed_allowlist=[969400, 969431], rows=rows, shared_recorded_targets=target_receipt,
         limitations=['Recorded-state diagnostics condition on observed neighbors each tick.',
             'Cohort rollout excludes entrants and treats all vehicles as native; not full fleet J.',
             '562.4 vs 1265.4 veh-s references are historical, not matched to this panel.',
@@ -267,7 +281,15 @@ def main():
         output = safe(args.output)
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(text + '\n')
-    print(text)
+    if args.quiet:
+        print(json.dumps(dict(seeds=args.seeds, horizon=args.horizon, runtime_s=report['runtime_s'],
+            observed_merges=sum(r['cohort']['real_merges'] for r in rows),
+            predicted_merges=sum(r['cohort']['predicted_merges'] for r in rows),
+            matched_merges=sum(r['cohort']['matched'] for r in rows),
+            births=sum(r['conditional_recorded_state']['observed_births'] for r in rows),
+            admitted_at_observed_birth=sum(r['conditional_recorded_state']['admitted_at_observed_birth'] for r in rows))))
+    else:
+        print(text)
 
 
 if __name__ == '__main__':
