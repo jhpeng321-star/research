@@ -119,16 +119,15 @@ def test_oracle_same_state_no_branch_leakage_and_selected_trunk_reuse():
 
 
 def test_budget_and_world_disjointness():
-    assert sum(BUDGET.values()) == 1447410
+    assert sum(BUDGET.values()) == 478410
     assert sum(v for k,v in BUDGET.items() if k.startswith('step0')) == 47010
     assert sum(5*(300+60*j+90) for w in worlds('main')
-               for j in measurement_indices(w['seed'])) == 235800
+               for j in measurement_indices(w['seed'])) == 158100
     assert len(STEP0_SEEDS) == 8 and 969100 not in STEP0_SEEDS
     assert len(STEP0_SEEDS)*6*sum(t+90 for t in STEP0_TIMES) == 46080
-    with pytest.raises(ValueError, match='oracle'):
-        require_main_budget()
+    require_main_budget()
     a, b = worlds('step0'), worlds('main')
-    assert len(a) == 12 and len(b) == 24
+    assert len(a) == 12 and len(b) == 16
     assert not {w['seed'] for w in a} & {w['seed'] for w in b}
     assert len({(w['penetration'],w['demand']) for w in a}) == 12
     with pytest.raises(ValueError):
@@ -222,7 +221,7 @@ def test_retired_saved_state_runner_cannot_simulate(tmp_path):
     from tools.c1switch.runner import run
     with pytest.raises(ValueError, match='retired'):
         run(tmp_path, 'step0', worlds('step0')[0])
-    with pytest.raises(ValueError, match='oracle'):
+    with pytest.raises(ValueError, match='retired'):
         run(tmp_path, 'main', worlds('main')[0], 'oracle')
 
 

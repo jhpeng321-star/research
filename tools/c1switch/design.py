@@ -9,8 +9,8 @@ HIGH = tuple(c for c in CELLS if c[0] in (.2, .4) and c[1] in (2400, 2700))
 CAP = 500_000
 STEP0_CAP = 60_000
 BUDGET = dict(step0_retained=930, step0_branches=38400,
-              step0_repeat=7680, wm=257400, bb=257400, oracle=756000,
-              random=21600, **{c:21600 for c in CONTROLLERS})
+              step0_repeat=7680, wm=172500, bb=172500,
+              random=14400, **{c:14400 for c in CONTROLLERS})
 STEP0_SEEDS = (969101, 969102, 969103, 969105, 969107, 969108, 969110, 969111)
 STEP0_TIMES = (300, 480)
 
@@ -22,7 +22,7 @@ def measurement_indices(seed):
 
 def require_main_budget():
     if sum(BUDGET.values()) > CAP:
-        raise ValueError('full-rerun ten-decision oracle exceeds approved cap; MAIN amendment required')
+        raise ValueError('registered full-rerun plan exceeds approved cap')
 FORBIDDEN = re.compile(r'sealed|holdout|heldout|cal_split|chunk5|j4b|inc1|'
                        r'hetdata_truth|vehicle_params|driver_params|vtype|assignment', re.I)
 
@@ -39,7 +39,7 @@ def sha(path):
 
 
 def worlds(stage):
-    cells = CELLS if stage == 'step0' else CELLS + HIGH * 3
+    cells = CELLS if stage == 'step0' else CELLS + HIGH
     start = 969100 if stage == 'step0' else 969112
     if stage not in ('step0', 'main'):
         raise ValueError(stage)
