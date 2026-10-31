@@ -49,3 +49,18 @@ Earlier source-version receipts and the adverse first FIT32 screen are retained
 separately. Different versions are not pooled. The ramp-lane speed-loss
 diagnostic uses reference speed 22.22m/s and excludes a ramp vehicle after its
 merge; use full ramp-origin/group clocks for the owner's fleet-delay target.
+## Entrant-inclusive LC2013 continuation
+
+`full_fleet.py --runtime <immutable integrated root> --root <observable views>
+--targets <shared target CSV directory> --output <new result directory>
+--seeds 969400 ... 969431 --horizon 300` runs population-default physics with
+LC2013 mainline, SUMO merge/insertion and the existing native CAV executor.
+Uses t0 request counters/backlog for arrivals and preserves `conserve_queue` /
+`SourceLedger`. The recorded per-world ramp-entrance-group clock is compared with
+ramp-origin road delay **plus source waiting**, including travel after merging.
+Cold LC memory and the actual CF selector are explicit in every receipt. No future
+observation supplies a prediction or driver setting. Exact future identity timing
+is meaningful only for the t0 cohort; synthetic entrants are scored distributionally.
+
+`remote_full_fleet.py status|stage|launch|poll|collect` owns one CPU-only dispatch
+on cpuQ, pinned to INT `ff8a637f`. Stage/launch/result paths refuse replacement.

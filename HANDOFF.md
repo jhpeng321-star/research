@@ -13,6 +13,27 @@
   Historical 562.4 is a reference, not the target of parameter tuning. No training.
 - Earlier cohort diagnostics below remain valid for their stated contracts.
 
+## Full-fleet validator increment
+- `tools/rbeval/full_fleet.py`: autonomous native CAV executor + population HDVs,
+  mainline LC2013 and SUMO merge/insertion using pinned INT `ff8a637f` runtime.
+  Each 0.5s chunk carries returned state/history, LC memory and synthetic entrant
+  identity. Recycled slots retain the NEW vehicle's origin, not the previous one.
+- Exact `SourceLedger` per entrance and road-population conservation checked each
+  step. Reported-boundary delay uses 31.29m/s, excludes births and uses prior speed
+  on exit; ramp-origin charge continues after merging. Source fractional waiting
+  is integrated separately with no extra RNG draws. Future arrivals inferred from
+  t0 request counters/backlog only; future recorded states never feed predictions.
+- Source snapshot currently has legacy CF (SUMO-IDM kernel is present but CF
+  switch wiring pending); selector is reported explicitly. LC memory is cold at
+  t0. One future is a diagnostic, not the final INT A/B distributional gate.
+- **5 new CPU tests pass** with pinned integrated imports (14.90s), including
+  native CAV 4-step-vs-chunk exact parity, fractional waiting, slot reuse/origin,
+  birth/exit clock and queue-corruption rejection. Existing merge suite **28 pass**.
+- CPU command: `py -3.13 -m pytest -o "pythonpath=E:/agent-work/c4-rb-int/src ." tests/unit/test_rb_merge_full_fleet.py -q`.
+- `remote_full_fleet.py` stages a new immutable `/tmp/rb-merge-fullfleet-v1`, runs
+  CPU tests remotely before admission, and uses an exclusive dispatch receipt.
+  FIT32/native/H300, single CPU nice19, no GPU/SUMO/training. No launch yet.
+
 LATEST INTEGRATION INCREMENT: **2977be6d** (source corrections; 28 CPU tests pass).
 INT already reconciled mainline ownership: cherry-pick source corrections from
 2977be6d while keeping your root HANDOFF and your integrated sumo_merge hooks.
