@@ -1,6 +1,17 @@
 # S-RB-RUNB handoff
 
-Updated 2026-11-01 01:42 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+Updated 2026-11-01 02:11 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+
+## Fresh-session 02:08 owner noon continuation intake
+- Preserved clean HEAD `f398d8da`, watcher33076 and B2 supervisor755633.
+- Read both current handoffs, STATUS and `INT_NOON_SCHEDULE_REQUEST.md` first.
+- 02:09 gpuR direct nvidia-smi: RTX4090,15555/24564MiB,99%,load11.59.
+- B2 audit: exact boot/start-tick/cmdline matches supervisor receipt; tasks0,
+  no DISPATCH, LAUNCHED, shard or terminal receipt; still WAITING_RESOURCES.
+- Owner explicitly extends supervision through11:30, interim04/08 and freeze09:30.
+  Existing modules capture07:00; preparing a fail-closed owner-side continuation
+  of the unlaunched B2 waiter and owned Windows watcher. Claims, sources, failed
+  original B and all completed peer work remain preserved.
 
 ## Current — corrected B2 claimed / WAITING_RESOURCES
 - Existing watcher33076 automatically claimed **WM-PHYS-B2** at01:31:32 and
