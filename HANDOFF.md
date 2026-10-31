@@ -45,6 +45,9 @@ Updated 2026-10-31 23:58 +08:00; branch `c4/rb-int`, base `f0db3c82`.
   Full-panel arrival/source conservation remains a separate required gate.
 
 ## Tests / results
+- LANE follow-up merged (right-overtake prevention and completed FIT receipts):
+  45 touched-module CPU tests PASS /15.61s. Original incorrect test filename
+  produced no tests; corrected command includes test_lc2013_validation.py.
 - MERGE follow-up integrated: no duplicate lane-end obstacle; retained INT's
   single post-CAV LC2013 arbitration (removed duplicate worker hook); exposed
   final lane probabilities. 42 touched-module CPU tests PASS /15.05s.

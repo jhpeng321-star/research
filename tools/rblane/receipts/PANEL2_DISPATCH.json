@@ -1,0 +1,35 @@
+{
+  "kind": "panel2",
+  "root": "/home/ubuntu/rblane20261031_panel2_efad08c61114",
+  "bundle_sha256": "efad08c6111424380527100e727311eec2fd5266caeeae999cb359da72ab532a",
+  "parent_commit": "127a106ff693ed879d6477dd0dcdefa458894e1a",
+  "preflight": {
+    "root": "/home/ubuntu/rblane20261031_panel2_efad08c61114",
+    "load": [
+      6.04638671875,
+      3.56787109375,
+      1.91650390625
+    ]
+  },
+  "status": "DISPATCHED",
+  "staged_at": 1793461719.2354138,
+  "process": {
+    "pid": 214459,
+    "start_ticks": "47599878",
+    "command": [
+      "/usr/bin/nice",
+      "-n",
+      "19",
+      "/home/ubuntu/miniconda3/bin/python",
+      "-B",
+      "-m",
+      "tools.rblane.validate",
+      "--out",
+      "/home/ubuntu/rblane20261031_panel2_efad08c61114/results",
+      "--reuse-mobil-from",
+      "/home/ubuntu/rblane20261031_panel_14523d0f69a6/results"
+    ],
+    "root": "/home/ubuntu/rblane20261031_panel2_efad08c61114",
+    "started_at": 1793461721.054381
+  }
+}

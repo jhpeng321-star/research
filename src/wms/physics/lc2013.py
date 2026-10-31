@@ -21,7 +21,8 @@ from .neighbours import lane_of
 PRECISION = 10_000_000
 STATE_KEYS = ("lc2013_left", "lc2013_right", "lc2013_keep_right",
               "lc2013_lookahead", "lc2013_present", "lc2013_lane",
-              "lc2013_identity", "lc2013_advice_accel")
+              "lc2013_identity", "lc2013_advice_accel",
+              "lc2013_own_advice_accel", "lc2013_own_has_advice")
 # Diagnostic reason codes, not thresholds.
 NONE, STRATEGIC, COOPERATIVE, SPEED_GAIN, KEEP_RIGHT = range(5)
 
@@ -142,7 +143,8 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
                 target_remaining_distance: Optional[Tensor] = None,
                 best_lane_offset: Optional[Tensor] = None,
                 best_occupation: Optional[Tensor] = None,
-                ballistic: bool = False) -> dict[str, Tensor]:
+                ballistic: bool = False,
+                allow_overtaking_right: bool = False) -> dict[str, Tensor]:
     """One highway LC2013 decision, including persistent fixed-point wishes.
 
     Optional route inputs are *distances from this snapshot* and offset in WM
@@ -152,8 +154,10 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
     sequential. Speed advice is emitted for the NEXT longitudinal update.
     """
     kin = kin.detach().double()
-    present = present.bool()
-    lane = lane_of(kin)
+    # Empty one-hot is a junction connector in WM observables, not lane 0.
+    normal_lane = kin[..., 1:4].sum(-1) > 0
+    present = present.bool() & normal_lane
+    lane = torch.where(normal_lane, lane_of(kin), -1)
     v, s, length = kin[..., 4], kin[..., 0], kin[..., 6]
     dt = float(physics.dt_s)
     p = _settings(v, physics, driver_params)
@@ -213,13 +217,32 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
                               p, dt, accelerating, ballistic)
     neigh_speed = _anticipated(kin, gl - p["min_gap"], il, target_distance,
                                p, dt, accelerating, ballistic)
-    relative_gain = (neigh_speed - this_speed) / neigh_speed.clamp_min(10)
     threshold_l = torch.where(p["lcSpeedGain"] > 0,
                               torch.trunc(0.2 / p["lcSpeedGain"] * PRECISION),
                               torch.full_like(v, float(2**63 - 1)))
     threshold_r = torch.where(p["lcSpeedGain"] > 0,
                               torch.trunc(0.2 / p["lcSpeedGainRight"] / p["lcSpeedGain"] * PRECISION),
                               torch.full_like(v, float(2**63 - 1)))
+    # AbstractLCM::avoidOvertakeRight and MSVehicle::congested use SUMO's
+    # documented 60/60.1 km/h congestion semantics, NOT a fitted jam threshold.
+    avoid_right = ((v >= 60.0 / 3.6) & (physics.speed_limit_mps >= 60.1 / 3.6)
+                    & ~torch.full_like(present, allow_overtaking_right))
+    dv_right = torch.maximum(p["v0"] - p["v0"].gather(-1, il), v - vl)
+    follow_right = idm_follow_speed(v, gl - p["min_gap"], vl, p["v0"],
+        p["accel"], p["decel"], p["time_headway"], p["min_gap"], dt)
+    max_decel_speed = (v - p["decel"] * dt).clamp_min(0)
+    avoid_speed = torch.where(follow_right >= max_decel_speed, follow_right,
+                              torch.maximum(max_decel_speed, vl - 10.0 / 3.6))
+    avoid_speed = torch.where(left_wish < threshold_l,
+                              torch.maximum(avoid_speed, vl), avoid_speed)
+    own_advice = (legal & active & ~urgent & ~right & has_l & avoid_right & (dv_right > 0))
+    this_speed = torch.where(own_advice, torch.minimum(this_speed, avoid_speed), this_speed)
+    future_follow = idm_follow_speed(v, gl - p["min_gap"] - dv_right * 8, vl,
+        p["v0"], p["accel"], p["decel"], p["time_headway"], p["min_gap"], dt)
+    avoid_impulse = own_advice & (future_follow < avoid_speed)
+    left_wish += torch.where(avoid_impulse, torch.trunc(
+        dt * dv_right / p["v0"].clamp_min(10) * PRECISION), 0.0)
+    relative_gain = (neigh_speed - this_speed) / neigh_speed.clamp_min(10)
     # Urgent/stay branches return before wish updates in SUMO.
     update = legal & active & ~urgent & ~stay
     left_new = torch.where(this_speed > neigh_speed, torch.trunc(left_wish * 0.5**dt),
@@ -239,6 +262,13 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
         p["v0"], vl, p["accel"], p["decel"], p["time_headway"])).clamp_min(0))
     full_seconds = torch.where(has_l & (vl < p["v0"]), torch.minimum(
         full_seconds, full_gap / (p["v0"] - vl).clamp_min(1e-9)), full_seconds)
+    # LC2013.cpp:1748-1752: don't return right if we cannot pass our slow
+    # current-lane leader on its right. Only applies where overtaking is banned.
+    current_v = v.gather(-1, ic)
+    slow_current = avoid_right & has_c & (p["v0"].gather(-1, ic) < p["v0"])
+    no_pass_gap = torch.minimum(full_gap, cl - p["min_gap"])
+    full_seconds = torch.where(slow_current, torch.minimum(full_seconds,
+        no_pass_gap / (p["v0"] - current_v).clamp_min(1e-9)), full_seconds)
     keep_delta = torch.where(p["lcSpeedGain"] > 0,
         threshold_r * (full_seconds / acceptance.clamp_min(1e-9)) / 5, 0.0)
     keep_new = keep - torch.trunc(dt * keep_delta)
@@ -261,7 +291,7 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
     cooperative &= to_best | (target_distance / (offset.abs() + 1) > la)
     keep_request = right & (torch.trunc(keep * p["lcKeepRight"]) < -threshold_r)
     gain_request = torch.where(right, right_wish > threshold_r,
-                                (left_wish > threshold_l) & (relative_gain > 1e-6))
+                                (left_wish > threshold_l) & ((relative_gain > 1e-6) | avoid_impulse))
     gain_request &= target_distance / v.clamp_min(0.1) > p["lcSpeedGainRemainTime"]
     early_strategic = to_best & (p["lcStrategic"] >= 0) & (relative_gain >= 0)
     early_strategic &= torch.where(right, right_wish, left_wish) > 0
@@ -311,7 +341,9 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
                   lc2013_keep_right=torch.where(present, keep, 0),
                   lc2013_lookahead=torch.where(present, look, 0),
                   lc2013_present=present.clone(), lc2013_lane=lane.clone(),
-                  lc2013_advice_accel=advice)
+                  lc2013_advice_accel=advice,
+                  lc2013_own_has_advice=own_advice,
+                  lc2013_own_advice_accel=torch.where(own_advice, (avoid_speed - v) / dt, 0.0))
     if identity is not None:
         result["lc2013_identity"] = identity.clone()
     return result
