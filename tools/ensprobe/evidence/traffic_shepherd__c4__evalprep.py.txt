@@ -1,0 +1,403 @@
+"""Registered Friday E3/E4 pipelines. Heavy outputs belong on cpuP/cpuQ only."""
+from __future__ import annotations
+
+import argparse
+import copy
+import hashlib
+import json
+import os
+from pathlib import Path
+import time
+
+import numpy as np
+
+from . import branching as BR
+from . import coopmeas as CM
+
+ARMS = ("native", "mappo", "ours", "belief_gate", "oracle_gate")
+THRESHOLD_SHA = "9119cd77"
+SEEDS = range(967237, 967249)
+
+
+def read(path):
+    return json.loads(BR.checked(path).read_text(encoding="utf-8"))
+
+
+def write(path, doc):
+    path = BR.checked(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp = path.with_suffix(path.suffix + ".tmp")
+    temp.write_text(json.dumps(BR._jsonable(doc), indent=1, allow_nan=False), encoding="utf-8")
+    temp.replace(path)
+
+
+def digest(path):
+    return CM.sha256(BR.checked(path))
+
+
+def worlds(smoke=False):
+    if smoke:
+        return [dict(seed=967250, demand=2700, penetration=0.4)]
+    return [dict(seed=967237 + i * 3 + j, demand=d, penetration=p)
+            for i, p in enumerate((0.05, 0.1, 0.2, 0.4))
+            for j, d in enumerate((1900, 2400, 2700))]
+
+
+def plan(experiment, smoke=False):
+    jobs = []
+    for w in worlds(smoke):
+        if experiment == "e3":
+            for arm in ARMS:
+                jobs.append(dict(w, id=f"s{w['seed']}_{arm}", arm=arm,
+                                 warmup=60 if smoke else 300, horizon=10 if smoke else 160,
+                                 charge=70 if smoke else 460))
+        else:
+            for arm in ("mappo", "ours"):
+                # Reuse the native-base COOPMEAS protocol; one point, |G|<=3, one FLIP.
+                t, h = (60, 5) if smoke else (360, 60)
+                jobs.append(dict(w, id=f"s{w['seed']}_{arm}", arm=arm, warmup=t - 60,
+                                 time=t, horizon=h, charge=t + h + 1 + 8 * h))
+    total = sum(j["charge"] for j in jobs)
+    cap = (350 if experiment == "e3" else 212) if smoke else (30000 if experiment == "e3" else 24000)
+    assert total <= cap
+    return dict(id="S-E3-INTERIM-1" if experiment == "e3" else "S-E4-COOP-1",
+                split="TRAIN", smoke=smoke, jobs=jobs, cap_sim_s=cap, planned_sim_s=total,
+                calibration_sim_s=1082 if experiment == "e3" and not smoke else 0,
+                reserved_seed_block=[967237, 967299], threshold_sha256_prefix=THRESHOLD_SHA)
+
+
+def validate_inputs(inputs, *, smoke=False, experiment="e3"):
+    hashes = {k: digest(inputs[k]) for k in ("policy", "wm", "mappo", "thresholds")}
+    if not hashes["mappo"].startswith("aecd7d70"):
+        raise ValueError("MAPPO SHA differs from aecd7d70")
+    if not hashes["thresholds"].startswith(THRESHOLD_SHA):
+        raise ValueError("COOPMEAS frozen thresholds differ")
+    if not smoke:
+        hashes["wm_config"] = digest(inputs["wm_config"])
+        from wms.control.nativeinit import verify_collection_gate
+        gate = verify_collection_gate({"checkpoint": str(BR.checked(inputs["policy"]))})
+        if hashes["wm"] not in ([gate.get("wm_sha256")] if isinstance(gate.get("wm_sha256"), str)
+                                 else gate.get("wm_sha256", [])):
+            raise ValueError("native-relative gate WM does not match experiment WM")
+        if hashes["wm_config"] not in gate.get("wm_config_sha256", []):
+            raise ValueError("native-relative gate WM config does not match")
+        hashes["native_gate"] = digest(Path(inputs["policy"]).with_name("native_gate_result.json"))
+    if experiment == "e3":
+        from wms.control.confident_gate import ReliabilityTable
+        for source in ("belief", "oracle"):
+            table = ReliabilityTable.load(inputs[source + "_table"])
+            m = table.meta
+            if (m.get("reference"), m.get("state_source"), m.get("comparison"), m.get("unit")) != (
+                    "native", source, "reference", "fleet"):
+                raise ValueError("E3 requires native-reference fleet gate, K=1, matching state source")
+            if float(m["horizon_s"]) != (2 if smoke else 10) or float(m.get("threshold", 0)) != 0.8:
+                raise ValueError("gate horizon/threshold mismatch")
+            if not smoke:
+                if (m.get("policy_sha256"), m.get("wm_sha256")) != (hashes["policy"], hashes["wm"]):
+                    raise ValueError("calibration must bind exact policy and WM")
+                seeds = m.get("seeds", [])
+                if not seeds or any(964000 <= s <= 964199 or 967237 <= s <= 967250 for s in seeds):
+                    raise ValueError("calibration seeds must be TRAIN, disjoint from reserved pairing")
+            hashes[source + "_table"] = digest(inputs[source + "_table"])
+    return hashes
+
+
+class Measurement:
+    """Full on-road population, stable IDs and exact source-ledger integration, no truth files."""
+
+    def start(self, env):
+        self.env = env
+        self.tracker = BR.BranchTracker(env, record_trajectory=False)
+        self.rec = CM.TrajRecorder()
+        self.progress = env.now
+        initial = {k: v.detach().cpu().tolist() for k, v in env.state().items()
+                   if hasattr(v, "detach")}
+        self.initial_sha = hashlib.sha256(json.dumps(initial, sort_keys=True).encode()).hexdigest()
+        self.source = {r.vehicle_id: 0.0 for r in env.requests}
+        self.inserts = set(env.ledger.inserted)
+        self.initial_inserted = len(self.inserts)
+        self.arrived_before = set(env.ledger.arrived)
+        self.last = env.now
+
+    def update(self, info):
+        e = self.env
+        now = float(info["time_s"])
+        self.tracker.update(info)
+        self.rec.add(e, now)
+        # RequestLedger uses insertion at the reported half-second boundary. Recover that
+        # boundary from the first observed frame (not first whole control tick).
+        raw = e.history.raw(3)
+        first = {}
+        for j in (1, 2):
+            for slot in np.flatnonzero(raw["mask"][j]):
+                idx = int(raw["vid_index"][j][slot])
+                if idx >= 0:
+                    first.setdefault(e.builder.vehicle_ids[idx], self.last + 0.5 * j)
+        for vid, request in e.ledger.requests.items():
+            if vid not in self.inserts:
+                stop = first.get(vid, now)
+                self.source[vid] += max(0.0, stop - max(self.last, request.depart_s))
+        self.inserts.update(e.ledger.inserted)
+        self.last = self.progress = now
+
+    def finish(self, *, save_trajectory=True):
+        e = self.env
+        now = self.progress
+        metrics = self.tracker.finish()
+        road = self.tracker.delay_by_vid
+        groups = {}
+        for name in ("mainline", "ramp"):
+            ids = [vid for vid, r in e.ledger.requests.items()
+                   if ("ramp" in r.route.lower()) == (name == "ramp")
+                   and r.depart_s < now and vid not in self.arrived_before]
+            delay = sum(road.get(v, 0.0) + self.source[v] for v in ids)
+            groups[name] = dict(delay_vs=delay, requested=len(ids),
+                                delay_per_requested_s=delay / len(ids) if ids else None)
+            metrics[name + "_delay_vs"] = delay
+        metrics["worst_group_delay_s"] = max(g["delay_per_requested_s"] or 0 for g in groups.values())
+        metrics["throughput_vph"] = metrics["arrivals"] * 3600 / (now - self.tracker.t0)
+        metrics["hard_braking_vs"] = metrics["braking_vehicle_seconds"]
+        metrics["initial_state_sha256"] = self.initial_sha
+        metrics["groups"] = groups
+        if abs(sum(self.source.values()) - metrics["source_wait_vs"]) > 1e-5:
+            raise ValueError("source-wait population conservation failed")
+        # Group delay uses exactly the same physical on-road cohort as BranchTracker.
+        if abs(sum(g["delay_vs"] for g in groups.values()) - metrics["team_delay_vs"]) > 1e-3:
+            raise ValueError("ramp/mainline delay conservation failed")
+        metrics["requested"] = sum(g["requested"] for g in groups.values())
+        metrics["inserted_total"] = len(e.ledger.inserted)
+        metrics["inserted"] = len(e.ledger.inserted) - self.initial_inserted
+        if save_trajectory:
+            self.rec.save(self.path / "traj_base.npz", e)
+        return metrics
+
+
+def run_e3(job, inputs, out, *, measurement=None):
+    from wms.control import deploy
+    arm = job["arm"]
+    cli = ["--controller", "native" if arm == "native" else "policy_gate" if "gate" in arm else "policy",
+           "--seed", str(job["seed"]), "--demand", str(job["demand"]),
+           "--penetration", str(job["penetration"]), "--warmup", str(job["warmup"]),
+           "--horizon", str(job["horizon"]), "--threads", "1", "--population", "textbook",
+           "--no-physics-log", "--out", str(out / "deploy")]
+    if arm != "native":
+        cli += ["--policy", inputs["mappo"] if arm == "mappo" else inputs["policy"]]
+    if "gate" in arm:
+        source = "belief" if arm == "belief_gate" else "oracle"
+        cli += ["--wm-ckpt", inputs["wm"], "--gate-table", inputs[source + "_table"],
+                "--state", source, "--gate-candidates", "1", "--decision-period", "6"]
+    measure = measurement if measurement is not None else Measurement()
+    measure.path = out
+    try:
+        result = deploy.run(deploy.parser().parse_args(cli), observer=measure)
+    finally:
+        if hasattr(measure, "env"):
+            measure.env.close()
+    if result["status"] != "complete":
+        raise RuntimeError(result["notes"])
+    return dict(metrics=result["measurement"], gate=result.get("gate"), sim_s=job["charge"])
+
+
+def run_e4(job, inputs, out):
+    """COOPMEAS native-state protocol, extended with the registered FLIP branch."""
+    h, t = job["horizon"], job["time"]
+    env = CM.make_env(out, branch=True)
+    exe = CM.load_controller(inputs["mappo"] if job["arm"] == "mappo" else inputs["policy"])
+    controller = BR.BranchController(exe, name=job["arm"])
+    sim_s = 0
+    try:
+        env.reset(seed=job["seed"], demand_vph=job["demand"], penetration=job["penetration"],
+                  warmup_s=job["warmup"], horizon_s=t + h + 1 - job["warmup"], controller="direct")
+        pre = CM.TrajRecorder()
+        while env.now < t:
+            env.step(None)
+            pre.add(env, env.now)
+        sim_s = t
+        state = out / "start.xml"
+        BR.save_state(env, state)
+        snap = BR.snapshot_env(env)
+        group = BR.select_group(BR.cav_positions(env), max_size=3)
+        arms = BR.plan_arms(list(BR.cav_positions(env)), group,
+                            rng=np.random.default_rng(job["seed"]), n_flip=1)
+        metrics, trajs = {}, {}
+        for arm in arms:
+            BR.load_state(env, state, snap)
+            BR.prepare_branch_mode(env)
+            tracker = BR.BranchTracker(env)
+            fn = copy.deepcopy(exe)
+            fn.reset()
+            for _ in range(h):
+                accel, kw = controller.command(env, env.state(), arm["members"], fn)
+                _, info = env.step(accel, **kw)
+                tracker.update(info)
+                sim_s += 1
+            metrics[arm["name"]] = tracker.finish()
+            trajs[arm["name"]] = tracker.trajectory
+        delta = {k: BR.improvement(v, metrics["B"]) for k, v in metrics.items()}
+        # Full native base continues to the protocol's end, charged even though not scored.
+        BR.load_state(env, state, snap)
+        while env.now < t + h + 1:
+            _, info = env.step(None)
+            sim_s += 1
+            if info["done"]:
+                break
+        same = BR.trajectory_diff(trajs["B"], trajs["B_repeat"])
+        if metrics["B"] != metrics["B_repeat"] or not same["identical"]:
+            raise ValueError("native repeat determinism failed")
+        return dict(sim_s=sim_s, metrics=metrics, group=group, D=delta,
+                    coop=BR.cooperation(delta, group), determinism=same,
+                    group_missing=not bool(group), t_s=t, horizon_s=h)
+    finally:
+        env.close()
+
+
+def job_worker(experiment, job, inputs, path):
+    import torch
+    torch.set_num_threads(1)
+    out = BR.checked(path)
+    out.mkdir(parents=True, exist_ok=False)
+    started = time.monotonic()
+    try:
+        result = (run_e3 if experiment == "e3" else run_e4)(job, inputs, out)
+        result.update(ok=True, job=job, wall_s=time.monotonic() - started)
+        if result["sim_s"] > job["charge"]:
+            raise ValueError("actual charge exceeds registered upper bound")
+        write(out / "result.json", result)
+    except Exception:
+        import traceback
+        write(out / "failure.json", dict(job=job, traceback=traceback.format_exc(),
+                                          charged_sim_s=job["charge"]))
+        raise
+    return result
+
+
+def run(args):
+    import concurrent.futures as cf
+    import fcntl
+    root = BR.checked(args.out).resolve()
+    if not root.is_relative_to((Path.home() / "evalprep").resolve()):
+        raise ValueError("heavy outputs must be under ~/evalprep on cpuP/cpuQ")
+    root.mkdir(parents=True, exist_ok=True)
+    lock = (root / "LOCK").open("a")
+    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    inputs = read(args.inputs)
+    hashes = validate_inputs(inputs, smoke=args.smoke, experiment=args.experiment)
+    p = plan(args.experiment, args.smoke)
+    p["input_hashes"] = hashes
+    manifest = Path(__file__).resolve().parents[2] / "SOURCE_MANIFEST.json"
+    if not manifest.is_file():
+        raise ValueError("staged source manifest missing")
+    p["source_manifest_sha256"] = digest(manifest)
+    # Launch permission is explicitly separate from scientific acceptance.
+    if not args.smoke:
+        go = read(args.main_go)
+        if go.get("experiment") != p["id"] or go.get("policy_sha256") != hashes["policy"] or go.get("go") is not True:
+            raise ValueError("main GO receipt must name this experiment and policy SHA")
+    p["shard"] = args.shard
+    if (root / "PLAN.json").exists() and read(root / "PLAN.json") != p:
+        raise ValueError("immutable plan/input hash differs on resume")
+    write(root / "PLAN.json", p)
+    jobs = [j for i, j in enumerate(p["jobs"]) if i % 2 == args.shard]
+    ledger = root / "budget.jsonl"
+    rows = [json.loads(s) for s in ledger.read_text().splitlines()] if ledger.exists() else []
+    charged = sum(r["sim_s"] for r in rows)
+    if args.experiment == "e3" and not args.smoke:
+        calibration_charge = int(inputs.get("calibration_charged_sim_s", 0))
+        if calibration_charge != 541:
+            raise ValueError("registered E3 calibration receipt/charge missing")
+        charged += calibration_charge
+    completed = []
+    todo = []
+    reuse_reservation = set()
+    for job in jobs:
+        out = root / "jobs" / job["id"]
+        if (out / "result.json").exists():
+            completed.append(read(out / "result.json"))
+        elif (out / "failure.json").exists():
+            raise ValueError(f"failed job {job['id']} retained; new registered retry required")
+        else:
+            # Pre-registered spot-only restart: retain interrupted bytes; conservatively charge
+            # the complete attempt again. Scientific failures never auto-retry.
+            if out.exists():
+                out.rename(out.with_name(out.name + f".spot_{time.time_ns()}"))
+            elif any(r["id"] == job["id"] for r in rows):
+                # Worker creates its directory before any SUMO. No directory means this was
+                # merely queued when spot vanished: its original reservation is still unused.
+                reuse_reservation.add(job["id"])
+            todo.append(job)
+    shard_cap = sum(j["charge"] for j in jobs) if args.smoke else p["cap_sim_s"] / 2
+    new_charge = sum(j["charge"] for j in todo if j["id"] not in reuse_reservation)
+    if charged + new_charge > shard_cap:
+        raise ValueError("shard budget exceeded")
+    with cf.ProcessPoolExecutor(max_workers=min(28, args.workers)) as pool:
+        futures = []
+        for job in todo:
+            if job["id"] not in reuse_reservation:
+                with ledger.open("a") as fh:
+                    fh.write(json.dumps(dict(id=job["id"], sim_s=job["charge"])) + "\n")
+                    fh.flush()
+                    os.fsync(fh.fileno())
+            futures.append(pool.submit(job_worker, args.experiment, job, inputs,
+                                       str(root / "jobs" / job["id"])))
+        for future in cf.as_completed(futures):
+            completed.append(future.result())
+            # Small results become durable immediately; remote coordinator mirrors this tree.
+            write(root / "RESULTS.json", completed)
+    write(root / "RESULTS.json", completed)
+    print(json.dumps(dict(jobs=len(completed), charged_sim_s=charged + new_charge)))
+
+
+def bind(args):
+    """Refit frozen, disjoint TRAIN collector records, binding tables to policy+WM bytes."""
+    from wms.control.confident_gate import fit_table
+    records = [json.loads(line) for f in args.records for line in BR.checked(f).read_text().splitlines() if line]
+    provenance = read(args.provenance)
+    if (provenance.get("policy_sha256"), provenance.get("wm_sha256")) != (digest(args.policy), digest(args.wm)):
+        raise ValueError("calibration collection provenance does not bind the supplied policy/WM")
+    for path in args.records:
+        if digest(path) != provenance.get("record_sha256", {}).get(str(path)):
+            raise ValueError("calibration record SHA missing/mismatched in collection provenance")
+    for r in records:
+        if 967237 <= int(r["seed"]) <= 967250:
+            raise ValueError("main experiment or smoke seed in calibration")
+    table = fit_table(records, unit="fleet", reference="native", horizon_s=args.horizon,
+                      state_source=args.state, sources=args.records)
+    table.meta.update(policy_sha256=digest(args.policy), wm_sha256=digest(args.wm))
+    write(args.out, table.to_json())
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__)
+    sub = ap.add_subparsers(dest="command", required=True)
+    p = sub.add_parser("plan")
+    p.add_argument("experiment", choices=("e3", "e4"))
+    p.add_argument("--smoke", action="store_true")
+    b = sub.add_parser("bind")
+    b.add_argument("--records", nargs="+", required=True)
+    b.add_argument("--provenance", required=True)
+    b.add_argument("--policy", required=True)
+    b.add_argument("--wm", required=True)
+    b.add_argument("--state", choices=("belief", "oracle"), required=True)
+    b.add_argument("--horizon", type=int, default=10)
+    b.add_argument("--out", required=True)
+    r = sub.add_parser("run")
+    r.add_argument("experiment", choices=("e3", "e4"))
+    r.add_argument("--inputs", required=True)
+    r.add_argument("--out", required=True)
+    r.add_argument("--main-go")
+    r.add_argument("--smoke", action="store_true")
+    r.add_argument("--shard", type=int, choices=(0, 1), required=True)
+    r.add_argument("--workers", type=int, default=28)
+    args = ap.parse_args()
+    if args.command == "plan":
+        print(json.dumps(plan(args.experiment, args.smoke), indent=1))
+    elif args.command == "bind":
+        bind(args)
+    else:
+        if not args.smoke and not args.main_go:
+            ap.error("production requires --main-go from main")
+        run(args)
+
+
+if __name__ == "__main__":
+    main()

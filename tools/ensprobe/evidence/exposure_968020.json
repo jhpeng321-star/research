@@ -1,0 +1,176 @@
+{
+  "seeds": [
+    968020,
+    968021,
+    968022,
+    968023,
+    968024
+  ],
+  "rng_seeds": [
+    968030,
+    968031,
+    968032,
+    968033,
+    968034,
+    968035,
+    968036,
+    968037
+  ],
+  "registry_sha256": "bf5635b364367cbc05cd8c90b19a19d60ff4d9d1a110b96cda6a6afa27fce48e",
+  "registry_conflicts": [
+    {
+      "line": 1419,
+      "ranges": [
+        [
+          968000,
+          968063
+        ]
+      ],
+      "text": "- 04:40 S-LOWPEN (Sonnet agent) REGISTERED before any simulation: runs/active/S-LOWPEN-20261025/REGISTRATION.md (64 low-share TRAIN episodes, 5 and 10 percent CAV share, seeds 968000-968063, v5 generator unchanged, cpuN 10 workers nice 15, about 110,880 sim-s)."
+    },
+    {
+      "line": 1422,
+      "ranges": [
+        [
+          968000,
+          968063
+        ]
+      ],
+      "text": "- 04:57 S-LOWPEN DONE: 64 episodes (seeds 968000-968063), 110,880 sim-s, 0 collisions; packs on cpuN ~/c4/runs_active/S-LOWPEN-20261025/packs (2.4 GB), NOT staged to gpuR (245 MB free); receipt runs/active/S-LOWPEN-20261025/RECEIPT.md."
+    },
+    {
+      "line": 1423,
+      "ranges": [
+        [
+          968000,
+          968063
+        ]
+      ],
+      "text": "- 04:57 gpuR DISK CRITICAL (245 MB free, 100%). Removed 5 stale code copies (repo_r8, repo_r9_base, repo_r9_f91d8753, repo_r10b_6a6f2afd, repo_r11_4d8de32b; no symlinks, not in use by any process; all reproducible from git branches) under owner's standing authority to clear space. S-LOWPEN DONE (Sonnet; runs/active/S-LOWPEN-20261025/): collect_v5 pipeline unchanged (HEAD f07bd01e), seeds 968000-968063 (registered LOOP_TRAIN block, no prior use found; gpuW/cpuT unchecked), 32 native + 24 plain generic_random + 8 branched (560 paired 60 s branches), 5%/10% 50/50, demands 1900/2100/2400/2700, 0 collisions/teleports, 110,880 sim-s (charged = actual), packs 2.4 GB on cpuN ~/c4/runs_active/S-LOWPEN-20261025/packs/lowpen_* (PACKS_SHA256.txt), loader OK (60 s: 4,670 train / 1,330 val windows; default 20% world-grouped val split kept). Not staged to gpuR (disk). TODO: experiment_history.json entry + validate."
+    },
+    {
+      "line": 1508,
+      "ranges": [
+        [
+          968000,
+          968063
+        ]
+      ],
+      "text": "- 16:49 S-LOOP DONE (c4/loop14; commits f2f58e3f R14 merge, 87868770 loop, 68366f88 S-TTC flag, 716914a3, 28320950 doc; LOOP14_DESIGN.md): scripts/c4/loop14.py five fail-closed phases (policy -> collect --policy-pairs (policy + native arms from the same saved SUMO state) -> convert -> wm_ft -> check accept.py with 13E stop rule + safety), registration/budget/GPU/disk/seed guards, resumable, cycle + seed ledgers; fixed KeyError in _apply_cav_overrides with gs on. Miniature full cycle on laptop with real SUMO (seeds 4107-4108, S-R12C stand-in) -> ACCEPT (mechanics only); 22 new + 633 related tests pass. physics.emergency_onset='driver_b' ON in the loop fine-tune config: on 13E-A (24 TTC states) gate TTC ratio 2.01 -> 0.27 [0.14,0.44] (band [0.28,3.56]: now marginally LOW), strict 5.17 -> 0.67, 1 s hard-brake 0.70% -> 0.08% (SUMO 0.03%), delay 1.00x SUMO, merges 10.4 -> 9.9 (SUMO 11.3), overlaps 105 -> 16. Blockers for Oct 26: low-share branch pack not on gpuR (disk), loop seed block needs a registry check + ack (968000-968063 already used by S-LOWPEN), SUMO parity of policy lane commands unprobed. Budget 29,776 sim-s per cycle, <= 120,000 total."
+    },
+    {
+      "line": 1509,
+      "ranges": [
+        [
+          968000,
+          968063
+        ],
+        [
+          968000,
+          968063
+        ]
+      ],
+      "text": "- 17:10 S-LOOPPREP SEED RESERVATION (acknowledgement; no simulation yet): C4-LOOP14-20261026 collection TRAIN block **968100-968227** (128 seeds: 64 = 4 cycles x 16 worlds, 64 retry reserve; sim-s cap 120,000 = 4 x 29,776 + slack). Evidence: 968000-968063 used by S-LOWPEN (block starts at 968100, 968064-968099 buffer); 964000-964199 never allocated; no other 968xxx use in protocols/*.json, docs/, this REGISTRATION.md, cpuN (full home text scan json/md/log/txt/sh/toml/csv/out/jsonl/py: only floats/timestamps; file/dir names: only w968000-063), gpuR (names under autodl-tmp, c4, c4_heavy, laneimp_work, yield_out: only S-LOWPEN). gpuW/cpuT not checked (unreachable). Registration template: configs/c4_loop14_registration.json on c4/loop14 (sources to fill at launch); config c4_loop14_gpur.json carries seed_block. The lane-parity probe (below) uses seeds 968100-968102 from this block (laptop SUMO, <= 2000 sim-s, TRAIN data discarded after the probe) - these seeds are therefore CONSUMED: loop allocation must skip them (add [968100, 968102] to registration exclude at launch)."
+    },
+    {
+      "line": 1600,
+      "ranges": [
+        [
+          968000,
+          968227
+        ]
+      ],
+      "text": "- 23:45 **S-SUMOCREDIT-SMOKE-20261025 REGISTERED** (owner-approved 10-25 night; branch c4/sumocredit from c4/loop14c 77d9e574, worktree E:/agent-work/c4-sumocredit). Purpose: MECHANICS smoke only (not efficacy evidence) of (1) the calibrated >=0.8 confident-deployment gate (wms.control.confident_gate; loop collect flag --gate-*, gated arm; deploy --controller policy_gate) and (2) real-SUMO cooperation credit arms (collect --credit-*; wms.control.real_credit14). Host cpuX, new dir ~/sumocredit only (code = git archive of the commit, LF), env ~/c4/venv, 1 collect worker + nice 10 (<= 2 SUMO processes); ~/coopmeas, ~/actqual, ~/autopilot_r10, ~/newbox_inbox_b untouched. Seeds: fresh TRAIN 967600-967602 (Dreamer-loop TRAIN block 966000-969999; not in REGISTRATION.md, not 964000-964199, not 968000-968227; COOPMEAS uses 967200-967299). Inputs: policy v8_u600.pt (md5 e7ddae1d) and 13E stage-A wm_s.pt (md5 dbe4d52b) + config.resolved.json, copied from E:/agent-work/c4-loop14c-scratch/qual. Plan: stage 1 seed 967600 (2700 vph, 40 %, warmup 300, points 360/420, POLICY/B 60 s, gate calibration group/hold/belief 20 s <= 2 units, credit 30 s G<=3 + 1 flip) <= 1,081 sim-s; fit gate table + real-credit multipliers from stage 1 (TRAIN); stage 2 seed 967601 one point 360, POLICY/B/GATED 30 s <= 451 sim-s; stage 3 deploy policy_gate seed 967602 warmup 300 + 30 s = 330 sim-s. Budget cap 2,000 sim-s (planned 1,862). No retries without a new registration line; outputs never overwritten."
+    },
+    {
+      "line": 1612,
+      "ranges": [
+        [
+          968000,
+          968063
+        ]
+      ],
+      "text": "- 2026-10-26 00:05 **C4-LOOP14-COOPOFF-20261026 REGISTERED** (S-GPUB-LOOP; owner-approved 10-25 ~23:30 \"run round 16 and a policy job together on gpuB\"). Cooperation-credit-OFF loop arm = ablation reference for the coop-ON main arm C4-LOOP14-20261026. Split TRAIN. Question: does the LOOP14 Dreamer loop (policy on accepted WM -> paired SUMO policy/native collection -> WM fine-tune -> fixed-panel accept) improve the SUMO policy-minus-native J with counterfactual credit w_all only? Closest prior: LOOP14 laptop mechanics smoke (S-LOOP 10-25, seeds 4107-4108, S-R12C stand-in, mechanics only) and POLICY14 on 13E (not run as a loop). Changed variable vs the coop-ON arm: cooperation weights (w_individual = w_group = w_coop = w_team = 0) only. Sources: initial WM 13E b2 FINAL runs/c4_wm_v10_round13e_b2/wm_s.pt sha256 952ec059de5a9c02... (verified on gpuB vs gpuR + newbox2 manifest), WM config configs/c4_wm_v10round13e_stage_b.toml (LF sha 383575a9; = registered 82346149 modulo CRLF); policy config configs/c4_policy14_loop14c.toml (LF sha256 98f341e3...; LOOP14C (2) native_ramp_merge=wm_law + (3) native_cav=head, (1) off), seed 965140, cycle-0 policy trained from scratch (no adopted policy); initial real returns policy14_stage/policy14_native_returns.npz (sha 0b92e908...); code c4/gpubloop bbe6244a (= loop14c 77d9e574 + C4_GPU_MEM_FRACTION cap in policy14_cli/WM trainer (unset = unchanged) + shared-GPU headroom guard + driver + idle guard); loop config configs/c4_loop14_coopoff_gpub.json (REPO_SHA=bbe6244a; filled copy sha256 a5cfdfe2...); registration JSON gpuB:/root/autodl-tmp/c4/v5/loop14_coopoff_REGISTRATION.json sha256 38d76edb.... Seeds: fresh TRAIN block **968500-968627** (64 = 4 cycles x 16 worlds + 64 retry reserve); checks 10-26 ~00:00: no 9685xx/9686[0-2]x in protocols/, docs/, configs/, runs/active md/json (this file incl.), E:/agent-work text, file names on gpuB/gpuR/cpuX, cpuX ~/c4 ~/coopmeas ~/actqual text, gpuR v5 logs; clear of 964000-964199, 968000-968063, 968100-968227 (coop-ON), 967200-967299 (S-COOPMEAS). Budget: 4 cycles, 150 policy updates/cycle (<= 3 GPU-h), WM fine-tune 40 steps/cycle (<= 1.5 GPU-h), collection 16 worlds x (661 + 2x2x300) = 29,776 sim-s/cycle (<= 30,000), <= 120,000 sim-s total, charged at allocation in the loop seed ledger. Comparators: previous accepted WM (same flags/panel, loop14 accept.py with the 13E stop rule + safety); SUMO native arm per pair from the same saved state. Stop rules per LOOP14_DESIGN (2 consecutive WM rejects, max cycles, budget, any branch collision/teleport, failed phase, policy14 update-10 gate; review if SUMO mean policy-native J > 0 for 2 cycles). Hosts: orchestrator + policy + wm_ft + check on gpuB (GPU shared with round 16: C4_GPU_MEM_FRACTION 0.41, headroom guard 22 GiB free, <= 4 CPU threads); collect + convert on cpuX over ssh (<= 16 SUMO workers). Ledger update at close-out (coordinator)."
+    },
+    {
+      "line": 1616,
+      "ranges": [
+        [
+          968000,
+          968227
+        ]
+      ],
+      "text": "- 00:19 **S-SUMOCREDIT-SMOKE-20261025 stages 4-5 REGISTERED** (owner addition 10-25: test-time K-candidate plan check). Mechanics only, inside the SAME registered 2,000 sim-s cap (stages 1-3 actual 1,862 sim-s; remainder 138): stage 4 seed 967603 (2700 vph, 40 %, warmup 60, one point t=62, POLICY/B 3 s, fleet/native/belief calibration 3 s with K=3 learned-policy candidates = mean + 2 own samples replayed in SUMO by vehicle-id noise) = 75 sim-s; fit reference + sample-vs-mean tables; stage 5 deploy policy_gate K=3 seed 967604 warmup 55 + 5 s (belief lead 50, decision period 1 s) = 60 sim-s. Planned 135 <= 138. Fresh TRAIN seeds 967603-967604 (not in REGISTRATION.md; not 964000-964199 / 968000-968227). Code c4/sumocredit c8ce53a6 (git archive, LF) in cpuX ~/sumocredit/code_d, outputs ~/sumocredit/out_k; inputs unchanged (v8_u600 md5 e7ddae1d, 13E-A wm_s md5 dbe4d52b)."
+    },
+    {
+      "line": 1629,
+      "ranges": [
+        [
+          968000,
+          968627
+        ]
+      ],
+      "text": "- 00:35 **S-MAPPODIAG-1 REGISTERED** (owner-approved S-MAPPODIAG 10-26; agent c4/mappodiag, worktree E:/agent-work/c4-mappodiag). Fresh TRAIN block **967400-967419** (verified unused: no 9674xx in this file; no s9674xx/w9674xx paths on cpuX ~ or gpuB /root/autodl-tmp; not 964000-964199, 967200-967299, 968000-968627). Budget <= 25,000 sim-s, planned 22,881: (B-src) deterministic native replay of the S-COOPMEAS worlds 967210-216/220-226/230-236 (2400 veh/h, textbook, warmup 300, to 541 s; start states only for the 13E closed-loop MAPPO check; 21 x 541 = 11,361) + (C) policy-pairs MAPPO (mappo_v5_final.pt sha aecd7d70) vs native from one saved state at t=360, 300 s branches (960 sim-s/world): ref 967400-402 (2400, 0.2, textbook), d2800 967403-405 (2800, 0.2), p05 967406-408 (2400, 0.05), legacy3 967409-411 (2400, 0.2, legacy3 population) = 11,520. RSU delay/dropout: not supported by the harness (no probe). Code c4/gpubloop 7556d267 (git archive) at cpuX ~/mappodiag/repo, <= 6 workers, no launch after 09:00; registration JSON tools/mappodiag/REG_S-MAPPODIAG-1.json sha256 435d0171...; budget log cpuX ~/mappodiag/budget.jsonl. Comparators: SUMO native arm from the identical saved state; S-COOPMEAS Part B. Not opened: sealed/holdout/... paths, hetdata_truth, vType files, eval-seed outcomes."
+    }
+  ],
+  "hosts": {
+    "cpuQ": {
+      "hits": [],
+      "safe_names_checked": 203740,
+      "guards": [
+        968020,
+        968021,
+        968022,
+        968023,
+        968024,
+        968030,
+        968031,
+        968032,
+        968033,
+        968034,
+        968035,
+        968036,
+        968037
+      ]
+    },
+    "gpuR": {
+      "hits": [
+        "/root/autodl-tmp/c4/v5/data/lowpen_20261025/lowpen_native/episodes/w968031m2700p10t300__native",
+        "/root/autodl-tmp/c4/v5/data/lowpen_20261025/lowpen_native/episodes/w968021m2400p10t300__native",
+        "/root/autodl-tmp/c4/v5/data/lowpen_20261025/lowpen_native/episodes/w968023m2700p10t300__native",
+        "/root/autodl-tmp/c4/v5/data/lowpen_20261025/lowpen_native/episodes/w968020m2400p05t300__native",
+        "/root/autodl-tmp/c4/v5/data/lowpen_20261025/lowpen_native/episodes/w968030m2700p05t300__native",
+        "/root/autodl-tmp/c4/v5/data/lowpen_20261025/lowpen_native/episodes/w968024m1900p05t300__native",
+        "/root/autodl-tmp/c4/v5/data/lowpen_20261025/lowpen_native/episodes/w968022m2700p05t300__native",
+        "/root/autodl-tmp/c4/v5/data/lowpen_20261025/lowpen_genrand_plain/episodes/w968032m1900p05t300__generic_random",
+        "/root/autodl-tmp/c4/v5/data/lowpen_20261025/lowpen_genrand_plain/episodes/w968033m1900p10t300__generic_random",
+        "/root/autodl-tmp/c4/v5/data/lowpen_20261025/lowpen_genrand_plain/episodes/w968036m2400p05t300__generic_random",
+        "/root/autodl-tmp/c4/v5/data/lowpen_20261025/lowpen_genrand_plain/episodes/w968037m2400p10t300__generic_random",
+        "/root/autodl-tmp/c4/v5/data/lowpen_20261025/lowpen_genrand_plain/episodes/w968035m2100p10t300__generic_random",
+        "/root/autodl-tmp/c4/v5/data/lowpen_20261025/lowpen_genrand_plain/episodes/w968034m2100p05t300__generic_random"
+      ],
+      "safe_names_checked": 359042,
+      "guards": []
+    },
+    "gpuA": {
+      "hits": [
+        "/root/autodl-tmp/c4/v5/data/lowpen_20261025/lowpen_genrand_plain/episodes/w968032m1900p05t300__generic_random",
+        "/root/autodl-tmp/c4/v5/data/lowpen_20261025/lowpen_genrand_plain/episodes/w968033m1900p10t300__generic_random",
+        "/root/autodl-tmp/c4/v5/data/lowpen_20261025/lowpen_genrand_plain/episodes/w968034m2100p05t300__generic_random",
+        "/root/autodl-tmp/c4/v5/data/lowpen_20261025/lowpen_genrand_plain/episodes/w968035m2100p10t300__generic_random",
+        "/root/autodl-tmp/c4/v5/data/lowpen_20261025/lowpen_genrand_plain/episodes/w968036m2400p05t300__generic_random",
+        "/root/autodl-tmp/c4/v5/data/lowpen_20261025/lowpen_genrand_plain/episodes/w968037m2400p10t300__generic_random",
+        "/root/autodl-tmp/c4/v5/data/lowpen_20261025/lowpen_native/episodes/w968020m2400p05t300__native",
+        "/root/autodl-tmp/c4/v5/data/lowpen_20261025/lowpen_native/episodes/w968021m2400p10t300__native",
+        "/root/autodl-tmp/c4/v5/data/lowpen_20261025/lowpen_native/episodes/w968022m2700p05t300__native",
+        "/root/autodl-tmp/c4/v5/data/lowpen_20261025/lowpen_native/episodes/w968023m2700p10t300__native",
+        "/root/autodl-tmp/c4/v5/data/lowpen_20261025/lowpen_native/episodes/w968024m1900p05t300__native",
+        "/root/autodl-tmp/c4/v5/data/lowpen_20261025/lowpen_native/episodes/w968030m2700p05t300__native",
+        "/root/autodl-tmp/c4/v5/data/lowpen_20261025/lowpen_native/episodes/w968031m2700p10t300__native"
+      ],
+      "safe_names_checked": 856901,
+      "guards": []
+    }
+  },
+  "pass": false
+}

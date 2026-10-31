@@ -1,0 +1,75 @@
+"""S-CTRLARM: external zero-residual adapter; no scientific runtime edits."""
+from contextlib import contextmanager
+
+import numpy as np
+
+from wms.control.nativeinit import NativeResidualCommand
+
+
+def forced_base_commands(api, residuals, lo, hi, *, dt=0.5):
+    """22:58 amendment: exact zero, but never take the zero-release branch.
+
+    Both CommandOwnership's prospective command and the original physics-tick
+    setAcceleration executor dynamically import this function. At residual zero
+    the original composition envelope includes the baseline exactly.
+    """
+    from wms.control.nativeinit import sumo_native_accel
+
+    if any(not np.isfinite(r) or r != 0.0 for r in residuals.values()):
+        raise ValueError("CTRL0 requires finite exact-zero residuals")
+    return {vid: float(sumo_native_accel(api, vid, dt)) for vid in residuals}
+
+
+class ZeroResidual:
+    """Run the original C1 executor, replacing only its typed residual output."""
+
+    def __init__(self, executor):
+        if not executor.residual_on_native:
+            raise ValueError("CTRL0 requires the native-residual C1 executor")
+        self.executor = executor
+
+    def __getattr__(self, name):
+        return getattr(self.executor, name)
+
+    def __call__(self, state, *, with_lanes=False, dwell_age=None):
+        output = self.executor(state, with_lanes=with_lanes, dwell_age=dwell_age)
+        command, lanes = output if with_lanes else (output, None)
+        if not isinstance(command, NativeResidualCommand) or lanes is not None:
+            raise ValueError("CTRL0 requires C1 typed residuals and native lanes")
+        zero = NativeResidualCommand(np.zeros_like(command.residual),
+                                     command.accel_min, command.accel_max)
+        return (zero, lanes) if with_lanes else zero
+
+
+@contextmanager
+def arm_loader(arm, checkpoint):
+    """Scope the loader override to CTRL0; native/MAPPO/ours remain original."""
+    from wms.control import policy
+    from wms.control import nativeinit
+
+    if arm != "ctrl0":
+        yield
+        return
+    original = policy.load_policy_fn
+    original_commands = nativeinit.sumo_residual_commands
+
+    def load(path, **kwargs):
+        if str(path) != str(checkpoint):
+            raise ValueError("CTRL0 loader received a different checkpoint")
+        return ZeroResidual(original(path, **kwargs))
+
+    policy.load_policy_fn = load
+    nativeinit.sumo_residual_commands = forced_base_commands
+    try:
+        yield
+    finally:
+        policy.load_policy_fn = original
+        nativeinit.sumo_residual_commands = original_commands
+
+
+def run_e3(job, inputs, out, *, measurement):
+    """Call the unchanged E3-final runner, observer, CLI and executor path."""
+    from traffic_shepherd.c4.evalprep import run_e3 as original
+
+    with arm_loader(job["arm"], inputs["policy"]):
+        return original(job, inputs, out, measurement=measurement)

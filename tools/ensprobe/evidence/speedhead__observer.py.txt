@@ -1,0 +1,112 @@
+"""Observation-only extension of the frozen E3 measurement, no command changes."""
+import hashlib
+import json
+from contextlib import contextmanager
+
+import numpy as np
+import torch
+from traffic_shepherd.c4 import e3long as L
+
+
+def transition_road(before, after):
+    """Current transition cohort includes births and carries exiting last speed."""
+    return .5 * sum(max(0., 1. - after.get(v, speed)/31.29)
+                    for v, speed in {**before, **after}.items())
+
+
+class Measurement(L.Measurement):
+    def start(self, env):
+        super().start(env)
+        self.road = self.source_j = 0.
+        self.j_windows = {}
+        # Only observable <=t300 histories and boundary counters are serialized.
+        # No scenario file, latent types, or future request schedule is read.
+        state = {k:v.detach().cpu().clone() for k,v in env.state().items()
+                 if torch.is_tensor(v)}
+        raw = env.history.raw(241)
+        np.savez_compressed(self.path/'start_history.npz', **raw)
+        start = dict(state=state, initial_state_sha256=self.initial_sha,
+                     t0=env.now, seed=env.seed, demand=env.demand,
+                     penetration=env.penetration, vehicle_ids=list(env.builder.vehicle_ids),
+                     inserted=sorted(env.ledger.inserted), arrived=sorted(env.ledger.arrived),
+                     queue=env.entry_queue_now(), past_entries=env._speedhead_past_entries,
+                     observed_queue_history=env._speedhead_queue_history)
+        torch.save(start, self.path/'start.pt')
+        original = env._after_physics
+
+        def observe(after, actions, command_time, commanded):
+            before = {v:t['speed_mps'] for v,t in env._table.items()}
+            result = original(after, actions, command_time, commanded)
+            speeds = {v:t['speed_mps'] for v,t in env._table.items()}
+            self.road += transition_road(before, speeds)
+            self.source_j += .5*env.entry_queue_now()
+            self.progress = after
+            return result
+
+        env._after_physics = observe
+
+    def update(self, info):
+        super().update(info)
+        elapsed = int(round(self.progress-self.tracker.t0))
+        if elapsed in (120,300,600):
+            self.j_windows[str(elapsed)] = dict(road=self.road, source=self.source_j,
+                                                J=self.road+self.source_j)
+            L.E.write(self.path/f'objective_{elapsed}.json', self.j_windows[str(elapsed)])
+
+    def finish(self):
+        result = super().finish()
+        result['training_objective'] = self.j_windows
+        return result
+
+
+@contextmanager
+def audit_lanes():
+    """Count actual calls without suppressing any lane action or changing its args."""
+    import traci
+    from traffic_shepherd.c4.env import CavSumoEnv
+    counts = dict(changeLane=0,setLaneChangeMode=0,lane_requests=0)
+    originals = {n:getattr(traci.vehicle,n) for n in ('changeLane','setLaneChangeMode')}
+    step = CavSumoEnv.step
+    physics = CavSumoEnv._after_physics
+    for name, fn in originals.items():
+        def spy(*args,_name=name,_fn=fn,**kwargs):
+            counts[_name] += 1
+            return _fn(*args,**kwargs)
+        setattr(traci.vehicle,name,spy)
+
+    def observe_step(env,*args,**kwargs):
+        lanes = kwargs.get('lanes',kwargs.get('lane'))
+        if lanes is not None:
+            counts['lane_requests'] += 1
+        return step(env,*args,**kwargs)
+
+    def observe_physics(env,after,actions,command_time,commanded):
+        # Capture actual warmup insertion events and current source state only.
+        known = set(env.ledger.inserted)
+        result = physics(env,after,actions,command_time,commanded)
+        if not hasattr(env,'_speedhead_past_entries'):
+            env._speedhead_past_entries=[]
+            env._speedhead_queue_history=[]
+        if after <= env.warmup_s:
+            for vid in sorted(set(env.ledger.inserted)-known):
+                row=env._table.get(vid)
+                if row:
+                    from traffic_shepherd.c4.geometry import lane_and_s
+                    lane,pos=lane_and_s(row['lane_id'],row['lane_position_m'])
+                    env._speedhead_past_entries.append(dict(time=after,lane=lane,s_m=pos,
+                        v_mps=row['speed_mps'],is_cav=vid in env.cav_ids))
+            # Mainline/ramp are observable routes of already-due requests only.
+            pending=[r for vid,r in env.ledger.requests.items()
+                     if r.depart_s <= after and vid not in env.ledger.inserted]
+            q=[sum(('ramp' in r.route.lower())==ramp for r in pending) for ramp in (False,True)]
+            env._speedhead_queue_history.append([after,*q])
+        return result
+
+    CavSumoEnv.step=observe_step
+    CavSumoEnv._after_physics=observe_physics
+    try:
+        yield counts
+    finally:
+        CavSumoEnv.step=step
+        CavSumoEnv._after_physics=physics
+        for name,fn in originals.items():setattr(traci.vehicle,name,fn)

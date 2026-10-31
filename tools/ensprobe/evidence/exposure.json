@@ -1,0 +1,46 @@
+{
+  "seeds": [
+    969060,
+    969061,
+    969062,
+    969063,
+    969064
+  ],
+  "registry_sha256": "bf5635b364367cbc05cd8c90b19a19d60ff4d9d1a110b96cda6a6afa27fce48e",
+  "registry_conflicts": [
+    {
+      "line": 5595,
+      "ranges": [
+        [
+          969050,
+          969085
+        ]
+      ],
+      "text": "- S-C1FLOOR BLOCKED AT BITWISE RESTORE GATE (2026-10-31; c4/c1floor, canary/source/evidence commit255456e1; E:/agent-work/c4-c1floor/docs/paper_results/C1FLOOR.md): original-seed native WMDATA969400 rerun t300\u2192600 matches all6 recorded observable tape arrays bitwise (45631rows), but complete-RNG/precision17 saved-state fresh-process restore diverges already at300.5s in2HDVs (IDs101,104; neither CAV), restored tape45227rows. Therefore NO RNG-only floor/CI inferred, NO alternative-seed branches or production worlds dispatched; durable own STOP, all12dispatched own PIDs exited. Six retained1500sim-s precharges=9000charged; actual0+0+0+600+900+900=2400sim-s including prefixes, below30000cap. Setup/adapter failures and pre-outcome index-only panel/budget amendments preserved in FLOOR_DESIGN.md; final prospective subset18worlds969400\u2013969417/native, RNG969050\u2013969085 was never run. Both frozen guards54/54, runtime543/543 verified, exact registration/range+12794safe-filename alternative exposure audit clean; early Grep parent-scope anomaly disclosed in evidence/EXPOSURE_NOTE.md, sibling numerical matches unused. CPU10mechanics+3scientific-contract tests and intercepted zero-SUMO setup PASS; real saved-state bitwise canary FAIL. CSV C1FLOOR_error_horizon.csv has exact14 C1CLOSED columns incl.units, all7horizons/98metric cells blank with n_worlds0/statusblocked_saved_state_canary, never zero estimates. Reuses pinned C1CLOSED metric/export code; raw canaries gpuR:/root/c1floor20261031/jobs, local complete receipts tools/c1floor/evidence/evidence_1793437482207139800. One nice19single-thread gpuR CPU/CUDA hidden, priority respected; no peer signals, deletions or push. Needs bitwise-compatible native restore/reseed mechanism plus new prospective binding before resumption; no retry armed."
+    }
+  ],
+  "hosts": {
+    "cpuQ": {
+      "hits": [],
+      "safe_names_checked": 203712,
+      "guards": [
+        969060,
+        969061,
+        969062,
+        969063,
+        969064
+      ]
+    },
+    "gpuR": {
+      "hits": [],
+      "safe_names_checked": 359039,
+      "guards": []
+    },
+    "gpuA": {
+      "hits": [],
+      "safe_names_checked": 856898,
+      "guards": []
+    }
+  },
+  "pass": false
+}
