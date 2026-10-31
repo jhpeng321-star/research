@@ -5,11 +5,10 @@ import hashlib
 import math
 
 from .entries import NOMINAL_LENGTH_M
-from wms.physics.merge_network import lane_desired_speed
+from wms.physics.merge_network import POSITION_EPS, lane_desired_speed
 
-# SUMO v1_27_1 config.h.cmake:239 (INT f2d9a3ff source reconciliation).
-# SPEED_EPS=.01 is a different constant; NUMERICAL_EPS=.001.
-POSITION_EPS = .1
+# POSITION_EPS is re-exported for existing insertion callers. The geometry and
+# LC urgency kernel share this source constant instead of confusing SPEED_EPS.
 
 
 def follow_speed(speed, bumper_gap, leader_speed, params, dt):

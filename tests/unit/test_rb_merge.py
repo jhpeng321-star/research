@@ -244,3 +244,20 @@ def test_insertion_preserves_integrated_weighted_candidate_identity():
             raise AssertionError('must not recompute an unrelated uniform pool draw')
     p = SumoInsertion(PhysicsConfig(merge_model='sumo'), Births()).candidate(0, 1, 9, True)
     assert p['v0'] == 35. and p['time_headway'] == 1.4
+
+
+def test_eventual_follower_help_uses_position_epsilon_not_speed_epsilon():
+    # LC2013.cpp:877. TS=.5, remaining=1s, ego10, follower13, b4.2:
+    # f_after_1s=8.8, dv=1.2. Choose a gap where .01 would falsely select
+    # eventual help, but source POSITION_EPS=.1 correctly selects fall-behind.
+    cfg = PhysicsConfig(merge_model='sumo', sumo_fidelity=True)
+    a, b, tau, mg, _ = cfg.idm()
+    f_one = 13.-b
+    need = f_one*tau + f_one*(f_one-10.)/(2*math.sqrt(a*b))
+    net = need-2*(10.-f_one)+.05
+    ego_s = cfg.merge_zone_s1_m-50.
+    s = state([ego_s, ego_s-5.-mg-net], [2, 1], [10., 13.])
+    acceleration, _ = merge_speed_advice(state_kin(s), s['present'], torch.zeros(1, 2), cfg,
+                                         lookahead_speed=torch.tensor([[25., 13.]]))
+    assert acceleration[0, 0] < 0
+    assert acceleration[0, 1] == 0

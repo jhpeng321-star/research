@@ -4,6 +4,10 @@ Branch `c4/rb-merge`; base `f0db3c82`. Owner registration5683 / MAIN00:10.
 Full earlier handoff preserved at `docs/rb_merge/HANDOFF_HISTORY_0100.md`.
 
 ## Integration-ready source
+- Follow-up source constants: eventual follower help now uses POSITION_EPS=.1,
+  not SPEED_EPS=.01; remaining-seconds denominator uses NUMERICAL_EPS=.001.
+  Shared constants live in merge_network.py. **37 CPU tests PASS /9.95s**,
+  including an independent near-boundary follower-help/fall-behind scenario.
 - **3df73a27** latest mechanics: NEW `physics/merge_network.py`, local approach
   speed limit22.22m/s before s=0, acceleration-lane limit31.29 thereafter, and
   inferred speedFactor=v0/referenceLimit for departure/advice. Source geometry,
@@ -48,7 +52,10 @@ Full earlier handoff preserved at `docs/rb_merge/HANDOFF_HISTORY_0100.md`.
   `fullfleet_v{3,4}_summary.json`. Four receipt-audit tests PASS (hash, complete
   panel, duplicate/missing world, broken source conservation).
 
-## Next diagnostic v5 — staged, NOT dispatched yet
+## Live diagnostic v5 — do NOT duplicate
+- **01:04:36 +08 dispatched ONCE**, owned cpuQ PID**468961**, validator SHA
+  `f68014b8b0586db5fdd329996c214fefcf7fb61c1e73aed5b4104ab5db21940b`.
+  Receipt `/tmp/rb-merge-fullfleet-v5/LAUNCH.json`. v4 confirmed exited first.
 - Source **7d4240ef**, same INTb0f66943 + mechanics3df73a27. Same default settings,
   stream190, SUMO CF and causal LC history; isolates the new network-limit rules.
 - Immutable `/tmp/rb-merge-fullfleet-v5`;33CPUtests and all32 source preflights
@@ -58,6 +65,10 @@ Full earlier handoff preserved at `docs/rb_merge/HANDOFF_HISTORY_0100.md`.
   Default versionv5; `--version v4` inspects existing v4. Stage/dispatch/results
   refuse overwrite. Single CPU nice19/CUDA-hidden, resource admission load<28/32.
   Never relaunch a completed version or overwrite a running snapshot.
+- Early trace identifies a concrete blocker in969400: initial CAV187 stalls
+  at s=-1.464m/v=0 before the legal merge zone, from320s through600s despite no
+  ramp leader. Testing inherited learned native-CAV surrogate vs physics-native
+  delegation next; no source/parameter/trace alteration of this running v5.
 
 ## Interfaces / tests / known gaps
 - Entries MUST use `TorchEntryProcessV2(conserve_queue=True, couple_draws=True,

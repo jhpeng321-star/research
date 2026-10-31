@@ -9,6 +9,9 @@ Encoder physical v0 is a ratio of that reference limit (driver_encoder.py:23-24)
 import torch
 
 RAMP_APPROACH_LIMIT_MPS = 22.22
+# SUMO v1_27_1 src/config.h.cmake:236/239; distinct from SPEED_EPS=.01.
+NUMERICAL_EPS = .001
+POSITION_EPS = .1
 
 
 def lane_desired_speed(v0, lane_limit, reference_limit):

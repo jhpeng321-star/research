@@ -21,15 +21,19 @@ def remote(code):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument('mode', choices=('status', 'stage', 'launch', 'poll', 'collect'))
+    p.add_argument('mode', choices=('status', 'stage', 'launch', 'poll', 'trace', 'collect'))
     p.add_argument('--version', default='v5')
     p.add_argument('--details', action='store_true')
+    p.add_argument('--seed', type=int, default=969400)
     args = p.parse_args()
     if not args.version.isalnum():
         p.error('version must be alphanumeric')
+    if not 969400 <= args.seed <= 969431:
+        p.error('FIT seed required')
     header = 'import os,json,time,hashlib\nfrom pathlib import Path\n'
     header += f'root=Path({("/tmp/rb-merge-fullfleet-"+args.version)!r})\n'
     header += f'details={args.details!r}\n'
+    header += f'seed={args.seed!r}\n'
     if args.mode == 'status':
         print(remote(header+"print(json.dumps(dict(load=os.getloadavg(), cpus=os.cpu_count(), old_owned_pids={p:Path('/proc/'+str(p)).exists() for p in (200540,233273)}, existing_dispatch=(root/'LAUNCH.json').exists())))"))
     elif args.mode == 'stage':
@@ -121,6 +125,23 @@ for seed in rows:
     summaries.append(dict(seed=seed,predicted_ramp=row['delay']['predicted_ramp_veh_s'],recorded_ramp=float(row['delay']['recorded']['ramp_delay_vs']),ramp_source=row['delay']['ramp_source_veh_s'],inserted=row['demand']['inserted'],real_merges=row['merges']['recorded'],predicted_merges=row['merges']['predicted']))
 failed=json.loads((result/'FAILED.json').read_text()) if (result/'FAILED.json').exists() else None
 print(json.dumps(dict(pid=pid,alive=Path('/proc/'+str(pid)).exists(),completed=len(rows),complete=(result/'COMPLETE.json').exists(),failed=failed,rows=summaries if details else summaries[-1:],log=(root/'RUN.log').read_text() if failed or details else None,load=os.getloadavg())))
+'''
+        print(remote(code))
+    elif args.mode == 'trace':
+        code = header+'''path=root/'results'/(str(seed)+'.json')
+if not path.exists():
+    print(json.dumps(dict(seed=seed,available=False)))
+else:
+    row=json.loads(path.read_text())
+    trace=row.get('merge_front_trace',[])
+    latest=max((r['time_s'] for r in trace),default=None)
+    heads=[r for r in trace if r['time_s']==latest]
+    head=max(heads,key=lambda r:r['s_m']) if heads else None
+    history=[r for r in trace if head is not None and r['identity']==head['identity']]
+    summary=dict(seed=seed,available=True,head=head,head_first=history[0] if history else None,head_samples=len(history),safe_samples=sum(r['safe'] for r in history),blocked_leader_samples=sum(r['blocked_leader'] for r in history),blocked_follower_samples=sum(r['blocked_follower'] for r in history),body_overlap=row.get('body_overlap'))
+    if details:
+        summary['history']=history
+    print(json.dumps(summary))
 '''
         print(remote(code))
     else:

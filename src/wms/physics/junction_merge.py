@@ -9,7 +9,7 @@ from __future__ import annotations
 import torch
 from torch import Tensor
 
-from .merge_network import lane_desired_speed, model_lane_limit
+from .merge_network import NUMERICAL_EPS, POSITION_EPS, lane_desired_speed, model_lane_limit
 
 
 def parameters(kin, physics, driver_params=None):
@@ -125,7 +125,7 @@ def merge_speed_advice(kin, present, accel, physics, driver_params=None, *, look
     # Lane end is always a stop constraint while the lane has no continuation.
     wanted = torch.where(g['ramp'], torch.minimum(wanted, stop), wanted)
     # LC2013.cpp:1502-1507, one required lane change, URGENCY=2.
-    remaining = (left / look.clamp_min(1e-9) / 2).clamp_min(dt)
+    remaining = (left / look.clamp_min(NUMERICAL_EPS) / 2).clamp_min(dt)
     # informLeader: do not overtake when the remaining distance cannot cover it
     # plus braking. Exact stopped-leader/counter-change exceptions are not modeled.
     next_leader = g['v_l'] - dt * torch.maximum(
@@ -173,7 +173,7 @@ def merge_speed_advice(kin, present, accel, physics, driver_params=None, *, look
                & ((secure_gap(g['v_f'], planned, fp['accel'], fp['decel'], fp['time_headway'])
                    - gap) / remaining < closing))
     eventual = (strategic & g['blocked_f'] & ~no_help & ~help_ok
-                & (planned > f_one) & ((planned - f_one) * remaining > needed - decel_gap + .01))
+                & (planned > f_one) & ((planned - f_one) * remaining > needed - decel_gap + POSITION_EPS))
     give_way = strategic & g['blocked_f'] & ~no_help & ~help_ok & ~eventual
     vhelp = torch.maximum(g['v_f'], v + 10 / 3.6)
     distance_to_pass = (gap + kin[..., 6] + p['min_gap']
