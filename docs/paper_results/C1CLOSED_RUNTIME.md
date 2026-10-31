@@ -56,6 +56,9 @@ Operational supplement, not an efficacy result. Frozen primary model, K8,
 - `TAIL_RECOVERY_PLAN.json` fixes only the13 missing tasks for same-host frozen
   retries, two lanes/serialized admission and4GiB launch reservation,8GB guard.
   Prior outputs/failures remain; complete480 gate and sole finalizer unchanged.
+- Recovery gpuR coordinator682477/start4208404737 launched after registration
+  commitda743ddc. First retry completed with unchanged worker identity, no guard
+  stop, sampled aggregate peak4684MiB. Only the13 registered missing tasks run.
 
 ## Separate reference slot
 S-C1FLOOR now supplies an approved native-only tiny-speed-pulse sensitivity on
