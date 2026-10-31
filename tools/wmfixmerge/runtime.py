@@ -3,8 +3,16 @@ from __future__ import annotations
 
 from dataclasses import replace
 import json
+import sys
+from pathlib import Path
 
 from tools.wmfixmerge.data import COMPONENTS, WM2_SHA, digest, safe, verify
+
+_WMREQUAL = Path(__file__).resolve().parents[1] / "wmrequal"
+if str(_WMREQUAL) not in sys.path:
+    # grouped_feedback imports sibling modules absolutely (labels, ...);
+    # every entry point (feasibility, train) must survive without a manual shim.
+    sys.path.insert(0, str(_WMREQUAL))
 
 
 class Runtime:
