@@ -145,3 +145,15 @@ decision. GPU parity/launch/decision remain pending.
 - Initializing the registered corpus on gpuA; no completed step10/full-panel claim
   yet. CPU-only actual frozen CTRL0 and speed-MAPPO policy_feedback loads also PASS.
   Monitor `recovery_1705/pilot/{RESUME.json,update_000010.json,FULL_PANEL_STEP10.json}`.
+
+## Step10 checkpoint milestone, 2026-10-31 17:45:12 +08
+- Actual RESUME.json confirms step4/Adam restoration; all14 preserved completed
+  files rehashed byte-identical to RECOVERY.json. Updates5-10 completed once.
+- step_000010.pt SHA256
+  `8bbd3a6d518e752d7d30d06352abbf413e91ac795a82f890b8ef241443b951e2`.
+  Update10 finite_gradients=true/frozen_bitwise=true; 249.79s this update,
+  elapsed2539.00s including original spent budget. Paired/anchor shares .6975/.3025
+  (this sampled world only; not a panel metric or an acceptance result).
+- At17:45, three baseline shards run (own PIDs224101/224982/226871); fourth
+  baseline and step10 full-panel shards are pending measured-memory admission.
+  No full panel has completed. Continue monitoring FULL_PANEL_STEP10.json.

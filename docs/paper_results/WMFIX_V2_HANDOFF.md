@@ -22,6 +22,9 @@
   receipt is published immediately upon all four shards finishing.
 - Monitor NEW pilot FULL_PANEL_STEP10.json / PILOT_V2.json. PASS auto-continues;
   FAIL stops. Verdict remains staged, never automatically launches. No peer touched.
+- UPDATE17:45:12: step10 saved8bbd3a6d (finite/frozen kept); all14 inherited
+  files byte-identical. Three step0 shards run; step10 PANEL is still pending.
+  Checkpoint completion is NOT a full-panel result or pilot PASS.
 
 ## SUPERSEDING MAIN 15:25 v2-DATA / Sol resume 15:34 gpuA clock
 - MAIN approved DATA ONLY, smoothing OFF, amended v1 30-step pilot gate. Code:
