@@ -50,17 +50,19 @@ Owner schedule: interim04/08, freeze09:30, evaluation through11:30, report11:45.
   `docs/rbint/hdv60/FACTUAL_065e9853.json`. Extraction not repeated.
   Exact t0 identity/junction carry matching; future targets isolated from forecasts.
   Existing Miniconda endpoint/protocol suite9PASS. Paired common-K8 scorer next.
-- ~04 report:4paired reserved worlds, FULL-v1−WM2 delay CRPS120/300/600
-  −785[−1264,−306]/−3512[−5825,−1200]/−11041[−16268,−5815]veh-s;
-  300s rate-distance+1.25pp[−4.17,+6.67], HDV60CI missing. NOT switch eligible.
+- ~04 report:4paired reserved worlds, FULL-v1−WM2 CRPS−785/−3512/−11041veh-s;
+  300s rate-distance+1.25pp. CORRECTION05:25: old CIs retracted; unscored same-cell
+  peers must not create bootstrap variation. Corrected singleton-stratum CIs NA.
 - Existing20min read-only peer observer retained (`runs/rbint_poll`); do not start
   another observer. Both GPUs busy in last audit; preserve live evaluation jobs.
-- NEW FULL-v4 canary395510/source22cc32f6 running gpuA (no redispatch), explicit
-  move→LC→emit +final LANE. Registered before inference; shared exclusive claim.
-- NEW05:45 paired FULL-v3 endpoints and delay, SAME4complete reserved worlds:
-  HDV60 mean-world-median error−33.94m[−43.91,−23.97],574common endpoints;
-  CRPS120/300/600−573[−979,−166]/−3359[−5620,−1099]/−11150[−16387,−5913].
-  Rate-distance300+2.5pp[−1.67,+6.67] (worse point); NOT switch eligible.
+- FULL-v4 canary395510/source22cc32f6 PASS370.48s/reused ONCE; panel now
+  LIVE gpuA own398268/398269/398270 +monitor398303; shared exclusive claim.
+- NEW paired FULL-v3 endpoints/delay, actual snapshot05:15:55 (path label0545):
+  HDV60 mean-world-median error−33.94m,574common endpoints;
+  CRPS120/300/600−573/−3359/−11150; rate-distance300+2.5pp (worse point).
+  ALL paired95%world CIs NA after scored-world-only fixed-stratum correction:
+  four complete worlds are distinct singleton cells. Old0545 report CIs RETRACTED;
+  use paired_0525_corrected outputs. NOT switch eligible. No inference repeated.
   Endpoint/protocol/comparator suite18PASS; immutable manifests/attrition retained.
   WM2 full panel160/160tasks fetched read-only. No inference repeated.
 - Next: complete source phase integration + CPU suite +8x60s recorded smoke,

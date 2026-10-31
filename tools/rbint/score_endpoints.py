@@ -10,7 +10,8 @@ from pathlib import Path
 import numpy as np
 
 from tools.rbeval.core import ARMS, HERE, SEEDS, digest, load, safe, save_new
-from tools.rbeval.score import WorldBootstrap, read_predictions
+from tools.rbeval.score import read_predictions
+from tools.rbint.compare import matched_bootstrap
 
 
 def read_short_baseline(inputs, real):
@@ -144,17 +145,17 @@ def main():
     candidate, ca = read_predictions(args.candidate, real, partial=True)
     baseline, ba = read_short_baseline(args.baseline, real)
     common = sorted(set(ca['complete_worlds']) & set(ba['complete_worlds']))
-    bootstrap = WorldBootstrap(real, 10000)
     summaries = {}
     for split, worlds in (('development12', [s for s in common if s < 969432]),
                            ('reserved8', [s for s in common if s >= 969432])):
-        summaries[split] = summarize(world_errors(candidate, baseline, factual['episodes'], worlds), bootstrap)
+        summaries[split] = summarize(world_errors(candidate, baseline, factual['episodes'], worlds),
+                                     matched_bootstrap(real, worlds))
     out.mkdir()
     report = dict(schema='wmphys-hdv60-comparison/1', summaries=summaries,
         candidate_audit=ca, baseline_audit=ba, factual_sha256=digest(args.factual),
         source_sha256=digest(Path(__file__)), design_sha256=digest(Path(__file__).resolve().parents[2]/'docs/rbint/HDV60_DESIGN.md'),
         bootstrap=10000, seed=20261031, stratified='demand x penetration x split',
-        uncertainty='paired whole-world maxstat family2; conditional on common cohort and saved K8',
+        uncertainty='scored-world-only fixed-stratum whole-world maxstat family2; singleton CIs unavailable; conditional on common cohort and saved K8',
         qualification='endpoint diagnostic only; delay/breakdown/credibility gates separate')
     save_new(out/'HDV60_COMPARISON.json', report)
     print(json.dumps({k: {n: v[n] for n in ('worlds', 'primary', 'point_nonregression', 'supported_nonregression')}

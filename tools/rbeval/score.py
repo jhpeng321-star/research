@@ -111,7 +111,8 @@ class WorldBootstrap:
                 draws += np.divide(delta*self.weights[:, i:i+1], denom,
                                    out=np.zeros_like(draws), where=denom > 0)
             sd[start:stop] = np.nanstd(draws, axis=0, ddof=1)
-            good = (n[start:stop] >= 2) & (sd[start:stop] > 1e-14) & np.isfinite(draws).all(0)
+            good = ((n[start:stop] >= 2) & (sd[start:stop] > 1e-14)
+                    & np.isfinite(draws).all(0) & (np.ptp(draws, axis=0) > 0))
             valid[start:stop] = good
             if good.any():
                 chunk_max = np.max(np.abs((draws[:, good]-estimate[start:stop][good])/sd[start:stop][good]), axis=1)
@@ -227,7 +228,10 @@ def main():
     save_new(out/'audit.json', audit)
     lookup = {(e['seed'], e['arm']): e for e in real}
     targets = [e for e in real if (e['seed'], e['arm']) in pred]
-    bootstrap = WorldBootstrap(real, args.bootstrap)
+    # Baseline construction still uses all permitted factual development rows.
+    # Sampling uncertainty uses ONLY scored complete worlds, so missing peers
+    # cannot randomly change the demand/penetration composition of this report.
+    bootstrap = WorldBootstrap(targets, args.bootstrap)
     rng = np.random.default_rng(20261031)
     rows, events, timing, energy = [], [], [], []
     cdf_features, cdf_meta = [], []

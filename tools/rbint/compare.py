@@ -14,6 +14,16 @@ from tools.rbeval.core import ARMS, HS, crps, digest, load, save_new
 from tools.rbeval.score import WorldBootstrap, read_predictions
 
 
+def matched_bootstrap(real, worlds):
+    """Resample only scored worlds; missing peers cannot create cell variation.
+
+    Restricting full-panel weights AFTER resampling changes stratum composition
+    when an unscored same-cell peer is drawn. In singleton scored strata this
+    manufactured a nonzero standard error despite zero replication.
+    """
+    return WorldBootstrap([e for e in real if e['seed'] in set(worlds)], 10000)
+
+
 def paired_features(candidate, baseline, real, worlds):
     lookup = {(e['seed'], e['arm']): e for e in real}
     delay, cp, bp, rp = [], [], [], []
@@ -52,7 +62,7 @@ def summarize_features(features, worlds, bootstrap):
     draws = np.concatenate((norm@delay, np.abs(norm@cp-norm@rp)-np.abs(norm@bp-norm@rp)), axis=1)
     point = np.r_[delay_point, rate_point]
     sd = draws.std(0, ddof=1)
-    valid = (len(worlds) >= 2) & np.isfinite(draws).all(0) & (sd > 1e-14)
+    valid = (len(worlds) >= 2) & np.isfinite(draws).all(0) & (sd > 1e-14) & (np.ptp(draws, axis=0) > 0)
     critical = (float(np.quantile(np.abs((draws[:, valid]-point[valid])/sd[valid]).max(1), .95))
                 if valid.any() else None)
     rows = []
@@ -91,18 +101,18 @@ def main():
     if ba['model'] is None or ba['model']['model'] != 'wm2':
         raise ValueError('baseline must be the registered WM2 inference contract')
     common = sorted(set(ca['complete_worlds']) & set(ba['complete_worlds']))
-    bootstrap = WorldBootstrap(real, 10000)
     summaries = {}
     for split, worlds in (
             ('development12', [s for s in common if s < 969432]),
             ('reserved8', [s for s in common if s >= 969432])):
+        bootstrap = matched_bootstrap(real, worlds)
         summaries[split] = summarize_features(paired_features(candidate, baseline, real, worlds), worlds, bootstrap)
     out.mkdir()
     save_new(out/'COMPARISON.json', dict(schema='wmphys-paired-comparison/1',
         real_receipt_sha256=digest(real_path), source_sha256=digest(Path(__file__)),
         candidate_audit=ca, baseline_audit=ba, summaries=summaries,
         bootstrap=10000, seed=20261031, stratified='demand x penetration x split',
-        uncertainty='whole worlds; conditional on saved K8 ensembles; no finite-K or model-error qualification',
+        uncertainty='scored-world-only fixed-stratum bootstrap; singleton strata cannot give CIs; conditional on saved K8',
         qualification='diagnostic; missing endpoints and sparse cells cannot establish switching eligibility'))
     print(json.dumps({k:dict(worlds=v['worlds'], status=v['status']) for k,v in summaries.items()}))
 

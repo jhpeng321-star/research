@@ -3,7 +3,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from tools.rbint.compare import paired_features, summarize_features
+from tools.rbint.compare import matched_bootstrap, paired_features, summarize_features
 from tools.rbeval.core import ARMS, HS
 
 
@@ -50,3 +50,19 @@ def test_missing_event_support_and_empty_complete_ensemble_are_explicit():
     with pytest.raises(ValueError, match='event support'):
         paired_features(c, b, real, [969432])
     assert summarize_features([np.zeros((0, 3))]*4, [], None)['status'] == 'NO_COMPLETE_PAIRED_K8_WORLD'
+
+
+def test_missing_same_cell_peers_cannot_create_uncertainty_in_singleton_scored_cells():
+    real = [dict(seed=969432, demand=1900, penetration=.2),
+            dict(seed=969433, demand=2400, penetration=.2),
+            dict(seed=969434, demand=1900, penetration=.2),
+            dict(seed=969435, demand=2400, penetration=.2)]
+    worlds = [969432, 969433]  # other same-cell worlds are not complete
+    bootstrap = matched_bootstrap(real, worlds)
+    assert bootstrap.seeds == worlds
+    np.testing.assert_array_equal(bootstrap.weights, np.ones((10000, 2)))
+    delay = np.array([[-2., -3., -4.], [-20., -30., -40.]])
+    rates = np.ones((2, 3))
+    result = summarize_features([delay, rates*.8, rates*.9, rates], worlds, bootstrap)
+    assert all(r['low'] is None and r['high'] is None for r in result['comparisons'])
+    assert result['comparisons'][0]['mean'] == -11.
