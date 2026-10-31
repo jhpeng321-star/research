@@ -30,7 +30,7 @@ Each response is an argument the current evidence permits, not polished rebuttal
 ## “Is the short-clock regret difference statistically established?”
 
 - **Threat:** comparing displayed marginal CIs is not paired inference; changing cost populations or candidate sets changes regret.
-- **Answer:** report the source-specific oracle regret and constant selectors, and retain the unresolved paired WM–BB contrast. Use exact strict-history/team selectors only. Evidence C1-MAPPO. The result supports exploratory offline choice, not deployed selector efficacy or a numerical guarantee on future regret.
+- **Answer:** report the source-specific oracle regret and constant selectors, plus the separately exported paired WM–BB contrast now available in the current E1 export. Use exact strict-history/team selectors only; keep the original analysis recipe and plant/exposure binding pending. Evidence C1-MAPPO. The result supports exploratory offline choice, not deployed selector efficacy or a numerical guarantee on future regret.
 
 ## “Does the horizon plot contradict corrected qualification?”
 

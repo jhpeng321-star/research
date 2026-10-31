@@ -1,0 +1,21 @@
+{
+  "status": "PASS",
+  "checks": [
+    "required deliverables nonempty",
+    "frozen source byte/hash integrity",
+    "strict-history regret rows equal original CSV, no inferred paired CI",
+    "paired WM-minus-BB regret is an existing source contrast, not inferred from marginal intervals",
+    "direction values, CIs, thresholds and verdicts equal original export",
+    "reported regional/entry/wall cells cross-checked, clock conventions distinct",
+    "every derived numerical/schematic CSV row has source and selector",
+    "PNG decoding, source metadata, dimensions and vector PDF signatures",
+    "verified bibliography pool: unique keys, balanced braces, required fields and documented verification URLs",
+    "headline numerical claim comments and explicit agent-owned pending fields"
+  ],
+  "scope": "Package/source-selection/artwork QA only; no scientific requalification or typeset-page verification",
+  "python": "3.14.0 (tags/v3.14.0:ebf955d, Oct  7 2025, 10:15:03) [MSC v.1944 64 bit (AMD64)]",
+  "matplotlib": "3.11.2",
+  "source_manifest_sha256": "73cc426b442dad0dc9530aef301e2be4f87da2cc8b069c84ce9dde06e64554dd",
+  "figure_count": 6,
+  "bib_entries": 12
+}

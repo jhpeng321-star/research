@@ -1,0 +1,3 @@
+# Preserve frozen source bytes so SOURCE_MANIFEST hashes survive checkout.
+data/*.source.csv -text whitespace=cr-at-eol
+data/*.source.md -text whitespace=cr-at-eol,-blank-at-eof

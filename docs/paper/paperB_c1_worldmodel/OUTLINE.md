@@ -63,7 +63,7 @@ At typesetting, shorten prior-attempt history before dropping protocol caveats o
 
 - **VI-A-P1 — exact claim:** The recovered historical unseen-wall report supports structured HDV-response error superiority over BB-traj with paired world-bootstrap uncertainty, under recorded CAV motion; BB-id is separately qualified. Include C1-WALL point values and paired contrasts from `CLAIMS.md`, with source comments. `wall_pilot` is sensitivity, not an independent pooled replication.
 - **VI-A-P2 — exact claim:** `[[PENDING: full-feedback unseen PI/wall or other excluded-controller comparison and paired result / S-C1CLOSED]]`. If unavailable, explicitly state the full-feedback extension remains unresolved; the historical sentence cannot fill this paragraph.
-- **VI-A-P3 — exact claim:** Strict-history E1 offers exploratory offline controller-choice evidence with measured oracle regret and constant-selector references. Report WM and BB marginal regret intervals without asserting a paired model win; include the difference versus always-MAPPO. Evidence C1-MAPPO.
+- **VI-A-P3 — exact claim:** Strict-history E1 offers exploratory offline controller-choice evidence with measured oracle regret and constant-selector references. Report marginal regrets plus the separately exported paired WM-minus-BB advantage and difference versus always-MAPPO; numerical pairing is now available, while eligibility/plant/cost bindings remain pending. Evidence C1-MAPPO; do not infer the paired interval from marginal bars.
 - **Visual:** final feedback comparison is pending; available selection panel is `fig_regret.png`. Historical wall evidence has its own labeled supplementary plot; never label it feedback.
 
 ### B. Where verdict trust ends

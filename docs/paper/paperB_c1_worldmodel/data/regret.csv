@@ -1,0 +1,5 @@
+selector,panel,metric,estimate,lo,hi,n_worlds,n_states,units,source_file,source_selector
+WM-13E,decisions/B_history_strict/wm13e/60/team,regret_oracle,13.638898849487305,5.381889350073679,26.196345071682977,21,32,veh-s,E:/research-dense/docs/paper_results/E1_C1_fair.csv,panel=decisions/B_history_strict/wm13e/60/team;metric=regret_oracle
+BB-traj,decisions/B_history_strict/bbtraj/60/team,regret_oracle,22.050608545541763,10.04666849513139,37.85677825508694,21,32,veh-s,E:/research-dense/docs/paper_results/E1_C1_fair.csv,panel=decisions/B_history_strict/bbtraj/60/team;metric=regret_oracle
+Always MAPPO,decisions/B_history_strict/wm13e/60/team,always_mappo_regret,21.880391031503677,9.727864948508861,37.68599152203762,21,32,veh-s,E:/research-dense/docs/paper_results/E1_C1_fair.csv,panel=decisions/B_history_strict/wm13e/60/team;metric=always_mappo_regret
+Always native,decisions/B_history_strict/wm13e/60/team,always_native_regret,48.29545718431473,26.926703274030288,70.97848100732732,21,32,veh-s,E:/research-dense/docs/paper_results/E1_C1_fair.csv,panel=decisions/B_history_strict/wm13e/60/team;metric=always_native_regret

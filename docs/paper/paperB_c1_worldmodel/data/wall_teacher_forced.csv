@@ -1,0 +1,13 @@
+model,horizon_s,n_states,median_m,iqr_m,p90_m,blowup_fraction,source_file,source_selector
+struct,10,67,2.04,0.85,2.89,-,E:/agent-work/c4-c1gap/docs/paper_results/c1gap/WALL_C1_RESULT.recovered.md,wall_same;model=struct;h=10s
+struct,30,67,5.07,3.01,10.54,-,E:/agent-work/c4-c1gap/docs/paper_results/c1gap/WALL_C1_RESULT.recovered.md,wall_same;model=struct;h=30s
+struct,60,67,8.71,10.40,27.54,-,E:/agent-work/c4-c1gap/docs/paper_results/c1gap/WALL_C1_RESULT.recovered.md,wall_same;model=struct;h=60s
+struct,120,66,99.84,84.96,217.67,0.000,E:/agent-work/c4-c1gap/docs/paper_results/c1gap/WALL_C1_RESULT.recovered.md,wall_same;model=struct;h=120s
+blackbox_traj,10,67,2.78,0.95,4.21,-,E:/agent-work/c4-c1gap/docs/paper_results/c1gap/WALL_C1_RESULT.recovered.md,wall_same;model=blackbox_traj;h=10s
+blackbox_traj,30,67,9.79,4.76,15.81,-,E:/agent-work/c4-c1gap/docs/paper_results/c1gap/WALL_C1_RESULT.recovered.md,wall_same;model=blackbox_traj;h=30s
+blackbox_traj,60,67,25.41,20.12,38.86,-,E:/agent-work/c4-c1gap/docs/paper_results/c1gap/WALL_C1_RESULT.recovered.md,wall_same;model=blackbox_traj;h=60s
+blackbox_traj,120,66,152.46,174.96,456.55,0.015,E:/agent-work/c4-c1gap/docs/paper_results/c1gap/WALL_C1_RESULT.recovered.md,wall_same;model=blackbox_traj;h=120s
+blackbox_id,10,67,2.78,1.88,4.67,-,E:/agent-work/c4-c1gap/docs/paper_results/c1gap/WALL_C1_RESULT.recovered.md,wall_same;model=blackbox_id;h=10s
+blackbox_id,30,67,9.66,9.14,27.00,-,E:/agent-work/c4-c1gap/docs/paper_results/c1gap/WALL_C1_RESULT.recovered.md,wall_same;model=blackbox_id;h=30s
+blackbox_id,60,67,40.07,53.11,114.88,-,E:/agent-work/c4-c1gap/docs/paper_results/c1gap/WALL_C1_RESULT.recovered.md,wall_same;model=blackbox_id;h=60s
+blackbox_id,120,66,245.44,212.61,519.52,0.379,E:/agent-work/c4-c1gap/docs/paper_results/c1gap/WALL_C1_RESULT.recovered.md,wall_same;model=blackbox_id;h=120s

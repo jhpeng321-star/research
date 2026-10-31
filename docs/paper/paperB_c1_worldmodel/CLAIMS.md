@@ -35,7 +35,8 @@ Extends `E:/research-dense/docs/paper/CLAIM_EVIDENCE_CHECKLIST.md`; that checkli
 - WM-selected minus always-MAPPO is **−8.241 [−18.99,−0.08363] veh-s** and minus always-native **−34.66 [−60.51,−8.163] veh-s**; source **95%** intervals. <!-- Source: E:/research-dense/docs/paper_results/E1_C1_fair.md:195-199; interval level: E:/research-dense/docs/paper/IEEE_IV_2027_DRAFT.md:107,133. -->
 - **Evidence:** corresponding CSV selectors; main checklist C1-MAPPO and C1-PAIRED; results README.
 - **Scope:** offline selection among evaluated controllers, not deployed receding-horizon selection or proof of a learned controller's efficacy. `team` cost needs its original implementation binding; do not silently rename it all-request fleet-plus-source J.
-- **Not established:** paired WM-minus-BB regret significance. Marginal intervals cannot provide it. `[[PENDING: paired regret contrast, exact team population/cost, candidate controllers and hashes / S-C1GAP + S-C1CLOSED]]`.
+- **Refresh correction to the older checklist:** the current export DOES contain a paired strict-history team regret contrast: **WM-13E minus BB-traj −8.412 [−19.23,−0.3071] veh-s**, on the same **21 worlds / 32 starts**. This is **SUPPORTED as an exported exploratory paired advantage**, not a contrast inferred from marginal intervals. <!-- Source: E:/research-dense/docs/paper_results/E1_C1_fair.md:2100; exact values E:/research-dense/docs/paper_results/E1_C1_fair.csv, panel paired_decisions/B_history_strict/60/team/13e_minus_bbtraj, metric regret_oracle. -->
+- **Still pending:** `[[PENDING: original paired-analysis recipe, exact team population/cost, candidate controllers, exposure and execution hashes / S-C1GAP + S-C1CLOSED]]`. The paired export fills the numerical gap; it does not complete zero-shot eligibility or full-feedback plant validation.
 
 ## C1-EXPOSURE — Controller exclusion is the unit of zero-shot eligibility
 
