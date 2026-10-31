@@ -6,7 +6,8 @@ from types import SimpleNamespace
 import pytest
 
 from tools.c1switch.core import Belief, Handover, branch_all, choose, medians
-from tools.c1switch.design import BUDGET, CONTROLLERS, checked, worlds
+from tools.c1switch.design import (BUDGET, CONTROLLERS, checked, worlds, measurement_indices,
+                                    require_main_budget, STEP0_SEEDS, STEP0_TIMES)
 from tools.c1switch.rpc import FilePredictor
 from tools.c1switch.storage import Ledger, canonical, write
 from tools.c1switch.model import select_model
@@ -118,8 +119,14 @@ def test_oracle_same_state_no_branch_leakage_and_selected_trunk_reuse():
 
 
 def test_budget_and_world_disjointness():
-    assert sum(BUDGET.values()) == 498360
-    assert sum(v for k,v in BUDGET.items() if k.startswith('step0')) == 59160
+    assert sum(BUDGET.values()) == 1447410
+    assert sum(v for k,v in BUDGET.items() if k.startswith('step0')) == 47010
+    assert sum(5*(300+60*j+90) for w in worlds('main')
+               for j in measurement_indices(w['seed'])) == 235800
+    assert len(STEP0_SEEDS) == 8 and 969100 not in STEP0_SEEDS
+    assert len(STEP0_SEEDS)*6*sum(t+90 for t in STEP0_TIMES) == 46080
+    with pytest.raises(ValueError, match='oracle'):
+        require_main_budget()
     a, b = worlds('step0'), worlds('main')
     assert len(a) == 12 and len(b) == 24
     assert not {w['seed'] for w in a} & {w['seed'] for w in b}
@@ -136,6 +143,87 @@ def test_durable_precharge_refuses_duplicate_and_step0_overflow(tmp_path):
     with pytest.raises(ValueError):
         ledger.charge('b', 841, 'step0')
     assert len(ledger.rows()) == 1
+
+
+class ReplayToy:
+    """A new t0..300 run, with recurrent controller state and full-prefix tape."""
+    def __init__(self, *, corrupt=False):
+        self.time, self.total, self.name, self.memory, self.actual = 300, 0., 'native', 0, 300
+        self.closed, self.selected, self.corrupt = False, [], corrupt
+        self.belief = SimpleNamespace(payload=lambda:{'observed_speed':7})
+    def select(self, name):
+        self.selected.append(name)
+        if name != self.name:
+            self.memory = 0
+        self.name = name
+    def advance(self, seconds):
+        best = 'pi' if self.time < 360 else 'mappo'
+        self.total += seconds*(1 if self.name == best else 5)+self.memory*.01
+        self.memory += seconds
+        self.time += seconds
+        self.actual += seconds
+    def metrics(self):
+        return {'team_delay_vs':self.total}
+    def fingerprint(self):
+        return dict(time=self.time, total=self.total, name=self.name,
+                    memory=self.memory, tape='bad' if self.corrupt else 'complete')
+    def close(self):
+        self.closed = True
+
+
+def test_full_rerun_oracle_rebuilds_trunk_and_closes_every_instance():
+    from tools.c1switch.rerun import candidates
+    made = []
+    def factory_for(name):
+        def create():
+            b = ReplayToy()
+            made.append(b)
+            return b
+        return create
+    rows = candidates(factory_for, ['pi', 'pi', 'native'])
+    assert len(made) == 6 and all(b.closed for b in made)
+    assert sum(b.actual for b in made) == 6*(480+90)
+    assert all(b.selected[:3] == ['pi', 'pi', 'native'] for b in made)
+    assert rows['native']['prefix']['memory'] == 60
+    assert choose({c:rows[c]['60']['team_delay_vs'] for c in CONTROLLERS}) == 'mappo'
+    assert rows['native']['90'] == rows['native_repeat']['90']
+
+
+def test_full_rerun_rejects_prefix_before_any_alternative_tick():
+    from tools.c1switch.rerun import replay
+    reference = replay(ReplayToy, [], 'native')
+    broken = ReplayToy(corrupt=True)
+    with pytest.raises(ValueError, match='trunk bitwise'):
+        replay(lambda:broken, [], 'pi', expected_prefix=reference['prefix'])
+    assert broken.closed and broken.actual == 300 and broken.selected == []
+
+
+def test_full_rerun_native_continuation_gate_precedes_nonnative():
+    from tools.c1switch.rerun import candidates
+    made = []
+    def factory_for(name):
+        def create():
+            b = ReplayToy()
+            if name == 'native_repeat':
+                original = b.advance
+                def changed(seconds):
+                    original(seconds)
+                    b.total += 1
+                b.advance = changed
+            made.append(name)
+            return b
+        return create
+    with pytest.raises(ValueError, match='continuation bitwise'):
+        candidates(factory_for, [])
+    assert made == ['native', 'native_repeat']
+
+
+def test_retired_saved_state_runner_cannot_simulate(tmp_path):
+    from tools.c1switch.runner import run
+    with pytest.raises(ValueError, match='retired'):
+        run(tmp_path, 'step0', worlds('step0')[0])
+    with pytest.raises(ValueError, match='oracle'):
+        run(tmp_path, 'main', worlds('main')[0], 'oracle')
 
 
 def test_file_handshake_accepts_only_matching_k8_team_binding(tmp_path):

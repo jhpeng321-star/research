@@ -1,5 +1,34 @@
 # S-C1SWITCH operational receipt
 
+## Current full-rerun continuation (MAIN 17:53)
+
+Design commit `74082ebd` supersedes saved-state execution below. Step0 v2 is
+47,010 sim-s cumulative: 930 retained + 38,400 five-way reruns + 7,680 native
+repeats. Eight unused reserved worlds, decision times 300/480, exact60/90.
+`rerun.replay` rebuilds controller memory by executing the full prior schedule;
+checks full warmup/trunk tape + belief + metric/counter fingerprint BEFORE any
+alternative tick. Native90 repeated continuation passes before nonnative runs.
+The legacy runner now refuses execution; old deployment/STOP/ledger preserved.
+
+CPU: 13 task tests PASS locally and on gpuR, all36 seed guards PASS remotely,
+ruff PASS. Immutable version `/root/c1switch20261031/fullrerun_v2` is staged;
+`evidence/FULL_STAGE.json` binds its sources/design and imported930 debit.
+No v2 SUMO dispatch: gpuR load41.61 exceeded20 admission ceiling. No queued
+process or second job was created. Respect SUMOCF priority; resume by inspecting
+`python -m tools.c1switch.fullops inspect`, then `... progress`.
+Only when admitted: `python -m tools.c1switch.fullops launch` ONCE. Existing
+dispatch/lock/START/STOP blocks retries; do not rerun `stage` or legacy `ops` jobs.
+
+Main is hard-blocked by budget arithmetic: even an optimally reused live oracle
+candidate needs626,400 sim-s for24worlds x10decisions, exceeding500,000 alone.
+Prospective three-clock WM/BB measurement plan totals1,447,410 including Step0;
+not approved. MAIN must resolve oracle count or cap before main implementation/
+dispatch. Existing source-entry/model eligibility gates also remain unresolved.
+New C1PIDIAG report is present, but explicitly entries-OFF/conditional presence;
+it does not attest a valid fleet+source+entrant adapter for either candidate.
+
+## Historical saved-state attempt (receipts only; commands retired)
+
 Design `docs/paper_results/C1SWITCH_DESIGN.md`, commit `53e38608`, was registered
 before analysis/SUMO; exact plan 498,360 sim-s, hard cap 500,000; Step0 59,160.
 CPU verification: `python -m pytest -q tests/test_c1switch.py tests/test_command_ownership.py`

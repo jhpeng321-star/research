@@ -1,5 +1,5 @@
 # C1SWITCH scenario winners — recorded panel complete; branching stopped
-**Status (2026-10-31):** Step0a COMPLETE; Step0b MECHANICALLY STOPPED, 0/120 complete decision states. Main switching NOT STARTED. This is not a scientific no-headroom verdict.
+**Status (2026-10-31):** Step0a COMPLETE; legacy Step0b MECHANICALLY STOPPED, 0/120 complete decision states. Full-rerun v2 staged/CPU-verified, 0/16 fresh states; GPU/main NOT STARTED. No scientific no-headroom verdict.
 
 ## Recorded fixed-arm evidence (zero new SUMO)
 - All 40 WMDATA worlds969400–969439 and 50 WMDATA2 worlds969550–969599, common five controllers only; generic-random excluded from this library comparison.
@@ -29,7 +29,9 @@
 - Full12-world state-dependent headroom/noise gate is **UNRESOLVED**. Do not interpret zero completed decisions as zero controller diversity or absent benefit. Never treat deterministic native repeats as an independent RNG divergence floor.
 
 ## Required continuation gates
-- MAIN must acknowledge the mechanical stop and prospectively authorise a new attempt/version before dispatch. A complete12-world rerun would cost58,680; including retained930, Step0 total59,610<=60,000 and full planned total498,810<=500,000 (reserve1,190), but that amended allocation is NOT dispatched/claimed approved here.
-- Existing native restore PASS need not be repeated. Preserve failed attempt, original ledger and source; bind repair hash/attempt IDs and both-world prefix/pairing checks before resumption. Recheck resource priority; one nice19CPU, no peer PID operations.
-- Before main switching: complete Step0/noise/headroom gate; publish C1PIDIAG diagnosis and select eligible WM by frozen rule; verify observable-source/entries adapters for WM and frozen BB-traj and GPU-memory admission. RPC infrastructure is built; real-model adapter is currently unbound and unvalidated.
-- Original designSHA `c4154bbe1a9281d61eb465de0e64123f232151b60dcf5a10a2fbdde30377967a` and498,360sim-s plan remain the registered baseline; owner approval already exists, so waiting for a second copy of the budget-approval phrase is unnecessary.
+- MAIN17:53 retired all saved-state continuations. Original native restore PASS is historical and cannot authorise branching. New design commit74082ebd/SHA `b0a527a848b0bec73227effc6b11988bf83978aa3321140dbd1d3d6d80724c85` registered before compute; no source figure/data recomputation.
+- V2: unused TRAIN969101/102/103/105/107/108/110/111, native decision300/480; all first12 excluded from main. Five full t0-to-(decision+90) reruns/state =38,400; separate native repeats=7,680; retained930 ->47,010 cumulative sim-s, within60,000. Every warmup/prefix/repeat included; no refunds/retries.
+- First native full warmup/trunk+90 continuation must repeat bitwise before nonnative; all other reruns must match the prefix before intervention. Observed-only belief remains distinct from evaluation-only exact tape/counters. Repeat noise is deterministic replay error, not a stochastic floor.
+- V2 CPU13local+13gpuR PASS; all36 guards PASS; immutable source/budget/debit receipts in `tools/c1switch/evidence/FULL_*.json`. No v2 dispatch: gpuR load41.61 exceeded20 admission ceiling; no new SUMO/GPU, no worker queued. Preserve original STOP and both old PIDs remain absent.
+- Main budget conflict:24-world ten-decision full-rerun oracle alone needs at least626,400sim-s (live trunk as one candidate), above500,000. Three registered random clocks/world for WM/BB do not solve this; conservative per-arm plan totals1,447,410 including Step0. MAIN must amend oracle count or cap before any main dispatch.
+- C1PIDIAG is now published (SHA `ef442d7dc93c3eddbac15ee5af7ff96c8ee06213639dae180abbe0913b7dac20`): original C1 retains historical TF60 advantage, but diagnosis entries are OFF and presence/exits conditional; WM2+mix unavailable without observed queue/demand. No team+source+entrant support attestation, hence neither candidate is yet eligible under the frozen rule; no MODEL_SELECTION or switching outcomes fabricated. RPC infrastructure remains built; real adapter unbound.

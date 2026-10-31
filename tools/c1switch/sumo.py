@@ -125,7 +125,14 @@ class Backend:
         self.totals = {k:0. for k in ('team_delay_vs', 'road_delay_vs', 'source_wait_vs',
                                       'collisions', 'teleports', 'ttc_below_3_vs', 'hard_brake')}
         self.digest = hashlib.sha256()
+        self.digest_time = None
         guard(world)
+        # A full rerun includes Python/controller RNGs as well as the SUMO seed.
+        import random
+        import torch
+        random.seed(world['seed'])
+        np.random.seed(world['seed'])
+        torch.manual_seed(world['seed'])
         # Count actual physics steps, including partial reset/advance failures.
         import traci
         self.traci, self.original_step = traci, traci.simulationStep
@@ -160,6 +167,13 @@ class Backend:
     def observe(self, env):
         from traffic_shepherd.c4.state import RSU_MAINLINE_S_M, RSU_RAMP_S_M, rsu_detections
         f, ids = env.frame, env.builder.vehicle_ids
+        if self.digest_time != env.now:
+            raw = env.history.raw(3)
+            # Evaluation-only tape includes BOTH half-second physics frames,
+            # including all native warmup ticks. Never sent to the predictor.
+            self.digest.update(canonical({k:raw[k][-2:].tolist()
+                                          for k in ('kin', 'mask', 'vid_index')}).encode())
+            self.digest_time = env.now
         # The frame is accessed only to obtain CAV self telemetry; HDV rows come from RSU.
         own = [dict(vehicle_id=ids[int(f.vid_index[i])], timestamp_s=float(f.time_s),
                     s_m=float(f.s[i]), lane=int(f.lane_carry[i] if f.junction[i] else f.lane[i]),
@@ -189,9 +203,6 @@ class Backend:
                              ('ttc_below_3_vs', 'ttc_below_3_vehicle_seconds'), ('hard_brake', 'braking_vehicle_seconds')]:
                 self.totals[k] += interval.get(field, 0.)
             self.observe(self.env)
-            raw = self.env.history.raw(3)
-            # Evaluation-only exact tape: never present in inference payload.
-            self.digest.update(canonical({k:raw[k][-2:].tolist() for k in ('kin', 'mask', 'vid_index')}).encode())
             if any(info['lane_commands'].values()):
                 raise ValueError('unexpected controller lane command')
             if info['done'] or any(interval.get(k, 0) for k in
@@ -216,7 +227,19 @@ class Backend:
     def metrics(self):
         return dict(self.totals)
 
+    def fingerprint(self):
+        """Evaluation receipt; no simulator-global fields enter belief/RPC."""
+        return dict(t_s=float(self.env.now), tape_sha256=self.digest.hexdigest(),
+                    belief_sha256=canonical(self.belief.payload()), metrics=self.metrics(),
+                    counters=dict(self.env.window_totals),
+                    incumbent=self.handover.name, switches=self.handover.switches)
+
     def close(self):
-        if self.env is not None:
-            self.env.close()
-        self.traci.simulationStep = self.original_step
+        try:
+            if self.env is not None:
+                self.env.close()
+        finally:
+            self.traci.simulationStep = self.original_step
+            from .storage import write
+            write(self.root/'CLOSE.json', dict(actual_sim_s=self.actual,
+                                              charged_sim_s=self.allowed))

@@ -1,0 +1,41 @@
+{
+  "version": "/root/c1switch20261031/fullrerun_v2",
+  "binding": {
+    "design_sha256": "b0a527a848b0bec73227effc6b11988bf83978aa3321140dbd1d3d6d80724c85",
+    "sources": {
+      "tools/c1switch/__init__.py": "26dbc7e0cc4bafed046fec9e13e5674ec65dfbc8435f0943106eafd6ce25a747",
+      "tools/c1switch/core.py": "067a2af55965904dee2c929d95b7accfca8fc5b55fa4d161d84a1f6dfe15bf19",
+      "tools/c1switch/design.py": "adaebb1f660ee175ad7fc942672bb25c68aa930fdfca787e2156ae9ad2ae789b",
+      "tools/c1switch/fullops.py": "7ed43d548c43f33d779dae63b8486715109438a7e96d1166f8e3e73b0fdbec2c",
+      "tools/c1switch/fullrun.py": "966745ca169c770f122da16127656c02eb532bc41b0ca6a28e540171962ddc66",
+      "tools/c1switch/inspect.py": "5c8ad915b568a99b77b4e71f2ea8a04520f444a317e2acb360a03a2e15bc24b2",
+      "tools/c1switch/model.py": "2e204de13a40e6f30cfd20fc3c517072b17ec1032f2f1724b41e3e2698d77d69",
+      "tools/c1switch/ops.py": "43a0b838201132a0681bf0ff6ceddc33ea814292951a8d9b893419abae1e1282",
+      "tools/c1switch/rerun.py": "97c59c305e4589fd9934dbd0c6ba9b258ce81e8a2b54b301d063d57b49601d11",
+      "tools/c1switch/rpc.py": "16b04f4a0e7edd2c2e894fb5583c35baa87c7cd8f825ea6a9dbeab4aeb43f02a",
+      "tools/c1switch/runner.py": "9cfd1906758427cf7e088337fb5520d1cf873bbb01c91811d7e44f0061bc726c",
+      "tools/c1switch/step0.py": "3423eaff773ae2ba94b47a16a7f4fdd2306783d38082ab10d8b2f0eacc16e0ea",
+      "tools/c1switch/storage.py": "e1da5e0121c7ce7593f20eeb6842b64d8e631f538b4d353cfed3b3ff929862d1",
+      "tools/c1switch/sumo.py": "7ba0de60eb42a7648880ec266c06c8a5cbc88c248f71c4fa551fc863b9578e9b",
+      "tools/c1switch/verify.py": "e7366b86ccb1eb11bdc9ce648dd4a5e20f86ae705441d8db8adb1947e9b8ed47",
+      "tools/c1switch/winners.py": "97432ebef2e2d53300aaecff3f854aa85f5ca93016615ba24dda0c4348dc6035",
+      "tests/test_c1switch.py": "e920553244d5547933a087b48f9076a94be0f072cdf65063bb3bafd10a601c0a",
+      "docs/paper_results/C1SWITCH_DESIGN.md": "b0a527a848b0bec73227effc6b11988bf83978aa3321140dbd1d3d6d80724c85"
+    },
+    "step0_total_sim_s": 47010,
+    "new_step0_sim_s": 46080,
+    "main_authorized": false,
+    "retained_debit": {
+      "id": "retained_legacy_930",
+      "sim_s": 930,
+      "stage": "step0",
+      "legacy_ledger_sha256": "43955ecf38ced3280100bd1abff8b07761f262ea182546d04e215111d85def5f"
+    }
+  },
+  "load": [
+    41.61328125,
+    27.3603515625,
+    19.90478515625
+  ],
+  "legacy_STOP_retained": true
+}

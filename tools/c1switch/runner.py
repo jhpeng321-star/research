@@ -8,12 +8,19 @@ import time
 import traceback
 
 from .core import branch_all, choose
-from .design import CONTROLLERS, checked, worlds
+from .design import CONTROLLERS, checked, worlds, require_main_budget
 from .rpc import FilePredictor
 from .storage import Ledger, exclusive, write
 
 
 def run(root, mode, world, arm=None):
+    # Legacy saved-state paths are retained for receipts, never executable again.
+    if mode == 'main':
+        require_main_budget()
+    raise ValueError('saved-state runner retired by MAIN17:53; use tools.c1switch.fullrun')
+
+
+def _retired_run(root, mode, world, arm=None):
     from .sumo import Backend, setup
     inputs = setup()  # All imports/dependencies checked before any precharge.
     if not json.loads((root/'EXPOSURE.json').read_text())['pass']:
