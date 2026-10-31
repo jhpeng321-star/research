@@ -14,6 +14,8 @@ from __future__ import annotations
 
 import torch
 
+from wms.model.entries import (ENTRY_S_M, NOMINAL_LENGTH_M, SUMO_POSITION_EPS_M)
+
 #: columns of the predicted/recorded component stack (data.COMPONENTS order)
 J, UPSTREAM, SOURCE, DISCHARGE, ROAD = range(5)
 #: differentiable columns whose paired contrasts carry gradients
@@ -22,6 +24,19 @@ GRADIENT_COLUMNS = (UPSTREAM, DISCHARGE, ROAD)
 REPORT_COLUMNS = (J, SOURCE)
 #: anchor columns (levels, differentiable), scaled by TRAIN absolute RMS
 ANCHOR_COLUMNS = (DISCHARGE, ROAD)
+#: S-WMFIX-C fallback 1 (default OFF): TRAINING-ONLY gradient columns of the
+#: smoothed-event objective.  The exact integer source ledger is replaced, in
+#: the differentiable stack only, by the smoothed admission surrogate
+#: (:func:`smooth_admission_source`), so the paired source contrast carries a
+#: gradient through the hard insertion boundary; the crossing column keeps the
+#: existing identity-bracketed :func:`smooth_crossings` surrogate.  Inference,
+#: verdicts and every default path keep the exact registered columns above.
+SMOOTH_GRADIENT_COLUMNS = (UPSTREAM, DISCHARGE, ROAD, SOURCE)
+#: Default numerical smoothing width (m) of the admission gate surrogate.  This
+#: is NOT a behavioural threshold: it only sets the gradient relaxation scale
+#: of the sigmoid that replaces the hard insertion test inside TRAINING
+#: objectives (the order of the inferred min-gap scale it smooths).
+ADMISSION_WIDTH_M = 1.0
 
 
 def _paired_error(predicted, recorded, references):
@@ -108,3 +123,72 @@ def smooth_crossings(positions, present, newborn, width, boundary=75.44, lanes=N
     cdf = torch.sigmoid((clean - boundary) / width)
     delta = (cdf[:, 1:] - cdf[:, :-1]).clamp_min(0)
     return torch.where(alive, delta, torch.zeros_like(delta)).sum((-1, -2))
+
+
+def entrance_gap_series(pre_pos, pre_speeds, pre_present, pre_lanes, pre_length,
+                        entry_s_m=ENTRY_S_M, dt_s=0.5,
+                        length_new_m=NOMINAL_LENGTH_M,
+                        position_eps_m=SUMO_POSITION_EPS_M):
+    """[B, T, 2] differentiable end-of-step entrance bumper gaps (mainline best, ramp).
+
+    TRAINING-ONLY surrogate input of S-WMFIX-C fallback 1.  ``pre_*`` are the
+    pre-insertion rollout series indexed ``t`` = the state the hard admission at
+    step ``t`` actually tested (t0 snapshot, then each step's post-move state);
+    ``T = pre_pos.shape[1]`` steps are evaluated.  The geometry mirrors
+    ``LearnedAdmission.place`` exactly: bumper gap from the entrant's front
+    (lane start + nominal length + eps) to the rearmost vehicle's rear bumper,
+    credited with the leader's next-step movement ``max(0, v_lead) * dt``.
+    Membership (presence/lane) uses the exact hard masks; only the gap itself
+    stays differentiable through the recorded positions/speeds, exactly like
+    the crossing surrogate.  Mainline takes the larger of lanes 0/1 (the
+    incumbent "any" lane order); an empty lane is an infinite gap.
+    """
+    lanes = ((0, 1), (2,))
+    out = []
+    for group in lanes:
+        per_lane = []
+        for lane in group:
+            member = pre_present.bool() & (pre_lanes.long() == int(lane))
+            big = torch.full_like(pre_pos, float("inf"))
+            s_min, index = torch.where(member, pre_pos, big).min(-1)
+            rear = s_min - pre_length.gather(-1, index.unsqueeze(-1)).squeeze(-1)
+            v_lead = pre_speeds.gather(-1, index.unsqueeze(-1)).squeeze(-1).clamp_min(0)
+            front = float(entry_s_m[lane]) + float(length_new_m) + float(position_eps_m)
+            per_lane.append(rear - front + v_lead * float(dt_s))
+        best = per_lane[0] if len(per_lane) == 1 else torch.maximum(per_lane[0], per_lane[1])
+        out.append(best)
+    return torch.stack(out, -1)
+
+
+def smooth_admission_source(queue0, due, gap_end, min_gap, width=ADMISSION_WIDTH_M,
+                            dt_s=0.5):
+    """TRAINING-ONLY differentiable surrogate of the exact due-inserted ledger.
+
+    Mean-field relaxation of the hard admission event chain (WMFIX_FEAS_BLOCKED
+    option (c)): the per-step Heaviside insertion test on the end-of-step
+    bumper gap becomes a sigmoid gate ``p_t = sigmoid((gap_end_t - min_gap_t) /
+    width)`` and each entrance queue drains through it,
+    ``Q_{t+1} = (Q_t + due_t) * (1 - p_t)``, seeded with the recorded Q0.
+    ``gap_end`` (from :func:`entrance_gap_series`) is the only differentiable
+    input; demand, Q0 and the hard-path tested ``min_gap`` thresholds are
+    detached constants, so the gradient path is exactly the smoothed insertion
+    boundary of the events the exact ledger counted.  Returns
+    ``(source [R], queue [R, T, 2])`` with the source integral in the scorer's
+    0.5 s left-boundary rectangle convention.  The exact integer
+    ``SourceLedger`` remains the only reported/verdict value; enabling this
+    surrogate is a training-side flag, never set at inference.
+    """
+    if float(width) <= 0.0:
+        raise ValueError("admission smoothing width must be positive")
+    if queue0.shape != due.shape[:1] + (due.shape[2],) or due.shape[1] < 1:
+        raise ValueError("queue0 [R,2] must match due [R,T,2]")
+    if gap_end.shape != due.shape or min_gap.shape != due.shape:
+        raise ValueError("gap_end/min_gap [R,T,2] must match due")
+    gate = torch.sigmoid((gap_end - min_gap) / float(width))
+    queue = []
+    q = queue0.to(due.dtype)
+    for t in range(due.shape[1]):
+        queue.append(q)
+        q = (q + due[:, t]) * (1.0 - gate[:, t])
+    series = torch.stack(queue, 1)
+    return float(dt_s) * series.sum((1, 2)), series

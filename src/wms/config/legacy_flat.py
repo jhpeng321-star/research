@@ -54,6 +54,8 @@ FLAT_TO_PATH: dict[str, str] = {
     # S-RAMPFIX LEARNED MAINLINE INTERACTION RESIDUAL
     "mainline_interaction_residual": "model.mainline_interaction_residual",
     "merge_response": "model.merge_response",
+    "merge_response_merge_bases": "model.merge_response_merge_bases",
+    "merge_response_ramp_bases": "model.merge_response_ramp_bases",
     "mainline_residual_hidden": "model.mainline_residual_hidden",
     # S-RAMPFIX LANE_V5 LONG-RUN PARAMETER GROUP
     "lane_v5_long": "optim.lane_v5_long",
@@ -569,6 +571,8 @@ OMIT_WHEN_DEFAULT: tuple[str, ...] = (
     # S-RAMPFIX (default OFF = bit-identical receipts/configs)
     "mainline_interaction_residual", "mainline_residual_hidden",
     "merge_response",
+    # S-WMFIX-C fallback 2 (default 0 = the registered 4-basis grid)
+    "merge_response_merge_bases", "merge_response_ramp_bases",
     "lane_v5_long", "lane_v5_long_lr_scale",
 )
 

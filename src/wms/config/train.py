@@ -276,6 +276,10 @@ class ModelConfig:
     # gate / bounds / clamp; trainable as its own optimizer parameter group.
     mainline_interaction_residual: bool = False
     merge_response: bool = False
+    # S-WMFIX-C fallback 2 (default 0 = the registered uniform 4-basis grid):
+    # geometry-concentrated extra centres over the merge section / ramp lane.
+    merge_response_merge_bases: int = 0
+    merge_response_ramp_bases: int = 0
     # Width of the mainline residual MLP.
     mainline_residual_hidden: int = 64
     checkpoint_residual: bool = False
@@ -483,6 +487,12 @@ class ModelConfig:
         require(isinstance(self.mainline_interaction_residual, bool),
                 "model.mainline_interaction_residual must be a boolean")
         require(isinstance(self.merge_response, bool), "model.merge_response must be a boolean")
+        for name in ("merge_response_merge_bases", "merge_response_ramp_bases"):
+            require(isinstance(getattr(self, name), int)
+                    and not isinstance(getattr(self, name), bool)
+                    and getattr(self, name) >= 0
+                    and getattr(self, name) != 1,
+                    f"model.{name} must be an integer 0 (off) or >= 2")
         require(isinstance(self.mainline_residual_hidden, int)
                 and not isinstance(self.mainline_residual_hidden, bool)
                 and self.mainline_residual_hidden >= 1,

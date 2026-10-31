@@ -51,6 +51,11 @@ class ModelSpec:
     black_box: bool = False
     # WMFIX: pooled upstream discharge field; no module/RNG/arithmetic when OFF.
     merge_response: bool = False
+    # S-WMFIX-C fallback 2 (default 0 = the registered uniform 4-basis grid):
+    # extra spatial centres concentrated over the observed merge section /
+    # ramp acceleration lane (network geometry only, no behavioural thresholds).
+    merge_response_merge_bases: int = 0
+    merge_response_ramp_bases: int = 0
     rollout_mode: str = "residual"
     lane_head: str = "off"
     lane_rule: str = "mobil"
@@ -204,6 +209,12 @@ class ModelSpec:
                 or isinstance(self.mainline_residual_hidden, bool) \
                 or self.mainline_residual_hidden < 1:
             raise ValueError("mainline_residual_hidden must be an integer >= 1")
+        for name in ("merge_response_merge_bases", "merge_response_ramp_bases"):
+            value = getattr(self, name)
+            if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+                raise ValueError(f"{name} must be an integer >= 0")
+            if value == 1:
+                raise ValueError(f"{name} must be 0 (off) or >= 2 (a resolvable region)")
         if self.mainline_interaction_residual and self.black_box:
             raise ValueError("mainline_interaction_residual needs the structured WM-S "
                              "(black_box off)")
