@@ -4,7 +4,7 @@
 
 **Working title:** “WM-S: Physics-Informed Prediction under Unseen Traffic Controllers and the Limits of Its Verdicts.”
 
-**Intended headline:** zero-shot closed-loop unseen-controller prediction versus black-box prediction, with explicit evidence-bounded controller-selection use. The completed full-feedback superiority sentence remains `[[PENDING: C1CLOSED.md / S-C1CLOSED]]`. The owner can draft the model, historical response evidence, decision evidence, and failure envelope now.
+**Supported drafting headline:** physics-informed response prediction for unseen controllers, anchored by the recovered historical teacher-forced wall comparison and its paired uncertainty. Add the genuine-history PI diagnosis as a conditional extension, and the exploratory selection result as decision evidence. **Intended full-feedback extension:** `[[PENDING: complete eligible C1CLOSED result / S-C1CLOSED]]`. Do not put “closed-loop superiority” in the title/abstract as an established finding at this cut.
 
 **Contribution bullets to preserve:** executable-controller/environment factorization; controller-exclusion evaluation separating recorded-action and feedback protocols; control-oriented reliability diagnosis linking regret, horizons, entrance accounting and regional error. Novelty is the combination and its measurements, not invention of physics-informed WMs, residual dynamics, or simulator admissibility.
 
@@ -20,9 +20,9 @@ At typesetting, shorten prior-attempt history before dropping protocol caveats o
 
 - **A-P1:** New CAV controllers require forecasts of surrounding human responses under changed feedback actions, motivating controller/environment factorization. No novelty priority claim.
 - **A-P2:** WM-S combines a versioned IDM/MOBIL-style core, history-conditioned settings, gated residual and entry/merge handling with executable controller code. Cite C1-FACTOR, WM-SETTINGS, WM-LANES.
-- **A-P3:** `[[PENDING: exact eligible closed-loop WM-versus-BB result / S-C1CLOSED]]`; until supplied, say historical teacher-forced response and exploratory feedback-selection evidence support distinct limited capabilities.
+- **A-P3:** Recovered historical wall response beats the frozen in-house black boxes under its teacher contract. Genuine-history WM2 PI advantage is a separately shifted conditional test, not a fair full-feedback win; use C1-WALL/C1-PI. `[[PENDING: exact eligible autonomous WM-versus-BB result / S-C1CLOSED]]`.
 - **A-P4:** Report the bounded tested direction envelope and the distinction between source-error repair and unresolved road error; use HORIZON-SIGN and ERR-ENTRY with their source comments.
-- **A-P5:** These measurements motivate a declared controller/horizon/population envelope for choosing controllers; no universal certification claim.
+- **A-P5:** Completed calibration fails its transfer gate and state-dependent switching opportunity is not yet selector efficacy; these results motivate a declared controller/horizon/population envelope, without universal certification.
 
 ## I. Introduction
 
@@ -41,7 +41,7 @@ At typesetting, shorten prior-attempt history before dropping protocol caveats o
 
 - **III-P1 — exact claim:** Given permitted history and common initial road/source state, predict the traffic consequences of controller code executed on predicted observations. Define `u=pi(o(x_hat))`, `x_hat'=F_theta(x_hat,u,xi)`. No future observations re-anchor the horizon. Teacher forcing of CAVs is distinct from feedback controller execution; historical uses of “open loop” may refer to no re-anchoring, not absence of controller feedback.
 - **III-P2 — exact claim:** Define cost `J`, intervention difference `Delta J=J(pi)-J(ref)` (negative favors the controller), offline choice and oracle regret. All-request source+road J, exported E1 `team`, and initial-vehicle proxies retain distinct names until bound. Evidence C1-MAPPO and ERR-REGION.
-- **III-P3 — exact claim:** Zero-shot means before exposure to the evaluated controller's outcomes. Specify checkpoint/corpus/exposure, originals/entrants, lane ownership, observation channels, reference arm, and WORLD sampling unit. Same-world other-arm training is permitted only when explicitly labeled; no unseen-world wording. `[[PENDING: hash-linked protocol table / S-C1GAP + S-C1CLOSED]]`.
+- **III-P3 — exact claim:** Zero-shot means before exposure to the evaluated controller's outcomes. Specify checkpoint/corpus/exposure, originals/entrants, lane ownership, observation channels, reference arm, and WORLD sampling unit. Historical old-C1/BB comparisons share seen-world training; newer diagnosis changes world coverage too. Name the completed corpus audit and incomplete initialization chain separately. `[[PENDING: remaining lineage and complete feedback protocol table / S-C1GAP + S-C1CLOSED]]`.
 
 ## IV. WM-S method
 
@@ -55,28 +55,33 @@ At typesetting, shorten prior-attempt history before dropping protocol caveats o
 
 - **V-P1 — exact claim:** Simulator highway-merge study uses existing evidence panels with different checkpoints and observation/execution contracts. Specify network/config identities from eligible receipts; describe synthetic simulator behavior without reading assignment files. `[[PENDING: compact experimental binding / S-C1GAP + S-C1CLOSED]]`.
 - **V-P2 — exact claim:** Compare structured, in-house BB-traj, BB-id where supported, and simple physics/keep-speed references under declared training/input contracts. BB-id's learned CAV path is not equivalent to the teacher-matched BB-traj path; absent feedback capability is unavailable, not a loss.
-- **V-P3 — exact claim:** Preserve source uncertainty and panel membership. Regret comparisons require matched controller/cost support; source repair is a paired diagnostic; regional share is covariance accounting. Mark exploratory outcomes, exclusions, missing histories and metric denominators. Do not create new pooled intervals from exported marginal intervals.
+- **V-P3 — exact claim:** Preserve source uncertainty and panel membership. Regret comparisons require matched controller/cost support; source repair is a paired diagnostic; regional share is covariance accounting. Original versus shifted history starts and teacher-forced versus reset-controller feedback retain separate rows. Mark survivor loss, exploratory component selection and unadjusted intervals; no synthesized paired intervals.
+- **V-P4 — exact claim:** Tiny-pulse sensitivity, recorded scenario winners and full-rerun same-state winners answer different questions. Replay equality validates execution; pulse response tests a limited chaos explanation; headroom tests opportunity. None tests whether a WM selector captures that opportunity. C1-FLOOR/C1-SWITCH; main selector evaluation stays `[[PENDING: complete corrected-adapter campaign / S-C1SWITCH]]`.
 
 ## VI. Results
 
 ### A. Unseen-controller prediction and short-clock choice
 
 - **VI-A-P1 — exact claim:** The recovered historical unseen-wall report supports structured HDV-response error superiority over BB-traj with paired world-bootstrap uncertainty, under recorded CAV motion; BB-id is separately qualified. Include C1-WALL point values and paired contrasts from `CLAIMS.md`, with source comments. `wall_pilot` is sensitivity, not an independent pooled replication.
-- **VI-A-P2 — exact claim:** `[[PENDING: full-feedback unseen PI/wall or other excluded-controller comparison and paired result / S-C1CLOSED]]`. If unavailable, explicitly state the full-feedback extension remains unresolved; the historical sentence cannot fill this paragraph.
+- **VI-A-P2 — exact claim:** The PI diagnosis finds genuine regression at original starts, a major training-coverage confound, and a favorable WM2 full-history teacher-forced contrast on separately shifted starts. Use exact C1-PI/C1-COVERAGE contrasts; preserve adverse original and reset-feedback results. Do not combine the original-start later-clock advantage with shifted-start history gains into one curve.
+- **VI-A-P2b — exact claim:** `[[PENDING: complete autonomous unseen PI/wall or other excluded-controller comparison / S-C1CLOSED]]`. The registered common-plant campaign is running; partial tasks, framework canaries and reset-controller stress tests cannot fill this paragraph.
 - **VI-A-P3 — exact claim:** Strict-history E1 offers exploratory offline controller-choice evidence with measured oracle regret and constant-selector references. Report marginal regrets plus the separately exported paired WM-minus-BB advantage and difference versus always-MAPPO; numerical pairing is now available, while eligibility/plant/cost bindings remain pending. Evidence C1-MAPPO; do not infer the paired interval from marginal bars.
-- **Visual:** final feedback comparison is pending; available selection panel is `fig_regret.png`. Historical wall evidence has its own labeled supplementary plot; never label it feedback.
+- **VI-A-P4 — exact claim:** Recorded library diversity and fresh same-state headroom justify investigating switching, with small best-to-second margins; they do not show that WM-guided switching works. The stochastic-key anonymity repair caused a mechanical retention stop; the authorized corrected continuation remains `[[PENDING: full efficacy results / S-C1SWITCH]]`. Include only a compact opportunity sentence if page pressure requires. Evidence C1-SWITCH.
+- **Visual:** final feedback comparison is pending; retain `fig_regret.png`. Evening diagnosis and headroom artwork are specified in `FIGURES.md`; historical wall artwork remains teacher-forced.
 
 ### B. Where verdict trust ends
 
 - **VI-B-P1 — exact claim:** The frozen sign export's tested short clocks pass, then tested longer clocks fail; checkpoint binding is unresolved and overall fidelity qualification is a separate test. Evidence HORIZON-SIGN and HORIZON-UNIVERSAL; show `fig_direction.png`.
 - **VI-B-P2 — exact claim:** Corrected timeline/native-lane accounting retains large paired-J error and negative long-clock correlation. Upstream/merge-region covariance dominates the error account but is not a queue-specific causal decomposition. Evidence ERR-REGION; show signed covariance bars, never a pie chart.
 - **VI-B-P3 — exact claim:** Entry-path repair reduces source-wait MAE while total MAE worsens because source/road errors cancel. Keep left-boundary and one-tick clocks separate. Evidence ERR-ENTRY; show entry component contrast adjacent to, but separately labeled from, the covariance panel.
-- **VI-B-P4 — exact claim:** Failed merge-response and smoothing attempts do not establish a repaired WM; final calibration is `[[PENDING: completed verdict / S-WMCALIB]]`. Keep a compact negative-result statement and the baseline/repair comparison; prior-attempt inventory belongs in the package rather than a long manuscript detour.
+- **VI-B-P4 — exact claim:** Completed grouped-CV calibration and independent transfer do not qualify long-run policy credit. Raw WM2 loses to arm-mean in grouped CV; transfer cell orderings differ and the selected calibrator fails its frozen gate. This is stronger than the afternoon missing-result statement. Evidence WM-CALIB; retain split/reference/selection labels.
+- **VI-B-P5 — exact claim:** The tiny native-pulse experiment supplies no measured short-window chaos explanation: endpoint medians remain near zero, with finite aggregate sensitivity and later survivor loss. It is not an irreducible RNG bound. Evidence C1-FLOOR.
+- **VI-B-P6 — exact claim:** Failed merge-response/smoothing and the killed queue-service prototype leave the long tail unresolved. The data-only pilot's candidate gate and short-WM-plus-value comparison remain `[[PENDING: complete respective gates / S-WMFIXMERGE + S-WMVALUE]]`. Keep one compact negative-result sentence; full attempt history and companion backup belong in the package.
 
 ## VII. Discussion, threats, conclusion
 
 - **VII-P1 — exact claim:** Existing results support bounded decision evidence, while failing effects/magnitudes and entry cancellation prevent unrestricted use as a controller judge. Recommend controller-, plant-, metric-, population- and horizon-specific validation before selection; recommendation is not measured deployment performance.
-- **VII-P2 — exact claim:** Simulator/prior similarity, exposure, unequal baseline contracts, panel selection, missing uncertainty and sensing/plant mismatches limit external validity. Answer the most material objections from `THREATS.md` without implying real-road validation.
+- **VII-P2 — exact claim:** Simulator/prior similarity, coverage-confounded checkpoint comparisons, unequal baseline contracts, shifted-history starts, controller-memory resets, survivor loss and sensing/plant mismatches limit external validity. Software restore artifacts and detector-ID stochastic keys require end-to-end execution audits; repaired mechanics alone are not scientific wins. Use `THREATS.md`.
 - **VII-P3 — exact claim:** Conclude with the factorization and the measured limits. Fill the zero-shot feedback superiority clause only if C1-CLOSED becomes SUPPORTED. Keep failed qualification findings even if a later calibration succeeds.
 
 ## References and drafting close-out

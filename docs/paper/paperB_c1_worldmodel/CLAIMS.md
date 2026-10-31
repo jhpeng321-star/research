@@ -2,6 +2,8 @@
 
 Extends `E:/research-dense/docs/paper/CLAIM_EVIDENCE_CHECKLIST.md`; that checklist is an older evidence cut, not overriding authority. Status refers to the exact claim below. Keep source comments when transferring numbers into prose. `[[PENDING: ... / agent]]` is an insertion request, never a result.
 
+**Evening refresh:** use the recovered historical response result as the supported headline; full autonomous feedback superiority is still unresolved. Diagnosis, calibration, perturbation and switching-headroom results below supersede afternoon pending language. Exact source cut: `SOURCE_REFRESH.json`; review receipt: `NIGHT_SOURCE_REVIEW.md`.
+
 ## C1-FACTOR — Executable controllers can be evaluated separately from human dynamics
 
 - **Status: SUPPORTED (architecture).** WM-S factors controller code from the learned traffic transition. In feedback evaluation, controllers receive predicted observations; teacher-forced CAV motion is a different contract.
@@ -18,15 +20,23 @@ Extends `E:/research-dense/docs/paper/CLAIM_EVIDENCE_CHECKLIST.md`; that checkli
 - **Correction to older checklist:** the original report was previously unavailable; recovered report now supplies paired intervals. The subsequently delivered `E:/agent-work/c4-c1gap/docs/paper_results/C1_GAPS.md` independently reconstructs the wall contrasts and supplies marginal world-bootstrap CIs for the displayed medians: **8.71 [7.10,13.61] / 25.41 [16.96,31.09] / 40.07 [33.61,54.68] m**. <!-- Source: E:/agent-work/c4-c1gap/docs/paper_results/C1_GAPS.md:23-25. -->
 - **Independent decision correction:** historical wall trajectory-error advantage does not imply wall selector advantage: short-clock regrets tie and the recovered report's “every wall beneficial” interpretation conflicts with its costs (native is optimal/tied). Entries are disabled and the historical ranking metric is road-only, not full fleet-plus-source cost. Use the corrected world-cluster reconstruction rather than the original start-resampled ranking intervals. Evidence: C1_GAPS.md, C1-PAIRED. `[[PENDING: unbroken from-initialization exclusion proof / S-C1GAP]]`.
 
-## C1-PI — Existing PI summaries establish current closed-loop PI transfer
+## C1-PI — Diagnosis supports a conditional genuine-history extension, not autonomous PI superiority
 
-- **Status: PENDING.** The recovered wall report's comparison-to-PI paragraph and change log support a historical qualitative lead only. Do not import its approximate PI numbers as a current feedback result.
-- **Evidence:** recovered wall report, Comparison to PI; `E:/research-dense/docs/WM_CHANGE_LOG.md`; main checklist C1-PI.
-- `[[PENDING: original PI exclusion receipt, checkpoint binding, feedback PI/Wall results and comparable black-box contracts / S-C1GAP + S-C1CLOSED]]`.
+- **Status: SUPPORTED (completed diagnosis, teacher-forced/conditional presence).** Original PI snapshot-start WM2−BB-traj common-ID position-error contrast at **60 s** is adverse: **+17.85 [3.24,31.27] m**; original-start **120 s** contrast is favorable, **−47.82 [−95.20,−27.75] m**. These are distinct clocks, not controller-choice evidence. <!-- Source: E:/agent-work/c4-c1pidiag/docs/paper_results/C1PIDIAG.md:7-14. -->
+- On separately registered shifted starts `t0′=t0+60 s`, genuine full-history WM2−BB-traj is **−45.05 [−52.73,−25.25] m at 60 s** and **−144.74 [−250.11,−36.22] m at 120 s**. The frequently quoted roughly **48 m** advantage belongs to the original-start later clock, not this shifted panel. <!-- Source: E:/agent-work/c4-c1pidiag/docs/paper_results/C1PIDIAG.md:14,25-32. -->
+- Within identical shifted PI starts, full history versus snapshot improves WM2 by **−13.47 [−26.92,−1.49] m at 60 s**. Later-start selection also changes rankings, so history alone does not explain the entire between-panel improvement. Full-history wall comparison remains inconclusive. <!-- Source: E:/agent-work/c4-c1pidiag/docs/paper_results/C1PIDIAG.md:33-37. -->
+- **Scope:** C1 `87ed02e0`, 13E `952ec059`, WM2 `b8797242`, frozen BB-traj `afaaa32c`; no baseline retraining. Recorded CAV teacher, conditional presence/exits, entries OFF and dormant mix. Shifted denominators differ by clock/survivors. Do not call this production WM2+mix or autonomous closed-loop superiority.
+- **Adverse feedback retained:** reset-controller late PI feedback gives WM2−BB **+201.00 [141.73,623.94] m at 120 s**. Prior PI command state is unbound: a conditional-reset stress test, not a fair continuation or isolated HDV-model error. `[[PENDING: fully initialized autonomous PI/Wall feedback comparison / S-C1CLOSED]]`. <!-- Source: E:/agent-work/c4-c1pidiag/docs/paper_results/C1PIDIAG.md:39-45. -->
+
+## C1-COVERAGE — Historical/newer differences isolate architecture or history
+
+- **Status: CONTRADICTED as an isolated causal attribution.** Old C1 and frozen BBs saw other-controller training from **40/40 PI and 13/13 wall diagnosis worlds**; audited 13E/WM2 corpora overlap **0/40 and 0/13**. Historical C1 tests unseen controllers on seen worlds; newer comparisons also change world exposure. Corpus, weights and physics change together. <!-- Source: E:/agent-work/c4-c1pidiag/docs/paper_results/C1PIDIAG.md:3-4. -->
+- No tested component rollback restores the original PI advantage; runtime replay retains regression but is not exact archived parity. Diagnosis supports a major documented coverage confound plus a within-panel history effect, not a coverage-only causal proof or universal history fix. Evidence: C1PIDIAG.md, components/runtime/publication boundary.
 
 ## C1-CLOSED — Zero-shot full-feedback superiority to black-box prediction is complete
 
-- **Status: PENDING.** The requested `E:/agent-work/c4-c1closed/C1CLOSED.md` was absent at initial review. Historical wall motion replay cannot supply this claim.
+- **Status: PENDING (registered campaign running).** The delivered `E:/agent-work/c4-c1closed/docs/paper_results/C1CLOSED.md` exists; the task-named root alias is absent. Complete-panel estimates remain unavailable. Historical wall motion replay and partial task completion cannot supply this claim.
+- **Bound design:** WM2+mix `b8797242`, frozen BB-traj `afaaa32c`, legacy BB-id `e12c81c0` and historical C1 `87ed02e0`; common longitudinal/gap-based ramp plant without ordinary CAV lane changes. BB-id keeps a different learned-CAV contract; production-native WM2 is a separate diagnostic. Cross-host exact parity failed and remains disclosed. Evidence: C1CLOSED.md and C1CLOSED_RUNTIME.md. No partial performance values enter the headline.
 - **Required evidence:** controller exclusion before training/adaptation; identical starts/histories; actual controller feedback on imagined observations; native/controlled original and entrant lane ownership; command-to-plant parity; endpoint and effect errors; paired model contrasts with world uncertainty; baseline data/compute contracts.
 - **Disposition:** retain the headline as the paper question; assert a completed full-feedback comparison only after `[[PENDING: eligible result and hashes / S-C1CLOSED]]`.
 
@@ -97,15 +107,38 @@ Extends `E:/research-dense/docs/paper/CLAIM_EVIDENCE_CHECKLIST.md`; that checkli
 
 - **Status: CONTRADICTED for completed reviewed candidates.** The pilot failed its registered cross-horizon gate; the smoothed-objective feasibility also failed and its successor pilot was not launched.
 - **Evidence:** `E:/agent-work/c4-wmfixmerge/docs/paper_results/WMFIX_PILOT_FAIL.md`; `WMFIX_V2_FEAS.md`; historical failures in `WMFIX_PRIOR.md`.
-- **Refresh:** `E:/agent-work/c4-wmfixmerge/docs/paper_results/WMFIX_PILOT_V2DATA.md` documents a separately authorized data-only successor waiting for resources; no passing accuracy verdict is reported. Its dispatch/readiness is PENDING efficacy, not another completed failure or a successful repair.
+- **Refresh:** `E:/agent-work/c4-wmfixmerge/docs/paper_results/WMFIX_PILOT_V2DATA.md` now records completed training updates and an assembled zero-head baseline, with candidate panels/gate still pending. An entrant-controller binding failure was repaired without repeating saved updates. MAIN restricts it to its registered gate; no passing repair or extension is established. Training completion and baseline metrics are not efficacy.
 - **Scope:** retain objective/horizon and hard-event gradient mismatches as failure evidence. Finite gradients, local loss improvement, or passing unit fixtures are not prediction-accuracy qualification. Later candidate outcomes remain `[[PENDING: any completed replacement verdict / S-WMFIXMERGE]]`.
 
-## WM-CALIB — Calibration restores trustworthy policy credit
+## WM-CALIB — Completed calibration restores trustworthy policy credit
 
-- **Status: PENDING.** Only handoff/resume reports were available initially; old calibration outputs are smoke artifacts and cannot be quoted as completed results.
-- **Evidence:** `E:/agent-work/c4-wmcalib/docs/paper_results/{WMCALIB_HANDOFF,WMCALIB_RESUME}.md`.
-- `[[PENDING: WMCALIB.md, complete grouped-CV selection and independent SPEEDHEAD transfer versus raw WM and arm-mean, plus separate WMREQUAL3 diagnostic / S-WMCALIB]]`.
-- Calibration is controller/reference/population dependent. Same-panel fitting cannot establish zero-shot controller generalization or calibrated epistemic uncertainty.
+- **Status: CONTRADICTED for the frozen calibration pipeline; completed verdict NOT USABLE as long-horizon policy credit.** Final `E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB.md` supersedes handoff/smoke pending fields. The gate requires better MAE, sign and Spearman than both raw WM2 and arm-mean at every horizon in both splits.
+- **Grouped-CV baseline warning:** on **40 fit worlds / 120 contrasts per horizon**, raw WM2 paired-effect MAE at **120/300/600 s** is **263/1719/6013 veh-s**, versus no-WM arm-mean **185/999/3298 veh-s**. Selected calibrators achieve **174/865/3152 veh-s**, but do not pass the combined gate. <!-- Source: E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB.md:2-14,17-28. -->
+- **Transfer retained:** SPEEDHEAD selected-calibrator MAE **212/1783/4754 veh-s**, versus raw **176/1399/4701**, arm-mean **198/1568/4073**, at the same clocks; all transfer horizon gates FAIL. Raw WM is not worse than arm-mean in every transfer cell: avoid promoting the CV ordering into a universal claim. <!-- Source: E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB.md:29-50. -->
+- **Scope:** arm−CTRL0 effects, mean paired futures (median sensitivity separately), objective J rather than silently substituted continuous team delay; world-grouped CV is selection evidence, not an independent test. WMREQUAL3 transfer changes reference/arms and is diagnostic only. No restoration of unseen-controller qualification or calibrated epistemic uncertainty follows.
+
+## WM-QUEUE — A conservative queue/service prototype repairs the long tail
+
+- **Status: CONTRADICTED for this registered prototype; KILL.** At **300 s**, queue paired-effect MAE/sign are **1362 veh-s / 0.313**, versus state-only **932 / 0.625**, arm-mean **930 / 0.646**, on **eight test worlds**. Queue−state-only sign difference is **−0.313 [−0.563,−0.104]** and baseline−queue MAE **−429.5 [−645.2,−213.3] veh-s**. Exact conservation does not ensure correct controller effects. <!-- Source: E:/agent-work/c4-wmqueue/docs/paper_results/WMQUEUE.md:13-16,24-28. -->
+- The matched cached-WM comparison uses a smaller complete subset; do not attach the full-panel baseline cells to that subset. This falsifies this frozen prototype, not all queue models. Evidence: WMQUEUE.md, matched coverage and final scope.
+
+## C1-FLOOR — Unavoidable chaos explains the short-window WM error
+
+- **Status: CONTRADICTED as an explanation supplied by the measured perturbation test.** On **six native development worlds**, two one-tick **+0.01 m/s** HDV pulses per world yield world-median original-HDV position/speed errors **exactly zero through 120 s**, excluding both target IDs. Aggregate team-delay absolute-error median is **0.5193 veh-s at 120 s** and **55.61 [0.0000382,421.18] veh-s at 300 s**. <!-- Source: E:/agent-work/c4-c1floor/docs/paper_results/C1FLOOR.md:7-20. -->
+- **Scope:** amplitude-, target-, arm- and median-dependent sensitivity; not proof that traffic is never chaotic, and not an irreducible stochastic lower bound. No joint original survivors remain at the last endpoint clock, so those endpoint cells are unavailable, never zero. RNG-only floor remains `[[PENDING: valid restore/reseed reference / S-C1FLOOR + MAIN]]`; the accepted fallback is complete, not a running floor job. Saved-state mismatch is a software/execution issue, not measured RNG divergence.
+
+## C1-SWITCH — State-dependent choice has headroom, while WM-guided switching benefit is complete
+
+- **Status: SUPPORTED for opportunity; PENDING for predictor/selector benefit.** Recorded **90-world, 600 s** unique winners: native **22**, CTRL0 **17**, MAPPO **19**, PI **29**, CIRCLES **3**. These fixed-episode winners establish scenario diversity, not same-moment switching. <!-- Source: E:/agent-work/c4-c1switch/docs/paper_results/C1SWITCH_WINNERS.md:5-13. -->
+- Full-rerun Step0b passes its headroom gate on **16 native-trunk states / eight worlds**. Unique **60 s** wins: native **2**, CTRL0 **9**, MAPPO **3**, plus **two ties**; unique **90 s** wins: native **2**, CTRL0 **7**, MAPPO **1**, PI **3**, CIRCLES **1**, plus **two ties**. Median best–second margin **1.832371 / 6.853775 veh-s** at those clocks, including ties. Every controller wins somewhere at the later clock, not the earlier one. <!-- Source: E:/agent-work/c4-c1switch/docs/paper_results/C1SWITCH_WINNERS.md:31-36. -->
+- **Validation/continuation:** the first paired canary is mechanical evidence only. Detector IDs affected its stochastic key despite anonymous tensors; correction changed a WM pick and triggered the retention STOP. MAIN subsequently authorized a corrected canary and continuation, still gated by parity and BB reuse; no complete main efficacy result is delivered at this cut. Evidence: `E:/agent-work/c4-c1switch/docs/paper_results/C1SWITCH_DESIGN.md`, final continuation clauses; shared REGISTRATION.md, MAIN evening authorization. `[[PENDING: corrected-adapter complete switching regret/episode comparison / S-C1SWITCH]]`.
+- **Contract:** full observable history; WM2 `b8797242` versus frozen BB; predictions optimize current-belief on-road delay with entries OFF/dormant mix, evaluation uses full fleet+source delay. Controller memory and approximate native plant remain explicit; deterministic repeat noise is not an RNG floor.
+
+## COMPANION-STATUS — A validated value tail or successful SUMO backup licenses WM-based control
+
+- **Status: PENDING for WMVALUE, CONTRADICTED for the completed backup win.** WMVALUE inference is running with frozen real-value/no-WM comparators and no efficacy verdict. `[[PENDING: complete frozen A–E verdict / S-WMVALUE]]`. Evidence: `E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md`.
+- Companion SUMO backup stopped: development learned−MAPPO **J600 +508.3 / +857.9 / +548.5 veh-s** at **u3/u7/u12**, with no useful deployed cooperation. This is context, not a Paper B result or a positive teacher. <!-- Source: E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_RUN.md:3-37. -->
+- Saved-state restore and held-absolute-latent/decoder artifacts were identified; full reruns plus the common current-mean/decoder path pass the mechanical gates. Old artifact-contaminated credits remain invalid. Evidence: `E:/agent-work/c4-sumocf/docs/paper_results/ARTIFACT_CHECK.md`, failure, full-rerun and CPU-correction sections. Mechanical repair establishes neither cooperation nor accuracy.
 
 ## CTRL-USE — Short-clock selection evidence licenses long-run controller choice
 

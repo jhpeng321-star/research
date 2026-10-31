@@ -91,13 +91,58 @@ Every delivered figure has a PNG and vector PDF twin. Use the vector version at 
 - **Generating command:** `[[PENDING: agent's existing CSV export command; rendering only after receipt arrives / S-C1CLOSED]]`.
 - **Status:** PENDING. No historical teacher-forced number is promoted to this table.
 
-### Calibration / negative-result row
+### Calibration / negative-result row — complete negative verdict
 
 - **Purpose:** show whether completed calibration changes decision trust beyond raw WM and arm-mean, while retaining failed repair outcomes.
 - **Columns:** selected calibrator; frozen selection scope; grouped CV; independent transfer; matched reference/arms; sign/MAE/rank; final gate verdict.
-- **Sources:** WMFIX_PILOT_FAIL/WMFIX_V2_FEAS for failure wording; `[[PENDING: WMCALIB.md and complete exports / S-WMCALIB]]` for calibration numbers.
-- **Generating command:** `[[PENDING: completed agent's export-to-table command / S-WMCALIB]]`; do not run agent monitor or calibrator from the paper worktree.
-- **Status:** failure text supported; calibration cells PENDING. A compact text sentence can replace this row if space is tight.
+- **Sources:** `E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB.md`, grouped CV/SPEEDHEAD tables and final verdict; earlier repair failure reports retain their separate scope.
+- **Generating command:** planned bounded `build_evening_figures.py` report-to-CSV transcription/render, described below; no calibrator, fitting or inference.
+- **Status:** final calibration NOT USABLE, no longer PENDING. Manuscript can use a compact sentence plus split-labeled MAE panel; keep the multimetric gate in the caption, not an implication that MAE alone qualifies credit.
+
+## Evening additions — existing-evidence rendering plan
+
+Render command from the Paper B worktree:
+
+```powershell
+python -B "docs/paper/paperB_c1_worldmodel/build_evening_figures.py" --refresh-inputs
+```
+
+Subsequent reproduction omits `--refresh-inputs` and uses frozen package snapshots. Exact allowlist/hash receipt: `data/EVENING_SOURCE_MANIFEST.json`. These additions use source tables and existing CSVs only; no new bootstrap, model execution, fitting or simulator run. `[[PENDING: local artwork generation and visual QA / S-PAPERB]]` at the documentation-step commit; final generation receipt updates this marker.
+
+### PI diagnosis — separated starts and paired endpoint contrasts
+
+- **Purpose:** show the adverse original-start short-clock comparison alongside the genuine-history extension without falsely drawing one horizon curve.
+- **Planned files:** `figures/fig_pi_diagnosis.{png,pdf}`, `data/pi_diagnosis.csv`, frozen `data/pidiag.source.md`.
+- **Source:** `E:/agent-work/c4-c1pidiag/docs/paper_results/C1PIDIAG.md`, original/shifted teacher-forced WM2 rows and within-shifted-start history contrast.
+- **Generating command:** common evening renderer; report row/contrast extraction.
+- **Caption claim:** “Common-ID WM2−BB-traj endpoint error: original snapshot starts **+17.85 [3.24,31.27] m at 60 s**, **−47.82 [−95.20,−27.75] at 120 s**; separate full-history shifted starts **−45.05 [−52.73,−25.25] / −144.74 [−250.11,−36.22] m**. Within shifted PI starts, full-history−snapshot **−13.47 [−26.92,−1.49] m at 60 s**. All are descriptive world-bootstrap intervals; teacher-forced CAVs and conditional presence, entries OFF. Different start clocks are not a trajectory curve or an isolated history intervention.” <!-- Source: E:/agent-work/c4-c1pidiag/docs/paper_results/C1PIDIAG.md:7-14,25-37,45. -->
+- **Placement:** compact prediction-results supporting panel; wall results and reset-controller feedback are not pooled. A favorable endpoint contrast does not establish regret or full-feedback superiority.
+
+### Calibration — grouped CV versus independent transfer
+
+- **Purpose:** make the no-WM comparison and transfer failure visible.
+- **Planned files:** `figures/fig_calibration.{png,pdf}`, `data/calibration.csv`, frozen `data/calibration.source.md`.
+- **Source:** `E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB.md`, both complete split tables.
+- **Generating command:** common evening renderer; exact MAE/sign/correlation/order transcription, plotting MAE only.
+- **Caption claim:** “Paired-effect MAE on grouped CV at **120/300/600 s** is raw WM2 **263/1719/6013 veh-s**, no-WM arm-mean **185/999/3298**, selected calibration **174/865/3152**. On SPEEDHEAD transfer selected calibration is **212/1783/4754**, raw **176/1399/4701**, arm-mean **198/1568/4073**. Frozen multimetric gate fails transfer at every clock: NOT USABLE for long-horizon credit. CV selection is not independent confirmation; changed-reference WMREQUAL3 transfer is not plotted here.” <!-- Source: E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB.md:9-50,58-60. -->
+- **Placement:** trust-limit supporting panel or compact table. No invented CI bars, and no universal raw-versus-arm-mean ordering beyond the stated split.
+
+### Switching opportunity — recorded scenarios and fresh same-state choices
+
+- **Purpose:** separate scenario diversity from measured same-state headroom and from still-missing predictor efficacy.
+- **Planned files:** `figures/fig_switch_headroom.{png,pdf}`, `data/switch_headroom.csv`; original full backing exports `data/recorded_winners.source.csv`, `data/step0b.source.csv`. The agent's existing richer figure is `E:/agent-work/c4-c1switch/docs/paper_results/c1switch/recorded_winner_by_condition.png` (vector twin beside it).
+- **Sources:** `E:/agent-work/c4-c1switch/docs/paper_results/C1SWITCH_WINNERS.md` and the two named CSVs in its `c1switch/` directory. Original condition-figure generating command is `python -m tools.c1switch.winners` in that worktree (analysis only); the bounded evening renderer creates the compact package panel from its existing exports.
+- **Caption claim:** “Recorded **600 s** unique wins across **90 worlds**: native **22**, CTRL0 **17**, MAPPO **19**, PI **29**, CIRCLES **3**. Fresh full-rerun **16-state** headroom: at **60 s** native/CTRL0/MAPPO unique wins **2/9/3**, plus **two ties**; at **90 s**, native/CTRL0/MAPPO/PI/CIRCLES **2/7/1/3/1**, plus **two ties**. Median best-to-second margins **1.832371 / 6.853775 veh-s**, including ties. Separate panels count worlds versus states. These are oracle opportunities, not demonstrated WM/BB switching gains.” <!-- Source: E:/agent-work/c4-c1switch/docs/paper_results/C1SWITCH_WINNERS.md:5-13,31-39. -->
+- **Status:** opportunity reports/CSVs complete; main efficacy `[[PENDING: corrected-adapter complete regret/episode results / S-C1SWITCH]]`. Current design/registration supersedes report-header main-status language. The anonymity-key retention STOP and later authorized corrected continuation are validation history, not negative or positive selector efficacy.
+- **Placement:** optional supporting plot; not an additional main claim if the final selector campaign stays incomplete.
+
+### Perturbation reference — preserve the exported missingness
+
+- **Purpose:** document that a tiny native perturbation supplies no measured short-window chaos explanation while retaining aggregate sensitivity and late survivor loss.
+- **Source/backing CSV:** `E:/agent-work/c4-c1floor/docs/paper_results/C1FLOOR_error_horizon.csv`; frozen copy `data/floor.source.csv`; report `data/floor.source.md`.
+- **Generating command:** evening renderer snapshots the existing CSV only; agent source export is already complete. No paper-agent floor experiment or subtraction from WM error.
+- **Caption/text claim:** “Two **+0.01 m/s** one-tick HDV pulses per native world, **six worlds**: original-HDV world-median endpoint errors **zero through 120 s**; no joint survivors at **300 s**, so endpoint cells unavailable, not zero. Aggregate delay sensitivity is nonzero. This is a limited pulse response, not an RNG floor.” <!-- Source: E:/agent-work/c4-c1floor/docs/paper_results/C1FLOOR.md:7-22. -->
+- **Status:** source COMPLETE; supporting CSV, no combined WM/floor curve because population/arm/estimands differ. RNG-only floor remains unavailable.
 
 ## Visual QA
 

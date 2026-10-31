@@ -12,6 +12,16 @@ Each response is an argument the current evidence permits, not polished rebuttal
 - **Threat:** reused outcomes, adaptation and same-world other-arm exposure can undermine zero-shot wording.
 - **Answer:** define eligibility by checkpoint and evaluated controller before first exposure. The recovered wall report names the historical training arms; historical same-world training prevents unseen-world claims. The newly delivered C1_GAPS audit supports algorithm exclusion in the audited historical/later corpora, and distinguishes own-policy adaptation from MAPPO exposure. `[[PENDING: unbroken initialization lineage and evaluation binding / S-C1GAP + S-C1CLOSED]]`. Later adaptation is a separate result, not retroactive confirmation.
 
+## “Did a newer architecture fail, or did the comparison become harder?”
+
+- **Threat:** checkpoint comparisons also change world exposure, corpora, history and physics. Historical matched-data advantages cannot isolate the effect of newer components.
+- **Answer:** C1PIDIAG documents old C1/frozen-BB exposure to all its PI/wall worlds under other arms and none in the newer audited corpora. Treat this as a major fairness confound, not a causal coverage-only proof. Keep genuine original-start regression, unsuccessful component rollbacks and incomplete initialization ancestry. C1-COVERAGE/C1-EXPOSURE.
+
+## “Was the history rescue obtained by giving the forecast its future?”
+
+- **Threat:** shifting the forecast start changes state difficulty and survival as well as available history. A later controller restart may omit its command memory.
+- **Answer:** original-start forecasts never receive later frames. Genuine-history diagnosis uses separately registered later starts; within those identical starts the history contrast is informative, while between-panel gains are not pure history effects. Teacher forcing still supplies future CAV motion. Late PI feedback with unbound previous-command state is retained as a reset stress test, not deployed continuation or isolated human-dynamics error. Entries/source remain unavailable on these bindings. C1-PI; C1PIDIAG.md.
+
 ## “IDM traffic predicted by an IDM prior is an inverse crime.”
 
 - **Threat:** synthetic dynamics share the prior's structure; no real-road transfer is demonstrated.
@@ -60,7 +70,27 @@ Each response is an argument the current evidence permits, not polished rebuttal
 ## “Can calibration rescue the verdict?”
 
 - **Threat:** flexible calibrators can use arm identity or same-panel outcomes, fit aggregate means and still fail state-dependent ordering.
-- **Answer:** require complete world-grouped CV, frozen selection, independent transfer versus raw WM and arm-mean; distinguish arm-minus-CTRL0 from arm-minus-native and J from continuous team cost. Old smoke outputs are not results. `[[PENDING: final WMCALIB report and transfer / S-WMCALIB]]`.
+- **Answer:** the final WMCALIB report is complete and NOT USABLE for long-horizon policy credit. Grouped-CV gains of a selected calibrator fail the independent transfer gate. Retain no-WM arm-mean as a substantive comparator and show both splits: raw WM's CV deficit is not its ordering in every transfer cell. Distinguish arm-minus-CTRL0 from arm-minus-native, mean from median reduction and J from continuous team cost. WMREQUAL3 changed-arm transfer is diagnostic. WM-CALIB.
+
+## “Is long-horizon prediction impossible because SUMO is chaotic?”
+
+- **Threat:** irreducibility could be used as an unfounded excuse for model error; median endpoint error could hide localized propagation.
+- **Answer:** C1FLOOR's completed tiny-pulse native experiment has near-zero short-window endpoint medians, so it provides no measured floor explaining large WM errors there. Its targets, amplitude, native-only scope, target-ID exclusions and nonzero aggregate delay sensitivity are explicit. RNG-only floor was blocked by restore mismatch. Late empty endpoint cohorts stay unavailable. This does not prove universal determinism, nor license subtracting a floor from WM MAE. C1-FLOOR.
+
+## “Does each controller winning somewhere establish that switching works?”
+
+- **Threat:** fixed-world winners are not same-moment opportunities, and an oracle opportunity is not predictable advantage. Small best-to-second margins may be practically negligible.
+- **Answer:** present recorded scenario diversity and full-rerun same-state headroom separately. Preserve ties and small margins; native repeats measure replay error, not stochastic uncertainty. Main WM/BB switching regret and episode gains remain `[[PENDING: complete corrected-adapter results / S-C1SWITCH]]`. Selection predicts on-road delay while evaluation includes source cost; entries are OFF and mix dormant. No inferred switching efficacy from winners. C1-SWITCH.
+
+## “Do simulation restore and random-key artifacts contaminate the conclusions?”
+
+- **Threat:** saved-state continuation can diverge with identical commands; a held absolute latent changes the intervention; anonymous tensors can still leak detector IDs through the forecast seed.
+- **Answer:** ARTIFACT_CHECK invalidates old contaminated credits and validates full same-seed reruns plus current-mean/common-decoder execution. C1SWITCH same-state headroom uses full reruns and complete prefix/repeat gates. The later detector-ID stochastic-key correction changed a canary decision and triggered STOP; MAIN authorized a corrected continuation, not an efficacy finding. Preserve superseded schedules and require corrected-adapter gates before any final selector claim. Mechanics do not supply a useful cooperation or prediction result. COMPANION-STATUS/C1-SWITCH.
+
+## “Why not replace the microscopic long tail with a queue model or value function?”
+
+- **Threat:** a structural replacement may conserve traffic yet miss intervention-dependent service; a value head may merely reproduce arm means.
+- **Answer:** WMQUEUE's fixed conservative prototype failed its registered paired-effect gate and was killed. This rejects that prototype, not every queue tail. WMVALUE compares short WM plus frozen real-value prediction with endpoint WM and no-WM alternatives; inference is running, so its benefit remains `[[PENDING: complete A–E gate / S-WMVALUE]]`. The stopped SUMO backup supplies no positive teacher or useful deployed cooperation. Keep these as context for controller-judge limits. WM-QUEUE/COMPANION-STATUS.
 
 ## “Where is uncertainty calibration or an abstention controller?”
 
@@ -81,5 +111,5 @@ Each response is an argument the current evidence permits, not polished rebuttal
 
 - Essential for the intended closed-loop headline: C1 protocol/exposure and feedback result bindings.
 - Essential for exact wording of trust limits: original direction-panel binding and distinction between covariance share, queue causality and source bookkeeping.
-- Optional result update: final calibration, provided it preserves the failed/unmatched evidence and transfer scope.
+- Completed negative evidence to retain: calibration transfer failure, killed queue prototype and bounded perturbation reference. Pending updates: complete C1CLOSED, corrected-adapter switching, candidate repair gate and WMVALUE verdict; no partial efficacy promotion.
 - Formatting: `[[PENDING: final prose, authors, conference requirements, accessible final figure sizing and compiled pagination / owner]]`.
