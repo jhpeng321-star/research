@@ -17,6 +17,12 @@ def registry_hits(text):
         # Our own prospective reservation is not a prior exposure.
         if 'S-C1SWITCH2 DESIGN REGISTERED' in line:
             continue
+        # The per-CAV owner explicitly leaves its evaluation unused and consumes
+        # OUR registered panel. Remove only that exact cross-reference, never
+        # another allocation on the same line or a generic mention of this task.
+        if ('S-SELMAPPO2 DESIGN REGISTERED' in line and 'Per S-C1SWITCH2 registration' in line
+                and 'leave local14400evaluation reservation UNSTARTED' in line):
+            line = line.replace('panel969136..969151/J600 receipts', 'registered-panel/J600 receipts')
         for match in SEED.finditer(line):
             lo = hi = int(match[1])
             tail = TAIL.match(line[match.end():])

@@ -51,7 +51,11 @@ Full-team J600/J900 and full-team branch oracle remain the evaluation objectives
 `runtime.py` wires the per-CAV owner's make_mixed_fleet and shared frozen executor.
 `SELECTOR_BINDINGS_PENDING.json` documents missing final169 weights: stubs raise, never pick.
 Supply final checkpoint + immutable freeze/source/config receipts, not intermediate checkpoints.
-Real-checkpoint controller feedback, grouped execution integration and both-GPU parity are still gates.
+Grouped execution/main admission and both-GPU parity remain gates.
+Both real frozen checkpoints now PASS the CPU K8/60s six-way feedback probe on gpuR;
+receipts `MODEL_CPU_{wm,bb}_steps120_c1switch2_run_7e448ccdafc0c1c3.json` preserve provenance.
+Per S-SELMAPPO2's `SELMAPPO2_HANDOFF.md`, per-CAV features synchronize from live
+backend contexts before EACH pick, including entrant/re-entry resets and retirement.
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
@@ -64,6 +68,11 @@ Tests include real wall memory parity, six-row synthetic WM/BB mechanics and act
 feature/model interfaces with clearly synthetic final169 test weights (not trained/evaluated arms).
 `python -B -m tools.c1switch2.gate --polls 1` reports approval without authorizing an unbound runtime.
 CPU preparation/exposure receipts are in `tools/c1switch2/evidence/`; prior versions are preserved.
+Staged mechanics roots (no dispatch at this receipt): cpuQ
+`/home/ubuntu/c1switch2_run_2d2400c953ef2545`, gpuR `/root/c1switch2_run_7e448ccdafc0c1c3`.
+Each passed frozen manifest/checkpoint constructors, both guards17/17 and CPU124/1skip.
+`operations.py status` inspects task-only dispatch receipts; canary is a write-once
+cpuQ claim using the original4680 sim-s reservation, never an automatic retry.
 The initial local exposure regex reported timestamp/negative-evidence false positives, fixed prospectively.
 An exact-file Grep call expanded into the parent tree; incidental numerical matches were not used.
 All subsequent registration reads/audits use exact checked paths; filename scans prune before traversal.

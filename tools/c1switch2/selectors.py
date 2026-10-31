@@ -98,20 +98,31 @@ class PerCav:
         self.model.eval()
         self.model.requires_grad_(False)
         self.index, self.incumbents = 0, {}
+        self.synchronized = False
+
+    def sync_incumbents(self, names):
+        if not isinstance(names, dict) or any(type(key) is not str or value not in CONTROLLERS
+                                             for key, value in names.items()):
+            raise ValueError('invalid observable live per-CAV incumbents')
+        self.incumbents = dict(names)
+        self.synchronized = True
 
     def select(self, raw):
         payload = anonymous_payload(raw, Wall.validate_memory)
         if self.index >= len(TIMES) or payload['history'][-1]['now_s'] != TIMES[self.index]:
             raise ValueError('per-CAV picker off-grid or reused without episode reset')
+        own = {r['vehicle_id'] for r in payload['history'][-1]['self_reports']}
+        if not self.synchronized or set(self.incumbents) != own:
+            raise ValueError('synchronize incumbents from current live backend contexts before every pick')
         observation = self.build(payload, variant='per_cav', incumbents=self.incumbents)
         import torch
         with torch.inference_mode():
             actions, _ = self.model.act(observation, deterministic=True)
-        own = {r['vehicle_id'] for r in payload['history'][-1]['self_reports']}
         if set(actions) != own:
             raise ValueError('per-CAV picker must cover exactly current self IDs')
         result = {key: CONTROLLERS[actions[key]] for key in actions}
         self.incumbents, self.index = result, self.index+1
+        self.synchronized = False
         return result
 
 

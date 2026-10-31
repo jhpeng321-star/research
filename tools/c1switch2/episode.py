@@ -33,6 +33,10 @@ def episode(backend, arm, world, *, predictor=None, selector=None, receipt=None)
             costs = predictor.predict(copy.deepcopy(payload), f'{arm}_s{world["seed"]}_j{j}')
             picked = choose(costs, incumbent if isinstance(incumbent, str) else 'native')
         elif arm in ('fleet_ppo', 'cav_mappo'):
+            if arm == 'cav_mappo' and hasattr(selector, 'sync_incumbents'):
+                # Entrants/re-entrants can reset during the 20s window. Match the
+                # training wrapper's live context features, not the last pick dict.
+                selector.sync_incumbents(backend.current_names())
             picked = selector.select(copy.deepcopy(payload))
             if arm == 'fleet_ppo' and not isinstance(picked, str):
                 raise ValueError('fleet picker must return one shared controller')

@@ -143,6 +143,10 @@ def test_real_peer_final169_feature_and_deterministic_inference(tmp_path, varian
     selector = selectors.Fleet(spec) if variant == 'fleet' else selectors.PerCav(spec)
     for now in range(300, 900, 20):
         raw = payload(now)
+        if variant == 'per_cav':
+            # Even after WALL was picked, a re-entrant's context is native.
+            selector.sync_incumbents({'a': 'native', 'b': 'wall' if now > 300 else 'native'})
+            assert selector.incumbents['a'] == 'native'
         result = selector.select(raw)
         assert result == ('wall' if variant == 'fleet' else {'a': 'wall', 'b': 'wall'})
     with pytest.raises(ValueError, match='grid|reused'):

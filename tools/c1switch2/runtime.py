@@ -35,6 +35,12 @@ class PerCavBackend(Backend):
     def self_ids(self):
         return {r['vehicle_id'] for r in self.observable()['history'][-1]['self_reports']}
 
+    def current_names(self):
+        if self.mixed is None:
+            raise ValueError('joint context features requested after fleet handover')
+        contexts = self.mixed.handover.contexts
+        return {key: contexts[key].name if key in contexts else 'native' for key in self.self_ids()}
+
     def inference_payload(self):
         if self.mixed is None:
             return super().inference_payload()

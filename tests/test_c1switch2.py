@@ -283,6 +283,11 @@ def test_registration_parser_catches_compressed_ranges_but_not_hashes():
     assert not audit.registry_hits('- SHA256 a969140abc')
     assert not audit.registry_hits('- utc 2026-10-28T15:05:33.969141+00:00')
     assert not audit.registry_hits('- remote ledger: none used in 966000-969699')
+    reuse = ('- S-SELMAPPO2 DESIGN REGISTERED: Per S-C1SWITCH2 registration, '
+             'leave local14400evaluation reservation UNSTARTED and consume peer-owned '
+             'panel969136..969151/J600 receipts')
+    assert not audit.registry_hits(reuse)
+    assert audit.registry_hits(reuse+'; unrelated new allocation 969152')
 
 
 def test_only_main_explicit_approval_can_open_budget_gate():
