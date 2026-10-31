@@ -70,6 +70,10 @@ replacement. Earlier v3 (INT `ff8a637f`, legacy CF, cold LC) is retained separat
 Default version is now `v5`: same INT base plus MERGE `3df73a27` network/insertion
 rules and `--trace-merge`, retaining the same arrival stream and population.
 Use an explicit `--version v3`/`v4` to inspect or collect those completed runs.
+Current default `v6` adds source-EPS5870b556 and the opt-in physics-native CAV
+callback d7be510a (`--native-model sumo`). Prior v5 retains its frozen head path.
+The validator's direct CLI default stays `--native-model head`; selecting sumo
+requires `--cf-model sumo_idm`. Every row reports its actual native model.
 `python -m tools.rbeval.summarize_full_fleet --panel <collected directory>
 --targets <shared targets> --output <new score.json>` checks complete FIT32,
 collection hashes and conservation before reporting per-world and marginal clocks.

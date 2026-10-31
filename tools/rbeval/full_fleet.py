@@ -263,7 +263,8 @@ def observable_source(job):
 
 
 @torch.no_grad()
-def validate(root, seed, horizon, slots, stream, target_dir, cf_model='legacy', warm_lc=False, trace_merge=False):
+def validate(root, seed, horizon, slots, stream, target_dir, cf_model='legacy', warm_lc=False,
+             trace_merge=False, native_model='head'):
     from wms.model.spec import ModelSpec
     from wms.model.wms import WmSModel
     from wms.physics.config import PhysicsConfig
@@ -316,7 +317,13 @@ def validate(root, seed, horizon, slots, stream, target_dir, cf_model='legacy', 
         cfg=EntryConfig(conserve_queue=True, insert_rule='sumo_like_v2'), queues=[queue])
     entries = ObservedEntries(process, state)
     initial = int(mask.sum())
-    cb = native_controller()
+    if native_model == 'sumo':
+        if cf_model != 'sumo_idm':
+            raise ValueError('physics-native validation requires the SUMO CF runtime')
+        from wms.model.sumo_native import native_physics_controller
+        cb = native_physics_controller(dt_s=dt)
+    else:
+        cb = native_controller()
     # No encoder inputs: population-only construction; SUMO path bypasses heads.
     clock = np.zeros(2)
     source = np.zeros(2)
@@ -391,7 +398,7 @@ def validate(root, seed, horizon, slots, stream, target_dir, cf_model='legacy', 
     predicted = clock+source
     return dict(seed=seed, arm='native', horizon_s=horizon, stream=stream, runtime_s=time.monotonic()-start,
         initial=initial, max_present=max_present, exits=exits,
-        cf_model=getattr(cfg, 'cf_model', 'legacy'), lane_model=model.lane_model,
+        cf_model=getattr(cfg, 'cf_model', 'legacy'), lane_model=model.lane_model, native_model=native_model,
         settings='population_default_no_encoder', lc_memory='observable_60s_then_persistent' if warm_lc else 'cold_t0_then_persistent',
         body_overlap=dict(pair_samples=overlap_samples, worst_bumper_gap_m=worst_overlap_gap),
         demand=dict(rate=rates.tolist(), initial_backlog=queue.backlog.tolist(),
@@ -424,6 +431,7 @@ def main():
     p.add_argument('--cf-model', choices=('legacy', 'sumo_idm'), default='legacy')
     p.add_argument('--warm-lc', action='store_true')
     p.add_argument('--trace-merge', action='store_true')
+    p.add_argument('--native-model', choices=('head', 'sumo'), default='head')
     args = p.parse_args()
     if len(args.seeds) != len(set(args.seeds)) or any(not 969400 <= s <= 969431 for s in args.seeds):
         p.error('unique FIT seeds 969400..969431 required')
@@ -460,7 +468,7 @@ def main():
             while hasattr(os, 'getloadavg') and os.getloadavg()[0] > 28:
                 time.sleep(15)
             row = validate(safe(args.root), seed, args.horizon, args.slots, args.stream, safe(args.targets),
-                           args.cf_model, args.warm_lc, args.trace_merge)
+                           args.cf_model, args.warm_lc, args.trace_merge, args.native_model)
             if any(digest(runtime/name) != sha for name, sha in sources.items()):
                 raise AssertionError('runtime changed during diagnostic')
             (out/f'{seed}.json').write_text(json.dumps(row, indent=2, allow_nan=False)+'\n')

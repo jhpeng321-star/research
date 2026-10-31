@@ -22,7 +22,7 @@ def remote(code):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('mode', choices=('status', 'stage', 'launch', 'poll', 'trace', 'collect'))
-    p.add_argument('--version', default='v5')
+    p.add_argument('--version', default='v6')
     p.add_argument('--details', action='store_true')
     p.add_argument('--seed', type=int, default=969400)
     args = p.parse_args()
@@ -45,6 +45,8 @@ def main():
             merge_kernel=base64.b64encode((ROOT/'src/wms/physics/junction_merge.py').read_bytes()).decode(),
             network=base64.b64encode((ROOT/'src/wms/physics/merge_network.py').read_bytes()).decode(),
             insertion=base64.b64encode((ROOT/'src/wms/model/sumo_insertion.py').read_bytes()).decode(),
+            native=base64.b64encode((ROOT/'src/wms/model/sumo_native.py').read_bytes()).decode(),
+            native_tests=base64.b64encode((ROOT/'tests/unit/test_rb_merge_native.py').read_bytes()).decode(),
             merge_tests=base64.b64encode((ROOT/'tests/unit/test_rb_merge.py').read_bytes()).decode(),
             validator=base64.b64encode((ROOT/'tools/rbeval/full_fleet.py').read_bytes()).decode(),
             tests=base64.b64encode((ROOT/'tests/unit/test_rb_merge_full_fleet.py').read_bytes()).decode(),
@@ -62,6 +64,7 @@ with tarfile.open(fileobj=io.BytesIO(base64.b64decode(payload['runtime_archive']
 (runtime/'src/wms/physics/junction_merge.py').write_bytes(base64.b64decode(payload['merge_kernel']))
 (runtime/'src/wms/physics/merge_network.py').write_bytes(base64.b64decode(payload['network']))
 (runtime/'src/wms/model/sumo_insertion.py').write_bytes(base64.b64decode(payload['insertion']))
+(runtime/'src/wms/model/sumo_native.py').write_bytes(base64.b64decode(payload['native']))
 adapter=runtime/'src/wms/model/sumo_merge.py'
 text=adapter.read_text()
 old='merge_speed_advice(kin, present, accel, physics, driver_params)'
@@ -78,12 +81,14 @@ test=root/'test_full_fleet.py'
 test.write_bytes(base64.b64decode(payload['tests']))
 merge_test=root/'test_merge_source.py'
 merge_test.write_bytes(base64.b64decode(payload['merge_tests']))
+native_test=root/'test_native_physics.py'
+native_test.write_bytes(base64.b64decode(payload['native_tests']))
 targets=root/'targets'
 targets.mkdir()
 for name,data in payload['targets'].items():
     (targets/name).write_bytes(base64.b64decode(data))
 env=dict(os.environ, PYTHONPATH=str(runtime/'src')+':'+str(root), OMP_NUM_THREADS='1', MKL_NUM_THREADS='1', OPENBLAS_NUM_THREADS='1', CUDA_VISIBLE_DEVICES='')
-result=subprocess.run([sys.executable,'-m','pytest',str(test),str(merge_test),'-q'],cwd=root,env=env,text=True,capture_output=True)
+result=subprocess.run([sys.executable,'-m','pytest',str(test),str(merge_test),str(native_test),'-q'],cwd=root,env=env,text=True,capture_output=True)
 receipt=dict(command=result.args,returncode=result.returncode,stdout=result.stdout,stderr=result.stderr,load=os.getloadavg(),cpus=os.cpu_count())
 (root/'CPU_TESTS.json').write_text(json.dumps(receipt,indent=2)+'\\n')
 print(json.dumps(receipt))
@@ -105,7 +110,7 @@ assert not (root/'results').exists()
 with (root/'LAUNCH.json').open('x') as f:
     json.dump(dict(state='reserved',owner='S-RB-MERGE'),f)
 script=root/'tools/rbeval/full_fleet.py'
-command=[python,'-B',str(script),'--root','/home/ubuntu/wmdata20261031/views','--runtime',str(root/'runtime'),'--targets',str(root/'targets'),'--output',str(root/'results'),'--seeds',*map(str,range(969400,969432)),'--horizon','300','--slots','320','--cf-model','sumo_idm','--warm-lc','--trace-merge']
+command=[python,'-B',str(script),'--root','/home/ubuntu/wmdata20261031/views','--runtime',str(root/'runtime'),'--targets',str(root/'targets'),'--output',str(root/'results'),'--seeds',*map(str,range(969400,969432)),'--horizon','300','--slots','320','--cf-model','sumo_idm','--warm-lc','--trace-merge','--native-model','sumo']
 env=dict(os.environ,OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',CUDA_VISIBLE_DEVICES='')
 with (root/'RUN.log').open('x') as log:
     child=subprocess.Popen(command,cwd=root,env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,preexec_fn=lambda:os.nice(19))

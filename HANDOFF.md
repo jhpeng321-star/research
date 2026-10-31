@@ -86,6 +86,10 @@ Full earlier handoff preserved at `docs/rb_merge/HANDOFF_HISTORY_0100.md`.
   ramp leader. Native-head packing bug reproduced on CPU (above); v5 sources
   and results remain unchanged. Next v6 stages physics-native delegation plus
   EPS5870b556; **39 remote CPU tests PASS /2.12s**, all32 preflights PASS.
+- v6 immutable runtime is staged at `/tmp/rb-merge-fullfleet-v6`; direct CLI
+  `--native-model sumo` requires `--cf-model sumo_idm`. Old head remains the
+  direct validator default; the versioned v6 runner selects physics-native.
+  Model IDs in each row/receipt prevent pooling different native-law contracts.
 
 ## Interfaces / tests / known gaps
 - Entries MUST use `TorchEntryProcessV2(conserve_queue=True, couple_draws=True,
