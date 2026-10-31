@@ -1,5 +1,29 @@
 # S-COOPFREE — implementation and execution receipt
 
+## OWNER01:48 correction (supersedes inherited live-run narrative)
+CPU22/22 PASS, zero skips,1.28s, SUMO0, including all18 original frozen gates.
+The original156-window batch has drained; its legacy MAPPO-credit checkpoint is
+retained but excluded from corrected learning. The exact supervisor is parked
+between plants, with no unfinished attempts, by the one-shot boundary gate.
+`tools/coopfree_hold.py` reuses the original joint trials with new exact zero-update
+policy-mean HOLD reruns. Score only Gaussian set-points conditional on exogenous W:
+scoring the categorical duration against a W-dependent baseline would bias its gradient.
+Weights remain1/1/1, giving2D_G on all156 windows. No inherited optimizer state is used.
+Original solos have MAPPO-background peers and cannot identify all-member-HOLD C_G.
+New exact solos therefore cover outcome-blind world-round-robin complete groups
+within the remaining TRAIN cap; report their exact count, not156 exact credits.
+This is a disclosed shortfall against the requested all-window solo diagnostics.
+The2M cap and phase allocations are unchanged; all legacy charges are retained.
+The two dev checks evaluate corrected learning and zero-update HOLD separately.
+Corrected discovery uses all-member HOLD baselines and single-member departures.
+Design amendment70lines/SHA8be79477; original build5 design/sources remain immutable.
+At recovery, the existing batch was blocked by free disk1.974GiB<unchanged2GiB gate.
+545 closed own observable tapes(629,923,759bytes) were relocated intact to the
+task-specific cpuQ `/dev/shm/coopfree20261101_observable`, with hash-verified symlinks
+preserving original logical paths; no content removed. Disk rose to2,735,427,584bytes.
+Durable external archival of relocated tapes is required before host shutdown.
+The continuation maintains this preserving relocation as needed; never touches peer files.
+
 ## Recovery snapshot (before the first optimizer update)
 Build and CPU gates complete. MAIN's explicit 23:58 budget approval was observed.
 Frozen design: `COOPFREE_DESIGN.md` (62 lines), SHA256

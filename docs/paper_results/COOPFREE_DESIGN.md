@@ -1,5 +1,5 @@
 # S-COOPFREE — prospective build, 2026-11-01
-Status: CPU BUILD ONLY; SUMO requires MAIN's explicit `S-COOPFREE BUDGET APPROVED` line.
+Status: approved inherited run; OWNER01:48 HOLD amendment below supersedes legacy MAPPO credit.
 Purpose: discover cooperation through continuous actions; no option/move library or shaped rewards.
 
 ## Plant and actions
@@ -60,3 +60,11 @@ Report paired-supported discovered patterns, unknown clusters, and exact learned
 Hosts cpuQ/gpuR/gpuA CPU-only nice19/single-thread, initially one worker, spare-load admission.
 Unique supervisor/charge locks; own-PID receipts; no signals to peers, no duplicate dispatches.
 Approval binds this design, source/runtime/checkpoint hashes, seed audits and CPU receipt before launch.
+
+## OWNER01:48 prospective HOLD correction (same2M cap, retained legacy receipts)
+Reference=zero-update policy-mean HOLD with identical roster/context/W; report HOLD-minus-MAPPO separately.
+Reuse156 existing joint arms, discard legacy optimizer for learning; exact new full-rerun HOLD baselines.
+W stays uniformly sampled/exogenous: Gaussian set-point score only, avoiding action-dependent window baseline bias.
+Train objective2D_G on all156; exact D_i/C_G only on outcome-blind, world-round-robin whole groups fitting TRAIN.
+Full156 replacement solos cannot fit after inherited physics; disclose exact subset counts and missing credit.
+Two DEV checks=corrected policy and zero-update HOLD; corrected discovery uses all-member-HOLD solo backgrounds.

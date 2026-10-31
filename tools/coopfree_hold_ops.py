@@ -32,18 +32,78 @@ print(json.dumps(receipt))
 
 
 def status():
-    return ssh.remote('cpuQ', f'''import pathlib,json,os
+    return ssh.remote('cpuQ', f'''import pathlib,json,os,shutil
 r=pathlib.Path({ROOT!r});read=lambda p:json.loads(p.read_text())
 names=['HOLD_GATE_DISPATCH.json','HOLD_GATE_PARKED.json','BATCH_RESUMED.json','STOP.json','UPDATE_001.json']
 out={{n:read(r/n) for n in names if (r/n).exists() and n!='UPDATE_001.json'}}
 out['legacy_update_exists']=(r/'UPDATE_001.json').exists()
 out['supervisor_stat']=pathlib.Path('/proc/339173/stat').read_text().split()[2:3]
 out['load']=os.getloadavg()
+out['disk_free']=shutil.disk_usage(r).free
+out['batch_complete']=(r/'BATCH_COMPLETE.json').exists()
+out['sidecar_state']=pathlib.Path('/proc/436993/stat').read_text().split()[2] if pathlib.Path('/proc/436993/stat').exists() else None
 out['unfinished']=[p.name for p in (r/'jobs').iterdir() if p.is_dir() and (p/'START.json').exists() and not (p/'CLOSE.json').exists()]
 print(json.dumps(out))
 ''', timeout=20)
 
 
+def relocate():
+    return ssh.remote('cpuQ', f'''import pathlib,json,shutil,hashlib,sys,os
+r=pathlib.Path({ROOT!r});assert r.is_dir()
+dest=pathlib.Path('/dev/shm/coopfree20261101_observable');assert dest.parent.is_dir()
+assert not (r/'TRACE_RELOCATION.json').exists(),'one-shot relocation'
+dest.mkdir(exist_ok=False)
+assert shutil.disk_usage(dest).free>4*1024**3
+sys.path.insert(0,str(r/'pytools'))
+from tools.coopfree.storage import write
+rows=[];size=0
+for job in sorted((r/'jobs').iterdir()):
+ p=job/'observable.jsonl.gz'
+ if not p.is_file() or p.is_symlink() or not (job/'CLOSE.json').exists() or not (job/'RESULT.json').exists(): continue
+ result=json.loads((job/'RESULT.json').read_text())
+ digest=hashlib.sha256(p.read_bytes()).hexdigest()
+ assert digest==result['trace_sha256']
+ target=dest/(job.name+'.jsonl.gz');n=p.stat().st_size
+ shutil.move(str(p),str(target));p.symlink_to(target)
+ assert hashlib.sha256(p.read_bytes()).hexdigest()==digest
+ rows.append(dict(id=job.name,bytes=n,sha256=digest,target=str(target)));size+=n
+ if size>=600*1024**2: break
+write(r/'TRACE_RELOCATION.json',dict(bytes=size,files=rows,reason='unchanged2GiB admission blocked at1.974GiB; preserve content and logical paths; no trace deletion',disk_free=shutil.disk_usage(r).free))
+print(json.dumps(dict(bytes=size,files=len(rows),disk_free=shutil.disk_usage(r).free)))
+''', timeout=45)
+
+
+def stage_cpu():
+    sources = {name: (LOCAL/name).read_text(encoding='utf-8') for name in
+               ('coopfree_hold.py', 'test_coopfree_hold.py')}
+    design = (LOCAL.parent/'docs/paper_results/COOPFREE_DESIGN.md').read_text(encoding='utf-8')
+    return ssh.remote('cpuQ', f'''import pathlib,json,hashlib,sys,os,unittest,time
+from unittest.mock import patch
+r=pathlib.Path({ROOT!r});assert r.is_dir()
+for name,text in json.loads({json.dumps(sources)!r}).items():
+ p=r/'pytools/tools'/name;assert p.parent.is_dir()
+ if p.exists(): assert p.read_text()==text,'immutable HOLD source'
+ else: p.write_text(text)
+p=r/'HOLD_DESIGN.md';text={design!a}
+if p.exists(): assert p.read_text()==text
+else: p.write_text(text)
+os.nice(19);os.environ.update(CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
+sys.path.insert(0,str(r/'pytools'))
+from tools.leverprobe.backend import setup
+setup('/home/ubuntu/e3final','/home/ubuntu/mappospeed/production2/policy_latest.pt')
+os.environ['COOPFREE_CPU_CHECKPOINT']='/home/ubuntu/mappospeed/production2/policy_latest.pt'
+from tools.coopfree.storage import write
+begin=time.monotonic()
+suite=unittest.TestSuite([unittest.defaultTestLoader.loadTestsFromName(n) for n in ('tools.coopfree.test_cpu','tools.test_coopfree_hold')])
+with patch('subprocess.Popen',side_effect=AssertionError('SUMO forbidden during CPU gate')):
+ result=unittest.TextTestRunner(verbosity=2).run(suite)
+receipt=dict(pass_=result.wasSuccessful(),tests=result.testsRun,skips=len(result.skipped),sim_s=0,wall_s=time.monotonic()-begin,
+ sources={{name:hashlib.sha256((r/'pytools/tools'/name).read_bytes()).hexdigest() for name in {list(sources)!r}}},design_sha256=hashlib.sha256((r/'HOLD_DESIGN.md').read_bytes()).hexdigest())
+if receipt['pass_'] and not receipt['skips']: write(r/'HOLD_CPU_APPROVED.json',receipt)
+print(json.dumps(receipt));assert receipt['pass_'] and not receipt['skips']
+''', timeout=25)
+
+
 if __name__ == '__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('gate','status'));a=p.parse_args()
-    print(gate() if a.mode=='gate' else status())
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('gate','status','relocate','stage-cpu'));a=p.parse_args()
+    print({'gate':gate,'status':status,'relocate':relocate,'stage-cpu':stage_cpu}[a.mode]())
