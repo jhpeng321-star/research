@@ -97,10 +97,14 @@ def resolve_shifted_lanes(s, length, source, proposed, present, deciders, physic
     Candidates only move toward STAY, so at most K rejections reach a fixed
     point. Fixed/teacher positions already use their supplied destination frame.
     """
+    resolver = resolve_lane_conflicts
+    if getattr(physics, 'sumo_lane_conflict_fast', False):
+        from wms.physics.lane_conflict_fast import resolve_lane_conflicts_fast
+        resolver = resolve_lane_conflicts_fast
     candidate = proposed
     for _ in range(s.shape[-1] + 1):
         shifted = s + torch.where(deciders, lane_position_shift(s, source, candidate, physics), 0.)
-        resolved = resolve_lane_conflicts(shifted, length, source, candidate, present, deciders, 0.0)
+        resolved = resolver(shifted, length, source, candidate, present, deciders, 0.0)
         if torch.equal(resolved, candidate):
             return resolved, shifted
         candidate = resolved

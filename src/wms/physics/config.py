@@ -230,6 +230,8 @@ class PhysicsConfig:
     merge_model: str = "legacy"
     # Exact one-ego reservation queries; default OFF preserves legacy execution.
     sumo_merge_query_fast: bool = False
+    # Exact candidate-only lane arbitration (avoids padded-slot scalar syncs).
+    sumo_lane_conflict_fast: bool = False
     mobil_threshold_mps2: float = 0.1
     b_safe_base_mps2: float = 4.0
     b_safe_end_mps2: float = 6.0

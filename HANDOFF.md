@@ -18,6 +18,11 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   `panel_ops status` is read-only; never repeat canary/continue/monitor dispatch.
 
 ## What exists
+- NEW default-OFF `sumo_lane_conflict_fast`: filter static present/movable/change
+  candidates ONCE before the same stable sequential arbitration. Original loop
+  performed scalar checks on every padded slot (millions per600s forecast).
+  Candidate order/occupancy/ties are unchanged; CPU geometry/coordinate fixed-point
+  parity PASS; synthetic640slot CPU kernel24.0x faster. GPU/rollout gate pending.
 - CUDA query parity **6/6 PASS /1.65s** on source d279a502. Shared-GPU synthetic
   kernel timing is0.106s dense vs0.114s query (0.94x): no GPU speed win claimed.
   CPU timing was1.150s vs0.0272s. NEW configs/wm_phys_cpu.toml differs ONLY by
