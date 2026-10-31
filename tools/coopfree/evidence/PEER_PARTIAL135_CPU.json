@@ -1,0 +1,26 @@
+{
+  "operation": "read-only partial135 prior/comparator compatibility preflight",
+  "host": "cpuQ",
+  "snapshot": "/home/ubuntu/coopbandit20261031_aggregate_v3/snapshots/partial135",
+  "sim_s": 0,
+  "prior": {
+    "scope": "TRAIN",
+    "states": 28,
+    "fit_worlds": [981002, 981006, 981013, 981016, 981018, 981022, 981026, 981028, 981030, 981041, 981052, 981053, 981054],
+    "states_sha256": "4876c43402b1c7423f65527589738801c8c206172c7d28d8df1015c6b586aec8",
+    "labels_sha256": "ccab754290054799652342eeb1ae7f14447dc2d9e34e58ecf4f93eab23cbfac4",
+    "source_sha256": "c21ceda8e4722f57b63943e0b9f674ad38adff119d9595b5f88cdea6370c2dbc",
+    "coefficients": {"cav_count": -0.10165948810843621, "density": -0.005302374378333546, "ramp": 0.0},
+    "selection_applied_to_update1": false
+  },
+  "comparator": {
+    "pass_": true,
+    "policy_sha256": "c6f184e98b9929555021ee6fc1d402d1dd5380ab79ce16af645b2917daa7f8cc",
+    "payload_keys": ["keys", "models", "options", "radius"],
+    "radius": 11465.2715868874,
+    "cpu_example": "982007 TRAIN screen at t300, no SUMO rerun",
+    "selected": "O0",
+    "requests": 0
+  },
+  "notes": "Actual read-only CPU calls succeeded. No peer model was frozen into the live root by these calls. The pipeline adopts the newest complete public snapshot before its next update/evaluation. u1 was sampled before partial135 existed and is not replanned."
+}

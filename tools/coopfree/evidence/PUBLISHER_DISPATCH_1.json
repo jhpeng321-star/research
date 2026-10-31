@@ -1,0 +1,22 @@
+{
+  "pid": 8556,
+  "unix": 1793465964.1773708,
+  "interval": 120,
+  "hours": 12,
+  "log": "E:\\research-dense\\.git\\worktrees\\c4-coopfree\\coopfree-publisher.log",
+  "simulations_dispatched": 0,
+  "commits": true,
+  "command": [
+    "C:\\Python314\\python.exe",
+    "-B",
+    "-u",
+    "-m",
+    "tools.coopfree_publish",
+    "--watch",
+    "--interval",
+    "120",
+    "--hours",
+    "12",
+    "--commit"
+  ]
+}

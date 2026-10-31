@@ -66,6 +66,16 @@ not a J900 endpoint, and this single-world drift is not a learned improvement cl
 Collisions/teleports are0 for both; hard-brake totals18vs14.5 and23vs18 respectively.
 Keep this structural hold effect separate from any subsequent learning attribution.
 
+### Peer partial findings after the u1 plan was frozen
+COOPBANDIT partial135 is now public:16/135 helpful states, but its registered
+uncertainty-gated policy selectsO0 throughout; positive C_G alone did not imply D_G>0.
+Read-only CPU preflight of our prior fit and real pickled comparator succeeded
+(`PEER_PARTIAL135_CPU.json`,0sim-s). The signed state-only prior uses28 available
+states/13TRAIN worlds; no option pattern enters the free action space. This snapshot
+arrived after u1 sampling: u1 retains its original observable-only priorities, not a
+retrospectively changed sample. The pipeline adopts the newest complete public peer
+snapshot before its next update/budget check and freezes that comparator for dev.
+
 ## Reproducible operations
 Immutable cpuQ root: `/home/ubuntu/coopfree20261101_build5`.
 Build4's launch preflight rejected the correct binary's banner because it omitted the word
