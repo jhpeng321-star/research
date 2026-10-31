@@ -38,6 +38,30 @@ There is **no conflicting minor-priority ramp junction** in this network.
 The relevant right-of-way obligation is the lateral changer's two-sided gap
 acceptance. Do not invent a junction yield deceleration on the mainline.
 
+Speed-limit audit: the same network's line22 sets the ramp APPROACH edge to
+22.22m/s; line45 sets the acceleration lane (s>=0) to31.29m/s. Thus lane2 does
+NOT have one constant limit along its whole route. `merge_network.py` encodes
+this observable geometry. `driver_encoder.py:23-24,66-67` defines physical v0
+relative to the reference road limit, so existing inferred speedFactor is
+v0/referenceLimit. SUMO IDM desired speed and departSpeed=max use the local
+lane limit times that factor. Never clip every driver to the unscaled posted
+limit; equally, never accelerate along the22.22 approach toward31.29 by default.
+These are source/network corrections, not estimates selected against FIT errors.
+
+## Native-CAV background contract
+
+SUMO native motion is its CF/LC pipeline when no external speed command is
+issued. The inherited WM native-CAV head is a frozen approximation, not that
+pipeline. CPU reproduction from the FIT969400 observed ramp-head trace shows a
+packing-dependent false standstill: `control/native_cav.py:65` returns unmasked
+dv from an argmin fallback index0 when has_leader=false, and head_features:80
+still passes dv to the head. An unrelated slot0 mainline speed can therefore
+change an unled ramp CAV's acceleration. No head was trained or modified here.
+The new opt-in sumo_native callback consumes the model's existing inferred/
+population-physics execution ceiling using the same project_native bounds,
+and delegates lanes/merges. This is a native-arm source-mechanics diagnostic;
+old frozen evaluation/controller bindings must remain distinguishable.
+
 ## Scope and explicit parity gaps
 
 This implements a source-backed highway subset, not full SUMO state parity.

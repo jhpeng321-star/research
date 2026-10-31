@@ -21,13 +21,21 @@ def remote(code):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument('mode', choices=('status', 'stage', 'launch', 'poll', 'collect'))
-    p.add_argument('--version', default='v4')
+    p.add_argument('mode', choices=('status', 'stage', 'launch', 'poll', 'trace', 'collect'))
+    p.add_argument('--version', default='v6')
+    p.add_argument('--details', action='store_true')
+    p.add_argument('--seed', type=int, default=969400)
+    p.add_argument('--identity', type=int)
     args = p.parse_args()
     if not args.version.isalnum():
         p.error('version must be alphanumeric')
+    if not 969400 <= args.seed <= 969431:
+        p.error('FIT seed required')
     header = 'import os,json,time,hashlib\nfrom pathlib import Path\n'
     header += f'root=Path({("/tmp/rb-merge-fullfleet-"+args.version)!r})\n'
+    header += f'details={args.details!r}\n'
+    header += f'seed={args.seed!r}\n'
+    header += f'identity={args.identity!r}\n'
     if args.mode == 'status':
         print(remote(header+"print(json.dumps(dict(load=os.getloadavg(), cpus=os.cpu_count(), old_owned_pids={p:Path('/proc/'+str(p)).exists() for p in (200540,233273)}, existing_dispatch=(root/'LAUNCH.json').exists())))"))
     elif args.mode == 'stage':
@@ -37,6 +45,10 @@ def main():
                                            cwd='E:/agent-work/c4-rb-int')
         payload = dict(runtime_archive=base64.b64encode(archive).decode(),
             merge_kernel=base64.b64encode((ROOT/'src/wms/physics/junction_merge.py').read_bytes()).decode(),
+            network=base64.b64encode((ROOT/'src/wms/physics/merge_network.py').read_bytes()).decode(),
+            insertion=base64.b64encode((ROOT/'src/wms/model/sumo_insertion.py').read_bytes()).decode(),
+            native=base64.b64encode((ROOT/'src/wms/model/sumo_native.py').read_bytes()).decode(),
+            native_tests=base64.b64encode((ROOT/'tests/unit/test_rb_merge_native.py').read_bytes()).decode(),
             merge_tests=base64.b64encode((ROOT/'tests/unit/test_rb_merge.py').read_bytes()).decode(),
             validator=base64.b64encode((ROOT/'tools/rbeval/full_fleet.py').read_bytes()).decode(),
             tests=base64.b64encode((ROOT/'tests/unit/test_rb_merge_full_fleet.py').read_bytes()).decode(),
@@ -52,6 +64,9 @@ with tarfile.open(fileobj=io.BytesIO(base64.b64decode(payload['runtime_archive']
     tar.extractall(runtime, filter='data')
 # Overlay only MERGE's owned kernel; keep INT's entrant-identity and lane hooks.
 (runtime/'src/wms/physics/junction_merge.py').write_bytes(base64.b64decode(payload['merge_kernel']))
+(runtime/'src/wms/physics/merge_network.py').write_bytes(base64.b64decode(payload['network']))
+(runtime/'src/wms/model/sumo_insertion.py').write_bytes(base64.b64decode(payload['insertion']))
+(runtime/'src/wms/model/sumo_native.py').write_bytes(base64.b64decode(payload['native']))
 adapter=runtime/'src/wms/model/sumo_merge.py'
 text=adapter.read_text()
 old='merge_speed_advice(kin, present, accel, physics, driver_params)'
@@ -68,12 +83,14 @@ test=root/'test_full_fleet.py'
 test.write_bytes(base64.b64decode(payload['tests']))
 merge_test=root/'test_merge_source.py'
 merge_test.write_bytes(base64.b64decode(payload['merge_tests']))
+native_test=root/'test_native_physics.py'
+native_test.write_bytes(base64.b64decode(payload['native_tests']))
 targets=root/'targets'
 targets.mkdir()
 for name,data in payload['targets'].items():
     (targets/name).write_bytes(base64.b64decode(data))
 env=dict(os.environ, PYTHONPATH=str(runtime/'src')+':'+str(root), OMP_NUM_THREADS='1', MKL_NUM_THREADS='1', OPENBLAS_NUM_THREADS='1', CUDA_VISIBLE_DEVICES='')
-result=subprocess.run([sys.executable,'-m','pytest',str(test),str(merge_test),'-q'],cwd=root,env=env,text=True,capture_output=True)
+result=subprocess.run([sys.executable,'-m','pytest',str(test),str(merge_test),str(native_test),'-q'],cwd=root,env=env,text=True,capture_output=True)
 receipt=dict(command=result.args,returncode=result.returncode,stdout=result.stdout,stderr=result.stderr,load=os.getloadavg(),cpus=os.cpu_count())
 (root/'CPU_TESTS.json').write_text(json.dumps(receipt,indent=2)+'\\n')
 print(json.dumps(receipt))
@@ -81,7 +98,7 @@ assert result.returncode==0
 preflight=subprocess.run([sys.executable,'-B',str(tools/'full_fleet.py'),'--root','/home/ubuntu/wmdata20261031/views','--runtime',str(runtime),'--targets',str(targets),'--seeds',*map(str,range(969400,969432)),'--preflight'],cwd=root,env=env,text=True,capture_output=True)
 pre=dict(command=preflight.args,returncode=preflight.returncode,stdout=preflight.stdout,stderr=preflight.stderr)
 (root/'PREFLIGHT.json').write_text(json.dumps(pre,indent=2)+'\\n')
-print(json.dumps(pre))
+print(json.dumps(dict(preflight_returncode=preflight.returncode,fit_worlds=32,stderr=preflight.stderr)))
 assert preflight.returncode==0
 '''
         print(remote(code))
@@ -95,7 +112,7 @@ assert not (root/'results').exists()
 with (root/'LAUNCH.json').open('x') as f:
     json.dump(dict(state='reserved',owner='S-RB-MERGE'),f)
 script=root/'tools/rbeval/full_fleet.py'
-command=[python,'-B',str(script),'--root','/home/ubuntu/wmdata20261031/views','--runtime',str(root/'runtime'),'--targets',str(root/'targets'),'--output',str(root/'results'),'--seeds',*map(str,range(969400,969432)),'--horizon','300','--slots','320','--cf-model','sumo_idm','--warm-lc']
+command=[python,'-B',str(script),'--root','/home/ubuntu/wmdata20261031/views','--runtime',str(root/'runtime'),'--targets',str(root/'targets'),'--output',str(root/'results'),'--seeds',*map(str,range(969400,969432)),'--horizon','300','--slots','320','--cf-model','sumo_idm','--warm-lc','--trace-merge','--native-model','sumo']
 env=dict(os.environ,OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',CUDA_VISIBLE_DEVICES='')
 with (root/'RUN.log').open('x') as log:
     child=subprocess.Popen(command,cwd=root,env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,preexec_fn=lambda:os.nice(19))
@@ -113,7 +130,30 @@ summaries=[]
 for seed in rows:
     row=json.loads((result/(str(seed)+'.json')).read_text())
     summaries.append(dict(seed=seed,predicted_ramp=row['delay']['predicted_ramp_veh_s'],recorded_ramp=float(row['delay']['recorded']['ramp_delay_vs']),ramp_source=row['delay']['ramp_source_veh_s'],inserted=row['demand']['inserted'],real_merges=row['merges']['recorded'],predicted_merges=row['merges']['predicted']))
-print(json.dumps(dict(launch=launch,alive=Path('/proc/'+str(pid)).exists(),completed=rows,complete=(result/'COMPLETE.json').exists(),failed=json.loads((result/'FAILED.json').read_text()) if (result/'FAILED.json').exists() else None,rows=summaries,log=(root/'RUN.log').read_text(),load=os.getloadavg())))
+failed=json.loads((result/'FAILED.json').read_text()) if (result/'FAILED.json').exists() else None
+print(json.dumps(dict(pid=pid,alive=Path('/proc/'+str(pid)).exists(),completed=len(rows),complete=(result/'COMPLETE.json').exists(),failed=failed,rows=summaries if details else summaries[-1:],log=(root/'RUN.log').read_text() if failed or details else None,load=os.getloadavg())))
+'''
+        print(remote(code))
+    elif args.mode == 'trace':
+        code = header+'''path=root/'results'/(str(seed)+'.json')
+if not path.exists():
+    print(json.dumps(dict(seed=seed,available=False)))
+else:
+    row=json.loads(path.read_text())
+    trace=row.get('merge_front_trace',[])
+    latest=max((r['time_s'] for r in trace),default=None)
+    heads=[r for r in trace if r['time_s']==latest]
+    head=max(heads,key=lambda r:r['s_m']) if heads else None
+    selected=identity if identity is not None else head['identity'] if head else None
+    history=[r for r in trace if r['identity']==selected]
+    if identity is not None:
+        head=history[-1] if history else None
+    summary=dict(seed=seed,available=True,head=head,head_first=history[0] if history else None,head_samples=len(history),safe_samples=sum(r['safe'] for r in history),blocked_leader_samples=sum(r['blocked_leader'] for r in history),blocked_follower_samples=sum(r['blocked_follower'] for r in history),body_overlap=row.get('body_overlap'))
+    if details:
+        summary['history']=history
+    summary['selected_identity']=selected
+    summary['merge_events']=[e for e in row['merges']['events'] if e['identity']==selected]
+    print(json.dumps(summary))
 '''
         print(remote(code))
     else:

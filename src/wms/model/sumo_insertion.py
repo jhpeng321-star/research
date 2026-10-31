@@ -5,10 +5,7 @@ import hashlib
 import math
 
 from .entries import NOMINAL_LENGTH_M
-
-# SUMO config.h.cmake:239, distinct from SPEED_EPS=.01 and NUMERICAL_EPS=.001.
-POSITION_EPS = .1
-
+from wms.physics.merge_network import POSITION_EPS, lane_desired_speed
 
 def follow_speed(speed, bumper_gap, leader_speed, params, dt):
     """Scalar IDM::_v, matching default .25s substeps."""
@@ -113,7 +110,8 @@ class SumoInsertion:
             lanes = [max(lanes, key=free_space)]
         for lane in lanes:
             gap, leader = self.gap(process, work, b, lane, length)
-            cap = min(p['v0'], float(process.cfg.sumo_lane_speed_mps[lane]))
+            cap = lane_desired_speed(p['v0'], float(process.cfg.sumo_lane_speed_mps[lane]),
+                                     self.physics.speed_limit_mps)
             if self.depart_speed in ('max', 'desired'):
                 requested = cap
             elif self.depart_speed == 'last':
@@ -122,7 +120,9 @@ class SumoInsertion:
                 requested = float(self.depart_speed)
                 if requested > cap:
                     continue
-            speed = insertion_speed(requested, gap, leader, p, process.dt)
+            # The IDM departure check uses this lane's desired speed too, while
+            # the coupled newborn retains the original reference-speed setting.
+            speed = insertion_speed(requested, gap, leader, {**p, 'v0': cap}, process.dt)
             if speed is None or (self.depart_speed != 'max' and speed < requested):
                 continue
             if process._place(work, b, entrance, lane, cav, speed, length):

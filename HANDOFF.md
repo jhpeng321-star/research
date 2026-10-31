@@ -18,6 +18,12 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   `panel_ops status` is read-only; never repeat canary/continue/monitor dispatch.
 
 ## What exists
+- MERGEda3607eb integrated: source22.22→31.29 ramp limits/speedFactor, EPS
+  constants, physics-native opt-in callback and matched native-relative accel.
+  Old learned native head's missing-leader dv gathers unrelated slot0 speed:
+  can falsely stall an unled ramp CAV. New callback bypasses that head, no training.
+  **59 CPU tests PASS /1CUDA skip**, including INT query parity and old adapters.
+  Callback not yet selected by the live4015b641 panel or new recipe.
 - NEW default-OFF `PhysicsConfig.sumo_merge_query_fast`: exact one-ego geometry
   per reservation rank (junction_query.py). CPU dense/query geometry+reservation
   bit parity PASS;34tests PASS/1CUDA skip. Synthetic640slot kernel benchmark42.3x

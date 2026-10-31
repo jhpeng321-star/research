@@ -69,11 +69,14 @@ def test_observer_detects_external_queue_corruption():
 
 
 @pytest.mark.parametrize('cf', ['legacy', 'sumo_idm'])
-def test_integrated_chunk_memory_matches_long_rollout(cf):
+@pytest.mark.parametrize('native_model', ['head', 'sumo'])
+def test_integrated_chunk_memory_matches_long_rollout(cf, native_model):
     from wms.model.spec import ModelSpec
     from wms.model.wms import WmSModel
     from wms.physics.config import PhysicsConfig
     from tools.rbeval.full_fleet import native_controller
+    from wms.model.sumo_native import native_physics_controller
+    controller = native_controller if native_model == 'head' else native_physics_controller
     # This test requires the exact peer integration runtime selected by PYTHONPATH.
     options = {} if cf == 'legacy' else dict(cf_model=cf, sumo_cf_emergency_decel_mps2=9.)
     model = WmSModel(ModelSpec(lane_model='lc2013', lane_head='off'),
@@ -84,11 +87,11 @@ def test_integrated_chunk_memory_matches_long_rollout(cf):
     state['s_m'][0, 0] = 20
     state['is_cav'][0, 0] = True
     with torch.no_grad():
-        full = model.rollout(copy.deepcopy(state), n_steps=4, cav_controller=native_controller())
+        full = model.rollout(copy.deepcopy(state), n_steps=4, cav_controller=controller())
         last = copy.deepcopy(state)
         history = history_mask = None
         for tick in range(4):
-            one = model.rollout(last, n_steps=1, k0=tick, cav_controller=native_controller(),
+            one = model.rollout(last, n_steps=1, k0=tick, cav_controller=controller(),
                                 history=history, history_mask=history_mask)
             last = one['state']
             history, history_mask = one['history'], one['history_mask']
@@ -141,3 +144,18 @@ def test_body_overlap_is_lane_local_and_touching_is_not_overlap():
     s = np.array([0., 5., 9., 9.])
     lane = np.array([1, 1, 1, 0])
     assert body_overlap_count(s, lane, np.full(4, 5.), np.ones(4, bool)) == (1, -1.)
+
+
+def test_front_trace_is_finite_identity_bound_and_does_not_mutate_state():
+    from tools.rbeval.full_fleet import merge_trace
+    from wms.physics.config import PhysicsConfig
+    state, _ = fixture()
+    state['lane'][0, 0] = 2
+    old = copy.deepcopy(state)
+    trace = merge_trace(state, PhysicsConfig(merge_model='sumo'), 300.)
+    assert len(trace) == 1 and trace[0]['identity'] == 0
+    assert trace[0]['leader'] is None and trace[0]['gap_leader_m'] is None
+    json.dumps(trace, allow_nan=False)
+    for key in old:
+        if torch.is_tensor(old[key]):
+            torch.testing.assert_close(state[key], old[key], rtol=0, atol=0)

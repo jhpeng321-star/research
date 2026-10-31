@@ -1,0 +1,475 @@
+{
+  "worlds": 32,
+  "horizons_s": [
+    300
+  ],
+  "arms": [
+    "native"
+  ],
+  "source_versions": {
+    "cf": [
+      "sumo_idm"
+    ],
+    "native_model": [
+      "head"
+    ],
+    "lc_memory": [
+      "observable_60s_then_persistent"
+    ]
+  },
+  "ramp_origin_full_fleet_delay_veh_s": {
+    "recorded": {
+      "n": 32,
+      "mean": 2272.7760628855704,
+      "q10": 1641.3651730822412,
+      "q50": 1965.813606814783,
+      "q90": 3422.4632048935073
+    },
+    "predicted": {
+      "n": 32,
+      "mean": 2363.874979373085,
+      "q10": 651.3502102740478,
+      "q50": 1080.151313133515,
+      "q90": 5764.865179600122
+    },
+    "mean_bias": 91.09891648751437,
+    "marginal_wasserstein1": 1197.3623573054792,
+    "secondary_paired_mae": 1651.7697756670873,
+    "predicted_source": {
+      "n": 32,
+      "mean": 9.84190311098324,
+      "q10": 6.955605177712235,
+      "q50": 8.935611566739977,
+      "q90": 13.11457118012444
+    }
+  },
+  "t0_merge_events": {
+    "recorded": 200,
+    "predicted": 176,
+    "matched": 174,
+    "missed": 26,
+    "extra": 2,
+    "time_error_s": {
+      "n": 174,
+      "mean": -24.727011494252874,
+      "q10": -63.75,
+      "q50": -14.5,
+      "q90": 3.3500000000000085
+    },
+    "position_error_m": {
+      "n": 174,
+      "mean": -5.562427093599035,
+      "q10": -33.9252753829956,
+      "q50": -1.1837040710449216,
+      "q90": 18.607270980834972
+    },
+    "timing_mae_s": 30.35919540229885,
+    "position_mae_m": 13.033445990469263
+  },
+  "full_fleet_merge_counts": {
+    "recorded": {
+      "n": 32,
+      "mean": 33.0625,
+      "q10": 26.0,
+      "q50": 33.0,
+      "q90": 41.0
+    },
+    "predicted": {
+      "n": 32,
+      "mean": 25.375,
+      "q10": 6.2,
+      "q50": 27.0,
+      "q90": 40.0
+    }
+  },
+  "insertions": {
+    "per_world": [
+      {
+        "seed": 969400,
+        "recorded": [
+          142,
+          28
+        ],
+        "predicted": [
+          151,
+          41
+        ]
+      },
+      {
+        "seed": 969401,
+        "recorded": [
+          163,
+          39
+        ],
+        "predicted": [
+          219,
+          28
+        ]
+      },
+      {
+        "seed": 969402,
+        "recorded": [
+          163,
+          42
+        ],
+        "predicted": [
+          217,
+          33
+        ]
+      },
+      {
+        "seed": 969403,
+        "recorded": [
+          147,
+          31
+        ],
+        "predicted": [
+          150,
+          27
+        ]
+      },
+      {
+        "seed": 969404,
+        "recorded": [
+          161,
+          33
+        ],
+        "predicted": [
+          213,
+          37
+        ]
+      },
+      {
+        "seed": 969405,
+        "recorded": [
+          166,
+          43
+        ],
+        "predicted": [
+          208,
+          29
+        ]
+      },
+      {
+        "seed": 969406,
+        "recorded": [
+          165,
+          32
+        ],
+        "predicted": [
+          159,
+          43
+        ]
+      },
+      {
+        "seed": 969407,
+        "recorded": [
+          163,
+          31
+        ],
+        "predicted": [
+          199,
+          27
+        ]
+      },
+      {
+        "seed": 969408,
+        "recorded": [
+          163,
+          33
+        ],
+        "predicted": [
+          199,
+          29
+        ]
+      },
+      {
+        "seed": 969409,
+        "recorded": [
+          132,
+          35
+        ],
+        "predicted": [
+          139,
+          31
+        ]
+      },
+      {
+        "seed": 969410,
+        "recorded": [
+          160,
+          35
+        ],
+        "predicted": [
+          181,
+          29
+        ]
+      },
+      {
+        "seed": 969411,
+        "recorded": [
+          162,
+          34
+        ],
+        "predicted": [
+          179,
+          35
+        ]
+      },
+      {
+        "seed": 969412,
+        "recorded": [
+          170,
+          36
+        ],
+        "predicted": [
+          164,
+          33
+        ]
+      },
+      {
+        "seed": 969413,
+        "recorded": [
+          162,
+          29
+        ],
+        "predicted": [
+          216,
+          34
+        ]
+      },
+      {
+        "seed": 969414,
+        "recorded": [
+          159,
+          46
+        ],
+        "predicted": [
+          214,
+          25
+        ]
+      },
+      {
+        "seed": 969415,
+        "recorded": [
+          146,
+          24
+        ],
+        "predicted": [
+          146,
+          39
+        ]
+      },
+      {
+        "seed": 969416,
+        "recorded": [
+          162,
+          36
+        ],
+        "predicted": [
+          184,
+          39
+        ]
+      },
+      {
+        "seed": 969417,
+        "recorded": [
+          164,
+          26
+        ],
+        "predicted": [
+          209,
+          39
+        ]
+      },
+      {
+        "seed": 969418,
+        "recorded": [
+          149,
+          28
+        ],
+        "predicted": [
+          138,
+          40
+        ]
+      },
+      {
+        "seed": 969419,
+        "recorded": [
+          160,
+          38
+        ],
+        "predicted": [
+          200,
+          40
+        ]
+      },
+      {
+        "seed": 969420,
+        "recorded": [
+          159,
+          38
+        ],
+        "predicted": [
+          203,
+          38
+        ]
+      },
+      {
+        "seed": 969421,
+        "recorded": [
+          143,
+          32
+        ],
+        "predicted": [
+          154,
+          41
+        ]
+      },
+      {
+        "seed": 969422,
+        "recorded": [
+          162,
+          37
+        ],
+        "predicted": [
+          187,
+          27
+        ]
+      },
+      {
+        "seed": 969423,
+        "recorded": [
+          161,
+          27
+        ],
+        "predicted": [
+          182,
+          23
+        ]
+      },
+      {
+        "seed": 969424,
+        "recorded": [
+          160,
+          37
+        ],
+        "predicted": [
+          151,
+          27
+        ]
+      },
+      {
+        "seed": 969425,
+        "recorded": [
+          162,
+          27
+        ],
+        "predicted": [
+          211,
+          27
+        ]
+      },
+      {
+        "seed": 969426,
+        "recorded": [
+          165,
+          34
+        ],
+        "predicted": [
+          220,
+          34
+        ]
+      },
+      {
+        "seed": 969427,
+        "recorded": [
+          164,
+          28
+        ],
+        "predicted": [
+          146,
+          34
+        ]
+      },
+      {
+        "seed": 969428,
+        "recorded": [
+          164,
+          34
+        ],
+        "predicted": [
+          198,
+          30
+        ]
+      },
+      {
+        "seed": 969429,
+        "recorded": [
+          163,
+          31
+        ],
+        "predicted": [
+          211,
+          21
+        ]
+      },
+      {
+        "seed": 969430,
+        "recorded": [
+          161,
+          27
+        ],
+        "predicted": [
+          188,
+          36
+        ]
+      },
+      {
+        "seed": 969431,
+        "recorded": [
+          163,
+          38
+        ],
+        "predicted": [
+          202,
+          35
+        ]
+      }
+    ],
+    "recorded_total": [
+      5086,
+      1069
+    ],
+    "predicted_total": [
+      5938,
+      1051
+    ]
+  },
+  "geometric_overlap": {
+    "available": true,
+    "pair_samples": 55,
+    "worlds_with_overlap": [
+      969402,
+      969405
+    ]
+  },
+  "merge_geometry_violations": [],
+  "source_conservation": {
+    "worlds_passed": 32,
+    "dropped": 0,
+    "no_slot": 0
+  },
+  "not_qualified": true,
+  "limitations": [
+    "One future per world; marginal distributions do not identify same-state variability.",
+    "Full-fleet insertion counts use autonomous stochastic arrivals, not replayed future demand.",
+    "Historical 562.4 veh-s is a different panel/contract; compare recorded per-world values.",
+    "No breakdown, controller-shift, or distributional qualification gate is claimed."
+  ],
+  "inputs_sha256": {
+    "ramp_merges.csv": "205fb2c16435759e9c6e78a50a133290adbf5f6fd2733a6938c23f08ae815cfc",
+    "insertions_10s.csv": "4fd744926fc8c8f6a6d4ff77088f4a40cc0a017979bfb0f268e8f0c339403b26"
+  },
+  "collection_sha256": "f0bce9ed8ecefa828de555856555ee04c3a32ac42bc173076fccafbb59c819a6"
+}

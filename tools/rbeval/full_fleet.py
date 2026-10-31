@@ -94,6 +94,36 @@ def warm_lc_history(model, arrays, t0, names, state, slots):
     transfer_lc_memory(previous, state)
 
 
+def merge_trace(state, physics, time_s):
+    """Ten-second diagnostic of the two front ramp cars, never a control input."""
+    from wms.physics.junction_merge import merge_geometry
+    from wms.physics.state import state_kin
+    geometry = merge_geometry(state_kin(state), state['present'], physics)
+    ramp = torch.where(state['present'][0] & (state['lane'][0] == 2))[0]
+    ramp = ramp[state['s_m'][0, ramp].argsort(descending=True)][:2]
+    rows = []
+    for slot in ramp.tolist():
+        def value(key):
+            v = float(geometry[key][0, slot])
+            return v if np.isfinite(v) else None
+        row = dict(time_s=time_s, identity=int(state['vehicle_id'][0, slot]),
+            s_m=float(state['s_m'][0, slot]), v_mps=float(state['v_mps'][0, slot]),
+            is_cav=bool(state['is_cav'][0, slot]), safe=bool(geometry['safe'][0, slot]),
+            gap_leader_m=value('gap_l'), gap_follower_m=value('gap_f'),
+            required_leader_m=value('lead_need'), required_follower_m=value('follow_need'),
+            blocked_leader=bool(geometry['blocked_l'][0, slot]),
+            blocked_follower=bool(geometry['blocked_f'][0, slot]))
+        for label, has, index in (('leader', 'has_l', 'leader'), ('follower', 'has_f', 'follower')):
+            i = int(geometry[index][0, slot])
+            row[label] = (dict(identity=int(state['vehicle_id'][0, i]),
+                               v_mps=float(state['v_mps'][0, i]), s_m=float(state['s_m'][0, i]))
+                          if geometry[has][0, slot] else None)
+        if 'lc2013_lookahead' in state:
+            row['lookahead_mps'] = float(state['lc2013_lookahead'][0, slot])
+        rows.append(row)
+    return rows
+
+
 class ObservedEntries:
     """Preserve the process and SourceLedger, record IDs/origins and exact waiting.
 
@@ -233,7 +263,8 @@ def observable_source(job):
 
 
 @torch.no_grad()
-def validate(root, seed, horizon, slots, stream, target_dir, cf_model='legacy', warm_lc=False):
+def validate(root, seed, horizon, slots, stream, target_dir, cf_model='legacy', warm_lc=False,
+             trace_merge=False, native_model='head'):
     from wms.model.spec import ModelSpec
     from wms.model.wms import WmSModel
     from wms.physics.config import PhysicsConfig
@@ -286,7 +317,13 @@ def validate(root, seed, horizon, slots, stream, target_dir, cf_model='legacy', 
         cfg=EntryConfig(conserve_queue=True, insert_rule='sumo_like_v2'), queues=[queue])
     entries = ObservedEntries(process, state)
     initial = int(mask.sum())
-    cb = native_controller()
+    if native_model == 'sumo':
+        if cf_model != 'sumo_idm':
+            raise ValueError('physics-native validation requires the SUMO CF runtime')
+        from wms.model.sumo_native import native_physics_controller
+        cb = native_physics_controller(dt_s=dt)
+    else:
+        cb = native_controller()
     # No encoder inputs: population-only construction; SUMO path bypasses heads.
     clock = np.zeros(2)
     source = np.zeros(2)
@@ -299,6 +336,7 @@ def validate(root, seed, horizon, slots, stream, target_dir, cf_model='legacy', 
     worst_overlap_gap = 0.
     last = state
     history = history_mask = None
+    trace = merge_trace(state, cfg, 300.) if trace_merge else []
     start = time.monotonic()
     # One-step rollout keeps the integrated carry/reset interfaces intact. Retain
     # the returned final state, rather than reconstructing and losing LC memory.
@@ -341,6 +379,8 @@ def validate(root, seed, horizon, slots, stream, target_dir, cf_model='legacy', 
         births.extend(dict(**b, time_s=300+tick*dt) for b in entries.last_births)
         last = roll['state']
         history, history_mask = roll['history'], roll['history_mask']
+        if trace_merge and (tick+1) % round(10/dt) == 0:
+            trace.extend(merge_trace(last, cfg, 300+(tick+1)*dt))
     # Read shared recorded outputs only after autonomous prediction is complete.
     def targets(name):
         with safe(target_dir / name).open(newline='') as f:
@@ -358,7 +398,7 @@ def validate(root, seed, horizon, slots, stream, target_dir, cf_model='legacy', 
     predicted = clock+source
     return dict(seed=seed, arm='native', horizon_s=horizon, stream=stream, runtime_s=time.monotonic()-start,
         initial=initial, max_present=max_present, exits=exits,
-        cf_model=getattr(cfg, 'cf_model', 'legacy'), lane_model=model.lane_model,
+        cf_model=getattr(cfg, 'cf_model', 'legacy'), lane_model=model.lane_model, native_model=native_model,
         settings='population_default_no_encoder', lc_memory='observable_60s_then_persistent' if warm_lc else 'cold_t0_then_persistent',
         body_overlap=dict(pair_samples=overlap_samples, worst_bumper_gap_m=worst_overlap_gap),
         demand=dict(rate=rates.tolist(), initial_backlog=queue.backlog.tolist(),
@@ -373,7 +413,7 @@ def validate(root, seed, horizon, slots, stream, target_dir, cf_model='legacy', 
                     t0_time_abs_error_s=stats([abs(pm[i]['time_s']-float(rm[i]['t_merge_s'])) for i in common]),
                     t0_position_abs_error_m=stats([abs(pm[i]['position_m']-float(rm[i]['s_merge_m'])) for i in common]),
                     predicted_positions_m=stats([m['position_m'] for m in merges]), events=merges),
-        births=births, road_delay_per_identity={str(k): v for k, v in per_vehicle.items()},
+        births=births, merge_front_trace=trace, road_delay_per_identity={str(k): v for k, v in per_vehicle.items()},
         episode_sha256=digest(ep/'episode.json'), tape_sha256=digest(tape), source_observations=source_receipt)
 
 
@@ -390,6 +430,8 @@ def main():
     p.add_argument('--stream', type=int, default=190)
     p.add_argument('--cf-model', choices=('legacy', 'sumo_idm'), default='legacy')
     p.add_argument('--warm-lc', action='store_true')
+    p.add_argument('--trace-merge', action='store_true')
+    p.add_argument('--native-model', choices=('head', 'sumo'), default='head')
     args = p.parse_args()
     if len(args.seeds) != len(set(args.seeds)) or any(not 969400 <= s <= 969431 for s in args.seeds):
         p.error('unique FIT seeds 969400..969431 required')
@@ -426,7 +468,7 @@ def main():
             while hasattr(os, 'getloadavg') and os.getloadavg()[0] > 28:
                 time.sleep(15)
             row = validate(safe(args.root), seed, args.horizon, args.slots, args.stream, safe(args.targets),
-                           args.cf_model, args.warm_lc)
+                           args.cf_model, args.warm_lc, args.trace_merge, args.native_model)
             if any(digest(runtime/name) != sha for name, sha in sources.items()):
                 raise AssertionError('runtime changed during diagnostic')
             (out/f'{seed}.json').write_text(json.dumps(row, indent=2, allow_nan=False)+'\n')
