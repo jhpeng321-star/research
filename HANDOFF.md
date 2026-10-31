@@ -3,7 +3,7 @@
 <!-- wmdecide-refresh:start -->
 ## Latest automated saved-output credibility refresh
 
-- Collected/scored 2026-10-31T23:34:52.878636+00:00; start at `docs/paper_results/wmdecide/refresh_20261031_233430Z/INDEX.md`.
+- Collected/scored 2026-10-31T23:56:04.353459+00:00; start at `docs/paper_results/wmdecide/refresh_20261031_235455Z/INDEX.md`.
 - All scores use validated complete K8 worlds; per-candidate matched WM2
   sections use exactly the candidate's available common worlds.
 - Read-only collection; CPU-only analysis; no inference/dispatch/process control.
@@ -11,7 +11,7 @@
 - wm2: DIAGNOSTIC_ONLY; 20 scored worlds.
 - full_v1: DIAGNOSTIC_ONLY; 9 scored worlds.
 - full_v3: DIAGNOSTIC_ONLY; 10 scored worlds.
-- a2: DIAGNOSTIC_ONLY; 9 scored worlds.
+- a2: DIAGNOSTIC_ONLY; 10 scored worlds.
 - b2: DIAGNOSTIC_ONLY; 9 scored worlds.
 - c2: UNAVAILABLE_OR_INVALID; 0 scored worlds.
 <!-- wmdecide-refresh:end -->
