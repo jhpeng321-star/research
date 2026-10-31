@@ -55,7 +55,8 @@ merge; use full ramp-origin/group clocks for the owner's fleet-delay target.
 --targets <shared target CSV directory> --output <new result directory>
 --seeds 969400 ... 969431 --horizon 300` runs population-default physics with
 LC2013 mainline, SUMO merge/insertion and the existing native CAV executor.
-Uses t0 request counters/backlog for arrivals and preserves `conserve_queue` /
+Uses identity-hashed observable `start.pt` pre-t0 insertions and entrance backlog
+to infer demand (the existing WMCALIB source contract), preserving `conserve_queue` /
 `SourceLedger`. The recorded per-world ramp-entrance-group clock is compared with
 ramp-origin road delay **plus source waiting**, including travel after merging.
 Cold LC memory and the actual CF selector are explicit in every receipt. No future

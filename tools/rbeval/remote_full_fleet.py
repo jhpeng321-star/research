@@ -7,7 +7,6 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[2]
 PYTHON = '/home/ubuntu/miniconda3/bin/python'
-REMOTE = '/tmp/rb-merge-fullfleet-v2'
 INT_COMMIT = 'ff8a637f'
 
 
@@ -23,9 +22,12 @@ def remote(code):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('mode', choices=('status', 'stage', 'launch', 'poll', 'collect'))
+    p.add_argument('--version', default='v3')
     args = p.parse_args()
+    if not args.version.isalnum():
+        p.error('version must be alphanumeric')
     header = 'import os,json,time,hashlib\nfrom pathlib import Path\n'
-    header += f'root=Path({REMOTE!r})\n'
+    header += f'root=Path({("/tmp/rb-merge-fullfleet-"+args.version)!r})\n'
     if args.mode == 'status':
         print(remote(header+"print(json.dumps(dict(load=os.getloadavg(), cpus=os.cpu_count(), old_owned_pids={p:Path('/proc/'+str(p)).exists() for p in (200540,233273)}, existing_dispatch=(root/'LAUNCH.json').exists())))"))
     elif args.mode == 'stage':
@@ -61,12 +63,18 @@ receipt=dict(command=result.args,returncode=result.returncode,stdout=result.stdo
 (root/'CPU_TESTS.json').write_text(json.dumps(receipt,indent=2)+'\\n')
 print(json.dumps(receipt))
 assert result.returncode==0
+preflight=subprocess.run([sys.executable,'-B',str(tools/'full_fleet.py'),'--root','/home/ubuntu/wmdata20261031/views','--runtime',str(runtime),'--targets',str(targets),'--seeds',*map(str,range(969400,969432)),'--preflight'],cwd=root,env=env,text=True,capture_output=True)
+pre=dict(command=preflight.args,returncode=preflight.returncode,stdout=preflight.stdout,stderr=preflight.stderr)
+(root/'PREFLIGHT.json').write_text(json.dumps(pre,indent=2)+'\\n')
+print(json.dumps(pre))
+assert preflight.returncode==0
 '''
         print(remote(code))
     elif args.mode == 'launch':
         code = header+f'python={PYTHON!r}\n'
         code += '''import subprocess
 assert json.loads((root/'CPU_TESTS.json').read_text())['returncode']==0
+assert json.loads((root/'PREFLIGHT.json').read_text())['returncode']==0
 assert os.getloadavg()[0]<28 and os.cpu_count()>=32
 assert not (root/'results').exists()
 with (root/'LAUNCH.json').open('x') as f:
@@ -91,12 +99,12 @@ print(json.dumps(dict(launch=launch,alive=Path('/proc/'+str(pid)).exists(),compl
         print(remote(code))
     else:
         code = header+'''result=root/'results'
-files=[root/'LAUNCH.json',root/'CPU_TESTS.json',result/'IDENTITY.json',result/'COMPLETE.json',result/'FAILED.json']
+files=[root/'LAUNCH.json',root/'CPU_TESTS.json',root/'PREFLIGHT.json',result/'IDENTITY.json',result/'COMPLETE.json',result/'FAILED.json']
 files += [result/(str(s)+'.json') for s in range(969400,969432)]
 print(json.dumps({p.name:dict(content=p.read_text(),sha256=hashlib.sha256(p.read_bytes()).hexdigest()) for p in files if p.exists()}))
 '''
         data = json.loads(remote(code))
-        dest = ROOT/'docs/rb_merge/fullfleet_v2'
+        dest = ROOT/('docs/rb_merge/fullfleet_'+args.version)
         dest.mkdir(exist_ok=False)
         for name, item in data.items():
             (dest/name).write_text(item['content'], encoding='utf-8', newline='\n')

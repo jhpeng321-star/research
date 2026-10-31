@@ -150,12 +150,45 @@ def native_controller():
     return callback
 
 
+def observable_source(job):
+    """Existing WMDATA t0 detector contract (wm_gpu_wmcalib.py:79-115).
+
+    Converted FIT views lack queue arrays. The identity-bound observable start
+    records pre-t0 insertions and entrance queues; no assignment/request XML read.
+    """
+    from wms.model.entries import EntranceQueue
+    path = safe(job/'start.pt')
+    receipt = json.loads(safe(job/'result.json').read_text())
+    sha = digest(path)
+    if sha != receipt['output_hashes']['start.pt']:
+        raise ValueError('observable start hash differs')
+    start = torch.load(path, map_location='cpu', weights_only=False)
+    if start['t0'] != 300 or start['initial_state_sha256'] != receipt['metrics']['initial_state_sha256']:
+        raise ValueError('observable start clock/identity differs')
+    events = start['past_entries']
+    if not all(0 < e['time'] <= 300 for e in events):
+        raise ValueError('noncausal entrance observations')
+    if start['observed_queue_history'][-1][0] > 300:
+        raise ValueError('future queue observation')
+    q = np.array(start['observed_queue_history'][-1][1:], dtype=float)
+    if q.sum() != start['queue'] or q.shape != (2,):
+        raise ValueError('queue observation differs')
+    entrance = np.array([int(e['lane'] == 2) for e in events])
+    inserted = np.bincount(entrance, minlength=2)
+    rates = (inserted+q)/300.
+    shares = np.array([np.mean([e['is_cav'] for e in events if int(e['lane'] == 2) == a])
+                       if inserted[a] else 0. for a in (0, 1)])
+    queue = EntranceQueue(q, rates, cav_share=shares)
+    return queue, dict(start_sha256=sha, initial_state_sha256=start['initial_state_sha256'],
+                       source='observed pre-t0 insertions plus t0 queue, divided by 300s')
+
+
 @torch.no_grad()
 def validate(root, seed, horizon, slots, stream, target_dir):
     from wms.model.spec import ModelSpec
     from wms.model.wms import WmSModel
     from wms.physics.config import PhysicsConfig
-    from wms.model.entries import EntryConfig, EntranceQueue, TorchEntryProcessV2, observed_rates
+    from wms.model.entries import EntryConfig, TorchEntryProcessV2
 
     if not 969400 <= seed <= 969431:
         raise ValueError('FIT allowlist is exactly 969400..969431')
@@ -164,8 +197,7 @@ def validate(root, seed, horizon, slots, stream, target_dir):
     meta = json.loads((ep / 'episode.json').read_text())
     if meta['seed'] != seed or meta['arm'] != 'native':
         raise ValueError('episode identity differs')
-    allowed = ('time_s', 'veh_kin', 'veh_mask', 'vid', 'is_cav', 'counter',
-               'entry_backlog', 'request_counter', 'entry_cav_counter')
+    allowed = ('time_s', 'veh_kin', 'veh_mask', 'vid', 'is_cav', 'counter')
     arrays = {n: np.load(safe(ep / (n+'.npy')), mmap_mode='r', allow_pickle=False) for n in allowed}
     t0 = int(meta['t0_index'])
     dt = float(arrays['time_s'][t0+1]-arrays['time_s'][t0])
@@ -193,13 +225,9 @@ def validate(root, seed, horizon, slots, stream, target_dir):
             module.register_forward_pre_hook(reject_learned)
     if model.physics.emergency_braking:
         raise ValueError('unexpected extra emergency envelope')
-    rates = observed_rates(arrays['request_counter'][t0])
-    queue = EntranceQueue(np.array(arrays['entry_backlog'][t0]), rates, cav_share=None)
+    queue, source_receipt = observable_source(safe(record['job']))
+    rates = queue.demand_rate
     counter = np.array(arrays['counter'][t0])
-    # Observable CAV fraction per entrance; arrivals use no latent type information.
-    ins = counter[:, :12].sum(-1)
-    cav = np.array(arrays['entry_cav_counter'][t0])[:, :12].sum(-1)
-    queue.cav_share = np.divide(cav, ins, out=np.zeros(2), where=ins > 0)
     process = TorchEntryProcessV2(counter, dt_s=dt, row_seeds=[seed+stream], couple_draws=True,
         cfg=EntryConfig(conserve_queue=True, insert_rule='sumo_like_v2'), queues=[queue])
     entries = ObservedEntries(process, state)
@@ -280,7 +308,7 @@ def validate(root, seed, horizon, slots, stream, target_dir):
                     t0_position_error_m=stats([pm[i]['position_m']-float(rm[i]['s_merge_m']) for i in common]),
                     predicted_positions_m=stats([m['position_m'] for m in merges]), events=merges),
         births=births, road_delay_per_identity={str(k): v for k, v in per_vehicle.items()},
-        episode_sha256=digest(ep/'episode.json'), tape_sha256=digest(tape))
+        episode_sha256=digest(ep/'episode.json'), tape_sha256=digest(tape), source_observations=source_receipt)
 
 
 def main():
@@ -288,7 +316,8 @@ def main():
     p.add_argument('--root', required=True)
     p.add_argument('--runtime', required=True)
     p.add_argument('--targets', required=True)
-    p.add_argument('--output', required=True)
+    p.add_argument('--output')
+    p.add_argument('--preflight', action='store_true')
     p.add_argument('--seeds', nargs='+', type=int, required=True)
     p.add_argument('--horizon', type=int, choices=(120, 300, 600), default=300)
     p.add_argument('--slots', type=int, default=320)
@@ -300,6 +329,20 @@ def main():
     sys.path.insert(0, str(runtime/'src'))
     torch.set_num_threads(1)
     torch.manual_seed(965140)
+    if args.preflight:
+        rows = []
+        for seed in args.seeds:
+            record = json.loads(safe(Path(args.root)/f'world_{seed}.json').read_text())['native']
+            queue, receipt = observable_source(safe(record['job']))
+            ep = safe(Path(args.root)/'episodes'/record['episode'])
+            for name in ('time_s', 'veh_kin', 'veh_mask', 'vid', 'is_cav', 'counter'):
+                np.load(safe(ep/(name+'.npy')), mmap_mode='r', allow_pickle=False)
+            rows.append(dict(seed=seed, source=receipt, rate=queue.demand_rate.tolist(),
+                             queue=queue.backlog.tolist()))
+        print(json.dumps(dict(preflight=True, rows=rows)))
+        return
+    if not args.output:
+        p.error('--output is required for a rollout')
     out = safe(args.output)
     out.mkdir(exist_ok=False)
     paths = list((runtime/'src/wms').rglob('*.py'))

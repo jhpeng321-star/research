@@ -39,6 +39,14 @@
   NEW `/tmp/rb-merge-fullfleet-v2` and pins both native-head/executor config hashes.
 - Corrected remote CPU gate: **5/5 PASS (1.35s)**, cpuQ load13.37/32. No launch
   receipt yet; exclusive dispatch is the next step. No scientific rollout repeated.
+- v2 owned PID330030 exited before any rollout: converted FIT views have no
+  `entry_backlog.npy`. Failure/launch/source receipts preserved in
+  `docs/rb_merge/fullfleet_v2/`; zero completed scientific worlds.
+- v3 uses the EXISTING identity-hashed `jobs/s{seed}_native/start.pt` observable
+  detector contract (same as WMCALIB): pre-t0 insertion counts plus t0 entrance
+  queue infer demand over 300s; pre-t0 observed CAV shares. No request XML/type
+  assignments are opened. **All32 source preflights PASS**, **6 CPU tests PASS**
+  on cpuQ in1.29s. New `/tmp/rb-merge-fullfleet-v3`; old trees left intact.
 
 LATEST INTEGRATION INCREMENT: **2977be6d** (source corrections; 28 CPU tests pass).
 INT already reconciled mainline ownership: cherry-pick source corrections from

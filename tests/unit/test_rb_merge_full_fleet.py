@@ -1,5 +1,7 @@
 """Boundary clocks, recycled identity/origin and real entry/LC chunk contracts."""
 import copy
+import hashlib
+import json
 
 import numpy as np
 import pytest
@@ -93,3 +95,28 @@ def test_integrated_chunk_memory_matches_long_rollout():
     for key in full['state']:
         if key.startswith('lc2013_'):
             torch.testing.assert_close(last[key], full['state'][key], rtol=0, atol=0)
+
+
+def test_observable_start_source_hash_and_causality(tmp_path):
+    from tools.rbeval.full_fleet import observable_source
+    start = dict(t0=300, initial_state_sha256='synthetic', queue=3,
+                 observed_queue_history=[[300., 1, 2]],
+                 past_entries=[dict(time=100., lane=2, is_cav=True),
+                               dict(time=250., lane=0, is_cav=False)])
+    def write():
+        path = tmp_path/'start.pt'
+        torch.save(start, path)
+        (tmp_path/'result.json').write_text(json.dumps(dict(
+            output_hashes={'start.pt': hashlib.sha256(path.read_bytes()).hexdigest()},
+            metrics={'initial_state_sha256': 'synthetic'})))
+    write()
+    queue, _ = observable_source(tmp_path)
+    np.testing.assert_allclose(queue.demand_rate, [2/300., 3/300.])
+    np.testing.assert_array_equal(queue.cav_share, [0., 1.])
+    start['past_entries'][0]['time'] = 300.5
+    write()
+    with pytest.raises(ValueError, match='noncausal'):
+        observable_source(tmp_path)
+    (tmp_path/'start.pt').write_bytes(b'changed')
+    with pytest.raises(ValueError, match='hash differs'):
+        observable_source(tmp_path)
