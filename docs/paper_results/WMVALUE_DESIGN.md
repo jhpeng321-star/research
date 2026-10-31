@@ -120,3 +120,27 @@ Before reserved outcomes or inference, CPU-audit real/imagined sensing parity,
 prefix-only 60s restart history, entry/exit tracking, objective clocks and CRN.
 Reuse A only when its full restart/controller/entry/cost binding matches; a
 different adapter cannot silently mix cached and newly computed predictions.
+
+### Adapter execution contract (frozen before reserved outcomes)
+Late restarts align identities across arms and preserve all historical neighbours
+while encoding the native121-frame60s history; only current-union columns enter
+the rollout. PI/CIRCLES memory is replayed on real prefix observations from300
+through t0-1. MAPPO's previous issued acceleration is seeded from t0-1; lane
+intent is zero for its frozen native-lane binding. Entrants receive the same
+closed-loop controllers. All arms share identity columns, plan/draw seeds and
+entry candidate keys; full-long stochastic plans are consumed by prefix for B/C.
+V terminal X uses exactly the real projection and real-prefix + imagined-birth
+boundary events, never an actual future entry or state. Model training unchanged.
+For the WM's existing internal source model only, retain recorded warmup queue
+q300 and rate=(inserted300+q300)/300; late initial queue is round(max(0,
+q300+rate*(t0-300)-(inserted_t0-inserted300))). This fixed mean prior uses no
+seeded request schedule or late real source clock. No queue/rate enters V/D.
+Real source request reconstruction remains LABEL ONLY. Cost is transition-union,
+end-speed with exits carrying their last speed, plus post-step source rectangles.
+Cached WMCALIB J uses predicted exit-step speed instead; its aggregates omit the
+per-step exit frames needed to repair that difference. Its present-only t300
+slot layout also differs from the late-arm identity-union CRN contract. Prior
+coverage was explicitly keys-only, not parity certification. Preserve all cached
+files, but classify uncertified A keys as missing under18:52 and compute the
+matched A/B/C trajectories together. This is an adapter/clock gate, not selection
+by prediction accuracy; no reserved label has been opened at this freeze.

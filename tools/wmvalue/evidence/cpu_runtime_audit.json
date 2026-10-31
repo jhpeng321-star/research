@@ -1,0 +1,27 @@
+{
+ "schema": "wmvalue_runtime_audit/1",
+ "verdict": "PASS",
+ "device": "cpu",
+ "fit_seed": 969400,
+ "t0": 360,
+ "reserved_outcomes_opened": false,
+ "restart_repeat_exact": true,
+ "entry_mix_exercised": [5, 5, 5, 5, 5],
+ "sensing_parity": true,
+ "history_s": 60,
+ "cost_union_end_speed": true,
+ "source_end_step": true,
+ "controller_prefix_replay": true,
+ "terminal_60_90_path": true,
+ "full_long_plan_crn": true,
+ "seconds": 43.290347665548325,
+ "prefix_sha256": "01ea9c3e6f776f955beeb0e7a358883cb95c7516b4f3886e2ef67efba85346c2",
+ "wm_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+ "code_sha256": {
+  "runtime.py": "20f7f23d442978d60d4ea92aebfc47c50b28aa586c3c444f216c4dbea0b46568",
+  "restart.py": "d113dc886393608b22b958f2e552c83facabb965beb40b47b556760c36e37c78",
+  "reconstruct.py": "e2d3701c406d22ce059178c9101628cf12ef3ed886985241425f66dd02502945",
+  "audit_runtime.py": "02e59537e47b6ad8e9224a85b7c7ea92c7d39ff7458f8d479b81cd48e1edece3"
+ },
+ "full_receipt": "gpuR:/root/wmvalue20261031/cpu_audit_v3.json"
+}
