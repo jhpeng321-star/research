@@ -1,0 +1,3 @@
+# Worktree registration receipts
+
+- 2026-10-31 — S-WMFIX-ES, MAIN 17:53 stop instruction: generations 0–2 complete; minimum TRAIN fitness selects g1/c1 (0.338086; paired J MAE 243.87 vs g0 237.69 veh-s). Generation 3 was already active before resume; stopped, partial artifacts preserved/excluded. Owned gpuA driver/finalizer and cpuQ workers stopped; zero active owned ES processes on both hosts, CPUs released. A/B not dispatched; prior GPU-slot request withdrawn; verdict NOT RUN / NOT ADOPTABLE; retain WM2 and stop generic physics-scalar sweeps. Final receipt: `docs/paper_results/wmfix_es_receipts/WMFIX_ES_FINAL.json`; report: `docs/paper_results/WMFIX_ES.md`. No push.
