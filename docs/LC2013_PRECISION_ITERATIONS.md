@@ -483,3 +483,29 @@ message semantics differ. Thus panels14–16 remain the conditional-decision
 metrics, with no redundant traffic scoring. Changed autonomous feedback still
 needs INT/EVAL smoke; no distributional gain is claimed. FINAL_DIAGNOSTICS.json
 binds the verified score receipts and this explicit equivalence scope.
+
+## Fresh05:00 continuation: optional source branches (no new default score)
+
+Resumed clean b8037c1d; all17 owned jobs recorded exited and previous results
+retained. Source audit reconfirms the default keep-right gate/threshold/time
+accumulation and signed cap already match SUMO. Completed two acknowledged
+optional gaps:1729–1736's close-current-follower adjustment to nonlegacy
+acceptance time, and1934–1947's lcSpeedGainLookahead average-speed forecast.
+Defaults remain acceptanceTime=-1/lookahead0. No style inference or fitting.
+
+Independent numerical CPU cases cover the source30*(20/30)/1.2 acceptance
+example, distant/slower follower vetoes, unchanged legacy acceptance and the
+lookahead mean with observed versus desired leader speed. Full targeted suite
+**71/71 PASS8.66s** (CPU_OPTIONAL_STYLE_FULL.xml). Initial system Python3.14
+lacked torch; its collection-failure receipt is retained. Reused existing3.13
+CPU environment, no installation or new environment.
+
+OPTIONAL_STYLE_DEFAULT_EQUIVALENCE_FINAL.json:46080 synthetic vehicle decisions,
+1658880 existing output elements **BIT-EXACT** to aefc4bd9;5817 positive
+proposal steps exercised, population/heterogeneous CF settings, identity reset
+and60s recurrent traces. New acceptance-time output is diagnostic only. The
+default conditional scores, including per-motivation precision/recall in
+panels14–16, therefore remain unchanged; no redundant FIT job dispatched and
+no precision improvement claimed. Keep-right remains unresolved.
+The initial equivalence receipt is retained; FINAL pins the final source bytes
+after dictionary indentation cleanup, with the same exact counts and outputs.

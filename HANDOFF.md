@@ -1,6 +1,6 @@
 # S-RB-LANE morning handoff — 2026-11-01
 
-Branch `c4/rb-lane`, base `f0db3c82`. **Current engineering source aefc4bd9**;
+Branch `c4/rb-lane`, base `f0db3c82`. **Current engineering: optional-style continuation**;
 scored decision source52d2df5c, decision-equivalent message completion certified.
 All prior work retained. **Keep-right precision is NOT solved; no distributional
 qualification. No owned jobs/watchers remain.** Morning report:
@@ -24,6 +24,10 @@ qualification. No owned jobs/watchers remain.** Morning report:
   Numeric IDs:vehicle_id orvid. Reset absence/identity/lane change/newborn.
 - LC style uses SUMO defaults; only directly comparable motion-inferred fields
   map. MOBIL politeness/threshold are not treated as LC2013 style parameters.
+- Fresh05:00 continuation completes optional `lcSpeedGainLookahead` (default0)
+  and nonlegacy `lcKeepRightAcceptanceTime` follower response (default-1).
+  No fitted style; default panel decisions remain unchanged. Acceptance-time
+  diagnostics added; existing STATE_KEYS and runtime ABI unchanged.
 
 ## Verified conditional FIT result (not autonomous qualification)
 32 FIT worlds969400–969431;240..300 history,300..360 teacher forcing, snapshotv2.
@@ -53,6 +57,10 @@ qualification. No owned jobs/watchers remain.** Morning report:
   911369 exited; all earlier workers exited. No SUMO/GPU/training/signals/push.
   Final identity audit:17 recorded workers,0 matching owned workers alive,
   0 signals (tools/rblane/receipts/OWNED_JOBS_FINAL.json).
+- Optional-style completion: **71 targeted CPU tests PASS8.66s**;
+  `OPTIONAL_STYLE_DEFAULT_EQUIVALENCE_FINAL.json` certifies46080 synthetic decisions/
+  1658880 existing output elements BIT-EXACT to aefc4bd9, including5817 positive
+  steps. No new FIT/GPU/SUMO jobs; old score receipts retained.
 
 ## CF / INT coordination and scope
 - Actual2.346M FIT motion intervals prove **Euler s+v_next*dt**, MAE3.49e-5m vs
@@ -60,5 +68,5 @@ qualification. No owned jobs/watchers remain.** Morning report:
   `docs/LC2013_POSITION_HANDOFF.md`, mirrored inrb-shared. LANE did not change
   CF-owned integration; align SUMO-mode and executable CAV/entry plants.
 - Remaining gaps: synchronous vs serial SUMO, full leader overtake/fall-behind/
-  counterchange and every follower branch, nonlegacy keep-right/nonhighway cases.
+  counterchange and every follower branch, nonhighway cases.
   Distributional CF+merge+LC/controller qualification belongs to INT/EVAL.

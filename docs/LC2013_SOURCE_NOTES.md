@@ -44,8 +44,7 @@ Only matching named inferred parameters map; all other LC parameters default.
 
 Explicit parity gaps: synchronous instead of downstream-first serial messages;
 leader overtake/fall-behind/full follower negotiation;
-arbitrary route best-lane metadata unless supplied by the caller; nonlegacy
-keep-right follower adjustment; speed-gain lookahead extension (default zero);
+arbitrary route best-lane metadata unless supplied by the caller;
 nonhighway special cases. This is a testable highway subset, not full parity.
 
 ## Source completeness amendment (after preserving first full panel)
@@ -109,3 +108,15 @@ with wanted speed; own advice is unscaled. Explicit presence distinguishes a
 zero-acceleration request from no message. Tests and decision-equivalence scope
 are in the morning report and immutable receipts; complete negotiation is still
 outside this subset's parity claim.
+
+## Optional source-style completion (fresh05:00 continuation)
+
+LC2013.cpp:1729–1736 shortens explicitly nonlegacy keep-right acceptance time
+when a sufficiently close same-lane follower is faster or wants to go faster.
+It uses that follower's brakeGap, observed speed and desired-speed factor.
+Legacy acceptanceTime=-1 is untouched. LC2013.cpp:1934–1947 optionally averages
+anticipated speed over twice lcSpeedGainLookahead, with desired leader speed
+for accelerating leaders. SUMO's default lookahead remains0. These additions
+support directly comparable caller settings; no setting was inferred or fit.
+Default-style equivalence is checked against our own preserved aefc4bd9 source.
+They do not resolve or justify a new claim about default-panel precision.

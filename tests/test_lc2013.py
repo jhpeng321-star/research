@@ -109,6 +109,55 @@ def test_mature_keep_right_waits_when_target_lane_becomes_slower():
     assert resumed['next_lane'][0, 0] == 1
 
 
+def test_nonlegacy_keep_right_acceptance_responds_to_same_lane_follower():
+    # Source1729-1736:30s * (20/30) /1.2 =16.6667s. A follower outside
+    # twice its own braking gap, or slower than the ego, must not shorten it.
+    p = PhysicsConfig(speed_limit_mps=30)
+    k, mask = scene([(-200, 0, 20), (-270, 0, 30)])
+    params = dict(v0=torch.tensor([[30., 36.]]),
+                  lcKeepRightAcceptanceTime=torch.full((1, 2), 30.))
+    out = lane_change(k, mask, p, driver_params=params)
+    assert abs(out['lc2013_keep_acceptance'][0, 0] - 30 * (20 / 30) / 1.2) < 1e-10
+    k[0, 1, 0] = -2000
+    distant = lane_change(k, mask, p, driver_params=params)
+    assert distant['lc2013_keep_acceptance'][0, 0] == 30
+    k[0, 1, 0], k[0, 1, 4] = -270, 19
+    slower = lane_change(k, mask, p, driver_params=params)
+    assert slower['lc2013_keep_acceptance'][0, 0] == 30
+    params['lcKeepRightAcceptanceTime'].fill_(-1)
+    legacy = lane_change(k, mask, p, driver_params=params)
+    assert legacy['lc2013_keep_acceptance'][0, 0] == 140
+
+
+def test_optional_speed_gain_lookahead_averages_future_slow_leader():
+    from wms.physics.lc2013 import _anticipated, _settings
+    p = PhysicsConfig(speed_limit_mps=35)
+    k, _ = scene([(0, 1, 30), (100, 1, 20)])
+    settings = _settings(k[..., 4], p, {'v0': torch.full((1, 2), 35.)})
+    gap = torch.tensor([[92.5, float('inf')]], dtype=torch.float64)
+    index = torch.tensor([[1, 0]])
+    dist = torch.full_like(gap, 2000.)
+    accelerating = torch.zeros_like(gap, dtype=torch.bool)
+    original = _anticipated(k, gap, index, dist, settings, .5, accelerating, False)
+    settings['lcSpeedGainLookahead'].fill_(10)
+    actual = _anticipated(k, gap, index, dist, settings, .5, accelerating, False)
+    sec = secure_gap(original, k[..., 4].gather(-1, index), settings['accel'],
+                     settings['decel'], settings['time_headway'])
+    closing = max(0., ((gap - sec) / 15)[0, 0].item())
+    expected = min(original[0, 0].item(), (closing * original[0, 0].item() + (20 - closing) * 20) / 20)
+    assert actual[0, 0] < original[0, 0]
+    assert abs(actual[0, 0] - expected) < 1e-10
+    assert actual[0, 1] == original[0, 1]  # no leader: no averaging
+    # If leaders are accelerating, forecast uses their desired rather than
+    # observed speed; equal desired speeds provide no closing-speed trigger.
+    accelerating.fill_(True)
+    settings['lcSpeedGainLookahead'].zero_()
+    original = _anticipated(k, gap, index, dist, settings, .5, accelerating, False)
+    settings['lcSpeedGainLookahead'].fill_(10)
+    actual = _anticipated(k, gap, index, dist, settings, .5, accelerating, False)
+    torch.testing.assert_close(actual, original, rtol=0, atol=0)
+
+
 def test_mature_speed_gain_requires_sumo_numerical_epsilon_not_machine_epsilon():
     # The target's30m/s vs current anticipated29.99m/s yields gain~0.00033:
     # positive but smaller than SUMO's documented NUMERICAL_EPS0.001.

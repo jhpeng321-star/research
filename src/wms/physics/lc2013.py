@@ -95,6 +95,7 @@ def _settings(v: Tensor, physics: PhysicsConfig,
                     lcSpeedGain=1, lcKeepRight=1, lcAssertive=1,
                     lcLookaheadLeft=2, lcSpeedGainRight=0.1,
                     lcSpeedGainRemainTime=20, lcKeepRightAcceptanceTime=-1,
+                    lcSpeedGainLookahead=0,
                     lcSpeedGainUrgency=50, lcCooperativeSpeed=1)
     out = {key: torch.full_like(v, float(value)) for key, value in defaults.items()}
     if params is not None:
@@ -141,7 +142,19 @@ def _anticipated(kin: Tensor, gap: Tensor, index: Tensor, distance: Tensor,
     speed_1s = v + p["accel"] * (1 - dt)
     idm = idm_follow_speed(speed_1s, effective_gap, leader_speed, p["v0"],
                           p["accel"], p["decel"], p["time_headway"], p["min_gap"], dt)
-    return torch.minimum(p["v0"], torch.where(accelerating, idm, safe))
+    future = torch.minimum(p["v0"], torch.where(accelerating, idm, safe))
+    # Source1934-1947: optional average-speed anticipation before catching a
+    # slower leader. Its SUMO default is zero; do not invent a forecast horizon.
+    forecast = p["lcSpeedGainLookahead"]
+    future_leader = torch.where(accelerating, p["v0"].gather(-1, index), vl)
+    closing_speed = p["v0"] - future_leader
+    full_gap = gap - secure_gap(future, vl, p["accel"], p["decel"], p["time_headway"])
+    closing_time = full_gap / torch.where(closing_speed > 0, closing_speed, 1.)
+    anticipate = has & (gap > 0) & (forecast > 0) & (closing_speed > 0) & (closing_time < forecast)
+    duration = torch.where(forecast > 0, 2 * forecast, 1.)
+    average = (closing_time.clamp_min(0) * future
+               + (duration - closing_time.clamp_min(0)) * future_leader) / duration
+    return torch.where(anticipate, torch.minimum(future, average), future)
 
 
 @torch.no_grad()
@@ -229,7 +242,7 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
     stay = (~to_best & (target_distance / (offset.abs() + 2) < la))
     stay = stay | ((offset == 0) & (target_distance * 2 < la))
     gl, il, gf, iff, overlap = _neighbours(kin, present, target, context, p, dt, physics, ballistic)
-    cl, ic, _, _, _ = _neighbours(kin, present, lane, context, p, dt, physics, ballistic)
+    cl, ic, cf, ifc, _ = _neighbours(kin, present, lane, context, p, dt, physics, ballistic)
     has_l, has_f, has_c = torch.isfinite(gl), torch.isfinite(gf), torch.isfinite(cl)
     vl, vf = v.gather(-1, il), v.gather(-1, iff)
     need_l = secure_gap(v, vl, p["accel"], p["decel"], p["time_headway"])
@@ -305,6 +318,18 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
     road_speed_factor = p["v0"] / float(physics.speed_limit_mps)
     acceptance = road_speed_factor * torch.where(p["lcKeepRightAcceptanceTime"] == -1,
                               7 * v.clamp_min(1), p["lcKeepRightAcceptanceTime"])
+    # Source1729-1736 applies ONLY to explicitly nonlegacy acceptance time.
+    # The same-lane follower may be urging us right even before it is blocked.
+    current_follower_speed = v.gather(-1, ifc)
+    follower_braking = brake_gap(current_follower_speed, p["decel"].gather(-1, ifc), dt,
+        headway=p["time_headway"].gather(-1, ifc), ballistic=ballistic)
+    follower_factor = p["v0"].gather(-1, ifc) / float(physics.speed_limit_mps)
+    acceptance_factor = v.clamp_min(1) / current_follower_speed.clamp_min(1)
+    acceptance_factor /= torch.where(follower_factor > road_speed_factor, follower_factor, 1.)
+    urged_right = ((p["lcKeepRightAcceptanceTime"] != -1) & torch.isfinite(cf)
+        & (cf - p["min_gap"].gather(-1, ifc) < 2 * follower_braking)
+        & (current_follower_speed >= v))
+    acceptance = torch.where(urged_right, acceptance * acceptance_factor, acceptance)
     full_gap = (target_length - brake_gap(p["v0"], p["decel"], dt,
                headway=p["time_headway"], ballistic=ballistic)).clamp_min(0)
     full_seconds = torch.minimum(acceptance, full_gap / p["v0"])
@@ -404,6 +429,7 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
                   lc2013_gap_leader=gl, lc2013_gap_follower=gf,
                   lc2013_position_shift=lane_position_shift(s, lane, choice, physics),
                   lc2013_keep_full_seconds=full_seconds,
+                  lc2013_keep_acceptance=acceptance,
                   lc2013_keep_signed_cap=right & slow_current & (current_v > p["v0"]),
                   lc2013_endpoint_canonicalized=canonicalized_end,
                   lc2013_cooperative_return=cooperative_return,
