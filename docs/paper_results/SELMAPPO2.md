@@ -2,6 +2,15 @@
 
 ## Status (2026-11-01)
 
+**05:05 +08:00 durable supervision:** local monitor46520 is verified live and
+checks the existing watcher/remote receipts every20min through12:00+08, appending
+HANDOFF progress and committing task report/evidence. First heartbeat has zero
+alerts:15updates,717production episodes complete,7open,646500actual/653400reserved
+sim-s, with the historical smoke debit intact. Nine targeted CPU checks/Ruff pass.
+Monitor uses existing collections and diagnoses process/reporting errors without
+additional physics or SSH polling. Its exact ownership and immutable heartbeat
+receipts are in `selmappo2/SUPERVISE_NOON_*.json` and `SUPERVISION_*.json`.
+
 **05:02 +08:00 fresh-session check:** existing watcher12432 identity verified;
 latest validated cpuQ606968 observation Unix1793480275 has15/169updates,
 690/7774production successes,8open,622200actual/630000reserved sim-s.

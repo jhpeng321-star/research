@@ -30,6 +30,11 @@ and dispatch receipts prevent a second supervisor. Nine targeted CPU checks pass
 Ruff passes. Alerts distinguish resource wait/stale reporting from a new failure.
 The helper records alerts; an agent must diagnose any needed same-cap repair under
 MAIN02:08. It cannot dispatch, restart or signal training, and adds no SSH polling.
+Launched once at05:05+08 as own localPID46520, exact command/source verified live;
+SUPERVISE_NOON_{ONCE,DISPATCH,PROCESS}.json retain ownership. First actual
+heartbeat committed1a217682 with zero alerts:15updates/717production/7open,
+646500actual/653400reserved. Next heartbeat~05:25; last heartbeat at12:00.
+Never duplicate this monitor, watcher12432 or training606968.
 
 - 05:02 fresh-session verification: existing watcher12432 executable/command and
   02:03:58 creation time match; latest collection Unix1793480275 validates
