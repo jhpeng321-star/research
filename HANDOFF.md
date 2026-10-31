@@ -1,6 +1,14 @@
 # S-RB-RUNB handoff
 
-Updated 2026-11-01 04:17 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+Updated 2026-11-01 05:08 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+
+### 05:07 live progress
+- B2 tasks16/160 (shards5/7/4), original3workers +supervisor live. GPU12263MiB,
+ 100%,load17.13, no terminal receipts; watcher05:01:35 healthy. Every10min
+  in-session audits continued. Full-panel completion by11:30 is not assured at
+  observed early throughput; notified INT via RUNB_B2_PROGRESS_0507.md.
+- Recognized INT-owned FULL-v3-gpu under READY; its shared claim preserved and
+  no peer redispatch. RUNB intake list remains A2/B2/C2 with B2 exclusively owned.
 
 ## Current 04:16 — B2 inference LIVE (one dispatch)
 - Existing noon supervisor762343 admitted B2 at04:15:41 with GPU1064MiB/24%,
