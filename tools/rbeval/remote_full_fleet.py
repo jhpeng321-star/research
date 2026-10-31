@@ -7,7 +7,8 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[2]
 PYTHON = '/home/ubuntu/miniconda3/bin/python'
-INT_COMMIT = 'b0f66943'
+INT_COMMIT = '4015b641'
+LANE_ENCODER_COMMIT = 'b192e0c8'
 
 
 def remote(code):
@@ -22,7 +23,9 @@ def remote(code):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('mode', choices=('status', 'stage', 'launch', 'poll', 'trace', 'collect'))
-    p.add_argument('--version', default='v6')
+    p.add_argument('--version', default='v7')
+    p.add_argument('--horizon', type=int, choices=(120, 300, 600), default=600)
+    p.add_argument('--slots', type=int, default=512)
     p.add_argument('--details', action='store_true')
     p.add_argument('--seed', type=int, default=969400)
     p.add_argument('--identity', type=int)
@@ -36,6 +39,7 @@ def main():
     header += f'details={args.details!r}\n'
     header += f'seed={args.seed!r}\n'
     header += f'identity={args.identity!r}\n'
+    header += f'horizon={args.horizon!r}\nslots={args.slots!r}\n'
     if args.mode == 'status':
         print(remote(header+"print(json.dumps(dict(load=os.getloadavg(), cpus=os.cpu_count(), old_owned_pids={p:Path('/proc/'+str(p)).exists() for p in (200540,233273)}, existing_dispatch=(root/'LAUNCH.json').exists())))"))
     elif args.mode == 'stage':
@@ -43,7 +47,18 @@ def main():
                                            'configs/native_cav_head_v5.json',
                                            'configs/execparity_cav_idm_v1.json'],
                                            cwd='E:/agent-work/c4-rb-int')
+        encoder_source = json.loads((Path('E:/agent-work/c4-rb-lane/tools/rblane/receipts/ENCODER_SOURCE.json')).read_text())
+        checkpoint = Path(encoder_source['local_path']).read_bytes()
+        import hashlib
+        assert hashlib.sha256(checkpoint).hexdigest() == encoder_source['source_sha256'] == 'b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436'
+        def lane_file(name):
+            return subprocess.check_output(['git', 'show', LANE_ENCODER_COMMIT+':'+name], cwd='E:/agent-work/c4-rb-lane')
         payload = dict(runtime_archive=base64.b64encode(archive).decode(),
+            checkpoint=base64.b64encode(checkpoint).decode(),
+            encoder=base64.b64encode(lane_file('tools/rblane/encoder.py')).decode(),
+            encoder_tests=base64.b64encode(lane_file('tests/test_lc2013_encoder.py')).decode(),
+            point_adapter=base64.b64encode((ROOT/'tools/rbeval/encoded_fleet.py').read_bytes()).decode(),
+            point_tests=base64.b64encode((ROOT/'tests/unit/test_rb_merge_encoded_fleet.py').read_bytes()).decode(),
             merge_kernel=base64.b64encode((ROOT/'src/wms/physics/junction_merge.py').read_bytes()).decode(),
             network=base64.b64encode((ROOT/'src/wms/physics/merge_network.py').read_bytes()).decode(),
             insertion=base64.b64encode((ROOT/'src/wms/model/sumo_insertion.py').read_bytes()).decode(),
@@ -70,32 +85,47 @@ with tarfile.open(fileobj=io.BytesIO(base64.b64decode(payload['runtime_archive']
 adapter=runtime/'src/wms/model/sumo_merge.py'
 text=adapter.read_text()
 old='merge_speed_advice(kin, present, accel, physics, driver_params)'
-assert text.count(old)==1
-text=text.replace(old,"merge_speed_advice(kin, present, accel, physics, driver_params, lookahead_speed=state.get('lc2013_lookahead'))")
+if text.count(old)==1:
+    text=text.replace(old,"merge_speed_advice(kin, present, accel, physics, driver_params, lookahead_speed=state.get('lc2013_lookahead'))")
+else:
+    assert text.count("lookahead_speed=state.get('lc2013_lookahead')")==1
 old='apply_merge(moved, present, next_lane, deciders, model.physics, driver_params)'
-assert text.count(old)==1
-text=text.replace(old,"apply_merge(moved, present, next_lane, deciders, model.physics, driver_params, lookahead_speed=out.get('lc2013_lookahead'))")
+if text.count(old)==1:
+    text=text.replace(old,"apply_merge(moved, present, next_lane, deciders, model.physics, driver_params, lookahead_speed=out.get('lc2013_lookahead'))")
+else:
+    assert text.count("lookahead_speed=out.get('lc2013_lookahead')")==1
 adapter.write_text(text)
+encoder_dir=runtime/'tools/rblane'
+encoder_dir.mkdir(parents=True)
+(encoder_dir/'encoder.py').write_bytes(base64.b64decode(payload['encoder']))
+inputs=root/'inputs'
+inputs.mkdir()
+(inputs/'wm_s.pt').write_bytes(base64.b64decode(payload['checkpoint']))
 tools=root/'tools'/'rbeval'
 tools.mkdir(parents=True)
 (tools/'full_fleet.py').write_bytes(base64.b64decode(payload['validator']))
+(tools/'encoded_fleet.py').write_bytes(base64.b64decode(payload['point_adapter']))
 test=root/'test_full_fleet.py'
 test.write_bytes(base64.b64decode(payload['tests']))
 merge_test=root/'test_merge_source.py'
 merge_test.write_bytes(base64.b64decode(payload['merge_tests']))
 native_test=root/'test_native_physics.py'
 native_test.write_bytes(base64.b64decode(payload['native_tests']))
+point_test=root/'test_encoded_fleet.py'
+point_test.write_bytes(base64.b64decode(payload['point_tests']))
+encoder_test=root/'test_frozen_encoder.py'
+encoder_test.write_bytes(base64.b64decode(payload['encoder_tests']))
 targets=root/'targets'
 targets.mkdir()
 for name,data in payload['targets'].items():
     (targets/name).write_bytes(base64.b64decode(data))
-env=dict(os.environ, PYTHONPATH=str(runtime/'src')+':'+str(root), OMP_NUM_THREADS='1', MKL_NUM_THREADS='1', OPENBLAS_NUM_THREADS='1', CUDA_VISIBLE_DEVICES='')
-result=subprocess.run([sys.executable,'-m','pytest',str(test),str(merge_test),str(native_test),'-q'],cwd=root,env=env,text=True,capture_output=True)
+env=dict(os.environ, PYTHONPATH=str(runtime/'src')+':'+str(root)+':'+str(runtime), OMP_NUM_THREADS='1', MKL_NUM_THREADS='1', OPENBLAS_NUM_THREADS='1', CUDA_VISIBLE_DEVICES='')
+result=subprocess.run([sys.executable,'-m','pytest',str(test),str(merge_test),str(native_test),str(point_test),str(encoder_test),'-q'],cwd=root,env=env,text=True,capture_output=True)
 receipt=dict(command=result.args,returncode=result.returncode,stdout=result.stdout,stderr=result.stderr,load=os.getloadavg(),cpus=os.cpu_count())
 (root/'CPU_TESTS.json').write_text(json.dumps(receipt,indent=2)+'\\n')
 print(json.dumps(receipt))
 assert result.returncode==0
-preflight=subprocess.run([sys.executable,'-B',str(tools/'full_fleet.py'),'--root','/home/ubuntu/wmdata20261031/views','--runtime',str(runtime),'--targets',str(targets),'--seeds',*map(str,range(969400,969432)),'--preflight'],cwd=root,env=env,text=True,capture_output=True)
+preflight=subprocess.run([sys.executable,'-B',str(tools/'full_fleet.py'),'--root','/home/ubuntu/wmdata20261031/views','--runtime',str(runtime),'--targets',str(targets),'--seeds',*map(str,range(969400,969432)),'--encoder-checkpoint',str(inputs/'wm_s.pt'),'--preflight'],cwd=root,env=env,text=True,capture_output=True)
 pre=dict(command=preflight.args,returncode=preflight.returncode,stdout=preflight.stdout,stderr=preflight.stderr)
 (root/'PREFLIGHT.json').write_text(json.dumps(pre,indent=2)+'\\n')
 print(json.dumps(dict(preflight_returncode=preflight.returncode,fit_worlds=32,stderr=preflight.stderr)))
@@ -112,11 +142,11 @@ assert not (root/'results').exists()
 with (root/'LAUNCH.json').open('x') as f:
     json.dump(dict(state='reserved',owner='S-RB-MERGE'),f)
 script=root/'tools/rbeval/full_fleet.py'
-command=[python,'-B',str(script),'--root','/home/ubuntu/wmdata20261031/views','--runtime',str(root/'runtime'),'--targets',str(root/'targets'),'--output',str(root/'results'),'--seeds',*map(str,range(969400,969432)),'--horizon','300','--slots','320','--cf-model','sumo_idm','--warm-lc','--trace-merge','--native-model','sumo']
+command=[python,'-B',str(script),'--root','/home/ubuntu/wmdata20261031/views','--runtime',str(root/'runtime'),'--targets',str(root/'targets'),'--output',str(root/'results'),'--seeds',*map(str,range(969400,969432)),'--horizon',str(horizon),'--slots',str(slots),'--cf-model','sumo_idm','--warm-lc','--trace-merge','--native-model','sumo','--encoder-checkpoint',str(root/'inputs/wm_s.pt')]
 env=dict(os.environ,OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',CUDA_VISIBLE_DEVICES='')
 with (root/'RUN.log').open('x') as log:
     child=subprocess.Popen(command,cwd=root,env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,preexec_fn=lambda:os.nice(19))
-record=dict(owner='S-RB-MERGE',pid=child.pid,started_unix=time.time(),command=command,validator_sha256=hashlib.sha256(script.read_bytes()).hexdigest(),load=os.getloadavg(),cpus=os.cpu_count(),scope='FIT32 native full fleet H300, one CPU thread; no SUMO/GPU/training')
+record=dict(owner='S-RB-MERGE',pid=child.pid,started_unix=time.time(),command=command,validator_sha256=hashlib.sha256(script.read_bytes()).hexdigest(),load=os.getloadavg(),cpus=os.cpu_count(),scope='FIT32 native full fleet H'+str(horizon)+', frozen motion encoder; one CPU thread; no SUMO/GPU/training')
 (root/'LAUNCH.json').write_text(json.dumps(record,indent=2)+'\\n')
 print(json.dumps(record))
 '''
@@ -169,7 +199,7 @@ print(json.dumps({p.name:dict(content=p.read_text(),sha256=hashlib.sha256(p.read
             (dest/name).write_text(item['content'], encoding='utf-8', newline='\n')
             import hashlib
             assert hashlib.sha256((dest/name).read_bytes()).hexdigest() == item['sha256']
-        (dest/'COLLECTION.json').write_text(json.dumps({n: v['sha256'] for n,v in data.items()}, indent=2)+'\n')
+        (dest/'COLLECTION.json').write_text(json.dumps({n: v['sha256'] for n,v in data.items()}, indent=2)+'\n', newline='\n')
         print('Hash-verified collection:', dest, len(data))
 
 

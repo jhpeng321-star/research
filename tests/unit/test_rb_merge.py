@@ -11,7 +11,7 @@ from wms.model.wms import WmSModel
 from wms.physics.config import PhysicsConfig
 from wms.physics.junction_merge import apply_merge, brake_gap_euler, merge_geometry, merge_speed_advice, secure_gap
 from wms.physics.state import state_kin
-from wms.physics.junction_merge import parameters
+from wms.physics.junction_merge import idm_min_next_speed, parameters
 
 
 def state(positions, lanes, speeds=None):
@@ -261,3 +261,11 @@ def test_eventual_follower_help_uses_position_epsilon_not_speed_epsilon():
                                          lookahead_speed=torch.tensor([[25., 13.]]))
     assert acceleration[0, 0] < 0
     assert acceleration[0, 1] == 0
+
+
+@pytest.mark.parametrize('comfortable,emergency,expected', [(.8, 9., 9.25), (.8, 1.2, 9.4), (2., 9., 9.)])
+def test_source_min_next_speed_for_motion_inferred_low_deceleration(comfortable, emergency, expected):
+    from types import SimpleNamespace
+    cfg = SimpleNamespace(dt_s=.5, sumo_cf_emergency_decel_mps2=emergency)
+    actual = idm_min_next_speed(torch.tensor(10.), torch.tensor(comfortable), cfg)
+    assert actual.item() == pytest.approx(expected, abs=1e-6)

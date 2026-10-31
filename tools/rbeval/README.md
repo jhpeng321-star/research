@@ -74,6 +74,13 @@ Current default `v6` adds source-EPS5870b556 and the opt-in physics-native CAV
 callback d7be510a (`--native-model sumo`). Prior v5 retains its frozen head path.
 The validator's direct CLI default stays `--native-model head`; selecting sumo
 requires `--cf-model sumo_idm`. Every row reports its actual native model.
+`v7` now stages INT4015b641 (latest finite-route LC2013), source minNextSpeed,
+and the reused strict frozen motion encoder b192e0c8, with H600 /512slots.
+`--encoder-checkpoint <registered wm_s.pt>` infers initial HDV settings once,
+keeps CAV defaults, and couples zero-history-centre entrant settings to exact
+admission ordinals. The learned motion/lane/merge modules remain bypassed.
+The600s run captures120/300/600s clocks in one pass; it does not replay future
+observations or refit any model. Summaries accept one uniform horizon per panel.
 `python -m tools.rbeval.summarize_full_fleet --panel <collected directory>
 --targets <shared targets> --output <new score.json>` checks complete FIT32,
 collection hashes and conservation before reporting per-world and marginal clocks.

@@ -103,6 +103,15 @@ def brake_gap_euler(speed, decel, tau, dt):
     return dt * (n * speed - decel * dt * n * (n + 1) / 2) + speed * tau
 
 
+def idm_min_next_speed(speed, decel, physics):
+    """IDM.cpp:79-88: permit max(b,min(emergencyDecel,1.5)) near stops."""
+    emergency = getattr(physics, 'sumo_cf_emergency_decel_mps2', None)
+    emergency = (torch.maximum(decel, torch.full_like(decel, 9.)) if emergency is None
+                 else torch.full_like(decel, float(emergency)))
+    bound = torch.maximum(decel, torch.minimum(emergency, torch.full_like(decel, 1.5)))
+    return (speed - physics.dt_s * bound).clamp_min(0)
+
+
 def merge_speed_advice(kin, present, accel, physics, driver_params=None, *, lookahead_speed=None):
     """Lane-end stop + LC2013 informLeader/informFollower highway subset.
 
@@ -131,7 +140,7 @@ def merge_speed_advice(kin, present, accel, physics, driver_params=None, *, look
     next_leader = g['v_l'] - dt * torch.maximum(
         torch.ones_like(v), -kin[..., 5].gather(-1, g['leader']))
     next_gap = g['gap_l'] + (next_leader - planned) * dt
-    target = torch.maximum((v - dt * p['decel']).clamp_min(0),
+    target = torch.maximum(idm_min_next_speed(v, p['decel'], physics),
                            idm_next_speed(v, next_gap, next_leader, p, dt))
     lp = {name: value.gather(-1, g['leader']) for name, value in p.items()}
     overtake_dist = (g['gap_l'] - p['min_gap'] + kin[..., 6] + lp['min_gap']

@@ -28,6 +28,9 @@ https://github.com/eclipse-sumo/sumo/tree/v1_27_1/src/microsim
   with headway; `MSLCM_LC2013.cpp:547-557` requires time as well as space to
   overtake; `:637-655` adds follow-speed advice even when the neighbor is not
   currently blocking. Lookahead/urgency reuse the lane stream's persistent state.
+- `MSCFModel_IDM.cpp:79-88`: minNextSpeed uses
+  max(comfortableDecel,min(emergencyDecel,1.5)), not comfortableDecel alone;
+  this matters when the existing motion encoder infers b below1.5.
 
 ## Geometry and right of way
 
@@ -61,6 +64,19 @@ The new opt-in sumo_native callback consumes the model's existing inferred/
 population-physics execution ceiling using the same project_native bounds,
 and delegates lanes/merges. This is a native-arm source-mechanics diagnostic;
 old frozen evaluation/controller bindings must remain distinguishable.
+
+## Frozen motion-settings diagnostic
+
+Reuse S-RB-LANE's committed `b192e0c8:tools/rblane/encoder.py`, registered
+WM2 checkpoint SHA b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436,
+and producer `ENCODER_PARITY.json` (strict full model, all9 outputs bit-exact).
+Do not reimplement its extractor or fit anything. Preserve the trained source
+legacy feature/default geometry for encoding; use SUMO geometry for forward
+simulation. Initial settings are identity-keyed from240..300s motion; newcomers
+use the frozen zero-history centre, CAVs inherited defaults. `EncodedPointBirths`
+only couples that point population to admission/newborn motion through exact
+recorded birth ordinals. It is a point-settings screen, not FULL's fitted
+posterior or a claim to calibrated conditional futures.
 
 ## Scope and explicit parity gaps
 
