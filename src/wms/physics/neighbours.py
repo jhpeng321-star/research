@@ -93,6 +93,10 @@ def lead_neighbour(kin: Tensor, present: Tensor,
     from .lane_chain import leader_rule_enabled
     lane = lane_of(kin)
     gap, lead_v = lane_neighbour(kin, present, lane, physics, ahead=True)
+    if getattr(physics, "merge_model", "legacy") == "sumo":
+        # The SUMO merge adapter applies IDM::stopSpeed separately. Treating
+        # a lane end as a car also adds minGap and stops cars short of the end.
+        return gap, lead_v
     if leader_rule_enabled():
         from .lane_chain import MERGE_CONNECTOR_RAMP_LEN_M
         chain_lane, chain, _ = _sumo_link_geometry(kin)

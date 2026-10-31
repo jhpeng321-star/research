@@ -40,6 +40,7 @@ def forward(model, state, learned, lane_deciders, encoded, driver_params,
     out = dict(physics_accel_mps2=accel, accel_mps2=accel,
                raw_residual_mps2=zero, accel_delta_mps2=zero,
                lane_logits=logits, gate=zero, residual_log_sigma=zero,
+               lane_probabilities=logits.softmax(-1),
                hdv_mask=learned, lane_decider_mask=lane_deciders,
                sumo_merge_safe=geometry['safe'])
     if encoded is not None:
@@ -53,6 +54,7 @@ def forward(model, state, learned, lane_deciders, encoded, driver_params,
         # Ramp acceptance remains exclusively owned by apply_merge in step.
         out['lane_logits'] = torch.where(geometry['ramp'].unsqueeze(-1),
                                           ramp_logits, out['lane_logits'])
+    out['lane_probabilities'] = out['lane_logits'].softmax(-1)
     return out
 
 
@@ -108,5 +110,6 @@ def step(model, state, out, k_steps, driver_params, action_id, action_command,
     if projection is not None:
         raise ValueError('SUMO merge uses exact footprints; padded projection must be off')
     out.update(next_s_m=next_s, next_v_mps=next_v, next_lane=next_lane,
-               next_present=next_present, sumo_merge_cross=ramp & ~staying)
+               next_present=next_present, sumo_merge_cross=ramp & ~staying,
+               lane_probabilities=torch.nn.functional.one_hot(next_lane.clamp(0, 2), 3).to(kin.dtype))
     return out

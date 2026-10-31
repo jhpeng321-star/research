@@ -7,6 +7,7 @@ Can also score an integrator's full predictions via --prediction-dir.
 from __future__ import annotations
 
 import argparse
+import csv
 import hashlib
 import json
 from pathlib import Path
@@ -20,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'src'))
 from wms.model.spec import ModelSpec
 from wms.model.entries import ENTRY_S_M
 from wms.model.wms import WmSModel
-from wms.model.sumo_insertion import insertion_speed
+from wms.model.sumo_insertion import POSITION_EPS, insertion_speed
 from wms.physics.config import PhysicsConfig
 from wms.physics.junction_merge import apply_merge
 from wms.physics.state import state_kin
@@ -79,6 +80,23 @@ def events(pos, lane, mask, times):
     return rows
 
 
+def align_identity(data, vid, identities):
+    """Converted views recycle slots; compare persistent observable IDs instead."""
+    lookup = {str(v): i for i, v in enumerate(identities)}
+    shape = (len(data['mask']), len(identities))
+    out = dict(s=np.zeros(shape), v=np.zeros(shape), lane=np.full(shape, -1, dtype=int),
+               mask=np.zeros(shape, dtype=bool))
+    if vid.ndim == 1:
+        vid = np.broadcast_to(vid, data['mask'].shape)
+    for t in range(shape[0]):
+        for slot in np.flatnonzero(data['mask'][t]):
+            col = lookup.get(str(vid[t, slot]))
+            if col is not None:
+                for key in out:
+                    out[key][t, col] = data[key][t, slot]
+    return out
+
+
 def score_trajectories(real, pred, times, dt, label):
     """Same slot IDs required; compare first ramp->mainline events and delay."""
     re = events(real['s'], real['lane'], real['mask'], times)
@@ -111,6 +129,9 @@ def validate(root, seed, arm, horizon, stride, prediction_dir=None):
     ep, meta, arrays = load_episode(root, seed, arm)
     times = np.asarray(arrays['time_s.npy'])
     kin = arrays['veh_kin.npy']
+    vid = arrays['vid.npy']
+    if vid.ndim == 1:
+        vid = np.broadcast_to(vid, kin.shape[:2])
     mask = np.asarray(arrays['veh_mask.npy'], dtype=bool) & (kin[..., 1:4].sum(-1) > 0)
     t0 = int(meta['t0_index'])
     dt = float(times[t0 + 1] - times[t0])
@@ -125,7 +146,9 @@ def validate(root, seed, arm, horizon, stride, prediction_dir=None):
     lanes = kin[..., 1:4].argmax(-1)
     a, b, tau, mg, _ = cfg.idm()
     params = dict(accel=a, decel=b, time_headway=tau, min_gap=mg, v0=cfg.v0_mps)
+    seen_ids = set(map(str, vid[:t0 + 1][mask[:t0 + 1]]))
     for j in range(t0, end, stride):
+        seen_ids.update(map(str, vid[j][mask[j]]))
         slots = np.flatnonzero(mask[j])
         if not len(slots):
             continue
@@ -138,22 +161,28 @@ def validate(root, seed, arm, horizon, stride, prediction_dir=None):
         ramp = s['lane'] == 2
         k[..., 0] = torch.where(ramp, k[..., 0].clamp_max(75.44), k[..., 0])
         proposal = apply_merge(k, s['present'], s['lane'], s['present'], cfg)
-        actual = (lanes[j, slots] == 2) & (lanes[j + 1, slots] == 1) & mask[j + 1, slots]
+        next_by_id = {str(vid[j + 1, z]): z for z in np.flatnonzero(mask[j + 1])}
+        actual = np.array([lanes[j, z] == 2 and str(vid[j, z]) in next_by_id and
+                           lanes[j + 1, next_by_id[str(vid[j, z])]] == 1 for z in slots])
         predicted = (proposal[0].numpy() == 1) & (lanes[j, slots] == 2)
         at_risk = lanes[j, slots] == 2
         tp += int((actual & predicted).sum()); fn += int((actual & ~predicted).sum())
         fp += int((~actual & predicted & at_risk).sum()); tn += int((~actual & ~predicted & at_risk).sum())
         for i in slots[predicted]:
-            first_accept.setdefault(int(i), float(times[j + 1]))
+            first_accept.setdefault(str(vid[j, i]), float(times[j + 1]))
         # Insertion service test at each observed birth, without class/assignment
         # data. Other lanes' occupants use the same causal extrapolation.
-        for i in np.flatnonzero(mask[j + 1] & ~mask[:j + 1].any(axis=0)):
+        for i in np.flatnonzero(mask[j + 1]):
+            identity = str(vid[j + 1, i])
+            if identity in seen_ids:
+                continue
+            seen_ids.add(identity)
             lane = int(lanes[j + 1, i])
             if lane not in (0, 1, 2):
                 continue
             entry = ENTRY_S_M[lane]
             length = float(kin[j + 1, i, 6])  # observable geometry, never behavior
-            front = entry + length + .1
+            front = entry + length + POSITION_EPS
             occupants = np.flatnonzero(lanes[j, slots] == lane)
             if len(occupants):
                 rear = min(float(k[0, z, 0] - k[0, z, 6]) for z in occupants)
@@ -165,10 +194,10 @@ def validate(root, seed, arm, horizon, stride, prediction_dir=None):
             speed = insertion_speed(min(cfg.v0_mps, 22.22 if lane == 2 else 31.29), gap, leader, params, dt)
             accepted_births += int(speed is not None)
     current_slots = np.flatnonzero(mask[t0])
-    real = dict(s=np.asarray(kin[t0:end + 1, current_slots, 0]),
-                v=np.asarray(kin[t0:end + 1, current_slots, 4]),
-                lane=np.asarray(lanes[t0:end + 1, current_slots]),
-                mask=np.asarray(mask[t0:end + 1, current_slots]))
+    expected = dict(s=np.asarray(kin[t0:end + 1, :, 0]), v=np.asarray(kin[t0:end + 1, :, 4]),
+                    lane=np.asarray(lanes[t0:end + 1]), mask=mask[t0:end + 1])
+    initial_ids = [str(v) for v in vid[t0, current_slots]]
+    real = align_identity(expected, vid[t0:end + 1], initial_ids)
     s = make_state(kin[t0, current_slots], mask[t0, current_slots])
     # Population-only physics, no random network/encoder outputs are consumed.
     model = WmSModel(ModelSpec(), physics=cfg).eval()
@@ -184,17 +213,22 @@ def validate(root, seed, arm, horizon, stride, prediction_dir=None):
         file = safe(Path(prediction_dir) / f'{seed}_{arm}.npz')
         with np.load(file, allow_pickle=False) as f:
             full = {key: f[key] for key in ('s', 'v', 'lane', 'mask')}
+            pred_vid = f['vid']
             if not np.array_equal(f['time_s'], times[t0:end + 1]):
                 raise ValueError('prediction clock differs')
-            if not np.array_equal(f['vid'], arrays['vid.npy']):
-                raise ValueError('prediction identity binding differs')
-        expected = dict(s=np.asarray(kin[t0:end + 1, :, 0]), v=np.asarray(kin[t0:end + 1, :, 4]),
-                        lane=np.asarray(lanes[t0:end + 1]), mask=mask[t0:end + 1])
+            pred_initial = pred_vid[0] if pred_vid.ndim == 2 else pred_vid
+            if set(map(str, pred_initial[full['mask'][0]])) != set(initial_ids):
+                raise ValueError('prediction initial identity binding differs')
         if any(full[k].shape != expected[k].shape for k in full):
             raise ValueError('full prediction shape/clock mismatch')
-        complete = score_trajectories(expected, full, times[t0:end + 1], dt, 'integrator_full_population')
+        pvid = np.broadcast_to(pred_vid, full['mask'].shape) if pred_vid.ndim == 1 else pred_vid
+        identities = sorted(set(map(str, vid[t0:end + 1][expected['mask']])) |
+                            set(map(str, pvid[full['mask']])))
+        complete = score_trajectories(align_identity(expected, vid[t0:end + 1], identities),
+            align_identity(full, pvid, identities), times[t0:end + 1], dt, 'integrator_full_population')
     return dict(seed=seed, arm=arm, episode=str(ep), t0_s=float(times[t0]), horizon_s=horizon,
         episode_sha256=hashlib.sha256((ep / 'episode.json').read_bytes()).hexdigest(),
+        cohort_identity_order=initial_ids,
         conditional_recorded_state=dict(stride=stride, tp=tp, fp=fp, fn=fn, tn=tn,
             observed_births=births, admitted_at_observed_birth=accepted_births,
             first_accepted_times_s=first_accept), cohort=cohort, full_population=complete)
@@ -209,6 +243,8 @@ def main():
     p.add_argument('--stride', type=int, default=1)
     p.add_argument('--prediction-dir')
     p.add_argument('--output')
+    p.add_argument('--target-csv', help='shared helper ramp_delay_world.csv (reuse, never re-extract)')
+    p.add_argument('--quiet', action='store_true')
     p.add_argument('--inspect', action='store_true')
     args = p.parse_args()
     torch.set_num_threads(1)
@@ -222,8 +258,19 @@ def main():
     start = time.monotonic()
     rows = [validate(args.root, seed, args.arm, args.horizon, args.stride, args.prediction_dir)
             for seed in args.seeds]
+    target_receipt = None
+    if args.target_csv:
+        target_path = safe(args.target_csv)
+        if target_path.name != 'ramp_delay_world.csv':
+            p.error('only shared ramp_delay_world.csv is accepted')
+        with target_path.open(newline='') as f:
+            targets = [r for r in csv.DictReader(f) if int(r['seed']) in args.seeds and
+                       r['arm'] == args.arm and float(r['horizon_s']) == args.horizon]
+        target_receipt = dict(sha256=hashlib.sha256(target_path.read_bytes()).hexdigest(),
+            definition='shared helper full ramp-entrance-group delay clock; not cohort ramp-lane speed loss',
+            rows=targets, delay_veh_s=summary([float(r['ramp_delay_vs']) for r in targets]))
     report = dict(task='S-RB-MERGE', runtime_s=time.monotonic() - start,
-        fit_seed_allowlist=[969400, 969431], rows=rows,
+        fit_seed_allowlist=[969400, 969431], rows=rows, shared_recorded_targets=target_receipt,
         limitations=['Recorded-state diagnostics condition on observed neighbors each tick.',
             'Cohort rollout excludes entrants and treats all vehicles as native; not full fleet J.',
             '562.4 vs 1265.4 veh-s references are historical, not matched to this panel.',
@@ -234,7 +281,15 @@ def main():
         output = safe(args.output)
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(text + '\n')
-    print(text)
+    if args.quiet:
+        print(json.dumps(dict(seeds=args.seeds, horizon=args.horizon, runtime_s=report['runtime_s'],
+            observed_merges=sum(r['cohort']['real_merges'] for r in rows),
+            predicted_merges=sum(r['cohort']['predicted_merges'] for r in rows),
+            matched_merges=sum(r['cohort']['matched'] for r in rows),
+            births=sum(r['conditional_recorded_state']['observed_births'] for r in rows),
+            admitted_at_observed_birth=sum(r['conditional_recorded_state']['admitted_at_observed_birth'] for r in rows))))
+    else:
+        print(text)
 
 
 if __name__ == '__main__':

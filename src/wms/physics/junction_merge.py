@@ -111,15 +111,18 @@ def merge_speed_advice(kin, present, accel, physics, driver_params=None):
     planned = torch.minimum(v, stop)
     # Lane end is always a stop constraint while the lane has no continuation.
     wanted = torch.where(g['ramp'], torch.minimum(wanted, stop), wanted)
-    remaining = left / v.clamp_min(1e-9)
+    # LC2013.cpp:1502-1507, one required lane change, URGENCY=2.
+    remaining = (left / v.clamp_min(1e-9) / 2).clamp_min(dt)
     # informLeader: do not overtake when the remaining distance cannot cover it
     # plus braking. Exact stopped-leader/counter-change exceptions are not modeled.
     next_leader = (g['v_l'] - dt * torch.maximum(
         torch.ones_like(v), -kin[..., 5].gather(-1, g['leader']))).clamp_min(0)
     next_gap = g['gap_l'] + (next_leader - planned) * dt
     target = idm_next_speed(v, next_gap, next_leader, p, dt)
-    overtake_dist = (g['gap_l'] + kin[..., 6] + p['min_gap']
-                     + kin[..., 6].gather(-1, g['leader']))
+    lp = {name: value.gather(-1, g['leader']) for name, value in p.items()}
+    overtake_dist = (g['gap_l'] - p['min_gap'] + kin[..., 6] + lp['min_gap']
+        + kin[..., 6].gather(-1, g['leader']) + secure_gap(
+            g['v_l'], v, lp['accel'], lp['decel'], lp['time_headway'])).clamp_min(0)
     cannot_overtake = ((planned <= g['v_l']) |
                       (left - v.square() / (2 * p['decel']) < overtake_dist))
     slow = strategic & g['blocked_l'] & cannot_overtake & (target < v)
@@ -132,15 +135,34 @@ def merge_speed_advice(kin, present, accel, physics, driver_params=None):
     fp = {name: value.gather(-1, g['follower']) for name, value in p.items()}
     new_f = (g['v_f'] - dt * fp['decel']).clamp_min(0)
     f_one = (g['v_f'] - fp['decel']).clamp_min(0)
-    decel_gap = g['gap_f'] + planned - f_one
+    decel_gap = g['gap_f'] - fp['min_gap'] + planned - f_one
     needed = secure_gap(f_one, planned, fp['accel'], fp['decel'], fp['time_headway'])
     help_ok = strategic & g['blocked_f'] & (decel_gap > 0) & (decel_gap >= needed)
     # Source gaps passed to the CF model exclude follower minGap.
     gap = g['gap_f'] - fp['min_gap']
     safe1 = torch.maximum(new_f, idm_next_speed(g['v_f'], gap + dt * planned + fp['min_gap'], planned, fp, dt))
     safe2 = torch.maximum(new_f, idm_next_speed(g['v_f'], gap + dt * (planned - safe1) + fp['min_gap'], planned, fp, dt))
+    # Source informFollower branches, in their original priority order:
+    # fast ego needs no braking help; otherwise one-second help, eventual help,
+    # or ego slows to let the blocking follower pass (LC2013.cpp:689-993).
+    closing = planned - g['v_f']
+    no_help = (strategic & g['blocked_f'] & (closing >= 10 / 3.6)
+               & ((secure_gap(g['v_f'], planned, fp['accel'], fp['decel'], fp['time_headway'])
+                   - gap) / remaining < closing))
+    eventual = (strategic & g['blocked_f'] & ~no_help & ~help_ok
+                & (planned > f_one) & ((planned - f_one) * remaining > needed - decel_gap + .01))
+    give_way = strategic & g['blocked_f'] & ~no_help & ~help_ok & ~eventual
+    vhelp = torch.maximum(g['v_f'], v + 10 / 3.6)
+    distance_to_pass = (gap + kin[..., 6] + p['min_gap']
+        + kin[..., 6].gather(-1, g['follower'])
+        + secure_gap(planned, vhelp, p['accel'], p['decel'], p['time_headway'])).clamp_min(0)
+    own_pass_speed = torch.maximum(vhelp - distance_to_pass / remaining, v - dt * p['decel'])
+    wanted = torch.where(give_way, torch.minimum(wanted, own_pass_speed.clamp_min(0)), wanted)
+    message = torch.where(no_help, planned - 10 / 3.6,
+                torch.where(help_ok, safe2, torch.where(eventual, new_f, vhelp)))
+    valid_message = strategic & g['blocked_f'] & (message >= new_f)
     cap = torch.full_like(v, float('inf'))
-    cap.scatter_reduce_(-1, g['follower'], torch.where(help_ok, safe2, torch.full_like(v, float('inf'))),
+    cap.scatter_reduce_(-1, g['follower'], torch.where(valid_message, message, torch.full_like(v, float('inf'))),
                         reduce='amin', include_self=True)
     wanted = torch.minimum(wanted, cap)
     result = (wanted - v) / dt

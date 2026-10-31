@@ -6,7 +6,7 @@ import torch
 
 from wms.model.entries import EntryConfig, EntranceHistory, TorchEntryProcessV2
 from wms.model.spec import ModelSpec
-from wms.model.sumo_insertion import SumoInsertion, insertion_speed
+from wms.model.sumo_insertion import POSITION_EPS, SumoInsertion, insertion_speed
 from wms.model.wms import WmSModel
 from wms.physics.config import PhysicsConfig
 from wms.physics.junction_merge import apply_merge, merge_geometry, merge_speed_advice, secure_gap
@@ -65,6 +65,15 @@ def test_lane_end_stop_and_no_blanket_mainline_yield():
     accel, _ = merge_speed_advice(state_kin(s), s['present'], torch.zeros(1, 3), cfg)
     assert accel[0, 0] == -6.
     assert accel[0, 1] == 0 and accel[0, 2] == 0
+
+
+def test_lane_end_does_not_get_a_fictitious_leader_min_gap():
+    cfg = PhysicsConfig(merge_model='sumo')
+    model = WmSModel(ModelSpec(), physics=cfg).eval()
+    s = state([74.], [2])
+    with torch.no_grad():
+        out = model.forward(s)
+    assert out['accel_mps2'][0, 0] > 0  # IDM stopSpeed fallback permits creeping to end
 
 
 def test_sumo_forward_bypasses_every_learned_head_and_sampling(monkeypatch):
@@ -129,3 +138,38 @@ def test_given_depart_speed_refuses_unsafe_instead_of_patching():
     process._emit_due = lambda b: [1]
     assert process.insert(s).sum() == 0
     assert process.pending[0, 1] == 1
+
+
+def test_shared_mergespec_idm_insertion_vector():
+    # rb-shared/mergespec/test_cases.md T3 (net gap=2m, TS=1s).
+    p = dict(accel=2.6, decel=4.5, time_headway=1., min_gap=2.5, v0=30.)
+    assert insertion_speed(10., 4.5, 5., p, 1.) == pytest.approx(1.264, abs=.001)
+
+
+@pytest.mark.parametrize('depart_speed', ['last', 'desired'])
+def test_source_fixed_depart_speed_modes_refuse_unsafe_departure(depart_speed):
+    cfg = PhysicsConfig(merge_model='sumo')
+    process = TorchEntryProcessV2(history=EntranceHistory.defaults(),
+        cfg=EntryConfig(conserve_queue=True, insert_rule='sumo_like_v2',
+                        sumo_insertion=SumoInsertion(cfg, depart_speed=depart_speed)),
+        row_seeds=[17], couple_draws=True)
+    front = float(process.entry_s[2]) + 5. + POSITION_EPS
+    s = state([0., front + 5. + 3.], [0, 2], [0., 20.])
+    s['present'][0, 0] = False
+    process._emit_due = lambda b: [1]
+    assert process.insert(s).sum() == 0
+    assert process.pending[0, 1] == 1
+
+
+def test_source_base_position_and_default_first_depart_lane():
+    cfg = PhysicsConfig(merge_model='sumo')
+    process = TorchEntryProcessV2(history=EntranceHistory.defaults(),
+        cfg=EntryConfig(conserve_queue=True, insert_rule='sumo_like_v2',
+                        sumo_insertion=SumoInsertion(cfg, depart_lane='first', depart_speed=0.)),
+        row_seeds=[17], couple_draws=True)
+    s = state([0., 0.], [0, 0])
+    s['present'].fill_(False)
+    process._emit_due = lambda b: [0]
+    process.insert(s)
+    assert s['lane'][0, 0] == 1
+    assert s['s_m'][0, 0] == pytest.approx(process.entry_s[1] + 5. + .01, abs=.0002)
