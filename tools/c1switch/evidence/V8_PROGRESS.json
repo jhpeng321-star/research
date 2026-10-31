@@ -1,0 +1,81 @@
+{
+  "cpuQ": {
+    "unix": 1793461316.0112736,
+    "load": [
+      3.056640625,
+      1.408203125,
+      0.81689453125
+    ],
+    "receipts": {},
+    "own_pids": {},
+    "logs": {},
+    "charged_sim_s": 227310,
+    "actual_closed_sim_s": 227310.0,
+    "episodes": 10,
+    "physics": 0,
+    "branches": 231,
+    "picks": {
+      "wm": 10,
+      "bb": 90
+    },
+    "failures": {}
+  },
+  "gpuA": {
+    "unix": 1793461317.53528,
+    "load": [
+      12.2607421875,
+      9.8603515625,
+      10.26708984375
+    ],
+    "receipts": {
+      "bb_gpu_DISPATCH.json": {
+        "host": "gpuA",
+        "pid": 313211,
+        "unix": 1793461230.5468085,
+        "name": "bb_gpu"
+      },
+      "wm_gpu_DISPATCH.json": {
+        "host": "gpuA",
+        "pid": 313233,
+        "unix": 1793461236.3599212,
+        "name": "wm_gpu"
+      },
+      "rpc/wm/GPU_STARTED.json": {
+        "pid": 313233,
+        "unix": 1793461236.3976371,
+        "cap_s": 4380
+      },
+      "rpc/bb/GPU_STARTED.json": {
+        "pid": 313211,
+        "unix": 1793461230.5863395,
+        "cap_s": 350
+      },
+      "rpc/wm/GPU_FINISHED.json": {
+        "pid": 313233,
+        "elapsed_s": 51.81962842494249,
+        "unix": 1793461288.216685
+      },
+      "rpc/bb/GPU_FINISHED.json": {
+        "pid": 313211,
+        "elapsed_s": 5.411647167056799,
+        "unix": 1793461235.995062
+      },
+      "rpc/wm/STOP": {
+        "reason": "gpuA anonymous-draw raw-K8 bitwise parity failed",
+        "pid": 313233
+      },
+      "rpc/bb/STOP": {
+        "reason": "gpuA anonymous-draw raw-K8 bitwise parity failed",
+        "pid": 313211
+      }
+    },
+    "own_pids": {
+      "313211": false,
+      "313233": false
+    },
+    "logs": {
+      "bb_gpu.log": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/root/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 255, in gpu_serve\n    raise ValueError('gpuA anonymous-draw raw-K8 bitwise parity failed')\nValueError: gpuA anonymous-draw raw-K8 bitwise parity failed\n",
+      "wm_gpu.log": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n  File \"/root/c1switch20261031/recovery_v8/pytools/tools/c1switch/resume.py\", line 255, in gpu_serve\n    raise ValueError('gpuA anonymous-draw raw-K8 bitwise parity failed')\nValueError: gpuA anonymous-draw raw-K8 bitwise parity failed\n"
+    }
+  }
+}
