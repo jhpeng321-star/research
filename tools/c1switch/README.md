@@ -1,6 +1,27 @@
 # S-C1SWITCH operational receipt
 
-## Current MAIN19:12 integration (v4 canary complete; v6 gated)
+## Current SCIENTIFIC STOP (v6 observable-key retention gate FAIL)
+
+**Do not launch main, re-stage, retry physics, or allocate the reserve.**
+`evidence/V6_CANARY_REVALIDATION.json` / `V6_FINAL_STOP.json` bind the stop:
+WM j0 retains CTRL0, but corrected anonymous-observable sampling at j1/t360
+picks PI instead of the original canary's MAPPO. The registered all20-identical
+retention gate failed; no main dispatcher was created. This is a validation
+failure, not an efficacy verdict. v6 original-draw GPU parity was not reached.
+
+Actual=charged71910sim-s (Step047010+WM12450+BB12450); GPU allocation including
+all loading/validation/idle phases is WM2548.557475s+BB1658.436705s=4206.994180s.
+Own revalidator3800051 and GPU598515 exited; v6 BB was never allocated. All local
+relays cooperatively closed; other tasks/processes untouched. v4/v5/v6 trees,
+original model requests, failed gate and all charged ledgers are preserved.
+
+No automatic retry/seed replacement/refund. MAIN must explicitly authorize a
+new continuation namespace/budget before any corrected-policy physics. A WM-only
+first-world repeat would add12450sim-s to planned478410 (=490860), leaving9140
+reserve, provided BB reuse is separately validated; this proposal is BLOCKED.
+GPU throughput and remaining per-model caps also need an executable gate.
+
+## Completed integration evidence before the stop
 
 Builds `db3d8683/4a4fe8cc` executed one paired world969112: real cross-host
 WM2/BB K8, full600s control, all30full-prefix branches and clocks PASS,

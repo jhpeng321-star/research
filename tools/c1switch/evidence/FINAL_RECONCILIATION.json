@@ -1,0 +1,67 @@
+{
+  "status": "SCIENTIFIC_STOP_BEFORE_MAIN",
+  "mechanical_canary_pass": true,
+  "corrected_canary_retention_pass": false,
+  "failure": {
+    "arm": "wm",
+    "world_seed": 969112,
+    "j": 1,
+    "t_s": 360,
+    "old_pick": "mappo",
+    "corrected_pick": "pi"
+  },
+  "actual_sim_s": 71910,
+  "charged_sim_s": 71910,
+  "step0_sim_s": 47010,
+  "main_arm_sim_s": {
+    "wm": 12450,
+    "bb": 12450,
+    "random": 0,
+    "native": 0,
+    "ctrl0": 0,
+    "mappo": 0,
+    "pi": 0,
+    "circles": 0
+  },
+  "additional_sumo_after_real_canary": 0,
+  "gpu_allocated_wall_s_including_loading_validation_idle": {
+    "wm": 2548.5574748814106,
+    "bb": 1658.4367050677538,
+    "total": 4206.994179949164,
+    "total_hours": 1.1686094944303234
+  },
+  "main_dispatch_created": false,
+  "own_revalidator_exists": false,
+  "own_v6_wm_gpu_process_exists": false,
+  "v6_bb_gpu_service_ever_allocated": false,
+  "all_local_relays_cooperatively_closed": true,
+  "immutable_production_source_binding": "5e936e0d44a4e8f4ddb93b92830c3690203cb4292cbaa960a43a4621810837af",
+  "operator_only_followup": "Read recorded observable inputs on cpuQ in place instead of sending the entire20-request payload through Windows; GPU launch helpers also reject durable scientific STOP. No production adapter/model/controller source changed.",
+  "tests": {
+    "local_pass": 38,
+    "local_host_specific_skips": 3,
+    "cpuQ_pass": 26,
+    "gpuR_real_checkpoint_cpu_pass": 27,
+    "v5_full60_original_draw_gpu_bitwise_parity_both_models": true,
+    "v6_full60_original_draw_gpu_parity": "not reached after retention STOP"
+  },
+  "original_plan_sim_s": 478410,
+  "unallocated_reserve_sim_s": 21590,
+  "prospective_unapproved_continuation": {
+    "requires_new_MAIN_acknowledgement": true,
+    "WM_only_corrected_first_world_additional_sim_s": 12450,
+    "revised_total_sim_s": 490860,
+    "remaining_reserve_sim_s": 9140,
+    "conditions": "Independent corrected BB reuse gate; new immutable attempt; remaining GPU cap/throughput and full60 parity validation. No automatic retry or seed replacement."
+  },
+  "evidence": [
+    "MAIN_CANARY.json",
+    "MAIN_CPU.json",
+    "V4_GPU_FINISHED.json",
+    "V5_GPU_FINISHED.json",
+    "V5_GPU_PARITY.json",
+    "V6_FINAL_STOP.json",
+    "V6_CANARY_REVALIDATION.json"
+  ],
+  "scientific_conclusion": "Validation stopped; main panel unrun. No model-benefit or exclusive causal attribution claim."
+}

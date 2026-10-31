@@ -181,6 +181,7 @@ def launch_gpu(model='wm'):
 from pathlib import Path
 root=Path({GPU!r});stage=root/'pytools'
 model={model!r}
+assert not (root/'STOP').exists() and not any((root/'rpc'/a/'STOP').exists() for a in ('wm','bb')), 'scientific STOP; MAIN continuation required'
 assert not (root/(model+'_GPU_DISPATCH.json')).exists(),'existing own GPU dispatch'
 sources=json.loads((root/'STAGED.json').read_text())
 assert all(hashlib.sha256((stage/n).read_bytes()).hexdigest()==h for n,h in sources.items())
@@ -386,16 +387,21 @@ for a,row in prior.items():
 
 
 def revalidate_canary():
-    prior = ssh('gpuR',f'''import json
+    prepared = ssh('cpuQ',f'''import hashlib,json
 from pathlib import Path
-root=Path({GPU_V4!r})/'rpc';out={{}}
+root=Path({CPU_V4!r})/'rpc';out={{}}
+target=Path({CPU!r})/'CANARY_OBSERVABLE_INPUTS.json'
+assert not (target.parent/'REVALIDATION_DISPATCH.json').exists()
+assert not target.exists(),'prepared inputs already exist; reconcile without duplicating dispatch'
 for a in ('wm','bb'):
  out[a]={{}}
  for p in (root/a).glob('*.request.json'):
   r=json.loads(p.read_text());j=int(r['id'].rsplit('_j',1)[1]);out[a][str(j)]=r['belief']
  assert len(out[a])==10
-print(json.dumps(out))
+with target.open('x') as f:json.dump(out,f)
+print(json.dumps(dict(decisions=20,input_sha256=hashlib.sha256(target.read_bytes()).hexdigest(),source=str(root))))
 ''')
+    write(EVIDENCE/'V6_OBSERVABLE_INPUTS.json',prepared)
     # Corrections are metadata-only and permitted solely after proving, by
     # induction over all ten decisions, the exact same real controller schedule.
     code = f'''import copy,json,sys
@@ -437,7 +443,7 @@ write(root/'REVALIDATION.json',out);print(json.dumps(out))
     result = ssh('cpuQ',f'''import json,os,subprocess,sys,time
 from pathlib import Path
 root=Path({CPU!r});assert not (root/'REVALIDATION_DISPATCH.json').exists()
-(root/'CANARY_OBSERVABLE_INPUTS.json').write_text({json.dumps(prior)!r})
+assert (root/'CANARY_OBSERVABLE_INPUTS.json').exists()
 env=dict(os.environ);env.update({CPU_ENV!r})
 with (root/'REVALIDATION.log').open('x') as log:
  p=subprocess.Popen([sys.executable,'-B','-u','-c',{code!r}],cwd=root/'pytools',env=env,

@@ -1,0 +1,20 @@
+{
+  "pass_": false,
+  "decisions": [
+    {
+      "arm": "wm",
+      "j": 0,
+      "old_pick": "ctrl0",
+      "corrected_pick": "ctrl0",
+      "equal": true
+    },
+    {
+      "arm": "wm",
+      "j": 1,
+      "old_pick": "mappo",
+      "corrected_pick": "pi",
+      "equal": false
+    }
+  ],
+  "new_sim_s": 0
+}

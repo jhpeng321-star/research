@@ -1,0 +1,63 @@
+{
+  "gpuR": {
+    "wm": {
+      "GPU_STARTED.json": {
+        "cap_s": 8576,
+        "total_cap_s": 10800,
+        "prior_gpu_s": 2224,
+        "unix": 1793449365.364927
+      },
+      "GPU_FINISHED.json": {
+        "elapsed_s": 330.11241541057825,
+        "cumulative_gpu_s": 2554.1124154105783,
+        "unix": 1793449695.4764838,
+        "pid": 598515
+      },
+      "STOP": {
+        "reason": "observable-only seed changes canary pick",
+        "arm": "wm",
+        "j": 1
+      },
+      "results": 2,
+      "own_pid_exists": false
+    },
+    "bb": {
+      "STOP": {
+        "reason": "observable-only seed changes canary pick",
+        "arm": "wm",
+        "j": 1
+      },
+      "results": 0
+    }
+  },
+  "cpuQ": {
+    "charged_sim_s": 71910,
+    "new_main_dispatch": false,
+    "STOP": {
+      "reason": "observable-only seed changes canary pick",
+      "arm": "wm",
+      "j": 1
+    },
+    "revalidation": {
+      "pass_": false,
+      "decisions": [
+        {
+          "arm": "wm",
+          "j": 0,
+          "old_pick": "ctrl0",
+          "corrected_pick": "ctrl0",
+          "equal": true
+        },
+        {
+          "arm": "wm",
+          "j": 1,
+          "old_pick": "mappo",
+          "corrected_pick": "pi",
+          "equal": false
+        }
+      ],
+      "new_sim_s": 0
+    },
+    "own_revalidator_exists": false
+  }
+}
