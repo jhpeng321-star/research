@@ -54,6 +54,8 @@ def match_targets_with_carry(start, initial_ids, initial_kin, initial_mask, init
     source_lane = state['lane'][0].cpu().numpy().copy()
     if initial_carry is None:
         source_lane[junction] = -1
+    elif 'observed_lane_carry' in start:
+        source_lane[junction] = np.asarray(start['observed_lane_carry'])[junction]
     observed = {}
     raw_lane = np.where(initial_kin[:, 1:4].sum(-1) == 1,
                         initial_kin[:, 1:4].argmax(-1), -1)
@@ -119,6 +121,8 @@ def main():
             raise ValueError('observable start clock/world differs')
         with np.load(safe(job/'start_history.npz'), allow_pickle=False) as history:
             ids = np.array(history['vid_index'][-1], copy=True)
+            source_carry = causal_lane_carry(history['kin'], history['mask'].astype(bool), history['vid_index'])
+        start = {**start, 'observed_lane_carry': source_carry}
         for arm in ARMS:
             name = manifest[arm]['episode']
             if not name.startswith(f'w{seed}m') or not name.endswith('__'+arm) or '/' in name or '\\' in name:

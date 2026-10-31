@@ -58,9 +58,10 @@ def test_parallel_junction_rows_are_disambiguated_only_by_causal_last_observed_l
     carry = causal_lane_carry(kin, np.ones((2, 2), bool), vids)
     assert carry.tolist() == [0, 1]
     start = dict(state=dict(present=torch.ones(1, 2, dtype=torch.bool),
-        junction=torch.ones(1, 2, dtype=torch.bool), lane=torch.tensor([[0, 1]]),
+        junction=torch.ones(1, 2, dtype=torch.bool), lane=torch.tensor([[-1, -1]]),
         s_m=torch.full((1, 2), 75.44), v_mps=torch.full((1, 2), 31.),
-        is_cav=torch.zeros(1, 2, dtype=torch.bool)), vehicle_ids=['left', 'right'])
+        is_cav=torch.zeros(1, 2, dtype=torch.bool)), vehicle_ids=['left', 'right'],
+        observed_lane_carry=np.array([0, 1]))
     future = np.zeros((2, 7), dtype=np.float32)
     future[:, 0], future[:, 1] = [200., 300.], 1.
     rows = match_targets_with_carry(start, np.array([0, 1]), kin[-1], np.ones(2, bool),
