@@ -1,0 +1,207 @@
+{
+  "schema": "wmdecide-refresh/1",
+  "started_utc": "2026-10-31T22:49:27.862903+00:00",
+  "models": {
+    "wm2": {
+      "host": "gpuR",
+      "root": "/root/rbeval20261031",
+      "snapshot": "E:\\Temp\\opencode\\wmdecide_refresh_0900_v2_3eddbdd0\\refresh_20261031_224926Z\\wm2_snapshot",
+      "snapshot_sha256": "620861ec21b1bf23645edb5712a95d3f3e319cd45583652eaf8419ee62d2fd41",
+      "tasks": 160,
+      "reused_report": "identical_complete_K8_bytes_and_identity",
+      "status": "DIAGNOSTIC_ONLY",
+      "worlds": [
+        969420,
+        969421,
+        969422,
+        969423,
+        969424,
+        969425,
+        969426,
+        969427,
+        969428,
+        969429,
+        969430,
+        969431,
+        969432,
+        969433,
+        969434,
+        969435,
+        969436,
+        969437,
+        969438,
+        969439
+      ],
+      "signature": "433ff12b5e5fa5f9e0ee01e358fc0ae2fa7bff96c8aef5359983db4e8913b684",
+      "report": "E:\\Temp\\opencode\\wmdecide_refresh_0900_b10e288c\\refresh_20261031_211541Z\\wm2_report",
+      "manifest_sha256": "d205e4cabc480d133906718d2e709db759206aaa35e00035903d5e26cfcf548d"
+    },
+    "full_v1": {
+      "host": "gpuA",
+      "root": "/root/rbeval20261031/int/WM-PHYS-FULL-v1",
+      "snapshot": "E:\\Temp\\opencode\\wmdecide_refresh_0900_v2_3eddbdd0\\refresh_20261031_224926Z\\full_v1_snapshot",
+      "snapshot_sha256": "9474917c46bb1b520bc585715ef5ed9d4183543ac603ac71dd340747512994e4",
+      "tasks": 79,
+      "reused_report": "identical_complete_K8_bytes_and_identity",
+      "status": "DIAGNOSTIC_ONLY",
+      "worlds": [
+        969422,
+        969432,
+        969433,
+        969434,
+        969435,
+        969436,
+        969437,
+        969438,
+        969439
+      ],
+      "signature": "42a4c3ee39955aa2d50f0c366286be511227b57ec04d6cf5036c37171f514305",
+      "report": "E:\\Temp\\opencode\\wmdecide_refresh_0900_v2_3eddbdd0\\refresh_20261031_220445Z\\full_v1_report",
+      "manifest_sha256": "a6e984117bf1800eb34860fcb8450b6fe36e822c0efb144a6c9d3db27168aa37",
+      "matched_worlds": [
+        969422,
+        969432,
+        969433,
+        969434,
+        969435,
+        969436,
+        969437,
+        969438,
+        969439
+      ],
+      "matched_sources": [
+        "433ff12b5e5fa5f9e0ee01e358fc0ae2fa7bff96c8aef5359983db4e8913b684",
+        "42a4c3ee39955aa2d50f0c366286be511227b57ec04d6cf5036c37171f514305"
+      ],
+      "matched_reports": [
+        "E:\\Temp\\opencode\\wmdecide_refresh_0900_v2_3eddbdd0\\refresh_20261031_220445Z\\full_v1_matched_wm2",
+        "E:\\Temp\\opencode\\wmdecide_refresh_0900_v2_3eddbdd0\\refresh_20261031_220445Z\\full_v1_report"
+      ]
+    },
+    "full_v3": {
+      "host": "gpuA",
+      "root": "/root/rbeval20261031/int/WM-PHYS-FULL-v3-gpu",
+      "snapshot": "E:\\Temp\\opencode\\wmdecide_refresh_0900_v2_3eddbdd0\\refresh_20261031_224926Z\\full_v3_snapshot",
+      "snapshot_sha256": "04a310babfb727887e3ad006c2caca9f1f1547c93541e199bdf72a3128f727d8",
+      "tasks": 80,
+      "status": "DIAGNOSTIC_ONLY",
+      "worlds": [
+        969422,
+        969432,
+        969433,
+        969434,
+        969435,
+        969436,
+        969437,
+        969438,
+        969439
+      ],
+      "signature": "c875a657d6fdb71b68e7f0ade150de4542aa64d013ec81bfceaeca2115a95a8b",
+      "report": "E:\\Temp\\opencode\\wmdecide_refresh_0900_v2_3eddbdd0\\refresh_20261031_224926Z\\full_v3_report",
+      "manifest_sha256": "22978103164b5826f4083a906ab6bb29aec6ebc95418a21a9c13cecce8f25c2d",
+      "matched_worlds": [
+        969422,
+        969432,
+        969433,
+        969434,
+        969435,
+        969436,
+        969437,
+        969438,
+        969439
+      ],
+      "matched_sources": [
+        "433ff12b5e5fa5f9e0ee01e358fc0ae2fa7bff96c8aef5359983db4e8913b684",
+        "c875a657d6fdb71b68e7f0ade150de4542aa64d013ec81bfceaeca2115a95a8b"
+      ],
+      "matched_reports": [
+        "E:\\Temp\\opencode\\wmdecide_refresh_0900_v2_3eddbdd0\\refresh_20261031_224926Z\\full_v3_matched_wm2",
+        "E:\\Temp\\opencode\\wmdecide_refresh_0900_v2_3eddbdd0\\refresh_20261031_224926Z\\full_v3_report"
+      ]
+    },
+    "a2": {
+      "host": "gpuA",
+      "root": "/root/rbeval20261031/runa/WM-PHYS-A2",
+      "snapshot": "E:\\Temp\\opencode\\wmdecide_refresh_0900_v2_3eddbdd0\\refresh_20261031_224926Z\\a2_snapshot",
+      "snapshot_sha256": "92c70d31d5e8b165d163afd03d7edbf5c96371a9e465d1ae6b4128fa483f5bcb",
+      "tasks": 73,
+      "status": "DIAGNOSTIC_ONLY",
+      "worlds": [
+        969422,
+        969432,
+        969433,
+        969434,
+        969435,
+        969436,
+        969437,
+        969438
+      ],
+      "signature": "a56745e6dd502b9055ec3b8d8eb699298949e5109b1912fc88e3e28811824ab7",
+      "report": "E:\\Temp\\opencode\\wmdecide_refresh_0900_v2_3eddbdd0\\refresh_20261031_224926Z\\a2_report",
+      "manifest_sha256": "da786f36bb2359b1b79ca3cae64abc55e7ef1ae88619591593ed0b4523bf5af3",
+      "matched_worlds": [
+        969422,
+        969432,
+        969433,
+        969434,
+        969435,
+        969436,
+        969437,
+        969438
+      ],
+      "matched_sources": [
+        "433ff12b5e5fa5f9e0ee01e358fc0ae2fa7bff96c8aef5359983db4e8913b684",
+        "a56745e6dd502b9055ec3b8d8eb699298949e5109b1912fc88e3e28811824ab7"
+      ],
+      "matched_reports": [
+        "E:\\Temp\\opencode\\wmdecide_refresh_0900_v2_3eddbdd0\\refresh_20261031_224926Z\\a2_matched_wm2",
+        "E:\\Temp\\opencode\\wmdecide_refresh_0900_v2_3eddbdd0\\refresh_20261031_224926Z\\a2_report"
+      ]
+    },
+    "b2": {
+      "host": "gpuR",
+      "root": "/root/rbeval20261031/runb/WM-PHYS-B2",
+      "snapshot": "E:\\Temp\\opencode\\wmdecide_refresh_0900_v2_3eddbdd0\\refresh_20261031_224926Z\\b2_snapshot",
+      "snapshot_sha256": "fddf0fb3067db62a6fc71afd627ff5299dfc9547b7bae0251eb7ea35c5b14d68",
+      "tasks": 67,
+      "status": "DIAGNOSTIC_ONLY",
+      "worlds": [
+        969432,
+        969433,
+        969434,
+        969435,
+        969436,
+        969437,
+        969439
+      ],
+      "signature": "3e1d16564244effab6b75881624f9e249137dc8eed7e4b74dc332a0f8d2af66f",
+      "report": "E:\\Temp\\opencode\\wmdecide_refresh_0900_v2_3eddbdd0\\refresh_20261031_224926Z\\b2_report",
+      "manifest_sha256": "83cabad855f75a0fae894f00a021b09c61007663949ea1abc4a5623c45b51d48",
+      "matched_worlds": [
+        969432,
+        969433,
+        969434,
+        969435,
+        969436,
+        969437,
+        969439
+      ],
+      "matched_sources": [
+        "433ff12b5e5fa5f9e0ee01e358fc0ae2fa7bff96c8aef5359983db4e8913b684",
+        "3e1d16564244effab6b75881624f9e249137dc8eed7e4b74dc332a0f8d2af66f"
+      ],
+      "matched_reports": [
+        "E:\\Temp\\opencode\\wmdecide_refresh_0900_v2_3eddbdd0\\refresh_20261031_224926Z\\b2_matched_wm2",
+        "E:\\Temp\\opencode\\wmdecide_refresh_0900_v2_3eddbdd0\\refresh_20261031_224926Z\\b2_report"
+      ]
+    },
+    "c2": {
+      "host": "gpuA",
+      "root": "/root/rbeval20261031/runa/WM-PHYS-C2",
+      "status": "UNAVAILABLE_OR_INVALID",
+      "error": "ValueError: No registered output JSON files available"
+    }
+  },
+  "refresh_sha256": "ec7fde9f353b7b9fc811be8d4624ddce94631dfd2cfb72f86c8d1f1f33a905f0",
+  "completed_utc": "2026-10-31T22:51:51.744629+00:00"
+}
