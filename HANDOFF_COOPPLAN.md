@@ -102,3 +102,19 @@
 - Final interpretation: robust dev-panel delay benefit and substantial exact cooperation
   cases; robust positive mean superadditivity is not established on extension/pooled panels.
   WM-PHYS transfer/calibration remains a future backend qualification, not this result.
+
+## MAIN02:21 H300 continuation — DISPATCHED ONCE
+- Resume37380f46, prospective design/source03256981, all-host CPU bindings3cc7128a.
+- All prior H120 results/roots preserved; no prior rollout repeated.
+- Fresh confirmation18DEV983300–983317 + separate wall6DEV983318–983323;
+  allH300/cadence60, original strict0.8 gate/options/safety/noise, ALL-group twins.
+- Exact continuation cap234720:78240per host/9780per world, global upper799860.
+  Design `COOPPLAN_H300_DESIGN.md`, receipts `coopplan/h300/`;140unallocated.
+- Corrected HOLD COOPFREE learned checkpoint absent at shared predispatch freeze;
+  no legacy/zero-update replacement or outcome-dependent checkpoint addition.
+- New immutable `_v3` roots: cpuQ693091, gpuA348726, gpuR768580.
+  All three30CPU/0skips and actual WMDECIDE parity PASS before any dispatch.
+- NEVER relaunch these supervisors. `python -B -m tools.coopplan.h300 status --host HOST`
+  is read-only. Budget pruning is expected; availability logged before admission.
+- Next: immutable result collection, separate confirmation18/wall6 J600/J900,
+  O2 available/evaluated/pruned/chosen and D_G/C_G; whole-world bootstrap and safety.
