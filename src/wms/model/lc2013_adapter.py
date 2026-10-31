@@ -61,12 +61,6 @@ def forward_output(model, state, kin, present, deciders, params, result):
 
 
 def step_output(model, state, kin, present, out, next_s, next_v, next_lane, params):
-    moved = kin.clone()
-    moved[..., 0], moved[..., 4], moved[..., 5] = next_s, next_v, out["accel_mps2"]
-    end = model.physics.merge_zone_s1_m
-    pinned = present & (state["lane"] == model.physics.merge_lane) & (next_s > end)
-    moved[..., 0] = torch.where(pinned, end, moved[..., 0])
-    moved[..., 4] = torch.where(pinned, 0.0, moved[..., 4])
     if params is None and "driver_parameters" in out:
         params = {name: out["driver_parameters"][..., i]
                   for i, name in enumerate(PARAMETER_NAMES)}
@@ -74,16 +68,34 @@ def step_output(model, state, kin, present, out, next_s, next_v, next_lane, para
     delegated = out.get(WM_MERGE_KEY)
     if delegated is not None:
         deciders = deciders | delegated.bool()
-    deciders = deciders & (kin[..., 1:4].sum(-1) > 0)
+    normal = kin[..., 1:4].sum(-1) > 0
+    deciders = deciders & present & normal
+    source = state["lane"].long()
+    end = model.physics.merge_zone_s1_m
+    pinned = deciders & (source == model.physics.merge_lane) & (next_s > end)
+    motion_s = torch.where(pinned, end, next_s)
+    motion_v = torch.where(pinned, 0.0, next_v)
+    applied_a = ((motion_v - kin[..., 4]) / model.physics.dt_s).to(out["accel_mps2"])
+    out["accel_mps2"] = torch.where(pinned, applied_a, out["accel_mps2"])
+    out["accel_delta_mps2"] = out["accel_mps2"] - out["physics_accel_mps2"]
+    moved = kin.clone()
+    moved[..., 0], moved[..., 4], moved[..., 5] = motion_s, motion_v, out["accel_mps2"]
+    # Fixed CAV/controller motion has already executed. Its destination lane,
+    # as well as its position, constrains this HDV decision snapshot. Connector
+    # rows retain their empty one-hot instead of manufacturing a lane0 body.
+    fixed = present & normal & ~deciders
+    fixed_lanes = F.one_hot(next_lane.clamp(0, 2), 3).to(kin)
+    fixed_lanes *= ((next_lane >= 0) & (next_lane < 3)).unsqueeze(-1)
+    moved[..., 1:4] = torch.where(fixed.unsqueeze(-1), fixed_lanes, moved[..., 1:4])
     lc = evaluate(model, state, moved, present, deciders, params)
     proposed = torch.where(deciders, lc["next_lane"], next_lane)
-    source = state["lane"].long()
-    resolved, shifted_s = resolve_shifted_lanes(next_s, kin[..., 6], source,
+    resolved, shifted_s = resolve_shifted_lanes(motion_s, kin[..., 6], source,
                                                proposed, present, deciders, model.physics)
     out.update({k: v for k, v in lc.items() if k != "next_lane"})
-    out['lc2013_position_shift'] = shifted_s - next_s
+    out['lc2013_position_shift'] = shifted_s - motion_s
+    out['lc2013_motion_clamped'] = pinned
     out["lane_probabilities"] = F.one_hot(resolved.clamp(0, 2), 3).float()
-    return resolved, shifted_s
+    return resolved, shifted_s, motion_v
 
 
 def resolve_shifted_lanes(s, length, source, proposed, present, deciders, physics):

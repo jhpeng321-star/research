@@ -232,6 +232,8 @@ def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reus
             exposure[direction] += 1
             if 'lc2013_keep_signed_cap' in memory and memory['lc2013_keep_signed_cap'][0, j]:
                 branches['keep_right_signed_current_leader_cap'] += 1
+            if 'lc2013_endpoint_canonicalized' in memory and memory['lc2013_endpoint_canonicalized'][0, j]:
+                branches['ramp_endpoint_canonicalized'] += 1
             if memory['lc2013_wish'][0, j]:
                 wishes[direction] += 1
                 if not memory['lc2013_safe'][0, j]:

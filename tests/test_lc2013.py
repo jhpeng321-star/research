@@ -216,3 +216,28 @@ def test_zero_closing_speed_in_current_leader_cap_keeps_wishes_finite():
     out = lane_change(k, mask, PhysicsConfig(), driver_params={'v0': torch.tensor([[30., 25.]])})
     assert torch.isfinite(out['lc2013_keep_full_seconds']).all()
     assert torch.isfinite(out['lc2013_keep_right']).all()
+
+
+def test_float32_ramp_end_representation_does_not_disable_a_strategic_merge():
+    p = PhysicsConfig()
+    kin, mask = scene([(p.merge_zone_s1_m, 2, 0)])
+    reference = lane_change(kin, mask, p)
+    assert reference['next_lane'].item() == 1
+    for observed_kin in (kin.float(), kin.float().double()):
+        observed = lane_change(observed_kin, mask, p)
+        assert observed['next_lane'].item() == 1
+        assert observed['lc2013_reason'].item() == STRATEGIC
+        assert observed['lc2013_position'].item() == p.merge_zone_s1_m
+
+
+def test_float32_one_ulp_beyond_ramp_end_is_not_a_new_merge_window():
+    p = PhysicsConfig()
+    kin, mask = scene([(p.merge_zone_s1_m, 2, 0)])
+    kin = kin.float()
+    kin[..., 0] = torch.nextafter(kin[..., 0], torch.full_like(kin[..., 0], float('inf')))
+    out = lane_change(kin, mask, p)
+    assert out['next_lane'].item() == 2
+    assert not out['lc2013_wish'].item()
+    exact, mask = scene([(p.merge_zone_s1_m, 2, 0)])
+    exact[..., 0] = torch.nextafter(exact[..., 0], torch.full_like(exact[..., 0], float('inf')))
+    assert lane_change(exact, mask, p)['next_lane'].item() == 2

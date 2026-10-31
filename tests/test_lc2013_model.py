@@ -124,3 +124,36 @@ def test_rejected_front_move_restores_its_origin_before_rear_move_is_admitted():
         proposed, torch.ones(1, 3).bool(), torch.tensor([[True, True, False]]), PhysicsConfig())
     assert torch.equal(lanes, source)
     torch.testing.assert_close(positions, s, rtol=0, atol=0)
+
+
+@torch.no_grad()
+def test_a_merge_after_clamping_cannot_release_untraveled_ramp_distance_or_speed():
+    m = model()
+    s = state(lane=2, s=m.physics.merge_zone_s1_m - .1, speed=20.)
+    out = m.step(s)
+    assert out['lc2013_motion_clamped'].item()
+    assert out['next_lane'].item() == 1
+    assert out['next_s_m'].item() == torch.full_like(out['next_s_m'], m.physics.merge_zone_s1_m).item()
+    assert out['next_v_mps'].item() == 0
+    assert out['accel_mps2'].item() == -20 / m.physics.dt_s
+
+
+@torch.no_grad()
+def test_fixed_cav_destination_lane_is_visible_before_hdv_lane_decision():
+    from wms.physics.lc2013 import lane_change, STATE_KEYS
+    from wms.physics.state import state_kin
+    m = model()
+    s = dict(s_m=torch.tensor([[-1000., -990.]]), v_mps=torch.full((1, 2), 5.),
+        a_mps2=torch.zeros(1, 2), lane=torch.tensor([[0, 1]]),
+        length_m=torch.full((1, 2), 5.), present=torch.ones(1, 2).bool(),
+        is_cav=torch.tensor([[False, True]]), vehicle_id=torch.tensor([[11, 12]]))
+    memory = lane_change(state_kin(s), s['present'], m.physics, identity=s['vehicle_id'],
+                         decision_mask=~s['is_cav'])
+    memory['lc2013_keep_right'][0, 0] = -40_000_000
+    s.update({key: memory[key] for key in STATE_KEYS if key in memory})
+    teacher = torch.tensor([[[-1000., 0., 5., 0.], [-990., 0., 5., 0.]]])
+    out = m.step(s, cav_teacher=teacher)
+    assert torch.isinf(out['lc2013_gap_leader'][0, 0])  # right lane was vacated
+    assert out['next_lane'][0, 0] == 1
+    assert out['next_lane'][0, 1] == 0
+    assert out['next_s_m'][0, 1] == -990

@@ -168,11 +168,21 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
     Messages are synchronous on the supplied snapshot; SUMO is downstream-first
     sequential. Speed advice is emitted for the NEXT longitudinal update.
     """
+    encoded_end = torch.as_tensor(physics.merge_zone_s1_m, device=kin.device,
+        dtype=torch.float32).double()
     kin = kin.detach().double()
     # Empty one-hot is a junction connector in WM observables, not lane 0.
     normal_lane = kin[..., 1:4].sum(-1) > 0
     present = present.bool() & normal_lane
     lane = torch.where(normal_lane, lane_of(kin), -1)
+    # float32(75.44) is75.44000244: converting that exact represented endpoint
+    # to double (including already-promoted observation tensors) must not put
+    # a clamped ramp car outside its legal merge edge.
+    # Snap ONLY that representation, not a hand-set extension of the zone.
+    at_encoded_end = (lane == physics.merge_lane) & (kin[..., 0] == encoded_end)
+    canonicalized_end = at_encoded_end & (kin[..., 0] != physics.merge_zone_s1_m)
+    s = torch.where(at_encoded_end, torch.full_like(kin[..., 0], physics.merge_zone_s1_m), kin[..., 0])
+    kin = torch.cat((s.unsqueeze(-1), kin[..., 1:]), -1)
     v, s, length = kin[..., 4], kin[..., 0], kin[..., 6]
     dt = float(physics.dt_s)
     p = _settings(v, physics, driver_params)
@@ -378,6 +388,7 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
                   lc2013_position_shift=lane_position_shift(s, lane, choice, physics),
                   lc2013_keep_full_seconds=full_seconds,
                   lc2013_keep_signed_cap=right & slow_current & (current_v > p["v0"]),
+                  lc2013_endpoint_canonicalized=canonicalized_end,
                   lc2013_this_speed=this_speed, lc2013_target_speed=neigh_speed,
                   lc2013_left=torch.where(present, left_wish, 0),
                   lc2013_right=torch.where(present, right_wish, 0),

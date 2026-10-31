@@ -1,0 +1,2130 @@
+{
+  "status": "PASS",
+  "episodes": 160,
+  "worlds": 32,
+  "counts": {
+    "warmup/all_ramp_endpoint_frames": 7855,
+    "warmup/hdv_ramp_endpoint_frames": 7465,
+    "warmup/recorded_hdv_changes_at_endpoint": 90,
+    "warmup/all_recorded_hdv_ramp_changes": 820,
+    "scoring/all_ramp_endpoint_frames": 7107,
+    "scoring/hdv_ramp_endpoint_frames": 5881,
+    "scoring/recorded_hdv_changes_at_endpoint": 91,
+    "scoring/all_recorded_hdv_ramp_changes": 801
+  },
+  "geometric_end_m": 75.44,
+  "float32_end_m": 75.44000244140625,
+  "rounding_error_m": 2.4414062522737368e-06,
+  "metadata_population": {
+    "None": 160
+  },
+  "metadata_keys": [
+    "arm",
+    "arm_recorded_as",
+    "branch",
+    "controllers_used",
+    "demand_vph",
+    "dir",
+    "episode",
+    "horizon_s",
+    "k_slots",
+    "n_control",
+    "n_states",
+    "pair_key",
+    "penetration",
+    "policy_sha256",
+    "seed",
+    "source",
+    "t0_index",
+    "t_start_s",
+    "warmup_s",
+    "world"
+  ],
+  "by_episode": [
+    {
+      "episode": "w969400m1900p05t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 51,
+        "warmup/hdv_ramp_endpoint_frames": 51,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 11,
+        "scoring/all_ramp_endpoint_frames": 29,
+        "scoring/hdv_ramp_endpoint_frames": 29,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 10
+      }
+    },
+    {
+      "episode": "w969400m1900p05t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 51,
+        "warmup/hdv_ramp_endpoint_frames": 51,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 11,
+        "scoring/all_ramp_endpoint_frames": 35,
+        "scoring/hdv_ramp_endpoint_frames": 35,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 9
+      }
+    },
+    {
+      "episode": "w969400m1900p05t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 51,
+        "warmup/hdv_ramp_endpoint_frames": 51,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 11,
+        "scoring/all_ramp_endpoint_frames": 29,
+        "scoring/hdv_ramp_endpoint_frames": 29,
+        "scoring/recorded_hdv_changes_at_endpoint": 2,
+        "scoring/all_recorded_hdv_ramp_changes": 13
+      }
+    },
+    {
+      "episode": "w969400m1900p05t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 51,
+        "warmup/hdv_ramp_endpoint_frames": 51,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 11,
+        "scoring/all_ramp_endpoint_frames": 20,
+        "scoring/hdv_ramp_endpoint_frames": 20,
+        "scoring/recorded_hdv_changes_at_endpoint": 2,
+        "scoring/all_recorded_hdv_ramp_changes": 8
+      }
+    },
+    {
+      "episode": "w969400m1900p05t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 51,
+        "warmup/hdv_ramp_endpoint_frames": 51,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 11,
+        "scoring/all_ramp_endpoint_frames": 20,
+        "scoring/hdv_ramp_endpoint_frames": 20,
+        "scoring/recorded_hdv_changes_at_endpoint": 2,
+        "scoring/all_recorded_hdv_ramp_changes": 9
+      }
+    },
+    {
+      "episode": "w969401m2400p05t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 4,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 7
+      }
+    },
+    {
+      "episode": "w969401m2400p05t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 4,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 7
+      }
+    },
+    {
+      "episode": "w969401m2400p05t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 4,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 7
+      }
+    },
+    {
+      "episode": "w969401m2400p05t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 4,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 7
+      }
+    },
+    {
+      "episode": "w969401m2400p05t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 4,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 7
+      }
+    },
+    {
+      "episode": "w969402m2700p05t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 57,
+        "warmup/hdv_ramp_endpoint_frames": 57,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 120,
+        "scoring/hdv_ramp_endpoint_frames": 120,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 9
+      }
+    },
+    {
+      "episode": "w969402m2700p05t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 57,
+        "warmup/hdv_ramp_endpoint_frames": 57,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 47,
+        "scoring/hdv_ramp_endpoint_frames": 47,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 14
+      }
+    },
+    {
+      "episode": "w969402m2700p05t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 57,
+        "warmup/hdv_ramp_endpoint_frames": 57,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 48,
+        "scoring/hdv_ramp_endpoint_frames": 48,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 13
+      }
+    },
+    {
+      "episode": "w969402m2700p05t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 57,
+        "warmup/hdv_ramp_endpoint_frames": 57,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 76,
+        "scoring/hdv_ramp_endpoint_frames": 76,
+        "scoring/recorded_hdv_changes_at_endpoint": 2,
+        "scoring/all_recorded_hdv_ramp_changes": 10
+      }
+    },
+    {
+      "episode": "w969402m2700p05t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 57,
+        "warmup/hdv_ramp_endpoint_frames": 57,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 51,
+        "scoring/hdv_ramp_endpoint_frames": 51,
+        "scoring/recorded_hdv_changes_at_endpoint": 3,
+        "scoring/all_recorded_hdv_ramp_changes": 10
+      }
+    },
+    {
+      "episode": "w969403m1900p10t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 25,
+        "warmup/hdv_ramp_endpoint_frames": 25,
+        "warmup/recorded_hdv_changes_at_endpoint": 2,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 66,
+        "scoring/hdv_ramp_endpoint_frames": 66,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 3
+      }
+    },
+    {
+      "episode": "w969403m1900p10t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 25,
+        "warmup/hdv_ramp_endpoint_frames": 25,
+        "warmup/recorded_hdv_changes_at_endpoint": 2,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 66,
+        "scoring/hdv_ramp_endpoint_frames": 66,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 3
+      }
+    },
+    {
+      "episode": "w969403m1900p10t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 25,
+        "warmup/hdv_ramp_endpoint_frames": 25,
+        "warmup/recorded_hdv_changes_at_endpoint": 2,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 66,
+        "scoring/hdv_ramp_endpoint_frames": 66,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 3
+      }
+    },
+    {
+      "episode": "w969403m1900p10t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 25,
+        "warmup/hdv_ramp_endpoint_frames": 25,
+        "warmup/recorded_hdv_changes_at_endpoint": 2,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 66,
+        "scoring/hdv_ramp_endpoint_frames": 66,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 3
+      }
+    },
+    {
+      "episode": "w969403m1900p10t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 25,
+        "warmup/hdv_ramp_endpoint_frames": 25,
+        "warmup/recorded_hdv_changes_at_endpoint": 2,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 66,
+        "scoring/hdv_ramp_endpoint_frames": 66,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 3
+      }
+    },
+    {
+      "episode": "w969404m2400p10t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 20,
+        "warmup/hdv_ramp_endpoint_frames": 20,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 12,
+        "scoring/all_ramp_endpoint_frames": 37,
+        "scoring/hdv_ramp_endpoint_frames": 37,
+        "scoring/recorded_hdv_changes_at_endpoint": 2,
+        "scoring/all_recorded_hdv_ramp_changes": 6
+      }
+    },
+    {
+      "episode": "w969404m2400p10t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 20,
+        "warmup/hdv_ramp_endpoint_frames": 20,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 12,
+        "scoring/all_ramp_endpoint_frames": 37,
+        "scoring/hdv_ramp_endpoint_frames": 37,
+        "scoring/recorded_hdv_changes_at_endpoint": 2,
+        "scoring/all_recorded_hdv_ramp_changes": 6
+      }
+    },
+    {
+      "episode": "w969404m2400p10t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 20,
+        "warmup/hdv_ramp_endpoint_frames": 20,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 12,
+        "scoring/all_ramp_endpoint_frames": 37,
+        "scoring/hdv_ramp_endpoint_frames": 37,
+        "scoring/recorded_hdv_changes_at_endpoint": 2,
+        "scoring/all_recorded_hdv_ramp_changes": 6
+      }
+    },
+    {
+      "episode": "w969404m2400p10t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 20,
+        "warmup/hdv_ramp_endpoint_frames": 20,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 12,
+        "scoring/all_ramp_endpoint_frames": 37,
+        "scoring/hdv_ramp_endpoint_frames": 37,
+        "scoring/recorded_hdv_changes_at_endpoint": 2,
+        "scoring/all_recorded_hdv_ramp_changes": 6
+      }
+    },
+    {
+      "episode": "w969404m2400p10t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 20,
+        "warmup/hdv_ramp_endpoint_frames": 20,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 12,
+        "scoring/all_ramp_endpoint_frames": 37,
+        "scoring/hdv_ramp_endpoint_frames": 37,
+        "scoring/recorded_hdv_changes_at_endpoint": 2,
+        "scoring/all_recorded_hdv_ramp_changes": 6
+      }
+    },
+    {
+      "episode": "w969405m2700p10t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 67,
+        "warmup/hdv_ramp_endpoint_frames": 67,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 3,
+        "scoring/all_ramp_endpoint_frames": 23,
+        "scoring/hdv_ramp_endpoint_frames": 23,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 10
+      }
+    },
+    {
+      "episode": "w969405m2700p10t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 67,
+        "warmup/hdv_ramp_endpoint_frames": 67,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 3,
+        "scoring/all_ramp_endpoint_frames": 45,
+        "scoring/hdv_ramp_endpoint_frames": 34,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 6
+      }
+    },
+    {
+      "episode": "w969405m2700p10t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 67,
+        "warmup/hdv_ramp_endpoint_frames": 67,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 3,
+        "scoring/all_ramp_endpoint_frames": 41,
+        "scoring/hdv_ramp_endpoint_frames": 41,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 7
+      }
+    },
+    {
+      "episode": "w969405m2700p10t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 67,
+        "warmup/hdv_ramp_endpoint_frames": 67,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 3,
+        "scoring/all_ramp_endpoint_frames": 56,
+        "scoring/hdv_ramp_endpoint_frames": 56,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 5
+      }
+    },
+    {
+      "episode": "w969405m2700p10t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 67,
+        "warmup/hdv_ramp_endpoint_frames": 67,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 3,
+        "scoring/all_ramp_endpoint_frames": 67,
+        "scoring/hdv_ramp_endpoint_frames": 67,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 5
+      }
+    },
+    {
+      "episode": "w969406m1900p20t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 8,
+        "warmup/hdv_ramp_endpoint_frames": 8,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 4,
+        "scoring/all_ramp_endpoint_frames": 73,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 1
+      }
+    },
+    {
+      "episode": "w969406m1900p20t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 8,
+        "warmup/hdv_ramp_endpoint_frames": 8,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 4,
+        "scoring/all_ramp_endpoint_frames": 91,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 2
+      }
+    },
+    {
+      "episode": "w969406m1900p20t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 8,
+        "warmup/hdv_ramp_endpoint_frames": 8,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 4,
+        "scoring/all_ramp_endpoint_frames": 90,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 2
+      }
+    },
+    {
+      "episode": "w969406m1900p20t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 8,
+        "warmup/hdv_ramp_endpoint_frames": 8,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 4,
+        "scoring/all_ramp_endpoint_frames": 80,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 2
+      }
+    },
+    {
+      "episode": "w969406m1900p20t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 8,
+        "warmup/hdv_ramp_endpoint_frames": 8,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 4,
+        "scoring/all_ramp_endpoint_frames": 73,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 3
+      }
+    },
+    {
+      "episode": "w969407m2400p20t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 46,
+        "warmup/hdv_ramp_endpoint_frames": 46,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 9,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 4
+      }
+    },
+    {
+      "episode": "w969407m2400p20t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 46,
+        "warmup/hdv_ramp_endpoint_frames": 46,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 9,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 2
+      }
+    },
+    {
+      "episode": "w969407m2400p20t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 46,
+        "warmup/hdv_ramp_endpoint_frames": 46,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 9,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 2
+      }
+    },
+    {
+      "episode": "w969407m2400p20t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 46,
+        "warmup/hdv_ramp_endpoint_frames": 46,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 9,
+        "scoring/all_ramp_endpoint_frames": 73,
+        "scoring/hdv_ramp_endpoint_frames": 73,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 2
+      }
+    },
+    {
+      "episode": "w969407m2400p20t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 46,
+        "warmup/hdv_ramp_endpoint_frames": 46,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 9,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 2
+      }
+    },
+    {
+      "episode": "w969408m2700p20t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 30,
+        "warmup/hdv_ramp_endpoint_frames": 30,
+        "warmup/recorded_hdv_changes_at_endpoint": 2,
+        "warmup/all_recorded_hdv_ramp_changes": 6,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 7
+      }
+    },
+    {
+      "episode": "w969408m2700p20t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 30,
+        "warmup/hdv_ramp_endpoint_frames": 30,
+        "warmup/recorded_hdv_changes_at_endpoint": 2,
+        "warmup/all_recorded_hdv_ramp_changes": 6,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 5
+      }
+    },
+    {
+      "episode": "w969408m2700p20t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 30,
+        "warmup/hdv_ramp_endpoint_frames": 30,
+        "warmup/recorded_hdv_changes_at_endpoint": 2,
+        "warmup/all_recorded_hdv_ramp_changes": 6,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 5
+      }
+    },
+    {
+      "episode": "w969408m2700p20t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 30,
+        "warmup/hdv_ramp_endpoint_frames": 30,
+        "warmup/recorded_hdv_changes_at_endpoint": 2,
+        "warmup/all_recorded_hdv_ramp_changes": 6,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 4
+      }
+    },
+    {
+      "episode": "w969408m2700p20t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 30,
+        "warmup/hdv_ramp_endpoint_frames": 30,
+        "warmup/recorded_hdv_changes_at_endpoint": 2,
+        "warmup/all_recorded_hdv_ramp_changes": 6,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 6
+      }
+    },
+    {
+      "episode": "w969409m1900p40t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 8,
+        "scoring/all_ramp_endpoint_frames": 47,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 2
+      }
+    },
+    {
+      "episode": "w969409m1900p40t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 8,
+        "scoring/all_ramp_endpoint_frames": 84,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 2
+      }
+    },
+    {
+      "episode": "w969409m1900p40t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 8,
+        "scoring/all_ramp_endpoint_frames": 11,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 2
+      }
+    },
+    {
+      "episode": "w969409m1900p40t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 8,
+        "scoring/all_ramp_endpoint_frames": 46,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 2
+      }
+    },
+    {
+      "episode": "w969409m1900p40t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 8,
+        "scoring/all_ramp_endpoint_frames": 40,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 3
+      }
+    },
+    {
+      "episode": "w969410m2400p40t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 3,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 2
+      }
+    },
+    {
+      "episode": "w969410m2400p40t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 3,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 2
+      }
+    },
+    {
+      "episode": "w969410m2400p40t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 3,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 2
+      }
+    },
+    {
+      "episode": "w969410m2400p40t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 3,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 2
+      }
+    },
+    {
+      "episode": "w969410m2400p40t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 3,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 2
+      }
+    },
+    {
+      "episode": "w969411m2700p40t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 4,
+        "scoring/all_ramp_endpoint_frames": 4,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 1
+      }
+    },
+    {
+      "episode": "w969411m2700p40t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 4,
+        "scoring/all_ramp_endpoint_frames": 35,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 1
+      }
+    },
+    {
+      "episode": "w969411m2700p40t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 4,
+        "scoring/all_ramp_endpoint_frames": 29,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 1
+      }
+    },
+    {
+      "episode": "w969411m2700p40t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 4,
+        "scoring/all_ramp_endpoint_frames": 26,
+        "scoring/hdv_ramp_endpoint_frames": 26,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 0
+      }
+    },
+    {
+      "episode": "w969411m2700p40t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 4,
+        "scoring/all_ramp_endpoint_frames": 11,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 1
+      }
+    },
+    {
+      "episode": "w969412m1900p05t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 6,
+        "scoring/all_ramp_endpoint_frames": 19,
+        "scoring/hdv_ramp_endpoint_frames": 19,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 6
+      }
+    },
+    {
+      "episode": "w969412m1900p05t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 6,
+        "scoring/all_ramp_endpoint_frames": 95,
+        "scoring/hdv_ramp_endpoint_frames": 95,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 6
+      }
+    },
+    {
+      "episode": "w969412m1900p05t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 6,
+        "scoring/all_ramp_endpoint_frames": 95,
+        "scoring/hdv_ramp_endpoint_frames": 95,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 6
+      }
+    },
+    {
+      "episode": "w969412m1900p05t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 6,
+        "scoring/all_ramp_endpoint_frames": 95,
+        "scoring/hdv_ramp_endpoint_frames": 95,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 6
+      }
+    },
+    {
+      "episode": "w969412m1900p05t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 6,
+        "scoring/all_ramp_endpoint_frames": 95,
+        "scoring/hdv_ramp_endpoint_frames": 95,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 6
+      }
+    },
+    {
+      "episode": "w969413m2400p05t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 8,
+        "scoring/all_ramp_endpoint_frames": 98,
+        "scoring/hdv_ramp_endpoint_frames": 98,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 5
+      }
+    },
+    {
+      "episode": "w969413m2400p05t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 8,
+        "scoring/all_ramp_endpoint_frames": 62,
+        "scoring/hdv_ramp_endpoint_frames": 62,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 6
+      }
+    },
+    {
+      "episode": "w969413m2400p05t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 8,
+        "scoring/all_ramp_endpoint_frames": 57,
+        "scoring/hdv_ramp_endpoint_frames": 57,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 6
+      }
+    },
+    {
+      "episode": "w969413m2400p05t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 8,
+        "scoring/all_ramp_endpoint_frames": 120,
+        "scoring/hdv_ramp_endpoint_frames": 120,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 3
+      }
+    },
+    {
+      "episode": "w969413m2400p05t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 8,
+        "scoring/all_ramp_endpoint_frames": 59,
+        "scoring/hdv_ramp_endpoint_frames": 59,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 6
+      }
+    },
+    {
+      "episode": "w969414m2700p05t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 99,
+        "warmup/hdv_ramp_endpoint_frames": 99,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 3,
+        "scoring/all_ramp_endpoint_frames": 75,
+        "scoring/hdv_ramp_endpoint_frames": 75,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 6
+      }
+    },
+    {
+      "episode": "w969414m2700p05t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 99,
+        "warmup/hdv_ramp_endpoint_frames": 99,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 3,
+        "scoring/all_ramp_endpoint_frames": 75,
+        "scoring/hdv_ramp_endpoint_frames": 75,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 6
+      }
+    },
+    {
+      "episode": "w969414m2700p05t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 99,
+        "warmup/hdv_ramp_endpoint_frames": 99,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 3,
+        "scoring/all_ramp_endpoint_frames": 75,
+        "scoring/hdv_ramp_endpoint_frames": 75,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 6
+      }
+    },
+    {
+      "episode": "w969414m2700p05t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 99,
+        "warmup/hdv_ramp_endpoint_frames": 99,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 3,
+        "scoring/all_ramp_endpoint_frames": 75,
+        "scoring/hdv_ramp_endpoint_frames": 75,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 6
+      }
+    },
+    {
+      "episode": "w969414m2700p05t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 99,
+        "warmup/hdv_ramp_endpoint_frames": 99,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 3,
+        "scoring/all_ramp_endpoint_frames": 75,
+        "scoring/hdv_ramp_endpoint_frames": 75,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 6
+      }
+    },
+    {
+      "episode": "w969415m1900p10t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 7,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 0
+      }
+    },
+    {
+      "episode": "w969415m1900p10t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 7,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 0
+      }
+    },
+    {
+      "episode": "w969415m1900p10t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 7,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 0
+      }
+    },
+    {
+      "episode": "w969415m1900p10t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 7,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 0
+      }
+    },
+    {
+      "episode": "w969415m1900p10t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 7,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 0
+      }
+    },
+    {
+      "episode": "w969416m2400p10t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 80,
+        "warmup/hdv_ramp_endpoint_frames": 80,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 120,
+        "scoring/hdv_ramp_endpoint_frames": 120,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 7
+      }
+    },
+    {
+      "episode": "w969416m2400p10t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 80,
+        "warmup/hdv_ramp_endpoint_frames": 80,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 120,
+        "scoring/hdv_ramp_endpoint_frames": 120,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 7
+      }
+    },
+    {
+      "episode": "w969416m2400p10t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 80,
+        "warmup/hdv_ramp_endpoint_frames": 80,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 120,
+        "scoring/hdv_ramp_endpoint_frames": 120,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 7
+      }
+    },
+    {
+      "episode": "w969416m2400p10t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 80,
+        "warmup/hdv_ramp_endpoint_frames": 80,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 120,
+        "scoring/hdv_ramp_endpoint_frames": 120,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 7
+      }
+    },
+    {
+      "episode": "w969416m2400p10t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 80,
+        "warmup/hdv_ramp_endpoint_frames": 80,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 120,
+        "scoring/hdv_ramp_endpoint_frames": 120,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 7
+      }
+    },
+    {
+      "episode": "w969417m2700p10t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 3,
+        "scoring/all_ramp_endpoint_frames": 11,
+        "scoring/hdv_ramp_endpoint_frames": 11,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 9
+      }
+    },
+    {
+      "episode": "w969417m2700p10t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 3,
+        "scoring/all_ramp_endpoint_frames": 11,
+        "scoring/hdv_ramp_endpoint_frames": 11,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 10
+      }
+    },
+    {
+      "episode": "w969417m2700p10t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 3,
+        "scoring/all_ramp_endpoint_frames": 11,
+        "scoring/hdv_ramp_endpoint_frames": 11,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 9
+      }
+    },
+    {
+      "episode": "w969417m2700p10t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 3,
+        "scoring/all_ramp_endpoint_frames": 11,
+        "scoring/hdv_ramp_endpoint_frames": 11,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 9
+      }
+    },
+    {
+      "episode": "w969417m2700p10t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 3,
+        "scoring/all_ramp_endpoint_frames": 11,
+        "scoring/hdv_ramp_endpoint_frames": 11,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 10
+      }
+    },
+    {
+      "episode": "w969418m1900p20t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 7
+      }
+    },
+    {
+      "episode": "w969418m1900p20t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 68,
+        "scoring/hdv_ramp_endpoint_frames": 68,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 9
+      }
+    },
+    {
+      "episode": "w969418m1900p20t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 52,
+        "scoring/hdv_ramp_endpoint_frames": 52,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 9
+      }
+    },
+    {
+      "episode": "w969418m1900p20t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 7
+      }
+    },
+    {
+      "episode": "w969418m1900p20t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 58,
+        "scoring/hdv_ramp_endpoint_frames": 58,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 9
+      }
+    },
+    {
+      "episode": "w969419m2400p20t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 8,
+        "scoring/all_ramp_endpoint_frames": 14,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 5
+      }
+    },
+    {
+      "episode": "w969419m2400p20t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 8,
+        "scoring/all_ramp_endpoint_frames": 14,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 8
+      }
+    },
+    {
+      "episode": "w969419m2400p20t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 8,
+        "scoring/all_ramp_endpoint_frames": 14,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 7
+      }
+    },
+    {
+      "episode": "w969419m2400p20t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 8,
+        "scoring/all_ramp_endpoint_frames": 14,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 8
+      }
+    },
+    {
+      "episode": "w969419m2400p20t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 8,
+        "scoring/all_ramp_endpoint_frames": 14,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 7
+      }
+    },
+    {
+      "episode": "w969420m2700p20t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 8,
+        "scoring/all_ramp_endpoint_frames": 103,
+        "scoring/hdv_ramp_endpoint_frames": 103,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 5
+      }
+    },
+    {
+      "episode": "w969420m2700p20t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 8,
+        "scoring/all_ramp_endpoint_frames": 37,
+        "scoring/hdv_ramp_endpoint_frames": 37,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 8
+      }
+    },
+    {
+      "episode": "w969420m2700p20t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 8,
+        "scoring/all_ramp_endpoint_frames": 37,
+        "scoring/hdv_ramp_endpoint_frames": 37,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 8
+      }
+    },
+    {
+      "episode": "w969420m2700p20t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 8,
+        "scoring/all_ramp_endpoint_frames": 120,
+        "scoring/hdv_ramp_endpoint_frames": 120,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 6
+      }
+    },
+    {
+      "episode": "w969420m2700p20t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 8,
+        "scoring/all_ramp_endpoint_frames": 37,
+        "scoring/hdv_ramp_endpoint_frames": 37,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 8
+      }
+    },
+    {
+      "episode": "w969421m1900p40t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 14,
+        "warmup/hdv_ramp_endpoint_frames": 14,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 2,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 4
+      }
+    },
+    {
+      "episode": "w969421m1900p40t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 14,
+        "warmup/hdv_ramp_endpoint_frames": 14,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 2,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 5
+      }
+    },
+    {
+      "episode": "w969421m1900p40t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 14,
+        "warmup/hdv_ramp_endpoint_frames": 14,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 2,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 5
+      }
+    },
+    {
+      "episode": "w969421m1900p40t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 14,
+        "warmup/hdv_ramp_endpoint_frames": 14,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 2,
+        "scoring/all_ramp_endpoint_frames": 88,
+        "scoring/hdv_ramp_endpoint_frames": 88,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 5
+      }
+    },
+    {
+      "episode": "w969421m1900p40t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 14,
+        "warmup/hdv_ramp_endpoint_frames": 14,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 2,
+        "scoring/all_ramp_endpoint_frames": 88,
+        "scoring/hdv_ramp_endpoint_frames": 88,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 5
+      }
+    },
+    {
+      "episode": "w969422m2400p40t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 0,
+        "scoring/all_ramp_endpoint_frames": 38,
+        "scoring/hdv_ramp_endpoint_frames": 15,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 5
+      }
+    },
+    {
+      "episode": "w969422m2400p40t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 0,
+        "scoring/all_ramp_endpoint_frames": 79,
+        "scoring/hdv_ramp_endpoint_frames": 15,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 5
+      }
+    },
+    {
+      "episode": "w969422m2400p40t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 0,
+        "scoring/all_ramp_endpoint_frames": 15,
+        "scoring/hdv_ramp_endpoint_frames": 15,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 8
+      }
+    },
+    {
+      "episode": "w969422m2400p40t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 0,
+        "scoring/all_ramp_endpoint_frames": 23,
+        "scoring/hdv_ramp_endpoint_frames": 15,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 5
+      }
+    },
+    {
+      "episode": "w969422m2400p40t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 0,
+        "scoring/all_ramp_endpoint_frames": 34,
+        "scoring/hdv_ramp_endpoint_frames": 15,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 5
+      }
+    },
+    {
+      "episode": "w969423m2700p40t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 101,
+        "warmup/hdv_ramp_endpoint_frames": 29,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 1,
+        "scoring/all_ramp_endpoint_frames": 98,
+        "scoring/hdv_ramp_endpoint_frames": 83,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 0
+      }
+    },
+    {
+      "episode": "w969423m2700p40t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 101,
+        "warmup/hdv_ramp_endpoint_frames": 29,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 1,
+        "scoring/all_ramp_endpoint_frames": 120,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 0
+      }
+    },
+    {
+      "episode": "w969423m2700p40t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 101,
+        "warmup/hdv_ramp_endpoint_frames": 29,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 1,
+        "scoring/all_ramp_endpoint_frames": 87,
+        "scoring/hdv_ramp_endpoint_frames": 72,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 0
+      }
+    },
+    {
+      "episode": "w969423m2700p40t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 101,
+        "warmup/hdv_ramp_endpoint_frames": 29,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 1,
+        "scoring/all_ramp_endpoint_frames": 60,
+        "scoring/hdv_ramp_endpoint_frames": 30,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 1
+      }
+    },
+    {
+      "episode": "w969423m2700p40t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 101,
+        "warmup/hdv_ramp_endpoint_frames": 29,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 1,
+        "scoring/all_ramp_endpoint_frames": 120,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 1
+      }
+    },
+    {
+      "episode": "w969424m1900p05t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 4
+      }
+    },
+    {
+      "episode": "w969424m1900p05t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 6
+      }
+    },
+    {
+      "episode": "w969424m1900p05t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 6
+      }
+    },
+    {
+      "episode": "w969424m1900p05t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 6
+      }
+    },
+    {
+      "episode": "w969424m1900p05t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 6
+      }
+    },
+    {
+      "episode": "w969425m2400p05t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 61,
+        "warmup/hdv_ramp_endpoint_frames": 61,
+        "warmup/recorded_hdv_changes_at_endpoint": 3,
+        "warmup/all_recorded_hdv_ramp_changes": 7,
+        "scoring/all_ramp_endpoint_frames": 48,
+        "scoring/hdv_ramp_endpoint_frames": 48,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 3
+      }
+    },
+    {
+      "episode": "w969425m2400p05t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 61,
+        "warmup/hdv_ramp_endpoint_frames": 61,
+        "warmup/recorded_hdv_changes_at_endpoint": 3,
+        "warmup/all_recorded_hdv_ramp_changes": 7,
+        "scoring/all_ramp_endpoint_frames": 48,
+        "scoring/hdv_ramp_endpoint_frames": 48,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 3
+      }
+    },
+    {
+      "episode": "w969425m2400p05t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 61,
+        "warmup/hdv_ramp_endpoint_frames": 61,
+        "warmup/recorded_hdv_changes_at_endpoint": 3,
+        "warmup/all_recorded_hdv_ramp_changes": 7,
+        "scoring/all_ramp_endpoint_frames": 35,
+        "scoring/hdv_ramp_endpoint_frames": 35,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 4
+      }
+    },
+    {
+      "episode": "w969425m2400p05t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 61,
+        "warmup/hdv_ramp_endpoint_frames": 61,
+        "warmup/recorded_hdv_changes_at_endpoint": 3,
+        "warmup/all_recorded_hdv_ramp_changes": 7,
+        "scoring/all_ramp_endpoint_frames": 48,
+        "scoring/hdv_ramp_endpoint_frames": 48,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 3
+      }
+    },
+    {
+      "episode": "w969425m2400p05t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 61,
+        "warmup/hdv_ramp_endpoint_frames": 61,
+        "warmup/recorded_hdv_changes_at_endpoint": 3,
+        "warmup/all_recorded_hdv_ramp_changes": 7,
+        "scoring/all_ramp_endpoint_frames": 48,
+        "scoring/hdv_ramp_endpoint_frames": 48,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 3
+      }
+    },
+    {
+      "episode": "w969426m2700p05t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 25,
+        "scoring/hdv_ramp_endpoint_frames": 25,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 8
+      }
+    },
+    {
+      "episode": "w969426m2700p05t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 38,
+        "scoring/hdv_ramp_endpoint_frames": 38,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 5
+      }
+    },
+    {
+      "episode": "w969426m2700p05t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 71,
+        "scoring/hdv_ramp_endpoint_frames": 71,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 7
+      }
+    },
+    {
+      "episode": "w969426m2700p05t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 55,
+        "scoring/hdv_ramp_endpoint_frames": 55,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 4
+      }
+    },
+    {
+      "episode": "w969426m2700p05t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 0,
+        "warmup/hdv_ramp_endpoint_frames": 0,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 5,
+        "scoring/all_ramp_endpoint_frames": 112,
+        "scoring/hdv_ramp_endpoint_frames": 112,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 4
+      }
+    },
+    {
+      "episode": "w969427m1900p10t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 2,
+        "scoring/all_ramp_endpoint_frames": 12,
+        "scoring/hdv_ramp_endpoint_frames": 12,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 4
+      }
+    },
+    {
+      "episode": "w969427m1900p10t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 2,
+        "scoring/all_ramp_endpoint_frames": 20,
+        "scoring/hdv_ramp_endpoint_frames": 12,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 4
+      }
+    },
+    {
+      "episode": "w969427m1900p10t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 2,
+        "scoring/all_ramp_endpoint_frames": 12,
+        "scoring/hdv_ramp_endpoint_frames": 12,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 5
+      }
+    },
+    {
+      "episode": "w969427m1900p10t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 2,
+        "scoring/all_ramp_endpoint_frames": 12,
+        "scoring/hdv_ramp_endpoint_frames": 12,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 4
+      }
+    },
+    {
+      "episode": "w969427m1900p10t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 2,
+        "scoring/all_ramp_endpoint_frames": 12,
+        "scoring/hdv_ramp_endpoint_frames": 12,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 4
+      }
+    },
+    {
+      "episode": "w969428m2400p10t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 0,
+        "scoring/all_ramp_endpoint_frames": 84,
+        "scoring/hdv_ramp_endpoint_frames": 84,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 3
+      }
+    },
+    {
+      "episode": "w969428m2400p10t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 0,
+        "scoring/all_ramp_endpoint_frames": 84,
+        "scoring/hdv_ramp_endpoint_frames": 84,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 3
+      }
+    },
+    {
+      "episode": "w969428m2400p10t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 0,
+        "scoring/all_ramp_endpoint_frames": 84,
+        "scoring/hdv_ramp_endpoint_frames": 84,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 3
+      }
+    },
+    {
+      "episode": "w969428m2400p10t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 0,
+        "scoring/all_ramp_endpoint_frames": 84,
+        "scoring/hdv_ramp_endpoint_frames": 84,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 3
+      }
+    },
+    {
+      "episode": "w969428m2400p10t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 0,
+        "scoring/all_ramp_endpoint_frames": 84,
+        "scoring/hdv_ramp_endpoint_frames": 84,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 3
+      }
+    },
+    {
+      "episode": "w969429m2700p10t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 62,
+        "warmup/hdv_ramp_endpoint_frames": 62,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 7,
+        "scoring/all_ramp_endpoint_frames": 62,
+        "scoring/hdv_ramp_endpoint_frames": 62,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 3
+      }
+    },
+    {
+      "episode": "w969429m2700p10t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 62,
+        "warmup/hdv_ramp_endpoint_frames": 62,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 7,
+        "scoring/all_ramp_endpoint_frames": 22,
+        "scoring/hdv_ramp_endpoint_frames": 22,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 4
+      }
+    },
+    {
+      "episode": "w969429m2700p10t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 62,
+        "warmup/hdv_ramp_endpoint_frames": 62,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 7,
+        "scoring/all_ramp_endpoint_frames": 119,
+        "scoring/hdv_ramp_endpoint_frames": 119,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 2
+      }
+    },
+    {
+      "episode": "w969429m2700p10t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 62,
+        "warmup/hdv_ramp_endpoint_frames": 62,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 7,
+        "scoring/all_ramp_endpoint_frames": 66,
+        "scoring/hdv_ramp_endpoint_frames": 66,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 3
+      }
+    },
+    {
+      "episode": "w969429m2700p10t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 62,
+        "warmup/hdv_ramp_endpoint_frames": 62,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 7,
+        "scoring/all_ramp_endpoint_frames": 22,
+        "scoring/hdv_ramp_endpoint_frames": 22,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 4
+      }
+    },
+    {
+      "episode": "w969430m1900p20t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 2,
+        "scoring/all_ramp_endpoint_frames": 80,
+        "scoring/hdv_ramp_endpoint_frames": 80,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 11
+      }
+    },
+    {
+      "episode": "w969430m1900p20t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 2,
+        "scoring/all_ramp_endpoint_frames": 91,
+        "scoring/hdv_ramp_endpoint_frames": 91,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 10
+      }
+    },
+    {
+      "episode": "w969430m1900p20t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 2,
+        "scoring/all_ramp_endpoint_frames": 34,
+        "scoring/hdv_ramp_endpoint_frames": 25,
+        "scoring/recorded_hdv_changes_at_endpoint": 1,
+        "scoring/all_recorded_hdv_ramp_changes": 9
+      }
+    },
+    {
+      "episode": "w969430m1900p20t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 2,
+        "scoring/all_ramp_endpoint_frames": 120,
+        "scoring/hdv_ramp_endpoint_frames": 120,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 9
+      }
+    },
+    {
+      "episode": "w969430m1900p20t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 120,
+        "warmup/hdv_ramp_endpoint_frames": 120,
+        "warmup/recorded_hdv_changes_at_endpoint": 0,
+        "warmup/all_recorded_hdv_ramp_changes": 2,
+        "scoring/all_ramp_endpoint_frames": 120,
+        "scoring/hdv_ramp_endpoint_frames": 120,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 10
+      }
+    },
+    {
+      "episode": "w969431m2400p20t300__circles",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 10,
+        "warmup/hdv_ramp_endpoint_frames": 4,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 6,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 1
+      }
+    },
+    {
+      "episode": "w969431m2400p20t300__ctrl0",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 10,
+        "warmup/hdv_ramp_endpoint_frames": 4,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 6,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 0
+      }
+    },
+    {
+      "episode": "w969431m2400p20t300__mappo",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 10,
+        "warmup/hdv_ramp_endpoint_frames": 4,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 6,
+        "scoring/all_ramp_endpoint_frames": 63,
+        "scoring/hdv_ramp_endpoint_frames": 63,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 0
+      }
+    },
+    {
+      "episode": "w969431m2400p20t300__native",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 10,
+        "warmup/hdv_ramp_endpoint_frames": 4,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 6,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 1
+      }
+    },
+    {
+      "episode": "w969431m2400p20t300__pi",
+      "counts": {
+        "warmup/all_ramp_endpoint_frames": 10,
+        "warmup/hdv_ramp_endpoint_frames": 4,
+        "warmup/recorded_hdv_changes_at_endpoint": 1,
+        "warmup/all_recorded_hdv_ramp_changes": 6,
+        "scoring/all_ramp_endpoint_frames": 0,
+        "scoring/hdv_ramp_endpoint_frames": 0,
+        "scoring/recorded_hdv_changes_at_endpoint": 0,
+        "scoring/all_recorded_hdv_ramp_changes": 1
+      }
+    }
+  ],
+  "parameter_inference": false,
+  "wm_inference": false,
+  "input_identity_reference": "/home/ubuntu/rblane20261031_panel9_bab4fd84e76c/results (completed PANEL9 input SHA receipts)",
+  "source_panel_bundle_sha256": "bab4fd84e76cf546a33a18372148ed6aa33f9e1dc49d5268e482c98025af78bc",
+  "fresh_byte_hashing": false
+}

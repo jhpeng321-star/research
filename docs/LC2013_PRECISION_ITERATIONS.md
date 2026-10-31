@@ -335,3 +335,41 @@ snapshotv2 and current geometry, before→after signed-cap:
 This source fix improves total positive-step precision slightly, but **does
 not resolve the keep-right problem**. Individual keep-right precision decreases
 because some true positives are removed too. No distributional adoption claim.
+
+## Candidate11: exact represented ramp endpoint / runtime motion consistency
+
+A regression reproduces a real arithmetic legality bug introduced by this LC
+port: float32(75.44)=75.44000244140625, so converting the represented physical
+endpoint to double made it appear OUTSIDE the merge zone. Float64 merged;
+the identical float32 scene stayed trapped. Input-only FIT audit (no WM run,
+ENDPOINT_INPUT_AUDIT.json) counts5881 scored HDV endpoint frames including91
+recorded merges, plus7465 warmup HDV frames/90 merges. All160 episodes and801
+scored recorded ramp changes reconcile. Metadata has no population label;
+no driver-assignment source was opened.
+
+Snap ONLY the exact float32 representation (including already-promoted double
+observation tensors) of the ramp endpoint back to
+its geometric double value. One float32ULP farther remains illegal: no zone
+extension or behavioural cutoff. The ramp end is topologically unique (no
+continuation). Mainline edge-boundary ambiguity is not changed by this fix.
+
+The now-possible merge also exposed a runtime inconsistency: LC decisions
+were evaluated at a stopped/clamped position, then a successful merge released
+the original untraveled overshoot and velocity. The adapter now returns its
+actual clamped position AND speed even after merging, with the applied
+acceleration recorded. Fixed teacher/controller CAV poses stay untouched;
+their executed destination lane is used in the HDV decision geometry.
+`step_output` now returns(next_lane,next_s,next_v), wired by one LC-only wms
+tuple change. Synthetic tests cover retained stop motion and a fixed CAV
+vacating the right lane before the HDV decision.
+
+Targeted30CPU tests PASS, including the pre-fix failing float32 endpoint
+regression. New DEFAULT_OFF_ENDPOINTS.json compares three full default-OFF
+weight/forward/step/rollout cases BIT-EXACT to preserved b192e0c8. Previous
+proofs are unchanged. Fresh default-mode FIT measurement will reuse the
+already-completedv2 MOBIL9 score; no repeated MOBIL compute is necessary.
+
+Final endpoint gate56/56 PASS, including float32 observations promoted to
+double and rejection of the next genuine float32/float64 ULP beyond the end.
+Final JUnit CPU_ENDPOINTS_PROMOTED.xml; initial endpoint gate and all earlier
+receipts retained. No new scoring data or driver settings were fit.

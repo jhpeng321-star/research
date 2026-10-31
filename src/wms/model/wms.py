@@ -1904,7 +1904,7 @@ class WmSModel(nn.Module):
 
         if self.lane_model == "lc2013":
             from .lc2013_adapter import step_output
-            next_lane, next_s = step_output(self, state, state_kin(state), present, out,
+            next_lane, next_s, next_v = step_output(self, state, state_kin(state), present, out,
                                      next_s, next_v, next_lane, driver_params)
         if (self.merge_pivot is None and self.lane_model != "lc2013" and cav_motion.WM_MERGE_KEY in out
                 and bool(out[cav_motion.WM_MERGE_KEY].any())):

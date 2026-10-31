@@ -16,8 +16,8 @@ WM-PHYS REGISTRATION5683 plus00:10 precision addendum. Source-backed subset;
   edge-local position, both-best-zero route offset resolution, raw neighboring
   gaps, collapsed3/2.93/8m junction links and source consecutive-leader visibility.
 - Candidate9 coordinate increment: upstream model s translates±1.45m on lane
-  change to preserve SUMO raw lane position. `step_output` now returns
-  **(next_lane,next_s)**; two guarded wms edits consume positions and skip a
+  change to preserve SUMO raw lane position. Latest `step_output` returns
+  **(next_lane,next_s,next_v)**; guarded wms edits consume motion and skip a
   duplicate legacy arbitration. Fixed CAV teacher positions are not shifted.
   Rejected moves restore their origin before a monotone joint-feasibility recheck.
 - Step recomputes after longitudinal/CAV motion; ramp cannot pass its lane end.
@@ -71,3 +71,13 @@ Synchronous proposals/messages vs SUMO serial processing; full leader
 overtake/fall-behind/counterchange and follower branches, nonlegacy keep-right,
 nonzero speed lookahead, nonhighway/emergency cases remain. See source notes
 and `docs/paper_results/RB_LANE.md`; integrated CF+merge+LC gate is EVAL's.
+
+## Candidate11 endpoint repair (CPU verified; FIT pending)
+Exact float32 ramp end75.44000244 was incorrectly outside double75.44.
+FIT audit:5881 scored HDV frames/91 recorded merges affected (plus warmup).
+Only the exact represented endpoint is canonicalized; nextULP stays illegal.
+Runtime merges retain clamped stop position/speed instead of releasing free
+overshoot; applied acceleration is consistent, fixed CAV poses/lanes preserved.
+**Adapter API now(next_lane,next_s,next_v)**; merge its one guarded wms tuple
+update. Final56CPU PASS (including promoted float32 input); default-OFF weights/forward/step/rollout bit-exact
+in three cases (DEFAULT_OFF_ENDPOINTS.json). Source11 commit/measurement next.
