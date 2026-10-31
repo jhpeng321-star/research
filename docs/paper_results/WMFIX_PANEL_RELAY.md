@@ -37,3 +37,26 @@ decide()): baseline = identical r0/r1 mean, SD 0; PASS requires strict
 improvement at BOTH horizons + finite grads + frozen-bitwise. gpuR step-0
 baseline cross-checks hardware bias; disagreement => re-run the affected
 panel on gpuA before declaring PASS (recorded, threshold-free).
+
+## MAIN ADDENDUM 12:45 parallelization + cross-hardware bias (12:39-12:47)
+
+- 12:40 step0_gpuR LANDED (1788 s): 120 s MAE 283.48534, 300 s MAE 2186.6283
+  vs gpuA r0/r1 283.288 / 2185.236 — NOT bitwise-equal: small but real
+  cross-hardware bias (d120 +0.197, d300 +1.392 veh-s, ~0.07%). Guard fired.
+- Per the pre-registered guard rule this makes gpuR-produced step panels
+  unusable as decision inputs: ALL decision panels are now gpuA-NATIVE
+  (same hardware as the r0/r1 baseline; the bias cannot enter the decision).
+  gpuR's running step10 (PID 491803, done ~13:08) is kept as a cross-check
+  receipt only and is NOT relayed into train/.
+- gpuA native panel_eval launched (code sha-verified b7360320 above; identical
+  inputs/CRN/config, candidates are the trainer's own immutable exports in
+  train/: step_000010.pt 109d693c, step_000020.pt 4ccef722, step_000030.pt
+  d8abf371): step20 PID 165896 + step30 PID 165897 at 12:41:58, step10 PID
+  166449 at 12:44:09; --memory-fraction 0.35 each (~0.75-1.4 GB actual,
+  47.8 GB free; continuation 160005 only polls). Decision expected ~13:12.
+- gpuR skip markers panels/PANEL_step20.json + PANEL_step30.json (12:46,
+  content = skip_marker json, NOT panel receipts; never relay) so the watcher
+  exits after step10 instead of duplicating gpuA's work.
+- PANEL_step0_gpuR.json sha 734ab834cf5a... relayed gpuR -> local -> gpuA
+  train/ (byte-identical on both hops) for PILOT.json's gpuR_step0_baseline
+  guard field; does not match the PANEL_step0_r*.json glob (no collision).

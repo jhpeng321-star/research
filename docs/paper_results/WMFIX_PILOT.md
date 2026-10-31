@@ -51,4 +51,14 @@ c4_wm_loop14_r16_ft.toml, checkpoint wm_s.pt b8797242, W5_COMBINED DESIGN.json).
   PILOT.json assembled by the unchanged pre-registered decide() (improvement > 2x SD
   with SD=0 => strict improvement at both horizons). PASS -> curriculum continues
   in place under the fresh cap; FAIL -> stop, WMFIX_PILOT_FAIL.md, option (c).
-- [pending] steps 1-30 -> relayed panels -> PILOT.json decision -> curriculum/FINAL
+- [done 12:26] steps 1-30 DONE on gpuA (PID 160005 healthy; loss 0.0593@1 -> 0.0010@30;
+  all 30 grads finite; STEP0_TERMS paired_share 0.957). Exports step_000010/20/30.pt
+  sha-verified and relayed (gpuA -> local -> gpuR, WMFIX_PANEL_RELAY.md).
+- [12:40] GUARD FIRED: gpuR step0 panel != gpuA r0/r1 bitwise (283.485/2186.628 vs
+  283.288/2185.236; ~0.07% cross-hardware bias). Per the pre-registered guard rule
+  all DECISION panels are gpuA-native (MAIN 12:45 parallelization): step20/step30
+  PID 165896/165897 from 12:41:58, step10 PID 166449 from 12:44:09, direct into
+  train/ with the identical panel_eval path; gpuR step10 kept as cross-check only.
+  Decision expected ~13:12 (sequential watcher would have been ~14:05).
+- [pending] gpuA-native panels 10/20/30 -> PILOT.json decision (decide() unchanged,
+  baseline r0/r1, SD 0) -> PASS: curriculum continues in place; FAIL: option (c).
