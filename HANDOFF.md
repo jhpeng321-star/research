@@ -1,6 +1,6 @@
 # S-RB-LANE — precision continuation active (~03:08)
 
-Branch `c4/rb-lane`, base `f0db3c82`; latest engineering source `82894fab`.
+Branch `c4/rb-lane`, base `f0db3c82`; latest engineering source `52d2df5c`.
 Coordinate lineage `0a1e7e93`, signed-cap source `92a3cd69`.
 All prior work retained. Owner authority:
 WM-PHYS REGISTRATION5683 plus00:10 precision addendum. Source-backed subset;
@@ -102,3 +102,7 @@ Next source fix: cooperative early returns now freeze wish accumulation as
 SUMO1643–1669 requires, using pre-update inconvenience. An extra positive-
 cooperation gate absent from source is removed. 60CPU PASS; default/encoder
 and native-point measurements follow, with matching completed MOBIL reused.
+Owned distinct-setting final passes:14/default910505,15/encoder910966,
+16/native-point911369 oncpuQ; immutable PANEL14/15/16_DISPATCH receipts.
+All reuse completed matched MOBIL; three admitted nice19/single-thread jobs,
+loads16.8–18.2 on32CPUs. Preserve these dispatches; do not duplicate.
