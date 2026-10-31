@@ -55,6 +55,14 @@ Owner schedule: interim04/08, freeze09:30, evaluation through11:30, report11:45.
   300s rate-distance+1.25pp[−4.17,+6.67], HDV60CI missing. NOT switch eligible.
 - Existing20min read-only peer observer retained (`runs/rbint_poll`); do not start
   another observer. Both GPUs busy in last audit; preserve live evaluation jobs.
+- NEW FULL-v4 canary395510/source22cc32f6 running gpuA (no redispatch), explicit
+  move→LC→emit +final LANE. Registered before inference; shared exclusive claim.
+- NEW05:45 paired FULL-v3 endpoints and delay, SAME4complete reserved worlds:
+  HDV60 mean-world-median error−33.94m[−43.91,−23.97],574common endpoints;
+  CRPS120/300/600−573[−979,−166]/−3359[−5620,−1099]/−11150[−16387,−5913].
+  Rate-distance300+2.5pp[−1.67,+6.67] (worse point); NOT switch eligible.
+  Endpoint/protocol/comparator suite18PASS; immutable manifests/attrition retained.
+  WM2 full panel160/160tasks fetched read-only. No inference repeated.
 - Next: complete source phase integration + CPU suite +8x60s recorded smoke,
   publish new immutable config/source, collect complete K8 matched worlds,
   endpoint CIs and DECIDE credibility, update ≤60line WMPHYS_MORNING.md.

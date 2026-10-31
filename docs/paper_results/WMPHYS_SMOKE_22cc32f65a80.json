@@ -1,0 +1,350 @@
+{
+ "schema": "wmphys-smoke/1",
+ "passed": true,
+ "results": [
+  {
+   "variant": "A",
+   "seed": 969420,
+   "t0": 300,
+   "horizon_s": 60,
+   "source_sha256": "b2bcd94fbf1a8b64f7a80e741e88990d797b60731a8f0fa98365748c843bd0a3",
+   "encoder_calls": 1,
+   "encoder_exact": true,
+   "guard_pass": true,
+   "query_parity": null,
+   "lane_parity": null,
+   "motion_conditioning": null,
+   "finite": true,
+   "conserved": true,
+   "steps": 120,
+   "initial": [
+    94
+   ],
+   "exited": [
+    30
+   ],
+   "final": [
+    64
+   ]
+  },
+  {
+   "variant": "A",
+   "seed": 969421,
+   "t0": 300,
+   "horizon_s": 60,
+   "source_sha256": "3c069c9f6457f9bc6aa18e25b8a6d4b31794c358f592649b4904e37b95c9fdac",
+   "encoder_calls": 1,
+   "encoder_exact": true,
+   "guard_pass": true,
+   "query_parity": null,
+   "lane_parity": null,
+   "motion_conditioning": null,
+   "finite": true,
+   "conserved": true,
+   "steps": 120,
+   "initial": [
+    71
+   ],
+   "exited": [
+    38
+   ],
+   "final": [
+    33
+   ]
+  },
+  {
+   "variant": "B",
+   "seed": 969420,
+   "t0": 300,
+   "horizon_s": 60,
+   "source_sha256": "b2bcd94fbf1a8b64f7a80e741e88990d797b60731a8f0fa98365748c843bd0a3",
+   "encoder_calls": 1,
+   "encoder_exact": true,
+   "guard_pass": true,
+   "query_parity": null,
+   "lane_parity": null,
+   "motion_conditioning": null,
+   "finite": true,
+   "conserved": true,
+   "steps": 120,
+   "initial": [
+    94
+   ],
+   "exited": [
+    43
+   ],
+   "final": [
+    51
+   ]
+  },
+  {
+   "variant": "B",
+   "seed": 969421,
+   "t0": 300,
+   "horizon_s": 60,
+   "source_sha256": "3c069c9f6457f9bc6aa18e25b8a6d4b31794c358f592649b4904e37b95c9fdac",
+   "encoder_calls": 1,
+   "encoder_exact": true,
+   "guard_pass": true,
+   "query_parity": null,
+   "lane_parity": null,
+   "motion_conditioning": null,
+   "finite": true,
+   "conserved": true,
+   "steps": 120,
+   "initial": [
+    71
+   ],
+   "exited": [
+    40
+   ],
+   "final": [
+    31
+   ]
+  },
+  {
+   "variant": "C",
+   "seed": 969420,
+   "t0": 300,
+   "horizon_s": 60,
+   "source_sha256": "b2bcd94fbf1a8b64f7a80e741e88990d797b60731a8f0fa98365748c843bd0a3",
+   "encoder_calls": 1,
+   "encoder_exact": true,
+   "guard_pass": true,
+   "query_parity": null,
+   "lane_parity": null,
+   "motion_conditioning": null,
+   "finite": true,
+   "conserved": true,
+   "steps": 120,
+   "initial": [
+    94
+   ],
+   "exited": [
+    32
+   ],
+   "final": [
+    62
+   ]
+  },
+  {
+   "variant": "C",
+   "seed": 969421,
+   "t0": 300,
+   "horizon_s": 60,
+   "source_sha256": "3c069c9f6457f9bc6aa18e25b8a6d4b31794c358f592649b4904e37b95c9fdac",
+   "encoder_calls": 1,
+   "encoder_exact": true,
+   "guard_pass": true,
+   "query_parity": null,
+   "lane_parity": null,
+   "motion_conditioning": null,
+   "finite": true,
+   "conserved": true,
+   "steps": 120,
+   "initial": [
+    71
+   ],
+   "exited": [
+    39
+   ],
+   "final": [
+    32
+   ]
+  },
+  {
+   "variant": "FULL",
+   "seed": 969420,
+   "t0": 300,
+   "horizon_s": 60,
+   "source_sha256": "b2bcd94fbf1a8b64f7a80e741e88990d797b60731a8f0fa98365748c843bd0a3",
+   "encoder_calls": 1,
+   "encoder_exact": true,
+   "guard_pass": true,
+   "query_parity": null,
+   "lane_parity": null,
+   "motion_conditioning": {
+    "runtime_motion_conditioning": true,
+    "saved_driver_id_lookup": false,
+    "posterior_source": "runtime_motion_conditioned_fixed_population",
+    "motion_rows_by_observed_id": {
+     "176": 0,
+     "181": 118,
+     "178": 120,
+     "180": 120,
+     "184": 119,
+     "194": 87,
+     "183": 14,
+     "186": 116,
+     "217": 25,
+     "195": 87,
+     "142": 112,
+     "151": 115,
+     "200": 74,
+     "204": 60,
+     "203": 64,
+     "206": 0,
+     "119": 112,
+     "207": 52,
+     "165": 119,
+     "208": 49,
+     "209": 0,
+     "224": 0,
+     "123": 114,
+     "218": 22,
+     "127": 102,
+     "212": 0,
+     "162": 120,
+     "197": 81,
+     "133": 115,
+     "219": 20,
+     "170": 120,
+     "143": 116,
+     "144": 110,
+     "146": 120,
+     "154": 118,
+     "220": 0,
+     "155": 119,
+     "148": 84,
+     "153": 120,
+     "149": 113,
+     "157": 120,
+     "158": 120,
+     "191": 95,
+     "168": 119,
+     "159": 120,
+     "160": 63,
+     "161": 120,
+     "169": 119,
+     "171": 120,
+     "199": 0,
+     "172": 91,
+     "71": 0,
+     "173": 20,
+     "174": 120,
+     "175": 120,
+     "177": 120,
+     "125": 113,
+     "179": 78,
+     "221": 16,
+     "185": 118,
+     "187": 114,
+     "188": 108,
+     "189": 105,
+     "190": 101,
+     "192": 2,
+     "198": 80,
+     "205": 58,
+     "150": 119,
+     "213": 38,
+     "214": 35,
+     "193": 95,
+     "215": 32,
+     "216": 29,
+     "222": 13,
+     "223": 9,
+     "225": 6,
+     "226": 3,
+     "131": 112,
+     "227": 0
+    },
+    "conditioned_drivers": 70,
+    "population_fallbacks": 9,
+    "motion_kernel_source_sha256": "3b18a14c92604ecd1329eb811758d876ce3e6ce7aaae853395133dcdb863d2f1"
+   },
+   "finite": true,
+   "conserved": true,
+   "steps": 120,
+   "initial": [
+    94
+   ],
+   "exited": [
+    22
+   ],
+   "final": [
+    72
+   ]
+  },
+  {
+   "variant": "FULL",
+   "seed": 969421,
+   "t0": 300,
+   "horizon_s": 60,
+   "source_sha256": "3c069c9f6457f9bc6aa18e25b8a6d4b31794c358f592649b4904e37b95c9fdac",
+   "encoder_calls": 1,
+   "encoder_exact": true,
+   "guard_pass": true,
+   "query_parity": null,
+   "lane_parity": null,
+   "motion_conditioning": {
+    "runtime_motion_conditioning": true,
+    "saved_driver_id_lookup": false,
+    "posterior_source": "runtime_motion_conditioned_fixed_population",
+    "motion_rows_by_observed_id": {
+     "137": 117,
+     "185": 4,
+     "136": 117,
+     "154": 103,
+     "138": 120,
+     "147": 120,
+     "156": 94,
+     "176": 0,
+     "108": 116,
+     "148": 120,
+     "110": 116,
+     "150": 119,
+     "158": 86,
+     "159": 83,
+     "152": 110,
+     "177": 19,
+     "117": 118,
+     "162": 74,
+     "163": 71,
+     "171": 49,
+     "164": 68,
+     "130": 120,
+     "109": 112,
+     "184": 6,
+     "173": 0,
+     "132": 120,
+     "112": 116,
+     "188": 0,
+     "114": 116,
+     "142": 115,
+     "167": 57,
+     "118": 115,
+     "120": 116,
+     "121": 116,
+     "128": 116,
+     "134": 120,
+     "141": 117,
+     "170": 52,
+     "174": 0,
+     "181": 14,
+     "182": 13,
+     "144": 117,
+     "187": 0,
+     "125": 116
+    },
+    "conditioned_drivers": 39,
+    "population_fallbacks": 5,
+    "motion_kernel_source_sha256": "3b18a14c92604ecd1329eb811758d876ce3e6ce7aaae853395133dcdb863d2f1"
+   },
+   "finite": true,
+   "conserved": true,
+   "steps": 120,
+   "initial": [
+    71
+   ],
+   "exited": [
+    36
+   ],
+   "final": [
+    35
+   ]
+  }
+ ],
+ "recipe_sha256": "ee8ba7db2da15bcf1a200e3a26f839f8ad197fb53429099464383224e86b3567",
+ "checkpoint_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+ "seconds": 21.1899934951216
+}
