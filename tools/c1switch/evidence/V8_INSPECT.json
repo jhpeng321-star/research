@@ -1,0 +1,34 @@
+{
+  "cpuQ": {
+    "load": [
+      0.03271484375,
+      0.2255859375,
+      0.630859375
+    ],
+    "recovery_exists": false
+  },
+  "gpuA": {
+    "load": [
+      9.9267578125,
+      9.9150390625,
+      11.40234375
+    ],
+    "gpu": "48510, 49140, 0\n",
+    "base_exists": false,
+    "wm_source_exists": false,
+    "inference_base_exists": true,
+    "recovery_exists": false
+  },
+  "gpuR": {
+    "load": [
+      6.359375,
+      9.8388671875,
+      14.70458984375
+    ],
+    "gpu": "19750, 24564, 66\n",
+    "base_exists": true,
+    "wm_source_exists": true,
+    "inference_base_exists": true,
+    "recovery_exists": false
+  }
+}
