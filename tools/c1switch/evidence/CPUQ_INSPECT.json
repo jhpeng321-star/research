@@ -8,10 +8,83 @@
   },
   "cpuQ": {
     "load": [
-      0.17626953125,
-      0.1953125,
-      1.56591796875
+      0.0166015625,
+      0.06982421875,
+      0.3720703125
     ],
-    "version_exists": true
+    "version_exists": true,
+    "DISPATCH.json": {
+      "pid": 3525930,
+      "unix": 1793443111.6503484,
+      "host": "cpuQ",
+      "version": "/home/ubuntu/c1switch20261031/fullrerun_v3",
+      "workers": 1,
+      "new_max_sim_s": 46080,
+      "total_step0_max_sim_s": 47010,
+      "main_authorized": false
+    },
+    "STATUS.json": {
+      "status": "COMPLETE",
+      "pass_": true,
+      "unique_wins": {
+        "60": {
+          "native": 2,
+          "ctrl0": 9,
+          "mappo": 3,
+          "pi": 0,
+          "circles": 0
+        },
+        "90": {
+          "native": 2,
+          "ctrl0": 7,
+          "mappo": 1,
+          "pi": 3,
+          "circles": 1
+        }
+      },
+      "native_repeat_noise_vs": 0.0,
+      "margin_threshold_vs": 1e-06,
+      "resolved_non_dominant": {
+        "60": 5,
+        "90": 7
+      },
+      "states": 16,
+      "charged_sim_s": 47010,
+      "main_authorized": false
+    },
+    "TRUNK_GATE.json": {
+      "pass_": true,
+      "states": 16,
+      "receipt_sha256": "71b451b5b287261be9d0030ed8c0418fb7cea38e13c5320040e7a739ebe82d77"
+    },
+    "STEP0_GATE.json": {
+      "pass_": true,
+      "unique_wins": {
+        "60": {
+          "native": 2,
+          "ctrl0": 9,
+          "mappo": 3,
+          "pi": 0,
+          "circles": 0
+        },
+        "90": {
+          "native": 2,
+          "ctrl0": 7,
+          "mappo": 1,
+          "pi": 3,
+          "circles": 1
+        }
+      },
+      "native_repeat_noise_vs": 0.0,
+      "margin_threshold_vs": 1e-06,
+      "resolved_non_dominant": {
+        "60": 5,
+        "90": 7
+      },
+      "states": 16,
+      "charged_sim_s": 47010,
+      "main_authorized": false
+    },
+    "own_pid_exists": false
   }
 }
