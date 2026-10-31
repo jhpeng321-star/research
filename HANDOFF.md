@@ -1,8 +1,28 @@
 # S-RB-EVAL handoff
 
+## Current resume: WM2 complete; candidate evaluations already owned
+
+- Original WM2 finalizer completed **160/160 tasks, 20 K8 worlds, 800 arm-futures**.
+  Remote result: `/root/rbeval20261031/FINALIZED.json`; report
+  `/root/rbeval20261031/reports/wm2_complete_1793478613086371110`.
+  Frozen gate: **NOT_QUALIFIED**, diagnostic/pilot only. Standby753102 verifies
+  all report hashes and remains bounded through11:30+08. Original workers exited
+  normally; no inference/finalizer replacement was dispatched on this resume.
+- `ops fetch-reports` retrieved the original report and finalization receipts.
+  Local immutable result verification/publication is the next step.
+- INT's current handoff supersedes the historical A/C prerequisite below:
+  **A2/C2 RUNA-owned, B2 RUNB-owned; FULL-v1/v3/v4 INT-owned**. gpuR B2 workers
+  801887/801888/801889 already live; gpuA has active candidate GPU use. Preserve
+  all claims/runtimes. `ops candidate-status` currently checks historical A/C only;
+  its old failures are not current A2/C2 status.
+- Published future-builder API below is already reconciled; no RUNA hook blocker.
+  Current launch specifications: `E:/agent-work/rb-shared/evalclaims/WM-PHYS-A2.runa.json`,
+  `WM-PHYS-C2.runa.json`, `WM-PHYS-B2.runb.json`. These bind immutable source4015b641.
+  INT's newer FULL sources and existing dispatches are listed in its `HANDOFF.md`.
+
 ## Exact candidate CLI (RUNA/RUNB/INT)
 
-**Current prerequisite:** b0f66943 A/C both exited before rollout on gpuA
+**Historical prerequisite (superseded by A2/B2/FULL):** b0f66943 A/C both exited before rollout on gpuA
 (`policy_native_lanes` missing from its bridge); zero futures produced.
 INT owns the controller port (commit0ec484ab) and NEW smoke/READY publication.
 The following is the preserved original command shape, not a new READY dispatch:
