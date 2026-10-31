@@ -1,0 +1,26 @@
+{
+  "command": "python -B -m pytest -p no:cacheprovider tests/test_c1switch_recovery.py tests/test_c1switch_continuation.py -q",
+  "returncode": 0,
+  "passed": 12,
+  "elapsed_s": 0.78,
+  "warning": "PytestConfigWarning: Unknown config option: cache_dir (cache plugin disabled)",
+  "new_sim_s": 0,
+  "new_gpu_s": 0,
+  "checks": [
+    "whole registered 608-job panel reconstructed, not only started jobs",
+    "actual ledger 227310 equals all closed actual simulation",
+    "10 complete episodes plus 231 complete branches credited once",
+    "7500 partial episode and 3600 partial branch sim-s remain charged",
+    "standard full-rerun recovery projected501960, blocked before dispatch",
+    "BB GPU cap exhausted with12 uncommitted picks",
+    "live owners, missing terminal receipts, duplicate debits, partial results rejected",
+    "existing superseded-debit and incumbent-aware reuse gates retained"
+  ],
+  "sources": {
+    "tools/c1switch/reconcile.py": "66c817370353e240e5f4d248498abe13ba09396b8e260e65b7ae6175fa5f75f1",
+    "tools/c1switch/recovery.py": "f1622719097f4f0b6b5e232c6d53198a2468ea53e55fbce29707a974ff155a70",
+    "tests/test_c1switch_recovery.py": "66a1ffe70f0d7827d992bd411e8722b1e6f4abe89709306209bc0a85053a16a8",
+    "tools/c1switch/evidence/V7_INTERRUPTION_AUDIT.json": "e5b5f1de9461e4b46df225acb26ffd929aba1b66c06391757c6226738c9244c4"
+  },
+  "status": "CPU preflight PASS; recovery BLOCKED, no resume implementation dispatched"
+}

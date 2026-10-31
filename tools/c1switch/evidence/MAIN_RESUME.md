@@ -11,6 +11,12 @@
   SSH error is recorded but not proven to be the initial cause of the panel stop.
 - MAIN23:04 requested same-plan resume, but original BB hard cap is exhausted.
   A new registered budget/protocol decision is required before compute resumes.
+- `python -B -m tools.c1switch.recovery` is a CPU-only preflight using the saved
+  audit. It reconstructs all608registered runs, preserves every partial debit,
+  and writes `V7_RECOVERY_ADMISSION.json` with `dispatch_authorized=false`.
+  Twelve CPU tests PASS (`V7_RECOVERY_CPU.json`). This does not lift old STOPs
+  or establish a new authorized recovery plan. Check fresh receipts before any
+  future implementation. Original frozen v7 scientific sources remain untouched.
 
 ## Historical MAIN20:52 main dispatch
 
