@@ -1,5 +1,50 @@
 # S-COOPFREE — implementation and execution receipt
 
+## Fresh-session recovery: current evidence and blockers
+Resumed clean at `0f9f60c2`; preserved inherited physics, charges and checkpoints.
+Publisher5020 had exited on an uncaught SSH RuntimeError. Both a read-only cpuQ
+status call and an independent10s connection probe returned `Connection closed`.
+Current remote supervisor liveness and discovery completion cannot be verified;
+the generated production snapshot below is historical, not a fresh health check.
+Observer-only fix `32bebb70` classifies explicit SSH outages for continued polling,
+while remote Python/integrity/authentication failures still stop. CPU18/18PASS,
+0skips,0.102s,SUMO0; `OBSERVER_RECOVERY_CPU.json` records the exact command.
+Verified replacement singleton42012/creation2026-11-01T05:26:11 is polling for12h,
+with automatic milestone commits; its first connection failure was recoverable.
+No production launch, simulation replay, process signals or budget change occurred.
+
+### Learning self-check from the latest completed receipts
+- Exactly one corrected fresh update:156windows/24worlds; no six-update trend exists.
+- Executed-change93.59%, issued-change99.36%, safety override84.89%; measured low
+  execution trigger is not met, so no evidence-based scale increase is due yet.
+- D_G mean+90.197/SD3449.764 across156 explorations. Exact HOLD solo subset66:
+  sumD_i mean-65.034; C_G mean+435.331/SD4176.503;33.33% have C_G>0.
+  These are exploration diagnostics, not a learned-policy improvement estimate.
+- Learned-minus-MAPPO J600=-330.547[-1644.045,+936.339],
+  J900=-447.972[-2779.091,+1858.397]vehicle-s; both paired95%CIs include zero.
+- Learned-minus-zero-update-HOLD J600=-156.526[-1211.465,+625.449],
+  J900=-774.415[-2569.353,+556.834]; neither establishes a learned improvement.
+- Frozen COOPBANDIT comparator's published paired results equal MAPPO here; its
+  public partial findings reportedO0 selection throughout. This does not establish
+  superiority over a separately executing cooperative policy.
+- Collisions/teleports have zero paired deltas. Hard-brake deltas vs MAPPO increase:
+  J600+2.500[+0.583,+4.354], J900+4.062[+0.875,+7.146].
+- Discovery receipt and terminal COMPLETE/STOP are not yet published. No claim of
+  rediscovered walls/yields/metering or a novel helpful learned mechanism is supported.
+
+Latest ledger snapshot:1,952,433precharged/1,900,133closedactualsim-s; original2Mcap.
+TRAIN reserved1,649,760/1,650,000 leaves240sim-s. Overall47,567unreserved is not
+a new TRAIN phase authorization; keep the existing phase reservations and charges.
+MAIN03:07 requested+4M for further updates, but REGISTRATION.md contains no approval
+at this resume. Updates3/6/9 and prospective ES/state-focus changes remain blocked.
+Existing u001 proposal remains available to COOPPLAN at
+`tools/coopfree/publications/hold/policy_u001.pt`, SHA256
+`7b6ff3254311b7f0e8af773cdd51dbfdeca16a8660d0f872c1c8212c8c03e9c1`.
+The prior observer verified all1,593 relocated observable tapes in durable storage.
+Recovery receipts: `RESUME_TRANSPORT_BLOCKED.json`, `HOLD_PUBLISHER_42012.json`.
+Shared REGISTRATION.md now records `S-COOPFREE 05:28 FRESH RESUME / OBSERVER RECOVERY`;
+the replacement observer survived three consecutive failed read-only polls.
+
 ## OWNER02:21 learning-check amendment and budget blocker
 Fresh resume verified cpuQ615088/start48394231 and all four nice19 workers;
 the existing singleton publisher15284 was verified and then identity-checked/retired

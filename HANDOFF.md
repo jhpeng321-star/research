@@ -15,6 +15,10 @@ Replacement singleton42012/creation2026-11-01T05:26:11 verified with exact comma
 receipt `tools/coopfree/evidence/HOLD_PUBLISHER_42012.json`. First log records the
 same connection closure as recoverable; it remains observer-only for12h and commits
 new hash-bound milestones. Do not spawn another observer or any production worker.
+Three consecutive recoverable polls were observed after restart. Shared registry
+line `S-COOPFREE 05:28 FRESH RESUME / OBSERVER RECOVERY` records the checkpoint,
+paired DEV uncertainty, braking increase and budget blocker. `COOPFREE.md` now has
+a current evidence summary; discovery remains unverified pending SSH recovery.
 
 ## OWNER02:21 fresh resume
 Production615088/start48394231 and workers615093-615096 verified live/nice19;
