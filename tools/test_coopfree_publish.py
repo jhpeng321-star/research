@@ -64,6 +64,26 @@ class PublicationTests(unittest.TestCase):
         with patch.object(p,'remote',side_effect=fake_remote):
             self.assertEqual(p.collect(),{})
 
+    def test_report_does_not_call_positive_synergy_a_helpful_group(self):
+        credits={h:dict(D_G=-10.,sum_D_i=-30.,C_G=20.) for h in ('120','300','600')}
+        report=dict(update=1,limitations='descriptive subset',groups=[dict(joint_id='g',credit=credits)],
+                    analysis=dict(events=[dict(joint_id='g',events=[dict(behaviour='yield')])],
+                                  clusters=dict(status='insufficient groups',k=None),note='Not causal proof.'))
+        text='\n'.join(p.discovery_text(report))
+        self.assertIn('C_G>0 1/1, D_G>0 and C_G>0 0/1',text)
+        self.assertIn('Events in groups with positive D_G and C_G at600s: none',text)
+
+    def test_paired_dev_sign_and_uncertainty_are_reported(self):
+        metrics={}
+        for h in ('600','900'):
+            for name in ('team_delay_vs','collisions','teleports','ttc_below_3_vs','hard_brake'):
+                metrics[h+'_'+name]=dict(mean=0.,ci95=[-1.,1.])
+        metrics['600_team_delay_vs']=dict(mean=-2.,ci95=[-3.,-1.])
+        report=dict(update=1,worlds=24,learned_minus_comparator=dict(mappo=metrics))
+        text='\n'.join(p.dev_text(report))
+        self.assertIn('mappo J600: -2.000 [-3.000, -1.000], supported reduction',text)
+        self.assertIn('mappo J900: 0.000 [-1.000, 1.000], CI includes zero',text)
+
 
 if __name__=='__main__':
     unittest.main()

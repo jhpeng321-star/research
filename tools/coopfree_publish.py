@@ -22,6 +22,10 @@ BEGIN = '<!-- COOPFREE PUBLICATIONS BEGIN -->'
 END = '<!-- COOPFREE PUBLICATIONS END -->'
 
 
+class DocumentationBusy(Exception):
+    """Preserve concurrent owner edits; retry only the read-only publication later."""
+
+
 def sha(data):
     return hashlib.sha256(data).hexdigest()
 
@@ -140,6 +144,59 @@ def manifest():
                 host='cpuQ',root=ROOT,files=files)
 
 
+def dev_text(report):
+    lines=['### Paired dev u%03d (%s worlds)' % (report['update'],report['worlds']),
+           'Learned minus comparator; total team delay in vehicle-seconds (negative is better).',
+           '95% CIs resample paired worlds; the fixed dev panel is not a final evaluation panel.']
+    for name,metrics in report['learned_minus_comparator'].items():
+        for horizon in ('600','900'):
+            value=metrics[horizon+'_team_delay_vs']
+            lo,hi=value['ci95']
+            conclusion='supported reduction' if hi<0 else 'supported increase' if lo>0 else 'CI includes zero'
+            lines.append('- %s J%s: %.3f [%.3f, %.3f], %s.' %
+                         (name,horizon,value['mean'],lo,hi,conclusion))
+            safety=[]
+            for key in ('collisions','teleports','ttc_below_3_vs','hard_brake'):
+                item=metrics[horizon+'_'+key]
+                safety.append('%s %.3f [%.3f, %.3f]' % (key,item['mean'],*item['ci95']))
+            lines.append('  Paired safety deltas: '+ '; '.join(safety)+'.')
+    return lines
+
+
+def discovery_text(report):
+    from collections import Counter
+    groups=report['groups']
+    lines=['### Learned-group discovery u%03d (%d groups)' % (report['update'],len(groups)),
+           report['limitations']+'.']
+    if not groups:
+        return lines+['No eligible whole group was admitted; no mechanism conclusion.']
+    for horizon in ('120','300','600'):
+        means={k:sum(g['credit'][horizon][k] for g in groups)/len(groups)
+               for k in ('D_G','sum_D_i','C_G')}
+        positive=sum(g['credit'][horizon]['C_G']>0 for g in groups)
+        helpful=sum(g['credit'][horizon]['C_G']>0 and g['credit'][horizon]['D_G']>0 for g in groups)
+        lines.append('- %ss: mean D_G %.3f, sum D_i %.3f, C_G %.3f vehicle-s; '
+                     'C_G>0 %d/%d, D_G>0 and C_G>0 %d/%d.' %
+                     (horizon,means['D_G'],means['sum_D_i'],means['C_G'],positive,len(groups),helpful,len(groups)))
+    analysis=report['analysis']
+    counts=Counter(e.get('behaviour','unspecified') for frame in analysis['events'] for e in frame['events'])
+    lines.append('Existing COOPBEHAV detector event counts: '+
+                 (', '.join('%s=%s'%item for item in sorted(counts.items())) or 'none')+'.')
+    helpful_ids={g['joint_id'] for g in groups if g['credit']['600']['D_G']>0 and g['credit']['600']['C_G']>0}
+    supported=Counter(e.get('behaviour','unspecified') for frame in analysis['events']
+                      if frame['joint_id'] in helpful_ids for e in frame['events'])
+    lines.append('Events in groups with positive D_G and C_G at600s: '+
+                 (', '.join('%s=%s'%item for item in sorted(supported.items())) or 'none')+'.')
+    cluster=analysis['clusters']
+    lines.append('Clustering: '+cluster['status']+
+                 ('; k=%s, silhouette=%.4f'%(cluster['k'],cluster['silhouette']) if cluster.get('k') else '')+'.')
+    unknown=sum(not frame['events'] for frame in analysis['events'])
+    lines.append('%d/%d group tapes have no named detector event; absence of a known label does not '
+                 'establish a new useful mechanism.'%(unknown,len(groups)))
+    lines.append(analysis['note'])
+    return lines
+
+
 def describe(snapshot):
     lines = ['## Automatically published proposal checkpoints',
              'Consumer guide: `docs/paper_results/COOPFREE_PROPOSALS.md`.',
@@ -155,10 +212,17 @@ def describe(snapshot):
                   (report['windows'],report['worlds'],report['executed_change_share'],report['safety_override_share']),
                   '  mean D_G %.3f, sum D_i %.3f, C_G %.3f vehicle-s; positive-C_G share %.4f.' %
                   (report['D_G']['mean'],report['sum_D_i']['mean'],report['C_G']['mean'],report['positive_C_G_share'])]
+        lines.append('  Issued share %.4f; executed/issued %s; sigma %s -> %s.' %
+                     (report['issued_change_share'],report['executed_vs_issued_share'],
+                      report['sigma_used'],report['sigma_next']))
+        lines.append('  D_G/sumD_i/C_G min/Q1/median/Q3/max: '+
+                     '; '.join(k+'='+str(report[k]['quantiles']) for k in ('D_G','sum_D_i','C_G'))+'.')
     for p in sorted(PUBLIC.glob('DEV_*.json')):
         lines.append('- Paired dev receipt: `tools/coopfree/publications/' + p.name + '`.')
+        lines.extend(dev_text(json.loads(p.read_text())))
     for p in sorted(PUBLIC.glob('DISCOVERY_*.json')):
         lines.append('- Learned-group C_G/detectors/clustering: `tools/coopfree/publications/' + p.name + '`.')
+        lines.extend(discovery_text(json.loads(p.read_text())))
     if (PUBLIC / 'STOP.json').exists():
         lines.append('**Durable STOP observed.** Inspect published `STOP.json`; no automatic simulation restart.')
     elif (PUBLIC / 'COMPLETE.json').exists():
@@ -191,7 +255,7 @@ def once(commit=False):
     # Do not edit/stage user work in the two shared documentation files.
     for name in ('HANDOFF.md','docs/paper_results/COOPFREE.md'):
         if git('status','--porcelain','--',name).stdout.strip():
-            raise ValueError('uncommitted documentation; preserve and reconcile: ' + name)
+            raise DocumentationBusy('uncommitted documentation; preserve and retry: ' + name)
     if not decoded:
         return snapshot, False
     for name,data in decoded.items():
@@ -234,7 +298,8 @@ def main():
     gitdir = Path(git('rev-parse','--absolute-git-dir').stdout.strip())
     if args.spawn:
         assert gitdir.is_dir()
-        with (gitdir/'coopfree-publisher.log').open('x',encoding='utf-8') as log:
+        logpath=gitdir/('coopfree-publisher-'+str(time.time_ns())+'.log')
+        with logpath.open('x',encoding='utf-8') as log:
             command=[sys.executable,'-B','-u','-m','tools.coopfree_publish','--watch',
                      '--interval',str(args.interval),'--hours',str(args.hours)]
             if args.commit:
@@ -244,9 +309,9 @@ def main():
             process=subprocess.Popen(command,cwd=LOCAL,stdin=subprocess.DEVNULL,stdout=log,
                                      stderr=subprocess.STDOUT,**options)
         receipt=dict(pid=process.pid,unix=time.time(),interval=args.interval,hours=args.hours,
-                     log=str(gitdir/'coopfree-publisher.log'),simulations_dispatched=0,
+                     log=str(logpath),simulations_dispatched=0,
                      commits=args.commit,command=command)
-        immutable(LOCAL/'tools/coopfree/evidence/PUBLISHER_DISPATCH_1.json',
+        immutable(LOCAL/f'tools/coopfree/evidence/PUBLISHER_DISPATCH_{process.pid}.json',
                   (json.dumps(receipt,indent=2)+'\n').encode())
         print(json.dumps(receipt),flush=True)
         return
@@ -262,6 +327,12 @@ def main():
         while True:
             try:
                 snapshot,changed = once(args.commit)
+            except DocumentationBusy as error:
+                if not args.watch or time.monotonic()>=deadline:
+                    raise
+                print(json.dumps(dict(documentation_busy=str(error),simulations_dispatched=0)),flush=True)
+                time.sleep(args.interval)
+                continue
             except (subprocess.TimeoutExpired,OSError,RuntimeError) as error:
                 # SSH transport retries only. Source/hash/assertion failures remain terminal.
                 transient = isinstance(error,(subprocess.TimeoutExpired,ConnectionError)) or \

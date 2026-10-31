@@ -45,7 +45,10 @@ checkpoint: u1 requires all156 windows/all member solos before its optimizer ste
 Never present the zero-initialized proposal distribution as a learned checkpoint.
 The singleton read-only publisher polls every120s for12h; after verified receipts appear,
 it updates this handoff/report and commits only its publication/documentation paths.
-Its own dispatch/log receipt is `tools/coopfree/evidence/PUBLISHER_DISPATCH_1.json`.
+Its dispatch/log receipt is `tools/coopfree/evidence/PUBLISHER_DISPATCH_<PID>.json`.
+Initial publisher8556 was stopped by exact owned PID after its successful first
+publication to add complete paired-dev/safety/discovery reporting; its receipt/log
+are retained. This observer-only maintenance does not pause/restart any SUMO worker.
 
 <!-- COOPFREE PUBLICATIONS BEGIN -->
 ## Automatically published proposal checkpoints
