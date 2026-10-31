@@ -5,7 +5,7 @@ import math
 import pytest
 import torch
 
-from tools.sumoes.config import CELL_CYCLE, ConfigError, SumoEsConfig
+from tools.sumoes.config import CELL_CYCLE, PANEL_CELLS, ConfigError, SumoEsConfig
 from tools.sumoes.driver import (AcceptAllScreener, BudgetExceeded, BudgetLedger,
                                  MechanicalFailure, SumoEsDriver, SumoRuntimeEvaluator)
 from tools.sumoes.es import (EsState, HeadAdam, estimate, head_dimension, head_vector,
@@ -24,10 +24,10 @@ def state_dict_for(dim=136, dtype=torch.float64):
 def test_config_defaults_off_and_frozen_budget_identity():
     shipped = SumoEsConfig.load("configs/c4_sumoes_design.toml")
     assert shipped.enabled is False
-    assert shipped.planned_episodes() == 4 + 16 * (2 * 3 * 3 + 4) == 356
-    assert shipped.planned_sim_s() == 356 * 900 == 320_400
-    assert 200_000 <= shipped.planned_sim_s() <= 400_000
-    assert shipped.cap_sim_s - shipped.planned_sim_s() == 9_600
+    assert shipped.planned_episodes() == 8 + 16 * (2 * 3 * 6 + 8) == 712
+    assert shipped.planned_sim_s() == 712 * 900 == 640_800
+    assert shipped.cap_sim_s == 650_000
+    assert shipped.cap_sim_s - shipped.planned_sim_s() == 9_200
 
 
 def test_config_refuses_bad_geometry_and_blocks():
@@ -43,23 +43,28 @@ def test_config_refuses_bad_geometry_and_blocks():
         with pytest.raises(ConfigError):
             SumoEsConfig(enabled=True, seed_block_first=lo, seed_block_last=hi)
     with pytest.raises(ConfigError, match="WMDATA"):
-        SumoEsConfig(enabled=True, seed_block_first=969_400, seed_block_last=969_451)
+        SumoEsConfig(enabled=True, seed_block_first=969_400, seed_block_last=969_503)
     with pytest.raises(ConfigError, match="exceeds cap"):
-        SumoEsConfig(enabled=True, cap_sim_s=320_000)
+        SumoEsConfig(enabled=True, cap_sim_s=640_000)
 
 
 def test_seed_schedule_panel_disjoint_and_cell_cycle():
     cfg = CONFIG
-    assert cfg.gradient_seeds(0) == (969_440, 969_441, 969_442)
-    assert cfg.gradient_seeds(15) == (969_485, 969_486, 969_487)
-    assert cfg.panel_seeds() == (969_488, 969_489, 969_490, 969_491)
+    assert cfg.gradient_seeds(0) == tuple(range(969_440, 969_446))
+    assert cfg.gradient_seeds(15) == tuple(range(969_530, 969_536))
+    assert cfg.panel_seeds() == tuple(range(969_536, 969_544))
     assert not set(cfg.gradient_seeds(15)) & set(cfg.panel_seeds())
     with pytest.raises(ConfigError):
         cfg.gradient_seeds(16)
     assert cfg.cell_for(969_440) == CELL_CYCLE[0]
-    assert cfg.cell_for(969_451) == CELL_CYCLE[11 % len(CELL_CYCLE)]
-    assert cfg.cell_for(969_452) == CELL_CYCLE[0]
-    assert len({cfg.cell_for(s) for s in cfg.all_seeds()}) == 12
+    assert cfg.cell_for(969_441) == CELL_CYCLE[2]
+    assert cfg.cell_for(969_446) == CELL_CYCLE[1]
+    for update in range(16):
+        cells = [cfg.cell_for(s) for s in cfg.gradient_seeds(update)]
+        assert {p for p, _ in cells} == {0.05, 0.1, 0.2, 0.4}
+        assert {d for _, d in cells} == {1900, 2400, 2700}
+    assert len({cfg.cell_for(s) for s in cfg.gradient_seeds(0) + cfg.gradient_seeds(1)}) == 12
+    assert [cfg.cell_for(s) for s in cfg.panel_seeds()] == list(PANEL_CELLS)
 
 
 def test_head_vector_roundtrip_137_and_shape_guards():
@@ -139,7 +144,7 @@ def test_full_stub_run_budget_and_progress():
     receipts = summary["receipts"]
     assert receipts[0]["kind"] == "ctrl0_panel_baseline"
     assert len(receipts) == 4
-    episodes = 4 + 3 * (2 * 3 * 3 + 4)
+    episodes = 8 + 3 * (2 * 3 * 6 + 8)
     assert driver.ledger.jobs == episodes
     assert summary["budget"]["charged_sim_s"] == episodes * 900
     assert summary["budget"]["charged_sim_s"] <= CONFIG.cap_sim_s
@@ -184,9 +189,9 @@ def test_rejected_update_rolls_back_bitwise_and_still_charges():
     assert state.to_dict()["theta"] == snapshot["theta"]
     assert state.adam.step_count == 0 and state.adam.m is None
     assert state.update_count == 1
-    assert receipt["budget"]["charged_sim_s"] == (4 + 2 * 3 * 3 + 4) * 900
+    assert receipt["budget"]["charged_sim_s"] == (8 + 2 * 3 * 6 + 8) * 900
     assert receipt["budget"]["charged_sim_s"] == (
-        baseline["budget"]["charged_sim_s"] + (2 * 3 * 3 + 4) * 900)
+        baseline["budget"]["charged_sim_s"] + (2 * 3 * 6 + 8) * 900)
 
 
 def test_budget_ledger_cap_and_actual_clamping():
@@ -264,7 +269,7 @@ def test_screening_selects_top_directions_and_zero_screen_is_noop():
     assert receipt["screen"]["kept"] == []
     assert receipt["no_step"] is True and receipt["accepted"] is None
     assert torch.equal(state2.theta, theta_before)
-    assert receipt["budget"]["jobs"] == 4
+    assert receipt["budget"]["jobs"] == 8
 
 
 def test_default_off_and_sumo_evaluator_refuse(tmp_path):
@@ -274,12 +279,12 @@ def test_default_off_and_sumo_evaluator_refuse(tmp_path):
         SumoRuntimeEvaluator()
     enabled = tmp_path / "enabled.toml"
     enabled.write_text("[sumoes]\nenabled = true\nmax_updates = 2\n"
-                       "seed_block_first = 969440\nseed_block_last = 969449\n",
+                       "seed_block_first = 969440\nseed_block_last = 969459\n",
                        encoding="utf-8")
     from tools.sumoes.driver import main
     out = tmp_path / "out"
     assert main(["--config", str(enabled), "--evaluator", "stub",
                  "--out", str(out)]) == 0
     payload = json.loads((out / "SUMOES_RECEIPTS.json").read_text())
-    assert payload["budget"]["charged_sim_s"] == (4 + 2 * (2 * 3 * 3 + 4)) * 900
+    assert payload["budget"]["charged_sim_s"] == (8 + 2 * (2 * 3 * 6 + 8)) * 900
     assert len(payload["receipts"]) == 3

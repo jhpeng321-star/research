@@ -16,6 +16,8 @@ PROHIBITED_SEED_RANGES = ((964_000, 964_199), (962_000, 962_199), (977_000, 977_
 PENETRATIONS = (0.05, 0.1, 0.2, 0.4)
 DEMANDS = (1900, 2400, 2700)
 CELL_CYCLE = tuple((p, d) for p in PENETRATIONS for d in DEMANDS)
+# Variant (b) panel: 4 penetrations x the two demand corners (as the S-WMDATA corner cells).
+PANEL_CELLS = tuple((p, d) for p in PENETRATIONS for d in (1900, 2700))
 
 
 class ConfigError(ValueError):
@@ -29,8 +31,8 @@ class SumoEsConfig:
     control_s: int = 600
     episode_charge_sim_s: int = 900
     pairs_per_update: int = 3
-    gradient_worlds_per_update: int = 3
-    panel_worlds: int = 4
+    gradient_worlds_per_update: int = 6
+    panel_worlds: int = 8
     wm_screen_directions: int = 8
     wm_screen_horizon_s: int = 60
     wm_screen_starts: int = 8
@@ -42,9 +44,9 @@ class SumoEsConfig:
     adam_beta2: float = 0.999
     adam_eps: float = 1e-8
     max_updates: int = 16
-    cap_sim_s: int = 330_000
+    cap_sim_s: int = 650_000
     seed_block_first: int = 969_440
-    seed_block_last: int = 969_491
+    seed_block_last: int = 969_543
     direction_seed: int = 7_000_031
 
     def __post_init__(self) -> None:
@@ -94,8 +96,17 @@ class SumoEsConfig:
         return self.all_seeds()[-self.panel_worlds:]
 
     def cell_for(self, seed: int) -> tuple[float, int]:
+        """Variant (b) mapping. Gradient world j of update u -> CELL_CYCLE[(2j + u%2) % 12]
+        (W=6: every update spans all 4 penetrations and all 3 demands; two consecutive
+        updates cover all 12 cells). Panel world i -> PANEL_CELLS[i % 8]."""
+        if seed not in self.all_seeds():
+            raise ConfigError(f"seed {seed} outside the registered block")
+        panel = self.panel_seeds()
+        if seed in panel:
+            return PANEL_CELLS[panel.index(seed) % len(PANEL_CELLS)]
         position = seed - self.seed_block_first
-        return CELL_CYCLE[position % len(CELL_CYCLE)]
+        update, world = divmod(position, self.gradient_worlds_per_update)
+        return CELL_CYCLE[(2 * world + update % 2) % len(CELL_CYCLE)]
 
     def episodes_per_update(self) -> int:
         return 2 * self.pairs_per_update * self.gradient_worlds_per_update + self.panel_worlds
