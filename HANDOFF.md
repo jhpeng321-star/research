@@ -6,7 +6,9 @@ Fresh01:30 resume at876b2433: both owned jobs exited; LANE source still811cd7e8.
 Next: direction-aware LC decision likelihood; see receipts/RESUME_0128.md.
 `tools/rbfit/lane_directional.py` adds source-lane categorical decision likelihood
 and prefix-calibrated informative-evidence shrinkage;5new CPU tests PASS.
-Candidate pending smoke/full FIT scoring; no LC adoption change.
+Smoke969400 PASS (9529fit/9779later intervals); no LC adoption change.
+Full32-world `lane_directional_v3` running cpuQ557463 (01:37),2nice19CPU workers,
+frozen estimator9f574a5c / LC811cd7e8; create-once receipts preserved.
 New outputs `artifacts/rbfit/shrinkage_v1` and `lane_v2`; **22 CPU tests PASS**.
 Direct UNC f8b6faea reader verified on ALL3,130 exported drivers and16
 paired/replayed planned futures. `receipts/ADDENDUM_VERIFIED_v2.json` binds SHA;
