@@ -11,7 +11,7 @@ from sklearn.linear_model import Ridge
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-from .schema import GROUP_OPTIONS
+from .schema import OPTIONS
 
 
 def make_gbt():
@@ -33,7 +33,7 @@ def fit_option_models(kind, X, targets, availability):
     availability: {option: bool array} marking where the option may be chosen.
     """
     models = {}
-    for option in GROUP_OPTIONS:
+    for option in OPTIONS:
         mask = np.asarray(availability[option], dtype=bool)
         if not mask.any():
             models[option] = None

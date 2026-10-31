@@ -1,18 +1,19 @@
-"""Load and validate an EXAM v1 labelled dataset (see schema.py and SCHEMA.md).
+"""Load and validate an EXAM v1 labelled dataset (executor export format).
 
-Every filesystem access goes through schema.checked(); provenance SHAs are
-verified; the feature matrix is built strictly from the recorded observable
-features (metadata identifiers are rejected as features).
+Every filesystem access goes through schema.checked(); the export MANIFEST
+sha256s are verified; dev worlds 981080..981091 are rejected (live-test only).
+Availability comes from labels.csv (per option); O0 is always available.
+Partial (completion-order) exports load fine and are flagged exploratory.
 """
 from dataclasses import dataclass, field
 import json
-import math
 
 import numpy as np
 import pandas as pd
 
-from .schema import (CREDIT, CREDIT_REQUIRED, FORBIDDEN_FEATURES, GROUP_OPTIONS, HORIZONS, LABELS,
-                     LABEL_REQUIRED, OPTIONS, PROVENANCE, SPLITS, STATES, STATE_REQUIRED, checked, sha)
+from .schema import (CREDIT, CREDIT_REQUIRED, DEV_WORLDS, FORBIDDEN_FEATURES, FULL_PANEL_STATES,
+                     HORIZONS, LABEL_COLUMNS, LABELS, MANIFEST, OPTIONS, POLICY_HORIZON, PROVENANCE,
+                     README, STATES, STATE_REQUIRED, WORLDS, ALL_OPTIONS, checked, sha, truthy)
 
 
 @dataclass
@@ -21,9 +22,9 @@ class Dataset:
     features: pd.DataFrame
     labels: pd.DataFrame
     credit: pd.DataFrame
-    fold_of: dict
     feature_names: list
     provenance: dict
+    worlds_info: dict
     _cache: dict = field(default_factory=dict)
 
     def feature_matrix(self, state_ids):
@@ -33,25 +34,39 @@ class Dataset:
         return self._cache[key]
 
     def world_of(self, state_ids):
-        return self.states.set_index("state_id").loc[list(state_ids), "world"].to_numpy()
+        return self.states.set_index("state_id").loc[list(state_ids), "world_id"].to_numpy()
 
     def available(self, state_id):
-        return tuple(o for o in GROUP_OPTIONS if bool(self.states.set_index("state_id").loc[state_id, o]))
-
-    def labels_for(self, state_id, horizon):
-        key = ("lab", state_id, horizon)
+        key = ("avail", state_id)
         if key not in self._cache:
-            sub = self.labels[(self.labels.state_id == state_id) & (self.labels.horizon == horizon)]
+            row = self.states.set_index("state_id").loc[state_id]
+            self._cache[key] = tuple(o for o in OPTIONS if bool(row[o]))
+        return self._cache[key]
+
+    def availability_map(self, state_ids):
+        rows = self.states.set_index("state_id").loc[list(state_ids)]
+        return {o: rows[o].to_numpy(dtype=bool) for o in OPTIONS}
+
+    def labels_for(self, state_id, horizon_s):
+        key = ("lab", state_id, horizon_s)
+        if key not in self._cache:
+            sub = self.labels[(self.labels.state_id == state_id) & (self.labels.horizon_s == horizon_s)]
             self._cache[key] = dict(zip(sub.option, sub.D))
         return self._cache[key]
 
+    @property
+    def partial(self):
+        if self.provenance.get("partial"):
+            return True
+        return len(self.states) < FULL_PANEL_STATES
 
-def _verify_provenance(data_dir):
-    manifest = json.loads(checked(data_dir / PROVENANCE).read_text(encoding="utf-8"))
-    for name, digest in manifest["files"].items():
+
+def _verify_manifest(data_dir):
+    manifest = json.loads(checked(data_dir / MANIFEST).read_text(encoding="utf-8"))
+    for name, digest in manifest.items():
         path = checked(data_dir / name)
         if not path.exists() or sha(path) != digest:
-            raise ValueError("provenance mismatch: " + name)
+            raise ValueError("MANIFEST mismatch: " + name)
     return manifest
 
 
@@ -77,39 +92,53 @@ def _states(data_dir):
         if bad:
             raise ValueError("metadata leaked into features " + str(bad) + " for " + r["state_id"])
         for k, v in feats.items():
-            if not isinstance(v, (int, float)) or isinstance(v, bool) or not math.isfinite(v):
+            if isinstance(v, bool) or not isinstance(v, (int, float)) or not np.isfinite(v):
                 raise ValueError("non-finite feature " + k + " for " + r["state_id"])
-        for o in ("O1", "O2", "O3", "O4"):
-            if o not in r["available"]:
-                raise ValueError("missing availability for " + o + " in " + r["state_id"])
+        if int(r["world_id"]) in DEV_WORLDS:
+            raise ValueError("live dev world in fit data: " + str(r["world_id"]))
     return pd.DataFrame(rows)
 
 
 def _labels(data_dir, states):
     labels = pd.read_csv(checked(data_dir / LABELS))
-    missing = [c for c in LABEL_REQUIRED if c not in labels.columns]
+    missing = [c for c in LABEL_COLUMNS if c not in labels.columns]
     if missing:
         raise ValueError("labels.csv missing columns " + str(missing))
-    if set(labels.horizon) != set(HORIZONS):
+    if set(labels.horizon_s) != set(HORIZONS):
         raise ValueError("labels horizons must be exactly " + repr(HORIZONS))
-    bad_option = set(labels.option) - set(OPTIONS)
+    bad_option = set(labels.option) - set(ALL_OPTIONS)
     if bad_option:
         raise ValueError("unknown options in labels: " + repr(sorted(bad_option)))
     if not np.isfinite(labels.D).all():
         raise ValueError("non-finite D labels")
-    avail = {r.state_id: {o for o in GROUP_OPTIONS if r.available.get(o)} for r in states.itertuples()}
-    labelled = labels.groupby("state_id").option.apply(set).to_dict()
-    for sid, avail_opts in avail.items():
-        have = {o for o in labelled.get(sid, set()) if o != "O0"}
-        if have - avail_opts:
-            raise ValueError("labels for unavailable options in " + sid + ": " + repr(sorted(have - avail_opts)))
-        for o in avail_opts:
-            got = labels[(labels.state_id == sid) & (labels.option == o)].horizon
-            if set(got) != set(HORIZONS):
-                raise ValueError("incomplete horizons for " + sid + "/" + o)
-    key = ["state_id", "option", "horizon"]
+    zero = labels[labels.option == "O0"]
+    if not (zero.D.abs() < 1e-9).all():
+        raise ValueError("O0 rows must carry D=0")
+    key = ["state_id", "option", "horizon_s"]
     if labels.duplicated(key).any():
         raise ValueError("duplicate state/option/horizon rows")
+    raw_world, raw_t0 = states.world_id.copy(), states.t0.copy()
+    wide = labels[labels.horizon_s == POLICY_HORIZON].pivot(index="state_id", columns="option",
+                                                            values="available").apply(lambda c: c.map(truthy))
+    wide = wide.reindex(states.state_id.to_numpy())
+    if wide.isna().any().any():
+        raise ValueError("missing option availability rows for some states")
+    for o in OPTIONS:
+        states[o] = wide[o].to_numpy(dtype=bool)
+    meta = labels[(labels.horizon_s == POLICY_HORIZON) & (labels.option == "O0")].set_index("state_id")
+    for col in ("world_id", "cell", "t0", "setting"):
+        states[col] = states.state_id.map(meta[col])
+    if not (states.world_id == states.apply(lambda r: int(str(r.state_id).split("_")[0][1:]), axis=1)).all():
+        raise ValueError("state_id/world_id inconsistent")
+    if not ((states.world_id == raw_world) & np.isclose(states.t0, raw_t0)).all():
+        raise ValueError("labels metadata contradict states.jsonl")
+    if not np.isclose(states.t0, states.state_id.str.split("_t").str[1].astype(float)).all():
+        raise ValueError("state_id/t0 inconsistent")
+    for r in states.itertuples():
+        for o in OPTIONS:
+            if not r.__getattribute__(o) and not np.isclose(
+                    labels[(labels.state_id == r.state_id) & (labels.option == o)].D.abs().max(), 0.0):
+                raise ValueError("unavailable option with non-zero D: " + r.state_id + "/" + o)
     return labels
 
 
@@ -123,38 +152,30 @@ def _credit(data_dir):
     return credit
 
 
-def _splits(data_dir, states):
-    raw = json.loads(checked(data_dir / SPLITS).read_text(encoding="utf-8"))
-    fold_of = {str(w): int(f) for w, f in raw["fold_of"].items()}
-    worlds = set(states.world.astype(str))
-    if set(fold_of) != worlds:
-        raise ValueError("splits worlds do not match states worlds")
-    k = int(raw.get("folds", max(fold_of.values()) + 1))
-    if k < 2:
-        raise ValueError("need >= 2 folds")
-    return fold_of
-
-
-def load(data_dir, verify_provenance=True):
-    """Read and validate a complete EXAM v1 dataset directory."""
+def load(data_dir, verify_manifest=True):
+    """Read and validate a complete EXAM v1 export directory."""
     data_dir = checked(data_dir)
     if not data_dir.is_dir():
         raise ValueError("not a directory: " + str(data_dir))
-    provenance = _verify_provenance(data_dir) if verify_provenance else {}
+    manifest = _verify_manifest(data_dir) if verify_manifest else {}
+    checked(data_dir / README)
+    provenance = json.loads(checked(data_dir / PROVENANCE).read_text(encoding="utf-8"))
+    worlds_info = json.loads(checked(data_dir / WORLDS).read_text(encoding="utf-8"))
     states = _states(data_dir)
+    seeds = {int(w["world"]["seed"]) for w in worlds_info["worlds"]}
+    if set(states.world_id.astype(int)) != seeds:
+        raise ValueError("states.jsonl worlds do not match worlds.json selection")
     labels = _labels(data_dir, states)
     credit = _credit(data_dir)
-    fold_of = _splits(data_dir, states)
     feature_names = sorted(states.iloc[0]["features"])
-    if not all(sorted(r["features"]) == feature_names for r in states.to_dict("records")):
+    records = states.to_dict("records")
+    if not all(sorted(r["features"]) == feature_names for r in records):
         raise ValueError("inconsistent feature keys across states")
-    features = pd.DataFrame([r["features"] for r in states.to_dict("records")])
+    features = pd.DataFrame([r["features"] for r in records])
     features.index = states.state_id.to_numpy()
     features = features[feature_names]
     if not np.isfinite(features.to_numpy(dtype=float)).all():
         raise ValueError("non-finite feature values")
-    for o in GROUP_OPTIONS:
-        if o not in states.columns:
-            states[o] = states["available"].apply(lambda a: bool(a.get(o)))
-    return Dataset(states=states, features=features, labels=labels, credit=credit, fold_of=fold_of,
-                   feature_names=feature_names, provenance=provenance)
+    return Dataset(states=states, features=features, labels=labels, credit=credit,
+                   feature_names=feature_names, provenance=provenance, worlds_info=worlds_info,
+                   _cache={"manifest": manifest})
