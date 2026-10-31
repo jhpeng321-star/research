@@ -3,12 +3,14 @@
 Branch `c4/rb-lane`, base `f0db3c82`. **Current engineering source80541278**;
 scored decision source52d2df5c, decision-equivalent message completion certified.
 All prior work retained. **Keep-right precision is NOT solved; no distributional
-qualification. No owned jobs/watchers remain.** Morning report:
+qualification. Prior inference jobs exited; publication-only observer active.** Morning report:
 `docs/paper_results/RB_LANE_20261101.md`; full iteration/receipts diary preserved.
 
 <!-- LANE-FIT-PRECISION:BEGIN -->
-05:20 continuation: publication-only observer prepared through09:00; source80541278.
-Consumes already-running FIT results, reports precision AND recall, no new fitting/inference.
+05:21:26 publication-only observer RUNNING: own localPID3316 through09:00; source80541278.
+Consumes already-running FIT results, reports precision AND recall, commits each new summary.
+Dispatch `FIT_PRECISION_FOLLOWUP_0520_DISPATCH.json`; runtime STATUS/log under
+`E:/Temp/opencode/rblane-fit-precision-20261101-0520`. No new fitting/inference.
 <!-- LANE-FIT-PRECISION:END -->
 
 ## Integration contract

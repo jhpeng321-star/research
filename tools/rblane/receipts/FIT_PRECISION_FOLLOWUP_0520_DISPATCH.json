@@ -1,0 +1,23 @@
+{
+  "status": "DISPATCHED",
+  "started_at": "2026-11-01T05:21:26.661850+08:00",
+  "until": "2026-11-01T09:00:00+08:00",
+  "runtime": "E:\\Temp\\opencode\\rblane-fit-precision-20261101-0520",
+  "root": "E:\\agent-work\\c4-rb-lane",
+  "parent_commit": "6f4ebdc5790dd9253ddfaefd8251606b2f79e4f4",
+  "consume_source_sha256": "7c26bee03b56044663db5577a3e366e5a7474235cd93df768992a0dcd348a19c",
+  "initially_seen_verified_sha256": [
+    "9895115ebdffe17f9d2e463e9528b51b0ccd4a76b6562b35cc8673802d8142da"
+  ],
+  "scope": "only new completed FIT publication arithmetic; no model/fitter/SUMO/GPU/remote dispatch",
+  "pid": 3316,
+  "command": [
+    "C:\\Users\\jpeng\\AppData\\Local\\Programs\\Python\\Python313\\python.exe",
+    "-B",
+    "-m",
+    "tools.rblane.watch_fit_precision",
+    "run",
+    "--until",
+    "2026-11-01T09:00:00+08:00"
+  ]
+}

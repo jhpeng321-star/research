@@ -556,3 +556,10 @@ fresh sessions inspect the existing dispatch/status and never duplicate it.
 Six CPU observer integrity tests PASS0.45s (CPU_PUBLICATION_FOLLOWUP.xml): exact
 publication hash, explicit directory scope, unrelated-work veto, marked-block
 preservation, expired-window no-launch and duplicate-dispatch no-launch.
+
+Observer dispatched ONCE05:21:26: own localPID3316, exact CIM creation
+2026-11-01T05:21:26.7754710+08:00 and expected python313/module/deadline command
+verified. Local total CPU16.35%; one-thread/CUDAhidden environment, no remote
+resources requested. Initial STATUS=RUNNING; it pauses on the uncommitted dispatch
+receipt until that step is committed. Dispatch/LIVE receipts and runtime path
+are durable; no inference/fitter/model dispatches or process signals.
