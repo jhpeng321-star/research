@@ -58,6 +58,44 @@ to gpuA `quartet_candidate/` after COMPLETE.json; then
 .../train --out .../verdict --execute --device cuda`. C1 stays BLOCKED until the
 unseen-PI/unseen-wall cohort + lineage runner are staged (fail-closed by design).
 
+## MAIN ADDENDUM 12:45 sharded dispatch (prepared 12:48-13:00, git b7742a11)
+Panel A is now shardable WITHOUT touching the frozen measurement: verdict_panels
+.validation gained (backward-compatible, verdict.py call site unchanged) optional
+`groups=` subset + immutable per-group A_{name}_{i:03d}.json files carrying an
+exact candidate binding (fail-closed reuse on mismatch); assembly ALWAYS re-reads
+the per-group files, so the one-command verdict later reuses exactly the sharded
+values (same score.score_batch path, per-call CRN; determinism proven r1==r0 and
+gate-(c) cross-device group checks). New CLI tools/wmfixmerge/verdict_shard.py
+(NOT in the producer closure; verdict_panels.py digest changes are recorded in
+receipts; B/C1 producer files untouched). Local tests 41 passed (test_wmfix_shard
+5 new; 1 pre-existing torch-import box test); box: shard tests 5/5 on gpuA,
+smoke parse OK; files sha-verified relayed gpuA+gpuR (verdict_panels 081d2a95,
+verdict_shard dc40e995). Panel B stays single-process BY DESIGN (frozen producer
+closure: quartet_candidate.py flock + hardcoded OUT). gpuR plan inputs verified
+(reference/base_config/controllers/validation_real/e3data OK; ACCEPT_PANEL.json
+is created deterministically by accept.py on first use; WMREQUAL3.md /
+HARNESS_CONTRACT.json / step_000000.pt are verdict.py-preflight inputs that stay
+on gpuA). Immediately after FINAL.json on gpuA:
+1. gpuR: reconcile the canary leftovers (MOVE, never delete:
+   `mkdir -p ../wmfix_candidate_quartet_canary_20261031 && mv IDENTITY.json
+   canary_7_0.json canary.log ../wmfix_candidate_quartet_canary_20261031/` — the
+   canary IDENTITY binds an older candidate and would abort the real run), then
+   `nohup env PYTHONPATH=src:. /root/miniconda3/bin/python -m
+   tools.wmfixmerge.quartet_candidate --candidate <FINAL abs path> --config
+   /root/autodl-tmp/c4/wmfixmerge20261031/train/candidate_config.json
+   > quartet_candidate.log 2>&1 &` in /root/autodl-tmp/c4/speedhead20261030
+   (self-caps 8 GiB; 64 immutable w{b}_k{f}.json; COMPLETE.json at the end).
+   Relay FINAL + candidate_config.json hash-verified BEFORE launch.
+2. gpuA (parallel): `verdict_shard --groups 18-35 --train-dir .../train --out
+   .../verdict --device cuda --memory-fraction 0.35` (out dir pre-created empty).
+3. gpuR (parallel to the quartet, 24 GB fits 8 GiB cap + shard):
+   same command with `--groups 0-17 --memory-fraction 0.3` after relaying the
+   FINAL checkpoint + candidate_config.json (hash-verified).
+4. After COMPLETE.json: relay gpuR wmfix_candidate_quartet -> gpuA
+   `quartet_candidate/` (producer_b's --candidate-dir), then the one-command
+   verdict above on gpuA. C1 producer stays fail-closed (c1_cohort.json/
+   c1_runner.json not staged by design); SAFETY creates ACCEPT_PANEL.json.
+
 ## Schedule
 Panel+retarget closed ~4 h earlier than the single-track projection (gpuR shard,
 faster late batches): retarget ~09:10, feasibility verdict ~10:45, diagnosis
