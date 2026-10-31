@@ -1,0 +1,309 @@
+{
+  "states": 5,
+  "state_arm_cells": 10,
+  "branches": 80,
+  "charged_sim_s": 49869,
+  "actual_sim_s": 49869,
+  "max600_seed_sd_veh_s": 0.0,
+  "max600_seed_range_veh_s": 0.0,
+  "mixed_upstream_state_arm_cells": 0,
+  "upstream600": [
+    {
+      "world": 969040,
+      "arm": "native",
+      "clock_s": 600,
+      "region": "upstream",
+      "n_seeds": 8,
+      "n_valid": 8,
+      "n_breakdown": 8,
+      "fraction_breakdown": 1.0,
+      "n_preexisting": 0,
+      "onset_min_s": 80.0,
+      "onset_max_s": 80.0,
+      "onset_mean_s": 80.0
+    },
+    {
+      "world": 969040,
+      "arm": "mappo",
+      "clock_s": 600,
+      "region": "upstream",
+      "n_seeds": 8,
+      "n_valid": 8,
+      "n_breakdown": 0,
+      "fraction_breakdown": 0.0,
+      "n_preexisting": 0,
+      "onset_min_s": null,
+      "onset_max_s": null,
+      "onset_mean_s": null
+    },
+    {
+      "world": 969041,
+      "arm": "native",
+      "clock_s": 600,
+      "region": "upstream",
+      "n_seeds": 8,
+      "n_valid": 8,
+      "n_breakdown": 8,
+      "fraction_breakdown": 1.0,
+      "n_preexisting": 0,
+      "onset_min_s": 280.0,
+      "onset_max_s": 280.0,
+      "onset_mean_s": 280.0
+    },
+    {
+      "world": 969041,
+      "arm": "mappo",
+      "clock_s": 600,
+      "region": "upstream",
+      "n_seeds": 8,
+      "n_valid": 8,
+      "n_breakdown": 8,
+      "fraction_breakdown": 1.0,
+      "n_preexisting": 0,
+      "onset_min_s": 40.0,
+      "onset_max_s": 40.0,
+      "onset_mean_s": 40.0
+    },
+    {
+      "world": 969042,
+      "arm": "native",
+      "clock_s": 600,
+      "region": "upstream",
+      "n_seeds": 8,
+      "n_valid": 8,
+      "n_breakdown": 8,
+      "fraction_breakdown": 1.0,
+      "n_preexisting": 0,
+      "onset_min_s": 190.0,
+      "onset_max_s": 190.0,
+      "onset_mean_s": 190.0
+    },
+    {
+      "world": 969042,
+      "arm": "mappo",
+      "clock_s": 600,
+      "region": "upstream",
+      "n_seeds": 8,
+      "n_valid": 8,
+      "n_breakdown": 0,
+      "fraction_breakdown": 0.0,
+      "n_preexisting": 0,
+      "onset_min_s": null,
+      "onset_max_s": null,
+      "onset_mean_s": null
+    },
+    {
+      "world": 969043,
+      "arm": "native",
+      "clock_s": 600,
+      "region": "upstream",
+      "n_seeds": 8,
+      "n_valid": 8,
+      "n_breakdown": 8,
+      "fraction_breakdown": 1.0,
+      "n_preexisting": 0,
+      "onset_min_s": 510.0,
+      "onset_max_s": 510.0,
+      "onset_mean_s": 510.0
+    },
+    {
+      "world": 969043,
+      "arm": "mappo",
+      "clock_s": 600,
+      "region": "upstream",
+      "n_seeds": 8,
+      "n_valid": 8,
+      "n_breakdown": 0,
+      "fraction_breakdown": 0.0,
+      "n_preexisting": 8,
+      "onset_min_s": null,
+      "onset_max_s": null,
+      "onset_mean_s": null
+    },
+    {
+      "world": 969044,
+      "arm": "native",
+      "clock_s": 600,
+      "region": "upstream",
+      "n_seeds": 8,
+      "n_valid": 8,
+      "n_breakdown": 8,
+      "fraction_breakdown": 1.0,
+      "n_preexisting": 0,
+      "onset_min_s": 90.0,
+      "onset_max_s": 90.0,
+      "onset_mean_s": 90.0
+    },
+    {
+      "world": 969044,
+      "arm": "mappo",
+      "clock_s": 600,
+      "region": "upstream",
+      "n_seeds": 8,
+      "n_valid": 8,
+      "n_breakdown": 8,
+      "fraction_breakdown": 1.0,
+      "n_preexisting": 0,
+      "onset_min_s": 520.0,
+      "onset_max_s": 520.0,
+      "onset_mean_s": 520.0
+    }
+  ],
+  "paired600": [
+    {
+      "world": 969040,
+      "clock_s": 600,
+      "metric": "J",
+      "units": "veh-s",
+      "contrast": "MAPPO-minus-native",
+      "n": 8,
+      "mean": -931.6748602110019,
+      "sd": 0.0,
+      "minimum": -931.6748602110019,
+      "maximum": -931.6748602110019
+    },
+    {
+      "world": 969041,
+      "clock_s": 600,
+      "metric": "J",
+      "units": "veh-s",
+      "contrast": "MAPPO-minus-native",
+      "n": 8,
+      "mean": -3408.8334663971036,
+      "sd": 0.0,
+      "minimum": -3408.8334663971036,
+      "maximum": -3408.8334663971036
+    },
+    {
+      "world": 969042,
+      "clock_s": 600,
+      "metric": "J",
+      "units": "veh-s",
+      "contrast": "MAPPO-minus-native",
+      "n": 8,
+      "mean": -7442.1016301165655,
+      "sd": 0.0,
+      "minimum": -7442.1016301165655,
+      "maximum": -7442.1016301165655
+    },
+    {
+      "world": 969043,
+      "clock_s": 600,
+      "metric": "J",
+      "units": "veh-s",
+      "contrast": "MAPPO-minus-native",
+      "n": 8,
+      "mean": 8775.168407370023,
+      "sd": 0.0,
+      "minimum": 8775.168407370023,
+      "maximum": 8775.168407370023
+    },
+    {
+      "world": 969044,
+      "clock_s": 600,
+      "metric": "J",
+      "units": "veh-s",
+      "contrast": "MAPPO-minus-native",
+      "n": 8,
+      "mean": 3389.891002485325,
+      "sd": 0.0,
+      "minimum": 3389.891002485325,
+      "maximum": 3389.891002485325
+    }
+  ],
+  "variance600": [
+    {
+      "arm": "native",
+      "clock_s": 600,
+      "metric": "J",
+      "variance_units": "(veh-s)^2",
+      "sd_units": "veh-s",
+      "states": 5,
+      "seeds": 8,
+      "within_seed_variance": 0.0,
+      "state_mean_variance": 157638502.80341357,
+      "between_state_variance_untruncated": 157638502.80341357,
+      "between_state_variance": 157638502.80341357,
+      "within_seed_sd": 0.0,
+      "between_state_sd": 12555.417269187574
+    },
+    {
+      "arm": "mappo",
+      "clock_s": 600,
+      "metric": "J",
+      "variance_units": "(veh-s)^2",
+      "sd_units": "veh-s",
+      "states": 5,
+      "seeds": 8,
+      "within_seed_variance": 0.0,
+      "state_mean_variance": 188525906.6672762,
+      "between_state_variance_untruncated": 188525906.6672762,
+      "between_state_variance": 188525906.6672762,
+      "within_seed_sd": 0.0,
+      "between_state_sd": 13730.473650507334
+    }
+  ],
+  "tape_diversity": [
+    {
+      "world": 969040,
+      "arm": "native",
+      "distinct_seed_tapes": 1
+    },
+    {
+      "world": 969040,
+      "arm": "mappo",
+      "distinct_seed_tapes": 1
+    },
+    {
+      "world": 969041,
+      "arm": "native",
+      "distinct_seed_tapes": 1
+    },
+    {
+      "world": 969041,
+      "arm": "mappo",
+      "distinct_seed_tapes": 1
+    },
+    {
+      "world": 969042,
+      "arm": "native",
+      "distinct_seed_tapes": 1
+    },
+    {
+      "world": 969042,
+      "arm": "mappo",
+      "distinct_seed_tapes": 1
+    },
+    {
+      "world": 969043,
+      "arm": "native",
+      "distinct_seed_tapes": 1
+    },
+    {
+      "world": 969043,
+      "arm": "mappo",
+      "distinct_seed_tapes": 1
+    },
+    {
+      "world": 969044,
+      "arm": "native",
+      "distinct_seed_tapes": 1
+    },
+    {
+      "world": 969044,
+      "arm": "mappo",
+      "distinct_seed_tapes": 1
+    }
+  ],
+  "detector": {
+    "path": "E:\\agent-work\\c4-entrant\\tools\\lrdiag\\replay.py",
+    "file_sha256": "68b84c4e4471377d233dcaf0ad55fe3598fa781059f4064bb8ec9fad88b923c1",
+    "function_sha256": "6de4df039e108508cf71f94abfe2e81136d5a9a502bb4803980411c0fa5b3f10",
+    "source": "def breakdown(values):\n    \"\"\"BIC-selected downward step + trend vs best constant/linear model.\"\"\"\n    y=np.array([np.nan if x is None else x for x in values],float)\n    ok=np.isfinite(y); t=np.arange(len(y)); n=int(ok.sum())\n    if n<8: return {'event':None,'onset_s':None,'reason':'insufficient_bins'}\n    x=t[ok].astype(float); y=y[ok]\n    def fit(X,k):\n        b=np.linalg.lstsq(X,y,rcond=None)[0]\n        sse=max(float(((y-X@b)**2).sum()),n*np.finfo(float).eps*max(float(np.mean(y*y)),1.))\n        return n*np.log(sse/n)+k*np.log(n),b\n    c,_=fit(np.ones((n,1)),1)\n    lin,_=fit(np.column_stack([np.ones(n),x]),2)\n    null=min(c,lin); choices=[]\n    for cp in range(3,len(values)-2):\n        step=(x>=cp).astype(float)\n        if step.sum()<3 or (1-step).sum()<3: continue\n        bic,b=fit(np.column_stack([np.ones(n),x,step]),4)\n        if b[2]<0: choices.append((bic,cp,float(b[2])))\n    if not choices: return {'event':False,'onset_s':None,'bic_improvement':0.}\n    bic,cp,drop=min(choices)\n    chosen=bic<null; onset=float((cp-6)*10) if chosen else None\n    return {'event':bool(chosen and onset>=0),'onset_s':onset,\n            'preexisting':bool(chosen and onset<0),'drop_mps':drop,\n            'bic_improvement':float(null-bic)}"
+  },
+  "max_position_error_m": 0.0,
+  "max_speed_error_mps": 0.0,
+  "transient_pending_cache_mismatches": 80,
+  "collection_sha256": "627fd620c13d495e31a1c02c29087420398555829a796c3cdbf8d22a41e609a1",
+  "collection_sha256_normalized_lf": "8c73d723959c7780504f88e6905169629d47d3fdc93e8e9a9c40dd5b544179b8"
+}

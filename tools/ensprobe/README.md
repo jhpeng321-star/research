@@ -5,6 +5,8 @@ Approval and prospective amendments: task `REGISTRATION.md`, master C4-V7FT-2026
 
 ## Current owned deployment
 
+**COMPLETE:** 80/80 branches, all80 physical gates PASS,49,869 charged=actual. Owned worker93751 exited. All K8 physical-tape hashes match within each state/arm; zero seed spread. Final paper report34lines,7CSVs and onePNG are under `docs/paper_results/`.
+
 - cpuQ `/home/ubuntu/ensprobe20261031/recovery_v4`, one nice19/single-thread CPU worker, CUDA hidden.
 - Immutable deployed `BINDING.json` lists exact source hashes; local `evidence/v4_{stage,cpu,launch}.json` binds source, CPU gate and owned PID.
 - Prior original/v2/v3 namespaces and STOPs are retained. No redeploy/retry is implicit in the progress/collection commands.
@@ -18,6 +20,7 @@ Approval and prospective amendments: task `REGISTRATION.md`, master C4-V7FT-2026
 2. After terminal COMPLETE: `python -B -m tools.ensprobe.ops v4_collect` — permitted JSON receipts only; complete-panel gate.
 3. `python -B -m tools.ensprobe.analyze` — unchanged AST-extracted LRDIAG BIC, CSVs/onePNG/≤50line paper report; no SUMO.
 4. `python -B -m pytest -q tests/test_ensprobe.py tests/test_ensprobe_analysis.py` — eight focused CPU checks.
+5. `python -B -m tools.ensprobe.analyze --verify-outputs` — independent CSV arithmetic, dimensions and canonical-LF artifact hashes; `--verify-staged` checks those hashes against Git's staged blobs before commit.
 
 `collection.json` exports physical kinematics/routes/queue checks, bins, objective clocks, accounting, immutable bindings and SHA256s. It never reads scenario assignment/truth or saved-state XML contents. Native SUMO necessarily consumes its own generated inputs internally. File content inspection is confined to permitted source/configuration and public output receipts.
 

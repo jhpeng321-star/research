@@ -141,7 +141,8 @@ def main():
                  tape_diversity=unique_tapes,detector=binding,
                  max_position_error_m=max(r['max_position_m'] for r in restore),max_speed_error_mps=max(r['max_speed_mps'] for r in restore),
                  transient_pending_cache_mismatches=sum(not r['pending_api_equal'] for r in restore),
-                 collection_sha256=hashlib.sha256((EVIDENCE/'collection.json').read_bytes()).hexdigest())
+                 collection_sha256=hashlib.sha256((EVIDENCE/'collection.json').read_bytes()).hexdigest(),
+                 collection_sha256_normalized_lf=hashlib.sha256((EVIDENCE/'collection.json').read_text(encoding='utf-8').encode()).hexdigest())
     (OUT/'summary.json').write_text(json.dumps(summary,indent=2)+'\n',encoding='utf-8')
     figure(summaries,pairs,summary)
     report(summary,summaries)
@@ -152,6 +153,7 @@ def figure(summaries,pairs,summary):
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
+    from matplotlib.ticker import MultipleLocator, StrMethodFormatter
     fig,axes=plt.subplots(1,2,figsize=(12,4.6),gridspec_kw={'width_ratios':[1.4,1]})
     labels=['5% / 2400','10% / 2700','20% / 2400','40% / 2700','20% / 2700']
     for arm,offset,color in [('native',-.12,'#555555'),('mappo',.12,'#176B87')]:
@@ -170,7 +172,9 @@ def figure(summaries,pairs,summary):
     axes[1].set_yticks(np.arange(5),labels);axes[1].invert_yaxis()
     axes[1].set_xlabel('MAPPO − native delay at 600 s (veh-s)');axes[1].set_ylabel('Paired physical state')
     axes[1].set_title('Controller effect: K8 mean and full range')
+    axes[1].xaxis.set_major_locator(MultipleLocator(5000))
     for ax in axes:
+        ax.xaxis.set_major_formatter(StrMethodFormatter('{x:,.0f}'))
         ax.spines[['top','right']].set_visible(False);ax.grid(axis='x',alpha=.15)
     fig.suptitle(f"SUMO continuation RNG ensemble: maximum within-state SD {summary['max600_seed_sd_veh_s']:.3g} veh-s",fontsize=13)
     fig.text(.01,.01,'Source: S-ENSPROBE fresh TRAIN969040–969044; SUMO1.27.1, t300→900; fixed requests/drivers, 8 new SUMO seeds per arm.',fontsize=8)
@@ -185,25 +189,27 @@ def report(summary,summaries):
         '',
         '## What was run',
         '- Five fresh TRAIN native-warmup states at t=300 s; paired native/speed-only MAPPO169, K8 seeds each, 600 s: 80 branches / 10 state-arm cells.',
-        '- Worlds969040–969044; cells(.05,2400),(.10,2700),(.20,2400),(.40,2700),(.20,2700); continuation RNG969086–969093. Two ordinary-share and three dense/high-share states; same physical starts across arms.',
-        '- Exact original plan49,500 sim-s; cache-gate recovery adds300 s native prefix; own scheduling stop retains69partial sim-s. **49,869 charged = 49,869 actual sim-s**; unused131 never allocated.',
-        '- Frozen cpuQ e3final manifestb3c031ad, SUMO1.27.1, textbook population; both guards and registry/filename exposure audit passed. Requests/routes/driver population stay fixed; only SUMO RNG changes.',
+        '- Worlds 969040–969044; cells (.05,2400), (.10,2700), (.20,2400), (.40,2700), (.20,2700); continuation RNG 969086–969093. Two ordinary-share and three dense/high-share states; same physical starts across arms.',
+        '- Original plan: 49,500 sim-s; cache-gate recovery adds 300 s native prefix; owned scheduling stop retains 69 partial sim-s. **49,869 charged = 49,869 actual sim-s**; unused 131 never allocated.',
+        '- Frozen cpuQ e3final manifest b3c031ad, SUMO 1.27.1, textbook population; both guards and registry/filename exposure audit passed. Requests/routes/driver population stay fixed; only SUMO RNG changes.',
         '',
         '## Physical restart validity',
         f"- 80/80 starts pass: max lane-position error {summary['max_position_error_m']:.3g} m, max speed error {summary['max_speed_error_mps']:.3g} m/s; xy/lanes/routes/route indices/due waiting objects/source queues/lane queues verified.",
-        f"- Residual: getPendingVehicles() insertion-attempt cache differs at {summary['transient_pending_cache_mismatches']}/80 loads. First attempt stopped at0 ticks; zero-step diagnosis found36/36 due vehicles still loaded/off-road/not departed with correct routes. Amended direct-object queue gate is pre-outcome and published.",
+        f"- Residual: getPendingVehicles() insertion-attempt cache differs at {summary['transient_pending_cache_mismatches']}/80 loads. First attempt stopped at 0 ticks; zero-step diagnosis found 36/36 due vehicles still loaded/off-road/not departed with correct routes. Amended direct-object queue gate is pre-outcome and published.",
         '- Repeated first warmup reproduces original physical trunk exactly. save-state.rng=false and each requested new --seed verified. CF/LC internal memory need not reproduce the un-restored trunk continuation: this is a physical-state-conditional restored ensemble.',
-        '- A second0-tick stop exposed deepcopy memo reuse. Fresh memos fix it; first-state bookkeeping was reconstructed at0ticks from the same public t0 state/due waiters, with exact retained prehistory and native600 result. MAPPO uses the frozen current-frame state API and fresh controller memory; four later worlds retain full native Python histories. No completed physics rerun or result-based selection.',
-        '- Spare-CPU admission was corrected after an owned cooperative scheduling stop; only its incomplete69s prefix reran and all ticks remain charged. One nice19 thread, load>20/own-YIELD pause; priority peers untouched.',
+        '- A second 0-tick stop exposed deepcopy memo reuse. Fresh memos fix it; first-state bookkeeping was reconstructed at 0 ticks from the same public t0 state/due waiters, with exact retained prehistory and native 600 s result. MAPPO uses the frozen current-frame state API and fresh controller memory; four later worlds retain full native Python histories. No completed physics rerun or result-based selection.',
+        '- Spare-CPU admission was corrected after an owned cooperative scheduling stop; only its incomplete 69 s prefix reran and all ticks remain charged. One nice-19 thread, load>20/own-YIELD pause; priority peers untouched.',
         '',
         '## Distribution results',
-        f"- Maximum within-state/arm600 s team-delay SD = **{summary['max600_seed_sd_veh_s']:.6g} veh-s**; maximum min–max range = **{summary['max600_seed_range_veh_s']:.6g} veh-s**.",
+        f"- Maximum within-state/arm 600 s team-delay SD = **{summary['max600_seed_sd_veh_s']:.6g} veh-s**; maximum min–max range = **{summary['max600_seed_range_veh_s']:.6g} veh-s**. All eight half-second physical-tape hashes are identical within each of the ten state/arm cells.",
         f"- Same-state sometimes-breaks/sometimes-not: **{summary['mixed_upstream_state_arm_cells']}/10 state-arm cells** under the unchanged LRDIAG BIC detector (600 s upstream); onset and preexisting flags per seed in CSV. No speed cutoff or behavioral threshold fitted.",
-        f"- At600 s, pooled within-seed variance native/MAPPO = {v['native']['within_seed_variance']:.6g}/{v['mappo']['within_seed_variance']:.6g} (veh-s)^2; corrected between-state variance = {v['native']['between_state_variance']:.6g}/{v['mappo']['between_state_variance']:.6g} (veh-s)^2 (five states only, descriptive).",
-        f"- Paired MAPPO-minus-native600 s state-mean effects span {min(ds):+.3f} to {max(ds):+.3f} veh-s; mean across five states {np.mean(ds):+.3f} veh-s. Largest within-state SD of that paired effect = {max(r['sd'] for r in effects):.6g} veh-s. Positive means MAPPO worse.",
-        '- All120/300/600 s fleet/source/team means, sample SDs, minima/maxima, paired spreads and variance components are in the CSVs. Event timing uses full on-road mapped lanes,10 s half-open vehicle-time bins and60 s prehistory; missing/preexisting distinct.',
+        '- Native has post-t0 BIC events in all five states (onsets 80/280/190/510/90 s in seed order), identical in all K8 futures. MAPPO has post-t0 events in 969041/969044 (40/520 s); 969043 receives a pre-t0 fit, and 969040/969042 no event. These are empirical detector selections, not validated physical onset labels.',
+        f"- At 600 s, pooled within-seed variance native/MAPPO = {v['native']['within_seed_variance']:.6g}/{v['mappo']['within_seed_variance']:.6g} (veh-s)^2; between-state SD = {v['native']['between_state_sd']:,.1f}/{v['mappo']['between_state_sd']:,.1f} veh-s (five states only, descriptive; full variance estimates in CSV).",
+        f"- Paired MAPPO-minus-native 600 s state-mean effects span {min(ds):+,.3f} to {max(ds):+,.3f} veh-s; mean across five states {np.mean(ds):+,.3f} veh-s. Largest within-state SD of that paired effect = {max(r['sd'] for r in effects):.6g} veh-s. Positive means MAPPO worse.",
+        '- All 120/300/600 s fleet/source/team means, sample SDs, minima/maxima, paired spreads and variance components are in the CSVs. Event timing uses full on-road mapped lanes, 10 s half-open vehicle-time bins and 60 s prehistory; missing/preexisting distinct.',
         '',
         '## Plain-language answer and scope',
+        '- **No same-state mixed breakdown outcome was observed:** every tested RNG seed reproduced the same trajectory for its state/controller. Controller effects vary across states and are much larger than the observed zero RNG variation.',
         '- This ensemble changes simulator RNG, not the future demand/driver realization. It cannot by itself measure the real-world metastable distribution conditional on an observable traffic state.',
         '- The code audit identifies randomness in Python-generated departures, CAV identities and heterogeneous IDM/LC parameters, fixed before the continuation. IDM has no dawdling noise; sigma=0, speedDev=0, lcSigma defaults0; insertion best/max and fixed routes add no identified process noise.',
         '- A degenerate seed ensemble therefore indicates insufficient configured continuation stochasticity, not proof that real traffic is deterministic or that a WM should have no uncertainty. Observable-state uncertainty and fresh future arrivals/drivers require a separately registered ensemble design.',
@@ -218,10 +224,64 @@ def report(summary,summaries):
     (ROOT/'docs/paper_results/ENSPROBE.md').write_text('\n'.join(lines)+'\n',encoding='utf-8')
 
 
+def verify_outputs():
+    """Independent CSV arithmetic, panel sizes and canonical-LF artifact receipts."""
+    import statistics
+    sizes={'per_seed_delay.csv':240,'state_spread.csv':90,'breakdown_per_seed.csv':960,
+           'breakdown_fraction.csv':120,'paired_arm_spread.csv':45,'variance_components.csv':18,'physical_restore.csv':80}
+    tables={}
+    for name,n in sizes.items():
+        with (OUT/name).open(encoding='utf-8',newline='') as f:tables[name]=list(csv.DictReader(f))
+        assert len(tables[name])==n
+    raw={(int(r['world']),r['arm'],int(r['rng']),int(r['clock_s'])):r for r in tables['per_seed_delay.csv']}
+    fields=dict(J='team_delay_veh_s',road='road_delay_veh_s',source='source_delay_veh_s')
+    for r in tables['state_spread.csv']:
+        values=[float(raw[int(r['world']),r['arm'],k,int(r['clock_s'])][fields[r['metric']]]) for k in range(969086,969094)]
+        for col,expected in [('mean',statistics.mean(values)),('sd',statistics.stdev(values)),('minimum',min(values)),('maximum',max(values))]:
+            assert abs(float(r[col])-expected)<1e-8
+    for r in tables['paired_arm_spread.csv']:
+        w,c,f=int(r['world']),int(r['clock_s']),fields[r['metric']]
+        delta=[float(raw[w,'mappo',k,c][f])-float(raw[w,'native',k,c][f]) for k in range(969086,969094)]
+        assert abs(float(r['mean'])-statistics.mean(delta))<1e-8 and abs(float(r['sd'])-statistics.stdev(delta))<1e-8
+    for r in tables['breakdown_fraction.csv']:
+        events=[e for e in tables['breakdown_per_seed.csv'] if all(e[k]==r[k] for k in ('world','arm','clock_s','region'))]
+        assert len(events)==8
+        assert sum(e['event']=='True' for e in events)==int(r['n_breakdown'])
+        assert sum(e.get('preexisting')=='True' for e in events)==int(r['n_preexisting'])
+    summary=json.loads((OUT/'summary.json').read_text())
+    assert all(r['distinct_seed_tapes']==1 for r in summary['tape_diversity'])
+    assert summary['collection_sha256_normalized_lf']==hashlib.sha256((EVIDENCE/'collection.json').read_text(encoding='utf-8').encode()).hexdigest()
+    report_path=ROOT/'docs/paper_results/ENSPROBE.md'
+    assert len(report_path.read_text(encoding='utf-8').splitlines())<=50
+    paths=[report_path,*[OUT/n for n in sizes],OUT/'summary.json',OUT/'ENSPROBE.png',
+           ROOT/'docs/paper_results/ENSPROBE_RANDOMNESS.md',ROOT/'docs/paper_results/ENSPROBE_DESIGN.md']
+    hashes={}
+    for p in paths:
+        content=p.read_bytes() if p.suffix=='.png' else p.read_text(encoding='utf-8').encode()
+        hashes[p.relative_to(ROOT).as_posix()]=hashlib.sha256(content).hexdigest()
+    receipt=dict(passed=True,csv_rows=sizes,report_lines=len(report_path.read_text(encoding='utf-8').splitlines()),
+                 charged_sim_s=49869,actual_sim_s=49869,hash_convention='UTF8 text normalized LF; PNG raw bytes',
+                 max_seed_sd_any_clock_veh_s=max(float(r['sd']) for r in tables['state_spread.csv']),
+                 artifacts_sha256=hashes)
+    (EVIDENCE/'final_verification.json').write_text(json.dumps(receipt,indent=2)+'\n',encoding='utf-8')
+    print(json.dumps(receipt,indent=2))
+
+
+def verify_staged():
+    import subprocess
+    receipt=json.loads((EVIDENCE/'final_verification.json').read_text())
+    for name,expected in receipt['artifacts_sha256'].items():
+        result=subprocess.run(['git','show',':'+name],cwd=ROOT,capture_output=True,check=True)
+        assert hashlib.sha256(result.stdout).hexdigest()==expected,name
+    print(json.dumps(dict(staged_artifacts_sha256_verified=len(receipt['artifacts_sha256']),passed=True)))
+
+
 if __name__=='__main__':
-    parser=argparse.ArgumentParser();parser.add_argument('--verify-only',action='store_true');args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('--verify-only',action='store_true');parser.add_argument('--verify-outputs',action='store_true');parser.add_argument('--verify-staged',action='store_true');args=parser.parse_args()
     if args.verify_only:
         panel=json.loads((EVIDENCE/'collection.json').read_text());verify(panel)
         print(json.dumps(dict(verified_branches=80,physical_gates=80,charged_sim_s=49869,actual_sim_s=49869,
                               retained_result_sha256_matches=True)))
+    elif args.verify_outputs:verify_outputs()
+    elif args.verify_staged:verify_staged()
     else:main()
