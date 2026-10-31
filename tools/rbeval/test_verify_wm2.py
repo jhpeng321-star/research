@@ -6,10 +6,17 @@ import unittest
 from unittest.mock import patch
 
 from .core import digest, save_new
-from .verify_wm2 import verify_report_hashes
+from .verify_wm2 import point_delta, verify_report_hashes
 
 
 class ReportTransferSafety(unittest.TestCase):
+    def test_cross_platform_roundoff_does_not_hide_changed_points(self):
+        self.assertLess(point_delta('248.81050505054884', '248.81050505054907'), 1e-10)
+        self.assertEqual(point_delta('native', 'native'), 0.)
+        for a, b in (('248.8', '248.9'), ('native', 'ctrl0'), ('nan', '2')):
+            with self.assertRaises(AssertionError):
+                point_delta(a, b)
+
     def test_changed_report_or_gate_cannot_verify(self):
         parent = Path('E:/Temp/opencode') if os.name == 'nt' else Path('/tmp')
         self.assertTrue(parent.is_dir())

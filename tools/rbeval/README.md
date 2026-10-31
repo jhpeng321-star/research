@@ -176,6 +176,11 @@ python -B -m tools.rbeval.verify_wm2 --evidence tools/rbeval/evidence --out docs
 This checks all160 task hashes, all15 report hashes, the exact scored input set,
 model/start/prehistory/support/delay contracts and7,200 BIC decisions. It is an
 integrity check; the separate bootstrap uncertainty correction still applies.
+The completed corrected baseline is
+`tools/rbeval/evidence/reports/wm2_corrected_63cf5d83/`, bound by
+`docs/paper_results/RBEVAL_WM2_CORRECTED_VERIFIED.json`. To verify a separately
+scored correction, add `--corrected-report PATH` and choose a NEW receipt path.
+This additionally checks equivalent point CSVs and unavailable singleton CIs.
 
 ```powershell
 python -B -m unittest tools.rbeval.test_core tools.rbeval.test_score tools.rbeval.test_finalize -v

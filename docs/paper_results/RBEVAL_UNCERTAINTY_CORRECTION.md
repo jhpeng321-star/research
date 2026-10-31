@@ -37,3 +37,17 @@ Do not edit a live/frozen candidate scorer or runtime. Any original frozen resul
 must keep its identity and be accompanied by this retraction; candidates can be
 rescored after completion using this source in a separate directory. No inference,
 new model selection, detector change or evaluation-panel change is authorized here.
+
+## Corrected complete baseline published
+
+- Source63cf5d83, new local output
+  `tools/rbeval/evidence/reports/wm2_corrected_63cf5d83/`; no GPU or inference.
+- `RBEVAL_WM2_CORRECTED_VERIFIED.json` binds the corrected scorer and all report
+  hashes to the same160 original task/identity hashes and20 complete K8 worlds.
+- 70,488 CSV rows checked: point data, Wilson intervals, randomized ranks and
+  detector outcomes equivalent; maximum cross-platform numerical delta
+  1.0913936421275139e-11 (comparison tolerance abs1e-8/rel1e-12).
+- Development12 singleton CIs unavailable; corrected gate remains NOT_QUALIFIED.
+  Original15-file report and original integrity manifest retained separately.
+- The remote original-report standby remains bounded through11:30+08; existing
+  candidate owners supervise their panels. No duplicate watcher was started.
