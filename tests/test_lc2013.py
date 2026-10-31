@@ -90,6 +90,23 @@ def test_keep_right_source_five_second_accumulator_and_reset():
     assert mem['lc2013_keep_right'].item() == 0
 
 
+def test_mature_keep_right_waits_when_target_lane_becomes_slower():
+    k, mask = scene([(0, 0, 5), (100, 1, 5)])
+    p = PhysicsConfig()
+    mem = lane_change(k, mask, p)
+    mem['lc2013_keep_right'][0, 0] = -40_000_000
+    out = lane_change(k, mask, p, memory=mem)
+    assert out['lc2013_safe'][0, 0]  # safety alone must not permit the wish
+    assert out['lc2013_this_speed'][0, 0] - 5 / 3.6 > out['lc2013_target_speed'][0, 0]
+    assert out['lc2013_keep_right'][0, 0] == -40_000_000  # retained, not erased
+    assert not out['lc2013_wish'][0, 0]
+    assert out['next_lane'][0, 0] == 0
+    mask[0, 1] = False
+    resumed = lane_change(k, mask, p, memory=out)
+    assert resumed['lc2013_reason'][0, 0] == KEEP_RIGHT
+    assert resumed['next_lane'][0, 0] == 1
+
+
 def test_blocked_wishes_persist_and_identity_or_absence_reset():
     k, mask = scene([(0, 1, 15), (30, 1, 5), (0, 0, 15)])
     ids = torch.tensor([[1, 2, 3]])

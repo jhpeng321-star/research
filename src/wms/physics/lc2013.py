@@ -289,7 +289,11 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
     cooperative = ((help_right & right) | (help_left & ~right))
     cooperative &= (inconvenience <= p["lcCooperative"]) & (p["lcCooperative"] > 0)
     cooperative &= to_best | (target_distance / (offset.abs() + 1) > la)
-    keep_request = right & (torch.trunc(keep * p["lcKeepRight"]) < -threshold_r)
+    # LC2013.cpp:1785 is INSIDE the non-slower-right-lane branch. A mature
+    # keep-right wish persists across a slowdown but cannot request a change
+    # until the anticipated speed condition is satisfied again.
+    keep_request = (right & (this_speed - 5 / 3.6 <= neigh_speed)
+                    & (torch.trunc(keep * p["lcKeepRight"]) < -threshold_r))
     gain_request = torch.where(right, right_wish > threshold_r,
                                 (left_wish > threshold_l) & ((relative_gain > 1e-6) | avoid_impulse))
     gain_request &= target_distance / v.clamp_min(0.1) > p["lcSpeedGainRemainTime"]

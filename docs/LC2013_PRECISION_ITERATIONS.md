@@ -17,10 +17,12 @@ will be repeated.
    therefore trigger even while the destination is much slower. Source
    MSLCM_LC2013.cpp:1710–1791 gates BOTH accumulation and the request.
 2. Default through-lane route distances are 1e6 m. Actual frozen WM geometry
-   ends at s=553.33 (batched.py:38–46). SUMO caps full-speed keep-right driving
-   time by route-end distance minus brakeGap (LC2013.cpp:1740–1741), so the
-   infinite default can accumulate far too quickly. Finite distances also
-   constrain strategic stay and 20s speed-gain remaining-time tests.
+   ends at s=553.33 (batched.py:38–46). **Further source inspection:** SUMO uses
+   `neighDist` (best-lane continuation LENGTH, not remaining distance) for
+   keep-right time, anticipated speed and speed-gain 20s checks; it subtracts
+   `posOnLane` only for strategic geometry. A naive replacement of all 1e6s
+   by 553.33-s would therefore be wrong. Coordinate separation needs another
+   source-backed iteration; it is not part of the first request-gate fix.
 3. Source thresholds are already correctly scaled: 0.2/lcSpeedGain left and
    0.2/(lcSpeedGainRight*lcSpeedGain) right, fixed-point truncation each update.
    No outcome-based threshold adjustment is authorized or planned.
@@ -35,3 +37,25 @@ recall per predicted reason is a contribution to all-event recall, NOT true
 class-conditional recall. Baseline MOBIL is reused with original SHA gates.
 One nice19/single-thread CPU only; load admission <20. At 00:14 cpuQ load21.4
 blocked dispatch; no GPU present on cpuQ, no new job launched at that check.
+
+## Candidate 4: source keep-right request gate
+
+Only the definite request-branch discrepancy (item 1) is corrected. Mature
+keep-right wishes persist during a slower-target interval, but do not fire
+there. Synthetic regression isolates this from secure-gap safety and checks
+that the wish resumes when the target lane clears. Helper `lcspec/DONE.md`
+has appeared and was consumed; its §5 independently confirms this nesting.
+Its ballistic/1s examples are assumptions, not our Euler/0.5s configuration;
+probability updates follow source integer truncation, not helper prose rounding.
+
+Baseline attribution (panel3, same physics and identical aggregate as panel2):
+- strategic: 318/3013 exact, precision10.55%, recall contribution9.77pp;
+- cooperative: 76/838, precision9.07%, contribution2.33pp;
+- speed-gain: 539/12558, precision4.29%, contribution16.56pp;
+- keep-right: 203/27924, precision0.727%, contribution6.24pp.
+
+Keep-right generates 27721/43197 = 64.17% of all false positive steps.
+Compressed keep-right ±2s runs are only73/1612 (precision4.53%), so this is
+not explained solely by repeated positive steps under teacher forcing.
+Panel3 source/aggregate/input/MOBIL/motivation-partition verification PASS;
+worker299672 exited after136.11s. Gate-fix CPU suite23/23 PASS.

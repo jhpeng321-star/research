@@ -1,9 +1,12 @@
 # S-RB-LANE handoff — integration-ready highway subset
 
 **00:10 precision continuation active:** prior commits/results retained. New
-per-predicted-motivation diagnostics added; source audit identified stale
-keep-right requests outside their speed gate and infinite default route
-distances. Physics unchanged so far; see `docs/LC2013_PRECISION_ITERATIONS.md`.
+per-predicted-motivation diagnostics added; source-backed stale keep-right
+request fix implemented (now gated by anticipated lane speeds). Candidate4
+validation pending. Route LENGTH vs remaining-distance audit continues;
+see `docs/LC2013_PRECISION_ITERATIONS.md`. Shared helper lcspec now consumed.
+Panel3 attribution verified: keep-right 203/27924 (0.727% precision),
+64.17% of all false-positive steps. Gate-fix CPU tests23/23 PASS.
 
 Branch `c4/rb-lane`, base `f0db3c82`; source implementation through `127a106f`.
 Owner WM-PHYS authorization REGISTRATION.md:5683 (2026-10-31 23:12).
