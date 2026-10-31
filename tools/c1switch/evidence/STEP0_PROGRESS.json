@@ -1,0 +1,42 @@
+{
+  "STEP0_STATUS.json": {
+    "status": "RUNNING",
+    "index": 0,
+    "world": {
+      "seed": 969100,
+      "penetration": 0.05,
+      "demand": 1900
+    },
+    "unix": 1793439302.2192285
+  },
+  "STOP": {
+    "error": "Traceback (most recent call last):\n  File \"/root/c1switch20261031/pytools/tools/c1switch/runner.py\", line 73, in run\n    branches, continuations = branch_all(backend, horizon=60 if arm == 'oracle' else 90,\n                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/c1switch20261031/pytools/tools/c1switch/core.py\", line 85, in branch_all\n    continuations[name] = backend.save(name+'_60')\n                          ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/c1switch20261031/pytools/tools/c1switch/sumo.py\", line 204, in save\n    copy.deepcopy((self.handover.name, self.handover.controller, self.handover.switches,\n  File \"/root/miniconda3/lib/python3.12/copy.py\", line 136, in deepcopy\n    y = copier(x, memo)\n        ^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/copy.py\", line 201, in _deepcopy_tuple\n    y = [deepcopy(a, memo) for a in x]\n         ^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/copy.py\", line 162, in deepcopy\n    y = _reconstruct(x, memo, *rv)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/copy.py\", line 259, in _reconstruct\n    state = deepcopy(state, memo)\n            ^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/copy.py\", line 136, in deepcopy\n    y = copier(x, memo)\n        ^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/copy.py\", line 221, in _deepcopy_dict\n    y[deepcopy(key, memo)] = deepcopy(value, memo)\n                             ^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/copy.py\", line 162, in deepcopy\n    y = _reconstruct(x, memo, *rv)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/copy.py\", line 260, in _reconstruct\n    if hasattr(y, '__setstate__'):\n       ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/wmdata2/tools/ctrlarm/zero.py\", line 32, in __getattr__\n    return getattr(self.executor, name)\n                   ^^^^^^^^^^^^^\n  File \"/root/wmdata2/tools/ctrlarm/zero.py\", line 32, in __getattr__\n    return getattr(self.executor, name)\n                   ^^^^^^^^^^^^^\n  File \"/root/wmdata2/tools/ctrlarm/zero.py\", line 32, in __getattr__\n    return getattr(self.executor, name)\n                   ^^^^^^^^^^^^^\n  [Previous line repeated 982 more times]\nRecursionError: maximum recursion depth exceeded\n",
+    "actual_sim_s": 450.0,
+    "job": "step0_s969100"
+  },
+  "step0.log": " Retrying in 1 seconds\n Retrying in 1 seconds\n Retrying in 1 seconds\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/root/c1switch20261031/pytools/tools/c1switch/step0.py\", line 44, in <module>\n    main()\n  File \"/root/c1switch20261031/pytools/tools/c1switch/step0.py\", line 34, in main\n    run(root, 'step0', world)\n  File \"/root/c1switch20261031/pytools/tools/c1switch/runner.py\", line 73, in run\n    branches, continuations = branch_all(backend, horizon=60 if arm == 'oracle' else 90,\n                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/c1switch20261031/pytools/tools/c1switch/core.py\", line 85, in branch_all\n    continuations[name] = backend.save(name+'_60')\n                          ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/c1switch20261031/pytools/tools/c1switch/sumo.py\", line 204, in save\n    copy.deepcopy((self.handover.name, self.handover.controller, self.handover.switches,\n  File \"/root/miniconda3/lib/python3.12/copy.py\", line 136, in deepcopy\n    y = copier(x, memo)\n        ^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/copy.py\", line 201, in _deepcopy_tuple\n    y = [deepcopy(a, memo) for a in x]\n         ^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/copy.py\", line 162, in deepcopy\n    y = _reconstruct(x, memo, *rv)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/copy.py\", line 259, in _reconstruct\n    state = deepcopy(state, memo)\n            ^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/copy.py\", line 136, in deepcopy\n    y = copier(x, memo)\n        ^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/copy.py\", line 221, in _deepcopy_dict\n    y[deepcopy(key, memo)] = deepcopy(value, memo)\n                             ^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/copy.py\", line 162, in deepcopy\n    y = _reconstruct(x, memo, *rv)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/copy.py\", line 260, in _reconstruct\n    if hasattr(y, '__setstate__'):\n       ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/wmdata2/tools/ctrlarm/zero.py\", line 32, in __getattr__\n    return getattr(self.executor, name)\n                   ^^^^^^^^^^^^^\n  File \"/root/wmdata2/tools/ctrlarm/zero.py\", line 32, in __getattr__\n    return getattr(self.executor, name)\n                   ^^^^^^^^^^^^^\n  File \"/root/wmdata2/tools/ctrlarm/zero.py\", line 32, in __getattr__\n    return getattr(self.executor, name)\n                   ^^^^^^^^^^^^^\n  [Previous line repeated 982 more times]\nRecursionError: maximum recursion depth exceeded\n",
+  "accounting.jsonl": {
+    "charged_sim_s": 930,
+    "segments": 7
+  },
+  "completed": [],
+  "decisions": {
+    "969100": 0,
+    "969101": 0,
+    "969102": 0,
+    "969103": 0,
+    "969104": 0,
+    "969105": 0,
+    "969106": 0,
+    "969107": 0,
+    "969108": 0,
+    "969109": 0,
+    "969110": 0,
+    "969111": 0
+  },
+  "failure": {
+    "error": "Traceback (most recent call last):\n  File \"/root/c1switch20261031/pytools/tools/c1switch/runner.py\", line 73, in run\n    branches, continuations = branch_all(backend, horizon=60 if arm == 'oracle' else 90,\n                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/c1switch20261031/pytools/tools/c1switch/core.py\", line 85, in branch_all\n    continuations[name] = backend.save(name+'_60')\n                          ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/c1switch20261031/pytools/tools/c1switch/sumo.py\", line 204, in save\n    copy.deepcopy((self.handover.name, self.handover.controller, self.handover.switches,\n  File \"/root/miniconda3/lib/python3.12/copy.py\", line 136, in deepcopy\n    y = copier(x, memo)\n        ^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/copy.py\", line 201, in _deepcopy_tuple\n    y = [deepcopy(a, memo) for a in x]\n         ^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/copy.py\", line 162, in deepcopy\n    y = _reconstruct(x, memo, *rv)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/copy.py\", line 259, in _reconstruct\n    state = deepcopy(state, memo)\n            ^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/copy.py\", line 136, in deepcopy\n    y = copier(x, memo)\n        ^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/copy.py\", line 221, in _deepcopy_dict\n    y[deepcopy(key, memo)] = deepcopy(value, memo)\n                             ^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/copy.py\", line 162, in deepcopy\n    y = _reconstruct(x, memo, *rv)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/miniconda3/lib/python3.12/copy.py\", line 260, in _reconstruct\n    if hasattr(y, '__setstate__'):\n       ^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/wmdata2/tools/ctrlarm/zero.py\", line 32, in __getattr__\n    return getattr(self.executor, name)\n                   ^^^^^^^^^^^^^\n  File \"/root/wmdata2/tools/ctrlarm/zero.py\", line 32, in __getattr__\n    return getattr(self.executor, name)\n                   ^^^^^^^^^^^^^\n  File \"/root/wmdata2/tools/ctrlarm/zero.py\", line 32, in __getattr__\n    return getattr(self.executor, name)\n                   ^^^^^^^^^^^^^\n  [Previous line repeated 982 more times]\nRecursionError: maximum recursion depth exceeded\n",
+    "actual_sim_s": 450.0,
+    "job": "step0_s969100"
+  }
+}

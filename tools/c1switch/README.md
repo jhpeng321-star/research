@@ -34,3 +34,13 @@ and source queues from observations/priors, without consulting the SUMO ledger.
 
 The shared `REGISTRATION.md` is outside this Git worktree and updated additively;
 never force-add it. No push, new environment, deletion or peer PID operation.
+
+## Current stopped state
+
+Canary passed (`00d94895`); Step0 dispatcher524236 then failed at first-world
+CTRL0 snapshot,450sim-s after warmup/partial branches. Total930charged=930actual,
+zero complete decisions,zero GPU-hours. Both owned PIDs gone. STOP is retained;
+do not repeat canary or use the stale STEP0_STATUS=RUNNING as a live-process sign.
+Snapshot repair is CPU-verified separately under `repairs/cc96a3c44efc`; original
+deployed files remain unchanged. Full panel needs a prospective continuation
+binding from MAIN. Details and paper figure: `docs/paper_results/C1SWITCH_WINNERS.md`.

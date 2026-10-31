@@ -256,9 +256,74 @@ print(json.dumps(out))
     print(json.dumps(result, indent=2))
 
 
+def repair_cpu():
+    """Stage repaired sources separately; intercept simulation; do NOT clear STOP."""
+    buf = io.BytesIO()
+    files = sorted(Path('tools/c1switch').glob('*.py'))+[Path('tests/test_c1switch.py')]
+    hashes = {p.as_posix():sha(p) for p in files}
+    with tarfile.open(fileobj=buf, mode='w:gz') as tar:
+        for p in files:
+            tar.add(p, arcname=p.as_posix())
+    raw = base64.b64encode(buf.getvalue()).decode()
+    result = ssh('gpuR', f'''import base64, contextlib, copy, hashlib, io, json, os, sys, tarfile
+from pathlib import Path
+root=Path({ROOT!r}); assert (root/'STOP').exists()
+repair=root/'repairs'/{sha('tools/c1switch/sumo.py')[:12]!r}; assert not repair.exists()
+repair.mkdir(parents=True)
+with tarfile.open(fileobj=io.BytesIO(base64.b64decode({raw!r})),mode='r:gz') as tar: tar.extractall(repair,filter='data')
+hashes={hashes!r};assert all(hashlib.sha256((repair/p).read_bytes()).hexdigest()==h for p,h in hashes.items())
+os.nice(19);os.environ['CUDA_VISIBLE_DEVICES']='';os.environ['PATH']='/root/miniconda3/bin:'+os.environ['PATH']
+sys.path.insert(0,str(repair))
+from tools.c1switch.sumo import setup,Controller
+inputs=setup()
+import traci
+def forbidden(*a,**kw):raise AssertionError('CPU-only repair test attempted SUMO')
+traci.simulationStep=forbidden;traci.start=forbidden
+from traffic_shepherd import simulation
+simulation.start_sumo=forbidden
+checks={{}}
+for name in ['native','ctrl0','mappo','pi','circles']:
+ c=Controller(name,inputs);cloned=copy.deepcopy(c)
+ assert cloned is not c and cloned.name==name
+ if c.exe is not None:
+  assert cloned.exe is not c.exe and cloned.exe.memory is not c.exe.memory
+ checks[name]='raw-controller deepcopy PASS'
+import pytest
+log=io.StringIO()
+with contextlib.redirect_stdout(log),contextlib.redirect_stderr(log):code=pytest.main(['-q',str(repair/'tests/test_c1switch.py')])
+out=dict(returncode=code,checks=checks,pytest_output=log.getvalue(),new_sim_s=0,STOP_retained=(root/'STOP').exists(),sources=hashes,repair_root=str(repair))
+(repair/'CPU_REPAIR.json').write_text(json.dumps(out,indent=2))
+print(json.dumps(out))
+''', timeout=90)
+    write(EVIDENCE/'CPU_REPAIR.json', result)
+    print(json.dumps(result, indent=2))
+
+
+def reconcile():
+    result = ssh('gpuR', f'''import json, os
+from pathlib import Path
+root=Path({ROOT!r})
+rows=[json.loads(x) for x in (root/'accounting.jsonl').read_text().splitlines()]
+jobs=[]
+for name in ['canary_s969100','step0_s969100']:
+ p=root/'jobs'/name
+ receipt=json.loads((p/('result.json' if (p/'result.json').exists() else 'failure.json')).read_text())
+ jobs.append(dict(id=name,receipt=receipt))
+pids={{}}
+for n in ['CANARY_DISPATCH.json','STEP0_DISPATCH.json']:
+ pid=json.loads((root/n).read_text())['pid'];pids[str(pid)]=Path(f'/proc/{{pid}}').exists()
+out=dict(charged_sim_s=sum(r['sim_s'] for r in rows),actual_sim_s=sum(j['receipt']['actual_sim_s'] for j in jobs),ledger=rows,jobs=jobs,owned_pids_alive=pids,STOP=json.loads((root/'STOP').read_text()),complete_decisions=0,main_worlds_started=0,GPU_hours=0)
+assert out['charged_sim_s']==out['actual_sim_s']==930
+assert not any(pids.values())
+print(json.dumps(out))
+''')
+    write(EVIDENCE/'RECONCILIATION.json', result)
+    print(json.dumps({k:v for k,v in result.items() if k not in ('ledger','jobs','STOP')},indent=2))
+
+
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument('action', choices=('audit','deploy','preflight','recorded','cpu','canary','status','step0','progress'))
+    p.add_argument('action', choices=('audit','deploy','preflight','recorded','cpu','canary','status','step0','progress','repair_cpu','reconcile'))
     a = p.parse_args()
     globals()[a.action]()
 

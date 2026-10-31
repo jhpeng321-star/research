@@ -73,15 +73,16 @@ class Controller:
             from wms.control.policy import load_policy_fn
             self.exe = load_policy_fn(inputs[name], device='cpu')
             self.exe.reset()
-            if name == 'ctrl0':
-                from zero import ZeroResidual
-                self.exe = ZeroResidual(self.exe)
 
     def command(self, env):
         if self.name in ('native', 'pi', 'circles'):
             return None, dict(fallback={'native':'native', 'pi':'pi', 'circles':'damping'}[self.name])
         if self.name == 'ctrl0':
-            return self.exe(env.state()), {}
+            # ZeroResidual is stateless but its delegated __getattr__ recurses
+            # during deepcopy reconstruction. Snapshot the raw executor/memory;
+            # construct only this stateless typed-output view at call time.
+            from zero import ZeroResidual
+            return ZeroResidual(self.exe)(env.state()), {}
         import numpy as np
         import torch
         ids = np.asarray(env.frame.vid_index)

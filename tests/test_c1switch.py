@@ -171,3 +171,29 @@ def test_model_rule_cannot_select_road_only_or_mismatched_panel():
     support['87ed02e0']['team_source_entries'] = True
     with pytest.raises(ValueError):
         select_model(rows[:-1], support)
+
+
+def test_ctrl0_snapshot_keeps_raw_executor_and_independent_memory(monkeypatch):
+    import sys
+    from tools.c1switch.sumo import Controller
+    # Exact failure mechanism: a transparent wrapper's delegated __getattr__
+    # cannot be reconstructed before its executor attribute is assigned.
+    class Proxy:
+        def __init__(self, executor):
+            self.executor = executor
+        def __getattr__(self, name):
+            return getattr(self.executor, name)
+        def __call__(self, state):
+            self.executor.memory.append(state)
+            return 'typed_zero'
+    raw = SimpleNamespace(memory=[])
+    with pytest.raises(RecursionError):
+        copy.deepcopy(Proxy(raw))
+    monkeypatch.setitem(sys.modules, 'zero', SimpleNamespace(ZeroResidual=Proxy))
+    controller = Controller.__new__(Controller)
+    controller.name, controller.exe, controller.previous = 'ctrl0', raw, None
+    assert controller.command(SimpleNamespace(state=lambda:'tick')) == ('typed_zero', {})
+    restored = copy.deepcopy(controller)
+    assert restored.exe is not raw and restored.exe.memory == ['tick']
+    restored.command(SimpleNamespace(state=lambda:'next'))
+    assert raw.memory == ['tick'] and restored.exe.memory == ['tick','next']
