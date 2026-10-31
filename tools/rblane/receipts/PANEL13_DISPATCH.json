@@ -1,0 +1,36 @@
+{
+  "kind": "panel13",
+  "root": "/home/ubuntu/rblane20261031_panel13_b1047447f57d",
+  "bundle_sha256": "b1047447f57d775243b7c045f97dad1784a467ceb21a70ca751dc5bcc30dbbb5",
+  "parent_commit": "6c0e209c3197db1b297913d2d81e0919a5ffc231",
+  "preflight": {
+    "root": "/home/ubuntu/rblane20261031_panel13_b1047447f57d",
+    "load": [
+      17.81005859375,
+      17.79150390625,
+      14.318359375
+    ]
+  },
+  "status": "DISPATCHED",
+  "staged_at": 1793476759.9792984,
+  "process": {
+    "pid": 870050,
+    "start_ticks": "49103916",
+    "command": [
+      "/usr/bin/nice",
+      "-n",
+      "19",
+      "/home/ubuntu/miniconda3/bin/python",
+      "-B",
+      "-m",
+      "tools.rblane.validate",
+      "--out",
+      "/home/ubuntu/rblane20261031_panel13_b1047447f57d/results",
+      "--motion-points",
+      "/home/ubuntu/rblane20261031_panel13_b1047447f57d/inputs/motion_point_table.json",
+      "--native-only"
+    ],
+    "root": "/home/ubuntu/rblane20261031_panel13_b1047447f57d",
+    "started_at": 1793476761.438178
+  }
+}

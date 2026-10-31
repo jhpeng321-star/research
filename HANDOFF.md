@@ -95,3 +95,6 @@ Native-only physical-point sensitivity13 is frozen for scoring: consumes the
 already-published S-RB-FIT3130 causal driver points, exact32 native observation
 SHA bindings; no fitting or LC-style change. Separate sensitivity, not an A/B
 replacement. Current combined CPU gate58PASS (CPU_MOTION_POINTS.xml).
+Dispatched once: cpuQ own870050,
+`/home/ubuntu/rblane20261031_panel13_b1047447f57d`; native-only32 episodes,
+new physical-setting MOBIL scored once. Preserve dispatch; no duplicate jobs.
