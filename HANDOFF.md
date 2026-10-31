@@ -29,3 +29,11 @@
   retain WM-native lanes and coupled entrants/driver/event streams.
 - Reuse S-WMBREAKDOWN observable receipts and registered AST-extracted LRDIAG
   detector. Helpers rb-shared/targets and obsstate will be consumed if available.
+- Fresh-session resume: preserved uncommitted scorer/adapter/tests and ops fix.
+  Full-panel dispatch ALREADY LIVE on gpuR: receipt
+  /root/rbeval20261031/DISPATCH_1793460699582341507.json; PIDs706825–706828,
+  shards0–3, each capped5GiB. Checked load6.53/224CPUs, GPU15029/24564MiB,
+  utilization100%. No duplicate launch or process signalling. Fetched receipts
+  into ignored tools/rbeval/evidence/. Initial canary remains reused.
+- rb-shared/targets/DONE.md now available: development-only speed-bin and BIC
+  targets independently match the existing receipt. No helper extraction repeated.

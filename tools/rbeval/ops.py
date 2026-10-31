@@ -31,6 +31,7 @@ print('load',os.getloadavg(),'cpus',os.cpu_count())
 print(subprocess.check_output(['nvidia-smi','--query-gpu=index,memory.used,memory.total,utilization.gpu','--format=csv'],text=True))
 if p.exists():
  for d in sorted(p.glob('wm2_shard*')):
+  if not d.is_dir(): continue
   print(d.name,'tasks',len(list(d.glob('w*_k*.json'))),'complete',(d/'COMPLETE.json').exists())
   log=p/(d.name+'.log')
   if log.exists(): print(log.read_text()[-6000:])
