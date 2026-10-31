@@ -10,7 +10,7 @@ import sys
 import time
 import traceback
 
-ROOT = Path('/home/ubuntu/ensprobe20261031')
+ROOT = Path(os.environ.get('ENSPROBE_ROOT','/home/ubuntu/ensprobe20261031'))
 RUNTIME = Path('/home/ubuntu/e3final/runtime')
 MAPPO = Path('/home/ubuntu/mappospeed/production2/policy_latest.pt')
 SOURCE = 'b3c031adb6bc2b5c2bca160bea308f83ba5567b97c1cd0e853eddcd8367a8193'
@@ -54,8 +54,15 @@ class Ledger:
     def charge(self, ident, seconds):
         path=ROOT/'accounting.jsonl'
         rows=[json.loads(s) for s in path.read_text().splitlines()] if path.exists() else []
-        assert ident not in {r['id'] for r in rows}
-        assert sum(r['sim_s'] for r in rows)+seconds<=49500
+        prior=json.loads((ROOT/'BINDING.json').read_text()).get('recovery',{})
+        if ident in {r['id'] for r in rows}:
+            # Explicit pre-outcome recovery: this precise reservation advanced ZERO ticks.
+            assert ident==prior.get('unspent_branch_id') and seconds==600
+            assert [r['sim_s'] for r in rows if r['id']==ident]==[600]
+            write(ROOT/'UNSPENT_RESERVATION_RESUMED.json',dict(id=ident,sim_s=600,refund=0,new_charge=0))
+            self.ident,self.allowed,self.actual=ident,600.,0.
+            return
+        assert sum(r['sim_s'] for r in rows)+seconds<=49800
         with path.open('a') as f:
             f.write(json.dumps(dict(id=ident,sim_s=seconds,unix=time.time()))+'\n');f.flush();os.fsync(f.fileno())
         self.ident,self.allowed,self.actual=ident,float(seconds),0.
@@ -71,7 +78,12 @@ def physical(env):
                 route_index=api.vehicle.getRouteIndex(v),speed=api.vehicle.getSpeed(v),
                 lane_pos=api.vehicle.getLanePosition(v),xy=list(api.vehicle.getPosition(v)))
           for v in sorted(api.vehicle.getIDList())}
-    return dict(time=api.simulation.getTime(),vehicles=rows,
+    due={vid:r for vid,r in env.ledger.requests.items() if r.depart_s<=env.now and vid not in env.ledger.inserted}
+    waiting={v:dict(lane=api.vehicle.getLaneID(v),route=list(api.vehicle.getRoute(v)),
+                    departure=api.vehicle.getDeparture(v)) for v in sorted(due)}
+    assert all(r['lane']=='' and r['departure']<0 for r in waiting.values())
+    assert len(waiting)==env.entry_queue_now()
+    return dict(time=api.simulation.getTime(),vehicles=rows,waiting=waiting,
                 pending=sorted(api.simulation.getPendingVehicles()),source_queue=env.entry_queue_now(),
                 lane_queues={l:api.lane.getLastStepHaltingNumber(l) for l in api.lane.getIDList()})
 
@@ -86,7 +98,10 @@ def compare(trunk, branch):
         out['max_xy_m']=max(out['max_xy_m'],*(abs(x-y) for x,y in zip(a['xy'],b['xy'])))
         out['lanes_equal'] &= a['lane']==b['lane']
         out['routes_equal'] &= (a['route'],a['route_index'])==(b['route'],b['route_index'])
-    out['queues_equal']=all(trunk[k]==branch[k] for k in ('pending','source_queue','lane_queues'))
+    # getPendingVehicles() is an insertion-attempt cache, empty immediately after loadState.
+    # Compare the actual due waiting objects, their routes and not-yet-departed status instead.
+    out['pending_api_equal']=trunk['pending']==branch['pending']
+    out['queues_equal']=all(trunk[k]==branch[k] for k in ('waiting','source_queue','lane_queues'))
     out['pass']=all(out[k] for k in ('ids_equal','lanes_equal','routes_equal','queues_equal')) and \
         max(out['max_position_m'],out['max_speed_mps'],out['max_xy_m'])<=1e-6 and out['time_error_s']<=1e-9
     return out
@@ -191,7 +206,8 @@ def main():
         for seed,penetration,demand in WORLD:
             priority_wait();out=ROOT/f'w{seed}';out.mkdir(exist_ok=False)
             random.seed(seed);np.random.seed(seed);torch.manual_seed(seed)
-            ledger.charge(f'w{seed}_trunk',300)
+            recovery=json.loads((ROOT/'BINDING.json').read_text()).get('recovery',{})
+            ledger.charge(f'w{seed}_trunk_repeat' if recovery and seed==969040 else f'w{seed}_trunk',300)
             MEASURE=Measurement()
             env=CavSumoEnv(k_slots=192,controller='direct',scenario_root=out/'scenarios',
                            extra_sumo_cli=['--save-state.precision','17','--save-state.rng','false'],
@@ -200,6 +216,10 @@ def main():
                       controller='direct',warmup_hook=lambda e:priority_wait())
             assert ledger.actual==300
             trunk=physical(env);prefix=MEASURE
+            if recovery and seed==969040:
+                original=json.loads((Path(recovery['original_root'])/'w969040/TRUNK.json').read_text())['physical']
+                assert all(original[k]==trunk[k] for k in original),'repeat warmup changed original physical state'
+                write(out/'REPEAT_TRUNK_GATE.json',dict(pass_gate=True,max_physical_error=0.,new_actual_sim_s=300))
             write(out/'TRUNK.json',dict(world=seed,penetration=penetration,demand=demand,physical=trunk,**ledger.receipt()))
             statefile=out/'physical_state.xml'
             traci.simulation.saveState(str(statefile))  # no Python read/parse/hash of assignment-bearing XML
@@ -242,8 +262,10 @@ def main():
                     print(json.dumps(dict(complete=ident,actual_sim_s=ledger.actual)),flush=True)
             env.close();env=None
         rows=[json.loads(s) for s in (ROOT/'accounting.jsonl').read_text().splitlines()]
-        assert sum(r['sim_s'] for r in rows)==49500
-        write(ROOT/'COMPLETE.json',dict(charged_sim_s=49500,actual_sim_s=49500,branches=80,trunks=5))
+        total=sum(r['sim_s'] for r in rows)
+        assert total==49800
+        write(ROOT/'COMPLETE.json',dict(charged_sim_s=total,actual_sim_s=total,branches=80,trunks=5,
+                                        extra_native_prefix_sim_s=300))
     except BaseException:
         write(ROOT/'FAILURE.json',dict(traceback=traceback.format_exc(),**ledger.receipt()))
         with (ROOT/'STOP').open('x') as f:f.write('gate or implementation failure; no automatic retries\n')

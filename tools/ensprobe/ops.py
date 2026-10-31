@@ -130,11 +130,20 @@ root.mkdir();stage=root/'code';stage.mkdir()
 with tarfile.open(fileobj=io.BytesIO(base64.b64decode({raw!r})),mode='r:gz') as t:t.extractall(stage)
 sources={sources!r}
 assert all(hashlib.sha256((stage/n).read_bytes()).hexdigest()==h for n,h in sources.items())
-binding=dict(sources=sources,exposure={exposure!r},budget_sim_s=49500,cap_sim_s=50000,workers=1)
+binding=dict(sources=sources,exposure={exposure!r},budget_sim_s=49800,cap_sim_s=50000,workers=1)
+if root.name=='recovery_v2':
+ original=root.parent
+ assert (original/'STOP').exists()
+ failure=json.loads((original/'FAILURE.json').read_text());assert failure['actual_sim_s']==0 and failure['id']=='w969040_native_r969086'
+ rows=[json.loads(s) for s in (original/'accounting.jsonl').read_text().splitlines()]
+ assert sum(r['sim_s'] for r in rows)==900 and len(rows)==2
+ binding['recovery']=dict(original_root=str(original),prior_actual_sim_s=300,unspent_branch_id=failure['id'])
+ with (root/'accounting.jsonl').open('x') as f:
+  for row in rows:f.write(json.dumps(row)+'\\n')
 (root/'BINDING.json').write_text(json.dumps(binding,indent=2))
 print(json.dumps(dict(root=str(root),sources=sources,new_sim_s=0)))
 ''')
-    write('stage.json',out);print(json.dumps(out,indent=2))
+    write('v2_stage.json' if REMOTE.endswith('recovery_v2') else 'stage.json',out);print(json.dumps(out,indent=2))
 
 
 def cpu():
@@ -156,13 +165,13 @@ receipt.update(returncode=rc,tests=log.getvalue(),controller_class=type(exe).__n
 with (root/'CPU.json').open('x') as f:json.dump(receipt,f,indent=2)
 print(json.dumps(receipt))
 ''',timeout=120)
-    write('cpu.json',out);print(json.dumps(out,indent=2))
+    write('v2_cpu.json' if REMOTE.endswith('recovery_v2') else 'cpu.json',out);print(json.dumps(out,indent=2))
 
 
 def launch():
     out=ssh(f'''import os,sys,json,subprocess,time,hashlib
 from pathlib import Path
-root=Path({REMOTE!r});assert not any((root/n).exists() for n in ['LAUNCH.json','STOP','accounting.jsonl'])
+root=Path({REMOTE!r});assert not any((root/n).exists() for n in ['LAUNCH.json','STOP'])
 assert json.loads((root/'CPU.json').read_text())['returncode']==0
 binding=json.loads((root/'BINDING.json').read_text());assert binding['exposure']['pass']
 assert all(hashlib.sha256((root/'code'/n).read_bytes()).hexdigest()==h for n,h in binding['sources'].items())
@@ -171,11 +180,11 @@ env=dict(os.environ);env.update({ENV!r})
 with (root/'worker.log').open('x') as log:
  p=subprocess.Popen([sys.executable,'-B','-u','-m','tools.ensprobe.worker'],cwd=root/'code',env=env,
                     stdout=log,stderr=subprocess.STDOUT,start_new_session=True,preexec_fn=lambda:os.nice(19))
- receipt=dict(pid=p.pid,unix=time.time(),root=str(root),workers=1,budget_sim_s=49500,cap_sim_s=50000)
+ receipt=dict(pid=p.pid,unix=time.time(),root=str(root),workers=1,budget_sim_s=binding['budget_sim_s'],cap_sim_s=50000)
  with (root/'LAUNCH.json').open('x') as f:json.dump(receipt,f,indent=2)
 print(json.dumps(receipt))
 ''')
-    write('launch.json',out);print(json.dumps(out,indent=2))
+    write('v2_launch.json' if REMOTE.endswith('recovery_v2') else 'launch.json',out);print(json.dumps(out,indent=2))
 
 
 def progress():
@@ -193,7 +202,7 @@ out['charged_sim_s']=sum(json.loads(s)['sim_s'] for s in p.read_text().splitline
 out['log_tail']=(root/'worker.log').read_text()[-6000:] if (root/'worker.log').exists() else ''
 print(json.dumps(out))
 ''')
-    write('progress.json',out);print(json.dumps(out,indent=2))
+    write('v2_progress.json' if REMOTE.endswith('recovery_v2') else 'progress.json',out);print(json.dumps(out,indent=2))
 
 
 def diagnose():
@@ -254,5 +263,7 @@ finally:traci.close()
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=['inspect','audit','stage','cpu','launch','progress','diagnose','waiting']);a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('action',choices=['inspect','audit','stage','cpu','launch','progress','diagnose','waiting','v2_stage','v2_cpu','v2_launch','v2_progress']);a=p.parse_args()
+    if a.action.startswith('v2_'):
+        REMOTE+='/recovery_v2';ENV['ENSPROBE_ROOT']=REMOTE;a.action=a.action[3:]
     globals()[a.action]()

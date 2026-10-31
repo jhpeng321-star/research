@@ -8,7 +8,8 @@ from tools.ensprobe.worker import Measurement, compare
 def sample():
     return dict(time=300.,vehicles={'a':dict(lane='road_0',route=['road','exit'],route_index=0,
                                            speed=10.,lane_pos=1.,xy=[1.,2.])},
-                pending=['pending'],source_queue=1,lane_queues={'road_0':0})
+                pending=['pending'],waiting={'pending':dict(lane='',route=['road','exit'],departure=-1073741824.)},
+                source_queue=1,lane_queues={'road_0':0})
 
 
 def test_physical_tolerance_and_fail_closed():
@@ -18,9 +19,17 @@ def test_physical_tolerance_and_fail_closed():
     for key,value in [('lane','road_1'),('route_index',1),('route',['wrong']),('lane_pos',1.1),('speed',10.1)]:
         b=copy.deepcopy(a);b['vehicles']['a'][key]=value
         assert not compare(a,b)['pass']
-    for key,value in [('pending',[]),('source_queue',2),('lane_queues',{'road_0':1}),('vehicles',{})]:
+    for key,value in [('waiting',{}),('source_queue',2),('lane_queues',{'road_0':1}),('vehicles',{})]:
         b=copy.deepcopy(a);b[key]=value
         assert not compare(a,b)['pass']
+
+
+def test_transient_insertion_cache_does_not_erase_verified_waiting_objects():
+    a=sample();b=copy.deepcopy(a);b['pending']=[]
+    result=compare(a,b)
+    assert result['pass'] and not result['pending_api_equal']
+    b['waiting']['pending']['route']=['wrong']
+    assert not compare(a,b)['pass']
 
 
 def test_union_objective_carries_exit_and_adds_newborn_and_source():
