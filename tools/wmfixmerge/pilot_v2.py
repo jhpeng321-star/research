@@ -201,8 +201,12 @@ def check_feasibility(path, prepared):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ("prepared", "config", "checkpoint", "controllers", "feasibility", "out"):
+    for name in ("prepared", "config", "checkpoint", "controllers", "out"):
         parser.add_argument("--" + name, required=True)
+    parser.add_argument("--feasibility")
+    parser.add_argument("--registered-data-pilot", action="store_true",
+                        help="MAIN 15:25 data-only route: amended 30-step panel gate, smoothing OFF")
+    parser.add_argument("--harness-contract")
     parser.add_argument("--schedule", default="tools/wmfixmerge/train_config.json")
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cuda")
     parser.add_argument("--memory-fraction", type=float, default=None)
@@ -210,7 +214,11 @@ def main(argv=None):
                         help="training-only smoothed admission (required for the registered v2)")
     args = parser.parse_args(argv)
     install_guard()
-    if not args.smooth_events:
+    if args.registered_data_pilot:
+        from tools.wmfixmerge.data_pilot import check_binding, run
+        check_binding(args)
+        return run(args)
+    if not args.smooth_events or not args.feasibility:
         parser.error("the registered PILOT v2 runs with --smooth-events (training only)")
     schedule = json.loads(safe(args.schedule).read_text())
     if schedule["max_seconds"] > 21600 or schedule["stages"] != [[60, 30], [120, 30], [300, 60]] \
