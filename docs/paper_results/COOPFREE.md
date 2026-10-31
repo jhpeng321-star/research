@@ -128,8 +128,8 @@ terminal failure `STOP.json` (never cleared automatically), budget exit `BUDGET_
 Public artifacts: `tools/coopfree/publications/hold/`; verify its `MANIFEST.json`.
 Legacy MAPPO-credit checkpoint is retained remotely and excluded from corrected learning.
 Owned cpuQ supervisor PID615088/start48394231; alive=True; four nice19 single-thread workers.
-New HOLD physics: 42/455 complete tasks; 156 baselines; exact solo diagnostics for 66/156 windows.
+New HOLD physics: 147/455 complete tasks; 156 baselines; exact solo diagnostics for 66/156 windows.
 Corrected learned checkpoint pending; no zero-update or legacy checkpoint is advertised as corrected.
-Budget: 1690800 precharged / 1260540 closed-actual sim-s; hard cap2,000,000; no refunds/retries.
+Budget: 1690800 precharged / 1369260 closed-actual sim-s; hard cap2,000,000; no refunds/retries.
 TRAIN exploration credit is not paired dev-policy performance.
 <!-- COOPFREE PUBLICATIONS END -->
