@@ -1,0 +1,67 @@
+{
+  "source": "paired",
+  "interpretation": "Descriptive; event signs are not positive C_G evidence",
+  "controllers": {
+    "sumocf_d9042cc5a05e": {
+      "episodes": 41,
+      "exposure_cav_s": 58005.0,
+      "exposure_episode_s": 2520.0,
+      "ramp_fit_gap_count": 27,
+      "behaviours": {
+        "yield_to_merge": {
+          "count": 0,
+          "member_event_count": 0,
+          "eligible_episodes": 41,
+          "eligible_exposure_cav_s": 58005.0,
+          "paired_supported_count": 0,
+          "events_per_cav_hour": 0.0,
+          "member_events_per_cav_hour": 0.0,
+          "events_per_episode_hour": 0.0
+        },
+        "gap_creation": {
+          "count": 628,
+          "member_event_count": 628,
+          "eligible_episodes": 41,
+          "eligible_exposure_cav_s": 58005.0,
+          "paired_supported_count": 5,
+          "events_per_cav_hour": 38.97595034910783,
+          "member_events_per_cav_hour": 38.97595034910783,
+          "events_per_episode_hour": 897.1428571428571
+        },
+        "cross_lane_hold": {
+          "count": 48,
+          "member_event_count": 96,
+          "eligible_episodes": 41,
+          "eligible_exposure_cav_s": 58005.0,
+          "paired_supported_count": 0,
+          "events_per_cav_hour": 2.9790535298681147,
+          "member_events_per_cav_hour": 5.958107059736229,
+          "events_per_episode_hour": 68.57142857142857
+        },
+        "wave_damping": {
+          "count": 1697,
+          "member_event_count": 1697,
+          "eligible_episodes": 41,
+          "eligible_exposure_cav_s": 58005.0,
+          "paired_supported_count": 144,
+          "events_per_cav_hour": 105.32195500387897,
+          "member_events_per_cav_hour": 105.32195500387897,
+          "events_per_episode_hour": 2424.285714285714
+        }
+      }
+    }
+  },
+  "episodes": 41,
+  "events": 2373,
+  "rates": "events/CAV-hour; member-events/CAV-hour; groups additionally events/episode-hour",
+  "examples": "largest gap opening, otherwise longest event, first source order breaks ties",
+  "missing_behaviours": "Zero observed events is conditional on recorded coverage, not proof of absence",
+  "analysis_source_sha256": {
+    "report.py": "62e1be75a2974929966c9e13762e492251f654a08c20f233d7eac5bf2ab81515",
+    "io.py": "f9221df9d6428c6d5b7710b807a590aee61c61df5a075b1292833286b393c88c",
+    "detectors.py": "9c5cdecd3bbff09de9e65e5bb85a5e1915deaeaee62567593f90b02d973906ff",
+    "discovery.py": "bffa342810c5d372e8a20606f41cb0dccf0c615e0c14e3561d0aa38d7f710f9f"
+  },
+  "source_manifest_sha256": {},
+  "pair_index_sha256": "47a5ce519e3feeeed2f65e775916979384a8d30fde26b71009c0016377cc9eec"
+}
