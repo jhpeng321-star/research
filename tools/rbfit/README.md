@@ -189,3 +189,20 @@ process-signalling code. Create-once watcher/job claims prohibit duplicate
 restarts; staged user work/edited handoffs block automatic publication commits.
 Live status is `receipts/LC_WATCH_0128_STATE.json`; terminal failures preserve
 source/logs and require manual reconciliation. No automatic adoption occurs.
+
+The explicit boundary adapter is now available without changing UNC's default
+reader or peer files:
+
+```python
+from wms.physics.lc_fit_for_unc import load_boundary_fitted_state
+reader = load_boundary_fitted_state("artifacts/rbfit/shrinkage_v1",
+    lane_directory="artifacts/rbfit/lane_boundaries_v4")
+# Pass reader as fitted_state to the existing plan_hidden_state_futures API.
+```
+
+This opts into testing that LC candidate. It inherits the real UNC reader and
+changes ONLY LC support-domain validation: nonnegative behavioral weights,
+cooperative<=1, assertive>0. IDM retains strict positivity. Five tests against
+the committed UNC implementation pass, including sparse driver support,
+population/entrant fallback, invalid-domain rejection,8paired/replayed planned
+futures, unmodified CAV/padding and unchanged global RNG. No LC adoption implied.
