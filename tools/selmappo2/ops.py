@@ -1,8 +1,8 @@
-"""Explicit, CPU-only immutable deployment for the registered per-CAV trainer.
+"""Explicit, CPU-only immutable repair staging for the registered per-CAV trainer.
 
 Importing this module performs no I/O. Only --action stage/dispatch/status calls
-the shared SSH transport. A failed stage or a consumed dispatch lock is terminal;
-there is deliberately no repair, resume, evaluation, or cleanup operation.
+the shared SSH transport. The original failed smoke and its dispatch lock remain
+immutable. CPU repair checks do not authorize continuation, replay, or evaluation.
 """
 import argparse
 import base64
@@ -33,6 +33,11 @@ HOME = "/home/ubuntu"
 PARENT = HOME + "/selmappo2_20261101"
 OWNER = "S-SELMAPPO2/per_cav/20261101"
 LOCK = "PER_CAV_DISPATCH_ONCE.json"
+HISTORICAL_BINDING = "b42c257b09813c175fcb7261e341c7599d0bb5c4c971529e2856890d2fc8038c"
+HISTORICAL_PID, HISTORICAL_START, HISTORICAL_UID = 428649, 47990900, 1000
+HISTORICAL_SEED = 18107998
+HISTORICAL_LEDGER_SHA = "eb53747c54b045b8a4c3447969d14ac4fc6f24e3719cdc5b18aff31d358417a9"
+HISTORICAL_ERROR = "ModuleNotFoundError: No module named 'wms.control.execution'"
 EVIDENCE = REPO / "docs/paper_results/selmappo2"
 BUILD = re.compile(r"build_[0-9a-f]{64}\Z")
 FORBIDDEN = re.compile(
@@ -44,11 +49,14 @@ PRUNED = frozenset((".git", "node_modules", ".venv", "venv", "__pycache__",
 SHARED_PY = (
     "__init__", "audit", "continuation", "dispatch", "environment", "gate",
     "guards", "handover", "integration", "launch", "learning", "observations",
-    "ops", "protocol", "remote", "runtime", "selector", "storage", "test_cpu", "train",
+    "ops", "postmortem", "progress", "protocol", "remote", "runtime", "selector",
+    "storage", "test_cpu", "train", "transport",
 )
-OWN_PY = ("__init__", "shared", "mixed", "training", "ops")
+OWN_PY = ("__init__", "shared", "mixed", "training", "ops", "report")
 C1_PY = ("__init__", "core", "design", "storage", "sumo", "library")
-TESTS = ("tests/test_selmappo2_training.py", "tests/test_selmappo2_mixed.py")
+TESTS = ("tests/test_selmappo2_training.py", "tests/test_selmappo2_mixed.py",
+         "tests/test_selmappo2_runtime_gate.py", "tests/test_selmappo2_report.py")
+EXPECTED_TESTS, EXPECTED_RUNTIME_TESTS = 86, 10
 
 
 def canonical(value):
@@ -121,8 +129,10 @@ def bundle():
                                  (REPO, "tools/selmappo2", OWN_PY)):
         folder = checked(root / package, directory=True)
         actual = {p.name for p in folder.glob("*.py")}
-        if actual != {n + ".py" for n in names}:
-            raise ValueError("Python source inventory changed; explicit review required")
+        expected = {n + ".py" for n in names}
+        if actual != expected:
+            raise ValueError(f"Python source inventory changed in {package}; explicit review required: "
+                             f"added={sorted(actual - expected)}, missing={sorted(expected - actual)}")
         origins.update({f"{package}/{n}.py": root / package / (n + ".py") for n in names})
     origins.update({f"tools/c1switch/{n}.py": WALL / "tools/c1switch" / (n + ".py")
                     for n in C1_PY})
@@ -153,11 +163,130 @@ def bundle():
     return files, sources, binding_for(sources)
 
 
+def historical_failure():
+    """Validate only the pinned failed run; never import or modify its old code.
+
+    This is the sole content-reading exception to the metadata census: exact own
+    ownership/dispatch receipts and the SHA-pinned, three-event failure ledger.
+    Neither an absent original root nor a repaired source tree implies a retry.
+    """
+    root = Path(PARENT) / ("build_" + HISTORICAL_BINDING)
+    try:
+        checked(root.parent, directory=True)
+        root.lstat()
+    except FileNotFoundError:
+        return None
+
+    def owned(path, *, directory=False):
+        path = checked(path, directory=directory)
+        if path.lstat().st_uid != HISTORICAL_UID or os.getuid() != HISTORICAL_UID:
+            raise ValueError("historical filesystem uid mismatch")
+        return path
+
+    owned(root, directory=True)
+    owner = read_json(owned(root / "OWNER.json"))
+    dispatch = read_json(owned(root / "DISPATCH.json"))
+    identity = dict(owner=OWNER, host=HOST, root=str(root), binding=HISTORICAL_BINDING)
+    if (any(owner.get(k) != v or dispatch.get(k) != v for k, v in identity.items())
+            or owner.get("design_sha256") != DESIGN_SHA
+            or not owner.get("files") or binding_for(owner["files"]) != HISTORICAL_BINDING
+            or dispatch.get("pid") != HISTORICAL_PID or dispatch.get("uid") != HISTORICAL_UID
+            or dispatch.get("proc_start_ticks") != HISTORICAL_START
+            or dispatch.get("command") != training_command(root)
+            or dispatch.get("out") != str(root / "training")):
+        raise ValueError("historical OWNER/DISPATCH identity mismatch")
+    for name in owner["files"]:
+        relative_name(name)
+    lock = read_json(owned(root.parent / LOCK))
+    if lock != dict(identity, command=dispatch["command"]):
+        raise ValueError("historical parent dispatch lock mismatch")
+
+    def stopped_pid():
+        # No process enumeration or signals; even a reused PID is refused.
+        procdir = Path("/proc") / str(HISTORICAL_PID)
+        try:
+            owned(procdir, directory=True)
+            fields = owned(procdir / "stat").read_text().rsplit(")", 1)[1].split()
+        except FileNotFoundError:
+            return "exited"
+        if fields[0] != "Z" or int(fields[19]) != HISTORICAL_START:
+            raise ValueError("historical PID still live or reused; exclusion refused")
+        return "own_zombie"
+
+    stopped_pid()
+    training = owned(root / "training", directory=True)
+    episode = owned(training / str(HISTORICAL_SEED), directory=True)
+    ledger = owned(training / "coordinator.jsonl")
+    raw = ledger.read_bytes()
+    expected = [dict(event="START", seed=HISTORICAL_SEED, mode="smoke",
+                     world=dict(seed=HISTORICAL_SEED, penetration=.4, demand=2700),
+                     reserved_sim_s=900, panel=[]),
+                dict(event="ACTUAL", seed=HISTORICAL_SEED, actual_sim_s=300),
+                dict(event="FAILED", seed=HISTORICAL_SEED, actual_sim_s=300,
+                     error=HISTORICAL_ERROR)]
+    if (sha(raw) != HISTORICAL_LEDGER_SHA or not raw.endswith(b"\n")
+            or [json.loads(line) for line in raw.splitlines()] != expected):
+        raise ValueError("historical failure ledger hash/events mismatch")
+
+    # Metadata only below training: no scenario, checkpoint, or result contents.
+    checkpoints, pending = [], [training]
+    while pending:
+        parent = pending.pop()
+        with os.scandir(owned(parent, directory=True)) as entries:
+            for entry in entries:
+                path = parent / entry.name
+                if FORBIDDEN.search(path.as_posix()):
+                    continue
+                if entry.is_symlink():
+                    raise ValueError("historical training symlink refused")
+                if any(int(match[0]) != HISTORICAL_SEED for match in EXPOSURE.finditer(entry.name)):
+                    raise ValueError("historical tree contains another exposed seed")
+                if entry.name in ("result.jsonl", "training.jsonl", "FROZEN_FINAL.json",
+                                  "evaluation.jsonl"):
+                    raise ValueError("historical successful result/update present")
+                if entry.is_dir(follow_symlinks=False):
+                    if parent == training and path != episode:
+                        raise ValueError("historical extra episode directory")
+                    pending.append(path)
+                elif entry.is_file(follow_symlinks=False):
+                    if entry.name.startswith("checkpoint_"):
+                        if path != training / "checkpoint_000.pt":
+                            raise ValueError("historical checkpoint beyond initial000")
+                        owned(path)
+                        checkpoints.append(path)
+                else:
+                    raise ValueError("historical special file refused")
+    if checkpoints != [training / "checkpoint_000.pt"]:
+        raise ValueError("historical initial checkpoint missing")
+    # Recheck the immutable debit and stopped process after the metadata census.
+    if owned(ledger).read_bytes() != raw:
+        raise ValueError("historical ledger changed during validation")
+    state = stopped_pid()
+    return dict(path=str(episode), root=str(root), owner=OWNER, binding=HISTORICAL_BINDING,
+                pid=HISTORICAL_PID, uid=HISTORICAL_UID, proc_start_ticks=HISTORICAL_START,
+                process_state=state, ledger_sha256=HISTORICAL_LEDGER_SHA,
+                seed=HISTORICAL_SEED, mode="smoke", status="FAILED",
+                reserved_sim_s=900, actual_sim_s=300, error=HISTORICAL_ERROR,
+                charge_retained=True, successful_results=0, checkpoints=["checkpoint_000.pt"],
+                retry_authorized=False, continuation_authorized=False, new_sumo_seconds=0)
+
+
 def inventory(roots):
-    """Filename AND parent-path census. No file contents or symlink targets read."""
+    """Metadata census with a separately validated, exact historical exclusion."""
+    roots = list(roots)
     if not roots:
         raise ValueError("empty exposure roots")
     count, hits, errors, skipped, directories = 0, set(), [], 0, 0
+    exclusions, pruned_history = [], []
+    historical_root = Path(PARENT) / ("build_" + HISTORICAL_BINDING)
+    if any(Path(r) == historical_root or Path(r) in historical_root.parents for r in roots):
+        try:
+            historical = historical_failure()
+            if historical is not None:
+                exclusions.append(historical)
+        except (OSError, ValueError, KeyError, TypeError, IndexError) as exc:
+            errors.append(f"historical exclusion refused: {type(exc).__name__}: {exc}")
+    excluded_path = Path(exclusions[0]["path"]) if exclusions else None
     for root in roots:
         try:
             root = checked(root, directory=True)
@@ -180,6 +309,13 @@ def inventory(roots):
                             skipped += 1
                             continue
                         try:
+                            if path == excluded_path:
+                                checked(path, directory=True)
+                                if (entry.is_symlink() or not entry.is_dir(follow_symlinks=False)
+                                        or path.lstat().st_uid != HISTORICAL_UID):
+                                    raise ValueError("validated historical episode metadata changed")
+                                pruned_history.append(str(path))
+                                continue
                             if EXPOSURE.search(path.as_posix()):
                                 hits.add(path.as_posix())
                             if entry.is_symlink():
@@ -189,13 +325,16 @@ def inventory(roots):
                                 pending.append(path)
                             elif entry.is_file(follow_symlinks=False):
                                 count += 1
-                        except OSError as exc:
+                        except (OSError, ValueError) as exc:
                             errors.append(f"{path}: {exc}")
             except (OSError, ValueError) as exc:
                 errors.append(f"{parent}: {exc}")
+    if excluded_path is not None and str(excluded_path) not in pruned_history:
+        errors.append("validated historical episode was not observed/pruned in the census")
     return dict(roots=[str(r) for r in roots], safe_filenames=count,
                 directories=directories, pruned=skipped, conflicts=sorted(hits),
                 traversal_errors=errors, filename_metadata_only=True,
+                historical_exclusions=exclusions, historical_paths_pruned=pruned_history,
                 registration_design_contents_scanned=False,
                 passed=bool(count and directories) and not hits and not errors)
 
@@ -214,7 +353,7 @@ def resources():
     disk = shutil.disk_usage(disk_root).free
     admitted = (cpus is not None and cpus >= 14 and math.isfinite(load)
                 and 0 <= load and load + 1 <= min(cpus - 2, 24)
-                and memory >= 4 * 1024**3 and disk >= 2 * 1024**3)
+                and memory >= 8 * 1024**3 and disk >= 2 * 1024**3)
     return dict(host=HOST, owner=OWNER, cpus=cpus, load=load, memory_available=memory,
                 disk_free=disk, admitted=admitted, timestamp_ns=time.time_ns())
 
@@ -283,11 +422,14 @@ def _cpu_child(source, root, action):
             class StagedSources:
                 def __init__(self):
                     self.collected, self.skipped = 0, []
+                    self.suites = {name: 0 for name in TESTS}
 
                 def pytest_collection_modifyitems(self, items):
                     self.collected = len(items)
                     for item in items:
                         module = item.module
+                        name = Path(module.__file__).relative_to(source).as_posix()
+                        self.suites[name] += 1
                         if hasattr(module, "FLEET_ROOT"):
                             module.FLEET_ROOT = source / "tools/selmappo"
                         if hasattr(module, "SHARED"):
@@ -312,10 +454,14 @@ def _cpu_child(source, root, action):
                 raise ValueError("existing pytest workspace; no retry")
             result = pytest.main(["-p", "no:cacheprovider", "-q", "--basetemp", str(temp),
                                   *[str(source / name) for name in TESTS]], plugins=[plugin])
-            if result or not plugin.collected or plugin.skipped:
-                raise ValueError(f"CPU suites failed/empty/skipped: {result}, {plugin.skipped}")
+            if (result or plugin.collected != EXPECTED_TESTS or plugin.skipped
+                    or not all(plugin.suites.values())
+                    or plugin.suites["tests/test_selmappo2_runtime_gate.py"] != EXPECTED_RUNTIME_TESTS):
+                raise ValueError(f"CPU suites failed/count mismatch/skipped: code={result}, "
+                                 f"collected={plugin.collected}/{EXPECTED_TESTS}, "
+                                 f"suites={plugin.suites}, skipped={plugin.skipped}")
             report = dict(status="CPU_TEST_PASS", collected=plugin.collected, skipped=0,
-                          scratch=str(temp), staged_fixture_paths=True)
+                          suites=plugin.suites, scratch=str(temp), staged_fixture_paths=True)
         elif action == "gate":
             gate = importlib.import_module(shared.environment.__package__ + ".gate")
             report = gate.check(source)
@@ -407,13 +553,15 @@ def _remote_stage(files, sources, binding, root):
     source = root / "pytools"
     record = dict(owner, cpu=cpu, tests=dict(passed=False, error="not run"),
                   gate=dict(passed=False, error="not run"), audit_passed=False,
-                  new_sumo_seconds=0, passed=False)
+                  new_sumo_seconds=0, passed=False, cpu_only_repair=True,
+                  continuation_authorized=False, historical_exclusions=[])
     try:
         audit = inventory([HOME])
         audit.update(owner=OWNER, root=str(root), binding=binding)
         exclusive_json(root / "AUDIT.json", audit)
         print("AUDIT_RECEIPT", canonical(audit), flush=True)
         record["audit_passed"] = audit["passed"]
+        record["historical_exclusions"] = audit["historical_exclusions"]
         if not audit["passed"]:
             raise ValueError("exposure conflict or traversal error")
         mkdir(source)
@@ -454,7 +602,8 @@ def _remote_stage(files, sources, binding, root):
         record["error"] = f"{type(exc).__name__}: {exc}"
     cpu_record = dict(owner, resources=cpu, tests=record["tests"], gate=record["gate"],
                       passed=record["tests"]["passed"] and record["gate"]["passed"],
-                      new_sumo_seconds=0)
+                      new_sumo_seconds=0, cpu_only_repair=True, continuation_authorized=False,
+                      historical_exclusions=record["historical_exclusions"])
     exclusive_json(root / "CPU.json", cpu_record)
     print("CPU_RECEIPT", canonical(cpu_record), flush=True)
     exclusive_json(root / "STAGE.json", record)
@@ -466,7 +615,9 @@ def _remote_stage(files, sources, binding, root):
                    library=["native", "ctrl0", "mappo", "pi", "circles", "wall"],
                    design_sha256=DESIGN_SHA, wall_module="tools.c1switch.library",
                    binding=binding, files=sources,
-                   registration_sha256=sources["REGISTRATION.md"], new_sumo_seconds=0)
+                   registration_sha256=sources["REGISTRATION.md"], new_sumo_seconds=0,
+                   cpu_only_repair=True, continuation_authorized=False,
+                   historical_exclusions=record["historical_exclusions"])
     exclusive_json(root / "INTEGRATION.json", receipt)
 
 
@@ -522,6 +673,13 @@ def training_command(root):
 
 
 def _remote_dispatch(root, sources, binding):
+    try:
+        (root.parent / LOCK).lstat()
+    except FileNotFoundError:
+        pass
+    else:
+        raise FileExistsError("parent dispatch lock consumed; CPU repair checks do not authorize "
+                              "continuation (MAIN same-cap acknowledgement not received)")
     source, _, _ = own_stage(root, sources, binding)
     cpu = resources()
     if not cpu["admitted"]:

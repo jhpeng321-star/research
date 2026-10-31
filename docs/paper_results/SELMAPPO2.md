@@ -2,9 +2,17 @@
 
 ## Status (2026-11-01)
 
-Implementation and CPU integration complete; production training has not yet
-been dispatched. Learning curves and final evaluation are pending, not zero-valued
-results. Frozen final169 is the only eligible evaluation checkpoint.
+**Stopped during the first mechanics canary; production has not started.**
+Own cpuQ supervisor428649 exited. The first smoke reserved900 sim-s and ran300
+native-warmup seconds; no controlled window or gradient update completed.
+Checkpoint000 is retained; final169 is absent. Learning curves and final
+evaluation are pending, not zero-valued results.
+
+The failure was `ModuleNotFoundError: No module named 'wms.control.execution'`
+in the inherited per-CAV CTRL0 route. All original receipts, failed reservation,
+logs, source snapshot and dispatch lock are retained. The remaining original
+smoke and all production seeds are unconsumed. A same-cap continuation request
+is registered; no automatic relaunch is armed.
 
 ## Registered experiment
 
@@ -28,7 +36,7 @@ and traffic outside sensor coverage are not filled from truth.
 
 ## Verification and source binding
 
-- Local56/56 CPU tests pass, Ruff passes.
+- Local86/86 CPU tests pass after repair, Ruff passes.
 - cpuQ56/56 CPU tests pass, zero skips; real CTRL0/MAPPO checkpoint constructors,
   frozen WALL formation/preservation/stop, per-CAV frozen seed aliases,
   30x20s reward windows and actual shared PPO learning pass with SUMO intercepted.
@@ -41,13 +49,42 @@ and traffic outside sensor coverage are not filled from truth.
   the frozen baseline search path. Original stage/evidence retained; no physics,
   budget reservation or training occurred there. Corrected56-test stage passed.
 
+## Diagnosed repair and accounting
+
+The local per-CAV adapter now hands CTRL0 through its real command owner as native
+at the one-second ownership boundary; the unchanged frozen typed residual path,
+under original `zero_scope()`, recomputes the **forced native-base CTRL0 command**
+before BOTH half-second physics steps. It affects only CTRL0-selected CAVs and
+avoids an extra CIRCLES/slowDown writer. This preserves the registered CTRL0
+controller; it is not a substitution of raw native-zero execution.
+
+Ten new CPU regressions execute the actual hash-checked frozen control-tick body
+with real command owners, PI/CIRCLES, synthetic policy outputs and fake transport.
+They verify selected-only half-step writes, non-CTRL0 routing, NaN-slot filtering,
+current handover clocks and zero-write WALL cleanup after terminal connection close.
+Shared owner terminal-clock/reward fixes are also available. No repair simulation
+has been dispatched.
+
+Verified closed accounting: **900 reserved /300 actual sim-s**, no refund,
+one failed smoke, zero successful smoke/production episodes, zero optimizer updates.
+Ledger SHA256:`eb53747c54b045b8a4c3447969d14ac4fc6f24e3719cdc5b18aff31d358417a9`.
+Full collection SHA256:
+`87cebb19f9bbd7ec44458916de6299bbaef631dfb8b4af93f4f1d947f66616f1`.
+The proposed continuation retains this900 charge, uses ONLY the original unused
+second smoke900, and retains production6,996,600 plus unstarted evaluation14,400:
+the original7,012,800 cap is unchanged. MAIN acknowledgement is pending under the
+registered no-retry protocol; no failed world would be replayed or replaced.
+
 ## Learning curves and evaluation
 
-Pending training. Supervisor records per-update J600 mean/std/range, episode
+Pending training. No learning curve can be measured from zero completed updates.
+Supervisor records per-update J600 mean/std/range, episode
 return, PPO loss/KL-stop, sim-s/hour, actual/reserved charge and checkpoint SHA256
 in `training/training.jsonl`. Initial000 and every001..169 checkpoint are immutable;
 `FROZEN_FINAL.json` binds the final policy and sources. One worker completes both
 smoke worlds before expansion to at most12spare nice19/single-thread CPU workers.
+The first attempt stopped before this expansion. Any acknowledged continuation
+must explicitly account for the already consumed failed smoke slot.
 
 S-C1SWITCH2 panel969136..969151 is disjoint from production18100000..18107773 and
 smoke18107998/18107999. The peer's complete hash-bound J600 receipts will supply

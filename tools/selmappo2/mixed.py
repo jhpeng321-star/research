@@ -99,6 +99,8 @@ def make_mixed_fleet(shared, *, wall_factory=None):
             self.fleet = fleet
 
         def select(self, name):
+            # Handover lifecycle clocks must follow the public controller clock.
+            self.view.now = self.backend.env.now
             if name != "wall":
                 return super().select(name)
             if self.name == name:
@@ -115,6 +117,14 @@ def make_mixed_fleet(shared, *, wall_factory=None):
             self.handover.switches += 1
 
         def step(self, frames, *, now_s, live_ids):
+            if self.name == "ctrl0":
+                # The frozen env, under shared Backend.tick's zero_scope, owns
+                # CTRL0 recomposition before BOTH half-steps. Native handback
+                # here avoids a spurious one-second CIRCLES/slowDown writer.
+                self.owner.wall_accel_max_mps2 = None
+                return self.owner.step(
+                    {self.key: frames[self.key]} if self.key in frames else {},
+                    now_s=now_s, live_ids={self.key}, native_ids={self.key})
             if self.name != "wall":
                 return super().step(frames, now_s=now_s, live_ids=live_ids)
             request = {self.key: self.fleet.requests[self.key]} if self.key in self.fleet.requests else {}
@@ -125,7 +135,9 @@ def make_mixed_fleet(shared, *, wall_factory=None):
 
         def close(self, *, live):
             if self.key in self.fleet.members:
-                self.fleet.stop_group(live=self.fleet.live - (set() if live else {self.key}))
+                active = (self.fleet.live - (set() if live else {self.key})
+                          if getattr(self.backend.env, "api", None) is not None else set())
+                self.fleet.stop_group(live=active)
             return super().close(live=live)
 
     class GroupHandover(shared.PerCavHandover):
@@ -165,7 +177,11 @@ def make_mixed_fleet(shared, *, wall_factory=None):
 
         def stop_group(self, *, live):
             if self.wall is not None:
-                self.wall.stop(now_s=self.backend.env.now)
+                # Frozen step closes TraCI before returning the final receipt.
+                # Backend caches that receipt's terminal clock.
+                now = (self.backend.now if hasattr(type(self.backend), "now")
+                       else self.backend.env.now)
+                self.wall.stop(now_s=now)
             # All active owners hand back before any new controller can step.
             for key in sorted(self.members):
                 context = self.handover.contexts.get(key)
