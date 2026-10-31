@@ -71,6 +71,12 @@ else:
     from tools.coopaudit.release import require_release
     require_release(root)
     assert not (root/'STOP').exists()
+    if {action!r}=='v2-main':
+        from tools.coopaudit.design import sha
+        verified=json.loads((root/'V2_CANARY_VERIFIED.json').read_text())
+        assert verified['ok'] and verified['commit']
+        for name,digest in verified['scientific_files'].items():
+            assert sha(dest/'tools/coopaudit'/name)==digest, 'science source changed since canary'
     log=(root/({action!r}+'_'+str(int(time.time()))+'.log')).open('x')
     args=['canary','--attempt','2'] if {action!r}=='canary-repair' else [{action!r}.replace('v2-','')]
     module='tools.coopaudit.full_rerun' if {action!r}.startswith('v2-') else 'tools.coopaudit.runner'
