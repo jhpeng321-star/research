@@ -9,6 +9,7 @@ config = "/root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop
 cf_model = "sumo_idm"
 sumo_cf_emergency_decel_mps2 = 9.0
 merge_model = "sumo"
+sumo_lane_conflict_fast = true
 lane_learnable = false
 merge_cal = false
 merge_end_wait = false

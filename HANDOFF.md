@@ -101,6 +101,11 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   Full-population ledger/exit/finite audit attached to every candidate task.
 
 ## Verification / receipts
+- Next-candidate local gate **270 PASS /2CUDA skips /21.53s**. Both CUDA
+  kernels separately passed6+4 tests on gpuA. Recorded FULL lane-arbitration
+  dense/fast COMPLETE tapes are bit-exact on FIT969420/969421 (source8e964de5),
+  all six motion/mask/residual fields; recipe now explicitly enables the fast
+  lane arbiter. Small-frame CPU speed1.04–1.06x; full GPU latency still pending.
 - Latest source95e81e79 recorded A/B/C/FULL CPU-recipe smoke8x60s PASS; FULL
   causal posteriors condition70/79 and39/44 observed HDVs, remaining9/5 use the
   learned population, saved-ID lookup FALSE. Physics-native CAV law exercised.

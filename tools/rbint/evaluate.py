@@ -14,12 +14,12 @@ from tools.rbeval import run_wm
 def main(variant):
     os.environ['WMPHYS_VARIANT'] = variant
     sources = [ROOT/'tools/rbint/rebuild.py', Path(__file__), Path(sys.argv[0]).resolve(),
-               ROOT/'configs/native_cav_head_v5.json', ROOT/'tools/rbint/endpoints.py']
+               ROOT/'configs/native_cav_head_v5.json', ROOT/'tools/rbint/endpoints.py',
+               ROOT/'tools/rbint/observations.py']
     if variant == 'C':
         sources.append(ROOT/'artifacts/rbfit/pooled_full_v5/idm_pooled.json')
     if variant == 'FULL':
-        sources += [ROOT/'tools/rbint/observations.py',
-                    ROOT/'tools/rbint/motion_posterior.py', ROOT/'tools/rbfit/idm_fit.py',
+        sources += [ROOT/'tools/rbint/motion_posterior.py', ROOT/'tools/rbfit/idm_fit.py',
                     ROOT/'artifacts/rbfit/shrinkage_v1/idm_population.json',
                     ROOT/'artifacts/rbfit/shrinkage_v1/idm_posteriors.json.gz',
                     ROOT/'artifacts/rbfit/shrinkage_v1/idm_shrinkage.json',
