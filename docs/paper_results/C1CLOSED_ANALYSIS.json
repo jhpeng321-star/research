@@ -794,12 +794,24 @@
   "wm2_production_w9_k0_h300.json": "d5d2fe5091c30a987bd3f5feef20fed679cd1879ebda61835e045e825fcb1c0f"
  },
  "outputs": {
-  "C1CLOSED.md": "ed592ab8206204ccf2a3b5bbfb466b4384d95c1b86f95a722dd6a736a5c39268",
+  "C1CLOSED.md": "8f0ff88355a405162b5a9910f9fb903009200661bf94446bff7b1454d51b3118",
   "C1CLOSED_bootstrap.csv": "23a0b94e460fc9e83a3663dd4cb131ac2ea8b23be667facae695fd180e8e8ee0",
-  "C1CLOSED_error_horizon.png": "a9e81287b5ebe66ebf9914e66d28f8c341f290b802255a2ac169daf0161fe357",
+  "C1CLOSED_error_horizon.png": "4ea40ad0b09bd326533c25a775a378a6aae7c515c29d4a4e5326b01edcb5ed8a",
   "C1CLOSED_paired.csv": "c77ce831d6239e42e9a11b06234c2d7329513daf4bbb159139fb2ba7dcb8ec54",
   "C1CLOSED_per_world.csv": "86460e1147c20c3cffb4a645d15f411d65431494da397deb98b3de6f2e6c1893",
   "C1CLOSED_RUNTIME.md": "056496bc089c9a7cc2559486d833ee6edccc1ec2215bf99003f98db78951e589",
   "C1CLOSED_WALL_INPUTS.md": "9115939bb3821f30fe5c7a25e0f869515a002405e65af2daa3492a79739fbb1e"
+ },
+ "presentation_revision": {
+  "script_sha256": "0b068784b87acdcfa72d68643fa3f26d1675ba2f1fda8a1d409b7e425fd950df",
+  "original_analysis_sha256": "0c4d8875631ca969844abb74e183bb199cbdc01ae7b4b59b6fb75371a75f9ffb",
+  "original_plot_sha256": "a9e81287b5ebe66ebf9914e66d28f8c341f290b802255a2ac169daf0161fe357",
+  "original_scientific_commit": "b40939aa",
+  "metric_files_unchanged": {
+   "C1CLOSED_per_world.csv": "86460e1147c20c3cffb4a645d15f411d65431494da397deb98b3de6f2e6c1893",
+   "C1CLOSED_paired.csv": "c77ce831d6239e42e9a11b06234c2d7329513daf4bbb159139fb2ba7dcb8ec54",
+   "C1CLOSED_bootstrap.csv": "23a0b94e460fc9e83a3663dd4cb131ac2ea8b23be667facae695fd180e8e8ee0"
+  },
+  "changes": "footer position and explicit scope interpretation only; frozen analyzer/inference/CSV values unchanged"
  }
 }

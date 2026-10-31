@@ -42,3 +42,7 @@ SUMO RNG divergence-floor slot: unavailable pending MAIN-supplied approved recor
 Files: `C1CLOSED_per_world.csv`, `C1CLOSED_paired.csv`, `C1CLOSED_bootstrap.csv`, `C1CLOSED_error_horizon.png`, `C1CLOSED_ANALYSIS.json`.
 Reproduce: `python -B tools/c1closed/sync.py`; `python -B tools/c1closed/analyze.py`; CPU/source/PID receipts in `tools/c1closed/evidence/`.
 No qualification threshold is borrowed from E2; relative BB advantages, absolute fidelity and controller selection are distinct claims.
+## Interpretation and numerical limitation
+At 60 s neither PI nor MAPPO paired HDV-position contrast excludes zero; current closed-loop endpoint superiority is inconclusive.
+Lower 120–300 s team-delay error versus BB-traj coexists with large absolute errors and weak selection; it does not establish accurate controller evaluation.
+Mixed-hardware exact cross-host parity failed; the prospectively registered numerical/ensemble gate passed 158/158. See `C1CLOSED_RUNTIME.md`; this is not a SUMO divergence floor.

@@ -1,0 +1,10 @@
+{
+ "finished": "2026-10-31T23:14:13.449570+08:00",
+ "commit": "b40939aa502fce93a4ab5ee5b23f4e2a93c750e4",
+ "delivery_sha256": "b422670130f2e4a91653d9d7d92ad04e40c0e2e96b0a7378c1f29145cb0f0e2c",
+ "manual_resolution": true,
+ "reason": "Original sole collector finished sync, tests, complete-panel analysis and delivery verification; GBK stdout failed while displaying staged diff before commit. Reviewed intended index and committed as b40939aa without rerunning analysis. Presentation-only footer/scope update subsequently reverified; all three metric CSVs unchanged.",
+ "blocked_receipt_retained": true,
+ "presentation_receipt_sha256": "6fd6fc6f9e4ede77f2294a72d2e480436f95556094bab43eb5be623b4a5537c4",
+ "owned_resource_receipt_sha256": "dee4fc96f82c7a1c5facab8ee530a5d44fb035831110f439ae5ab9cdcec79d56"
+}

@@ -1,0 +1,32 @@
+{
+ "passed": true,
+ "at": "2026-10-31T23:14:13.449570+08:00",
+ "hosts": {
+  "gpuA": {
+   "checked_owned_receipts": 137,
+   "live_owned": [],
+   "owned_gpu_mib": 0,
+   "free_gpu_mib": 48510,
+   "panel_files": 480
+  },
+  "gpuR": {
+   "checked_owned_receipts": 368,
+   "live_owned": [],
+   "owned_gpu_mib": 0,
+   "free_gpu_mib": 24092,
+   "panel_files": 347
+  }
+ },
+ "local": {
+  "WATCH_LAUNCH.json": {
+   "pid": 39680,
+   "alive": false
+  },
+  "EXPAND_BRIDGE_LAUNCH.json": {
+   "pid": 36960,
+   "alive": false
+  }
+ },
+ "all_frozen_collector_sources_unchanged": true,
+ "delivery_sha256": "b422670130f2e4a91653d9d7d92ad04e40c0e2e96b0a7378c1f29145cb0f0e2c"
+}

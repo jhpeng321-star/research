@@ -1,0 +1,13 @@
+{
+ "passed": true,
+ "metric_files_unchanged": {
+  "C1CLOSED_per_world.csv": "86460e1147c20c3cffb4a645d15f411d65431494da397deb98b3de6f2e6c1893",
+  "C1CLOSED_paired.csv": "c77ce831d6239e42e9a11b06234c2d7329513daf4bbb159139fb2ba7dcb8ec54",
+  "C1CLOSED_bootstrap.csv": "23a0b94e460fc9e83a3663dd4cb131ac2ea8b23be667facae695fd180e8e8ee0"
+ },
+ "analyzer_unchanged": true,
+ "original_archive": "E:\\agent-work\\c4-c1closed\\tools\\c1closed\\out\\presentation_before",
+ "analysis_sha256": "c71fcdc49acc6b2907b4da6e9f2e0f2cdb016642794c11c8e6f63f0707a668d2",
+ "script_sha256": "0b068784b87acdcfa72d68643fa3f26d1675ba2f1fda8a1d409b7e425fd950df",
+ "changes": "footer position and explicit scope interpretation only; frozen analyzer/inference/CSV values unchanged"
+}
