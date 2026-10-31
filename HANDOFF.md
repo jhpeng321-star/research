@@ -3,6 +3,15 @@
 Updated 2026-10-31 23:58 +08:00; branch `c4/rb-int`, base `f0db3c82`.
 
 ## Status
+- INT candidate adapter exists at tools/rbint/{recipe,evaluate,smoke,stage}.py.
+  A uses hidden driver+Poisson futures; B fixes BOTH present/entrant settings to
+  inherited physics population defaults (not learned encoder centre), with Poisson
+  arrival uncertainty. Strict source checkpoint and encoder copy remain required.
+  Await CF worker committed cf_model wiring before recorded smoke/READY publication.
+- Fixed cross-worker identity mismatch: SUMO insertion now consumes BirthMix's
+  exact weighted candidate rather than recomputing an unrelated uniform draw.
+  Wrapped evaluator entries expose birth ordinals/queue config and observe exact
+  fractional-step Poisson waiting. 28 integration/sampler/merge CPU tests PASS.
 - Fresh resume preserved HEAD841be6ea and untracked read-only remote.py. No INT
   dispatch exists on gpuA; resource check: 48,510MiB free, 0% GPU, load6.40/208.
 - EVAL baseline/finalizer and SUMOCORE production already dispatched by owners;

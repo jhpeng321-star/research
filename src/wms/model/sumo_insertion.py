@@ -72,10 +72,13 @@ class SumoInsertion:
         params = dict(v0=self.physics.v0_mps, accel=a, decel=decel,
                       time_headway=tau, min_gap=gap)
         if self.mix is not None:
-            pool = self.mix.pool_for(b, cav)
-            key = f'errsrc-mix:{self.mix.seed}:{self.mix.row_keys[b]}:{entrance}:{ordinal}'
-            index = int.from_bytes(hashlib.sha256(key.encode()).digest()[:8], 'big') % len(pool)
-            params.update(zip(self.mix.names, pool[index].detach().cpu().tolist()))
+            if callable(getattr(self.mix, 'candidate', None)):
+                params.update(self.mix.candidate(b, entrance, ordinal, cav))
+            else:
+                pool = self.mix.pool_for(b, cav)
+                key = f'errsrc-mix:{self.mix.seed}:{self.mix.row_keys[b]}:{entrance}:{ordinal}'
+                index = int.from_bytes(hashlib.sha256(key.encode()).digest()[:8], 'big') % len(pool)
+                params.update(zip(self.mix.names, pool[index].detach().cpu().tolist()))
         if any(not math.isfinite(params[n]) or params[n] <= 0
                for n in ('v0', 'accel', 'decel', 'time_headway', 'min_gap')):
             raise ValueError('nonphysical motion-inferred insertion settings')

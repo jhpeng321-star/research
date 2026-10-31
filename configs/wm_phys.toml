@@ -2,6 +2,9 @@
 # Start from a strictly loaded WM2 checkpoint and preserve its motion encoder.
 schema = "wm_phys/1"
 
+[source]
+config = "/root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml"
+
 [physics]
 cf_model = "sumo_idm"
 merge_model = "sumo"
@@ -12,6 +15,10 @@ mainline_merge_yield = false
 merge_impatience = false
 gap_stopped_relax = false
 secure_gap_veto = false
+emergency_braking = false
+emergency_decel_mps2 = "off"
+lane_change_secure_gap = false
+entry_learned = false
 
 [model]
 rollout_mode = "driver_params"
@@ -35,9 +42,11 @@ driver_update = "off"
 
 [variants.A]
 driver_settings = "encoder_inferred"
+future_sampling = "hidden_state"
 
 [variants.B]
 driver_settings = "population_default"
+future_sampling = "poisson_arrivals_fixed_population"
 
 [inference]
 training = false
