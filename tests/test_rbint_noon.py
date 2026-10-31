@@ -1,10 +1,13 @@
 import json
 from pathlib import Path
+import subprocess
+import sys
 
 import pytest
 
 from tools.rbint import continue_noon as collector
 from tools.rbint.noon_report import render
+from tools.rbint.local_resources import child_incarnation, local_resources
 
 
 def receipt(root, tasks):
@@ -77,3 +80,15 @@ def test_render_uses_same_candidate_and_common_cohort_not_a_different_source(tmp
     assert 'FULL-v4−WM2 delay CRPS' in text
     assert 'HDV60 non-regression PENDING' in text
     assert len(text.splitlines()) <= 60
+
+
+def test_existing_interpreter_needs_no_optional_package_for_own_child_receipt():
+    child = subprocess.Popen([sys.executable, '-B', '-c', 'import time;time.sleep(.2)'])
+    try:
+        receipt = child_incarnation(child)
+        assert receipt and all(value for value in receipt.values())
+    finally:
+        child.wait(timeout=10)
+    resources = local_resources(.1)
+    assert 0 <= resources['cpu_percent'] <= 100
+    assert resources['available_bytes'] > 0 and resources['gpu_used'] is False

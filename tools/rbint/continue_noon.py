@@ -15,6 +15,7 @@ import sys
 import time
 
 from tools.rbint.noon_report import render
+from tools.rbint.local_resources import child_incarnation, local_resources
 from tools.rbeval.core import digest, load, save_new
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -65,9 +66,8 @@ def command(argv, directory, name, *, cwd=ROOT, optional_missing=False):
     with (directory/(name+'.log')).open('x', encoding='utf-8') as log:
         child = subprocess.Popen(args, cwd=cwd, env=env, stdout=log,
                                  stderr=subprocess.STDOUT, creationflags=flags)
-        import psutil
         save_new(directory/(name+'_PROCESS.json'), dict(pid=child.pid,
-            create_time=psutil.Process(child.pid).create_time(), argv=args, analysis_only=True))
+            **child_incarnation(child), argv=args, analysis_only=True))
         limit = max(1, min(240, DEADLINE-time.time()))
         try:
             rc = child.wait(timeout=limit)
@@ -123,12 +123,12 @@ def update_handoff(text, block):
 
 
 def collect(state, *, now=None):
-    import psutil
     now = time.time() if now is None else now
     if now >= DEADLINE:
         raise RuntimeError('publication deadline expired')
     guard()
-    if psutil.cpu_percent(interval=1) > 75 or psutil.virtual_memory().available < 2**30:
+    resources = local_resources()
+    if resources['cpu_percent'] > 75 or resources['available_bytes'] < 2**30:
         return dict(state, resource_wait=True)
     head = git('rev-parse', 'HEAD')
     stamp = datetime.fromtimestamp(now).astimezone().strftime('%Y%m%dT%H%M%S%z')
@@ -246,26 +246,34 @@ def collect(state, *, now=None):
 
 
 def main():
+    global STATE
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('action', choices=('start', 'watch'))
+    p.add_argument('--state-root', default=str(STATE))
+    p.add_argument('--recovery-receipt')
     args = p.parse_args()
+    STATE = Path(args.state_root).resolve()
+    assert STATE.parent == ROOT/'runs'
     if args.action == 'start':
         guard()
         assert time.time() < FINAL
         assert STATE.parent.is_dir() and EVIDENCE.is_dir() and PUBLISH.parent.is_dir()
+        if STATE.name != 'rbint_noon':
+            assert args.recovery_receipt, 'diagnosed recovery receipt required'
+            prior = load(Path(args.recovery_receipt))
+            assert prior['automatic_retry'] is False and prior['remote_inference_dispatched'] is False
         STATE.mkdir(exist_ok=True)
         PUBLISH.mkdir(exist_ok=True)
         save_new(STATE/'DISPATCH_ONCE.json', dict(unix=time.time(), deadline=DEADLINE,
             interval_s=1200, analysis_only=True, automatic_retry=False, head=git('rev-parse', 'HEAD'),
             source_sha256=digest(Path(__file__))))
-        argv = [sys.executable, '-B', '-u', '-m', 'tools.rbint.continue_noon', 'watch']
+        argv = [sys.executable, '-B', '-u', '-m', 'tools.rbint.continue_noon', 'watch', '--state-root', str(STATE)]
         flags = (subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP |
                  subprocess.BELOW_NORMAL_PRIORITY_CLASS) if os.name == 'nt' else 0
         with (STATE/'watch.log').open('x', encoding='utf-8') as log:
             child = subprocess.Popen(argv, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT,
                                      creationflags=flags, start_new_session=os.name != 'nt')
-        import psutil
-        receipt = dict(pid=child.pid, create_time=psutil.Process(child.pid).create_time(), argv=argv,
+        receipt = dict(pid=child.pid, **child_incarnation(child), argv=argv,
                        source_sha256=digest(Path(__file__)), deadline=DEADLINE)
         save_new(STATE/'PROCESS.json', receipt)
         print(json.dumps(receipt))
