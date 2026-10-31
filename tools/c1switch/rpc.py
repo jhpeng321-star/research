@@ -70,10 +70,12 @@ def serve(root, adapter_name, binding_path, device):
     with exclusive(root):
         if (root/'GPU_STARTED.json').exists():
             raise ValueError('previous GPU allocation; reconcile before restart')
-        cap = binding['gpu_cap_s']
-        if cap not in (10800, 3600):
+        total_cap = binding['gpu_cap_s']
+        prior = binding.get('prior_gpu_s',0)
+        cap = total_cap-prior
+        if total_cap not in (10800, 3600) or not 0 < cap <= total_cap:
             raise ValueError('unregistered per-model GPU cap')
-        write(root/'GPU_STARTED.json', dict(cap_s=cap, unix=time.time()))
+        write(root/'GPU_STARTED.json', dict(cap_s=cap,total_cap_s=total_cap,prior_gpu_s=prior,unix=time.time()))
         def expired(signum, frame):
             write(root/'STOP', dict(reason='GPU hard wall-time cap', cap_s=cap))
             raise TimeoutError('GPU allocation exhausted')
@@ -84,7 +86,7 @@ def serve(root, adapter_name, binding_path, device):
             write(root/'READY.json',dict(pid=os.getpid(),unix=time.time(),binding=binding,
                                        attestation=getattr(model,'attestation',None)))
             while not (root/'STOP').exists() and not (root/'COMPLETE').exists():
-                if time.monotonic()-began >= binding['gpu_cap_s']:
+                if time.monotonic()-began >= cap:
                     raise TimeoutError('GPU wall-time cap')
                 for request_path in sorted(root.glob('*.request.json')):
                     result_path = request_path.with_name(request_path.name.replace('.request.', '.result.'))
@@ -104,7 +106,9 @@ def serve(root, adapter_name, binding_path, device):
             raise
         finally:
             signal.setitimer(signal.ITIMER_REAL,0)
-            write(root/'GPU_FINISHED.json',dict(elapsed_s=time.monotonic()-began,unix=time.time(),pid=os.getpid()))
+            elapsed = time.monotonic()-began
+            write(root/'GPU_FINISHED.json',dict(elapsed_s=elapsed,cumulative_gpu_s=prior+elapsed,
+                                               unix=time.time(),pid=os.getpid()))
 
 
 if __name__ == '__main__':

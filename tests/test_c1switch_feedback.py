@@ -10,7 +10,7 @@ def payload(arm='native'):
     rows = []
     for j in range(121):
         now = 240+.5*j
-        own = dict(vehicle_id='self',timestamp_s=now,s_m=-100+2*j,lane=1,
+        own = dict(vehicle_id='self',timestamp_s=now,s_m=-200+2*j,lane=2,
                    v_mps=4.,a_mps2=0.,age_s=0,source='cav_self')
         detections = [dict(own,vehicle_id='anonymous',s_m=own['s_m']+15,source='rsu')]
         rows.append(dict(now_s=now,self_reports=[own],detections=detections,
@@ -77,3 +77,6 @@ def test_real_frozen_models_cpu(tmp_path):
             samples = adapter.predict(p,steps=4)
             assert len(medians(samples)) == 5
             assert next(adapter.model.parameters()).device == torch.device('cpu')
+            adapter.optimized = False
+            assert adapter.predict(p,steps=4) == samples
+            adapter.optimized = True

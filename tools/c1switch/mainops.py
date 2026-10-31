@@ -14,8 +14,10 @@ from .design import BUDGET, sha
 from .ops import EVIDENCE, REG, ssh
 from .storage import canonical, write
 
-CPU = '/home/ubuntu/c1switch20261031/main_v4'
-GPU = '/root/c1switch20261031/main_v4'
+CPU = '/home/ubuntu/c1switch20261031/main_v5'
+GPU = '/root/c1switch20261031/main_v5'
+CPU_V4 = '/home/ubuntu/c1switch20261031/main_v4'
+GPU_V4 = '/root/c1switch20261031/main_v4'
 BB = Path('E:/research-dense/runs/active/WM-S-C1FAST-20261006/box/full_bb_traj/wm_s.pt')
 GPU_ENV = dict(OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',
                C4_ALLOWED_ROOTS='/root/autodl-tmp/c4:/root/c1switch20261031',
@@ -26,6 +28,7 @@ def bundle():
     paths = sorted(Path('tools/c1switch').glob('*.py')) + [
         Path('tests/test_c1switch.py'),Path('tests/test_c1switch_observable.py'),
         Path('tests/test_c1switch_feedback.py')]
+    paths.append(Path('tests/test_c1switch_merge_fast.py'))
     sources = {p.as_posix():sha(p) for p in paths}
     engine = Path('traffic_shepherd/c4/branching.py')
     sources['engine/branching.py'] = sha(engine)
@@ -86,7 +89,7 @@ else:
 import pytest
 log=io.StringIO()
 with contextlib.redirect_stdout(log),contextlib.redirect_stderr(log):
- code=pytest.main(['-q',str(root/'tests/test_c1switch.py'),str(root/'tests/test_c1switch_observable.py'),str(root/'tests/test_c1switch_feedback.py')])
+ code=pytest.main(['-q',str(root/'tests/test_c1switch.py'),str(root/'tests/test_c1switch_observable.py'),str(root/'tests/test_c1switch_feedback.py'),str(root/'tests/test_c1switch_merge_fast.py')])
 out=dict(returncode=code,output=log.getvalue(),root=str(root),sources={sources!r},new_sim_s=0,GPU_s=0)
 (root/'CPU.json').write_text(json.dumps(out,indent=2));print(json.dumps(out))
 ''',timeout=120)
@@ -105,9 +108,18 @@ def stage():
                for row in REG.read_text(encoding='utf-8').splitlines()):
         raise ValueError('current design/per-arm budget not registered')
     selection = json.loads((EVIDENCE/'MODEL_SELECTION.json').read_text())
+    prior = ssh('gpuR',f'''import json,math
+from pathlib import Path
+root=Path({GPU_V4!r});out={{}}
+for a in ('wm','bb'):
+ q=root/'rpc'/a
+ assert (q/'GPU_FINISHED.json').exists() and not (q/'STOP').exists()
+ out[a]=2+math.ceil(json.loads((q/'GPU_FINISHED.json').read_text())['elapsed_s'])
+print(json.dumps(out))
+''')
     bindings = {arm:dict(selection,model=arm,checkpoint_path=GPU+'/bb.pt',
         adapter_sha256=sources['tools/c1switch/adapter.py'],gpu_cap_s=10800 if arm=='wm' else 3600,
-        allocator_limit_gib=2.5,entries=False,mix_active=False) for arm in ('wm','bb')}
+        allocator_limit_gib=2.5,entries=False,mix_active=False,prior_gpu_s=prior[arm]) for arm in ('wm','bb')}
     out = {}
     for host,root in [('cpuQ',CPU),('gpuR',GPU)]:
         out[host] = ssh(host,f'''import base64,hashlib,io,json,tarfile
@@ -140,7 +152,25 @@ assert hashlib.sha256((tested/'bb.pt').read_bytes()).hexdigest()=={selection['bb
 for name in ['bb.pt','physics.json']:shutil.copyfile(tested/name,root/name)
 print(json.dumps(dict(bb_sha256=hashlib.sha256((root/'bb.pt').read_bytes()).hexdigest())))
 ''')
-    write(EVIDENCE/'MAIN_STAGE.json',out)
+    imported = ssh('cpuQ',f'''import json,shutil
+from pathlib import Path
+old=Path({CPU_V4!r});root=Path({CPU!r})
+assert (old/'CANARY_GATE.json').exists() and not (old/'STOP').exists()
+gate=json.loads((old/'CANARY_GATE.json').read_text());assert gate['pass_']
+assert gate['charged_sim_s']==71910
+for p in old.glob('jobs/*/*.json'):
+ dest=root/'jobs'/p.parent.name/p.name
+ dest.parent.mkdir(exist_ok=True)
+ shutil.copyfile(p,dest)
+shutil.copyfile(old/'accounting.jsonl',root/'accounting.jsonl')
+(root/'canary').mkdir()
+shutil.copyfile(old/'canary/COMPLETE.json',root/'canary/COMPLETE.json')
+shutil.copyfile(old/'CANARY_GATE.json',root/'CANARY_GATE.json')
+print(json.dumps(dict(imported_sim_s=gate['charged_sim_s'],episodes=2,branches=30,prior_root=str(old))))
+''')
+    out['imported_v4'] = imported
+    out['prior_gpu_s'] = prior
+    write(EVIDENCE/'V5_MAIN_STAGE.json',out)
     print(json.dumps(dict(cpu=CPU,gpu=GPU,design_sha256=design,source_binding=canonical(sources))))
 
 
@@ -163,12 +193,12 @@ for arm in ('wm','bb'):
  out['models'][arm]=dict(pid=p.pid,cap_s=10800 if arm=='wm' else 3600)
 (root/'GPU_DISPATCH.json').write_text(json.dumps(out,indent=2));print(json.dumps(out))
 ''')
-    write(EVIDENCE/'GPU_DISPATCH.json',result)
+    write(EVIDENCE/'V5_GPU_DISPATCH.json',result)
     print(json.dumps(result,indent=2))
 
 
 def relay():
-    root = EVIDENCE/'relay_main_v4'
+    root = EVIDENCE/'relay_main_v5'
     if root.exists():
         raise ValueError('existing local relay namespace; inspect own PID before continuation')
     root.mkdir()
@@ -183,7 +213,8 @@ def relay():
 def launch(phase):
     if phase == 'main':
         gate = json.loads((EVIDENCE/'MAIN_CANARY.json').read_text())
-        if not gate['pass_']:
+        parity_gate = json.loads((EVIDENCE/'V5_GPU_PARITY.json').read_text())
+        if not gate['pass_'] or not parity_gate['pass_']:
             raise ValueError('one-world canary required')
     env = dict(CPU_ENV,C1SWITCH_ENGINE_ROOT=CPU)
     result = ssh('cpuQ',f'''import hashlib,json,os,subprocess,sys,time
@@ -203,7 +234,7 @@ out=dict(pid=p.pid,phase=phase,unix=time.time(),host='cpuQ',max_episode_workers=
  max_sumo_workers_including_branches=4 if phase=='canary' else 24)
 (root/(phase+'_DISPATCH.json')).write_text(json.dumps(out,indent=2));print(json.dumps(out))
 ''')
-    write(EVIDENCE/(phase.upper()+'_DISPATCH.json'),result)
+    write(EVIDENCE/('MAIN_'+phase.upper()+'_DISPATCH.json'),result)
     print(json.dumps(result,indent=2))
 
 
@@ -279,9 +310,74 @@ out=dict(pass_=True,world=969112,results=results,charged_sim_s=charged,actual_si
     print(json.dumps(result,indent=2))
 
 
+def v4_progress():
+    global CPU,GPU
+    CPU,GPU = CPU_V4,GPU_V4
+    return progress()
+
+
+def v4_gate():
+    global CPU,GPU
+    CPU,GPU = CPU_V4,GPU_V4
+    canary_gate()
+
+
+def park_v4():
+    arms = ssh('cpuQ',f'''import json
+from pathlib import Path
+root=Path({CPU_V4!r})
+print(json.dumps([a for a in ('wm','bb') if (root/'jobs'/(a+'_s969112_episode')/'CLOSE.json').exists()
+ and (root/'jobs'/(a+'_s969112_episode')/'RESULT.json').exists()]))
+''')
+    result = ssh('gpuR',f'''import json,time
+from pathlib import Path
+root=Path({GPU_V4!r});out={{}}
+for a in {arms!r}:
+ q=root/'rpc'/a
+ assert len(list(q.glob('*.result.json')))==10
+ if not (q/'COMPLETE').exists():(q/'COMPLETE').write_text(json.dumps(dict(reason='canary complete, preserve GPU remainder',unix=time.time())))
+ if (q/'GPU_FINISHED.json').exists():out[a]=json.loads((q/'GPU_FINISHED.json').read_text())
+print(json.dumps(out))
+''')
+    write(EVIDENCE/'V4_GPU_FINISHED.json',result)
+    print(json.dumps(dict(completed_canary_arms=arms,gpu_finished=result),indent=2))
+
+
+def parity():
+    # GPU-only parity at an already-recorded OBSERVABLE canary decision; no SUMO
+    # replay, no outcomes/labels, and all elapsed allocation time remains capped.
+    prior = ssh('gpuR',f'''import json
+from pathlib import Path
+root=Path({GPU_V4!r})/'rpc';out={{}}
+for a in ('wm','bb'):
+ p=next(p for p in (root/a).glob('*.request.json') if json.loads(p.read_text())['id'].endswith('_j0'))
+ r=json.loads(p.read_text());q=json.loads(p.with_name(p.name.replace('.request.','.result.')).read_text())
+ out[a]=dict(belief=r['belief'],samples=q['samples'])
+print(json.dumps(out))
+''')
+    result = ssh('gpuR',f'''import json,sys,time
+from pathlib import Path
+root=Path({GPU!r});sys.path.insert(0,str(root/'pytools'))
+from tools.c1switch.rpc import FilePredictor
+prior=json.loads({json.dumps(prior)!r});out={{}}
+for a,row in prior.items():
+ binding=json.loads((root/(a+'_BINDING.json')).read_text())
+ predictor=FilePredictor(root/'rpc'/a,binding,timeout_s=600)
+ predictor.predict(row['belief'],'parity_v4_canary_j0')
+ p=next(p for p in (root/'rpc'/a).glob('*.request.json') if json.loads(p.read_text())['id']=='parity_v4_canary_j0')
+ q=json.loads(p.with_name(p.name.replace('.request.','.result.')).read_text())
+ assert q['samples']==row['samples'], 'optimized GPU samples differ from frozen canary'
+ out[a]=dict(bitwise=True,samples=q['samples'],elapsed_s=q['elapsed_gpu_s'])
+(root/'PARITY.json').write_text(json.dumps(out,indent=2));print(json.dumps(dict(pass_=True,models=out)))
+''',timeout=90)
+    write(EVIDENCE/'V5_GPU_PARITY.json',result)
+    print(json.dumps(result,indent=2))
+
+
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
-    p.add_argument('mode',choices=('cpu','stage','launch_gpu','relay','canary','main','progress','canary_gate'))
+    p.add_argument('mode',choices=('cpu','stage','launch_gpu','relay','canary','main','progress','canary_gate',
+                                 'v4_progress','v4_gate','park_v4','parity'))
     args = p.parse_args()
     if args.mode in ('canary','main'):
         launch(args.mode)

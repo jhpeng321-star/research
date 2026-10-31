@@ -41,6 +41,7 @@ class Adapter:
     def __init__(self, binding, device):
         import torch
         self.binding, self.device = binding, device
+        self.optimized = True
         torch.set_num_threads(1)
         sys.addaudithook(audit)
         if device == 'cuda':
@@ -100,7 +101,8 @@ class Adapter:
     def callback(self, payload, tracker, states):
         import torch
         from wms.control.continuous import project_native
-        from wms.control.bridge import make_cav_controller, _merge_lane
+        from wms.control.bridge import make_cav_controller
+        from .merge_fast import gap6
         from wms.model.cav import WM_LANE_TARGET_KEY, WM_MERGE_KEY
         from wms.train.cav_drive import TimelineControllers
         frozen = self.frozen
@@ -111,10 +113,23 @@ class Adapter:
             def physics_accel(self, state):
                 return project_native(state,native(state))
         plant = Plant()
+        class ClockPlant:
+            physics = reference.physics
+            def physics_accel(self,state):
+                # Timeline's native output is ignored below; its controller
+                # recurrence/sensing are pure CPU, the shared native plant stays
+                # on its original device with identical arithmetic.
+                return torch.zeros_like(state['s_m'])
         calls = []
         for arm in CONTROLLERS:
             if arm == 'mappo':
-                calls.append(frozen.callback_for('mappo',None,None,self.mp,native))
+                mp = copy.copy(self.mp)
+                if self.optimized:
+                    # Native-lane speed-only actors never consume lane feasibility
+                    # or dwell. The frozen bridge otherwise computes and discards
+                    # these at every tick; actor acceleration/command memory agree.
+                    mp.lane_rules = None
+                calls.append(frozen.callback_for('mappo',None,None,mp,native))
             elif arm == 'ctrl0':
                 def zero(obs, signal):
                     return torch.zeros_like(obs.cav_mask,dtype=torch.float32), None
@@ -130,13 +145,28 @@ class Adapter:
                 calls.append(native_cb)
             else:
                 ids = torch.full((1,61,states['s_m'].shape[1]),2 if arm == 'pi' else 1,dtype=torch.long)
-                timeline = TimelineControllers(plant,dict(controller=ids,
+                timeline = TimelineControllers(ClockPlant() if self.optimized else plant,dict(controller=ids,
                     acceleration_mps2=torch.zeros_like(ids,dtype=torch.float32),
                     target_speed_mps=torch.zeros_like(ids,dtype=torch.float32)),dependencies=self.deps)
                 seed_pi(timeline,tracker,payload,arm)
                 def baseline(state,timeline=timeline):
                     state[WM_MERGE_KEY] = state['present'].bool() & state['is_cav'].bool() & (state['lane'] == 2)
-                    return frozen.parity_motion(state,state['lane'],timeline(state)[...,3])
+                    if self.optimized:
+                        keys = ('s_m','v_mps','a_mps2','lane','present','is_cav','length_m')
+                        packed = torch.stack([state[k].float() for k in keys]).cpu()
+                        sensed = {key:packed[i] for i,key in enumerate(keys)}
+                        timeline(sensed)
+                        held = torch.full_like(sensed['s_m'],float('inf'))
+                        for key,value in timeline.active.items():
+                            b,k = map(int,key.split(':'))
+                            held[b,k] = value
+                        native_accel = state.get('merge_pivot_native_accel')
+                        if native_accel is None:
+                            native_accel = plant.physics_accel(state)
+                        accel = torch.minimum(native_accel,held.to(state['s_m'].device))
+                    else:
+                        accel = timeline(state)[...,3]
+                    return frozen.parity_motion(state,state['lane'],accel)
                 calls.append(baseline)
         def callback(state):
             # BB-traj has no WM discretionary lane pipeline. Use the same explicit
@@ -147,11 +177,17 @@ class Adapter:
                 row = {k:v[i:i+1] if torch.is_tensor(v) and v.ndim and v.shape[0] == 5 else v
                        for k,v in state.items()}
                 out = call(row)
-                cav = row['present'].bool() & row['is_cav'].bool()
-                out[...,1] = torch.where(cav,_merge_lane(row,cav),out[...,1])
+                if not self.optimized:
+                    from wms.control.bridge import _merge_lane
+                    cav = row['present'].bool() & row['is_cav'].bool()
+                    out[...,1] = torch.where(cav,_merge_lane(row,cav),out[...,1])
                 outputs.append(out)
             state[WM_MERGE_KEY] = torch.zeros_like(state['present'],dtype=torch.bool)
-            return torch.cat(outputs)
+            result = torch.cat(outputs)
+            if self.optimized:
+                cav = state['present'].bool() & state['is_cav'].bool()
+                result[...,1] = torch.where(cav,gap6(state,cav),result[...,1])
+            return result
         return callback
 
     def predict(self, payload, K=8, horizon_s=60, *, steps=None):
