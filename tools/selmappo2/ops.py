@@ -738,15 +738,34 @@ def main(argv=None):
     parser.add_argument("--action", required=True, choices=("stage", "dispatch", "status"))
     parser.add_argument("--build", help="exact build_<full source SHA256>; required after staging")
     args = parser.parse_args(argv)
-    files, sources, binding = bundle()
-    build = "build_" + binding
-    if args.build is not None and (not BUILD.fullmatch(args.build) or args.build != build):
-        parser.error("build differs from current registered source snapshot")
     if args.action != "stage" and args.build is None:
         parser.error("dispatch/status require --build")
     if args.action == "stage":
+        files, sources, binding = bundle()
+        build = "build_" + binding
+        if args.build is not None and args.build != build:
+            parser.error("build differs from current registered source snapshot")
+        checked(EVIDENCE.parent, directory=True)
+        if not EVIDENCE.exists():
+            mkdir(EVIDENCE)
+        # Later peer registry/source additions cannot mutate this task's stage.
+        snapshot = EVIDENCE / f"BUNDLE_{binding}.json"
+        exclusive_json(snapshot, dict(binding=binding, sources=sources,
+                       files={name: base64.b64encode(data).decode("ascii")
+                              for name, data in files.items()}))
         # A separate read-only SSH resource receipt precedes any staging writes.
         remote("cpu", files, sources, binding, build)
+    else:
+        if not BUILD.fullmatch(args.build):
+            parser.error("invalid build identifier")
+        build, binding = args.build, args.build.removeprefix("build_")
+        snapshot = read_json(EVIDENCE / f"BUNDLE_{binding}.json")
+        sources = snapshot["sources"]
+        files = {name: base64.b64decode(data, validate=True)
+                 for name, data in snapshot["files"].items()}
+        if (snapshot["binding"] != binding or binding_for(sources) != binding
+                or {name: sha(data) for name, data in files.items()} != sources):
+            raise ValueError("local immutable bundle mismatch")
     return remote(args.action, files, sources, binding, build)
 
 

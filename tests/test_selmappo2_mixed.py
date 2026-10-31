@@ -28,6 +28,11 @@ def sources():
     for name, root in zip(names, (SHARED, WALL)):
         package = ModuleType(name)
         package.__path__ = [str(root)]
+        if name == names[1]:
+            # The staged extension deliberately reuses the frozen baseline;
+            # it does not stage or fork that baseline beside the extension.
+            import traffic_shepherd.c4
+            package.__path__.extend(traffic_shepherd.c4.__path__)
         package.ROOT = root.parents[1]
         sys.modules[name] = package
     runtime = importlib.import_module(f"{names[0]}.runtime")
