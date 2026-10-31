@@ -21,8 +21,9 @@ including symlink destinations, and any seed outside 969400–969431.
   censored/missed/extra event slots, normalized ramp speed-loss vehicle-time and
   per-vehicle delay quantiles. Omits entrants; does not certify fleet/source delay.
 - **Full population:** optional `--prediction-dir DIR` consumes integrator output
-  `<seed>_<arm>.npz`, keys `s,v,lane,mask` [time,slot], `vid` exactly matching the
-  view, `time_s` exact recorded clock including t0. Same event/delay/count scores.
+  `<seed>_<arm>.npz`, keys `s,v,lane,mask` [time,slot], `vid` [time,slot] (or fixed
+  [slot]), initial identities exactly matching the view, `time_s` exact recorded
+  clock including t0. Slots may recycle/reorder; scoring aligns persistent IDs.
   This is the contract for the overnight fully integrated WM-PHYS candidate.
 
 `--stride 1` is the complete one-step diagnostic; larger strides are explicitly
