@@ -1,0 +1,19 @@
+panel,horizon_s,controller,count,denominator,units,source_file,source_selector
+Recorded worlds,600,native,22,90,worlds,E:/agent-work/c4-c1switch/docs/paper_results/c1switch/recorded_world_winners.csv,clock_s=600;unique winner=native
+Recorded worlds,600,ctrl0,17,90,worlds,E:/agent-work/c4-c1switch/docs/paper_results/c1switch/recorded_world_winners.csv,clock_s=600;unique winner=ctrl0
+Recorded worlds,600,mappo,19,90,worlds,E:/agent-work/c4-c1switch/docs/paper_results/c1switch/recorded_world_winners.csv,clock_s=600;unique winner=mappo
+Recorded worlds,600,pi,29,90,worlds,E:/agent-work/c4-c1switch/docs/paper_results/c1switch/recorded_world_winners.csv,clock_s=600;unique winner=pi
+Recorded worlds,600,circles,3,90,worlds,E:/agent-work/c4-c1switch/docs/paper_results/c1switch/recorded_world_winners.csv,clock_s=600;unique winner=circles
+Recorded worlds,600,ties,0,90,worlds,E:/agent-work/c4-c1switch/docs/paper_results/c1switch/recorded_world_winners.csv,clock_s=600;unique winner=ties
+Same-state decisions,60,native,2,16,states,E:/agent-work/c4-c1switch/docs/paper_results/c1switch/step0b_decisions.csv,horizon_s=60;unique winner=native
+Same-state decisions,60,ctrl0,9,16,states,E:/agent-work/c4-c1switch/docs/paper_results/c1switch/step0b_decisions.csv,horizon_s=60;unique winner=ctrl0
+Same-state decisions,60,mappo,3,16,states,E:/agent-work/c4-c1switch/docs/paper_results/c1switch/step0b_decisions.csv,horizon_s=60;unique winner=mappo
+Same-state decisions,60,pi,0,16,states,E:/agent-work/c4-c1switch/docs/paper_results/c1switch/step0b_decisions.csv,horizon_s=60;unique winner=pi
+Same-state decisions,60,circles,0,16,states,E:/agent-work/c4-c1switch/docs/paper_results/c1switch/step0b_decisions.csv,horizon_s=60;unique winner=circles
+Same-state decisions,60,ties,2,16,states,E:/agent-work/c4-c1switch/docs/paper_results/c1switch/step0b_decisions.csv,horizon_s=60;unique winner=ties
+Same-state decisions,90,native,2,16,states,E:/agent-work/c4-c1switch/docs/paper_results/c1switch/step0b_decisions.csv,horizon_s=90;unique winner=native
+Same-state decisions,90,ctrl0,7,16,states,E:/agent-work/c4-c1switch/docs/paper_results/c1switch/step0b_decisions.csv,horizon_s=90;unique winner=ctrl0
+Same-state decisions,90,mappo,1,16,states,E:/agent-work/c4-c1switch/docs/paper_results/c1switch/step0b_decisions.csv,horizon_s=90;unique winner=mappo
+Same-state decisions,90,pi,3,16,states,E:/agent-work/c4-c1switch/docs/paper_results/c1switch/step0b_decisions.csv,horizon_s=90;unique winner=pi
+Same-state decisions,90,circles,1,16,states,E:/agent-work/c4-c1switch/docs/paper_results/c1switch/step0b_decisions.csv,horizon_s=90;unique winner=circles
+Same-state decisions,90,ties,2,16,states,E:/agent-work/c4-c1switch/docs/paper_results/c1switch/step0b_decisions.csv,horizon_s=90;unique winner=ties

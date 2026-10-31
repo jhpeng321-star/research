@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-31T20:55:42+08:00",
+  "checked_at": "2026-10-31T21:04:47+08:00",
   "scope": "Explicit permitted evidence paths only; no automatic scientific status promotion",
   "sources": {
     "C1 gap authoritative report": {
@@ -12,8 +12,8 @@
       "sha256": "f713bd7bacf89392596c7a496e5043f0f60bb6592cda614cc3de2d19c65a19c8",
       "bytes": 13641,
       "heading": "# C1 gaps — S-C1GAP (2026-10-31)",
-      "changed_since_previous_refresh": true,
-      "matches_figure_snapshot": false
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": true
     },
     "C1 closed-loop authoritative report": {
       "path": "E:/agent-work/c4-c1closed/C1CLOSED.md",
@@ -25,6 +25,15 @@
       "sha256": "a5679b8a219fa8adaec8ddb2dbb71d46177a63a567204c0b7b4223d3a47875ff",
       "bytes": 2651,
       "heading": "# S-C1CLOSED — RUNNING; no scientific verdict yet",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "C1 closed-loop runtime sensitivity": {
+      "path": "E:/agent-work/c4-c1closed/docs/paper_results/C1CLOSED_RUNTIME.md",
+      "status": "PRESENT",
+      "sha256": "bc2349dafe5b5848ba335ad2c18c7b6434e7e4016b2e0e4cd14aba0640ddd45d",
+      "bytes": 3979,
+      "heading": "# S-C1CLOSED — runtime expansion and numerical sensitivity",
       "changed_since_previous_refresh": false,
       "matches_figure_snapshot": null
     },
@@ -205,7 +214,7 @@
       "sha256": "41a9fd8e2d4f573c8058df16147cd7d52ffaad4804671c10fe7184f652571e30",
       "bytes": 16274,
       "heading": "# PILOT v2-DATA — MAIN authorization 2026-10-31 15:25",
-      "changed_since_previous_refresh": true,
+      "changed_since_previous_refresh": false,
       "matches_figure_snapshot": null
     },
     "Final calibration": {
@@ -215,7 +224,7 @@
       "bytes": 5282,
       "heading": "# S-WMCALIB — frozen-WM effect calibration",
       "changed_since_previous_refresh": false,
-      "matches_figure_snapshot": null
+      "matches_figure_snapshot": true
     },
     "Calibration handoff": {
       "path": "E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB_HANDOFF.md",
@@ -223,7 +232,7 @@
       "sha256": "a0bae997363eda615d5612ee428e4b8aeedf0b4fcffaccf370cc53775c42995f",
       "bytes": 7103,
       "heading": "# S-WMCALIB (Track 2) HANDOFF 2026-10-31 ~15:00 (branch c4/wmcalib, no push)",
-      "changed_since_previous_refresh": true,
+      "changed_since_previous_refresh": false,
       "matches_figure_snapshot": null
     },
     "Calibration resume": {
@@ -232,7 +241,7 @@
       "sha256": "7a001f0965787f45b674963c8db9e133ba684f32b844562871321fb59b10e8b0",
       "bytes": 7275,
       "heading": "# S-WMCALIB resume / frozen completion procedure — 2026-10-31",
-      "changed_since_previous_refresh": true,
+      "changed_since_previous_refresh": false,
       "matches_figure_snapshot": null
     },
     "Speed-only headroom": {
@@ -256,10 +265,10 @@
     "Shared registration": {
       "path": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md",
       "status": "PRESENT",
-      "sha256": "2765bb044718178bf5ed9ed1120fbc91b5bf0ec8c8dac9c62a51fce43d128404",
-      "bytes": 2176241,
+      "sha256": "1163bcf1bffc3e806795ca5adf6879fc17afbf3433e7e16197a06c0b76319bdb",
+      "bytes": 2177829,
       "heading": "# C4-V7FT-20261017: world-model fixes (merge calibration) + policy-setting fixes; overnight on gpuR",
-      "changed_since_previous_refresh": false,
+      "changed_since_previous_refresh": true,
       "matches_figure_snapshot": null
     },
     "PI regression and genuine-history diagnosis": {
@@ -269,7 +278,7 @@
       "bytes": 7803,
       "heading": "# S-C1PIDIAG — why the newer checkpoints lose the original C1 comparison",
       "changed_since_previous_refresh": false,
-      "matches_figure_snapshot": null
+      "matches_figure_snapshot": true
     },
     "Tiny-perturbation reference": {
       "path": "E:/agent-work/c4-c1floor/docs/paper_results/C1FLOOR.md",
@@ -278,7 +287,7 @@
       "bytes": 3889,
       "heading": "# S-C1FLOOR — tiny-perturbation chaos reference (2026-10-31)",
       "changed_since_previous_refresh": false,
-      "matches_figure_snapshot": null
+      "matches_figure_snapshot": true
     },
     "Tiny-perturbation horizon CSV": {
       "path": "E:/agent-work/c4-c1floor/docs/paper_results/C1FLOOR_error_horizon.csv",
@@ -287,7 +296,7 @@
       "bytes": 33657,
       "heading": "",
       "changed_since_previous_refresh": false,
-      "matches_figure_snapshot": null
+      "matches_figure_snapshot": true
     },
     "Switching scenario and same-state winners": {
       "path": "E:/agent-work/c4-c1switch/docs/paper_results/C1SWITCH_WINNERS.md",
@@ -296,7 +305,7 @@
       "bytes": 11022,
       "heading": "# C1SWITCH scenario winners — recorded and fresh full-rerun panels complete",
       "changed_since_previous_refresh": false,
-      "matches_figure_snapshot": null
+      "matches_figure_snapshot": true
     },
     "Switching current design and continuation": {
       "path": "E:/agent-work/c4-c1switch/docs/paper_results/C1SWITCH_DESIGN.md",
@@ -314,7 +323,7 @@
       "bytes": 44561,
       "heading": "",
       "changed_since_previous_refresh": false,
-      "matches_figure_snapshot": null
+      "matches_figure_snapshot": true
     },
     "Same-state winner CSV": {
       "path": "E:/agent-work/c4-c1switch/docs/paper_results/c1switch/step0b_decisions.csv",
@@ -323,7 +332,7 @@
       "bytes": 6626,
       "heading": "",
       "changed_since_previous_refresh": false,
-      "matches_figure_snapshot": null
+      "matches_figure_snapshot": true
     },
     "Queue service falsifier": {
       "path": "E:/agent-work/c4-wmqueue/docs/paper_results/WMQUEUE.md",

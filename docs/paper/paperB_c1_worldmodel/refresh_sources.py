@@ -16,6 +16,7 @@ SOURCES = {
     "C1 gap report alternate documented delivery": "E:/agent-work/c4-c1gap/docs/paper_results/C1_GAPS.md",
     "C1 closed-loop authoritative report": "E:/agent-work/c4-c1closed/C1CLOSED.md",
     "C1 closed-loop report alternate delivery": "E:/agent-work/c4-c1closed/docs/paper_results/C1CLOSED.md",
+    "C1 closed-loop runtime sensitivity": "E:/agent-work/c4-c1closed/docs/paper_results/C1CLOSED_RUNTIME.md",
     "Recovered wall result": "E:/agent-work/c4-c1gap/docs/paper_results/c1gap/WALL_C1_RESULT.recovered.md",
     "Wall recovery provenance": "E:/agent-work/c4-c1gap/docs/paper_results/c1gap/recovery.json",
     "Main claim checklist": "E:/research-dense/docs/paper/CLAIM_EVIDENCE_CHECKLIST.md",
@@ -62,6 +63,9 @@ def main() -> None:
     prior = json.loads(prior_path.read_text(encoding="utf-8")) if prior_path.exists() else {}
     previous = prior.get("sources", {})
     manifest = json.loads((ROOT / "data/SOURCE_MANIFEST.json").read_text(encoding="utf-8"))
+    evening_path = ROOT / "data/EVENING_SOURCE_MANIFEST.json"
+    if evening_path.is_file():
+        manifest.update(json.loads(evening_path.read_text(encoding="utf-8")))
     snapshots = {r["source_file"]: r["sha256"] for r in manifest.values()}
     records = {}
     for label, filename in SOURCES.items():

@@ -3,6 +3,11 @@
   "checks": [
     "required deliverables nonempty",
     "frozen source byte/hash integrity",
+    "evening source snapshots retain exact producer bytes",
+    "PI source contrasts checked; original, shifted and within-panel history effects stay separate",
+    "all plotted calibration MAEs equal complete report cells; splits and selected variants retained",
+    "recorded/state winner counts and tie handling checked against original five-way costs",
+    "pulse endpoints preserve zero short-clock medians and unavailable late survivors, never zero imputation",
     "strict-history regret rows equal original CSV, no inferred paired CI",
     "paired WM-minus-BB regret is an existing source contrast, not inferred from marginal intervals",
     "direction values, CIs, thresholds and verdicts equal original export",
@@ -11,12 +16,14 @@
     "PNG decoding, source metadata, dimensions and vector PDF signatures",
     "verified bibliography pool: unique keys, balanced braces, required fields and documented verification URLs",
     "headline numerical claim comments and explicit agent-owned pending fields",
+    "evening headline figures have adjacent source comments; complete negative calibration and pending feedback stay distinct",
     "timestamped refresh pending statuses and append-once shared registration match committed receipt"
   ],
   "scope": "Package/source-selection/artwork QA only; no scientific requalification or typeset-page verification",
   "python": "3.14.0 (tags/v3.14.0:ebf955d, Oct  7 2025, 10:15:03) [MSC v.1944 64 bit (AMD64)]",
   "matplotlib": "3.11.2",
-  "source_manifest_sha256": "cd93f644136a525bb0dcd872fdfc6a84d8718d1c9a04656b6b54258cc111766d",
-  "figure_count": 6,
+  "source_manifest_sha256": "96fd1594ecd4c8b040265fa235e3b61db6e0a9beab508693c51828bbd64885a0",
+  "evening_manifest_sha256": "87d640c7f34c9902bb6d94f828a86c7650c98b5e977165e6bee956fba4bdb49d",
+  "figure_count": 9,
   "bib_entries": 12
 }

@@ -35,6 +35,57 @@ def main() -> None:
         assert len(blob) == info["bytes"], name
     checks.append("frozen source byte/hash integrity")
 
+    evening = json.loads((DATA / "EVENING_SOURCE_MANIFEST.json").read_text(encoding="utf-8"))
+    for name, info in evening.items():
+        blob = (DATA / name).read_bytes()
+        assert hashlib.sha256(blob).hexdigest() == info["sha256"], name
+        assert len(blob) == info["bytes"], name
+    checks.append("evening source snapshots retain exact producer bytes")
+
+    pi = csv_rows("pi_diagnosis.csv")
+    assert [(int(r["horizon_s"]), float(r["estimate"]), float(r["lo"]), float(r["hi"])) for r in pi] == [
+        (60,17.85,3.24,31.27), (120,-47.82,-95.20,-27.75),
+        (60,-45.05,-52.73,-25.25), (120,-144.74,-250.11,-36.22),
+        (60,-13.47,-26.92,-1.49)]
+    assert len(set(r["panel"] for r in pi)) == 3
+    checks.append("PI source contrasts checked; original, shifted and within-panel history effects stay separate")
+
+    calib = csv_rows("calibration.csv")
+    assert len(calib) == 18
+    for split, expected in [("Grouped CV", [263,185,174,1719,999,865,6013,3298,3152]),
+                            ("SPEEDHEAD transfer", [176,198,212,1399,1568,1783,4701,4073,4754])]:
+        assert [float(r["mae_veh_s"]) for r in calib if r["split"] == split] == expected
+    for row in calib:
+        assert 0 <= float(row["sign_accuracy"]) <= 1
+        assert -1 <= float(row["spearman"]) <= 1
+    checks.append("all plotted calibration MAEs equal complete report cells; splits and selected variants retained")
+
+    headroom = csv_rows("switch_headroom.csv")
+    for h, expected in [(600,[22,17,19,29,3,0]), (60,[2,9,3,0,0,2]), (90,[2,7,1,3,1,2])]:
+        selected = [r for r in headroom if int(r["horizon_s"]) == h]
+        assert [int(r["count"]) for r in selected] == expected
+        assert sum(int(r["count"]) for r in selected) == int(selected[0]["denominator"])
+    # Check winner labels independently against all candidate costs, including ties.
+    for source, clock, suffix in [("recorded_winners.source.csv", "clock_s", "team_delay_vs"),
+                                  ("step0b.source.csv", "horizon_s", "cost_vs")]:
+        for row in csv_rows(source):
+            costs = {c:float(row[f"{c}_{suffix}"]) for c in ["native","ctrl0","mappo","pi","circles"]}
+            best = min(costs.values())
+            winners = {c for c,v in costs.items() if v-best <= 1e-6}
+            actual = row["winner" if clock == "clock_s" else "winners"]
+            assert set(actual.split("|")) == winners, (source,row["seed"],row[clock])
+    checks.append("recorded/state winner counts and tie handling checked against original five-way costs")
+
+    floor = csv_rows("floor.source.csv")
+    for metric in ["position", "speed"]:
+        for row in [r for r in floor if r["metric"] == metric]:
+            if int(row["horizon_s"]) <= 120:
+                assert float(row["estimate"]) == 0 and row["n_worlds"] == "6"
+            if row["horizon_s"] == "300":
+                assert all(row[k] == "" for k in ["estimate","lo","hi"])
+                assert row["n_worlds"] == "0" and row["status"] == "no_surviving_ids"
+    checks.append("pulse endpoints preserve zero short-clock medians and unavailable late survivors, never zero imputation")
+
     # Compare exact source records, independently of the builder's selector loop.
     raw = {(r["panel"],r["metric"]):r for r in csv_rows("fair.source.csv")}
     for r in csv_rows("regret.csv"):
@@ -78,12 +129,12 @@ def main() -> None:
     assert all(r["n_states"] == "67" for r in wall)
     checks.append("reported regional/entry/wall cells cross-checked, clock conventions distinct")
 
-    for name in ["direction.csv", "regret.csv", "regret_paired.csv", "regional.csv", "entry.csv", "wall_teacher_forced.csv", "architecture_edges.csv"]:
+    for name in ["direction.csv", "regret.csv", "regret_paired.csv", "regional.csv", "entry.csv", "wall_teacher_forced.csv", "architecture_edges.csv", "pi_diagnosis.csv", "calibration.csv", "switch_headroom.csv"]:
         for r in csv_rows(name):
             assert r["source_file"] and r["source_selector"], name
     checks.append("every derived numerical/schematic CSV row has source and selector")
 
-    names = ["fig_direction", "fig_regret", "fig_regional", "fig_entry", "fig_wall_teacher_forced", "fig_architecture"]
+    names = ["fig_direction", "fig_regret", "fig_regional", "fig_entry", "fig_wall_teacher_forced", "fig_architecture", "fig_pi_diagnosis", "fig_calibration", "fig_switch_headroom"]
     for name in names:
         with Image.open(FIG / f"{name}.png") as image:
             assert min(image.size) > 400
@@ -118,8 +169,14 @@ def main() -> None:
     for phrase in ["96.0%", "584.0", "13.64", "0.8895"]:
         line = next(line for line in claims.splitlines() if phrase in line)
         assert "<!-- Source" in line, phrase
-    assert "[[PENDING:" in claims and "S-C1CLOSED" in claims and "S-WMCALIB" in claims
+    assert "[[PENDING:" in claims and "S-C1CLOSED" in claims and "S-C1SWITCH" in claims
     checks.append("headline numerical claim comments and explicit agent-owned pending fields")
+    for phrase in ["+17.85", "−45.05", "263/1719/6013", "1362", "0.5193", "1.832371", "+508.3"]:
+        line = next(line for line in claims.splitlines() if phrase in line)
+        assert "<!-- Source" in line, phrase
+    assert "Status: PENDING (registered campaign running)" in claims
+    assert "completed verdict NOT USABLE" in claims
+    checks.append("evening headline figures have adjacent source comments; complete negative calibration and pending feedback stay distinct")
 
     refresh = json.loads((ROOT / "SOURCE_REFRESH.json").read_text(encoding="utf-8"))
     assert refresh["sources"]["C1 gap report alternate documented delivery"]["status"] == "PRESENT"
@@ -135,6 +192,7 @@ def main() -> None:
                "scope":"Package/source-selection/artwork QA only; no scientific requalification or typeset-page verification",
                "python":sys.version, "matplotlib":matplotlib.__version__,
                "source_manifest_sha256":hashlib.sha256((DATA/"SOURCE_MANIFEST.json").read_bytes()).hexdigest(),
+               "evening_manifest_sha256":hashlib.sha256((DATA/"EVENING_SOURCE_MANIFEST.json").read_bytes()).hexdigest(),
                "figure_count":len(names), "bib_entries":len(keys)}
     (ROOT / "VERIFICATION.json").write_text(json.dumps(receipt,indent=2)+"\n", encoding="utf-8")
     print(json.dumps(receipt,indent=2))

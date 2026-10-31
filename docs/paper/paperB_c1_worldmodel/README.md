@@ -12,6 +12,13 @@ Target: IEEE IV, six pages including references; owner deadline November 15, 202
 - `THREATS.md`: reviewer objections and evidence-bounded answers.
 - `REFRESH.md`: final source refresh and remaining agent dependencies.
 - `SOURCE_REFRESH.json`: timestamped exact-path existence/hash inventory; `refresh_sources.py` updates it without dispatching any runs.
+- `NIGHT_SOURCE_REVIEW.md`: evening source precedence, completed negative verdicts and continuation boundaries.
+
+## Evening drafting cut
+
+The supported headline remains the recovered historical teacher-forced wall result. The PI diagnosis supplies a separately scoped genuine-history extension and coverage confound; it does not complete autonomous feedback superiority. Calibration and the queue/service prototype now have completed negative verdicts. The pulse experiment supplies no measured short-window chaos excuse. Recorded and same-state switching headroom are complete; corrected-adapter selector efficacy, complete C1CLOSED, repair-candidate gate and WMVALUE remain explicit agent-owned PENDING fields.
+
+New source-bound artwork and CSVs: `fig_pi_diagnosis`, `fig_calibration`, `fig_switch_headroom`, plus the byte-preserved perturbation export. Use `build_evening_figures.py` for these additions and `build_figures.py` for the historical package; commands/captions are in `FIGURES.md`. Bibliography verification and first-package registration are preserved.
 
 ## Evidence rules for this package
 
@@ -19,7 +26,7 @@ All empirical numbers in Markdown have adjacent HTML source comments. Source-rel
 
 `SUPPORTED` means supported within the named report's scope, not independently replicated. `PENDING` means the statement cannot yet be asserted. `CONTRADICTED` identifies a claim that must be removed or replaced. A completed package may contain scientific PENDING fields; it is not a completed manuscript or a qualification receipt.
 
-## Initial source audit
+## Initial source audit (historical; evening changes above and in REFRESH.md)
 
 - Read `E:/research-dense/docs/paper/{CLAIM_EVIDENCE_CHECKLIST,IEEE_IV_2027_DRAFT}.md`, model plans/change log, named E1/E2 exports and their README.
 - Read `E:/agent-work/c4-wmrequal3/docs/paper_results/{WMREQUAL2,WMREQUAL3}.md` and `E:/agent-work/c4-wmfixmerge/docs/paper_results/{WMFIX_PRIOR,WMFIX_RETARGET,WMFIX_PILOT_FAIL,WMFIX_V2_FEAS}.md`.
