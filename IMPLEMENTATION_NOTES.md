@@ -18,3 +18,10 @@
   0/140 named original shard/run directories exist. Input audit finds no source
   queue or demand channels, so autonomous-entry+mix cells are unavailable.
   This is an availability result for these bindings, not a global deletion claim.
+- Pack-clock byte check independently aligns all 73 modelled PI snapshot
+  kinematics to pack offset 1, and all 94 wall snapshot kinematics to offset 10;
+  offset 0 is empty in both examples. The nominal-origin conclusion is not an
+  assumption that the pack retained a 300 s warm-up. Clock-check v1/v2 retained.
+- Source inspection confirms broad A0 removes all learned longitudinal
+  corrections, including courtesy/yield/adaptation, not only the residual net.
+  Separately registered built-in single-switch tests isolate those mechanisms.

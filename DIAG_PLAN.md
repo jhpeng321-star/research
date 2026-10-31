@@ -89,3 +89,16 @@ starts. Preserve the recorded remaining endpoint clocks: PI 60/120 s, wall
 Report endpoint attrition. No component winner is chosen from this auxiliary
 panel; this is the registered full-history test, with 60 s primary. Entries
 remain unavailable. Run sequentially after the original grid, <=24 workers.
+
+## Source-inspection component clarification (before extra forecasts)
+
+Current `accel_delta_mps2` includes attention/temporal residual, courtesy, learned
+yield and ramp-speed adaptation. Thus original r0 is **all learned acceleration
+corrections off** (A0), not attention residual alone. Add frozen single-switch
+teacher-forced checks on the same original starts/longest available history,
+inferred settings: attention+temporal residual off, courtesy off, learned yield
+off for 13E/WM2, plus ramp-speed-adaptation off for WM2 (490 units). Keep all
+other components unchanged. This source-defined split is registered before
+looking at any panel aggregate. After scoring, conditional closed-loop-check
+the best extra switch per model/cohort if it improves on that model's original
+baseline; selection is exploratory. Run after both earlier panels, <=24 workers.

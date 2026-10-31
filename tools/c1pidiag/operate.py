@@ -32,7 +32,7 @@ def ssh(code, timeout=120):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('action', choices=('select', 'probe', 'read', 'list', 'inspect', 'stage', 'smoke', 'launch', 'status', 'fetch'))
+    ap.add_argument('action', choices=('select', 'probe', 'read', 'list', 'inspect', 'stage', 'smoke', 'launch', 'auxlaunch', 'exlaunch', 'status', 'fetch'))
     ap.add_argument('--path')
     args = ap.parse_args()
     if args.action == 'select':
@@ -52,9 +52,9 @@ def main():
             json.dump(dict(rule='first 40 PI + first 30 wall sorted world,t0,sid; denied identities excluded',
                            index_sha256=hashlib.sha256(path.read_bytes()).hexdigest(), states=panel), f, indent=2)
         print('fixed panel',len(panel), 'worlds',len({e['world'] for e in panel}))
-    elif args.action in ('smoke', 'launch'):
-        script = 'worker.py' if args.action == 'smoke' else 'dispatch.py'
-        extra = ['--smoke'] if args.action == 'smoke' else []
+    elif args.action in ('smoke', 'launch', 'auxlaunch', 'exlaunch'):
+        script = {'smoke':'worker.py','launch':'dispatch.py','auxlaunch':'auxiliary.py','exlaunch':'extensions.py'}[args.action]
+        extra = {'smoke':['--smoke'],'launch':[],'auxlaunch':['--wait'],'exlaunch':[]}[args.action]
         label = args.action.upper()+'2'
         print(ssh(f'''from pathlib import Path
 import os,subprocess,json,time
@@ -72,18 +72,26 @@ with (p/'evidence_v2/{label}.log').open('x') as log:
         print(ssh(f'''from pathlib import Path
 import json,os
 p=Path({REMOTE!r})
-for name in ('SMOKE2.log','LAUNCH2.log'):
+for name in ('SMOKE2.log','LAUNCH2.log','AUXLAUNCH2.log','EXLAUNCH2.log'):
  q=p/'evidence_v2'/name
  if q.exists():print(name,q.read_text()[-12000:])
 for name in ('STATUS.json','COMPLETE.json','TF_DONE.json','PREFLIGHT.json','SELECTED.json'):
  q=p/'evidence_v2'/name
  if q.exists():print(name,q.read_text())
 print('units',sum(1 for _ in (p/'units_v2').glob('*.json')),'load',os.getloadavg())
+for name in ('PREFLIGHT.json','COMPLETE.json'):
+ q=p/'aux_evidence'/name
+ if q.exists():print('aux',name,q.read_text())
+print('aux units',sum(1 for _ in (p/'aux_units').glob('*.json')))
+for name in ('TF_DONE.json','COMPLETE.json','SELECTED.json'):
+ q=p/'extra_evidence'/name
+ if q.exists():print('extra',name,q.read_text())
+print('extra units',sum(1 for _ in (p/'extra_units').glob('*.json')))
 '''))
     elif args.action == 'fetch':
         out=ROOT/'docs/paper_results/c1pidiag'
         assert out.is_dir()
-        for name in ('evidence','evidence_v2'):
+        for name in ('evidence','evidence_v2','aux_evidence','extra_evidence'):
             p=subprocess.run(['scp','-o','BatchMode=yes','-o','ConnectTimeout=15','-r',f'gpuA:{REMOTE}/{name}',str(out)],text=True,capture_output=True,timeout=180)
             if p.returncode:raise RuntimeError(p.stderr)
         print('evidence fetched')
@@ -91,7 +99,7 @@ print('units',sum(1 for _ in (p/'units_v2').glob('*.json')),'load',os.getloadavg
         print(ssh(f'''from pathlib import Path
 import hashlib
 p=Path({REMOTE!r});assert p.parent.is_dir();p.mkdir(exist_ok=True)
-for name in ('evidence','units','smoke','evidence_v2','units_v2'):(p/name).mkdir(exist_ok=True)
+for name in ('evidence','units','smoke','evidence_v2','units_v2','aux_evidence','aux_units','extra_evidence','extra_units'):(p/name).mkdir(exist_ok=True)
 for name in ('worker.py','dispatch.py','operate.py'):
  q=p/name
  if q.exists():
@@ -104,6 +112,14 @@ print('destination',p)
             if p.returncode: raise RuntimeError(p.stderr)
         print('staged')
     elif args.action == 'inspect':
+        if args.path == 'forward':
+            print(ssh('''import sys,inspect
+sys.path.insert(0,'/root/autodl-tmp/c4/speedhead20261030/tools/speedhead')
+import wm_worker
+from wms.model.wms import WmSModel
+print(inspect.getsource(WmSModel.forward))
+'''))
+            return
         print(ssh('''import sys,inspect
 sys.path.insert(0,'/root/autodl-tmp/c4/speedhead20261030/tools/speedhead')
 import wm_worker as w
