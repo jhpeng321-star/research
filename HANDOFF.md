@@ -2,12 +2,14 @@
 
 ## OWNER02:21 fresh resume
 Production615088/start48394231 and workers615093-615096 verified live/nice19;
-publisher15284/creation2026-11-01T02:05:24 also verified. Never duplicate either.
+publisher15284/creation2026-11-01T02:05:24 was verified, then identity-checked/retired
+for the observer-only amendment. Replacement publisher5020 is live for12h;
+receipt `tools/coopfree/evidence/HOLD_PUBLISHER_5020.json`. Never duplicate production/publisher.
 TRAIN reserved1,649,760/1,650,000:240sim-s remain. Corrected u1 can finish; updates3/6/9
 require prospective owner budget/phase amendment. Preserve all historical charges;
 do not count optimizer replay as fresh batches. See RESUME_OWNER0221.json.
 Read-only learning-check/pairwise learned-vs-HOLD observer extension CPU6/6PASS/SUMO0;
-its deployment receipt below supersedes the old publisher PID when available.
+its deployment receipt supersedes old publisher15284; physics supervisor unchanged.
 
 ## OWNER01:48 HOLD-credit migration (fresh-session priority)
 The inherited u1 arms use MAPPO counterfactuals. Any inherited `policy_u001.pt`

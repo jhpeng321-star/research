@@ -2,7 +2,8 @@
 
 ## OWNER02:21 learning-check amendment and budget blocker
 Fresh resume verified cpuQ615088/start48394231 and all four nice19 workers;
-the existing singleton publisher15284 is also live. No physics was redispatched.
+the existing singleton publisher15284 was verified and then identity-checked/retired
+for an observer-only replacement5020, live12h. No physics was redispatched.
 TRAIN has1,649,760/1,650,000sim-s reserved, leaving240; the corrected u1 can finish,
 but fresh updates3/6/9 cannot fit. Even150 joint-only windows at earliest t300 cost
 135,000sim-s, before HOLD baselines or all-member solos. The overall2M cap also
@@ -19,6 +20,18 @@ J600/J900 and safety bootstrap differences directly, rather than subtracting CIs
 CPU6/6PASS,0.080s,SUMO0; includes world-pair mismatch/duplicate rejection, cancellation
 of world variance, legacy/replay exclusion, cap blockage and six-update trigger tests.
 Shared REGISTRATION.md records this blocker; immutable scientific runtime/design unchanged.
+
+### Pre-optimizer execution/credit snapshot (not a learned update)
+All156 new HOLD baselines are complete. Against the retained joint explorations,
+146/156windows(93.5897%) change executed motion, so the registered low-execution
+trigger is not met; original safety overrides84.8897% of requested commands.
+Sampled600s D_G mean+90.197vehicle-s, SD3449.764, range[-8317.092,+10477.929].
+At collection only33/66planned exact solo groups were closed: sumD_i mean-474.520,
+C_G mean+246.432/SD4814.872,9/33positive. This incomplete completion-order subset
+is not a final cooperation estimate or DEV learned-policy improvement.
+Machine-readable receipt: `tools/coopfree/evidence/PREOPT_HOLD_DIAGNOSTICS.json`.
+First replacement observer publication succeeded at260/455tasks,
+1,488,840closedactual/1,690,800chargedsim-s; checkpoint and both dev panels pending.
 
 ## OWNER01:48 correction (supersedes inherited live-run narrative)
 CPU22/22 PASS, zero skips,1.28s, SUMO0, including all18 original frozen gates.
