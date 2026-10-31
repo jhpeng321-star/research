@@ -220,6 +220,8 @@ class PhysicsConfig:
     merge_zone_s1_m: float = 75.44
     merge_lane: int = 2
     merge_target_lane: int = 1
+    # S-RB-MERGE: absent = legacy checkpoint behavior.
+    merge_model: str = "legacy"
     mobil_threshold_mps2: float = 0.1
     b_safe_base_mps2: float = 4.0
     b_safe_end_mps2: float = 6.0
@@ -305,6 +307,8 @@ class PhysicsConfig:
     entry_learned: bool = False
 
     def __post_init__(self) -> None:
+        if self.merge_model not in ("legacy", "sumo"):
+            raise ValueError("merge_model must be 'legacy' or 'sumo'")
         if not isinstance(self.secure_gap_veto, bool):
             raise ValueError("secure_gap_veto must be a boolean")
         if not isinstance(self.emergency_braking, bool):

@@ -49,7 +49,8 @@ def forward_output(model, state, kin, present, deciders, params, result):
         result["accel_delta_mps2"] = result["accel_mps2"] - result["physics_accel_mps2"]
 
 
-def step_output(model, state, kin, present, out, next_s, next_v, next_lane, params):
+def step_output(model, state, kin, present, out, next_s, next_v, next_lane, params,
+                *, ramp_owned_by_merge=False):
     moved = kin.clone()
     moved[..., 0], moved[..., 4], moved[..., 5] = next_s, next_v, out["accel_mps2"]
     end = model.physics.merge_zone_s1_m
@@ -65,6 +66,11 @@ def step_output(model, state, kin, present, out, next_s, next_v, next_lane, para
         deciders = deciders | delegated.bool()
     lc = evaluate(model, state, moved, present, deciders, params)
     proposed = torch.where(deciders, lc["next_lane"], next_lane)
+    if ramp_owned_by_merge:
+        # Keep ramp wishes/messages, but reserve occupancy only when the merge
+        # owner accepts the move against the resolved mainline proposals.
+        proposed = torch.where(state["lane"] == model.physics.merge_lane,
+                               state["lane"].long(), proposed)
     resolved = resolve_lane_conflicts(next_s, kin[..., 6], state["lane"].long(),
                                       proposed, present, deciders, 0.0)
     out.update({k: v for k, v in lc.items() if k != "next_lane"})

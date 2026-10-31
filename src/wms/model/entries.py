@@ -170,8 +170,13 @@ class EntryConfig:
     conserve_queue: bool = False
     # WMFIX: opt-in candidate admission using the SAME inferred entrant settings.
     learned_admission: object | None = None
+    # S-RB-MERGE: source-backed IDM departure adapter, default absent.
+    sumo_insertion: object | None = None
 
     def __post_init__(self) -> None:
+        if self.sumo_insertion is not None and (not self.conserve_queue or
+                self.learned_entry is not None or self.learned_admission is not None):
+            raise ValueError("SUMO insertion requires exact conservation and learned insertion OFF")
         if self.learned_admission is not None and (not self.conserve_queue or
                 self.insert_rule != "sumo_like_v2" or self.learned_entry is not None):
             raise ValueError("learned admission requires exact conservation/sumo_like_v2, no hazard bundle")
@@ -979,7 +984,7 @@ class TorchEntryProcessV2(_EntryProcessBase):
                                     max(hist.speed_std[e], 1.0e-3)))
             u_gap = float(rng.normal(hist.gap_mean[e],
                                      max(hist.gap_std[e], 1.0e-3)))
-            vt = (0 if self.cfg.learned_admission is not None else
+            vt = (0 if self.cfg.learned_admission is not None or self.cfg.sumo_insertion is not None else
                   (int(rng.choice(N_VTYPES, p=_norm(hist.vtype_share[e])))
                    if hist.vtype_share[e].sum() > 0 else 0))
             if e == 0:
@@ -990,7 +995,12 @@ class TorchEntryProcessV2(_EntryProcessBase):
             if self.cfg.insert_rule != "v2":
                 # Same random draws as v2 (common random numbers across rules); the
                 # speed ratio and the sampled required gap are not used.
-                if self.cfg.learned_admission is not None:
+                if self.cfg.sumo_insertion is not None:
+                    if not self.couple_draws:
+                        raise ValueError("SUMO insertion requires identity-coupled ordinals")
+                    placed = self.cfg.sumo_insertion.place(
+                        self, work, b, e, lanes_try, cav, int(self._candidate_index[b, e]) + attempt)
+                elif self.cfg.learned_admission is not None:
                     if not self.couple_draws:
                         raise ValueError("learned admission requires identity-coupled candidate ordinals")
                     placed = self.cfg.learned_admission.place(

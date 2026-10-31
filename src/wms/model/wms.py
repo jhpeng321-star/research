@@ -1054,6 +1054,14 @@ class WmSModel(nn.Module):
         elif tuple(k.shape) != (b, slots):
             raise ValueError("k_steps must be scalar or [B,K]")
 
+        if self.physics.merge_model == "sumo":
+            from . import sumo_merge
+            encoded, driver_embedding, driver_params = self._encode_drivers(
+                kin, present, driver_history, driver_history_mask, history, history_mask,
+                driver_defaults, driver_params, driver_embedding)
+            return sumo_merge.forward(self, state, learned, lane_learned, encoded,
+                                      driver_params, driver_embedding, baseline_lane_logits)
+
         encoded = None
         final_envelope = bool(getattr(self.physics, "emergency_braking", False))             and self.physics_step is None
         if self.rollout_mode in ("driver_params", "hybrid") or self.long_history:
@@ -1470,6 +1478,8 @@ class WmSModel(nn.Module):
     @property
     def _samples_lanes(self) -> bool:
         """Hazard lane decisions are sampled from the masked categorical (not argmax)."""
+        if self.physics.merge_model == "sumo":
+            return False
         if getattr(self, "lane_v5", None) is not None:
             # V8WM2 forced_window_mode='hazard': forced-window rows always draw.
             # V10UNBLOCK lane_learnable: every learned slot always draws its own head.
@@ -1489,6 +1499,8 @@ class WmSModel(nn.Module):
 
     @property
     def _tracks_lane_blocked(self) -> bool:
+        if self.physics.merge_model == "sumo":
+            return False
         return (getattr(self, "lane_hazard", None) is not None
                 and getattr(self, "lane_hazard_features", "v1") == "v2")
 
@@ -1509,6 +1521,8 @@ class WmSModel(nn.Module):
     # ------------------------------------------------------------------ LANEV5
     @property
     def _tracks_lane_v5(self) -> bool:
+        if self.physics.merge_model == "sumo":
+            return False
         return getattr(self, "lane_v5", None) is not None
 
     def _history_stride_steps(self) -> int:
@@ -1773,7 +1787,8 @@ class WmSModel(nn.Module):
         """
         native_lane_mask = getattr(cav_controller, "native_lane_mask", None)
         if native_lane_mask is not None:
-            if self.black_box or (self.merge_pivot is None and self.lane_model != "lc2013"):
+            if self.black_box or (self.merge_pivot is None and self.lane_model != "lc2013"
+                                  and self.physics.merge_model != "sumo"):
                 raise ValueError("native_lane_change requires a structured first-passage WM")
             if (self.rollout_mode not in ("driver_params", "hybrid") and not self.long_history
                     and self.lane_model != "lc2013"):
@@ -1787,7 +1802,7 @@ class WmSModel(nn.Module):
             baseline_lane_logits=baseline_lane_logits,
             controller_id=(controller_id if action_id is None else action_id),
             action_command=action_command)
-        if self.merge_pivot is not None and projection is not None:
+        if self.merge_pivot is not None and projection is not None and self.physics.merge_model != "sumo":
             raise ValueError("first_passage uses exact geometry; padded projection must be off")
         if self._uses_driver_embedding:
             forward_kwargs["driver_embedding"] = driver_embedding
@@ -1804,6 +1819,10 @@ class WmSModel(nn.Module):
                              use_reentrant=False, preserve_rng_state=self.training)
         else:
             out = self.forward(state, **forward_kwargs)
+        if self.physics.merge_model == "sumo":
+            from . import sumo_merge
+            return sumo_merge.step(self, state, out, k_steps, driver_params, action_id,
+                                   action_command, cav_teacher, cav_controller, projection)
         lane_deciders = out.get("lane_decider_mask", out["hdv_mask"])
 
         s, v = state["s_m"], state["v_mps"]
@@ -2510,6 +2529,9 @@ class WmSModel(nn.Module):
         torch RNG; ``lane_crn`` shares one draw per (step, slot) across all batch rows.
         """
         current = dict(state)
+        if self.physics.merge_model == "sumo" and entries is not None:
+            from .sumo_insertion import configure_entries
+            configure_entries(entries, self.physics, entrant_driver_sampler)
         if controller_id is None:
             controller_id = current.get("controller_id")
         current.pop("controller_id", None)
