@@ -77,3 +77,33 @@ Use only existing Python environments; nice19 single-thread remote CPU work;
 GPU inference only if nvidia-smi shows free compute, otherwise CPU. Own PIDs only.
 If PASS, map V bootstrap and WM counterfactual group credit to policy14_cli and
 provide a measured GPU-hour estimate before registering any training run.
+
+## Registered MAIN amendment (18:12), execution freeze on resume
+Supersedes the source-feature requirement in lines 25-45: no source queue,
+backlog, request count, inferred demand, or seed/demand feature is permitted.
+Rebuild on-road observations using the existing belief.py projection: own CAV
+reports, nearest same-lane front/rear within 100 m bumper gap (nominal 5 m
+length, never length_true_m), and RSU zones mainline [-800,225.44), ramp
+[-378.66,75.44). Outside RSU, neighbour acceleration is unobserved (zero).
+Coverage masks identify geometric bins intersecting RSU/detection coverage;
+they do not imply full global sensing. No behavioural threshold is added.
+Boundary FLOW = cumulative and trailing-60s first-entry detector counts per
+entrance from the prefix only. Registry IDs are used only for deduplication,
+never as features. Require first appearances at the physical network boundary;
+later first appearances inside the road fail the reconstruction audit.
+V state replaces queue/request channels with these four flow counts. D retains
+only commands issued at t0 (the first 1s decision), not realized accelerations;
+read explicit nullable commands from the recorded action log to avoid zero
+sentinel ambiguity. Fit at t900 uses no command and exact zero terminal value.
+Global speed histories and independently reproduced request schedules may be
+used ONLY to construct LABELS. Full objective uses the recorded observer's
+transition-union/end-speed fleet cost (births included, exits carry last speed)
+and end-step source rectangles. Reconcile each objective_120/300/600 clock;
+never interpolate missing source clocks or replace full J with on-road J.
+Freeze all feature definitions and tests before real fitting. Reserved labels
+remain unopened until the complete A-E adapter/coverage gate is ready.
+A may reuse only matched seed/start/arm/future/end-clock predictions. Existing
+t300-only cumulative tails cannot stand in for later-state conditional starts.
+The MAIN amendment authorizes new WM inference only at 60/90s. If reused A is
+incomplete, record the exact missing cells and request the smallest explicit
+amendment; do not run unregistered new long inference or report a false FAIL.
