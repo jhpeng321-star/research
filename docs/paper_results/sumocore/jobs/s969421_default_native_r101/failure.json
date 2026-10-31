@@ -1,0 +1,13 @@
+{
+ "job": {
+  "id": "s969421_default_native_r101",
+  "world": 969421,
+  "variant": "default",
+  "arm": "native",
+  "rng": 101,
+  "horizon": 600,
+  "charge": 601
+ },
+ "actual_sim_s": 0.0,
+ "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/sumocore20261031/code/90324a041fef/worker.py\", line 50, in run\n    env.initialize(bundle,config,seed=job['rng'],arm=job['arm'],out=out,horizon=job['horizon'])\n  File \"/home/ubuntu/sumocore20261031/code/90324a041fef/model_env.py\", line 30, in initialize\n    start_sumo(self.binary,config,seed=seed,config=self.config,api=traci,\n  File \"/home/ubuntu/e3final/runtime/traffic_shepherd/simulation.py\", line 76, in start_sumo\n    api.start(command, port=port)\n  File \"/home/ubuntu/miniconda3/lib/python3.10/site-packages/traci/main.py\", line 159, in start\n    raise FatalTraCIError(\"Could not connect.\")\ntraci.exceptions.FatalTraCIError: Could not connect.\n"
+}

@@ -1,5 +1,15 @@
 # S-SUMOCORE handoff
 
+## COMPLETE — final receipts take precedence over chronological notes below
+- Report `docs/paper_results/SUMOCORE.md` (≤50lines);144/144effective futures,87517.5actualsim-s incl1117.5partials,90150precharge<=100000. All own supervisors exited; no active dispatch/inference. No completed rollout repeated.
+- Inferred settings improve traffic fields/absolute-delay CRPS, but predict wrong600s sample-mean MAPPO/PI benefit signs; default signs are correct. Both lose600sdelayCRPS to cell-conditioned climatology.18/144startupcollision flags (all969425) retained; physical-validity FAIL, not a clean information ceiling. No overall qualified winner; no physics/settings tuned after results.
+- Data/accounting verification PASS on all144trajectories/source integrals and24paired arrival/CAV streams;4contract+3scoretestsPASS. Helper obsstate649cars/routes/lengths and54targetclock cross-checksPASS. Padding192→512 gives EXACT frozenMAPPO commands on8states.
+- Remote `cpuQ:~/sumocore20261031/`; terminal scorer immutable `code/1f061a300604/`. Local compact receipts/forecasts/scores `docs/paper_results/sumocore/`,196files plusMIRROR_SHA256; raw0.5strajectories retained remotely. SummarySHAf91561842325d391e158dbb6383690d3727d6b50179d0ab37950b06bdbfe086e; verificationSHA9b1bb4950c947bc3e9358bc945c4410dc82b5056674265dd3920d5adf3a31f66.
+- Real S-RB-EVAL primitives/BIC reused; its external importer requiresK8/fivearms, so do not mislabel ourK3/threearms as that gate. Existing frozenencoderSHA5b256941 differs from WM2K8referenceb8797242; comparison is system-level, not same-encoder ablation. No shared model changes or switches, training/GPU/push/peer signals.
+- Read-only progress: `python tools/sumocore/status.py`; local integrity/length check: `python tools/sumocore/verify_mirror.py`. Central REGISTRATION has design, explicit repairs/status amendments and terminal result line. Do not repeat completed dispatches.
+
+## Chronological preparation and recovery receipts
+
 - Owner task: observable-start SUMO 1.27.1 physics ceiling; branch `c4/sumocore`, base `f0db3c82`.
 - Read owner WM-PHYS registration (2026-10-31 23:12), both top-down reviews and WMBREAKDOWN.
 - No simulation or inference dispatched yet; cap 100,000 actual sim-s.

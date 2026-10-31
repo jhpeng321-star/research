@@ -1,0 +1,13 @@
+{
+ "job": {
+  "id": "s969426_default_mappo_r303",
+  "world": 969426,
+  "variant": "default",
+  "arm": "mappo",
+  "rng": 303,
+  "horizon": 600,
+  "charge": 601
+ },
+ "actual_sim_s": 591.5,
+ "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/sumocore20261031/code/60aaa2dcb977/worker.py\", line 62, in run\n    env.advance(policy)\n  File \"/home/ubuntu/sumocore20261031/code/60aaa2dcb977/model_env.py\", line 130, in advance\n    self._control_tick(command)\n  File \"/home/ubuntu/e3final/runtime/traffic_shepherd/c4/env.py\", line 567, in _control_tick\n    sub = self._after_physics(after, actions, now, commanded)\n  File \"/home/ubuntu/sumocore20261031/code/60aaa2dcb977/model_env.py\", line 96, in _after_physics\n    assert not self.frame.dropped, self.frame.dropped\nAssertionError: ('ramp.sc.100',)\n"
+}

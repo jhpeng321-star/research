@@ -1,0 +1,13 @@
+{
+ "job": {
+  "id": "s969421_default_native_r101_a2",
+  "world": 969421,
+  "variant": "default",
+  "arm": "native",
+  "rng": 101,
+  "horizon": 600,
+  "charge": 601
+ },
+ "actual_sim_s": 0.0,
+ "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/sumocore20261031/code/1bf08f26ee5d/worker.py\", line 52, in run\n    env.initialize(bundle,config,seed=job['rng'],arm=job['arm'],out=out,horizon=job['horizon'])\n  File \"/home/ubuntu/sumocore20261031/code/1bf08f26ee5d/model_env.py\", line 46, in initialize\n    traci.vehicle.add(vid,rid,typeID=vehicle['type'],depart='now',\n  File \"/home/ubuntu/miniconda3/lib/python3.10/site-packages/traci/_vehicle.py\", line 1461, in add\n    self._setCmd(tc.ADD_FULL, vehID, \"t\" + (12 * \"s\") + \"ii\", 14,\n  File \"/home/ubuntu/miniconda3/lib/python3.10/site-packages/traci/domain.py\", line 169, in _setCmd\n    self._connection._sendCmd(self._cmdSetID, varID, objectID, format, *values)\n  File \"/home/ubuntu/miniconda3/lib/python3.10/site-packages/traci/connection.py\", line 232, in _sendCmd\n    return self._sendExact()\n  File \"/home/ubuntu/miniconda3/lib/python3.10/site-packages/traci/connection.py\", line 144, in _sendExact\n    raise TraCIException(err, prefix[1], _RESULTS[prefix[2]])\ntraci.exceptions.TraCIException: Departure speed for vehicle 'mainline.118' is too high for the departure edge '1191554636'.\n"
+}

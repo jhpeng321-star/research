@@ -1,0 +1,13 @@
+{
+ "job": {
+  "id": "s969422_default_native_r202",
+  "world": 969422,
+  "variant": "default",
+  "arm": "native",
+  "rng": 202,
+  "horizon": 600,
+  "charge": 601
+ },
+ "actual_sim_s": 0.0,
+ "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/sumocore20261031/code/09aeb8ddcaf5/worker.py\", line 48, in run\n    bundle,config=prepare(job,out)\n  File \"/home/ubuntu/sumocore20261031/code/09aeb8ddcaf5/prepare_bundle.py\", line 67, in prepare\n    assert len(candidates)==1,('observable inverse geometry ambiguous',vid,s,lane,candidates)\nAssertionError: ('observable inverse geometry ambiguous', 'ramp.11', 75.44000244140625, 2, [])\n"
+}

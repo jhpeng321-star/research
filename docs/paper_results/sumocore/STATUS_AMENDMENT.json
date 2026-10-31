@@ -1,0 +1,27 @@
+{
+ "recovered": [
+  "s969425_default_mappo_r101",
+  "s969425_default_mappo_r202",
+  "s969425_default_mappo_r303",
+  "s969425_default_native_r101",
+  "s969425_default_native_r202",
+  "s969425_default_native_r303"
+ ],
+ "stops": {
+  "STOP": "f5ff26dc4bb908724bb3f2c1900052e9584741eb1d4f9341c7d03be7b6ab4cc1",
+  "STOP.s969421_default_native_r101_a2": "6c8a2221d061be2f2355887c7950c126d64c308090700270d3f22dc954834767",
+  "STOP.s969425_default_native_r101": "62cc096a57148c7c9759268707f63722a2aaa49c4ba88441daca2834a953fab7",
+  "STOP.s969422_default_native_r101": "30140c13d7b930e0c227becc3f368abb9f107c6c677c3abf150b896e99746922"
+ },
+ "full_rollout_failures": {
+  "s969425_default_mappo_r101": "3bd4a37d45c7c63fcc794781cf3689b505e8d49ffe1309620967e5c110dc060b",
+  "s969425_default_mappo_r202": "895adea823f84b0d4cc41ffc5d6562e2c0aa3bc2163ce4059d61f158268091cf",
+  "s969425_default_mappo_r303": "8df6152ce5c89d74dfd668238f7e2515c2c55b379f0b9d5c45506e0ed12a82ca",
+  "s969425_default_native_r101": "d6a9cad4c3ec4b9ea9596d9eda318a7dc367f62b79ecaa46e64351e8b7666788",
+  "s969425_default_native_r202": "00626a0c334ec1171e81388438cb585dba3588294c1142ed5f13d6d8d8a74e51",
+  "s969425_default_native_r303": "1da3cf6be640145e46e6ff47f81f568f33ddd9ef7259f80e078ed412d1bedf51"
+ },
+ "extra_sim_s": 0,
+ "extra_precharge": 0,
+ "interpretation": "retain collision-flagged forecasts in diagnostic scores; they FAIL physical validity, never rerun or tune"
+}

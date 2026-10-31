@@ -1,0 +1,24 @@
+{
+ "job": {
+  "id": "s969432_default_mappo_r101",
+  "world": 969432,
+  "variant": "default",
+  "arm": "mappo",
+  "rng": 101,
+  "horizon": 600,
+  "charge": 601
+ },
+ "pid": 273701,
+ "unix": 1793463112.1794393,
+ "code": {
+  "worker.py": "5dbcff08f995cc485fd45c67e47dc040c075faa4c77bd13e86299994e3d95689",
+  "model_env.py": "61379142c3b2b86bf0d2fed39a017a5effdf03b137c4d215ecf6688333084adf",
+  "inference.py": "8a01bb6576232c163cad578fb63125e5a90525f3a06b78bb1fbca4dce25ab4a5",
+  "demand.py": "a6a2dbb63adf346fa3d0ac8b1f1e5432e44c0a12a46cab5f74a5725b110be056",
+  "prepare_bundle.py": "f94c6825294fd34536d92c9a005341063248292b3268d38d525131eb38193133",
+  "padding_audit.py": "a4644064c8d069d49e11c2ddf0b59e24f63969c3aba3323255309ce3cf70e3e3",
+  "supervisor.py": "ce657972926a7a7e2c31d0481b4938d3926a17f01f40b17262b6218a094867c1",
+  "dispatch.py": "bb832ee261920cbe7b5a284a8731abeaa5a29a398859ad0aee37aa634f968862",
+  "admission.py": "6d94827519520c702a3e7bb64a842860eb315f204ca0c4b3fc596cb3fa5f89cd"
+ }
+}

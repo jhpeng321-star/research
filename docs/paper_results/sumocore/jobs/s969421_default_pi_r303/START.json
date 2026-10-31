@@ -1,0 +1,23 @@
+{
+ "job": {
+  "id": "s969421_default_pi_r303",
+  "world": 969421,
+  "variant": "default",
+  "arm": "pi",
+  "rng": 303,
+  "horizon": 600,
+  "charge": 601
+ },
+ "pid": 203508,
+ "unix": 1793461499.697117,
+ "code": {
+  "worker.py": "805f66d023afe7ebcf607118c763954099a9f28f5272fed5bad994c9841bb587",
+  "model_env.py": "61379142c3b2b86bf0d2fed39a017a5effdf03b137c4d215ecf6688333084adf",
+  "inference.py": "8a01bb6576232c163cad578fb63125e5a90525f3a06b78bb1fbca4dce25ab4a5",
+  "demand.py": "a6a2dbb63adf346fa3d0ac8b1f1e5432e44c0a12a46cab5f74a5725b110be056",
+  "prepare_bundle.py": "d58fdf40c39889fba9ad6a0f67de9281474c7863c2c7fe3b57137a101dea672f",
+  "supervisor.py": "11006b405cc27795ebf2e332de45236db13190f7fafe40ddf72cf18617114063",
+  "dispatch.py": "a5d377f522711f072bc65cac1303e61df41f48756f5e69404f74cd6f1b0b105c",
+  "admission.py": "37b6437e1e75b7a5e7934562399b2bf2545ef488ee6cb34a87c753d77c633ae0"
+ }
+}

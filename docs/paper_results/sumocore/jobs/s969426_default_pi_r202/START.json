@@ -1,0 +1,25 @@
+{
+ "job": {
+  "id": "s969426_default_pi_r202",
+  "world": 969426,
+  "variant": "default",
+  "arm": "pi",
+  "rng": 202,
+  "horizon": 600,
+  "charge": 601
+ },
+ "pid": 244172,
+ "unix": 1793462324.8011706,
+ "code": {
+  "worker.py": "7d7f6dc3be28624212c07e9e943062a3a5bd42b2278b153a95162e9e93e337a4",
+  "model_env.py": "61379142c3b2b86bf0d2fed39a017a5effdf03b137c4d215ecf6688333084adf",
+  "inference.py": "8a01bb6576232c163cad578fb63125e5a90525f3a06b78bb1fbca4dce25ab4a5",
+  "recover_completed.py": "dce83a3ec69cffbe5c882dbda29a69155518d1e650a7885198f199824bcf5407",
+  "demand.py": "a6a2dbb63adf346fa3d0ac8b1f1e5432e44c0a12a46cab5f74a5725b110be056",
+  "prepare_bundle.py": "f94c6825294fd34536d92c9a005341063248292b3268d38d525131eb38193133",
+  "preflight_all.py": "b82817a7764f11a962ceea96548a506ebf92fbc1e37c891253e5d7e4a52754c9",
+  "supervisor.py": "ce657972926a7a7e2c31d0481b4938d3926a17f01f40b17262b6218a094867c1",
+  "dispatch.py": "773a748cf1c37d119025aa7e7cdbf3f8f07b4b5e8e9e2c64c91647cb33b21a6e",
+  "admission.py": "aab1427d3d90f9a2e232f98397436a0910e6c050b5bd06de81e7f27f239f5fb7"
+ }
+}

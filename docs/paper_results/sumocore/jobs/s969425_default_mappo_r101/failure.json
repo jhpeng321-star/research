@@ -1,0 +1,13 @@
+{
+ "job": {
+  "id": "s969425_default_mappo_r101",
+  "world": 969425,
+  "variant": "default",
+  "arm": "mappo",
+  "rng": 101,
+  "horizon": 600,
+  "charge": 601
+ },
+ "actual_sim_s": 600.0,
+ "traceback": "Traceback (most recent call last):\n  File \"/home/ubuntu/sumocore20261031/code/f5709438ec33/worker.py\", line 69, in run\n    assert not env.totals.get('collision_involvements')\nAssertionError\n"
+}

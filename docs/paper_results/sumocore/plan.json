@@ -1,0 +1,1305 @@
+{
+ "schema": "sumocore/1",
+ "jobs": [
+  {
+   "id": "s969421_default_native_r101",
+   "world": 969421,
+   "variant": "default",
+   "arm": "native",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969421_default_native_r202",
+   "world": 969421,
+   "variant": "default",
+   "arm": "native",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969421_default_native_r303",
+   "world": 969421,
+   "variant": "default",
+   "arm": "native",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969421_default_mappo_r101",
+   "world": 969421,
+   "variant": "default",
+   "arm": "mappo",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969421_default_mappo_r202",
+   "world": 969421,
+   "variant": "default",
+   "arm": "mappo",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969421_default_mappo_r303",
+   "world": 969421,
+   "variant": "default",
+   "arm": "mappo",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969421_default_pi_r101",
+   "world": 969421,
+   "variant": "default",
+   "arm": "pi",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969421_default_pi_r202",
+   "world": 969421,
+   "variant": "default",
+   "arm": "pi",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969421_default_pi_r303",
+   "world": 969421,
+   "variant": "default",
+   "arm": "pi",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969421_inferred_native_r101",
+   "world": 969421,
+   "variant": "inferred",
+   "arm": "native",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969421_inferred_native_r202",
+   "world": 969421,
+   "variant": "inferred",
+   "arm": "native",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969421_inferred_native_r303",
+   "world": 969421,
+   "variant": "inferred",
+   "arm": "native",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969421_inferred_mappo_r101",
+   "world": 969421,
+   "variant": "inferred",
+   "arm": "mappo",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969421_inferred_mappo_r202",
+   "world": 969421,
+   "variant": "inferred",
+   "arm": "mappo",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969421_inferred_mappo_r303",
+   "world": 969421,
+   "variant": "inferred",
+   "arm": "mappo",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969421_inferred_pi_r101",
+   "world": 969421,
+   "variant": "inferred",
+   "arm": "pi",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969421_inferred_pi_r202",
+   "world": 969421,
+   "variant": "inferred",
+   "arm": "pi",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969421_inferred_pi_r303",
+   "world": 969421,
+   "variant": "inferred",
+   "arm": "pi",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969422_default_native_r101",
+   "world": 969422,
+   "variant": "default",
+   "arm": "native",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969422_default_native_r202",
+   "world": 969422,
+   "variant": "default",
+   "arm": "native",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969422_default_native_r303",
+   "world": 969422,
+   "variant": "default",
+   "arm": "native",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969422_default_mappo_r101",
+   "world": 969422,
+   "variant": "default",
+   "arm": "mappo",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969422_default_mappo_r202",
+   "world": 969422,
+   "variant": "default",
+   "arm": "mappo",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969422_default_mappo_r303",
+   "world": 969422,
+   "variant": "default",
+   "arm": "mappo",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969422_default_pi_r101",
+   "world": 969422,
+   "variant": "default",
+   "arm": "pi",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969422_default_pi_r202",
+   "world": 969422,
+   "variant": "default",
+   "arm": "pi",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969422_default_pi_r303",
+   "world": 969422,
+   "variant": "default",
+   "arm": "pi",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969422_inferred_native_r101",
+   "world": 969422,
+   "variant": "inferred",
+   "arm": "native",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969422_inferred_native_r202",
+   "world": 969422,
+   "variant": "inferred",
+   "arm": "native",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969422_inferred_native_r303",
+   "world": 969422,
+   "variant": "inferred",
+   "arm": "native",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969422_inferred_mappo_r101",
+   "world": 969422,
+   "variant": "inferred",
+   "arm": "mappo",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969422_inferred_mappo_r202",
+   "world": 969422,
+   "variant": "inferred",
+   "arm": "mappo",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969422_inferred_mappo_r303",
+   "world": 969422,
+   "variant": "inferred",
+   "arm": "mappo",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969422_inferred_pi_r101",
+   "world": 969422,
+   "variant": "inferred",
+   "arm": "pi",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969422_inferred_pi_r202",
+   "world": 969422,
+   "variant": "inferred",
+   "arm": "pi",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969422_inferred_pi_r303",
+   "world": 969422,
+   "variant": "inferred",
+   "arm": "pi",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969425_default_native_r101",
+   "world": 969425,
+   "variant": "default",
+   "arm": "native",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969425_default_native_r202",
+   "world": 969425,
+   "variant": "default",
+   "arm": "native",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969425_default_native_r303",
+   "world": 969425,
+   "variant": "default",
+   "arm": "native",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969425_default_mappo_r101",
+   "world": 969425,
+   "variant": "default",
+   "arm": "mappo",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969425_default_mappo_r202",
+   "world": 969425,
+   "variant": "default",
+   "arm": "mappo",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969425_default_mappo_r303",
+   "world": 969425,
+   "variant": "default",
+   "arm": "mappo",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969425_default_pi_r101",
+   "world": 969425,
+   "variant": "default",
+   "arm": "pi",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969425_default_pi_r202",
+   "world": 969425,
+   "variant": "default",
+   "arm": "pi",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969425_default_pi_r303",
+   "world": 969425,
+   "variant": "default",
+   "arm": "pi",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969425_inferred_native_r101",
+   "world": 969425,
+   "variant": "inferred",
+   "arm": "native",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969425_inferred_native_r202",
+   "world": 969425,
+   "variant": "inferred",
+   "arm": "native",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969425_inferred_native_r303",
+   "world": 969425,
+   "variant": "inferred",
+   "arm": "native",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969425_inferred_mappo_r101",
+   "world": 969425,
+   "variant": "inferred",
+   "arm": "mappo",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969425_inferred_mappo_r202",
+   "world": 969425,
+   "variant": "inferred",
+   "arm": "mappo",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969425_inferred_mappo_r303",
+   "world": 969425,
+   "variant": "inferred",
+   "arm": "mappo",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969425_inferred_pi_r101",
+   "world": 969425,
+   "variant": "inferred",
+   "arm": "pi",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969425_inferred_pi_r202",
+   "world": 969425,
+   "variant": "inferred",
+   "arm": "pi",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969425_inferred_pi_r303",
+   "world": 969425,
+   "variant": "inferred",
+   "arm": "pi",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969426_default_native_r101",
+   "world": 969426,
+   "variant": "default",
+   "arm": "native",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969426_default_native_r202",
+   "world": 969426,
+   "variant": "default",
+   "arm": "native",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969426_default_native_r303",
+   "world": 969426,
+   "variant": "default",
+   "arm": "native",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969426_default_mappo_r101",
+   "world": 969426,
+   "variant": "default",
+   "arm": "mappo",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969426_default_mappo_r202",
+   "world": 969426,
+   "variant": "default",
+   "arm": "mappo",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969426_default_mappo_r303",
+   "world": 969426,
+   "variant": "default",
+   "arm": "mappo",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969426_default_pi_r101",
+   "world": 969426,
+   "variant": "default",
+   "arm": "pi",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969426_default_pi_r202",
+   "world": 969426,
+   "variant": "default",
+   "arm": "pi",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969426_default_pi_r303",
+   "world": 969426,
+   "variant": "default",
+   "arm": "pi",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969426_inferred_native_r101",
+   "world": 969426,
+   "variant": "inferred",
+   "arm": "native",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969426_inferred_native_r202",
+   "world": 969426,
+   "variant": "inferred",
+   "arm": "native",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969426_inferred_native_r303",
+   "world": 969426,
+   "variant": "inferred",
+   "arm": "native",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969426_inferred_mappo_r101",
+   "world": 969426,
+   "variant": "inferred",
+   "arm": "mappo",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969426_inferred_mappo_r202",
+   "world": 969426,
+   "variant": "inferred",
+   "arm": "mappo",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969426_inferred_mappo_r303",
+   "world": 969426,
+   "variant": "inferred",
+   "arm": "mappo",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969426_inferred_pi_r101",
+   "world": 969426,
+   "variant": "inferred",
+   "arm": "pi",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969426_inferred_pi_r202",
+   "world": 969426,
+   "variant": "inferred",
+   "arm": "pi",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969426_inferred_pi_r303",
+   "world": 969426,
+   "variant": "inferred",
+   "arm": "pi",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969427_default_native_r101",
+   "world": 969427,
+   "variant": "default",
+   "arm": "native",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969427_default_native_r202",
+   "world": 969427,
+   "variant": "default",
+   "arm": "native",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969427_default_native_r303",
+   "world": 969427,
+   "variant": "default",
+   "arm": "native",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969427_default_mappo_r101",
+   "world": 969427,
+   "variant": "default",
+   "arm": "mappo",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969427_default_mappo_r202",
+   "world": 969427,
+   "variant": "default",
+   "arm": "mappo",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969427_default_mappo_r303",
+   "world": 969427,
+   "variant": "default",
+   "arm": "mappo",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969427_default_pi_r101",
+   "world": 969427,
+   "variant": "default",
+   "arm": "pi",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969427_default_pi_r202",
+   "world": 969427,
+   "variant": "default",
+   "arm": "pi",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969427_default_pi_r303",
+   "world": 969427,
+   "variant": "default",
+   "arm": "pi",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969427_inferred_native_r101",
+   "world": 969427,
+   "variant": "inferred",
+   "arm": "native",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969427_inferred_native_r202",
+   "world": 969427,
+   "variant": "inferred",
+   "arm": "native",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969427_inferred_native_r303",
+   "world": 969427,
+   "variant": "inferred",
+   "arm": "native",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969427_inferred_mappo_r101",
+   "world": 969427,
+   "variant": "inferred",
+   "arm": "mappo",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969427_inferred_mappo_r202",
+   "world": 969427,
+   "variant": "inferred",
+   "arm": "mappo",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969427_inferred_mappo_r303",
+   "world": 969427,
+   "variant": "inferred",
+   "arm": "mappo",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969427_inferred_pi_r101",
+   "world": 969427,
+   "variant": "inferred",
+   "arm": "pi",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969427_inferred_pi_r202",
+   "world": 969427,
+   "variant": "inferred",
+   "arm": "pi",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969427_inferred_pi_r303",
+   "world": 969427,
+   "variant": "inferred",
+   "arm": "pi",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969428_default_native_r101",
+   "world": 969428,
+   "variant": "default",
+   "arm": "native",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969428_default_native_r202",
+   "world": 969428,
+   "variant": "default",
+   "arm": "native",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969428_default_native_r303",
+   "world": 969428,
+   "variant": "default",
+   "arm": "native",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969428_default_mappo_r101",
+   "world": 969428,
+   "variant": "default",
+   "arm": "mappo",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969428_default_mappo_r202",
+   "world": 969428,
+   "variant": "default",
+   "arm": "mappo",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969428_default_mappo_r303",
+   "world": 969428,
+   "variant": "default",
+   "arm": "mappo",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969428_default_pi_r101",
+   "world": 969428,
+   "variant": "default",
+   "arm": "pi",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969428_default_pi_r202",
+   "world": 969428,
+   "variant": "default",
+   "arm": "pi",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969428_default_pi_r303",
+   "world": 969428,
+   "variant": "default",
+   "arm": "pi",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969428_inferred_native_r101",
+   "world": 969428,
+   "variant": "inferred",
+   "arm": "native",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969428_inferred_native_r202",
+   "world": 969428,
+   "variant": "inferred",
+   "arm": "native",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969428_inferred_native_r303",
+   "world": 969428,
+   "variant": "inferred",
+   "arm": "native",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969428_inferred_mappo_r101",
+   "world": 969428,
+   "variant": "inferred",
+   "arm": "mappo",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969428_inferred_mappo_r202",
+   "world": 969428,
+   "variant": "inferred",
+   "arm": "mappo",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969428_inferred_mappo_r303",
+   "world": 969428,
+   "variant": "inferred",
+   "arm": "mappo",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969428_inferred_pi_r101",
+   "world": 969428,
+   "variant": "inferred",
+   "arm": "pi",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969428_inferred_pi_r202",
+   "world": 969428,
+   "variant": "inferred",
+   "arm": "pi",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969428_inferred_pi_r303",
+   "world": 969428,
+   "variant": "inferred",
+   "arm": "pi",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969432_default_native_r101",
+   "world": 969432,
+   "variant": "default",
+   "arm": "native",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969432_default_native_r202",
+   "world": 969432,
+   "variant": "default",
+   "arm": "native",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969432_default_native_r303",
+   "world": 969432,
+   "variant": "default",
+   "arm": "native",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969432_default_mappo_r101",
+   "world": 969432,
+   "variant": "default",
+   "arm": "mappo",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969432_default_mappo_r202",
+   "world": 969432,
+   "variant": "default",
+   "arm": "mappo",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969432_default_mappo_r303",
+   "world": 969432,
+   "variant": "default",
+   "arm": "mappo",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969432_default_pi_r101",
+   "world": 969432,
+   "variant": "default",
+   "arm": "pi",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969432_default_pi_r202",
+   "world": 969432,
+   "variant": "default",
+   "arm": "pi",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969432_default_pi_r303",
+   "world": 969432,
+   "variant": "default",
+   "arm": "pi",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969432_inferred_native_r101",
+   "world": 969432,
+   "variant": "inferred",
+   "arm": "native",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969432_inferred_native_r202",
+   "world": 969432,
+   "variant": "inferred",
+   "arm": "native",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969432_inferred_native_r303",
+   "world": 969432,
+   "variant": "inferred",
+   "arm": "native",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969432_inferred_mappo_r101",
+   "world": 969432,
+   "variant": "inferred",
+   "arm": "mappo",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969432_inferred_mappo_r202",
+   "world": 969432,
+   "variant": "inferred",
+   "arm": "mappo",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969432_inferred_mappo_r303",
+   "world": 969432,
+   "variant": "inferred",
+   "arm": "mappo",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969432_inferred_pi_r101",
+   "world": 969432,
+   "variant": "inferred",
+   "arm": "pi",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969432_inferred_pi_r202",
+   "world": 969432,
+   "variant": "inferred",
+   "arm": "pi",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969432_inferred_pi_r303",
+   "world": 969432,
+   "variant": "inferred",
+   "arm": "pi",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969435_default_native_r101",
+   "world": 969435,
+   "variant": "default",
+   "arm": "native",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969435_default_native_r202",
+   "world": 969435,
+   "variant": "default",
+   "arm": "native",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969435_default_native_r303",
+   "world": 969435,
+   "variant": "default",
+   "arm": "native",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969435_default_mappo_r101",
+   "world": 969435,
+   "variant": "default",
+   "arm": "mappo",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969435_default_mappo_r202",
+   "world": 969435,
+   "variant": "default",
+   "arm": "mappo",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969435_default_mappo_r303",
+   "world": 969435,
+   "variant": "default",
+   "arm": "mappo",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969435_default_pi_r101",
+   "world": 969435,
+   "variant": "default",
+   "arm": "pi",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969435_default_pi_r202",
+   "world": 969435,
+   "variant": "default",
+   "arm": "pi",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969435_default_pi_r303",
+   "world": 969435,
+   "variant": "default",
+   "arm": "pi",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969435_inferred_native_r101",
+   "world": 969435,
+   "variant": "inferred",
+   "arm": "native",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969435_inferred_native_r202",
+   "world": 969435,
+   "variant": "inferred",
+   "arm": "native",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969435_inferred_native_r303",
+   "world": 969435,
+   "variant": "inferred",
+   "arm": "native",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969435_inferred_mappo_r101",
+   "world": 969435,
+   "variant": "inferred",
+   "arm": "mappo",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969435_inferred_mappo_r202",
+   "world": 969435,
+   "variant": "inferred",
+   "arm": "mappo",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969435_inferred_mappo_r303",
+   "world": 969435,
+   "variant": "inferred",
+   "arm": "mappo",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969435_inferred_pi_r101",
+   "world": 969435,
+   "variant": "inferred",
+   "arm": "pi",
+   "rng": 101,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969435_inferred_pi_r202",
+   "world": 969435,
+   "variant": "inferred",
+   "arm": "pi",
+   "rng": 202,
+   "horizon": 600,
+   "charge": 601
+  },
+  {
+   "id": "s969435_inferred_pi_r303",
+   "world": 969435,
+   "variant": "inferred",
+   "arm": "pi",
+   "rng": 303,
+   "horizon": 600,
+   "charge": 601
+  }
+ ],
+ "hard_cap": 100000,
+ "panel_precharge": 86544,
+ "engineering_cap": 1000,
+ "code": "/home/ubuntu/sumocore20261031/code/90324a041fef"
+}
