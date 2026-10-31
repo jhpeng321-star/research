@@ -279,12 +279,96 @@ def prepare(config_path):
         result['cpus'][host] = staged['root']
     write(path, result)
     print(json.dumps(dict(path=str(path), sha256=sha(path), cpus=result['cpus'])))
+    return path
+
+
+def follow(config_path, after_config):
+    """One unused BB arm after WM releases its services; no scientific retry path."""
+    from .gpuops import start
+    config_path, after_config = checked(config_path), checked(after_config)
+    config, after = (json.loads(p.read_text()) for p in (config_path, after_config))
+    if config['engine']['model'] != 'bb' or after['engine']['model'] != 'wm':
+        raise ValueError('registered WM-then-unused-BB sequence required')
+    local = EVIDENCE/'BB_FOLLOW'
+    with exclusive(local):
+        if (local/'START.json').exists():
+            raise ValueError('BB follower already claimed')
+        import os
+        write(local/'START.json', dict(pid=os.getpid(), config_sha256=sha(config_path),
+              after_sha256=sha(after_config), unix=time.time()))
+        while True:
+            states = {}
+            for host, root in after['gpus'].items():
+                states[host] = ssh(host, f'''import json,subprocess
+from pathlib import Path
+root=Path({root!r})
+free=int(subprocess.check_output(['nvidia-smi','--query-gpu=memory.free','--format=csv,noheader,nounits'],text=True).strip())
+print(json.dumps(dict(wm_finished=(root/'rpc/GPU_FINISHED.json').exists(),free_mib=free)))
+''', timeout=30)
+            write(local/'WAIT.json', dict(unix=time.time(), states=states))
+            # Context initialization itself needs memory before rpc's actual >=7GiB
+            # admission. This resource margin is not a behavioural/picker rule.
+            if all(s['wm_finished'] and s['free_mib'] >= 8*1024 for s in states.values()):
+                break
+            time.sleep(60)
+        try:
+            for host, root in config['gpus'].items():
+                start(host, root)
+            # READY is a construction gate; no main physics while it is absent.
+            while True:
+                ready = []
+                for host, root in config['gpus'].items():
+                    ready.append(ssh(host, f'''import json
+from pathlib import Path
+root=Path({root!r});assert not (root/'rpc/STOP').exists(),'BB service STOP'
+print(json.dumps(dict(ready=(root/'rpc/READY.json').exists())))
+''', timeout=30)['ready'])
+                if all(ready):
+                    break
+                time.sleep(2)
+            parity(config_path, submit=True)
+            while parity(config_path) is None:
+                time.sleep(5)
+            bound = prepare(config_path)
+            cpus = json.loads(bound.read_text())['cpus']
+            dispatch('cpuQ', cpus['cpuQ'], 'bb', 4)
+            dispatch('gpuR', cpus['gpuR'], 'bb', 1)
+            relay(bound)
+            write(local/'COMPLETE.json', dict(unix=time.time()))
+        except BaseException as exc:
+            write(local/'STOP.json', dict(unix=time.time(), error=repr(exc)))
+            for host, root in config['gpus'].items():
+                ssh(host, f'''import json
+from pathlib import Path
+root=Path({root!r});path=root/'rpc/COMPLETE'
+if not path.exists():
+ with path.open('x') as stream:json.dump(dict(reason='BB follower terminal STOP'),stream)
+print(json.dumps(dict(owned_services_released=True)))
+''', timeout=30)
+            raise
+
+
+def follow_start(config, after_config):
+    config, after_config = checked(config).resolve(), checked(after_config).resolve()
+    path = EVIDENCE/'BB_FOLLOW_DISPATCH.json'
+    if path.exists():
+        raise ValueError('BB follower already dispatched')
+    with (EVIDENCE/'BB_FOLLOW.log').open('x') as log:
+        process = subprocess.Popen([sys.executable, '-B', '-u', '-m', 'tools.c1switch2.modelops',
+                    'follow', '--config', str(config), '--after-config', str(after_config)],
+                    stdout=log, stderr=subprocess.STDOUT,
+                    creationflags=subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.DETACHED_PROCESS)
+    out = dict(pid=process.pid, config=str(config), after_config=str(after_config), unix=time.time())
+    write(path, out)
+    print(json.dumps(out))
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('command', choices=('parity-submit', 'parity-collect', 'dispatch', 'relay', 'relay-start', 'prepare'))
+    parser.add_argument('command', choices=('parity-submit', 'parity-collect', 'dispatch', 'relay', 'relay-start',
+                                           'prepare', 'follow', 'follow-start'))
     parser.add_argument('--config')
+    parser.add_argument('--after-config')
     parser.add_argument('--host', choices=('cpuQ', 'gpuR'))
     parser.add_argument('--root')
     parser.add_argument('--model', choices=('wm', 'bb'))
@@ -298,5 +382,9 @@ if __name__ == '__main__':
         relay(args.config)
     elif args.command == 'prepare':
         prepare(args.config)
+    elif args.command == 'follow':
+        follow(args.config, args.after_config)
+    elif args.command == 'follow-start':
+        follow_start(args.config, args.after_config)
     else:
         relay_start(args.config)

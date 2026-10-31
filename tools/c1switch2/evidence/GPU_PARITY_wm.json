@@ -1,0 +1,424 @@
+{
+  "status": "PASS",
+  "model": "wm",
+  "engine": {
+    "protocol": "S-C1SWITCH2/v2",
+    "arm": "wm",
+    "model": "wm",
+    "library": [
+      "native",
+      "ctrl0",
+      "mappo",
+      "pi",
+      "circles",
+      "wall"
+    ],
+    "history_s": 60,
+    "horizon_s": 60,
+    "K": 8,
+    "objective": "on_road_fleet_delay",
+    "evaluation_objective": "full_team_delay_fleet_plus_source",
+    "objective_design_sha256": "95aa84cf801aea773a0c7f9a208396ed4898e5cacdf8b6177940c7d9e1f5a273",
+    "observable_source_admissions": false,
+    "entries": false,
+    "controller_feedback": true,
+    "wall_start_stop": true,
+    "anonymous_seed": true,
+    "wm_checkpoint_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+    "bb_checkpoint_sha256": "afaaa32cb15079014d1a9e08f78b26e74fd341298d1aa0292a24009d9f783742",
+    "checkpoint_path": "/root/c1switch2_gpu_wm_95614dbfc754e322/bb.pt",
+    "service_gpu_cap_s": 28800.0,
+    "prior_gpu_s": 0
+  },
+  "numerical_tolerance": {
+    "rtol": 1e-06,
+    "atol": 1e-06
+  },
+  "results": {
+    "gpuA": {
+      "fresh": {
+        "request_sha256": "4621524edef50d2093d4ccd7f2682f1a5d7ef07700d9c54445fdd71486d8094a",
+        "binding": {
+          "protocol": "S-C1SWITCH2/v2",
+          "arm": "wm",
+          "model": "wm",
+          "library": [
+            "native",
+            "ctrl0",
+            "mappo",
+            "pi",
+            "circles",
+            "wall"
+          ],
+          "history_s": 60,
+          "horizon_s": 60,
+          "K": 8,
+          "objective": "on_road_fleet_delay",
+          "evaluation_objective": "full_team_delay_fleet_plus_source",
+          "objective_design_sha256": "95aa84cf801aea773a0c7f9a208396ed4898e5cacdf8b6177940c7d9e1f5a273",
+          "observable_source_admissions": false,
+          "entries": false,
+          "controller_feedback": true,
+          "wall_start_stop": true,
+          "anonymous_seed": true,
+          "wm_checkpoint_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+          "bb_checkpoint_sha256": "afaaa32cb15079014d1a9e08f78b26e74fd341298d1aa0292a24009d9f783742",
+          "checkpoint_path": "/root/c1switch2_gpu_wm_95614dbfc754e322/bb.pt",
+          "service_gpu_cap_s": 28800.0,
+          "prior_gpu_s": 0
+        },
+        "samples": {
+          "native": [
+            15.703498840332031,
+            15.703498840332031,
+            15.703498840332031,
+            15.703498840332031,
+            15.703498840332031,
+            15.703498840332031,
+            15.703498840332031,
+            15.703498840332031
+          ],
+          "ctrl0": [
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719
+          ],
+          "mappo": [
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719
+          ],
+          "pi": [
+            25.459054946899414,
+            26.25945472717285,
+            23.74141502380371,
+            26.21827507019043,
+            26.3433837890625,
+            27.469594955444336,
+            26.22565460205078,
+            27.02532196044922
+          ],
+          "circles": [
+            25.459054946899414,
+            26.25945472717285,
+            23.74141502380371,
+            26.21827507019043,
+            26.3433837890625,
+            27.469594955444336,
+            26.22565460205078,
+            27.02532196044922
+          ],
+          "wall": [
+            65.87386322021484,
+            65.87386322021484,
+            65.87386322021484,
+            65.87386322021484,
+            65.87386322021484,
+            65.87386322021484,
+            65.87386322021484,
+            65.87386322021484
+          ]
+        }
+      },
+      "continued_wall": {
+        "request_sha256": "0a6ba59087bd6a01b8de9eb3a1e66d3d59d959c57ab4e9bc7d7d02a7c7250258",
+        "binding": {
+          "protocol": "S-C1SWITCH2/v2",
+          "arm": "wm",
+          "model": "wm",
+          "library": [
+            "native",
+            "ctrl0",
+            "mappo",
+            "pi",
+            "circles",
+            "wall"
+          ],
+          "history_s": 60,
+          "horizon_s": 60,
+          "K": 8,
+          "objective": "on_road_fleet_delay",
+          "evaluation_objective": "full_team_delay_fleet_plus_source",
+          "objective_design_sha256": "95aa84cf801aea773a0c7f9a208396ed4898e5cacdf8b6177940c7d9e1f5a273",
+          "observable_source_admissions": false,
+          "entries": false,
+          "controller_feedback": true,
+          "wall_start_stop": true,
+          "anonymous_seed": true,
+          "wm_checkpoint_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+          "bb_checkpoint_sha256": "afaaa32cb15079014d1a9e08f78b26e74fd341298d1aa0292a24009d9f783742",
+          "checkpoint_path": "/root/c1switch2_gpu_wm_95614dbfc754e322/bb.pt",
+          "service_gpu_cap_s": 28800.0,
+          "prior_gpu_s": 0
+        },
+        "samples": {
+          "native": [
+            15.703498840332031,
+            15.703498840332031,
+            15.703498840332031,
+            15.703498840332031,
+            15.703498840332031,
+            15.703498840332031,
+            15.703498840332031,
+            15.703498840332031
+          ],
+          "ctrl0": [
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719
+          ],
+          "mappo": [
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719
+          ],
+          "pi": [
+            24.66977882385254,
+            27.4573974609375,
+            26.577245712280273,
+            24.467130661010742,
+            27.341981887817383,
+            30.23504638671875,
+            27.068044662475586,
+            25.705636978149414
+          ],
+          "circles": [
+            24.66977882385254,
+            27.4573974609375,
+            26.577245712280273,
+            24.467130661010742,
+            27.341981887817383,
+            30.23504638671875,
+            27.068044662475586,
+            25.705636978149414
+          ],
+          "wall": [
+            54.79300308227539,
+            54.7941780090332,
+            54.79289245605469,
+            54.791908264160156,
+            54.79388427734375,
+            54.79448318481445,
+            54.792964935302734,
+            54.79280090332031
+          ]
+        }
+      }
+    },
+    "gpuR": {
+      "fresh": {
+        "request_sha256": "4621524edef50d2093d4ccd7f2682f1a5d7ef07700d9c54445fdd71486d8094a",
+        "binding": {
+          "protocol": "S-C1SWITCH2/v2",
+          "arm": "wm",
+          "model": "wm",
+          "library": [
+            "native",
+            "ctrl0",
+            "mappo",
+            "pi",
+            "circles",
+            "wall"
+          ],
+          "history_s": 60,
+          "horizon_s": 60,
+          "K": 8,
+          "objective": "on_road_fleet_delay",
+          "evaluation_objective": "full_team_delay_fleet_plus_source",
+          "objective_design_sha256": "95aa84cf801aea773a0c7f9a208396ed4898e5cacdf8b6177940c7d9e1f5a273",
+          "observable_source_admissions": false,
+          "entries": false,
+          "controller_feedback": true,
+          "wall_start_stop": true,
+          "anonymous_seed": true,
+          "wm_checkpoint_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+          "bb_checkpoint_sha256": "afaaa32cb15079014d1a9e08f78b26e74fd341298d1aa0292a24009d9f783742",
+          "checkpoint_path": "/root/c1switch2_gpu_wm_95614dbfc754e322/bb.pt",
+          "service_gpu_cap_s": 28800.0,
+          "prior_gpu_s": 0
+        },
+        "samples": {
+          "native": [
+            15.703498840332031,
+            15.703498840332031,
+            15.703498840332031,
+            15.703498840332031,
+            15.703498840332031,
+            15.703498840332031,
+            15.703498840332031,
+            15.703498840332031
+          ],
+          "ctrl0": [
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719
+          ],
+          "mappo": [
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719
+          ],
+          "pi": [
+            25.459054946899414,
+            26.25945472717285,
+            23.74141502380371,
+            26.21827507019043,
+            26.3433837890625,
+            27.469594955444336,
+            26.22565460205078,
+            27.02532196044922
+          ],
+          "circles": [
+            25.459054946899414,
+            26.25945472717285,
+            23.74141502380371,
+            26.21827507019043,
+            26.3433837890625,
+            27.469594955444336,
+            26.22565460205078,
+            27.02532196044922
+          ],
+          "wall": [
+            65.87386322021484,
+            65.87386322021484,
+            65.87386322021484,
+            65.87386322021484,
+            65.87386322021484,
+            65.87386322021484,
+            65.87386322021484,
+            65.87386322021484
+          ]
+        }
+      },
+      "continued_wall": {
+        "request_sha256": "0a6ba59087bd6a01b8de9eb3a1e66d3d59d959c57ab4e9bc7d7d02a7c7250258",
+        "binding": {
+          "protocol": "S-C1SWITCH2/v2",
+          "arm": "wm",
+          "model": "wm",
+          "library": [
+            "native",
+            "ctrl0",
+            "mappo",
+            "pi",
+            "circles",
+            "wall"
+          ],
+          "history_s": 60,
+          "horizon_s": 60,
+          "K": 8,
+          "objective": "on_road_fleet_delay",
+          "evaluation_objective": "full_team_delay_fleet_plus_source",
+          "objective_design_sha256": "95aa84cf801aea773a0c7f9a208396ed4898e5cacdf8b6177940c7d9e1f5a273",
+          "observable_source_admissions": false,
+          "entries": false,
+          "controller_feedback": true,
+          "wall_start_stop": true,
+          "anonymous_seed": true,
+          "wm_checkpoint_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+          "bb_checkpoint_sha256": "afaaa32cb15079014d1a9e08f78b26e74fd341298d1aa0292a24009d9f783742",
+          "checkpoint_path": "/root/c1switch2_gpu_wm_95614dbfc754e322/bb.pt",
+          "service_gpu_cap_s": 28800.0,
+          "prior_gpu_s": 0
+        },
+        "samples": {
+          "native": [
+            15.703498840332031,
+            15.703498840332031,
+            15.703498840332031,
+            15.703498840332031,
+            15.703498840332031,
+            15.703498840332031,
+            15.703498840332031,
+            15.703498840332031
+          ],
+          "ctrl0": [
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719
+          ],
+          "mappo": [
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719,
+            8.718070983886719
+          ],
+          "pi": [
+            24.66977882385254,
+            27.4573974609375,
+            26.577245712280273,
+            24.467130661010742,
+            27.341981887817383,
+            30.23504638671875,
+            27.068044662475586,
+            25.705636978149414
+          ],
+          "circles": [
+            24.66977882385254,
+            27.4573974609375,
+            26.577245712280273,
+            24.467130661010742,
+            27.341981887817383,
+            30.23504638671875,
+            27.068044662475586,
+            25.705636978149414
+          ],
+          "wall": [
+            54.79300308227539,
+            54.7941780090332,
+            54.79289245605469,
+            54.791908264160156,
+            54.79388427734375,
+            54.79448318481445,
+            54.792964935302734,
+            54.79280090332031
+          ]
+        }
+      }
+    }
+  },
+  "gpu_roots": {
+    "gpuA": "/root/c1switch2_gpu_wm_95614dbfc754e322",
+    "gpuR": "/root/c1switch2_gpu_wm_95614dbfc754e322"
+  },
+  "new_sim_s": 0
+}

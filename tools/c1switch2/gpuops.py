@@ -140,9 +140,49 @@ print(json.dumps(out))
     return result
 
 
+def copy_bb(host, root):
+    if host not in ('gpuA', 'gpuR') or not Path(root).name.startswith('c1switch2_gpu_bb_'):
+        raise ValueError('explicit owned BB stage required')
+    raw = ssh('gpuR', f'''import base64,hashlib,json,zlib
+from pathlib import Path
+source=Path('/root/c1switch20261031/main_v6/bb.pt')
+assert hashlib.sha256(source.read_bytes()).hexdigest()=={BB_SHA!r}
+out={{}}
+for name,path in [('bb.pt',source),('physics.json',source.with_name('physics.json'))]:
+ data=path.read_bytes();out[name]=dict(sha256=hashlib.sha256(data).hexdigest(),data=base64.b64encode(zlib.compress(data)).decode())
+print(json.dumps(out))
+''', timeout=45)
+    result = ssh(host, f'''import base64,hashlib,json,zlib
+from pathlib import Path
+root=Path({root!r});assert root.is_dir() and root.name.startswith('c1switch2_gpu_bb_')
+out={{}}
+for name,row in {raw!r}.items():
+ assert name in ('bb.pt','physics.json');data=zlib.decompress(base64.b64decode(row['data']))
+ assert hashlib.sha256(data).hexdigest()==row['sha256']
+ with (root/name).open('xb') as stream:stream.write(data)
+ out[name]=dict(sha256=row['sha256'],bytes=len(data))
+print(json.dumps(dict(host={host!r},root=str(root),files=out,new_gpu_s=0,new_sim_s=0)))
+''', timeout=60)
+    write(EVIDENCE/('BB_COPY_'+host+'_'+Path(root).name+'.json'), result)
+    print(json.dumps(result, indent=2))
+
+
+def config(root, model):
+    rows = {h: json.loads((EVIDENCE/('GPU_STAGE_'+h+'_'+Path(root).name+'.json')).read_text())
+            for h in ('gpuA', 'gpuR')}
+    if rows['gpuA']['engine'] != rows['gpuR']['engine']:
+        raise ValueError('cross-GPU immutable engine specifications differ')
+    path = EVIDENCE/(model.upper()+'_EXECUTION.json')
+    if path.exists():
+        raise ValueError('preserve existing GPU execution specification')
+    out = dict(engine=rows['gpuA']['engine'], gpus={h: rows[h]['root'] for h in rows})
+    write(path, out)
+    print(json.dumps(dict(path=str(path), sha256=sha(path))))
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('command', choices=('inspect', 'stage', 'cpu-probe', 'start', 'collect'))
+    parser.add_argument('command', choices=('inspect', 'stage', 'cpu-probe', 'start', 'collect', 'copy-bb', 'config'))
     parser.add_argument('--host', choices=('gpuA', 'gpuR'), required=True)
     parser.add_argument('--model', choices=('wm', 'bb'))
     parser.add_argument('--root')
@@ -155,5 +195,9 @@ if __name__ == '__main__':
         cpu_probe(args.host, args.root, args.model)
     elif args.command == 'start':
         start(args.host, args.root)
+    elif args.command == 'copy-bb':
+        copy_bb(args.host, args.root)
+    elif args.command == 'config':
+        config(args.root, args.model)
     else:
         collect(args.host, args.root)

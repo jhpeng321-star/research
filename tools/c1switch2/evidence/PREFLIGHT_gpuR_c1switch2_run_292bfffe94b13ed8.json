@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "returncode": 0,
+  "inputs": {
+    "mappo": "/root/autodl-tmp/c4/speedhead20261030/mappospeed_final169.pt",
+    "ctrl0": "/root/autodl-tmp/c4/speedhead20261030/e3final/inputs/policy_latest.pt"
+  },
+  "guards": 17,
+  "host": "gpuR",
+  "root": "/root/c1switch2_run_292bfffe94b13ed8",
+  "output": "........................................................................ [ 53%]\n............................................................s.           [100%]\n133 passed, 1 skipped in 1.73s\n",
+  "new_sim_s": 0,
+  "new_gpu_s": 0
+}
