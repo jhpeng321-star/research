@@ -16,7 +16,8 @@ if str(_WMREQUAL) not in sys.path:
 
 
 class Runtime:
-    def __init__(self, prepared, config, checkpoint, controllers, device="cpu"):
+    def __init__(self, prepared, config, checkpoint, controllers, device="cpu",
+                 arm_names=None):
         import torch
         from tools.wmcombined.e3_score import load_for_scoring
         from wms.data.c4_pairs import PairedBranchSource
@@ -40,12 +41,21 @@ class Runtime:
         self.model.checkpoint_forward = True
         manifest = json.loads(safe(safe(self.doc["root"]) / "C4_EPISODES_MANIFEST.json").read_text())
         worlds = {row["world"] for row in self.doc["episodes"]}
+        names = tuple(sorted({e["arm"] for e in self.doc["episodes"]}))
+        if arm_names is not None:
+            # S-WMFIX-ES: restrict a multi-arm corpus to the registered paired
+            # contrast (WMDATA.md: native + ctrl0); designed-controller arms
+            # (circles/pi) stay outside this TRAIN rollout source entirely.
+            missing = set(arm_names) - set(names)
+            if missing:
+                raise ValueError("arm restriction outside the corpus: " + repr(sorted(missing)))
+            names = tuple(a for a in names if a in set(arm_names))
         self.source = PairedBranchSource(self.doc["root"], horizon_steps=600,
             history_s=60., history_stride_s=1., entries_v2=True, junction_fix="ffill",
             command_known=True, arm_kinds=("B", "POLICY"), role="train",
             role_of={e["world"]: "train" if e["world"] in worlds else "val"
                      for e in manifest["episodes"]}, name="wmfix_registered_fit",
-            arm_names=tuple(sorted({e["arm"] for e in self.doc["episodes"]})))
+            arm_names=names)
         if {g["pair_key"] for g in self.source.groups} != {r["pair_key"] for r in self.doc["episodes"]}:
             raise ValueError("production loader dropped or added registered groups")
         if self.source.receipt["dropped_groups_t0_mismatch"] or self.source.horizon != 600:

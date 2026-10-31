@@ -94,7 +94,7 @@ def test_fitness_subset_every_fifth_wmdata_group():
     subset = fitness_subset(fit, wm, seeds_of)
     assert [g["corpus"] for g in subset[:12]] == ["fit"] * 12
     assert [g["group"] for g in subset[12:]] == [0, 5, 10, 15, 20, 25, 30, 35]
-    assert all(g["arm"] == 1 and g["arm_name"] == "ctrl0" for g in subset[12:])
+    assert all(g["arm"] == 0 and g["arm_name"] == "ctrl0" for g in subset[12:])
     assert all(g["arm"] == 0 for g in subset[:12])
 
 

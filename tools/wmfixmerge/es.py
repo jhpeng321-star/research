@@ -155,7 +155,10 @@ def sweep(argv=None):
     def runtime_for(corpus):
         if corpus not in runtimes:
             prepared = args.prepared if corpus == "fit" else args.prepared_wmdata
-            rt = Runtime(prepared, args.config, args.checkpoint, args.controllers, "cpu")
+            # wm corpus: native + ctrl0 only (registered paired contrast); the
+            # designed-controller arms never enter this rollout source.
+            rt = Runtime(prepared, args.config, args.checkpoint, args.controllers, "cpu",
+                         arm_names=None if corpus == "fit" else ("native", "ctrl0"))
             live = {p["name"]: float(getattr(rt.model.physics, p["name"]))
                     for p in PARAMS if p["where"] == "physics"}
             for name, value in live.items():

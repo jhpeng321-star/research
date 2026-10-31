@@ -21,7 +21,8 @@ from tools.wmfixmerge.data import SEEDS, digest, install_guard, safe, verify
 
 WMDATA_STRIDE = 5
 WMDATA_ARM = "ctrl0"  # WMDATA.md: paired arm-minus-CTRL0/native contrasts
-WMDATA_ARM_INDEX = 1  # group_rows sorts arms: circles, ctrl0, mappo, pi
+WMDATA_ARM_INDEX = 0  # the wm Runtime source is restricted to [native, ctrl0]
+                      # (es.sweep), so the single non-reference arm is ctrl0
 
 
 def group_order(doc):
