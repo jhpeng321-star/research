@@ -1,0 +1,63 @@
+[
+  {
+    "source": "paired",
+    "episode": "devcg_u03_s969608",
+    "arm": "sumocf_deployed_u03",
+    "seed": 969608,
+    "exposure_cav_s": 1235.0,
+    "exposure_episode_s": 90.0,
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "Reference policy_mean explicitly denotes MAPPO during the window, learned policy afterward",
+        "Only labels/duplicate mean fields normalized; original observations/actions/costs are unchanged",
+        "Short behaviour crop; full600s credit; three prospective DEV worlds, missing groups disclosed",
+        "Categorical full-fleet tag corrected after field validation; observations/actions/credit unchanged"
+      ],
+      "requested_branch_interval_s": [
+        367.0,
+        967.0
+      ],
+      "recorded_interval_s": [
+        367.0,
+        457.0
+      ],
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 14,
+      "gap_creation": 5
+    }
+  },
+  {
+    "source": "paired",
+    "episode": "devcg_u03_s969610",
+    "arm": "sumocf_deployed_u03",
+    "seed": 969610,
+    "exposure_cav_s": 3263.0,
+    "exposure_episode_s": 90.0,
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "Reference policy_mean explicitly denotes MAPPO during the window, learned policy afterward",
+        "Only labels/duplicate mean fields normalized; original observations/actions/costs are unchanged",
+        "Short behaviour crop; full600s credit; three prospective DEV worlds, missing groups disclosed",
+        "Categorical full-fleet tag corrected after field validation; observations/actions/credit unchanged"
+      ],
+      "requested_branch_interval_s": [
+        357.0,
+        957.0
+      ],
+      "recorded_interval_s": [
+        357.0,
+        447.0
+      ],
+      "disabled_detectors": []
+    },
+    "counts": {
+      "cross_lane_hold": 4,
+      "wave_damping": 46,
+      "gap_creation": 27
+    }
+  }
+]

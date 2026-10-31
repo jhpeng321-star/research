@@ -1,0 +1,86 @@
+[
+  {
+    "episode": "devcg_u03_s969608",
+    "meta": {
+      "seed": 969608,
+      "arm": "sumocf_deployed_u03",
+      "branch": {
+        "t0_s": 367,
+        "horizon_s": 600
+      },
+      "trace_scope": "full_observable_fleet",
+      "trace_limitations": [
+        "Reference policy_mean explicitly denotes MAPPO during the window, learned policy afterward",
+        "Only labels/duplicate mean fields normalized; original observations/actions/costs are unchanged",
+        "Short behaviour crop; full600s credit; three prospective DEV worlds, missing groups disclosed",
+        "Categorical full-fleet tag corrected after field validation; observations/actions/credit unchanged"
+      ],
+      "position_dtype_epsilon": 1.1920928955078125e-07
+    },
+    "hashes": {
+      "b003.jsonl.gz": "cc970cc865b28249b8242c965ebbded82928415d8d8d22fea39572a3ad2da0db"
+    },
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "Reference policy_mean explicitly denotes MAPPO during the window, learned policy afterward",
+        "Only labels/duplicate mean fields normalized; original observations/actions/costs are unchanged",
+        "Short behaviour crop; full600s credit; three prospective DEV worlds, missing groups disclosed",
+        "Categorical full-fleet tag corrected after field validation; observations/actions/credit unchanged"
+      ],
+      "requested_branch_interval_s": [
+        367.0,
+        967.0
+      ],
+      "recorded_interval_s": [
+        367.0,
+        457.0
+      ]
+    },
+    "reference_hashes": {
+      "969608_MAPPO_mean_reference.jsonl.gz": "2b7c02d287864d57acb136bc2ace9002d15cb356eea19c687a9bd117de1540d7"
+    }
+  },
+  {
+    "episode": "devcg_u03_s969610",
+    "meta": {
+      "seed": 969610,
+      "arm": "sumocf_deployed_u03",
+      "branch": {
+        "t0_s": 357,
+        "horizon_s": 600
+      },
+      "trace_scope": "full_observable_fleet",
+      "trace_limitations": [
+        "Reference policy_mean explicitly denotes MAPPO during the window, learned policy afterward",
+        "Only labels/duplicate mean fields normalized; original observations/actions/costs are unchanged",
+        "Short behaviour crop; full600s credit; three prospective DEV worlds, missing groups disclosed",
+        "Categorical full-fleet tag corrected after field validation; observations/actions/credit unchanged"
+      ],
+      "position_dtype_epsilon": 1.1920928955078125e-07
+    },
+    "hashes": {
+      "b003.jsonl.gz": "bbad190fd0db4963a3a7998c97e6febf1f236510c7474fa6dd260247004395a6"
+    },
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "Reference policy_mean explicitly denotes MAPPO during the window, learned policy afterward",
+        "Only labels/duplicate mean fields normalized; original observations/actions/costs are unchanged",
+        "Short behaviour crop; full600s credit; three prospective DEV worlds, missing groups disclosed",
+        "Categorical full-fleet tag corrected after field validation; observations/actions/credit unchanged"
+      ],
+      "requested_branch_interval_s": [
+        357.0,
+        957.0
+      ],
+      "recorded_interval_s": [
+        357.0,
+        447.0
+      ]
+    },
+    "reference_hashes": {
+      "969610_MAPPO_mean_reference.jsonl.gz": "f3097dd874811e981b1e2b307975bab0b1d1fe99b1393eabcdd88c28f13e1848"
+    }
+  }
+]
