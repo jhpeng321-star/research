@@ -114,6 +114,12 @@ if {host!r}=='gpuA':(root/'physics.json').write_text(json.dumps({gpu_data!r}['ph
 print(json.dumps(dict(root=str(root),source_sha256={canonical(sources)!r})))
 ''',timeout=90)
     subprocess.run(['scp','-o','BatchMode=yes',str(BB),'gpuA:'+GPU+'/bb.pt'],check=True,timeout=90)
+    write(EVIDENCE/'V8_STAGE.json',results)
+    import_receipts()
+
+
+def import_receipts():
+    results = json.loads((EVIDENCE/'V8_STAGE.json').read_text()) if (EVIDENCE/'V8_STAGE.json').exists() else {}
     audit = json.loads((EVIDENCE/'V7_INTERRUPTION_AUDIT.json').read_text())
     results['import'] = ssh('cpuQ',f'''import hashlib,json,shutil,sys
 from pathlib import Path
@@ -121,8 +127,9 @@ root=Path({CPU!r});old=root.parent/'main_v7';sys.path.insert(0,str(root/'pytools
 from tools.c1switch.resume import imported_rows
 audit={audit!r};assert hashlib.sha256((old/'accounting.jsonl').read_bytes()).hexdigest()==audit['cpuQ']['accounting_sha256']
 assert not any(Path('/proc',pid).exists() for pid in audit['cpuQ']['own_pids'])
+assert not (root/'accounting.jsonl').exists(),'existing import; inspect only'
 shutil.copyfile(old/'accounting.jsonl',root/'PRIOR_ACCOUNTING.jsonl')
-out=imported_rows(audit);(root/'accounting.jsonl').write_text(''.join(json.dumps(x)+'\n' for x in out))
+out=imported_rows(audit);(root/'accounting.jsonl').write_text(''.join(json.dumps(x)+'\\n' for x in out))
 for job in audit['cpuQ']['jobs']:
  dest=root/('jobs' if job['result_present'] else 'prior_jobs')/job['id'];dest.mkdir()
  for p in (old/'jobs'/job['id']).glob('*.json'):shutil.copyfile(p,dest/p.name)
@@ -144,12 +151,16 @@ print(json.dumps(dict(charged_sim_s=sum(x['sim_s'] for x in out),cached=cached,c
 
 def cpu():
     from .mainops import CPU_ENV, GPU_ENV
+    if (EVIDENCE/'V8_CPU.json').exists():
+        write(EVIDENCE/f'V8_CPU_PRIOR_{time.time_ns()}.json',json.loads((EVIDENCE/'V8_CPU.json').read_text()))
     results = {}
     for host,target in [('cpuQ',CPU),('gpuA',GPU)]:
-        env = dict(CPU_ENV) if host=='cpuQ' else dict(GPU_ENV,CUDA_VISIBLE_DEVICES='',C1SWITCH_REAL_CPU='1',C1SWITCH_TEST_BUILD=target)
+        env = dict(CPU_ENV) if host=='cpuQ' else dict(GPU_ENV,CUDA_VISIBLE_DEVICES='',C1SWITCH_REAL_CPU='1',C1SWITCH_TEST_BUILD=target,
+            PYTHONPATH=GPU+'/pydeps:'+GPU_ENV['PYTHONPATH'])
         results[host] = ssh(host,f'''import contextlib,io,json,os,sys
 from pathlib import Path
 r=Path({target!r});os.nice(19);os.environ.update({env!r});sys.path.insert(0,str(r/'pytools'))
+if (r/'CPU.json').exists():(r/'CPU.json').rename(r/('CPU_PRIOR_'+str(__import__('time').time_ns())+'.json'))
 if {host!r}=='cpuQ':
  from tools.c1switch.sumo import setup
  setup()
@@ -159,6 +170,7 @@ if {host!r}=='cpuQ':
  from traffic_shepherd import simulation
  simulation.start_sumo=forbidden
 else:
+ sys.path.insert(0,str(r/'pydeps'))
  sys.path[:0]=['/root/autodl-tmp/c4/speedhead20261030/e3final/runtime/src','/root/autodl-tmp/c4/speedhead20261030/e3final/runtime','/root/autodl-tmp/c4/speedhead20261030/tools/speedhead']
  import wm_worker
 import pytest
@@ -172,10 +184,22 @@ out=dict(returncode=code,output=log.getvalue(),new_sim_s=0,new_gpu_s=0)
     print(json.dumps(results,indent=2))
 
 
+def dependency_runtime():
+    version = ssh('gpuR',"import importlib.metadata,json; print(json.dumps(importlib.metadata.version('onnxruntime')))")
+    result = ssh('gpuA',f'''import json,subprocess,sys
+from pathlib import Path
+r=Path({GPU!r});assert r.is_dir();target=r/'pydeps';assert not target.exists()
+p=subprocess.run([sys.executable,'-m','pip','install','--no-deps','--target',str(target),{'onnxruntime=='+version!r}],capture_output=True,text=True)
+print(json.dumps(dict(returncode=p.returncode,stdout=p.stdout,stderr=p.stderr,version={version!r})))
+''',timeout=120)
+    write(EVIDENCE/'V8_RUNTIME_DEPENDENCY.json',result)
+    print(json.dumps(result,indent=2))
+
+
 def launch(host, name, code, gpu=False):
     from .mainops import CPU_ENV, GPU_ENV
     root = CPU if host=='cpuQ' else GPU
-    env = dict(CPU_ENV,C1SWITCH_ENGINE_ROOT=CPU,C1SWITCH_MAIN_ROOT=CPU) if host=='cpuQ' else dict(GPU_ENV,CUDA_VISIBLE_DEVICES='0')
+    env = dict(CPU_ENV,C1SWITCH_ENGINE_ROOT=CPU,C1SWITCH_MAIN_ROOT=CPU) if host=='cpuQ' else dict(GPU_ENV,CUDA_VISIBLE_DEVICES='0',PYTHONPATH=GPU+'/pydeps:'+GPU_ENV['PYTHONPATH'])
     result = ssh(host,f'''import hashlib,json,os,subprocess,sys,time
 from pathlib import Path
 r=Path({root!r});stage=r/'pytools';assert not (r/'STOP').exists()
@@ -278,5 +302,5 @@ print(json.dumps(out))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('mode', choices=('inspect','dependencies','preflight','stage','cpu','wm_gpu','bb_gpu','gate','relay','main_panel','progress'))
+    parser.add_argument('mode', choices=('inspect','dependencies','preflight','stage','import_receipts','cpu','dependency_runtime','wm_gpu','bb_gpu','gate','relay','main_panel','progress'))
     globals()[parser.parse_args().mode]()
