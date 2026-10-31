@@ -1,0 +1,19 @@
+{
+  "status": "MAIN_DISPATCHED_AND_OBSERVED_RUNNING",
+  "main_supervisor_pid_cpuQ": 3984657,
+  "initial_active_episode_workers": 14,
+  "initial_pending_episode_jobs": 112,
+  "reused_scientific_canary_episodes": 2,
+  "owned_gpu_pids": [617609, 634799],
+  "owned_local_relay_pid": 13556,
+  "owned_gpu_memory_mib_observed": 1012,
+  "pre_main_actual_equals_charged_sim_s": 84360,
+  "registered_total_sim_s": 490860,
+  "unallocated_sim_s_reserve": 9140,
+  "gpu_hard_caps_s": {"wm": 10800, "bb": 3600},
+  "no_STOP_at_initial_inspection": true,
+  "new_main_GPU_response_observed": true,
+  "full_panel_complete": false,
+  "efficacy_claim": false,
+  "resume": "Inspect continuation progress and owned PIDs; do not stage or redispatch. Preserve all old STOPs, schedules, and charges."
+}

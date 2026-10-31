@@ -23,6 +23,12 @@ zero collisions/teleports, cumulative84360sim-s charged=actual. See
 `V7_CANARY_GATE.json`, `V7_GPU_PARITY.json`, `V7_PAIRED_WARMUP_GATE.json`.
 Main remains write-once and bounded by the original GPU hard caps; observed
 WM mean81.59s/forecast creates throughput pressure. No partial-panel efficacy.
+MAIN IS RUNNING: cpuQ supervisor3984657 (initial14BB episode workers active,
+112pending;2canary episodes reused), gpuR own WM617609/BB634799, relay13556.
+`V7_MAIN_DISPATCH.json` / `V7_PROGRESS.json` are the current receipts. Do not
+re-stage, re-dispatch, restart old versions, or remove any lock/STOP. Main jobs
+preserve reservations/results and stop on caps/errors; analysis requires all16
+paired worlds/all8arms. Inspect first, and keep the frozen anonymous adapter.
 
 ## Historical SCIENTIFIC STOP (v6 observable-key retention gate FAIL)
 
