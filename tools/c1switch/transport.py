@@ -7,8 +7,8 @@ import time
 from .ops import ssh
 from .storage import write
 
-CPU = '/home/ubuntu/c1switch20261031/main_v5/rpc'
-GPU = '/root/c1switch20261031/main_v5/rpc'
+CPU = '/home/ubuntu/c1switch20261031/main_v6/rpc'
+GPU = '/root/c1switch20261031/main_v6/rpc'
 
 
 def markers():

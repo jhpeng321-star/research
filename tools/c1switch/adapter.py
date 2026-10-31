@@ -95,6 +95,7 @@ class Adapter:
             wm_config_sha256=sha(frozen.WM_CONFIG),candidate_sha256=sha(frozen.CANDIDATE),
             mappo_sha256=sha(export['path']),sources={str(p):sha(p) for p in sorted(source_paths)},
             allocator_limit_gib=2.5,plant='shared inferred-native cap and gap6 ramp; native lanes approximated')
+        self.attestation.update(pivot_diagnostics_only_off=True,bb_k8_deterministic_memoization=binding['model']=='bb')
         if binding['model'] == 'bb':
             self.attestation['physics_sha256'] = sha(path.with_name('physics.json'))
 
@@ -197,6 +198,9 @@ class Adapter:
         if K != 8 or horizon_s != 60:
             raise ValueError('registered K8/60s required')
         n = 120 if steps is None else steps  # CPU integration gate may use two ticks.
+        # Frozen SPEED2 switch removes quadrature DIAGNOSTICS only; trajectories,
+        # RNG/carry and our fleet integral are bit-identical (tested below).
+        os.environ['WMS_SPEED_PIVOT_DIAG_OFF'] = '1' if self.optimized else '0'
         state, kwargs, tracker = rollout_inputs(payload,self.model)
         # Free anonymous slots never enter a rollout with admissions OFF. Compact
         # them before pairwise dynamics, preserving every present belief track.
@@ -217,7 +221,11 @@ class Adapter:
         plans = (self.frozen.SampledFutures(self.frozen.FuturesConfig.from_trainer(self.cfg),seed)
                  .plan([self.model],state,kwargs,n)[0]) if self.binding['model'] == 'wm' else [{} for _ in range(8)]
         samples = {c:[] for c in CONTROLLERS}
-        for k in range(8):
+        cached_bb = self.optimized and self.binding['model'] == 'bb'
+        if cached_bb and (type(self.model).__name__ != 'BlackBoxTrajModel' or
+                          bool(getattr(self.model,'_samples_lanes',False)) or self.model.training):
+            raise ValueError('BB deterministic K8 memoization eligibility failed')
+        for k in range(1 if cached_bb else 8):
             st = copy.deepcopy(initial)
             self.frozen.pair_merge_streams(st,torch.zeros(5,dtype=torch.long,device=self.device),1,seed+k)
             kw = self.frozen.expand({**kwargs,**plans[k]},5)
@@ -236,6 +244,11 @@ class Adapter:
                     raise ValueError('nonfinite model rollout')
             for i,c in enumerate(CONTROLLERS):
                 samples[c].append(float(costs[i]))
+        if cached_bb:
+            # This frozen BB has no sampled drivers/noise/lanes and entries OFF;
+            # all K8 futures are exactly identical. Preserve the eight-point
+            # degenerate distribution without eight copies of the same work.
+            samples = {c:values*8 for c,values in samples.items()}
         return samples
 
 

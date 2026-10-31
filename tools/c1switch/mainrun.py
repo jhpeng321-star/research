@@ -12,7 +12,7 @@ from .rerun import replay
 from .rpc import FilePredictor
 from .storage import Ledger, exclusive, write
 
-ROOT = Path('/home/ubuntu/c1switch20261031/main_v5')
+ROOT = Path('/home/ubuntu/c1switch20261031/main_v6')
 
 
 class MainLedger(Ledger):

@@ -14,10 +14,11 @@ from .design import BUDGET, sha
 from .ops import EVIDENCE, REG, ssh
 from .storage import canonical, write
 
-CPU = '/home/ubuntu/c1switch20261031/main_v5'
-GPU = '/root/c1switch20261031/main_v5'
+CPU = '/home/ubuntu/c1switch20261031/main_v6'
+GPU = '/root/c1switch20261031/main_v6'
 CPU_V4 = '/home/ubuntu/c1switch20261031/main_v4'
 GPU_V4 = '/root/c1switch20261031/main_v4'
+GPU_PREVIOUS = '/root/c1switch20261031/main_v5'
 BB = Path('E:/research-dense/runs/active/WM-S-C1FAST-20261006/box/full_bb_traj/wm_s.pt')
 GPU_ENV = dict(OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',
                C4_ALLOWED_ROOTS='/root/autodl-tmp/c4:/root/c1switch20261031',
@@ -111,11 +112,11 @@ def stage():
     selection = json.loads((EVIDENCE/'MODEL_SELECTION.json').read_text())
     prior = ssh('gpuR',f'''import json,math
 from pathlib import Path
-root=Path({GPU_V4!r});out={{}}
+root=Path({GPU_PREVIOUS!r});out={{}}
 for a in ('wm','bb'):
  q=root/'rpc'/a
  assert (q/'GPU_FINISHED.json').exists() and not (q/'STOP').exists()
- out[a]=2+math.ceil(json.loads((q/'GPU_FINISHED.json').read_text())['elapsed_s'])
+ out[a]=2+math.ceil(json.loads((q/'GPU_FINISHED.json').read_text())['cumulative_gpu_s'])
 print(json.dumps(out))
 ''')
     bindings = {arm:dict(selection,model=arm,checkpoint_path=GPU+'/bb.pt',
@@ -171,35 +172,41 @@ print(json.dumps(dict(imported_sim_s=gate['charged_sim_s'],episodes=2,branches=3
 ''')
     out['imported_v4'] = imported
     out['prior_gpu_s'] = prior
-    write(EVIDENCE/'V5_MAIN_STAGE.json',out)
+    write(EVIDENCE/'V6_MAIN_STAGE.json',out)
     print(json.dumps(dict(cpu=CPU,gpu=GPU,design_sha256=design,source_binding=canonical(sources))))
 
 
-def launch_gpu():
+def launch_gpu(model='wm'):
     result = ssh('gpuR',f'''import hashlib,json,os,subprocess,sys,time
 from pathlib import Path
 root=Path({GPU!r});stage=root/'pytools'
-assert not (root/'GPU_DISPATCH.json').exists(),'existing own GPU dispatch'
+model={model!r}
+assert not (root/(model+'_GPU_DISPATCH.json')).exists(),'existing own GPU dispatch'
 sources=json.loads((root/'STAGED.json').read_text())
 assert all(hashlib.sha256((stage/n).read_bytes()).hexdigest()==h for n,h in sources.items())
 free=int(subprocess.check_output(['nvidia-smi','--query-gpu=memory.free','--format=csv,noheader,nounits'],text=True).strip())
 assert free>=7168,free
 env=dict(os.environ);env.update({GPU_ENV!r},CUDA_VISIBLE_DEVICES='0')
 out=dict(host='gpuR',free_mib=free,allocator_total_gib=5,unix=time.time(),models={{}})
-for arm in ('wm','bb'):
+for arm in (model,):
  with (root/(arm+'_gpu.log')).open('x') as log:
   p=subprocess.Popen([sys.executable,'-B','-u','-m','tools.c1switch.rpc','--root',str(root/'rpc'/arm),
    '--adapter','tools.c1switch.adapter:create','--binding',str(root/(arm+'_BINDING.json'))],cwd=stage,
    env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,preexec_fn=lambda:os.nice(19))
- out['models'][arm]=dict(pid=p.pid,cap_s=10800 if arm=='wm' else 3600)
-(root/'GPU_DISPATCH.json').write_text(json.dumps(out,indent=2));print(json.dumps(out))
+ b=json.loads((root/(arm+'_BINDING.json')).read_text())
+ out['models'][arm]=dict(pid=p.pid,total_cap_s=b['gpu_cap_s'],prior_gpu_s=b['prior_gpu_s'],remaining_s=b['gpu_cap_s']-b['prior_gpu_s'])
+(root/(model+'_GPU_DISPATCH.json')).write_text(json.dumps(out,indent=2));print(json.dumps(out))
 ''')
-    write(EVIDENCE/'V5_GPU_DISPATCH.json',result)
+    write(EVIDENCE/('V6_'+model.upper()+'_GPU_DISPATCH.json'),result)
     print(json.dumps(result,indent=2))
 
 
+def launch_bb():
+    launch_gpu('bb')
+
+
 def relay():
-    root = EVIDENCE/'relay_main_v5'
+    root = EVIDENCE/'relay_main_v6'
     if root.exists():
         raise ValueError('existing local relay namespace; inspect own PID before continuation')
     root.mkdir()
@@ -214,8 +221,8 @@ def relay():
 def launch(phase):
     if phase == 'main':
         gate = json.loads((EVIDENCE/'MAIN_CANARY.json').read_text())
-        parity_gate = json.loads((EVIDENCE/'V5_GPU_PARITY.json').read_text())
-        observable_gate = json.loads((EVIDENCE/'V5_CANARY_REVALIDATION.json').read_text())
+        parity_gate = json.loads((EVIDENCE/'V6_GPU_PARITY.json').read_text())
+        observable_gate = json.loads((EVIDENCE/'V6_CANARY_REVALIDATION.json').read_text())
         if not gate['pass_'] or not parity_gate['pass_'] or not observable_gate['pass_']:
             raise ValueError('one-world canary required')
     env = dict(CPU_ENV,C1SWITCH_ENGINE_ROOT=CPU)
@@ -374,7 +381,7 @@ for a,row in prior.items():
  out[a]=dict(bitwise=True,samples=q['samples'],elapsed_s=q['elapsed_gpu_s'])
 (root/'PARITY.json').write_text(json.dumps(out,indent=2));print(json.dumps(dict(pass_=True,models=out)))
 ''',timeout=90)
-    write(EVIDENCE/'V5_GPU_PARITY.json',result)
+    write(EVIDENCE/'V6_GPU_PARITY.json',result)
     print(json.dumps(result,indent=2))
 
 
@@ -438,7 +445,7 @@ with (root/'REVALIDATION.log').open('x') as log:
 out=dict(pid=p.pid,unix=time.time(),new_sim_s=0,role='all20 observable-only canary pick check')
 (root/'REVALIDATION_DISPATCH.json').write_text(json.dumps(out,indent=2));print(json.dumps(out))
 ''')
-    write(EVIDENCE/'V5_REVALIDATION_DISPATCH.json',result)
+    write(EVIDENCE/'V6_REVALIDATION_DISPATCH.json',result)
     print(json.dumps(result,indent=2))
 
 
@@ -455,13 +462,13 @@ if 'REVALIDATION_DISPATCH.json' in out:
 print(json.dumps(out))
 ''')
     if 'REVALIDATION.json' in result:
-        write(EVIDENCE/'V5_CANARY_REVALIDATION.json',result['REVALIDATION.json'])
+        write(EVIDENCE/'V6_CANARY_REVALIDATION.json',result['REVALIDATION.json'])
     print(json.dumps(result,indent=2))
 
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
-    p.add_argument('mode',choices=('cpu','stage','launch_gpu','relay','canary','main','progress','canary_gate',
+    p.add_argument('mode',choices=('cpu','stage','launch_gpu','launch_bb','relay','canary','main','progress','canary_gate',
                                  'v4_progress','v4_gate','park_v4','parity','revalidate_canary','revalidation_status'))
     args = p.parse_args()
     if args.mode in ('canary','main'):

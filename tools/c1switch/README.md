@@ -1,23 +1,27 @@
 # S-C1SWITCH operational receipt
 
-## Current MAIN19:12 integration (v4 canary complete; v5 gated)
+## Current MAIN19:12 integration (v4 canary complete; v6 gated)
 
 Builds `db3d8683/4a4fe8cc` executed one paired world969112: real cross-host
 WM2/BB K8, full600s control, all30full-prefix branches and clocks PASS,
 charged=actual71910 cumulative, zero collisions/teleports. No repeated physics.
 `evidence/MAIN_CANARY.json` is the mechanical gate, not a model-benefit result.
 Original GPU services gracefully COMPLETE: WM1899.304206s, BB1339.300185s.
-v5 carries conservative1902/1342s against original10800/3600 caps.
+v5 full60s original-draw GPU sample parity PASS; no new SUMO. Both services
+gracefully COMPLETE after319.14s each; v6 cumulative conservative debits2224/1664s
+leave8576/1936s against original10800/3600 caps.
 
-CPU-proven exact callback speedups are in `adapter.py/merge_fast.py`; native
+CPU-proven exact callback speedups are in `adapter.py/merge_fast.py`; v6 also
+skips unused WM pivot quadrature diagnostics and memoizes deterministic BB K8.
+Both still require original-draw full60s GPU sample parity. Native
 PI/CIRCLES envelope is model-supplied when available, inferred-head otherwise.
 The end-to-end audit found v4 CRN hashing included discarded detector IDs.
-v5 removes them before both RPC and hashing. MAIN remains blocked until full60s
+v6 removes them before both RPC and hashing. MAIN remains blocked until full60s
 GPU original-draw parity AND all20canary picks under corrected anonymous keys
 pass. If any corrected pick differs, STOP; do not repeat/replace the canary.
 The two immutable v4 episodes/branches stay on disk regardless of this gate.
 
-Prospective v5 main: cpuQ14episode+<=14branch workers nice19 (owner<=28), BB
+Prospective v6 main: cpuQ14episode+<=14branch workers nice19 (owner<=28), BB
 first for its tighter GPU wall allocation. GPU services2.5GiB each,5GiB combined.
 `mainops stage/launch_gpu/relay/parity/revalidate_canary/revalidation_status`
 are gated, write-once operations; `mainops main` also requires both GPU gates.
