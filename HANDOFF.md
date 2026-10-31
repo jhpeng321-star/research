@@ -27,6 +27,20 @@ INTEGRATION.json for acknowledgement of a new training attempt.
 
 ## Resume verification after MAIN01:48
 
+Continuation implementation88078774 passes93/93 CPU locally and on cpuQ, zero
+skips, plus real frozen checkpoints/WALL/exact guard aliases/shared PPO gate.
+New immutable continuation-ready stage:
+`build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29`.
+Registration snapshotSHA2c3fa57d03f956bac2626378885429d835f65fce205e05a0700d55a159bccf7e
+contains exact unchanged cap and MAIN01:48 acknowledgement. Reviewed/shared
+registration_history.py is now included explicitly in the source inventory;
+its exemptions apply only to fleet disclosures, not per-CAV worlds.
+cpuQ census199529safe filenames/zero conflicts/errors; original failed path only
+is excluded after original PID/UID/ledger/lock validation. Pre-stage disk2.608GB,
+load6.62/32cores; dispatch/each episode rechecks8GiB memory/2GiB disk and spare
+nice19 CPUs. Stage is CPU-only; new simulation awaits explicit `--action continue`
+with this exact build. Never use original `--action dispatch` or remove any lock.
+
 MAIN's registry line `01:48 MAIN ACKNOWLEDGEMENTS / DECISIONS` and the fresh
 session addendum explicitly acknowledge unused second smoke only, then production.
 Read-only collection `COLLECTION_b42c257b09813c175fcb7261e341c7599d0bb5c4c971529e2856890d2fc8038c_1793468957194697000_9e2e08b6f97e49469002bdb211625332.json`

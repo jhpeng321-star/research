@@ -50,7 +50,7 @@ PRUNED = frozenset((".git", "node_modules", ".venv", "venv", "__pycache__",
 SHARED_PY = (
     "__init__", "audit", "continuation", "dispatch", "environment", "gate",
     "guards", "handover", "integration", "launch", "learning", "observations",
-    "ops", "postmortem", "progress", "protocol", "remote", "runtime", "selector",
+    "ops", "postmortem", "progress", "protocol", "registration_history", "remote", "runtime", "selector",
     "storage", "test_cpu", "train", "transport",
 )
 OWN_PY = ("__init__", "shared", "mixed", "training", "ops", "report")
