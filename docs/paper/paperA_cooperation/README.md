@@ -8,8 +8,8 @@ This is an evidence-linked drafting package. Start with `OUTLINE.md`, resolve cl
 
 ## Current scientific boundary
 
-- **Primary method:** WM-trained cooperative policy using short imagination plus a terminal cost-to-go trained on real SUMO outcomes. The WMVALUE frozen offline design is present; [[PENDING: decisive offline verdict / S-WMVALUE]], then [[PENDING: separately registered policy run and exact cooperation/efficacy verification / MAIN WM policy producer, S-COOPMEASURE, S-COOPEVAL]].
-- **Backup/reference:** SUMO-oracle cooperative learner. Later zero-noise saved-state branches failed despite identical commands, invalidating the original SNR/interaction values. No optimizer update completed. Corrected full-prefix rerun gates/probe and the audit remain on artifact HOLD. Earlier passing canaries apply only to their checked states.
+- **Primary method:** WM-trained cooperative policy using short imagination plus a real-SUMO-trained terminal value. WMVALUE now reports **INCOMPLETE before fitting**: required per-time observed source/request telemetry and remaining fleet+source labels are unavailable under the frozen contract. Every predictive metric is NA, not zero or a scientific FAIL. [[PENDING: permitted telemetry recovery/audited reconstruction amendment and decisive offline comparison / S-WMVALUE, MAIN]], then [[PENDING: separately registered policy and exact verification / MAIN WM policy producer, S-COOPMEASURE, S-COOPEVAL]].
+- **Backup/reference:** SUMO-oracle cooperative learner. Later zero-noise saved-state branches failed despite identical commands, invalidating the original SNR/interaction values. Corrected full-prefix rerun mechanics now PASS; the corrected probe finds no useful cooperation signal, and learner resumption requires a new launch binding. No completed optimizer update is reported at this cut. The audit's own HOLD/release migration remains unresolved. Earlier canaries apply only to their checked states.
 - The interaction estimand and historical measurement are supported. Track 3B is now complete with no accepted improvement. Descriptive behavior counts have landed; probe-based positive-credit discovery cannot validate cooperation after the artifact failure.
 - Historical WM direction fidelity was bounded by horizon; corrected native-lane qualification still fails. The new value-tail route is a hypothesis to test, not a validation already supplied by those older results.
 - Keep native release, the forced-command CTRL0 adapter, lane-on historical MAPPO, and the speed-only MAPPO export distinct.
@@ -17,6 +17,7 @@ This is an evidence-linked drafting package. Start with `OUTLINE.md`, resolve cl
 <!-- Sources: E:/agent-work/c4-coopmeasure/AUDIT_DESIGN.md; E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_DESIGN.md (binding amendment); E:/research-dense/docs/paper_results/COOPMEAS2.md; E:/agent-work/c4-wmrequal3/docs/paper_results/WMREQUAL3.md; E:/research-dense/docs/paper_results/E2_direction_horizon.csv. -->
 <!-- Refresh sources: E:/agent-work/c4-coopmeasure/docs/paper_results/COOPAUDIT.md; E:/agent-work/c4-sumocf/tools/sumocf/evidence/CANARY_V2.json. -->
 <!-- Current authority/evidence: owner MAIN ADDENDUM; E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md, OWNER FRAMING; E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md; E:/agent-work/c4-sumocf/docs/paper_results/ARTIFACT_CHECK.md; E:/agent-work/c4-sumoes/docs/paper_results/SUMOES_RUN.md; E:/agent-work/c4-coopbehav/docs/paper_results/COOPBEHAV.md. -->
+<!-- WMVALUE verdict: E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md. -->
 
 ## Package conventions
 

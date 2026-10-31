@@ -1,5 +1,5 @@
 {
-  "captured_local": "2026-10-31T17:42:54.757606+08:00",
+  "captured_local": "2026-10-31T17:53:46.705845+08:00",
   "reports": {
     "wmvalue_design": {
       "path": "E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md",
@@ -11,31 +11,35 @@
     },
     "wmvalue_report": {
       "path": "E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md",
-      "exists": false
+      "exists": true,
+      "sha256": "30b4beecbbd40fae2b49d0e846f16f4dcb3633dfab1fa4b292a1210132910585",
+      "bytes": 3321,
+      "modified_local": "2026-10-31T17:53:29.571511+08:00",
+      "snapshot": "source_snapshots/wmvalue_report_30b4beecbbd40fae.md"
     },
     "sumocf_design": {
       "path": "E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_DESIGN.md",
       "exists": true,
-      "sha256": "ad9e25287ba301c10ae5f3dd9a0b288e9f9a6e1b2559df722c46dcafab67a3e5",
-      "bytes": 27145,
-      "modified_local": "2026-10-31T17:35:26.139923+08:00",
-      "snapshot": "source_snapshots/sumocf_design_ad9e25287ba301c1.md"
+      "sha256": "cbfca5bdd53850dcf5015537c1618ef75e161b9cbcc68f1c8061c91fc089b839",
+      "bytes": 30386,
+      "modified_local": "2026-10-31T17:52:03.668243+08:00",
+      "snapshot": "source_snapshots/sumocf_design_cbfca5bdd53850dc.md"
     },
     "sumocf_run": {
       "path": "E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_RUN.md",
       "exists": true,
-      "sha256": "5b460b71a1d43cf2a5dfd720283763117ef070b7373cd6879bdc021fea9b2057",
-      "bytes": 7599,
-      "modified_local": "2026-10-31T17:40:11.021240+08:00",
-      "snapshot": "source_snapshots/sumocf_run_5b460b71a1d43cf2.md"
+      "sha256": "f174ad69604be3221fa493f2838161474b4c0aca9028179bdffcb222d75929c3",
+      "bytes": 7843,
+      "modified_local": "2026-10-31T17:45:24.940799+08:00",
+      "snapshot": "source_snapshots/sumocf_run_f174ad69604be322.md"
     },
     "sumocf_artifact": {
       "path": "E:/agent-work/c4-sumocf/docs/paper_results/ARTIFACT_CHECK.md",
       "exists": true,
-      "sha256": "164ae0a05363b0c44f9d31e31fa1dff0b7a5b594920da344bc225a37c3906f7a",
-      "bytes": 4552,
-      "modified_local": "2026-10-31T17:35:36.528333+08:00",
-      "snapshot": "source_snapshots/sumocf_artifact_164ae0a05363b0c4.md"
+      "sha256": "4ac2b3e82b61bbdb9e2fbbf788af8311a0e8f4d62b07c88b48868ca31410d6af",
+      "bytes": 7549,
+      "modified_local": "2026-10-31T17:52:03.669811+08:00",
+      "snapshot": "source_snapshots/sumocf_artifact_4ac2b3e82b61bbdb.md"
     },
     "sumocf_root_run": {
       "path": "E:/agent-work/c4-sumocf/SUMOCF_RUN.md",
@@ -187,16 +191,10 @@
     }
   },
   "changed_since_prior_cut": [
-    "wmvalue_design",
     "wmvalue_report",
     "sumocf_design",
     "sumocf_run",
-    "sumocf_artifact",
-    "audit_design",
-    "audit_report",
-    "behavior_report",
-    "sumoes_report",
-    "sumoes_log"
+    "sumocf_artifact"
   ],
   "scope": "explicit local report snapshots only; no simulator/model or restricted input access",
   "claim_review": "manual; file appearance or a canary is not an efficacy result"

@@ -34,6 +34,7 @@
   ],
   "report_snapshot_checks": [
     "wmvalue_design",
+    "wmvalue_report",
     "sumocf_design",
     "sumocf_run",
     "sumocf_artifact",
@@ -69,14 +70,14 @@
   "scope": "local links, provenance structure, bibliography identity coverage, CSV schema, plotted source values and hashes",
   "limitations": "Not a scientific efficacy check, exhaustive numerical prose proof, full BibTeX compile, or IEEE pagination check",
   "document_sha256": {
-    "README.md": "c28b88020aed5e5e5f5c3edccca72f98eda2dbb3b66a926ff7eecab6b1a21ea8",
-    "OUTLINE.md": "f2ffdc653250ccba5674d06dd3597f095f43fd7f2008147ec9f530ddf1e64432",
-    "CLAIMS.md": "eb97255b26a25cddfa324f83d3c961e56a8ca56178e52367727665e8e28dac32",
-    "FIGURES.md": "e321c6bca1d22c25af5b86fe55b1a1cf379bacddb8efaaaf229ca722ed8e3839",
+    "README.md": "ae7c473682fc17ba0105041918ab09329bc396393213a9097cee80d950d7bed3",
+    "OUTLINE.md": "815d3acb4f088dfaea731c703b70722b5a75e994e7b95cc54925f8a16cbc94b0",
+    "CLAIMS.md": "4cb4b46066b5b96a2dea8e33ca05b5c96186b41385580c4d4b0c57a8627db2d5",
+    "FIGURES.md": "082f1f943204904c34461aec6dbabb4f55e4022c01190927b54c5115b21226ed",
     "RELATED_WORK.md": "ee3fe1f1c4ba1c9ca56d87c6e2a5c6cf38c6ad5ddce262ed8800c691b40c84ba",
-    "THREATS.md": "2309831d6974a52088e951266dde36355bc51862858b56927d1a30ddf96e4c2c",
-    "EVIDENCE_SOURCES.md": "098f8069ee92cdd63dbdfd1422241001c6c08d43bff90663c961f7852c2bce28",
-    "REFRESH.md": "8cd2411d45783f41af88dfae3af705091c11666f09cdcbcdf82d92581d69534c",
+    "THREATS.md": "f15705d47f1c2efa77f9a3432ad58803e428c48b1623949d05435a913213eadd",
+    "EVIDENCE_SOURCES.md": "92e022e8cfd022c1a09b15037458a80aac18360a4c222e41ce39b8a63f2d409d",
+    "REFRESH.md": "8ce33101b9329a0bf54fe5d3f2990808bb2b1287be8346d89944dc875c68a79e",
     "refs.bib": "2401075b868a49e8b783b12dcdee5a07f137e70eb716bce54ea06f5f0b31ecbc",
     "reference_verification.csv": "cdb4b1409d2850cb965e5d2b94440fc0a708498a3809894dd61ebd5f05e88cab"
   }

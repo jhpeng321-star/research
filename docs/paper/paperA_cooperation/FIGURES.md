@@ -50,8 +50,8 @@ Initial capture used the same command with `--freeze-inputs`. That option reads 
 ## F2 — primary speed-only existing-controller audit
 
 - **Purpose:** answer whether each existing controller has positive interaction, separately from individual and group gains.
-- **Status: PENDING — artifact HOLD.** [[PENDING: corrected full MAPPO-speed/wall audit and paired trained arms / S-COOPMEASURE, S-SUMOCF, MAIN WM policy producer]]. PI/CIRCLES/CTRL0 are optional/history under the owner amendment. Canary outcomes and the completed old-design first world are not corrected-panel inference.
-- **Source expected:** `E:/agent-work/c4-coopmeasure/docs/paper_results/COOPAUDIT.md` and eventual analysis CSV. Report requires explicit artifact PASS, corrected SNR/design binding and versioned full-panel admission; the original saved-state probe cannot authorize plotting results.
+- **Status: PENDING — audit release/migration unresolved.** [[PENDING: corrected full MAPPO-speed/wall audit and paired trained arms / S-COOPMEASURE, S-SUMOCF, MAIN WM policy producer]]. The learner's corrected full-rerun mechanics now PASS, but the audit has not yet delivered its own release/versioned migration. PI/CIRCLES/CTRL0 are optional/history. Canary outcomes and the old-design first world are not corrected-panel inference.
+- **Source expected:** `E:/agent-work/c4-coopmeasure/docs/paper_results/COOPAUDIT.md` and eventual analysis CSV. Report requires explicit artifact PASS, corrected SNR/design binding and versioned full-panel admission. `E:/agent-work/c4-sumocf/docs/paper_results/ARTIFACT_CHECK.md` now reports corrected mechanics PASS and selection, without useful interaction signal. The original saved-state probe remains invalid.
 - **Layout:** forest plot of C_G with world CIs, plus aligned D_G/ΣD_i, eligible groups and positive fraction; stratified/whole-panel estimates explicit. Include native-repeat and wall coverage/abort indicators.
 - **Generating command:** [[PENDING: producer's final analysis/export command and package renderer after real CSV schema lands / S-COOPMEASURE, S-PAPERA]]. Do not run a guessed producer command or synthesize placeholder bars.
 - **Caption insert:** [[PENDING: selected group/window, clock origin, fixed population, source CI recipe and all controller outcomes / S-COOPMEASURE]].
@@ -68,8 +68,8 @@ Initial capture used the same command with `--freeze-inputs`. That option reads 
 ## F3V — decisive offline WM+value test (primary prerequisite)
 
 - **Purpose:** test whether a real-trained tail improves paired long-outcome prediction beyond full WM and no-WM alternatives.
-- **Status: PENDING.** [[PENDING: WMVALUE telemetry gate, all method/horizon metrics, paired baseline differences/CIs and export / S-WMVALUE]]. INCOMPLETE means explicit NA, not fabricated bars.
-- **Source expected:** `E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md` and its hash-bound CSV/receipt; design in `WMVALUE_DESIGN.md` in the same directory.
+- **Status: BLOCKED — delivered WMVALUE INCOMPLETE before fitting.** All method/horizon metrics and CIs are NA. Record the source/label telemetry blocker; no performance plot can be generated. [[PENDING: permitted data recovery/amendment and decisive predictions/export / S-WMVALUE, MAIN]]. <!-- Source: E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md. -->
+- **Delivered source:** `E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md` (INCOMPLETE; no numerical performance export); design in `WMVALUE_DESIGN.md` in the same directory. A future admissible test needs its own hash-bound CSV/receipt.
 - **Layout:** full WM, WM60+V, WM90+V, command-aware no-WM V and FIT-only arm/time means; aligned sign agreement, MAE and ranking, plus paired sign-improvement/MAE-reduction CIs and each gate result. Both short horizons retained. These horizon labels are from the frozen design. <!-- Source: E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md:40-71. -->
 - **Generating command:** [[PENDING: producer's actual schema-bound analysis/export command and package renderer / S-WMVALUE, S-PAPERA]]. This task will not train V or run model rollouts.
 - **Caption requirements:** reserved TRAIN worlds, world-cluster uncertainty, same pair/time rows, real fleet+source cost endpoint, sensor/queue admissibility, recorded arm-specific continuation rather than a same-state policy intervention. Report every baseline; offline PASS does not establish C_G or learned gain.
@@ -115,7 +115,7 @@ Initial capture used the same command with `--freeze-inputs`. That option reads 
 ## T2 — physical outcomes and actual budget
 
 - **Purpose:** expose safety/fairness/throughput and cost of WM/value acquisition/training, oracle reference and exact verification.
-- **Status: PENDING for new policies; baseline-only receipt delivered.** [[PENDING: full paired WM/oracle physical vector and actual/charged lineage including real value labels, warm start, prefixes, canaries and failed branches / S-COOPEVAL, S-WMVALUE, MAIN WM policy producer, S-SUMOCF, S-COOPMEASURE]]. Completed DEV baseline does not fill learned-arm rows. <!-- Source: E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_RUN.md:19-26. -->
+- **Status: PENDING for new policies; baseline-only receipt delivered.** [[PENDING: full paired WM/oracle physical vector and actual/charged lineage including real value labels, warm start, prefixes, canaries and failed branches / S-COOPEVAL, S-WMVALUE, MAIN WM policy producer, S-SUMOCF, S-COOPMEASURE]]. Completed DEV baseline does not fill learned-arm rows. <!-- Source: E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_RUN.md, Completed fixed DEV baseline. -->
 - **Source expected:** complete producer reports plus durable accounting summaries. Allocation is not consumption; screen-only no-step costs are not new SUMO panel measurements.
 - **Generating command:** [[PENDING: schema-bound export and final IEEEtran table source / S-COOPEVAL, owner]].
 - **Main-text minimum:** collisions/teleports/dropped steps, TTC/braking and worst-group/service effects alongside efficiency; incident zeros are not safety equivalence. Full components/cells remain in the artifact.
