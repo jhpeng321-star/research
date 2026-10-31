@@ -9,10 +9,11 @@ BAD = ('sealed', 'holdout', 'heldout', 'cal_split', 'chunk5', 'j4b', 'inc1',
        'hetdata_truth', 'vehicle_params', 'driver_params', 'vtype')
 
 
-def ssh(source, host='cpuQ', data=None):
+def ssh(source, host='cpuQ', data=None, python='python3'):
     assert host in ('cpuQ', 'gpuR')
+    assert python in ('python3', '/home/ubuntu/miniconda3/bin/python')
     payload = base64.b64encode(source.encode()).decode()
-    command = "python3 -c 'import base64;exec(base64.b64decode(\"" + payload + "\"))'"
+    command = python + " -c 'import base64;exec(base64.b64decode(\"" + payload + "\"))'"
     p = subprocess.run(['ssh', '-o', 'BatchMode=yes', host, command],
                        input=data, capture_output=True, timeout=300)
     if p.returncode:
