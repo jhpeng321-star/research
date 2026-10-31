@@ -1,4 +1,9 @@
-# S-RB-UNC — READY for WM-PHYS A
+# S-RB-UNC — baseline READY; owner00:40 addendum IN PROGRESS
+
+Fresh-session resume preserves clean baseline46c33fbe and all completed probes.
+Next: fitted IDM/optional LC posterior + learned entrance-counter process +
+identity-keyed action CRN. Frozen plan: `docs/paper_results/RBUNC_ADDENDUM_DESIGN.md`.
+Remote terminal rechecked: old31children exited0; no old dispatch repeated.
 
 Branch `c4/rb-unc`, base `f0db3c82`. Owner registration5683/5694 and WHY +
 ENSPROBE read. Merge the branch; retain INT's own root HANDOFF on conflict.
