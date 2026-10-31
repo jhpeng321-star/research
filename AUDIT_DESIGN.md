@@ -5,6 +5,11 @@ Authority: owner 2026-10-31 15:45, REGISTRATION.md line5544; branch
 No positive fleet gain or visually coordinated behaviour substitutes for C_G.
 
 ## Estimand, interventions and controllers
+- **Binding 17:20 owner amendment:** primary arms are speed-only MAPPO and
+  wall-v2.1 mechanism positive control, plus S-SUMOCF's trained policy when an
+  immutable checkpoint exists, paired on the same worlds/groups/design. PI,
+  CIRCLES and CTRL0 are historical/optional only after primary work and budget.
+  The original five-arm specification below is retained as execution history.
 - D(S)=J(B)-J(S), C_G=D(G)-sum_i D(ONLY:i), positive beneficial interaction.
   Exact same-state SUMO branches, not additive model approximations.
 - B means native SUMO car-following (IDM population), native lane decisions, no
@@ -124,3 +129,30 @@ No retry or truncation is automatic. CPU tests now also verify exact frozen CTRL
 masking and PI/CIRCLES subset/native release. Production local crossing-cohort
 scoring is aligned to the SNR oracle; no new controller/physics action path was
 introduced after the canary. Pending report is clearly labelled until completion.
+
+## Binding artifact HOLD and recovery (2026-10-31, owner 17:20)
+- Local continuation39620 was identity-verified and stopped. The owned gpuR
+  YIELD flag and ARTIFACT_HOLD.json block dispatch; owned worker516243/start
+  ticks4206436595 was identity-verified and SIGSTOPped while idle between worlds.
+  No in-progress world was interrupted; no peer process was signalled.
+- Completed work is preserved: canary,28 census prefixes, and main969650's
+  original five-arm branches. At pause:21180actual/21480charged sim-s of500000;
+  unused setup reservation300 remains charged. Receipt:
+  tools/coopaudit/evidence/ARTIFACT_HOLD.json. No jobs are duplicated or retried.
+- The prior grid6/two-member/60s binding used the now-disclosed CV selection
+  defect. S-SUMOCF's published raw-owner-rule winner is grid26/all-zone/60s/rho1,
+  itself under artifact investigation. Neither selection currently authorises
+  further audit SUMO. The completed first world is historical, not a completed
+  corrected-design observation; its results and charges remain untouched.
+- **Release condition:** E:/agent-work/c4-sumocf/ARTIFACT_CHECK.md must explicitly
+  report PASS, or a corrected/re-selected design with a passed artifact check.
+  Bind that evidence and the current owner-rule selection, revise exact complete
+  panel costs, and register/commit before dispatch. Missing/ambiguous/FAIL blocks.
+  No unconditional timer release or old-worker resume is authorised. As checked
+  at recovery, ARTIFACT_CHECK.md does not yet exist.
+- If the selected group changes, regenerate only deterministic groups from the
+  existing census's observable positions; keep the original census/state hashes.
+  Never rerun finished prefixes to discover new groups or overwrite old jobs.
+  A new design namespace is required for non-reusable branches, all newly charged.
+  Reserve space for the paired trained-policy arm before admitting the panel;
+  absent a checkpoint, report its pending status rather than fabricate a comparator.
