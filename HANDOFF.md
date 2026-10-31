@@ -1,8 +1,20 @@
 # S-RB-RUNB handoff
 
-Updated 2026-11-01 01:30 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+Updated 2026-11-01 01:42 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
 
-## Current — B withdrawn before inference; corrected variant needed
+## Current — corrected B2 claimed / WAITING_RESOURCES
+- Existing watcher33076 automatically claimed **WM-PHYS-B2** at01:31:32 and
+  launched ONE supervisor **gpuR755633**; original B remains withdrawn/tasks0.
+- Immutable source4015b6412cdfa2a94168b7095a59287d0fddcd3b; INT reports8x60s
+  smoke PASS and five-arm600s canary PASS (FULL;206.03s), repaired MAPPO ABI.
+- Root `/root/rbeval20261031/runb/WM-PHYS-B2`; exact manifest in shared
+  WM-PHYS-B2.claim. INT complete evaluate_B.py entrypoint preserves future-builder.
+- Read-only01:41 audit: GPU15,483/24,564MiB/100%, load9.20; supervisor last
+  admission sample15,691MiB/100%/load11.24, WAITING_RESOURCES. No DISPATCH or FAILED.
+- A2/C2 assigned RUNA/gpuA; FULL-v1 already INT-owned on gpuA. No duplicates.
+- Continues polling ten-minute handoffs while waiting for free gpuR compute.
+
+## Historical 01:30 — original B withdrawn before inference
 - INT01:24 reports A's three constructor failures: frozen MAPPO callback requires
   unsupported `policy_native_lanes`. Independently AST-checked B's immutable
   bridge: argument absent, no **kwargs. No DISPATCH.json, LAUNCHED or shard exists.
