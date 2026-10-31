@@ -21,6 +21,15 @@ No redispatch or second watcher. All previous evidence and peer notices preserve
 
 ### MAIN04:27 supervision log (+08:00)
 
+- 05:02 fresh-session verification: existing watcher12432 executable/command and
+  02:03:58 creation time match; latest collection Unix1793480275 validates
+  cpuQ606968 live,15/169 updates,690/7774 production successes,8open.
+  622200actual/630000reserved incl unchanged original900/300 failure;
+  691complete controlled receipts have zero collisions/teleports. Checkpoint015
+  SHA6520cc011d8d18bb0c48369ea36bcdbff95a83f1ce6de1227a0c96d22f69832f.
+  CollectionSHA53e09dc0d429f16063f03171e940bb2a1058a5404867e9f67fc051cf0a3d84c4.
+  Recovered uncommitted watcher receipts/curves retained; existing jobs progressing.
+
 - 04:48: watcher12432 identity/live rechecked; latest remote observation
   Unix1793479670 verifies606968live,13/169updates (+2),637production successes
   (+120),6open.574500actual/580500reserved incl unchanged historical failure;
