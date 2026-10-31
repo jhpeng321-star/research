@@ -46,6 +46,14 @@ failure. Retain both existing jobs/locks and the no-replay accounting; existing
 collector already retries read-only transport every300s. No restart/dispatch or
 signals. Supervision continues, and stale receipts must not be reported as current.
 
+06:05: shared REGISTRATION now records the per-CAV connectivity alert, exact last
+verified checkpoint/accounting and existing monitor identities. MAIN05:50 confirms
+a shared cpuQ incident and plans infrastructure investigation near07:00 if needed.
+Fleet peer already verified gpuR works and its cpuQ jump also fails; no duplicate
+diagnostics needed. Relocation/restart requires reconciling consumed worlds and
+durable checkpoint/ledger first. Existing per-CAV watcher retries/20min commits
+continue, with no change to cap,169updates or final-only evaluation.
+
 - 05:02 fresh-session verification: existing watcher12432 executable/command and
   02:03:58 creation time match; latest collection Unix1793480275 validates
   cpuQ606968 live,15/169 updates,690/7774 production successes,8open.
