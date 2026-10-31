@@ -3,6 +3,10 @@ from .sumo import Backend
 
 
 class MainBackend(Backend):
+    def inference_payload(self):
+        from .feedback import capture
+        return capture(self)
+
     def observe(self, env):
         # Preserve exact evaluation tape accounting, then replace the one-second
         # belief row with both native half-second sensor projections. Never expose

@@ -2,6 +2,7 @@
 import argparse
 import importlib
 import json
+import os
 from pathlib import Path
 import signal
 import time
@@ -78,24 +79,32 @@ def serve(root, adapter_name, binding_path, device):
             raise TimeoutError('GPU allocation exhausted')
         signal.signal(signal.SIGALRM, expired)
         signal.setitimer(signal.ITIMER_REAL, cap)
-        model = getattr(mod, func)(binding, device=device)
-        while not (root/'STOP').exists():
-            if time.monotonic()-began >= binding['gpu_cap_s']:
-                write(root/'STOP', dict(reason='GPU wall-time cap'))
-                return
-            for request_path in sorted(root.glob('*.request.json')):
-                result_path = request_path.with_name(request_path.name.replace('.request.', '.result.'))
-                if result_path.exists():
-                    continue
-                request = json.loads(request_path.read_text())
-                key = request.pop('request_sha256')
-                if canonical(request) != key or request['binding'] != binding:
-                    raise ValueError('request binding mismatch')
-                samples = model.predict(request['belief'], K=8, horizon_s=60)
-                medians(samples)
-                write(result_path, dict(request_sha256=key, binding=binding, samples=samples,
-                                        elapsed_gpu_s=time.monotonic()-began))
-            time.sleep(.25)
+        try:
+            model = getattr(mod, func)(binding, device=device)
+            write(root/'READY.json',dict(pid=os.getpid(),unix=time.time(),binding=binding,
+                                       attestation=getattr(model,'attestation',None)))
+            while not (root/'STOP').exists() and not (root/'COMPLETE').exists():
+                if time.monotonic()-began >= binding['gpu_cap_s']:
+                    raise TimeoutError('GPU wall-time cap')
+                for request_path in sorted(root.glob('*.request.json')):
+                    result_path = request_path.with_name(request_path.name.replace('.request.', '.result.'))
+                    if result_path.exists():
+                        continue
+                    request = json.loads(request_path.read_text())
+                    key = request.pop('request_sha256')
+                    if canonical(request) != key or request['binding'] != binding:
+                        raise ValueError('request binding mismatch')
+                    samples = model.predict(request['belief'], K=8, horizon_s=60)
+                    medians(samples)
+                    write(result_path, dict(request_sha256=key, binding=binding, samples=samples,
+                                            elapsed_gpu_s=time.monotonic()-began))
+                time.sleep(.25)
+        except BaseException as exc:
+            write(root/'STOP',dict(reason=str(exc),pid=os.getpid()))
+            raise
+        finally:
+            signal.setitimer(signal.ITIMER_REAL,0)
+            write(root/'GPU_FINISHED.json',dict(elapsed_s=time.monotonic()-began,unix=time.time(),pid=os.getpid()))
 
 
 if __name__ == '__main__':

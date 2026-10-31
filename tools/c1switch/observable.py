@@ -3,7 +3,7 @@ import math
 
 
 def tracker_from_payload(payload):
-    from wms.control.belief import BeliefConfig, BeliefTracker, CavReport, RsuDetection
+    from wms.control.belief import BeliefConfig, BeliefTracker, CavReport, RsuDetection, Detection
     if payload.get('schema') != 'c1switch_observable/1':
         raise ValueError('observable receipt schema required')
     history = payload['history']
@@ -14,8 +14,18 @@ def tracker_from_payload(payload):
     for row in history:
         reports = []
         for r in row['self_reports']:
+            def neighbour(ahead):
+                sign = 1 if ahead else -1
+                seen = [d for d in row['detections'] if d['lane'] == r['lane']
+                        and sign*(d['s_m']-r['s_m']) > 0]
+                if not seen:
+                    return None
+                d = min(seen,key=lambda x:sign*(x['s_m']-r['s_m']))
+                gap = max(0.,sign*(d['s_m']-r['s_m'])-5.)
+                return Detection(gap,d['v_mps']-r['v_mps']) if gap <= 100 else None
             reports.append(CavReport(cav_id=r['vehicle_id'], s_m=r['s_m'], lane=r['lane'],
-                                     v_mps=r['v_mps'], a_mps2=r['a_mps2'], age_s=r['age_s']))
+                                     v_mps=r['v_mps'], a_mps2=r['a_mps2'], age_s=r['age_s'],
+                                     front=neighbour(True),rear=neighbour(False)))
         # The capture-side track IDs are never handed to association or the model.
         # RSU vehicles are anonymous and CAV identity comes exclusively from self.
         detections = [RsuDetection(s_m=r['s_m'], lane=r['lane'], v_mps=r['v_mps'],

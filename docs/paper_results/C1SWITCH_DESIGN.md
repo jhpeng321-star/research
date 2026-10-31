@@ -52,3 +52,6 @@
 51. Mechanical stop: full-rerun prefix/repeat mismatch, duplicate IDs/requests, controller lane call, nonfinite output, invalid observable inference contract, collision/teleport/drop, ledger/cap/hash/pairing error.
 52. Durable exclusive dispatch lock, fsynced precharge before every prefix/branch, actual half-second accounting incl failures; existing START without terminal result blocks redispatch.
 53. Resume: inspect task receipts/PIDs; reuse finished analyses/jobs without recomputation; register changes before compute; commits after design/build/analysis/canary/results.
+54. MAIN19:12 integration: Step0 PASS47,010; real WM2/BB CPU gate and cross-host hash-bound relay; one-world canary is retained main969112 WM+BB episodes/registered measurements, no extra sim-s.
+55. Causal PI raw recurrence/MAPPO command memory uses self IDs only; reset on change, preserve incumbent; shared inferred-native CAV plant+gap6 ramp approximates SUMO native lanes for both models (no exact native-lane forecast claim).
+56. Entries OFF: WM2 learned mix configured but dormant; K8 shares controller-paired draws where supported, BB repeats deterministic forecasts where no stochastic head exists. GPU services2.5GiB allocator EACH (5GiB combined), admission>=7GiB free; cpuQ12episode workers+<=12branch children, nice19.

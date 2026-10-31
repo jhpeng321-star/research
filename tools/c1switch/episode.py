@@ -36,7 +36,7 @@ def episode(backend, arm, world, *, predictor=None, measurement=None, receipt=No
     for j in range(10):
         # Complete observable state is copied at the boundary, no backend reference
         # reaches the predictor. Exact fingerprints/cell identities remain evaluation.
-        payload = backend.belief.payload()
+        payload = backend.inference_payload() if hasattr(backend, 'inference_payload') else backend.belief.payload()
         prefix = backend.fingerprint()
         if arm in ('wm', 'bb'):
             costs = predictor.predict(payload, f'{arm}_s{world["seed"]}_j{j}')
