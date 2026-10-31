@@ -1,0 +1,28 @@
+{
+  "root": "/home/ubuntu/rblane20261031_panel10_750e5bd54607",
+  "process": {
+    "pid": 644043,
+    "start_ticks": "48471090",
+    "command": [
+      "/usr/bin/nice",
+      "-n",
+      "19",
+      "/home/ubuntu/miniconda3/bin/python",
+      "-B",
+      "-m",
+      "tools.rblane.validate",
+      "--out",
+      "/home/ubuntu/rblane20261031_panel10_750e5bd54607/results",
+      "--encoder-checkpoint",
+      "/home/ubuntu/rblane20261031_panel10_750e5bd54607/inputs/wm_s.pt",
+      "--pre-signed-kernel",
+      "/home/ubuntu/rblane20261031_panel10_750e5bd54607/inputs/lc2013_before_signed.py"
+    ],
+    "root": "/home/ubuntu/rblane20261031_panel10_750e5bd54607",
+    "started_at": 1793470433.179287
+  },
+  "bundle_sha256": "750e5bd546076cf2f9f3b90cbb59ddb0fffe7a1ac8a7fca95850fa23a48dc465",
+  "complete": true,
+  "alive": false,
+  "collected_at": 1793471443.1635704
+}

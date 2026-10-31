@@ -315,3 +315,23 @@ project code; no downloaded SUMO code is executed. All settings, current
 geometry, history and observations are shared, and both kernels get independent
 persistent state. Encoder-source fingerprints now protect MOBIL reuse as well
 as checkpoint SHA, inputs, physics and scoring transform.
+
+Candidate10 paired result VERIFIED (worker644043 exited,566.25s). Same encoder,
+snapshotv2 and current geometry, before→after signed-cap:
+- exact precision2.1475%→2.2490%, recall38.7097%→37.4194%;1260/58672→1218/54157.
+- Removes4473 false-positive steps at the cost of42 exact matches (net4515
+  fewer proposals). The signed-cap branch fires25160 scored HDV frames.
+- Per motivation before→after precision / recall contribution:
+  strategic23.461%/14.286pp→same (465/1982); cooperative14.549%/4.117pp→same
+  (134/921); speed-gain2.347%/10.445pp→2.337%/10.445pp (340/14486→340/14550);
+  keep-right0.778%/9.862pp→0.760%/8.571pp (321/41283→279/36704).
+- Current compressed±2s runs914/3586: precision25.488%, recall28.080%,
+  timingMAE0.3972s, positionMAE6.053m. Paired MOBIL108/3118 exact:
+  precision3.464%, recall3.318%. New matched-mode baseline retained.
+- Source/encoder/input/motivation-partition and original-runtime exact
+  reassembly PASS. Non-return transition controls (merge/overtake) are EXACT
+  between ablation kernels, as predicted by the targeted source change.
+
+This source fix improves total positive-step precision slightly, but **does
+not resolve the keep-right problem**. Individual keep-right precision decreases
+because some true positives are removed too. No distributional adoption claim.

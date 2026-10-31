@@ -55,15 +55,16 @@ WM-PHYS REGISTRATION5683 plus00:10 precision addendum. Source-backed subset;
   published motion-fit artifact/frozen model weights, and road/source code read.
   No SUMO/GPU/training/signals/deletions/push. lcspec/obsstate/targets consumed.
 
-## Candidate10 RUNNING (source92a3cd69)
+## Candidate10 VERIFIED (source92a3cd69)
 Source1749's current-leader denominator now preserves its SIGN; the old clamp
 incorrectly removed negative keep-right feedback under inferred settings.
 Faster target leaders no longer overwrite the later cap's gap. 52CPU PASS;
-9600 default-population synthetic decisions remain bit-exact to9. Next paired
-encoder-v2 pass compares before/after signed-cap kernels on identical inputs,
-with source-pinned ablation and independent wish states. cpuQ own644043,
-`/home/ubuntu/rblane20261031_panel10_750e5bd54607`, one nice19 thread; no other
-owned job active. No setting/threshold fit. Preserve dispatch; do not duplicate.
+9600 default-population synthetic decisions remain bit-exact to9. Paired
+encoder-v2 ablation: precision2.148%→2.249%, recall38.710%→37.419%; removes4473
+FP at cost42 exact matches. Keep-right precision remains0.760%; NOT resolved.
+Source branch fires25160 frames. Non-return transition controls are exactly
+unchanged. All source/input/encoder/aggregate checks PASS, worker644043 exited;
+no owned jobs remain. No setting/threshold fit. All original results preserved.
 
 ## Gaps
 Synchronous proposals/messages vs SUMO serial processing; full leader

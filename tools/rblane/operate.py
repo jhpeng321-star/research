@@ -19,10 +19,10 @@ RECEIPTS = ROOT / 'tools/rblane/receipts'
 PYTHON = '/home/ubuntu/miniconda3/bin/python'
 
 
-def remote(code):
+def remote(code, timeout=30):
     result = subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10',
                              'cpuQ', PYTHON + ' -B -'], input=code, text=True,
-                            capture_output=True, timeout=30)
+                             capture_output=True, timeout=timeout)
     if result.returncode:
         raise RuntimeError(result.stdout + result.stderr)
     return result.stdout
@@ -157,6 +157,9 @@ print(json.dumps(dict(alive=alive,complete=summary.exists(),
                      aggregate={model: {key: value for key, value in scores.items()
                           if key in ('exact', 'by_motivation', 'positive_runs')}
                           for model, scores in report['summary']['aggregate'].items()})
+        if collect:
+            brief['aggregate'] = {model: scores['exact']
+                                  for model, scores in report['summary']['aggregate'].items()}
     else:
         brief['progress'] = report['progress']
     print(json.dumps(brief, indent=2))

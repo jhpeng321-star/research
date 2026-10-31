@@ -126,6 +126,11 @@ print(json.dumps(dict(source_bundle_sha256={dispatch['bundle_sha256']!r},
                 for key in ('predicted', 'matched'):
                     assert sum(r['exact'][key] for r in reasons) == scores['exact'][key]
     result['exact_motivation_partition'] = 'exact' if 'by_motivation' in rows[0]['scores']['lc2013'] else 'not saved'
+    if 'lc2013_before_signed' in summary['aggregate']:
+        for transition in ('merge', 'overtake'):
+            assert (summary['aggregate']['lc2013']['by_transition'][transition]
+                    == summary['aggregate']['lc2013_before_signed']['by_transition'][transition])
+        result['paired_ablation_nontarget_transition_control'] = 'exact'
     out = RECEIPTS / (args.kind.upper() + '_VERIFIED.json')
     assert not out.exists()
     out.write_text(json.dumps(result, indent=2) + '\n')
