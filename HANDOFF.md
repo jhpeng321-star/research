@@ -18,6 +18,11 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   `panel_ops status` is read-only; never repeat canary/continue/monitor dispatch.
 
 ## What exists
+- UNC84ee27b9 integrated: canonical causal-motion posterior snapshot binding
+  (clears saved IDs/LC), observed-counter snapshot hashes/deep copies, stricter
+  identity pairing, source-valid optional LC bounds (LC still OFF). INT generic
+  wrapper now uses UNC.with_motion_posteriors instead of constructing a parallel
+  adapter. **60 CPU tests PASS /11.68s**; no sampling-scale/noise changes.
 - Next FULL recipe now selects causal runtime motion conditioning + physics-native
   law (NOT READY until new smoke). Reuses FIT.condition_motion and exact FIT pure
   interval/IDM functions without SciPy; no saved-driver-ID lookup, no population

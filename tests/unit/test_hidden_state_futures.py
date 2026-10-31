@@ -205,6 +205,38 @@ def test_population_is_required_when_no_motion_donors_exist():
         plan(model, state, h)
 
 
+def test_supplied_posterior_observable_identity_survives_action_slot_permutations():
+    model, state, h, params = fixture()
+    vectors = torch.stack([params[n] for n in PARAMETER_NAMES], -1)
+    particles = vectors[None].repeat(11, 1, 1, 1)
+    particles[..., 0] = torch.arange(11)[:, None, None] + 20.
+    model.encode_drivers = lambda state, **kw: ({'posterior_samples': particles}, None, params)
+    ids = torch.tensor([[101, 102, 103, 104, -1]])
+    kw = dict(n_samples=16, seed=77, row_keys=[969400])
+    before = torch.get_rng_state().clone()
+    original = plan(model, state, h, vehicle_ids=ids, **kw)
+    perm = torch.tensor([2, 0, 1, 3, 4])
+    model.encode_drivers = lambda state, **kw: (
+        {'posterior_samples': particles[:, :, perm]}, None, {n:p[:, perm] for n,p in params.items()})
+    moved = plan(model, {n:v[:, perm] for n,v in state.items()},
+                 {n:v[:, perm] for n,v in h.items()}, vehicle_ids=ids[:, perm], **kw)
+    for a, b in zip(original, moved):
+        assert a.receipt['driver_draw_key'] == b.receipt['driver_draw_key'] == 'observable_vid'
+        for n in PARAMETER_NAMES:
+            assert torch.equal(a.kwargs['driver_params'][n][:, perm], b.kwargs['driver_params'][n])
+    assert torch.equal(before, torch.get_rng_state())
+
+
+@pytest.mark.parametrize('bad', [
+    [[101, 101, 103, 104, -1]], [[101, -1, 103, 104, -1]],
+    [[101, 102.5, 103, 104, -1]], [[101, float('nan'), 103, 104, -1]],
+])
+def test_observable_driver_identity_rejects_aliases_or_invalid_values(bad):
+    model, state, h, _ = fixture()
+    with pytest.raises(ValueError, match='unique nonnegative integers'):
+        plan(model, state, h, vehicle_ids=torch.tensor(bad))
+
+
 def test_actual_rollout_admits_same_settings_it_later_moves_and_replays_exactly():
     from wms.model.spec import ModelSpec
     from wms.model.wms import WmSModel

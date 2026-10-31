@@ -18,6 +18,8 @@ import torch
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--out', type=Path, required=True)
+    parser.add_argument('--fitted-directory', type=Path)
+    parser.add_argument('--lane-directory', type=Path)
     args = parser.parse_args()
     assert args.out.parent.is_dir()
     torch.set_num_threads(1)
@@ -27,6 +29,15 @@ def main():
     hidden = importlib.util.module_from_spec(module_spec)
     sys.modules[module_spec.name] = hidden
     module_spec.loader.exec_module(hidden)
+    fitted = None
+    if args.fitted_directory is not None:
+        path_fit = here/'src/wms/control/fitted_hidden.py'
+        spec_fit = importlib.util.spec_from_file_location('wms.control.fitted_hidden', path_fit)
+        mod_fit = importlib.util.module_from_spec(spec_fit)
+        sys.modules[spec_fit.name] = mod_fit
+        spec_fit.loader.exec_module(mod_fit)
+        fitted = mod_fit.FittedHiddenState.from_directory(args.fitted_directory,
+            lane_directory=args.lane_directory)
     from wms.model.spec import ModelSpec
     from wms.model.wms import WmSModel
     from wms.physics.config import PhysicsConfig
@@ -34,7 +45,7 @@ def main():
     from wms.model.driver_encoder import PARAMETER_NAMES
     from wms.model.sumo_insertion import SumoInsertion
     model = WmSModel(ModelSpec(rollout_mode='driver_params', lane_model='lc2013'),
-        physics=PhysicsConfig(merge_model='sumo')).eval()
+        physics=PhysicsConfig(merge_model='sumo', **({} if fitted is None else {'cf_model':'sumo_idm'}))).eval()
     state = dict(s_m=torch.zeros(1, 16), v_mps=torch.zeros(1, 16),
         a_mps2=torch.zeros(1, 16), length_m=torch.full((1, 16), 5.),
         lane=torch.zeros(1, 16, dtype=torch.long), present=torch.zeros(1, 16, dtype=torch.bool),
@@ -52,10 +63,19 @@ def main():
     queues = [EntranceQueue(np.ones(2), np.zeros(2), cav_share=np.zeros(2))]
     hashes, assignments = [], []
     before_rng = torch.get_rng_state().clone()
+    step_parameters = []
+    original_step = model.step
+    def checked_step(state, **kwargs):
+        if fitted is not None and args.lane_directory is not None:
+            step_parameters.append({n:v.clone() for n,v in kwargs['driver_params'].items()})
+        return original_step(state, **kwargs)
+    model.step = checked_step
     for _ in range(2):
+        extra = {} if fitted is None else dict(fitted_state=fitted,
+            vehicle_ids=torch.arange(16)[None], t0_s=300, row_keys=[969400])
         f = hidden.plan_hidden_state_futures(model, state,
             dict(history=history, history_mask=mask), future_sampling='hidden_state',
-            n_samples=1, seed=35, entrance_histories=histories, queues=queues)[0]
+            n_samples=1, seed=35, entrance_histories=histories, queues=queues, **extra)[0]
         mix = f.kwargs['entrant_driver_sampler']
         expected = [mix.candidate(0, e, 0) for e in (0, 1)]
         with torch.inference_mode():
@@ -68,8 +88,12 @@ def main():
         for entrance, slot in enumerate((3, 4)):
             actual = {name: float(roll['driver_parameters'][0, slot, j])
                       for j, name in enumerate(PARAMETER_NAMES)}
-            assert actual == expected[entrance]
-            assert entries.cfg.sumo_insertion.candidate(0, entrance, 0) == actual
+            assert actual == {n:expected[entrance][n] for n in PARAMETER_NAMES}
+            assert entries.cfg.sumo_insertion.candidate(0, entrance, 0) == expected[entrance]
+            if step_parameters:
+                for values in step_parameters[-5:]:
+                    for n in mod_fit.LC_ORDER:
+                        assert float(values[n][0, slot]) == float(torch.tensor(expected[entrance][n]))
         hashes.append(hashlib.sha256(b''.join(roll[k].numpy().tobytes()
             for k in ('positions', 'speeds', 'lanes', 'masks'))).hexdigest())
         assignments.append(expected)
@@ -80,7 +104,11 @@ def main():
         sampler_sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
         runtime_sources={inspect.getfile(obj): hashlib.sha256(Path(inspect.getfile(obj)).read_bytes()).hexdigest()
                          for obj in (WmSModel, SumoInsertion)},
-        cf_model=getattr(model.physics, 'cf_model', 'legacy'))
+         cf_model=getattr(model.physics, 'cf_model', 'legacy'))
+    if fitted is not None:
+        result.update(fitted_artifacts=fitted.provenance,
+            fitted_lc_persistent=bool(step_parameters),
+            fitted_reader_sha256=hashlib.sha256(path_fit.read_bytes()).hexdigest())
     with args.out.open('x') as f:
         json.dump(result, f, indent=1)
     print(json.dumps(result, indent=1))

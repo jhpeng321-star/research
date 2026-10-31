@@ -1,0 +1,24 @@
+{
+ "status": "PASS",
+ "scientific_rollouts": 0,
+ "synthetic_intervals": 8,
+ "exact_causal_support_weights": true,
+ "empty_history_is_population": true,
+ "saved_id_records_cleared": true,
+ "global_rng_unchanged": true,
+ "fitted_artifacts": {
+  "idm_population_sha256": "d8cee1dabe1c064f2da1b3d49af934e2bfd8f9869250ac31f98f3943532cc092",
+  "idm_posterior_sha256": "578e1b2bfeced10db9d30e5104a54de7600786ee7ce5a5be82b99b75824e73b9"
+ },
+ "causal_snapshot": {
+  "idm_population_sha256": "d8cee1dabe1c064f2da1b3d49af934e2bfd8f9869250ac31f98f3943532cc092",
+  "idm_posterior_sha256": "68f1548de59b6a8ca4b4298d297f1eb5cde6a7a759dee81feb3d491cbec624d4",
+  "posterior_source": "caller_causal_motion",
+  "conditioning_end_s": 315.0,
+  "posterior_hash_encoding": "canonical_json",
+  "source_population_sha256": "d8cee1dabe1c064f2da1b3d49af934e2bfd8f9869250ac31f98f3943532cc092"
+ },
+ "policy_sha256": "73283ffa206380d53ddaa037f6fb57fb61bbc9876c868253617db089da6cb299",
+ "fit_source_sha256": "7f9746b2090dd255d660e2b87ba77658bd860d02c62552a6b5579a03c4947111",
+ "adapter_source_sha256": "2eb8ac0e6dbb68b132657d6a8cf46c90c69724ac4e7a13ad56759b76708d22df"
+}

@@ -302,6 +302,15 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
     mask = args.get('driver_history_mask', args.get('history_mask'))
     if mask is None:
         mask = torch.zeros((*point.shape[:2], 1), dtype=torch.bool, device=point.device)
+    if vehicle_ids is not None:
+        if not isinstance(vehicle_ids, torch.Tensor) or vehicle_ids.shape != state['present'].shape:
+            raise ValueError('observable vehicle_ids must match state slots')
+        for b in range(batch):
+            ids = vehicle_ids[b][state['present'][b].bool()].detach().cpu()
+            if (ids.dtype == torch.bool or ids.is_complex() or not torch.isfinite(ids).all()
+                    or (ids < 0).any() or (ids != ids.long()).any()
+                    or len(ids.unique()) != len(ids)):
+                raise ValueError('present vehicle_ids must be unique nonnegative integers per row')
     if fitted_state is not None:
         fitted_state.check_time(t0_s)
         if vehicle_ids is None or vehicle_ids.shape != state['present'].shape:
@@ -331,6 +340,8 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
               if hasattr(physics, 'accel_min_mps2') and hasattr(physics, 'accel_max_mps2') else None)
     posteriors, diagnostics = {}, []
     supplied = None if encoded is None else encoded.get('posterior_samples')
+    if fitted_state is not None and supplied is not None:
+        raise ValueError('choose fitted_state OR supplied motion posterior, not both')
     if supplied is not None and (supplied.ndim != 4 or supplied.shape[1:] != point.shape
                                 or not len(supplied) or not torch.isfinite(supplied).all()
                                 or (supplied[..., :5] <= 0).any()):
@@ -361,7 +372,8 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
         for (b, slot), (candidates, weights) in posteriors.items():
             if not sample_present:
                 continue
-            rng = _generator(seed, row_keys[b], sample, 'present', slot)
+            identity = slot if vehicle_ids is None else int(vehicle_ids[b, slot].item())
+            rng = _generator(seed, row_keys[b], sample, 'present', identity)
             use_posterior = supplied is not None or float(torch.rand((), generator=rng)) < float(reliability[b, slot])
             pool = candidates if use_posterior else population.hdv[b].to(point)
             w = weights if use_posterior else population.weights[b]
@@ -383,7 +395,8 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
                 for name, value in draw.items():
                     kwargs['driver_params'][name][b, slot] = value
                 key = f'{int(row_keys[b])}:{int(vid)}'
-                branches['posterior' if key in fitted_state.posterior['drivers'] else 'population'] += 1
+                identified = 'weights' in fitted_state.posterior['drivers'].get(key, {})
+                branches['posterior' if identified else 'population'] += 1
         if embedding is not None:
             kwargs['driver_embedding'] = embedding.detach().clone()
         arrival_sample = sample if sample_arrivals else 0
@@ -417,6 +430,7 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
             seed=int(seed), driver_branches=branches, likelihood=diagnostics,
             posterior_source=('rbfit_joint_finite_support' if fitted_state is not None else
                               'supplied_motion_posterior' if supplied is not None else 'empirical_motion_likelihood'),
+            driver_draw_key='observable_vid' if vehicle_ids is not None else 'packed_slot',
             fitted_artifacts=None if fitted_state is None else fitted_state.provenance,
             fitted_lc=fitted_state is not None and fitted_state.lane_population is not None,
             idm_lc_joint_coupling='independent_fitted_blocks' if fitted_state is not None else None,
@@ -424,6 +438,8 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
             population_sizes=[len(p) for p in population.hdv],
             arrival_sample=arrival_sample, arrivals='poisson' if entrance_histories is not None else 'closed_cohort',
             learned_arrival_sha256=getattr(arrival_fit, 'sha256', None),
+            learned_arrival_observations=None if arrival_fit is None else [
+                arrival_fit.observation_receipt(key, t0_s=t0_s) for key in row_keys],
             demand_rate_draws=None if arrival_fit is None else [p.rates.tolist() for p in process.demand_plans],
             rate_source=('fitted_entrance_counters' if arrival_fit is not None else
                          'observed_request_demand' if queues is not None else 'observed_insertion_proxy'),

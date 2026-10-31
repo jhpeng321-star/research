@@ -79,3 +79,108 @@ CPU verification:
 No distributional qualification is implied by implementing the right latent
 sources. Across-world real variation includes observable-state differences and
 is not a target for conditional same-state ensemble SD.
+
+## Owner00:40 fitted posterior and learned demand
+
+```python
+from wms.control.fitted_hidden import FittedHiddenState
+from wms.control.arrival_fit import LearnedArrivalFit
+
+fit = FittedHiddenState.from_directory("artifacts/rbfit/shrinkage_v1")
+# LC is separately opt-in: lane_directory="artifacts/rbfit/lane_v2".
+# FIT LC validation lost to its baseline; it is not silently adopted.
+demand = LearnedArrivalFit.from_file("docs/paper_results/rbunc/observed_arrivals.json")
+futures = plan_hidden_state_futures(
+    model, initial, history_kwargs, future_sampling="hidden_state", n_samples=8,
+    seed=20261031, row_keys=[observable_world] * n_arms,
+    fitted_state=fit, vehicle_ids=observed_numeric_vids, t0_s=300,
+    entrance_histories=observed_histories, queues=observed_queues,
+    arrival_fit=demand)
+```
+
+- Numeric IDs are recorder `vid.npy` identities, **not** indices into route-string
+  `start.vehicle_ids`. Example exact binding: `fitted_probe.observed_ids`.
+- Current HDVs: exact sparse finite-support posterior; unknown or summary-only
+  records use the population. No log-normal moment reinterpretation or additional
+  encoder reliability shrinkage. Nine-coordinate IDM mapping is by name.
+- Preferred S-RB-FIT `shrinkage_v1` already includes learned population mixing
+  n/(n+19.35568); do not apply it again. Raw `finite_mixture_v4` remains supported
+  and is the frozen input of this workstream's new H120 physical diagnostic.
+- Saved-ID posteriors exist only for FIT969400..969431 at300s. For other worlds
+  use FIT's causal `MotionFit.condition_motion` on the caller's stable-mainline
+  motion intervals, with faithful next-speed predictions in the frozen support
+  order and the learned shrinkage policy. Bind its returned distributions with
+  `fit.with_motion_posteriors({(world, vid): distribution, ...}, t0_s=t0)` and
+  pass the returned reader as `fitted_state=`. This samples the exact finite
+  weights and the fitted entrant population without a finite-particle surrogate.
+  Rebinding clears ALL saved-ID records and optional LC; missing IDs use population.
+  The caller is responsible for support/likelihood compatibility and causal input
+  intervals. No new recording is read by this adapter.
+- `MotionFitForUNC` is an alternative supplied-particle proxy for saved-ID
+  posteriors (or population-only draws), not a causal-motion inference wrapper.
+  Use the supplied-posterior path plus fitted `Population` via `population=` for
+  newcomers. Do not combine it with `fitted_state=`. Never fake a numeric VID
+  from packed slots or route-string ordinals.
+- New HDVs: fitted population. Current/new CAV plant settings remain the existing
+  observed inference, outside the HDV physical fit. Optional named LC settings
+  persist for current/new HDVs; no fitted joint IDM/LC dependence is claimed.
+- Optional LC support follows the source domain: first four motivations may be
+  zero; cooperative must be at most one; assertiveness must be strictly positive.
+  No clipping. Old unadopted LC exports with cooperative>1 are rejected. Existing
+  source-bound historical diagnostic receipts remain historical, not new results.
+- Fit artifact records all32 nativeFIT entrance histories using insertions+queue
+  conservation. It retains10s time-varying rate estimates and BIC diagnostics.
+  Data and documented generator favor the constant pre1200s phase, with no
+  supported added overdispersion. Arrival-rate estimation uncertainty uses one
+  Gamma(count+.5, rate=observed exposure) posterior draw per future/entrance;
+  requests are conditional Poisson with exact integrated-intensity inversion.
+- `sample_demand_rate=False` fixes rates at their observed MLE, retaining request
+  randomness. `sample_arrivals=False` fixes rate/request/newcomer draws across K.
+- For a permitted new observation, first call
+  `demand.condition(world, observed_entries, observed_queue_history)`; this only
+  conditions the frozen family on causal counts. A missing world without causal
+  counters fails closed. Requests beyond fitted phase end1200s are refused.
+- `learned_arrival_observations` in each future receipt binds the actual causal
+  counter snapshot, family, phase end and start separately from the original fit
+  file hash. Reconditioned observations may share a source file; pair both source
+  and observation hashes. The fit owns a deep copy of its supplied observation.
+- Paired candidate actions must share initial observations, numeric IDs, row key,
+  seed, and future index. Rebuild mutable future objects per arm. Hidden rates,
+  incumbent settings, request clocks, and entrant settings then share CRN exactly.
+- Pass `vehicle_ids=` also with supplied causal-motion posteriors: the final
+  draw then keys by observable VID, preserving CRN under packed-slot permutations.
+  Present IDs must be unique nonnegative integers per row; padding IDs are ignored.
+  Legacy callers without IDs retain slot-keyed draws, identified in each receipt
+  as `driver_draw_key='packed_slot'`. Supplying both `fitted_state=` and encoded
+  `posterior_samples` is rejected rather than silently overriding either source.
+- CPU suites: `test_fitted_hidden.py`, `test_arrival_fit.py`,
+  `test_hidden_state_futures.py`, `test_c4_futures.py` (42 tests).
+- New fitted-input physical verification and retained failure lineage:
+  `docs/paper_results/RBUNC_ADDENDUM_DESIGN.md`, `rbunc/fitted_source_probe.json`.
+  Complete-panel summaries: `python tools/rbunc/analyze_addendum.py`.
+- Actual FIT API/artifact compatibility smoke (synthetic motion, no recording):
+  `PYTHONPATH=src python -B tools/rbunc/motion_bridge_smoke.py --fit-source
+  ../c4-rb-fit/src/wms/physics/motion_fit.py --directory
+  ../c4-rb-fit/artifacts/rbfit/shrinkage_v1 --policy
+  ../c4-rb-fit/artifacts/rbfit/shrinkage_v1/idm_shrinkage.json --out NEW_RECEIPT.json`.
+- Preferred32-state panel is COMPLETE in `rbunc/preferred_source_probe.json`.
+  Analysis only: `python -B tools/rbunc/analyze_addendum.py --raw
+  docs/paper_results/rbunc/preferred_source_probe.json --compare-raw
+  docs/paper_results/rbunc/fitted_source_probe.json --out NEW_SUMMARY.json`.
+  Exact source/input equality is checked before reporting paired CRPS changes.
+  Read `RBUNC_PREFERRED.md`; do not redispatch completed `preferred_v1`.
+- Causal arrival count check: `arrival_prefix.py --out NEW.json` uses only the
+  existing FIT32 counter artifact,0–150s→150–300s. Requires SciPy (available in
+  cpuQ's existing environment). `arrival_prefix_ops.py run` is exclusively claimed
+  and already COMPLETE; use `fetch` only into an absent local result. Receipt:
+  `rbunc/arrival_prefix_v1.json`. Exact Gamma–Poisson improves NLL against a
+  same-mean Poisson; CRPS change remains unresolved. This does not tune a physical
+  spread or independently qualify traffic predictions. Three numerical tests
+  passed on cpuQ; local tests skip this optional offline dependency when absent.
+- Bounded integration observer: `interim_ops.py dispatch` claims one CPU-only
+  observer through2026-11-01 09:00+08; `status` is read-only; `fetch --out NEW.json`
+  preserves an immutable local snapshot. It opens explicit FIT969420–969431 task
+  paths only and requires K8/source/CRN/native-start consistency before emitting
+  native120s spread/CRPS/coverage diagnostics against existing targets. No physical
+  sampling change, inference, peer process action or full EVAL scoring. INT still
+  owns its04/08/full reports. See `RBUNC_INTERIM_DESIGN.md`;11CPUtestsPASS.

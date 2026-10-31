@@ -1,0 +1,21 @@
+{
+  "schema": "rbunc_lc_domain_cpu/1",
+  "date_local": "2026-11-01",
+  "fit_request": "c4-rb-fit/HANDOFF.md lines 38-44, 02:02 continuation",
+  "command": "py -3.13 -B -m pytest -q -p no:cacheprovider tests/unit/test_fitted_hidden.py tests/unit/test_arrival_fit.py tests/unit/test_hidden_state_futures.py tests/unit/test_c4_futures.py",
+  "cpu_only": true,
+  "threads": 1,
+  "passed": 50,
+  "elapsed_s": 14.92,
+  "domain": {
+    "first_four_lc_coordinates": "nonnegative",
+    "lcCooperative": "[0,1]",
+    "lcAssertive": "strictly positive",
+    "idm": "strictly positive"
+  },
+  "checks": ["zero-motivation finite support", "paired-action CRN", "newcomer finite draw", "negative-motivation rejection", "cooperative>1 rejection", "zero-assertiveness rejection", "IDM zero rejection", "existing persistence and admission identity regressions"],
+  "initial_test_failure": "New newcomer regression omitted entrance histories, so no entry sampler was constructed. Fixture corrected; runtime implementation unchanged.",
+  "lc_adopted": false,
+  "legacy_unadopted_out_of_domain_artifacts": "rejected; original historical receipts preserved",
+  "new_jobs_dispatched": 0
+}

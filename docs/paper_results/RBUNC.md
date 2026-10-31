@@ -1,5 +1,10 @@
 # S-RB-UNC — hidden drivers and future demand, deterministic conditional physics
 
+**Owner00:40 extension is complete:** [fitted posteriors + learned arrivals +
+paired-action CRN](RBUNC_ADDENDUM.md). That report preserves a distinct raw-fitted
+32-state diagnostic and identifies FIT's newer preferred shrinkage artifact.
+The original encoder-input results below remain unchanged and historical.
+
 ## Result
 
 **Implementation ready for WM-PHYS variant A. Source-attribution checks pass.**

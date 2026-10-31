@@ -49,3 +49,31 @@ supervised children exited0; no scientific redispatch is needed for old work.
 - Single nice19 CPU on cpuQ, existing environment, admission load<24/32;
   no GPU/SUMO/neural training or peer-process action. Commit after each step,
   publish exact artifacts/API/tests/gaps in root HANDOFF.md for INT/DECIDE.
+
+## Fitted-input physical verification extension (frozen before dispatch)
+- Extend the new diagnostic to physical H120 rollouts: same deterministic legacy
+  reference and exact scoring as preserved v2, replacing only hidden IDM inputs
+  and the arrival-rate posterior. All32/K8 plus first-state three source ablations
+  =280 futures/33,600 model-seconds. This is a NEW fitted-input variant, not a
+  repeat of completed v2; neither result is relabeled integrated WM-PHYS efficacy.
+- Four disjoint nice19 single-thread CPU workers, admission load<24/32; root
+  `rbunc20261031/addendum_v1`, exclusive dispatcher + per-worker PID/terminal
+  receipts, no retry. No new SUMO/GPU/black-box training or peer process action.
+- Bind numeric FIT posterior VID from recorder `vid.npy` using exact t0 observable
+  position/speed correspondence; start.vehicle_ids route-string ordinals are NOT
+  the FIT numeric IDs. Only allowed native manifests and observable arrays opened.
+- All physical/global-RNG/queue/finite/no-padding-refusal checks retained; source
+  and alternate-action hidden inputs must match exactly. Continue request-only
+  clocks to300/600 after physical120; optional LC evaluated as latent input only.
+
+## Explicit zero-physics startup repair (before new dispatch)
+- addendum_v1 supervisor445343 and children445344..445347 all terminated rc1;
+  all four fail in the FIRST planner before any rollout, zero completed worlds.
+  FIT summary-only/unidentified driver records have moments but no weights:
+  published contract requires population fallback; adapter raised KeyError.
+- Implement exactly that fallback, with regression against the joint population;
+  do not reinterpret moments or change any identifiable driver's posterior.
+- Preserve old logs/terminal/dispatch/arrival fit. New immutable `addendum_v2`
+  copies the already completed arrival artifact byte-for-byte (no refit), and
+  admits the same planned280 new physical futures once. New supervisor only
+  after verified all-four-terminal/no-completed-world checks. No process signals.

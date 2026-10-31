@@ -12,9 +12,6 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from wms.control.fitted_hidden import FittedHiddenState
-
-
 @lru_cache(maxsize=1)
 def fit_kernels():
     source = Path(__file__).resolve().parents[1]/'rbfit/idm_fit.py'
@@ -72,12 +69,11 @@ def condition_population(base, motion_fit, policy_path, start, history, *, kerne
         driver = motion_fit.condition_motion(tensor(predictions), tensor(observed[:, 3]),
             tensor(observed[:, 4]), tensor(dt), tensor(observed[:, 0]+dt),
             t0_s=300., policy_path=policy_path)
-        drivers[f"{int(start['seed'])}:{int(vid)}"] = driver
-    posterior = dict(base.posterior, drivers=drivers)
-    provenance = dict(base.provenance, runtime_conditioning=True,
+        drivers[int(start['seed']), int(vid)] = driver
+    result = base.with_motion_posteriors(drivers, t0_s=300.)
+    result.provenance.update(runtime_conditioning=True,
         saved_driver_id_lookup=False, conditioning_interval_s=[240., 300.],
         motion_kernel_source_sha256=source_sha)
-    result = FittedHiddenState(base.population, posterior, provenance=provenance)
     return result, dict(runtime_motion_conditioning=True, saved_driver_id_lookup=False,
         posterior_source='runtime_motion_conditioned_fixed_population',
         motion_rows_by_observed_id=counts, conditioned_drivers=len(drivers),

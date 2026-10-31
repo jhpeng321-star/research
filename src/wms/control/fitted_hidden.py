@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import gzip
+import copy
 import hashlib
 import json
+import math
 from pathlib import Path
 
 import torch
@@ -82,14 +84,53 @@ class FittedHiddenState:
                 or (indices < 0).any() or (indices >= len(support)).any()
                 or weights.shape != indices.shape or not torch.isfinite(weights).all()
                 or (weights < 0).any() or weights.sum() <= 0
-                or not torch.isfinite(support).all() or (support <= 0).any()):
+                or not torch.isfinite(support).all()):
             raise ValueError('invalid fitted support indices/weights')
+        if tuple(order) == LC_ORDER:
+            # SUMO LC2013 permits disabled motivations at zero; cooperative is
+            # a fraction. Assertiveness divides accepted gaps and must be >0.
+            invalid = ((support[:, :4] < 0).any() or (support[:, 1] > 1).any()
+                       or (support[:, 4] <= 0).any())
+        else:
+            invalid = (support <= 0).any()
+        if invalid:
+            raise ValueError('invalid fitted physical support domain')
         return support[indices], weights
 
     def check_time(self, t0_s):
         for post in (self.posterior, self.lane_posterior):
             if post is not None and t0_s != post['conditioning_end_s']:
                 raise ValueError('posterior conditioning time mismatch')
+
+    def with_motion_posteriors(self, drivers, *, t0_s):
+        """Bind caller-computed causal finite posteriors to observable identities.
+
+        ``drivers[(world, vid)]`` are outputs of FIT's ``condition_motion`` using
+        THIS population support. No saved-ID posterior is inherited into the new
+        observation. Unknown identities use the fitted population. LC is omitted:
+        the longitudinal observation likelihood supplies no LC evidence.
+        """
+        if isinstance(t0_s, bool) or not math.isfinite(t0_s) or t0_s < 0:
+            raise ValueError('invalid motion posterior conditioning time')
+        records = {}
+        for (world, vid), distribution in drivers.items():
+            if (isinstance(world, bool) or isinstance(vid, bool)
+                    or int(world) != world or int(vid) != vid or world < 0 or vid < 0):
+                raise ValueError('motion posterior requires observable world and VID')
+            if distribution.get('conditioning_end_s') != t0_s:
+                raise ValueError('motion posterior conditioning time mismatch')
+            self._distribution(self.population, distribution, IDM_ORDER)
+            records[f'{int(world)}:{int(vid)}'] = copy.deepcopy(distribution)
+        posterior = dict(schema='wm_phys.idm_posteriors.v1', parameter_order=IDM_ORDER,
+                         conditioning_end_s=t0_s, drivers=records)
+        digest = hashlib.sha256(json.dumps(posterior, sort_keys=True,
+            separators=(',', ':'), allow_nan=False).encode()).hexdigest()
+        provenance = {k:v for k,v in self.provenance.items() if k.startswith('idm_')}
+        provenance.update(idm_posterior_sha256=digest,
+            posterior_source='caller_causal_motion', conditioning_end_s=t0_s,
+            posterior_hash_encoding='canonical_json',
+            source_population_sha256=self.provenance.get('idm_population_sha256'))
+        return type(self)(copy.deepcopy(self.population), posterior, provenance=provenance)
 
     def draw(self, world, vid, *, generator, lane=False):
         pop, post, order = ((self.lane_population, self.lane_posterior, LC_ORDER) if lane
@@ -99,6 +140,10 @@ class FittedHiddenState:
         if vid is not None and (int(vid) != vid or vid < 0):
             raise ValueError('present drivers require observable nonnegative numeric VID')
         distribution = pop if vid is None else post['drivers'].get(f'{int(world)}:{int(vid)}', pop)
+        # FIT explicitly emits summary-only records for unidentifiable/ramp-only
+        # drivers. Their missing finite weights mean POPULATION, not lognormal.
+        if 'weights' not in distribution:
+            distribution = pop
         key = (lane, None if distribution is pop else f'{int(world)}:{int(vid)}')
         if key not in self._cache:
             self._cache[key] = self._distribution(pop, distribution, order)
