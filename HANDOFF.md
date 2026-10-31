@@ -125,3 +125,10 @@ rejection, differing-builder pooling rejection and WM2 callback identity guards.
   RUNB supervisor728893 also exists; no job launched or signalled. INT already
   publishes immutable b0f66943 runtime with the future-builder hook and A/C intake
   links; reconcile EVAL's source API next without replacing either live runtime.
+- Commit7689120b publishes future-builder parity and CLI; shared coordination
+  note `E:/agent-work/rb-shared/EVAL_FUTURE_BUILDER_READY.md`. Fetched current
+  WM2 tasks/reports without dispatch; independent partial score revalidated all
+  fetched task identities, supports, delay ledgers and BIC decisions. Five worlds
+  have complete K8 ensembles; progress report is ignored evidence at
+  `tools/rbeval/evidence/progress_resume_7689120b/`. This is an incomplete pilot,
+  not the morning full-panel result. Original auto-finalizer still owns scoring.
