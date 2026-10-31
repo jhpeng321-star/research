@@ -1,0 +1,43 @@
+{
+  "cpuQ": {
+    "root": "/home/ubuntu/c1switch20261031/shared_v10",
+    "sources_sha256": "95cd534f862326b4d252b7cdc0206cb31917dad4ec2d8f073c6549a71b0bf279",
+    "shared_gpu_cap_s": 4117,
+    "prior_gpu_s": 10279.222073864192,
+    "per_arm": {
+      "wm": 178380.0,
+      "bb": 184440.0,
+      "random": 5400,
+      "native": 14400,
+      "ctrl0": 14400,
+      "mappo": 14400,
+      "pi": 14400,
+      "circles": 14400
+    }
+  },
+  "gpuR": {
+    "root": "/root/c1switch20261031/shared_v10",
+    "sources_sha256": "95cd534f862326b4d252b7cdc0206cb31917dad4ec2d8f073c6549a71b0bf279",
+    "shared_gpu_cap_s": 4117,
+    "prior_gpu_s": 10279.222073864192,
+    "per_arm": {
+      "wm": 178380.0,
+      "bb": 184440.0,
+      "random": 5400,
+      "native": 14400,
+      "ctrl0": 14400,
+      "mappo": 14400,
+      "pi": 14400,
+      "circles": 14400
+    }
+  },
+  "import": {
+    "charged_sim_s": 234930,
+    "complete_physics": 11,
+    "complete_branches": 231,
+    "cached": {
+      "wm": 18,
+      "bb": 140
+    }
+  }
+}
