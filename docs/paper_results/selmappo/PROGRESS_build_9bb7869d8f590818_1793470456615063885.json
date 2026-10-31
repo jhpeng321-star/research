@@ -1,0 +1,140 @@
+{
+  "schema": "selmappo.progress/1",
+  "timestamp_utc": "2026-10-31T18:14:16.614943+00:00",
+  "root": "/home/ubuntu/selmappo20261031/build_9bb7869d8f590818",
+  "source_binding": "9bb7869d8f590818c46980a16a63be00f72e00d3491dec95f903649dfa7bf790",
+  "own_pid": 645235,
+  "own_pid_exists": true,
+  "own_nice": 19,
+  "load_1m": 15.587890625,
+  "cores": 32,
+  "max_load_fraction": 0.8,
+  "charged_sim_s": 53100,
+  "closed_actual_sim_s": 0,
+  "outstanding_episodes": 11,
+  "outstanding_actual_not_yet_final": true,
+  "historical_charged_sim_s": 43200,
+  "historical_actual_sim_s_lower": 30600,
+  "historical_actual_sim_s_upper": 37800,
+  "inherited_unresolved_reservations": 14,
+  "production_reserved_episodes": 11,
+  "production_closed_episodes": 0,
+  "production_completed_episodes": 0,
+  "production_completed_sim_s": 0,
+  "completed_updates": 0,
+  "latest_update": null,
+  "initial_and_stable_checkpoints": [
+    {
+      "iteration": 0,
+      "path": "/home/ubuntu/selmappo20261031/build_9bb7869d8f590818/training/checkpoint_000.pt",
+      "size": 202049,
+      "sha256": "bdd5af7f40971528d8ed6aefa8fba7353597a3d989234f9341eb2789dc3f8adc"
+    }
+  ],
+  "latest_priority_status": {
+    "cores": 32,
+    "load_1m": 14.1591796875,
+    "max_load_fraction": 0.8,
+    "next_seed": 18000057,
+    "pending": 11,
+    "status": "DISPATCH_PAUSED_RESOURCE_PRIORITY"
+  },
+  "failure_count": 0,
+  "failed_worlds": [],
+  "first_failure": null,
+  "worker_receipts": [
+    {
+      "seed": 18000046,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    },
+    {
+      "seed": 18000047,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    },
+    {
+      "seed": 18000048,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    },
+    {
+      "seed": 18000049,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    },
+    {
+      "seed": 18000050,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    },
+    {
+      "seed": 18000051,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    },
+    {
+      "seed": 18000052,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    },
+    {
+      "seed": 18000053,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    },
+    {
+      "seed": 18000054,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    },
+    {
+      "seed": 18000055,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    },
+    {
+      "seed": 18000056,
+      "actual": null,
+      "result_complete": false,
+      "supervisor_closed": false
+    }
+  ],
+  "own_processes": [
+    {
+      "pid": 645235,
+      "command": "/home/ubuntu/miniconda3/bin/python -m tools.selmappo.train --variant fleet --registration /home/ubuntu/selmappo20261031/build_9bb7869d8f590818/pytools/REGISTRATION.md --c1-root /home/ubuntu/selmappo20261031/build_9bb7869d8f590818/pytools --integration /home/ubuntu/selmappo20261031/build_9bb7869d8f590818/INTEGRATION.json --design-sha 992c05601f03d1d9caad0421b041dbeaa05fa8621ae7e3020be42e3c9f5b41d0 --out /home/ubuntu/selmappo20261031/build_9bb7869d8f590818/training --workers 12 --history-from /home/ubuntu/selmappo20261031/build_3351504cece84e4b "
+    },
+    {
+      "pid": 645281,
+      "command": "/home/ubuntu/miniconda3/lib/python3.10/site-packages/sumo/bin/sumo -c /home/ubuntu/selmappo20261031/build_9bb7869d8f590818/training/18000051/scenarios/s18000051_m1900_io26sq23/scenario.sumocfg --seed 18000051 --step-length 0.5 --end 2401 --no-step-log true --duration-log.disable true --remote-port 52357 "
+    }
+  ],
+  "actual_sim_s_lower_bound": 30600,
+  "actual_sim_s_upper_bound": 47700,
+  "completed_result_totals": {
+    "road_delay_vs": 0,
+    "source_wait_vs": 0,
+    "team_delay_vs": 0,
+    "collisions": 0,
+    "teleports": 0,
+    "ttc_below_3_vs": 0,
+    "hard_brake_vs": 0
+  },
+  "completed_episode_wall_s_mean": null,
+  "prospective_local_evaluation_sim_s": 14400,
+  "local_evaluation_started": false,
+  "final169_eligible": false,
+  "training_budget_upper_sim_s": 7012800,
+  "mechanics_replayed": false
+}

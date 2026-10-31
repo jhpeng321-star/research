@@ -1,5 +1,16 @@
 # S-SELMAPPO fleet-picker integration handoff
 
+**CURRENT LIVE: MAIN02:08 continuation owncpuQ645235, build9bb7869d8f590818.**
+Immutable full source binding9bb7869d8f590818c46980a16a63be00f72e00d3491dec95f903649dfa7bf790.
+Registered exact unchanged cap/schedule in shared REGISTRATION.md BEFORE dispatch;
+final stage40/40CPU+real integrationPASS. Exclusive fifth
+`FLEET_HISTORY_CONTINUATION_ONCE.json` consumed; never duplicate/relaunch this build.
+First live snapshot: nice19,11unused production worlds precharged,0failures/0updates,
+53,100totalcharged including43,200history. Resource admission paused further
+reservations at load14.159+pending11+next1>25.6 on32cores; existing episodes drain.
+Read-only status: `python -m tools.selmappo.progress --build build_9bb7869d8f590818`.
+Final169/evaluation pending; all preceding stopped builds/locks/charges preserved.
+
 **MAIN02:08 ACK NOW PRESENT; same-cap continuation implemented and CPU-verified.**
 Fresh-session inventory confirms all four prior fleet supervisors absent; locks retained.
 New schedule is update1 seeds18000046..18000068, update2 seeds18000069..18000091,
@@ -10,7 +21,7 @@ CPU40/40PASS on cpuQ, real frozen controllers/WALL/seed aliases/current registry
 old initial-model/RNG parityPASS. Both ancestor ledgers are copied byte-for-byte;
 new HISTORY debit consumes all46production+2mechanics IDs, retaining14unclosed old
 reservations (five independently established zero-physics), actual30,600..37,800 bounds.
-Stage6337986b308bd7fc is CPU-only; progress accounting is being updated before final stage.
+Stage6337986b308bd7fc is CPU-only; final stage9bb7869d8f590818 includes HISTORY-aware progress accounting.
 Lowest-priority nice19/each-episode load+pending admission unchanged. Evaluation peer-owned.
 The stop/request paragraphs below are preserved historical records, superseded by MAIN02:08.
 
