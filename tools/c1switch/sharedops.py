@@ -162,7 +162,7 @@ def gpu():launch('gpuR','gpu','from tools.c1switch.shared import serve; serve()'
 
 
 def relay():
-    root=EVIDENCE/'relay_shared_v10';assert not root.exists();root.mkdir()
+    root=EVIDENCE/'relay_shared_v10a';assert not root.exists();root.mkdir()
     env=dict(os.environ,C1SWITCH_CPU_RPC=CPU+'/rpc',C1SWITCH_GPU_RPC=GPU+'/rpc',C1SWITCH_GPU_HOST='gpuR')
     with (root/'relay.log').open('x') as log:
         p=subprocess.Popen([sys.executable,'-B','-u','-m','tools.c1switch.transport','--root',str(root.resolve())],env=env,stdout=log,stderr=subprocess.STDOUT)

@@ -47,6 +47,9 @@ print(json.dumps(out))
 from pathlib import Path
 p=Path({CPU!r}).parent/'STOP'
 if not p.exists():p.write_text(json.dumps(dict(reason='GPU service stopped',models={failures!r})))
+for arm,reason in {failures!r}.items():
+ waiter=Path({CPU!r})/arm/'STOP'
+ if not waiter.exists():waiter.write_text(json.dumps(reason))
 print(json.dumps(dict(stopped=True)))
 ''')
 

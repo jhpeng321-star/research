@@ -1,4 +1,32 @@
-# CURRENT MAIN23:25 recovery DISPATCHED — inspect before doing anything
+# CURRENT shared_v10 DISPATCHED — inspect before doing anything
+
+- Build31313092/stagea0d078f5; design lines78–79, V10_PLAN/STAGE/CPU/PROGRESS.
+- cpuQ `/home/ubuntu/c1switch20261031/shared_v10`, own supervisor259509;
+  14 own nice19 single-thread jobs, at most2WM episodes active. Retains completed
+  episode PHYSICS even if its evaluation branches are pending; no physics repeats.
+- gpuR `/root/c1switch20261031/shared_v10`, ONE owned GPU process715850;
+  both frozen adapters share ONE4117s alarm. Started1793462789.657412;
+  conservative prior10279.222074s, maximum14396.222074/14400owner GPU-s.
+- Local own relay30024 at `evidence/relay_shared_v10a` is REQUIRED; transport
+  retries don't repeat physics; terminal GPU STOP also closes paused CPU waiters.
+  Initial shared relay32612 was cooperatively closed before GPU allocation.
+- Latest command `python -B -m tools.c1switch.sharedops progress` only inspects.
+  NEVER stage/launch/relay/main_panel again; no duplicate dispatch. Old v4–v9
+  deployments/STOPs remain immutable. gpuA services and v9 original-host services
+  are closed. All old successful physics/forecasts imported once.
+- Exact499680sim-s/reserve320: Step047010;WM190830(incl superseded12450 and
+  abandoned5880);BB184440(incl abandoned11940);random5400;fivefixed14400each.
+  Random only969112–969117; last10worlds omitted BEFORE any random outcomes.
+- CPU49cpuQ/50gpuR PASS; BOTH original-host rawK8 full60s parity gates retained,
+  frozen scientific sources/attestations verified at shared model loading.
+- GPU throughput may prevent completion:142WM/10BB uncached picks at staging;
+  original-host forecast~78s. Owner cap still enforced; no partial-panel efficacy.
+- At terminal run `python -B -m tools.c1switch.finish collect`, then `... report`.
+  It refuses live owners/mismatched closed accounting and only bootstraps a fully
+  complete registered panel. Write final REGISTRATION line/commit afterwards.
+  `finish.py` is local analysis code added after staging; do not mutate live stage.
+
+## Historical MAIN23:25 recovery DISPATCHED
 
 - Latest build/stage `c6443e7a`; read design lines74–77 and `V9_PROGRESS.json`.
 - cpuQ recovery `/home/ubuntu/c1switch20261031/recovery_v8`, supervisor211684,
