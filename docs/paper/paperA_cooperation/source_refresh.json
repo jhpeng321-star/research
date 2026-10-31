@@ -1,37 +1,37 @@
 {
-  "captured_local": "2026-10-31T21:09:15.984097+08:00",
+  "captured_local": "2026-10-31T22:16:57.465878+08:00",
   "reports": {
     "owner_read_first": {
       "path": "E:/research-dense/docs/OWNER_UPDATE_20261030_EVENING.md",
       "exists": true,
-      "sha256": "cbd9b4c0155aff8379e3846c173bed0ff8a034d45f08f9ccdcef8bb048602c69",
-      "bytes": 23200,
-      "modified_local": "2026-10-31T19:52:18.555263+08:00",
-      "snapshot": "source_snapshots/owner_read_first_cbd9b4c0155aff83.md"
+      "sha256": "df24c999bf7243a66791d1b1cf353de0c7c8c0f674f57b9b667a504ffd2fd923",
+      "bytes": 23977,
+      "modified_local": "2026-10-31T21:52:16.536501+08:00",
+      "snapshot": "source_snapshots/owner_read_first_df24c999bf7243a6.md"
     },
     "registration": {
       "path": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md",
       "exists": true,
-      "sha256": "ca18e0b3211199e3062343f7b04b3ca541d80641f2b91f07999c517f3dff6276",
-      "bytes": 2178795,
-      "modified_local": "2026-10-31T21:05:30.032909+08:00",
-      "snapshot": "source_snapshots/registration_ca18e0b3211199e3.md"
+      "sha256": "cff459cdc8079cf54979ac6853ca0ff6d1afd56f011c953100378d9e026a0c6c",
+      "bytes": 2187621,
+      "modified_local": "2026-10-31T22:10:01.095565+08:00",
+      "snapshot": "source_snapshots/registration_cff459cdc8079cf5.md"
     },
     "wmvalue_design": {
       "path": "E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md",
       "exists": true,
-      "sha256": "80bfe861a1bc976f1cf72448aca14d00a5905eac13ee0737a769d964830f9b31",
-      "bytes": 10356,
-      "modified_local": "2026-10-31T19:13:42.389821+08:00",
-      "snapshot": "source_snapshots/wmvalue_design_80bfe861a1bc976f.md"
+      "sha256": "5216be65c8116f22ee0ddf71ea9154bc987eaa28bd3a1553ce86b576c28ad1f6",
+      "bytes": 11291,
+      "modified_local": "2026-10-31T21:15:14.793128+08:00",
+      "snapshot": "source_snapshots/wmvalue_design_5216be65c8116f22.md"
     },
     "wmvalue_report": {
       "path": "E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md",
       "exists": true,
-      "sha256": "83a3fe4d87a5e1b72181391737cd5895ac2613da5a53f34e667b9cae01f6a76a",
-      "bytes": 3536,
-      "modified_local": "2026-10-31T20:14:20.772576+08:00",
-      "snapshot": "source_snapshots/wmvalue_report_83a3fe4d87a5e1b7.md"
+      "sha256": "d3bfa957123e5727934954a33987eed2ad01a3cc080a0fd802db1232280bc6cb",
+      "bytes": 3533,
+      "modified_local": "2026-10-31T22:12:20.223654+08:00",
+      "snapshot": "source_snapshots/wmvalue_report_d3bfa957123e5727.md"
     },
     "sumocf_design": {
       "path": "E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_DESIGN.md",
@@ -184,10 +184,10 @@
     "wmfix_v2data": {
       "path": "E:/agent-work/c4-wmfixmerge/docs/paper_results/WMFIX_PILOT_V2DATA.md",
       "exists": true,
-      "sha256": "41a9fd8e2d4f573c8058df16147cd7d52ffaad4804671c10fe7184f652571e30",
-      "bytes": 16274,
-      "modified_local": "2026-10-31T20:24:56.296791+08:00",
-      "snapshot": "source_snapshots/wmfix_v2data_41a9fd8e2d4f573c.md"
+      "sha256": "3e0bd4cf680cefa2a141f52232cf867d2b6e85f900a141ce3ae54770944ec9a8",
+      "bytes": 19807,
+      "modified_local": "2026-10-31T21:37:51.366266+08:00",
+      "snapshot": "source_snapshots/wmfix_v2data_3e0bd4cf680cefa2.md"
     },
     "wmcalib_report": {
       "path": "E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB.md",
@@ -271,6 +271,10 @@
     }
   },
   "changed_since_prior_cut": [
+    "owner_read_first",
+    "registration",
+    "wmvalue_design",
+    "wmvalue_report",
     "wmfix_v2data"
   ],
   "scope": "explicit local report snapshots only; no simulator/model or restricted input access",
