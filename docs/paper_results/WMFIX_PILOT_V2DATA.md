@@ -212,3 +212,16 @@ decision. GPU parity/launch/decision remain pending.
 - Existing external deadline remains23:02:20+08 (20528s from17:20:12), about
  3h50m remaining at this probe. No timeout/gate/concurrency amendment made.
   Record actual panel durations for MAIN's budget review; continue step10 watch.
+
+## First scoring receipts, 2026-10-31 20:15-20:16 +08
+- Baseline shard0/groups0-12 finished20:15:27,10318.0s;
+  SHA `d4fbf36db76221791e05fc05238fe7957125ec6e23eb9a09f6e6912eeefb7346`.
+- Baseline shard1/groups13-25 finished20:16:19,10112.4s;
+  SHA `edd2ad758eaab2a25317bf1bd3816a81b802f02bbb45e802cb1b2f92e4e4b9b5`.
+- Each has52 cells (13worlds x2arms x2horizons);26/52 baseline worlds complete.
+  Shards2/3 still run. No complete baseline or candidate panel yet.
+- Step10 shards0/1 now running, owned PIDs264542/264730, exact step10 checkpoint
+ 8bbd3a6d / prepared84751dc7 / baseb8797242 / same-gpuA+CRN. No duplicate jobs.
+- The measured169-172min per initial shard includes earlier peer contention;
+  budget deadline remains23:02:20. Full gate still needs all registered panels.
+  MAIN17:52 gate-only watcher249622 remains armed; no curriculum dispatch.

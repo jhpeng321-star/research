@@ -46,6 +46,9 @@
 - UPDATE19:11:46: same four baseline shards active, oldest108m20s; GPU99%,
  32881MiB free. No completed shard; pilot sleeps in drain. External deadline
  23:02:20+08 remains unchanged. Scoring timing, not fitting, is the bottleneck.
+- UPDATE20:16: baseline shards0/1 done (26/52worlds),10318.0/10112.4s,
+  receiptsd4fbf36d/edd2ad75. Step10 shards0/1 now own264542/264730; baseline2/3
+  still active. No complete baseline/candidate panel, no gate claim. Deadline unchanged.
 
 ## SUPERSEDING MAIN 15:25 v2-DATA / Sol resume 15:34 gpuA clock
 - MAIN approved DATA ONLY, smoothing OFF, amended v1 30-step pilot gate. Code:
