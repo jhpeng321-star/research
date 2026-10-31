@@ -1,5 +1,5 @@
 {
-  "captured_local": "2026-10-31T20:55:55.621791+08:00",
+  "captured_local": "2026-10-31T21:09:15.984097+08:00",
   "reports": {
     "owner_read_first": {
       "path": "E:/research-dense/docs/OWNER_UPDATE_20261030_EVENING.md",
@@ -12,10 +12,10 @@
     "registration": {
       "path": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md",
       "exists": true,
-      "sha256": "2765bb044718178bf5ed9ed1120fbc91b5bf0ec8c8dac9c62a51fce43d128404",
-      "bytes": 2176241,
-      "modified_local": "2026-10-31T20:52:07.834927+08:00",
-      "snapshot": "source_snapshots/registration_2765bb044718178b.md"
+      "sha256": "ca18e0b3211199e3062343f7b04b3ca541d80641f2b91f07999c517f3dff6276",
+      "bytes": 2178795,
+      "modified_local": "2026-10-31T21:05:30.032909+08:00",
+      "snapshot": "source_snapshots/registration_ca18e0b3211199e3.md"
     },
     "wmvalue_design": {
       "path": "E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md",
@@ -181,6 +181,14 @@
       "modified_local": "2026-10-31T08:56:45.358275+08:00",
       "snapshot": "source_snapshots/wmfix_retarget_0ec45023b084e04e.md"
     },
+    "wmfix_v2data": {
+      "path": "E:/agent-work/c4-wmfixmerge/docs/paper_results/WMFIX_PILOT_V2DATA.md",
+      "exists": true,
+      "sha256": "41a9fd8e2d4f573c8058df16147cd7d52ffaad4804671c10fe7184f652571e30",
+      "bytes": 16274,
+      "modified_local": "2026-10-31T20:24:56.296791+08:00",
+      "snapshot": "source_snapshots/wmfix_v2data_41a9fd8e2d4f573c.md"
+    },
     "wmcalib_report": {
       "path": "E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB.md",
       "exists": true,
@@ -263,20 +271,7 @@
     }
   },
   "changed_since_prior_cut": [
-    "owner_read_first",
-    "registration",
-    "wmvalue_design",
-    "wmvalue_report",
-    "sumocf_design",
-    "sumocf_run",
-    "behavior_report",
-    "wmcalib_report",
-    "wmqueue_report",
-    "c1pidiag_report",
-    "c1gap_report",
-    "c1floor_report",
-    "c1switch_report",
-    "c1closed_report"
+    "wmfix_v2data"
   ],
   "scope": "explicit local report snapshots only; no simulator/model or restricted input access",
   "claim_review": "manual; file appearance or a canary is not an efficacy result"

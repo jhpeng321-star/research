@@ -8,6 +8,7 @@ import re
 import subprocess
 
 from build_figures import ROOT, check, extract
+from build_night_figures import check_night, extract_night
 
 
 def main():
@@ -25,7 +26,8 @@ def main():
                 assert path.is_relative_to(ROOT), (name, target)
                 assert path.exists(), (name, target)
     # The primary/backup hierarchy and prerequisite claims must survive refreshes.
-    for claim in ("W-VALUE", "W-POLICY", "W-RISE", "W-WIN", "W-RATIO", "M-ARTIFACT"):
+    for claim in ("W-VALUE", "W-POLICY", "W-RISE", "W-WIN", "W-RATIO", "M-ARTIFACT",
+                  "W-CALIB", "W-QUEUE", "B-TRANSFER", "B-FLOOR", "B-SWITCH", "B-CLOSED"):
         assert re.search(r"^### " + claim + r"\b", docs["CLAIMS.md"], re.MULTILINE), claim
     for name in ("OUTLINE.md", "FIGURES.md", "THREATS.md", "README.md"):
         assert "WMVALUE" in docs[name], name
@@ -59,11 +61,14 @@ def main():
     assert all(None not in row and all(value is not None for value in row.values()) for row in controllers)
     rows, manifest = extract()
     check(rows, manifest)
+    night_rows, night_sources = extract_night()
+    night_figures = check_night(night_rows, night_sources)
     # Check staged byte preservation as well as working-copy provenance.
     index_checks = []
     identities = [(entry["snapshot"], entry["snapshot_sha256"]) for entry in manifest.values()]
     figures = json.loads((ROOT / "figure_validation.json").read_text(encoding="utf-8"))
     identities.extend((name, entry["sha256"]) for name, entry in figures["artifacts"].items())
+    identities.extend((name, entry["sha256"]) for name, entry in night_figures["artifacts"].items())
     for name, expected in identities:
         relative = "docs/paper/paperA_cooperation/" + name
         command = subprocess.run(["git", "show", ":" + relative], cwd=ROOT,
@@ -75,6 +80,7 @@ def main():
               "verified_bibliography_entries": len(keys), "controller_contract_rows": len(controllers),
               "git_index_byte_checks": index_checks,
               "report_snapshot_checks": report_checks,
+              "night_figure_source_cells": len(night_rows),
               "pending_insertions": {name: text.count("[[PENDING:") for name, text in docs.items()
                                      if name.endswith(".md")},
               "scope": "local links, provenance structure, bibliography identity coverage, CSV schema, plotted source values and hashes",

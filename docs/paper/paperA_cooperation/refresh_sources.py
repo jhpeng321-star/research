@@ -38,6 +38,7 @@ REPORTS = {
     "wmrequal3_report": "E:/agent-work/c4-wmrequal3/docs/paper_results/WMREQUAL3.md",
     "speedhead_report": "E:/agent-work/c4-speedhead/docs/paper_results/SPEEDHEAD.md",
     "wmfix_retarget": "E:/agent-work/c4-wmfixmerge/docs/paper_results/WMFIX_RETARGET.md",
+    "wmfix_v2data": "E:/agent-work/c4-wmfixmerge/docs/paper_results/WMFIX_PILOT_V2DATA.md",
     "wmcalib_report": "E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB.md",
     "wmqueue_report": "E:/agent-work/c4-wmqueue/docs/paper_results/WMQUEUE.md",
     "c1pidiag_report": "E:/agent-work/c4-c1pidiag/docs/paper_results/C1PIDIAG.md",

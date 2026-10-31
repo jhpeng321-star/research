@@ -13,6 +13,9 @@ From `E:/agent-work/c4-papera`:
 python -B docs/paper/paperA_cooperation/build_figures.py
 # Check exported values, identities, interaction algebra and image integrity.
 python -B docs/paper/paperA_cooperation/build_figures.py --check
+# Night additions use pinned final report summaries, never overwrite older inputs.
+python -B docs/paper/paperA_cooperation/build_night_figures.py
+python -B docs/paper/paperA_cooperation/build_night_figures.py --check
 ```
 
 Initial capture used the same command with `--freeze-inputs`. That option reads only the explicit allowlist in the script and refuses to replace a differing snapshot. It is not needed for a portable rebuild. PNGs are **300 dpi**; PDFs embed TrueType fonts. <!-- Source: E:/agent-work/c4-papera/docs/paper/paperA_cooperation/build_figures.py, save/rcParams. -->
@@ -26,7 +29,7 @@ Initial capture used the same command with `--freeze-inputs`. That option reads 
 - **Sources:** `E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md`; owner MAIN ADDENDUM. Do not reuse the oracle learner's sampled-time endpoint as the fixed-end offline value label.
 - **Diagram plan:** recorded real outcomes → observable V; matched B/G/ONLY short WM branches → imagined costs plus branch-specific terminal V → D/C_G → actor update; frozen policy → artifact-valid exact SUMO audit/evaluation. Show oracle-trained backup as a parallel reference, not the primary training signal.
 - **Generating command:** [[PENDING: package schematic renderer after the policy contract is frozen / S-PAPERA]]. No empirical bars or performance labels until receipts arrive.
-- **Caption claim:** “Proposed WM-primary cooperative training uses a real-trained value tail rather than extending the WM beyond its validated horizon. Offline continuation prediction and exact policy interaction/traffic outcomes are separate gates.”
+- **Caption claim:** “Proposed WM-primary cooperative training uses short imagination and a real-trained value tail instead of relying on an unqualified long rollout. The short route itself still needs qualification. Offline continuation prediction and exact policy interaction/traffic outcomes are separate gates.”
 - **Placement:** IV; combine with a reduced F1 replay inset if needed.
 
 ## F1 — exact-replay verification protocol
@@ -87,7 +90,7 @@ Initial capture used the same command with `--freeze-inputs`. That option reads 
 ## F3B — completed SUMO backup: no primary-horizon win
 
 - **Purpose:** preserve every declared evaluated checkpoint and the horizon-ranking reversal, rather than leave the stopped backup as pending.
-- **Status: DATA READY; renderer/export verification is the next package step.** Frozen final report in `source_refresh.json`, key `sumocf_run`; full source `E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_RUN.md`, final DEV table and cooperation section.
+- **Status: GENERATED, source-checked and visually inspected.** [PNG](figures/F3B_stopped_sumo_backup.png), [PDF](figures/F3B_stopped_sumo_backup.pdf), [CSV behind plot](figures/F3B_stopped_sumo_backup.csv). Renderer pins the immutable final report snapshot; full source `E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_RUN.md`, final DEV table and cooperation section. `night_figure_validation.json` binds source/output hashes. Published summary precision is retained, not presented as an independent per-world reanalysis.
 - **Generating command:** `python -B docs/paper/paperA_cooperation/build_night_figures.py`; validate with the same command plus `--check`. This renderer transcribes published summary cells into a source-located CSV; it computes no new CIs or scientific predictions.
 - **Layout:** paired learned-minus-MAPPO J600 and J900, checkpoint categories, zero reference and copied source CIs; a separate small C_G panel with its much smaller scale and eligible/missing counts. No interpolation between checks; no clipping away adverse costs or pooling credit definitions.
 - **Caption claim:** “Fixed **24-world** development panel, **u3/u7/u12 J600 +508.3/+857.9/+548.5 veh-s**, versus **J900 −633.4/−465.0/−584.5**. Source **95% world-bootstrap CIs**, **2000 draws/seed 0**: middle J600 adverse, all other displayed cost intervals include zero. Sparse deployed-mean pair C_G **−0.002589/+0.001270/0 veh-s**, **2/2/3** eligible worlds and **1/1/0** missing groups, does not show useful cooperation. This diagnostic uses MAPPO-mean background/learned continuation, not native-release audit. Owner stopped training; later checkpoints are preserved but untested on DEV.” <!-- Source: E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_RUN.md:3-46. -->
@@ -115,7 +118,7 @@ Initial capture used the same command with `--freeze-inputs`. That option reads 
 ## F4N — night falsifiers: calibration and queue/service model
 
 - **Purpose:** make the failed long-tail remedies visible without combining different panels into one horizon qualification.
-- **Status: DATA READY; renderer/export verification is the next package step.** Sources in `source_refresh.json`, `wmcalib_report` and `wmqueue_report`; original `E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB.md` and `E:/agent-work/c4-wmqueue/docs/paper_results/WMQUEUE.md`.
+- **Status: GENERATED, source-checked and visually inspected.** [PNG](figures/F4N_failed_tail_remedies.png), [PDF](figures/F4N_failed_tail_remedies.pdf), [CSV behind plot](figures/F4N_failed_tail_remedies.csv). Immutable report snapshots are pinned in `build_night_figures.py`; original sources `E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB.md` and `E:/agent-work/c4-wmqueue/docs/paper_results/WMQUEUE.md`. Exact plotted source cells/hashes and image checks are in `night_figure_validation.json`.
 - **Generating command:** `python -B docs/paper/paperA_cooperation/build_night_figures.py`; validate with `--check`. Source-table cell export only, no new statistics.
 - **Layout:** separate categorical MAE panels: raw WM2/arm-mean/selected calibrator in grouped CV; queue/state-only/arm-mean on the complete reserved-world panel. No invented MAE whiskers. Include failed qualification labels, not a success badge for the best CV point.
 - **Caption claim:** “Grouped-CV raw WM2 versus no-WM arm-mean MAE at **120/300/600 s** is **263/1719/6013** versus **185/999/3298 veh-s**. Selected calibrators fail the frozen SPEEDHEAD gate at every horizon: NOT USABLE. Separate queue prototype on **eight reserved TRAIN worlds/48 contrasts per horizon** has MAE **276/1362/5296** versus state-only **239/932/3642 veh-s**: KILL. These point estimates have different panels and are not a common model curve or C_G-fidelity test.” <!-- Sources: E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB.md:14-50; E:/agent-work/c4-wmqueue/docs/paper_results/WMQUEUE.md:12-32. -->
@@ -142,3 +145,4 @@ Initial capture used the same command with `--freeze-inputs`. That option reads 
 
 - Existing winner-by-condition PNG/PDF and CSVs: `E:/agent-work/c4-c1switch/docs/paper_results/c1switch/recorded_winner_by_condition.{png,pdf}`, `recorded_world_winners.csv`, `recorded_cell_winshares.csv`; command `python -m tools.c1switch.winners` in its worktree. Completed recorded/fresh headroom is descriptive, not switching efficacy; keep this figure in Paper B. <!-- Source: E:/agent-work/c4-c1switch/docs/paper_results/C1SWITCH_WINNERS.md:15-19,31-42. -->
 - Recovered C1GAP wall CIs and genuine-history PI results belong to the scoped Paper B prediction panels; they do not fill F3V or F3. C1CLOSED has no complete-panel figure/verdict yet: [[PENDING: complete feedback CSV/PNG / S-C1CLOSED existing finalizer]]. No partial performance plot is imported. <!-- Sources: E:/agent-work/c4-c1gap/docs/paper_results/C1_GAPS.md; E:/agent-work/c4-c1pidiag/docs/paper_results/C1PIDIAG.md; E:/agent-work/c4-c1closed/docs/paper_results/C1CLOSED.md. -->
+- Latest shared-ledger reread: corrected switching canary is now RUNNING; model/BB parity/reuse and complete main dispatch remain gated. This changes operational status only, not headroom or efficacy claims. <!-- Source: E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md, S-C1SWITCH v7 STAGED / WM PARITY PASS / CORRECTED CANARY RUNNING. -->

@@ -1,0 +1,49 @@
+{
+  "status": "PASS",
+  "source_cells": 33,
+  "sources": {
+    "backup": {
+      "source_path": "E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_RUN.md",
+      "source_sha256": "1c6095d7bfa316701b0e6af661f210b6ef350f9e6911e31734e83c26dd6299a4",
+      "snapshot": "source_snapshots/sumocf_run_1c6095d7bfa31670.md"
+    },
+    "calibration": {
+      "source_path": "E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB.md",
+      "source_sha256": "be56ae652810e3602e9243858be88b0829e90a8c4059227feda45e98a53670f2",
+      "snapshot": "source_snapshots/wmcalib_report_be56ae652810e360.md"
+    },
+    "queue": {
+      "source_path": "E:/agent-work/c4-wmqueue/docs/paper_results/WMQUEUE.md",
+      "source_sha256": "3fbe64e7da2e44f673fcc100496d7db90dad8184b2169a1518700286d42eb38d",
+      "snapshot": "source_snapshots/wmqueue_report_3fbe64e7da2e44f6.md"
+    }
+  },
+  "artifacts": {
+    "figures/F3B_stopped_sumo_backup.csv": {
+      "sha256": "d550fd138bf56d6bd0af2964c842826d6be7170d65f4777043434d6a65ea22a9",
+      "bytes": 5411
+    },
+    "figures/F3B_stopped_sumo_backup.png": {
+      "sha256": "4f58b1ee38a5a4b79a180a261b5de771cdb03a5c859b10b84a9b3f5e36693ac5",
+      "bytes": 153658
+    },
+    "figures/F3B_stopped_sumo_backup.pdf": {
+      "sha256": "d6cbcfb43afa7177099d73477c825b4057779cdd795c831f8b764339580dc4b6",
+      "bytes": 27307
+    },
+    "figures/F4N_failed_tail_remedies.csv": {
+      "sha256": "0b21c887f464e1d2192c3886df225d7e034b9602e3ca595d35b0646fb6c40374",
+      "bytes": 6818
+    },
+    "figures/F4N_failed_tail_remedies.png": {
+      "sha256": "af2e5f24365307eb5e69165171bf481c558068ae275347191abfdba0edfbcded",
+      "bytes": 174023
+    },
+    "figures/F4N_failed_tail_remedies.pdf": {
+      "sha256": "c473d974a0b49c93929ce34f6cc306f3e5bb68a4e9e21e83a467f9b1897b75b6",
+      "bytes": 26116
+    }
+  },
+  "scope": "Published summary transcription, copied CIs, immutable input hashes, CSV/image integrity; no new statistics",
+  "precision": "Published rounded summaries, not an independently rerun per-world analysis"
+}
