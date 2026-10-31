@@ -1,6 +1,6 @@
 # S-RB-MERGE — full-fleet validation continuation
 
-## New source-backed mechanics increment (after 4f78ba0e)
+## New source-backed mechanics increment **0090c168**
 - Source reconciliation agrees with INT `f2d9a3ff`: POSITION_EPS is **.1**, not
   helper's .01 (SPEED_EPS). Prior cohort/full-fleet versions remain separately bound.
 - `junction_merge.py`: informLeader now checks BOTH overtake time and distance,
@@ -15,10 +15,27 @@
 - **32 CPU tests PASS (9.54s)**. Includes new source anchors: Euler22m braking,
   sufficient-space/insufficient-time overtake, unblocked-leader cap and stopped
   vehicle retaining strategic intent via existing LC lookahead.
-- v3 diagnostic continues on its original frozen runtime; these changes are NOT
-  retroactively applied to it. Its per-world ramp delay is heterogeneous; no
-  efficacy improvement inferred from a partial panel. Next version will use
+- v3 diagnostic retained its original frozen runtime; these changes were NOT
+  retroactively applied to it. Its per-world ramp delay is heterogeneous. Next version uses
   the newly available integrated SUMO-CF wiring, with separate source hashes.
+
+## Completed full-fleet v3 (4f78ba0e / INT ff8a637f)
+- Owned PID338844 exited, **32/32 native FIT worlds** H300 complete, all source
+  and road conservation gates pass; no discarded demand or slot pressure.
+- Hash-verified receipts `docs/rb_merge/fullfleet_v3/`, compact score
+  `docs/rb_merge/fullfleet_v3_summary.json`. Legacy CF/cold LC, one default future.
+- Full ramp-origin road+source delay mean **2366.57 predicted /2272.78 recorded**
+  veh-s. Similar means HIDE the wrong distribution: predicted q10/50/90
+  **536/1091/5912**, recorded **1641/1966/3422**. Marginal W1 **1336.91 veh-s**;
+  secondary paired-world MAE1859.51. Historical562.4 is not this panel's clock.
+- Full-fleet merge count mean25.59 predicted /33.06 recorded. t0 cohort200real /
+  171predicted,169matches; timingMAE35.86s, positionMAE16.61m. Six accepted
+  positions slightly past lane end expose legacy trapezoid motion + SUMO Euler
+  stop-speed inconsistency. The new integrated CF uses Euler positions.
+- Source waiting mean9.69veh-s; bias is chiefly on-road. No collision-sample
+  diagnostic was retained in v3; missing safety evidence is not a zero count.
+- Four receipt-audit CPU tests PASS, including corrupted hash, duplicate/missing
+  world and broken source-conservation rejection. **NOT QUALIFIED**.
 
 ## Resume / MAIN 00:10 continuation
 - Preserved clean HEAD `1d68fd5a` and all prior receipts. Prior PID200540 and
