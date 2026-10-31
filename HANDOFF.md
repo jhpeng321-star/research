@@ -7,11 +7,18 @@ Legacy local publisher17964 was identity-checked and stopped before this migrati
 One-shot cpuQ boundary gate591782/start48339232 waits for the existing batch to drain,
 then writes YIELD and parks ONLY exact owned supervisor339173, after its current arm
 closes and before new legacy dev physics. All existing rollouts/checkpoints are retained.
-See `tools/coopfree_hold_ops.py status`; do not duplicate the original pipeline.
+The original supervisor has now been retired after closing every plant; YIELD was
+renamed to its retained receipt. Corrected production is RUNNING on cpuQ,
+PID615088/start48394231, four nice19/single-thread workers. Do not invoke launch again.
+See `python -m tools.coopfree_hold_ops status`; original branch physics is not repeated.
 New exact HOLD baselines can reuse the joint trials for objective2D_G. Existing solos
 leave nonexploring members on MAPPO: their C_G is NOT exact all-member-HOLD C_G.
 Full replacement of those solos exceeds the remaining2M cap; exact HOLD-credit
-diagnostics must use complete affordable groups and report their sample count.
+diagnostics cover66 complete windows; all156 windows/24worlds drive objective2D_G.
+New455tasks=156exact HOLD baselines(161,820sim-s)+299exact replacement solos.
+Totalprecharge1,690,800sim-s at dispatch; corrected optimizer/dev/discovery pending.
+Corrected proposals publish under `tools/coopfree/publications/hold/`, NOT legacy exports.
+The new observer also copies relocated tapes to durable `E:/Temp/opencode/` archives.
 
 Branch `c4/coopfree`; preserve every committed/uncommitted file and all remote roots.
 Read `docs/paper_results/COOPFREE.md`, `COOPFREE_DESIGN.md`, and `tools/coopfree/evidence/` first.

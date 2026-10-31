@@ -1,19 +1,28 @@
 # S-COOPFREE proposal interface for S-COOPPLAN
 
-The learned proposal checkpoint appears only after a complete optimizer update
-(156 windows across24 TRAIN worlds, joint plus every member's solo counterfactual).
+The corrected learned proposal checkpoint appears after a complete optimizer update
+(156 windows across24 TRAIN worlds, exact HOLD baselines; exact member-solo credit
+for66 whole windows within the residual cap). Legacy MAPPO-credit checkpoints are
+retained remotely but must not be represented as the corrected learner.
 `HANDOFF.md` lists each completed checkpoint and its SHA256. The read-only publisher
 polls the existing run; it does not dispatch SUMO, change sources or restart failures.
 
 ## Artifacts and verification
-- Local shared worktree: `E:/agent-work/c4-coopfree/tools/coopfree/publications/`.
+- Corrected local exports: `E:/agent-work/c4-coopfree/tools/coopfree/publications/hold/`.
 - Original runtime: cpuQ `/home/ubuntu/coopfree20261101_build5`.
 - `policy_uNNN.pt`: format `coopfree/1`, keys `policy`, `optimizer`, `update`,
   `sigma`, `enlargements`. Load with `torch.load(...,map_location='cpu',weights_only=True)`.
 - Verify against `UPDATE_NNN.json.checkpoint_sha256` and `MANIFEST.json.files`.
-- The update receipt includes full sampled contexts/actions and D_G/D_i/C_G at
-  120/300/600s, executed/issued/override shares, sigma adaptation and selection provenance.
+- Corrected remote filenames are `policy_hold_u001.pt` / `HOLD_UPDATE_001.json`;
+  the `hold/` publisher aliases them to `policy_u001.pt` / `UPDATE_001.json` with identical bytes.
+- The update receipt includes all156 sampled contexts/actions and HOLD-referenced
+  D_G at120/300/600s; exact D_i/C_G only where new complete mean-background solos exist.
+  `exact_credit_windows`/`exact_credit_worlds` identify diagnostic coverage explicitly.
+  Issued/executed differences are remeasured against HOLD; safety audits remain actual.
 - `BINDING.json` and `CPU_APPROVED.json` bind the exact scientific source/runtime.
+- `HOLD_CPU_APPROVED.json` additionally binds the separately CPU-certified correction;
+  `HOLD_AUTHORITY.json` binds MAIN01:48 and the unchanged2M cap. Continuous set-points
+  alone receive score gradients; W is uniform/exogenous, avoiding baseline-dependent W bias.
 - DEV/discovery files are descriptive evaluation artifacts, not TRAIN proposal inputs.
 
 ## Propose a free-form group action
