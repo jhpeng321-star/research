@@ -1,8 +1,26 @@
 # S-C1SWITCH operational receipt
 
-## Current SCIENTIFIC STOP (v6 observable-key retention gate FAIL)
+## MAIN20:52 authorised immutable continuation (v7)
 
-**Do not launch main, re-stage, retry physics, or allocate the reserve.**
+`c1908877` registers the corrected WM-only canary and total490860sim-s.
+New roots: cpuQ `/home/ubuntu/c1switch20261031/main_v7`, gpuR
+`/root/c1switch20261031/main_v7`. The v6 scientific adapter hashes are unchanged.
+Original WM canary12450sim-s is superseded evidence and remains in accounting;
+BB original episode+15branches are imported, conditional on all10 corrected picks.
+Old STOPs and complete trees are retained. Do not use legacy `mainops` dispatch.
+
+Use `python -B -m tools.c1switch.continuation progress` first on every resume.
+Write-once operations: `wm_gpu`, `wm_parity`, `relay`, `canary` (WM only),
+`bb_gpu`, `bb_parity`, `bb_reuse`, then `gate` and `main` only after all gates.
+Inspect existing dispatch/PID receipts rather than relaunching any operation.
+The GPU original-draw parity workers are diagnostic-only; live stochastic keys
+are frozen anonymous observables. New services carry WM2557/BB1664s prior debit,
+leaving8243/1936s; all loading/validation/idle counts. GPU hard caps remain3h/1h.
+`V7_STAGE.json` binds the sources and imported71910sim-s. CPU28cpuQ/29gpuR PASS.
+
+## Historical SCIENTIFIC STOP (v6 observable-key retention gate FAIL)
+
+The following stop was superseded only by MAIN's explicit20:52 continuation.
 `evidence/V6_CANARY_REVALIDATION.json` / `V6_FINAL_STOP.json` bind the stop:
 WM j0 retains CTRL0, but corrected anonymous-observable sampling at j1/t360
 picks PI instead of the original canary's MAPPO. The registered all20-identical

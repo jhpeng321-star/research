@@ -1,0 +1,70 @@
+{
+  "cpuQ": {
+    "load": [
+      0.05859375,
+      0.07958984375,
+      0.0869140625
+    ],
+    "exists": true,
+    "receipts": {},
+    "own_pids": {},
+    "charged_sim_s": 71910,
+    "actual_closed_sim_s": 71910.0,
+    "episodes": [
+      "bb_s969112_episode"
+    ],
+    "branches": 15,
+    "rpc": {
+      "wm": {
+        "requests": 0,
+        "results": 0
+      },
+      "bb": {
+        "requests": 0,
+        "results": 0
+      }
+    }
+  },
+  "gpuR": {
+    "load": [
+      53.18603515625,
+      49.171875,
+      47.478515625
+    ],
+    "exists": true,
+    "receipts": {
+      "wm_gpu_DISPATCH.json": {
+        "pid": 617609,
+        "host": "gpuR",
+        "unix": 1793451557.951498,
+        "name": "wm_gpu"
+      },
+      "wm_parity_DISPATCH.json": {
+        "pid": 617674,
+        "host": "gpuR",
+        "unix": 1793451562.7108986,
+        "name": "wm_parity"
+      },
+      "rpc/wm/GPU_STARTED.json": {
+        "cap_s": 8243,
+        "total_cap_s": 10800,
+        "prior_gpu_s": 2557,
+        "unix": 1793451558.0146513
+      }
+    },
+    "own_pids": {
+      "617609": true,
+      "617674": true
+    },
+    "rpc": {
+      "wm": {
+        "requests": 1,
+        "results": 0
+      },
+      "bb": {
+        "requests": 0,
+        "results": 0
+      }
+    }
+  }
+}
