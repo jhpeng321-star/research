@@ -19,7 +19,11 @@ def check_binding(args):
     """An explicit, immutable authorization route, never an FD receipt override."""
     if args.smooth_events:
         raise ValueError("v2-DATA requires smooth-events OFF")
-    if not args.harness_contract or digest(args.harness_contract) != CONTRACT_SHA:
+    recovery = getattr(args, "data_recovery", None)
+    if recovery:
+        from tools.wmfixmerge.recover_data_pilot import validate_recovery
+        validate_recovery(args)
+    elif not args.harness_contract or digest(args.harness_contract) != CONTRACT_SHA:
         raise ValueError("v2-DATA requires the registered HARNESS_CONTRACT_V2")
     if digest(args.prepared) != PREPARED_SHA:
         raise ValueError("v2-DATA requires the registered 52-world TRAIN_PREPARED_V2")
@@ -27,7 +31,9 @@ def check_binding(args):
         raise ValueError("base is not registered WM2")
     return dict(authorization="MAIN REVIEW 2026-10-31 15:25 v2-DATA; 10:40/11:52 gate",
                 prepared_sha256=PREPARED_SHA, harness_contract_sha256=CONTRACT_SHA,
-                base_sha256=WM2_SHA, smooth_events=False)
+                base_sha256=WM2_SHA, smooth_events=False,
+                **({"recovery_sha256": args.data_recovery_sha256,
+                    "recovery_contract_sha256": digest(args.harness_contract)} if recovery else {}))
 
 
 def fit_groups(groups, labels):
@@ -85,10 +91,35 @@ class PanelQueue:
                 name, candidate, groups = self.pending.pop(0)
                 self.panels.launch(name, candidate, groups)
 
-    def drain(self):
+    def drain(self, on_tick=None):
         while self.pending or self.panels.running:
             self.tick()
+            if on_tick is not None:
+                on_tick()
             time.sleep(5)
+
+
+def restore_completed(model, optimizer, frozen, out, recovery):
+    """Exact checkpoint/Adam restore, including frozen-tensor rejection."""
+    import shutil
+    import torch
+    previous = safe(recovery["previous_out"])
+    step = recovery["completed_steps"]
+    for name, expected in recovery["resume_files"].items():
+        if digest(previous / name) != expected:
+            raise ValueError("completed update changed: " + name)
+    state = torch.load(previous / f"step_{step:06d}.pt", map_location="cpu", weights_only=True)
+    model.load_state_dict(state["model"], strict=True)
+    device = next(model.parameters()).device
+    optimizer.load_state_dict(torch.load(previous / f"optimizer_{step:06d}.pt",
+                                        map_location=device, weights_only=True))
+    if any(not torch.equal(v, model.state_dict()[n].detach().cpu()) for n, v in frozen.items()):
+        raise ValueError("recovered checkpoint changed frozen WM2 tensors")
+    for name in recovery["resume_files"]:
+        target = out / name
+        with target.open("xb") as dest, (previous / name).open("rb") as src:
+            shutil.copyfileobj(src, dest)
+    return step, out / f"step_{step:06d}.pt"
 
 
 def run(args):
@@ -109,6 +140,10 @@ def run(args):
     if not out.is_dir() or any(out.iterdir()):
         raise ValueError("out must be an existing empty directory")
     started = time.monotonic()
+    recovery = None
+    if getattr(args, "data_recovery", None):
+        recovery = json.loads(safe(args.data_recovery).read_text())
+        started -= recovery["spent_seconds"]
 
     def write(name, doc):
         with (out / name).open("x") as stream:
@@ -140,7 +175,16 @@ def run(args):
     config["model"]["merge_response"] = True
     write("candidate_config.json", config)
     write("PROTOCOL.json", receipt)
-    latest = export(rt.model, original, frozen, optimizer, out, 0, receipt)
+    step = 0
+    if recovery:
+        previous = safe(recovery["previous_out"])
+        # Resume exact Adam state; no completed optimizer update is repeated.
+        step, latest = restore_completed(rt.model, optimizer, frozen, out, recovery)
+        write("RESUME.json", dict(previous_out=str(previous), step=step,
+                                  recovery_sha256=args.data_recovery_sha256,
+                                  spent_seconds=recovery["spent_seconds"]))
+    else:
+        latest = export(rt.model, original, frozen, optimizer, out, 0, receipt)
     panels = Panels(out, ["--prepared", args.prepared, "--config", args.config,
                          "--checkpoint", args.checkpoint, "--controllers", args.controllers],
                     0.08 if args.device == "cuda" else None, args.device)
@@ -151,9 +195,31 @@ def run(args):
         for i, groups in enumerate(shards):
             queue.submit(f"step{step}_full_s{i}", checkpoint, groups)
 
-    submit(0, latest)
+    submit(0, out / "step_000000.pt")
     timings = []
-    step = 0
+    scores = {}
+
+    def collect():
+        # Publish each full panel as soon as its four shards finish, so step10
+        # can be monitored without waiting for steps20/30. Gate is unchanged.
+        for s in (0, *EVAL_STEPS):
+            if s in scores or not all(f"step{s}_full_s{i}" in queue.done for i in range(4)):
+                continue
+            shard_docs = [panels.read(f"step{s}_full_s{i}") for i in range(4)]
+            for i, doc in enumerate(shard_docs):
+                producer = doc["producer"]
+                if doc["step"] != s or doc["groups"] != shards[i] or \
+                        producer["prepared_sha256"] != PREPARED_SHA or \
+                        producer["base_sha256"] != WM2_SHA or \
+                        producer["candidate_sha256"] != digest(out / f"step_{s:06d}.pt"):
+                    raise ValueError("full-panel producer binding mismatch")
+                if len(doc["rows"]) != 4 * len(shards[i]) or {
+                        (r["group"], r["horizon"], r["arm"]) for r in doc["rows"]} != {
+                        (g, h, a) for g in shards[i] for h in (120, 300) for a in (0, 1)}:
+                    raise ValueError("duplicate/missing full-panel cell")
+            panel = assemble([doc["rows"] for doc in shard_docs], range(52))
+            write(f"FULL_PANEL_STEP{s}.json", panel)
+            scores[s] = {h: panel[str(h)]["paired_J_MAE"] for h in (120, 300)}
 
     def update(horizon):
         nonlocal step, latest
@@ -178,32 +244,16 @@ def run(args):
               elapsed=time.monotonic() - started, rollout=roll_receipt, checkpoint=str(latest)))
         print(json.dumps(dict(step=step, horizon=horizon, loss=float(loss.detach()))), flush=True)
         queue.tick()
+        collect()
 
     try:
-        for _ in range(30):
+        for _ in range(30 - step):
             if time.monotonic() - started + max(timings, default=300) >= schedule["max_seconds"]:
                 raise RuntimeError("budget exhausted before the 30-step pilot completed")
             update(60)
             if step in EVAL_STEPS:
                 submit(step, latest)
-        queue.drain()
-        scores = {}
-        for s in (0, *EVAL_STEPS):
-            shard_docs = [panels.read(f"step{s}_full_s{i}") for i in range(4)]
-            for i, doc in enumerate(shard_docs):
-                producer = doc["producer"]
-                if doc["step"] != s or doc["groups"] != shards[i] or \
-                        producer["prepared_sha256"] != PREPARED_SHA or \
-                        producer["base_sha256"] != WM2_SHA or \
-                        producer["candidate_sha256"] != digest(out / f"step_{s:06d}.pt"):
-                    raise ValueError("full-panel producer binding mismatch")
-                if len(doc["rows"]) != 4 * len(shards[i]) or {
-                        (r["group"], r["horizon"], r["arm"]) for r in doc["rows"]} != {
-                        (g, h, a) for g in shards[i] for h in (120, 300) for a in (0, 1)}:
-                    raise ValueError("duplicate/missing full-panel cell")
-            panel = assemble([doc["rows"] for doc in shard_docs], range(52))
-            write(f"FULL_PANEL_STEP{s}.json", panel)
-            scores[s] = {h: panel[str(h)]["paired_J_MAE"] for h in (120, 300)}
+        queue.drain(collect)
         frozen_ok = all(torch.equal(v, rt.model.state_dict()[n].detach().cpu()) for n, v in frozen.items())
         decision = decide_panels(scores[0], {s: scores[s] for s in EVAL_STEPS}, step == 30, frozen_ok)
         decision.update(completed_steps=step, protocol=receipt, elapsed_s=time.monotonic() - started)

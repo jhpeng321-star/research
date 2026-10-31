@@ -96,3 +96,30 @@ decision. GPU parity/launch/decision remain pending.
 - Original v2data outputs/checkpoints remain immutable. No blind redispatch:
   diagnose WMDATA controller binding, then recover in a new output directory.
   gpuA free9428MiB at17:06 (<14336); all peer jobs untouched.
+
+## Infrastructure recovery (MAIN17:05 re-arm; registered before dispatch)
+- Root cause reproduced: WMDATA `ctrl0` is a direct arm, but Runtime retained
+  only ours_c1/coopoff_c1 specs. Its alias was absent. Recorded CTRL0 hash equals
+  ours_c1 `64f70af4...`; bind that exact algorithm, never extrapolate direct actions.
+- Future curriculum also needs WMDATA speed-MAPPO `d9042cc5...`, not the old
+  DESIGN's `aecd7d70...`. The already-staged SPEEDHEAD EXPORT_BOUND checkpoint
+  has the exact TRAIN recording hash. Bind it, retaining the original FIT specs.
+- Runtime now fails early on any missing/mismatched direct-policy identity.
+  New entrant_binding.py is included in the implementation hash list. Other
+  model/objective/clock/label/scorer files are unchanged. A new harness contract
+  changes only Runtime's hash; its parent e67850f3 is preserved.
+- NEW output: `v2data/recovery_1705/`; old v2data receipts remain immutable.
+  `recover_data_pilot --prepare` creates a separately hash-bound RECOVERY.json;
+  --execute waits >=14336MiB and holds an exclusive recovery lock/dispatch receipt.
+  No CUDA allocation while waiting. No peer process is signalled.
+- Resume exact saved step4 + Adam; verify/copy all completed-update bytes;
+  do not repeat updates1-4 or the already-passing parity smoke. Gate panels have
+  no completed outputs to reuse. Preserve the original frozen tensors exactly.
+- Spent budget = original FINISHED minus PILOT_RUNNING epochs (~1042s);
+  remaining timeout =21570-spent, including new initialization/panels/continuation.
+  No fresh cap. Same52 TRAIN panel,44 optimizer worlds, lr/curriculum/CRN,
+  smoothing/finer bases OFF, unchanged decide() and PASS continuation.
+- Each full step panel is now published immediately when its four shards finish,
+  enabling step10 monitoring without waiting for step20/30. No partial-panel gate.
+- Local CPU:29 PASS; torch-dependent actual direct-row reproduction and exact
+  Adam-resume/frozen-rejection tests require the staged CPU suite before dispatch.

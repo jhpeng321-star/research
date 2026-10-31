@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 from tools.wmfixmerge.data import COMPONENTS, WM2_SHA, digest, safe, verify
+from tools.wmfixmerge.entrant_binding import bind_entrant_specs
 from wms.model.entries import NOMINAL_LENGTH_M, SUMO_V2_MIN_GAP_M
 from wms.train.merge_response import ADMISSION_WIDTH_M
 
@@ -44,7 +45,7 @@ class Runtime:
         if not all(a in specs for a in ("ours_c1", "coopoff_c1")):
             raise ValueError("missing hash-bound entrant controller specifications")
         self.settings = replace(settings, seed=140014, entrant_control=True,
-            entrant_controllers={a: specs[a] for a in ("ours_c1", "coopoff_c1")},
+            entrant_controllers=bind_entrant_specs(specs, self.doc["episodes"]),
             entry_queue_state=True, entry_pad_auto=True, entry_pad_max=1024,
             entry_insert_rule="sumo_like_v2")
         self.model = self.model.to(self.device).eval()

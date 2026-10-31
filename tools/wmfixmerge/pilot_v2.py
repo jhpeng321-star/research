@@ -207,6 +207,8 @@ def main(argv=None):
     parser.add_argument("--registered-data-pilot", action="store_true",
                         help="MAIN 15:25 data-only route: amended 30-step panel gate, smoothing OFF")
     parser.add_argument("--harness-contract")
+    parser.add_argument("--data-recovery", help="explicit hash-bound infrastructure recovery receipt")
+    parser.add_argument("--data-recovery-sha256")
     parser.add_argument("--schedule", default="tools/wmfixmerge/train_config.json")
     parser.add_argument("--device", choices=("cpu", "cuda"), default="cuda")
     parser.add_argument("--memory-fraction", type=float, default=None)

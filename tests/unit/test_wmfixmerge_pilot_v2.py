@@ -124,3 +124,35 @@ def test_recovered_smoke_requires_exact_original_values_and_complete_group():
     smoke["groups"] = [0]
     with pytest.raises(ValueError, match="parity failed"):
         parity(smoke, original)
+
+
+def test_recovery_binding_checks_every_parent_driver_and_completed_update(monkeypatch):
+    from tools.wmfixmerge import recover_data_pilot as r
+    args = SimpleNamespace(data_recovery="receipt", data_recovery_sha256="receipt-sha",
+        prepared="prepared", harness_contract="contract", checkpoint="base", controllers="controllers")
+    hashes = {"receipt": "receipt-sha", "prepared": d.PREPARED_SHA, "contract": "new-contract",
+              "base": d.WM2_SHA, "controllers": "new-controllers", "parent": "parent-sha",
+              "old/step_000004.pt": "model-sha", "old/optimizer_000004.pt": "adam-sha"}
+    doc = dict(schema="wmfix_data_infrastructure_recovery/1", completed_steps=4, spent_seconds=1042,
+        inputs={k + "_sha256": hashes[getattr(args, k)] for k in
+                ("prepared", "harness_contract", "checkpoint", "controllers")},
+        implementation_hashes={"runtime": "new-runtime"}, driver_hashes={},
+        parents={"parent": "parent-sha"}, previous_out="old",
+        resume_files={"step_000004.pt": "model-sha", "optimizer_000004.pt": "adam-sha"})
+    from pathlib import Path
+    monkeypatch.setattr(r, "read", lambda p: doc)
+    monkeypatch.setattr(r, "safe", Path)
+    monkeypatch.setattr(r, "digest", lambda p: hashes[str(p).replace("\\", "/")])
+    monkeypatch.setattr(r, "implementation_hashes", lambda: {"runtime": "new-runtime"})
+    assert r.validate_recovery(args)["spent_seconds"] == 1042
+    hashes["old/optimizer_000004.pt"] = "mutated"
+    with pytest.raises(ValueError, match="completed update changed"):
+        r.validate_recovery(args)
+    hashes["old/optimizer_000004.pt"] = "adam-sha"
+    hashes["parent"] = "mutated"
+    with pytest.raises(ValueError, match="parent changed"):
+        r.validate_recovery(args)
+    hashes["parent"] = "parent-sha"
+    doc["spent_seconds"] = 0
+    with pytest.raises(ValueError, match="spent pilot budget"):
+        r.validate_recovery(args)
