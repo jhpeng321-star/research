@@ -103,7 +103,7 @@
   cases; robust positive mean superadditivity is not established on extension/pooled panels.
   WM-PHYS transfer/calibration remains a future backend qualification, not this result.
 
-## MAIN02:21 H300 continuation — DISPATCHED ONCE
+## MAIN02:21 H300 continuation — COMPLETE / no dispatch armed
 - Resume37380f46, prospective design/source03256981, all-host CPU bindings3cc7128a.
 - All prior H120 results/roots preserved; no prior rollout repeated.
 - Fresh confirmation18DEV983300–983317 + separate wall6DEV983318–983323;
@@ -116,5 +116,20 @@
   All three30CPU/0skips and actual WMDECIDE parity PASS before any dispatch.
 - NEVER relaunch these supervisors. `python -B -m tools.coopplan.h300 status --host HOST`
   is read-only. Budget pruning is expected; availability logged before admission.
-- Next: immutable result collection, separate confirmation18/wall6 J600/J900,
-  O2 available/evaluated/pruned/chosen and D_G/C_G; whole-world bootstrap and safety.
+- Complete artifacts/QA `docs/paper_results/coopplan/h300/final/`; collected1dc8f9d5.
+- All24pairs/288decisions,14executed groups/28solos,138prefix gates PASS;
+  all hosts COMPLETE/noSTOP/noincomplete/nooutstanding. New actual=charged160140,
+  global725280/800000,74720unused; no extra dispatch/reallocation/retry armed.
+- Confirmation18 J600+767.979[157.470,1606.905],J900+821.068[-944.174,2576.533];
+  C_Gmean-100.774[-1071.707,785.406],5/10positive actions.
+- Wall6 J600+1481.955[472.316,2510.373],J900+1437.522[-489.175,3975.582];
+  C_Gmean-681.287[-1295.768,-144.359],0/4positive,12undefined zero-action draws.
+- O2 confirmation available22/evaluated9/pruned13/chosen1; wall6 17/6/11/1.
+  Wall983303/t360 D_G+13.851684,C_G+181.570625 (positive superadditive wall).
+  Wall983321/t480 D_G+2442.101011,C_G-428.858726 (large benefit, not superadditive).
+- H120 O2 available/evaluated37/432,3helpful butalloutscored,0chosen.
+- New collisions/teleports0botharms; confirmation braking413.5→457.0increases.
+  Separate H120/H300 panels: no causal horizon-effect or positive H300 meanC_G claim.
+- Read-only reproduce: `python -B -m tools.coopplan.h300_report verify`, `examples`.
+  Three figures visually checked; local40CPU/analysisPASS, eachhost30CPU/0skips+
+  WMDECIDE parity. Source/design/panel/quotas/all twins/accounting independently QA'd.

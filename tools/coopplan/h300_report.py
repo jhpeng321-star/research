@@ -206,8 +206,17 @@ def verify():
     return result
 
 
+def examples():
+    credits=json.loads((DEST/'ALL_GROUP_CREDITS.json').read_text())
+    selected=dict(largest_positive=max(credits,key=lambda c:c['C_G']),
+                  most_negative=min(credits,key=lambda c:c['C_G']))
+    selected.update({f'wall_{c["seed"]}':c for c in credits if c['action']['id']=='O2'})
+    return {k:dict(seed=c['seed'],time_s=c['time_s'],action=c['action']['id'],
+                   D_G=c['D_G'],C_G=c['C_G'],member_alone_D=c['member_alone_D']) for k,c in selected.items()}
+
+
 def main():
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('fetch','collect','verify'))
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('fetch','collect','verify','examples'))
     p.add_argument('--host',choices=tuple(HOSTS),default='cpuQ');a=p.parse_args()
     print(json.dumps(fetch(a.host) if a.mode=='fetch' else globals()[a.mode]()))
 

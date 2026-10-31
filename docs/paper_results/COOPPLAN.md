@@ -1,11 +1,12 @@
 # S-COOPPLAN — exact-model planner improves delay and executes substantial cooperative actions
-H120 complete 2026-11-01, branch `c4/coopplan`: original12 + independently registered extension24 =36 fresh development worlds. Separate MAIN02:21 H300 confirmation18/wall6 continuation is running (below).
+Complete 2026-11-01, branch `c4/coopplan`: H120 original12 + extension24 =36 fresh development worlds; separate MAIN02:21 H300 confirmation18 + wall6 =24 additional worlds. All60 pairs complete.
 
 ## Main finding
 The SUMO-oracle cooperative planner reduces both paired J600 and J900 on the pooled36-world panel; the extension alone also improves both scores.
 It executes52 group actions with complete counterfactuals;24 have positive superadditive C_G, including a joint action that helps when BOTH member-alone actions harm.
 Pooled mean C_G is positive but its clustered CI includes0: **robust full-team delay benefit and concrete cooperation cases; no robust positive population-mean superadditivity claim**.
 This is the perfect-model benchmark for the pluggable WM-PHYS predictor, whose efficacy/calibration is not measured here.
+**H300 amendment:** walls now execute twice, including one exact positive-superadditive wall (C_G+181.571). Both new panels improve J600; J900 remains uncertain, and H300 mean C_G is not positive. Separate estimates below retain these limitations.
 
 ## Frozen experiment and panel completeness
 Original DEV983100–983111: one world per .05/.10/.20/.40 CAV share ×1900/2400/2700 demand cell; extension DEV983200–983223: two additional worlds per cell.
@@ -69,13 +70,44 @@ Original first-sample receipts/figures remain under `coopplan/final/`; completed
 Final plots: [cohort paired CIs](coopplan/extension/final/paired_cohorts.png), [all world contrasts](coopplan/extension/final/paired_worlds.png), [all-group cooperation](coopplan/extension/final/all_group_cooperation.png).
 Read-only reproducibility: `python -B -m tools.coopplan.extension_report --verify`; example extrema: `--examples`. Never relaunch or recollect an existing immutable attempt/result directory.
 
-## MAIN02:21 H300 continuation — running, no efficacy estimate yet
+## MAIN02:21 H300 continuation — COMPLETE, separate confirmation and wall panels
 Prospective design/source03256981; all three frozen hosts30CPU/0skips plus actual WMDECIDE H300 parity PASS before one-shot dispatch.
 Fresh never-fit confirmation18DEV983300–983317: TWO worlds per .4/.2/.1 x2700/2400/1900 cell, high-share first; separate wall6DEV983318–983323: .2/.4 x2400/2700, extra repeats in .4cells.
 ALL new predictions and ALL-executed-group twins useH300; cadence60/same inherited grid/safety/noise/strict0.8 gate. Completed H120 panels above are preserved.
 Prospective234720continuation=57600paired +177120adaptive lookaheads/complete solos;9780/world,78240per host, global upper799860/800000,140unallocated.
 Fixed per-world quotas protect every full pair and both solos before prediction; cyclic pruning/MAPPO fallback expected. Availability of O2 is logged before budget admission at every decision.
 Corrected HOLD COOPFREE learned checkpoint absent at shared freeze (legacy weights excluded); no outcome-dependent late switch.
-New immutable `_v3` supervisors cpuQ693091/gpuA348726/gpuR768580; no replay/relaunch/refund. Separate confirmation and wall estimates require complete panels.
-Analysis `tools.coopplan.h300_report`: separate paired J600/J900, world-cluster C_G, O2 available/evaluated/budget-skipped/chosen and D_G/C_G, safety and unchanged causal detectors.
+New immutable `_v3` supervisors cpuQ693091/gpuA348726/gpuR768580 all COMPLETE, no STOP/incomplete attempts/outstanding reservations; no replay/relaunch/refund.
 H120-versus-H300 summaries compare different fresh panels and different budget availability, not a paired causal horizon effect. Full-rerun predictions remain synchronous offline.
+
+### Paired H300 delay and ALL-group cooperation credit
+Same score units and10000 whole-world bootstrap RNG20261101; all executed groups have both member-alone twins, no sign exclusions.
+- **Confirmation18:** J600 **+767.979 [157.470,1606.905]**; J900 **+821.068 [-944.174,2576.533] veh-s/world**.
+  Ten group actions (O1=2/O2=1/O3=3/O4=4);5/10 positive C_G in9/18active worlds.
+  Event-weighted mean C_G **-100.774 [-1071.707,785.406] veh-s/action**.
+- **Wall6:** J600 **+1481.955 [472.316,2510.373]**; J900 **+1437.522 [-489.175,3975.582]**.
+  Four group actions (O1=3/O2=1);0/4 positive C_G in4/6active worlds.
+  Mean C_G **-681.287 [-1295.768,-144.359]**;12/10000 zero-action resamples undefined/excluded and disclosed.
+Both panels support J600 benefit, not a robust J900 benefit or positive mean superadditivity. The wall-panel credit interval is negative but based on only four actions/six worlds.
+Largest H300 positive case:983310/t480/O4, D_G+360.193374, solos-2303.698878/+144.292849, **C_G+2519.599403**.
+Largest negative retained:983309/t660/O3, D_G+2651.254557, solos+2807.265931/+3018.391618, **C_G-3174.402992**.
+
+### Why O2 did not emerge atH120, and what H300 actually shows
+Under the original nearest-two upstream/adjacent-lane eligibility rule, H120 O2 was available/evaluated37/432decisions, helpful versus MAPPO in3, but outscored by another option in all3; chosen0. Mean evaluated D_O2-950.761, range[-2269.631,+243.858]. This was not an unavailable/disabled option.
+- **H300 confirmation18:** O2 available22/216decisions, evaluated9, budget-skipped13, helpful2, chosen1 (one helpful wall outscored). Mean evaluated D_O2-1170.145.
+- **H300 wall6:** O2 available17/72, evaluated6, budget-skipped11, helpful1, chosen1. Mean evaluated D_O2-925.232.
+Eligibility is logged BEFORE pruning at every registered decision; the24 H300 budget-skipped wall opportunities are untested, not rejected by the predictor. Overall quota pruning affected31confirmation and32wall-panel decisions, including partial candidate pruning.
+**Executed confirmation wall983303/t360:** members mainline.171/mainline.167, O2/L3 magnitude3,60s; exactH300 **D_G+13.851684**, solos**-205.778376/+38.059435**, **C_G+181.570625**.
+**Executed wall-test wall983321/t480:** members mainline.208/mainline.209, magnitude6,60s; **D_G+2442.101011**, solos**+2510.676566/+360.283172**, **C_G-428.858726**. A helpful joint wall need not be superadditive; its strongest solo helps more.
+Thus the H300 planner demonstrably executes a superadditive wall and a large-benefit wall; these separate-world results do not prove that a longer horizon alone caused either difference.
+
+### H300 safety, behaviours, accounting and verification
+MAPPO/planner confirmation18: collisions0/0,teleports0/0,TTC10951.5/10334.0veh-s,braking413.5/457.0veh-s (**braking increases**). Wall6: collisions0/0,teleports0/0,TTC4316.0/3894.5,braking113.0/103.5. Safety clamped331/975 total requested member commands.
+Unchanged same-prefix causal COOPBEHAV over all14groups: confirmation2supported yield/18gap/39wave events; wall panel1supported gap/1cross-lane-metering/11wave. Observational-only events remain separately labelled in the full receipts.
+All14executed groups have28exact solos; all138new full-prefix gates PASS,741total including H120. Every new branch usedt+300 full-rerun cost; all24pairs and source/design/frozen-proposal bindings verified.
+**GLOBAL actual=charged725280sim-s <=800000;74720unused.** New160140=57600paired +21000group twins +81540lookaheads; prior565140 unchanged. Host new actual/charged cpuQ53820,gpuA56520,gpuR49800 (cap78240each). Fixed nontransferable world quotas and absent geometrically available options leave budget unused; no outcome-dependent quota reallocation or extra dispatch is armed.
+All three hosts30CPU/0skips+WMDECIDE parity; local40CPU/analysis tests PASS. Independent analysis QA checks all24pairs/288decisions, per-world9780quotas, exact H300 predictions and both solos, best-action gate, CSV/summary/credit recomputation, zero pending reservations and exact accounting.
+Measured new branch timer median11.092s/max21.226s excludes warmup/reset, retaining the60s cadence as an offline cost-controlled experiment. All three new figures rendered and visually checked.
+Artifacts `coopplan/h300/final/`: immutable RECEIPTS/SUMMARY/ALL_GROUP_CREDITS/BEHAVIOURS/QA JSON, confirmation18/wall6 CSVs; SUMMARYsha256`1a5ec2b0dbf310e49247e8593fb99caf46e88aeaf778dfdba21540908526a54d`.
+Figures: [horizon/cohort paired CIs](coopplan/h300/final/horizons.png), [wall opportunity audit](coopplan/h300/final/wall_opportunities.png), [all H300 group credits](coopplan/h300/final/h300_cooperation.png).
+Reproduce read-only: `python -B -m tools.coopplan.h300_report verify`; exact extrema/walls: `python -B -m tools.coopplan.h300_report examples`. Retain completed H120 estimates above; WM transfer/calibrated confidence remains unqualified.
