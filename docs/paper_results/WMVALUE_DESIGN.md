@@ -109,3 +109,14 @@ t300-only cumulative tails cannot stand in for later-state conditional starts.
 The MAIN amendment authorizes new WM inference only at 60/90s. If reused A is
 incomplete, record the exact missing cells and request the smallest explicit
 amendment; do not run unregistered new long inference or report a false FAIL.
+
+## Registered MAIN amendment (18:52), adapter-first execution
+The shared registration's MAIN18:52 supersedes the long-inference restriction
+above: missing A cells may be computed with frozen WM2+mix, K8, through absolute
+t900, including native and all five decision times on seeds969432..969439.
+B/C60/90 inference is authorized under the same frozen test. V/D/E and all
+features, labels, hyperparameters, comparisons and bootstrap rules remain frozen.
+Before reserved outcomes or inference, CPU-audit real/imagined sensing parity,
+prefix-only 60s restart history, entry/exit tracking, objective clocks and CRN.
+Reuse A only when its full restart/controller/entry/cost binding matches; a
+different adapter cannot silently mix cached and newly computed predictions.
