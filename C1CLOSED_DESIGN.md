@@ -99,3 +99,51 @@ Initial prerequisites: S-C1GAP report absent; local branch lacks later tools/dat
 that remain accessible as immutable git objects. At initial probes gpuA had
 ~12 GB free GPU memory and load ~22/208 CPUs; gpuR ~4.8 GB free GPU memory.
 No scientific inference launched at this design registration.
+
+## Prospective compatibility amendment (after tiny CPU checks, before panel)
+
+The actual frozen BB-traj rejects `native_lane_change` because it has no
+structured first-passage head (2 s CPU failure retained). Therefore the paired
+WM2/BB-traj/historical panel uses the existing C1FAIR **common external CAV
+plant**: no ordinary CAV lane changes, explicit gap-based ramp merge, shared
+execution-parity longitudinal dynamics. This is a scoped approximation to the
+recorded native-lane plant, not full production parity. No BB module is added,
+retrained or replaced. Separately retain WM2 production-native K1 diagnostic
+on all 40 same worlds; never pool the two plants or compare unlike plants as a
+paired model win. BB-id remains its explicit learned-ID contract (no feedback
+MAPPO/CTRL0). Checkpoint TRAIN_RECEIPTs accompany each legacy checkpoint to
+resolve its original physics; the failed no-sidecar attempt is not evidence.
+These changes are fixed before any main-panel forecasts or recorded outcome
+extraction. K8 common-plant WM2 + K1 BB-traj/BB-id/historical, plus K1 WM2
+production diagnostic = 480 world/future tasks, five arms except BB-id's three.
+
+## Owner secondary analysis addendum (fresh-session recovery, before panel)
+
+The primary checkpoint, K8, panel, endpoints and horizons above are unchanged.
+At 60/120/180/300 s also measure aggregate fidelity against the same recorded
+SUMO: merge-zone queue (present vehicles at -200 <= s <= 75.44 m with v < 5 m/s),
+100 m by 10 s speed/density fields on fixed s edges -1000:100:500 m (all lanes
+pooled, density veh/km of road, speed occupancy-weighted; empty cell speed=0,
+with empty/occupied mismatch exported), cumulative merge crossings and the four
+additive delay components. Score cumulative space-time field MAE through each
+horizon; queue at the endpoint and time-mean queue are both reported. Bootstrap
+paired model error contrasts using the same 2,000 whole-world draws, seed 0.
+All fields include autonomous entrants; no matching of their synthetic IDs.
+Use medians over WM draws for aggregate fields/queues/crossings, and shared
+total-J median-order weights for additive delay components as specified above.
+Long-horizon chaotic divergence is a motivation, not an established floor.
+
+If S-WMFIXMERGE v2-DATA or S-WMFIX-ES passes its OWN registered verdict, bind
+its checkpoint, verdict and exposure receipt before evaluating the exact same
+panel/metrics as a secondary comparison. Adapted controllers stay labelled
+adapted; this never selects/replaces WM2 for the C1 headline. A failed/pending
+verdict leaves the slot unavailable. Reserve an explicitly unavailable SUMO
+seed-to-seed divergence-floor series in the figure/data schema. MAIN must
+supply approved recorded same-start/different-RNG results and provenance;
+this task launches no SUMO and does not fabricate an irreducible floor.
+
+Recovery: four 2 s CPU model outputs exist; no panel outputs, DISPATCH or
+COMPLETE receipt exists. The uncommitted dispatcher is incomplete and has not
+been launched. S-C1GAP C1_GAPS.md now supports PI/wall/MAPPO algorithm absence
+in audited WM2 corpora, with pre-R16 initialization exclusion still incomplete;
+eligibility is provisional, not an unbroken-lineage zero-shot certificate.
