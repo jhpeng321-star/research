@@ -1,6 +1,8 @@
 from types import SimpleNamespace
 from pathlib import Path
 import json
+import tomllib
+from dataclasses import replace
 
 import numpy as np
 import torch
@@ -15,6 +17,20 @@ from wms.model.factory import build_model
 from wms.model.spec import ModelSpec
 from wms.model.sumo_insertion import SumoInsertion
 from wms.physics.config import PhysicsConfig
+
+
+def test_recipe_clears_incompatible_trained_hazard_modes():
+    config = tomllib.loads((Path(__file__).resolve().parents[1]/'configs/wm_phys.toml').read_text())
+    old = ModelSpec(rollout_mode='hybrid',history_s=60., lane_model='hazard_v5',
+        lane_decision='gated',lane_v5_gates=(.2,.3,.4),lane_v5_head_ap=(.1,.2,.3),
+        lane_v5_extra_features=True,lane_v5_mainline='sample',
+        lane_hazard_features='v2',merge_hazard_zone='full',merge_decision='first_passage')
+    rebuilt = replace(old,**config['model'])
+    assert rebuilt.history_s == old.history_s and rebuilt.lane_model == 'lc2013'
+    physics = dict(config['physics'])
+    physics['emergency_decel_mps2'] = None
+    legacy = PhysicsConfig(emergency_braking=True, emergency_onset='driver_b')
+    assert replace(legacy,**physics).cf_model == 'sumo_idm'
 
 
 def observer():

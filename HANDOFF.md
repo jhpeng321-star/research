@@ -69,6 +69,10 @@ Updated 2026-10-31 23:58 +08:00; branch `c4/rb-int`, base `f0db3c82`.
   Full-panel arrival/source conservation remains a separate required gate.
 
 ## Tests / results
+- Second immutable stage c553078f96b5 stopped BEFORE rollout on inherited
+  hazard-v5 metadata incompatible with LC2013. Recipe now resets all obsolete
+  lane hazard mode/offset/gate metadata to inert ModelSpec defaults; no threshold
+  is added to the active LC2013 behavior. Both initial stages are preserved.
 - Immutable gpuA stage f2d9a3fff741 exists. First smoke stopped BEFORE rollout:
   source checkpoint had emergency_onset=driver_b, incompatible with disabling its
   legacy envelope. Recipe now explicitly resets emergency_onset=plant. Preserve
