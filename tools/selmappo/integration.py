@@ -40,9 +40,10 @@ def load(path, registration, c1_root, design_sha):
         if not path.is_relative_to(root) or digest(path) != expected:
             raise ValueError('integration source binding mismatch')
     module = record['wall_module']
-    if not re.fullmatch(r'tools\.wallsw\.[a-zA-Z_]\w*', module):
+    if module != 'tools.c1switch.library':
         raise ValueError('invalid S-WALLSW module')
-    if module.replace('.', '/')+'.py' not in files or 'HANDOFF.md' not in files:
+    if not {module.replace('.', '/')+'.py', 'WALLSW_HANDOFF.md',
+            'traffic_shepherd/c4/switchable_wall.py', 'src/wms/control/wall.py'} <= files.keys():
         raise ValueError('WALL adapter/handoff not hash-bound')
     return record
 

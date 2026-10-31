@@ -12,7 +12,6 @@ import time
 from types import SimpleNamespace
 
 from .environment import PerCavHandover
-from .handover import FleetHandover
 from .integration import load as load_integration
 from .protocol import approval_line, guard_seed, guard_world, safe_path
 
@@ -113,7 +112,7 @@ class Backend:
         receipt = load_integration(integration, registration, c1_root, design_sha)
         self.lib = library(c1_root)
         self.inputs = self.lib.setup()  # Frozen source/controller hashes + nice19/CUDA guard.
-        self.wall_factory = importlib.import_module(receipt['wall_module']).Controller
+        wall_library = importlib.import_module(receipt['wall_module'])
         import numpy as np
         import random
         import torch
@@ -131,8 +130,7 @@ class Backend:
         self.timing = dict(controller_wall_s=0., environment_wall_s=0., observable_wall_s=0.)
         self.variant, self.actual, self.budget = variant, 0., budget
         self.env, self.mixed = None, None
-        self.handover = FleetHandover(lambda name: self.wall_factory(name, self.inputs)
-                                     if name == 'wall' else self.lib.Controller(name, self.inputs))
+        self.handover = wall_library.make_handover(self.inputs)
         budget.reserve(world, variant, evaluation=evaluation, smoke=smoke, panel=panel)
         # Exact episode-only guard adapters, never a broad seed block bypass.
         original_guard, original_source = guarded.check_case, source_guard.require_development_case
@@ -246,7 +244,7 @@ class Backend:
     def close(self):
         try:
             if self.env is not None and self.handover.name == 'wall':
-                self.handover.controller.stop(self.env)
+                self.handover.controller.stop(now_s=self.env.now)
             if self.mixed:
                 for key, context in self.mixed.handover.contexts.items():
                     context.close(live=key in set(self.env.api.vehicle.getIDList()))

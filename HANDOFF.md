@@ -21,18 +21,18 @@ Exact fleet allocation **7,012,800sim-s**, owner advance approval applies after 
   tests cover WALL start, incumbent assembly preservation, stop and PI reset.
 - Runtime's retained per-CAV prototype is UNVALIDATED for WALL; per-CAV task owns that integration.
 
-## S-WALLSW integration needed
-No `E:/agent-work/c4-wallsw/HANDOFF.md` was present at the resumed build checks.
-The fleet bridge expects a hash-bound module `tools.wallsw.<module>` exporting
-`Controller(name, inputs)` with `start(env)`, `stop(env)` and `command(env)->(command, kwargs)`.
-The controller owns its assembly/release law; selectors add no behavioural thresholds.
-If the published adapter uses another API, adapt the bridge after its handoff is available
-and rerun integration CPU checks before any SUMO.
+## S-WALLSW integration delivered
+The handoff arrived during this session, at peer commit `07fb123e` (implementation
+`1b0581d0`). Fleet runtime now directly reuses `tools.c1switch.library.make_handover(inputs)`;
+the peer `Controller` lifecycle is `start(now_s=...)`, `stop(now_s=...)` and
+`command(env)->(command,kwargs)`. It owns all assembly/release logic.
+CPU gate loads BOTH real frozen controller checkpoints and exercises the real WALL
+formation, incumbent preservation and outgoing reset, intercepting SUMO start/step.
 
 `tools/selmappo/integration.py` expects a `selmappo.integration/2` JSON with:
 `status=CPU_INTEGRATION_PASS`, protocol, cadence_s=20, library, design_sha256,
-wall_module, and `files` (relative safe path -> SHA256) under `--c1-root`.
-Bind the WALL module and its HANDOFF.md along with the frozen controller/observer sources.
+wall_module=`tools.c1switch.library`, and `files` (relative safe path -> SHA256) under `--c1-root`.
+Bind the peer module, additive extensions and `WALLSW_HANDOFF.md` with controller/observer sources.
 An approval string alone cannot start an incomplete five-controller runtime.
 
 ## S-C1SWITCH2 panel/checkpoint interface
@@ -46,7 +46,15 @@ Frozen selector bridge will expose `select(payload)->controller_name` for fleet_
 same builder, incumbent memory, deterministic argmax, no scaler/gradient update.
 
 ## Resume safety
-No selector training root or selector PID found on cpuQ/gpuR at resume; no SUMO dispatched.
+No selector training root or selector PID found on cpuQ/gpuR at resume.
+Final real-integration stage (not yet a dispatch at this checkpoint):
+`/home/ubuntu/selmappo20261031/build_bc4c3aae72073204`, source binding
+`bc4c3aae72073204cf046d800766d4fcc5fd9610a29ea099c3c40cfc195dce14`.
+28/28CPU tests and real frozen-controller/WALL integration PASS; SUMO0 at staging.
+Launch ONCE with `python -m tools.selmappo.launch dispatch --build build_bc4c3aae72073204`;
+inspect with the same command's `status` action; never repeat dispatch or reset the lock.
+The single trainer runs the two registered mechanics episodes then admitted<=12worker training;
+no separate mechanics dispatch/repeat. Final evaluation awaits the peer16world manifest.
 The CPU-only stages are immutable receipts, not running jobs:
 `/home/ubuntu/selmappo_cpucheck_9f8afc61e72189e6/CPU_RESULT.json` records28/28PASS,
 including real CPU PyTorch optimizer, full600s return and RNG-isolation checks.

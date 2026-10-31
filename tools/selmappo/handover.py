@@ -12,14 +12,14 @@ class FleetHandover:
             raise ValueError('unregistered controller')
         if name == self.name:
             return self.controller
-        if self.name == 'wall':
-            self.controller.stop(env)
+        controller = self.factory(name)
+        if self.controller is not None and hasattr(self.controller, 'stop'):
+            self.controller.stop(now_s=getattr(env, 'now', 0.))
         env.ownership.release_all(live_ids=env.api.vehicle.getIDList())
         env.ownership.controller = env._circles
         env.pi_session, env._direct_pi = None, False
-        controller = self.factory(name)
-        if name == 'wall':
-            controller.start(env)
+        if hasattr(controller, 'start'):
+            controller.start(now_s=getattr(env, 'now', 0.))
         self.name, self.controller = name, controller
         self.switches += 1
         return controller

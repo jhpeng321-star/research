@@ -144,7 +144,8 @@ class HandoverTests(unittest.TestCase):
     def test_wall_lifecycle_and_incumbent_memory(self):
         owner = SimpleNamespace(release_all=Mock(), controller=None)
         env = SimpleNamespace(ownership=owner, api=SimpleNamespace(vehicle=SimpleNamespace(
-            getIDList=lambda: ['cav', 'hdv'])), _circles=object(), pi_session=object(), _direct_pi=True)
+            getIDList=lambda: ['cav', 'hdv'])), _circles=object(), pi_session=object(), _direct_pi=True,
+            now=300)
         created = []
         def factory(name):
             result = SimpleNamespace(name=name, memory=[], start=Mock(), stop=Mock())
@@ -155,10 +156,10 @@ class HandoverTests(unittest.TestCase):
         wall.memory.append('assembly')
         self.assertIs(h.select('wall', env), wall)
         self.assertEqual(wall.memory, ['assembly'])
-        wall.start.assert_called_once_with(env)
+        wall.start.assert_called_once_with(now_s=300)
         self.assertEqual(owner.release_all.call_count, 1)
         h.select('pi', env)
-        wall.stop.assert_called_once_with(env)
+        wall.stop.assert_called_once_with(now_s=300)
         self.assertEqual(owner.release_all.call_count, 2)
         self.assertIsNone(env.pi_session)
         self.assertFalse(env._direct_pi)
