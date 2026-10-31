@@ -108,12 +108,28 @@ def merge_predictions(record, previous, prior_columns, new_columns):
     return dict(record, prediction=combined)
 
 
+def postmotion_snapshot(before, after, physics, version="v1"):
+    moved = np.array(before,copy=True)
+    moved[:,[0,4,5]] = after[:,[0,4,5]]
+    if version == "v2":
+        import torch
+        from wms.physics.lc2013_geometry import lane_position_shift
+        source = before[:,1:4].argmax(-1)
+        destination = after[:,1:4].argmax(-1)
+        shift = lane_position_shift(torch.as_tensor(np.array(after[:,0],copy=True)),
+            torch.as_tensor(source),torch.as_tensor(destination),physics)
+        moved[:,0] -= shift.numpy()
+    elif version != "v1":
+        raise ValueError("Unknown observable snapshot version")
+    return moved
+
+
 def episode_job(job):
     import torch
     from wms.physics.config import PhysicsConfig
     from wms.physics.lc2013 import lane_change
 
-    root, world, support, idm, out, reuse = job
+    root, world, support, idm, out, reuse, snapshot_version = job
     torch.set_num_threads(1)
     candidates = len(support)
     previous, new_columns, prior_columns = None, np.arange(candidates), None
@@ -147,8 +163,7 @@ def episode_job(job):
         destination = kin[ti+1, :, 1:4].argmax(-1)
         # Same teacher-forced post-longitudinal geometry as lane_v2. Recorded
         # future positions/speeds are a conditioning target, not an open-loop test.
-        moved = np.array(kin[ti], copy=True)
-        moved[:, [0, 4, 5]] = np.asarray(kin[ti+1])[:, [0, 4, 5]]
+        moved = postmotion_snapshot(np.asarray(kin[ti]),np.asarray(kin[ti+1]),physics,snapshot_version)
         memory = lane_change(torch.as_tensor(moved).expand(active_candidates, slots, 7),
             torch.as_tensor(present).expand(active_candidates, slots), physics,
             memory=memory, identity=torch.as_tensor(np.array(ids[ti], copy=True)).expand(active_candidates, slots),
@@ -221,6 +236,7 @@ def main():
     parser.add_argument("--worlds", type=int, nargs="+", default=list(FIT_WORLDS))
     parser.add_argument("--support-json", type=Path, help="Explicit source-domain numerical search support")
     parser.add_argument("--reuse", type=Path, help="Completed identical-source/IDM decision cache")
+    parser.add_argument("--snapshot-version", choices=("v1","v2"), default="v1")
     args = parser.parse_args()
     if not args.worlds or len(set(args.worlds)) != len(args.worlds) or not set(args.worlds) <= set(FIT_WORLDS):
         raise ValueError("Unique native FIT worlds required before any data read")
@@ -242,6 +258,9 @@ def main():
         if len(np.unique(support,axis=0)) != len(support):
             raise ValueError("Duplicate numerical physical profiles")
     if args.reuse is not None:
+        previous_population = json.loads((args.reuse/"lc2013_population.json").read_text())
+        if previous_population.get("snapshot_version","v1") != args.snapshot_version:
+            raise ValueError("Cached observable snapshot contract mismatch")
         prior = json.loads((args.reuse/"provenance.json").read_text())
         for name in ("lc2013", "lc2013_geometry", "config"):
             path = Path(__import__("wms.physics."+name, fromlist=["__file__"]).__file__)
@@ -250,7 +269,7 @@ def main():
         if hashlib.sha256(args.idm_pooled.read_bytes()).hexdigest() != prior["idm_pooled_sha256"]:
             raise ValueError("Cached IDM candidate mismatch")
     jobs = [(str(args.root), w, support, pooled["parameters"], str(args.out),
-             str(args.reuse) if args.reuse is not None else None) for w in args.worlds]
+             str(args.reuse) if args.reuse is not None else None,args.snapshot_version) for w in args.worlds]
     results = []
     with ProcessPoolExecutor(max_workers=args.workers) as executor:
         results.extend(executor.map(episode_job, jobs, chunksize=1))
@@ -304,6 +323,7 @@ def main():
             "probabilities": emission.tolist(), "note": "Discrepancy likelihood only; NEVER runtime event noise"},
         "likelihood_trace": trace, "final_log_likelihood": ll,
         "requires_boundary_aware_lc_reader": bool((support == 0).any()),
+        "snapshot_version":args.snapshot_version,
         "idm_parameters": pooled["parameters"], "known_limits": ["finite support search",
             "highway LC2013 subset", "left-censored wishes at240", "stepwise discrepancy independence",
             "teacher-forced geometry", "internal empirical Bayes, not independent calibration"]}

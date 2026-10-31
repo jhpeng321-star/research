@@ -170,3 +170,22 @@ Boundary artifacts declare `requires_boundary_aware_lc_reader=true`. FIT's
 `draw_lane_parameters` handles source-legal zero behavioral weights; UNC's
 strict-positive reader requires an LC-only domain update before using those
 artifacts. IDM always remains strictly positive. Neither version is adopted.
+
+Latest source0a1e7e93 requires `--snapshot-version v2`: restore pre-change lane
+origins before LC decisions with the published geometry's lane_position_shift.
+`freeze_lc_version.py --lane-commit SHA --prepare` creates an immutable
+explicit-file source bundle and an owned CPU-only remote root. Generic dispatcher
+`dispatch_lc_version.py --root OWN_ROOT fit` claims exactly once; after independent
+verification, action `raw` fits the physical profile mixture by categorical
+least squares on the completed cache and learns driver evidence temperature
+using causal prefix→suffix raw-decision Brier. Raw decisions and likelihood
+emissions are separately scored, so probability calibration cannot hide too
+many runtime lane proposals.
+
+`watch_lc.py` is the durable owner01:28 continuation: inspect existing owned
+receipts first, publish/commit each verified version, re-freeze only when committed
+LANE physics bytes change, stop new starts08:40 and stop polling09:00. It has no
+process-signalling code. Create-once watcher/job claims prohibit duplicate
+restarts; staged user work/edited handoffs block automatic publication commits.
+Live status is `receipts/LC_WATCH_0128_STATE.json`; terminal failures preserve
+source/logs and require manual reconciliation. No automatic adoption occurs.

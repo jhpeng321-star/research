@@ -165,3 +165,23 @@ def test_raw_physics_scores_do_not_use_discrepancy_to_hide_false_events(raw_fit)
     receipt = raw_fit.metrics(probability,np.array([0,2,0]))
     assert receipt["expected_event_count"] == 0.5
     assert abs(receipt["categorical_brier"]-(.125+1.125)/3) < 1e-12
+
+
+def test_source_coordinate_snapshot_restores_prechange_origins(fit):
+    pytest.importorskip("torch")
+    from wms.physics.config import PhysicsConfig
+    import wms.physics.lc2013_geometry as geometry
+    if not hasattr(geometry,"UPSTREAM_POSITION_OFFSETS_M"):
+        pytest.skip("Coordinate test requires published LANE0a1e7e93 or later")
+    before = np.zeros((4,7))
+    before[:,0] = -100
+    before[:,1:4] = np.eye(3)[[0,1,2,0]]
+    after = before.copy()
+    after[:,0] = [-90,-90,-90,-90]
+    after[:,1:4] = np.eye(3)[[1,0,1,0]]
+    after[:,4] = [1,2,3,4]
+    moved = fit.postmotion_snapshot(before,after,PhysicsConfig(sumo_fidelity=True),"v2")
+    np.testing.assert_allclose(moved[:,0],[-91.45,-88.55,-90,-90],atol=1e-10)
+    np.testing.assert_array_equal(moved[:,1:4],before[:,1:4])
+    np.testing.assert_array_equal(moved[:,4],after[:,4])
+    np.testing.assert_array_equal(fit.postmotion_snapshot(before,after,PhysicsConfig(),"v1")[:,0],after[:,0])

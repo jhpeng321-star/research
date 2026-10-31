@@ -1,122 +1,59 @@
-# S-RB-FIT handoff
+# S-RB-FIT — owner01:28 continuation active
 
-Branch `c4/rb-fit`, base `f0db3c82`; owner amendment REGISTRATION.md:5701.
-Status: owner01:28 continuation ACTIVE; prior outputs/commits preserved.
-Fresh01:30 resume at876b2433: both owned jobs exited; LANE source still811cd7e8.
-Next: direction-aware LC decision likelihood; see receipts/RESUME_0128.md.
-`tools/rbfit/lane_directional.py` adds source-lane categorical decision likelihood
-and prefix-calibrated informative-evidence shrinkage;5new CPU tests PASS.
-Smoke969400 PASS (9529fit/9779later intervals); no LC adoption change.
-Full32-world `lane_directional_v3` COMPLETE; cpuQ557463 exited. Published JSONs
-in artifacts/rbfit/lane_directional_v3; all3130direct sequence posteriors PASS,
-1630zero-information fallbacks; later eventBrier .002359 vs population.002463.
-Raw proposals7811vs626observed: NOT ADOPTED; source-default12095. See VERIFIED.json.
-Boundary continuation:209 source-domain profiles incl SUMO zero-weight faces,
-cached matching v3 decisions reused exactly;7new tests PASS. Smoke573779 verified,
-exited. Fullv4 cpuQ579949 (01:47),2nice19CPUworkers; newroot lc_boundaries.
-`draw_lane_parameters` now accepts nonnegative behavioral weights, assertive>0.
-UNC must allow those LC-only zeros before sampling this forthcoming candidate;
-IDM remains strictly positive. No boundary fit adopted before validation.
-Raw-decision LS continuation: `lane_raw_fit.py` fits the physical categorical
-distribution itself (no free-emission score substitution), learns causal
-driver likelihood temperature; all10new tests PASS. Smoke598368 exited/verified,
-raw expected99vs30changes (v4raw301/source-default533); full candidate pendingv4.
-New outputs `artifacts/rbfit/shrinkage_v1` and `lane_v2`; **22 CPU tests PASS**.
-Direct UNC f8b6faea reader verified on ALL3,130 exported drivers and16
-paired/replayed planned futures. `receipts/ADDENDUM_VERIFIED_v2.json` binds SHA;
-generic causal117-interval motion posterior matches saved weights within5.6e-17.
-Prior cpuQ407617(LC)/426309(shrinkage) both exited; new jobs listed above.
-No action outcomes selected fits. Reports: `docs/paper_results/RBFIT.md` and
-`docs/paper_results/RBFIT_SUMOCORE_DIAG.md`. No demonstrated600s sign repair.
-Coordination receipt: `E:/agent-work/rb-shared/fit/ADDENDUM_0040.md` and
-`ARTIFACTS_0040.json`; artifact commit4965c665, generic APIe60634b9.
+Branch `c4/rb-fit`, basef0db3c82. Prior work preserved; owner instructions in
+REGISTRATION5683/5701/5734/5736. Continue substantive LC source refits through09:00;
+INT freezes09:30. Detailed previous handoff:docs/RBFIT_HANDOFF_ARCHIVE_0205.md.
 
-## Frozen data/estimation contract
-- Only FIT worlds 969400–969431, native arm, from cpuQ
-  `/home/ubuntu/wmdata20261031/views`; explicit allowlist of `episode.json`,
-  `time_s.npy`, `veh_kin.npy`, `veh_mask.npy`, `is_cav.npy`, `vid.npy`.
-- Fit motion in [240,300] s only; driver identity = world + observable numeric VID.
-  Do not combine the five counterfactual arms as independent drivers.
-- Per-driver posterior uses at most the causal 60 s before t=300, shorter when
-  absent; unseen/absent drivers use the learned population distribution.
-- IDM fits mainline lanes 0/1 only: ramp/junction virtual-stop constraints are
-  not a same-lane leader observation. Ramp-only histories use population prior.
-- Acceleration target is forward speed difference, not a hidden driver setting.
-  Exclude junction/no-lane snapshots, ego lane transitions, changed/absent leaders,
-  invalid identities, and negative physical bumper gaps; retain stopped traffic.
-- Positive IDM parameters: v0, tau, accel, decel, minGap; delta=4 fixed. Gaussian
-  empirical Bayes and finite-profile mixture ML; all fitted from motion.
-- Validation is later native FIT motion only, conditional on recorded leaders and
-  lanes; this does not establish free-running breakdown/traffic fidelity.
+## Ready for INT / UNC
+- Preferred IDM:`artifacts/rbfit/shrinkage_v1`; already-materialized joint
+  population/driver posteriors.3,130drivers/174no-evidence population fallbacks.
+- Existing schemas `wm_phys.idm_population.v1` / `wm_phys.idm_posteriors.v1`;
+  parameter_order `[v0,time_headway,accel,decel,min_gap]`, units m/s,s,m/s²,m/s²,m.
+  Population support[C,5]+weights[C]; driver support_indices+weights select
+  that same support. Moments are summaries, not new log-normal draws.
+- Identity=world:observable numeric VID, causal60s ending300. Unknown/missing
+  history→population. Do not mistake packed slots for tape IDs. `condition_motion`
+  supports caller-supplied causal motion without saved-ID assumptions.
+- Learn prior_count19.35568 from prefix CRPS; ALREADY APPLIED, do not shrink twice.
+  UNCf8b6faea `FittedHiddenState.from_directory` verified on all exports and16
+  paired/replayed futures. Draw once/cache per identity, common across actions;
+  future entrants use the same learned population. v0/actual speed limit=speedFactor.
+- Pooled point:`pooled_full_v5/idm_pooled.json`, v0/tau/a/b/s0=
+  29.839994/.770429/.795080/1.772102/1.933667; delta4. Shared model files untouched.
 
-## Outputs / integration
-- Point candidate: `artifacts/rbfit/pooled_full_v5/idm_pooled.json`, schema
-  `wm_phys.idm_pooled.v1`; pass its `parameters` to WM-PHYS driver settings.
-  v0/tau/a/b/s0 = 29.839994/0.770429/0.795080/1.772102/1.933667, delta=4.
-- Preferred posterior candidate: `artifacts/rbfit/shrinkage_v1`, schemas
-  `wm_phys.idm_population.v1` / `wm_phys.idm_posteriors.v1`; order
-  `[v0,time_headway,accel,decel,min_gap]`, units m/s,s,m/s²,m/s²,m.
-  `support` + `weights` are joint physical profiles; per-driver sparse
-  `support_indices` + `weights` select that same support, keys `world:VID`.
-  `log_mean`/`log_cov` are summaries, NOT a new log-normal draw distribution.
-  Unknown identity -> population; t0 must equal `conditioning_end_s=300`.
-- NEW shrinkage policy: n/(n+19.35568) posterior + remainder population,
-  strength learned prefix240..270→270..300 CRPS. All3,130 records have explicit
-  joint weights;174 zero-evidence records equal population. Policy ALREADY
-  APPLIED in the gzip JSON; do not shrink again. Original raw finite_mixture_v4
-  and Gaussian fits preserved. Population joint support unchanged.
-- UNC saved-ID path: `FittedHiddenState.from_directory('.../shrinkage_v1')`, pass
-  `fitted_state=reader,vehicle_ids=verified_tape_vids,t0_s=300,row_keys=worlds` to
-  `plan_hidden_state_futures`. It uses fitted population for entrant settings
-  too. Leave `lane_directory` unset: fitted LC still fails its baseline.
-- `MotionFit(directory).idm(world,present_vids,t0_s=300,sample=True,generator=g)`
-  reads gzip/JSON. Draw ONCE and cache by identity across future/chunks;
-  entrants use population. Shared model/spec/factory untouched; no new switch.
-- v0 IS effective desired speed; speedFactor=v0/actual lane limit. No double scale.
-- Identity: never equate evaluator packed slots with tape numeric VIDs. NEW
-  `MotionFit.condition_motion` infers from caller-supplied causal60s motion and
-  frozen support, without saved-ID lookup. See tools README; missing motion ->
-  explicit population fallback. No verified SUMO-string/tape-VID crosswalk.
-  Worlds969432..439 have no saved posterior; do not claim one from slot indices.
-- UNC: wrap the original model with `MotionFitForUNC(model, fit, worlds, ids,
-  t0_s=300,n_particles=32,seed=...)` for `plan_hidden_state_futures` ONLY; use
-  original model for rollout. Proxy supplies `encoded['posterior_samples']`
-  [P,B,K,9] in exact encoder order. Five IDM keys replace present HDVs only;
-  CAV/padding, four unrelated coordinates, embeddings and model stay intact.
-  World+VID keyed samples are slot-order invariant and common across actions.
-  Explicit `MotionFit(...,shrinkage_path=...)` enables the learned JSON policy;
-  policy/population SHA and conditioning time must match. Default unchanged.
-- LC: `artifacts/rbfit/lane_v2/lc2013_{population,posteriors}.json`, schemas
-  `wm_phys.lc2013_{population,posteriors}.v1`; joint support/weights, five physical
-  keys. `draw_lane_parameters` draws one persistent vector. Emission probabilities
-  are observation discrepancy, NEVER runtime event noise. LC not adopted.
-- `tools/rbfit/README.md` contains reproduction commands and format details.
-- Old cpuQ root `/home/ubuntu/rbfit20261031`; addendum root
-  `/home/ubuntu/rbfit20261101_addendum`,2LC+1calibration nice19/single-thread.
-- Tests:18 FIT +4 committed UNC tests PASS; independent SUMO vectors, CRPS
-  pairwise oracle, no-evidence/identity/CAV invariants, and actual exported
-  posterior algebra/schema/PSD/SHA/UNC replay PASS. Local Python lacks SciPy;
-  cpuQ existing environment used. No new environment installed.
+## LC continuation (02:02 dispatch snapshot)
+- Published `artifacts/rbfit/lane_directional_v3`: all3,130sequence posteriors
+  independently verified,1,630zero-information histories=population. Later-FIT
+  emission eventBrier.002359 vs population.002463/source-rate.002412. Raw physics
+  still7811expected changes vs626real; **NOT ADOPTED**. Old search permits
+  cooperative>1; boundary v4 corrects that domain. Prior v1/v2 outputs preserved.
+- Boundary v4:209source-domain profiles,33cached/176new; full job579949cpuQ.
+  Raw-physical LS next uses that completed cache rather than rerunning LC.
+  One-world v5 smoke independently verified:99expected vs30real changes
+  (v4raw301/default533), still no free-running qualification.
+- Latest LANE0a1e7e93 frozen at `source_versions/ec0f2a74974b`; physical source
+  SHAc1aa89fafb69, geometry59017d3ec30a. New snapshotv2 restores PRE-change
+  upstream origins. Full32FIT-world/209profile job617309cpuQ,2nice19workers.
+  No old-source decisions reused across physics/snapshot changes.
+- LC schemas `wm_phys.lc2013_{population,posteriors}.v1`; five-key order
+  `[lcStrategic,lcCooperative,lcSpeedGain,lcKeepRight,lcAssertive]`; joint support
+  and driver weights, conditioning_end_s300. Weights already conditioned.
+  Emission probabilities are discrepancy only, NEVER runtime event noise.
+- Boundary-aware reader: first4LC coordinates≥0, assertive>0; cooperative[0,1].
+  FIT `draw_lane_parameters` supports zero weights; UNC strict-positive validator
+  needs its LC-only update. Keep lane_directory unset until a candidate is adopted.
 
-## Resources and gaps
-- CPU only; no GPU allocation, no new environment. Initial cpuQ load0.07/32 CPUs.
-- Setdata arrived after original extraction; independent helper's pooled
-  v0=29.87/tau=.753 corroborates our29.84/.770 (different filtering/optimizer).
-  Shared idmspec vectors agree. `rb-shared/fit/REFERENCE_COMPATIBILITY.md` flags
-  CF source-default mismatches: NUMERICAL_EPS=0.001 and emergencyDecel=9.
-- Gaussian posterior improves 10s position MAE but worsens RMSE tails.
-  Raw finite posterior nominal95% coverage68.8%; shrinkage90.48%, population95.0%.
-  Shrunk/raw/population CRPS .14657/.16351/.16560; RMSE .3478/.3778/.3567m/s².
-  Internal empirical Bayes calibration; still NO conditional coverage qualification.
-- Updated LC811cd7e8 finite geometry/epsilon, pooled_full_v5: later-FIT Brier
-  posterior.002828/population.003071 vs baseline.002414; not adopted.
-- Six FIT SUMOCORE states: inferred-minus-default600s MAPPO/PI effect
-  +4171/+3909veh-s, almost wholly road. Native road improves8523 vs controlled
-  4351/4617veh-s. Initial HDVs AND entrant donors changed; cause unidentified.
-- Point candidate acceleration RMSE 0.299 vs initial0.902 m/s², 10s position
-  MAE5.58 m vs constant-speed13.81 m. Conditional FIT only; INT/EVAL must score
-  free-running congestion/breakdown before adoption. Mainline-only CF fit and
-  missing junction/LC constraints limit physical parameter identification.
-- Student-t variants v2/v3 scale-collapsed; stopped verified OWN PIDs/children,
-  STOP receipts and original partial logs preserved. Neither adopted.
-- No new SUMO simulation or neural-network training.
+## Evidence / limits
+- Native FIT969400–969431 only, six explicit observable files. No settings labels.
+  CF mainline only; acceleration derived from speeds, stable lanes/leaders.
+- Conditional later-FIT pooled acceleration RMSE.299 vs initial.902m/s²;10s
+  position MAE5.58 vs constant-speed13.81m. Shrunk physical acceleration CRPS
+  .14657 vs raw.16351/population.16560;95%coverage90.48%, not full calibration.
+- SUMOCORE six-FIT-state diagnosis: inferred-minus-default600s MAPPO/PI effects
+  +4171/+3909veh-s, almost all road. Incumbent/entrant settings changed together;
+  culpable parameter unidentified. Shrinkage is not demonstrated sign repair.
+- Prior22CPU tests passed; new11numerical/runtime+4continuation tests PASS.
+  Initial coordinate overlay missing secure_gap dependency repaired pre-dispatch;
+  original failure/success receipts retained. No GPU/SUMO/neural training.
+- Report≤40lines:`docs/paper_results/RBFIT.md`; reproducer/JSON APIs:
+  `tools/rbfit/README.md`. Coordination:`rb-shared/fit/CONTINUATION_0128.md`.
