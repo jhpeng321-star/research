@@ -7,10 +7,13 @@ Next: direction-aware LC decision likelihood; see receipts/RESUME_0128.md.
 `tools/rbfit/lane_directional.py` adds source-lane categorical decision likelihood
 and prefix-calibrated informative-evidence shrinkage;5new CPU tests PASS.
 Smoke969400 PASS (9529fit/9779later intervals); no LC adoption change.
-Full32-world `lane_directional_v3` running cpuQ557463 (01:37),2nice19CPU workers,
-frozen estimator9f574a5c / LC811cd7e8; create-once receipts preserved.
+Full32-world `lane_directional_v3` COMPLETE; cpuQ557463 exited. Published JSONs
+in artifacts/rbfit/lane_directional_v3; all3130direct sequence posteriors PASS,
+1630zero-information fallbacks; later eventBrier .002359 vs population.002463.
+Raw proposals7811vs626observed: NOT ADOPTED; source-default12095. See VERIFIED.json.
 Boundary continuation:209 source-domain profiles incl SUMO zero-weight faces,
-cached matching v3 decisions reused exactly;7new tests PASS. Smoke cpuQ573779.
+cached matching v3 decisions reused exactly;7new tests PASS. Smoke573779 verified,
+exited. Fullv4 cpuQ579949 (01:47),2nice19CPUworkers; newroot lc_boundaries.
 `draw_lane_parameters` now accepts nonnegative behavioral weights, assertive>0.
 UNC must allow those LC-only zeros before sampling this forthcoming candidate;
 IDM remains strictly positive. No boundary fit adopted before validation.

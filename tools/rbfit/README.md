@@ -147,3 +147,26 @@ were read or population parameters fitted to implement or verify this API.
 position scores. `predictive_validation.json` scores physical-profile spread only,
 without injecting fitted residual noise. These conditional FIT checks do not
 qualify future traffic distributions; INT/EVAL must do the free-running checks.
+
+## Owner01:28 LC continuation
+
+`lane_directional.py` fits source-lane conditioned categorical LC decisions
+(stay/target0/target1), so wrong-direction changes are failures. Driver evidence
+is causal [240,300]; prefix240..270→270..300 estimates informative-evidence
+shrinkage before later300..360 scoring. Emissions are discrepancy only; the
+independent `verify_directional.py` rebuilds the likelihood directly from saved
+decisions and reports RAW physical proposal scores separately.
+
+`lane_directional_v3` retains the old65profile search for comparability; cooperative
+values>1 are a known domain gap. Boundary continuation uses `--support-json` for
+documented lcCooperative[0,1], nonnegative behavioral weights, assertive>0;
+`--reuse COMPLETED_V3` reuses exact matching physical profile decisions after
+SHA-checking LC source/geometry/config/pooled-IDM and exact observable alignment.
+Zero-weight faces are legal SUMO parameter settings, not new behavioral rules.
+Only new profiles are evaluated; previous outputs remain untouched.
+
+LC JSON schemas remain v1; all driver weights already include shrinkage.
+Boundary artifacts declare `requires_boundary_aware_lc_reader=true`. FIT's
+`draw_lane_parameters` handles source-legal zero behavioral weights; UNC's
+strict-positive reader requires an LC-only domain update before using those
+artifacts. IDM always remains strictly positive. Neither version is adopted.
