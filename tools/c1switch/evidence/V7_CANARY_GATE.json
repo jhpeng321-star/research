@@ -1,0 +1,54 @@
+{
+  "pass_": true,
+  "charged_sim_s": 84360,
+  "actual_sim_s": 84360.0,
+  "results": {
+    "wm": {
+      "schedule": [
+        "ctrl0",
+        "pi",
+        "ctrl0",
+        "ctrl0",
+        "mappo",
+        "mappo",
+        "ctrl0",
+        "ctrl0",
+        "ctrl0",
+        "ctrl0"
+      ],
+      "J600": {
+        "team_delay_vs": 8915.438919634005,
+        "road_delay_vs": 8639.274244634003,
+        "source_wait_vs": 276.1646750000002,
+        "collisions": 0.0,
+        "teleports": 0.0,
+        "ttc_below_3_vs": 179.5,
+        "hard_brake": 20.0
+      }
+    },
+    "bb": {
+      "schedule": [
+        "ctrl0",
+        "mappo",
+        "ctrl0",
+        "circles",
+        "circles",
+        "ctrl0",
+        "ctrl0",
+        "ctrl0",
+        "ctrl0",
+        "ctrl0"
+      ],
+      "J600": {
+        "team_delay_vs": 8950.36454821778,
+        "road_delay_vs": 8674.199873217774,
+        "source_wait_vs": 276.1646750000002,
+        "collisions": 0.0,
+        "teleports": 0.0,
+        "ttc_below_3_vs": 212.0,
+        "hard_brake": 11.5
+      }
+    }
+  },
+  "superseded_WM": 12450
+}

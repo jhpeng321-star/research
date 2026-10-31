@@ -17,6 +17,12 @@ The GPU original-draw parity workers are diagnostic-only; live stochastic keys
 are frozen anonymous observables. New services carry WM2557/BB1664s prior debit,
 leaving8243/1936s; all loading/validation/idle counts. GPU hard caps remain3h/1h.
 `V7_STAGE.json` binds the sources and imported71910sim-s. CPU28cpuQ/29gpuR PASS.
+Validation now PASS: both full60s GPU parity gates; all10 BB reuse picks;
+corrected WM1episode+15branches; exact paired warmup; all30live-prefix gates,
+zero collisions/teleports, cumulative84360sim-s charged=actual. See
+`V7_CANARY_GATE.json`, `V7_GPU_PARITY.json`, `V7_PAIRED_WARMUP_GATE.json`.
+Main remains write-once and bounded by the original GPU hard caps; observed
+WM mean81.59s/forecast creates throughput pressure. No partial-panel efficacy.
 
 ## Historical SCIENTIFIC STOP (v6 observable-key retention gate FAIL)
 
