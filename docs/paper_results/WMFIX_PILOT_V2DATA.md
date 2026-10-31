@@ -1,5 +1,38 @@
 # PILOT v2-DATA — MAIN authorization 2026-10-31 15:25
 
+## FINAL — MAIN21:32 partial-result STOP, 2026-10-31 21:35 +08
+- **step10 failed; steps 20/30 not scored**. This is the amended early-stop
+  result, **not a full-gate PASS/FAIL**. Historical continuation instructions
+  below are superseded. No further training or verdict is dispatched.
+- Full52-world panel,104 contrasts/horizon: step0 -> step10 paired-J MAE
+  **120s252.1303194486178 -> 250.6552217923678** (-1.47510, -0.585%);
+  **300s1718.261998103215 -> 1885.3962026742788** (+167.13420, +9.727%).
+  Step10 fails the requirement to improve BOTH horizons; no deadline extension.
+- FULL_PANEL_STEP10 SHA256
+  `b17159cb58f0a522af87537f1ebd28ff4f795587d8d550854e5650431101d9bd`.
+  Reassembled all8 baseline/head10 shards independently; exact checkpoint/data/
+  base hashes, groups,208 unique cells/panel, finite contrasts and published
+  values verified. Same gpuA/CRN and registered baseline; all30 update receipts
+  retain finite gradients and frozen-bitwise. No update beyond30 exists.
+- On first live probe21:33, all step10 workers had exited; inherited queue had
+  already started step20 workers. Stopped own trainer223222 via existing tested
+  identity-pinned pidfd SIGINT immediately. Metadata-only finalize_step10.py
+  independently verifies both panels, writes exclusive stop intent, and stops
+  exact owned later-panel workers by output/candidate/name/startticks+pidfd.
+  CPU5PASS (worker binding and existing watcher tests); no scoring-file edits.
+- Stopped own step20 workers279328/279518/280304/280867 at21:35. No completed
+  step20/30 shard or full panel exists; their interrupted logs are preserved.
+  At21:35:26 dispatcher222535, timeout223221, trainer223222, watcher249622 and
+  all four workers are absent. Remaining GPU peers282423/282438 untouched.
+  gpuA released to MAIN/S-WMVALUE; no duplicate dispatch, budget extension,
+  curriculum, GPU training, SUMO, deletion or push in this resume.
+- Durable remote receipt: R/v2data/recovery_1705/MAIN2132_STOP.json, alongside
+  MAIN2132_STOP_INTENT.json. Main stopped21:33, so finalizer correctly records
+  trainer_sigint_sent=false for its later idempotent ownership check.
+- Interpretation: expanded TRAIN data with the v1 hard-event objective did not
+  satisfy the amended step10 screen. Tiny120s improvement accompanies300s harm;
+  this does not measure the unscored20/30 checkpoints or qualify a corrected WM.
+
 ## Current scope — MAIN17:52 supersedes automatic continuation below
 - Shared REGISTRATION.md MAIN17:52 synthesis says Track1 **finishes its registered
   thirty-step gate ONLY**. Discovered during the19:20 exact-file coordination read;
