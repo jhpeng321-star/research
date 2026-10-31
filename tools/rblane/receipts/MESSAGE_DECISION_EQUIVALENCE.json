@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "baseline_commit": "52d2df5c5a2543307e007edc06ca7d464804e8ae",
+  "synthetic_vehicle_decisions": 9600,
+  "nonmessage_outputs": "BIT_EXACT",
+  "compared_tensor_elements": 288000,
+  "changed_outward_message_elements": 3,
+  "speed_gain_urgent_frames": 536,
+  "scope": "same observed snapshots; autonomous longitudinal feedback is deliberately changed",
+  "prior_lc_sha256": "9650e67676e674dc4450de8d52b392aab2b9259e5f88b5297b568922751378c5",
+  "current_lc_sha256": "77b5539974ca4e4083c3bc9e3d89e6d1c0dbedf0bf079f0e071d6dbd8b3d2a90"
+}

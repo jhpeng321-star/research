@@ -260,3 +260,28 @@ def test_source_zero_cost_cooperation_at_zero_parameter_is_not_an_extra_disable_
     assert out['lc2013_reason'][0,1] == COOPERATIVE
     assert out['next_lane'][0,1] == 0
     assert out['lc2013_left'][0,1] == 0
+
+
+def test_mature_speed_gain_urgency_requests_source_follower_deceleration():
+    kin,mask = scene([(0,1,10),(30,1,5),(-10,0,15)])
+    p = PhysicsConfig()
+    memory = lane_change(kin,mask,p)
+    memory['lc2013_left'][0,0] = 51 * 10_000_000
+    out = lane_change(kin,mask,p,memory=memory)
+    assert out['lc2013_reason'][0,0] == SPEED_GAIN
+    assert out['lc2013_blocked_follower'][0,0]
+    assert out['lc2013_speed_gain_urgent'][0,0]
+    assert out['lc2013_urgent'][0,0]
+    assert out['lc2013_has_advice'][0,2]
+    assert out['lc2013_advice_accel'][0,2] == -p.idm()[1]
+
+
+def test_speed_gain_below_source_urgency_threshold_does_not_request_help():
+    kin,mask = scene([(0,1,10),(30,1,5),(-10,0,15)])
+    p = PhysicsConfig()
+    memory = lane_change(kin,mask,p)
+    memory['lc2013_left'][0,0] = 49 * 10_000_000
+    out = lane_change(kin,mask,p,memory=memory)
+    assert out['lc2013_reason'][0,0] == SPEED_GAIN
+    assert not out['lc2013_speed_gain_urgent'][0,0]
+    assert not out['lc2013_has_advice'][0,2]

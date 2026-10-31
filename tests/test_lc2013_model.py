@@ -157,3 +157,46 @@ def test_fixed_cav_destination_lane_is_visible_before_hdv_lane_decision():
     assert out['next_lane'][0, 0] == 1
     assert out['next_lane'][0, 1] == 0
     assert out['next_s_m'][0, 1] == -990
+
+
+@pytest.mark.parametrize('message,weight',[(0.,1.),(1.,1.),(-2.,.5),(-2.,0.),(-20.,1.)])
+@torch.no_grad()
+def test_foreign_message_presence_raw_bounds_and_source_wanted_speed_blending(message,weight):
+    m = model()
+    s = state(lane=1,s=-500.,speed=10.)
+    wanted = m(s)['accel_mps2'].clone()
+    s.update(lc2013_present=s['present'].clone(),lc2013_lane=s['lane'].clone(),
+        lc2013_identity=s['vehicle_id'].clone(),lc2013_advice_accel=torch.full((1,1),message),
+        lc2013_has_advice=torch.ones(1,1).bool(),lc2013_advice_weight=torch.full((1,1),weight))
+    result = m(s)['accel_mps2']
+    expected = wanted if message < -m.physics.idm()[1] else torch.minimum(
+        wanted, message*weight+wanted*(1-weight))
+    torch.testing.assert_close(result,expected,rtol=0,atol=0)
+
+
+def test_idm_minimum_message_bound_uses_source_slack_velocity_floor_and_existing_braking():
+    from wms.model.lc2013_adapter import minimum_advice_accel
+    speed = torch.tensor([[10.,.4,10.]],dtype=torch.float64)
+    decel = torch.full_like(speed,.8)
+    wanted = torch.tensor([[2.,2.,-5.]],dtype=speed.dtype)
+    got = minimum_advice_accel(speed,decel,wanted,PhysicsConfig())
+    torch.testing.assert_close(got,torch.tensor([[-1.5,-.8,-5.]],dtype=speed.dtype),rtol=0,atol=0)
+
+
+@torch.no_grad()
+def test_low_comfort_decel_does_not_reject_valid_idm_min_next_speed_help():
+    from types import SimpleNamespace
+    from wms.model.lc2013_adapter import forward_output
+    from wms.physics.state import state_kin
+    physics = PhysicsConfig()
+    s = state(lane=1,s=-500.,speed=10.)
+    s.update(lc2013_present=s['present'].clone(),lc2013_lane=s['lane'].clone(),
+        lc2013_identity=s['vehicle_id'].clone(),lc2013_advice_accel=torch.tensor([[-1.5]]),
+        lc2013_has_advice=torch.ones(1,1).bool(),lc2013_advice_weight=torch.ones(1,1))
+    params = {key:torch.tensor([[value]]) for key,value in
+        dict(v0=30.,time_headway=1.,min_gap=2.,accel=1.2,decel=.8).items()}
+    result = dict(accel_mps2=torch.tensor([[1.2]]),physics_accel_mps2=torch.tensor([[1.2]]),
+                  hdv_mask=torch.ones(1,1).bool())
+    forward_output(SimpleNamespace(physics=physics),s,state_kin(s),s['present'],
+                   s['present'],params,result)
+    assert result['accel_mps2'].item() == -1.5

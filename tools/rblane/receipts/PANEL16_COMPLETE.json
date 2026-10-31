@@ -1,0 +1,29 @@
+{
+  "root": "/home/ubuntu/rblane20261031_panel16_faa7787ae35d",
+  "process": {
+    "pid": 911369,
+    "start_ticks": "49189309",
+    "command": [
+      "/usr/bin/nice",
+      "-n",
+      "19",
+      "/home/ubuntu/miniconda3/bin/python",
+      "-B",
+      "-m",
+      "tools.rblane.validate",
+      "--out",
+      "/home/ubuntu/rblane20261031_panel16_faa7787ae35d/results",
+      "--reuse-mobil-from",
+      "/home/ubuntu/rblane20261031_panel13_b1047447f57d/results",
+      "--motion-points",
+      "/home/ubuntu/rblane20261031_panel16_faa7787ae35d/inputs/motion_point_table.json",
+      "--native-only"
+    ],
+    "root": "/home/ubuntu/rblane20261031_panel16_faa7787ae35d",
+    "started_at": 1793477615.3656375
+  },
+  "bundle_sha256": "faa7787ae35d1966875918cfd47a22a47a7bc5ea5dfc96faa2f731c0f920cbb3",
+  "complete": true,
+  "alive": false,
+  "collected_at": 1793478692.6692162
+}

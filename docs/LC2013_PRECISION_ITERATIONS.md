@@ -447,3 +447,39 @@ a slow current leader: source returns COOPERATIVE with left wish still0, rather
 than accruing a latent speed-gain manoeuvre. Targeted32physics/model tests PASS.
 This changes no inferred parameters and targets a real accumulation/timing path;
 before/after metrics and per-motivation precision/recall will be reported.
+
+Final cooperative-order passes VERIFIED, all matched MOBIL reused:
+- Default14:1235/41083 exact, precision3.0061%, recall37.9416% (12 fewer false
+  proposal steps than11, same total matches). Per motivation precision/recall
+  contribution: strategic10.234%/12.627pp (411/4016), cooperative9.046%/2.826pp
+  (92/1017), speed-gain4.490%/16.621pp (541/12049), keep-right0.796%/5.868pp
+  (191/24001).
+- Encoder15:1318/54910 exact, precision2.4003%, recall40.4916% (4 more matches,
+  6 more proposals than12). Strategic20.574%/16.959pp (552/2683), cooperative
+  14.995%/4.547pp (148/987), speed-gain2.332%/10.415pp (339/14536), keep-right
+  0.760%/8.571pp (279/36704).
+- Native points16:236/7629, precision3.0935%, recall37.6997% (2 extra false
+  proposals vs13). Strategic14.808%/13.578pp (85/574), cooperative15.672%/3.355pp
+  (21/134), speed-gain2.341%/12.141pp (76/3246), keep-right1.469%/8.626pp (54/3675).
+All input/artifact/source/original-runtime and exact motivation partitions PASS.
+Owned910505/910966/911369 exited. This source-order correction is faithful but
+only marginally improves these conditional metrics; keep-right remains unresolved.
+
+## Final urgency / outward-message completion (no repeated traffic scoring)
+
+Source1661/1861's mature left speed-gain/cooperative request now emits follower
+help using source minNextSpeed slack; lcSpeedGainUrgency is active and urgency
+flags distinguish strategic/cooperative/speed-gain paths. Source283–300 checks
+RAW message bounds before foreign wanted-speed blending. Explicit message
+presence/weight now preserves zero/positive advice instead of conflating it
+with no message; new STATE_KEYS carry those fields, with old-state fallback.
+IDM default passenger minNextSpeed slack1.5 and velocity floor are honored.
+
+69CPU tests PASS (7.76s), including both sides of the urgency threshold, follower
+deceleration, positive/zero/weighted messages and fitted low-decel admission.
+9600 heterogeneous synthetic decisions/288000 non-message elements BIT-EXACT
+to scored source52d2df5c;536 urgent stress frames exercised. Only outward
+message semantics differ. Thus panels14–16 remain the conditional-decision
+metrics, with no redundant traffic scoring. Changed autonomous feedback still
+needs INT/EVAL smoke; no distributional gain is claimed. FINAL_DIAGNOSTICS.json
+binds the verified score receipts and this explicit equivalence scope.

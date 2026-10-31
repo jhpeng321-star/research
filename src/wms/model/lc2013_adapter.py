@@ -15,6 +15,14 @@ def _identity(state):
     return state.get("vehicle_id", state.get("vid"))
 
 
+def minimum_advice_accel(speed, decel, wanted, physics):
+    """Euler IDM minNextSpeed slack (source IDM:82), including safe CF braking."""
+    emergency = getattr(physics, 'sumo_cf_emergency_decel_mps2', None)
+    slack = min(9.0 if emergency is None else float(emergency), 1.5)
+    braking = torch.maximum(decel, torch.full_like(decel, slack))
+    return torch.maximum(-speed / physics.dt_s, torch.minimum(-braking, wanted))
+
+
 def evaluate(model, state, kin, present, deciders, params):
     return lane_change(kin, present, model.physics, memory=state,
                        identity=_identity(state), driver_params=params,
@@ -41,20 +49,24 @@ def forward_output(model, state, kin, present, deciders, params, result):
             same &= ids == state["lc2013_identity"]
         advice = state["lc2013_advice_accel"].to(result["accel_mps2"])
         b = (torch.full_like(advice, model.physics.idm()[1]) if params is None
-             else params["decel"].to(advice))
-        # SUMO patchSpeed ignores advice outside the feasible acceleration range.
-        valid = same & result["hdv_mask"] & torch.isfinite(advice) & (advice >= -b)
-        accel = torch.where(valid, torch.minimum(result["accel_mps2"], advice),
-                             result["accel_mps2"])
-        # Zero advice means no message, not a request to suppress acceleration.
-        result["accel_mps2"] = torch.where(valid & (advice < 0), accel,
-                                             result["accel_mps2"])
+              else params["decel"].to(advice))
+        a = (torch.full_like(advice, model.physics.idm()[0]) if params is None
+             else params["accel"].to(advice))
+        wanted = result["accel_mps2"]
+        lower = minimum_advice_accel(kin[..., 4].to(advice), b, wanted, model.physics)
+        # Source283-300 checks the RAW message before blending foreign advice
+        # with wanted speed. Explicit message presence preserves zero/positive
+        # messages; old carried states retain the old negative-only convention.
+        has = state.get("lc2013_has_advice", advice < 0).bool()
+        weight = state.get("lc2013_advice_weight", torch.ones_like(advice)).to(advice).clamp(0, 1)
+        valid = same & result["hdv_mask"] & has & torch.isfinite(advice) & torch.isfinite(weight)
+        valid &= (advice >= lower) & (advice <= a)
+        blended = advice * weight + wanted * (1 - weight)
+        result["accel_mps2"] = torch.where(valid, torch.minimum(wanted, blended), wanted)
         if "lc2013_own_has_advice" in state:
             own = state["lc2013_own_advice_accel"].to(advice)
-            a = (torch.full_like(advice, model.physics.idm()[0]) if params is None
-                 else params["accel"].to(advice))
             valid = (same & result["hdv_mask"] & state["lc2013_own_has_advice"].bool()
-                     & torch.isfinite(own) & (own >= -b) & (own <= a))
+                     & torch.isfinite(own) & (own >= lower) & (own <= a))
             result["accel_mps2"] = torch.where(valid,
                 torch.minimum(result["accel_mps2"], own), result["accel_mps2"])
         result["accel_delta_mps2"] = result["accel_mps2"] - result["physics_accel_mps2"]

@@ -24,8 +24,9 @@ PRECISION = 10_000_000
 NUMERICAL_EPS = 0.001
 STATE_KEYS = ("lc2013_left", "lc2013_right", "lc2013_keep_right",
               "lc2013_lookahead", "lc2013_present", "lc2013_lane",
-              "lc2013_identity", "lc2013_advice_accel",
-              "lc2013_own_advice_accel", "lc2013_own_has_advice")
+               "lc2013_identity", "lc2013_advice_accel",
+               "lc2013_own_advice_accel", "lc2013_own_has_advice",
+               "lc2013_has_advice", "lc2013_advice_weight")
 # Diagnostic reason codes, not thresholds.
 NONE, STRATEGIC, COOPERATIVE, SPEED_GAIN, KEEP_RIGHT = range(5)
 
@@ -351,6 +352,14 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
     wish = legal & active & ~stay & (reason != NONE)
     change = wish & safe
     choice = torch.where(change, target, lane)
+    gain_probability = torch.where(right, right_wish, left_wish)
+    speed_gain_urgent = (reason == SPEED_GAIN) & (gain_probability > p["lcSpeedGainUrgency"] * PRECISION)
+    is_urgent = wish & (((reason == STRATEGIC) & urgent) | (reason == COOPERATIVE) | speed_gain_urgent)
+    # Source1661/1861: a mature left speed-gain/cooperative request explicitly
+    # asks its blocking follower to approach at max(minNextSpeed, egoSpeed-1).
+    urgent_help = (wish & ~right & blocked_f
+        & ((reason == SPEED_GAIN) | (reason == COOPERATIVE))
+        & (left_wish > p["lcSpeedGainUrgency"] * PRECISION))
     logits = torch.full((*lane.shape, 3), -torch.inf, device=v.device, dtype=kin.dtype)
     logits.scatter_(-1, lane.clamp(0, 2).unsqueeze(-1), 0.0)
     logits.scatter_(-1, choice.clamp(0, 2).unsqueeze(-1), 1.0)
@@ -358,7 +367,7 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
     # informFollower's Euler cut-in-with-help branch (LC2013.cpp:712-791).
     # Emit acceleration advice so delayed consumption is relative to next v.
     # Ballistic negotiation and full leader overtake/fall-behind are not ported.
-    advice = torch.zeros_like(v)
+    advice = torch.full_like(v, float('inf'))
     if not ballistic:
         bf = p["decel"].gather(-1, iff)
         af = p["accel"].gather(-1, iff)
@@ -373,9 +382,16 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
             vf, gf - sf + dt * v, v, v0f, af, bf, tf, sf, dt))
         vsafe = torch.maximum(decel_v, idm_follow_speed(
             vf, gf - sf + dt * (v - vsafe1), v, v0f, af, bf, tf, sf, dt))
-        message = torch.where(can_help, (vsafe - vf) / dt, 0.0)
+        message = torch.where(can_help, (vsafe - vf) / dt, float('inf'))
         advice.scatter_reduce_(-1, iff, message, reduce="amin", include_self=True)
-        advice *= p["lcCooperativeSpeed"].clamp(0, 1)
+        emergency = getattr(physics, 'sumo_cf_emergency_decel_mps2', None)
+        slack = min(9.0 if emergency is None else float(emergency), 1.5)
+        min_follower_speed = (vf - torch.maximum(bf, torch.full_like(bf, slack)) * dt).clamp_min(0)
+        help_speed = torch.maximum(min_follower_speed, v - 1.0)
+        message = torch.where(urgent_help, (help_speed - vf) / dt, float('inf'))
+        advice.scatter_reduce_(-1, iff, message, reduce="amin", include_self=True)
+    has_advice = torch.isfinite(advice)
+    advice = torch.where(has_advice, advice, 0.0)
 
     # Reset at the *next* observed lane change, rather than predicted changes:
     # teacher forcing must never manufacture a successful manoeuvre.
@@ -391,6 +407,7 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
                   lc2013_keep_signed_cap=right & slow_current & (current_v > p["v0"]),
                   lc2013_endpoint_canonicalized=canonicalized_end,
                   lc2013_cooperative_return=cooperative_return,
+                  lc2013_urgent=is_urgent, lc2013_speed_gain_urgent=wish & speed_gain_urgent,
                   lc2013_this_speed=this_speed, lc2013_target_speed=neigh_speed,
                   lc2013_left=torch.where(present, left_wish, 0),
                   lc2013_right=torch.where(present, right_wish, 0),
@@ -398,6 +415,8 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
                   lc2013_lookahead=torch.where(present, look, 0),
                   lc2013_present=present.clone(), lc2013_lane=lane.clone(),
                   lc2013_advice_accel=advice,
+                  lc2013_has_advice=has_advice,
+                  lc2013_advice_weight=p["lcCooperativeSpeed"].clamp(0, 1),
                   lc2013_own_has_advice=own_advice,
                   lc2013_own_advice_accel=torch.where(own_advice, (avoid_speed - v) / dt, 0.0))
     if identity is not None:

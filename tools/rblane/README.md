@@ -91,3 +91,12 @@ and uses its population point for unseen IDs. CAV and LC defaults stay unchanged
 Native-only avoids assuming numeric-ID alignment between counterfactual arms;
 these32 episodes must be compared with native-only A/B results. Compatible
 MOBIL cache reuse accepts a selected-arm subset of an already completed panel.
+
+Final runtime message fields add `lc2013_has_advice` and
+`lc2013_advice_weight` to STATE_KEYS. They preserve explicit zero/positive
+messages and source wanted-speed blending; old states keep negative-only
+fallback behavior. Urgent speed-gain follower help and IDM minNextSpeed slack
+are CPU-tested. `check_message_equivalence.py` proves conditional choices/wish
+state unchanged relative to scored source52d2df5c while outward advice changes.
+`finalize_diagnostics.py` assembles only already-verified score receipts; it
+does not repeat inference or establish autonomous distributional fidelity.
