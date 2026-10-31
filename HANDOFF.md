@@ -1,5 +1,21 @@
 # S-SELMAPPO fleet-picker integration handoff
 
+**Latest18:19:31UTC:2/169 genuine PPO updates;46new episodes complete,6open,0failures.**
+OwncpuQ645235 remains live/nice19, total90,000charged (43,200history included),
+actual72,000..84,600bounds. Both reduced23-world batches completed; third46-world
+batch underway. Subsequent status is maintained in `docs/paper_results/SELMAPPO.md`.
+
+**LEARNING VERIFIED: update001 completed23episodes/690fleet decisionframes, no newfailures.**
+First update150.014wall-s/496,755sim-s-hour (includes priority waits, not efficacy).
+At18:18:40UTC:41newepisodes complete/5open,84,600charged incl43,200history;
+actual67,500..79,200bounds,0collisions/teleports in completed control-window receipts.
+Read-only observerlocal3668 runs every300s with exclusive WATCH_MAIN0208_ONCE,
+maintains `docs/paper_results/SELMAPPO.md` and immutable JSON receipts, and will
+publish CPU-host-labelled `SELMAPPO_FINAL.json` to C1SWITCH2 only after full169/
+schedule/accounting/source/finite-policy validation. Never duplicate observer/trainer.
+Observer198e96f8 is separate from immutable training sources; no simulation/retry/signals.
+Final169/evaluation still pending; see `docs/paper_results/selmappo/OBSERVER_MAIN0208.md`.
+
 **CURRENT LIVE: MAIN02:08 continuation owncpuQ645235, build9bb7869d8f590818.**
 Immutable full source binding9bb7869d8f590818c46980a16a63be00f72e00d3491dec95f903649dfa7bf790.
 Registered exact unchanged cap/schedule in shared REGISTRATION.md BEFORE dispatch;

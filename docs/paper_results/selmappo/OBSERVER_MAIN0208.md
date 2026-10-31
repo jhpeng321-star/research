@@ -4,6 +4,11 @@
 It observes only build9bb7869d8f590818 and never dispatches or signals any process.
 One exclusive `WATCH_MAIN0208_ONCE.json` and exclusive log prevent duplicate launches.
 
+Started once as localPID3668, verified exact Windows process command/creation time
+and successful18:18:40UTC observer log. Lock binds build/source and is committed.
+Subsequent read-only18:19:31UTC check verifies2genuineupdates,46new complete/6open,
+0newfailures,90,000charged (incl43,200history), actual72,000..84,600bounds.
+
 - Every300s, use the existing read-only progress collector; retain immutable JSON
   snapshots and maintain the concise `docs/paper_results/SELMAPPO.md` status.
 - Stop observing a dead supervisor; no automatic training retry/replay.
