@@ -72,17 +72,28 @@ gpuR `/root/c1switch2_run_716d39f08986c84f`, one worker,33600sim-s.
 Exactly native/CTRL0/MAPPO/PI/CIRCLES/WALL/random;112episodes total,134400sim-s,GPU0.
 Both hosts pass130CPU/1skip. Never duplicate their write-once CPU dispatch claims.
 Use `operations cpu-collect --host HOST --root ROOT`; retained main accounting is incremental.
-GPU services and picker physics remain pending; preserve WM-PHYS priority perMAIN01:48.
-Latest fleet peer delivery: `SELMAPPO_FLEET_STATUS.md` (~01:18). Its first production
-wave stopped in tensor IPC before any PPO update; no final169 exists and peer MAIN ACK is needed.
-Do not substitute checkpoint000 or restart peer work. The peer acknowledges our panel/evaluation ownership.
+WM picker RUNNING: cpuQ649272 (2workers) + gpuR763520 (1worker), model CPU roots
+`/home/ubuntu/c1switch2_run_292bfffe94b13ed8` and `/root/c1switch2_run_292bfffe94b13ed8`.
+WM services gpuA342449/gpuR761968 share root `/root/c1switch2_gpu_wm_95614dbfc754e322`;
+hard28800GPU-s/card includes loading/validation/idle, never restart/top-up.
+Real six-way/K8/full60s/fresh+continued-WALL GPU parity PASS; both model CPU stages133/1skip.
+Local Windows relay31696 is LIVE; `tools/c1switch2/evidence/RELAY_wm/STATUS.json`.
+Validated main RPC responses and first two20s decisions now recorded; no efficacy result yet.
+One-use BB follower43404 waits for BOTH owned WM services to end and free>=8GiB
+(resource-only context margin), then BB parity/CPU gates and original79800sim-s/3GPUh arm.
+See BB_FOLLOW/WAIT.json, BB_EXECUTION.json; never launch a duplicate follower/service/arm.
+BB frozen checkpoint/physics hashes and both-host CPU K8/60s/all6/continued-WALL probes PASS.
+Priority admission left peers untouched. Optional WM-PHYS remains independently gated.
+Latest fleet peer delivery: `SELMAPPO_MAIN0208_RUNNING.md`: owncpuQ645235 continuation
+running, no final169. Per-CAV owncpuQ606968 continuation likewise has no supplied final169.
+Do not substitute checkpoint000 or restart peer work; peers acknowledge our evaluation ownership.
 Initial PID446935 exited before setup/physics with zero charge; all receipts retained.
 Repair1065f89d was explicitly registered and passed pristine-process CPU construction before dispatch.
 The 23:48 owner approval and MAIN01:48 independent CPU authorization are present;
 WALL integrated, final trained selectors pending.
 `tools/c1switch2/wall.py` binds the real peer lifecycle and self-ID-only memory;
 missing members remain absent and abort atomically on continuation. No simulator slots cross RPC.
-Latest cpuQ AND gpuR CPU verification: 130 passed/1 host-only skip each.
+Latest model cpuQ AND gpuR CPU verification: 133 passed/1 host-only skip each.
 Tests include real wall memory parity, six-row synthetic WM/BB mechanics and actual peer
 feature/model interfaces with clearly synthetic final169 test weights (not trained/evaluated arms).
 `python -B -m tools.c1switch2.gate --polls 1` reports approval without authorizing an unbound runtime.

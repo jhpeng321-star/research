@@ -371,10 +371,12 @@ out={{name:json.loads((root/name).read_text()) for name in ('BINDING.json','GATE
 binding=out['BINDING.json']
 assert hashlib.sha256((root/'REGISTRATION.md').read_bytes()).hexdigest()==binding['registration_sha256']
 assert all(hashlib.sha256((root/'pytools'/name).read_bytes()).hexdigest()==value for name,value in binding['sources'].items())
-out['canary_sha256']=hashlib.sha256((root/'CANARY.json').read_bytes()).hexdigest()
+if (root/'CANARY.json').exists():out['canary_sha256']=hashlib.sha256((root/'CANARY.json').read_bytes()).hexdigest()
+else:out['canary_sha256']=out['GATES.json'].get('mechanics_sha256')
 out['root']=str(root);print(json.dumps(out))
 ''', timeout=30)
-    path = EVIDENCE/('CANARY_BINDING_'+Path(root).name+'.json')
+    prefix = 'CANARY_BINDING_' if root == '/home/ubuntu/c1switch2_run_4ad4ece01d5a9ac1' else 'RUNTIME_BINDING_'+host+'_'
+    path = EVIDENCE/(prefix+Path(root).name+'.json')
     if path.exists():
         raise ValueError('preserve archived binding')
     write(path, result)

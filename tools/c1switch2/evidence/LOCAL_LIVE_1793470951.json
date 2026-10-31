@@ -1,0 +1,21 @@
+{
+  "protocol": "S-C1SWITCH2/v2",
+  "relay": {
+    "pid": 31696,
+    "status_unix": 1793470951.4024704,
+    "cpuQ": {"stop": null, "episodes": 0, "expected": 12, "complete": false},
+    "gpuR": {"stop": null, "episodes": 0, "expected": 4, "complete": false},
+    "gpuA_service": {"stop": null, "finished": null},
+    "gpuR_service": {"stop": null, "finished": null},
+    "latest_cycle_transferred": 0,
+    "main_rpc_delivery_proof": "MODEL_PROGRESS_wm_cpuQ_1793470804.json: 2 validated results and decisions"
+  },
+  "bb_follower": {
+    "pid": 43404,
+    "status_unix": 1793470938.9878879,
+    "gpuA": {"wm_finished": false, "free_mib": 43665},
+    "gpuR": {"wm_finished": false, "free_mib": 16055},
+    "state": "WAIT_FOR_BOTH_OWNED_WM_SERVICES_TO_RELEASE"
+  },
+  "never_duplicate_dispatches": true
+}

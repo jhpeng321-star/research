@@ -143,6 +143,30 @@ print(json.dumps(out))
     print(json.dumps(result, indent=2))
 
 
+def collect(host, root, model):
+    result = ssh(host, f'''import json,time
+from pathlib import Path
+root=Path({root!r});assert root.name.startswith('c1switch2_run_')
+dispatch=json.loads((root/'DISPATCH_MODEL.json').read_text());proc=Path('/proc',str(dispatch['pid']))
+ledger=root/'accounting.jsonl';rows=[json.loads(x) for x in ledger.read_text().splitlines()] if ledger.exists() else []
+out=dict(host={host!r},root=str(root),arm={model!r},unix=time.time(),pid=dispatch['pid'],pid_state=proc.joinpath('stat').read_text().split()[2] if proc.exists() else 'EXITED',charged_sim_s=sum(r['sim_s'] for r in rows),closed_actual_sim_s=0,episodes=0,decisions=0,requests=0,results=0)
+out['complete']=(root/'supervisor/COMPLETE.json').exists();out['stop']=json.loads((root/'STOP').read_text()) if (root/'STOP').exists() else None
+for job in (root/'jobs').iterdir():
+ close=job/'CLOSE.json'
+ if close.exists():out['closed_actual_sim_s']+=json.loads(close.read_text())['actual_sim_s']
+ out['episodes']+=(job/'PHYSICS.json').exists();out['decisions']+=len(list(job.glob('pick_j*.json')))
+for gpu in ('gpuA','gpuR'):
+ route=root/'rpc'/{model!r}/gpu;out['requests']+=len(list(route.glob('*.request.json')));out['results']+=len(list(route.glob('*.result.json')))
+if out['stop']:
+ out['log']=(root/'MODEL.log').read_text();failed=root/'logs'/(out['stop'].get('id','')+'.log')
+ if failed.is_file():out['failed_log']=failed.read_text()
+print(json.dumps(out))
+''', timeout=30)
+    path = EVIDENCE/('MODEL_PROGRESS_'+model+'_'+host+'_'+str(int(result['unix']))+'.json')
+    write(path, result)
+    print(json.dumps(result, indent=2))
+
+
 def transfer(cpu, root, gpu, gpu_root, model):
     route = root+'/rpc/'+model+'/'+gpu
     requests = ssh(cpu, f'''import json
@@ -365,7 +389,7 @@ def follow_start(config, after_config):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('command', choices=('parity-submit', 'parity-collect', 'dispatch', 'relay', 'relay-start',
+    parser.add_argument('command', choices=('parity-submit', 'parity-collect', 'dispatch', 'collect', 'relay', 'relay-start',
                                            'prepare', 'follow', 'follow-start'))
     parser.add_argument('--config')
     parser.add_argument('--after-config')
@@ -378,6 +402,8 @@ if __name__ == '__main__':
         parity(args.config, submit=args.command == 'parity-submit')
     elif args.command == 'dispatch':
         dispatch(args.host, args.root, args.model, args.workers)
+    elif args.command == 'collect':
+        collect(args.host, args.root, args.model)
     elif args.command == 'relay':
         relay(args.config)
     elif args.command == 'prepare':

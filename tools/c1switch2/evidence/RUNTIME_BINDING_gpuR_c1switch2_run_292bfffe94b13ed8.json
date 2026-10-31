@@ -1,0 +1,443 @@
+{
+  "BINDING.json": {
+    "protocol": "S-C1SWITCH2/v2",
+    "cpu_host": "gpuR",
+    "include_phys": false,
+    "sim_s": {
+      "wm": 79800,
+      "bb": 79800,
+      "fleet_ppo": 79800,
+      "cav_mappo": 89900,
+      "native": 19200,
+      "ctrl0": 19200,
+      "mappo": 19200,
+      "pi": 19200,
+      "circles": 19200,
+      "wall": 19200,
+      "random": 19200,
+      "canary": 4680
+    },
+    "library": [
+      "native",
+      "ctrl0",
+      "mappo",
+      "pi",
+      "circles",
+      "wall"
+    ],
+    "gpu_seconds": {
+      "wm": 57600,
+      "bb": 10800,
+      "fleet_ppo": 0,
+      "cav_mappo": 0,
+      "native": 0,
+      "ctrl0": 0,
+      "mappo": 0,
+      "pi": 0,
+      "circles": 0,
+      "wall": 0,
+      "random": 0,
+      "canary": 0
+    },
+    "design_sha256": "95aa84cf801aea773a0c7f9a208396ed4898e5cacdf8b6177940c7d9e1f5a273",
+    "registration_sha256": "ca4cba9e615925ad3f76b76b7d69c0872b4d2a63955fe172fe1774ef78499b5d",
+    "sources": {
+      "tools/c1switch/__init__.py": "72ded96deac3573080cf1962caa9df96ee7a1ec2b50ccad11e3b4d73df436d48",
+      "tools/c1switch/adapter.py": "a5cf94a1156d77d5ad032d056f8f05db409f51501948cc31a9ff9448523f6dc6",
+      "tools/c1switch/analyze.py": "d18192df715e43d1989b5820416b4a82619a5b95dfb83fd00f86ddcc25a50c03",
+      "tools/c1switch/continuation.py": "1637f334bf76c48104fe30f34f4d4aadd6d03aa8cf7217195c17980d40af0055",
+      "tools/c1switch/core.py": "f682e66a35c8995c9da315802d0039a37dc857c611570740aa5bf0572219e82c",
+      "tools/c1switch/cpuops.py": "2a745a86afdb9854f8a143af332e3ea25a2131a1e875ffc3b760d8a791e16333",
+      "tools/c1switch/design.py": "0b7d45ada5aebb611a383796531d558910d07f7d9acebab3e700f2c108cc56d0",
+      "tools/c1switch/dispatch.py": "3f5304de4c7df547d98ba2cbb327a3c765a41d8fb155b2775ac8da3e9319d2e9",
+      "tools/c1switch/episode.py": "6e0b717337bf8a579c9de3cf22913da89671ecd646582bda23257190ec198efd",
+      "tools/c1switch/feedback.py": "cb03cf4df3ff0222f9828714c4774683064bf5c07d31aa788226d43740916163",
+      "tools/c1switch/fullops.py": "061fc7e81a88655e74248ffc68ab4436d61eaf68fbca3339d27911c3174b197f",
+      "tools/c1switch/fullrun.py": "a94f0bfb0eba967c07c6270cdec8d0c16e148fa113b874eb9a10623f11fda5e2",
+      "tools/c1switch/headroom.py": "87c4aefad2dd923e14d3abe09010945e188ab7ac5529299dc2c82a35308ed5ea",
+      "tools/c1switch/inspect.py": "66ad63546109fe8189763efd8d41c0f4a05c98edfbf7b83fdbe105be657d739f",
+      "tools/c1switch/library.py": "193db8d2d8c3d3de095f789888f39e4f0c67aa4d4d70201b0247ea483574b0a3",
+      "tools/c1switch/main_backend.py": "34e8fbcf96fcfb0edeebb34bbfad157cbe74aff7e1a47ff46dc9f396a03a820f",
+      "tools/c1switch/mainops.py": "03b6634bf776e1c151a9e60a2c4aedea63ce7527e1759f262d6e16bf0b1a2bd1",
+      "tools/c1switch/mainrun.py": "d4ceb85338b37bf375eb22a29abe0924b7fb720e95411fc9763fa01919692633",
+      "tools/c1switch/merge_fast.py": "2d0155d45b6b0b7d1a17005ee66c52e7f7c67c66f0f9b84a4e547c4f0e6ec5c9",
+      "tools/c1switch/model.py": "393ef3312948acf3449da0d941693e261fea629a62cf0048495b11a759000aff",
+      "tools/c1switch/observable.py": "1c7f4cb6a82192272535a832d98c0b30bcc4875b9e1eb8605317e4e320b76879",
+      "tools/c1switch/ops.py": "07dac4ba3c65032d7552ad33950c63db1d37c821054d0c2695a144e6f59b1931",
+      "tools/c1switch/reconcile.py": "3bd8666dd81e099f5c530776c6d74c3021b5c514e2f746c23951de97d60625c2",
+      "tools/c1switch/recovery.py": "ffc502de987746a57f96c15e4837d4eabea22fc105c90ff3e499decd6f403510",
+      "tools/c1switch/rerun.py": "db13f7f0fd732e565864d5b812de319aaeee39e944541946de27ae9e8252c777",
+      "tools/c1switch/resume.py": "d1e5b31e340a1c7341d782323bd196f1227bc12f65662fb27ea5d8e96aed5d84",
+      "tools/c1switch/resumeops.py": "b019ffbd1b68d3b4bc691fb67a3f24d70c238ee232d6da239280d82c13c1d747",
+      "tools/c1switch/rpc.py": "7aa8f7d1f65f61f3ae5337ba518b82f67576dab68005231ce886a0a7d090e950",
+      "tools/c1switch/runner.py": "76cbbca5f75008fcb3d48df07028417cec33b010aa8d6039797fd5455963dcc5",
+      "tools/c1switch/step0.py": "a16fe3ca1247232dd1591810771d1d55d457e290147c726faceed56fc27dca78",
+      "tools/c1switch/storage.py": "d433d789df68f85435e026c5f397094a4262eac8369776bcaff44a1a13543461",
+      "tools/c1switch/sumo.py": "fb02adbb861e957e1fb33c65b19863d04aad469cd76e67ed7cd85c0b44e649d3",
+      "tools/c1switch/transport.py": "3a807ff370d92eb19acf4dcf296f036f4c637c111c9c4e15d7d2cc9e6626cbf6",
+      "tools/c1switch/verify.py": "c99684ef6dc84cba0cd4dc5fc1d984ee136d95b8b438aff6726b44b059b0d81e",
+      "tools/c1switch/wall_probe.py": "7b348d4d1bbb3320a009de48fdd1f2e5d7a9c11992182fb8845760ff070c34de",
+      "tools/c1switch/winners.py": "ed493c5e509363a9b58b8ef841090a387f7a4da109d50086ead2090af51f81f4",
+      "tools/c1switch2/__init__.py": "060cd0dcaa1eb14075651c874ff4567b663d27a9139430423e082d93a83ef74e",
+      "tools/c1switch2/analyze.py": "b0435451c473a2c9eef2f72a5b50d5003983f59dcdeef6f040d4380d815a8865",
+      "tools/c1switch2/audit.py": "1a261626641dcf168f1d58a65265f2dc064e2f2399a2ddfdc80613313721e822",
+      "tools/c1switch2/backend.py": "dc4fb0876a39062f044b64c371e761ae100a7532ddb3882b27a0e3a83b9ab23b",
+      "tools/c1switch2/canary.py": "e3d57456f519b1a77fef2ab5e02706185618ed561003c17e6099726931451a22",
+      "tools/c1switch2/core.py": "be99eaedb8fada32d1d14d21cbff41e8f2fbb72d1662f4a2c8eb48de397390fb",
+      "tools/c1switch2/design.py": "c0ce540ae652c48d601845e8a1fa3adbb2af5a31bd6dc90d5712f5de6f51b314",
+      "tools/c1switch2/engine.py": "d86be22c5daf08832a94641fb3623364b385632e2e040434cab0f402741bbc5b",
+      "tools/c1switch2/episode.py": "56208ab0a12f72bce20c12e7847ba2bcb0501f88bc1de1f3858ff51177c2b391",
+      "tools/c1switch2/gate.py": "05951e52cd8876e15baf933463b01b2cd69102f23d84cfdb99b755d90ceda6a2",
+      "tools/c1switch2/gpuops.py": "3770e40ad7276e22675558b6b01eaabba3910a3c25f6ae9b3cdcef7785601e14",
+      "tools/c1switch2/gpuserver.py": "191940e6a5d430f30364acb5a5eeaa61be278a7360a97970e1711d51f6cbdd5b",
+      "tools/c1switch2/hostcheck.py": "f98c9c39e60d0790a9ea98bdb22152263066cb926e6e665766a5f9596b82fc9e",
+      "tools/c1switch2/inference.py": "e373ecc5a310ba4a8f5cbd7b07c7fc4683b03295e0c4a8bc329ddd6ddd389c38",
+      "tools/c1switch2/modelops.py": "2dfd1318ac442d915632d6b585a2320382e009f0cb08e6f362d3e05c21fb21ff",
+      "tools/c1switch2/observable.py": "6c561e816fa5789604da9863d41af2fc3cc92bb402bc3aba5392293167f8e3c1",
+      "tools/c1switch2/operations.py": "1b0ea3a089d964cc9c9ca2548b19895d3ba37678eeec02f5230e60da61330e01",
+      "tools/c1switch2/prepare.py": "ebf5f2ac2b5bc62fe4e20e5bd15e17ad8bfeb435fb971bed4aafd836fc872e5d",
+      "tools/c1switch2/publish.py": "c2b2ce1512379ec3ba1530d0025f8a5429a511ec30671dff28ad9a103ce21234",
+      "tools/c1switch2/qualification.py": "c2a2181a3406ca0e4435ba55f426f3763dbe411a9fad126ba11cbc2e2317f3cf",
+      "tools/c1switch2/rerun.py": "2c2fb6420ef6adbc92c1a8ca1e977ded11496322b66e45346e9bf59cc3fbea29",
+      "tools/c1switch2/rpc.py": "0727e703da0d9017551052b07c77bfb11261b2dcfb0beb5b0e93f822cf70d8a9",
+      "tools/c1switch2/runner.py": "7a94e76cf73693849cba7e1dc36fa0898839191a08f37c893ada79a38884e522",
+      "tools/c1switch2/runtime.py": "ada063784310ead08289979c7aa90578d3101b1260f0ac0c908fefa06f93dd7a",
+      "tools/c1switch2/selectors.py": "cb67a8072e69049aef5469946514fb5929c13cd8172f18a9b34ffc3f9afc9322",
+      "tools/c1switch2/supervisor.py": "35aab6897f9cd677b0d1313a95fd90ad3395bc2e5ca5e3253dcd3f6fb0024ca7",
+      "tools/c1switch2/wall.py": "964f9d722df5cf77c7943e2a3b6ef2a8a5209c6da33fd90c021aa8675359a5cd",
+      "tests/test_c1switch2.py": "f0b12453d7e5a591dec92ef9971c644d922c383978d752c650c0f667db531db6",
+      "tests/test_c1switch2_wall.py": "61170677eadd6e6f657ea8cdd3aa9f9fc2267d13aaf2847e017d30d20dbb7777",
+      "tests/test_c1switch2_integrations.py": "c67f719141166a08c80ec46e8180f3e707f7df3c0b96bd88a7dd7618104a2127",
+      "tests/test_switchable_wall.py": "0140bcf241a39786a6b6c2576ce7af5975a4c84c3f8fbd52a2002ebc02bd9983",
+      "tests/test_c1switch.py": "3b9a65cf261944cba41f627be404be77424128533fbbb5dba5e964610b605f0f",
+      "tests/test_c1switch_feedback.py": "57d3c9a75aac96931bb94a39ad8e92b533293bda17b619b63338047f78b248f1",
+      "tests/test_c1switch_merge_fast.py": "e73d83fe15f7e1829b021a74b9bd8ec374e5d565251dbbd40bb76b860ed5bf91",
+      "docs/paper_results/C1SWITCH2_DESIGN.md": "95aa84cf801aea773a0c7f9a208396ed4898e5cacdf8b6177940c7d9e1f5a273",
+      "docs/paper_results/c1switch2/PANEL_v2.json": "7c780c25237dde73a657937ab577b8e48f71766817f4363f3298982e90144827",
+      "traffic_shepherd/c4/switchable_wall.py": "8a889f67e6d4530c1a1c244980c8d057ff003faf10915dfcf545ec56df3d5778",
+      "src/wms/control/wall.py": "65ea552ca9d77a31f1d6c26280bca981c0bf74777f65d16c34001d4eb67ae506",
+      "engine/branching.py": "3349793f7b3a37e59447863a432ca2eda9a63ffa7e4ab9c5e0e88190bf1de272",
+      "peer/selmappo/audit.py": "25feaca6f30d1c0de03f2bdb5c245ad865c6f8ea8979b629692c4dd9eeaba110",
+      "peer/selmappo/continuation.py": "89af6f2f525a715fde08de99f52b55180c357202b2b4351e8ff54ff288036bf3",
+      "peer/selmappo/dispatch.py": "278a5e22ae5efd80b87f16ec79550ac5f922dc675f202cdb8ec9ea94aa629ef6",
+      "peer/selmappo/environment.py": "d580eda35074150519644d813773502f6bc3b79a42ee8f85781c7eff52524acf",
+      "peer/selmappo/gate.py": "c8b5f9eaea184d5db835bbff8e452e556d29fe5a8f7833555cd1d89d66fe45eb",
+      "peer/selmappo/guards.py": "deed7589afa0723a22b848d892f39d02d22617d10c34f0224263c7e71e68b055",
+      "peer/selmappo/handover.py": "48a737ae70605fc09eb29b7abc9e3c7ac1298b6277300bc7b7dba07881a24ec8",
+      "peer/selmappo/history_continuation.py": "51806e93cce349abe45b3ca333188e51a56d87ef6a3a8e58b28ecdfd69c0e32d",
+      "peer/selmappo/integration.py": "d22cd891ee0d56c7d243a3ee4b76701101bfc2385d60286718460da7a001b87a",
+      "peer/selmappo/launch.py": "3f8352227e291525c608a6ce462a4215e247d2937d36f1732f34561279980a0e",
+      "peer/selmappo/learning.py": "60e7da8d8f29c266a1d48328f1251931534e525527be1d0e58c7677bd4ac21c7",
+      "peer/selmappo/observations.py": "97de4c47efb4a6dac43e605919eb1cd08f1a63b5b40d0468ef28a4fc8b4a8c33",
+      "peer/selmappo/ops.py": "c368540178dd16235a69d9523a35cd49bd26929b917dba0e47f6b7996b7ce57a",
+      "peer/selmappo/postmortem.py": "66cadad560532594b4a8d1e339719a4c0462da31f57c1de314c365aad7dbd06f",
+      "peer/selmappo/progress.py": "ac8262807b83f37997c6c93f7271f886a2438d99d67d174f3083f363d3b6b46e",
+      "peer/selmappo/protocol.py": "84cffdd37889efaf94aee2313a37b7b86695c9ba191db6dbe8ae0d2e967774f9",
+      "peer/selmappo/registration_history.py": "25a7af8e8a3a2e513a948cf4f6ebb705edf60098f738c310138346e50a95563d",
+      "peer/selmappo/remote.py": "f5bdf28d9463e4a19c2f1bb9365f349a2d4dad268dae568a47e8bd41a9f31af4",
+      "peer/selmappo/runtime.py": "05bb36d5cb2030bc4a2ffc0ba55980e136c18f063779957823f4ce5d9ba8c523",
+      "peer/selmappo/selector.py": "d4d85a305e4c815d9986e4cd0ca1d534fecba3eb174aeda817aa2f710f226162",
+      "peer/selmappo/storage.py": "3a3d5243c5c21a7eee37453f173be518c8b0370f0cfa1d290f44661fa0935c4c",
+      "peer/selmappo/test_cpu.py": "e8a3afc2fe2d5b2eb607dbe2fab013962717881efb94b5281fea71631440da61",
+      "peer/selmappo/train.py": "b66bbefb44f95220485bb41bd429fcb3e1386074c67b93386cb7e11f75252263",
+      "peer/selmappo/transport.py": "6b1e45a4540ecaf1d18f44c30f65baab4b620224cbc8d86775429b20f59fc4ae",
+      "peer/selmappo/__init__.py": "a532d4315d41a8e01cf843153ed5332957e437025dbe5c331f19273176de6659",
+      "peer/selmappo2/mixed.py": "be9fc17f443aaa9e38aad4e6059967e0d30e48a1dea95bed2f9cdd0b24c34f07",
+      "peer/selmappo2/ops.py": "05df8496a957faa980405e5a4674e22a7c7b47ae33e0046fa3bd7403f34754b0",
+      "peer/selmappo2/report.py": "d74474b8afcb9168f7226d96fe3a60e13b8800a805923697d6ad3b3ffd7c06f8",
+      "peer/selmappo2/shared.py": "7caa24ed9cce549bbed76eb5a1b59a25e3ba98dafde10bfe099899915d6fe26c",
+      "peer/selmappo2/training.py": "9086e45b7eeac97ca50378feeeb6d5eec292145668758f224b9a78dcbcb53b31",
+      "peer/selmappo2/__init__.py": "717ffbb61681bc99e95727b09026b1a7c13abcd00290958cd4abfd0655db3c75"
+    },
+    "prediction_objective": "on_road_fleet_delay",
+    "runtime": {
+      "entry": "tools.c1switch2.runtime:create",
+      "sha256": "ada063784310ead08289979c7aa90578d3101b1260f0ac0c908fefa06f93dd7a"
+    },
+    "predictors": {
+      "wm": {
+        "entry": "tools.c1switch2.rpc:wm",
+        "sha256": "0727e703da0d9017551052b07c77bfb11261b2dcfb0beb5b0e93f822cf70d8a9"
+      },
+      "bb": {
+        "entry": "tools.c1switch2.rpc:bb",
+        "sha256": "0727e703da0d9017551052b07c77bfb11261b2dcfb0beb5b0e93f822cf70d8a9"
+      }
+    },
+    "inference_specs": {
+      "wm": {
+        "status": "FROZEN_READY",
+        "engine": {
+          "protocol": "S-C1SWITCH2/v2",
+          "arm": "wm",
+          "model": "wm",
+          "library": [
+            "native",
+            "ctrl0",
+            "mappo",
+            "pi",
+            "circles",
+            "wall"
+          ],
+          "history_s": 60,
+          "horizon_s": 60,
+          "K": 8,
+          "objective": "on_road_fleet_delay",
+          "evaluation_objective": "full_team_delay_fleet_plus_source",
+          "objective_design_sha256": "95aa84cf801aea773a0c7f9a208396ed4898e5cacdf8b6177940c7d9e1f5a273",
+          "observable_source_admissions": false,
+          "entries": false,
+          "controller_feedback": true,
+          "wall_start_stop": true,
+          "anonymous_seed": true,
+          "wm_checkpoint_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+          "bb_checkpoint_sha256": "afaaa32cb15079014d1a9e08f78b26e74fd341298d1aa0292a24009d9f783742",
+          "checkpoint_path": "/root/c1switch2_gpu_wm_95614dbfc754e322/bb.pt",
+          "service_gpu_cap_s": 28800.0,
+          "prior_gpu_s": 0
+        },
+        "routes": {
+          "gpuA": "rpc/wm/gpuA",
+          "gpuR": "rpc/wm/gpuR"
+        }
+      },
+      "bb": {
+        "status": "PENDING"
+      }
+    },
+    "selectors": {
+      "fleet_ppo": {
+        "entry": "tools.c1switch2.selectors:fleet",
+        "sha256": "cb67a8072e69049aef5469946514fb5929c13cd8172f18a9b34ffc3f9afc9322"
+      },
+      "cav_mappo": {
+        "entry": "tools.c1switch2.selectors:per_cav",
+        "sha256": "cb67a8072e69049aef5469946514fb5929c13cd8172f18a9b34ffc3f9afc9322"
+      }
+    },
+    "selector_specs": {
+      "fleet_ppo": {
+        "status": "PENDING"
+      },
+      "cav_mappo": {
+        "status": "PENDING"
+      }
+    },
+    "dispatch_phase": "model",
+    "enabled_arms": [
+      "wm"
+    ]
+  },
+  "GATES.json": {
+    "frozen_v7_sources": {
+      "status": "PASS",
+      "binding_sha256": "2cd788dbf4510db047c7c07074bb9b7acfc3a05f4a5cd6689e7d1c95a0badea5",
+      "source": "CPU/frozen canary/preallocation exposure/currentregistry/real GPU parity"
+    },
+    "seed_guards": {
+      "status": "PASS",
+      "binding_sha256": "2cd788dbf4510db047c7c07074bb9b7acfc3a05f4a5cd6689e7d1c95a0badea5",
+      "source": "CPU/frozen canary/preallocation exposure/currentregistry/real GPU parity"
+    },
+    "exposure_cpuQ": {
+      "status": "PASS",
+      "binding_sha256": "2cd788dbf4510db047c7c07074bb9b7acfc3a05f4a5cd6689e7d1c95a0badea5",
+      "source": "CPU/frozen canary/preallocation exposure/currentregistry/real GPU parity"
+    },
+    "exposure_gpuR": {
+      "status": "PASS",
+      "binding_sha256": "2cd788dbf4510db047c7c07074bb9b7acfc3a05f4a5cd6689e7d1c95a0badea5",
+      "source": "CPU/frozen canary/preallocation exposure/currentregistry/real GPU parity"
+    },
+    "exposure_gpuA": {
+      "status": "PASS",
+      "binding_sha256": "2cd788dbf4510db047c7c07074bb9b7acfc3a05f4a5cd6689e7d1c95a0badea5",
+      "source": "CPU/frozen canary/preallocation exposure/currentregistry/real GPU parity"
+    },
+    "registry_intervals": {
+      "status": "PASS",
+      "binding_sha256": "2cd788dbf4510db047c7c07074bb9b7acfc3a05f4a5cd6689e7d1c95a0badea5",
+      "source": "CPU/frozen canary/preallocation exposure/currentregistry/real GPU parity"
+    },
+    "wall_sumo": {
+      "status": "PASS",
+      "binding_sha256": "2cd788dbf4510db047c7c07074bb9b7acfc3a05f4a5cd6689e7d1c95a0badea5",
+      "source": "CPU/frozen canary/preallocation exposure/currentregistry/real GPU parity"
+    },
+    "wall_model": {
+      "status": "PASS",
+      "binding_sha256": "2cd788dbf4510db047c7c07074bb9b7acfc3a05f4a5cd6689e7d1c95a0badea5",
+      "source": "CPU/frozen canary/preallocation exposure/currentregistry/real GPU parity"
+    },
+    "inference_wm": {
+      "status": "PASS",
+      "binding_sha256": "2cd788dbf4510db047c7c07074bb9b7acfc3a05f4a5cd6689e7d1c95a0badea5",
+      "source": "CPU/frozen canary/preallocation exposure/currentregistry/real GPU parity"
+    },
+    "inference_bb": {
+      "status": "PENDING",
+      "binding_sha256": "2cd788dbf4510db047c7c07074bb9b7acfc3a05f4a5cd6689e7d1c95a0badea5",
+      "source": "CPU/frozen canary/preallocation exposure/currentregistry/real GPU parity"
+    },
+    "fleet_ppo": {
+      "status": "PENDING",
+      "binding_sha256": "2cd788dbf4510db047c7c07074bb9b7acfc3a05f4a5cd6689e7d1c95a0badea5",
+      "source": "CPU/frozen canary/preallocation exposure/currentregistry/real GPU parity"
+    },
+    "cav_mappo": {
+      "status": "PENDING",
+      "binding_sha256": "2cd788dbf4510db047c7c07074bb9b7acfc3a05f4a5cd6689e7d1c95a0badea5",
+      "source": "CPU/frozen canary/preallocation exposure/currentregistry/real GPU parity"
+    },
+    "gpuA_parity": {
+      "status": "PASS",
+      "binding_sha256": "2cd788dbf4510db047c7c07074bb9b7acfc3a05f4a5cd6689e7d1c95a0badea5",
+      "source": "CPU/frozen canary/preallocation exposure/currentregistry/real GPU parity"
+    },
+    "gpuR_parity": {
+      "status": "PASS",
+      "binding_sha256": "2cd788dbf4510db047c7c07074bb9b7acfc3a05f4a5cd6689e7d1c95a0badea5",
+      "source": "CPU/frozen canary/preallocation exposure/currentregistry/real GPU parity"
+    },
+    "cpu_tests": {
+      "status": "PASS",
+      "binding_sha256": "2cd788dbf4510db047c7c07074bb9b7acfc3a05f4a5cd6689e7d1c95a0badea5",
+      "source": "CPU/frozen canary/preallocation exposure/currentregistry/real GPU parity"
+    },
+    "canary_repeat": {
+      "status": "PASS",
+      "binding_sha256": "2cd788dbf4510db047c7c07074bb9b7acfc3a05f4a5cd6689e7d1c95a0badea5",
+      "source": "CPU/frozen canary/preallocation exposure/currentregistry/real GPU parity"
+    },
+    "gpu_parity_sha256": "6c64210d77708dddc9fc90fbf0eb733dc24b880f44c96b16fd08ad91de885554",
+    "registry_audit": {
+      "registration_sha256": "bd7603f2582c3dc0696f8fd2329b0066d91e656582c0e8293f7058be705db86d",
+      "hits": []
+    },
+    "mechanics_sha256": "2cdfd15288ac7dc657ed35aa86117ec429698d022fedef3600f0a27bceadb55d"
+  },
+  "STAGED.json": {
+    "tools/c1switch/__init__.py": "72ded96deac3573080cf1962caa9df96ee7a1ec2b50ccad11e3b4d73df436d48",
+    "tools/c1switch/adapter.py": "a5cf94a1156d77d5ad032d056f8f05db409f51501948cc31a9ff9448523f6dc6",
+    "tools/c1switch/analyze.py": "d18192df715e43d1989b5820416b4a82619a5b95dfb83fd00f86ddcc25a50c03",
+    "tools/c1switch/continuation.py": "1637f334bf76c48104fe30f34f4d4aadd6d03aa8cf7217195c17980d40af0055",
+    "tools/c1switch/core.py": "f682e66a35c8995c9da315802d0039a37dc857c611570740aa5bf0572219e82c",
+    "tools/c1switch/cpuops.py": "2a745a86afdb9854f8a143af332e3ea25a2131a1e875ffc3b760d8a791e16333",
+    "tools/c1switch/design.py": "0b7d45ada5aebb611a383796531d558910d07f7d9acebab3e700f2c108cc56d0",
+    "tools/c1switch/dispatch.py": "3f5304de4c7df547d98ba2cbb327a3c765a41d8fb155b2775ac8da3e9319d2e9",
+    "tools/c1switch/episode.py": "6e0b717337bf8a579c9de3cf22913da89671ecd646582bda23257190ec198efd",
+    "tools/c1switch/feedback.py": "cb03cf4df3ff0222f9828714c4774683064bf5c07d31aa788226d43740916163",
+    "tools/c1switch/fullops.py": "061fc7e81a88655e74248ffc68ab4436d61eaf68fbca3339d27911c3174b197f",
+    "tools/c1switch/fullrun.py": "a94f0bfb0eba967c07c6270cdec8d0c16e148fa113b874eb9a10623f11fda5e2",
+    "tools/c1switch/headroom.py": "87c4aefad2dd923e14d3abe09010945e188ab7ac5529299dc2c82a35308ed5ea",
+    "tools/c1switch/inspect.py": "66ad63546109fe8189763efd8d41c0f4a05c98edfbf7b83fdbe105be657d739f",
+    "tools/c1switch/library.py": "193db8d2d8c3d3de095f789888f39e4f0c67aa4d4d70201b0247ea483574b0a3",
+    "tools/c1switch/main_backend.py": "34e8fbcf96fcfb0edeebb34bbfad157cbe74aff7e1a47ff46dc9f396a03a820f",
+    "tools/c1switch/mainops.py": "03b6634bf776e1c151a9e60a2c4aedea63ce7527e1759f262d6e16bf0b1a2bd1",
+    "tools/c1switch/mainrun.py": "d4ceb85338b37bf375eb22a29abe0924b7fb720e95411fc9763fa01919692633",
+    "tools/c1switch/merge_fast.py": "2d0155d45b6b0b7d1a17005ee66c52e7f7c67c66f0f9b84a4e547c4f0e6ec5c9",
+    "tools/c1switch/model.py": "393ef3312948acf3449da0d941693e261fea629a62cf0048495b11a759000aff",
+    "tools/c1switch/observable.py": "1c7f4cb6a82192272535a832d98c0b30bcc4875b9e1eb8605317e4e320b76879",
+    "tools/c1switch/ops.py": "07dac4ba3c65032d7552ad33950c63db1d37c821054d0c2695a144e6f59b1931",
+    "tools/c1switch/reconcile.py": "3bd8666dd81e099f5c530776c6d74c3021b5c514e2f746c23951de97d60625c2",
+    "tools/c1switch/recovery.py": "ffc502de987746a57f96c15e4837d4eabea22fc105c90ff3e499decd6f403510",
+    "tools/c1switch/rerun.py": "db13f7f0fd732e565864d5b812de319aaeee39e944541946de27ae9e8252c777",
+    "tools/c1switch/resume.py": "d1e5b31e340a1c7341d782323bd196f1227bc12f65662fb27ea5d8e96aed5d84",
+    "tools/c1switch/resumeops.py": "b019ffbd1b68d3b4bc691fb67a3f24d70c238ee232d6da239280d82c13c1d747",
+    "tools/c1switch/rpc.py": "7aa8f7d1f65f61f3ae5337ba518b82f67576dab68005231ce886a0a7d090e950",
+    "tools/c1switch/runner.py": "76cbbca5f75008fcb3d48df07028417cec33b010aa8d6039797fd5455963dcc5",
+    "tools/c1switch/step0.py": "a16fe3ca1247232dd1591810771d1d55d457e290147c726faceed56fc27dca78",
+    "tools/c1switch/storage.py": "d433d789df68f85435e026c5f397094a4262eac8369776bcaff44a1a13543461",
+    "tools/c1switch/sumo.py": "fb02adbb861e957e1fb33c65b19863d04aad469cd76e67ed7cd85c0b44e649d3",
+    "tools/c1switch/transport.py": "3a807ff370d92eb19acf4dcf296f036f4c637c111c9c4e15d7d2cc9e6626cbf6",
+    "tools/c1switch/verify.py": "c99684ef6dc84cba0cd4dc5fc1d984ee136d95b8b438aff6726b44b059b0d81e",
+    "tools/c1switch/wall_probe.py": "7b348d4d1bbb3320a009de48fdd1f2e5d7a9c11992182fb8845760ff070c34de",
+    "tools/c1switch/winners.py": "ed493c5e509363a9b58b8ef841090a387f7a4da109d50086ead2090af51f81f4",
+    "tools/c1switch2/__init__.py": "060cd0dcaa1eb14075651c874ff4567b663d27a9139430423e082d93a83ef74e",
+    "tools/c1switch2/analyze.py": "b0435451c473a2c9eef2f72a5b50d5003983f59dcdeef6f040d4380d815a8865",
+    "tools/c1switch2/audit.py": "1a261626641dcf168f1d58a65265f2dc064e2f2399a2ddfdc80613313721e822",
+    "tools/c1switch2/backend.py": "dc4fb0876a39062f044b64c371e761ae100a7532ddb3882b27a0e3a83b9ab23b",
+    "tools/c1switch2/canary.py": "e3d57456f519b1a77fef2ab5e02706185618ed561003c17e6099726931451a22",
+    "tools/c1switch2/core.py": "be99eaedb8fada32d1d14d21cbff41e8f2fbb72d1662f4a2c8eb48de397390fb",
+    "tools/c1switch2/design.py": "c0ce540ae652c48d601845e8a1fa3adbb2af5a31bd6dc90d5712f5de6f51b314",
+    "tools/c1switch2/engine.py": "d86be22c5daf08832a94641fb3623364b385632e2e040434cab0f402741bbc5b",
+    "tools/c1switch2/episode.py": "56208ab0a12f72bce20c12e7847ba2bcb0501f88bc1de1f3858ff51177c2b391",
+    "tools/c1switch2/gate.py": "05951e52cd8876e15baf933463b01b2cd69102f23d84cfdb99b755d90ceda6a2",
+    "tools/c1switch2/gpuops.py": "3770e40ad7276e22675558b6b01eaabba3910a3c25f6ae9b3cdcef7785601e14",
+    "tools/c1switch2/gpuserver.py": "191940e6a5d430f30364acb5a5eeaa61be278a7360a97970e1711d51f6cbdd5b",
+    "tools/c1switch2/hostcheck.py": "f98c9c39e60d0790a9ea98bdb22152263066cb926e6e665766a5f9596b82fc9e",
+    "tools/c1switch2/inference.py": "e373ecc5a310ba4a8f5cbd7b07c7fc4683b03295e0c4a8bc329ddd6ddd389c38",
+    "tools/c1switch2/modelops.py": "2dfd1318ac442d915632d6b585a2320382e009f0cb08e6f362d3e05c21fb21ff",
+    "tools/c1switch2/observable.py": "6c561e816fa5789604da9863d41af2fc3cc92bb402bc3aba5392293167f8e3c1",
+    "tools/c1switch2/operations.py": "1b0ea3a089d964cc9c9ca2548b19895d3ba37678eeec02f5230e60da61330e01",
+    "tools/c1switch2/prepare.py": "ebf5f2ac2b5bc62fe4e20e5bd15e17ad8bfeb435fb971bed4aafd836fc872e5d",
+    "tools/c1switch2/publish.py": "c2b2ce1512379ec3ba1530d0025f8a5429a511ec30671dff28ad9a103ce21234",
+    "tools/c1switch2/qualification.py": "c2a2181a3406ca0e4435ba55f426f3763dbe411a9fad126ba11cbc2e2317f3cf",
+    "tools/c1switch2/rerun.py": "2c2fb6420ef6adbc92c1a8ca1e977ded11496322b66e45346e9bf59cc3fbea29",
+    "tools/c1switch2/rpc.py": "0727e703da0d9017551052b07c77bfb11261b2dcfb0beb5b0e93f822cf70d8a9",
+    "tools/c1switch2/runner.py": "7a94e76cf73693849cba7e1dc36fa0898839191a08f37c893ada79a38884e522",
+    "tools/c1switch2/runtime.py": "ada063784310ead08289979c7aa90578d3101b1260f0ac0c908fefa06f93dd7a",
+    "tools/c1switch2/selectors.py": "cb67a8072e69049aef5469946514fb5929c13cd8172f18a9b34ffc3f9afc9322",
+    "tools/c1switch2/supervisor.py": "35aab6897f9cd677b0d1313a95fd90ad3395bc2e5ca5e3253dcd3f6fb0024ca7",
+    "tools/c1switch2/wall.py": "964f9d722df5cf77c7943e2a3b6ef2a8a5209c6da33fd90c021aa8675359a5cd",
+    "tests/test_c1switch2.py": "f0b12453d7e5a591dec92ef9971c644d922c383978d752c650c0f667db531db6",
+    "tests/test_c1switch2_wall.py": "61170677eadd6e6f657ea8cdd3aa9f9fc2267d13aaf2847e017d30d20dbb7777",
+    "tests/test_c1switch2_integrations.py": "c67f719141166a08c80ec46e8180f3e707f7df3c0b96bd88a7dd7618104a2127",
+    "tests/test_switchable_wall.py": "0140bcf241a39786a6b6c2576ce7af5975a4c84c3f8fbd52a2002ebc02bd9983",
+    "tests/test_c1switch.py": "3b9a65cf261944cba41f627be404be77424128533fbbb5dba5e964610b605f0f",
+    "tests/test_c1switch_feedback.py": "57d3c9a75aac96931bb94a39ad8e92b533293bda17b619b63338047f78b248f1",
+    "tests/test_c1switch_merge_fast.py": "e73d83fe15f7e1829b021a74b9bd8ec374e5d565251dbbd40bb76b860ed5bf91",
+    "docs/paper_results/C1SWITCH2_DESIGN.md": "95aa84cf801aea773a0c7f9a208396ed4898e5cacdf8b6177940c7d9e1f5a273",
+    "docs/paper_results/c1switch2/PANEL_v2.json": "7c780c25237dde73a657937ab577b8e48f71766817f4363f3298982e90144827",
+    "traffic_shepherd/c4/switchable_wall.py": "8a889f67e6d4530c1a1c244980c8d057ff003faf10915dfcf545ec56df3d5778",
+    "src/wms/control/wall.py": "65ea552ca9d77a31f1d6c26280bca981c0bf74777f65d16c34001d4eb67ae506",
+    "engine/branching.py": "3349793f7b3a37e59447863a432ca2eda9a63ffa7e4ab9c5e0e88190bf1de272",
+    "peer/selmappo/audit.py": "25feaca6f30d1c0de03f2bdb5c245ad865c6f8ea8979b629692c4dd9eeaba110",
+    "peer/selmappo/continuation.py": "89af6f2f525a715fde08de99f52b55180c357202b2b4351e8ff54ff288036bf3",
+    "peer/selmappo/dispatch.py": "278a5e22ae5efd80b87f16ec79550ac5f922dc675f202cdb8ec9ea94aa629ef6",
+    "peer/selmappo/environment.py": "d580eda35074150519644d813773502f6bc3b79a42ee8f85781c7eff52524acf",
+    "peer/selmappo/gate.py": "c8b5f9eaea184d5db835bbff8e452e556d29fe5a8f7833555cd1d89d66fe45eb",
+    "peer/selmappo/guards.py": "deed7589afa0723a22b848d892f39d02d22617d10c34f0224263c7e71e68b055",
+    "peer/selmappo/handover.py": "48a737ae70605fc09eb29b7abc9e3c7ac1298b6277300bc7b7dba07881a24ec8",
+    "peer/selmappo/history_continuation.py": "51806e93cce349abe45b3ca333188e51a56d87ef6a3a8e58b28ecdfd69c0e32d",
+    "peer/selmappo/integration.py": "d22cd891ee0d56c7d243a3ee4b76701101bfc2385d60286718460da7a001b87a",
+    "peer/selmappo/launch.py": "3f8352227e291525c608a6ce462a4215e247d2937d36f1732f34561279980a0e",
+    "peer/selmappo/learning.py": "60e7da8d8f29c266a1d48328f1251931534e525527be1d0e58c7677bd4ac21c7",
+    "peer/selmappo/observations.py": "97de4c47efb4a6dac43e605919eb1cd08f1a63b5b40d0468ef28a4fc8b4a8c33",
+    "peer/selmappo/ops.py": "c368540178dd16235a69d9523a35cd49bd26929b917dba0e47f6b7996b7ce57a",
+    "peer/selmappo/postmortem.py": "66cadad560532594b4a8d1e339719a4c0462da31f57c1de314c365aad7dbd06f",
+    "peer/selmappo/progress.py": "ac8262807b83f37997c6c93f7271f886a2438d99d67d174f3083f363d3b6b46e",
+    "peer/selmappo/protocol.py": "84cffdd37889efaf94aee2313a37b7b86695c9ba191db6dbe8ae0d2e967774f9",
+    "peer/selmappo/registration_history.py": "25a7af8e8a3a2e513a948cf4f6ebb705edf60098f738c310138346e50a95563d",
+    "peer/selmappo/remote.py": "f5bdf28d9463e4a19c2f1bb9365f349a2d4dad268dae568a47e8bd41a9f31af4",
+    "peer/selmappo/runtime.py": "05bb36d5cb2030bc4a2ffc0ba55980e136c18f063779957823f4ce5d9ba8c523",
+    "peer/selmappo/selector.py": "d4d85a305e4c815d9986e4cd0ca1d534fecba3eb174aeda817aa2f710f226162",
+    "peer/selmappo/storage.py": "3a3d5243c5c21a7eee37453f173be518c8b0370f0cfa1d290f44661fa0935c4c",
+    "peer/selmappo/test_cpu.py": "e8a3afc2fe2d5b2eb607dbe2fab013962717881efb94b5281fea71631440da61",
+    "peer/selmappo/train.py": "b66bbefb44f95220485bb41bd429fcb3e1386074c67b93386cb7e11f75252263",
+    "peer/selmappo/transport.py": "6b1e45a4540ecaf1d18f44c30f65baab4b620224cbc8d86775429b20f59fc4ae",
+    "peer/selmappo/__init__.py": "a532d4315d41a8e01cf843153ed5332957e437025dbe5c331f19273176de6659",
+    "peer/selmappo2/mixed.py": "be9fc17f443aaa9e38aad4e6059967e0d30e48a1dea95bed2f9cdd0b24c34f07",
+    "peer/selmappo2/ops.py": "05df8496a957faa980405e5a4674e22a7c7b47ae33e0046fa3bd7403f34754b0",
+    "peer/selmappo2/report.py": "d74474b8afcb9168f7226d96fe3a60e13b8800a805923697d6ad3b3ffd7c06f8",
+    "peer/selmappo2/shared.py": "7caa24ed9cce549bbed76eb5a1b59a25e3ba98dafde10bfe099899915d6fe26c",
+    "peer/selmappo2/training.py": "9086e45b7eeac97ca50378feeeb6d5eec292145668758f224b9a78dcbcb53b31",
+    "peer/selmappo2/__init__.py": "717ffbb61681bc99e95727b09026b1a7c13abcd00290958cd4abfd0655db3c75"
+  },
+  "PREFLIGHT.json": {
+    "status": "PASS",
+    "returncode": 0,
+    "inputs": {
+      "mappo": "/root/autodl-tmp/c4/speedhead20261030/mappospeed_final169.pt",
+      "ctrl0": "/root/autodl-tmp/c4/speedhead20261030/e3final/inputs/policy_latest.pt"
+    },
+    "guards": 17,
+    "host": "gpuR",
+    "root": "/root/c1switch2_run_292bfffe94b13ed8",
+    "output": "........................................................................ [ 53%]\n............................................................s.           [100%]\n133 passed, 1 skipped in 1.73s\n",
+    "new_sim_s": 0,
+    "new_gpu_s": 0
+  },
+  "canary_sha256": "2cdfd15288ac7dc657ed35aa86117ec429698d022fedef3600f0a27bceadb55d",
+  "root": "/root/c1switch2_run_292bfffe94b13ed8"
+}
