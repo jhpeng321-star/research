@@ -37,3 +37,12 @@
   into ignored tools/rbeval/evidence/. Initial canary remains reused.
 - rb-shared/targets/DONE.md now available: development-only speed-bin and BIC
   targets independently match the existing receipt. No helper extraction repeated.
+- Scorer and S-SUMOCORE observable adapter finished: tools/rbeval/README.md has
+  exact invocation/schema and WM-PHYS runtime/config/switch interface. Scoring
+  rejects mixed identities/duplicate copies, incomplete K8 ensembles, changed
+  starts/prehistory/BIC/support/ledger. Real baselines exclude entire target world
+  and reserved labels. All11 CPU tests PASS, including end-to-end synthetic
+  import→gate, independent CRPS/detector and joint chunked max-stat equivalence.
+  B10000 scoring is memory-bounded; sparse cells explicitly NOT_QUALIFIED.
+- gpuA checked separately: load7.29, GPU1/49140MiB, utilization0%. Existing WM2
+  panel remains on gpuR to preserve live tasks; gpuA is available for S-RB-INT.
