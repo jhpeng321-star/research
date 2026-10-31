@@ -41,6 +41,10 @@ Earlier work retained in `docs/rb_merge/HANDOFF_HISTORY_{0100,0315}.md`.
   Same-tick exit/birth cannot overwrite one logged slot; newborn history resets.
   **7 dedicated phase tests PASS**,58 combined runtime tests PASS. No shared
   wms/spec/factory edits. Existing rollout default remains before-phase.
+  API follow-up: explicit/inferred driver settings require a coupled entrant
+  sampler, preventing newborns from inheriting unrelated departed-slot settings.
+  **9 dedicated phase tests PASS /4.34s**; all active screens already provide
+  both, so their frozen input/dynamics contracts are unchanged.
 - **158d0193** candidate-local sequential geometry: O(ramp_count*slots), bit-exact
   to full-frame geometry with heterogeneous/batched inputs; reservations preserved.
 - **9bdc35e5** exact IDM minNextSpeed low-b bound + causal encoder/600s harness.

@@ -128,3 +128,14 @@ def test_new_cav_is_not_controlled_on_its_insertion_tick():
     assert len(seen) == 1 and not seen[0].any()
     assert out['state']['is_cav'].item()
     assert out['speeds'].item() == pytest.approx(22.22, abs=1e-5)
+
+
+@pytest.mark.parametrize('mode,params,message', [
+    ('residual', {'v0': torch.full((1, 2), 30.)}, 'identity-coupled entrant sampler'),
+    ('driver_params', None, 'pre-bound settings')])
+def test_unbound_newborn_settings_cannot_silently_reuse_departed_driver(mode, params, message):
+    state, _, entries = setup([100., 0.], [1, 0], [10., 0.], [True, False])
+    model = WmSModel(ModelSpec(rollout_mode=mode), physics=PhysicsConfig(merge_model='sumo')).eval()
+    with pytest.raises(ValueError, match=message):
+        step_after_movement(model, state, entries, driver_params=params)
+    assert entries.now[0] == 0.

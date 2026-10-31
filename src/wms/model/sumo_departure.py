@@ -22,6 +22,10 @@ def step_after_movement(model, state, entries, *, driver_params=None,
         raise ValueError('post-movement departure requires merge_model=sumo')
     if entrant_driver_sampler is not None and driver_params is None:
         raise ValueError('post-movement departure needs pre-bound initial driver settings')
+    if driver_params is not None and entrant_driver_sampler is None:
+        raise ValueError('fixed driver settings require an identity-coupled entrant sampler')
+    if driver_params is None and model.rollout_mode != 'residual':
+        raise ValueError('inferred-driver mode requires pre-bound settings and an entrant sampler')
     configure_entries(entries, model.physics, entrant_driver_sampler)
     process = getattr(entries, 'process', entries)
     # Seed virgin-slot bookkeeping from the true initial cohort, not after an
