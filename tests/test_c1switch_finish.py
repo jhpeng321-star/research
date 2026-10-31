@@ -29,3 +29,25 @@ def test_incomplete_terminal_report_does_not_bootstrap_subset(tmp_path,monkeypat
     assert 'not evaluated' in text
     assert 'combined owner GPU budget exhausted' in text
     assert not (tmp_path/'docs/paper_results/c1switch/main_results.json').exists()
+
+
+def test_gpu_stop_closes_cpu_waiters_without_overwriting_first_cause(tmp_path,monkeypatch):
+    import contextlib
+    import io
+    import json
+    from tools.c1switch import transport
+    cpu=tmp_path/'cpu/rpc';gpu=tmp_path/'gpu/rpc'
+    for root in (cpu,gpu):
+        for a in ('wm','bb'):(root/a).mkdir(parents=True)
+    for a in ('wm','bb'):write(gpu/a/'STOP',dict(reason='combined cap'))
+    write(cpu.parent/'STOP',dict(reason='first causal receipt'))
+    monkeypatch.setattr(transport,'CPU',str(cpu))
+    monkeypatch.setattr(transport,'GPU',str(gpu))
+    def local_ssh(host,code):
+        output=io.StringIO()
+        with contextlib.redirect_stdout(output):exec(code,{})
+        return json.loads(output.getvalue())
+    monkeypatch.setattr(transport,'ssh',local_ssh)
+    transport.markers()
+    assert json.loads((cpu.parent/'STOP').read_text())['reason']=='first causal receipt'
+    assert all(json.loads((cpu/a/'STOP').read_text())['reason']=='combined cap' for a in ('wm','bb'))
