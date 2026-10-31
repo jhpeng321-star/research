@@ -13,7 +13,7 @@ from tools.rbint.remote import ssh
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=('canary', 'continue', 'status'))
+    parser.add_argument('action', choices=('canary', 'continue', 'monitor', 'status'))
     parser.add_argument('--host', choices=('gpuA', 'gpuR'), default='gpuA')
     parser.add_argument('--runtime', required=True)
     parser.add_argument('--name', required=True)
@@ -71,19 +71,34 @@ save(root/'PANEL_CLAIM.json',dict(time=time.time(),reuse=files[0].name,automatic
 workers=[launch(i,False) for i in range(3)]
 save(root/'PANEL_PROCESS.json',dict(workers=workers));print(json.dumps(workers))
 '''
+    elif args.action == 'monitor':
+        source = Path(__file__).with_name('panel_monitor.py').read_text(encoding='utf-8')
+        code = '''
+assert (root/'PANEL_PROCESS.json').is_file()
+assert not (root/'MONITOR_ONCE.json').exists(), 'preserve existing monitor'
+save(root/'MONITOR_DISPATCH_CLAIM.json',dict(unix=time.time(),automatic_retry=False))
+source='''+repr(source)+'''
+path=root/'PANEL_MONITOR.py'
+with path.open('x') as f: f.write(source)
+argv=['nice','-n','19','/root/miniconda3/bin/python','-B','-u',str(path),'--root',str(root)]
+env=dict(os.environ,CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
+with (root/'monitor.log').open('x') as log:
+ p=subprocess.Popen(argv,env=env,stdout=log,stderr=subprocess.STDOUT,cwd=root,start_new_session=True)
+r=dict(**incarnation(p.pid),argv=argv,source_sha256=sha(path));save(root/'MONITOR_PROCESS.json',r);print(json.dumps(r))
+'''
     else:
         code = '''
 print('LOAD',os.getloadavg())
 print(subprocess.check_output(['nvidia-smi','--query-gpu=memory.free,memory.used,utilization.gpu','--format=csv'],text=True))
 print('ROOT',str(root),'exists',root.is_dir())
 if root.is_dir():
- for name in ('CANARY_PROCESS.json','PANEL_PROCESS.json'):
+ for name in ('CANARY_PROCESS.json','PANEL_PROCESS.json','MONITOR_PROCESS.json'):
   p=root/name
   if p.exists():
    r=json.loads(p.read_text());print(name,[(v['pid'],alive(v)) for v in r.get('workers',[r])])
  for i in range(3):
   out=root/f'shard{i}';print(out.name,len(list(out.glob('w*_k*.json'))),'complete',(out/'COMPLETE.json').exists(),'STOP',(out/'STOP').exists())
- for name in ('canary.log','shard0.log','shard1.log','shard2.log'):
+ for name in ('MONITOR_FAILED.json','MONITOR_COMPLETE.json','ANALYSIS_full.json','ANALYSIS_interim04.json','ANALYSIS_interim08.json','canary.log','shard0.log','shard1.log','shard2.log','monitor.log'):
   p=root/name
   if p.exists(): print(name,p.read_text()[-5000:])
 '''
