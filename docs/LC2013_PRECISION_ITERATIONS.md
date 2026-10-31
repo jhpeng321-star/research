@@ -68,3 +68,26 @@ speed-gain4.292%/16.559pp (539/12558), keep-right0.734%/6.237pp (203/27669).
 Compressed-run precision16.663%, recall26.452%; this small first fix is
 insufficient. Next investigate geometry/continuation length and lane-change
 source evaluation gates rather than tuning the already-correct thresholds.
+
+## Geometry audit before candidate5
+
+Consumed completed obsstate helper's `netframe.py` geometry contract and
+independently read ONLY the corridor net (SHAf58c4ef5…) into
+`receipts/GEOMETRY_AUDIT.json`. The lane representation collapses THREE
+different SUMO edges into each through lane. Best-lane LENGTH is therefore
+3197.55m upstream,553.33m on the merge edge,477.89m downstream, not1e6m.
+Each route length is the sum of edge lengths; SUMO uses the first lane's
+length as edge length (MSVehicle.cpp:6163,6295; MSEdge.cpp:126). It excludes
+internal links, as does the frozen model frame. Strategic distances must
+subtract the **ego's current edge-local position**, unlike the accumulator
+and anticipated-speed code, which consume continuation LENGTH directly.
+Upstream left position is s+2645.67, right s+2644.22; merge position is s;
+downstream position s-75.44. Ramp approach has no legal adjacent lane.
+
+Read-only extra public source `MSEdge.cpp` from SUMO v1_27_1 downloaded into
+NEW EMPTY `E:/Temp/opencode/sumo-1.27.1-lane-edge`, SHA256
+f9677034237961789b9b9ebd9c837b0c1ce1704caaa58918b121d30a84eb7e58.
+Never executed. No scenario routes/types/assignment files read. No behaviour
+threshold inferred or tuned. Also identified source's both-best-lanes-zero
+offset resolution (LC2013.cpp:1144–1155); resolving toward the neighbor must
+not create a route-required urgent/early strategic request (1330/1874).

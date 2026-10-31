@@ -9,15 +9,18 @@ import argparse
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--vehicle-implementation', action='store_true')
+    parser.add_argument('--edge-implementation', action='store_true')
     args = parser.parse_args()
     parent = Path('E:/Temp/opencode')
     assert parent.is_dir()
-    out = parent / ('sumo-1.27.1-lane-vehicle' if args.vehicle_implementation
+    out = parent / ('sumo-1.27.1-lane-edge' if args.edge_implementation else
+                    'sumo-1.27.1-lane-vehicle' if args.vehicle_implementation
                     else 'sumo-1.27.1-lane-extra')
     out.mkdir(exist_ok=False)
     assert not any(out.iterdir())
     receipts = []
-    paths = ('src/microsim/MSVehicle.cpp',) if args.vehicle_implementation else (
+    paths = ('src/microsim/MSEdge.cpp',) if args.edge_implementation else (
+        'src/microsim/MSVehicle.cpp',) if args.vehicle_implementation else (
         'src/microsim/MSVehicle.h', 'src/utils/common/StdDefs.h')
     for rel in paths:
         url = 'https://raw.githubusercontent.com/eclipse-sumo/sumo/v1_27_1/' + rel

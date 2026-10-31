@@ -1,0 +1,119 @@
+{
+  "net_path": "assets\\research\\highway_merge_shepherd_long\\osm.net.xml.gz",
+  "net_sha256": "f58c4ef5f0497cfb887a298cd0fa4876bfe7bcef101cc0ed2fa6801d503e93f5",
+  "lanes": {
+    "11553048#1": [
+      {
+        "id": "11553048#1_0",
+        "index": "0",
+        "allow": "private emergency authority army vip passenger hov taxi bus coach delivery truck trailer motorcycle evehicle custom1 custom2",
+        "speed": "22.22",
+        "length": "378.66"
+      }
+    ],
+    "1191554636": [
+      {
+        "id": "1191554636_0",
+        "index": "0",
+        "allow": "private emergency authority army vip passenger hov taxi bus coach delivery truck trailer motorcycle evehicle custom1 custom2",
+        "speed": "31.29",
+        "length": "2644.22"
+      },
+      {
+        "id": "1191554636_1",
+        "index": "1",
+        "allow": "private emergency authority army vip passenger hov taxi bus coach delivery truck trailer motorcycle evehicle custom1 custom2",
+        "speed": "31.29",
+        "length": "2645.67"
+      }
+    ],
+    "1487606178": [
+      {
+        "id": "1487606178_0",
+        "index": "0",
+        "allow": "private emergency authority army vip passenger hov taxi bus coach delivery truck trailer motorcycle evehicle custom1 custom2",
+        "speed": "31.29",
+        "length": "477.89"
+      },
+      {
+        "id": "1487606178_1",
+        "index": "1",
+        "allow": "private emergency authority army vip passenger hov taxi bus coach delivery truck trailer motorcycle evehicle custom1 custom2",
+        "speed": "31.29",
+        "length": "477.89"
+      }
+    ],
+    "1487606179": [
+      {
+        "id": "1487606179_0",
+        "index": "0",
+        "allow": "private emergency authority army vip passenger hov taxi bus coach delivery truck trailer motorcycle evehicle custom1 custom2",
+        "speed": "31.29",
+        "length": "75.44",
+        "acceleration": "1"
+      },
+      {
+        "id": "1487606179_1",
+        "index": "1",
+        "allow": "private emergency authority army vip passenger hov taxi bus coach delivery truck trailer motorcycle evehicle custom1 custom2",
+        "speed": "31.29",
+        "length": "75.44"
+      },
+      {
+        "id": "1487606179_2",
+        "index": "2",
+        "allow": "private emergency authority army vip passenger hov taxi bus coach delivery truck trailer motorcycle evehicle custom1 custom2",
+        "speed": "31.29",
+        "length": "75.44"
+      }
+    ]
+  },
+  "connections": [
+    {
+      "from": "11553048#1",
+      "to": "1487606179",
+      "fromLane": "0",
+      "toLane": "0",
+      "via": ":1780739017_0_0",
+      "dir": "s",
+      "state": "M"
+    },
+    {
+      "from": "1191554636",
+      "to": "1487606179",
+      "fromLane": "0",
+      "toLane": "1",
+      "via": ":1780739017_1_0",
+      "dir": "s",
+      "state": "M"
+    },
+    {
+      "from": "1191554636",
+      "to": "1487606179",
+      "fromLane": "1",
+      "toLane": "2",
+      "via": ":1780739017_1_1",
+      "dir": "s",
+      "state": "M"
+    },
+    {
+      "from": "1487606179",
+      "to": "1487606178",
+      "fromLane": "1",
+      "toLane": "0",
+      "via": ":13638027693_0_0",
+      "dir": "s",
+      "state": "M"
+    },
+    {
+      "from": "1487606179",
+      "to": "1487606178",
+      "fromLane": "2",
+      "toLane": "1",
+      "via": ":13638027693_0_1",
+      "dir": "s",
+      "state": "M"
+    }
+  ],
+  "helper": "rb-shared/obsstate: netframe.py documented and verified geometry"
+}
