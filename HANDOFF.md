@@ -1,4 +1,4 @@
-# S-SELMAPPO2 durable stop / resume
+# S-SELMAPPO2 live continuation / resume
 
 Branch `c4/selmappo2`; report `docs/paper_results/SELMAPPO2.md`.
 Original advance-approved exact cap7,012,800; designSHA09499f2af60311b3690a940dca8d94605d710465afb9c9eb05d5b0a79b23900c.
@@ -16,6 +16,15 @@ admission waits at2GiB without any deletion/signals/new reservations.
 Read-only collection command (>=60s SSH intervals):
 `python -B -m tools.selmappo2.report --action collect --build build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29 --pid 606968`.
 Use current reporter: it accepts ONLY the exact hash-bound historical failure.
+
+Collection Unix1793469726 verifies second smoke SUCCESS900actual and20production
+episodes complete;19,200actual/26,100reserved incl history,7openproduction,0updates.
+Owned supervisor606968 remains live. A separate read-only five-minute watcher
+`scripts/selmappo2_watch.py` is prepared (4CPU tests/Ruff pass); it never dispatches
+simulation. Its WATCH_ONCE lock and process/dispatch receipts live in evidence.
+After launch, let it collect rather than duplicating SSH polls. It publishes the
+paper's live tail plus immutable snapshots and only hands COMPLETE final169 to
+the peer. Peer evaluation manifest path/schema are documented in the report.
 
 Original immutable cpuQ root:
 `/home/ubuntu/selmappo2_20261101/build_b42c257b09813c175fcb7261e341c7599d0bb5c4c971529e2856890d2fc8038c`.

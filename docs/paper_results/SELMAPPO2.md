@@ -14,7 +14,12 @@ safe-filename exposure audit199667/zero conflicts/errors. Immutable current buil
 Owned supervisor606968 (UID1000/startticks48374316) was launched once, nice19,
 CUDAhidden/single-thread workers,<=12 after successful second smoke. Dispatch
 disk2.601GB/load7.08/32cores; each reservation yields below2GiB disk/8GiB memory
-or above spare-CPU admission. Current smoke/production results await collection.
+or above spare-CPU admission. Latest complete collection at Unix1793469726 verifies
+**second smoke900s PASS and20production worlds complete**, supervisor still live.
+Totals19,200actual/26,100reserved (including original failed900/300);7production
+reservations still unresolved at that observation,0complete PPO updates yet.
+The21complete episode receipts have0collisions/teleports in recorded control
+windows. CollectionSHA25699d8a03dc01102ef052f1944f1ffaeafef828ade5c160ab2cb5bd40891fb9935.
 
 ### Preserved first attempt
 
@@ -103,7 +108,7 @@ under the amended no-retry protocol; no failed world is replayed or replaced.
 
 ## Learning curves and evaluation
 
-Pending training. No learning curve can be measured from zero completed updates.
+Production is running. No learning curve can be measured from zero completed updates.
 Supervisor records per-update J600 mean/std/range, episode
 return, PPO loss/KL-stop, sim-s/hour, actual/reserved charge and checkpoint SHA256
 in `training/training.jsonl`. Initial000 and every001..169 checkpoint are immutable;
@@ -111,6 +116,16 @@ in `training/training.jsonl`. Initial000 and every001..169 checkpoint are immuta
 smoke worlds before expansion to at most12spare nice19/single-thread CPU workers.
 The first attempt stopped before this expansion. Any acknowledged continuation
 must explicitly account for the already consumed failed smoke slot.
+
+`scripts/selmappo2_watch.py` is a separate read-only collector (4CPU checks/Ruff
+pass), not a training dispatcher. Its exclusive watcher lock prevents duplication;
+300s read spacing, immutable full collections/curve CSV+SVG/report snapshots, and
+a live section below keep this report current without changing staged training.
+Only verified COMPLETE final169 produces `SELMAPPO2_FINAL.json` for S-C1SWITCH2.
+It can ingest the peer's explicit byte-pinned evaluation manifest at
+`selmappo2/PEER_EVALUATION_MANIFEST.json` with schema`selmappo2.peer_manifest/1`,
+absolute safe `path` and `sha256`; underlying receipt must be complete schema
+`selmappo2.evaluation/1` on the exact PANEL_v2 contract. No local evaluation physics.
 
 S-C1SWITCH2 panel969136..969151 is disjoint from production18100000..18107773 and
 smoke18107998/18107999. The peer's complete hash-bound J600 receipts will supply

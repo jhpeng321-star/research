@@ -29,3 +29,9 @@ selmappo2.evaluation/1 COMPLETE receipt for our existing report collector.
 Read-only collection (SSH intervals>=60s):
 `python -B -m tools.selmappo2.report --action collect --build build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29 --pid 606968`.
 Learning/evaluation report: docs/paper_results/SELMAPPO2.md; all evidence append-only.
+
+Verified Unix1793469726: second smoke900sSUCCESS,20production complete,
+19,200actual/26,100reserved incl original debit;7openproduction,0completeupdates.
+Control-window receipts0collisions/teleports. Separate five-minute read-only
+watcher scripts/selmappo2_watch.py maintains the paper live tail/immutable curves,
+and writes peer SELMAPPO2_FINAL.json ONLY after fully verified final169.
