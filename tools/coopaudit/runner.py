@@ -105,6 +105,8 @@ def trace_rows(rows, group, commands=None, ramp_ids=None):
 
 
 def wait_spare():
+    from tools.coopaudit.release import require_release
+    require_release(ROOT)
     if shutil.disk_usage(ROOT).free<1024**3:
         raise ValueError('owned-root disk admission requires1GiB free')
     while os.getloadavg()[0] > 20 or (ROOT/'YIELD').exists():
@@ -117,6 +119,8 @@ def wait_spare():
 
 
 def execute(world, mode, selection=None, attempt=1):
+    from tools.coopaudit.release import require_release
+    require_release(ROOT, selection)
     import numpy as np
     from traffic_shepherd.c4 import branching as B
     from traffic_shepherd.c4 import evalprep as E
@@ -135,6 +139,7 @@ def execute(world, mode, selection=None, attempt=1):
     if out.exists():
         raise ValueError('attempt directory exists; never retry')
     wait_spare()
+    require_release(ROOT, selection)
     ledger.charge(ident+'_prefix',300)
     out.mkdir(parents=True)
     progress = {'sim_s':0}
@@ -278,6 +283,8 @@ def main():
     with (ROOT/'RUN.lock').open('a') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         setup()
+        from tools.coopaudit.release import require_release
+        require_release(ROOT)
         if a.mode=='canary':
             execute(canary(),'canary',attempt=a.attempt)
             return
@@ -293,9 +300,13 @@ def main():
             charges = []
             for w in worlds():
                 if (ROOT/'jobs'/f"main_s{w['seed']}"/'result.json').exists():
-                    continue
+                    raise ValueError('historical main job exists; reviewed versioned panel required')
                 doc = json.loads((ROOT/'jobs'/f"census_s{w['seed']}"/'FROZEN.json').read_text())
-                charges.append(300+branch_charge(len(doc['group'])))
+                expected = select_group(doc['observations'],size=selected['group_size'])
+                if doc['group'] != expected:
+                    raise ValueError('historical census group differs; reviewed versioned design required')
+                # Include a second prefix if the trained checkpoint arrives later.
+                charges.append(600+branch_charge(len(doc['group'])))
             Ledger(ROOT).admit_panel(charges)
             write(ROOT/'PANEL_ADMITTED.json',dict(charges=charges,total=sum(charges),selection=selected))
         # Sequential admission leaves spare capacity to S-SUMOCF and other priority jobs.

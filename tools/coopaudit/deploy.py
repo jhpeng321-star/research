@@ -11,6 +11,10 @@ from tools.coopaudit.remote import run
 
 def deploy(action):
     root=Path(__file__).resolve().parents[2]
+    if action not in ('stage', 'test'):
+        from tools.coopaudit.release import require_release
+        require_release(root/'tools/coopaudit/evidence',
+                        artifact='E:/agent-work/c4-sumocf/ARTIFACT_CHECK.md')
     files=sorted((root/'tools/coopaudit').glob('*.py'))
     version=hashlib.sha256(b''.join(p.name.encode()+p.read_bytes() for p in files)).hexdigest()[:16]
     buffer=io.BytesIO()
@@ -33,6 +37,8 @@ if not dest.exists():
         tf.extractall(dest)
 env=dict(os.environ,PATH='/root/miniconda3/bin:'+os.environ['PATH'],PYTHONPATH=str(dest),CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',C4_POLICY_STOCHASTIC='0',C4_POLICY_ACCEL_NOISE='0')
 if {action!r}=='test':
+    for path in (dest/'tools/coopaudit').glob('*.py'):
+        compile(path.read_text(),str(path),'exec')
     os.environ.update(env)
     sys.path.insert(0,str(dest))
     from tools.coopaudit import runner
@@ -48,6 +54,9 @@ if {action!r}=='test':
 elif {action!r}=='stage':
     print(json.dumps(dict(version={version!r},code=str(dest))))
 else:
+    sys.path.insert(0,str(dest))
+    from tools.coopaudit.release import require_release
+    require_release(root)
     assert not (root/'STOP').exists()
     log=(root/({action!r}+'_'+str(int(time.time()))+'.log')).open('x')
     args=['canary','--attempt','2'] if {action!r}=='canary-repair' else [{action!r}]

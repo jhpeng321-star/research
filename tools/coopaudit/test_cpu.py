@@ -1,5 +1,7 @@
 """Meaningful synthetic counterfactual and control-context contracts; zero SUMO."""
 import contextlib
+import hashlib
+import json
 import os
 from pathlib import Path
 import tempfile
@@ -109,7 +111,7 @@ class AuditContracts(unittest.TestCase):
 
     def test_selection_adopts_probe_and_refuses_different_winner(self):
         from tools.coopaudit.continue_audit import selection
-        table=[dict(status='ok',grid=i,selection_snr=float(i),sim_s_per_sample=100,
+        table=[dict(status='ok',grid=i,selection_snr=float(i),raw=dict(mean=i,sd=1),sim_s_per_sample=100,
                     design=['all',60,.5],use_cv=False) for i in range(27)]
         receipt=dict(status='PASS',table=table,selected=table[-1])
         self.assertEqual(selection(receipt)['group_size'],'all')
@@ -117,6 +119,74 @@ class AuditContracts(unittest.TestCase):
         receipt['selected']=table[0]
         with self.assertRaises(ValueError):
             selection(receipt)
+
+    def test_cv_score_cannot_replace_raw_group_snr(self):
+        from tools.coopaudit.continue_audit import selection
+        table=[dict(status='ok',grid=i,selection_snr=float(i),raw=dict(mean=i,sd=1),
+                    sim_s_per_sample=100,design=['all',60,1],use_cv=True) for i in range(27)]
+        receipt=dict(status='PASS',table=table,selected=table[-1])
+        table[0]['selection_snr']=1000.
+        receipt['selected']=table[0]
+        with self.assertRaisesRegex(ValueError,'substituted'):
+            selection(receipt)
+
+    def test_primary_budget_reserves_paired_trained_arm(self):
+        from tools.coopaudit.design import CONTROLLERS, branch_charge
+        self.assertEqual(CONTROLLERS,('mappo','wall'))
+        self.assertEqual(branch_charge(10),600*(2+3*11))
+
+    def test_artifact_hold_fails_closed_and_release_is_hash_bound(self):
+        from tools.coopaudit.release import require_release
+        from tools.coopaudit.design import CONTROLLERS
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            selected=dict(group_size='all',window_s=60,probe_grid=26)
+            (root/'SELECTED_DESIGN.json').write_text(json.dumps(selected))
+            with self.assertRaisesRegex(ValueError,'missing reviewed'):
+                require_release(root)
+            artifact=root/'ARTIFACT_CHECK.md'
+            artifact.write_text('Status: PASS\n',encoding='utf-8')
+            release=dict(status='PASS',registered=True,controllers=list(CONTROLLERS),
+                         reserved_controller_count=3,source_commit='test-source',
+                         registration_entry='test registration',
+                         artifact_document_sha256=hashlib.sha256(artifact.read_bytes()).hexdigest(),
+                         selected_design_sha256=hashlib.sha256(json.dumps(selected,sort_keys=True).encode()).hexdigest())
+            (root/'ARTIFACT_RELEASE.json').write_text(json.dumps(release))
+            self.assertEqual(require_release(root),release)
+            (root/'ARTIFACT_HOLD.json').write_text(json.dumps(dict(active=True)))
+            with self.assertRaisesRegex(ValueError,'HOLD active'):
+                require_release(root)
+            (root/'ARTIFACT_HOLD.json').write_text(json.dumps(dict(active=False)))
+            with self.assertRaisesRegex(ValueError,'design changed'):
+                require_release(root,dict(selected,group_size=2))
+            artifact.write_text('Status: FAIL\n',encoding='utf-8')
+            release['artifact_document_sha256']=hashlib.sha256(artifact.read_bytes()).hexdigest()
+            (root/'ARTIFACT_RELEASE.json').write_text(json.dumps(release))
+            with self.assertRaisesRegex(ValueError,'explicit Status: PASS'):
+                require_release(root)
+
+    def test_continuation_cannot_start_under_hold(self):
+        from unittest.mock import patch
+        from tools.coopaudit import continue_audit
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            (root/'ARTIFACT_HOLD.json').write_text('{"active":true}')
+            with patch.object(continue_audit,'EVIDENCE',root):
+                with self.assertRaisesRegex(ValueError,'HOLD active'):
+                    continue_audit.main()
+            self.assertFalse((root/'CONTINUATION_PID.json').exists())
+
+    def test_worker_refuses_hold_before_runtime_setup_or_precharge(self):
+        from unittest.mock import patch
+        from tools.coopaudit import runner
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp)
+            (root/'ARTIFACT_HOLD.json').write_text('{"active":true}')
+            with patch.object(runner,'ROOT',root), patch.object(runner,'setup') as setup:
+                with self.assertRaisesRegex(ValueError,'HOLD active'):
+                    runner.execute(worlds()[0],'main')
+                setup.assert_not_called()
+            self.assertFalse((root/'accounting.jsonl').exists())
 
     @unittest.skipIf(os.name=='nt','fcntl ledger is exercised on Linux host')
     def test_precharge_no_refund_duplicate_or_partial_panel(self):

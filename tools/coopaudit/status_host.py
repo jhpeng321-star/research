@@ -6,7 +6,8 @@ root=Path('/root/coopaudit20261031')
 out=dict(load=os.getloadavg())
 for name in ('canary_PID.json','canary-repair_PID.json','census_PID.json','main_PID.json',
              'CPU_TESTS.json','WAIT.json','STOP','CANARY_VERIFIED.json',
-             'SELECTED_DESIGN.json','CENSUS_COMPLETE.json','MAIN_COMPLETE.json'):
+              'SELECTED_DESIGN.json','CENSUS_COMPLETE.json','MAIN_COMPLETE.json',
+              'ARTIFACT_HOLD.json','ARTIFACT_RELEASE.json'):
     p=root/name
     if p.is_file():
         out[name]=json.loads(p.read_text())
@@ -15,6 +16,7 @@ for name in ('canary_PID.json','canary-repair_PID.json','census_PID.json','main_
                 proc=Path('/proc')/str(out[name]['pid'])/'stat'
                 fields=proc.read_text().split()
                 out[name]['live']=fields[21]==out[name]['proc_start_ticks'] and fields[2]!='Z'
+                out[name]['process_state']=fields[2]
             except FileNotFoundError:
                 out[name]['live']=False
 ledger=root/'accounting.jsonl'

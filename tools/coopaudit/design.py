@@ -6,7 +6,9 @@ from pathlib import Path
 
 CAP = 500_000
 SEEDS = set(range(969650, 969678)) | {969699}
-CONTROLLERS = ('mappo', 'pi', 'circles', 'ctrl0', 'wall')
+CONTROLLERS = ('mappo', 'wall')
+OPTIONAL_CONTROLLERS = ('pi', 'circles', 'ctrl0')
+RESERVED_CONTROLLER_COUNT = 3  # MAPPO + wall + paired S-SUMOCF checkpoint arm
 MAPPO_SHA = 'd9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca'
 SOURCE_SHA = 'b3c031adb6bc2b5c2bca160bea308f83ba5567b97c1cd0e853eddcd8367a8193'
 RESTRICTED = re.compile('sealed|holdout|heldout|cal_split|chunk5|j4b|inc1|hetdata_truth|vtype|driver_params|vehicle_params|requests\\.rou|assignment', re.I)
@@ -65,13 +67,15 @@ def interaction(baseline, group, solos):
     return dict(D_GROUP=dg, sum_D_ONLY=sum(gains), C_G=dg-sum(gains), D_ONLY=gains)
 
 
-def branch_charge(n, horizon=600):
-    return (2 + len(CONTROLLERS)*(n+1))*horizon
+def branch_charge(n, horizon=600, controller_count=RESERVED_CONTROLLER_COUNT):
+    return (2 + controller_count*(n+1))*horizon
 
 
 def document():
     return dict(id='S-COOPMEASURE', cap_sim_s=CAP, worlds=worlds(), canary=canary(),
-                controllers=CONTROLLERS, t0=300, clocks=[300, 600],
+                controllers=CONTROLLERS, pending_controller='sumocf checkpoint',
+                reserved_controller_count=RESERVED_CONTROLLER_COUNT,
+                t0=300, clocks=[300, 600],
                 group_size='WAIT_SUMOCF', window_s='WAIT_SUMOCF',
                 group_zone_m=[-150., 75.44], bootstrap_draws=5000, bootstrap_seed=20261031,
                 baseline='native IDM, no TraCI acceleration/lane command; native release after window',

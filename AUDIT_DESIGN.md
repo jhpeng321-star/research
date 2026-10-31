@@ -156,3 +156,18 @@ introduced after the canary. Pending report is clearly labelled until completion
   A new design namespace is required for non-reusable branches, all newly charged.
   Reserve space for the paired trained-policy arm before admitting the panel;
   absent a checkpoint, report its pending status rather than fabricate a comparator.
+
+## Fail-closed launch implementation (17:20 amendment)
+`release.py` checks the local and remote launch paths independently: an active
+ARTIFACT_HOLD, missing release, YIELD/STOP, non-PASS evidence, scope mismatch,
+missing three-arm budget reservation, changed artifact/design hashes, or absent
+registration provenance prevents launch. The artifact document must contain one
+unambiguous `Status: PASS` line; release is reviewed and registered, never inferred
+from a timer or table title. No release receipt has been issued during this HOLD.
+The old table-polling auto-bind/auto-dispatch code is removed. Selection validation
+now recomputes abs(raw DG mean)/raw DG SD and rejects a substituted CV statistic.
+Primary controller loops use MAPPO/wall only. Budget admission reserves the third
+arm's G+solos plus a second300s prefix/world for a checkpoint delivered later.
+Historic main job names/census groups cannot be reused silently by the new runner;
+an explicit versioned-panel migration after PASS is still required. The paused
+old worker must never be SIGCONTed into the outdated five-arm/two-member loop.

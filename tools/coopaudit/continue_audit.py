@@ -1,14 +1,13 @@
-"""Durable local continuation: wait for published TRAIN SNR, census, cap, audit, export.
+"""Reviewed-release-only continuation: census, cap, audit, export.
 
 No SUMO is started by a missing table, partial census, failed canary or cap refusal.
 This process owns only its own SSH clients and the audit's recorded worker PIDs.
 """
 import argparse
-import hashlib
 import json
+import math
 import os
 from pathlib import Path
-import re
 import subprocess
 import sys
 import time
@@ -17,11 +16,11 @@ import traceback
 from tools.coopaudit.accounting import write
 from tools.coopaudit.deploy import deploy
 from tools.coopaudit.remote import run
-from tools.coopaudit.design import branch_charge, worlds
+from tools.coopaudit.design import CONTROLLERS
+from tools.coopaudit.release import require_release
 
 HERE=Path(__file__).resolve().parents[2]
 EVIDENCE=HERE/'tools/coopaudit/evidence'
-DOC=Path('E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_DESIGN.md')
 SOURCE=Path('E:/agent-work/c4-sumocf')
 REMOTE=Path('/root/coopaudit20261031')
 
@@ -29,7 +28,19 @@ REMOTE=Path('/root/coopaudit20261031')
 def selection(receipt):
     if receipt.get('status')!='PASS' or len(receipt.get('table',[]))!=27:
         raise ValueError('complete registered27-design TRAIN SNR table required')
+    if {r['grid'] for r in receipt['table']} != set(range(27)):
+        raise ValueError('unique complete probe grid required')
     eligible=[r for r in receipt['table'] if r.get('status')=='ok']
+    for row in eligible:
+        raw=row.get('raw',{})
+        mean,sd=raw.get('mean'),raw.get('sd')
+        if not all(isinstance(x,(int,float)) and math.isfinite(x) for x in (mean,sd)) or sd<0:
+            raise ValueError('raw D_GROUP mean and SD required for owner-rule selection')
+        score=abs(mean)/sd if sd else 0. if mean==0 else float('inf')
+        if not math.isclose(row['selection_snr'],score,rel_tol=1e-12,abs_tol=1e-12):
+            raise ValueError('CV or other statistic substituted for raw D_GROUP SNR')
+    if not eligible:
+        raise ValueError('no eligible raw probe designs')
     chosen=sorted(eligible,key=lambda r:(-r['selection_snr'],r['sim_s_per_sample'],r['grid']))[0]
     if chosen!=receipt['selected']:
         raise ValueError('published selected design does not follow probe rule')
@@ -61,6 +72,7 @@ def git_commit(message, paths):
 
 
 def phase(name):
+    require_release(EVIDENCE, artifact=SOURCE/'ARTIFACT_CHECK.md')
     s=status()
     if 'STOP' in s:
         raise ValueError('owned STOP prevents continuation')
@@ -73,6 +85,7 @@ def phase(name):
         deploy(name)
     while True:
         time.sleep(120)
+        require_release(EVIDENCE, artifact=SOURCE/'ARTIFACT_CHECK.md')
         s=status()
         write(EVIDENCE/'STATUS.json',dict(phase=name,unix=time.time(),remote=s))
         if 'STOP' in s:
@@ -84,6 +97,7 @@ def phase(name):
 
 
 def export():
+    require_release(EVIDENCE, artifact=SOURCE/'ARTIFACT_CHECK.md')
     script="""
 import base64,json,sys
 from pathlib import Path
@@ -108,7 +122,7 @@ print(json.dumps(files))
            'S-COOPMEASURE. Complete fixed TRAIN/development panel; exploratory, not sealed evaluation.',
            'D=J(native)-J(branch); C_G=D_GROUP-sum D_ONLY:i; positive means beneficial interaction.',
            '28 worlds:24 high-share (.2/.4 x2400/2700) plus4 coverage worlds; frozen native t0=300.',
-           'Controllers: speed-only MAPPO iter169 d9042cc5, PI external-U, CIRCLES, CTRL0, wall-v2.1.',
+           'Primary controllers: speed-only MAPPO iter169 d9042cc5 and wall-v2.1; trained SUMOCF arm pending checkpoint.',
            'Disabled members and all continuations use native SUMO/IDM; native lanes throughout.',
            '95% stratified world-bootstrap CIs,5000draws/seed20261031; tiny/missing groups retained/reported.',
            'Raw outcomes below; no control-variate fitted on this audit. Units veh-s.','']
@@ -117,11 +131,11 @@ print(json.dumps(files))
         return 'NA' if x is None else f'{x:.2f}'
     for outcome in ('600','300','local'):
         lines.append('## High-share24: '+outcome+' outcome')
-        for c in ('mappo','pi','circles','ctrl0','wall'):
+        for c in CONTROLLERS:
             cg=by[outcome,c,'C_G']; dg=by[outcome,c,'D_GROUP']; si=by[outcome,c,'sum_D_ONLY']; fp=by[outcome,c,'frac_positive']
             lines.append(f"- {c}: C_G {number(cg['mean'])} [{number(cg['lo'])},{number(cg['hi'])}]; n={cg['n_worlds']}; share>0 {number(fp['mean'])}; D_G {number(dg['mean'])}; sumD_i {number(si['mean'])}.")
     lines.append('## All28:600s outcome (missing strata are never silently reweighted)')
-    for c in ('mappo','pi','circles','ctrl0','wall'):
+    for c in CONTROLLERS:
         row=next(r for r in summary['summary'] if r['cohort']=='all' and r['outcome']=='600' and r['controller']==c and r['metric']=='C_G')
         lines.append(f"- {c}: C_G {number(row['mean'])} [{number(row['lo'])},{number(row['hi'])}]; n={row['n_worlds']}.")
     lines += ['',f"Charged {summary['charged_sim_s']} /500000; actual total {summary['actual_total_sim_s']} sim-s (all prefixes/canary/failures retained).",
@@ -149,6 +163,8 @@ print(json.dumps(files))
 
 
 def main():
+    # Check BEFORE taking/replacing PID receipts or considering any old selection.
+    require_release(EVIDENCE, artifact=SOURCE/'ARTIFACT_CHECK.md')
     lock=(EVIDENCE/'CONTINUATION.lock').open('a+b')
     if os.name=='nt':
         import msvcrt
@@ -162,36 +178,6 @@ def main():
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     write(EVIDENCE/'CONTINUATION_PID.json',dict(pid=os.getpid(),unix=time.time()))
     try:
-        while not (EVIDENCE/'SELECTED_DESIGN.json').exists():
-            text=DOC.read_text(encoding='utf-8')
-            # A measured-results section must actually be published in the requested doc.
-            published=bool(re.search(r'(?im)^#{1,4} .*SNR.*(?:result|measur|table|select)',text))
-            if published:
-                mirror=SOURCE/'tools/sumocf/evidence/SNR_PROBE.json'
-                receipt=json.loads(mirror.read_text()) if mirror.exists() else None
-                if not receipt:
-                    probehost='gpuR' if '/root/sumocf20261031' in text else 'cpuQ'
-                    probe=run(probehost,(HERE/'tools/coopaudit/probe_status.py').read_text())
-                    if probe.returncode:
-                        raise RuntimeError(probe.stderr)
-                    receipt=json.loads(probe.stdout).get('receipts/SNR_PROBE.json')
-                if receipt:
-                    selected=selection(receipt)
-                    raw=json.dumps(receipt,sort_keys=True).encode()
-                    selected.update(sumocf_table_sha256=hashlib.sha256(raw).hexdigest(),
-                                    source_commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=SOURCE,text=True).strip(),
-                                    source_document_sha256=hashlib.sha256(DOC.read_bytes()).hexdigest())
-                    write(EVIDENCE/'SNR_PROBE.json',receipt)
-                    write(EVIDENCE/'SELECTED_DESIGN.json',selected)
-                    upload=f"from pathlib import Path; p=Path('/root/coopaudit20261031/SELECTED_DESIGN.json'); assert not p.exists(); p.write_text({json.dumps(selected,indent=1)!r})"
-                    result=run('gpuR',upload)
-                    if result.returncode:
-                        raise RuntimeError(result.stderr)
-                    git_commit('S-COOPMEASURE step 4: bind published TRAIN SNR design before audit',
-                               ['tools/coopaudit/evidence/SELECTED_DESIGN.json','tools/coopaudit/evidence/SNR_PROBE.json'])
-                    break
-            write(EVIDENCE/'STATUS.json',dict(phase='WAIT_SUMOCF_SNR_TABLE',unix=time.time(),actual_sim_s=2280,charged_sim_s=2580))
-            time.sleep(120)
         phase('census')
         phase('main')
         export()
