@@ -127,8 +127,40 @@ def event_proximity(recorded, predicted):
                 nearest_timing_abs_sum_s=sum(abs(t) for t in offsets))
 
 
+def motion_settings(physics, is_cav, values):
+    """Published motion-only CF point; LC style and CAV defaults stay unchanged."""
+    if values is None:
+        return None
+    a, b, tau, s0, _ = physics.idm()
+    defaults = dict(v0=physics.v0_mps, accel=a, decel=b, time_headway=tau, min_gap=s0,
+                    politeness=0.2, mobil_threshold=physics.mobil_threshold_mps2,
+                    merge_gap=physics.lane_safe_gap_m, merge_urgency=1.)
+    return {key: torch.where(is_cav,
+                torch.full(is_cav.shape, default, dtype=torch.float64),
+                torch.full(is_cav.shape, values.get(key, default), dtype=torch.float64))
+            for key, default in defaults.items()}
+
+
+def load_motion_point(path):
+    if any(term in str(path.resolve()).lower() for term in FORBIDDEN):
+        raise ValueError('prohibited parameter artifact path')
+    payload = json.loads(path.read_text())
+    if (payload['schema'] != 'wm_phys.idm_pooled.v1'
+            or payload['fit_interval_s'] != [240, 300]
+            or payload['fit_worlds'] != list(range(969400, 969432))
+            or payload['delta'] != 4):
+        raise ValueError('not the published causal FIT motion-only IDM point')
+    values = payload['parameters']
+    if set(values) != {'v0', 'accel', 'decel', 'time_headway', 'min_gap'}:
+        raise ValueError('unexpected physical parameter keys')
+    if not all(np.isfinite(v) and v > 0 for v in values.values()):
+        raise ValueError('invalid physical point')
+    return values
+
+
 @torch.no_grad()
-def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reuse_mobil=None):
+def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reuse_mobil=None,
+            motion_parameters=None):
     hashes = {name: sha(safe_path(path / name, root)) for name in FILES}
     if reuse_mobil is not None and reuse_mobil['input_sha256'] != hashes:
         raise ValueError('MOBIL reuse requires exact observable input hashes')
@@ -169,12 +201,15 @@ def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reus
         m = torch.from_numpy(present).unsqueeze(0)
         identity = torch.from_numpy(np.array(ids[t], copy=True)).unsqueeze(0)
         d = torch.from_numpy(eligible).unsqueeze(0)
-        memory = lane_change(k, m, physics, memory=memory, identity=identity, decision_mask=d)
+        params = motion_settings(physics, torch.from_numpy(np.array(cav[t], copy=True)).bool().unsqueeze(0),
+                                 motion_parameters)
+        memory = lane_change(k, m, physics, memory=memory, identity=identity,
+                             decision_mask=d, driver_params=params)
         if times[t] < t0:
             continue
         choices = dict(lc2013=memory['next_lane'][0].numpy())
         if reuse_mobil is None:
-            choices['mobil'] = mobil_merge_logits(k, m, physics)[0].argmax(-1).numpy()
+            choices['mobil'] = mobil_merge_logits(k, m, physics, driver_params=params)[0].argmax(-1).numpy()
         source = kin[t, :, 1:4].argmax(-1)
         destination = kin[t + 1, :, 1:4].argmax(-1)
         for j in np.flatnonzero(eligible):
@@ -301,6 +336,7 @@ def main():
     ap.add_argument('--horizon-s', type=float, default=60)
     ap.add_argument('--smoke', action='store_true')
     ap.add_argument('--reuse-mobil-from', type=Path)
+    ap.add_argument('--idm-parameters', type=Path)
     args = ap.parse_args()
     torch.set_num_threads(1)
     torch.set_num_interop_threads(1)
@@ -310,11 +346,14 @@ def main():
         raise ValueError('output must be NEW with existing parent')
     args.out.mkdir()
     physics = PhysicsConfig(sumo_fidelity=True, open_road=True)
+    motion_parameters = load_motion_point(args.idm_parameters) if args.idm_parameters is not None else None
+    parameter_sha = sha(args.idm_parameters) if args.idm_parameters is not None else None
     baseline = None
     if args.reuse_mobil_from is not None:
         baseline = json.loads((args.reuse_mobil_from / 'SUMMARY.json').read_text())
         if (baseline['status'] != 'COMPLETE' or baseline['episodes'] != 160
-                or baseline['physics'] != asdict(physics) or baseline['horizon_s'] != args.horizon_s):
+                or baseline['physics'] != asdict(physics) or baseline['horizon_s'] != args.horizon_s
+                or baseline.get('motion_parameter_sha256') != parameter_sha):
             raise ValueError('MOBIL reuse panel/settings mismatch')
     paths = []
     # Never glob the full world range or open a global manifest/split.
@@ -331,13 +370,16 @@ def main():
     for path in paths:
         reuse = (json.loads((args.reuse_mobil_from / (path.name + '.json')).read_text())
                  if baseline is not None else None)
-        row = episode(path, args.views, physics, args.horizon_s, reuse)
+        row = episode(path, args.views, physics, args.horizon_s, reuse, motion_parameters)
         rows.append(row)
         (args.out / (path.name + '.json')).write_text(json.dumps(row, indent=2) + '\n')
         print(json.dumps(dict(completed=len(rows), total=len(paths), episode=path.name,
                               elapsed_s=time.time()-start)), flush=True)
     report = dict(status='COMPLETE', episodes=len(rows), worlds=len({r['seed'] for r in rows}),
-                  horizon_s=args.horizon_s, prehistory_s=60, settings='population only',
+                  horizon_s=args.horizon_s, prehistory_s=60,
+                  settings=('inherited population defaults' if motion_parameters is None else
+                            'published motion-only pooled IDM point for HDVs; CAV and LC style defaults'),
+                  motion_parameters=motion_parameters, motion_parameter_sha256=parameter_sha,
                   snapshot='recorded post-motion s/v/a with pre-change lanes; teacher forced',
                   cohort='HDV, same identity, normal road in both adjacent frames',
                   motivation_contract='predicted reason; recall contribution uses all recorded events; no observed motivation labels',

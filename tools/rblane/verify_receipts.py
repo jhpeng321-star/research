@@ -25,7 +25,10 @@ def main():
     for row in rows:
         old = json.loads((first_dir / (row['episode'] + '.json')).read_text())
         assert row['input_sha256'] == old['input_sha256']
-        assert row['scores']['mobil'] == old['scores']['mobil']
+        if summary.get('motion_parameter_sha256') is None:
+            assert row['scores']['mobil'] == old['scores']['mobil']
+        else:
+            assert summary['mobil_reuse'] is None
         assert row['recorded'] == old['recorded']
         assert row['exposure'] == old['exposure']
     dispatch = json.loads((RECEIPTS / (args.kind.upper() + '_DISPATCH.json')).read_text())
@@ -39,6 +42,10 @@ with zipfile.ZipFile(p/'code.zip') as z:
         rel=pathlib.Path(name).relative_to(p).as_posix()
         assert hashlib.sha256(z.read(rel)).hexdigest()==digest
         assert hashlib.sha256(pathlib.Path(name).read_bytes()).hexdigest()==digest
+    if summary.get('motion_parameter_sha256') is not None:
+        data=z.read('inputs/idm_pooled.json')
+        assert hashlib.sha256(data).hexdigest()==summary['motion_parameter_sha256']
+        assert json.loads(data)['parameters']==summary['motion_parameters']
 print(json.dumps(dict(source_bundle_sha256={dispatch['bundle_sha256']!r},
                      summary_sha256=hashlib.sha256((p/'results/SUMMARY.json').read_bytes()).hexdigest())))
 '''))
@@ -49,7 +56,9 @@ print(json.dumps(dict(source_bundle_sha256={dispatch['bundle_sha256']!r},
     assert targets['status'] == 'PASS_RECONCILED' and targets['unexpected_missing'] == 0
     result = dict(status='PASS', episodes=160, worlds=32, arms=5,
                   aggregate_reassembly='exact', dispatched_model_and_scorer_hashes='exact',
-                  same_cohort_and_all_input_hashes='exact', mobil_score_reuse='exact',
+                  same_cohort_and_all_input_hashes='exact',
+                  mobil_score_reuse=('exact' if summary.get('motion_parameter_sha256') is None
+                                     else 'new paired scoring under new motion-only physical point'),
                   target_events_reconciled=targets['scoring_events'],
                   **binding)
     for row in rows:

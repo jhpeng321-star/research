@@ -131,3 +131,35 @@ directed transition has ANY recorded event in the **bounded60s window** and
 the nearest signed timing error. Missing means window-censored, not proof it
 never changes. Scoring-only5/5 CPU tests PASS, including censored-direction
 and identity handling. These diagnostics do not change the physics decisions.
+
+Candidate6 verified (worker392698 exited,141.12s):1112/39045 exact,
+precision2.8480%, recall34.1628%. Source epsilon correction removes45
+proposals but6 matches, so it is not an empirical precision improvement.
+Predicted-reason precision/recall contribution: strategic10.554%/9.770pp
+(318/3013), cooperative9.069%/2.335pp (76/838), speed-gain4.386%/16.375pp
+(533/12151), keep-right0.803%/5.684pp (185/23043).
+
+Remaining false positives are predominantly **free-flow upstream**, not just
+jam merges:21566 keep-right false steps upstream, mean observed speed29.6m/s;
+only211 on the merge edge and1081 downstream. 19123/23043 keep-right steps
+have no matching vehicle/direction event anywhere in the scored60s window.
+Recorded-event failures: return629 no-wish/44 follower-block/189match;
+overtake922 no-wish/41 follower-block/48 leader-block/581match;
+merge141 no-wish/195 follower-block/123 leader-block/342match.
+
+A key source dependency is current-leader **desired speed** at1749–1752:
+the cannot-pass-on-right cap only runs if that leader's desired speed is
+lower than the ego's. Homogeneous population defaults make that comparison
+always false among HDVs. This is a plausible parameter-information failure,
+not permission to substitute an observed-speed heuristic or new wish cutoff.
+
+## Next parameter sensitivity (no fitting)
+
+Add support for the **already published**, motion-only S-RB-FIT pooled IDM
+point used by INT's registered variantC (owner amendment5700). Validate its
+exact FIT969400–969431/pre300 schema; retain SUMO LC defaults and CAV defaults.
+For this new physical-parameter setting, score BOTH LC2013 and MOBIL afresh
+once (old MOBIL scores cannot be reused across changed settings). This is a
+new paired sensitivity, not retraining or a source-threshold sweep. Settings
+artifact bytes are bound inside the immutable bundle and verified. Seven
+validator CPU tests PASS, including rejecting post-start/out-of-FIT metadata.

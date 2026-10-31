@@ -1,4 +1,5 @@
 from tools.rblane.validate import match_events, compress_proposals, aggregate, MOTIVATIONS, event_proximity
+from tools.rblane.validate import motion_settings, load_motion_point
 
 
 def event(t, vid=1, source=1, dest=0):
@@ -52,3 +53,38 @@ def test_proximity_does_not_invent_events_for_unobserved_transitions():
     assert result['has_recorded_transition_in_window'] == 2
     assert result['nearest_timing_signed_sum_s'] == -4
     assert result['nearest_timing_abs_sum_s'] == 10
+
+
+def test_published_motion_point_never_changes_cav_or_lane_style_settings():
+    import torch
+    from wms.physics.config import PhysicsConfig
+    p = PhysicsConfig(sumo_fidelity=True)
+    cav = torch.tensor([[False, True]])
+    values = dict(v0=29., accel=.8, decel=1.8, time_headway=.77, min_gap=1.9)
+    out = motion_settings(p, cav, values)
+    assert out['accel'][0, 0] == .8
+    assert out['accel'][0, 1] == p.idm()[0]
+    assert out['v0'][0, 1] == p.v0_mps
+    assert not any(key.startswith('lc') for key in out)
+    assert out['politeness'].unique().item() == .2
+    assert motion_settings(p, cav, None) is None
+
+
+def test_motion_point_rejects_post_start_or_out_of_fit_metadata(tmp_path):
+    import json
+    import pytest
+    path = tmp_path / 'idm_pooled.json'
+    payload = dict(schema='wm_phys.idm_pooled.v1', fit_interval_s=[240, 300],
+                   fit_worlds=list(range(969400, 969432)), delta=4,
+                   parameters=dict(v0=29., accel=.8, decel=1.8, time_headway=.77, min_gap=1.9))
+    path.write_text(json.dumps(payload))
+    assert load_motion_point(path) == payload['parameters']
+    payload['fit_interval_s'][1] = 301
+    path.write_text(json.dumps(payload))
+    with pytest.raises(ValueError, match='causal FIT'):
+        load_motion_point(path)
+    payload['fit_interval_s'][1] = 300
+    payload['fit_worlds'].append(969432)
+    path.write_text(json.dumps(payload))
+    with pytest.raises(ValueError, match='causal FIT'):
+        load_motion_point(path)

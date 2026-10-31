@@ -16,10 +16,17 @@ remaining-distance tests. New `lc2013_geometry.py`; default legacy unchanged.
 Adapter adds optional `lc2013_current_lane_position` and
 `lc2013_target_best_lane_offset` inputs. 27 lane CPU tests PASS. This consumes
 obsstate helper geometry and lcspec numeric vector, without reading assignments.
-**Candidate6 implementation ready, measurement pending:** correct SUMO's
+**Candidate6 verified (physics811cd7e8, scorer a7bc0843):** precision2.848%,
+recall34.163% (1112/39045); EPS correction is source-faithful but NOT another
+measured gain. Correct SUMO's
 NUMERICAL_EPS=.001 in safe-stop/IDM anticipation/positive speed-gain veto;
 28 CPU tests PASS. INT's independently found precision constant is confirmed
-from freshly downloaded read-only config.h.cmake. All panel3/4/5 workers exited.
+from freshly downloaded read-only config.h.cmake. All panel3/4/5/6 workers exited.
+New evidence:21566 keep-right FP are upstream/free-flow (~29.6m/s),19123/23043
+have no recorded same-ID/direction event in60s. Homogeneous desired speeds
+disable source1749's slow-current-leader keep-right cap. Next: distinguish
+source defects from this missing heterogeneity using already-inferred physical
+settings; no LC fitting/threshold tuning. All iterations/reasons retained.
 
 Branch `c4/rb-lane`, base `f0db3c82`; source implementation through `127a106f`.
 Owner WM-PHYS authorization REGISTRATION.md:5683 (2026-10-31 23:12).
