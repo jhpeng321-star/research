@@ -59,6 +59,13 @@ Operational supplement, not an efficacy result. Frozen primary model, K8,
 - Recovery gpuR coordinator682477/start4208404737 launched after registration
   commitda743ddc. First retry completed with unchanged worker identity, no guard
   stop, sampled aggregate peak4684MiB. Only the13 registered missing tasks run.
+- All13 exact-tail retries now succeeded in544.25s, peak aggregate4684MiB,
+  zero memory-guard stops; post-run owned GPU memory0MiB. The13-task identities
+  match the missing roster exactly. Original failures remain separately retained.
+- `cache_bridge.py` may reuse existing local checksum-verified publication copies
+  in the frozen sync cache after every earlier bulk-copy process has exited and
+  before remote COMPLETE. This avoids redundant transport, without inference,
+  analysis, scientific-source changes or a second collector.
 
 ## Separate reference slot
 S-C1FLOOR now supplies an approved native-only tiny-speed-pulse sensitivity on
