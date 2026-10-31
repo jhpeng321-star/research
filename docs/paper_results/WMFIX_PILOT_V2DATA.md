@@ -12,6 +12,9 @@
 - Three CPU tests PASS (bound gate, PID reuse/foreign job/output rejection, pidfd
   final ownership check). Watcher records GATE_ONLY_WATCH/RESULT.json separately.
   No post-gate curriculum/verdict dispatch is authorised by the current scope.
+- Preflight: gpuA's existing conda Python omits os.pidfd_open; kernel5.15/x86_64
+  supports it. Add a fail-closed Linux syscall fallback (no PID-based kill), plus
+  kernel-support dry-run before arming. Updated local watcher suite4 PASS.
 
 ## Resume / binding
 - Resumed clean `c4/wmfixmerge` at f373b47e; prior audit/design/implementation and

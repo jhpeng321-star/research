@@ -35,10 +35,9 @@ def test_process_identity_refuses_pid_reuse_other_outputs_and_other_commands(tmp
 
 def test_pidfd_signal_requires_final_ownership_check_and_always_closes(monkeypatch):
     calls = []
-    monkeypatch.setattr(w.os, "pidfd_open", lambda pid: 7, raising=False)
+    monkeypatch.setattr(w, "open_pidfd", lambda pid: 7)
     monkeypatch.setattr(w.os, "close", lambda fd: calls.append(("close", fd)))
-    monkeypatch.setattr(w.signal, "pidfd_send_signal", lambda fd, sig: calls.append(("signal", fd, sig)),
-                        raising=False)
+    monkeypatch.setattr(w, "send_pidfd", lambda fd: calls.append(("signal", fd, w.signal.SIGINT)))
     monkeypatch.setattr(w, "owned", lambda *a: False)
     assert not w.interrupt_owned(123, "456")
     assert calls == [("close", 7)]
@@ -46,3 +45,13 @@ def test_pidfd_signal_requires_final_ownership_check_and_always_closes(monkeypat
     monkeypatch.setattr(w, "owned", lambda *a: True)
     assert w.interrupt_owned(123, "456")
     assert calls == [("signal", 7, w.signal.SIGINT), ("close", 7)]
+
+
+def test_conda_wrapper_fallback_uses_pidfd_syscalls_without_pid_based_kill(monkeypatch):
+    monkeypatch.delattr(w.os, "pidfd_open", raising=False)
+    monkeypatch.delattr(w.signal, "pidfd_send_signal", raising=False)
+    calls = []
+    monkeypatch.setattr(w, "_syscall", lambda *args: calls.append(args) or 8)
+    assert w.open_pidfd(123) == 8
+    w.send_pidfd(8)
+    assert calls == [(434, 123, 0), (424, 8, w.signal.SIGINT, 0, 0)]

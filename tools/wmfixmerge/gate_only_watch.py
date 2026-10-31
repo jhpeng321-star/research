@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import signal
+import sys
 import time
 
 from tools.wmfixmerge.data import digest, safe
@@ -37,17 +38,44 @@ def owned(pid, ticks, *, proc=Path("/proc")):
         return False
 
 
+def _syscall(number, *args):
+    # Some existing conda Python builds lack the pidfd wrappers despite running
+    # on a kernel that supports them. Linux's generic 64-bit syscall numbers
+    # are identical on the two supported architectures; fail closed elsewhere.
+    import ctypes
+    import platform
+    if sys.platform != "linux" or platform.machine() not in ("x86_64", "aarch64"):
+        raise OSError("pidfd syscall fallback unsupported on this platform")
+    libc = ctypes.CDLL(None, use_errno=True)
+    libc.syscall.restype = ctypes.c_long
+    result = libc.syscall(ctypes.c_long(number), *(ctypes.c_long(int(v)) for v in args))
+    if result == -1:
+        error = ctypes.get_errno()
+        raise OSError(error, os.strerror(error))
+    return int(result)
+
+
+def open_pidfd(pid):
+    fn = getattr(os, "pidfd_open", None)
+    return fn(pid) if fn else _syscall(434, pid, 0)
+
+
+def send_pidfd(fd):
+    fn = getattr(signal, "pidfd_send_signal", None)
+    return fn(fd, signal.SIGINT) if fn else _syscall(424, fd, signal.SIGINT, 0, 0)
+
+
 def interrupt_owned(pid, ticks):
     """A pidfd pins identity across the final check/signal race (Linux only)."""
     try:
-        fd = os.pidfd_open(pid)
+        fd = open_pidfd(pid)
     except ProcessLookupError:
         return False
     try:
         if not owned(pid, ticks):
             return False
         try:
-            signal.pidfd_send_signal(fd, signal.SIGINT)
+            send_pidfd(fd)
         except ProcessLookupError:
             return False
         return True
@@ -72,6 +100,8 @@ def main(argv=None):
     args = parser.parse_args(argv)
     if not owned(args.pid, args.start_ticks) or digest(OUT / "step_000030.pt") != STEP30_SHA:
         raise ValueError("owned trainer/checkpoint identity mismatch")
+    fd = open_pidfd(args.pid)  # prove kernel support before arming; never signal in dry-run
+    os.close(fd)
     if not args.execute:
         print("owned trainer and step30 verified; dry-run only")
         return 0
