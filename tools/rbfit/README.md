@@ -60,6 +60,39 @@ conditioning time and is demonstrably underdispersed here; it is experimental.
 The helper `draw_lane_parameters` also draws one persistent physical vector.
 Neither reader enables a shared model/config switch or alters legacy behavior.
 
+## Owner00:40 addendum
+
+`MotionFit(directory, shrinkage_path=POLICY_JSON)` optionally applies
+`wm_phys.idm_shrinkage.v1`: mix the exact raw posterior with the SAME fitted
+population, posterior fraction `n/(n+prior_count)`; zero usable acceleration
+observations use population exactly. `population_only=true` represents the
+infinite-shrinkage endpoint. Policy SHA-binds its population and causal time.
+The scalar prior_count is fitted by physical acceleration CRPS using prefix
+[240,270) to predict [270,300), then frozen before [300,360) scoring. Population
+was estimated on the whole pre-t0 FIT sample: this is internal empirical Bayes,
+not independent coverage qualification. No action outcomes select the policy.
+
+```python
+from wms.physics.motion_fit import MotionFit, MotionFitForUNC
+fit = MotionFit("artifacts/rbfit/finite_mixture_v4", shrinkage_path=policy_path)
+proxy = MotionFitForUNC(model, fit, worlds, observed_vids, t0_s=300,
+                        n_particles=32, seed=190)
+# UNC imports live on the integrator/UNC branch; no shared files are changed here.
+plans = plan_hidden_state_futures(proxy, state, history_kwargs,
+    future_sampling="hidden_state", row_keys=worlds, n_samples=8, seed=190)
+# Roll out the ORIGINAL model with each plan.kwargs, retaining each joint draw.
+```
+
+`fit.unc_posterior_samples(...)` is also available directly. Shape [P,B,K,9]
+uses `driver_encoder.PARAMETER_NAMES`, NOT IDM artifact order: min_gap is third.
+The four non-IDM values and all CAV/padding values are preserved from the point
+encoder; there is no MOBIL-to-LC conversion. This bridge supplies incumbent
+samples; entrant pools still must explicitly use the fitted joint population.
+
+Updated LC reproduction adds `--idm-pooled .../pooled_full_v5/idm_pooled.json`
+and freezes lane811cd7e8 (two LC source files, finite route geometry and epsilon),
+with identical65 numerical profiles. All old source/output versions remain.
+
 `validation_recorded_endpoints.json` supersedes original Euler-reconstructed
 position scores. `predictive_validation.json` scores physical-profile spread only,
 without injecting fitted residual noise. These conditional FIT checks do not

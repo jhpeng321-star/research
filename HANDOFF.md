@@ -22,6 +22,9 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   A/C use the bound compatible runner even with an older EVAL worktree copy.
 
 ## What exists
+- FIT50f2cd02 integrated: shrinkage_v1 preferred physical posterior (learned
+  strength19.35568, already applied in artifact), UNC bridge and SUMOCORE
+  sign diagnosis. Fitted LCv2 remains OFF: still loses its event-rate baseline.
 - UNCe038da91 integrated: fitted finite-support posterior adapter, identity-keyed
   existing-driver draws, learned observable-counter arrival family + Gamma rate
   uncertainty. Default-OFF; FULL recipe wiring next. Optional fitted LC left OFF.
@@ -45,6 +48,8 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   Full-population ledger/exit/finite audit attached to every candidate task.
 
 ## Verification / receipts
+- Existing cpuQ FIT source suite **17 PASS /2.10s**; latest21-test source gate
+  still to run in NEW INT staging (local SciPy absent). UNC adapter20PASS above.
 - UNC integration: **34 CPU tests PASS /13.33s**; fitted-IDM/arrivals, legacy
   futures and INT recipe/audit. Test fixture now explicitly eval(), matching
   production loader and the new fail-closed deterministic-future guard.
