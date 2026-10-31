@@ -110,6 +110,13 @@ class BackendUnavailable(RuntimeError):
     pass
 
 
+@dataclass(frozen=True)
+class CompleteDraw:
+    """Identity-bound arbitrary WM payload (including tensor-backed future builders)."""
+    draw_id: str
+    payload: object
+
+
 class WMPhysPredictor:
     """Rebuilt WM bridge. One complete hidden-driver/arrival draw per k, across actions.
 
@@ -127,8 +134,13 @@ class WMPhysPredictor:
         draws = list(self.draw_factory(observable_state, horizon, K))
         if len(draws) != K:
             raise ValueError('future builder must return exactly K complete draws')
+        bound_ids = [d.draw_id for d in draws if isinstance(d,CompleteDraw)]
+        if any(not isinstance(d,str) or not d for d in bound_ids) or len(set(bound_ids)) != len(bound_ids):
+            raise ValueError('complete futures require unique nonempty bound draw identities')
         identities = [digest(dict(replay=observable_state.replay_key, horizon=horizon,
-                                  ordinal=i, payload=d)) for i,d in enumerate(draws)]
+                                  ordinal=i, payload=d.draw_id if isinstance(d,CompleteDraw) else d))
+                      for i,d in enumerate(draws)]
+        draws = [d.payload if isinstance(d,CompleteDraw) else d for d in draws]
         outcomes = {}
         for action in candidate_actions:
             outcomes[action['id']] = tuple(Outcome(identity, **self.rollout(

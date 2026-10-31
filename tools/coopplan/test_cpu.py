@@ -7,7 +7,7 @@ import unittest
 from unittest.mock import patch
 
 from .predictor import (ObservableState, Outcome, Prediction, SumoOraclePredictor,
-                        WMPhysPredictor, BackendUnavailable)
+                        WMPhysPredictor, BackendUnavailable, CompleteDraw)
 from .planner import Planner, candidates, decide, cooperation_credit, TIMES
 from .protocol import budget, CAP, approval, worlds
 
@@ -94,6 +94,20 @@ class ContractTests(unittest.TestCase):
     def test_unavailable_model_never_calls_sumo(self):
         with self.assertRaises(BackendUnavailable):
             WMPhysPredictor().predict(STATE,ACTIONS,120,8)
+
+    def test_identity_bound_tensor_style_payload_does_not_need_json_encoding(self):
+        class Payload:
+            value = 3.
+        seen = []
+        def rollout(s,a,h,draw):
+            seen.append(draw.value)
+            result = toy(a,draw.value)
+            draw.value = 999.
+            return result
+        model = WMPhysPredictor(rollout,lambda s,h,k:[CompleteDraw('recipe-sha/future-0',Payload())])
+        p = model.predict(STATE,ACTIONS,120,1)
+        self.assertEqual(seen,[3.,3.])
+        self.assertEqual(decide(p)['selected'],'O1')
 
     def test_observable_whitelist_and_hdv_command_rejected(self):
         with self.assertRaises(ValueError):
@@ -193,6 +207,28 @@ class ContractTests(unittest.TestCase):
         self.assertEqual(order[2][2],480)
         self.assertEqual(order[-1],'close')
         self.assertEqual(result['breakdown'],False)
+
+    def test_bic_pre_history_and_future_bins_are_half_open(self):
+        import numpy as np
+        from types import SimpleNamespace
+        from .plant import Diagnostics
+        kin = np.zeros((121,1,7))
+        kin[:,:,0],kin[:,:,1],kin[:,:,4] = -10.,1.,20.
+        frame = SimpleNamespace(junction=np.array([False]),lane_carry=np.array([0]),
+                                lane=np.array([0]),present=np.array([True]),
+                                s=np.array([-10.]),v=np.array([20.]))
+        env = SimpleNamespace(now=300,frame=frame,_table={'a':dict(speed_mps=20.)},
+                              history=SimpleNamespace(raw=lambda n:dict(kin=kin,mask=np.ones((121,1),bool))),
+                              _after_physics=lambda *a,**k:{})
+        b = SimpleNamespace(env=env)
+        fake = SimpleNamespace(SPEED_LIMIT_MPS=31.29)
+        with patch.dict('sys.modules',{'traffic_shepherd.c4.env':fake}):
+            diag = Diagnostics(b,['a'])
+            for i in range(240):
+                env._after_physics(300.+.5*(i+1))
+        self.assertEqual(set(diag.speeds),set(range(24,42)))
+        self.assertEqual([len(diag.speeds[k]) for k in range(24,42)],[20]*18)
+        self.assertAlmostEqual(diag.delay['a'],120.*(1.-20./31.29),places=10)
 
 
 if __name__ == '__main__':
