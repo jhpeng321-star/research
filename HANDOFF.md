@@ -1,5 +1,14 @@
 # S-COOPFREE resume receipt
 
+## OWNER02:21 fresh resume
+Production615088/start48394231 and workers615093-615096 verified live/nice19;
+publisher15284/creation2026-11-01T02:05:24 also verified. Never duplicate either.
+TRAIN reserved1,649,760/1,650,000:240sim-s remain. Corrected u1 can finish; updates3/6/9
+require prospective owner budget/phase amendment. Preserve all historical charges;
+do not count optimizer replay as fresh batches. See RESUME_OWNER0221.json.
+Read-only learning-check/pairwise learned-vs-HOLD observer extension CPU6/6PASS/SUMO0;
+its deployment receipt below supersedes the old publisher PID when available.
+
 ## OWNER01:48 HOLD-credit migration (fresh-session priority)
 The inherited u1 arms use MAPPO counterfactuals. Any inherited `policy_u001.pt`
 is a **legacy MAPPO-credit checkpoint**, not the requested HOLD-credit learner.

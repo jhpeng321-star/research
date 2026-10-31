@@ -1,5 +1,25 @@
 # S-COOPFREE — implementation and execution receipt
 
+## OWNER02:21 learning-check amendment and budget blocker
+Fresh resume verified cpuQ615088/start48394231 and all four nice19 workers;
+the existing singleton publisher15284 is also live. No physics was redispatched.
+TRAIN has1,649,760/1,650,000sim-s reserved, leaving240; the corrected u1 can finish,
+but fresh updates3/6/9 cannot fit. Even150 joint-only windows at earliest t300 cost
+135,000sim-s, before HOLD baselines or all-member solos. The overall2M cap also
+retains DEV172,800, discovery91,200, and unallocated44,960; these are not a fresh
+TRAIN authorization. Further training needs a prospective owner budget/phase amendment.
+Completed simulations/charges remain; repeated optimizer passes are not fresh updates.
+`tools/coopfree_learning_checks.py` adds read-only checks for each actual update,
+six-update descriptive D_G/C_G trends and the registered<=50% execution trigger.
+It reports missing exact credit and pending dev explicitly; no learning is inferred
+from absent updates. A triggered phase recommends measured shared-scale calibration,
+public observable helpful-state evidence, and prospective group-ES efficiency trials.
+The publisher will export raw paired learned/HOLD per-world metrics and compute
+J600/J900 and safety bootstrap differences directly, rather than subtracting CIs.
+CPU6/6PASS,0.080s,SUMO0; includes world-pair mismatch/duplicate rejection, cancellation
+of world variance, legacy/replay exclusion, cap blockage and six-update trigger tests.
+Shared REGISTRATION.md records this blocker; immutable scientific runtime/design unchanged.
+
 ## OWNER01:48 correction (supersedes inherited live-run narrative)
 CPU22/22 PASS, zero skips,1.28s, SUMO0, including all18 original frozen gates.
 The original156-window batch has drained; its legacy MAPPO-credit checkpoint is

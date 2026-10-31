@@ -15,6 +15,7 @@ import time
 from tools.coopbandit.ops import remote
 from tools.coopfree_publish import (git, immutable, replace_block, DocumentationBusy,
                                     dev_text, discovery_text)
+from tools.coopfree_learning_checks import learning_check, paired_hold, render
 
 LOCAL = Path(__file__).resolve().parents[1]
 ROOT = '/home/ubuntu/coopfree20261101_build5'
@@ -52,6 +53,16 @@ if (r/'HOLD_UPDATE_001.json').exists():
  assert report['windows']>=150 and report['worlds']>=12
  assert report['baseline'].startswith('zero-update policy-mean HOLD')
  add('HOLD_UPDATE_001.json','UPDATE_001.json');add('policy_hold_u001.pt','policy_u001.pt')
+if (r/'HOLD_DEV_001.json').exists() and (r/'HOLD_ZERO_DEV.json').exists() and 'HOLD_PAIRED_WORLD_METRICS.json' not in known:
+ paired={{}}
+ for label,u in [('learned',101),('hold',1)]:
+  paired[label]=[]
+  for seed in range(982024,982048):
+   value=read(r/'jobs'/('dev_u%03d_s%d_learned'%(u,seed))/'RESULT.json')
+   assert (r/'jobs'/('dev_u%03d_s%d_learned'%(u,seed))/'CLOSE.json').exists()
+   paired[label].append(dict(world=value['world'],metrics=value['metrics']))
+ data=(json.dumps(paired,sort_keys=True)+'\\n').encode()
+ files['HOLD_PAIRED_WORLD_METRICS.json']=dict(sha256=hashlib.sha256(data).hexdigest(),base64=base64.b64encode(data).decode())
 dispatch=read(r/'HOLD_DISPATCH.json');p=pathlib.Path('/proc/'+str(dispatch['pid'])+'/stat')
 alive=p.exists() and p.read_text().split()[21]==dispatch['start_ticks'] and p.read_text().split()[2]!='Z'
 rows=[json.loads(s) for s in (r/'CHARGES.jsonl').read_text().splitlines()]
@@ -67,7 +78,7 @@ if d.is_dir():
   if p.is_file() and p.name.endswith('.jsonl.gz'):
    result=read(r/'jobs'/p.name[:-9]/'RESULT.json')
    archive.append(dict(name=p.name,bytes=p.stat().st_size,sha256=result['trace_sha256']))
-print(json.dumps(dict(files=files,dispatch=dispatch,owned_alive=alive,charged=sum(row['sim_s'] for row in rows),actual_closed=sum(row['actual_sim_s'] for row in closed),progress=progress,archive=archive,unix=time.time(),load=os.getloadavg())))
+print(json.dumps(dict(files=files,dispatch=dispatch,owned_alive=alive,charged=sum(row['sim_s'] for row in rows),train_charged=sum(row['sim_s'] for row in rows if row['phase']=='train'),actual_closed=sum(row['actual_sim_s'] for row in closed),progress=progress,archive=archive,unix=time.time(),load=os.getloadavg())))
 ''', timeout=25))
 
 
@@ -106,6 +117,8 @@ def describe(snapshot):
             lines += ['### '+label] + dev_text(json.loads((PUBLIC/name).read_text()))
     if (PUBLIC/'HOLD_DISCOVERY_001.json').exists():
         lines += discovery_text(json.loads((PUBLIC/'HOLD_DISCOVERY_001.json').read_text()))
+    if (PUBLIC/'LEARNING_CHECK.json').exists():
+        lines.append(render(json.loads((PUBLIC/'LEARNING_CHECK.json').read_text())))
     lines += ['Budget: %d precharged / %.0f closed-actual sim-s; hard cap2,000,000; no refunds/retries.' %
               (snapshot['charged'],snapshot['actual_closed']),
               'TRAIN exploration credit is not paired dev-policy performance.']
@@ -174,6 +187,15 @@ def once(commit):
     old = json.loads(lastpath.read_text()) if lastpath.exists() else None
     archive_rows = snapshot.pop('archive')
     if decoded or old is None or snapshot['unix']-old['unix'] >= 600:
+        updates = [json.loads((PUBLIC/'UPDATE_001.json').read_text())] if (PUBLIC/'UPDATE_001.json').exists() else []
+        paired = None
+        if (PUBLIC/'HOLD_PAIRED_WORLD_METRICS.json').exists():
+            worlds = json.loads((PUBLIC/'HOLD_PAIRED_WORLD_METRICS.json').read_text())
+            paired = paired_hold(worlds['learned'], worlds['hold'])
+            immutable(PUBLIC/'HOLD_LEARNED_VS_ZERO_DEV.json', (json.dumps(paired,indent=2)+'\n').encode())
+        dev = json.loads((PUBLIC/'HOLD_DEV_001.json').read_text()) if (PUBLIC/'HOLD_DEV_001.json').exists() else None
+        check = learning_check(updates, snapshot['train_charged'], paired=paired, dev=dev)
+        (PUBLIC/'LEARNING_CHECK.json').write_text(json.dumps(check,indent=2)+'\n')
         replace_block(LOCAL/'HANDOFF.md',describe(snapshot))
         replace_block(LOCAL/'docs/paper_results/COOPFREE.md',describe(snapshot))
         lastpath.write_text(json.dumps(snapshot,indent=2)+'\n')

@@ -1,0 +1,22 @@
+{
+  "owner_addendum": "02:21",
+  "command": "python -B -m unittest tools.test_coopfree_learning_checks -v",
+  "tests": 6,
+  "passed": 6,
+  "skips": 0,
+  "wall_s": 0.080,
+  "sim_s": 0,
+  "live_readonly_integration": {
+    "source_and_checkpoint_bindings_verified": true,
+    "owned_supervisor_alive": true,
+    "completed_tasks": 236,
+    "total_tasks": 455,
+    "actual_closed_sim_s": 1463280,
+    "charged_sim_s": 1690800,
+    "train_charged_sim_s": 1649760,
+    "relocated_tapes": 1349,
+    "physics_dispatched": 0
+  },
+  "registration": "Appended own S-COOPFREE OWNER02:21 RESUME / BUDGET BLOCKER line in shared REGISTRATION.md. Shared runs registry is outside this task branch's tracked files; own scientific sources and original certificate remain immutable.",
+  "scope": "Observer-only owner checks and paired learned-vs-HOLD bootstrap; no new training phase authorized."
+}
