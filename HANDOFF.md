@@ -19,12 +19,16 @@ Use current reporter: it accepts ONLY the exact hash-bound historical failure.
 
 Collection Unix1793469726 verifies second smoke SUCCESS900actual and20production
 episodes complete;19,200actual/26,100reserved incl history,7openproduction,0updates.
-Owned supervisor606968 remains live. A separate read-only five-minute watcher
-`scripts/selmappo2_watch.py` is prepared (4CPU tests/Ruff pass); it never dispatches
-simulation. Its WATCH_ONCE lock and process/dispatch receipts live in evidence.
-After launch, let it collect rather than duplicating SSH polls. It publishes the
+Owned supervisor606968 remains live. Separate read-only five-minute watcher
+`scripts/selmappo2_watch.py` is **running locally as ownPID12432**, launched once
+at Unix1793469838 (4CPU tests/Ruff pass); it never dispatches simulation.
+ScriptSHA2119509d4b46020bc5a6b67e5e34898c93db0405560bedd99c225984b711983f.
+Its WATCH_ONCE lock and process/dispatch receipts live in evidence; do not relaunch.
+Let it collect rather than duplicating SSH polls. It publishes the
 paper's live tail plus immutable snapshots and only hands COMPLETE final169 to
 the peer. Peer evaluation manifest path/schema are documented in the report.
+Read-only resource receipt Unix1793469890:32cores/load17.11,55.98GBavailable RAM,
+2.860GBfree disk, admission passes. No task/peer artifacts deleted or signals sent.
 
 Original immutable cpuQ root:
 `/home/ubuntu/selmappo2_20261101/build_b42c257b09813c175fcb7261e341c7599d0bb5c4c971529e2856890d2fc8038c`.

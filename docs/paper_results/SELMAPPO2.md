@@ -14,7 +14,7 @@ safe-filename exposure audit199667/zero conflicts/errors. Immutable current buil
 Owned supervisor606968 (UID1000/startticks48374316) was launched once, nice19,
 CUDAhidden/single-thread workers,<=12 after successful second smoke. Dispatch
 disk2.601GB/load7.08/32cores; each reservation yields below2GiB disk/8GiB memory
-or above spare-CPU admission. Latest complete collection at Unix1793469726 verifies
+or above spare-CPU admission. Initial production verification at Unix1793469726 records
 **second smoke900s PASS and20production worlds complete**, supervisor still live.
 Totals19,200actual/26,100reserved (including original failed900/300);7production
 reservations still unresolved at that observation,0complete PPO updates yet.
@@ -119,6 +119,7 @@ must explicitly account for the already consumed failed smoke slot.
 
 `scripts/selmappo2_watch.py` is a separate read-only collector (4CPU checks/Ruff
 pass), not a training dispatcher. Its exclusive watcher lock prevents duplication;
+own localPID12432 was launched once at Unix1793469838 and is live.
 300s read spacing, immutable full collections/curve CSV+SVG/report snapshots, and
 a live section below keep this report current without changing staged training.
 Only verified COMPLETE final169 produces `SELMAPPO2_FINAL.json` for S-C1SWITCH2.
