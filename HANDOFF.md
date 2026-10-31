@@ -139,6 +139,10 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
 - Poll workers about every20min. No peer process action, push, deletion or training.
 
 ## Remaining / known gaps
+- New candidate runner exports60s predicted positions by ORIGINAL observed
+  string ID, exact halfstep119, with exit/recycled-slot censoring and explicit
+  no-factual-future-input provenance. Endpoint exporter2CPU tests PASS. Existing
+  old snapshots remain bin/clock-only; baseline short-horizon/factual scorer next.
 - RUNA must retain the published loader module so the verified runner resolves.
 - Matched distributional efficacy, HDV60s non-regression and paired CIs pending.
 - EVAL endpoint gate request: rb-shared/INT_HDV60_GATE_REQUEST.md; bin/clock-only

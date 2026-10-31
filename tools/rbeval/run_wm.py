@@ -287,6 +287,9 @@ def main(model_loader=None, identity_sources=(), future_builder=None):
                     road_delay_vs=score[str(h)]['real_road'][i], source_wait_vs=score[str(h)]['real_source'][i]) for h in HS}
                 episodes.append(dict(seed=seed, future=fi, arm=arm,
                     initial_sha256=source.metadata[0]['initial_state_sha256'], bins=bins, clocks=clocks))
+            if getattr(model, '_wmphys_variant', None) in ('A', 'B', 'C', 'FULL'):
+                from tools.rbint.endpoints import attach_endpoints60
+                attach_endpoints60(episodes, arrays, seed, b.entry_spec['k0'])
             assert all(digest(p) == sha for p, sha in sources.items()), 'source changed during task'
             task = dict(schema='rbeval/1', identity_sha256=identity_sha, seed=seed, future=fi,
                 arms=ARMS, episodes=episodes, costs=score, seconds=time.monotonic()-begin,
