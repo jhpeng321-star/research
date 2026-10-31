@@ -27,6 +27,8 @@ def main(argv=None):
     parser.add_argument("--horizons", default="120,300")
     parser.add_argument("--arms", default="0,1")
     parser.add_argument("--threads", type=int, default=1)
+    parser.add_argument("--future-index", type=int, default=0)
+    parser.add_argument("--n-futures", type=int, default=8)
     args = parser.parse_args(argv)
     install_guard()
     import torch
@@ -40,7 +42,8 @@ def main(argv=None):
         for horizon in (int(h) for h in args.horizons.split(",")):
             began = time.monotonic()
             with torch.no_grad():
-                predicted, recorded, _, receipt = rt.rollout(args.group, horizon, arm_index=arm)
+                predicted, recorded, _, receipt = rt.rollout(args.group, horizon, arm_index=arm,
+                    future_index=args.future_index, n_futures=args.n_futures)
             row = dict(group=args.group, arm=arm, horizon=horizon,
                        seconds=round(time.monotonic() - began, 2),
                        paired_J_contrast=float(((predicted[1, 0] - predicted[0, 0])
@@ -49,7 +52,8 @@ def main(argv=None):
             rows.append(row)
             print(json.dumps(row), flush=True)
     result = dict(schema="wmfix_es_probe/1", host=socket.gethostname(), pid=os.getpid(),
-                  threads=args.threads, torch=torch.__version__, device="cpu",
+                   threads=args.threads, torch=torch.__version__, device="cpu",
+                   future_index=args.future_index, n_futures=args.n_futures,
                   runtime_load_seconds=round(load_seconds, 1),
                   group_seconds=round(sum(r["seconds"] for r in rows), 1),
                   max_rss_mb=round(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024., 1),

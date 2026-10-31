@@ -70,7 +70,7 @@ class PairedBranchSource:
                  role_of: Optional[dict] = None, role: str = "train",
                   junction_fix: str = "off", command_known: bool = False, name: str = "paired",
                    horizon_mode: str = "fixed", merge_pivot_history: bool = False,
-                   arm_kinds=None, arm_names=None):
+                    arm_kinds=None, arm_names=None, allow_designed=False):
         if horizon_mode not in ("fixed", "stage"):
             raise ValueError("paired horizon_mode must be fixed or stage")
         self.horizon_mode = horizon_mode
@@ -83,7 +83,7 @@ class PairedBranchSource:
                    and roles.get(e["world"], e.get("split_role")) == role
                    and (arm_names is None or e.get("arm") in arm_names)
                    and (arm_kinds is None or e.get('branch', {}).get('kind') in arm_kinds)]
-        if not doc.get("allow_designed", False):
+        if not (doc.get("allow_designed", False) or allow_designed):
             bad = [e["episode"] for e in entries
                    if set(e.get("controllers_used", ())) - {"native", "direct"}]
             if bad:

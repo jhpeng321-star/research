@@ -85,7 +85,7 @@ class RowControllers:
 
 def policy_feedback(checkpoint, *, device="cpu", native_cav="head",
                     native_accel_max=1.2, native_ramp_merge="wm_law",
-                    native_lane_change=True, symmetric_exec_cap=True):
+                    native_lane_change=True, symmetric_exec_cap=True, zero_residual=False):
     """Frozen policy/MAPPO adapter using the exact ordinary CAV observation builder.
 
     ``load_policy_components`` supports the published MAPPO checkpoint interface.
@@ -96,6 +96,9 @@ def policy_feedback(checkpoint, *, device="cpu", native_cav="head",
     from .counterfactual import native_fn
     from .safety import safe_accel
     policy, encoder, rules, _ = load_policy_components(str(checkpoint), device=device)
+    if zero_residual:
+        torch.nn.init.zeros_(policy.residual_head.weight)
+        torch.nn.init.zeros_(policy.residual_head.bias)
     policy.eval(); encoder.eval()
     def deterministic(obs, signal, **kwargs):
         return policy(obs, signal, deterministic=True, **kwargs)

@@ -85,7 +85,7 @@ def test_cell_name_carries_corpus_tag():
     assert cell_name(0, 0, "fit", 4, 0, 300) == "CELL_g000_c000_fit_grp4_arm0_h300.json"
 
 
-def test_fitness_subset_every_fifth_wmdata_group():
+def test_fitness_subset_all_wmdata_worlds_and_arms():
     from tools.wmfixmerge.prepare_combined import fitness_subset
     fit = [f"fitpair{i}" for i in range(12)]
     wm = [f"wmpair{i}" for i in range(40)]
@@ -93,9 +93,24 @@ def test_fitness_subset_every_fifth_wmdata_group():
                 for i, k in enumerate(ks)}
     subset = fitness_subset(fit, wm, seeds_of)
     assert [g["corpus"] for g in subset[:12]] == ["fit"] * 12
-    assert [g["group"] for g in subset[12:]] == [0, 5, 10, 15, 20, 25, 30, 35]
-    assert all(g["arm"] == 0 and g["arm_name"] == "ctrl0" for g in subset[12:])
+    assert len(subset) == 172
+    assert {g["group"] for g in subset[12:]} == set(range(40))
+    for i in range(40):
+        assert [(g["arm"], g["arm_name"]) for g in subset[12:] if g["group"] == i] == [
+            (0, "circles"), (1, "ctrl0"), (2, "mappo"), (3, "pi")]
     assert all(g["arm"] == 0 for g in subset[:12])
+
+
+def test_fitness_equal_world_weighting_with_unequal_arm_counts():
+    def cell(group, delta):
+        return dict(group=group, horizon=300, predicted=[[0.] * 5, [delta] * 5],
+                    recorded=[[0.] * 5, [0.] * 5])
+    one = cell("fit:0", 1.)
+    many = cell("wm:0", 3.)
+    a, ar = fitness_from_cells([one, many], [1.] * 5, [1.] * 5)
+    b, br = fitness_from_cells([one] + [many] * 4, [1.] * 5, [1.] * 5)
+    assert a == b
+    assert ar["paired_J_MAE"] == br["paired_J_MAE"] == 2.
 
 
 def test_check_registry_binds_objective_and_digests(tmp_path):

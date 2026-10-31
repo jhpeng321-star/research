@@ -14,3 +14,21 @@
   signalling. cpuQ cap now 30 CPU workers; gpuA cap 20 CPU threads.
 - Next: explicit frozen wmdata feedback adapters; all-world/all-arm registry;
   genuine K8 probe; budget the full-corpus calibration honestly.
+
+## Corrected tooling / live probes
+- Explicit CTRL0 uses the original 64f70af4 policy with its residual head zeroed;
+  MAPPO binds d9042cc5. PI/CIRCLES use published TimelineControllers, including
+  explicit algorithm continuity for entrants. Opt-in designed-arm loading is
+  restricted in Runtime to verified wmdata_fit episodes; default loader unchanged.
+- Registry now covers 52 worlds / 172 contrasts; fitness averages arms within
+  world before averaging worlds. Original FIT objective scales remain fixed.
+- cpuQ tests: 18 passed (ES + wmdata role); Windows has no torch (17 passed,
+  the live-dataclass test requires torch; no Windows environment installed).
+- K8 probe launched as eight sticky-future single-thread processes per host:
+  cpuQ PIDs 3030648-3030655; gpuA PIDs 193235-193242. Each measures both arms
+  at 120/300 s, entry path/mix ON. Dedicated `probe_k8/DISPATCH.json` + PID
+  receipts prevent relaunch; gpuA code isolated under `es_cpu_v3`.
+- CTRL0/MAPPO 60 s smoke complete, 31.2/31.3 s; frozen tensor checks pass.
+- PI/CIRCLES first attempt lacked frozen controller sources; retained failures.
+  Sources staged byte-for-byte from WMDATA frozen e3final runtime; new owned
+  PIDs 3035044/3035045, `es_canary_deps_v3`; no other processes signalled.

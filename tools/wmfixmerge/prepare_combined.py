@@ -3,8 +3,7 @@
 MAIN addendum 2026-10-31 13:38 (S-WMDATA COMPLETE): the ES calibration data is
 the combined TRAIN corpus.  This tool runs on a host that can verify BOTH
 prepared docs (cpuQ): it fully re-verifies each corpus (data.verify digests
-every source file), fixes the pre-registered fitness subset (all 12 FIT groups
-+ every 5th wmdata group of the doc's sorted pair order, budget-capped) and
+every source file), binds all 12 FIT groups plus all 40 wmdata worlds/all arms and
 reuses the FIT doc's scales/anchor_scales/crossing_width so the fitness stays
 the SAME pre-registered paired objective, merely evaluated on more groups.
 
@@ -19,10 +18,7 @@ import json
 
 from tools.wmfixmerge.data import SEEDS, digest, install_guard, safe, verify
 
-WMDATA_STRIDE = 5
-WMDATA_ARM = "ctrl0"  # WMDATA.md: paired arm-minus-CTRL0/native contrasts
-WMDATA_ARM_INDEX = 0  # the wm Runtime source is restricted to [native, ctrl0]
-                      # (es.sweep), so the single non-reference arm is ctrl0
+WMDATA_ARMS = ("circles", "ctrl0", "mappo", "pi")
 
 
 def group_order(doc):
@@ -32,7 +28,7 @@ def group_order(doc):
         if row["pair_key"] not in seen:
             seen.add(row["pair_key"])
             order.append(row["pair_key"])
-    return order
+    return sorted(order)
 
 
 def fitness_subset(fit_groups, wm_groups, seeds_of):
@@ -40,9 +36,9 @@ def fitness_subset(fit_groups, wm_groups, seeds_of):
                            arm=0, arm_name="registered_single")
                       for i, k in enumerate(fit_groups)]
     fitness_groups += [dict(corpus="wm", group=i, pair_key=k, seed=seeds_of[("wm", k)],
-                            arm=WMDATA_ARM_INDEX, arm_name=WMDATA_ARM)
-                       for i in range(0, len(wm_groups), WMDATA_STRIDE)
-                       for k in [wm_groups[i]]]
+                            arm=arm, arm_name=name)
+                       for i, k in enumerate(wm_groups)
+                       for arm, name in enumerate(WMDATA_ARMS)]
     return fitness_groups
 
 
@@ -68,8 +64,7 @@ def build(fit_prepared, wmdata_prepared, out):
                fitness_groups=fitness_groups,
                scales=fit["scales"], anchor_scales=fit["anchor_scales"],
                crossing_width=fit["crossing_width"],
-               rule=f"FIT 0-11 + wmdata every {WMDATA_STRIDE}th of sorted pair order; "
-                    f"contrast arm {WMDATA_ARM} (arm_index {WMDATA_ARM_INDEX}); "
+               rule="FIT 0-11 + all 40 wmdata worlds, all four native contrasts; "
                     f"scales/anchors/crossing_width from the FIT doc (unchanged objective)")
     with safe(out).open("x") as stream:
         json.dump(doc, stream, indent=2, allow_nan=False)

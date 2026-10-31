@@ -17,11 +17,12 @@ if str(_WMREQUAL) not in sys.path:
 
 class Runtime:
     def __init__(self, prepared, config, checkpoint, controllers, device="cpu",
-                 arm_names=None):
+                  arm_names=None, wmdata_controllers=None):
         import torch
         from tools.wmcombined.e3_score import load_for_scoring
         from wms.data.c4_pairs import PairedBranchSource
         self.doc = verify(prepared)
+        self.wmdata = all(e.get("wmdata_split") == "wmdata_fit" for e in self.doc["episodes"])
         if digest(checkpoint) != WM2_SHA:
             raise ValueError("base is not registered WM2")
         self.device = torch.device(device)
@@ -31,8 +32,17 @@ class Runtime:
         specs = specs.get("controllers", specs)
         if not all(a in specs for a in ("ours_c1", "coopoff_c1")):
             raise ValueError("missing hash-bound entrant controller specifications")
+        if self.wmdata:
+            if not wmdata_controllers:
+                raise ValueError("wmdata_fit needs explicit frozen CTRL0/MAPPO controller specs")
+            extra = json.loads(safe(wmdata_controllers).read_text())
+            extra = extra.get("controllers", extra)
+            if set(extra) != {"ctrl0", "mappo"}:
+                raise ValueError("wmdata controller specs must bind ctrl0 and mappo")
+            specs = {**specs, **extra}
+        self.feedback_specs = specs
         self.settings = replace(settings, seed=140014, entrant_control=True,
-            entrant_controllers={a: specs[a] for a in ("ours_c1", "coopoff_c1")},
+            entrant_controllers=specs,
             entry_queue_state=True, entry_pad_auto=True, entry_pad_max=1024,
             entry_insert_rule="sumo_like_v2")
         self.model = self.model.to(self.device).eval()
@@ -43,9 +53,7 @@ class Runtime:
         worlds = {row["world"] for row in self.doc["episodes"]}
         names = tuple(sorted({e["arm"] for e in self.doc["episodes"]}))
         if arm_names is not None:
-            # S-WMFIX-ES: restrict a multi-arm corpus to the registered paired
-            # contrast (WMDATA.md: native + ctrl0); designed-controller arms
-            # (circles/pi) stay outside this TRAIN rollout source entirely.
+            # Optional explicit subset; the full ES corpus does not restrict arms.
             missing = set(arm_names) - set(names)
             if missing:
                 raise ValueError("arm restriction outside the corpus: " + repr(sorted(missing)))
@@ -55,7 +63,7 @@ class Runtime:
             command_known=True, arm_kinds=("B", "POLICY"), role="train",
             role_of={e["world"]: "train" if e["world"] in worlds else "val"
                      for e in manifest["episodes"]}, name="wmfix_registered_fit",
-            arm_names=names)
+             arm_names=names, allow_designed=self.wmdata)
         if {g["pair_key"] for g in self.source.groups} != {r["pair_key"] for r in self.doc["episodes"]}:
             raise ValueError("production loader dropped or added registered groups")
         if self.source.receipt["dropped_groups_t0_mismatch"] or self.source.horizon != 600:
@@ -64,13 +72,14 @@ class Runtime:
         self.anchor_scales = torch.tensor(self.doc["anchor_scales"], device=self.device,
                                           dtype=torch.float32)
 
-    def rollout(self, group_index, horizon, arm_index=0):
+    def rollout(self, group_index, horizon, arm_index=0, *, future_index=0, n_futures=1):
         import numpy as np
         import torch
         from tools.errsrc.inference import LearnedMix
         from tools.wmcombined.e3_score import group_rows
         from tools.wmrequal.native_lanes import repair
         from tools.wmrequal.grouped_feedback import feedback
+        from tools.wmfixmerge.wmdata_feedback import feedback as wmdata_feedback
         from wms.control.futures import SampledFutures, FuturesConfig
         from wms.data.collate import collate
         from wms.train.inputs import prepare_inputs
@@ -91,7 +100,10 @@ class Runtime:
             record["entry_queue"] = np.array([*label["queue0"], *label["demand_rate"],
                 label["penetration"], label["penetration"]], dtype=np.float32)
         batch = collate(records)
-        with scoring_rng(140014, self.device):
+        draw_seed = 140014 + 1000003 * future_index
+        if not 0 <= future_index < n_futures:
+            raise ValueError("future index outside the registered plan")
+        with scoring_rng(draw_seed, self.device):
             inp = prepare_inputs(batch, self.model, self.settings, self.device, steps)
         inp.cav_controller = repair(inp.cav_controller)
         bind_merge_crn(inp)
@@ -103,14 +115,14 @@ class Runtime:
         initial = {k: select(v) for k, v in inp.initial.items()}
         hist = dict(driver_history=select(inp.observed_hist), driver_history_mask=select(inp.observed_hist_mask),
                     history=select(inp.hist), history_mask=select(inp.hist_mask))
-        plan = SampledFutures(FuturesConfig(n_samples=1, driver_noise_scale=1., embedding_noise_std=.05),
-                              140014).plan([self.model], initial, hist, steps)[0][0]
+        plan = SampledFutures(FuturesConfig(n_samples=n_futures, driver_noise_scale=1., embedding_noise_std=.05),
+                              140014).plan([self.model], initial, hist, steps)[0][future_index]
         def expand(x):
             if isinstance(x, dict):
                 return {k: expand(v) for k, v in x.items()}
             return x.expand(len(records), *x.shape[1:]).clone()
         kw = {k: expand(v) for k, v in plan.items()}
-        mix = LearnedMix(kw["driver_params"], inp.observed_hist_mask, 140014, [key] * len(records))
+        mix = LearnedMix(kw["driver_params"], inp.observed_hist_mask, draw_seed, [key] * len(records))
         from wms.model.learned_admission import LearnedAdmission
         if self.learned_admission:
             # WMFIX: entrant CAVs draw from the native row's observed t0 CAV settings.
@@ -119,7 +131,7 @@ class Runtime:
             mix.cav_pools = [cav_pool.clone() for _ in records]
             inp.entries.cfg = replace(inp.entries.cfg, learned_admission=LearnedAdmission(mix))
         entries = TrackedEntries(inp.entries)
-        with scoring_rng(140014, self.device):
+        with scoring_rng(draw_seed, self.device):
             roll = self.model.rollout(inp.initial, n_steps=steps, entries=entries,
                 cav_teacher=None if inp.teacher is None else inp.teacher[:, :steps + 1],
                 present_seq=None, is_cav_seq=None, history=inp.hist, history_mask=inp.hist_mask,
@@ -147,7 +159,8 @@ class Runtime:
         recorded = torch.tensor([[r["values"][str(horizon)][c] for c in COMPONENTS] for r in order],
                                 device=self.device, dtype=torch.float32)
         return predicted, recorded, [0] * len(order), dict(pair_key=key, arms=[r["arm"] for r in order],
-            queue_conservation=True, source_gradient="zero off hard service events")
+            queue_conservation=True, future_index=future_index, n_futures=n_futures,
+            source_gradient="zero off hard service events")
 
 
 class TrackedEntries:

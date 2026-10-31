@@ -112,11 +112,12 @@ def fitness_from_cells(cells, scales, anchor_scales):
         per_group.setdefault((cell["group"], cell["horizon"]), []).append(
             dict(pair=pair, absolute=absolute,
                  j=abs(float(error[J])), source=abs(float(error[SOURCE]))))
-    fitness = float(np.mean(pair_terms) + np.mean(anchor_terms))
+    fitness = float(np.mean([np.mean([r["pair"] + r["absolute"] for r in v])
+                             for v in per_group.values()]))
     reports = dict(cells=len(cells),
-                   paired_J_MAE=float(np.mean([r["j"] for v in per_group.values() for r in v])),
-                   source_contrast_MAE=float(np.mean([r["source"] for v in per_group.values()
-                                                      for r in v])),
+                   paired_J_MAE=float(np.mean([np.mean([r["j"] for r in v]) for v in per_group.values()])),
+                   source_contrast_MAE=float(np.mean([np.mean([r["source"] for r in v])
+                                                      for v in per_group.values()])),
                    per_group={f"g{g}_h{h}": dict(paired_J_MAE=float(np.mean([r["j"] for r in v])),
                                                  source_contrast_MAE=float(np.mean([r["source"] for r in v])))
                               for (g, h), v in sorted(per_group.items())})
@@ -140,6 +141,7 @@ def sweep(argv=None):
         parser.add_argument("--" + name, required=True)
     parser.add_argument("--prepared-wmdata", default=None,
                         help="prepared doc for corpus 'wm' cells (required if any present)")
+    parser.add_argument("--wmdata-controllers")
     args = parser.parse_args(argv)
     install_guard()
     import torch
@@ -158,7 +160,7 @@ def sweep(argv=None):
             # wm corpus: native + ctrl0 only (registered paired contrast); the
             # designed-controller arms never enter this rollout source.
             rt = Runtime(prepared, args.config, args.checkpoint, args.controllers, "cpu",
-                         arm_names=None if corpus == "fit" else ("native", "ctrl0"))
+                         wmdata_controllers=args.wmdata_controllers)
             live = {p["name"]: float(getattr(rt.model.physics, p["name"]))
                     for p in PARAMS if p["where"] == "physics"}
             for name, value in live.items():
@@ -217,7 +219,7 @@ def sweep(argv=None):
                              f" != {cell['pair_key']}")
         if len(receipt["arms"]) != 2 or receipt["arms"][0] != "native":
             raise ValueError("unexpected microbatch rows: " + repr(receipt["arms"]))
-        if cell.get("arm_name") and receipt["arms"][1] != cell["arm_name"]:
+        if cell.get("arm_name") not in (None, "registered_single") and receipt["arms"][1] != cell["arm_name"]:
             raise ValueError(f"arm order differs: {receipt['arms'][1]} != {cell['arm_name']}")
         if state_hash(rt.model) != bases[cell["corpus"]]:
             raise ValueError("frozen WM2 tensors changed under candidate " + str(cell["cand"]))
