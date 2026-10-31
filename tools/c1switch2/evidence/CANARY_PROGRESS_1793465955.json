@@ -1,0 +1,12 @@
+{
+  "host": "cpuQ",
+  "root": "/home/ubuntu/c1switch2_run_2d2400c953ef2545",
+  "unix": 1793465955.7303364,
+  "pid": 446935,
+  "pid_state": "EXITED",
+  "charged_sim_s": 0,
+  "closed_jobs": [],
+  "closed_actual_sim_s": 0,
+  "log": "Traceback (most recent call last):\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 196, in _run_module_as_main\n    return _run_code(code, main_globals, None,\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 86, in _run_code\n    exec(code, run_globals)\n  File \"/home/ubuntu/c1switch2_run_2d2400c953ef2545/pytools/tools/c1switch2/runner.py\", line 141, in <module>\n    main()\n  File \"/home/ubuntu/c1switch2_run_2d2400c953ef2545/pytools/tools/c1switch2/runner.py\", line 126, in main\n    run(root, binding)\n  File \"/home/ubuntu/c1switch2_run_2d2400c953ef2545/pytools/tools/c1switch2/canary.py\", line 17, in run\n    env = make(label)\n  File \"/home/ubuntu/c1switch2_run_2d2400c953ef2545/pytools/tools/c1switch2/canary.py\", line 13, in make\n    return backend(root, binding, 'canary', world, 'canary__'+label)\n  File \"/home/ubuntu/c1switch2_run_2d2400c953ef2545/pytools/tools/c1switch2/runner.py\", line 69, in backend\n    guard(world)\n  File \"/home/ubuntu/c1switch2_run_2d2400c953ef2545/pytools/tools/c1switch2/design.py\", line 35, in guard\n    from traffic_shepherd.seeds import require_development_case\nModuleNotFoundError: No module named 'traffic_shepherd.seeds'\n",
+  "new_gpu_s": 0
+}

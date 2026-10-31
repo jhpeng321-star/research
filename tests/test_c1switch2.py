@@ -358,3 +358,27 @@ def test_backend_overlay_leaves_frozen_v7_globals_untouched():
     overlay = frozen_overlay(Wall())
     assert overlay.guard is design.guard and overlay.Handover is core.Handover
     assert (v7.guard, v7.Handover, v7.Controller) == original
+
+
+def test_runner_installs_frozen_paths_before_guards_but_never_sets_up_invalid_world(tmp_path, monkeypatch):
+    from tools.c1switch2 import runner
+    events = []
+    class Runtime:
+        def __init__(self, binding):
+            events.append('frozen_paths')
+        def create_backend(self, *args, **kwargs):
+            events.append('create')
+            return 'cpu-construction-sentinel'
+    def guarded(world):
+        assert events == ['frozen_paths']
+        events.append('two_frozen_guards')
+    monkeypatch.setattr(runner, 'load_plugin', lambda spec: Runtime)
+    monkeypatch.setattr(runner, 'guard', guarded)
+    (tmp_path/'jobs').mkdir()
+    binding = dict(runtime={}, cpu_host='cpuQ')
+    with pytest.raises(ValueError, match='unregistered'):
+        runner.backend(tmp_path, binding, 'canary', dict(design.canary_world(), seed=964000), 'bad')
+    assert events == []
+    result = runner.backend(tmp_path, binding, 'canary', design.canary_world(), 'cpu_probe')
+    assert result == 'cpu-construction-sentinel'
+    assert events == ['frozen_paths', 'two_frozen_guards', 'create']

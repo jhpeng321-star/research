@@ -47,7 +47,31 @@ def env(host, root):
     return common
 
 
-def stage(host):
+def zero_physics_predecessor(host, root, text):
+    parent = '/home/ubuntu' if host == 'cpuQ' else '/root'
+    if (Path(root).parent.as_posix() != parent or not Path(root).name.startswith('c1switch2_run_') or
+            not any('S-C1SWITCH2 ZERO-PHYSICS STARTUP CORRECTION REGISTERED' in line and root in line
+                    for line in text.splitlines())):
+        raise ValueError('explicit registered zero-physics predecessor required')
+    return ssh(host, f'''import hashlib,json
+from pathlib import Path
+root=Path({root!r});dispatch=json.loads((root/'DISPATCH_CANARY.json').read_text())
+proc=Path('/proc',str(dispatch['pid']))
+assert not proc.exists() or proc.joinpath('stat').read_text().split()[2]=='Z','predecessor still alive'
+ledger=root/'accounting.jsonl';raw=ledger.read_bytes() if ledger.exists() else b''
+assert not raw,'predecessor charged physics; zero-physics correction forbidden'
+assert not list((root/'jobs').iterdir()),'predecessor constructed jobs; reconcile explicitly'
+assert "ModuleNotFoundError: No module named 'traffic_shepherd.seeds'" in (root/'CANARY.log').read_text()
+out=dict(root=str(root),pid=dispatch['pid'],status='EXITED_BEFORE_SETUP_AND_PHYSICS',charged_sim_s=0,actual_sim_s=0,ledger_sha256=hashlib.sha256(raw).hexdigest())
+path=root/'STARTUP_STOP.json'
+if not path.exists():
+ with path.open('x') as stream:json.dump(out,stream,indent=2)
+else:assert json.loads(path.read_text())==out
+print(json.dumps(out))
+''')
+
+
+def stage(host, predecessor=None):
     registration_bytes = checked(REGISTRATION).read_bytes()
     text = registration_bytes.decode('utf-8')
     digest = sha(DESIGN)
@@ -55,8 +79,12 @@ def stage(host):
                                    for line in text.splitlines()):
         raise ValueError('current design/approval not registered')
     state = status(host)
-    if any('DISPATCH_CANARY.json' in r for r in state['roots']):
-        raise ValueError('existing canary dispatch: inspect and reuse; never duplicate')
+    old = None
+    dispatched = [r for r in state['roots'] if 'DISPATCH_CANARY.json' in r or 'CANARY_DISPATCH_ONCE.json' in r]
+    if dispatched:
+        if len(dispatched) != 1 or dispatched[0]['root'] != predecessor:
+            raise ValueError('existing canary dispatch: inspect and reuse; never duplicate')
+        old = zero_physics_predecessor(host, predecessor, text)
     files = sorted(Path('tools/c1switch').glob('*.py'))+sorted(Path('tools/c1switch2').glob('*.py'))
     files += [Path(p) for p in TESTS+[DESIGN, 'docs/paper_results/c1switch2/PANEL_v2.json',
               'traffic_shepherd/c4/switchable_wall.py', 'src/wms/control/wall.py']]
@@ -76,6 +104,8 @@ def stage(host):
         prediction_objective='on_road_fleet_delay',
         runtime=dict(entry='tools.c1switch2.runtime:create', sha256=sha('tools/c1switch2/runtime.py')),
         selector_specs={a: dict(status='PENDING') for a in ('fleet_ppo', 'cav_mappo')})
+    if old is not None:
+        binding['startup_predecessor'] = old
     buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode='w:gz') as tar:
         for name, path in staged.items():
@@ -111,8 +141,18 @@ sys.path.insert(0,str(stage));os.chdir(stage)
 log=io.StringIO()
 try:
  with contextlib.redirect_stdout(log),contextlib.redirect_stderr(log):
-  from tools.c1switch.sumo import setup
-  inputs=setup()
+  from tools.c1switch2.runtime import Runtime
+  from tools.c1switch2.runner import backend
+  from tools.c1switch2.design import canary_world
+  assert 'traffic_shepherd.seeds' not in sys.modules,'fresh-process regression was masked'
+  scratch=root/'CPU_CONSTRUCTION';scratch.mkdir();(scratch/'jobs').mkdir()
+  original=Runtime.create_backend
+  Runtime.create_backend=lambda self,*a,**k:dict(inputs=self.inputs)
+  try:
+   constructed=backend(scratch,json.loads((root/'BINDING.json').read_text()),'canary',canary_world(),'cpu_only')
+  finally:Runtime.create_backend=original
+  inputs=constructed['inputs']
+  assert not (scratch/'accounting.jsonl').exists(),'construction-only CPU probe charged physics'
   from tools.c1switch.library import install_wall_extension
   install_wall_extension()
   from tools.c1switch2.design import worlds,canary_world,guard
@@ -156,7 +196,7 @@ out['output']=log.getvalue();output.write_text(json.dumps(out,indent=2));print(j
     print(json.dumps(summary, indent=2))
 
 
-def canary(host, root):
+def canary(host, root, predecessor=None):
     from .audit import registration_audit
     if host != 'cpuQ' or not root.startswith('/home/ubuntu/c1switch2_run_'):
         raise ValueError('canary belongs to the cpuQ task namespace')
@@ -172,19 +212,25 @@ def canary(host, root):
             raise ValueError('retained exposure gate failed')
         exposures[h] = sha(path)
     current = status(host)
-    if any('CANARY_DISPATCH_ONCE.json' in r or 'DISPATCH_CANARY.json' in r for r in current['roots']):
-        raise ValueError('canary previously claimed: inspect/reuse, never duplicate')
+    old = None
+    dispatched = [r for r in current['roots'] if 'CANARY_DISPATCH_ONCE.json' in r or 'DISPATCH_CANARY.json' in r]
+    if dispatched:
+        if len(dispatched) != 1 or dispatched[0]['root'] != predecessor:
+            raise ValueError('canary previously claimed: inspect/reuse, never duplicate')
+        old = zero_physics_predecessor(host, predecessor, text)
     result = ssh(host, f'''import hashlib,json,os,subprocess,sys,sysconfig,time
 from pathlib import Path
 root=Path({root!r});stage=root/'pytools';assert root.is_dir()
 binding=json.loads((root/'BINDING.json').read_text())
+assert binding.get('startup_predecessor')=={old!r},'predecessor lineage mismatch'
 assert all(hashlib.sha256((stage/n).read_bytes()).hexdigest()==v for n,v in binding['sources'].items())
 preflight=json.loads((root/'PREFLIGHT.json').read_text());assert preflight['status']=='PASS'
 assert os.getloadavg()[0]<28,'yield to host pressure'
 assert not (root/'STOP').exists();assert not (root/'CANARY_DISPATCH_ONCE.json').exists()
 for sibling in root.parent.iterdir():
  if sibling.name.startswith('c1switch2_run_') and sibling.is_dir():
-  assert not (sibling/'CANARY_DISPATCH_ONCE.json').exists(),'another task canary claimed'
+  if str(sibling)!={predecessor!r}:
+   assert not (sibling/'CANARY_DISPATCH_ONCE.json').exists(),'another task canary claimed'
 sys.path.insert(0,str(stage));os.chdir(stage)
 from tools.c1switch.storage import canonical
 from tools.c1switch2.gate import REQUIRED,admission
@@ -214,22 +260,56 @@ print(json.dumps(out))
     print(json.dumps(result))
 
 
+def collect(host, root):
+    result = ssh(host, f'''import hashlib,json,time
+from pathlib import Path
+root=Path({root!r});assert root.name.startswith('c1switch2_run_')
+out=dict(host={host!r},root=str(root),unix=time.time())
+dispatch=json.loads((root/'DISPATCH_CANARY.json').read_text());pid=dispatch['pid']
+proc=Path('/proc',str(pid));out['pid']=pid
+out['pid_state']=proc.joinpath('stat').read_text().split()[2] if proc.exists() else 'EXITED'
+ledger=root/'accounting.jsonl'
+rows=[json.loads(line) for line in ledger.read_text().splitlines()] if ledger.exists() else []
+out['charged_sim_s']=sum(r['sim_s'] for r in rows)
+out['closed_jobs']=[];out['closed_actual_sim_s']=0
+for name in ('native_reference','native_repeat',*['branch_'+c for c in {CONTROLLERS!r}],
+             'six_way_reference','six_way_repeat'):
+ close=root/'jobs'/('canary__'+name)/'CLOSE.json'
+ if close.exists():
+  row=json.loads(close.read_text());out['closed_jobs'].append(name);out['closed_actual_sim_s']+=row['actual_sim_s']
+gate=root/'CANARY.json'
+if gate.exists():
+ row=json.loads(gate.read_text());out['canary']=dict(native_repeat=row['native_repeat'],six_way_repeat=row['six_way_repeat'],planned_sim_s=row['planned_sim_s'])
+ out['canary_sha256']=hashlib.sha256(gate.read_bytes()).hexdigest()
+log=root/'CANARY.log'
+if log.exists():out['log']=log.read_text()
+out['new_gpu_s']=0
+print(json.dumps(out))
+''', timeout=30)
+    path = EVIDENCE/('CANARY_PROGRESS_'+str(int(result['unix']))+'.json')
+    write(path, result)
+    print(json.dumps(result, indent=2))
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('command', choices=('status', 'stage', 'preflight', 'probe', 'canary'))
+    parser.add_argument('command', choices=('status', 'stage', 'preflight', 'probe', 'canary', 'collect'))
     parser.add_argument('--host', choices=('cpuQ', 'gpuR'), required=True)
     parser.add_argument('--root')
     parser.add_argument('--model', choices=('wm', 'bb'))
     parser.add_argument('--steps', type=int, default=120)
+    parser.add_argument('--predecessor')
     args = parser.parse_args()
     if args.command == 'status':
         print(json.dumps(status(args.host), indent=2))
     elif args.command == 'stage':
-        stage(args.host)
+        stage(args.host, args.predecessor)
     elif args.command == 'preflight':
         preflight(args.host, args.root)
     elif args.command == 'canary':
-        canary(args.host, args.root)
+        canary(args.host, args.root, args.predecessor)
+    elif args.command == 'collect':
+        collect(args.host, args.root)
     else:
         probe(args.host, args.root, args.model, args.steps)
 

@@ -7,7 +7,7 @@ import os
 from tools.c1switch.design import checked, sha
 from tools.c1switch.storage import Ledger, exclusive, write
 
-from .design import MODEL_ARMS, PROTOCOL, assigned, budget, guard, local_budget, worlds
+from .design import MODEL_ARMS, PROTOCOL, assigned, budget, canary_world, guard, local_budget, worlds
 from .episode import episode
 from .gate import admission
 from .rerun import replay
@@ -66,12 +66,16 @@ def admitted(root, *, phase='main'):
 
 
 def backend(root, binding, arm, world, ident):
-    guard(world)
+    # Membership is pure and precedes setup. The two frozen package guards need
+    # the validated runtime import paths installed by runtime's CPU-only setup.
+    if type(world.get('seed')) is not int or world not in worlds()+[canary_world()]:
+        raise ValueError('unregistered S-C1SWITCH2 world')
     if (arm == 'canary' and binding['cpu_host'] != 'cpuQ') or (
             arm != 'canary' and assigned(world['seed']) != binding['cpu_host']):
         raise ValueError('world belongs to other CPU host')
     # Setup/imports that might allocate SUMO occur ONLY after admitted().
     runtime = load_plugin(binding['runtime'])(binding)
+    guard(world)  # Both real frozen guards still precede scenario/SUMO creation.
     path = root/'jobs'/ident
     path.mkdir()  # Partial jobs are never retried automatically.
     write(path/'START.json', dict(id=ident, world=world, arm=arm, pid=os.getpid()))
