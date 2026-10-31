@@ -61,9 +61,17 @@ def main():
     assert np.diff(lane["likelihood_trace"]).min(initial=0)>-1e-7
     assert len(lp["drivers"])==lane["n_drivers"]
     assert lane["fit_interval_s"]==[240,300]
+    pooled=load(root/"pooled_full_v5/idm_pooled.json")
+    assert pooled["optimizer_success"] and pooled["n_observations"]==229839
+    assert pooled["fit_interval_s"]==[240,300] and pooled["delta"]==4
+    assert all(np.isfinite(v) and v>0 for v in pooled["parameters"].values())
+    paper=Path(__file__).resolve().parents[2]/"docs/paper_results/RBFIT.md"
+    report_lines=len(paper.read_text(encoding="utf-8").splitlines())
+    assert report_lines<=40
     report={"status":"PASS","checks":all_checks,"lc_drivers":lane["n_drivers"],
             "lc_fit_events":lane["n_events"],"source_worlds":32,"native_only":True,
             "causal_window_s":[240,300],"future_validation_s":[300,360],
+            "pooled_full_fit_verified":True,"paper_report_lines":report_lines,
             "qualification":"Integrity/schema/numerics only; validation limitations remain"}
     (root/"verification.json").write_text(json.dumps(report,indent=2)+"\n")
     print(json.dumps(report))
