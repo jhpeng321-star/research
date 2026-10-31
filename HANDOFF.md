@@ -111,7 +111,13 @@ Full earlier handoff preserved at `docs/rb_merge/HANDOFF_HISTORY_0100.md`.
   direct validator default; the versioned v6 runner selects physics-native.
   Model IDs in each row/receipt prevent pooling different native-law contracts.
 
-## Next v7 prepared — 600s frozen-motion-encoder diagnostic
+## Next v7fast prepared — 600s frozen-motion-encoder diagnostic
+- Sequential merge arbitration now recomputes geometry ONLY for the candidate
+  at that rank, reducing O(ramp_count*slots²) to O(ramp_count*slots). Bit-exact
+  full-vs-selected geometry tested with heterogeneous parameters/multiple batch
+  rows; mixed ramp-count occupancy reservations preserved. **46 local tests PASS**.
+- NEW `/tmp/rb-merge-fullfleet-v7fast` passes **51 CPU tests /2.64s** and all32
+  preflights. Earlier v7 engineering stage retained; no v7 prediction launched.
 - New `/tmp/rb-merge-fullfleet-v7`: INT**4015b641** (includes LANE811cd7e8)
   plus current MERGE kernel/network/insertion/native callback. H600,512slots,
   FIT32/native, same arrival stream190. No prediction launched yet.

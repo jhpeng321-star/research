@@ -58,13 +58,16 @@ def idm_next_speed(speed, gap, leader_speed, p, dt, *, stop=False):
     return v
 
 
-def target_gaps(kin, present, target_lane=1):
+def target_gaps(kin, present, target_lane=1, *, ego_index=None):
     """Nearest target leader/follower and overlap, including equal-front cars."""
     s, v, length = kin[..., 0], kin[..., 4], kin[..., 6]
+    ego_s = s if ego_index is None else s.gather(-1, ego_index)
+    ego_length = length if ego_index is None else length.gather(-1, ego_index)
     target = present & (kin[..., 1:4].argmax(-1) == target_lane)
-    delta = s.unsqueeze(-2) - s.unsqueeze(-1)  # [batch, ego, other]
+    delta = s.unsqueeze(-2) - ego_s.unsqueeze(-1)  # [batch, selected ego, other]
     valid = target.unsqueeze(-2).expand_as(delta)
-    eye = torch.eye(s.shape[-1], device=s.device, dtype=torch.bool)
+    eye = (torch.eye(s.shape[-1], device=s.device, dtype=torch.bool) if ego_index is None else
+           torch.arange(s.shape[-1], device=s.device) == ego_index.unsqueeze(-1))
     valid = valid & ~eye
     inf = torch.full_like(delta, float('inf'))
     ahead = torch.where(valid & (delta >= 0), delta, inf)
@@ -72,24 +75,28 @@ def target_gaps(kin, present, target_lane=1):
     da, li = ahead.min(-1)
     db, fi = behind.min(-1)
     gl = da - length.gather(-1, li)
-    gf = db - length
+    gf = db - ego_length
     overlap = (valid & (delta < length.unsqueeze(-2))
-               & (delta > -length.unsqueeze(-1))).any(-1)
+               & (delta > -ego_length.unsqueeze(-1))).any(-1)
     return dict(gap_l=gl, gap_f=gf, leader=li, follower=fi,
                 has_l=da.isfinite(), has_f=db.isfinite(), overlap=overlap,
                 v_l=v.gather(-1, li), v_f=v.gather(-1, fi))
 
 
-def merge_geometry(kin, present, physics, driver_params=None):
-    p = parameters(kin, physics, driver_params)
-    g = target_gaps(kin, present, physics.merge_target_lane)
-    lead_need = p['min_gap'] + secure_gap(kin[..., 4], g['v_l'], p['accel'],
+def merge_geometry(kin, present, physics, driver_params=None, *, ego_index=None):
+    all_p = parameters(kin, physics, driver_params)
+    p = all_p if ego_index is None else {n: v.gather(-1, ego_index) for n, v in all_p.items()}
+    g = target_gaps(kin, present, physics.merge_target_lane, ego_index=ego_index)
+    v, s, lane = kin[..., 4], kin[..., 0], kin[..., 1:4].argmax(-1)
+    if ego_index is not None:
+        v, s, lane, present = [x.gather(-1, ego_index) for x in (v, s, lane, present)]
+    lead_need = p['min_gap'] + secure_gap(v, g['v_l'], p['accel'],
                                          p['decel'], p['time_headway'])
-    fp = {name: value.gather(-1, g['follower']) for name, value in p.items()}
-    follow_need = fp['min_gap'] + secure_gap(g['v_f'], kin[..., 4], fp['accel'],
+    fp = {name: value.gather(-1, g['follower']) for name, value in all_p.items()}
+    follow_need = fp['min_gap'] + secure_gap(g['v_f'], v, fp['accel'],
                                             fp['decel'], fp['time_headway'])
-    ramp = present & (kin[..., 1:4].argmax(-1) == physics.merge_lane)
-    legal = ramp & (kin[..., 0] >= physics.merge_zone_s0_m) & (kin[..., 0] <= physics.merge_zone_s1_m)
+    ramp = present & (lane == physics.merge_lane)
+    legal = ramp & (s >= physics.merge_zone_s0_m) & (s <= physics.merge_zone_s1_m)
     g.update(ramp=ramp, legal=legal, lead_need=lead_need, follow_need=follow_need,
              blocked_l=g['has_l'] & (g['gap_l'] < lead_need),
              blocked_f=g['has_f'] & (g['gap_f'] < follow_need))
@@ -225,8 +232,10 @@ def apply_merge(kin, present, proposed_lane, deciders, physics, driver_params=No
                  look * 20 + 2 * (kin[..., 6] + p['min_gap']))
     for rank in range(count):
         idx = order[:, rank:rank + 1]
-        g = merge_geometry(occupied, present, physics, driver_params)
-        allowed = (g['safe'] & ramp & strategic).gather(-1, idx)
+        # Only this ego can move at this rank. Re-evaluating every ego made the
+        # sequential resolver O(ramp_count * slots**2), including padding rows.
+        g = merge_geometry(occupied, present, physics, driver_params, ego_index=idx)
+        allowed = g['safe'] & ramp.gather(-1, idx) & strategic.gather(-1, idx)
         result.scatter_(-1, idx, torch.where(allowed,
             torch.full_like(idx, physics.merge_target_lane), result.gather(-1, idx)))
         selected = torch.zeros_like(present).scatter(-1, idx, allowed)

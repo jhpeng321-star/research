@@ -269,3 +269,30 @@ def test_source_min_next_speed_for_motion_inferred_low_deceleration(comfortable,
     cfg = SimpleNamespace(dt_s=.5, sumo_cf_emergency_decel_mps2=emergency)
     actual = idm_min_next_speed(torch.tensor(10.), torch.tensor(comfortable), cfg)
     assert actual.item() == pytest.approx(expected, abs=1e-6)
+
+
+def test_selected_ego_geometry_is_bit_exact_to_full_geometry_with_heterogeneity():
+    torch.manual_seed(9)
+    kin = torch.zeros(3, 64, 7)
+    kin[..., 0] = torch.rand(3, 64)*300-100
+    lane = torch.randint(3, (3, 64))
+    kin[..., 1:4] = torch.nn.functional.one_hot(lane, 3)
+    kin[..., 4] = torch.rand(3, 64)*30
+    kin[..., 6] = 4+torch.rand(3, 64)*4
+    present = torch.rand(3, 64) > .2
+    p = dict(time_headway=.5+torch.rand(3, 64)*2, decel=1+torch.rand(3, 64)*4)
+    cfg = PhysicsConfig(merge_model='sumo')
+    selected = torch.tensor([[1, 5, 60], [0, 30, 63], [13, 49, 8]])
+    full = merge_geometry(kin, present, cfg, p)
+    subset = merge_geometry(kin, present, cfg, p, ego_index=selected)
+    for name in full:
+        torch.testing.assert_close(subset[name], full[name].gather(-1, selected), rtol=0, atol=0)
+
+
+def test_resolver_handles_different_ramp_counts_in_batched_rows():
+    a = state([74., 73., 90., 50.], [2, 2, 0, 0])
+    b = state([100., 80., 74., -10.], [0, 0, 2, 1])
+    joined = {n: torch.cat((a[n], b[n])) for n in a}
+    result = apply_merge(state_kin(joined), joined['present'], joined['lane'], joined['present'],
+                         PhysicsConfig(merge_model='sumo'))
+    assert result.tolist() == [[1, 2, 0, 0], [0, 0, 1, 1]]

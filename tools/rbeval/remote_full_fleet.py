@@ -23,7 +23,7 @@ def remote(code):
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('mode', choices=('status', 'stage', 'launch', 'poll', 'trace', 'collect'))
-    p.add_argument('--version', default='v7')
+    p.add_argument('--version', default='v7fast')
     p.add_argument('--horizon', type=int, choices=(120, 300, 600), default=600)
     p.add_argument('--slots', type=int, default=512)
     p.add_argument('--details', action='store_true')

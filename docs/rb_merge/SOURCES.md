@@ -78,6 +78,12 @@ only couples that point population to admission/newborn motion through exact
 recorded birth ordinals. It is a point-settings screen, not FULL's fitted
 posterior or a claim to calibrated conditional futures.
 
+The sequential acceptance resolver reserves each accepted footprint in the
+same front-to-back order. Its selected-ego geometry path computes precisely
+the same leader/follower/overlap/secure gaps as the full-frame API (bit-exact
+heterogeneous/batched CPU checks), avoiding a full slots² recomputation for
+every ramp candidate. No physical parameter or acceptance criterion changes.
+
 ## Scope and explicit parity gaps
 
 This implements a source-backed highway subset, not full SUMO state parity.
