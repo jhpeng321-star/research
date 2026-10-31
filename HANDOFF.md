@@ -20,9 +20,9 @@ It replaces the unregistered preliminary12-world proposal seen by S-SELMAPPO.
 - Training observations/reward remain those registered by each selector task. No online updates here.
 
 ## WALL ABI / S-WALLSW
-Use the frozen wall-v2.1/v2.2 law; do not add thresholds in either picker.
+Integrated S-WALLSW through `1b0581d0` (handoff `07fb123e`); frozen v2.1/v2.2 law.
 The v2 backend injects a wall facade with:
-- `create_sumo()->controller`, whose `start(env)`, `stop(env)`, `command(env)->(command,kwargs)`
+- `create_sumo()->controller`, whose `start(now_s=...)`, `stop(now_s=...)`, `command(env)->(command,kwargs)`
   obey the shared `Controller('wall',inputs)` lifecycle proposed in the selector handoff.
 - `capture_memory(controller,env)->state`: only causal controller-owned group/command state,
   CAV self IDs only; no simulator HDV identities, hidden settings or future requests.
@@ -49,7 +49,10 @@ No WM-PHYS activation without its independently hashed S-RB-EVAL qualification r
 
 ## Current execution state
 Build and CPU preparation only; no task SUMO/GPU/physics processes.
-The 23:48 owner approval is present, but WALL handoff and final trained selectors are pending.
+The 23:48 owner approval is present; WALL integrated, final trained selectors pending.
+`tools/c1switch2/wall.py` binds the real peer lifecycle and self-ID-only memory;
+missing members remain absent and abort atomically on continuation. No simulator slots cross RPC.
+Resume CPU verification: 118 passed/1 frozen-host-only skip; real memory/remapping parity included.
 `python -B -m tools.c1switch2.gate --polls 1` reports approval without authorizing an unbound runtime.
 CPU preparation/exposure receipts are in `tools/c1switch2/evidence/`; prior versions are preserved.
 The initial local exposure regex reported timestamp/negative-evidence false positives, fixed prospectively.

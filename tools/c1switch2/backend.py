@@ -95,6 +95,6 @@ class Backend(MainBackend):
     def close(self):
         try:
             if getattr(self, 'env', None) is not None and self.handover.name == 'wall':
-                self.handover.controller.stop(self.env)
+                self.handover.controller.stop(now_s=self.env.now)
         finally:
             super().close()

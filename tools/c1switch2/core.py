@@ -32,27 +32,5 @@ class Handover(V7Handover):
     Existing five-way memory/ownership reset is executed by the frozen v7 method.
     A wall-to-wall selection preserves assembly and release state across decisions.
     """
-    def select(self, name, env):
-        if name not in CONTROLLERS:
-            raise ValueError('unregistered controller')
-        if name == self.name:
-            return self.controller
-        if self.name == 'wall':
-            self.controller.stop(env)
-        if name != 'wall':
-            return super().select(name, env)
-        # Delegate all original ownership resets, counting this as ONE transition.
-        old_switches = self.switches
-        was_native = self.name == 'native'
-        super().select('native', env)
-        if was_native:
-            # v7 initial native has no object; ownership may still contain native
-            # desired-speed overrides, so release them on a first wall activation.
-            env.ownership.release_all(live_ids=env.api.vehicle.getIDList())
-            env.ownership.controller = env._circles
-            env.pi_session, env._direct_pi = None, False
-        controller = self.factory('wall')
-        controller.start(env)
-        self.name, self.controller = 'wall', controller
-        self.switches = old_switches+1
-        return controller
+    def __init__(self, factory):
+        super().__init__(factory, controllers=CONTROLLERS)

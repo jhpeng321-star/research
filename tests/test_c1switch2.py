@@ -181,9 +181,9 @@ def test_all_thirty_six_handover_pairs_retain_or_reset_wall(source, target):
     class Controller:
         def __init__(self, name):
             self.name = name
-        def start(self, env):
+        def start(self, *, now_s):
             events.append(('start', self.name))
-        def stop(self, env):
+        def stop(self, *, now_s):
             events.append(('stop', self.name))
     ownership = SimpleNamespace(release_all=lambda **kw: events.append(('release', None)), controller=None)
     env = SimpleNamespace(ownership=ownership, api=SimpleNamespace(vehicle=SimpleNamespace(getIDList=lambda: ['self-cav'])),
