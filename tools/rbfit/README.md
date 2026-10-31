@@ -207,6 +207,8 @@ cooperative<=1, assertive>0. IDM retains strict positivity. Five tests against
 the committed UNC implementation pass, including sparse driver support,
 population/entrant fallback, invalid-domain rejection,8paired/replayed planned
 futures, unmodified CAV/padding and unchanged global RNG. No LC adoption implied.
+UNC commit51ae6345 now also accepts source-valid LC boundaries directly; the FIT
+adapter preserves compatibility with the older frozen reader used in our tests.
 
 Explicit `--resume --run-tag UNIQUE` restores the same durable job state after
 manual reconciliation; an OS singleton excludes concurrent watcher sessions.

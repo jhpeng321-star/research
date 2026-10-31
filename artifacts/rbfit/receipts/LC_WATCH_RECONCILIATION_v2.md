@@ -16,4 +16,5 @@
   remote jobs are never retried; load admission before a claim remains deferrable.
 - Normal window09:00, new starts through08:40, existing verified work may drain
   to09:25 ahead of the owner's09:30 freeze. Future source fits may use4CPU workers
-  only below load16/32 CPUs; the currently running2-worker617309 is unchanged.
+  only below load26/32 CPUs (>=2CPU margin); one-core cache fits admit below28/32.
+  The currently running2-worker617309 and its frozen launcher are unchanged.

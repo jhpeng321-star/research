@@ -1,0 +1,26 @@
+{
+  "state": "dispatched",
+  "pid": 23604,
+  "argv": [
+    "C:\\Python314\\python.exe",
+    "-u",
+    "E:\\agent-work\\c4-rb-fit\\tools\\rbfit\\watch_lc.py",
+    "--until",
+    "2026-11-01T09:00:00+08:00",
+    "--last-start",
+    "2026-11-01T08:40:00+08:00",
+    "--poll-seconds",
+    "60",
+    "--run-tag",
+    "0128_resume_v2",
+    "--resume",
+    "--drain-until",
+    "2026-11-01T09:25:00+08:00"
+  ],
+  "until": "2026-11-01T09:00:00+08:00",
+  "last_start": "2026-11-01T08:40:00+08:00",
+  "drain_until": "2026-11-01T09:25:00+08:00",
+  "resume": true,
+  "timestamp": "2026-11-01T02:21:49.992570+08:00",
+  "automatic_restart": false
+}

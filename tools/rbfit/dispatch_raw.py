@@ -25,7 +25,7 @@ def main():
                     "cmdline":(proc/"cmdline").read_bytes().decode().replace("\0"," ") if proc.exists() else "",
                     "complete":(ROOT/name/"validation.json").is_file()}))
         return
-    if not ROOT.is_dir() or os.getloadavg()[0] > min(16,os.cpu_count()-2):
+    if not ROOT.is_dir() or os.getloadavg()[0] > min(28,os.cpu_count()-2):
         raise RuntimeError("Expected-parent/free-load admission failed")
     smoke = args.action == "smoke"
     name = "lane_raw_smoke_v5" if smoke else "lane_raw_v5"

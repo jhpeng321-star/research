@@ -56,7 +56,8 @@ def main():
                     "complete":(root/name/"validation.json").is_file(),
                     "verified":(root/name/"VERIFIED.json").is_file()}))
         return
-    if not root.is_dir() or os.getloadavg()[0] > min(16,os.cpu_count()-2):
+    load_limit = min(28,os.cpu_count()-(6 if args.action=="fit" else 2))
+    if not root.is_dir() or os.getloadavg()[0] > load_limit:
         raise RuntimeError("Expected-parent/free-load admission failed")
     name = "lane_fit" if args.action == "fit" else "lane_raw"
     receipt,output = root/(name+"_process.json"),root/name
@@ -86,6 +87,7 @@ def main():
         process = subprocess.Popen(command,cwd=root,env=environment,stdout=log,
                                    stderr=subprocess.STDOUT,start_new_session=True)
     r = {"state":"dispatched","pid":process.pid,"argv":command,"timestamp_unix":time.time(),
+        "launcher_sha256":hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),"load_limit":load_limit,
         "proc_start_ticks":(Path("/proc")/str(process.pid)/"stat").read_text().split()[21],
         "source_sha256":hashes,"source_version":version,"load":os.getloadavg(),"gpu":False,"automatic_retry":False}
     receipt.write_text(json.dumps(r,indent=2)+"\n")
