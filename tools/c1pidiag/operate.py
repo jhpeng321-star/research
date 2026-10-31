@@ -32,7 +32,7 @@ def ssh(code, timeout=120):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('action', choices=('select', 'probe', 'read', 'list', 'inspect', 'stage', 'smoke', 'launch', 'auxlaunch', 'exlaunch', 'status', 'fetch'))
+    ap.add_argument('action', choices=('select', 'probe', 'read', 'list', 'inspect', 'stage', 'smoke', 'launch', 'auxlaunch', 'auxstop', 'exlaunch', 'recoverfeedback', 'runtimecontrol', 'status', 'fetch', 'fetchraw'))
     ap.add_argument('--path')
     args = ap.parse_args()
     if args.action == 'select':
@@ -52,10 +52,26 @@ def main():
             json.dump(dict(rule='first 40 PI + first 30 wall sorted world,t0,sid; denied identities excluded',
                            index_sha256=hashlib.sha256(path.read_bytes()).hexdigest(), states=panel), f, indent=2)
         print('fixed panel',len(panel), 'worlds',len({e['world'] for e in panel}))
-    elif args.action in ('smoke', 'launch', 'auxlaunch', 'exlaunch'):
-        script = {'smoke':'worker.py','launch':'dispatch.py','auxlaunch':'auxiliary.py','exlaunch':'extensions.py'}[args.action]
-        extra = {'smoke':['--smoke'],'launch':[],'auxlaunch':['--wait'],'exlaunch':[]}[args.action]
-        label = args.action.upper()+'2'
+    elif args.action == 'auxstop':
+        label='EXLAUNCH2' if args.path=='extensions' else 'AUXLAUNCH2'
+        script='extensions.py' if args.path=='extensions' else 'auxiliary.py'
+        folder='extra_evidence' if args.path=='extensions' else 'aux_evidence'
+        print(ssh(f'''from pathlib import Path
+import os,signal,json,time
+p=Path({REMOTE!r});q=p/'evidence_v2/{label}_OWNED.json'
+r=json.loads(q.read_text());pid=r['pid'];proc=Path(f'/proc/{{pid}}')
+assert not (p/'{folder}/DISPATCH.json').exists(),'inference already began: inspect first'
+assert (proc/'stat').read_text().split(') ',1)[1].split()[19]==r['start_ticks']
+assert str(p/{script!r}).encode() in (proc/'cmdline').read_bytes()
+assert not (proc/f'task/{{pid}}/children').read_text().strip(),'queued parent has children'
+os.kill(pid,signal.SIGTERM)
+with (p/'evidence_v2/{label}_STOPPED.json').open('x') as f:json.dump(dict(pid=pid,start_ticks=r['start_ticks'],stopped=time.time(),reason='adapter correction before queued inference'),f)
+print('stopped owned waiting PID',pid)
+'''))
+    elif args.action in ('smoke', 'launch', 'auxlaunch', 'exlaunch','recoverfeedback','runtimecontrol'):
+        script = {'smoke':'worker.py','launch':'dispatch.py','auxlaunch':'auxiliary.py','exlaunch':'extensions.py','recoverfeedback':'feedback_support.py','runtimecontrol':'runtime_control.py'}[args.action]
+        extra = {'smoke':['--smoke'],'launch':[],'auxlaunch':['--wait'],'exlaunch':[],'recoverfeedback':[],'runtimecontrol':[]}[args.action]
+        label = args.action.upper()+({'auxlaunch':'4','exlaunch':'3'}.get(args.action,'2'))
         print(ssh(f'''from pathlib import Path
 import os,subprocess,json,time
 p=Path({REMOTE!r});assert p.is_dir();assert os.getloadavg()[0] < 100
@@ -72,26 +88,46 @@ with (p/'evidence_v2/{label}.log').open('x') as log:
         print(ssh(f'''from pathlib import Path
 import json,os
 p=Path({REMOTE!r})
-for name in ('SMOKE2.log','LAUNCH2.log','AUXLAUNCH2.log','EXLAUNCH2.log'):
+for name in ('LAUNCH2.log','AUXLAUNCH4.log','EXLAUNCH3.log','RECOVERFEEDBACK2.log','RUNTIMECONTROL2.log'):
  q=p/'evidence_v2'/name
- if q.exists():print(name,q.read_text()[-12000:])
+ if q.exists():print(name,' | '.join(q.read_text().splitlines()[-6:]))
 for name in ('STATUS.json','COMPLETE.json','TF_DONE.json','PREFLIGHT.json','SELECTED.json'):
  q=p/'evidence_v2'/name
- if q.exists():print(name,q.read_text())
+ if q.exists():
+  d=json.loads(q.read_text());print(name,{{**d,'errors':len(d['errors'])}} if isinstance(d,dict) and 'errors' in d else d)
 print('units',sum(1 for _ in (p/'units_v2').glob('*.json')),'load',os.getloadavg())
 for name in ('PREFLIGHT.json','COMPLETE.json'):
  q=p/'aux_evidence'/name
- if q.exists():print('aux',name,q.read_text())
+ if q.exists():
+  d=json.loads(q.read_text());print('aux',name,{{**d,'errors':len(d['errors'])}})
 print('aux units',sum(1 for _ in (p/'aux_units').glob('*.json')))
 for name in ('TF_DONE.json','COMPLETE.json','SELECTED.json'):
  q=p/'extra_evidence'/name
- if q.exists():print('extra',name,q.read_text())
+ if q.exists():
+  d=json.loads(q.read_text());print('extra',name,{{**d,'errors':len(d['errors'])}} if isinstance(d,dict) and 'errors' in d else d)
 print('extra units',sum(1 for _ in (p/'extra_units').glob('*.json')))
+for name in ('PREFLIGHT.json','COMPLETE.json'):
+ q=p/'feedback_evidence'/name
+ if q.exists():
+  d=json.loads(q.read_text());print('feedback',name,{{**d,'errors':len(d['errors'])}})
+q=p/'legacy_evidence/COMPLETE.json'
+if q.exists():
+ d=json.loads(q.read_text());print('legacy complete',{{**d,'errors':len(d['errors'])}})
 '''))
+    elif args.action == 'fetchraw':
+        primary=args.path=='primary'
+        out=ROOT/('_out/c1pidiag/primary' if primary else 'docs/paper_results/c1pidiag')
+        assert out.is_dir()
+        names=('RAW_PRIMARY.jsonl.gz','OUTPUTS_PRIMARY.json') if primary else ('RAW_UNITS.jsonl.gz','OUTPUTS_MANIFEST.json','PID_AUDIT.json')
+        for name in names:
+            assert not (out/name).exists()
+            p=subprocess.run(['scp','-o','BatchMode=yes','-o','ConnectTimeout=15',f'gpuA:{REMOTE}/{name}',str(out/name)],text=True,capture_output=True,timeout=180)
+            if p.returncode:raise RuntimeError(p.stderr)
+        print('raw outputs fetched',out)
     elif args.action == 'fetch':
         out=ROOT/'docs/paper_results/c1pidiag'
         assert out.is_dir()
-        for name in ('evidence','evidence_v2','aux_evidence','extra_evidence'):
+        for name in ('evidence','evidence_v2','aux_evidence','extra_evidence','feedback_evidence','legacy_evidence'):
             p=subprocess.run(['scp','-o','BatchMode=yes','-o','ConnectTimeout=15','-r',f'gpuA:{REMOTE}/{name}',str(out)],text=True,capture_output=True,timeout=180)
             if p.returncode:raise RuntimeError(p.stderr)
         print('evidence fetched')
@@ -99,8 +135,8 @@ print('extra units',sum(1 for _ in (p/'extra_units').glob('*.json')))
         print(ssh(f'''from pathlib import Path
 import hashlib
 p=Path({REMOTE!r});assert p.parent.is_dir();p.mkdir(exist_ok=True)
-for name in ('evidence','units','smoke','evidence_v2','units_v2','aux_evidence','aux_units','extra_evidence','extra_units'):(p/name).mkdir(exist_ok=True)
-for name in ('worker.py','dispatch.py','operate.py'):
+for name in ('evidence','units','smoke','evidence_v2','units_v2','aux_evidence','aux_units','extra_evidence','extra_units','feedback_units','feedback_evidence','legacy_units','legacy_evidence'):(p/name).mkdir(exist_ok=True)
+for name in ('worker.py','dispatch.py','operate.py','auxiliary.py','extensions.py'):
  q=p/name
  if q.exists():
   data=q.read_bytes(); backup=p/'evidence'/(name+'.'+hashlib.sha256(data).hexdigest())

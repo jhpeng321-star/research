@@ -102,3 +102,15 @@ other components unchanged. This source-defined split is registered before
 looking at any panel aggregate. After scoring, conditional closed-loop-check
 the best extra switch per model/cohort if it improves on that model's original
 baseline; selection is exploratory. Run after both earlier panels, <=24 workers.
+
+## Runtime-reproduction control (prospective before its computation)
+
+The 420 archived baseline endpoint checks agree on missingness but are not
+numerically identical under the current SPEEDHEAD runtime / torch 2.8 versus
+the refresh's torch 2.12 CPU. Preserve this discrepancy, not a false parity
+claim. After the registered panels, run all 70 original starts x original
+C1/13E/BB-traj baselines in the immutable archived refresh source tree, same
+current CPU environment, to 120 s; export per-ID endpoints. Compare archived
+source vs current source on the same torch/host, and archived results vs this
+reproduction separately. No states/models/components are selected by discrepancy.
+This 210-cell protocol control cannot change any main-panel selection.

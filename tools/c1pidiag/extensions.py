@@ -6,6 +6,7 @@ from pathlib import Path
 import time
 import traceback
 import worker as w
+from feedback_support import init as init_feedback
 
 OUT=w.ROOT/'extra_units'
 EVIDENCE=w.ROOT/'extra_evidence'
@@ -101,7 +102,7 @@ def main():
         w.frozen.FIX/'src/wms/model/wms.py',w.frozen.WM_CONFIG)}
     w.write(EVIDENCE/'DISPATCH.json',dict(units=len(units),workers=24,sources=sources,started=time.time()))
     begin=time.time()
-    with ProcessPoolExecutor(max_workers=24,initializer=w.init) as pool:
+    with ProcessPoolExecutor(max_workers=24,initializer=init_feedback) as pool:
         errors=execute(units,pool,'extra_tf')
         w.write(EVIDENCE/'TF_DONE.json',dict(units=len(units),errors=errors))
         if errors:return

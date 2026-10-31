@@ -25,3 +25,18 @@
 - Source inspection confirms broad A0 removes all learned longitudinal
   corrections, including courtesy/yield/adaptation, not only the residual net.
   Separately registered built-in single-switch tests isolate those mechanisms.
+- The first queued auxiliary watcher (PID 216929, matching recorded start ticks,
+  no children, no auxiliary DISPATCH) was stopped by its exact PID before any
+  auxiliary inference. Builder review added causal backward velocity differences
+  for observed acceleration and full-state junction carry (matching scorer
+  observability). Source snapshot and stop receipt retained; AUXLAUNCH3 is the
+  corrected queued run. No peer PID was signalled.
+- All 1,930 v2 teacher-forced cells completed without error. Conditional feedback
+  initially failed 195/350 cells because the frozen runtime's default PI source
+  lookup has no simulation-layer source tree. The 155 successful wall forecasts
+  and all 195 failed attempts remain intact. Recovery explicitly binds surviving
+  `speedhead20261030/e3final/runtime` controller classes, the same dependency API
+  used by C1CLOSED, and reruns only the 350 feedback cells in a separate folder.
+  Auxiliary gating then checks the successful TF + recovered-feedback receipts.
+  Its prior assertion failure produced zero auxiliary forecasts. Exact-PID-only
+  stop/requeue of the waiting extra-switch parent preserves the 24-worker cap.

@@ -29,19 +29,22 @@ def history_from_observed(frames, cutoff):
         for v in f['vehicles']:
             if not v.get('present',True):continue
             vid=str(v['id']);lane=int(v['lane'])
+            s,speed=float(v['s']),float(v['v'])
             if lane<0:
                 if vid not in last:continue
-                lane=last[vid]
-            else:last[vid]=lane
+                s,speed,lane=last[vid]
+            else:last[vid]=(s,speed,lane)
             k=col[vid]
-            kin[ti,k,0]=float(v['s']);kin[ti,k,1+lane]=1.
-            kin[ti,k,4]=float(v['v']);kin[ti,k,6]=5.
+            kin[ti,k,0]=s;kin[ti,k,1+lane]=1.
+            kin[ti,k,4]=speed;kin[ti,k,6]=5.
+            if ti and mask[ti-1,k]:
+                kin[ti,k,5]=(speed-kin[ti-1,k,4])/.5
             mask[ti,k]=True
     target=mask[:-1]&mask[1:]
     return dict(ids=ids,kin=kin.tolist(),mask=mask.tolist(),target_mask=target.tolist(),
         history_s=60.,history_stride_s=1.,dt_s=.5,available_span_s=60.,run_start_limited=False,
         observed_min_s=cutoff-60.,observed_max_s=cutoff,
-        note='same-arm recorded observations at the prospectively shifted start; not original-t0 inputs')
+        note='same-arm observed positions/speeds; causal full-state junction carry; acceleration from backward .5 s velocity differences (zero at first observation); not original-t0 inputs')
 
 
 def derive(e):
@@ -114,15 +117,25 @@ def execute(units,pool,label):
 
 
 def main():
-    ap=argparse.ArgumentParser();ap.add_argument('--wait',action='store_true');args=ap.parse_args()
+    ap=argparse.ArgumentParser();ap.add_argument('--wait',action='store_true');ap.add_argument('--audit',action='store_true');args=ap.parse_args()
     assert os.getpriority(os.PRIO_PROCESS,0)==19
+    if args.audit:
+        w.init()
+        panel=json.loads((w.ROOT/'PANEL.json').read_text())['states']
+        audit=[]
+        for e in panel:
+            _,info=derive(e);audit.append(info);DERIVED.clear()
+        w.write(EVIDENCE/'INPUT_AUDIT.json',audit)
+        print('genuine observed history audits',len(audit),flush=True)
+        return
     if args.wait:
         start=time.time()
-        while not (w.EVIDENCE/'COMPLETE.json').exists():
+        while not (w.ROOT/'feedback_evidence/COMPLETE.json').exists():
             assert time.time()-start<24*3600,'original campaign incomplete after 24 h'
             time.sleep(15)
-    original=json.loads((w.EVIDENCE/'COMPLETE.json').read_text())
+    original=json.loads((w.EVIDENCE/'TF_DONE.json').read_text())
     assert not original['errors'],'original campaign requires inspection'
+    assert not json.loads((w.ROOT/'feedback_evidence/COMPLETE.json').read_text())['errors']
     assert os.getloadavg()[0]<100
     panel=json.loads((w.ROOT/'PANEL.json').read_text())['states']
     units=[(e,tag,hist,pop) for e in panel for tag in ('c1struct','wm13e','wm2')
