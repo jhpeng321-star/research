@@ -163,6 +163,10 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
 - Poll workers about every20min. No peer process action, push, deletion or training.
 
 ## Remaining / known gaps
+- Evaluation-only endpoint target reader implemented: six converted observable
+  files, exact unique t0 state matching then persistent VID; causal carried-lane
+  recovery handles parallel junction rows without saved-ID assumptions. Future
+  junction/absent positions censored.7CPU tests PASS; actual100episode extraction next.
 - WM2-HDV60 now LIVE on ORIGINAL gpuR runtime: own812962/812963/812964,
   root `/root/rbeval20261031/int/WM2-HDV60`. Canary22.59s; verified original
  600s task's all5arms/3regions/6prefix bins before continuation. No baseline
