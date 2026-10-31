@@ -321,6 +321,17 @@ C4_V6_LONGPAIR_SEEDS = frozenset(range(965000, 966000))
 # C4 Dreamer-loop TRAINING block (owner-approved 2026-10-16 ~04:00): SUMO episodes collected with the learned
 # policy for continuous WM refresh. TRAINING only. Scan of seed tables + ledger: no overlap.
 C4_LOOP_TRAIN_SEEDS = frozenset(range(966000, 970000))
+
+# S-COOPBANDIT, owner-approved 2026-10-31: exact fresh-world cell admission.
+# Dataset/dev separation and full seed/demand map live in the prospective protocol.
+C4_COOPBANDIT_SEED_DEMAND = {
+    981000 + offset + r: (1900, 2400, 2700)[cell % 3]
+    for cell, offset in enumerate((0, 4, 8, 12, 16, 20, 24, 28, 40, 52, 56, 68))
+    for r in range(12 if cell in (7, 8, 10, 11) else 4)
+}
+C4_COOPBANDIT_SEED_DEMAND.update({
+    981080 + cell: (1900, 2400, 2700)[cell % 3] for cell in range(12)
+})
 # Every partition that may not enter a future prospective (final-test)
 # evaluation. FINAL_TEST_SEEDS is deliberately absent: it is the only
 # partition reserved for prospective evaluation.
@@ -366,6 +377,8 @@ def require_development_case(seed, loading, role):
     """Only previously exposed direct-fixture cases; no new campaign authorization."""
     if type(seed) is not int or type(loading) is not int:
         raise ValueError("seed and loading must be exact integers, not bools or float aliases")
+    if role == 'exposed' and C4_COOPBANDIT_SEED_DEMAND.get(seed) == loading:
+        return
     if seed in SEALED_SEEDS:
         raise ValueError("reserved acceptance seed remains sealed")
     if role == "development" and seed in OE32_OBSERVATION_DEVELOPMENT_SEEDS and loading == 2700:
