@@ -5,8 +5,8 @@ import argparse
 import json
 from pathlib import Path
 
-from tools.wmfixmerge.data import (COMPONENTS, LEDGER_ARRAYS, SEEDS, digest, episode_arrays,
-                                   install_guard, safe, select)
+from tools.wmfixmerge.data import (COMPONENTS, LEDGER_ARRAYS, digest, episode_arrays,
+                                    install_guard, safe, select)
 
 
 def prepare(root, out):
@@ -149,7 +149,8 @@ def prepare(root, out):
             raise ValueError("TRAIN anchor column has no rows")
         anchor_scales[column] = max(float(np.sqrt(np.mean(np.square(values)))),
                                     np.finfo(np.float32).eps)
-    doc = dict(schema="wmfix_train/1", root=str(root), seeds=list(SEEDS), episodes=entries,
+    doc = dict(schema="wmfix_train/1", root=str(root),
+               seeds=sorted({int(row["seed"]) for row in entries}), episodes=entries,
                manifest_sha256=digest(root / "C4_EPISODES_MANIFEST.json"),
                split_sha256=digest(root / "SPLIT.json"), files=files, labels=labels,
                selection="TRAIN only", source_gradient="hard service; zero off events",
