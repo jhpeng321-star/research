@@ -62,10 +62,15 @@ def admitted(root, *, phase='main'):
         raise ValueError('S-C1SWITCH2 dispatch blocked: '+json.dumps(status))
     if binding['protocol'] != PROTOCOL or binding['sim_s'] != budget(binding.get('include_phys') is True):
         raise ValueError('runtime protocol mismatch')
+    for name, digest in binding.get('sources', {}).items():
+        if sha(root/'pytools'/name) != digest:
+            raise ValueError('immutable staged source changed: '+name)
     return binding
 
 
 def backend(root, binding, arm, world, ident):
+    if 'enabled_arms' in binding and arm not in binding['enabled_arms']:
+        raise ValueError('arm is not enabled in this immutable dispatch')
     # Membership is pure and precedes setup. The two frozen package guards need
     # the validated runtime import paths installed by runtime's CPU-only setup.
     if type(world.get('seed')) is not int or world not in worlds()+[canary_world()]:
@@ -106,6 +111,8 @@ def run_episode(root, binding, arm, world):
 
 
 def run_branch(root, binding, spec):
+    if binding.get('dispatch_phase') == 'cpu':
+        raise ValueError('CPU fixed/random dispatch has no oracle branches')
     if spec['arm'] not in binding['sim_s'] or spec['arm'] == 'canary':
         raise ValueError('unregistered branch arm')
     row = replay(lambda: backend(root, binding, spec['arm'], spec['world'], spec['id']),

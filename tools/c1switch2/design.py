@@ -6,6 +6,7 @@ from tools.c1switch.design import CELLS, HIGH, sha
 PROTOCOL = 'S-C1SWITCH2/v2'
 BASE_COMMIT = '1121117f'
 CONTROLLERS = ('native', 'ctrl0', 'mappo', 'pi', 'circles', 'wall')
+CPU_ARMS = CONTROLLERS + ('random',)
 MODEL_ARMS = ('wm', 'bb', 'wm_phys')
 RL_ARMS = ('fleet_ppo', 'cav_mappo')
 PICKERS = ('wm', 'bb') + RL_ARMS

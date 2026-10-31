@@ -7,16 +7,21 @@ from pathlib import Path
 import tarfile
 
 from tools.c1switch.design import checked, sha
-from tools.c1switch.ops import ssh
+from tools.c1switch.ops import ssh as frozen_ssh
 from tools.c1switch.storage import canonical, write
 
-from .design import CONTROLLERS, DESIGN, GPU_SECONDS, PROTOCOL, REGISTRATION, budget
+from .design import CONTROLLERS, CPU_ARMS, DESIGN, GPU_SECONDS, PROTOCOL, REGISTRATION, budget
 from .gate import approval
 
 EVIDENCE = Path('tools/c1switch2/evidence')
 TESTS = ['tests/test_c1switch2.py', 'tests/test_c1switch2_wall.py',
          'tests/test_c1switch2_integrations.py', 'tests/test_switchable_wall.py',
          'tests/test_c1switch.py', 'tests/test_c1switch_feedback.py', 'tests/test_c1switch_merge_fast.py']
+
+
+def ssh(host, code, timeout=60):
+    compile(code, '<c1switch2-remote>', 'exec')
+    return frozen_ssh(host, code, timeout=timeout)
 
 
 def status(host):
@@ -27,7 +32,8 @@ roots=[]
 for entry in os.scandir({parent!r}):
  if entry.name.startswith('c1switch2_run_') and entry.is_dir(follow_symlinks=False):
   root=Path(entry.path);row=dict(root=str(root))
-  for name in ('CANARY_DISPATCH_ONCE.json','DISPATCH_CANARY.json','CANARY.json','CANARY_EXIT.json','STOP'):
+  for name in ('CANARY_DISPATCH_ONCE.json','DISPATCH_CANARY.json','CANARY.json','CANARY_EXIT.json',
+               'CPU_DISPATCH_ONCE.json','DISPATCH_CPU.json','STOP'):
    p=root/name
    if p.exists():
     data=json.loads(p.read_text())
@@ -35,6 +41,10 @@ for entry in os.scandir({parent!r}):
                if name=='CANARY.json' else data)
   if 'DISPATCH_CANARY.json' in row:
    pid=row['DISPATCH_CANARY.json']['pid'];row['own_pid_exists']=Path('/proc',str(pid)).exists()
+  if 'DISPATCH_CPU.json' in row:
+   pid=row['DISPATCH_CPU.json']['pid'];proc=Path('/proc',str(pid))
+   row['cpu_pid_state']=proc.joinpath('stat').read_text().split()[2] if proc.exists() else 'EXITED'
+   row['cpu_complete']=(root/'supervisor'/'COMPLETE.json').exists()
   roots.append(row)
 print(json.dumps(dict(host={host!r},load=os.getloadavg(),roots=roots,new_sim_s=0,new_gpu_s=0)))
 ''')
@@ -74,7 +84,7 @@ print(json.dumps(out))
 ''')
 
 
-def stage(host, predecessor=None):
+def stage(host, predecessor=None, cpu_only=False):
     registration_bytes = checked(REGISTRATION).read_bytes()
     text = registration_bytes.decode('utf-8')
     digest = sha(DESIGN)
@@ -84,7 +94,14 @@ def stage(host, predecessor=None):
     state = status(host)
     old = None
     dispatched = [r for r in state['roots'] if 'DISPATCH_CANARY.json' in r or 'CANARY_DISPATCH_ONCE.json' in r]
-    if dispatched:
+    if cpu_only:
+        from .gate import cpu_authority
+        if not cpu_authority(text) or any('CPU_DISPATCH_ONCE.json' in r for r in state['roots']):
+            raise ValueError('CPU authority absent or subset already claimed; inspect/reuse')
+        if host == 'cpuQ' and not any(r.get('CANARY.json', {}).get('six_way_repeat') == 'PASS'
+                                     for r in state['roots']):
+            raise ValueError('completed mechanics receipt required')
+    elif dispatched:
         if len(dispatched) != 1 or dispatched[0]['root'] != predecessor:
             raise ValueError('existing canary dispatch: inspect and reuse; never duplicate')
         old = zero_physics_predecessor(host, predecessor, text)
@@ -112,7 +129,9 @@ def stage(host, predecessor=None):
         selectors={a:dict(entry='tools.c1switch2.selectors:'+entry,
                           sha256=sha('tools/c1switch2/selectors.py'))
                    for a, entry in [('fleet_ppo', 'fleet'), ('cav_mappo', 'per_cav')]},
-        selector_specs={a: dict(status='PENDING') for a in ('fleet_ppo', 'cav_mappo')})
+         selector_specs={a: dict(status='PENDING') for a in ('fleet_ppo', 'cav_mappo')})
+    if cpu_only:
+        binding.update(dispatch_phase='cpu', enabled_arms=list(CPU_ARMS))
     if old is not None:
         binding['startup_predecessor'] = old
     buf = io.BytesIO()
@@ -131,7 +150,7 @@ assert all(hashlib.sha256((stage/n).read_bytes()).hexdigest()==v for n,v in sour
 (root/'BINDING.json').write_text(json.dumps({binding!r},indent=2))
 (root/'REGISTRATION.md').write_bytes(base64.b64decode({base64.b64encode(registration_bytes).decode()!r}))
 assert hashlib.sha256((root/'REGISTRATION.md').read_bytes()).hexdigest()=={binding['registration_sha256']!r}
-for name in ('jobs','specs','tasks'): (root/name).mkdir()
+for name in ('jobs','specs','tasks','logs'): (root/name).mkdir()
 print(json.dumps(dict(host={host!r},root=str(root),binding_sha256={canonical(binding)!r},files=len(sources),new_sim_s=0,new_gpu_s=0)))
 ''', timeout=90)
     write(EVIDENCE/('STAGE_'+host+'_'+identity+'.json'), result)
@@ -153,13 +172,14 @@ try:
  with contextlib.redirect_stdout(log),contextlib.redirect_stderr(log):
   from tools.c1switch2.runtime import Runtime
   from tools.c1switch2.runner import backend
-  from tools.c1switch2.design import canary_world
+  from tools.c1switch2.design import assigned,worlds
   assert 'traffic_shepherd.seeds' not in sys.modules,'fresh-process regression was masked'
   scratch=root/'CPU_CONSTRUCTION';scratch.mkdir();(scratch/'jobs').mkdir()
   original=Runtime.create_backend
   Runtime.create_backend=lambda self,*a,**k:dict(inputs=self.inputs)
   try:
-   constructed=backend(scratch,json.loads((root/'BINDING.json').read_text()),'canary',canary_world(),'cpu_only')
+   world=next(w for w in worlds() if assigned(w['seed'])=={host!r})
+   constructed=backend(scratch,json.loads((root/'BINDING.json').read_text()),'native',world,'cpu_only')
   finally:Runtime.create_backend=original
   inputs=constructed['inputs']
   assert not (scratch/'accounting.jsonl').exists(),'construction-only CPU probe charged physics'
@@ -349,20 +369,117 @@ out['root']=str(root);print(json.dumps(out))
     print(json.dumps(dict(path=str(path), sha256=sha(path), canary_sha256=result['canary_sha256'])))
 
 
+def cpu_dispatch(host, root, workers):
+    """Claim the seven-arm panel once per host; completed canary is evidence only."""
+    from .audit import registration_audit
+    from .gate import cpu_authority
+    text = checked(REGISTRATION).read_text(encoding='utf-8')
+    audit = registration_audit(REGISTRATION)
+    if not approval(text) or not cpu_authority(text) or audit['hits']:
+        raise ValueError('current CPU authority/registry not admitted')
+    if not 1 <= workers <= (14 if host == 'cpuQ' else 4):
+        raise ValueError('worker ceiling')
+    name = 'c1switch2_run_4ad4ece01d5a9ac1'
+    mechanics_path = EVIDENCE/('CANARY_'+name+'.json')
+    archive = json.loads((EVIDENCE/('CANARY_BINDING_'+name+'.json')).read_text())
+    mechanics = json.loads(mechanics_path.read_text())
+    if (sha(mechanics_path) != archive['canary_sha256'] or
+            mechanics['native_repeat'] != 'PASS' or mechanics['six_way_repeat'] != 'PASS'):
+        raise ValueError('retained mechanics evidence mismatch')
+    frozen = {k: v for k, v in archive['BINDING.json']['sources'].items()
+              if k.startswith('tools/c1switch/') or k == 'engine/branching.py'}
+    exposures = {}
+    for h in ('cpuQ', 'gpuR', 'gpuA'):
+        path = EVIDENCE/('EXPOSURE_'+h+'_v3.json')
+        if not json.loads(path.read_text())['pass']:
+            raise ValueError('exposure gate failed')
+        exposures[h] = sha(path)
+    result = ssh(host, f'''import hashlib,json,os,subprocess,sys,sysconfig,time
+from pathlib import Path
+root=Path({root!r});parent=Path({'/home/ubuntu' if host == 'cpuQ' else '/root'!r})
+assert root.parent==parent and root.name.startswith('c1switch2_run_') and root.is_dir()
+stage=root/'pytools';binding=json.loads((root/'BINDING.json').read_text())
+assert binding['dispatch_phase']=='cpu' and binding['enabled_arms']=={list(CPU_ARMS)!r}
+assert binding['cpu_host']=={host!r}
+assert hashlib.sha256((root/'REGISTRATION.md').read_bytes()).hexdigest()=={sha(REGISTRATION)!r}==binding['registration_sha256'],'registration changed; restage before compute'
+assert all(hashlib.sha256((stage/n).read_bytes()).hexdigest()==v for n,v in binding['sources'].items())
+assert all(binding['sources'][n]==v for n,v in {frozen!r}.items()),'v7 frozen sources changed'
+assert json.loads((root/'PREFLIGHT.json').read_text())['status']=='PASS'
+assert not (root/'STOP').exists() and not (root/'accounting.jsonl').exists()
+assert not list((root/'jobs').iterdir())
+assert os.getloadavg()[0] < {28 if host == 'cpuQ' else 20},'yield to host pressure'
+for entry in os.scandir(parent):
+ if entry.name.startswith('c1switch2_run_') and entry.is_dir(follow_symlinks=False):
+  assert not Path(entry.path,'CPU_DISPATCH_ONCE.json').exists(),'CPU panel previously claimed; never retry'
+sys.path.insert(0,str(stage));os.chdir(stage)
+from tools.c1switch.storage import canonical
+from tools.c1switch2.gate import REQUIRED,CPU_REQUIRED,admission
+from tools.c1switch2.design import local_budget
+evidence={{k:dict(status='PASS' if k in CPU_REQUIRED else 'PENDING',binding_sha256=canonical(binding),
+ source='PREFLIGHT.json; frozen canary; retained preallocation exposure; current registry') for k in REQUIRED}}
+evidence['mechanics_sha256']={sha(mechanics_path)!r}
+evidence['exposure_receipt_sha256']={exposures!r};evidence['current_registry_audit']={audit!r}
+assert admission((root/'REGISTRATION.md').read_text(),binding,evidence)['dispatch_authorized']
+with (root/'GATES.json').open('x') as stream:json.dump(evidence,stream,indent=2)
+planned=sum(local_budget({host!r})[a] for a in binding['enabled_arms'])
+claim=dict(host={host!r},root=str(root),phase='cpu',enabled_arms=binding['enabled_arms'],planned_sim_s=planned,gpu_s=0,unix=time.time())
+with (root/'CPU_DISPATCH_ONCE.json').open('x') as stream:
+ json.dump(claim,stream,indent=2);stream.flush();os.fsync(stream.fileno())
+environment=os.environ.copy();environment.update({env(host, root)!r})
+environment['PATH']=str(Path(sysconfig.get_paths()['purelib'])/'sumo/bin')+':'+environment['PATH']
+environment['PYTHONPATH']=str(stage)
+with (root/'CPU.log').open('x') as log:
+ process=subprocess.Popen([sys.executable,'-B','-u','-m','tools.c1switch2.supervisor','--root',str(root),'--host',{host!r},'--workers',{str(workers)!r}],cwd=stage,env=environment,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,preexec_fn=lambda:os.nice(19))
+out=dict(claim,pid=process.pid,workers={workers!r},binding_sha256=canonical(binding))
+with (root/'DISPATCH_CPU.json').open('x') as stream:json.dump(out,stream,indent=2)
+print(json.dumps(out))
+''', timeout=45)
+    write(EVIDENCE/('DISPATCH_CPU_'+host+'_'+Path(root).name+'.json'), result)
+    print(json.dumps(result, indent=2))
+
+
+def cpu_collect(host, root):
+    result = ssh(host, f'''import json,time
+from pathlib import Path
+root=Path({root!r});assert root.name.startswith('c1switch2_run_')
+dispatch=json.loads((root/'DISPATCH_CPU.json').read_text());proc=Path('/proc',str(dispatch['pid']))
+ledger=root/'accounting.jsonl';rows=[json.loads(x) for x in ledger.read_text().splitlines()] if ledger.exists() else []
+out=dict(host={host!r},root=str(root),unix=time.time(),pid=dispatch['pid'],pid_state=proc.joinpath('stat').read_text().split()[2] if proc.exists() else 'EXITED',charged_sim_s=sum(r['sim_s'] for r in rows),closed_actual_sim_s=0,results=[],accounting=rows,new_gpu_s=0)
+out['complete']=(root/'supervisor'/'COMPLETE.json').exists()
+out['stop']=json.loads((root/'STOP').read_text()) if (root/'STOP').exists() else None
+for job in sorted((root/'jobs').iterdir()):
+ close=job/'CLOSE.json'
+ if close.exists():out['closed_actual_sim_s']+=json.loads(close.read_text())['actual_sim_s']
+ result=job/'PHYSICS.json'
+ if result.exists():out['results'].append(json.loads(result.read_text()))
+if out['stop']:
+ out['supervisor_log']=(root/'CPU.log').read_text()
+ failed=root/'logs'/(out['stop'].get('id','')+'.log')
+ if failed.is_file():out['failed_log']=failed.read_text()
+print(json.dumps(out))
+''', timeout=45)
+    path = EVIDENCE/('CPU_PROGRESS_'+host+'_'+str(int(result['unix']))+'.json')
+    write(path, result)
+    print(json.dumps({k: (len(v) if k in ('results', 'accounting') else v)
+                      for k, v in result.items()}, indent=2))
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('command', choices=('status', 'stage', 'preflight', 'probe', 'canary', 'collect',
-                                          'export-canary', 'archive-binding'))
+                                          'export-canary', 'archive-binding', 'cpu-dispatch', 'cpu-collect'))
     parser.add_argument('--host', choices=('cpuQ', 'gpuR'), required=True)
     parser.add_argument('--root')
     parser.add_argument('--model', choices=('wm', 'bb'))
     parser.add_argument('--steps', type=int, default=120)
     parser.add_argument('--predecessor')
+    parser.add_argument('--cpu-only', action='store_true')
+    parser.add_argument('--workers', type=int, default=1)
     args = parser.parse_args()
     if args.command == 'status':
         print(json.dumps(status(args.host), indent=2))
     elif args.command == 'stage':
-        stage(args.host, args.predecessor)
+        stage(args.host, args.predecessor, args.cpu_only)
     elif args.command == 'preflight':
         preflight(args.host, args.root)
     elif args.command == 'canary':
@@ -373,6 +490,10 @@ def main():
         export_canary(args.host, args.root)
     elif args.command == 'archive-binding':
         archive_binding(args.host, args.root)
+    elif args.command == 'cpu-dispatch':
+        cpu_dispatch(args.host, args.root, args.workers)
+    elif args.command == 'cpu-collect':
+        cpu_collect(args.host, args.root)
     else:
         probe(args.host, args.root, args.model, args.steps)
 

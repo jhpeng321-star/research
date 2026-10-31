@@ -12,6 +12,12 @@ from .design import assigned, worlds
 from .runner import admitted
 
 
+def episode_jobs(binding, host):
+    return [(f'{a}__s{w["seed"]}', ['episode', '--arm', a, '--seed', str(w['seed'])])
+            for a in binding.get('enabled_arms', binding['sim_s']) if a != 'canary'
+            for w in worlds() if assigned(w['seed']) == host]
+
+
 def run(root, host, workers):
     if host not in ('cpuQ', 'gpuR') or not 1 <= workers <= (14 if host == 'cpuQ' else 4):
         raise ValueError('unregistered host/CPU ceiling')
@@ -28,9 +34,7 @@ def run(root, host, workers):
         write(root/'supervisor'/'START.json', dict(pid=os.getpid(), host=host, workers=workers))
         for phase in ('episodes', 'branches'):
             if phase == 'episodes':
-                todo = [(f'{a}__s{w["seed"]}', ['episode', '--arm', a, '--seed', str(w['seed'])])
-                        for a in binding['sim_s'] if a != 'canary'
-                        for w in worlds() if assigned(w['seed']) == host]
+                todo = episode_jobs(binding, host)
             else:
                 todo = [(p.stem, ['branch', '--spec', str(p)]) for p in sorted((root/'specs').glob('*.json'))]
             active = {}
@@ -49,7 +53,8 @@ def run(root, host, workers):
                     admitted(root)
                     ident, args = todo.pop(0)
                     log = (root/'logs'/(ident+'.log')).open('x')
-                    env = dict(os.environ, CUDA_VISIBLE_DEVICES='', OMP_NUM_THREADS='1', MKL_NUM_THREADS='1')
+                    env = dict(os.environ, CUDA_VISIBLE_DEVICES='', OMP_NUM_THREADS='1', MKL_NUM_THREADS='1',
+                               OPENBLAS_NUM_THREADS='1')
                     process = subprocess.Popen([sys.executable, '-B', '-u', '-m',
                         'tools.c1switch2.runner', *args, '--root', str(root)],
                         stdout=log, stderr=subprocess.STDOUT, env=env)

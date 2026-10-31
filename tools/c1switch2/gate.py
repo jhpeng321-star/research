@@ -7,7 +7,7 @@ import time
 from tools.c1switch.design import checked, sha
 from tools.c1switch.storage import canonical, write
 
-from .design import CONTROLLERS, DESIGN, GPU_SECONDS, PROTOCOL, REGISTRATION, budget
+from .design import CONTROLLERS, CPU_ARMS, DESIGN, GPU_SECONDS, PROTOCOL, REGISTRATION, budget
 
 
 def approval(text):
@@ -27,6 +27,16 @@ REQUIRED = ('frozen_v7_sources', 'seed_guards', 'exposure_cpuQ', 'exposure_gpuR'
             'exposure_gpuA', 'registry_intervals', 'wall_sumo', 'wall_model',
             'inference_wm', 'inference_bb', 'fleet_ppo', 'cav_mappo',
             'gpuA_parity', 'gpuR_parity', 'cpu_tests', 'canary_repeat')
+CPU_REQUIRED = tuple(k for k in REQUIRED if k not in
+                     ('inference_wm', 'inference_bb', 'fleet_ppo', 'cav_mappo',
+                      'gpuA_parity', 'gpuR_parity'))
+
+
+def cpu_authority(text):
+    return any(re.match(r'^-\s+01:48\s+MAIN\b', line) and
+               'S-C1SWITCH2: do not wait for RL checkpoints' in line and
+               'start the CPU-only arms now (6 fixed controllers + random)' in line
+               for line in text.splitlines())
 
 
 def admission(text, binding, evidence, *, phase='main'):
@@ -45,6 +55,12 @@ def admission(text, binding, evidence, *, phase='main'):
                    for line in text.splitlines()):
             raise ValueError('road-only objective amendment not registered')
     needed = REQUIRED + (('wm_phys_qualification', 'inference_wm_phys') if include_phys else ())
+    if binding.get('dispatch_phase') == 'cpu' and phase == 'main':
+        if binding.get('enabled_arms') != list(CPU_ARMS) or include_phys or not cpu_authority(text):
+            raise ValueError('CPU subset requires MAIN 01:48 authority and exact seven-arm binding')
+        needed = CPU_REQUIRED
+    elif phase == 'main' and 'enabled_arms' in binding:
+        raise ValueError('unregistered partial-arm admission')
     if phase == 'canary':
         # No model or selector is used by the already budgeted mechanical canary.
         needed = tuple(k for k in REQUIRED if k not in

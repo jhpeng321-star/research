@@ -311,6 +311,56 @@ def test_missing_dependency_still_blocks_after_budget_approval(monkeypatch):
     assert gate.admission('- MAIN S-C1SWITCH2 BUDGET APPROVED', b, evidence)['dispatch_authorized']
 
 
+def cpu_binding(monkeypatch):
+    monkeypatch.setattr(gate, 'sha', lambda path: 'd'*64)
+    binding = dict(protocol=design.PROTOCOL, sim_s=design.budget(), library=list(design.CONTROLLERS),
+                   gpu_seconds={a: design.GPU_SECONDS[a] for a in design.budget()},
+                   design_sha256='d'*64, dispatch_phase='cpu', enabled_arms=list(design.CPU_ARMS))
+    text = ('- MAIN S-C1SWITCH2 BUDGET APPROVED\n'
+            '- 01:48 MAIN ACKNOWLEDGEMENTS / DECISIONS: S-C1SWITCH2: do not wait for RL checkpoints - '
+            'start the CPU-only arms now (6 fixed controllers + random)')
+    evidence = {k: dict(status='PASS', binding_sha256=canonical(binding)) for k in gate.CPU_REQUIRED}
+    return binding, text, evidence
+
+
+def test_cpu_subset_needs_no_unused_model_or_selector_but_keeps_scientific_gates(monkeypatch):
+    b, text, evidence = cpu_binding(monkeypatch)
+    assert gate.admission(text, b, evidence)['dispatch_authorized']
+    for key in gate.CPU_REQUIRED:
+        broken = copy.deepcopy(evidence)
+        broken[key]['status'] = 'PENDING'
+        assert not gate.admission(text, b, broken)['dispatch_authorized'], key
+        broken[key] = dict(status='PASS', binding_sha256='other-binding')
+        assert not gate.admission(text, b, broken)['dispatch_authorized'], key
+    assert sum(design.budget()[a] for a in b['enabled_arms']) == 134400
+
+
+def test_cpu_subset_cannot_smuggle_picker_or_bypass_main_authority(monkeypatch):
+    b, text, evidence = cpu_binding(monkeypatch)
+    with pytest.raises(ValueError, match='authority'):
+        gate.admission('- MAIN S-C1SWITCH2 BUDGET APPROVED', b, evidence)
+    for altered in (dict(b, enabled_arms=list(design.CPU_ARMS)+['wm']),
+                    dict(b, enabled_arms=['native']), dict(b, dispatch_phase='other')):
+        with pytest.raises(ValueError):
+            gate.admission(text, altered, evidence)
+    from tools.c1switch2 import runner
+    monkeypatch.setattr(runner, 'load_plugin', lambda spec: pytest.fail('loaded disabled arm'))
+    with pytest.raises(ValueError, match='not enabled'):
+        runner.backend(None, b, 'fleet_ppo', design.worlds()[0], 'blocked')
+    with pytest.raises(ValueError, match='no oracle branches'):
+        runner.run_branch(None, b, {'arm': 'native'})
+
+
+def test_cpu_dispatch_plans_exact_disjoint_panel_without_repeating_canary(monkeypatch):
+    from tools.c1switch2.supervisor import episode_jobs
+    b, _, _ = cpu_binding(monkeypatch)
+    q, r = episode_jobs(b, 'cpuQ'), episode_jobs(b, 'gpuR')
+    assert len(q) == 84 and len(r) == 28
+    assert not ({ident for ident, _ in q} & {ident for ident, _ in r})
+    for _, args in q+r:
+        assert args[2] in design.CPU_ARMS and int(args[4]) in range(969136, 969152)
+
+
 def test_signed_joint_oracle_gap_can_beat_all_fleet_actions():
     from tools.c1switch2.analyze import regret
     branches = {c: dict(prefix={'t_s': 300}, **{'60': {'team_delay_vs': 20.}})

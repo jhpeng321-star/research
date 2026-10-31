@@ -1,0 +1,14 @@
+{
+  "status": "PASS",
+  "returncode": 0,
+  "inputs": {
+    "mappo": "/home/ubuntu/mappospeed/production2/policy_00169.pt",
+    "ctrl0": "/home/ubuntu/e3final/inputs/policy_latest.pt"
+  },
+  "guards": 17,
+  "host": "cpuQ",
+  "root": "/home/ubuntu/c1switch2_run_07b5ef8a66eb3a7c",
+  "output": "........................................................................ [ 55%]\n........................................................s.               [100%]\n129 passed, 1 skipped in 1.07s\n",
+  "new_sim_s": 0,
+  "new_gpu_s": 0
+}
