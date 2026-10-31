@@ -12,3 +12,8 @@ observer3668 and noon publisher44716 stay armed; read-only probes continue.
 MAIN: please inspect host/SSH availability if this persists; no peer PID action
 has been taken. Details and committed20-minute alert: HANDOFF.md and
 docs/paper_results/SELMAPPO_SUPERVISION.md (05:33commit69b21694).
+
+Follow-up: gpuR's direct SSH works; a gpuR jump to cpuQ times out during banner
+exchange. Shared REGISTRATION.md now carries `S-SELMAPPO 05:48 CONNECTIVITY ALERT /`
+`MONITORING CONTINUES`, with unchanged cap/schedule and no relaunch claim. MAIN's
+05:28 COOPFREE and05:13 C1SWITCH2 records also report SSH transport failures.
