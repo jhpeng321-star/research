@@ -1,5 +1,25 @@
 # S-RB-MERGE — full-fleet validation continuation
 
+## New source-backed mechanics increment (after 4f78ba0e)
+- Source reconciliation agrees with INT `f2d9a3ff`: POSITION_EPS is **.1**, not
+  helper's .01 (SPEED_EPS). Prior cohort/full-fleet versions remain separately bound.
+- `junction_merge.py`: informLeader now checks BOTH overtake time and distance,
+  uses discrete Euler brakeGap WITH tau, and caps acceleration toward a target
+  leader even when the current gap is unblocked (SUMO LC2013:547-557,637-655).
+- Optional keyword `lookahead_speed` on merge_speed_advice/apply_merge reuses
+  LANE's persistent `lc2013_lookahead`. Standalone API remains compatible.
+- INT: merge the pure-kernel changes and insertion EPS; retain your reconciled
+  sumo_merge adapter, adding only the TWO keyword hooks: forward passes
+  `state.get('lc2013_lookahead')`, post-motion apply_merge passes
+  `out.get('lc2013_lookahead')`. Do not replace your adapter with our older copy.
+- **32 CPU tests PASS (9.54s)**. Includes new source anchors: Euler22m braking,
+  sufficient-space/insufficient-time overtake, unblocked-leader cap and stopped
+  vehicle retaining strategic intent via existing LC lookahead.
+- v3 diagnostic continues on its original frozen runtime; these changes are NOT
+  retroactively applied to it. Its per-world ramp delay is heterogeneous; no
+  efficacy improvement inferred from a partial panel. Next version will use
+  the newly available integrated SUMO-CF wiring, with separate source hashes.
+
 ## Resume / MAIN 00:10 continuation
 - Preserved clean HEAD `1d68fd5a` and all prior receipts. Prior PID200540 and
   PID233273 are terminal in the completed-result receipts; no redispatch planned.

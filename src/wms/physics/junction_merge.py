@@ -93,7 +93,13 @@ def merge_geometry(kin, present, physics, driver_params=None):
     return g
 
 
-def merge_speed_advice(kin, present, accel, physics, driver_params=None):
+def brake_gap_euler(speed, decel, tau, dt):
+    """MSCFModel.cpp:87-108; brakeGap(speed) includes the driver's tau."""
+    n = (speed / (decel * dt)).floor()
+    return dt * (n * speed - decel * dt * n * (n + 1) / 2) + speed * tau
+
+
+def merge_speed_advice(kin, present, accel, physics, driver_params=None, *, lookahead_speed=None):
     """Lane-end stop + LC2013 informLeader/informFollower highway subset.
 
     Cooperates only with the paired blocking follower. No global yield zone,
@@ -106,30 +112,43 @@ def merge_speed_advice(kin, present, accel, physics, driver_params=None):
     wanted = (v + accel * dt).clamp_min(0)
     left = (physics.merge_zone_s1_m - kin[..., 0]).clamp_min(0)
     # LC2013.cpp:1244-1245, leftward strategic lookahead defaults 10s * 2.
-    strategic = g['legal'] & (left < v * 10 * 2 + 2 * (kin[..., 6] + p['min_gap']))
+    # The integrated LC2013 stream owns lookahead memory. Direct callers without
+    # that state have the source's cold-start value (the current speed).
+    look = v if lookahead_speed is None else torch.maximum(v, lookahead_speed.to(v))
+    strategic = g['legal'] & (left < look * 10 * 2 + 2 * (kin[..., 6] + p['min_gap']))
     stop = idm_next_speed(v, left, torch.zeros_like(v), p, dt, stop=True)
     planned = torch.minimum(v, stop)
     # Lane end is always a stop constraint while the lane has no continuation.
     wanted = torch.where(g['ramp'], torch.minimum(wanted, stop), wanted)
     # LC2013.cpp:1502-1507, one required lane change, URGENCY=2.
-    remaining = (left / v.clamp_min(1e-9) / 2).clamp_min(dt)
+    remaining = (left / look.clamp_min(1e-9) / 2).clamp_min(dt)
     # informLeader: do not overtake when the remaining distance cannot cover it
     # plus braking. Exact stopped-leader/counter-change exceptions are not modeled.
-    next_leader = (g['v_l'] - dt * torch.maximum(
-        torch.ones_like(v), -kin[..., 5].gather(-1, g['leader']))).clamp_min(0)
+    next_leader = g['v_l'] - dt * torch.maximum(
+        torch.ones_like(v), -kin[..., 5].gather(-1, g['leader']))
     next_gap = g['gap_l'] + (next_leader - planned) * dt
-    target = idm_next_speed(v, next_gap, next_leader, p, dt)
+    target = torch.maximum((v - dt * p['decel']).clamp_min(0),
+                           idm_next_speed(v, next_gap, next_leader, p, dt))
     lp = {name: value.gather(-1, g['leader']) for name, value in p.items()}
     overtake_dist = (g['gap_l'] - p['min_gap'] + kin[..., 6] + lp['min_gap']
         + kin[..., 6].gather(-1, g['leader']) + secure_gap(
             g['v_l'], v, lp['accel'], lp['decel'], lp['time_headway'])).clamp_min(0)
-    cannot_overtake = ((planned <= g['v_l']) |
-                      (left - v.square() / (2 * p['decel']) < overtake_dist))
+    dv = planned - g['v_l']
+    # LC2013.cpp:547-557 has BOTH a space and a time test. The previous subset
+    # omitted the time test and substituted ballistic stopping without tau.
+    cannot_overtake = ((dv <= 0) |
+                      (left - brake_gap_euler(v, p['decel'], p['time_headway'], dt) < overtake_dist) |
+                      (remaining < overtake_dist / dv.clamp_min(1e-9)))
     slow = strategic & g['blocked_l'] & cannot_overtake & (target < v)
     decel = torch.minimum(p['decel'], torch.maximum(
         torch.full_like(v, 7 / 3.6), (v - target) / remaining.clamp_min(1e-9)))
     planned = torch.where(slow, torch.minimum(planned, (v - dt * decel).clamp_min(0)), planned)
     wanted = torch.where(slow, torch.minimum(wanted, planned), wanted)
+    # informLeader's remainUnblocked branch still supplies a follow-speed cap
+    # (LC2013.cpp:637-655); safety at current speed is not safety after accelerating.
+    remain_unblocked = strategic & g['has_l'] & ~g['blocked_l']
+    wanted = torch.where(remain_unblocked, torch.minimum(wanted, target), wanted)
+    planned = torch.where(remain_unblocked, torch.minimum(planned, target), planned)
     # informFollower: request help only when one second's comfortable braking
     # can create the follower's own secure gap (HELP_DECEL_FACTOR=1).
     fp = {name: value.gather(-1, g['follower']) for name, value in p.items()}
@@ -169,7 +188,7 @@ def merge_speed_advice(kin, present, accel, physics, driver_params=None):
     return torch.where(present, result, torch.zeros_like(result)), g
 
 
-def apply_merge(kin, present, proposed_lane, deciders, physics, driver_params=None):
+def apply_merge(kin, present, proposed_lane, deciders, physics, driver_params=None, *, lookahead_speed=None):
     """Resolve ramp merges after motion, reserving accepted target occupancy.
 
     Existing target vehicles remain obstacles even if proposing to leave. Cars
@@ -188,8 +207,9 @@ def apply_merge(kin, present, proposed_lane, deciders, physics, driver_params=No
         occupied[..., 1:4])
     order = torch.where(ramp, kin[..., 0], torch.full_like(kin[..., 0], -float('inf'))).argsort(-1, descending=True)
     p = parameters(kin, physics, driver_params)
+    look = kin[..., 4] if lookahead_speed is None else torch.maximum(kin[..., 4], lookahead_speed.to(kin))
     strategic = ((physics.merge_zone_s1_m - kin[..., 0]) <
-                 kin[..., 4] * 20 + 2 * (kin[..., 6] + p['min_gap']))
+                 look * 20 + 2 * (kin[..., 6] + p['min_gap']))
     for rank in range(count):
         idx = order[:, rank:rank + 1]
         g = merge_geometry(occupied, present, physics, driver_params)

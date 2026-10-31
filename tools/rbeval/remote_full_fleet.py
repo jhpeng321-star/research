@@ -94,7 +94,11 @@ print(json.dumps(record))
 pid=launch['pid']
 result=root/'results'
 rows=[s for s in range(969400,969432) if (result/(str(s)+'.json')).exists()]
-print(json.dumps(dict(launch=launch,alive=Path('/proc/'+str(pid)).exists(),completed=rows,complete=(result/'COMPLETE.json').exists(),failed=json.loads((result/'FAILED.json').read_text()) if (result/'FAILED.json').exists() else None,log=(root/'RUN.log').read_text(),load=os.getloadavg())))
+summaries=[]
+for seed in rows:
+    row=json.loads((result/(str(seed)+'.json')).read_text())
+    summaries.append(dict(seed=seed,predicted_ramp=row['delay']['predicted_ramp_veh_s'],recorded_ramp=float(row['delay']['recorded']['ramp_delay_vs']),ramp_source=row['delay']['ramp_source_veh_s'],inserted=row['demand']['inserted'],real_merges=row['merges']['recorded'],predicted_merges=row['merges']['predicted']))
+print(json.dumps(dict(launch=launch,alive=Path('/proc/'+str(pid)).exists(),completed=rows,complete=(result/'COMPLETE.json').exists(),failed=json.loads((result/'FAILED.json').read_text()) if (result/'FAILED.json').exists() else None,rows=summaries,log=(root/'RUN.log').read_text(),load=os.getloadavg())))
 '''
         print(remote(code))
     else:

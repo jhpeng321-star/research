@@ -26,7 +26,8 @@ def forward(model, state, learned, lane_deciders, encoded, driver_params,
     # Direct physics kernel bypasses every learned acceleration, courtesy,
     # merge, temporal, noise and lane-correction emission.
     accel = baseline_accel(kin, present, physics, driver_params, emergency_envelope=False)
-    accel, geometry = merge_speed_advice(kin, present, accel, physics, driver_params)
+    accel, geometry = merge_speed_advice(kin, present, accel, physics, driver_params,
+                                         lookahead_speed=state.get('lc2013_lookahead'))
     if physics.emergency_braking:
         from wms.physics.accel import apply_emergency_envelope
         accel = apply_emergency_envelope(kin, present, accel, physics, driver_params)
@@ -104,7 +105,8 @@ def step(model, state, out, k_steps, driver_params, action_id, action_command,
                                            present, deciders & ~ramp, 0.)
         out.update({key: value for key, value in lc.items()
                     if key.startswith('lc2013_')})
-    next_lane = apply_merge(moved, present, next_lane, deciders, model.physics, driver_params)
+    next_lane = apply_merge(moved, present, next_lane, deciders, model.physics, driver_params,
+                            lookahead_speed=out.get('lc2013_lookahead'))
     staying = ramp & (next_lane == model.physics.merge_lane)
     overrun = staying & (next_s >= model.physics.merge_zone_s1_m)
     next_s = torch.where(overrun, torch.full_like(next_s, model.physics.merge_zone_s1_m), next_s)
