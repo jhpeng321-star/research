@@ -29,6 +29,7 @@ def bundle():
         Path('tests/test_c1switch.py'),Path('tests/test_c1switch_observable.py'),
         Path('tests/test_c1switch_feedback.py')]
     paths.append(Path('tests/test_c1switch_merge_fast.py'))
+    paths.append(Path('tests/test_c1switch_analysis.py'))
     sources = {p.as_posix():sha(p) for p in paths}
     engine = Path('traffic_shepherd/c4/branching.py')
     sources['engine/branching.py'] = sha(engine)
@@ -89,7 +90,7 @@ else:
 import pytest
 log=io.StringIO()
 with contextlib.redirect_stdout(log),contextlib.redirect_stderr(log):
- code=pytest.main(['-q',str(root/'tests/test_c1switch.py'),str(root/'tests/test_c1switch_observable.py'),str(root/'tests/test_c1switch_feedback.py'),str(root/'tests/test_c1switch_merge_fast.py')])
+ code=pytest.main(['-q',str(root/'tests/test_c1switch.py'),str(root/'tests/test_c1switch_observable.py'),str(root/'tests/test_c1switch_feedback.py'),str(root/'tests/test_c1switch_merge_fast.py'),str(root/'tests/test_c1switch_analysis.py')])
 out=dict(returncode=code,output=log.getvalue(),root=str(root),sources={sources!r},new_sim_s=0,GPU_s=0)
 (root/'CPU.json').write_text(json.dumps(out,indent=2));print(json.dumps(out))
 ''',timeout=120)
@@ -230,8 +231,8 @@ env=dict(os.environ);env.update({env!r})
 with (root/(phase+'_dispatcher.log')).open('x') as log:
  p=subprocess.Popen([sys.executable,'-B','-u','-m','tools.c1switch.dispatch',phase],cwd=stage,env=env,
   stdout=log,stderr=subprocess.STDOUT,start_new_session=True,preexec_fn=lambda:os.nice(19))
-out=dict(pid=p.pid,phase=phase,unix=time.time(),host='cpuQ',max_episode_workers=2 if phase=='canary' else 12,
- max_sumo_workers_including_branches=4 if phase=='canary' else 24)
+out=dict(pid=p.pid,phase=phase,unix=time.time(),host='cpuQ',max_episode_workers=2 if phase=='canary' else 14,
+ max_sumo_workers_including_branches=4 if phase=='canary' else 28)
 (root/(phase+'_DISPATCH.json')).write_text(json.dumps(out,indent=2));print(json.dumps(out))
 ''')
     write(EVIDENCE/('MAIN_'+phase.upper()+'_DISPATCH.json'),result)

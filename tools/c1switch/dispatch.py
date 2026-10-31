@@ -35,11 +35,13 @@ def main(phase):
         panel = worlds('main')[:1] if phase == 'canary' else worlds('main')
         arms = ('wm','bb') if phase == 'canary' else ARMS
         tasks = [(arm,w['seed']) for arm in arms for w in panel]
-        # Interleave switching arms so neither per-model wall allocation idles.
-        tasks.sort(key=lambda t:(0 if t[0] in ('wm','bb') else 1,t[1],arms.index(t[0])))
+        # BB has the tighter cumulative GPU wall cap. Complete its remaining
+        # worlds first, overlapping CPU branches; model draws are payload-keyed.
+        priority = {'bb':0,'wm':1}
+        tasks.sort(key=lambda t:(priority.get(t[0],2),t[1],arms.index(t[0])))
         tasks = [t for t in tasks if not completed(*t)]
         active, processes, done = {}, {}, []
-        limit = 2 if phase == 'canary' else 12  # <=24 active SUMO workers incl children.
+        limit = 2 if phase == 'canary' else 14  # <=28 SUMO workers incl branch children.
         while tasks or active:
             if (ROOT/'STOP').exists():
                 write(root/'STATUS.json',dict(status='STOP',active=list(active.values()),done=done))
@@ -67,10 +69,17 @@ def main(phase):
             write(root/'STATUS.json',dict(status='RUNNING',active=list(active.values()),done=done,pending=len(tasks)))
             if phase == 'main':
                 for arm in ('wm','bb'):
-                    if all((ROOT/'jobs'/f'{arm}_s{w["seed"]}_episode'/'RESULT.json').exists() for w in worlds('main')):
+                    if all((ROOT/'jobs'/f'{arm}_s{w["seed"]}_episode'/'pick_j9.json').exists() for w in worlds('main')):
                         if not (ROOT/'rpc'/arm/'COMPLETE').exists():
-                            write(ROOT/'rpc'/arm/'COMPLETE',dict(episodes=16,unix=time.time()))
+                            write(ROOT/'rpc'/arm/'COMPLETE',dict(all160_picks_committed=True,unix=time.time()))
             time.sleep(.5)
+        if phase == 'main':
+            from .analyze import summarize
+            try:
+                summarize(ROOT)
+            except BaseException as exc:
+                write(ROOT/'STOP',dict(reason='complete-panel analysis gate',error=str(exc)))
+                raise
         write(root/'COMPLETE.json',dict(phase=phase,done=done,unix=time.time()))
 
 
