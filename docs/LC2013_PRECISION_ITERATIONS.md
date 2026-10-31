@@ -542,3 +542,17 @@ including legal zero faces.46080synthetic decisions/1658880prior output
 elements BIT-EXACT to aefc4bd9;4468positive steps. FIT's existing source watcher
 already lists source jobs; do not duplicate or signal them. Shared note pins
 the equivalence scope for avoiding unnecessary future duplicate recomputation.
+
+## Owner-window publication followup
+
+Prepared a single local observer through09:00, following FIT's existing owned
+source jobs rather than launching another lane fit/scorer. New completed raw
+publications are checksum-verified, reduced to precision AND recall once, then
+published in the marked HANDOFF block with their own frozen source identity.
+Its arithmetic consumer is source-pinned. It auto-commits only its own receipt
+and HANDOFF after status/diff/log review; unrelated work pauses publication.
+No reset/clean/deletions/signals/peer edits. Deadline completion is receipted;
+fresh sessions inspect the existing dispatch/status and never duplicate it.
+Six CPU observer integrity tests PASS0.45s (CPU_PUBLICATION_FOLLOWUP.xml): exact
+publication hash, explicit directory scope, unrelated-work veto, marked-block
+preservation, expired-window no-launch and duplicate-dispatch no-launch.

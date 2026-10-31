@@ -6,6 +6,11 @@ All prior work retained. **Keep-right precision is NOT solved; no distributional
 qualification. No owned jobs/watchers remain.** Morning report:
 `docs/paper_results/RB_LANE_20261101.md`; full iteration/receipts diary preserved.
 
+<!-- LANE-FIT-PRECISION:BEGIN -->
+05:20 continuation: publication-only observer prepared through09:00; source80541278.
+Consumes already-running FIT results, reports precision AND recall, no new fitting/inference.
+<!-- LANE-FIT-PRECISION:END -->
+
 ## Integration contract
 - `ModelSpec(lane_model="lc2013",lane_head="off",merge_decision="hazard")`.
   Build a clean spec; disable learned acceleration/merge corrections. Default

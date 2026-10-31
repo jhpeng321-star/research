@@ -100,3 +100,27 @@ are CPU-tested. `check_message_equivalence.py` proves conditional choices/wish
 state unchanged relative to scored source52d2df5c while outward advice changes.
 `finalize_diagnostics.py` assembles only already-verified score receipts; it
 does not repeat inference or establish autonomous distributional fidelity.
+
+## Fresh05:00 source continuation / publication-only followup
+
+Source80541278 completes optional lcSpeedGainLookahead (default0) and nonlegacy
+acceptance-time follower response (default-1).71CPU cases pass. Default LC-style
+and ALL209published five-parameter profile equivalence receipts pin every old
+output BIT-EXACT to aefc4bd9. Current panels14–16 are retained; no repeated scoring.
+
+`consume_fit_precision.py --fit PUBLISHED_DIRECTORY --receipt NEW_NAME.json`
+checks publication/VERIFIED/artifact hashes and32native-world count sums, then
+derives exact-direction precision/recall from raw-physics expected counts.
+It does not fit, select settings, run a model or read original tapes. It reports
+the upstream source separately and does not invent missing motivation counts.
+
+`watch_fit_precision.py launch` claims a single local publication-only observer
+through2026-11-01T09:00+08. It follows the EXISTING FIT producer's latest verified
+`lane_raw_<digest>` publications, generates count summaries once, updates only
+the marked HANDOFF block, and commits only its own receipts/HANDOFF. Any unrelated
+work blocks publication; no git reset/clean/stash, signals or peer edits. A pinned
+consumer-source hash prevents silently changing the running observer's arithmetic.
+The create-once dispatch/claim must be inspected on resume, never re-launched.
+Runtime status/logs are in `E:/Temp/opencode/rblane-fit-precision-20261101-0520`;
+dispatch/completion receipts live under `tools/rblane/receipts`. It performs no
+fitting, WM/SUMO/GPU inference or remote dispatch and closes at the owner deadline.
