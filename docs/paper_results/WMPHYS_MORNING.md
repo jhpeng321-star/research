@@ -1,4 +1,4 @@
-# WM-PHYS morning report — live integration receipt, 2026-11-01 01:27 +08
+# WM-PHYS morning report — live integration receipt, 2026-11-01 02:52 +08
 The rebuilt physics runs, but it has not yet shown that it predicts traffic better than WM2.
 Keep the switching decision pending until matched distribution and60s-error evidence exists.
 
@@ -20,6 +20,9 @@ Keep the switching decision pending until matched distribution and60s-error evid
 ## Distribution comparison and interim checkpoints
 - Registered20worlds969420..969439, five arms/K8/H120/300/600; reserved8 separate.
   FULL processes reserved8 first, without changing membership, seeds or predictions.
+- Early partial02:52: FULL-v1 has3complete reserved worlds; WM2 shares only969432.
+  On that ONE paired world, CRPS120/300/600 differences are +60/+635/−1672veh-s;
+  upstream300s rate95% vs WM287.5% vs real100%. World-sampling CIs unavailable.
 - 04:00 interim: pending complete paired K8 worlds; partial ensembles will not be scored.
 - 08:00 interim: pending. Final candidate freeze09:30, full evaluation09:30–11:30,
   final report11:45 per revised owner schedule; this is not the final candidate freeze.
@@ -35,8 +38,8 @@ Keep the switching decision pending until matched distribution and60s-error evid
   paired historical MOBIL7.50%, but too many proposals remain. Not full traffic parity.
 
 ## Switching-eligibility rule
-- Delay CRPS: candidate−WM2 at120/300/600s, paired-world95%CIs: PENDING.
-- Breakdown closeness: |candidate−real|−|WM2−real|, paired-world95%CI: PENDING.
+- Delay CRPS: early FULL-v1−WM2 +60/+635/−1672 at120/300/600s;95%CIs unavailable(n=1).
+- Breakdown closeness: early300s |FULL-v1−real|−|WM2−real|=−7.5pp;95%CI unavailable(n=1).
 - HDV60s position error: candidate−WM2, paired-world95%CI: PENDING.
   Existing saved bin/clock tasks lack endpoints; a separate paired60s gate is requested.
 - All three registered conditions must be satisfied before S-C1SWITCH changes its WM arm.

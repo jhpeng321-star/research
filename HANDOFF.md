@@ -91,6 +91,12 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   Full-population ledger/exit/finite audit attached to every candidate task.
 
 ## Verification / receipts
+- Early matched snapshot02:52: FULL-v1=30tasks/3complete reserved worlds;
+  WM2=115tasks/13complete worlds, intersection ONLY969432. Mean five-arm CRPS
+  difference120/300/600=+59.93/+635.50/−1671.64veh-s; rate300 distance−7.5pp.
+  No world-sampling CI from n=1. `docs/rbint/full_v1/reports/paired_0255` binds
+  all inputs; tools/rbint/compare.py uses frozen paired-world/maxstat bootstrap,
+  conditional on saved ensembles. Comparator3CPU tests PASS. No eligibility claim.
 - Current complete local integration gate **215 PASS /1CUDA skip /25.53s**;
   all touched physics/model/hidden-source/recipe/monitor/credibility modules.
   Runtime posterior + physics-native FULL candidate requires fresh recorded smoke.
