@@ -24,6 +24,11 @@ counts fail closed. CPU53PASS/19.10s includes unchanged seeded pairing/forecast
 regressions, conditioning/replay/source-hash distinction and no global RNG.
 Sampling law/scale unchanged; source receipts are additive. No jobs dispatched.
 
+Next diagnostic frozen before computation:
+`docs/paper_results/RBUNC_ARRIVAL_PREFIX_DESIGN.md`. Existing FIT32 entrance bins
+only: causal0–150s predicts150–300s; exact Gamma–Poisson versus same-mean Poisson
+isolates demand-rate uncertainty. No physical spread adjustment or new rollout.
+
 Latest preferred32/K8/H120 legacy-reference result: within-K teamSD748.35
 [668.54,828.51] vs real across-world4200.50veh-s; source ablations on969400:
 drivers164.22/arrivals874.61/both850.71/fixed0.00, fixed8tapes hash-identical.
