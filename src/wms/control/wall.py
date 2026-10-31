@@ -56,6 +56,12 @@ class WallRolloutController:
         arrays = {key: _numpy(state[key]) for key in keys}
         ids = _numpy(state.get('vid_index', torch.arange(shape[1], device=state['s_m'].device)
                                .expand(shape)))
+        if ids.shape != tuple(shape) or not np.issubdtype(ids.dtype, np.integer):
+            raise ValueError("vid_index must be an integer [B,K] identity array")
+        for b in range(shape[0]):
+            live_ids = ids[b, arrays['present'][b].astype(bool)]
+            if (live_ids < 0).any() or len(set(live_ids.tolist())) != len(live_ids):
+                raise ValueError("present vehicle identities must be nonnegative and unique")
         junction = _numpy(state.get('junction', torch.zeros_like(state['present'])))
         self.held = torch.zeros_like(state['s_m'])
         self.target = torch.zeros_like(state['s_m'])
@@ -80,6 +86,7 @@ class WallRolloutController:
     @torch.no_grad()
     def __call__(self, state):
         now = self.start_s + self.step_index * 0.5
+        remaining_s = 1.0 if self.step_index % 2 == 0 else 0.5
         base = self.fallback(state)
         if self.running and self.step_index % 2 == 0:
             self._decide(state, now)
@@ -91,9 +98,12 @@ class WallRolloutController:
             mask &= state['vid_index'] == self.identities
         if self.execute is not None:
             return self.execute(state, self.held, self.target, mask, base)
-        # Same native-safe minimum and held absolute-target bound as TimelineControllers.
-        request = torch.minimum(self.held, (self.target - state['v_mps']) / 0.5)
+        # slowDown targets are for the END of the one-second control interval.
+        # Bounding them by a half-second on the first tick would double braking.
+        request = torch.minimum(self.held, (self.target - state['v_mps']) / remaining_s)
         executed = torch.minimum(self.model.physics_accel(state), request)
+        from wms.model.cav import apply_exec_cap
+        executed = apply_exec_cap(state, executed, mask)
         speed = (state['v_mps'] + executed * 0.5).clamp_min(0)
         position = state['s_m'] + 0.25 * (state['v_mps'] + speed)
         wall = torch.stack((position, base[..., 1], speed, executed), dim=-1)
