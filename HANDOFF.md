@@ -32,6 +32,10 @@ Updated 2026-10-31 23:22 +08:00; branch `c4/rb-int`, base `f0db3c82`.
 - `tools/rbint/audit.py`: closed-cohort conservation/finite/zero-residual gate and
   temporary hooks rejecting execution of parameterized corrections (encoder allowed).
   `py -3.13 -m pytest -q tests/test_rbint_audit.py`: 9 passed (5.70 s).
+- `tools/rbint/rebuild.py`: strict-loaded source -> opt-in rebuilt architecture;
+  exact motion-encoder key/shape/value preservation, unchanged source model and
+  caller RNG, explicit unused/initialized-head receipt. No checkpoint rewriting.
+  `py -3.13 -m pytest -q tests/test_rbint_rebuild.py`: 5 passed (5.80 s).
 - Existing local `py -3.13` has torch `2.15.0+cpu`; default Python 3.14 is not the selected runtime.
 - Remote resource check: gpuR RTX4090 24,092 MiB free, 0% utilization; cpuQ load 0.94 / 32 logical CPUs, ~61 GB available. Recheck immediately before dispatch.
 - Resume local load 68%; parity check used a single CPU thread. No running INT
