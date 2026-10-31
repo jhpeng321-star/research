@@ -87,8 +87,8 @@ from wms.control.fitted_hidden import FittedHiddenState
 from wms.control.arrival_fit import LearnedArrivalFit
 
 fit = FittedHiddenState.from_directory("artifacts/rbfit/shrinkage_v1")
-# LC is separately opt-in: lane_directory="artifacts/rbfit/lane_v2".
-# FIT LC validation lost to its baseline; it is not silently adopted.
+# LC requires a FIT-adopted, source-valid export; keep lane_directory unset now.
+# Earlier unadopted exports with cooperative>1 fail the current source domain.
 demand = LearnedArrivalFit.from_file("docs/paper_results/rbunc/observed_arrivals.json")
 futures = plan_hidden_state_futures(
     model, initial, history_kwargs, future_sampling="hidden_state", n_samples=8,

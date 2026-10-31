@@ -1,0 +1,25 @@
+{
+  "schema": "rbunc_resume_cpu/1",
+  "date_local": "2026-11-01",
+  "command": "py -3.13 -B -m pytest -q -p no:cacheprovider tests/unit/test_fitted_hidden.py tests/unit/test_arrival_fit.py tests/unit/test_hidden_state_futures.py tests/unit/test_c4_futures.py tests/unit/test_arrival_prefix.py tests/unit/test_unc_interim_watch.py",
+  "passed": 64,
+  "skipped_modules": 1,
+  "elapsed_s": 32.06,
+  "skip_reason": "Optional offline SciPy diagnostic absent locally; its three numerical tests passed on cpuQ in 1.74s using the existing environment",
+  "cpu_only": true,
+  "threads": 1,
+  "owned_observer": {
+    "pid": 348253,
+    "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+    "start_ticks": "885157916",
+    "source_sha256": "5a06fdc9477c13eaf384fbe302046411ebb6cd9b8732240f76f4d8f2b90fcbf0",
+    "deadline": "2026-11-01T09:00:00+08:00",
+    "poll_s": 1200,
+    "startup_and_post_test_status": "LIVE, no complete FIT K8 world yet",
+    "root": "gpuA:/root/rbeval20261031/rbunc_support_v1"
+  },
+  "admission_history": "First preflight failed conservative absolute load guard before creating any claim or process. Read-only inspect confirmed absent root and 208 CPUs. Host-capacity one-free-CPU admission then succeeded once; startup load12.90.",
+  "duplicated_inference_or_full_eval_dispatches": 0,
+  "peer_process_actions": 0,
+  "physical_sampling_scale_changed": false
+}
