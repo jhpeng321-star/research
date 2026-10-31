@@ -33,6 +33,12 @@
 - `remote_full_fleet.py` stages a new immutable `/tmp/rb-merge-fullfleet-v1`, runs
   CPU tests remotely before admission, and uses an exclusive dispatch receipt.
   FIT32/native/H300, single CPU nice19, no GPU/SUMO/training. No launch yet.
+- Remote staging CPU gate caught missing frozen native-CAV JSON in the source
+  archive (local tests had that config). No recorded rollout/job was launched.
+  Preserve `/tmp/rb-merge-fullfleet-v1/CPU_TESTS.json`; corrected staging uses a
+  NEW `/tmp/rb-merge-fullfleet-v2` and pins both native-head/executor config hashes.
+- Corrected remote CPU gate: **5/5 PASS (1.35s)**, cpuQ load13.37/32. No launch
+  receipt yet; exclusive dispatch is the next step. No scientific rollout repeated.
 
 LATEST INTEGRATION INCREMENT: **2977be6d** (source corrections; 28 CPU tests pass).
 INT already reconciled mainline ownership: cherry-pick source corrections from

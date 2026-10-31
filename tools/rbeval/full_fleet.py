@@ -302,7 +302,9 @@ def main():
     torch.manual_seed(965140)
     out = safe(args.output)
     out.mkdir(exist_ok=False)
-    sources = {str(path.relative_to(runtime)): digest(path) for path in (runtime/'src/wms').rglob('*.py')}
+    paths = list((runtime/'src/wms').rglob('*.py'))
+    paths += [runtime/'configs/native_cav_head_v5.json', runtime/'configs/execparity_cav_idm_v1.json']
+    sources = {str(path.relative_to(runtime)): digest(path) for path in paths}
     identity = dict(owner='S-RB-MERGE', args=vars(args), sources=sources,
         validator_sha256=digest(__file__), pid=os.getpid(), started_unix=time.time(),
         targets={n: digest(safe(args.targets)/n) for n in ('ramp_delay_world.csv', 'ramp_merges.csv')})

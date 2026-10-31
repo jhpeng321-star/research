@@ -1,15 +1,13 @@
 """Owned CPU-only dispatch/collection for the entrant-inclusive FIT diagnostic."""
 import argparse
 import base64
-import io
 import json
 from pathlib import Path
 import subprocess
-import tarfile
 
 ROOT = Path(__file__).resolve().parents[2]
 PYTHON = '/home/ubuntu/miniconda3/bin/python'
-REMOTE = '/tmp/rb-merge-fullfleet-v1'
+REMOTE = '/tmp/rb-merge-fullfleet-v2'
 INT_COMMIT = 'ff8a637f'
 
 
@@ -31,7 +29,9 @@ def main():
     if args.mode == 'status':
         print(remote(header+"print(json.dumps(dict(load=os.getloadavg(), cpus=os.cpu_count(), old_owned_pids={p:Path('/proc/'+str(p)).exists() for p in (200540,233273)}, existing_dispatch=(root/'LAUNCH.json').exists())))"))
     elif args.mode == 'stage':
-        archive = subprocess.check_output(['git', 'archive', '--format=tar', INT_COMMIT, 'src/wms'],
+        archive = subprocess.check_output(['git', 'archive', '--format=tar', INT_COMMIT, 'src/wms',
+                                           'configs/native_cav_head_v5.json',
+                                           'configs/execparity_cav_idm_v1.json'],
                                            cwd='E:/agent-work/c4-rb-int')
         payload = dict(runtime_archive=base64.b64encode(archive).decode(),
             validator=base64.b64encode((ROOT/'tools/rbeval/full_fleet.py').read_bytes()).decode(),
@@ -96,7 +96,7 @@ files += [result/(str(s)+'.json') for s in range(969400,969432)]
 print(json.dumps({p.name:dict(content=p.read_text(),sha256=hashlib.sha256(p.read_bytes()).hexdigest()) for p in files if p.exists()}))
 '''
         data = json.loads(remote(code))
-        dest = ROOT/'docs/rb_merge/fullfleet_v1'
+        dest = ROOT/'docs/rb_merge/fullfleet_v2'
         dest.mkdir(exist_ok=False)
         for name, item in data.items():
             (dest/name).write_text(item['content'], encoding='utf-8', newline='\n')
