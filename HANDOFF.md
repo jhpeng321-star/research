@@ -134,3 +134,5 @@ An exact-file Grep call expanded into the parent tree; incidental numerical matc
 All subsequent registration reads/audits use exact checked paths; filename scans prune before traversal.
 
 - 2026-11-01T04:32:28+08:00 cpu:episodes=112,decisions=3360,charged=134400,closedactual=134400; wm:episodes=3,decisions=131,charged=5320,closedactual=3600; alerts=0; receipt `tools/c1switch2/evidence/WATCH_MAIN0427/PROGRESS_1793478748.json`.
+
+- 2026-11-01T04:52:28+08:00 cpu:episodes=112,decisions=3360,charged=134400,closedactual=134400; wm:episodes=3,decisions=157,charged=5840,closedactual=3600; alerts=0; receipt `tools/c1switch2/evidence/WATCH_MAIN0427/PROGRESS_1793479948.json`.
