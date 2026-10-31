@@ -5,6 +5,33 @@ import sys
 
 if __name__ == '__main__':
     action=sys.argv[1] if len(sys.argv)>1 else 'inspect'
+    if action=='pulse-stage':
+        print(ssh("from pathlib import Path; p=Path('/root/c1floor20261031/pulse');assert p.parent.is_dir();p.mkdir(exist_ok=True);print(p)"))
+        for name in ('pulse.py','test_pulse.py'):
+            print(scp(HERE/name,'gpuR:/root/c1floor20261031/'+name))
+        raise SystemExit()
+    if action=='pulse-tests':
+        print(ssh('''import subprocess,json
+from pathlib import Path
+r=Path('/root/c1floor20261031')
+p=subprocess.run(['/root/miniconda3/bin/python','-B',str(r/'test_pulse.py')],capture_output=True,text=True)
+print(p.stdout,p.stderr);assert p.returncode==0
+with (r/'pulse/CPU.json').open('x') as f:json.dump(dict(ok=True,tests=2),f)
+'''))
+        raise SystemExit()
+    if action in ('pulse-canary','pulse-full'):
+        phase=action.split('-')[1]
+        print(ssh(f'''from pathlib import Path
+import os,subprocess,json
+r=Path('/root/c1floor20261031/pulse');assert r.is_dir()
+env={{**os.environ,'CUDA_VISIBLE_DEVICES':'','OMP_NUM_THREADS':'1','OPENBLAS_NUM_THREADS':'1','MKL_NUM_THREADS':'1','PATH':'/root/miniconda3/bin:'+os.environ['PATH']}}
+with (r/{(phase+'.log')!r}).open('x') as log:
+ p=subprocess.Popen(['nice','-n','19','/root/miniconda3/bin/python','-B','-u','/root/c1floor20261031/pulse.py',{phase!r}],stdout=log,stderr=subprocess.STDOUT,env=env,start_new_session=True)
+ owner=dict(pid=p.pid,start_ticks=Path(f'/proc/{{p.pid}}/stat').read_text().split()[21],phase={phase!r})
+ with (r/{(phase+'_PID.json')!r}).open('x') as f:json.dump(owner,f)
+ print(json.dumps(owner))
+'''))
+        raise SystemExit()
     if action=='unpack':
         import tarfile
         p=HERE/'evidence'/sys.argv[2]
@@ -32,13 +59,13 @@ with (r/{(action+'.log')!r}).open('x') as log:
         print(ssh('''from pathlib import Path
 import json,os
 r=Path('/root/c1floor20261031/fallback');print('load',os.getloadavg())
-for p in r.glob('*_PID.json'):
+for p in list(r.glob('*_PID.json'))+list((r.parent/'pulse').glob('*_PID.json')):
  d=json.loads(p.read_text());q=Path('/proc')/str(d['pid']);print(p.name,d,'state',q.joinpath('stat').read_text().split()[2] if q.exists() else 'exited')
-for p in sorted(Path('/root/c1floor20261031/jobs').glob('fallback_*/*.json')):
+for p in sorted(list(Path('/root/c1floor20261031/jobs').glob('fallback_*/*.json'))+list(Path('/root/c1floor20261031/jobs').glob('pulse_*/*.json'))):
  if p.name=='result.json':
   d=json.loads(p.read_text());print(p.parent.name,dict(ok=d['ok'],actual=d['actual_sim_s'],original_bitwise=all(x['identical'] for x in d['reproduction'].values())))
  if p.name=='failure.json':print(str(p),p.read_text())
-print('charged',sum(json.loads(s)['sim_s'] for p in (r/'accounting.jsonl',r.parent/'accounting.jsonl') for s in p.read_text().splitlines()))
+print('charged',sum(json.loads(s)['sim_s'] for p in (r/'accounting.jsonl',r.parent/'accounting.jsonl',r.parent/'pulse/accounting.jsonl') if p.exists() for s in p.read_text().splitlines()))
 '''))
         raise SystemExit()
     if action=='tests':
@@ -129,7 +156,7 @@ print('original metadata added to existing references')
 p=subprocess.run(['nice','-n','19','/root/miniconda3/bin/python','-B','/root/c1floor20261031/fallback_extract.py'],capture_output=True,text=True,env={**os.environ,'OMP_NUM_THREADS':'1','OPENBLAS_NUM_THREADS':'1','MKL_NUM_THREADS':'1','CUDA_VISIBLE_DEVICES':''})
 print(p.stdout,p.stderr);assert p.returncode==0
 ''',timeout=120))
-        print(scp('gpuR:/root/c1floor20261031/fallback/LABELS.json',HERE/'evidence/FALLBACK_LABELS.json'))
+        print(scp('gpuR:/root/c1floor20261031/pulse/LABELS.json',HERE/'evidence/PULSE_LABELS.json'))
         raise SystemExit()
     if action=='fetch':
         import tarfile,time
@@ -138,6 +165,7 @@ print(p.stdout,p.stderr);assert p.returncode==0
 import tarfile
 r=Path('/root/c1floor20261031')
 files=list((r/'fallback').glob('*.json'))+list((r/'fallback').glob('*.jsonl'))+list((r/'fallback').glob('*.log'))+list((r/'jobs').glob('fallback_*/*.json'))
+files+=list((r/'pulse').glob('*.json'))+list((r/'pulse').glob('*.jsonl'))+list((r/'pulse').glob('*.log'))+list((r/'jobs').glob('pulse_*/*.json'))
 with tarfile.open(r/'evidence'/{name!r},'w:gz') as tar:
  for p in files:tar.add(p,arcname=str(p.relative_to(r)),recursive=False)
 print('receipts',len(files))

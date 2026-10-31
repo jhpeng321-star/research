@@ -1,0 +1,72 @@
+{
+ "ok": true,
+ "mode": "b",
+ "world": {
+  "demand": 2700,
+  "penetration": 0.05,
+  "seed": 969402
+ },
+ "actual_sim_s": 1800.0,
+ "targets": [
+  "mainline.188",
+  "mainline.187"
+ ],
+ "perturbations": [
+  {
+   "target": "mainline.188",
+   "speed_before": 0.4298700092116154,
+   "speed_request": 0.4398700092116154,
+   "tick_before": 1800,
+   "duration_s": 0.5,
+   "speed_after_tick": 0.4398700092116154,
+   "release_tick": 1801
+  },
+  {
+   "target": "mainline.187",
+   "speed_before": 2.955412473337393,
+   "speed_request": 2.965412473337393,
+   "tick_before": 3000,
+   "duration_s": 0.5,
+   "speed_after_tick": 2.965412473337393,
+   "release_tick": 3001
+  }
+ ],
+ "initial_signature": "873dc88f3422c6765dc3befaee4d451244d3e85c9f01592260e66fbf5a0841c2",
+ "reproduction": {
+  "t": {
+   "identical": true,
+   "rows_first": 61681,
+   "rows_second": 61681
+  },
+  "vid": {
+   "identical": true,
+   "rows_first": 61681,
+   "rows_second": 61681
+  },
+  "s": {
+   "identical": true,
+   "rows_first": 61681,
+   "rows_second": 61681
+  },
+  "v": {
+   "identical": true,
+   "rows_first": 61681,
+   "rows_second": 61681
+  },
+  "a": {
+   "identical": true,
+   "rows_first": 61681,
+   "rows_second": 61681
+  },
+  "lane": {
+   "identical": true,
+   "rows_first": 61681,
+   "rows_second": 61681
+  }
+ },
+ "outputs": {
+  "reference.npz": "a6bda7378d417f1423d5de7e6532d2b369805787b9643d1e4a58ee2c2c11e061",
+  "alt0.npz": "4743eadaa008b36326dacc7b0b5de514deaa04795b3d97384093a6b7140ded0b",
+  "alt1.npz": "e521ff1da7afe90cad0699e8c6fcde7736f4b42cea9b9feccdfd4b77620b0c8e"
+ }
+}
