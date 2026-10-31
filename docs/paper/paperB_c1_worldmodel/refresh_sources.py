@@ -40,6 +40,20 @@ SOURCES = {
     "Calibration handoff": "E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB_HANDOFF.md",
     "Calibration resume": "E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB_RESUME.md",
     "Speed-only headroom": "E:/agent-work/c4-speedhead/docs/paper_results/SPEEDHEAD.md",
+    "Owner evening priorities": "E:/research-dense/docs/OWNER_UPDATE_20261030_EVENING.md",
+    "Shared registration": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md",
+    "PI regression and genuine-history diagnosis": "E:/agent-work/c4-c1pidiag/docs/paper_results/C1PIDIAG.md",
+    "Tiny-perturbation reference": "E:/agent-work/c4-c1floor/docs/paper_results/C1FLOOR.md",
+    "Tiny-perturbation horizon CSV": "E:/agent-work/c4-c1floor/docs/paper_results/C1FLOOR_error_horizon.csv",
+    "Switching scenario and same-state winners": "E:/agent-work/c4-c1switch/docs/paper_results/C1SWITCH_WINNERS.md",
+    "Switching current design and continuation": "E:/agent-work/c4-c1switch/docs/paper_results/C1SWITCH_DESIGN.md",
+    "Recorded winner CSV": "E:/agent-work/c4-c1switch/docs/paper_results/c1switch/recorded_world_winners.csv",
+    "Same-state winner CSV": "E:/agent-work/c4-c1switch/docs/paper_results/c1switch/step0b_decisions.csv",
+    "Queue service falsifier": "E:/agent-work/c4-wmqueue/docs/paper_results/WMQUEUE.md",
+    "Short WM plus real-value test": "E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md",
+    "Companion backup final verdict": "E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_RUN.md",
+    "Saved-state and action artifact check": "E:/agent-work/c4-sumocf/docs/paper_results/ARTIFACT_CHECK.md",
+    "WM review synthesis": "E:/research-dense/docs/WM_FIX_SYNTHESIS_20261031.md",
 }
 
 

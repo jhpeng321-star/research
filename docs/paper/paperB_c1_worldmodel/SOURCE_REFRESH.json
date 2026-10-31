@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-10-31T16:15:03+08:00",
+  "checked_at": "2026-10-31T20:55:42+08:00",
   "scope": "Explicit permitted evidence paths only; no automatic scientific status promotion",
   "sources": {
     "C1 gap authoritative report": {
@@ -9,11 +9,11 @@
     "C1 gap report alternate documented delivery": {
       "path": "E:/agent-work/c4-c1gap/docs/paper_results/C1_GAPS.md",
       "status": "PRESENT",
-      "sha256": "f601c1cce9fabcb6a31582b9c566b3570a9c76dc36789c100180968e41c2b91f",
-      "bytes": 7465,
+      "sha256": "f713bd7bacf89392596c7a496e5043f0f60bb6592cda614cc3de2d19c65a19c8",
+      "bytes": 13641,
       "heading": "# C1 gaps — S-C1GAP (2026-10-31)",
       "changed_since_previous_refresh": true,
-      "matches_figure_snapshot": true
+      "matches_figure_snapshot": false
     },
     "C1 closed-loop authoritative report": {
       "path": "E:/agent-work/c4-c1closed/C1CLOSED.md",
@@ -21,7 +21,12 @@
     },
     "C1 closed-loop report alternate delivery": {
       "path": "E:/agent-work/c4-c1closed/docs/paper_results/C1CLOSED.md",
-      "status": "MISSING"
+      "status": "PRESENT",
+      "sha256": "a5679b8a219fa8adaec8ddb2dbb71d46177a63a567204c0b7b4223d3a47875ff",
+      "bytes": 2651,
+      "heading": "# S-C1CLOSED — RUNNING; no scientific verdict yet",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
     },
     "Recovered wall result": {
       "path": "E:/agent-work/c4-c1gap/docs/paper_results/c1gap/WALL_C1_RESULT.recovered.md",
@@ -197,32 +202,37 @@
     "Data-only successor status": {
       "path": "E:/agent-work/c4-wmfixmerge/docs/paper_results/WMFIX_PILOT_V2DATA.md",
       "status": "PRESENT",
-      "sha256": "caf06a07b3c62bf42c3645022f7a17d1d686e57793cca0c1de0c720019dd7474",
-      "bytes": 5189,
+      "sha256": "41a9fd8e2d4f573c8058df16147cd7d52ffaad4804671c10fe7184f652571e30",
+      "bytes": 16274,
       "heading": "# PILOT v2-DATA — MAIN authorization 2026-10-31 15:25",
-      "changed_since_previous_refresh": false,
+      "changed_since_previous_refresh": true,
       "matches_figure_snapshot": null
     },
     "Final calibration": {
       "path": "E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB.md",
-      "status": "MISSING"
+      "status": "PRESENT",
+      "sha256": "be56ae652810e3602e9243858be88b0829e90a8c4059227feda45e98a53670f2",
+      "bytes": 5282,
+      "heading": "# S-WMCALIB — frozen-WM effect calibration",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
     },
     "Calibration handoff": {
       "path": "E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB_HANDOFF.md",
       "status": "PRESENT",
-      "sha256": "dc9a4d4f5f9da2d0b4439da0aaaa5e7c90b749743bc507b69e59855606cc721e",
-      "bytes": 4255,
+      "sha256": "a0bae997363eda615d5612ee428e4b8aeedf0b4fcffaccf370cc53775c42995f",
+      "bytes": 7103,
       "heading": "# S-WMCALIB (Track 2) HANDOFF 2026-10-31 ~15:00 (branch c4/wmcalib, no push)",
-      "changed_since_previous_refresh": false,
+      "changed_since_previous_refresh": true,
       "matches_figure_snapshot": null
     },
     "Calibration resume": {
       "path": "E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB_RESUME.md",
       "status": "PRESENT",
-      "sha256": "f231302caf40e928e2fc6717dc8fed23b20a46c00e81ef84eb97f2f9c6ecc805",
-      "bytes": 4936,
+      "sha256": "7a001f0965787f45b674963c8db9e133ba684f32b844562871321fb59b10e8b0",
+      "bytes": 7275,
       "heading": "# S-WMCALIB resume / frozen completion procedure — 2026-10-31",
-      "changed_since_previous_refresh": false,
+      "changed_since_previous_refresh": true,
       "matches_figure_snapshot": null
     },
     "Speed-only headroom": {
@@ -231,6 +241,132 @@
       "sha256": "ddf295ec72024014982f291fd7789c92d2a7acec14ddeaa709171f15a103ea42",
       "bytes": 7504,
       "heading": "# SPEEDHEAD — EXPLORATORY TRAIN/development study",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Owner evening priorities": {
+      "path": "E:/research-dense/docs/OWNER_UPDATE_20261030_EVENING.md",
+      "status": "PRESENT",
+      "sha256": "cbd9b4c0155aff8379e3846c173bed0ff8a034d45f08f9ccdcef8bb048602c69",
+      "bytes": 23200,
+      "heading": "# READ FIRST TONIGHT (kept current by MAIN; written 2026-10-31 ~15:58)",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Shared registration": {
+      "path": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md",
+      "status": "PRESENT",
+      "sha256": "2765bb044718178bf5ed9ed1120fbc91b5bf0ec8c8dac9c62a51fce43d128404",
+      "bytes": 2176241,
+      "heading": "# C4-V7FT-20261017: world-model fixes (merge calibration) + policy-setting fixes; overnight on gpuR",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "PI regression and genuine-history diagnosis": {
+      "path": "E:/agent-work/c4-c1pidiag/docs/paper_results/C1PIDIAG.md",
+      "status": "PRESENT",
+      "sha256": "ef442d7dc93c3eddbac15ee5af7ff96c8ee06213639dae180abbe0913b7dac20",
+      "bytes": 7803,
+      "heading": "# S-C1PIDIAG — why the newer checkpoints lose the original C1 comparison",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Tiny-perturbation reference": {
+      "path": "E:/agent-work/c4-c1floor/docs/paper_results/C1FLOOR.md",
+      "status": "PRESENT",
+      "sha256": "1f10c5c0a4776eb5f8d914cccbe51a5028215a10d6c9eca4dc94464069d8b3ab",
+      "bytes": 3889,
+      "heading": "# S-C1FLOOR — tiny-perturbation chaos reference (2026-10-31)",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Tiny-perturbation horizon CSV": {
+      "path": "E:/agent-work/c4-c1floor/docs/paper_results/C1FLOOR_error_horizon.csv",
+      "status": "PRESENT",
+      "sha256": "440816365f9105471d3bb85cfe2fd469b7af6aecab97a002a386034f6b0d06d4",
+      "bytes": 33657,
+      "heading": "",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Switching scenario and same-state winners": {
+      "path": "E:/agent-work/c4-c1switch/docs/paper_results/C1SWITCH_WINNERS.md",
+      "status": "PRESENT",
+      "sha256": "d303074e68bd0122190cd74cabcc9b2aa310ea28be277ffd15969f78b6d13853",
+      "bytes": 11022,
+      "heading": "# C1SWITCH scenario winners — recorded and fresh full-rerun panels complete",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Switching current design and continuation": {
+      "path": "E:/agent-work/c4-c1switch/docs/paper_results/C1SWITCH_DESIGN.md",
+      "status": "PRESENT",
+      "sha256": "0fa7c88b0d6c6e578e8fcb7a536ee6e02d791677619249aaeb874c6d07e9fb85",
+      "bytes": 12780,
+      "heading": "# S-C1SWITCH — prospective Paper-B design (2026-10-31)",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Recorded winner CSV": {
+      "path": "E:/agent-work/c4-c1switch/docs/paper_results/c1switch/recorded_world_winners.csv",
+      "status": "PRESENT",
+      "sha256": "f240c3d9cabee6f91e411cf9a3a7dc66be2d2f8881dc9ce514564e56468a4392",
+      "bytes": 44561,
+      "heading": "",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Same-state winner CSV": {
+      "path": "E:/agent-work/c4-c1switch/docs/paper_results/c1switch/step0b_decisions.csv",
+      "status": "PRESENT",
+      "sha256": "63fec1111239cd798b812cf7c17f5810e8104e1eb18d9e43dc6722340df8f4b1",
+      "bytes": 6626,
+      "heading": "",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Queue service falsifier": {
+      "path": "E:/agent-work/c4-wmqueue/docs/paper_results/WMQUEUE.md",
+      "status": "PRESENT",
+      "sha256": "3fbe64e7da2e44f673fcc100496d7db90dad8184b2169a1518700286d42eb38d",
+      "bytes": 5036,
+      "heading": "# S-WMQUEUE — conservative queue/service falsifier (2026-10-31)",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Short WM plus real-value test": {
+      "path": "E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md",
+      "status": "PRESENT",
+      "sha256": "83a3fe4d87a5e1b72181391737cd5895ac2613da5a53f34e667b9cae01f6a76a",
+      "bytes": 3536,
+      "heading": "# S-WMVALUE — decisive-test inference RUNNING (2026-10-31)",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Companion backup final verdict": {
+      "path": "E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_RUN.md",
+      "status": "PRESENT",
+      "sha256": "1c6095d7bfa316701b0e6af661f210b6ef350f9e6911e31734e83c26dd6299a4",
+      "bytes": 23156,
+      "heading": "# S-SUMOCF run receipts",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Saved-state and action artifact check": {
+      "path": "E:/agent-work/c4-sumocf/docs/paper_results/ARTIFACT_CHECK.md",
+      "status": "PRESENT",
+      "sha256": "4ac2b3e82b61bbdb9e2fbbf788af8311a0e8f4d62b07c88b48868ca31410d6af",
+      "bytes": 7549,
+      "heading": "# S-SUMOCF artifact check — PASS for full reruns; corrected learner launch pending",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "WM review synthesis": {
+      "path": "E:/research-dense/docs/WM_FIX_SYNTHESIS_20261031.md",
+      "status": "PRESENT",
+      "sha256": "66355e4b722ad4db34cde9f64c5685b15741f364b3ede030fd55827cd113e674",
+      "bytes": 2662,
+      "heading": "# WM fix synthesis — MAIN, 2026-10-31 ~18:00 (Astra + Claude top-down reviews)",
       "changed_since_previous_refresh": false,
       "matches_figure_snapshot": null
     }
