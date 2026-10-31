@@ -35,3 +35,6 @@ _out/brakefix_verification/main2*/command.log -whitespace
 
 # GENRAND box driver: LF on every checkout (bash on Linux)
 scripts/genrand/*.sh text eol=lf
+
+# Exact EXAM manifests bind original bytes, including CSV CRLF and JSON LF.
+docs/paper_results/coopbandit/** -text
