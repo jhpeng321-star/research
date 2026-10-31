@@ -7,6 +7,11 @@ Explicit owner approval is in the shared REGISTRATION.md at the 23:58 COOPFREE b
 ## Live owned run
 - Host cpuQ; immutable `/home/ubuntu/coopfree20261101_build5`.
 - Pipeline PID339173, Linux start_ticks47835664; nice19, one CPU thread.
+- Batch acceleration: sidecar PID436993/start48005147, eight nice19 CPU workers.
+  The original supervisor is intentionally paused (stateT); do not launch another pipeline.
+  Sidecar owns1082 disjoint unstarted arms; it excluded the original in-flight
+  `u001_w013_solo1` and resumes the exact original supervisor after draining its allocation.
+  Read `COOPFREE_OPERATIONS.md` and `BATCH_*` receipts before intervening.
 - `python -m tools.coopfree.ops status` is read-only and validates that exact process identity.
 - `DISPATCH_BUILD5.json`, `CANARY_BUILD5.json`, `STATUS_SCREEN_PROGRESS.json` are local receipts.
 - Fresh-session identity check: PID339173/start47835664 still alive, no STOP.
@@ -38,6 +43,9 @@ Publish each completed `policy_uNNN.pt` with its `UPDATE_NNN.json` and SHA256 fo
 S-COOPPLAN (`E:/agent-work/c4-coopplan`). The live root currently has no learned
 checkpoint: u1 requires all156 windows/all member solos before its optimizer step.
 Never present the zero-initialized proposal distribution as a learned checkpoint.
+The singleton read-only publisher polls every120s for12h; after verified receipts appear,
+it updates this handoff/report and commits only its publication/documentation paths.
+Its own dispatch/log receipt is `tools/coopfree/evidence/PUBLISHER_DISPATCH_1.json`.
 
 <!-- COOPFREE PUBLICATIONS BEGIN -->
 ## Automatically published proposal checkpoints
@@ -45,6 +53,7 @@ Consumer guide: `docs/paper_results/COOPFREE_PROPOSALS.md`.
 Public artifacts: `tools/coopfree/publications/`; verify `MANIFEST.json` hashes.
 Frozen remote root: `/home/ubuntu/coopfree20261101_build5` (cpuQ).
 No learned checkpoint yet; the full156-window/all-member-solo first update is running.
-Latest milestone: 60 complete jobs; 1216740 charged/66660.0 closed-actual sim-s.
+Latest milestone: 112 complete jobs; 1216740 charged/120120.0 closed-actual sim-s.
 Training-window credits describe exploration; they are not paired dev-policy performance.
+The owned supervisor is paused while eight same-host workers drain only disjoint precharged arms; the sidecar resumes it for the optimizer step (see COOPFREE_OPERATIONS.md).
 <!-- COOPFREE PUBLICATIONS END -->

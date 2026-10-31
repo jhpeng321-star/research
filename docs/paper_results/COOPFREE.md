@@ -5,6 +5,10 @@ Build and CPU gates complete. MAIN's explicit 23:58 budget approval was observed
 Frozen design: `COOPFREE_DESIGN.md` (62 lines), SHA256
 `05c729eac9b45c2128b7d8bf0db01f350730fb381d1956709a6a7b7fae9c91e3`.
 Approved SUMO pipeline is running on cpuQ, PID339173/start_ticks47835664, nice19/one thread.
+Registered operational sidecar436993/start48005147 now drains1082 disjoint precharged
+u1 arms on8 nice19 CPU workers, excluding all started work and the one in-flight arm.
+It resumes the intentionally paused original supervisor for the unchanged optimizer step.
+Original scientific sources, samples,2M budget and prefix/safety gates remain hash-bound.
 First1140s baseline and full repeat both closed at charged=actual1140, bitwise-identical
 RESULT SHA256 `a5419ebb2219b3cc765a020e6515c4e38bebcc5aba800b876375fb9d4e328030`.
 Fresh-session status: owned process identity matches, all24 screens/all12 repeats and
@@ -84,6 +88,7 @@ Consumer guide: `docs/paper_results/COOPFREE_PROPOSALS.md`.
 Public artifacts: `tools/coopfree/publications/`; verify `MANIFEST.json` hashes.
 Frozen remote root: `/home/ubuntu/coopfree20261101_build5` (cpuQ).
 No learned checkpoint yet; the full156-window/all-member-solo first update is running.
-Latest milestone: 60 complete jobs; 1216740 charged/66660.0 closed-actual sim-s.
+Latest milestone: 112 complete jobs; 1216740 charged/120120.0 closed-actual sim-s.
 Training-window credits describe exploration; they are not paired dev-policy performance.
+The owned supervisor is paused while eight same-host workers drain only disjoint precharged arms; the sidecar resumes it for the optimizer step (see COOPFREE_OPERATIONS.md).
 <!-- COOPFREE PUBLICATIONS END -->

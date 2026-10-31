@@ -16,6 +16,8 @@ class PublicationTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             p.unpack({'../policy_u001.pt':item})
         with self.assertRaises(ValueError):
+            p.unpack({'..\\policy_u001.pt':item})
+        with self.assertRaises(ValueError):
             p.unpack({'policy_u001.pt':dict(item,sha256='0'*64)})
 
     def test_existing_artifact_never_overwritten(self):

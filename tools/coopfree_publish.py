@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import sys
 import time
 
 from tools.coopbandit.ops import remote
@@ -56,7 +57,9 @@ def add(name):
   return digest
 for name in ('BINDING.json','CPU_APPROVED.json','jobs/zero_update_canary/RESULT.json',
              'PRIOR.json','BANDIT.json','BUDGET_STOP.json','TRAIN_NOT_ADMITTED.json',
-             'WAITING_PEER.json','STOP.json','COMPLETE.json'):
+             'WAITING_PEER.json','STOP.json','COMPLETE.json',
+             'BATCH_CPU.json','BATCH_REGISTRATION.json','BATCH_DISPATCH.json','BATCH_PAUSE.json','BATCH_ALLOCATION.json',
+             'BATCH_COMPLETE.json','BATCH_RESUMED.json'):
  add(name)
 for p in sorted(r.glob('UPDATE_*.json')):
  u=read(p);name='policy_u%03d.pt'%u['update']
@@ -105,7 +108,8 @@ def unpack(files):
         # The remote read whitelist is reinforced locally before writing any artifact.
         if name == 'jobs/zero_update_canary/RESULT.json':
             local = 'ZERO_UPDATE_CANARY.json'
-        elif '/' not in name and (name.endswith('.json') or name.startswith('policy_u') and name.endswith('.pt')):
+        elif '/' not in name and '\\' not in name and ':' not in name and \
+                (name.endswith('.json') or name.startswith('policy_u') and name.endswith('.pt')):
             local = name
         else:
             raise ValueError('unapproved publication name: ' + name)
@@ -162,6 +166,9 @@ def describe(snapshot):
     lines += ['Latest milestone: %d complete jobs; %d charged/%s closed-actual sim-s.' %
               (snapshot['complete_jobs'],snapshot['charged'],snapshot['actual_closed']),
               'Training-window credits describe exploration; they are not paired dev-policy performance.']
+    if (PUBLIC/'BATCH_PAUSE.json').exists() and not (PUBLIC/'BATCH_RESUMED.json').exists():
+        lines.append('The owned supervisor is paused while eight same-host workers drain only disjoint precharged arms; '
+                     'the sidecar resumes it for the optimizer step (see COOPFREE_OPERATIONS.md).')
     return '\n'.join(lines)
 
 
@@ -209,13 +216,15 @@ def once(commit=False):
         paths += ['tools/coopfree/publications/MANIFEST.json',
                   'tools/coopfree/publications/MILESTONE_'+ident+'.json']
         git('add','--','HANDOFF.md','docs/paper_results/COOPFREE.md',*paths)
-        print(git('commit','-m','coopfree: publish verified proposal and run milestone '+ident).stdout,flush=True)
+        print(git('commit','-m','coopfree: publish verified proposal and run milestone '+ident,
+                  '--only','--','HANDOFF.md','docs/paper_results/COOPFREE.md',*paths).stdout,flush=True)
     return snapshot, True
 
 
 def main():
     parser = argparse.ArgumentParser(__doc__)
     parser.add_argument('--watch',action='store_true')
+    parser.add_argument('--spawn',action='store_true',help='one-shot detached singleton observer; no simulations')
     parser.add_argument('--commit',action='store_true')
     parser.add_argument('--interval',type=int,default=120)
     parser.add_argument('--hours',type=float,default=12)
@@ -223,6 +232,24 @@ def main():
     if args.interval < 30 or not 0 < args.hours <= 24:
         parser.error('interval>=30 and 0<hours<=24 required')
     gitdir = Path(git('rev-parse','--absolute-git-dir').stdout.strip())
+    if args.spawn:
+        assert gitdir.is_dir()
+        with (gitdir/'coopfree-publisher.log').open('x',encoding='utf-8') as log:
+            command=[sys.executable,'-B','-u','-m','tools.coopfree_publish','--watch',
+                     '--interval',str(args.interval),'--hours',str(args.hours)]
+            if args.commit:
+                command.append('--commit')
+            options=dict(creationflags=subprocess.CREATE_NEW_PROCESS_GROUP|subprocess.DETACHED_PROCESS) \
+                if os.name=='nt' else dict(start_new_session=True)
+            process=subprocess.Popen(command,cwd=LOCAL,stdin=subprocess.DEVNULL,stdout=log,
+                                     stderr=subprocess.STDOUT,**options)
+        receipt=dict(pid=process.pid,unix=time.time(),interval=args.interval,hours=args.hours,
+                     log=str(gitdir/'coopfree-publisher.log'),simulations_dispatched=0,
+                     commits=args.commit,command=command)
+        immutable(LOCAL/'tools/coopfree/evidence/PUBLISHER_DISPATCH_1.json',
+                  (json.dumps(receipt,indent=2)+'\n').encode())
+        print(json.dumps(receipt),flush=True)
+        return
     with (gitdir/'coopfree-publisher.lock').open('a+b') as lock:
         if os.name == 'nt':
             import msvcrt
