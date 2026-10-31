@@ -1,0 +1,1058 @@
+[
+  {
+    "episode": "fixed_u14_w0_k0",
+    "meta": {
+      "seed": 969290,
+      "arm": "sumocf",
+      "branch": {
+        "t0_s": 358,
+        "horizon_s": 600
+      },
+      "trace_scope": "full_observable_fleet",
+      "trace_limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "position_dtype_epsilon": 1.1920928955078125e-07
+    },
+    "hashes": {
+      "b003.jsonl.gz": "6eb685f11062b656da18c121c6060805c918b90a8b55aa1586c76aec64e07523"
+    },
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        358.0,
+        958.0
+      ],
+      "recorded_interval_s": [
+        358.0,
+        448.0
+      ]
+    },
+    "reference_hashes": {
+      "b000.jsonl.gz": "776b8f0ec90bd2ddac5d1f685803b00000889acf11fe75b9a3f253914f705ca1"
+    }
+  },
+  {
+    "episode": "fixed_u14_w0_k1",
+    "meta": {
+      "seed": 969290,
+      "arm": "sumocf",
+      "branch": {
+        "t0_s": 535,
+        "horizon_s": 600
+      },
+      "trace_scope": "full_observable_fleet",
+      "trace_limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "position_dtype_epsilon": 1.1920928955078125e-07
+    },
+    "hashes": {
+      "b003.jsonl.gz": "e836d617d47d73242f6d114f01653677f272ae47ee1049f9a3a718682cdbcc7b"
+    },
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        535.0,
+        1135.0
+      ],
+      "recorded_interval_s": [
+        535.0,
+        625.0
+      ]
+    },
+    "reference_hashes": {
+      "b000.jsonl.gz": "32556051f84f29e60dcedbebd25b2504396b1c99678839f90f6f177dd6b58242"
+    }
+  },
+  {
+    "episode": "fixed_u14_w0_k2",
+    "meta": {
+      "seed": 969290,
+      "arm": "sumocf",
+      "branch": {
+        "t0_s": 387,
+        "horizon_s": 600
+      },
+      "trace_scope": "full_observable_fleet",
+      "trace_limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "position_dtype_epsilon": 1.1920928955078125e-07
+    },
+    "hashes": {
+      "b003.jsonl.gz": "c63d24c1e4841fc2d9ae3c81989d0812e749480fd89ef5a12bca0fde84842ddd"
+    },
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        387.0,
+        987.0
+      ],
+      "recorded_interval_s": [
+        387.0,
+        477.0
+      ]
+    },
+    "reference_hashes": {
+      "b000.jsonl.gz": "9d30bb7cf0254d012aecd6fee6c828f97e484b959f43804551980ba459633cf2"
+    }
+  },
+  {
+    "episode": "fixed_u14_w0_k3",
+    "meta": {
+      "seed": 969290,
+      "arm": "sumocf",
+      "branch": {
+        "t0_s": 459,
+        "horizon_s": 600
+      },
+      "trace_scope": "full_observable_fleet",
+      "trace_limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "position_dtype_epsilon": 1.1920928955078125e-07
+    },
+    "hashes": {
+      "b003.jsonl.gz": "7e9bd17cf1574fdc2036991f3486f425832f6c51e4adabf71420878c2ff8bc36"
+    },
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        459.0,
+        1059.0
+      ],
+      "recorded_interval_s": [
+        459.0,
+        549.0
+      ]
+    },
+    "reference_hashes": {
+      "b000.jsonl.gz": "19afbbfc98d3ecae565893c118d2aa7218a589330e99df09f9a2c7d13e86ff4f"
+    }
+  },
+  {
+    "episode": "fixed_u14_w0_k4",
+    "meta": {
+      "seed": 969290,
+      "arm": "sumocf",
+      "branch": {
+        "t0_s": 394,
+        "horizon_s": 600
+      },
+      "trace_scope": "full_observable_fleet",
+      "trace_limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "position_dtype_epsilon": 1.1920928955078125e-07
+    },
+    "hashes": {
+      "b003.jsonl.gz": "c3ce9922132c64984ba4bfbd92da17f0f3d1f8e809ac73e155e57761f95f0b64"
+    },
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        394.0,
+        994.0
+      ],
+      "recorded_interval_s": [
+        394.0,
+        484.0
+      ]
+    },
+    "reference_hashes": {
+      "b000.jsonl.gz": "588a3b2068f8a39026d50968c091bf040c346ca4b54a473aed398750046c17e4"
+    }
+  },
+  {
+    "episode": "fixed_u14_w0_k5",
+    "meta": {
+      "seed": 969290,
+      "arm": "sumocf",
+      "branch": {
+        "t0_s": 354,
+        "horizon_s": 600
+      },
+      "trace_scope": "full_observable_fleet",
+      "trace_limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "position_dtype_epsilon": 1.1920928955078125e-07
+    },
+    "hashes": {
+      "b003.jsonl.gz": "7eb7dd4d0d93ce2dcfaedb588c07fc856841a20f59d173f6867c5cc99961bc30"
+    },
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        354.0,
+        954.0
+      ],
+      "recorded_interval_s": [
+        354.0,
+        444.0
+      ]
+    },
+    "reference_hashes": {
+      "b000.jsonl.gz": "06361f32e5a1d37362228d9f821b4b976263bd602b344e90fe3e7c30ef3d3d1a"
+    }
+  },
+  {
+    "episode": "fixed_u14_w1_k0",
+    "meta": {
+      "seed": 969291,
+      "arm": "sumocf",
+      "branch": {
+        "t0_s": 435,
+        "horizon_s": 600
+      },
+      "trace_scope": "full_observable_fleet",
+      "trace_limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "position_dtype_epsilon": 1.1920928955078125e-07
+    },
+    "hashes": {
+      "b003.jsonl.gz": "cdff6353d0ceea582010229a8812eba42a0fb283fc41560a8dfd41723aea6ece"
+    },
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        435.0,
+        1035.0
+      ],
+      "recorded_interval_s": [
+        435.0,
+        525.0
+      ]
+    },
+    "reference_hashes": {
+      "b000.jsonl.gz": "04ca1c2d863ca60ace13fa7f6470e819d99ef9444b60e4090a8c5a6061bd3e9f"
+    }
+  },
+  {
+    "episode": "fixed_u14_w1_k2",
+    "meta": {
+      "seed": 969291,
+      "arm": "sumocf",
+      "branch": {
+        "t0_s": 578,
+        "horizon_s": 600
+      },
+      "trace_scope": "full_observable_fleet",
+      "trace_limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "position_dtype_epsilon": 1.1920928955078125e-07
+    },
+    "hashes": {
+      "b003.jsonl.gz": "c0af772561af84ced20b67c6c16f65daaa646f03ebb1d4b5ecfcb7f39b5487e4"
+    },
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        578.0,
+        1178.0
+      ],
+      "recorded_interval_s": [
+        578.0,
+        668.0
+      ]
+    },
+    "reference_hashes": {
+      "b000.jsonl.gz": "1bf9af2d7941eaa2405e191240fb2db37584bb0596152e3140db3b108c709249"
+    }
+  },
+  {
+    "episode": "fixed_u14_w1_k4",
+    "meta": {
+      "seed": 969291,
+      "arm": "sumocf",
+      "branch": {
+        "t0_s": 571,
+        "horizon_s": 600
+      },
+      "trace_scope": "full_observable_fleet",
+      "trace_limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "position_dtype_epsilon": 1.1920928955078125e-07
+    },
+    "hashes": {
+      "b003.jsonl.gz": "9b9591fdb9744b195e62d67c813116bf7a271695052aff9f297d046555cf32e8"
+    },
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        571.0,
+        1171.0
+      ],
+      "recorded_interval_s": [
+        571.0,
+        661.0
+      ]
+    },
+    "reference_hashes": {
+      "b000.jsonl.gz": "bba0d3e0da66da5048089b341055523a4b366348b2c84e171e4fe3d4a9468652"
+    }
+  },
+  {
+    "episode": "fixed_u14_w1_k5",
+    "meta": {
+      "seed": 969291,
+      "arm": "sumocf",
+      "branch": {
+        "t0_s": 551,
+        "horizon_s": 600
+      },
+      "trace_scope": "full_observable_fleet",
+      "trace_limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "position_dtype_epsilon": 1.1920928955078125e-07
+    },
+    "hashes": {
+      "b003.jsonl.gz": "f7d781c0725a53e1f878488c8a2397dde7d558014d3b4e76023709371b5e0a43"
+    },
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        551.0,
+        1151.0
+      ],
+      "recorded_interval_s": [
+        551.0,
+        641.0
+      ]
+    },
+    "reference_hashes": {
+      "b000.jsonl.gz": "322bce68d9b13f21d36e59bf371dcba59c730a61de2bc22671617ae12a257cac"
+    }
+  },
+  {
+    "episode": "fixed_u14_w2_k0",
+    "meta": {
+      "seed": 969292,
+      "arm": "sumocf",
+      "branch": {
+        "t0_s": 589,
+        "horizon_s": 600
+      },
+      "trace_scope": "full_observable_fleet",
+      "trace_limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "position_dtype_epsilon": 1.1920928955078125e-07
+    },
+    "hashes": {
+      "b003.jsonl.gz": "dbf71073bcac80cb3da3c040ad173a20b73fd48bb895988c7e9a342e6ca6aaff"
+    },
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        589.0,
+        1189.0
+      ],
+      "recorded_interval_s": [
+        589.0,
+        679.0
+      ]
+    },
+    "reference_hashes": {
+      "b000.jsonl.gz": "98dc630aa0c24d02a807da8e0ca23edb1ad839f966e0b3176057f002df4dcd50"
+    }
+  },
+  {
+    "episode": "fixed_u14_w2_k1",
+    "meta": {
+      "seed": 969292,
+      "arm": "sumocf",
+      "branch": {
+        "t0_s": 335,
+        "horizon_s": 600
+      },
+      "trace_scope": "full_observable_fleet",
+      "trace_limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "position_dtype_epsilon": 1.1920928955078125e-07
+    },
+    "hashes": {
+      "b003.jsonl.gz": "97a009f426e863637707689cfa5880079d2e440af0c52c27b40469047728185d"
+    },
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        335.0,
+        935.0
+      ],
+      "recorded_interval_s": [
+        335.0,
+        425.0
+      ]
+    },
+    "reference_hashes": {
+      "b000.jsonl.gz": "31ffca25e8095011546b5551b8ef653be67e9652bd0a7d53181846a08cd7cff4"
+    }
+  },
+  {
+    "episode": "fixed_u14_w2_k2",
+    "meta": {
+      "seed": 969292,
+      "arm": "sumocf",
+      "branch": {
+        "t0_s": 556,
+        "horizon_s": 600
+      },
+      "trace_scope": "full_observable_fleet",
+      "trace_limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "position_dtype_epsilon": 1.1920928955078125e-07
+    },
+    "hashes": {
+      "b003.jsonl.gz": "267d9b9048b30268beeab5f3934e99a24749875fdd8ee276d23e54913f04c40f"
+    },
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        556.0,
+        1156.0
+      ],
+      "recorded_interval_s": [
+        556.0,
+        646.0
+      ]
+    },
+    "reference_hashes": {
+      "b000.jsonl.gz": "327d30dfd6e590a692d008a1ca9e5a115cc64e4483d31575555886c814aa21a5"
+    }
+  },
+  {
+    "episode": "fixed_u14_w2_k3",
+    "meta": {
+      "seed": 969292,
+      "arm": "sumocf",
+      "branch": {
+        "t0_s": 577,
+        "horizon_s": 600
+      },
+      "trace_scope": "full_observable_fleet",
+      "trace_limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "position_dtype_epsilon": 1.1920928955078125e-07
+    },
+    "hashes": {
+      "b003.jsonl.gz": "f6258ad2cb4f30f5459f5246a30d6a300323fdfe277044b6b56621774f677298"
+    },
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        577.0,
+        1177.0
+      ],
+      "recorded_interval_s": [
+        577.0,
+        667.0
+      ]
+    },
+    "reference_hashes": {
+      "b000.jsonl.gz": "7ac134636f0b2454a634110dd98305f2c802f0315ba5fdba338b8e51edd0cab3"
+    }
+  },
+  {
+    "episode": "fixed_u14_w2_k4",
+    "meta": {
+      "seed": 969292,
+      "arm": "sumocf",
+      "branch": {
+        "t0_s": 425,
+        "horizon_s": 600
+      },
+      "trace_scope": "full_observable_fleet",
+      "trace_limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "position_dtype_epsilon": 1.1920928955078125e-07
+    },
+    "hashes": {
+      "b003.jsonl.gz": "d36a6f0de75a7e0010f5db2dc84741a1a32ac808eb970b08aa6fee347b83177a"
+    },
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        425.0,
+        1025.0
+      ],
+      "recorded_interval_s": [
+        425.0,
+        515.0
+      ]
+    },
+    "reference_hashes": {
+      "b000.jsonl.gz": "3338e195785371d54b52b688fd8cfa0d27a151bea8508e154b4c7cbc455e49bc"
+    }
+  },
+  {
+    "episode": "fixed_u14_w2_k5",
+    "meta": {
+      "seed": 969292,
+      "arm": "sumocf",
+      "branch": {
+        "t0_s": 429,
+        "horizon_s": 600
+      },
+      "trace_scope": "full_observable_fleet",
+      "trace_limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "position_dtype_epsilon": 1.1920928955078125e-07
+    },
+    "hashes": {
+      "b003.jsonl.gz": "3d606023a4b1578db41ed9cc1ddff52cec55296d3aebe56949c2835b91eee913"
+    },
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        429.0,
+        1029.0
+      ],
+      "recorded_interval_s": [
+        429.0,
+        519.0
+      ]
+    },
+    "reference_hashes": {
+      "b000.jsonl.gz": "7b3ec42e502042972d755f7974be8d50f63c43d9fb6de113fdd731517423b12e"
+    }
+  },
+  {
+    "episode": "fixed_u14_w3_k5",
+    "meta": {
+      "seed": 969293,
+      "arm": "sumocf",
+      "branch": {
+        "t0_s": 600,
+        "horizon_s": 600
+      },
+      "trace_scope": "full_observable_fleet",
+      "trace_limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "position_dtype_epsilon": 1.1920928955078125e-07
+    },
+    "hashes": {
+      "b003.jsonl.gz": "62f45f4b2f56ce3795c51fd603c7460e692f2e0a0f8926b0751f481faaa1f91b"
+    },
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        600.0,
+        1200.0
+      ],
+      "recorded_interval_s": [
+        600.0,
+        690.0
+      ]
+    },
+    "reference_hashes": {
+      "b000.jsonl.gz": "b48bfc7e007826563daa2691ad22bbe7d6ee807bc925bc13e0331abc2bc84299"
+    }
+  },
+  {
+    "episode": "fixed_u14_w4_k2",
+    "meta": {
+      "seed": 969294,
+      "arm": "sumocf",
+      "branch": {
+        "t0_s": 446,
+        "horizon_s": 600
+      },
+      "trace_scope": "full_observable_fleet",
+      "trace_limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "position_dtype_epsilon": 1.1920928955078125e-07
+    },
+    "hashes": {
+      "b003.jsonl.gz": "b08d26176fdd5506ccac12d6faa8de28752708bb9fb23a9ef340ddb3598aa558"
+    },
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        446.0,
+        1046.0
+      ],
+      "recorded_interval_s": [
+        446.0,
+        536.0
+      ]
+    },
+    "reference_hashes": {
+      "b000.jsonl.gz": "fb2564dc23bed11966cec17cd17d08f74375404a441b85979a35000206bf8be0"
+    }
+  },
+  {
+    "episode": "fixed_u14_w4_k3",
+    "meta": {
+      "seed": 969294,
+      "arm": "sumocf",
+      "branch": {
+        "t0_s": 428,
+        "horizon_s": 600
+      },
+      "trace_scope": "full_observable_fleet",
+      "trace_limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "position_dtype_epsilon": 1.1920928955078125e-07
+    },
+    "hashes": {
+      "b003.jsonl.gz": "f26a57fa6350aae9e4becfd921a57df43db5343afb0c08a7da761125919e6061"
+    },
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        428.0,
+        1028.0
+      ],
+      "recorded_interval_s": [
+        428.0,
+        518.0
+      ]
+    },
+    "reference_hashes": {
+      "b000.jsonl.gz": "167c8e003a13c1c83563db7ed17a34cf2e826a6d20f5646358f622eb3c6e4e1c"
+    }
+  },
+  {
+    "episode": "fixed_u14_w4_k4",
+    "meta": {
+      "seed": 969294,
+      "arm": "sumocf",
+      "branch": {
+        "t0_s": 417,
+        "horizon_s": 600
+      },
+      "trace_scope": "full_observable_fleet",
+      "trace_limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "position_dtype_epsilon": 1.1920928955078125e-07
+    },
+    "hashes": {
+      "b003.jsonl.gz": "7483aae5f42a24ed541d73bdd055e0e348a80e88dde3340dfa7111c2430abf7d"
+    },
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        417.0,
+        1017.0
+      ],
+      "recorded_interval_s": [
+        417.0,
+        507.0
+      ]
+    },
+    "reference_hashes": {
+      "b000.jsonl.gz": "573d0285e91ecb8b79c7aa5a4f49c9f7ee59a7ca43292b1bfd1b40d9fbad0474"
+    }
+  },
+  {
+    "episode": "fixed_u14_w4_k5",
+    "meta": {
+      "seed": 969294,
+      "arm": "sumocf",
+      "branch": {
+        "t0_s": 575,
+        "horizon_s": 600
+      },
+      "trace_scope": "full_observable_fleet",
+      "trace_limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "position_dtype_epsilon": 1.1920928955078125e-07
+    },
+    "hashes": {
+      "b003.jsonl.gz": "ae7d490ba3bd3dbe17c371c553cc936ec6f72e77c0e68b8de32f0f1d4c5c8499"
+    },
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        575.0,
+        1175.0
+      ],
+      "recorded_interval_s": [
+        575.0,
+        665.0
+      ]
+    },
+    "reference_hashes": {
+      "b000.jsonl.gz": "94aa299306f797198acee39b7315f85d3dc0227f0fcd6a04c63fdbbe1366e26b"
+    }
+  },
+  {
+    "episode": "fixed_u14_w5_k1",
+    "meta": {
+      "seed": 969295,
+      "arm": "sumocf",
+      "branch": {
+        "t0_s": 457,
+        "horizon_s": 600
+      },
+      "trace_scope": "full_observable_fleet",
+      "trace_limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "position_dtype_epsilon": 1.1920928955078125e-07
+    },
+    "hashes": {
+      "b003.jsonl.gz": "cd73373574f05344d7c85653a474e3d96041055b344704dfd10cc5b2ddbd9c41"
+    },
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        457.0,
+        1057.0
+      ],
+      "recorded_interval_s": [
+        457.0,
+        547.0
+      ]
+    },
+    "reference_hashes": {
+      "b000.jsonl.gz": "91d74a27721d7aec5573a1a25183cb2ffc1dd38f9a35824e46a28e91fb16f146"
+    }
+  },
+  {
+    "episode": "fixed_u14_w5_k3",
+    "meta": {
+      "seed": 969295,
+      "arm": "sumocf",
+      "branch": {
+        "t0_s": 585,
+        "horizon_s": 600
+      },
+      "trace_scope": "full_observable_fleet",
+      "trace_limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "position_dtype_epsilon": 1.1920928955078125e-07
+    },
+    "hashes": {
+      "b003.jsonl.gz": "e9515517f38e30a82bdcec2aab29872dfac9c9f1b8a1f6c990439f0b93403d0a"
+    },
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        585.0,
+        1185.0
+      ],
+      "recorded_interval_s": [
+        585.0,
+        675.0
+      ]
+    },
+    "reference_hashes": {
+      "b000.jsonl.gz": "a6f0b95f6cbbb30dfc035fb62dbf59e3e1a52c2771e1cd0c2b96d2020806c867"
+    }
+  },
+  {
+    "episode": "fixed_u14_w5_k5",
+    "meta": {
+      "seed": 969295,
+      "arm": "sumocf",
+      "branch": {
+        "t0_s": 586,
+        "horizon_s": 600
+      },
+      "trace_scope": "full_observable_fleet",
+      "trace_limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "position_dtype_epsilon": 1.1920928955078125e-07
+    },
+    "hashes": {
+      "b003.jsonl.gz": "57c044c197d6d9db6b9d1f07b65286214fc587cab792cea5d761086d36ba30fb"
+    },
+    "coverage": {
+      "trace_scope": "full_observable_fleet",
+      "limitations": [
+        "reference is policy mean, NEVER native release",
+        "probe v1 action.executed means issued safe command, not realized acceleration",
+        "v2 action.issued_safe and realized_physics explicitly separate command from response",
+        "native-warmup prefix lengths from packed history are unknown",
+        "600s outcome is measured beyond the shorter exported behaviour window"
+      ],
+      "requested_branch_interval_s": [
+        586.0,
+        1186.0
+      ],
+      "recorded_interval_s": [
+        586.0,
+        676.0
+      ]
+    },
+    "reference_hashes": {
+      "b000.jsonl.gz": "aa19180420e6e27815cbbade040a8a4efd5ff911d764c0065ef99d1bb3d8e7e0"
+    }
+  }
+]
