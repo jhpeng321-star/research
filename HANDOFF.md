@@ -4,9 +4,12 @@ Branch `c4/rb-fit`, base `f0db3c82`; owner amendment REGISTRATION.md:5701.
 Status: RESUMED for owner00:40 addendum; prior outputs/commits preserved.
 Pooled IDM, population/driver distributions and first LC parameters published.
 Fresh cpuQ00:43 audit: all five receipted fit/lane PIDs absent; load8.55/32.
-Remaining: UNC sample adapter, motion-only posterior shrinkage calibration,
-LC refit against committed lane811cd7e8 (finite geometry/epsilon fixes), and
-bounded SUMOCORE sign-reversal diagnosis. Report: `docs/paper_results/RBFIT.md`.
+UNC adapter implemented: `MotionFitForUNC` read-only encoder proxy;17 CPU tests
+pass. LC refit against committed lane811cd7e8 (finite geometry/epsilon fixes)
+dispatched once: cpuQ407617,2nice19workers,load8.67/32,root
+`/home/ubuntu/rbfit20261101_addendum/lane_v2`. No completed fit repeated.
+Remaining: run pre-t0 motion-only shrinkage calibration and publish bounded
+SUMOCORE sign-reversal diagnosis. Report: `docs/paper_results/RBFIT.md`.
 
 ## Frozen data/estimation contract
 - Only FIT worlds 969400–969431, native arm, from cpuQ
@@ -43,6 +46,14 @@ bounded SUMOCORE sign-reversal diagnosis. Report: `docs/paper_results/RBFIT.md`.
   cache by observed identity for the entire future; entrants use population.
   No automatic integration switch; shared model/spec/factory untouched.
 - v0 IS effective desired speed; speedFactor=v0/actual lane limit. No double scale.
+- UNC: wrap the original model with `MotionFitForUNC(model, fit, worlds, ids,
+  t0_s=300,n_particles=32,seed=...)` for `plan_hidden_state_futures` ONLY; use
+  original model for rollout. Proxy supplies `encoded['posterior_samples']`
+  [P,B,K,9] in exact encoder order. Five IDM keys replace present HDVs only;
+  CAV/padding, four unrelated coordinates, embeddings and model stay intact.
+  World+VID keyed samples are slot-order invariant and common across actions.
+  Explicit `MotionFit(...,shrinkage_path=...)` enables the learned JSON policy;
+  policy/population SHA and conditioning time must match. Default unchanged.
 - LC: `artifacts/rbfit/lane_v1/lc2013_{population,posteriors}.json`, schemas
   `wm_phys.lc2013_{population,posteriors}.v1`; joint support/weights, five physical
   keys. `draw_lane_parameters` draws one persistent vector. Emission probabilities

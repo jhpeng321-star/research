@@ -56,8 +56,14 @@ def main():
                        OPENBLAS_NUM_THREADS='1', MKL_NUM_THREADS='1',
                        PYTHONPATH=str(ROOT/'src'))
     command = ['nice', '-n', '19', sys.executable, *command]
+    source_paths = [ROOT/'src/wms/physics'/name for name in (
+        'lc2013.py', 'lc2013_geometry.py', 'config.py', 'mobil.py', 'neighbours.py',
+        'batched.py', 'motion_fit.py')]
+    source_paths += [ROOT/'tools/rbfit'/name for name in (
+        'idm_fit.py', 'lane_fit.py', 'calibrate_shrinkage.py', 'dispatch_addendum.py')
+        if (ROOT/'tools/rbfit'/name).is_file()]
     manifest = {str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()
-                for base in ('src', 'tools') for p in (ROOT/base).rglob('*.py')}
+                for p in source_paths}
     # Exclusive receipt claims dispatch before Popen. An interrupted claim requires
     # human reconciliation, never a second launch from this command.
     with receipt.open('x') as stream:
@@ -69,7 +75,7 @@ def main():
             'timestamp_unix': time.time(), 'load': os.getloadavg(),
             'source_sha256': manifest, 'gpu': False, 'automatic_retry': False}
     receipt.write_text(json.dumps(data, indent=2)+'\n')
-    print(json.dumps(data))
+    print(json.dumps({k: v for k, v in data.items() if k != 'source_sha256'}))
 
 
 if __name__ == '__main__':

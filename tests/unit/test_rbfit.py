@@ -15,6 +15,7 @@ spec.loader.exec_module(fit)
 sys.path.insert(0, str(MODULE.parent))
 import lane_fit  # noqa: E402
 import idm_mixture  # noqa: E402
+import calibrate_shrinkage  # noqa: E402
 
 
 def test_reject_non_fit_before_access(tmp_path):
@@ -149,6 +150,70 @@ def test_finite_sampler_never_invents_off_support_parameters(tmp_path):
     reader=MotionFit(tmp_path)
     sample=reader.idm(969400,torch.tensor([42]*20),t0_s=300,sample=True)
     np.testing.assert_allclose(sample["v0"].numpy(),[37.548]*20)
+
+
+def test_shrinkage_crps_polynomial_matches_pairwise_definition():
+    rng = np.random.default_rng(73)
+    values, y = rng.normal(size=(17, 7)), rng.normal(size=17)
+    prior, posterior = rng.dirichlet(np.ones(7), size=2)
+    c = calibrate_shrinkage.crps_coefficients(values, y, prior, posterior)
+    for r in (0, .19, .73, 1):
+        w = (1-r)*prior+r*posterior
+        direct = abs(values-y[:, None])@w - .5*np.einsum(
+            'i,nij,j->n', w, abs(values[:, :, None]-values[:, None, :]), w)
+        np.testing.assert_allclose(c[:, 0]+r*c[:, 1]+r*r*c[:, 2], direct, atol=1e-14)
+    assert calibrate_shrinkage.posterior_weight(0, 0) == 0
+    assert calibrate_shrinkage.posterior_weight(100, 1) == 0
+    assert calibrate_shrinkage.posterior_weight(10, .5) < calibrate_shrinkage.posterior_weight(100, .5)
+
+
+def test_unc_bridge_preserves_cavs_auxiliary_coordinates_and_identity(tmp_path):
+    import hashlib
+    import torch
+    from types import SimpleNamespace
+    from wms.physics.motion_fit import MotionFit, MotionFitForUNC, ENCODER_ORDER
+
+    support = np.stack([fit.INITIAL, fit.INITIAL*1.2])
+    pop = dict(schema='wm_phys.idm_population.v1', parameter_order=list(fit.NAMES),
+        distribution='finite_support_mixture', support=support.tolist(), weights=[1., 0.],
+        **idm_mixture.moments(support, np.array([1., 0.])), delta=4)
+    post = dict(schema='wm_phys.idm_posteriors.v1', parameter_order=list(fit.NAMES),
+        conditioning_end_s=300, drivers={'969400:42': dict(
+            **idm_mixture.moments(support, np.array([0., 1.])),
+            support_indices=[1], weights=[1.], n_observations=0)})
+    fit.write_json(tmp_path/'idm_population.json', pop)
+    fit.write_json(tmp_path/'idm_posteriors.json', post)
+    policy = dict(schema='wm_phys.idm_shrinkage.v1', conditioning_end_s=300,
+        idm_population_sha256=hashlib.sha256((tmp_path/'idm_population.json').read_bytes()).hexdigest(),
+        population_only=False, prior_count=20.)
+    fit.write_json(tmp_path/'policy.json', policy)
+    reader = MotionFit(tmp_path, shrinkage_path=tmp_path/'policy.json')
+    ids = torch.tensor([[42, 7, -1, 42]])
+    present, cav = torch.tensor([[1, 1, 0, 1]]), torch.tensor([[0, 1, 0, 0]])
+    params = {name: torch.full((1, 4), float(j+2)) for j, name in enumerate(ENCODER_ORDER)}
+    embedding = torch.tensor([123.])
+    model = SimpleNamespace(training=False, encode_drivers=lambda state, **kw: ({'keep': 9}, embedding, params))
+    proxy = MotionFitForUNC(model, reader, [969400], ids, t0_s=300, n_particles=5)
+    encoded, emb, point = proxy.encode_drivers(dict(present=present, is_cav=cav))
+    samples = encoded['posterior_samples']
+    assert samples.shape == (5, 1, 4, 9) and encoded['keep'] == 9
+    assert emb is embedding and point is params and proxy.training is False
+    baseline = torch.stack([params[name] for name in ENCODER_ORDER], -1)
+    torch.testing.assert_close(samples[:, :, 1:3], baseline[:, 1:3].expand(5, 1, 2, 9))
+    torch.testing.assert_close(samples[..., 5:], baseline[..., 5:].expand(5, 1, 4, 4))
+    torch.testing.assert_close(samples[:, 0, 0], samples[:, 0, 3])
+    # No evidence must override even this deliberately overconfident raw posterior.
+    np.testing.assert_allclose(samples[:, 0, 0, 0].numpy(), np.full(5, fit.INITIAL[0]))
+    permutation = [3, 1, 2, 0]
+    permuted = reader.unc_posterior_samples([969400], ids[:, permutation], present[:, permutation],
+        cav[:, permutation], {k: v[:, permutation] for k, v in params.items()}, n_samples=5, t0_s=300)
+    torch.testing.assert_close(samples[:, :, permutation], permuted)
+    with pytest.raises(ValueError, match='conditioning time'):
+        reader.unc_posterior_samples([969400], ids, present, cav, params, n_samples=5, t0_s=301)
+    policy['idm_population_sha256'] = 'wrong'
+    fit.write_json(tmp_path/'bad_policy.json', policy)
+    with pytest.raises(ValueError, match='binding mismatch'):
+        MotionFit(tmp_path, shrinkage_path=tmp_path/'bad_policy.json')
 
 
 @pytest.mark.parametrize("v,gap,vl,p,dt,expected",[
