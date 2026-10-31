@@ -26,7 +26,7 @@ def summarize_rows(data, bootstrap=10000):
         keys = base_keys + extra
         for source, fields in (("distributions", ["crps", "fair_crps", "pooled_crps", "cell_crps",
                     "crps_minus_pooled", "crps_minus_cell"]),
-                ("events", ["brier", "pooled_brier", "cell_brier",
+                ("events", ["probability", "outcome", "brier", "pooled_brier", "cell_brier",
                             "brier_minus_pooled", "brier_minus_cell"])):
             for values, rows in group_rows(data[source], keys).items():
                 meta = dict(zip(keys, values), scope=scope)
@@ -48,6 +48,13 @@ def summarize_rows(data, bootstrap=10000):
         for values, rows in group_rows(data["coverage"], coverage_keys).items():
             meta = dict(zip(coverage_keys, values), scope=scope)
             for field in ("covered", "width", "continuous_exchangeable_reference"):
+                summaries.append(dict(meta, metric=field, **intervals.mean(rows, field)))
+    for scope, extra in (("pooled", []), ("incumbent", ["incumbent"]),
+                         ("cell_incumbent", ["demand", "penetration", "incumbent"])):
+        keys = ["split", "horizon_s"] + extra
+        for values, rows in group_rows(data["decisions"], keys).items():
+            meta = dict(zip(keys, values), scope=scope, target="picker", region="")
+            for field in ("switched", "expected_saving", "observed_saving"):
                 summaries.append(dict(meta, metric=field, **intervals.mean(rows, field)))
     return summaries, diagrams
 
@@ -104,16 +111,18 @@ def reliability_svg(rows, target, model):
                 low = oy+(1-row["observed_low"])*side
                 high = oy+(1-row["observed_high"])*side
                 svg.append(f'<path d="M {x} {low} V {high}" stroke="{colour}" stroke-width="2"/>')
-            title = escape(f"{row['region'] or 'pairs'} n={row['count']}, worlds={row['worlds']}; "
+            label = "selected switches" if target == "selected_preference" else "all pairs"
+            title = escape(f"{row['region'] or label} n={row['count']}, worlds={row['worlds']}; "
                            f"pred={row['mean_probability']:.3f}, observed={row['observed_rate']:.3f}")
             svg.append(f'<circle cx="{x}" cy="{y}" r="4" fill="{colour}"><title>{title}</title></circle>')
         for j, region in enumerate(sorted({r["region"] for r in points})):
-            svg.append(f'<text x="{ox+side+10}" y="{oy+20+j*18}" fill="{colours[region]}">{region or "all pairs"}</text>')
+            label = "selected switches" if target == "selected_preference" else "all pairs"
+            svg.append(f'<text x="{ox+side+10}" y="{oy+20+j*18}" fill="{colours[region]}">{region or label}</text>')
     return "\n".join(svg + ["</g></svg>"])
 
 
 def credibility_section(model, audit, summaries):
-    complete = len(audit["complete_worlds"])
+    complete = len(audit.get("scored_worlds", audit["complete_worlds"]))
     lines = [f"## Credibility — {model}", "",
              f"Evidence: {complete} complete K8 worlds; {len(audit['missing_tasks'])} missing tasks. "
              "Development and reserved worlds are separate. Diagnostic pilot only; "
@@ -121,19 +130,31 @@ def credibility_section(model, audit, summaries):
              "Strict paired P(A beats B) is checked against recorded paired delay order. "
              "Ties are non-wins. Climatology uses same-arm / same-pair development worlds, "
              "excluding the entire target world; cell climatology additionally matches demand and penetration.", "",
-             "Reliability: [breakdown](reliability_breakdown.svg), "
-             "[pairwise preference](reliability_preference.svg). Full action/cell metrics, "
+              "Reliability: [breakdown](reliability_breakdown.svg), "
+              "[pairwise preference](reliability_preference.svg), "
+              "[selected switches](reliability_selected_preference.svg). Full action/cell metrics, "
              "unknown-label counts and interval coverage are in `summary.csv`; "
-             "decile support in `reliability.csv`.", ""]
+              "decile support in `reliability.csv`.", ""]
+    if audit.get("world_selection") == "explicit":
+        lines.extend([f"Explicit scored worlds: {audit['scored_worlds']}. "
+                      f"Other complete worlds excluded: {audit['excluded_complete_worlds']}.", ""])
     pooled = [r for r in summaries if r["scope"] == "pooled"]
     for split, h in sorted({(r["split"], r["horizon_s"]) for r in pooled}):
         lines.append(f"### {split}, {h} s")
         selected = [r for r in pooled if (r["split"], r["horizon_s"]) == (split, h)
-                    and r["metric"] in ("crps", "crps_minus_cell", "brier", "brier_minus_cell")]
+                    and r["metric"] in ("crps", "crps_minus_cell", "brier", "brier_minus_cell",
+                                        "switched", "expected_saving", "observed_saving")]
+        selected += [r for r in pooled if (r["split"], r["horizon_s"]) == (split, h)
+                     and ((r["target"] == "selected_preference" and
+                           r["metric"] in ("probability", "outcome")) or r["metric"] == "covered")]
         for row in selected:
             value = "unavailable" if row["mean"] is None else f"{row['mean']:.5g}"
             ci = f" [{row['low']:.5g}, {row['high']:.5g}]" if row["low"] is not None else " (CI unavailable)"
-            lines.append(f"- {row['target']} {row['region']} {row['metric']}: {value}{ci}; "
+            metric = row['metric']
+            if metric == "covered":
+                metric = (f"central {row['nominal_level']:.0%} coverage" if row['interval'] == 'central'
+                          else "min-max coverage")
+            lines.append(f"- {row['target']} {row['region']} {metric}: {value}{ci}; "
                          f"{row['worlds']} worlds, {row['count']} outcomes.")
         lines.append("")
     lines.extend(["Uncertainty: pointwise 95% percentile intervals from 10,000 stratified "
@@ -145,5 +166,17 @@ def credibility_section(model, audit, summaries):
                   "ties may raise it. Wide coverage alone does not establish useful predictions.", "",
                   "Picker rule remains P(candidate beats incumbent) >= 0.8 and lower expected "
                   "full-team delay. That registered confidence rule is not proof of calibrated "
-                  "probabilities; use the existing S-RB-EVAL qualification gate for adoption.", ""])
+                   "probabilities; use the existing S-RB-EVAL qualification gate for adoption.", ""])
+    lines.extend(["Selected-switch diagnostics evaluate only the action actually selected by "
+                  "that rule for each hypothetical incumbent. They use the selected direction's "
+                  "strict paired probability, including reverse directions and ties, rather than "
+                  "an arbitrary unordered-pair orientation. No-switch cases remain in the picker "
+                  "switch-rate/saving summaries but are not recoded as wins or calibration cases. "
+                  "All five hypothetical incumbents remain clustered within each world.", "",
+                  "Recorded paired-arm outcomes permit a retrospective original-state check; "
+                  "these picker savings are not closed-loop switching-policy performance or "
+                  "same-state probability identification. Real labels never enter selection. "
+                  "Probability/coverage/switch-rate values are fractions; delay scores and savings "
+                  "are veh-s. Positive saving helps the selected action; negative score differences "
+                  "favour the WM over climatology.", ""])
     return "\n".join(lines)

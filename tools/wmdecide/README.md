@@ -55,17 +55,33 @@ unbalanced delay ledgers are rejected by the evaluator's own `read_predictions`.
 Python `-O` is rejected because that validator uses assertions. Inputs must be
 trusted local harness files. No raw recording paths are searched or opened.
 
+For model comparisons, add `--worlds 969432 969433 969434 969436` (or the frozen
+matched set) **to both invocations**. Every requested world must have validated
+complete K8 futures; missing, empty or duplicate selections fail before writing.
+This selects score rows only: original input validation still checks all shards,
+and climatology still uses the full permitted development receipt. The audit
+distinguishes all available complete worlds from scored/excluded worlds. Without
+`--allow-partial`, the full-panel input requirement still applies.
+
 Outputs:
 - `CREDIBILITY.md`: ready-to-include morning report section per model, referencing
-  the two reliability SVGs and describing uncertainty and qualification limits.
+  three reliability SVGs, interval coverage, selected switches, and qualification limits.
 - `credibility.json`, `summary.csv`: CRPS, fair-ensemble CRPS, Brier scores and
   model-minus-climatology differences; interval coverage/width; unknown counts.
 - `reliability_breakdown.svg`, `reliability_preference.svg`, `reliability.csv`:
   fixed probability deciles, mean prediction vs empirical frequency, bin support,
   pointwise whole-world intervals. Includes all three registered breakdown regions.
+- `reliability_selected_preference.svg`: calibration of the **selected** switch
+  versus its incumbent, in the chosen direction (including reverse directions).
+  Selected-switch probability, observed win rate, and Brier vs same-pair
+  climatology are separate from the unordered all-pair diagnostic.
 - `distributions.csv`, `events.csv`, `coverage.csv`: per-world outcome receipts.
 - `decisions.csv`: the registered 0.8 rule evaluated from each possible incumbent
-  using predictions only; these are prospective choices, not policy efficacy.
+  using predictions only; switch rate and expected/recorded paired saving are
+  summarized by split/horizon/incumbent/cell. No-switch cases have zero saving
+  and contribute to switch rate, but are excluded from selected-win calibration.
+  Recorded savings are retrospective original-state diagnostics, not closed-loop
+  switching-policy efficacy. Outcomes never enter selection.
 - `audit.json`, `FILES.json`: input identities/hashes, complete/missing tasks,
   evaluator and decision source hashes, output checksums. Outputs are immutable.
 
@@ -74,6 +90,8 @@ Outputs:
 - Strict pairwise event: `J(A) < J(B)`; real and predicted ties are reported and
   are non-wins. One orientation per unordered pair follows frozen EVAL arm order.
   Each delta distribution is **paired A−B**, never independent cross-products.
+  Selected-switch checks additionally follow the exact selected direction; a
+  tied future is a non-win in either direction (not `1 - P(reverse wins)`).
 - Baselines: same-arm empirical real-delay climatology and same-pair empirical
   paired-delay / win-rate climatology. Pooled baseline conditions on arm/pair;
   cell baseline additionally matches demand×penetration. Only development worlds

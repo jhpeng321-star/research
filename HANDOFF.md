@@ -10,8 +10,11 @@ Branch `c4/rb-decide`, base `f0db3c82`; owner WM-PHYS registration line5683.
   K8 worlds; INT retains immutable local `runs/rbint_evidence/{wm2_0400,full_v1_0400}`
   snapshots and a four-world paired comparison. Previous zero-complete-world receipt
   below is historical, not the current evidence status.
-- Next: score these saved ensembles with the existing credibility CLI, then improve
-  report visibility of coverage and the actual selected 0.8-confidence calls.
+- Improved CLI adds `--worlds ID ...` for strict matched-world scoring and a third
+  reliability diagram / Brier comparison for the actual selected 0.8-confidence
+  switches, including reverse directions and ties. No-switch cases stay in switch
+  rate / saving summaries, not calibration. `CREDIBILITY.md` now exposes coverage.
+  **18 CPU tests PASS /5.889s**; next score the immutable local snapshots.
   Existing EVAL/INT/RUNA/RUNB inference and finalizers retain ownership.
 - Owner 00:44 extension applies: improve until ~09:00, integrator freeze ~09:30.
   Local 04:43 resource check: 22 logical CPUs, 0% load; NVIDIA driver unavailable.

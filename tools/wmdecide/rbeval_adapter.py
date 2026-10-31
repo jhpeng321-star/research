@@ -59,6 +59,23 @@ def baseline_worlds(real, target, *, cell=False):
     return by_world
 
 
+def select_worlds(pred, audit, requested=None):
+    """Select complete worlds explicitly; never silently shrink a matched panel."""
+    available = sorted(audit["complete_worlds"])
+    worlds = available if requested is None else list(requested)
+    if requested is not None and (not worlds or len(set(worlds)) != len(worlds)
+            or any(type(s) is not int for s in worlds)):
+        raise ValueError("World selection must contain distinct integer world IDs")
+    missing = sorted(set(worlds) - set(available))
+    if missing:
+        raise ValueError(f"Requested worlds lack complete validated K8 ensembles: {missing}")
+    selected = set(worlds)
+    audit = dict(audit, scored_worlds=sorted(worlds),
+                 excluded_complete_worlds=sorted(set(available)-selected),
+                 world_selection="all_complete" if requested is None else "explicit")
+    return {key: rows for key, rows in pred.items() if key[0] in selected}, audit
+
+
 def _climate(worlds, action, reference, h, region=None):
     """Return same-arm absolute or same-world paired empirical climatology."""
     values = []
@@ -118,11 +135,28 @@ def observations(pred, real, arms, horizons, regions):
             # Expose each incumbent's decision for later picker reuse, without real-label feedback.
             for incumbent in arms:
                 choice = decide(action_futures, incumbent)
+                selected = choice["selected"]
+                mean = choice["summary"]["actions"][selected]["team_delay"]["mean"]
+                expected_saving = (choice["summary"]["actions"][incumbent]
+                                   ["team_delay"]["mean"] - mean)
+                observed_saving = (lookup[seed, incumbent]["clocks"][str(h)]["team_delay_vs"]
+                                   - lookup[seed, selected]["clocks"][str(h)]["team_delay_vs"])
                 choices.append(dict(common, horizon_s=h, incumbent=incumbent,
-                    selected=choice["selected"], switched=choice["switched"],
+                    selected=selected, switched=choice["switched"],
                     confidence_level=choice["confidence_level"],
-                    expected_delay=choice["summary"]["actions"][choice["selected"]]
-                    ["team_delay"]["mean"]))
+                    expected_delay=mean, expected_saving=expected_saving,
+                    observed_saving=float(observed_saving)))
+                if choice["switched"]:
+                    pair = next(p for p in choice["summary"]["pairwise"]
+                                if p["action"] == selected and p["reference"] == incumbent)
+                    event = dict(common, horizon_s=h, target="selected_preference", region="",
+                        action=selected, reference=incumbent,
+                        probability=pair["probability_beats"], outcome=int(observed_saving > 0),
+                        real_tie=int(observed_saving == 0),
+                        predicted_tie_probability=pair["probability_tie"], unscorable_futures=0)
+                    _event_scores(event, {key: [int(v < 0) for v in
+                        _climate(pool, selected, incumbent, h)] for key, pool in pools.items()})
+                    events.append(event)
             for arm, reference in [(a, None) for a in arms] + list(combinations(arms, 2)):
                 x = np.array([f.team_delay for f in action_futures[arm]])
                 y = float(lookup[seed, arm]["clocks"][str(h)]["team_delay_vs"])
