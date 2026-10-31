@@ -1,7 +1,8 @@
 # S-RB-FIT handoff
 
 Branch `c4/rb-fit`, base `f0db3c82`; owner amendment REGISTRATION.md:5694.
-Status: IDM fitter implemented/tested; cpuQ fit_v1 running (own PID 191785).
+Status: Gaussian IDM, finite-profile IDM and LC fits complete; final publication
+and all-row pooled point fit in progress. Own fit/lane jobs have exited.
 
 ## Frozen data/estimation contract
 - Only FIT worlds 969400–969431, native arm, from cpuQ
@@ -23,22 +24,30 @@ Status: IDM fitter implemented/tested; cpuQ fit_v1 running (own PID 191785).
   lanes; this does not establish free-running breakdown/traffic fidelity.
 
 ## Outputs / integration
-Pending: `artifacts/rbfit/idm_population.json`, `idm_posteriors.json`,
-`validation.json`; schemas and measured results will be added after fitting.
+Artifacts exist in `artifacts/rbfit/{gaussian_v1,finite_mixture_v4,lane_v1}`.
+Finite-mixture posterior is lossless `idm_posteriors.json.gz` (32.8 MB); original
+104 MB JSON preserved locally/remote and explicitly ignored by its own directory.
+Runtime `wms.physics.motion_fit.MotionFit` supports both encodings.
 No shared model/spec/factory edits; no switches enabled by this workstream.
 - `tools/rbfit/idm_fit.py`: allowlisted extractor, source-backed NumPy SUMO IDM
   substepping/free-speed envelope, Gaussian acceleration likelihood, diagonal
   log-normal population EM, full-covariance per-driver Laplace posteriors.
-- cpuQ command: existing miniconda Python, `--root /home/ubuntu/wmdata20261031/views
-  --out /home/ubuntu/rbfit20261031/fit_v1 --workers 4 --iterations 25`.
+- cpuQ run root `/home/ubuntu/rbfit20261031`, four nice19 workers, one BLAS thread.
 - Tests: cpuQ `python -m pytest tests/unit/test_rbfit.py -q -p no:cacheprovider`
-  **4 passed** (identity/cut-in leakage, FIT guard, identifiable synthetic
-  physical-parameter recovery, free-speed finite behavior). Local default Python
+  **15 passed** (including six independent shared SUMO full-step numeric vectors).
+  Artifact integrity/schema/numerics verification PASS. Local default Python
   lacks SciPy; use cpuQ existing environment. No new environment installed.
 
 ## Resources and gaps
 - cpuQ load 0.07 on 32 CPUs at first check; existing miniconda Python available.
   Local CPU busy; no local GPU driver. CPU fitting, no GPU allocation required.
-- Shared `setdata/` and `idmspec/DONE.md` not ready at start.
-- LC2013 module usable in c4-rb-lane; lane physical-parameter fitting follows IDM.
+- Shared setdata not ready; independent extractor used. Shared idmspec numeric
+  vectors arrived and agree. `rb-shared/fit/REFERENCE_COMPATIBILITY.md` flags
+  CF source-default mismatches: NUMERICAL_EPS=0.001 and emergencyDecel=9.
+- Gaussian posterior improves 10s position MAE but worsens RMSE tails.
+  Finite-profile posterior 95% physical-acceleration coverage is only 68.8%; no
+  posterior uncertainty qualification. Population coverage 95.0%, diagnostic only.
+- LC later-FIT Brier 0.00306 loses to event-rate baseline 0.00241: not adopted.
+- Student-t variants v2/v3 scale-collapsed; stopped verified OWN PIDs/children,
+  STOP receipts and original partial logs preserved. Neither adopted.
 - No new SUMO simulation or neural-network training.

@@ -14,14 +14,27 @@ from pathlib import Path
 import time
 
 import numpy as np
-from scipy.optimize import least_squares
+from scipy.optimize import least_squares, minimize
+from scipy.special import gammaln
 
 NAMES = ("v0", "time_headway", "accel", "decel", "min_gap")
 FILES = ("episode.json", "time_s.npy", "veh_kin.npy", "veh_mask.npy", "is_cav.npy", "vid.npy")
 FIT_WORLDS = tuple(range(969400, 969432))
 # Optimizer initial point only, not adopted driver settings or a prior mean.
 INITIAL = np.array([31.29, 1.0, 2.6, 4.5, 2.5])
-EPS = 1e-7  # SUMO NUMERICAL_EPS; no behavioral speed/gap threshold.
+EPS = 0.001  # SUMO 1.27.1 config.h.cmake NUMERICAL_EPS (shared spec.md:28).
+FORBIDDEN = ("hold" + "out", "held" + "out", "cal" + "_split", "chunk" + "5",
+             "j4" + "b", "inc" + "1", "sealed", "hetdata" + "_truth",
+             "vehicle" + "_params", "driver" + "_params", "assignment")
+
+
+def observable_path(path, root):
+    for candidate in (path, path.resolve()):
+        if any(token in str(candidate).lower() for token in FORBIDDEN):
+            raise ValueError("Prohibited observable path")
+    if not path.resolve().is_relative_to(root.resolve()):
+        raise ValueError("Observable path escapes the approved root")
+    return path
 
 
 def write_json(path, value):
@@ -32,27 +45,28 @@ def native_episode(root: Path, world: int) -> Path:
     if world not in FIT_WORLDS:
         raise ValueError("Only registered FIT worlds 969400-969431 are permitted")
     # Never open split files, assignment files, or arbitrary episode globs.
-    manifest = root / f"world_{world}.json"
+    manifest = observable_path(root / f"world_{world}.json", root)
     entry = json.loads(manifest.read_text())["native"]["episode"]
     if not entry.startswith(f"w{world}m") or not entry.endswith("__native"):
         raise ValueError("Unexpected native episode identity")
     if "/" in entry or "\\" in entry or ".." in entry:
         raise ValueError("Invalid episode name")
-    return root / "episodes" / entry
+    return observable_path(root / "episodes" / entry, root)
 
 
 def read_episode(path: Path, world: int):
-    meta = json.loads((path / "episode.json").read_text())
+    paths = {name: observable_path(path / name, path) for name in FILES}
+    meta = json.loads(paths["episode.json"].read_text())
     if meta["seed"] != world or meta["arm"] != "native":
         raise ValueError("Native FIT episode identity mismatch")
-    arrays = {n: np.load(path / f"{n}.npy", mmap_mode="r", allow_pickle=False)
+    arrays = {n: np.load(paths[f"{n}.npy"], mmap_mode="r", allow_pickle=False)
               for n in ("time_s", "veh_kin", "veh_mask", "is_cav", "vid")}
-    hashes = {n: hashlib.sha256((path / n).read_bytes()).hexdigest() for n in FILES}
+    hashes = {n: hashlib.sha256(paths[n].read_bytes()).hexdigest() for n in FILES}
     return arrays, {"world": world, "episode": path.name, "sha256": hashes}
 
 
 def extract_rows(a, start=240.0, stop=360.0):
-    """Rows: time, VID, x, v, next_v, bumper_gap, leader_v, leader_ID, lane, dt.
+    """Rows: time, VID, x, v, next_v, gap, leader_v, leader_ID, lane, dt, next_x.
 
     Mainline only: ramp/junction braking is not identifiable from same-lane IDM
     alone. Actual stopped vehicles are included. Stable leaders are required at
@@ -94,9 +108,9 @@ def extract_rows(a, start=240.0, stop=360.0):
                  & (k[:, 4] >= 0) & (kn[:, 4] >= 0) & (k[:, 6] > 0))
         for idx in np.flatnonzero(valid):
             rows.append((times[ti], vid[ti, idx], k[idx, 0], k[idx, 4], kn[idx, 4],
-                         gap[idx], k[il[idx], 4] if has[idx] else 0, lid[idx], lane[idx], dt))
+                         gap[idx], k[il[idx], 4] if has[idx] else 0, lid[idx], lane[idx], dt, kn[idx,0]))
         counts["accepted"] += int(valid.sum())
-    return np.asarray(rows, dtype=np.float64).reshape(-1, 10), history, counts
+    return np.asarray(rows, dtype=np.float64).reshape(-1, 11), history, counts
 
 
 def next_speed(v, gap, vl, params, dt=0.5):
@@ -123,7 +137,7 @@ def next_speed(v, gap, vl, params, dt=0.5):
         aa = accel * (1 - (speed / np.maximum(EPS, vmax)) ** 4
                       - (desired / np.maximum(EPS, distance)) ** 2)
         speed = np.maximum(0, speed + h * aa)
-        distance -= np.maximum(0, speed - vl) * h
+        distance = distance - np.maximum(0, speed - vl) * h
         fs = np.maximum(0, free * tau + free * (free - vmax)
                         / (2 * np.sqrt(accel * decel)))
         fa = accel * (1 - (free / np.maximum(EPS, vmax)) ** 4 - (fs / fg) ** 2)
@@ -147,12 +161,18 @@ def observed(rows):
 
 
 def posterior_job(job):
-    key, rows, mu, var, sigma = job
+    key, rows, mu, var, sigma, *tail = job
+    df = tail[0] if tail else None
     std = np.sqrt(var)
     y = observed(rows)
 
     def residual(z):
-        return np.concatenate(((prediction(rows, z) - y) / sigma, (z - mu) / std))
+        r = (prediction(rows, z) - y) / sigma
+        if df is not None:
+            # Exact Student-t negative log-likelihood deviance; scale/df are
+            # inferred from observed residuals, never hand-set braking triggers.
+            r = np.sign(r) * np.sqrt((df + 1) * np.log1p(r ** 2 / df))
+        return np.concatenate((r, (z - mu) / std))
 
     result = least_squares(residual, mu, bounds=(-10, 10), max_nfev=100,
                            ftol=1e-7, xtol=1e-7, gtol=1e-7)
@@ -164,7 +184,7 @@ def posterior_job(job):
     return key, result.x, covariance, float(expected_sse), len(rows), result.success
 
 
-def fit_population(groups, workers=4, iterations=20):
+def fit_population(groups, workers=4, iterations=20, likelihood="gaussian"):
     pooled = np.concatenate(list(groups.values()))
     # Deterministic evenly spaced numerical subsample for the INITIAL estimate.
     init_rows = pooled[np.linspace(0, len(pooled) - 1, min(len(pooled), 30000)).astype(int)]
@@ -175,29 +195,55 @@ def fit_population(groups, workers=4, iterations=20):
     sigma = max(1e-6, float(np.sqrt(np.mean(np.square(
         prediction(init_rows, mu) - observed(init_rows))))))
     trace = []
+    df = None if likelihood == "gaussian" else 4.0  # numerical initialization only
     with ProcessPoolExecutor(max_workers=workers) as executor:
         for iteration in range(iterations):
-            jobs = ((key, rows, mu, var, sigma) for key, rows in groups.items())
+            jobs = ((key, rows, mu, var, sigma, df) for key, rows in groups.items())
             post = list(executor.map(posterior_job, jobs, chunksize=16))
             means = np.stack([r[1] for r in post])
             covs = np.stack([r[2] for r in post])
             new_mu = means.mean(0)
             new_var = np.mean(np.square(means - new_mu) + np.diagonal(covs, axis1=1, axis2=2), 0)
             new_sigma = np.sqrt(sum(r[3] for r in post) / sum(r[4] for r in post))
+            new_df = df
+            if df is not None:
+                # Profile residual scale and tail shape from every driver's
+                # mode residual. This is generalized empirical Bayes with a
+                # Gauss-Newton local posterior, not exact marginal ML.
+                residuals = np.concatenate([prediction(groups[r[0]], r[1]) - observed(groups[r[0]])
+                                             for r in post])
+
+                def tail_nll(x):
+                    scale = np.exp(x[0])
+                    # Finite-variance residual family; this is a statistical
+                    # model assumption, not a driving threshold. Unrestricted
+                    # df/scale is singular for deterministic/censored speed data.
+                    degrees = 2 + np.exp(x[1])
+                    constant = (gammaln((degrees + 1) / 2) - gammaln(degrees / 2)
+                                - 0.5 * np.log(degrees * np.pi) - np.log(scale))
+                    return float(-constant + np.mean((degrees + 1) / 2 * np.log1p(
+                        (residuals / scale) ** 2 / degrees)))
+
+                tail_fit = minimize(tail_nll, np.log([sigma, max(1e-6, df-2)]), method="L-BFGS-B",
+                                    bounds=[(-14, 5), (-14, 14)])
+                new_sigma, new_df = np.exp(tail_fit.x[0]), 2 + np.exp(tail_fit.x[1])
             change = max(float(np.max(abs(new_mu - mu))),
                          float(np.max(abs(np.log(new_var / var)))),
-                         float(abs(np.log(new_sigma / sigma))))
+                         float(abs(np.log(new_sigma / sigma))),
+                         0.0 if df is None else float(abs(np.log(new_df / df))))
             trace.append({"iteration": iteration, "median": dict(zip(NAMES, np.exp(new_mu).tolist())),
                           "log_std": np.sqrt(new_var).tolist(), "sigma_accel": float(new_sigma),
+                          "student_df": None if df is None else float(new_df),
                           "max_log_change": change, "optimizer_success": sum(r[5] for r in post)})
             print(json.dumps(trace[-1]), flush=True)
             mu, var, sigma = new_mu, np.maximum(new_var, 1e-10), max(1e-6, new_sigma)
+            df = new_df
             if change < 1e-3:
                 break
         # Final E-step must use the EXPORTED hyperparameters.
         post = list(executor.map(posterior_job,
-                    ((k, r, mu, var, sigma) for k, r in groups.items()), chunksize=16))
-    return mu, var, sigma, post, trace, initial.x
+                    ((k, r, mu, var, sigma, df) for k, r in groups.items()), chunksize=16))
+    return mu, var, sigma, post, trace, initial.x, df
 
 
 def summarize(errors):
@@ -232,8 +278,9 @@ def validate(world_rows, posterior, mu, pooled_mu):
                             or len(np.unique(segment[:, 7])) != 1
                             or len(np.unique(segment[:, 8])) != 1):
                         continue
-                    # Last endpoint x = x_last + v_next*dt under SUMO Euler.
-                    target_x = segment[-1, 2] + segment[-1, 4] * segment[-1, 9]
+                    # Score actual recorded endpoint, including any observable
+                    # coordinate offsets; never reconstruct a target from IDM.
+                    target_x = segment[-1, 10]
                     target_v = segment[-1, 4]
                     for name, z in (("constant_speed", None), ("pooled_fit", pooled_mu),
                                     ("population", mu), ("posterior", pp)):
@@ -262,6 +309,7 @@ def main():
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--iterations", type=int, default=20)
+    parser.add_argument("--likelihood", choices=("gaussian", "student_t"), default="gaussian")
     parser.add_argument("--worlds", type=int, nargs="+", default=list(FIT_WORLDS))
     args = parser.parse_args()
     if not set(args.worlds) <= set(FIT_WORLDS):
@@ -287,16 +335,19 @@ def main():
     write_json(args.out / "provenance.json", {"sources": provenance, "extraction": extraction,
                "allowed_files": list(FILES), "fit_interval_s": [240, 300],
                "worlds": args.worlds, "arm": "native"})
-    mu, var, sigma, post, trace, pooled_mu = fit_population(groups, args.workers, args.iterations)
+    mu, var, sigma, post, trace, pooled_mu, df = fit_population(
+        groups, args.workers, args.iterations, args.likelihood)
     population = {"schema": "wm_phys.idm_population.v1", "parameter_order": list(NAMES),
                   "distribution": "diagonal_lognormal", "log_mean": mu.tolist(),
                   "log_cov": np.diag(var).tolist(), "median": dict(zip(NAMES, np.exp(mu).tolist())),
                   "mean": dict(zip(NAMES, np.exp(mu + var / 2).tolist())),
                   "delta": 4, "sigma_accel_mps2": float(sigma),
+                  "student_df": None if df is None else float(df),
+                  "residual_scale_note": "sigma is a scale; for Student-t, sd=scale*sqrt(df/(df-2))",
                   "n_drivers": len(groups), "n_observations": sum(len(r) for r in groups.values()),
                   "fit_worlds": args.worlds, "fit_interval_s": [240, 300],
                   "speedFactor_mapping": "v0 / current lane speed limit in m/s; do not multiply v0 twice",
-                  "likelihood": "Gaussian one-step effective acceleration; Laplace approximate marginal ML EM",
+                  "likelihood": f"{args.likelihood} one-step effective acceleration; Gauss-Newton approximate empirical Bayes",
                   "em_trace": trace, "pooled_fit_median": dict(zip(NAMES, np.exp(pooled_mu).tolist()))}
     drivers = {}
     for key, z, covariance, _, n, success in post:
