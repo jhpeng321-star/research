@@ -262,7 +262,8 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
                               future_sampling='off', n_samples=8, seed=0, row_keys=None,
                               population=None, entrance_histories=None, queues=None,
                               entry_config=None, sample_present=True, sample_arrivals=True,
-                              fitted_state=None, vehicle_ids=None, t0_s=None):
+                              fitted_state=None, vehicle_ids=None, t0_s=None,
+                              arrival_fit=None, sample_demand_rate=True):
     """Prepare K deterministic conditional futures, with independent latent draws.
 
     Histories/queues MUST be observable at t0. queues.demand_rate is upstream
@@ -314,6 +315,8 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
         raise ValueError('entrance_histories length mismatch')
     if queues is not None and (entrance_histories is None or len(queues) != batch):
         raise ValueError('queues need entrance histories for every row')
+    if arrival_fit is not None and entrance_histories is None:
+        raise ValueError('learned arrivals require observable entrance histories')
     lower, upper = point.new_tensor(PARAMETER_LOWER), point.new_tensor(PARAMETER_UPPER)
     encoder = getattr(model, 'driver_encoder', None)
     if getattr(encoder, 'driver_param_mode', None) == 'physical':
@@ -399,9 +402,15 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
                 raise ValueError('hidden-state entries need conserved deterministic inferred admission')
             hist = [replace(h, headway_cv=np.ones(2)) for h in entrance_histories]
             row_seeds = [seed_of(seed, key, arrival_sample, 'arrival') for key in row_keys]
-            process = PoissonEntries(histories=hist, queues=q, batch=batch,
+            process_type, extra = PoissonEntries, {}
+            if arrival_fit is not None:
+                from .arrival_fit import FittedEntries
+                process_type = FittedEntries
+                extra['demand_plans'] = [arrival_fit.draw(key, t0_s=t0_s, seed=seed,
+                    sample=arrival_sample, sample_rate=sample_demand_rate) for key in row_keys]
+            process = process_type(histories=hist, queues=q, batch=batch,
                 dt_s=float(model.physics.dt_s), row_seeds=row_seeds, couple_draws=True,
-                cfg=replace(cfg, learned_admission=PopulationAdmission(mix)))
+                cfg=replace(cfg, learned_admission=PopulationAdmission(mix)), **extra)
             process.birth_mix = mix
             kwargs.update(entries=process, entrant_driver_sampler=mix)
         futures.append(HiddenFuture(kwargs, dict(future_sampling='hidden_state', future=sample,
@@ -414,6 +423,9 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
             likelihood_acceleration_limits=limits,
             population_sizes=[len(p) for p in population.hdv],
             arrival_sample=arrival_sample, arrivals='poisson' if entrance_histories is not None else 'closed_cohort',
-            rate_source='observed_request_demand' if queues is not None else 'observed_insertion_proxy',
+            learned_arrival_sha256=getattr(arrival_fit, 'sha256', None),
+            demand_rate_draws=None if arrival_fit is None else [p.rates.tolist() for p in process.demand_plans],
+            rate_source=('fitted_entrance_counters' if arrival_fit is not None else
+                         'observed_request_demand' if queues is not None else 'observed_insertion_proxy'),
             physics_noise=False, embedding_noise=False)))
     return futures

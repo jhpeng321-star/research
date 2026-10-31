@@ -17,7 +17,27 @@ Remote terminal rechecked: old31children exited0; no old dispatch repeated.
   Current draws key on world/VID/future, invariant under slot permutations and
   candidate actions. Birth draws remain entrance/ordinal-keyed, shared admission
   and motion. LC block independent of IDM block (FIT supplied no joint coupling).
-- CPU new+existing hidden suite16PASS. Arrival addendum still in progress.
+- CPU new+existing hidden suite16PASS.
+
+## Owner00:40 learned arrivals (READY)
+- `LearnedArrivalFit.from_file('docs/paper_results/rbunc/observed_arrivals.json')`
+  in `wms.control.arrival_fit`; pass `arrival_fit=fit, t0_s=300` to planner.
+  Optional `sample_demand_rate=False` isolates request-clock vs rate uncertainty.
+- Actual FIT32 counters fitted: request(t)=inserted(t)+queue(t), exact10s bins.
+  Mainline/ramp within-world Pearson dispersion0.9766/1.0759; NB minus Poisson
+  BIC+6.87/+6.27. No supported excess-dispersion component. Empirical time-varying
+  profile minus constant BIC+166.1/+174.8 supports documented constant phase
+  before1200s; per-bin counts/rate profiles preserved, not spurious extrapolation.
+- Sample one Gamma(count+0.5,rate=exposure) demand intensity per future/entrance,
+  then exact exponential request clocks. Rate posterior uses Jeffreys Poisson
+  prior; no behavioral threshold, clipping or per-tick physical perturbation.
+- Exact integrated hazard supports piecewise rates/zero-rate intervals; refuse
+  forecasting past end of fitted phase (here1200s absolute). K horizons<=600s
+  from300s supported. Same world/future keys pair both rates and request clocks.
+- `.condition(world, observed_entries, observed_queue_history)` supports new
+  causal starts under the frozen family without reading future labels. Unknown
+  worlds otherwise fail closed. Mutable future objects still recreated per arm.
+- Combined CPU suite20PASS; new32-state fitted-source verification pending.
 
 Branch `c4/rb-unc`, base `f0db3c82`. Owner registration5683/5694 and WHY +
 ENSPROBE read. Merge the branch; retain INT's own root HANDOFF on conflict.
