@@ -123,3 +123,18 @@ decision. GPU parity/launch/decision remain pending.
   enabling step10 monitoring without waiting for step20/30. No partial-panel gate.
 - Local CPU:29 PASS; torch-dependent actual direct-row reproduction and exact
   Adam-resume/frozen-rejection tests require the staged CPU suite before dispatch.
+
+## Verified recovery dispatch, 2026-10-31 17:17 +08
+- Staged CPU suite **31 PASS**, including the actual grouped-feedback direct-row
+  failure/repaired binding and exact Adam resume + frozen-tensor rejection.
+- Archive local/remote sha `da7623b877a009d33dd5945aecd39c21e52d948a54f6b03b5ec00d6e036534f3`.
+  Existing staged files backed up to v2data/pre_recovery_55733a60.tar.
+- RECOVERY.json SHA256 `056c295c441bff291ec3548a47be2b1c0dffd00c085e53a51e0dd5f59bca0d10`;
+  contract `3cc03fed...`, controllers `cd47e8ad...`. Inputs/parents/checkpoints,
+  all31 implementation files and6 drivers verified before dispatch and at launch.
+- **Live dispatcher PID222535/start881844640**, PPID1/SID222535, separately
+  verified after SSH exit. State WAIT_GPU_MEMORY11485MiB<14336 at17:17.
+  NEW authoritative logs: R/v2data/recovery_1705/{STATUS.json,EVENTS.jsonl,
+  dispatcher.log,pilot.log}; pilot.log/child appear only when memory permits.
+- New pilot path R/v2data/recovery_1705/pilot. Remaining timeout20528s after
+ 1041.774795s spent. No peer processes signalled, no SUMO, no push.

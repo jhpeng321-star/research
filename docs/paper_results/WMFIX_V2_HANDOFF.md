@@ -1,5 +1,26 @@
 # PILOT v2 handoff (Claude -> GLM executor), 2026-10-31 ~15:20 +08
 
+## SUPERSEDING MAIN17:05 recovery / Sol17:17 gpuA clock
+- Old dispatcher197030 FINISHED/exit1 after exact parity PASS and4 updates;
+  step0 panel failed because WMDATA CTRL0 entrant feedback was unbound.
+  Infrastructure BLOCKED, not a measured gate FAIL. Old outputs preserved.
+- Repair committed55733a60; local29 CPU PASS / staged31 CPU PASS (including
+  direct-row reproduction and exact step4/Adam resume). See WMFIX_PILOT_V2DATA.md.
+- **ONE LIVE dispatcher gpuA222535/start881844640**, PPID1/SID222535,
+  `tools.wmfixmerge.recover_data_pilot --execute`, waiting>=14336MiB.
+  Authoritative NEW `R/v2data/recovery_1705/{DISPATCH,STATUS}.json`, EVENTS.jsonl.
+  At17:17 WAIT_GPU_MEMORY11485MiB. Never start a second dispatcher.
+- RECOVERY.json sha056c295c441bff291ec3548a47be2b1c0dffd00c085e53a51e0dd5f59bca0d10;
+  prepared84751dc7/baseb8797242 unchanged; new contract3cc03fed changes only
+  Runtime hash vs parente67850f3; controllerscd47e8ad binds recorded CTRL0 +
+  speed-MAPPO identities. Only Runtime/policy binding/hash-list + driver changed.
+- New pilot will resume exact step4/Adam into `recovery_1705/pilot`, retaining
+ 1041.774795s already spent (remaining timeout20528s). No parity/update repetition.
+  Full52 panels0/10/20/30, same gate/exclusions/lr/curriculum/CRN. Each full-panel
+  receipt is published immediately upon all four shards finishing.
+- Monitor NEW pilot FULL_PANEL_STEP10.json / PILOT_V2.json. PASS auto-continues;
+  FAIL stops. Verdict remains staged, never automatically launches. No peer touched.
+
 ## SUPERSEDING MAIN 15:25 v2-DATA / Sol resume 15:34 gpuA clock
 - MAIN approved DATA ONLY, smoothing OFF, amended v1 30-step pilot gate. Code:
   81ddfb5d + 6a53549c; dispatch evidence e5b52ebb. See WMFIX_PILOT_V2DATA.md.
