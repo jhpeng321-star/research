@@ -123,12 +123,25 @@ Learned minus comparator; total team delay in vehicle-seconds (negative is bette
   Paired safety deltas: collisions 0.000 [0.000, 0.000]; teleports 0.000 [0.000, 0.000]; ttc_below_3_vs -5.312 [-49.355, 36.940]; hard_brake 2.500 [0.583, 4.354].
 - mappo J900: -447.972 [-2779.091, 1858.397], CI includes zero.
   Paired safety deltas: collisions 0.000 [0.000, 0.000]; teleports 0.000 [0.000, 0.000]; ttc_below_3_vs -3.583 [-55.876, 48.439]; hard_brake 4.062 [0.875, 7.146].
+### Zero-update mean HOLD structural baseline
+### Paired dev u001 (24 worlds)
+Learned minus comparator; total team delay in vehicle-seconds (negative is better).
+95% CIs resample paired worlds; the fixed dev panel is not a final evaluation panel.
+- bandit J600: -174.021 [-1630.261, 1204.276], CI includes zero.
+  Paired safety deltas: collisions 0.000 [0.000, 0.000]; teleports 0.000 [0.000, 0.000]; ttc_below_3_vs -7.875 [-55.418, 36.649]; hard_brake 1.958 [0.042, 3.958].
+- bandit J900: 326.443 [-2378.223, 2941.878], CI includes zero.
+  Paired safety deltas: collisions 0.000 [0.000, 0.000]; teleports 0.000 [0.000, 0.000]; ttc_below_3_vs -7.771 [-65.627, 51.605]; hard_brake 2.875 [-0.188, 6.126].
+- mappo J600: -174.021 [-1630.261, 1204.276], CI includes zero.
+  Paired safety deltas: collisions 0.000 [0.000, 0.000]; teleports 0.000 [0.000, 0.000]; ttc_below_3_vs -7.875 [-55.418, 36.649]; hard_brake 1.958 [0.042, 3.958].
+- mappo J900: 326.443 [-2378.223, 2941.878], CI includes zero.
+  Paired safety deltas: collisions 0.000 [0.000, 0.000]; teleports 0.000 [0.000, 0.000]; ttc_below_3_vs -7.771 [-65.627, 51.605]; hard_brake 2.875 [-0.188, 6.126].
 ### OWNER02:21 learning self-check
 - Completed corrected fresh updates: [1]; next scheduled check u3.
 - Status: insufficient fresh updates for six-update trend.
 - TRAIN remaining: 240 sim-s; one fresh >=150-window joint-only lower bound: 135000 sim-s (HOLD/solos extra).
 - **Updates3/6/9 are budget-blocked. Prospective owner phase/budget amendment required; no replay or automatic dispatch.**
-- DEV learned-minus-HOLD J600/J900: pending both complete paired panels; no marginal-CI subtraction.
-Budget: 1863600 precharged / 1862400 closed-actual sim-s; hard cap2,000,000; no refunds/retries.
+- DEV learned-minus-HOLD J600: -156.526 vehicle-s, paired world-bootstrap95%CI [-1211.4653697340573, 625.4487812527271].
+- DEV learned-minus-HOLD J900: -774.415 vehicle-s, paired world-bootstrap95%CI [-2569.3527833601424, 556.8341841770399].
+Budget: 1952433 precharged / 1865400 closed-actual sim-s; hard cap2,000,000; no refunds/retries.
 TRAIN exploration credit is not paired dev-policy performance.
 <!-- COOPFREE PUBLICATIONS END -->

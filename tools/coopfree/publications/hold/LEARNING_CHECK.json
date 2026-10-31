@@ -82,7 +82,78 @@
       "mean": -3.5833333333333335
     }
   },
-  "dev_vs_hold": null,
+  "dev_vs_hold": {
+    "600_team_delay_vs": {
+      "mean": -156.52604864966784,
+      "ci95": [
+        -1211.4653697340573,
+        625.4487812527271
+      ]
+    },
+    "600_collisions": {
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    "600_teleports": {
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    "600_ttc_below_3_vs": {
+      "mean": 2.5625,
+      "ci95": [
+        -18.375520833333333,
+        24.148958333333344
+      ]
+    },
+    "600_hard_brake": {
+      "mean": 0.5416666666666666,
+      "ci95": [
+        -0.5625,
+        1.625
+      ]
+    },
+    "900_team_delay_vs": {
+      "mean": -774.4151453336723,
+      "ci95": [
+        -2569.3527833601424,
+        556.8341841770399
+      ]
+    },
+    "900_collisions": {
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    "900_teleports": {
+      "mean": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    "900_ttc_below_3_vs": {
+      "mean": 4.1875,
+      "ci95": [
+        -26.315625,
+        33.41770833333333
+      ]
+    },
+    "900_hard_brake": {
+      "mean": 1.1875,
+      "ci95": [
+        -0.4375,
+        2.8958333333333335
+      ]
+    }
+  },
   "interpretation": "TRAIN exploration effects are not DEV learned-policy improvements; slopes descriptive only",
   "latest": {
     "executed_change_share": 0.9358974358974359,
