@@ -59,6 +59,17 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**06:00 terminal WM GPU receipts reconciled:** BOTH services EXITED after
+ordinary COMPLETE release; gpuA13845.159507265314s + gpuR13840.939484648407s
+=27686.09899191372GPU-s (7.6905830533h), all validation/idle included, no refund.
+BB remains0physics/0GPU and observer36376 is deliberately PARKED while cpuQ
+is offline; do not call its expected missing-process alert an unknown crash.
+cpuQ WM current charge/actual remainUNKNOWN. Verified total lower bounds only:
+146620charged/145380closedactual (CPU134400+canary4680+historicalcpuQWM4840/3600
++finalgpuRWM2700/2700). Six WM episodes confirmed by finalgpuR2 plus last relay
+cpuQ4; full panel/oracles/primary WM-vs-RL are INCOMPLETE, no primary efficacy CI.
+Receipts GPU_RELEASE_wm_1793484020 + GPU_PROGRESS_{gpuA1793484027,gpuR1793484032};
+STATUS_CURRENT now distinguishes unknown totals from these historical lower bounds.
 **05:59 WM global-stop release required:** gpuR supervisor763520 EXITED with
 durableSTOP `wm__s969147`; exact worker traceback is inference unavailable timeout.
 Its2completeepisodes/60decisions and2700charged=actual are preserved, including

@@ -1,0 +1,28 @@
+{
+  "unix": 1793484020.800649,
+  "model": "wm",
+  "proof": {
+    "root": "/root/c1switch2_run_292bfffe94b13ed8",
+    "stop": {
+      "reason": "child failed",
+      "id": "wm__s969147",
+      "code": 1
+    },
+    "stop_sha256": "068ba3710e416413821cfef87d6924fe11b9db6644344ad16fd6c388faf65453"
+  },
+  "releases": {
+    "gpuA": {
+      "root": "/root/c1switch2_gpu_wm_95614dbfc754e322",
+      "release_requested": true,
+      "pid": 342449
+    },
+    "gpuR": {
+      "root": "/root/c1switch2_gpu_wm_95614dbfc754e322",
+      "release_requested": true,
+      "pid": 761968
+    }
+  },
+  "config_sha256": "27356c916576bb96c2fc64807eb54d983d910595546e99bbbe0352789778b3d8",
+  "new_sim_s": 0,
+  "new_gpu_allocations": 0
+}

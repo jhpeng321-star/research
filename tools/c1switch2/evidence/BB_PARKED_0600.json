@@ -1,0 +1,21 @@
+{
+  "protocol": "S-C1SWITCH2/v2",
+  "state": "OBSERVER_PARKED_BB_SCIENCE_UNCLAIMED",
+  "observer_pid": 36376,
+  "identity_verified": {
+    "creation_local": "2026-11-01T05:15:50+08:00",
+    "module": "tools.c1switch2.modelops",
+    "command": "follow-resume-wait"
+  },
+  "reason": "cpuQ SSH offline; prevent unused BB allocation from starting after ordinary WM global-stop GPU release",
+  "predecessor_receipts_preserved": true,
+  "wm_gpu_release_receipt": "GPU_RELEASE_wm_1793484020.json",
+  "bb_gpuA_unclaimed_receipt": "GPU_PROGRESS_gpuA_1793484097.json",
+  "bb_gpuR_unclaimed_receipt": "GPU_PROGRESS_gpuR_1793484103.json",
+  "new_sim_s": 0,
+  "new_gpu_s": 0,
+  "remaining_bb_sim_s_allocation": 79800,
+  "remaining_bb_gpu_s_allocation": 10800,
+  "automatic_scientific_restart": false,
+  "next_gate": "Restore cpuQ access before any explicit observer continuation; preserve all original one-use science claims and gates"
+}

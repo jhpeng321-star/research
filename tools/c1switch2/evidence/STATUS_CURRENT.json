@@ -1,7 +1,7 @@
 {
   "protocol": "S-C1SWITCH2/v2",
-  "status": "CPU_SEVEN_ARMS_COMPLETE_WM_RUNNING_BB_QUEUED_RL_FINALS_PENDING",
-  "verified_unix": 1793478575,
+  "status": "CPU_COMPLETE_WM_TIMEOUT_STOP_GPU_RELEASED_CPUQ_UNKNOWN_BB_PARKED_RL_FINALS_PENDING",
+  "verified_unix": 1793484032,
   "design_sha256": "95aa84cf801aea773a0c7f9a208396ed4898e5cacdf8b6177940c7d9e1f5a273",
   "panel_sha256": "7c780c25237dde73a657937ab577b8e48f71766817f4363f3298982e90144827",
   "prediction_objective": "on_road_fleet_delay",
@@ -35,12 +35,14 @@
   "cpu_tests_gpuR": {"passed": 133, "skipped": 1},
   "real_checkpoint_cpu_wm": "PASS_K8_60s_SIX_WAY_AND_WALL_CONTINUATION",
   "real_checkpoint_cpu_bb": "PASS_K8_60s_SIX_WAY_AND_WALL_CONTINUATION",
-  "new_gpu_s": null,
-  "gpu_accounting_note": "WM clocks active, includes loading/validation/idle; final monotonic charges only in GPU_FINISHED.json, no reset/refund",
-  "new_actual_sim_s": 142680,
-  "actual_note": "Closed actual only, excludes still-open CPU/model jobs; receipts below are time-specific",
-  "charged_sim_s_at_latest_receipts": 144300,
-  "registered_base_remaining_sim_s": 324080,
+  "new_gpu_s": 27686.09899191372,
+  "gpu_accounting_note": "WM final monotonic elapsed including loading/validation/idle; gpuA13845.159507265314 + gpuR13840.939484648407; both EXITED after ordinary global-stop COMPLETE release; BB0, no reset/refund",
+  "new_actual_sim_s": null,
+  "closed_actual_verified_lower_bound_sim_s": 145380,
+  "actual_note": "cpuQ unreachable since after0517 snapshot; current WM accounting UNKNOWN. Lower bounds use CPU134400+canary4680+WMcpuQ3600closed/4840charged historical+WMgpuR2700 final. Later cpuQ episode existence is not substituted for missing final accounting.",
+  "charged_sim_s_at_latest_receipts": null,
+  "charged_verified_lower_bound_sim_s": 146620,
+  "registered_base_remaining_sim_s": null,
   "main_dispatched": true,
   "background_main_dispatcher_armed": true,
   "cpu_subset": {
@@ -59,6 +61,7 @@
     "never_redispatch": true
   },
   "wm_arm": {
+    "state": "GLOBAL_STOP_AFTER_GPUR_INFERENCE_TIMEOUT_CPUQ_UNKNOWN_GPU_ALLOCATION_TERMINAL",
     "planned_sim_s": 79800,
     "aggregate_gpu_cap_s": 57600,
     "each_gpu_cap_s": 28800,
@@ -69,18 +72,22 @@
     "gpuR_service_pid": 761968,
     "local_relay_pid": 31696,
     "gpu_parity_sha256": "6c64210d77708dddc9fc90fbf0eb733dc24b880f44c96b16fd08ad91de885554",
-    "latest_receipts": ["MODEL_PROGRESS_wm_cpuQ_1793478535.json", "MODEL_PROGRESS_wm_gpuR_1793478539.json"],
-    "charged_main_sim_s_at_receipts": 5220,
-    "closed_actual_main_sim_s_at_receipts": 3600,
-    "completed_episodes": 3,
-    "validated_main_decisions_at_receipts": 126,
+    "latest_receipts": ["WATCH_MAIN0427/PROGRESS_1793481471.json", "MODEL_PROGRESS_wm_gpuR_1793483964.json"],
+    "charged_main_sim_s_at_receipts": null,
+    "closed_actual_main_sim_s_at_receipts": null,
+    "completed_episodes_confirmed_lower_bound": 6,
+    "completed_episode_note": "cpuQ4 in last relay status1793481610 plus gpuR2 in final receipt; complete paired panel absent",
+    "gpuA_final_elapsed_s": 13845.159507265314,
+    "gpuR_final_elapsed_s": 13840.939484648407,
+    "gpuR_terminal_stop": {"id": "wm__s969147", "reason": "inference unavailable timeout", "charged_sim_s": 2700, "actual_sim_s": 2700},
     "never_redispatch": true
   },
   "bb_arm": {
-    "state": "ONE_USE_FOLLOWER_WAITING_FOR_WM_GPU_RELEASE_AND_MEMORY",
+    "state": "OBSERVER_PARKED_BEFORE_GPU_RELEASE_CPUQ_ACCESS_REQUIRED_BB_ALLOCATION_UNUSED",
     "local_follower_pid": 36376,
     "original_follower_pid": 43404,
     "original_follower_state": "EXITED_PRE_DISPATCH_SSH_CONNECTION_CLOSED_ZERO_BB_SPEND",
+    "corrected_follower_state": "PARKED_EXACT_OWN_PID_36376_BEFORE_WM_RELEASE_TO_AVOID_SPENDING_BB_WITH_CPUQ_OFFLINE",
     "wait_resume_claim_sha256": "bd690a89f2d65526a1769a3a7fed708662a47cdade98899123d0b179bb1abf56",
     "planned_sim_s": 79800,
     "aggregate_gpu_cap_s": 10800,
@@ -96,7 +103,9 @@
   "pending_main": [
     "Genuine final169 fleet PPO checkpoint plus source/config/freeze receipt",
     "Genuine final169 per-CAV MAPPO checkpoint plus frozen shared/mixed source receipts",
-    "BB waits for owned WM GPU release and memory, then own GPU parity/CPU gates before one-use arm dispatch"
+    "BB allocation remains unused; restore cpuQ access before any explicit observer continuation and original parity/CPU gates",
+    "Reconcile cpuQ WM STOP/open-job ledgers when access returns; never replay successful or failed charged physics",
+    "WM incomplete after infrastructure timeout; no complete-panel primary statistics admitted"
   ],
   "optional_wm_phys": "Disabled unless independently qualified under the registered S-RB-EVAL rule before main outcomes"
 }
