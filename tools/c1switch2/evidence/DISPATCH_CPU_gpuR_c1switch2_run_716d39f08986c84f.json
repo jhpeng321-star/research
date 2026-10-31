@@ -1,0 +1,20 @@
+{
+  "host": "gpuR",
+  "root": "/root/c1switch2_run_716d39f08986c84f",
+  "phase": "cpu",
+  "enabled_arms": [
+    "native",
+    "ctrl0",
+    "mappo",
+    "pi",
+    "circles",
+    "wall",
+    "random"
+  ],
+  "planned_sim_s": 33600,
+  "gpu_s": 0,
+  "unix": 1793469429.3896449,
+  "pid": 759845,
+  "workers": 1,
+  "binding_sha256": "1ab0a1f683e69f76e40de4ee92941eb2c4e4feddf3ad6b12ea4b2044735fabc3"
+}

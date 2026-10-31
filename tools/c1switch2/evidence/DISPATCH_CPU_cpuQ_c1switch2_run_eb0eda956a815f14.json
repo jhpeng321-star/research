@@ -1,0 +1,20 @@
+{
+  "host": "cpuQ",
+  "root": "/home/ubuntu/c1switch2_run_eb0eda956a815f14",
+  "phase": "cpu",
+  "enabled_arms": [
+    "native",
+    "ctrl0",
+    "mappo",
+    "pi",
+    "circles",
+    "wall",
+    "random"
+  ],
+  "planned_sim_s": 100800,
+  "gpu_s": 0,
+  "unix": 1793469411.0983534,
+  "pid": 604784,
+  "workers": 4,
+  "binding_sha256": "7f9a0aa46a3509602c6d3b02731a769e5251f005cd4efff2aed836412988b76c"
+}

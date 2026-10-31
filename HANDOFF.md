@@ -66,16 +66,23 @@ Both native and full30x20s six-way replay pairs matched bitwise; all6 alternativ
 Original receipt bytes exported as `CANARY_c1switch2_run_4ad4ece01d5a9ac1.json`, SHA256
 `2cdfd15288ac7dc657ed35aa86117ec429698d022fedef3600f0a27bceadb55d`.
 Accounting plus immutable BINDING/GATES/STAGED/PREFLIGHT archived beside it.
-No main jobs, GPU services or background main dispatcher are armed.
+MAIN01:48 CPU subset is now running: cpuQ PID604784, gpuR PID759845.
+cpuQ `/home/ubuntu/c1switch2_run_eb0eda956a815f14`, four workers,100800sim-s.
+gpuR `/root/c1switch2_run_716d39f08986c84f`, one worker,33600sim-s.
+Exactly native/CTRL0/MAPPO/PI/CIRCLES/WALL/random;112episodes total,134400sim-s,GPU0.
+Both hosts pass130CPU/1skip. Never duplicate their write-once CPU dispatch claims.
+Use `operations cpu-collect --host HOST --root ROOT`; retained main accounting is incremental.
+GPU services and picker physics remain pending; preserve WM-PHYS priority perMAIN01:48.
 Latest fleet peer delivery: `SELMAPPO_FLEET_STATUS.md` (~01:18). Its first production
 wave stopped in tensor IPC before any PPO update; no final169 exists and peer MAIN ACK is needed.
 Do not substitute checkpoint000 or restart peer work. The peer acknowledges our panel/evaluation ownership.
 Initial PID446935 exited before setup/physics with zero charge; all receipts retained.
 Repair1065f89d was explicitly registered and passed pristine-process CPU construction before dispatch.
-The 23:48 owner approval is present; WALL integrated, final trained selectors pending.
+The 23:48 owner approval and MAIN01:48 independent CPU authorization are present;
+WALL integrated, final trained selectors pending.
 `tools/c1switch2/wall.py` binds the real peer lifecycle and self-ID-only memory;
 missing members remain absent and abort atomically on continuation. No simulator slots cross RPC.
-Latest cpuQ AND gpuR CPU verification: 127 passed/1 host-only skip each.
+Latest cpuQ AND gpuR CPU verification: 130 passed/1 host-only skip each.
 Tests include real wall memory parity, six-row synthetic WM/BB mechanics and actual peer
 feature/model interfaces with clearly synthetic final169 test weights (not trained/evaluated arms).
 `python -B -m tools.c1switch2.gate --polls 1` reports approval without authorizing an unbound runtime.
