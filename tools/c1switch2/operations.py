@@ -33,7 +33,7 @@ for entry in os.scandir({parent!r}):
  if entry.name.startswith('c1switch2_run_') and entry.is_dir(follow_symlinks=False):
   root=Path(entry.path);row=dict(root=str(root))
   for name in ('CANARY_DISPATCH_ONCE.json','DISPATCH_CANARY.json','CANARY.json','CANARY_EXIT.json',
-               'CPU_DISPATCH_ONCE.json','DISPATCH_CPU.json','STOP'):
+               'CPU_DISPATCH_ONCE.json','DISPATCH_CPU.json','MODEL_DISPATCH_ONCE.json','STOP'):
    p=root/name
    if p.exists():
     data=json.loads(p.read_text())
@@ -84,7 +84,7 @@ print(json.dumps(out))
 ''')
 
 
-def stage(host, predecessor=None, cpu_only=False):
+def stage(host, predecessor=None, cpu_only=False, model=None, inference=None):
     registration_bytes = checked(REGISTRATION).read_bytes()
     text = registration_bytes.decode('utf-8')
     digest = sha(DESIGN)
@@ -94,9 +94,11 @@ def stage(host, predecessor=None, cpu_only=False):
     state = status(host)
     old = None
     dispatched = [r for r in state['roots'] if 'DISPATCH_CANARY.json' in r or 'CANARY_DISPATCH_ONCE.json' in r]
-    if cpu_only:
+    if cpu_only or model:
         from .gate import cpu_authority
-        if not cpu_authority(text) or any('CPU_DISPATCH_ONCE.json' in r for r in state['roots']):
+        if cpu_only and model or model not in (None, 'wm', 'bb'):
+            raise ValueError('one registered dispatch scope required')
+        if not cpu_authority(text) or (cpu_only and any('CPU_DISPATCH_ONCE.json' in r for r in state['roots'])):
             raise ValueError('CPU authority absent or subset already claimed; inspect/reuse')
         if host == 'cpuQ' and not any(r.get('CANARY.json', {}).get('six_way_repeat') == 'PASS'
                                      for r in state['roots']):
@@ -116,7 +118,8 @@ def stage(host, predecessor=None, cpu_only=False):
         for path in Path(local).glob('*.py'):
             staged['peer/'+peer+'/'+path.name] = checked(path)
     sources = {name: sha(path) for name, path in staged.items()}
-    identity = canonical(dict(sources=sources, registration=sha(REGISTRATION)))[:16]
+    identity = canonical(dict(sources=sources, registration=sha(REGISTRATION),
+                              scope=model or ('cpu' if cpu_only else 'canary'), inference=inference))[:16]
     root = ('/home/ubuntu' if host == 'cpuQ' else '/root')+'/c1switch2_run_'+identity
     binding = dict(protocol=PROTOCOL, cpu_host=host, include_phys=False, sim_s=budget(),
         library=list(CONTROLLERS), gpu_seconds={a: GPU_SECONDS[a] for a in budget()},
@@ -132,6 +135,11 @@ def stage(host, predecessor=None, cpu_only=False):
          selector_specs={a: dict(status='PENDING') for a in ('fleet_ppo', 'cav_mappo')})
     if cpu_only:
         binding.update(dispatch_phase='cpu', enabled_arms=list(CPU_ARMS))
+    elif model:
+        binding.update(dispatch_phase='model', enabled_arms=[model])
+        if inference is None:
+            raise ValueError('model stage requires completed immutable two-GPU inference specification')
+        binding['inference_specs'][model] = inference
     if old is not None:
         binding['startup_predecessor'] = old
     buf = io.BytesIO()
@@ -155,6 +163,7 @@ print(json.dumps(dict(host={host!r},root=str(root),binding_sha256={canonical(bin
 ''', timeout=90)
     write(EVIDENCE/('STAGE_'+host+'_'+identity+'.json'), result)
     print(json.dumps(result))
+    return result
 
 
 def preflight(host, root):
@@ -179,7 +188,9 @@ try:
   Runtime.create_backend=lambda self,*a,**k:dict(inputs=self.inputs)
   try:
    world=next(w for w in worlds() if assigned(w['seed'])=={host!r})
-   constructed=backend(scratch,json.loads((root/'BINDING.json').read_text()),'native',world,'cpu_only')
+   probe_binding=json.loads((root/'BINDING.json').read_text())
+   probe_arm=probe_binding.get('enabled_arms',['native'])[0]
+   constructed=backend(scratch,probe_binding,probe_arm,world,'cpu_only')
   finally:Runtime.create_backend=original
   inputs=constructed['inputs']
   assert not (scratch/'accounting.jsonl').exists(),'construction-only CPU probe charged physics'
@@ -200,6 +211,7 @@ out.update(host={host!r},root=str(root),output=log.getvalue(),new_sim_s=0,new_gp
 ''', timeout=90)
     write(EVIDENCE/('PREFLIGHT_'+host+'_'+Path(root).name+'.json'), result)
     print(json.dumps(result))
+    return result
 
 
 def probe(host, root, model, steps=120):
@@ -479,7 +491,7 @@ def main():
     if args.command == 'status':
         print(json.dumps(status(args.host), indent=2))
     elif args.command == 'stage':
-        stage(args.host, args.predecessor, args.cpu_only)
+        stage(args.host, args.predecessor, args.cpu_only, args.model)
     elif args.command == 'preflight':
         preflight(args.host, args.root)
     elif args.command == 'canary':

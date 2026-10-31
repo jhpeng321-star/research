@@ -74,7 +74,8 @@ def serve(root, binding, factory):
                 raise ValueError('insufficient free GPU memory for frozen service admission')
             torch.cuda.set_per_process_memory_fraction(2.5*2**30/total)
             predictor = factory(binding)
-            write(root/'READY.json', dict(pid=os.getpid(), binding=binding))
+            write(root/'READY.json', dict(pid=os.getpid(), binding=binding,
+                  attestation=predictor.engine.attestation))
             while not (root/'STOP').exists() and not (root/'COMPLETE').exists():
                 for path in sorted(root.glob('*.request.json')):
                     finish = path.with_name(path.name.replace('.request.', '.result.'))

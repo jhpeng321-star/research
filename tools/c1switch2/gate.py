@@ -59,6 +59,11 @@ def admission(text, binding, evidence, *, phase='main'):
         if binding.get('enabled_arms') != list(CPU_ARMS) or include_phys or not cpu_authority(text):
             raise ValueError('CPU subset requires MAIN 01:48 authority and exact seven-arm binding')
         needed = CPU_REQUIRED
+    elif binding.get('dispatch_phase') == 'model' and phase == 'main':
+        arms = binding.get('enabled_arms')
+        if arms not in (['wm'], ['bb']) or include_phys or not cpu_authority(text):
+            raise ValueError('model subset requires MAIN 01:48 authority and one frozen model arm')
+        needed = CPU_REQUIRED + ('inference_'+arms[0], 'gpuA_parity', 'gpuR_parity')
     elif phase == 'main' and 'enabled_arms' in binding:
         raise ValueError('unregistered partial-arm admission')
     if phase == 'canary':

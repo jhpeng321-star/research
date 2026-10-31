@@ -361,6 +361,46 @@ def test_cpu_dispatch_plans_exact_disjoint_panel_without_repeating_canary(monkey
         assert args[2] in design.CPU_ARMS and int(args[4]) in range(969136, 969152)
 
 
+@pytest.mark.parametrize('model', ('wm', 'bb'))
+def test_model_subset_retains_both_gpu_parities_and_only_its_own_model_gate(monkeypatch, model):
+    b, text, _ = cpu_binding(monkeypatch)
+    b.update(dispatch_phase='model', enabled_arms=[model])
+    needed = gate.CPU_REQUIRED+('inference_'+model, 'gpuA_parity', 'gpuR_parity')
+    evidence = {k: dict(status='PASS', binding_sha256=canonical(b)) for k in needed}
+    assert gate.admission(text, b, evidence)['dispatch_authorized']
+    for key in ('inference_'+model, 'gpuA_parity', 'gpuR_parity'):
+        broken = copy.deepcopy(evidence)
+        broken.pop(key)
+        assert not gate.admission(text, b, broken)['dispatch_authorized']
+    with pytest.raises(ValueError, match='one frozen model'):
+        gate.admission(text, dict(b, enabled_arms=['wm_phys']), evidence)
+
+
+def test_gpu_parity_rejects_missing_controller_sample_drift_and_lost_wall_memory():
+    from tools.c1switch2.modelops import compare_parity, parity_requests
+    from tools.c1switch2 import gpuserver, gpuops
+    assert callable(gpuserver.main) and callable(gpuops.stage)
+    requests = parity_requests({'protocol': design.PROTOCOL})
+    assert requests[0]['request_sha256'] != requests[1]['request_sha256']
+    results = {h: {name: dict(samples={c: [float(i+1)]*8 for i, c in enumerate(design.CONTROLLERS)})
+                   for name in ('fresh', 'continued_wall')} for h in ('gpuA', 'gpuR')}
+    for host in results:
+        results[host]['continued_wall']['samples']['wall'] = [2.]*8
+    compare_parity(results)
+    broken = copy.deepcopy(results)
+    broken['gpuA']['fresh']['samples'].pop('wall')
+    with pytest.raises(ValueError, match='shape'):
+        compare_parity(broken)
+    broken = copy.deepcopy(results)
+    broken['gpuR']['fresh']['samples']['native'][0] = 7.
+    with pytest.raises(ValueError, match='sample parity'):
+        compare_parity(broken)
+    for host in results:
+        results[host]['continued_wall'] = copy.deepcopy(results[host]['fresh'])
+    with pytest.raises(ValueError, match='continuation'):
+        compare_parity(results)
+
+
 def test_signed_joint_oracle_gap_can_beat_all_fleet_actions():
     from tools.c1switch2.analyze import regret
     branches = {c: dict(prefix={'t_s': 300}, **{'60': {'team_delay_vs': 20.}})
