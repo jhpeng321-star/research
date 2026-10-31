@@ -84,6 +84,7 @@ def analyze(rows, targets):
         source_versions=dict(cf=sorted({r['cf_model'] for r in rows}),
                              native_model=sorted({r.get('native_model', 'head') for r in rows}),
                              settings=sorted({r.get('settings', 'unspecified') for r in rows}),
+                             entry_phase=sorted({r.get('entry_phase', 'before') for r in rows}),
                              lc_memory=sorted({r['lc_memory'] for r in rows})),
         ramp_origin_full_fleet_delay_veh_s=dict(recorded=stats(recorded_delay), predicted=stats(predicted_delay),
             mean_bias=float((predicted_delay-recorded_delay).mean()),

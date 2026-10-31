@@ -4,6 +4,20 @@ Branch `c4/rb-merge`; base `f0db3c82`. Owner registration5683 / MAIN00:10.
 Full earlier handoff preserved at `docs/rb_merge/HANDOFF_HISTORY_0100.md`.
 
 ## Integration-ready source
+- NEW opt-in `model/sumo_departure.py::step_after_movement`: tagged SUMO
+  MSNet::simulationStep confirms movement/LC BEFORE insertion. Existing WM
+  entry-before-motion scheduling is retained only as the previous contract.
+  New adapter admits against moved geometry, leaves newborns at basePos without
+  same-step movement/LC/control, returns explicit old-cohort/birth/exit masks,
+  preserves FIFO/SourceLedger and resets newborn history/LC memory.
+  Do not charge an entry observer's post-step snapshot as the old road cohort;
+  consume returned `source_before` / `source_birth_mask` / `source_exit_mask`.
+  **7 local phase tests PASS /5.26s** (moved-gap admission, no birth motion,
+  no same-tick slot overwrite, exact no-arrival parity, coupled settings,
+  newborn-CAV control timing, legacy/default isolation).
+- Experimental `/tmp/rb-merge-fullfleet-v8end120` is STAGED ONLY: same frozen
+  encoder/native/LC source, `--entry-phase after`, H120/FIT32/512slots.
+  **58 remote CPU tests PASS /2.45s**, all32 preflights PASS. v7fast stays frozen.
 - Source advice now uses IDM's exact minNextSpeed bound
   `max(b,min(emergencyDecel,1.5))`, important for motion-inferred low b.
   Three source numeric anchors added; **44 local merge/native tests PASS /5.80s**.
@@ -156,6 +170,10 @@ Full earlier handoff preserved at `docs/rb_merge/HANDOFF_HISTORY_0100.md`.
   stopped-leader negotiation, continuous LC, internal-junction state, nondefault
   actionStep and full inferred-population efficacy remain open. LC/fleet posterior
   and final distributional qualification belong to INT/UNC/FIT/EVAL.
+- New phase reference: read-only tagged MSNet.cpp excerpt at
+  `E:/Temp/opencode/sumo-1271-merge-phases-20261101`; verified new empty directory,
+  no downloaded code executed. Existing v3-v7 receipts retain their original
+  pre-movement insertion order; new phase is explicitly labelled, never pooled.
 - Source ledger: `docs/rb_merge/SOURCES.md`. Public downloads read as text only
   in new empty temp directories; no downloaded code executed. No GPU/SUMO/training,
   peer PID changes, push, reset/clean/deletions/new venvs in this continuation.

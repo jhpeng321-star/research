@@ -81,6 +81,11 @@ keeps CAV defaults, and couples zero-history-centre entrant settings to exact
 admission ordinals. The learned motion/lane/merge modules remain bypassed.
 The600s run captures120/300/600s clocks in one pass; it does not replay future
 observations or refit any model. Summaries accept one uniform horizon per panel.
+`--entry-phase after` opts into SUMO's move/LC/then-depart order through the new
+`step_after_movement` helper. Boundary scoring uses its explicit source_before
+cohort, birth and exit masks. Newborns stay at basePos/departSpeed on birth tick.
+No-arrival dynamics are bit-exact to the original physics step. This operator
+experiment has a separate source identity from the ongoing `v7fast` H600 run.
 `python -m tools.rbeval.summarize_full_fleet --panel <collected directory>
 --targets <shared targets> --output <new score.json>` checks complete FIT32,
 collection hashes and conservation before reporting per-world and marginal clocks.

@@ -266,7 +266,7 @@ def observable_source(job):
 
 @torch.no_grad()
 def validate(root, seed, horizon, slots, stream, target_dir, cf_model='legacy', warm_lc=False,
-             trace_merge=False, native_model='head', encoder_checkpoint=None):
+             trace_merge=False, native_model='head', encoder_checkpoint=None, entry_phase='before'):
     from wms.model.spec import ModelSpec
     from wms.model.wms import WmSModel
     from wms.physics.config import PhysicsConfig
@@ -369,13 +369,19 @@ def validate(root, seed, horizon, slots, stream, target_dir, cf_model='legacy', 
     for tick in range(round(horizon/dt)):
         if tick % 40 == 0 and Path('STOP').exists():
             raise RuntimeError('cooperative STOP requested')
-        roll = model.rollout(last, n_steps=1, k0=tick, entries=entries, cav_controller=cb,
-                             history=history, history_mask=history_mask,
-                             **({} if sampler is None else dict(driver_params=sampler.current,
-                                                                 entrant_driver_sampler=sampler)))
+        parameters = {} if sampler is None else dict(driver_params=sampler.current,
+                                                     entrant_driver_sampler=sampler)
+        if entry_phase == 'after':
+            from wms.model.sumo_departure import step_after_movement
+            roll = step_after_movement(model, last, entries, k0=tick, cav_controller=cb,
+                                       history=history, history_mask=history_mask, **parameters)
+        else:
+            roll = model.rollout(last, n_steps=1, k0=tick, entries=entries, cav_controller=cb,
+                                 history=history, history_mask=history_mask, **parameters)
         after = {k: roll[r][0, 0].numpy() for k, r in
                  (('s_m', 'positions'), ('v_mps', 'speeds'), ('lane', 'lanes'), ('present', 'masks'))}
-        before = entries.previous
+        before = (entries.previous if entry_phase == 'before' else
+                  {k: v[0].numpy() for k, v in roll['source_before'].items()})
         if any(not np.isfinite(after[k]).all() for k in ('s_m', 'v_mps', 'lane')):
             raise AssertionError('nonfinite physics')
         if roll['raw_residual_mps2'].count_nonzero():
@@ -404,7 +410,8 @@ def validate(root, seed, horizon, slots, stream, target_dir, cf_model='legacy', 
         changed = before['present'] & after['present'] & (before['lane'] == 2) & (after['lane'] == 1)
         merges.extend(dict(identity=int(entries.ids[s]), time_s=300+(tick+1)*dt,
                            position_m=float(after['s_m'][s])) for s in np.flatnonzero(changed))
-        births.extend(dict(**b, time_s=300+tick*dt) for b in entries.last_births)
+        birth_time = 300+(tick+int(entry_phase == 'after'))*dt
+        births.extend(dict(**b, time_s=birth_time) for b in entries.last_births)
         last = roll['state']
         history, history_mask = roll['history'], roll['history_mask']
         elapsed = (tick+1)*dt
@@ -436,6 +443,7 @@ def validate(root, seed, horizon, slots, stream, target_dir, cf_model='legacy', 
     return dict(seed=seed, arm='native', horizon_s=horizon, stream=stream, runtime_s=time.monotonic()-start,
         initial=initial, max_present=max_present, exits=exits,
         cf_model=getattr(cfg, 'cf_model', 'legacy'), lane_model=model.lane_model, native_model=native_model,
+        entry_phase=entry_phase,
         settings='frozen_motion_encoder_point' if encoded is not None else 'population_default_no_encoder',
         inferred_settings=parameter_receipt, checkpoints=checkpoints,
         newborn_settings_checked=0 if sampler is None else sampler.births_checked,
@@ -473,6 +481,7 @@ def main():
     p.add_argument('--trace-merge', action='store_true')
     p.add_argument('--native-model', choices=('head', 'sumo'), default='head')
     p.add_argument('--encoder-checkpoint')
+    p.add_argument('--entry-phase', choices=('before', 'after'), default='before')
     args = p.parse_args()
     if len(args.seeds) != len(set(args.seeds)) or any(not 969400 <= s <= 969431 for s in args.seeds):
         p.error('unique FIT seeds 969400..969431 required')
@@ -521,7 +530,8 @@ def main():
             while hasattr(os, 'getloadavg') and os.getloadavg()[0] > 28:
                 time.sleep(15)
             row = validate(safe(args.root), seed, args.horizon, args.slots, args.stream, safe(args.targets),
-                           args.cf_model, args.warm_lc, args.trace_merge, args.native_model, args.encoder_checkpoint)
+                           args.cf_model, args.warm_lc, args.trace_merge, args.native_model, args.encoder_checkpoint,
+                           args.entry_phase)
             if any(digest(runtime/name) != sha for name, sha in sources.items()):
                 raise AssertionError('runtime changed during diagnostic')
             if any(digest(name) != sha for name, sha in auxiliary.items()):

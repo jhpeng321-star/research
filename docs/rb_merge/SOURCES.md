@@ -84,6 +84,28 @@ the same leader/follower/overlap/secure gaps as the full-frame API (bit-exact
 heterogeneous/batched CPU checks), avoiding a full slots² recomputation for
 every ramp candidate. No physical parameter or acceptance criterion changes.
 
+## Insertion phase (later source audit)
+
+Tagged `MSNet.cpp::simulationStep` executes planMovements/junction approaches/
+executeMovements/changeLanes/removePending before determineCandidates/emitVehicles;
+postMoveStep writes observations and then advances time. Therefore a new
+departure is at basePos/departSpeed in its first post-step frame and does not
+move or change lanes again in that step. Read-only non-contiguous excerpt,
+all omissions marked, saved in a verified NEW EMPTY directory:
+`E:/Temp/opencode/sumo-1271-merge-phases-20261101`. Source URL:
+https://github.com/eclipse-sumo/sumo/blob/v1_27_1/src/microsim/MSNet.cpp
+Raw transport failed; tagged GitHub blob supplied the displayed source.
+No downloaded code compiled/executed.
+
+`sumo_departure.step_after_movement` is an explicit one-step adapter: existing
+arrival generator/FIFO/ordinals/ledger, post-movement occupancy, no newborn
+motion/control/LC, explicit old-road cohort and exit mask for boundary costs.
+Same-tick slot recycling is deferred to the next step so old exit and new birth
+cannot overwrite one logged identity; capacity pressure remains visible in
+the conserved queue/no_slot statistic. Existing rollout/factory defaults and
+previous frozen validation sources are unchanged. The direct validator default
+is still `--entry-phase before`; the experimental after phase is labelled.
+
 ## Scope and explicit parity gaps
 
 This implements a source-backed highway subset, not full SUMO state parity.
