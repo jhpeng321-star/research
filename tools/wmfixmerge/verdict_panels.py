@@ -10,7 +10,42 @@ import sys
 from tools.wmfixmerge.data import WM2_SHA, digest, safe
 
 
-def validation(plan, candidate, candidate_config, out, device):
+def _group_binding(plan, candidate, candidate_config):
+    """Every per-group A_*.json file carries the exact candidate binding."""
+    return dict(candidate_sha256=digest(candidate), candidate_config_sha256=digest(candidate_config),
+                reference_sha256=digest(plan["reference"]))
+
+
+def load_group_file(path, binding):
+    """Fail-closed reuse of an existing per-group shard file (resume/shard-merge)."""
+    doc = json.loads(safe(path).read_text())
+    if doc.get("binding") != binding or not isinstance(doc.get("rows"), list) or not doc["rows"]:
+        raise ValueError("existing panel-A group file is foreign or empty: " + path.name)
+    return doc["rows"]
+
+
+def save_group_file(path, rows, binding):
+    with path.open("x") as stream:
+        json.dump(dict(binding=binding, rows=rows), stream, allow_nan=False)
+
+
+def parse_groups(spec, total):
+    """'0-17' / '18,19' / '3' -> sorted unique index list within range."""
+    indices = set()
+    for token in str(spec).split(","):
+        token = token.strip()
+        if "-" in token:
+            lo, hi = sorted(int(x) for x in token.split("-", 1))
+            indices.update(range(lo, hi + 1))
+        else:
+            indices.add(int(token))
+    ordered = sorted(indices)
+    if not ordered or ordered[0] < 0 or ordered[-1] >= total:
+        raise ValueError("group shard out of range")
+    return ordered
+
+
+def validation(plan, candidate, candidate_config, out, device, groups=None):
     import torch
     from tools.wmcombined import e3_score as e3
     from wms.data.c4_pairs import PairedBranchSource
@@ -37,12 +72,14 @@ def validation(plan, candidate, candidate_config, out, device):
         raise ValueError("incomplete corrected validation cohort")
     specs = json.loads(safe(plan["controllers"]).read_text())["controllers"]
     entrant.feedback_from_specs = feedback
-    samples = {}
     original_entries = score.Entries
     class ConservingEntries(original_entries):
         def __init__(self, process):
             process.cfg = replace(process.cfg, conserve_queue=True)
             super().__init__(process)
+    binding = _group_binding(plan, candidate, candidate_config)
+    shard = None if groups is None else parse_groups(groups, len(source.groups))
+    samples = {}
     for name, config, ckpt in (("base", plan["base_config"], plan["reference"]),
                                 ("entry", plan["base_config"], plan["reference"]),
                                 ("candidate", candidate_config, candidate)):
@@ -58,18 +95,26 @@ def validation(plan, candidate, candidate_config, out, device):
         model.cav_exec_cap = "idm"
         entry_path = name in ("entry", "candidate")
         score.Entries = ConservingEntries if entry_path else original_entries
-        draws = []
-        for i in range(len(source.groups)):
+        todo = range(len(source.groups)) if shard is None else shard
+        for i in todo:
+            path = out / f"A_{name}_{i:03d}.json"
+            if path.is_file():
+                continue  # already computed by this or another shard process
             rows = score.score_batch(model, settings, e3, source, [i], real, torch.device(device),
                                       600, False, native_lanes=True, mix_modes=(True,),
                                       learned_admission=entry_path)
-            path = out / f"A_{name}_{i:03d}.json"
-            with path.open("x") as stream:
-                json.dump(dict(rows=rows), stream, allow_nan=False)
-            draws.extend(rows)
-        samples[name] = draws
+            save_group_file(path, rows, binding)
         del model
     score.Entries = original_entries
+    missing = [f"{n}_{i:03d}" for n in ("base", "entry", "candidate")
+               for i in range(len(source.groups)) if not (out / f"A_{n}_{i:03d}.json").is_file()]
+    if missing:
+        return dict(schema="wmfix_validation_shard/1", complete=False,
+                    missing=len(missing), first_missing=missing[0], binding=binding)
+    # Single source of truth: assembly always reads the immutable per-group files.
+    for name in ("base", "entry", "candidate"):
+        samples[name] = [row for i in range(len(source.groups))
+                         for row in load_group_file(out / f"A_{name}_{i:03d}.json", binding)]
     lookup = {(r["pair_key"], r["arm"]): r for r in real}
     rows = []
     for key in sorted({r["pair_key"] for r in real}):
