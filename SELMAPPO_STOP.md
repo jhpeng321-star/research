@@ -91,3 +91,13 @@ Local32PASS/2torch-unavailableSKIP, RuffPASS. Stage`build_b3d13ccfae77de71`, ful
 Dispatch revalidates ALL source hashes, both old locks/exitedPIDs and exact stopped
 ledger/log, then acquires exclusiveFLEET_PRODUCTION_ONCE; no automatic retries.
 No new SUMO at this CPU-only checkpoint. Receipt`STAGE_b3d13ccfae77de71.json`.
+
+## Production-only dispatch (current)
+After implementation92969232 and registration-receiptae38d65e, one explicit production
+launch claimed`FLEET_PRODUCTION_ONCE.json`; cpuQ own trainer503239 is live.
+Dispatch receipt`DISPATCH_build_b3d13ccfae77de71.json`; source remains immutable.
+The new ledger inherited both old START/END pairs unchanged and started production
+at18000000; first poll records10production reservations and a resource-priority pause.
+No mechanics rerun, completed training update, final checkpoint or evaluation claim.
+Original STOPs/locks/ledgers remain historical receipts; do not interpret them as
+permission for another retry. Any new failure still stops with all charges retained.

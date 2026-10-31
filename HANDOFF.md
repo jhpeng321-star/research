@@ -1,6 +1,6 @@
 # S-SELMAPPO fleet-picker integration handoff
 
-**CURRENT: MAIN01:08 authorizes production-only continuation; no trainer alive yet.**
+**CURRENT: production-only continuation dispatched once on cpuQ, own trainer503239.**
 MAIN00:29 continuation was used once (commit `c082b233`); second seed reached900actual,
 then the wrapper queried the frozen environment's already-closed clock. Total1,800charged /
 900actual, production0/checkpoints0. Terminal repair commit `d219f5ca` is CPU31/31 plus
@@ -8,10 +8,17 @@ real frozen-controller/WALL/alias-gate PASS, staged ONLY at `build_68394a9568862
 MAIN acknowledgement is now present in REGISTRATION.md; both smoke slots are spent.
 Fresh-session reconciliation confirmed own357398 exited and no fleet trainer at01:09+08:00.
 A separate one-use production-only continuation passed CPU34/34 plus the real frozen
-controller/WALL/seed-alias gate on cpuQ; no launch yet. Immutable stage
+controller/WALL/seed-alias gate on cpuQ. Immutable stage
 `build_b3d13ccfae77de71`, source binding
 `b3d13ccfae77de71cd8ff70d2ee444de514104855652968aa70965a54aae4aba`.
 Lowest-priority nice19 dispatch must yield above0.8xcores. See `SELMAPPO_STOP.md`.
+Exclusive`FLEET_PRODUCTION_ONCE.json` claimed; receipt
+`docs/paper_results/selmappo/DISPATCH_build_b3d13ccfae77de71.json`.
+Both historical mechanics charges inherited unchanged; NO more mechanics run.
+First production wave starts18000000; first status has10reservations and resource pause
+atload15.265+pending10 on32cores (ceiling25.6). No successful update reported yet.
+Status: `python -m tools.selmappo.launch status --build build_b3d13ccfae77de71`.
+Do not launch another build or reuse any old dispatch command while this trainer lives.
 
 Latest scope: **fleet PPO only**, `S-C1SWITCH2/v2`, decisions every20s at300..880,
 library `native, ctrl0, mappo, pi, circles, wall`. Per-CAV belongs to S-SELMAPPO2.
