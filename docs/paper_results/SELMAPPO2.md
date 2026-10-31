@@ -2,15 +2,23 @@
 
 ## Status (2026-11-01)
 
-MAIN01:48 has now **acknowledged** the same-cap continuation: unused second
+MAIN01:48 has now **acknowledged and launched** the same-cap continuation: unused second
 smoke18107999 only, then all originally registered production worlds. The explicit
 one-use continuation implementation passes93/93 local CPU tests and Ruff. It
 retains the hash-pinned failed ledger byte-for-byte,900reserved/300actual, and
 never replays18107998. A later failure still stops dispatch. The report validates
 this historical exception separately and retains the600s reserved/actual gap in
-every update. cpuQ staging and dispatch receipts follow separately.
+every update. cpuQ93/93CPU/zero-skips and real frozen integration pass;
+safe-filename exposure audit199667/zero conflicts/errors. Immutable current build:
+`c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29`.
+Owned supervisor606968 (UID1000/startticks48374316) was launched once, nice19,
+CUDAhidden/single-thread workers,<=12 after successful second smoke. Dispatch
+disk2.601GB/load7.08/32cores; each reservation yields below2GiB disk/8GiB memory
+or above spare-CPU admission. Current smoke/production results await collection.
 
-**Stopped during the first mechanics canary; production has not started.**
+### Preserved first attempt
+
+**Stopped during the first mechanics canary.**
 Own cpuQ supervisor428649 exited. The first smoke reserved900 sim-s and ran300
 native-warmup seconds; no controlled window or gradient update completed.
 Checkpoint000 is retained; final169 is absent. Learning curves and final

@@ -5,6 +5,18 @@ Original advance-approved exact cap7,012,800; designSHA09499f2af60311b3690a940dc
 
 ## Current state
 
+**MAIN01:48 continuation dispatched once** on cpuQ, own supervisor606968,
+UID1000/startticks48374316. Current root is
+`/home/ubuntu/selmappo2_20261101/build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29`.
+Parent `PER_CAV_CONTINUATION_ONCE.json` is now consumed; NEVER dispatch again.
+Original lock/root/failed seed/900charge remain untouched. First current job is
+ONLY second smoke18107999; production follows its success under spare-CPU admission.
+At dispatch:32cores/load7.08,60.13GBavailable RAM,2.601GBfree disk. Disk is tight;
+admission waits at2GiB without any deletion/signals/new reservations.
+Read-only collection command (>=60s SSH intervals):
+`python -B -m tools.selmappo2.report --action collect --build build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29 --pid 606968`.
+Use current reporter: it accepts ONLY the exact hash-bound historical failure.
+
 Original immutable cpuQ root:
 `/home/ubuntu/selmappo2_20261101/build_b42c257b09813c175fcb7261e341c7599d0bb5c4c971529e2856890d2fc8038c`.
 Supervisor428649 exited;900reserved/300actual, no controlled windows, no production,
