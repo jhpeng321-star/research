@@ -1,0 +1,6 @@
+{
+  "status": "APPROVAL_PRESENT",
+  "approval_line": "- 23:48 S-C1SWITCH2 BUDGET APPROVED (owner, chat: 'yes, approve up to 600,000 and start when ready'): cap 600,000 actual sim-s (excl. RL picker training, covered by the advance picker approval) + GPU on both cards for WM/BB inference; the agent must register its design sha + exact per-arm budget <= 600,000 before dispatch; WM checkpoint fixed by the registered rule (WM-PHYS only if it qualifies, else WM2) before any switching outcome; RL pickers evaluated with their final checkpoints.",
+  "dispatch_authorized": false,
+  "reason": "polling alone cannot authorize an unbound runtime"
+}
