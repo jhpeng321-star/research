@@ -1,6 +1,6 @@
 # Evidence source map — initial cut
 
-Initial inspection date: 2026-10-31. This package is on `c4/papera`. Paths below are exact permitted sources; unavailable reports are recorded explicitly rather than searched through unrelated data trees.
+Initial inspection date: 2026-10-31. This package is on `c4/papera`. Paths below retain the initial cut; the refresh addendum below supersedes availability/status statements. Exact permitted sources are used; unavailable reports are recorded explicitly rather than searched through unrelated data trees.
 
 ## Live contribution producers
 
@@ -29,3 +29,11 @@ Initial inspection date: 2026-10-31. This package is on `c4/papera`. Paths below
 ## Read-only scope
 
 Only explicit report/export/code paths needed to interpret the package are used. Directory listings were nonrecursive. No restricted data path, truth file, or assignment file is an input. Reading prose that discusses historical diagnostics does not authorize opening its underlying inputs. This task's source ledger and figure manifest document a presentation-only analysis, with the required shared registration appended on first-package completion.
+
+## First-package refresh — supersedes initial availability statements
+
+- `E:/agent-work/c4-coopmeasure/docs/paper_results/COOPAUDIT.md` is now present: mechanics canary verified; complete audit waits for selected SNR table. `tools/coopaudit/evidence/EXPOSURE_NOTE.md` records the producer's corrected-scanner exposure disclosure; retain it without opening the referenced inputs.
+- `E:/agent-work/c4-sumocf/tools/sumocf/evidence/CANARY_V2.json` and `docs/paper_results/SUMOCF_RUN.md` are now present: saved branching and zero-update parity PASS. The design now explicitly labels the full-correlation score projection, samples correlation during training, reserves a rotating-pair dev cooperation diagnostic, and labels its trace index `policy_mean_reference`. Run report contains recovery/CPU/canary receipts; full SNR/training outcomes are still absent at this refresh.
+- `E:/agent-work/c4-coopeval/docs/paper_results/COOPEVAL.md` is now present: implementation/figure/export scaffolding and exact CLI documented. Its horizons/budget still describe the earlier contract; reconcile the amended learner before treating it as the final report. No completed learned-arm dataset is delivered here.
+- `E:/agent-work/c4-sumoes/docs/paper_results/SUMOES_RUN.md` now opens with authorized Track 3B continuation: MAPPO baseline complete, first update in progress. Historical stopped-result sections remain history, not latest status.
+- S-COOPBEHAV's prose now includes a physically resolved displacement requirement for slowing events; its old source-availability paragraphs remain stale. No final measured detector outcomes are yet present in the report.

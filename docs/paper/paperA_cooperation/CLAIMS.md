@@ -14,11 +14,11 @@ Status vocabulary follows the existing checklist but uses the requested three la
 - **Exact claim:** The historical protocol reproduced native branches and preserved paired initial state, group and exogenous coupling. Exactness is relative to the simulator/replay contract.
 - **Evidence:** `E:/research-dense/docs/paper_results/COOPMEAS2.md`, verification; `E:/agent-work/c4-coopmeas2/COOPMEAS2.md`, snapshot/controller-memory design.
 - **Status: SUPPORTED — historical contract.** Native repeats passed **56/56** controller-world checks; this does not certify the new audit or learner canary. <!-- Source: E:/research-dense/docs/paper_results/COOPMEAS2.md:78-85. -->
-- **Insert:** [[PENDING: new audit bitwise trajectory/metric canary and learner live-trunk/load-state canary or declared full-rerun route / S-COOPMEASURE, S-SUMOCF]]. Same scalar seeds alone are insufficient.
+- **Refresh:** New audit live-native/load/repeat, wall GROUP repeat and MAPPO GROUP repeat are reported bit-identical; learner receipt says `branch_mode=saved`, `saved_bitwise=true`, `zero_update_bitwise=true`. **SUPPORTED — these mechanics canaries only.** Full-panel replay/coverage remains [[PENDING: complete new audit and training integrity receipt / S-COOPMEASURE, S-SUMOCF]]. Same scalar seeds alone are insufficient. <!-- Sources: E:/agent-work/c4-coopmeasure/docs/paper_results/COOPAUDIT.md:19-31; E:/agent-work/c4-sumocf/tools/sumocf/evidence/CANARY_V2.json. -->
 
 ### M-BASE — Audit and training use different counterfactual backgrounds
 - **Exact claim:** The controller audit disables control to native release; CTRL0 is an always-commanded adapter. Learner credit instead compares a sampled latent-window intervention with checkpoint-mean continuation/background. These estimate different interventions.
-- **Evidence:** `E:/agent-work/c4-coopmeasure/AUDIT_DESIGN.md`, intervention/release; `E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_DESIGN.md`, binding amendment, exploration/continuation and retained original intervention explanation.
+- **Evidence:** `E:/agent-work/c4-coopmeasure/AUDIT_DESIGN.md`, intervention/release; `E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_DESIGN.md`, binding amendment, exploration/continuation and explicit `policy_mean_reference` handoff.
 - **Status: SUPPORTED — design scope; actual learner binding PENDING.** Never pool learner exploration C_G with native-release audit C_G or call one an increase in the other.
 - **Insert:** [[PENDING: confirm sampled-window B/subset/continuation semantics from actual learner receipts and audit the final frozen policy against native release / S-SUMOCF, S-COOPMEASURE]].
 
@@ -38,6 +38,7 @@ Status vocabulary follows the existing checklist but uses the requested three la
 - **Evidence:** `E:/agent-work/c4-coopmeasure/AUDIT_DESIGN.md`, full-roster masked singleton rule and refusal/abort accounting.
 - **Status: PENDING.** A designed coordinated mechanism is not guaranteed beneficial. Preserve refused/aborted worlds and identical wall context in singleton branches.
 - **Insert:** [[PENDING: wall interaction and command/abort/coverage receipt / S-COOPMEASURE]].
+- **Canary scope:** A coordinated wall was assembled, but its single-pair **180 s C_G was −154.834 veh-s**; MAPPO's was **zero** in that same mechanics probe. This is not complete-panel inference and does not contradict a still-pending average positive-control hypothesis. <!-- Source: E:/agent-work/c4-coopmeasure/docs/paper_results/COOPAUDIT.md:19-25. -->
 
 ### A-OLD — Earlier cooperation evidence establishes a positive interaction advantage
 - **Evidence:** `E:/research-dense/docs/paper_results/COOPMEAS2.{md,csv}`.
@@ -57,8 +58,8 @@ Status vocabulary follows the existing checklist but uses the requested three la
 ### L-METHOD — Warm-started observable per-CAV counterfactual learner
 - **Exact claim:** The amended method warm-starts speed-only MAPPO, trains its final hidden layer and mean row plus an observable RSU broadcast branch, and uses correlated latent exploration with matched subset branches.
 - **Evidence:** `E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_DESIGN.md`, binding amendment only.
-- **Status: SUPPORTED — design only.** Coordination latent is at most **four-dimensional**; exploration mixes **ρ∈{0,0.5,1}** with the subset's marginal joint density, including rank-one support at full correlation. The credit outcome horizon is **600 s after sampled start**. <!-- Source: E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_DESIGN.md:10-34. -->
-- **Scope:** Native lanes, original safety executor; not a new lane policy, from-scratch actor, parameter-ES learner, or already validated WM-trained successor. [[PENDING: implementation/config/checkpoint hashes, zero-addition parity, sampled-score checks and exact objective receipt / S-SUMOCF]].
+- **Status: SUPPORTED — design plus zero-update mechanics, not learning efficacy.** Coordination latent is at most **four-dimensional**; exploration mixes **ρ∈{0,0.5,1}**. Full-rank cases use subset marginal joint scores; at full correlation the amended design explicitly calls the score a **common-mode projected surrogate**, since individual mean shifts can be off support. Training samples correlation per window even after a nominal probe winner is selected. Credit outcome horizon is **600 s after sampled start**. <!-- Source: E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_DESIGN.md:10-60; E:/agent-work/c4-sumocf/tools/sumocf/evidence/CANARY_V2.json. -->
+- **Scope:** Native lanes, original safety executor; not a new lane policy, from-scratch actor, parameter-ES learner, or already validated WM-trained successor. Zero-update parity and CPU sampled-score checks are reported passing. [[PENDING: final trained implementation/config/checkpoint hashes and executed objective receipt / S-SUMOCF]]. <!-- Sources: E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_RUN.md; E:/agent-work/c4-sumocf/tools/sumocf/evidence/CANARY_V2.json. -->
 
 ### L-SNR — Probe selection has established a usable cooperation signal
 - **Evidence:** `E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_DESIGN.md`, SNR gate; `E:/agent-work/c4-coopmeasure/AUDIT_DESIGN.md`, WAIT_SUMOCF.
@@ -77,6 +78,7 @@ Status vocabulary follows the existing checklist but uses the requested three la
 - **Evidence needed:** complete paired team-delay and physical-vector dev exports, checkpoint-selection history and frozen candidate identity.
 - **Status: PENDING.** [[PENDING: learned−MAPPO and learned−CTRL0 fleet+source cost CIs, later-clock ranking, subgroup and safety outcomes / S-COOPEVAL]]. Development selection is exploratory; a fresh fixed confirmation and training-seed replication remain separate gaps.
 - **Contract issue:** current harness lists **120/300/600 s**; amended design requires **600/900 s after control start**. No later-clock value can be extrapolated from the older loader. <!-- Sources: E:/agent-work/c4-coopeval/tools/coopeval/__init__.py:13; E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_DESIGN.md:88-93. -->
+- **Latest amendment:** planned **six** dev checks now include a **three-world**, geometrically selected **pair** interaction diagnostic, rotating high-demand cells, alongside the full efficacy panel. That diagnostic uses exploration-background credit and differs from selected training groups and native-release audit groups. Rotating worlds do not supply a matched policy-level C_G learning curve. <!-- Source: E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_DESIGN.md:95-107. -->
 
 ### L-OLDWIN — The older frozen imagined policy already beat MAPPO
 - **Evidence:** `E:/research-dense/docs/paper_results/E3FINAL_A.md`.
@@ -90,7 +92,7 @@ Status vocabulary follows the existing checklist but uses the requested three la
 
 ### L-TRACK3 — Track 3 learned an improvement
 - **Evidence:** `E:/agent-work/c4-sumoes/docs/paper_results/SUMOES_RUN.md`.
-- **Status: CONTRADICTED — historical CTRL0-base search; PENDING for MAPPO-base learning.** Historical final head is zero with no accepted update. Later Track 3B passed zero-head MAPPO canary but stopped for a logging failure before panel baseline/updates. Screen-only rejections are not additional measured panel costs.
+- **Status: CONTRADICTED — historical CTRL0-base search; PENDING for MAPPO-base learning.** Historical final head is zero with no accepted update. Track 3B's post-canary logging stop was repaired and explicitly superseded by continuation: its MAPPO-base panel baseline is complete and its first update is in progress. No completed learned-improvement result has landed. Screen-only rejections are not additional measured panel costs. <!-- Source: E:/agent-work/c4-sumoes/docs/paper_results/SUMOES_RUN.md:1-9,94-127. -->
 
 ### L-CREDIT — A prior cooperation-loss ablation proved causal benefit
 - **Evidence:** `E:/research-dense/docs/paper/CLAIM_EVIDENCE_CHECKLIST.md`, E5-CREDIT (secondary report pointer).

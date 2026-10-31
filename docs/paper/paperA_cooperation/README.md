@@ -8,11 +8,12 @@ This is an evidence-linked drafting package. Start with `OUTLINE.md`, resolve cl
 
 ## Current scientific boundary
 
-- The interaction estimand is defined and a historical exact-branch implementation has completed. The new speed-only controller audit and warm-started counterfactual learner have no completed local outcome report at initial inspection. Their efficacy is pending.
+- The interaction estimand is defined and a historical exact-branch implementation has completed. The new speed-only audit and learner now have passing mechanics canaries; their full-panel cooperation/efficacy results remain pending. The audit waits for the learner's measured SNR selection table.
 - WM-S is a candidate deployable substitute for the expensive oracle. A historical direction panel supports a bounded horizon, but the corrected native-lane contract is NOT QUALIFIED. Avoid an unconditional deployment or short-horizon accuracy claim.
 - Keep native release, the forced-command CTRL0 adapter, lane-on historical MAPPO, and the speed-only MAPPO export distinct.
 
 <!-- Sources: E:/agent-work/c4-coopmeasure/AUDIT_DESIGN.md; E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_DESIGN.md (binding amendment); E:/research-dense/docs/paper_results/COOPMEAS2.md; E:/agent-work/c4-wmrequal3/docs/paper_results/WMREQUAL3.md; E:/research-dense/docs/paper_results/E2_direction_horizon.csv. -->
+<!-- Refresh sources: E:/agent-work/c4-coopmeasure/docs/paper_results/COOPAUDIT.md; E:/agent-work/c4-sumocf/tools/sumocf/evidence/CANARY_V2.json. -->
 
 ## Package conventions
 

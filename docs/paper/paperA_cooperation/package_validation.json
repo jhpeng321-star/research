@@ -1,0 +1,59 @@
+{
+  "status": "PASS",
+  "required_documents": [
+    "README.md",
+    "OUTLINE.md",
+    "CLAIMS.md",
+    "FIGURES.md",
+    "RELATED_WORK.md",
+    "THREATS.md",
+    "EVIDENCE_SOURCES.md",
+    "REFRESH.md",
+    "refs.bib",
+    "reference_verification.csv"
+  ],
+  "verified_bibliography_entries": 16,
+  "controller_contract_rows": 9,
+  "git_index_byte_checks": [
+    "inputs/COOPMEAS2.csv",
+    "inputs/E2_direction_horizon.csv",
+    "inputs/E3FINAL_A.csv",
+    "inputs/WMREQUAL3_projection.json",
+    "figures/F1_exact_replay_protocol.png",
+    "figures/F1_exact_replay_protocol.pdf",
+    "figures/F1_exact_replay_protocol.csv",
+    "figures/F2H_historical_cooperation.png",
+    "figures/F2H_historical_cooperation.pdf",
+    "figures/F2H_historical_cooperation.csv",
+    "figures/F4_surrogate_reliability.png",
+    "figures/F4_surrogate_reliability.pdf",
+    "figures/F4_surrogate_reliability.csv",
+    "figures/F3H_historical_policy_failure.png",
+    "figures/F3H_historical_policy_failure.pdf",
+    "figures/F3H_historical_policy_failure.csv"
+  ],
+  "pending_insertions": {
+    "README.md": 1,
+    "OUTLINE.md": 13,
+    "CLAIMS.md": 15,
+    "FIGURES.md": 12,
+    "RELATED_WORK.md": 3,
+    "THREATS.md": 14,
+    "EVIDENCE_SOURCES.md": 4,
+    "REFRESH.md": 9
+  },
+  "scope": "local links, provenance structure, bibliography identity coverage, CSV schema, plotted source values and hashes",
+  "limitations": "Not a scientific efficacy check, exhaustive numerical prose proof, full BibTeX compile, or IEEE pagination check",
+  "document_sha256": {
+    "README.md": "09d85f4219b7a03310777de432b664e047b3b75b6bcb50078400c62a48bd95f1",
+    "OUTLINE.md": "65c9a006b70376c08e22332d2dc30bbf7547a747b1437df1319f8fc7753c5568",
+    "CLAIMS.md": "9e517b532a6abcfe5f52daf3acc9647dfd9a2eeeeed94970fbd8e0e1e3c4504c",
+    "FIGURES.md": "e3e87191c9e2452473c1e0a5b53bebfedc3328afecc4250e6c0ad89253561385",
+    "RELATED_WORK.md": "83c24909062b3a285a2455ee05eabf6c99f76be459e95acf658a71e24803fb09",
+    "THREATS.md": "06e0f8c7baf8c328ad78fb6b88ff1121d449adc20d60e3eaf03ae75c130ca911",
+    "EVIDENCE_SOURCES.md": "02909875a27faf5c174bb0753107b72bb2b6cb17a7512d848fc1dede1324c5e5",
+    "REFRESH.md": "6b13c7d816097d378f06fcd56bf9e5afce0307dfe8c5dae8965e50884014d39b",
+    "refs.bib": "2401075b868a49e8b783b12dcdee5a07f137e70eb716bce54ea06f5f0b31ecbc",
+    "reference_verification.csv": "cdb4b1409d2850cb965e5d2b94440fc0a708498a3809894dd61ebd5f05e88cab"
+  }
+}

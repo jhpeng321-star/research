@@ -1,0 +1,4 @@
+# Snapshot and generated-artifact hashes refer to exact bytes on every platform.
+inputs/** -text -diff
+figures/** -text
+source_snapshots/** -text -diff
