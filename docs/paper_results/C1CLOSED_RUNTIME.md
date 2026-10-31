@@ -40,11 +40,14 @@ Operational supplement, not an efficacy result. Frozen primary model, K8,
   receipts: `tools/c1closed/evidence/EXPAND_*.json`; code `tools/c1closed/expand*.py`.
 - `prefetch.py` can bulk-copy immutable own output/receipt files into the frozen
   sync cache with per-file/archive hashes and safe member validation. One128-file
-  receipt batch verified; a separate one-off200-file transfer is running. It
+  receipt batch and separate one-off200-file transfer both verified. It
   performs no inference/analysis/finalization and cannot change the complete gate.
 - Latest live receipt:157/480 unique tasks complete, both expansion runners and
   sole collector/bridge live, no failed expansion tasks. Sampled completed-task
   owned peaks3750MiB (gpuA) /7316MiB (gpuR), below the respective byte budgets.
+- Cached partial panel validates129 tasks against frozen model/source/initial-state
+  bindings and all200 recorded label sets. Remaining351 cache tasks block scoring;
+  this identity check is not a partial C1 estimate. `CACHE_VALIDATED.json` records it.
 
 ## Separate reference slot
 S-C1FLOOR now supplies an approved native-only tiny-speed-pulse sensitivity on

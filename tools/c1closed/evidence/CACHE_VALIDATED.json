@@ -1,0 +1,18 @@
+{
+ "status": "PASS_TRANSPORT_AND_PARTIAL_IDENTITY_CHECK_ONLY",
+ "task": "S-C1CLOSED",
+ "copy_batches": [128, 200],
+ "new_immutable_files_cached": 328,
+ "second_archive_bytes": 18530333,
+ "copy_launch_receipt": "PREFETCH_1793447329053186100_LAUNCH.json",
+ "copy_completion_log": "PREFETCH_1793447329053186100.log",
+ "copy_verification": "archive SHA256 and each exact immutable member SHA256 checked before caching; no inference or scoring",
+ "validation_command": "python -B tools/c1closed/analyze.py --validate",
+ "validation_output": {
+  "validated_tasks": 129,
+  "missing": 351,
+  "label_arms": 200
+ },
+ "scientific_verdict": "PENDING_FULL_480_TASK_PANEL",
+ "finalizer": "original single watch.py collector; frozen sources unchanged"
+}
