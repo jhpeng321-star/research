@@ -24,10 +24,17 @@ counts fail closed. CPU53PASS/19.10s includes unchanged seeded pairing/forecast
 regressions, conditioning/replay/source-hash distinction and no global RNG.
 Sampling law/scale unchanged; source receipts are additive. No jobs dispatched.
 
-Next diagnostic frozen before computation:
-`docs/paper_results/RBUNC_ARRIVAL_PREFIX_DESIGN.md`. Existing FIT32 entrance bins
-only: causal0–150s predicts150–300s; exact Gamma–Poisson versus same-mean Poisson
-isolates demand-rate uncertainty. No physical spread adjustment or new rollout.
+NEW causal arrival-prefix diagnostic COMPLETE: frozen design
+`docs/paper_results/RBUNC_ARRIVAL_PREFIX_DESIGN.md`, receipt
+`rbunc/arrival_prefix_v1.json`. Existing FIT32 bins only:0–150s predicts150–300s.
+Gamma–Poisson versus SAME-MEAN Poisson improves average NLL−0.3137
+[−0.5846,−0.0732]; CRPS−0.1957 [−0.4242,+0.0132]counts (unresolved).
+90%interval coverage85.94% vs73.44%, discrete nominal91.24%/91.57%; not full
+calibration. Source-supported estimation uncertainty matters; no extra physical
+noise or rate-spread inflation adopted. Source/family reuse makes this FIT-only.
+cpuQ single nice19CPU command, load18.85/32, existing SciPy;3numerical testsPASS
+/1.75s and analysisrc0, terminal retained, no live worker. Local SciPy absent;
+offline diagnostic test skips explicitly there, production suite53PASS retained.
 
 Latest preferred32/K8/H120 legacy-reference result: within-K teamSD748.35
 [668.54,828.51] vs real across-world4200.50veh-s; source ablations on969400:

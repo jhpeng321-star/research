@@ -1,0 +1,31 @@
+{
+  "schema": "rbunc_arrival_prefix_cpu/1",
+  "date_local": "2026-11-01",
+  "local_production_suite": {
+    "command": "py -3.13 -B -m pytest -q -p no:cacheprovider tests/unit/test_fitted_hidden.py tests/unit/test_arrival_fit.py tests/unit/test_hidden_state_futures.py tests/unit/test_c4_futures.py tests/unit/test_arrival_prefix.py",
+    "passed": 53,
+    "skipped_modules": 1,
+    "elapsed_s": 14.73,
+    "skip_reason": "Local SciPy absent; optional offline analysis only"
+  },
+  "remote_numerical_suite": {
+    "code": "cpuQ:/home/ubuntu/rbunc20261031/code/97418e18f670",
+    "test_sha256": "7dd3af79a09bb78905c6900d7f5c66ad21d74ac7f82afedf49d78bf7e27c8535",
+    "passed": 3,
+    "elapsed_s": 1.74,
+    "rc": 0,
+    "checks": ["independent Gamma-Poisson rate quadrature", "total predictive variance", "same-mean Poisson contrast", "CRPS pairwise-expectation identity", "exact discrete interval mass", "zero-prefix prediction", "impossible plug-in MLE reporting"]
+  },
+  "analysis": {
+    "result": "arrival_prefix_v1.json",
+    "original_code": "cpuQ:/home/ubuntu/rbunc20261031/code/64ccb1414c56",
+    "rc": 0,
+    "original_numerical_tests_passed": 3,
+    "only_analysis_execution": true,
+    "source": "Existing observed_arrivals.json; native FIT 969400-969431 only"
+  },
+  "new_venv_or_install": false,
+  "cpu_only": true,
+  "sampling_law_or_scale_changed": false,
+  "initial_local_collection_error": "SciPy unavailable locally. Used existing cpuQ SciPy environment, then made the optional offline test guard explicit. Final numerical test verified remotely without repeating the analysis."
+}

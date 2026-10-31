@@ -169,3 +169,11 @@ futures = plan_hidden_state_futures(
   docs/paper_results/rbunc/fitted_source_probe.json --out NEW_SUMMARY.json`.
   Exact source/input equality is checked before reporting paired CRPS changes.
   Read `RBUNC_PREFERRED.md`; do not redispatch completed `preferred_v1`.
+- Causal arrival count check: `arrival_prefix.py --out NEW.json` uses only the
+  existing FIT32 counter artifact,0–150s→150–300s. Requires SciPy (available in
+  cpuQ's existing environment). `arrival_prefix_ops.py run` is exclusively claimed
+  and already COMPLETE; use `fetch` only into an absent local result. Receipt:
+  `rbunc/arrival_prefix_v1.json`. Exact Gamma–Poisson improves NLL against a
+  same-mean Poisson; CRPS change remains unresolved. This does not tune a physical
+  spread or independently qualify traffic predictions. Three numerical tests
+  passed on cpuQ; local tests skip this optional offline dependency when absent.
