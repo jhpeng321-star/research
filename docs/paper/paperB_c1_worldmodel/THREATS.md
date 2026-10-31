@@ -5,7 +5,7 @@ Each response is an argument the current evidence permits, not polished rebuttal
 ## “The headline says closed loop; the strongest wall result replays the controller.”
 
 - **Threat:** realized CAV motion supplies information unavailable to an autonomous feedback forecast. BB-id does not even share that teacher contract.
-- **Answer:** separate historical response prediction from feedback transfer and offline selection. Historical superiority is confined to its declared contract; full-feedback superiority remains `[[PENDING: eligible comparison / S-C1CLOSED]]`. No relabeling of teacher-forced CAVs as executable wall control. See C1-WALL/C1-CLOSED.
+- **Answer:** separate historical response prediction from feedback transfer and offline selection. Completed C1CLOSED now supplies autonomous common-plant PI/MAPPO evidence, but its principal-clock paired endpoint contrasts are inconclusive. Earliest clocks favor BB; lower aggregate error does not imply useful controller ranking. Wall executor restoration remains pending. No relabeling of teacher-forced CAVs as executable wall control. See C1-WALL/C1-CLOSED.
 
 ## “Is the excluded controller actually absent from training?”
 
@@ -65,7 +65,7 @@ Each response is an argument the current evidence permits, not polished rebuttal
 ## “Fewer lane changes or better local losses prove a fix.”
 
 - **Threat:** bundled changes, saturated/indirect gradients, hard events and objective/horizon mismatch undermine mechanistic attribution.
-- **Answer:** keep failed pilot/feasibility outcomes and version history. Local loss, finite gradients, reduced lane counts or smaller source error do not imply correct paired J. Evidence WM-REPAIR and WMFIX_PRIOR. No new experiment is proposed as a completed answer.
+- **Answer:** keep failed pilot/feasibility outcomes and version history. Expanded-data repair stopped at its failed early screen; later checkpoints were not scored, so the original full gate is unmeasured. Local loss, finite gradients, reduced lane counts or smaller source error do not imply correct paired J. Evidence WM-REPAIR and WMFIX_PRIOR.
 
 ## “Can calibration rescue the verdict?”
 
@@ -75,22 +75,37 @@ Each response is an argument the current evidence permits, not polished rebuttal
 ## “Is long-horizon prediction impossible because SUMO is chaotic?”
 
 - **Threat:** irreducibility could be used as an unfounded excuse for model error; median endpoint error could hide localized propagation.
-- **Answer:** C1FLOOR's completed tiny-pulse native experiment has near-zero short-window endpoint medians, so it provides no measured floor explaining large WM errors there. Its targets, amplitude, native-only scope, target-ID exclusions and nonzero aggregate delay sensitivity are explicit. RNG-only floor was blocked by restore mismatch. Late empty endpoint cohorts stay unavailable. This does not prove universal determinism, nor license subtracting a floor from WM MAE. C1-FLOOR.
+- **Answer:** C1FLOOR's tiny-pulse experiment provides no measured floor explaining large WM endpoint errors there. Its native-only scope and nonzero aggregate sensitivity are explicit. ENSPROBE later found identical tapes across its configured continuation seeds, holding driver population/arrivals fixed; that does not measure hidden-state uncertainty, prove real-road determinism, or repair the earlier un-restored-continuation mismatch. Late empty cohorts stay unavailable. Never subtract these references from WM MAE. C1-FLOOR/WM-RNG.
 
 ## “Does each controller winning somewhere establish that switching works?”
 
 - **Threat:** fixed-world winners are not same-moment opportunities, and an oracle opportunity is not predictable advantage. Small best-to-second margins may be practically negligible.
-- **Answer:** present recorded scenario diversity and full-rerun same-state headroom separately. Preserve ties and small margins; native repeats measure replay error, not stochastic uncertainty. Main WM/BB switching regret and episode gains remain `[[PENDING: complete corrected-adapter results / S-C1SWITCH]]`. Selection predicts on-road delay while evaluation includes source cost; entries are OFF and mix dormant. No inferred switching efficacy from winners. C1-SWITCH.
+- **Answer:** present scenario diversity and full-rerun same-state headroom separately. Preserve ties/small margins; native repeats measure replay error, not stochastic uncertainty. The reference switching study stopped incomplete; its authorized low-penetration complete-case analysis does not establish WM−BB superiority or a full-panel null. The wall-inclusive main study and final RL comparators remain pending. Selection predicts road delay while evaluation includes source cost, with entries OFF/dormant mix. C1-SWITCH/C1-SWITCH2.
 
 ## “Do simulation restore and random-key artifacts contaminate the conclusions?”
 
 - **Threat:** saved-state continuation can diverge with identical commands; a held absolute latent changes the intervention; anonymous tensors can still leak detector IDs through the forecast seed.
-- **Answer:** ARTIFACT_CHECK invalidates old contaminated credits and validates full same-seed reruns plus current-mean/common-decoder execution. C1SWITCH same-state headroom uses full reruns and complete prefix/repeat gates. The later detector-ID stochastic-key correction changed a canary decision and triggered STOP; MAIN authorized a corrected continuation, not an efficacy finding. Preserve superseded schedules and require corrected-adapter gates before any final selector claim. Mechanics do not supply a useful cooperation or prediction result. COMPANION-STATUS/C1-SWITCH.
+- **Answer:** ARTIFACT_CHECK invalidates old contaminated credits and validates full reruns plus common-decoder execution. C1SWITCH headroom uses full reruns and prefix/repeat gates. The detector-ID key correction changed a canary pick; corrected-canary/parity/BB-reuse gates subsequently passed before the later budget stop. Preserve superseded schedules and distinguish mechanical validation from efficacy. C1CLOSED's failed exact cross-host parity and prospective numerical acceptance are separately disclosed; ensemble-scale acceptance does not prove identical lane/queue trajectories. COMPANION-STATUS/C1-SWITCH/C1-CLOSED.
 
 ## “Why not replace the microscopic long tail with a queue model or value function?”
 
 - **Threat:** a structural replacement may conserve traffic yet miss intervention-dependent service; a value head may merely reproduce arm means.
-- **Answer:** WMQUEUE's fixed conservative prototype failed its registered paired-effect gate and was killed. This rejects that prototype, not every queue tail. WMVALUE compares short WM plus frozen real-value prediction with endpoint WM and no-WM alternatives; inference is running, so its benefit remains `[[PENDING: complete A–E gate / S-WMVALUE]]`. The stopped SUMO backup supplies no positive teacher or useful deployed cooperation. Keep these as context for controller-judge limits. WM-QUEUE/COMPANION-STATUS.
+- **Answer:** WMQUEUE's fixed prototype failed and was killed. WMVALUE now also FAILS: both short-imagination methods fail necessary no-WM comparator gates, so its long-WM conjunction fails regardless of the missing A estimate. Retain A as NA and the frozen value/data scope. These reject the tested routes, not all queue/value models. The stopped SUMOCF backup remains negative; later exact-planner findings are distinct companion evidence and do not validate a WM. WM-QUEUE/WM-VALUE/COMPANION-STATUS.
+
+## “Point errors are irrelevant if the model gets the traffic distribution right.”
+
+- **Threat:** exact realized outcomes may be unpredictable, but good pooled means or broad future spread can conceal biased action forecasts.
+- **Answer:** WMBREAKDOWN supplies distributional failure too: conditioned climatology is stronger than the WM on the evaluation slice, absolute range coverage is poor, and paired effects can be excessively dispersed. Do not claim all uncertainty is too narrow. Saved cost-only predictions cannot score new-panel imagined event rates/timing; historical rate evidence belongs to a different panel. Cells are sparse and reused, preventing untouched or powered qualification. The proposed distributional gate is not a passed theorem. WM-DISTRIBUTION.
+
+## “Does faithful physics prove a best-achievable information ceiling?”
+
+- **Threat:** observable initialization can lose internal state; a physics prior can improve fields while misjudging controller effects.
+- **Answer:** SUMOCORE retains initialization collision flags, different encoder/ensemble contracts and small cohorts. Its short-clock improvement does not establish a clean ceiling or long-clock action accuracy. WM-PHYS interim is available-case with missing adoption conditions and earlier unverified saved-ID mapping; later direct-motion variants are distinct candidates. Require final identity-bound qualification before changing switching models. WM-PHYS.
+
+## “Is WM-guided switching fairly compared with RL?”
+
+- **Threat:** cadence, wall lifecycle, memory resets, observation budget, source objective, training expenditure and joint action space can favor one selector.
+- **Answer:** C1SWITCH2 registers shared library/cadence/handovers/evaluation panel; evaluation is peer-owned once, with frozen final RL weights. Fleet PPO is the like-for-like primary selector; per-CAV MAPPO has a different joint action space. Disclose road-only WM/BB prediction versus full-team evaluation, both model-data and RL training costs, and independent WM-PHYS adoption. Training progress and complete fixed-controller arms cannot substitute for the pending paired picker result. C1-SWITCH2.
 
 ## “Where is uncertainty calibration or an abstention controller?”
 
@@ -109,7 +124,7 @@ Each response is an argument the current evidence permits, not polished rebuttal
 
 ## Owner submission dependencies
 
-- Essential for the intended closed-loop headline: C1 protocol/exposure and feedback result bindings.
+- Completed current common-plant feedback is available; strict initialization lineage and causal wall feedback remain dependencies for stronger zero-shot/wall wording.
 - Essential for exact wording of trust limits: original direction-panel binding and distinction between covariance share, queue causality and source bookkeeping.
-- Completed negative evidence to retain: calibration transfer failure, killed queue prototype and bounded perturbation reference. Pending updates: complete C1CLOSED, corrected-adapter switching, candidate repair gate and WMVALUE verdict; no partial efficacy promotion.
+- Completed evidence to retain: calibration/value failures, killed queue prototype, repair early-stop partial result, distributional bias, bounded pulse/RNG references and mixed closed-loop results. Reference switching stays partial. Pending updates: main wall-inclusive paired pickers/final RL weights and independent physics-rebuild qualification; no partial efficacy promotion.
 - Formatting: `[[PENDING: final prose, authors, conference requirements, accessible final figure sizing and compiled pagination / owner]]`.

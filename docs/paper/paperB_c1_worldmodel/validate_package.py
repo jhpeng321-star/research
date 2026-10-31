@@ -42,6 +42,66 @@ def main() -> None:
         assert len(blob) == info["bytes"], name
     checks.append("evening source snapshots retain exact producer bytes")
 
+    overnight = json.loads((DATA / "OVERNIGHT_SOURCE_MANIFEST.json").read_text(encoding="utf-8"))
+    for name, info in overnight.items():
+        blob = (DATA / name).read_bytes()
+        assert hashlib.sha256(blob).hexdigest() == info["sha256"], name
+        assert len(blob) == info["bytes"], name
+    checks.append("overnight completed-report/export snapshots retain exact producer bytes")
+
+    fields = ("model", "plant", "arm", "horizon_s", "metric")
+    closed_raw = {tuple(r[k] for k in fields): r for r in csv_rows("closed.source.csv")}
+    closed = csv_rows("closed_loop.csv")
+    assert len(closed) == 28
+    assert len({tuple(r[k] for k in fields) for r in closed}) == 28
+    for row in closed:
+        original = closed_raw[tuple(row[k] for k in fields)]
+        assert all(row[k] == v for k, v in original.items())
+        assert row["model"] == "wm2-minus-bbtraj" and row["plant"] == "common"
+        assert row["arm"] in ("pi", "mappo") and row["metric"] in ("position", "J_ae")
+        if row["metric"] == "position":
+            expected_n = {10:40, 30:40, 60:40, 90:40, 120:33, 180:6 if row["arm"] == "pi" else 5, 300:0}
+            assert int(row["n_worlds"]) == expected_n[int(row["horizon_s"])]
+            if row["horizon_s"] == "300":
+                assert row["status"] == "no_surviving_ids"
+                assert all(row[k] == "" for k in ("estimate", "lo", "hi"))
+            if row["horizon_s"] == "60":
+                assert float(row["lo"]) < 0 < float(row["hi"])
+                assert round(float(row["estimate"]), 2) == (-5.17 if row["arm"] == "pi" else -3.45)
+        else:
+            assert row["n_worlds"] == "40"
+    checks.append("completed feedback rows equal producer CSV; pairing, inconclusive primary contrasts and survivor missingness preserved")
+
+    fields = ("split", "target", "horizon_s", "clock", "arm")
+    distribution_raw = {tuple(r[k] for k in fields): r for r in csv_rows("distribution.source.csv")}
+    distribution = csv_rows("distribution.csv")
+    assert len(distribution) == 6
+    for row in distribution:
+        assert row["split"] == "reserved8" and row["clock"] == "team" and row["arm"] == "pooled"
+        original = distribution_raw[tuple(row[k] for k in fields)]
+        assert all(row[k] == v for k, v in original.items())
+    for target, expected_wm, expected_baseline, key in [
+        ("absolute", [1522,7129,25523], [763,3584,8267], "cell_arm_climatology_crps"),
+        ("effect", [390,2420,6906], [171,968,3286], "climatology_crps")]:
+        selected = sorted([r for r in distribution if r["target"] == target], key=lambda r: int(r["horizon_s"]))
+        assert [round(float(r["wm_crps"])) for r in selected] == expected_wm
+        assert [round(float(r[key])) for r in selected] == expected_baseline
+    late = next(r for r in distribution if r["target"] == "absolute" and r["horizon_s"] == "600")
+    assert float(late["minmax_coverage"]) == .125 and float(late["below_all"]) == .875
+    checks.append("distribution figures preserve separate absolute/effect baseline columns and previously exposed evaluation split")
+
+    value = csv_rows("value_tail.csv")
+    assert len(value) == 12
+    for metric, expected in [
+        ("sign_accuracy", [(47.25,38,56.25),(43.25,35.25,51.5),(58.75,47.75,67.75),(72.25,56,86)]),
+        ("mae", [(8877.72,4590.41,14306.82),(10117.34,5832.41,14984.31),
+                 (4460,3161,6183.67),(3038.93,1725.06,4769.29)])]:
+        assert [tuple(float(r[k]) for k in ("estimate", "lo", "hi")) for r in value if r["metric"] == metric] == expected
+    assert all(not r["method"].startswith("A:") for r in value)
+    value_report = (DATA / "value.source.md").read_text(encoding="utf-8-sig")
+    assert "**VERDICT: FAIL**" in value_report and "| A: WM to900 | NA | NA | NA |" in value_report
+    checks.append("value method cells/CIs transcribed exactly; decisive necessary-condition FAIL retains long-WM A as NA")
+
     pi = csv_rows("pi_diagnosis.csv")
     assert [(int(r["horizon_s"]), float(r["estimate"]), float(r["lo"]), float(r["hi"])) for r in pi] == [
         (60,17.85,3.24,31.27), (120,-47.82,-95.20,-27.75),
@@ -129,12 +189,12 @@ def main() -> None:
     assert all(r["n_states"] == "67" for r in wall)
     checks.append("reported regional/entry/wall cells cross-checked, clock conventions distinct")
 
-    for name in ["direction.csv", "regret.csv", "regret_paired.csv", "regional.csv", "entry.csv", "wall_teacher_forced.csv", "architecture_edges.csv", "pi_diagnosis.csv", "calibration.csv", "switch_headroom.csv"]:
+    for name in ["direction.csv", "regret.csv", "regret_paired.csv", "regional.csv", "entry.csv", "wall_teacher_forced.csv", "architecture_edges.csv", "pi_diagnosis.csv", "calibration.csv", "switch_headroom.csv", "closed_loop.csv", "distribution.csv", "value_tail.csv"]:
         for r in csv_rows(name):
             assert r["source_file"] and r["source_selector"], name
     checks.append("every derived numerical/schematic CSV row has source and selector")
 
-    names = ["fig_direction", "fig_regret", "fig_regional", "fig_entry", "fig_wall_teacher_forced", "fig_architecture", "fig_pi_diagnosis", "fig_calibration", "fig_switch_headroom"]
+    names = ["fig_direction", "fig_regret", "fig_regional", "fig_entry", "fig_wall_teacher_forced", "fig_architecture", "fig_pi_diagnosis", "fig_calibration", "fig_switch_headroom", "fig_closed_loop", "fig_distribution", "fig_value_tail"]
     for name in names:
         with Image.open(FIG / f"{name}.png") as image:
             assert min(image.size) > 400
@@ -174,9 +234,14 @@ def main() -> None:
     for phrase in ["+17.85", "−45.05", "263/1719/6013", "1362", "0.5193", "1.832371", "+508.3"]:
         line = next(line for line in claims.splitlines() if phrase in line)
         assert "<!-- Source" in line, phrase
-    assert "Status: PENDING (registered campaign running)" in claims
+    assert "Status: SUPPORTED for completed scoped comparison; superiority INCONCLUSIVE" in claims
     assert "completed verdict NOT USABLE" in claims
-    checks.append("evening headline figures have adjacent source comments; complete negative calibration and pending feedback stay distinct")
+    for phrase in ["−5.17", "252.1303", "+5.102", "47.25%", "1522/7129/25523", "18/144"]:
+        line = next(line for line in claims.splitlines() if phrase in line)
+        assert "<!-- Source" in line, phrase
+    assert "steps 20/30 were not scored" in claims and "A remains NA" in claims
+    assert "scheduler/budget-selected" in claims and "C1-SWITCH2" in claims
+    checks.append("new source-commented verdicts distinguish complete feedback, partial reference switching, failed value/repair and pending main switching")
 
     refresh = json.loads((ROOT / "SOURCE_REFRESH.json").read_text(encoding="utf-8"))
     assert refresh["sources"]["C1 gap report alternate documented delivery"]["status"] == "PRESENT"
@@ -192,7 +257,8 @@ def main() -> None:
                "scope":"Package/source-selection/artwork QA only; no scientific requalification or typeset-page verification",
                "python":sys.version, "matplotlib":matplotlib.__version__,
                "source_manifest_sha256":hashlib.sha256((DATA/"SOURCE_MANIFEST.json").read_bytes()).hexdigest(),
-               "evening_manifest_sha256":hashlib.sha256((DATA/"EVENING_SOURCE_MANIFEST.json").read_bytes()).hexdigest(),
+                "evening_manifest_sha256":hashlib.sha256((DATA/"EVENING_SOURCE_MANIFEST.json").read_bytes()).hexdigest(),
+                "overnight_manifest_sha256":hashlib.sha256((DATA/"OVERNIGHT_SOURCE_MANIFEST.json").read_bytes()).hexdigest(),
                "figure_count":len(names), "bib_entries":len(keys)}
     (ROOT / "VERIFICATION.json").write_text(json.dumps(receipt,indent=2)+"\n", encoding="utf-8")
     print(json.dumps(receipt,indent=2))

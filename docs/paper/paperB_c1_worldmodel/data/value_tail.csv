@@ -1,0 +1,13 @@
+method,metric,estimate,lo,hi,units,source_file,source_selector
+B: WM60 + V,sign_accuracy,47.25,38.00,56.25,%,E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md,Method table;B: WM60 + V;sign_accuracy
+B: WM60 + V,spearman,-0.08,-0.32,0.21,correlation,E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md,Method table;B: WM60 + V;spearman
+B: WM60 + V,mae,8877.72,4590.41,14306.82,veh-s,E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md,Method table;B: WM60 + V;mae
+C: WM90 + V,sign_accuracy,43.25,35.25,51.50,%,E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md,Method table;C: WM90 + V;sign_accuracy
+C: WM90 + V,spearman,-0.21,-0.40,-0.00,correlation,E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md,Method table;C: WM90 + V;spearman
+C: WM90 + V,mae,10117.34,5832.41,14984.31,veh-s,E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md,Method table;C: WM90 + V;mae
+D: V + present commands,sign_accuracy,58.75,47.75,67.75,%,E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md,Method table;D: V + present commands;sign_accuracy
+D: V + present commands,spearman,0.29,0.09,0.48,correlation,E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md,Method table;D: V + present commands;spearman
+D: V + present commands,mae,4460.00,3161.00,6183.67,veh-s,E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md,Method table;D: V + present commands;mae
+E: FIT arm/time mean,sign_accuracy,72.25,56.00,86.00,%,E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md,Method table;E: FIT arm/time mean;sign_accuracy
+E: FIT arm/time mean,spearman,0.46,0.11,0.72,correlation,E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md,Method table;E: FIT arm/time mean;spearman
+E: FIT arm/time mean,mae,3038.93,1725.06,4769.29,veh-s,E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md,Method table;E: FIT arm/time mean;mae

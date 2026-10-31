@@ -79,6 +79,9 @@ def main() -> None:
     evening_path = ROOT / "data/EVENING_SOURCE_MANIFEST.json"
     if evening_path.is_file():
         manifest.update(json.loads(evening_path.read_text(encoding="utf-8")))
+    overnight_path = ROOT / "data/OVERNIGHT_SOURCE_MANIFEST.json"
+    if overnight_path.is_file():
+        manifest.update(json.loads(overnight_path.read_text(encoding="utf-8")))
     snapshots = {r["source_file"]: r["sha256"] for r in manifest.values()}
     records = {}
     for label, filename in SOURCES.items():

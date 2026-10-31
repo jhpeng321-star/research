@@ -26,18 +26,18 @@ Every delivered figure has a PNG and vector PDF twin. Use the vector version at 
 - **Files:** `figures/fig_architecture.{png,pdf}`; backing edge list `data/architecture_edges.csv`.
 - **Source:** `E:/research-dense/docs/WM_STATE_PLAN.md`, model/addition; `E:/research-dense/docs/WM_CHANGE_LOG.md`, settings and lane history; local `src/wms/model/spec.py`.
 - **Generating command:** common render command above, `architecture()`.
-- **Status:** GENERATED; family-level, not a final-checkpoint architecture receipt. `[[PENDING: final checkpoint-specific component labels / S-C1CLOSED]]`.
+- **Status:** GENERATED; family-level. Current common-plant result binding is now delivered in C1CLOSED.md/analysis receipt; historical and later family labels remain essential. This schematic does not depict the separate evolving WM-PHYS candidate.
 - **Caption claim:** “WM-S separates executable CAV control, evaluated on predicted observations, from learned human dynamics and road/source accounting. Settings, residual gate and lane/merge machinery are versioned: historical residual-only outputs did not wire learned settings into the physics; later hybrid models do.”
 - **Placement:** method; full-width schematic only if its small text remains readable. Do not add oracle future lanes or hidden types to the online input arrows.
 
-### Feedback comparison / controller-selection evidence — selection panel delivered, feedback comparison pending
+### Feedback comparison / controller-selection evidence — separate delivered protocols
 
 - **Purpose:** connect prediction to offline controller-choice regret and constant-controller references.
 - **Files:** `figures/fig_regret.{png,pdf}`, `data/regret.csv`, `data/regret_paired.csv`; complete source export `data/fair.source.csv`.
 - **Selectors:** `decisions/B_history_strict/{wm13e,bbtraj}/60/team`; oracle regret plus WM-row constant-selector regrets.
 - **Source:** `E:/research-dense/docs/paper_results/E1_C1_fair.csv` and `.md`, strict-history team rows.
 - **Generating command:** common render command, `extract()` and regret block in `render()`.
-- **Status:** GENERATED exploratory selection panel including the current export's paired numerical contrast, now independently reconstructed in C1_GAPS with world resampling. `[[PENDING: full-feedback unseen-controller WM/BB comparison and exact team population/exposure binding / S-C1CLOSED + S-C1GAP]]`. No blank or invented feedback panel is emitted.
+- **Status:** GENERATED exploratory selection panel including the source's paired contrast, independently reconstructed in C1_GAPS. Exact historical team-cost/exposure binding remains `[[PENDING: original implementation/lineage / S-C1GAP + MAIN]]`. Completed autonomous feedback has a separate new panel below, not a relabeling of this one.
 - **Caption claim:** “Exploratory strict-history offline team-cost selection at **60 s**, **32 starts / 21 worlds**. WM-13E regret **13.64 [5.382,26.2] veh-s**, BB-traj **22.05 [10.05,37.86]**; constant selectors use the same exported metric. Upper bars are source marginal **95%** CIs. Lower panel separately reproduces the source's paired **WM-minus-BB regret −8.412 [−19.23,−0.3071] veh-s**; it is not inferred from the marginal bars.” <!-- Sources: E:/research-dense/docs/paper_results/E1_C1_fair.md:159-199,2100; CI level E:/research-dense/docs/paper/IEEE_IV_2027_DRAFT.md:107,133. -->
 - **Placement:** prediction/decision results. Do not relabel this as a policy-training result or deployed receding-horizon selector evaluation.
 
@@ -78,18 +78,18 @@ Every delivered figure has a PNG and vector PDF twin. Use the vector version at 
 
 - **Purpose:** prevent checkpoint, feedback, and population mixing across evidence panels.
 - **Columns:** checkpoint hash; corpus and controller exposure; evaluation controller/reference; observations/history; CAV plant; original/entrant lane ownership; entry/exit/source clock; metric/population; uncertainty unit; claim status.
-- **Rows:** historical wall; strict-history team selection; frozen direction export; corrected WM2 recorded-command qualification; corrected-clock zero-head entry path; completed feedback comparison when available.
+- **Rows:** historical wall; strict-history team selection; frozen direction export; corrected WM2 recorded-command qualification; corrected-clock zero-head entry path; completed C1CLOSED common-plant feedback; partial reference switching; pending wall-inclusive main switching.
 - **Data sources:** `CLAIMS.md` source pointers and source manifest; insert only receipt-supported cells.
-- **Generating command:** no final table generator until `[[PENDING: C1/exposure/direction bindings / S-C1GAP + S-C1CLOSED]]`; owner may typeset the scoped source facts now with literal PENDING cells.
+- **Generating command:** owner typesets receipt-supported protocol cells; final complete table awaits `[[PENDING: remaining initialization/exposure/direction bindings / S-C1GAP + MAIN]]`. Completed C1CLOSED cells can be filled from its report/CSV/analysis receipt now.
 - **Status:** SPECIFIED / PENDING final bindings. No synthetic CSV of guessed bindings.
 
 ### Final feedback comparison table
 
 - **Purpose:** the empirical headline: structured versus comparable black-box errors/effects under executable excluded-controller feedback.
 - **Columns:** controller; horizon; eligible checkpoint; common worlds/starts; endpoint error; paired WM–BB difference/CI; effect sign/magnitude; oracle regret; execution caveat.
-- **Source:** `[[PENDING: C1CLOSED.md and corresponding result CSV / S-C1CLOSED]]`.
-- **Generating command:** `[[PENDING: agent's existing CSV export command; rendering only after receipt arrives / S-C1CLOSED]]`.
-- **Status:** PENDING. No historical teacher-forced number is promoted to this table.
+- **Source:** `E:/agent-work/c4-c1closed/docs/paper_results/C1CLOSED.md`, `C1CLOSED_bootstrap.csv`, `C1CLOSED_ANALYSIS.json`; frozen package source/selected CSVs described below.
+- **Generating command:** overnight renderer below selects existing estimates and CIs only. Producer analysis command in its worktree is `python -B tools/c1closed/analyze.py`; the package does not rerun it.
+- **Status:** COMPLETE scoped comparison; final table can use `data/closed_loop.csv`. Principal-clock endpoint superiority is INCONCLUSIVE, earliest contrasts favor BB, and wall feedback stays unavailable. Keep cohort/plant caveats and current-model direction/regret alongside relative delay gains.
 
 ### Calibration / negative-result row — complete negative verdict
 
@@ -133,7 +133,7 @@ Subsequent reproduction omits `--refresh-inputs` and uses frozen package snapsho
 - **Delivered files:** `figures/fig_switch_headroom.{png,pdf}`, `data/switch_headroom.csv`; original full backing exports `data/recorded_winners.source.csv`, `data/step0b.source.csv`. The agent's existing richer figure is `E:/agent-work/c4-c1switch/docs/paper_results/c1switch/recorded_winner_by_condition.png` (vector twin beside it).
 - **Sources:** `E:/agent-work/c4-c1switch/docs/paper_results/C1SWITCH_WINNERS.md` and the two named CSVs in its `c1switch/` directory. Original condition-figure generating command is `python -m tools.c1switch.winners` in that worktree (analysis only); the bounded evening renderer creates the compact package panel from its existing exports.
 - **Caption claim:** “Recorded **600 s** unique wins across **90 worlds**: native **22**, CTRL0 **17**, MAPPO **19**, PI **29**, CIRCLES **3**. Fresh full-rerun **16-state** headroom: at **60 s** native/CTRL0/MAPPO unique wins **2/9/3**, plus **two ties**; at **90 s**, native/CTRL0/MAPPO/PI/CIRCLES **2/7/1/3/1**, plus **two ties**. Median best-to-second margins **1.832371 / 6.853775 veh-s**, including ties. Separate panels count worlds versus states. These are oracle opportunities, not demonstrated WM/BB switching gains.” <!-- Source: E:/agent-work/c4-c1switch/docs/paper_results/C1SWITCH_WINNERS.md:5-13,31-39. -->
-- **Status:** opportunity reports/CSVs complete; main efficacy `[[PENDING: corrected-adapter complete regret/episode results / S-C1SWITCH]]`. Current design/registration supersedes report-header main-status language. The anonymity-key retention STOP and later authorized corrected continuation are validation history, not negative or positive selector efficacy.
+- **Status:** opportunity reports/CSVs complete. Reference main stopped incomplete; its authorized partial analysis is summarized in C1-SWITCH and retained as `data/switch_partial.source.md`, without an efficacy headline figure. Main wall-inclusive WM-versus-RL evidence is `[[PENDING: complete paired picker results / S-C1SWITCH2 + selector agents]]`. Opportunity artwork remains valid; neither winner panel implies predictor benefit.
 - **Placement:** optional supporting plot; not an additional main claim if the final selector campaign stays incomplete.
 
 ### Perturbation reference — preserve the exported missingness
@@ -143,6 +143,51 @@ Subsequent reproduction omits `--refresh-inputs` and uses frozen package snapsho
 - **Generating command:** evening renderer snapshots the existing CSV only; agent source export is already complete. No paper-agent floor experiment or subtraction from WM error.
 - **Caption/text claim:** “Two **+0.01 m/s** one-tick HDV pulses per native world, **six worlds**: original-HDV world-median endpoint errors **zero through 120 s**; no joint survivors at **300 s**, so endpoint cells unavailable, not zero. Aggregate delay sensitivity is nonzero. This is a limited pulse response, not an RNG floor.” <!-- Source: E:/agent-work/c4-c1floor/docs/paper_results/C1FLOOR.md:7-22. -->
 - **Status:** source COMPLETE; supporting CSV, no combined WM/floor curve because population/arm/estimands differ. RNG-only floor remains unavailable.
+
+## Overnight completed-result artwork
+
+```powershell
+python -B "docs/paper/paperB_c1_worldmodel/build_overnight_figures.py" --refresh-inputs
+```
+
+Omit `--refresh-inputs` to reproduce from local frozen bytes. Exact safe allowlist and
+hashes: `build_overnight_figures.py:INPUTS`, `data/OVERNIGHT_SOURCE_MANIFEST.json`.
+Selection/transcription only: no experiment, model execution, fit or resampling.
+**Status: GENERATED and visually inspected.** Historical/evening artwork is preserved.
+
+### Completed autonomous common-plant contrast
+
+- **Purpose:** separate paired endpoint-error evidence from relative aggregate-delay gains and controller-judge trust.
+- **Files:** `figures/fig_closed_loop.{png,pdf}`, backing `data/closed_loop.csv`; exact producer bootstrap CSV `data/closed.source.csv`, report/runtime snapshots beside it.
+- **Source:** `E:/agent-work/c4-c1closed/docs/paper_results/C1CLOSED_bootstrap.csv`; select `wm2-minus-bbtraj/common`, PI/MAPPO, `position` and `J_ae`. Every source clock, including missing/sparse endpoint cells, stays in the backing CSV.
+- **Generating command:** overnight renderer, `extract()`/`render()`; no CI reconstruction from marginal summaries.
+- **Caption claim:** “Completed autonomous common-plant comparison, **40 worlds**, genuine **60 s** history. Paired WM2−BB-traj endpoint error at **60 s**: PI **−5.17 [−18.02,+7.09] m**, MAPPO **−3.45 [−13.42,+4.58] m**; neither excludes zero. Earliest endpoints favor BB. At **120 s**, endpoint cohort falls to **33 worlds**; sparse **180 s** and unavailable **300 s** endpoints stay in the CSV. Aggregate J-error contrasts retain **40 worlds**, with relative WM gains at longer clocks; these do not establish accurate effects/ranking or low absolute error. Shading reproduces producer **95% whole-world-bootstrap intervals** at tested clocks, not simultaneous functional bands.” <!-- Source: E:/agent-work/c4-c1closed/docs/paper_results/C1CLOSED.md:4-12,14-30,35-48; C1CLOSED_bootstrap.csv,wm2-minus-bbtraj/common/pi,mappo/position,J_ae. -->
+- **Scope/placement:** current autonomous results, separate from teacher-forced wall and E1 selector. Approximate common CAV plant, survivor-conditioned endpoints, differing baseline corpus, provisional exclusion lineage and failed exact cross-host parity remain visible.
+
+### Distributional long-tail diagnosis
+
+- **Purpose:** test the claim that only realized-path error is poor while traffic distributions remain useful.
+- **Files:** `figures/fig_distribution.{png,pdf}`, backing `data/distribution.csv`, exact `data/distribution.source.csv` and report snapshot.
+- **Source/selectors:** `E:/agent-work/c4-wmbreakdown/docs/paper_results/wmbreakdown/distribution_summary.csv`; `reserved8`, `team`, `pooled`, targets `absolute/effect`. Absolute comparator is `cell_arm_climatology_crps`; effect comparator is `climatology_crps`. These are explicitly different baseline columns.
+- **Generating command:** overnight renderer; all selected source columns/CIs retained in backing CSV. No fabricated marginal bars or inferred significance from displayed columns.
+- **Caption claim:** “Separately reported **eight-world** evaluation slice, previously used by calibration. At **120/300/600 s**, absolute team-delay CRPS WM **1522/7129/25523**, cell×arm climatology **763/3584/8267 veh-s**. Arm−CTRL0 effect CRPS WM **390/2420/6906**, paired-effect climatology **171/968/3286**. At **600 s**, absolute K8 range coverage **12.5%**, real below all futures **87.5%**. Baselines use development outcomes only; effect dispersion can be excessive even when absolute futures miss real delay. Cost-only imagined futures do not supply new-panel event-rate/timing tests.” <!-- Source: E:/agent-work/c4-wmbreakdown/docs/paper_results/WMBREAKDOWN.md:6-10,23-30; distribution_summary.csv,reserved8/team/pooled/absolute,effect. -->
+- **Placement:** optional reliability panel or compact source-bound sentence under page pressure; proposed future qualification gate is not a measured pass.
+
+### Short imagination plus value — complete negative gate
+
+- **Purpose:** show the failure of a real-value tail to turn short-range WM predictions into long-run controller credit.
+- **Files:** `figures/fig_value_tail.{png,pdf}`, `data/value_tail.csv`, `data/value.source.md`.
+- **Source:** `E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md`, B/C/D/E method table; gate uses paired contrast table, not overlap of these marginal CIs.
+- **Generating command:** overnight renderer report transcription. No missing A row is manufactured.
+- **Caption claim:** “Frozen test on **eight reserved FIT worlds / 400 pairs**: WM60+V sign **47.25%**, MAE **8877.72 veh-s**; WM90+V **43.25% / 10117.34**; V+commands **58.75% / 4460.00**; arm/time mean **72.25% / 3038.93**. Source **95% world-bootstrap CIs** shown. Both short methods fail necessary sign-and-MAE improvement against each no-WM comparator; the full conjunction FAILS regardless of unmeasured long-WM A. Remaining fleet+source cost to the fixed absolute endpoint is not a short-window cost.” <!-- Source: E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md:4-28,33-38. -->
+- **Placement:** supporting negative-result artwork, or compact text; it is not evidence for a validated policy plug-in.
+
+### Main wall-inclusive WM-versus-RL switching
+
+- **Purpose:** the requested controller-choice comparison with the primary fleet-PPO baseline and secondary per-CAV MAPPO selector.
+- **Planned columns/panels:** full-team episode cost/paired differences; decision regret; each model's training/data/compute budget; library/cadence/plant/handovers; safety; complete coverage; optional independently qualified model version.
+- **Sources:** `E:/agent-work/c4-c1switch2/docs/paper_results/C1SWITCH2_DESIGN.md`, `HANDOFF.md`, eventual complete identity-bound outputs and final selector receipts.
+- **Generating command/status:** `[[PENDING: completed paired exports and producer analysis/render command / S-C1SWITCH2 + S-SELMAPPO + S-SELMAPPO2]]`. Existing jobs/queue/observers already own execution; do not dispatch from this package. No partial main efficacy figure.
 
 ## Visual QA
 
