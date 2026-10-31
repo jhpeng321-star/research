@@ -158,9 +158,60 @@ print(json.dumps(dict(rows=rows,hashes=hashes)))
     print(json.dumps(dict(rows=len(rows), worlds=90, new_sim_s=0, source_files=len(hashes))))
 
 
+def cpu():
+    result = ssh('gpuR', f'''import contextlib, io, json, os, sys
+os.nice(19); os.environ['CUDA_VISIBLE_DEVICES']=''
+os.environ['PATH']='/root/miniconda3/bin:'+os.environ['PATH']
+sys.path.insert(0,{ROOT!r}+'/pytools')
+from tools.c1switch.sumo import setup
+setup()
+import pytest
+log=io.StringIO()
+with contextlib.redirect_stdout(log), contextlib.redirect_stderr(log):
+ code=pytest.main(['-q',{ROOT!r}+'/pytools/tests/test_c1switch.py'])
+print(json.dumps(dict(returncode=code,output=log.getvalue())))
+''')
+    write(EVIDENCE/'CPU_REMOTE.json', result)
+    print(json.dumps(result))
+
+
+def canary():
+    result = ssh('gpuR', f'''import json, os, subprocess, sys, time
+from pathlib import Path
+root=Path({ROOT!r}); assert root.is_dir()
+assert not (root/'CANARY_DISPATCH.json').exists()
+assert not (root/'STOP').exists()
+assert os.getloadavg()[0] <= 20, 'yield to priority track'
+env=dict(os.environ,CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',PATH='/root/miniconda3/bin:'+os.environ['PATH'])
+with (root/'canary.log').open('x') as log:
+ proc=subprocess.Popen([sys.executable,'-B','-u','-m','tools.c1switch.runner','canary'],cwd=root/'pytools',env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,preexec_fn=lambda:os.nice(19))
+ row=dict(pid=proc.pid,unix=time.time(),mode='canary',max_sim_s=480)
+ (root/'CANARY_DISPATCH.json').write_text(json.dumps(row,indent=2))
+print(json.dumps(row))
+''')
+    write(EVIDENCE/'CANARY_DISPATCH.json', result)
+    print(json.dumps(result))
+
+
+def status():
+    result = ssh('gpuR', f'''import json
+from pathlib import Path
+root=Path({ROOT!r})
+names=['CANARY_DISPATCH.json','STOP','accounting.jsonl','canary.log', 'jobs/canary_s969100/START.json','jobs/canary_s969100/result.json','jobs/canary_s969100/failure.json','jobs/canary_s969100/initialization_failure.json']
+out={{}}
+for n in names:
+ p=root/n
+ if p.exists():
+  text=p.read_text(); out[n]=text if n.endswith('.log') or n.endswith('.jsonl') else json.loads(text)
+print(json.dumps(out))
+''')
+    write(EVIDENCE/'CANARY_STATUS.json', result)
+    print(json.dumps(result, indent=2))
+
+
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument('action', choices=('audit','deploy','preflight','recorded'))
+    p.add_argument('action', choices=('audit','deploy','preflight','recorded','cpu','canary','status'))
     a = p.parse_args()
     globals()[a.action]()
 
