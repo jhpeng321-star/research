@@ -65,10 +65,14 @@ Full earlier handoff preserved at `docs/rb_merge/HANDOFF_HISTORY_0100.md`.
   panel, duplicate/missing world, broken source conservation).
 
 ## Completed diagnostic v5 / next v6
+- **v6 LIVE,01:21:30 +08**, owned cpuQ PID**522021**, source **3fd7ab03**.
+  Validator SHA `d35a8a99790696cef19a47a0e460a36b9eb7d4748c63999aa3563c040f2342a1`.
+  Receipt `/tmp/rb-merge-fullfleet-v6/LAUNCH.json`; v5 exited first. One CPU,
+  nice19/CUDA-hidden, launch load7.27/32. **Do not duplicate this running job.**
 - **01:04:36 +08 dispatched ONCE**, owned cpuQ PID**468961**, validator SHA
   `f68014b8b0586db5fdd329996c214fefcf7fb61c1e73aed5b4104ab5db21940b`.
   Receipt `/tmp/rb-merge-fullfleet-v5/LAUNCH.json`. PID468961 now **exited**,
-  all32 worlds complete; no running prediction dispatch remains at this poll.
+  all32 worlds complete; all v3/v4/v5 dispatches are terminal.
 - Source **7d4240ef**, same INTb0f66943 + mechanics3df73a27. Same default settings,
   stream190, SUMO CF and causal LC history; isolates the new network-limit rules.
 - Immutable `/tmp/rb-merge-fullfleet-v5`;33CPUtests and all32 source preflights
