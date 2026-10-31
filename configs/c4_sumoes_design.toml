@@ -1,0 +1,44 @@
+# S-SUMOES design freeze (TRACK 3, owner 2026-10-31 13:50). Design + budget for
+# approval; NO SUMO runs in S-SUMOES-DESIGN. See docs/paper_results/SUMOES_DESIGN.md.
+# enabled stays false; only the registered run task may flip it after the exposure
+# audit of the fresh TRAIN sub-block and the interactive cpuQ ACK.
+[sumoes]
+enabled = false
+
+# Episode geometry: one episode = 300 s native warmup + 600 s control, charged 900.
+warmup_s = 300
+control_s = 600
+episode_charge_sim_s = 900
+
+# Per-update workload: draw 8 directions, WM screen keeps 3, evaluate 3 antithetic
+# pairs on 3 fresh gradient worlds, then the 4-world held-in panel after each step.
+pairs_per_update = 3
+gradient_worlds_per_update = 3
+panel_worlds = 4
+wm_screen_directions = 8
+wm_screen_horizon_s = 60
+wm_screen_starts = 8
+
+# Parameterisation: the 137 residual-head scalars; sigma = target residual RMS /
+# deployed t0 head sensitivity RMS (ESLONG command-scale calibration), halving every
+# 4 accepted updates; sigma_min is a floor on the perturbed COMMAND RMS (0.02 m/s^2);
+# Adam 1e-3 on the head only.
+sigma_target_residual_rms_mps2 = 0.10
+sigma_min_mps2 = 0.02
+sigma_halve_every_accepted = 4
+adam_lr = 0.001
+adam_beta1 = 0.9
+adam_beta2 = 0.999
+adam_eps = 1e-08
+
+# Run shape: 16 updates; 4 + 16*(2*3*3 + 4) = 356 episodes = 320,400 planned sim-s;
+# hard cap 330,000 sim-s (9,600 reserve for registered amendments only, no retries).
+max_updates = 16
+cap_sim_s = 330000
+
+# Fresh registered C4_LOOP_TRAIN sub-block 969440-969491 (52 seeds: 48 gradient +
+# 4 panel). Registration + exposure audit required before any allocation; never
+# overlaps WMDATA 969400-969439 and refuses 964xxx-eval / 962xxx / 977xxx ranges.
+seed_block_first = 969440
+seed_block_last = 969491
+direction_seed = 7000031
