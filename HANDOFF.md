@@ -18,6 +18,16 @@
 
 Branch `c4/rb-decide`, base `f0db3c82`; owner WM-PHYS registration line5683.
 
+## Collector recovery — 05:21 +08
+
+- First own collector38724 exited after producing a valid05:18 publication;
+  stopped before Git staging on Windows GBK decoding of a UTF-8 diff. Its
+  claim/STOP/raw outputs are retained; publication committed as `59562ee3`.
+- Explicit UTF-8 Git decoding fixes the failure. A replacement uses a NEW claim
+  and `--previous` pointing at the completed `REFRESH.json`, preserving/reusing
+  all hash-verified finished scores. Seven refresh tests PASS/15.396s including
+  UTF-8 decoding and the previous-cache owner binding. See recovery receipt.
+
 ## Bounded continuation prepared — 05:14 +08
 
 - `tools/wmdecide/refresh.py` collects/scored saved output JSON only, every20min

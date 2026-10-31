@@ -157,7 +157,8 @@ def refresh_once(eval_root, scratch, publication, previous=None):
 
 
 def git(repo, *args):
-    result = subprocess.run(["git", *args], cwd=repo, capture_output=True, text=True, check=True)
+    result = subprocess.run(["git", *args], cwd=repo, capture_output=True, text=True,
+                            encoding="utf-8", errors="backslashreplace", check=True)
     return result.stdout.strip()
 
 
@@ -188,7 +189,7 @@ def commit_publication(repo, relative):
     return inspected
 
 
-def run(repo, eval_root, scratch, claim, until, interval=1200):
+def run(repo, eval_root, scratch, claim, until, interval=1200, previous_receipt=None):
     """One exclusive collector; no PID signalling, deletion or inference ownership."""
     import psutil
 
@@ -204,12 +205,17 @@ def run(repo, eval_root, scratch, claim, until, interval=1200):
                     started_utc=datetime.now(timezone.utc).isoformat(), until=until.isoformat(),
                     scratch=str(scratch), repo=str(repo), interval_seconds=interval,
                     code_sha256=sha256(Path(__file__)), inference=False, process_signalling=False)
+    if previous_receipt is not None:
+        previous_receipt = safe_path(previous_receipt)
+        identity.update(previous_receipt=str(previous_receipt),
+                        previous_sha256=sha256(previous_receipt))
     # Persistent exclusive claim survives crashes; never silently reclaim/relaunch.
     write_json(claim, identity)
     scratch.mkdir()
     write_json(scratch/"OWNER.json", identity)
     try:
-        previous = None
+        previous = (json.loads(previous_receipt.read_text(encoding="utf-8"))["models"]
+                    if previous_receipt is not None else None)
         while time.time() < until.timestamp():
             now = datetime.now(timezone.utc)
             label = now.strftime("refresh_%Y%m%d_%H%M%SZ")
@@ -249,9 +255,10 @@ def main():
     parser.add_argument("--claim", required=True)
     parser.add_argument("--until", required=True, help="ISO8601 deadline with explicit timezone")
     parser.add_argument("--interval", type=float, default=1200)
+    parser.add_argument("--previous", help="Preserved completed refresh receipt; reuse verified scores")
     args = parser.parse_args()
     run(args.repo, args.eval_root, args.scratch, args.claim,
-        datetime.fromisoformat(args.until), args.interval)
+        datetime.fromisoformat(args.until), args.interval, args.previous)
 
 
 if __name__ == "__main__":

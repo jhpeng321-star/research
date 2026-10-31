@@ -5,6 +5,10 @@ verification/handoff commit. All work is CPU-only, with NumPy and existing Pytho
 
 ## Resume improvement — 2026-11-01 05:14 +08
 
+Follow-up05:21:7 refresh tests PASS/15.396s after an actual first-cycle Git-output
+GBK decode STOP. Explicit UTF-8 decoding and hash-bound previous-cache recovery
+are verified. Completed first-cycle reports were preserved/committed, not repeated.
+
 The18 existing picker/credibility checks and4 snapshot checks pass. Six new
 refresh tests pass (18.565s final targeted run) with the actual EVAL validator,
 synthetic copied-outcome forecasts, two-world baseline/one-world matched candidate,

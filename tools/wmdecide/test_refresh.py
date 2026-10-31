@@ -8,10 +8,11 @@ import sys
 import tempfile
 import unittest
 from unittest.mock import patch
+from types import SimpleNamespace
 
 from .rbeval_adapter import load_harness, sha256
 from .refresh import (BEGIN, END, commit_publication, handoff_text, refresh_once,
-                      complete_signature, require_clean_branch, run)
+                      complete_signature, git, require_clean_branch, run)
 from .report import write_json
 
 
@@ -63,6 +64,15 @@ class RefreshTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     require_clean_branch(self.scratch)
 
+    def test_git_output_has_explicit_utf8_decoding(self):
+        # Git's UTF-8 diff may contain punctuation invalid under Windows GBK.
+        text = "diff: preserved owner evidence — complete K8\n"
+        with patch("tools.wmdecide.refresh.subprocess.run",
+                   return_value=SimpleNamespace(stdout=text)) as command:
+            self.assertEqual(git(self.scratch, "diff"), text.strip())
+        self.assertEqual(command.call_args.kwargs["encoding"], "utf-8")
+        self.assertEqual(command.call_args.kwargs["errors"], "backslashreplace")
+
     def test_loop_stops_at_deadline_and_preserves_own_claim(self):
         (self.scratch/"HANDOFF.md").write_text("# Synthetic handoff\nOwner history.\n")
         receipt = dict(completed_utc="synthetic_test_time", models={
@@ -70,16 +80,18 @@ class RefreshTests(unittest.TestCase):
 
         def cycle(eval_root, scratch, publication, previous=None):
             scratch.mkdir()
+            self.assertEqual(previous, receipt["models"])
             return receipt
 
         claim, job = self.scratch/"loop_claim.json", self.scratch/"loop_job"
+        write_json(self.scratch/"previous.json", receipt)
         with patch("tools.wmdecide.refresh.require_clean_branch"), \
                 patch("tools.wmdecide.refresh.refresh_once", side_effect=cycle) as refresh, \
                 patch("tools.wmdecide.refresh.commit_publication", return_value={}), \
                 patch("tools.wmdecide.refresh.time.time", side_effect=[0, 0, 1001, 1001]), \
                 patch("psutil.cpu_percent", return_value=50):
             run(self.scratch, "unused", job, claim,
-                datetime.fromtimestamp(1000, timezone.utc))
+                datetime.fromtimestamp(1000, timezone.utc), previous_receipt=self.scratch/"previous.json")
         self.assertEqual(refresh.call_count, 1)
         self.assertTrue((job/"COMPLETE.json").is_file())
         self.assertTrue(claim.is_file())
@@ -88,6 +100,7 @@ class RefreshTests(unittest.TestCase):
         self.assertEqual(identity["pid"], os.getpid())
         self.assertFalse(identity["inference"])
         self.assertFalse(identity["process_signalling"])
+        self.assertEqual(identity["previous_sha256"], sha256(self.scratch/"previous.json"))
 
     def test_unchanged_completed_worlds_cache_ignores_partial_progress(self):
         files = {f"shard0/w969420_k{k}.json": str(k) for k in range(8)}

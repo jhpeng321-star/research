@@ -168,6 +168,10 @@ models remain explicit in the index; if no valid report exists, the prior handof
 is preserved. A STOP receipt is terminal; no automatic relaunch or cap extension.
 Raw snapshots/rows go in a NEW scratch root, compact versioned publications in
 `docs/paper_results/wmdecide/`. Deadline completion has an immutable receipt.
+An explicitly reconciled terminal collector can seed its replacement with
+`--previous PREVIOUS_PUBLICATION/REFRESH.json`; the new ownership receipt binds
+that cache and all reused source outputs are checksum-verified. Git output is
+explicit UTF-8, independent of the Windows console's default code page.
 
 Verify with `python -B -m unittest tools.wmdecide.test_refresh -v`; integration
 uses clearly labelled synthetic copied-outcome fixtures, never scientific scores.
