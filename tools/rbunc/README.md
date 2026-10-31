@@ -140,6 +140,10 @@ futures = plan_hidden_state_futures(
   `demand.condition(world, observed_entries, observed_queue_history)`; this only
   conditions the frozen family on causal counts. A missing world without causal
   counters fails closed. Requests beyond fitted phase end1200s are refused.
+- `learned_arrival_observations` in each future receipt binds the actual causal
+  counter snapshot, family, phase end and start separately from the original fit
+  file hash. Reconditioned observations may share a source file; pair both source
+  and observation hashes. The fit owns a deep copy of its supplied observation.
 - Paired candidate actions must share initial observations, numeric IDs, row key,
   seed, and future index. Rebuild mutable future objects per arm. Hidden rates,
   incumbent settings, request clocks, and entrant settings then share CRN exactly.

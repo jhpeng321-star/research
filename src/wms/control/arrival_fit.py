@@ -7,6 +7,9 @@ or inventing a process outside the documented generator family.
 from __future__ import annotations
 
 from dataclasses import dataclass
+import copy
+import hashlib
+import json
 
 import numpy as np
 
@@ -83,7 +86,9 @@ class LearnedArrivalFit:
         if artifact['schema'] != 'wm_phys.observed_arrivals.v1' \
                 or artifact['generator_family'] != 'piecewise_constant_poisson':
             raise ValueError('unsupported learned arrival schema/family')
-        self.artifact = artifact
+        # A conditioned forecast owns its observation snapshot. Keep the source
+        # file hash separate from the causal counters used for a particular start.
+        self.artifact = copy.deepcopy(artifact)
 
     @classmethod
     def from_file(cls, path):
@@ -109,16 +114,9 @@ class LearnedArrivalFit:
         return instance
 
     def draw(self, world, *, t0_s, seed, sample, sample_rate=True):
-        if t0_s != self.artifact['conditioning_end_s']:
-            raise ValueError('arrival conditioning time mismatch')
-        observed = self.artifact['worlds'].get(str(world))
-        if observed is None:
-            raise ValueError('no causal entrance counters for this world; fit them first')
+        observed = self._observation(world, t0_s=t0_s)
         counts = np.asarray(observed['total'], dtype=float)
         exposure = float(observed['exposure_s'])
-        if counts.shape != (2,) or (counts < 0).any() or not np.isfinite(counts).all() \
-                or not np.isfinite(exposure) or exposure <= 0:
-            raise ValueError('invalid learned request counts/exposure')
         rates = counts / exposure
         if sample_rate:
             # Jeffreys prior for a Poisson intensity: p(lambda) ∝ lambda**(-1/2).
@@ -127,6 +125,39 @@ class LearnedArrivalFit:
                 world, sample, e)).gamma(counts[e] + .5, 1 / exposure) for e in range(2)])
         end = float(self.artifact['observed_phase_end_s']) - t0_s
         return DemandPlan(np.array([0., end]), rates[None])
+
+    def _observation(self, world, *, t0_s):
+        if t0_s != self.artifact['conditioning_end_s']:
+            raise ValueError('arrival conditioning time mismatch')
+        observed = self.artifact['worlds'].get(str(world))
+        if observed is None:
+            raise ValueError('no causal entrance counters for this world; fit them first')
+        counts = np.asarray(observed['total'], dtype=float)
+        exposure = float(observed['exposure_s'])
+        if counts.shape != (2,) or (counts < 0).any() or not np.isfinite(counts).all() \
+                or not np.equal(counts, np.rint(counts)).all() \
+                or not np.isfinite(exposure) or exposure <= 0:
+            raise ValueError('invalid learned request counts/exposure')
+        return observed
+
+    def observation_receipt(self, world, *, t0_s):
+        """Bind a forecast to its actual causal counter snapshot, not just a file.
+
+        ``condition`` preserves the learned family's source hash, but replaces a
+        world's observations. Equal file hashes alone therefore do not establish
+        common inputs across candidate actions.
+        """
+        observation = self._observation(world, t0_s=t0_s)
+        snapshot = dict(world=str(world), conditioning_end_s=float(t0_s),
+                        generator_family=self.artifact['generator_family'],
+                        observed_phase_end_s=float(self.artifact['observed_phase_end_s']),
+                        observation=observation)
+        digest = hashlib.sha256(json.dumps(snapshot, sort_keys=True,
+            separators=(',', ':'), allow_nan=False).encode()).hexdigest()
+        return dict(world=str(world), conditioning_end_s=t0_s,
+                    source_sha256=getattr(self, 'sha256', None),
+                    observation_sha256=digest,
+                    total=list(observation['total']), exposure_s=observation['exposure_s'])
 
 
 class FittedEntries(PoissonEntries):

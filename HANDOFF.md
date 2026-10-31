@@ -15,6 +15,15 @@ preferred_v1 receipts preserve their original source/inputs, not a new LC result
 LC remains explicitly opt-in and not adopted pending FIT's source-refit gate.
 Local CPU load33%/22threads; nvidia-smi reports no loaded local GPU driver.
 
+NEW causal arrival provenance: `LearnedArrivalFit` owns a deep-copied snapshot;
+`observation_receipt(world,t0_s=...)` hashes its actual causal counters + family/
+phase/start. Future receipts expose `learned_arrival_observations` per row,
+separately from the original file hash. Reconditioned observations can share the
+fit file but must not be mistaken for the same paired input. Fractional request
+counts fail closed. CPU53PASS/19.10s includes unchanged seeded pairing/forecast
+regressions, conditioning/replay/source-hash distinction and no global RNG.
+Sampling law/scale unchanged; source receipts are additive. No jobs dispatched.
+
 Latest preferred32/K8/H120 legacy-reference result: within-K teamSD748.35
 [668.54,828.51] vs real across-world4200.50veh-s; source ablations on969400:
 drivers164.22/arrivals874.61/both850.71/fixed0.00, fixed8tapes hash-identical.

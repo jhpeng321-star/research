@@ -438,6 +438,8 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
             population_sizes=[len(p) for p in population.hdv],
             arrival_sample=arrival_sample, arrivals='poisson' if entrance_histories is not None else 'closed_cohort',
             learned_arrival_sha256=getattr(arrival_fit, 'sha256', None),
+            learned_arrival_observations=None if arrival_fit is None else [
+                arrival_fit.observation_receipt(key, t0_s=t0_s) for key in row_keys],
             demand_rate_draws=None if arrival_fit is None else [p.rates.tolist() for p in process.demand_plans],
             rate_source=('fitted_entrance_counters' if arrival_fit is not None else
                          'observed_request_demand' if queues is not None else 'observed_insertion_proxy'),
