@@ -21,6 +21,16 @@ No redispatch or second watcher. All previous evidence and peer notices preserve
 
 ### MAIN04:27 supervision log (+08:00)
 
+The additive local `scripts/selmappo2_supervise.py` provides a durable20min
+heartbeat through2026-11-01 12:00+08. It consumes existing collector receipts,
+checks watcher12432 exact PID/executable/command/creation time/source and the
+validated remote ownership/progress/logs/accounting, appends a short HANDOFF line,
+and commits only task report/evidence. Exclusive SUPERVISE_NOON_ONCE plus process
+and dispatch receipts prevent a second supervisor. Nine targeted CPU checks pass;
+Ruff passes. Alerts distinguish resource wait/stale reporting from a new failure.
+The helper records alerts; an agent must diagnose any needed same-cap repair under
+MAIN02:08. It cannot dispatch, restart or signal training, and adds no SSH polling.
+
 - 05:02 fresh-session verification: existing watcher12432 executable/command and
   02:03:58 creation time match; latest collection Unix1793480275 validates
   cpuQ606968 live,15/169 updates,690/7774 production successes,8open.
