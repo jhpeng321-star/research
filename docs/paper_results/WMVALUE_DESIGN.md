@@ -144,3 +144,16 @@ coverage was explicitly keys-only, not parity certification. Preserve all cached
 files, but classify uncertified A keys as missing under18:52 and compute the
 matched A/B/C trajectories together. This is an adapter/clock gate, not selection
 by prediction accuracy; no reserved label has been opened at this freeze.
+
+## Registered MAIN amendment (21:12): short-prefix-first stopping rule
+Compute all200states' K8 B/C60/90 checkpoints and frozen D/E first. Preserve
+full-long stochastic plans, padding, controller and cost clocks; truncate only
+execution after90s. Certified completed long trajectories supply their existing
+checkpoints; never duplicate an active original task. Frozen V/D/E are not refit.
+Use the same400pairs and10,000world-cluster bootstrap draws/seed/95% bounds.
+If neither B nor C has strictly positive sign-gain AND MAE-reduction lower bounds
+against EACH D and E, the full registered conjunction necessarily FAILS; publish
+FAIL with missing A explicitly NA. Only otherwise complete A and apply the full
+A/D/E gate. This order change does not relax the PASS criterion. One retry for
+an infrastructure exit without Python exception is authorized only after proving
+the original process is gone and its immutable output is absent.
