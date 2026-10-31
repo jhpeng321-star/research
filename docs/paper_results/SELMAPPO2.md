@@ -2,6 +2,14 @@
 
 ## Status (2026-11-01)
 
+**05:35 +08:00 transport interruption:** existing collector has three SSH exit255
+errors after its last successful observation at05:18:01 (17updates,
+787production successes,5open,709500actual/714600reserved). A single spaced
+diagnostic also received `Connection closed by 1.15.42.207 port 22`. Both local
+monitor processes remain alive, but remote training state after05:18 is UNKNOWN.
+Read-only collector retries continue; no training restart or replay has occurred.
+The live section below is a last verified snapshot until fresh transport succeeds.
+
 **05:05 +08:00 durable supervision:** local monitor46520 is verified live and
 checks the existing watcher/remote receipts every20min through12:00+08, appending
 HANDOFF progress and committing task report/evidence. First heartbeat has zero

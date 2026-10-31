@@ -36,6 +36,16 @@ heartbeat committed1a217682 with zero alerts:15updates/717production/7open,
 646500actual/653400reserved. Next heartbeat~05:25; last heartbeat at12:00.
 Never duplicate this monitor, watcher12432 or training606968.
 
+**05:35 transport incident:** three existing watcher SSH reads exited255 after
+the last successful observation at05:18:01 (17updates/787production/5open,
+709500actual/714600reserved). A single spaced diagnostic SSH to cpuQ also
+returned `Connection closed by 1.15.42.207 port 22` before running date/own-PID
+inspection. Watcher12432 and supervisor46520 remain local/live. Remote job state
+is UNKNOWN after the last successful observation, not an established training
+failure. Retain both existing jobs/locks and the no-replay accounting; existing
+collector already retries read-only transport every300s. No restart/dispatch or
+signals. Supervision continues, and stale receipts must not be reported as current.
+
 - 05:02 fresh-session verification: existing watcher12432 executable/command and
   02:03:58 creation time match; latest collection Unix1793480275 validates
   cpuQ606968 live,15/169 updates,690/7774 production successes,8open.
