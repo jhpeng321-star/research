@@ -1,7 +1,7 @@
 # S-WMFIX-ES — CPU calibration receipt — 2026-10-31
 
 ## Resume / resources
-- Clean start at 89d7e29b; frozen-session artifacts retained; no ES jobs running.
+- Clean resume at 89d7e29b; frozen-session artifacts retained; no prior ES jobs live.
 - Combined smoke had failed on missing CTRL0 feedback; no generation completed.
 - MAIN 13:38 supersedes sharing limits: cpuQ <=30 workers; gpuA <=18 low-priority
   CPU workers (20-CPU quota). GPU processes and S-WMDATA processes untouched.
@@ -43,10 +43,15 @@
   per generation, canonical reload; no validation feedback.
 
 ## ES curve / verdict / recommendation
+- Full ES driver gpuA PID 195604, `es_cpu_v3/es_run_full`; generation 0 running.
 - ES curve: no complete combined generation yet; earlier partial FIT cells are
   excluded. All four wmdata arms smoke PASS (31.2-31.9 s); 20 unit tests PASS.
 - Verdict: INCOMPLETE, not adoptable. A vs WM2 AND entry, B SPEEDHEAD eight
   worlds, C1 and canonical accept.py remain the unchanged mandatory gates.
+- Actual unchanged-plan preflight: missing ACCEPT_PANEL.json, c1_cohort.json,
+  c1_runner.json and candidate quartet COMPLETE.json (the latter is not run yet).
+- MAIN input request: bind the registered C1 cohort/runner and canonical accept
+  panel. `ES_VERDICT_PREFLIGHT.json` is an infrastructure receipt, not a verdict.
 - MAIN GPU-slot request: reserve A/B evaluation after selected ES-WM checkpoint;
   corrected K8 CPU cost cannot support the prior optimistic deadline estimate.
 - Recommendation: finish full-corpus CPU ES, report measured curve and long-

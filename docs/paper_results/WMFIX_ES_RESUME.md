@@ -50,3 +50,8 @@
   bitwise checked on export and canonical reload. Failure receipts stop driver.
 - Driver reserves live K8 probe slots before each generation (cpuQ total <=30,
   gpuA <=18 CPU workers), low-priority sweeps; no GPU code path.
+- Full driver launched gpuA PID 195604, `es_cpu_v3/es_run_full`; cpuQ workers
+  `es_run_full`. Read RUN/ENV/CELL/GEN/ES_FINAL/ES_ABORT before any resume.
+- Unchanged-plan preflight on canonical smoke export found missing accept panel,
+  C1 cohort/runner and candidate quartet completion. Required input/GPU-slot
+  requests are recorded in WMFIX_ES.md; no evaluation result is claimed.
