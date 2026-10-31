@@ -1,21 +1,41 @@
 {
-  "captured_local": "2026-10-31T16:24:47.232604+08:00",
+  "captured_local": "2026-10-31T17:42:54.757606+08:00",
   "reports": {
+    "wmvalue_design": {
+      "path": "E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md",
+      "exists": true,
+      "sha256": "537d46f95ac05be01edc0106be8ffbd550a6a4149d5c1a8d041b475fee4b09c1",
+      "bytes": 5421,
+      "modified_local": "2026-10-31T17:41:01.086626+08:00",
+      "snapshot": "source_snapshots/wmvalue_design_537d46f95ac05be0.md"
+    },
+    "wmvalue_report": {
+      "path": "E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md",
+      "exists": false
+    },
     "sumocf_design": {
       "path": "E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_DESIGN.md",
       "exists": true,
-      "sha256": "edf0edc125bf8e47f3585f722fa5f679c0c1fdcb4ebb75f2fe9a9b774bf8611e",
-      "bytes": 17703,
-      "modified_local": "2026-10-31T16:19:04.492047+08:00",
-      "snapshot": "source_snapshots/sumocf_design_edf0edc125bf8e47.md"
+      "sha256": "ad9e25287ba301c10ae5f3dd9a0b288e9f9a6e1b2559df722c46dcafab67a3e5",
+      "bytes": 27145,
+      "modified_local": "2026-10-31T17:35:26.139923+08:00",
+      "snapshot": "source_snapshots/sumocf_design_ad9e25287ba301c1.md"
     },
     "sumocf_run": {
       "path": "E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_RUN.md",
       "exists": true,
-      "sha256": "36db1e31df71295230df5805f126281ef96ca0e8ded83ee1fda7b789fd639a2d",
-      "bytes": 2006,
-      "modified_local": "2026-10-31T16:06:21.064749+08:00",
-      "snapshot": "source_snapshots/sumocf_run_36db1e31df712952.md"
+      "sha256": "5b460b71a1d43cf2a5dfd720283763117ef070b7373cd6879bdc021fea9b2057",
+      "bytes": 7599,
+      "modified_local": "2026-10-31T17:40:11.021240+08:00",
+      "snapshot": "source_snapshots/sumocf_run_5b460b71a1d43cf2.md"
+    },
+    "sumocf_artifact": {
+      "path": "E:/agent-work/c4-sumocf/docs/paper_results/ARTIFACT_CHECK.md",
+      "exists": true,
+      "sha256": "164ae0a05363b0c44f9d31e31fa1dff0b7a5b594920da344bc225a37c3906f7a",
+      "bytes": 4552,
+      "modified_local": "2026-10-31T17:35:36.528333+08:00",
+      "snapshot": "source_snapshots/sumocf_artifact_164ae0a05363b0c4.md"
     },
     "sumocf_root_run": {
       "path": "E:/agent-work/c4-sumocf/SUMOCF_RUN.md",
@@ -32,18 +52,18 @@
     "audit_design": {
       "path": "E:/agent-work/c4-coopmeasure/AUDIT_DESIGN.md",
       "exists": true,
-      "sha256": "b5471caec113a8fdfab378d1a91de2b164588b6ad63c6d5e3e38da57a11b0eed",
-      "bytes": 8987,
-      "modified_local": "2026-10-31T16:10:43.542541+08:00",
-      "snapshot": "source_snapshots/audit_design_b5471caec113a8fd.md"
+      "sha256": "7ab547ea20d5fdbd144868105887de189468391b4316e9e12c07ad6f50343e3f",
+      "bytes": 12739,
+      "modified_local": "2026-10-31T17:31:15.541547+08:00",
+      "snapshot": "source_snapshots/audit_design_7ab547ea20d5fdbd.md"
     },
     "audit_report": {
       "path": "E:/agent-work/c4-coopmeasure/docs/paper_results/COOPAUDIT.md",
       "exists": true,
-      "sha256": "fb7dca44c12d6fdd87dbb6ba05b3f872ffa0ef7e92c67e4f0d5bc75414493a89",
-      "bytes": 3420,
-      "modified_local": "2026-10-31T16:14:10.571907+08:00",
-      "snapshot": "source_snapshots/audit_report_fb7dca44c12d6fdd.md"
+      "sha256": "228838eb3e8739ed2a62e7a04d61bb2ae89bad1eef8a2e2f47e6704346a03e7f",
+      "bytes": 3953,
+      "modified_local": "2026-10-31T17:31:15.554559+08:00",
+      "snapshot": "source_snapshots/audit_report_228838eb3e8739ed.md"
     },
     "audit_canary": {
       "path": "E:/agent-work/c4-coopmeasure/tools/coopaudit/evidence/CANARY_VERIFIED.json",
@@ -64,10 +84,10 @@
     "behavior_report": {
       "path": "E:/agent-work/c4-coopbehav/docs/paper_results/COOPBEHAV.md",
       "exists": true,
-      "sha256": "90c711c0a017649442dcc86a465ac9adb7fb31156691d49fc962d1b5a81fe0af",
-      "bytes": 4659,
-      "modified_local": "2026-10-31T16:24:44.307209+08:00",
-      "snapshot": "source_snapshots/behavior_report_90c711c0a0176494.md"
+      "sha256": "7f69689ccf360cdab4b0c9cc655cdb0eb19ef45028047a1170f7a85f6b85fff3",
+      "bytes": 14763,
+      "modified_local": "2026-10-31T17:12:06.464991+08:00",
+      "snapshot": "source_snapshots/behavior_report_7f69689ccf360cda.md"
     },
     "eval_report": {
       "path": "E:/agent-work/c4-coopeval/docs/paper_results/COOPEVAL.md",
@@ -96,18 +116,18 @@
     "sumoes_report": {
       "path": "E:/agent-work/c4-sumoes/docs/paper_results/SUMOES_RUN.md",
       "exists": true,
-      "sha256": "ea4da340e5d80306b57bf5dc09b54cf468c0187c7cf676b59cabc9238cf6df23",
-      "bytes": 14714,
-      "modified_local": "2026-10-31T16:23:26.602393+08:00",
-      "snapshot": "source_snapshots/sumoes_report_ea4da340e5d80306.md"
+      "sha256": "6fac40cff7065ee997a4e4428911d7020c2a3ad7832176b8686affb3dc22d7a1",
+      "bytes": 21728,
+      "modified_local": "2026-10-31T16:47:04.519727+08:00",
+      "snapshot": "source_snapshots/sumoes_report_6fac40cff7065ee9.md"
     },
     "sumoes_log": {
       "path": "E:/agent-work/c4-sumoes/tools/sumoes/RUN.md",
       "exists": true,
-      "sha256": "5741b13b8fc98902f2724ee9c9513d5ee8ede1fcdb0e99949b47f73322568385",
-      "bytes": 14700,
-      "modified_local": "2026-10-31T16:23:26.576259+08:00",
-      "snapshot": "source_snapshots/sumoes_log_5741b13b8fc98902.md"
+      "sha256": "4244e3870f0e9aeaaba4e8a1045b29fa53432f7134ce01386a822bb58406b394",
+      "bytes": 21387,
+      "modified_local": "2026-10-31T16:50:46.484412+08:00",
+      "snapshot": "source_snapshots/sumoes_log_4244e3870f0e9aea.md"
     },
     "pilotdiag_report": {
       "path": "E:/agent-work/c4-pilotdiag/docs/paper_results/PILOTDIAG.md",
@@ -167,6 +187,13 @@
     }
   },
   "changed_since_prior_cut": [
+    "wmvalue_design",
+    "wmvalue_report",
+    "sumocf_design",
+    "sumocf_run",
+    "sumocf_artifact",
+    "audit_design",
+    "audit_report",
     "behavior_report",
     "sumoes_report",
     "sumoes_log"

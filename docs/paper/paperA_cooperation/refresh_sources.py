@@ -15,8 +15,11 @@ from pathlib import Path
 from build_figures import ROOT, guarded
 
 REPORTS = {
+    "wmvalue_design": "E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md",
+    "wmvalue_report": "E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md",
     "sumocf_design": "E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_DESIGN.md",
     "sumocf_run": "E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_RUN.md",
+    "sumocf_artifact": "E:/agent-work/c4-sumocf/docs/paper_results/ARTIFACT_CHECK.md",
     "sumocf_root_run": "E:/agent-work/c4-sumocf/SUMOCF_RUN.md",
     "sumocf_canary": "E:/agent-work/c4-sumocf/tools/sumocf/evidence/CANARY_V2.json",
     "audit_design": "E:/agent-work/c4-coopmeasure/AUDIT_DESIGN.md",
