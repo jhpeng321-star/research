@@ -36,3 +36,13 @@ Observations after update 0 (for MAIN):
 - CPU checks on cpuQ existing environment: 32 passed (1 existing torch warning), no SUMO.
   Windows default Python lacks torch; no environment was created.
 - No additional SUMO dispatched at this checkpoint; all original evidence retained.
+
+### Update 1 — screen rejection, no step
+- MAIN1440 / commit beb08d64; screen136 WM rollouts, 24 nice19 CPU processes, 102.882 s.
+- Kept []; braking-side gain medians by direction0..7 (veh-s, positive better):
+  [-18.6241,-13.0176,-16.9719,-7.0724,-26.6924,-9.1613,-3.9606,-7.7089].
+- Real SUMO pair differences: none (all screen-rejected). Accept/rollback: no-step,
+  theta unchanged bitwise. Panel mean before=after=46,958.76242850634 (cached, not rescored).
+- sigma=0.07621979740797888; update-driver wall=0.005689 s; sim-s increment0,
+  cumulative charged=actual=47,700 / 650,000. Consecutive rejected opportunities=2 (u0,u1).
+- Evidence: request_u01.json, screen_u01.json, u01_state.json; cpuQ driver3042666 exited.
