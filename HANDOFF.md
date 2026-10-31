@@ -1,4 +1,17 @@
-# S-RB-MERGE — implementation and FIT diagnostics complete
+# S-RB-MERGE — full-fleet validation continuation
+
+## Resume / MAIN 00:10 continuation
+- Preserved clean HEAD `1d68fd5a` and all prior receipts. Prior PID200540 and
+  PID233273 are terminal in the completed-result receipts; no redispatch planned.
+- Re-read owner registration and four WHY reports. Latest LANE `127a106f`
+  supplies mainline LC2013; INT owns the reconciled post-motion arbitration and
+  entrant identity correction. Reuse a hash-bound integrated source snapshot
+  for the next diagnostic rather than change shared worker code independently.
+- Next increment: full-population native FIT diagnostic with autonomous entries,
+  exact due/admitted/pending conservation, ramp-origin (including post-merge)
+  speed-loss delay and source waiting separately, plus recorded per-world clocks.
+  Historical 562.4 is a reference, not the target of parameter tuning. No training.
+- Earlier cohort diagnostics below remain valid for their stated contracts.
 
 LATEST INTEGRATION INCREMENT: **2977be6d** (source corrections; 28 CPU tests pass).
 INT already reconciled mainline ownership: cherry-pick source corrections from
