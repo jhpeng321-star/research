@@ -58,3 +58,20 @@
 - Verdict: functioning predictor/planner + positive short-score result; robust superadditive cooperation NOT established.
 - Frozen dev panel must remain never-fitting; do not select/tune candidates or WM settings from these outcomes.
 - Full final local CPU/analysis suite20/20PASS; rendered figures visually checked.
+
+## MAIN01:28 extension — PREPARED, CPU gates passed
+- Preserve the complete original panel and roots above. Resume reconciliation commit97a8b34b.
+- Extension source/design/preregistration commitc2646eb1; separate immutable `*_v2` roots.
+- Exact cap579020sim-s plus original220980=800000. Fresh DEV983200–983223, never fitting.
+- Design `COOPPLAN_EXTENSION_DESIGN.md` SHA25617356a3ee726ffea189da8d1f0e10cb376e4eae1293cfdaf1014c68a8a826918.
+- All executed extension groups receive two solos; backfill13 missing original group credits
+  (22560sim-s) using original states/O0/joint outcomes. No original episode is rerun.
+- Every pair and solo obligation reserved before lookaheads; budget-only cyclic pruning logged.
+- COOPFREE no complete learned update at shared freeze; no untrained substitute/late switch.
+- Three-host safe-name/registration audits PASS. All three immutable hosts27CPU tests/0skips
+  plus real WMDECIDE parity PASS, SUMO process creation blocked; local29CPU/analysis PASS.
+- CPU/binding/freeze/audit manifests: `docs/paper_results/coopplan/extension/`.
+- Read-only: `python -B -m tools.coopplan.extension status --host <cpuQ|gpuA|gpuR>`.
+- Dispatch still requires one exclusive launch per new root; never relaunch original supervisors.
+- Final result must report extension24 and pooled36 separately, all-group credits with
+  whole-world clustering, unchanged causal detectors, safety, budget pruning and full accounting.
