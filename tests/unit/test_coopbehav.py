@@ -48,6 +48,17 @@ def test_no_earlier_acceptance_is_not_supported_yield():
     assert ev["evidence"]=="observational_candidate"
 
 
+def test_leader_only_counterfactual_difference_is_not_attributed_to_cav_yield():
+    a,b=opening(),opening(False)
+    for i,r in enumerate(b.rows):
+        r["c"]=replace(r["c"],issued=None,controller=0)
+        r["l"]=replace(r["l"],x=r["l"].x-.5*i*i)
+    ev=events(a,"yield_to_merge",reference=b,released_members=["c"])[0]
+    assert ev["extra_opening_vs_release_m"]>0
+    assert ev["cav_displacement_deficit_vs_release_m"]==0
+    assert ev["evidence"]=="observational_candidate"
+
+
 def test_gap_creation_without_acceptance_and_censoring():
     ev=events(opening(merge=False),"gap_creation")[0]
     assert ev["opening_m"]==16
@@ -70,6 +81,15 @@ def test_leader_acceleration_without_cav_braking_is_not_yield():
     for i,r in enumerate(tape.rows):
         r["c"]=replace(r["c"],x=10*i,v=10)
         r["l"]=replace(r["l"],x=40+10*i+i*i,v=10+2*i)
+    assert not events(tape,"yield_to_merge")
+    assert not events(tape,"gap_creation")
+
+
+def test_speed_sign_roundoff_without_resolved_braking_displacement_is_not_yield():
+    tape=opening()
+    tape.eps=np.finfo(np.float32).eps
+    for i,r in enumerate(tape.rows):
+        r["c"]=replace(r["c"],x=10.,v=1e-6/(i+1))
     assert not events(tape,"yield_to_merge")
     assert not events(tape,"gap_creation")
 
@@ -131,6 +151,14 @@ def test_no_fabricated_damping_when_follower_identity_changes():
     tape=opening(False)
     for row in tape.rows[1:]: del row["f"]
     assert not events(tape,"wave_damping")
+
+
+def test_incomplete_neighbourhood_has_missing_not_fabricated_gap_or_damping():
+    tape=opening()
+    tape.coverage["trace_scope"]="members_and_ramp_only"
+    result=detect(tape)
+    assert result["events"]==[]
+    assert set(result["coverage"]["disabled_detectors"])=={"yield_to_merge","gap_creation","wave_damping"}
 
 
 def test_pair_guards_reject_initial_mismatch_and_external_reference():

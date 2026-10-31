@@ -18,6 +18,10 @@ All signs are zero crossings, with floating-point roundoff tolerance derived
 from the input dtype; no tuned speed, braking, gap, duration or synchrony
 thresholds. Episodes are maximal contiguous runs on the recorded time grid.
 Gaps use bumper geometry and identity continuity, not slot continuity.
+Every slowing interval also requires a resolved displacement deficit against
+the physical constant-speed extrapolation `x(t-dt)+v(t-dt)*dt`. This excludes
+near-stationary speed-sign jitter that has no resolved braking displacement;
+the only tolerance is input-dtype epsilon times the compared coordinate scale.
 
 1. **Yield-to-merge:** a receiving-lane CAV decelerates, remains behind the
    same leader, and increases their bumper gap; a ramp vehicle subsequently

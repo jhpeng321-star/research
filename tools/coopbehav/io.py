@@ -129,7 +129,8 @@ def load_tape(root, metadata=None):
         times.append(float(clock))
     return Tape(np.array(times), rows, meta, np.finfo(kin.dtype).eps, hashes,
                 dict(missing_cav_command_frames=missing_commands, junction_vehicle_frames=junction,
-                     command_ledger_available=issued is not None, branch_start_s=start, branch_end_s=end))
+                     command_ledger_available=issued is not None, branch_start_s=start, branch_end_s=end,
+                     trace_scope="full_observable_fleet"))
 
 
 def manifest_entries(root, arms=("mappo", "ctrl0")):

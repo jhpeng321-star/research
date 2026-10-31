@@ -98,6 +98,8 @@ def detect(tape, reference=None, released_members=()):
     events = []
     eps = tape.eps if reference is None else max(tape.eps, reference.eps)
     active = {}
+    complete_neighbours=tape.coverage.get("trace_scope","full_observable_fleet") in (
+        "full_observable_fleet","members_and_complete_neighbours")
 
     def close(key, end, accepted=None, reason="gap_closed"):
         state = active.pop(key)
@@ -112,6 +114,8 @@ def detect(tape, reference=None, released_members=()):
                   headway_change_s=h1-h0 if h0 is not None and h1 is not None else None,
                   ramp_fit_observed=state["fits"], accepted_vehicle=accepted,
                   end_reason=reason, evidence="observational_candidate", group=[rear])
+        a0,a1=tape.rows[first][rear],tape.rows[peak][rear]
+        ev["ballistic_braking_contribution_m"]=(a0.x+a0.v*(tape.time[peak]-tape.time[first]))-a1.x
         if accepted:
             ev["merge_time_interval_s"] = [float(tape.time[end-1]), float(tape.time[end])]
         if reference is not None and rear in released_members:
@@ -119,10 +123,18 @@ def detect(tape, reference=None, released_members=()):
             if g0 is not None and g1 is not None:
                 dg = (peakgap-startgap)-(g1-g0)
                 ev["extra_opening_vs_release_m"] = dg
+                a0,a1=tape.rows[first][rear],tape.rows[peak][rear]
+                b0,b1=reference.rows[first][rear],reference.rows[peak][rear]
+                deficit=(b1.x-b0.x)-(a1.x-a0.x)
+                braking=(a0.v-a1.v)-(b0.v-b1.v)
+                ev["cav_displacement_deficit_vs_release_m"]=deficit
+                ev["extra_speed_loss_vs_release_mps"]=braking
                 hr0, hr1 = (_headway(reference.rows[i], rear, front) for i in (first, peak))
                 ev["extra_headway_change_vs_release_s"] = (h1-h0)-(hr1-hr0) if all(
                     x is not None for x in (h0,h1,hr0,hr1)) else None
-                if greater(dg, 0, eps):
+                if (greater(peakgap-startgap,g1-g0,eps)
+                        and greater(b1.x-b0.x,a1.x-a0.x,eps)
+                        and greater(a0.v-a1.v,b0.v-b1.v,eps)):
                     if not accepted:
                         ev["evidence"] = "paired_release_gap_support"
                     else:
@@ -140,7 +152,7 @@ def detect(tape, reference=None, released_members=()):
                             ev["evidence"] = "paired_release_yield_support"
         events.append(ev)
 
-    for i in range(1, len(tape.time)):
+    for i in (range(1, len(tape.time)) if complete_neighbours else ()):
         prev, row = tape.rows[i-1], tape.rows[i]
         continuing_keys = set(active)
         for key in list(active):
@@ -170,6 +182,9 @@ def detect(tape, reference=None, released_members=()):
             g0, g1 = gap(prev,rear,front), gap(row,rear,front)
             if g1 is None or not greater(v.v,row[rear].v,eps) or not greater(g1,g0,eps):
                 continue
+            ballistic=v.x+v.v*(tape.time[i]-tape.time[i-1])
+            if not greater(ballistic,row[rear].x,eps):
+                continue
             key = rear, front
             fits = any(w.lane == RAMP and 0 <= w.x <= MERGE_END
                        and v.x <= w.x-w.length and w.x <= prev[front].x-prev[front].length
@@ -194,7 +209,8 @@ def detect(tape, reference=None, released_members=()):
         a,b=tape.rows[i-1],tape.rows[i]
         ids=sorted(j for j,v in b.items() if j in a and v.cav and v.lane in (0,1)
                    and a[j].lane == v.lane and v.x < MERGE_START
-                   and greater(a[j].v,v.v,eps))
+                   and greater(a[j].v,v.v,eps)
+                   and greater(a[j].x+a[j].v*(tape.time[i]-tape.time[i-1]),v.x,eps))
         edges={j:set() for j in ids}
         for n,j in enumerate(ids):
             for k in ids[n+1:]:
@@ -230,10 +246,12 @@ def detect(tape, reference=None, released_members=()):
             events.append(ev)
 
     # Fixed follower-chain, same-clock temporal variance, no changing-population variance.
-    cav_ids=sorted({j for row in tape.rows for j,v in row.items() if v.cav and v.lane in (0,1)})
+    cav_ids=sorted({j for row in tape.rows for j,v in row.items() if v.cav and v.lane in (0,1)}) if complete_neighbours else []
     for j in cav_ids:
         slowing=[False]+[j in a and j in b and a[j].lane==b[j].lane and b[j].lane in (0,1)
-                        and greater(a[j].v,b[j].v,eps) for a,b in zip(tape.rows[:-1],tape.rows[1:])]
+                        and greater(a[j].v,b[j].v,eps)
+                        and greater(a[j].x+a[j].v*(tape.time[i]-tape.time[i-1]),b[j].x,eps)
+                        for i,(a,b) in enumerate(zip(tape.rows[:-1],tape.rows[1:]),1)]
         for lo,hi in _runs(slowing):
             first=lo-1
             chain=[]; f=follower(tape.rows[first],j)
@@ -264,5 +282,7 @@ def detect(tape, reference=None, released_members=()):
     for i,e in enumerate(events): e["event_id"]=i
     exposure=sum((tape.time[i]-tape.time[i-1])*sum(v.cav for j,v in tape.rows[i-1].items()
                  if j in tape.rows[i]) for i in range(1,len(tape.time)))
+    coverage=dict(tape.coverage,disabled_detectors=[] if complete_neighbours else
+                  ["yield_to_merge","gap_creation","wave_damping"])
     return dict(events=events,exposure_cav_s=float(exposure),
-                exposure_episode_s=float(tape.time[-1]-tape.time[0]),coverage=tape.coverage)
+                exposure_episode_s=float(tape.time[-1]-tape.time[0]),coverage=coverage)
