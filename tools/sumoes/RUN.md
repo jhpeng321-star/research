@@ -55,3 +55,15 @@ Observations after update 0 (for MAIN):
   (cached, not rescored); sigma0.07621979740797888. Increment0sim-s;
   cumulative47,700charged=actual/650,000. Rejection streak3(u0,u1,u2).
 - Evidence: request_u02.json, screen_u02.json, u02_state.json; driver3050671 exited.
+
+### Update 3 — screen rejection; four-rejection early stop
+- Screen kept[]; braking-side gain medians direction0..7, veh-s:
+  [-21.82,-5.69,-6.34,-4.63,-4.12,-7.00,-4.42,-26.03] (rounded; exact evidence retained).
+- 136 WM rollouts/24 nice19 CPU processes; screenwall101.419477s, driverwall0.004179s.
+- No real-SUMO pairs; no-step, theta bitwise unchanged. Panel before=after46,958.76242850634
+  (cached, not rescored); sigma0.07621979740797888. Increment0sim-s;
+  cumulative47,700charged=actual/650,000. Rejection streak4(u0,u1,u2,u3).
+- Registered scientific stop confirmed by run.py before update4: four_consecutive_rejected_updates_including_screen_no_step.
+  No update4 request, WM screen, or SUMO dispatch. No rejection-based sigma halving (u9 not reached).
+- Evidence: request_u03.json, screen_u03.json, u03_state.json, MAIN1440_RUN_LOG.jsonl;
+  update3 driver3056777 exited. No mechanical failure or owned processes to signal.
