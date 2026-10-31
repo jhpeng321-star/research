@@ -16,7 +16,7 @@ def main():
     sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root, text=True).strip()
     paths = ['src/wms', 'tools/rbint', 'tools/rbeval',
              'configs/execparity_cav_idm_v1.json', 'configs/native_cav_head_v5.json',
-              'configs/wm_phys.toml',
+              'configs/wm_phys.toml', 'configs/wm_phys_cpu.toml',
               'artifacts/rbfit/pooled_full_v5/idm_pooled.json',
               'artifacts/rbfit/shrinkage_v1/idm_population.json',
               'artifacts/rbfit/shrinkage_v1/idm_posteriors.json.gz',

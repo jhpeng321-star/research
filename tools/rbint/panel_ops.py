@@ -17,6 +17,8 @@ def main():
     parser.add_argument('--host', choices=('gpuA', 'gpuR'), default='gpuA')
     parser.add_argument('--runtime', required=True)
     parser.add_argument('--name', required=True)
+    parser.add_argument('--device', choices=('cuda', 'cpu'), default='cuda')
+    parser.add_argument('--recipe', choices=('wm_phys.toml', 'wm_phys_cpu.toml'), default='wm_phys.toml')
     args = parser.parse_args()
     if not re.fullmatch(r'WM-PHYS-FULL-[A-Za-z0-9_.-]+', args.name):
         raise ValueError('INT owns FULL candidates only; A/B/C belong to runners')
@@ -27,6 +29,7 @@ def main():
 from pathlib import Path
 import hashlib,json,os,subprocess,time
 root=Path({root!r});runtime=Path({args.runtime!r})
+device={args.device!r};recipe={args.recipe!r};config=runtime/'configs'/recipe
 def save(path,data):
  with path.open('x') as f: json.dump(data,f,indent=2)
 def sha(path): return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -34,11 +37,26 @@ def alive(r):
  try: return Path('/proc/sys/kernel/random/boot_id').read_text().strip()==r['boot_id'] and Path('/proc/'+str(r['pid'])+'/stat').read_text().split()[21]==r['start_ticks']
  except FileNotFoundError: return False
 def incarnation(pid): return dict(pid=pid,boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),start_ticks=Path('/proc/'+str(pid)+'/stat').read_text().split()[21])
+def admit(canary):
+ assert os.getloadavg()[0]<16, 'wait for a free CPU'
+ resources=dict(load=os.getloadavg(),device=device)
+ if device=='cuda':
+  free=int(subprocess.check_output(['nvidia-smi','--query-gpu=memory.free','--format=csv,noheader,nounits'],text=True).strip())
+  assert free>(6500 if canary else 19500), 'wait for free GPU allocation'
+  resources['gpu_free_mib']=free
+ else:
+  mem={{line.split(':')[0]:int(line.split()[1])*1024 for line in Path('/proc/meminfo').read_text().splitlines() if line.startswith('MemAvailable:')}}
+  available=mem['MemAvailable']
+  limit=Path('/sys/fs/cgroup/memory.max');current=Path('/sys/fs/cgroup/memory.current')
+  if limit.exists() and current.exists() and limit.read_text().strip()!='max': available=min(available,int(limit.read_text())-int(current.read_text()))
+  assert available>(4 if canary else 12)*2**30, 'wait for free CPU memory'
+  resources['effective_free_memory_bytes']=available
+ return resources
 def launch(i,canary):
  out=root/f'shard{{i}}';out.mkdir(exist_ok=True)
- argv=['nice','-n','19','/root/miniconda3/bin/python','-B','-u',str(runtime/'tools/rbint/evaluate_FULL.py'),'--out',str(out),'--runtime-root',str(runtime),'--wm','/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt','--wm-config',str(runtime/'configs/wm_phys.toml'),'--model-name',{args.name!r},'--shard',str(i),'--shards','3','--memory-gib','5']
+ argv=['nice','-n','19','/root/miniconda3/bin/python','-B','-u',str(runtime/'tools/rbint/evaluate_FULL.py'),'--out',str(out),'--runtime-root',str(runtime),'--wm','/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt','--wm-config',str(config),'--model-name',{args.name!r},'--shard',str(i),'--shards','3','--memory-gib','5','--device',device]
  if canary: argv+=['--max-tasks','1']
- env=dict(os.environ,CUDA_VISIBLE_DEVICES='0',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',PYTHONPATH='/root/autodl-tmp/c4/speedhead20261030/pythondeps')
+ env=dict(os.environ,CUDA_VISIBLE_DEVICES='0' if device=='cuda' else '',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',PYTHONPATH='/root/autodl-tmp/c4/speedhead20261030/pythondeps')
  with (root/('canary.log' if canary else f'shard{{i}}.log')).open('x') as log:
   p=subprocess.Popen(argv,stdout=log,stderr=subprocess.STDOUT,env=env,cwd=runtime,start_new_session=True)
  return dict(**incarnation(p.pid),argv=argv,unix=time.time())
@@ -46,28 +64,26 @@ def launch(i,canary):
     if args.action == 'canary':
         code = '''
 assert runtime.is_dir() and (runtime/'INT_STAGE.json').is_file()
-assert os.getloadavg()[0]<16, 'wait for a free CPU'
-free=int(subprocess.check_output(['nvidia-smi','--query-gpu=memory.free','--format=csv,noheader,nounits'],text=True).strip())
-assert free>6500, 'wait for a free GPU allocation'
-smoke=runtime.parent/('SMOKE_'+runtime.name.removeprefix('phys_code_')+'.json')
-assert json.loads(smoke.read_text())['passed']
+resources=admit(True)
+suffix='_cpu' if recipe=='wm_phys_cpu.toml' else ''
+smoke=runtime.parent/('SMOKE_'+runtime.name.removeprefix('phys_code_')+suffix+'.json')
+gate=json.loads(smoke.read_text());assert gate['passed'] and gate['recipe_sha256']==sha(config)
 assert root.parent.parent.is_dir();root.parent.mkdir(exist_ok=True);root.mkdir()
-save(root/'SPEC.json',dict(owner='S-RB-INT',host='''+repr(args.host)+''',runtime=str(runtime),stage=json.loads((runtime/'INT_STAGE.json').read_text()),smoke_sha256=sha(smoke),variant='FULL',tasks=160,world_order='reserved-first',training=False))
+save(root/'SPEC.json',dict(owner='S-RB-INT',host='''+repr(args.host)+''',runtime=str(runtime),stage=json.loads((runtime/'INT_STAGE.json').read_text()),smoke_sha256=sha(smoke),variant='FULL',tasks=160,world_order='reserved-first',training=False,device=device,recipe=recipe,resources=resources))
 save(root/'CANARY_CLAIM.json',dict(time=time.time(),automatic_retry=False))
 r=launch(0,True);save(root/'CANARY_PROCESS.json',r);print(json.dumps(r))
 '''
     elif args.action == 'continue':
         code = '''
 spec=json.loads((root/'SPEC.json').read_text());assert spec['owner']=='S-RB-INT' and spec['runtime']==str(runtime)
+assert spec.get('device','cuda')==device and spec.get('recipe','wm_phys.toml')==recipe, 'preserve original device/recipe'
 assert not alive(json.loads((root/'CANARY_PROCESS.json').read_text())), 'canary still live'
 assert not (root/'shard0/STOP').exists(), 'terminal canary failure'
 files=list((root/'shard0').glob('w*_k*.json'));assert len(files)==1, 'need successful one-task canary'
 task=json.loads(files[0].read_text());assert task['future']==0 and len(task['episodes'])==5
 assert task['future_sampling']['population_audit']['conserved']
-assert os.getloadavg()[0]<16, 'wait for free CPU'
-free=int(subprocess.check_output(['nvidia-smi','--query-gpu=memory.free','--format=csv,noheader,nounits'],text=True).strip())
-assert free>19500, 'wait for free aggregate3x5GiB allocation'
-save(root/'PANEL_CLAIM.json',dict(time=time.time(),reuse=files[0].name,automatic_retry=False))
+resources=admit(False)
+save(root/'PANEL_CLAIM.json',dict(time=time.time(),reuse=files[0].name,automatic_retry=False,resources=resources))
 workers=[launch(i,False) for i in range(3)]
 save(root/'PANEL_PROCESS.json',dict(workers=workers));print(json.dumps(workers))
 '''

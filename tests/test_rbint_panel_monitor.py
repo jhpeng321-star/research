@@ -44,7 +44,8 @@ def test_fake_complete_marker_does_not_certify_missing_futures(tmp_path):
 
 
 @pytest.mark.parametrize('action', ['canary', 'continue', 'monitor', 'status'])
-def test_remote_orchestration_is_valid_python_without_dispatch(monkeypatch, action):
+@pytest.mark.parametrize('device', ['cuda', 'cpu'])
+def test_remote_orchestration_is_valid_python_without_dispatch(monkeypatch, action, device):
     from tools.rbint import panel_ops
     seen = []
     def inspect_only(host, code, **kwargs):
@@ -53,7 +54,8 @@ def test_remote_orchestration_is_valid_python_without_dispatch(monkeypatch, acti
         return 'compile-only, no remote process'
     monkeypatch.setattr(panel_ops, 'ssh', inspect_only)
     monkeypatch.setattr('sys.argv', ['panel_ops', action, '--runtime',
-        '/root/rbeval20261031/phys_code_4015b6412cdf', '--name', 'WM-PHYS-FULL-test'])
+        '/root/rbeval20261031/phys_code_4015b6412cdf', '--name', 'WM-PHYS-FULL-test',
+        '--device', device, '--recipe', 'wm_phys_cpu.toml' if device=='cpu' else 'wm_phys.toml'])
     panel_ops.main()
     assert len(seen) == 1 and seen[0][0] == 'gpuA'
 

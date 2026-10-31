@@ -1,0 +1,17 @@
+{
+  "synthetic": true,
+  "device": "cuda",
+  "batch": 5,
+  "slots": 640,
+  "present_per_row": 180,
+  "ramp_per_row": 32,
+  "seconds_per_call": {
+    "dense": 0.10631683021783829,
+    "ego_query": 0.11356928907334804
+  },
+  "speedup": 0.9361406687081946,
+  "complete_reservation_lanes_bit_exact": true,
+  "full_rollout_speedup_not_measured": true,
+  "training": false,
+  "sumo_runs": 0
+}

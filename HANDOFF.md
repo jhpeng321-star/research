@@ -18,6 +18,11 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   `panel_ops status` is read-only; never repeat canary/continue/monitor dispatch.
 
 ## What exists
+- CUDA query parity **6/6 PASS /1.65s** on source d279a502. Shared-GPU synthetic
+  kernel timing is0.106s dense vs0.114s query (0.94x): no GPU speed win claimed.
+  CPU timing was1.150s vs0.0272s. NEW configs/wm_phys_cpu.toml differs ONLY by
+  the exact query switch; CPU full-task throughput probe planned before choosing
+  execution hardware, with outcome scores unopened. Protocol/config18CPU PASS.
 - Runtime posterior profile predictions now use the ACTIVE CF source lane-cap
   chain and deployed lane/link gap geometry, not the older FIT step approximation.
   FIT selector/shrinkage API and learned population remain unchanged. Overspeed

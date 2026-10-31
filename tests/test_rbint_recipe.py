@@ -33,6 +33,14 @@ def test_recipe_clears_incompatible_trained_hazard_modes():
     assert replace(legacy,**physics).cf_model == 'sumo_idm'
 
 
+def test_cpu_recipe_changes_only_the_exact_query_implementation_switch():
+    root = Path(__file__).resolve().parents[1]/'configs'
+    standard = tomllib.loads((root/'wm_phys.toml').read_text())
+    cpu = tomllib.loads((root/'wm_phys_cpu.toml').read_text())
+    assert cpu['physics'].pop('sumo_merge_query_fast') is True
+    assert cpu == standard
+
+
 def observer():
     namespace = dict(np=np, torch=torch, ACTORS=[])
     reference('costs', namespace)

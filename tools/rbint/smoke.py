@@ -30,6 +30,7 @@ from wms.physics.state import state_kin
 def main():
     p = argparse.ArgumentParser()
     p.add_argument('--out', required=True)
+    p.add_argument('--wm-config', default=str(ROOT/'configs/wm_phys.toml'))
     p.add_argument('--variants', nargs='+', choices=('A', 'B', 'C', 'FULL'),
                    default=('A', 'B', 'C', 'FULL'))
     p.add_argument('--compare-query-fast', action='store_true')
@@ -43,7 +44,7 @@ def main():
     for variant in args.variants:
         os.environ['WMPHYS_VARIANT'] = variant
         models, receipt = load_candidate(
-            ['/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt'], [str(ROOT/'configs/wm_phys.toml')], 'cpu')
+            ['/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt'], [args.wm_config], 'cpu')
         model = models[0]
         if args.compare_query_fast and model.physics.sumo_merge_query_fast:
             raise ValueError('dense reference must have sumo_merge_query_fast=False')
@@ -119,7 +120,7 @@ def main():
                 encoder_exact=receipt['encoder_exact'], guard_pass=True,
                 query_parity=query_parity, motion_conditioning=conditioning_receipt, **gate))
     save_new(out, dict(schema='wmphys-smoke/1', passed=True, results=results,
-        recipe_sha256=digest(ROOT/'configs/wm_phys.toml'),
+        recipe_sha256=digest(args.wm_config),
         checkpoint_sha256=digest('/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt'),
         seconds=time.monotonic()-begin))
     print('SMOKE PASS', len(results), 'rollouts', flush=True)
