@@ -43,6 +43,17 @@ def test_member_release_support_and_acceptance_censoring():
     assert ev["reference_acceptance_right_censored"]
 
 
+def test_policy_mean_reference_is_validated_and_not_relabelled_native_release():
+    a,b=opening(),opening(False,True)
+    for r in b.rows: r["c"]=replace(r["c"],controller="policy_mean",issued=0.,policy_mean=0.)
+    ev=events(a,"yield_to_merge",reference=b,released_members=["c"],reference_kind="policy_mean_intervention")[0]
+    assert ev["evidence"]=="paired_policy_mean_yield_support"
+    assert ev["reference_intervention"]=="policy_mean_intervention"
+    b.rows[1]["c"]=replace(b.rows[1]["c"],issued=-1.)
+    with pytest.raises(ValueError,match="differs from policy mean"):
+        detect(a,b,["c"],"policy_mean_intervention")
+
+
 def test_no_earlier_acceptance_is_not_supported_yield():
     ev=events(opening(),"yield_to_merge",reference=opening(native=True),released_members=["c"])[0]
     assert ev["evidence"]=="observational_candidate"
@@ -100,6 +111,17 @@ def test_identity_loss_terminates_slot_and_never_counts_merge():
     assert not events(tape,"yield_to_merge")
     ev=events(tape,"gap_creation")[0]
     assert ev["end_reason"]=="identity_or_lane_censored"
+
+
+def test_recovered_braking_displacement_cannot_credit_later_leader_opening_as_yield():
+    tape=opening()
+    for i,r in enumerate(tape.rows):
+        r["l"]=replace(r["l"],x=40+10*i+5*i*i)
+        if i>=2: r["c"]=replace(r["c"],x=21+12*(i-2),v=12)
+    assert not events(tape,"yield_to_merge")
+    ev=events(tape,"gap_creation")[0]
+    assert ev["end_reason"]=="braking_deficit_closed"
+    assert ev["ballistic_braking_contribution_m"]>0
 
 
 def wall(offset=0,native=False):

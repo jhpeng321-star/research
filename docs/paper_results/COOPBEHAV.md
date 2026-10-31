@@ -22,6 +22,9 @@ Every slowing interval also requires a resolved displacement deficit against
 the physical constant-speed extrapolation `x(t-dt)+v(t-dt)*dt`. This excludes
 near-stationary speed-sign jitter that has no resolved braking displacement;
 the only tolerance is input-dtype epsilon times the compared coordinate scale.
+An open slot stops being a braking-created opportunity when the CAV has
+recovered that displacement deficit, even if its leader has continued pulling
+away. This prevents attributing leader-created space to an earlier CAV brake.
 
 1. **Yield-to-merge:** a receiving-lane CAV decelerates, remains behind the
    same leader, and increases their bumper gap; a ramp vehicle subsequently
@@ -45,7 +48,7 @@ the only tolerance is input-dtype epsilon times the compared coordinate scale.
    CAV's variance. Neither version implies beneficial fleet interaction.
 5. **Discovery:** rank complete, positive `C_G` records, extract member and
    immediate-neighbour state/action signatures during their registered window,
-   robustly scale features and deterministically cluster them. Cluster count
+   standardize features and deterministically cluster them. Cluster count
    is selected by an explicit documented rule; label physical centroids and
    identify clusters containing no events (1)-(4). Outcome ranking is
    exploratory, never confirmatory evidence or an exclusion rule.

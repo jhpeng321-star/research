@@ -34,7 +34,7 @@ def gap(row, rear, front):
     return b.x - b.length - a.x if a.lane == b.lane and b.x > a.x else None
 
 
-def validate_release(actual: Tape, reference: Tape, members):
+def validate_release(actual: Tape, reference: Tape, members, reference_kind="native_member_release"):
     """Fail closed: clock/state identity plus explicit observable member command release.
 
     Caller must also bind provenance (kind/member list) in the pair index. A same-seed
@@ -61,8 +61,19 @@ def validate_release(actual: Tape, reference: Tape, members):
     for row in reference.rows:
         for j in members:
             if j in row:
-                if row[j].controller not in (0, "native") or row[j].issued is not None:
-                    raise ValueError("Reference member has an external command or unknown native status")
+                v=row[j]
+                if reference_kind=="native_member_release":
+                    if v.controller not in (0,"native") or v.issued is not None:
+                        raise ValueError("Reference member has an external command or unknown native status")
+                elif reference_kind=="policy_mean_intervention":
+                    if v.controller=="policy_mean":
+                        if v.policy_mean is None or v.issued is None or not np.isfinite(v.policy_mean):
+                            raise ValueError("Policy-mean baseline needs its recorded unperturbed command")
+                        if greater(abs(v.issued-v.policy_mean),eps*max(abs(v.issued),abs(v.policy_mean)),eps):
+                            raise ValueError("Reference issued command differs from policy mean")
+                    elif v.controller!="native" or v.issued is not None:
+                        raise ValueError("Reference contains sampled or unknown control")
+                else: raise ValueError("Unknown reference intervention")
                 released += 1
     if not released:
         raise ValueError("No observed release exposure")
@@ -92,9 +103,9 @@ def _crossing(tape, identity, begin):
     return None
 
 
-def detect(tape, reference=None, released_members=()):
+def detect(tape, reference=None, released_members=(), reference_kind="native_member_release"):
     if reference is not None:
-        validate_release(tape, reference, released_members)
+        validate_release(tape, reference, released_members,reference_kind)
     events = []
     eps = tape.eps if reference is None else max(tape.eps, reference.eps)
     active = {}
@@ -118,21 +129,26 @@ def detect(tape, reference=None, released_members=()):
         ev["ballistic_braking_contribution_m"]=(a0.x+a0.v*(tape.time[peak]-tape.time[first]))-a1.x
         if accepted:
             ev["merge_time_interval_s"] = [float(tape.time[end-1]), float(tape.time[end])]
+            ev["accepted_slot_gap_m"]=gap(tape.rows[end],rear,front)
+            ev["accepted_slot_change_m"]=ev["accepted_slot_gap_m"]-startgap
         if reference is not None and rear in released_members:
-            g0, g1 = (gap(reference.rows[i], rear, front) for i in (first, peak))
+            comparison=end if accepted else peak
+            actual_gap=gap(tape.rows[comparison],rear,front)
+            actual_headway=_headway(tape.rows[comparison],rear,front)
+            g0, g1 = (gap(reference.rows[i], rear, front) for i in (first, comparison))
             if g0 is not None and g1 is not None:
-                dg = (peakgap-startgap)-(g1-g0)
+                dg = (actual_gap-startgap)-(g1-g0)
                 ev["extra_opening_vs_release_m"] = dg
-                a0,a1=tape.rows[first][rear],tape.rows[peak][rear]
-                b0,b1=reference.rows[first][rear],reference.rows[peak][rear]
+                a0,a1=tape.rows[first][rear],tape.rows[comparison][rear]
+                b0,b1=reference.rows[first][rear],reference.rows[comparison][rear]
                 deficit=(b1.x-b0.x)-(a1.x-a0.x)
                 braking=(a0.v-a1.v)-(b0.v-b1.v)
                 ev["cav_displacement_deficit_vs_release_m"]=deficit
                 ev["extra_speed_loss_vs_release_mps"]=braking
-                hr0, hr1 = (_headway(reference.rows[i], rear, front) for i in (first, peak))
-                ev["extra_headway_change_vs_release_s"] = (h1-h0)-(hr1-hr0) if all(
-                    x is not None for x in (h0,h1,hr0,hr1)) else None
-                if (greater(peakgap-startgap,g1-g0,eps)
+                hr0, hr1 = (_headway(reference.rows[i], rear, front) for i in (first, comparison))
+                ev["extra_headway_change_vs_release_s"] = (actual_headway-h0)-(hr1-hr0) if all(
+                    x is not None for x in (h0,actual_headway,hr0,hr1)) else None
+                if (greater(actual_gap-startgap,g1-g0,eps)
                         and greater(b1.x-b0.x,a1.x-a0.x,eps)
                         and greater(a0.v-a1.v,b0.v-b1.v,eps)):
                     if not accepted:
@@ -161,6 +177,11 @@ def detect(tape, reference=None, released_members=()):
             state = active[key]
             if g is None or row[rear].lane != RECEIVING:
                 close(key, i-1, reason="identity_or_lane_censored")
+                continue
+            initial=tape.rows[state["first"]][rear]
+            ballistic=initial.x+initial.v*(tape.time[i]-tape.time[state["first"]])
+            if not greater(ballistic,row[rear].x,eps):
+                close(key,i-1,reason="braking_deficit_closed")
                 continue
             inserted = [j for j,w in row.items() if j in prev and prev[j].lane == RAMP
                         and w.lane == RECEIVING and row[rear].x <= w.x-w.length
@@ -280,6 +301,12 @@ def detect(tape, reference=None, released_members=()):
                     and j in released_members else "observational_attenuation"))
     events.sort(key=lambda e:(e["start_s"],e["behaviour"],e["members"]))
     for i,e in enumerate(events): e["event_id"]=i
+    if reference is not None:
+        for e in events:
+            e["reference_intervention"]=reference_kind
+            e["intervention_members"]=list(released_members)
+            if reference_kind=="policy_mean_intervention" and e["evidence"].startswith("paired_release_"):
+                e["evidence"]=e["evidence"].replace("paired_release_","paired_policy_mean_",1)
     exposure=sum((tape.time[i]-tape.time[i-1])*sum(v.cav for j,v in tape.rows[i-1].items()
                  if j in tape.rows[i]) for i in range(1,len(tape.time)))
     coverage=dict(tape.coverage,disabled_detectors=[] if complete_neighbours else

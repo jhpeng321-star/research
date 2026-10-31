@@ -49,8 +49,11 @@ normalized `.jsonl[.gz]` trajectories; each line is:
 released native members. The factual and reference initial states and clocks
 must match; missing/unknown release status fails closed. Multiple released
 members support a **group intervention**, not isolated attribution to one CAV.
-Policy-mean baselines from SUMOCF are a different intervention and currently
-remain unsupported by this native-release adapter; never relabel them native.
+Policy-mean baselines from SUMOCF use `kind: "policy_mean_intervention"`.
+Their reference member frames must carry `controller: "policy_mean"` and an
+`actions` entry whose `vid`, `policy_mean` and recorded issued command agree.
+They are explicitly labelled sampled-window-versus-policy-mean support, never
+native-release support. Native frames without commands remain valid.
 
 Include the **same-lane leader/follower identities**, lengths, CAV flags,
 controller/no-command status and immediate mainline neighbours, as well as ramp
@@ -68,6 +71,12 @@ in either watched design document. The poller launches only its installed CPU
 reporter under the analysis root and retains PID/start-tick receipts, once per
 index SHA. It cannot reconstruct trajectories from SHA256 digests or discover
 unspecified remote roots.
+`sources.py` now also polls the published gpuR SUMOCF job-result/trace root,
+uses the saved subset roster (never fixed branch numbers), independently
+reconstructs group/solo credit and generates ready indices under our own root.
+It waits for closed `result.json` files. The original COOPAUDIT crop is explicitly
+blocked for missing geometry/neighbour/action fields; no default lengths or
+guessed controller commands are substituted.
 Place `STOP` in the poller's output directory for cooperative exit. Remote
 reporting uses `remote.py` and stores exact owned PID/start-tick receipts; it
 never signals a process or imports a simulator.

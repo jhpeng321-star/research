@@ -38,6 +38,7 @@ class Vehicle:
     cav: bool
     issued: float | None = None
     controller: int | str | None = None
+    policy_mean: float | None = None
 
 
 @dataclass

@@ -30,6 +30,7 @@ root=Path({root!r}); assert root.is_dir()
 receipt=root/{(label+"_PID.json")!r}
 assert not receipt.exists(), "Existing launch retained; use status"
 env=dict(os.environ,CUDA_VISIBLE_DEVICES="",OMP_NUM_THREADS="1",OPENBLAS_NUM_THREADS="1",MKL_NUM_THREADS="1")
+if (root/'deps').is_dir(): env['PYTHONPATH']=str(root/'deps')
 command=[{python!r},"-m","tools.coopbehav.report","--views",{views!r},"--out",str(root/{label!r}),"--label",{label!r}]
 log=(root/{(label+".log")!r}).open("ab")
 p=subprocess.Popen(command,cwd=root,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,preexec_fn=lambda:os.nice(19))

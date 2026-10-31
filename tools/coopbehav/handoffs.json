@@ -1,7 +1,13 @@
 {
+  "publish_dir": "E:/agent-work/c4-coopbehav/tools/coopbehav/evidence/live",
+  "commit_published": true,
   "documents": [
     "E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_DESIGN.md",
     "E:/agent-work/c4-coopmeasure/AUDIT_DESIGN.md"
+  ],
+  "remote_sources": [
+    {"host": "gpuR", "kind": "sumocf", "root": "/root/sumocf20261031"},
+    {"host": "gpuR", "kind": "coopaudit", "root": "/root/coopaudit20261031"}
   ],
   "indices": [
     "E:/agent-work/c4-sumocf/tools/sumocf/evidence/COOPBEHAV_INDEX.json",

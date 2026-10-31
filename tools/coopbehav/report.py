@@ -41,14 +41,17 @@ def load_trace(path, meta):
     with opener(path,"rt",encoding="utf-8") as stream:
         for line in stream:
             frame=json.loads(line)
+            if frame.get("phase")=="prefix": continue
             row={}
+            action_rows={str(a["vid"]):a for a in frame.get("actions",[])}
             for v in frame["vehicles"]:
                 j=str(v["vid"])
                 if j in row: raise ValueError("Duplicate trace identity")
                 issued=v.get("issued_acceleration_mps2")
                 if issued is not None and not np.isfinite(issued): issued=None
                 row[j]=Vehicle(float(v["s_m"]),float(v["v_mps"]),float(v["length_m"]),
-                               int(v["lane"]),bool(v["is_cav"]),issued,v.get("controller"))
+                               int(v["lane"]),bool(v["is_cav"]),issued,v.get("controller"),
+                               action_rows.get(j,{}).get("policy_mean"))
             times.append(float(frame["time_s"])); rows.append(row)
     branch=meta.get("branch",{})
     start=float(branch.get("t0_s",times[0])); end=start+float(branch.get("horizon_s",times[-1]-start))
@@ -145,6 +148,8 @@ def example_plot(tape,event,path):
 
 def run_report(views,out,pairs=None,arms=("mappo","ctrl0"),label="source"):
     out=safe(out); out.mkdir(parents=True,exist_ok=True)
+    source_hashes={name:hashlib.sha256((Path(__file__).parent/name).read_bytes()).hexdigest()
+        for name in ("report.py","io.py","detectors.py","discovery.py")}
     episodes=[]; all_events=[]; member_rows=[]; samples={}; discovery_rows=[]; input_rows=[]
     aggregate=defaultdict(lambda:dict(episodes=0,exposure_cav_s=0.,exposure_episode_s=0.,
                                     counts=Counter(),member_event_counts=Counter(),supported_counts=Counter(),
@@ -152,7 +157,7 @@ def run_report(views,out,pairs=None,arms=("mappo","ctrl0"),label="source"):
                                     ramp_fit_gap_count=0))
 
     def consume(tape,identity,arm,reference=None,members=(),pair=None):
-        result=detect(tape,reference,members)
+        result=detect(tape,reference,members,pair["kind"] if pair else "native_member_release")
         record=dict(source=label,episode=identity,arm=arm,seed=tape.meta.get("seed"),
                     exposure_cav_s=result["exposure_cav_s"],exposure_episode_s=result["exposure_episode_s"],
                     coverage=result["coverage"],counts=dict(Counter(e["behaviour"] for e in result["events"])))
@@ -212,14 +217,15 @@ def run_report(views,out,pairs=None,arms=("mappo","ctrl0"),label="source"):
     if pairs is not None:
         index=read_json(pairs)
         for pair in index["pairs"]:
-            if pair.get("kind")!="native_member_release":
-                raise ValueError("Only explicit native_member_release pairs currently qualify")
+            if pair.get("kind") not in ("native_member_release","policy_mean_intervention"):
+                raise ValueError("Explicit native-release or policy-mean intervention required")
             check_seed(pair["seed"])
             if len(set(pair["members"]))!=len(pair["members"]) or len(pair["members"])<1:
                 raise ValueError("Pair index needs unique member identities")
             def resolve(name):
                 p=Path(pair[name]); return safe(p if p.is_absolute() else Path(pairs).parent/p)
-            meta={k:pair[k] for k in ("seed","arm","branch","trace_scope","trace_limitations") if k in pair}
+            meta={k:pair[k] for k in ("seed","arm","branch","trace_scope","trace_limitations",
+                 "position_dtype_epsilon","source_design","source_initial_state_sha256") if k in pair}
             actual,reference=load_trace(resolve("factual"),meta),load_trace(resolve("reference"),meta)
             consume(actual,str(pair["id"]),pair["arm"],reference,list(map(str,pair["members"])),pair)
     summaries={}
@@ -243,8 +249,7 @@ def run_report(views,out,pairs=None,arms=("mappo","ctrl0"),label="source"):
                  rates="events/CAV-hour; member-events/CAV-hour; groups additionally events/episode-hour",
                  examples="largest gap opening, otherwise longest event, first source order breaks ties",
                  missing_behaviours="Zero observed events is conditional on recorded coverage, not proof of absence")
-    summary["analysis_source_sha256"]={name:hashlib.sha256((Path(__file__).parent/name).read_bytes()).hexdigest()
-        for name in ("report.py","io.py","detectors.py","discovery.py")}
+    summary["analysis_source_sha256"]=source_hashes
     summary["source_manifest_sha256"]={str(root):hashlib.sha256(safe(Path(root)/
         "C4_EPISODES_MANIFEST.json").read_bytes()).hexdigest() for root in views}
     if pairs: summary["pair_index_sha256"]=hashlib.sha256(safe(pairs).read_bytes()).hexdigest()
