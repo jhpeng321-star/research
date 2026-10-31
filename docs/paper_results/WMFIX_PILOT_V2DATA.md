@@ -157,3 +157,11 @@ decision. GPU parity/launch/decision remain pending.
 - At17:45, three baseline shards run (own PIDs224101/224982/226871); fourth
   baseline and step10 full-panel shards are pending measured-memory admission.
   No full panel has completed. Continue monitoring FULL_PANEL_STEP10.json.
+
+## Step20 checkpoint milestone, 2026-10-31 18:14:15 +08
+- step_000020.pt SHA256
+  `2c1d152064bc9bb5359483d7c723fd474424eb70a351bcf2c8e6e5af4f776bad`.
+  Finite gradients/frozen-bitwise retained; elapsed4282.45s incl. prior spent budget.
+- Memory admission has grown to the registered maximum4 baseline shards
+  (224101/224982/226871/233889). At18:15 all4 are live; no shard/full panel has
+  completed yet. Step10/20 evaluation remains queued; no gate/accuracy claim.

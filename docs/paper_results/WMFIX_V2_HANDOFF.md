@@ -25,6 +25,8 @@
 - UPDATE17:45:12: step10 saved8bbd3a6d (finite/frozen kept); all14 inherited
   files byte-identical. Three step0 shards run; step10 PANEL is still pending.
   Checkpoint completion is NOT a full-panel result or pilot PASS.
+- UPDATE18:14:15: step20 saved2c1d1520 (finite/frozen kept);4 baseline shards
+  now live incl.233889. Full step10 panel remains queued; no completed shard yet.
 
 ## SUPERSEDING MAIN 15:25 v2-DATA / Sol resume 15:34 gpuA clock
 - MAIN approved DATA ONLY, smoothing OFF, amended v1 30-step pilot gate. Code:
