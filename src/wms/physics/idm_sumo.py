@@ -432,6 +432,7 @@ def action_step_update(v: Tensor, held_accel: Optional[Tensor], p: SumoIDMParams
 PURE_SUMO_PHYSICS = {
     "cf_model": "sumo_idm",
     "emergency_braking": False,
+    "emergency_onset": "plant",
     "emergency_decel_mps2": None,
     "merge_cal": False,
     "mainline_merge_yield": False,
