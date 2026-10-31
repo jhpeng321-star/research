@@ -1,6 +1,18 @@
 # S-RB-RUNB handoff
 
-Updated 2026-11-01 00:02 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+Updated 2026-11-01 00:13 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+
+## Fresh-session resume 00:13
+- Preserved clean HEAD `df8bac33` and existing watcher PID33076 (creation
+  00:01:31, exact RUNB watch.py command verified). No replacement watcher or
+  evaluation dispatch launched. Its 00:11:32 poll completed successfully.
+- Read current INT/EVAL handoffs: CLI published, no READY FOR EVAL candidate.
+  Shared evalclaims contains only protocol notes; no candidate claims or done files.
+- gpuR read-only audit 00:12:19: RTX4090, 13,898/24,564 MiB, 99% utilization,
+  load15.61. Existing owners' processes preserved.
+- MAIN 00:10 addendum acknowledged: this session stays alive, sleeping between
+  ten-minute checks until ~07:00 while the existing bounded watcher handles
+  exclusive claims and dispatch. No duplicate running work.
 
 ## Status
 - Read `rb_common.md`, owner registration and four WHY reports; evaluation only.
