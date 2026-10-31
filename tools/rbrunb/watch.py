@@ -247,6 +247,8 @@ def main():
     p.add_argument('--once', action='store_true')
     p.add_argument('--stage-only', action='store_true', help='Stage and verify code, without claiming or inference')
     p.add_argument('--interval', type=int, default=600)
+    p.add_argument('--deadline', help='Explicit timezone-aware owner supervision deadline')
+    p.add_argument('--freeze-at', help='Close intake of new claims at this owner freeze time')
     a = p.parse_args()
     assert a.interval >= 30
     state = WORK/'runs'/'rbrunb'
@@ -263,12 +265,16 @@ def main():
     lock.seek(0)
     msvcrt.locking(lock.fileno(), msvcrt.LK_NBLCK, 1)
     now = datetime.now().astimezone()
-    end = now.replace(hour=7, minute=0, second=0, microsecond=0)
-    if now >= end:
+    end = datetime.fromisoformat(a.deadline) if a.deadline else now.replace(hour=7, minute=0, second=0, microsecond=0)
+    assert end.tzinfo is not None, 'Deadline must include timezone'
+    if not a.deadline and now >= end:
         end += timedelta(days=1)
     deadline = end.timestamp()
+    freeze = datetime.fromisoformat(a.freeze_at) if a.freeze_at else end
+    assert freeze.tzinfo is not None and now < freeze <= end
     save_new(state/f'WATCH_{os.getpid()}_{time.time_ns()}.json',
              dict(owner=OWNER, pid=os.getpid(), interval=a.interval, deadline=end.isoformat(),
+                  freeze_at=freeze.isoformat(),
                   started=now.isoformat(), script_sha256=sha(__file__)))
     while time.time() < deadline+1800:
         tick = time.monotonic()
@@ -297,7 +303,7 @@ def main():
                 if old.get('owner') == OWNER and old['variant'] not in published:
                     records.append(old['manifest'])
             candidates = eligible(records)
-            if time.time() >= deadline:
+            if time.time() >= freeze.timestamp():
                 candidates = [r for r in candidates if (SHARED/(r['variant']+'.claim')).exists()]
             if candidates:
                 event['evaluation'] = launch_or_status(candidates[0], state, deadline)

@@ -19,7 +19,7 @@ def main():
     stamp = time.time_ns()
     log_path = root/f'watch_{stamp}.log'
     with log_path.open('x', encoding='utf-8') as log:
-        child = subprocess.Popen([sys.executable, '-B', '-u', str(here/'watch.py')],
+        child = subprocess.Popen([sys.executable, '-B', '-u', str(here/'watch.py'), *sys.argv[1:]],
                                  cwd=work, stdin=subprocess.DEVNULL, stdout=log,
                                  stderr=subprocess.STDOUT,
                                  creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP,

@@ -13,6 +13,25 @@ Updated 2026-11-01 02:11 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
   of the unlaunched B2 waiter and owned Windows watcher. Claims, sources, failed
   original B and all completed peer work remain preserved.
 
+## Current 02:12 — owner noon continuation LIVE
+- Exact owned Windows watcher33076 replaced by watcher**35616** with explicit
+  `--deadline 2026-11-01T11:30:00+08:00 --freeze-at 2026-11-01T09:30:00+08:00`.
+- Exact owned gpuR waiter755633 continued as **762343**, deadline11:30. Identical
+  immutable code/source hashes, original B2 claim/MANIFEST/LAUNCH preserved.
+  Admission + launch locks held; pidfd and boot/start-tick/cmdline checks passed;
+  no DISPATCH/shard/tasks existed before or after the continuation. No failed-job
+  replay. Supervisor762343's receipt independently confirms deadline1793503800.
+- Durable shared receipt: `rb-shared/evalclaims/RUNB_NOON_CONTINUATION.json`;
+  remote `WM-PHYS-B2/OWNER_NOON_CONTINUATION{,_REQUEST}.json` and
+  `SUPERVISOR_762343_*.json` (exact nanosecond suffix retained on gpuR).
+- Local first noon poll02:11:35: B2 LIVE/tasks0. Resource sample16296MiB/100%,
+  load16.89, still WAITING_RESOURCES; <=20000MiB admission retained.
+- `py -3.13 -B tools/rbrunb/test_runner.py`:9PASS. First Windows continuation
+  precheck rejected CIM's microsecond rounding (6x100ns), before any signal;
+  exact handle creation tick639290592919104196 then verified and operation passed.
+- Session remains alive with ten-minute sleeps/checks through11:30;04/08 interim
+  status and09:30 intake freeze supersede the historical07:00 notes below.
+
 ## Current — corrected B2 claimed / WAITING_RESOURCES
 - Existing watcher33076 automatically claimed **WM-PHYS-B2** at01:31:32 and
   launched ONE supervisor **gpuR755633**; original B remains withdrawn/tasks0.
