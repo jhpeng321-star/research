@@ -43,3 +43,15 @@ with command_present=false/controller=native_sumo; simulation commands/fingerpri
 safety are unchanged. CPU regression covers sentinel/real commands/infinity rejection.
 Both old reservations remain: conservative DATA1,491,480, LIVE99,360, total1,590,840;
 actual abandoned physics366, slack9,160. This is an explicit diagnosed correction.
+
+## Resumable dispatch and milestone commands
+`python -m tools.coopbandit.dispatch status` reports roots, charges and STOPs.
+`plan` waits for all screens/repeats, then freezes SHARDS.json; register/commit its
+hash before `install`, `canaries`, and `expand`. Two low-share worlds go to gpuR;
+remaining whole worlds alternate cpuQ/gpuA in a 4:5 pattern. No world is split.
+Each host executes ONE allocated branch first, requiring the copied full bitwise
+prefix, before pool expansion. The canary is reused by the pool, never rerun.
+`collect` transports only explicit RESULT/CLOSE receipts and builds immutable
+partial/full snapshots; `analyze` runs the registered nested grouped model.
+All raw observable tapes remain on their originating hosts with SHA256 receipts.
+Transport can be resumed; a physics STOP blocks that shard and is never cleared.
