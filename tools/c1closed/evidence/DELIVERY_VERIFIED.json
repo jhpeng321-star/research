@@ -1,0 +1,19 @@
+{
+ "schema": "c1closed_delivery_check/1",
+ "passed": true,
+ "worlds": 40,
+ "tasks": 480,
+ "analysis_sha256": "0c4d8875631ca969844abb74e183bb199cbdc01ae7b4b59b6fb75371a75f9ffb",
+ "verifier_sha256": "96bcd7f35646842eee8d6485994a103f52898a480db859bf57deff2b3b39dc2e",
+ "checks": [
+  "unique_world_arm_horizon_keys",
+  "complete_480_task_K8_panel",
+  "input_output_hashes",
+  "additive_signed_components",
+  "paired_common_cohort_differences",
+  "unavailable_not_zero",
+  "finite_cluster_CIs",
+  "report_60_line_limit",
+  "PNG_decode_dimensions"
+ ]
+}
