@@ -29,6 +29,7 @@ FORBIDDEN = ('hold' + 'out', 'held' + 'out', 'cal' + '_split', 'chunk' + '5',
              'vehicle' + '_params', 'driver' + '_params', 'assignment')
 FILES = ('episode.json', 'time_s.npy', 'veh_kin.npy', 'veh_mask.npy', 'is_cav.npy', 'vid.npy')
 ARMS = ('native', 'ctrl0', 'mappo', 'pi', 'circles')
+MOTIVATIONS = {1: 'strategic', 2: 'cooperative', 3: 'speed_gain', 4: 'keep_right'}
 
 
 def safe_path(path: Path, root: Path) -> Path:
@@ -130,6 +131,7 @@ def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reus
         raise ValueError('unexpected time discretization')
     memory = None
     actual, proposals = [], {'lc2013': [], 'mobil': []}
+    motivated = {name: [] for name in MOTIVATIONS.values()}
     exposure = Counter()
     wishes, blocked = Counter(), Counter()
     for t in range(len(times) - 1):
@@ -170,6 +172,8 @@ def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reus
             for name, choice in choices.items():
                 if choice[j] != source[j]:
                     proposals[name].append(event(choice[j]))
+                    if name == 'lc2013':
+                        motivated[MOTIVATIONS[int(memory['lc2013_reason'][0, j])]].append(event(choice[j]))
     scores = {}
     for name, events in proposals.items():
         if name == 'mobil' and reuse_mobil is not None:
@@ -185,6 +189,11 @@ def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reus
             by_transition={key: match_events([e for e in actual if e[1] == lane],
                 [e for e in events if e[1] == lane], 0)
                 for lane, key in ((0, 'return'), (1, 'overtake'), (2, 'merge'))})
+        if name == 'lc2013':
+            scores[name]['by_motivation'] = {
+                reason: dict(exact=match_events(actual, ev, 0),
+                             run_window_2s=match_events(actual, compress_proposals(ev, physics.dt_s), 2))
+                for reason, ev in motivated.items()}
     return dict(episode=meta['episode'], seed=int(meta['seed']), arm=meta['arm'],
                 input_sha256=hashes, recorded=len(actual), exposure=dict(exposure),
                 wishes=dict(wishes), blocked=dict(blocked), scores=scores)
@@ -213,6 +222,18 @@ def aggregate(rows):
             sums['recall'] = sums['matched'] / sums['recorded'] if sums['recorded'] else None
             sums['precision'] = sums['matched'] / sums['predicted'] if sums['predicted'] else None
             result[model]['by_transition'][transition] = sums
+        if model == 'lc2013' and all('by_motivation' in r['scores'][model] for r in rows):
+            result[model]['by_motivation'] = {}
+            for motivation in MOTIVATIONS.values():
+                result[model]['by_motivation'][motivation] = {}
+                for metric in ('exact', 'run_window_2s'):
+                    cells = [r['scores'][model]['by_motivation'][motivation][metric] for r in rows]
+                    sums = {key: sum(c[key] for c in cells) for key in ('matched', 'recorded', 'predicted')}
+                    sums['precision'] = sums['matched'] / sums['predicted'] if sums['predicted'] else None
+                    # Recorded tapes have no motivation labels. This is the
+                    # contribution to ALL-event recall, not class-conditional recall.
+                    sums['recall_contribution'] = sums['matched'] / sums['recorded'] if sums['recorded'] else None
+                    result[model]['by_motivation'][motivation][metric] = sums
     return result
 
 
@@ -262,6 +283,7 @@ def main():
                   horizon_s=args.horizon_s, prehistory_s=60, settings='population only',
                   snapshot='recorded post-motion s/v/a with pre-change lanes; teacher forced',
                   cohort='HDV, same identity, normal road in both adjacent frames',
+                  motivation_contract='predicted reason; recall contribution uses all recorded events; no observed motivation labels',
                   mobil_reuse=(str(args.reuse_mobil_from) if baseline is not None else None),
                   physics=asdict(physics), aggregate=aggregate(rows),
                   by_arm={arm: aggregate([r for r in rows if r['arm'] == arm]) for arm in ARMS

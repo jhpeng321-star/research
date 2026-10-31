@@ -1,5 +1,10 @@
 # S-RB-LANE handoff — integration-ready highway subset
 
+**00:10 precision continuation active:** prior commits/results retained. New
+per-predicted-motivation diagnostics added; source audit identified stale
+keep-right requests outside their speed gate and infinite default route
+distances. Physics unchanged so far; see `docs/LC2013_PRECISION_ITERATIONS.md`.
+
 Branch `c4/rb-lane`, base `f0db3c82`; source implementation through `127a106f`.
 Owner WM-PHYS authorization REGISTRATION.md:5683 (2026-10-31 23:12).
 
