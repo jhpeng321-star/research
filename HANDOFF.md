@@ -69,6 +69,10 @@ Updated 2026-10-31 23:58 +08:00; branch `c4/rb-int`, base `f0db3c82`.
   Full-panel arrival/source conservation remains a separate required gate.
 
 ## Tests / results
+- Immutable gpuA stage f2d9a3fff741 exists. First smoke stopped BEFORE rollout:
+  source checkpoint had emergency_onset=driver_b, incompatible with disabling its
+  legacy envelope. Recipe now explicitly resets emergency_onset=plant. Preserve
+  first stage; no task output or scientific prediction was produced by that attempt.
 - C point-physics adapter now consumes the exact pooled_full_v5 JSON, identity
   binds its SHA, fixes HDV parameters while retaining registered CAV defaults,
   and gives entrants the same point settings. A/B/C recorded smoke is frozen
