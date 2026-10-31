@@ -241,3 +241,22 @@ def test_float32_one_ulp_beyond_ramp_end_is_not_a_new_merge_window():
     exact, mask = scene([(p.merge_zone_s1_m, 2, 0)])
     exact[..., 0] = torch.nextafter(exact[..., 0], torch.full_like(exact[..., 0], float('inf')))
     assert lane_change(exact, mask, p)['next_lane'].item() == 2
+
+
+def test_cooperative_early_return_does_not_also_accumulate_a_speed_gain_wish():
+    # Ramp request makes its target follower clear left. The follower also has
+    # a slow current leader, but source1669 returns before1820's wish update.
+    kin,mask = scene([(40,2,10),(31,1,10),(60,1,5)])
+    out = lane_change(kin,mask,PhysicsConfig())
+    assert out['lc2013_reason'][0,1] == COOPERATIVE
+    assert out['lc2013_cooperative_return'][0,1]
+    assert out['lc2013_target_speed'][0,1] > out['lc2013_this_speed'][0,1]
+    assert out['lc2013_left'][0,1] == 0
+
+
+def test_source_zero_cost_cooperation_at_zero_parameter_is_not_an_extra_disable_gate():
+    kin,mask = scene([(40,2,10),(31,1,10),(60,1,5)])
+    out = lane_change(kin,mask,PhysicsConfig(),driver_params={'lcCooperative':torch.zeros(1,3)})
+    assert out['lc2013_reason'][0,1] == COOPERATIVE
+    assert out['next_lane'][0,1] == 0
+    assert out['lc2013_left'][0,1] == 0

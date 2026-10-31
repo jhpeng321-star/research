@@ -91,10 +91,14 @@ recall37.942% (1235/41095); encoder12:2.393%/40.369% (1314/54904). Both report
 5881 corrected HDV frames, source/aggregate/input checks PASS, matching MOBIL
 baselines reused. Both workers758018/762113 exited; no owned jobs remain.
 
-Native-only physical-point sensitivity13 is frozen for scoring: consumes the
+Native-only physical-point sensitivity13 is verified: consumes the
 already-published S-RB-FIT3130 causal driver points, exact32 native observation
 SHA bindings; no fitting or LC-style change. Separate sensitivity, not an A/B
-replacement. Current combined CPU gate58PASS (CPU_MOTION_POINTS.xml).
-Dispatched once: cpuQ own870050,
-`/home/ubuntu/rblane20261031_panel13_b1047447f57d`; native-only32 episodes,
-new physical-setting MOBIL scored once. Preserve dispatch; no duplicate jobs.
+replacement. Native236/626 matches, precision3.094%, recall37.700%; default11
+native has the same total matches but8193 vs7627 proposals. Matched-mode
+MOBIL31/626. All checks PASS;870050 exited.
+
+Next source fix: cooperative early returns now freeze wish accumulation as
+SUMO1643–1669 requires, using pre-update inconvenience. An extra positive-
+cooperation gate absent from source is removed. 60CPU PASS; default/encoder
+and native-point measurements follow, with matching completed MOBIL reused.

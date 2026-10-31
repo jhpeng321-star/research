@@ -418,3 +418,32 @@ claimed as calibrated uncertainty. New-setting matched MOBIL runs once; source,
 arm subset, input SHA and table-reader identity protect future cache reuse.
 Point-table tests cover identity/fallback/CAV defaults and reject foreign-arm,
 out-of-FIT, nonpositive or mismatched-observation inputs.
+
+Sensitivity13 VERIFIED: native-only32worlds/626 events, LC236/7627 exact,
+precision3.0943%, recall37.6997%; matched MOBIL31/770, precision4.0260%,
+recall4.9521%. Same native subset of default11 has236/8193, precision2.8805%
+and identical total recall. Different physical inference removes566 proposal
+steps with the same total match count; this is not proof of identical matched
+identities or a distributional improvement. All identity/artifact/source and
+original-runtime reassembly checks PASS; owned870050 exited. No fitting ran.
+Per motivation (precision / native626-event recall contribution): strategic
+14.808%/13.578pp (85/574); cooperative15.672%/3.355pp (21/134);
+speed-gain2.343%/12.141pp (76/3244); keep-right1.469%/8.626pp (54/3675).
+
+## Cooperative early-return ordering14 (source-frozen before scoring)
+
+Source1643–1669 returns on cooperative clearing BEFORE1694–1826's wish updates.
+The port had accumulated speed-gain wishes while returning COOPERATIVE, then
+used updated counters in inconvenience. Reorder to compute the source condition
+from pre-update wishes and freeze accumulation on that branch, including blocked
+cooperative requests. Source1565's thisSpeed==0 inconvenience convention is also
+retained. Remove the extra positive-parameter disable gate absent from source:
+zero-cost cooperation atlcCooperative0 is permitted by the actual predicate.
+The earlier avoid-overtake-right impulse remains, as it precedes the source's
+cooperative return; only the later ordinary accumulation is skipped.
+
+Independent synthetic cases have an urgent ramp request and its follower behind
+a slow current leader: source returns COOPERATIVE with left wish still0, rather
+than accruing a latent speed-gain manoeuvre. Targeted32physics/model tests PASS.
+This changes no inferred parameters and targets a real accumulation/timing path;
+before/after metrics and per-motivation precision/recall will be reported.

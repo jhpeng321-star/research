@@ -278,8 +278,22 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
     left_wish += torch.where(avoid_impulse, torch.trunc(
         dt * dv_right / p["v0"].clamp_min(10) * PRECISION), 0.0)
     relative_gain = (neigh_speed - this_speed) / neigh_speed.clamp_min(10)
-    # Urgent/stay branches return before wish updates in SUMO.
-    update = legal & active & ~urgent & ~stay
+    # Source1643-1669 returns on cooperative clearing BEFORE1694's speed-gain
+    # and keep-right accumulation. Inconvenience uses the pre-update wishes.
+    request = active & legal & urgent & blocked_f
+    i = torch.arange(v.shape[-1], device=v.device)
+    incoming = request.unsqueeze(-1) & (iff.unsqueeze(-1) == i)
+    help_left = (incoming & (~right).unsqueeze(-1)).any(-2)
+    help_right = (incoming & right.unsqueeze(-1)).any(-2)
+    rel_speed_diff = torch.where(this_speed == 0, 0.0,
+        (this_speed - neigh_speed) / torch.maximum(this_speed, neigh_speed).clamp_min(1e-9))
+    inconvenience = torch.maximum(rel_speed_diff,
+        torch.where(right, left_wish / threshold_r, right_wish / threshold_l)).clamp_max(1)
+    cooperative = ((help_right & right) | (help_left & ~right))
+    cooperative &= inconvenience <= p["lcCooperative"]
+    cooperative &= to_best | (target_length / (offset.abs() + 1) > la)
+    cooperative_return = legal & active & ~urgent & ~stay & cooperative
+    update = legal & active & ~urgent & ~stay & ~cooperative
     left_new = torch.where(this_speed > neigh_speed, torch.trunc(left_wish * 0.5**dt),
                torch.where(this_speed == neigh_speed, torch.trunc(left_wish * 0.8**dt),
                            left_wish + torch.trunc(dt * relative_gain * PRECISION)))
@@ -319,19 +333,6 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
     right_wish = torch.where(update & right, right_new, right_wish)
     keep = torch.where(update & right & (this_speed - 5 / 3.6 <= neigh_speed), keep_new, keep)
 
-    # amBlockingFollowerPlusNB: urgent neighbouring vehicle needs the current
-    # lane. SUMO messages carry the *same physical direction*, not opposite.
-    request = active & legal & urgent & blocked_f
-    i = torch.arange(v.shape[-1], device=v.device)
-    incoming = request.unsqueeze(-1) & (iff.unsqueeze(-1) == i)
-    help_left = (incoming & (~right).unsqueeze(-1)).any(-2)
-    help_right = (incoming & right.unsqueeze(-1)).any(-2)
-    inconvenience = torch.maximum(
-        (this_speed - neigh_speed) / torch.maximum(this_speed, neigh_speed).clamp_min(1e-9),
-        torch.where(right, left_wish / threshold_r, right_wish / threshold_l)).clamp_max(1)
-    cooperative = ((help_right & right) | (help_left & ~right))
-    cooperative &= (inconvenience <= p["lcCooperative"]) & (p["lcCooperative"] > 0)
-    cooperative &= to_best | (target_length / (offset.abs() + 1) > la)
     # LC2013.cpp:1785 is INSIDE the non-slower-right-lane branch. A mature
     # keep-right wish persists across a slowdown but cannot request a change
     # until the anticipated speed condition is satisfied again.
@@ -389,6 +390,7 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
                   lc2013_keep_full_seconds=full_seconds,
                   lc2013_keep_signed_cap=right & slow_current & (current_v > p["v0"]),
                   lc2013_endpoint_canonicalized=canonicalized_end,
+                  lc2013_cooperative_return=cooperative_return,
                   lc2013_this_speed=this_speed, lc2013_target_speed=neigh_speed,
                   lc2013_left=torch.where(present, left_wish, 0),
                   lc2013_right=torch.where(present, right_wish, 0),
