@@ -122,3 +122,12 @@ regression has a safe target, mature wish and positive gain~.00033; SUMO's
 veto rejects it. CPU28/28 PASS. Candidate5 is collected and verified, so the
 next diagnostic can run without overlapping an owned worker; no threshold
 fitted to data.
+
+Candidate6 diagnostic extension (same fixed cohort): predicted-reason TP/FP
+profiles by physical upstream/merge/downstream edge, mean observed and
+anticipated speeds; recorded-event failures split into no-wish/front-block/
+back-block/other safety. Proximity reports whether a proposal's vehicle and
+directed transition has ANY recorded event in the **bounded60s window** and
+the nearest signed timing error. Missing means window-censored, not proof it
+never changes. Scoring-only5/5 CPU tests PASS, including censored-direction
+and identity handling. These diagnostics do not change the physics decisions.

@@ -1,4 +1,4 @@
-from tools.rblane.validate import match_events, compress_proposals, aggregate, MOTIVATIONS
+from tools.rblane.validate import match_events, compress_proposals, aggregate, MOTIVATIONS, event_proximity
 
 
 def event(t, vid=1, source=1, dest=0):
@@ -42,3 +42,13 @@ def test_motivation_scores_keep_false_positives_and_all_event_denominator():
     assert reason['precision'] == 1 / 3
     assert reason['recall_contribution'] == 1 / 2
     assert reason['predicted'] == 3
+
+
+def test_proximity_does_not_invent_events_for_unobserved_transitions():
+    real = [event(10)]
+    predicted = [event(3), event(13), event(10, vid=2), event(10, source=0, dest=1)]
+    result = event_proximity(real, predicted)
+    assert result['no_recorded_transition_in_window'] == 2
+    assert result['has_recorded_transition_in_window'] == 2
+    assert result['nearest_timing_signed_sum_s'] == -4
+    assert result['nearest_timing_abs_sum_s'] == 10

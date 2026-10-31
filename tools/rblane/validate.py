@@ -108,6 +108,25 @@ def compress_proposals(events, dt):
     return runs
 
 
+def event_proximity(recorded, predicted):
+    """Describe bounded-window timing mismatch without a behavioural cutoff."""
+    groups = {}
+    for event in recorded:
+        groups.setdefault(tuple(event[:3]), []).append(event[3])
+    offsets = []
+    missing = 0
+    for event in predicted:
+        times = groups.get(tuple(event[:3]), ())
+        if times:
+            offsets.append(min((event[3] - t for t in times), key=abs))
+        else:
+            missing += 1
+    return dict(no_recorded_transition_in_window=missing,
+                has_recorded_transition_in_window=len(offsets),
+                nearest_timing_signed_sum_s=sum(offsets),
+                nearest_timing_abs_sum_s=sum(abs(t) for t in offsets))
+
+
 @torch.no_grad()
 def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reuse_mobil=None):
     hashes = {name: sha(safe_path(path / name, root)) for name in FILES}
@@ -134,6 +153,7 @@ def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reus
     motivated = {name: [] for name in MOTIVATIONS.values()}
     exposure = Counter()
     wishes, blocked = Counter(), Counter()
+    diagnostics, misses = {}, Counter()
     for t in range(len(times) - 1):
         if times[t] < t0 - 60 or times[t] >= t0 + horizon:
             continue
@@ -169,11 +189,32 @@ def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reus
                         float(times[t + 1]), float(kin[t + 1, j, 0])]
             if destination[j] != source[j]:
                 actual.append(event(destination[j]))
+                if choices['lc2013'][j] == destination[j]:
+                    failure = 'match'
+                elif not memory['lc2013_wish'][0, j]:
+                    failure = 'no_wish'
+                elif memory['lc2013_blocked_leader'][0, j]:
+                    failure = 'blocked_leader'
+                elif memory['lc2013_blocked_follower'][0, j]:
+                    failure = 'blocked_follower'
+                else:
+                    failure = 'other_safety'
+                misses[direction + '/' + failure] += 1
             for name, choice in choices.items():
                 if choice[j] != source[j]:
                     proposals[name].append(event(choice[j]))
                     if name == 'lc2013':
-                        motivated[MOTIVATIONS[int(memory['lc2013_reason'][0, j])]].append(event(choice[j]))
+                        reason = MOTIVATIONS[int(memory['lc2013_reason'][0, j])]
+                        motivated[reason].append(event(choice[j]))
+                        outcome = 'tp' if choice[j] == destination[j] else 'fp'
+                        position = float(moved[j, 0])
+                        region = ('upstream' if position < physics.merge_zone_s0_m else
+                                  'downstream' if position > physics.merge_zone_s1_m else 'merge')
+                        cell = diagnostics.setdefault(reason + '/' + outcome + '/' + region, Counter())
+                        cell['count'] += 1
+                        cell['speed_sum_mps'] += float(moved[j, 4])
+                        cell['this_speed_sum_mps'] += float(memory['lc2013_this_speed'][0, j])
+                        cell['target_speed_sum_mps'] += float(memory['lc2013_target_speed'][0, j])
     scores = {}
     for name, events in proposals.items():
         if name == 'mobil' and reuse_mobil is not None:
@@ -192,11 +233,13 @@ def episode(path: Path, root: Path, physics: PhysicsConfig, horizon: float, reus
         if name == 'lc2013':
             scores[name]['by_motivation'] = {
                 reason: dict(exact=match_events(actual, ev, 0),
-                             run_window_2s=match_events(actual, compress_proposals(ev, physics.dt_s), 2))
+                             run_window_2s=match_events(actual, compress_proposals(ev, physics.dt_s), 2),
+                             proximity=event_proximity(actual, ev))
                 for reason, ev in motivated.items()}
     return dict(episode=meta['episode'], seed=int(meta['seed']), arm=meta['arm'],
                 input_sha256=hashes, recorded=len(actual), exposure=dict(exposure),
-                wishes=dict(wishes), blocked=dict(blocked), scores=scores)
+                wishes=dict(wishes), blocked=dict(blocked), scores=scores,
+                proposal_diagnostics=diagnostics, recorded_outcomes=dict(misses))
 
 
 def aggregate(rows):
@@ -234,6 +277,20 @@ def aggregate(rows):
                     # contribution to ALL-event recall, not class-conditional recall.
                     sums['recall_contribution'] = sums['matched'] / sums['recorded'] if sums['recorded'] else None
                     result[model]['by_motivation'][motivation][metric] = sums
+                if all('proximity' in r['scores'][model]['by_motivation'][motivation] for r in rows):
+                    cells = [r['scores'][model]['by_motivation'][motivation]['proximity'] for r in rows]
+                    result[model]['by_motivation'][motivation]['proximity'] = {
+                        key: sum(c[key] for c in cells) for key in cells[0]}
+            if all('proposal_diagnostics' in r for r in rows):
+                profile = {}
+                for r in rows:
+                    for key, cell in r['proposal_diagnostics'].items():
+                        profile.setdefault(key, Counter()).update(cell)
+                result[model]['proposal_diagnostics'] = profile
+                misses = Counter()
+                for r in rows:
+                    misses.update(r['recorded_outcomes'])
+                result[model]['recorded_outcomes'] = dict(misses)
     return result
 
 
