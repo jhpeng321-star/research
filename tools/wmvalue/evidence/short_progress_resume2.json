@@ -1,0 +1,27 @@
+{
+ "schema": "wmvalue_progress/1",
+ "time": 1793457776.363118,
+ "dispatcher_pid": 27340,
+ "claimed": 193,
+ "completed": 199,
+ "short_completed": 183,
+ "original_completed": 16,
+ "expected": 320,
+ "failures": 1,
+ "unresolved_failures": 0,
+ "workers": {
+  "gpuA": {
+   "returncode": 0,
+   "own_process_metadata": "   PID   PPID     ELAPSED %CPU   RSS COMMAND\n300079 300054       00:34 99.0 999884 /root/miniconda3/bin/python -B -u -\n300080 300059       00:34 97.3 1295160 /root/miniconda3/bin/python -B -u -\n300090 300055       00:33 98.7 907268 /root/miniconda3/bin/python -B -u -\n300102 300053       00:33 98.4 1386080 /root/miniconda3/bin/python -B -u -\n"
+  },
+  "gpuR": {
+   "returncode": 0,
+   "own_process_metadata": "   PID   PPID     ELAPSED %CPU   RSS COMMAND\n685678 685650       00:33  100 1236044 /root/miniconda3/bin/python -B -u -\n685680 685653       00:33  100 1219952 /root/miniconda3/bin/python -B -u -\n685714 685654       00:32  100 955240 /root/miniconda3/bin/python -B -u -\n685715 685651       00:32  100 851436 /root/miniconda3/bin/python -B -u -\n685753 685652       00:29 99.3 1180040 /root/miniconda3/bin/python -B -u -\n"
+  }
+ },
+ "launch_sha256": "d750b432a30b0778d8b58b0de1e76f2c826d069992aa5ecac571396b26bc8145",
+ "active_launch_receipt": "RESUME2.json",
+ "complete": false,
+ "frozen_test_written": false,
+ "amended_test_written": false
+}

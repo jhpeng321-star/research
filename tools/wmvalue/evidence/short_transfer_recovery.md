@@ -21,3 +21,7 @@
   Evidence short_transfer_recovery_binding.json. No reserved label/model scoring.
 - Worker short_v1 and frozen V/D/E unchanged. finalize_short change is ONLY
   hash-bound transfer-path resolution. Scientific predictions/test rules frozen.
+- Verified RESUME2 dispatcher27340 at~22:42, same root/worker/model/test;
+ 199combined complete,16original+183short, zero unresolved failures. Inherited
+  workers/outputs collected without redispatch. Actual receipt
+  short_progress_resume2.json binds RESUME2.json SHA d750b432a30b0778d8b58b0de1e76f2c826d069992aa5ecac571396b26bc8145.
