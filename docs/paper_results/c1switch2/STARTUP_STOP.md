@@ -19,3 +19,8 @@ A corrected immutable stage requires an explicit registered predecessor, verifie
 exited own PID, empty ledger and empty jobs; no automatic retry/refund or PID signals.
 The unused original4680 sim-s mechanics allocation remains the entire canary cap.
 The design/panel/arm budgets and all scientific/controller sources are unchanged.
+
+Repair commit1065f89d registered with the exact old-root predecessor in REGISTRATION.
+Corrected CPU-only stage: `/home/ubuntu/c1switch2_run_4ad4ece01d5a9ac1`.
+Pristine runner construction PASS; genuine frozen17/17guards; CPU125passed/1skip.
+No physics at staging/preflight. Any dispatch must explicitly name the old zero-debit predecessor.
