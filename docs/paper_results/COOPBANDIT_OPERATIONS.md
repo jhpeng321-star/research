@@ -35,3 +35,11 @@ Explicit v2 dispatch adds binary-version preflight and exports installed SUMO_HO
 on PATH; scientific runtime, safety and plan are unchanged. Retain the old1140 charge
 against the reserve: conservative data1,490,340<=1,500,000, plus live99,360 gives
 1,589,700<=1,600,000 (10,300 slack). Successful data remains1,489,200 actual sim-s.
+
+v2 PID257008 stopped at t366 because the optional strict-JSON trace tried to encode
+the executor's NaN native-SUMO/no-command sentinel as an acceleration. CLOSE actual366,
+charged1140, 66 trace rows retained. v3 maps only this documented sentinel to JSON null
+with command_present=false/controller=native_sumo; simulation commands/fingerprint and
+safety are unchanged. CPU regression covers sentinel/real commands/infinity rejection.
+Both old reservations remain: conservative DATA1,491,480, LIVE99,360, total1,590,840;
+actual abandoned physics366, slack9,160. This is an explicit diagnosed correction.

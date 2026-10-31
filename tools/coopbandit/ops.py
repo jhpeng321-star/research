@@ -8,15 +8,15 @@ from .protocol import checked, digest, sha, worlds, dev_worlds, FORBIDDEN
 LOCAL = Path(__file__).resolve().parents[2]
 REG = Path('E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md')
 PROBE = Path('E:/agent-work/c4-leverprobe/tools/leverprobe')
-ROOT = '/home/ubuntu/coopbandit20261031_v2'
+ROOT = '/home/ubuntu/coopbandit20261031_v3'
 PYTHON = dict(cpuQ='/home/ubuntu/miniconda3/bin/python', gpuR='/root/miniconda3/bin/python', gpuA='/root/miniconda3/bin/python')
 HOSTS = {
     'cpuQ': dict(root=ROOT,runtime='/home/ubuntu/e3final',checkpoint='/home/ubuntu/mappospeed/production2/policy_latest.pt',
                  deps=[],load_max=24,workers=8),
-    'gpuA': dict(root='/root/autodl-tmp/coopbandit20261031_v1',runtime='/root/autodl-tmp/c4/speedhead20261030/e3final',
+    'gpuA': dict(root='/root/autodl-tmp/coopbandit20261031_v3',runtime='/root/autodl-tmp/c4/speedhead20261030/e3final',
                  checkpoint='/root/autodl-tmp/c4/speedhead20261030/mappospeed_final169.pt',
                  deps=['/root/autodl-tmp/c4/speedhead20261030/pythondeps'],load_max=16,workers=8),
-    'gpuR': dict(root='/root/autodl-tmp/coopbandit20261031_v1',runtime='/root/autodl-tmp/c4/speedhead20261030/e3final',
+    'gpuR': dict(root='/root/autodl-tmp/coopbandit20261031_v3',runtime='/root/autodl-tmp/c4/speedhead20261030/e3final',
                  checkpoint='/root/autodl-tmp/c4/speedhead20261030/mappospeed_final169.pt',
                  deps=['/root/autodl-tmp/c4/speedhead20261030/pythondeps'],load_max=20,workers=2),
 }

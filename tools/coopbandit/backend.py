@@ -1,11 +1,38 @@
 """Leverprobe plant/executor reused unchanged; richer trace and clock export."""
 import gzip
 import hashlib
+import math
 import os
 from pathlib import Path
 import time
 
 from .protocol import canonical, guard, install_seed_scope, option, sha
+
+
+def command_record(value, requested):
+    """NaN is the executor's native-SUMO/no-command sentinel, not an acceleration."""
+    issued=float(value)
+    if math.isnan(issued):
+        return dict(controller='native_sumo',issued_acceleration_mps2=None,command_present=False)
+    if not math.isfinite(issued):
+        raise ValueError('infinite issued acceleration')
+    return dict(controller='option' if requested else 'policy_mean',
+                issued_acceleration_mps2=issued,command_present=True)
+
+
+def action_record(action):
+    out=dict(action)
+    absent=[]
+    for key,value in action.items():
+        if isinstance(value,float) and math.isnan(value):
+            if key not in ('mappo_raw','mappo_safe','issued_raw','issued_safe'):
+                raise ValueError('unexpected NaN in action '+key)
+            out[key]=None
+            absent.append(key)
+        elif isinstance(value,float) and not math.isfinite(value):
+            raise ValueError('infinite action '+key)
+    out['native_no_command_fields']=absent
+    return out
 
 
 def setup(binding):
@@ -47,10 +74,9 @@ def tick(b, plan=None, initial=None, start=None, trace=None):
         for r in rows:
             public = dict(r, length_m=float(b.traci.vehicle.getLength(r['vid'])))
             if r['is_cav']:
-                public['controller'] = 'option' if r['vid'] in requested else 'policy_mean'
-                public['issued_acceleration_mps2'] = float(np.asarray(cmd).reshape(-1)[slot[r['vid']]])
+                public.update(command_record(np.asarray(cmd).reshape(-1)[slot[r['vid']]],r['vid'] in requested))
             vehicles.append(public)
-        trace.write(canonical(dict(time_s=now,vehicles=vehicles,actions=audit,event=event))+'\n')
+        trace.write(canonical(dict(time_s=now,vehicles=vehicles,actions=[action_record(a) for a in audit],event=event))+'\n')
     _, info = b.env.step(cmd,lanes=None)
     interval = info['interval']
     road, source = interval['speed_deficit_vehicle_seconds'], interval['source_wait_vehicle_seconds']

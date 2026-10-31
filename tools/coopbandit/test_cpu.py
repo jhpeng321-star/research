@@ -106,6 +106,20 @@ class ProtocolTests(unittest.TestCase):
         self.assertNotEqual(exact(np.array([0.])),exact(np.array([-0.])))
         self.assertNotEqual(exact(np.array([1],dtype='f4')),exact(np.array([1],dtype='f8')))
 
+    def test_trace_distinguishes_native_nan_sentinel_from_command(self):
+        from .backend import command_record,action_record
+        from .protocol import canonical
+        native=command_record(float('nan'),False)
+        self.assertEqual(json.loads(canonical(native))['issued_acceleration_mps2'],None)
+        self.assertEqual(native['controller'],'native_sumo')
+        self.assertFalse(native['command_present'])
+        self.assertEqual(command_record(0.,True)['controller'],'option')
+        with self.assertRaises(ValueError): command_record(float('inf'),False)
+        log=action_record(dict(issued_safe=float('nan'),requested_raw=-1.))
+        self.assertEqual(json.loads(canonical(log))['issued_safe'],None)
+        self.assertEqual(log['native_no_command_fields'],['issued_safe'])
+        with self.assertRaises(ValueError): action_record(dict(requested_raw=float('nan')))
+
 
 if __name__=='__main__':
     unittest.main()
