@@ -1,0 +1,81 @@
+{
+ "ok": true,
+ "world": {
+  "demand": 2400,
+  "penetration": 0.05,
+  "seed": 969401
+ },
+ "actual_sim_s": 1200,
+ "targets": [
+  "mainline.163",
+  "mainline.162"
+ ],
+ "initial_signature": "6a0b15ebb4d17b11086917d4361f1cd72b56f76ef45619676322d7603a07b36e",
+ "pulses": [
+  {
+   "target": "mainline.163",
+   "speed_before": 0.8218067442109962,
+   "speed_after": 0.8318067442109962,
+   "delta_mps": 0.010000000000000009,
+   "acceleration_before_after": 0.7397326103543364,
+   "lane_position_before_after": 5.736873591622412,
+   "other_vehicle_speeds_unchanged": 90,
+   "api": "setPreviousSpeed",
+   "persistent_speed_override": false,
+   "pulse_at_s": 300.0,
+   "consumed_by_native_tick_s": 300.5
+  },
+  {
+   "target": "mainline.162",
+   "speed_before": 2.9179034205823586,
+   "speed_after": 2.9279034205823584,
+   "delta_mps": 0.009999999999999787,
+   "acceleration_before_after": 0.8594249246277572,
+   "lane_position_before_after": 10.89353103527754,
+   "other_vehicle_speeds_unchanged": 90,
+   "api": "setPreviousSpeed",
+   "persistent_speed_override": false,
+   "pulse_at_s": 300.0,
+   "consumed_by_native_tick_s": 300.5
+  }
+ ],
+ "original_reference": "/root/c1floor20261031/jobs/fallback_b_s969401/reference.npz",
+ "original_reference_sha256": "563a8a5ee04716e720bedcf2db0469fea531e4067008accca5fdb2a0c73f856c",
+ "original_receipt_sha256": "573cf8cd05df95640b2b17a87d82afce94ddb6deb9b159bee2a2aae5fa753c47",
+ "reproduction": {
+  "t": {
+   "identical": true,
+   "rows_first": 54353,
+   "rows_second": 54353
+  },
+  "vid": {
+   "identical": true,
+   "rows_first": 54353,
+   "rows_second": 54353
+  },
+  "s": {
+   "identical": true,
+   "rows_first": 54353,
+   "rows_second": 54353
+  },
+  "v": {
+   "identical": true,
+   "rows_first": 54353,
+   "rows_second": 54353
+  },
+  "a": {
+   "identical": true,
+   "rows_first": 54353,
+   "rows_second": 54353
+  },
+  "lane": {
+   "identical": true,
+   "rows_first": 54353,
+   "rows_second": 54353
+  }
+ },
+ "outputs": {
+  "alt0.npz": "089c3fadcc88392d421f323cd9d45260f92554d8ff3a600524414eec14ce2c09",
+  "alt1.npz": "42249ed050fc4ab8543265876a630a3a332ba5701efc3f91d88997d60f08715a"
+ }
+}

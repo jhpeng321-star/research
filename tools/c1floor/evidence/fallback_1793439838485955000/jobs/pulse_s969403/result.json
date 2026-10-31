@@ -1,0 +1,81 @@
+{
+ "ok": true,
+ "world": {
+  "demand": 1900,
+  "penetration": 0.1,
+  "seed": 969403
+ },
+ "actual_sim_s": 1200,
+ "targets": [
+  "mainline.164",
+  "mainline.163"
+ ],
+ "initial_signature": "06ecfb118e920f94da131bc723547cf1398f569d7e90d883d5bbb76f1128a0a0",
+ "pulses": [
+  {
+   "target": "mainline.164",
+   "speed_before": 27.435819216193,
+   "speed_after": 27.445819216193,
+   "delta_mps": 0.010000000000001563,
+   "acceleration_before_after": 0.0,
+   "lane_position_before_after": 5.1,
+   "other_vehicle_speeds_unchanged": 78,
+   "api": "setPreviousSpeed",
+   "persistent_speed_override": false,
+   "pulse_at_s": 300.0,
+   "consumed_by_native_tick_s": 300.5
+  },
+  {
+   "target": "mainline.163",
+   "speed_before": 26.077132086784516,
+   "speed_after": 26.087132086784518,
+   "delta_mps": 0.010000000000001563,
+   "acceleration_before_after": -0.6379854976889732,
+   "lane_position_before_after": 31.336628461206757,
+   "other_vehicle_speeds_unchanged": 78,
+   "api": "setPreviousSpeed",
+   "persistent_speed_override": false,
+   "pulse_at_s": 300.0,
+   "consumed_by_native_tick_s": 300.5
+  }
+ ],
+ "original_reference": "/root/c1floor20261031/jobs/fallback_b_s969403/reference.npz",
+ "original_reference_sha256": "ed28941f0d4afedc161944bcd25e372a9c5fc8095379ca4e6fba2f831c723c95",
+ "original_receipt_sha256": "e710dfdac8731d8340d69ff2569b22e3af9c4c9fafcae1d1ff3500820e36a7d5",
+ "reproduction": {
+  "t": {
+   "identical": true,
+   "rows_first": 42649,
+   "rows_second": 42649
+  },
+  "vid": {
+   "identical": true,
+   "rows_first": 42649,
+   "rows_second": 42649
+  },
+  "s": {
+   "identical": true,
+   "rows_first": 42649,
+   "rows_second": 42649
+  },
+  "v": {
+   "identical": true,
+   "rows_first": 42649,
+   "rows_second": 42649
+  },
+  "a": {
+   "identical": true,
+   "rows_first": 42649,
+   "rows_second": 42649
+  },
+  "lane": {
+   "identical": true,
+   "rows_first": 42649,
+   "rows_second": 42649
+  }
+ },
+ "outputs": {
+  "alt0.npz": "62d6904a96040f2f78c1f3d0ddeee97d6f6404d9a5e7c9bcc2d1264b70ca7f46",
+  "alt1.npz": "babb16bb300c15a3d37312199a29629bc916cd9b32105e210c2c3639c3453cb0"
+ }
+}

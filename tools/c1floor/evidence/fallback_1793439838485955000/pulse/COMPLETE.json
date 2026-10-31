@@ -1,0 +1,52 @@
+{
+ "ok": true,
+ "method": "instantaneous_speed_state_pulse_chaos",
+ "worlds": 6,
+ "draws": 12,
+ "actual_sim_s": 21900.0,
+ "charged_sim_s": 29700,
+ "original_continuations_bitwise": 6,
+ "workers": 1,
+ "nice": 19,
+ "owners": [
+  {
+   "pid": 522726,
+   "start_ticks": "4206562408",
+   "phase": "a",
+   "state": "exited"
+  },
+  {
+   "pid": 523077,
+   "start_ticks": "4206570986",
+   "phase": "b_canary",
+   "state": "exited"
+  },
+  {
+   "pid": 523745,
+   "start_ticks": "4206584225",
+   "phase": "b_full",
+   "state": "exited"
+  },
+  {
+   "pid": 525735,
+   "start_ticks": "4206615452",
+   "phase": "canary",
+   "state": "exited"
+  },
+  {
+   "pid": 526302,
+   "start_ticks": "4206626513",
+   "phase": "full",
+   "state": "exited"
+  }
+ ],
+ "labels_sha256": "18cc22aec803e980f663dac151f9a0175c52e366cd1130a79186561ff2eef89a",
+ "result_sha256": {
+  "969400": "0e484bf5aa9b5b7923cc53afe5ac5b9ae3c5227f3e1880efe1cbd5b0a52ebce5",
+  "969401": "1ffef85a3474ec5bee7daef39405fcd0de3bdb385dc8b757ae4addf3a558e2ac",
+  "969402": "b7fed6814498b09c3cb1fcc3d0f33a2773ff39fae69dd23ffac71f1ac4271490",
+  "969403": "97e31117ec88be6a9ac6def9435802161b98651d2ff0e51af284e972a707349f",
+  "969404": "59e6b03062e3edb1b6a6aee23a8c733b42271d12ffd0dc086295d5dcfc3c09c6",
+  "969405": "6f55847b111aab581204bba8c98ad705ea7a791bf523d8946e666cb01618fd80"
+ }
+}

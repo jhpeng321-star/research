@@ -1,0 +1,81 @@
+{
+ "ok": true,
+ "world": {
+  "demand": 2400,
+  "penetration": 0.1,
+  "seed": 969404
+ },
+ "actual_sim_s": 1200,
+ "targets": [
+  "mainline.169",
+  "mainline.168"
+ ],
+ "initial_signature": "2503ac987a94868bda6ebc762af96a429cdb169f7ec3b2cac4e0a641c3e22ace",
+ "pulses": [
+  {
+   "target": "mainline.169",
+   "speed_before": 2.255873300947478,
+   "speed_after": 2.2658733009474776,
+   "delta_mps": 0.009999999999999787,
+   "acceleration_before_after": 1.4193961230820524,
+   "lane_position_before_after": 7.566511756933331,
+   "other_vehicle_speeds_unchanged": 86,
+   "api": "setPreviousSpeed",
+   "persistent_speed_override": false,
+   "pulse_at_s": 300.0,
+   "consumed_by_native_tick_s": 300.5
+  },
+  {
+   "target": "mainline.168",
+   "speed_before": 3.3425181863069326,
+   "speed_after": 3.3525181863069324,
+   "delta_mps": 0.009999999999999787,
+   "acceleration_before_after": 1.1862004564705506,
+   "lane_position_before_after": 10.760512631201136,
+   "other_vehicle_speeds_unchanged": 86,
+   "api": "setPreviousSpeed",
+   "persistent_speed_override": false,
+   "pulse_at_s": 300.0,
+   "consumed_by_native_tick_s": 300.5
+  }
+ ],
+ "original_reference": "/root/c1floor20261031/jobs/fallback_b_s969404/reference.npz",
+ "original_reference_sha256": "f8d609c50cd4a1916eb9ebaa4d8cb0d38f9c01a41f8d71429e210e10276d8f27",
+ "original_receipt_sha256": "c208da4479cd2d99bb6125e1510d49564afddab9a3e9a179861c85d8e03674e6",
+ "reproduction": {
+  "t": {
+   "identical": true,
+   "rows_first": 49698,
+   "rows_second": 49698
+  },
+  "vid": {
+   "identical": true,
+   "rows_first": 49698,
+   "rows_second": 49698
+  },
+  "s": {
+   "identical": true,
+   "rows_first": 49698,
+   "rows_second": 49698
+  },
+  "v": {
+   "identical": true,
+   "rows_first": 49698,
+   "rows_second": 49698
+  },
+  "a": {
+   "identical": true,
+   "rows_first": 49698,
+   "rows_second": 49698
+  },
+  "lane": {
+   "identical": true,
+   "rows_first": 49698,
+   "rows_second": 49698
+  }
+ },
+ "outputs": {
+  "alt0.npz": "64af51da0920e7fb99fad9fcf464648f4ecf9f8ddcbe54c654e58eb099366b64",
+  "alt1.npz": "67fdfcab16fc06f176378ead9b1ac7adad88074967379774fb84764ad6e56db3"
+ }
+}
