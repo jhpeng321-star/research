@@ -77,7 +77,7 @@ def transfer_lc_memory(previous, current):
         current['lc2013_present'] &= found
 
 
-def warm_lc_history(model, arrays, t0, names, state, slots):
+def warm_lc_history(model, arrays, t0, names, state, slots, encoded=None):
     from wms.physics.lc2013 import STATE_KEYS, lane_change
     from wms.physics.state import state_kin
     previous = None
@@ -89,16 +89,18 @@ def warm_lc_history(model, arrays, t0, names, state, slots):
         current = make_state(kin, mask, ids, arrays['is_cav'][tick].astype(bool), names, slots)
         transfer_lc_memory(previous, current)
         lc = lane_change(state_kin(current), current['present'], model.physics,
-                         memory=current, identity=current['vehicle_id'], decision_mask=current['present'])
+                         memory=current, identity=current['vehicle_id'], decision_mask=current['present'],
+                         driver_params=(None if encoded is None else
+                             encoded.settings(current['vehicle_id'], current['is_cav'])))
         previous = {**current, **{k: lc[k] for k in STATE_KEYS if k in lc}}
     transfer_lc_memory(previous, state)
 
 
-def merge_trace(state, physics, time_s):
+def merge_trace(state, physics, time_s, driver_params=None):
     """Ten-second diagnostic of the two front ramp cars, never a control input."""
     from wms.physics.junction_merge import merge_geometry
     from wms.physics.state import state_kin
-    geometry = merge_geometry(state_kin(state), state['present'], physics)
+    geometry = merge_geometry(state_kin(state), state['present'], physics, driver_params)
     ramp = torch.where(state['present'][0] & (state['lane'][0] == 2))[0]
     ramp = ramp[state['s_m'][0, ramp].argsort(descending=True)][:2]
     rows = []
@@ -264,7 +266,7 @@ def observable_source(job):
 
 @torch.no_grad()
 def validate(root, seed, horizon, slots, stream, target_dir, cf_model='legacy', warm_lc=False,
-             trace_merge=False, native_model='head'):
+             trace_merge=False, native_model='head', encoder_checkpoint=None, entry_phase='before', cpu_fast=False):
     from wms.model.spec import ModelSpec
     from wms.model.wms import WmSModel
     from wms.physics.config import PhysicsConfig
@@ -296,6 +298,8 @@ def validate(root, seed, horizon, slots, stream, target_dir, cf_model='legacy', 
     options = dict(merge_model='sumo', sumo_fidelity=True, dt_s=dt)
     if cf_model != 'legacy':
         options.update(cf_model=cf_model, sumo_cf_emergency_decel_mps2=9.)
+    if cpu_fast:
+        options.update(sumo_merge_query_fast=True, sumo_lane_conflict_fast=True)
     cfg = PhysicsConfig(**options)
     # CF wiring may arrive in a later INT commit. Bind/report the actual selector.
     model = WmSModel(ModelSpec(lane_model='lc2013', lane_head='off'), physics=cfg).eval()
@@ -308,8 +312,31 @@ def validate(root, seed, horizon, slots, stream, target_dir, cf_model='legacy', 
             module.register_forward_pre_hook(reject_learned)
     if model.physics.emergency_braking:
         raise ValueError('unexpected extra emergency envelope')
+    encoded = sampler = None
+    parameter_receipt = None
+    if encoder_checkpoint is not None:
+        # Reuse the lane worker's separately verified extractor; no neural
+        # acceleration/lane module from the checkpoint is loaded or executed.
+        from tools.rblane.encoder import FrozenMotionEncoder, REGISTERED_WM2_SHA
+        from tools.rbeval.encoded_fleet import EncodedPointBirths
+        # Preserve the trained encoder's input/default contract, as independently
+        # checked by LANE's real-checkpoint full-model parity receipt. SUMO
+        # rollout geometry must not silently change that frozen featurization.
+        encoder_physics = PhysicsConfig(sumo_fidelity=True, open_road=True, lane_learnable=True)
+        encoder = FrozenMotionEncoder(safe(encoder_checkpoint), encoder_physics, required_sha=REGISTERED_WM2_SHA)
+        ids = arrays['vid']
+        if ids.ndim == 1:
+            ids = np.broadcast_to(ids, arrays['veh_mask'].shape)
+        encoded = encoder.prepare(arrays['veh_kin'], arrays['veh_mask'], ids, arrays['time_s'], 300.)
+        sampler = EncodedPointBirths(encoded)
+        sampler.initial(state)
+        hdv = state['present'] & ~state['is_cav']
+        parameter_receipt = dict(checkpoint_sha256=encoder.sha256,
+            encoder_geometry='source legacy WM2 contract; SUMO geometry only for rollout',
+            existing_hdv={n: stats(v[hdv].tolist()) for n, v in sampler.current.items()},
+            entrant_rule='exact frozen zero-history encoder centre; inherited CAV defaults')
     if warm_lc:
-        warm_lc_history(model, arrays, t0, names, state, slots)
+        warm_lc_history(model, arrays, t0, names, state, slots, encoded)
     queue, source_receipt = observable_source(safe(record['job']))
     rates = queue.demand_rate
     counter = np.array(arrays['counter'][t0])
@@ -324,30 +351,39 @@ def validate(root, seed, horizon, slots, stream, target_dir, cf_model='legacy', 
         cb = native_physics_controller(dt_s=dt)
     else:
         cb = native_controller()
-    # No encoder inputs: population-only construction; SUMO path bypasses heads.
+    # Only settings may be inferred; SUMO dynamics still bypass learned heads.
     clock = np.zeros(2)
     source = np.zeros(2)
     per_vehicle = {}
     merges = []
     births = []
+    checkpoints = {}
     exits = 0
     max_present = initial
     overlap_samples = 0
     worst_overlap_gap = 0.
     last = state
     history = history_mask = None
-    trace = merge_trace(state, cfg, 300.) if trace_merge else []
+    trace = merge_trace(state, cfg, 300., None if sampler is None else sampler.current) if trace_merge else []
     start = time.monotonic()
     # One-step rollout keeps the integrated carry/reset interfaces intact. Retain
     # the returned final state, rather than reconstructing and losing LC memory.
     for tick in range(round(horizon/dt)):
         if tick % 40 == 0 and Path('STOP').exists():
             raise RuntimeError('cooperative STOP requested')
-        roll = model.rollout(last, n_steps=1, k0=tick, entries=entries, cav_controller=cb,
-                             history=history, history_mask=history_mask)
+        parameters = {} if sampler is None else dict(driver_params=sampler.current,
+                                                     entrant_driver_sampler=sampler)
+        if entry_phase == 'after':
+            from wms.model.sumo_departure import step_after_movement
+            roll = step_after_movement(model, last, entries, k0=tick, cav_controller=cb,
+                                       history=history, history_mask=history_mask, **parameters)
+        else:
+            roll = model.rollout(last, n_steps=1, k0=tick, entries=entries, cav_controller=cb,
+                                 history=history, history_mask=history_mask, **parameters)
         after = {k: roll[r][0, 0].numpy() for k, r in
                  (('s_m', 'positions'), ('v_mps', 'speeds'), ('lane', 'lanes'), ('present', 'masks'))}
-        before = entries.previous
+        before = (entries.previous if entry_phase == 'before' else
+                  {k: v[0].numpy() for k, v in roll['source_before'].items()})
         if any(not np.isfinite(after[k]).all() for k in ('s_m', 'v_mps', 'lane')):
             raise AssertionError('nonfinite physics')
         if roll['raw_residual_mps2'].count_nonzero():
@@ -376,11 +412,21 @@ def validate(root, seed, horizon, slots, stream, target_dir, cf_model='legacy', 
         changed = before['present'] & after['present'] & (before['lane'] == 2) & (after['lane'] == 1)
         merges.extend(dict(identity=int(entries.ids[s]), time_s=300+(tick+1)*dt,
                            position_m=float(after['s_m'][s])) for s in np.flatnonzero(changed))
-        births.extend(dict(**b, time_s=300+tick*dt) for b in entries.last_births)
+        birth_time = 300+(tick+int(entry_phase == 'after'))*dt
+        births.extend(dict(**b, time_s=birth_time) for b in entries.last_births)
         last = roll['state']
         history, history_mask = roll['history'], roll['history_mask']
+        elapsed = (tick+1)*dt
+        if elapsed in (120, 300, 600):
+            checkpoints[str(int(elapsed))] = dict(mainline_road=float(clock[0]), ramp_road=float(clock[1]),
+                mainline_source=float(source[0]), ramp_source=float(source[1]),
+                mainline_total=float(clock[0]+source[0]), ramp_total=float(clock[1]+source[1]),
+                inserted=entries.births.tolist(), pending=process.pending[0].tolist(),
+                ramp_merges=len(merges), max_present=max_present)
         if trace_merge and (tick+1) % round(10/dt) == 0:
-            trace.extend(merge_trace(last, cfg, 300+(tick+1)*dt))
+            trace.extend(merge_trace(last, cfg, 300+elapsed, None if sampler is None else sampler.current))
+    if sampler is not None and sampler.births_checked != int(entries.births.sum()):
+        raise AssertionError('not every admitted entrant received its coupled motion settings')
     # Read shared recorded outputs only after autonomous prediction is complete.
     def targets(name):
         with safe(target_dir / name).open(newline='') as f:
@@ -399,7 +445,12 @@ def validate(root, seed, horizon, slots, stream, target_dir, cf_model='legacy', 
     return dict(seed=seed, arm='native', horizon_s=horizon, stream=stream, runtime_s=time.monotonic()-start,
         initial=initial, max_present=max_present, exits=exits,
         cf_model=getattr(cfg, 'cf_model', 'legacy'), lane_model=model.lane_model, native_model=native_model,
-        settings='population_default_no_encoder', lc_memory='observable_60s_then_persistent' if warm_lc else 'cold_t0_then_persistent',
+        entry_phase=entry_phase,
+        cpu_fast=cpu_fast,
+        settings='frozen_motion_encoder_point' if encoded is not None else 'population_default_no_encoder',
+        inferred_settings=parameter_receipt, checkpoints=checkpoints,
+        newborn_settings_checked=0 if sampler is None else sampler.births_checked,
+        lc_memory='observable_60s_then_persistent' if warm_lc else 'cold_t0_then_persistent',
         body_overlap=dict(pair_samples=overlap_samples, worst_bumper_gap_m=worst_overlap_gap),
         demand=dict(rate=rates.tolist(), initial_backlog=queue.backlog.tolist(),
                     cav_share=queue.cav_share.tolist(), inserted=entries.births.tolist(),
@@ -432,14 +483,23 @@ def main():
     p.add_argument('--warm-lc', action='store_true')
     p.add_argument('--trace-merge', action='store_true')
     p.add_argument('--native-model', choices=('head', 'sumo'), default='head')
+    p.add_argument('--encoder-checkpoint')
+    p.add_argument('--entry-phase', choices=('before', 'after'), default='before')
+    p.add_argument('--cpu-fast', action='store_true')
     args = p.parse_args()
     if len(args.seeds) != len(set(args.seeds)) or any(not 969400 <= s <= 969431 for s in args.seeds):
         p.error('unique FIT seeds 969400..969431 required')
     runtime = safe(args.runtime)
-    sys.path.insert(0, str(runtime/'src'))
+    sys.path[:0] = [str(runtime/'src'), str(runtime), str(Path(__file__).resolve().parents[2])]
     torch.set_num_threads(1)
     torch.manual_seed(965140)
     if args.preflight:
+        if args.encoder_checkpoint:
+            from tools.rblane.encoder import FrozenMotionEncoder, REGISTERED_WM2_SHA
+            from wms.physics.config import PhysicsConfig
+            FrozenMotionEncoder(safe(args.encoder_checkpoint),
+                                PhysicsConfig(sumo_fidelity=True, open_road=True, lane_learnable=True),
+                                required_sha=REGISTERED_WM2_SHA)
         rows = []
         for seed in args.seeds:
             record = json.loads(safe(Path(args.root)/f'world_{seed}.json').read_text())['native']
@@ -457,9 +517,15 @@ def main():
     out.mkdir(exist_ok=False)
     paths = list((runtime/'src/wms').rglob('*.py'))
     paths += [runtime/'configs/native_cav_head_v5.json', runtime/'configs/execparity_cav_idm_v1.json']
+    if args.encoder_checkpoint:
+        paths.append(runtime/'tools/rblane/encoder.py')
     sources = {str(path.relative_to(runtime)): digest(path) for path in paths}
+    auxiliary = ({str(Path(__file__).with_name('encoded_fleet.py')):
+                  digest(Path(__file__).with_name('encoded_fleet.py'))} if args.encoder_checkpoint else {})
     identity = dict(owner='S-RB-MERGE', args=vars(args), sources=sources,
+        auxiliary_sources=auxiliary,
         validator_sha256=digest(__file__), pid=os.getpid(), started_unix=time.time(),
+        encoder_checkpoint_sha256=digest(args.encoder_checkpoint) if args.encoder_checkpoint else None,
         targets={n: digest(safe(args.targets)/n) for n in ('ramp_delay_world.csv', 'ramp_merges.csv', 'insertions_10s.csv')})
     (out/'IDENTITY.json').write_text(json.dumps(identity, indent=2)+'\n')
     rows = []
@@ -468,16 +534,19 @@ def main():
             while hasattr(os, 'getloadavg') and os.getloadavg()[0] > 28:
                 time.sleep(15)
             row = validate(safe(args.root), seed, args.horizon, args.slots, args.stream, safe(args.targets),
-                           args.cf_model, args.warm_lc, args.trace_merge, args.native_model)
+                           args.cf_model, args.warm_lc, args.trace_merge, args.native_model, args.encoder_checkpoint,
+                           args.entry_phase, args.cpu_fast)
             if any(digest(runtime/name) != sha for name, sha in sources.items()):
                 raise AssertionError('runtime changed during diagnostic')
+            if any(digest(name) != sha for name, sha in auxiliary.items()):
+                raise AssertionError('entrant settings adapter changed during diagnostic')
             (out/f'{seed}.json').write_text(json.dumps(row, indent=2, allow_nan=False)+'\n')
             rows.append(row)
             print('DONE', seed, row['runtime_s'], row['delay']['predicted_ramp_veh_s'], flush=True)
         report = dict(rows=rows,
             recorded_ramp_veh_s=stats([float(r['delay']['recorded']['ramp_delay_vs']) for r in rows]),
             predicted_ramp_veh_s=stats([r['delay']['predicted_ramp_veh_s'] for r in rows]),
-            limitations=['One population-default future, native arm only; not distributional qualification.',
+            limitations=['One point-settings future, native arm only; not distributional qualification.',
                 'Historical 562.4 vs 1265.4 is a different panel; recorded per-world clocks primary.',
                 'Future arrival identities are synthetic; exact timing matches only t0 cohort.',
                 'LC2013 memory is inferred only from observable pre-t0 traffic when --warm-lc is selected.',

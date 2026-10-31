@@ -45,3 +45,15 @@ def test_source_conservation_checked_in_receipts(tmp_path):
     panel(tmp_path, corrupt_source=True)
     with pytest.raises(ValueError, match='source conservation'):
         load_panel(tmp_path)
+
+
+def test_mixed_horizons_cannot_be_pooled_as_one_panel(tmp_path):
+    panel(tmp_path)
+    complete = json.loads((tmp_path/'COMPLETE.json').read_text())
+    complete['rows'][0]['horizon_s'] = 600
+    (tmp_path/'COMPLETE.json').write_text(json.dumps(complete))
+    manifest = json.loads((tmp_path/'COLLECTION.json').read_text())
+    manifest['COMPLETE.json'] = hashlib.sha256((tmp_path/'COMPLETE.json').read_bytes()).hexdigest()
+    (tmp_path/'COLLECTION.json').write_text(json.dumps(manifest))
+    with pytest.raises(ValueError, match='different arm or horizon'):
+        load_panel(tmp_path)

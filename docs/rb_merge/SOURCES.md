@@ -28,6 +28,9 @@ https://github.com/eclipse-sumo/sumo/tree/v1_27_1/src/microsim
   with headway; `MSLCM_LC2013.cpp:547-557` requires time as well as space to
   overtake; `:637-655` adds follow-speed advice even when the neighbor is not
   currently blocking. Lookahead/urgency reuse the lane stream's persistent state.
+- `MSCFModel_IDM.cpp:79-88`: minNextSpeed uses
+  max(comfortableDecel,min(emergencyDecel,1.5)), not comfortableDecel alone;
+  this matters when the existing motion encoder infers b below1.5.
 
 ## Geometry and right of way
 
@@ -61,6 +64,47 @@ The new opt-in sumo_native callback consumes the model's existing inferred/
 population-physics execution ceiling using the same project_native bounds,
 and delegates lanes/merges. This is a native-arm source-mechanics diagnostic;
 old frozen evaluation/controller bindings must remain distinguishable.
+
+## Frozen motion-settings diagnostic
+
+Reuse S-RB-LANE's committed `b192e0c8:tools/rblane/encoder.py`, registered
+WM2 checkpoint SHA b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436,
+and producer `ENCODER_PARITY.json` (strict full model, all9 outputs bit-exact).
+Do not reimplement its extractor or fit anything. Preserve the trained source
+legacy feature/default geometry for encoding; use SUMO geometry for forward
+simulation. Initial settings are identity-keyed from240..300s motion; newcomers
+use the frozen zero-history centre, CAVs inherited defaults. `EncodedPointBirths`
+only couples that point population to admission/newborn motion through exact
+recorded birth ordinals. It is a point-settings screen, not FULL's fitted
+posterior or a claim to calibrated conditional futures.
+
+The sequential acceptance resolver reserves each accepted footprint in the
+same front-to-back order. Its selected-ego geometry path computes precisely
+the same leader/follower/overlap/secure gaps as the full-frame API (bit-exact
+heterogeneous/batched CPU checks), avoiding a full slots² recomputation for
+every ramp candidate. No physical parameter or acceptance criterion changes.
+
+## Insertion phase (later source audit)
+
+Tagged `MSNet.cpp::simulationStep` executes planMovements/junction approaches/
+executeMovements/changeLanes/removePending before determineCandidates/emitVehicles;
+postMoveStep writes observations and then advances time. Therefore a new
+departure is at basePos/departSpeed in its first post-step frame and does not
+move or change lanes again in that step. Read-only non-contiguous excerpt,
+all omissions marked, saved in a verified NEW EMPTY directory:
+`E:/Temp/opencode/sumo-1271-merge-phases-20261101`. Source URL:
+https://github.com/eclipse-sumo/sumo/blob/v1_27_1/src/microsim/MSNet.cpp
+Raw transport failed; tagged GitHub blob supplied the displayed source.
+No downloaded code compiled/executed.
+
+`sumo_departure.step_after_movement` is an explicit one-step adapter: existing
+arrival generator/FIFO/ordinals/ledger, post-movement occupancy, no newborn
+motion/control/LC, explicit old-road cohort and exit mask for boundary costs.
+Same-tick slot recycling is deferred to the next step so old exit and new birth
+cannot overwrite one logged identity; capacity pressure remains visible in
+the conserved queue/no_slot statistic. Existing rollout/factory defaults and
+previous frozen validation sources are unchanged. The direct validator default
+is still `--entry-phase before`; the experimental after phase is labelled.
 
 ## Scope and explicit parity gaps
 

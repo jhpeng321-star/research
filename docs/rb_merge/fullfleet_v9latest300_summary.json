@@ -1,0 +1,524 @@
+{
+  "worlds": 32,
+  "horizons_s": [
+    300
+  ],
+  "arms": [
+    "native"
+  ],
+  "boundary_target_augmentation": [],
+  "source_versions": {
+    "cf": [
+      "sumo_idm"
+    ],
+    "native_model": [
+      "sumo"
+    ],
+    "settings": [
+      "frozen_motion_encoder_point"
+    ],
+    "entry_phase": [
+      "after"
+    ],
+    "lc_memory": [
+      "observable_60s_then_persistent"
+    ]
+  },
+  "ramp_origin_full_fleet_delay_veh_s": {
+    "recorded": {
+      "n": 32,
+      "mean": 2272.7760628855704,
+      "q10": 1641.3651730822412,
+      "q50": 1965.813606814783,
+      "q90": 3422.4632048935073
+    },
+    "predicted": {
+      "n": 32,
+      "mean": 2187.72252086738,
+      "q10": 977.0866852684677,
+      "q50": 1785.2858222777136,
+      "q90": 3794.9536980163166
+    },
+    "mean_bias": -85.0535420181906,
+    "marginal_wasserstein1": 522.2806414491579,
+    "secondary_paired_mae": 955.6471308409323,
+    "predicted_source": {
+      "n": 32,
+      "mean": 10.248153110983239,
+      "q10": 6.921998264402435,
+      "q50": 8.801917486580464,
+      "q90": 16.346251956928178
+    }
+  },
+  "t0_merge_events": {
+    "recorded": 200,
+    "predicted": 195,
+    "matched": 193,
+    "missed": 7,
+    "extra": 2,
+    "time_error_s": {
+      "n": 193,
+      "mean": 9.702072538860104,
+      "q10": -38.0,
+      "q50": 3.5,
+      "q90": 64.00000000000006
+    },
+    "position_error_m": {
+      "n": 193,
+      "mean": 2.6415915834100754,
+      "q10": -15.13750726318359,
+      "q50": 2.4414062522737368e-06,
+      "q90": 35.1275135803223
+    },
+    "timing_mae_s": 33.89378238341969,
+    "position_mae_m": 12.73269881431303
+  },
+  "full_fleet_merge_counts": {
+    "recorded": {
+      "n": 32,
+      "mean": 33.0625,
+      "q10": 26.0,
+      "q50": 33.0,
+      "q90": 41.0
+    },
+    "predicted": {
+      "n": 32,
+      "mean": 32.625,
+      "q10": 22.3,
+      "q50": 34.0,
+      "q90": 43.900000000000006
+    }
+  },
+  "insertions": {
+    "per_world": [
+      {
+        "seed": 969400,
+        "recorded": [
+          142,
+          28
+        ],
+        "predicted": [
+          151,
+          41
+        ]
+      },
+      {
+        "seed": 969401,
+        "recorded": [
+          163,
+          39
+        ],
+        "predicted": [
+          145,
+          28
+        ]
+      },
+      {
+        "seed": 969402,
+        "recorded": [
+          163,
+          42
+        ],
+        "predicted": [
+          145,
+          33
+        ]
+      },
+      {
+        "seed": 969403,
+        "recorded": [
+          147,
+          31
+        ],
+        "predicted": [
+          150,
+          27
+        ]
+      },
+      {
+        "seed": 969404,
+        "recorded": [
+          161,
+          33
+        ],
+        "predicted": [
+          147,
+          37
+        ]
+      },
+      {
+        "seed": 969405,
+        "recorded": [
+          166,
+          43
+        ],
+        "predicted": [
+          147,
+          29
+        ]
+      },
+      {
+        "seed": 969406,
+        "recorded": [
+          165,
+          32
+        ],
+        "predicted": [
+          149,
+          43
+        ]
+      },
+      {
+        "seed": 969407,
+        "recorded": [
+          163,
+          31
+        ],
+        "predicted": [
+          149,
+          27
+        ]
+      },
+      {
+        "seed": 969408,
+        "recorded": [
+          163,
+          33
+        ],
+        "predicted": [
+          149,
+          29
+        ]
+      },
+      {
+        "seed": 969409,
+        "recorded": [
+          132,
+          35
+        ],
+        "predicted": [
+          139,
+          31
+        ]
+      },
+      {
+        "seed": 969410,
+        "recorded": [
+          160,
+          35
+        ],
+        "predicted": [
+          156,
+          29
+        ]
+      },
+      {
+        "seed": 969411,
+        "recorded": [
+          162,
+          34
+        ],
+        "predicted": [
+          157,
+          35
+        ]
+      },
+      {
+        "seed": 969412,
+        "recorded": [
+          170,
+          36
+        ],
+        "predicted": [
+          164,
+          33
+        ]
+      },
+      {
+        "seed": 969413,
+        "recorded": [
+          162,
+          29
+        ],
+        "predicted": [
+          146,
+          34
+        ]
+      },
+      {
+        "seed": 969414,
+        "recorded": [
+          159,
+          46
+        ],
+        "predicted": [
+          146,
+          25
+        ]
+      },
+      {
+        "seed": 969415,
+        "recorded": [
+          146,
+          24
+        ],
+        "predicted": [
+          146,
+          39
+        ]
+      },
+      {
+        "seed": 969416,
+        "recorded": [
+          162,
+          36
+        ],
+        "predicted": [
+          147,
+          39
+        ]
+      },
+      {
+        "seed": 969417,
+        "recorded": [
+          164,
+          26
+        ],
+        "predicted": [
+          147,
+          39
+        ]
+      },
+      {
+        "seed": 969418,
+        "recorded": [
+          149,
+          28
+        ],
+        "predicted": [
+          138,
+          40
+        ]
+      },
+      {
+        "seed": 969419,
+        "recorded": [
+          160,
+          38
+        ],
+        "predicted": [
+          149,
+          40
+        ]
+      },
+      {
+        "seed": 969420,
+        "recorded": [
+          159,
+          38
+        ],
+        "predicted": [
+          149,
+          38
+        ]
+      },
+      {
+        "seed": 969421,
+        "recorded": [
+          143,
+          32
+        ],
+        "predicted": [
+          154,
+          41
+        ]
+      },
+      {
+        "seed": 969422,
+        "recorded": [
+          162,
+          37
+        ],
+        "predicted": [
+          153,
+          27
+        ]
+      },
+      {
+        "seed": 969423,
+        "recorded": [
+          161,
+          27
+        ],
+        "predicted": [
+          155,
+          23
+        ]
+      },
+      {
+        "seed": 969424,
+        "recorded": [
+          160,
+          37
+        ],
+        "predicted": [
+          151,
+          27
+        ]
+      },
+      {
+        "seed": 969425,
+        "recorded": [
+          162,
+          27
+        ],
+        "predicted": [
+          146,
+          27
+        ]
+      },
+      {
+        "seed": 969426,
+        "recorded": [
+          165,
+          34
+        ],
+        "predicted": [
+          144,
+          34
+        ]
+      },
+      {
+        "seed": 969427,
+        "recorded": [
+          164,
+          28
+        ],
+        "predicted": [
+          146,
+          34
+        ]
+      },
+      {
+        "seed": 969428,
+        "recorded": [
+          164,
+          34
+        ],
+        "predicted": [
+          146,
+          30
+        ]
+      },
+      {
+        "seed": 969429,
+        "recorded": [
+          163,
+          31
+        ],
+        "predicted": [
+          146,
+          21
+        ]
+      },
+      {
+        "seed": 969430,
+        "recorded": [
+          161,
+          27
+        ],
+        "predicted": [
+          145,
+          36
+        ]
+      },
+      {
+        "seed": 969431,
+        "recorded": [
+          163,
+          38
+        ],
+        "predicted": [
+          149,
+          35
+        ]
+      }
+    ],
+    "recorded_total": [
+      5086,
+      1069
+    ],
+    "predicted_total": [
+      4751,
+      1051
+    ]
+  },
+  "geometric_overlap": {
+    "available": true,
+    "pair_samples": 364,
+    "worlds_with_overlap": [
+      969402,
+      969405,
+      969425
+    ]
+  },
+  "merge_geometry_violations": [],
+  "source_conservation": {
+    "worlds_passed": 32,
+    "dropped": 0,
+    "no_slot": 0
+  },
+  "checkpoint_ramp_delays": {
+    "120": {
+      "predicted": {
+        "n": 32,
+        "mean": 927.5610534773023,
+        "q10": 398.13773557727984,
+        "q50": 756.7895758017594,
+        "q90": 1507.3156905925032
+      },
+      "recorded": {
+        "n": 32,
+        "mean": 928.8689307402011,
+        "q10": 490.9378022147593,
+        "q50": 736.4844528303374,
+        "q90": 1681.477962914414
+      },
+      "mean_bias": -1.3078772628989608,
+      "marginal_wasserstein1": 135.82569787383963
+    },
+    "300": {
+      "predicted": {
+        "n": 32,
+        "mean": 2187.72252086738,
+        "q10": 977.0866852684677,
+        "q50": 1785.2858222777136,
+        "q90": 3794.9536980163166
+      },
+      "recorded": {
+        "n": 32,
+        "mean": 2272.7760628855704,
+        "q10": 1641.3651730822412,
+        "q50": 1965.813606814783,
+        "q90": 3422.4632048935073
+      },
+      "mean_bias": -85.0535420181906,
+      "marginal_wasserstein1": 522.2806414491579
+    }
+  },
+  "not_qualified": true,
+  "limitations": [
+    "One future per world; marginal distributions do not identify same-state variability.",
+    "Full-fleet insertion counts use autonomous stochastic arrivals, not replayed future demand.",
+    "Historical 562.4 veh-s is a different panel/contract; compare recorded per-world values.",
+    "No breakdown, controller-shift, or distributional qualification gate is claimed."
+  ],
+  "boundary_audit_sha256": null,
+  "inputs_sha256": {
+    "ramp_merges.csv": "205fb2c16435759e9c6e78a50a133290adbf5f6fd2733a6938c23f08ae815cfc",
+    "insertions_10s.csv": "4fd744926fc8c8f6a6d4ff77088f4a40cc0a017979bfb0f268e8f0c339403b26",
+    "ramp_delay_world.csv": "ae3253262435d355e19a349d3413020c164bba3e85c3f20da50108799f981e9f"
+  },
+  "collection_sha256": "fa1ed5816f31a0f28ab368edf0340c12cc8db6891d5a41acb75b3b810d0b3968",
+  "scorer_sha256": "7aaf82930a1f31ac05d90a9e67d52846e7938ec66bafd69220502265678b5067"
+}

@@ -1,2 +1,2 @@
-# Collection receipts hash exact bytes; retain canonical LF on Windows checkouts.
-*.json text eol=lf
+# Collection receipts hash exact bytes; never normalize their line endings.
+*.json -text

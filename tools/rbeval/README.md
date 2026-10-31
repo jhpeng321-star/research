@@ -228,6 +228,31 @@ Current default `v6` adds source-EPS5870b556 and the opt-in physics-native CAV
 callback d7be510a (`--native-model sumo`). Prior v5 retains its frozen head path.
 The validator's direct CLI default stays `--native-model head`; selecting sumo
 requires `--cf-model sumo_idm`. Every row reports its actual native model.
+`v7` now stages INT4015b641 (latest finite-route LC2013), source minNextSpeed,
+and the reused strict frozen motion encoder b192e0c8, with H600 /512slots.
+`--encoder-checkpoint <registered wm_s.pt>` infers initial HDV settings once,
+keeps CAV defaults, and couples zero-history-centre entrant settings to exact
+admission ordinals. The learned motion/lane/merge modules remain bypassed.
+The600s run captures120/300/600s clocks in one pass; it does not replay future
+observations or refit any model. Summaries accept one uniform horizon per panel.
+`--entry-phase after` opts into SUMO's move/LC/then-depart order through the new
+`step_after_movement` helper. Boundary scoring uses its explicit source_before
+cohort, birth and exit masks. Newborns stay at basePos/departSpeed on birth tick.
+No-arrival dynamics are bit-exact to the original physics step. This operator
+experiment has a separate source identity from the completed `v7fast` H600 run.
+Current runner default is `v8end600 --entry-phase after`; earlier version
+directories remain explicit and immutable. `verify_fleet_prefix` checks the saved
+H120 clocks/events/front traces against the600s extension without treating those
+prefixes as independent evidence or claiming unavailable full-trajectory parity.
+`--int-commit <sha>` selects a committed immutable integration snapshot for a
+NEW stage. `--cpu-fast` selects INT's independently parity-checked exact query/
+lane-conflict flags; direct validator/default flags remain unchanged. Stage
+provenance is written to STAGE.json and actual switches are retained per row.
+`boundary-targets` audits only the observed300→300.5 first-step transitions.
+The shared event table omits two native FIT boundary merges. Optional scorer
+`--boundary-targets docs/rb_merge/boundary_native_fit32.json` creates a separate,
+explicitly augmented report with episode/target hash checks; original helper
+CSVs and prior report contracts are retained unchanged.
 `python -m tools.rbeval.summarize_full_fleet --panel <collected directory>
 --targets <shared targets> --output <new score.json>` checks complete FIT32,
 collection hashes and conservation before reporting per-world and marginal clocks.

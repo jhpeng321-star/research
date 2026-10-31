@@ -21,7 +21,8 @@ def load_panel(directory):
     rows = complete['rows']
     if sorted(r['seed'] for r in rows) != list(range(969400, 969432)):
         raise ValueError('exact FIT32 complete panel required')
-    if any(r['arm'] != 'native' or r['horizon_s'] != 300 for r in rows):
+    horizons = {r['horizon_s'] for r in rows}
+    if len(horizons) != 1 or any(r['arm'] != 'native' or r['horizon_s'] not in (120, 300, 600) for r in rows):
         raise ValueError('different arm or horizon')
     for row in rows:
         if json.loads((directory/f"{row['seed']}.json").read_text()) != row:
@@ -32,16 +33,41 @@ def load_panel(directory):
         if not demand['conserved'] or demand['no_slot'] or demand['dropped']:
             raise ValueError('invalid source admission')
         for e in row['merges']['events']:
-            if not 300 < e['time_s'] <= 600:
+            if not 300 < e['time_s'] <= 300+row['horizon_s']:
                 raise ValueError('merge event outside supported clock')
     return sorted(rows, key=lambda r: r['seed'])
 
 
-def analyze(rows, targets):
+def augment_boundary_events(events, boundary, rows, target_sha):
+    if boundary['target_sha256'] != target_sha:
+        raise ValueError('boundary audit refers to another helper target')
+    episodes = {r['seed']: r['episode_sha256'] for r in rows}
+    keys = {(int(e['seed']), int(e['vid'])) for e in events if e['arm'] == 'native'}
+    added = []
+    for e in boundary['missing_from_helper']:
+        seed, vid = int(e['seed']), int(e['vid'])
+        if seed not in episodes or e['episode_sha256'] != episodes[seed] or e['time_s'] != 300.5:
+            raise ValueError('boundary episode/first-step identity mismatch')
+        if (seed, vid) not in keys:
+            events.append(dict(seed=str(seed), arm='native', vid=str(vid),
+                               t_merge_s=e['time_s'], s_merge_m=e['position_m']))
+            keys.add((seed, vid))
+            added.append(dict(seed=seed, vid=vid))
+    return added
+
+
+def analyze(rows, targets, boundary=None):
+    horizon = rows[0]['horizon_s']
+    end = 300+horizon
     with safe(targets/'ramp_merges.csv').open(newline='') as f:
         real_merges = list(csv.DictReader(f))
+    added = (augment_boundary_events(real_merges, boundary, rows,
+             hashlib.sha256((targets/'ramp_merges.csv').read_bytes()).hexdigest()) if boundary else [])
     with safe(targets/'insertions_10s.csv').open(newline='') as f:
         real_insertions = list(csv.DictReader(f))
+    with safe(targets/'ramp_delay_world.csv').open(newline='') as f:
+        real_delays = {(int(r['seed']), int(float(r['horizon_s']))): float(r['ramp_delay_vs'])
+                       for r in csv.DictReader(f) if r['arm'] == 'native'}
     predicted_delay = np.array([r['delay']['predicted_ramp_veh_s'] for r in rows])
     recorded_delay = np.array([float(r['delay']['recorded']['ramp_delay_vs']) for r in rows])
     time_errors, position_errors = [], []
@@ -51,7 +77,7 @@ def analyze(rows, targets):
         seed = row['seed']
         initial = {int(i) for i in row['road_delay_per_identity'] if int(i) >= 0}
         rm = {int(r['vid']): r for r in real_merges if int(r['seed']) == seed and r['arm'] == 'native'
-              and int(r['vid']) in initial and 300 < float(r['t_merge_s']) <= 600}
+              and int(r['vid']) in initial and 300 < float(r['t_merge_s']) <= end}
         pm = {r['identity']: r for r in row['merges']['events'] if r['identity'] >= 0}
         common = rm.keys() & pm.keys()
         recorded_cohort += len(rm)
@@ -61,15 +87,25 @@ def analyze(rows, targets):
         time_errors.extend(pm[i]['time_s']-float(rm[i]['t_merge_s']) for i in common)
         position_errors.extend(pm[i]['position_m']-float(rm[i]['s_merge_m']) for i in common)
         actual = [sum(int(r['count']) for r in real_insertions if int(r['seed']) == seed
-                      and r['arm'] == 'native' and r['entrance'] == e and float(r['t_start_s']) < 600)
+                      and r['arm'] == 'native' and r['entrance'] == e and float(r['t_start_s']) < end)
                   for e in ('mainline', 'ramp')]
         insertion.append(dict(seed=seed, recorded=actual, predicted=row['demand']['inserted']))
     upper = float(np.nextafter(np.float32(75.44), np.float32(np.inf)))
     out_of_zone = [dict(seed=r['seed'], **e) for r in rows for e in r['merges']['events']
                    if not 0 <= e['position_m'] <= upper]
-    return dict(worlds=len(rows), horizons_s=[300], arms=['native'],
+    checkpoint_scores = {}
+    for h in (120, 300, 600):
+        if all(str(h) in r.get('checkpoints', {}) for r in rows):
+            x = np.array([r['checkpoints'][str(h)]['ramp_total'] for r in rows])
+            y = np.array([real_delays[r['seed'], h] for r in rows])
+            checkpoint_scores[str(h)] = dict(predicted=stats(x), recorded=stats(y),
+                mean_bias=float((x-y).mean()), marginal_wasserstein1=float(np.abs(np.sort(x)-np.sort(y)).mean()))
+    return dict(worlds=len(rows), horizons_s=[horizon], arms=['native'],
+        boundary_target_augmentation=added,
         source_versions=dict(cf=sorted({r['cf_model'] for r in rows}),
                              native_model=sorted({r.get('native_model', 'head') for r in rows}),
+                             settings=sorted({r.get('settings', 'unspecified') for r in rows}),
+                             entry_phase=sorted({r.get('entry_phase', 'before') for r in rows}),
                              lc_memory=sorted({r['lc_memory'] for r in rows})),
         ramp_origin_full_fleet_delay_veh_s=dict(recorded=stats(recorded_delay), predicted=stats(predicted_delay),
             mean_bias=float((predicted_delay-recorded_delay).mean()),
@@ -80,7 +116,8 @@ def analyze(rows, targets):
             missed=missed, extra=extra, time_error_s=stats(time_errors), position_error_m=stats(position_errors),
             timing_mae_s=float(np.abs(time_errors).mean()) if time_errors else None,
             position_mae_m=float(np.abs(position_errors).mean()) if position_errors else None),
-        full_fleet_merge_counts=dict(recorded=stats([r['merges']['recorded'] for r in rows]),
+        full_fleet_merge_counts=dict(recorded=stats([r['merges']['recorded']+
+            sum(e['seed'] == r['seed'] for e in added) for r in rows]),
                                      predicted=stats([r['merges']['predicted'] for r in rows])),
         insertions=dict(per_world=insertion,
             recorded_total=np.array([r['recorded'] for r in insertion]).sum(0).tolist(),
@@ -90,6 +127,7 @@ def analyze(rows, targets):
             worlds_with_overlap=[r['seed'] for r in rows if r.get('body_overlap', {}).get('pair_samples', 0)]),
         merge_geometry_violations=out_of_zone,
         source_conservation=dict(worlds_passed=len(rows), dropped=0, no_slot=0),
+        checkpoint_ramp_delays=checkpoint_scores,
         not_qualified=True,
         limitations=['One future per world; marginal distributions do not identify same-state variability.',
             'Full-fleet insertion counts use autonomous stochastic arrivals, not replayed future demand.',
@@ -102,14 +140,18 @@ def main():
     parser.add_argument('--panel', required=True)
     parser.add_argument('--targets', required=True)
     parser.add_argument('--output', required=True)
+    parser.add_argument('--boundary-targets', help='optional separately verified first-step target omissions')
     args = parser.parse_args()
     rows = load_panel(Path(args.panel))
     targets = safe(args.targets)
-    result = analyze(rows, targets)
+    boundary = json.loads(safe(args.boundary_targets).read_text()) if args.boundary_targets else None
+    result = analyze(rows, targets, boundary)
+    result['boundary_audit_sha256'] = hashlib.sha256(safe(args.boundary_targets).read_bytes()).hexdigest() if boundary else None
     result['inputs_sha256'] = {n: hashlib.sha256((targets/n).read_bytes()).hexdigest()
-                              for n in ('ramp_merges.csv', 'insertions_10s.csv')}
+                              for n in ('ramp_merges.csv', 'insertions_10s.csv', 'ramp_delay_world.csv')}
     result['collection_sha256'] = hashlib.sha256((Path(args.panel)/'COLLECTION.json').read_bytes()).hexdigest()
-    safe(args.output).write_text(json.dumps(result, indent=2, allow_nan=False)+'\n')
+    result['scorer_sha256'] = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+    safe(args.output).write_text(json.dumps(result, indent=2, allow_nan=False)+'\n', newline='\n')
     print(json.dumps({k: v for k, v in result.items() if k not in ('insertions',)}))
 
 

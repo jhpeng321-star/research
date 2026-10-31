@@ -1,0 +1,44 @@
+{
+  "contract": "Validation-only first-step merge transitions from observable views; no prediction feedback",
+  "events": [
+    {
+      "seed": 969413,
+      "vid": 144,
+      "time_s": 300.5,
+      "position_m": 62.21665954589844,
+      "to_lane": 1,
+      "in_helper": false,
+      "episode_sha256": "f63a497c6db0226c35f7acd2ca4dac458ecd4afbc7c270ecfb10d7cd7905af73"
+    },
+    {
+      "seed": 969419,
+      "vid": 181,
+      "time_s": 300.5,
+      "position_m": 44.144866943359375,
+      "to_lane": 1,
+      "in_helper": false,
+      "episode_sha256": "6ed88236a1bc4a07562e43ad93c20c2eee89f1f107c0ea0b91f12bfcdb055acf"
+    }
+  ],
+  "missing_from_helper": [
+    {
+      "seed": 969413,
+      "vid": 144,
+      "time_s": 300.5,
+      "position_m": 62.21665954589844,
+      "to_lane": 1,
+      "in_helper": false,
+      "episode_sha256": "f63a497c6db0226c35f7acd2ca4dac458ecd4afbc7c270ecfb10d7cd7905af73"
+    },
+    {
+      "seed": 969419,
+      "vid": 181,
+      "time_s": 300.5,
+      "position_m": 44.144866943359375,
+      "to_lane": 1,
+      "in_helper": false,
+      "episode_sha256": "6ed88236a1bc4a07562e43ad93c20c2eee89f1f107c0ea0b91f12bfcdb055acf"
+    }
+  ],
+  "target_sha256": "205fb2c16435759e9c6e78a50a133290adbf5f6fd2733a6938c23f08ae815cfc"
+}
