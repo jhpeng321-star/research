@@ -209,3 +209,29 @@ def test_crn_world_hash_mismatch_stops():
     driver.baseline(state)
     with pytest.raises(MechanicalFailure, match="CRN"):
         driver.run_update(state)
+
+
+def test_file_screener_binds_request_and_result(tmp_path):
+    import hashlib
+    from tools.sumoes.file_screen import FileScreener, request_payload, write_request
+    driver = SumoEsDriver(config=CONFIG, evaluator=ArmStub(), screener=None)
+    state = driver.initial_state()
+    driver.baseline(state)
+    sigma = state.sigma(driver.sensitivity)
+    directions = state.directions(0, 8)
+    digest = write_request(tmp_path, request_payload(0, state.theta, sigma, driver.sensitivity,
+                                                     directions))
+    (tmp_path / "screen_u00.json").write_text(json.dumps(dict(
+        update=0, request_sha256=digest, kept=[5, 1], predicted_gain=[3.0, 2.0],
+        rejected=[0, 2, 3, 4, 6, 7])))
+    driver.screener = FileScreener(tmp_path)
+    receipt = driver.run_update(state)
+    assert receipt["screen"]["kept"] == [5, 1]
+    assert len(receipt["pair_J"]) == 2
+    text = (tmp_path / "request_u00.json").read_text()
+    assert hashlib.sha256(text.encode()).hexdigest() == digest
+    with pytest.raises(ValueError, match="different content"):
+        write_request(tmp_path, request_payload(0, state.theta + 1, sigma, 1.0, directions))
+    bad = FileScreener(tmp_path)
+    with pytest.raises(ValueError, match="does not match"):
+        bad.screen(state.theta + 1.0, sigma, directions, 0)

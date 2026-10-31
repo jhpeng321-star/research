@@ -1,7 +1,8 @@
 """S-SUMOES-RUN driver entry on cpuQ (owned, nice 19). Registered design 05b84910.
 
     python run.py baseline            # canary (CTRL0 vs ours@0 on s969536) + 7 panel worlds
-    python run.py updates --screener wm --max N   # resume state.json, run N more updates
+    python run.py request             # write screens/request_uXX.json for the next update
+    python run.py updates --screener file --max 1  # consume screens/screen_uXX.json, run it
 
 All SUMO goes through SumoRuntimeEvaluator (charge-before-dispatch, durable ledger,
 no retries, STOP on any failure). Receipts: OWN/state.json + OWN/RUN_LOG.jsonl.
@@ -33,16 +34,16 @@ def log(kind, **data):
 
 
 def screener_for(name, config):
-    if name == 'wm':
-        from tools.sumoes.remote.wm_screen import WmScreener
-        return WmScreener(config)
-    raise SystemExit(f'screener {name!r} is not registered (only the WM 60 s screen is)')
+    if name == 'file':
+        from tools.sumoes.file_screen import FileScreener
+        return FileScreener(OWN / 'screens', keep=config.pairs_per_update)
+    raise SystemExit(f'screener {name!r} is not registered (only the WM 60 s screen via file)')
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('mode', choices=('baseline', 'updates'))
-    parser.add_argument('--screener', default='wm')
+    parser.add_argument('mode', choices=('baseline', 'request', 'updates'))
+    parser.add_argument('--screener', default='file')
     parser.add_argument('--max', type=int, default=1)
     parser.add_argument('--workers', type=int, default=24)
     args = parser.parse_args()
@@ -67,6 +68,18 @@ def main():
         driver.save(state)
         log('baseline_done', panel_J=receipt['panel_J'], panel_mean=receipt['panel_mean'],
             sensitivity=receipt['sensitivity'], budget=receipt['budget'])
+        return 0
+    if args.mode == 'request':
+        from tools.sumoes.file_screen import request_payload, write_request
+        driver, state = SumoEsDriver.resume(state_path, config=config, evaluator=evaluator,
+                                            screener=None)
+        update = state.update_count
+        sigma = state.sigma(driver.sensitivity)
+        directions = state.directions(update, config.wm_screen_directions)
+        digest = write_request(OWN / 'screens', request_payload(
+            update, state.theta, sigma, driver.sensitivity, directions))
+        log('screen_request', update=update, sigma=sigma, sensitivity=driver.sensitivity,
+            request_sha256=digest)
         return 0
     driver, state = SumoEsDriver.resume(state_path, config=config, evaluator=evaluator,
                                         screener=screener_for(args.screener, config))
