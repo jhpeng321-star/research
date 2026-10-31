@@ -10,6 +10,7 @@ from .storage import write
 
 CPU = os.environ.get('C1SWITCH_CPU_RPC','/home/ubuntu/c1switch20261031/main_v6/rpc')
 GPU = os.environ.get('C1SWITCH_GPU_RPC','/root/c1switch20261031/main_v6/rpc')
+GPU_HOST = os.environ.get('C1SWITCH_GPU_HOST','gpuR')
 
 
 def markers():
@@ -25,7 +26,7 @@ else:
 print(json.dumps(out))
 ''')
     if rows:
-        ssh('gpuR',f'''import json
+        ssh(GPU_HOST,f'''import json
 from pathlib import Path
 root=Path({GPU!r})
 for name,row in {rows!r}.items():
@@ -33,7 +34,7 @@ for name,row in {rows!r}.items():
  if not p.exists():p.write_text(json.dumps(row))
 print(json.dumps(dict(count={len(rows)})))
 ''')
-    failures = ssh('gpuR',f'''import json
+    failures = ssh(GPU_HOST,f'''import json
 from pathlib import Path
 root=Path({GPU!r});out={{}}
 for arm in ('wm','bb'):
@@ -93,8 +94,8 @@ def main(root):
         write(root/'START.json',dict(unix=time.time(),cpu=CPU,gpu=GPU))
         while not (root/'STOP').exists():
             try:
-                count = transfer('cpuQ',CPU,'gpuR',GPU,'.request')
-                count += transfer('gpuR',GPU,'cpuQ',CPU,'.result')
+                count = transfer('cpuQ',CPU,GPU_HOST,GPU,'.request')
+                count += transfer(GPU_HOST,GPU,'cpuQ',CPU,'.result')
                 markers()
                 write(root/'STATUS.json',dict(unix=time.time(),last_transferred=count))
             except Exception as exc:

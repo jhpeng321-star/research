@@ -32,6 +32,9 @@ def bundle():
     paths.append(Path('tests/test_c1switch_merge_fast.py'))
     paths.append(Path('tests/test_c1switch_analysis.py'))
     paths.append(Path('tests/test_c1switch_continuation.py'))
+    paths.append(Path('tests/test_c1switch_resume.py'))
+    paths.extend([Path('tests/__init__.py'),Path('tests/test_c1switch_recovery.py'),
+                  Path('tools/c1switch/evidence/V7_INTERRUPTION_AUDIT.json')])
     sources = {p.as_posix():sha(p) for p in paths}
     engine = Path('traffic_shepherd/c4/branching.py')
     sources['engine/branching.py'] = sha(engine)
