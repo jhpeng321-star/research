@@ -59,7 +59,7 @@
 - Frozen dev panel must remain never-fitting; do not select/tune candidates or WM settings from these outcomes.
 - Full final local CPU/analysis suite20/20PASS; rendered figures visually checked.
 
-## MAIN01:28 extension — PREPARED, CPU gates passed
+## MAIN01:28 extension — RUNNING, CPU gates passed
 - Preserve the complete original panel and roots above. Resume reconciliation commit97a8b34b.
 - Extension source/design/preregistration commitc2646eb1; separate immutable `*_v2` roots.
 - Exact cap579020sim-s plus original220980=800000. Fresh DEV983200–983223, never fitting.
@@ -72,6 +72,8 @@
   plus real WMDECIDE parity PASS, SUMO process creation blocked; local29CPU/analysis PASS.
 - CPU/binding/freeze/audit manifests: `docs/paper_results/coopplan/extension/`.
 - Read-only: `python -B -m tools.coopplan.extension status --host <cpuQ|gpuA|gpuR>`.
-- Dispatch still requires one exclusive launch per new root; never relaunch original supervisors.
+- Dispatched once: cpuQ565742, gpuA335613, gpuR756955; immutable `*_v2` roots.
+  All have DISPATCH_ONCE, no STOP; cpuQ starts new pairs, gpuA/gpuR original missing twins.
+  NEVER relaunch these supervisors or the original ones; dispatch receipts are committed.
 - Final result must report extension24 and pooled36 separately, all-group credits with
   whole-world clustering, unchanged causal detectors, safety, budget pruning and full accounting.
