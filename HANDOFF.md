@@ -3,7 +3,7 @@
 <!-- wmdecide-refresh:start -->
 ## Latest automated saved-output credibility refresh
 
-- Collected/scored 2026-10-31T23:14:27.613612+00:00; start at `docs/paper_results/wmdecide/refresh_20261031_231154Z/INDEX.md`.
+- Collected/scored 2026-10-31T23:34:52.878636+00:00; start at `docs/paper_results/wmdecide/refresh_20261031_233430Z/INDEX.md`.
 - All scores use validated complete K8 worlds; per-candidate matched WM2
   sections use exactly the candidate's available common worlds.
 - Read-only collection; CPU-only analysis; no inference/dispatch/process control.
