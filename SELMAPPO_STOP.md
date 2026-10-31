@@ -145,3 +145,27 @@ the original three exclusive locks present. cpuQ load2.38/32cores at inventory;
 no continuation dispatched. Implement a fourth one-use lock and immutable inherited
 history, retaining unknown actual bounds rather than inventing terminal debits.
 The two untracked SELMAPPO2 request files are peer work and are preserved.
+
+## MAIN01:48 dispatch STOP: history-reader schema failure (current)
+Registered implementation `e6c24e73`/resource-wait `678b4548`; exact owned-history audit
+repair `4200a7b8`. Pre-lock attempt on a6b stage ran no supervisor/reservation/physics.
+Corrected immutable build `3351504cece84e4b` passed38/38CPU and genuine integration,
+current registry/initial policy/RNG gates. Exclusive fourth lock was claimed ONCE.
+cpuQ ownPID606965 then exited; no owned descendants remain. Disk had recovered to
+2,601,025,536bytes at launch, so normal per-episode admission admitted the first5 worlds.
+
+All five reservations18000041..18000045 failed in `PrechargedEpisode.reserve`:
+the per-episode scan assumed every ledger row had `id`; the new HISTORY row does not.
+All five tracebacks are at `runtime.py` budget.reserve BEFORE CavSumoEnv constructor,
+reset or SUMO start; all five episode directories are empty. **New actual0, retained
+new charge4,500; total43,200charged /30,600..37,800historical actual bounds.**
+New ledger retains5open reservations and the byte-identical original open ledger.
+New ledgerSHA `7ae8d3b572fa4ab22298b9f0d161790afc7de3bd0dd13ded8804134fcf36f0d4`.
+Stop receipt binds all failures/log/initial000 (unchanged original hash);0updates,
+no final169, no evaluation. All sources/stages/locks/charges remain, no retries/refunds.
+
+CPU-only correction reads `row.get('id')`; regression now explicitly exercises the real
+PrechargedEpisode reserve/finish against inherited HISTORY plus a fresh live reservation.
+The previous inheritance test had exercised only supervisor Budget, missing this boundary.
+No continuation implementation/automatic launch is authorized after this new stop.
+MAIN must amend the now-exhausted first5 schedule; proposal in `MAIN_CONTINUATION_REQUEST.md`.

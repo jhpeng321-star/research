@@ -1,0 +1,35 @@
+{
+  "pid": 606965,
+  "root": "/home/ubuntu/selmappo20261031/build_3351504cece84e4b",
+  "out": "/home/ubuntu/selmappo20261031/build_3351504cece84e4b/training",
+  "binding": "3351504cece84e4b5c289689dd65350dfe784dd0dfbbb3c93fa16a681df59235",
+  "command": [
+    "/home/ubuntu/miniconda3/bin/python",
+    "-m",
+    "tools.selmappo.train",
+    "--variant",
+    "fleet",
+    "--registration",
+    "/home/ubuntu/selmappo20261031/build_3351504cece84e4b/pytools/REGISTRATION.md",
+    "--c1-root",
+    "/home/ubuntu/selmappo20261031/build_3351504cece84e4b/pytools",
+    "--integration",
+    "/home/ubuntu/selmappo20261031/build_3351504cece84e4b/INTEGRATION.json",
+    "--design-sha",
+    "992c05601f03d1d9caad0421b041dbeaa05fa8621ae7e3020be42e3c9f5b41d0",
+    "--out",
+    "/home/ubuntu/selmappo20261031/build_3351504cece84e4b/training",
+    "--workers",
+    "12",
+    "--transport-from",
+    "/home/ubuntu/selmappo20261031/build_b3d13ccfae77de71"
+  ],
+  "resource_wait_supervisor": true,
+  "startup_disk_free_bytes": 2601025536,
+  "startup_load": [
+    7.08203125,
+    6.37744140625,
+    7.78955078125
+  ],
+  "physics_admission": "each episode before precharge; unchanged"
+}

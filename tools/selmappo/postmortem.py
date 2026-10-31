@@ -57,5 +57,60 @@ print('STOP_RECEIPT',json.dumps(record))
     save_tag(result.stdout, 'STOP_RECEIPT', 'STOP_build_b3d13ccfae77de71.json')
 
 
+def history_record():
+    result = run('cpuQ', '''
+import hashlib,json
+from pathlib import Path
+root=Path.home()/'selmappo20261031/build_3351504cece84e4b'
+out=root/'training';assert root.is_dir() and out.is_dir()
+dispatch=json.loads((root/'DISPATCH.json').read_text())
+assert dispatch['pid']==606965 and not (Path('/proc')/'606965').exists()
+for proc in Path('/proc').iterdir():
+ if proc.name.isdigit():
+  try:cmd=(proc/'cmdline').read_bytes().replace(bytes([0]),b' ').decode(errors='replace')
+  except (OSError,ProcessLookupError):continue
+  assert str(root) not in cmd or '-c import base64' in cmd,'owned descendant remains'
+def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
+ledger=out/'ledger.jsonl';rows=[json.loads(s) for s in ledger.read_text().splitlines()]
+assert len(rows)==6 and rows[0]['event']=='HISTORY' and rows[0]['charged_sim_s']==38700
+assert [r['event'] for r in rows[1:]]==['START']*5
+assert {r['id'] for r in rows[1:]}=={f'fleet:{s}' for s in range(18000041,18000046)}
+assert all(r['reserved_sim_s']==900 for r in rows[1:])
+assert sha(out/'inherited_ledger.jsonl')=='497e0c292a1acb757f4bd733fa4a60b9ad7e2853e6b16d16e8fe50c6c570ec88'
+failures=[json.loads(s) for s in (out/'failure.jsonl').read_text().splitlines()]
+assert len(failures)==5
+assert {r['world']['seed'] for r in failures}==set(range(18000041,18000046))
+for row in failures:
+ assert row['actual'] is None and not row['ok']
+ assert "KeyError: 'id'" in row['error'] and 'storage.py", line 90, in <listcomp>' in row['error']
+ assert 'runtime.py", line 135, in __init__' in row['error']
+for seed in range(18000041,18000046):
+ assert not list((out/str(seed)).iterdir()),'unexpected physics/trajectory artifact'
+assert not (out/'training.jsonl').exists()
+assert [p.name for p in out.glob('checkpoint_*.pt')]==['checkpoint_000.pt']
+assert (out/'STOP_REQUESTED').exists()
+record=dict(status='STOPPED_BEFORE_PHYSICS_HISTORY_READER',root=str(root),own_pid=606965,
+ own_pid_exited=True,own_descendants_remaining=0,charged_sim_s=43200,
+ inherited_charge_sim_s=38700,new_charge_sim_s=4500,new_actual_sim_s=0,
+ known_actual_sim_s=30600,actual_upper_sim_s=37800,new_open_reservations=5,
+ failed_seeds=list(range(18000041,18000046)),training_updates=0,final_checkpoint=False,
+ ledger_sha256=sha(ledger),inherited_ledger_sha256=sha(out/'inherited_ledger.jsonl'),
+ log_sha256=sha(root/'training.log'),failure_sha256=sha(out/'failure.jsonl'),
+ initial_checkpoint_sha256=sha(out/'checkpoint_000.pt'),source_binding=dispatch['binding'],
+ failure_before_env_constructor=True,retry_authorized=False,automatic_launch_armed=False,
+ error='PrechargedEpisode reserved-row scan assumed id on immutable HISTORY debit',
+ note='All five tracebacks are at runtime budget.reserve before CavSumoEnv construction/reset; empty episode roots. Null worker actual is retained; new actual0 is independently established by the failure location. No invented END rows/refund/replay.')
+with (root/'STOP.json').open('x') as stream:json.dump(record,stream,indent=2)
+print('STOP_RECEIPT',json.dumps(record))
+''')
+    save_tag(result.stdout, 'STOP_RECEIPT', 'STOP_build_3351504cece84e4b.json')
+
+
 if __name__ == '__main__':
-    record()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('kind', choices=('transport', 'history'), default='transport', nargs='?')
+    if parser.parse_args().kind == 'history':
+        history_record()
+    else:
+        record()

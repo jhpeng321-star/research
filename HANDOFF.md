@@ -1,6 +1,16 @@
 # S-SELMAPPO fleet-picker integration handoff
 
-**CURRENT: STOPPED on production tensor-IPC failure; own503239 exited, no descendants.**
+**CURRENT: MAIN01:48 continuation STOPPED before physics on HISTORY row reader; own606965 exited.**
+New build3351504cece84e4b passed38/38CPU/real integration and registered before its
+one-use dispatch. All5unused worlds were precharged then failed at budget.reserve
+BEFORE simulator construction/reset; newactual0/newcharge4500 retained. Total43200charged,
+actual historical30600..37800bounds unchanged,0PPOupdates/initial000only/no evaluation.
+Original41worlds AND new5 reservations are consumed; all4locks/oldopenledgers retained.
+CPU fix adds HISTORY-safe worker row lookup and a real worker-with-HISTORY regression.
+MAIN schedule amendment required; no automatic launch/retry armed. See
+`MAIN_CONTINUATION_REQUEST.md`, `SELMAPPO_STOP.md` and STOP_build_3351504cece84e4b.json.
+
+**Previous transport stop (preserved): own503239 exited, no descendants.**
 Production began under MAIN01:08, but first wave exhausted PyTorch storage-FD transport
 near32x30logp tensors against cpuQ softFDlimit1024 (`received0items of ancdata`).
 41production worlds reserved,33complete result/actual receipts,0PPOupdates; initial000only.
