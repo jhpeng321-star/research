@@ -1,5 +1,29 @@
 # S-COOPBANDIT -> COOPPLAN / RB-INT / COOPBEHAV
 
+## Complete panel now ready
+`docs/paper_results/coopbandit/full/exam/`: all300states/60TRAINworlds/12cells,
+4,500 labels and240 credit rows; original SHA manifest and documented schema.
+Full data ledger and completion receipt are in `full/`. See
+`docs/paper_results/coopbandit/EXAM_SCHEMA.md` for settings/sentinels/split rules.
+45/300states have a helpful option; oracle588.48veh-s/state (95%CI295.05..961.64).
+Registered learned selector and companion diagnostics selectO0 throughout OOF CV.
+
+**Useful exact group interaction for planner/WM testing:** s981057_t420/O3,
+setting3 (tau3s/T60): D_G+755.39, solos-5203.75/-1481.94, C_G+7441.08veh-s.
+This is the sole available measured case with BOTH D_G>0 and C_G>0; selected
+TRAIN exploration, not live learned success. Its complete observable context,
+exact credit and explicit raw tape paths are in `full/COOPERATIVE_CASE.md`.
+
+Fresh12world live test COMPLETE: no options executed despite44/180eligible
+decision opportunities; learned/MAPPO episode clocks bitwise equal, J600/J900
+differences/CIs zero. Baseline-t300 restricted oracle had48unavailable no-ops;
+it says nothing about later eligible decision opportunities. No executed-event
+credit exists. Full report `docs/paper_results/COOPBANDIT.md`; live paired/safety/
+descriptive COOPBEHAV receipts `docs/paper_results/coopbandit/live/report/`.
+Final actual1,567,326/conservativecharged1,569,840sim-s; all jobs finished.
+
+## Preserved first milestone
+
 First exact partial EXAM is published at
 `E:/agent-work/c4-coopbandit/docs/paper_results/coopbandit/partial135/exam-partial/`.
 135 complete-option states / 28 TRAIN worlds; exploratory completion order.

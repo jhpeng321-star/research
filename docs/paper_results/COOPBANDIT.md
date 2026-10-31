@@ -1,49 +1,59 @@
-# Cooperation bandit — first partial results, 2026-11-01
+# Cooperation bandit — complete results, 2026-11-01
 
-Some fixed group moves save substantial delay in exact SUMO twins, but the
-registered observable-state learner has not yet learned when to execute them
-confidently. This is an exploratory 135/300-state completion-order subset.
+Cooperation can help in exact SUMO twins, including one genuinely beneficial
+group interaction. The registered observable-state learner did not learn to
+select it confidently: it always fell back to MAPPO, including on fresh dev.
 
-## First milestone
-- 135 states, 28 TRAIN worlds, 10/12 cells represented; remaining labels running.
-- Every included state has all four options and 120/300/600 s exact labels.
-- 16/135 states (11.85%) have an available helpful option at 600 s.
-- Equal-world helpful fraction: 12.5%, bootstrap 95% CI [6.43%, 19.64%].
-- Equal-world oracle saving: 284.87 veh-s/state, 95% CI [122.91, 484.80].
-- Registered nested-CV policy: zero interventions, zero saving; oracle regret
-  284.87 veh-s/state with the same CI. Always-MAPPO fallback is active.
-- Its full-data CV radius is 11,465.27 veh-s; it is learned from world-max
-  signed overprediction, not a hand-set traffic threshold.
-- Available/helpful counts: O1 28/12, O2 14/2, O3 12/5, O4 28/11.
-- Best observed D600: O1 6,360.02; O2 1,521.60; O3 2,273.65;
-  O4 6,315.78 veh-s. These maxima are selected examples, not policy gains.
-- Seven available O2/O3 solo-credit cases are complete. None has positive D_G;
-  C_G ranges from -3,912.18 to +11,303.43. Positive interaction alone does
-  not mean the group move beats MAPPO.
-- No collisions or teleports in the exported 600 s outcomes. Detailed TTC,
-  hard-braking and override shares are in labels.csv; no safety superiority claim.
+## Exact TRAIN exam and learning
+- Complete: 300 states / 60 worlds / all 12 demand×share cells; 4,500 labels
+  at 120/300/600 s, and 240 O2/O3 joint/solo-credit rows. No dev data used for fitting.
+- High-demand .2/.4 cells have 180 states; 20 satisfy the prospective dense rule.
+- Helpful available option in 45/300 states = 15%, world-bootstrap 95% CI [10%,20.33%].
+  Only 81 states have an eligible two-CAV group. The mixture is intentionally oversampled.
+- Oracle saving 588.48 veh-s/state, CI [295.05,961.64]. Registered nested-CV saving 0;
+  regret 588.48 with the same CI; 0 selected options. Full-fit uncertainty radius 9612.20.
+- Confidence uses nested world-grouped signed overprediction, a 95% quantile of
+  each world's worst error across options/times; choose positive lower bound or O0.
+  This is CV-derived uncertainty, not a behavioural threshold or live guarantee.
+- Available/helpful: O1 metering 81/30, O2 wall 34/9, O3 ramp gap 43/14, O4 gap 81/31.
+  Mean available-option effects are harmful: -1176/-1153/-1736/-1022 veh-s.
+  Best observed effects: +14992/+9917/+6338/+17154 veh-s; selected TRAIN maxima.
+- Primary model importance emphasizes second-member rear gap/position/speed;
+  O3 also emphasizes first-member position and receiving-lane speed. PDP plots
+  describe model associations; no reliably beneficial observable rule was learned.
+- S-COOPBANDIT-LEARN available-only GBT/linear diagnostics also select O0 everywhere;
+  diagnostic GBT RMSE 5262.43/radius 11905.25. They do not replace the registered fit.
 
-## Companion analysis and artifacts
-S-COOPBANDIT-LEARN GBT and linear diagnostics also select O0 in every OOF
-state. Their available-option-only fitting/calibration differs from the registered
-all-state learner; GBT radius 9,262.55, RMSE 4,247.30 veh-s (exploratory).
-Feature-importance/PDP CSVs and PNGs are in `coopbandit/partial135/helper/`.
-Model importances describe fits; no stable beneficial traffic rule is established.
-The helper input is a documented metadata-only view of the verified EXAM;
-the original labels/features/manifest are preserved unchanged.
+## Measured useful interaction
+Of 80 measured O2/O3 state-option credit cases, 12 are available; one has D_G>0
+and C_G>0: s981057_t420/O3, 3 s headway held 60 s. Two almost-stopped receiving-lane
+CAVs near the merge face a slow queue and observed ramp vehicles. Joint saving
++755.39 veh-s; solos -5203.75/-1481.94; C_G=+7441.08. This is a selected TRAIN
+example, not learned deployment success. See `coopbandit/full/COOPERATIVE_CASE.md`.
+Positive C_G alone is insufficient: available-case C_G spans -5211.84..+11303.43.
 
-EXAM: `coopbandit/partial135/exam-partial/README.md`, `states.jsonl`,
-`labels.csv`, `group_credit.csv`, `worlds.json`, provenance and SHA manifest.
-Registered CV outputs: `coopbandit/partial135/learned/`.
-World IDs are grouping metadata; no true share/demand/driver truth is a feature.
-All dev worlds 981080–981091 are excluded from fitting and calibration.
-Option/runner handoff: `../../HANDOFF_COOPBANDIT.md` from this directory.
+## Fixed fresh-dev live test
+- All 12 worlds 981080–981091 complete; RSU 15 decisions/world every 60 s.
+  There were 44/180 group-eligible decisions; policy executed 0 options.
+- Learned/MAPPO clocks match BITWISE. J600/J900 paired differences 0 veh-s,
+  both 95% bootstrap CIs [0,0]. Mean J600 61006.69, J900 106159.67 veh-s in both arms.
+- Restricted baseline-t300 oracle: all 48 options unavailable/no-op, saving 0.
+  It had no intervention opportunity and is not a closed-loop oracle bound.
+- Executed-event C_G is NA: no events, so no credit twins or attributed cooperation.
+- No collisions/teleports. Both arms' mean TTC<3 s exposure 424.25/597.33 veh-s
+  and hard-braking 12.46/18.08 veh-s at 600/900 s; option override share 0.
+- COOPBEHAV finds 185 descriptive cross-lane-hold candidates in EACH arm,
+  zero yield/gap/wave events; no new attributable cooperative behaviour.
+  TRAIN safety/audit counters are exported; original safety layer is unchanged.
 
-## Execution and remaining work
-Recovered existing cpuQ/gpuA jobs; admitted gpuR only after its full 1140 s
-bitwise compatibility proof. Preserved all old STOPs, attempts and charges.
-Frozen MAPPO169/E3/SUMO1.27.1/noise/original safety layer unchanged.
-Conservative final data reservation 1,497,840; live reservation 99,360;
-combined 1,597,200 <= 1,600,000 sim-s. Live test is not yet dispatched.
-Final 300-state analysis, fresh-dev paired J600/J900 test and executed-event
-cooperation evidence remain pending. No learned cooperation success is claimed.
+## Artifacts, provenance and budget
+EXAM `coopbandit/full/exam/`; schema `coopbandit/EXAM_SCHEMA.md`; world-fold OOF
+rows `coopbandit/full/learned/`; primary CSVs/figures `coopbandit/full/registered-summary/`;
+helper diagnostics `coopbandit/full/helper/`; live results `coopbandit/live/report/`.
+World IDs/cells are metadata, never predictors. Original byte SHA manifests verify.
+Options/traces/planner handoff: `../../HANDOFF_COOPBANDIT.md`. First 135-state
+partial analysis remains preserved in `coopbandit/partial135/` (published before full).
+All three hosts used nice19 CPUs, frozen E3/MAPPO169/SUMO1.27.1/noise; bitwise
+cross-host reducer gates passed without tolerance or safety changes. CPU 20/20 PASS.
+Final actual 1,567,326 sim-s = data 1,495,326 + live 72,000; conservative charged 1,569,840
+<=1,600,000. Event-credit reserve unused; all failed charges/STOPs retained; no automatic retries.
