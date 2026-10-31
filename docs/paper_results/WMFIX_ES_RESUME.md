@@ -114,4 +114,19 @@
   Added the existing registered input-presence checks to that preflight too;
   no metric change. Combined verdict/binding regressions: 14 passed (26.0 s).
   Staged only private ES files. ES-plan preflight reports precisely those four
-  missing inputs; no producer-closure mismatch and no evaluation launch.
+   missing inputs; no producer-closure mismatch and no evaluation launch.
+
+## Fresh-session audit — 2026-10-31 16:52 +08
+- Resumed at 069c68ae with five modified files plus GEN_001.json; all retained.
+  Read required design/review/feasibility/retarget/pilot and rollout sources first.
+- Existing gpuA driver 195604 remains live; generation 1 completed all 184 cells
+  per candidate, generation 2 already active on both hosts. No failed sweep.
+  No driver, worker or receipt collector redispatched.
+- Existing local collector 18420 is live (exclusive resume_audit PID receipt);
+  its automatic commits deferred because of the prior session's code edits.
+- Pending private-plan selection and collector/report changes verified with
+  test_wmfixmerge_es_collect, test_wmfixmerge_es_verdict_binding and
+  test_wmfix_verdict: 18 passed in 30.99 s. No Windows environment installed.
+- Generation 1 selected g1/c1 by registered road/crossing fitness .33808628
+  (baseline .36886510); paired J MAE worsens 237.69 -> 243.87 veh-s. Selection
+  remains training-objective-only; neither number constitutes a verdict PASS.

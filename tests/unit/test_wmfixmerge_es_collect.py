@@ -24,6 +24,8 @@ def test_k8_aggregation_and_report_line_cap(tmp_path, monkeypatch):
     assert "gpuA N=18 8.9 min" in rendered
     assert "combined 3.3 min" in rendered
     assert "g0=5.00" in rendered and "g0=2.00" in rendered
+    assert "selection fitness): g0=1.000000" in rendered
+    assert "ES_VERDICT_PLAN.json" in rendered
     assert "NOT ADOPTABLE" in rendered
     assert len(rendered.splitlines()) <= 60
 

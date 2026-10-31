@@ -1,19 +1,28 @@
 """Read-only preflight of the unchanged registered A/B/C1/accept verdict."""
 import argparse
 import json
+from pathlib import Path
+
+
+def selected_plan(candidate, explicit=None):
+    if explicit:
+        return Path(explicit)
+    private = Path(candidate).parent / "ES_VERDICT_PLAN.json"
+    return private if private.is_file() else Path("tools/wmfixmerge/verdict_plan.json")
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--candidate", required=True)
     parser.add_argument("--config", required=True)
-    parser.add_argument("--plan", default="tools/wmfixmerge/verdict_plan.json")
+    parser.add_argument("--plan", help="defaults to the candidate's frozen ES plan if present")
     parser.add_argument("--out", required=True)
     args = parser.parse_args()
     from tools.wmfixmerge.data import digest, install_guard, safe
     from tools.wmfixmerge.verdict import preflight
     install_guard()
-    plan = json.loads(safe(args.plan).read_text())
+    plan_path = safe(selected_plan(args.candidate, args.plan))
+    plan = json.loads(plan_path.read_text())
     blockers = preflight(plan, args.candidate, args.config)
     required = {"accept_panel": plan.get("accept_panel")}
     for stage, flags in (("C1", ("--cohort", "--runner")), ("B", ("--candidate-dir",))):
@@ -30,7 +39,7 @@ def main():
     doc = dict(schema="wmfix_es_verdict_preflight/1", status="BLOCKED" if blockers else "READY",
                passed=False, executed_stages=[], blockers=blockers, checks=checks,
                candidate_sha256=digest(args.candidate), config_sha256=digest(args.config),
-               plan_sha256=digest(args.plan), evaluation_only=True)
+               plan_sha256=digest(plan_path), evaluation_only=True)
     with safe(args.out).open("x") as stream:
         json.dump(doc, stream, indent=2, allow_nan=False)
     print(json.dumps(doc, indent=2), flush=True)

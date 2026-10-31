@@ -62,3 +62,13 @@ def test_missing_registered_inputs_block_before_any_a_rollout(tmp_path):
     assert set(result["blockers"]) == {"missing accept_panel", "missing B--candidate-dir",
                                        "missing C1--cohort", "missing C1--runner"}
     assert not (tmp_path / "RUN.json").exists()
+
+
+def test_finalizer_preflight_selects_frozen_es_plan_only_for_its_candidate(tmp_path):
+    from tools.wmfixmerge.es_verdict_preflight import selected_plan
+    candidate = tmp_path / "generation_001.pt"
+    assert selected_plan(candidate) == Path("tools/wmfixmerge/verdict_plan.json")
+    private = tmp_path / "ES_VERDICT_PLAN.json"
+    private.write_text("{}")
+    assert selected_plan(candidate) == private
+    assert selected_plan(candidate, "explicit.json") == Path("explicit.json")

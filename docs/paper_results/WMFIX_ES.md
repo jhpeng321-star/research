@@ -43,12 +43,14 @@
 
 ## ES curve / verdict / recommendation
 - Calibration: RUNNING (gpuA driver PID 195604); `es_cpu_v3/es_run_full`, cpuQ `es_run_full`.
-- Curve (generation winner by objective, TRAIN paired J MAE veh-s): g0=237.69.
-- Source contrast MAE reported separately: g0=26.62.
-- Selected/best-so-far g0/c0: paired J MAE 237.69 veh-s.
-- Scoring-ready selected checkpoint: pending; 20 CPUQ + 3 receipt checks PASS.
+- Curve (generation winner by objective, TRAIN paired J MAE veh-s): g0=237.69; g1=243.87.
+- SAME paired road/crossing objective (selection fitness): g0=0.368865; g1=0.338086.
+- Source contrast MAE reported separately: g0=26.62; g1=23.67.
+- Selected/best-so-far g1/c1: paired J MAE 243.87 veh-s.
+- Scoring-ready selected checkpoint: pending; 20 CPUQ + 18 local checks PASS.
 - Verdict INCOMPLETE / NOT ADOPTABLE; unchanged A vs WM2 AND entry, B, C1/accept.
 - Missing registered inputs: accept panel, C1 cohort/runner, candidate quartet completion.
-- MAIN: bind C1/accept inputs and allocate A/B GPU slot after checkpoint readiness.
+- MAIN: bind C1/accept; A/B GPU slot requested (CPU estimate A ~8.6 h + B ~1.3 h).
+  Use es_run_full/ES_VERDICT_PLAN.json and private quartet_candidate output.
 - Recommendation: retain WM2 until registered independent A/B/C1/accept PASS;
   120 s TRAIN calibration alone does not establish 300/600 s response quality.

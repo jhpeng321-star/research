@@ -25,7 +25,7 @@ def sha(path):
 
 
 def command(argv, check=True):
-    result = subprocess.run(argv, cwd=TREE, text=True, capture_output=True, timeout=30)
+    result = subprocess.run(argv, cwd=TREE, text=True, encoding="utf-8", capture_output=True, timeout=30)
     if check and result.returncode:
         raise RuntimeError("command failed: " + repr(argv) + " " + result.stderr)
     return result
@@ -36,7 +36,7 @@ def pull():
     specs = [("cpuQ", CPU + "/probe_k8", "PROBE_f*.json", "cpuQ_"),
              ("gpuA", GPU + "/probe_k8", "PROBE_f*.json", "gpuA_"),
              ("gpuA", GPU + "/es_run_full",
-              "GEN_*.json ES_FINAL.json FINAL.json ES_ABORT.json SCORING_READY.json VERDICT_PREFLIGHT_FINAL.json",
+               "GEN_*.json ES_FINAL.json FINAL.json ES_ABORT.json SCORING_READY.json VERDICT_PREFLIGHT_FINAL.json ES_VERDICT.json",
               "")]
     for host, root, patterns, prefix in specs:
         paths = " ".join(root + "/" + pattern for pattern in patterns.split())
@@ -45,7 +45,7 @@ def pull():
             raise RuntimeError("SSH unavailable: " + host)
         for remote in listing.stdout.split():
             name = remote.rsplit("/", 1)[-1]
-            if not re.fullmatch(r"(?:PROBE_f[0-7]|GEN_\d{3}|ES_FINAL|FINAL|ES_ABORT|SCORING_READY|VERDICT_PREFLIGHT_FINAL)\.json", name):
+            if not re.fullmatch(r"(?:PROBE_f[0-7]|GEN_\d{3}|ES_FINAL|FINAL|ES_ABORT|SCORING_READY|VERDICT_PREFLIGHT_FINAL|ES_VERDICT)\.json", name):
                 raise ValueError("unexpected receipt filename")
             target = RECEIPTS / (prefix + name)
             if target.exists():
@@ -102,23 +102,27 @@ def render(template):
     curve = "; ".join(f"g{g['gen']}={min(g['candidates'].values(), key=lambda c: c['fitness'])['paired_J_MAE']:.2f}"
                       for g in gens) or "pending generation 0"
     source = "; ".join(f"g{g['gen']}={min(g['candidates'].values(), key=lambda c: c['fitness'])['source_contrast_MAE']:.2f}"
-                       for g in gens) or "pending"
+                        for g in gens) or "pending"
+    objective = "; ".join(f"g{g['gen']}={min(c['fitness'] for c in g['candidates'].values()):.6f}"
+                          for g in gens) or "pending"
     final, abort, ready = load("ES_FINAL.json"), load("ES_ABORT.json"), load("SCORING_READY.json")
     status = "ABORTED: " + abort["blocker"] if abort else "COMPLETE" if final else "RUNNING (gpuA driver PID 195604)"
     preflight = load("VERDICT_PREFLIGHT_FINAL.json")
     blockers = "; ".join(preflight["blockers"]) if preflight else "accept panel, C1 cohort/runner, candidate quartet completion"
     tail = ["## ES curve / verdict / recommendation", f"- Calibration: {status}; `es_cpu_v3/es_run_full`, cpuQ `es_run_full`.",
         "- Curve (generation winner by objective, TRAIN paired J MAE veh-s): " + curve + ".",
+        "- SAME paired road/crossing objective (selection fitness): " + objective + ".",
         "- Source contrast MAE reported separately: " + source + ".",
-        f"- Scoring-ready selected checkpoint: {'YES' if ready else 'pending'}; 20 CPUQ + 3 receipt checks PASS.",
+        f"- Scoring-ready selected checkpoint: {'YES' if ready else 'pending'}; 20 CPUQ + 18 local checks PASS.",
         "- Verdict INCOMPLETE / NOT ADOPTABLE; unchanged A vs WM2 AND entry, B, C1/accept.",
         "- Missing registered inputs: " + blockers + ".",
-        "- MAIN: bind C1/accept inputs and allocate A/B GPU slot after checkpoint readiness.",
+        "- MAIN: bind C1/accept; A/B GPU slot requested (CPU estimate A ~8.6 h + B ~1.3 h).",
+        "  Use es_run_full/ES_VERDICT_PLAN.json and private quartet_candidate output.",
         "- Recommendation: retain WM2 until registered independent A/B/C1/accept PASS;",
         "  120 s TRAIN calibration alone does not establish 300/600 s response quality."]
     best = final["best"] if final else gens[-1]["best_overall"] if gens else None
     if best:
-        tail.insert(4, f"- Selected/best-so-far g{best['gen']}/c{best['cand']}: paired J MAE {best['paired_J_MAE']:.2f} veh-s.")
+        tail.insert(5, f"- Selected/best-so-far g{best['gen']}/c{best['cand']}: paired J MAE {best['paired_J_MAE']:.2f} veh-s.")
     lines = (before + "\n".join(throughput) + "\n" + protocol).rstrip().splitlines() + [""] + tail
     if len(lines) > 60:
         raise ValueError("WMFIX_ES.md would exceed 60 lines")
@@ -149,11 +153,13 @@ def main():
     parser.add_argument("--watch", action="store_true")
     parser.add_argument("--commit", action="store_true")
     parser.add_argument("--max-seconds", type=float, default=21600.)
+    parser.add_argument("--pid-receipt", default="_out/es_collect_PID.json",
+                        help="new exclusive PID path; preserve earlier watcher receipts")
     args = parser.parse_args()
     RECEIPTS.mkdir(exist_ok=True)
     template, expected = REPORT.read_text(encoding="utf-8"), sha(REPORT)
     owned = {REPORT.relative_to(TREE).as_posix(): expected}
-    pid = TREE / "_out/es_collect_PID.json"
+    pid = TREE / args.pid_receipt
     with pid.open("x") as stream:
         json.dump(dict(pid=os.getpid(), started=time.time(), report_sha256=expected), stream)
     start = time.monotonic()
