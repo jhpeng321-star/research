@@ -1,57 +1,38 @@
-# S-WMVALUE — decisive-test inference RUNNING (2026-10-31)
+# S-WMVALUE frozen decisive offline test
 
-**MAIN21:12 short-first execution active; complete B/C/D/E gate pending inference.**
-The WM-trained cooperative policy remains the target. Original freeze12685912;
-amendment03dd03e0; frozen real fit a0acedb6; adapter3d863697; pipeline226b0a8e.
+**VERDICT: FAIL** (MAIN21:12 short-prefix-first amendment).
+Eight reserved FIT worlds969432..969439;200arm cells;400paired differences.
+Starts300/360/420/480/540; full remaining fleet+source delay to absolute900s.
+V/D/E unchanged SHAef3e7bce;111causal sensed features; no source queue input.
+K8 WM2+mix; identical long stochastic plans truncated only after90s.
+World-cluster bootstrap10,000,seed20261031;95% percentile intervals.
 
-## Registered comparison: remaining fleet+source delay to absolute t900, veh-s
+| Method | Sign accuracy % [CI] | Spearman [CI] | MAE veh-s [CI] |
+|---|---:|---:|---:|
+| A: WM to900 | NA | NA | NA |
+| B: WM60 + V | 47.25 [38.00, 56.25] | -0.08 [-0.32, 0.21] | 8877.72 [4590.41, 14306.82] |
+| C: WM90 + V | 43.25 [35.25, 51.50] | -0.21 [-0.40, -0.00] | 10117.34 [5832.41, 14984.31] |
+| D: V + present commands | 58.75 [47.75, 67.75] | 0.29 [0.09, 0.48] | 4460.00 [3161.00, 6183.67] |
+| E: FIT arm/time mean | 72.25 [56.00, 86.00] | 0.46 [0.11, 0.72] | 3038.93 [1725.06, 4769.29] |
 
-| Method | Sign accuracy | Spearman | MAE (veh-s) | World-cluster CI |
-| --- | --- | --- | --- | --- |
-| A: WM2 b8797242 + mix to endpoint | NA | NA | NA | NA |
-| B: WM 60 s + real-trained V | NA | NA | NA | NA |
-| C: WM 90 s + real-trained V | NA | NA | NA | NA |
-| D: no-WM V + current issued commands | NA | NA | NA | NA |
-| E: FIT arm/time means | NA | NA | NA | NA |
+| Contrast | Sign gain pp [CI] | MAE reduction veh-s [CI] |
+|---|---:|---:|
+| B-D | -11.50 [-21.75, 2.00] | -4417.72 [-8445.89, -921.72] |
+| B-E | -25.00 [-41.25, -4.75] | -5838.80 [-10057.35, -2104.14] |
+| C-D | -15.50 [-26.00, -3.00] | -5657.34 [-9214.69, -2159.55] |
+| C-E | -29.00 [-45.25, -9.50] | -7078.42 [-10909.94, -3335.07] |
 
-NA = not evaluated, never zero. Reserved200 real cells exported AFTER adapter audit.
-PASS remains: B or C beats EACH A,D,E on sign AND MAE with all six positive
-95% lower bounds; 400 arm pairs, 10,000 whole-world bootstrap draws. No tuning.
+Positive strictly-above-zero lower bounds are required for BOTH sign and MAE
+against EACH D/E, then A. Short methods surviving D/E: [].
+Neither short method clears the necessary D/E gate; the full A/D/E
+conjunction therefore FAILS regardless of A. Long-A completion is unnecessary.
+Recommendation: do not plug this frozen V into policy training as a validated fix.
+Keep WM-primary as the research goal; diagnose value/rollout mismatch on FIT only.
+Preserve SUMO oracle as teacher/reference. These exposed worlds cannot tune a revision.
 
-## Completed: the original telemetry blocker is resolved
-
-460 FIT episodes,82 worlds: WMDATA160 + WMDATA2 300;21 states/episode =9660.
-111 features: sensed lane/segment aggregates, known CAV count, time remaining,
-cumulative/trailing60 boundary FLOW; no source queue/request/demand feature.
-CAV nearest same-lane front/rear <=100m + existing mainline/ramp RSU zones;
-nominal5m length only; neighbour acceleration outside RSU unobserved (zero).
-Internal-junction lane=-1 contributes only to known CAV count, no invented lane.
-Future poisoning/truncation and existing projection-helper parity tests PASS.
-Full real LABELS include union-cohort births, carried exit speeds, post-step
-source waiting; label-only independent request RNG never enters features.
-All1380 objective120/300/600 checks pass: max discrepancy7.87e-6veh-s;
-source discrepancy exactly0. No interpolation or on-road-only target substitute.
-Frozen HGB150/15/.05/L2=10 V and command-only D fit once in9.89 CPU seconds;
-FIT-only E fitted too; equal world/arm/time weighting; no selection or test use.
-Model: `_out/wmvalue_frozen_value6f334469.joblib`; hash in `frozen_fit.json`.
-
-## Adapter and registered inference execution
-
-MAIN18:52 authorizes missing matched A to900 and B/C60/90. Cached A was
-keys-only coverage, not cost/CRN certification; aggregate-only exit-clock mismatch
-cannot be repaired. Preserve it; new matched A/B/C share trajectories and CRNs.
-Native121frame60s history, PI/CIRCLES prefix-memory replay, entrant controls,
-real/imagined sensing, boundary-flow splice, exit/source clocks CPU audited.
-40 CPU tests + actual frozen WM CPU repeat +134source cross-host parity PASS.
-Actual WM90s CPU synthetic run: both60/90 terminal paths and all five arms PASS.
-All120 reserved real objective clocks reconcile; arrays frozen SHAa61d1846.
-No late true source backlog in WM initialization: warmup queue + prefix-flow prior.
-
-**Recommendation:** complete B/C/D/E first; neither short method clears D/E => FAIL.
-Durable short dispatcher resumed PID27340; _out/wmvalue_short_v1/RESUME2.json.
-Old schedulers28924/27688 stopped by exact ownership; live workers preserved.
-CPU caps gpuA4/gpuR8 include old workers; GPUs only absent peer compute PIDs.
-Exact90vs120s checkpoint parity PASS on CPU; immutable short_v1 on both hosts.
-Complete320K8-prefix tasks trigger once-only400pair gate/report/verdict commit.
-Only D/E survivors require long A; V/D/E frozen, no efficacy verdict yet.
-No SUMO, refit, eval/prohibited-path access, peer signals, policy run or push.
+Real/imagined sensing parity, prefix causality, history, entries/exits, clocks and CRN
+passed CPU gates before reserved inference. Only registered worker-driver versions differ.
+Existing long outputs supply their own short checkpoints; active jobs were not duplicated.
+A is NA because the complete320long-task test has not run; no partial A efficacy claim.
+Evidence: tools/wmvalue/evidence/short_test.json and short_arm_predictions.json.
+No SUMO, eval/prohibited paths, refit, peer PID signals, policy training or push.
