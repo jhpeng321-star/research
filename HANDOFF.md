@@ -1,6 +1,6 @@
 # S-RB-INT handoff
 
-Updated 2026-11-01 ~00:34 +08; branch `c4/rb-int`. Owner registration5683/5697/5708.
+Updated 2026-11-01 ~00:43 +08; branch `c4/rb-int`. Owner registration5683/5697/5708/5733.
 Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_0034.md`.
 
 ## READY FOR EVAL
@@ -50,6 +50,14 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   one missing frozen controller asset fixed before any completed rollout/task.
 
 ## Jobs / coordination
+- Fresh-session audit: clean HEAD61e4e036 retained; all prior receipts/stages preserved.
+- RUNB already owns B, supervisor gpuR728893 WAITING_RESOURCES; do not redispatch.
+- RUNA watcher44796 owns intake of published A/C; no A claim at00:42 poll.
+- New ready source increments: LANE811cd7e8, MERGE0090c168, UNC46c33fbe.
+- Owner00:40 schedule: integrate continuously, freeze FULL around05:00, retain
+  immutable A/B/C, evaluate through07:15 and report with DECIDE credibility07:30.
+- DECIDE handoff not present at00:42; FIT finite-profile posterior is available,
+  learned arrival upgrade pending UNC. Existing C remains pooled-point fit.
 - No INT scientific dispatch yet. RUNB owns B after exclusive shared claim.
 - EVAL WM2 gpuR workers706825..706828 and finalizer708801 already live; preserve.
 - SUMOCORE production cpuQ203500 already launched; do NOT duplicate.
