@@ -1,0 +1,15 @@
+# S-PILOTDIAG relaunch candidate (docs/paper_results/PILOTDIAG.md): exploratory
+# pilot B with the two default-OFF guards turned ON. Never used for the CPU
+# diagnosis itself; owner-dispatched training only.
+extends = "c4_policy14_candB.toml"
+
+[trainer]
+# PILOTDIAG option (b): before/after each update, rescore the frozen gate panel
+# (deterministic, CRN); unless mean panel J improved monotonically, restore the
+# actor parameters and Adam state. No behavioural threshold; requires --gate-panel.
+update_acceptance_panel = true
+# PILOTDIAG option (d): unit-normalise the accumulated state cotangent at every
+# controller-input boundary during future-tape replay VJPs, bounding chaotic
+# adjoint growth across rollout steps. Optimizer preconditioning, not the exact
+# derivative; telemetry keeps the raw pre-normalisation adjoint.
+imagination_step_cotangent_normalize = true
