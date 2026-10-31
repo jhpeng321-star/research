@@ -1,4 +1,18 @@
-# CURRENT MAIN20:52 continuation: v7 MAIN RUNNING
+# CURRENT MAIN23:04 continuation: v7 STOPPED / BUDGET BLOCKED
+
+- First read `V7_INTERRUPTION_AUDIT.json` and the last four lines of the design.
+  All audited remote owned PIDs exited. BB hit its hard3600s GPU allocation cap;
+  subsequent STOPs and WM timeouts closed all active SUMO jobs. No restart yet.
+- Cumulative227310sim-s charged=closed actual;10complete episodes(9BB/1WM),
+  231successful branches,14partial episodes and9partial branches retained.
+  Standard independent full-rerun recovery projection501960sim-s exceeds500000;
+  BB remaining GPU budget0. Preserve original v7 adapter and every old STOP.
+- Local owned relay13556 cooperatively stopped after receipt inspection. Its
+  SSH error is recorded but not proven to be the initial cause of the panel stop.
+- MAIN23:04 requested same-plan resume, but original BB hard cap is exhausted.
+  A new registered budget/protocol decision is required before compute resumes.
+
+## Historical MAIN20:52 main dispatch
 
 - Start with `python -B -m tools.c1switch.continuation progress`; do not stage,
   launch, duplicate, or retry an existing operation. v4/v5/v6 STOPs remain intact.

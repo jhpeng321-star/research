@@ -1,12 +1,19 @@
 {
   "cpuQ": {
     "load": [
-      7.7138671875,
-      3.38330078125,
-      1.630859375
+      1.83154296875,
+      1.25048828125,
+      0.8046875
     ],
     "exists": true,
     "receipts": {
+      "STOP": {
+        "reason": "inference stopped/timed out; SUMO stays paused",
+        "pid": 4050769,
+        "mode": "episode",
+        "arm": "wm",
+        "seed": 969115
+      },
       "main_DISPATCH.json": {
         "pid": 3984657,
         "host": "cpuQ",
@@ -336,47 +343,17 @@
         "unix": 1793453369.0977676
       },
       "main/STATUS.json": {
-        "status": "RUNNING",
+        "status": "STOP",
         "active": [
-          {
-            "pid": 3984659,
-            "arm": "bb",
-            "seed": 969113
-          },
           {
             "pid": 3984660,
             "arm": "bb",
             "seed": 969114
           },
           {
-            "pid": 3984662,
-            "arm": "bb",
-            "seed": 969115
-          },
-          {
-            "pid": 3984663,
-            "arm": "bb",
-            "seed": 969116
-          },
-          {
-            "pid": 3984664,
-            "arm": "bb",
-            "seed": 969117
-          },
-          {
             "pid": 3984665,
             "arm": "bb",
             "seed": 969118
-          },
-          {
-            "pid": 3984666,
-            "arm": "bb",
-            "seed": 969119
-          },
-          {
-            "pid": 3984667,
-            "arm": "bb",
-            "seed": 969120
           },
           {
             "pid": 3984668,
@@ -394,9 +371,71 @@
             "seed": 969123
           },
           {
-            "pid": 3984671,
+            "pid": 3984673,
             "arm": "bb",
-            "seed": 969124
+            "seed": 969126
+          },
+          {
+            "pid": 4035991,
+            "arm": "bb",
+            "seed": 969127
+          },
+          {
+            "pid": 4037333,
+            "arm": "wm",
+            "seed": 969113
+          },
+          {
+            "pid": 4045392,
+            "arm": "wm",
+            "seed": 969114
+          },
+          {
+            "pid": 4050769,
+            "arm": "wm",
+            "seed": 969115
+          },
+          {
+            "pid": 4051324,
+            "arm": "wm",
+            "seed": 969116
+          },
+          {
+            "pid": 4054316,
+            "arm": "wm",
+            "seed": 969117
+          },
+          {
+            "pid": 4056037,
+            "arm": "wm",
+            "seed": 969118
+          },
+          {
+            "pid": 4056149,
+            "arm": "wm",
+            "seed": 969119
+          }
+        ],
+        "done": [
+          {
+            "pid": 3984662,
+            "arm": "bb",
+            "seed": 969115
+          },
+          {
+            "pid": 3984659,
+            "arm": "bb",
+            "seed": 969113
+          },
+          {
+            "pid": 3984663,
+            "arm": "bb",
+            "seed": 969116
+          },
+          {
+            "pid": 3984666,
+            "arm": "bb",
+            "seed": 969119
           },
           {
             "pid": 3984672,
@@ -404,43 +443,60 @@
             "seed": 969125
           },
           {
-            "pid": 3984673,
+            "pid": 3984671,
             "arm": "bb",
-            "seed": 969126
+            "seed": 969124
+          },
+          {
+            "pid": 3984667,
+            "arm": "bb",
+            "seed": 969120
+          },
+          {
+            "pid": 3984664,
+            "arm": "bb",
+            "seed": 969117
           }
-        ],
-        "done": [],
-        "pending": 112
+        ]
       }
     },
     "own_pids": {
-      "3984657": true,
+      "4050769": false,
+      "3984657": false,
       "3960578": false,
       "3886815": false
     },
-    "charged_sim_s": 99900,
-    "actual_closed_sim_s": 91140.0,
+    "charged_sim_s": 227310,
+    "actual_closed_sim_s": 227310.0,
     "episodes": [
       "bb_s969112_episode",
-      "wm_s969112_episode"
+      "bb_s969115_episode",
+      "bb_s969119_episode",
+      "bb_s969125_episode",
+      "bb_s969124_episode",
+      "bb_s969117_episode",
+      "wm_s969112_episode",
+      "bb_s969113_episode",
+      "bb_s969116_episode",
+      "bb_s969120_episode"
     ],
-    "branches": 46,
+    "branches": 231,
     "rpc": {
       "wm": {
-        "requests": 10,
-        "results": 11
+        "requests": 21,
+        "results": 18
       },
       "bb": {
-        "requests": 46,
-        "results": 43
+        "requests": 148,
+        "results": 149
       }
     }
   },
   "gpuR": {
     "load": [
-      32.10791015625,
-      38.0673828125,
-      39.16650390625
+      18.14013671875,
+      18.6787109375,
+      18.65087890625
     ],
     "exists": true,
     "receipts": {
@@ -595,22 +651,46 @@
         "total_cap_s": 3600,
         "prior_gpu_s": 1664,
         "unix": 1793453075.1145563
+      },
+      "rpc/wm/GPU_FINISHED.json": {
+        "elapsed_s": 3504.728941038251,
+        "cumulative_gpu_s": 6061.728941038251,
+        "unix": 1793455062.7418127,
+        "pid": 617609
+      },
+      "rpc/bb/GPU_FINISHED.json": {
+        "elapsed_s": 1936.005322277546,
+        "cumulative_gpu_s": 3600.005322277546,
+        "unix": 1793455011.1189818,
+        "pid": 634799
+      },
+      "rpc/wm/STOP": {
+        "reason": "Command '['/home/ubuntu/miniconda3/bin/python', '-B', '-u', '-m', 'tools.c1switch.mainrun', 'branch', '--spec', '/home/ubuntu/c1switch20261031/main_v7/jobs/bb_s969118_episode/branch_j9_ctrl0.json']' returned non-zero exit status 1.",
+        "pid": 3984665,
+        "mode": "episode",
+        "arm": "bb",
+        "seed": 969118
+      },
+      "rpc/bb/STOP": {
+        "reason": "GPU allocation exhausted",
+        "pid": 634799
       }
     },
     "own_pids": {
-      "617609": true,
+      "617609": false,
       "617674": false,
-      "634799": true,
-      "634861": false
+      "634799": false,
+      "634861": false,
+      "3984665": false
     },
     "rpc": {
       "wm": {
-        "requests": 11,
-        "results": 11
+        "requests": 22,
+        "results": 18
       },
       "bb": {
-        "requests": 45,
-        "results": 44
+        "requests": 149,
+        "results": 149
       }
     }
   }
