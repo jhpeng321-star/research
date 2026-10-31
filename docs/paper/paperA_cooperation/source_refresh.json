@@ -1,37 +1,53 @@
 {
-  "captured_local": "2026-10-31T17:53:46.705845+08:00",
+  "captured_local": "2026-10-31T20:55:55.621791+08:00",
   "reports": {
+    "owner_read_first": {
+      "path": "E:/research-dense/docs/OWNER_UPDATE_20261030_EVENING.md",
+      "exists": true,
+      "sha256": "cbd9b4c0155aff8379e3846c173bed0ff8a034d45f08f9ccdcef8bb048602c69",
+      "bytes": 23200,
+      "modified_local": "2026-10-31T19:52:18.555263+08:00",
+      "snapshot": "source_snapshots/owner_read_first_cbd9b4c0155aff83.md"
+    },
+    "registration": {
+      "path": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md",
+      "exists": true,
+      "sha256": "2765bb044718178bf5ed9ed1120fbc91b5bf0ec8c8dac9c62a51fce43d128404",
+      "bytes": 2176241,
+      "modified_local": "2026-10-31T20:52:07.834927+08:00",
+      "snapshot": "source_snapshots/registration_2765bb044718178b.md"
+    },
     "wmvalue_design": {
       "path": "E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md",
       "exists": true,
-      "sha256": "537d46f95ac05be01edc0106be8ffbd550a6a4149d5c1a8d041b475fee4b09c1",
-      "bytes": 5421,
-      "modified_local": "2026-10-31T17:41:01.086626+08:00",
-      "snapshot": "source_snapshots/wmvalue_design_537d46f95ac05be0.md"
+      "sha256": "80bfe861a1bc976f1cf72448aca14d00a5905eac13ee0737a769d964830f9b31",
+      "bytes": 10356,
+      "modified_local": "2026-10-31T19:13:42.389821+08:00",
+      "snapshot": "source_snapshots/wmvalue_design_80bfe861a1bc976f.md"
     },
     "wmvalue_report": {
       "path": "E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md",
       "exists": true,
-      "sha256": "30b4beecbbd40fae2b49d0e846f16f4dcb3633dfab1fa4b292a1210132910585",
-      "bytes": 3321,
-      "modified_local": "2026-10-31T17:53:29.571511+08:00",
-      "snapshot": "source_snapshots/wmvalue_report_30b4beecbbd40fae.md"
+      "sha256": "83a3fe4d87a5e1b72181391737cd5895ac2613da5a53f34e667b9cae01f6a76a",
+      "bytes": 3536,
+      "modified_local": "2026-10-31T20:14:20.772576+08:00",
+      "snapshot": "source_snapshots/wmvalue_report_83a3fe4d87a5e1b7.md"
     },
     "sumocf_design": {
       "path": "E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_DESIGN.md",
       "exists": true,
-      "sha256": "cbfca5bdd53850dcf5015537c1618ef75e161b9cbcc68f1c8061c91fc089b839",
-      "bytes": 30386,
-      "modified_local": "2026-10-31T17:52:03.668243+08:00",
-      "snapshot": "source_snapshots/sumocf_design_cbfca5bdd53850dc.md"
+      "sha256": "28759b79e8f9064def2c933551dd4a8bb117a63eba383b108f9e49b5b366dd3f",
+      "bytes": 32676,
+      "modified_local": "2026-10-31T18:20:17.623369+08:00",
+      "snapshot": "source_snapshots/sumocf_design_28759b79e8f9064d.md"
     },
     "sumocf_run": {
       "path": "E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_RUN.md",
       "exists": true,
-      "sha256": "f174ad69604be3221fa493f2838161474b4c0aca9028179bdffcb222d75929c3",
-      "bytes": 7843,
-      "modified_local": "2026-10-31T17:45:24.940799+08:00",
-      "snapshot": "source_snapshots/sumocf_run_f174ad69604be322.md"
+      "sha256": "1c6095d7bfa316701b0e6af661f210b6ef350f9e6911e31734e83c26dd6299a4",
+      "bytes": 23156,
+      "modified_local": "2026-10-31T20:01:28.939560+08:00",
+      "snapshot": "source_snapshots/sumocf_run_1c6095d7bfa31670.md"
     },
     "sumocf_artifact": {
       "path": "E:/agent-work/c4-sumocf/docs/paper_results/ARTIFACT_CHECK.md",
@@ -88,10 +104,10 @@
     "behavior_report": {
       "path": "E:/agent-work/c4-coopbehav/docs/paper_results/COOPBEHAV.md",
       "exists": true,
-      "sha256": "7f69689ccf360cdab4b0c9cc655cdb0eb19ef45028047a1170f7a85f6b85fff3",
-      "bytes": 14763,
-      "modified_local": "2026-10-31T17:12:06.464991+08:00",
-      "snapshot": "source_snapshots/behavior_report_7f69689ccf360cda.md"
+      "sha256": "577aa335926d7dc77a4aba6c5a2229d530cd4e4d3429fc2aa0e511fec66dd1fd",
+      "bytes": 17817,
+      "modified_local": "2026-10-31T20:03:23.506922+08:00",
+      "snapshot": "source_snapshots/behavior_report_577aa335926d7dc7.md"
     },
     "eval_report": {
       "path": "E:/agent-work/c4-coopeval/docs/paper_results/COOPEVAL.md",
@@ -165,6 +181,62 @@
       "modified_local": "2026-10-31T08:56:45.358275+08:00",
       "snapshot": "source_snapshots/wmfix_retarget_0ec45023b084e04e.md"
     },
+    "wmcalib_report": {
+      "path": "E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB.md",
+      "exists": true,
+      "sha256": "be56ae652810e3602e9243858be88b0829e90a8c4059227feda45e98a53670f2",
+      "bytes": 5282,
+      "modified_local": "2026-10-31T19:36:06.797134+08:00",
+      "snapshot": "source_snapshots/wmcalib_report_be56ae652810e360.md"
+    },
+    "wmqueue_report": {
+      "path": "E:/agent-work/c4-wmqueue/docs/paper_results/WMQUEUE.md",
+      "exists": true,
+      "sha256": "3fbe64e7da2e44f673fcc100496d7db90dad8184b2169a1518700286d42eb38d",
+      "bytes": 5036,
+      "modified_local": "2026-10-31T18:27:32.631432+08:00",
+      "snapshot": "source_snapshots/wmqueue_report_3fbe64e7da2e44f6.md"
+    },
+    "c1pidiag_report": {
+      "path": "E:/agent-work/c4-c1pidiag/docs/paper_results/C1PIDIAG.md",
+      "exists": true,
+      "sha256": "ef442d7dc93c3eddbac15ee5af7ff96c8ee06213639dae180abbe0913b7dac20",
+      "bytes": 7803,
+      "modified_local": "2026-10-31T17:54:45.723595+08:00",
+      "snapshot": "source_snapshots/c1pidiag_report_ef442d7dc93c3edd.md"
+    },
+    "c1gap_report": {
+      "path": "E:/agent-work/c4-c1gap/docs/paper_results/C1_GAPS.md",
+      "exists": true,
+      "sha256": "f713bd7bacf89392596c7a496e5043f0f60bb6592cda614cc3de2d19c65a19c8",
+      "bytes": 13641,
+      "modified_local": "2026-10-31T16:20:56.738488+08:00",
+      "snapshot": "source_snapshots/c1gap_report_f713bd7bacf89392.md"
+    },
+    "c1floor_report": {
+      "path": "E:/agent-work/c4-c1floor/docs/paper_results/C1FLOOR.md",
+      "exists": true,
+      "sha256": "1f10c5c0a4776eb5f8d914cccbe51a5028215a10d6c9eca4dc94464069d8b3ab",
+      "bytes": 3889,
+      "modified_local": "2026-10-31T17:48:19.952904+08:00",
+      "snapshot": "source_snapshots/c1floor_report_1f10c5c0a4776eb5.md"
+    },
+    "c1switch_report": {
+      "path": "E:/agent-work/c4-c1switch/docs/paper_results/C1SWITCH_WINNERS.md",
+      "exists": true,
+      "sha256": "d303074e68bd0122190cd74cabcc9b2aa310ea28be277ffd15969f78b6d13853",
+      "bytes": 11022,
+      "modified_local": "2026-10-31T18:56:28.210453+08:00",
+      "snapshot": "source_snapshots/c1switch_report_d303074e68bd0122.md"
+    },
+    "c1closed_report": {
+      "path": "E:/agent-work/c4-c1closed/docs/paper_results/C1CLOSED.md",
+      "exists": true,
+      "sha256": "a5679b8a219fa8adaec8ddb2dbb71d46177a63a567204c0b7b4223d3a47875ff",
+      "bytes": 2651,
+      "modified_local": "2026-10-31T19:54:58.180283+08:00",
+      "snapshot": "source_snapshots/c1closed_report_a5679b8a219fa8ad.md"
+    },
     "wm_design": {
       "path": "E:/agent-work/c4-papera/docs/WM_C4_DESIGN.md",
       "exists": true,
@@ -191,10 +263,20 @@
     }
   },
   "changed_since_prior_cut": [
+    "owner_read_first",
+    "registration",
+    "wmvalue_design",
     "wmvalue_report",
     "sumocf_design",
     "sumocf_run",
-    "sumocf_artifact"
+    "behavior_report",
+    "wmcalib_report",
+    "wmqueue_report",
+    "c1pidiag_report",
+    "c1gap_report",
+    "c1floor_report",
+    "c1switch_report",
+    "c1closed_report"
   ],
   "scope": "explicit local report snapshots only; no simulator/model or restricted input access",
   "claim_review": "manual; file appearance or a canary is not an efficacy result"

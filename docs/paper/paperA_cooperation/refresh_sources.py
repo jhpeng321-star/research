@@ -15,6 +15,8 @@ from pathlib import Path
 from build_figures import ROOT, guarded
 
 REPORTS = {
+    "owner_read_first": "E:/research-dense/docs/OWNER_UPDATE_20261030_EVENING.md",
+    "registration": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md",
     "wmvalue_design": "E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md",
     "wmvalue_report": "E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md",
     "sumocf_design": "E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_DESIGN.md",
@@ -36,6 +38,13 @@ REPORTS = {
     "wmrequal3_report": "E:/agent-work/c4-wmrequal3/docs/paper_results/WMREQUAL3.md",
     "speedhead_report": "E:/agent-work/c4-speedhead/docs/paper_results/SPEEDHEAD.md",
     "wmfix_retarget": "E:/agent-work/c4-wmfixmerge/docs/paper_results/WMFIX_RETARGET.md",
+    "wmcalib_report": "E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB.md",
+    "wmqueue_report": "E:/agent-work/c4-wmqueue/docs/paper_results/WMQUEUE.md",
+    "c1pidiag_report": "E:/agent-work/c4-c1pidiag/docs/paper_results/C1PIDIAG.md",
+    "c1gap_report": "E:/agent-work/c4-c1gap/docs/paper_results/C1_GAPS.md",
+    "c1floor_report": "E:/agent-work/c4-c1floor/docs/paper_results/C1FLOOR.md",
+    "c1switch_report": "E:/agent-work/c4-c1switch/docs/paper_results/C1SWITCH_WINNERS.md",
+    "c1closed_report": "E:/agent-work/c4-c1closed/docs/paper_results/C1CLOSED.md",
     "wm_design": "E:/agent-work/c4-papera/docs/WM_C4_DESIGN.md",
     "prior_checklist": "E:/research-dense/docs/paper/CLAIM_EVIDENCE_CHECKLIST.md",
     "prior_draft": "E:/research-dense/docs/paper/IEEE_IV_2027_DRAFT.md",
