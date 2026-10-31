@@ -1,0 +1,83 @@
+# S-COOPMEASURE — prospective cooperation audit
+
+Authority: owner 2026-10-31 15:45, REGISTRATION.md line5544; branch
+`c4/coopmeasure` from `c4/sumocf@bf8c1e20`. Headline: **measured cooperation**.
+No positive fleet gain or visually coordinated behaviour substitutes for C_G.
+
+## Estimand, interventions and controllers
+- D(S)=J(B)-J(S), C_G=D(G)-sum_i D(ONLY:i), positive beneficial interaction.
+  Exact same-state SUMO branches, not additive model approximations.
+- B means native SUMO car-following (IDM population), native lane decisions, no
+  controller acceleration request. A disabled member receives no command; ownership
+  explicitly releases previous control to native (`setSpeed(-1)` inherited path).
+  This differs from CTRL0's always-commanded native-acceleration adapter. At the
+  end of the intervention window all vehicles are released to native, continuing
+  the same branch for the remaining outcome horizon. Entrants are always native.
+- Controllers: original speed-only MAPPO iter169 sha256 d9042cc5a05ee1adc54a720b7482329a59850bddb00444ce29cc70e49cffa9ca;
+  PI external-U and CIRCLES damping through frozen env fallbacks; CTRL0 via exact
+  zero.py24095a10; wall-v2.1-closure through `WallGroupSession`. Preserve frozen
+  runtime b3c031ad, original safety caps, speedMode27 and native lanes.
+- Wall provenance: docs/INDEX.md and WM_CHANGE_LOG.md read; commit5022d92 merges
+  3b2bb094, `traffic_shepherd/wall_group.py`. Closure: front v_wall; rear
+  v_wall+min(2,0.1*gap), acceleration clip[-3,1.5], 6m/1m/s assembly tolerance,
+  60s timeout, original span/rear-risk/missing-member/lane-coverage aborts.
+  Fixed planner request v_wall=12m/s; choose the closest distinct-mainline-lane
+  pair with span<=75m inside G, geometric tie-break only, before acting. Other G
+  members are inert for wall. Solos retain the frozen *full wall roster/context*
+  and mask its commands to ONLY:i; never replace a solo by a refused singleton
+  request. Record absent wall coverage and aborts, never replace worlds. This is
+  a known coordinated *mechanism* positive control, not an assumed positive C_G.
+
+## Fresh worlds, selection, SNR dependency
+- Reserve TRAIN969650-969699. Main969650-969677; canary969699 (.4,2700).
+  `tools/coopaudit/design.py` is the exact mapping: six repeat-major worlds in
+  each (.2/.4)x(2400/2700) cell, then (.05,2400),(.1,2700),(.2,1900),(.4,1900).
+  Disjoint from969200-391,969400-543,969550-599,969600-624,981200-981299;
+  never964000-964199,962xxx,977xxx, validation/calibration or sealed data.
+- Native prefix t0=300s, one frozen G/world, no outcome-based reselection.
+  Only RSU-observable identity/position/lane/junction and CAV eligibility. Zone
+  s in[-300,75.44]m, nearest |s| then identity. Missing |G|<2 stays missing.
+- **WAIT_SUMOCF**: adopt the S-SUMOCF selected group size and 10/30/60s window
+  from its TRAIN-only SNR table before main dispatch. Prefer the registered
+  selected design even if it differs from expectations. All-zone groups are
+  supported without an artificial four-member cap. Freeze selected table SHA,
+  local-outcome definition and any geometry difference before any main SUMO.
+- Reuse COOPMEAS2 saved RNG + fresh-process loadState + Python snapshot,
+  identity-keyed requests, masked controller memory/dwell and world bootstrap.
+  Bitwise trajectory+metrics repeat canary mandatory. No silent full-rerun fallback.
+
+## Outcomes and analysis
+- Team fleet+source delay at300/600s; local zone delay integral over
+  s[-300,75.44] during window+120s (veh-s, unnormalised, all live vehicles).
+  Also retain per-identity delay/cohort rows so SNR-selected local definition can
+  be implemented exactly before production; no post-result metric selection.
+- For every controller and outcome: world mean C_G and95% percentile stratified
+  world-bootstrap CI (5000draws, seed20261031, shared resamples), fraction C_G>0,
+  D_G and sumD_i, all-world and high-share cohort/cell coverage. Tiny/null gains
+  retained, numerical-null resolution1e-6, missing never zero. Safety: collisions,
+  teleports, dropped steps, TTC<3s and hard-braking veh-s for B/G/ONLY branches.
+- Per-group traces: own-root `jobs/sSEED/traces/CONTROLLER_BRANCH.jsonl.gz`;
+  members and observed nearby ramp vehicles (within300m of a member or in zone),
+  t0-30 through t0+window+30, 0.5s physics frames, identity/s/lane/v/a, membership,
+  executed commands and wall events; no hidden types. Document for S-COOPBEHAV.
+
+## Budget and gates
+- Combined **500000 actual sim-s HARD CAP**, including all prefixes, canaries,
+  failed attempts and any repeats. Durable fsynced precharge under exclusive
+  ledger lock before each attempt; no refunds/retries. No other stream's budget.
+- Native-prefix census:28*300=8400sim-s, saved states retained in each worker;
+  exact group cardinality determines reservations before any branches. Each
+  world costs300 +600*(2+5*(|G|+1)) for B/Brepeat and five(G+all solos).
+  Canary separately bounded at20000sim-s. Main panel must fit remaining cap as
+  a complete fixed allocation; otherwise STOP for budget/design amendment,
+  never truncate groups/worlds or silently change600s to300s after outcomes.
+- Before launch: both frozen seed guards + exposure audit, CPU algebra/group/
+  wall wiring tests, runtime/wrapper hashes, same-state/RNG canary, native and
+  controlled repeated trajectory identity, wall command/abort evidence.
+- gpuR spare CPUs max2 workers nice19, one thread, CUDA hidden; pause new work
+  if load>20 or S-SUMOCF priority active (explicit cooperative admission file).
+  cpuQ optional max2 only with priority admission. Never signal other PIDs.
+  STOP/infrastructure/determinism/lane/safety anomaly blocks new dispatch.
+- Commit after design, CPU implementation, canary, and completed run/report.
+  Final docs/paper_results/COOPAUDIT.md <=60lines and one registration entry.
+  Exposure disclosure: tools/coopaudit/evidence/EXPOSURE_NOTE.md.

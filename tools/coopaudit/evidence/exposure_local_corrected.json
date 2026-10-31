@@ -1,0 +1,28 @@
+{
+ "roots": [
+  "E:/research-dense/runs/active",
+  "E:/research-dense/protocols"
+ ],
+ "files": 57165,
+ "path_index_sha256": "6ead644263a1bad3a0e6b639803acf5900bb357d1cec9faef8b9249a4727b4bc",
+ "hits": [
+  {
+   "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\REGISTRATION.md",
+   "line": 796,
+   "kind": "text",
+   "seeds": [
+    969699
+   ],
+   "excerpt": "- Source: cpuN ~/c4/repo_83b661f8, traffic_shepherd.c4.genrand_driver (generic_random CAVs, native reference arm, textbook population), training seeds 967000-967079 (fresh; remote ledger grep 10-19: none used in 966000-969699), demands 2400/2700, pen weighted 0.05/0.1/0.2/0.4, warmup 300, horizon 90"
+  },
+  {
+   "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\REGISTRATION.md",
+   "line": 5497,
+   "kind": "text",
+   "seeds": [
+    969699
+   ],
+   "excerpt": "- 13:2x S-WMDATA DESIGN FROZEN before any SUMO (owner-approved 12:55; executor S-WMDATA GLM-5.3; worktree E:/agent-work/c4-wmdata branch c4/wmdata from c4/wmfixmerge@5a4d64c2): 40 NEW TRAIN worlds x 5 arms {native, CTRL0 (zero.py 24095a10, policy 64f70af4), speed-only MAPPO (cpuQ ~/mappospeed/produc"
+  }
+ ]
+}
