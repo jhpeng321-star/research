@@ -18,6 +18,11 @@ Full earlier history retained in `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_
   `panel_ops status` is read-only; never repeat canary/continue/monitor dispatch.
 
 ## What exists
+- LANE16db471a/0a1e7e93 integrated: raw upstream lane origins, collapsed-link
+  neighbor distances and±1.45m lane-change position translation. Reconciled the
+  new (next_lane,next_s) adapter API with INT ramp ownership/mainline arbitration.
+  **68 CPU PASS /1CUDA skip**; both default-OFF synthetic architectures remain
+  weights/forward/rollout BIT-EXACT to original fingerprint. New recorded smoke next.
 - FIT4aee21a8 integrated: MotionFit.condition_motion generic causal posterior
   API (no saved tape-ID lookup); source weights and shrinkage exports preserved.
   New direction-aware/raw LC fitting tools remain diagnostic; LC stays OFF.

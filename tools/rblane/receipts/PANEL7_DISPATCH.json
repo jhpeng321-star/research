@@ -1,0 +1,35 @@
+{
+  "kind": "panel7",
+  "root": "/home/ubuntu/rblane20261031_panel7_d70d60c092fc",
+  "bundle_sha256": "d70d60c092fc7113bd47f382275f659d7170ebbeb76787ca685879f8cb4bd424",
+  "parent_commit": "d240163991332572c551eb26adba1e42dcf8b99c",
+  "preflight": {
+    "root": "/home/ubuntu/rblane20261031_panel7_d70d60c092fc",
+    "load": [
+      10.2587890625,
+      10.00439453125,
+      10.935546875
+    ]
+  },
+  "status": "DISPATCHED",
+  "staged_at": 1793465534.9404855,
+  "process": {
+    "pid": 423311,
+    "start_ticks": "47981445",
+    "command": [
+      "/usr/bin/nice",
+      "-n",
+      "19",
+      "/home/ubuntu/miniconda3/bin/python",
+      "-B",
+      "-m",
+      "tools.rblane.validate",
+      "--out",
+      "/home/ubuntu/rblane20261031_panel7_d70d60c092fc/results",
+      "--idm-parameters",
+      "/home/ubuntu/rblane20261031_panel7_d70d60c092fc/inputs/idm_pooled.json"
+    ],
+    "root": "/home/ubuntu/rblane20261031_panel7_d70d60c092fc",
+    "started_at": 1793465536.72597
+  }
+}

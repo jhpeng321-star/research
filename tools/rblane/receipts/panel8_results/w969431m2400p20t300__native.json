@@ -1,0 +1,346 @@
+{
+  "episode": "w969431m2400p20t300__native",
+  "seed": 969431,
+  "arm": "native",
+  "input_sha256": {
+    "episode.json": "66ee495913ec3ec8dc074e365a7b7b75357c59d6a3713ff08fc9adcd41b74a8b",
+    "time_s.npy": "d199113bc056e5c20bf444cecd15f575a34d8ffd1801cac82e59e555e802e5b4",
+    "veh_kin.npy": "2a45a5aeb8c6e3215d90d81a4abcb3d5d447cbfce7ad023531e876f06eb34049",
+    "veh_mask.npy": "66e593a4cad98a8ae2197a1a6bba07047d0974379485fe7525d19cceb999c262",
+    "is_cav.npy": "7348ec5a2ed8a37248790018e4ec16fcd35dd6b0f0e6df8f2b5968c70bb18c90",
+    "vid.npy": "10cd800714f7db5825b1ca1b1625994770b252e21244fa9953044c9bdf2cf9e2"
+  },
+  "recorded": 13,
+  "exposure": {
+    "return": 3588,
+    "overtake": 3024,
+    "merge": 157
+  },
+  "wishes": {
+    "return": 443,
+    "overtake": 377,
+    "merge": 89
+  },
+  "blocked": {
+    "return": 256,
+    "overtake": 272,
+    "merge": 88
+  },
+  "scores": {
+    "lc2013": {
+      "proposals": 293,
+      "positive_runs": 17,
+      "exact": {
+        "matched": 7,
+        "recorded": 13,
+        "predicted": 293,
+        "recall": 0.5384615384615384,
+        "precision": 0.023890784982935155,
+        "timing_abs_sum_s": 0.0,
+        "timing_signed_sum_s": 0.0,
+        "position_abs_sum_m": 0.0
+      },
+      "window_2s": {
+        "matched": 7,
+        "recorded": 13,
+        "predicted": 293,
+        "recall": 0.5384615384615384,
+        "precision": 0.023890784982935155,
+        "timing_abs_sum_s": 0.0,
+        "timing_signed_sum_s": 0.0,
+        "position_abs_sum_m": 0.0
+      },
+      "run_window_2s": {
+        "matched": 6,
+        "recorded": 13,
+        "predicted": 17,
+        "recall": 0.46153846153846156,
+        "precision": 0.35294117647058826,
+        "timing_abs_sum_s": 3.0,
+        "timing_signed_sum_s": -3.0,
+        "position_abs_sum_m": 87.85265350341797
+      },
+      "by_transition": {
+        "return": {
+          "matched": 2,
+          "recorded": 4,
+          "predicted": 187,
+          "recall": 0.5,
+          "precision": 0.0106951871657754,
+          "timing_abs_sum_s": 0.0,
+          "timing_signed_sum_s": 0.0,
+          "position_abs_sum_m": 0.0
+        },
+        "overtake": {
+          "matched": 4,
+          "recorded": 8,
+          "predicted": 105,
+          "recall": 0.5,
+          "precision": 0.0380952380952381,
+          "timing_abs_sum_s": 0.0,
+          "timing_signed_sum_s": 0.0,
+          "position_abs_sum_m": 0.0
+        },
+        "merge": {
+          "matched": 1,
+          "recorded": 1,
+          "predicted": 1,
+          "recall": 1.0,
+          "precision": 1.0,
+          "timing_abs_sum_s": 0.0,
+          "timing_signed_sum_s": 0.0,
+          "position_abs_sum_m": 0.0
+        }
+      },
+      "by_motivation": {
+        "strategic": {
+          "exact": {
+            "matched": 1,
+            "recorded": 13,
+            "predicted": 1,
+            "recall": 0.07692307692307693,
+            "precision": 1.0,
+            "timing_abs_sum_s": 0.0,
+            "timing_signed_sum_s": 0.0,
+            "position_abs_sum_m": 0.0
+          },
+          "run_window_2s": {
+            "matched": 1,
+            "recorded": 13,
+            "predicted": 1,
+            "recall": 0.07692307692307693,
+            "precision": 1.0,
+            "timing_abs_sum_s": 0.0,
+            "timing_signed_sum_s": 0.0,
+            "position_abs_sum_m": 0.0
+          },
+          "proximity": {
+            "no_recorded_transition_in_window": 0,
+            "has_recorded_transition_in_window": 1,
+            "nearest_timing_signed_sum_s": 0.0,
+            "nearest_timing_abs_sum_s": 0.0
+          }
+        },
+        "cooperative": {
+          "exact": {
+            "matched": 1,
+            "recorded": 13,
+            "predicted": 10,
+            "recall": 0.07692307692307693,
+            "precision": 0.1,
+            "timing_abs_sum_s": 0.0,
+            "timing_signed_sum_s": 0.0,
+            "position_abs_sum_m": 0.0
+          },
+          "run_window_2s": {
+            "matched": 1,
+            "recorded": 13,
+            "predicted": 5,
+            "recall": 0.07692307692307693,
+            "precision": 0.2,
+            "timing_abs_sum_s": 1.0,
+            "timing_signed_sum_s": -1.0,
+            "position_abs_sum_m": 28.02625274658203
+          },
+          "proximity": {
+            "no_recorded_transition_in_window": 7,
+            "has_recorded_transition_in_window": 3,
+            "nearest_timing_signed_sum_s": -1.5,
+            "nearest_timing_abs_sum_s": 1.5
+          }
+        },
+        "speed_gain": {
+          "exact": {
+            "matched": 3,
+            "recorded": 13,
+            "predicted": 95,
+            "recall": 0.23076923076923078,
+            "precision": 0.031578947368421054,
+            "timing_abs_sum_s": 0.0,
+            "timing_signed_sum_s": 0.0,
+            "position_abs_sum_m": 0.0
+          },
+          "run_window_2s": {
+            "matched": 3,
+            "recorded": 13,
+            "predicted": 5,
+            "recall": 0.23076923076923078,
+            "precision": 0.6,
+            "timing_abs_sum_s": 1.0,
+            "timing_signed_sum_s": -1.0,
+            "position_abs_sum_m": 27.469711303710938
+          },
+          "proximity": {
+            "no_recorded_transition_in_window": 90,
+            "has_recorded_transition_in_window": 5,
+            "nearest_timing_signed_sum_s": -1.5,
+            "nearest_timing_abs_sum_s": 1.5
+          }
+        },
+        "keep_right": {
+          "exact": {
+            "matched": 2,
+            "recorded": 13,
+            "predicted": 187,
+            "recall": 0.15384615384615385,
+            "precision": 0.0106951871657754,
+            "timing_abs_sum_s": 0.0,
+            "timing_signed_sum_s": 0.0,
+            "position_abs_sum_m": 0.0
+          },
+          "run_window_2s": {
+            "matched": 1,
+            "recorded": 13,
+            "predicted": 6,
+            "recall": 0.07692307692307693,
+            "precision": 0.16666666666666666,
+            "timing_abs_sum_s": 1.0,
+            "timing_signed_sum_s": -1.0,
+            "position_abs_sum_m": 32.356689453125
+          },
+          "proximity": {
+            "no_recorded_transition_in_window": 171,
+            "has_recorded_transition_in_window": 16,
+            "nearest_timing_signed_sum_s": -40.5,
+            "nearest_timing_abs_sum_s": 40.5
+          }
+        }
+      }
+    },
+    "mobil": {
+      "proposals": 19,
+      "positive_runs": 3,
+      "exact": {
+        "matched": 0,
+        "recorded": 13,
+        "predicted": 19,
+        "recall": 0.0,
+        "precision": 0.0,
+        "timing_abs_sum_s": 0,
+        "timing_signed_sum_s": 0,
+        "position_abs_sum_m": 0
+      },
+      "window_2s": {
+        "matched": 0,
+        "recorded": 13,
+        "predicted": 19,
+        "recall": 0.0,
+        "precision": 0.0,
+        "timing_abs_sum_s": 0,
+        "timing_signed_sum_s": 0,
+        "position_abs_sum_m": 0
+      },
+      "run_window_2s": {
+        "matched": 0,
+        "recorded": 13,
+        "predicted": 3,
+        "recall": 0.0,
+        "precision": 0.0,
+        "timing_abs_sum_s": 0,
+        "timing_signed_sum_s": 0,
+        "position_abs_sum_m": 0
+      },
+      "by_transition": {
+        "return": {
+          "matched": 0,
+          "recorded": 4,
+          "predicted": 0,
+          "recall": 0.0,
+          "precision": null,
+          "timing_abs_sum_s": 0,
+          "timing_signed_sum_s": 0,
+          "position_abs_sum_m": 0
+        },
+        "overtake": {
+          "matched": 0,
+          "recorded": 8,
+          "predicted": 0,
+          "recall": 0.0,
+          "precision": null,
+          "timing_abs_sum_s": 0,
+          "timing_signed_sum_s": 0,
+          "position_abs_sum_m": 0
+        },
+        "merge": {
+          "matched": 0,
+          "recorded": 1,
+          "predicted": 19,
+          "recall": 0.0,
+          "precision": 0.0,
+          "timing_abs_sum_s": 0,
+          "timing_signed_sum_s": 0,
+          "position_abs_sum_m": 0
+        }
+      }
+    }
+  },
+  "proposal_diagnostics": {
+    "keep_right/fp/upstream": {
+      "count": 177,
+      "speed_sum_mps": 5245.695056915283,
+      "this_speed_sum_mps": 5045.516265519861,
+      "target_speed_sum_mps": 5039.8137118185
+    },
+    "speed_gain/tp/upstream": {
+      "count": 3,
+      "speed_sum_mps": 72.91215324401855,
+      "this_speed_sum_mps": 69.6949418012036,
+      "target_speed_sum_mps": 76.74388643125636
+    },
+    "keep_right/tp/upstream": {
+      "count": 2,
+      "speed_sum_mps": 60.66044235229492,
+      "this_speed_sum_mps": 56.734663009643555,
+      "target_speed_sum_mps": 56.734663009643555
+    },
+    "speed_gain/fp/upstream": {
+      "count": 92,
+      "speed_sum_mps": 2686.543601989746,
+      "this_speed_sum_mps": 2663.6849717664386,
+      "target_speed_sum_mps": 2675.923444487921
+    },
+    "cooperative/fp/merge": {
+      "count": 8,
+      "speed_sum_mps": 213.7513885498047,
+      "this_speed_sum_mps": 219.70099747801993,
+      "target_speed_sum_mps": 202.898271102715
+    },
+    "cooperative/tp/merge": {
+      "count": 1,
+      "speed_sum_mps": 28.0079288482666,
+      "this_speed_sum_mps": 28.39630372454619,
+      "target_speed_sum_mps": 28.12935100516952
+    },
+    "keep_right/fp/downstream": {
+      "count": 2,
+      "speed_sum_mps": 55.07931327819824,
+      "this_speed_sum_mps": 55.65197554022416,
+      "target_speed_sum_mps": 55.91612997041943
+    },
+    "keep_right/fp/merge": {
+      "count": 6,
+      "speed_sum_mps": 156.21843719482422,
+      "this_speed_sum_mps": 158.66791667686311,
+      "target_speed_sum_mps": 158.66636314203822
+    },
+    "strategic/tp/merge": {
+      "count": 1,
+      "speed_sum_mps": 15.741398811340332,
+      "this_speed_sum_mps": 17.538340564732337,
+      "target_speed_sum_mps": 19.29921427808712
+    },
+    "cooperative/fp/upstream": {
+      "count": 1,
+      "speed_sum_mps": 24.560653686523438,
+      "this_speed_sum_mps": 25.005158132598968,
+      "target_speed_sum_mps": 24.84358238780028
+    }
+  },
+  "recorded_outcomes": {
+    "overtake/match": 4,
+    "return/match": 2,
+    "overtake/no_wish": 4,
+    "return/no_wish": 2,
+    "merge/match": 1
+  }
+}

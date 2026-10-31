@@ -15,9 +15,9 @@ import torch
 from torch import Tensor
 
 from .config import PhysicsConfig
-from .mobil import body_overlap, physical_target_lane
+from .mobil import physical_target_lane
 from .neighbours import lane_of
-from .lc2013_geometry import corridor_context
+from .lc2013_geometry import corridor_context, neighbour_displacements, lane_position_shift
 
 PRECISION = 10_000_000
 # SUMO v1_27_1 src/config.h.cmake:236 (general floating comparison).
@@ -106,15 +106,21 @@ def _settings(v: Tensor, physics: PhysicsConfig,
     return out
 
 
-def _neighbours(kin: Tensor, present: Tensor, target: Tensor):
+def _neighbours(kin: Tensor, present: Tensor, target: Tensor,
+                context, p, dt, physics, ballistic):
     s, length = kin[..., 0], kin[..., 6]
-    ds = s.unsqueeze(-2) - s.unsqueeze(-1)
+    ds, same_edge, preceding_end = neighbour_displacements(s, lane_of(kin), context, physics)
     other = (present.unsqueeze(-2)
              & (lane_of(kin).unsqueeze(-2) == target.unsqueeze(-1)))
     other = other & ~torch.eye(s.shape[-1], device=s.device, dtype=torch.bool)
-    gl, il = torch.where(other & (ds > 0), ds - length.unsqueeze(-2), float("inf")).min(-1)
+    search = brake_gap(kin[..., 4], p['decel'], dt,
+                       headway=p['time_headway'], ballistic=ballistic) + p['min_gap']
+    visible = same_edge | (preceding_end <= search.unsqueeze(-1))
+    gl, il = torch.where(other & (ds > 0) & visible,
+                         ds - length.unsqueeze(-2), float("inf")).min(-1)
     gf, iff = torch.where(other & (ds < 0), -ds - length.unsqueeze(-1), float("inf")).min(-1)
-    return gl, il, gf, iff
+    overlap = (other & (ds < length.unsqueeze(-2)) & (-ds < length.unsqueeze(-1))).any(-1)
+    return gl, il, gf, iff, overlap
 
 
 def _anticipated(kin: Tensor, gap: Tensor, index: Tensor, distance: Tensor,
@@ -211,8 +217,8 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
     urgent = route_to_best & (usable / offset.abs().clamp_min(1) < la)
     stay = (~to_best & (target_distance / (offset.abs() + 2) < la))
     stay = stay | ((offset == 0) & (target_distance * 2 < la))
-    gl, il, gf, iff = _neighbours(kin, present, target)
-    cl, ic, _, _ = _neighbours(kin, present, lane)
+    gl, il, gf, iff, overlap = _neighbours(kin, present, target, context, p, dt, physics, ballistic)
+    cl, ic, _, _, _ = _neighbours(kin, present, lane, context, p, dt, physics, ballistic)
     has_l, has_f, has_c = torch.isfinite(gl), torch.isfinite(gf), torch.isfinite(cl)
     vl, vf = v.gather(-1, il), v.gather(-1, iff)
     need_l = secure_gap(v, vl, p["accel"], p["decel"], p["time_headway"])
@@ -229,7 +235,7 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
                           | ~valid.gather(-1, il))
     blocked_f = has_f & ((gf - p["min_gap"].gather(-1, iff) < need_f / p["lcAssertive"])
                           | ~valid.gather(-1, iff))
-    safe = valid & ~blocked_l & ~blocked_f & ~body_overlap(kin, present, target, 0.0)
+    safe = valid & ~blocked_l & ~blocked_f & ~overlap
     accelerating = ((has_l & (kin[..., 5].gather(-1, il) > 0))
                     | (has_c & (kin[..., 5].gather(-1, ic) > 0)))
     this_speed = _anticipated(kin, cl - p["min_gap"], ic, current_length,
@@ -360,6 +366,8 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
                   lc2013_target_lane=target,
                   lc2013_current_length=current_length, lc2013_target_length=target_length,
                   lc2013_position=position,
+                  lc2013_gap_leader=gl, lc2013_gap_follower=gf,
+                  lc2013_position_shift=lane_position_shift(s, lane, choice, physics),
                   lc2013_this_speed=this_speed, lc2013_target_speed=neigh_speed,
                   lc2013_left=torch.where(present, left_wish, 0),
                   lc2013_right=torch.where(present, right_wish, 0),

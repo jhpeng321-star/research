@@ -131,3 +131,154 @@ directed transition has ANY recorded event in the **bounded60s window** and
 the nearest signed timing error. Missing means window-censored, not proof it
 never changes. Scoring-only5/5 CPU tests PASS, including censored-direction
 and identity handling. These diagnostics do not change the physics decisions.
+
+Candidate6 verified (worker392698 exited,141.12s):1112/39045 exact,
+precision2.8480%, recall34.1628%. Source epsilon correction removes45
+proposals but6 matches, so it is not an empirical precision improvement.
+Predicted-reason precision/recall contribution: strategic10.554%/9.770pp
+(318/3013), cooperative9.069%/2.335pp (76/838), speed-gain4.386%/16.375pp
+(533/12151), keep-right0.803%/5.684pp (185/23043).
+
+Remaining false positives are predominantly **free-flow upstream**, not just
+jam merges:21566 keep-right false steps upstream, mean observed speed29.6m/s;
+only211 on the merge edge and1081 downstream. 19123/23043 keep-right steps
+have no matching vehicle/direction event anywhere in the scored60s window.
+Recorded-event failures: return629 no-wish/44 follower-block/189match;
+overtake922 no-wish/41 follower-block/48 leader-block/581match;
+merge141 no-wish/195 follower-block/123 leader-block/342match.
+
+A key source dependency is current-leader **desired speed** at1749–1752:
+the cannot-pass-on-right cap only runs if that leader's desired speed is
+lower than the ego's. Homogeneous population defaults make that comparison
+always false among HDVs. This is a plausible parameter-information failure,
+not permission to substitute an observed-speed heuristic or new wish cutoff.
+
+## Next parameter sensitivity (no fitting)
+
+Add support for the **already published**, motion-only S-RB-FIT pooled IDM
+point used by INT's registered variantC (owner amendment5700). Validate its
+exact FIT969400–969431/pre300 schema; retain SUMO LC defaults and CAV defaults.
+For this new physical-parameter setting, score BOTH LC2013 and MOBIL afresh
+once (old MOBIL scores cannot be reused across changed settings). This is a
+new paired sensitivity, not retraining or a source-threshold sweep. Settings
+artifact bytes are bound inside the immutable bundle and verified. Seven
+validator CPU tests PASS, including rejecting post-start/out-of-FIT metadata.
+
+Candidate7 sensitivity completed/verified (worker423311 exited,203.08s):
+LC1263/62689 exact = precision2.0147%, recall38.8018%; newly matched-setting
+MOBIL187/3752 = precision4.9840%, recall5.7450%. This pooled CF point improves
+strategic precision but **worsens total over-proposal**. Per predicted reason:
+strategic20.625%/15.607pp (508/2463); cooperative13.312%/3.902pp (127/954);
+speed-gain2.967%/8.725pp (284/9571); keep-right0.692%/10.568pp (344/49701).
+No fitted CF setting is substituted into the LC default implementation as a
+result. This matters to INT'sC interpretation; the full integrated gate owns
+adoption. LC style remained source defaults throughout.
+
+## Candidate8: existing motion encoder, no new fitted setting
+
+Fetched the registered WM2 checkpoint from its explicit gpuA model-asset path;
+SHA b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436,
+3,756,566bytes, receipt ENCODER_SOURCE.json. Copied into NEW EMPTY approved
+temporary directory. CPU source inspection only; GPU0/no model rollout.
+The checkpoint has physical-mode,60s/1s long-history encoder weights.
+
+New `tools/rblane/encoder.py` strictly loads ONLY all `driver_encoder.*`
+tensors into the exact existing DriverEncoder. Shared trainer history features
+and source model interaction function, no learned motion/LC correction runs.
+One inference at300 using only240..300 data; parameters cached by observed VID
+for all scored frames. LC warmup replays pre-t0 observations with these static
+inferred settings. Drivers absent at300 use the frozen encoder's zero-history
+population centre (including future entrants); CAVs retain original defaults.
+No post300 motion contributes to driver inference. Noncomparable inferred
+MOBIL lane parameters never map into LC2013 style.
+
+CPU extractor tests independently compare all9 outputs bit-exact to the
+original full model's encode_drivers, mutate all post300 data (outputs stay
+identical), check source-centre fallback/CAV defaults, and fail closed on a
+missing weight or wrong checkpoint SHA. Combined encoder/scorer10tests PASS.
+Candidate8 will score BOTH algorithms under this new frozen parameter setting
+once; old baseline results are retained, not reused across different settings.
+
+Real frozen-weight parity also PASS (`ENCODER_PARITY.json`): all171 source
+model keys strictly loaded, all9 inferred outputs bit-exact against the full
+source model. First constructor-only attempt stopped because its original
+learned-yield architecture requires lane_learnable=true; setting that original
+construction flag permits strict load, with no acceleration/LC forward run.
+The extracted encoder retains the diagnostic's original physics defaults;
+its parameters still match the source model exactly. No gate was relaxed.
+
+Candidate8 completed/verified (worker462783 exited,267.49s):1249/58225 exact,
+precision2.1451%, recall38.3717%; matched-setting MOBIL108/3121 exact,
+precision3.4604%, recall3.3180%. Per predicted reason:
+strategic24.215%/14.224pp (463/1912); cooperative15.483%/4.086pp (133/859);
+speed-gain2.334%/10.384pp (338/14484); keep-right0.769%/9.677pp (315/40970).
+The existing encoder improves strategic precision vs defaults, but does not
+resolve free-flow keep-right over-proposal. No parameter mode selected by this
+diagnostic; all results remain explicit sensitivities.
+
+## Candidate9: SUMO lane coordinates and consecutive-edge visibility
+
+Further source-backed coordinate defects found before scoring:
+- Same upstream edge: raw position is s+2645.67 left or s+2644.22 right.
+  Directly subtracting normalized s loses1.45m in neighboring gap checks.
+- Consecutive edges: source gaps include internal links (main entry3m,
+  ramp entry2.93m, downstream8m). SUMO only starts looking into a subsequent
+  normal edge once the preceding normal lane's end is in braking range, but
+  then inspects that edge's first leader regardless of its in-edge position.
+  Source MSLCM/MSLaneChanger and MSLane.cpp:3036,3136–3161 support both rules.
+- MSVehicle.cpp:5617 enterLaneAtLaneChange preserves RAW lane position;
+  normalized upstream s must translate+1.45m for0→1 and−1.45m for1→0.
+  The runtime adapter now returns shifted positions after joint arbitration;
+  rejected moves restore their origin before a fixed-point recheck. Teacher
+  CAV positions are already in their destination frame and are not shifted.
+  Two tiny LC2013-only wms guards wire the returned position and prevent a
+  second legacy arbitration. Three default-OFF cases (legacy, legacy-conflict,
+  physical-long-history) compare weights/forward/step/rollout BIT-EXACT to
+  preserved pre-coordinate commit b192e0c8 (DEFAULT_OFF_COORDINATES.json).
+
+The validator also previously paired POST-change normalized s with PRE-change
+lanes without undoing that origin jump. New snapshot contractv2 restores
+post-motion coordinates to the source lane, and reports each hypothetical
+proposal in its own destination origin. This uses the observed lane label
+only to undo a coordinate transform, not as a motivation/driver input.
+The0.5s movement-before-LC ordering was independently confirmed in public
+MSNet.cpp:872/878/884; it remains unchanged.
+
+**Scoring contract changes:** old panels1–8 remain immutable diagnosticv1.
+Fresh MOBIL scoring is REQUIRED once per parameter mode underv2; old v1
+baseline cannot be silently reused just because raw tape hashes match.
+Subsequent compatible MOBIL results are auto-reused after exact physics,
+parameter SHA, snapshot-contract, and MOBIL/dependency source-byte checks.
+CPU45tests PASS before the final rejection-origin regression was added;
+source reads only, no SUMO or fitting. Extra downloaded sources were stored
+in NEW EMPTY directories and never executed:
+MSLane.cpp SHA845efee31486644e24965462e2cec3ac63da00942db5f73897b535f341982f21
+at E:/Temp/opencode/sumo-1.27.1-lane-neighbours;
+MSNet.cpp SHA33c14a847ea1edf1897285e65236a53e59ff6d534cd807b92d23617dcf60b40b
+at E:/Temp/opencode/sumo-1.27.1-lane-order.
+
+Final candidate9 CPU gate:46/46 PASS, single-thread6.53s, persisted JUnit
+`CPU_COORDINATES.xml`. The extra regression proves rejected front movers must
+restore their original origin before a rear mover is admitted (otherwise a1m
+post-resolution overlap is possible). All earlier raw/source/scoring receipts
+and the exact real-encoder/default-OFF parity proofs are retained.
+
+Candidate9v2 verified (worker561787 exited,314.94s): LC1134/40246 exact =
+precision2.8177%, recall34.8387%; fresh matched MOBIL241/7623 = precision3.1615%,
+recall7.4040%. Per predicted motivation (precision / all-event recall contribution):
+strategic9.816%/9.831pp (320/3260); cooperative8.511%/2.335pp (76/893);
+speed-gain4.524%/16.805pp (547/12092); keep-right0.796%/5.868pp (191/24001).
+Compressed ±2s runs:835/4611, precision18.109%, recall25.653%, matched
+timingMAE0.4132s/positionMAE7.149m. Exact-position MAE2.05e-5m is coordinate
+rounding, not predictive longitudinal error. This corrected result is still
+far from acceptable positive-step precision.
+
+Verification first found ONLY a6e-12m aggregate position-sum difference between
+local Python3.13 compensated sum and original Python3.10.16 sum. Original
+receipts/results were preserved. Reassembly now additionally runs the immutable
+archived scorer in its original runtime and is **EXACT** there. Local differences
+are restricted to position sums/means within a row-count-derived float64ULP
+bound; counts, precision, recall, timing, inputs, settings and sources remain
+exact. Integrity test rejects even a tiny precision change or one-count change.
+PANEL9_VERIFIED.json retains both differing local floating values and the exact
+original-runtime proof; no metric/result bytes were corrected or rerun.

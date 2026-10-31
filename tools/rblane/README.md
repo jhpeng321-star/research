@@ -15,8 +15,8 @@ population defaults, no hidden driver files, no fitting or selection.
 Reports exact directed-event recall/precision, ±2s one-to-one event matches,
 matched timing/position MAE, per-transition and per-arm results. One-to-one
 matching maximizes cardinality then minimizes total timing difference. Exact
-position error is necessarily zero under longitudinal teacher forcing and is
-not a trajectory prediction score. The ±2s tolerance is evaluation-only.
+position error is zero up to coordinate-rounding under longitudinal teacher
+forcing and is not a trajectory prediction score. The ±2s tolerance is evaluation-only.
 
 Positive *steps* can repeat while a model wants to change but the teacher still
 stays. Thus both positive-step counts/precision and compressed positive-run
@@ -44,3 +44,33 @@ adds SUMO's right-overtaking prohibition and its next-step speed advice.
 `operate.py panel2` evaluates that revised LC2013 candidate and **reuses** the
 already-completed MOBIL baseline. Input SHA256s, physics, horizon and cohort
 must match exactly; no completed MOBIL inference is repeated. No tuning.
+
+## Precision continuation / corrected coordinate contractv2
+
+Panels3–8 preserve successive source fixes and parameter sensitivities under
+the originalv1 scoring transform. Details and per-predicted-motivation
+precision/recall contributions: `docs/LC2013_PRECISION_ITERATIONS.md`.
+Tapes do not contain motivation labels: these are contributions to ALL-event
+recall, not true class-conditional recalls. TP/FP profiles split physical
+upstream/merge/downstream edges, plus bounded-window nearest-event timing.
+
+Starting with9, reconstruct source-lane raw position before deciding. SUMO
+preserves raw position on a lane change, whereas upstream normalized WM s
+jumps±1.45m because lane origins differ. `snapshot.py` undoes the recorded
+jump, and maps hypothetical proposal positions to their own destination
+origin. Current `snapshot` string is the scoring version identity. Old v1
+MOBIL cannot be reused underv2; one new matched score per setting is needed.
+The operator auto-reuses subsequent completed MOBIL scores only when settings,
+snapshot, physics and all MOBIL/dependency source-byte hashes match.
+
+`--idm-parameters <published idm_pooled.json>` consumes the existing S-RB-FIT
+pre300 FIT point without fitting. `--encoder-checkpoint <wm_s.pt>` strictly
+consumes registered WM2 b8797242… encoder weights, authentic240..300 long
+history, static observed-VID parameters and zero-history centre fallback for
+entrants. No post300 motion is used to infer settings. CAV defaults and SUMO
+LC style defaults retained. Both algorithms are scored under matching settings.
+Frozen real-weight encoder/full-source parity is BIT-EXACT for all9 outputs.
+
+Operate successive unique `panelN` names; every dispatch is immutable. Verify
+each collection using `python -m tools.rblane.verify_receipts --kind panelN`.
+Verification uses immutable bundle bytes, not a newer model in this worktree.

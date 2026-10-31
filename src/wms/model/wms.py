@@ -1923,7 +1923,7 @@ class WmSModel(nn.Module):
 
         if self.lane_model == "lc2013":
             from .lc2013_adapter import step_output
-            next_lane = step_output(self, state, state_kin(state), present, out,
+            next_lane, next_s = step_output(self, state, state_kin(state), present, out,
                                      next_s, next_v, next_lane, driver_params)
         if (self.merge_pivot is None and self.lane_model != "lc2013" and cav_motion.WM_MERGE_KEY in out
                 and bool(out[cav_motion.WM_MERGE_KEY].any())):
@@ -1944,7 +1944,7 @@ class WmSModel(nn.Module):
         exit_s = state.get("exit_s_m")
         if exit_s is not None:
             next_present = next_present & (next_s <= exit_s)
-        if self.lane_conflict_resolve and self.merge_pivot is None:
+        if self.lane_conflict_resolve and self.merge_pivot is None and self.lane_model != "lc2013":
             next_lane = resolve_lane_conflicts(
                 next_s, state_kin(state)[..., 6], state["lane"].long(), next_lane,
                 next_present, out["hdv_mask"], self.physics.gap_overlap_margin_m)

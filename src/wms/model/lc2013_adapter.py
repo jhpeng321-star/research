@@ -6,6 +6,7 @@ import torch.nn.functional as F
 
 from wms.physics.lc2013 import STATE_KEYS, lane_change
 from wms.physics.lane_conflict import resolve_lane_conflicts
+from wms.physics.lc2013_geometry import lane_position_shift
 from .driver_encoder import PARAMETER_NAMES
 from .cav import WM_MERGE_KEY
 
@@ -82,11 +83,28 @@ def step_output(model, state, kin, present, out, next_s, next_v, next_lane, para
         # owner accepts the move against the resolved mainline proposals.
         proposed = torch.where(state["lane"] == model.physics.merge_lane,
                                state["lane"].long(), proposed)
-    resolved = resolve_lane_conflicts(next_s, kin[..., 6], state["lane"].long(),
-                                      proposed, present, deciders, 0.0)
+    resolved, shifted_s = resolve_shifted_lanes(next_s, kin[..., 6], state["lane"].long(),
+                                              proposed, present, deciders, model.physics)
     out.update({k: v for k, v in lc.items() if k != "next_lane"})
+    out['lc2013_position_shift'] = shifted_s - next_s
     out["lane_probabilities"] = F.one_hot(resolved.clamp(0, 2), 3).float()
-    return resolved
+    return resolved, shifted_s
+
+
+def resolve_shifted_lanes(s, length, source, proposed, present, deciders, physics):
+    """Recheck after rejected moves restore their original coordinate origin.
+
+    Candidates only move toward STAY, so at most K rejections reach a fixed
+    point. Fixed/teacher positions already use their supplied destination frame.
+    """
+    candidate = proposed
+    for _ in range(s.shape[-1] + 1):
+        shifted = s + torch.where(deciders, lane_position_shift(s, source, candidate, physics), 0.)
+        resolved = resolve_lane_conflicts(shifted, length, source, candidate, present, deciders, 0.0)
+        if torch.equal(resolved, candidate):
+            return resolved, shifted
+        candidate = resolved
+    raise RuntimeError('LC2013 lane-coordinate arbitration did not converge')
 
 
 def carry_state(current, out, present):

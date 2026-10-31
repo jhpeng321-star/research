@@ -1,0 +1,23 @@
+{
+  "status": "PASS",
+  "checkpoint_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+  "source_full_model_strict_load": true,
+  "encoder_strict_load": true,
+  "full_model_construction_lane_learnable": true,
+  "parameters_bit_exact": {
+    "v0": 0.0,
+    "time_headway": 0.0,
+    "min_gap": 0.0,
+    "accel": 0.0,
+    "decel": 0.0,
+    "politeness": 0.0,
+    "mobil_threshold": 0.0,
+    "merge_gap": 0.0,
+    "merge_urgency": 0.0
+  },
+  "source_model_weight_keys": 171,
+  "max_observation_time_s": 300,
+  "history_s": 60,
+  "no_training": true,
+  "no_wm_rollout": true
+}

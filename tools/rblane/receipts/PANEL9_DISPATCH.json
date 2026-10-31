@@ -1,0 +1,33 @@
+{
+  "kind": "panel9",
+  "root": "/home/ubuntu/rblane20261031_panel9_bab4fd84e76c",
+  "bundle_sha256": "bab4fd84e76cf546a33a18372148ed6aa33f9e1dc49d5268e482c98025af78bc",
+  "parent_commit": "0a1e7e9396bac5bc23ce1def030332ea6a79a8a3",
+  "preflight": {
+    "root": "/home/ubuntu/rblane20261031_panel9_bab4fd84e76c",
+    "load": [
+      12.181640625,
+      10.1494140625,
+      9.91552734375
+    ]
+  },
+  "status": "DISPATCHED",
+  "staged_at": 1793468350.2440183,
+  "process": {
+    "pid": 561787,
+    "start_ticks": "48262993",
+    "command": [
+      "/usr/bin/nice",
+      "-n",
+      "19",
+      "/home/ubuntu/miniconda3/bin/python",
+      "-B",
+      "-m",
+      "tools.rblane.validate",
+      "--out",
+      "/home/ubuntu/rblane20261031_panel9_bab4fd84e76c/results"
+    ],
+    "root": "/home/ubuntu/rblane20261031_panel9_bab4fd84e76c",
+    "started_at": 1793468352.203291
+  }
+}

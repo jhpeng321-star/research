@@ -28,7 +28,34 @@ def remote(code):
     return result.stdout
 
 
-def launch(kind):
+def compatible_mobil_baseline(parameter_sha):
+    """Reuse only an already completed identical MOBIL experiment/transform."""
+    from dataclasses import asdict
+    from wms.physics.config import PhysicsConfig
+    from .snapshot import SNAPSHOT_CONTRACT
+    physics = asdict(PhysicsConfig(sumo_fidelity=True, open_road=True))
+    dependencies = ('mobil.py', 'neighbours.py', 'idm.py', 'config.py')
+    current = {name: hashlib.sha256((ROOT/'src/wms/physics'/name).read_bytes()).hexdigest()
+               for name in dependencies}
+    matches = []
+    for receipt in RECEIPTS.glob('PANEL*_COMPLETE.json'):
+        completed = json.loads(receipt.read_text())
+        summary_path = RECEIPTS / (receipt.name.removesuffix('_COMPLETE.json').lower() + '_results/SUMMARY.json')
+        if not completed['complete'] or completed['alive'] or not summary_path.is_file():
+            continue
+        summary = json.loads(summary_path.read_text())
+        if (summary['status'] != 'COMPLETE' or summary['episodes'] != 160
+                or summary['physics'] != physics or summary['horizon_s'] != 60
+                or summary['snapshot'] != SNAPSHOT_CONTRACT
+                or summary.get('motion_parameter_sha256') != parameter_sha):
+            continue
+        previous = {Path(name).name: digest for name, digest in summary['source_sha256'].items()}
+        if all(previous.get(name) == digest for name, digest in current.items()):
+            matches.append(completed)
+    return max(matches, key=lambda r: r['collected_at'])['root'] + '/results' if matches else None
+
+
+def launch(kind, idm_parameters=None, encoder_checkpoint=None):
     from .validate import FORBIDDEN
     RECEIPTS.mkdir(exist_ok=True)
     receipt = RECEIPTS / (kind.upper() + '_DISPATCH.json')
@@ -47,13 +74,20 @@ def launch(kind):
                 if any(term in str(path).lower() for term in FORBIDDEN):
                     continue
                 archive.write(path, path.relative_to(ROOT).as_posix())
+        if idm_parameters is not None:
+            from .validate import load_motion_point
+            load_motion_point(idm_parameters)
+            archive.write(idm_parameters, 'inputs/idm_pooled.json')
+        if encoder_checkpoint is not None:
+            from .encoder import REGISTERED_WM2_SHA
+            assert not any(term in str(encoder_checkpoint.resolve()).lower() for term in FORBIDDEN)
+            assert hashlib.sha256(encoder_checkpoint.read_bytes()).hexdigest() == REGISTERED_WM2_SHA
+            archive.write(encoder_checkpoint, 'inputs/wm_s.pt')
     digest = hashlib.sha256(bundle.read_bytes()).hexdigest()
     run = f'/home/ubuntu/rblane20261031_{kind}_{digest[:12]}'
-    reuse = None
-    if kind != 'smoke' and kind != 'panel':
-        first = json.loads((RECEIPTS / 'PANEL_COMPLETE.json').read_text())
-        assert first['complete'] and not first['alive']
-        reuse = first['root'] + '/results'
+    selected = encoder_checkpoint if encoder_checkpoint is not None else idm_parameters
+    parameter_sha = hashlib.sha256(selected.read_bytes()).hexdigest() if selected is not None else None
+    reuse = compatible_mobil_baseline(parameter_sha) if kind != 'smoke' else None
     preflight = remote(f'''import os,pathlib,json
 p=pathlib.Path({run!r})
 assert p.parent.is_dir() and not p.exists(), 'run exists: do not duplicate'
@@ -78,6 +112,8 @@ env=dict(os.environ,PYTHONPATH=str(p/'src'),CUDA_VISIBLE_DEVICES='',
 cmd=['/usr/bin/nice','-n','19',{PYTHON!r},'-B','-m','tools.rblane.validate',
      '--out',str(p/'results')]+(['--smoke'] if {kind=='smoke'!r} else [])
 if {reuse!r} is not None: cmd += ['--reuse-mobil-from',{reuse!r}]
+if {idm_parameters is not None!r}: cmd += ['--idm-parameters',str(p/'inputs/idm_pooled.json')]
+if {encoder_checkpoint is not None!r}: cmd += ['--encoder-checkpoint',str(p/'inputs/wm_s.pt')]
 with (p/'run.log').open('x') as log:
     child=subprocess.Popen(cmd,cwd=p,env=env,stdin=subprocess.DEVNULL,
        stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
@@ -133,12 +169,16 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('command')
     ap.add_argument('--kind', default='smoke')
+    ap.add_argument('--idm-parameters', type=Path)
+    ap.add_argument('--encoder-checkpoint', type=Path)
     args = ap.parse_args()
+    if args.idm_parameters is not None and args.encoder_checkpoint is not None:
+        ap.error('choose one frozen parameter source')
     import re
     if not re.fullmatch(r'smoke|panel(?:[2-9]|[1-9][0-9]+)?', args.kind):
         ap.error('invalid run kind')
     if re.fullmatch(r'smoke|panel(?:[2-9]|[1-9][0-9]+)?', args.command):
-        launch(args.command)
+        launch(args.command, args.idm_parameters, args.encoder_checkpoint)
     elif args.command in ('status', 'collect'):
         status(args.kind, args.command=='collect')
     else:

@@ -1,0 +1,28 @@
+{
+  "status": "PASS",
+  "episodes": 160,
+  "worlds": 32,
+  "arms": 5,
+  "aggregate_reassembly": "exact in original runtime",
+  "local_position_roundoff": [
+    [
+      "aggregate.lc2013.run_window_2s.position_mae_m",
+      7.1490693594953285,
+      7.149069359495322
+    ],
+    [
+      "aggregate.lc2013.run_window_2s.position_abs_sum_m",
+      5969.4729151786,
+      5969.472915178594
+    ]
+  ],
+  "dispatched_model_and_scorer_hashes": "exact",
+  "same_cohort_and_all_input_hashes": "exact",
+  "mobil_score_reuse": "new paired score for this setting/transform",
+  "target_events_reconciled": 3255,
+  "source_bundle_sha256": "bab4fd84e76cf546a33a18372148ed6aa33f9e1dc49d5268e482c98025af78bc",
+  "original_runtime_exact_reassembly": true,
+  "original_python": "3.10.16",
+  "summary_sha256": "f44459c9e8aa839e3bf87f5303bfce447ae0f37515af3ebacbfbefdfbfa52474",
+  "exact_motivation_partition": "exact"
+}
