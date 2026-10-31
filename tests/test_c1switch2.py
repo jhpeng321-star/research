@@ -85,24 +85,25 @@ class ToyBackend:
 
 
 def test_exact_budget_includes_full_prefixes_and_optional_model():
-    assert design.budget()['wm'] == 97800
-    assert design.budget()['bb'] == 97800
-    assert design.budget()['fleet_ppo'] == 97800
-    assert design.budget()['cav_mappo'] == 112300
-    assert design.budget()['wall'] == 10800
+    assert design.budget()['wm'] == 79800
+    assert design.budget()['bb'] == 79800
+    assert design.budget()['fleet_ppo'] == 79800
+    assert design.budget()['cav_mappo'] == 89900
+    assert design.budget()['wall'] == 19200
     assert design.budget()['canary'] == 4680
-    assert sum(design.budget().values()) == 485980
-    assert sum(design.budget(True).values()) == 583780
-    assert sum(design.GPU_SECONDS[a] for a in design.budget(True)) == 93600
-    assert design.measurement_indices(969136) == [0, 10]
+    assert sum(design.budget().values()) == 468380
+    assert sum(design.budget(True).values()) == 548180
+    assert sum(design.GPU_SECONDS[a] for a in design.budget(True)) == 126000
+    assert design.measurement_indices(969136) == [10]
     for arm, total in design.budget(True).items():
         assert sum(design.local_budget(h, True)[arm] for h in ('cpuQ', 'gpuR')) == total
+    assert sum(len(design.measurement_indices(w['seed'])) for w in design.worlds()) == 16
 
 
-def test_both_seed_guards_all_thirteen_worlds():
+def test_both_seed_guards_all_seventeen_worlds():
     for world in design.worlds()+[design.canary_world()]:
         design.guard(world)
-    for seed in (964000, 962100, 977001, 969135, 969149):
+    for seed in (964000, 962100, 977001, 969135, 969153):
         with pytest.raises(ValueError):
             design.guard(dict(design.worlds()[0], seed=seed))
 
@@ -143,12 +144,12 @@ def test_receding_horizon_replans_thirty_times_and_only_executes_twenty():
     row = episode(env, 'wm', design.worlds()[0], predictor=Picker(),
                   receipt=lambda kind, value: receipts.append(copy.deepcopy(value)))
     assert seen == list(range(300, 900, 20))
-    assert [t[1] for t in env.trace if t[0] == 'advance'] == [20]*30
-    assert env.actual == 900
+    assert [t[1] for t in env.trace if t[0] == 'advance'] == [20]*30+[300]
+    assert env.actual == 1200
     assert row['wall_decisions'] == 15
     assert env.wall_starts == env.wall_stops == 15
-    assert row['J900']['team_delay_vs'] == row['J600']['team_delay_vs']+500
-    assert [s['j'] for s in row['measurement_specs']] == [0, 10]
+    assert row['J900']['team_delay_vs'] == row['J600']['team_delay_vs']+300
+    assert [s['j'] for s in row['measurement_specs']] == [10]
     assert receipts[0]['t_s'] == 300 and receipts[-1]['t_s'] == 880
     assert 'branches' not in receipts[0]  # No truth can alter a committed pick.
 
@@ -269,7 +270,7 @@ def test_rl_pickers_share_cadence_library_and_observable_boundary():
     for arm, selector in [('fleet_ppo', Fleet()), ('cav_mappo', PerCav())]:
         env = ToyBackend()
         row = episode(env, arm, design.worlds()[0], selector=selector)
-        assert len(row['schedule']) == 30 and env.actual == 900
+        assert len(row['schedule']) == 30 and env.actual == 1200
         assert row['wall_decisions'] == 30
     with pytest.raises(ValueError, match='one shared controller'):
         episode(ToyBackend(), 'fleet_ppo', design.worlds()[0], selector=PerCav())
@@ -280,6 +281,8 @@ def test_registration_parser_catches_compressed_ranges_but_not_hashes():
     assert audit.registry_hits('- prior reserve 969100..969199')
     assert not audit.registry_hits('- eligibility C4_LOOP_TRAIN 966000-969999')
     assert not audit.registry_hits('- SHA256 a969140abc')
+    assert not audit.registry_hits('- utc 2026-10-28T15:05:33.969141+00:00')
+    assert not audit.registry_hits('- remote ledger: none used in 966000-969699')
 
 
 def test_only_main_explicit_approval_can_open_budget_gate():
@@ -288,6 +291,7 @@ def test_only_main_explicit_approval_can_open_budget_gate():
     assert gate.approval('- MAIN S-C1SWITCH2 BUDGET APPROVED NOT YET') is None
     assert gate.approval('- S-C1SWITCH2 DESIGN REGISTERED: waiting for S-C1SWITCH2 BUDGET APPROVED') is None
     assert gate.approval('- 00:30 MAIN S-C1SWITCH2 BUDGET APPROVED cap 600000')
+    assert gate.approval("- 23:48 S-C1SWITCH2 BUDGET APPROVED (owner, chat: 'yes'): cap 600000")
 
 
 def test_missing_dependency_still_blocks_after_budget_approval(monkeypatch):

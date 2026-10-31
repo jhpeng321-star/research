@@ -64,9 +64,16 @@ def episode(backend, arm, world, *, predictor=None, selector=None, receipt=None)
     if backend.fingerprint()['t_s'] != 900:
         raise ValueError('episode did not end at 900s')
     end = backend.metrics()
+    j600 = {k: end[k]-start[k] for k in end}
+    # Secondary J900 is 900 CONTROL seconds, not warmup plus J600. No additional
+    # picker decisions: retain the t=880 controller/assembly through t=1200.
+    backend.advance(300)
+    if backend.fingerprint()['t_s'] != 1200:
+        raise ValueError('J900 tail did not end at 1200s')
+    long_end = backend.metrics()
     return dict(arm=arm, world=world, schedule=schedule, decisions=decisions,
-                measurement_specs=branches, J600={k: end[k]-start[k] for k in end},
-                J900=backend.episode_metrics(),
+                measurement_specs=branches, J600=j600,
+                J900={k: long_end[k]-start[k] for k in long_end},
                 switch_count=sum(a != b for a, b in zip(['native']+schedule, schedule)),
                 wall_decisions=sum(a == 'wall' if isinstance(a, str) else
                                    any(c == 'wall' for c in a.values()) for a in schedule))

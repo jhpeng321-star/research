@@ -11,7 +11,7 @@ from tools.c1switch.ops import ssh
 from tools.c1switch.storage import write
 
 from .audit import registration_audit
-from .design import REGISTRATION, canary_world, guard, worlds
+from .design import REGISTRATION, canary_world, guard, manifest, worlds
 
 EVIDENCE = Path('tools/c1switch2/evidence')
 
@@ -20,7 +20,7 @@ def audit(host=None):
     report = registration_audit(REGISTRATION)
     for world in worlds()+[canary_world()]:
         guard(world)
-    report['local_seed_guards'] = 13
+    report['local_seed_guards'] = len(worlds())+1
     if host:
         parent = '/home/ubuntu' if host == 'cpuQ' else '/root'
         # Source names only; do not open, parse or stat a prohibited entry.
@@ -46,7 +46,9 @@ print(json.dumps(dict(host={host!r},safe_names_checked=count,pruned=pruned,hits=
 '''
         report['remote'] = ssh(host, code, timeout=120)
     report['pass'] = not report['hits'] and not report.get('remote', {}).get('hits')
-    output = EVIDENCE/('EXPOSURE_'+(host or 'local')+'.json')
+    output = EVIDENCE/('EXPOSURE_'+(host or 'local')+'_v3.json')
+    if output.exists():
+        raise ValueError('preserve prior exposure receipt; use a new prospective version')
     write(output, report)
     print(json.dumps(report, indent=2))
 
@@ -91,14 +93,32 @@ out=dict(host={host!r},root=str(root),returncode=int(code),output=log.getvalue()
     print(json.dumps({k: v for k, v in result.items() if k != 'sources'}, indent=2))
 
 
+def export():
+    proposal = dict(base=manifest(), conditional_wm_phys=manifest(True))
+    output = Path('docs/paper_results/c1switch2')
+    if (output/'BUDGET_PROPOSAL.json').exists():
+        raise ValueError('preserve prior design export')
+    write(output/'BUDGET_PROPOSAL.json', proposal)
+    write(output/'PANEL.json', dict(protocol=proposal['base']['protocol'], worlds=worlds(),
+        canary=canary_world(), measured=proposal['base']['measured'],
+        decisions_s=list(range(300,900,20)), J600_window_s=[300,900], J900_window_s=[300,1200],
+        evaluation_owner='S-C1SWITCH2'))
+    print(json.dumps(dict(design_sha256=proposal['base']['design_sha256'],
+        base_sim_s=proposal['base']['total_sim_s'],
+        conditional_sim_s=proposal['conditional_wm_phys']['total_sim_s'],
+        new_sim_s=0,new_gpu_s=0), indent=2))
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('command', choices=('audit', 'cpu'))
+    parser.add_argument('command', choices=('audit', 'cpu', 'export'))
     parser.add_argument('--host', choices=('cpuQ', 'gpuR', 'gpuA'))
     args = parser.parse_args()
     if args.command == 'audit':
         audit(args.host)
-    else:
+    elif args.command == 'cpu':
         if not args.host:
             raise ValueError('CPU host required')
         cpu(args.host)
+    else:
+        export()

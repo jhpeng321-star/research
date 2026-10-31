@@ -7,7 +7,7 @@ import os
 from tools.c1switch.design import checked, sha
 from tools.c1switch.storage import Ledger, exclusive, write
 
-from .design import MODEL_ARMS, PROTOCOL, REGISTRATION, assigned, budget, guard, local_budget, worlds
+from .design import MODEL_ARMS, PROTOCOL, assigned, budget, guard, local_budget, worlds
 from .episode import episode
 from .gate import admission
 from .rerun import replay
@@ -54,7 +54,10 @@ class ArmLedger(Ledger):
 def admitted(root, *, phase='main'):
     binding = json.loads((root/'BINDING.json').read_text())
     evidence = json.loads((root/'GATES.json').read_text())
-    status = admission(checked(REGISTRATION).read_text(encoding='utf-8'), binding, evidence, phase=phase)
+    registration = root/'REGISTRATION.md'
+    if sha(registration) != binding.get('registration_sha256'):
+        raise ValueError('registered approval snapshot changed')
+    status = admission(registration.read_text(encoding='utf-8'), binding, evidence, phase=phase)
     if not status['dispatch_authorized']:
         raise ValueError('S-C1SWITCH2 dispatch blocked: '+json.dumps(status))
     if binding['protocol'] != PROTOCOL or binding['sim_s'] != budget(binding.get('include_phys') is True):

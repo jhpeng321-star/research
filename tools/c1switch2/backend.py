@@ -31,6 +31,11 @@ class Backend(MainBackend):
         self.wall = wall
         self.warmup_metrics = None
         frozen_overlay(wall).Backend.__init__(self, root, world, ledger, stage, ident, inputs)
+        # Horizon is only env termination metadata; scenario demand already spans
+        # the unchanged 2400s fixture. Extend before any controlled physics tick.
+        if self.env.config.episode_seconds < 1231:
+            raise ValueError('frozen fixture cannot support J900 control tail')
+        self.env.horizon_s, self.env.end_s = 931., 1231.
         if self.warmup_metrics is None:
             raise ValueError('missing full 300s native warmup metrics')
 

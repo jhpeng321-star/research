@@ -15,7 +15,9 @@ def approval(text):
     for line in text.splitlines():
         # Require an actual MAIN-authored approval entry. Quoted requests, future
         # conditions, our design line, and S-C1SWITCH's old approval do not match.
-        if re.match(r'^-\s+(?:\d\d:\d\d\s+)?MAIN\b[^\n]*\bS-C1SWITCH2 BUDGET APPROVED\b', line):
+        main = re.match(r'^-\s+(?:\d\d:\d\d\s+)?MAIN\b[^\n]*\bS-C1SWITCH2 BUDGET APPROVED\b', line)
+        owner = re.match(r'^-\s+\d\d:\d\d\s+S-C1SWITCH2 BUDGET APPROVED\s+\(owner,\s*chat:', line)
+        if main or owner:
             if not re.search(r'\b(?:NOT|NO|AWAIT|PENDING|REVOKED|EXAMPLE)\b', line):
                 lines.append(line)
     return lines[-1] if lines else None

@@ -6,7 +6,7 @@ from tools.c1switch.design import FORBIDDEN, checked, sha
 
 from .design import canary_world, worlds
 
-SEED = re.compile(r'(?<![A-Za-z0-9])(?:TRAIN|seed|s|w)?(9\d{5})(?!\d)')
+SEED = re.compile(r'(?<![A-Za-z0-9.])(?:TRAIN|seed|s|w)?(9\d{5})(?!\d)')
 TAIL = re.compile(r'^\s*(?:-|–|—|\.\.|~|锟\?)\s*(\d{3,6})(?!\d)')
 
 
@@ -24,7 +24,10 @@ def registry_hits(text):
                 digits = tail[1]
                 hi = int(str(lo)[:6-len(digits)]+digits)
             # This is the parent TRAIN eligibility range, not an allocated panel.
-            if (lo, hi) == (966000, 969999):
+            if (lo, hi) in {(966000, 969999), (965184, 969999)}:
+                continue
+            # Historical negative exposure evidence, not a world reservation.
+            if (lo, hi) == (966000, 969699) and re.search(r'none\s+(?:used|in)', line, re.I):
                 continue
             overlap = proposed.intersection(range(lo, hi+1))
             if overlap:

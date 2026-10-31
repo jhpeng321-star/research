@@ -68,6 +68,11 @@ def serve(root, binding, factory):
         signal.signal(signal.SIGALRM, expired)
         signal.setitimer(signal.ITIMER_REAL, cap)
         try:
+            import torch
+            free, total = torch.cuda.mem_get_info()
+            if free < 7*2**30:
+                raise ValueError('insufficient free GPU memory for frozen service admission')
+            torch.cuda.set_per_process_memory_fraction(2.5*2**30/total)
             predictor = factory(binding)
             write(root/'READY.json', dict(pid=os.getpid(), binding=binding))
             while not (root/'STOP').exists() and not (root/'COMPLETE').exists():
