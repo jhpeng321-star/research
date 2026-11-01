@@ -1,5 +1,11 @@
 # S-COOPMWM live continuation — OWNER22:08 WARM MEMORY HOLD
 
+22:51 A5 REGISTERED/DISPATCHED2611888/start55895612, verified S, no failure.
+SUMO_HOME/PATH restored exactly from original accel_deploy and binary verified.
+Twelve completed A episodes reused; twelve failed A4 reservations/claims retained,
+replacement environment5 IDs precharged independently. Allocation4324040/cap6M;
+A throughu4/check then pause. B/R remain held. WARM_A5_* and fresh RESUME_A receipt.
+
 22:48 A4 authority/base64 repair passed real preflight and dispatched2604907;
 it EXITED before SUMO initialization: SUMO binary absent from inherited PATH.
 Preserve A4 claims/failure; no optimizer update. A continuation must set the same
