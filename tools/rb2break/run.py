@@ -18,7 +18,7 @@ sys.path[:0] = [str(ROOT), str(ROOT/'src')]
 DEV = tuple(range(969420, 969432))
 FACTORS = ('baseline', 'no_mainline_lc', 'no_merge_advice', 'depart_last',
            'depart_first', 'population', 'raw_posterior', 'point_v0', 'point_tau', 'fixed_rate',
-           'lane_limits', 'cav_settings')
+           'lane_limits', 'cav_settings', 'native_uncommanded')
 
 
 def filtered_starts(code, worlds):
@@ -140,6 +140,11 @@ def main():
             from dataclasses import replace
             models[0].physics = replace(models[0].physics, sumo_cf_lane_speed_limits=True)
             receipt['sumo_cf_lane_speed_limits'] = True
+        if options.factor == 'native_uncommanded':
+            models[0]._wmphys_native_model = 'sumo_uncommanded'
+            models[0]._wmphys_match_cav_execution_settings = True
+            receipt['native_model'] = 'sumo_uncommanded'
+            receipt['match_cav_execution_settings'] = True
         if options.factor == 'population':
             # Keep causal arrivals; disable only own-driver posterior information.
             models[0]._wmphys_condition_motion = False

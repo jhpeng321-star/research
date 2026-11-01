@@ -13,9 +13,11 @@ from tools.rbint.rebuild import rebuild_with_motion_encoder
 
 def native_controller(model=None):
     """Native-CAV law selected by the recipe; default is the registered head."""
-    if getattr(model, '_wmphys_native_model', 'registered_head') == 'sumo_physics':
+    native_mode = getattr(model, '_wmphys_native_model', 'registered_head')
+    if native_mode in ('sumo_physics', 'sumo_uncommanded'):
         from wms.model.sumo_native import native_physics_controller
-        return native_physics_controller(dt_s=model.physics.dt_s)
+        return native_physics_controller(dt_s=model.physics.dt_s,
+                                         uncommanded=native_mode == 'sumo_uncommanded')
     from wms.control.counterfactual import native_fn
     from wms.control.continuous import project_native
     from wms.model.cav import WM_MERGE_KEY, WM_LANE_TARGET_KEY
@@ -67,8 +69,10 @@ def load_candidate(checkpoints, configs, device):
         if options_full['fitted_lc']:
             raise ValueError('fitted LC has not passed its baseline')
         candidate._wmphys_native_model = options_full.get('native_model', 'registered_head')
-        if candidate._wmphys_native_model not in ('registered_head', 'sumo_physics'):
+        if candidate._wmphys_native_model not in ('registered_head', 'sumo_physics', 'sumo_uncommanded'):
             raise ValueError('unsupported native-CAV law')
+        if candidate._wmphys_native_model == 'sumo_uncommanded' and not candidate._wmphys_match_cav_execution_settings:
+            raise ValueError('uncommanded native CAVs require matched physical CAV settings')
         receipt['native_model'] = candidate._wmphys_native_model
         candidate._wmphys_fitted_state = FittedHiddenState.from_directory(
             root/options_full['parameter_directory'])

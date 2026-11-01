@@ -9,6 +9,7 @@ from wms.physics.mobil import mobil_merge_logits
 from wms.physics.state import state_kin, state_present
 from . import cav as cav_motion
 from .driver_encoder import PARAMETER_NAMES
+from .sumo_native import NATIVE_UNCOMMANDED_KEY
 
 
 def clean_physics(physics):
@@ -22,6 +23,10 @@ def forward(model, state, learned, lane_deciders, encoded, driver_params,
             driver_embedding, baseline_lane_logits=None):
     kin = state_kin(state).float()
     present = state_present(state, kin)
+    # Uncommanded CAVs have the same physical CF/LC speed patching as HDVs.
+    # Their observed role remains CAV; the dispatcher still executes once.
+    native = state.get(NATIVE_UNCOMMANDED_KEY, torch.zeros_like(present)).bool() & present
+    physical_movers = learned | native
     physics = clean_physics(model.physics)
     # Direct physics kernel bypasses every learned acceleration, courtesy,
     # merge, temporal, noise and lane-correction emission.
@@ -42,7 +47,7 @@ def forward(model, state, learned, lane_deciders, encoded, driver_params,
                raw_residual_mps2=zero, accel_delta_mps2=zero,
                lane_logits=logits, gate=zero, residual_log_sigma=zero,
                lane_probabilities=logits.softmax(-1),
-               hdv_mask=learned, lane_decider_mask=lane_deciders,
+               hdv_mask=physical_movers, lane_decider_mask=lane_deciders,
                sumo_merge_safe=geometry['safe'])
     if encoded is not None:
         out.update(driver_parameters=encoded['values'], driver_uncertainty=encoded['uncertainty'],
@@ -65,6 +70,12 @@ def step(model, state, out, k_steps, driver_params, action_id, action_command,
     kin = state_kin(state)
     present = state_present(state, kin)
     cav = state.get('is_cav', torch.zeros_like(present)).bool() & present
+    uncommanded = cav & state.get(NATIVE_UNCOMMANDED_KEY, torch.zeros_like(cav)).bool()
+    if cav_teacher is not None and bool(uncommanded.any()):
+        raise ValueError('uncommanded native CAVs cannot have teacher commands')
+    if action_id is not None and bool((uncommanded & (action_id == DIRECT_ID)).any()):
+        raise ValueError('uncommanded native CAVs cannot have direct commands')
+    cav = cav & ~uncommanded
     if driver_params is None and 'driver_parameters' in out:
         driver_params = {name: out['driver_parameters'][..., i]
                          for i, name in enumerate(PARAMETER_NAMES)}

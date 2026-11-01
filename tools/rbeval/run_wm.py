@@ -194,7 +194,7 @@ def main(model_loader=None, identity_sources=(), future_builder=None,
         save_new(out/'IDENTITY.json', identity)
     identity_sha = digest(out/'IDENTITY.json')
     native = native_fn('head', a_max=1.2)
-    if getattr(model, '_wmphys_native_model', 'registered_head') == 'sumo_physics':
+    if getattr(model, '_wmphys_native_model', 'registered_head') in ('sumo_physics', 'sumo_uncommanded'):
         from wms.model.sumo_native import native_physics_accel
         native = native_physics_accel
 
@@ -227,6 +227,12 @@ def main(model_loader=None, identity_sources=(), future_builder=None,
             state[WM_MERGE_KEY] = torch.cat(merges)
             return torch.cat(outputs)
         callback.native_lane_mask = lambda state: state['present'].bool() & state['is_cav'].bool()
+        if getattr(model, '_wmphys_native_model', None) == 'sumo_uncommanded':
+            def uncommanded_mask(state):
+                mask = torch.zeros_like(state['present'], dtype=torch.bool)
+                mask[0] = state['present'][0].bool() & state['is_cav'][0].bool()
+                return mask
+            callback.native_uncommanded_mask = uncommanded_mask
         return callback
 
     def move(x):

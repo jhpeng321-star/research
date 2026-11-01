@@ -116,3 +116,17 @@ Use only240..270s own motion to condition, then270..300s stable-leader accelerat
 CRPS on the same registered surviving HDV cohort. This is an internal conditional
 motion check (survivor cohort, not prospective independent-world qualification).
 Only a lower mean-world physical acceleration CRPS permits a traffic screen.
+
+##14:15 native-uncommanded CAV parity (before inference)
+The existing sumo_physics native callback uses inferred_follow_cap, explicitly
+the externally commanded CAV path, not native SUMO finalizeSpeed/LC patching.
+New default-OFF native_model=sumo_uncommanded delegates native CAV motion to the
+same SUMO CF/merge/LC physical stream as HDVs, while still calling the controller
+dispatcher once per tick. The native CAV role, birth ownership and latents remain
+unchanged; only motion ownership changes. Require the CAV-setting consistency
+switch so physical parameters match the already-deployed fixed execution fit.
+Compare against CAV-settings-only parent, not against an unmatched baseline.
+All four commanded-controller arms MUST remain exactly unchanged. Unit gate:
+with identical physical settings, an uncontrolled CAV and an HDV clone produce
+identical motion, including emergency finalization and carried LC speed advice.
+No externally commanded plant, controller or black box changes.

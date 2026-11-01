@@ -16,7 +16,7 @@ JOB = PARENT+'/rb2break'
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=('stage', 'launch', 'queue', 'queue-corrections', 'validate-envelope', 'fetch-envelope', 'fit-birth', 'bind-birth', 'fetch-birth', 'resources', 'inspect-start', 'wait', 'retire-cpu3', 'retire-slow-cpu', 'retire-old-queues', 'status', 'fetch', 'fetch-baseline', 'baseline'))
+    parser.add_argument('action', choices=('stage', 'launch', 'queue', 'queue-corrections', 'queue-native', 'validate-envelope', 'fetch-envelope', 'fit-birth', 'bind-birth', 'fetch-birth', 'resources', 'inspect-start', 'wait', 'retire-cpu3', 'retire-slow-cpu', 'retire-old-queues', 'status', 'fetch', 'fetch-baseline', 'baseline'))
     parser.add_argument('--host', default='gpuA', choices=('gpuA', 'gpuR'))
     parser.add_argument('--runtime')
     parser.add_argument('--factor', default='baseline')
@@ -77,7 +77,7 @@ def save(path,data):
     out_name = f'{args.tag}_{args.factor}_s{args.shard}'
     if args.action == 'launch':
         if args.factor not in ('baseline', 'no_mainline_lc', 'no_merge_advice', 'depart_last',
-                               'depart_first', 'population', 'raw_posterior', 'point_v0', 'point_tau', 'fixed_rate', 'lane_limits', 'cav_settings'):
+                               'depart_first', 'population', 'raw_posterior', 'point_v0', 'point_tau', 'fixed_rate', 'lane_limits', 'cav_settings', 'native_uncommanded'):
             raise ValueError('unregistered factor')
         if not args.runtime or not args.runtime.startswith(PARENT+'/rb2break_code_'):
             raise ValueError('own immutable runtime required')
@@ -104,14 +104,17 @@ receipt=dict(owner='S-RB2-BREAK',pid=p.pid,boot_id=Path('/proc/sys/kernel/random
  start_ticks=Path('/proc/'+str(p.pid)+'/stat').read_text().split()[21],argv=argv,resources=resources,unix=time.time())
 save(out/'DISPATCH.json',receipt);print(json.dumps(receipt))
 '''
-    elif args.action in ('queue', 'queue-corrections'):
+    elif args.action in ('queue', 'queue-corrections', 'queue-native'):
         assert args.runtime and args.runtime.startswith(PARENT+'/rb2break_code_')
         if args.action == 'queue':
             wait_for = 'screen_no_mainline_lc_s0' if args.lane == 0 else 'screen_no_merge_advice_s0'
             factors = ['depart_last', 'population', 'point_v0'] if args.lane == 0 else ['depart_first', 'point_tau', 'fixed_rate']
-        else:
+        elif args.action == 'queue-corrections':
             wait_for = 'screen_point_v0_s0' if args.lane == 0 else 'screen_fixed_rate_s0'
             factors = ['raw_posterior', 'lane_limits'] if args.lane == 0 else ['cav_settings']
+        else:
+            assert args.lane == 1, 'native followup uses the released CAV-settings worker slot'
+            wait_for, factors = 'screen_cav_settings_s0', ['native_uncommanded']
         code = f'''
 runtime=Path({args.runtime!r});assert (runtime/'STAGE.json').is_file()
 claim=root/('QUEUE2_'+runtime.name+'_'+{str(args.lane)!r}+'.json');assert not claim.exists()

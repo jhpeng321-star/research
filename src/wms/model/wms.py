@@ -1801,6 +1801,17 @@ class WmSModel(nn.Module):
         LANEFIX ``lane_decision='sample'``: learned slots draw their lane from the masked
         categorical with ``lane_uniform [B, K]`` (``None``: from the global torch RNG).
         """
+        native_uncommanded = getattr(cav_controller, "native_uncommanded_mask", None)
+        if native_uncommanded is not None:
+            if (self.black_box or self.physics.merge_model != "sumo"
+                    or self.physics.cf_model != "sumo_idm" or self.lane_model != "lc2013"):
+                raise ValueError("uncommanded native CAVs require SUMO CF/merge and LC2013")
+            from .sumo_native import NATIVE_UNCOMMANDED_KEY
+            mask = native_uncommanded(state)
+            if mask.shape != state["present"].shape:
+                raise ValueError("uncommanded native mask differs from state")
+            mask = mask.bool() & state["present"].bool() & state["is_cav"].bool()
+            state = {**state, NATIVE_UNCOMMANDED_KEY: mask}
         native_lane_mask = getattr(cav_controller, "native_lane_mask", None)
         if native_lane_mask is not None:
             if self.black_box or (self.merge_pivot is None and self.lane_model != "lc2013"
