@@ -1,5 +1,27 @@
 # S-RB2-INT — round 2 active, 2026-11-01 ~12:00 +08
 
+## Owner16:28 continuation — read before any new collector or dispatch
+
+Recovered clean at e6dd0c2a; recovery c99825d8, interim tooling690019ab. Both original
+supervisors healthy/no failures at16:30; collector9660 remains alive and exclusively
+collects remote forecasts. No hot-reorder interface exists in the live supervisors.
+Do not edit their plan or restart them. Cache-only interim publication is prepared:
+`docs/rb2int/INTERIM_CONTINUATION.md`; new publisher launch receipt follows.
+It publishes first replicated scored v5/v4 cells and complete reserved8 immediately,
+then each view about3h; all horizons/metrics/CIs and30/60/90short decision bounds.
+29CPU analysis/continuation checks PASS5.38s; Ruff PASS. Recorded short team/source
+clocks absent in all290episodes; observable road reconstruction checked at120s.
+Exact team accuracy remains partially identified, not replaced by road accuracy.
+
+**Final-delivery ownership transition:** owner-required report edits trigger only
+the original collector's final progress-report guard AFTER all216worldjobs are
+collected. New cache-only publisher waits for that exact STOP, validates original
+analysis hashes and full cache, then scores/publishes once. No duplicate inference
+or transfer. Preserve any other STOP/source edits for explicit recovery. Later
+worker limits (fitted LC adoption and retired CAV mirror) are disclosed in report;
+the frozen model remainsb2df7458. Engineering READY signal below remains available
+to S-WMTEACH; cooperation/planner switching qualification is still pending.
+
 Branch `c4/rb2-int`, base engineering source FULL-v4 `22cc32f6`; inherited
 round-1 delivery remains below. Read `docs/rb2int/PLAN.md` when available.
 

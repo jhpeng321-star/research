@@ -48,3 +48,34 @@ complete K8 worlds, distributional components, credibility and switching rule.
 Keep source-bound v4 decision maps separate from v5. The FULL-v5 READY signal and
 immutable source/recipe/smoke binding in HANDOFF.md are now published for
 S-WMTEACH's engineering/quality rerun; final qualification is pending.
+
+<!-- RB2-INTERIM:BEGIN -->
+## INTERIM — owner16:28 early-delivery addendum
+
+The final panel remains active. A cache-only publisher now prepares the first
+matched K8 scored cell with at least two distinct recorded worlds, and the complete
+reserved8 comparison as soon as available, then refreshes each view about every3h.
+It reports120/300/600s delay CRPS, breakdown-rate distance, HDV60, controller-effect
+signs,0.8call reliability and range coverage. Singleton confidence intervals are
+NA; available-case replication never substitutes for complete registered54.
+
+The existing supervisors have no live queue-reorder interface. Their in-memory
+queues, claims and frozen sources are preserved; safe reordering without restart
+is unsupported. Only the original collector transfers forecasts; the new publisher
+reads completed local cache entries. Exact continuation/final handover:
+`../rb2int/INTERIM_CONTINUATION.md`.
+
+Short30/60/90s forecasts preserve exact total-delay increments, but recorded tapes
+have no saved total/source clocks at those horizons. Reconstructed road clocks
+match all290 recorded120s road totals. Total-delay direction accuracy will be
+reported as identification bounds using nonnegative source waiting bounded by its
+recorded120s total, plus resolved-pair fraction and separate road-only accuracy.
+These five controller options do not establish unrecorded cooperation/group
+effects. Planner/cooperation short-horizon qualification remains NOT ESTABLISHED.
+
+Later development handoffs flag two frozen-candidate limits: LANE rejects fitted
+LC adoption on its standalone free-rate/recall evidence; BREAK reports116b2147
+targets a retired mode2 mirror, not the actual shared CAV actuator. Thus verified
+mode2 actuator consistency must not be claimed for this frozen version. Both
+findings are disclosed while the fixed four-model comparison continues unchanged.
+<!-- RB2-INTERIM:END -->
