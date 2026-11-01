@@ -59,6 +59,17 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**20:12 fresh-session reconciliation (1793535166):** original observer42548 LIVE;
+all112fixed/random and finalfleet16episodes+96oracles COMPLETE, no replay.
+All36originalWMoracles COMPLETE; WM6episodes only, terminal failures retained.
+Exact charged=closedactual247680sim-s; finalizedGPU27787.12987509556s includes
+BOTH BB startup attempts (101.03088318184018s total), both services EXITED.
+MAIN12:14's one-use BB continuation stopped after parity on CPU-load admission,
+BEFORE BB physics; retain BB_CONTINUATION_STOP and all claims; no automatic retry.
+cpuQ uptime6.359days/free2149703680bytes, ownoutputs356383743bytes; no reboot.
+Per-CAV final169 receipt NOW delivered (checkpointSHA82c6745b); original training
+606968 EXITED. Next work is final-only per-CAV bridge admission under its original
+89900sim-s/GPU0 reservation. PHYS remains OFF; full WM primary panel incomplete.
 **12:24 postnoon supervision LIVE:** ownWindows42548, source82667e50, exact
 `WATCH_MAIN1214/DISPATCH.json` and first committedheartbeatbddaa353.
 Checks exact ownedroots/progress every20min, observes resourcegate every60s;

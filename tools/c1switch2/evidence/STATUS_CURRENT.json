@@ -1,8 +1,8 @@
 {
   "protocol": "S-C1SWITCH2/v2",
-  "verified_unix": 1793507079.845706,
+  "verified_unix": 1793535160.9135315,
   "status": "CPU_COMPLETE_WM_TERMINAL_REGISTERED_PANEL_PARTIAL_OWNED_SCOPES_SUPERVISED",
-  "receipt": "tools\\c1switch2\\evidence\\RESUME_RECONCILIATION_1793507083.json",
+  "receipt": "tools\\c1switch2\\evidence\\RESUME_RECONCILIATION_1793535166.json",
   "base_sim_s": 468380,
   "conditional_sim_s": 548180,
   "base_gpu_hours_cap": 19,
@@ -12,14 +12,14 @@
   "prediction_objective": "on_road_fleet_delay",
   "evaluation_objective": "full_team_delay_fleet_plus_source",
   "host_coverage_complete": true,
-  "charged_sim_s_at_latest_receipts": 207820,
-  "charged_verified_lower_bound_sim_s": 207820,
-  "closed_actual_verified_lower_bound_sim_s": 207160.0,
-  "closed_actual_sim_s_at_latest_receipts": 207160.0,
-  "registered_base_remaining_sim_s": 260560,
+  "charged_sim_s_at_latest_receipts": 247680,
+  "charged_verified_lower_bound_sim_s": 247680,
+  "closed_actual_verified_lower_bound_sim_s": 247680.0,
+  "closed_actual_sim_s_at_latest_receipts": 247680.0,
+  "registered_base_remaining_sim_s": 220700,
   "actual_note": "Closed actual excludes currently open jobs; historical charges are never refunded.",
-  "new_gpu_s": 27729.12296916172,
-  "finalized_gpu_s": 27729.12296916172,
+  "new_gpu_s": 27787.12987509556,
+  "finalized_gpu_s": 27787.12987509556,
   "gpu_accounting_note": "Every original and continuation allocation retained; exact total unknown while any allocation is live. Finalized monotonic receipts include loading/parity/idle.",
   "canary": {
     "state": "COMPLETE",
@@ -67,19 +67,16 @@
         "root": "/home/ubuntu/c1switch2_run_e79775aa1f380c25",
         "process": {
           "pid": 1152412,
-          "state": "S",
-          "start_ticks": 51924786,
-          "uid": 1000,
-          "own_root_in_command": true
+          "state": "EXITED"
         },
-        "complete": false,
+        "complete": true,
         "stop": null,
         "episodes": 12,
         "decisions": 360,
-        "closed_jobs": 50,
-        "closed_actual_sim_s": 39280.0,
-        "charged_sim_s": 39940,
-        "ledger_sha256": "a189aba834372df3e736f708f6931878bddf1cb7a97dc9eac8011637f464f6c8"
+        "closed_jobs": 84,
+        "closed_actual_sim_s": 63480.0,
+        "charged_sim_s": 63480,
+        "ledger_sha256": "cefeba5bbff863606e0f8bb9f9c653f11879672f84e507ca206d145053ee44e6"
       },
       "wm_oracles": {
         "root": "/home/ubuntu/c1switch2_run_oracles_0e790a668b7ec5d8",
@@ -138,7 +135,18 @@
       },
       "fleet_ppo": {
         "root": "/root/c1switch2_run_6e152d9a0b7bf7a4",
-        "state": "UNCLAIMED"
+        "process": {
+          "pid": 918286,
+          "state": "EXITED"
+        },
+        "complete": true,
+        "stop": null,
+        "episodes": 4,
+        "decisions": 120,
+        "closed_jobs": 28,
+        "closed_actual_sim_s": 16320.0,
+        "charged_sim_s": 16320,
+        "ledger_sha256": "f2db8da87c5e1bab60ae18e7bba7c024334f70055c3930793b10f6a8ca1893d4"
       },
       "wm_oracles": {
         "root": "/root/c1switch2_run_oracles_8d6ceccb69058bb0",
@@ -180,11 +188,28 @@
         "ready": true,
         "requests": 98,
         "results": 98,
-        "elapsed_wall_s": 36902.286950588226
+        "elapsed_wall_s": 64983.51807141304
       },
       "bb": {
         "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
-        "state": "UNCLAIMED"
+        "process": {
+          "pid": 918383,
+          "state": "EXITED"
+        },
+        "started": {
+          "pid": 918383,
+          "cap_s": 5378.357716992497,
+          "unix": 1793516189.3431368
+        },
+        "finished": {
+          "pid": 918383,
+          "elapsed_s": 28.955177523195744
+        },
+        "stop": null,
+        "ready": true,
+        "requests": 2,
+        "results": 2,
+        "elapsed_wall_s": 18973.435141801834
       },
       "bb_startup": {
         "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -205,7 +230,7 @@
         "ready": true,
         "requests": 2,
         "results": 2,
-        "elapsed_wall_s": 2928.0728509426117
+        "elapsed_wall_s": 31009.304121494293
       }
     },
     "gpuA": {
@@ -228,11 +253,28 @@
         "ready": true,
         "requests": 90,
         "results": 90,
-        "elapsed_wall_s": 36908.26513051987
+        "elapsed_wall_s": 64991.163949251175
       },
       "bb": {
         "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
-        "state": "UNCLAIMED"
+        "process": {
+          "pid": 466657,
+          "state": "EXITED"
+        },
+        "started": {
+          "pid": 466657,
+          "cap_s": 5378.618305759504,
+          "unix": 1793516188.291644
+        },
+        "finished": {
+          "pid": 466657,
+          "elapsed_s": 29.05172841064632
+        },
+        "stop": null,
+        "ready": true,
+        "requests": 2,
+        "results": 2,
+        "elapsed_wall_s": 18977.140766382217
       },
       "bb_startup": {
         "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -253,7 +295,7 @@
         "ready": true,
         "requests": 2,
         "results": 2,
-        "elapsed_wall_s": 2929.9164850711823
+        "elapsed_wall_s": 31012.81547474861
       }
     }
   },
@@ -263,12 +305,12 @@
     "BB relocated startup terminal STOP: ValueError('current model authority/registry absent')"
   ],
   "cpuQ_resources": {
-    "unix": 1793507083.2886674,
-    "uptime_s": 521361.01,
+    "unix": 1793535166.2525752,
+    "uptime_s": 549443.98,
     "disk": {
       "total": 52721041408,
-      "used": 42575704064,
-      "free": 7873990656
+      "used": 48299991040,
+      "free": 2149703680
     },
     "processes": {
       "649272": {
@@ -278,10 +320,7 @@
         "state": "EXITED"
       },
       "606968": {
-        "state": "S",
-        "start_ticks": 48374316,
-        "uid": 1000,
-        "command": "/home/ubuntu/miniconda3/bin/python -B -m tools.selmappo2.training --shared-root /home/ubuntu/selmappo2_20261101/build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29/pytools --c1-root /home/ubuntu/selmappo2_20261101/build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29/pytools --integration /home/ubuntu/selmappo2_20261101/build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29/INTEGRATION.json --design-sha 09499f2af60311b3690a940dca8d94605d710465afb9c9eb05d5b0a79b23900c --registration /home/ubuntu/selmappo2_20261101/build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29/pytools/REGISTRATION.md --out /home/ubuntu/selmappo2_20261101/build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29/training --workers 12 --continuation "
+        "state": "EXITED"
       }
     },
     "own_outputs": {
@@ -338,8 +377,8 @@
         "files": 118
       },
       "/home/ubuntu/c1switch2_run_e79775aa1f380c25": {
-        "bytes": 30889486,
-        "files": 988
+        "bytes": 44750287,
+        "files": 1217
       }
     }
   },
@@ -364,7 +403,7 @@
   },
   "final_checkpoint_receipts": {
     "SELMAPPO_FINAL.json": true,
-    "SELMAPPO2_FINAL.json": false
+    "SELMAPPO2_FINAL.json": true
   },
   "optional_wm_phys": "OFF: MAIN11:48 final report says registered switching rule FAIL; keep WM2",
   "efficacy_status": "Primary full paired WM-vs-RL panel incomplete; no primary efficacy CI"
