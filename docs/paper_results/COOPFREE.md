@@ -312,12 +312,12 @@ TRAIN exploration credit is not paired dev-policy performance.
 
 <!-- COOPFREE OWNER1511 BEGIN -->
 ## OWNER15:11 live continuation
-Observed UTC 2026-11-01T08:12:17Z.
+Observed UTC 2026-11-01T09:04:51Z.
 cpuQ owned1579328/start53193103 alive=True; four nice19 workers, load admission12.
-Budget: 2,826,693 precharged / 2,392,833 closed-actual sim-s; total cap6,000,000.
+Budget: 2,855,493 precharged / 2,826,693 closed-actual sim-s; total cap6,000,000.
 Corrected u001 is inherited; every subsequent update uses fresh exploration. TRAIN effects are not DEV gains.
 - u002: 420/420 new arms closed; charge431,640; cachedHOLD48.
-- u003: 8/431 new arms closed; charge442,620; cachedHOLD65.
+- u003: 431/431 new arms closed; charge442,620; cachedHOLD65.
 ### Proposal checkpoint u001
 `tools/coopfree/publications/owner1511/policy_hold_u001.pt`
 SHA256 `7b6ff3254311b7f0e8af773cdd51dbfdeca16a8660d0f872c1c8212c8c03e9c1`; receipt `HOLD_UPDATE_001.json`.
@@ -336,5 +336,14 @@ SHA256 `d16bbbf5cfad5e6c7c094dabd7f249adfbc777643b35e9c5c9ca4ebb55147580`; recei
 - sum_D_i: n=39, mean-1979.274, SD7144.206; quantiles[-29323.25727799016, -3566.652163541141, 0.0, 115.6916427105898, 16985.82678918413].
 - C_G: n=39, mean+1221.839, SD5888.892; quantiles[-14252.044054282866, -0.45868709106434835, 0.0, 660.708745656164, 24283.266055319735].
 - Share exactCG>0=0.3333333333333333; sigma[4.5, 0.5] -> [4.5, 0.5].
+### Proposal checkpoint u003
+`tools/coopfree/publications/owner1511/policy_hold_u003.pt`
+SHA256 `ed65707fef67c33b37eddc645890499b62154d3fa47884cff9cfe27803ccc2b6`; receipt `HOLD_UPDATE_003.json`.
+- 156windows/24worlds; exactsoloCG 39windows/19worlds.
+- Executed 0.9231; issued 1.0000; executed/issued 0.9230769230769231; overrides 0.8462.
+- D_G: n=156, mean+87.608, SD3958.969; quantiles[-16882.3046664219, -1207.1720020763896, -0.0059685133819584735, 870.9898476872331, 11277.099290318612].
+- sum_D_i: n=39, mean-296.114, SD5064.113; quantiles[-12552.07263988952, -1846.8236514880264, -0.004952115152264014, 85.4862986420012, 16113.727535690137].
+- C_G: n=39, mean+411.456, SD3946.375; quantiles[-13651.146291759564, -0.09484785609674873, 7.378673763014376e-05, 56.12258040663801, 10643.248926371234].
+- Share exactCG>0=0.5384615384615384; sigma[4.5, 0.5] -> [4.5, 0.5].
 Discovery: observational COOPBEHAV/clustering exports are separate from exact HOLD C_G; do not infer paired native-release mechanisms.
 <!-- COOPFREE OWNER1511 END -->
