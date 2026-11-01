@@ -18,10 +18,18 @@ On the small CPU-only H60/K2/width-4 comparison, wall time fell from **229.25 s 
 future-steps/s**. Team costs, candidate ordering, presence masks, lanes, positions,
 speeds, and accelerations all matched exactly on this comparison.
 
-These are CPU measurements. At the initial capacity check (2026-11-01 21:36:30),
-gpuA was 99% utilized and gpuR 95% utilized. No GPU benchmark was admitted. GPU
-speed-up and GPU numerical qualification must be measured when capacity is
-available; the CPU factor is not a GPU throughput claim.
+The initial capacity check (2026-11-01 21:36:30) found both GPUs occupied, so CPU
+work came first. On recovery at 22:35 both GPUs were idle with no compute processes.
+The requested H120/K4/width34 GPU comparison then passed with **zero cost and
+trajectory error and identical ranking** on both GPUs:
+
+- gpuA: **95.679 → 31.810 s, 3.008x**, 341.14 → 1,026.08 future-steps/s.
+- gpuR: **97.743 → 32.877 s, 2.973x**, 333.94 → 992.78 future-steps/s.
+
+These timings include copying qualification trajectories to the CPU; they compare
+the same fixture, roster, threads, source sampling, and padded candidate width.
+They are evaluator batch measurements, not complete CEM-search plans/hour claims.
+H300/K8/width10 and warm/extended-plan qualification are tracked separately below.
 
 The implementation is opt-in through `GPU_BINDING.json: "speed2": true`.
 Activation requires a new worker's startup cost/ranking/trajectory qualification.
