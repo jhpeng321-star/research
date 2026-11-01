@@ -62,7 +62,6 @@ gates and the final model comparison still precede live dispatch.
 
 <!-- WMPLAN-PROGRESS:BEGIN -->
 ## Current continuation status
-- Model comparison COMPLETE before physics: selected FULL-v4.
-- FULL-v4 helpful agreement 0.500, all12 chosen saving +680.307521; FULL-v5 0.250, +172.703890 veh-s/state.
-- Reused existing predictions; no new quality forecasts or SUMO.
+- Continuation stopped; preserve all completed evidence and existing remote work.
+- No automatic retry or new dispatch is armed. See `wmplan/AUTO_FAILURE.json`.
 <!-- WMPLAN-PROGRESS:END -->
