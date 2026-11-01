@@ -3,18 +3,32 @@
 Branch `c4/rb2-lane`; engineering base FULL-v4 `22cc32f6` (inherited
 round-1 final-delivery HEAD `03c81f91`).
 
-## Round-2 status
-- Source comparison underway against read-only SUMO1.27.1 cache
+## Round-2 status (12:23 update)
+- Source comparison complete against read-only SUMO1.27.1 cache
   `E:/Temp/opencode/sumo-1.27.1-rb-lane`. No downloaded source executed.
 - Required LC continuation: `E:/agent-work/c4-rb-fit/artifacts/rbfit/lane_raw_c5602102891e`.
-  Existing `FittedHiddenState` accepts legal zero LC weights. Recipe rejects
-  fitted LC; `with_motion_posteriors` drops LC: need explicit opt-in continuation.
-- No round-2 candidate ready yet. Learned corrections stay OFF.
+  Population SHA256 `b903fa49fe1f3f1a15428ae48de5c8f86863aa5c5821dbb0acc8275c77d4483f`.
+- Candidate implementation exists; not yet qualified. `configs/wm_phys_rb2_lane.toml`
+  differs only by `fitted_lc=true` and `lane_parameter_directory`. Base recipe
+  stays OFF. Separate LC causal conditioning attaches AFTER independent IDM;
+  native tape saved-ID posteriors never transfer to another export's identities.
+  Sampled-profile causal60s replay initializes wishes by ID. No learned corrections.
+- Source fixes: nondecision lookahead freeze; documented actionStepLength for
+  wishes/decay; source tauRemainder secure speeds for nondefault action steps.
+  No generic changeWish decay exists in this SUMO tag. Full serial negotiation
+  and internal critical leaders remain incomplete; see `docs/RB2_LANE_SOURCE_AUDIT.md`.
+- 84 targeted CPU tests PASS before last recipe-only addition. First FIT969400
+  smoke: pooled IDM/LCdefault547 proposals,15TP/30events; fitted K8mean31.375,
+  3.5TP (precision2.74→11.16%, recall50→11.67%). Count improvement loses recall;
+  no declaration that matching lane dynamics is solved.
+- CPU nice19 diagnostics LIVE: native FIT32 H300 in two disjoint16world shards;
+  development12 four nonnative arms H60 in two disjoint6world shards. K8 persistent
+  LC draws, same pooled IDM, no fitting. Receipts `docs/rb2lane/*_DISPATCH.json`.
 - Exposure: prior rules/morning/handoffs/noon freeze and aggregate evidence read;
   new diagnosis ONLY FIT969400–969431. No reserved outcome files opened for
   round-2 selection. No WMDATA2 access; respect INT exposure quarantine.
 - Resource audit: local nvidia-smi driver unavailable; cpuQ12:01 load12.93.
-  No jobs launched yet; no peer processes signalled.
+  Four own CPU workers now launched; no peer processes signalled. No GPU used.
 - Delivery: physics parity, persistent fitted LC/causal conditioning, FIT
   lane/segment counts/rates/timing and per-predicted-motivation precision/recall
   contributions, exact versions/tests. Full qualification belongs to INT.
