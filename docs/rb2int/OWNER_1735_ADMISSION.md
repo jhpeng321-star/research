@@ -28,6 +28,24 @@ jobs at2/gpuA and1/gpuR. Original source/plan/results/claims remain preserved;
 this is an operational owner-priority amendment, not candidate reselection.
 Any failed or incomplete existing claim must stop continuation rather than retry.
 
+`tools/rb2int/capped_worker.py` now implements that explicit handover. A coordinator
+lock prevents duplicate waiters. After the old children are all exited/complete,
+it signals only the exact original paused CPU dispatcher (pidfd TERM then CONT),
+waits for its actual exit, acquires SUPERVISOR.lock, and revalidates every prior
+claim before any Popen. Prior claims never enter its pending queue. Missing
+supervisor EXIT receipts are recovered from verified K8 markers with returncode
+**null** (not invented0). Source/model/recipe/registration/plan bytes stay frozen.
+New admission is hard-capped2/gpuA and1/gpuR, using the original resource guards,
+5GiB/nice19/single-thread evaluate invocation and no automatic retries.
+
+Remaining reserved FULL-v5 jobs move first; the rest retain their stable original
+order. This amendment uses only seed/model metadata, not outcomes. The dispatcher
+cutoff remains the original Nov2 09:00 for now. `capped_ops` stages only an exact
+committed standalone coordinator, starts it once, and writes a distinct process
+receipt; original supervisor/source/queue receipts remain immutable. The waiting
+coordinator cannot dispatch while the original owns the dispatch lock.12CPU
+guard/claim/priority checks PASS; Ruff PASS. Launch/status receipts follow.
+
 The existing sole collector25240 and cache-only publisher44988 remain owners.
 Collection keys off hash-validated task COMPLETE.json, not supervisor EXIT.json;
 completed draining children can still be collected while dispatchers are paused.
