@@ -1,5 +1,19 @@
 # S-COOPMWM — live checks
 
+## First qualified exact TRAIN plan grade — descriptive only
+- Existing detached reporter published
+  `warm_live/B_EXACT_VIABILITY_dccf60491b28433e4500845a95addb7fd0debe0792e7b71f6bef9c65e00b8d5a.json`.
+  World986025, B-u1, t320: a3-member,180s ordinary-regime MPPI plan,
+  predicted rank1, post-hoc label“new” (no prototype on these members).
+- Exact marginal SUMO saving **+6.6664veh-s** over executed duration+120s;
+  qualified deterministic prefix/CRN, first successful real grade reused as smoke.
+  The corresponding WM prediction was **+240.9659veh-s** at its registered final
+  horizon. These are different registered estimands/horizons and are both shown.
+- **One plan, one world: CI unavailable.** This is selection-conditional exact
+  evidence for that execution, not a B-vs-A learning result or a general viability
+  claim. Losing/unresolved/ungraded plans remain subject to the registered rules.
+  No sealed outcomes are involved. Further exact evidence publishes automatically.
+
 ## MAIN05:48 quota-aware admission — qualified and registered
 - **DEPLOYED:** quota broker3514272/start58480523 and detached handover
   supervisor3514691/start58480999 are alive/no errors at unix1793570536.

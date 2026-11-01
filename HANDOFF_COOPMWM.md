@@ -1,5 +1,13 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+FIRSTEXACTGRADE: reporterexisting3357311 alive/noerrors, firstpublishedreport
+B_EXACT_VIABILITY_dccf6049...: world986025/t320,3members,D180,rank1,new/ordinary,
+exactmarginalsaving+6.666416veh-s vsWM+240.965869 (differentregisteredhorizons).
+ONEworld/ONEplan=>NO CI/generalviabilityclaim. ExactsmokePASS; gradeonlylearning
+rules retained. At1793571003 threeexecutedstarts/threegradereceipts(statusmixed),
+reportstillfirstqualifiedone; noBu1optimizerupdate yet. Originalreporter/observers
+publishsubsequentexactreports; neverduplicate. Quota boundarywatch remainslive.
+
 MAIN0548 DEPLOYED: quota broker3514272/start58480523, transitionwatch3514691/
 start58480999 cpuQ, bothS/noerrors at1793570536. Originalbroker3426521 exited by
 verifiedPID; ALLoriginalGPUowners/claims preserved/noinferenceretry. Grader3427015
