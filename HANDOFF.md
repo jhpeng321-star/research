@@ -18,10 +18,13 @@ Detailed prior receipts: `docs/paper_results/RBEVAL_HANDOFF_ARCHIVE_COMPLETE.md`
 - Verified160 task hashes,15 original report hashes,7,200 BIC decisions; corrected
   point-data audit70,488 CSV rows/max cross-platform numeric delta1.0914e-11.
   Verification:11 scorer+4 core+1 completion+2 transfer tests PASS.
-- Standby **753102** remains bounded through11:30+08, preserving/verifying the
-  original report. No replacement inference/finalizer/watcher launched.
-- RUNA owns A2/C2; RUNB B2; INT FULL-v1/v3/v4 and WM2-HDV60. Last EVAL snapshot:
-  A2=67,B2=45,FULL-v1=73,FULL-v3=62,FULL-v4=19 tasks (incomplete,not rankings).
+- Standby **753102** completed its bounded support through11:30+08; final log
+  verifies all160 tasks, frozen sources and original report hashes. Workers and
+  original finalizer have exited. Resume17:07+08 launched no replacement jobs.
+- Read-only resume snapshot: A2=160,FULL-v4=160 tasks COMPLETE; B2=157
+  (worker exit1,no retry); C2=102 (INT-owned cutoff). FULL-v1/v3 retain81/87.
+  INT's final publication owns candidate comparisons and C2 ownership transfer:
+  `E:/agent-work/c4-rb-int/docs/rbint/FINAL_DELIVERY.md`. No variant redispatch.
   `python -B -m tools.rbeval.ops candidate-status` checks both hosts read-only.
 
 ## Exact future-builder-capable candidate CLI
@@ -58,3 +61,14 @@ retrieves original remote receipts. `docs/paper_results/RBEVAL_DESIGN.md` and ce
 registration5697 retain the pre-scoring freeze. Small cells, missing speed support
 and one factual continuation per world limit qualification; no training tonight.
 Shared coordination: `E:/agent-work/rb-shared/EVAL_WM2_COMPLETE_AND_CI_CORRECTION.md`.
+
+## Fresh-session reconciliation — 2026-11-01 17:07+08
+- Clean HEADdf24b624 retained; owner registration/program, frozen design,
+  WMBREAKDOWN gate and RUNA hook request reread. The request is already resolved.
+- `ops status`: WM2 four40-task shards COMPLETE, finalizer complete; support's
+  last11:30 receipt REPORT_READY/report_verified=true. No EVAL process remains.
+- `ops candidate-status`: A2/FULL-v4 complete; preserve B2 FAILED and C2 cutoff,
+  plus all superseded sources. Both GPUs currently busy with other work.
+- Requested support cutoff and INT11:45 delivery have passed. Final comparison:
+  `E:/agent-work/c4-rb-int/docs/paper_results/WMPHYS_MORNING.md`; source manifest
+  `E:/agent-work/c4-rb-int/docs/rbint/noon/20261101T113555+0800/PUBLICATION.json`.
