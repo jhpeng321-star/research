@@ -1,3 +1,16 @@
+# S-RB2-CAL — 2026-11-01 (active)
+
+Branch `c4/rb2-cal`, base frozen FULL-v4 `22cc32f6`. Design frozen before fit:
+`docs/paper_results/RB2_CAL_DESIGN.md`. Implementing motion-likelihood power,
+Gamma-rate dispersion and hierarchical entrant-mix concentration fitted ONLY
+on native FIT969400–969431. Outcome diagnostics restricted to dev969420–969431.
+No reserved raw tasks opened. Owner-required historical aggregate reports were
+read (disclosed exposure); they cannot qualify an independent final comparison.
+Local NVIDIA driver unavailable; no GPU jobs launched. Existing code/evidence
+below is inherited INT history, not this worker's current result.
+
+---
+
 # S-RB-INT FINAL — 2026-11-01
 
 Branch `c4/rb-int`. Retain all prior work and immutable jobs. Earlier detail:
