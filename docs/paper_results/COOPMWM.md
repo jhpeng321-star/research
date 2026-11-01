@@ -318,3 +318,11 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - H60 WM/exact C_G -1.19209e-06/0; D_i [8.344650268554688e-07, 4.76837158203125e-07]/[0.0, 0.0]; zero C_G is a tie, not sign evidence.
 - H600 conditional WM K8 variance: joint-team advantage 1.31309e+08, paired C_G 7.21099e-12 veh-s²; not empirical SUMO noise.
 - H600 WM/exact C_G -1.19209e-06/0; D_i [8.344650268554688e-07, 4.76837158203125e-07]/[0.0, 0.0]; zero C_G is a tie, not sign evidence.
+
+## Live publication — 2026-11-01T10:55:12.537480+00:00
+- Charged 278,840/6,000,000 sim-s; closed jobs 225/234; pending WM 1.
+
+### S0_A_UPDATE_004.json
+- A update4, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
+- Per-bucket trust: .
+- TRAIN GAE variance 5.03716e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_004.json`.
