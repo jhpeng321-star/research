@@ -232,9 +232,10 @@ python -B -m tools.coopmwm.speed2_ops wait parity-new,ramp-new --wait-seconds 60
 python -B -m tools.coopmwm.speed2_ops status parity-new
 ```
 
-Use a fresh tag per attempt. All commands above hide CUDA before starting Python,
-run inference/tests only, and write solely to the WMSPEED2 root. The helper does
-not start GPU qualification or training.
+Use a fresh tag per attempt. The commands above hide CUDA before starting Python,
+run inference/tests only, and write solely to the WMSPEED2 root. GPU probes need
+an explicit `--gpu` and pass the idle-device admission check; the helper never
+starts training.
 
 ## Registered hot-swap recipe for S-COOPMWM
 
@@ -426,3 +427,57 @@ checker rejected two-chunk versus one-chunk shapes. It is retained as `wide68` a
 does not qualify a width change. The harness now aligns future-major action rows
 before comparing different chunk widths, and writes costs/timings before that
 comparison so a diagnostic failure cannot lose completed numerical evidence.
+
+### Updated immutable release and hot-swap recipe
+
+**Recommended GPU source: `fcc50296`.** Both hosts have
+`/root/coopmwm20261101_wmspeed2/release_transfersfcc50296`, with identical
+`SOURCE_MANIFEST.json` SHA256
+`b7a279ad20aef6df874b4700dadfdd692ff857fbd491135399f39cc5f3bfc5a2`.
+Receipts are `WMSPEED2_gpu{A,R}_release_transfersfcc50296.json`.
+
+Use the exact drained-boundary operational-root/broker/admission steps of the
+earlier recipe, substituting this release and its manifest hashes. Add
+`"speed2_transfers": true` to its binding. Preserve the registered34/10 phase
+widths, memory fraction, original deadline, full model/WMTEACH/cost hashes, and
+the owner's new search module. Stage **all** files in the manifest, including
+`speed2_transfers.py`. A port into the owner's MPPI source needs the evaluator,
+`speed2_transfers.py`, `speed2_runtime.py`, and service/diagnostic flag propagation;
+do not replace the owner's separately amended search with this CPU36 base search.
+
+Require all four cold/warm startup receipts to have0.0 errors and identical
+ranks/draws before READY/admission. They now enforce the exact gate automatically
+when the transfer flag is true. Rollback is the earlier hash-bound release at a
+new drained boundary, with its own binding; completed requests are not replayed.
+The GPU binding does not enable the exploratory graphs or wider batches.
+
+The matched H120 profiler confirms the intended transfer reduction over four
+sampled steps: stream synchronizations **5,777 →3,552 (38.5% fewer)** and async
+copies **6,879 →4,654 (32.3% fewer)**. Kernel launch counts remain similar
+(32,980 →32,877); scalar reads fall2,756 →2,484 and `nonzero` stays548. Thus this
+add-on removes substantial newborn transfer overhead, not all inherited source
+admission synchronization. Receipt: `WMSPEED2_gpuR_transfersprof120.json`.
+
+### Wider candidate batch and final recovery state
+
+The repaired `wide68v2` trial passes exact0 costs, all trajectories and identical
+rankings/draw IDs for **68 distinct smooth three-CAV plans** on warm GPU A at
+H120/K4. Two width34 chunks take **87.988s**, one width68 chunk **73.460s**:
+**1.198x** additional batching gain,741.92 →888.65 future-steps/s. This trial
+isolates width on the eager base fast path; it is not a measurement of combining
+width68 with transfers. It batches candidates within one query, not independent
+query histories. Receipt: `WMSPEED2_gpuA_wide68v2.json`.
+
+Keep production34/10 until the owner separately admits its new search/batch size.
+For a width68 GPU-A amendment, use `batch_width_by_K["4"] = 68` in a fresh binding,
+retain the registered K8 width, and require full-roster cold/warm startup exact
+qualification and a memory admission measurement on that source. GPU R width68
+and cross-query fusion are not qualified by this trial.
+
+At23:53 both GPU inventories show0% utilization,1MiB used, and no compute process.
+All GPU experiments from this session have ended. Inventory receipts are
+`WMSPEED2_gpu{A,R}_final_recovery_inventory.json`. Two inherited CUDA-hidden CPU
+comparisons remain alive on GPU A and were preserved without duplication:
+`parity300` PID552087/start892109765 and `parity60wide`
+PID552073/start892109667. Their immutable roots remain under the WMSPEED2 root;
+they are not dependencies of the completed CPU/GPU qualifications above.

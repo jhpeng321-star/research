@@ -173,9 +173,27 @@ print(json.dumps(dict(host={host!r},tag={tag!r},trace_sha256=hashlib.sha256(p.re
     print(json.dumps(value,indent=2))
 
 
+def inventory(tag,host):
+    value=json.loads(ssh.remote(host,f'''import pathlib,json,subprocess,time
+root=pathlib.Path({ROOT!r});runs=[]
+for p in sorted(root.glob('*/OWNER.json')):
+ o=json.loads(p.read_text());s=pathlib.Path('/proc')/str(o['pid'])/'stat'
+ fields=s.read_text().split() if s.exists() else []
+ alive=bool(fields and fields[21]==o['start_ticks'] and fields[2]!='Z')
+ done=[n for n in ('PARITY','QUALIFICATION','EXPERIMENT','GPU_PROFILE','BASELINE','TESTS','FAILED') if (p.parent/(n+'.json')).exists()]
+ runs.append(dict(tag=p.parent.name,owner=o,alive=alive,process_state=fields[2] if alive else None,done=done))
+print(json.dumps(dict(host={host!r},root=str(root),unix=time.time(),runs=runs,
+ nvidia_smi=subprocess.check_output(['nvidia-smi'],text=True),new_sumo_sim_s=0)))
+''',timeout=30))
+    from .storage import write
+    target=LOCAL/'docs/paper_results/coopmwm'/f'WMSPEED2_{host}_{tag}_inventory.json'
+    write(target,value)
+    print(json.dumps(dict(receipt=str(target),alive=[r for r in value['runs'] if r['alive']],nvidia_smi=value['nvidia_smi'])))
+
+
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
-    p.add_argument('mode', choices=('launch', 'status','wait','collect','stage-release','trace-summary'))
+    p.add_argument('mode', choices=('launch', 'status','wait','collect','stage-release','trace-summary','inventory'))
     p.add_argument('tag')
     p.add_argument('--compact', action='store_true')
     p.add_argument('--job-mode',choices=('profile','parity','tests','qualification','gpu-profile','gpu-experiment','table-test'),default='profile')
@@ -200,4 +218,5 @@ if __name__ == '__main__':
         for tag in a.tag.split(','):collect(tag,a.host)
     elif a.mode == 'stage-release':stage_release(a.tag,a.host)
     elif a.mode == 'trace-summary':trace_summary(a.tag,a.host)
+    elif a.mode == 'inventory':inventory(a.tag,a.host)
     else:wait(a.tag.split(','),a.wait_seconds)
