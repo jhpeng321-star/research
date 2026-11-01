@@ -1,5 +1,12 @@
 # Owner16:28 interim continuation — 2026-11-01
 
+**Numerical CI follow-up587416ad:** see CI_NUMERICAL_REPAIR.md. First16:46interim
+is preserved; constant-column equal-endpoint intervals become NA. Old local
+publisherV1 has exited; receipt-checked waiter30228 waits for collectorV2's source
+guard exit, then starts sole collectorV3 and publisherV2. No remote supervisor
+change, forecast retry or overlapping collector. Below, final guard handover now
+applies to collectorV3; earlierV2 ownership is retained historical context.
+
 ## Queue / ownership
 
 Both existing supervisors remain untouched and exclusive. They load their pending

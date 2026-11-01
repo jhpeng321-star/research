@@ -1,5 +1,18 @@
 # Resume here — INT owned development jobs, sourceb2df7458
 
+## Latest16:53 local continuation correction — overrides collector notes below
+
+Both original remote supervisors remain untouched. First INTERIM5512f402 published
+two matched worlds969436/969590; final evaluation continues. CI-only correction
+587416ad fixes spurious numerical variance for constant bootstrap support (36CPU
+PASS/Ruff). Original cache publisher24320 EXITED on expected source guard; sole
+collector9660 stops at its next ordinary source check, before collecting again.
+Recovery waiter30228/create_filetime134379968469379503 is LIVE; exclusive
+`runs/rb2int_ci_resume_v1`. It verifies both exact expected STOPs and process exits
+without signals, then starts finishV3 and interimV2 ONCE using the same cache.
+Do not restart old collectors or add another dispatcher. Read its COMPLETE/STOP
+and new PROCESS receipts before action; `CI_NUMERICAL_REPAIR.md` explains handover.
+
 Read this and HANDOFF.md before any launch. **FINAL EVALUATION IS RUNNING.**
 Do not launch either supervisor again.
 

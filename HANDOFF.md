@@ -2,6 +2,18 @@
 
 ## Owner16:28 continuation — read before any new collector or dispatch
 
+**16:53 update:** first INTERIM committed5512f402, two matched K8 worlds969436/969590
+(1900/.05); v5−v4 CRPS+206/+2333/+11428veh-s, HDV60−8.7m. Not model selection.
+CI numerical correction587416ad supersedes constant-column equal-endpoint CIs by
+NA; all points unchanged.36CPU checks PASS9.01s/Ruff PASS. Local publisher24320
+has EXITED on its expected source guard. Original collector9660 will stop on its
+next source check. **Recovery waiter30228/create_filetime134379968469379503 LIVE**
+at `runs/rb2int_ci_resume_v1`: waits for both exact expected STOPs AND actual owned
+process exits, then starts sole collectorV3 + cache-only publisherV2 ONCE. No PID
+signals, no overlapping collectors, no inference/transfer replay. Read
+`docs/rb2int/CI_NUMERICAL_REPAIR.md` and recovery COMPLETE/STOP before any action.
+After handover the final report-guard transition binds collectorV3, notV2.
+
 Recovered clean at e6dd0c2a; recovery c99825d8, interim tooling690019ab. Both original
 supervisors healthy/no failures at16:30; collector9660 remains alive and exclusively
 collects remote forecasts. No hot-reorder interface exists in the live supervisors.

@@ -1,5 +1,13 @@
 # WM-PHYS v5 — integration progress; final comparison pending
 
+**INTERIM16:46: on the first two matched worlds in one replicated traffic cell,
+v5 has worse delay CRPS than v4 (+206/+2,333/+11,428veh-s at120/300/600s), while
+HDV60 position error improves by8.7m.** This small available slice cannot select a
+model or authorize a planner/cooperation switch. Complete reserved8 and the final
+registered comparison remain pending. Constant-column equal-endpoint CIs in the
+first snapshot are superseded by NA after a numerical-zero variance correction;
+point estimates are unchanged. See the detailed INTERIM section below.
+
 **The four fixes are integrated, but round-2 performance is not yet established.**
 FULL-v5 and FULL-v5-LP pass the local physical integration tests and two-world
 60s recorded-start smoke. FULL-v5 also passes the all-five-arm600s development
