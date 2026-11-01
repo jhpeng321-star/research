@@ -1,5 +1,19 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+MAIN0718 RESUMED at9bb94362; full296linebrief read. Original A48/B1/R0,
+B3551873/R3551874/grader3427015 adopted/noSTOP. Recoveredfairness CPUqualified/
+registered0c36d106, committeddeaa5c47 andDEPLOYEDbroker3706352/start58959212,
+unix1793575314; fourassignedGPUclaimsadopted/noinference replay. Old3514272
+verifiedterminated; statusCENTRE_FAIR_STATUS1793575382PASS. Updateobservers to
+recogniseCENTRE_FAIR_BROKER_DISPATCH (training/GPU/graderunchanged).
+IMPORTANT0718CONTRASTCLARIFICATION: originaltwozero forecasts K8H420 predict
+saving_vs_policyEXACT0/centre_open_loop_gapEXACT0; +164.137/+26.225 arevsMAPPO,
+notmarginalplangains. ALLtopkfinalistsvsown0. ExactmarginalzeroAGREESwithWM.
+CentralREGISTRATIONnotified; doNOTsilentlychangeMAIN2239acceptance rule.
+Independentfinalcommand-chain auditongoing: WM alreadyinferred_cap/SUMOIDM,
+plantdirect_target1s/slowDownmaystillneedmirror. Sourcesandobservablefixtures
+inCOMMAND_CHAIN_{SOURCE*,LAWS*,NULL_FIXTURES}. No numericalfix/GPUgateclaimed.
+
 CURRENTTELEMETRY1793574892: `episode_progress --current` nowtracksB-u2/R-u1,
 notstaleu1-only; actualpayloadCPU1PASS/realremotePASS/noSUMO. B17/24closed,
 sevenopenT310..400; R21/24closed, THREEcentrequeriesWAIT3234..3293s.
