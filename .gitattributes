@@ -97,12 +97,16 @@ R9_GATE2.md text eol=lf
 /docs/rb2lphys/**/*.csv text eol=lf
 
 # RB2-INT prospective registrations and candidate recipes use exact byte hashes.
-/docs/rb2int/*.json -text
-/docs/rb2int/**/*.json -text
-/docs/rb2int/**/*.csv -text
+# Machine receipts may intentionally use Windows CRLF; preserve SHA-bound bytes
+# while recognizing CR as an end-of-line marker in git diff --check.
+/docs/rb2int/*.json -text whitespace=cr-at-eol
+/docs/rb2int/**/*.json -text whitespace=cr-at-eol
+/docs/rb2int/**/*.csv -text whitespace=cr-at-eol
 /docs/rb2int/*.md text eol=lf
 /configs/wm_phys_v5*.toml text eol=lf
 /tools/rb2int/*.py text eol=lf
+/docs/paper_results/WMPHYS_V5.md -text whitespace=cr-at-eol
+/docs/paper_results/WMPHYS_V5*.json -text whitespace=cr-at-eol
 
 # Preserve SHA-bound S-C2H60 source and receipt bytes on Windows checkouts.
 /configs/c4_policy14_c2h60.toml -text
