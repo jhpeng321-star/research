@@ -27,7 +27,10 @@ proper-score-fitted outcome scales1.498/1.219/1.579 at120/300/600s.
 OOF paired90% coverage only71.7/65.8/68.3%; a scalar cannot solve the task.
 These output-scale diagnostics ARE NOT simulation or a selectable model.
 Reliability SVG/CSV and exact summaries in `rb2cal/dev_fullv4_v1/`.
-Code/evidence commit `0711a026` (design `c20b82ac`). Dev12-only GPU canary
+Code/evidence commit `0711a026` (design `c20b82ac`); probability/audit/collector
+commit `0782c9bf`. Later strict malformed-posterior validation adds no change on
+the valid frozen artifact; the running physical comparison stays source0711a026.
+Dev12-only GPU canary
 PASS187.57s, own438985 EXITED, runtime
 `/root/rbeval20261031/rb2cal/code_0711a02646bb`, output
 `/root/rbeval20261031/rb2cal/dev_v1`; all five arms/H600, world969420/k0.
@@ -47,13 +50,19 @@ The full-data map implies NO0.8switches. OOF selected calls2/0/1, wins2/NA/0;
 physical candidate or integrated physics: source fingerprints reject mismatch.
 Refit only on new dev12 forecasts after integration. `rb2cal/INTEGRATION.md`
 documents APIs, switches, exact exposure limits and final CI requirements.
+K8 central intervals remain descriptive: continuous iid range reference7/9,
+not90%; saved central/range coverage and proper scores stay separate.
 
 Finite CPU continuation/collection tool `tools/rbcal/finish.py` is prepared;
 it waits for successful own CPU canary, launches its two-worker panel ONCE,
 then only after all96tasks fetches/validates/scores, refits the probability map
 and publishes `rb2cal/COMPLETION.json` + `DEVELOPMENT_PHYSICAL_V1_CPU.md`.
 Deadline Nov2 09:00+08; no scientific retries or peer PID control. Collector
-launch receipt will be added below; until completion no nominal traffic-coverage claim.
+LIVE local33284/create_filetime134379810406680562; exclusive receipts in
+`runs/rb2cal_completion_cpu_v1/{PROCESS,START,TERMINAL}.json` and `poll.jsonl`.
+First poll verified CPU canary alive,0tasks,noSTOP; no GPU continuation.
+Until completion no nominal traffic-coverage claim. Integrator can read
+`rb2cal/COMPLETION.json` after collection; no second collector is needed.
 No reserved raw tasks opened. Owner-required historical aggregate reports were
 read (disclosed exposure); they cannot qualify an independent final comparison.
 Local NVIDIA driver unavailable; gpuA12:02 audit idle (49139MiB free), cpuQ

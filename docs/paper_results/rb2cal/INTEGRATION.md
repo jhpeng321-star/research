@@ -79,6 +79,13 @@ python -B -m tools.rbcal.probability --report REPORT/physical --out NEW_MAP
 - No full-world CI is published from singleton cells; SVG deciles have support
   counts and no CI bars. Replicate every scored demand×penetration×split cell
   using recorded worlds not used in this fit before claiming valid final CIs.
+- K8 empirical central intervals are descriptive, not finite-sample nominal
+  prediction guarantees. Even a correct continuous iid predictive law gives
+  inclusive sample min–max coverage only `(K-1)/(K+1)=7/9`; its interpolated
+  central90% interval is narrower. Do not relabel K8 range as a90% interval or
+  qualify a law from coverage alone. The saved CSV reports range and quantile
+  coverage separately; proper scores and separately calibrated interval
+  estimators are needed alongside larger-K or replicated evaluation.
 
 ## Evidence pointers
 
