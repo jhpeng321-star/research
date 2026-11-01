@@ -58,7 +58,10 @@ class Controller:
                         targets=targets(sample),group=members,setting=(int(now)//10)%4)))>2)
                     sampling=gate.sampling(self.gate_path) if available else {'merge-dense':0.,'ordinary':0.}
                 if route(sample,rows,self.beta,self.generator,sampling):
+                    import time
+                    begin=time.monotonic()
                     proposal=self.guide(rows,commands,now,sample)
+                    sample['behaviour']['query_wall_s']=time.monotonic()-begin
                     sample=(gate.execute(self.gate_path,sample,proposal,self.beta,self.generator)
                             if self.gate_path else execute(sample,proposal,self.beta,self.generator))
             self.targets=targets(sample); self.until=now+sample['window']

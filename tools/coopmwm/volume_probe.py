@@ -18,7 +18,7 @@ def run(root):
     results=[]
     for count,K in ((2,8),(4,4),(4,8)):
         torch.cuda.reset_peak_memory_stats();start=time.monotonic()
-        values=futures(rt,records[:count],tuple(range(K)))
+        values=futures(rt,records[:count],tuple(range(K)),trim_absent=True)
         torch.cuda.synchronize();wall=time.monotonic()-start
         write(root/f'FUSED_{count}_K{K}.json',values)
         assert all(v['population_audit']['finite'] and v['population_audit']['conserved'] for v in values)
@@ -32,7 +32,7 @@ def run(root):
             # Once per worker, full K8 and indexed single, actual heterogeneous windows.
             for r,v in zip(records[:count],values):
                 ns=adapted_futures((300,));ns['_actions']=proposal_candidates(r)
-                with executor_adapter(300):single=ns['futures'](rt,dict(r),indices=(0,))
+                with executor_adapter():single=ns['futures'](rt,dict(r),indices=(0,))
                 err=max(abs(fs[0]['team_delay']-single['futures']['300'][a][0]['team_delay']) for a,fs in v['futures']['300'].items())
                 parity.append(err)
             assert max(parity)<=1e-3,parity

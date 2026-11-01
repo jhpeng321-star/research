@@ -12,6 +12,26 @@ from tools.coopnative.test_cpu import rows
 
 
 class VolumeCPU(unittest.TestCase):
+    def test_trim_restores_virgin_defaults_before_newborn_insertion(self):
+        class Model:
+            def rollout(self,state,*,n_steps,cav_controller,history):
+                out=cav_controller(state)
+                return dict(state=dict(state,s_m=out[...,0]),history=history+1,
+                            positions=out[...,0][:,None])
+        proxy=FusedModel(Model(),1,trim_absent=True);proxy.local.index=0
+        state=dict(present=torch.tensor([[True,False,False,False]]),
+                   s_m=torch.tensor([[2.,7.,8.,9.]]))
+        history=torch.arange(8.).reshape(1,4,2)
+        def cb(s):return torch.stack((s['s_m']+1,s['s_m']*0,s['s_m']*0,s['s_m']*0),-1)
+        cb.native_lane_mask=lambda s:s['present']
+        v=proxy.rollout(state,n_steps=1,cav_controller=cb,history=history)
+        self.assertTrue(torch.equal(v['state']['s_m'],torch.tensor([[3.,7.,8.,9.]])))
+        self.assertTrue(torch.equal(v['history'][:,1:],history[:,1:]))
+        # The inherited entry phase can insert into a restored virgin slot.
+        v['state']['present'][0,3]=True
+        w=proxy.rollout(v['state'],n_steps=1,cav_controller=cb,history=v['history'])
+        self.assertEqual(float(w['state']['s_m'][0,3]),10.)
+
     def test_fused_forward_preserves_private_windows_slots_and_clocks(self):
         class Model:
             training=False

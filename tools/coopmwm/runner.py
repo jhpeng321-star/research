@@ -222,7 +222,13 @@ def proposal_report(episodes):
     return dict(windows=len(bs),queries=sum(b['route']=='wm' for b in bs),
         accepted=sum(b.get('proposal_accepted',False) for b in bs),
         executed=sum(b['executed'] for b in bs),
-        by_bucket={o+'|'+r:dict(proposed=sum(b.get('option')==o and b['regime']==r for b in bs),
+        query_wait_wall_s=sum(b.get('query_wall_s',0.) for b in bs),
+        by_regime={r:dict(queries=sum(b['route']=='wm' and b['regime']==r for b in bs),
+            accepted=sum(b.get('proposal_accepted',False) and b['regime']==r for b in bs),
+            executed=sum(b['executed'] and b['regime']==r for b in bs)) for r in ('merge-dense','ordinary')},
+        by_bucket={o+'|'+r:dict(queries=sum(b.get('queried_option')==o and b['regime']==r for b in bs),
+            accepted=sum(b.get('proposal_accepted',False) and b.get('option')==o and b['regime']==r for b in bs),
+            proposed=sum(b.get('option')==o and b['regime']==r for b in bs),
             executed=sum(b.get('option')==o and b['regime']==r and b['executed'] for b in bs))
              for o in ('O1','O2','O3','O4') for r in ('merge-dense','ordinary')})
 

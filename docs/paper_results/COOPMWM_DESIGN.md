@@ -13,7 +13,7 @@
 12. Reuse PPO4epochs/Adam3e-4/clip.2/KL.045; gamma exp(-10/600),lambda exp(-10/1200).
 13. Critic GAE e-folding400s; complete900s task after300s warmup, terminal0.
 14. WM fixed FULL-v4 source22cc32f6; later qualified v5 requires a new registered arm.
-15. Reuse WMTEACH futures/executors; fuse private windows at one-step model forward; H300/960 slots.
+15. Reuse WMTEACH futures/executors; fuse private windows at one-step forward; original1600-slot draws preserved.
 16. R=B except uniform AVAILABLE O1-O4 proposer, no WM/saving filter; same executors/W10 setpoints.
 17. Roster only; joint FIT driver prior/uniform32FIT source: integer round(rate*t) pseudo-counts/exposure t.
 18. Cold memory/unobserved source pseudo-exposure disclosed; not causal request conditioning; no future inputs.

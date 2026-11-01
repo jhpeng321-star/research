@@ -37,13 +37,14 @@ def validate(record):
 
 
 @contextlib.contextmanager
-def executor_adapter(horizon=600):
+def executor_adapter(horizon=600,resize_cache=False):
     """Use the original option executor; only its target/request decoder changes."""
     from tools.leverprobe import intervention
     from tools.coopfree.policy import requests
     from tools.wmteach import runtime
     old_targets,old_requests=intervention.targets,intervention.requests
     old_prepare=runtime.prepare_batch
+    old_controller=runtime.option_controller
     tree=ast.parse(inspect.getsource(old_prepare));counts={300:0,960:0}
     class Capacity(ast.NodeTransformer):
         def visit_Constant(self,node):
@@ -55,12 +56,29 @@ def executor_adapter(horizon=600):
     if counts!={300:1,960:1}:raise ValueError('frozen entrant capacity ABI changed')
     ns=dict(old_prepare.__globals__);exec(compile(tree,'<coopmwm-H600-entrant-capacity>','exec'),ns)
     runtime.prepare_batch=ns['prepare_batch']
+    if resize_cache:
+        tree=ast.parse(inspect.getsource(old_controller));matches=0
+        for node in ast.walk(tree):
+            if isinstance(node,ast.FunctionDef) and node.name=='injected':
+                matches+=1
+                node.body[-1:-1]=ast.parse('''
+if raw_override.shape != accel.shape:
+    extra=max(0,accel.shape[1]-raw_override.shape[1])
+    raw_override=torch.nn.functional.pad(raw_override,(0,extra))[:,:accel.shape[1]]
+    mask_override=torch.nn.functional.pad(mask_override,(0,extra))[:,:accel.shape[1]]
+''').body
+        assert matches==1,'frozen executor cache ABI changed'
+        ast.fix_missing_locations(tree)
+        controller_ns=dict(old_controller.__globals__)
+        exec(compile(tree,'<coopmwm-executor-virgin-slot-cache>','exec'),controller_ns)
+        runtime.option_controller=controller_ns['option_controller']
     intervention.targets=lambda action,rows:action['targets']
     intervention.requests=lambda action,rows,fixed:(requests(fixed,rows,zone=None),'setpoint')
     try:yield
     finally:
         intervention.targets,intervention.requests=old_targets,old_requests
         runtime.prepare_batch=old_prepare
+        runtime.option_controller=old_controller
 
 
 def adapted_futures(horizons=HORIZONS):
@@ -146,7 +164,7 @@ def propose(rt,record):
         return dict(accepted=False,option=None,targets={},expected_saving=0.,record_sha256=digest(record))
     ns=adapted_futures((300,));ns['_actions']=acts
     adapted=dict(record)
-    with executor_adapter(300):
+    with executor_adapter():
         chunks=[ns['futures'](rt,adapted,indices=tuple(range(i,i+2))) for i in range(0,8,2)]
     if any(not c['population_audit']['finite'] or not c['population_audit']['conserved'] for c in chunks):
         raise ValueError('proposal conservation/finite check failed')
@@ -173,7 +191,7 @@ def canary(rt,record,result):
     if proposal and not result.get('futures'):return dict(deferred=True,reason='no available inherited option')
     horizons=(300,) if proposal else HORIZONS
     ns=adapted_futures(horizons);ns['_actions']=acts
-    with executor_adapter(max(horizons)):single=ns['futures'](rt,dict(record,setting=record.get('setting',0)),indices=(0,))
+    with executor_adapter():single=ns['futures'](rt,dict(record,setting=record.get('setting',0)),indices=(0,))
     futures={'300':result['futures']} if proposal else result['replay']['futures']
     worst=max(abs(single['futures'][str(h)][a['id']][0]['team_delay']-
         futures[str(h)][a['id']][0]['team_delay']) for h in horizons for a in acts)

@@ -32,9 +32,11 @@ def main(root):
             from .fused import futures
             for r in records:
                 validate(r)
+                used=sum(1 for _ in root.glob('forecasts/*/CLAIM.json'))
+                assert used<identity['proposal_cap'],'registered proposal cap reached'
                 assert not (root/'forecasts'/r['state_id']/'CLAIM.json').exists(),'no duplicate inference'
                 write(root/'forecasts'/r['state_id']/'CLAIM.json',dict(owner=owner,unix=time.time()))
-            values=futures(rt,records,tuple(range(identity['K'])))
+            values=futures(rt,records,tuple(range(identity['K'])),trim_absent=True)
             results=[]
             for r,v in zip(records,values):
                 assert v['population_audit']['finite'] and v['population_audit']['conserved']

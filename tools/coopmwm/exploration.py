@@ -62,6 +62,7 @@ def route(sample, rows, beta, generator,sampling=None):
 
 def execute(sample, proposal, previous, generator):
     b = sample['behaviour']
+    b['queried_option']=proposal.get('option')
     if not proposal['accepted']:
         b['rejection'] = proposal.get('reason', 'nonpositive saving or unavailable')
         return sample

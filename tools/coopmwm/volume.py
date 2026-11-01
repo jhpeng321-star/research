@@ -72,8 +72,8 @@ print(json.dumps(dict(records=records,selection='first four chronological availa
 
 def bench_launch(host):
     from .storage import read
-    root='/root/coopmwm20261101_volumeprobe3'
-    assert not (ops.EVIDENCE/f'VOLUME_PROBE3_{host}_DISPATCH.json').exists()
+    root='/root/coopmwm20261101_volumeprobe6'
+    assert not (ops.EVIDENCE/f'VOLUME_PROBE6_{host}_DISPATCH.json').exists()
     files=ops.sources()
     files['FROZEN_COSTS.json']=ops.ssh.remote('gpuA',"import pathlib;print(pathlib.Path('/root/coopmwm20261101_dual2/FROZEN_COSTS.json').read_text())",timeout=20).strip()
     files['INPUTS.json']=json.dumps(read(ops.EVIDENCE/'VOLUME_INPUTS_1854.json'))
@@ -90,7 +90,7 @@ v=dict(pid=p.pid,start_ticks=pathlib.Path(f'/proc/{{p.pid}}/stat').read_text().s
 with (r/'DISPATCH.json').open('x') as f:json.dump(v,f)
 print(json.dumps(v))
 ''',timeout=30))
-    write(ops.EVIDENCE/f'VOLUME_PROBE3_{host}_DISPATCH.json',value);print(json.dumps(value))
+    write(ops.EVIDENCE/f'VOLUME_PROBE6_{host}_DISPATCH.json',value);print(json.dumps(value))
 
 
 def capacity_register():
@@ -104,6 +104,19 @@ def capacity_register():
     with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
     write(ops.EVIDENCE/'VOLUME_CAPACITY_REGISTRATION_1854.json',dict(line=line,new_sumo_sim_s=0))
     print(line.strip())
+
+
+def trim_register():
+    from .protocol import REGISTRY,checked
+    line=('\nS-COOPMWM 18:54 MASKED-SLOT QUALIFICATION REGISTERED:960-slot source-capacity candidate '
+          'FAILED parity (max3.50637veh-s), rejected before training; retain original1600 source/hidden draws. '
+          'Next engineering probe trims only universally absent TRAILING slots from each fused model.rollout(n_steps=1), '
+          'then restores the original full slot state/history BEFORE the inherited insertion/observer; '
+          'no roster reordering, source capacity, RNG, controller, model or grading change. '
+          'Same registered2/4-windowK8/K4 inputs and frozen1600 K8 reference; <=1e-3veh-s parity required. '
+          'No physics; per-worker parity once; original GPU deadline/cap retained.\n')
+    with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+    write(ops.EVIDENCE/'VOLUME_TRIM_REGISTRATION_1854.json',dict(line=line,new_sumo_sim_s=0));print(line.strip())
 
 
 def quiesce():
@@ -166,12 +179,18 @@ def register_A(cpu_name):
 
 def bind_A(cpu_name):
     from .storage import read
-    from .protocol import budget,REGISTRY,checked,sha
+    from .protocol import budget,REGISTRY,checked,sha,canonical
+    import hashlib
     cpu=read(ops.EVIDENCE/cpu_name);assert cpu['pass_'] and not cpu['skips'] and not cpu['sim_s']
     source='/home/ubuntu/coopmwm20261101_volumeA1'
     staged=json.loads(ops.stage_frozen('cpuQ',source,cpu))
     registry=checked(REGISTRY).read_text(encoding='utf-8');am=read(ops.EVIDENCE/'AMENDMENT_1854_A.json')
-    h=sha(ops.EVIDENCE/'AMENDMENT_1854_A.json');assert h in registry
+    h=hashlib.sha256((canonical(am)+'\n').encode()).hexdigest()
+    if h not in registry:
+        line='\nS-COOPMWM 18:54 A-ONLY REGISTRATION BYTE-ENCODING CORRIGENDUM: normalized Linux LF amendment_sha256='+h+'; same JSON plan/budget, prior Windows-CRLF hash retained; before physics.\n'
+        with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+        write(ops.EVIDENCE/'REGISTRATION_1854_A_ENCODING.json',dict(line=line,amendment_sha256=h,new_sumo_sim_s=0))
+        registry+=line
     v=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,sys,hashlib
 r=pathlib.Path({deploy.ROOT!r});s=pathlib.Path({source!r});sys.path[:0]=[str(s/'pytools'),'/home/ubuntu/e3final/runtime/src','/home/ubuntu/e3final/runtime']
 from tools.coopmwm.storage import read,write
@@ -180,7 +199,9 @@ b=read(r/'BINDING_1742.json');b.update(budget=json.loads({json.dumps(budget())!r
  volume_amendment=True,volume=dict(release_guided=False),amendment_sha256={h!r},amendment_file='AMENDMENT_1854_A.json',authority_file='AUTHORITY_1854_A.md',
  unstarted_precharged_jobs=read(r/'QUIESCE_1854.json')['unstarted_precharged_jobs'])
 for name,h in json.loads({json.dumps(staged['hashes'])!r}).items():b['hashes']['../'+s.name+'/'+name]=h
-write(r/'AMENDMENT_1854_A.json',json.loads({json.dumps(am)!r}))
+am=json.loads({json.dumps(am)!r})
+if (r/'AMENDMENT_1854_A.json').exists():assert read(r/'AMENDMENT_1854_A.json')==am
+else:write(r/'AMENDMENT_1854_A.json',am)
 assert hashlib.sha256((r/'AMENDMENT_1854_A.json').read_bytes()).hexdigest()=={h!r}
 with (r/'AUTHORITY_1854_A.md').open('x') as f:f.write({ascii(registry)})
 write(r/'BINDING_1854_A.json',b)
@@ -216,7 +237,7 @@ write(r/'A_DISPATCH_1854.json',v);print(json.dumps(v))
 
 def bench_status(host):
     from .storage import read
-    tag=next(t for t in ('VOLUME_PROBE3','VOLUME_PROBE2','VOLUME_PROBE1') if (ops.EVIDENCE/f'{t}_{host}_DISPATCH.json').exists())
+    tag=next(t for t in ('VOLUME_PROBE6','VOLUME_PROBE5','VOLUME_PROBE4','VOLUME_PROBE3','VOLUME_PROBE2','VOLUME_PROBE1') if (ops.EVIDENCE/f'{t}_{host}_DISPATCH.json').exists())
     d=read(ops.EVIDENCE/f'{tag}_{host}_DISPATCH.json')
     v=json.loads(ops.ssh.remote(host,f'''import pathlib,json
 r=pathlib.Path({d['root']!r});out={{n:json.loads((r/n).read_text()) for n in ('COMPLETE.json','FAILED.json','TIMING_2_K8.json','TIMING_4_K8.json','TIMING_4_K4.json') if (r/n).exists()}}
@@ -230,11 +251,12 @@ print(json.dumps(out))
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('hold','inspect','bench-inputs','bench-launch','bench-status','capacity-register','quiesce','register-A','bind-A','launch-A'));p.add_argument('--host',default='gpuA');p.add_argument('--cpu',default='CPU_coopmwm20261101_cpu25.json');a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('hold','inspect','bench-inputs','bench-launch','bench-status','capacity-register','trim-register','quiesce','register-A','bind-A','launch-A'));p.add_argument('--host',default='gpuA');p.add_argument('--cpu',default='CPU_coopmwm20261101_cpu25.json');a=p.parse_args()
     if a.mode=='hold':hold()
     elif a.mode=='inspect':inspect_runtime()
     elif a.mode=='bench-inputs':bench_inputs()
     elif a.mode=='capacity-register':capacity_register()
+    elif a.mode=='trim-register':trim_register()
     elif a.mode=='quiesce':quiesce()
     elif a.mode=='register-A':register_A(a.cpu)
     elif a.mode=='bind-A':bind_A(a.cpu)
