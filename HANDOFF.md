@@ -1,3 +1,16 @@
+# S-RB2-LPHYS — round 2 active, 2026-11-01
+
+Branch `c4/rb2-lphys`, frozen engineering source22cc32f6; inherited HEAD03c81f91.
+Plan: `docs/rb2lphys/PLAN.md`; coordination: `rb-shared/RB2_LPHYS_OWNERSHIP.md`.
+LPHYS owns default-OFF physical parameter artifact/switch, starting with SUMO
+departure parameters; FIT/LANE own five LC and IDM population/posterior settings.
+No independent refit of those supports; no acceleration residuals.
+Only969400–969431 allowed for fit/selection; no WMDATA2 or reserved outcomes read
+for round-2 selection. Required prior aggregate evidence read. No jobs launched.
+Local NVIDIA driver unavailable; remote resource audit pending. Candidate NOT READY.
+
+## Preserved round-1 handoff
+
 # S-RB-INT FINAL — 2026-11-01
 
 Branch `c4/rb-int`. Retain all prior work and immutable jobs. Earlier detail:
