@@ -1,14 +1,14 @@
 {
-  "unix": 1793504245.3130698,
+  "unix": 1793505445.314477,
   "protocol": "S-C1SWITCH2/v2",
   "hosts": {
     "cpuQ": {
-      "unix": 1793504246.3097706,
+      "unix": 1793505446.0618923,
       "host": "cpuQ",
       "load": [
-        9.763671875,
-        9.0068359375,
-        9.1533203125
+        12.98193359375,
+        11.0341796875,
+        10.1103515625
       ],
       "cpu": {
         "cpu": {
@@ -49,12 +49,12 @@
       "gpu": {}
     },
     "gpuR": {
-      "unix": 1793504246.9956617,
+      "unix": 1793505447.140094,
       "host": "gpuR",
       "load": [
-        11.18310546875,
-        9.9111328125,
-        15.93994140625
+        19.88916015625,
+        22.05126953125,
+        18.05322265625
       ],
       "cpu": {
         "cpu": {
@@ -116,7 +116,7 @@
           "ready": true,
           "requests": 98,
           "results": 98,
-          "elapsed_wall_s": 34067.747755765915
+          "elapsed_wall_s": 35267.89223122597
         },
         "bb": {
           "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -137,17 +137,17 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 93.53361392021179
+          "elapsed_wall_s": 1293.6780762672424
         }
       }
     },
     "gpuA": {
-      "unix": 1793504248.801064,
+      "unix": 1793505449.4733188,
       "host": "gpuA",
       "load": [
-        3.0244140625,
-        3.69580078125,
-        3.97119140625
+        3.4814453125,
+        5.24462890625,
+        4.93603515625
       ],
       "cpu": {},
       "gpu": {
@@ -170,7 +170,7 @@
           "ready": true,
           "requests": 90,
           "results": 90,
-          "elapsed_wall_s": 34074.53374648094
+          "elapsed_wall_s": 35275.205998659134
         },
         "bb": {
           "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -191,7 +191,7 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 96.18511009216309
+          "elapsed_wall_s": 1296.8573496341705
         }
       }
     }
@@ -257,11 +257,11 @@
     }
   },
   "latest_task_registration": [
-    "- S-C1SWITCH2 WM ORACLE CONTINUATION REGISTERED BEFORE COMPUTE (9dc75c33; MAIN07:07 after11:30): exact planSHA256 8d6ceccb69058bb0c753f57c7558f8a129e608951c280d5cd123e0a109c4926a. ONLY12 previously UNSTARTED registered full-prefix oracle branches for completedgpuRWM worlds969139/j1 and969143/j13, all6controllers each;6000sim-s=6x380+6x620, GPU0. Exact predecessor763520 EXITED/STOPfailed969147, ledgerSHAafa389bda63ba104f9435a6e48c5770a7e64b0fd2a419cf7c14240af7b591447/2700charges retained inclfailed300prefix; NO branch ever charged before scope freeze. New+old gpuRWM8700<=original16320; globalWM79800/base468380sim-s/19GPUh unchanged. Copies original frozen hash-verified runtime/BINDING/GATES/specs, one-use12-job wrapper hardcaps6000/nochildretry; no WM episode/GPU restart, cpuQ/failed/completed-picker replay, replacementworld or outcome-driven state selection. AFTER11:30 only, ONE nice19/load20-yield oracle worker +THREE relocatedBB workers <=4taskgpuRcap; currentprioritywindow SUMO0/GPU0. CPU26/26/RuffPASS; immutable stage receipt follows. FullWM/RLpanel remainsINCOMPLETE/no primaryCI; all original sources/charges/claims/results preserved, no peerPIDactions/newenv/deletion/push.",
-    "- S-C1SWITCH2 BB RELOCATION REGISTERED BEFORE ALLOCATION (eb831a29; MAIN07:07 after11:30 placement authority): exact canonical planSHA256 d5037b81825d4788131b49c675934ee71e6007da91fec60012de9ecdbc75abde in tools/c1switch2/evidence/BB_RELOCATION_PLAN.json. ONLY wholly unstarted BB arm, SAME16worlds969136..969151/indices/20s/60sK8/library/objectives, allBBphysics on<=4nice19single-thread gpuR CPUs/load20yield after2026-11-01T11:30+08; originalcpuQ WM unknown/NOTreplayed. Exact BB79800sim-s=19200episodes+60600full-prefix6wayoracles; exact GPU10800s=5400/card BOTHgpuA/gpuR incl loading/parity/idle, no increment/topup/refund/retry. Base468380sim-s/19GPUh and design95aa84cf/panel7c780c25 unchanged. Strict hash-bound placement disables allotherarms and preserves ALL16worlds/originalindices; relay requires16 not old4episodes before ordinary release. BeforeGPU: bothBBroots/noBBphysicsclaims unused/currentauthority/resources; afterone-useclaim, realbothGPU K8/sixway/continuedWALLparity and immutableCPU/frozenv7/WALL/exposure/canary gates required. BB0GPU/physics at registration; local96CPU/RuffPASS with existingMiniconda, immutablegpuRpreflight pending. No priority-window GPU/SUMO, WM/CPUcanary replay, peerPIDactions,newenv,deletion,push. See docs/paper_results/c1switch2/BB_RELOCATION_DESIGN.md; published sources concern placement/accounting/outage-isolated transport only, frozen engines/controllers unchanged.",
-    "- 08:27 MAIN REVIEW WM-PHYS interim 07:58 (FULL-v4, all 8 reserved worlds): delay CRPS -393/-3,040/-11,647 veh-s and 60 s HDV error -15.3 m (better), but 300 s breakdown-distance +5.63 pp (FARTHER from real than WM2; with 6 worlds it was -5.83) -> REGISTERED SWITCHING RULE FAILS on point estimates (all three conditions required); S-C1SWITCH/S-C1SWITCH2 keep WM2 unless the final 09:30-11:30 evaluation changes this. Owner's 07:50 message corrected.",
-    "- S-C1SWITCH2 09:18 PREPARATION VERIFIED / STILL NO NEW ALLOCATION (c02867c2/85019961): unusedBB all16-world placement root /root/c1switch2_run_bbd7ba8b48ed5829 CPU143PASS/1host-onlyskip/BOTHguards17, binding54848c3e7059ef2691878116db7c76dbead02962d42e1f281aae4ad8514b5802; originalWM12unstarted-oracle root /root/c1switch2_run_oracles_8d6ceccb69058bb0 CPU-bindingPASS/106original source hashes/unchanged frozen BINDING+GATES. Both prospectively registered plans ready for AFTER11:30 only, resources/realBBGPUparity/one-use gates retained; 3BB+1oracle taskworkers<=4gpuR. Additional physics/GPU0 so far, no WM GPU restart or cpuQ-world replay. Existing112fixed/random+canary preserved; finalWMGPU7.690583h remains exact, cpuQ WM current totals UNKNOWN, final169RL absent. Monitor25348 stillLIVE and committing every20min throughnoon (latest0917a4a46431). OptionalPHYS staysOFF under current independentrule failure. Caps/manifest/engine/controller/metrics unchanged; HANDOFF and immutable receipts published.",
-    "- 11:37 OWNER restarted cpuQ; SSH works again, data directories present (c1switch2_*, selmappo*, coopfree*). All cpuQ processes were stopped by the reboot. MAIN: S-SELMAPPO, S-SELMAPPO2 and S-C1SWITCH2 resume their own work on cpuQ from durable checkpoints/receipts (no replays of completed jobs, within registered caps); stale owned-PID/lock receipts from before the reboot must be reconciled first."
+    "- S-C1SWITCH2 CPUQ WM ORACLES REGISTERED BEFORE COMPUTE (f75a160f; recoveredcpuQ/MAIN11:37 reconcile-without-replay): exactplanSHA256 0e790a668b7ec5d8140510203f997067b0b301cb90a72db0a81b3b89157f3a86, ONLY24 previously UNSTARTED original six-way full-prefix branches from ALL4durablycompleted cpuQWM episodes; exact14640sim-s/GPU0=6x(560+600+800+480), unchanged original registered measuredindices/schedules. Predecessor649272 EXITED/STOP, ledgerSHAab62e7ddaa2ffcf1d006ba3fe67ba4c7ec9b3dfafd19ab736f4098ee015c9553/5460charges retained incl2failed episodes; zerooraclecharges/jobs proven. CombinedcpuQWM20100<=original63480; globalWM<=79800/base468380sim-s/19GPUh unchanged. Byteverified original runtime/BINDING/GATES/specs and successful originalCPU preflight reused, one-use24jobwrapper hardcap14640/no childretry, onenice19singlethreadcpuQworker/load28/disk>=2GiB admission; no new/failed WM episode, GPU restart, replacement world, completedbranch replay or outcome-selected subset. OriginalgpuR12oraclebranches6000sim-s COMPLETE. CPU5/5/RuffPASS; final immutable source/binding verification required before launch. No deletion/peerPIDsignals/newenv/push; primary paired efficacy remainsINCOMPLETE.",
+    "- S-C1SWITCH2 11:50 OWN-JOB PROGRESS / DISK BLOCKER (a1a29346): original12WMoracle branches COMPLETE6000charged=actual/GPU0/noSTOP; original WM total14160sim-s incl retained failures,112fixed/random134400+canary4680unchanged. Frozenfinal169 fleet evaluation owncpuQ1152412 LIVE2workers/original63480sim-s partition,37decisions/1340charged/noSTOP at1793505028. OriginalgpuR4world/16320sim-s partition prepared/EACHhost147CPU+realpolicyPASS but UNCLAIMED: disk gate refuses root143589376bytes free/data2032021504bytes (<2GiB). MAIN please free space; no deletion/relocation/duplicate physics here. BB terminal one-use startup BEFOREphysics after realparity,43.02397724799812GPU-s retained; narrow registry historical-STOP-reference fix5ffc7f70/77CPU now checks beforeGPU, no retry/reset/refund. Explicit MAIN registered exception required for any BB continuation under unspent original cap. Currentbase468380sim-s/19GPUh unchanged, cpuQ uptime6days/per-CAV606968LIVE/no final169/observer25348LIVE throughnoon. Notice E:/agent-work/_sol/C1SWITCH2_1150_DISK_AND_BB_ALERT.md; current HANDOFF/evidence retained, no peerPIDsignals/newenv/push.",
+    "- S-C1SWITCH2 FINAL FLEET EVALUATION REGISTERED BEFORE COMPUTE (a3ae8a88; MAIN01:48 final-checkpoint authority): genuine fleet169 checkpointSHA256 be0bb66dba7ec2059de9d7ca57993731d8383a0a5bf69c52cbfcafc10c457ddc / frozenreceipt9dee8c4f, peer source/config receipt SELMAPPO_FINAL.json. ONLY original fleet_ppo arm, SAME16world panel7c780c25/original12cpuQ+4gpuR partition, original79800sim-s=19200episodes+60600full-prefix six-way oracles; GPU0, no new allocation/training/evaluation by peer. Immutable selector-only binding keeps all common CPU/WALL/canary/frozen-v7/seed/exposure/currentregistry gates, real final-policy CPU load before one-use claim, nice19/singlethread/CUDAhidden/load28cpuQ20gpuR/disk>=2GiB admission; start2cpuQ+1gpuR workers, originalWMoracle occupies1additionalgpuR slot. Local84CPU/RuffPASS; immutable host CPU/final169 preflight precedes dispatch. Base468380sim-s/19GPUh unchanged, per-CAV remains pending genuine final169. Reconciliation4968614a: cpuQ NOT rebooted/uptime6days, originalWM terminal5460cpuQ+2700gpuR retained,112fixed/random134400+canary4680complete; oracle885469live6of12. BB one-use startup terminal BEFOREphysics after parity, exact43.02397724799812GPU-s retained; diagnosed ownSTOP-reference registry falsepositive fixed5ffc7f70 and moved audit beforeGPU, NO retry/reset/refund. Existing observer25348LIVE throughnoon; cpuQ own task outputs296MB/free2.84GiB, no deletion/peerPIDaction/push/newenv.",
+    "- S-SELMAPPO 11:40 SSH-RECOVERY / FLEET TRAINING COMPLETE (reconciliationa7b65924; no new allocation): cpuQ uptime518620s confirms MAIN11:37 CORRECTION/SSH-only outage. Original own645235/build9bb7869d8f590818 has completed169GENUINEupdates, exact MAIN02:08 schedule23+23+167x46, all7728newproduction START-ENDs closed,0outstanding/0newfailures/no live own-build processes; terminal TRAIN_COMPLETE_AWAIT_REGISTERED_PANEL. Idempotent real final169/source/finite-policy/ledger validationPASS; final checkpoint /home/ubuntu/selmappo20261031/build_9bb7869d8f590818/training/checkpoint_169.pt SHA256be0bb66dba7ec2059de9d7ca57993731d8383a0a5bf69c52cbfcafc10c457ddc, frozenreceiptSHA9dee8c4f818d540a5f105f88b6b32c76ed4c717ec83eec84afbf3cb35b7a90cb, ledgerSHA3e79fc86dd2359b6361bbb6097e5c83facfee1b04fa56cc172a871334490ceda. Original observer3668 published matching E:/agent-work/c4-c1switch2/SELMAPPO_FINAL.json and exited normally; existing noonpublisher44716 remainsLIVE/no duplicate watcher/trainer. Charged6998400=43200historical+6955200newactual, totalactual6985800..6993000 retains historical uncertainty;14400local evaluationUNSTARTED, exactcap7012800/designSHA992c05601f03d1d9caad0421b041dbeaa05fa8621ae7e3020be42e3c9f5b41d0 unchanged. All46omittedgradientworlds/oldfailures/14historicalunresolved/locks retained; no replay/refund/newphysics/relocation. Completed TRAIN control-window receipts0collisions/teleports, not efficacy. Evaluation remains exclusively S-C1SWITCH2 on registered16world969136..969151/PANEL_v2SHA7c780c25237dde73a657937ab577b8e48f71766817f4363f3298982e90144827; peer now has genuine frozen weights/source/config interface, no duplicated evaluation here. cpuQ free2.85GiB/own output4.92GiB/no growingfleetjob; no deletion/newenv/push/peerPIDaction. Current evidence docs/paper_results/SELMAPPO_RECOVERY.md and FROZEN_FINAL_MAIN0208.json; HANDOFF supersedes historical outage/weight-unavailable status.",
+    "- 11:48 MAIN: WM-PHYS FINAL report published (11:35:55; FULL-v4 frozen 22cc32f6): registered switching rule FAIL (300 s breakdown rate not closer to real) -> S-C1SWITCH2 keeps WM2 for its WM arm. S-SELMAPPO fleet PPO picker finished training (final169, kept running through the SSH outage); S-SELMAPPO2 per-CAV at 84 updates; S-C1SWITCH2 admitting final-only selector evaluation on its panel."
   ],
   "final_checkpoint_receipts": {
     "SELMAPPO_FINAL.json": true,

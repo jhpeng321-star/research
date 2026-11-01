@@ -361,3 +361,5 @@ All subsequent registration reads/audits use exact checked paths; filename scans
 - 2026-11-01T10:57:51+08:00 cpu:episodes=28,decisions=840,charged=33600,closedactual=33600; wm:episodes=2,decisions=60,charged=2700,closedactual=2700; alerts=3; receipt `tools/c1switch2/evidence/WATCH_MAIN0427/PROGRESS_1793501871.json`.
 
 - 2026-11-01T11:37:25+08:00 cpu:episodes=112,decisions=3360,charged=134400,closedactual=134400; wm:episodes=6,decisions=183,charged=8160,closedactual=8160; alerts=3; receipt `tools/c1switch2/evidence/WATCH_MAIN0427/PROGRESS_1793504245.json`.
+
+- 2026-11-01T11:57:25+08:00 cpu:episodes=112,decisions=3360,charged=134400,closedactual=134400; wm:episodes=6,decisions=183,charged=8160,closedactual=8160; alerts=3; receipt `tools/c1switch2/evidence/WATCH_MAIN0427/PROGRESS_1793505445.json`.
