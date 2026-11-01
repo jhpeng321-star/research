@@ -9,6 +9,11 @@
   remains live. No relaunch or duplicate dispatch needed; all exclusive locks retained.
 - Idempotent final169/source/ledger validation PASS; checkpoint SHA256
   `be0bb66dba7ec2059de9d7ca57993731d8383a0a5bf69c52cbfcafc10c457ddc`.
+- Existing `E:/agent-work/c4-c1switch2/SELMAPPO_FINAL.json` matches the revalidated
+  local frozen receipt byte-for-byte. Peer may bind this final169 now; all evaluation
+  physics remain peer-owned on PANEL_v2/969136..969151 (local14,400 unstarted).
+- Shared REGISTRATION.md now records completion/exact accounting; MAIN infrastructure
+  alert marked resolved. No training continuation is needed or armed.
 - Disk free2.85GiB, own tree4.92GiB; all historical outputs preserved, no new growth.
   See `docs/paper_results/SELMAPPO_RECOVERY.md`. Historical status below is superseded.
 

@@ -1,5 +1,13 @@
 # Fleet picker: cpuQ connectivity prevents current health verification
 
+## RESOLVED — 2026-11-01 11:40 +08:00
+SSH-only outage confirmed by six-day uptime. Fleet training finished169/169updates,
+all7,728 continuation worlds complete,0newfailures/outstanding. No restart required.
+Final169/hash/source/ledger/finite-policy validationPASS; frozen handoff already matches
+`E:/agent-work/c4-c1switch2/SELMAPPO_FINAL.json`. Exact6,998,400charged plus14,400
+UNSTARTED evaluation reservation stays within7,012,800. See HANDOFF.md and
+docs/paper_results/SELMAPPO_RECOVERY.md. Historical incident details follow.
+
 Observed2026-11-01T05:34:10+08:00. cpuQ SSH closes before executing a command:
 `Connection closed by 1.15.42.207 port 22`. Reproduced with `ssh cpuQ true`.
 The existing observer has no fresh receipt after05:15:32+08:00. Last verified:
