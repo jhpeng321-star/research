@@ -1,5 +1,5 @@
 {
-  "captured_local": "2026-11-01T12:04:17.502998+08:00",
+  "captured_local": "2026-11-01T12:16:12.701531+08:00",
   "reports": {
     "owner_read_first": {
       "path": "E:/research-dense/docs/OWNER_UPDATE_20261030_EVENING.md",
@@ -12,10 +12,10 @@
     "registration": {
       "path": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md",
       "exists": true,
-      "sha256": "627a4a7398bb1ec8d77ebcc9ee5b9a72d935aa64e2aff7bd1e75d69d6ddc2e7b",
-      "bytes": 2379331,
-      "modified_local": "2026-11-01T12:03:49.996099+08:00",
-      "snapshot": "source_snapshots/registration_627a4a7398bb1ec8.md"
+      "sha256": "d24580050b0d32102cf579e548ed173bfbe54a37aebff6ef59923c8eb7b04021",
+      "bytes": 2384923,
+      "modified_local": "2026-11-01T12:15:41.700997+08:00",
+      "snapshot": "source_snapshots/registration_d24580050b0d3210.md"
     },
     "wmvalue_design": {
       "path": "E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md",
@@ -296,10 +296,10 @@
     "distill_report": {
       "path": "E:/agent-work/c4-distill-1101/docs/paper_results/DISTILL.md",
       "exists": true,
-      "sha256": "2195075aa8ec68d34b3c3a2458ad5302ce66fabd2341f59c8f91b595ae6474eb",
-      "bytes": 3173,
-      "modified_local": "2026-11-01T11:55:36.988329+08:00",
-      "snapshot": "source_snapshots/distill_report_2195075aa8ec68d3.md"
+      "sha256": "b1fb3328b92b5a9535cbee839b23c9ac7e51c8685a5745cc2778e7a67140dc6b",
+      "bytes": 4781,
+      "modified_local": "2026-11-01T12:11:59.197496+08:00",
+      "snapshot": "source_snapshots/distill_report_b1fb3328b92b5a95.md"
     },
     "distill_design": {
       "path": "E:/agent-work/c4-distill-1101/docs/paper_results/DISTILL_DESIGN.md",
@@ -317,13 +317,45 @@
       "modified_local": "2026-11-01T11:58:16.281194+08:00",
       "snapshot": "source_snapshots/distill_live_design_f934b45ddd6ac024.md"
     },
+    "distill_live_summary": {
+      "path": "E:/agent-work/c4-distill-1101/docs/paper_results/distill_live/SUMMARY.json",
+      "exists": true,
+      "sha256": "ece80f45ff3d96082121bd919af8aa039046f1ce521c85d2a3e4b1d79182e4a6",
+      "bytes": 1208,
+      "modified_local": "2026-11-01T12:10:53.711424+08:00",
+      "snapshot": "source_snapshots/distill_live_summary_ece80f45ff3d9608.json"
+    },
+    "distill_live_qa": {
+      "path": "E:/agent-work/c4-distill-1101/docs/paper_results/distill_live/QA.json",
+      "exists": true,
+      "sha256": "44e38727bddc62ed40544f7e7034a979da6c41a22432743669412a6c6527af34",
+      "bytes": 202,
+      "modified_local": "2026-11-01T12:10:53.715835+08:00",
+      "snapshot": "source_snapshots/distill_live_qa_44e38727bddc62ed.json"
+    },
+    "distill_live_worlds": {
+      "path": "E:/agent-work/c4-distill-1101/docs/paper_results/distill_live/WORLD_METRICS.json",
+      "exists": true,
+      "sha256": "c39d8627cf23372e7c67de18db3b8556a5840815754e395e1e8c3661e55ed4ec",
+      "bytes": 7058,
+      "modified_local": "2026-11-01T12:10:53.714309+08:00",
+      "snapshot": "source_snapshots/distill_live_worlds_c39d8627cf23372e.json"
+    },
+    "distill_live_credits": {
+      "path": "E:/agent-work/c4-distill-1101/docs/paper_results/distill_live/CREDITS.json",
+      "exists": true,
+      "sha256": "079cc7f6d10114bd9e80c0696e4507d2a78e3fba5ca7e4f2032e192ff648927a",
+      "bytes": 2174,
+      "modified_local": "2026-11-01T12:10:53.715835+08:00",
+      "snapshot": "source_snapshots/distill_live_credits_079cc7f6d10114bd.json"
+    },
     "wmteach_report": {
       "path": "E:/agent-work/c4-wmteach/docs/paper_results/WMTEACH.md",
       "exists": true,
-      "sha256": "be0018554db7241c1300ba1883e96dda3c11c2e072afb83e3b529ad2f6440c5c",
-      "bytes": 3458,
-      "modified_local": "2026-11-01T12:03:08.082470+08:00",
-      "snapshot": "source_snapshots/wmteach_report_be0018554db7241c.md"
+      "sha256": "eecd1091301b36070c21c41e06ac7c3101ae689d541e6e3b319bdebdb87e3d4b",
+      "bytes": 3783,
+      "modified_local": "2026-11-01T12:09:26.432886+08:00",
+      "snapshot": "source_snapshots/wmteach_report_eecd1091301b3607.md"
     },
     "sumocore_report": {
       "path": "E:/agent-work/c4-sumocore/docs/paper_results/SUMOCORE.md",
@@ -455,19 +487,13 @@
     }
   },
   "changed_since_prior_cut": [
-    "owner_read_first",
     "registration",
-    "coopfree_report",
-    "coopfree_stop",
-    "coopfree_status",
-    "coopfree_manifest",
     "distill_report",
-    "distill_design",
-    "distill_live_design",
-    "wmteach_report",
-    "sumocore_report",
-    "wmphys_morning",
-    "wmphys_final_publication"
+    "distill_live_summary",
+    "distill_live_qa",
+    "distill_live_worlds",
+    "distill_live_credits",
+    "wmteach_report"
   ],
   "scope": "explicit local report snapshots only; no simulator/model or restricted input access",
   "claim_review": "manual; file appearance or a canary is not an efficacy result"
