@@ -238,6 +238,22 @@ def receipt_from_service(request, response, arm='B'):
     return rec, None
 
 
+def log_receipt(root, record, result, recorder, arm='B'):
+    """Logging-only live hook: write ``<root>/proposer_receipts/<state_id>.json``.
+
+    Call after ``search(..., evaluate=recorder)`` for EVERY B search (accepted or
+    not); the search output is unchanged. Returns the path. Never overwrites.
+    """
+    rec = receipt_from_search(record, result, recorder, arm)
+    path = Path(root)/'proposer_receipts'/(str(record.get('state_id') or rec['search_id'])+'.json')
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists():
+        raise ValueError('proposer receipt already exists; never overwritten')
+    tmp = path.with_suffix('.tmp')
+    tmp.write_text(json.dumps(rec, default=float)); tmp.replace(path)
+    return path
+
+
 def attach_sumo(receipts, entries):
     """Join ``search_learning.update`` entries (plan id -> SUMO-realized advantage)."""
     adv = {e['plan']: float(e['sumo_realized_advantage']) for e in entries

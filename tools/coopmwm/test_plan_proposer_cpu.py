@@ -210,7 +210,14 @@ class Integration(unittest.TestCase):
         rec = pp.receipt_from_search(dict(state_id='s', world_id=1, rows=g['rows'], group=g['members']), res, recorder)
         self.assertEqual(len([c for c in rec['candidates'] if c['stage'] == 'screen']), res['candidates_searched'])
         s, why = pp.build_search(rec)
-        self.assertIsNone(why); self.assertTrue(s['targets']); self.assertTrue(s['elites'])
+        self.assertIsNone(why); self.assertTrue(s['targets']); self.assertTrue(s['elites']); self.assertTrue(s['full_pool'])
+        with tempfile.TemporaryDirectory() as d:
+            path = pp.log_receipt(d, dict(state_id='s', world_id=1, rows=g['rows'], group=g['members']), res, recorder)
+            got, _ = pp.load_receipts([Path(d)/'proposer_receipts'])
+            self.assertEqual(len(got), 1); self.assertEqual(got[0]['search_id'], rec['search_id'])
+            with self.assertRaises(ValueError):
+                pp.log_receipt(d, dict(state_id='s', world_id=1, rows=g['rows'], group=g['members']), res, recorder)
+            self.assertTrue(path.exists())
 
     def test_proposal_seeds_respect_bounds_knots_and_feed_search(self):
         g = group_of(3); fake = Fake(3)
