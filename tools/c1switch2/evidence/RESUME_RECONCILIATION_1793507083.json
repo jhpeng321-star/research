@@ -1,0 +1,446 @@
+{
+  "unix": 1793507079.845706,
+  "protocol": "S-C1SWITCH2/v2",
+  "hosts": {
+    "cpuQ": {
+      "unix": 1793507080.682788,
+      "host": "cpuQ",
+      "load": [
+        13.71728515625,
+        11.6875,
+        11.22265625
+      ],
+      "cpu": {
+        "cpu": {
+          "root": "/home/ubuntu/c1switch2_run_eb0eda956a815f14",
+          "process": {
+            "pid": 604784,
+            "state": "EXITED"
+          },
+          "complete": true,
+          "stop": null,
+          "episodes": 84,
+          "decisions": 2520,
+          "closed_jobs": 84,
+          "closed_actual_sim_s": 100800.0,
+          "charged_sim_s": 100800,
+          "ledger_sha256": "ae3ad0953482be22a6bbacc50f0c858deb29ba541dbf9c25ee96418a4300cc9f"
+        },
+        "wm": {
+          "root": "/home/ubuntu/c1switch2_run_292bfffe94b13ed8",
+          "process": {
+            "pid": 649272,
+            "state": "EXITED"
+          },
+          "complete": false,
+          "stop": {
+            "reason": "child failed",
+            "id": "wm__s969141",
+            "code": 1
+          },
+          "episodes": 4,
+          "decisions": 123,
+          "closed_jobs": 6,
+          "closed_actual_sim_s": 5460.0,
+          "charged_sim_s": 5460,
+          "ledger_sha256": "ab62e7ddaa2ffcf1d006ba3fe67ba4c7ec9b3dfafd19ab736f4098ee015c9553"
+        },
+        "fleet_ppo": {
+          "root": "/home/ubuntu/c1switch2_run_e79775aa1f380c25",
+          "process": {
+            "pid": 1152412,
+            "state": "S",
+            "start_ticks": 51924786,
+            "uid": 1000,
+            "own_root_in_command": true
+          },
+          "complete": false,
+          "stop": null,
+          "episodes": 12,
+          "decisions": 360,
+          "closed_jobs": 50,
+          "closed_actual_sim_s": 39280.0,
+          "charged_sim_s": 39940,
+          "ledger_sha256": "a189aba834372df3e736f708f6931878bddf1cb7a97dc9eac8011637f464f6c8"
+        },
+        "wm_oracles": {
+          "root": "/home/ubuntu/c1switch2_run_oracles_0e790a668b7ec5d8",
+          "process": {
+            "pid": 1163082,
+            "state": "EXITED"
+          },
+          "complete": true,
+          "stop": null,
+          "episodes": 0,
+          "decisions": 0,
+          "closed_jobs": 24,
+          "closed_actual_sim_s": 14640.0,
+          "charged_sim_s": 14640,
+          "ledger_sha256": "d9566de3ce750db3dfa652e7712c50fa102fd218edf4cd5d155e4c5c20cb2cb3"
+        }
+      },
+      "gpu": {}
+    },
+    "gpuR": {
+      "unix": 1793507081.5331004,
+      "host": "gpuR",
+      "load": [
+        7.267578125,
+        9.88037109375,
+        15.63818359375
+      ],
+      "cpu": {
+        "cpu": {
+          "root": "/root/c1switch2_run_716d39f08986c84f",
+          "process": {
+            "pid": 759845,
+            "state": "EXITED"
+          },
+          "complete": true,
+          "stop": null,
+          "episodes": 28,
+          "decisions": 840,
+          "closed_jobs": 28,
+          "closed_actual_sim_s": 33600.0,
+          "charged_sim_s": 33600,
+          "ledger_sha256": "098f42cd14d79e5fe94398001523c6d8c405eb2687d8aa9ea6c352f109460938"
+        },
+        "wm": {
+          "root": "/root/c1switch2_run_292bfffe94b13ed8",
+          "process": {
+            "pid": 763520,
+            "state": "EXITED"
+          },
+          "complete": false,
+          "stop": {
+            "reason": "child failed",
+            "id": "wm__s969147",
+            "code": 1
+          },
+          "episodes": 2,
+          "decisions": 60,
+          "closed_jobs": 3,
+          "closed_actual_sim_s": 2700.0,
+          "charged_sim_s": 2700,
+          "ledger_sha256": "afa389bda63ba104f9435a6e48c5770a7e64b0fd2a419cf7c14240af7b591447"
+        },
+        "bb": {
+          "root": "/root/c1switch2_run_bbd7ba8b48ed5829",
+          "state": "UNCLAIMED"
+        },
+        "fleet_ppo": {
+          "root": "/root/c1switch2_run_6e152d9a0b7bf7a4",
+          "state": "UNCLAIMED"
+        },
+        "wm_oracles": {
+          "root": "/root/c1switch2_run_oracles_8d6ceccb69058bb0",
+          "process": {
+            "pid": 885469,
+            "state": "EXITED"
+          },
+          "complete": true,
+          "stop": null,
+          "episodes": 0,
+          "decisions": 0,
+          "closed_jobs": 12,
+          "closed_actual_sim_s": 6000.0,
+          "charged_sim_s": 6000,
+          "ledger_sha256": "74a6a1acadc6d0ffaedc3795e416f3de932bf2b61556a858e24f86ee838e2cab"
+        }
+      },
+      "gpu": {
+        "wm": {
+          "root": "/root/c1switch2_gpu_wm_95614dbfc754e322",
+          "process": {
+            "pid": 761968,
+            "state": "EXITED"
+          },
+          "started": {
+            "pid": 761968,
+            "cap_s": 28800.0,
+            "unix": 1793470179.259909
+          },
+          "finished": {
+            "pid": 761968,
+            "elapsed_s": 13840.939484648407
+          },
+          "stop": null,
+          "ready": true,
+          "requests": 98,
+          "results": 98,
+          "elapsed_wall_s": 36902.286950588226
+        },
+        "bb": {
+          "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
+          "state": "UNCLAIMED"
+        },
+        "bb_startup": {
+          "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
+          "process": {
+            "pid": 885526,
+            "state": "EXITED"
+          },
+          "started": {
+            "pid": 885526,
+            "cap_s": 5400.0,
+            "unix": 1793504153.4743981
+          },
+          "finished": {
+            "pid": 885526,
+            "elapsed_s": 21.642283007502556
+          },
+          "stop": null,
+          "ready": true,
+          "requests": 2,
+          "results": 2,
+          "elapsed_wall_s": 2928.0728509426117
+        }
+      }
+    },
+    "gpuA": {
+      "unix": 1793507082.5324569,
+      "host": "gpuA",
+      "load": [
+        16.7646484375,
+        12.16845703125,
+        9.04150390625
+      ],
+      "cpu": {},
+      "gpu": {
+        "wm": {
+          "root": "/root/c1switch2_gpu_wm_95614dbfc754e322",
+          "process": {
+            "pid": 342449,
+            "state": "EXITED"
+          },
+          "started": {
+            "pid": 342449,
+            "cap_s": 28800.0,
+            "unix": 1793470174.2682555
+          },
+          "finished": {
+            "pid": 342449,
+            "elapsed_s": 13845.159507265314
+          },
+          "stop": null,
+          "ready": true,
+          "requests": 90,
+          "results": 90,
+          "elapsed_wall_s": 36908.26513051987
+        },
+        "bb": {
+          "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
+          "state": "UNCLAIMED"
+        },
+        "bb_startup": {
+          "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
+          "process": {
+            "pid": 432280,
+            "state": "EXITED"
+          },
+          "started": {
+            "pid": 432280,
+            "cap_s": 5400.0,
+            "unix": 1793504152.6170995
+          },
+          "finished": {
+            "pid": 432280,
+            "elapsed_s": 21.381694240495563
+          },
+          "stop": null,
+          "ready": true,
+          "requests": 2,
+          "results": 2,
+          "elapsed_wall_s": 2929.9164850711823
+        }
+      }
+    }
+  },
+  "alerts": [
+    "cpuQ/cpu/wm: STOP {'reason': 'child failed', 'id': 'wm__s969141', 'code': 1}",
+    "gpuR/cpu/wm: STOP {'reason': 'child failed', 'id': 'wm__s969147', 'code': 1}",
+    "BB relocated startup terminal STOP: ValueError('current model authority/registry absent')"
+  ],
+  "relay": {
+    "unix": 1793481610.36372,
+    "cpus": {
+      "cpuQ": {
+        "stop": null,
+        "episodes": 4,
+        "expected": 12,
+        "complete": false
+      },
+      "gpuR": {
+        "stop": null,
+        "episodes": 1,
+        "expected": 4,
+        "complete": false
+      }
+    },
+    "gpus": {
+      "gpuA": {
+        "stop": null,
+        "finished": null
+      },
+      "gpuR": {
+        "stop": null,
+        "finished": null
+      }
+    },
+    "transferred": 0
+  },
+  "bb_wait": {
+    "unix": 1793483953.0254462,
+    "states": {
+      "gpuA": {
+        "wm_finished": false,
+        "free_mib": 37673
+      },
+      "gpuR": {
+        "wm_finished": false,
+        "free_mib": 20736
+      }
+    }
+  },
+  "bb_stop": null,
+  "bb_complete": null,
+  "bb_relocation_stop": {
+    "unix": 1793504172.9679978,
+    "error": "ValueError('current model authority/registry absent')",
+    "started": [
+      [
+        "gpuA",
+        "/root/c1switch2_gpu_bb_caeab9eaa303f93c"
+      ],
+      [
+        "gpuR",
+        "/root/c1switch2_gpu_bb_caeab9eaa303f93c"
+      ]
+    ]
+  },
+  "bb_continuation_stop": null,
+  "local_processes": {
+    "31696": {
+      "pid": 31696,
+      "state": "EXITED",
+      "error": 87
+    },
+    "36376": {
+      "pid": 36376,
+      "state": "EXITED",
+      "error": 87
+    }
+  },
+  "latest_task_registration": [
+    "- S-C1SWITCH2 FINAL FLEET EVALUATION REGISTERED BEFORE COMPUTE (a3ae8a88; MAIN01:48 final-checkpoint authority): genuine fleet169 checkpointSHA256 be0bb66dba7ec2059de9d7ca57993731d8383a0a5bf69c52cbfcafc10c457ddc / frozenreceipt9dee8c4f, peer source/config receipt SELMAPPO_FINAL.json. ONLY original fleet_ppo arm, SAME16world panel7c780c25/original12cpuQ+4gpuR partition, original79800sim-s=19200episodes+60600full-prefix six-way oracles; GPU0, no new allocation/training/evaluation by peer. Immutable selector-only binding keeps all common CPU/WALL/canary/frozen-v7/seed/exposure/currentregistry gates, real final-policy CPU load before one-use claim, nice19/singlethread/CUDAhidden/load28cpuQ20gpuR/disk>=2GiB admission; start2cpuQ+1gpuR workers, originalWMoracle occupies1additionalgpuR slot. Local84CPU/RuffPASS; immutable host CPU/final169 preflight precedes dispatch. Base468380sim-s/19GPUh unchanged, per-CAV remains pending genuine final169. Reconciliation4968614a: cpuQ NOT rebooted/uptime6days, originalWM terminal5460cpuQ+2700gpuR retained,112fixed/random134400+canary4680complete; oracle885469live6of12. BB one-use startup terminal BEFOREphysics after parity, exact43.02397724799812GPU-s retained; diagnosed ownSTOP-reference registry falsepositive fixed5ffc7f70 and moved audit beforeGPU, NO retry/reset/refund. Existing observer25348LIVE throughnoon; cpuQ own task outputs296MB/free2.84GiB, no deletion/peerPIDaction/push/newenv.",
+    "- S-SELMAPPO 11:40 SSH-RECOVERY / FLEET TRAINING COMPLETE (reconciliationa7b65924; no new allocation): cpuQ uptime518620s confirms MAIN11:37 CORRECTION/SSH-only outage. Original own645235/build9bb7869d8f590818 has completed169GENUINEupdates, exact MAIN02:08 schedule23+23+167x46, all7728newproduction START-ENDs closed,0outstanding/0newfailures/no live own-build processes; terminal TRAIN_COMPLETE_AWAIT_REGISTERED_PANEL. Idempotent real final169/source/finite-policy/ledger validationPASS; final checkpoint /home/ubuntu/selmappo20261031/build_9bb7869d8f590818/training/checkpoint_169.pt SHA256be0bb66dba7ec2059de9d7ca57993731d8383a0a5bf69c52cbfcafc10c457ddc, frozenreceiptSHA9dee8c4f818d540a5f105f88b6b32c76ed4c717ec83eec84afbf3cb35b7a90cb, ledgerSHA3e79fc86dd2359b6361bbb6097e5c83facfee1b04fa56cc172a871334490ceda. Original observer3668 published matching E:/agent-work/c4-c1switch2/SELMAPPO_FINAL.json and exited normally; existing noonpublisher44716 remainsLIVE/no duplicate watcher/trainer. Charged6998400=43200historical+6955200newactual, totalactual6985800..6993000 retains historical uncertainty;14400local evaluationUNSTARTED, exactcap7012800/designSHA992c05601f03d1d9caad0421b041dbeaa05fa8621ae7e3020be42e3c9f5b41d0 unchanged. All46omittedgradientworlds/oldfailures/14historicalunresolved/locks retained; no replay/refund/newphysics/relocation. Completed TRAIN control-window receipts0collisions/teleports, not efficacy. Evaluation remains exclusively S-C1SWITCH2 on registered16world969136..969151/PANEL_v2SHA7c780c25237dde73a657937ab577b8e48f71766817f4363f3298982e90144827; peer now has genuine frozen weights/source/config interface, no duplicated evaluation here. cpuQ free2.85GiB/own output4.92GiB/no growingfleetjob; no deletion/newenv/push/peerPIDaction. Current evidence docs/paper_results/SELMAPPO_RECOVERY.md and FROZEN_FINAL_MAIN0208.json; HANDOFF supersedes historical outage/weight-unavailable status.",
+    "- 11:48 MAIN: WM-PHYS FINAL report published (11:35:55; FULL-v4 frozen 22cc32f6): registered switching rule FAIL (300 s breakdown rate not closer to real) -> S-C1SWITCH2 keeps WM2 for its WM arm. S-SELMAPPO fleet PPO picker finished training (final169, kept running through the SSH outage); S-SELMAPPO2 per-CAV at 84 updates; S-C1SWITCH2 admitting final-only selector evaluation on its panel.",
+    "- 12:14 INCIDENT: gpuR root overlay 100% full (100 MB free; /root/autodl-tmp 97%) - endangers all gpuR jobs (WM eval, S-WMTEACH, S-C1SWITCH2 admission blocked). MAIN archiving idle /root/c4_heavy (16 GB; no files newer than 10-31 12:00, no processes) to gpuA archive_cpuQ_20261101/gpuR_c4_heavy.tar with sha256 verification, source removed only on match. Also: S-C1SWITCH2 BB startup restart AUTHORISED as a registered continuation exception (retain the 43.024 GPU-s charge; within its caps).",
+    "- S-C1SWITCH2 BB CONTINUATION REGISTERED BEFORE ALLOCATION (fb6df4f8; MAIN12:14 explicit exception): exactplanSHA25674807c59d8cd942ca0dbc39427a7b1264880e2ac5ce2e3d9c72c0ee80e565110 in tools/c1switch2/evidence/BB_CONTINUATION_PLAN.json. Preserve original terminal BB startup/STOP/parity/one-use claims; zeroBBphysics proven, exact original finalGPU43.02397724799812s retained: gpuA21.381694240495563/gpuR21.642283007502556. ONE new immutable both-card service scope, SAME frozen engine/checkpoints/protocol/library/objectives, external allocation metadata hardcaps remaining5378.618305759504s gpuA+5378.357716992497s gpuR=10756.976022752002s; old+new<=original10800s/3h, no refund/top-up. OriginalBB16world CPUstage /root/c1switch2_run_bbd7ba8b48ed5829 stillUNCLAIMED/empty; SAME79800sim-s/all original oracles, no priorWM/fixed/random/canary replay. Exact EXITED predecessor/finalreceipt hashes/currentauthority+registry/prospectiveplan/sourcepins/realCPUfeedback and newbothGPUparity required. BEFOREclaim/GPU: bothfree>=8GiB, gpuRload<20/disk>=2GiB; threeBB+onefleet<=4taskgpuRslots, nice19/singlethread. CPU89PASS existingMiniconda/targeted28PASS/RuffPASS; immutableCPUstage receipts follow. Originalbase468380sim-s/19GPUh/design95aa84cf/panel7c780c25 unchanged; PHYS finalruleFAIL/OFF. At fresh1215 receipt cpuQfleet1152412LIVE/all12episodes/360decisions/oraclesprogressing, originalWMoraclesALL36COMPLETE20640actual; gpuRfleet stillUNCLAIMED/diskblocked. No newSUMO/GPU at this registration, deletion/peerPIDactions/newenv/push."
+  ],
+  "final_checkpoint_receipts": {
+    "SELMAPPO_FINAL.json": true,
+    "SELMAPPO2_FINAL.json": false
+  },
+  "cpuQ_resources": {
+    "unix": 1793507083.2886674,
+    "uptime_s": 521361.01,
+    "disk": {
+      "total": 52721041408,
+      "used": 42575704064,
+      "free": 7873990656
+    },
+    "processes": {
+      "649272": {
+        "state": "EXITED"
+      },
+      "645235": {
+        "state": "EXITED"
+      },
+      "606968": {
+        "state": "S",
+        "start_ticks": 48374316,
+        "uid": 1000,
+        "command": "/home/ubuntu/miniconda3/bin/python -B -m tools.selmappo2.training --shared-root /home/ubuntu/selmappo2_20261101/build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29/pytools --c1-root /home/ubuntu/selmappo2_20261101/build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29/pytools --integration /home/ubuntu/selmappo2_20261101/build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29/INTEGRATION.json --design-sha 09499f2af60311b3690a940dca8d94605d710465afb9c9eb05d5b0a79b23900c --registration /home/ubuntu/selmappo2_20261101/build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29/pytools/REGISTRATION.md --out /home/ubuntu/selmappo2_20261101/build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29/training --workers 12 --continuation "
+      }
+    },
+    "own_outputs": {
+      "/home/ubuntu/c1switch2_run_2d2400c953ef2545": {
+        "bytes": 3294999,
+        "files": 153
+      },
+      "/home/ubuntu/c1switch2_run_99b7e73023ca409c": {
+        "bytes": 3089871,
+        "files": 104
+      },
+      "/home/ubuntu/c1switch2_cpu_6d0799ad0ce5": {
+        "bytes": 416645,
+        "files": 74
+      },
+      "/home/ubuntu/c1switch2_run_07b5ef8a66eb3a7c": {
+        "bytes": 3533139,
+        "files": 162
+      },
+      "/home/ubuntu/c1switch2_run_eb0eda956a815f14": {
+        "bytes": 50864706,
+        "files": 3281
+      },
+      "/home/ubuntu/c1switch2_run_bc1d01899c5ae22c": {
+        "bytes": 3544281,
+        "files": 163
+      },
+      "/home/ubuntu/c1switch2_run_oracles_0e790a668b7ec5d8": {
+        "bytes": 15432848,
+        "files": 323
+      },
+      "/home/ubuntu/c1switch2_cpu_6b84f28df5d4": {
+        "bytes": 1055812,
+        "files": 151
+      },
+      "/home/ubuntu/c1switch2_run_292bfffe94b13ed8": {
+        "bytes": 218422265,
+        "files": 618
+      },
+      "/home/ubuntu/c1switch2_run_4ad4ece01d5a9ac1": {
+        "bytes": 7655072,
+        "files": 199
+      },
+      "/home/ubuntu/c1switch2_run_fb380fbae2149521": {
+        "bytes": 3175019,
+        "files": 124
+      },
+      "/home/ubuntu/c1switch2_cpu_0fbe3a11d40b": {
+        "bytes": 420106,
+        "files": 74
+      },
+      "/home/ubuntu/c1switch2_cpu_95c5133cd0dc": {
+        "bytes": 728693,
+        "files": 118
+      },
+      "/home/ubuntu/c1switch2_run_e79775aa1f380c25": {
+        "bytes": 30889486,
+        "files": 988
+      }
+    }
+  },
+  "observer": {
+    "pid": 42548,
+    "state": "LIVE",
+    "exit_code": 259
+  },
+  "bb_startup_stop": {
+    "unix": 1793504172.9679978,
+    "error": "ValueError('current model authority/registry absent')",
+    "started": [
+      [
+        "gpuA",
+        "/root/c1switch2_gpu_bb_caeab9eaa303f93c"
+      ],
+      [
+        "gpuR",
+        "/root/c1switch2_gpu_bb_caeab9eaa303f93c"
+      ]
+    ]
+  },
+  "read_only": true
+}

@@ -1,8 +1,8 @@
 {
   "protocol": "S-C1SWITCH2/v2",
-  "verified_unix": 1793506516.2663748,
-  "status": "CPU_COMPLETE_WM_TERMINAL_ORACLE_CONTINUATIONS_BB_TERMINAL_FLEET_EVALUATING",
-  "receipt": "tools\\c1switch2\\evidence\\RESUME_RECONCILIATION_1793506521.json",
+  "verified_unix": 1793507079.845706,
+  "status": "CPU_COMPLETE_WM_TERMINAL_REGISTERED_PANEL_PARTIAL_OWNED_SCOPES_SUPERVISED",
+  "receipt": "tools\\c1switch2\\evidence\\RESUME_RECONCILIATION_1793507083.json",
   "base_sim_s": 468380,
   "conditional_sim_s": 548180,
   "base_gpu_hours_cap": 19,
@@ -12,14 +12,15 @@
   "prediction_objective": "on_road_fleet_delay",
   "evaluation_objective": "full_team_delay_fleet_plus_source",
   "host_coverage_complete": true,
-  "charged_sim_s_at_latest_receipts": 196560,
-  "charged_verified_lower_bound_sim_s": 196560,
-  "closed_actual_verified_lower_bound_sim_s": 195960.0,
-  "closed_actual_sim_s_at_latest_receipts": 195960.0,
-  "registered_base_remaining_sim_s": 271820,
+  "charged_sim_s_at_latest_receipts": 207820,
+  "charged_verified_lower_bound_sim_s": 207820,
+  "closed_actual_verified_lower_bound_sim_s": 207160.0,
+  "closed_actual_sim_s_at_latest_receipts": 207160.0,
+  "registered_base_remaining_sim_s": 260560,
   "actual_note": "Closed actual excludes currently open jobs; historical charges are never refunded.",
   "new_gpu_s": 27729.12296916172,
-  "gpu_accounting_note": "Final monotonic loading/parity/idle-inclusive WM and BB receipts; terminal allocations never reset.",
+  "finalized_gpu_s": 27729.12296916172,
+  "gpu_accounting_note": "Every original and continuation allocation retained; exact total unknown while any allocation is live. Finalized monotonic receipts include loading/parity/idle.",
   "canary": {
     "state": "COMPLETE",
     "charged_sim_s": 4680,
@@ -75,10 +76,10 @@
         "stop": null,
         "episodes": 12,
         "decisions": 360,
-        "closed_jobs": 34,
-        "closed_actual_sim_s": 28080.0,
-        "charged_sim_s": 28680,
-        "ledger_sha256": "b50558a7452848b398a7a37a3d9b1e09db9f9031783b9a1dc7ea6ea3094ffdf0"
+        "closed_jobs": 50,
+        "closed_actual_sim_s": 39280.0,
+        "charged_sim_s": 39940,
+        "ledger_sha256": "a189aba834372df3e736f708f6931878bddf1cb7a97dc9eac8011637f464f6c8"
       },
       "wm_oracles": {
         "root": "/home/ubuntu/c1switch2_run_oracles_0e790a668b7ec5d8",
@@ -179,9 +180,13 @@
         "ready": true,
         "requests": 98,
         "results": 98,
-        "elapsed_wall_s": 36339.14093375206
+        "elapsed_wall_s": 36902.286950588226
       },
       "bb": {
+        "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
+        "state": "UNCLAIMED"
+      },
+      "bb_startup": {
         "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
         "process": {
           "pid": 885526,
@@ -200,7 +205,7 @@
         "ready": true,
         "requests": 2,
         "results": 2,
-        "elapsed_wall_s": 2364.926912546158
+        "elapsed_wall_s": 2928.0728509426117
       }
     },
     "gpuA": {
@@ -223,9 +228,13 @@
         "ready": true,
         "requests": 90,
         "results": 90,
-        "elapsed_wall_s": 36345.41905546188
+        "elapsed_wall_s": 36908.26513051987
       },
       "bb": {
+        "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
+        "state": "UNCLAIMED"
+      },
+      "bb_startup": {
         "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
         "process": {
           "pid": 432280,
@@ -244,7 +253,7 @@
         "ready": true,
         "requests": 2,
         "results": 2,
-        "elapsed_wall_s": 2367.070405960083
+        "elapsed_wall_s": 2929.9164850711823
       }
     }
   },
@@ -254,12 +263,12 @@
     "BB relocated startup terminal STOP: ValueError('current model authority/registry absent')"
   ],
   "cpuQ_resources": {
-    "unix": 1793506520.7972925,
-    "uptime_s": 520798.52,
+    "unix": 1793507083.2886674,
+    "uptime_s": 521361.01,
     "disk": {
       "total": 52721041408,
-      "used": 43869483008,
-      "free": 6580211712
+      "used": 42575704064,
+      "free": 7873990656
     },
     "processes": {
       "649272": {
@@ -329,15 +338,15 @@
         "files": 118
       },
       "/home/ubuntu/c1switch2_run_e79775aa1f380c25": {
-        "bytes": 22952744,
-        "files": 876
+        "bytes": 30889486,
+        "files": 988
       }
     }
   },
   "observer": {
-    "pid": 25348,
-    "state": "EXITED",
-    "error": 87
+    "pid": 42548,
+    "state": "LIVE",
+    "exit_code": 259
   },
   "bb_startup_stop": {
     "unix": 1793504172.9679978,

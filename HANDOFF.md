@@ -59,6 +59,16 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**12:24 postnoon supervision LIVE:** ownWindows42548, source82667e50, exact
+`WATCH_MAIN1214/DISPATCH.json` and first committedheartbeatbddaa353.
+Checks exact ownedroots/progress every20min, observes resourcegate every60s;
+ONE originalgpuRfleet admission and ONE registeredBB continuation only,
+durableattemptclaims/no science retries. Original25348 alreadyEXITED normally.
+Freshreconciliation1793507083:207820charged/207160closedactual,
+GPU27729.12296916172s finalized; cpuQfleet1152412LIVE/noSTOP,12episodes/360choices,
+WMoriginaloraclesALL36complete20640actual. cpuQfree7873990656bytes/own342522942.
+Latestadmission1793507046 WAIT/noCLAIM:gpuRroot55726080bytes/load6.44;
+MAIN archivecompletion stillrequired. Per-CAVfinal169pending/606968LIVE.
 **MAIN12:14 continuation now REGISTERED + immutable CPU PREPARED:** bothGPUroot
 `/root/c1switch2_gpu_bb_cont_74807c59d8cd942c`, realBB full60s/K8/sixway and
 incumbentWALL CPUprobes PASS, identicalsamplesSHA37852b51 on bothcards.
