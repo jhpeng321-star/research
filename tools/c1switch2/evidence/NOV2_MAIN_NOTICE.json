@@ -1,0 +1,33 @@
+{
+  "repair_commit": "7b5efda4",
+  "reconciliation_commit": "f4a4f416",
+  "final_receipt": "tools/c1switch2/evidence/RESUME_RECONCILIATION_1793555179.json",
+  "registration_path": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md",
+  "registration_line_observed": 6050,
+  "registration_marker": "S-C1SWITCH2 Nov2 FRESH-SESSION RECONCILIATION / CPU IMPORT REPAIR",
+  "main_notice": "E:/agent-work/_sol/C1SWITCH2_OWNER2014_STATUS.md",
+  "registration_status": "published; shared runtime file is not tracked by its repository",
+  "requested_only_not_authorized": {
+    "new_sim_s": 76840,
+    "cpuQ_sim_s": 62460,
+    "gpuR_sim_s": 14380,
+    "new_gpu_s": 0,
+    "excluded_failed_worlds": [969138, 969139],
+    "unstarted_cpuQ_episode_worlds": 9,
+    "unstarted_gpuR_episode_worlds": 3,
+    "successful_world_unstarted_oracle_and_joint_branches": 14,
+    "successful_world_branch_sim_s": 8120
+  },
+  "observer_identity": {
+    "pid": 20260,
+    "state": "LIVE",
+    "created_local": "2026-11-01 20:29:58",
+    "command": "C:\\Python314\\python.exe -B -u -m tools.c1switch2.cpuwatch run",
+    "deadline_local": "2026-11-02 12:14+08:00",
+    "progress_interval_s": 1200,
+    "duplicate_observer_started": false
+  },
+  "gpu_hold_active": true,
+  "main_gpu_resume_authority_observed": false,
+  "new_science_dispatches": 0
+}

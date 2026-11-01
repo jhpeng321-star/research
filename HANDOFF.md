@@ -59,6 +59,18 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**Nov2 01:46 final supervision1793555179:** unchanged250980charged/
+250660closedactualsim-s and finalized27787.12987509556GPU-s; no new science.
+Owned observer20260 identity confirmed Windows creationNov1 20:29:58,
+`C:\Python314\python.exe -B -u -m tools.c1switch2.cpuwatch run`, LIVE through
+original Nov2 12:14+08deadline. Both per-CAV predecessors EXITED/durableSTOP,
+all GPU services EXITED/hold ACTIVE. cpuQfree3206598656bytes/own366348334bytes.
+CPU repair7b5efda4 and narrow REQUEST ONLY published REGISTRATION.md line6050
+and MAIN notice `_sol/C1SWITCH2_OWNER2014_STATUS.md`; no GPU resume authority.
+Next authorized work requires MAIN's explicit unstarted-scope continuation, then
+immutable plan/no-prior-charge proofs/new host CPU gates; never replay the two
+failed worlds or any completed episode/branch. Existing observer remains sole
+supervisor; terminal science retry/admission stays disarmed.
 **Nov2 CPU-only import correction VERIFIED:** `PER_CAV_IMPORT_STOP.md` records
 the exact failure and no-replay scope request. Regressions reproduce the production
 missing-WALL error with the additive import path/cache removed, then PASS through
