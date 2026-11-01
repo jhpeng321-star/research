@@ -1,5 +1,34 @@
 # Evening evidence-review receipt
 
+## Morning fresh-session source cut
+
+Preserved the clean committed package and first-registration receipt. Read Git
+status/history and existing task receipts first, then the current owner READ FIRST
+block and shared registration from the afternoon through its current end. The
+bounded inventory reread every original safe source; only owner priorities,
+registration, switching handoff, selector status and rebuild interim changed.
+Those changed reports were reviewed semantically. Exact source hashes and check
+time are in `SOURCE_REFRESH.json`; numerical figure inputs remain unchanged.
+
+- The main wall-inclusive study is infrastructure-interrupted, not currently
+  attested running. Its WM GPU services exited; cpuQ's current WM state and final
+  accounting are unknown. Completed fixed/random arms are preserved. BB remains
+  unstarted; a separately registered after-priority-window placement and original-WM
+  oracle continuation are staged, not scientific results or paper-task dispatches.
+- Both RL pickers have last-verified partial training snapshots and no genuine
+  final checkpoint delivery. Shared cpuQ transport loss does not prove trainer
+  death, authorize replay, or supply efficacy. Existing owner observers continue.
+- Latest direct-motion FULL-v4 interim improves delay-distribution and endpoint
+  point estimates but FAILS the registered breakdown-distance condition. Earlier
+  numerical confidence intervals were retracted; singleton strata leave full-world
+  uncertainty unavailable. The final engineering freeze/evaluation is still pending.
+- Completed historical, feedback, calibration, repair, value, distributional and
+  RNG evidence is unchanged. Bibliography verification and delivered artwork are
+  inherited; no rerender, scientific inference or first-registration append needed.
+
+Evidence-step review is complete. The next commit updates the drafting claims and
+handoff to these newer source scopes; no existing job or observer was duplicated.
+
 ## Fresh-session overnight continuation
 
 Preserved the clean committed evening package. Read Git status/history, this receipt,
