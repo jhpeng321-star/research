@@ -1,5 +1,13 @@
 # S-COOPMWM live continuation — OWNER22:08 WARM MEMORY HOLD
 
+22:37 fresh recovery: full150-line prompt read through22:34. Original supervisor
+2477255 and24B child identities remain T. A-only2576197 EXITED before its claim,
+physics or optimizer: inherited verify rejected the original bridge STOP (missing
+local torch). No A acceleration updates exist; charge872840unchanged. Preserve STOP;
+prospective source-bound A-only release of this exact bridge failure is being qualified.
+Both GPUs empty; gpuA speed2 CPU qualification processes belong to S-WMSPEED2,
+do not duplicate/control. Receipt RECOVERY_LIVE_1793543822.json.
+
 22:29 fresh recovery: read all 148 lines of owner prompt through22:28. Verified
 supervisor2477255 and all24 held B worker/SUMO identities remain T; no optimizer
 update; twelve A episodes complete, twelve A reservations unclaimed. Conservative

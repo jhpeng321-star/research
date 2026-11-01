@@ -1,5 +1,14 @@
 # S-COOPMWM — live checks
 
+## 22:37 — fresh recovery; A continuation preflight failure identified
+- Original B/R hold identities remain stopped; all prior work and charges retained.
+- A-only continuation PID2576197 exited before acquiring a claim or launching physics:
+  inherited global verification rejected the existing bridge `No module named 'torch'` STOP.
+- No A acceleration optimizer update exists; conservative charge remains872840sim-s.
+  A source-bound, registered release scoped to this exact bridge STOP is being qualified;
+  the original STOP remains durable. Both GPUs are currently empty; S-WMSPEED2 has
+  independent CPU qualification processes whose jobs are preserved.
+
 ## 22:11 — OWNER22:08 warm-memory hold recorded
 - Verified cpuQ supervisor2477255/start55545604 and stopped its shared optimizer
   scheduling; separately stopped only its twelve B workers and their SUMO children
