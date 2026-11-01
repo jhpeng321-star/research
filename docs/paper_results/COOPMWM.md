@@ -1,5 +1,27 @@
 # S-COOPMWM — live checks
 
+## Fresh continuation — independent command audit and live evidence
+- Existing A48/B1/R1 training owners and observers adopted; no redispatch. At
+  unix1793576973 B-u2 has22/24 closed episodes; R-u2 waits for its final B quota.
+  No active STOP/pause; grader queue pending/running0 at unix1793576976.
+- Latest published exact report at unix1793576889 contains **11 B plans across
+  10 TRAIN worlds**, mean **+224.8358veh-s**, world-cluster95% CI
+  **[−35.3982,+596.7440]**. Five positive grades. B-u2 physical nulls are3/8
+  qualified grades; all zeros and losses retained. **Viability is not established.**
+  Full rank/type/group breakdown is in
+  `coopmwm/warm_live/B_EXACT_VIABILITY_f1d3fd1e73331c00e1ce9476a7ec8f4933728b3aed82117e089eb608441244ff.json`.
+- Independent actual-callback CPU check propagates the named groups continuously
+  and derives intermediate background speed from observable endpoints using the
+  frozen semi-implicit Euler law. **Three new CPU tests PASS**, also on the GPU-A
+  host with subprocess launches prohibited; runtime0.715s, zero SUMO/GPU jobs.
+  Both named plan-versus-own-policy trajectories remain **exactly identical**,
+  with both original and prototype chains. The prototype does not reduce absolute
+  errors (position/speed maxima0.859924m/0.381060m/s and0.078796m/0.055090m/s).
+  Receipt `coopmwm/COMMAND_CHAIN_KINEMATIC_CALLBACK_PROBE.json` discloses unresolved
+  roster/lane changes and interpolation fallbacks. Law-derived rows are not genuine
+  sensed half-step records. **Full trajectory/GPU qualification remains unpassed;
+  mirror stays disabled.** No acceptance, horizon, training or budget change.
+
 ## MAIN07:18 clarification and command-chain audit
 - **R-u1 completed** after the centre-fairness repair. A48/B1/R1 at
   unix1793576017; B-u2 has20/24 closed episodes and four still collecting.

@@ -130,6 +130,34 @@ print(json.dumps(run({root!r}+'/NULL_FIXTURES.json')))''',timeout=90)
     print(json.dumps(dict(v,cases=[{k:x for k,x in c.items() if k!='trace'} for c in v['cases']])))
 
 
+def probe_kinematic():
+    """Separate CPU-only audit; original probe and all running owners retained."""
+    from .storage import read
+    from .protocol import checked
+    root='/root/coopmwm20261102_commandkinematic1'
+    target=ops.EVIDENCE/'COMMAND_CHAIN_KINEMATIC_CALLBACK_PROBE.json'
+    assert not target.exists(),'adopt completed probe rather than repeat it'
+    cpu=read(ops.EVIDENCE/'CPU_coopmwm20261102_commandcpu3.json')
+    ops.stage_frozen('gpuA',root,cpu)
+    files={'tools/coopmwm/'+name+'.py':checked(ops.LOCAL/'tools/coopmwm'/(name+'.py')).read_text(encoding='utf-8')
+        for name in ('command_chain_probe','test_command_chain_probe_cpu')}
+    files['NULL_FIXTURES.json']=checked(ops.EVIDENCE/'COMMAND_CHAIN_NULL_FIXTURES.json').read_text(encoding='utf-8')
+    staged=json.loads(ops.stage('gpuA',root,files))
+    out=ops.ssh.remote('gpuA',f'''import sys,os,json,unittest
+from unittest.mock import patch
+sys.path.insert(0,{root!r}+'/pytools');os.nice(19)
+from tools.coopmwm.command_chain_probe import run
+suite=unittest.defaultTestLoader.loadTestsFromName('tools.coopmwm.test_command_chain_probe_cpu')
+with patch('subprocess.Popen',side_effect=AssertionError('audit cannot launch physics or GPU jobs')):
+ result=unittest.TextTestRunner(stream=sys.stderr).run(suite)
+ assert result.wasSuccessful() and not result.skipped
+ v=run({root!r}+'/NULL_FIXTURES.json',kinematic=True,continuous=True)
+v.update(tests=result.testsRun,source_root={root!r},numerical_activation=False)
+print(json.dumps(v))''',timeout=90)
+    v=json.loads(out);v['staged_hashes']=staged['hashes'];write(target,v)
+    print(json.dumps(dict(v,cases=[{k:x for k,x in c.items() if k not in ('trace','errors','unresolved_half_steps')} for c in v['cases']])))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('sources','show','laws','fixtures','contrast','qualify','probe'))
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('sources','show','laws','fixtures','contrast','qualify','probe','probe_kinematic'))
     globals()[p.parse_args().mode]()

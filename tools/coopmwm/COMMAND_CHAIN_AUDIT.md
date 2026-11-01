@@ -43,6 +43,25 @@ motion/error accounting, source-bound GPU full/fast and batched/single gates,
 and a registered boundary handover that adopts all assigned searches.
 Do not rerun existing episodes/searches or spend unallocated budget implicitly.
 
+### Independent continuous-group check
+
+`COMMAND_CHAIN_KINEMATIC_CALLBACK_PROBE.json` replaces linear half-step speed
+interpolation with the frozen semi-implicit Euler identity
+`v_half = 2*(s_next-s_now)-v_next`, using only existing observable endpoints.
+Group states propagate continuously while present instead of resetting each
+second. Three independent CPU tests cover nonconstant acceleration and explicitly
+unresolved entries/departures/lane changes; CPU-host execution also passes.
+
+The actual callback still produces exactly identical plan/own-policy motion in
+both named cases, with BOTH command chains. Continuous absolute position/speed
+residual maxima are0.859924m/0.381060m/s (986051) and0.078796m/0.055090m/s
+(986070), unchanged by the prototype. The diagnostic took0.715s on CPU, no SUMO
+or GPU jobs. Law-reconstructed backgrounds and interpolation fallbacks for
+unresolved rows are explicitly retained in the receipt. They are not genuine
+half-step sensed observations. This closes neither the absolute trajectory nor
+the GPU release gate; the prototype remains OFF. No command-chain cause of the
+named marginal zeros has been demonstrated.
+
 ## Live descriptive reporting
 
 `noop_ops status` observes reporter3746050/start59055744 (`nullreport1`).
