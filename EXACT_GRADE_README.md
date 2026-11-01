@@ -27,9 +27,7 @@
 - Run it as `cd <pytools>; nohup python -m tools.coopmwm.exact_grade supervise --root <grade_root> --workers N &`. Workers are owned subprocesses at nice 19 with 1 torch thread, and their PIDs are logged in `WORKERS.jsonl`. The supervisor never kills a process.
 - **Charging:** each attempt is charged before any physics via `accel_storage.reserve(..., phase='exact_grade')`. If the budget is refused, the supervisor writes `GRADER_BLOCKED.json` and stops; nothing runs and nothing is imputed.
 - **Resume:** enqueue is idempotent (same SHA is a no-op; a different spec raises). A claim whose worker is dead goes to `attempts/` and the grade is re-queued, up to 2 attempts, then gets a `failed` receipt. A claim on a foreign host or a still-live PID is never taken over. Physics or executor errors produce a `failed` receipt with no retry.
-## Budget
-- Each plan costs `sim_s = t_end` (from t=0, warmup included, like every accel_plant job). The maximum is 1200.
-- Plans start between 300 and 900 s with D up to 300, so a plan typically costs 700–1100 sim-s, in line with the owner's ~1,000 estimate. `quote([(t0, D), ...])` gives the exact total.
+**Budget:** each plan costs `sim_s = t_end` (from t=0, warmup included, like every accel_plant job; max 1200). Plans start between 300 and 900 s with D up to 300, so a plan typically costs 700–1100 sim-s, in line with the owner's ~1,000 estimate. `quote([(t0, D), ...])` gives the exact total.
 ## Integration recipe (S-COOPMWM `warm_runner.run_arm`, B and R)
 0. Register the `exact_grade` phase in the budget quote, re-quoted within 7,500,000. Create the grade root and `GRADER_CONFIG.json`, then start the supervisor under nohup. **Gate:** the first B update must not apply until the supervisor PID is alive.
 1. After `eps = wave(...)`, call `GradeQueue(grade_root).enqueue_episode(ep, meta)` for each episode. `meta`:
