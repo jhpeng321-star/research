@@ -1,4 +1,4 @@
-"""Single local read-only collector. Never launches/retries remote computation."""
+"""Single collector; one approved live launch after first frozen WM student gates."""
 import argparse
 import hashlib
 import json
@@ -16,7 +16,8 @@ END='<!-- WMTEACH-WATCH:END -->'
 
 
 def run_git(*args):
-    return subprocess.run(['git',*args],cwd=ROOT,check=True,capture_output=True,text=True).stdout
+    return subprocess.run(['git',*args],cwd=ROOT,check=True,capture_output=True,
+                          text=True,encoding='utf-8').stdout
 
 
 def commit_owned(paths,message):
@@ -43,7 +44,7 @@ def state_section(snapshot):
            f'- Snapshot Unix{int(snapshot["unix"])}; owned PID{process["pid"]}, '
            f'identity-match={process["own_identity_matches"]}, process-state={process["state"]}.',
            f'- Complete future tasks: {snapshot["completed_future_tasks"]}; '
-           f'complete H120/H300 label contexts: {len(snapshot["labels"])}; new SUMO:0sim-s.']
+           f'complete H120/H300 label contexts: {len(snapshot["labels"])}; teacher SUMO:0sim-s.']
     if 'QUALITY.json' in files:
         for h,q in files['QUALITY.json'].items():
             lines.append(f'- Exact diagnostic H{h}: {q["states"]}/{q["expected_states"]} states, '
@@ -59,10 +60,23 @@ def state_section(snapshot):
             f'nested model-label saving {s["nested"]["saving"]["mean"]:.3f}veh-s/state '
             '(WM-target CV, not real SUMO efficacy).')
     if not students:lines.append('- No completed student snapshot yet.')
-    if 'COMPLETE.json' in files:lines.append('- Registered initial teacher/student job COMPLETE; live test still requires frozen-policy design/budget binding.')
+    live=snapshot.get('live')
+    if live:
+        lines.append(f'- Live: {len(live["pairs"])}/24 complete pairs; charged {live["charged_sim_s"]}sim-s '
+                     f'of preregistered58800; closed actual {live["closed_actual_sim_s"]}sim-s.')
+        if live.get('stopped') or live.get('terminal_incomplete'):
+            lines.append('- Live stopped/incomplete; preserve every charge/job and diagnose; no automatic retry.')
+        if live.get('complete'):
+            for h in ('600','900'):
+                s=live['summary'][h]
+                lines.append(f'- Paired J{h} saving {s["mean"]:.3f}veh-s/world, '
+                             f'95%world-bootstrap CI[{s["ci95"][0]:.3f},{s["ci95"][1]:.3f}].')
+            lines.append(f'- Executed group moves {live["summary"]["moves"]}; safety is retained in the snapshot; no superadditivity estimate.')
+    if 'COMPLETE.json' in files:lines.append('- Registered initial teacher/student job COMPLETE; same-panel live status above.')
     elif not process['own_identity_matches'] or process['state']=='Z':
         lines.append('- GPU process ended before COMPLETE: preserve receipts and diagnose before any explicit continuation.')
-    lines.extend(['- No live result or claim of beating MAPPO.',END])
+    if not live or not live.get('complete'):lines.append('- No complete live result or claim of beating MAPPO yet.')
+    lines.append(END)
     return '\n'.join(lines)
 
 
@@ -79,14 +93,18 @@ def main(interval=1200,hours=24):
     pid=os.getpid();receipt=HERE/f'WATCH_PROCESS_{pid}.json'
     with receipt.open('x',encoding='utf-8') as f:
         json.dump(dict(pid=pid,started_unix=time.time(),interval_s=interval,max_hours=hours,
-            role='read_only_collection_and_owned_receipt_commits',remote_dispatch=False),f)
+            role='collection_and_one_approved_first_policy_live_launch',remote_gpu_dispatch=False),f)
     deadline=time.monotonic()+hours*3600; expected=None
     pending=[receipt]
     frozen={p:hashlib.sha256(p.read_bytes()).hexdigest() for p in
-            (Path(__file__),Path(__file__).with_name('ops.py'))}
+            (Path(__file__),Path(__file__).with_name('ops.py'),Path(__file__).with_name('auto_live.py'),
+             Path(__file__).with_name('live.py'),Path(__file__).with_name('portable.py'))}
     while time.monotonic()<deadline:
         if any(hashlib.sha256(p.read_bytes()).hexdigest()!=s for p,s in frozen.items()):
             raise RuntimeError('collector source changed; stop without mutating new user work')
+        from tools.wmteach.auto_live import advance
+        live_advance=advance()
+        print(json.dumps(dict(live_advance=live_advance)),flush=True)
         result=json.loads(collect());path=Path(result['path']);snapshot=json.loads(path.read_text())
         current=REPORT.read_text(encoding='utf-8')
         if BEGIN in current:
@@ -99,11 +117,17 @@ def main(interval=1200,hours=24):
         expected=state_section(snapshot)
         REPORT.write_text(before+expected+after,encoding='utf-8')
         pending.extend([path,REPORT])
+        pending.extend(p for p in HERE.glob('LIVE_*.json') if p not in pending)
         commit_owned(pending,'wmteach: collect owned GPU teacher and student progress')
         pending=[]
         print(json.dumps(result),flush=True)
         process=snapshot['process']
-        if 'COMPLETE.json' in snapshot['files'] or not process['own_identity_matches'] or process['state']=='Z':
+        live=snapshot.get('live')
+        live_terminal=live and (live.get('complete') or live.get('stopped') or live.get('terminal_incomplete'))
+        if 'COMPLETE.json' in snapshot['files'] and live_terminal:
+            return
+        if ('COMPLETE.json' not in snapshot['files'] and (not process['own_identity_matches'] or process['state']=='Z')
+                and (not live or live_terminal)):
             return
         time.sleep(interval)
 

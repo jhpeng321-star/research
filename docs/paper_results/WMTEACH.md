@@ -26,7 +26,10 @@
 - MAIN11:48 approval now appears in shared registration: live cap100,000sim-s;
   S-DISTILL's shared fresh DEV panel is984000–984023, panel SHA
   `72776ff122956f021d1caf2db9622674b0cde2a74af8bd9f20c3de5ba0a383a6`.
-  A frozen policy/design and exact per-arm budget are still required before dispatch.
+  First completed WM student will freeze under `WMTEACH_LIVE_DESIGN.md`:58800sim-s
+  (57600full paired+1200extra bitwise O0 mechanics), no action pruning. Final policy/
+  design hashes,232input portable parity, CPU/24guard gates and durable registry line
+  must pass before the one-use launch. Efficacy-only: no new member-alone C_G branches.
 
 ## Status
 Active immutable gpuA root `/root/autodl-tmp/wmteach20261101_v3`,404source hashes.
@@ -34,11 +37,11 @@ Supervisor437822/startticks888636829/boot a81555d7-176e-4ed8-bc7d-896fc89cc914;
 `wmteach/DISPATCH_V3.json`. Own strict8GiB GPU cap; peer processes untouched.
 H300 canary34.248s PASS finite/conserved/source-inclusive costs, reused once.
 v1 startup hash-helper failure before rollouts and undispatched v2 both retained.
-Shared S-DISTILL code imported from4b139e5f; full local22CPU PASS, frozen host17PASS.
+Shared S-DISTILL code imported from4b139e5f; full local25CPU PASS, frozen host17PASS.
 Numpy-only export supports the selected GBT OR MLP plus unseen-option constants;
-128query parity/choices per family pass (no family substitution). Two first complete
+128query parity/choices per family pass (no family substitution). Eight complete
 K8/H120+H300 contexts pass actual published S-RB-DECIDE probability/selection parity;
-`wmteach/WMDECIDE_PARITY_1793506599.json`. Quality panel is still incomplete.
+`wmteach/WMDECIDE_PARITY_1793507555.json`. Quality panel is still incomplete.
 No new environment: sklearn/scipy/joblib/threadpoolctl pinned in own `deps/` directory.
 Initial quality panel:12EXAM states, one per cell, selected by observable availability
 then earliest clock/world, not outcomes; H120/H300, K8. Roster-only EXAM lacks causal

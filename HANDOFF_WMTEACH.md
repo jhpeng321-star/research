@@ -16,9 +16,12 @@
   This is one-shot read-only SSH, not another observer/dispatcher.
 - One local20minute collector may be running: inspect `wmteach/WATCH_PROCESS_*.json`
   and exact local command/identity first. Its exclusive WATCH.lock prevents duplicates.
-  It only snapshots/updates its marked report section/commits owned receipts; never
-  dispatches/retries GPU/SUMO. It stops at COMPLETE, terminal GPU process, changed
-  collector source, foreign staging or24h. Do not launch another while live.
+  It snapshots/updates its marked report section/commits owned receipts and gates
+  ONE MAIN-approved live test after the first genuine WM student is complete.
+  It never retries a launch or dispatches another GPU teacher. It stops after
+  teacher/live terminal states, changed source, foreign staging or24h. No duplicates.
+  Original local34576 was exact-own stopped after first committed receipt60ee8a16
+  to fix Windows GBK Git decoding; `WATCH_ENCODING_REPAIR.json`, GPU437822 untouched.
 
 ## Pipeline already armed
 - Twelve EXAM quality states (one/cell, selected by observed candidate availability,
@@ -40,9 +43,16 @@
 - Shared panel DEV984000..984023, two/all12cells, high-share first; canonical SHA
   `72776ff122956f021d1caf2db9622674b0cde2a74af8bd9f20c3de5ba0a383a6`.
   Source: `E:/agent-work/c4-distill-1101/HANDOFF_DISTILL.md`.
-- Live is NOT armed: freeze a genuine completed WM student; register design SHA and
-  exact per-arm budget; reuse S-DISTILL portable/executor/guards/bitwise mechanics.
-  Its baseline reuse must be source/prefix/metric validated and explicitly budgeted.
+- Initial live continuation is `tools/wmteach/auto_live.py`, invoked by the collector:
+  FIRST complete `student_setting0_0` ONLY, no exact-result-based snapshot selection;
+  original-pickle SHA/232input portable parity +3CPU/24guard gate, automatic durable
+  final design/policy/exactbudget registration BEFORE one-use launch. Design
+  `WMTEACH_LIVE_DESIGN.md`:58800sim-s=57600full paired+1200extra bitwise mechanics,
+  first own MAPPO baseline reused once, no external baseline reuse/action pruning.
+  Efficacy-only, no member-alone C_G branches;41200 remains unallocated.
+  Own immutable live root `/root/autodl-tmp/wmteach_live20261101_v1`, <=2CPUworkers.
+  Source-copy inherits verified S-DISTILL executor/replay/metric/runtime/checkpoint;
+  no peer mutation. Resource wait does no physics. Any terminal launch stays terminal.
 - Re-read `E:/agent-work/c4-rb-int/HANDOFF.md` and the new S-RB2-INT handoff before a
   successor. MAIN11:58 round2 is preparing FULL-v5, report due Nov2~10:00. Preserve v4.
 - Numpy-only `tools.wmteach.portable` supports BOTH selected GBT and MLP (and unseen
@@ -50,6 +60,6 @@
   original sklearn1.7.2 environment and verify its predictions/actions before live.
 - Actual published S-RB-DECIDE source parity PASS on first two complete contexts;
   rerun `python -B -m tools.wmteach.audit` after more complete contexts, no inference.
-- Deliverable `docs/paper_results/WMTEACH.md`; local CPU22PASS/remote17portablePASS.
+- Deliverable `docs/paper_results/WMTEACH.md`; local CPU25PASS/remote17portablePASS.
 - Registry is shared/ignored by main Git: own prospective line is already appended;
   preserve other workers' edits. Committed own receipts live under `wmteach/`.

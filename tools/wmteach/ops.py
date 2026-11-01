@@ -212,10 +212,46 @@ process=dict(pid=dispatch['pid'],exists=stat is not None,
 labels=[json.loads(p.read_text()) for p in sorted((root/'tasks').glob('*/LABEL_H*.json'))]
 for p in sorted(root.glob('student_setting*/SUMMARY.json')):
  files[str(p.relative_to(root))]=json.loads(p.read_text())
+live_root=pathlib.Path('/root/autodl-tmp/wmteach_live20261101_v1');live=None
+if live_root.is_dir():
+ live=dict(root=str(live_root),complete=(live_root/'COMPLETE.json').is_file(),stopped=(live_root/'STOP').exists(),pairs=[])
+ for name in ('FREEZE.json','CPU.json','PROCESS.json','MECHANICS.json'):
+  if (live_root/name).is_file():live[name]=json.loads((live_root/name).read_text())
+ if 'PROCESS.json' in live:
+  owner=live['PROCESS.json'];p=pathlib.Path(f'/proc/{{owner["pid"]}}/stat')
+  st=p.read_text().split() if p.exists() else None
+  live['owned_process_live']=(st is not None and st[21]==owner['start_ticks'] and st[2]!='Z' and
+   pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()==owner['boot_id'])
+  live['terminal_incomplete']=not live['owned_process_live'] and not live['complete']
+ ledger=live_root/'CHARGES.jsonl'
+ live['charged_sim_s']=sum(json.loads(s)['sim_s'] for s in ledger.read_text().splitlines()) if ledger.exists() else 0
+ live['closed_actual_sim_s']=sum(json.loads(p.read_text())['actual_sim_s'] for p in (live_root/'jobs').glob('*/CLOSE.json'))
+ for seed in range(984000,984024):
+  base=live_root/'jobs'/f's{{seed}}_mappo'/'RESULT.json';student=live_root/'jobs'/f's{{seed}}_student'/'RESULT.json'
+  if base.is_file() and student.is_file():
+   b=json.loads(base.read_text());s=json.loads(student.read_text())
+   live['pairs'].append(dict(seed=seed,clocks={{h:{{k:b['clocks'][h][k]-s['clocks'][h][k] for k in
+    ('team_delay_vs','road_delay_vs','source_wait_vs')}} for h in ('600','900')}},
+    baseline_safety={{k:b['clocks']['900'][k] for k in ('collisions','teleports','ttc_below_3_vs','hard_brake')}},
+    student_safety={{k:s['clocks']['900'][k] for k in ('collisions','teleports','ttc_below_3_vs','hard_brake')}},
+    moves=sum(e['executed_action']['id']!='O0' for e in s['history']),warmup_pass=s['warmup_pass'],
+    overrides=s['overrides'],requests=s['requests']))
+ if live['complete']:
+  import numpy as np
+  assert len(live['pairs'])==24 and live['charged_sim_s']<=58800
+  rng=np.random.default_rng(20261101);indices=rng.integers(0,24,(10000,24))
+  live['summary']={{}}
+  for h in ('600','900'):
+   values=np.array([r['clocks'][h]['team_delay_vs'] for r in live['pairs']])
+   live['summary'][h]=dict(mean=float(values.mean()),ci95=np.quantile(values[indices].mean(1),[.025,.975]).tolist())
+  live['summary']['moves']=sum(r['moves'] for r in live['pairs'])
+  live['summary']['meaning']='paired full-team MAPPO minus WM student; positive saves delay; fresh shared DEV'
 print(json.dumps(dict(root=str(root),unix=time.time(),process=process,files=files,labels=labels,
+ live=live,
  completed_future_tasks=len(list((root/'tasks').glob('*/k*.json'))),
  source_hashes={{n:hashlib.sha256((root/n).read_bytes()).hexdigest() for n in names if (root/n).is_file()}},
- new_sumo_sim_s=0,load=os.getloadavg())))
+ teacher_new_sumo_sim_s=0,new_sumo_sim_s=(live['closed_actual_sim_s'] if live else 0),
+ sumo_accounting='closed-actual lower bound until all charged jobs close',load=os.getloadavg())))
 '''
     snapshot=json.loads(remote(source))
     registry=Path('E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md')
@@ -239,7 +275,7 @@ def watch():
         child=subprocess.Popen([sys.executable,'-B','-u','-m','tools.wmteach.watch'],cwd=ROOT,
             stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
             creationflags=(subprocess.CREATE_NEW_PROCESS_GROUP if hasattr(subprocess,'CREATE_NEW_PROCESS_GROUP') else 0))
-    return json.dumps(dict(pid=child.pid,log=str(path),role='collector_only',new_gpu_dispatch=False))
+    return json.dumps(dict(pid=child.pid,log=str(path),role='collector_and_approved_first_student_live_gate',new_gpu_dispatch=False))
 
 
 if __name__ == '__main__':
