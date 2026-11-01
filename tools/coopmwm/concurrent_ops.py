@@ -51,7 +51,14 @@ print(json.dumps(v))''',timeout=40))
 def status(host):
     from . import warm_remote_ops as old
     old.GPU=GPU
-    return old.gpu_status(host)
+    value=old.gpu_status(host)
+    extra=json.loads(ops.ssh.remote(host,f'''import pathlib,json
+r=pathlib.Path({GPU!r});names=['STARTUP_COMMITTED_K4_H300.json','STARTUP_COMMITTED_K8_H420.json']
+print(json.dumps({{n:json.loads((r/n).read_text()) for n in names if (r/n).exists()}}))''',timeout=30))
+    value['receipts'].update(extra)
+    write(ops.EVIDENCE/f'CONCURRENT_STATUS_{host}_{int(time.time())}.json',value)
+    print(json.dumps(dict(host=host,root=GPU,extra_gates=extra)))
+    return value
 
 
 if __name__=='__main__':

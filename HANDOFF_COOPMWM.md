@@ -1,5 +1,17 @@
 # S-COOPMWM live continuation — MAIN03:03 integration pending
 
+CPU exactcpu3 immutable201PASS/0skips/38.25s/zeroSUMO; f57e3abf integrates
+exact-only async runtime/grader, full48/48/24 endpoints, concurrent marginal replay,
+truncated grades and exact-positive library. Query-metadata RNG bug fixed/tested.
+gpuA596572 continues concurrent1: BOTH added background gates EXACT0; other6pending.
+gpuR concurrent1 failedOOM(oldidle29230occupied14.78GiB); registered memoryamendment,
+old29230gracefullyexited via SPOOL_STOP. ONE same-source concurrent2 retry39130/
+start4218720351 live, no duplicate. R root now /root/coopmwm20261102_concurrent2.
+EXACT_REMOTE_AUTHORIZATION_V2 uses fresh cpuQ-only routes4 key, Aroot1/Rroot2.
+Use exact_ops register AFTER8gatesbothREADY, then dispatch grader/broker/B/R once.
+Do not use old warm_remote_ops release/dispatch. Operator exact_ops local may differ
+from snapshot; learner/grader/broker MUST run immutable exactcpu3 source.
+
 Recovery RESUME_MAIN0303_20261102.md: all274brief lines read; A2998262 alive/u25,
 612closed/1722440charged; B/R/broker unstarted. Original GPU owners READY/sixEXACT0.
 NEW recovered concurrent qualifiers596572/36740 both alive/R; adopt, never duplicate.

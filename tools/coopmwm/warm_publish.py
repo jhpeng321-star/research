@@ -17,6 +17,8 @@ def describe(name,value):
             f'{r.get("queries",0)}/{r.get("accepted",0)}/{r.get("executed",0)}; '
             f'wall {number(value.get("wall_s"))}s; next beta {number(value.get("trust",{}).get("beta"))}. SUMO-only reward.\n')
         out.append(f'- Executions by type/regime: `{json.dumps(r.get("by_bucket",{}),sort_keys=True)}`.\n')
+        if value.get('grading_lag') is not None:
+            out.append(f'- Exact-grade queue/lag: `{json.dumps(value["grading_lag"],sort_keys=True)}`; final ETA {number(value.get("eta_final_hours"))}h.\n')
     elif '_CHECK_' in name or '_DEV_' in name:
         for contrast,c in value.get('comparisons',{}).items():
             metrics=c['metrics'];parts=[]
@@ -30,6 +32,11 @@ def describe(name,value):
             out.append(f'- {contrast}: '+ '; '.join(parts)+'. Negative Δ is better; 95% whole-world bootstrap.\n')
         out.append('- Reporting-only check, never checkpoint selection. Full safety/per-cell results in the linked immutable receipt.\n')
     elif '_VIABILITY_' in name:
+        if 'exact_trust' in value:
+            tr=value['exact_trust']
+            out.append(f'- {value["arm"]} u{value["update"]}: exact paired SUMO plan saving mean {number(tr.get("mean"))} veh-s, 95% world-cluster CI `{tr.get("ci95")}`, {tr.get("graded",0)} graded plans. Positive saving is better. Ungraded plans excluded.\n')
+            out.append(f'- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/{name}`.\n')
+            return ''.join(out)
         v=value['viability'];overall=v['overall']
         out.append(f'- {value["arm"]} u{value["update"]}: executed-plan vs own-action SUMO H300 critic residual '
             f'{number(overall.get("mean"))} veh-s, 95% CI `{overall.get("ci95")}`; '
@@ -66,7 +73,7 @@ print(json.dumps(dict(receipts=out,charged_sim_s=charged(r))))''',timeout=45))
     if text:
         with doc.open('a',encoding='utf-8') as f:
             f.write('\n## Warm live publication — '+datetime.now(timezone.utc).isoformat()+'\n')
-            f.write(f'- Conservatively charged {result["charged_sim_s"]}/6500000 sim-s.\n'+text)
+            f.write(f'- Conservatively charged {result["charged_sim_s"]}/7500000 sim-s.\n'+text)
         changed.append(str(doc.relative_to(ops.LOCAL)))
     print(json.dumps(dict(published=len(result['receipts']),charged_sim_s=result['charged_sim_s'])))
     return changed

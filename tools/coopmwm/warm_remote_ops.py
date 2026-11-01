@@ -68,7 +68,7 @@ print(json.dumps(v))''',timeout=30))
     print(json.dumps(value));return value
 
 
-def authorize(receipt_name='WARM_REMOTE_AUTHORIZATION.json'):
+def authorize(receipt_name='WARM_REMOTE_AUTHORIZATION.json',roots=None):
     """Task-only restricted public key; private material remains on cpuQ."""
     public=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,subprocess,json,os
 r=pathlib.Path({ROUTES!r});assert r.parent.is_dir();r.mkdir(exist_ok=True);r.chmod(0o700)
@@ -78,14 +78,15 @@ assert p.is_file() and p.with_suffix('.pub').is_file();p.chmod(0o600)
 print(json.dumps(dict(public=p.with_suffix('.pub').read_text().strip())))''',timeout=35))['public']
     endpoints=[]
     for host in ('gpuA','gpuR'):
+        gpu=(roots or {}).get(host,GPU)
         config=dict(line.split(' ',1) for line in subprocess.check_output(['ssh','-G',host],text=True).splitlines() if ' ' in line)
         hostname=config['hostname'];port=int(config['port'])
         known=subprocess.check_output(['ssh-keygen','-F',f'[{hostname}]:{port}'],text=True);assert known.strip()
         ops.stage('cpuQ',ROUTES,{'known_hosts_'+host:known})
-        command=f'env PYTHONPATH={GPU}/pytools /root/miniconda3/bin/python -B -m tools.coopmwm.warm_rpc {GPU}'
+        command=f'env PYTHONPATH={gpu}/pytools /root/miniconda3/bin/python -B -m tools.coopmwm.warm_rpc {gpu}'
         entry='restrict,command="'+command+'" '+public+'\n'
         receipt=json.loads(ops.ssh.remote(host,f'''import pathlib,json,hashlib
-r=pathlib.Path({GPU!r});assert (r/'GPU_BINDING.json').is_file()
+r=pathlib.Path({gpu!r});assert (r/'GPU_BINDING.json').is_file()
 p=pathlib.Path('/root/.ssh/authorized_keys');assert p.parent.is_dir()
 entry={entry!r}
 if not p.exists() or entry not in p.read_text():

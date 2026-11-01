@@ -9,24 +9,74 @@ from .warm_deploy import ROOT
 
 CPU='/home/ubuntu/coopmwm20261102_exactcpu3'
 GPU='/root/coopmwm20261102_concurrent1'
-ROUTES='/home/ubuntu/coopmwm20261102_remote_routes3'
+ROUTES='/home/ubuntu/coopmwm20261102_remote_routes4'
+GPU_R='/root/coopmwm20261102_concurrent2'
 
 
 def authorize():
     from . import warm_remote_ops as w
     w.GPU=GPU;w.ROUTES=ROUTES
-    w.authorize('EXACT_REMOTE_AUTHORIZATION.json')
+    w.authorize('EXACT_REMOTE_AUTHORIZATION_V2.json',roots={'gpuA':GPU,'gpuR':GPU_R})
+
+
+def telemetry():
+    for host,pids in [('gpuA','596572,588981'),('gpuR','39130,29230')]:
+        value=json.loads(ops.ssh.remote(host,f'''import subprocess,json,time,os
+print(json.dumps(dict(unix=time.time(),load=os.getloadavg(),gpu=subprocess.check_output(['nvidia-smi','--query-gpu=utilization.gpu,memory.used,power.draw','--format=csv,noheader'],text=True),processes=subprocess.run(['ps','-p',{pids!r},'-o','pid,ppid,stat,etime,time,pcpu,pmem,args'],capture_output=True,text=True).stdout)))''',timeout=30))
+        write(ops.EVIDENCE/f'EXACT_TELEMETRY_{host}_{int(value["unix"])}.json',value);print(json.dumps(dict(host=host,**value)))
+
+
+def retire_gpur():
+    from . import warm_remote_ops as w
+    from .concurrent_ops import status
+    failed=status('gpuR');w.GPU='/root/coopmwm20261102_durable1';old=w.gpu_status('gpuR')
+    assert failed['failed'] and failed['state']=='exited' and 'OutOfMemoryError' in failed['receipts']['SPOOL_FAILED.json']['error']
+    assert old['alive'] and old['ready'] and not old['failed']
+    owner=old['receipts']['SPOOL_OWNER.json']
+    path=ops.EVIDENCE/'CONCURRENT_GPUR_MEMORY_AMENDMENT.json'
+    value=dict(failed=failed,old=old,replacement_root=GPU_R,reason='old idle model occupies14.78GiB on24GiB host; graceful retirement then ONE same-source qualifier retry',new_sumo_sim_s=0)
+    write(path,value);h=sha(path)
+    line='\nS-COOPMWM GPU-R MEMORY ENGINEERING REGISTERED amendmentSHA'+h+': retire only verified original idle spool29230/start4218346888 via SPOOL_STOP, preserve receipts; failed concurrent1 OOM retained; one same-source concurrent2 qualification retry after original exits; unchanged search/H300/K8/memory flags; zero SUMO.\n'
+    with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+    print(ops.ssh.remote('gpuR',f'''import pathlib,json,sys
+r=pathlib.Path('/root/coopmwm20261102_durable1');sys.path.insert(0,str(r/'pytools'))
+from tools.coopmwm.warm_spool import immutable
+d=json.loads({json.dumps(owner)!r});assert pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']
+s=pathlib.Path('/proc')/str(d['pid'])/'stat';assert s.read_text().split()[21]==d['start_ticks']
+for name in ('inbox','inference_claims','forecasts'):assert not list((r/name).glob('*.json')),'not idle'
+immutable(r/'SPOOL_STOP.json',dict(amendment_sha256={h!r},reason='superseded idle model; free memory for concurrent qualified replacement'))
+print(json.dumps(dict(graceful_stop_requested=True,pid=d['pid'],new_sumo_sim_s=0)))''',timeout=40))
+
+
+def retry_gpur():
+    from . import concurrent_ops as c
+    from . import warm_remote_ops as w
+    old=w.gpu_status('gpuR');assert not old['alive'],'wait for graceful exit'
+    inventory=json.loads(ops.ssh.remote('gpuR',"import subprocess,json;p=subprocess.run(['nvidia-smi','--query-compute-apps=pid,process_name,used_memory','--format=csv,noheader'],capture_output=True,text=True,check=True);print(json.dumps(dict(processes=p.stdout)))",timeout=30))
+    assert not inventory['processes'].strip(),'inspect memory owners'
+    stage=read(ops.EVIDENCE/'CONCURRENT_STAGE_gpuR.json')
+    ops.stage_frozen('gpuR',GPU_R,stage['cpu'])
+    inputs=ops.ssh.remote('gpuR',"import pathlib;print(pathlib.Path('/root/coopmwm20261102_concurrent1/INPUTS.json').read_text())",timeout=30)
+    ops.stage('gpuR',GPU_R,{'INPUTS.json':inputs,'GPU_BINDING.json':json.dumps(stage['binding'],sort_keys=True)})
+    # Source and all physics/search settings are byte-identical; only operational root differs.
+    c.GPU=GPU_R
+    original=c.read
+    c.read=lambda p:dict(stage,root=GPU_R) if p.name=='CONCURRENT_STAGE_gpuR.json' else original(p)
+    writer=c.write
+    c.write=lambda p,v:writer(p.with_name('CONCURRENT_RETRY_DISPATCH_gpuR.json') if p.name=='CONCURRENT_DISPATCH_gpuR.json' else p,v)
+    c.dispatch('gpuR')
+    write(ops.EVIDENCE/'CONCURRENT_RETRY_gpuR.json',dict(root=GPU_R,inventory=inventory,new_sumo_sim_s=0))
 
 
 def register():
     from .warm_protocol import budget
     from .resume_gate import check_budget
-    from .concurrent_ops import status
+    from . import concurrent_ops as c
     check_budget(budget())
     target=ops.EVIDENCE/'EXACT_RUNTIME_REGISTRATION.json';assert not target.exists()
     cpu=read(ops.EVIDENCE/'CPU_coopmwm20261102_exactcpu3.json')
     assert cpu['pass_'] and cpu['sim_s']==cpu['skips']==0
-    workers={h:status(h) for h in ('gpuA','gpuR')}
+    c.GPU=GPU;workers={'gpuA':c.status('gpuA')};c.GPU=GPU_R;workers['gpuR']=c.status('gpuR')
     assert all(v['alive'] and v['ready'] and not v['failed'] for v in workers.values()),'adopt running qualifications; no duplicate'
     for value in workers.values():
         gates=[r for name,r in value['receipts'].items() if name.startswith('STARTUP_')]
@@ -39,7 +89,7 @@ def register():
         for name in numerical:
             key='pytools/tools/coopmwm/'+name
             assert gpu['hashes'][key]==cpu['source_hashes'][key],name
-    endpoints=read(ops.EVIDENCE/'EXACT_REMOTE_AUTHORIZATION.json')['endpoints']
+    endpoints=read(ops.EVIDENCE/'EXACT_REMOTE_AUTHORIZATION_V2.json')['endpoints']
     value=dict(cpu=cpu,workers=workers,endpoints=endpoints,budget=budget(),new_sumo_sim_s=0,
         learning='own-step PPO; critic all steps; only exact-positive full buffer imitation; weight1 until20 then frozen RMSfirst20 T,clip20,coefficient1',
         grades='marginal SUMO Dexecuted+120; all other concurrent plans replayed; prefix/CRN fault STOP; unresolved shared members excluded; no physics retries',
@@ -113,5 +163,5 @@ print(json.dumps(v))''',timeout=45))
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('authorize','register','dispatch'));p.add_argument('--component',choices=('B','R','grader','broker'))
-    a=p.parse_args();dispatch(a.component) if a.mode=='dispatch' else globals()[a.mode]()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('authorize','register','dispatch','retire-gpur','retry-gpur','telemetry'));p.add_argument('--component',choices=('B','R','grader','broker'))
+    a=p.parse_args();dispatch(a.component) if a.mode=='dispatch' else globals()[a.mode.replace('-','_')]()
