@@ -253,7 +253,7 @@ class WarmStart(unittest.TestCase):
         self.assertNotIn('warm_start', plain)
         prior = dict(mean=np.zeros(3*ms.canonical_knots()).tolist(),
                      cov=ms.isotropic_covariance(3, ms.default_sigma(BOUNDS)).tolist(),
-                     duration_probs=[1.]*len(ms.allowed_durations()))
+                     duration_probs=[1.]*len(ms.allowed_durations()), generic_share=0.)
         warm, _, _ = self._run(warm_start=prior)
         self.assertIn('warm_start', warm)
         warm.pop('warm_start')
@@ -281,3 +281,72 @@ class WarmStart(unittest.TestCase):
         np.testing.assert_allclose(mean, 0, atol=1e-12)
         np.testing.assert_allclose(cov, ms.isotropic_covariance(m, pp.Z_SCALE), atol=1e-5)
         np.testing.assert_allclose(pd, 1/len(ms.allowed_durations()))
+
+
+class NoveltyAndEntropy(unittest.TestCase):
+    def test_novelty_slice_and_generic_share_counts(self):
+        g = group_of(3); fake = Fake(3)
+        model = pp.ProposerNet(dict(pp.REGISTERED, d_model=32))
+        rec = dict(state_id='n', rows=g['rows'], policy_residuals={v: 0. for v in g['members']})
+        ws = pp.warm_start(rec, g, model, 'ordinary')
+        seen = []
+        inner = ws['novelty_score']
+
+        def spy(Z, D):
+            seen.append(len(Z))
+            return inner(Z, D)
+        ws['novelty_score'] = spy
+        res = ms.search(rec, g, fake.policy, BOUNDS, fake, 'ordinary', seed=3, warm_start=ws)
+        N = ms.scaling(3, ms.canonical_knots())['population']
+        self.assertEqual(res['warm_start']['generic_per_iteration'], int(np.ceil(.2*N)))
+        self.assertEqual(res['warm_start']['novelty_per_iteration'], int(np.ceil(.1*N)))
+        self.assertEqual(seen, [int(np.ceil(.1*N))*4]*ms.REGISTERED['iterations'])
+        self.assertEqual(res['candidates_searched'], N*ms.REGISTERED['iterations'])
+        with self.assertRaises(ValueError):
+            ms.search(rec, g, fake.policy, BOUNDS, fake, 'ordinary', seed=3, warm_start=dict(ws, generic_share=.95))
+
+    def test_novelty_scorer_ranks_proposer_modes_as_least_novel(self):
+        model = pp.ProposerNet(dict(pp.REGISTERED, d_model=32))
+        n = ms.canonical_knots()
+        with torch.no_grad():
+            b = model.member.bias.view(4, 2, n)
+            b[:, 0].fill_(-2.)        # every component mean = -2 (Z units) = -1 m/s^2
+            b[:, 1].fill_(-3.)        # tight
+        s = dataset(5, 1)[0]; m = s['m']
+        score = pp.novelty_scorer(model, s['x'])
+        mode = np.full((m, n), -1.); far = np.full((m, n), 1.)
+        a, b = score([mode, far], [300, 300])
+        self.assertGreater(a, b)                                     # the far draw is "more novel"
+
+    def test_entropy_floor_penalises_collapsed_mixture(self):
+        S = [s for s in dataset(10, 2) if s['targets']]
+        model = pp.ProposerNet(dict(pp.REGISTERED, d_model=32))
+        with torch.no_grad():
+            model.mix.bias.copy_(torch.tensor([30., 0., 0., 0.]))
+            model.mix.weight.zero_()
+            plain = float(pp._weighted_nll(model, S)); floored = float(pp._weighted_nll(model, S, entropy=True))
+        self.assertAlmostEqual(floored-plain, pp.REGISTERED['entropy_floor'], places=3)
+        model2 = pp.ProposerNet(dict(pp.REGISTERED, d_model=32))
+        with torch.no_grad():
+            model2.mix.weight.zero_(); model2.mix.bias.zero_()          # uniform mixture: H = log 4 > floor
+            self.assertAlmostEqual(float(pp._weighted_nll(model2, S, entropy=True)),
+                                   float(pp._weighted_nll(model2, S)), places=5)
+
+    def test_unaccepted_full_pool_searches_are_training_data(self):
+        r = pp.synthetic_receipts(1, 1, seed=8, sizes=(3,), null_frac=1.)[0]
+        s, why = pp.build_search(r)
+        self.assertIsNone(why); self.assertTrue(s['full_pool'])
+        self.assertTrue(s['targets']); self.assertTrue(all(t['w'] >= 0 for t in s['targets']))
+        self.assertAlmostEqual(sum(t['w'] for t in s['targets'] if t['source'] == 'wm'), 1.)
+
+    def test_plan_novelty_and_report(self):
+        g = group_of(2); fake = Fake(2)
+        model = pp.ProposerNet(dict(pp.REGISTERED, d_model=32))
+        res = ms.search(dict(state_id='p', policy_residuals={v: 0. for v in g['members']}), g, fake.policy, BOUNDS,
+                        fake, 'ordinary', mappo_traj=fake.mappo, seed=1)
+        lib = ms.PlanLibrary(); lib.add(ms.describe(g, 'ordinary'), res['plan'], 1.)
+        row = pp.plan_novelty(res['plan'], model, g['rows'], 'ordinary', lib, dict(label='new'))
+        self.assertAlmostEqual(row['library_distance'], 0.)
+        self.assertGreaterEqual(row['proposer_mode_distance'], 0.)
+        rep = pp.novelty_report([row, dict(row, posthoc_label='O1', origin='proposer')])
+        self.assertEqual(rep['label_counts'], {'O1': 1, 'new': 1}); self.assertEqual(rep['new_fraction'], .5)

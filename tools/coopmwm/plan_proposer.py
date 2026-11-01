@@ -65,7 +65,9 @@ REGISTERED = dict(
     components=4, d_model=64, layers=2, heads=4, logstd_min=-1.5, logstd_max=1.5, defensive=.1,
     steps=1500, batch=32, lr=3e-3, weight_decay=1e-4, seed=20261102, val_frac=.25,
     sumo_bonus=1., elites_frac=.25, eval_samples=16, bootstraps=2000,
-    min_heldout_worlds=8, min_heldout_searches=40, threads=1, inner_frac=.2, inner_min_worlds=5, eval_every=100)
+    min_heldout_worlds=8, min_heldout_searches=40, threads=1, inner_frac=.2, inner_min_worlds=5, eval_every=100,
+    min_pool=16, generic_share=.2, novelty_share=.1, novelty_oversample=4,
+    entropy_floor=.5*math.log(4), entropy_weight=1.)
 
 FEATURES = 41
 
@@ -325,33 +327,50 @@ def build_search(receipt, cfg=REGISTERED):
                 continue
         except (KeyError, ValueError, TypeError):
             continue
-        prev = cands.get(c['id'])
-        if prev is None or (c.get('stage') == 'final' and prev['stage'] != 'final'):
-            cands[c['id']] = dict(id=c['id'], z=z/Z_SCALE, D=int(c['duration_s']), saving=float(s),
-                                  stage=c.get('stage', 'screen'), origin=c.get('origin'))
-    good = sorted((c for c in cands.values() if c['saving'] > 0), key=lambda c: (-c['saving'], c['id']))
+        sm = c.get('saving_vs_mappo')
+        sm = float(sm) if sm is not None and math.isfinite(float(sm)) else None
+        # utility vs the search's own comparators: the better of 'policy continues' and MAPPO
+        u = float(s) if sm is None else min(float(s), sm)
+        stage = 'final' if c.get('stage') == 'final' else 'screen'
+        e = cands.setdefault(c['id'], dict(id=c['id'], z=z/Z_SCALE, D=int(c['duration_s']), origin=c.get('origin')))
+        # a finalist appears twice (screen K4 and final K8): keep both scores, never mix them
+        e.setdefault(stage, dict(saving=float(s), u=u))
     ex = receipt.get('executed') or {}
     sumo = ex.get('sumo_realized_advantage')
     lost = ex.get('plan_id') if sumo is not None and sumo <= 0 else None
-    good = [c for c in good if c['id'] != lost]           # plans that lost in SUMO are never imitated
+    screen = [dict(c, **c['screen']) for c in cands.values() if 'screen' in c]
+    full_pool = len(screen) >= cfg['min_pool']
+    if full_pool:
+        # FULL screened pool (any B search, accepted or not): the search's own
+        # elites by utility vs its comparators; weight = utility above the elite
+        # threshold (the next-ranked candidate), so weights are >= 0 and rank-
+        # informative even when no candidate beat the comparators.
+        ranked = sorted(screen, key=lambda c: (-c['u'], c['id']))
+        E = max(1, int(math.ceil(cfg['elites_frac']*len(screen)/ms.REGISTERED['iterations'])))
+        thr = ranked[E]['u'] if len(ranked) > E else ranked[-1]['u']
+        good = [dict(c, gain=c['u']-thr) for c in ranked[:E] if c['id'] != lost]
+    else:
+        # top-k-only receipt: candidates with positive predicted saving vs the policy
+        scored = [dict(c, **c.get('final', c.get('screen'))) for c in cands.values()]
+        good = [dict(c, gain=c['saving']) for c in sorted(scored, key=lambda c: (-c['saving'], c['id']))
+                if c['saving'] > 0 and c['id'] != lost]         # plans that lost in SUMO are never imitated
     cov0 = initial_covariance(receipt, m); cache = {}
     def item(c, **kw):
         return dict(z=c['z'], d=duration_index(c['D'], durations), D=c['D'],
                     lp0=initial_logpdf(c['z'], c['D'], cov0, cache), **kw)
     targets = []
     if good:
-        # weight proportional to the WM-predicted saving vs 'policy continues';
         # each search contributes unit WM weight in total (scale-free)
-        w = np.array([c['saving'] for c in good]); w = w/w.sum()
+        w = np.array([max(0., c['gain']) for c in good])
+        w = w/w.sum() if w.sum() > 0 else np.full(len(good), 1/len(good))
         targets = [item(c, w=float(wi), source='wm') for c, wi in zip(good, w)]
     if sumo is not None and sumo > 0 and ex.get('plan_id') in cands:
         targets.append(item(cands[ex['plan_id']], w=float(cfg['sumo_bonus']), source='sumo'))
     topk = set(receipt.get('topk') or [])
-    elites = [c for c in good if c['id'] in topk and c['stage'] == 'final']
-    if not elites:
-        e = max(1, int(math.ceil(cfg['elites_frac']*len(cands)))) if cands else 0
-        elites = good[:e]
+    elites = good if full_pool else [c for c in good if c['id'] in topk and 'final' in c] or good
     return dict(id=str(receipt.get('search_id')), world=str(receipt.get('world_id')), regime=regime, m=m,
+                full_pool=full_pool, accepted=bool(any(c[k]['u'] > 0 for c in cands.values() for k in ('screen', 'final')
+                                                       if k in c)),
                 x=x, targets=targets, elites=[item(c) for c in elites],
                 cov0=cov0, n_candidates=len(cands)), None
 
@@ -437,18 +456,19 @@ def _targets(searches, key):
             torch.tensor(np.stack(km)), torch.tensor(w, dtype=torch.float32), torch.tensor(lp0, dtype=torch.float32))
 
 
-def log_likelihood(model, searches, key='targets'):
+def log_likelihood(model, searches, key='targets', defensive=True, return_logpi=False):
     """Per-target joint log-density (Z_SCALE units) of (perturbation, duration).
 
     The proposer is a defensive mixture: (1 - eps) x learned M-component mixture
     + eps x the search's own initial distribution (eps = ``defensive``), so its
     density never falls more than log(1/eps) below the initial distribution.
+    ``defensive=False``: learned mixture only (novelty ranking).
     """
     t = _targets(searches, key)
     if t is None:
-        return None, None
+        return (None, None, None) if return_logpi else (None, None)
     sid, Z, d, km, w, lp0 = t
-    eps = float(model.cfg.get('defensive', 0.))
+    eps = float(model.cfg.get('defensive', 0.)) if defensive else 0.
     x, mask = _batch(searches)
     mu, logstd, logpi, logdur = model(x, mask)
     mu, logstd = mu[sid], logstd[sid]                                   # E x P x M x n
@@ -458,6 +478,8 @@ def log_likelihood(model, searches, key='targets'):
     comp = (lp*keep).sum((1, 3))+logpi[sid]+logdur[sid].gather(-1, d.view(-1, 1, 1).expand(-1, logpi.shape[1], 1)).squeeze(-1)
     if eps > 0:
         comp = torch.cat([comp+math.log1p(-eps), (lp0+math.log(eps)).unsqueeze(-1)], -1)
+    if return_logpi:
+        return torch.logsumexp(comp, -1), w, logpi
     return torch.logsumexp(comp, -1), w
 
 
@@ -468,9 +490,16 @@ def _set_determinism(cfg):
     return prev
 
 
-def _weighted_nll(model, searches):
-    ll, w = log_likelihood(model, searches)
-    return -(w*ll).sum()/w.sum()
+def _weighted_nll(model, searches, entropy=False):
+    """Weighted NLL; with ``entropy`` adds the registered mixture-entropy floor
+    penalty  weight * mean_s relu(floor - H(pi_s))  so the proposer cannot
+    collapse onto a single plan type (floor = 0.5 log M)."""
+    ll, w, logpi = log_likelihood(model, searches, return_logpi=True)
+    loss = -(w*ll).sum()/w.sum()
+    if entropy and model.cfg.get('entropy_weight', 0) > 0:
+        H = -(logpi.exp()*logpi).sum(-1)
+        loss = loss+model.cfg['entropy_weight']*torch.relu(model.cfg['entropy_floor']-H).mean()
+    return loss
 
 
 def train(searches, cfg=REGISTERED):
@@ -497,7 +526,7 @@ def train(searches, cfg=REGISTERED):
         for step in range(cfg['steps']):
             model.train()
             idx = torch.randint(len(fit), (min(cfg['batch'], len(fit)),), generator=g).tolist()
-            loss = _weighted_nll(model, [fit[i] for i in idx])
+            loss = _weighted_nll(model, [fit[i] for i in idx], entropy=True)
             opt.zero_grad(); loss.backward()
             nn.utils.clip_grad_norm_(model.parameters(), 5.)
             opt.step()
@@ -637,6 +666,29 @@ def mixture_moments(model, x, cov0=None):
     return mean*Z_SCALE, cov*Z_SCALE**2, pd/pd.sum()
 
 
+@torch.no_grad()
+def novelty_scorer(model, x, rank='ratio'):
+    """Scores for the warm-start NOVELTY slice (lower = more novel; rank-based use only).
+
+    ``ratio`` (registered): learned-mixture log-likelihood minus the generic
+    isotropic-smooth prior log-density, so generic draws the proposer considers
+    unlikely RELATIVE to the generic distribution rank first (not merely generic
+    tails). ``likelihood``: learned-mixture log-likelihood alone.
+    """
+    m = x.shape[0]; c0 = ms.isotropic_covariance(m, Z_SCALE)/Z_SCALE**2
+
+    @torch.no_grad()
+    def score(Zs, Ds):
+        cache = {}
+        tg = [dict(z=np.asarray(z, float)/Z_SCALE, d=duration_index(D), D=int(D)) for z, D in zip(Zs, Ds)]
+        for t in tg:
+            t['lp0'] = initial_logpdf(t['z'], t['D'], c0, cache)
+        ll, _ = log_likelihood(model, [dict(x=x, m=m, novel=tg)], 'novel', defensive=False)
+        ll = ll.double().numpy()
+        return ll-np.array([t['lp0'] for t in tg]) if rank == 'ratio' else ll
+    return score
+
+
 def warm_start(record, group, proposer, regime=None, cov0=None):
     """Learned-search hook: ``mppi_search.search(..., warm_start=warm_start(...))``.
 
@@ -644,12 +696,60 @@ def warm_start(record, group, proposer, regime=None, cov0=None):
     policy-centred initial N(0, Sigma_0) and uniform durations; the search itself
     (population, iterations, WM scoring, top-k, Thompson) is unchanged unless the
     caller also passes a smaller ``config``. Flag-only: never used by default.
+    ``generic_share`` (registered 0.2) of every iteration's sampled population
+    stays on the generic policy-centred N(0, Sigma_0)/uniform-duration
+    distribution so discovery is never lost, and a NOVELTY slice (registered 0.1)
+    keeps, from ``novelty_oversample`` x as many generic draws, those the proposer
+    ranks least likely (``novelty_scorer``; rank-based, no threshold).
     """
     model = proposer[0] if isinstance(proposer, tuple) else proposer
     regime = regime or record.get('regime') or 'unknown'
     x = member_features(record.get('rows') or group['rows'], group['members'], regime)
     mean, cov, pd = mixture_moments(model, x, None if cov0 is None else np.asarray(cov0, float)/Z_SCALE**2)
-    return dict(mean=mean.tolist(), cov=cov.tolist(), duration_probs=pd.tolist(), source='plan_proposer')
+    cfg = dict(REGISTERED, **model.cfg)
+    return dict(mean=mean.tolist(), cov=cov.tolist(), duration_probs=pd.tolist(), source='plan_proposer',
+                generic_share=float(cfg['generic_share']), novelty_share=float(cfg['novelty_share']),
+                novelty_oversample=int(cfg['novelty_oversample']), novelty_score=novelty_scorer(model, x))
+
+
+@torch.no_grad()
+def plan_novelty(plan, proposer, rows, regime, library=None, posthoc=None):
+    """Novelty of one executed plan (report per update; descriptive only).
+
+    Distances are RMS over the canonical m x 10 perturbation (m/s^2): to the
+    nearest proposer component mean (modal duration, zero after the plan end) for
+    this group's observable tokens, and to the nearest same-regime/size library
+    entry (``mppi_search.PlanLibrary``). ``posthoc``: ``mppi_search.posthoc_label``
+    output (family or 'new').
+    """
+    z = np.asarray(plan['perturbation_canonical'], float); members = plan['members']
+    out = dict(plan_id=plan.get('id'), origin=plan.get('origin'), size=len(members), duration_s=plan.get('duration_s'))
+    if proposer is not None:
+        model = proposer[0] if isinstance(proposer, tuple) else proposer
+        x = member_features(rows, members, regime)
+        modes = sample(model, x, int(model.cfg['components']), np.random.default_rng(0))
+        out['proposer_mode_distance'] = float(min(np.sqrt(((z-mz)**2).mean()) for mz, _ in modes))
+    if library is not None:
+        pool = [e for e in library.entries if e['descriptor']['regime'] == regime and e['descriptor']['size'] == len(members)]
+        if pool:
+            out['library_distance'] = float(min(np.sqrt(((z-np.asarray(e['perturbation_canonical'], float))**2).mean())
+                                                for e in pool))
+    if posthoc is not None:
+        out['posthoc_label'] = posthoc.get('label')
+    return out
+
+
+def novelty_report(items):
+    """Per-update summary of ``plan_novelty`` rows (descriptive)."""
+    def stats(k):
+        v = [i[k] for i in items if i.get(k) is not None]
+        return dict(n=len(v), mean=float(np.mean(v)), median=float(np.median(v))) if v else dict(n=0)
+    labels = [i.get('posthoc_label') for i in items if i.get('posthoc_label') is not None]
+    return dict(plans=len(items), proposer_mode_distance=stats('proposer_mode_distance'),
+                library_distance=stats('library_distance'),
+                label_counts={k: labels.count(k) for k in sorted(set(labels))},
+                new_fraction=float(np.mean([lab == 'new' for lab in labels])) if labels else None,
+                by_origin={o: sum(i.get('origin') == o for i in items) for o in sorted({str(i.get('origin')) for i in items})})
 
 
 # --------------------------------------------------------------------------- offline evaluation
@@ -753,7 +853,7 @@ def planted_direction(x, regime):
 
 
 def synthetic_receipts(n_searches, n_worlds, seed=0, sizes=(2, 3, 4, 5, 6), topk_only=False,
-                       population=40, iterations=3, noise=.05, signal=1.):
+                       population=40, iterations=3, noise=.05, signal=1., null_frac=0.):
     """Fast numpy stand-in for MPPI searches with a planted, observable-dependent optimum.
 
     cost(z, D) = mean((z_eff - signal*z*)^2) + noise; the policy (z=0) is the
@@ -777,6 +877,8 @@ def synthetic_receipts(n_searches, n_worlds, seed=0, sizes=(2, 3, 4, 5, 6), topk
         regime = 'merge-dense' if MERGE_ZONE[0]-150 <= lead <= MERGE_ZONE[1]+150 else 'ordinary'
         x = member_features(rows, members, regime)
         zstar, Dstar = planted_direction(x, regime); zstar = zstar*signal
+        if null_frac and rng.random() < null_frac:     # policy already optimal: an unaccepted search
+            zstar = zstar*0
         cov = ms.isotropic_covariance(m, Z_SCALE, n)/Z_SCALE**2
         Lc = np.linalg.cholesky(cov+1e-9*np.eye(len(cov)))
         def cost(z, D):
@@ -799,7 +901,7 @@ def synthetic_receipts(n_searches, n_worlds, seed=0, sizes=(2, 3, 4, 5, 6), topk
             wd = np.array([sum(c['duration_s'] == d for c in top) for d in durations], float)
             pd = (pd+len(top)*wd/wd.sum())/(1+len(top))
         fin = sorted(cands, key=lambda c: (-c['saving_vs_policy'], c['id']))[:8]
-        final = [dict({k2: v for k2, v in c.items() if k2 != '_z'}, id=c['id']+'F', stage='final',
+        final = [dict({k2: v for k2, v in c.items() if k2 != '_z'}, stage='final',
                       saving_vs_policy=(base-cost(c['_z'], c['duration_s']))*100.) for c in fin]
         topk = [c['id'] for c in sorted(final, key=lambda c: -c['saving_vs_policy'])[:4] if c['saving_vs_policy'] > 0]
         pool = [] if topk_only else [{k2: v for k2, v in c.items() if k2 != '_z'} for c in cands]

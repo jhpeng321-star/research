@@ -22,8 +22,9 @@ class Surrogate(unittest.TestCase):
     def test_replay_is_deterministic_and_counts_screen_budget(self):
         r = pp.synthetic_receipts(1, 1, seed=2, sizes=(2,), population=24)[0]
         sur = le.surrogate_for(r)
-        a = le.replay(r, sur, 'plain'); b = le.replay(r, sur, 'plain')
+        a, za = le.replay(r, sur, 'plain'); b, zb = le.replay(r, sur, 'plain')
         self.assertEqual(a, b)
+        np.testing.assert_array_equal(np.stack(za), np.stack(zb))
         sc = ms.scaling(2, ms.canonical_knots())
         self.assertEqual(len(a), ms.REGISTERED['iterations']*sc['population'])
 
@@ -36,7 +37,7 @@ class Curve(unittest.TestCase):
         model, _ = pp.train(tr, dict(steps=300, eval_every=50, d_model=32))
         held = [r for r in rec if str(r['world_id']) in set(vw)][:8]
         res = le.evaluations_curve(model, held + pp.synthetic_receipts(1, 1, seed=3, topk_only=True),
-                                   modes=('plain', 'warm', 'seeds'), cfg=dict(bootstraps=200))
+                                   modes=('plain', 'warm', 'seeds', 'warm_it1'), cfg=dict(bootstraps=200))
         self.assertEqual(res['searches'], 8)
         self.assertEqual(len(res['skipped']), 1)                       # top-k-only receipt has no pool
         s = res['summary']
@@ -46,6 +47,26 @@ class Curve(unittest.TestCase):
         self.assertLess(s['warm']['minus_plain']['ci_hi'], 0)
         for mode in s.values():
             self.assertEqual(sorted(mode['quality_curve']), sorted(map(str, le.REGISTERED['curve_fracs'])))
+        self.assertAlmostEqual(s['warm_it1']['evaluations_fraction'], 1/3, places=6)
+        self.assertEqual(s['plain']['elite_coverage'], 1.)
+        self.assertGreater(s['warm']['elite_coverage'], 0)
+        self.assertAlmostEqual(s['plain']['final_quality']['mean'], 1.)
+
+    def test_reduced_iterations_keep_horizons(self):
+        from .test_mppi_search_cpu import Fake, group_of
+        g = group_of(2); fake = Fake(2)
+        model = pp.ProposerNet(dict(pp.REGISTERED, d_model=32))
+        rec = dict(state_id='h', rows=g['rows'], policy_residuals={v: 0. for v in g['members']})
+        plain = ms.search(rec, g, fake.policy, (-3., 1.5), Fake(2), 'ordinary', seed=1)
+        ws = pp.warm_start(rec, g, model, 'ordinary')
+        f1 = Fake(2)
+        one = ms.search(rec, g, fake.policy, (-3., 1.5), f1, 'ordinary', seed=1, warm_start=ws,
+                        config=dict(iterations=1))
+        self.assertEqual(one['screen'], plain['screen'])
+        self.assertEqual(one['final']['K'], plain['final']['K'])
+        self.assertEqual(one['final']['H'], ms.final_horizon(max(f['duration_s'] for f in one['finalists'])))
+        self.assertEqual({(k, h) for _, k, h in f1.calls[:-1]}, {(4, plain['screen']['H'])})
+        self.assertEqual(len(one['iterations']), 1)
 
 
 if __name__ == '__main__':

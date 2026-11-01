@@ -87,6 +87,16 @@ REGISTERED = dict(
 # only when explicitly passed as ``extra_seeds`` (default None = unchanged search).
 ORIGINS = ('centre', 'mappo', 'library', 'sampled', 'proposer')
 PLAN_TYPE = 'MPPI'
+# Learned-search flag only: share of every iteration's sampled population kept on the
+# generic policy-centred N(0, Sigma_0)/uniform-duration start when ``warm_start`` is
+# given (owner 2026-11-02: 10-25%, registered 0.2). Not part of REGISTERED, so the
+# plain search's output/config bytes are unchanged.
+WARM_GENERIC_SHARE = .2
+# Learned-search flag only: NOVELTY share (owner 2026-11-02, registered 0.1) - from
+# WARM_NOVELTY_OVERSAMPLE x as many generic draws keep those the supplied proposer
+# ranks least likely (rank-based, no threshold). Requires warm_start['novelty_score'].
+WARM_NOVELTY_SHARE = .1
+WARM_NOVELTY_OVERSAMPLE = 4
 
 
 def _digest(obj):
@@ -595,8 +605,17 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
     H_screen = int(min(cfg['final_H_max'], max(cfg['screen_H_min'], durations[-1])))
     sigma = default_sigma(bounds)
     mu, cov, pd = _distribution(cfg, m, durations, covariance, regime, sigma)
+    n_generic = n_novel = 0
     if warm_start is not None:
+        L0, pd0 = _sampler(cov), pd
+        share = float(warm_start.get('generic_share', WARM_GENERIC_SHARE))
+        novelty = warm_start.get('novelty_score')
+        nshare = float(warm_start.get('novelty_share', WARM_NOVELTY_SHARE)) if novelty is not None else 0.
+        over = int(warm_start.get('novelty_oversample', WARM_NOVELTY_OVERSAMPLE))
+        if not (0 <= share and 0 <= nshare and share+nshare < 1 and over >= 1):
+            raise ValueError('generic + novelty shares must be in [0, 1), oversample >= 1')
         mu, cov, pd = _warm_start(warm_start, mu, pd)
+        n_generic = int(math.ceil(share*sc['population'])); n_novel = int(math.ceil(nshare*sc['population']))
     desc = describe(group, regime)
     base = comparators(record, cfg['final_H_max'])
     seeds = [(np.zeros((m, nc)), durations[-1], 'centre', None)]
@@ -621,10 +640,22 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
                 p = build_plan(group, P, z, D, bounds, origin, regime, f'i{it}s{j}-', absolute,
                                _span(cfg, durations, D), nc)
                 cands.append(p); zs[p['id']] = np.asarray(p['perturbation_canonical'], float).reshape(-1)
-        L = _sampler(cov)
+        L = _sampler(cov); k_generic = 0; novel = []
+        take = min(n_novel, max(0, sc['population']-len(cands)-n_generic))
+        if take:   # warm start only: novelty slice, lowest proposer rank among generic draws
+            pz = [L0@search_rng.standard_normal(mu.size) for _ in range(take*over)]
+            pD = [int(durations[search_rng.choice(len(durations), p=pd0)]) for _ in range(take*over)]
+            score = np.asarray(novelty([z.reshape(m, nc) for z in pz], pD), float)
+            novel = [(pz[i], pD[i]) for i in sorted(np.argsort(score, kind='stable')[:take])]
         while len(cands) < sc['population']:
-            z = mu+L@search_rng.standard_normal(mu.size)
-            D = int(durations[search_rng.choice(len(durations), p=pd)])
+            if k_generic < n_generic:   # warm start only: generic policy-centred share
+                z = L0@search_rng.standard_normal(mu.size)
+                D = int(durations[search_rng.choice(len(durations), p=pd0)]); k_generic += 1
+            elif novel:
+                z, D = novel.pop(0)
+            else:
+                z = mu+L@search_rng.standard_normal(mu.size)
+                D = int(durations[search_rng.choice(len(durations), p=pd)])
             p = build_plan(group, P, z.reshape(m, nc), D, bounds, 'sampled', regime,
                            f'i{it}s{len(cands)}-', span_s=_span(cfg, durations, D), n_canon=nc)
             cands.append(p); zs[p['id']] = z
@@ -672,7 +703,8 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
     if extra_seeds:  # key absent by default: unchanged output bytes without seeds
         out['extra_seeds'] = len(extra_seeds)
     if warm_start is not None:
-        out['warm_start'] = dict(source=warm_start.get('source', 'proposer'), sha256=_digest(
+        out['warm_start'] = dict(source=warm_start.get('source', 'proposer'), generic_per_iteration=n_generic,
+                                 novelty_per_iteration=n_novel, sha256=_digest(
             dict(mean=_f([np.asarray(warm_start['mean'], float).reshape(-1)])[0],
                  duration_probs=warm_start.get('duration_probs'))))
     if not t['accepted']:
