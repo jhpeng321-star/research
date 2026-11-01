@@ -1,16 +1,11 @@
 # Fleet PPO controller-selector training status
 
-> Connectivity alert, 2026-11-01 06:13 +08:00: cpuQ SSH remains unavailable.
-> The values below are the last successful observation, not current health.
-> See `SELMAPPO_SUPERVISION.md` for committed 20-minute outage checks and
-> `../../SELMAPPO_INFRA_ALERT.md` for the MAIN notification. No relaunch attempted.
-
-Observed UTC: 2026-10-31T21:15:32.762626+00:00
-- cpuQ supervisor: 645235; alive=True; nice=19.
-- Genuine completed PPO updates: 37/169; final169 eligible=False.
-- New production: 1687 complete, 6 outstanding; failures=0.
-- Charged: 1,566,900 sim-s, including43,200historical; exact total cap7,012,800.
-- Actual sim-s bounds: 1,548,900..1,561,500 (old unknown actuals retained).
+Observed UTC: 2026-11-01T03:39:13.320648+00:00
+- cpuQ supervisor: 645235; alive=False; nice=None.
+- Genuine completed PPO updates: 169/169; final169 eligible=True.
+- New production: 7728 complete, 0 outstanding; failures=0.
+- Charged: 6,998,400 sim-s, including43,200historical; exact total cap7,012,800.
+- Actual sim-s bounds: 6,985,800..6,993,000 (old unknown actuals retained).
 - MAIN02:08 schedule23+23+167x46; 46fewer gradient episodes than original; final169only.
 - Every reservation yields above0.8cores or below8GiB RAM/2GiB disk; nice19, one thread, CUDA hidden.
 - Training observations are not efficacy results. Evaluation remains exclusively C1SWITCH2-owned.
@@ -18,5 +13,6 @@ Observed UTC: 2026-10-31T21:15:32.762626+00:00
 - Immutable build: `build_9bb7869d8f590818`; binding `9bb7869d8f590818c46980a16a63be00f72e00d3491dec95f903649dfa7bf790`.
 - Receipts: `docs/paper_results/selmappo/`; protocol/design and previous stops: `HANDOFF.md`.
 
-This status is maintained by one read-only five-minute observer. It cannot launch, retry,
-resume or stop training/evaluation and does not signal any process.
+The original five-minute observer completed its final169 handoff and exited normally.
+Fresh-session reconciliation verified completion; the existing noon supervisor remains
+active. No fleet training processes remain, and no restart is required.

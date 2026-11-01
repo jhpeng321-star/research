@@ -1,5 +1,17 @@
 # S-SELMAPPO fleet-picker integration handoff
 
+## SSH recovered; fleet training COMPLETE — 2026-11-01 11:39 +08:00
+- cpuQ uptime confirms SSH-only outage. Original own645235 absent because all169
+  genuine updates finished; all7,728 new worlds closed, zero new failures/outstanding.
+- Exact charged6,998,400sim-s includes43,200 history; actual6,985,800..6,993,000.
+  Local14,400 evaluation remains UNSTARTED; total cap7,012,800 unchanged.
+- Original observer3668 completed final handoff and exited; existing noon publisher44716
+  remains live. No relaunch or duplicate dispatch needed; all exclusive locks retained.
+- Idempotent final169/source/ledger validation PASS; checkpoint SHA256
+  `be0bb66dba7ec2059de9d7ca57993731d8383a0a5bf69c52cbfcafc10c457ddc`.
+- Disk free2.85GiB, own tree4.92GiB; all historical outputs preserved, no new growth.
+  See `docs/paper_results/SELMAPPO_RECOVERY.md`. Historical status below is superseded.
+
 ## MAIN07:07 priority decision observed — 2026-11-01 07:14 +08:00
 - Shared registration says NO relocation to gpuA/gpuR before11:30 WM-PHYS priority.
   Continue read-only monitoring; cpuQ current trainer state remains UNKNOWN.
