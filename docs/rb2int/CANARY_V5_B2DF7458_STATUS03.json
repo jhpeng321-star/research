@@ -1,0 +1,86 @@
+{
+ "host": "gpuA",
+ "root": "/root/autodl-tmp/c4/rb2int20261101/dev_b2df7458a41f_fivearm600_v5_cuda",
+ "exists": true,
+ "process": {
+  "pid": 446421,
+  "start_ticks": "888936830",
+  "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+  "argv": [
+   "nice",
+   "-n",
+   "19",
+   "/root/miniconda3/bin/python",
+   "-B",
+   "-u",
+   "/root/autodl-tmp/c4/rb2int20261101/phys_code_b2df7458a41f/tools/rb2int/dev_canary.py",
+   "--out",
+   "/root/autodl-tmp/c4/rb2int20261101/dev_b2df7458a41f_fivearm600_v5_cuda/tasks",
+   "--wm-config",
+   "/root/autodl-tmp/c4/rb2int20261101/phys_code_b2df7458a41f/configs/wm_phys_v5.toml",
+   "--runtime-root",
+   "/root/autodl-tmp/c4/rb2int20261101/phys_code_b2df7458a41f",
+   "--model-name",
+   "RB2-INT-DEV-fivearm600_v5_cuda",
+   "--device",
+   "cuda",
+   "--memory-gib",
+   "5"
+  ],
+  "root": "/root/autodl-tmp/c4/rb2int20261101/dev_b2df7458a41f_fivearm600_v5_cuda",
+  "stage": {
+   "host": "gpuA",
+   "commit": "b2df7458a41f5f4d3a048532bc40d8d4435ec381",
+   "archive_sha256": "83cfe685d21c975a7776eb06817e31beaee9d152a32f4ca5f26af647f4128d1c",
+   "runtime": "/root/autodl-tmp/c4/rb2int20261101/phys_code_b2df7458a41f",
+   "endpoint_only": false
+  },
+  "entry_sha256": "bf38c24f03b14c32333348248e94a0f3eecdd85dbb25cc1ad2fcbe6f8cf0fc1f",
+  "resources": {
+   "load": [
+    10.8603515625,
+    13.080078125,
+    12.14453125
+   ],
+   "disk_free": 97232556032,
+   "cpu_capacity": 20.0,
+   "cpu_used": 9.083482561999947,
+   "memory_free": 9641824256,
+   "gpu": "46171, 99"
+  }
+ },
+ "alive": false,
+ "tasks": 2,
+ "receipts": {
+  "tasks/DEV_CANARY_PASS.json": {
+   "passed": true,
+   "development_only": true,
+   "worlds": [
+    969420,
+    969421
+   ],
+   "K_completed": 1,
+   "arms": 5,
+   "horizon_s": 600,
+   "learned_corrections_guard": true,
+   "recipe_sha256": "023fa74a4d3059115ec0a5f28d39030a76137d871db5798eb1d23a13fc1e32c5",
+   "task_sha256": {
+    "w969420_k0.json": "e97caf5ea19c411792818d29a237d9b302ff42e9540d70f0770fa372573d98b1",
+    "w969421_k0.json": "b701dc16a99e3f4ef0ece380a665ddf33f946d3eb436cf91a48fcf6234066002"
+   },
+   "encoder_calls": [
+    2
+   ],
+   "final_panel_tasks": false
+  },
+  "tasks/COMPLETE.json": {
+   "tasks": 2,
+   "identity_sha256": "a63544634eb8cb0ae9fc289e13a0652ab566ce9cbe1d14ab28e876eded1065e3",
+   "hashes": {
+    "w969420_k0.json": "e97caf5ea19c411792818d29a237d9b302ff42e9540d70f0770fa372573d98b1",
+    "w969421_k0.json": "b701dc16a99e3f4ef0ece380a665ddf33f946d3eb436cf91a48fcf6234066002"
+   }
+  }
+ },
+ "log_tail": "DONE 969420 0 220.56\nDONE 969421 0 232.72\nINTEGRATED DEVELOPMENT CANARY PASS\n"
+}

@@ -3,15 +3,21 @@
 Branch `c4/rb2-int`, base engineering source FULL-v4 `22cc32f6`; inherited
 round-1 delivery remains below. Read `docs/rb2int/PLAN.md` when available.
 
-**LIVE OWNERSHIP: read `docs/rb2int/CURRENT_JOBS.md` before any launch.** Immutable
-gpuA model stageb2df7458; closed60 v5/LP both PASS/EXITED446051/446341. Own v5
-fivearm600 development canary446421 is LIVE (boot/startticks in receipt); do not
-duplicate. LP full-canary admission rejected before claim/Popen; root absent.
-No final evaluation job exists yet. WMPHYS_V5.md is explicitly a progress report.
+**FULL-v5 READY for engineering/teacher-quality rerun.** Frozen sourceb2df7458,
+gpuA stage `/root/autodl-tmp/c4/rb2int20261101/phys_code_b2df7458a41f`, recipe
+SHA023fa74a4d3059115ec0a5f28d39030a76137d871db5798eb1d23a13fc1e32c5.
+Both dev worlds/allfivearms/H600/K1 PASS220.56/232.72s;446421 EXITED. Read
+`docs/rb2int/CANARY_V5_B2DF7458_STATUS03.json` and shared RB2_INT_FULL_V5_READY.md.
+Distributional qualification/switching remain pending; no final panel exists yet.
 
-- FULL-v5 and FULL-v5-LP are **NOT READY**. All four engineering intakes merged:
+**LIVE OWNERSHIP: read `docs/rb2int/CURRENT_JOBS.md` before any launch.** LP full
+canary449208/start889033367 is LIVE; earlier admission failures occurred BEFORE
+claim/Popen. No duplicate job. Closed60 v5/LP both PASS/EXITED446051/446341.
+WMPHYS_V5.md is explicitly a progress report, not a completed final evaluation.
+
+- FULL-v5 engineering READY; FULL-v5-LP full-canary pending. All four intakes merged:
   LANE6b4bfbd5/CAL7c1cf53c/BREAK116b2147/LPHYSf6cf52ab. Integrated recipes
-  `configs/wm_phys_v5{,_lp}.toml`; staged smoke/full exposure release still pending.
+  `configs/wm_phys_v5{,_lp}.toml`; v5 staged smoke/fit audit PASS, final dispatch release pending.
 - Cross-worker physical/sampling/recipe integration gate135PASS/0skips/20.11s;
   `docs/rb2int/INTAKE_LPHYS.md`. LC attachment now preserves CAL's latent wrapper.
 - Safe alternate-volume staging and exclusive dev-smoke/canary launch/status

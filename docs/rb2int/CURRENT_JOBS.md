@@ -17,28 +17,30 @@ Use this existing stage; do not restage/replay merely because Git HEAD advances.
 - Both preserve exact WM2 encoder/checkpoint, causal motion/LC conditioning,
   finite/conserved cohort and learned-correction guard. Completion snapshots in
   `SMOKE_CLOSED_{V5,LP}_B2DF7458_COMPLETE.json`.
+- v5 fivearm600 own446421 EXITED/PASS: dev969420/969421, K1/allfivearms/H600;
+  task times220.56/232.72s. `CANARY_V5_B2DF7458_STATUS03.json` saves the complete
+  `DEV_CANARY_PASS.json` and identity-bound task hashes. Never rerun this canary.
 
 ## Running; status only
 
-- v5 fivearm600: own446421/start_ticks888936830/boot
+- LP fivearm600: own449208/start_ticks889033367/boot
   a81555d7-176e-4ed8-bc7d-896fc89cc914. Root:
-  `/root/autodl-tmp/c4/rb2int20261101/dev_b2df7458a41f_fivearm600_v5_cuda`.
+  `/root/autodl-tmp/c4/rb2int20261101/dev_b2df7458a41f_fivearm600_lp_cuda`.
   Dev969420/969421, K1/allfivearms/H600, strict5GiB CUDA/nice19/oneCPU thread.
-  Last saved status02: alive, zero complete tasks; no error log. Subsequent exact
-  process audit:183elapsed/183CPU seconds,1.94GB RSS; GPU process1,170MiB. This
-  is active computation, not evidence of a hang. Do not duplicate or stop it.
-- Read: `python -B -m tools.rb2int.smoke_ops status --host gpuA --runtime /root/autodl-tmp/c4/rb2int20261101/phys_code_b2df7458a41f --recipe wm_phys_v5.toml --kind fivearm600 --device cuda`.
+  Earlier coarse-load/memory admission failures preceded claim/Popen. Launch
+  succeeded only after v5 completed/released memory; exact PROCESS receipt saved.
+  Do not duplicate or stop it.
+- Read: `python -B -m tools.rb2int.smoke_ops status --host gpuA --runtime /root/autodl-tmp/c4/rb2int20261101/phys_code_b2df7458a41f --recipe wm_phys_v5_lp.toml --kind fivearm600 --device cuda`.
 - Completion requires `tasks/DEV_CANARY_PASS.json`, not merely a COMPLETE marker
   or process exit. This K1 development canary is never counted as final K8.
 
 ## Not launched
 
-- LP fivearm600 initial admission was rejected on a coarse host-load20 guard,
-  **before root/claim/Popen**. Read-only admission snapshot confirms root absent.
-  No LP full-canary PID/task exists. A prospective launcher correction now uses
+- LP fivearm600 initial admissions were rejected on host load/effective memory,
+  **before root/claim/Popen**. A prospective launcher correction now uses
   half-physical-host headroom plus measured effective cgroup quota (<80% after
-  adding one thread), retaining memory/disk/GPU caps. Recheck admission and launch
-  once; this is no scientific retry. Existing v5 job is unchanged.
+  adding one thread), retaining memory/disk/GPU caps. The one successful LP launch
+  followed actual memory release; no forecast or successful claim was repeated.
 - No final panel/collector/dispatcher is running for INT. Final input preparation,
   baseline-source/observation bridge and exclusive final dispatch remain pending.
 
@@ -54,6 +56,7 @@ Rate-distance CI implementation now conservatively propagates joint signed-bias
 bands through abs/subtraction (zero-bias kink); see RATE_CI_IMPLEMENTATION.md.
 New audit/CI/launcher checks20PASS; all-four-source integration135PASS.
 
-FULL-v5/LP are **NOT READY for teacher handoff** until successful integrated
-five-arm smoke and immutable release binding. Recheck worker handoffs for later
-development evidence without duplicating their owned running work.
+FULL-v5 **READY for engineering/teacher-quality rerun**, source/recipe/smoke bound
+in FREEZE_ENGINEERING_V5.md and HANDOFF.md. Distributional qualification remains
+pending. LP readiness awaits its own successful integrated five-arm receipt.
+Recheck worker handoffs for later dev evidence without duplicating their jobs.
