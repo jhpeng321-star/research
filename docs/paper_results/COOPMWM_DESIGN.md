@@ -26,7 +26,7 @@
 25. beta starts1 per training seed; immutable update receipts supply the next update's beta.
 26. Log query mass p over eligible uncommitted decisions only; beta(type,regime); R quota exhausted=>own/p0.
 27. MAIN02:01 PPO only nonexecuted/own steps (including rejected queries), standard pi_new/pi_old; never score/ratio plan steps.
-28. Critic allsteps for own PPO baseline only; plan A=exact paired SUMO saving/10000 over D+120, identical prefix; only exact-positive AWR min(20,exp(A/T)), coefficient1,T4.822766875237093 frozen preB/R; ungraded queued.
+28. Critic allsteps for own PPO baseline only; plans graded ONLY exact marginal SUMO saving g over executedD+120, identicalprefix/otherplans replayed; positivebuffer AWR weight1 until20grades then min(20,exp(g/T)),T=max(1,RMSfirst20veh-s) frozen perarm/seed; coefficient1; ungraded queued.
 29. Original E2 retained; cold/warm qualification reuses exact-labelled00/01; acceleration E2 first12random executed TRAIN plans,RNG20261101.
 30. Exact/WM E2 keeps all background CAVs on MAPPO after decision, group commitment then MAPPO; no native reversion.
 31. Select t<=600 so all H600 twins finish by1200; full-prefix COOPFREE quartet once/window.
@@ -45,7 +45,7 @@
 44. Mechanics3600,calibration57600,discovery200000,pairedbranches691200,reusecheck600; allocated7473440/free26560 not auto-spent; complete-grade precharge or STOP.
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.
 46. All failures/warmup/twins charged in full before attempts; no retries/refunds/duplicate dispatch.
-47. Primary A/B parallel first; cpuQ12nice19singlethread workers+2E2; load<=20/RAM8GiB/disk2GiB.
+47. A original4workers retained; B8/R8/exactgrader8nice19singlethread slots, <=28cpuQ total plus2diagnostic only when capacity available; RAM8GiB/disk2GiB; no physics retry.
 48. Source-bound bothGPU cold/warm EXACT0 gates; widths34/10,oneworker/GPU; hot-add same search only; final throughput/quota registration before restart.
 49. GPU CPU helpers disabled until separate frozen parity qualification; own PIDs only.
 50. Both seed guards, fresh-name exposure, immutable sources/cache/approval bindings before physics.
@@ -62,7 +62,7 @@
 61. BranchesT300/500/700/900,H300; exact same MAPPO prefix, mismatchSTOP; MAPPO-reuse600 check first; failure+115200 needs MAIN approval.
 62. Final paired world-bootstrap95CI B-MAPPO/B-A/B-R/A-MAPPO J600/J900; percell/safety; controls reused.
 63. First12executedBstarts RNG20261101 + final detector-first twins share200000reserve; complete n+2 full-prefix reruns before any attempt.
-64. Trust/library/covariance: ONLY exact same-state SUMO plan grades, never critic estimates; prefix mismatch STOP/logged, no imputation; asynchronous CPU grading before first B update, report lag.
+64. Trust/library/covariance: exact same-state SUMO only, never critic estimates; prefix/CRNfaultSTOP,noimputation; asyncgrader alive beforefirstBupdate; firstrealgrade reusedassmoke before consumption; truncatedD graded, partialplans excludedfromlibrary; reportlag.
 65. 10000 world bootstrap95CI[L,U]; e=max(|mean-L|,|U-mean|); beta=min(old,max(0,U)/(|mean|+e)).
 66. MPPI/type x regime EB buckets: tau²=max(0,var(bucketmeans)-mean(bootstrapSE²)); weight=tau²/(tau²+SE²); O1-O4 posthoc labels only.
 67. Two Holm families per comparator B-MAPPO/B-A over{allbranch,focus},two-sidedalpha.05; whole-world clusters; focus sources exact lines/SHA in amendment.

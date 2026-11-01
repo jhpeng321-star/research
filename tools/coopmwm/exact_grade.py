@@ -47,7 +47,7 @@ EPISODE_END_S = 1200
 TAIL_S = 120
 METRIC = 'team_delay_vs'
 NOISE_MODES = ('crn', 'mean')
-MAX_ATTEMPTS = 2           # orphaned (dead worker) attempts only; physics/executor errors never retry
+MAX_ATTEMPTS = 1           # all attempted physics retained; no automatic physics replay
 T_FLOOR_VEH_S = 1.
 WEIGHT_CLIP = 20.          # same registered clip as the AWR amendment
 HARM_MIN_PLANS = 30        # owner health guard 3b
@@ -129,7 +129,7 @@ def job_specs(result, meta, noise_mode='crn'):
     specs = []
     for _, s in starts:
         t0 = int(s['time_s']);plan = s['proposal']['plan'];b = s['sample']['behaviour']
-        D = int(plan['duration_s'])
+        D = executed_duration(result, plan, t0)
         if D <= 0:
             raise ValueError('executed plan duration missing')
         t_end = window_end(t0, D, end)
@@ -165,17 +165,39 @@ def job_specs(result, meta, noise_mode='crn'):
     return specs
 
 
+def executed_duration(result, plan, t0):
+    ends = [int(s['time_s']) for s in result['steps'] for c in s['sample'].get('plan_truncations', [])
+            if c['plan_id'] == plan['id'] and int(c['start_s']) == t0]
+    return min([int(plan['duration_s']), episode_end_s(result)-t0]+[t-t0 for t in ends])
+
+
+def plan_executions(step):
+    sample = step['sample']
+    if 'plan_executions' in sample:
+        return sample['plan_executions']
+    b = sample.get('behaviour') or {}
+    return ([dict(plan_id=b.get('plan_id'), proposal_members=b.get('proposal_members') or
+                  list(sample['absolute_accels']))] if 'absolute_accels' in sample else [])
+
+
+def replay_accels(step, plan_id):
+    accels = step['sample'].get('absolute_accels', {})
+    return {c['plan_id']: {v: accels[v] for v in c['proposal_members'] if v in accels}
+            for c in plan_executions(step) if c['plan_id'] != plan_id}
+
+
 def other_plans(result, t0, duration_s, t_end):
     """Every OTHER executed plan active in [t0, t_end) of the original episode (MAIN overlap rule):
     replayed in the without-plan branch exactly as recorded (per-second absolute accelerations)."""
     out = {}
+    pid = next(s['proposal']['plan']['id'] for s in result['steps'] if int(s['time_s']) == t0)
     for s in result['steps']:
-        t = int(s['time_s']);b = s['sample'].get('behaviour') or {}
-        if not (t0 <= t < t_end) or t0 <= t < t0+duration_s or 'absolute_accels' not in s['sample']:
-            continue
-        pid = b.get('plan_id');members = list(b.get('proposal_members') or s['sample']['absolute_accels'])
-        o = out.setdefault((pid, tuple(members)), dict(id=pid, members=members, first_s=t, last_s=t, seconds=0))
-        o['last_s'] = t;o['seconds'] += 1
+        t = int(s['time_s'])
+        if not t0 <= t < t_end:continue
+        for other, accels in replay_accels(s, pid).items():
+            members = list(accels)
+            o = out.setdefault((other, tuple(members)), dict(id=other, members=members, first_s=t, last_s=t, seconds=0))
+            o['last_s'] = t;o['seconds'] += 1
     return sorted(out.values(), key=lambda o: o['first_s'])
 
 
@@ -301,8 +323,9 @@ def grade_controller_class():
                         sample['action'][i] = [float(mean[i, 0])]
                 changed = True
             replayed = None
-            if orig is not None and not (self.t0 <= t < self.t0+self.duration) and 'absolute_accels' in orig['sample']:
-                accels = dict(orig['sample']['absolute_accels'])
+            others = replay_accels(orig, self.audit['without_plan_of']) if orig is not None else {}
+            if others:
+                accels = {v: a for values in others.values() for v, a in values.items()}
                 if set(accels) & set(self.plan_members):
                     raise ValueError('other-plan replay touches the graded plan members (overlap_unresolved)')
                 sample['absolute_accels'] = accels
@@ -310,8 +333,9 @@ def grade_controller_class():
                 for v, raw in accels.items():
                     if v in members:
                         sample['action'][members.index(v)] = [raw-commands[v]]
-                replayed = (orig['sample'].get('behaviour') or {}).get('plan_id')
-                key = str(replayed);self.audit['replayed_plans'][key] = self.audit['replayed_plans'].get(key, 0)+1
+                replayed = list(others)
+                for key in others:
+                    self.audit['replayed_plans'][str(key)] = self.audit['replayed_plans'].get(str(key), 0)+1
                 self.audit['replay_skipped_member_seconds'] += sum(v not in commands for v in accels)
                 changed = True
             if changed:
@@ -374,11 +398,10 @@ def grade(spec, original, runner):
     audit = branch.get('audit') or {}
     if 'replayed_plans' in audit:
         expected = {}
-        for o in spec.get('replayed_plans', []):
-            o_end = min(o['last_s'], t_end-1)
-            n = sum(1 for s in original['steps'] if o['first_s'] <= int(s['time_s']) <= o_end
-                    and 'absolute_accels' in s['sample'] and not (t0 <= int(s['time_s']) < t0+spec['plan']['duration_s']))
-            expected[str(o['id'])] = expected.get(str(o['id']), 0)+n
+        for s in original['steps']:
+            if t0 <= int(s['time_s']) < t_end:
+                for key in replay_accels(s, spec['plan']['id']):
+                    expected[str(key)] = expected.get(str(key), 0)+1
         if audit['replayed_plans'] != {k: v for k, v in expected.items() if v}:
             raise ValueError('other-plan replay does not match the recorded plans')
     for s in branch.get('steps', []):
@@ -796,10 +819,13 @@ def imitation_pairs(original, entry):
     for s in original['steps']:
         t = int(s['time_s'])
         if t0 <= t < t0+D:
-            b = s['sample'].get('behaviour') or {}
-            if not b.get('executed') or b.get('plan_id') != pid:
+            import copy
+            selected = [c for c in plan_executions(s) if c['plan_id'] == pid]
+            if not selected:
                 raise ValueError('incomplete committed plan tape')
-            pairs.append((s['sample'], entry['weight']))
+            sample = copy.deepcopy(s['sample'])
+            sample['behaviour'] = dict(sample.get('behaviour') or {}, proposal_members=selected[0]['proposal_members'])
+            pairs.append((sample, entry['weight']))
     if len(pairs) != D:
         raise ValueError('committed plan extends past the recorded tape')
     return pairs
@@ -840,13 +866,30 @@ def trust_evidence(receipts, previous, n_boot=N_BOOT, seed=BOOT_SEED, arm=None, 
     mean, ci = _bootstrap_mean([r['grade_veh_s'] for r in g], [r['world_seed'] for r in g], n_boot, seed)
     out.update(mean=mean, ci95=ci, beta=decay(prior['beta'], mean, ci) if ci else prior['beta'])
     out['harm_guard'].update(ci95=ci, pause=bool(len(g) >= HARM_MIN_PLANS and ci is not None and ci[1] < 0))
+    worlds=sorted({r['world_seed'] for r in g});wi={w:i for i,w in enumerate(worlds)}
+    counts=np.random.default_rng(seed).multinomial(len(worlds),np.full(len(worlds),1/len(worlds)),size=n_boot)
+    def samples(sub):
+        x=np.zeros((len(worlds),2))
+        for r in sub:x[wi[r['world_seed']]] += [r['grade_veh_s'],1]
+        draws=counts@x
+        return np.divide(draws[:,0],draws[:,1],out=np.full(n_boot,np.nan),where=draws[:,1]>0)
+    pooled=samples(g);local={};variances={}
     for k in BUCKETS:
-        option, traffic = k.split('|');old = bucket_beta(prior, option, traffic)
-        sub = [r for r in g if (r['plan'].get('option') or 'MPPI') == option and (r['plan'].get('regime') or 'ordinary') == traffic]
-        if len({r['world_seed'] for r in sub}) < 2:
-            out['buckets'][k] = dict(beta=old, previous=old, ci95=None, n=len(sub));continue
-        m, c = _bootstrap_mean([r['grade_veh_s'] for r in sub], [r['world_seed'] for r in sub], n_boot, seed)
-        out['buckets'][k] = dict(beta=decay(old, m, c), previous=old, mean=m, ci95=c, n=len(sub))
+        option,traffic=k.split('|')
+        sub=[r for r in g if (r['plan'].get('option') or 'MPPI')==option and (r['plan'].get('regime') or 'ordinary')==traffic]
+        if len({r['world_seed'] for r in sub})>=2:
+            draws=samples(sub);local[k]=(float(np.mean([r['grade_veh_s'] for r in sub])),draws,len(sub))
+            variances[k]=float(np.nanvar(draws,ddof=1))
+    tau=max(0.,float(np.var([v[0] for v in local.values()],ddof=1)-np.mean(list(variances.values())))) if len(local)>1 else 0.
+    out['between_bucket_variance']=tau
+    for k in BUCKETS:
+        old=bucket_beta(prior,*k.split('|'))
+        w=tau/(tau+variances[k]) if k in local and tau else 0.
+        mu=w*local[k][0]+(1-w)*mean if w else mean
+        draws=w*local[k][1]+(1-w)*pooled if w else pooled
+        c=list(map(float,np.nanquantile(draws,[.025,.975])))
+        out['buckets'][k]=dict(beta=decay(old,mu,c),previous=old,mean=mu,ci95=c,
+            shrinkage_to_local=w,n=local[k][2] if k in local else 0)
     return out
 
 

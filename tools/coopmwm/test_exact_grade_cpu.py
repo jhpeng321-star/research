@@ -97,7 +97,8 @@ class FakeGuide:
         from .mppi_search import group_components
         if int(now) % 10 or now > 900:
             return None
-        groups = group_components(rows)
+        from .committed import members as committed_members
+        groups = group_components(rows,exclude=committed_members(sample.get('committed_plans',[])))
         if not groups:
             return None
         p = .95;queried = float(torch.rand((), generator=self.g)) < p
@@ -422,7 +423,7 @@ class ExactGradeCPU(unittest.TestCase):
     def test_queue_resume_idempotence_and_orphan_recovery(self):
         fx = Fixture(self.tmp);specs = fx.specs()
         alive = {'v': True}
-        q = fx.queue(alive=lambda c: alive['v'])
+        q = fx.queue(alive=lambda c: alive['v'],max_attempts=2)  # explicit legacy queue fixture; production never retries
         self.assertTrue(q.enqueue(specs[0]));self.assertFalse(q.enqueue(specs[0]))
         with self.assertRaises(ValueError):
             q.enqueue(xg._seal(dict({k: v for k, v in specs[0].items() if k != 'spec_sha256'}, sim_s=1), 'spec_sha256'))
@@ -499,6 +500,38 @@ class ExactGradeCPU(unittest.TestCase):
         with self.assertRaises(ValueError):
             xg.smoke(fx.tmp/'run', 'final_B_1', fx.tmp/'smoke', binding, training_seed=20261101, charge='local')
 
+    def test_concurrent_plan_replay_is_marginal_during_graded_plan(self):
+        fx=Fixture(self.tmp,accel=-.05,offers={320:'c1',330:'c4'})
+        starts=xg.executed_plan_steps(fx.original)
+        self.assertEqual([s['time_s'] for _,s in starts],[320,330])
+        spec=fx.specs()[0]
+        self.assertEqual(spec['replayed_plans'][0]['first_s'],330)
+        self.assertFalse(spec['overlap_unresolved'])
+        with fake_sumo():
+            branch=xg.AccelPlantGradeRunner(fx.tmp/'grader').run(spec,fx.original)
+        for step in branch['steps']:
+            t=step['time_s']
+            if 330<=t<350:
+                original=next(s for s in fx.original['steps'] if s['time_s']==t)
+                expected=xg.replay_accels(original,spec['plan']['id'])
+                actual=step['sample']['absolute_accels']
+                self.assertEqual(actual,{v:a for values in expected.values() for v,a in values.items()})
+                self.assertFalse(set(actual)&set(spec['plan']['members']))
+        body=xg.grade(spec,fx.original,types.SimpleNamespace(run=lambda s,o:branch))
+        self.assertEqual(body['noise']['replayed_plans']['P330'],30)
+
+    def test_truncation_and_imitation_select_one_concurrent_group(self):
+        fx=Fixture(self.tmp,accel=-.05,offers={320:'c1',330:'c4'})
+        original=copy.deepcopy(fx.original)
+        first=original['steps'][20]['proposal']['plan']
+        original['steps'][35]['sample']['plan_truncations']=[dict(plan_id=first['id'],start_s=320)]
+        self.assertEqual(xg.executed_duration(original,first,320),15)
+        spec=xg.job_specs(original,dict(fx.meta,result_sha256=digest(original)))[0]
+        self.assertEqual(spec['window']['end_s'],455)
+        pairs=xg.imitation_pairs(original,dict(start_s=330,duration_s=30,plan_id='P330',weight=1.))
+        self.assertEqual(len(pairs),30)
+        for sample,_ in pairs:self.assertEqual(set(sample['behaviour']['proposal_members']),{'c4','c5'})
+
     def test_trust_evidence_and_harm_guard(self):
         good = [receipt(f'g{i}', 3.+i % 2, world=i % 5) for i in range(10)]
         t = xg.trust_evidence(good, 1.)
@@ -515,6 +548,22 @@ class ExactGradeCPU(unittest.TestCase):
         self.assertEqual(xg.guide_draws(step, 'R'), ['rand', 'randint', 'rand'])
         self.assertEqual(xg.guide_draws(dict(step, proposal=dict(accepted=False)), 'B'), ['rand'])
         self.assertEqual(xg.guide_draws(dict(sample=dict(behaviour=dict(route='plan')), proposal=None), 'B'), [])
+
+    def test_runtime_never_consumes_grades_before_real_smoke(self):
+        from . import exact_runtime as xr
+        q=types.SimpleNamespace(root=Path(self.tmp)/'exact_grades',receipts=lambda:self.fail('unqualified grade read'))
+        with patch.object(xr,'assert_live'),patch.object(xr,'queue',return_value=q):
+            rows,weights,pairs,tr=xr.evidence(Path(self.tmp),'B',1.)
+        self.assertEqual(rows,[]);self.assertEqual(pairs,[]);self.assertEqual(weights['weights'],{})
+        self.assertEqual(tr['beta'],1.)
+
+    def test_exact_library_ignores_critic_and_other_arm_seed_negative(self):
+        from . import search_learning as sl
+        state=sl.empty('B',20261101,[-3.,2.6])
+        records=[receipt('neg',-1),receipt('random',5,arm='R'),receipt('otherseed',5)]
+        for r in records:r.update(training_seed=1);r.update(xg._seal(r,'receipt_sha256'))
+        learned=sl.exact_update(state,records,lambda p:self.fail('invalid library source read'),'B',20261101)
+        self.assertEqual(learned['library']['entries'],[])
 
 
 def q_branch(fx, r):

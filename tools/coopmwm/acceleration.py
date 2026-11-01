@@ -113,7 +113,7 @@ class Controller:
             primary=self.active_plans[-1] if sample.get('behaviour',{}).get('plan_start') else self.active_plans[0]
             self.plan,self.plan_start=primary['plan'],primary['start_s']
             if not sample.get('behaviour',{}).get('plan_start'):
-                sample['behaviour'] = dict(route='plan', executed=True, plan_start=False,
+                sample['behaviour'] = dict(sample.get('behaviour',{}),route='plan', executed=True, plan_start=False,
                     beta=bucket_beta(self.beta, self.plan['family'], regime(rows)),
                     option=self.plan['family'], regime=regime(rows))
             b = sample['behaviour']

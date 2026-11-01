@@ -68,7 +68,7 @@ print(json.dumps(v))''',timeout=30))
     print(json.dumps(value));return value
 
 
-def authorize():
+def authorize(receipt_name='WARM_REMOTE_AUTHORIZATION.json'):
     """Task-only restricted public key; private material remains on cpuQ."""
     public=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,subprocess,json,os
 r=pathlib.Path({ROUTES!r});assert r.parent.is_dir();r.mkdir(exist_ok=True);r.chmod(0o700)
@@ -95,7 +95,7 @@ print(json.dumps(dict(registered=True,public_key_sha256=hashlib.sha256({public!r
         endpoints.append(dict(slot=host+'@0',destination=config['user']+'@'+hostname,port=port,
             identity_file=ROUTES+'/id_ed25519',known_hosts=ROUTES+'/known_hosts_'+host,authorization=receipt))
     ops.stage('cpuQ',ROUTES,{'ENDPOINTS.json':json.dumps(endpoints,sort_keys=True)})
-    write(ops.EVIDENCE/'WARM_REMOTE_AUTHORIZATION.json',dict(endpoints=endpoints,private_material_copied=False,new_sumo_sim_s=0))
+    write(ops.EVIDENCE/receipt_name,dict(endpoints=endpoints,private_material_copied=False,new_sumo_sim_s=0))
     print(json.dumps(dict(authorized=[e['slot'] for e in endpoints],private_material_copied=False)))
 
 

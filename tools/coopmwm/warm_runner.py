@@ -31,7 +31,8 @@ def verify(root,arm):
         release=read(root/'WARM_RELEASE.json')
         assert release['pass_'] and release['N_exec']>=10
         assert release['release_amendment_sha256'] in text
-    v3=root/f'WARM_{arm}_RUNTIME_BINDING_V3.json'
+    v4=root/f'WARM_{arm}_RUNTIME_BINDING_V4.json'
+    v3=v4 if v4.exists() else root/f'WARM_{arm}_RUNTIME_BINDING_V3.json'
     if arm in ('B','R') or v3.exists():
         runtime=read(v3 if v3.exists() else root/f'WARM_{arm}_RUNTIME_BINDING_V2.json')
         assert runtime['cpu']['pass_'] and not runtime['cpu']['skips']
@@ -81,7 +82,7 @@ def run_arm(root,arm):
         first,last=resume+1,48
     else:
         policy=Policy();opt=torch.optim.Adam(policy.parameters(),lr=3e-4)
-        rng=torch.Generator().manual_seed(SEED);first,last=1,4
+        rng=torch.Generator().manual_seed(SEED);first,last=1,budget()['updates'][arm]
         save(root/f'{arm}_checkpoint_000.pt',policy,opt,rng,0,charged(root))
     write(root/f'WARM_{arm}_STARTED{suffix}.json',dict(timestamp_utc=timestamp(),first_update=first,
         pause_update=last,full_endpoint=budget()['updates'][arm],charged_sim_s=charged(root)))
@@ -114,9 +115,15 @@ def run_arm(root,arm):
                     actual=sorted((t['group_size'],t['duration_s']) for t in routes['durations'] if t['regime']==regime)
                     assert actual==expected,'R count/regime/group-size/duration gate'
             ev=evidence(eps);running+=ev
-            tr=trust(beta,running) if arm in ('B','R') else dict(beta=0.)
+            exact_receipts=[];weights=None;pairs=[]
+            if arm in ('B','R'):
+                from . import exact_runtime as xr
+                for ep in eps:xr.enqueue(root,b,ep,u,arm,beta)
+                exact_receipts,weights,pairs,tr=xr.evidence(root,arm,beta)
+            else:tr=dict(beta=0.)
             if b.get('health_guards'):
-                before_update(root,arm,u,routes, running,tr,b['N_exec'])
+                before_update(root,arm,u,routes,
+                    [dict(executed=True)]*tr['graded'] if arm in ('B','R') else running,tr,b['N_exec'])
                 if arm in ('B','R'):
                     a_records=[]
                     for w in batch_worlds(u):
@@ -125,19 +132,29 @@ def run_arm(root,arm):
                         if p.exists():a_records.append(read(p))
                     braking(root,arm,u,eps,a_records)
             if arm=='B':
-                learned=search_learning.update(learned,eps,ev,arm,SEED)
+                learned=search_learning.exact_update(learned,exact_receipts,lambda p:read(Path(p)),arm,SEED)
                 write(root/f'B_SEARCH_LEARNING_{u:03}.json',learned)
             write(root/f'{arm}_VIABILITY_{u:03}.json',dict(timestamp_utc=timestamp(),update=u,
-                arm=arm,viability=viability(ev),cumulative=viability(running),routing=routes))
+                arm=arm,critic_diagnostic_only=viability(ev),cumulative_critic_diagnostic_only=viability(running),
+                exact_trust=tr,routing=routes))
             # Snapshot the rollout policy BEFORE the optimizer for exact twins.
             state={k:v.detach().clone() for k,v in policy.state_dict().items()}
-            metrics=update(policy,opt,eps,rng,**({'awr':b['awr']} if 'awr' in b else {}))
+            if arm in ('B','R'):
+                from .exact_grade import exact_update,lag_report
+                metrics=exact_update(policy,opt,eps,rng,pairs,b['awr']['coefficient'])
+                grade_lag=lag_report(xr.queue(root),u)
+            else:
+                metrics=update(policy,opt,eps,rng,**({'awr':b['awr']} if 'awr' in b else {}));grade_lag=None
             save(root/f'{arm}_checkpoint_{u:03}.pt',policy,opt,rng,u,charged(root))
             raw=[v*UNIT for e in eps for v,_ in advantages(e['steps'])]
             write(root/f'{arm}_UPDATE_{u:03}.json',dict(timestamp_utc=timestamp(),update=u,arm=arm,
                 training_seed=SEED,ppo=metrics,trust=tr,beta_used=beta if arm!='A' else 0.,
                 proposal_routing=routes,team_only_noise=dict(advantage_variance_veh_s_squared=float(np.var(raw,ddof=1))),
                 wall_s=time.monotonic()-start,eta_final_hours=(budget()['updates'][arm]-u)*(time.monotonic()-start)/3600,
+                exact_imitation=weights,grading_lag=grade_lag,
+                concurrently_active_plans=max(s.get('simultaneously_active_plans',0) for e in eps for s in e['steps']),
+                overlap_rechecks=[s['proposal']['overlap_recheck'] for e in eps for s in e['steps']
+                    if s.get('proposal') and s['proposal'].get('overlap_recheck')],
                 charged_sim_s=charged(root),reward_source='SUMO source-inclusive team J only'))
             beta=tr
             if arm=='B':
@@ -155,7 +172,7 @@ def run_arm(root,arm):
         diagnostics.shutdown(wait=True)
         write(root/f'WARM_{arm}_PAUSED.json',dict(timestamp_utc=timestamp(),update=last,
             full_endpoint=budget()['updates'][arm],charged_sim_s=charged(root),
-            reason='early viability owner review; final panel unopened' if arm!='A' else 'A fixedu48 complete; wait for B48 before final panel'))
+            reason='fixed registered endpoint complete; final evaluation waits for A/B48'))
     except BaseException as error:
         write(root/f'WARM_{arm}_FAILED{suffix}.json',dict(timestamp_utc=timestamp(),error=repr(error)))
         if not isinstance(error,HealthPause):

@@ -1,5 +1,25 @@
 # S-COOPMWM — live checks
 
+## MAIN03:03 exact-grader integration — CPU qualified
+- **201 CPU tests PASS, zero skips, 38.25 s, zero SUMO** on cpuQ, immutable
+  `/home/ubuntu/coopmwm20261102_exactcpu3`; failed CPU1/CPU2 receipts retained.
+- Integrated landed grader526465de: only exact marginal SUMO grades drive plan
+  imitation, trust and B's same-seed winning-plan library/covariance. Own-step PPO,
+  all-step critic; positive-plan weights uniform until20grades, then frozen
+  first20-grade RMS temperature, clip20, whole positive buffer each update.
+- **DIAGNOSIS:** concurrent plan execution overwrote eligible-query metadata when
+  a new query was declined while an older plan continued. That hid RNG draws and
+  broke exact common-random-number replay. Preserve query metadata; both B/R
+  independent-oracle tests now pass bitwise. Grader now replays OTHER groups during
+  the graded plan, grades truncated executed portions, and selects imitation
+  members by plan-execution records. Unlabelled truncated tails do not seed search.
+- First successful real B grade will be reused as the one-plan smoke; no grade
+  enters learning before its prefix/CRN gates pass. Grading remains asynchronous;
+  no automatic physics replay. CPU capacity: B8/R8/grader8 plus original A4.
+- Existing concurrent GPU qualifiers596572/36740 are adopted; their source-bound
+  background/recheck gates are still running. B/R remain unstarted at this entry.
+- Latest approved budget remains **7,473,440 /7,500,000sim-s**,26,560spare.
+
 ## Fresh resume — full brief through MAIN02:43
 - Original detached A2998262 remains running: **u21 complete, 496/504 jobs
   closed, 1,592,840 sim-s charged**. B/R/broker unstarted; no active pause/STOP.
