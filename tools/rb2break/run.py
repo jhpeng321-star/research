@@ -17,7 +17,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(ROOT), str(ROOT/'src')]
 DEV = tuple(range(969420, 969432))
 FACTORS = ('baseline', 'no_mainline_lc', 'no_merge_advice', 'depart_last',
-           'depart_first', 'population', 'point_v0', 'point_tau', 'fixed_rate')
+           'depart_first', 'population', 'point_v0', 'point_tau', 'fixed_rate', 'lane_limits')
 
 
 def filtered_starts(code, worlds):
@@ -128,6 +128,10 @@ def main():
         models, receipt = recipe.load_candidate(*args)
         receipt['rb2break_factor'] = options.factor
         receipt['rb2break_world_allowlist'] = options.dev_worlds
+        if options.factor == 'lane_limits':
+            from dataclasses import replace
+            models[0].physics = replace(models[0].physics, sumo_cf_lane_speed_limits=True)
+            receipt['sumo_cf_lane_speed_limits'] = True
         if options.factor == 'population':
             # Keep causal arrivals; disable only own-driver posterior information.
             models[0]._wmphys_condition_motion = False

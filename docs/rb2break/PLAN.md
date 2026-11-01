@@ -46,3 +46,12 @@ Local NVIDIA driver unavailable. gpuA checked at11:59 host time: idle GPU,
 one CPU thread/nice19; check actual GPU/load before launch. Do not signal peer PIDs.
 S-RB2-LANE owns LC2013 corrections; BREAK owns diagnostics and longitudinal,
 insertion/arrival fixes. Publish requests/results under rb-shared with own names.
+
+##12:18 source-supported extension (registered before candidate inference)
+`lane_limits`: enable `physics.sumo_cf_lane_speed_limits=true` alone. Audit found
+that SUMO CF calls current lane getVehicleMaxSpeed, whereas the deployed CF
+adapter uses reference v0 on the22.22m/s ramp approach. Insertion and merge
+negotiation already map the lane limit; longitudinal CF does not. Reuse the
+existing network mapping (no fitted constant), preserve sampled reference v0
+and mainline/acceleration-lane outputs exactly. Source-backed parity correction,
+not a forecast improvement claim until matched development screen completes.

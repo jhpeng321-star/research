@@ -12,6 +12,24 @@ Accounting share84% source is NOT a causal attribution. New runner reproduces
 No candidate or improvement claimed yet. Mainline-LC/merge-advice screens active.
 Reserved969432–969439 forbidden to this workstream. Learned corrections OFF.
 
+## Round2 physical correction (screen pending)
+`physics.sumo_cf_lane_speed_limits=true` (default OFF) maps inferred reference v0
+to CURRENT lane limit for longitudinal SUMO CF. Network ramp approach22.22m/s
+was already mapped in insertion/merge advice but missing in CF. Source
+`MSCFModel_IDM.cpp:131–133` uses current-lane getVehicleMaxSpeed.
+Persistent sampled settings unchanged; mainline/acceleration-lane output unchanged.
+Regression+departure+motion-conditioning+guard13PASS (existing local Miniconda).
+Source fix is available for integration review; do not claim traffic improvement
+until matched development inference completes. No change to frozen recipes yet.
+
+Arrival receipt audit `SOURCE_AUDIT_DEV.json`: mean K8 mainline intensity draw
+adds only0.713 expected requests over600s vs causal count/exposure (ramp−0.109).
+Jeffreys prior alone adds1 request/entrance in600s. This is not an11kveh-s
+direct arrival-count offset. Native mainline admissions average260–290/600s
+across these worlds; source service / induced queue dynamics need isolation.
+Current own queued workers continue the predeclared remaining6 factors serially,
+max2GPU workers, inference only. Immutable roots under `/root/rbeval20261031/rb2break`.
+
 ## Inherited round1 handoff (provenance; not current BREAK process ownership)
 
 # S-RB-INT FINAL — 2026-11-01

@@ -27,6 +27,7 @@ def main():
     parser.add_argument('--tag', default='screen')
     parser.add_argument('--snapshot-name')
     parser.add_argument('--lane', type=int, choices=(0, 1), default=0)
+    parser.add_argument('--device', choices=('cuda', 'cpu'), default='cuda')
     args = parser.parse_args()
     if not set(args.worlds) <= set(range(969420, 969432)) or not args.worlds:
         raise ValueError('development only')
@@ -72,15 +73,17 @@ def save(path,data):
     out_name = f'{args.tag}_{args.factor}_s{args.shard}'
     if args.action == 'launch':
         if args.factor not in ('baseline', 'no_mainline_lc', 'no_merge_advice', 'depart_last',
-                               'depart_first', 'population', 'point_v0', 'point_tau', 'fixed_rate'):
+                               'depart_first', 'population', 'point_v0', 'point_tau', 'fixed_rate', 'lane_limits'):
             raise ValueError('unregistered factor')
         if not args.runtime or not args.runtime.startswith(PARENT+'/rb2break_code_'):
             raise ValueError('own immutable runtime required')
         code = f'''
 runtime=Path({args.runtime!r});assert (runtime/'STAGE.json').is_file()
-resources=dict(load=os.getloadavg(),gpu=subprocess.check_output(['nvidia-smi','--query-gpu=memory.free,utilization.gpu','--format=csv,noheader,nounits'],text=True))
+resources=dict(load=os.getloadavg(),device={args.device!r})
 assert resources['load'][0]<16, 'host busy'
-assert int(resources['gpu'].split(',')[0])>12000, 'leave shared GPU headroom'
+if {args.device!r}=='cuda':
+ resources['gpu']=subprocess.check_output(['nvidia-smi','--query-gpu=memory.free,utilization.gpu','--format=csv,noheader,nounits'],text=True)
+ assert int(resources['gpu'].split(',')[0])>12000, 'leave shared GPU headroom'
 root.mkdir(exist_ok=True)
 out=root/{out_name!r};assert not out.exists(), 'never duplicate a dispatch'
 out.mkdir()
@@ -88,8 +91,8 @@ argv=['nice','-n','19','/root/miniconda3/bin/python','-B','-u',str(runtime/'tool
  '--out',str(out),'--runtime-root',str(runtime),'--wm-config',str(runtime/'configs/wm_phys.toml'),
  '--model-name',{('RB2BREAK_'+args.tag+'_'+args.factor)!r},'--factor',{args.factor!r},
  '--dev-worlds',*map(str,{args.worlds!r}),'--futures',*map(str,{args.futures!r}),
- '--shard',{str(args.shard)!r},'--shards',{str(args.shards)!r},'--memory-gib','5']
-env=dict(os.environ,OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',CUDA_VISIBLE_DEVICES='0',
+ '--shard',{str(args.shard)!r},'--shards',{str(args.shards)!r},'--memory-gib','5','--device',{args.device!r}]
+env=dict(os.environ,OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',CUDA_VISIBLE_DEVICES={'0' if args.device == 'cuda' else ''!r},
  PYTHONPATH='/root/autodl-tmp/c4/speedhead20261030/pythondeps')
 with (out/'worker.log').open('x') as log:
  p=subprocess.Popen(argv,stdout=log,stderr=subprocess.STDOUT,env=env,cwd=runtime,start_new_session=True)

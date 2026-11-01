@@ -330,8 +330,16 @@ class PhysicsConfig:
     #: SUMO vType ``actionStepLength`` (None = every step, the SUMO default; the
     #: rollout does not carry the held-acceleration state for larger values yet).
     sumo_cf_action_step_s: float | None = None
+    # S-RB2-BREAK: use the network-local lane limit times inferred speedFactor
+    # in SUMO CF (ramp approach22.22 vs reference31.29). Default OFF preserves
+    # existing frozen recipes. Insertion/merge already apply this mapping.
+    sumo_cf_lane_speed_limits: bool = False
 
     def __post_init__(self) -> None:
+        if not isinstance(self.sumo_cf_lane_speed_limits, bool):
+            raise ValueError('sumo_cf_lane_speed_limits must be a boolean')
+        if self.sumo_cf_lane_speed_limits and self.cf_model != 'sumo_idm':
+            raise ValueError('network-local SUMO lane speeds require cf_model=sumo_idm')
         if self.merge_model not in ("legacy", "sumo"):
             raise ValueError("merge_model must be 'legacy' or 'sumo'")
         if not isinstance(self.secure_gap_veto, bool):
