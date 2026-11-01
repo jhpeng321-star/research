@@ -27,8 +27,10 @@ def request_memory(rt,record,binding):
     allowed={'state_id','world_id','time_s','rows','group','commands','policy_residuals'}|({'mode','plan'} if diagnostic else set())
     if 'warm_memory' in record:allowed.add('warm_memory')
     if 'history' in record:allowed.add('history')
-    allowed|={k for k in ('policy_state','search_learning') if k in record}
+    allowed|={k for k in ('policy_state','search_learning','committed_plans') if k in record}
     if set(record)!=allowed:raise ValueError('observable plan request whitelist')
+    from .committed import validate
+    validate(record.get('committed_plans',[]),record['group'])
     if 'history' in record and 'warm_memory' in record:
         raise ValueError('ambiguous warm memory payload')
     if binding.get('memory_mode')=='warm' and not {'history','warm_memory'} & set(record):

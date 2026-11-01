@@ -1,5 +1,11 @@
 # S-COOPMWM live continuation — MAIN02:43 concurrent-plan correctness pending
 
+MAIN0243 concurrentCPU3 now164PASS/0skips/zeroSUMO, immutable
+/home/ubuntu/coopmwm20261102_concurrentcpu3. Multi-disjoint committed plant plans,
+observable remaining-profile context, every WM comparator/candidate keeps other
+commitments then policy after expiry; reference/transfer tables exact onCPU.
+GPU requalification/new runtime binding pending; original GPU owners untouched.
+
 FRESH RESUME: complete255-line brief read, HEAD5e4f296e/work preserved. Receipt
 RESUME_MAIN0243_20261102.md: original A2998262 running,u21complete,496/504closed,
 charge1592840; B/R/broker unstarted. BOTH original GPU spools alive/S/READY with

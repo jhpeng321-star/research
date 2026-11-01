@@ -23,7 +23,8 @@ def imagined_centres(rt,record,memory,width=2,speed2=True,transfers=False):
 
 def plan(rt,record,memory,binding):
     from .plan_service import batch_width
-    groups=search.group_components(record['rows'])
+    from .committed import members
+    groups=search.group_components(record['rows'],exclude=members(record.get('committed_plans',[])))
     group=next((g for g in groups if g['members']==record['group']),None)
     if group is None:raise ValueError('group does not match registered observable components')
     policy,mappo,receipt=imagined_centres(rt,record,memory,speed2=binding.get('speed2',False),transfers=binding.get('speed2_transfers',False))

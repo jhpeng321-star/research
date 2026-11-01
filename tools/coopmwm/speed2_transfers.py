@@ -26,6 +26,13 @@ def vector_table(actions, ids, device, horizon=300, dynamic_policy=False):
             for v,x in a.get('residuals',{}).items():
                 if v in slots:
                     raw[b,ts,slots[v]]=x; mask[b,ts,slots[v]]=True; residual[b,ts,slots[v]]=True
+        from .committed import background
+        committed=[background(a.get('committed_plans',[]),t) for t in range(int(horizon))]
+        for v in dict.fromkeys(v for row in committed for v in row):
+            if v not in slots:continue
+            ts=[t for t,row in enumerate(committed) if v in row]
+            raw[b,ts,slots[v]]=torch.tensor([committed[t][v] for t in ts],dtype=raw.dtype)
+            mask[b,ts,slots[v]]=True;residual[b,ts,slots[v]]=False
     return raw.to(device),mask.to(device),residual.to(device)
 
 

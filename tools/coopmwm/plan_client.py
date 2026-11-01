@@ -29,7 +29,9 @@ def guide(job,generator):
     quota=read(Path(job['random_quota'])) if job.get('random_quota') else None
     def call(rows,commands,now,sample):
         if int(now)%10 or now>900:return None
-        groups=group_components(rows)
+        from .committed import members as committed_members
+        committed=sample.get('committed_plans',[])
+        groups=group_components(rows,exclude=committed_members(committed))
         if not groups:return None
         chosen_group=groups[0];members=chosen_group['members']
         traffic=regime(rows);selected_ticket=None
@@ -67,7 +69,8 @@ def guide(job,generator):
         if not queried:return None
         deltas={v:float(a[0]) for v,a in zip(sample['context']['members'],sample['own_action'])}
         r=dict(world_id=job['world']['seed'],time_s=int(now),rows=rows,group=members,
-             commands=commands,policy_residuals=deltas,history=history.snapshot(now))
+              commands=commands,policy_residuals=deltas,history=history.snapshot(now))
+        if committed:r['committed_plans']=copy.deepcopy(committed)
         if job.get('policy_state') is not None:r['policy_state']=job['policy_state']
         if job.get('search_learning') is not None and quota is None:r['search_learning']=job['search_learning']
         r['state_id']=digest(dict(record=r,job=job['id']))

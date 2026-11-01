@@ -32,6 +32,10 @@ def profile_table(actions, ids, device, horizon=300, dynamic_policy=False):
             for v,x in values.items():
                 if v not in slots:continue
                 raw[b,t,slots[v]]=x;mask[b,t,slots[v]]=True;residual[b,t,slots[v]]=is_residual
+            from .committed import background as committed_background
+            for v,x in committed_background(a.get('committed_plans',[]),t).items():
+                if v in slots:
+                    raw[b,t,slots[v]]=x;mask[b,t,slots[v]]=True;residual[b,t,slots[v]]=False
     return raw.to(device),mask.to(device),residual.to(device)
 
 
@@ -101,6 +105,8 @@ def evaluate(rt,record,actions,K,H,chunk_actions=4,trim=True,pad_actions=False,h
         for start in range(0,len(actions),chunk_actions):
             subset=actions[start:start+chunk_actions]
             subset=[dict(a,background_residuals=record['policy_residuals']) if ('knots' in a or 'profile' in a) else a for a in subset]
+            if record.get('committed_plans'):
+                subset=[dict(a,committed_plans=record['committed_plans']) for a in subset]
             real_ids=[a['id'] for a in subset]
             if pad_actions:
                 subset=list(subset)

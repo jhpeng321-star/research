@@ -65,6 +65,7 @@ class Controller:
         self.guide, self.beta, self.replay, self.branch = guide, beta, replay, branch
         self.events, self.memory = [], {}
         self.plan, self.plan_start = None, None
+        self.active_plans = []
 
     def apply(self, rows, commands, now):
         from .plans import acceleration_at
@@ -77,14 +78,16 @@ class Controller:
         else:
             sample, self.memory = self.policy.sample(context, self.generator, self.deterministic, self.memory)
         from .mppi_search import group_components
-        groups=group_components(rows)
+        self.active_plans=[c for c in self.active_plans if now<c['start_s']+c['plan']['duration_s']]
+        from .committed import members
+        committed=[dict(plan=c['plan'],elapsed_s=now-c['start_s']) for c in self.active_plans]
+        sample['committed_plans']=copy.deepcopy(committed)
+        groups=group_components(rows,exclude=members(committed))
         observed_group=groups[0]['members'] if groups else []
         if self.replay is None and not self.deterministic and int(now)%10==0 and len(observed_group)>=2:
             sample['behaviour']=dict(route='policy',executed=False,sample_probability=0.,q=0.,regime=regime(rows))
         proposal = None
-        if self.plan and now >= self.plan_start+self.plan['duration_s']:
-            self.plan = self.plan_start = None
-        if self.replay is None and self.guide and not self.deterministic and self.plan is None:
+        if self.replay is None and self.guide and not self.deterministic and groups:
             proposal = self.guide(rows, commands, now, sample)
             if proposal is not None:
                 b = proposal['behaviour']
@@ -95,19 +98,30 @@ class Controller:
                     if float(torch.rand((), generator=self.generator)) < b['beta']:
                         self.plan, self.plan_start = proposal['plan'], now
                         b.update(executed=True, plan_start=True)
+                        if set(self.plan['members'])&members(committed):raise ValueError('overlapping committed group')
+                        self.active_plans.append(dict(plan=self.plan,start_s=now,behaviour=copy.deepcopy(b)))
                 if hasattr(self.guide,'completed'):
                     self.guide.completed(proposal,b.get('executed',False))
-        if self.plan is not None and self.replay is None:
+        if self.active_plans and self.replay is None:
+            primary=self.active_plans[-1] if sample.get('behaviour',{}).get('plan_start') else self.active_plans[0]
+            self.plan,self.plan_start=primary['plan'],primary['start_s']
             if not sample.get('behaviour',{}).get('plan_start'):
                 sample['behaviour'] = dict(route='plan', executed=True, plan_start=False,
                     beta=bucket_beta(self.beta, self.plan['family'], regime(rows)),
                     option=self.plan['family'], regime=regime(rows))
             b = sample['behaviour']
             b.update(plan_id=self.plan['id'], proposal_members=self.plan['members'])
-            sample['absolute_accels']=acceleration_at(self.plan,now-self.plan_start)
+            sample['absolute_accels']={}
+            sample['plan_executions']=[]
+            for c in self.active_plans:
+                sample['absolute_accels'].update(acceleration_at(c['plan'],now-c['start_s']))
+                sample['plan_executions'].append(dict(plan_id=c['plan']['id'],proposal_members=c['plan']['members'],
+                    start_s=c['start_s'],duration_s=c['plan']['duration_s'],plan_start=now==c['start_s']))
             for vid, raw in sample['absolute_accels'].items():
                 if vid in context['members']:
-                    sample['action'][context['members'].index(vid)] = [raw-commands[vid]]
+                     sample['action'][context['members'].index(vid)] = [raw-commands[vid]]
+        elif self.replay is None:
+            self.plan=self.plan_start=None
         desired = requests(sample, commands)
         # Exact twins release only the selected group's whole committed plan;
         # all non-group sampled actions are byte-identical on the replayed prefix.
@@ -120,5 +134,5 @@ class Controller:
                 desired.pop(vid, None)
         self.events.append(dict(time_s=int(now), sample=sample, rows=rows,
             commands=commands, group=(self.plan['members'] if self.plan else observed_group),
-            proposal=proposal, requests=desired))
+            proposal=proposal, requests=desired,simultaneously_active_plans=len(self.active_plans)))
         return desired

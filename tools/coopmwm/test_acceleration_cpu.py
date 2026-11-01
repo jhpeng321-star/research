@@ -251,6 +251,8 @@ class AccelerationCPU(unittest.TestCase):
 
     def test_plan_is_committed_and_replay_is_immutable(self):
         sensor=rows();members=[r['vid'] for r in sensor if r['is_cav']][:2]
+        # Admit a real connected group under the current all-road chaining rule.
+        sensor=[dict(r,s_m=-400.+20.*members.index(r['vid'])) if r['vid'] in members else r for r in sensor]
         self.assertEqual(len(members),2)
         plan=dict(id='p',members=members,duration_s=20,knots=[[-1.]*7,[1.]*7],family='O1')
         calls=[]
