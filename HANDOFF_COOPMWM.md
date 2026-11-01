@@ -1,5 +1,21 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+MAIN0748freshrecovery adoptedallowners, receiptRESUME_MAIN0748_20261102.md;
+noSUMO/GPUdispatchorPIDcontrol. At1793576973A48/B1/R1,Bu2closed22/24.
+Currentwarm_watchstate nowexposesservice_owners withfairbroker3706352 andgrader
+3427015,newestdispatch/boot/startidentity;12CPU/PASS+realstatePASS/stopNULL,
+WARM_STATE_SERVICE_OWNERS_REPAIR registered. Existing46108/28752observersretained;
+exact_opsfreshCLI nowincludesCENTRE_FAIR_BROKER_DISPATCH inownerhistory.
+NewCPU-onlyauditCOMMAND_CHAIN_KINEMATIC_CALLBACK_PROBE:3CPU/PASSlocal+remote,
+0.715s,noSUMO/GPUjobs. Endpoint-law-derivedhalfsteps+continuouslypropagatedgroup
+stillpredictEXACTplan-v-ownidentitybothnulls/bothchains. Prototypeunchangederrors
+0.859924m/0.381060mps and0.078796m/0.055090mps; NOT genuinehalfsteps/fullroad/GPU
+parity, NOTactivation. DefaultmirrorOFF,acceptanceunchanged; centralMAINnotified.
+LatestBreport1793576889:11grades/10worlds mean224.8358 CI[-35.3982,596.7440],
+5positive;Bu2physicalnulls3/8graded. NOGENERALviabilityclaim. Originalreporter
+3746050continues;neverduplicate. Allocation7495040/7500000/free4960unchanged,
+charged3338010at1793576981,originalGPUdeadline18:07:02UTC+8notextended.
+
 LIVE07:39:18UTC+8/unix1793576358: A48/B1/R1; R-u1completedafterfairbroker,
 B-u2at20/24closed/fouropen. No activeSTOP/pause at1793576017; originalB/R,
 grader andfourGPUownerscontinue. Fairbroker3706352/start58959212 isCURRENT;

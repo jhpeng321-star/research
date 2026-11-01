@@ -83,6 +83,25 @@ class WarmStateTests(unittest.TestCase):
         v=self.collect({'WARM_R_FAILED_Q1.json':dict(error='executor fault')})
         self.assertEqual(v['stop']['error'],'current training supervisor failure')
 
+    def test_fair_broker_and_latest_grader_override_historical_owners(self):
+        v=self.collect({'CENTRE_FAIR_BROKER_DISPATCH.json':self.owner(),
+            'QUOTA_broker_DISPATCH.json':self.owner(22),
+            'EXACT_GRADER_DISPATCH_V2.json':self.owner(),
+            'EXACT_GRADER_DISPATCH.json':self.owner(23)})
+        self.assertEqual(v['service_owners']['broker']['dispatch_receipt'],'CENTRE_FAIR_BROKER_DISPATCH.json')
+        self.assertEqual(v['service_owners']['grader']['dispatch_receipt'],'EXACT_GRADER_DISPATCH_V2.json')
+        self.assertTrue(all(x['state']=='S' for x in v['service_owners'].values()))
+
+    def test_exited_new_broker_not_hidden_by_live_predecessor(self):
+        v=self.collect({'CENTRE_FAIR_BROKER_DISPATCH.json':self.owner(22),
+            'QUOTA_broker_DISPATCH.json':self.owner()})
+        self.assertEqual(v['service_owners']['broker']['state'],'exited')
+        self.assertEqual(v['service_owners']['broker']['owner']['pid'],22)
+
+    def test_service_pid_reuse_never_reported_as_healthy(self):
+        with self.assertRaisesRegex(AssertionError,'service PID reused'):
+            self.collect({'CENTRE_FAIR_BROKER_DISPATCH.json':self.owner()},start='456')
+
     def test_identity_mismatch_never_reports_healthy_owner(self):
         for options in (dict(boot='changed-boot'),dict(start='456')):
             with self.subTest(options=options),self.assertRaises(AssertionError):

@@ -1,6 +1,13 @@
 # S-COOPMWM — live checks
 
 ## Fresh continuation — independent command audit and live evidence
+- Read-only guard/status compatibility now includes the **current fairness broker
+  and exact grader** with newest-dispatch precedence and boot/start identity.
+  A dead newest owner is reported as dead rather than hidden by an older live
+  owner. **12 CPU tests PASS**, including actual generated transport payloads;
+  real cpuQ verifies broker3706352/grader3427015 live, active STOPnull. Existing
+  local observers and all remote jobs continue; receipt
+  `coopmwm/WARM_STATE_SERVICE_OWNERS_REPAIR.json`.
 - Existing A48/B1/R1 training owners and observers adopted; no redispatch. At
   unix1793576973 B-u2 has22/24 closed episodes; R-u2 waits for its final B quota.
   No active STOP/pause; grader queue pending/running0 at unix1793576976.

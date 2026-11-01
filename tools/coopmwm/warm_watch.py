@@ -41,6 +41,15 @@ for arm in ('A','B','R'):
  assert d['boot_id']==pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip(),'owner boot changed'
  assert not s or s[21]==d['start_ticks'],'owner PID reused'
  owners[arm]=dict(owner=d,state=s[2] if s else 'exited',dispatch_receipt=p.name)
+services={{}}
+for component,names in {{'broker':('CENTRE_FAIR_BROKER_DISPATCH.json','QUOTA_broker_DISPATCH.json','CAPACITY_BROKER_DISPATCH_V2.json','WARM_REMOTE_BROKER_DISPATCH.json'),
+                        'grader':('EXACT_GRADER_DISPATCH_V2.json','EXACT_GRADER_DISPATCH.json')}}.items():
+ p=next((r/name for name in names if (r/name).exists()),None)
+ if p is None:continue
+ d=json.loads(p.read_text());q=pathlib.Path('/proc')/str(d['pid']);s=(q/'stat').read_text().split() if (q/'stat').exists() else None
+ assert d['boot_id']==pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip(),'service boot changed'
+ assert not s or s[21]==d['start_ticks'],'service PID reused'
+ services[component]=dict(owner=d,state=s[2] if s else 'exited',dispatch_receipt=p.name)
 stop=None
 try:assert_running(r,'B')
 except (ValueError,HealthPause) as error:stop=dict(error=str(error),source='current registered warm_health guard')
@@ -48,7 +57,7 @@ pauses=sorted(p.name for p in r.glob('PAUSE_*.json'))
 failures={{p.name:json.loads(p.read_text()) for pattern in ('WARM_*_FAILED_Q1.json','WARM_*_FAILED_V5.json') for p in r.glob(pattern)}}
 if failures and stop is None:stop=dict(error='current training supervisor failure',receipts=failures)
 charges=[json.loads(x) for x in (r/'CHARGES.jsonl').read_text().splitlines()]
-print(json.dumps(dict(unix=time.time(),owners=owners,stop=stop,
+print(json.dumps(dict(unix=time.time(),owners=owners,service_owners=services,stop=stop,
    updates={{a:sorted(int(p.stem.rsplit('_',1)[1]) for p in r.glob(a+'_UPDATE_[0-9][0-9][0-9].json')) for a in ('A','B','R')}},
   paused={{a:(r/f'WARM_{{a}}_PAUSED.json').exists() or (a in ('B','R') and bool(pauses)) for a in ('A','B','R')}},
   pause_receipts=pauses,failures=failures,
@@ -70,6 +79,24 @@ def register_state_repair():
     line='\nS-COOPMWM MAIN0628 GUARD STATE COMPATIBILITY REPAIR REGISTERED amendmentSHA'+sha(target)+': read-only state now adopts current A/V3,B-R/QUOTA owners, boot/start identity; released historical SSH STOP is separate from active stop, PAUSE and current supervisor faults visible; CPU11PASS including actual generated payload, real cpuQ status PASS; zero SUMO/inference/PID control, existing owners/observers and original deadline retained.\n'
     with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
     print(json.dumps(value))
+
+
+def register_service_owners():
+    """Read-only guard compatibility; never replace any running observer/job."""
+    from .protocol import REGISTRY
+    target=ops.EVIDENCE/'WARM_STATE_SERVICE_OWNERS_REPAIR.json'
+    assert not target.exists(),'adopt registered service-owner observation'
+    live=state()
+    assert live['service_owners']['broker']['dispatch_receipt']=='CENTRE_FAIR_BROKER_DISPATCH.json'
+    value=dict(unix=time.time(),state=live,tests=12,new_sumo_sim_s=0,
+        source_sha256=sha(ops.LOCAL/'tools/coopmwm/warm_watch.py'),
+        exact_status_sha256=sha(ops.LOCAL/'tools/coopmwm/exact_ops.py'),
+        repair='read-only service_owners broker/grader dispatch precedence; newest exited owner stays visible, never falls back to predecessor; boot/start identity mandatory; exact_ops includes fair broker receipt',
+        training_or_inference_changes=False,observer_replacement=False,original_deadline_retained=True)
+    write(target,value)
+    line='\nS-COOPMWM CURRENT SERVICE OWNER OBSERVATION REGISTERED evidenceSHA'+sha(target)+': '+value['repair']+';12CPU PASS including actual generated transport payload; real cpuQ state verified, zero SUMO/inference/PID control; existing observers/jobs retained, no release or deadline change.\n'
+    with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+    print(json.dumps(dict(receipt=str(target),service_owners=live['service_owners'],stop=live['stop'],tests=12)))
 
 
 def commit():
@@ -183,6 +210,6 @@ def dispatch():
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('dispatch','run','state','register_state_repair'));a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('dispatch','run','state','register_state_repair','register_service_owners'));a=p.parse_args()
     if a.mode=='state':print(json.dumps(state()))
     else:globals()[a.mode]()
