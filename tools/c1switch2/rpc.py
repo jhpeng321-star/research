@@ -42,7 +42,7 @@ class FilePredictor:
         return means(result['samples'])
 
 
-def serve(root, binding, factory):
+def serve(root, binding, factory, allocation=None):
     """One GPU service allocation: exactly half its model arm's aggregate cap.
 
     Each remote service records elapsed wall time INCLUDING startup/idle/validation;
@@ -51,13 +51,10 @@ def serve(root, binding, factory):
     import os
     import signal
     from tools.c1switch.storage import exclusive
-    from .design import GPU_SECONDS
+    from .gpuallocation import allocation_cap
     root = checked(root)
     validate_engine(binding)
-    arm = binding['arm']
-    cap = GPU_SECONDS[arm]/2
-    if binding['service_gpu_cap_s'] != cap or binding.get('prior_gpu_s', 0) != 0:
-        raise ValueError('unregistered GPU service allocation/restart')
+    cap = allocation_cap(binding, allocation)
     with exclusive(root):
         if (root/'GPU_STARTED.json').exists():
             raise ValueError('previous allocation; no implicit GPU retry')

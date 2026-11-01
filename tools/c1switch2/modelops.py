@@ -45,7 +45,7 @@ def compare_parity(results):
             raise ValueError('GPU incumbent WALL continuation missing')
 
 
-def parity(config, submit=False):
+def parity(config, submit=False, receipt_path=None):
     config = json.loads(checked(config).read_text())
     requests = parity_requests(config['engine'])
     results = {}
@@ -74,7 +74,7 @@ print(json.dumps(out))
     out = dict(status='PASS', model=config['engine']['model'], engine=config['engine'],
                numerical_tolerance=dict(rtol=1e-6, atol=1e-6), results=results,
                gpu_roots=config['gpus'], new_sim_s=0)
-    path = EVIDENCE/('GPU_PARITY_'+config['engine']['model']+'.json')
+    path = receipt_path or EVIDENCE/('GPU_PARITY_'+config['engine']['model']+'.json')
     if path.exists():
         if json.loads(path.read_text()) != out:
             raise ValueError('preserve previous parity receipt')
@@ -84,13 +84,13 @@ print(json.dumps(out))
     return out
 
 
-def dispatch(host, root, model, workers):
+def dispatch(host, root, model, workers, parity_path=None):
     from .audit import registration_audit
     text = checked(REGISTRATION).read_text(encoding='utf-8')
     audit = registration_audit(REGISTRATION)
     if not approval(text) or not cpu_authority(text) or audit['hits']:
         raise ValueError('current model authority/registry absent')
-    parity_path = EVIDENCE/('GPU_PARITY_'+model+'.json')
+    parity_path = parity_path or EVIDENCE/('GPU_PARITY_'+model+'.json')
     p = json.loads(parity_path.read_text())
     if p['status'] != 'PASS':
         raise ValueError('real both-GPU parity missing')
@@ -103,7 +103,7 @@ def dispatch(host, root, model, workers):
                  for h in ('cpuQ', 'gpuA', 'gpuR')}
     if not all(exposures.values()) or not 1 <= workers <= (14 if host == 'cpuQ' else 4):
         raise ValueError('exposure/worker admission')
-    result = ssh(host, f'''import hashlib,json,os,subprocess,sys,sysconfig,time
+    result = ssh(host, f'''import hashlib,json,os,shutil,subprocess,sys,sysconfig,time
 from pathlib import Path
 root=Path({root!r});assert root.name.startswith('c1switch2_run_')
 binding=json.loads((root/'BINDING.json').read_text());assert binding['enabled_arms']==[{model!r}] and binding['dispatch_phase']=='model'
@@ -114,6 +114,7 @@ assert all(binding['sources'][n]==v for n,v in {frozen!r}.items()),'v7 changed'
 assert json.loads((root/'PREFLIGHT.json').read_text())['status']=='PASS'
 assert not (root/'STOP').exists() and not (root/'accounting.jsonl').exists() and not list((root/'jobs').iterdir())
 assert os.getloadavg()[0]<{28 if host == 'cpuQ' else 20},'yield spare CPU priority'
+assert shutil.disk_usage(root).free>=2*1024**3,'yield disk pressure before model claim'
 for entry in os.scandir(root.parent):
  if entry.name.startswith('c1switch2_run_') and entry.is_dir(follow_symlinks=False):
   claim=Path(entry.path,'MODEL_DISPATCH_ONCE.json')

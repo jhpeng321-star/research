@@ -16,7 +16,20 @@ def main(root):
     sources = json.loads((root/'STAGED.json').read_text())
     if not all(sha(root/'pytools'/name) == digest for name, digest in sources.items()):
         raise ValueError('immutable GPU source changed')
-    serve(root/'rpc', binding, create)
+    allocation_path = root/'GPU_ALLOCATION.json'
+    allocation = json.loads(allocation_path.read_text()) if allocation_path.exists() else None
+    if allocation is not None:
+        from .gpuallocation import allocation_cap
+        allocation_cap(binding, allocation)
+        old = Path(allocation['predecessor_root'])
+        if (sha(old/'rpc/GPU_FINISHED.json') != allocation['finished_sha256'] or
+                json.loads((old/'rpc/GPU_FINISHED.json').read_text()) != allocation['finished'] or
+                Path('/proc', str(allocation['finished']['pid'])).exists()):
+            raise ValueError('continuation requires exact exited predecessor and final debit')
+        registration = (root/'CONTINUATION_REGISTRATION.md').read_text()
+        if allocation['authority'] not in registration or allocation['plan_sha256'] not in registration:
+            raise ValueError('continuation not prospectively registered')
+    serve(root/'rpc', binding, create, allocation)
 
 
 if __name__ == '__main__':

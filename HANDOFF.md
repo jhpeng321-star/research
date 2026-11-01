@@ -59,6 +59,20 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**MAIN12:14 BB continuation built/CPU-tested, NOT dispatched:** exact plan
+74807c59d8cd942ca0dbc39427a7b1264880e2ac5ce2e3d9c72c0ee80e565110.
+Preserve original BB roots/STOP/parity/final receipts and zero-physics CPU stage.
+New immutable GPU roots use the SAME frozen engine binding/checkpoints/objective;
+external allocation metadata subtracts exact oldgpuA21.381694240495563 and
+oldgpuR21.642283007502556s from original5400s/card: remaining5378.618305759504
+and5378.357716992497s, aggregate10756.976022752002s. No cap increase/refund.
+One-use exception requires exact EXITED predecessor/final receipt hashes,
+original16-world CPU stage stillunclaimed/empty, current authority+registry,
+real both-GPU parity and CPU gates. gpuRdisk>=2GiB/load<20 and bothGPUfree>=8GiB
+checked BEFORE claim/allocation. ThreeBB+onefleet workers<=4taskgpuRslots.
+CPU89PASS with existingMiniconda (defaultPython lacks torch), targeted28PASS,
+RuffPASS. Prospectively register exact plan, then `bbcontinue prepare`; only
+after resources pass, `bbcontinue start`. Original WM episodes remain terminal.
 **12:15 fresh-session reconciliation1793506521:** cpuQ fleet1152412 remains
 LIVE/noSTOP, all12local episodes/360decisions complete and original oracles
 progressing (34closedjobs,28680charged/28080closedactual). Original cpuQ WM

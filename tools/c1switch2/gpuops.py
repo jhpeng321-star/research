@@ -90,7 +90,7 @@ out['output']=log.getvalue();(root/'CPU.json').write_text(json.dumps(out,indent=
     return result
 
 
-def start(host, root):
+def start(host, root, continuation=None):
     # CPU provenance comparison against the already validated original-host checkpoint.
     model = 'wm' if Path(root).name.startswith('c1switch2_gpu_wm_') else 'bb'
     cpu = json.loads((EVIDENCE/('GPU_CPU_'+host+'_'+Path(root).name+'.json')).read_text())
@@ -100,20 +100,29 @@ def start(host, root):
     for key in ('checkpoint_sha256', 'wm_config_sha256', 'candidate_sha256', 'mappo_sha256'):
         if cpu['attestation'][key] != original['attestation'][key]:
             raise ValueError('frozen inference provenance differs: '+key)
+    from .gpuallocation import allocation_cap
+    cap = allocation_cap(json.loads((EVIDENCE/('GPU_STAGE_'+host+'_'+Path(root).name+'.json')).read_text())['engine'], continuation)
     result = ssh(host, f'''import hashlib,json,os,subprocess,sys,time
 from pathlib import Path
 root=Path({root!r});assert root.name.startswith('c1switch2_gpu_{model}_')
+continuation={continuation!r}
+if continuation is not None:
+ assert json.loads((root/'GPU_ALLOCATION.json').read_text())==continuation
+ old=Path(continuation['predecessor_root'])
+ assert hashlib.sha256((old/'rpc/GPU_FINISHED.json').read_bytes()).hexdigest()==continuation['finished_sha256']
+ assert not Path('/proc',str(continuation['finished']['pid'])).exists(),'predecessor still live'
 assert json.loads((root/'CPU.json').read_text())['status']=='PASS'
 assert all(hashlib.sha256((root/'pytools'/n).read_bytes()).hexdigest()==v for n,v in json.loads((root/'STAGED.json').read_text()).items())
 gpu=subprocess.check_output(['nvidia-smi','--query-gpu=memory.free','--format=csv,noheader,nounits'],text=True)
 assert int(gpu.strip())>=7*1024,'yield to WM-PHYS memory priority'
 for entry in os.scandir(root.parent):
- if entry.name.startswith('c1switch2_gpu_{model}_') and entry.is_dir(follow_symlinks=False):
-  assert not Path(entry.path,'DISPATCH.json').exists(),'GPU allocation already claimed; never retry'
+  if entry.name.startswith('c1switch2_gpu_{model}_') and entry.is_dir(follow_symlinks=False):
+   if continuation is not None and entry.path==continuation['predecessor_root']:continue
+   assert not Path(entry.path,'DISPATCH.json').exists(),'GPU allocation already claimed; never retry'
 environment=dict(os.environ,CUDA_VISIBLE_DEVICES='0',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',PYTHONPATH=str(root/'pytools'))
 with (root/'GPU.log').open('x') as log:
  process=subprocess.Popen([sys.executable,'-B','-u','-m','tools.c1switch2.gpuserver','--root',str(root)],cwd=root/'pytools',env=environment,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,preexec_fn=lambda:os.nice(19))
-out=dict(host={host!r},root=str(root),model={model!r},pid=process.pid,cap_s={GPU_SECONDS[model]/2!r},unix=time.time())
+out=dict(host={host!r},root=str(root),model={model!r},pid=process.pid,cap_s={cap!r},unix=time.time())
 with (root/'DISPATCH.json').open('x') as stream:json.dump(out,stream,indent=2);stream.flush();os.fsync(stream.fileno())
 print(json.dumps(out))
 ''', timeout=45)
