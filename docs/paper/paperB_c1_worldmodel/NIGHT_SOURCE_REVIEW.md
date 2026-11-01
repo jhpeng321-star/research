@@ -26,8 +26,31 @@ time are in `SOURCE_REFRESH.json`; numerical figure inputs remain unchanged.
   RNG evidence is unchanged. Bibliography verification and delivered artwork are
   inherited; no rerender, scientific inference or first-registration append needed.
 
-Evidence-step review is complete. The next commit updates the drafting claims and
-handoff to these newer source scopes; no existing job or observer was duplicated.
+Updated OUTLINE/CLAIMS/FIGURES/THREATS and the README/REFRESH handoff to these newer
+source scopes. Numerical insertions carry exact HTML source comments. The frozen
+selected-switch credibility report was additionally read to bind horizon ordering
+and its retrospective hypothetical-incumbent scope, then added to the safe inventory.
+
+### Morning close-out verification
+
+The final bounded inventory found no further changed reports or numerical figure
+inputs; `SOURCE_REFRESH.json` records the exact closing source cut. Existing PNGs,
+vector twins, backing CSVs, historical source snapshots and verified bibliography
+were preserved. No rerender or scientific analysis was needed for this text refresh.
+
+- `python -B "docs/paper/paperB_c1_worldmodel/validate_package.py"`: PASS;
+  `VERIFICATION.json` retains the artifact/source-selection checks. This checks
+  existing source-derived data and artwork, not the missing final scientific gates.
+- Focused Python syntax/undefined-name Ruff check on the inventory and validator:
+  PASS. Git whitespace/diff review passed.
+- The shared first-package completion line still matches `REGISTRATION_RECEIPT.md`
+  exactly; no duplicate registration was appended.
+- No existing job, observer, relay or dispatch was duplicated or operated. This
+  session used permitted local reports/exports only and started no experiment.
+
+Resume from the current morning handoff in `REFRESH.md`. The final rebuild and
+complete paired switching/RL results remain source-owner PENDING, with current
+connectivity/accounting uncertainty preserved rather than inferred away.
 
 ## Fresh-session overnight continuation
 
