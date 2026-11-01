@@ -1,8 +1,30 @@
 # S-WMPLAN — world-model-guided cooperative planner
 
 ## Plain-language status
-**The approved engineering restart is running with a one-episode fail-fast smoke
-gate and dual-GPU inference services. There is no complete live efficacy result yet.** The original test stopped on an executor-wiring error. Three primary-arm
+**S-WMPLAN is on HOLD under MAIN's 2026-11-01 17:55 owner instruction. Both GPUs
+are assigned to S-COOPMWM. Resume only when MAIN appends `S-WMPLAN RESUME`.**
+No service or episode was started by this recovery session. The previously approved
+restart stopped on an SSH monitoring fault with zero complete episodes; no paired
+live efficacy result is available. Retained combined accounting is **6,480 charged /
+3,480 actual sim-seconds**, with zero open jobs in the stopped-run receipt.
+
+All earlier work and forecast caches are preserved. The recovered status snapshot
+contains 13 complete K8 forecasts (104 futures). The existing local continuation
+PID34272 and relay PID17368 were absent when checked in this recovery session.
+The snapshot records the gpuA supervisor and inference service as absent; gpuR's
+service was not freshly probed by this session. No PID was signalled.
+
+The 17:54 infrastructure-restart approval is superseded operationally by the HOLD.
+Before any later authorized restart, register bounded-backoff monitoring SSH retries;
+an exhausted monitoring connection is not itself a confirmed dead service or a
+physics/executor fault. Preserve completed forecasts and every prior charge, keep
+the combined charged upper bound at 199,440 sim-seconds, and retain smoke first,
+then the primary expected arm and its verified report, then strict. GPU placement
+must follow MAIN's resume authority; this HOLD grants no GPU admission.
+See `wmplan/OWNER1755_HOLD.json` for the recovery receipt.
+
+### Historical starts and repair
+The original test stopped on an executor-wiring error. Three primary-arm
 attempts reached the 300-second warmup; none ran a post-warmup physics step or
 completed an episode. A durable STOP was written immediately when the abnormal
 close was detected. All owned v1 local and remote services exited before the restart.
@@ -28,7 +50,7 @@ fixed 2,950 sim-s credit per world-arm: at most one early group can execute, and
 none after t600 fits. This is explicitly a budget-limited planner comparison;
 raw proposals, executions and resource-forced O0 decisions will all be reported.
 
-## Requested outcomes — not estimable from this failed start
+## Original v1 outcomes — not estimable from the failed start
 - **Paired J600/J900 and bootstrap CIs:** unavailable; zero complete 1,200-second
   episodes and zero post-warmup scoring exposure. Failed warmups are not assigned
   zero savings and are not substituted with reused MAPPO endpoints.
@@ -64,7 +86,7 @@ STOP, traceback and exited ownership identities. `FAULT_REGISTRATION.json` is th
 shared registration receipt. Original claims, startup-gate failures, mirror
 manifests, transferred files and every forecast remain preserved.
 
-## Engineering restart — APPROVED 15:55 / v2 dispatched
+## Historical engineering restart — APPROVED 15:55 / v2 dispatched, now stopped
 The approved restart keeps the same model, panel, decision rules, credit quotas,
 executors and expected-first reporting order under the owner's original cap.
 The tighter mathematical bound is:
@@ -139,13 +161,14 @@ gate evidence are retained in `wmplan/`.
 
 <!-- WMPLAN-PROGRESS:BEGIN -->
 ## Current continuation status
-- Approved v2 continuation STOPPED on a new fault; no retry or new dispatch.
-- Combined charged6480; closed actual3480sim-s, 0 open jobs at receipt time. All prior charges retained.
-- See `wmplan/restart_v2/CONTINUATION_FAULT.json` and `FAULT_RECEIPTS.json`; complete paired efficacy cannot be asserted from an incomplete arm.
+- OWNER17:55 HOLD supersedes the 17:54 restart approval; both GPUs belong to S-COOPMWM. Resume only on MAIN's explicit `S-WMPLAN RESUME` entry.
+- Approved v2 continuation STOPPED on an infrastructure monitoring fault; zero complete episodes. No service, retry, or new dispatch was started in this recovery session.
+- Combined charged6480; closed actual3480sim-s, 0 open jobs at receipt time. All prior charges and cached forecasts retained; combined charged upper199440sim-s.
+- See `wmplan/OWNER1755_HOLD.json`, `wmplan/restart_v2/CONTINUATION_FAULT.json` and `FAULT_RECEIPTS.json`; complete paired efficacy cannot be asserted from an incomplete arm.
 <!-- WMPLAN-PROGRESS:END -->
 
 ## V2 continuation and receipts
-- The receipt-only local continuation is PID34272, with its owned gpuR relay
+- The stopped receipt-only local continuation was PID34272, with its owned gpuR relay
   PID17368; both identities were checked after launch. Its initial progress/claim
   was committed as `2f6a011b`. It polls gates every60s and records routine progress
   every30min; it cannot dispatch a duplicate episode.
@@ -165,7 +188,7 @@ gate evidence are retained in `wmplan/`.
   remaining23 primary worlds. The verified full primary report is committed before
   strict is released, irrespective of efficacy. Any new fault writes durable STOP
   and preserves partial accounting; no automatic retry is available.
-- Read-only resume checks: `py -3.13 -B -m tools.wmplan.continuation --gate` and
+- Historical read-only resume checks (not run during this HOLD): `py -3.13 -B -m tools.wmplan.continuation --gate` and
   `py -3.13 -B -m tools.wmplan.restart status`. Inspect
   `wmplan/restart_v2/CONTINUATION_LAUNCH.json` / `CONTINUATION_ONCE.json` and
   `_out/wmplan_v2_continuation.log` before doing anything else. Do not duplicate the

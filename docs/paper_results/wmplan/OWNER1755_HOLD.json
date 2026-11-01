@@ -1,0 +1,55 @@
+{
+  "task": "S-WMPLAN",
+  "state": "HOLD",
+  "authority": "2026-11-01 17:55 MAIN: OWNER - both GPUs to S-COOPMWM WM suggestions. S-WMPLAN HOLD (stop own forecast services, keep caches; resume on 'S-WMPLAN RESUME')",
+  "resume_requires": "MAIN appends S-WMPLAN RESUME",
+  "supersedes_operationally": "2026-11-01 17:54 second infrastructure-restart approval",
+  "recovery_base_commit": "90a26238",
+  "preserved_snapshot_commit": "cde458f5",
+  "new_forecast_services_this_session": 0,
+  "new_episode_dispatches_this_session": 0,
+  "new_sim_s_this_session": 0,
+  "pids_signalled_this_session": [],
+  "local_process_check": {
+    "method": "Get-CimInstance Win32_Process filtered to recorded continuation PID34272 and relay PID17368",
+    "matching_processes": 0
+  },
+  "last_remote_snapshot": {
+    "receipt": "restart_v2/STATUS_1793526923.json",
+    "unix": 1793526923.7856965,
+    "durable_stop": true,
+    "complete_episodes": 0,
+    "open_jobs": 0,
+    "complete_forecasts": 13,
+    "forecast_futures": 104,
+    "gpuA_recorded_supervisor_and_inference_service_absent": true,
+    "gpuR_service_freshly_probed_this_session": false
+  },
+  "retained_accounting": {
+    "receipt": "restart_v2/FAULT_RECEIPTS.json",
+    "combined_charged_sim_s": 6480,
+    "combined_closed_actual_sim_s": 3480,
+    "combined_charged_upper_sim_s": 199440,
+    "approved_combined_actual_upper_sim_s": 196740,
+    "owner_cap_sim_s": 200000,
+    "refund_sim_s": 0
+  },
+  "retained_model": "FULL-v4",
+  "preserve": [
+    "all committed and uncommitted predecessor work",
+    "stopped immutable v1 and v2 run roots and durable STOP receipts",
+    "all completed and partial forecast caches, requests, responses and claims",
+    "all charges, partial execution evidence and fault receipts",
+    "all 24 bitwise-bound completed S-DISTILL MAPPO baselines"
+  ],
+  "future_resume_requirements": [
+    "explicit MAIN S-WMPLAN RESUME authority before any service or episode starts",
+    "register monitoring SSH bounded-backoff retries before restart; monitoring transport failures alone are not episode faults",
+    "only a confirmed dead service or physics/executor error is a STOP fault",
+    "reuse completed forecasts and retain all charges within combined199440 charged sim-s",
+    "respect GPU placement in MAIN resume authority; HOLD admits no GPU work",
+    "smoke first, expected arm next, verified primary report before strict arm",
+    "one attempt per episode under the authorized engineering amendment; no automatic episode retry"
+  ],
+  "efficacy": "No complete live episode or paired efficacy result; the candidate headline is unsubstantiated."
+}
