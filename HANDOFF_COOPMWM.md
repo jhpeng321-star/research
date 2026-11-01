@@ -1,5 +1,16 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+DIAGNOSTICREPAIR QUALIFIED242CPU/PASS0skips/38.96s/zeroSUMO, source
+/home/ubuntu/coopmwm20261102_diagrepaircpu1; amendmentaf8b16e5registered.
+SeparateCPU-onlysidecarwillrepairONLYsamefirst12randomsamples(RNG20261101),
+adoptcompletedoriginalbranches(world/prefix/allHverified), explicitlyONEnew
+attemptpermisingbranchafteroldpoolfailure/settlement, allfailedchargesretained.
+Wholemissingsetreservedinexistingdiscovery200000 BEFOREphysics; noextrascope/
+allocation. Strictlive/preprefixrequests; ignoredepartedIDsONLYafterbranchreplay.
+DO NOTrestartB/R/GPU/grader. Next diagnostic_repair_ops dispatch ONCE thenstatus.
+IMPORTANTfuturefinal-discoveryexecutorneeds samequalifiedguardbeforerelease;
+current3338335waitingowneruntouched. No finaloutcomeaccess.
+
 LATEST B-u1COMPLETE06:19:04UTC+8. SOURCEquotacpu4 liveB3551873/start58572732,
 R3551874/start58572733 since06:17:29; broker3514272/grader3427015 retained.
 All24Bu1RESULTsadopted/u0AdamRNGpreserved; REGISTEREDu1quotaexception3/10.

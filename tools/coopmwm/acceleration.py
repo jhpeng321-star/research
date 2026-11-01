@@ -45,10 +45,11 @@ class Policy(Network):
         return (gaussian_log_prob(action, conditional, RHO, sigma) if len(mean) else mean.sum()), value
 
 
-def requests(sample, commands):
+def requests(sample, commands, *, ignore_departed=False):
     """Only raw pre-safety commands; never write TraCI or bypass ownership."""
     out = {}
     for vid, (delta,) in zip(sample['context']['members'], sample['action']):
+        if ignore_departed and vid not in commands:continue
         if not math.isfinite(delta):
             raise ValueError('nonfinite acceleration residual')
         if delta != 0.:
@@ -129,7 +130,8 @@ class Controller:
                      sample['action'][context['members'].index(vid)] = [raw-commands[vid]]
         elif self.replay is None:
             self.plan=self.plan_start=None
-        desired = requests(sample, commands)
+        desired = requests(sample, commands,ignore_departed=bool(self.replay is not None
+            and self.branch and now>=self.branch['time_s']))
         # Exact twins release only the selected group's whole committed plan;
         # all non-group sampled actions are byte-identical on the replayed prefix.
         if self.branch and now >= self.branch['time_s']:

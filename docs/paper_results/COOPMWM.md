@@ -1,5 +1,23 @@
 # S-COOPMWM — live checks
 
+### Departed-roster diagnostic repair qualified and registered
+- Isolated `diagrepaircpu1`: **242 CPU tests PASS, zero skips,38.96s, zero SUMO**.
+  Only recorded counterfactual replay at/after the registered branch time may
+  ignore a vehicle absent from current command IDs. Live control and the common
+  prefix remain strict; common-roster requests are unchanged. Regression tests
+  reproduce the departed-member failure and verify the guarded replay.
+- Amendment `af8b16e5…` keeps the **same first12 registered random executed-plan
+  sample**. It waits for the original failed pool to settle, adopts every completed
+  original branch after world/prefix/all-horizon checks, then permits one explicitly
+  registered repaired attempt for each missing branch under a fresh job ID.
+  Any further fault stops this diagnostic sidecar; no completed branch is rerun.
+- All old charges remain. The entire missing branch set must fit and be charged
+  together inside the existing200,000 discovery phase before physics. Full task
+  allocation remains7,495,040/7,500,000. No grading/final allocation is borrowed.
+  Running training/search/exact grades/trust/imitation/library are unchanged.
+- The deferred final-discovery executor needs this same qualified replay guard
+  bound before its future physics; its current waiting owner is retained.
+
 ## B-u1 complete; quota-aware B-u2 and pipelined R-u1 live
 - **B-u1 completed2026-11-02 06:19:04UTC+8.** The retained24-episode wave was
   adopted once. Its registered engineering deviation is3 executed plan-starts
