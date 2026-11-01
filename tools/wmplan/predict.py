@@ -121,6 +121,10 @@ def serve(root, worker):
                     write(folder/f'k{k}.json',result)
                     for a,f in result['results']['300'].items():
                         values.setdefault(a,[]).append(f)
+                    import gc
+                    import torch
+                    gc.collect()
+                    torch.cuda.empty_cache()
                 from tools.wmteach.labels import actions
                 Prediction({a:tuple(Outcome(**f) for f in fs) for a,fs in values.items()},
                            False,'WM-PHYS').validate(actions(r['rows'],r['setting']),8)
@@ -139,4 +143,9 @@ if __name__ == '__main__':
     p.add_argument('root',type=Path)
     p.add_argument('--worker',type=int,required=True)
     a = p.parse_args()
-    serve(a.root,a.worker)
+    try:
+        serve(a.root,a.worker)
+    except BaseException:
+        from tools.coopplan.storage import stop
+        stop(a.root,traceback.format_exc())
+        raise

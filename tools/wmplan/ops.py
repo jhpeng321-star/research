@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 
 from tools.coopbandit.protocol import digest, sha
-from tools.wmteach.ops import remote
 
 LOCAL = Path(__file__).resolve().parents[2]
 OUT = LOCAL/'docs/paper_results/wmplan'
@@ -12,6 +11,12 @@ ROOT = '/root/autodl-tmp/wmplan20261101_v1'
 BASE = '/root/autodl-tmp/distill20261101_v1'
 QUALITY = '/root/autodl-tmp/wmteach_v5quality20261101_v2'
 REG = Path('E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md')
+
+
+def remote(source, timeout=60):
+    compile(source,'<wmplan-remote-preflight>','exec')
+    from tools.wmteach.ops import remote as call
+    return call(source,timeout=timeout)
 
 
 def save(name, value):
@@ -87,7 +92,12 @@ roots={{'v4':pathlib.Path('/root/autodl-tmp/wmteach20261101_v3'),'v5':pathlib.Pa
 out={{}}
 for name,root in roots.items():
  if not (root/'QUALITY.json').is_file():
-  print(json.dumps(dict(complete=False,waiting_for=name,futures=len(list((root/'tasks').glob('*/k*.json'))))));break
+  owner=json.loads((root/'DISPATCH.json').read_text());p=pathlib.Path(f'/proc/{{owner["pid"]}}/stat')
+  st=p.read_text().split() if p.is_file() else None
+  alive=bool(st and st[21]==owner['start_ticks'] and st[2]!='Z' and
+   pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()==owner['boot_id'])
+  assert alive,'peer quality ended incomplete; no duplicate, fallback, or process action'
+  print(json.dumps(dict(complete=False,waiting_for=name,futures=len(list((root/'tasks').glob('*/k*.json'))),owner_alive=alive)));break
  paths=[root/'QUALITY.json',root/'QUALITY_RECORDS.json',root/'IDENTITY.json']
  assert len(list((root/'tasks').glob('*/k*.json')))==96
  out[name]=dict(records=json.loads(paths[1].read_text()),identity=json.loads(paths[2].read_text()),
@@ -110,6 +120,8 @@ def stage():
     model = comparison['selected']
     quality_root = QUALITY if model == 'FULL-v5' else '/root/autodl-tmp/wmteach20261101_v3'
     modules = {p.name:p.read_text(encoding='utf-8') for p in (LOCAL/'tools/wmplan').glob('*.py')}
+    quality_helpers = {name:(LOCAL/'tools/wmteach'/name).read_text(encoding='utf-8')
+                       for name in ('__init__.py','labels.py')}
     design = (LOCAL/'docs/paper_results/WMPLAN_DESIGN.md').read_text(encoding='utf-8')
     result = json.loads(remote(f'''import pathlib,json,hashlib,shutil
 root=pathlib.Path({ROOT!r});base=pathlib.Path({BASE!r});quality=pathlib.Path({quality_root!r})
@@ -126,6 +138,10 @@ for name,expected in identity['sources'].items():
   rel=p.relative_to(quality)
   if p.suffix=='.py':files['pywm/'+str(rel)]=p.read_text()
  else:external[name]=expected
+for name in ('storage.py','protocol.py'):
+ files['pywm/tools/coopplan/'+name]=files['pytools/tools/coopplan/'+name]
+for name,text in json.loads({json.dumps(quality_helpers)!r}).items():
+ files['pytools/tools/wmteach/'+name]=text
 modules=json.loads({json.dumps(modules)!r})
 for tree in ('pytools','pywm'):
  for name,text in modules.items():files[f'{{tree}}/tools/wmplan/{{name}}']=text
@@ -173,7 +189,7 @@ setup(root)
 with patch('subprocess.Popen',side_effect=AssertionError('SUMO blocked during CPU gate')):
  for w in panel():guard(w)
  r=unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromNames([
-  'tools.wmplan.test_cpu','tools.coopplan.test_cpu']))
+  'tools.wmplan.test_cpu','tools.wmplan.test_report','tools.coopplan.test_cpu']))
 assert r.wasSuccessful() and not r.skipped
 from tools.coopplan.storage import write
 receipt=dict(pass_=True,tests=r.testsRun,guards=24,skipped=0,new_sumo_sim_s=0)
@@ -249,7 +265,66 @@ print(json.dumps(receipt))
     print(json.dumps(result))
 
 
+def status(collect=False):
+    result = json.loads(remote(f'''import pathlib,json,time,hashlib
+root=pathlib.Path({ROOT!r})
+def load(p):return json.loads(p.read_text())
+owners=[]
+if (root/'DISPATCH.json').is_file():
+ for r in load(root/'DISPATCH.json')['owners']:
+  p=pathlib.Path(f'/proc/{{r["pid"]}}/stat');st=p.read_text().split() if p.exists() else None
+  owners.append(dict(**r,state=st[2] if st else None,identity_match=bool(st and st[21]==r['start_ticks'] and
+   pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()==r['boot_id'])))
+charges=[json.loads(s) for s in (root/'CHARGES.jsonl').read_text().splitlines()] if (root/'CHARGES.jsonl').exists() else []
+closed=[];incomplete=[];results={{}}
+for job in (root/'jobs').iterdir():
+ if (job/'CLOSE.json').is_file():closed.append(dict(id=job.name,**load(job/'CLOSE.json')))
+ else:incomplete.append(job.name)
+ if (job/'RESULT.json').is_file():results[job.name]=load(job/'RESULT.json')
+out=dict(unix=time.time(),root=str(root),complete=(root/'COMPLETE.json').is_file(),
+ stopped=(root/'STOP.json').is_file(),owners=owners,charged=sum(r['sim_s'] for r in charges),
+ actual=sum(r['actual_sim_s'] for r in closed),incomplete=incomplete,
+ episodes=sum('_t' not in k for k in results),forecasts=len(list((root/'responses').glob('*.json'))),
+ requests=len(list((root/'requests').glob('*.json'))),
+ forecast_futures=sum(len(list(p.glob('k*.json'))) for p in (root/'forecasts').iterdir()),
+ stop=load(root/'STOP.json') if (root/'STOP.json').exists() else None,
+ logs={{p.name:p.read_text()[-3000:] for p in root.glob('*.log')}})
+if {collect!r}:
+ assert out['complete'] and not out['stopped'] and not incomplete and out['episodes']==48
+ import sys
+ sys.path.insert(0,str(root/'pytools'))
+ from tools.wmplan.live import verify
+ verify(root)
+ baseroot=pathlib.Path({BASE!r});panel=load(root/'PANEL.json')
+ out.update(binding=load(root/'BINDING.json'),charges=charges,closed=closed,results=results,
+  baselines={{str(w['seed']):load(baseroot/'jobs'/f's{{w["seed"]}}_mappo'/'RESULT.json') for w in panel}},
+  forecasts={{p.stem:load(p) for p in (root/'responses').glob('*.json')}},
+  observations={{p.stem:load(p) for p in (root/'requests').glob('*.json')}},
+  reservations={{p.stem:load(p) for p in (root/'reservations').glob('*.json')}},
+  result_hashes={{str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest() for p in (root/'jobs').glob('*/RESULT.json')}})
+ peer=pathlib.Path('/root/autodl-tmp/wmteach_live20261101_v1')
+ out['wm_student']=None
+ if (peer/'COMPLETE.json').is_file() and not (peer/'STOP.json').exists():
+  pairs=[]
+  for w in panel:
+   s=w['seed'];pairs.append(dict(world=w,baseline=load(peer/'jobs'/f's{{s}}_mappo'/'RESULT.json'),
+    student=load(peer/'jobs'/f's{{s}}_student'/'RESULT.json')))
+  out['wm_student']=dict(root=str(peer),pairs=pairs)
+print(json.dumps(out))
+''',timeout=180))
+    if collect:
+        save('RECEIPTS.json',result)
+    else:
+        save(f'STATUS_{int(result["unix"])}.json',result)
+    print(json.dumps({k:v for k,v in result.items() if k not in
+                     ('binding','charges','closed','results','baselines','forecasts','observations','reservations','result_hashes','wm_student')}))
+
+
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
-    p.add_argument('action', choices=['inspect','register','compare','stage','cpu','freeze','launch'])
-    globals()[p.parse_args().action]()
+    p.add_argument('action', choices=['inspect','register','compare','stage','cpu','freeze','launch','status','collect'])
+    a = p.parse_args().action
+    if a in ('status','collect'):
+        status(a == 'collect')
+    else:
+        globals()[a]()

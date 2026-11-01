@@ -155,6 +155,10 @@ def run(root):
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         write(root/'DISPATCH_ONCE.json',dict(pid=os.getpid(),unix=time.time(),budget=budget()))
         try:
+            while not all((root/f'GPU_READY_{i}.json').is_file() for i in range(binding['gpu_workers'])):
+                if (root/'STOP.json').exists():
+                    raise RuntimeError('GPU startup fault before physics')
+                time.sleep(1)
             with ProcessPoolExecutor(binding['workers'],mp_context=multiprocessing.get_context('spawn')) as pool:
                 jobs = [pool.submit(episode,root,w,arm) for w in panel() for arm in ARMS]
                 for f in as_completed(jobs):

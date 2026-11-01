@@ -4,6 +4,10 @@
 Preparation is in progress. No S-WMPLAN live episode has run and no claim of
 beating MAPPO is supported yet. The owner-approved question is whether the
 world model can choose cooperative actions online better than MAPPO alone.
+The exact199200sim-s plan is registered. Complete full-prefix C_G twins require
+fixed2950sim-s credit per world-arm: at most one early group can execute, and
+none aftert600 fits. This is explicitly a budget-limited planner comparison;
+raw proposals, executions and resource-forced O0 decisions will all be reported.
 
 ## Recovered authority and evidence
 - Branch `c4/wmplan`, clean initial HEAD `df52de61`, inherited from S-WMTEACH.
