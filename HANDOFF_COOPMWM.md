@@ -1,4 +1,10 @@
-# S-COOPMWM live continuation — MAIN02:49 integration pending
+# S-COOPMWM live continuation — MAIN02:53 integration pending
+
+Fresh recovery RESUME_MAIN0253_20261102.md: all270brief lines read; original A
+2998262 running/u23/552closed/1650440charged; both original GPU owners READY/
+sixEXACT0; B/R/broker unstarted. Adopt completed warm qualification, no duplicates.
+Exact grader landed59bf1ddc/e285217a; integrate per README, concurrency/recheck,
+CPU/GPU/runtime gates and prospective registration, then launch once.
 
 Fresh recovery receipt RESUME_MAIN0249_20261102.md: complete262-line brief read,
 HEADe7425014 preserved. Original A2998262 running/u22/528closed/1621640charged;

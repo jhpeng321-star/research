@@ -24,6 +24,21 @@ def main(root):
         group=max(group_components(record['rows']),key=lambda g:g['size'])
         bounds=(float(rt.mp.policy.accel_min),float(rt.mp.policy.accel_max))
         acts=comparators(record,600)+[sample_unscored(group,[[0.]*300]*group['size'],bounds,'ordinary',20261101,duration_s=300)]
+        if binding.get('concurrent_plans'):
+            # Source-bound qualification of the NEW remaining-background branch.
+            # Reuse the original observable fixture, no SUMO or new exact labels.
+            from .speed2_runtime import qualify
+            others=[r['vid'] for r in record['rows'] if r['is_cav'] and r['vid'] not in group['members']][:2]
+            if len(others)!=2:raise ValueError('concurrent qualification requires two other sensed CAVs')
+            other=dict(id='background_qualified',members=others,family='MPPI',duration_s=60,
+                knots=[[-1.]*7,[.4]*7])
+            context=dict(record,group=group['members'],committed_plans=[dict(plan=other,elapsed_s=20)])
+            for k,h in ((4,300),(8,420)):
+                width=batch_width(binding,k)
+                q=dict(qualify(rt,context,acts,k,h,width,memory=memory,transfers=True),
+                    context='other committed group remains for40s then policy; every comparator/candidate',new_sumo_sim_s=0)
+                write(root/f'STARTUP_COMMITTED_K{k}_H{h}.json',q)
+                if not q['pass_']:raise ValueError('concurrent background full/fast parity failed')
         for k,h in ((4,120),(8,300)):
             width=batch_width(binding,k);begin=time.monotonic()
             single=evaluate(rt,record,acts,k,h,chunk_actions=1,pad_actions=width,trim=False,speed2=True,transfers=True,memory=memory)
