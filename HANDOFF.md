@@ -7,6 +7,7 @@
 - Remote `cpuQ:~/sumocore20261031/`; terminal scorer immutable `code/1f061a300604/`. Local compact receipts/forecasts/scores `docs/paper_results/sumocore/`,196files plusMIRROR_SHA256; raw0.5strajectories retained remotely. SummarySHAf91561842325d391e158dbb6383690d3727d6b50179d0ab37950b06bdbfe086e; verificationSHA9b1bb4950c947bc3e9358bc945c4410dc82b5056674265dd3920d5adf3a31f66.
 - Real S-RB-EVAL primitives/BIC reused; its external importer requiresK8/fivearms, so do not mislabel ourK3/threearms as that gate. Existing frozenencoderSHA5b256941 differs from WM2K8referenceb8797242; comparison is system-level, not same-encoder ablation. No shared model changes or switches, training/GPU/push/peer signals.
 - Read-only progress: `python tools/sumocore/status.py`; local integrity/length check: `python tools/sumocore/verify_mirror.py`. Central REGISTRATION has design, explicit repairs/status amendments and terminal result line. Do not repeat completed dispatches.
+- Fresh-session verification (2026-11-01, resumed from e1300102): clean branch; owner registration/background and terminal receipts re-read. `verify_mirror.py` PASS:196 hashed files,29 report lines,87517.5 actual sim-s, physical-validity FAIL retained. Read-only remote `status.py`:144 complete,6 preserved failed attempts,90150 precharged,active=[],all4 recorded supervisors not live. Central completion line already present (5696), acknowledged by MAIN (5734). No simulation/inference dispatch or result changes needed.
 
 ## Chronological preparation and recovery receipts
 
