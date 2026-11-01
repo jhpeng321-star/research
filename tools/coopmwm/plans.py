@@ -23,6 +23,9 @@ def validate(plan, bounds):
 
 
 def acceleration_at(plan, elapsed):
+    if 'profile' in plan:  # policy-centred MPPI profile plans (mppi_search)
+        from .mppi_search import acceleration_at as profile_at
+        return profile_at(plan, elapsed)
     if not 0 <= elapsed < plan['duration_s']:
         return {}
     j = min(5, int(elapsed//10)); f = (elapsed-10*j)/10

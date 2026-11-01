@@ -24,7 +24,7 @@ def profile_table(actions, ids, device):
             for v,x in background.items():
                 if v in slots:
                     raw[b,t,slots[v]]=x;mask[b,t,slots[v]]=True;residual[b,t,slots[v]]=True
-            if 'knots' in a:
+            if 'knots' in a or 'profile' in a:
                 values=acceleration_at(a,t);is_residual=False
             else:
                 values=a.get('residuals',{}) if t<a.get('window',0) else {};is_residual=True
@@ -82,7 +82,7 @@ def evaluate(rt,record,actions,K,H,chunk_actions=4,trim=True,pad_actions=False,h
     with executor_adapter(),plan_executor(),warm_adapter(rt,record):
         for start in range(0,len(actions),chunk_actions):
             subset=actions[start:start+chunk_actions]
-            subset=[dict(a,background_residuals=record['policy_residuals']) if 'knots' in a else a for a in subset]
+            subset=[dict(a,background_residuals=record['policy_residuals']) if ('knots' in a or 'profile' in a) else a for a in subset]
             real_ids=[a['id'] for a in subset]
             if pad_actions:
                 subset=list(subset)
