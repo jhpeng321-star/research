@@ -4,6 +4,8 @@ import json
 from . import ops
 from .storage import write
 
+CPU='/home/ubuntu/coopmwm20261102_commandcpu3'
+
 
 def sources():
     """Inspect only the named runtime code, never scenario/type assignment files."""
@@ -83,6 +85,51 @@ def contrast():
             topk=[{k:p.get(k) for k in ('id','origin','saving_vs_policy','saving_vs_mappo','p_best')} for p in proposal['topk']])))
 
 
+def qualify():
+    from .storage import read
+    from .protocol import checked
+    prior=read(ops.EVIDENCE/'CPU_coopmwm20261102_centrefaircpu1.json')
+    files=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,hashlib
+r=pathlib.Path({prior['root']!r});out={{}}
+for name,h in json.loads({json.dumps(prior['source_hashes'])!r}).items():
+ p=r/name;assert hashlib.sha256(p.read_bytes()).hexdigest()==h;out[name.removeprefix('pytools/')]=p.read_text()
+print(json.dumps(out))''',timeout=40))
+    for name in ('command_chain','command_chain_ops','test_command_chain_cpu','plan_wm'):
+        files['tools/coopmwm/'+name+'.py']=checked(ops.LOCAL/'tools/coopmwm'/(name+'.py')).read_text(encoding='utf-8')
+    stage=json.loads(ops.stage('cpuQ',CPU,files))
+    out=ops.ssh.remote('cpuQ',f'''import sys,os,json,unittest,time
+from unittest.mock import patch
+sys.path[:0]=[{CPU!r}+'/pytools','/home/ubuntu/e3final/runtime/src','/home/ubuntu/e3final/runtime']
+os.nice(19);os.environ.update(CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',COOPMWM_MAPPO='/home/ubuntu/mappospeed/production2/policy_00169.pt',COOPMWM_COST_SOURCE={CPU!r}+'/FROZEN_COSTS.json',COOPMWM_MOTION_SOURCE={CPU!r}+'/FROZEN_MOTION_SOURCE.py')
+import torch;torch.set_num_threads(1)
+names=['tools.coopmwm.'+n for n in ('test_command_chain_cpu','test_mppi_runtime_cpu','test_volume_cpu','test_warm_cpu','test_mppi_search_cpu','test_committed_cpu','test_overlap_cpu')]
+suite=unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromName(n) for n in names)
+begin=time.monotonic()
+with patch('subprocess.Popen',side_effect=AssertionError('CPU only/no SUMO or WM calls')):
+ result=unittest.TextTestRunner(stream=sys.stdout).run(suite)
+print(json.dumps(dict(pass_=result.wasSuccessful(),tests=result.testsRun,skips=len(result.skipped),sim_s=0,root={CPU!r},wall_s=time.monotonic()-begin)))''',timeout=90)
+    print(out);v=json.loads(out.strip().splitlines()[-1]);v['source_hashes']=stage['hashes']
+    write(ops.EVIDENCE/'CPU_coopmwm20261102_commandcpu3.json',v)
+    assert v['pass_'] and v['sim_s']==v['skips']==0
+
+
+def probe():
+    from .storage import read
+    from .protocol import checked
+    root='/root/coopmwm20261102_commandprobe1'
+    cpu=read(ops.EVIDENCE/'CPU_coopmwm20261102_commandcpu3.json')
+    ops.stage_frozen('gpuA',root,cpu)
+    files={'tools/coopmwm/command_chain_probe.py':checked(ops.LOCAL/'tools/coopmwm/command_chain_probe.py').read_text(encoding='utf-8'),
+        'NULL_FIXTURES.json':checked(ops.EVIDENCE/'COMMAND_CHAIN_NULL_FIXTURES.json').read_text(encoding='utf-8')}
+    ops.stage('gpuA',root,files)
+    out=ops.ssh.remote('gpuA',f'''import sys,os,json
+sys.path.insert(0,{root!r}+'/pytools');os.nice(19)
+from tools.coopmwm.command_chain_probe import run
+print(json.dumps(run({root!r}+'/NULL_FIXTURES.json')))''',timeout=90)
+    v=json.loads(out);write(ops.EVIDENCE/'COMMAND_CHAIN_NULL_CALLBACK_PROBE.json',v)
+    print(json.dumps(dict(v,cases=[{k:x for k,x in c.items() if k!='trace'} for c in v['cases']])))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('sources','show','laws','fixtures','contrast'))
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('sources','show','laws','fixtures','contrast','qualify','probe'))
     globals()[p.parse_args().mode]()

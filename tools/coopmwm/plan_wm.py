@@ -51,7 +51,7 @@ def profile_apply(accel,tick,table,bounds):
 
 
 @contextmanager
-def plan_executor(horizon=300, policy=None, trace=None):
+def plan_executor(horizon=300, policy=None, trace=None, final_chain=False):
     """Keep original bridge, memory, lane mask, cap, and safe_accel implementation."""
     from tools.wmteach import runtime
     original=runtime.option_controller
@@ -64,10 +64,20 @@ def plan_executor(horizon=300, policy=None, trace=None):
     for node in ast.walk(tree):
         if isinstance(node,ast.FunctionDef) and node.name=='injected':
             matches+=1
-            node.body=ast.parse("raw=decode(state,accel,tick,table,(mp.policy.accel_min,mp.policy.accel_max),candidate_actions,ids)\nreturn safe_accel(state,raw,**kw)").body
+            node.body=ast.parse("raw=decode(state,accel,tick,table,(mp.policy.accel_min,mp.policy.accel_max),candidate_actions,ids)\nreturn post_safety(state,raw,tick,safe_accel,kw)").body
     if matches!=1:raise ValueError('inherited pre-safety ABI changed')
     ast.fix_missing_locations(tree)
     held=[None]
+    from .command_chain import SlowDown
+    chain=SlowDown() if final_chain else None
+    def post_safety(state,raw,tick,safety,kw):
+        if chain is None:return safety(state,raw,**kw)
+        from wms.control.sumo_idm import allowed_speed
+        from wms.control.alwayscmd import inferred_cap
+        # SUMO computes safe_accel/CommandOwnership once per control decision,
+        # then executes the slowDown timeline under speedMode27 every half-step.
+        safe=safety(state,raw,**kw) if tick%2==0 else raw
+        return chain.apply(state,safe,tick,allowed_speed(state['lane'],state['s_m']),inferred_cap(state))
     def decode(state,accel,tick,table,bounds,actions,ids):
         if policy is not None:
             from .policy_wm import residuals
@@ -77,14 +87,14 @@ def plan_executor(horizon=300, policy=None, trace=None):
         raw=profile_apply(accel,tick,table,bounds)
         if trace is not None and tick%2==0:trace.append(raw.detach().clone())
         return raw
-    ns=dict(original.__globals__,profile_table=profile_table,horizon=horizon,policy=policy,decode=decode)
+    ns=dict(original.__globals__,profile_table=profile_table,horizon=horizon,policy=policy,decode=decode,post_safety=post_safety)
     exec(compile(tree,'<coopmwm-acceleration-profile-decoder>','exec'),ns)
     runtime.option_controller=ns['option_controller']
     try:yield
     finally:runtime.option_controller=original
 
 
-def evaluate(rt,record,actions,K,H,chunk_actions=4,trim=True,pad_actions=False,horizons=None,speed2=False,memory=None,trace=None,transfers=False):
+def evaluate(rt,record,actions,K,H,chunk_actions=4,trim=True,pad_actions=False,horizons=None,speed2=False,memory=None,trace=None,transfers=False,final_chain=False):
     """Same source draws, CRN keys, insertions, departure loop and J reducer.
 
     A single compact-forward proxy retains full virgin-slot controller memory.
@@ -101,7 +111,7 @@ def evaluate(rt,record,actions,K,H,chunk_actions=4,trim=True,pad_actions=False,h
     if record.get('policy_state') is not None:
         from .policy_wm import load_actor
         policy=load_actor(record['policy_state'],next(rt.mp.policy.parameters()).device)
-    with (memory.context(rt,record) if memory is not None else warm_adapter(rt,record)),(compact_geometry(proxy) if speed2 else nullcontext()),(fast_transfers() if transfers else nullcontext()),executor_adapter(),plan_executor(H,policy,trace):
+    with (memory.context(rt,record) if memory is not None else warm_adapter(rt,record)),(compact_geometry(proxy) if speed2 else nullcontext()),(fast_transfers() if transfers else nullcontext()),executor_adapter(),plan_executor(H,policy,trace,final_chain=final_chain):
         for start in range(0,len(actions),chunk_actions):
             subset=actions[start:start+chunk_actions]
             subset=[dict(a,background_residuals=record['policy_residuals']) if ('knots' in a or 'profile' in a) else a for a in subset]
