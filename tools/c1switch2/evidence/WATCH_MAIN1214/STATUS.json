@@ -1,14 +1,14 @@
 {
-  "unix": 1793507042.2456646,
+  "unix": 1793508278.6435049,
   "protocol": "S-C1SWITCH2/v2",
   "hosts": {
     "cpuQ": {
-      "unix": 1793507042.7677934,
+      "unix": 1793508279.349406,
       "host": "cpuQ",
       "load": [
-        11.36669921875,
-        11.01806640625,
-        10.994140625
+        11.87841796875,
+        11.837890625,
+        11.80078125
       ],
       "cpu": {
         "cpu": {
@@ -58,10 +58,11 @@
           "stop": null,
           "episodes": 12,
           "decisions": 360,
-          "closed_jobs": 48,
-          "closed_actual_sim_s": 37440.0,
-          "charged_sim_s": 39200,
-          "ledger_sha256": "8c9327815a9d77405cb6a52cd21c1fd0070391d94ccfe3035029cee041b0f0e6"
+          "closed_jobs": 76,
+          "closed_actual_sim_s": 57920.0,
+          "charged_sim_s": 59140,
+          "ledger_sha256": "b90f77c1419cdbe92ef7ec2494d4707ad53e03bab3204bcec2bdacf8150cf071",
+          "no_progress_ticks": 0
         },
         "wm_oracles": {
           "root": "/home/ubuntu/c1switch2_run_oracles_0e790a668b7ec5d8",
@@ -82,12 +83,12 @@
       "gpu": {}
     },
     "gpuR": {
-      "unix": 1793507043.484851,
+      "unix": 1793508280.1942024,
       "host": "gpuR",
       "load": [
-        6.56494140625,
-        10.0966796875,
-        15.927734375
+        16.93017578125,
+        15.396484375,
+        14.3193359375
       ],
       "cpu": {
         "cpu": {
@@ -168,7 +169,7 @@
           "ready": true,
           "requests": 98,
           "results": 98,
-          "elapsed_wall_s": 36864.24066090584
+          "elapsed_wall_s": 38100.94798326492
         },
         "bb": {
           "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
@@ -193,17 +194,17 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 2890.026555299759
+          "elapsed_wall_s": 4126.733838319778
         }
       }
     },
     "gpuA": {
-      "unix": 1793507045.1122549,
+      "unix": 1793508281.5251548,
       "host": "gpuA",
       "load": [
-        10.21728515625,
-        10.96337890625,
-        8.55517578125
+        15.4287109375,
+        10.798828125,
+        9.5751953125
       ],
       "cpu": {},
       "gpu": {
@@ -226,7 +227,7 @@
           "ready": true,
           "requests": 90,
           "results": 90,
-          "elapsed_wall_s": 36870.844957351685
+          "elapsed_wall_s": 38107.25782442093
         },
         "bb": {
           "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
@@ -251,7 +252,7 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 2892.496330022812
+          "elapsed_wall_s": 4128.9091827869415
         }
       }
     }
@@ -332,10 +333,10 @@
     }
   },
   "latest_task_registration": [
-    "- S-C1SWITCH2 FINAL FLEET EVALUATION REGISTERED BEFORE COMPUTE (a3ae8a88; MAIN01:48 final-checkpoint authority): genuine fleet169 checkpointSHA256 be0bb66dba7ec2059de9d7ca57993731d8383a0a5bf69c52cbfcafc10c457ddc / frozenreceipt9dee8c4f, peer source/config receipt SELMAPPO_FINAL.json. ONLY original fleet_ppo arm, SAME16world panel7c780c25/original12cpuQ+4gpuR partition, original79800sim-s=19200episodes+60600full-prefix six-way oracles; GPU0, no new allocation/training/evaluation by peer. Immutable selector-only binding keeps all common CPU/WALL/canary/frozen-v7/seed/exposure/currentregistry gates, real final-policy CPU load before one-use claim, nice19/singlethread/CUDAhidden/load28cpuQ20gpuR/disk>=2GiB admission; start2cpuQ+1gpuR workers, originalWMoracle occupies1additionalgpuR slot. Local84CPU/RuffPASS; immutable host CPU/final169 preflight precedes dispatch. Base468380sim-s/19GPUh unchanged, per-CAV remains pending genuine final169. Reconciliation4968614a: cpuQ NOT rebooted/uptime6days, originalWM terminal5460cpuQ+2700gpuR retained,112fixed/random134400+canary4680complete; oracle885469live6of12. BB one-use startup terminal BEFOREphysics after parity, exact43.02397724799812GPU-s retained; diagnosed ownSTOP-reference registry falsepositive fixed5ffc7f70 and moved audit beforeGPU, NO retry/reset/refund. Existing observer25348LIVE throughnoon; cpuQ own task outputs296MB/free2.84GiB, no deletion/peerPIDaction/push/newenv.",
     "- S-SELMAPPO 11:40 SSH-RECOVERY / FLEET TRAINING COMPLETE (reconciliationa7b65924; no new allocation): cpuQ uptime518620s confirms MAIN11:37 CORRECTION/SSH-only outage. Original own645235/build9bb7869d8f590818 has completed169GENUINEupdates, exact MAIN02:08 schedule23+23+167x46, all7728newproduction START-ENDs closed,0outstanding/0newfailures/no live own-build processes; terminal TRAIN_COMPLETE_AWAIT_REGISTERED_PANEL. Idempotent real final169/source/finite-policy/ledger validationPASS; final checkpoint /home/ubuntu/selmappo20261031/build_9bb7869d8f590818/training/checkpoint_169.pt SHA256be0bb66dba7ec2059de9d7ca57993731d8383a0a5bf69c52cbfcafc10c457ddc, frozenreceiptSHA9dee8c4f818d540a5f105f88b6b32c76ed4c717ec83eec84afbf3cb35b7a90cb, ledgerSHA3e79fc86dd2359b6361bbb6097e5c83facfee1b04fa56cc172a871334490ceda. Original observer3668 published matching E:/agent-work/c4-c1switch2/SELMAPPO_FINAL.json and exited normally; existing noonpublisher44716 remainsLIVE/no duplicate watcher/trainer. Charged6998400=43200historical+6955200newactual, totalactual6985800..6993000 retains historical uncertainty;14400local evaluationUNSTARTED, exactcap7012800/designSHA992c05601f03d1d9caad0421b041dbeaa05fa8621ae7e3020be42e3c9f5b41d0 unchanged. All46omittedgradientworlds/oldfailures/14historicalunresolved/locks retained; no replay/refund/newphysics/relocation. Completed TRAIN control-window receipts0collisions/teleports, not efficacy. Evaluation remains exclusively S-C1SWITCH2 on registered16world969136..969151/PANEL_v2SHA7c780c25237dde73a657937ab577b8e48f71766817f4363f3298982e90144827; peer now has genuine frozen weights/source/config interface, no duplicated evaluation here. cpuQ free2.85GiB/own output4.92GiB/no growingfleetjob; no deletion/newenv/push/peerPIDaction. Current evidence docs/paper_results/SELMAPPO_RECOVERY.md and FROZEN_FINAL_MAIN0208.json; HANDOFF supersedes historical outage/weight-unavailable status.",
     "- 11:48 MAIN: WM-PHYS FINAL report published (11:35:55; FULL-v4 frozen 22cc32f6): registered switching rule FAIL (300 s breakdown rate not closer to real) -> S-C1SWITCH2 keeps WM2 for its WM arm. S-SELMAPPO fleet PPO picker finished training (final169, kept running through the SSH outage); S-SELMAPPO2 per-CAV at 84 updates; S-C1SWITCH2 admitting final-only selector evaluation on its panel.",
     "- 12:14 INCIDENT: gpuR root overlay 100% full (100 MB free; /root/autodl-tmp 97%) - endangers all gpuR jobs (WM eval, S-WMTEACH, S-C1SWITCH2 admission blocked). MAIN archiving idle /root/c4_heavy (16 GB; no files newer than 10-31 12:00, no processes) to gpuA archive_cpuQ_20261101/gpuR_c4_heavy.tar with sha256 verification, source removed only on match. Also: S-C1SWITCH2 BB startup restart AUTHORISED as a registered continuation exception (retain the 43.024 GPU-s charge; within its caps).",
+    "- S-C1SWITCH2 12:24 SUPERVISION LIVE (82667e50/heartbeatbddaa353; exactreceipt1793507083): ownWindows42548 verifies exact ownedroots/progress20min and commits shortHANDOFF+immutable receipts; resourceobservation60s admits ONLY originalunstartedgpuRfleet1worker and prospectivelyregisteredMAIN12:14BB3workers after disk/load/memory/currentregistry/source/paritygates, durableper-scopeattemptclaims forbid automatic scientificretry. Originalobserver25348EXITED normallyatnoon/no duplicate. gpuRdiskstillBLOCKED/root55726080bytes/load6.44, no newGPU/physics/admissionclaims; awaitMAINarchive. cpuQfleet1152412LIVE/noSTOP/all12episodes360decisions/oraclesprogressing; ALL36originalWMoraclebranchesCOMPLETE20640actual. Aggregate207820charged/207160closedactual, finalizedGPU27729.12296916172s retained; originalbase468380sim-s/19GPUh unchanged. BBnewbothGPUCPUprobesPASS SAMEfrozenengine/identicalsamples37852b51, remaining10756.976022752002GPU-s after43.02397724799812prior debit. cpuQfree7873990656bytes/ownoutputs342522942; per-CAV606968LIVE/final169pending, PHYSOFF. No replay/deletion/peerPIDactions/newenv/push; primaryfullpairedWMvsRLstillINCOMPLETE.",
     "- S-C1SWITCH2 BB CONTINUATION REGISTERED BEFORE ALLOCATION (fb6df4f8; MAIN12:14 explicit exception): exactplanSHA25674807c59d8cd942ca0dbc39427a7b1264880e2ac5ce2e3d9c72c0ee80e565110 in tools/c1switch2/evidence/BB_CONTINUATION_PLAN.json. Preserve original terminal BB startup/STOP/parity/one-use claims; zeroBBphysics proven, exact original finalGPU43.02397724799812s retained: gpuA21.381694240495563/gpuR21.642283007502556. ONE new immutable both-card service scope, SAME frozen engine/checkpoints/protocol/library/objectives, external allocation metadata hardcaps remaining5378.618305759504s gpuA+5378.357716992497s gpuR=10756.976022752002s; old+new<=original10800s/3h, no refund/top-up. OriginalBB16world CPUstage /root/c1switch2_run_bbd7ba8b48ed5829 stillUNCLAIMED/empty; SAME79800sim-s/all original oracles, no priorWM/fixed/random/canary replay. Exact EXITED predecessor/finalreceipt hashes/currentauthority+registry/prospectiveplan/sourcepins/realCPUfeedback and newbothGPUparity required. BEFOREclaim/GPU: bothfree>=8GiB, gpuRload<20/disk>=2GiB; threeBB+onefleet<=4taskgpuRslots, nice19/singlethread. CPU89PASS existingMiniconda/targeted28PASS/RuffPASS; immutableCPUstage receipts follow. Originalbase468380sim-s/19GPUh/design95aa84cf/panel7c780c25 unchanged; PHYS finalruleFAIL/OFF. At fresh1215 receipt cpuQfleet1152412LIVE/all12episodes/360decisions/oraclesprogressing, originalWMoraclesALL36COMPLETE20640actual; gpuRfleet stillUNCLAIMED/diskblocked. No newSUMO/GPU at this registration, deletion/peerPIDactions/newenv/push."
   ],
   "final_checkpoint_receipts": {
@@ -344,7 +345,17 @@
   },
   "postnoon_supervision": {
     "pid": 42548,
-    "admission": null,
-    "admission_error": null
+    "admission": {
+      "unix": 1793508217.849623,
+      "status": "WAIT_CPU_DISK_NO_CLAIM",
+      "states": {
+        "load": 22.666015625,
+        "free_bytes": 316493824
+      }
+    },
+    "admission_error": {
+      "unix": 1793507853.6158674,
+      "error": "RuntimeError('Connection closed by 172.19.0.16 port 53897\\n')"
+    }
   }
 }
