@@ -340,5 +340,142 @@
    "dist_initial": 0.1622200899450133,
    "dist_centre": 0.1381595112893818
   }
- ]
+ ],
+ "full_pool_v2_with_30pct_unaccepted": {
+  "note": "Synthetic FULL-POOL receipts incl. 30% unaccepted (null) searches; new rank-based elite weighting; held-out 96 searches / 12 worlds; default REGISTERED proposer (entropy floor on).",
+  "rows": [
+   {
+    "train_searches": 24,
+    "passed": false,
+    "loglik_gain": {
+     "mean": -0.828665618996775,
+     "ci95": [
+      -1.100391383411872,
+      -0.5299784178037924
+     ]
+    },
+    "nearest_elite_distance_change": {
+     "mean": -0.04130218846710775,
+     "ci95": [
+      -0.04915969240227969,
+      -0.033563202412102276
+     ]
+    },
+    "distance_change_vs_centre": {
+     "mean": -0.006241045380731693,
+     "ci95": [
+      -0.013067336954481682,
+      0.000266937441428666
+     ]
+    },
+    "selected_step": 1500
+   },
+   {
+    "train_searches": 48,
+    "passed": false,
+    "loglik_gain": {
+     "mean": -0.29168544203137936,
+     "ci95": [
+      -0.6307491944552556,
+      0.03622409909672886
+     ]
+    },
+    "nearest_elite_distance_change": {
+     "mean": -0.05058086438558224,
+     "ci95": [
+      -0.058387495602626203,
+      -0.043945490949583464
+     ]
+    },
+    "distance_change_vs_centre": {
+     "mean": -0.015519721299206183,
+     "ci95": [
+      -0.01981539497430755,
+      -0.0114069867539124
+     ]
+    },
+    "selected_step": 1500
+   },
+   {
+    "train_searches": 96,
+    "passed": true,
+    "loglik_gain": {
+     "mean": 1.6483119304965375,
+     "ci95": [
+      1.2794186734971267,
+      1.9673918418367553
+     ]
+    },
+    "nearest_elite_distance_change": {
+     "mean": -0.05063530607395237,
+     "ci95": [
+      -0.05752750347792473,
+      -0.043857863974966965
+     ]
+    },
+    "distance_change_vs_centre": {
+     "mean": -0.01557416298757631,
+     "ci95": [
+      -0.02093111591009027,
+      -0.009550638034247627
+     ]
+    },
+    "selected_step": 100
+   },
+   {
+    "train_searches": 192,
+    "passed": true,
+    "loglik_gain": {
+     "mean": 3.6149894943823853,
+     "ci95": [
+      3.181685242760573,
+      4.149599414451547
+     ]
+    },
+    "nearest_elite_distance_change": {
+     "mean": -0.055173319080280676,
+     "ci95": [
+      -0.0628283451943806,
+      -0.04846278755292578
+     ]
+    },
+    "distance_change_vs_centre": {
+     "mean": -0.020112175993904618,
+     "ci95": [
+      -0.023465751279274773,
+      -0.01683490966839089
+     ]
+    },
+    "selected_step": 100
+   },
+   {
+    "train_searches": 384,
+    "passed": true,
+    "loglik_gain": {
+     "mean": 4.087594111858849,
+     "ci95": [
+      3.723390058124826,
+      4.549568880992631
+     ]
+    },
+    "nearest_elite_distance_change": {
+     "mean": -0.05824519629416829,
+     "ci95": [
+      -0.06479655161196146,
+      -0.05262898036905484
+     ]
+    },
+    "distance_change_vs_centre": {
+     "mean": -0.02318405320779222,
+     "ci95": [
+      -0.02701935282709395,
+      -0.019342663357164197
+     ]
+    },
+    "selected_step": 100
+   }
+  ],
+  "wall_s": 375.98819184303284
+ },
+ "note_v2": "v2 = rank-based full-pool elite weighting incl. unaccepted searches, entropy floor; passes from 96 training searches"
 }

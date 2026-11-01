@@ -1,0 +1,47 @@
+{
+ "generated_utc": "2026-11-01T20:11:39+00:00",
+ "cache": "E:\\agent-work\\_plan_proposer_cache",
+ "fetch": [
+  {
+   "host": "cpuQ",
+   "remote": "/home/ubuntu/coopmwm20261102_warm1/requests",
+   "listed": 7,
+   "fetched": 7
+  },
+  {
+   "host": "cpuQ",
+   "remote": "/home/ubuntu/coopmwm20261102_warm1/responses",
+   "listed": 3,
+   "fetched": 3
+  },
+  {
+   "host": "cpuQ",
+   "remote": "/home/ubuntu/coopmwm20261101_accel1/requests",
+   "listed": 4,
+   "fetched": 0
+  },
+  {
+   "host": "cpuQ",
+   "remote": "/home/ubuntu/coopmwm20261101_accel1/responses",
+   "listed": 0,
+   "fetched": 0
+  }
+ ],
+ "load": {
+  "pairs": 3,
+  "skipped": {
+   "search without scored perturbations (rejected or unavailable)": 1
+  },
+  "non_train": 0,
+  "full_pool_files": 0,
+  "sumo_entries": 0
+ },
+ "receipts": 2,
+ "full_pool_receipts": 0,
+ "searches": 2,
+ "searches_with_elites": 2,
+ "worlds": 2,
+ "dataset_skips": 0,
+ "activation": "NOT ACTIVATED: requires registered minimum + offline PASS + explicit owner approval via MAIN",
+ "train": "not run: need >= 24 B searches from >= 4 TRAIN worlds"
+}

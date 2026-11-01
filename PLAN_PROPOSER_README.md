@@ -1,47 +1,42 @@
-# tools/coopmwm/plan_proposer.py: learned prior for the MPPI plan search (arm B only)
+# Learned search for the MPPI plan search (arm B only; never auto-activated)
 
-The plan proposer is an AlphaZero-style prior. It sees the observable situation of a CAV group and proposes joint plan perturbations, so searches can start near good plans. It never scores plans. Its proposals are extra iteration-0 seeds, and the WM still scores every candidate. It runs on CPU only (numpy and torch), uses no SUMO or GPU, and is deterministic.
+`tools/coopmwm/plan_proposer.py` is an AlphaZero-style prior. From the observable situation of a CAV group it proposes joint plan perturbations. The search can use it in two flag-only ways (default off, output byte-identical): **seeds** (extra iteration-0 seeds) and **warm start** (the starting distribution for MPPI/CEM). The WM still scores every candidate, and horizons are never shortened. Everything runs on CPU (numpy/torch), deterministically, without SUMO or GPU.
 
 ## Design
-- **Inputs:** one token per member from the rows the plan service already receives (`vid, s_m, v_mps, lane, is_cav[, length_m]`): relative/road position, merge-zone flag, speed and relative speed, lane one-hot, nearest vehicle ahead/behind in each of 3 lanes within 100 m, HDV/CAV counts within 100 m, and group context (regime, size, mean speed, zone occupancy).
-- **Excluded:** world/seed/demand/share labels, clock, driver parameters and truth. `world_id` only groups the split.
-- **Model:** set transformer (d=64, 2 layers, no positional encoding), permutation-equivariant for 2-6 members.
-  - Output: M=4 Gaussian joint proposals in `mppi_search`'s canonical space (members x 10 knots over [0, 300] s, relative to the policy trajectory), plus a per-component duration categorical.
-  - Defensive mixture: 0.1 of the mass stays on the search's own initial N(0, Sigma_0), uniform over durations.
-- **Training targets:** weighted likelihood of candidates whose WM-predicted saving vs 'policy continues' is > 0. Each search has unit weight, shared in proportion to saving. A SUMO-positive executed plan adds +1. SUMO-losing executed plans are never targets.
-- **Training setup:** world-grouped split (25% of worlds by SHA rank); early stopping on an inner world split of the TRAIN worlds only; AdamW, at most 1500 steps, seed 20261102, 1 thread, deterministic algorithms.
-- **Checkpoint:** `<out>.pt` + `<out>.json` (cfg, .pt SHA256, own SHA256); the loader verifies both.
-- **Offline check** (`offline_check`) on held-out-world searches, against the search's own initial distribution: elite log-likelihood gain, and nearest-elite RMS distance change (16 samples each) vs initial samples and vs the zero 'centre' seed, with world-bootstrap 95% CIs. PASS needs >= 8 worlds, >= 40 searches, LL CI lower > 0 and both distance CI uppers < 0.
+- **Inputs:** one token per member from the rows the plan service already receives (`vid, s_m, v_mps, lane, is_cav[, length_m]`): relative/road position, merge-zone flag, speeds, lane one-hot, nearest vehicle ahead/behind per lane within 100 m, HDV/CAV counts, and group context (regime, size, mean speed, zone occupancy).
+- **Excluded:** world/seed/demand/share labels, clock, driver parameters and truth.
+- **Model:** set transformer (d=64, 2 layers), permutation-equivariant for 2-6 members. It outputs M=4 Gaussian joint proposals in `mppi_search`'s canonical space (members x 10 knots over 300 s, relative to the policy), plus a duration categorical. 0.1 of the mixture stays on the search's own N(0, Sigma_0) as a defensive component. A mixture-entropy floor of 0.5 log M prevents collapse onto one plan type.
+- **Targets:** every B search with a full screened pool, including searches that were not accepted. Each search's top-E elites (E = ceil(N/4)) are ranked by utility against its comparators, min(saving vs policy, saving vs MAPPO). The weight is the utility above the next-ranked candidate, and each search sums to one unit. A SUMO-positive executed plan adds +1; SUMO-negative executed plans are never imitated. Top-k-only receipts are a fallback.
+- **Training:** world-grouped split (25% of worlds); early stopping on inner TRAIN worlds only; seed 20261102. Checkpoints are `.pt` + `.json` with SHA256, and the loader verifies both.
+- **Warm start** (`warm_start`; `mppi_search.search(warm_start=...)`): the mixture is moment-matched into one Gaussian. In every iteration, **20% generic** policy-centred samples and a **10% novelty** slice are kept. The novelty slice takes, from 4x as many generic draws, those with the lowest proposer/generic density ratio (rank-based), so unexpected moves are still tried.
+- **Novelty per executed plan:** `plan_novelty` / `novelty_report` give the distance to the nearest proposer mode and library entry, plus the post-hoc label including 'new'.
 
-## Data needed (schema `coopmwm.plan_proposer.receipt/1`, documented in the module docstring)
-- **Already enough:** plan-service `requests/` + `responses/` (or `forecasts/`). `receipt_from_service` uses the top-k plans and the `search_learning` covariance. It skips arm R, rejected searches and missing rows. `attach_sumo` adds the `search_learning.update` entries.
-- **Better:** wrap `evaluate` in `RecordingEvaluator`. The search output stays byte-identical (tested) and the whole screened pool is logged (372 candidates, 0.26 MB JSON for 6 members).
-- **How many searches?** From the synthetic planted-direction curve (`docs/paper_results/PLAN_PROPOSER_SYNTH_CURVE.json`, 12 held-out worlds):
-  - Top-k-only receipts pass from 96 searches. Log-likelihood gain is +2.0 nats per elite at 192 searches and +4.3 at 384.
-  - Full-pool receipts pass from 48 searches (+3.8 at 192).
-  - With fewer searches, the CI includes 0.
-- **Registered minimum** before the first check: >= 200 B searches with elites from >= 32 TRAIN worlds, so that >= 8 worlds are held out. Real WM noise is unknown, so the gate decides.
-- **Cost:** inference takes about 5 ms per group on CPU; training takes minutes on CPU.
+## Checks
+- **Offline check** (`offline_check`, held-out worlds, vs the search's own initial distribution): elite log-likelihood gain CI lower > 0; nearest-elite distance vs initial samples and vs the 'centre' seed, CI uppers < 0; >= 8 worlds and >= 40 searches.
+- **Evaluations saved** (`learned_search_eval`): each held-out search is replayed through the real `mppi_search` code on a kernel-ridge surrogate of its own full WM screen pool. Modes: plain, plain_alt (different seed), seeds, warm, both, and warm_it1/warm_it2 (1 or 2 CEM iterations, same K4/H300 screen and K8/H_final). It reports evaluations needed to reach plain's final elite quality (mean of the top E), the quality curve, and elite coverage, all with world-bootstrap CIs.
+- **Synthetic results** (`docs/paper_results/LEARNED_SEARCH_SYNTH.json`: 40 held-out searches, 8 worlds, sizes 2-6, 30% unaccepted, 240 screened candidates per search). All comparisons are against an independent plain search (plain_alt):
+  - **warm** reaches plain's final elite quality 33 evaluations sooner (-14%, CI -41 to -24) and ends +0.22 higher (CI 0.10 to 0.36).
+  - **both** saves 38 evaluations (+0.18 quality). **seeds** saves 9 (CI includes 0).
+  - **warm_it2** uses 67% of the evaluations and ends -0.06 (CI -0.12 to 0.01), roughly equal.
+  - **warm_it1** is too weak (-0.41).
+  - Elite coverage is 0.62 for warm and 0.55 for warm_it2, against 0.47 for an independent plain search.
+  - Data needed: with full pools, the check passes from 96 training searches (`PLAN_PROPOSER_SYNTH_CURVE.json`).
 
-## Integration recipe (only after activation; in `mppi_runtime.plan`)
-1. At service start, run `model, meta = plan_proposer.load_checkpoint(path)` and check `meta['pt_sha256']` against the registered SHA.
-2. For each search, run `seeds = plan_proposer.proposal_seeds(record, group, policy, 4, model, bounds, regime=regime(record['rows']))`.
-   - Seeds are made with `build_plan` and `validate_plan`: clipped to bounds, <= 10 knots, registered durations, origin `'proposer'`.
-   - They are deterministic per record.
-3. Call `search.search(..., extra_seeds=seeds)`.
-   - This patch adds an optional `extra_seeds` argument and the `'proposer'` origin to `mppi_search`. With `None` the output is unchanged and gains no key.
-   - Seeds take population slots, so the WM cost per search does not change.
-4. Optional logging, usable now: `rec = plan_proposer.RecordingEvaluator(score)`, then `search(..., evaluate=rec)`, then write `receipt_from_search(record, result, rec)`.
-5. At each boundary, run `python -m tools.coopmwm.plan_proposer train <queue roots|receipt dirs> --learning-entries <search_learning JSONs> --out <ckpt>`. It prints the SHAs and the offline check.
+## Real data (`python -m tools.coopmwm.learned_search_report`)
+- **Collect:** copies read-only (SSH `find` / `tar -c` only, with forbidden names pruned) from cpuQ `requests/` + `responses/` and from `proposer_receipts/` on cpuQ/gpuA/gpuR into `E:/agent-work/_plan_proposer_cache`. Only TRAIN worlds are kept.
+- **Run:** trains, runs the check and the evaluations curve (once at least 48 full-pool receipts exist), and writes `docs/paper_results/LEARNED_SEARCH_REPORT.md` + `.json`. It never activates anything.
+- **Status 2026-11-02 04:12:** 3 B searches found on cpuQ (2 accepted, 1 rejected). Real full pools: 0, because the live service does not log pools.
+- **To get full-pool data,** MAIN would approve this logging-only patch in `mppi_runtime.plan` (search output byte-identical, no WM cost): `rec = plan_proposer.RecordingEvaluator(score)`; `search(..., rec, ...)`; `plan_proposer.log_receipt(root, record, result, rec)`.
+- **Registered minimum** for the first check: >= 160 full-pool B searches (>= 40 held out) from >= 32 TRAIN worlds.
 
-## Activation rule (full text: `docs/paper_results/PLAN_PROPOSER_PREREG.md`)
-- The proposer joins B's seed population only after it passes the offline check on held-out searches.
-- Checks run only at TRAIN-check boundaries (every 4 updates), at most once each, up to u40, with a frozen config. Every attempt is recorded.
-- Arm R never uses the proposer.
-- Activation is an engineering amendment `ACTIVATE_PLAN_PROPOSER_u<k>.json` at an update boundary.
-- The current frozen launch is unchanged.
+## Integration after explicit owner approval (`mppi_runtime.plan`)
+1. Run `model, meta = plan_proposer.load_checkpoint(path)` and check the SHA.
+2. For the **seeds** mode: `seeds = proposal_seeds(record, group, policy, 4, model, bounds, regime=...)`, then `search(..., extra_seeds=seeds)`.
+3. For the **warm** mode: `search(..., warm_start=plan_proposer.warm_start(record, group, model, regime))`. Mode **both** combines steps 2 and 3. Iteration cuts need a separate amendment.
 
-## Tests
-- `python -m pytest -q tools/coopmwm/test_plan_proposer_cpu.py` (rl_driving, CPU): **14 passed** in about 35 s.
-- Coverage: groups of 2-6; permutation invariance/equivariance; only row fields read; planted direction learned with a held-out PASS; untrained model and too little data FAIL; world-grouped split; deterministic training and sampling; checkpoint SHA with tamper detection; schema tolerance; SUMO weighting; service adapter and queue loader; search byte-identical with the recorder; seeds within bounds/knots/durations and WM-scored via `extra_seeds`.
-- `test_mppi_search_cpu.py` still passes 15/15.
+## Activation (`docs/paper_results/PLAN_PROPOSER_PREREG.md`)
+Activation needs both (a) a PASS of the offline check under the registered schedule and (b) explicit owner approval recorded by MAIN. It is never automatic. Arm R never uses the proposer, and activation is recorded as an engineering amendment at an update boundary.
+
+## Tests (rl_driving, CPU)
+- `python -m pytest -q tools/coopmwm/test_plan_proposer_cpu.py tools/coopmwm/test_learned_search_cpu.py tools/coopmwm/test_mppi_search_cpu.py`: 43 passed.
+- Coverage: permutation invariance, determinism, SHA tamper detection, schema tolerance; unaccepted searches as training data; flag-off and prior-equal warm start byte-identical; generic/novelty slice counts and novelty ranking; entropy floor; unchanged horizons with fewer iterations; elite coverage; read-only report path on a synthetic cache.
