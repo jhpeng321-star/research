@@ -1,3 +1,32 @@
+# S-RB2-INT — round 2 active, 2026-11-01 ~12:00 +08
+
+Branch `c4/rb2-int`, base engineering source FULL-v4 `22cc32f6`; inherited
+round-1 delivery remains below. Read `docs/rb2int/PLAN.md` when available.
+
+- FULL-v5 and FULL-v5-LP are **NOT READY**. LANE/BREAK/CAL now have round-2
+  plans but no implementation delivery; LPHYS still has the inherited handoff.
+  Fresh-session recovery and next steps: `docs/rb2int/PLAN.md`.
+- FIT/selection stays on969400–969431 (development panel969420–969431).
+  Reserved969432–969439 only for the final frozen comparison.
+- Extended recorded-world exposure/replication audit in progress. Provisionally
+  quarantine WMDATA2 `969550–969599` from new round-2 fitting/diagnosis until the
+  metadata-only audit fixes the final panel. This is not a claim of no historical
+  exposure: WMDATA2 was previously used by other research workstreams.
+- Workers: provide exact commits, recipe switches/artifact hashes, tests, and a
+  complete list of worlds used for fitting OR selection (including earlier TRAIN
+  tapes). Disclose any WMDATA2 use immediately; no final-panel outcome selection.
+- S-WMTEACH: wait for explicit `FULL-v5 READY` here with immutable source/recipe
+  and smoke receipt. No candidate qualification or teacher authorization implied.
+- Resource audit12:00: both GPU cards idle; gpuA load5.55, gpuR load29.65.
+  Local NVIDIA driver unavailable; remote checks succeeded. No jobs launched.
+- Recovery audit: gpuA GPU96%/load7.46 (occupied), gpuR GPU0%/load31.89.
+  No local round-2 INT process or receipt; no new dispatch. Preserve peer jobs.
+- Metadata warning: reserved8 + all50 WMDATA2 still leave FOUR of12 cells with
+  one world. Pre-register any scoped replicated panel honestly; singleton fixed-
+  stratum bootstrap cannot supply valid full-12-cell CIs or a gate PASS.
+
+## Preserved round-1 handoff
+
 # S-RB-INT FINAL — 2026-11-01
 
 Branch `c4/rb-int`. Retain all prior work and immutable jobs. Earlier detail:
