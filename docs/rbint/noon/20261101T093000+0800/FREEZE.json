@@ -1,0 +1,17 @@
+{
+ "unix": 1793497169.3217533,
+ "candidate": "WM-PHYS-FULL-v4-gpu",
+ "source_commit": "22cc32f65a80af482a1a277c5f22377fa727d0a3",
+ "recipe": "/root/rbeval20261031/phys_code_22cc32f65a80/configs/wm_phys.toml",
+ "immutable_stage": {
+  "host": "gpuA",
+  "commit": "22cc32f65a80af482a1a277c5f22377fa727d0a3",
+  "archive_sha256": "ea6f39b6fdcd5e79da6543e64b533cf30bf92f79b4427123e64bc724867213a8",
+  "runtime": "/root/rbeval20261031/phys_code_22cc32f65a80",
+  "endpoint_only": false
+ },
+ "evidence_reuse": "same source; successful tasks retained, no reruns",
+ "basis": "latest integrated engineering/causal settings/arrivals; no reserved-outcome parameter tuning",
+ "fitted_lc": false,
+ "qualification": "not implied by engineering freeze"
+}
