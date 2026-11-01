@@ -1,5 +1,14 @@
 # Resume here — INT owned development jobs, sourceb2df7458
 
+## Owner17:35 priority (applied17:40) — highest-priority admission state
+
+Supervisors473053/gpuA and924719/gpuR are PAUSED/T via exact identity-bound pidfds;
+no evaluate process was signalled. Current4+3children finish; new admission0.
+They cannot hot-reload caps: do not SIGCONT frozen4/3 admission. Safe capped2/1
+claim-preserving continuation is required after drain; see OWNER_1735_ADMISSION.md
+and OWNER_1735_{GPUA,GPUR}_DRAIN.json. Collector25240/publisher44988 stay sole owners;
+19/216world jobs complete, no failures at recovery. No dispatch/task duplicated.
+
 ## LIVE17:03 — highest-priority ownership (supersedes older local PID notes)
 
 - Remote supervisors473053/gpuA and924719/gpuR: same incarnations, healthy/no

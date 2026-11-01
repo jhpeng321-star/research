@@ -1,0 +1,61 @@
+{
+ "host": "gpuA",
+ "time": "2026-11-01T17:40:51.060163+08:00",
+ "process": {
+  "pid": 473053,
+  "start_ticks": "889857083",
+  "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914"
+ },
+ "supervisor_state": "T",
+ "new_admission_ceiling": 0,
+ "requested_ceiling": 2,
+ "mode": "drain-only; exact2/1 live cap unavailable",
+ "evaluate_children": [
+  {
+   "job": "v4_969592",
+   "process": {
+    "pid": 498213,
+    "start_ticks": "890386372",
+    "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914"
+   },
+   "state": "R",
+   "signal_sent": false
+  },
+  {
+   "job": "v5-lp_969599",
+   "process": {
+    "pid": 498077,
+    "start_ticks": "890383264",
+    "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914"
+   },
+   "state": "R",
+   "signal_sent": false
+  },
+  {
+   "job": "v5_969592",
+   "process": {
+    "pid": 509366,
+    "start_ticks": "890587481",
+    "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914"
+   },
+   "state": "R",
+   "signal_sent": false
+  },
+  {
+   "job": "v5_969599",
+   "process": {
+    "pid": 496347,
+    "start_ticks": "890341155",
+    "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914"
+   },
+   "state": "R",
+   "signal_sent": false
+  }
+ ],
+ "intent_sha256": "e8201cf1090c47207d5a5621a4de9e90b85c2a03423f9e85c0d9cdda15f580ce",
+ "gpu_before": "43916, 99",
+ "source_recipe_plan_changed": false,
+ "redispatched_tasks": 0,
+ "automatic_resume": false,
+ "next_action": "explicit capped supervisor continuation required; do not SIGCONT at frozen4/3 slots"
+}

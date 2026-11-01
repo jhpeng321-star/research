@@ -1,5 +1,18 @@
 # S-RB2-INT — round 2 active, 2026-11-01 ~12:00 +08
 
+## OWNER17:35 priority — dispatch drain applied17:40 +08 (supersedes live admission below)
+
+- Original dispatch supervisors473053/gpuA and924719/gpuR are identity-verified
+  **PAUSED (T)** via exact pidfd SIGSTOP only; no evaluate-child/group signals.
+  Existing4+3evaluate children continue. New admission temporarily0 (within2/1).
+  Frozen4/3 supervisors have no hot cap; do not SIGCONT them at old concurrency.
+- Read `docs/rb2int/OWNER_1735_ADMISSION.md` and exact per-host DRAIN receipts.
+  Claim-preserving2/1 continuation after all existing children finish is next;
+  no candidate/source/plan change, task kill, retry or redispatch has occurred.
+- Collector25240 and publisher44988 ownership stays unchanged. Complete tasks
+  remain collectable while supervisors are paused.19/216world jobs complete at
+  recovery, no failures. Existing report/interim qualification limits still apply.
+
 ## LIVE17:03 — authoritative continuation ownership
 
 - Original remote supervisors473053/gpuA +924719/gpuR remain LIVE, same boot/start
