@@ -1,0 +1,19 @@
+{
+ "owner": "S-RB2-BREAK",
+ "pid": 457557,
+ "argv": [
+  "nice",
+  "-n",
+  "19",
+  "/root/miniconda3/bin/python",
+  "-B",
+  "-u",
+  "-m",
+  "tools.rb2break.validate_envelope",
+  "--out",
+  "/root/rbeval20261031/rb2break/envelope_validation/VALIDATION.json"
+ ],
+ "unix": 1793512891.8157873,
+ "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+ "start_ticks": "889310597"
+}

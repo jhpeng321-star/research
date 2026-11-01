@@ -1,0 +1,6752 @@
+{
+ "schema": "rb2break-motion-envelope/1",
+ "worlds": [
+  969420,
+  969421,
+  969422,
+  969423,
+  969424,
+  969425,
+  969426,
+  969427,
+  969428,
+  969429,
+  969430,
+  969431
+ ],
+ "conditioning_interval_s": [
+  240,
+  270
+ ],
+ "validation_interval_s": [
+  270,
+  300
+ ],
+ "cohort": "registered t0=300 surviving HDVs with later stable-leader motion",
+ "baseline_crps_mps2": 0.11341915431477179,
+ "bounded_crps_mps2": 0.12010075962927987,
+ "improved": false,
+ "per_world": [
+  {
+   "world": 969420,
+   "rows": 3480,
+   "baseline_crps": 0.18215639120545732,
+   "bounded_crps": 0.16546767168325588,
+   "observable_hashes": {
+    "start.pt": "81d639c46954ee050764438d36bfddbae09d4bc4703f1eb7a1b58592763051e8",
+    "start_history.npz": "afeaa830bf9ae9dbf1395cb24685108ff430a7595568ac149891ba3a1004acc4",
+    "result.json": "f4be47676bab8a618c97f3f191cff9488e2ea927f5f2fb8d5e821d9ddf5e69c4"
+   }
+  },
+  {
+   "world": 969421,
+   "rows": 2017,
+   "baseline_crps": 0.0580645444647407,
+   "bounded_crps": 0.05691866592065778,
+   "observable_hashes": {
+    "start.pt": "507cbef23a5e8ec69a3a3c25a1e5b433d6f7967072cca8d144aa79cc77e75a85",
+    "start_history.npz": "db481268d74b3adaed2a93f31bf6cec5a2bad5182445b7c7c1305811a1911093",
+    "result.json": "bb44c44a672ce40e618250ad7a2fe32ccbc5fffa40d1ede59d6e5793b2eff7e3"
+   }
+  },
+  {
+   "world": 969422,
+   "rows": 2109,
+   "baseline_crps": 0.06984679110814294,
+   "bounded_crps": 0.08478064880152654,
+   "observable_hashes": {
+    "start.pt": "18864114875baa28cb83eb48a1e7ed6517c8d98705ef53ea5d5f9be090073b60",
+    "start_history.npz": "f527dc1bc0b4f33a613c5454de5127e0d07579505fdfe1abb15ae57d910c3ac7",
+    "result.json": "ade01f0bbdba38383948327514cd6b157a9c9f888202a8550c389e0e7d385a89"
+   }
+  },
+  {
+   "world": 969423,
+   "rows": 2024,
+   "baseline_crps": 0.13036442622589264,
+   "bounded_crps": 0.1449872178186803,
+   "observable_hashes": {
+    "start.pt": "56e24f0b1fb172a038943a670732dbee04aa649f6b89ae8d96ddc09814bfafe8",
+    "start_history.npz": "514a59dab49e987ab91e4d96a98e983ae8c320099b2a9d8642105fe618478a16",
+    "result.json": "ef1b25e734a65c6880d4bbab1cd05cd988de27eb3c952aeaaa8da2739986dd7c"
+   }
+  },
+  {
+   "world": 969424,
+   "rows": 3496,
+   "baseline_crps": 0.11127491729113602,
+   "bounded_crps": 0.12968601071514194,
+   "observable_hashes": {
+    "start.pt": "69cc15a59c9784269dc5d0c678b4c41595dc76e430331e3d8923c7c9ffc787ae",
+    "start_history.npz": "be76ed45c3bd4fadfebc5af3725c007f435635f36e23725946e5116a7dd42afd",
+    "result.json": "fd50fe5cdc4f4556ef7ebea3df0a5ebf78b67c8b02a9965e8aefc564ce98302b"
+   }
+  },
+  {
+   "world": 969425,
+   "rows": 3890,
+   "baseline_crps": 0.11724739763538956,
+   "bounded_crps": 0.12392456968732757,
+   "observable_hashes": {
+    "start.pt": "72d4774119c491e7b6b449b9c7cc8f40af838a5bc09a7235a95459a51a762d78",
+    "start_history.npz": "41b052c257377a960dfc2b6f5c34c373ea24aa3fd84e6a5ea7ab6e50788246ed",
+    "result.json": "51fb9264d15722cb84edcd4d53130fda632cf608b655e8a47138accf5f31294c"
+   }
+  },
+  {
+   "world": 969426,
+   "rows": 3615,
+   "baseline_crps": 0.12293454546116353,
+   "bounded_crps": 0.12910481127613596,
+   "observable_hashes": {
+    "start.pt": "5c83a8d17735cf8d4423282a64ea8d0bc67667441e7c3f34e76965e985a1aada",
+    "start_history.npz": "661506c7116ab11e109eecc71a6efadb75f859dd5c3ea675de92e2761a897b81",
+    "result.json": "7942642c8671939f83574b36a3455a0b6c1e77c59ccdf600d25e4951255c5c52"
+   }
+  },
+  {
+   "world": 969427,
+   "rows": 3437,
+   "baseline_crps": 0.12566513179347125,
+   "bounded_crps": 0.1280674757259429,
+   "observable_hashes": {
+    "start.pt": "8471940e6c84b394e236391767a6821eba0b9961c7744ae05be77c094f1bd366",
+    "start_history.npz": "f6a701573b92f4524549d0faca7793d7d635997ef48c03f8fa890aee89ca2cae",
+    "result.json": "5638ee9b54953df985540a87eaefd850f2474161272877ae85940c6a9feec0cc"
+   }
+  },
+  {
+   "world": 969428,
+   "rows": 3077,
+   "baseline_crps": 0.11235530776789421,
+   "bounded_crps": 0.13397215926340045,
+   "observable_hashes": {
+    "start.pt": "d28986b21d660e03c826aa22660790fbf973bd7cdf0685b1225cc39b035701ab",
+    "start_history.npz": "ca730b1a38aeffef0c5c9e491ead76651e6b76be45c8b2e1d68f766f04afab32",
+    "result.json": "8bb70985e07427ff8402827c1f73c0fd988f42c90224f18aeb644076253a66ae"
+   }
+  },
+  {
+   "world": 969429,
+   "rows": 3597,
+   "baseline_crps": 0.14444304834632357,
+   "bounded_crps": 0.14252121110914917,
+   "observable_hashes": {
+    "start.pt": "0d8df31d5bfcf8ed006ad8f12223755b100659ca2c79714fbab98da8008e25ce",
+    "start_history.npz": "a7b71aca9b896d08c461c34782d2a34c36ba263e3f38dc08072f0411a4288006",
+    "result.json": "1646e53d3162daf114a3ec206b411e30e2bf27bebff53f0041844fb6408a4fac"
+   }
+  },
+  {
+   "world": 969430,
+   "rows": 2931,
+   "baseline_crps": 0.07970843813873875,
+   "bounded_crps": 0.07900040691742988,
+   "observable_hashes": {
+    "start.pt": "fdc68d9f786138a650cf4b57324c9f7c17f3066749faeac0286638ffd94c7559",
+    "start_history.npz": "a5b34f656f3e7bf11110fe2a5f2e370efc9dd11ab0355aa26e60d5ded67f820c",
+    "result.json": "5589cea1b7c493b93d3f897c3154709ab934533065540488794125b7bfb86525"
+   }
+  },
+  {
+   "world": 969431,
+   "rows": 2910,
+   "baseline_crps": 0.10696891233891115,
+   "bounded_crps": 0.12277826663271013,
+   "observable_hashes": {
+    "start.pt": "523da4cd02fe5ac311cd67578534beb8d7da5e7d5503543cd01728c1283acdfa",
+    "start_history.npz": "7b44f11710047541419f3744e8a5cef8564033cf769a252dd59c094afdbe6283",
+    "result.json": "6c3f8d5d2893b315d7fa2c06fcf71ebe988bfd140e06f081f13396a2f8425c40"
+   }
+  }
+ ],
+ "audits": [
+  {
+   "world": 969420,
+   "identity": 181,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.6329011917114258,
+   "discarded_weight": 0.5199404777735273,
+   "remaining_profiles": 736,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 178,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.7227592468261719,
+   "discarded_weight": 0.06127409766855704,
+   "remaining_profiles": 659,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 180,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 1.5353965759277344,
+   "discarded_weight": 0.4365055826137438,
+   "remaining_profiles": 152,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 184,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 1.0589218139648438,
+   "discarded_weight": 0.16269698683333858,
+   "remaining_profiles": 387,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 194,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 27,
+   "acceleration_lower_mps2": 1.251551628112793,
+   "discarded_weight": 0.6964433616115826,
+   "remaining_profiles": 269,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 183,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969420,
+   "identity": 186,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 56,
+   "acceleration_lower_mps2": 0.976776123046875,
+   "discarded_weight": 0.6825537975958186,
+   "remaining_profiles": 448,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 217,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969420,
+   "identity": 195,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 27,
+   "acceleration_lower_mps2": 1.0329561233520508,
+   "discarded_weight": 0.6111037131882027,
+   "remaining_profiles": 406,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 142,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.3295707702636719,
+   "discarded_weight": 0.023143852092907445,
+   "remaining_profiles": 925,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 151,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.042209625244140625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 200,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 14,
+   "acceleration_lower_mps2": 1.4572334289550781,
+   "discarded_weight": 0.6272313039254309,
+   "remaining_profiles": 177,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 204,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969420,
+   "identity": 203,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 5,
+   "acceleration_lower_mps2": 1.3508987426757812,
+   "discarded_weight": 0.7783493000904687,
+   "remaining_profiles": 219,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 119,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 54,
+   "acceleration_lower_mps2": 0.01195526123046875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 207,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969420,
+   "identity": 165,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.4830169677734375,
+   "discarded_weight": 0.03247363890834305,
+   "remaining_profiles": 850,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 208,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969420,
+   "identity": 123,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 56,
+   "acceleration_lower_mps2": 0.12868118286132812,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 218,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969420,
+   "identity": 127,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.2827644348144531,
+   "discarded_weight": 0.13796692137546415,
+   "remaining_profiles": 937,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 162,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.61102294921875,
+   "discarded_weight": 0.04432747371410851,
+   "remaining_profiles": 753,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 197,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 21,
+   "acceleration_lower_mps2": 1.1542234420776367,
+   "discarded_weight": 0.5906764712613478,
+   "remaining_profiles": 324,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 133,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.00653839111328125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 219,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969420,
+   "identity": 170,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.8240547180175781,
+   "discarded_weight": 0.2779395965770556,
+   "remaining_profiles": 570,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 143,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 56,
+   "acceleration_lower_mps2": 0.19680404663085938,
+   "discarded_weight": 0.006667046817114032,
+   "remaining_profiles": 948,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 144,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 57,
+   "acceleration_lower_mps2": 0.025554656982421875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 146,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.0523223876953125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 154,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.1029510498046875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 155,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.13523101806640625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 148,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 31,
+   "acceleration_lower_mps2": 0.9423365592956543,
+   "discarded_weight": 0.7955420934541741,
+   "remaining_profiles": 474,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 153,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.10073471069335938,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 149,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 57,
+   "acceleration_lower_mps2": 0.01348876953125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 157,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.11148452758789062,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 158,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.15820693969726562,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 191,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 35,
+   "acceleration_lower_mps2": 1.2600460052490234,
+   "discarded_weight": 0.3738104870648532,
+   "remaining_profiles": 264,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 168,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.7672119140625,
+   "discarded_weight": 0.11872451173967814,
+   "remaining_profiles": 620,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 159,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.6155357360839844,
+   "discarded_weight": 0.12246807834836534,
+   "remaining_profiles": 750,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 160,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 10,
+   "acceleration_lower_mps2": 0.5075310468673706,
+   "discarded_weight": 0.09062132672841187,
+   "remaining_profiles": 834,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 161,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.18481063842773438,
+   "discarded_weight": 0.012231450611543165,
+   "remaining_profiles": 948,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 169,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.8683357238769531,
+   "discarded_weight": 0.09408876004840411,
+   "remaining_profiles": 534,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 171,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.4952125549316406,
+   "discarded_weight": 0.04471529038062255,
+   "remaining_profiles": 842,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 172,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 36,
+   "acceleration_lower_mps2": 0.7416366338729858,
+   "discarded_weight": 0.7425527856507813,
+   "remaining_profiles": 643,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 173,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969420,
+   "identity": 174,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 1.0752582550048828,
+   "discarded_weight": 0.9031846471379013,
+   "remaining_profiles": 376,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 175,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.8040008544921875,
+   "discarded_weight": 0.08523320901905068,
+   "remaining_profiles": 588,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 177,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 1.1546268463134766,
+   "discarded_weight": 0.24853292378804787,
+   "remaining_profiles": 324,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 125,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.269683837890625,
+   "discarded_weight": 0.017294128947558503,
+   "remaining_profiles": 939,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 179,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 21,
+   "acceleration_lower_mps2": 0.8981247544288635,
+   "discarded_weight": 0.20806804182509775,
+   "remaining_profiles": 510,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 221,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969420,
+   "identity": 185,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.9483833312988281,
+   "discarded_weight": 0.8677456850605652,
+   "remaining_profiles": 469,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 187,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 54,
+   "acceleration_lower_mps2": 0.8716421127319336,
+   "discarded_weight": 0.1671048674079957,
+   "remaining_profiles": 532,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 188,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 48,
+   "acceleration_lower_mps2": 1.123763084411621,
+   "discarded_weight": 0.32349121091054467,
+   "remaining_profiles": 343,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 189,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 45,
+   "acceleration_lower_mps2": 0.7542581558227539,
+   "discarded_weight": 0.5382557190918461,
+   "remaining_profiles": 631,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 190,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 41,
+   "acceleration_lower_mps2": 1.6133508682250977,
+   "discarded_weight": 0.3024078256864624,
+   "remaining_profiles": 127,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 192,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969420,
+   "identity": 198,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 20,
+   "acceleration_lower_mps2": 1.1249361038208008,
+   "discarded_weight": 0.4755935567862669,
+   "remaining_profiles": 343,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 205,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969420,
+   "identity": 150,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.7659225463867188,
+   "discarded_weight": 0.08620912898278774,
+   "remaining_profiles": 621,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 213,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969420,
+   "identity": 214,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969420,
+   "identity": 193,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 35,
+   "acceleration_lower_mps2": 1.7401018142700195,
+   "discarded_weight": 0.9256023336896736,
+   "remaining_profiles": 95,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969420,
+   "identity": 215,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969420,
+   "identity": 216,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969420,
+   "identity": 222,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969420,
+   "identity": 223,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969420,
+   "identity": 225,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969420,
+   "identity": 226,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969420,
+   "identity": 131,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.2567481994628906,
+   "discarded_weight": 0.013707351997127186,
+   "remaining_profiles": 941,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 137,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.20402145385742188,
+   "discarded_weight": 0.011201660754924308,
+   "remaining_profiles": 946,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 185,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969421,
+   "identity": 136,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.2978858947753906,
+   "discarded_weight": 0.02615676719202972,
+   "remaining_profiles": 934,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 154,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 44,
+   "acceleration_lower_mps2": 0.036418914794921875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 138,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.5933113098144531,
+   "discarded_weight": 0.07812334772809651,
+   "remaining_profiles": 768,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 147,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 1.1370506286621094,
+   "discarded_weight": 0.18655155762780293,
+   "remaining_profiles": 335,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 156,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 35,
+   "acceleration_lower_mps2": -0.028079986572265625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 108,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.0256500244140625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 148,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.4389457702636719,
+   "discarded_weight": 0.028205583505538638,
+   "remaining_profiles": 877,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 110,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.01605224609375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 150,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.803192138671875,
+   "discarded_weight": 0.10303255194025918,
+   "remaining_profiles": 589,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 158,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 26,
+   "acceleration_lower_mps2": -0.059719085693359375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 159,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 24,
+   "acceleration_lower_mps2": -0.0566864013671875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 152,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 50,
+   "acceleration_lower_mps2": 0.09908676147460938,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 177,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969421,
+   "identity": 117,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.06390380859375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 162,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 14,
+   "acceleration_lower_mps2": 0.050258636474609375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 163,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 11,
+   "acceleration_lower_mps2": 0.16302490234375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 171,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969421,
+   "identity": 164,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 8,
+   "acceleration_lower_mps2": -0.13028717041015625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 130,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.024318695068359375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 109,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.05539703369140625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 184,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969421,
+   "identity": 132,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.054523468017578125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 112,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": -0.001171112060546875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 114,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": -0.007129669189453125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 142,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 57,
+   "acceleration_lower_mps2": 0.8378753662109375,
+   "discarded_weight": 0.09239799812935845,
+   "remaining_profiles": 558,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 167,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969421,
+   "identity": 118,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.077880859375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 120,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.02579498291015625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 121,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.049777984619140625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 128,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.00081634521484375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 134,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.06491851806640625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 141,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.6689300537109375,
+   "discarded_weight": 0.06314062198198031,
+   "remaining_profiles": 705,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 170,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969421,
+   "identity": 181,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969421,
+   "identity": 182,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969421,
+   "identity": 144,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.75958251953125,
+   "discarded_weight": 0.07065631925563978,
+   "remaining_profiles": 627,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969421,
+   "identity": 125,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.005519866943359375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 148,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 1.0955219268798828,
+   "discarded_weight": 0.22919606665656886,
+   "remaining_profiles": 362,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 162,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 19,
+   "acceleration_lower_mps2": 0.7612676620483398,
+   "discarded_weight": 0.3965147103899686,
+   "remaining_profiles": 626,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 169,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969422,
+   "identity": 115,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": -0.00330352783203125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 164,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 10,
+   "acceleration_lower_mps2": 0.7348222732543945,
+   "discarded_weight": 0.3062989690462534,
+   "remaining_profiles": 648,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 171,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969422,
+   "identity": 167,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 1,
+   "acceleration_lower_mps2": 0.3381899297237396,
+   "discarded_weight": 0.08898181107541535,
+   "remaining_profiles": 923,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 176,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969422,
+   "identity": 125,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.0549468994140625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 179,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969422,
+   "identity": 178,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969422,
+   "identity": 180,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969422,
+   "identity": 182,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969422,
+   "identity": 129,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.2092437744140625,
+   "discarded_weight": 0.008292412614663864,
+   "remaining_profiles": 946,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 127,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.08171844482421875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 116,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.020282745361328125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 117,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.018680572509765625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 118,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.01074981689453125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 140,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.9274368286132812,
+   "discarded_weight": 0.11457413356878825,
+   "remaining_profiles": 486,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 124,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.05474853515625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 128,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.0504913330078125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 130,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.09869003295898438,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 131,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.3895225524902344,
+   "discarded_weight": 0.026585616173189358,
+   "remaining_profiles": 903,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 132,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.38082122802734375,
+   "discarded_weight": 0.02408750574600037,
+   "remaining_profiles": 906,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 137,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.42240142822265625,
+   "discarded_weight": 0.027028247885634737,
+   "remaining_profiles": 886,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 138,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.6903495788574219,
+   "discarded_weight": 0.05445864473557645,
+   "remaining_profiles": 687,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 139,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.6263160705566406,
+   "discarded_weight": 0.04563121980894785,
+   "remaining_profiles": 741,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 144,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 1.0491371154785156,
+   "discarded_weight": 0.14565237945804338,
+   "remaining_profiles": 394,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 153,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 55,
+   "acceleration_lower_mps2": 0.9939508438110352,
+   "discarded_weight": 0.7406966689853921,
+   "remaining_profiles": 433,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 146,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.8537139892578125,
+   "discarded_weight": 0.33885292298004316,
+   "remaining_profiles": 546,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 150,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 1.1872749328613281,
+   "discarded_weight": 0.3191003204891572,
+   "remaining_profiles": 304,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 160,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 27,
+   "acceleration_lower_mps2": 0.9628715515136719,
+   "discarded_weight": 0.37785320655822585,
+   "remaining_profiles": 458,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 155,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 47,
+   "acceleration_lower_mps2": 1.292177677154541,
+   "discarded_weight": 0.45112670555927603,
+   "remaining_profiles": 247,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 165,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 9,
+   "acceleration_lower_mps2": 1.5149269104003906,
+   "discarded_weight": 0.6603133575098932,
+   "remaining_profiles": 158,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 151,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 1.5036625862121582,
+   "discarded_weight": 0.22477465543748987,
+   "remaining_profiles": 161,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 161,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 26,
+   "acceleration_lower_mps2": 1.2089433670043945,
+   "discarded_weight": 0.5603993376501535,
+   "remaining_profiles": 292,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 163,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 18,
+   "acceleration_lower_mps2": 0.8420877456665039,
+   "discarded_weight": 0.505457975221345,
+   "remaining_profiles": 555,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 157,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 40,
+   "acceleration_lower_mps2": 1.3561010360717773,
+   "discarded_weight": 0.39975088257130265,
+   "remaining_profiles": 216,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969422,
+   "identity": 187,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969423,
+   "identity": 170,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 31,
+   "acceleration_lower_mps2": 1.3497564792633057,
+   "discarded_weight": 0.6352627296732111,
+   "remaining_profiles": 220,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969423,
+   "identity": 172,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 25,
+   "acceleration_lower_mps2": 1.121891975402832,
+   "discarded_weight": 0.4189188119983488,
+   "remaining_profiles": 345,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969423,
+   "identity": 171,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 31,
+   "acceleration_lower_mps2": 1.054072380065918,
+   "discarded_weight": 0.5103144443310323,
+   "remaining_profiles": 390,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969423,
+   "identity": 123,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.056079864501953125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969423,
+   "identity": 168,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 40,
+   "acceleration_lower_mps2": 0.7897453308105469,
+   "discarded_weight": 0.27917549565368627,
+   "remaining_profiles": 601,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969423,
+   "identity": 173,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 23,
+   "acceleration_lower_mps2": 1.2107181549072266,
+   "discarded_weight": 0.5489769930440369,
+   "remaining_profiles": 290,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969423,
+   "identity": 175,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 16,
+   "acceleration_lower_mps2": 1.3457489013671875,
+   "discarded_weight": 0.6051012258420624,
+   "remaining_profiles": 221,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969423,
+   "identity": 131,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": -0.005817413330078125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969423,
+   "identity": 135,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.0162353515625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969423,
+   "identity": 188,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969423,
+   "identity": 182,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969423,
+   "identity": 136,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.056751251220703125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969423,
+   "identity": 159,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 1.6937007904052734,
+   "discarded_weight": 0.23188550060823632,
+   "remaining_profiles": 106,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969423,
+   "identity": 197,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969423,
+   "identity": 196,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969423,
+   "identity": 195,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969423,
+   "identity": 186,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969423,
+   "identity": 193,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969423,
+   "identity": 189,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969423,
+   "identity": 191,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969423,
+   "identity": 115,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.008014678955078125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969423,
+   "identity": 116,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.008014678955078125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969423,
+   "identity": 129,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.00849151611328125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969423,
+   "identity": 194,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969423,
+   "identity": 176,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 10,
+   "acceleration_lower_mps2": 1.8599638938903809,
+   "discarded_weight": 0.6618021396400383,
+   "remaining_profiles": 72,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969423,
+   "identity": 134,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.01045989990234375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969423,
+   "identity": 137,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.16381072998046875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969423,
+   "identity": 184,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969423,
+   "identity": 142,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.4327812194824219,
+   "discarded_weight": 0.04116477141465518,
+   "remaining_profiles": 881,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969423,
+   "identity": 185,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969423,
+   "identity": 177,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 9,
+   "acceleration_lower_mps2": 0.8879399299621582,
+   "discarded_weight": 0.3832421777221013,
+   "remaining_profiles": 518,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969423,
+   "identity": 145,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.4025917053222656,
+   "discarded_weight": 0.02663994770218512,
+   "remaining_profiles": 896,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969423,
+   "identity": 146,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.7643623352050781,
+   "discarded_weight": 0.5776065988883469,
+   "remaining_profiles": 622,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969423,
+   "identity": 147,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.6355743408203125,
+   "discarded_weight": 0.047376300481807555,
+   "remaining_profiles": 733,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969423,
+   "identity": 120,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.00148773193359375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969423,
+   "identity": 149,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.6897811889648438,
+   "discarded_weight": 0.054621081450000344,
+   "remaining_profiles": 688,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969423,
+   "identity": 151,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 1.5659599304199219,
+   "discarded_weight": 0.38812829671809074,
+   "remaining_profiles": 141,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969423,
+   "identity": 164,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 53,
+   "acceleration_lower_mps2": 1.0909395217895508,
+   "discarded_weight": 0.5264050749769916,
+   "remaining_profiles": 365,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969423,
+   "identity": 187,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969423,
+   "identity": 192,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969423,
+   "identity": 122,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.12693405151367188,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969423,
+   "identity": 138,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.488433837890625,
+   "discarded_weight": 0.035027204116758,
+   "remaining_profiles": 847,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 153,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 1.2813024520874023,
+   "discarded_weight": 0.2510626907407245,
+   "remaining_profiles": 252,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 154,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 1.160416603088379,
+   "discarded_weight": 0.5018409126160744,
+   "remaining_profiles": 321,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 145,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.9607353210449219,
+   "discarded_weight": 0.2001342824231068,
+   "remaining_profiles": 460,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 189,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969424,
+   "identity": 147,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.9267921447753906,
+   "discarded_weight": 0.10961578424122775,
+   "remaining_profiles": 487,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 172,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969424,
+   "identity": 150,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 1.3550910949707031,
+   "discarded_weight": 0.22393436792360447,
+   "remaining_profiles": 217,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 155,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 1.0575132369995117,
+   "discarded_weight": 0.36639509702145723,
+   "remaining_profiles": 388,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 105,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.000415802001953125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 186,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969424,
+   "identity": 190,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969424,
+   "identity": 156,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 51,
+   "acceleration_lower_mps2": 1.0204277038574219,
+   "discarded_weight": 0.6527486875553923,
+   "remaining_profiles": 414,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 171,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 7,
+   "acceleration_lower_mps2": 0.7178483009338379,
+   "discarded_weight": 0.2859325927022883,
+   "remaining_profiles": 664,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 144,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 1.0904121398925781,
+   "discarded_weight": 0.15714851580635764,
+   "remaining_profiles": 365,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 148,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 1.1275672912597656,
+   "discarded_weight": 0.8114852898238439,
+   "remaining_profiles": 341,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 164,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 31,
+   "acceleration_lower_mps2": 1.4119091033935547,
+   "discarded_weight": 0.9506120175057318,
+   "remaining_profiles": 195,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 176,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969424,
+   "identity": 174,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969424,
+   "identity": 178,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969424,
+   "identity": 179,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969424,
+   "identity": 101,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 57,
+   "acceleration_lower_mps2": 0.018177032470703125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 102,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.03719329833984375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 191,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969424,
+   "identity": 124,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.057964324951171875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 110,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.1556243896484375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 111,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.08539199829101562,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 130,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.3902626037597656,
+   "discarded_weight": 0.024412249644295853,
+   "remaining_profiles": 902,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 112,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.09003448486328125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 113,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.0110626220703125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 173,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969424,
+   "identity": 114,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.0208740234375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 151,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.9610395431518555,
+   "discarded_weight": 0.23698962207601998,
+   "remaining_profiles": 460,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 139,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.6514129638671875,
+   "discarded_weight": 0.053053473271642164,
+   "remaining_profiles": 719,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 116,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": -0.02819061279296875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 117,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.033107757568359375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 118,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": -0.05204010009765625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 166,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 23,
+   "acceleration_lower_mps2": 2.0329055786132812,
+   "discarded_weight": 0.5955146491863285,
+   "remaining_profiles": 46,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 120,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.038532257080078125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 122,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": -0.032016754150390625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 123,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.054698944091796875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 125,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.06757354736328125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 167,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 18,
+   "acceleration_lower_mps2": 0.8432655334472656,
+   "discarded_weight": 0.43364331792755895,
+   "remaining_profiles": 554,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 157,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 50,
+   "acceleration_lower_mps2": 0.9060811996459961,
+   "discarded_weight": 0.39058833319979924,
+   "remaining_profiles": 503,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 128,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.0486297607421875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 138,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.4928245544433594,
+   "discarded_weight": 0.03375062863290282,
+   "remaining_profiles": 844,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 168,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 19,
+   "acceleration_lower_mps2": 1.0188288688659668,
+   "discarded_weight": 0.4195434849658177,
+   "remaining_profiles": 415,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 141,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 57,
+   "acceleration_lower_mps2": 0.4634857177734375,
+   "discarded_weight": 0.030991915485229192,
+   "remaining_profiles": 863,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 142,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.399078369140625,
+   "discarded_weight": 0.024456067195052864,
+   "remaining_profiles": 898,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 135,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.5931282043457031,
+   "discarded_weight": 0.04983358478487684,
+   "remaining_profiles": 768,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 129,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.07883834838867188,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 149,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 1.0889854431152344,
+   "discarded_weight": 0.16419080283055318,
+   "remaining_profiles": 366,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 158,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 2,
+   "acceleration_lower_mps2": -0.16534805297851562,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 159,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 45,
+   "acceleration_lower_mps2": 1.1853351593017578,
+   "discarded_weight": 0.23101345720364422,
+   "remaining_profiles": 305,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 152,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 1.0852537155151367,
+   "discarded_weight": 0.8912944425080738,
+   "remaining_profiles": 369,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 160,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969424,
+   "identity": 163,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 34,
+   "acceleration_lower_mps2": 1.584763526916504,
+   "discarded_weight": 0.35588715183289726,
+   "remaining_profiles": 135,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 162,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 38,
+   "acceleration_lower_mps2": 1.393810749053955,
+   "discarded_weight": 0.4416978895013251,
+   "remaining_profiles": 201,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 170,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 11,
+   "acceleration_lower_mps2": 1.4102654457092285,
+   "discarded_weight": 0.7563333263384135,
+   "remaining_profiles": 195,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 181,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969424,
+   "identity": 183,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969424,
+   "identity": 131,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.07539749145507812,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 132,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.4290351867675781,
+   "discarded_weight": 0.027235325403338166,
+   "remaining_profiles": 883,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 133,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.30310821533203125,
+   "discarded_weight": 0.019372578178139144,
+   "remaining_profiles": 933,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 184,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969424,
+   "identity": 161,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 42,
+   "acceleration_lower_mps2": 1.0065126419067383,
+   "discarded_weight": 0.46739225411468005,
+   "remaining_profiles": 424,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 165,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 27,
+   "acceleration_lower_mps2": 0.7628316879272461,
+   "discarded_weight": 0.40260856242261744,
+   "remaining_profiles": 624,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969424,
+   "identity": 187,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969425,
+   "identity": 185,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969425,
+   "identity": 122,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.015453338623046875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 159,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 57,
+   "acceleration_lower_mps2": 0.7888507843017578,
+   "discarded_weight": 0.35389759984993363,
+   "remaining_profiles": 601,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 164,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 40,
+   "acceleration_lower_mps2": 0.7090539932250977,
+   "discarded_weight": 0.3654242485652275,
+   "remaining_profiles": 671,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 172,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 14,
+   "acceleration_lower_mps2": 1.6279106140136719,
+   "discarded_weight": 0.6442667782799648,
+   "remaining_profiles": 124,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 189,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969425,
+   "identity": 191,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969425,
+   "identity": 163,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 43,
+   "acceleration_lower_mps2": 1.2225265502929688,
+   "discarded_weight": 0.6421943547824205,
+   "remaining_profiles": 284,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 176,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 3,
+   "acceleration_lower_mps2": 0.7460465431213379,
+   "discarded_weight": 0.26974652168466134,
+   "remaining_profiles": 639,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 143,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.6614608764648438,
+   "discarded_weight": 0.05321425974391972,
+   "remaining_profiles": 713,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 167,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 31,
+   "acceleration_lower_mps2": 1.2178328037261963,
+   "discarded_weight": 0.313739363660781,
+   "remaining_profiles": 287,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 171,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 18,
+   "acceleration_lower_mps2": 1.3715944290161133,
+   "discarded_weight": 0.6797703291708348,
+   "remaining_profiles": 211,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 169,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 24,
+   "acceleration_lower_mps2": 1.6327390670776367,
+   "discarded_weight": 0.5605580202250736,
+   "remaining_profiles": 122,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 193,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969425,
+   "identity": 168,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 29,
+   "acceleration_lower_mps2": 1.1352901458740234,
+   "discarded_weight": 0.542324534100775,
+   "remaining_profiles": 336,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 92,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.4853161573410034,
+   "discarded_weight": 0.032060504586701774,
+   "remaining_profiles": 849,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 126,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.2677040100097656,
+   "discarded_weight": 0.11415472160170394,
+   "remaining_profiles": 940,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 96,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.4782836437225342,
+   "discarded_weight": 0.03169621624703985,
+   "remaining_profiles": 854,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 186,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969425,
+   "identity": 180,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969425,
+   "identity": 129,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969425,
+   "identity": 113,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 57,
+   "acceleration_lower_mps2": -0.0095367431640625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 131,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.3076171875,
+   "discarded_weight": 0.03421531232685519,
+   "remaining_profiles": 932,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 183,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969425,
+   "identity": 133,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.030132293701171875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 192,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969425,
+   "identity": 120,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.00167083740234375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 123,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.006961822509765625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 142,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.4894981384277344,
+   "discarded_weight": 0.03290861943108832,
+   "remaining_profiles": 846,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 150,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.9605712890625,
+   "discarded_weight": 0.1280353049626377,
+   "remaining_profiles": 460,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 144,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 12,
+   "acceleration_lower_mps2": 0.464583158493042,
+   "discarded_weight": 0.39465847414525385,
+   "remaining_profiles": 862,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 166,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 36,
+   "acceleration_lower_mps2": 1.3062725067138672,
+   "discarded_weight": 0.3105222299542173,
+   "remaining_profiles": 240,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 118,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.006381988525390625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 121,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.001758575439453125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 124,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.02541351318359375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 127,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.9413070678710938,
+   "discarded_weight": 0.11460169120567652,
+   "remaining_profiles": 476,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 151,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 57,
+   "acceleration_lower_mps2": 0.9326877593994141,
+   "discarded_weight": 0.11703118166162924,
+   "remaining_profiles": 482,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 132,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.027927398681640625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 173,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 11,
+   "acceleration_lower_mps2": 1.0075578689575195,
+   "discarded_weight": 0.5678850919954611,
+   "remaining_profiles": 423,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 155,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 1.2867889404296875,
+   "discarded_weight": 0.19238215641524414,
+   "remaining_profiles": 249,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 128,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.006244659423828125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 134,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.0164947509765625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 157,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 1.1994209289550781,
+   "discarded_weight": 0.7795287016581903,
+   "remaining_profiles": 298,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 135,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": -0.00322723388671875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 137,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.18363189697265625,
+   "discarded_weight": 0.0857559481765892,
+   "remaining_profiles": 948,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 147,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.8259544372558594,
+   "discarded_weight": 0.8389415893282317,
+   "remaining_profiles": 569,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 140,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.6235542297363281,
+   "discarded_weight": 0.0462832931864646,
+   "remaining_profiles": 743,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 161,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 52,
+   "acceleration_lower_mps2": 0.8785762786865234,
+   "discarded_weight": 0.30067150006041576,
+   "remaining_profiles": 526,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 170,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 21,
+   "acceleration_lower_mps2": 1.4898934364318848,
+   "discarded_weight": 0.47279210098743407,
+   "remaining_profiles": 165,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 160,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969425,
+   "identity": 152,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 57,
+   "acceleration_lower_mps2": 1.105377197265625,
+   "discarded_weight": 0.7291159198883782,
+   "remaining_profiles": 356,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 177,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969425,
+   "identity": 153,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 1.0384597778320312,
+   "discarded_weight": 0.3029836294548915,
+   "remaining_profiles": 402,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 154,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 1.2769279479980469,
+   "discarded_weight": 0.20088562467224025,
+   "remaining_profiles": 255,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 182,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969425,
+   "identity": 158,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.8092126846313477,
+   "discarded_weight": 0.5597501613243674,
+   "remaining_profiles": 583,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 175,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969425,
+   "identity": 184,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969425,
+   "identity": 174,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 8,
+   "acceleration_lower_mps2": 0.9904980659484863,
+   "discarded_weight": 0.5520071218979403,
+   "remaining_profiles": 437,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 88,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 1.3068604469299316,
+   "discarded_weight": 0.9506363659922589,
+   "remaining_profiles": 240,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 90,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.5982096195220947,
+   "discarded_weight": 0.041582573846109895,
+   "remaining_profiles": 765,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 149,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.9248638153076172,
+   "discarded_weight": 0.5465519418259752,
+   "remaining_profiles": 488,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 99,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.35410821437835693,
+   "discarded_weight": 0.7723295777331186,
+   "remaining_profiles": 917,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 179,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969425,
+   "identity": 104,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 55,
+   "acceleration_lower_mps2": 0.002635955810546875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 188,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969425,
+   "identity": 190,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969425,
+   "identity": 194,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969425,
+   "identity": 115,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.0029754638671875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 130,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.08954238891601562,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 136,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.16266632080078125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 139,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.19126510620117188,
+   "discarded_weight": 0.12130039740917949,
+   "remaining_profiles": 948,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 141,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.3026275634765625,
+   "discarded_weight": 0.03899854990529024,
+   "remaining_profiles": 933,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 145,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.6373329162597656,
+   "discarded_weight": 0.04625661696950378,
+   "remaining_profiles": 731,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 162,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 49,
+   "acceleration_lower_mps2": 0.9329991340637207,
+   "discarded_weight": 0.4514321317723036,
+   "remaining_profiles": 482,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969425,
+   "identity": 178,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969426,
+   "identity": 196,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969426,
+   "identity": 198,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969426,
+   "identity": 177,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 12,
+   "acceleration_lower_mps2": 1.4521489143371582,
+   "discarded_weight": 0.6537884625514372,
+   "remaining_profiles": 179,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 106,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": -0.000270843505859375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 166,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969426,
+   "identity": 192,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969426,
+   "identity": 179,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 6,
+   "acceleration_lower_mps2": 0.797684907913208,
+   "discarded_weight": 0.3565550138975425,
+   "remaining_profiles": 593,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 185,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969426,
+   "identity": 90,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 56,
+   "acceleration_lower_mps2": 0.6882495880126953,
+   "discarded_weight": 0.05680664564498714,
+   "remaining_profiles": 689,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 167,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 43,
+   "acceleration_lower_mps2": 0.8058090209960938,
+   "discarded_weight": 0.43305336740308314,
+   "remaining_profiles": 586,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 186,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969426,
+   "identity": 134,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.26753997802734375,
+   "discarded_weight": 0.025866771615608533,
+   "remaining_profiles": 940,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 129,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.000377655029296875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 103,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.006107330322265625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 189,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969426,
+   "identity": 104,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": -0.02262115478515625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 108,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": -0.037357330322265625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 128,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.01947021484375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 143,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.5110702514648438,
+   "discarded_weight": 0.2108377371296422,
+   "remaining_profiles": 831,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 148,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.5836944580078125,
+   "discarded_weight": 0.04023229093467362,
+   "remaining_profiles": 776,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 174,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 22,
+   "acceleration_lower_mps2": 0.6525239944458008,
+   "discarded_weight": 0.35281196984193974,
+   "remaining_profiles": 719,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 130,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.28987884521484375,
+   "discarded_weight": 0.0318409241722063,
+   "remaining_profiles": 936,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 119,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.024494171142578125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 191,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969426,
+   "identity": 121,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.009265899658203125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 122,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.0087890625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 133,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.08195877075195312,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 194,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969426,
+   "identity": 136,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.06937789916992188,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 199,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969426,
+   "identity": 156,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 1.228109359741211,
+   "discarded_weight": 0.4291359100454264,
+   "remaining_profiles": 280,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 182,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969426,
+   "identity": 153,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.8216781616210938,
+   "discarded_weight": 0.08741885024468754,
+   "remaining_profiles": 572,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 195,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969426,
+   "identity": 127,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.002384185791015625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 142,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.3238067626953125,
+   "discarded_weight": 0.02108802665544305,
+   "remaining_profiles": 928,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 139,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.27667236328125,
+   "discarded_weight": 0.02686076191570744,
+   "remaining_profiles": 939,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 138,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.2788352966308594,
+   "discarded_weight": 0.015929633183305404,
+   "remaining_profiles": 938,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 140,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.2786712646484375,
+   "discarded_weight": 0.018923354564436633,
+   "remaining_profiles": 938,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 141,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.6859130859375,
+   "discarded_weight": 0.054284662478450076,
+   "remaining_profiles": 691,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 145,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.477142333984375,
+   "discarded_weight": 0.03196784580409864,
+   "remaining_profiles": 854,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 197,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969426,
+   "identity": 144,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.28597259521484375,
+   "discarded_weight": 0.01592666868269677,
+   "remaining_profiles": 936,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 146,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.5799102783203125,
+   "discarded_weight": 0.04076115416533453,
+   "remaining_profiles": 779,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 150,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.6304550170898438,
+   "discarded_weight": 0.045647460564250335,
+   "remaining_profiles": 737,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 152,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.7884330749511719,
+   "discarded_weight": 0.10201162017133875,
+   "remaining_profiles": 601,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 188,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969426,
+   "identity": 157,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 1.3503398895263672,
+   "discarded_weight": 0.6347198536300143,
+   "remaining_profiles": 219,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 158,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.8363637924194336,
+   "discarded_weight": 0.6449093899244239,
+   "remaining_profiles": 560,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 159,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 1.048029899597168,
+   "discarded_weight": 0.6057704925954546,
+   "remaining_profiles": 394,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 175,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 20,
+   "acceleration_lower_mps2": 0.9686508178710938,
+   "discarded_weight": 0.4804356717799537,
+   "remaining_profiles": 454,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 124,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.01561737060546875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 160,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.9482784271240234,
+   "discarded_weight": 0.42935631717748723,
+   "remaining_profiles": 469,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 178,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 12,
+   "acceleration_lower_mps2": 0.9228296279907227,
+   "discarded_weight": 0.33341132891888814,
+   "remaining_profiles": 490,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 165,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 50,
+   "acceleration_lower_mps2": 1.2005720138549805,
+   "discarded_weight": 0.6948698929598996,
+   "remaining_profiles": 296,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 180,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 4,
+   "acceleration_lower_mps2": 0.8854622840881348,
+   "discarded_weight": 0.37374364884376077,
+   "remaining_profiles": 520,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 201,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969426,
+   "identity": 183,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969426,
+   "identity": 151,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.6421394348144531,
+   "discarded_weight": 0.0478376375690944,
+   "remaining_profiles": 727,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 161,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.9529829025268555,
+   "discarded_weight": 0.5693418934709449,
+   "remaining_profiles": 466,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 98,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.61407470703125,
+   "discarded_weight": 0.045039925979545876,
+   "remaining_profiles": 752,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 163,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 57,
+   "acceleration_lower_mps2": 1.431889533996582,
+   "discarded_weight": 0.39154392630616164,
+   "remaining_profiles": 186,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 168,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 43,
+   "acceleration_lower_mps2": 1.5828571319580078,
+   "discarded_weight": 0.8428018752809403,
+   "remaining_profiles": 136,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 115,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.028507232666015625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 170,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 37,
+   "acceleration_lower_mps2": 1.018941879272461,
+   "discarded_weight": 0.5005993692436439,
+   "remaining_profiles": 415,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 118,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.041233062744140625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 171,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 34,
+   "acceleration_lower_mps2": 1.0347681045532227,
+   "discarded_weight": 0.43751310761205353,
+   "remaining_profiles": 404,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 172,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 28,
+   "acceleration_lower_mps2": 1.4730486869812012,
+   "discarded_weight": 0.5143880381881162,
+   "remaining_profiles": 171,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969426,
+   "identity": 173,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 27,
+   "acceleration_lower_mps2": 1.3748693466186523,
+   "discarded_weight": 0.3567217389586541,
+   "remaining_profiles": 210,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 142,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 1.0628242492675781,
+   "discarded_weight": 0.15528340243060473,
+   "remaining_profiles": 384,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 149,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 1.3185577392578125,
+   "discarded_weight": 0.8757049226221112,
+   "remaining_profiles": 234,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 151,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 1.190328598022461,
+   "discarded_weight": 0.932910756126651,
+   "remaining_profiles": 302,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 74,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.6012552976608276,
+   "discarded_weight": 0.7984675040795381,
+   "remaining_profiles": 761,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 143,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 1.1992950439453125,
+   "discarded_weight": 0.18241087265829103,
+   "remaining_profiles": 298,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 153,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 1.4372529983520508,
+   "discarded_weight": 0.21998682126068403,
+   "remaining_profiles": 184,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 77,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.3355250358581543,
+   "discarded_weight": 0.02129990965548139,
+   "remaining_profiles": 924,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 159,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 36,
+   "acceleration_lower_mps2": 0.9757742881774902,
+   "discarded_weight": 0.3418093915950238,
+   "remaining_profiles": 448,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 181,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969427,
+   "identity": 174,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969427,
+   "identity": 176,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969427,
+   "identity": 121,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": -0.08104324340820312,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 179,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969427,
+   "identity": 119,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": -0.001949310302734375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 92,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 53,
+   "acceleration_lower_mps2": 0.30950355529785156,
+   "discarded_weight": 0.023076718392776717,
+   "remaining_profiles": 931,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 93,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 51,
+   "acceleration_lower_mps2": 0.2877023220062256,
+   "discarded_weight": 0.01774772286686754,
+   "remaining_profiles": 936,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 167,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969427,
+   "identity": 168,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969427,
+   "identity": 157,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 47,
+   "acceleration_lower_mps2": 0.6176061630249023,
+   "discarded_weight": 0.44739138932494177,
+   "remaining_profiles": 748,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 87,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 49,
+   "acceleration_lower_mps2": 0.3404245376586914,
+   "discarded_weight": 0.5397283345833821,
+   "remaining_profiles": 922,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 164,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 14,
+   "acceleration_lower_mps2": 1.0628547668457031,
+   "discarded_weight": 0.543014495133997,
+   "remaining_profiles": 384,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 171,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969427,
+   "identity": 107,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.00095367431640625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 154,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 1.0036678314208984,
+   "discarded_weight": 0.7729143917183892,
+   "remaining_profiles": 427,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 152,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969427,
+   "identity": 103,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 57,
+   "acceleration_lower_mps2": -0.08768081665039062,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 115,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.00359344482421875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 177,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969427,
+   "identity": 127,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.26203155517578125,
+   "discarded_weight": 0.04363703214308527,
+   "remaining_profiles": 941,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 109,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.007598876953125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 136,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.1566619873046875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 150,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.8866806030273438,
+   "discarded_weight": 0.33551071287967443,
+   "remaining_profiles": 519,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 122,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.02936553955078125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 120,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.013004302978515625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 79,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.33798789978027344,
+   "discarded_weight": 0.021799215622427162,
+   "remaining_profiles": 923,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 124,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.039943695068359375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 125,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.017040252685546875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 128,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.07326889038085938,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 147,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 1.0607833862304688,
+   "discarded_weight": 0.2303349658690687,
+   "remaining_profiles": 386,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 126,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.08658218383789062,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 129,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.22928237915039062,
+   "discarded_weight": 0.09635264135771769,
+   "remaining_profiles": 945,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 170,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969427,
+   "identity": 130,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.1041412353515625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 178,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969427,
+   "identity": 180,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969427,
+   "identity": 137,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.42472076416015625,
+   "discarded_weight": 0.030247667726617525,
+   "remaining_profiles": 885,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 61,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 57,
+   "acceleration_lower_mps2": 0.7219660878181458,
+   "discarded_weight": 0.8093824766862815,
+   "remaining_profiles": 660,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 138,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.7655830383300781,
+   "discarded_weight": 0.0723480964556115,
+   "remaining_profiles": 621,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 131,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 1.1408729553222656,
+   "discarded_weight": 0.165733412542966,
+   "remaining_profiles": 333,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 144,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 1.0346431732177734,
+   "discarded_weight": 0.48502530994209925,
+   "remaining_profiles": 404,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 145,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 1.0684165954589844,
+   "discarded_weight": 0.7179501096997929,
+   "remaining_profiles": 380,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 182,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969427,
+   "identity": 155,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 55,
+   "acceleration_lower_mps2": 0.9802951812744141,
+   "discarded_weight": 0.3910779955060697,
+   "remaining_profiles": 445,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 158,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 42,
+   "acceleration_lower_mps2": 1.4284048080444336,
+   "discarded_weight": 0.6707141552198234,
+   "remaining_profiles": 188,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 156,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 50,
+   "acceleration_lower_mps2": 1.369187831878662,
+   "discarded_weight": 0.2504349053108635,
+   "remaining_profiles": 212,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 83,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 57,
+   "acceleration_lower_mps2": 0.34043121337890625,
+   "discarded_weight": 0.022622678765084107,
+   "remaining_profiles": 922,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 90,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 51,
+   "acceleration_lower_mps2": 0.31827807426452637,
+   "discarded_weight": 0.7485332057646783,
+   "remaining_profiles": 929,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 162,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 28,
+   "acceleration_lower_mps2": 1.1676216125488281,
+   "discarded_weight": 0.5767536776007394,
+   "remaining_profiles": 316,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 165,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 7,
+   "acceleration_lower_mps2": 0.9119091033935547,
+   "discarded_weight": 0.42301496765245816,
+   "remaining_profiles": 498,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 166,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 6,
+   "acceleration_lower_mps2": 1.5725674629211426,
+   "discarded_weight": 0.7919703101381287,
+   "remaining_profiles": 139,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 173,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969427,
+   "identity": 183,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969427,
+   "identity": 111,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.004192352294921875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 133,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.258697509765625,
+   "discarded_weight": 0.01336789560762317,
+   "remaining_profiles": 941,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 135,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.1989898681640625,
+   "discarded_weight": 0.006330987851054472,
+   "remaining_profiles": 948,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 141,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.7581825256347656,
+   "discarded_weight": 0.07199337158358082,
+   "remaining_profiles": 628,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 148,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 1.136312484741211,
+   "discarded_weight": 0.5121708209924587,
+   "remaining_profiles": 335,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969427,
+   "identity": 163,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 27,
+   "acceleration_lower_mps2": 0.7475004196166992,
+   "discarded_weight": 0.2685169798709536,
+   "remaining_profiles": 638,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 124,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.41838836669921875,
+   "discarded_weight": 0.026425561663789655,
+   "remaining_profiles": 889,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 153,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.6591053009033203,
+   "discarded_weight": 0.5447456319774194,
+   "remaining_profiles": 713,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 161,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 33,
+   "acceleration_lower_mps2": 1.4423103332519531,
+   "discarded_weight": 0.47409803380304394,
+   "remaining_profiles": 183,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 139,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.6677932739257812,
+   "discarded_weight": 0.058463778759061474,
+   "remaining_profiles": 707,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 159,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 39,
+   "acceleration_lower_mps2": 1.8107929229736328,
+   "discarded_weight": 0.3233196827347012,
+   "remaining_profiles": 80,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 162,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 33,
+   "acceleration_lower_mps2": 0.9036712646484375,
+   "discarded_weight": 0.45102181332555935,
+   "remaining_profiles": 505,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 164,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 24,
+   "acceleration_lower_mps2": 1.6016449928283691,
+   "discarded_weight": 0.4359785577649762,
+   "remaining_profiles": 131,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 163,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 27,
+   "acceleration_lower_mps2": 0.9660310745239258,
+   "discarded_weight": 0.5469076106435691,
+   "remaining_profiles": 455,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 165,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 19,
+   "acceleration_lower_mps2": 1.220848560333252,
+   "discarded_weight": 0.7137980715614394,
+   "remaining_profiles": 285,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 171,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969428,
+   "identity": 147,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.8477058410644531,
+   "discarded_weight": 0.09968257070889319,
+   "remaining_profiles": 550,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 166,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 18,
+   "acceleration_lower_mps2": 1.100754737854004,
+   "discarded_weight": 0.478812654701995,
+   "remaining_profiles": 359,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 168,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 10,
+   "acceleration_lower_mps2": 1.3514232635498047,
+   "discarded_weight": 0.653410355281266,
+   "remaining_profiles": 219,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 169,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 5,
+   "acceleration_lower_mps2": 1.2851290702819824,
+   "discarded_weight": 0.7017527249666535,
+   "remaining_profiles": 250,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 141,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.6315956115722656,
+   "discarded_weight": 0.04737056728448825,
+   "remaining_profiles": 737,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 180,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969428,
+   "identity": 181,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969428,
+   "identity": 183,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969428,
+   "identity": 184,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969428,
+   "identity": 178,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969428,
+   "identity": 186,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969428,
+   "identity": 121,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.14138412475585938,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 187,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969428,
+   "identity": 142,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 1.3160324096679688,
+   "discarded_weight": 0.9525922368073079,
+   "remaining_profiles": 235,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 149,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 1.042633056640625,
+   "discarded_weight": 0.8968555983102618,
+   "remaining_profiles": 399,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 188,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969428,
+   "identity": 123,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.23307418823242188,
+   "discarded_weight": 0.01665006979626068,
+   "remaining_profiles": 945,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 185,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969428,
+   "identity": 158,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 45,
+   "acceleration_lower_mps2": 1.3878488540649414,
+   "discarded_weight": 0.27482597498983025,
+   "remaining_profiles": 204,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 132,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.4034919738769531,
+   "discarded_weight": 0.02459811227491271,
+   "remaining_profiles": 896,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 125,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.7195777893066406,
+   "discarded_weight": 0.061271222187441306,
+   "remaining_profiles": 661,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 133,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.3775749206542969,
+   "discarded_weight": 0.02363089873458897,
+   "remaining_profiles": 908,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 127,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.05190277099609375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 160,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 39,
+   "acceleration_lower_mps2": 1.5677990913391113,
+   "discarded_weight": 0.42815609261660986,
+   "remaining_profiles": 140,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 128,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.392425537109375,
+   "discarded_weight": 0.6182212630869518,
+   "remaining_profiles": 901,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 136,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.28209686279296875,
+   "discarded_weight": 0.028753199214815766,
+   "remaining_profiles": 938,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 134,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.029666900634765625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 170,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 3,
+   "acceleration_lower_mps2": 1.1960859298706055,
+   "discarded_weight": 0.6884327961930655,
+   "remaining_profiles": 299,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 130,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.5516700744628906,
+   "discarded_weight": 0.03738496945963626,
+   "remaining_profiles": 801,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 135,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.3989677429199219,
+   "discarded_weight": 0.02457511110777705,
+   "remaining_profiles": 898,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 131,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.06647872924804688,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 137,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.41420745849609375,
+   "discarded_weight": 0.026098427176971674,
+   "remaining_profiles": 890,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 138,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.3171882629394531,
+   "discarded_weight": 0.029617666470972553,
+   "remaining_profiles": 929,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 140,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.788421630859375,
+   "discarded_weight": 0.076537153838465,
+   "remaining_profiles": 602,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 146,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.9846687316894531,
+   "discarded_weight": 0.13485199517669308,
+   "remaining_profiles": 442,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 148,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.9278888702392578,
+   "discarded_weight": 0.5659449302299282,
+   "remaining_profiles": 486,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 144,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.7464160919189453,
+   "discarded_weight": 0.14038219734335283,
+   "remaining_profiles": 638,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 151,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.9285802841186523,
+   "discarded_weight": 0.45649809760947735,
+   "remaining_profiles": 485,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 189,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969428,
+   "identity": 155,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 51,
+   "acceleration_lower_mps2": 1.7159805297851562,
+   "discarded_weight": 0.444538918871633,
+   "remaining_profiles": 100,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 156,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 52,
+   "acceleration_lower_mps2": 1.846621036529541,
+   "discarded_weight": 0.2640530944541546,
+   "remaining_profiles": 75,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 174,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969428,
+   "identity": 175,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969428,
+   "identity": 129,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.19279861450195312,
+   "discarded_weight": 0.0064117859243027825,
+   "remaining_profiles": 948,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 150,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.9709053039550781,
+   "discarded_weight": 0.12142565733826229,
+   "remaining_profiles": 452,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 152,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.8819208145141602,
+   "discarded_weight": 0.5904736489225211,
+   "remaining_profiles": 523,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 176,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969428,
+   "identity": 177,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969428,
+   "identity": 117,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.11944580078125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969428,
+   "identity": 120,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.049312591552734375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 138,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.4185218811035156,
+   "discarded_weight": 0.027023010303503035,
+   "remaining_profiles": 889,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 148,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 1.0061607360839844,
+   "discarded_weight": 0.1798350982663631,
+   "remaining_profiles": 425,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 154,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 1.5082931518554688,
+   "discarded_weight": 0.6051871689642616,
+   "remaining_profiles": 160,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 152,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 14,
+   "acceleration_lower_mps2": 0.871536374092102,
+   "discarded_weight": 0.224892462940043,
+   "remaining_profiles": 532,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 188,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969429,
+   "identity": 160,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 54,
+   "acceleration_lower_mps2": 1.23191499710083,
+   "discarded_weight": 0.4208368829300982,
+   "remaining_profiles": 279,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 137,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.24441146850585938,
+   "discarded_weight": 0.024168155536163253,
+   "remaining_profiles": 943,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 161,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 47,
+   "acceleration_lower_mps2": 1.2219161987304688,
+   "discarded_weight": 0.4924366840097399,
+   "remaining_profiles": 284,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 163,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 41,
+   "acceleration_lower_mps2": 1.4029970169067383,
+   "discarded_weight": 0.38556604977335845,
+   "remaining_profiles": 198,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 164,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 41,
+   "acceleration_lower_mps2": 1.1842689514160156,
+   "discarded_weight": 0.7843734890056241,
+   "remaining_profiles": 306,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 166,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 33,
+   "acceleration_lower_mps2": 1.4565744400024414,
+   "discarded_weight": 0.32777074916764803,
+   "remaining_profiles": 177,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 165,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 34,
+   "acceleration_lower_mps2": 1.0139713287353516,
+   "discarded_weight": 0.5214687650562675,
+   "remaining_profiles": 419,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 119,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.01070404052734375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 174,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 6,
+   "acceleration_lower_mps2": 1.4323134422302246,
+   "discarded_weight": 0.7223661572649649,
+   "remaining_profiles": 186,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 175,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 5,
+   "acceleration_lower_mps2": 1.1553702354431152,
+   "discarded_weight": 0.5967499296118988,
+   "remaining_profiles": 324,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 180,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969429,
+   "identity": 181,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969429,
+   "identity": 121,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": -0.0219879150390625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 182,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969429,
+   "identity": 178,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969429,
+   "identity": 183,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969429,
+   "identity": 186,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969429,
+   "identity": 122,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.3106498718261719,
+   "discarded_weight": 0.0268444769780788,
+   "remaining_profiles": 931,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 125,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 57,
+   "acceleration_lower_mps2": 0.3303947448730469,
+   "discarded_weight": 0.021893921249228,
+   "remaining_profiles": 925,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 195,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969429,
+   "identity": 187,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969429,
+   "identity": 110,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.009075164794921875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 193,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969429,
+   "identity": 112,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.011058807373046875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 116,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.5203971862792969,
+   "discarded_weight": 0.3756517258573572,
+   "remaining_profiles": 825,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 117,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.057621002197265625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 118,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.017787933349609375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 120,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.050144195556640625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 123,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.335235595703125,
+   "discarded_weight": 0.03623362549388434,
+   "remaining_profiles": 924,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 124,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.22170639038085938,
+   "discarded_weight": 0.017841904592533632,
+   "remaining_profiles": 946,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 145,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.7949028015136719,
+   "discarded_weight": 0.07732503899060991,
+   "remaining_profiles": 596,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 126,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.227081298828125,
+   "discarded_weight": 0.00878727242323271,
+   "remaining_profiles": 945,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 127,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.3995857238769531,
+   "discarded_weight": 0.024719742657659523,
+   "remaining_profiles": 898,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 128,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.2313232421875,
+   "discarded_weight": 0.00890435604737903,
+   "remaining_profiles": 945,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 129,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.2846565246582031,
+   "discarded_weight": 0.016296263689108855,
+   "remaining_profiles": 937,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 130,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.4619941711425781,
+   "discarded_weight": 0.06036499303628669,
+   "remaining_profiles": 864,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 131,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.23957443237304688,
+   "discarded_weight": 0.05535016662935444,
+   "remaining_profiles": 944,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 132,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.5127182006835938,
+   "discarded_weight": 0.7528297910238979,
+   "remaining_profiles": 830,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 139,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.4087867736816406,
+   "discarded_weight": 0.025734716109638768,
+   "remaining_profiles": 893,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 140,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.38814544677734375,
+   "discarded_weight": 0.04204783668482636,
+   "remaining_profiles": 903,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 190,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969429,
+   "identity": 172,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 15,
+   "acceleration_lower_mps2": 0.6052989959716797,
+   "discarded_weight": 0.2792182532844768,
+   "remaining_profiles": 758,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 141,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.7607192993164062,
+   "discarded_weight": 0.07201634756240267,
+   "remaining_profiles": 626,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 192,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969429,
+   "identity": 143,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 7,
+   "acceleration_lower_mps2": -0.16103562712669373,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 144,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.8997535705566406,
+   "discarded_weight": 0.10519060737328617,
+   "remaining_profiles": 508,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 179,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969429,
+   "identity": 147,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 13,
+   "acceleration_lower_mps2": 0.8719256520271301,
+   "discarded_weight": 0.6328757720865148,
+   "remaining_profiles": 532,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 151,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 1.2185420989990234,
+   "discarded_weight": 0.6074904293007264,
+   "remaining_profiles": 286,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 153,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.7173709869384766,
+   "discarded_weight": 0.37747971822355064,
+   "remaining_profiles": 664,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 156,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 15,
+   "acceleration_lower_mps2": 1.3864588737487793,
+   "discarded_weight": 0.9088353778476554,
+   "remaining_profiles": 205,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 157,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 1.0839834213256836,
+   "discarded_weight": 0.2493280509296863,
+   "remaining_profiles": 370,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 158,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.9883584976196289,
+   "discarded_weight": 0.33400652000904135,
+   "remaining_profiles": 439,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 162,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 47,
+   "acceleration_lower_mps2": 1.5093889236450195,
+   "discarded_weight": 0.42794861051422906,
+   "remaining_profiles": 160,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 107,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": -0.002838134765625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 194,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969429,
+   "identity": 109,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969429,
+   "identity": 167,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 27,
+   "acceleration_lower_mps2": 1.3594484329223633,
+   "discarded_weight": 0.47343292780879054,
+   "remaining_profiles": 215,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 168,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 26,
+   "acceleration_lower_mps2": 1.8525409698486328,
+   "discarded_weight": 0.9879713454123349,
+   "remaining_profiles": 74,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 170,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 21,
+   "acceleration_lower_mps2": 1.724447250366211,
+   "discarded_weight": 0.6623112174378575,
+   "remaining_profiles": 99,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 171,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 21,
+   "acceleration_lower_mps2": 1.5728912353515625,
+   "discarded_weight": 0.7224589995384603,
+   "remaining_profiles": 139,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 173,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 14,
+   "acceleration_lower_mps2": 0.9034690856933594,
+   "discarded_weight": 0.4320917865400382,
+   "remaining_profiles": 505,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969429,
+   "identity": 189,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969429,
+   "identity": 191,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969429,
+   "identity": 196,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969430,
+   "identity": 154,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 29,
+   "acceleration_lower_mps2": 0.07201385498046875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 155,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 29,
+   "acceleration_lower_mps2": 0.06885528564453125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 156,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 26,
+   "acceleration_lower_mps2": 0.049121856689453125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 159,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 23,
+   "acceleration_lower_mps2": -0.03310394287109375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 157,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 25,
+   "acceleration_lower_mps2": -0.020824432373046875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 189,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969430,
+   "identity": 110,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.0059814453125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 163,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 14,
+   "acceleration_lower_mps2": -0.3134765625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 161,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 21,
+   "acceleration_lower_mps2": 0.145233154296875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 142,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.5679740905761719,
+   "discarded_weight": 0.03872621431665794,
+   "remaining_profiles": 788,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 104,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.08454132080078125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 185,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969430,
+   "identity": 151,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 41,
+   "acceleration_lower_mps2": 0.153778076171875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 181,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969430,
+   "identity": 187,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969430,
+   "identity": 188,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969430,
+   "identity": 123,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.00531005859375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 121,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": -0.001529693603515625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 179,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969430,
+   "identity": 105,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.05467987060546875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 107,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.34189605712890625,
+   "discarded_weight": 0.021757056924718896,
+   "remaining_profiles": 922,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 109,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.03440093994140625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 144,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 54,
+   "acceleration_lower_mps2": 0.08089447021484375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 106,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.049732208251953125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 112,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.001239776611328125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 132,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 56,
+   "acceleration_lower_mps2": 0.00310516357421875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 122,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.024562835693359375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 129,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": -0.034023284912109375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 127,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": -0.03580474853515625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 134,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 54,
+   "acceleration_lower_mps2": 0.00644683837890625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 135,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 54,
+   "acceleration_lower_mps2": 0.19321823120117188,
+   "discarded_weight": 0.006848819979144019,
+   "remaining_profiles": 948,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 136,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.4590187072753906,
+   "discarded_weight": 0.03697513651407625,
+   "remaining_profiles": 865,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 130,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": -0.00205230712890625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 137,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 56,
+   "acceleration_lower_mps2": 0.19556427001953125,
+   "discarded_weight": 0.00666704681711403,
+   "remaining_profiles": 948,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 150,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 45,
+   "acceleration_lower_mps2": 1.3972396850585938,
+   "discarded_weight": 0.2586057619556802,
+   "remaining_profiles": 200,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 164,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 13,
+   "acceleration_lower_mps2": -0.1740264892578125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 166,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 11,
+   "acceleration_lower_mps2": -0.31204986572265625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 167,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 11,
+   "acceleration_lower_mps2": -0.178924560546875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 183,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969430,
+   "identity": 114,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": -0.00852203369140625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 131,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": -0.00205230712890625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 138,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.9579868316650391,
+   "discarded_weight": 0.11913306100293308,
+   "remaining_profiles": 462,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 139,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.054042816162109375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 140,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.3808708190917969,
+   "discarded_weight": 0.0250087426372131,
+   "remaining_profiles": 906,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 184,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969430,
+   "identity": 143,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.1321868896484375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 162,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 20,
+   "acceleration_lower_mps2": -0.09051132202148438,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 168,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 10,
+   "acceleration_lower_mps2": 1.2118072509765625,
+   "discarded_weight": 0.5018808931900522,
+   "remaining_profiles": 290,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 169,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 10,
+   "acceleration_lower_mps2": 1.7490811347961426,
+   "discarded_weight": 0.7961758875325579,
+   "remaining_profiles": 92,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969430,
+   "identity": 174,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969430,
+   "identity": 175,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969430,
+   "identity": 176,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969430,
+   "identity": 177,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969430,
+   "identity": 180,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969430,
+   "identity": 182,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969431,
+   "identity": 157,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.6137962341308594,
+   "discarded_weight": 0.04396002666457913,
+   "remaining_profiles": 752,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 155,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.3172950744628906,
+   "discarded_weight": 0.066478497272373,
+   "remaining_profiles": 929,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 139,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.15052032470703125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 186,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 17,
+   "acceleration_lower_mps2": 1.0358390808105469,
+   "discarded_weight": 0.4486239255662461,
+   "remaining_profiles": 403,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 196,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969431,
+   "identity": 195,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969431,
+   "identity": 134,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.16245269775390625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 130,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.137054443359375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 197,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969431,
+   "identity": 200,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969431,
+   "identity": 194,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969431,
+   "identity": 193,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969431,
+   "identity": 175,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 46,
+   "acceleration_lower_mps2": 1.5927190780639648,
+   "discarded_weight": 0.313935961855136,
+   "remaining_profiles": 134,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 141,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.2203521728515625,
+   "discarded_weight": 0.06407863087404378,
+   "remaining_profiles": 946,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 112,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 52,
+   "acceleration_lower_mps2": 0.031314849853515625,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 198,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969431,
+   "identity": 201,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969431,
+   "identity": 203,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969431,
+   "identity": 135,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.0442352294921875,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 169,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.9853696823120117,
+   "discarded_weight": 0.5531517487440704,
+   "remaining_profiles": 442,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 204,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969431,
+   "identity": 140,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.09808349609375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 192,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969431,
+   "identity": 176,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 45,
+   "acceleration_lower_mps2": 1.9087510108947754,
+   "discarded_weight": 0.3081457877066429,
+   "remaining_profiles": 63,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 124,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.12045669555664062,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 136,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.03473663330078125,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 149,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.41219329833984375,
+   "discarded_weight": 0.025040835793931578,
+   "remaining_profiles": 892,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 150,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.4199180603027344,
+   "discarded_weight": 0.02614520690371719,
+   "remaining_profiles": 888,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 127,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": -0.008907318115234375,
+   "discarded_weight": 0.0,
+   "remaining_profiles": 949,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 159,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.8012847900390625,
+   "discarded_weight": 0.07837460894306628,
+   "remaining_profiles": 590,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 151,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.3542976379394531,
+   "discarded_weight": 0.022332382452459502,
+   "remaining_profiles": 917,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 137,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.21888351440429688,
+   "discarded_weight": 0.0210148284566417,
+   "remaining_profiles": 946,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 142,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.6734046936035156,
+   "discarded_weight": 0.05241244612091418,
+   "remaining_profiles": 702,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 144,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 0.9120712280273438,
+   "discarded_weight": 0.8577650089668909,
+   "remaining_profiles": 498,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 146,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.4069480895996094,
+   "discarded_weight": 0.028550151433413856,
+   "remaining_profiles": 895,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 148,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.4152183532714844,
+   "discarded_weight": 0.02997127253437356,
+   "remaining_profiles": 890,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 153,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.6883277893066406,
+   "discarded_weight": 0.05848672290310461,
+   "remaining_profiles": 689,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 189,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 3,
+   "acceleration_lower_mps2": 0.9625391960144043,
+   "discarded_weight": 0.4693949811020365,
+   "remaining_profiles": 458,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 156,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.4348640441894531,
+   "discarded_weight": 0.03808311301194687,
+   "remaining_profiles": 880,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 160,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 0.8921470642089844,
+   "discarded_weight": 0.09797650601085003,
+   "remaining_profiles": 515,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 162,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 57,
+   "acceleration_lower_mps2": 0.8807964324951172,
+   "discarded_weight": 0.09953970309191987,
+   "remaining_profiles": 523,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 163,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 1.04656982421875,
+   "discarded_weight": 0.16205646411986274,
+   "remaining_profiles": 396,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 165,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 58,
+   "acceleration_lower_mps2": 1.2470760345458984,
+   "discarded_weight": 0.9428888496442616,
+   "remaining_profiles": 271,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 166,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 1.2661666870117188,
+   "discarded_weight": 0.6224185562122412,
+   "remaining_profiles": 260,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 167,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 1.5193653106689453,
+   "discarded_weight": 0.7397616623078331,
+   "remaining_profiles": 157,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 168,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.7096490859985352,
+   "discarded_weight": 0.3211314309557399,
+   "remaining_profiles": 670,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 170,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 60,
+   "acceleration_lower_mps2": 0.9529027938842773,
+   "discarded_weight": 0.24410193251220802,
+   "remaining_profiles": 466,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 171,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 59,
+   "acceleration_lower_mps2": 1.0946831703186035,
+   "discarded_weight": 0.1963668305386243,
+   "remaining_profiles": 363,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 172,
+   "acceleration_envelope": false,
+   "acceleration_evidence": 0,
+   "discarded_weight": 0.0
+  },
+  {
+   "world": 969431,
+   "identity": 173,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 52,
+   "acceleration_lower_mps2": 1.343614101409912,
+   "discarded_weight": 0.4651418643611634,
+   "remaining_profiles": 221,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 179,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 39,
+   "acceleration_lower_mps2": 1.5879230499267578,
+   "discarded_weight": 0.34986949550249136,
+   "remaining_profiles": 135,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 181,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 32,
+   "acceleration_lower_mps2": 1.2404470443725586,
+   "discarded_weight": 0.5884562301986203,
+   "remaining_profiles": 274,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 174,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 52,
+   "acceleration_lower_mps2": 1.8810477256774902,
+   "discarded_weight": 0.3609799025809736,
+   "remaining_profiles": 67,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 183,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 25,
+   "acceleration_lower_mps2": 0.8334417343139648,
+   "discarded_weight": 0.5069790752175246,
+   "remaining_profiles": 562,
+   "representation_bound": "outward adjacent float32 values"
+  },
+  {
+   "world": 969431,
+   "identity": 188,
+   "acceleration_envelope": true,
+   "acceleration_evidence": 8,
+   "acceleration_lower_mps2": 1.0423016548156738,
+   "discarded_weight": 0.5699753622725107,
+   "remaining_profiles": 399,
+   "representation_bound": "outward adjacent float32 values"
+  }
+ ],
+ "source_sha256": "774347783fb1ec9090c9b2e20a85497774468b36ae338409dd669571e4168a9d",
+ "constraint_sha256": "9a448664553d0214f4785a907070f3c75831a2a377fa0bff625c0cd754d49feb",
+ "population_sha256": "d8cee1dabe1c064f2da1b3d49af934e2bfd8f9869250ac31f98f3943532cc092",
+ "policy_sha256": "73283ffa206380d53ddaa037f6fb57fb61bbc9876c868253617db089da6cb299",
+ "traffic_outcomes_used": false,
+ "qualified": false
+}

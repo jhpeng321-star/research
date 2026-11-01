@@ -16,7 +16,7 @@ JOB = PARENT+'/rb2break'
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=('stage', 'launch', 'queue', 'queue-corrections', 'queue-native', 'queue-k8', 'validate-envelope', 'fetch-envelope', 'fit-birth', 'bind-birth', 'fetch-birth', 'fetch-source-audit', 'resources', 'inspect-start', 'inspect-source', 'wait', 'retire-cpu3', 'retire-slow-cpu', 'retire-old-queues', 'status', 'fetch', 'fetch-baseline', 'baseline'))
+    parser.add_argument('action', choices=('stage', 'launch', 'queue', 'queue-corrections', 'queue-native', 'queue-k8', 'pause-k8', 'validate-envelope', 'fetch-envelope', 'fit-birth', 'bind-birth', 'fetch-birth', 'fetch-source-audit', 'resources', 'inspect-start', 'inspect-source', 'wait', 'retire-cpu3', 'retire-slow-cpu', 'retire-old-queues', 'status', 'fetch', 'fetch-baseline', 'baseline'))
     parser.add_argument('--host', default='gpuA', choices=('gpuA', 'gpuR'))
     parser.add_argument('--runtime')
     parser.add_argument('--factor', default='baseline')
@@ -31,6 +31,7 @@ def main():
     parser.add_argument('--jobs', nargs='+')
     parser.add_argument('--wait-seconds', type=int, default=480)
     parser.add_argument('--cpu-fast', action='store_true')
+    parser.add_argument('--native-probe', action='store_true')
     parser.add_argument('--birth-version', choices=('v1', 'v2', 'v3'), default='v1')
     args = parser.parse_args()
     if not set(args.worlds) <= set(range(969420, 969432)) or not args.worlds:
@@ -44,6 +45,9 @@ def main():
             'configs/execparity_cav_idm_v1.json', 'configs/native_cav_head_v5.json', 'configs/wm_phys.toml', 'configs/wm_phys_cpu.toml',
             'artifacts/rbfit/shrinkage_v1', 'docs/paper_results/rbunc/observed_arrivals.json',
             'tests/test_rb2break.py']
+        packaged = root/'artifacts/rb2break/startup_v3'
+        if packaged.is_dir():
+            paths.append('artifacts/rb2break/startup_v3')
         archive = subprocess.check_output(['git', 'archive', '--format=tar', commit, *paths], cwd=root)
         sha = hashlib.sha256(archive).hexdigest()
         dest = PARENT+'/rb2break_code_'+commit[:12]
@@ -77,7 +81,7 @@ def save(path,data):
     out_name = f'{args.tag}_{args.factor}_s{args.shard}'
     if args.action == 'launch':
         if args.factor not in ('baseline', 'no_mainline_lc', 'no_merge_advice', 'depart_last',
-                               'depart_first', 'population', 'raw_posterior', 'point_v0', 'point_tau', 'fixed_rate', 'lane_limits', 'cav_settings', 'native_uncommanded'):
+                               'depart_first', 'population', 'raw_posterior', 'point_v0', 'point_tau', 'fixed_rate', 'lane_limits', 'cav_settings', 'native_uncommanded', 'startup_birth_population'):
             raise ValueError('unregistered factor')
         if not args.runtime or not args.runtime.startswith(PARENT+'/rb2break_code_'):
             raise ValueError('own immutable runtime required')
@@ -96,6 +100,7 @@ argv=['nice','-n','19','/root/miniconda3/bin/python','-B','-u','-m','tools.rb2br
  '--model-name',{('RB2BREAK_'+args.tag+'_'+args.factor)!r},'--factor',{args.factor!r},
  '--dev-worlds',*map(str,{args.worlds!r}),'--futures',*map(str,{args.futures!r}),
  '--shard',{str(args.shard)!r},'--shards',{str(args.shards)!r},'--memory-gib','5','--device',{args.device!r}]
+if {args.native_probe!r}: argv+=['--native-probe']
 env=dict(os.environ,OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',CUDA_VISIBLE_DEVICES={'0' if args.device == 'cuda' else ''!r},
  PYTHONPATH='/root/autodl-tmp/c4/speedhead20261030/pythondeps')
 with (out/'worker.log').open('x') as log:
@@ -187,6 +192,33 @@ for lane in (0,1):
   result.append(dict(pid=r['pid'],lane=lane,reason='engineering namespace shadowing; no factor inference launched'))
  finally: os.close(pidfd)
 save(root/'RETIRED_OLD_QUEUES.json',result);print(json.dumps(result))
+'''
+    elif args.action == 'pause-k8':
+        code = '''
+reason="MAIN 2026-11-01 17:35 GPU priority: checkpoint current BREAK runs; no new GPU jobs until MAIN appends S-RB2-BREAK RESUME"
+rows=[]
+for name,pid in (('devk8_native2_s0',501141),('devk8_native2_s1',500921)):
+ out=root/name;r=json.loads((out/'DISPATCH.json').read_text())
+ assert r['owner']=='S-RB2-BREAK' and r['pid']==pid
+ assert r['argv'][r['argv'].index('--out')+1]==str(out)
+ assert Path('/proc/sys/kernel/random/boot_id').read_text().strip()==r['boot_id']
+ proc=Path('/proc')/str(pid)
+ alive=proc.exists() and (proc/'stat').read_text().split()[2]!='Z'
+ if alive:
+  assert (proc/'stat').read_text().split()[21]==r['start_ticks']
+  actual=(proc/'cmdline').read_bytes().split(b'\\0')
+  assert str(out).encode() in actual and b'tools.rb2break.run' in actual
+ runtime=Path(r['argv'][r['argv'].index('--runtime-root')+1])
+ assert "assert not (out/'STOP').exists()" in (runtime/'tools/rbeval/run_wm.py').read_text()
+ receipt=dict(owner='S-RB2-BREAK',reason=reason,unix=time.time(),process=r,
+  alive_at_request=alive,checkpoint_policy='finish in-flight task; STOP before next task; retain all files',
+  completed_hashes={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in sorted(out.glob('w*_k*.json'))})
+ pause=out/'GPU_PAUSE_1735.json'
+ if not pause.exists(): save(pause,receipt)
+ if not (out/'STOP').exists():
+  with (out/'STOP').open('x') as f: f.write(reason+'\\n')
+ rows.append(dict(job=name,pid=pid,alive=alive,tasks=len(receipt['completed_hashes']),stop_exists=(out/'STOP').exists()))
+print(json.dumps(rows))
 '''
     elif args.action == 'wait':
         if not args.jobs or any(not name.replace('_', '').isalnum() for name in args.jobs):
@@ -373,7 +405,7 @@ for seed in range(969420,969432):
    except json.JSONDecodeError: continue
    assert task['seed']==seed and task['future']==future
    files[path.name]=data
-for name in ('IDENTITY.json','DISPATCH.json','COMPLETE.json','BASELINE.json','FIT.json','VALIDATION.json','entrant_population.json','OBSERVATION_BINDING.json','OPERATIONAL_STOP.json','SOURCE_OBSERVABLE_AUDIT.json'):
+ for name in ('IDENTITY.json','DISPATCH.json','COMPLETE.json','BASELINE.json','FIT.json','VALIDATION.json','entrant_population.json','OBSERVATION_BINDING.json','OPERATIONAL_STOP.json','SOURCE_OBSERVABLE_AUDIT.json','GPU_PAUSE_1735.json','STOP'):
  path=root/name
  if path.exists(): files[name]=path.read_bytes()
 receipt=dict(source=str(root),hashes={{name:hashlib.sha256(data).hexdigest() for name,data in files.items()}})

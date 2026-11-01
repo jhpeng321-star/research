@@ -1,0 +1,1153 @@
+{
+ "audits": [
+  {
+   "world": 969420,
+   "matched_births": 86,
+   "skipped_unmatched": 0,
+   "fit_drivers": 28,
+   "validation_drivers": 14,
+   "fit_rows": 557,
+   "validation_rows": 278
+  },
+  {
+   "world": 969421,
+   "matched_births": 71,
+   "skipped_unmatched": 0,
+   "fit_drivers": 16,
+   "validation_drivers": 8,
+   "fit_rows": 318,
+   "validation_rows": 159
+  },
+  {
+   "world": 969422,
+   "matched_births": 75,
+   "skipped_unmatched": 0,
+   "fit_drivers": 21,
+   "validation_drivers": 10,
+   "fit_rows": 420,
+   "validation_rows": 200
+  },
+  {
+   "world": 969423,
+   "matched_births": 73,
+   "skipped_unmatched": 0,
+   "fit_drivers": 14,
+   "validation_drivers": 9,
+   "fit_rows": 280,
+   "validation_rows": 180
+  },
+  {
+   "world": 969424,
+   "matched_births": 74,
+   "skipped_unmatched": 0,
+   "fit_drivers": 27,
+   "validation_drivers": 14,
+   "fit_rows": 539,
+   "validation_rows": 279
+  },
+  {
+   "world": 969425,
+   "matched_births": 74,
+   "skipped_unmatched": 0,
+   "fit_drivers": 31,
+   "validation_drivers": 16,
+   "fit_rows": 615,
+   "validation_rows": 320
+  },
+  {
+   "world": 969426,
+   "matched_births": 81,
+   "skipped_unmatched": 0,
+   "fit_drivers": 29,
+   "validation_drivers": 14,
+   "fit_rows": 580,
+   "validation_rows": 280
+  },
+  {
+   "world": 969427,
+   "matched_births": 64,
+   "skipped_unmatched": 0,
+   "fit_drivers": 27,
+   "validation_drivers": 12,
+   "fit_rows": 540,
+   "validation_rows": 240
+  },
+  {
+   "world": 969428,
+   "matched_births": 70,
+   "skipped_unmatched": 0,
+   "fit_drivers": 30,
+   "validation_drivers": 14,
+   "fit_rows": 597,
+   "validation_rows": 279
+  },
+  {
+   "world": 969429,
+   "matched_births": 82,
+   "skipped_unmatched": 0,
+   "fit_drivers": 28,
+   "validation_drivers": 15,
+   "fit_rows": 557,
+   "validation_rows": 300
+  },
+  {
+   "world": 969430,
+   "matched_births": 87,
+   "skipped_unmatched": 0,
+   "fit_drivers": 21,
+   "validation_drivers": 17,
+   "fit_rows": 416,
+   "validation_rows": 339
+  },
+  {
+   "world": 969431,
+   "matched_births": 73,
+   "skipped_unmatched": 0,
+   "fit_drivers": 28,
+   "validation_drivers": 11,
+   "fit_rows": 560,
+   "validation_rows": 220
+  }
+ ],
+ "trace": [
+  {
+   "iteration": 0,
+   "negative_log_likelihood": 6.9794604571512595,
+   "max_weight_change": 0.01868886408774957
+  },
+  {
+   "iteration": 1,
+   "negative_log_likelihood": 6.562864197894079,
+   "max_weight_change": 0.005706401002969409
+  },
+  {
+   "iteration": 2,
+   "negative_log_likelihood": 6.1069625968774215,
+   "max_weight_change": 0.006819634410891567
+  },
+  {
+   "iteration": 3,
+   "negative_log_likelihood": 6.061726236415005,
+   "max_weight_change": 0.0070181320601970295
+  },
+  {
+   "iteration": 4,
+   "negative_log_likelihood": 6.035228476636967,
+   "max_weight_change": 0.0055038533148161
+  },
+  {
+   "iteration": 5,
+   "negative_log_likelihood": 6.018168330318394,
+   "max_weight_change": 0.003776881307501992
+  },
+  {
+   "iteration": 6,
+   "negative_log_likelihood": 6.006415226727969,
+   "max_weight_change": 0.002767474464900461
+  },
+  {
+   "iteration": 7,
+   "negative_log_likelihood": 5.997776165462518,
+   "max_weight_change": 0.002532918791444766
+  },
+  {
+   "iteration": 8,
+   "negative_log_likelihood": 5.99108099899497,
+   "max_weight_change": 0.0022615794215501382
+  },
+  {
+   "iteration": 9,
+   "negative_log_likelihood": 5.985685665805577,
+   "max_weight_change": 0.0019756148001900675
+  },
+  {
+   "iteration": 10,
+   "negative_log_likelihood": 5.981216791956937,
+   "max_weight_change": 0.001964722341565372
+  },
+  {
+   "iteration": 11,
+   "negative_log_likelihood": 5.97744436180982,
+   "max_weight_change": 0.0019855663502512007
+  },
+  {
+   "iteration": 12,
+   "negative_log_likelihood": 5.972093189857785,
+   "max_weight_change": 0.001993704635827497
+  },
+  {
+   "iteration": 13,
+   "negative_log_likelihood": 5.924551131296738,
+   "max_weight_change": 0.001974501178582326
+  },
+  {
+   "iteration": 14,
+   "negative_log_likelihood": 5.919491301476153,
+   "max_weight_change": 0.0019437485576125416
+  },
+  {
+   "iteration": 15,
+   "negative_log_likelihood": 5.9171587011356035,
+   "max_weight_change": 0.0019219197950282145
+  },
+  {
+   "iteration": 16,
+   "negative_log_likelihood": 5.915277244136411,
+   "max_weight_change": 0.0018914726584000965
+  },
+  {
+   "iteration": 17,
+   "negative_log_likelihood": 5.913637076298193,
+   "max_weight_change": 0.0018538138059127282
+  },
+  {
+   "iteration": 18,
+   "negative_log_likelihood": 5.912185196268279,
+   "max_weight_change": 0.0018108029757415087
+  },
+  {
+   "iteration": 19,
+   "negative_log_likelihood": 5.910892728020746,
+   "max_weight_change": 0.0017638366528421046
+  },
+  {
+   "iteration": 20,
+   "negative_log_likelihood": 5.909737492485157,
+   "max_weight_change": 0.0017140427775054756
+  },
+  {
+   "iteration": 21,
+   "negative_log_likelihood": 5.90870110135501,
+   "max_weight_change": 0.0016623730495864547
+  },
+  {
+   "iteration": 22,
+   "negative_log_likelihood": 5.907768067208338,
+   "max_weight_change": 0.0016096300502990782
+  },
+  {
+   "iteration": 23,
+   "negative_log_likelihood": 5.906925274503245,
+   "max_weight_change": 0.0015564796663842875
+  },
+  {
+   "iteration": 24,
+   "negative_log_likelihood": 5.906161572973681,
+   "max_weight_change": 0.001503463332575443
+  },
+  {
+   "iteration": 25,
+   "negative_log_likelihood": 5.905467446617037,
+   "max_weight_change": 0.0014510119740714575
+  },
+  {
+   "iteration": 26,
+   "negative_log_likelihood": 5.9048347409979485,
+   "max_weight_change": 0.0013994607613939392
+  },
+  {
+   "iteration": 27,
+   "negative_log_likelihood": 5.904256438240217,
+   "max_weight_change": 0.001349063629773356
+  },
+  {
+   "iteration": 28,
+   "negative_log_likelihood": 5.90372647168641,
+   "max_weight_change": 0.0013000068422608854
+  },
+  {
+   "iteration": 29,
+   "negative_log_likelihood": 5.903239573679005,
+   "max_weight_change": 0.0012524211968669083
+  },
+  {
+   "iteration": 30,
+   "negative_log_likelihood": 5.902791150910393,
+   "max_weight_change": 0.001225450634032503
+  },
+  {
+   "iteration": 31,
+   "negative_log_likelihood": 5.90237718254845,
+   "max_weight_change": 0.0012037418582455592
+  },
+  {
+   "iteration": 32,
+   "negative_log_likelihood": 5.901994136990277,
+   "max_weight_change": 0.0011805338722606779
+  },
+  {
+   "iteration": 33,
+   "negative_log_likelihood": 5.901638903685123,
+   "max_weight_change": 0.0011560904913894068
+  },
+  {
+   "iteration": 34,
+   "negative_log_likelihood": 5.901308737017064,
+   "max_weight_change": 0.0011306685675958675
+  },
+  {
+   "iteration": 35,
+   "negative_log_likelihood": 5.901001209748224,
+   "max_weight_change": 0.0011045128745184318
+  },
+  {
+   "iteration": 36,
+   "negative_log_likelihood": 5.900714173986224,
+   "max_weight_change": 0.0010778519043810261
+  },
+  {
+   "iteration": 37,
+   "negative_log_likelihood": 5.900445728048144,
+   "max_weight_change": 0.001050894629424752
+  },
+  {
+   "iteration": 38,
+   "negative_log_likelihood": 5.900194187944245,
+   "max_weight_change": 0.0010238282341228228
+  },
+  {
+   "iteration": 39,
+   "negative_log_likelihood": 5.899958062498883,
+   "max_weight_change": 0.0009968167826047356
+  },
+  {
+   "iteration": 40,
+   "negative_log_likelihood": 5.899736031367568,
+   "max_weight_change": 0.0009700007510748745
+  },
+  {
+   "iteration": 41,
+   "negative_log_likelihood": 5.899526925403933,
+   "max_weight_change": 0.0009434973286758727
+  },
+  {
+   "iteration": 42,
+   "negative_log_likelihood": 5.899329708984354,
+   "max_weight_change": 0.0009174013722421034
+  },
+  {
+   "iteration": 43,
+   "negative_log_likelihood": 5.899143464016987,
+   "max_weight_change": 0.0008917868900721604
+  },
+  {
+   "iteration": 44,
+   "negative_log_likelihood": 5.898967375450875,
+   "max_weight_change": 0.0008667089262753697
+  },
+  {
+   "iteration": 45,
+   "negative_log_likelihood": 5.898800718163947,
+   "max_weight_change": 0.0008422057194254276
+  },
+  {
+   "iteration": 46,
+   "negative_log_likelihood": 5.898642845149925,
+   "max_weight_change": 0.0008183010162477536
+  },
+  {
+   "iteration": 47,
+   "negative_log_likelihood": 5.898493176947292,
+   "max_weight_change": 0.0007950064319750261
+  },
+  {
+   "iteration": 48,
+   "negative_log_likelihood": 5.898351192262393,
+   "max_weight_change": 0.0007723237629973859
+  },
+  {
+   "iteration": 49,
+   "negative_log_likelihood": 5.898216419737047,
+   "max_weight_change": 0.0007502471736084426
+  },
+  {
+   "iteration": 50,
+   "negative_log_likelihood": 5.898088430802959,
+   "max_weight_change": 0.0007287651961097527
+  },
+  {
+   "iteration": 51,
+   "negative_log_likelihood": 5.897966833553615,
+   "max_weight_change": 0.0007078625013267059
+  },
+  {
+   "iteration": 52,
+   "negative_log_likelihood": 5.897851267552704,
+   "max_weight_change": 0.00068752141380031
+  },
+  {
+   "iteration": 53,
+   "negative_log_likelihood": 5.897741399488235,
+   "max_weight_change": 0.0006677231617056717
+  },
+  {
+   "iteration": 54,
+   "negative_log_likelihood": 5.8976369195750875,
+   "max_weight_change": 0.0006484488652476333
+  },
+  {
+   "iteration": 55,
+   "negative_log_likelihood": 5.897537538606266,
+   "max_weight_change": 0.0006296802784153399
+  },
+  {
+   "iteration": 56,
+   "negative_log_likelihood": 5.897442985554792,
+   "max_weight_change": 0.0006114003073040691
+  },
+  {
+   "iteration": 57,
+   "negative_log_likelihood": 5.897353005633292,
+   "max_weight_change": 0.0005935933337437999
+  },
+  {
+   "iteration": 58,
+   "negative_log_likelihood": 5.897267358726207,
+   "max_weight_change": 0.0005762453758689084
+  },
+  {
+   "iteration": 59,
+   "negative_log_likelihood": 5.8971858181193335,
+   "max_weight_change": 0.0005593441179058967
+  },
+  {
+   "iteration": 60,
+   "negative_log_likelihood": 5.897108169461942,
+   "max_weight_change": 0.000542878840241609
+  },
+  {
+   "iteration": 61,
+   "negative_log_likelihood": 5.897034209907482,
+   "max_weight_change": 0.0005268402782755838
+  },
+  {
+   "iteration": 62,
+   "negative_log_likelihood": 5.896963747389045,
+   "max_weight_change": 0.0005112204350896099
+  },
+  {
+   "iteration": 63,
+   "negative_log_likelihood": 5.896896599995004,
+   "max_weight_change": 0.0004960123690338492
+  },
+  {
+   "iteration": 64,
+   "negative_log_likelihood": 5.89683259541827,
+   "max_weight_change": 0.00048120997325647175
+  },
+  {
+   "iteration": 65,
+   "negative_log_likelihood": 5.896771570459382,
+   "max_weight_change": 0.0004668077602807408
+  },
+  {
+   "iteration": 66,
+   "negative_log_likelihood": 5.896713370569063,
+   "max_weight_change": 0.00045280066114100626
+  },
+  {
+   "iteration": 67,
+   "negative_log_likelihood": 5.896657849420211,
+   "max_weight_change": 0.00043918384544400224
+  },
+  {
+   "iteration": 68,
+   "negative_log_likelihood": 5.896604868502536,
+   "max_weight_change": 0.00042595256609041787
+  },
+  {
+   "iteration": 69,
+   "negative_log_likelihood": 5.896554296735466,
+   "max_weight_change": 0.0004131020302629157
+  },
+  {
+   "iteration": 70,
+   "negative_log_likelihood": 5.896506010096641,
+   "max_weight_change": 0.0004006272966612101
+  },
+  {
+   "iteration": 71,
+   "negative_log_likelihood": 5.896459891264507,
+   "max_weight_change": 0.00038852319776318256
+  },
+  {
+   "iteration": 72,
+   "negative_log_likelihood": 5.896415829274221,
+   "max_weight_change": 0.00037678428508328143
+  },
+  {
+   "iteration": 73,
+   "negative_log_likelihood": 5.896373719186602,
+   "max_weight_change": 0.00036540479489714783
+  },
+  {
+   "iteration": 74,
+   "negative_log_likelihood": 5.896333461770017,
+   "max_weight_change": 0.00035437863164966554
+  },
+  {
+   "iteration": 75,
+   "negative_log_likelihood": 5.896294963195296,
+   "max_weight_change": 0.00034369936621167496
+  },
+  {
+   "iteration": 76,
+   "negative_log_likelihood": 5.8962581347436736,
+   "max_weight_change": 0.00033336024622847293
+  },
+  {
+   "iteration": 77,
+   "negative_log_likelihood": 5.8962228925277955,
+   "max_weight_change": 0.0003233542159834929
+  },
+  {
+   "iteration": 78,
+   "negative_log_likelihood": 5.896189157225709,
+   "max_weight_change": 0.0003136739434399516
+  },
+  {
+   "iteration": 79,
+   "negative_log_likelihood": 5.896156853827701,
+   "max_weight_change": 0.0003043118523956695
+  },
+  {
+   "iteration": 80,
+   "negative_log_likelihood": 5.8961259113957665,
+   "max_weight_change": 0.0002952601579664649
+  },
+  {
+   "iteration": 81,
+   "negative_log_likelihood": 5.896096262835385,
+   "max_weight_change": 0.00028651090389822387
+  },
+  {
+   "iteration": 82,
+   "negative_log_likelihood": 5.896067844679299,
+   "max_weight_change": 0.00027805600046514056
+  },
+  {
+   "iteration": 83,
+   "negative_log_likelihood": 5.896040596882846,
+   "max_weight_change": 0.0002698872619593534
+  },
+  {
+   "iteration": 84,
+   "negative_log_likelihood": 5.896014462630437,
+   "max_weight_change": 0.0002619964429935867
+  },
+  {
+   "iteration": 85,
+   "negative_log_likelihood": 5.895989388152702,
+   "max_weight_change": 0.0002543752730275739
+  },
+  {
+   "iteration": 86,
+   "negative_log_likelihood": 5.895965322553823,
+   "max_weight_change": 0.0002470154886950182
+  },
+  {
+   "iteration": 87,
+   "negative_log_likelihood": 5.895942217648562,
+   "max_weight_change": 0.00023990886364406994
+  },
+  {
+   "iteration": 88,
+   "negative_log_likelihood": 5.895920027808494,
+   "max_weight_change": 0.00023304723572106778
+  },
+  {
+   "iteration": 89,
+   "negative_log_likelihood": 5.8958987098169295,
+   "max_weight_change": 0.0002264225314193291
+  },
+  {
+   "iteration": 90,
+   "negative_log_likelihood": 5.895878222732074,
+   "max_weight_change": 0.0002200267875878542
+  },
+  {
+   "iteration": 91,
+   "negative_log_likelihood": 5.895858527757878,
+   "max_weight_change": 0.0002138521704552615
+  },
+  {
+   "iteration": 92,
+   "negative_log_likelihood": 5.895839588122136,
+   "max_weight_change": 0.00020789099206405814
+  },
+  {
+   "iteration": 93,
+   "negative_log_likelihood": 5.895821368961335,
+   "max_weight_change": 0.0002021357242471128
+  },
+  {
+   "iteration": 94,
+   "negative_log_likelihood": 5.895803837211744,
+   "max_weight_change": 0.00019657901029242197
+  },
+  {
+   "iteration": 95,
+   "negative_log_likelihood": 5.8957869615062855,
+   "max_weight_change": 0.0001912136744649795
+  },
+  {
+   "iteration": 96,
+   "negative_log_likelihood": 5.89577071207662,
+   "max_weight_change": 0.00018603272955289296
+  },
+  {
+   "iteration": 97,
+   "negative_log_likelihood": 5.895755060659958,
+   "max_weight_change": 0.00018102938261395363
+  },
+  {
+   "iteration": 98,
+   "negative_log_likelihood": 5.895739980409951,
+   "max_weight_change": 0.0001761970390902895
+  },
+  {
+   "iteration": 99,
+   "negative_log_likelihood": 5.895725445811073,
+   "max_weight_change": 0.0001715293054605771
+  },
+  {
+   "iteration": 100,
+   "negative_log_likelihood": 5.895711432595687,
+   "max_weight_change": 0.00016701999058434114
+  },
+  {
+   "iteration": 101,
+   "negative_log_likelihood": 5.8956979176630036,
+   "max_weight_change": 0.00016266310588917976
+  },
+  {
+   "iteration": 102,
+   "negative_log_likelihood": 5.895684878998856,
+   "max_weight_change": 0.00015845286453899932
+  },
+  {
+   "iteration": 103,
+   "negative_log_likelihood": 5.89567229559509,
+   "max_weight_change": 0.00015438367971012945
+  },
+  {
+   "iteration": 104,
+   "negative_log_likelihood": 5.8956601473670025,
+   "max_weight_change": 0.00015045016209139228
+  },
+  {
+   "iteration": 105,
+   "negative_log_likelihood": 5.895648415066929,
+   "max_weight_change": 0.00014664711670892006
+  },
+  {
+   "iteration": 106,
+   "negative_log_likelihood": 5.895637080191545,
+   "max_weight_change": 0.00014296953916997923
+  },
+  {
+   "iteration": 107,
+   "negative_log_likelihood": 5.895626124879724,
+   "max_weight_change": 0.00013941261139914507
+  },
+  {
+   "iteration": 108,
+   "negative_log_likelihood": 5.895615531795181,
+   "max_weight_change": 0.00013597169693341238
+  },
+  {
+   "iteration": 109,
+   "negative_log_likelihood": 5.895605283939702,
+   "max_weight_change": 0.00013264233581908313
+  },
+  {
+   "iteration": 110,
+   "negative_log_likelihood": 5.895595363013445,
+   "max_weight_change": 0.00012942023902492994
+  },
+  {
+   "iteration": 111,
+   "negative_log_likelihood": 5.895585707715416,
+   "max_weight_change": 0.00012630127901276655
+  },
+  {
+   "iteration": 112,
+   "negative_log_likelihood": 5.895575050156873,
+   "max_weight_change": 0.00012328138186630533
+  },
+  {
+   "iteration": 113,
+   "negative_log_likelihood": 5.895528538220498,
+   "max_weight_change": 0.00012035367122201213
+  },
+  {
+   "iteration": 114,
+   "negative_log_likelihood": 5.8946225255333475,
+   "max_weight_change": 0.0008063854462468585
+  },
+  {
+   "iteration": 115,
+   "negative_log_likelihood": 5.888828962385155,
+   "max_weight_change": 0.002159058495065132
+  },
+  {
+   "iteration": 116,
+   "negative_log_likelihood": 5.8853604187639865,
+   "max_weight_change": 0.00034431295549349275
+  },
+  {
+   "iteration": 117,
+   "negative_log_likelihood": 5.885072266764744,
+   "max_weight_change": 0.00022298414325951435
+  },
+  {
+   "iteration": 118,
+   "negative_log_likelihood": 5.885045421257904,
+   "max_weight_change": 0.00015866604769072118
+  },
+  {
+   "iteration": 119,
+   "negative_log_likelihood": 5.885034393110136,
+   "max_weight_change": 0.00012031591076456377
+  },
+  {
+   "iteration": 120,
+   "negative_log_likelihood": 5.88502490292589,
+   "max_weight_change": 9.918183732150754e-05
+  },
+  {
+   "iteration": 121,
+   "negative_log_likelihood": 5.885015856900788,
+   "max_weight_change": 9.702858728921626e-05
+  },
+  {
+   "iteration": 122,
+   "negative_log_likelihood": 5.885007003896298,
+   "max_weight_change": 9.502934976809985e-05
+  },
+  {
+   "iteration": 123,
+   "negative_log_likelihood": 5.884998170749383,
+   "max_weight_change": 9.315048997585174e-05
+  },
+  {
+   "iteration": 124,
+   "negative_log_likelihood": 5.884989172328348,
+   "max_weight_change": 9.134788495218649e-05
+  },
+  {
+   "iteration": 125,
+   "negative_log_likelihood": 5.884979756948462,
+   "max_weight_change": 8.958979647520626e-05
+  },
+  {
+   "iteration": 126,
+   "negative_log_likelihood": 5.884969519595902,
+   "max_weight_change": 8.78577360681615e-05
+  },
+  {
+   "iteration": 127,
+   "negative_log_likelihood": 5.8849577255451875,
+   "max_weight_change": 8.614221042932413e-05
+  },
+  {
+   "iteration": 128,
+   "negative_log_likelihood": 5.884942928035502,
+   "max_weight_change": 8.443822511561283e-05
+  },
+  {
+   "iteration": 129,
+   "negative_log_likelihood": 5.884922125963835,
+   "max_weight_change": 8.274120131733509e-05
+  },
+  {
+   "iteration": 130,
+   "negative_log_likelihood": 5.884888917375479,
+   "max_weight_change": 8.10423547539102e-05
+  },
+  {
+   "iteration": 131,
+   "negative_log_likelihood": 5.8848295659576895,
+   "max_weight_change": 7.932132900038968e-05
+  },
+  {
+   "iteration": 132,
+   "negative_log_likelihood": 5.884715241405485,
+   "max_weight_change": 0.0001680688257231978
+  },
+  {
+   "iteration": 133,
+   "negative_log_likelihood": 5.884489551999515,
+   "max_weight_change": 0.00035215607811477995
+  },
+  {
+   "iteration": 134,
+   "negative_log_likelihood": 5.884059573305102,
+   "max_weight_change": 0.0006774180139090522
+  },
+  {
+   "iteration": 135,
+   "negative_log_likelihood": 5.883325351836898,
+   "max_weight_change": 0.0011229643023621943
+  },
+  {
+   "iteration": 136,
+   "negative_log_likelihood": 5.882287620042313,
+   "max_weight_change": 0.0015039738042778635
+  },
+  {
+   "iteration": 137,
+   "negative_log_likelihood": 5.881135735840616,
+   "max_weight_change": 0.0015821324604859428
+  },
+  {
+   "iteration": 138,
+   "negative_log_likelihood": 5.880123500648719,
+   "max_weight_change": 0.001341244187938415
+  },
+  {
+   "iteration": 139,
+   "negative_log_likelihood": 5.879370786487505,
+   "max_weight_change": 0.0009717715980780105
+  },
+  {
+   "iteration": 140,
+   "negative_log_likelihood": 5.8788516011643255,
+   "max_weight_change": 0.0006391709959662189
+  },
+  {
+   "iteration": 141,
+   "negative_log_likelihood": 5.8784897234758,
+   "max_weight_change": 0.0004370159898880667
+  },
+  {
+   "iteration": 142,
+   "negative_log_likelihood": 5.8782182396317655,
+   "max_weight_change": 0.0005129683062279418
+  },
+  {
+   "iteration": 143,
+   "negative_log_likelihood": 5.877992835452688,
+   "max_weight_change": 0.0005886476951237683
+  },
+  {
+   "iteration": 144,
+   "negative_log_likelihood": 5.8777880343595985,
+   "max_weight_change": 0.0006588930671606874
+  },
+  {
+   "iteration": 145,
+   "negative_log_likelihood": 5.877591110989726,
+   "max_weight_change": 0.0007183020606749786
+  },
+  {
+   "iteration": 146,
+   "negative_log_likelihood": 5.877397297472635,
+   "max_weight_change": 0.0007622015234745993
+  },
+  {
+   "iteration": 147,
+   "negative_log_likelihood": 5.877206445397392,
+   "max_weight_change": 0.000787549218699504
+  },
+  {
+   "iteration": 148,
+   "negative_log_likelihood": 5.877020741979137,
+   "max_weight_change": 0.0007934499745571571
+  },
+  {
+   "iteration": 149,
+   "negative_log_likelihood": 5.876843176774297,
+   "max_weight_change": 0.0007811240661286054
+  },
+  {
+   "iteration": 150,
+   "negative_log_likelihood": 5.876676583093862,
+   "max_weight_change": 0.0007534012627793008
+  },
+  {
+   "iteration": 151,
+   "negative_log_likelihood": 5.87652312822272,
+   "max_weight_change": 0.0007139820321027963
+  },
+  {
+   "iteration": 152,
+   "negative_log_likelihood": 5.876384131355836,
+   "max_weight_change": 0.0006667272562979384
+  },
+  {
+   "iteration": 153,
+   "negative_log_likelihood": 5.876260091192841,
+   "max_weight_change": 0.0006151425481204439
+  },
+  {
+   "iteration": 154,
+   "negative_log_likelihood": 5.876150823218705,
+   "max_weight_change": 0.0005621009299051471
+  },
+  {
+   "iteration": 155,
+   "negative_log_likelihood": 5.876055635179399,
+   "max_weight_change": 0.0005190406938752785
+  },
+  {
+   "iteration": 156,
+   "negative_log_likelihood": 5.875973497826237,
+   "max_weight_change": 0.00047956204612363725
+  },
+  {
+   "iteration": 157,
+   "negative_log_likelihood": 5.875903190113076,
+   "max_weight_change": 0.000440614046625357
+  },
+  {
+   "iteration": 158,
+   "negative_log_likelihood": 5.8758434122266125,
+   "max_weight_change": 0.000403063826149035
+  },
+  {
+   "iteration": 159,
+   "negative_log_likelihood": 5.875792867542238,
+   "max_weight_change": 0.0003674761031277965
+  },
+  {
+   "iteration": 160,
+   "negative_log_likelihood": 5.875750318007521,
+   "max_weight_change": 0.0003341814134690396
+  },
+  {
+   "iteration": 161,
+   "negative_log_likelihood": 5.87571461841163,
+   "max_weight_change": 0.00030333674693990703
+  },
+  {
+   "iteration": 162,
+   "negative_log_likelihood": 5.875684734743542,
+   "max_weight_change": 0.0002749755443996922
+  },
+  {
+   "iteration": 163,
+   "negative_log_likelihood": 5.8756597510957915,
+   "max_weight_change": 0.00024904691489644956
+  },
+  {
+   "iteration": 164,
+   "negative_log_likelihood": 5.875638868705397,
+   "max_weight_change": 0.00022544529200702046
+  },
+  {
+   "iteration": 165,
+   "negative_log_likelihood": 5.875621399908942,
+   "max_weight_change": 0.00020403220958979847
+  },
+  {
+   "iteration": 166,
+   "negative_log_likelihood": 5.875606759088026,
+   "max_weight_change": 0.00018465187502988457
+  },
+  {
+   "iteration": 167,
+   "negative_log_likelihood": 5.875594452107911,
+   "max_weight_change": 0.0001671420139859412
+  },
+  {
+   "iteration": 168,
+   "negative_log_likelihood": 5.875584065298304,
+   "max_weight_change": 0.00015134119538047497
+  },
+  {
+   "iteration": 169,
+   "negative_log_likelihood": 5.8755752546753195,
+   "max_weight_change": 0.00013709358693571316
+  },
+  {
+   "iteration": 170,
+   "negative_log_likelihood": 5.875567735841,
+   "max_weight_change": 0.00012425186764150262
+  },
+  {
+   "iteration": 171,
+   "negative_log_likelihood": 5.875561274804598,
+   "max_weight_change": 0.00011267884131729335
+  },
+  {
+   "iteration": 172,
+   "negative_log_likelihood": 5.87555567983412,
+   "max_weight_change": 0.00010224815265458438
+  },
+  {
+   "iteration": 173,
+   "negative_log_likelihood": 5.875550794354343,
+   "max_weight_change": 9.284439800769789e-05
+  },
+  {
+   "iteration": 174,
+   "negative_log_likelihood": 5.875546490848188,
+   "max_weight_change": 8.43628412339429e-05
+  },
+  {
+   "iteration": 175,
+   "negative_log_likelihood": 5.875542665683372,
+   "max_weight_change": 7.670888409364203e-05
+  },
+  {
+   "iteration": 176,
+   "negative_log_likelihood": 5.875539234768376,
+   "max_weight_change": 6.979739608887169e-05
+  },
+  {
+   "iteration": 177,
+   "negative_log_likelihood": 5.875536129935827,
+   "max_weight_change": 6.355197613125245e-05
+  },
+  {
+   "iteration": 178,
+   "negative_log_likelihood": 5.875533295953096,
+   "max_weight_change": 5.790419497482026e-05
+  },
+  {
+   "iteration": 179,
+   "negative_log_likelihood": 5.87553068806633,
+   "max_weight_change": 5.279285055456891e-05
+  },
+  {
+   "iteration": 180,
+   "negative_log_likelihood": 5.875528269993071,
+   "max_weight_change": 4.816325646161794e-05
+  },
+  {
+   "iteration": 181,
+   "negative_log_likelihood": 5.875526012288552,
+   "max_weight_change": 4.396657542958711e-05
+  },
+  {
+   "iteration": 182,
+   "negative_log_likelihood": 5.875523891020931,
+   "max_weight_change": 4.0356207873404326e-05
+  },
+  {
+   "iteration": 183,
+   "negative_log_likelihood": 5.875521886700164,
+   "max_weight_change": 3.953005414887578e-05
+  },
+  {
+   "iteration": 184,
+   "negative_log_likelihood": 5.875519983414087,
+   "max_weight_change": 3.8738543885752375e-05
+  },
+  {
+   "iteration": 185,
+   "negative_log_likelihood": 5.875518168132901,
+   "max_weight_change": 3.7979106233765325e-05
+  },
+  {
+   "iteration": 186,
+   "negative_log_likelihood": 5.875516430150049,
+   "max_weight_change": 3.72493786455208e-05
+  },
+  {
+   "iteration": 187,
+   "negative_log_likelihood": 5.87551476063319,
+   "max_weight_change": 3.654720029104552e-05
+  },
+  {
+   "iteration": 188,
+   "negative_log_likelihood": 5.875513152263828,
+   "max_weight_change": 3.587060180947066e-05
+  },
+  {
+   "iteration": 189,
+   "negative_log_likelihood": 5.87551159894814,
+   "max_weight_change": 3.521779288044591e-05
+  },
+  {
+   "iteration": 190,
+   "negative_log_likelihood": 5.875510095584948,
+   "max_weight_change": 3.458714869333801e-05
+  },
+  {
+   "iteration": 191,
+   "negative_log_likelihood": 5.875508637879447,
+   "max_weight_change": 3.397719608963512e-05
+  },
+  {
+   "iteration": 192,
+   "negative_log_likelihood": 5.875507222193576,
+   "max_weight_change": 3.338659991161674e-05
+  },
+  {
+   "iteration": 193,
+   "negative_log_likelihood": 5.875505845425694,
+   "max_weight_change": 3.281414991167242e-05
+  },
+  {
+   "iteration": 194,
+   "negative_log_likelihood": 5.875504504913705,
+   "max_weight_change": 3.2258748441371665e-05
+  },
+  {
+   "iteration": 195,
+   "negative_log_likelihood": 5.875503198356942,
+   "max_weight_change": 3.171939904356158e-05
+  },
+  {
+   "iteration": 196,
+   "negative_log_likelihood": 5.875501923753068,
+   "max_weight_change": 3.119519599839582e-05
+  },
+  {
+   "iteration": 197,
+   "negative_log_likelihood": 5.875500679346997,
+   "max_weight_change": 3.0685314826722765e-05
+  },
+  {
+   "iteration": 198,
+   "negative_log_likelihood": 5.87549946358946,
+   "max_weight_change": 3.01890037222724e-05
+  },
+  {
+   "iteration": 199,
+   "negative_log_likelihood": 5.875498275103299,
+   "max_weight_change": 2.9705575862432054e-05
+  }
+ ],
+ "metrics": {
+  "frozen_resident_population": {
+   "mean_world_crps_mps2": 0.20646406440889184,
+   "per_world": {
+    "969420": 0.1897779388517615,
+    "969421": 0.1960546976322317,
+    "969422": 0.1439248249813908,
+    "969423": 0.18820773553049774,
+    "969424": 0.20397913253075486,
+    "969425": 0.18669952373243578,
+    "969426": 0.1848195626650558,
+    "969427": 0.16981104460416124,
+    "969428": 0.26692431213125295,
+    "969429": 0.2734213921432257,
+    "969430": 0.22479987992966532,
+    "969431": 0.24914872817426842
+   }
+  },
+  "birth_cohort_population": {
+   "mean_world_crps_mps2": 0.1885881572785986,
+   "per_world": {
+    "969420": 0.1451259204798885,
+    "969421": 0.25442560846560797,
+    "969422": 0.14359448054398427,
+    "969423": 0.15374090558837483,
+    "969424": 0.18068985723463984,
+    "969425": 0.16288743953921803,
+    "969426": 0.16750679772359428,
+    "969427": 0.15617467855726944,
+    "969428": 0.19335061175263138,
+    "969429": 0.20390764835178096,
+    "969430": 0.30784215685824984,
+    "969431": 0.19381178224794385
+   }
+  }
+ },
+ "improved": true,
+ "acceleration_envelope": [],
+ "source_sha256": "e21365f88f84f2d8ecddf31529eace464f525fecd7a4a594200811d4276babc4"
+}

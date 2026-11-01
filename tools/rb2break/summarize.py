@@ -71,7 +71,7 @@ def onset(event):
     return float('inf')
 
 
-def summarize(candidate, baseline, real, *, full_baseline=False):
+def summarize(candidate, baseline, real, *, full_baseline=False, arms=ARMS):
     keys = sorted(candidate)
     assert keys and set(keys) <= set(baseline)
     by_world = defaultdict(list)
@@ -79,7 +79,7 @@ def summarize(candidate, baseline, real, *, full_baseline=False):
         by_world[seed].append(future)
     rows = []
     for seed, futures in sorted(by_world.items()):
-        for arm in ARMS:
+        for arm in arms:
             factual = real[seed, arm]
             samples = [next(e for e in candidate[seed, f]['episodes'] if e['arm'] == arm) for f in futures]
             parents = [next(e for e in baseline[seed, f]['episodes'] if e['arm'] == arm) for f in futures]
@@ -156,6 +156,7 @@ def main():
     parser.add_argument('--output', required=True)
     parser.add_argument('--require-complete', action='store_true')
     parser.add_argument('--require-identical-arms', nargs='*', choices=ARMS, default=[])
+    parser.add_argument('--native-only', action='store_true')
     args = parser.parse_args()
     real_path = Path(__file__).resolve().parents[1]/'rbeval/real_observables.json'
     # This pre-existing mixed-split container is parsed only to extract allowlisted
@@ -164,7 +165,7 @@ def main():
     candidate = tasks(Path(args.candidate), require_complete=args.require_complete)
     baseline = tasks(Path(args.baseline), require_complete=args.require_complete)
     verify_identical_arms(candidate, baseline, args.require_identical_arms)
-    result = summarize(candidate, baseline, real)
+    result = summarize(candidate, baseline, real, arms=('native',) if args.native_only else ARMS)
     result['unchanged_arms_verified'] = args.require_identical_arms
     result.update(candidate=str(args.candidate), baseline=str(args.baseline),
                   real_receipt_sha256=digest(real_path), source_sha256=digest(__file__))

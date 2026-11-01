@@ -46,13 +46,14 @@ def arguments():
 
 
 def main(model_loader=None, identity_sources=(), future_builder=None,
-         worlds=None, future_indices=None):
+         worlds=None, future_indices=None, native_only=False):
     """Optional INT loader has the strict load_members(checkpoints,configs,device)
     interface. It returns ([frozen_model], JSON receipt); its Python source and
     explicitly supplied recipe/helper files are bound into the run identity.
     Live WM2 uses the original independently staged source, never overwritten.
     """
     args = arguments()
+    panel_arms = ('native',) if native_only else ARMS
     panel_worlds = SEEDS if worlds is None else tuple(worlds)
     futures = tuple(range(8)) if future_indices is None else tuple(future_indices)
     assert panel_worlds and len(set(panel_worlds)) == len(panel_worlds) and set(panel_worlds) <= set(SEEDS)
@@ -173,9 +174,10 @@ def main(model_loader=None, identity_sources=(), future_builder=None,
     for p in provenance:
         s = p['metadata']['seed']
         if s in SEEDS:
-            assert all(real[s, arm]['initial_sha256'] == p['metadata']['initial_state_sha256'] for arm in ARMS)
-    identity = dict(schema='wmphys-hdv60/1' if args.endpoint_only else 'rbeval/1',
-        K=8, horizon=60 if args.endpoint_only else 600, t0=300, arms=ARMS,
+            assert all(real[s, arm]['initial_sha256'] == p['metadata']['initial_state_sha256'] for arm in panel_arms)
+    schema = 'rb2break-native-probe/1' if native_only else ('wmphys-hdv60/1' if args.endpoint_only else 'rbeval/1')
+    identity = dict(schema=schema,
+        K=8, horizon=60 if args.endpoint_only else 600, t0=300, arms=panel_arms,
         worlds=panel_worlds, shard=args.shard, shards=args.shards, model=args.model_name,
         wm=receipt, wm_sha256=digest(args.wm), config_sha256=digest(args.wm_config),
         candidate_sha256=digest(candidate), export_sha256=binding['sha256'],
@@ -199,6 +201,9 @@ def main(model_loader=None, identity_sources=(), future_builder=None,
         native = native_physics_accel
 
     def controllers(slots):
+        if native_only:
+            from tools.rbint.recipe import native_controller
+            return native_controller(model)
         def native_call(state):
             mask = state['present'].bool() & state['is_cav'].bool()
             state[WM_MERGE_KEY] = mask & (state['lane'] == 2)
@@ -225,7 +230,7 @@ def main(model_loader=None, identity_sources=(), future_builder=None,
         def callback(state):
             outputs, merges = [], []
             for i, call in enumerate(calls):
-                row = {k: v[i:i+1] if torch.is_tensor(v) and v.ndim and v.shape[0] == len(ARMS) else v
+                row = {k: v[i:i+1] if torch.is_tensor(v) and v.ndim and v.shape[0] == len(panel_arms) else v
                        for k, v in state.items()}
                 outputs.append(call(row))
                 merges.append(row[WM_MERGE_KEY])
@@ -259,7 +264,7 @@ def main(model_loader=None, identity_sources=(), future_builder=None,
             if target.exists():
                 old = load(target)
                 assert old['identity_sha256'] == identity_sha and old['seed'] == seed and old['future'] == fi
-                assert len(old['episodes']) == 5
+                assert len(old['episodes']) == len(panel_arms)
                 if args.endpoint_only:
                     assert old['schema'] == 'wmphys-hdv60/1' and all('endpoint60' in e for e in old['episodes'])
                 else:
@@ -276,8 +281,8 @@ def main(model_loader=None, identity_sources=(), future_builder=None,
             b.state, b.rollout_kwargs = move(b.state), move(b.rollout_kwargs)
             plan = (SampledFutures(FuturesConfig.from_trainer(cfg), 190).plan(
                 models, b.state, b.rollout_kwargs, 1200)[0] if future_builder is None else None)
-            initial = frozen.expand(b.state, len(ARMS))
-            pair_merge_streams(initial, torch.zeros(len(ARMS), dtype=torch.long, device=args.device), 1, 190+fi)
+            initial = frozen.expand(b.state, len(panel_arms))
+            pair_merge_streams(initial, torch.zeros(len(panel_arms), dtype=torch.long, device=args.device), 1, 190+fi)
             initial['exit_s_m'] = torch.full_like(initial['s_m'], road_end_exit_bound(model.physics))
             # Snapshot the t0 state before in-place admission/model updates.
             start = {k: initial[k].detach().cpu().numpy().copy() for k in ('s_m', 'v_mps', 'lane', 'present')}
@@ -287,17 +292,17 @@ def main(model_loader=None, identity_sources=(), future_builder=None,
                     initial=initial, future=fi, seed=seed, frozen=frozen)
                 process = entries.process
             else:
-                kw = frozen.expand({**b.rollout_kwargs, **plan[fi]}, len(ARMS))
+                kw = frozen.expand({**b.rollout_kwargs, **plan[fi]}, len(panel_arms))
                 lanes = lane_uniform_draws(models, 1, 1200, initial['s_m'].shape[1],
                     190+1000003*fi if fi else 190, device=args.device)
                 if lanes is not None:
-                    kw['lane_uniform'] = frozen.expand(lanes, len(ARMS))
+                    kw['lane_uniform'] = frozen.expand(lanes, len(panel_arms))
                 assert not model.physics.entry_learned, 'use a separately frozen adapter for learned insertion'
-                process = _entry_process(b.entry_spec, [0]*len(ARMS), initial['s_m'].shape[1],
+                process = _entry_process(b.entry_spec, [0]*len(panel_arms), initial['s_m'].shape[1],
                     cfg.entry_insert_rule, None, couple_draws=True, sample_index=fi)
                 entries = frozen.Entries(process)
                 kw['entries'] = entries
-                kw['entrant_driver_sampler'] = make_sampler(model, initial, kw, 190+1000003*fi, [0]*len(ARMS))
+                kw['entrant_driver_sampler'] = make_sampler(model, initial, kw, 190+1000003*fi, [0]*len(panel_arms))
             cb = controllers(initial['s_m'].shape[1])
             with torch.no_grad():
                 if getattr(model, '_wmphys_departure_phase', 'before_movement') == 'after_movement_and_lanes':
@@ -311,7 +316,7 @@ def main(model_loader=None, identity_sources=(), future_builder=None,
                     future_receipt['population_audit'] = entries.audit_population(initial, roll)
             arrays = {k: roll[k].detach().cpu().numpy() for k in ('positions', 'speeds', 'lanes', 'masks')}
             episodes = []
-            for i, arm in enumerate(ARMS):
+            for i, arm in enumerate(panel_arms):
                 if args.endpoint_only:
                     prefix = [np.concatenate((start[s][i:i+1], arrays[r][i, :119]), axis=0)
                         for s, r in (('s_m', 'positions'), ('v_mps', 'speeds'), ('lane', 'lanes'), ('present', 'masks'))]
@@ -333,9 +338,9 @@ def main(model_loader=None, identity_sources=(), future_builder=None,
                 from tools.rbint.endpoints import attach_endpoints60
                 attach_endpoints60(episodes, arrays, seed, b.entry_spec['k0'])
             assert all(digest(p) == sha for p, sha in sources.items()), 'source changed during task'
-            task = dict(schema='wmphys-hdv60/1' if args.endpoint_only else 'rbeval/1',
+            task = dict(schema=schema,
                 identity_sha256=identity_sha, seed=seed, future=fi,
-                arms=ARMS, episodes=episodes, costs=score, seconds=time.monotonic()-begin,
+                arms=panel_arms, episodes=episodes, costs=score, seconds=time.monotonic()-begin,
                 peak_reserved_mib=torch.cuda.max_memory_reserved()/2**20 if args.device.startswith('cuda') else None)
             if future_receipt is not None:
                 task['future_sampling'] = future_receipt

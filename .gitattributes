@@ -135,3 +135,4 @@ R9_GATE2.md text eol=lf
 # S-RB2-BREAK: fetched remote receipts are SHA-bound raw bytes, not reflowable text.
 # Scope only nested evidence JSON; top-level locally generated summaries are ordinary text.
 /docs/rb2break/*/*.json -text
+/artifacts/rb2break/startup_v3/*.json -text

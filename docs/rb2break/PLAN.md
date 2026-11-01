@@ -164,3 +164,14 @@ forward equation, arrival process or parameter value is hand-set by this choice.
 All pre-t0, native, dev12; same fixed Gaussian scale. Keep original priors unless
 birth-disjoint startup acceleration CRPS improves. Report its restricted scope;
 do not claim longer-horizon validation or adopt without autonomous dev evidence.
+
+## Startup v3 gate PASS → native source canary (before inference)
+First10s incoming fit improves birth-disjoint mean-world acceleration CRPS
+0.206464→0.188588m/s² (10/12worlds better); not longer-horizon qualification.
+Package unchanged joint support/new weights; change ONLY future HDV entrant
+mixture, not current-driver posteriors/CAVs/arrivals/physics rules. Compare to
+corrected-mode2/native-CF parent. First CPU-fast native-only H600 probes on all
+12dev worlds, matched hardware/algorithms. Distinct native-probe schema; never
+pooled into five-arm/K8 results. Before interpretation, require parent native
+clocks/bins/endpoints match its five-arm K1 native forecasts (probe equivalence).
+No extra GPU concurrency or alteration of the frozen development K8 run.

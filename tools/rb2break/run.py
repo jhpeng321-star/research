@@ -18,7 +18,7 @@ sys.path[:0] = [str(ROOT), str(ROOT/'src')]
 DEV = tuple(range(969420, 969432))
 FACTORS = ('baseline', 'no_mainline_lc', 'no_merge_advice', 'depart_last',
            'depart_first', 'population', 'raw_posterior', 'point_v0', 'point_tau', 'fixed_rate',
-           'lane_limits', 'cav_settings', 'native_uncommanded')
+           'lane_limits', 'cav_settings', 'native_uncommanded', 'startup_birth_population')
 
 
 def filtered_starts(code, worlds):
@@ -111,6 +111,7 @@ def main():
     parser.add_argument('--factor', required=True, choices=FACTORS)
     parser.add_argument('--dev-worlds', nargs='+', type=int, default=list(DEV))
     parser.add_argument('--futures', nargs='+', type=int, default=[0])
+    parser.add_argument('--native-probe', action='store_true')
     options, rest = parser.parse_known_args()
     if (not options.dev_worlds or len(set(options.dev_worlds)) != len(options.dev_worlds)
             or not set(options.dev_worlds) <= set(DEV)):
@@ -140,7 +141,7 @@ def main():
             from dataclasses import replace
             models[0].physics = replace(models[0].physics, sumo_cf_lane_speed_limits=True)
             receipt['sumo_cf_lane_speed_limits'] = True
-        if options.factor == 'native_uncommanded':
+        if options.factor in ('native_uncommanded', 'startup_birth_population'):
             models[0]._wmphys_native_model = 'sumo_uncommanded'
             models[0]._wmphys_match_cav_execution_settings = True
             receipt['native_model'] = 'sumo_uncommanded'
@@ -160,16 +161,23 @@ def main():
         ROOT/'artifacts/rbfit/shrinkage_v1/idm_posteriors.json.gz',
         ROOT/'artifacts/rbfit/shrinkage_v1/idm_shrinkage.json',
         ROOT/'docs/paper_results/rbunc/observed_arrivals.json']
+    entrant_artifact = ROOT/'artifacts/rb2break/startup_v3/entrant_population.json'
+    if options.factor == 'startup_birth_population':
+        sources.append(entrant_artifact)
     def future(**kwargs):
         planned, entries, receipt = recipe.candidate_future(**kwargs)
         if options.factor == 'cav_settings':
             from wms.control.execution_settings import bind_execution_settings
             receipt.update(bind_execution_settings(planned, entries, kwargs['initial'],
                 ROOT/'configs/execparity_cav_idm_v1.json'))
+        if options.factor == 'startup_birth_population':
+            from wms.control.entrant_population import bind_entrant_population
+            receipt.update(bind_entrant_population(entries, entrant_artifact,
+                kwargs['model']._wmphys_fitted_state.provenance['idm_population_sha256']))
         return planned, entries, receipt
     run_wm.main(model_loader=load, future_builder=future,
                 identity_sources=sources, worlds=options.dev_worlds,
-                future_indices=options.futures)
+                future_indices=options.futures, native_only=options.native_probe)
 
 
 if __name__ == '__main__':
