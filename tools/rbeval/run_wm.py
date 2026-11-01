@@ -42,6 +42,7 @@ def arguments():
     p.add_argument('--max-tasks', type=int)
     p.add_argument('--endpoint-only', action='store_true', help='separate60s endpoint contract; retain600s padding/RNG prefix')
     p.add_argument('--switches', help='JSON object of explicit model-attribute overrides')
+    p.add_argument('--registered-panel', help='explicit identity-bound round-2 panel manifest')
     return p.parse_args()
 
 
@@ -52,6 +53,21 @@ def main(model_loader=None, identity_sources=(), future_builder=None):
     Live WM2 uses the original independently staged source, never overwritten.
     """
     args = arguments()
+    panel = None
+    panel_path = None
+    seeds = SEEDS
+    real_path = HERE/'real_observables.json'
+    observation_root = DATA_ROOT
+    if args.registered_panel:
+        # Separate orchestration metadata never mutates a frozen model/runtime.
+        # The adapter validates release, world identities and observation hashes.
+        from tools.rb2int.inputs import validate_panel, install_observations
+        panel_path = safe(args.registered_panel)
+        panel = validate_panel(panel_path)
+        seeds = tuple(panel['worlds'])
+        real_path = safe(panel['real_observables'])
+        observation_root = safe(panel['observations_root'])
+        install_observations(observation_root, seeds)
     if args.endpoint_only:
         assert args.model_name != 'wm2' and 'hdv60' in args.model_name.lower(), 'separate endpoint model identity required'
     rollout_steps = 120 if args.endpoint_only else 1200
@@ -103,7 +119,7 @@ def main(model_loader=None, identity_sources=(), future_builder=None):
     for key in ('motion', 'worker', 'costs'):
         reference(key, namespace)
     frozen = SimpleNamespace(**namespace)
-    namespace.update(frozen=frozen, ROOT=DATA_ROOT, DATA=DATA_ROOT/'data')
+    namespace.update(frozen=frozen, ROOT=observation_root, DATA=observation_root/'data')
     reference('starts', namespace)
     out = safe(args.out)
     assert out.parent.is_dir()
@@ -163,20 +179,26 @@ def main(model_loader=None, identity_sources=(), future_builder=None):
     source_paths += [Path(inspect.getfile(x)) for x in
                      (deps.circles_type, deps.direct_target, deps.pi_type, deps.pi_params_type)]
     sources = {str(safe(p)): digest(p) for p in source_paths}
-    reals = load(HERE/'real_observables.json')['episodes']
+    reals = load(real_path)['episodes']
     real = {(e['seed'], e['arm']): e for e in reals}
     for p in provenance:
         s = p['metadata']['seed']
-        if s in SEEDS:
+        if s in seeds:
             assert all(real[s, arm]['initial_sha256'] == p['metadata']['initial_state_sha256'] for arm in ARMS)
     identity = dict(schema='wmphys-hdv60/1' if args.endpoint_only else 'rbeval/1',
         K=8, horizon=60 if args.endpoint_only else 600, t0=300, arms=ARMS,
-        worlds=SEEDS, shard=args.shard, shards=args.shards, model=args.model_name,
+        worlds=seeds, shard=args.shard, shards=args.shards, model=args.model_name,
         wm=receipt, wm_sha256=digest(args.wm), config_sha256=digest(args.wm_config),
         candidate_sha256=digest(candidate), export_sha256=binding['sha256'],
         sources=sources, provenance=provenance, switches=switches, device=args.device,
-        real_receipt_sha256=digest(HERE/'real_observables.json'), mix=True,
+        real_receipt_sha256=digest(real_path), mix=True,
         native_lanes=True, seed=965140, update=190)
+    if panel is not None:
+        from tools.rb2int import inputs as panel_inputs
+        identity.update(registered_panel_sha256=digest(panel_path),
+            registration_sha256=panel['registration_sha256'],
+            observation_registry_sha256=digest(observation_root/'expected_hashes.json'),
+            panel_adapter_sha256=digest(panel_inputs.__file__))
     if model_loader is not None:
         identity['construction_loader_sha256'] = digest(inspect.getfile(model_loader))
     # Round-trip tuple/list normalization before exact resume identity comparison.
@@ -228,7 +250,7 @@ def main(model_loader=None, identity_sources=(), future_builder=None):
         return {k: move(v) for k, v in x.items()} if isinstance(x, dict) else x
 
     tasks = 0
-    selected = [s for i, s in enumerate(SEEDS) if i % args.shards == args.shard]
+    selected = [s for i, s in enumerate(seeds) if i % args.shards == args.shard]
     if args.model_name != 'wm2':
         # Administrative order only: registered panel/partition/RNG stay fixed.
         # Complete the reserved eight worlds first for the owner's04:00 interim.

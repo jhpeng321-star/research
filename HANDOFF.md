@@ -33,6 +33,10 @@ round-1 delivery remains below. Read `docs/rb2int/PLAN.md` when available.
   WMDATA evaluation uses staged ctrl0 starts plus cached observable targets.
   MAIN12:14 reports gpuR disk-full incident and its own archive recovery. Admission
   must check disk; do not mutate/archive/delete any peer file or job.
+- Extended-panel input adapter and strict replicated-world bootstrap implemented;
+  targeted adapter/panel/uncertainty/source/core suite30PASS. New starts require
+  immutable registration/release/input hashes and causal source counters. Default
+  round1 loader restriction preserved. No model delivery merged or job launched.
 
 ## Preserved round-1 handoff
 
