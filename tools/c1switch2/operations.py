@@ -85,7 +85,8 @@ print(json.dumps(out))
 ''')
 
 
-def stage(host, predecessor=None, cpu_only=False, model=None, inference=None, relocation=None):
+def stage(host, predecessor=None, cpu_only=False, model=None, inference=None, relocation=None,
+          selector=None, selector_spec=None):
     registration_bytes = checked(REGISTRATION).read_bytes()
     text = registration_bytes.decode('utf-8')
     digest = sha(DESIGN)
@@ -95,9 +96,10 @@ def stage(host, predecessor=None, cpu_only=False, model=None, inference=None, re
     state = status(host)
     old = None
     dispatched = [r for r in state['roots'] if 'DISPATCH_CANARY.json' in r or 'CANARY_DISPATCH_ONCE.json' in r]
-    if cpu_only or model:
+    if cpu_only or model or selector:
         from .gate import cpu_authority
-        if cpu_only and model or model not in (None, 'wm', 'bb'):
+        if (sum(bool(x) for x in (cpu_only, model, selector)) != 1 or
+                model not in (None, 'wm', 'bb') or selector not in (None, 'fleet_ppo', 'cav_mappo')):
             raise ValueError('one registered dispatch scope required')
         if not cpu_authority(text) or (cpu_only and any('CPU_DISPATCH_ONCE.json' in r for r in state['roots'])):
             raise ValueError('CPU authority absent or subset already claimed; inspect/reuse')
@@ -120,8 +122,8 @@ def stage(host, predecessor=None, cpu_only=False, model=None, inference=None, re
             staged['peer/'+peer+'/'+path.name] = checked(path)
     sources = {name: sha(path) for name, path in staged.items()}
     identity = canonical(dict(sources=sources, registration=sha(REGISTRATION),
-                              scope=model or ('cpu' if cpu_only else 'canary'), inference=inference,
-                              relocation=relocation))[:16]
+                              scope=selector or model or ('cpu' if cpu_only else 'canary'), inference=inference,
+                              relocation=relocation, selector_spec=selector_spec))[:16]
     root = ('/home/ubuntu' if host == 'cpuQ' else '/root')+'/c1switch2_run_'+identity
     binding = dict(protocol=PROTOCOL, cpu_host=host, include_phys=False, sim_s=budget(),
         library=list(CONTROLLERS), gpu_seconds={a: GPU_SECONDS[a] for a in budget()},
@@ -142,6 +144,11 @@ def stage(host, predecessor=None, cpu_only=False, model=None, inference=None, re
         if inference is None:
             raise ValueError('model stage requires completed immutable two-GPU inference specification')
         binding['inference_specs'][model] = inference
+    elif selector:
+        if not selector_spec or selector_spec.get('status') != 'FROZEN_FINAL':
+            raise ValueError('genuine final169 selector specification required')
+        binding.update(dispatch_phase='selector', enabled_arms=[selector])
+        binding['selector_specs'][selector] = selector_spec
     if relocation is not None:
         from .relocation import validate
         binding['relocation'] = relocation

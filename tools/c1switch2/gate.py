@@ -64,6 +64,13 @@ def admission(text, binding, evidence, *, phase='main'):
         if arms not in (['wm'], ['bb']) or include_phys or not cpu_authority(text):
             raise ValueError('model subset requires MAIN 01:48 authority and one frozen model arm')
         needed = CPU_REQUIRED + ('inference_'+arms[0], 'gpuA_parity', 'gpuR_parity')
+    elif binding.get('dispatch_phase') == 'selector' and phase == 'main':
+        arms = binding.get('enabled_arms')
+        if arms not in (['fleet_ppo'], ['cav_mappo']) or include_phys or not cpu_authority(text):
+            raise ValueError('selector subset requires MAIN authority and one final selector arm')
+        if binding.get('selector_specs', {}).get(arms[0], {}).get('status') != 'FROZEN_FINAL':
+            raise ValueError('selector subset requires genuine frozen final169 specification')
+        needed = CPU_REQUIRED + (arms[0],)
     elif phase == 'main' and 'enabled_arms' in binding:
         raise ValueError('unregistered partial-arm admission')
     if phase == 'canary':

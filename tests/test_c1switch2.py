@@ -384,6 +384,30 @@ def test_model_subset_retains_both_gpu_parities_and_only_its_own_model_gate(monk
         gate.admission(text, dict(b, enabled_arms=['wm_phys']), evidence)
 
 
+@pytest.mark.parametrize('arm', ('fleet_ppo', 'cav_mappo'))
+def test_final_selector_subset_keeps_common_gates_and_exact_world_partition(monkeypatch, arm):
+    from tools.c1switch2.supervisor import episode_jobs
+    b, text, _ = cpu_binding(monkeypatch)
+    b.update(dispatch_phase='selector', enabled_arms=[arm],
+             selector_specs={arm: dict(status='FROZEN_FINAL')})
+    needed = gate.CPU_REQUIRED+(arm,)
+    evidence = {k: dict(status='PASS', binding_sha256=canonical(b)) for k in needed}
+    assert gate.admission(text, b, evidence)['dispatch_authorized']
+    for key in needed:
+        missing = dict(evidence)
+        missing.pop(key)
+        assert not gate.admission(text, b, missing)['dispatch_authorized']
+    q, r = episode_jobs(b, 'cpuQ'), episode_jobs(b, 'gpuR')
+    assert len(q) == 12 and len(r) == 4
+    assert not ({ident for ident, _ in q} & {ident for ident, _ in r})
+    pending = copy.deepcopy(b)
+    pending['selector_specs'][arm]['status'] = 'PENDING'
+    with pytest.raises(ValueError, match='genuine frozen final169'):
+        gate.admission(text, pending, evidence)
+    with pytest.raises(ValueError, match='one final selector'):
+        gate.admission(text, dict(b, enabled_arms=[arm, 'wm']), evidence)
+
+
 def test_gpu_parity_rejects_missing_controller_sample_drift_and_lost_wall_memory():
     from tools.c1switch2.modelops import compare_parity, parity_requests
     from tools.c1switch2 import gpuserver, gpuops

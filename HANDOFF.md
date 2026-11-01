@@ -59,6 +59,14 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**Final-fleet evaluation bridge built, not yet dispatched:** delivered genuine
+final169 SHAbe0bb66d is now accepted by selector-only immutable CPU stages.
+Same original12cpuQ/4gpuR worlds, full1200s episodes+registered six-way full-prefix
+oracles, original79800sim-s/GPU0. `selectorops` validates frozen checkpoint/source
+receipt, CPU-loads the actual policy before any claim/physics, keeps all common
+scientific gates and rejects duplicate same-arm claims. No training restart.
+Local84CPU PASS/RuffPASS. Prospective registration and immutable host preflight
+are still required before dispatch; per-CAV remains pending its own final169.
 **11:44 diagnosed BB admission defect, CPU fix only:** `registry_hits` counted
 the exact own06:00 durableSTOP job reference as a conflicting allocation.
 Narrow correction removes ONLY that known job token in that exact incident;
