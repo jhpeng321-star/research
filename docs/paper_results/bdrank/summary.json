@@ -1,0 +1,68 @@
+{
+ "detector_sha256": "6de4df039e108508cf71f94abfe2e81136d5a9a502bb4803980411c0fa5b3f10",
+ "checks": {
+  "independent_detector_decisions": 11700,
+  "real_cost_additivity": 4500,
+  "forecast_cost_additivity": 7200
+ },
+ "real_episodes": 500,
+ "prediction_tasks": 160,
+ "new_sumo_sim_s": 0,
+ "new_training": 0,
+ "new_inference": 0,
+ "process_signals": 0,
+ "selected_development_rules": {
+  "120": {
+   "rule": "probability",
+   "development_mean_savings": {
+    "probability": 4.031952063242595,
+    "onset": -91.09926048914592,
+    "severity": -5.745283444722493,
+    "delay": -42.56388465563456,
+    "breakdown_then_delay": -51.650815884272255
+   },
+   "basis": "maximum development12 mean saving only; fixed rule order breaks equal development scores"
+  },
+  "300": {
+   "rule": "delay",
+   "development_mean_savings": {
+    "probability": 49.83077883720398,
+    "onset": -744.5929492115974,
+    "severity": -781.407355149587,
+    "delay": 230.2776034871737,
+    "breakdown_then_delay": -80.77002596855164
+   },
+   "basis": "maximum development12 mean saving only; fixed rule order breaks equal development scores"
+  },
+  "600": {
+   "rule": "delay",
+   "development_mean_savings": {
+    "probability": 278.15731223424274,
+    "onset": 391.275496840477,
+    "severity": -2.853799819943864,
+    "delay": 1694.56116604805,
+    "breakdown_then_delay": 1250.4428198337555
+   },
+   "basis": "maximum development12 mean saving only; fixed rule order breaks equal development scores"
+  }
+ },
+ "option_missing": {
+  "v4_canary_future_wall_s": 34.24834016337991,
+  "v4_estimated_96_future_gpu_minutes": 54.79734426140785,
+  "estimated_repeat_worker_gpu_minutes": {
+   "FULL-v4": 71.48830093831445,
+   "FULL-v5": 91.77406191745152
+  },
+  "exact_detector_labels_available": false,
+  "imagined_detector_fields_available": false
+ },
+ "round2": {
+  "snapshot": "20261101T161643+0800",
+  "complete_world_jobs": 7,
+  "expected_world_jobs": 216,
+  "controller_v5_scored": false,
+  "reason": "registered round2 panel incomplete; no partial-panel outcome reads",
+  "peer_jobs_touched": false,
+  "inference_launched": false
+ }
+}

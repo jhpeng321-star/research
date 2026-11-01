@@ -1,0 +1,698 @@
+{
+ "inputs": [
+  {
+   "path": "E:\\agent-work\\c4-bdrank\\tools\\rbeval\\references.json",
+   "sha256": "5b1551d7a4e10f2135b358c3a2ae64cc507b83c44bed481e0336aba3ba00cb06"
+  },
+  {
+   "path": "E:\\agent-work\\c4-wmbreakdown\\docs\\paper_results\\wmbreakdown\\wmdata_observables.json",
+   "sha256": "01d0d2b7027aad9910496c7bc5b9681c0d1ccf08f46b4e16a1113310a67362e9"
+  },
+  {
+   "path": "E:\\agent-work\\c4-wmbreakdown\\docs\\paper_results\\wmbreakdown\\wmdata2_observables.json",
+   "sha256": "a2b3ecf7a6ea9d6904fafa44d57a502e77781024b42b9b9469cbddaf44779fb4"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T093000+0800\\FULL-v4\\distribution\\audit.json",
+   "sha256": "800b409df40a47deffe53e6db24bd4864def556db0dd0d86843373f44bcf9266"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969420_k0.json",
+   "sha256": "764a84812976601431d9c2601a86f2a4f5829b2bd6d480da7201a8ded13ba69e"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\IDENTITY.json",
+   "sha256": "e5830c341e303554ad22b72d53eeaf9e3dad205635f15112a7fdb55bf81b73f7"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969420_k1.json",
+   "sha256": "57066a147e241de487cdee38e64fb86462e60ee3043eff04eecd8c5f8bba0dca"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969420_k2.json",
+   "sha256": "babc268eded4357222d8c2285c5381a0bdc2a392b1d0f02065d258629ee6f45d"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969420_k3.json",
+   "sha256": "16d0ea73a1eefbb2a815392f9058f19fb5b41f18567874b84359b704702ec82a"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969420_k4.json",
+   "sha256": "5c894a2681c2cd1729c9d8be33537f4e63e14d8468faa688e9fbe2d8623ca271"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969420_k5.json",
+   "sha256": "1abb4a5f1ce43c9ba2b6ef6fd3d5a9b5a7cc7731fa30c776e7d2ed834e3134ed"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969420_k6.json",
+   "sha256": "00965961e4973beb64af082f01cfbea780ad553f32e0f4a5148cb19389149256"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969420_k7.json",
+   "sha256": "e9fff3eda948db9de5bed9b952b1b3866dad12e3e195ac41ac59913bc00ea7fe"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969423_k0.json",
+   "sha256": "69ea1c8a658705704811257bfa983b56ca13e17c6430739c948cb1dd05e49643"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969423_k1.json",
+   "sha256": "91a8a2d340dd17451542c373f4283fa235708e340d840268cc15458c6b149133"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969423_k2.json",
+   "sha256": "f81981c1106197b8cccea6233eed487de4fa3b99436ad0cbdd4672f7618484ca"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969423_k3.json",
+   "sha256": "eb135d1e78159626ff93325feb46fc54f64832b772f2440702a31834fd7eb03e"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969423_k4.json",
+   "sha256": "8e296bb33004fd37c296a1775ca3b4c2980ade5768677226d5282e3c490a21ee"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969423_k5.json",
+   "sha256": "6e60ed5c5de471d25979bc23238621eb911e99f979a74442c8a3168deadb5a8b"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969423_k6.json",
+   "sha256": "c4f4cc88dd1911fae8eca1925b951611c5bfb911db678527396cee4aa6598f08"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969423_k7.json",
+   "sha256": "26dfc8f022d3fe0df30997b3fceeb92f202b4c279d029991e07fabddd14a462f"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969426_k0.json",
+   "sha256": "1251a559c60adc8631d0ea1c428961175c207f300f9098ff3d6b893372f5eec7"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969426_k1.json",
+   "sha256": "4dcfb5815f69c5cb15fd1a2802c64a918ac7b3cae8eeca9e0ba550709d96d3fb"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969426_k2.json",
+   "sha256": "4eb1e1b45916e13789bcd3dc4c343b552dd0099fea8c15080e9ecfd67190320a"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969426_k3.json",
+   "sha256": "4c4758934a0eab4a15376277a93fd14662df89da81a4fa75b7daca136a212ba7"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969426_k4.json",
+   "sha256": "606906fea1697788635798a4c8e126b22ed9df6c104577cc308caaa8a0c4ae6b"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969426_k5.json",
+   "sha256": "02eb24ddac16c682bcfc28f2378ee44ad4ff787db39e931996507b5643522424"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969426_k6.json",
+   "sha256": "880c317b3bcf6afa423a91ae961b5fca6586d782a892cff48032eb0a11e4f8cc"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969426_k7.json",
+   "sha256": "bf7799cd29518b9e6f07a38a3c2e5ed4f74554897141cd4d60e09e19fe891355"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969429_k0.json",
+   "sha256": "8e01decc80327e2410f368a4c9307074a6852d7fb176b519f58b42cf3edd9c19"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969429_k1.json",
+   "sha256": "530ae68b5e95298374968bc6ff7ee506e8fb96cb2788ebbde601de7dc101b16a"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969429_k2.json",
+   "sha256": "c66cb085c86eb9d06e8843124529137d96c356fd1b91c873c36f020208276a7a"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969429_k3.json",
+   "sha256": "5165d33db0bc5e8fb644ebec0d0475c986eec5ffcf66077a1d3c24e40d79dde9"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969429_k4.json",
+   "sha256": "ba31c188e53c67953528bef44126cea442433c00649398f35976de47cbb2e156"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969429_k5.json",
+   "sha256": "9b92659865d9aea3b9d99b3ac72afcfedd5f715794ad9727297251ac7be1add4"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969429_k6.json",
+   "sha256": "a66f811eda4e27f4736ce9a6441744a5e45976c3311b60edee7efb1404941bfc"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969429_k7.json",
+   "sha256": "906e1cbc6d4ca175d4f0ff9f4c7c12a422c78878a0375ff67d2ebc2920d054dd"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969432_k0.json",
+   "sha256": "d0422a353d1418276597e75db2bd5e52969c6193c465f5280644c283f81c2090"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969432_k1.json",
+   "sha256": "18f6c4b5659d1c5aab5eee76751195f92f89609475fb2bd58016a302aa98cda3"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969432_k2.json",
+   "sha256": "ca90e99748730c6c8e1bf939d60c0a68f82c089d7597776952add28606bbb2e3"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969432_k3.json",
+   "sha256": "1708032faf109affce5ea07d1f5d1e760f79fafa435e030619c05074d6d2e87e"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969432_k4.json",
+   "sha256": "65e471a525c092088a14edc0833f3127c9ba72a5af5bdc2b1c70024e7eb05cd4"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969432_k5.json",
+   "sha256": "a2d4dcc3d5437e4bf33403edcf64645013e650fb03ffc0010d32c062ce2f300e"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969432_k6.json",
+   "sha256": "d46bb8063958ee6d490db88b9220507314d383201cd2dc2c1d0f2e32f8d52965"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969432_k7.json",
+   "sha256": "e0ee076e27231762315eb716db2a122842561a07536a184a8b50e2135d4165b5"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969435_k0.json",
+   "sha256": "e37325f03948fbad58702616a1810eb5228ed0aed5c0fee7c94764a7aa1ee42e"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969435_k1.json",
+   "sha256": "e5fc2a66e201a2c35893daa76b1121f90c2a636a17ca848346c463cb3f88bdf8"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969435_k2.json",
+   "sha256": "9b53311db02a0c4a4c5281b338862d28fc7437d8326657a11f21b541f5685012"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969435_k3.json",
+   "sha256": "dc3d0cf918edadd48d777b862343008e58ee3c6eb2422b241220a6b2f6faf1f3"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969435_k4.json",
+   "sha256": "ac2135859f5c3005d1bbe01358e67a318d6660f8628bc264ee54c478bd55d3e9"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969435_k5.json",
+   "sha256": "8e12738eea0328e38f7cdaf2f2f1f1a1864cca7682f2a3b2a03746e29f3c3d6c"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969435_k6.json",
+   "sha256": "6722a295aeb851f0d13ba7bcc75b96c3f427e438444ed71fe3155d9f66c0e083"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969435_k7.json",
+   "sha256": "2b0cdf587cb4ebddc2ba33081330c8d5ecb313f648d0e45100666745dd1b21f8"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969438_k0.json",
+   "sha256": "a2c2caab6a540004981db18d7ec63f42283f936bec2b422319bbde64f7736502"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969438_k1.json",
+   "sha256": "f331fa49ade9542396520bfe8719116dbb85d0eb839f39e3297807455f06a110"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969438_k2.json",
+   "sha256": "270b3a44bd52fea8f8641b21237b81108f3ab40beed285dc2f6bd4ef257cfc88"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969438_k3.json",
+   "sha256": "cdd3b0bae56ddaa39f699cde1cd1becaeac3bdeeeac8107d93c6532ccd8dbaa5"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969438_k4.json",
+   "sha256": "1760ba74fcce71ffa807eda15c566da20cf78e0d8e8ceca730cf076c79b67f7f"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969438_k5.json",
+   "sha256": "973a5756ae8fce170f269355445c2358d18bf76e014e8ca63a32e599774efab1"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969438_k6.json",
+   "sha256": "6b425818a0ebd7757c7c404fa2f5b474dab80601e02827cef064d9f69ade6128"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard0\\w969438_k7.json",
+   "sha256": "b5893adb4ea7a66f6fef60bf4df688a9a6870ef3ce60733c451177ca4770e2a1"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969421_k0.json",
+   "sha256": "c6f813cfc32c800c12a9e8474e7151ff0615c555d1213b75b2a67ec051ccddc8"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\IDENTITY.json",
+   "sha256": "8c7866419500b0ede7716ac2d8b239bd07a2d2b707b0dd8f228b6bc940e2b68e"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969421_k1.json",
+   "sha256": "9a4e841178d40d79679a1faed655dc615f28929e8afd4cac4340d513ab8bad0b"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969421_k2.json",
+   "sha256": "d3d3a83834e0e16bfcedfb283f1d065d5d9ec2e7a6bd0a256833bca98f8d64ac"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969421_k3.json",
+   "sha256": "236e16394181c8aa47f54a2415f0d28d6b6d4ae79e0e64b3f645e4ba784e3996"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969421_k4.json",
+   "sha256": "24a37eab11469787c787a1f82c655f4c7cf82281d6c85e731946bf176e5e2076"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969421_k5.json",
+   "sha256": "9d47a8101009c18d0613e89612761cb54d099b18fa81bb742b2d8683a32a2c2c"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969421_k6.json",
+   "sha256": "2560e7964266570f688c5a73e536e898949973e732859773b8a3ecde3c5d3007"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969421_k7.json",
+   "sha256": "de94d4a5fd0935f7eb67e130428851efc13868c26347706107d3507df24f4ebf"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969424_k0.json",
+   "sha256": "4d67ff140429c9e344832ebd7463ea87588904a788a4c3fef3cd8145c8f6a82f"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969424_k1.json",
+   "sha256": "2cee6386151bc4f7a62b51880f6733058c2b8cd9656b86f2751bd448dfa1f354"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969424_k2.json",
+   "sha256": "7114809a0469eaa38723d66000cd30de18f9545c24a050ca517f28bc5e385550"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969424_k3.json",
+   "sha256": "fa3045968092bd2d9c8aab48ba4022aada925d617078867f81d2d84b35a8bbb8"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969424_k4.json",
+   "sha256": "391caa9c8bad89a2298c66f098e99153353131a791d7b1100d6f00fe9455dab9"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969424_k5.json",
+   "sha256": "2fa0bc459b97610a4891a1151325c0acfc3f9ca530d1361ccba67ee687924c89"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969424_k6.json",
+   "sha256": "0eb1dd808e0c70abe0653281fd4946be603bbb023637fa7a410045eb83eb8466"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969424_k7.json",
+   "sha256": "7ef6dc7caa5c37098fe490c597c5b3757e8005fd9a9dcd177ebad5195f074e2e"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969427_k0.json",
+   "sha256": "ad1f58b80d78fa62d58767d725897109a6990467be025e2266263d1f9ebdd71e"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969427_k1.json",
+   "sha256": "4c9220cfc1cb02e86d404657fe7d0185634a75a344bcd9ba1d258aa56dd92598"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969427_k2.json",
+   "sha256": "6d34afd0594865f5949d4b2a432ff62560b0d807d4101de0c42934f42fde596e"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969427_k3.json",
+   "sha256": "d7c3d9cd02d28139dbb73d002b0c0887cefd4e6db97c021065222aa979cc3c55"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969427_k4.json",
+   "sha256": "08166d4cb69e31316e5cd13f7a72cd04ce5a6306639a7264aa8a6aa05337b4b5"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969427_k5.json",
+   "sha256": "a295ea786b72c6c2781c3341cea38c04df5990f22a58d781017f9c23ca5aea4e"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969427_k6.json",
+   "sha256": "1df0f7626e768ced6f3caf3919164c6cc6747b62ed082fbd71731821a8ca8e67"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969427_k7.json",
+   "sha256": "fda24d59b32e76e006d2ab8690282edebb16dd7b58a4353c8a156b4609868fac"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969430_k0.json",
+   "sha256": "0b60cc441c3fa3dc5788301c748a98f31703652d3eef1420cd298520f4847854"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969430_k1.json",
+   "sha256": "318fd39ad57ec740c48ae45d9266aaa4357e57b979b2e716410064610230d5cd"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969430_k2.json",
+   "sha256": "b0924cf0926b79f1bccbbf82ed1966398b77f0d2b36a93cb4ee9e0f3aef6851c"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969430_k3.json",
+   "sha256": "230e8bb2d91d91fe52c7415d051510d0999a0f1fb35d319a262bf2f47106823d"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969430_k4.json",
+   "sha256": "345f4937658603ee3b862d3d8d64f4ea428b5d29c6dca20e20de09048cbc62d9"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969430_k5.json",
+   "sha256": "d1a6c3129e9a46cf62d8dc2650303dd0d5d3036b2047aa91131e2a2fc8044568"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969430_k6.json",
+   "sha256": "741c7763c8972646afc70679687d6cf46083bdaf60ce7f2d2b66bcff4e9d26a1"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969430_k7.json",
+   "sha256": "63ab6b495fc6a3dca044b2c423345bad69b3e4e4997463b77353657ae9bd1f2a"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969433_k0.json",
+   "sha256": "fa296ef75ff279f69b9b9698fe406c777a23063eff374b5e251b6f087c74d828"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969433_k1.json",
+   "sha256": "9a22e6b71964f94da1acb5eec8304effa9e6632b3cfac3a63fd50271231128dc"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969433_k2.json",
+   "sha256": "be5fc890882a01d1b8a29d1c96baf92918f31f4fc7ebcb18d8cd4a4a232e836c"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969433_k3.json",
+   "sha256": "a5795b3a21a825c77fc1302f16003db38c82b6e0bc8d3ba4093373600b7c3f70"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969433_k4.json",
+   "sha256": "137edb47dd9f603d9da4362e842692eb3baa0a6d23018e65137c00fb577a8000"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969433_k5.json",
+   "sha256": "63bfafd6c841ab05860858b9711a9c0819e5da6db5a9c414eaa1a02b4a057de6"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969433_k6.json",
+   "sha256": "90a715be77b4821c82a5a8c312539f6aedf29514c0594ca578136e0ce63a728c"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969433_k7.json",
+   "sha256": "bfe8c332c548a0808acd81a8cd57f5777d400b44e25342db9796e95307de6fb0"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969436_k0.json",
+   "sha256": "2c2ec81186b96da499e19fa68ea9d2b0147c7cef71fb6936073d2bc9b6d9c150"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969436_k1.json",
+   "sha256": "df8743ace559ebcdf75cbe30653c0eb89a4b59adab88979ac8b5353f6396c847"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969436_k2.json",
+   "sha256": "ce922902fa0a0f4495bf28427a924092ded2059817bcdf29bb0d6c7a84d46c27"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969436_k3.json",
+   "sha256": "09b085c071e3d6090d3c02d6e23e8bed651524a505be2f694a6171b3dcfe9b77"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969436_k4.json",
+   "sha256": "1cc7df59b5f53cec4dcf84312c520d5ee68dea5acd9cef7a05ea89fe64a55ced"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969436_k5.json",
+   "sha256": "156cd0eab3c9b093c75a65c9896671d6ba1134346f927157f61cae22a958c1af"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969436_k6.json",
+   "sha256": "412ddc52fcb6b72300b89b9b4bd7cef623187fb140b1c1ef28b225c3ccccd5a6"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969436_k7.json",
+   "sha256": "52719bc14db527280d5ffc1ed6336bd411764dfbd988312c529d2d81e4b0be72"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969439_k0.json",
+   "sha256": "0e8ec279e4429fff8250c7ed1d10d3fe2b4348d3e1d73a23f5157a32685e6942"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969439_k1.json",
+   "sha256": "c2b441fd267d7717f3cb91ecb0c399d87b9101163895f6d3d1c0285144b0c39d"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969439_k2.json",
+   "sha256": "1df9e8620f540a7509bc19e26506323af3c1f2029e8012f5e7ee59a74a78a6ac"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969439_k3.json",
+   "sha256": "18f5534b3dc4d1502b8f1d295a4f2bba360ab22b5ebed686e15d77bb7fc2624a"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969439_k4.json",
+   "sha256": "2a678925eb4197195903e21aed6c0427ea402954e4f47ab659edc3154aa1adf6"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969439_k5.json",
+   "sha256": "574bf36f071ec55cd7965170cebe5778794b34f15048e8c2f5f3efa5a3bbd67d"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969439_k6.json",
+   "sha256": "b0c30ec6f9cf47fed35ab0c0ad21fbc20032718d50890a0fe8ec080210f3b712"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard1\\w969439_k7.json",
+   "sha256": "f4aea58d1666948d8c2d773ee329665bc68744e44561dc34656a402aafc93cec"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969422_k0.json",
+   "sha256": "ce109b244788727d169b0fc7ddcaf2457de1f7f5f799514774f263c5eac46efa"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\IDENTITY.json",
+   "sha256": "88336bdf19ef95c0413bab0e3036d4a1b05d56fafb509dd18b4677be9587ecbc"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969422_k1.json",
+   "sha256": "e74f9b731a9cbef62deb5c2b3373be21934ffbc4343ac15fa7aa55c700a2dafa"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969422_k2.json",
+   "sha256": "cc0ea0a122fcd4878d32a4385c9945727f8e937455bfc2ddadccef1823212c41"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969422_k3.json",
+   "sha256": "faaed77312e9cf43481d34b2bb851de95812f438c6a8d648e32b9d84dc3854f2"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969422_k4.json",
+   "sha256": "ac627f8f99a576af42b90e44ab5c2f251099fbfb448ca3bc41bd55d6e414035c"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969422_k5.json",
+   "sha256": "4ab0148e5eb3ccb8a6869f3e9c51142b35937cb3159a21ded29665be1748eca1"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969422_k6.json",
+   "sha256": "2b821804a25abe37ed377a0ebda3cd7d19479df413dffac0a8c2c07ea6f60868"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969422_k7.json",
+   "sha256": "ddacbfdb187df10db70b610ae48d6640d00484b903c6711ef8f4eaa8c3a223bb"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969425_k0.json",
+   "sha256": "89196fa2849fa0974a2b9bdf3625adb89eebd74208ea307f3a825c35027793f6"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969425_k1.json",
+   "sha256": "4013bdcd680bec1453f846e5fca90550d0e09debb44d2cdadbf44a8d9ea3c481"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969425_k2.json",
+   "sha256": "4a1c3113dad29f5275aab1371ac807b18db06a9e372a3b54e96258c143326e45"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969425_k3.json",
+   "sha256": "d05dd598855ce0345e9be3af648048ba9c9722492238a605a3651ca88c17bbda"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969425_k4.json",
+   "sha256": "053ec3cc3f39177be8f37fda212fb17b93e66a914ef5276d440858cc50369654"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969425_k5.json",
+   "sha256": "140d80bfa0c4dede3e4bf6dd7722635718054de5f0a68ab2e929b74112babbeb"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969425_k6.json",
+   "sha256": "6398db2c9d77a7ba4986affe27dbbc1c9d22b10cc95a03c61ad217d956d6595f"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969425_k7.json",
+   "sha256": "dc93ff15505fd390d6c6d2959924fcc70c475eb6b1dfc4218e218333887a4ea4"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969428_k0.json",
+   "sha256": "89d6de939e170bccb79621038cdc5baa9513241fda60b4ed869110c04f47e1cb"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969428_k1.json",
+   "sha256": "f08746952ced98e3d1fe50b0ee5382856656431a4ef60f3070e864584b0198e8"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969428_k2.json",
+   "sha256": "1f0251c870b03cae817ea60d8a764be64f4a8b2dbdc437a99d740cabdbe2e871"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969428_k3.json",
+   "sha256": "3f83ba5090bf3b4f615353cd95ebe880b78d6ca5983830db0f23277b57199fc0"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969428_k4.json",
+   "sha256": "6ffbe7c1180b06a2f2fb41fda9d980a22139a0b1cf218dfa8ccf14d756437aff"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969428_k5.json",
+   "sha256": "afe76d5490fe410a2743da463a3953bb55a78b57035c71ba79401ca3ec8aad73"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969428_k6.json",
+   "sha256": "4e7c2bafb85464e07ba345e62dacf5f837f8d92484cdb105984181245acdbd75"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969428_k7.json",
+   "sha256": "aa8b8f47fa53b65682a70c86ccac9dee5613cd31512e5502e4329aa38c62ca69"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969431_k0.json",
+   "sha256": "544700c7ea24d6b47477e67efeeba0194f8c75d699aa76a978d4a3df57f7e4ae"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969431_k1.json",
+   "sha256": "74d58695aa38fb55e4f61f8e99b406fcdd4a1a3be2dd05a19d00c8aa087cccee"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969431_k2.json",
+   "sha256": "43270c91fd9eb9fdce5bbabe8e769ab0155d935d89d0645da6475e0f3e4efbcc"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969431_k3.json",
+   "sha256": "9154aaf6f0b6b57734c2569d888d691a83e0061050b6188e3d39306214adc4ee"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969431_k4.json",
+   "sha256": "af6eb0b8f0a317e2cbf1e040e642b8e1825ec6ef4f5677ed79bea341e720215c"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969431_k5.json",
+   "sha256": "efc9d91d060f783b85f571e9b7bbb70ff94ee3c640b33d08fda46cc807d81d0f"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969431_k6.json",
+   "sha256": "87e745c51d0b6c4583dc33d3ae78872ff53eb46163e80d96ec639d4d7b1bbcc5"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969431_k7.json",
+   "sha256": "266adb9d67c86b61bc9f118445ceacb311965b3163cb002bdc95758ae50f1678"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969434_k0.json",
+   "sha256": "7a1b8992a3da136482d0f779d1d6ba18dc0715580c74f6303ac003bec9bcdad3"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969434_k1.json",
+   "sha256": "d0ad0b13ae0c37922e50e88a18735029ce15c61622167fca816923f5f1a3e0d8"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969434_k2.json",
+   "sha256": "8e90ccaecb1a18c2090a7830c3ea66a42df0f6c2bed75ec25e1692e34713d250"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969434_k3.json",
+   "sha256": "9e0c271af78124130850ffd942988fafc1488ef4ae6c8a4cab1005ef3305bb81"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969434_k4.json",
+   "sha256": "e47fa8938747cddb65bbee537b80a7ddbe0c73896655ce82df212611f19bfdcf"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969434_k5.json",
+   "sha256": "013a40879e44b1aaa3def165bdf2ae24e90cb28a4e5a340836e94ef33185e367"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969434_k6.json",
+   "sha256": "51657ae85ad6ff314478dd5b49496794f4e4514b7cef300fc303e021c7417e3f"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969434_k7.json",
+   "sha256": "a157deee011a78880177cf14fdbfc92f0c0c71a250eb7bc0927ad302ee61695c"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969437_k0.json",
+   "sha256": "5a0dd527e503b2c3b60317ee68b4c0d8d1c4a364c408bb0ec93092ffca9ac703"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969437_k1.json",
+   "sha256": "662bc5e8d178a3cc321f9763c941e733cf54762c09a2695b4e47a53ac5c43349"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969437_k2.json",
+   "sha256": "6d25236c6a869271ab7f916026836f9bb5254200d098bdde8595ec3378971859"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969437_k3.json",
+   "sha256": "ac00dc1ef905613b4e839bae8dd61ec4d6b22e4144540260e0c92da4a983bd4c"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969437_k4.json",
+   "sha256": "b5279dd311341467ffe1c1c7f47b2d7cd0fabdfa5b1722698b45aee71117bcbe"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969437_k5.json",
+   "sha256": "fc253dff3697a2d7ad5a0257965450da89cf19dafb16345e5bb93728e8a7cfac"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969437_k6.json",
+   "sha256": "4bb1f94bd460a99fe01c9970be05fbd94a84f603cc3d9602418b9ce743ca9c7c"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T093000+0800\\shard2\\w969437_k7.json",
+   "sha256": "b34e52df6d53101c985b49575d095eb36e6f6ee9a02f264e450fd63058c86487"
+  },
+  {
+   "path": "E:\\agent-work\\c4-wmteach\\docs\\paper_results\\wmteach\\SNAPSHOT_1793521615.json",
+   "sha256": "30db2bdc590d5b25ba7b7d0b5ab7e966c77325e25c614803af18d025a5a01b10"
+  },
+  {
+   "path": "E:\\agent-work\\c4-wmteach\\docs\\paper_results\\wmteach\\V5_QUALITY_SNAPSHOT_1793521619.json",
+   "sha256": "bdb87b8e269f1660f629b93417ef8fc78019331780f2299a1b0f887d3a7b1ea7"
+  },
+  {
+   "path": "E:\\agent-work\\c4-bdrank\\docs\\paper_results\\bdrank\\option_cache_audit.json",
+   "sha256": "0ab2b061dba483207bb023098dfb9eb4d198d2c8deefdfe7986d32ab6d25d90d"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb2-int\\docs\\rb2int\\COLLECT_20261101T161643+0800_gpuA.json",
+   "sha256": "da50d4e1c9a8b49c214a10b9209f375429b597268bfc28f0231c634004f5daeb"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb2-int\\docs\\rb2int\\COLLECT_20261101T161643+0800_gpuR.json",
+   "sha256": "0d001e06a9f6ca73649d760b2bbd62cbcb16454df08d262bd2dc6313087b7492"
+  },
+  {
+   "path": "E:\\agent-work\\c4-rb2-int\\docs\\rb2int\\FINAL_RUN_PLAN.json",
+   "sha256": "185c565df34e4150c90e4b12d55391ab29772c58ab84eff7c0dc3e50ff1caa80"
+  }
+ ],
+ "detector_sha256": "6de4df039e108508cf71f94abfe2e81136d5a9a502bb4803980411c0fa5b3f10",
+ "explicit_path_guard": true
+}

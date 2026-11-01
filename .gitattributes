@@ -131,3 +131,8 @@ R9_GATE2.md text eol=lf
 /tools/autonomy_e5/telemetry_audit.py -text
 /tools/autonomy_e5/summarize.py -text
 /tools/autonomy_e5/verify_report.py -text
+
+# S-BDRANK analysis sources and evidence use exact-byte SHA256 manifests.
+/docs/paper_results/BDRANK.md -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/docs/paper_results/bdrank/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+/tools/bdrank/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

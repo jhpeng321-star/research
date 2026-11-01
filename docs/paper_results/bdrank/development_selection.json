@@ -1,0 +1,53 @@
+{
+ "source": "FULL-v4/22cc32f6",
+ "horizon_selection": {
+  "120": {
+   "rule": "probability",
+   "development_mean_savings": {
+    "probability": 4.031952063242595,
+    "onset": -91.09926048914592,
+    "severity": -5.745283444722493,
+    "delay": -42.56388465563456,
+    "breakdown_then_delay": -51.650815884272255
+   },
+   "basis": "maximum development12 mean saving only; fixed rule order breaks equal development scores"
+  },
+  "300": {
+   "rule": "delay",
+   "development_mean_savings": {
+    "probability": 49.83077883720398,
+    "onset": -744.5929492115974,
+    "severity": -781.407355149587,
+    "delay": 230.2776034871737,
+    "breakdown_then_delay": -80.77002596855164
+   },
+   "basis": "maximum development12 mean saving only; fixed rule order breaks equal development scores"
+  },
+  "600": {
+   "rule": "delay",
+   "development_mean_savings": {
+    "probability": 278.15731223424274,
+    "onset": 391.275496840477,
+    "severity": -2.853799819943864,
+    "delay": 1694.56116604805,
+    "breakdown_then_delay": 1250.4428198337555
+   },
+   "basis": "maximum development12 mean saving only; fixed rule order breaks equal development scores"
+  }
+ },
+ "development_worlds": [
+  969420,
+  969421,
+  969422,
+  969423,
+  969424,
+  969425,
+  969426,
+  969427,
+  969428,
+  969429,
+  969430,
+  969431
+ ],
+ "reserved_labels_used": false
+}
