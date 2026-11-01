@@ -30,3 +30,9 @@
 - No collision/teleport either arm;19all-O0worlds bitwise equal. Full independent QA/report recomputation PASS.
 - Frozen original root COMPLETE/noSTOP/noincomplete; never relaunch. Unused authority is not a new dispatch.
 - This EXAM-only student did not establish generalization benefit. PlannerDEV never-fit roles preserved.
+
+## Fresh-session closure
+- Results/receipts committed as `7d5fe0c9`; resume report recomputation,31CPUtests,Ruff and diffcheck PASS.
+- Appended `S-DISTILL LIVE COMPLETE / NO MAPPO WIN` to the shared REGISTRATION.md on2026-11-01.
+- MAIN integration handoff: master ledger/route/index/result-summary updates remain MAIN-owned and pending.
+- Shared registration is outside this worktree and git-ignored by the MAIN repository; this committed handoff records its completion notice.
