@@ -83,7 +83,9 @@ REGISTERED = dict(
     top_k=4, finalists_per_k=2, screen_K=4, screen_H_min=120, final_K=8,
     final_H_min=300, release_s=120, final_H_max=600,
     thompson_bootstraps=4000, library_seeds=4, method='mppi', length_knots=1., frame='absolute', sigma=.5)
-ORIGINS = ('centre', 'mappo', 'library', 'sampled')
+# 'proposer': optional learned plan-proposer seeds (plan_proposer.proposal_seeds); used
+# only when explicitly passed as ``extra_seeds`` (default None = unchanged search).
+ORIGINS = ('centre', 'mappo', 'library', 'sampled', 'proposer')
 PLAN_TYPE = 'MPPI'
 
 
@@ -546,7 +548,7 @@ def sample_unscored(group, policy_traj, bounds, regime, seed, covariance=None, c
 
 
 def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None,
-           covariance=None, library=None, seed=None, config=None):
+           covariance=None, library=None, seed=None, config=None, extra_seeds=None):
     """Policy-centred MPPI/CEM joint-plan search with WM screening and K_final rescoring.
 
     record: request passed unchanged to ``evaluate`` (needs ``policy_residuals``
@@ -555,6 +557,9 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
     order) x seconds (array or {vid: list}), length >= max duration.
     Returns a JSON dict: accepted, plan (Thompson choice), top-k candidates with
     savings vs MAPPO / policy and P(best), comparator means, search diagnostics.
+    extra_seeds: optional iteration-0 seeds (dicts with ``perturbation_canonical``
+    on the current canonical grid and ``duration_s``; e.g. plan-proposer plans).
+    They take population slots and are WM-scored like every other candidate.
     """
     cfg = dict(REGISTERED, **(config or {}))
     durations = allowed_durations(cfg['durations_s'], cfg['max_duration_s'])
@@ -582,6 +587,11 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
         old_span = e.get('canonical_span_s') or durations[-1]
         z = _regrid(e['perturbation_canonical'], old_span, _span(cfg, durations, D), nc)
         seeds.append((z, D, 'library', None))
+    for e in extra_seeds or ():
+        z = np.asarray(e['perturbation_canonical'], float)
+        if z.shape != (m, nc) or int(e['duration_s']) not in durations:
+            raise ValueError('extra seed must be members x canonical knots with a registered duration')
+        seeds.append((z, int(e['duration_s']), 'proposer', None))
     pool, zs, log, futures = {}, {}, [], 0
     for it in range(cfg['iterations']):
         cands = []
@@ -638,6 +648,8 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
                finalists=[dict(id=p['id'], origin=p['origin'], duration_s=p['duration_s'],
                                saving_vs_mappo=float((costs['MAPPO']-costs[p['id']]).mean()),
                                saving_vs_policy=float((costs['policy']-costs[p['id']]).mean())) for p in finalists])
+    if extra_seeds:  # key absent by default: unchanged output bytes without seeds
+        out['extra_seeds'] = len(extra_seeds)
     if not t['accepted']:
         out.update(reason=t['reason'], plan=None, option=None, expected_saving=None)
         return out
