@@ -1,0 +1,132 @@
+{
+  "checked_at_utc": "2026-11-01T08:55:33.019670+00:00",
+  "purpose": "Outline/document QA only; no scientific result recomputed",
+  "status": "PASS",
+  "pdf_pages_including_references": 5,
+  "page_limit": 6,
+  "sections": [
+    "Introduction",
+    "Related Work",
+    "Problem Formulation",
+    "Method",
+    "Experimental Setup",
+    "Results",
+    "Discussion and Limitations",
+    "Conclusion"
+  ],
+  "verified_citation_keys": [
+    "barnett_counterfactual2026",
+    "castellini_drreinforce",
+    "chai_macd2024",
+    "chen_merge2021",
+    "foerster_coma2018",
+    "han_shapley2022",
+    "lee_circles2024",
+    "liu_physics_wm2026",
+    "lopez_sumo2018",
+    "oefinger_validate2026",
+    "wolpert_tumer2002",
+    "wu_flow2022",
+    "yu_mappo2022"
+  ],
+  "bibliographic_entries_match_inherited_verified_bytes_modulo_whitespace": true,
+  "figure_placeholders": 4,
+  "table_placeholders": 2,
+  "tex_pending_markers": 25,
+  "tex_citation_needed_markers": 2,
+  "source_comment_count": 15,
+  "overfull_or_undefined_latex_warnings": false,
+  "pages": [
+    {
+      "page": 1,
+      "words": 631,
+      "red_spans": 85,
+      "outside_page": []
+    },
+    {
+      "page": 2,
+      "words": 722,
+      "red_spans": 75,
+      "outside_page": []
+    },
+    {
+      "page": 3,
+      "words": 724,
+      "red_spans": 81,
+      "outside_page": []
+    },
+    {
+      "page": 4,
+      "words": 573,
+      "red_spans": 100,
+      "outside_page": []
+    },
+    {
+      "page": 5,
+      "words": 709,
+      "red_spans": 115,
+      "outside_page": []
+    }
+  ],
+  "artifacts": {
+    "main.tex": {
+      "sha256": "827d093448c0e99669004d5d1dbc21e79c712fb791837e4810ef1ebd3942fd85",
+      "bytes": 26342
+    },
+    "refs.bib": {
+      "sha256": "2968bb9fd98f30957c02a0623371cbeb2f0b082ca233c49a8086da0c43c0c3dd",
+      "bytes": 5944
+    },
+    "main.pdf": {
+      "sha256": "37e10a533eb788a1c9696bb90a62aafd53968f80fe48819ce9f27a5f8accb7c3",
+      "bytes": 243069
+    },
+    "OUTLINE_IEEEIV.md": {
+      "sha256": "5b14768b2ebf0cd2706dc95ec2dd9e1939ee9e0caf90f1dfcac2a69c16525512",
+      "bytes": 30103
+    }
+  },
+  "source_reports_at_qa_cut": {
+    "exact_planner": {
+      "path": "E:\\agent-work\\c4-coopplan\\docs\\paper_results\\COOPPLAN.md",
+      "sha256": "965bd7c5b286aac02344321f03919abdd124f84c88ddf96fe42d3f984da3c24a"
+    },
+    "opportunity_and_bandit": {
+      "path": "E:\\agent-work\\c4-coopbandit\\docs\\paper_results\\COOPBANDIT.md",
+      "sha256": "3a1148560492f10893394073c0a32db6d30d48bb346cd8091870d3df6e6ce46c"
+    },
+    "wm_teacher_diagnostic": {
+      "path": "E:\\agent-work\\c4-wmteach\\docs\\paper_results\\WMTEACH.md",
+      "sha256": "9512896cf51e9a63d06cfa1671c4e10bca8faa557d86769b67060716a8bb298b"
+    },
+    "negative_distillation": {
+      "path": "E:\\agent-work\\c4-distill-1101\\docs\\paper_results\\DISTILL.md",
+      "sha256": "b1fb3328b92b5a9535cbee839b23c9ac7e51c8685a5745cc2778e7a67140dc6b"
+    },
+    "earlier_learner_design": {
+      "path": "E:\\agent-work\\c4-coopnative\\docs\\paper_results\\COOPMWM_DESIGN.md",
+      "sha256": "941c9387107f9654d7857f2ceec8f7dbfef9fe6312f1e6c35dde62410b88ed29"
+    },
+    "wm_planner_status": {
+      "path": "E:\\agent-work\\c4-wmplan\\docs\\paper_results\\WMPLAN.md",
+      "sha256": "1b21264fe9e3e877d4f3265fdb1f77e56d6e6957f2bf96b64c8b78d47ee57006"
+    },
+    "cached_action_ranking": {
+      "path": "E:\\agent-work\\c4-bdrank\\docs\\paper_results\\BDRANK.md",
+      "sha256": "f0a8b6549dda5697c329f331fdd15df91c525f7c7e884b63b2c2b71f0b835896"
+    },
+    "owner_authority": {
+      "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\REGISTRATION.md",
+      "sha256": "337d61eb433fd360d807767ca9707e5dea76e36225e265fb3860f41b5585e58c"
+    },
+    "verified_bibliography": {
+      "path": "E:\\agent-work\\c4-papera\\docs\\paper\\paperA_cooperation\\refs.bib",
+      "sha256": "2401075b868a49e8b783b12dcdee5a07f137e70eb716bce54ea06f5f0b31ecbc"
+    },
+    "verification_receipt": {
+      "path": "E:\\agent-work\\c4-papera\\docs\\paper\\paperA_cooperation\\reference_verification.csv",
+      "sha256": "cdb4b1409d2850cb965e5d2b94440fc0a708498a3809894dd61ebd5f05e88cab"
+    }
+  },
+  "visual_inspection": "Rendered all pages; inspect qa_render/contact_sheet.png and page images"
+}
