@@ -198,7 +198,7 @@ TRAIN exploration credit is not paired dev-policy performance.
 
 <!-- COOPFREE OWNER1511 BEGIN -->
 ## OWNER15:11 live continuation
-Observed UTC 2026-11-01T10:57:20Z.
+Observed UTC 2026-11-01T10:59:24Z.
 cpuQ owned1579328/start53193103 alive=True; four nice19 workers, load admission12.
 Budget: 4,221,333 precharged / 4,221,333 closed-actual sim-s; total cap6,000,000.
 Corrected u001 is inherited; every subsequent update uses fresh exploration. TRAIN effects are not DEV gains.
@@ -302,4 +302,5 @@ SHA256 `ee3dc3db0e951f6769c3d59e8ecaa868693e85dddd8ee4266553e5179b2c009b`; recei
 - Prospectively compare group ES perturbations by effect/gradient SNR per charged sim-s.
 - Register new phase, CPU/source binding and budget before physics; retain all completed arms.
 Discovery: observational COOPBEHAV/clustering exports are separate from exact HOLD C_G; do not infer paired native-release mechanisms.
+Registered phase fix: {"es": true, "es_sigma": [4.651557406006064, 0.5168397117784516], "first_update": 7, "id": "owner1511_fix_after6", "measured_execution_share": 0.9358974358974359, "scale_factor": 1.0336794235569031, "sigma": [4.651557406006064, 0.5168397117784516], "state_focus": "double signed full-EXAM observable log-priority; retain ordinary support; no action templates"}.
 <!-- COOPFREE OWNER1511 END -->
