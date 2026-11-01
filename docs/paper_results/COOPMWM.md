@@ -1,5 +1,30 @@
 # S-COOPMWM — live checks
 
+## OWNER18:34 — engineering HOLD (fresh-session recovery)
+- Verified supervisor PID1945256 boot/start identity; paused it with SIGSTOP at the
+  update-2 sampling gate. B/R are held at update1/not-started respectively. The
+  interleaved supervisor also pauses A until safe arm-independent continuation exists.
+- All70 jobs are closed;83,200sim-s charged. No new SUMO, duplicated job or checkpoint
+  replacement. Existing GPU inference/exact receipts are retained for wiring diagnosis.
+- `coopmwm/HOLD_1834.json` records the owned pause. No numeric sampling binding will
+  release learning before action-response regression and a registered repair amendment.
+
+## 2026-11-01 18:31 — source-prior ABI qualified; primary checkpoints preserved
+- CPU21: **50PASS/zero skips/1.71s/zero SUMO**, including non300-clock integer source
+  sufficient statistics, real frozen MAPPO parity and per-future proposal parity.
+- First availability-qualified H300 probe exposed a pre-rollout integer-count API fault;
+  failed dual1 services ended. Both remote inventories verified no surviving task GPU process.
+- Fresh immutable dual2 services: gpuA ownedPID520375/gpuR ownedPID954996; original
+  GPU deadline retained. They now qualify/timestamp an actual available K8 H300 proposal.
+- Source encoding uses rounded FIT-prior rate×current-clock pseudo-counts, NOT measured
+  source requests. This current-clock pseudo-exposure is weaker than retaining the
+  donor posterior exposure; no causal/full-history source-conditioning claim is made.
+- All u1 weights/Adam/RNG, original queue, completed forecasts and exact twins are kept.
+  **83,200sim-s charged /70closedjobs**, no physical duplicate; u2 remains gated on
+  numeric registered sampling. Allocated4,918,800/cap6,000,000 is unchanged.
+- Owned30s publisherPID1116 will publish and commit E2 windows/full agreement CIs,
+  every UPDATE, every4-update TRAIN check, dev/final and STOP receipts for up to24h.
+
 ## 2026-11-01 18:10 — owner17:55 dual-GPU amendment active
 - Registered unchanged **4,918,800 allocated /6,000,000 cap**,1,081,200 unallocated.
 - CPU18/19: **47PASS/zero skips/zero SUMO**; finalCPU19 2.87s. Design remains70lines.

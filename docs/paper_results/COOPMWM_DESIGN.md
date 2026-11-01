@@ -15,8 +15,8 @@
 14. WM fixed FULL-v4 source22cc32f6; later qualified v5 requires a new registered arm.
 15. Reuse WMTEACH scale.futures K8 batching and option_controller executor/safety.
 16. R=B except uniform AVAILABLE O1-O4 proposer, no WM/saving filter; same executors/W10 setpoints.
-17. Observable replay roster only; fitted joint FIT driver population and uniform32FIT source prior.
-18. Cold motion/controller memory and unobserved source prior disclosed; no realised future inputs.
+17. Roster only; joint FIT driver prior/uniform32FIT source: integer round(rate*t) pseudo-counts/exposure t.
+18. Cold memory/unobserved source pseudo-exposure disclosed; not causal request conditioning; no future inputs.
 19. Inherited option group=two upstream mainline CAVs within100m; ordinary windows also sampled.
 20. u1 historical p=1/900 dense,1/3600 ordinary; u2+ fixed throughput-fit p,p/4 shared by B/R/seeds.
 21. FULL-v4 K8 CRN H300 scores policy action/MAPPO/O1-O4; propose iff saving vs BOTH baselines>0.

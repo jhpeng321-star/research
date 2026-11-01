@@ -1,5 +1,8 @@
 # S-COOPNATIVE — design/build complete, WAIT_MAIN_APPROVAL
 
+> SUPERSEDED by owner S-COOPMWM MAPPO-start WM-guided exploration. Native-start was
+> not run. Current live continuation: `HANDOFF_COOPMWM.md`; preserve the history below.
+
 - Worktree `E:/agent-work/c4-coopnative`, branch `c4/coopnative`, parent `7f2a96c3`.
 - Implementation/CPU commit `8368ce1a`; design61lines/SHA
   `1866111aa1b7e5f6b9b521e913c3f002b054db86949e9eb0c5633f59985ab989`.
