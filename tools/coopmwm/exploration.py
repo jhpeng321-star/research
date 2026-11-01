@@ -185,7 +185,9 @@ def trust(previous, records, bootstraps=10000):
     prior = previous if isinstance(previous,dict) else dict(beta=float(previous))
     keys = list(BUCKETS); ws = sorted({r['world'] for r in records})
     # Columns: numerator/denominator per proposal bucket, then own per regime.
-    x = np.zeros((len(ws),20)); wi = {w:i for i,w in enumerate(ws)}
+    nb,nr=len(keys),len(REGIMES)
+    own_offset=2*nb
+    x = np.zeros((len(ws),2*(nb+nr))); wi = {w:i for i,w in enumerate(ws)}
     treated_worlds = {k:set() for k in keys}
     for r in records:
         traffic = r.get('regime','ordinary'); i = wi[r['world']]
@@ -194,13 +196,13 @@ def trust(previous, records, bootstraps=10000):
             j = 2*keys.index(key); weight = 1/r['q']
             treated_worlds[key].add(r['world'])
         elif r['route']=='policy':
-            j = 16+2*REGIMES.index(traffic); weight = 1/(1-r.get('p',r['q']))
+            j = own_offset+2*REGIMES.index(traffic); weight = 1/(1-r.get('p',r['q']))
         else:continue
         x[i,j] += weight*r['advantage'];x[i,j+1] += weight
     out = dict(beta=prior['beta'], buckets={}, worlds=len(ws),
         estimand='H300 SUMO critic residual; selected proposal-type vs own in same observable regime; not exact causal credit',
         executed=sum(r['executed'] for r in records), own=sum(r['route']=='policy' for r in records))
-    valid = [i for i,k in enumerate(keys) if len(treated_worlds[k])>=2 and x[:,17+2*(i%2)].sum()>0]
+    valid = [i for i,k in enumerate(keys) if len(treated_worlds[k])>=2 and x[:,own_offset+1+2*(i%nr)].sum()>0]
     if len(ws)<2 or not valid:
         out.update(ci95=None,reason='insufficient proposal evidence in two independent worlds')
         out['buckets']={k:dict(beta=bucket_beta(prior,*k.split('|')),ci95=None,shrinkage_to_local=0.) for k in keys}
@@ -209,13 +211,13 @@ def trust(previous, records, bootstraps=10000):
     counts = rng.multinomial(len(ws),np.full(len(ws),1/len(ws)),size=bootstraps)
     totals = x.sum(0); draws = counts@x
     def contrasts(t):
-        z = t.reshape(*t.shape[:-1],10,2)
+        z = t.reshape(*t.shape[:-1],nb+nr,2)
         means = np.divide(z[...,0],z[...,1],out=np.full(z.shape[:-1],np.nan),where=z[...,1]>0)
-        local = means[...,:8]-means[...,8:][...,np.arange(8)%2]
+        local = means[...,:nb]-means[...,nb:][...,np.arange(nb)%nr]
         # Pooled contrast keeps the observed proposal regime composition.
-        den = z[...,:8,1].sum(-1)
-        controls = np.nan_to_num(means[...,8:][...,np.arange(8)%2])*z[...,:8,1]
-        a,b = z[...,:8,0].sum(-1),controls.sum(-1)
+        den = z[...,:nb,1].sum(-1)
+        controls = np.nan_to_num(means[...,nb:][...,np.arange(nb)%nr])*z[...,:nb,1]
+        a,b = z[...,:nb,0].sum(-1),controls.sum(-1)
         delta = a-b
         # Cancellation at machine precision is a numerical zero, independent
         # of reward units; never turn roundoff around zero into a trust decision.

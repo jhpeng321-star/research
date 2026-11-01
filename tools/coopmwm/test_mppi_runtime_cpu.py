@@ -7,6 +7,54 @@ from .speed2_transfers import vector_table
 
 
 class LongProfileTests(unittest.TestCase):
+    def test_MPPI_trust_columns_never_alias_the_own_policy_controls(self):
+        from .exploration import trust
+        records=[]
+        for world in range(4):
+            for regime,treated,control in (('ordinary',30.,10.),('merge-dense',-10.,10.)):
+                records.extend([dict(world=world,executed=True,q=.5,p=.5,regime=regime,option='MPPI',route='wm',advantage=treated),
+                    dict(world=world,executed=False,q=0.,p=.5,regime=regime,option=None,route='policy',advantage=control)])
+        result=trust(1.,records,bootstraps=200)
+        self.assertEqual(result['mean'],0.)
+        self.assertGreater(result['buckets']['MPPI|ordinary']['mean'],0.)
+        self.assertLess(result['buckets']['MPPI|merge-dense']['mean'],0.)
+        self.assertEqual(result['buckets']['MPPI|merge-dense']['beta'],0.)
+        self.assertEqual(result['buckets']['MPPI|ordinary']['beta'],1.)
+
+    def test_R_uses_the_same_policy_centre_and_never_scores_candidates(self):
+        import tempfile
+        from pathlib import Path
+        from .plan_client import guide
+        from .storage import write
+        from .acceleration import encode
+        from .mppi_search import sample_unscored
+        observed=[dict(vid=v,s_m=s,v_mps=10.,lane=lane,is_cav=True,length_m=5.)
+            for v,s,lane in [('a',-20.,1),('b',-40.,2)]]
+        centre=[[i/1000 for i in range(300)],[-i/1000 for i in range(300)]]
+        sample=dict(context=encode(observed),own_action=[[0.],[0.]])
+        with tempfile.TemporaryDirectory() as tmp,patch('tools.coopmwm.centre_client.trajectory',return_value=(centre,dict(K=1,H=300))) as rpc,patch(
+                'tools.coopmwm.plan_client.sample_unscored',wraps=sample_unscored) as sampled,patch(
+                'tools.coopmwm.mppi_search.search',side_effect=AssertionError('R candidate WM scoring forbidden')):
+            q=Path(tmp)/'quota.json'
+            write(q,dict(sampling={'ordinary':.95,'merge-dense':.95},tickets=[dict(id=0,regime='ordinary',group_size=2,duration_s=300)]))
+            fn=guide(dict(id='R1',world=dict(seed=986000),queue_root=tmp,accel_bounds=[-3.,2.6],arm='R',update=1,
+                random_quota=str(q),gpu_deadline=1e12,policy_state={}),torch.Generator().manual_seed(5))
+            fn.observe(observed,300)
+            result=fn(observed,{'a':2.6,'b':2.6},300,sample)
+            self.assertTrue(result['accepted']);self.assertEqual(sampled.call_args.args[1],centre)
+            self.assertEqual(rpc.call_count,1);self.assertEqual(result['plan']['duration_s'],300)
+            self.assertNotIn('search_learning',rpc.call_args.args[1])
+
+    def test_centre_service_calls_only_the_existing_comparator_trajectory_extractor(self):
+        from .centre_service import result
+        record=dict(state_id='r',rows=[],group=[])
+        with patch('tools.coopmwm.mppi_runtime.imagined_centres',return_value=([[.1]*300],[[0.]*300],dict(K=1,H=300))) as centre,patch(
+                'tools.coopmwm.mppi_search.search',side_effect=AssertionError('no scoring')):
+            value=result(None,record,None)
+        self.assertEqual(centre.call_count,1)
+        self.assertEqual(value['candidate_scores'],0)
+        self.assertEqual(value['policy_traj'],[[.1]*300])
+
     def test_imagined_nonzero_actor_matches_observable_plant_actor(self):
         from .acceleration import Policy,encode
         from .policy_wm import actor_state,load_actor,residuals

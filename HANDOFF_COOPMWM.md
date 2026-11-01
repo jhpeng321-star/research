@@ -1,5 +1,26 @@
 # S-COOPMWM live continuation — OWNER22:08 WARM MEMORY HOLD
 
+LATEST ENGINEERING: B/R MUST launch immutable CPU8, not CPU6 or CPU7. New
+WARM_BR_CPU8_REGISTRATION and per-arm WARM_{B,R}_RUNTIME_BINDING_V2 source
+/home/ubuntu/coopmwm20261102_mppicpu8:126PASS/0skips/10.01s/zeroSUMO. MPPI trust
+now derives10type/regime+2control columns dynamically (old8bucket offsets aliased
+MPPI and own controls). Caught before ANY B/R update. A CPU6 has no MPPI actions,
+continues unchanged, latest at leastu12. Warm A-u4/u8 curves now in COOPMWM.md.
+R held-command centre proxy was ALSO corrected before outcomes: R now obtains
+exactly B's warm K1/H300 CURRENT-policy trajectory extraction, then samples a
+generic plan with ZERO candidate WM scores; no library/covariance learning.
+Baseline-only centre helper source CPU7 is separately hash-audited/registered;
+local centre bridge41580 waits for B-u4 pause before occupying a GPU (no B delay).
+R's actual PPO/guide source is CPU8(V2 binding supersedes unstarted CPU7 runtime).
+GPU A warm service startup on /root/coopmwm20261102_warmservice1_w0 runs under
+owned local bridge36300; inspect WARM_BRIDGE/log/worker-status before action.
+GPU R qual2 failed H420 allocator65% cap with7.83GiB physicalfree; exited.
+New qual3 PID15463/start4217806853, allocator80%, adopted finishedE2/H120 by SHA;
+H420 EXACT0 and empty-cold passed, group4/6 timing still running. Never duplicate.
+Use warm_release_ops collect / worker-status; stage+admit gpuR only after qual3 exits.
+Nexec10/full dimension-scaled medium search retained for quality; final warm
+release + B/R dispatch still require all timing/startup receipts and registration.
+
 LIVE A: warm1 registered source CPU6(123PASS/0skips/8.87s/zeroSUMO), A-only
 PID2767879/start56464482/bootb8bc1fcb-c656-4e1e-a43d-4543118c834e. It resumes
 exactA-u4/Adam/RNG ->48, checks4/dev16, no final access; u5 already complete.

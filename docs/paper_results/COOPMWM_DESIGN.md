@@ -14,7 +14,7 @@
 13. Critic GAE e-folding400s; complete900s task after300s warmup, terminal0.
 14. WM fixed FULL-v4 source22cc32f6; later qualified v5 requires a new registered arm.
 15. Reuse WMTEACH futures/executors; speed2 masked-virgin-prefix pure geometry, full1600-slot source/controller; transfers opt-in exact parity.
-16. R=random unscored generic policy-centred profiles; matched count/regime/group-size/duration; noWM/library/covariance learning.
+16. R=random generic profiles around SAME warm current-policy centre(K1/H300); zero candidate WM scoring/ranking, no library/covariance learning; matched count/regime/size/duration.
 17. Roster only; joint FIT driver prior/uniform32FIT source: integer round(rate*t) pseudo-counts/exposure t.
 18. Rolling60s genuine observable history -> frozen FULL-v4 encoder/motion posteriors/shrinkage; unseen prior; CRN across candidates; source pseudo-exposure disclosed.
 19. Groups2..6 anywhere/all lanes/ramp,100m chaining; >6 contiguous subsets prefer lane diversity, smallest span, downstream; disjoint rechaining.

@@ -91,14 +91,17 @@ def guide(job,generator):
                     write(match/(r['state_id']+'_START.json'),dict(ticket=selected_ticket['id']))
             if selected_ticket is None:
                 return dict(accepted=False,reason='matched quota exhausted',behaviour=b)
-            # Model-free current-command continuation; no WM evaluation, labels,
-            # library or learned covariance enters R's random choice.
-            centre=[[float(np.clip(commands[v]+deltas[v],*bounds))]*300 for v in members]
+            # Same CURRENT-policy trajectory extraction as B, no candidate scoring.
+            # The model is used only for this shared nuisance-centre calculation.
+            # Random choice/covariance/library remain independent of WM rankings.
+            from .centre_client import trajectory
+            centre,centre_receipt=trajectory(root,r,job['gpu_deadline'])
             plan=sample_unscored(chosen_group,centre,bounds,traffic,
                 int(torch.randint(2**31,(),generator=generator)),duration_s=selected_ticket['duration_s'])
             result=dict(accepted=True,plan=plan,option=plan['family'],expected_saving=None,
                 known_family=False,record_sha256=digest(r),random_match=dict(path=str(match),key=r['state_id']),
-                centre_contract='model-free current-policy raw-command continuation; no WM')
+                centre_contract='same warm K1/H300 current-policy trajectory as B; zero candidate WM scores',
+                centre_receipt=centre_receipt)
         b.update(queried_option=result.get('option'),proposal_accepted=result['accepted'],
             query_wall_s=result.get('query_wall_s',0.))
         if result['accepted']:

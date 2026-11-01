@@ -30,6 +30,13 @@ def verify(root,arm):
         release=read(root/'WARM_RELEASE.json')
         assert release['pass_'] and release['N_exec']>=10
         assert release['release_amendment_sha256'] in text
+    if arm in ('B','R'):
+        runtime=read(root/f'WARM_{arm}_RUNTIME_BINDING_V2.json')
+        assert runtime['cpu']['pass_'] and not runtime['cpu']['skips']
+        assert runtime['amendment_sha256'] in text
+        source=Path(runtime['source_root'])
+        assert Path(__file__).resolve()==source/'pytools/tools/coopmwm/warm_runner.py'
+        for name,h in runtime['hashes'].items():assert sha(source/name)==h,arm+' runtime source '+name
     install_accounting()
     return b
 

@@ -24,7 +24,9 @@ assert not s or s[21]==d['start_ticks']
 print(json.dumps(dict(root=str(r),unix=time.time(),state=s[2] if s else 'exited',
  receipts={{n:json.loads((r/n).read_text()) for n in names if (r/n).exists()}})))''',timeout=35))
         combined[host]=value
-    write(ops.EVIDENCE/f'WARM_RELEASE_COLLECT_{int(time.time())}.json',combined)
+    from .protocol import digest
+    target=ops.EVIDENCE/('WARM_RELEASE_STATE_'+digest({h:v['receipts'] for h,v in combined.items()})[:16]+'.json')
+    if not target.exists():write(target,combined)
     timing={str(size):dict(host=host,wall_s=value['receipts'][f'SEARCH_GROUP{size}.json']['wall_s'],
         plans_per_hour=value['receipts'][f'SEARCH_GROUP{size}.json']['plans_per_hour'],
         centre_open_loop_gap=value['receipts'][f'SEARCH_GROUP{size}.json']['result']['centre_open_loop_gap'])
@@ -112,12 +114,60 @@ names=['STARTUP_WARM_BATCH_SINGLE_K4_H120.json','STARTUP_WARM_BATCH_SINGLE_K8_H3
  'STARTUP_PARITY_K4_H120.json','STARTUP_PARITY_K8_H300.json',
  'STARTUP_WARM_PARITY_K4_H120.json','STARTUP_WARM_PARITY_K8_H300.json','SERVICE_OWNER.json']
 print(json.dumps(dict(unix=time.time(),receipts={{n:json.loads((r/n).read_text()) for n in names if (r/n).exists()}})))''',timeout=30))
-    write(ops.EVIDENCE/f'WARM_WORKER_STATUS_{host}_{int(value["unix"])}.json',value)
+    from .protocol import digest
+    target=ops.EVIDENCE/f'WARM_WORKER_STATE_{host}_{digest(value["receipts"])[:16]}.json'
+    if not target.exists():write(target,value)
     print(json.dumps(dict(host=host,receipts=list(value['receipts']))));return value
 
 
+def release():
+    from .warm_report import summary,publish
+    from .warm_protocol import budget
+    target=ops.EVIDENCE/'WARM_RELEASE_REGISTRATION.json';assert not target.exists()
+    data=collect()
+    assert 'SEARCH_GROUP2.json' in data['gpuA']['receipts']
+    assert all(f'SEARCH_GROUP{n}.json' in data['gpuR']['receipts'] for n in (4,6))
+    workers={h:worker_status(h) for h in ('gpuA','gpuR')}
+    for host,w in workers.items():
+        assert len(w['receipts'])==7 and 'SERVICE_OWNER.json' in w['receipts']
+        for name,v in w['receipts'].items():
+            if name=='SERVICE_OWNER.json':continue
+            assert v['pass_'] and v['max_cost_error']==0.,host+name
+    cpu=read(ops.EVIDENCE/'WARM_BR_CPU8_REGISTRATION.json')
+    assert read(ops.EVIDENCE/'WARM_R_CENTRE_REGISTRATION.json')['runtime']['cpu']['pass_']
+    value=summary(data)
+    # Use the full dimension-scaled medium search for quality, the owner-selected
+    # minimum10starts; report the measured capacity, not an acceptance-based ETA.
+    fastest=value['timing']['2']['plans_per_hour']
+    slowest=min(t['plans_per_hour'] for t in value['timing'].values())
+    value.update(pass_=True,N_exec=10,workers=workers,cpu_runtime=cpu,budget=budget(),
+        capacity_note='group-size benchmarks use different hosts/states; no end-to-end execution ETA until an update closes',
+        per_update_single_device_capacity_floor_hours=[10/fastest,10/slowest],
+        size_choice='retain full quality-first dimension-scaled medium MPPI; Nexec10 minimum, positive acceptance unknown')
+    write(ops.EVIDENCE/'WARM_RELEASE_AMENDMENT.json',value);h=sha(ops.EVIDENCE/'WARM_RELEASE_AMENDMENT.json')
+    line=('\nS-COOPMWM WARM MEMORY QUALIFIED / B-R RESTART REGISTERED amendmentSHA'+h+
+        ': rolling60s causal per-driver FULL-v4 posteriors/shrinkage, empty==cold, both-host warm batched/single and cold/warm full-fast EXACT0 gates; '
+        'registered E2 cold/warm decision/sign/timing diagnostic reused exact labels. CPU8 learner126PASS; source-bound CPU8 B/R u0, '
+        'R baseline-only same-policy centre and zero candidate scoring. Full medium dimension-scaled MPPI, K4H300 screen, '
+        'K8Hfinal=min(600,max(300,D+120)), top4 posterior choice; Nexec10/update, R count/regime/size/duration matched. '
+        'Quality-first/no hard deadline; actual executed throughput unknown; measured group2/4/6 timings in amendment. '
+        'Both GPUs, widths34/10, allocatorA65%/R80%, original deadline retained. A continues preserved CPU6; '
+        'B/Ru4 viability pause, no final outcome access; full fixed A/B48/R24 and6473440/cap6500000 retained.\n')
+    with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+    value['release_amendment_sha256']=h
+    # Authorization precedes every new B/R reservation and does not alter sources.
+    ops.ssh.remote('cpuQ',f'''import pathlib,json
+r=pathlib.Path({ROOT!r});assert r.is_dir() and not (r/'STOP.json').exists()
+for a in ('B','R'):assert not (r/f'WARM_{{a}}_DISPATCH.json').exists()
+with (r/'AUTHORITY.md').open('a') as f:f.write({line!r})
+with (r/'WARM_RELEASE.json').open('x') as f:json.dump(json.loads({json.dumps(value)!r}),f,sort_keys=True)
+print('registered before B/R physics')''',timeout=40)
+    publish(value,qualified=True)
+    write(target,dict(line=line,release_amendment_sha256=h,new_sumo_sim_s=0));print(line.strip())
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('collect','stage','admit','bridge','worker-status'));p.add_argument('--host',choices=('gpuA','gpuR'))
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('collect','stage','admit','bridge','worker-status','release'));p.add_argument('--host',choices=('gpuA','gpuR'))
     a=p.parse_args()
     if a.mode=='stage':stage_worker(a.host)
     elif a.mode=='admit':admit(a.host)

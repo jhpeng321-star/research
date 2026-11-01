@@ -87,12 +87,14 @@ def dispatch(arm):
     value=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,os,subprocess,time,sys
 r=pathlib.Path({ROOT!r});assert r.is_dir()
 assert not (r/{('WARM_'+arm+'_DISPATCH.json')!r}).exists()
-sys.path.insert(0,str(r/'pytools'))
+source=r
+if {arm!r} in ('B','R'):source=pathlib.Path(json.loads((r/{('WARM_'+arm+'_RUNTIME_BINDING_V2.json')!r}).read_text())['source_root'])
+sys.path.insert(0,str(source/'pytools'))
 from tools.coopmwm.warm_runner import verify
 verify(r,{arm!r})
 env=dict(os.environ,CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',
  SUMO_HOME='/home/ubuntu/miniconda3/lib/python3.10/site-packages/sumo',
- PYTHONPATH=str(r/'pytools')+':/home/ubuntu/e3final/runtime/src:/home/ubuntu/e3final/runtime')
+ PYTHONPATH=str(source/'pytools')+':/home/ubuntu/e3final/runtime/src:/home/ubuntu/e3final/runtime')
 env['PATH']=env['SUMO_HOME']+'/bin:'+env['PATH']
 assert pathlib.Path(env['SUMO_HOME'],'bin/sumo').is_file()
 cmd=[{ops.ssh.PYTHON['cpuQ']!r},'-B','-u','-m','tools.coopmwm.warm_runner',str(r),'--arm',{arm!r}]
