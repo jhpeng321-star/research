@@ -12,6 +12,22 @@ import time
 from .warm_history import arrays
 
 
+def moving_clock(original, time_s):
+    """Translate the frozen 240..300 contract, including integer interval guards."""
+    tree = ast.parse(inspect.getsource(original))
+    class Clock(ast.NodeTransformer):
+        def visit_Constant(self, node):
+            if type(node.value) in (int, float) and node.value in (240, 300):
+                value = float(time_s) - (60. if node.value == 240 else 0.)
+                return ast.copy_location(ast.Constant(value), node)
+            return node
+    tree = Clock().visit(tree)
+    ast.fix_missing_locations(tree)
+    ns = dict(original.__globals__)
+    exec(compile(tree, '<coopmwm-causal-moving-clock>', 'exec'), ns)
+    return ns[original.__name__]
+
+
 def condition(model, record):
     import numpy as np
     import torch
@@ -23,18 +39,10 @@ def condition(model, record):
         raise ValueError('FULL-v4 frozen motion inference unavailable')
     # Generalize ONLY the original registered clock, retaining its selector,
     # physical likelihood, support order and learned shrinkage implementation.
-    tree = ast.parse(inspect.getsource(frozen.condition_population))
-    class Clock(ast.NodeTransformer):
-        def visit_Constant(self,node):
-            if type(node.value) is float and node.value in (240.,300.):
-                return ast.copy_location(ast.Constant(record['time_s']-(60. if node.value==240. else 0.)),node)
-            return node
-    tree=Clock().visit(tree);ast.fix_missing_locations(tree)
-    ns=dict(frozen.condition_population.__globals__)
-    exec(compile(tree,'<coopmwm-causal-moving-clock>','exec'),ns)
+    causal = moving_clock(frozen.condition_population, record['time_s'])
     state=dict(present=torch.as_tensor(raw['mask'][-1:]),is_cav=torch.as_tensor(raw['is_cav'][None]))
     begin=time.monotonic()
-    fitted,receipt=ns['condition_population'](model._wmphys_fitted_state,
+    fitted,receipt=causal(model._wmphys_fitted_state,
         model._wmphys_motion_fit,model._wmphys_shrinkage_policy,
         dict(t0=record['time_s'],seed=record['world_id'],state=state),raw)
     receipt.update(history_frames=len(raw['time_s']),history_start_s=float(raw['time_s'][0]),

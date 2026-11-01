@@ -25,7 +25,10 @@ print(json.dumps(out))
 '''
     value = json.loads(ops.ssh.remote('cpuQ', source, timeout=25))
     write(ops.EVIDENCE/f'RESUME_A_{int(time.time())}.json', value)
-    print(json.dumps(value))
+    print(json.dumps(dict(unix=value['unix'],processes=value['processes'],
+        updates=sorted(value['updates']),
+        paused=value.get('A_WARM5_CONTINUATION_PAUSED.json'),
+        failure=value.get('A_WARM5_CONTINUATION_FAILED.json'),new_sumo_sim_s=0)))
 
 
 if __name__ == '__main__':

@@ -88,16 +88,17 @@ print(json.dumps(dict(code=json.loads(p.read_text())['costs']['code'],source_fil
 """,timeout=30)
     files=sources();files['COOPMWM_DESIGN.md']=checked(LOCAL/'docs/paper_results/COOPMWM_DESIGN.md').read_text(encoding='utf-8')
     files['FROZEN_COSTS.json']=qualified.strip()+'\n'
+    files['FROZEN_MOTION_SOURCE.py']=checked(LOCAL/'docs/paper_results/coopmwm/warm_api/tools__rbint__motion_posterior.py').read_text(encoding='utf-8')
     staged=json.loads(stage('cpuQ',root,files))
     print(json.dumps(dict(root=root,source_files=len(staged['hashes']))))
     out=ssh.remote('cpuQ',f'''import os,sys,pathlib,json,time,unittest
 from unittest.mock import patch
 os.nice(19)
-os.environ.update(CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',COOPMWM_MAPPO='/home/ubuntu/mappospeed/production2/policy_00169.pt',COOPMWM_COST_SOURCE={root!r}+'/FROZEN_COSTS.json')
+os.environ.update(CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',COOPMWM_MAPPO='/home/ubuntu/mappospeed/production2/policy_00169.pt',COOPMWM_COST_SOURCE={root!r}+'/FROZEN_COSTS.json',COOPMWM_MOTION_SOURCE={root!r}+'/FROZEN_MOTION_SOURCE.py')
 sys.path[:0]=[{root!r}+'/pytools','/home/ubuntu/e3final/runtime/src','/home/ubuntu/e3final/runtime']
 import torch;torch.set_num_threads(1)
 start=time.monotonic()
-suite=unittest.TestSuite([unittest.defaultTestLoader.loadTestsFromName(n) for n in ['tools.coopnative.test_cpu','tools.coopmwm.test_cpu','tools.coopmwm.test_volume_cpu','tools.coopmwm.test_acceleration_cpu']])
+suite=unittest.TestSuite([unittest.defaultTestLoader.loadTestsFromName(n) for n in ['tools.coopnative.test_cpu','tools.coopmwm.test_cpu','tools.coopmwm.test_volume_cpu','tools.coopmwm.test_acceleration_cpu','tools.coopmwm.test_warm_cpu']])
 with patch('subprocess.Popen',side_effect=AssertionError('physics forbidden during CPU tests')):
  result=unittest.TextTestRunner(stream=sys.stdout,verbosity=2).run(suite)
 print(json.dumps(dict(pass_=result.wasSuccessful(),tests=result.testsRun,skips=len(result.skipped),sim_s=0,wall_s=time.monotonic()-start,root={root!r})))

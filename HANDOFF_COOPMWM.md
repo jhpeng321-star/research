@@ -1,5 +1,16 @@
 # S-COOPMWM live continuation — OWNER22:08 WARM MEMORY HOLD
 
+23:07 fresh-session recovery: read complete179-line brief through23:04. Fresh
+WARM_RECOVERY_1793545561 confirms original supervisor2477255 and24B identities T;
+A_UPDATE_001..004 now exist and all12u4TRAIN-check episodes are closed. Conservative
+charge988040sim-s. RESUME_A_1793545577 preserves A5 identity/log/update evidence.
+Both GPUs idle (no compute PIDs); remaining gpuA speed2 jobs are CPU-only and owned
+by S-WMSPEED2. Its warm H120/H300 GPU exact-parity receipts are now published.
+Recovered warm runtime/tests/ops remain engineering work, not a qualification claim.
+Latest23:04 delegates search and branch harness to existing c4-mppi-search and
+c4-branch-eval worktrees: integrate when ready; do not duplicate their implementation.
+Pre-start depth diagnostic deferred by23:04. No new dispatch/physics in recovery.
+
 23:01 fresh recovery: complete174-line brief read through22:58. A5 identity
 2611888/start55895612 remains S; acceleration A updates1..3 exist, u4 episodes
 draining. Original supervisor2477255 and all24 held B identities remain T.
