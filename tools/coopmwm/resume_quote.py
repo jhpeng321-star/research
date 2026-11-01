@@ -4,12 +4,13 @@ from .accel_protocol import PHASES
 from .branch_eval import budget_quote
 
 
-def quote(cap=6000000):
+def quote(cap=6500000):
     endpoints = (48, 48, 24)
-    branches = budget_quote(96, [300, 500, 700, 900], ['MAPPO', 'A', 'B', 'R'])
+    branches = budget_quote(96, [300, 500, 700, 900], ['MAPPO', 'A', 'B'])
     base = dict(PHASES, train=sum(endpoints)*24*1200,
                 cold_B_retained=24*1200, failed_A_retained=12*1200,
-                paired_branch=branches['total_sim_s'], branch_reuse_equivalence=600)
+                paired_branch=branches['total_sim_s'], branch_reuse_equivalence=600,
+                discovery=200000)
     scenarios = []
     for train_every, dev_every in ((4, 8), (4, 16), (8, 16)):
         phases = dict(base,
@@ -21,10 +22,12 @@ def quote(cap=6000000):
         total = sum(phases.values())
         scenarios.append(dict(train_every=train_every, dev_every=dev_every,
             phases=phases, allocated_sim_s=total, over_cap_sim_s=max(0, total-cap)))
-    minimum = scenarios[-1]['allocated_sim_s']
-    return dict(cap_sim_s=cap, source='explicit fresh-session resume cap',
+    selected = scenarios[1]  # MAIN23:54: TRAIN4/dev16, R branches deferred.
+    minimum = selected['allocated_sim_s']
+    return dict(cap_sim_s=cap, source='MAIN22:58 cap; MAIN23:54 allocation resolution',
         updates=dict(A=48, B=48, R=24), episodes_per_update=24,
         episode_sim_s=1200, branch=branches, scenarios=scenarios,
+        selected=selected, allocated_sim_s=minimum, unallocated_sim_s=cap-minimum,
         minimum_allocated_sim_s=minimum, minimum_over_cap_sim_s=max(0, minimum-cap),
         over_brief_6500000_sim_s=max(0, minimum-6500000),
         admitted=minimum<=cap, new_sumo_sim_s=0,
@@ -33,8 +36,8 @@ def quote(cap=6000000):
             'All 12 failed A reservations retained: 14400.',
             'A completed training u1..4 is inside the 48-update train allocation, not added twice.',
             'Completed A u4 TRAIN check is additional only for future every8 schedule.',
-            'Original mechanics/calibration/discovery reserves retained in full.',
-            'All 96 episode-test worlds and A/B/R branch liabilities protected.',
+            'Original mechanics/calibration retained; MAIN23:54 discovery reserve reduced to 200000.',
+            'All 96 episode-test worlds and A/B branches protected; R branches deferred pending owner decision.',
             'MAPPO branch reference reuse assumed to PASS; failure adds 115200, not included.'],
         disposition='STOP before new physics: owner budget/scope decision required' if minimum>cap else 'prospective registration still required')
 

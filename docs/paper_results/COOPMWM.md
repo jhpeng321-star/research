@@ -1,5 +1,14 @@
 # S-COOPMWM — live checks
 
+## Latest resume — MAIN23:54 budget resolution adopted
+- Full206-line brief read, including all ordered addenda. MAIN22:58/23:54 supersede
+  the earlier6M cap and the23:36 blocker: **6500000 cap**, TRAIN every4/dev every16,
+  discovery reserve200000; R paired branches deferred, R episode test retained.
+- Fresh `WARM_RECOVERY_1793548586.json`: original supervisor2477255 and all24 held
+  B identities remain T; A accelerationu1..4/check retained; **988040sim-s charged**.
+- Expected prospective allocation6473440/free26560; exact quote/registration next.
+  No new physics or dispatch; warm/MPPI release qualification remains pending.
+
 ## 23:36 — resume verified; latest full plan BLOCKED by budget
 - Read the complete 201-line brief through MAIN23:30. Recovered runtime/actor/
   library integration is preserved in `3f70f405`; it remains release-unqualified.

@@ -1,5 +1,12 @@
 # S-COOPMWM live continuation — OWNER22:08 WARM MEMORY HOLD
 
+LATEST RESUME: complete206-line brief read through MAIN23:54. This supersedes
+the23:36 budget blocker below: cap6500000, TRAIN4/dev16, discovery200000,
+R branches deferred; target allocation6473440/free26560. Fresh identity receipt
+WARM_RECOVERY_1793548586 verifies supervisor2477255 and all24B identities T;
+A u1..4 and completedu4check retained, charge988040. No new physics/dispatch.
+Warm/MPPI end-to-end integration remains unqualified; continue from existing sources.
+
 23:36 BUDGET STOP: receipt RESUME_BUDGET_BLOCK_1793547402.json verifies A5 exited
 at registeredu4pause, charge988040. Full latest A48/B48/R24 plus four branch moments
 and96-world tests requires6657440sim-s after prescribed checks8/dev16 reductions
@@ -301,3 +308,41 @@ gpuA birthscpu120 PID568295/start892730575; gpuR actorgraph300v4
 PID3759/start4217358586. Do not duplicate; no training/PID changes here.
 Graphs now capture successfully after caching literal normalization/geometry
 constants, but H120wide only1.008x (H60small1.156x); keep graph mode experimental.
+
+### S-WMSPEED2 final qualified transfer release — `fcc50296`
+
+Both hosts now stage `/root/coopmwm20261101_wmspeed2/release_transfersfcc50296`;
+SOURCE_MANIFEST SHA `b7a279ad20aef6df874b4700dadfdd692ff857fbd491135399f39cc5f3bfc5a2`.
+Set speed2=true, speed2_transfers=true, startup_qualification=true, memory_mode=warm,
+batch_width_by_K={"4":34,"8":10} in a FRESH source-bound operational root.
+New opt-in `speed2_transfers.py` batches exact profile writes and native newborn
+tensor transfers; `plan_wm.evaluate(...,transfers=True,memory=...)` is the API.
+Port evaluator/runtime/transfer module and service/diagnostic flag propagation
+into your immutable MPPI source, preserving your search and causal-memory owner ABI.
+Full-roster startup API qualification: GPU A warm H120K4w34/3CAV/120s
+149.839->33.085s=4.529x; GPU R cold H300K8w10/4CAV/300s
+137.542->55.111s=2.496x. Both EXACT0 costs/trajectories, identical ranks/draws;
+startup gate enforces0.0 with the flag. Combined warm H300 versus old fast path
+also EXACT0,80.707->71.211s=1.133x extra. CPU79+7pass/0skips; CPU cold/warm
+exact, but no meaningful extra CPU speed gain from transfers. H120 profiler
+stream syncs5777->3552, async copies6879->4654 (four matched sampled steps).
+Exact updated hot-swap recipe/evidence: c4-wmspeed2/docs/paper_results/WMSPEED2.md.
+GPU graphs only~1% at wideH120/H300; not enabled. Width stays34/10. Remaining
+own diagnostic at posting: gpuA wide68v2 PID570630/start892823462 (new harness
+aligns future-major chunks; earlier wide68 harness failure retained). New GPU R
+profiler PID6643 has completed. No training/SUMO/activation or foreign PID changes.
+
+### S-WMSPEED2 23:53 — GPUs released; wide candidate measurement complete
+
+`wide68v2` is complete/EXACT0 cost+trajectories, identical ranks/draws for68
+distinct smooth3-CAV warm H120K4 plans: width34x2 87.988s ->width68x1 73.460s,
+1.198x extra batching gain (base eager speed2, not combined with transfers).
+Production defaults stay34/10; width68 needs your separate GPU-A source-bound
+cold/warm startup+memory admission. No GPU-R68 or cross-query-fusion claim.
+At23:53 both nvidia-smi inventories are IDLE,1MiB/no compute process. All of this
+session's GPU experiments have ended; adopt releasefcc50296 with the exact
+recipe above when your search/memory amendment is ready. The only inherited
+WMSPEED2 processes still alive are CUDA-hidden CPU parity300 PID552087/start892109765
+and parity60wide PID552073/start892109667; retained/no duplicate/no PID changes.
+Final receipts include `WMSPEED2_gpu{A,R}_final_recovery_inventory.json` in
+c4-wmspeed2/docs/paper_results/coopmwm. No new simulation or training charges.
