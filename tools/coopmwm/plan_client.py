@@ -74,7 +74,8 @@ def guide(job,generator):
         r['state_id']=digest(dict(record=r,job=job['id']))
         if quota is None:
             request=root/'requests'/(r['state_id']+'.json');response=root/'responses'/request.name
-            write(request,r);start=time.monotonic()
+            from .warm_spool import immutable
+            immutable(request,r);start=time.monotonic()
             while not response.exists():
                 assert_running(root,job['arm'])
                 if time.time()>job['gpu_deadline']:raise ValueError('registered GPU deadline exceeded')

@@ -77,7 +77,7 @@ def run_arm(root,arm):
     import os
     b=verify(root,arm)
     lock=(root/f'WARM_{arm}.claim').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-    suffix='_V3' if b.get('health_guards') else ''
+    suffix=b.get('runtime_receipt_suffix','_V3' if b.get('health_guards') else '')
     assert not (root/f'WARM_{arm}_STARTED{suffix}.json').exists(),'one-use warm arm already started'
     os.nice(max(0,19-os.getpriority(os.PRIO_PROCESS,0)));torch.set_num_threads(1)
     torch.manual_seed(SEED)
@@ -85,6 +85,10 @@ def run_arm(root,arm):
         resume=b.get('A_resume_update',4)
         policy,opt,rng,payload=load(root/f'A_checkpoint_{resume:03}.pt');assert payload['update']==resume
         first,last=resume+1,48
+    elif 'resume_update' in b:
+        resume=b['resume_update']
+        policy,opt,rng,payload=load(root/f'{arm}_checkpoint_{resume:03}.pt');assert payload['update']==resume
+        first,last=resume+1,budget()['updates'][arm]
     else:
         policy=Policy();opt=torch.optim.Adam(policy.parameters(),lr=3e-4)
         rng=torch.Generator().manual_seed(SEED);first,last=1,budget()['updates'][arm]
@@ -181,7 +185,8 @@ def run_arm(root,arm):
     except BaseException as error:
         write(root/f'WARM_{arm}_FAILED{suffix}.json',dict(timestamp_utc=timestamp(),error=repr(error)))
         if not isinstance(error,HealthPause):
-            stop=root/('WARM_GUIDED_STOP.json' if arm in ('B','R') and b.get('health_guards') else 'STOP.json')
+            guided_stop='WARM_GUIDED_STOP_V2.json' if suffix=='_V5' else 'WARM_GUIDED_STOP.json'
+            stop=root/(guided_stop if arm in ('B','R') and b.get('health_guards') else 'STOP.json')
             if not stop.exists():write(stop,dict(arm=arm,error=repr(error),timestamp_utc=timestamp()))
         raise
     finally:

@@ -3,7 +3,7 @@ from pathlib import Path
 import tempfile
 import unittest
 from unittest.mock import patch
-from .capacity_broker import capacity_declines,decline
+from .capacity_broker import capacity_declines,decline,pending
 from .protocol import digest
 
 
@@ -11,6 +11,22 @@ def request(key,**extras):return ('plan',dict(state_id=key,**extras))
 
 
 class CapacityTests(unittest.TestCase):
+    def test_legacy_partial_request_is_not_a_fatal_read_race(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);(root/'requests').mkdir();(root/'responses').mkdir()
+            p=root/'requests/a.json';p.write_text('')
+            self.assertEqual(pending(root),[])
+            p.write_text(json.dumps(dict(state_id='a',rows=[],time_s=300)))
+            with patch('tools.coopmwm.exploration.regime',return_value='ordinary'):
+                self.assertEqual(len(pending(root)),1)
+
+    def test_stale_malformed_request_still_stops(self):
+        import os,time
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);(root/'requests').mkdir();(root/'responses').mkdir()
+            p=root/'requests/a.json';p.write_text('');os.utime(p,(time.time()-60,)*2)
+            with self.assertRaises(json.JSONDecodeError):pending(root)
+
     def test_busy_declines_only_unassigned(self):
         a=request('a');b=request('b');c=request('c')
         rejected,busy=capacity_declines([a,b,c],{'a':{'slot':'gpuA@0'},'b':{'slot':'gpuR@0'}},['gpuA@0','gpuR@0'])

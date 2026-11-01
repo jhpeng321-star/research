@@ -111,5 +111,22 @@ print(json.dumps(dict(unix=time.time(),owner=d,state=st[2] if st else 'exited',d
     write(ops.EVIDENCE/f'CAPACITY_STATUS_{int(value["unix"])}.json',value);print(json.dumps(value));return value
 
 
+def failure_status():
+    value=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,time
+r=pathlib.Path({ROOT!r});owners=[]
+for name in ('WARM_B_DISPATCH_V4.json','WARM_R_DISPATCH_V4.json','EXACT_GRADER_DISPATCH.json'):
+ d=json.loads((r/name).read_text());p=pathlib.Path('/proc',str(d['pid']),'stat');st=p.read_text().split() if p.exists() else None
+ assert not st or st[21]==d['start_ticks'];owners.append(dict(name=name,owner=d,state=st[2] if st else 'exited'))
+jobs=[]
+for p in (r/'jobs').glob('warm_u001_B_*'):
+ c=p/'CLAIM.json';d=json.loads(c.read_text()) if c.exists() else None
+ stat=pathlib.Path('/proc',str(d['pid']),'stat') if d else None
+ jobs.append(dict(id=p.name,claimed=bool(d),closed=(p/'RESULT.json').exists(),pid=d['pid'] if d else None,
+  state=stat.read_text().split()[2] if stat and stat.exists() else 'exited',failure=(p/'FAILED.json').read_text()[-1000:] if (p/'FAILED.json').exists() else None))
+logs={{n:(r/n).read_text()[-6000:] for n in ('WARM_B_V4.log','WARM_R_V4.log','CAPACITY_BROKER.log') if (r/n).exists()}}
+print(json.dumps(dict(unix=time.time(),owners=owners,jobs=jobs,logs=logs)))''',timeout=40))
+    write(ops.EVIDENCE/f'CAPACITY_FAILURE_{int(value["unix"])}.json',value);print(json.dumps(value));return value
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('cpu','register','handover','status'));a=p.parse_args();globals()[a.mode]()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('cpu','register','handover','status','failure_status'));a=p.parse_args();globals()[a.mode]()

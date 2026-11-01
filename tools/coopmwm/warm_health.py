@@ -27,9 +27,19 @@ def assert_running(root,arm):
     root=Path(root)
     if active_stop(root):raise ValueError('durable warm STOP')
     if arm in ('B','R'):
+        if (root/'WARM_GUIDED_STOP_V2.json').exists():raise ValueError('new durable guided engineering STOP')
         pauses=sorted(root.glob('PAUSE_*.json'))
         if pauses:raise HealthPause('registered health pause '+pauses[0].name)
-        if (root/'WARM_GUIDED_STOP.json').exists():raise ValueError('durable guided engineering STOP')
+        p=root/'WARM_GUIDED_STOP.json'
+        if p.exists():
+            release=root/'MAIN0508_GUIDED_RELEASE.json'
+            v=read(release) if release.exists() else {}
+            original=read(p)
+            qualified=(v.get('original_stop_sha256')==sha(p)
+                and original.get('source')=='capacity broker control'
+                and original.get('error')=="JSONDecodeError('Expecting value: line 1 column 1 (char 0)')"
+                and v.get('amendment_sha256','UNREGISTERED') in (root/'AUTHORITY.md').read_text())
+            if not qualified:raise ValueError('durable guided engineering STOP')
 
 
 def pause(root,rule,evidence):

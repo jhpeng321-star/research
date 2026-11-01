@@ -22,7 +22,14 @@ def pending(root):
     items=[]
     for req,resp,kind in [('requests','responses','plan'),('centre_requests','centre_responses','centre')]:
         for p in (root/req).glob('*.json'):
-            if not (root/resp/p.name).exists():items.append((kind,json.loads(p.read_text())))
+            if (root/resp/p.name).exists():continue
+            try:record=json.loads(p.read_text())
+            except json.JSONDecodeError:
+                # Historical writers create then fill a request (not atomic).
+                # In-progress metadata can be observed but is never a forecast.
+                if time.time()-p.stat().st_mtime<30:continue
+                raise
+            items.append((kind,record))
     items.sort(key=lambda v:(v[0]=='centre',v[1].get('mode')=='diagnostic',
         regime(v[1]['rows'])!='merge-dense',v[1]['time_s'],v[1]['state_id']))
     return items
@@ -65,7 +72,9 @@ def run(root,config_path):
     signal.signal(signal.SIGHUP,signal.SIG_IGN)
     owner=dict(pid=os.getpid(),start_ticks=Path(f'/proc/{os.getpid()}/stat').read_text().split()[21],
         boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),unix=time.time(),source=config['source_root'])
-    immutable(root/'CAPACITY_BROKER_OWNER.json',owner)
+    tag=config.get('receipt_tag','')
+    immutable(root/('CAPACITY_BROKER_OWNER'+tag+'.json'),owner)
+    stop_path=root/('WARM_GUIDED_STOP_V2.json' if tag else 'WARM_GUIDED_STOP.json')
     assignments=root/'broker_assignments';assignments.mkdir(exist_ok=True)
     for name in ('broker_completed','capacity_declines','capacity_admissions'):(root/name).mkdir(exist_ok=True)
     stop=threading.Event();mutex=threading.Lock();inflight=set();errors=[]
@@ -91,7 +100,10 @@ def run(root,config_path):
                             inflight.add(key);item=(kind,record,previous is not None);break
                 if item is None:stop.wait(.1);continue
                 kind,record,adopted=item;key=record['state_id'];begin=time.monotonic()
-                immutable(root/'capacity_admissions'/(key+'.json'),dict(key=key,slot=endpoint['slot'],
+                admission=root/'capacity_admissions'/(key+'.json')
+                if admission.exists():
+                    old=json.loads(admission.read_text());assert old['key']==key and old['slot']==endpoint['slot']
+                else:immutable(admission,dict(key=key,slot=endpoint['slot'],
                     adopted=adopted,capacity_admission_probability=1.,unix=time.time()))
                 # Identical transport submission is idempotent in the durable
                 # GPU spool. An existing inference claim is NEVER recomputed.
@@ -108,8 +120,8 @@ def run(root,config_path):
                 with mutex:inflight.remove(key)
         except BaseException as error:
             errors.append(repr(error));stop.set()
-            if not isinstance(error,HealthPause):
-                immutable(root/'WARM_GUIDED_STOP.json',dict(error=repr(error),source='capacity broker',unix=time.time()))
+            if not isinstance(error,HealthPause) and not stop_path.exists():
+                immutable(stop_path,dict(error=repr(error),source='capacity broker',unix=time.time()))
 
     threads={};endpoints={};last_slots=None
     try:
@@ -134,7 +146,8 @@ def run(root,config_path):
             stop.wait(.1)
     except BaseException as error:
         errors.append(repr(error));stop.set()
-        immutable(root/'WARM_GUIDED_STOP.json',dict(error=repr(error),source='capacity broker control',unix=time.time()))
+        if not stop_path.exists():
+            immutable(stop_path,dict(error=repr(error),source='capacity broker control',unix=time.time()))
     finally:
         for t in threads.values():t.join()
         lock.close()

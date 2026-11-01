@@ -49,13 +49,15 @@ def diagnostic_task(root,b,state,ep,step,index):
 
 
 def wave(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None):
-    jobs=[];results=[]
+    jobs=[];results=[];precharged={x['id'] for x in ledger(root)}
     from .policy_wm import actor_state
     for w in ws:
         for arm,policy in policies.items():
             key=f'{ident}_{arm}_{w["seed"]}';path=root/'jobs'/key
             if (path/'RESULT.json').exists():results.append(read(path/'RESULT.json'));continue
-            if key in {x['id'] for x in ledger(root)}:raise ValueError('attempted job cannot be retried '+key)
+            if key in precharged:
+                if key not in b.get('precharged_unattempted',[]) or (path/'CLAIM.json').exists():
+                    raise ValueError('attempted job cannot be retried '+key)
             jobs.append(dict(id=key,path=str(path),world=w,role=role,arm=arm,
                 weights=policy.state_dict(),runtime=b['runtime'],checkpoint=b['checkpoint'],
                 noise_seed=int(digest(dict(seed=SEED,world=w['seed'],wave=ident))[:15],16),
@@ -63,7 +65,8 @@ def wave(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None):
                 gpu_deadline=b['gpu_deadline'],guided=not deterministic and arm in ('B','R'),
                 beta=b.get('beta',1.),N_exec=b.get('N_exec'),policy_state=actor_state(policy),warm_history=b.get('warm_history',False),**(extras or {})))
     if jobs:
-        reserve(root,jobs,phase)
+        fresh=[j for j in jobs if j['id'] not in precharged]
+        if fresh:reserve(root,fresh,phase)
         from .runner import admission
         admission(b)
         from .accel_plant import episode
