@@ -1,5 +1,5 @@
 {
-  "checked_at": "2026-11-01T08:46:15+08:00",
+  "checked_at": "2026-11-01T12:05:05+08:00",
   "scope": "Explicit permitted evidence paths only; no automatic scientific status promotion",
   "sources": {
     "C1 gap authoritative report": {
@@ -256,8 +256,8 @@
     "Owner evening priorities": {
       "path": "E:/research-dense/docs/OWNER_UPDATE_20261030_EVENING.md",
       "status": "PRESENT",
-      "sha256": "e275ee76263bcbf8882e18f80123c76109324a7918854ee2e14b65a69e3c8d6e",
-      "bytes": 31914,
+      "sha256": "4b45aadd72a3b0991308232ce72cfec8807ecf20c4c3ab13f9d52a8c45a5bb55",
+      "bytes": 32448,
       "heading": "# READ FIRST TONIGHT (kept current by MAIN; written 2026-10-31 ~15:58)",
       "changed_since_previous_refresh": false,
       "matches_figure_snapshot": null
@@ -265,10 +265,10 @@
     "Shared registration": {
       "path": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md",
       "status": "PRESENT",
-      "sha256": "5a2c0baf264d8c93e02ad4e7ebc013acd0c939ecfe77ada8ddbdc033d32dd6b5",
-      "bytes": 2356332,
+      "sha256": "0a8bc754256107778e8922037d53f0b74064ffa939943bcf997b48c8a8450a3e",
+      "bytes": 2379715,
       "heading": "# C4-V7FT-20261017: world-model fixes (merge calibration) + policy-setting fixes; overnight on gpuR",
-      "changed_since_previous_refresh": false,
+      "changed_since_previous_refresh": true,
       "matches_figure_snapshot": null
     },
     "PI regression and genuine-history diagnosis": {
@@ -427,8 +427,8 @@
     "Main wall-inclusive switching handoff": {
       "path": "E:/agent-work/c4-c1switch2/HANDOFF.md",
       "status": "PRESENT",
-      "sha256": "6cd981dab96b680e7638db90274b82e96350abffb73173ce70229dfaa07da460",
-      "bytes": 22382,
+      "sha256": "41b69f5009c4ebddf25e337089ea49e772df8fdf73a2bde587bc8ca670d6ba6f",
+      "bytes": 32432,
       "heading": "# S-C1SWITCH2 integration handoff",
       "changed_since_previous_refresh": false,
       "matches_figure_snapshot": null
@@ -436,8 +436,8 @@
     "Fleet picker status": {
       "path": "E:/agent-work/c4-selmappo/docs/paper_results/SELMAPPO.md",
       "status": "PRESENT",
-      "sha256": "dbadfb6ca7571516860345f916bbd6f1516c51d632a32176a9c766d4ef74bb99",
-      "bytes": 1505,
+      "sha256": "37e2883cc515c2cba966dd4fe35f8d80d8bbd2b970f65ec9ff380eb558547c6a",
+      "bytes": 1357,
       "heading": "# Fleet PPO controller-selector training status",
       "changed_since_previous_refresh": false,
       "matches_figure_snapshot": null
@@ -445,8 +445,8 @@
     "Per-CAV picker status": {
       "path": "E:/agent-work/c4-selmappo2/docs/paper_results/SELMAPPO2.md",
       "status": "PRESENT",
-      "sha256": "4b310a88838ec835956525126f0a4a341a55ec21f668e786f12a442f8a1f5335",
-      "bytes": 14955,
+      "sha256": "65cc56a22333b2fc290138c1dc4fca3d88b2b5d2a21966e7a0019f23dcf731b0",
+      "bytes": 17171,
       "heading": "# S-SELMAPPO2 — per-CAV MAPPO controller picker",
       "changed_since_previous_refresh": false,
       "matches_figure_snapshot": null
@@ -487,12 +487,12 @@
       "changed_since_previous_refresh": false,
       "matches_figure_snapshot": true
     },
-    "Physics rebuild interim": {
+    "Physics rebuild report (interim then final)": {
       "path": "E:/agent-work/c4-rb-int/docs/paper_results/WMPHYS_MORNING.md",
       "status": "PRESENT",
-      "sha256": "d67db60f36da6914775ec025ea94519b4ae7ac4d5400baf74db27e70c98a782f",
-      "bytes": 5374,
-      "heading": "# WM-PHYS morning report — interim, 2026-11-01T07:58:46+08:00",
+      "sha256": "44ad6b2a1dd2cc09277f8023357aed451ce0b0cdaebe15d3a5c1322746177f77",
+      "bytes": 5758,
+      "heading": "# WM-PHYS morning report — final, 2026-11-01T11:35:55+08:00",
       "changed_since_previous_refresh": false,
       "matches_figure_snapshot": null
     },
@@ -502,6 +502,69 @@
       "sha256": "55f41c5b200faa82c7fa212cdf511476745a3e73f68faac4ba19a84becfe2dec",
       "bytes": 15319,
       "heading": "## Credibility — WM-PHYS-FULL-v4-gpu",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Final physics publication and source reuse": {
+      "path": "E:/agent-work/c4-rb-int/docs/rbint/noon/20261101T113555+0800/PUBLICATION.json",
+      "status": "PRESENT",
+      "sha256": "2b38479c841b2776d184ca861be61a96294d0eeddfaca9ebeddd287c0ca9a42a",
+      "bytes": 5160,
+      "heading": "",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Final physics engineering freeze": {
+      "path": "E:/agent-work/c4-rb-int/docs/rbint/noon/20261101T093000+0800/FREEZE.json",
+      "status": "PRESENT",
+      "sha256": "14ce2eea2932afffc28c09ad91f8a724e0f79652eada4e08d0522f862ca26dd8",
+      "bytes": 752,
+      "heading": "",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Final physics selected-switch credibility": {
+      "path": "E:/agent-work/c4-rb-int/docs/rbint/noon/20261101T093000+0800/FULL-v4/credibility/CREDIBILITY.md",
+      "status": "PRESENT",
+      "sha256": "b9155fabe5882d5e963a3a7f3834443a6a1f6cccc56d776b7f9b04dfcd461055",
+      "bytes": 15554,
+      "heading": "## Credibility — WM-PHYS-FULL-v4-gpu",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Final fleet selector delivery": {
+      "path": "E:/agent-work/c4-c1switch2/SELMAPPO_FINAL.json",
+      "status": "PRESENT",
+      "sha256": "2ecb0e855272e342b64002a288995f1552eceac79e740043dca5746ded607c18",
+      "bytes": 8574,
+      "heading": "",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Companion exact-model planner": {
+      "path": "E:/agent-work/c4-coopplan/docs/paper_results/COOPPLAN.md",
+      "status": "PRESENT",
+      "sha256": "965bd7c5b286aac02344321f03919abdd124f84c88ddf96fe42d3f984da3c24a",
+      "bytes": 15536,
+      "heading": "# S-COOPPLAN — exact-model planner improves delay and executes substantial cooperative actions",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Companion observable bandit": {
+      "path": "E:/agent-work/c4-coopbandit/docs/paper_results/COOPBANDIT.md",
+      "status": "PRESENT",
+      "sha256": "3a1148560492f10893394073c0a32db6d30d48bb346cd8091870d3df6e6ce46c",
+      "bytes": 4215,
+      "heading": "# Cooperation bandit — complete results, 2026-11-01",
+      "changed_since_previous_refresh": false,
+      "matches_figure_snapshot": null
+    },
+    "Companion free-form learner status": {
+      "path": "E:/agent-work/c4-coopfree/docs/paper_results/COOPFREE.md",
+      "status": "PRESENT",
+      "sha256": "da0aab82d871bed14fbdeacb21476488845a046d7e0509ce58edbd9689293084",
+      "bytes": 20560,
+      "heading": "# S-COOPFREE — implementation and execution receipt",
       "changed_since_previous_refresh": false,
       "matches_figure_snapshot": null
     }

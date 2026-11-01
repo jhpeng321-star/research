@@ -67,8 +67,15 @@ SOURCES = {
     "Distributional summary CSV": "E:/agent-work/c4-wmbreakdown/docs/paper_results/wmbreakdown/distribution_summary.csv",
     "Configured RNG ensemble": "E:/agent-work/c4-ensprobe/docs/paper_results/ENSPROBE.md",
     "Observable-start physics reference": "E:/agent-work/c4-sumocore/docs/paper_results/SUMOCORE.md",
-    "Physics rebuild interim": "E:/agent-work/c4-rb-int/docs/paper_results/WMPHYS_MORNING.md",
+    "Physics rebuild report (interim then final)": "E:/agent-work/c4-rb-int/docs/paper_results/WMPHYS_MORNING.md",
     "Frozen interim selected-switch credibility": "E:/agent-work/c4-rb-int/docs/rbint/noon/20261101T075846+0800/FULL-v4/credibility/CREDIBILITY.md",
+    "Final physics publication and source reuse": "E:/agent-work/c4-rb-int/docs/rbint/noon/20261101T113555+0800/PUBLICATION.json",
+    "Final physics engineering freeze": "E:/agent-work/c4-rb-int/docs/rbint/noon/20261101T093000+0800/FREEZE.json",
+    "Final physics selected-switch credibility": "E:/agent-work/c4-rb-int/docs/rbint/noon/20261101T093000+0800/FULL-v4/credibility/CREDIBILITY.md",
+    "Final fleet selector delivery": "E:/agent-work/c4-c1switch2/SELMAPPO_FINAL.json",
+    "Companion exact-model planner": "E:/agent-work/c4-coopplan/docs/paper_results/COOPPLAN.md",
+    "Companion observable bandit": "E:/agent-work/c4-coopbandit/docs/paper_results/COOPBANDIT.md",
+    "Companion free-form learner status": "E:/agent-work/c4-coopfree/docs/paper_results/COOPFREE.md",
 }
 
 

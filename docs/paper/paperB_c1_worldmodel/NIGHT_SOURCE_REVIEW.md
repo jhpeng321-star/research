@@ -1,5 +1,53 @@
 # Evening evidence-review receipt
 
+## Noon fresh-session evidence delta
+
+Preserved the clean committed worktree, existing figures, verified bibliography and
+append-once first registration. Read Git status/history and task receipts before
+the current owner READ FIRST block and shared registration additions. The bounded
+inventory reread every original permitted report; unchanged scientific reports and
+figure-source hashes retain their prior semantic review. Changed owner, switching,
+selector and physics reports were reread directly. New explicit safe inventory
+entries bind the final publication/freeze/credibility, fleet delivery and companion
+planner/bandit/free-form reports. Exact source bytes and cut are in
+`SOURCE_REFRESH.json`.
+
+- The physics report is now FINAL, not awaiting its engineering freeze. The final
+  publication explicitly reuses verified complete frozen-source results after a
+  redundant transfer timeout. Favorable point errors and controller-effect signs
+  coexist with a failed breakdown-distance adoption condition, missing full-world
+  uncertainty and uncalibrated action confidence. Keep WM2 in switching; future
+  rebuild work is a separate candidate, not an open final-report gate.
+- Shared registration corrects the apparent host reboot: the outage was SSH-only.
+  Fleet training completed and its final-only checkpoint/source/config receipt was
+  delivered. Its existing evaluator is running; the per-CAV trainer continues and
+  has no final delivery. Neither training completion nor partial evaluation is an
+  efficacy result.
+- Original WM episodes are terminal/incomplete. Previously unstarted oracle work
+  has source-owned continuations; one host's scope is complete and the recovered
+  host's scope is running. BB reached terminal startup before physics and needs an
+  explicit source-owner continuation exception; it is no longer merely unstarted.
+  Complete fixed/random work is preserved. No full paired primary estimate exists.
+- Companion exact-model planning establishes a simulator-oracle benefit with
+  uncertain pooled superadditivity; the bandit fallback did not improve deployment,
+  and the free-form report does not establish learned improvement. New distillation,
+  WM-teacher and successor-physics registrations are prospective, not new Paper B
+  results. The companion free-form health header predates restored connectivity;
+  do not infer its current state from that historical snapshot.
+
+Sources: `E:/research-dense/docs/OWNER_UPDATE_20261030_EVENING.md`, READ FIRST;
+`E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md`, latest final,
+recovery, selector-evaluation and prospective teacher/rebuild entries;
+`E:/agent-work/c4-rb-int/docs/paper_results/WMPHYS_MORNING.md`;
+`E:/agent-work/c4-rb-int/docs/rbint/noon/20261101T113555+0800/PUBLICATION.json`;
+`E:/agent-work/c4-c1switch2/HANDOFF.md`, Current execution state;
+`E:/agent-work/c4-c1switch2/SELMAPPO_FINAL.json`;
+`E:/agent-work/c4-selmappo/docs/paper_results/SELMAPPO.md`;
+`E:/agent-work/c4-selmappo2/docs/paper_results/SELMAPPO2.md`;
+`E:/agent-work/c4-{coopplan,coopbandit,coopfree}/docs/paper_results/` named reports
+in the explicit inventory. No job, observer, inference or dispatch was started by
+the paper task. This receipt supersedes the historical morning live-status cut below.
+
 ## Morning fresh-session source cut
 
 Preserved the clean committed package and first-registration receipt. Read Git
