@@ -2054,3 +2054,21 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - `{"charged_sim_s": 2528840, "full_endpoint": 48, "reason": "A fixedu48 complete; wait for B48 before final panel", "timestamp_utc": "2026-11-01T21:00:22.741918+00:00", "update": 48}`
 - Receipt: `coopmwm/warm_live/WARM_A_PAUSED.json`.
 <!-- warm-receipt:WARM_A_PAUSED.json:24bdd81f07433591de0aaad97516dbc2697e6f2fa58acba29059fd6d0e61d47d -->
+
+## Warm live publication — 2026-11-01T21:33:33.987705+00:00
+- Conservatively charged 3242240/7500000 sim-s.
+
+### Warm continuation — WARM_B_FAILED_V3.json
+- `{"error": "ValueError('durable guided engineering STOP')", "timestamp_utc": "2026-11-01T21:18:18.617196+00:00"}`
+- Receipt: `coopmwm/warm_live/WARM_B_FAILED_V3.json`.
+<!-- warm-receipt:WARM_B_FAILED_V3.json:ba05b928d9a3277eb9baab66d4c2600544cac2f139201c511c5b1be921ed4386 -->
+
+### Warm continuation — WARM_GUIDED_STOP.json
+- `{"error": "JSONDecodeError('Expecting value: line 1 column 1 (char 0)')", "source": "capacity broker control", "unix": 1793567885.634367}`
+- Receipt: `coopmwm/warm_live/WARM_GUIDED_STOP.json`.
+<!-- warm-receipt:WARM_GUIDED_STOP.json:6bb256081946b912414cdfafa30321e2dbcc46a732ff96557ea621d65faa187d -->
+
+### Warm continuation — WARM_R_FAILED_V3.json
+- `{"error": "ValueError('durable guided engineering STOP')", "timestamp_utc": "2026-11-01T21:18:06.783912+00:00"}`
+- Receipt: `coopmwm/warm_live/WARM_R_FAILED_V3.json`.
+<!-- warm-receipt:WARM_R_FAILED_V3.json:e17365eccd47e54e7c26ac5aee1bf8024f0bbb3ace135399d1b681a62c9d3fb8 -->
