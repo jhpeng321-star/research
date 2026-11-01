@@ -195,11 +195,58 @@ print(json.dumps(receipt))
 ''')
 
 
+def collect():
+    """One bounded read-only snapshot; never launches a watcher or GPU task."""
+    source=f'''import pathlib,json,time,hashlib,os
+root=pathlib.Path({REMOTE!r})
+names=('IDENTITY.json','CPU.json','CANARY_PASS.json','CANARY_DISPATCH.json','DISPATCH.json',
+ 'QUALITY.json','QUALITY_RECORDS.json','COMPLETE.json','DATA_PROVENANCE.json')
+files={{n:json.loads((root/n).read_text()) for n in names if (root/n).is_file()}}
+dispatch=files.get('DISPATCH.json',files['CANARY_DISPATCH.json'])
+p=pathlib.Path(f'/proc/{{dispatch["pid"]}}/stat')
+stat=p.read_text().split() if p.is_file() else None
+process=dict(pid=dispatch['pid'],exists=stat is not None,
+ own_identity_matches=(stat is not None and stat[21]==dispatch['start_ticks'] and
+ pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()==dispatch['boot_id']),
+ state=stat[2] if stat else None)
+labels=[json.loads(p.read_text()) for p in sorted((root/'tasks').glob('*/LABEL_H*.json'))]
+for p in sorted(root.glob('student_setting*/SUMMARY.json')):
+ files[str(p.relative_to(root))]=json.loads(p.read_text())
+print(json.dumps(dict(root=str(root),unix=time.time(),process=process,files=files,labels=labels,
+ completed_future_tasks=len(list((root/'tasks').glob('*/k*.json'))),
+ source_hashes={{n:hashlib.sha256((root/n).read_bytes()).hexdigest() for n in names if (root/n).is_file()}},
+ new_sumo_sim_s=0,load=os.getloadavg())))
+'''
+    snapshot=json.loads(remote(source))
+    registry=Path('E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md')
+    snapshot['registration_lines']=[line for line in registry.read_text(encoding='utf-8').splitlines()
+        if line.startswith('- S-WMTEACH ') or 'S-WMTEACH BUDGET APPROVED:' in line]
+    dest=ROOT/'docs/paper_results/wmteach'/('SNAPSHOT_'+str(int(snapshot['unix']))+'.json')
+    assert dest.parent.is_dir()
+    with dest.open('x',encoding='utf-8') as f:json.dump(snapshot,f,sort_keys=True,allow_nan=False);f.write('\n')
+    return json.dumps(dict(path=str(dest),process=snapshot['process'],
+                          completed_future_tasks=snapshot['completed_future_tasks'],labels=len(snapshot['labels']),
+                          teacher_quality_complete='QUALITY.json' in snapshot['files']))
+
+
+def watch():
+    import sys,time
+    receipt_dir=ROOT/'docs/paper_results/wmteach'
+    assert receipt_dir.is_dir()
+    # WATCH.lock inside the child enforces sole ownership even across launch races.
+    path=receipt_dir/f'WATCH_{int(time.time())}.log'
+    with path.open('x',encoding='utf-8') as log:
+        child=subprocess.Popen([sys.executable,'-B','-u','-m','tools.wmteach.watch'],cwd=ROOT,
+            stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
+            creationflags=(subprocess.CREATE_NEW_PROCESS_GROUP if hasattr(subprocess,'CREATE_NEW_PROCESS_GROUP') else 0))
+    return json.dumps(dict(pid=child.pid,log=str(path),role='collector_only',new_gpu_dispatch=False))
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--host',choices=['gpuA','gpuR'],default='gpuA')
-    parser.add_argument('action', choices=['inspect', 'inspect-data','stage','cpu','deps','canary','status','launch'])
+    parser.add_argument('action', choices=['inspect', 'inspect-data','stage','cpu','deps','canary','status','launch','collect','watch'])
     args = parser.parse_args()
     HOST=args.host
     print({'inspect':inspect,'inspect-data':inspect_data,'stage':stage,'cpu':cpu,'deps':dependencies,
-           'canary':launch_canary,'status':status,'launch':launch}[args.action]())
+           'canary':launch_canary,'status':status,'launch':launch,'collect':collect,'watch':watch}[args.action]())

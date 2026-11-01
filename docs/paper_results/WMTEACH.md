@@ -34,7 +34,11 @@ Supervisor437822/startticks888636829/boot a81555d7-176e-4ed8-bc7d-896fc89cc914;
 `wmteach/DISPATCH_V3.json`. Own strict8GiB GPU cap; peer processes untouched.
 H300 canary34.248s PASS finite/conserved/source-inclusive costs, reused once.
 v1 startup hash-helper failure before rollouts and undispatched v2 both retained.
-Shared S-DISTILL code imported from4b139e5f; full local19CPU PASS, portable host17PASS.
+Shared S-DISTILL code imported from4b139e5f; full local22CPU PASS, frozen host17PASS.
+Numpy-only export supports the selected GBT OR MLP plus unseen-option constants;
+128query parity/choices per family pass (no family substitution). Two first complete
+K8/H120+H300 contexts pass actual published S-RB-DECIDE probability/selection parity;
+`wmteach/WMDECIDE_PARITY_1793506599.json`. Quality panel is still incomplete.
 No new environment: sklearn/scipy/joblib/threadpoolctl pinned in own `deps/` directory.
 Initial quality panel:12EXAM states, one per cell, selected by observable availability
 then earliest clock/world, not outcomes; H120/H300, K8. Roster-only EXAM lacks causal
@@ -44,5 +48,5 @@ contract than the fully conditioned FIT labels and must be reported as such.
 Fit plan:32FIT worlds ×4settings ×2horizons=256WM label contexts, K8;
 student snapshots after each complete32world pass, H300 fixed, nested outer4/inner3
 world CV and same GBT/MLP/classifier/confidence grid as S-DISTILL. No exact fitting.
-No WM labels, teacher-quality estimate, trained student or live result yet.
+Initial quality labels exist; full teacher-quality estimate/student/live result pending.
 The headline “a policy trained with the world model beats MAPPO” is an objective, not a result.
