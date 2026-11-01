@@ -1,5 +1,11 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+FreshresumeMAIN0419: full280linebrief read, originalobserver43408alive/adopted.
+Status1793564418 verifies A/B/R/grader/broker allalive, A-u40/B-Ru0collecting,
+noSTOP, charge2269640. BothGPU8EXACT0READY/original596572+43005; fivequeries/
+threeexecutedstarts, noexactgradesyet. MAIN0419 secondworkerqualification next;
+neverduplicate runningowners/exporters. RESUME_MAIN0419_20261102.md pins evidence.
+
 MAIN0413 pool logging RESOLVED without touching running searches: existing live
 RecordingEvaluator embeds FULL pools in forecast.proposer_receipt. Registered
 POOL_EXPORT amendment a2a729c1; fourCPUtests/hostPASS; detached exporters614389(A)/
