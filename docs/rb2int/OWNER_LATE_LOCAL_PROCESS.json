@@ -1,0 +1,17 @@
+{
+ "pid": 9724,
+ "create_filetime": 134380004640417822,
+ "source_commit": "0b3a652ec3c0ef1881d07de249c3927e166b786b",
+ "receipt_root": "E:/agent-work/c4-rb2-int/runs/rb2int_late_wait_v1",
+ "inference_dispatch": false,
+ "standby_only": true,
+ "first_log": "STANDBY prior collector/publisher retain ownership",
+ "existing_collector_pid": 25240,
+ "existing_collector_create_filetime": 134379970282244431,
+ "existing_publisher_pid": 44988,
+ "existing_publisher_create_filetime": 134379973214244749,
+ "all_three_exact_incarnations_verified_alive": true,
+ "takeover_requires": "both natural deadline-incomplete receipts and actual prior-process exits; no unexpected STOP",
+ "active_collection": false,
+ "process_signals": false
+}

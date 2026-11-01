@@ -1,5 +1,24 @@
 # S-RB2-INT — round 2 active, 2026-11-01 ~12:00 +08
 
+## LIVE17:56 — current authoritative ownership
+
+Read `docs/rb2int/LIVE_CONTINUATION_1756.md` first. gpuA handover COMPLETE17:52:42:
+capped513448/start890664618 now runs exactly2reserved-v5children969434/969435;
+original473053 EXITED, all13prior claims preserved. gpuR948148/start4215302457
+waits for its last old WM2child; new admission0 until exclusive1slot handover.
+Current collector25240/publisher44988 remain LIVE/sole owners. Existing report
+hash guards prohibit external WMPHYS_V5.md edits; next normal interim~19:57,
+complete reserved8 immediate. No evaluate/group/peer signals or task redispatch.
+
+Later-delivery standbys are LIVE but do not dispatch/collect: gpuA514854/
+start890706569, gpuR949247/start4215344299; local9724/
+create_filetime134380004640417822 (`runs/rb2int_late_wait_v1`). They take over ONLY
+after current owners' NATURAL clean cutoff/deadline receipts AND exact exits,
+preserve all claims/cache, cap2/1, and deliver immediately when full216jobs exist.
+Prospectively registered finite boundsNov4 09:00admission/09:55publication;
+original Nov2 attrition preserved. Exact PROCESS/STATUS receipts underdocs/rb2int.
+33CPU checks/Ruff PASS; modelb2df7458/final design unchanged. No qualification yet.
+
 ## OWNER17:35 priority — dispatch drain applied17:40 +08 (supersedes live admission below)
 
 - Original dispatch supervisors473053/gpuA and924719/gpuR are identity-verified

@@ -1,0 +1,25 @@
+{
+ "host": "gpuA",
+ "pid": 514854,
+ "start_ticks": "890706569",
+ "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+ "argv": [
+  "nice",
+  "-n",
+  "19",
+  "/root/miniconda3/bin/python",
+  "-B",
+  "-u",
+  "/root/autodl-tmp/c4/rb2int20261101/final_v5_v1/owner_late_control/capped_worker.py",
+  "--root",
+  "/root/autodl-tmp/c4/rb2int20261101/final_v5_v1",
+  "--host",
+  "gpuA",
+  "--after-current"
+ ],
+ "phase": "wait for current capped pass to exit naturally; then only missing claims",
+ "cap": 2,
+ "source_commit": "0b3a652ec3c0ef1881d07de249c3927e166b786b",
+ "source_sha256": "4e6a72774f8a9021ecae9bd3700efe4cb46e9f3c1193cceeda8d0ae156b1da74",
+ "started_at": "2026-11-01T17:54:11.537323+08:00"
+}

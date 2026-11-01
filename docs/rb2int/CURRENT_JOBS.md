@@ -1,5 +1,21 @@
 # Resume here — INT owned development jobs, sourceb2df7458
 
+## LIVE17:56 — authoritative owner-priority continuation
+
+Read LIVE_CONTINUATION_1756.md before any action. gpuA513448/start890664618 has
+completed exclusive handover and runs2reserved-v5worlds969434/969435; original473053
+EXITED and13prior claims preserved. gpuR948148/start4215302457 waits for last old
+WM2child before exclusive1slot handover; no new admission meanwhile. Original924719
+remains PAUSED/T. Current collector25240/publisher44988 LIVE/sole owners.
+
+Late remote standby514854/gpuA and949247/gpuR and local9724 are LIVE but DO NOT
+dispatch/collect until current owners' natural clean terminals AND actual exits.
+Bounded late pass endsNov4 09:00admission/09:55publication, earlier atfull216jobs;
+all claims/cache preserved, same2/1 cap and frozen design. Exact receipts:
+OWNER_1735_*_CAPPED_*.json, OWNER_LATE_*_PROCESS/STATUS*.json and
+runs/rb2int_late_wait_v1/{PROCESS,START_ONCE,STOP,COMPLETE}.json. Never duplicate.
+Use capped_ops status/status-late; old final_ops still refers to original PID.
+
 ## Owner17:35 priority (applied17:40) — highest-priority admission state
 
 Supervisors473053/gpuA and924719/gpuR are PAUSED/T via exact identity-bound pidfds;

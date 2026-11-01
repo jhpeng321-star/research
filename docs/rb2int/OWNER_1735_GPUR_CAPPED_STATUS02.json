@@ -1,0 +1,95 @@
+{
+ "exists": true,
+ "time": "2026-11-01T17:54:48.422856+08:00",
+ "process": {
+  "host": "gpuR",
+  "pid": 948148,
+  "start_ticks": "4215302457",
+  "boot_id": "d19e6898-efd0-4288-a901-d63b21f11163",
+  "argv": [
+   "nice",
+   "-n",
+   "19",
+   "/root/miniconda3/bin/python",
+   "-B",
+   "-u",
+   "/root/autodl-tmp/c4/rb2int20261101/final_v5_v1/owner1735_control/capped_worker.py",
+   "--root",
+   "/root/autodl-tmp/c4/rb2int20261101/final_v5_v1",
+   "--host",
+   "gpuR"
+  ],
+  "phase": "wait for all original children; then exclusive capped continuation",
+  "cap": 1,
+  "source_commit": "87ef677dac708cb944a5c44d76f8126111d81504",
+  "source_sha256": "9150d74817f8c908f3c915a25e40d3098a0ed9a4657e611af743024b277e1ed0",
+  "started_at": "2026-11-01T17:47:17.750536+08:00"
+ },
+ "alive": true,
+ "log_tail": "DRAIN gpuR active ['wm2_969550', 'wm2_969597', 'wm2_969598'] prior_claims 13\nDRAIN gpuR active ['wm2_969550', 'wm2_969597', 'wm2_969598'] prior_claims 13\nDRAIN gpuR active ['wm2_969550', 'wm2_969597', 'wm2_969598'] prior_claims 13\nDRAIN gpuR active ['wm2_969550', 'wm2_969597', 'wm2_969598'] prior_claims 13\nDRAIN gpuR active ['wm2_969550', 'wm2_969597', 'wm2_969598'] prior_claims 13\nDRAIN gpuR active ['wm2_969550', 'wm2_969597', 'wm2_969598'] prior_claims 13\nDRAIN gpuR active ['wm2_969550', 'wm2_969597', 'wm2_969598'] prior_claims 13\nDRAIN gpuR active ['wm2_969550', 'wm2_969597', 'wm2_969598'] prior_claims 13\nDRAIN gpuR active ['wm2_969550', 'wm2_969597', 'wm2_969598'] prior_claims 13\nDRAIN gpuR active ['wm2_969550', 'wm2_969597'] prior_claims 13\nDRAIN gpuR active ['wm2_969550', 'wm2_969597'] prior_claims 13\nDRAIN gpuR active ['wm2_969550', 'wm2_969597'] prior_claims 13\nDRAIN gpuR active ['wm2_969550', 'wm2_969597'] prior_claims 13\nDRAIN gpuR active ['wm2_969550', 'wm2_969597'] prior_claims 13\nDRAIN gpuR active ['wm2_969550', 'wm2_969597'] prior_claims 13\nDRAIN gpuR active ['wm2_969550', 'wm2_969597'] prior_claims 13\nDRAIN gpuR active ['wm2_969550', 'wm2_969597'] prior_claims 13\nDRAIN gpuR active ['wm2_969550'] prior_claims 13\nDRAIN gpuR active ['wm2_969550'] prior_claims 13\nDRAIN gpuR active ['wm2_969550'] prior_claims 13\nDRAIN gpuR active ['wm2_969550'] prior_claims 13\nDRAIN gpuR active ['wm2_969550'] prior_claims 13\nDRAIN gpuR active ['wm2_969550'] prior_claims 13\nDRAIN gpuR active ['wm2_969550'] prior_claims 13\nDRAIN gpuR active ['wm2_969550'] prior_claims 13\nDRAIN gpuR active ['wm2_969550'] prior_claims 13\nDRAIN gpuR active ['wm2_969550'] prior_claims 13\nDRAIN gpuR active ['wm2_969550'] prior_claims 13\nDRAIN gpuR active ['wm2_969550'] prior_claims 13\nDRAIN gpuR active ['wm2_969550'] prior_claims 13\n",
+ "OWNER_1735_CAPPED_START_ONCE.json": {
+  "pid": 948148,
+  "start_ticks": "4215302457",
+  "boot_id": "d19e6898-efd0-4288-a901-d63b21f11163",
+  "source_sha256": "9150d74817f8c908f3c915a25e40d3098a0ed9a4657e611af743024b277e1ed0",
+  "cap": 1,
+  "no_evaluate_signals": true,
+  "original": {
+   "pid": 924719,
+   "start_ticks": "4214495421",
+   "boot_id": "d19e6898-efd0-4288-a901-d63b21f11163",
+   "argv": [
+    "nice",
+    "-n",
+    "19",
+    "/root/miniconda3/bin/python",
+    "-B",
+    "-u",
+    "/root/autodl-tmp/c4/rb2int20261101/phys_code_d0df3d66e80a/tools/rb2int/final_worker.py",
+    "--root",
+    "/root/autodl-tmp/c4/rb2int20261101/final_v5_v1",
+    "--host",
+    "gpuR"
+   ],
+   "root": "/root/autodl-tmp/c4/rb2int20261101/final_v5_v1",
+   "host": "gpuR"
+  },
+  "started_at": "2026-11-01T17:47:17.820272+08:00"
+ },
+ "OWNER_LATE_WAIT_ONCE.json": {
+  "pid": 949247,
+  "start_ticks": "4215344299",
+  "boot_id": "d19e6898-efd0-4288-a901-d63b21f11163",
+  "previous": {
+   "host": "gpuR",
+   "pid": 948148,
+   "start_ticks": "4215302457",
+   "boot_id": "d19e6898-efd0-4288-a901-d63b21f11163",
+   "argv": [
+    "nice",
+    "-n",
+    "19",
+    "/root/miniconda3/bin/python",
+    "-B",
+    "-u",
+    "/root/autodl-tmp/c4/rb2int20261101/final_v5_v1/owner1735_control/capped_worker.py",
+    "--root",
+    "/root/autodl-tmp/c4/rb2int20261101/final_v5_v1",
+    "--host",
+    "gpuR"
+   ],
+   "phase": "wait for all original children; then exclusive capped continuation",
+   "cap": 1,
+   "source_commit": "87ef677dac708cb944a5c44d76f8126111d81504",
+   "source_sha256": "9150d74817f8c908f3c915a25e40d3098a0ed9a4657e611af743024b277e1ed0",
+   "started_at": "2026-11-01T17:47:17.750536+08:00"
+  },
+  "cap": 1,
+  "source_sha256": "4e6a72774f8a9021ecae9bd3700efe4cb46e9f3c1193cceeda8d0ae156b1da74",
+  "dispatch_cutoff": "2026-11-04T09:00:00+08:00",
+  "signals_sent": false
+ },
+ "original_alive": true,
+ "original_state": "T",
+ "gpu": "20504, 41"
+}
