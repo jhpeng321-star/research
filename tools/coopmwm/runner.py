@@ -283,6 +283,19 @@ def final_test(root,b,policies,si=0):
     if si==0:discover(root,b,policies['B'],[r for r in records if r['arm']=='B'],'final_test')
 
 
+def registered_sampling(root):
+    fitted=read(root/'SAMPLING_1755.json')
+    registration=(root/'SAMPLING_AUTHORITY_1755.md').read_text()
+    h=fitted['registration_sha256_of_payload']
+    if not any('S-COOPMWM 17:55 NUMERIC SAMPLING REGISTERED' in line and h in line for line in registration.splitlines()):
+        raise ValueError('numeric sampling registration absent')
+    if digest(fitted['payload'])!=h:raise ValueError('registered sampling payload binding mismatch')
+    rates=fitted['payload']['probabilities']
+    if set(rates)!={'merge-dense','ordinary'} or not 0<rates['merge-dense']<=.5 or rates['ordinary']!=rates['merge-dense']/4:
+        raise ValueError('sampling probability contract mismatch')
+    return rates
+
+
 def run(root,smoke_only=False):
     b=verify(root)
     import fcntl
@@ -331,6 +344,11 @@ def run(root,smoke_only=False):
                     guide_arm='R' if active==['R'] else 'B'
                     previous=read(root/f'S{si}_{guide_arm}_UPDATE_{u-1:03}.json')
                     beta=previous['trust']
+                if u>=2 and b.get('sampling_gate_before_update2') and not b.get('proposal_sampling'):
+                    while not (root/'SAMPLING_1755.json').exists():
+                        if (root/'STOP.json').exists():raise ValueError('STOP while waiting for registered sampling')
+                        time.sleep(2)
+                    b=dict(b,proposal_sampling=registered_sampling(root))
                 b=dict(b,beta=beta,sampling=None if u==1 else b.get('proposal_sampling'))
                 episodes_all=wave(root,b,policies,batch_worlds(u,si),'paired','train',f's{si}_u{u:03}','train')
                 if si==0 and u==1 and 'B' in active:

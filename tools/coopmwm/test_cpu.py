@@ -253,6 +253,23 @@ class Contracts(unittest.TestCase):
             self.assertEqual(len(rows),12);self.assertEqual(sum(r['sim_s'] for r in rows),14400)
             with self.assertRaisesRegex(ValueError,'duplicate charge'):charge(0)
 
+    def test_numeric_sampling_requires_matching_prospective_payload_registration(self):
+        import json
+        from pathlib import Path
+        from tempfile import TemporaryDirectory
+        from .protocol import digest
+        from .runner import registered_sampling
+        with TemporaryDirectory() as d:
+            root=Path(d);payload=dict(probabilities={'merge-dense':.02,'ordinary':.005});h=digest(payload)
+            (root/'SAMPLING_1755.json').write_text(json.dumps(dict(payload=payload,registration_sha256_of_payload=h)))
+            auth=root/'SAMPLING_AUTHORITY_1755.md';auth.write_text('missing registration')
+            with self.assertRaisesRegex(ValueError,'registration absent'):registered_sampling(root)
+            auth.write_text('S-COOPMWM 17:55 NUMERIC SAMPLING REGISTERED '+h)
+            self.assertEqual(registered_sampling(root),payload['probabilities'])
+            payload['probabilities']['ordinary']=.01
+            (root/'SAMPLING_1755.json').write_text(json.dumps(dict(payload=payload,registration_sha256_of_payload=h)))
+            with self.assertRaisesRegex(ValueError,'binding mismatch'):registered_sampling(root)
+
     def test_random_window_selection_uses_only_eligibility_not_credit(self):
         from .runner import select_calibration
         episodes=[dict(world=dict(cell=i,seed=986000+i),steps=[

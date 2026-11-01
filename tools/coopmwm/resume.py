@@ -56,7 +56,7 @@ def bind(cpu_name):
     auth=authority(text)
     assert 'S-COOPMWM 17:55 DUAL-GPU AMENDMENT REGISTERED' in text
     amendment=read(ops.EVIDENCE/'BUDGET_AMENDMENT_1755.json')
-    sampling=read(ops.EVIDENCE/'SAMPLING_1755.json')
+    sampling=read(ops.EVIDENCE/'SAMPLING_1755.json') if (ops.EVIDENCE/'SAMPLING_1755.json').exists() else None
     out=ops.ssh.remote('cpuQ',f'''import sys,pathlib,json,hashlib
 r=pathlib.Path({deploy.ROOT!r});s=pathlib.Path({SOURCE_ROOT!r});assert r.is_dir() and s.is_dir()
 sys.path[:0]=[str(s/'pytools'),'/home/ubuntu/e3final/runtime/src','/home/ubuntu/e3final/runtime']
@@ -65,7 +65,8 @@ assert (r/'QUIESCE_1742.json').exists()
 old=read(r/'BINDING.json');b=dict(old)
 b.update(cpu=json.loads({json.dumps(cpu)!r}),budget=json.loads({json.dumps(budget())!r}),
  authority=json.loads({json.dumps(auth)!r}),amendment=json.loads({json.dumps(amendment)!r}),
- workers=12,proposal_sampling=json.loads({json.dumps(sampling['probabilities'])!r}),
+ workers=12,proposal_sampling=json.loads({json.dumps(sampling['probabilities'] if sampling else None)!r}),
+ sampling_gate_before_update2=True,
  parent_binding_sha256=hashlib.sha256((r/'BINDING.json').read_bytes()).hexdigest())
 b['hashes']=dict(old['hashes'])
 for name,h in json.loads({json.dumps(staged['hashes'])!r}).items():b['hashes']['../'+s.name+'/'+name]=h
@@ -107,9 +108,27 @@ write(r/'TRAIN_DISPATCH_1742.json',d);print(json.dumps(d))
     value=json.loads(out);write(ops.EVIDENCE/'TRAIN_DISPATCH_1742.json',value);print(out)
 
 
+def sampling_bind():
+    from .protocol import digest
+    payload=read(ops.EVIDENCE/'SAMPLING_1755.json');h=digest(payload)
+    registry=checked(REGISTRY).read_text(encoding='utf-8')
+    assert any('S-COOPMWM 17:55 NUMERIC SAMPLING REGISTERED' in line and h in line for line in registry.splitlines())
+    out=ops.ssh.remote('cpuQ',f'''import sys,pathlib,json
+r=pathlib.Path({deploy.ROOT!r});sys.path.insert(0,{SOURCE_ROOT!r}+'/pytools')
+from tools.coopmwm.storage import read,write
+value=dict(payload=json.loads({json.dumps(payload)!r}),registration_sha256_of_payload={h!r})
+assert not (r/'SAMPLING_1755.json').exists(),'one-use fixed sampling binding'
+with (r/'SAMPLING_AUTHORITY_1755.md').open('x') as f:f.write({ascii(registry)})
+write(r/'SAMPLING_1755.json',value)
+print(json.dumps(dict(bound=True,payload_sha256={h!r},probabilities=value['payload']['probabilities'],sim_s=0)))
+''',timeout=35)
+    value=json.loads(out);write(ops.EVIDENCE/'SAMPLING_BINDING_1755.json',value);print(out)
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('quiesce','bind','launch'))
-    p.add_argument('--cpu',default='CPU_coopmwm20261101_cpu19.json');a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('quiesce','bind','launch','sampling'))
+    p.add_argument('--cpu',default='CPU_coopmwm20261101_cpu20.json');a=p.parse_args()
     if a.mode=='quiesce':quiesce()
     elif a.mode=='bind':bind(a.cpu)
+    elif a.mode=='sampling':sampling_bind()
     else:launch()
