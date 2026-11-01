@@ -5,6 +5,23 @@ Original advance-approved exact cap7,012,800; designSHA09499f2af60311b3690a940dc
 
 ## Current state
 
+**FINAL169 COMPLETE /17:31+08 verified:** original606968 has EXITED normally;
+169updates/all7774production/no open reservations/no new failures. Actual6997800,
+reserved6998400training+smoke; original900/300failure retained;14400local evaluation
+UNSTARTED and original7012800cap unchanged. Final checkpointSHA
+`82c6745bac50aaf4dee98f5d8b3c60db0e5e558d9abf4667dd8e605774f4b3c4`.
+FinalcollectionSHA`a8a08f8c30279c1473b78421d740332e2ef158f3ad117ad8839851723e1de8c0`;
+heartbeat `selmappo2/SUPERVISION_1793525482971644800.json` zeroalerts,
+0control-window collisions/teleports. Foreground supervision12:15..17:31 complete,
+all progress commits retained; NO trainer restart or duplicate monitor/dispatch.
+Existing watcher12432 published genuine final169/source/config/freeze/accounting
+to C1SWITCH2/SELMAPPO2_FINAL.json; byte equality verified, SHA
+`9ae72e2702aac270afb97e0dce555006c651c040925f3885127e40ba18ced30e`.
+Evaluation remains peer-owned/PENDING on registered16worlds/PANEL_v2; the existing
+watcher waits for explicit PEER_EVALUATION_MANIFEST.json and performs no physics.
+Do not relaunch training or evaluate another checkpoint. The complete169-point
+learning curve and exact report are in docs/paper_results/SELMAPPO2.md.
+
 **13:55+08 foreground disk/ownership audit:** original606968 exactUID/start/
 command/nice19 remainsLIVE and original watcher12432 identity is unchanged.
 Latest13:54heartbeat353823f5 verifies114/169updates,5270production,12open,

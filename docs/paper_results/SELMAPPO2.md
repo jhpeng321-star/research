@@ -2,6 +2,34 @@
 
 ## Status (2026-11-01)
 
+**FINAL training verified at17:31+08:00:** all **169/169 updates** and
+**7,774/7,774 production episodes** are complete. The existing trainer606968 has
+exited; all reservations are closed. Training+smoke totals are **6,997,800 actual /
+6,998,400 reserved sim-s**, retaining the original failed smoke900reserved/300actual.
+The separate14,400local evaluation reservation remains unstarted, so total
+reserved authority stays **7,012,800sim-s**. No production replay or restart was
+needed during this session's12:15..17:31 supervision; each progress step was committed.
+
+Final169 checkpoint SHA256:
+`82c6745bac50aaf4dee98f5d8b3c60db0e5e558d9abf4667dd8e605774f4b3c4`.
+The verified final collection SHA256 is
+`a8a08f8c30279c1473b78421d740332e2ef158f3ad117ad8839851723e1de8c0`;
+`selmappo2/SUPERVISION_1793525482971644800.json` records zero alerts and zero
+open reservations. Control-interval result receipts record0collisions/0teleports;
+warmup safety is not separately recorded. Final training cohort J600 is
+55,207.0015veh-s (46fresh worlds), a training statistic rather than evaluation.
+All169learning-curve points and their checkpoint hashes are linked below.
+
+**Evaluation pending at S-C1SWITCH2:** the existing watcher published
+`E:/agent-work/c4-c1switch2/SELMAPPO2_FINAL.json`, byte-identical to this task's
+`selmappo2/FINAL_HANDOFF_build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29.json`.
+Handoff SHA256 is`9ae72e2702aac270afb97e0dce555006c651c040925f3885127e40ba18ced30e`.
+It binds checkpoint, optimizer/config/source identities, final freeze and complete
+accounting. C1SWITCH2 owns the registered16-world/J600/J900 evaluation and oracle
+branches; no per-CAV evaluation results or paired efficacy CIs exist here yet.
+Watcher12432 remains available to import an explicit hash-bound peer receipt.
+Earlier status paragraphs below are historical snapshots, superseded by this final.
+
 **12:15 +08:00 / MAIN12:14 continuation:** active supervision now continues until
 the existing per-CAV trainer reaches final checkpoint169. Fresh exact identity
 audit verifies original cpuQ606968/UID1000/startticks48374316/nice19 and local
@@ -284,11 +312,11 @@ J600 is full-team delay over the 600 s control interval; lower is better. Each p
 
 
 
-![Training learning curve](selmappo2/selmappo2_curve_1793525385602691800_9e09d888156e490da7700d1bce9af594.svg)
+![Training learning curve](selmappo2/selmappo2_curve_1793525685693763800_e012fbd45d9d4017b956d8040f57388c.svg)
 
 
 
-[Complete-update metrics CSV](selmappo2/selmappo2_curve_1793525385602691800_9e09d888156e490da7700d1bce9af594.csv)
+[Complete-update metrics CSV](selmappo2/selmappo2_curve_1793525685693763800_e012fbd45d9d4017b956d8040f57388c.csv)
 
 
 
