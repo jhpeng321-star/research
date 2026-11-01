@@ -60,7 +60,12 @@ def load_candidate(checkpoints, configs, device):
         root = Path(__file__).resolve().parents[2]
         options_full = recipe['variants']['FULL']
         if options_full['fitted_lc']:
-            raise ValueError('fitted LC has not passed its baseline')
+            from wms.physics.lane_continuation import LaneContinuation
+            if not options_full.get('condition_motion', False):
+                raise ValueError('fitted LC requires own-start causal conditioning')
+            candidate._wmphys_lane_continuation = LaneContinuation.from_directory(
+                root/options_full['lane_parameter_directory'])
+            receipt['fitted_lc'] = candidate._wmphys_lane_continuation.provenance
         candidate._wmphys_native_model = options_full.get('native_model', 'registered_head')
         if candidate._wmphys_native_model not in ('registered_head', 'sumo_physics'):
             raise ValueError('unsupported native-CAV law')
@@ -122,8 +127,16 @@ def fitted_state_at_start(model, seed):
     from tools.rbint.motion_posterior import condition_population
     if int(seed) not in model._wmphys_conditioned_cache:
         start, raw = load_motion_history(seed)
-        model._wmphys_conditioned_cache[int(seed)] = condition_population(
+        conditioned, receipt = condition_population(
             fitted, model._wmphys_motion_fit, model._wmphys_shrinkage_policy, start, raw)
+        continuation = getattr(model, '_wmphys_lane_continuation', None)
+        if continuation is not None:
+            from tools.rblane.runtime_history import lane_arrays
+            records, lane_receipt = continuation.condition(lane_arrays(start, raw),
+                world=int(seed), t0_s=300., physics=model.physics)
+            conditioned = continuation.attach(conditioned, records, t0_s=300., receipt=lane_receipt)
+            receipt.update(lane_receipt)
+        model._wmphys_conditioned_cache[int(seed)] = conditioned, receipt
     return model._wmphys_conditioned_cache[int(seed)]
 
 
@@ -222,6 +235,15 @@ def candidate_future(*, model, batch, initial, future, seed, frozen, **unused):
         queues=[spec['queues'][0]] * rows,
         sample_present=settings in ('A', 'FULL'), **extra)
     plan = plans[future]
+    if getattr(model, '_wmphys_lane_continuation', None) is not None:
+        from tools.rbint.observations import load_motion_history
+        from tools.rblane.runtime_history import lane_arrays
+        from wms.physics.lane_continuation import warm_lane_memory
+        observed_start, raw = load_motion_history(seed)
+        memory = warm_lane_memory(lane_arrays(observed_start, raw), t0_s=300.,
+            physics=model.physics, driver_params=plan.kwargs['driver_params'], vehicle_ids=ids)
+        initial.update(memory, vehicle_id=ids.clone())
+        plan.receipt['lc_wish_initialization'] = 'causal60s_replay_under_sampled_settings'
     if defaults is not None:
         plan.kwargs['driver_params'] = {n: defaults[..., i] for i, n in enumerate(PARAMETER_NAMES)}
         plan.receipt.update(posterior_source=('fixed_inherited_physics_population'

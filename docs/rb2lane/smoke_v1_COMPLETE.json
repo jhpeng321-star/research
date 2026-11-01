@@ -1,0 +1,33 @@
+{
+  "root": "/home/ubuntu/rb2lane20261101_smoke_v1_e04c1f478e11",
+  "process": {
+    "pid": 1201680,
+    "start_ticks": "52081948",
+    "command": [
+      "/usr/bin/nice",
+      "-n",
+      "19",
+      "/home/ubuntu/miniconda3/bin/python",
+      "-B",
+      "-u",
+      "-m",
+      "tools.rblane.round2_validate",
+      "--continuation",
+      "/home/ubuntu/rb2lane20261101_smoke_v1_e04c1f478e11/artifacts/rbfit/lane_raw_c5602102891e",
+      "--out",
+      "/home/ubuntu/rb2lane20261101_smoke_v1_e04c1f478e11/results",
+      "--samples",
+      "8",
+      "--horizon",
+      "60",
+      "--worlds",
+      "969400",
+      "--arms",
+      "native"
+    ]
+  },
+  "complete": true,
+  "alive": false,
+  "collected_at": 1793506633.965709,
+  "bundle_sha256": "e04c1f478e11a7a78c7e99c53127542c1d9756f1859cb7948b97f6efaf148cbc"
+}

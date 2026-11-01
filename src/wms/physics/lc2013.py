@@ -95,7 +95,8 @@ def _settings(v: Tensor, physics: PhysicsConfig,
                     lcSpeedGain=1, lcKeepRight=1, lcAssertive=1,
                     lcLookaheadLeft=2, lcSpeedGainRight=0.1,
                     lcSpeedGainRemainTime=20, lcKeepRightAcceptanceTime=-1,
-                    lcSpeedGainUrgency=50, lcCooperativeSpeed=1)
+                    lcSpeedGainUrgency=50, lcCooperativeSpeed=1,
+                    actionStepLength=physics.dt_s)
     out = {key: torch.full_like(v, float(value)) for key, value in defaults.items()}
     if params is not None:
         for key in out:
@@ -202,7 +203,13 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
         return torch.where(same, memory.get(key, torch.zeros_like(v)).to(v), 0.0)
     left_wish, right_wish, keep = (previous(key) for key in STATE_KEYS[:3])
     look = previous("lc2013_lookahead")
-    look = torch.where(v > look, v, ((1 - 0.1 * dt) * look + 0.1 * dt * v).clamp_min(0))
+    action_dt = p['actionStepLength']
+    look_new = torch.where(v > look, v,
+        ((1 - 0.1 * action_dt) * look + 0.1 * action_dt * v).clamp_min(0))
+    # MSLaneChanger:359 skips wantsChange on non-action steps. In particular,
+    # neither the lookahead memory nor wish counters may age on those ticks.
+    # decision_mask is the caller's isActive schedule (default every sim tick).
+    look = torch.where(active & legal, look_new, look)
     la = look * 10 * p["lcStrategic"] * torch.where(right, 1.0, p["lcLookaheadLeft"])
     la = la + 2 * (length + p["min_gap"])
     la = torch.where(p["lcStrategic"] < 0, -1000.0, la)
@@ -232,11 +239,17 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
     cl, ic, _, _, _ = _neighbours(kin, present, lane, context, p, dt, physics, ballistic)
     has_l, has_f, has_c = torch.isfinite(gl), torch.isfinite(gf), torch.isfinite(cl)
     vl, vf = v.gather(-1, il), v.gather(-1, iff)
-    need_l = secure_gap(v, vl, p["accel"], p["decel"], p["time_headway"])
-    need_f = secure_gap(vf, v, p["accel"].gather(-1, iff),
+    # MSLaneChanger:851-910: longer action steps extrapolate conservative
+    # reaction-time speeds; with the default actionStepLength==TS this is zero.
+    remainder = torch.where(action_dt == dt, 0., (p['time_headway'] - dt).clamp_min(0))
+    need_l = secure_gap(v + (remainder * kin[..., 5]).clamp_min(0),
+                       vl + (remainder * kin[..., 5].gather(-1, il)).clamp_max(0),
+                       p["accel"], p["decel"], p["time_headway"])
+    need_f = secure_gap(vf + (remainder * kin[..., 5].gather(-1, iff)).clamp_min(0),
+                         v + (remainder * kin[..., 5]).clamp_max(0), p["accel"].gather(-1, iff),
                          p["decel"].gather(-1, iff), p["time_headway"].gather(-1, iff))
     valid = torch.isfinite(kin).all(-1) & (v >= 0) & (length > 0)
-    for key in ("accel", "decel", "v0", "lcAssertive", "lcSpeedGainRight"):
+    for key in ("accel", "decel", "v0", "lcAssertive", "lcSpeedGainRight", "actionStepLength"):
         valid &= torch.isfinite(p[key]) & (p[key] > 0)
     for key in ("min_gap", "time_headway"):
         valid &= torch.isfinite(p[key]) & (p[key] >= 0)
@@ -277,7 +290,7 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
         p["v0"], p["accel"], p["decel"], p["time_headway"], p["min_gap"], dt)
     avoid_impulse = own_advice & (future_follow < avoid_speed)
     left_wish += torch.where(avoid_impulse, torch.trunc(
-        dt * dv_right / p["v0"].clamp_min(10) * PRECISION), 0.0)
+        action_dt * dv_right / p["v0"].clamp_min(10) * PRECISION), 0.0)
     relative_gain = (neigh_speed - this_speed) / neigh_speed.clamp_min(10)
     # Source1643-1669 returns on cooperative clearing BEFORE1694's speed-gain
     # and keep-right accumulation. Inconvenience uses the pre-update wishes.
@@ -295,12 +308,12 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
     cooperative &= to_best | (target_length / (offset.abs() + 1) > la)
     cooperative_return = legal & active & ~urgent & ~stay & cooperative
     update = legal & active & ~urgent & ~stay & ~cooperative
-    left_new = torch.where(this_speed > neigh_speed, torch.trunc(left_wish * 0.5**dt),
-               torch.where(this_speed == neigh_speed, torch.trunc(left_wish * 0.8**dt),
-                           left_wish + torch.trunc(dt * relative_gain * PRECISION)))
+    left_new = torch.where(this_speed > neigh_speed, torch.trunc(left_wish * 0.5**action_dt),
+               torch.where(this_speed == neigh_speed, torch.trunc(left_wish * 0.8**action_dt),
+                            left_wish + torch.trunc(action_dt * relative_gain * PRECISION)))
     right_new = torch.where(this_speed - 5 / 3.6 > neigh_speed,
-                            torch.trunc(right_wish * 0.5**dt),
-                            right_wish + torch.trunc(dt * relative_gain * PRECISION))
+                             torch.trunc(right_wish * 0.5**action_dt),
+                             right_wish + torch.trunc(action_dt * relative_gain * PRECISION))
     # Source default legacy keep-right acceptance, no hand-set dwell threshold.
     road_speed_factor = p["v0"] / float(physics.speed_limit_mps)
     acceptance = road_speed_factor * torch.where(p["lcKeepRightAcceptanceTime"] == -1,
@@ -329,7 +342,7 @@ def lane_change(kin: Tensor, present: Tensor, physics: PhysicsConfig, *,
         no_pass_gap / (p["v0"] - current_v)), full_seconds)
     keep_delta = torch.where(p["lcSpeedGain"] > 0,
         threshold_r * (full_seconds / acceptance.clamp_min(1e-9)) / 5, 0.0)
-    keep_new = keep - torch.trunc(dt * keep_delta)
+    keep_new = keep - torch.trunc(action_dt * keep_delta)
     left_wish = torch.where(update & ~right, left_new, left_wish)
     right_wish = torch.where(update & right, right_new, right_wish)
     keep = torch.where(update & right & (this_speed - 5 / 3.6 <= neigh_speed), keep_new, keep)

@@ -3,8 +3,8 @@
 Branch `c4/rb2-int`, base engineering source FULL-v4 `22cc32f6`; inherited
 round-1 delivery remains below. Read `docs/rb2int/PLAN.md` when available.
 
-- FULL-v5 and FULL-v5-LP are **NOT READY**. LANE/BREAK/CAL now have round-2
-  plans but no implementation delivery; LPHYS still has the inherited handoff.
+- FULL-v5 and FULL-v5-LP are **NOT READY**. LANE engineering intake6b4bfbd5 is
+  being integrated; BREAK/CAL/LPHYS delivery and complete development evidence pending.
   Fresh-session recovery and next steps: `docs/rb2int/PLAN.md`.
 - FIT/selection stays on969400–969431 (development panel969420–969431).
   Reserved969432–969439 only for the final frozen comparison.
@@ -36,12 +36,54 @@ round-1 delivery remains below. Read `docs/rb2int/PLAN.md` when available.
 - Extended-panel input adapter and strict replicated-world bootstrap implemented;
   targeted adapter/panel/uncertainty/source/core suite30PASS. New starts require
   immutable registration/release/input hashes and causal source counters. Default
-  round1 loader restriction preserved. No model delivery merged or job launched.
+  round1 loader restriction preserved. No INT inference job launched.
 - Infrastructure now includes frozen-runtime isolation, approved-run reader,
   original distributional-gate adapter, six simultaneous model contrasts and
   explicit point/supported switching states. Combined CPU suite56PASS/1historical
   canary skip (24.39s), Ruff PASS: `docs/rb2int/CPU_INFRASTRUCTURE.md`.
   Runtime staging, input preparation, exposure-cleared release and jobs pending.
+## LANE engineering intake — source snapshot6b4bfbd5
+
+Imported commits73a5685b/a29116e9/6b4bfbd5. CPU/development diagnostics below
+belong to LANE, not INT process ownership. Default fitted-LC recipe remains OFF;
+explicit candidate `configs/wm_phys_rb2_lane.toml` is not yet a FULL-v5 freeze.
+INT intake suite92PASS/1CUDA skip/30.49s; `docs/rb2int/INTAKE_LANE.md`.
+Latest gpuR disk audit still only~53MiB root free; no INT dispatch admitted.
+
+### Preserved S-RB2-LANE handoff (12:23 source snapshot)
+
+Branch `c4/rb2-lane`; engineering base FULL-v4 `22cc32f6` (inherited
+round-1 final-delivery HEAD `03c81f91`).
+
+## Round-2 status (12:23 update)
+- Source comparison complete against read-only SUMO1.27.1 cache
+  `E:/Temp/opencode/sumo-1.27.1-rb-lane`. No downloaded source executed.
+- Required LC continuation: `E:/agent-work/c4-rb-fit/artifacts/rbfit/lane_raw_c5602102891e`.
+  Population SHA256 `b903fa49fe1f3f1a15428ae48de5c8f86863aa5c5821dbb0acc8275c77d4483f`.
+- Candidate implementation exists; not yet qualified. `configs/wm_phys_rb2_lane.toml`
+  differs only by `fitted_lc=true` and `lane_parameter_directory`. Base recipe
+  stays OFF. Separate LC causal conditioning attaches AFTER independent IDM;
+  native tape saved-ID posteriors never transfer to another export's identities.
+  Sampled-profile causal60s replay initializes wishes by ID. No learned corrections.
+- Source fixes: nondecision lookahead freeze; documented actionStepLength for
+  wishes/decay; source tauRemainder secure speeds for nondefault action steps.
+  No generic changeWish decay exists in this SUMO tag. Full serial negotiation
+  and internal critical leaders remain incomplete; see `docs/RB2_LANE_SOURCE_AUDIT.md`.
+- 84 targeted CPU tests PASS before last recipe-only addition. First FIT969400
+  smoke: pooled IDM/LCdefault547 proposals,15TP/30events; fitted K8mean31.375,
+  3.5TP (precision2.74→11.16%, recall50→11.67%). Count improvement loses recall;
+  no declaration that matching lane dynamics is solved.
+- CPU nice19 diagnostics LIVE: native FIT32 H300 in two disjoint16world shards;
+  development12 four nonnative arms H60 in two disjoint6world shards. K8 persistent
+  LC draws, same pooled IDM, no fitting. Receipts `docs/rb2lane/*_DISPATCH.json`.
+- Exposure: prior rules/morning/handoffs/noon freeze and aggregate evidence read;
+  new diagnosis ONLY FIT969400–969431. No reserved outcome files opened for
+  round-2 selection. No WMDATA2 access; respect INT exposure quarantine.
+- Resource audit: local nvidia-smi driver unavailable; cpuQ12:01 load12.93.
+  Four own CPU workers now launched; no peer processes signalled. No GPU used.
+- Delivery: physics parity, persistent fitted LC/causal conditioning, FIT
+  lane/segment counts/rates/timing and per-predicted-motivation precision/recall
+  contributions, exact versions/tests. Full qualification belongs to INT.
 
 ## Preserved round-1 handoff
 
