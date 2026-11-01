@@ -59,6 +59,13 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**11:35 fresh-session continuation:** original registered twelve UNSTARTED WM
+oracle branches now dispatched once on gpuR, ownPID885469, root
+`/root/c1switch2_run_oracles_8d6ceccb69058bb0`;6000sim-s cap/GPU0.
+Time/load/current-registration, predecessor ledger, immutable supervisor and CPU
+binding checks passed. No original WM episodes or completed CPU arms replayed.
+Receipt: `WM_ORACLE_CONTINUATION_DISPATCH.json`. Existing observer25348 remains
+live; unrelated selector handoff changes in this worktree are preserved.
 **Additional CPU-only original-WM oracle continuation (after11:30 only):**
 gpuR stopped-stage proof confirms2700charged, no oracle branch ever charged,
 and exactly12 registered specs for completed worlds969139/j1 and969143/j13.
