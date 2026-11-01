@@ -1,5 +1,16 @@
 # S-COOPMWM live continuation — infrastructure recovery / explicit cap gate
 
+MAIN01:33 durability engineering: warm_spool.py wraps the UNCHANGED warm service
+with disk-backed stdin on a detached GPU process; completed forecasts survive SSH
+loss, repeated identical submissions adopt one result, interrupted claims STOP/no
+inference replay. CPU9tests PASS plus8transport tests locally; remote cpuQ9PASS
+and detached two-SSH-session probe PASS (2939705/start56944518, completed normally).
+WARM_SPOOL_QUALIFICATION/REGISTRATION pin source and evidence. This is CPU-only
+transport qualification, NOT GPU activation or warm-release qualification. Adapter
+still needs source-bound worker staging/startup gates and broker wiring before use.
+cpuQ has no gpuA SSH alias (read-only route probe failed DNS); no credentials copied.
+Both original qual4 GPU jobs continue; no duplicate/physics dispatch.
+
 FRESH RESUME 2026-11-02 ~01:40: complete221-line brief read through MAIN01:38.
 Verified A exited at u16; all288 warm jobs closed, pending0, charge1405640.
 B/R have no dispatch. Existing qual4 GPUs are BOTH identity-verified R; each

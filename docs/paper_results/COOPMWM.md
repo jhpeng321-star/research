@@ -1,5 +1,21 @@
 # S-COOPMWM — live checks
 
+## Remote-worker durability engineering — MAIN01:33
+- Added a disk-spool input adapter around the unchanged warm GPU service. A
+  detached worker can retain its model process, request claim and completed
+  forecast across SSH/Windows disconnects. Search/model settings are unchanged.
+- **17 local CPU tests PASS** (9 spool lifecycle + 8 existing transport), zero
+  skips/SUMO. Remote cpuQ: **9 PASS**, plus a real detached process that processed
+  its request after the launching SSH session ended, with stdin disconnected.
+  Three identical deliveries produced exactly one inference claim and forecast.
+- Conflicting inputs, changed completed requests, interrupted inference and wrong
+  result identities stop without replay. Durable receipts:
+  `coopmwm/WARM_SPOOL_QUALIFICATION.json` and `WARM_SPOOL_REGISTRATION.json`.
+- This qualifies transport lifecycle only. Source-bound GPU startup parity and
+  broker wiring are still required before activation. Both original qual4 GPU
+  jobs continue; zero new SUMO. A direct cpuQ→gpuA alias probe failed DNS, so
+  remote broker connectivity is not assumed or advertised as working.
+
 ## Fresh resume — 2026-11-02 ~01:40
 - Complete brief read through MAIN01:38. Fresh status verifies A at u16/exited,
   **288/288 warm jobs closed, zero pending requests, 1,405,640 sim-s charged**;
