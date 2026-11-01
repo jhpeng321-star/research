@@ -1,6 +1,11 @@
 # S-SELMAPPO2 — per-CAV MAPPO controller picker
 
-## Status (2026-11-01)
+## Status (reconciled 2026-11-02)
+
+**Nov2 resume:** the original final collection passes `report.analyze` again;
+all169updates, checkpoint and handoff identities below are unchanged. Existing
+watcher12432 matches its exact recorded executable/command/creation/source identity.
+Evidence: `selmappo2/RESUME_20261102_FINAL_RECONCILIATION.json`.
 
 **FINAL training verified at17:31+08:00:** all **169/169 updates** and
 **7,774/7,774 production episodes** are complete. The existing trainer606968 has
@@ -20,13 +25,21 @@ warmup safety is not separately recorded. Final training cohort J600 is
 55,207.0015veh-s (46fresh worlds), a training statistic rather than evaluation.
 All169learning-curve points and their checkpoint hashes are linked below.
 
-**Evaluation pending at S-C1SWITCH2:** the existing watcher published
+**Evaluation incomplete at S-C1SWITCH2:** the existing watcher published
 `E:/agent-work/c4-c1switch2/SELMAPPO2_FINAL.json`, byte-identical to this task's
 `selmappo2/FINAL_HANDOFF_build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29.json`.
 Handoff SHA256 is`9ae72e2702aac270afb97e0dce555006c651c040925f3885127e40ba18ced30e`.
 It binds checkpoint, optimizer/config/source identities, final freeze and complete
 accounting. C1SWITCH2 owns the registered16-world/J600/J900 evaluation and oracle
-branches; no per-CAV evaluation results or paired efficacy CIs exist here yet.
+branches. Its Nov2 reconciliation has2/16complete per-CAV episodes and terminal
+adapter/import failures on969138(cpuQ) and969139(gpuR). Peer per-CAV charges are
+3300sim-s, with2980closed-actual sim-s; unclosed work is not asserted to be zero.
+These are separate peer evaluation costs, not additional training charges. No
+complete panel receipt or paired efficacy CI is available. Peer CPU-only repairs
+pass156checks/Ruff; unstarted-scope continuation awaits MAIN authority under the
+peer's terminal-scope protocol. The selector's standing same-cap training repair
+authority does not supersede the evaluation owner's dispatch gates. Hash-bound
+status: `selmappo2/PEER_STATUS_20261102.json`.
 Watcher12432 remains available to import an explicit hash-bound peer receipt.
 Earlier status paragraphs below are historical snapshots, superseded by this final.
 
@@ -230,8 +243,9 @@ under the amended no-retry protocol; no failed world is replayed or replaced.
 
 ## Learning curves and evaluation
 
-Production is running; the first verified complete-update point and its CSV/SVG
-are published in the live section below. No efficacy claim follows from it.
+Production is complete. All169verified complete-update points and their CSV/SVG
+are published in the live section below. These are training statistics; efficacy
+requires the separate peer evaluation.
 Supervisor records per-update J600 mean/std/range, episode
 return, PPO loss/KL-stop, sim-s/hour, actual/reserved charge and checkpoint SHA256
 in `training/training.jsonl`. Initial000 and every001..169 checkpoint are immutable;
@@ -312,11 +326,11 @@ J600 is full-team delay over the 600 s control interval; lower is better. Each p
 
 
 
-![Training learning curve](selmappo2/selmappo2_curve_1793525685693763800_e012fbd45d9d4017b956d8040f57388c.svg)
+![Training learning curve](selmappo2/selmappo2_curve_1793555693498991700_d0a8501561f74218bcf1e148136e76f1.svg)
 
 
 
-[Complete-update metrics CSV](selmappo2/selmappo2_curve_1793525685693763800_e012fbd45d9d4017b956d8040f57388c.csv)
+[Complete-update metrics CSV](selmappo2/selmappo2_curve_1793555693498991700_d0a8501561f74218bcf1e148136e76f1.csv)
 
 
 

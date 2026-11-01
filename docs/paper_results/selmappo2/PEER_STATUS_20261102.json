@@ -1,0 +1,50 @@
+{
+  "schema": "selmappo2.peer_status/1",
+  "session_date": "2026-11-02",
+  "evaluation_owner": "S-C1SWITCH2",
+  "evaluation_state": "INCOMPLETE_TERMINAL_SCOPES",
+  "is_complete_evaluation_receipt": false,
+  "panel_sha256": "7c780c25237dde73a657937ab577b8e48f71766817f4363f3298982e90144827",
+  "checkpoint_sha256": "82c6745bac50aaf4dee98f5d8b3c60db0e5e558d9abf4667dd8e605774f4b3c4",
+  "source_evidence_root": "E:/agent-work/c4-c1switch2/tools/c1switch2/evidence",
+  "source_receipts_sha256": {
+    "RESUME_RECONCILIATION_1793554689.json": "e6bdd1e81a7588e5446386e10911834f0cc7cfc30f499917caf8a082e8d5f3b1",
+    "SELECTOR_PROGRESS_cav_mappo_cpuQ_1793554718.json": "187afba6a93a5d9438e98921c3511429e10c47560535df0df27ddeec160f5b51",
+    "PER_CAV_IMPORT_CPU_VERIFICATION.json": "a252898f512e06bedd5f62ea2751f2f2a290a9fc819331683c054e1f88f9ca6d"
+  },
+  "cpuQ": {
+    "pid": 2380230,
+    "state": "EXITED",
+    "complete_episodes": 2,
+    "decision_receipts_including_failed_prefix": 75,
+    "failed_episode_seed": 969138,
+    "closed_actual_sim_s": 2980,
+    "charged_sim_s": 3000,
+    "ledger_sha256": "bd8cd25910dfaa836454c21d4e7c427d15123041526e6363deb35ddeaaa82156",
+    "error": "ModuleNotFoundError: traffic_shepherd.c4.switchable_wall"
+  },
+  "gpuR": {
+    "pid": 973470,
+    "state": "EXITED",
+    "complete_episodes": 0,
+    "decision_receipts_including_failed_prefix": 0,
+    "failed_episode_seed": 969139,
+    "closed_actual_sim_s": 0,
+    "charged_sim_s": 300,
+    "ledger_sha256": "6571e2b56aceaca0415a7565a9ebe97da2cc7ecdee1175c1049ae13ced5435cb",
+    "error": "CommandOwnership has no execute_residual attribute during evaluation adapter construction"
+  },
+  "per_cav_peer_evaluation_charged_sim_s": 3300,
+  "per_cav_peer_evaluation_closed_actual_sim_s": 2980,
+  "accounting_note": "Closed actual is receipted accounting, not proof that unclosed physical work was zero. These peer evaluation charges are separate from selector training accounting.",
+  "peer_cpu_repair": {
+    "passed": 156,
+    "failed": 0,
+    "skipped": 0,
+    "ruff": "PASS",
+    "terminal_scope_restart_authorized": false
+  },
+  "next_dependency": "MAIN authority for peer-owned wholly unstarted scope, then immutable plan/no-prior-charge proofs/host CPU gates and complete byte-pinned panel results",
+  "new_local_evaluation_sim_s": 0,
+  "new_dispatches": 0
+}
