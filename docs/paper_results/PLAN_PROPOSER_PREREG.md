@@ -1,6 +1,6 @@
 # PRE-REGISTRATION: activation of the learned plan proposer (arm B only)
 
-Status: DRAFT for MAIN registration. Register before any proposer-related B outcome.
+Status: prospective registration before any B/R outcome; MAIN02:53 owner-approval gate applies.
 It does not change the current launch (design freeze 2026-11-02 01:38): until
 activation, B runs exactly the qualified warm fast-path MPPI search.
 
@@ -19,8 +19,8 @@ activation, B runs exactly the qualified warm fast-path MPPI search.
    same-arm (B) and same-seed only, like the plan library and covariance.
 3. Training data. Training uses only arm-B TRAIN-world search receipts from updates
    before the activation boundary. A receipt is the plan-service request rows plus
-   the search result, with the full screened pool when `RecordingEvaluator`
-   logging is on, and the `search_learning` SUMO-realized advantages of executed
+    the search result, with the full screened pool when `RecordingEvaluator`
+    logging is on, and the `search_learning` exact paired SUMO grades of executed
    plans. Training never reads dev, check, sealed or branch-panel outcomes.
    - Weights: each search's candidates with a positive WM-predicted saving vs
      'policy continues' share one unit of weight, proportional to the saving.
@@ -32,7 +32,7 @@ activation, B runs exactly the qualified warm fast-path MPPI search.
      deterministic algorithms.
    - Early stopping: on an inner world-grouped split of the TRAIN worlds only.
    - Changing any of these needs a new amendment before training.
-5. Offline check. This is the only activation gate. It uses held-out searches only,
+5. Offline check. PASS plus explicit OWNER approval recorded by MAIN in REGISTRATION.md are BOTH required for activation. It uses held-out searches only,
    with a world-grouped split: 25% of worlds chosen by the SHA256 rank of
    (seed, world id). The held-out set must have >= 8 worlds and >= 40 searches with
    >= 1 elite. Elites are the search's own top-k candidates with a positive final
@@ -58,7 +58,7 @@ activation, B runs exactly the qualified warm fast-path MPPI search.
    - Every attempt (PASS or FAIL) is written as `PROPOSER_CHECK_u<k>.json`, with
      the checkpoint .pt/.json SHA256, the dataset SHA, the split worlds and the
      metrics.
-7. Activation is an engineering amendment at an update boundary
+7. Activation is NEVER automatic; explicit OWNER approval by MAIN is required in addition to PASS. Activation is an engineering amendment at an update boundary
    (`ACTIVATE_PLAN_PROPOSER_u<k>.json`, with code commit and checkpoint SHAs).
    From update k+1, each B search receives `proposal_seeds(record, group,
    policy_traj, n=4, ...)` as `extra_seeds`. These are iteration-0 seeds that take
