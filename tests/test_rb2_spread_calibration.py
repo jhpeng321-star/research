@@ -1,5 +1,7 @@
 import copy
 import json
+import time
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -10,6 +12,8 @@ from tests.unit.test_fitted_hidden import fitted
 from tests.unit.test_hidden_state_futures import fixture, plan
 from tools.rbcal.fit import count_nll, quadratic_fit, weighted_crps_terms
 from tools.rbcal.outcomes import development_truth, snapshot_dev
+from tools.rbcal.probability import calibrated_probability, calibrated_decide, fit_retention
+from tools.wmdecide.decision import Future, decide
 from tools.rbeval.core import ARMS
 from wms.control.arrival_fit import LearnedArrivalFit
 from wms.control.spread_calibration import SpreadCalibration
@@ -143,6 +147,10 @@ def test_calibration_binding_and_invalid_parameters_rejected():
         SpreadCalibration(artifact)
     with pytest.raises(ValueError, match='population mismatch'):
         c.hidden(fitted())
+    invalid = source()
+    invalid.posterior['drivers']['969400:101']['support_indices'] = [-1]
+    with pytest.raises(ValueError, match='indices/weights'):
+        c.hidden(invalid).dense_weights(969400, 101)
 
 
 def test_factual_reader_stops_before_reserved_outcome_body(tmp_path):
@@ -173,3 +181,98 @@ def test_snapshot_admits_explicit_development_names_only(tmp_path):
     assert not (destination/'shard0/w969432_k0.json').exists()
     with pytest.raises(ValueError, match='development12'):
         snapshot_dev(source, tmp_path/'bad', worlds=range(969432, 969440))
+
+
+def test_probability_map_preserves_reverse_ties_and_enforces_original_gate():
+    for p, t, retention in ((.75, .125, .4), (.125, .5, .2), (1., 0., .55)):
+        assert calibrated_probability(p, t, retention)+calibrated_probability(1-t-p, t, retention) == pytest.approx(1-t)
+    actions = dict(a=[Future(str(i), i+1) for i in range(8)],
+                   b=[Future(str(i), i+20) for i in range(8)])
+    artifact = dict(schema='wmdecide.probability_calibration.v1', fit_worlds=list(range(969420, 969432)),
+        source_fingerprint='source', retention_by_horizon={'600':.55})
+    assert decide(actions, 'b')['switched']
+    result = calibrated_decide(actions, 'b', horizon_s=600, calibration=artifact, source_fingerprint='source')
+    assert not result['switched'] and result['selected'] == 'b'
+    assert all(p['probability_beats'] <= .8 for p in result['summary']['pairwise'])
+    with pytest.raises(ValueError, match='source'):
+        calibrated_decide(actions, 'b', horizon_s=600, calibration=artifact, source_fingerprint='changed')
+
+
+def test_probability_fit_is_world_excluded_and_reserved_refused():
+    rows = [dict(seed=world, probability=p, predicted_tie_probability=0., outcome=y)
+            for world in range(969420, 969432) for p, y in ((1., 1), (.875, 0), (.125, 1))]
+    expected = fit_retention(rows, excluded=969420)
+    changed = [dict(r, outcome=1-r['outcome']) if r['seed'] == 969420 else r for r in rows]
+    assert fit_retention(changed, excluded=969420) == expected
+    actual = fit_retention(rows)
+    grid = np.linspace(0, 1, 10001)
+    scores = [np.mean([(calibrated_probability(r['probability'], 0., fraction)-r['outcome'])**2
+                       for r in rows]) for fraction in grid]
+    assert actual == pytest.approx(grid[np.argmin(scores)], abs=1e-4)
+    with pytest.raises(ValueError, match='development12'):
+        fit_retention(rows+[dict(rows[0], seed=969432)], excluded=969432)
+
+
+def test_finite_collector_deadline_blocks_analysis(tmp_path, monkeypatch):
+    from tools.rbcal import finish
+    monkeypatch.setattr(finish, 'remote_status', lambda: pytest.fail('expired collector must not poll'))
+    finish.work(tmp_path, time.time()-1)
+    terminal = json.loads((tmp_path/'TERMINAL.json').read_text())
+    assert terminal['state'] == 'BLOCKED' and 'incomplete' in terminal['error']
+
+
+def test_collector_preserves_producer_failure_without_retry(tmp_path, monkeypatch):
+    from tools.rbcal import finish
+    calls = []
+    def status():
+        calls.append('poll')
+        return dict(tasks=3, stops=['own producer STOP'])
+    monkeypatch.setattr(finish, 'remote_status', status)
+    monkeypatch.setattr(finish.subprocess, 'run', lambda *a, **kw: pytest.fail('STOP must not launch analysis'))
+    finish.work(tmp_path, time.time()+60)
+    assert calls == ['poll']
+    terminal = json.loads((tmp_path/'TERMINAL.json').read_text())
+    assert terminal['state'] == 'BLOCKED' and 'STOP' in terminal['error']
+
+
+def test_complete_collector_uses_cpu_dev_run_once_and_writes_receipt(tmp_path, monkeypatch):
+    from tools.rbcal import finish
+    out = tmp_path/'claim'
+    out.mkdir()
+    (tmp_path/'docs/paper_results/rb2cal').mkdir(parents=True)
+    monkeypatch.setattr(finish, 'ROOT', tmp_path)
+    monkeypatch.setattr(finish, 'remote_status', lambda:dict(tasks=96, stops=[], source={'commit':'fixed'}))
+    commands = []
+    def run(command, **kwargs):
+        commands.append(command)
+        return SimpleNamespace(returncode=0)
+    monkeypatch.setattr(finish.subprocess, 'run', run)
+    finish.work(out, time.time()+60)
+    assert len(commands) == 4
+    assert commands[0][-1] == 'dev_v1_cpu'
+    terminal = json.loads((out/'TERMINAL.json').read_text())
+    assert terminal['state'] == 'COMPLETE' and terminal['source']['commit'] == 'fixed'
+    assert (tmp_path/'docs/paper_results/rb2cal/COMPLETION.json').is_file()
+
+
+def test_collector_continues_cpu_once_after_own_canary_not_before(tmp_path, monkeypatch):
+    from tools.rbcal import finish
+    out = tmp_path/'claim'
+    out.mkdir()
+    (tmp_path/'docs/paper_results/rb2cal').mkdir(parents=True)
+    monkeypatch.setattr(finish, 'ROOT', tmp_path)
+    statuses = iter([dict(tasks=0, stops=[], source={}, canary_alive=True, panel_started=False),
+        dict(tasks=1, stops=[], source={}, canary_alive=False, panel_started=False),
+        dict(tasks=96, stops=[], source={}, canary_alive=False, panel_started=True)])
+    monkeypatch.setattr(finish, 'remote_status', lambda:next(statuses))
+    monkeypatch.setattr(finish.time, 'sleep', lambda _:None)
+    commands = []
+    def run(command, **kwargs):
+        commands.append(command)
+        return SimpleNamespace(returncode=0)
+    monkeypatch.setattr(finish.subprocess, 'run', run)
+    finish.work(out, time.time()+60, continue_cpu=True)
+    assert len(commands) == 5
+    assert commands[0][-1] == 'cpu' and 'panel' in commands[0]
+    assert len([command for command in commands if 'panel' in command]) == 1
+    assert json.loads((out/'TERMINAL.json').read_text())['state'] == 'COMPLETE'

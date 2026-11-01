@@ -81,6 +81,7 @@ class CalibratedHidden:
             if 'weights' not in distribution:
                 weights = prior.clone()
             else:
+                self.base._distribution(self.base.population, distribution, IDM_ORDER)
                 # Distribution indices refer to the original full population support.
                 indices = torch.tensor(distribution.get('support_indices', range(len(prior))), dtype=torch.long)
                 values = torch.tensor(distribution['weights'], dtype=torch.float64)

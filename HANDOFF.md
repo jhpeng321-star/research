@@ -11,24 +11,54 @@ Runtime source `src/wms/control/spread_calibration.py`; minimal hooks in
 `hidden_state.BirthMix`, `rbint/recipe.py`, identity binding in `rbint/evaluate.py`.
 Present drivers stay VID-keyed; one future-owned Dirichlet entrant mixture;
 request/admission ordinal coupling and fixed joint physical support preserved.
-40 CPU tests PASS before additional exposure guards; Ruff PASS. No neural training.
+74 CPU tests PASS plus4finite-collector tests; Ruff PASS.
+No neural training; no per-step noise or output-cost corrections are deployed.
 
 FIT115652 later-prefix motion rows/2460drivers. All32 scalar crossfits retain
 posterior=1 and entrant concentration=0; rate variance range1.42916–1.75267.
 Count NLL3.746607→3.724368 in fit, but3.746607→3.745985 world-excluded:
 **very weak crossfit improvement, no coverage/decision qualification**.
+World-excluded count CRPS6.02330→6.05365vehicles (worse); 50/80/90% coverage
+51.6/75.0/85.9→62.5/84.4/89.1%; exact discrete nominal masses are in
+`v1/COUNT_VALIDATION.json`. These are request counts, not team-delay coverage.
 Dev baseline and outcome-scale limitation check:
 `docs/paper_results/rb2cal/DEVELOPMENT_BASELINE.md` + adjacent JSON;
 proper-score-fitted outcome scales1.498/1.219/1.579 at120/300/600s.
 OOF paired90% coverage only71.7/65.8/68.3%; a scalar cannot solve the task.
 These output-scale diagnostics ARE NOT simulation or a selectable model.
 Reliability SVG/CSV and exact summaries in `rb2cal/dev_fullv4_v1/`.
-Next: dev12-only physical v1 canary/panel; fresh results not yet available.
+Code/evidence commit `0711a026` (design `c20b82ac`). Dev12-only GPU canary
+PASS187.57s, own438985 EXITED, runtime
+`/root/rbeval20261031/rb2cal/code_0711a02646bb`, output
+`/root/rbeval20261031/rb2cal/dev_v1`; all five arms/H600, world969420/k0.
+Shared GPU subsequently99% busy with peer jobs; no GPU panel launched.
+NEW CPU canary LIVE own440092/start_ticks888711700, same immutable source,
+output `/root/rbeval20261031/rb2cal/dev_v1_cpu`. Separate model identity/device;
+do not mix its futures with the GPU canary. Quota audit20cores/3.31used,
+19.36GiBfree; CPU continuation will use two nice19/one-thread workers.
+Own shared claim `E:/agent-work/rb-shared/evalclaims/S-RB2-CAL-dev-v1.json`.
+Fresh physical outcome results not yet available; do not adopt v1 as qualified.
+
+Separate source-bound probability map/API: `tools/rbcal/probability.py`, evidence
+`rb2cal/probability_fullv4_v1/`. Lambdas120/300/600=.553247/.355783/.539945.
+All-pair OOF Brier .23841/.26875/.24245→.22044/.24498/.22503.
+The full-data map implies NO0.8switches. OOF selected calls2/0/1, wins2/NA/0;
+**not useful-switch qualification**. Full-v4 map MUST NOT be applied to the new
+physical candidate or integrated physics: source fingerprints reject mismatch.
+Refit only on new dev12 forecasts after integration. `rb2cal/INTEGRATION.md`
+documents APIs, switches, exact exposure limits and final CI requirements.
+
+Finite CPU continuation/collection tool `tools/rbcal/finish.py` is prepared;
+it waits for successful own CPU canary, launches its two-worker panel ONCE,
+then only after all96tasks fetches/validates/scores, refits the probability map
+and publishes `rb2cal/COMPLETION.json` + `DEVELOPMENT_PHYSICAL_V1_CPU.md`.
+Deadline Nov2 09:00+08; no scientific retries or peer PID control. Collector
+launch receipt will be added below; until completion no nominal traffic-coverage claim.
 No reserved raw tasks opened. Owner-required historical aggregate reports were
 read (disclosed exposure); they cannot qualify an independent final comparison.
 Local NVIDIA driver unavailable; gpuA12:02 audit idle (49139MiB free), cpuQ
-single nice19/one-thread fit COMPLETE (own1181880/terminalrc0). GPU job not
-launched yet. Existing code/evidence
+single nice19/one-thread fit COMPLETE (own1181880/terminalrc0). Canary launch
+rechecked GPU free46119MiB, preserving shared teacher capacity. Existing code/evidence
 below is inherited INT history, not this worker's current result.
 
 ---

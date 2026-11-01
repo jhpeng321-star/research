@@ -1,0 +1,26 @@
+{
+  "schema": "wmdecide.probability_calibration.v1",
+  "fit_worlds": [
+    969420,
+    969421,
+    969422,
+    969423,
+    969424,
+    969425,
+    969426,
+    969427,
+    969428,
+    969429,
+    969430,
+    969431
+  ],
+  "source_fingerprint": "5055c00d6712fec5e0d06f00d6b785444ee7d45d655f83c89a1f5b8e1ba055ca",
+  "source_model": "WM-PHYS-FULL-v4-gpu",
+  "retention_by_horizon": {
+    "120": 0.5532467532467532,
+    "300": 0.3557833089311859,
+    "600": 0.5399449035812672
+  },
+  "objective": "all unordered pair strict-win Brier",
+  "qualification": "development fit; source bound; no independent decision qualification"
+}
