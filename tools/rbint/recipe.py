@@ -45,9 +45,17 @@ def load_candidate(checkpoints, configs, device):
     options = dict(recipe['physics'])
     if options.get('emergency_decel_mps2') == 'off':
         options['emergency_decel_mps2'] = None
+    learned_parameters_receipt = None
+    if options.get('physics_params', 'off') != 'off':
+        from wms.physics.learned_parameters import load_parameters
+        path = Path(__file__).resolve().parents[2]/options['physics_params_file']
+        profile = load_parameters(str(path.resolve()))
+        options['physics_params_file'] = str(path.resolve())
+        learned_parameters_receipt = dict(name=options['physics_params'], path=str(path), sha256=profile.sha256)
     physics = replace(old.physics, **options)
     spec = replace(old.spec, **recipe['model'])
     candidate, receipt = rebuild_with_motion_encoder(old, spec, physics)
+    receipt['learned_physics_parameters'] = learned_parameters_receipt
     candidate.requires_grad_(False)
     candidate._wmphys_variant = variant
     candidate._wmphys_departure_phase = recipe.get('rollout', {}).get('departure_phase', 'before_movement')

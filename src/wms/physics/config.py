@@ -213,6 +213,10 @@ class PhysicsConfig:
     exit_at_road_end: bool = True
     sumo_fidelity: bool = False
     sumo_idm: bool = True
+    #: Explicit inference-only physical parameter distribution (LPHYS). No rule
+    #: forms or IDM/LC settings are changed by the default-OFF selector.
+    physics_params: str = 'off'
+    physics_params_file: str | None = None
     speed_factor: float = 1.0
     speed_limit_mps: float = 31.29
     free_road_gap_m: float = 250.0
