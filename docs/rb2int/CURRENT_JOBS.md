@@ -1,5 +1,17 @@
 # Resume here — INT owned development jobs, sourceb2df7458
 
+## AUTHORITATIVE23:27 recovery — OWNER17:55 ZERO-admission hold
+
+Supersedes every LIVE/admission note below. Read HANDOFF.md's23:27recovery first.
+Receipt `OWNER_1755_RECOVERY_2327.json` confirms collector25240 and cache-only
+publisher23664 LIVE, all four current/late remote coordinators PAUSED/T, ZERO
+active INT evaluations on both hosts, all hold-time children collected.31/216new
+world jobs; reserved8 v5/v4 INTERIM already complete. No MAIN release found.
+No launch/restart/redispatch/signals; preserve existing owners and immutable cache.
+Publisher44988 and late local waiter9724 are EXITED with expected source guards.
+Report latest21:39; existing sole publisher continues~3h, next~00:39. Final full
+comparison remains blocked on explicit MAIN `S-RB2-INT RESUME` authority.
+
 ## LIVE17:56 — authoritative owner-priority continuation
 
 Read LIVE_CONTINUATION_1756.md before any action. gpuA513448/start890664618 has

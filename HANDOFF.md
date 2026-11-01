@@ -1,5 +1,28 @@
 # S-RB2-INT — round 2 active, 2026-11-01 ~12:00 +08
 
+## RECOVERED23:27 +08 — hold intact, existing owners healthy
+
+- Fresh-session receipt: `docs/rb2int/OWNER_1755_RECOVERY_2327.json`.
+  Collector25240/create134379970282244431 and cache-only publisher23664/
+  create134380020249390235 are LIVE with no terminal receipts. Preserve both.
+- All four current/late admission coordinators retain exact original identities
+  and stateT. Both hosts have ZERO active INT evaluations; all hold-time children
+  are collected.31/216new world jobs,12matched v5/v4 worlds, unchanged since18:37.
+  Read-only nvidia-smi verified both hosts; no inference, dispatch or signals.
+- MAIN registration contains the17:55hold and18:15application; no explicit MAIN
+  `S-RB2-INT RESUME` release was found at recovery. Idle utilization is not release.
+- Reserved8 INTERIM is already published (latest21:39); its whole-panel CIs are
+  NA(singleton). The separate10world/five-replicated-cell21:39INTERIM has valid
+  scoped CIs, not full-panel qualification. Existing publisher's next look~00:39.
+  Authoritative report: `docs/paper_results/WMPHYS_V5.md`; do not edit externally.
+- All four current worker handoffs re-read. Later LANE rejection and BREAK's
+  actual-mode2 correction are already disclosed by the report; frozenb2df7458
+  stays unchanged after final-outcome exposure. No repeated fit/smoke/inference.
+- FULL-v5/LP engineering READY remains available to S-WMTEACH, with no quality or
+  planner/cooperation switching authorization. Full four-model comparison awaits
+  explicit admission release. Existing local owners retain Nov2 09:55deadline;
+  do not restart the exited late waiter or paused GPU standbys automatically.
+
 ## OWNER17:55 HOLD — applied18:15 +08; supersedes ALL admission below
 
 **ZERO new GPU admissions until MAIN appends `S-RB2-INT RESUME`.** Exact
