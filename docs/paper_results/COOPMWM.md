@@ -2166,3 +2166,13 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - B u1: exact paired SUMO plan saving mean 862.9 veh-s, 95% world-cluster CI `[6.666416322528676, 1290.9455121911988]`, 3 graded plans. Positive saving is better. Ungraded plans excluded.
 - Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_VIABILITY_001.json`.
 <!-- warm-receipt:B_VIABILITY_001.json:6fa161521a1ea9e8ffd58abcb6613082d17183a029a2fec50cdc84184bc4d189 -->
+
+## Warm live publication — 2026-11-01T22:19:13.310595+00:00
+- Conservatively charged 3306220/7500000 sim-s.
+
+### Warm continuation — B_UPDATE_001.json
+- B u1: queries/accepted/executed 171/3/3; wall 93.53s; next beta 0.751. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 3, "executed": 3, "queries": 3}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Exact-grade queue/lag: `{"failed": 0, "graded": 3, "max_lag_s": 15.68671441078186, "mean_lag_s": 12.17886463801066, "orphaned": 0, "overlap_unresolved": 0, "pending": 0, "running": 0, "stopped": 0, "update": 1}`; final ETA 1.221h.
+- Receipt: `coopmwm/warm_live/B_UPDATE_001.json`.
+<!-- warm-receipt:B_UPDATE_001.json:3edcfbe3fe2f0fbef8be8aa7ee026a2b33e5d7873ba79ab13994170f0d7b1fa9 -->
