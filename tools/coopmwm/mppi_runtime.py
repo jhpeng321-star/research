@@ -36,9 +36,16 @@ def plan(rt,record,memory,binding):
         return evaluate(rt,rec,actions,k,h,chunk_actions=width,trim=False,
                         pad_actions=width,speed2=binding.get('speed2',False),memory=memory,transfers=binding.get('speed2_transfers',False))
     bounds=(float(rt.mp.policy.accel_min),float(rt.mp.policy.accel_max))
-    result=search.search(record,group,policy,bounds,score,regime(record['rows']),
+    from .plan_proposer import RecordingEvaluator
+    recording=RecordingEvaluator(score)
+    result=search.search(record,group,policy,bounds,recording,regime(record['rows']),
         mappo_traj=mappo,covariance=covariance,library=library,
         seed=int(digest(record)[:15],16),config=binding.get('search_config'))
+    from .plan_proposer import receipt_from_search
+    result['proposer_receipt']=receipt_from_search(record,result,recording,arm='B',
+        initial_covariance=covariance.get(regime(record['rows']),len(record['group'])) if covariance else None)
+    from .overlap import recheck
+    result=recheck(record,result,score)
     result.update(record_sha256=digest(record),centre_rollout=receipt,
         memory=memory.receipt if memory is not None else {'mode':'cold'})
     if result['accepted']:

@@ -190,7 +190,12 @@ class Fixture:
 
     def oracle(self, t0, name):
         beta = dict(beta=1., buckets={'NOEXEC|ordinary': dict(beta=0.)})
-        with fake_sumo():
+        # The oracle must consume the ORIGINAL draw schedule even if its own
+        # counterfactual trajectories no longer form a connected eligible group.
+        # Controller's new concurrent-group gate otherwise suppresses the scripted
+        # callback after group geometry diverges, changing the innovation stream.
+        with fake_sumo(), patch('tools.coopmwm.mppi_search.group_components',
+                return_value=[dict(members=['c1','c2','c3'],size=3)]):
             return run_episode(self.tmp/'oracle', name, self.weights, self.noise_seed,
                                lambda job, g: ScriptedGuide(g, self.original, t0, self.arm), self.arm, beta=beta)
 

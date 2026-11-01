@@ -6,7 +6,7 @@ from . import ops
 from .storage import read,write
 from .protocol import checked,REGISTRY,sha
 
-CPU='/home/ubuntu/coopmwm20261102_concurrentcpu4'
+CPU='/home/ubuntu/coopmwm20261102_overlapcpu2'
 GPU='/root/coopmwm20261102_concurrent1'
 
 
@@ -14,8 +14,8 @@ def stage(host):
     from .warm_remote_ops import gpu_status
     old=gpu_status(host)
     assert old['alive'] and old['ready'] and not old['failed']
-    cpu=read(ops.EVIDENCE/'CPU_coopmwm20261102_concurrentcpu4.json')
-    assert cpu['pass_'] and cpu['tests']==164 and cpu['sim_s']==cpu['skips']==0
+    cpu=read(ops.EVIDENCE/'CPU_coopmwm20261102_overlapcpu2.json')
+    assert cpu['pass_'] and cpu['tests']==195 and cpu['sim_s']==cpu['skips']==0
     staged=json.loads(ops.stage_frozen(host,GPU,cpu))
     extra={'INPUTS.json':ops.ssh.remote(host,"import pathlib;print(pathlib.Path('/root/coopmwm20261101_planprobe3/INPUTS.json').read_text())",timeout=30)}
     hashes=dict(staged['hashes'],**json.loads(ops.stage(host,GPU,extra))['hashes'])

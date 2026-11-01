@@ -106,7 +106,7 @@ def evaluate(rt,record,actions,K,H,chunk_actions=4,trim=True,pad_actions=False,h
             subset=actions[start:start+chunk_actions]
             subset=[dict(a,background_residuals=record['policy_residuals']) if ('knots' in a or 'profile' in a) else a for a in subset]
             if record.get('committed_plans'):
-                subset=[dict(a,committed_plans=record['committed_plans']) for a in subset]
+                subset=[dict(a,committed_plans=a.get('committed_plans',record['committed_plans'])) for a in subset]
             real_ids=[a['id'] for a in subset]
             if pad_actions:
                 subset=list(subset)

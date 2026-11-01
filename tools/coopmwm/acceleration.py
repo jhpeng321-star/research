@@ -96,6 +96,13 @@ class Controller:
                     b['beta'] = bucket_beta(self.beta, proposal['option'], b['regime'])
                     b['q'] = b.get('sample_probability',1.)*b['beta']
                     if float(torch.rand((), generator=self.generator)) < b['beta']:
+                        recheck=proposal.get('overlap_recheck',{})
+                        ended=set(recheck.get('truncated_plan_ids',[]))
+                        if ended:
+                            sample['plan_truncations']=[dict(plan_id=c['plan']['id'],start_s=c['start_s'],
+                                executed_duration_s=now-c['start_s'],predicted_gain=recheck['predicted_gain_vs_keep_all'])
+                                for c in self.active_plans if c['plan']['id'] in ended]
+                            self.active_plans=[c for c in self.active_plans if c['plan']['id'] not in ended]
                         self.plan, self.plan_start = proposal['plan'], now
                         b.update(executed=True, plan_start=True)
                         if set(self.plan['members'])&members(committed):raise ValueError('overlapping committed group')

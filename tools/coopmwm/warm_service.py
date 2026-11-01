@@ -33,6 +33,7 @@ def main(root):
             other=dict(id='background_qualified',members=others,family='MPPI',duration_s=60,
                 knots=[[-1.]*7,[.4]*7])
             context=dict(record,group=group['members'],committed_plans=[dict(plan=other,elapsed_s=20)])
+            acts=acts+[dict(acts[-1],id='end_background_for_new_plan',committed_plans=[])]
             for k,h in ((4,300),(8,420)):
                 width=batch_width(binding,k)
                 q=dict(qualify(rt,context,acts,k,h,width,memory=memory,transfers=True),
