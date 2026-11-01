@@ -25,7 +25,7 @@
 - **Budget:** `sim_s = t_end` (from t=0, warmup included; max 1200; about 700–1100 per plan). `quote()` gives exact totals; unresolved plans cost 0.
 - **Smoke** (one real completed episode, one plan, run once; idempotent): `python -m tools.coopmwm.exact_grade smoke --run-root <run root> --episode-id warm_u001_B_<seed> --grade-root <dir> [--binding <runtime binding json>] [--t0 T] [--charge accel|local] [--path-map '{}']`. It prints status, grade, prefix_pass, crn_verified_t0, aligned_until_s and replayed_plans.
 ## Integration recipe (S-COOPMWM `warm_runner.run_arm`, B and R)
-0. Register the `exact_grade` phase inside the 7.5M cap. Create the grade root and config, then start the supervisor under nohup. Gate: B's first update does not apply until the supervisor PID is alive. Run the smoke after the first B episode.
+0. Register the `exact_plan_grading` phase inside the 7.5M cap. Create the grade root and config, then start the supervisor under nohup. Gate: B's first update does not apply until the supervisor PID is alive. Run the smoke after the first B episode.
 1. After `eps = wave(...)`, call `GradeQueue(gr).enqueue_episode(ep, meta)` for each episode. `meta`:
    - `run_root`; `result_path = root/jobs/<id>/RESULT.json`; `result_sha256 = digest(ep)`; `update = u`; `arm`; `training_seed = SEED`;
    - `checkpoint_path = root/{arm}_checkpoint_{u-1:03}.pt`, its `sha`, and `checkpoint_update = u-1`;

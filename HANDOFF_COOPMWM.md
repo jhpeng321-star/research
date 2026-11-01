@@ -1,4 +1,23 @@
-# S-COOPMWM live continuation — MAIN03:03 integration pending
+# S-COOPMWM live continuation — WARM B/R STARTED
+
+TRAINING STARTED B/R2026-11-02 03:53:05UTC+8, source exactcpu5/204PASS.
+B3209145/start57706006,R3209416/start57706200,grader3208762/start57705728,
+broker3208897/start57705818(cpuQbootb8bc1fcb). OriginalA2998262 continues/u35atstart.
+BothGPU8EXACT0 READY: A596572/rootconcurrent1; R43005/rootconcurrent3.
+EXACT_RUNTIME_REGISTRATION/EXACT_TRAINING_STARTED pin fullauthority/owners. NoSTOP.
+ObserverV2 local43408 alive, exact_watch publishes/commits; NEVERduplicate launch.
+Firstlive2CAV GPUA445.607s/8.079queries-per-inference-hour, accepted0/executed0;
+no exactgrades yet. Observe exact_ops status/progress; ownPIDs only, no inference retry.
+Latest1793563560: GPU-R first2CAV542.437s/6.637q/h, accepted1/executed1,
+Bworld986024/t300/ramp.29+.32/D90/rank2/new/beta1, expectedWM18.754veh-s ONLY.
+Exactgrade stillpending episodecompletion. A-u37/noSTOP, charge2168840.
+Remaining: publish exact-smoke/firstBupdate and B-u4..6 viability (grades/type/rank/
+new-v-known, n+2 exactC_G, B-v-Achecks). Depthdiagnostic deferred23:04; no spareGPU.
+Full u48 episode/branch evaluator still needs its completion-hook integration;
+DO NOT call superseded accel_runner.final (u24 gate). Observer currently publishes
+TRAIN/dev/status, not final execution. Original GPUdeadline1793614022.4598482 is
+still enforced; do not silently reset it. Full-run resource continuation needs
+an outcome-blind registered resolution before that deadline. All old charges kept.
 
 LATEST: exactcpu5 immutable204PASS/0skips/38.21s/zeroSUMO; use this source.
 GPUA596572 READY/all8EXACT0, retainedunchanged. GPUR concurrent2 completed4EXACT0

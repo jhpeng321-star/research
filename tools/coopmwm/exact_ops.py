@@ -20,8 +20,14 @@ def authorize():
 
 
 def telemetry():
-    for host,pids in [('gpuA','596572,588981'),('gpuR','39130,29230')]:
+    owners={'gpuA':read(ops.EVIDENCE/'CONCURRENT_DISPATCH_gpuA.json'),
+            'gpuR':read(ops.EVIDENCE/'CONCURRENT_REPAIR_DISPATCH_gpuR.json')}
+    for host,owner in owners.items():
+        pids=str(owner['pid'])
         value=json.loads(ops.ssh.remote(host,f'''import subprocess,json,time,os
+import pathlib
+d=json.loads({json.dumps(owner)!r});assert pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']
+assert pathlib.Path('/proc',str(d['pid']),'stat').read_text().split()[21]==d['start_ticks']
 print(json.dumps(dict(unix=time.time(),load=os.getloadavg(),gpu=subprocess.check_output(['nvidia-smi','--query-gpu=utilization.gpu,memory.used,power.draw','--format=csv,noheader'],text=True),processes=subprocess.run(['ps','-p',{pids!r},'-o','pid,ppid,stat,etime,time,pcpu,pmem,args'],capture_output=True,text=True).stdout)))''',timeout=30))
         write(ops.EVIDENCE/f'EXACT_TELEMETRY_{host}_{int(value["unix"])}.json',value);print(json.dumps(dict(host=host,**value)))
 
@@ -51,6 +57,42 @@ print(json.dumps(dict(unix=time.time(),owners=owners,stops=stops,updates={{a:max
     write(ops.EVIDENCE/f'EXACT_STATUS_{int(cpu["unix"])}.json',dict(gpu=values,cpu=cpu))
     print(json.dumps(dict(cpu=cpu,gpu={h:dict(alive=v['alive'],ready=v['ready'],failed=v['failed'],owner=v['receipts'].get('SPOOL_OWNER.json'),gates={n:dict(pass_=r['pass_'],max_cost_error=r['max_cost_error']) for n,r in v['receipts'].items() if n.startswith('STARTUP_')},failure=v['receipts'].get('SPOOL_FAILED.json')) for h,v in values.items()})))
     return values,cpu
+
+
+def progress():
+    """Read TRAIN-only query timing and executed-start receipts; never final data."""
+    value=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,sys,time
+r=pathlib.Path({ROOT!r});sys.path.insert(0,{CPU!r}+'/pytools')
+from tools.coopmwm.accel_storage import read,ledger,charged
+queries=[]
+for p in (r/'broker_completed').glob('*.json'):
+ c=read(p)
+ if c['kind']!='plan':continue
+ request=read(r/'requests'/p.name)
+ if request.get('mode')=='diagnostic':continue
+ result=read(r/'responses'/p.name)
+ queries.append(dict(key=c['key'],slot=c['slot'],group_size=len(request['group']),
+  world=request['world_id'],time_s=request['time_s'],inference_wall_s=c['inference_wall_s'],
+  accepted=result['accepted'],candidates=result.get('candidates_searched'),futures=result.get('imagined_futures'),
+  duration_s=(result.get('plan') or {{}}).get('duration_s'),predicted_rank=result.get('predicted_rank'),
+  predicted_saving=result.get('expected_saving'),known_family=result.get('known_family'),unix=c['unix']))
+starts=[]
+for d in (r/'guided_starts').glob('u[0-9][0-9][0-9]'):
+ for p in d.glob('*.json'):starts.append(dict(update=int(d.name[1:]),**read(p)))
+phase={{}}
+for c in ledger(r):phase[c['phase']]=phase.get(c['phase'],0)+c['sim_s']
+statuses=sorted(r.glob('EXACT_GRADER_STATUS_*.json'))
+print(json.dumps(dict(unix=time.time(),queries=queries,executed_starts=starts,phase_charges=phase,
+ grader=read(statuses[-1]) if statuses else None,charged_sim_s=charged(r))))''',timeout=40))
+    write(ops.EVIDENCE/f'EXACT_PROGRESS_{int(value["unix"])}.json',value)
+    groups={}
+    for q in value['queries']:
+        key=q['slot']+'|n'+str(q['group_size']);g=groups.setdefault(key,dict(queries=0,accepted=0,inference_wall_s=0.))
+        g['queries']+=1;g['accepted']+=q['accepted'];g['inference_wall_s']+=q['inference_wall_s']
+    for g in groups.values():g['measured_queries_per_inference_hour']=3600*g['queries']/g['inference_wall_s']
+    print(json.dumps(dict(unix=value['unix'],by_gpu_group=groups,executed_starts=len(value['executed_starts']),
+        grader=value['grader'],charged_sim_s=value['charged_sim_s'])))
+    return value
 
 
 def retire_gpur():
@@ -242,5 +284,5 @@ print(json.dumps(v))''',timeout=45))
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('authorize','register','dispatch','retire-gpur','retire-gpua','retry-gpur','resume-gpur','telemetry','status'));p.add_argument('--component',choices=('B','R','grader','broker'))
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('authorize','register','dispatch','retire-gpur','retire-gpua','retry-gpur','resume-gpur','telemetry','status','progress'));p.add_argument('--component',choices=('B','R','grader','broker'))
     a=p.parse_args();dispatch(a.component) if a.mode=='dispatch' else globals()[a.mode.replace('-','_')]()
