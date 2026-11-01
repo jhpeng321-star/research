@@ -1,5 +1,27 @@
 # S-RB2-INT — round 2 active, 2026-11-01 ~12:00 +08
 
+## RECOVERED Nov2 07:16 +08 — hold intact; admission ownership changed
+
+Supersedes older LIVE/paused-owner assertions below. Read
+`docs/rb2int/RECOVERY_20261102.md` and the three `RECOVERY_20261102_*.json` receipts.
+
+- MAIN's Nov2 02:28 registration records stopping INT capped/late coordinators
+  to dedicate GPUs and cpuQ to S-COOPMWM. No MAIN `S-RB2-INT RESUME` release found.
+- Direct read-only identity audit: gpuA513448 and gpuR948148/949247 ABSENT;
+  gpuA514854 remains the exact recorded incarnation in stateT. Do not signal or
+  restart it. MAIN's stop announcement does not establish every PID's actual exit.
+- ZERO active INT evaluations;31/216 new world jobs collected; all hold-time
+  children collected;12matched v5/v4 worlds. No inference, dispatch or signals.
+- Collector25240/create134379970282244431 and cache-only publisher23664/
+  create134380020249390235 remain LIVE with no terminal receipt. Preserve both.
+  Latest report interims06:42/06:43; next scheduled look~09:43, deadline09:55.
+- All four current worker handoffs re-read. Frozen sourceb2df7458 and both
+  recipes remain unchanged; adverse LANE/BREAK/LP evidence is not a refit license.
+- FULL-v5/LP remain engineering READY for S-WMTEACH with the exact bindings below.
+  Distributional/short-horizon switching qualification remains NOT ESTABLISHED.
+  The remaining185new world jobs require explicit MAIN admission release and
+  claim/source/deadline reconciliation; no automatic late restart is authorized.
+
 ## RECOVERED23:27 +08 — hold intact, existing owners healthy
 
 - Fresh-session receipt: `docs/rb2int/OWNER_1755_RECOVERY_2327.json`.

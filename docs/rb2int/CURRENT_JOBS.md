@@ -1,5 +1,24 @@
 # Resume here — INT owned development jobs, sourceb2df7458
 
+## AUTHORITATIVE Nov2 07:16 +08 — HOLD; three admission owners absent
+
+Supersedes all historical LIVE/paused-owner notes below. MAIN's Nov2 02:28
+registration dedicates GPUs and cpuQ to S-COOPMWM and records stopping our four
+capped/late coordinators. Direct read-only checks find513448/gpuA and
+948148/949247/gpuR absent;514854/gpuA still matches its exact incarnation in
+stateT. Preserve it without signals. No MAIN `S-RB2-INT RESUME` release found.
+
+ZERO active INT evaluations on either GPU; all hold-time children collected;
+31/216new world jobs and12matched v5/v4worlds. Collector25240 and publisher23664
+are still LIVE sole owners, exact creation identities unchanged, no terminal
+receipt. Latest reserved8/replicated interims06:42/06:43; next~09:43; existing
+local deadline09:55. Do not externally edit their guarded report/analysis source.
+
+Receipts: `RECOVERY_20261102_{LOCAL,GPUA,GPUR}.json`; coordination/readiness:
+`RECOVERY_20261102.md` and HANDOFF.md. Remaining185jobs cannot run until explicit
+MAIN release plus source/claim/ownership/deadline reconciliation. No automatic
+restart of stopped coordinators, old late waiter, collector or publisher.
+
 ## AUTHORITATIVE23:27 recovery — OWNER17:55 ZERO-admission hold
 
 Supersedes every LIVE/admission note below. Read HANDOFF.md's23:27recovery first.

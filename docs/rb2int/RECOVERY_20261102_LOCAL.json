@@ -1,0 +1,118 @@
+{
+ "time": "2026-11-02T07:15:58.179727+08:00",
+ "local": [
+  {
+   "root": "E:\\agent-work\\c4-rb2-int\\runs\\rb2int_finish_v3",
+   "process": {
+    "pid": 25240,
+    "argv": [
+     "C:\\Users\\jpeng\\miniconda3\\python.exe",
+     "-B",
+     "-u",
+     "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\finish.py",
+     "watch",
+     "--out",
+     "E:\\agent-work\\c4-rb2-int\\runs\\rb2int_finish_v3"
+    ],
+    "create_filetime": 134379970282244431,
+    "inference_dispatch": false
+   },
+   "alive": true,
+   "terminal": {},
+   "log_tail": "bs\nCOLLECT 20261102T001900+0800 31 /216 complete world jobs\nCOLLECT 20261102T003911+0800 31 /216 complete world jobs\nCOLLECT 20261102T005914+0800 31 /216 complete world jobs\nCOLLECT 20261102T011918+0800 31 /216 complete world jobs\nCOLLECT 20261102T013922+0800 31 /216 complete world jobs\nCOLLECT 20261102T015926+0800 31 /216 complete world jobs\nCOLLECT 20261102T021930+0800 31 /216 complete world jobs\nCOLLECT 20261102T023934+0800 31 /216 complete world jobs\nCOLLECT 20261102T025936+0800 31 /216 complete world jobs\nCOLLECT 20261102T031940+0800 31 /216 complete world jobs\nCOLLECT 20261102T033943+0800 31 /216 complete world jobs\nCOLLECT 20261102T035947+0800 31 /216 complete world jobs\nCOLLECT 20261102T041951+0800 31 /216 complete world jobs\nCOLLECT 20261102T043956+0800 31 /216 complete world jobs\nCOLLECT 20261102T045959+0800 31 /216 complete world jobs\nCOLLECT 20261102T052002+0800 31 /216 complete world jobs\nCOLLECT 20261102T054005+0800 31 /216 complete world jobs\nCOLLECT 20261102T060007+0800 31 /216 complete world jobs\nCOLLECT 20261102T062010+0800 31 /216 complete world jobs\nCOLLECT 20261102T064013+0800 31 /216 complete world jobs\nCOLLECT 20261102T070016+0800 31 /216 complete world jobs\n"
+  },
+  {
+   "root": "E:\\agent-work\\c4-rb2-int\\runs\\rb2int_interim_hold_v1",
+   "process": {
+    "pid": 23664,
+    "argv": [
+     "C:\\Users\\jpeng\\miniconda3\\python.exe",
+     "-B",
+     "-u",
+     "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\interim_watch.py",
+     "watch-hold",
+     "--out",
+     "runs\\rb2int_interim_hold_v1"
+    ],
+    "create_filetime": 134380020249390235,
+    "cache_only": true
+   },
+   "alive": true,
+   "terminal": {},
+   "log_tail": "atched 12 ready ['reserved8', 'available_replicated_cells']\nCACHE 31 /216; matched 12 ready ['reserved8', 'available_replicated_cells']\nCACHE 31 /216; matched 12 ready ['reserved8', 'available_replicated_cells']\nCACHE 31 /216; matched 12 ready ['reserved8', 'available_replicated_cells']\nCACHE 31 /216; matched 12 ready ['reserved8', 'available_replicated_cells']\nCACHE 31 /216; matched 12 ready ['reserved8', 'available_replicated_cells']\nCACHE 31 /216; matched 12 ready ['reserved8', 'available_replicated_cells']\nCACHE 31 /216; matched 12 ready ['reserved8', 'available_replicated_cells']\nCACHE 31 /216; matched 12 ready ['reserved8', 'available_replicated_cells']\nCACHE 31 /216; matched 12 ready ['reserved8', 'available_replicated_cells']\nCACHE 31 /216; matched 12 ready ['reserved8', 'available_replicated_cells']\nCACHE 31 /216; matched 12 ready ['reserved8', 'available_replicated_cells']\nCACHE 31 /216; matched 12 ready ['reserved8', 'available_replicated_cells']\nCACHE 31 /216; matched 12 ready ['reserved8', 'available_replicated_cells']\nCACHE 31 /216; matched 12 ready ['reserved8', 'available_replicated_cells']\nCACHE 31 /216; matched 12 ready ['reserved8', 'available_replicated_cells']\n"
+  },
+  {
+   "root": "E:\\agent-work\\c4-rb2-int\\runs\\rb2int_interim_v3",
+   "process": {
+    "pid": 44988,
+    "argv": [
+     "C:\\Users\\jpeng\\miniconda3\\python.exe",
+     "-B",
+     "-u",
+     "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\interim_watch.py",
+     "watch",
+     "--out",
+     "runs\\rb2int_interim_v3"
+    ],
+    "create_filetime": 134379973214244749,
+    "cache_only": true
+   },
+   "alive": false,
+   "terminal": {
+    "STOP.json": {
+     "error": "ValueError('interim source/target changed; explicit recovery required')",
+     "automatic_retry": false,
+     "inference_repeated": false
+    }
+   },
+   "log_tail": "lable_replicated_cells']\nCACHE 25 /216; matched 8 ready ['available_replicated_cells']\nCACHE 25 /216; matched 8 ready ['available_replicated_cells']\nCACHE 25 /216; matched 8 ready ['available_replicated_cells']\nCACHE 25 /216; matched 8 ready ['available_replicated_cells']\nCACHE 25 /216; matched 8 ready ['available_replicated_cells']\nCACHE 25 /216; matched 8 ready ['available_replicated_cells']\nCACHE 25 /216; matched 8 ready ['available_replicated_cells']\nCACHE 25 /216; matched 8 ready ['available_replicated_cells']\nCACHE 25 /216; matched 8 ready ['available_replicated_cells']\nCACHE 28 /216; matched 10 ready ['available_replicated_cells']\nTraceback (most recent call last):\n  File \"E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\interim_watch.py\", line 261, in <module>\n    folder.mkdir()\n    \n  File \"E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\interim_watch.py\", line 254, in main\n    for scope, selected in available.items():\n    ^^^^^^^^\n  File \"E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\interim_watch.py\", line 179, in run\n    def hold_intro(text, result, stamp, count, drained):\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nValueError: interim source/target changed; explicit recovery required\n"
+  },
+  {
+   "root": "E:\\agent-work\\c4-rb2-int\\runs\\rb2int_late_wait_v1",
+   "process": {
+    "pid": 9724,
+    "argv": [
+     "C:\\Users\\jpeng\\miniconda3\\python.exe",
+     "-B",
+     "-u",
+     "-m",
+     "tools.rb2int.late_watch",
+     "watch",
+     "--out",
+     "E:\\agent-work\\c4-rb2-int\\runs\\rb2int_late_wait_v1"
+    ],
+    "create_filetime": 134380004640417822,
+    "inference_dispatch": false,
+    "standby_only": true
+   },
+   "alive": false,
+   "terminal": {
+    "STOP.json": {
+     "error": "ValueError('late source changed; explicit recovery required')",
+     "automatic_retry": false,
+     "inference_repeated": false,
+     "process_signals": false
+    }
+   },
+   "log_tail": "ublisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\late_watch.py\", line 197, in <module>\n    main()\n    ~~~~^^\n  File \"E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\late_watch.py\", line 189, in main\n    run(out)\n    ~~~^^^^^\n  File \"E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\late_watch.py\", line 89, in run\n    raise ValueError('late source changed; explicit recovery required')\nValueError: late source changed; explicit recovery required\n"
+  }
+ ],
+ "complete_collected_world_jobs": 31,
+ "matched_v5_v4_worlds": [
+  969432,
+  969433,
+  969434,
+  969435,
+  969436,
+  969437,
+  969438,
+  969439,
+  969590,
+  969592,
+  969595,
+  969599
+ ],
+ "hold_children_all_collected": true,
+ "inference_dispatched": false,
+ "signals_sent": false
+}
