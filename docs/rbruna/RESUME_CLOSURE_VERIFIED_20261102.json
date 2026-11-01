@@ -1,0 +1,113 @@
+{
+  "verified_at": "2026-11-02T06:47:58.897768+08:00",
+  "root": "/root/rbeval20261031/runa/WM-PHYS-A2",
+  "result": {
+    "status": "complete",
+    "variant": "WM-PHYS-A2",
+    "tasks": 160,
+    "report": "/root/rbeval20261031/runa/WM-PHYS-A2/reports/complete",
+    "peak_own_gpu_mib": 3272,
+    "gate": {
+      "schema": "rbeval-gate/1",
+      "verdict": "NOT_QUALIFIED",
+      "pilot_only": true,
+      "reasons": [
+        "simultaneous upstream rate precision insufficient",
+        "upstream point rate outside simultaneous real intervals",
+        "cell-level delay/speed CRPS superiority unproven or failed",
+        "speed support/missingness prevents complete field scoring",
+        "timing IBS superiority unproven or failed",
+        "onset CDF simultaneous real bands insufficient or violated",
+        "paired upstream WM-real rate compatibility unproven or failed (includes K8 MC)",
+        "expected-shift arm-order evidence insufficient or failed",
+        "expected shifts unproven or outside paired real intervals"
+      ],
+      "complete_worlds": 20,
+      "bootstrap": 10000,
+      "bootstrap_seed": 20261031,
+      "bootstrap_method": "demand/penetration/split-stratified whole-world centered standardized max-stat",
+      "rate_family_primary": 180,
+      "rate_family_diagnostic": 360,
+      "scope": "Fixed overnight diagnostic, not a powered qualification panel",
+      "caveat": "One factual continuation per world cannot identify same-state irreducible randomness"
+    },
+    "finished_unix": 1793500734.010622,
+    "report_hashes": {
+      "audit.json": "7df8e2623aeea66fe29848809e52ad98069ddc18c0d8ae0dbd8223e5d743346c",
+      "distribution_world_bins.csv": "b7e862bd49b59051321dc6ab121fd50d0922c357b6e4cf3a611581adde540f6c",
+      "events_worlds.csv": "8368484434cb96c33cd2dff9e6c0448ce86ef60512baba3a0fd2f64a5c259fbb",
+      "timing_worlds.csv": "283ec514cb6e33084a331846a638db746f6f74b4ebb9d363ae3f313775d09087",
+      "energy_diagnostic.csv": "10e9ce959fced8c728a7a15d524ecfaee95928c6fbe1dc83e803a3ac5e85f113",
+      "distribution_worlds.csv": "f6695b6396ef9ec015e74f1f0759f3b5364934e70432c06bb6e690e42018d56d",
+      "distribution_summary.csv": "ea4e8de89c7a649d5c92c753baefea0c4269ca5d679d4905809baf2424e58b29",
+      "rates.csv": "7e149e7ab763deb9ffd3df5c97ec5d3f286a67d88686f09f91cacc1151973442",
+      "timing_summary.csv": "b0e72a31b33524eff98c2bfb9f9bfa4ca30caca2255f551ac9fd461203d4e3b3",
+      "onset_cdf_bands.csv": "a3b25e574a7812638499198a7b6ffb076e4398be8f4ed1e385ebaddac6fecfb3",
+      "expected_shifts.csv": "8fcf57a996e0e78e8905810bcb4d4f2a763d92d89fba9c9fa2710785b5fc375c",
+      "expected_shifts_worlds.csv": "85a906f6f0d48e6edf8d3e9edd984f054936896f20ca5a7fbab7a4eac821fe7b",
+      "expected_order.csv": "92510c3ef4b449f1cbe47b6cda76272c8251659f2629785701a83781253a53d8",
+      "calibration.csv": "c057cf49c8ec506ed2346f13499972c642bee8378a15d02c5a186e4059483b19",
+      "gate.json": "793d10f461879fb59f84b3d2a1d5c8782436e1475c4e8cd5950a38dfe09999fb"
+    }
+  },
+  "task_counts": [
+    56,
+    56,
+    48
+  ],
+  "task_hashes_verified": 160,
+  "identity_hashes_verified": 3,
+  "report_hashes_verified": {
+    "complete": 15,
+    "04": 15,
+    "08": 15
+  },
+  "preserved_hashes_verified": 26,
+  "interims": {
+    "04": {
+      "worlds": 4,
+      "finished": "2026-11-01T04:00:07.668025+08:00",
+      "report": "/root/rbeval20261031/runa/WM-PHYS-A2/reports/04"
+    },
+    "08": {
+      "worlds": 10,
+      "finished": "2026-11-01T08:00:24.339932+08:00",
+      "report": "/root/rbeval20261031/runa/WM-PHYS-A2/reports/08"
+    }
+  },
+  "registered_process_states": [
+    {
+      "pid": 335002,
+      "same_incarnation_live": false
+    },
+    {
+      "pid": 335003,
+      "same_incarnation_live": false
+    },
+    {
+      "pid": 335004,
+      "same_incarnation_live": false
+    },
+    {
+      "pid": 343598,
+      "same_incarnation_live": false
+    },
+    {
+      "pid": 334996,
+      "same_incarnation_live": false
+    }
+  ],
+  "load": [
+    7.7802734375,
+    8.0439453125,
+    7.2861328125
+  ],
+  "local_result_matches_remote": true,
+  "poll_receipts": {
+    "count": 55,
+    "first": "2026-11-01T02:14:43.020793+08:00",
+    "last": "2026-11-01T11:34:16.538542+08:00",
+    "max_gap_seconds": 1773.477434
+  },
+  "local_result_sha256": "c84e9b928df1d32f4a6c2c9f83835b8b63996b77c2396983b8244615492e384d"
+}

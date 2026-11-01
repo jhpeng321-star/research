@@ -80,7 +80,7 @@ Execution/verification receipts will be appended after implementation.
   peer B/B2/FULL-v1 and active A2 are preserved; C2 remains unclaimed, next in
   list order. Shared `RUNA_NOON_CONTINUATION.json` publishes this recovered state.
 
-## Subsequent resume audit — 2026-11-02 06:45–06:49 +08
+## Subsequent resume audit — 2026-11-02 06:45–06:47 +08
 
 - Preserved clean HEAD `61a4d155`; read log/status before program and receipts.
   The registered continuation is dated **November 1**, not a rolling daily noon
@@ -105,3 +105,22 @@ Execution/verification receipts will be appended after implementation.
   schedule. This resume has launched no inference, scoring, SUMO or training and
   has signalled no process. Next step is read-only A2 completion/hash verification
   and a current closure handoff/coordination receipt.
+
+## Read-only closure verification — 2026-11-02 06:47:58 +08
+
+- Receipt: `docs/rbruna/RESUME_CLOSURE_VERIFIED_20261102.json`. All **160 task
+  hashes**, **3 shard identities**, **15 final report hashes**, **30 interim
+  report hashes**, and **26 handover-preserved artifact hashes** verified.
+  Canonical shard counts56/56/48; local and remote RESULT are identical; no FAILED
+  marker. Original worker/supervisor/monitor incarnations are no longer live.
+- Existing interims completed at04:00:07 (4complete worlds) and08:00:24
+  (10complete worlds) on November1. Full result completed before11:30; peak own
+  allocation3272MiB remains below18500MiB guard. No forecasts/scores regenerated.
+- Local continuation has55 poll receipts from02:14:43 through11:34:16 November1.
+  Maximum saved gap is1773.477434s (~29m33s); the receipts do **not** establish an
+  uninterrupted ten-minute cadence at the end. The late final poll is retained;
+  it does not extend candidate admission or authorize a new run. Remote A2
+  supervision and both scheduled interim receipts completed independently.
+- Final corrected candidate comparisons belong to INT's existing publication;
+  original frozen reports and shared `.done` remain immutable provenance. Do not
+  reuse the historical bootstrap intervals as corrected qualification evidence.
