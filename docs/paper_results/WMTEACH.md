@@ -23,9 +23,22 @@
 - Student reuses S-DISTILL's causal observable features, O0 fallback and value-policy form;
   world identity, hidden parameters, demand and exact diagnostic outcomes are not features.
 - GPU work only after source/CPU/paired-future checks and an exclusive own-run receipt.
-  No SUMO dispatch is authorized: shared registration has no `S-WMTEACH BUDGET APPROVED`.
-- Live proposal remains ≤100,000 sim-s on S-DISTILL's same fresh DEV panel after MAIN approval.
+- MAIN11:48 approval now appears in shared registration: live cap100,000sim-s;
+  S-DISTILL's shared fresh DEV panel is984000–984023, panel SHA
+  `72776ff122956f021d1caf2db9622674b0cde2a74af8bd9f20c3de5ba0a383a6`.
+  A frozen policy/design and exact per-arm budget are still required before dispatch.
 
 ## Status
-Recovery/design only. No WM labels, teacher-quality estimate, trained student or live result yet.
+Code staged at gpuA `/root/autodl-tmp/wmteach20261101_v1`,404source hashes.
+Shared S-DISTILL code imported from4b139e5f; full local19CPU PASS, portable host17PASS.
+No new environment: sklearn/scipy/joblib/threadpoolctl pinned in own `deps/` directory.
+Initial quality panel:12EXAM states, one per cell, selected by observable availability
+then earliest clock/world, not outcomes; H120/H300, K8. Roster-only EXAM lacks causal
+history/source counters: explicitly marginalize the32FIT source queue/arrival priors
+and fitted driver population, cold controller memory; this is a weaker observation
+contract than the fully conditioned FIT labels and must be reported as such.
+Fit plan:32FIT worlds ×4settings ×2horizons=256WM label contexts, K8;
+student snapshots after each complete32world pass, H300 fixed, nested outer4/inner3
+world CV and same GBT/MLP/classifier/confidence grid as S-DISTILL. No exact fitting.
+No WM labels, teacher-quality estimate, trained student or live result yet.
 The headline “a policy trained with the world model beats MAPPO” is an objective, not a result.
