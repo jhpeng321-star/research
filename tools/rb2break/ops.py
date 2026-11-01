@@ -16,7 +16,7 @@ JOB = PARENT+'/rb2break'
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=('stage', 'launch', 'queue', 'retire-old-queues', 'status', 'fetch', 'fetch-baseline', 'baseline'))
+    parser.add_argument('action', choices=('stage', 'launch', 'queue', 'wait', 'retire-slow-cpu', 'retire-old-queues', 'status', 'fetch', 'fetch-baseline', 'baseline'))
     parser.add_argument('--host', default='gpuA', choices=('gpuA', 'gpuR'))
     parser.add_argument('--runtime')
     parser.add_argument('--factor', default='baseline')
@@ -28,6 +28,9 @@ def main():
     parser.add_argument('--snapshot-name')
     parser.add_argument('--lane', type=int, choices=(0, 1), default=0)
     parser.add_argument('--device', choices=('cuda', 'cpu'), default='cuda')
+    parser.add_argument('--jobs', nargs='+')
+    parser.add_argument('--wait-seconds', type=int, default=480)
+    parser.add_argument('--cpu-fast', action='store_true')
     args = parser.parse_args()
     if not set(args.worlds) <= set(range(969420, 969432)) or not args.worlds:
         raise ValueError('development only')
@@ -37,7 +40,7 @@ def main():
     if args.action == 'stage':
         commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root, text=True).strip()
         paths = ['src/wms', 'tools/rbint', 'tools/rbeval', 'tools/rb2break', 'tools/rbfit',
-            'configs/execparity_cav_idm_v1.json', 'configs/native_cav_head_v5.json', 'configs/wm_phys.toml',
+            'configs/execparity_cav_idm_v1.json', 'configs/native_cav_head_v5.json', 'configs/wm_phys.toml', 'configs/wm_phys_cpu.toml',
             'artifacts/rbfit/shrinkage_v1', 'docs/paper_results/rbunc/observed_arrivals.json',
             'tests/test_rb2break.py']
         archive = subprocess.check_output(['git', 'archive', '--format=tar', commit, *paths], cwd=root)
@@ -73,7 +76,7 @@ def save(path,data):
     out_name = f'{args.tag}_{args.factor}_s{args.shard}'
     if args.action == 'launch':
         if args.factor not in ('baseline', 'no_mainline_lc', 'no_merge_advice', 'depart_last',
-                               'depart_first', 'population', 'point_v0', 'point_tau', 'fixed_rate', 'lane_limits'):
+                               'depart_first', 'population', 'raw_posterior', 'point_v0', 'point_tau', 'fixed_rate', 'lane_limits', 'cav_settings'):
             raise ValueError('unregistered factor')
         if not args.runtime or not args.runtime.startswith(PARENT+'/rb2break_code_'):
             raise ValueError('own immutable runtime required')
@@ -88,7 +91,7 @@ root.mkdir(exist_ok=True)
 out=root/{out_name!r};assert not out.exists(), 'never duplicate a dispatch'
 out.mkdir()
 argv=['nice','-n','19','/root/miniconda3/bin/python','-B','-u','-m','tools.rb2break.run',
- '--out',str(out),'--runtime-root',str(runtime),'--wm-config',str(runtime/'configs/wm_phys.toml'),
+ '--out',str(out),'--runtime-root',str(runtime),'--wm-config',str(runtime/'configs'/{('wm_phys_cpu.toml' if args.cpu_fast else 'wm_phys.toml')!r}),
  '--model-name',{('RB2BREAK_'+args.tag+'_'+args.factor)!r},'--factor',{args.factor!r},
  '--dev-worlds',*map(str,{args.worlds!r}),'--futures',*map(str,{args.futures!r}),
  '--shard',{str(args.shard)!r},'--shards',{str(args.shards)!r},'--memory-gib','5','--device',{args.device!r}]
@@ -118,6 +121,26 @@ save(claim,dict(owner='S-RB2-BREAK',pid=child.pid,argv=argv,unix=time.time(),
  start_ticks=Path('/proc/'+str(child.pid)+'/stat').read_text().split()[21]))
 print(claim.read_text())
 '''
+    elif args.action == 'retire-slow-cpu':
+        code = '''
+import ctypes,signal
+libc=ctypes.CDLL(None,use_errno=True)
+for name in ('controlcpu2_baseline_s0','fixcpu2_lane_limits_s0'):
+ out=root/name;assert not list(out.glob('w*_k*.json')), 'task exists; no pre-inference retirement'
+ r=json.loads((out/'DISPATCH.json').read_text())
+ assert r['owner']=='S-RB2-BREAK' and r['argv'][r['argv'].index('--device')+1]=='cpu'
+ assert r['argv'][r['argv'].index('--out')+1]==str(out)
+ pidfd=libc.syscall(434,r['pid'],0);assert pidfd>=0
+ try:
+  assert Path('/proc/sys/kernel/random/boot_id').read_text().strip()==r['boot_id']
+  assert (Path('/proc')/str(r['pid'])/'stat').read_text().split()[21]==r['start_ticks']
+  actual=(Path('/proc')/str(r['pid'])/'cmdline').read_bytes().split(b'\\0')
+  assert str(out).encode() in actual and b'tools.rb2break.run' in actual
+  save(out/'OPERATIONAL_STOP.json',dict(process=r,reason='12min no completed task; replace full-matrix CPU queries by independently parity-tested CPU recipe; no efficacy inspected',unix=time.time()))
+  assert libc.syscall(424,pidfd,int(signal.SIGTERM),0,0)==0
+ finally: os.close(pidfd)
+print('Stopped exact own slow CPU pair; all outputs retained')
+'''
     elif args.action == 'retire-old-queues':
         code = '''
 import ctypes,signal
@@ -139,6 +162,28 @@ for lane in (0,1):
   result.append(dict(pid=r['pid'],lane=lane,reason='engineering namespace shadowing; no factor inference launched'))
  finally: os.close(pidfd)
 save(root/'RETIRED_OLD_QUEUES.json',result);print(json.dumps(result))
+'''
+    elif args.action == 'wait':
+        if not args.jobs or any(not name.replace('_', '').isalnum() for name in args.jobs):
+            raise ValueError('explicit own job names required')
+        if not 0 <= args.wait_seconds <= 900:
+            raise ValueError('bounded wait required')
+        code = f'''
+jobs={args.jobs!r};end=time.monotonic()+{args.wait_seconds!r}
+while True:
+ rows=[]
+ for name in jobs:
+  out=root/name;r=dict(job=name,tasks=len(list(out.glob('w*_k*.json'))),complete=(out/'COMPLETE.json').exists(),failed=False)
+  dispatch=out/'DISPATCH.json'
+  if dispatch.exists():
+   receipt=json.loads(dispatch.read_text());assert receipt['owner']=='S-RB2-BREAK'
+   proc=Path('/proc')/str(receipt['pid'])/'stat'
+   r['alive']=proc.exists() and proc.read_text().split()[2]!='Z' and proc.read_text().split()[21]==receipt['start_ticks']
+   r['failed']=not r['alive'] and not r['complete']
+  rows.append(r)
+ if all(r['complete'] for r in rows) or any(r['failed'] for r in rows) or time.monotonic()>=end: break
+ time.sleep(15)
+print(json.dumps(dict(jobs=rows,load=os.getloadavg())))
 '''
     elif args.action == 'status':
         code = '''
@@ -223,7 +268,16 @@ with tarfile.open(fileobj=sys.stdout.buffer,mode='w|gz') as tar:
             tar.extractall(target, filter='data')
         print(json.dumps(dict(snapshot=str(target), files=len(receipt['hashes']))))
         return
-    print(ssh(args.host, common+code, timeout=120))
+    if args.action == 'wait':
+        result = subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=15',
+            '-o', 'ServerAliveInterval=15', '-o', 'ServerAliveCountMax=3', args.host,
+            '/root/miniconda3/bin/python -B -'], input=common+code, text=True,
+            capture_output=True, timeout=args.wait_seconds+45)
+        if result.returncode:
+            raise RuntimeError(result.stdout+result.stderr)
+        print(result.stdout)
+    else:
+        print(ssh(args.host, common+code, timeout=120))
 
 
 if __name__ == '__main__':

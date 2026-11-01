@@ -55,3 +55,23 @@ negotiation already map the lane limit; longitudinal CF does not. Reuse the
 existing network mapping (no fitted constant), preserve sampled reference v0
 and mainline/acceleration-lane outputs exactly. Source-backed parity correction,
 not a forecast improvement claim until matched development screen completes.
+
+##12:27 shrinkage endpoint and resource extension
+`raw_posterior` removes ONLY the contamination prior (prior_count=0) when
+conditioning the same finite support on the same causal own-start motion. Pair
+with `population` (infinite-prior-count endpoint) and baseline19.35568. No scalar
+sweep or outcome-fitted parameter. Correction canary CPU import failed before
+inference due to local filename shadowing; preserved. Repaired module dispatch,
+then launched SAME-device CPU baseline/correction pair after load audit9.36.
+Two nice19 single-thread CPU workers, no extra GPU worker; GPU cap remains2.
+
+##12:30 CAV source/admission consistency (before candidate inference)
+`cav_settings`: bind CAV admission/initial/lane-geometry settings to the SAME
+registered motion-fitted CAV vector already forced by `execution.inferred_follow_cap`
+through `C4_EXECUTION_DRIVER`. The HDV encoder's CAV pool otherwise controls
+insertion while the external CAV executor ignores that pool. This is a
+cross-interface physics consistency correction, not a new execution plant or
+driver-truth lookup. Same initial CAV mask and source CAV-ordinal identities;
+HDV particles, arrival streams, controller/executor unchanged. Explicit opt-in.
+Inherited execution artifact TRAIN fit-world manifest is unchanged; no additional
+TRAIN tape opened or physical fit performed by BREAK.

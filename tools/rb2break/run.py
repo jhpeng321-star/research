@@ -17,7 +17,8 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(ROOT), str(ROOT/'src')]
 DEV = tuple(range(969420, 969432))
 FACTORS = ('baseline', 'no_mainline_lc', 'no_merge_advice', 'depart_last',
-           'depart_first', 'population', 'point_v0', 'point_tau', 'fixed_rate', 'lane_limits')
+           'depart_first', 'population', 'raw_posterior', 'point_v0', 'point_tau', 'fixed_rate',
+           'lane_limits', 'cav_settings')
 
 
 def filtered_starts(code, worlds):
@@ -74,6 +75,13 @@ def install_factor(factor):
             kwargs['sample_rate'] = False
             return original(self, *args, **kwargs)
         LearnedArrivalFit.draw = draw
+    elif factor == 'raw_posterior':
+        from wms.physics.motion_fit import MotionFit
+        original = MotionFit.condition_motion
+        def condition(self, *args, **kwargs):
+            kwargs['policy_path'] = None  # exact zero-prior-count endpoint
+            return original(self, *args, **kwargs)
+        MotionFit.condition_motion = condition
     elif factor in ('point_v0', 'point_tau'):
         # Collapse exactly one physical coordinate, preserving joint particle keys,
         # all other support coordinates and weights. Diagnostic, not a refit.
@@ -147,7 +155,14 @@ def main():
         ROOT/'artifacts/rbfit/shrinkage_v1/idm_posteriors.json.gz',
         ROOT/'artifacts/rbfit/shrinkage_v1/idm_shrinkage.json',
         ROOT/'docs/paper_results/rbunc/observed_arrivals.json']
-    run_wm.main(model_loader=load, future_builder=recipe.candidate_future,
+    def future(**kwargs):
+        planned, entries, receipt = recipe.candidate_future(**kwargs)
+        if options.factor == 'cav_settings':
+            from wms.control.execution_settings import bind_execution_settings
+            receipt.update(bind_execution_settings(planned, entries, kwargs['initial'],
+                ROOT/'configs/execparity_cav_idm_v1.json'))
+        return planned, entries, receipt
+    run_wm.main(model_loader=load, future_builder=future,
                 identity_sources=sources, worlds=options.dev_worlds,
                 future_indices=options.futures)
 

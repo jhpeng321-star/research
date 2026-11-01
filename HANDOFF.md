@@ -13,6 +13,7 @@ No candidate or improvement claimed yet. Mainline-LC/merge-advice screens active
 Reserved969432–969439 forbidden to this workstream. Learned corrections OFF.
 
 ## Round2 physical correction (screen pending)
+Core correction commit `8addc19e` (subsequent orchestration1c5fe0cf).
 `physics.sumo_cf_lane_speed_limits=true` (default OFF) maps inferred reference v0
 to CURRENT lane limit for longitudinal SUMO CF. Network ramp approach22.22m/s
 was already mapped in insertion/merge advice but missing in CF. Source
@@ -36,6 +37,26 @@ own pidfds BEFORE dispatching factors. Renamed `factor_queue.py`, module entry
 (`-m tools.rb2break.run`) avoids shadowing. Initial6b2d4c01 GPU screens unaffected.
 Correction CPU run requires matched same-device baseline; no CPU-vs-GPU ablation
 will be interpreted as a one-factor effect. Both failed source/output preserved.
+
+## Completed ablations12:40 (K1,12dev worlds, all5arms)
+`LC_COMPLETE.json`: no mainline lateral execution adds11,219.37veh-s at600s
+vs matchedfuture0 baseline (source only+26.46, road+11,192.91).300s event rate
+96.67→100%; upstream speed error worsens. Do NOT disable mainline LC.
+`MERGE_COMPLETE.json`: no merge negotiation/advice adds3,436.34veh-s at600s
+(source+1.53, road+3,434.81). Keep lane-end stopping/acceptance in both arms.
+Do NOT disable merge speed advice. These interventions don't explain source bias.
+
+Additional optional CAV consistency helper (unit tested, traffic screen pending):
+`variants.FULL.match_cav_execution_settings=true` binds admission/initial/lane
+settings to the SAME registered motion-fitted CAV artifact already forced by the
+executor. No controller/plant/HDV/RNG change. Default OFF. Use separately from
+lane-limit flag to preserve one-factor attribution. Tests:14targetedPASS;
+separate query/parity suite9PASS/2CUDA skips; CF suite28PASS.
+
+CPU full-matrix pair was operationally retired after12min/no completed task,
+exact own pidfds440933/440949; all logs retained. Next SAME-device pair uses
+existing independently parity-tested wm_phys_cpu recipe (fast exact merge queries).
+Current source/metadata/evidence under docs/rb2break; no reserved or WMDATA2 data.
 
 ## Inherited round1 handoff (provenance; not current BREAK process ownership)
 
