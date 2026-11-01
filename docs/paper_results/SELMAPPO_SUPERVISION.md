@@ -1,5 +1,15 @@
 # Fleet PPO operational supervision through noon
 
+## Terminal reconciliation — 2026-11-01 12:00 +08:00
+Existing publisher44716 completed its deadline heartbeat and exited without signals;
+observer3668 had already completed final169 publication. Both PIDs are absent.
+Fresh cpuQ receipt at04:00:32UTC verifies169updates,7,728closed/0outstanding worlds,
+0newfailures,6,998,400charged, no live own-build processes and unchanged sources.
+The generic last two heartbeat lines below say `nice19` and `inspect resource admission`;
+those describe the monitor's live-job template, not a currently live or stalled trainer.
+The trainer is complete and no repair is needed. Frozen final169 handoff remains valid;
+evaluation is C1SWITCH2-owned. Free disk4,958,339,072bytes (4.62GiB).
+
 MAIN04:27: approximately20-minute health/progress publication and commits.
 Consumes existing observer3668 receipts; verifies exact cpuQ645235 command,
 UID/starttime/nice and immutable staged source hashes. Exclusive local lock.

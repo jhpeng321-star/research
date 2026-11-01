@@ -1,5 +1,15 @@
 # S-SELMAPPO fleet-picker integration handoff
 
+## Noon supervision complete — 2026-11-01 12:01 +08:00
+- Existing noon publisher44716 emitted its12:00 heartbeat and exited at deadline;
+  observer3668 already exited after final169 publication. Both local PIDs absent.
+- Fresh12:00:32cpuQ verification:169updates/7,728closed,0open/0newfailures,
+  6,998,400charged, original own645235 absent/no live own-build processes.
+- Final checkpoint/source/ledger binding unchanged; peer final169 handoff ready.
+  Evaluation remains C1SWITCH2-owned, local14,400unstarted. Free disk4.62GiB.
+- Terminal details/throughput: `docs/paper_results/SELMAPPO_RECOVERY.md`.
+  No continuation/restart/duplicate observer is needed; all sources/locks retained.
+
 ## SSH recovered; fleet training COMPLETE — 2026-11-01 11:39 +08:00
 - cpuQ uptime confirms SSH-only outage. Original own645235 absent because all169
   genuine updates finished; all7,728 new worlds closed, zero new failures/outstanding.

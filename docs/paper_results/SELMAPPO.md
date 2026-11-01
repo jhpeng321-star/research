@@ -1,6 +1,6 @@
 # Fleet PPO controller-selector training status
 
-Observed UTC: 2026-11-01T03:39:13.320648+00:00
+Observed UTC: 2026-11-01T04:00:32.809158+00:00
 - cpuQ supervisor: 645235; alive=False; nice=None.
 - Genuine completed PPO updates: 169/169; final169 eligible=True.
 - New production: 7728 complete, 0 outstanding; failures=0.
@@ -14,5 +14,6 @@ Observed UTC: 2026-11-01T03:39:13.320648+00:00
 - Receipts: `docs/paper_results/selmappo/`; protocol/design and previous stops: `HANDOFF.md`.
 
 The original five-minute observer completed its final169 handoff and exited normally.
-Fresh-session reconciliation verified completion; the existing noon supervisor remains
-active. No fleet training processes remain, and no restart is required.
+Fresh-session reconciliation verified completion. The existing noon supervisor published
+its final heartbeat and exited at its deadline; both local PIDs are now absent.
+No fleet training processes remain, and no restart is required.
