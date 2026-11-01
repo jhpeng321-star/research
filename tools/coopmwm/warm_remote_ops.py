@@ -191,6 +191,29 @@ print(json.dumps(v))''',timeout=45))
     write(ops.EVIDENCE/f'WARM_{arm}_DISPATCH_V3.json',value);print(json.dumps(value))
 
 
+def status():
+    value=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,sys,time,shutil,os
+r=pathlib.Path({ROOT!r});sys.path.insert(0,{CPU!r}+'/pytools')
+from tools.coopmwm.accel_storage import read,ledger,charged
+from tools.coopmwm.warm_health import active_stop
+owners={{}}
+for name in ['WARM_REMOTE_BROKER_DISPATCH.json']+[f'WARM_{{a}}_DISPATCH_V3.json' for a in ('A','B','R')]:
+ p=r/name
+ if not p.exists():continue
+ d=read(p);assert pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']
+ q=pathlib.Path('/proc')/str(d['pid']);s=(q/'stat').read_text().split() if (q/'stat').exists() else None
+ assert not s or s[21]==d['start_ticks'];owners[name]=dict(owner=d,state=s[2] if s else 'exited')
+receipts={{p.name:read(p) for pattern in ('PAUSE_*.json','WARM_*_FAILED_V3.json','WARM_GUIDED_STOP.json','WARM_*_PAUSED.json') for p in r.glob(pattern)}}
+logs={{a:(r/f'WARM_{{a}}_V3.log').read_text()[-4000:] for a in ('A','B','R') if (r/f'WARM_{{a}}_FAILED_V3.json').exists()}}
+charges=ledger(r);fresh=[c for c in charges if c['id'].startswith(('warm_','warmcheck','warmdev'))]
+print(json.dumps(dict(unix=time.time(),owners=owners,active_transport_stop=active_stop(r),receipts=receipts,failed_logs=logs,
+ updates={{a:max([0]+[int(p.stem.rsplit('_',1)[1]) for p in r.glob(a+'_UPDATE_*.json')]) for a in ('A','B','R')}},
+ charged_sim_s=charged(r),reserved_jobs=len(fresh),closed_jobs=sum((r/'jobs'/c['id']/'CLOSE.json').exists() for c in fresh),
+ pending_requests={{kind:sum(not (r/responses/p.name).exists() for p in (r/requests).glob('*.json')) for kind,requests,responses in [('plan','requests','responses'),('centre','centre_requests','centre_responses')]}},
+ completed_forecasts=len(list((r/'broker_completed').glob('*.json'))),load=os.getloadavg(),disk_free=shutil.disk_usage(r).free,ram_free=shutil.disk_usage('/dev/shm').free)))''',timeout=40))
+    write(ops.EVIDENCE/f'WARM_V3_STATUS_{int(value["unix"])}.json',value);print(json.dumps(value));return value
+
+
 def routes():
     known=subprocess.check_output(['ssh-keygen','-F','[connect.bjb1.seetacloud.com]:11000'],text=True)
     assert known.strip()
@@ -212,7 +235,7 @@ print(json.dumps(dict(code=p.returncode,stderr=p.stderr)))''',timeout=35))
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('routes','stage-gpu','dispatch-gpu','gpu-status','authorize','probe-routes','register-runtime','dispatch-arm'));p.add_argument('--host',choices=('gpuA','gpuR'));p.add_argument('--arm',choices=('A','B','R'));a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('routes','stage-gpu','dispatch-gpu','gpu-status','authorize','probe-routes','register-runtime','dispatch-arm','status'));p.add_argument('--host',choices=('gpuA','gpuR'));p.add_argument('--arm',choices=('A','B','R'));a=p.parse_args()
     if a.mode=='dispatch-arm':dispatch_arm(a.arm)
-    elif a.mode in ('routes','authorize','probe-routes','register-runtime'):globals()[a.mode.replace('-','_')]()
+    elif a.mode in ('routes','authorize','probe-routes','register-runtime','status'):globals()[a.mode.replace('-','_')]()
     else:globals()[a.mode.replace('-','_')](a.host)

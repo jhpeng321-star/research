@@ -1,5 +1,13 @@
 # S-COOPMWM — live checks
 
+## A exact-u16 continuation started — detached remote supervision
+- A V3 PID2998262/start57133822, cpuQ boot identity verified; dispatch unix1793557060.492315.
+  Exact u16 checkpoint/Adam/RNG retained, now collecting u17; fixed final48 unchanged.
+- Fresh status1793557149: processS, no failure or active transportSTOP; 360/372 new
+  jobs closed, 1,434,440 sim-s conservatively charged. B/R still unstarted.
+- Both persistent GPU workers pass their first warm K4/H120 batched/single EXACT0
+  gate; remaining startup gates run on the same owned processes. No duplicate search.
+
 ## Durable runtime and health guards — CPU qualified, remote gates running
 - **160 CPU tests PASS, zero skips, 8.99s, zero SUMO**. Health pauses are integrated
   into live guided episodes, pre-update checks and paired learning checks. A remains

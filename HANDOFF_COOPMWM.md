@@ -1,5 +1,10 @@
 # S-COOPMWM live continuation — MAIN02:01 learner correction pending
 
+ACTIVE A V3: cpuQ2998262/start57133822 bootb8bc1fcb, dispatch1793557060.492315,
+exactu16 resume nowu17 collecting. `warm_remote_ops status` knows V3owners and
+SHA-releasedSTOP; old warm_deploy status only sees historical exited A. Do not
+duplicate A. GPU durable1 both first warmK4H120 batch/single EXACT0, others pending.
+
 LATEST: MAIN02:01 learner now registered0bb2f157/CPU133PASS; positive completed-plan
 AWR T4.822766875237093 from preB/R MAPPO baseline, clip20, no plan PPO scores/ratios.
 DurableCPU2 now160PASS/0skips/zeroSUMO with health/client/plant integration; runtime
