@@ -1,4 +1,16 @@
-# S-COOPMWM live continuation — OWNER20:35 four-update viability
+# S-COOPMWM live continuation — OWNER22:08 WARM MEMORY HOLD
+
+22:11 recovery: OWNER22:08 supersedes cold B/R viability. Identity-verified cpuQ
+supervisor2477255/start55545604 is T; all twelve active B workers and SUMO children
+are identity/ancestry-verified T. No acceleration optimizer update exists. Twelve A
+episodes completed, others reserved but unclaimed; preserve/reuse A work. Conservative
+charge872840sim-s/all51reservations retained. HOLD_WARM2208.json + registered
+amendment082dc02b3c443b83a228ae2000be719eb2a1297e1d9cf4cb23b7895c14b1863e.
+Do NOT resume the cold shared supervisor. Qualify observable60s C1 genuine history,
+FULL-v4 per-driver posteriors, empty-history equivalence, bothGPU batch parity and
+registered E2 cold/warm diagnostic/timing, then B/R restartu0 in new namespace.
+Existing bridge/services/observer must be inspected/quiesced before replacements.
+No sealed access; all old charges retained; revised exact quote before physics.
 
 21:49 ACTIVE RELEASE CPU37 79PASS/0skips/zeroSUMO, tag `VIABILITY2035v4`.
 Capacity amendment780fa80741ef2f573c79ee8eb377e3c4f07c20c41e5d3554b3a6a0ac1b4ad38b:

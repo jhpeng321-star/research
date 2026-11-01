@@ -1,5 +1,20 @@
 # S-COOPMWM — live checks
 
+## 22:11 — OWNER22:08 warm-memory hold recorded
+- Verified cpuQ supervisor2477255/start55545604 and stopped its shared optimizer
+  scheduling; separately stopped only its twelve B workers and their SUMO children
+  after ancestry/start-time checks. No acceleration optimizer update exists.
+- Twelve A episodes are complete and preserved; remaining A reservations can be
+  adopted once by an A-only continuation. B/R cold runs are superseded engineering
+  work; **872840sim-s conservatively charged**,51reservations, no refunds.
+- Registered engineering amendment
+  `082dc02b3c443b83a228ae2000be719eb2a1297e1d9cf4cb23b7895c14b1863e`.
+  B/R restart from MAPPOu0 requires C1 observable60s history, learned FULL-v4
+  per-driver posteriors, CPU/empty-history tests, both-GPU parity and timed
+  cold/warm decision comparison on registered exact-labelled diagnostic states.
+- Qualification pending; **WARM MEMORY QUALIFIED is not yet claimed**. No new
+  physics or sealed-panel access during recovery.
+
 ## 21:49 — fastest qualified capacity admitted for early viability
 - Fixed4 two-worker searches are slower than one: gpuA4.6604vs5.3373plans/hour;
   gpuR4.7692vs5.1416. All workers reproduce the complete reference search exactly.
