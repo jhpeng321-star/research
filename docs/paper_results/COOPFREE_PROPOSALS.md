@@ -1,5 +1,22 @@
 # S-COOPFREE proposal interface for S-COOPPLAN
 
+## OWNER15:11 continuation — COOPPLAN and WMPLAN consumers
+New exports: `tools/coopfree/publications/owner1511/` (separate from the legacy namespace).
+The current u001 is the same corrected HOLD checkpoint, not a new optimizer update.
+Fresh u002+ checkpoints appear only after complete156-window/24world updates.
+Verify `policy_hold_uNNN.pt` against `HOLD_UPDATE_NNN.json.checkpoint_sha256`
+and the new flat `MANIFEST.json` filename-to-SHA256 mapping. No filename aliases.
+`CONTINUE_CPU.json`/`CONTINUE_AUTHORITY.json` bind the amended6M budget/design,
+new source hashes and full TRAIN-only EXAM prior. Original runtime/policy/safety unchanged.
+New exact solo diagnostics cover39/156 randomly selected whole groups, not66/156;
+all156 Gaussian joint-score gradients use objective2DG vs exact zero-update HOLD.
+Regular hash-bound exports and u3/u6/u9 checks are maintained by singleton observer
+42732 (48h/poll120s); do not start another publisher or any training job.
+Use the proposal encoding below unchanged: actual pre-safety MAPPO anchors, absolute
+speed/time-gap targets, every observable merge-zone member, unchanged safety executor.
+DEV and discovery outcomes remain evaluation artifacts, not proposal-network inputs.
+
+## Original u001 correction (historical)
 The corrected learned proposal checkpoint appears after a complete optimizer update
 (156 windows across24 TRAIN worlds, exact HOLD baselines; exact member-solo credit
 for66 whole windows within the residual cap). Legacy MAPPO-credit checkpoints are
