@@ -34,3 +34,16 @@
 - Immutable final runtime/CPU/source binding and complete exposure admission.
 - One full-episode smoke per arm, against the reused bitwise MAPPO cache.
 - WM/exact gate, then every-four-update TRAIN-cell checks and first registered dev check.
+
+## CPU7 — final workflow implementation
+- **30 PASS, zero skips, 1.28 s, zero SUMO**; receipt `coopmwm/CPU_coopmwm20261101_cpu7.json`.
+- Runner now namespaces all three training-seed checkpoint/job/check receipts and fixes
+  seed0/update24 for the final test. The final-test gate requires all training completions;
+  missing B finals produce an explicit incomplete test, never a fallback checkpoint.
+- Native reference reuses the genuine native plant. Final paired bootstrap supports all36 worlds.
+- H600 uses the original producer with H600/1600 entrant capacity and four indexed K2 batches
+  assembled into complete paired K8. Draw identities/executor/reducer are retained; actual GPU
+  memory/forecast parity remains a pre-inference check, not established by structural CPU tests.
+- Actual team-only GAE variance is logged separately from conditional WM credit noise.
+- cpuP SSH still closes at the second bounded metadata-only probe. No runtime binding,
+  owned training/GPU service, smoke, credit agreement or learning update has been dispatched.

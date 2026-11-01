@@ -9,6 +9,19 @@ from .policy import Policy,Controller
 
 
 def episode(job):
+    if job.get('native_reference'):
+        # Reuse the tested true-native plant, not a zero MAPPO command surrogate.
+        import types
+        from tools.coopnative import plant as native
+        from .protocol import authority
+        original_setup=native.setup
+        def setup(runtime):
+            original_setup(runtime);install_seed_scope()
+        def approved(text):
+            if authority(text)!=job['authority']:raise ValueError('native reference authority mismatch')
+        run=types.FunctionType(native.episode.__code__,dict(native.episode.__globals__,
+            approval_line=approved,setup=setup,guard=guard))
+        return run(dict(job,approval_line='\n'.join(job['authority'])))
     from tools.leverprobe import backend as exact
     from tools.coopfree import backend as cf
     path=Path(job['path']);path.mkdir(parents=True,exist_ok=True)

@@ -139,12 +139,38 @@ class Contracts(unittest.TestCase):
         with self.assertRaises(ValueError):guard(dict(final[0],seed=964000),'final_test')
         self.assertEqual(registry_conflicts('other 989599..989636'),[1])
 
+    def test_final_test_refuses_early_and_no_fallback_checkpoint(self):
+        import tempfile
+        from .runner import final_test,compare
+        from .storage import write,read
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp)
+            with self.assertRaisesRegex(ValueError,'before all registered training'):
+                final_test(root,{}, {})
+            self.assertFalse((root/'FINAL_TEST_STARTED.json').exists())
+            for i in range(3):write(root/f'S{i}_TRAINING_COMPLETE.json',dict(active_arms=['A']))
+            final_test(root,{}, {})
+            self.assertTrue(read(root/'FINAL_TEST_NOT_RUN.json')['no_fallback'])
+            self.assertFalse((root/'FINAL_TEST_STARTED.json').exists())
+        metrics={h:dict(team_delay_vs=10.,collisions=0.,teleports=0.,ttc_below_3_vs=2.,hard_brake=1.) for h in ('600','900')}
+        records=[dict(world=w,arm=a,metrics=copy.deepcopy(metrics)) for w in worlds('final_test') for a in ('A','B')]
+        result=compare(records,[],'B','A','final_test')
+        self.assertEqual(result['worlds'],36)
+        self.assertEqual(result['metrics']['900_team_delay_vs']['ci95'],[0.,0.])
+
     def test_frozen_batched_K8_adapter_multihorizon_structure(self):
         from .wm import adapted_futures
         ns=adapted_futures()
         self.assertIn('futures',ns)
         self.assertIn(1200,ns['futures'].__code__.co_consts)
         self.assertIn((60,120,300,600),ns['futures'].__code__.co_consts)
+        from .wm import executor_adapter
+        from tools.wmteach import runtime
+        original=runtime.prepare_batch
+        with executor_adapter():
+            self.assertIn(600,runtime.prepare_batch.__code__.co_consts)
+            self.assertIn(1600,runtime.prepare_batch.__code__.co_consts)
+        self.assertIs(runtime.prepare_batch,original)
 
     def test_multihorizon_selection_scale_and_CRN_noise(self):
         rs=[dict(world=dict(cell=i,seed=986000+i),wm={},exact={}) for i in range(12)]

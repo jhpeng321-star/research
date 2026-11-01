@@ -39,11 +39,26 @@ def executor_adapter():
     """Use the original option executor; only its target/request decoder changes."""
     from tools.leverprobe import intervention
     from tools.coopfree.policy import requests
+    from tools.wmteach import runtime
     old_targets,old_requests=intervention.targets,intervention.requests
+    old_prepare=runtime.prepare_batch
+    tree=ast.parse(inspect.getsource(old_prepare));counts={300:0,960:0}
+    class Capacity(ast.NodeTransformer):
+        def visit_Constant(self,node):
+            if type(node.value) is int and node.value in counts:
+                counts[node.value]+=1
+                return ast.copy_location(ast.Constant({300:600,960:1600}[node.value]),node)
+            return node
+    tree=Capacity().visit(tree);ast.fix_missing_locations(tree)
+    if counts!={300:1,960:1}:raise ValueError('frozen entrant capacity ABI changed')
+    ns=dict(old_prepare.__globals__);exec(compile(tree,'<coopmwm-H600-entrant-capacity>','exec'),ns)
+    runtime.prepare_batch=ns['prepare_batch']
     intervention.targets=lambda action,rows:action['targets']
     intervention.requests=lambda action,rows,fixed:(requests(fixed,rows,zone=None),'setpoint')
     try:yield
-    finally:intervention.targets,intervention.requests=old_targets,old_requests
+    finally:
+        intervention.targets,intervention.requests=old_targets,old_requests
+        runtime.prepare_batch=old_prepare
 
 
 def adapted_futures():
@@ -103,10 +118,13 @@ def evaluate(rt,record):
     ns=adapted_futures();ns['_actions']=candidates(record)
     adapted=dict(record,setting=0)
     with executor_adapter():
-        result=ns['futures'](rt,adapted)
-    audit=result['population_audit']
-    if not audit['finite'] or not audit['conserved']:
+        # Same producer's indexed batching, complete K8 assembled without changing
+        # draw identities. Two futures/batch bounds H600 memory under the 8GiB cap.
+        chunks=[ns['futures'](rt,adapted,indices=tuple(range(i,i+2))) for i in range(0,8,2)]
+    if any(not r['population_audit']['finite'] or not r['population_audit']['conserved'] for r in chunks):
         raise ValueError('WM finite/conservation failure')
+    result=dict(futures={str(h):{a['id']:[v for r in chunks for v in r['futures'][str(h)][a['id']]]
+                for a in candidates(record)} for h in HORIZONS},chunks=chunks,indices=list(range(8)))
     from .credit import noise
     credits={};variances={}
     for h in HORIZONS:
