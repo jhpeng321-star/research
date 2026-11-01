@@ -1,21 +1,26 @@
 """One-use continuation staging/dispatch and bounded read-only collection."""
 import json
+import os
 from pathlib import Path
 import time
 
 from tools.coopbandit.protocol import sha
 from tools.wmteach.ops import remote,ROOT,REMOTE
 
-SCALE='/root/autodl-tmp/wmteach_scale20261101_v1'
+PROFILES={'v4repair':('/root/autodl-tmp/wmteach_scale20261101_v2',REMOTE,'FULL-v4'),
+          'v5':('/root/autodl-tmp/wmteach_scale_v5_20261101_v1',
+                '/root/autodl-tmp/wmteach_v5quality20261101_v1','FULL-v5')}
+PROFILE=os.environ.get('WMTEACH_SCALE_PROFILE','v4repair')
+SCALE,PARENT,BACKEND=PROFILES[PROFILE]
 HERE=ROOT/'docs/paper_results/wmteach'
 
 
 def stage():
     overrides={f'tools/wmteach/{name}':(ROOT/'tools/wmteach'/name).read_text(encoding='utf-8')
-               for name in ('scale.py','test_scale.py','labels.py','student.py')}
-    design=(ROOT/'docs/paper_results/WMTEACH_SCALE_DESIGN.md').read_text(encoding='utf-8')
+               for name in ('scale.py','test_scale.py','test_marginal.py','labels.py','student.py','marginal.py','runtime.py','run.py')}
+    design=(ROOT/'docs/paper_results/WMTEACH_SCALE_V2_DESIGN.md').read_text(encoding='utf-8')
     return remote(f'''import pathlib,json,hashlib,shutil
-parent=pathlib.Path({REMOTE!r});root=pathlib.Path({SCALE!r})
+parent=pathlib.Path({PARENT!r});root=pathlib.Path({SCALE!r})
 assert root.parent.is_dir() and not root.exists(), 'one-use root exists; never redispatch'
 assert shutil.disk_usage(root.parent).free>4*2**30
 identity=json.loads((parent/'IDENTITY.json').read_text())
@@ -32,7 +37,7 @@ for name,text in files.items():
 (root/'deps').symlink_to(parent/'deps',target_is_directory=True)
 for name in ('states','labels'):(root/name).mkdir()
 sources={{**identity['sources'],**{{str(root/n):hashlib.sha256((root/n).read_bytes()).hexdigest() for n in files}}}}
-new=dict(schema='wmteach-scale/1',backend='FULL-v4',source=identity['source'],parent=str(parent),
+new=dict(schema='wmteach-scale/1',backend={BACKEND!r},source=identity['source'],parent=str(parent),
  parent_identity_sha256=hashlib.sha256((parent/'IDENTITY.json').read_bytes()).hexdigest(),sources=sources,
  worlds=list(range(969400,969432)),states=5120,lineages=2,times=[300+7.5*i for i in range(1,81)],
  K=8,horizons=[120,300],settings='(clock_index+lineage)%4',new_sumo_sim_s=0,
@@ -58,11 +63,19 @@ print(json.dumps(receipt))
 
 
 def register():
-    design=sha(ROOT/'docs/paper_results/WMTEACH_SCALE_DESIGN.md')
-    line=(f'- S-WMTEACH OWNER1253 SCALE CONTINUATION REGISTERED BEFORE DISPATCH: designSHA256{design}; '
+    design=sha(ROOT/'docs/paper_results/WMTEACH_SCALE_V2_DESIGN.md')
+    line=(f'- S-WMTEACH FIT-BRIDGE REPAIR/SUCCESSOR {PROFILE} REGISTERED BEFORE DISPATCH: designSHA256{design}; '
+          f'backend{BACKEND}/root{SCALE}/qualityparent{PARENT}. '
+          'Originalv4quality96futuresCOMPLETE; originalsmall and scalev1 both EXITED at native-export '
+          '969420..969439-only guard BEFORE any FIT rollout/label. Preserve all roots; no replay. '
+          'Use population-marginal observable FIT-start generator, no exporter identity substitution; '
+          'v5 uses releasedb2df7458/recipe023fa74a/fittedLCpopulation+CALphysicalspread+CAVsettings, '
+          'cold motion/LC/controller memory retained and disclosed. v4repair reuses completedv4quality; '
+          'v5 waits separatev5quality12EXAM/K8/H120,H300 before fitting. '
+          'Latest publishedv5 fixed prospectively as live teacher BEFORE v5quality forecasts; v4repair '
+          'is engineering comparison only, cannot trigger live or select snapshots. '
           'supersedes first32state student LIVE trigger before any physics; own collector41120 exact-owned stopped, '
-          'initialGPU437822 retained/no replay. gpuA immutable /root/autodl-tmp/wmteach_scale20261101_v1, '
-          'FULL-v4 source22cc32f6; wait existing12EXAM/twoH quality without recomputation, report H300 helpful '
+          'initialGPU437822 receipts retained/no replay. gpuA immutable versioned roots, report H300 helpful '
           'argmax agreement/sign/rank/regret FIRST. 32FIT969400..969431 x2independent O0 imagined lineages '
           'x80clocks307.5..900 every7.5s=5120DISTINCT observable states; setting=(clockindex+lineage)%4, '
           'K8xO0..O4 paired futures batched/H120,H300/source-inclusive delay. Frozen FIT joint-driver population '
@@ -75,19 +88,19 @@ def register():
           'gate fixed before QUALITY completed, never selects snapshot/model. Existing MAIN11:48 cap100000/'
           'sameDEV984000..984023/panelSHA72776ff1/exact58800upper retained; final policy+design hashes/portable '
           'parity/CPU24guards registration before one-use live. Strict8GiB/nice19/singlethread/newSUMO0 for '
-          'teacher; no peerPIDaction/retries/deletions/newenv/push. WMDATA2quarantined/FULL-v5notREADY; '
-          'await explicit immutable successor handoff before a separately versioned rerun.\n')
+          'teacher; no peerPIDaction/retries/deletions/newenv/push. WMDATA2quarantined; '
+          'FULL-v5 engineering/teacher rerun READY verified, final distributional qualification pending.\n')
     registry=Path('E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md')
-    if 'designSHA256'+design not in registry.read_text(encoding='utf-8'):
+    if line not in registry.read_text(encoding='utf-8'):
         with registry.open('a',encoding='utf-8') as f:f.write(line);f.flush()
-    receipt=HERE/'SCALE_REGISTRATION.json'
+    receipt=HERE/f'SCALE_{PROFILE.upper()}_REGISTRATION.json'
     if not receipt.exists():
         with receipt.open('x',encoding='utf-8') as f:json.dump(dict(line=line,design_sha256=design),f);f.write('\n')
     return json.dumps(dict(path=str(receipt),design_sha256=design))
 
 
 def launch():
-    registration=json.loads((HERE/'SCALE_REGISTRATION.json').read_text(encoding='utf-8'))
+    registration=json.loads((HERE/f'SCALE_{PROFILE.upper()}_REGISTRATION.json').read_text(encoding='utf-8'))
     return remote(f'''import pathlib,json,subprocess,os,time,hashlib,shutil
 root=pathlib.Path({SCALE!r})
 assert not (root/'LAUNCH_ONCE.json').exists(), 'existing dispatch; never duplicate'
@@ -99,7 +112,8 @@ with (root/'LAUNCH_ONCE.json').open('x') as f:json.dump(dict(unix=time.time(),pa
 with (root/'RUN.log').open('x') as log:
  p=subprocess.Popen(['/root/miniconda3/bin/python','-B','-u','-m','tools.wmteach.scale',str(root)],
   cwd=root,stdout=log,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL,start_new_session=True,
-  env={{**os.environ,'PYTHONPATH':str(root/'deps'),'OMP_NUM_THREADS':'1','MKL_NUM_THREADS':'1','OPENBLAS_NUM_THREADS':'1'}})
+  env={{**os.environ,'PYTHONPATH':str(root/'deps'),'WMTEACH_BACKEND':{BACKEND!r},'WMTEACH_PARENT_ROOT':{PARENT!r},
+   'OMP_NUM_THREADS':'1','MKL_NUM_THREADS':'1','OPENBLAS_NUM_THREADS':'1'}})
 receipt=dict(pid=p.pid,start_ticks=pathlib.Path(f'/proc/{{p.pid}}/stat').read_text().split()[21],
  boot_id=pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip(),unix=time.time(),
  root=str(root),strict_memory_gib=8,new_sumo_sim_s=0)
@@ -128,7 +142,7 @@ print(json.dumps(dict(unix=time.time(),root=str(root),files=files,process=proces
  gpu=subprocess.check_output(['nvidia-smi','--query-compute-apps=pid,used_memory','--format=csv,noheader'],text=True),
  load=os.getloadavg(),disk_free=shutil.disk_usage(root).free,new_sumo_sim_s=0)))
 ''',timeout=90))
-    dest=HERE/f'SCALE_SNAPSHOT_{int(data["unix"])}.json'
+    dest=HERE/f'SCALE_{PROFILE.upper()}_SNAPSHOT_{int(data["unix"])}.json'
     with dest.open('x',encoding='utf-8') as f:json.dump(data,f,sort_keys=True,allow_nan=False);f.write('\n')
     return json.dumps(dict(path=str(dest),process=data['process'],generated=data['generated_states'],
                            labelled=data['labelled_states'],quality=data['files'].get('HELPFUL_QUALITY.json'),
@@ -138,4 +152,6 @@ print(json.dumps(dict(unix=time.time(),root=str(root),files=files,process=proces
 if __name__=='__main__':
     import argparse
     parser=argparse.ArgumentParser();parser.add_argument('action',choices=['stage','cpu','register','launch','collect'])
-    args=parser.parse_args();print(globals()[args.action]())
+    parser.add_argument('--profile',choices=list(PROFILES),default=PROFILE)
+    args=parser.parse_args();PROFILE=args.profile;SCALE,PARENT,BACKEND=PROFILES[PROFILE]
+    print(globals()[args.action]())

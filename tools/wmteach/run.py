@@ -19,7 +19,7 @@ def save(path,value):
 def read(path): return json.loads(checked(path).read_text())
 
 
-def execute(root,canary=False):
+def execute(root,canary=False,quality_only=False):
     import torch
     root=checked(root)
     assert root.is_dir()
@@ -38,6 +38,7 @@ def execute(root,canary=False):
         save(root/'RUNTIME.json',dict(model=rt.receipt,export=rt.export,starts=rt.provenance))
     records=read(root/'QUALITY_INPUTS.json')
     def compute(record,source):
+        record=dict(record,backend=identity['backend'])
         path=root/'tasks'/record['state_id']
         path.mkdir(exist_ok=True)
         for future in range(8):
@@ -80,6 +81,10 @@ def execute(root,canary=False):
                 rows.append(compare(wm,exact[r['state_id'],horizon]))
         save(root/'QUALITY_RECORDS.json',rows)
         save(root/'QUALITY.json',{str(h):quality([r for r in rows if r['horizon_s']==h],300) for h in (120,300)})
+    if quality_only:
+        save(root/'QUALITY_COMPLETE.json',dict(states=12,futures=96,new_sumo_sim_s=0,
+                                             identity_sha256=sha(root/'IDENTITY.json')))
+        return
     # FIT-only sources; NEVER exact EXAM targets or planner DEV outcomes.
     for setting in range(4):
         for i,source in enumerate(rt.batches):
@@ -98,4 +103,5 @@ def execute(root,canary=False):
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(); parser.add_argument('root',type=Path); parser.add_argument('--canary',action='store_true')
-    args=parser.parse_args(); execute(args.root,args.canary)
+    parser.add_argument('--quality-only',action='store_true')
+    args=parser.parse_args(); execute(args.root,args.canary,args.quality_only)

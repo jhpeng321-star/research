@@ -7,7 +7,7 @@ from tools.wmteach.ops import remote,ROOT,REMOTE
 
 LIVE='/root/autodl-tmp/wmteach_live20261101_v1'
 PEER='/root/autodl-tmp/distill20261101_v1'
-SCALE='/root/autodl-tmp/wmteach_scale20261101_v1'
+SCALE='/root/autodl-tmp/wmteach_scale_v5_20261101_v1'
 
 
 def prepare():
@@ -40,6 +40,7 @@ assert summary['states']>=5000
 original=sha(student/'policy.pkl');assert original==complete['policy_sha256']==summary['policy_sha256']
 with (student/'policy.pkl').open('rb') as f:payload=pickle.load(f)
 assert payload['label_horizon_s']==300 and payload['train_worlds']==list(range(969400,969432))
+assert payload['teacher']=='FULL-v5_WM_only'
 portable=types.ModuleType('wmteach_frozen_export');sys.modules[portable.__name__]=portable
 own=json.loads({json.dumps(files)!r})
 exec(compile(own['pytools/tools/wmteach/portable.py'],'<frozen-wmteach-export>','exec'),portable.__dict__)
@@ -77,7 +78,7 @@ new_binding.update(workers=2,load_max=16,budget=budget(),panel=panel,
 freeze=dict(design_sha256=new_binding['design_sha256'],original_policy_sha256=original,
  policy_sha256=sha(root/'POLICY.json'),panel_sha256=PANEL_SHA,budget=budget(),
   selected_snapshot='student_scale_5120',training_states=summary['states'],helpful_quality=gate,
-  teacher_identity_sha256=sha(teacher/'IDENTITY.json'),
+  teacher_identity_sha256=sha(teacher/'IDENTITY.json'),teacher_backend=payload['teacher'],
  quality_sha256=sha(teacher/'QUALITY.json'),portable_parity_states=len(query),
  max_prediction_error=float(abs(expected-actual).max()),new_sumo_sim_s=0)
 for name,value in [('BINDING.json',new_binding),('FREEZE.json',freeze),('APPROVAL.json',dict(line={authority!r}))]:
@@ -119,6 +120,7 @@ def preregister(freeze):
           f'FIRST complete student_scale_5120 ONLY/originalpolicySHA{freeze["original_policy_sha256"]}/'
           f'portablepolicySHA{freeze["policy_sha256"]}, H300 WM-only targets/32FITworlds/'
           f'{freeze["training_states"]}distinctstates/helpfulqualityPASS, '
+          f'teacher{freeze["teacher_backend"]}/publishedb2df7458fixedBEFOREv5quality, '
           f'qualitySHA{freeze["quality_sha256"]} completed before fitting; portable original parity '
           f'{freeze["portable_parity_states"]}states. SAME S-DISTILL24world DEV984000..984023/'
           f'panelSHA{freeze["panel_sha256"]}, no new seed block/fitting on live worlds. EXACT58800upper='

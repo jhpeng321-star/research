@@ -32,6 +32,16 @@
   must pass before the one-use launch. Efficacy-only: no new member-alone C_G branches.
 
 ## Status
+Latest repair/release contract: `WMTEACH_SCALE_V2_DESIGN.md`/a3684b70abda.
+Three immutable roots staged: repairedv4scale(9hostCPU), v5quality-only(10hostCPU),
+v5scale(9hostCPU). The real released-type regression confirms LC attachment retains
+CAL hidden/arrival wrappers while per-ID posteriors are emptied. Existing local
+Python31327CPU PASS. All shared prospective registrations precede dispatch.
+Latest published FULL-v5 is fixed as the live teacher before its quality forecasts;
+v4repair is an engineering comparison. The new generator uses the same explicit
+population/cold-memory contract as descendant labelling, avoiding the incompatible
+native exported-ID path. Original failed roots are preserved, not relaunched.
+
 OWNER12:53 amendment: scale target >=5000 distinct FIT/imagined decision states;
 helpful-state teacher quality must precede scale fitting and gate live testing.
 Fresh recovery at `e6ba1bde` found original GPU437822 alive (64 futures/16 horizon
@@ -90,7 +100,8 @@ after each matched prediction file exists; all10completed states included.
   driver/source-prior marginalization and cold memory; not calibrated confidence,
   whole-panel qualification, student recognition, or real-policy efficacy.
 
-Active immutable gpuA root `/root/autodl-tmp/wmteach20261101_v3`,404source hashes.
+Historical immutable gpuA root `/root/autodl-tmp/wmteach20261101_v3`,404source hashes
+(original process now EXITED; complete quality/terminal FIT guard retained).
 Supervisor437822/startticks888636829/boot a81555d7-176e-4ed8-bc7d-896fc89cc914;
 `wmteach/DISPATCH_V3.json`. Own strict8GiB GPU cap; peer processes untouched.
 H300 canary34.248s PASS finite/conserved/source-inclusive costs, reused once.

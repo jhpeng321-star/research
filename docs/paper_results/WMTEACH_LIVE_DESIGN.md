@@ -2,6 +2,10 @@
 
 - Authority: MAIN11:48 S-WMTEACH BUDGET APPROVED, cap100000actual sim-s.
 - OWNER12:53 supersedes the earlier small-student trigger BEFORE any live launch.
+- Published-v5 amendment (before its quality forecasts): latest released FULL-v5
+  sourceb2df7458 is fixed as the live teacher. V4repair is an engineering comparison
+  and cannot trigger live. See `WMTEACH_SCALE_V2_DESIGN.md`; its population/cold-
+  memory limitations and physical LC/CAL/CAV-setting preservation apply.
 - Policy fixed prospectively: FIRST completed `student_scale_5120` snapshot from
   the registered FULL-v4 scale continuation, H300 WM targets/32FIT worlds. No selection by exact
   diagnostic results, other student snapshots or LIVE outcomes; retain later models.

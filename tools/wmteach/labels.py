@@ -17,7 +17,7 @@ def actions(rows, setting):
 def label(record, futures):
     candidates = actions(record['rows'], record['setting'])
     prediction = Prediction({a: tuple(Outcome(**f) for f in fs) for a, fs in futures.items()},
-                            False, 'WM-PHYS-FULL-v4')
+                            False, 'WM-PHYS-'+record.get('backend','FULL-v4'))
     prediction.validate(candidates, 8)
     paired = decide(prediction)
     means = paired['expected_delay']
@@ -79,7 +79,7 @@ def quality(rows, expected):
                 mean_within_state_spearman=(fmean(r['within_state_spearman'] for r in rows
                     if r['within_state_spearman'] is not None)
                     if any(r['within_state_spearman'] is not None for r in rows) else None),
-                 meaning='conditional exact-state diagnostic; not a live policy comparison')
+                meaning='conditional exact-state diagnostic; not a live policy comparison')
 
 
 def helpful_quality(rows):

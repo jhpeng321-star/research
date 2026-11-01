@@ -14,7 +14,10 @@ import torch
 from tools.coopbandit.protocol import digest, observable, sha
 from tools.wmteach.labels import actions
 
-PHYS = Path('/root/rbeval20261031/phys_code_22cc32f65a80')
+BACKEND=os.environ.get('WMTEACH_BACKEND','FULL-v4')
+BACKENDS={'FULL-v4':('/root/rbeval20261031/phys_code_22cc32f65a80','wm_phys.toml'),
+          'FULL-v5':('/root/autodl-tmp/c4/rb2int20261101/phys_code_b2df7458a41f','wm_phys_v5.toml')}
+PHYS,RECIPE=BACKENDS[BACKEND];PHYS=Path(PHYS)
 FIX = Path('/root/autodl-tmp/c4/setupaudit20261030/fix')
 BASE = Path('/root/autodl-tmp/c4')
 
@@ -66,7 +69,7 @@ def bootstrap():
     exec(compile(tree,'<wmteach-FIT-only-starts>','exec'), namespace)
     wm = BASE/'wmcombined_wm2/wm_s.pt'
     assert sha(wm) == 'b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436'
-    models, receipt = load_candidate([str(wm)],[str(PHYS/'configs/wm_phys.toml')],'cuda')
+    models, receipt = load_candidate([str(wm)],[str(PHYS/'configs'/RECIPE)],'cuda')
     model = models[0]
     assert not model.training and all(not p.requires_grad for p in model.parameters())
     candidate = torch.load(BASE/'setupaudit20261030/policy_000190.pt',map_location='cpu',weights_only=False)
@@ -208,6 +211,17 @@ def diagnostic_source(rt,record,future):
 
 
 def diagnostic_future(rt,b,initial,record,future):
+    if BACKEND=='FULL-v5':
+        from tools.wmteach.marginal import plans,bind
+        donor=b.metadata[0]['prior_donor'];world=record['world_id'];nr=initial['present'].shape[0]
+        observation=rt.model._wmphys_arrival_fit.artifact['worlds'][str(donor)]
+        kw=rt.frozen.expand(b.rollout_kwargs,nr)
+        plan=plans(rt,initial,kw,row_keys=[world]*nr,histories=[b.entry_spec['histories'][0]]*nr,
+            queues=[b.entry_spec['queues'][0]]*nr,observations={str(world):observation},
+            t0_s=300.,seed=190,n_samples=8)[future]
+        plan.receipt.update(observation_contract='EXAM_roster_only',source_prior_donor=donor,
+            source_queue_observed=False,source_prior='uniform32FIT',absolute_time_s=record['time_s'])
+        return bind(rt,initial,kw,plan)
     from wms.control.hidden_state import Population,plan_hidden_state_futures
     from wms.control.fitted_hidden import IDM_ORDER
     from wms.model.driver_encoder import PARAMETER_NAMES

@@ -1,6 +1,22 @@
 # S-WMTEACH resume / ownership
 
 ## Latest recovery milestone — read before older ownership
+- Repair/successor code staged and CPU-checked under designa3684b70abda,
+  `WMTEACH_SCALE_V2_DESIGN.md`. All three prospective registry receipts committed
+  before dispatch. Original failed roots are immutable and remain terminal.
+- `tools/wmteach/marginal.py` removes saved per-ID posteriors while preserving
+  released LC population, CAL hidden/arrival wrappers and registered CAV settings.
+  Shared FIT-start generator now uses this population contract rather than the
+  restricted native exporter. Real released-type LC/CAL CPU regression PASS.
+- Staged v4repair root `/root/autodl-tmp/wmteach_scale20261101_v2`, identity43bf5570,
+  431bindings/9hostCPU PASS. Reuses completed v4quality, never its failed FIT jobs.
+- Staged v5quality root `/root/autodl-tmp/wmteach_v5quality20261101_v1`, identity69603de6,
+  446bindings/10hostCPU PASS (including real LC/CAL regression), quality ONLY.
+- Staged v5scale root `/root/autodl-tmp/wmteach_scale_v5_20261101_v1`, identity6183ab2f,
+  485bindings/9hostCPU PASS; waits v5quality. Existing local Python31327CPU PASS.
+- Latest releasedv5 fixed as sole live teacher BEFORE its new quality forecasts;
+  v4repair is engineering comparison only. FIRST complete v5student_scale_5120,
+  its own helpful-quality PASS and original final frozenpolicy/budget/guards gates.
 - FULL-v4 quality COMPLETE: receipt1793510517/12states/96futures; H3008/12argmax,
   helpful4/8argmaxhits/6positivechoices, exactchosenD+680.3/regret593.0veh-s/state.
   Helpful-quality gate PASS. Shared REGISTRATION result line appended.
@@ -69,7 +85,7 @@
   rows before writing ONLY its own STOP/retirement receipt. Preserve every prior
   future/label; no GPU signal, replay or relaunch. Scale5120 job remains active.
 
-## Read first; do not duplicate
+## Historical initial ownership — superseded by latest milestone
 - Branch `c4/wmteach`; recovery `9f92c488`, shared student `ee47f395`
   (original S-DISTILL `4b139e5f`), teacher `d1584ddc`, canary/dispatch `b919f4bf`.
 - Active GPU job: gpuA PID437822, startticks888636829,

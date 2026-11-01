@@ -8,13 +8,15 @@ import copy
 from dataclasses import replace
 import json
 import math
+import os
 from pathlib import Path
 import time
 
 from tools.coopbandit.protocol import digest, sha
 from tools.wmteach.labels import actions, label, helpful_quality
 
-PARENT='/root/autodl-tmp/wmteach20261101_v3'
+PARENT=os.environ.get('WMTEACH_PARENT_ROOT','/root/autodl-tmp/wmteach20261101_v3')
+BACKEND=os.environ.get('WMTEACH_BACKEND','FULL-v4')
 WORLDS=tuple(range(969400,969432))
 TIMES=tuple(300+7.5*i for i in range(1,81))
 TARGET=5120
@@ -56,7 +58,7 @@ def quality_receipt(parent):
 def source_for(rt,record):
     """Observable roster and source backlog only; no generator driver parameters."""
     import torch
-    source=copy.deepcopy(rt.batches[record['world_id']-WORLDS[0]])
+    source=copy.deepcopy(next(b for b in rt.batches if b.metadata[0]['seed']==record['world_id']))
     rows=record['rows'];n=len(rows)
     def tensor(values,dtype=torch.float32):return torch.tensor([values],dtype=dtype)
     source.state=dict(s_m=tensor([r['s_m'] for r in rows]),v_mps=tensor([r['v_mps'] for r in rows]),
@@ -84,16 +86,11 @@ def futures(rt,record,indices=tuple(range(8))):
     """
     import torch
     import numpy as np
-    from wms.control.hidden_state import Population,plan_hidden_state_futures
-    from wms.control.fitted_hidden import IDM_ORDER
-    from wms.model.driver_encoder import PARAMETER_NAMES
-    from wms.physics.state import state_kin
     from wms.physics.batched import road_end_exit_bound
     from wms.control.nativeinit import pair_merge_streams
-    from wms.control.arrival_fit import LearnedArrivalFit
-    from tools.rbint.recipe import InstrumentedEntries
     from tools.rbint.departure import rollout_after_movement
     from tools.wmteach.runtime import prepare_batch,option_controller
+    from tools.wmteach.marginal import plans,bind
     acts=actions(record['rows'],record['setting']);na=len(acts)
     b=prepare_batch(rt,source_for(rt,record));nr=na*len(indices)
     # Input queues are measured at this imagined clock; history is only a prior
@@ -104,27 +101,15 @@ def futures(rt,record,indices=tuple(range(8))):
     initial=rt.frozen.expand(b.state,nr)
     pair_merge_streams(initial,torch.tensor([i for i in indices for _ in acts],device='cuda'),8,190)
     initial['exit_s_m']=torch.full_like(initial['s_m'],road_end_exit_bound(rt.model.physics))
-    defaults=rt.model._default_driver_parameters(state_kin(initial),*initial['present'].shape)
-    fitted=rt.model._wmphys_fitted_state
-    pool=defaults[0,0].expand(len(fitted.support),-1).clone()
-    for i,name in enumerate(IDM_ORDER):pool[:,PARAMETER_NAMES.index(name)]=fitted.support[:,i].to(pool)
-    pop=Population([pool.clone() for _ in range(nr)],
-        [defaults[i,:1].clone() for i in range(nr)],[fitted.weights.clone() for _ in range(nr)])
     keys=[record['world_id']*100+i for i in indices for _ in acts]
-    original=rt.model._wmphys_arrival_fit
     observation=dict(total=record['request_total'],exposure_s=record['time_s'],
                      final_backlog=record['backlog'])
-    arrival=LearnedArrivalFit({**original.artifact,'conditioning_end_s':record['time_s'],
-                              'worlds':{str(k):observation for k in keys}})
-    arrival.sha256=original.sha256
     kw=rt.frozen.expand(b.rollout_kwargs,nr)
     sampling_seed=190+int(digest(record['state_id'])[:8],16)
-    plan=plan_hidden_state_futures(rt.model,initial,kw,future_sampling='hidden_state',n_samples=1,
-        seed=sampling_seed,row_keys=keys,population=pop,
-        entrance_histories=[b.entry_spec['histories'][0]]*nr,queues=[q]*nr,
-        t0_s=record['time_s'],arrival_fit=arrival)[0]
-    process=plan.kwargs.pop('entries');entries=InstrumentedEntries(process,rt.frozen.Entries)
-    kw.update(plan.kwargs,entries=entries)
+    plan=plans(rt,initial,kw,n_samples=1,seed=sampling_seed,row_keys=keys,
+        histories=[b.entry_spec['histories'][0]]*nr,queues=[q]*nr,
+        t0_s=record['time_s'],observations={str(k):observation for k in keys})[0]
+    kw,entries,_=bind(rt,initial,kw,plan)
     cb=option_controller(rt.mp,acts*len(indices),record['rows'])
     with torch.no_grad():
         roll=rollout_after_movement(rt.model,initial,n_steps=600,cav_controller=cb,**kw)
@@ -133,7 +118,7 @@ def futures(rt,record,indices=tuple(range(8))):
     out={str(h):{a['id']:[] for a in acts} for h in (120,300)}
     for j,k in enumerate(indices):
         draw=digest(dict(state=record['state_id'],future=k,seed=sampling_seed,
-                         observation=observation,source='FULL-v4_population_cold_descendant'))
+                         observation=observation,source=BACKEND+'_population_cold_descendant'))
         for h in (120,300):
             for i,a in enumerate(acts):
                 row=j*na+i
@@ -144,7 +129,7 @@ def futures(rt,record,indices=tuple(range(8))):
                 out[str(h)][a['id']].append(dict(draw_id=draw,team_delay=value,breakdown=None))
     return dict(futures=out,population_audit=audit,sampling=plan.receipt,
                 indices=list(indices),observation=observation,
-                contract='FULL-v4 physics/FIT-joint-population/cold-motion-and-controller/causal-source-counters')
+                contract=BACKEND+' physics/FIT-joint-population/cold-motion-and-controller/causal-source-counters')
 
 
 def generate(rt,source,lineage):
@@ -152,7 +137,7 @@ def generate(rt,source,lineage):
     import torch
     from tools.wmteach.runtime import roster,move,option_controller
     from wms.control.dreamer import with_entry_slots
-    from tools.rbint.recipe import candidate_future
+    from tools.wmteach.marginal import plans,bind
     from tools.rbint.departure import rollout_after_movement
     from wms.physics.batched import road_end_exit_bound
     from wms.control.nativeinit import pair_merge_streams
@@ -162,12 +147,16 @@ def generate(rt,source,lineage):
     current=rt.frozen.expand(b.state,1)
     pair_merge_streams(current,torch.zeros(1,dtype=torch.long,device='cuda'),1,190+lineage)
     current['exit_s_m']=torch.full_like(current['s_m'],road_end_exit_bound(rt.model.physics))
-    kw,entries,receipt=candidate_future(model=rt.model,batch=b,initial=current,future=lineage,seed=seed,frozen=rt.frozen)
+    original=rt.model._wmphys_arrival_fit.artifact['worlds'][str(seed)]
+    kw=rt.frozen.expand(b.rollout_kwargs,1)
+    plan=plans(rt,current,kw,row_keys=[seed],histories=[b.entry_spec['histories'][0]],
+        queues=[b.entry_spec['queues'][0]],observations={str(seed):original},
+        t0_s=300.,seed=190,n_samples=2)[lineage]
+    kw,entries,receipt=bind(rt,current,kw,plan)
     # No team costs are needed for unlabelled path generation; the raw source
     # process carries queues/ordinals. Avoid retaining an entire600s observer tape.
     kw['entries']=entries.process
     cb=option_controller(rt.mp,[dict(id='O0',available=True)],roster(current))
-    original=rt.model._wmphys_arrival_fit.artifact['worlds'][str(seed)]
     for j,t in enumerate(TIMES):
         kw['k0']=j*15
         with torch.no_grad():
@@ -182,7 +171,7 @@ def generate(rt,source,lineage):
         record=dict(state_id=f'w{seed}_line{lineage}_t{int(t*2)}',world_id=seed,lineage=lineage,
             role='TRAIN',time_s=t,setting=(j+lineage)%4,rows=rows,
             backlog=entries.process.pending[0].tolist(),request_total=total,
-            generator='FULL-v4-native-motion-conditioned-O0',generator_future=lineage,
+            backend=BACKEND,generator=BACKEND+'-population-marginal-O0',generator_future=lineage,
             parent_state_sha256=source.metadata[0]['initial_state_sha256'])
         yield validate_record(record)
 

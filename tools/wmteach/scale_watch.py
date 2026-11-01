@@ -17,7 +17,8 @@ END='<!-- WMTEACH-SCALE:END -->'
 
 def section(data):
     files=data['files'];quality=files.get('HELPFUL_QUALITY.json');owner=data['process']
-    lines=[BEGIN,'## OWNER12:53 scale continuation',
+    backend=files['IDENTITY.json']['backend']
+    lines=[BEGIN,f'## OWNER12:53 scale continuation — {backend}',
         f'- Snapshot Unix{int(data["unix"])}; GPU ownership {owner}.',
         f'- Generated {data["generated_states"]}/5120 distinct planned states; '
         f'labelled {data["labelled_states"]}/5120 (each K8/H120+H300); teacher SUMO0sim-s.']
@@ -75,16 +76,38 @@ def main(interval=1200,hours=168):
         gate=advance();print(json.dumps(dict(live_gate=gate)),flush=True)
         parent=json.loads(collect_parent());parent_path=Path(parent['path'])
         old=json.loads(parent_path.read_text(encoding='utf-8'))
-        scale=json.loads(collect_scale());scale_path=Path(scale['path'])
-        data=json.loads(scale_path.read_text(encoding='utf-8'))
+        from tools.wmteach import scale_ops,successor_ops
+        snapshots=[]
+        for profile in ('v4repair','v5'):
+            scale_ops.PROFILE=profile
+            scale_ops.SCALE,scale_ops.PARENT,scale_ops.BACKEND=scale_ops.PROFILES[profile]
+            snapshot=json.loads(collect_scale());path=Path(snapshot['path'])
+            snapshots.append((profile,path,json.loads(path.read_text(encoding='utf-8'))))
+        q=json.loads(successor_ops.collect());qpath=Path(q['path'])
+        quality=json.loads(qpath.read_text(encoding='utf-8'))
         text=REPORT.read_text(encoding='utf-8')
         text=update(text,'<!-- WMTEACH-WATCH:BEGIN -->','<!-- WMTEACH-WATCH:END -->',state_section(old))
-        REPORT.write_text(update(text,BEGIN,END,section(data)),encoding='utf-8')
-        paths.extend([parent_path,scale_path,REPORT])
+        for profile,path,data in snapshots:
+            begin,end=(BEGIN,END) if profile=='v4repair' else ('<!-- WMTEACH-V5-SCALE:BEGIN -->','<!-- WMTEACH-V5-SCALE:END -->')
+            text=update(text,begin,end,section(data).replace(BEGIN,begin).replace(END,end))
+            paths.append(path)
+        qb,qe='<!-- WMTEACH-V5-QUALITY:BEGIN -->','<!-- WMTEACH-V5-QUALITY:END -->'
+        lines=[qb,'## Published FULL-v5 teacher-quality rerun',
+            f'- Owned process {quality["process"]}; {quality["completed_futures"]}/96futures, '
+            f'{quality["completed_labels"]}/24horizon contexts; SUMO0sim-s.']
+        for h,value in quality['files'].get('QUALITY.json',{}).items():
+            lines.append(f'- H{h}: agreement {value["choice_agreement"]:.3f}, sign {value["sign_agreement"]}, '
+                f'rank {value["mean_within_state_spearman"]}, exact chosen D {value["exact_chosen_saving"]:.3f}, '
+                f'regret {value["exact_regret"]:.3f}veh-s/state.')
+        if 'helpful_H300' in quality:lines.append('- Helpful H300: '+json.dumps(quality['helpful_H300'],sort_keys=True))
+        lines.extend(['- Roster-only/cold-memory/source-prior diagnostics; model availability is not efficacy.',qe])
+        REPORT.write_text(update(text,qb,qe,'\n'.join(lines)),encoding='utf-8')
+        paths.extend([parent_path,qpath,REPORT])
         paths.extend(p for p in HERE.glob('LIVE_*.json') if p not in paths)
         commit_owned(paths,'wmteach: collect scale teacher quality and GPU progress')
         paths=[]
-        print(json.dumps(scale),flush=True)
+        print(json.dumps(dict(v5quality=q,scale=snapshots[-1][2]['process'])),flush=True)
+        data=snapshots[-1][2]
         files=data['files'];process=data['process'];live=old.get('live')
         terminal=live and (live.get('complete') or live.get('stopped') or live.get('terminal_incomplete'))
         if 'FAILURE.json' in files or not process['identity_matches'] or process['state']=='Z':

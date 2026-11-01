@@ -28,6 +28,7 @@ def train(root,dest,last_setting):
 def train_records(root,dest,records):
     """Shared student fit, including the large-corpus continuation."""
     from tools.wmteach.run import save
+    identity=json.loads((root/'IDENTITY.json').read_text())
     if not (root/'QUALITY.json').is_file():
         raise ValueError('quality check must precede fitting')
     if len({r['state_id'] for r in records}) != len(records):
@@ -54,7 +55,7 @@ def train_records(root,dest,records):
     dest.mkdir()
     payload=dict(keys=KEYS,options=OPTIONS,models=models,errors=cache[best['family']][1],
         family=best['family'],confidence=best['confidence'],label_horizon_s=300,
-        train_worlds=sorted(set(groups.tolist())),teacher='FULL-v4_WM_only',
+        train_worlds=sorted(set(groups.tolist())),teacher=identity['backend']+'_WM_only',
         provenance=dict(identity_sha256=sha(root/'IDENTITY.json'),quality_sha256=sha(root/'QUALITY.json')))
     with (dest/'policy.pkl').open('xb') as f: pickle.dump(payload,f,protocol=5)
     with (dest/'classifier.pkl').open('xb') as f: pickle.dump(dict(model=classifier,keys=KEYS),f,protocol=5)
