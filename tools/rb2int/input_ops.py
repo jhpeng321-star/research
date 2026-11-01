@@ -15,7 +15,7 @@ PARENT = '/root/autodl-tmp/c4/rb2int20261101'
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=('export', 'status', 'download', 'upload', 'view'))
+    parser.add_argument('action', choices=('export', 'status', 'download', 'upload', 'view', 'manifest'))
     parser.add_argument('--host', choices=('gpuA', 'gpuR'), required=True)
     parser.add_argument('--tag', default='prefix_all58_v1')
     parser.add_argument('--receipt', required=True)
@@ -70,6 +70,16 @@ result=dict(root=str(root),pid=child.pid,start_ticks=fields[21],boot_id=Path('/p
 save(root/'PROCESS.json',result);print(json.dumps(result))
 '''
         result = json.loads(ssh(args.host, code, timeout=45))
+    elif args.action == 'manifest':
+        base = PARENT+'/received_'+args.tag if args.host == 'gpuA' else root+'/inputs58'
+        code = f'''
+import hashlib,json
+from pathlib import Path
+root=Path({base!r});path=root/'INPUTS_BUILD.json';raw=path.read_bytes();build=json.loads(raw)
+assert build['passed'] and build['final_outcomes_exported'] is False
+print(json.dumps(dict(root=str(root),inputs_build_sha256=hashlib.sha256(raw).hexdigest(),build=build)))
+'''
+        result = json.loads(ssh(args.host, code, timeout=30))
     elif args.action == 'view':
         source = Path(__file__).with_name('prepare_inputs.py').read_text(encoding='utf-8')
         base = PARENT+'/received_'+args.tag if args.host == 'gpuA' else root+'/inputs58'
@@ -150,7 +160,11 @@ print(json.dumps(receipt))'''
             result = json.loads(completed.stdout)
     with receipt.open('x', encoding='utf-8') as stream:
         json.dump(dict(result, action=args.action, host=args.host), stream, indent=1)
-    print(json.dumps(result, indent=1))
+    if args.action == 'manifest':
+        print(json.dumps(dict(root=result['root'],inputs_build_sha256=result['inputs_build_sha256'],
+            worlds=len(result['build']['worlds']),passed=result['build']['passed']),indent=1))
+    else:
+        print(json.dumps(result, indent=1))
 
 
 if __name__ == '__main__':

@@ -27,6 +27,11 @@ it cannot dispatch a final panel. Development release is distinct from final.
   code/weights/controllers, exact causal prefix equivalence, and one fixed
   development-only kernel replay before final orchestration. The direct replay
   cannot request reserved/additional worlds and never replaces a final K8 task.
+- `final_plan`/`release`/`final_ops`/`final_worker`: immutable proof-bound final
+  allocation, deployment and one-use world-job supervision. Baseline reserved8
+  tasks are reuse-only; v5/LP hardware is paired by world. Scheduler reads no
+  efficacy values and never retries a failed scientific task. V2 release binds
+  model-construction config and fixed controller artifacts explicitly.
 - `uncertainty`: joint18-contrast score/rate families; fixed-cell whole-world
   bootstrap, paired future resampling for forecast means. Singleton factual cells
   remain NA even when the K8 forecast varies.

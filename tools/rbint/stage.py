@@ -14,12 +14,13 @@ def main():
     p.add_argument('--endpoint-only', action='store_true', help='analysis helpers only; reuse original WM2 model/runtime')
     p.add_argument('--parent', choices=('/root/rbeval20261031', '/root/autodl-tmp/c4/rb2int20261101'))
     p.add_argument('--receipt', help='exclusive local staging receipt after verified transfer')
+    p.add_argument('--source-commit', help='explicit frozen source; defaults to current HEAD')
     args = p.parse_args()
     local_receipt = Path(args.receipt) if args.receipt else None
     if local_receipt is not None and (not local_receipt.parent.is_dir() or local_receipt.exists()):
         raise ValueError('new local staging receipt in existing parent required')
     root = Path(__file__).resolve().parents[2]
-    sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root, text=True).strip()
+    sha = subprocess.check_output(['git', 'rev-parse', '--verify', (args.source_commit or 'HEAD')+'^{commit}'], cwd=root, text=True).strip()
     paths = ['src/wms', 'tools/rbint', 'tools/rbeval',
              'configs/execparity_cav_idm_v1.json', 'configs/native_cav_head_v5.json',
               'configs/wm_phys.toml', 'configs/wm_phys_cpu.toml',

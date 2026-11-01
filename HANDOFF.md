@@ -25,8 +25,9 @@ orchestration bridge per baseline, then owned matched-K8 dispatch. Details and
 exact existing input roots: `docs/rb2int/INPUT_AND_BASELINE_AUDIT.md`.
 WM2 baseline kernel bridge909809 EXITED/PASS150.70s (control378d7be5), exact
 clock/speed/support/event parity, max error0; never duplicate.
-V4 bridge first admission blocked before claim/Popen; clean inactive-file cache
-accounting corrected read-only. See CURRENT_JOBS.md and MEMORY_ACCOUNTING.md.
+V4 bridge461214 EXITED/PASS236.71s, max parity error0. Both baseline bridges now
+PASS. Clean inactive-file cache accounting corrected read-only. Final releaseV2
+and outcome-blind plan prepared; see FINAL_EXECUTION_DESIGN.md. No final task yet.
 
 - FULL-v5 and FULL-v5-LP engineering READY. All four intakes merged:
   LANE6b4bfbd5/CAL7c1cf53c/BREAK116b2147/LPHYSf6cf52ab. Integrated recipes

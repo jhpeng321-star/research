@@ -1,0 +1,4111 @@
+{
+ "schema": "rb2int-final-world-plan/1",
+ "models": [
+  "WM2",
+  "FULL-v4",
+  "FULL-v5",
+  "FULL-v5-LP"
+ ],
+ "jobs": [
+  {
+   "id": "v5_969436",
+   "model": "FULL-v5",
+   "seed": 969436,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 2
+  },
+  {
+   "id": "v5-lp_969436",
+   "model": "FULL-v5-LP",
+   "seed": 969436,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 2
+  },
+  {
+   "id": "wm2_969590",
+   "model": "WM2",
+   "seed": 969590,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 2
+  },
+  {
+   "id": "v4_969590",
+   "model": "FULL-v4",
+   "seed": 969590,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 2
+  },
+  {
+   "id": "v5_969590",
+   "model": "FULL-v5",
+   "seed": 969590,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 2
+  },
+  {
+   "id": "v5-lp_969590",
+   "model": "FULL-v5-LP",
+   "seed": 969590,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 2
+  },
+  {
+   "id": "wm2_969595",
+   "model": "WM2",
+   "seed": 969595,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 2
+  },
+  {
+   "id": "v4_969595",
+   "model": "FULL-v4",
+   "seed": 969595,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 2
+  },
+  {
+   "id": "v5_969595",
+   "model": "FULL-v5",
+   "seed": 969595,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 2
+  },
+  {
+   "id": "v5-lp_969595",
+   "model": "FULL-v5-LP",
+   "seed": 969595,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 2
+  },
+  {
+   "id": "wm2_969599",
+   "model": "WM2",
+   "seed": 969599,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 2
+  },
+  {
+   "id": "v4_969599",
+   "model": "FULL-v4",
+   "seed": 969599,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 2
+  },
+  {
+   "id": "v5_969599",
+   "model": "FULL-v5",
+   "seed": 969599,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 2
+  },
+  {
+   "id": "v5-lp_969599",
+   "model": "FULL-v5-LP",
+   "seed": 969599,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 2
+  },
+  {
+   "id": "v5_969433",
+   "model": "FULL-v5",
+   "seed": 969433,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 3
+  },
+  {
+   "id": "v5-lp_969433",
+   "model": "FULL-v5-LP",
+   "seed": 969433,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 3
+  },
+  {
+   "id": "v5_969437",
+   "model": "FULL-v5",
+   "seed": 969437,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 3
+  },
+  {
+   "id": "v5-lp_969437",
+   "model": "FULL-v5-LP",
+   "seed": 969437,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 3
+  },
+  {
+   "id": "v5_969438",
+   "model": "FULL-v5",
+   "seed": 969438,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 3
+  },
+  {
+   "id": "v5-lp_969438",
+   "model": "FULL-v5-LP",
+   "seed": 969438,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 3
+  },
+  {
+   "id": "wm2_969592",
+   "model": "WM2",
+   "seed": 969592,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 3
+  },
+  {
+   "id": "v4_969592",
+   "model": "FULL-v4",
+   "seed": 969592,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 3
+  },
+  {
+   "id": "v5_969592",
+   "model": "FULL-v5",
+   "seed": 969592,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 3
+  },
+  {
+   "id": "v5-lp_969592",
+   "model": "FULL-v5-LP",
+   "seed": 969592,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 3
+  },
+  {
+   "id": "wm2_969597",
+   "model": "WM2",
+   "seed": 969597,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 3
+  },
+  {
+   "id": "v4_969597",
+   "model": "FULL-v4",
+   "seed": 969597,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 3
+  },
+  {
+   "id": "v5_969597",
+   "model": "FULL-v5",
+   "seed": 969597,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 3
+  },
+  {
+   "id": "v5-lp_969597",
+   "model": "FULL-v5-LP",
+   "seed": 969597,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 3
+  },
+  {
+   "id": "wm2_969598",
+   "model": "WM2",
+   "seed": 969598,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 3
+  },
+  {
+   "id": "v4_969598",
+   "model": "FULL-v4",
+   "seed": 969598,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 3
+  },
+  {
+   "id": "v5_969598",
+   "model": "FULL-v5",
+   "seed": 969598,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 3
+  },
+  {
+   "id": "v5-lp_969598",
+   "model": "FULL-v5-LP",
+   "seed": 969598,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 3
+  },
+  {
+   "id": "wm2_969550",
+   "model": "WM2",
+   "seed": 969550,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v4_969550",
+   "model": "FULL-v4",
+   "seed": 969550,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v5_969550",
+   "model": "FULL-v5",
+   "seed": 969550,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v5-lp_969550",
+   "model": "FULL-v5-LP",
+   "seed": 969550,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "wm2_969554",
+   "model": "WM2",
+   "seed": 969554,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v4_969554",
+   "model": "FULL-v4",
+   "seed": 969554,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v5_969554",
+   "model": "FULL-v5",
+   "seed": 969554,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v5-lp_969554",
+   "model": "FULL-v5-LP",
+   "seed": 969554,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "wm2_969558",
+   "model": "WM2",
+   "seed": 969558,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v4_969558",
+   "model": "FULL-v4",
+   "seed": 969558,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v5_969558",
+   "model": "FULL-v5",
+   "seed": 969558,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v5-lp_969558",
+   "model": "FULL-v5-LP",
+   "seed": 969558,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "wm2_969562",
+   "model": "WM2",
+   "seed": 969562,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v4_969562",
+   "model": "FULL-v4",
+   "seed": 969562,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v5_969562",
+   "model": "FULL-v5",
+   "seed": 969562,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v5-lp_969562",
+   "model": "FULL-v5-LP",
+   "seed": 969562,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "wm2_969566",
+   "model": "WM2",
+   "seed": 969566,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v4_969566",
+   "model": "FULL-v4",
+   "seed": 969566,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v5_969566",
+   "model": "FULL-v5",
+   "seed": 969566,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v5-lp_969566",
+   "model": "FULL-v5-LP",
+   "seed": 969566,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "wm2_969570",
+   "model": "WM2",
+   "seed": 969570,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v4_969570",
+   "model": "FULL-v4",
+   "seed": 969570,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v5_969570",
+   "model": "FULL-v5",
+   "seed": 969570,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v5-lp_969570",
+   "model": "FULL-v5-LP",
+   "seed": 969570,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "wm2_969574",
+   "model": "WM2",
+   "seed": 969574,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v4_969574",
+   "model": "FULL-v4",
+   "seed": 969574,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v5_969574",
+   "model": "FULL-v5",
+   "seed": 969574,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v5-lp_969574",
+   "model": "FULL-v5-LP",
+   "seed": 969574,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "wm2_969578",
+   "model": "WM2",
+   "seed": 969578,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v4_969578",
+   "model": "FULL-v4",
+   "seed": 969578,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v5_969578",
+   "model": "FULL-v5",
+   "seed": 969578,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v5-lp_969578",
+   "model": "FULL-v5-LP",
+   "seed": 969578,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "wm2_969582",
+   "model": "WM2",
+   "seed": 969582,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v4_969582",
+   "model": "FULL-v4",
+   "seed": 969582,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v5_969582",
+   "model": "FULL-v5",
+   "seed": 969582,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v5-lp_969582",
+   "model": "FULL-v5-LP",
+   "seed": 969582,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "wm2_969586",
+   "model": "WM2",
+   "seed": 969586,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v4_969586",
+   "model": "FULL-v4",
+   "seed": 969586,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v5_969586",
+   "model": "FULL-v5",
+   "seed": 969586,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v5-lp_969586",
+   "model": "FULL-v5-LP",
+   "seed": 969586,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 10
+  },
+  {
+   "id": "v5_969432",
+   "model": "FULL-v5",
+   "seed": 969432,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5-lp_969432",
+   "model": "FULL-v5-LP",
+   "seed": 969432,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5_969434",
+   "model": "FULL-v5",
+   "seed": 969434,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5-lp_969434",
+   "model": "FULL-v5-LP",
+   "seed": 969434,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "wm2_969551",
+   "model": "WM2",
+   "seed": 969551,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v4_969551",
+   "model": "FULL-v4",
+   "seed": 969551,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5_969551",
+   "model": "FULL-v5",
+   "seed": 969551,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5-lp_969551",
+   "model": "FULL-v5-LP",
+   "seed": 969551,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "wm2_969552",
+   "model": "WM2",
+   "seed": 969552,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v4_969552",
+   "model": "FULL-v4",
+   "seed": 969552,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5_969552",
+   "model": "FULL-v5",
+   "seed": 969552,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5-lp_969552",
+   "model": "FULL-v5-LP",
+   "seed": 969552,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "wm2_969555",
+   "model": "WM2",
+   "seed": 969555,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v4_969555",
+   "model": "FULL-v4",
+   "seed": 969555,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5_969555",
+   "model": "FULL-v5",
+   "seed": 969555,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5-lp_969555",
+   "model": "FULL-v5-LP",
+   "seed": 969555,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "wm2_969556",
+   "model": "WM2",
+   "seed": 969556,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v4_969556",
+   "model": "FULL-v4",
+   "seed": 969556,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5_969556",
+   "model": "FULL-v5",
+   "seed": 969556,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5-lp_969556",
+   "model": "FULL-v5-LP",
+   "seed": 969556,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "wm2_969559",
+   "model": "WM2",
+   "seed": 969559,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v4_969559",
+   "model": "FULL-v4",
+   "seed": 969559,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5_969559",
+   "model": "FULL-v5",
+   "seed": 969559,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5-lp_969559",
+   "model": "FULL-v5-LP",
+   "seed": 969559,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "wm2_969560",
+   "model": "WM2",
+   "seed": 969560,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v4_969560",
+   "model": "FULL-v4",
+   "seed": 969560,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5_969560",
+   "model": "FULL-v5",
+   "seed": 969560,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5-lp_969560",
+   "model": "FULL-v5-LP",
+   "seed": 969560,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "wm2_969563",
+   "model": "WM2",
+   "seed": 969563,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v4_969563",
+   "model": "FULL-v4",
+   "seed": 969563,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5_969563",
+   "model": "FULL-v5",
+   "seed": 969563,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5-lp_969563",
+   "model": "FULL-v5-LP",
+   "seed": 969563,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "wm2_969564",
+   "model": "WM2",
+   "seed": 969564,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v4_969564",
+   "model": "FULL-v4",
+   "seed": 969564,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5_969564",
+   "model": "FULL-v5",
+   "seed": 969564,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5-lp_969564",
+   "model": "FULL-v5-LP",
+   "seed": 969564,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "wm2_969567",
+   "model": "WM2",
+   "seed": 969567,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v4_969567",
+   "model": "FULL-v4",
+   "seed": 969567,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5_969567",
+   "model": "FULL-v5",
+   "seed": 969567,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5-lp_969567",
+   "model": "FULL-v5-LP",
+   "seed": 969567,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "wm2_969568",
+   "model": "WM2",
+   "seed": 969568,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v4_969568",
+   "model": "FULL-v4",
+   "seed": 969568,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5_969568",
+   "model": "FULL-v5",
+   "seed": 969568,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5-lp_969568",
+   "model": "FULL-v5-LP",
+   "seed": 969568,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "wm2_969571",
+   "model": "WM2",
+   "seed": 969571,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v4_969571",
+   "model": "FULL-v4",
+   "seed": 969571,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5_969571",
+   "model": "FULL-v5",
+   "seed": 969571,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5-lp_969571",
+   "model": "FULL-v5-LP",
+   "seed": 969571,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "wm2_969572",
+   "model": "WM2",
+   "seed": 969572,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v4_969572",
+   "model": "FULL-v4",
+   "seed": 969572,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5_969572",
+   "model": "FULL-v5",
+   "seed": 969572,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5-lp_969572",
+   "model": "FULL-v5-LP",
+   "seed": 969572,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "wm2_969575",
+   "model": "WM2",
+   "seed": 969575,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v4_969575",
+   "model": "FULL-v4",
+   "seed": 969575,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5_969575",
+   "model": "FULL-v5",
+   "seed": 969575,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5-lp_969575",
+   "model": "FULL-v5-LP",
+   "seed": 969575,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "wm2_969576",
+   "model": "WM2",
+   "seed": 969576,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v4_969576",
+   "model": "FULL-v4",
+   "seed": 969576,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5_969576",
+   "model": "FULL-v5",
+   "seed": 969576,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5-lp_969576",
+   "model": "FULL-v5-LP",
+   "seed": 969576,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "wm2_969579",
+   "model": "WM2",
+   "seed": 969579,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v4_969579",
+   "model": "FULL-v4",
+   "seed": 969579,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5_969579",
+   "model": "FULL-v5",
+   "seed": 969579,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5-lp_969579",
+   "model": "FULL-v5-LP",
+   "seed": 969579,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "wm2_969580",
+   "model": "WM2",
+   "seed": 969580,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v4_969580",
+   "model": "FULL-v4",
+   "seed": 969580,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5_969580",
+   "model": "FULL-v5",
+   "seed": 969580,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5-lp_969580",
+   "model": "FULL-v5-LP",
+   "seed": 969580,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "wm2_969583",
+   "model": "WM2",
+   "seed": 969583,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v4_969583",
+   "model": "FULL-v4",
+   "seed": 969583,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5_969583",
+   "model": "FULL-v5",
+   "seed": 969583,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5-lp_969583",
+   "model": "FULL-v5-LP",
+   "seed": 969583,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "wm2_969584",
+   "model": "WM2",
+   "seed": 969584,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v4_969584",
+   "model": "FULL-v4",
+   "seed": 969584,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5_969584",
+   "model": "FULL-v5",
+   "seed": 969584,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5-lp_969584",
+   "model": "FULL-v5-LP",
+   "seed": 969584,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "wm2_969587",
+   "model": "WM2",
+   "seed": 969587,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v4_969587",
+   "model": "FULL-v4",
+   "seed": 969587,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5_969587",
+   "model": "FULL-v5",
+   "seed": 969587,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5-lp_969587",
+   "model": "FULL-v5-LP",
+   "seed": 969587,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "wm2_969588",
+   "model": "WM2",
+   "seed": 969588,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v4_969588",
+   "model": "FULL-v4",
+   "seed": 969588,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5_969588",
+   "model": "FULL-v5",
+   "seed": 969588,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5-lp_969588",
+   "model": "FULL-v5-LP",
+   "seed": 969588,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 11
+  },
+  {
+   "id": "v5_969435",
+   "model": "FULL-v5",
+   "seed": 969435,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v5-lp_969435",
+   "model": "FULL-v5-LP",
+   "seed": 969435,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v5_969439",
+   "model": "FULL-v5",
+   "seed": 969439,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v5-lp_969439",
+   "model": "FULL-v5-LP",
+   "seed": 969439,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "wm2_969553",
+   "model": "WM2",
+   "seed": 969553,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v4_969553",
+   "model": "FULL-v4",
+   "seed": 969553,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v5_969553",
+   "model": "FULL-v5",
+   "seed": 969553,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v5-lp_969553",
+   "model": "FULL-v5-LP",
+   "seed": 969553,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "wm2_969557",
+   "model": "WM2",
+   "seed": 969557,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v4_969557",
+   "model": "FULL-v4",
+   "seed": 969557,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v5_969557",
+   "model": "FULL-v5",
+   "seed": 969557,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v5-lp_969557",
+   "model": "FULL-v5-LP",
+   "seed": 969557,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "wm2_969561",
+   "model": "WM2",
+   "seed": 969561,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v4_969561",
+   "model": "FULL-v4",
+   "seed": 969561,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v5_969561",
+   "model": "FULL-v5",
+   "seed": 969561,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v5-lp_969561",
+   "model": "FULL-v5-LP",
+   "seed": 969561,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "wm2_969565",
+   "model": "WM2",
+   "seed": 969565,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v4_969565",
+   "model": "FULL-v4",
+   "seed": 969565,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v5_969565",
+   "model": "FULL-v5",
+   "seed": 969565,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v5-lp_969565",
+   "model": "FULL-v5-LP",
+   "seed": 969565,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "wm2_969569",
+   "model": "WM2",
+   "seed": 969569,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v4_969569",
+   "model": "FULL-v4",
+   "seed": 969569,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v5_969569",
+   "model": "FULL-v5",
+   "seed": 969569,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v5-lp_969569",
+   "model": "FULL-v5-LP",
+   "seed": 969569,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "wm2_969573",
+   "model": "WM2",
+   "seed": 969573,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v4_969573",
+   "model": "FULL-v4",
+   "seed": 969573,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v5_969573",
+   "model": "FULL-v5",
+   "seed": 969573,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v5-lp_969573",
+   "model": "FULL-v5-LP",
+   "seed": 969573,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "wm2_969577",
+   "model": "WM2",
+   "seed": 969577,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v4_969577",
+   "model": "FULL-v4",
+   "seed": 969577,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v5_969577",
+   "model": "FULL-v5",
+   "seed": 969577,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v5-lp_969577",
+   "model": "FULL-v5-LP",
+   "seed": 969577,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "wm2_969581",
+   "model": "WM2",
+   "seed": 969581,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v4_969581",
+   "model": "FULL-v4",
+   "seed": 969581,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v5_969581",
+   "model": "FULL-v5",
+   "seed": 969581,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v5-lp_969581",
+   "model": "FULL-v5-LP",
+   "seed": 969581,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "wm2_969585",
+   "model": "WM2",
+   "seed": 969585,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v4_969585",
+   "model": "FULL-v4",
+   "seed": 969585,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v5_969585",
+   "model": "FULL-v5",
+   "seed": 969585,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v5-lp_969585",
+   "model": "FULL-v5-LP",
+   "seed": 969585,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "wm2_969589",
+   "model": "WM2",
+   "seed": 969589,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v4_969589",
+   "model": "FULL-v4",
+   "seed": 969589,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v5_969589",
+   "model": "FULL-v5",
+   "seed": 969589,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "v5-lp_969589",
+   "model": "FULL-v5-LP",
+   "seed": 969589,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": true,
+   "stratum_worlds": 12
+  },
+  {
+   "id": "wm2_969591",
+   "model": "WM2",
+   "seed": 969591,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": false,
+   "stratum_worlds": 1
+  },
+  {
+   "id": "v4_969591",
+   "model": "FULL-v4",
+   "seed": 969591,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": false,
+   "stratum_worlds": 1
+  },
+  {
+   "id": "v5_969591",
+   "model": "FULL-v5",
+   "seed": 969591,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": false,
+   "stratum_worlds": 1
+  },
+  {
+   "id": "v5-lp_969591",
+   "model": "FULL-v5-LP",
+   "seed": 969591,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": false,
+   "stratum_worlds": 1
+  },
+  {
+   "id": "wm2_969593",
+   "model": "WM2",
+   "seed": 969593,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": false,
+   "stratum_worlds": 1
+  },
+  {
+   "id": "v4_969593",
+   "model": "FULL-v4",
+   "seed": 969593,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": false,
+   "stratum_worlds": 1
+  },
+  {
+   "id": "v5_969593",
+   "model": "FULL-v5",
+   "seed": 969593,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": false,
+   "stratum_worlds": 1
+  },
+  {
+   "id": "v5-lp_969593",
+   "model": "FULL-v5-LP",
+   "seed": 969593,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": false,
+   "stratum_worlds": 1
+  },
+  {
+   "id": "wm2_969594",
+   "model": "WM2",
+   "seed": 969594,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": false,
+   "stratum_worlds": 1
+  },
+  {
+   "id": "v4_969594",
+   "model": "FULL-v4",
+   "seed": 969594,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": false,
+   "stratum_worlds": 1
+  },
+  {
+   "id": "v5_969594",
+   "model": "FULL-v5",
+   "seed": 969594,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": false,
+   "stratum_worlds": 1
+  },
+  {
+   "id": "v5-lp_969594",
+   "model": "FULL-v5-LP",
+   "seed": 969594,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": false,
+   "stratum_worlds": 1
+  },
+  {
+   "id": "wm2_969596",
+   "model": "WM2",
+   "seed": 969596,
+   "host": "gpuR",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": false,
+   "stratum_worlds": 1
+  },
+  {
+   "id": "v4_969596",
+   "model": "FULL-v4",
+   "seed": 969596,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": false,
+   "stratum_worlds": 1
+  },
+  {
+   "id": "v5_969596",
+   "model": "FULL-v5",
+   "seed": 969596,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": false,
+   "stratum_worlds": 1
+  },
+  {
+   "id": "v5-lp_969596",
+   "model": "FULL-v5-LP",
+   "seed": 969596,
+   "host": "gpuA",
+   "futures": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "primary": false,
+   "stratum_worlds": 1
+  }
+ ],
+ "final_worlds": [
+  969432,
+  969433,
+  969434,
+  969435,
+  969436,
+  969437,
+  969438,
+  969439,
+  969550,
+  969551,
+  969552,
+  969553,
+  969554,
+  969555,
+  969556,
+  969557,
+  969558,
+  969559,
+  969560,
+  969561,
+  969562,
+  969563,
+  969564,
+  969565,
+  969566,
+  969567,
+  969568,
+  969569,
+  969570,
+  969571,
+  969572,
+  969573,
+  969574,
+  969575,
+  969576,
+  969577,
+  969578,
+  969579,
+  969580,
+  969581,
+  969582,
+  969583,
+  969584,
+  969585,
+  969586,
+  969587,
+  969588,
+  969589,
+  969590,
+  969591,
+  969592,
+  969593,
+  969594,
+  969595,
+  969596,
+  969597,
+  969598,
+  969599
+ ],
+ "primary_worlds": [
+  969432,
+  969433,
+  969434,
+  969435,
+  969436,
+  969437,
+  969438,
+  969439,
+  969550,
+  969551,
+  969552,
+  969553,
+  969554,
+  969555,
+  969556,
+  969557,
+  969558,
+  969559,
+  969560,
+  969561,
+  969562,
+  969563,
+  969564,
+  969565,
+  969566,
+  969567,
+  969568,
+  969569,
+  969570,
+  969571,
+  969572,
+  969573,
+  969574,
+  969575,
+  969576,
+  969577,
+  969578,
+  969579,
+  969580,
+  969581,
+  969582,
+  969583,
+  969584,
+  969585,
+  969586,
+  969587,
+  969588,
+  969589,
+  969590,
+  969592,
+  969595,
+  969597,
+  969598,
+  969599
+ ],
+ "K": 8,
+ "arms": [
+  "native",
+  "ctrl0",
+  "mappo",
+  "pi",
+  "circles"
+ ],
+ "horizons_s": [
+  120,
+  300,
+  600
+ ],
+ "new_world_jobs": 216,
+ "new_future_tasks": 1728,
+ "reused_baseline_future_tasks": 128,
+ "slots": {
+  "gpuA": 4,
+  "gpuR": 3
+ },
+ "memory_gib_per_worker": 5,
+ "paired_v5_world_host": {
+  "969436": "gpuA",
+  "969590": "gpuA",
+  "969595": "gpuA",
+  "969599": "gpuA",
+  "969433": "gpuR",
+  "969437": "gpuR",
+  "969438": "gpuR",
+  "969592": "gpuA",
+  "969597": "gpuA",
+  "969598": "gpuA",
+  "969550": "gpuA",
+  "969554": "gpuR",
+  "969558": "gpuR",
+  "969562": "gpuR",
+  "969566": "gpuA",
+  "969570": "gpuA",
+  "969574": "gpuA",
+  "969578": "gpuA",
+  "969582": "gpuR",
+  "969586": "gpuR",
+  "969432": "gpuR",
+  "969434": "gpuA",
+  "969551": "gpuA",
+  "969552": "gpuA",
+  "969555": "gpuA",
+  "969556": "gpuR",
+  "969559": "gpuR",
+  "969560": "gpuR",
+  "969563": "gpuA",
+  "969564": "gpuA",
+  "969567": "gpuA",
+  "969568": "gpuA",
+  "969571": "gpuR",
+  "969572": "gpuR",
+  "969575": "gpuR",
+  "969576": "gpuA",
+  "969579": "gpuA",
+  "969580": "gpuA",
+  "969583": "gpuA",
+  "969584": "gpuR",
+  "969587": "gpuR",
+  "969588": "gpuR",
+  "969435": "gpuA",
+  "969439": "gpuA",
+  "969553": "gpuA",
+  "969557": "gpuA",
+  "969561": "gpuR",
+  "969565": "gpuR",
+  "969569": "gpuR",
+  "969573": "gpuA",
+  "969577": "gpuA",
+  "969581": "gpuA",
+  "969585": "gpuA",
+  "969589": "gpuR",
+  "969591": "gpuR",
+  "969593": "gpuR",
+  "969594": "gpuA",
+  "969596": "gpuA"
+ },
+ "ordering": "primary replicated cells by n then seed; descriptive singletons last; fixed model order",
+ "scheduling_uses_outcomes": false,
+ "baseline_hosts": {
+  "WM2": "gpuR",
+  "FULL-v4": "gpuA"
+ },
+ "v5_lp_same_host_for_every_world": true,
+ "inference_only": true,
+ "new_sumo_runs": 0,
+ "automatic_scientific_retry": false,
+ "dispatch_cutoff": "2026-11-02T09:00:00+08:00",
+ "cutoff_policy": "no new world job after cutoff; running own world jobs finish; all attrition retained",
+ "registered_at": "2026-11-01T14:51:46.511808+08:00",
+ "registration_sha256": "b88e57bca228f6022a85c4c8e2bf8949848ded7e041eb7c8e201e75f2ba74dff",
+ "source_sha256": "8b4921ffdbd1ca846849fb51d06b1f27a267a66b1a08a59afa0e1f2bfb4acb10"
+}

@@ -47,9 +47,12 @@ Use this existing stage; do not restage/replay merely because Git HEAD advances.
 - Control stage378d7be5 exists on BOTH hosts with archive
   SHA531494803bb989e331e7679092fdd7c354c23718a4698aac21d1b1c69da7ac54.
   Model/teacher source remainsb2df7458. Do not confuse these two roles.
-- v4 bridge first admission stopped before root/claim/Popen on a misleading raw
-  cgroup-free-memory check. Read-only correction accounts for clean inactive file
-  cache; see MEMORY_ACCOUNTING.md. No v4 bridge PID yet; next launch is one-use.
+- v4 bridge461214 EXITED/PASS236.71s, max output error0; exact completion/parity
+  receipts `BRIDGE_V4_378D7BE5_{STATUS01,PASS}.json`. First admission had stopped
+  before claim on raw memory accounting; read-only correction counted only clean
+  inactive file cache. No original or successful validation task was repeated.
+- Final releaseV2 and plan are prepared; not yet deployed/launched. See
+  FINAL_EXECUTION_DESIGN.md. Do not use the preserved V1 release for deployment.
 
 ## Not launched
 

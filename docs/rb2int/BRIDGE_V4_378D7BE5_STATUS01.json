@@ -1,0 +1,62 @@
+{
+ "root": "/root/autodl-tmp/c4/rb2int20261101/bridge_378d7be5c182_v4",
+ "exists": true,
+ "process": {
+  "root": "/root/autodl-tmp/c4/rb2int20261101/bridge_378d7be5c182_v4",
+  "pid": 461214,
+  "start_ticks": "889444187",
+  "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+  "argv": [
+   "nice",
+   "-n",
+   "19",
+   "/root/miniconda3/bin/python",
+   "-B",
+   "-u",
+   "/root/autodl-tmp/c4/rb2int20261101/phys_code_378d7be5c182/tools/rb2int/evaluate.py",
+   "--variant",
+   "FULL",
+   "--runtime-root",
+   "/root/rbeval20261031/phys_code_22cc32f65a80",
+   "--wm-config",
+   "/root/rbeval20261031/phys_code_22cc32f65a80/configs/wm_phys.toml",
+   "--wm",
+   "/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt",
+   "--model-name",
+   "WM-PHYS-FULL-v4-gpu",
+   "--development-direct",
+   "--baseline-audit",
+   "/root/autodl-tmp/c4/rb2int20261101/bridge_378d7be5c182_v4/BASELINE_AUDIT.json",
+   "--out",
+   "/root/autodl-tmp/c4/rb2int20261101/bridge_378d7be5c182_v4/tasks",
+   "--device",
+   "cuda",
+   "--memory-gib",
+   "5"
+  ],
+  "memory": {
+   "limit_bytes": 96636764160,
+   "current_bytes": 94370562048,
+   "inactive_file_bytes": 51699904512,
+   "dirty_file_bytes": 15839232,
+   "writeback_bytes": 0,
+   "host_available_bytes": 1026796752896,
+   "effective_available_bytes": 53950267392,
+   "method": "min(host MemAvailable, cgroup limit-current+clean inactive_file); no active/anonymous cache allowance",
+   "process_or_cache_mutation": false
+  }
+ },
+ "alive": false,
+ "tasks": 1,
+ "tasks/COMPLETE.json": {
+  "tasks": 1,
+  "identity_sha256": "3a7eed8e3e3f90a0344e43e2dcde20ed110aa36207dbc01ccebe0686bff8902e",
+  "hashes": {
+   "w969420_k0.json": "b755b273513176d34027ffeb50fc784621fcfb159d7f31e132ac5c5b76d1a3b2"
+  }
+ },
+ "log_tail": "DONE 969420 0 236.71\n",
+ "host": "gpuA",
+ "model": "FULL-v4",
+ "action": "status"
+}

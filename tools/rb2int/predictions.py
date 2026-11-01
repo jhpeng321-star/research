@@ -82,8 +82,12 @@ def read_model(manifest_path, label, real, worlds, *, partial=False):
         raise ValueError('approved model differs from its release')
     if not model['development_bridge_passed'] or not model['bridge_receipts']:
         raise ValueError('no development parity receipt for orchestration bridge')
+    if 'catalog' in release and release['catalog'][label]['baseline_bridge']['sha256'] not in model['bridge_receipts'].values():
+        raise ValueError('model bridge differs from its frozen release proof')
     for path, expected in model['bridge_receipts'].items():
-        if digest(path) != expected or load(path).get('passed') is not True:
+        proof = load(path)
+        passed = proof.get('passed') is True or proof.get('receipts', {}).get('tasks/DEV_CANARY_PASS.json', {}).get('passed') is True
+        if digest(path) != expected or not passed:
             raise ValueError('development bridge receipt changed')
     lookup = {(r['seed'], r['arm']): r for r in real}
     roots = []

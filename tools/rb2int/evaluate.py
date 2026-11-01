@@ -65,12 +65,21 @@ def main():
         panel = validate_panel(args.registered_panel)
         release = load(panel['release_path'])
         model_binding = release['models'][args.model_name]
+        if 'original_model_config' in release:
+            origin = release['original_model_config']
+            if digest(origin['path']) != origin['sha256']:
+                raise ValueError('original model-construction config changed')
     if (str(safe(model_binding['runtime_root']).resolve()) != str(runtime) or
             model_binding['config_sha256'] != digest(args.wm_config) or
             model_binding['wm_sha256'] != digest(args.wm) or
             model_binding['variant'] != args.variant):
         raise ValueError('frozen model/runtime/recipe binding differs')
     sources = model_binding['sources']
+    if 'candidate_sha256' in model_binding:
+        actor = Path('/root/autodl-tmp/c4/setupaudit20261030/policy_000190.pt')
+        export = load('/root/autodl-tmp/c4/speedhead20261030/EXPORT_BOUND.json')
+        if digest(actor) != model_binding['candidate_sha256'] or digest(export['path']) != model_binding['export_sha256']:
+            raise ValueError('frozen external controller checkpoint changed')
     if not sources:
         raise ValueError('frozen runtime needs a nonempty exact source manifest')
     for path, expected in sources.items():

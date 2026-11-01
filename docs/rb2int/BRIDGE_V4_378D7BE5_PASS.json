@@ -1,0 +1,25 @@
+{
+ "passed": true,
+ "development_only": true,
+ "world": 969420,
+ "future": 0,
+ "arms": 5,
+ "horizons_s": [
+  120,
+  300,
+  600
+ ],
+ "max_absolute_error": 0.0,
+ "absolute_tolerance": 1e-08,
+ "region_fields": 15,
+ "event_decisions": 45,
+ "new_task_sha256": "b755b273513176d34027ffeb50fc784621fcfb159d7f31e132ac5c5b76d1a3b2",
+ "original_task_sha256": "764a84812976601431d9c2601a86f2a4f5829b2bd6d480da7201a8ded13ba69e",
+ "new_identity_sha256": "3a7eed8e3e3f90a0344e43e2dcde20ed110aa36207dbc01ccebe0686bff8902e",
+ "original_identity_sha256": "e5830c341e303554ad22b72d53eeaf9e3dad205635f15112a7fdb55bf81b73f7",
+ "final_worlds_used": false,
+ "factual_future_targets_used": false,
+ "host": "gpuA",
+ "model": "FULL-v4",
+ "action": "verify"
+}
