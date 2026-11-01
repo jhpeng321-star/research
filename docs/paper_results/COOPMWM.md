@@ -1,5 +1,17 @@
 # S-COOPMWM — live checks
 
+## OWNER18:54 — guidance-volume HOLD (18:55 recovery)
+- Verified owned cpuQ supervisor1945256 boot/start and paused it before B update4.
+  A has update4; B updates1–3 are superseded engineering runs (all bytes/charges retained).
+  R has not started. The shared supervisor pause temporarily also holds A scheduling.
+- Charge307,640sim-s/258 reserved jobs at hold;24 already-reserved A dev jobs may drain.
+  No new SUMO dispatch. `HOLD_1854.json` records the outstanding job identities.
+- Both existing owned GPU services remain (gpuA520375/gpuR954996); no duplicate service.
+  The preserved K8 whole-future batch probe passed max cost error0.00065279veh-s,
+  peak allocated2.43GB. Multi-window throughput qualification/gating is next.
+- Latest18:54 amendment supersedes the earlier continuation: B/R restart at MAPPO u0
+  only after registered execution-count gating, measured batch capacity and matched R counts.
+
 ## DIAGNOSIS — 2026-11-01 18:47, OWNER18:38 fast path
 **No action-injection/roster/reversion bug found; release the engineering hold.**
 Window01 `.139` has target-minus-MAPPO speed **+5.70434m/s**, tau−0.000249751s;
