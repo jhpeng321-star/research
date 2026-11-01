@@ -17,7 +17,8 @@ Detailed prior receipts: `docs/paper_results/RBEVAL_HANDOFF_ARCHIVE_COMPLETE.md`
   Details: `docs/paper_results/RBEVAL_UNCERTAINTY_CORRECTION.md`.
 - Verified160 task hashes,15 original report hashes,7,200 BIC decisions; corrected
   point-data audit70,488 CSV rows/max cross-platform numeric delta1.0914e-11.
-  Verification:11 scorer+4 core+1 completion+2 transfer tests PASS.
+  Fresh-session verification: all21 core/scorer/completion/support/transfer tests
+  PASS/18.993s; no scoring or inference repeated.
 - Standby **753102** completed its bounded support through11:30+08; final log
   verifies all160 tasks, frozen sources and original report hashes. Workers and
   original finalizer have exited. Resume17:07+08 launched no replacement jobs.
@@ -72,3 +73,8 @@ Shared coordination: `E:/agent-work/rb-shared/EVAL_WM2_COMPLETE_AND_CI_CORRECTIO
 - Requested support cutoff and INT11:45 delivery have passed. Final comparison:
   `E:/agent-work/c4-rb-int/docs/paper_results/WMPHYS_MORNING.md`; source manifest
   `E:/agent-work/c4-rb-int/docs/rbint/noon/20261101T113555+0800/PUBLICATION.json`.
+- Reverified original+corrected evidence at commit43d67b24:
+  `docs/paper_results/RBEVAL_WM2_RESUME_20261101T1710_VERIFIED.json` (160 task
+  hashes,15 original report files,7,200 BIC decisions,70,488 point-data rows).
+- Closure receipt: `docs/paper_results/RBEVAL_RESUME_CLOSED_20261101.md`;
+  shared notice: `E:/agent-work/rb-shared/EVAL_RESUME_CLOSED_20261101.md`.
