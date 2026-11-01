@@ -8,10 +8,10 @@ from pathlib import Path
 import time
 import torch
 import numpy as np
-from .protocol import (authority,budget,worlds,batch_worlds,sha,digest,UPDATES,CHECK_EVERY)
+from .protocol import (authority,budget,worlds,batch_worlds,sha,digest,UPDATES,CHECK_EVERY,HORIZONS)
 from .storage import read,write,reserve,ledger,reconciled
 from .policy import Policy
-from .credit import algebra,calibration,bonus
+from .credit import algebra,multihorizon,multibonus
 from tools.coopnative.learner import update,save,load
 
 
@@ -68,7 +68,7 @@ def select_calibration(episodes):
     rng=np.random.default_rng(20261101);selected=[];missing=[]
     for cell in range(12):
         choices=[(ep,s) for ep in episodes if ep['world']['cell']==cell
-                 for s in ep['steps'] if len(s['group'])==2 and s['time_s']<=1110]
+                 for s in ep['steps'] if len(s['group'])==2 and s['time_s']<=600]
         if not choices:missing.append(cell);continue
         ep,s=choices[int(rng.integers(len(choices)))];selected.append((ep,s))
     return selected,missing
@@ -84,7 +84,7 @@ def exact_window(root,b,policy,ep,step,index,phase='calibration'):
         if (path/'RESULT.json').exists():results[name]=read(path/'RESULT.json');continue
         jobs.append(dict(id=key,path=str(path),world=ep['world'],role='train' if phase=='calibration' else 'dev',
             arm=name,weights=policy.state_dict(),runtime=b['runtime'],checkpoint=b['checkpoint'],
-            noise_seed=0,deterministic=True,sim_s=t+90,stop=t+90,samples=samples,
+            noise_seed=0,deterministic=True,sim_s=t+600,stop=t+600,samples=samples,horizons=HORIZONS,
             branch=dict(time_s=t,revert=revert,prefixes=ep['prefixes'])))
     if jobs:
         reserve(root,jobs,phase);admission(b)
@@ -93,9 +93,9 @@ def exact_window(root,b,policy,ep,step,index,phase='calibration'):
             for job,r in zip(jobs,pool.map(episode,jobs)):
                 name=next(n for n,_ in plans if f'_{n}_' in job['id']);results[name]=r
     # Full-prefix terms cancel; using total J is identical to subtracting common prefix.
-    return algebra(results['joint']['totals']['team_delay_vs'],
-                   [results[f'revert{i}']['totals']['team_delay_vs'] for i in range(len(group))],
-                   results['all']['totals']['team_delay_vs'])
+    return {str(h):algebra(results['joint']['horizon_totals'][str(h)]['team_delay_vs'],
+                   [results[f'revert{i}']['horizon_totals'][str(h)]['team_delay_vs'] for i in range(len(group))],
+                   results['all']['horizon_totals'][str(h)]['team_delay_vs']) for h in HORIZONS}
 
 
 def credit_gate(root,b,policy,episodes):
@@ -113,9 +113,9 @@ def credit_gate(root,b,policy,episodes):
         wm=forecast(root,ep,step)
         ex=exact_window(root,b,policy,ep,step,i)
         record=dict(world=ep['world'],time_s=step['time_s'],group=step['group'],
-                    wm=wm['credit'],exact=ex,horizon_s=90)
+                     wm=wm['credits'],exact=ex,noise=wm['noise'],horizons_s=HORIZONS)
         write(path,record);records.append(record)
-    verdict=calibration(records);write(root/'CREDIT_CHECK.json',verdict);return verdict
+    verdict=multihorizon(records);write(root/'CREDIT_CHECK.json',verdict);return verdict
 
 
 def compare(records,baseline,left,right,role):
@@ -153,12 +153,12 @@ def discover(root,b,policy,episodes):
             times=[v for k,v in event.items() if k in ('start_s','start_time_s','time_s')]
             if not times:
                 coverage.append(dict(id=ep['id'],covered=False,reason='detector event has no registered decision clock',event=event));continue
-            time_s=float(times[0]);step=next((s for s in ep['steps'] if s['time_s']<=time_s<s['time_s']+10 and len(s['group'])==2 and s['time_s']<=1110),None)
+            time_s=float(times[0]);step=next((s for s in ep['steps'] if s['time_s']<=time_s<s['time_s']+10 and len(s['group'])==2 and s['time_s']<=600),None)
             if step is None:
                 coverage.append(dict(id=ep['id'],covered=False,reason='no complete RSU pair/window'));continue
             credit=exact_window(root,b,policy,ep,step,index,'discovery');index+=1
             coverage.append(dict(id=ep['id'],time_s=step['time_s'],group=step['group'],credit=credit,covered=True))
-    write(root/'DISCOVERY.json',dict(coverage=coverage,exact_groups=index,horizon_s=90))
+    write(root/'DISCOVERY.json',dict(coverage=coverage,exact_groups=index,horizons_s=HORIZONS))
 
 
 def run(root,smoke_only=False):
@@ -205,14 +205,14 @@ def run(root,smoke_only=False):
                         for ep in training:
                             for step in ep['steps']:
                                 if len(step['group'])!=2:continue
-                                c=forecast(root,ep,step)['credit'];credits.append(c)
-                                step['reward']+=bonus(c,u,gate['scale'])
+                                c=forecast(root,ep,step)['credits'];credits.append(c)
+                                step['reward']+=multibonus(c,u,gate)
                     metrics=update(policies[a],optimizers[a],training,generators[a])
                     charged=sum(r['sim_s'] for r in ledger(root))
                     save(checkpoint,policies[a],optimizers[a],generators[a],u,charged,ppo=metrics)
                     write(root/f'{a}_UPDATE_{u:03}.json',dict(update=u,arm=a,ppo=metrics,
                         training_sim_s=u*28800,charged_sim_s=charged,wm_windows=len(credits),
-                        credit_mean={k:float(np.mean([sum(c[k]) if k=='D_i' else c[k] for c in credits])) if credits else None for k in ('D_i','C_G','D_G')}))
+                         credit_mean={h:{k:float(np.mean([sum(c[h][k]) if k=='D_i' else c[h][k] for c in credits])) if credits else None for k in ('D_i','C_G','D_G')} for h in map(str,HORIZONS)}))
                 if u%CHECK_EVERY==0:panel+=wave(root,b,policies[a],worlds('check'),a,'check',f'check{u:03}','checks',True)
                 if u in (4,UPDATES):dev+=wave(root,b,policies[a],worlds('dev'),a,'dev',f'dev{u:03}','dev',True)
             if panel and not (root/f'CHECK_{u:03}.json').exists():report_panel(root,u,panel,controls,'check')

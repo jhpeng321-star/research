@@ -7,15 +7,17 @@ CAPS=dict(train=4_608_000,checks=590_400,dev=115_200,mechanics=2400,
           calibration=240_000,discovery=240_000)
 UPDATES=80
 CHECK_EVERY=4
+HORIZONS=(60,120,300,600)
 
 
 def authority(text):
     lines=text.splitlines()
     a=next((x for x in lines if '16:22 MAIN:' in x and 'S-COOPMWM' in x and '6,000,000' in x),None)
     b=next((x for x in lines if '16:25 MAIN:' in x and 'SPEED MODE' in x and 'FULL-v4' in x),None)
-    if not a or not b:
+    c=next((x for x in lines if '16:38 MAIN:' in x and 'S-COOPMWM' in x and '600' in x),None)
+    if not a or not b or not c:
         raise ValueError('owner MAPPO re-scope and speed amendment required')
-    return [a,b]
+    return [a,b,c]
 
 
 def registry_conflicts(text):

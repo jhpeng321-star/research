@@ -22,7 +22,7 @@ def episode(job):
     controller=Controller(p,g,deterministic=job['deterministic'],
                           samples=job.get('samples'),branch=job.get('branch'))
     b=exact.Backend(path,job['world'],job['sim_s'],job['checkpoint'])
-    steps=[];metrics={};prefixes={};requests=overrides=0
+    steps=[];metrics={};prefixes={};horizon_totals={};requests=overrides=0
     branch=job.get('branch'); stop=job.get('stop',1200)
     try:
         with gzip.open(path/'observable.jsonl.gz','xt',encoding='utf-8') as trace:
@@ -38,9 +38,11 @@ def episode(job):
                     event=controller.events[-1]
                     steps.append(dict(event,reward=before-b.totals['team_delay_vs']))
                 if t+10 in (900,1200):metrics[str(t+10-300)]=dict(b.totals)
+                if branch and t+10-branch['time_s'] in job.get('horizons',[]):
+                    horizon_totals[str(t+10-branch['time_s'])]=dict(b.totals)
         result=dict(id=job['id'],world=job['world'],arm=job['arm'],steps=steps,
             metrics=metrics,prefixes=prefixes,final=b.fingerprint(),
-            totals=dict(b.totals),actual_sim_s=b.actual,charged_sim_s=job['sim_s'],
+            totals=dict(b.totals),horizon_totals=horizon_totals,actual_sim_s=b.actual,charged_sim_s=job['sim_s'],
             requests=requests,overrides=overrides)
         write(path/'RESULT.json',result)
         return result

@@ -12,7 +12,7 @@ from tools.coopnative.learner import GAMMA,LAMBDA
 from tools.coopfree.execution import inject
 from tools.coopnative.policy import targets
 from .policy import Policy,Controller,encode,group
-from .credit import algebra,paired,ramp,bonus,calibration
+from .credit import algebra,paired,ramp,bonus,calibration,multihorizon,multibonus,noise
 from .wm import candidates,validate
 from .protocol import budget,guard,install_seed_scope,worlds,registry_conflicts
 
@@ -119,12 +119,31 @@ class Contracts(unittest.TestCase):
         self.assertEqual(registry_conflicts('another task986000..986083'),[1])
         with self.assertRaises(ValueError):guard(worlds('check')[0],'train')
 
-    def test_frozen_batched_K8_adapter_H90_structure(self):
+    def test_frozen_batched_K8_adapter_multihorizon_structure(self):
         from .wm import adapted_futures
         ns=adapted_futures()
         self.assertIn('futures',ns)
-        self.assertIn(180,ns['futures'].__code__.co_consts)
-        self.assertIn((90,),ns['futures'].__code__.co_consts)
+        self.assertIn(1200,ns['futures'].__code__.co_consts)
+        self.assertIn((60,120,300,600),ns['futures'].__code__.co_consts)
+
+    def test_multihorizon_selection_scale_and_CRN_noise(self):
+        rs=[dict(world=dict(cell=i,seed=986000+i),wm={},exact={}) for i in range(12)]
+        for r in rs:
+            for h in ('60','120','300','600'):
+                r['wm'][h]=algebra(10.,[15.,16.],25.)
+                r['exact'][h]={k:([2*x for x in v] if isinstance(v,list) else 2*v) for k,v in r['wm'][h].items()}
+            r['exact']['600']['C_G']*=-1
+        gate=multihorizon(rs,100)
+        self.assertEqual(set(gate['weights']),{'60','120','300'})
+        self.assertEqual(gate['primary_horizon_s'],300)
+        self.assertAlmostEqual(sum(gate['weights'].values()),1.)
+        self.assertEqual(multibonus(rs[0]['wm'],1,gate),0.)
+        self.assertEqual(multibonus(rs[0]['wm'],9,gate),26.)
+        fs=[{k:dict(draw_id=str(i),team_delay=v+1000*i) for k,v in
+            [('joint',10.),('revert:0',15.),('revert:1',16.),('all',25.)]} for i in range(8)]
+        n=noise(fs)
+        self.assertGreater(n['team_return_advantage_variance'],0)
+        self.assertEqual(n['paired_credit_variance'],0.)
 
     def test_random_window_selection_uses_only_eligibility_not_credit(self):
         from .runner import select_calibration

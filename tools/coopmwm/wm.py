@@ -6,7 +6,7 @@ import inspect
 import json
 import math
 import types
-from .protocol import digest
+from .protocol import digest,HORIZONS
 from .credit import paired
 
 
@@ -47,7 +47,7 @@ def executor_adapter():
 
 
 def adapted_futures():
-    """Minimal AST parameterization: H90 instead of H120/H300, same K8 implementation.
+    """Minimal AST parameterization: H60/120/300/600, same K8 implementation.
 
     Frozen upstream sources are staged/hash-bound. Fail closed on changed structure.
     No physical rollout, sampling, costs, safety, or option executor is reimplemented.
@@ -59,12 +59,12 @@ def adapted_futures():
         def visit_Constant(self,node):
             if node.value==600:
                 counts['steps']+=1
-                return ast.copy_location(ast.Constant(180),node)
+                return ast.copy_location(ast.Constant(1200),node)
             return node
         def visit_Tuple(self,node):
             if all(isinstance(v,ast.Constant) for v in node.elts) and [v.value for v in node.elts]==[120,300]:
                 counts['horizons']+=1
-                return ast.copy_location(ast.Tuple([ast.Constant(90)],ast.Load()),node)
+                return ast.copy_location(ast.Tuple([ast.Constant(h) for h in HORIZONS],ast.Load()),node)
             return self.generic_visit(node)
     tree=Horizon().visit(tree);ast.fix_missing_locations(tree)
     if counts!={'steps':1,'horizons':2}:
@@ -78,8 +78,24 @@ def adapted_futures():
         return b
     namespace=dict(scale.futures.__globals__,actions=lambda rows,setting:namespace['_actions'],
                    source_for=source,BACKEND='FULL-v4')
-    exec(compile(tree,'<coopmwm-frozen-batched-H90>','exec'),namespace)
+    exec(compile(tree,'<coopmwm-frozen-batched-multihorizon>','exec'),namespace)
     return namespace
+
+
+def cost_adapter(fn):
+    """Add H60 to the unchanged frozen per-step team/source reducer."""
+    tree=ast.parse(inspect.getsource(fn));count=0
+    class Horizons(ast.NodeTransformer):
+        def visit_Tuple(self,node):
+            nonlocal count
+            if all(isinstance(v,ast.Constant) for v in node.elts) and [v.value for v in node.elts]==[90,120,300,600]:
+                count+=1
+                return ast.copy_location(ast.Tuple([ast.Constant(h) for h in HORIZONS],ast.Load()),node)
+            return self.generic_visit(node)
+    tree=Horizons().visit(tree);ast.fix_missing_locations(tree)
+    if count!=1:raise ValueError('frozen team-cost horizon ABI changed')
+    ns=dict(fn.__globals__);exec(compile(tree,'<coopmwm-frozen-cost-horizons>','exec'),ns)
+    return ns[fn.__name__]
 
 
 def evaluate(rt,record):
@@ -91,7 +107,11 @@ def evaluate(rt,record):
     audit=result['population_audit']
     if not audit['finite'] or not audit['conserved']:
         raise ValueError('WM finite/conservation failure')
-    f=result['futures']['90']
-    credit=paired([{a:values[k] for a,values in f.items()} for k in range(8)])
-    return dict(credit=credit,replay=result,record_sha256=digest(record),horizon_s=90,
+    from .credit import noise
+    credits={};variances={}
+    for h in HORIZONS:
+        f=result['futures'][str(h)]
+        draws=[{a:values[k] for a,values in f.items()} for k in range(8)]
+        credits[str(h)]=paired(draws);variances[str(h)]=noise(draws)
+    return dict(credits=credits,noise=variances,replay=result,record_sha256=digest(record),horizons_s=HORIZONS,
                 observation_contract='roster-only/cold-memory/uniform32FIT-source-prior')
