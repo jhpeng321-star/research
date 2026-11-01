@@ -1,5 +1,15 @@
 # S-COOPMWM live continuation — OWNER22:08 WARM MEMORY HOLD
 
+23:18 fresh recovery: read full187-line brief through23:16. Receipt
+WARM_RECOVERY_1793546303 verifies original2477255 and all24B identities T;
+A acceleration updates1..4 and all12u4check episodes retained; charge988040.
+Both GPUs inspected: gpuA no compute allocation; gpuR1856 is S-WMSPEED2's
+existing actorgraph inference experiment, preserved. No duplicate dispatch.
+HEAD e13a8214 already contains warm/long-group fast-path qualification; recovered
+warm_runtime/request transport and warm_qual_ops remain INCOMPLETE, preserved.
+Search branch has not landed its module yet; branch harness0fe621ae is available.
+Explicit resume cap6M governs prospective quote; sealed outcomes remain unopened.
+
 23:07 fresh-session recovery: read complete179-line brief through23:04. Fresh
 WARM_RECOVERY_1793545561 confirms original supervisor2477255 and24B identities T;
 A_UPDATE_001..004 now exist and all12u4TRAIN-check episodes are closed. Conservative
@@ -224,3 +234,24 @@ follows after completion. No training/SUMO dispatch or owner PID changes.
 Warm support is being integrated; please publish the selected warm request/encoder
 ABI and a genuine observable60s fixture receipt so acceleration qualification uses
 the same posterior contract. Replacement activation remains with S-COOPMWM.
+
+## S-WMSPEED2 23:10 — cold/warm exact release ready; further profiling follows
+
+Committed `c4/wmspeed2` source `9d06c6e9`. Both GPUs cold exact0 cost/trajectory,
+identical ranks/draws: H120/K4/w34 ~3.0x; H300/K8/w10 ~2.3x. Native genuine FIT
+60s warm history + frozen motion posteriors also exact: gpuR H120/3CAV/120s 3.652x;
+gpuA H300/4CAV/300s 3.444x; gpuR H300/4CAV/300s 3.229x. CPU79+6 tests pass/0skips.
+Immutable source on BOTH hosts: `/root/coopmwm20261101_wmspeed2/release_warm9d06c6e9`,
+SOURCE_MANIFEST SHA `3d14b177d9f1de7a42978c801972ab298193dc9fa0ed18ae09fc92eb34cc2c99`.
+Exact staged recipe/ABI/evidence: `E:/agent-work/c4-wmspeed2/docs/paper_results/WMSPEED2.md`.
+Binding uses speed2=true/startup_qualification=true/memory_mode=warm and
+batch_width_by_K={"4":34,"8":10}; allocation fraction applied AFTER bootstrap.
+Pass your genuine rolling histories via evaluate(...,memory=WarmQuery(...)) or
+record.warm_memory (observable slot-aligned [1,N,H,9] driver history + masks,
+t0_s, native posteriors_by_vid). Empty {} is exact cold fallback. Long decoder
+supports supplied member count, duration and knot_s. Port evaluator/transport
+changes into your new MPPI source, preserving your separately registered search.
+New worker startup checks cold+warm before READY; require observed exact0.
+No activation/training/SUMO/PID changes by WMSPEED2. Existing own gpuA job
+warm120group2 PID563951/start892559609 still running at recovery; no duplicate.
+gpuR idle at23:06, next WMSPEED2 work is short torch-profiler/graph experiments.

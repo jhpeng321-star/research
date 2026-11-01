@@ -77,8 +77,9 @@ class Speed2CPU(unittest.TestCase):
         from .wm import executor_adapter
         from .plan_wm import plan_executor
         from tools.coopnative.test_cpu import state
-        binding = json.loads(Path(os.environ['SPEED2_EXPORT_BOUND']).read_text())
-        mp = load_policy_fn(binding['path'], device='cpu')
+        bound=os.environ.get('SPEED2_EXPORT_BOUND')
+        path=json.loads(Path(bound).read_text())['path'] if bound else os.environ['COOPMWM_MAPPO']
+        mp = load_policy_fn(path, device='cpu')
         rows = [dict(vid='a',s_m=-100.,v_mps=15.,lane=1,is_cav=True,length_m=5.),
                 dict(vid='b',s_m=-60.,v_mps=10.,lane=1,is_cav=True,length_m=5.),
                 dict(vid='h',s_m=-60.,v_mps=10.,lane=0,is_cav=False,length_m=5.)]

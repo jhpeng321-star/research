@@ -31,10 +31,10 @@ def moving_clock(original, time_s):
 def condition(model, record):
     import numpy as np
     import torch
-    from tools.rbint import motion_posterior as frozen
     raw = arrays(record)
     if raw is None:
         return None
+    from tools.rbint import motion_posterior as frozen
     if not hasattr(model,'_wmphys_motion_fit'):
         raise ValueError('FULL-v4 frozen motion inference unavailable')
     # Generalize ONLY the original registered clock, retaining its selector,
@@ -74,6 +74,26 @@ def encoded_history(model, raw, initial):
     history_mask[0,:n]=valid[:n].to(history.device)
     return dict(driver_history=history.expand(initial['present'].shape[0],-1,-1,-1).clone(),
         driver_history_mask=history_mask.expand(initial['present'].shape[0],-1,-1).clone())
+
+
+def prepare(rt, record):
+    """Condition once per query; reuse the qualified native posterior transport."""
+    result=condition(rt.model,record)
+    if result is None:return None
+    from tools.wmteach import runtime
+    from .speed2_memory import WarmQuery
+    fitted,raw,receipt=result
+    source=runtime.diagnostic_source(rt,record,0)
+    source.rollout_kwargs.update(encoded_history(rt.model,raw,source.state))
+    posteriors={}
+    for key,value in fitted.posterior['drivers'].items():
+        world,slot=map(int,key.split(':'))
+        if world!=record['world_id']:raise ValueError('posterior world mismatch')
+        posteriors[slot]=value
+    receipt.update(observation_contract='observable_rolling60s_per_driver',
+        causal_motion_conditioning=True,saved_ID_lookup=False,
+        controller_memory='cold; driver history warm',source_counter_conditioning=False)
+    return WarmQuery(source,posteriors,record['time_s'],receipt)
 
 
 class Proxy:

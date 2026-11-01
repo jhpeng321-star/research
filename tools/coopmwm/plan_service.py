@@ -26,9 +26,15 @@ def request_memory(rt,record,binding):
     diagnostic=record.get('mode')=='diagnostic'
     allowed={'state_id','world_id','time_s','rows','group','commands','policy_residuals'}|({'mode','plan'} if diagnostic else set())
     if 'warm_memory' in record:allowed.add('warm_memory')
+    if 'history' in record:allowed.add('history')
     if set(record)!=allowed:raise ValueError('observable plan request whitelist')
-    if binding.get('memory_mode')=='warm' and 'warm_memory' not in record:
+    if 'history' in record and 'warm_memory' in record:
+        raise ValueError('ambiguous warm memory payload')
+    if binding.get('memory_mode')=='warm' and not {'history','warm_memory'} & set(record):
         raise ValueError('warm worker requires an explicit memory payload (empty allowed)')
+    if 'history' in record:
+        from .warm_runtime import prepare
+        return prepare(rt,record)
     from .speed2_memory import WarmQuery
     return WarmQuery.from_record(rt,record)
 
