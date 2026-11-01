@@ -1,3 +1,13 @@
+# S-RB2-BREAK — round2 in progress, 2026-11-01 ~12:00
+
+Owner: S-RB2-BREAK, branch `c4/rb2-break`; FULL-v4 base22cc32f6.
+Development-only plan `docs/rb2break/PLAN.md`; coordination
+`E:/agent-work/rb-shared/RB2_BREAK_TO_LANE_INT.md`.
+No candidate or improvement claimed yet. Attribution screen being implemented.
+Reserved969432–969439 forbidden to this workstream. Learned corrections OFF.
+
+## Inherited round1 handoff (provenance; not current BREAK process ownership)
+
 # S-RB-INT FINAL — 2026-11-01
 
 Branch `c4/rb-int`. Retain all prior work and immutable jobs. Earlier detail:

@@ -45,13 +45,18 @@ def arguments():
     return p.parse_args()
 
 
-def main(model_loader=None, identity_sources=(), future_builder=None):
+def main(model_loader=None, identity_sources=(), future_builder=None,
+         worlds=None, future_indices=None):
     """Optional INT loader has the strict load_members(checkpoints,configs,device)
     interface. It returns ([frozen_model], JSON receipt); its Python source and
     explicitly supplied recipe/helper files are bound into the run identity.
     Live WM2 uses the original independently staged source, never overwritten.
     """
     args = arguments()
+    panel_worlds = SEEDS if worlds is None else tuple(worlds)
+    futures = tuple(range(8)) if future_indices is None else tuple(future_indices)
+    assert panel_worlds and len(set(panel_worlds)) == len(panel_worlds) and set(panel_worlds) <= set(SEEDS)
+    assert futures and len(set(futures)) == len(futures) and set(futures) <= set(range(8))
     if args.endpoint_only:
         assert args.model_name != 'wm2' and 'hdv60' in args.model_name.lower(), 'separate endpoint model identity required'
     rollout_steps = 120 if args.endpoint_only else 1200
@@ -171,12 +176,14 @@ def main(model_loader=None, identity_sources=(), future_builder=None):
             assert all(real[s, arm]['initial_sha256'] == p['metadata']['initial_state_sha256'] for arm in ARMS)
     identity = dict(schema='wmphys-hdv60/1' if args.endpoint_only else 'rbeval/1',
         K=8, horizon=60 if args.endpoint_only else 600, t0=300, arms=ARMS,
-        worlds=SEEDS, shard=args.shard, shards=args.shards, model=args.model_name,
+        worlds=panel_worlds, shard=args.shard, shards=args.shards, model=args.model_name,
         wm=receipt, wm_sha256=digest(args.wm), config_sha256=digest(args.wm_config),
         candidate_sha256=digest(candidate), export_sha256=binding['sha256'],
         sources=sources, provenance=provenance, switches=switches, device=args.device,
         real_receipt_sha256=digest(HERE/'real_observables.json'), mix=True,
         native_lanes=True, seed=965140, update=190)
+    if future_indices is not None:
+        identity['future_indices'] = futures
     if model_loader is not None:
         identity['construction_loader_sha256'] = digest(inspect.getfile(model_loader))
     # Round-trip tuple/list normalization before exact resume identity comparison.
@@ -228,7 +235,7 @@ def main(model_loader=None, identity_sources=(), future_builder=None):
         return {k: move(v) for k, v in x.items()} if isinstance(x, dict) else x
 
     tasks = 0
-    selected = [s for i, s in enumerate(SEEDS) if i % args.shards == args.shard]
+    selected = [s for i, s in enumerate(panel_worlds) if i % args.shards == args.shard]
     if args.model_name != 'wm2':
         # Administrative order only: registered panel/partition/RNG stay fixed.
         # Complete the reserved eight worlds first for the owner's04:00 interim.
@@ -236,7 +243,7 @@ def main(model_loader=None, identity_sources=(), future_builder=None):
     by_seed = {b.metadata[0]['seed']: (b, i) for i, b in enumerate(batches)}
     for seed in selected:
         source, bi = by_seed[seed]
-        for fi in range(8):
+        for fi in futures:
             target = out/f'w{seed}_k{fi}.json'
             if target.exists():
                 old = load(target)
@@ -331,8 +338,8 @@ def main(model_loader=None, identity_sources=(), future_builder=None):
             if args.max_tasks and tasks >= args.max_tasks:
                 return
     if not (out/'COMPLETE.json').exists():
-        save_new(out/'COMPLETE.json', dict(tasks=8*len(selected), identity_sha256=identity_sha,
-            hashes={f'w{s}_k{k}.json': digest(out/f'w{s}_k{k}.json') for s in selected for k in range(8)}))
+        save_new(out/'COMPLETE.json', dict(tasks=len(futures)*len(selected), identity_sha256=identity_sha,
+            hashes={f'w{s}_k{k}.json': digest(out/f'w{s}_k{k}.json') for s in selected for k in futures}))
 
 
 if __name__ == '__main__':
