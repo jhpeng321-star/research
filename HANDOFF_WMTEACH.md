@@ -1,6 +1,11 @@
 # S-WMTEACH resume / ownership
 
 ## CURRENT: PAUSED by MAIN 2026-11-01 17:35 — supersedes all launch instructions below
+- Fresh-session recheck1793533462 (2026-11-01): registry still has no MAIN resume
+  authorization. Read-only checkpoint confirms all10503 cached files byte-identical
+  to1793525989, all three owned jobs inactive, both scale STOPs retained and live
+  root absent. Local CIM audit finds no WMTEACH collector/auto-live process.
+  New receipt: `wmteach/OWNER1735_CHECKPOINT_1793533462.json` and `_SUMMARY.json`.
 - Resume authority is ONLY a new MAIN `S-WMTEACH RESUME` entry. Paper A/S-COOPMWM
   has GPU priority. Do not start a collector, teacher, student or live job while held.
 - Pause/code/first inventories committed `1df3e615`. Durable local hold:

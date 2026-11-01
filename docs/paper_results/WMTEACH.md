@@ -33,6 +33,11 @@
 
 ## Status
 **PAUSED by MAIN17:35 (2026-11-01), pending explicit `S-WMTEACH RESUME`.**
+Fresh-session read-only recheck1793533462 confirms all10503 cached files have the
+same paths/sizes/SHA256 as checkpoint1793525989; all three owned jobs remain
+inactive, both scale STOPs remain, live root is absent, and local CIM audit finds
+no collector/auto-live process. No subsequent MAIN resume authorization is present.
+New checkpoint and `_SUMMARY.json` are retained under `wmteach/`.
 S-COOPMWM/Paper A has GPU priority. Exact-owned local collector43128 stopped;
 gpuA scale453587/453608 cooperatively stopped at existing guards. Quality453566
 was already complete. Final checkpoint1793525989 verifies all three PIDs absent
