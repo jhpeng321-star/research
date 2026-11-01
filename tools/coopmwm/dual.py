@@ -13,8 +13,8 @@ from .deploy import ROOT,EVIDENCE
 from .protocol import digest
 from .storage import read,write
 
-GPU_ROOT='/root/coopmwm20261101_dual1'
-TAG='1755'
+GPU_ROOT='/root/coopmwm20261101_dual2'
+TAG='1755v2'
 
 
 def pending():
@@ -70,6 +70,10 @@ class Service:
 
 
 def credit_difference(a,b):
+    if 'credits' not in a:
+        if set(a['futures'])!=set(b['futures']):raise ValueError('cross-GPU proposal action mismatch')
+        return max(abs(x['team_delay']-y['team_delay']) for k in a['futures']
+            for x,y in zip(a['futures'][k],b['futures'][k]))
     differences=[]
     for h in (60,120,300,600):
         x,y=a['credits'][str(h)],b['credits'][str(h)]
@@ -90,7 +94,7 @@ def run():
             for future in as_completed([pool.submit(Service,h) for h in ('gpuA','gpuR')]):
                 services.append(future.result())
             services.sort(key=lambda s:s.host)
-            first=next(r for r in pending()['records'] if r.get('mode')!='proposal')
+            first=next(r for r in sorted(pending()['records'],key=lambda r:r['state_id']) if r.get('mode')=='proposal')
             values=list(pool.map(lambda s:s.call(first),services))
             difference=credit_difference(*(v['result'] for v in values))
             # Same frozen draws/model/reducer; gate both hosts before routing proposals.
@@ -99,13 +103,18 @@ def run():
                 hosts=['gpuA','gpuR'],wall_s={s.host:v['wall_s'] for s,v in zip(services,values)},sim_s=0))
             persist(first,values[0]['result'])
             # A no-SUMO proposal timing on the same observable roster, not an outcome selector.
-            probe=dict(first,mode='proposal',setting=0)
-            probe['state_id']=digest(dict(first=first['state_id'],mode='throughput-probe'))
-            timings=list(pool.map(lambda s:s.call(probe),services))
+            timings=values  # Actual H300 K8 plus serial canary: conservative capacity timing.
             write(EVIDENCE/f'DUAL_{TAG}_THROUGHPUT.json',dict(unix=time.time(),sim_s=0,
                 hosts={s.host:dict(wall_s=v['wall_s'],K=8,horizon_s=300,
                     available=len(v['result'].get('means',{}))-2) for s,v in zip(services,timings)},
                 aggregate_queries_per_s=sum(1/v['wall_s'] for v in timings)))
+            # Timing requests never become training data. Once both hosts have a
+            # real K8 measurement, record unused probes as skipped before inference.
+            manifest=read(EVIDENCE/'TIMING_REQUESTS_1755.json')
+            for r in pending()['records']:
+                if r['state_id'] in manifest['state_ids']:
+                    persist(r,dict(record_sha256=digest(r),not_inferred=True,
+                        reason='bounded infrastructure probe unused; both-host qualification complete'))
             lock=threading.Lock();inflight=set();stop=threading.Event()
             def worker(service):
                 while not stop.is_set():
@@ -137,13 +146,14 @@ def run():
 
 def bind(cpu_name):
     cpu=read(EVIDENCE/cpu_name);assert cpu['pass_'] and not cpu['skips'] and not cpu['sim_s']
+    deadline=read(EVIDENCE/'DUAL_1755_DISPATCH.json')['unix']+86400
     for host in ('gpuA','gpuR'):
         staged=json.loads(ops.stage_frozen(host,GPU_ROOT,cpu));assert staged['hashes']==cpu['source_hashes']
         out=ops.ssh.remote(host,f'''import pathlib,json,sys,hashlib
 r=pathlib.Path({GPU_ROOT!r});sys.path.insert(0,str(r/'pytools'))
 from tools.coopmwm.storage import read,write
 v=dict(hashes=json.loads({json.dumps(staged['hashes'])!r}),backend='FULL-v4',source='22cc32f6',
- host={host!r},memory_cap_GiB=8,owner_release='2026-11-01 17:55',proposal_cap=10000)
+ host={host!r},memory_cap_GiB=8,owner_release='2026-11-01 17:55',proposal_cap=10000,deadline_unix={deadline!r})
 if (r/'GPU_BINDING.json').exists():assert read(r/'GPU_BINDING.json')==v
 else:write(r/'GPU_BINDING.json',v)
 print(json.dumps(dict(host={host!r},root=str(r),binding_sha256=hashlib.sha256((r/'GPU_BINDING.json').read_bytes()).hexdigest(),sim_s=0)))
@@ -162,17 +172,7 @@ def start():
 
 
 def fit_sampling():
-    manifest=read(EVIDENCE/'TIMING_REQUESTS_1755.json')
-    measured={}
-    for key in manifest['state_ids']:
-        p=EVIDENCE/'dual_forecasts'/(key+'.json')
-        if p.exists():
-            v=read(p)
-            if v['host'] not in measured or v['unix']<measured[v['host']]['unix']:measured[v['host']]=v
-    assert set(measured)=={'gpuA','gpuR'},'real H300 timing pending on one or both hosts'
-    timing=dict(hosts={h:dict(wall_s=v['wall_s'],available=len(manifest['available_options']),K=8,horizon_s=300) for h,v in measured.items()},
-        aggregate_queries_per_s=sum(1/v['wall_s'] for v in measured.values()),sim_s=0,
-        source='first availability-qualified timing completion per host; empty original probe excluded')
+    timing=read(EVIDENCE/f'DUAL_{TAG}_THROUGHPUT.json')
     assert all(v['available']>0 for v in timing['hosts'].values()),'timing requires real inherited options'
     metadata=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,sys
 r=pathlib.Path({ROOT!r});sys.path.insert(0,{('/home/ubuntu/coopmwm20261101_cpu19/pytools')!r})
@@ -228,7 +228,7 @@ print(json.dumps(dict(state_ids=ids,world_id=selected['world_id'],time_s=selecte
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('bind','start','run','fit','bench'));p.add_argument('--cpu',default='CPU_coopmwm20261101_cpu19.json');a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('bind','start','run','fit','bench'));p.add_argument('--cpu',default='CPU_coopmwm20261101_cpu21.json');a=p.parse_args()
     if a.mode=='bind':bind(a.cpu)
     elif a.mode=='start':start()
     elif a.mode=='fit':fit_sampling()

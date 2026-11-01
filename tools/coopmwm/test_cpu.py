@@ -229,6 +229,25 @@ class Contracts(unittest.TestCase):
         b['credits']['600']['D_i'][1]+=2.
         self.assertEqual(credit_difference(a,b),2.)
 
+    def test_source_prior_integer_ABI_at_non300_clock_no_truth(self):
+        from .wm import prior_counters
+        q=torch.tensor([[2.,3.,.623,.117]])
+        before=q.clone();r=prior_counters(q,550)
+        self.assertTrue(torch.equal(q,before));self.assertEqual(r['backlog'],[2.,3.])
+        self.assertTrue(all(type(x) is int for x in r['request_total']))
+        for count,rate in zip(r['request_total'],q[0,2:].tolist()):
+            self.assertLessEqual(abs(count/550-rate),.5/550+1e-7)
+        with self.assertRaisesRegex(ValueError,'invalid inferred'):
+            prior_counters(torch.tensor([[0.,0.,float('nan'),1.]]),550)
+
+    def test_proposal_GPU_parity_uses_each_paired_future(self):
+        import copy
+        from .dual import credit_difference
+        a=dict(futures={k:[dict(team_delay=float(i)) for i in range(8)] for k in ('policy','MAPPO','O1')})
+        b=copy.deepcopy(a);self.assertEqual(credit_difference(a,b),0.)
+        b['futures']['O1'][6]['team_delay']+=2.
+        self.assertEqual(credit_difference(a,b),2.)
+
     def test_throughput_sampling_logs_exact_mixture_mass(self):
         from .exploration import route,mixture_ratio
         from unittest.mock import patch

@@ -41,7 +41,8 @@ def main(root):
     write(root/'GPU_READY.json',owner)
     print('COOPMWM_JSON '+json.dumps(dict(event='READY',owner=owner)),flush=True)
     for line in sys.stdin:
-        if time.monotonic()-started>24*3600:raise ValueError('registered 24h GPU service wall cap reached')
+        if time.monotonic()-started>24*3600 or time.time()>identity.get('deadline_unix',float('inf')):
+            raise ValueError('registered 24h GPU service wall cap reached')
         record=json.loads(line);key=record['state_id'];dest=root/'forecasts'/key;begin=time.monotonic()
         if (dest/'RESULT.json').exists():result=read(dest/'RESULT.json')
         else:

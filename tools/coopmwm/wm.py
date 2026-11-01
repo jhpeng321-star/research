@@ -90,13 +90,28 @@ def adapted_futures(horizons=HORIZONS):
         b=runtime.diagnostic_source(rt,r,0)
         # Identical population-marginal source prior used by the qualified teacher.
         # These values are inferred priors, never read from SUMO RequestLedger.
-        r['backlog']=b.entry_queue[0,:2].cpu().tolist()
-        r['request_total']=(b.entry_queue[0,2:4]*r['time_s']).cpu().tolist()
+        r.update(prior_counters(b.entry_queue,r['time_s']))
         return b
     namespace=dict(scale.futures.__globals__,actions=lambda rows,setting:namespace['_actions'],
                    source_for=source,BACKEND='FULL-v4')
     exec(compile(tree,'<coopmwm-frozen-batched-multihorizon>','exec'),namespace)
     return namespace
+
+
+def prior_counters(entry_queue,time_s):
+    """Integer encode inferred FIT-prior counts, never actual SUMO counters.
+
+    The frozen learned-arrival API requires integer count sufficient statistics.
+    Its population-prior mean rate times a new observable clock is not generally
+    integral; nearest-integer encoding preserves that rate to <=0.5/time_s.
+    Exposure remains the disclosed inferred current-clock prior, not measured
+    requests. It must not be described as causal source-counter conditioning.
+    """
+    backlog=entry_queue[0,:2].cpu().tolist()
+    raw=(entry_queue[0,2:4]*time_s).cpu().tolist()
+    if time_s<=0 or any(not math.isfinite(x) or x<0 for x in backlog+raw):
+        raise ValueError('invalid inferred FIT source prior')
+    return dict(backlog=backlog,request_total=[int(round(x)) for x in raw])
 
 
 def proposal_candidates(record):
@@ -141,7 +156,8 @@ def propose(rt,record):
     saving=min(means['policy'],means['MAPPO'])-means[best['id']]
     return dict(accepted=saving>0,option=best['id'],targets=best['proposal_targets'] if saving>0 else {},
         expected_saving=saving,means=means,futures=futures,K=8,horizon_s=300,
-        record_sha256=digest(record),contract='inherited-options/W10-setpoint-adapter/observable-only')
+        record_sha256=digest(record),contract='inherited-options/W10-setpoint-adapter/observable-only',
+        source_prior='uniform32FIT/current-clock inferred integer pseudo-counts; not observed source requests')
 
 
 def canary(rt,record,result):
