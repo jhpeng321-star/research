@@ -78,3 +78,18 @@ Shared coordination: `E:/agent-work/rb-shared/EVAL_WM2_COMPLETE_AND_CI_CORRECTIO
   hashes,15 original report files,7,200 BIC decisions,70,488 point-data rows).
 - Closure receipt: `docs/paper_results/RBEVAL_RESUME_CLOSED_20261101.md`;
   shared notice: `E:/agent-work/rb-shared/EVAL_RESUME_CLOSED_20261101.md`.
+
+## Subsequent resume — 2026-11-01 21:31+08
+- Clean HEAD5a08962d preserved. Registration5683/5697, fixed design, rationale,
+  WMBREAKDOWN gate, RUNA request and INT final-delivery receipt reconciled.
+- Read-only `ops status` confirms all four WM2 shards40/40 and original
+  `FINALIZED.json`; no matching EVAL process was listed. Existing support log
+  ends at its11:30 cutoff with REPORT_READY/report_verified=true.
+- Read-only `ops candidate-status` confirms A2/FULL-v4=160, B2=157/FAILED,
+  C2=102. INT's final delivery already accounts for these retained partial runs.
+  gpuA/gpuR currently99%/98% utilized; no replacement work is needed.
+- Corrected local `gate.json` remains NOT_QUALIFIED with revision
+  `scored-only-singleton-roundoff-v2`. Prior verification/test receipts above
+  remain the evidence; this resume did not regenerate forecasts, scores or tests.
+- The requested support deadline has passed and no unresolved EVAL request was
+  found. Exact future-builder CLI/API and canonical corrected report remain above.
