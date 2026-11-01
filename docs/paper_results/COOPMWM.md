@@ -1723,3 +1723,12 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
 - Receipt: `coopmwm/warm_live/A_VIABILITY_040.json`.
 <!-- warm-receipt:A_VIABILITY_040.json:85a44dc47d44ab0ad05a2b58c28ba9fa0d2f5ab1dc0d61919f6457ad21e6347b -->
+
+## Warm live publication — 2026-11-01T20:18:14.500393+00:00
+- Conservatively charged 2240840/7500000 sim-s.
+
+### Warm continuation — A_UPDATE_040.json
+- A u40: queries/accepted/executed 0/0/0; wall 271s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_040.json`.
+<!-- warm-receipt:A_UPDATE_040.json:b74d2edb9e1690fb001669b082e50239ce3cd36f93c980a47362b63daff6538b -->
