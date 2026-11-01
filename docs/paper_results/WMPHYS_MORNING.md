@@ -1,4 +1,4 @@
-# WM-PHYS morning report — interim, 2026-11-01T10:25:23+08:00
+# WM-PHYS morning report — interim, 2026-11-01T10:52:04+08:00
 Registered switching rule FAIL: 300s breakdown rate not closer to real. Calibrated controller selection is not established.
 Latest engineering source is FULL-v4/22cc32f6; current paired diagnostic below is FULL-v4.
 
@@ -54,4 +54,4 @@ Latest engineering source is FULL-v4/22cc32f6; current paired diagnostic below i
 - Receipt: docs/rbint/noon/20261101T075846+0800; primary95%CIs NA (singleton cells). Finalfreeze09:30: docs/rbint/noon/20261101T093000+0800/FREEZE.json.
 - Final evaluation receipts through11:30, final report11:45; frozen source is not selected by reserved outcome tuning.
 - Remaining gaps:serial LC negotiation/internal junction state/cold memory; finish matched panels and validate action confidence.
-- Audit/source manifests, per-world attrition, timing/speed/shift/gate/credibility files: docs/rbint/noon/20261101T102523+0800.
+- Audit/source manifests, per-world attrition, timing/speed/shift/gate/credibility files: docs/rbint/noon/20261101T105204+0800.

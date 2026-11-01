@@ -110,10 +110,8 @@ Full-world CIs NA/singletons. Freeze `docs/rbint/FREEZE_0930.md`; current public
 
 <!-- NOON-COLLECTOR:BEGIN -->
 ## Bounded noon collector
-2026-11-01T10:25:23+08:00; read-only remote collection, no inference dispatch.
-Latest publication `docs/rbint/noon/20261101T102523+0800/PUBLICATION.json`; 08interim `docs/rbint/noon/20261101T075846+0800`,09:30freeze `docs/rbint/noon/20261101T093000+0800/FREEZE.json`.
-Source22cc32f6 FULL-v4 and prior A/B/C/FULL sources remain immutable.
-Scored-world-only fixed-stratum CIs; singleton uncertainty NA; prior CIs retracted.
-Existing remote supervisors retain own-PID11:30 deadline. Final collection11:35, report by11:45.
-Collector owns ONLY its local CPU analysis children and publication files; foreign work stops it.
+Explicit saved-component CPU recovery completed; no new inference.
+Latest publication `docs/rbint/noon/20261101T105204+0800/PUBLICATION.json`;08interim retained.
+All successful components reused; only previously unfinished analysis executed.
+Next bounded collector resumes this committed publication/cache;09:30freeze/11:45report unchanged.
 <!-- NOON-COLLECTOR:END -->
