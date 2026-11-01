@@ -12,7 +12,12 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument('host', choices=('gpuA', 'gpuR', 'cpuQ'))
     p.add_argument('--endpoint-only', action='store_true', help='analysis helpers only; reuse original WM2 model/runtime')
+    p.add_argument('--parent', choices=('/root/rbeval20261031', '/root/autodl-tmp/c4/rb2int20261101'))
+    p.add_argument('--receipt', help='exclusive local staging receipt after verified transfer')
     args = p.parse_args()
+    local_receipt = Path(args.receipt) if args.receipt else None
+    if local_receipt is not None and (not local_receipt.parent.is_dir() or local_receipt.exists()):
+        raise ValueError('new local staging receipt in existing parent required')
     root = Path(__file__).resolve().parents[2]
     sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=root, text=True).strip()
     paths = ['src/wms', 'tools/rbint', 'tools/rbeval',
@@ -25,7 +30,15 @@ def main():
               'docs/paper_results/rbunc/observed_arrivals.json',
               'tools/rbfit', 'tests/unit/test_rbfit.py', 'tests/unit/test_rbfit_directional.py',
               'tests/test_rbint_merge_fast.py', 'tests/test_rbint_lane_fast.py',
-              'tests/test_rbint_motion_posterior.py', 'tests/test_rbint_endpoints.py']
+               'tests/test_rbint_motion_posterior.py', 'tests/test_rbint_endpoints.py']
+    paths += ['tools/rb2int', 'tools/rbcal', 'tools/rb2lphys',
+              'configs/wm_phys_v5.toml', 'configs/wm_phys_v5_lp.toml',
+              'artifacts/rb2lphys/learned_v1.json',
+              'docs/paper_results/rb2cal/v1/fit/calibration.json',
+              'docs/rb2int/EVALUATION_DESIGN.md', 'docs/rb2int/EVALUATION_REGISTRATION.json',
+              'docs/rb2int/PANEL_METADATA.json',
+              'tests/test_rb2int_candidate_recipes.py', 'tests/test_rb2int_lane_cal_composition.py',
+              'tests/test_rb2lphys.py', 'tests/test_rb2_spread_calibration.py']
     # Explicit round-2 LC continuation dependency closure; old recipe remains OFF.
     paths += ['tools/rblane', 'configs/wm_phys_rb2_lane.toml',
               'artifacts/rbfit/lane_raw_c5602102891e']
@@ -34,14 +47,19 @@ def main():
     archive = subprocess.check_output(['git', 'archive', '--format=tar', sha, *paths], cwd=root)
     archive_sha = hashlib.sha256(archive).hexdigest()
     parent = '/home/ubuntu/rbint20261101' if args.host == 'cpuQ' else '/root/rbeval20261031'
+    if args.parent:
+        if args.host == 'cpuQ':
+            raise ValueError('explicit alternate parent is for GPU hosts only')
+        parent = args.parent
     python = '/home/ubuntu/miniconda3/bin/python' if args.host == 'cpuQ' else '/root/miniconda3/bin/python'
     dest = f'{parent}/phys_code_{sha[:12]}'
     # This archive consists solely of this repository's committed code/data receipts.
     code = f'''
-import io, json, hashlib, tarfile
+import io, json, hashlib, shutil, tarfile
 from pathlib import Path
 parent=Path({parent!r})
 assert parent.parent.is_dir()
+assert shutil.disk_usage(parent if parent.exists() else parent.parent).free > max(512*2**20, 3*{len(archive)}), 'wait for free staging disk; preserve existing files'
 parent.mkdir(exist_ok=True)
 dest=Path({dest!r})
 if dest.exists():
@@ -53,6 +71,9 @@ dest.mkdir()
     prepared = ssh(args.host, code + '\nprint("NEW_STAGE",str(dest))')
     print(prepared)
     if 'NEW_STAGE' not in prepared:
+        if local_receipt is not None:
+            with local_receipt.open('x', encoding='utf-8') as stream:
+                json.dump(json.loads(prepared), stream, indent=1)
         return
     # Send trusted local git bytes, never a remote download or peer runtime edit.
     unpack = f'''import sys,io,tarfile,hashlib,json
@@ -72,6 +93,10 @@ print(json.dumps(receipt))'''
     if result.returncode:
         raise RuntimeError(result.stderr.decode() + result.stdout.decode())
     print(result.stdout.decode())
+    if local_receipt is not None:
+        receipt = json.loads(result.stdout.decode())
+        with local_receipt.open('x', encoding='utf-8') as stream:
+            json.dump(receipt, stream, indent=1)
 
 
 if __name__ == '__main__':

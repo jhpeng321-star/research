@@ -8,6 +8,10 @@ round-1 delivery remains below. Read `docs/rb2int/PLAN.md` when available.
   `configs/wm_phys_v5{,_lp}.toml`; staged smoke/full exposure release still pending.
 - Cross-worker physical/sampling/recipe integration gate135PASS/0skips/20.11s;
   `docs/rb2int/INTAKE_LPHYS.md`. LC attachment now preserves CAL's latent wrapper.
+- Safe alternate-volume staging and exclusive dev-smoke/canary launch/status
+  tooling prepared; source/launcher gate11PASS/6.05s and Ruff PASS. Final tasks
+  remain unlaunched. New canary is dev969420/969421, K1/all5arms/H600, distinct
+  from final K8 and guarded against learned corrections.
   Fresh-session recovery and next steps: `docs/rb2int/PLAN.md`.
 - FIT/selection stays on969400–969431 (development panel969420–969431).
   Reserved969432–969439 only for the final frozen comparison.

@@ -1,8 +1,8 @@
 # Round-2 integration/evaluation receipts
 
 Status and immutable prospective design: `docs/rb2int/`; teacher signal:
-`HANDOFF.md`. No tool in this directory currently dispatches an inference job.
-Do not treat a development-only bridge release as final-panel authorization.
+`HANDOFF.md`. `smoke_ops` can launch only the explicit development smoke/canary;
+it cannot dispatch a final panel. Development release is distinct from final.
 
 - `audit`: outcome-blind design metadata, exact panel roster, prior fit artifact,
   and worker handoff snapshots. This does not automatically clear exposure.
@@ -15,6 +15,9 @@ Do not treat a development-only bridge release as final-panel authorization.
   import precedence, exact source/config/checkpoint checks, and hash-bound panel
   release. WM2 retains its own original runtime; v4 cannot import merged v5 code.
   Registered extended tasks also save60s endpoints, without another forecast.
+- `dev_canary`/`smoke_ops`: exclusive, incarnation-recorded development execution
+  on the immutable INT stage. Closed60s smoke or dev969420/969421 K1/all5arm/H600;
+  no replay of a completed smoke root. Resource/disk admission precedes claiming.
 - `uncertainty`: joint18-contrast score/rate families; fixed-cell whole-world
   bootstrap, paired future resampling for forecast means. Singleton factual cells
   remain NA even when the K8 forecast varies.
@@ -41,8 +44,8 @@ Do not treat a development-only bridge release as final-panel authorization.
    explicitly allow `final_comparison` (or only `development_bridge` for an early
    mechanics check). `models` binds every runtime/source/config/checkpoint.
 3. A `rb2int-panel-inputs/1` manifest binds the registration/release, selected
-   worlds, observable registry and factual receipt. Input preparation and remote
-   dispatch still need an implementation/review; do not manufacture these files
+   worlds, observable registry and factual receipt. Final input preparation and
+   panel dispatch still need implementation/review; do not manufacture these files
    as a substitute for missing exposure/smoke evidence.
 4. A `rb2int-approved-runs/1` registry lists exact approved shard identity hashes,
    the frozen semantic model source subset and each real-receipt hash. It binds
