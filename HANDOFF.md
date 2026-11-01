@@ -11,7 +11,8 @@ Runtime source `src/wms/control/spread_calibration.py`; minimal hooks in
 `hidden_state.BirthMix`, `rbint/recipe.py`, identity binding in `rbint/evaluate.py`.
 Present drivers stay VID-keyed; one future-owned Dirichlet entrant mixture;
 request/admission ordinal coupling and fixed joint physical support preserved.
-74 CPU tests PASS plus4finite-collector tests; Ruff PASS.
+79 distinct CPU tests PASS (74combined +4finite-collector +1empty-call report);
+Ruff PASS. Empty selected sets retain NA scores/0calls rather than fake wins.
 No neural training; no per-step noise or output-cost corrections are deployed.
 
 FIT115652 later-prefix motion rows/2460drivers. All32 scalar crossfits retain

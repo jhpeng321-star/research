@@ -21,8 +21,11 @@ def compact(rows):
         for target in ('preference', 'selected_preference'):
             record[target] = {r['metric']:r['mean'] for r in selected if r['target'] == target
                                and r['metric'] in ('brier', 'probability', 'outcome')}
-            brier = next(r for r in selected if r['target'] == target and r['metric'] == 'brier')
-            record[target]['calls'] = brier['count']
+            brier = next((r for r in selected if r['target'] == target and r['metric'] == 'brier'), None)
+            if brier is None:
+                record[target] = dict(calls=0, brier=None, probability=None, outcome=None)
+            else:
+                record[target]['calls'] = brier['count']
         record['switch_rate'] = next(r['mean'] for r in selected if r['target'] == 'picker' and r['metric'] == 'switched')
         result[str(h)] = record
     return result

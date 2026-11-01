@@ -276,3 +276,19 @@ def test_collector_continues_cpu_once_after_own_canary_not_before(tmp_path, monk
     assert commands[0][-1] == 'cpu' and 'panel' in commands[0]
     assert len([command for command in commands if 'panel' in command]) == 1
     assert json.loads((out/'TERMINAL.json').read_text())['state'] == 'COMPLETE'
+
+
+def test_compact_report_keeps_empty_switch_sets_unqualified():
+    from tools.rbcal.summarize import compact
+    rows = []
+    for horizon in (120, 300, 600):
+        for target in ('delay', 'paired_delay'):
+            rows.append(dict(horizon_s=horizon, target=target, metric='crps', mean=1.))
+            rows += [dict(horizon_s=horizon, target=target, metric='covered', mean=level,
+                          nominal_level=level, interval='central') for level in (.5, .8, .9)]
+        rows += [dict(horizon_s=horizon, target='preference', metric=metric, mean=value, count=120)
+                 for metric, value in [('brier', .25), ('probability', .5), ('outcome', .5)]]
+        rows.append(dict(horizon_s=horizon, target='picker', metric='switched', mean=0.))
+    summary = compact(rows)
+    assert all(r['selected_preference'] == dict(calls=0, brier=None, probability=None, outcome=None)
+               for r in summary.values())
