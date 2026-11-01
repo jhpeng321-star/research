@@ -17,6 +17,22 @@ waits for exact expected STOP AND actual exit before immediate larger-cache
 INTERIM/drain-completion/complete-reserved8/~3h looks.15CPU tests PASS.
 Do not restart old late waiter or any GPU coordinator; new PROCESS follows.
 
+### LIVE18:21 verified hold/publication ownership
+
+- Collector25240/create134379970282244431 LIVE/unchanged;28/216jobs collected.
+- Prior publisher44988 EXITED with exact expected source-guard STOP. New sole
+  publisher23664/create134380020249390235 LIVE,`runs/rb2int_interim_hold_v1`;
+  first larger8world/four-replicated-cell INTERIM committedb9aaed90 at18:20.
+- v5−v4 CRPS120/300/600+240/+1350/+4461veh-s; simultaneous95%CIs all above0.
+  HDV60+0.5m CI[-4.5,5.5]. Short total-team signs still partially identified;
+  no planner/cooperation switching qualification. Shared READY note updated.
+- All four admission/late owners remain stateT; gpuA last v5_969439 and gpuR
+  wm2_969554 still LIVE at18:21; v5_969435 has finished naturally. No new claim.
+- Old local late waiter9724 EXITED on expected source-guard change; do not restart.
+  Full receipts:`docs/rb2int/OWNER_1755_STATUS01.json`; hold-status tool is read-only.
+-15interim/ownership CPU tests+21hold/collector/CI/credibility checks PASS;
+  Ruff PASS with existing E402/E702 scripting exceptions. No model/source replay.
+
 ## LIVE17:56 — current authoritative ownership
 
 Read `docs/rb2int/LIVE_CONTINUATION_1756.md` first. gpuA handover COMPLETE17:52:42:

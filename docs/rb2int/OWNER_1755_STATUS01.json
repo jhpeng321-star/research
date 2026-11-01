@@ -1,0 +1,229 @@
+{
+ "time": "2026-11-01T18:21:19.490515+08:00",
+ "local": [
+  {
+   "root": "E:\\agent-work\\c4-rb2-int\\runs\\rb2int_finish_v3",
+   "process": {
+    "pid": 25240,
+    "argv": [
+     "C:\\Users\\jpeng\\miniconda3\\python.exe",
+     "-B",
+     "-u",
+     "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\finish.py",
+     "watch",
+     "--out",
+     "E:\\agent-work\\c4-rb2-int\\runs\\rb2int_finish_v3"
+    ],
+    "create_filetime": 134379970282244431,
+    "inference_dispatch": false
+   },
+   "alive": true,
+   "terminal": {},
+   "log_tail": "COLLECT 20261101T165708+0800 12 /216 complete world jobs\nCOLLECT 20261101T171717+0800 17 /216 complete world jobs\nCOLLECT 20261101T173724+0800 19 /216 complete world jobs\nCOLLECT 20261101T175729+0800 25 /216 complete world jobs\nCOLLECT 20261101T181735+0800 28 /216 complete world jobs\n"
+  },
+  {
+   "root": "E:\\agent-work\\c4-rb2-int\\runs\\rb2int_interim_v3",
+   "process": {
+    "pid": 44988,
+    "argv": [
+     "C:\\Users\\jpeng\\miniconda3\\python.exe",
+     "-B",
+     "-u",
+     "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\interim_watch.py",
+     "watch",
+     "--out",
+     "runs\\rb2int_interim_v3"
+    ],
+    "create_filetime": 134379973214244749,
+    "cache_only": true
+   },
+   "alive": false,
+   "terminal": {
+    "STOP.json": {
+     "error": "ValueError('interim source/target changed; explicit recovery required')",
+     "automatic_retry": false,
+     "inference_repeated": false
+    }
+   },
+   "log_tail": "CACHE 12 /216; matched 4 ready ['available_replicated_cells']\nCACHE 12 /216; matched 4 ready ['available_replicated_cells']\nCACHE 12 /216; matched 4 ready ['available_replicated_cells']\nCACHE 12 /216; matched 4 ready ['available_replicated_cells']\nCACHE 12 /216; matched 4 ready ['available_replicated_cells']\nCACHE 12 /216; matched 4 ready ['available_replicated_cells']\nCACHE 12 /216; matched 4 ready ['available_replicated_cells']\nCACHE 12 /216; matched 4 ready ['available_replicated_cells']\nCACHE 17 /216; matched 6 ready ['available_replicated_cells']\nCACHE 17 /216; matched 6 ready ['available_replicated_cells']\nCACHE 17 /216; matched 6 ready ['available_replicated_cells']\nCACHE 17 /216; matched 6 ready ['available_replicated_cells']\nCACHE 17 /216; matched 6 ready ['available_replicated_cells']\nCACHE 17 /216; matched 6 ready ['available_replicated_cells']\nCACHE 17 /216; matched 6 ready ['available_replicated_cells']\nCACHE 17 /216; matched 6 ready ['available_replicated_cells']\nCACHE 17 /216; matched 6 ready ['available_replicated_cells']\nCACHE 17 /216; matched 6 ready ['available_replicated_cells']\nCACHE 19 /216; matched 6 ready ['available_replicated_cells']\nCACHE 19 /216; matched 6 ready ['available_replicated_cells']\nCACHE 19 /216; matched 6 ready ['available_replicated_cells']\nCACHE 19 /216; matched 6 ready ['available_replicated_cells']\nCACHE 19 /216; matched 6 ready ['available_replicated_cells']\nCACHE 19 /216; matched 6 ready ['available_replicated_cells']\nCACHE 19 /216; matched 6 ready ['available_replicated_cells']\nCACHE 19 /216; matched 6 ready ['available_replicated_cells']\nCACHE 19 /216; matched 6 ready ['available_replicated_cells']\nCACHE 19 /216; matched 6 ready ['available_replicated_cells']\nCACHE 25 /216; matched 8 ready ['available_replicated_cells']\nCACHE 25 /216; matched 8 ready ['available_replicated_cells']\nCACHE 25 /216; matched 8 ready ['available_replicated_cells']\nCACHE 25 /216; matched 8 ready ['available_replicated_cells']\nCACHE 25 /216; matched 8 ready ['available_replicated_cells']\nCACHE 25 /216; matched 8 ready ['available_replicated_cells']\nCACHE 25 /216; matched 8 ready ['available_replicated_cells']\nCACHE 25 /216; matched 8 ready ['available_replicated_cells']\nCACHE 25 /216; matched 8 ready ['available_replicated_cells']\nCACHE 25 /216; matched 8 ready ['available_replicated_cells']\nCACHE 28 /216; matched 10 ready ['available_replicated_cells']\nTraceback (most recent call last):\n  File \"E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\interim_watch.py\", line 261, in <module>\n    folder.mkdir()\n    \n  File \"E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\interim_watch.py\", line 254, in main\n    for scope, selected in available.items():\n    ^^^^^^^^\n  File \"E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\interim_watch.py\", line 179, in run\n    def hold_intro(text, result, stamp, count, drained):\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nValueError: interim source/target changed; explicit recovery required\n"
+  },
+  {
+   "root": "E:\\agent-work\\c4-rb2-int\\runs\\rb2int_interim_hold_v1",
+   "process": {
+    "pid": 23664,
+    "argv": [
+     "C:\\Users\\jpeng\\miniconda3\\python.exe",
+     "-B",
+     "-u",
+     "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\interim_watch.py",
+     "watch-hold",
+     "--out",
+     "runs\\rb2int_interim_hold_v1"
+    ],
+    "create_filetime": 134380020249390235,
+    "cache_only": true
+   },
+   "alive": true,
+   "terminal": {},
+   "log_tail": "PUBLISHED 20261101T182025+0800 available_replicated_cells 8\nCACHE 28 /216; matched 10 ready ['available_replicated_cells']\n"
+  },
+  {
+   "root": "E:\\agent-work\\c4-rb2-int\\runs\\rb2int_late_wait_v1",
+   "process": {
+    "pid": 9724,
+    "argv": [
+     "C:\\Users\\jpeng\\miniconda3\\python.exe",
+     "-B",
+     "-u",
+     "-m",
+     "tools.rb2int.late_watch",
+     "watch",
+     "--out",
+     "E:\\agent-work\\c4-rb2-int\\runs\\rb2int_late_wait_v1"
+    ],
+    "create_filetime": 134380004640417822,
+    "inference_dispatch": false,
+    "standby_only": true
+   },
+   "alive": false,
+   "terminal": {
+    "STOP.json": {
+     "error": "ValueError('late source changed; explicit recovery required')",
+     "automatic_retry": false,
+     "inference_repeated": false,
+     "process_signals": false
+    }
+   },
+   "log_tail": "STANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nSTANDBY prior collector/publisher retain ownership\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\late_watch.py\", line 197, in <module>\n    main()\n    ~~~~^^\n  File \"E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\late_watch.py\", line 189, in main\n    run(out)\n    ~~~^^^^^\n  File \"E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\late_watch.py\", line 89, in run\n    raise ValueError('late source changed; explicit recovery required')\nValueError: late source changed; explicit recovery required\n"
+  }
+ ],
+ "hosts": {
+  "gpuA": {
+   "time": "2026-11-01T18:21:17.926490+08:00",
+   "paused": [
+    {
+     "process": {
+      "pid": 514854,
+      "start_ticks": "890706569",
+      "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914"
+     },
+     "state": "T",
+     "stage": "owner_late_control"
+    },
+    {
+     "process": {
+      "pid": 513448,
+      "start_ticks": "890664618",
+      "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914"
+     },
+     "state": "T",
+     "stage": "owner1735_control"
+    }
+   ],
+   "active_evaluations": [
+    {
+     "job": "v5_969439",
+     "process": {
+      "pid": 517852,
+      "start_ticks": "890821011",
+      "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914"
+     },
+     "state": "R"
+    }
+   ],
+   "claimed_jobs": [
+    "v4_969590",
+    "v4_969592",
+    "v4_969595",
+    "v4_969599",
+    "v5-lp_969436",
+    "v5-lp_969590",
+    "v5-lp_969595",
+    "v5-lp_969599",
+    "v5_969434",
+    "v5_969435",
+    "v5_969436",
+    "v5_969439",
+    "v5_969590",
+    "v5_969592",
+    "v5_969595",
+    "v5_969599"
+   ],
+   "new_gpu_admissions": 0,
+   "gpu": "45200, 96",
+   "inference_dispatched": false,
+   "signals_sent": false
+  },
+  "gpuR": {
+   "time": "2026-11-01T18:21:18.875421+08:00",
+   "paused": [
+    {
+     "process": {
+      "pid": 949247,
+      "start_ticks": "4215344299",
+      "boot_id": "d19e6898-efd0-4288-a901-d63b21f11163"
+     },
+     "state": "T",
+     "stage": "owner_late_control"
+    },
+    {
+     "process": {
+      "pid": 948148,
+      "start_ticks": "4215302457",
+      "boot_id": "d19e6898-efd0-4288-a901-d63b21f11163"
+     },
+     "state": "T",
+     "stage": "owner1735_control"
+    }
+   ],
+   "active_evaluations": [
+    {
+     "job": "wm2_969554",
+     "process": {
+      "pid": 952289,
+      "start_ticks": "4215458888",
+      "boot_id": "d19e6898-efd0-4288-a901-d63b21f11163"
+     },
+     "state": "R"
+    }
+   ],
+   "claimed_jobs": [
+    "v5-lp_969433",
+    "v5-lp_969437",
+    "v5-lp_969438",
+    "v5_969432",
+    "v5_969433",
+    "v5_969437",
+    "v5_969438",
+    "wm2_969550",
+    "wm2_969554",
+    "wm2_969590",
+    "wm2_969592",
+    "wm2_969595",
+    "wm2_969597",
+    "wm2_969598",
+    "wm2_969599"
+   ],
+   "new_gpu_admissions": 0,
+   "gpu": "20196, 59",
+   "inference_dispatched": false,
+   "signals_sent": false
+  }
+ },
+ "complete_collected_world_jobs": 28,
+ "matched_v5_v4_worlds": [
+  969432,
+  969433,
+  969434,
+  969436,
+  969437,
+  969438,
+  969590,
+  969592,
+  969595,
+  969599
+ ],
+ "hold_children_all_collected": false,
+ "inference_dispatched": false,
+ "signals_sent": false
+}
