@@ -1,5 +1,10 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+GPURsecond56877 READY8EXACT0/admitted1793566045.8605 viaexistingmonitor; doNOT
+relaunch. GPUAsecond617099stillqualifying. LatestA46/u44CIincludes0; B/Rfirstupdate
+stillcollecting,5executedstarts/noexactgrades at1793565861. OriginalGPUdeadline
+Nov2 18:07:02UTC+8 remainsunchanged; registeredresourcecontinuation neededbeforeit.
+
 Finalcompletion hooks now INTEGRATED: precompute3316828; discovery3338335/
 start58037338(sourcefinaldiscovery1, amendmentbcbbbacb, CPU6PASS0skips/0SUMO).
 DiscoverywaitsALLfixedendpoints+finaloutcomeopening/analysis; unchangeddetectors,
