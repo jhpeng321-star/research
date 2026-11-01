@@ -8,6 +8,7 @@ from tools.c1switch.design import checked, sha
 from tools.c1switch.storage import canonical, write
 
 from . import gpuops, modelops, operations, relocation
+from .audit import registration_audit
 from .design import REGISTRATION
 from .gate import approval, cpu_authority
 from .operations import EVIDENCE, ssh
@@ -83,6 +84,8 @@ def start():
                         enabled_arms=['bb'], dispatch_phase='model'), text)
     if not approval(text) or not cpu_authority(text):
         raise ValueError('current owner/MAIN authority required before GPU allocation')
+    if registration_audit(REGISTRATION)['hits']:
+        raise ValueError('current registry conflicts; refuse before any GPU allocation')
     if time.time() < datetime.fromisoformat(config['relocation']['not_before']).timestamp():
         raise ValueError('priority WM-PHYS window; not before11:30')
     claim_path = EVIDENCE/'BB_RELOCATION_DISPATCH_ONCE.json'

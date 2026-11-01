@@ -96,3 +96,18 @@ def test_priority_time_gate_precedes_every_gpu_allocation(tmp_path, monkeypatch)
     monkeypatch.setattr(bbrelocate, 'resources', lambda config: pytest.fail('no allocation during priority window'))
     with pytest.raises(ValueError, match='not before11:30'):
         bbrelocate.start()
+
+
+def test_registry_conflict_is_rejected_before_gpu_resources_or_claim(tmp_path, monkeypatch):
+    move = relocation.plan()
+    bound, registration = tmp_path/'bound.json', tmp_path/'registration.md'
+    bound.write_text(json.dumps(dict(relocation=move)))
+    registration.write_text('07:07 MAIN DECISION\n- S-C1SWITCH2 BB RELOCATION REGISTERED '
+                            + canonical(move) + '\n- other task reserves seed969136')
+    monkeypatch.setattr(bbrelocate, 'BOUND_PATH', bound)
+    monkeypatch.setattr(bbrelocate, 'REGISTRATION', registration)
+    monkeypatch.setattr(bbrelocate, 'approval', lambda text: True)
+    monkeypatch.setattr(bbrelocate, 'cpu_authority', lambda text: True)
+    monkeypatch.setattr(bbrelocate, 'resources', lambda config: pytest.fail('allocated before audit'))
+    with pytest.raises(ValueError, match='registry conflicts'):
+        bbrelocate.start()

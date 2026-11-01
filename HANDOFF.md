@@ -59,6 +59,12 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**11:44 diagnosed BB admission defect, CPU fix only:** `registry_hits` counted
+the exact own06:00 durableSTOP job reference as a conflicting allocation.
+Narrow correction removes ONLY that known job token in that exact incident;
+other seed reservations on the same line remain conflicts. BB startup now
+checks current registry BEFORE allocating GPUs. CPU77/77 PASS, no restart or
+new scientific dispatch; terminal BB claim/spent43.02397724799812GPU-s retained.
 **11:40 fresh-session reconciliation:** cpuQ uptime6.003days, NOT rebooted.
 Original WM supervisors649272/763520 both EXITED with durable STOP; cpuQ now
 reconciled5460charged=closedactual (4episodes/123decisions), gpuR2700 (2/60).

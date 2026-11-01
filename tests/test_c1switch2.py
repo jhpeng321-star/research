@@ -100,6 +100,14 @@ def test_exact_budget_includes_full_prefixes_and_optional_model():
     assert sum(len(design.measurement_indices(w['seed'])) for w in design.worlds()) == 16
 
 
+def test_own_durable_stop_reference_is_not_a_new_allocation():
+    line = ('- S-C1SWITCH2 06:00 INFRASTRUCTURE STOP / GPU RELEASE: '
+            'gpuR own763520 EXITED durableSTOP on wm__s969147; BB0physics/GPU')
+    assert audit.registry_hits(line) == []
+    assert audit.registry_hits(line + '; another task reserves seed969136')[0]['seeds'] == [969136]
+    assert audit.registry_hits(line.replace('own763520', 'own999999'))[0]['seeds'] == [969147]
+
+
 def test_both_seed_guards_all_seventeen_worlds():
     for world in design.worlds()+[design.canary_world()]:
         design.guard(world)

@@ -17,6 +17,13 @@ def registry_hits(text):
         # Our own prospective reservation is not a prior exposure.
         if 'S-C1SWITCH2 DESIGN REGISTERED' in line:
             continue
+        # This exact durable STOP report refers to our already allocated failed
+        # world, not a new reservation. Remove only its known job identity;
+        # every other seed/range on the line must still be audited.
+        if ('S-C1SWITCH2 06:00 INFRASTRUCTURE STOP / GPU RELEASE' in line and
+                'gpuR own763520 EXITED durableSTOP on wm__s969147' in line and
+                'BB0physics/GPU' in line):
+            line = line.replace('wm__s969147', 'registered-failed-job')
         # The per-CAV owner explicitly leaves its evaluation unused and consumes
         # OUR registered panel. Remove only that exact cross-reference, never
         # another allocation on the same line or a generic mention of this task.
