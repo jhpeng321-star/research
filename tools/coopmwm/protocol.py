@@ -6,14 +6,22 @@ from tools.coopnative.protocol import (worlds as prior_worlds,
 from tools.coopbandit.protocol import CELLS
 
 CAP=6_000_000
-CAPS=dict(train=4_147_200,checks=532_800,dev=230_400,mechanics=2400,
-          calibration=240_000,discovery=240_000,final_test=172_800,replication_test=172_800)
+CAPS=dict(train=3_456_000,checks=446_400,dev=230_400,mechanics=3600,
+          calibration=240_000,discovery=240_000,final_test=172_800,
+          replication_test=86_400,random_guide_test=43_200)
 UPDATES=24
-TRAINING_SEEDS=(20261101,20261102,20261103)
+TRAINING_SEEDS=(20261101,20261102)
 TRAIN_STARTS=(986000,987000,988000)
 FINAL_START=989600
 CHECK_EVERY=4
 HORIZONS=(60,120,300,600)
+
+
+def training_plan():
+    # Primary A/B and their fixed test first; R cannot consume their capacity.
+    return ((0,TRAINING_SEEDS[0],('A','B')),
+            (0,TRAINING_SEEDS[0],('R',)),
+            (1,TRAINING_SEEDS[1],('A','B')))
 
 
 def worlds(role='train',training_seed=0):
@@ -31,7 +39,7 @@ def batch_worlds(update,training_seed=0):
 
 
 def guard(world,role):
-    allowed=([w for i in range(3) for w in worlds('train',i)] if role=='train' else worlds(role))
+    allowed=([w for i in range(len(TRAINING_SEEDS)) for w in worlds('train',i)] if role=='train' else worlds(role))
     if world not in allowed:raise ValueError('exact registered world and role required')
     from traffic_shepherd.seeds import require_development_case
     from traffic_shepherd.c4.seeds import check_case
@@ -42,7 +50,7 @@ def guard(world,role):
 def install_seed_scope():
     from traffic_shepherd import seeds as s
     from traffic_shepherd.c4 import seeds as c
-    ws=[w for i in range(3) for w in worlds('train',i)]+[w for r in ('check','dev','final_test') for w in worlds(r)]
+    ws=[w for i in range(len(TRAINING_SEEDS)) for w in worlds('train',i)]+[w for r in ('check','dev','final_test') for w in worlds(r)]
     allowed={(w['seed'],w['demand']) for w in ws}
     old_s,old_c=s.require_development_case,c.check_case
     def base(seed,loading,role):
@@ -67,9 +75,10 @@ def authority(text):
     e=next((x for x in lines if '17:07 MAIN:' in x and 'S-COOPMWM' in x and '172,800' in x),None)
     f=next((x for x in lines if '17:12 MAIN:' in x and 'S-COOPMWM' in x and 'SUMO-GRADED' in x),None)
     g=next((x for x in lines if '17:27 MAIN:' in x and 'S-COOPMWM' in x and 'empirical-Bayes' in x),None)
-    if not a or not b or not c or not d or not e or not f or not g:
+    h=next((x for x in lines if '17:42 MAIN:' in x and 'S-COOPMWM' in x and 'random-guide' in x),None)
+    if not a or not b or not c or not d or not e or not f or not g or not h:
         raise ValueError('owner MAPPO re-scope and speed amendment required')
-    return [a,b,c,d,e,f,g]
+    return [a,b,c,d,e,f,g,h]
 
 
 def registry_conflicts(text,seeds=None):
@@ -88,6 +97,7 @@ def budget():
     return dict(total=CAP,phases=CAPS,unallocated=CAP-sum(CAPS.values()),
                 training_seeds=list(TRAINING_SEEDS),updates_per_arm_per_seed=UPDATES,
                 episodes_per_update=24,sim_s_per_episode=1200,
-                train_controlled_sim_s=3_110_400,new_dev_mappo_sim_s=0,
+                training_plan=[dict(index=i,seed=s,arms=list(a)) for i,s,a in training_plan()],
+                train_controlled_sim_s=2_592_000,new_dev_mappo_sim_s=0,
                 final_test_precharged_sim_s=172800,final_checkpoint_rule='seed0 update24; no selection',
                 final_panel_sha256=digest(worlds('final_test')))

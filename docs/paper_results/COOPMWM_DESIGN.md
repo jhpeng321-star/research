@@ -1,6 +1,6 @@
-# S-COOPMWM — WM-guided exploration, SUMO-graded (2026-11-01 17:27)
-1. Authority: MAIN16:22/25/38/46/17:07/12/27; native-start and WM-reward arms superseded.
-2. Both arms fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
+# S-COOPMWM — WM-guided exploration, SUMO-graded (2026-11-01 17:42)
+1. Authority: MAIN16:22/25/38/46/17:07/12/27/42; native-start and WM-reward arms superseded.
+2. A/B/R fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
 4. A: PPO shared team reward=-J, road speed deficit plus source waiting.
 5. B: same SUMO-only reward/advantage, WM-guided exploration; no WM or behavioural bonus.
@@ -14,7 +14,7 @@
 13. Critic GAE e-folding400s; complete900s task after300s warmup, terminal0.
 14. WM fixed FULL-v4 source22cc32f6; later qualified v5 requires a new registered arm.
 15. Reuse WMTEACH scale.futures K8 batching and option_controller executor/safety.
-16. Proposals reuse inherited O1-O4 availability, magnitudes and executors, mapped to W10 setpoints.
+16. R=B except uniform AVAILABLE O1-O4 proposer, no WM/saving filter; same executors/W10 setpoints.
 17. Observable replay roster only; fitted joint FIT driver population and uniform32FIT source prior.
 18. Cold motion/controller memory and unobserved source prior disclosed; no realised future inputs.
 19. Inherited option group=two upstream mainline CAVs within100m; ordinary windows also sampled.
@@ -35,18 +35,18 @@
 34. Zero/tie credits reported separately; scale fitted from exact data, diagnostic only.
 35. TRAIN986000..986071/987000..987071/988000..988071, six worlds/cell per seed.
 36. Check986072..986083, one/cell, independent TRAIN; never optimizer/selection input.
-37. Every4updates checks A+B vs cached once MAPPO controls, J600/J900/safety.
+37. Every4updates checks A/B/R vs once-only MAPPO controls, J600/J900/safety; forced counts/type and SNR.
 38. Dev984000..984023 at update4 and final; update0 uses existing24bitwise MAPPO bytes.
-39. Dev u4 seed0 plus u24 each seed; paired world bootstrap10000/RNG20261101; no tuning.
+39. Dev u4 primary A/B/R plus u24 all five arm-seeds; paired world bootstrap10000/RNG20261101; no tuning.
 40. Final detector-first discovery uses unchanged COOPBEHAV detectors and complete exact twins.
 41. Learning checks report team return/value/KL/gradient, beta, proposal routes/acceptance/O1-O4 counts.
-42. Seeds20261101/2/3: fixed24updates/arm/seed,24episodes/update, paired exploration seeds.
-43. Cap6,000,000 TOTAL: train4,147,200; checks532,800; dev230,400; final_test172,800.
-44. Mechanics2,400; calibration240,000; discovery240,000; replication-test172,800; unallocated261,600.
+42. A/B seeds20261101/2, R primary20261101 only; seed3 DROPPED; fixed24updates x24episodes/arm-seed.
+43. Cap6,000,000 TOTAL: train3,456,000; checks446,400; dev230,400; primaryfinal172,800; Rtest43,200.
+44. Mechanics3,600; calibration240,000; discovery240,000; seed2test86,400; unallocated1,081,200.
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.
 46. All failures/warmup/twins charged in full before attempts; no retries/refunds/duplicate dispatch.
 47. Primary A/B parallel first; cpuQ nice19 singlethread workers; load<=20/RAM8GiB/disk2GiB.
-48. WM GPUA or GPUR strict8GiB; nvidia-smi, WMPLAN queued-request priority and spare memory required.
+48. WM GPUA/R strict8GiB, WMPLANpriority/nvidia-smi; RzeroGPU, Bmax360proposals+12E2+2canary forecasts.
 49. GPU CPU helpers disabled until separate frozen parity qualification; own PIDs only.
 50. Both seed guards, fresh-name exposure, immutable sources/cache/approval bindings before physics.
 51. No prohibited paths/truth/assignments, no newenv/deletion/push; commit every completed step.
@@ -59,8 +59,8 @@
 58. No credit outcomes inspected before random subset manifest; failed/incomplete quartet=>STOP.
 59. FINAL_TEST989600..989635:36fresh worlds,3/cell; metadata manifest hash registered before SUMO.
 60. Precharge4x36x1200=172800; MAPPO169/native/Aseed0u24/Bseed0u24, no model selection.
-61. Run once after BOTH primary u24 checkpoints; publish, then train seeds2/3 and test A/B once each.
-62. Final paired world-bootstrap95CI B-MAPPO/B-A/A-MAPPO J600/J900, per-cell/safety descriptive.
+61. Primary four-arm test ONCE after BOTH primaryu24; publish, then R train/test, then seed2A/B train/test.
+62. Final paired world-bootstrap95CI B-MAPPO/B-A/B-R/A-MAPPO J600/J900; percell/safety; controls reused.
 63. Final B detector-first exact C_G twins share240000 discovery reserve; complete chronological groups.
 64. Trust: H300 SUMO return+critic tail-baseline; Hajek executed(type,regime) minus own(regime) residuals.
 65. 10000 world bootstrap95CI[L,U]; e=max(|mean-L|,|U-mean|); beta=min(old,max(0,U)/(|mean|+e)).

@@ -64,8 +64,10 @@ def execute(sample, proposal, previous, generator):
         b['rejection'] = proposal.get('reason', 'nonpositive saving or unavailable')
         return sample
     beta = bucket_beta(previous, proposal['option'], b['regime'])
-    b.update(beta=beta, option=proposal['option'], q=b['sample_probability']*beta,
-             proposal_accepted=True)
+    probability=proposal.get('option_probability',1.)
+    b.update(beta=beta, option=proposal['option'], q=b['sample_probability']*beta*probability,
+              option_probability=probability,available_options=proposal.get('available_options'),
+              proposal_accepted=True)
     if float(torch.rand((), generator=generator)) < beta:
         return apply_proposal(sample, proposal)
     return sample

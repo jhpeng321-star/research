@@ -12,6 +12,18 @@
   Receipt `QUIESCE_1742.json`; existing GPU bridge retained, no duplicate dispatch.
 - R implementation/CPU qualification underway; no training update or R physics yet.
 
+### 17:53 — arm R CPU qualification PASS
+- CPU15/16 both **43 PASS / zero skips / zero SUMO**; final CPU16 took1.66s.
+- Covers actual frozen MAPPO parity; uniform available inherited options without WM;
+  mixture mass/imitation/SUMO-only reward; per-type/regime trust; safe completed-job reuse;
+  fixed R final-test one-use gate, reused primary controls and paired B-R bootstrap.
+- Final70-line design SHA `02879dd48ed26b466575891df920c1cbfad9da848a841c26af56c26777466cea`.
+- Noise diagnostics report C_G, each D_i, sum D_i and D_G variance from the original K8
+  draws. No superseded reward-combination weight is used; no inference is repeated.
+- GPUA snapshot17:50:1,359MiB/49,140MiB,32%util; original service waiting on admission,
+  WMPLAN priority retained. E2/first-update results and a measured ETA are still pending.
+- Exact registered allocation remains4,918,800/6M; `READINESS_1742.json` binds CPU/design.
+
 ## 2026-11-01 17:41 — full-episode zero-update smoke PASS
 - Owned cpuQ smoke PID1872644 finished; both registered1200s episodes closed.
 - A and B metrics exactly equal reused bitwise MAPPO baseline at J600/J900;

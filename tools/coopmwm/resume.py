@@ -106,7 +106,7 @@ write(r/'TRAIN_DISPATCH_1742.json',d);print(json.dumps(d))
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('mode',choices=('quiesce','bind','launch'))
-    p.add_argument('--cpu',default='CPU_coopmwm20261101_cpu15.json');a=p.parse_args()
+    p.add_argument('--cpu',default='CPU_coopmwm20261101_cpu16.json');a=p.parse_args()
     if a.mode=='quiesce':quiesce()
     elif a.mode=='bind':bind(a.cpu)
     else:launch()

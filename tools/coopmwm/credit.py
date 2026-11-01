@@ -110,5 +110,9 @@ def noise(futures):
     cs=[algebra(f['joint']['team_delay'],[f[k]['team_delay'] for k in sorted(f) if k.startswith('revert:')],
                 f['all']['team_delay']) for f in futures]
     return dict(team_return_advantage_variance=float(np.var([-f['joint']['team_delay'] for f in futures],ddof=1)),
-                paired_credit_variance=float(np.var([sum(c['D_i'])+.5*c['C_G'] for c in cs],ddof=1)),
+                paired_credit_variance=float(np.var([c['C_G'] for c in cs],ddof=1)),
+                D_i_variance=np.var([c['D_i'] for c in cs],axis=0,ddof=1).tolist(),
+                sum_D_i_variance=float(np.var([sum(c['D_i']) for c in cs],ddof=1)),
+                D_G_variance=float(np.var([c['D_G'] for c in cs],ddof=1)),
+                paired_credit='C_G (no hand-weighted reward combination)',
                 unit='veh-s squared',K=len(futures),estimator='conditional WM K8; fixed critic baseline')

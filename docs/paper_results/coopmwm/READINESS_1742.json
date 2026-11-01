@@ -1,0 +1,21 @@
+{
+  "status": "CPU_QUALIFIED_REGISTERED_BEFORE_AMENDED_PHYSICS",
+  "cpu": "CPU_coopmwm20261101_cpu16.json",
+  "cpu_sha256": "cab1bb4a6b1485ec7b8fac210ab18e8a8eebba3371c1b8a3d6e24f0be36bd638",
+  "tests": 43,
+  "skips": 0,
+  "cpu_sim_s": 0,
+  "design_lines": 70,
+  "design_sha256": "02879dd48ed26b466575891df920c1cbfad9da848a841c26af56c26777466cea",
+  "amendment_sha256": "afad16731bbeb932e47437950a119b352bd56fa61fca28fa76f77ab3ecf117c6",
+  "allocated_sim_s": 4918800,
+  "unallocated_sim_s": 1081200,
+  "charged_sim_s_at_safe_adoption": 74400,
+  "closed_jobs_reused": 62,
+  "physics_retries": 0,
+  "GPU": "Original frozen v2 FULL-v4 service/bridge retained with WMPLAN priority. New CPU diagnostics recompute C_G, D_i, sum_D_i and D_G variances directly from original K8 draw bytes, without the superseded hand-weighted reward combination. No repeat inference.",
+  "adoption": "Original source/checkpoints/jobs/charge ledger/queue immutable. v3 CPU16 source overlay + BINDING_1742/AUTHORITY_1742; verify old and new source/assets, same episode IDs, reuse all completed results, no old supervisor alive before one-use amended launch.",
+  "R": "Uniform available inherited options, zero WM; augmented query mixture has zero policy target mass. Log available options and uniform probability; executed bucket probability includes 1/n_available for SUMO trust IPW. Same sampling/trust/imitation/reward as B.",
+  "final_test": "Primary MAPPO/native/A/B once after primary A/Bu24; R primary train/test next; seed2 A/B train/test last. Fixed u24, no selection. Final36 panel unchanged. R one-use test reads existing primary B result bytes for paired B-R.",
+  "outcomes": "No UPDATE or E2 exact outcomes at amendment registration/adoption; no sealed final-test outcomes accessed."
+}

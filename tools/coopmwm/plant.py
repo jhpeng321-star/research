@@ -32,10 +32,11 @@ def episode(job):
     exact.guard=lambda w:guard(w,job['role'])
     p=Policy();p.load_state_dict(job['weights']);p.eval()
     g=torch.Generator().manual_seed(job['noise_seed'])
-    from .client import guide
+    from .client import guide,random_guide
     controller=Controller(p,g,deterministic=job['deterministic'],
         samples=job.get('samples'),branch=job.get('branch'),beta=job.get('beta',0.),
-        guide=guide(job['queue_root'],job['world']) if job.get('guided') else None)
+        guide=(random_guide(g) if job.get('proposer')=='random' else
+               guide(job['queue_root'],job['world'])) if job.get('guided') else None)
     b=exact.Backend(path,job['world'],job['sim_s'],job['checkpoint'])
     steps=[];metrics={};prefixes={};horizon_totals={};requests=overrides=0
     branch=job.get('branch'); stop=job.get('stop',1200)

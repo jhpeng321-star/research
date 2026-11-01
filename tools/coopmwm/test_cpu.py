@@ -119,19 +119,25 @@ class Contracts(unittest.TestCase):
         self.assertEqual(registry_conflicts('another task986000..986083'),[1])
         with self.assertRaises(ValueError):guard(worlds('check')[0],'train')
 
-    def test_three_seed_budget_final_panel_and_scope(self):
-        from .protocol import UPDATES,TRAINING_SEEDS,batch_worlds
+    def test_random_guide_budget_final_panel_and_scope(self):
+        from .protocol import UPDATES,TRAINING_SEEDS,batch_worlds,training_plan
         b=budget();self.assertEqual(UPDATES,24)
-        self.assertEqual(b['phases']['train'],len(TRAINING_SEEDS)*2*UPDATES*24*1200)
+        self.assertEqual(b['phases']['train'],5*UPDATES*24*1200)
+        self.assertEqual(TRAINING_SEEDS,(20261101,20261102))
+        self.assertEqual(training_plan(),((0,20261101,('A','B')),(0,20261101,('R',)),(1,20261102,('A','B'))))
         self.assertEqual(b['phases']['final_test'],4*36*1200)
-        self.assertEqual(b['unallocated'],261600)
-        self.assertEqual(b['phases']['replication_test'],172800)
+        self.assertEqual(b['unallocated'],1081200)
+        self.assertEqual(b['phases']['replication_test'],86400)
+        self.assertEqual(b['phases']['random_guide_test'],43200)
+        self.assertEqual(b['phases']['checks'],5*6*12*1200+12*1200)
+        self.assertEqual(b['phases']['dev'],(3+5)*24*1200)
         install_seed_scope();seen=set()
-        for i in range(3):
+        for i in range(2):
             panel=worlds('train',i)
             self.assertFalse(seen&{w['seed'] for w in panel});seen|={w['seed'] for w in panel}
             for w in panel:guard(w,'train')
             self.assertEqual(len(batch_worlds(1,i)),24)
+        with self.assertRaises(ValueError):guard(worlds('train',2)[0],'train')
         final=worlds('final_test')
         self.assertEqual(len(final),36);self.assertFalse(seen&{w['seed'] for w in final})
         for w in final:
@@ -191,6 +197,11 @@ class Contracts(unittest.TestCase):
         n=noise(fs)
         self.assertGreater(n['team_return_advantage_variance'],0)
         self.assertEqual(n['paired_credit_variance'],0.)
+        for i,f in enumerate(fs):f['all']['team_delay']+=i
+        n=noise(fs)
+        self.assertEqual(n['paired_credit_variance'],6.)
+        self.assertEqual(n['D_G_variance'],6.)
+        self.assertEqual(n['D_i_variance'],[0.,0.])
 
     def test_random_window_selection_uses_only_eligibility_not_credit(self):
         from .runner import select_calibration
@@ -386,6 +397,71 @@ class Contracts(unittest.TestCase):
         self.assertEqual(regime(list(reversed(r))),regime(r))
         # No seed/demand/share/truth is passed to the observable regime rule.
         self.assertNotIn('demand',__import__('inspect').getsource(regime))
+
+    def test_random_proposer_uniform_available_mask_and_zero_WM(self):
+        from .client import random_guide
+        from .exploration import execute,mixture_ratio
+        r=rows();r[0].update(vid='a',s_m=-20.,lane=0,is_cav=True)
+        r[1].update(vid='b',s_m=-40.,lane=1,is_cav=True)
+        commands={v['vid']:.2 for v in r if v['is_cav']}
+        p=Policy();g=torch.Generator().manual_seed(13)
+        s=p.sample(encode(r,commands),g)
+        s['behaviour']=dict(route='wm',beta=0.,regime='ordinary',sample_probability=.01,mixture_mass=.01,executed=False)
+        from .wm import proposal_candidates
+        record=dict(rows=r,targets=__import__('tools.coopmwm.policy',fromlist=['targets']).targets(s),group=['a','b'],setting=2)
+        available=proposal_candidates(record)[2:]
+        self.assertGreater(len(available),1)
+        seen=set()
+        for i,option in enumerate(available):
+            with patch('tools.coopmwm.client.request',side_effect=AssertionError('R cannot query WM')),patch('torch.randint',return_value=torch.tensor(i)) as draw:
+                proposal=random_guide(g)(r,commands,300,s)
+            self.assertEqual(draw.call_args.args[0],len(available))
+            self.assertEqual(proposal['option'],option['id']);seen.add(proposal['option'])
+            self.assertEqual(proposal['targets'],option['proposal_targets'])
+            self.assertEqual(proposal['option_probability'],1/len(available))
+            self.assertIsNone(proposal['expected_saving'])
+            actual=execute(copy.deepcopy(s),proposal,1.,g)
+            self.assertTrue(actual['behaviour']['executed'])
+            self.assertEqual(actual['behaviour']['q'],.01/len(available))
+            self.assertEqual(float(mixture_ratio(torch.tensor(s['logp']),actual)),0.)
+        self.assertEqual(seen,{a['id'] for a in available})
+        with patch('tools.coopmwm.wm.proposal_candidates',return_value=available[:0]):
+            self.assertFalse(random_guide(g)(r,commands,300,s)['accepted'])
+
+    def test_random_final_test_once_controls_reused_and_B_minus_R(self):
+        import tempfile
+        from .runner import random_final_test
+        from .storage import write,read
+        calls=[]
+        metrics=lambda value:{h:dict(team_delay_vs=value,collisions=0.,teleports=0.,ttc_below_3_vs=0.,hard_brake=0.) for h in ('600','900')}
+        def fake(root,b,p,ws,arm,role,ident,phase,*args):
+            calls.append((arm,phase))
+            return [dict(world=w,arm=arm,metrics=metrics(12.)) for w in ws]
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp)
+            with self.assertRaisesRegex(ValueError,'requires primary test'):random_final_test(root,{},Policy())
+            write(root/'FINAL_TEST_COMPLETE.json',{});write(root/'R0_TRAINING_COMPLETE.json',{})
+            with self.assertRaisesRegex(ValueError,'checkpoint absent'):random_final_test(root,{},Policy())
+            (root/'S0_R_checkpoint_024.pt').write_bytes(b'fixture')
+            for w in worlds('final_test'):
+                for a in ('A','B','mappo','native'):
+                    write(root/'jobs'/f's0_final_{a}_{w["seed"]}'/'RESULT.json',dict(world=w,arm=a,metrics=metrics(10.)))
+            with patch('tools.coopmwm.runner.wave',fake):
+                random_final_test(root,{},Policy());random_final_test(root,{},Policy())
+            self.assertEqual(calls,[('R','random_guide_test')])
+            result=read(root/'R_FINAL_TEST_COMPLETE.json')
+            self.assertEqual(result['comparisons']['B_minus_R']['metrics']['900_team_delay_vs']['ci95'],[-2.,-2.])
+
+    def test_completed_wave_adoption_never_reserves_or_runs_SUMO(self):
+        import tempfile
+        from .runner import wave
+        from .storage import write
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);w=worlds()[0]
+            record=dict(world=w,arm='A',id=f's0_u001_A_{w["seed"]}')
+            write(root/'jobs'/record['id']/'RESULT.json',record)
+            with patch('tools.coopmwm.runner.reserve',side_effect=AssertionError('duplicate physics')):
+                self.assertEqual(wave(root,{},Policy(),[w],'A','train','s0_u001','train'),[record])
 
 
 if __name__=='__main__':unittest.main()
