@@ -1,0 +1,92 @@
+"""Execute the guard's real transport payload without SSH or SUMO."""
+import contextlib
+import io
+import json
+from pathlib import Path
+import sys
+import tempfile
+import types
+import unittest
+from unittest.mock import patch
+from . import warm_watch as w
+from . import warm_health  # Bind its real pathlib.Path before the transport stub.
+
+
+class WarmStateTests(unittest.TestCase):
+    def collect(self, files, *, boot='fixture-boot', start='123'):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);proc=root/'proc';proc.mkdir()
+            for name,value in files.items():
+                (root/name).write_text(json.dumps(value))
+            (root/'CHARGES.jsonl').write_text('{"sim_s":1200}\n')
+            (proc/'sys/kernel/random').mkdir(parents=True)
+            (proc/'sys/kernel/random/boot_id').write_text(boot)
+            (proc/'77').mkdir()
+            stat=['77','(python)','S']+['0']*18+[start]
+            (proc/'77/stat').write_text(' '.join(stat))
+            paths=types.ModuleType('pathlib')
+            def path(*args):
+                if args==(w.ROOT,):return root
+                p=Path(*args)
+                if p==Path('/proc') or Path('/proc') in p.parents:
+                    return proc/p.relative_to('/proc')
+                return p
+            paths.Path=path
+            def remote(host,source,timeout):
+                self.assertEqual(host,'cpuQ');compile(source,'<actual warm state payload>','exec')
+                out=io.StringIO();saved=sys.path[:]
+                try:
+                    with patch.dict(sys.modules,{'pathlib':paths}),patch('shutil.disk_usage',return_value=types.SimpleNamespace(free=123456)),contextlib.redirect_stdout(out):
+                        exec(source,{})
+                finally:sys.path[:]=saved
+                return out.getvalue()
+            with patch.object(w.ops.ssh,'remote',side_effect=remote):return w.state()
+
+    def owner(self, pid=77):
+        return dict(pid=pid,start_ticks='123',boot_id='fixture-boot')
+
+    def test_current_owner_precedence_and_numeric_updates(self):
+        v=self.collect({'WARM_B_DISPATCH_V4.json':self.owner(22),
+            'QUOTA_B_DISPATCH.json':self.owner(),
+            'WARM_A_DISPATCH_V3.json':self.owner(),
+            'B_UPDATE_001.json':{},'B_UPDATE_001_TIMING.json':{},
+            'B_UPDATE_other.json':{},'A_UPDATE_048.json':{}})
+        self.assertEqual(v['updates'],dict(A=[48],B=[1],R=[]))
+        self.assertEqual(v['owners']['B']['owner']['pid'],77)
+        self.assertEqual(v['owners']['A']['dispatch_receipt'],'WARM_A_DISPATCH_V3.json')
+        self.assertIsNone(v['stop'])
+        self.assertEqual(v['charged_sim_s'],812840)
+
+    def test_only_sha_registered_transport_release_clears_stop(self):
+        old=dict(error='Connection closed by 1.15.42.207 port 22\n',
+            source='owned warm bridge; no automatic retry')
+        # sha is file bytes, not the canonical JSON digest.
+        import hashlib
+        h=hashlib.sha256(json.dumps(old).encode()).hexdigest()
+        files={'STOP.json':old,'WARM_TRANSPORT_RELEASE.json':dict(
+            original_stop_sha256=h,amendment_sha256='registered-observation-fixture')}
+        # AUTHORITY is read as text; a JSON string is sufficient for this fixture.
+        files['AUTHORITY.md']='registered-observation-fixture'
+        v=self.collect(files)
+        self.assertIsNone(v['stop']);self.assertEqual(v['historical_transport_stop'],old)
+        files['WARM_TRANSPORT_RELEASE.json']['original_stop_sha256']='wrong'
+        self.assertIsNotNone(self.collect(files)['stop'])
+
+    def test_new_stop_and_health_pause_visible(self):
+        v=self.collect({'WARM_GUIDED_STOP_V2.json':dict(error='new fault')})
+        self.assertIn('new durable guided',v['stop']['error'])
+        v=self.collect({'PAUSE_STARVATION.json':dict(rule='STARVATION')})
+        self.assertIsNotNone(v['stop']);self.assertTrue(v['paused']['B']);self.assertTrue(v['paused']['R'])
+        self.assertEqual(v['pause_receipts'],['PAUSE_STARVATION.json'])
+
+    def test_current_supervisor_failure_visible(self):
+        v=self.collect({'WARM_R_FAILED_Q1.json':dict(error='executor fault')})
+        self.assertEqual(v['stop']['error'],'current training supervisor failure')
+
+    def test_identity_mismatch_never_reports_healthy_owner(self):
+        for options in (dict(boot='changed-boot'),dict(start='456')):
+            with self.subTest(options=options),self.assertRaises(AssertionError):
+                self.collect({'QUOTA_B_DISPATCH.json':self.owner()},**options)
+
+
+if __name__=='__main__':unittest.main()

@@ -26,20 +26,50 @@ OWN_PATTERNS=('WARM_RELEASE_STATE_*.json','WARM_WORKER_STATE_*.json',
 
 
 def state():
-    return json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,time,shutil
+    return json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,time,shutil,sys
 r=pathlib.Path({ROOT!r});assert r.is_dir();owners={{}}
+source='/home/ubuntu/coopmwm20261102_exactcpu5'
+for name in ('MAIN0548_RUNTIME_BINDING_V2.json','MAIN0548_RUNTIME_BINDING.json','MAIN0508_REPAIR_BINDING_V2.json'):
+ if (r/name).exists():source=json.loads((r/name).read_text())['source_root'];break
+sys.path.insert(0,source+'/pytools')
+from tools.coopmwm.warm_health import assert_running,HealthPause
 for arm in ('A','B','R'):
- p=r/f'WARM_{{arm}}_DISPATCH.json'
- if not p.exists():continue
+ names=[f'QUOTA_{{arm}}_DISPATCH.json']+[f'WARM_{{arm}}_DISPATCH{{suffix}}.json' for suffix in ('_V6','_V4','_V3','2','')]
+ p=next((r/name for name in names if (r/name).exists()),None)
+ if p is None:continue
  d=json.loads(p.read_text());q=pathlib.Path('/proc')/str(d['pid']);s=(q/'stat').read_text().split() if (q/'stat').exists() else None
- assert not s or s[21]==d['start_ticks']
- owners[arm]=dict(owner=d,state=s[2] if s else 'exited')
+ assert d['boot_id']==pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip(),'owner boot changed'
+ assert not s or s[21]==d['start_ticks'],'owner PID reused'
+ owners[arm]=dict(owner=d,state=s[2] if s else 'exited',dispatch_receipt=p.name)
+stop=None
+try:assert_running(r,'B')
+except (ValueError,HealthPause) as error:stop=dict(error=str(error),source='current registered warm_health guard')
+pauses=sorted(p.name for p in r.glob('PAUSE_*.json'))
+failures={{p.name:json.loads(p.read_text()) for pattern in ('WARM_*_FAILED_Q1.json','WARM_*_FAILED_V5.json') for p in r.glob(pattern)}}
+if failures and stop is None:stop=dict(error='current training supervisor failure',receipts=failures)
 charges=[json.loads(x) for x in (r/'CHARGES.jsonl').read_text().splitlines()]
-print(json.dumps(dict(unix=time.time(),owners=owners,stop=json.loads((r/'STOP.json').read_text()) if (r/'STOP.json').exists() else None,
-  updates={{a:sorted(int(p.stem.rsplit('_',1)[1]) for p in r.glob(a+'_UPDATE_[0-9][0-9][0-9].json')) for a in ('A','B','R')}},
- paused={{a:(r/f'WARM_{{a}}_PAUSED.json').exists() for a in ('A','B','R')}},
- charged_sim_s=811640+sum(c['sim_s'] for c in charges),disk_free=shutil.disk_usage(r).free,
- ram_free=shutil.disk_usage('/dev/shm').free)))''',timeout=30))
+print(json.dumps(dict(unix=time.time(),owners=owners,stop=stop,
+   updates={{a:sorted(int(p.stem.rsplit('_',1)[1]) for p in r.glob(a+'_UPDATE_[0-9][0-9][0-9].json')) for a in ('A','B','R')}},
+  paused={{a:(r/f'WARM_{{a}}_PAUSED.json').exists() or (a in ('B','R') and bool(pauses)) for a in ('A','B','R')}},
+  pause_receipts=pauses,failures=failures,
+  historical_transport_stop=json.loads((r/'STOP.json').read_text()) if (r/'STOP.json').exists() else None,
+  charged_sim_s=811640+sum(c['sim_s'] for c in charges),disk_free=shutil.disk_usage(r).free,
+  ram_free=shutil.disk_usage('/dev/shm').free)))''',timeout=30))
+
+
+def register_state_repair():
+    from .protocol import REGISTRY
+    target=ops.EVIDENCE/'WARM_STATE_CURRENT_OWNERS_REPAIR.json'
+    assert not target.exists(),'adopt existing observation repair receipt'
+    live=state()
+    value=dict(unix=time.time(),state=live,tests=11,new_sumo_sim_s=0,
+        source_sha256=sha(ops.LOCAL/'tools/coopmwm/warm_watch.py'),
+        repair='numeric update indices; current dispatch precedence with boot/start identity; active registered health guard instead of historical released transport STOP; PAUSE and current supervisor failures exposed',
+        training_or_inference_changes=False,original_deadline_retained=True)
+    write(target,value)
+    line='\nS-COOPMWM MAIN0628 GUARD STATE COMPATIBILITY REPAIR REGISTERED amendmentSHA'+sha(target)+': read-only state now adopts current A/V3,B-R/QUOTA owners, boot/start identity; released historical SSH STOP is separate from active stop, PAUSE and current supervisor faults visible; CPU11PASS including actual generated payload, real cpuQ status PASS; zero SUMO/inference/PID control, existing owners/observers and original deadline retained.\n'
+    with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+    print(json.dumps(value))
 
 
 def commit():
@@ -153,6 +183,6 @@ def dispatch():
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('dispatch','run','state'));a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('dispatch','run','state','register_state_repair'));a=p.parse_args()
     if a.mode=='state':print(json.dumps(state()))
     else:globals()[a.mode]()

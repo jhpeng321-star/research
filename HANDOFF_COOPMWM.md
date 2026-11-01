@@ -1,5 +1,12 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+GUARDCOMPATIBILITY FIXED/REGISTERED at1793574193: warm_watchstate nowcurrent
+A/V3,B-R/QUOTAowners; realstopNULL/pausesnone. HistoricalSSHSTOPretainedseparately,
+SHA/authorityreleaseverifiedbyexistingwarm_health. Actualpayload11CPUtestsPASS,
+realcpuQstatePASS; existingobserver46108/telemetry28752/remoteownersunchanged.
+NEWMAINregistry6177(06:58)asksdiagnosetwoEXACT0gradesworld986051/986070t300:
+no-opvsgradingartifact beforetrust. Investigatereceipts/read-onlynext.
+
 FRESHMAIN0628: full292linebrief read; receiptRESUME_MAIN0628_20261102.md.
 Live1793573946 A48/B1/R0, B-u2/R-u1 BOTH24/24claimed; B-u2starts3+inflight7.
 OriginalB3551873/R3551874/broker3514272/grader3427015 and local46108/28752
