@@ -6,8 +6,18 @@ LPHYS owns default-OFF physical parameter artifact/switch, starting with SUMO
 departure parameters; FIT/LANE own five LC and IDM population/posterior settings.
 No independent refit of those supports; no acceleration residuals.
 Only969400–969431 allowed for fit/selection; no WMDATA2 or reserved outcomes read
-for round-2 selection. Required prior aggregate evidence read. No jobs launched.
-Local NVIDIA driver unavailable; remote resource audit pending. Candidate NOT READY.
+for round-2 selection. Required prior aggregate evidence read.
+Commits fd768d54/cef6321c add the default-OFF departure-parameter reader and GP fit.
+`physics_params='learned_v1'`, explicit `physics_params_file` (recipe-relative path).
+Current artifact `artifacts/rb2lphys/learned_v1.json`: first-lane0, mainline-last0,
+ramp-last0.01107518819; all other IDM/LC population parameters unchanged.
+13CPU checks PASS on gpuR, receipt `docs/rb2lphys/unit_v1`. Prefix fit1068births;
+later development2059births: objective0.0827416→0.0827994 (slightly WORSE).
+This conditional fit does NOT justify adoption. Autonomous comparison pending.
+cpuQ owned diagnosis1188078 and fitter1197634 EXITED. gpuR unit891804 EXITED.
+gpuR12:15 audit idle0%/1MiB, load12.25/224cores. Plan at most two5GiB workers.
+Observations.py untouched. No peer PID action; full5-arm development runner ready.
+Candidate NOT READY; FULL-v5-LP must not be qualified from conditional birth scores.
 
 ## Preserved round-1 handoff
 

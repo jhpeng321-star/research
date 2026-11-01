@@ -40,6 +40,7 @@ for p in ('/root/wmdata20261031/views','/root/wmdata20261031','/home/ubuntu/wmda
             'src/wms', 'tools/rbint', 'tools/rbeval', 'tools/rbfit', 'tools/rb2lphys',
             'configs/wm_phys.toml', 'configs/execparity_cav_idm_v1.json',
             'configs/native_cav_head_v5.json', 'artifacts/rbfit/shrinkage_v1',
+            'artifacts/rb2lphys',
             'docs/paper_results/rbunc/observed_arrivals.json', 'tests/test_rb2lphys.py'], cwd=ROOT)
         digest = hashlib.sha256(data).hexdigest()
         dest = f'{parent}/lphys_code_{sha[:12]}'

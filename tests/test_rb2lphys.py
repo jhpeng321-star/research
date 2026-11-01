@@ -1,5 +1,4 @@
 """Physical parameter sampling must preserve CRN and source safety semantics."""
-from dataclasses import replace
 import json
 from types import SimpleNamespace
 
@@ -86,3 +85,15 @@ def test_last_mode_preserves_unsafe_refusal_and_zero_profile_preserves_baseline(
     assert placement(DepartureParameters(0,0,0)) == placement()
     assert placement(DepartureParameters(1,1,0), gap=.01)[0] is False
     assert placement(DepartureParameters(1,0,0), gap=.01)[0] is False
+
+
+def test_development_filter_is_before_any_start_artifact_open():
+    from tools.rb2lphys.evaluate import restrict_start_source
+    from tools.rbeval.core import load
+    from pathlib import Path
+    code = load(Path(__file__).resolve().parents[1]/'tools/rbeval/references.json')['starts']['code']
+    filtered = restrict_start_source(code, [969420,969431])
+    assert filtered.index("if w['seed'] in (969420, 969431)") < filtered.index('for i, world in enumerate(worlds)')
+    for world in (969419,969432,969439):
+        with pytest.raises(ValueError, match='development panel'):
+            restrict_start_source(code, [world])
