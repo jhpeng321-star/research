@@ -1,0 +1,19 @@
+{
+  "owner": "S-RB2-LPHYS",
+  "pid": 899557,
+  "start_ticks": "4213578761",
+  "command": [
+    "/root/miniconda3/bin/python",
+    "-B",
+    "-m",
+    "tools.rb2lphys.evaluate",
+    "--world",
+    "969429",
+    "--futures",
+    "2",
+    "--params",
+    "learned_v1",
+    "--out",
+    "/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel/learned_v1_969429"
+  ]
+}

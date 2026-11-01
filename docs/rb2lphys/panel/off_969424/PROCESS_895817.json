@@ -1,0 +1,23 @@
+{
+ "pid": 895817,
+ "boot_id": "d19e6898-efd0-4288-a901-d63b21f11163",
+ "start_ticks": "4213441173",
+ "argv": [
+  "/root/autodl-tmp/c4/rb2lphys20261101/lphys_code_1c5722e9a40d/tools/rb2lphys/evaluate.py",
+  "--out",
+  "/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel/off_969424",
+  "--runtime-root",
+  "/root/autodl-tmp/c4/rb2lphys20261101/lphys_code_1c5722e9a40d",
+  "--wm-config",
+  "/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel/off_969424_recipe.toml",
+  "--model-name",
+  "LPDEV_off",
+  "--device",
+  "cuda",
+  "--memory-gib",
+  "5",
+  "--max-tasks",
+  "2"
+ ],
+ "started_unix": 1793507826.7425866
+}

@@ -1,0 +1,25 @@
+params,horizon_s,arm,predicted_effect,recorded_effect,point_sign_agreement,confidence_interval,interpretation
+learned_v1,120,ctrl0,-24.502544452746708,-34.65862210591634,True,,descriptive expected point effect; sign resolution not established
+learned_v1,120,mappo,18.66019879778226,-90.44087374210358,False,,descriptive expected point effect; sign resolution not established
+learned_v1,120,pi,-102.90526327490807,-91.00719344615936,True,,descriptive expected point effect; sign resolution not established
+learned_v1,120,circles,139.3134422302246,94.29356372356419,True,,descriptive expected point effect; sign resolution not established
+learned_v1,300,ctrl0,-175.90412856141742,-65.7259995341301,True,,descriptive expected point effect; sign resolution not established
+learned_v1,300,mappo,19.226650923490524,-490.4403893550237,False,,descriptive expected point effect; sign resolution not established
+learned_v1,300,pi,-106.73957957824041,-731.3344220121702,True,,descriptive expected point effect; sign resolution not established
+learned_v1,300,circles,815.1246507267157,402.47471630573244,True,,descriptive expected point effect; sign resolution not established
+learned_v1,600,ctrl0,-317.55385159452845,-545.5473176439604,True,,descriptive expected point effect; sign resolution not established
+learned_v1,600,mappo,-395.97020637989135,-1295.6865872939427,True,,descriptive expected point effect; sign resolution not established
+learned_v1,600,pi,-1175.8314706186468,-3106.968691865603,True,,descriptive expected point effect; sign resolution not established
+learned_v1,600,circles,2885.6450893084216,792.6605937083547,True,,descriptive expected point effect; sign resolution not established
+off,120,ctrl0,-27.75644929210345,-34.65862210591634,True,,descriptive expected point effect; sign resolution not established
+off,120,mappo,15.755810449520746,-90.44087374210358,False,,descriptive expected point effect; sign resolution not established
+off,120,pi,-105.57552523414294,-91.00719344615936,True,,descriptive expected point effect; sign resolution not established
+off,120,circles,136.63699881235758,94.29356372356419,True,,descriptive expected point effect; sign resolution not established
+off,300,ctrl0,-195.72359368205085,-65.7259995341301,True,,descriptive expected point effect; sign resolution not established
+off,300,mappo,30.02244495352109,-490.4403893550237,False,,descriptive expected point effect; sign resolution not established
+off,300,pi,-112.09697006146082,-731.3344220121702,True,,descriptive expected point effect; sign resolution not established
+off,300,circles,818.7157767315706,402.47471630573244,True,,descriptive expected point effect; sign resolution not established
+off,600,ctrl0,-250.68856611847968,-545.5473176439604,True,,descriptive expected point effect; sign resolution not established
+off,600,mappo,-388.4161748290071,-1295.6865872939427,True,,descriptive expected point effect; sign resolution not established
+off,600,pi,-919.8872015873603,-3106.968691865603,True,,descriptive expected point effect; sign resolution not established
+off,600,circles,2826.293750226498,792.6605937083547,True,,descriptive expected point effect; sign resolution not established

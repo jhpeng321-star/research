@@ -1,0 +1,159 @@
+{
+  "schema": "rb2lphys.panel.v1",
+  "worlds": [
+    969420,
+    969421,
+    969422,
+    969423,
+    969424,
+    969425,
+    969426,
+    969427,
+    969428,
+    969429,
+    969430,
+    969431
+  ],
+  "K": 2,
+  "arms": [
+    "native",
+    "ctrl0",
+    "mappo",
+    "pi",
+    "circles"
+  ],
+  "horizons": [
+    120,
+    300,
+    600
+  ],
+  "records": {
+    "learned_v1": [
+      {
+        "world": 969420,
+        "directory": "/root/rbeval20261031/lphys_canary_lp/task",
+        "reused_canary": true
+      },
+      {
+        "world": 969421,
+        "directory": "/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel/learned_v1_969421",
+        "reused_canary": false
+      },
+      {
+        "world": 969422,
+        "directory": "/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel/learned_v1_969422",
+        "reused_canary": false
+      },
+      {
+        "world": 969423,
+        "directory": "/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel/learned_v1_969423",
+        "reused_canary": false
+      },
+      {
+        "world": 969424,
+        "directory": "/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel/learned_v1_969424",
+        "reused_canary": false
+      },
+      {
+        "world": 969425,
+        "directory": "/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel/learned_v1_969425",
+        "reused_canary": false
+      },
+      {
+        "world": 969426,
+        "directory": "/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel/learned_v1_969426",
+        "reused_canary": false
+      },
+      {
+        "world": 969427,
+        "directory": "/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel/learned_v1_969427",
+        "reused_canary": false
+      },
+      {
+        "world": 969428,
+        "directory": "/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel/learned_v1_969428",
+        "reused_canary": false
+      },
+      {
+        "world": 969429,
+        "directory": "/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel/learned_v1_969429",
+        "reused_canary": false
+      },
+      {
+        "world": 969430,
+        "directory": "/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel/learned_v1_969430",
+        "reused_canary": false
+      },
+      {
+        "world": 969431,
+        "directory": "/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel/learned_v1_969431",
+        "reused_canary": false
+      }
+    ],
+    "off": [
+      {
+        "world": 969420,
+        "directory": "/root/rbeval20261031/lphys_canary_off/task",
+        "reused_canary": true
+      },
+      {
+        "world": 969421,
+        "directory": "/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel/off_969421",
+        "reused_canary": false
+      },
+      {
+        "world": 969422,
+        "directory": "/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel/off_969422",
+        "reused_canary": false
+      },
+      {
+        "world": 969423,
+        "directory": "/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel/off_969423",
+        "reused_canary": false
+      },
+      {
+        "world": 969424,
+        "directory": "/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel/off_969424",
+        "reused_canary": false
+      },
+      {
+        "world": 969425,
+        "directory": "/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel/off_969425",
+        "reused_canary": false
+      },
+      {
+        "world": 969426,
+        "directory": "/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel/off_969426",
+        "reused_canary": false
+      },
+      {
+        "world": 969427,
+        "directory": "/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel/off_969427",
+        "reused_canary": false
+      },
+      {
+        "world": 969428,
+        "directory": "/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel/off_969428",
+        "reused_canary": false
+      },
+      {
+        "world": 969429,
+        "directory": "/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel/off_969429",
+        "reused_canary": false
+      },
+      {
+        "world": 969430,
+        "directory": "/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel/off_969430",
+        "reused_canary": false
+      },
+      {
+        "world": 969431,
+        "directory": "/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel/off_969431",
+        "reused_canary": false
+      }
+    ]
+  },
+  "started_unix": 1793507048.1934264,
+  "finished_unix": 1793510073.0982907,
+  "scope": "development only; fixed engineering source; not FULL-v5 qualification"
+}

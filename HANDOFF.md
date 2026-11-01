@@ -1,32 +1,53 @@
-# S-RB2-LPHYS — round 2 active, 2026-11-01
+# S-RB2-LPHYS — DELIVERED, 2026-11-01 ~13:20 +08
 
-Branch `c4/rb2-lphys`, frozen engineering source22cc32f6; inherited HEAD03c81f91.
-Plan: `docs/rb2lphys/PLAN.md`; coordination: `rb-shared/RB2_LPHYS_OWNERSHIP.md`.
-LPHYS owns default-OFF physical parameter artifact/switch, starting with SUMO
-departure parameters; FIT/LANE own five LC and IDM population/posterior settings.
-No independent refit of those supports; no acceleration residuals.
-Only969400–969431 allowed for fit/selection; no WMDATA2 or reserved outcomes read
-for round-2 selection. Required prior aggregate evidence read.
-Commits fd768d54/cef6321c add the default-OFF departure-parameter reader and GP fit.
-`physics_params='learned_v1'`, explicit `physics_params_file` (recipe-relative path).
-Current artifact `artifacts/rb2lphys/learned_v1.json`: first-lane0, mainline-last0,
-ramp-last0.01107518819; all other IDM/LC population parameters unchanged.
-31CPU checks PASS/1CUDA skip locally;14own checks PASS on gpuR. Prefix fit1068births;
-later development2059births: objective0.0827416→0.0827994 (slightly WORSE).
-This conditional fit does NOT justify adoption. Autonomous comparison LIVE.
-cpuQ owned diagnosis1188078 and fitter1197634 EXITED. gpuR unit891804 EXITED.
-gpuR paired969420/K2/fivearms/H600 canaries COMPLETE, finite/conserved, shared
-driver/arrival source receipts verified: `docs/rb2lphys/CANARY_CHECK.json`.
-Commits06eaf9b3/1c5722e9 contain frozen artifact, paired runner and canary evidence.
-Panel coordinator893753 (own) runs at most2×5GiB/nice19/oneCPUthread children,
-`/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel`,12development worlds/K2/fivearms.
-Each canary reused once; no K2 relabelling as K8. Full comparison not yet scored.
-Root-volume12:22 free55.7MB; own NEW stage/results use verified alternate volume
-with2.03GB free; no peer or old own file deleted/moved. Canaries retained in root.
-Support-only revalidation confirms converted tapes end600s: later conditional
-check actually300..600s, not requested upperbound900s. Values/results unchanged.
-Observations.py untouched. No peer PID action; full5-arm development runner ready.
-Candidate NOT READY; FULL-v5-LP must not be qualified from conditional birth scores.
+Branch `c4/rb2-lphys`; frozen engineering base22cc32f6, inherited HEAD03c81f91.
+**Engineering ready for INT ablation; NOT a qualified congestion/credibility repair.**
+Report `docs/paper_results/RB2_LPHYS.md` (≤40lines); exact before/after table
+`docs/rb2lphys/comparison/before_after.csv`, full COMPARISON.json/effects/world rows.
+
+## Exact implementation / switch / artifact
+- Commits fd768d54/cef6321c/06eaf9b3/1c5722e9/f6cf52ab, already INT-ingested.
+- Default-OFF `physics_params='learned_v1'`, explicit recipe-relative
+  `physics_params_file='artifacts/rb2lphys/learned_v1.json'`.
+- `configs/wm_phys_lp.toml` is exactly baseline +two physical fields. For FULL-v5,
+  apply those same fields to INT's integrated recipe; preserve its LC/CAL adapters.
+- Global first-lane0/mainline-last0/ramp-last0.011075188190315551. Outputs only
+  documented SUMO departLane/departSpeed settings, fixed by future/world/source
+  ordinal through retries/actions. No rule-form or acceleration-residual learning.
+- Canonical artifact SHA256 e1387b5fa606b3fa8c51050dab69c5935cbf0bc1468769e6fb948f0e7d7e366f.
+  Evaluated Windows-archive CRLF SHA20a4d7774d365d2ec1915c749f3159d17813b9726504fdac8704738c1e18286a.
+  `docs/rb2lphys/DELIVERY_AUDIT_FINAL.json` verifies equal JSON/rule source modulo endings;
+  final artifact/results attributes pin LF. Raw/stage/source hashes are separated.
+
+## Development result / readiness limits
+- GP Bayesian optimisation57trials/16common support draws;1068native prefix births.
+  Later development2059birth objective0.08274163→0.08279937 (slightly worse).
+- Autonomous12worlds/fivearms/K2/H600 COMPLETE:48tasks/240arm-futures; same K8
+  latent plans, first2scored as K2. Every task finite/conserved; CRN/source checked.
+- Delay CRPS120/300/600:841.09→841.43 /3705.55→3696.28 /14034.18→14024.29veh-s.
+  600s bias12820.87→12816.69;300/600rates94.17/100% UNCHANGED vs real61.67/90%.
+- 600s upstream speed/onset/range coverage worsen slightly; lane counts nearly
+  unchanged. Tiny delay gains pass the narrow point screen, not the broader goal.
+  Keep default OFF; retain explicit FULL-v5-LP comparison. Singleton95%CIs NA.
+- Ramp-lane road loss and ramp-source waiting are separately reported; full
+  ramp-origin delay remains unscored. These results are FULL-v4-source +LP,
+  not integrated FULL-v5 forecasts or final-gate evidence.
+
+## Exposure / ownership / resources
+- Fit: native969400–969431240..300s; diagnosis: same32native240..600s;
+  selection/autonomous comparison:969420–969431all5arms300..900s. No other new TRAIN tapes.
+- No reserved969432–969439 or WMDATA2 fitting/selection. Required prior aggregates
+  read; canonical inherited reference bundle has other rows, excluded from scores.
+  Existing encoder, FIT shrinkage_v1 joint support/posteriors/prior count and
+  causal learned-arrival fit unchanged. No black-box/SUMO/neural training.
+- FIT/LANE own IDM/fiveLC settings; CAL owns physical spread. No double-learn.
+- 31CPU PASS/1CUDA skip;14remote checks PASS; canaries reused once. `QA.json`.
+- Own cpuQ1188078/1197634/1218949, gpuR891804/892284/892295/892594 and coordinator
+  893753 plus all its children EXITED. gpuR13:14audit GPU0%/1MiB, load7.99/224.
+- Results retained at `/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel`; root-volume
+  canaries retained too. No peer process/file action, no deletions/moves.
+- observations.py untouched. INT owns final exposure release, FULL-v5/LP freeze,
+  integrated smoke, registered replicated evaluation, CIs and teacher authorization.
 
 ## Preserved round-1 handoff
 
