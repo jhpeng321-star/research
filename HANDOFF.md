@@ -7,6 +7,8 @@ Report `docs/paper_results/RB2_LPHYS.md` (≤40lines); exact before/after table
 
 ## Exact implementation / switch / artifact
 - Commits fd768d54/cef6321c/06eaf9b3/1c5722e9/f6cf52ab, already INT-ingested.
+- Final numerical delivery5e8e23f7 plus sealed-byte integrity followup21c12039;
+  take both evidence commits. Physical code/parameter values remain f6cf52ab.
 - Default-OFF `physics_params='learned_v1'`, explicit recipe-relative
   `physics_params_file='artifacts/rb2lphys/learned_v1.json'`.
 - `configs/wm_phys_lp.toml` is exactly baseline +two physical fields. For FULL-v5,
