@@ -63,7 +63,7 @@ def current_status(snapshot, receipt):
         cpuQ_resources=snapshot.get('cpuQ_resources'), observer=snapshot['observer'],
         bb_startup_stop=snapshot['bb_startup_stop'],
         final_checkpoint_receipts=snapshot['final_checkpoint_receipts'],
-        optional_wm_phys='OFF pending independent registered qualification',
+        optional_wm_phys='OFF: MAIN11:48 final report says registered switching rule FAIL; keep WM2',
         efficacy_status='Primary full paired WM-vs-RL panel incomplete; no primary efficacy CI')
 
 

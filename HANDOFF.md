@@ -59,6 +59,24 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**12:00 final foreground supervision receipt1793505658:** cpuQ1152412 LIVE/noSTOP,
+fleet8/12local episodes complete/292decisions,11240charged/9600closedactual;
+cpuQ originalWMoracle1163082 LIVE/noSTOP,8/24branches closed,
+4960charged/4560closedactual. gpuR original12oracles COMPLETE6000actual.
+All112fixed/random134400+canary4680 preserved. Task169440charged/
+167400closedactual at1793505654; openjobs excluded from closedactual. GPU final
+27729.12296916172s=7.7025341581h; base468380sim-s/19h unchanged.
+cpuQfree4958310400bytes/ownoutputs313255286bytes. gpuR fleet4world partition
+stillUNCLAIMED: latest root143589376/data2032021504bytes free and load42.67>20,
+so no dispatch. BB remains terminal0physics/43.02397724799812GPU-s; explicit
+MAIN continuation exception absent. Per-CAV606968LIVE/final169absent.
+MAIN11:48 FINAL WM-PHYS ruleFAIL now definitive: optionalPHYS OFF, keep WM2.
+Original observer25348 completed its noon deadline normally at1793505605 and
+EXITED; no replacement/duplicate watcher. Running science remains under its
+existing immutable supervisors/hardcaps. FullpairedWM/RL primaryCI unavailable.
+Resume via `python -B -m tools.c1switch2.reconcile`; do not redispatch cpuQ fleet
+or either oracle scope. For gpuR fleet's FIRST dispatch only after CPU/disk gates:
+`python -B -m tools.c1switch2.selectorops dispatch --host gpuR --workers 1`.
 **11:55 original recovered-cpuQ oracle continuation now LIVE:** own1163082,
 `/home/ubuntu/c1switch2_run_oracles_0e790a668b7ec5d8`, exactly24 original
 UNSTARTED branches/14640sim-s cap/GPU0. Registered plan and immutable original
