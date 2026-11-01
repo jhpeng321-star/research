@@ -1,0 +1,57 @@
+{
+  "alive": false,
+  "complete": true,
+  "load": [
+    9.26611328125,
+    12.53955078125,
+    12.73095703125
+  ],
+  "progress": [
+    "{\"world\": 969420, \"sample\": 0, \"variant\": \"source_default\", \"conserved\": true, \"count\": 139, \"elapsed_s\": 55.254480600357056}",
+    "{\"world\": 969420, \"sample\": 0, \"variant\": \"fitted_lc\", \"conserved\": true, \"count\": 78, \"elapsed_s\": 124.08935832977295}",
+    "{\"world\": 969420, \"sample\": 1, \"variant\": \"source_default\", \"conserved\": true, \"count\": 193, \"elapsed_s\": 180.45237827301025}",
+    "{\"world\": 969420, \"sample\": 1, \"variant\": \"fitted_lc\", \"conserved\": true, \"count\": 122, \"elapsed_s\": 238.29851174354553}"
+  ],
+  "process": {
+    "pid": 448042,
+    "start_ticks": "888995740",
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "/root/miniconda3/bin/python",
+      "-B",
+      "-u",
+      "-m",
+      "tools.rblane.round2_free_pilot",
+      "--out",
+      "/root/rbeval20261031/rb2lane_free_canary_v1/results",
+      "--samples",
+      "2",
+      "--horizon",
+      "300",
+      "--worlds",
+      "969420"
+    ],
+    "root": "/root/rbeval20261031/rb2lane_free_canary_v1",
+    "stage": {
+      "host": "gpuA",
+      "commit": "a60a6a62759ee1312c1d453df2fa7941b517880e",
+      "archive_sha256": "07e1b1a9ebe6f3f9ac0dfe40900bcad492f056711542ff8e806fe660f554539d",
+      "runtime": "/root/rbeval20261031/phys_code_a60a6a62759e",
+      "endpoint_only": false
+    },
+    "worlds": [
+      969420
+    ],
+    "samples": 2,
+    "load": [
+      9.44482421875,
+      11.71044921875,
+      12.3359375
+    ],
+    "disk_free": 3955617792,
+    "cpu_only": true
+  },
+  "collected_at": 1793510214.319442
+}

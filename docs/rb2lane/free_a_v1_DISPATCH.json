@@ -1,0 +1,45 @@
+{
+  "pid": 449726,
+  "start_ticks": "889046092",
+  "command": [
+    "nice",
+    "-n",
+    "19",
+    "/root/miniconda3/bin/python",
+    "-B",
+    "-u",
+    "-m",
+    "tools.rblane.round2_free_pilot",
+    "--out",
+    "/root/rbeval20261031/rb2lane_free_a_v1/results",
+    "--samples",
+    "2",
+    "--horizon",
+    "300",
+    "--worlds",
+    "969421",
+    "969422",
+    "969423"
+  ],
+  "root": "/root/rbeval20261031/rb2lane_free_a_v1",
+  "stage": {
+    "host": "gpuA",
+    "commit": "a60a6a62759ee1312c1d453df2fa7941b517880e",
+    "archive_sha256": "07e1b1a9ebe6f3f9ac0dfe40900bcad492f056711542ff8e806fe660f554539d",
+    "runtime": "/root/rbeval20261031/phys_code_a60a6a62759e",
+    "endpoint_only": false
+  },
+  "worlds": [
+    969421,
+    969422,
+    969423
+  ],
+  "samples": 2,
+  "load": [
+    8.7080078125,
+    12.0361328125,
+    12.55419921875
+  ],
+  "disk_free": 3954425856,
+  "cpu_only": true
+}

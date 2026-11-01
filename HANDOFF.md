@@ -50,6 +50,15 @@ round-1 final-delivery HEAD `03c81f91`).
   factor. Measures actual full-traffic LC counts/rates against targets, addressing
   the positive-run under-frequency concern. FIT-only start-loader guard2CPU PASS;
   no reserved starts can be read. This pilot is not the INT distributional gate.
+  Source `a60a6a62`; first969420 canary4/4 futures PASS238.3s, reused once.
+  Remaining11worlds LIVE on four nice19 CPU workers (gpuA449726/449712/449710/449696);
+  `docs/rb2lane/free_{canary,a,b,c,d}_v1_DISPATCH.json` binds ownership/startticks.
+  Pilot records only predictions/counters; independent target restoration/scoring
+  happens afterward. No change to physical dynamics after source freeze.
+  Causal initial-state audit found four junction-internal rows in969420/424/429.
+  A ONE-step scoring audit will exclude their internal→normal initialization
+  from LC event counts; raw forecasts remain immutable. Scoring/future-binding
+  tests2PASS; `INITIAL_LANE_AUDIT.json` retains the initial finding.
 - INT composition: apply CAL spread wrapper after LC attachment (or retain its
   subclass); INT already identified this intake requirement. New evidence does
   not alter the tested dynamics. Full arrivals/fivearm/free-running gate and
