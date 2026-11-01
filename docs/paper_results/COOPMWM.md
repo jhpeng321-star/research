@@ -1,5 +1,18 @@
 # S-COOPMWM — live checks
 
+## OWNER19:34 — acceleration-space restart HOLD (fresh recovery)
+- Verified cpuQ supervisor2146725 boot/start identity and SIGSTOPed that owned
+  supervisor. A reached update19; eighteen update20 jobs remain incomplete at the
+  snapshot and may drain. All A/B set-point results are superseded engineering runs.
+- **811,640sim-s charged/678 reserved jobs**, retained in full. B/R remain held;
+  no new physics or duplicate dispatch. Receipt `HOLD_ACCEL_1934.json`.
+- New common A/B/R policy must use1s acceleration residuals on frozen MAPPO,
+  unchanged safe_accel/CommandOwnership; B needs committed group acceleration plans.
+- Probe6 trailing-slot trimming FAILED forecast parity: max1912.604veh-s on gpuA;
+  both failed receipts retained. No trimmed implementation is admitted to training.
+- Restart awaits corrected batch parity, CPU qualification, measured plan capacity,
+  and a prospective exact budget/quota registration including superseded A charges.
+
 ## 19:14 — A resumed independently; B/R volume qualification remains held
 - CPU25 **55PASS/zero skips/1.72s/zero SUMO**, including private multi-window
   forwarding, exact gate-to-closed-episode matching, R regime quotas, p=0 own-route

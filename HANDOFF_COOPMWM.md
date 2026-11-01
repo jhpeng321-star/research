@@ -1,4 +1,13 @@
-# S-COOPMWM live continuation — 2026-11-01 18:31
+# S-COOPMWM live continuation — OWNER19:34 recovery
+
+LATEST OVERRIDE: `HOLD_ACCEL_1934.json` pauses verified owned A-only supervisor
+2146725; A u1..19 and draining u20 are superseded set-point engineering runs.
+B u1..3 superseded, R not run. All arms must restart from MAPPO u0 with1s
+acceleration residuals after CPU/batch-plan qualification and new registration.
+811,640sim-s reserved at hold; retain every charge. Probe6 trimming failed parity
+(1912.604veh-s gpuA); do not use it or dispatch a replacement without qualification.
+Original runtime, claims, publisher and GPU queues remain; inspect before action.
+The historical continuation below is superseded wherever it conflicts.
 
 - Read git status/log, `docs/paper_results/COOPMWM.md`, `COOPMWM_DESIGN.md`, newest
   `coopmwm` receipts BEFORE any dispatch. COOPNATIVE from-native experiment superseded.
