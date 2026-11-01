@@ -15,14 +15,15 @@ def write(path, data):
 
 def panel_fixture(root):
     reg = root/'registration.json'
-    write(reg, dict(final_comparison_worlds=[969550]))
+    write(reg, dict(final_comparison_worlds=[969550], fitting_worlds=[969420]))
     inputs = root/'inputs'
     write(inputs/'expected_hashes.json', {})
     write(inputs/'data/design.json', dict(worlds=[dict(seed=969550)]))
     real = root/'real.json'
     write(real, dict(episodes=[]))
     release = root/'release.json'
-    write(release, dict(status='READY', registration_sha256=digest(reg), exposure_audit_passed=True))
+    write(release, dict(status='READY', registration_sha256=digest(reg), exposure_audit_passed=True,
+                       execution_purposes=['final_comparison']))
     panel = root/'panel.json'
     write(panel, dict(schema='rb2int-panel-inputs/1', registration_path=str(reg),
         registration_sha256=digest(reg), observations_root=str(inputs), worlds=[969550],
@@ -91,3 +92,15 @@ def test_missing_source_sensing_is_not_replaced_by_zero_queue(tmp_path):
     recorded_start(tmp_path, queues=False)
     with pytest.raises(ValueError, match='observed source counters'):
         RegisteredObservations(tmp_path, [969550]).load(969550)
+
+
+def test_development_bridge_release_cannot_be_used_for_final_forecasts(tmp_path):
+    path = panel_fixture(tmp_path)
+    panel = json.loads(path.read_text())
+    release = json.loads((tmp_path/'release.json').read_text())
+    release['execution_purposes'] = ['development_bridge']
+    write(tmp_path/'release.json', release)
+    panel['release_sha256'] = digest(tmp_path/'release.json')
+    write(path, panel)
+    with pytest.raises(ValueError, match='execution purpose'):
+        validate_panel(path)

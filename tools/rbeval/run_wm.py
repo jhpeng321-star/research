@@ -168,7 +168,7 @@ def main(model_loader=None, identity_sources=(), future_builder=None):
     source_paths = [Path(__file__), HERE/'core.py', HERE/'references.json',
                     runtime/'configs/execparity_cav_idm_v1.json']
     source_paths += [safe(p) for p in identity_sources]
-    if args.endpoint_only:
+    if args.endpoint_only or panel is not None:
         source_paths += [HERE.parent/'rbint/endpoints.py', HERE.parent/'rbint/observations.py']
     if future_builder is not None:
         source_paths.append(safe(inspect.getfile(future_builder)))
@@ -333,7 +333,7 @@ def main(model_loader=None, identity_sources=(), future_builder=None):
                     road_delay_vs=score[str(h)]['real_road'][i], source_wait_vs=score[str(h)]['real_source'][i]) for h in HS}
                 episodes.append(dict(seed=seed, future=fi, arm=arm,
                     initial_sha256=source.metadata[0]['initial_state_sha256'], bins=bins, clocks=clocks))
-            if args.endpoint_only or getattr(model, '_wmphys_variant', None) in ('A', 'B', 'C', 'FULL'):
+            if args.endpoint_only or panel is not None or getattr(model, '_wmphys_variant', None) in ('A', 'B', 'C', 'FULL'):
                 from tools.rbint.endpoints import attach_endpoints60
                 attach_endpoints60(episodes, arrays, seed, b.entry_spec['k0'])
             assert all(digest(p) == sha for p, sha in sources.items()), 'source changed during task'

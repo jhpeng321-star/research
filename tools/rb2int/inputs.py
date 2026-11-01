@@ -19,10 +19,14 @@ def validate_panel(path):
     if digest(registration_path) != panel['registration_sha256']:
         raise ValueError('registration binding changed')
     seeds = panel['worlds']
+    purpose = panel.get('purpose', 'final_comparison')
+    if purpose not in ('final_comparison', 'development_bridge'):
+        raise ValueError('unregistered execution purpose')
+    allowed = registration['final_comparison_worlds'] if purpose == 'final_comparison' else registration['fitting_worlds']
     if len(set(seeds)) != len(seeds) or not seeds or any(
-            s not in registration['final_comparison_worlds'] for s in seeds):
-        raise ValueError('unregistered final world')
-    if any(969400 <= s <= 969431 for s in seeds):
+            s not in allowed for s in seeds):
+        raise ValueError('unregistered execution world')
+    if purpose == 'final_comparison' and any(969400 <= s <= 969431 for s in seeds):
         raise ValueError('development cannot enter final panel')
     root = safe(panel['observations_root'])
     if digest(root/'expected_hashes.json') != panel['observation_registry_sha256']:
@@ -40,6 +44,8 @@ def validate_panel(path):
         raise ValueError('release belongs to a different registration')
     if not release['exposure_audit_passed']:
         raise ValueError('exposure audit has not cleared this execution')
+    if purpose not in release['execution_purposes']:
+        raise ValueError('release does not authorize this execution purpose')
     return panel
 
 

@@ -37,6 +37,11 @@ round-1 delivery remains below. Read `docs/rb2int/PLAN.md` when available.
   targeted adapter/panel/uncertainty/source/core suite30PASS. New starts require
   immutable registration/release/input hashes and causal source counters. Default
   round1 loader restriction preserved. No model delivery merged or job launched.
+- Infrastructure now includes frozen-runtime isolation, approved-run reader,
+  original distributional-gate adapter, six simultaneous model contrasts and
+  explicit point/supported switching states. Combined CPU suite56PASS/1historical
+  canary skip (24.39s), Ruff PASS: `docs/rb2int/CPU_INFRASTRUCTURE.md`.
+  Runtime staging, input preparation, exposure-cleared release and jobs pending.
 
 ## Preserved round-1 handoff
 

@@ -209,10 +209,15 @@ def eligible_peers(real, e, cell=False):
     """No reserved label and no row from the target world may enter climatology."""
     return [r for r in real if r['seed'] < 969432 and r['seed'] != e['seed'] and
             (not cell or (r['arm'], r['demand'], r['penetration']) ==
-             (e['arm'], e['demand'], e['penetration']))]
+              (e['arm'], e['demand'], e['penetration']))]
 
 
-def main():
+def split_name(seed):
+    return 'reserved8' if seed >= 969432 else 'development12'
+
+
+def main(*, prediction_reader=None, bootstrap_factory=None, real_receipt=None,
+         split_classifier=None):
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--inputs', nargs='+', required=True)
     p.add_argument('--out', required=True)
@@ -223,15 +228,16 @@ def main():
     out = safe(args.out)
     assert out.parent.is_dir()
     out.mkdir(exist_ok=False)
-    real = load(HERE/'real_observables.json')['episodes']
-    pred, audit = read_predictions(args.inputs, real, args.allow_partial)
+    real = load(real_receipt or HERE/'real_observables.json')['episodes']
+    pred, audit = (prediction_reader or read_predictions)(args.inputs, real, args.allow_partial)
     save_new(out/'audit.json', audit)
     lookup = {(e['seed'], e['arm']): e for e in real}
     targets = [e for e in real if (e['seed'], e['arm']) in pred]
     # Baseline construction still uses all permitted factual development rows.
     # Sampling uncertainty uses ONLY scored complete worlds, so missing peers
     # cannot randomly change the demand/penetration composition of this report.
-    bootstrap = WorldBootstrap(targets, args.bootstrap)
+    bootstrap = (bootstrap_factory or WorldBootstrap)(targets, args.bootstrap)
+    classify_split = split_classifier or split_name
     rng = np.random.default_rng(20261031)
     rows, events, timing, energy = [], [], [], []
     cdf_features, cdf_meta = [], []
@@ -240,7 +246,7 @@ def main():
         return eligible_peers(real, e, cell)
 
     def distribution(e, h, metric, x, y, pooled, cell, bin_index=None, support=None):
-        meta = dict(seed=e['seed'], split='reserved8' if e['seed'] >= 969432 else 'development12',
+        meta = dict(seed=e['seed'], split=classify_split(e['seed']),
                     demand=e['demand'], penetration=e['penetration'], arm=e['arm'], horizon_s=h,
                     metric=metric, bin=bin_index)
         good = [v for v in x if v is not None and np.isfinite(v)]
@@ -275,7 +281,7 @@ def main():
                 re = e['bins'][reg]['events'][str(h)]
                 draws = [s['bins'][reg]['events'][str(h)] for s in samples]
                 unknown = sum(d['event'] is None for d in draws)
-                meta = dict(seed=e['seed'], split='reserved8' if e['seed'] >= 969432 else 'development12',
+                meta = dict(seed=e['seed'], split=classify_split(e['seed']),
                     demand=e['demand'], penetration=e['penetration'], arm=e['arm'], horizon_s=h, region=reg)
                 event = dict(meta, real_event=re['event'], real_preexisting=re.get('preexisting', False),
                     real_onset_s=re['onset_s'], wm_event_probability=avg(float(d['event']) for d in draws if d['event'] is not None) if not unknown else None,
@@ -413,14 +419,17 @@ def main():
                             continue
                         y = float(a['real_event'])-float(b['real_event'])
                         wm = a['wm_event_probability']-b['wm_event_probability']
-                    effects.append(dict(seed=e['seed'], split='reserved8' if e['seed'] >= 969432 else 'development12',
+                        x = [float(av)-float(bv) for av, bv in zip(a['wm_event_draws'], b['wm_event_draws'])]
+                    effects.append(dict(seed=e['seed'], split=classify_split(e['seed']),
                         demand=e['demand'], penetration=e['penetration'], arm=e['arm'], reference=reference_arm,
-                        horizon_s=h, quantity=quantity, real_effect=y, wm_effect=wm, bias=wm-y))
+                        horizon_s=h, quantity=quantity, real_effect=y, wm_effect=wm, bias=wm-y,
+                        wm_effect_draws=x))
     effect_keys = ['split', 'demand', 'penetration', 'arm', 'reference', 'horizon_s', 'quantity']
     effect_summary = []
     effect_groups = list(groups(effects, effect_keys).items())
     real_bands = bootstrap.bands([[(r['seed'], r['real_effect']) for r in rs] for _, rs in effect_groups])
-    bias_bands = bootstrap.bands([[(r['seed'], r['bias']) for r in rs] for _, rs in effect_groups])
+    bias_bands = bootstrap.bands([[(r['seed'], r['bias'], [x-r['real_effect']
+        for x in r['wm_effect_draws']]) for r in rs] for _, rs in effect_groups])
     for (group, rs), rb, bb in zip(effect_groups, real_bands, bias_bands):
         wm = avg(r['wm_effect'] for r in rs)
         resolved = rb['low'] is not None and (rb['low'] > 0 or rb['high'] < 0)
@@ -450,7 +459,8 @@ def main():
             return avg(hits)
         estimate = concordance(np.ones(len(bootstrap.seeds)))
         # Bonferroni conservative simultaneous bound over frozen 12×2×3×2 groups.
-        draws = [concordance(w) for w in bootstrap.weights] if len(worlds) >= 2 else []
+        support_ok = len(worlds) >= 2 and (not hasattr(bootstrap, 'supports') or bootstrap.supports(worlds))
+        draws = [concordance(w) for w in bootstrap.weights] if support_ok else []
         good = [v for v in draws if v is not None]
         lower = float(np.quantile(good, .05/144)) if len(good) == bootstrap.B else None
         order.append(dict(zip(['split', 'demand', 'penetration', 'reference', 'horizon_s', 'quantity'], key)) |
@@ -510,8 +520,8 @@ def main():
         failures.append('PIT/range outside simultaneous world-cluster exchangeability bands')
     verdict = dict(schema='rbeval-gate/1', verdict='NOT_QUALIFIED',
         pilot_only=True, reasons=failures, complete_worlds=len(audit['complete_worlds']),
-        bootstrap=10000, bootstrap_seed=20261031,
-        bootstrap_method='demand/penetration/split-stratified whole-world centered standardized max-stat',
+        bootstrap=10000, bootstrap_seed=getattr(bootstrap, 'seed', 20261031),
+        bootstrap_method=getattr(bootstrap, 'method', 'demand/penetration/split-stratified whole-world centered standardized max-stat'),
         rate_family_primary=180, rate_family_diagnostic=360,
         scope='Fixed overnight diagnostic, not a powered qualification panel',
         caveat='One factual continuation per world cannot identify same-state irreducible randomness')
