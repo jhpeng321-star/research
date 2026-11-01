@@ -1,0 +1,34 @@
+{
+  "task": "S-COOPBEHAV",
+  "observed_local": "2026-11-02T01:08:46+08:00",
+  "inherited_head": "17df76a0",
+  "initial_git_status": "clean c4/coopbehav",
+  "authority": "REGISTRATION.md owner approval 2026-10-31 15:45, line 5545",
+  "preserved_reports": "All existing descriptive, corrected paired and invalidated historical reports retained; no completed report rerun",
+  "watcher": {
+    "pid": 29244,
+    "parent_pid": 23892,
+    "creation_local": "2026-10-31T17:07:54",
+    "executable": "C:/Python314/python.exe",
+    "exact_identity_live": true,
+    "interval_s": 120,
+    "status_timestamp": 1793552790.722507,
+    "canonical_index_sha256": "1c94ebe359532d3d00e6fa2d72af557791e71709691a78b26196cd4973f76c2e",
+    "canonical_state": "complete",
+    "new_watcher_or_report_dispatches": 0
+  },
+  "new_producer_handoff": {
+    "source": "S-COOPMEASURE full-prefix v2",
+    "status": "COMPLETE",
+    "production_worlds": 28,
+    "trace_files_including_canary": 247,
+    "local_trace_root": "E:/agent-work/c4-coopmeasure/tools/coopaudit/evidence/v2_complete",
+    "production_manifest": "E:/agent-work/c4-coopmeasure/tools/coopaudit/evidence/v2_analysis/TRACE_MANIFEST.csv",
+    "producer_contract": "E:/agent-work/c4-coopmeasure/tools/coopaudit/TRACE_HANDOFF.md",
+    "next_step": "Inspect and hash-verify published v2 observable trace coverage; current scanner incorrectly calls all audit jobs v1 and still lists non-wall commands as missing"
+  },
+  "new_simulation_seconds": 0,
+  "process_signals": 0,
+  "research_data_deletions": 0,
+  "pushes": 0
+}
