@@ -57,6 +57,15 @@ def logsumexp(x, axis=-1):
     return np.squeeze(result, axis=axis)
 
 
+def acceleration_support(before, after, dt, support_accel):
+    """SUMO's strict positive-acceleration envelope, with outward IEEE bounds."""
+    low_after = np.nextafter(np.asarray(after, np.float32), np.float32(-np.inf)).astype(float)
+    high_before = np.nextafter(np.asarray(before, np.float32), np.float32(np.inf)).astype(float)
+    lower = float(np.max((low_after-high_before)/dt))
+    high_accel = np.nextafter(np.asarray(support_accel, np.float32), np.float32(np.inf)).astype(float)
+    return high_accel >= lower, lower
+
+
 def fit_weights(log_likelihood, prior, *, iterations=200):
     weights = np.asarray(prior, dtype=float)/np.sum(prior)
     trace = []
@@ -86,6 +95,7 @@ def acceleration_crps(predictions, target, weights):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--out', required=True, type=Path)
+    parser.add_argument('--acceleration-envelope', action='store_true')
     args = parser.parse_args()
     assert args.out.parent.is_dir() and not args.out.exists()
     torch.set_num_threads(1)
@@ -96,7 +106,7 @@ def main():
     prior = np.array(population['weights']); prior /= prior.sum()
     sigma = float(population['sigma_accel_mps2'])
     extract, predict, kernel_sha = fit_kernels()
-    likelihood, validation, audits = [], [], []
+    likelihood, validation, audits, envelope_audit = [], [], [], []
     for world in DEV:
         start, history = load_motion_history(world)
         cohort, skipped = births(start, history)
@@ -120,7 +130,15 @@ def main():
                 selected[:, 6, None], support, float(dt[0]))-selected[:, 3, None])/dt[:, None]
             target = (selected[:, 4]-selected[:, 3])/dt
             if birth['time'] <= 240:
-                likelihood.append(-((prediction-target[:, None])**2).sum(0)/(2*sigma*sigma))
+                ll = -((prediction-target[:, None])**2).sum(0)/(2*sigma*sigma)
+                if args.acceleration_envelope:
+                    valid, lower = acceleration_support(selected[:, 3], selected[:, 4], dt, support[:, 2])
+                    if prior[valid].sum() <= 0:
+                        raise ValueError(f'No admissible positive-prior acceleration profile: {world}:{identity}; bound={lower}')
+                    ll = np.where(valid, ll, -np.inf)
+                    envelope_audit.append(dict(world=world, identity=identity, accel_lower_mps2=lower,
+                        inadmissible_prior_mass=float(prior[~valid].sum())))
+                likelihood.append(ll)
                 counts['fit_drivers'] += 1
                 counts['fit_rows'] += len(target)
             else:
@@ -148,12 +166,13 @@ def main():
         fit_worlds=list(DEV), fit_birth_interval_s=[180, 240], validation_birth_interval_s=[240, 270],
         conditioning_end_s=300, physical_likelihood='stable-mainline HDV SUMO IDM accelerations; frozen Gaussian scale',
         sigma_accel_mps2=sigma, motion_validation_improved=bool(improved), metrics=metrics,
+        acceleration_envelope=bool(args.acceleration_envelope),
         kernel_sha256=kernel_sha, source_sha256=digest(__file__),
         caution='birth-disjoint internal motion validation, not independent-world or traffic qualification')
     args.out.mkdir()
     save_new(args.out/'entrant_population.json', artifact)
     save_new(args.out/'FIT.json', dict(audits=audits, trace=trace, metrics=metrics,
-        improved=bool(improved), source_sha256=digest(__file__)))
+        improved=bool(improved), acceleration_envelope=envelope_audit, source_sha256=digest(__file__)))
     print(json.dumps(dict(improved=bool(improved), metrics=metrics, drivers=len(likelihood))))
 
 

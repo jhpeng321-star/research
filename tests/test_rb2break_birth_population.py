@@ -1,6 +1,6 @@
 import numpy as np
 
-from tools.rb2break.birth_population import acceleration_crps, births, fit_weights
+from tools.rb2break.birth_population import acceleration_crps, acceleration_support, births, fit_weights
 
 
 def test_observed_births_not_junction_reappearance_or_owner_assignment():
@@ -31,3 +31,10 @@ def test_weighted_crps_matches_independent_pairwise_definition():
         np.abs(predictions[:, :, None]-predictions[:, None, :])*weights[None, :, None]
         *weights[None, None, :]).sum((1, 2))
     np.testing.assert_allclose(actual, expected, rtol=0, atol=1e-12)
+
+
+def test_acceleration_envelope_rejects_impossible_profiles_but_allows_roundoff():
+    valid, lower = acceleration_support(np.array([0., 10.]), np.array([.5, 10.5]),
+        np.array([.5, .5]), np.array([.8, 1., 1.2]))
+    assert 0.999 < lower <= 1.
+    assert valid.tolist() == [False, True, True]

@@ -31,6 +31,7 @@ def main():
     parser.add_argument('--jobs', nargs='+')
     parser.add_argument('--wait-seconds', type=int, default=480)
     parser.add_argument('--cpu-fast', action='store_true')
+    parser.add_argument('--birth-version', choices=('v1', 'v2'), default='v1')
     args = parser.parse_args()
     if not set(args.worlds) <= set(range(969420, 969432)) or not args.worlds:
         raise ValueError('development only')
@@ -212,11 +213,12 @@ used=(usage()-before)/1e6/(time.monotonic()-begin)
 assert used+1<.8*capacity, 'wait for spare container CPU quota'
 limit=(cg/'memory.max').read_text().strip()
 assert limit=='max' or int(limit)-int((cg/'memory.current').read_text())>2*2**30, 'leave memory headroom'
-out=root/'birth_fit_v1';assert not out.exists()
-claim=root/'BIRTH_FIT_PROCESS.json';assert not claim.exists()
+out=root/{('birth_fit_'+args.birth_version)!r};assert not out.exists()
+claim=root/{('BIRTH_FIT_'+args.birth_version+'_PROCESS.json')!r};assert not claim.exists()
 argv=['nice','-n','19','/root/miniconda3/bin/python','-B','-u','-m','tools.rb2break.birth_population','--out',str(out)]
+if {args.birth_version!r}=='v2': argv+=['--acceleration-envelope']
 env=dict(os.environ,OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',CUDA_VISIBLE_DEVICES='')
-with (root/'birth_fit_v1.log').open('x') as log:
+with (root/{('birth_fit_'+args.birth_version+'.log')!r}).open('x') as log:
  child=subprocess.Popen(argv,env=env,stdout=log,stderr=subprocess.STDOUT,cwd=runtime,start_new_session=True)
 save(claim,dict(owner='S-RB2-BREAK',pid=child.pid,argv=argv,unix=time.time(),
  boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
@@ -229,7 +231,7 @@ print(claim.read_text())
 import sys
 runtime=Path({args.runtime!r});sys.path[:0]=[str(runtime),str(runtime/'src')]
 from tools.rbint.observations import load_observations
-fit=root/'birth_fit_v1';artifact=json.loads((fit/'entrant_population.json').read_text())
+fit=root/{('birth_fit_'+args.birth_version)!r};artifact=json.loads((fit/'entrant_population.json').read_text())
 assert artifact['source_sha256']==hashlib.sha256((runtime/'tools/rb2break/birth_population.py').read_bytes()).hexdigest()
 observations={{}}
 for seed in range(969420,969432):
@@ -297,7 +299,7 @@ print(json.dumps(dict(tasks=len(manifest),development_only=True)))
         if target.exists():
             raise ValueError('new immutable local snapshot required')
         remote_name = ('frozen_baseline' if args.action == 'fetch-baseline' else
-                       'birth_fit_v1' if args.action == 'fetch-birth' else out_name)
+                       'birth_fit_'+args.birth_version if args.action == 'fetch-birth' else out_name)
         code = f'''import hashlib,io,json,sys,tarfile
 from pathlib import Path
 root=Path({JOB!r})/{remote_name!r};assert root.is_dir()

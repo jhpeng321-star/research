@@ -89,3 +89,17 @@ No outcome objective selects mixture weights. Proposed change, if it passes that
 motion check, affects entrant HDV population only; present-driver posteriors,
 CAV executor, arrival process and ordinal keys remain unchanged. This is an
 additional one-factor candidate; not an assumption that it will repair congestion.
+
+##13:45 source-physical acceleration-envelope extension (before v2 fit)
+The frozen Gaussian motion-discrepancy likelihood can assign weight to a driver's
+accel parameter BELOW an acceleration already observed for that HDV. SUMO's
+maxNextSpeed/finalizeSpeed enforces v_next ≤ v + accel*dt, independently of LC
+braking, so those profiles are physically inadmissible, not residual noise.
+V2 birth-cohort fit adds ONLY this support constraint to each FIT driver's
+likelihood, using one-ULP outward bounds on recorded float32 speeds and candidate
+float32 accel (representation tolerance, no behavioral threshold). Same support,
+same Gaussian scale, same birth-defined FIT/validation cohorts. No support for a
+driver => fail closed, never clip an observed acceleration or invent a profile.
+Unconditioned later-birth acceleration CRPS must improve before any traffic run.
+No throughput/delay/breakdown target enters either fit. Entrant-only ablation
+would preserve current-driver posteriors and all arrival/controller streams.

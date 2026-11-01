@@ -34,16 +34,18 @@ Prior notes/inherited INT history preserved in `docs/rb2break/HANDOFF_1318_ARCHI
   validation drivers/13,635rows;910birth matches/0unmatched. Physical acceleration
   CRPS0.163291→0.165448m/s²: motion gateFAIL, rejected BEFORE traffic inference.
   Hash-bound artifact `docs/rb2break/birthfit_v1_bound/` (no neural fitting).
+- Tau homogenization changes600s delay−241/source−85; population-only current
+  drivers−327/source+2. Neither fixes over-breakdown. `TAU/POPULATION_COMPLETE.json`.
 
 ## Live continuation / ownership
 - gpuA own max2CUDA workers; root `/root/rbeval20261031/rb2break`.
 - Initial immutable source6b2d4c01; remaining population/tau/v0/fixed-rate source
-  `1c5fe0cf`, sleeping supervisors440884/440882. Population/tau currently live;
-  thenv0/rate. Read-only `python -B -m tools.rb2break.ops status`.
+  `1c5fe0cf`, supervisors440884/440882. Population/tau COMPLETE;v0/rate now live.
+  Read-only `python -B -m tools.rb2break.ops status`.
 - CPU attempts retained, no completed task; exact own pidfds retired for runtime
   (not efficacy): import-shadow failure then12/30min budgets. Never mix CPU/CUDA.
 - Raw-posterior (zero shrinkage), lane-limit and CAV-consistency CUDA screens
-  follow original queues, max2 total; subsequent source/dispatch receipt to publish.
+  follow in sourceb4012f02, supervisors450241/450254, max2 total.
 - Bounded waits and hash-verified snapshots in tools/rb2break; no automatic retries.
 
 ## Exposure / integration
