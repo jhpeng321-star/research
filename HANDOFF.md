@@ -25,8 +25,12 @@ Task S-RB-CF: SUMO 1.27.1 IDM car-following parity + a pure-physics preset.
   (SUMO core -0.032/-0.122 m/s @30/60 s, 21/32 and 19/32 worlds; LEGACY core
   -0.054/-0.096 m/s, 20/32 and 19/32 — core-independent integrator effect);
   gap MAE neutral at matched horizon (+0.08/+0.22 m; an initial -8.4 m gap
-  delta was a 120s-vs-60s horizon mismatch, discarded).  Value is generator
-  parity + bias removal, not the error score.  Measured per-step bias of the
+  delta was a 120s-vs-60s horizon mismatch, discarded).  **WM2 as-is + Euler
+  position ONLY** (`tape_check_wm2_euler60.json`): -0.020/-0.102/-0.106 m/s at
+  10/30/60 s (25/32, 27/32, 19/32 worlds), gap -0.26 m — the integrator fix
+  helps every stack (WM2 / legacy pure / SUMO pure), no retraining.  Value is
+  generator parity + bias removal, not the error score.  Measured per-step
+  bias of the
   legacy rule on the 40 native dev tapes (merge zone): braking steps overshoot
   downstream +8.5 cm mean (p99 19.8 cm, n=195,638), accelerating steps
   undershoot -8.5 cm (n=91,762) — both directions align with the
