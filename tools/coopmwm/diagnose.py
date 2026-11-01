@@ -206,8 +206,45 @@ print(json.dumps(v))
     write(ops.EVIDENCE/'RELEASE_1838.json',value);print(json.dumps(value))
 
 
+def batch_probe():
+    from .storage import read
+    fixture=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json
+r=pathlib.Path({deploy.ROOT!r});key='29c5e52d2cbf8822f00cf0c547b5c6fd5203bf865a98c151717798e927e09610.json'
+print(json.dumps(dict(input=json.loads((r/'requests'/key).read_text()),reference=json.loads((r/'responses'/key).read_text()))))
+''',timeout=25))
+    assert fixture['reference'].get('futures'),'must reuse actual qualified timing prediction'
+    root='/root/coopmwm20261101_batchprobe1'
+    ops.stage_frozen('gpuA',root,read(ops.EVIDENCE/'CPU_coopmwm20261101_cpu21.json'))
+    ops.stage('gpuA',root,{'tools/coopmwm/batch_probe.py':(ops.LOCAL/'tools/coopmwm/batch_probe.py').read_text(),
+        'INPUT.json':json.dumps(fixture['input']),'REFERENCE.json':json.dumps(fixture['reference'])})
+    value=json.loads(ops.ssh.remote('gpuA',f'''import os,pathlib,json,subprocess,sys,time
+r=pathlib.Path({root!r});assert r.is_dir();assert not (r/'DISPATCH.json').exists()
+gpu=subprocess.check_output(['nvidia-smi'],text=True)
+free=subprocess.check_output(['nvidia-smi','--query-gpu=memory.free','--format=csv,noheader,nounits'],text=True)
+assert int(free.strip())>12000
+env=dict(os.environ,PYTHONPATH=str(r/'pytools'),OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
+with (r/'PROBE.log').open('x') as log:
+ p=subprocess.Popen(['nice','-n','19',sys.executable,'-B','-u','-m','tools.coopmwm.batch_probe',str(r)],cwd=r,env=env,stdout=log,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL,start_new_session=True)
+v=dict(pid=p.pid,start_ticks=pathlib.Path(f'/proc/{{p.pid}}/stat').read_text().split()[21],boot_id=pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip(),root=str(r),host='gpuA',unix=time.time(),new_sumo_sim_s=0,nvidia_smi=gpu)
+with (r/'DISPATCH.json').open('x') as f:json.dump(v,f)
+print(json.dumps(v))
+''',timeout=25))
+    write(ops.EVIDENCE/'BATCH_PROBE1_DISPATCH.json',value);print(json.dumps(value))
+
+
+def collect_batch():
+    from .storage import read
+    d=read(ops.EVIDENCE/'BATCH_PROBE1_DISPATCH.json')
+    value=json.loads(ops.ssh.remote('gpuA',f'''import pathlib,json
+r=pathlib.Path({d['root']!r});p=r/'RESULT.json'
+print(json.dumps(dict(complete=p.exists(),result=json.loads(p.read_text()) if p.exists() else None,log=(r/'PROBE.log').read_text())))
+''',timeout=25))
+    if value['complete']:write(ops.EVIDENCE/'BATCH_PROBE1_RESULT.json',value['result'])
+    print(json.dumps(dict(complete=value['complete'],log=value['log'])))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=['hold','fetch','probe','deltas','collect','wm-cpu','report','amendment','release']);p.add_argument('--window',type=int,choices=(0,1),default=1);a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=['hold','fetch','probe','deltas','collect','wm-cpu','report','amendment','release','batch','batch-collect']);p.add_argument('--window',type=int,choices=(0,1),default=1);a=p.parse_args()
     if a.mode=='hold':hold()
     elif a.mode=='fetch':fetch()
     elif a.mode=='deltas':deltas()
@@ -216,4 +253,6 @@ if __name__=='__main__':
     elif a.mode=='report':report()
     elif a.mode=='amendment':amendment()
     elif a.mode=='release':release()
+    elif a.mode=='batch':batch_probe()
+    elif a.mode=='batch-collect':collect_batch()
     else:launch_probe(a.window)
