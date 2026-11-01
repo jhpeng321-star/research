@@ -2176,3 +2176,16 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - Exact-grade queue/lag: `{"failed": 0, "graded": 3, "max_lag_s": 15.68671441078186, "mean_lag_s": 12.17886463801066, "orphaned": 0, "overlap_unresolved": 0, "pending": 0, "running": 0, "stopped": 0, "update": 1}`; final ETA 1.221h.
 - Receipt: `coopmwm/warm_live/B_UPDATE_001.json`.
 <!-- warm-receipt:B_UPDATE_001.json:3edcfbe3fe2f0fbef8be8aa7ee026a2b33e5d7873ba79ab13994170f0d7b1fa9 -->
+
+## Warm live publication — 2026-11-01T22:20:17.473903+00:00
+- Conservatively charged 3316220/7500000 sim-s.
+
+### Warm continuation — ACCEL_EXACT_PLAN_000_FAILED.json
+- Exact executed-plan twins: `{}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_000_FAILED.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_000_FAILED.json:b5d3fd1294c58c0ee1e7f4d6275565da004cf49bdbcf29a943b3d265a085fcbb -->
+
+### Warm continuation — ACCEL_EXACT_PLAN_001_FAILED.json
+- Exact executed-plan twins: `{}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_001_FAILED.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_001_FAILED.json:ec5c2dace890b0b8e481f7a1b63cb46a25649ddf078c8b23218309ad0af09057 -->
