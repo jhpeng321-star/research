@@ -62,6 +62,12 @@ not recovered checkpoint bytes or post05:18 consumed-world accounting; these
 must be reconciled before any scientific continuation. Local watcher/supervisor
 identities remain unchanged and live;07:45heartbeat29485edf retains stale alerts.
 
+09:26: published the checkpoint-byte/accounting recovery prerequisite explicitly
+in shared REGISTRATION under MAIN07:07. Safe local task-evidence `.pt` inventory
+is empty; hash-only checkpoint receipts cannot resume optimization on spare CPUs.
+Do not substitute a newly initialized policy or stale consumed-world assumptions.
+09:25 supervisionbeb25a3c still records stale transport, no new scientific action.
+
 - 05:02 fresh-session verification: existing watcher12432 executable/command and
   02:03:58 creation time match; latest collection Unix1793480275 validates
   cpuQ606968 live,15/169 updates,690/7774 production successes,8open.
