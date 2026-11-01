@@ -29,6 +29,13 @@ direct arrival-count offset. Native mainline admissions average260–290/600s
 across these worlds; source service / induced queue dynamics need isolation.
 Current own queued workers continue the predeclared remaining6 factors serially,
 max2GPU workers, inference only. Immutable roots under `/root/rbeval20261031/rb2break`.
+Engineering repair12:24: `queue.py` shadowed stdlib queue when executing run.py
+as a script. The CPU correction canary failed before importing Torch/inference;
+no result exists. Old sleeping supervisors439275/439291 retired via verified
+own pidfds BEFORE dispatching factors. Renamed `factor_queue.py`, module entry
+(`-m tools.rb2break.run`) avoids shadowing. Initial6b2d4c01 GPU screens unaffected.
+Correction CPU run requires matched same-device baseline; no CPU-vs-GPU ablation
+will be interpreted as a one-factor effect. Both failed source/output preserved.
 
 ## Inherited round1 handoff (provenance; not current BREAK process ownership)
 

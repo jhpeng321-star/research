@@ -16,7 +16,7 @@ JOB = PARENT+'/rb2break'
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=('stage', 'launch', 'queue', 'status', 'fetch', 'fetch-baseline', 'baseline'))
+    parser.add_argument('action', choices=('stage', 'launch', 'queue', 'retire-old-queues', 'status', 'fetch', 'fetch-baseline', 'baseline'))
     parser.add_argument('--host', default='gpuA', choices=('gpuA', 'gpuR'))
     parser.add_argument('--runtime')
     parser.add_argument('--factor', default='baseline')
@@ -87,7 +87,7 @@ if {args.device!r}=='cuda':
 root.mkdir(exist_ok=True)
 out=root/{out_name!r};assert not out.exists(), 'never duplicate a dispatch'
 out.mkdir()
-argv=['nice','-n','19','/root/miniconda3/bin/python','-B','-u',str(runtime/'tools/rb2break/run.py'),
+argv=['nice','-n','19','/root/miniconda3/bin/python','-B','-u','-m','tools.rb2break.run',
  '--out',str(out),'--runtime-root',str(runtime),'--wm-config',str(runtime/'configs/wm_phys.toml'),
  '--model-name',{('RB2BREAK_'+args.tag+'_'+args.factor)!r},'--factor',{args.factor!r},
  '--dev-worlds',*map(str,{args.worlds!r}),'--futures',*map(str,{args.futures!r}),
@@ -106,17 +106,39 @@ save(out/'DISPATCH.json',receipt);print(json.dumps(receipt))
         factors = ['depart_last', 'population', 'point_v0'] if args.lane == 0 else ['depart_first', 'point_tau', 'fixed_rate']
         code = f'''
 runtime=Path({args.runtime!r});assert (runtime/'STAGE.json').is_file()
-claim=root/{('QUEUE_'+str(args.lane)+'.json')!r};assert not claim.exists()
-argv=['nice','-n','19','/root/miniconda3/bin/python','-B','-u','-m','tools.rb2break.queue',
+claim=root/('QUEUE2_'+runtime.name+'_'+{str(args.lane)!r}+'.json');assert not claim.exists()
+argv=['nice','-n','19','/root/miniconda3/bin/python','-B','-u','-m','tools.rb2break.factor_queue',
  '--wait-for',str(root/{wait_for!r}),'--factors',*{factors!r},'--lane',{str(args.lane)!r}]
 env=dict(os.environ,OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',CUDA_VISIBLE_DEVICES='0',
  PYTHONPATH='/root/autodl-tmp/c4/speedhead20261030/pythondeps')
-with (root/{('QUEUE_'+str(args.lane)+'.log')!r}).open('x') as log:
+with claim.with_suffix('.log').open('x') as log:
  child=subprocess.Popen(argv,env=env,stdout=log,stderr=subprocess.STDOUT,cwd=runtime,start_new_session=True)
 save(claim,dict(owner='S-RB2-BREAK',pid=child.pid,argv=argv,unix=time.time(),
  boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
  start_ticks=Path('/proc/'+str(child.pid)+'/stat').read_text().split()[21]))
 print(claim.read_text())
+'''
+    elif args.action == 'retire-old-queues':
+        code = '''
+import ctypes,signal
+assert not any((root/f'screen_{factor}_s0').exists() for factor in ('depart_last','depart_first','population','point_v0','point_tau','fixed_rate')), 'old queues already launched work'
+result=[]
+for lane in (0,1):
+ path=root/f'QUEUE_{lane}.json';r=json.loads(path.read_text())
+ assert r['owner']=='S-RB2-BREAK' and 'tools.rb2break.queue' in r['argv']
+ assert Path('/proc/sys/kernel/random/boot_id').read_text().strip()==r['boot_id']
+ libc=ctypes.CDLL(None,use_errno=True)
+ pidfd=libc.syscall(434,r['pid'],0)  # x86_64 pidfd_open; bind incarnation before inspecting
+ assert pidfd>=0, ctypes.get_errno()
+ try:
+  stat=Path('/proc')/str(r['pid'])/'stat'
+  assert stat.read_text().split()[21]==r['start_ticks']
+  actual=(Path('/proc')/str(r['pid'])/'cmdline').read_bytes().split(b'\\0')
+  assert b'tools.rb2break.queue' in actual
+  assert libc.syscall(424,pidfd,int(signal.SIGTERM),0,0)==0, ctypes.get_errno()
+  result.append(dict(pid=r['pid'],lane=lane,reason='engineering namespace shadowing; no factor inference launched'))
+ finally: os.close(pidfd)
+save(root/'RETIRED_OLD_QUEUES.json',result);print(json.dumps(result))
 '''
     elif args.action == 'status':
         code = '''

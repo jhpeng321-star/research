@@ -54,7 +54,7 @@ def main():
             assert time.monotonic() < deadline
             time.sleep(30)
         out.mkdir()
-        argv = ['nice', '-n', '19', sys.executable, '-B', '-u', str(runtime/'tools/rb2break/run.py'),
+        argv = ['nice', '-n', '19', sys.executable, '-B', '-u', '-m', 'tools.rb2break.run',
             '--out', str(out), '--runtime-root', str(runtime), '--wm-config', str(runtime/'configs/wm_phys.toml'),
             '--model-name', 'RB2BREAK_screen_'+factor, '--factor', factor,
             '--dev-worlds', *map(str, DEV), '--futures', '0', '--memory-gib', '5']
