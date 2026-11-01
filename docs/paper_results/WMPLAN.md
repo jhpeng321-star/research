@@ -62,7 +62,7 @@ gates and the final model comparison still precede live dispatch.
 
 <!-- WMPLAN-PROGRESS:BEGIN -->
 ## Current continuation status
-- Exclusive amended continuation is waiting for the already-running FULL-v5 quality check.
-- Expected arm first, report before strict, both GPUs; exact199200upper retained.
-- Original owned continuation stopped and retained; no peer process action or duplicated quality.
+- Model comparison COMPLETE before physics: selected FULL-v4.
+- FULL-v4 helpful agreement 0.500, all12 chosen saving +680.307521; FULL-v5 0.250, +172.703890 veh-s/state.
+- Reused existing predictions; no new quality forecasts or SUMO.
 <!-- WMPLAN-PROGRESS:END -->
