@@ -1,7 +1,7 @@
 # WM-PHYS v5 — INTERIM; final comparison pending
 
-**INTERIM 20261102T064257+0800: on 8 matched complete K8 worlds
-(reserved8), v5−v4 delay CRPS is +169/+1,110/+2,996 veh-s at120/300/600s.**
+**INTERIM 20261102T064309+0800: on 10 matched complete K8 worlds
+(available_replicated_cells), v5−v4 delay CRPS is +167/+1,046/+3,618 veh-s at120/300/600s.**
 See the interval-supported detailed results below. This is an available-data
 diagnostic, not model selection or a planner/cooperation switching authorization.
 
@@ -58,7 +58,7 @@ immutable source/recipe/smoke binding in HANDOFF.md are now published for
 S-WMTEACH's engineering/quality rerun; final qualification is pending.
 
 <!-- RB2-INTERIM:BEGIN -->
-## INTERIM v5 versus v4 — 20261102T034208+0800 (available_replicated_cells)
+## INTERIM v5 versus v4 — 20261102T064309+0800 (available_replicated_cells)
 
 **10 matched complete K8 worlds; all five arms.** This is an interim diagnostic, not model selection or switching authorization.
 Worlds: 969433, 969435, 969436, 969437, 969438, 969439, 969590, 969592, 969595, 969599.
