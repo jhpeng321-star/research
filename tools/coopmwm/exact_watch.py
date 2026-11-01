@@ -116,6 +116,14 @@ def dispatch():
         write(receipt,value)
         line='\nS-COOPMWM OBSERVER STAGING RECOVERY REGISTERED amendmentSHA'+sha(receipt)+': local observer43408 exited on other-staged-work guard; verified absent; V3 restores observation/adopts existing remote owners, does not repeat launches, defers index-conflict commit until next poll; all physics/inference and original GPU deadline unchanged; CPU2PASS/zeroSUMO.\n'
         with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+    if TAG=='EXACT_OBSERVER_V4':
+        from .protocol import checked,REGISTRY,sha
+        receipt=ops.EVIDENCE/'EXACT_OBSERVER_PUBLICATION_RECOVERY.json';assert not receipt.exists()
+        write(receipt,dict(previous_exit=read(ops.EVIDENCE/'EXACT_OBSERVER_EXIT_1793566613.json'),
+            publisher_sha256=sha(ops.LOCAL/'tools/coopmwm/warm_publish.py'),tests=4,new_sumo_sim_s=0,
+            repair='strict TRAIN receipt whitelist; cache existence is not publication; adopt identical cached values and append missing markers; metadata excluded; no overwrite/replay'))
+        line='\nS-COOPMWM TRAIN PUBLICATION SCHEMA RECOVERY REGISTERED amendmentSHA'+sha(receipt)+': observer34356 exited KeyError(viability) on reporter metadata matched by broad glob; verified absent. CPU4PASS, strict TRAIN/health receipt whitelist, retain metadata/cached files; identical already-fetched unpublished A receipts adopted and missing paper markers restored, no overwrite/deletion/physics/inference replay. V4 observes existing owners only, originaldeadline retained.\n'
+        with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
     binding=dict(deadline_unix=read(ops.EVIDENCE/'WARM_A48_BINDING.json')['gpu_deadline'],
         contract='observe/publish; adopt existing owners; once8EXACT0 gates per host, register and launch grader/broker/B/R once; no physics retry')
     write(ops.EVIDENCE/(TAG+'_BINDING.json'),binding)
@@ -126,5 +134,5 @@ def dispatch():
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('mode',choices=('run','dispatch'))
-    p.add_argument('--tag',choices=('EXACT_OBSERVER_V2','EXACT_OBSERVER_V3'),default=TAG)
+    p.add_argument('--tag',choices=('EXACT_OBSERVER_V2','EXACT_OBSERVER_V3','EXACT_OBSERVER_V4'),default=TAG)
     args=p.parse_args();TAG=args.tag;globals()[args.mode]()

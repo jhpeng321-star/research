@@ -1,5 +1,6 @@
 """Append-only publication of warm TRAIN/dev receipts, never final-panel data."""
 import json
+import re
 from datetime import datetime,timezone
 from . import ops
 from .storage import read,write
@@ -8,6 +9,15 @@ from .warm_deploy import ROOT,PRIOR
 
 
 def number(value):return 'NA' if value is None else f'{value:.4g}'
+
+
+PUBLIC_RULES=(r'(?:A|B|R|AB)_(?:UPDATE|CHECK|DEV|VIABILITY)_(?:PRESERVED_)?[0-9]{3}\.json',
+              r'B_EXACT_VIABILITY_[0-9a-f]{64}\.json',r'ACCEL_EXACT_PLAN_[0-9]{3}(?:_FAILED)?\.json',
+              r'WARM_[ABR]_(?:FAILED(?:_V3)?|PAUSED)\.json',r'(?:WARM_GUIDED_STOP|STOP)\.json',
+              r'PAUSE_[A-Za-z0-9_]+\.json')
+
+
+def publishable(name):return any(re.fullmatch(rule,name) for rule in PUBLIC_RULES)
 
 
 def describe(name,value):
@@ -51,23 +61,29 @@ def describe(name,value):
 
 def publish():
     local=ops.EVIDENCE/'warm_live';local.mkdir(exist_ok=True)
-    known=[p.name for p in local.glob('*.json')]
-    result=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,sys
+    doc=checked(ops.LOCAL/'docs/paper_results/COOPMWM.md');current=doc.read_text(encoding='utf-8')
+    # A cache write is not a publication: recovery must adopt receipts fetched
+    # before a prior formatting failure but not yet appended to the paper log.
+    known=[p.name for p in local.glob('*.json') if publishable(p.name) and f'<!-- warm-receipt:{p.name}:' in current]
+    result=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,sys,re
 r=pathlib.Path({ROOT!r});assert r.is_dir();sys.path.insert(0,str(r/'pytools'))
 from tools.coopmwm.accel_storage import read,charged
-known=set(json.loads({json.dumps(known)!r}));out={{}}
+known=set(json.loads({json.dumps(known)!r}));out={{}};rules=json.loads({json.dumps(PUBLIC_RULES)!r})
 patterns=('*_UPDATE_*.json','*_CHECK_*.json','*_DEV_*.json','*_VIABILITY_*.json','ACCEL_EXACT_PLAN_*.json','WARM_*_FAILED.json','WARM_*_FAILED_V3.json','WARM_*_PAUSED.json','PAUSE_*.json','WARM_GUIDED_STOP.json','STOP.json')
 for pattern in patterns:
  for p in r.glob(pattern):
-  if '_RECORDS_' in p.name or p.name in known:continue
+   if p.name in known or not any(re.fullmatch(rule,p.name) for rule in rules):continue
   out[p.name]=read(p)
 p=pathlib.Path({PRIOR!r})/'A_CHECK_004.json';key='A_CHECK_PRESERVED_004.json'
 if key not in known and p.is_file():out[key]=read(p)
 print(json.dumps(dict(receipts=out,charged_sim_s=charged(r))))''',timeout=45))
-    doc=checked(ops.LOCAL/'docs/paper_results/COOPMWM.md');current=doc.read_text(encoding='utf-8')
     changed=[];text=''
     for name,value in sorted(result['receipts'].items()):
-        target=local/name;write(target,value);changed.append(str(target.relative_to(ops.LOCAL)))
+        if not publishable(name):continue
+        target=local/name
+        if target.exists():assert read(target)==value,'immutable cached training receipt changed'
+        else:write(target,value)
+        changed.append(str(target.relative_to(ops.LOCAL)))
         marker=f'<!-- warm-receipt:{name}:{digest(value)} -->'
         if marker not in current:text+=describe(name,value)+marker+'\n'
     if text:
