@@ -1,0 +1,19 @@
+{
+  "owner": "S-RB2-LPHYS",
+  "pid": 891804,
+  "boot_id": "d19e6898-efd0-4288-a901-d63b21f11163",
+  "start_ticks": "4213300857",
+  "stage": "/root/rbeval20261031/lphys_code_cef6321cb92c",
+  "work": "/root/rbeval20261031/lphys_unit_v1",
+  "command": [
+    "/root/miniconda3/bin/python",
+    "-B",
+    "-m",
+    "pytest",
+    "tests/test_rb2lphys.py",
+    "-q",
+    "-p",
+    "no:cacheprovider"
+  ],
+  "started_unix": 1793506421.753879
+}

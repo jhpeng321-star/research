@@ -1,0 +1,69 @@
+{
+  "schema": "wm_phys.learned_parameters.v1",
+  "name": "learned_v1",
+  "fit_worlds": [
+    969400,
+    969401,
+    969402,
+    969403,
+    969404,
+    969405,
+    969406,
+    969407,
+    969408,
+    969409,
+    969410,
+    969411,
+    969412,
+    969413,
+    969414,
+    969415,
+    969416,
+    969417,
+    969418,
+    969419,
+    969420,
+    969421,
+    969422,
+    969423,
+    969424,
+    969425,
+    969426,
+    969427,
+    969428,
+    969429,
+    969430,
+    969431
+  ],
+  "selection_worlds": [
+    969420,
+    969421,
+    969422,
+    969423,
+    969424,
+    969425,
+    969426,
+    969427,
+    969428,
+    969429,
+    969430,
+    969431
+  ],
+  "departure_parameters": {
+    "lane_first_probability": 0.0,
+    "mainline_last_probability": 0.0,
+    "ramp_last_probability": 0.011075188190315551
+  },
+  "fit_interval_s": [
+    240,
+    300
+  ],
+  "conditional_check_interval_s": [
+    300,
+    600.0
+  ],
+  "frozen_idm_population_sha256": "d8cee1dabe1c064f2da1b3d49af934e2bfd8f9869250ac31f98f3943532cc092",
+  "rule_forms": "SUMO1.27.1 SumoInsertion; max/last speed; free/first lane",
+  "ownership": "IDM/LC populations unchanged; FIT/LANE own those coordinates",
+  "status": "conditional screen only; autonomous development comparison required"
+}

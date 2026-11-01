@@ -52,11 +52,12 @@ class SumoInsertion:
     departSpeed supports max (patched), last/desired (unpatched), and explicit numeric
     speeds (unpatched, refusal if unsafe). Default SUMO departSpeed is 0.
     """
-    def __init__(self, physics, mix=None, *, depart_lane='free', depart_speed='max'):
+    def __init__(self, physics, mix=None, *, depart_lane='free', depart_speed='max', departure_profile=None):
         self.physics = physics
         self.mix = mix
         self.depart_lane = depart_lane
         self.depart_speed = depart_speed if depart_speed in ('max', 'last', 'desired') else float(depart_speed)
+        self.departure_profile = departure_profile
         if depart_lane not in ('free', 'best_free', 'first', 0, 1, 2):
             raise ValueError('unsupported SUMO departLane')
         if depart_speed not in ('max', 'last', 'desired'):
@@ -93,11 +94,14 @@ class SumoInsertion:
         if not process.cfg.conserve_queue or process.cfg.learned_entry is not None or process.cfg.learned_admission is not None:
             raise ValueError('SUMO insertion requires exact queue and learned admission OFF')
         p = self.candidate(b, entrance, ordinal, cav)
+        depart_lane, depart_speed = self.depart_lane, self.depart_speed
+        if self.departure_profile is not None:
+            depart_lane, depart_speed = self.departure_profile.modes(self.mix, b, entrance, ordinal)
         length = float(NOMINAL_LENGTH_M)
         lanes = sorted(lanes, reverse=True)  # SUMO rightmost first, WM indexes reversed
-        if isinstance(self.depart_lane, int):
-            lanes = [self.depart_lane] if self.depart_lane in lanes else []
-        elif self.depart_lane == 'first':
+        if isinstance(depart_lane, int):
+            lanes = [depart_lane] if depart_lane in lanes else []
+        elif depart_lane == 'first':
             lanes = lanes[:1]
         else:
             # On this network both mainline entrance lanes have the same
@@ -112,18 +116,18 @@ class SumoInsertion:
             gap, leader = self.gap(process, work, b, lane, length)
             cap = lane_desired_speed(p['v0'], float(process.cfg.sumo_lane_speed_mps[lane]),
                                      self.physics.speed_limit_mps)
-            if self.depart_speed in ('max', 'desired'):
+            if depart_speed in ('max', 'desired'):
                 requested = cap
-            elif self.depart_speed == 'last':
+            elif depart_speed == 'last':
                 requested = min(cap, leader if gap < 1e9 else cap)
             else:
-                requested = float(self.depart_speed)
+                requested = float(depart_speed)
                 if requested > cap:
                     continue
             # The IDM departure check uses this lane's desired speed too, while
             # the coupled newborn retains the original reference-speed setting.
             speed = insertion_speed(requested, gap, leader, {**p, 'v0': cap}, process.dt)
-            if speed is None or (self.depart_speed != 'max' and speed < requested):
+            if speed is None or (depart_speed != 'max' and speed < requested):
                 continue
             if process._place(work, b, entrance, lane, cav, speed, length):
                 slot = work.inserted[-1][1]
@@ -144,5 +148,7 @@ def configure_entries(process, physics, sampler=None):
         raise ValueError('SUMO insertion needs identity-keyed observable entrant sampler')
     process.cfg.learned_entry = None
     process.cfg.learned_admission = None
-    process.cfg.sumo_insertion = SumoInsertion(physics, mix)
+    from wms.physics.learned_parameters import departure_parameters
+    profile = departure_parameters(physics)
+    process.cfg.sumo_insertion = SumoInsertion(physics, mix, departure_profile=profile)
     process.cfg.insert_rule = 'sumo_like_v2'  # reuse FIFO/ordinal/ledger plumbing only

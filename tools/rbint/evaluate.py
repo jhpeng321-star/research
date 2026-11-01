@@ -16,6 +16,13 @@ def main(variant):
     sources = [ROOT/'tools/rbint/rebuild.py', Path(__file__), Path(sys.argv[0]).resolve(),
                ROOT/'configs/native_cav_head_v5.json', ROOT/'tools/rbint/endpoints.py',
                ROOT/'tools/rbint/observations.py', ROOT/'tools/rbint/departure.py']
+    import tomllib
+    parser_config = argparse.ArgumentParser(add_help=False)
+    parser_config.add_argument('--wm-config', required=True)
+    config_args, _ = parser_config.parse_known_args()
+    physics = tomllib.loads(Path(config_args.wm_config).read_text())['physics']
+    if physics.get('physics_params', 'off') != 'off':
+        sources.append(ROOT/physics['physics_params_file'])
     if variant == 'C':
         sources.append(ROOT/'artifacts/rbfit/pooled_full_v5/idm_pooled.json')
     if variant == 'FULL':

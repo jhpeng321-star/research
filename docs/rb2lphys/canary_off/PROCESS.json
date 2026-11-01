@@ -1,0 +1,23 @@
+{
+  "owner": "S-RB2-LPHYS",
+  "pid": 892295,
+  "boot_id": "d19e6898-efd0-4288-a901-d63b21f11163",
+  "start_ticks": "4213323347",
+  "stage": "/root/rbeval20261031/lphys_code_06eaf9b3b58f",
+  "work": "/root/rbeval20261031/lphys_canary_off",
+  "command": [
+    "/root/miniconda3/bin/python",
+    "-B",
+    "-m",
+    "tools.rb2lphys.evaluate",
+    "--world",
+    "969420",
+    "--futures",
+    "2",
+    "--params",
+    "off",
+    "--out",
+    "/root/rbeval20261031/lphys_canary_off/task"
+  ],
+  "started_unix": 1793506646.6551309
+}

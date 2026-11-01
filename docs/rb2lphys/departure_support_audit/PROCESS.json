@@ -1,0 +1,19 @@
+{
+  "owner": "S-RB2-LPHYS",
+  "pid": 1218949,
+  "boot_id": "b8bc1fcb-c656-4e1e-a43d-4543118c834e",
+  "start_ticks": "52132578",
+  "stage": "/home/ubuntu/rb2lphys20261101/lphys_code_1c5722e9a40d",
+  "work": "/home/ubuntu/rb2lphys20261101/lphys_departure_support_audit",
+  "command": [
+    "/home/ubuntu/miniconda3/bin/python",
+    "-B",
+    "-m",
+    "tools.rb2lphys.fit_departures",
+    "--root",
+    "/home/ubuntu/wmdata20261031/views",
+    "--out",
+    "/home/ubuntu/rb2lphys20261101/lphys_departure_support_audit"
+  ],
+  "started_unix": 1793507048.0584967
+}

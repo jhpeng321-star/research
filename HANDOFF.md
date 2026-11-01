@@ -3,8 +3,11 @@
 Branch `c4/rb2-int`, base engineering source FULL-v4 `22cc32f6`; inherited
 round-1 delivery remains below. Read `docs/rb2int/PLAN.md` when available.
 
-- FULL-v5 and FULL-v5-LP are **NOT READY**. LANE6b4bfbd5/CAL7c1cf53c and
-  BREAK116b2147 engineering intake complete; LPHYS and full dev smoke pending.
+- FULL-v5 and FULL-v5-LP are **NOT READY**. All four engineering intakes merged:
+  LANE6b4bfbd5/CAL7c1cf53c/BREAK116b2147/LPHYSf6cf52ab. Integrated recipes
+  `configs/wm_phys_v5{,_lp}.toml`; staged smoke/full exposure release still pending.
+- Cross-worker physical/sampling/recipe integration gate135PASS/0skips/20.11s;
+  `docs/rb2int/INTAKE_LPHYS.md`. LC attachment now preserves CAL's latent wrapper.
   Fresh-session recovery and next steps: `docs/rb2int/PLAN.md`.
 - FIT/selection stays on969400–969431 (development panel969420–969431).
   Reserved969432–969439 only for the final frozen comparison.
@@ -235,6 +238,42 @@ existing independently parity-tested wm_phys_cpu recipe (fast exact merge querie
 Current source/metadata/evidence under docs/rb2break; no reserved or WMDATA2 data.
 
 ## Inherited round1 handoff (provenance; not current BREAK process ownership)
+## LPHYS engineering intake — source snapshotf6cf52ab
+
+Explicit learned physical departure-parameter variant being integrated; it is
+not a calibrated/qualified FULL-v5-LP yet. Peer jobs below remain LPHYS-owned.
+Integrated pair differs only by the declared LP departure distribution;135CPU PASS.
+
+### Preserved S-RB2-LPHYS handoff
+
+Branch `c4/rb2-lphys`, frozen engineering source22cc32f6; inherited HEAD03c81f91.
+Plan: `docs/rb2lphys/PLAN.md`; coordination: `rb-shared/RB2_LPHYS_OWNERSHIP.md`.
+LPHYS owns default-OFF physical parameter artifact/switch, starting with SUMO
+departure parameters; FIT/LANE own five LC and IDM population/posterior settings.
+No independent refit of those supports; no acceleration residuals.
+Only969400–969431 allowed for fit/selection; no WMDATA2 or reserved outcomes read
+for round-2 selection. Required prior aggregate evidence read.
+Commits fd768d54/cef6321c add the default-OFF departure-parameter reader and GP fit.
+`physics_params='learned_v1'`, explicit `physics_params_file` (recipe-relative path).
+Current artifact `artifacts/rb2lphys/learned_v1.json`: first-lane0, mainline-last0,
+ramp-last0.01107518819; all other IDM/LC population parameters unchanged.
+31CPU checks PASS/1CUDA skip locally;14own checks PASS on gpuR. Prefix fit1068births;
+later development2059births: objective0.0827416→0.0827994 (slightly WORSE).
+This conditional fit does NOT justify adoption. Autonomous comparison LIVE.
+cpuQ owned diagnosis1188078 and fitter1197634 EXITED. gpuR unit891804 EXITED.
+gpuR paired969420/K2/fivearms/H600 canaries COMPLETE, finite/conserved, shared
+driver/arrival source receipts verified: `docs/rb2lphys/CANARY_CHECK.json`.
+Commits06eaf9b3/1c5722e9 contain frozen artifact, paired runner and canary evidence.
+Panel coordinator893753 (own) runs at most2×5GiB/nice19/oneCPUthread children,
+`/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel`,12development worlds/K2/fivearms.
+Each canary reused once; no K2 relabelling as K8. Full comparison not yet scored.
+Root-volume12:22 free55.7MB; own NEW stage/results use verified alternate volume
+with2.03GB free; no peer or old own file deleted/moved. Canaries retained in root.
+Support-only revalidation confirms converted tapes end600s: later conditional
+check actually300..600s, not requested upperbound900s. Values/results unchanged.
+Observations.py untouched. No peer PID action; full5-arm development runner ready.
+Candidate NOT READY; FULL-v5-LP must not be qualified from conditional birth scores.
+
 ## Preserved round-1 handoff
 
 # S-RB-INT FINAL — 2026-11-01

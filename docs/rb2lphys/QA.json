@@ -1,0 +1,19 @@
+{
+  "recorded_by": "agent from completed terminal/tool outputs",
+  "local_command": "C:\\Users\\jpeng\\Miniconda3\\python.exe -m pytest tests/test_rb2lphys.py tests/test_rbint_recipe.py tests/test_rbint_departure.py tests/test_rbint_merge_fast.py -q -p no:cacheprovider",
+  "local_passed": 31,
+  "local_skipped": 1,
+  "skip_reason": "CUDA parity requires a free GPU; local NVIDIA driver unavailable",
+  "local_seconds": 11.11,
+  "remote_own_checks_passed": 14,
+  "remote_own_checks_seconds": 1.83,
+  "remote_checks_stage_commit": "06eaf9b3b58f9e137a0f0ee6fc73c3f8e94d2dd1",
+  "paired_canary_tasks": 4,
+  "paired_canary_world": 969420,
+  "paired_canary_arms": 5,
+  "paired_canary_futures_per_variant": 2,
+  "paired_canary_horizon_s": 600,
+  "canary_verification": "docs/rb2lphys/CANARY_CHECK.json",
+  "canary_finite_conserved_crn_verified": true,
+  "qualification_implied": false
+}
