@@ -1,0 +1,21 @@
+{
+ "pid": 473053,
+ "start_ticks": "889857083",
+ "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+ "argv": [
+  "nice",
+  "-n",
+  "19",
+  "/root/miniconda3/bin/python",
+  "-B",
+  "-u",
+  "/root/autodl-tmp/c4/rb2int20261101/phys_code_d0df3d66e80a/tools/rb2int/final_worker.py",
+  "--root",
+  "/root/autodl-tmp/c4/rb2int20261101/final_v5_v1",
+  "--host",
+  "gpuA"
+ ],
+ "root": "/root/autodl-tmp/c4/rb2int20261101/final_v5_v1",
+ "host": "gpuA",
+ "action": "launch"
+}

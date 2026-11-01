@@ -3,12 +3,18 @@
 Branch `c4/rb2-int`, base engineering source FULL-v4 `22cc32f6`; inherited
 round-1 delivery remains below. Read `docs/rb2int/PLAN.md` when available.
 
+**FINAL EVALUATION RUNNING — NEVER REDISPATCH.** gpuA supervisor473053 and
+gpuR924719 (exact boot/startticks in docs/rb2int/FINAL_{GPUA,GPUR}_PROCESS.json),
+root `/root/autodl-tmp/c4/rb2int20261101/final_v5_v1` on both hosts. Controld0df3d66,
+modelb2df7458, releaseV2/plan frozen.4gpuA+3gpuR own5GiB/nice19/singlethread workers.
+Read `docs/rb2int/CURRENT_JOBS.md` and latest final status receipts BEFORE any action.
+
 **FULL-v5 READY for engineering/teacher-quality rerun.** Frozen sourceb2df7458,
 gpuA stage `/root/autodl-tmp/c4/rb2int20261101/phys_code_b2df7458a41f`, recipe
 SHA023fa74a4d3059115ec0a5f28d39030a76137d871db5798eb1d23a13fc1e32c5.
 Both dev worlds/allfivearms/H600/K1 PASS220.56/232.72s;446421 EXITED. Read
 `docs/rb2int/CANARY_V5_B2DF7458_STATUS03.json` and shared RB2_INT_FULL_V5_READY.md.
-Distributional qualification/switching remain pending; no final panel exists yet.
+Distributional qualification/switching remain pending; final panel is RUNNING.
 
 **FULL-v5-LP engineering READY too:** same source, recipeSHA95802e9bc6d4661cd86dd738db0853cb0ce6055ebcf23194943a5c745f945c15;
 allfivearm600s dev canary PASS218.12/215.52s,449208 EXITED. Read exact completion
@@ -16,7 +22,7 @@ allfivearm600s dev canary PASS218.12/215.52s,449208 EXITED. Read exact completio
 
 **OWNERSHIP: read `docs/rb2int/CURRENT_JOBS.md` before any launch.** All four
 closed/full smoke processes EXITED/PASS. Earlier LP admission failures preceded
-claim/Popen. No duplicate job. No INT final-panel job has been dispatched yet.
+claim/Popen. No duplicate job. Final supervisors above now own all new dispatches.
 WMPHYS_V5.md is explicitly a progress report, not a completed final evaluation.
 
 Final causal inputs58 exported/transferred/verified; past-bin proof max error0.
@@ -27,7 +33,7 @@ WM2 baseline kernel bridge909809 EXITED/PASS150.70s (control378d7be5), exact
 clock/speed/support/event parity, max error0; never duplicate.
 V4 bridge461214 EXITED/PASS236.71s, max parity error0. Both baseline bridges now
 PASS. Clean inactive-file cache accounting corrected read-only. Final releaseV2
-and outcome-blind plan prepared; see FINAL_EXECUTION_DESIGN.md. No final task yet.
+and outcome-blind plan deployed/running; see FINAL_EXECUTION_DESIGN.md.
 
 - FULL-v5 and FULL-v5-LP engineering READY. All four intakes merged:
   LANE6b4bfbd5/CAL7c1cf53c/BREAK116b2147/LPHYSf6cf52ab. Integrated recipes

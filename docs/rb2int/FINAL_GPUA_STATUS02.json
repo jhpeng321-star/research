@@ -1,0 +1,53 @@
+{
+ "root": "/root/autodl-tmp/c4/rb2int20261101/final_v5_v1",
+ "exists": true,
+ "process": {
+  "pid": 473053,
+  "start_ticks": "889857083",
+  "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+  "argv": [
+   "nice",
+   "-n",
+   "19",
+   "/root/miniconda3/bin/python",
+   "-B",
+   "-u",
+   "/root/autodl-tmp/c4/rb2int20261101/phys_code_d0df3d66e80a/tools/rb2int/final_worker.py",
+   "--root",
+   "/root/autodl-tmp/c4/rb2int20261101/final_v5_v1",
+   "--host",
+   "gpuA"
+  ],
+  "root": "/root/autodl-tmp/c4/rb2int20261101/final_v5_v1",
+  "host": "gpuA"
+ },
+ "alive": true,
+ "complete_world_jobs": [],
+ "failed_world_jobs": [],
+ "running": [
+  {
+   "job": "v4_969590",
+   "pid": 473081,
+   "alive": true
+  },
+  {
+   "job": "v5-lp_969436",
+   "pid": 473068,
+   "alive": true
+  },
+  {
+   "job": "v5_969436",
+   "pid": 473062,
+   "alive": true
+  },
+  {
+   "job": "v5_969590",
+   "pid": 473094,
+   "alive": true
+  }
+ ],
+ "future_task_files": 4,
+ "log_tail": "WORLD_START v5_969436 473062\nWORLD_START v5-lp_969436 473068\nWORLD_START v4_969590 473081\nWORLD_START v5_969590 473094\n",
+ "action": "status",
+ "host": "gpuA"
+}

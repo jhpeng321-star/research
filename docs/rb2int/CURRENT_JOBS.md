@@ -1,6 +1,27 @@
 # Resume here — INT owned development jobs, sourceb2df7458
 
-Read this and HANDOFF.md before any launch. Final evaluation has **not** started.
+Read this and HANDOFF.md before any launch. **FINAL EVALUATION IS RUNNING.**
+Do not launch either supervisor again.
+
+## Active final ownership (highest priority)
+
+- gpuA supervisor473053/start889857083/boot a81555d7-176e-4ed8-bc7d-896fc89cc914.
+- gpuR supervisor924719/start4214495421/boot d19e6898-efd0-4288-a901-d63b21f11163.
+- Root on BOTH hosts: `/root/autodl-tmp/c4/rb2int20261101/final_v5_v1`.
+- Control source d0df3d66e80a45e1e03298a7e590429ab7f67adf; model source remainsb2df7458.
+  ReleaseV2 SHA6579ece632f1368aa8ea80c25c612297da3d5e57a44a91793e4ea4643d0e01df;
+  planSHA185c565df34e4150c90e4b12d55391ab29772c58ab84eff7c0dc3e50ff1caa80.
+- gpuA first children473062(v5/969436),473068(LP/969436),473081(v4/969590),
+  473094(v5/969590). gpuR924722/924725/924733(WM2/969590,969595,969599).
+  Child PIDs change only as the fixed world queue advances; inspect PROCESS/EXIT
+  receipts and exact incarnation, never kill by name or redispatch a claim.
+- Latest status02: both supervisors alive, no failed worlds; gpuA4future files,
+  gpuR still beginning first futures. Future files are not complete K8 worlds.
+- Read: `python -B -m tools.rb2int.final_ops status --host gpuA --control /root/autodl-tmp/c4/rb2int20261101/phys_code_d0df3d66e80a --receipt <NEW_LOCAL_JSON>` (gpuR analog).
+-216worldjobs/1,728new future tasks,128original baseline reserved tasks reused;
+  v5/LP pairs stay on the same host.4gpuA/3gpuR own5GiB workers/nice19/singlethread.
+  No new world starts after Nov2 09:00; running own worlds finish, all attrition retained.
+
 Model stage is immutable and remains valid across documentation/scoring commits:
 
 `gpuA:/root/autodl-tmp/c4/rb2int20261101/phys_code_b2df7458a41f`
@@ -51,8 +72,8 @@ Use this existing stage; do not restage/replay merely because Git HEAD advances.
   receipts `BRIDGE_V4_378D7BE5_{STATUS01,PASS}.json`. First admission had stopped
   before claim on raw memory accounting; read-only correction counted only clean
   inactive file cache. No original or successful validation task was repeated.
-- Final releaseV2 and plan are prepared; not yet deployed/launched. See
-  FINAL_EXECUTION_DESIGN.md. Do not use the preserved V1 release for deployment.
+- Final releaseV2/plan are DEPLOYED/RUNNING as above. See FINAL_EXECUTION_DESIGN.md.
+  Do not use the preserved V1 release or launch either root a second time.
 
 ## Not launched
 
@@ -61,9 +82,9 @@ Use this existing stage; do not restage/replay merely because Git HEAD advances.
   half-physical-host headroom plus measured effective cgroup quota (<80% after
   adding one thread), retaining memory/disk/GPU caps. The one successful LP launch
   followed actual memory release; no forecast or successful claim was repeated.
-- No final panel/collector/dispatcher is running for INT. Final causal inputs are
-  prepared, transferred and exact-prefix verified; kernel bridges and exclusive
-  final dispatch remain pending. Preserve the completed export904864 and transfers.
+- Final supervisors are RUNNING. The scoring/collection continuation is still
+  being prepared; do not invent a second inference dispatcher. Preserve completed
+  exporter904864, transfers and all baseline/kernel/model smokes.
 
 ## Exposure and uncertainty
 

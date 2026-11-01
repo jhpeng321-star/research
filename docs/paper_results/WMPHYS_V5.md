@@ -5,8 +5,9 @@ FULL-v5 and FULL-v5-LP pass the local physical integration tests and two-world
 60s recorded-start smoke. FULL-v5 also passes the all-five-arm600s development
 canary; LP passes its separate full canary too. Both are engineering-ready for the
 teacher-quality rerun, frozen before new final outcomes.
-Final evaluation, distributional scores, confidence intervals and switching
-eligibility are still pending. This is not the completed Nov2 delivery.
+The matched final evaluation is now running on both GPUs; distributional scores,
+confidence intervals and switching eligibility are pending. This is not the
+completed Nov2 delivery.
 
 ## What exists
 
@@ -41,8 +42,8 @@ eligibility are still pending. This is not the completed Nov2 delivery.
 
 ## Remaining work / teacher status
 
-Complete baseline/source/input parity and final
-release; execute only missing identity-bound tasks; score all models on matched
+Baseline/source/input parity and final release are complete. Execute only the
+scheduled missing identity-bound tasks; score all models on matched
 complete K8 worlds, distributional components, credibility and switching rule.
 Keep source-bound v4 decision maps separate from v5. The FULL-v5 READY signal and
 immutable source/recipe/smoke binding in HANDOFF.md are now published for
