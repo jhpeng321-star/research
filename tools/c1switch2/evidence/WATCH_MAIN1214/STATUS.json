@@ -1,14 +1,14 @@
 {
-  "unix": 1793519274.7426937,
+  "unix": 1793520500.560032,
   "protocol": "S-C1SWITCH2/v2",
   "hosts": {
     "cpuQ": {
-      "unix": 1793519275.5523047,
+      "unix": 1793520501.0665922,
       "host": "cpuQ",
       "load": [
-        10.56103515625,
-        11.1162109375,
-        10.8671875
+        10.73583984375,
+        11.25634765625,
+        11.12939453125
       ],
       "cpu": {
         "cpu": {
@@ -79,12 +79,12 @@
       "gpu": {}
     },
     "gpuR": {
-      "unix": 1793519276.748523,
+      "unix": 1793520502.1183352,
       "host": "gpuR",
       "load": [
-        34.564453125,
-        35.07373046875,
-        32.345703125
+        9.87841796875,
+        11.2294921875,
+        17.625
       ],
       "cpu": {
         "cpu": {
@@ -176,7 +176,7 @@
           "ready": true,
           "requests": 98,
           "results": 98,
-          "elapsed_wall_s": 49097.50762653351
+          "elapsed_wall_s": 50322.87647199631
         },
         "bb": {
           "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
@@ -197,7 +197,7 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 3087.424774646759
+          "elapsed_wall_s": 4312.793581962585
         },
         "bb_startup": {
           "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -218,17 +218,17 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 15123.29380106926
+          "elapsed_wall_s": 16348.662600755692
         }
       }
     },
     "gpuA": {
-      "unix": 1793519277.862907,
+      "unix": 1793520502.9814196,
       "host": "gpuA",
       "load": [
-        11.32861328125,
-        12.3271484375,
-        11.5830078125
+        13.43994140625,
+        15.44189453125,
+        14.14453125
       ],
       "cpu": {},
       "gpu": {
@@ -251,7 +251,7 @@
           "ready": true,
           "requests": 90,
           "results": 90,
-          "elapsed_wall_s": 49103.59561061859
+          "elapsed_wall_s": 50328.71410179138
         },
         "bb": {
           "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
@@ -272,7 +272,7 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 3089.5724170207977
+          "elapsed_wall_s": 4314.690911054611
         },
         "bb_startup": {
           "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -293,7 +293,7 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 15125.247118473053
+          "elapsed_wall_s": 16350.36562037468
         }
       }
     }
@@ -387,11 +387,11 @@
     }
   },
   "latest_task_registration": [
-    "- 11:48 MAIN: WM-PHYS FINAL report published (11:35:55; FULL-v4 frozen 22cc32f6): registered switching rule FAIL (300 s breakdown rate not closer to real) -> S-C1SWITCH2 keeps WM2 for its WM arm. S-SELMAPPO fleet PPO picker finished training (final169, kept running through the SSH outage); S-SELMAPPO2 per-CAV at 84 updates; S-C1SWITCH2 admitting final-only selector evaluation on its panel.",
     "- 12:14 INCIDENT: gpuR root overlay 100% full (100 MB free; /root/autodl-tmp 97%) - endangers all gpuR jobs (WM eval, S-WMTEACH, S-C1SWITCH2 admission blocked). MAIN archiving idle /root/c4_heavy (16 GB; no files newer than 10-31 12:00, no processes) to gpuA archive_cpuQ_20261101/gpuR_c4_heavy.tar with sha256 verification, source removed only on match. Also: S-C1SWITCH2 BB startup restart AUTHORISED as a registered continuation exception (retain the 43.024 GPU-s charge; within its caps).",
     "- S-C1SWITCH2 12:24 SUPERVISION LIVE (82667e50/heartbeatbddaa353; exactreceipt1793507083): ownWindows42548 verifies exact ownedroots/progress20min and commits shortHANDOFF+immutable receipts; resourceobservation60s admits ONLY originalunstartedgpuRfleet1worker and prospectivelyregisteredMAIN12:14BB3workers after disk/load/memory/currentregistry/source/paritygates, durableper-scopeattemptclaims forbid automatic scientificretry. Originalobserver25348EXITED normallyatnoon/no duplicate. gpuRdiskstillBLOCKED/root55726080bytes/load6.44, no newGPU/physics/admissionclaims; awaitMAINarchive. cpuQfleet1152412LIVE/noSTOP/all12episodes360decisions/oraclesprogressing; ALL36originalWMoraclebranchesCOMPLETE20640actual. Aggregate207820charged/207160closedactual, finalizedGPU27729.12296916172s retained; originalbase468380sim-s/19GPUh unchanged. BBnewbothGPUCPUprobesPASS SAMEfrozenengine/identicalsamples37852b51, remaining10756.976022752002GPU-s after43.02397724799812prior debit. cpuQfree7873990656bytes/ownoutputs342522942; per-CAV606968LIVE/final169pending, PHYSOFF. No replay/deletion/peerPIDactions/newenv/push; primaryfullpairedWMvsRLstillINCOMPLETE.",
     "- S-C1SWITCH2 BB CONTINUATION REGISTERED BEFORE ALLOCATION (fb6df4f8; MAIN12:14 explicit exception): exactplanSHA25674807c59d8cd942ca0dbc39427a7b1264880e2ac5ce2e3d9c72c0ee80e565110 in tools/c1switch2/evidence/BB_CONTINUATION_PLAN.json. Preserve original terminal BB startup/STOP/parity/one-use claims; zeroBBphysics proven, exact original finalGPU43.02397724799812s retained: gpuA21.381694240495563/gpuR21.642283007502556. ONE new immutable both-card service scope, SAME frozen engine/checkpoints/protocol/library/objectives, external allocation metadata hardcaps remaining5378.618305759504s gpuA+5378.357716992497s gpuR=10756.976022752002s; old+new<=original10800s/3h, no refund/top-up. OriginalBB16world CPUstage /root/c1switch2_run_bbd7ba8b48ed5829 stillUNCLAIMED/empty; SAME79800sim-s/all original oracles, no priorWM/fixed/random/canary replay. Exact EXITED predecessor/finalreceipt hashes/currentauthority+registry/prospectiveplan/sourcepins/realCPUfeedback and newbothGPUparity required. BEFOREclaim/GPU: bothfree>=8GiB, gpuRload<20/disk>=2GiB; threeBB+onefleet<=4taskgpuRslots, nice19/singlethread. CPU89PASS existingMiniconda/targeted28PASS/RuffPASS; immutableCPUstage receipts follow. Originalbase468380sim-s/19GPUh/design95aa84cf/panel7c780c25 unchanged; PHYS finalruleFAIL/OFF. At fresh1215 receipt cpuQfleet1152412LIVE/all12episodes/360decisions/oraclesprogressing, originalWMoraclesALL36COMPLETE20640actual; gpuRfleet stillUNCLAIMED/diskblocked. No newSUMO/GPU at this registration, deletion/peerPIDactions/newenv/push.",
-    "- 15:11 S-COOPFREE BUDGET EXTENSION APPROVED (owner, chat 'approve for the sim' - the only pending SUMO request): +4,000,000 actual sim-s (total cap 6,000,000), for ~20-25 more corrected HOLD-credit updates; cost reductions as proposed (exact member-alone solos on a 25% random subset of windows; reuse HOLD baselines where the state repeats); learning checks at u3/u6/u9 (executed-change share, D_G, sum D_i, C_G mean/share>0, dev J600 vs MAPPO/HOLD) with the fix-and-restart playbook. CPU priority below S-WMPLAN and S-C1SWITCH2."
+    "- 15:11 S-COOPFREE BUDGET EXTENSION APPROVED (owner, chat 'approve for the sim' - the only pending SUMO request): +4,000,000 actual sim-s (total cap 6,000,000), for ~20-25 more corrected HOLD-credit updates; cost reductions as proposed (exact member-alone solos on a 25% random subset of windows; reuse HOLD baselines where the state repeats); learning checks at u3/u6/u9 (executed-change share, D_G, sum D_i, C_G mean/share>0, dev J600 vs MAPPO/HOLD) with the fix-and-restart playbook. CPU priority below S-WMPLAN and S-C1SWITCH2.",
+    "2026-11-01 15:56 MAIN: gpuR /root/c4_heavy already moved (EXIT=0, sha verified earlier; / now 49%). gpuR data disk 97% (1.7G) blocks S-C1SWITCH2's 2 GiB gate -> moving idle /root/autodl-tmp/c4/e3data (4.9G, untouched since 10-27, lsof-checked) to gpuA archive_cpuQ_20261101/gpuR_e3data.tar; source removed only if sha256 matches (script /root/move_e3data.sh, log /root/move_e3data_20261101.log)."
   ],
   "final_checkpoint_receipts": {
     "SELMAPPO_FINAL.json": true,
@@ -400,11 +400,11 @@
   "postnoon_supervision": {
     "pid": 42548,
     "admission": {
-      "unix": 1793519213.9193523,
-      "status": "WAIT_CPU_DISK_NO_CLAIM",
+      "unix": 1793520439.7569163,
+      "status": "ADMITTED_OR_TERMINAL_NO_RETRY",
       "states": {
-        "load": 27.0029296875,
-        "free_bytes": 16480362496
+        "load": 12.4365234375,
+        "free_bytes": 11309871104
       }
     },
     "admission_error": {
