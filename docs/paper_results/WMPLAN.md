@@ -62,12 +62,7 @@ gates and the final model comparison still precede live dispatch.
 
 <!-- WMPLAN-PROGRESS:BEGIN -->
 ## Current continuation status
-- Fresh-session recovery verified local continuation PID21412 and stopped only that
-  owned process before revising its obsolete launch order. Its claim and log are retained.
-- Both remote S-WMPLAN roots are absent: no live dispatch or SUMO has occurred.
-  Existing FULL-v5 quality is alive with75/96 complete futures; it is not duplicated.
-- Owner14:48 amendment is being implemented: gpuA+gpuR inference, all24 expected
-  worlds and their primary report before the strict arm. Registered199200sim-s upper retained.
-- gpuR has16GiB free on its root filesystem, but only1.8GiB on `/root/autodl-tmp`;
-  inference outputs must use the root filesystem. No peer process is modified.
+- Exclusive amended continuation is waiting for the already-running FULL-v5 quality check.
+- Expected arm first, report before strict, both GPUs; exact199200upper retained.
+- Original owned continuation stopped and retained; no peer process action or duplicated quality.
 <!-- WMPLAN-PROGRESS:END -->
