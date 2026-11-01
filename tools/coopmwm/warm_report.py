@@ -48,3 +48,43 @@ def publish(value,qualified=False):
     lines.append(f'- Immutable complete receipt: `coopmwm/{target.name}`.\n')
     with doc.open('a',encoding='utf-8') as f:f.write(''.join(lines))
     return [str(doc.relative_to(ops.LOCAL)),str(target.relative_to(ops.LOCAL))]
+
+
+def qualify():
+    """Publish completed model qualification independently of learner release."""
+    import json
+    from .warm_release_ops import collect
+    from .warm_remote_ops import probe_routes
+    from .storage import read
+    from .protocol import sha,REGISTRY
+    target=ops.EVIDENCE/'WARM_MEMORY_QUALIFIED.json'
+    assert not target.exists(),'adopt published warm qualification'
+    data=collect()
+    assert all(v['state'] in ('exited','Z') and v['receipts']['COMPLETE.json']['pass_'] for v in data.values())
+    routes=probe_routes()
+    for host in ('gpuA','gpuR'):
+        route=routes[host+'@0'];assert route['alive'] and route['ready'] and not route['failed']
+        files=sorted(ops.EVIDENCE.glob('WARM_DURABLE_STATUS_'+host+'_*.json'))
+        w=read(files[-1]);assert w['receipts']['SPOOL_OWNER.json']==route['owner']
+        gates=[v for n,v in w['receipts'].items() if n.startswith('STARTUP_')]
+        assert len(gates)==6 and all(v['pass_'] and v['max_cost_error']==0 for v in gates)
+    value=summary(data)
+    value.update(pass_=True,qualification_only=True,training_dispatch=False,routes=routes,
+        runtime_cpu=read(ops.EVIDENCE/'CPU_coopmwm20261102_durablecpu2.json'),
+        search_screen='K4/H300 always; MAIN02:36 conditional screen revocation',
+        launch_requirement='separate exact-only learner/grader integration and immutable release; not authorized by model qualification')
+    assert value['runtime_cpu']['pass_'] and value['runtime_cpu']['tests']==160
+    publish(value,qualified=True)
+    line=('\nS-COOPMWM WARM MEMORY QUALIFIED qualificationSHA'+sha(target)+
+        ': completed original causal60s observable per-driver FULLv4 posterior/empty-cold/CPU160 gates adopted; '
+        'both original persistent GPU spools READY, six startup gates each EXACT0; original E2 cold/warm labels '
+        'and group2/4/6 timings retained, zero new SUMO. Two-window decision comparison is descriptive, '
+        'no demonstrated accuracy improvement. Registered MPPI K4/H300 always, K8/Hfinal unchanged. '
+        'This qualifies warm inference ONLY; exact-only learner/grader integration and separate runtime release remain before B/R learning.\n')
+    with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+    write(ops.EVIDENCE/'WARM_MEMORY_QUALIFICATION_REGISTRATION.json',dict(line=line,qualification_sha256=sha(target),new_sumo_sim_s=0))
+    print(json.dumps(dict(qualified=True,timestamp_utc=value['timestamp_utc'],training_dispatch=False,
+        timing=value['timing'],new_sumo_sim_s=0)))
+
+
+if __name__=='__main__':qualify()
