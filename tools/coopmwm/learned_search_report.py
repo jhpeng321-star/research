@@ -223,16 +223,20 @@ def write_report(res, path):
         else:
             L += [f"- {ev['searches']} held-out searches / {ev['worlds']} worlds; mean screen budget {_fmt(ev['mean_budget'], 1)}; "
                   f"median surrogate LOO R^2 {_fmt(ev['median_surrogate_loo_r2'], 2)}.",
-                  '', '| mode | evaluations used (x plain) | evals to plain elite quality (x plain budget) | reached '
-                  '| mode - plain evals (95% CI) | final elite quality (95% CI) | elite coverage | strict max reached |',
+                  '', '| mode | evaluations used (x plain) | reached plain elite quality | evals to it | '
+                  'evals - plain_alt (95% CI) | final elite quality (95% CI) | quality - plain_alt (95% CI) | elite coverage |',
                   '|---|---|---|---|---|---|---|---|']
             for m, s in ev['summary'].items():
-                e = s['elite']; d, q = e['minus_plain'], e['final_quality']
-                L.append(f"| {m} | {_fmt(s['evaluations_fraction'], 2)} | {_fmt(e['mean_fraction_of_plain_budget'], 2)} | "
-                         f"{_fmt(e['reached_rate'], 2)} | {_fmt(d['mean'], 1)} [{_fmt(d['ci_lo'], 1)}, {_fmt(d['ci_hi'], 1)}] | "
-                         f"{_fmt(q['mean'], 2)} [{_fmt(q['ci_lo'], 2)}, {_fmt(q['ci_hi'], 2)}] | {_fmt(s['elite_coverage'], 2)} | "
-                         f"{_fmt(s['reached_rate'], 2)} |")
-            L += ['', 'Quality: 0 = centre seed (unchanged policy), 1 = plain 3-iteration final best. Horizons are '
+                e = s['elite']; q = e['final_quality']
+                da = e.get('evals_minus_plain_alt', {}); qa = e.get('quality_minus_plain_alt', {})
+                L.append(f"| {m} | {_fmt(s['evaluations_fraction'], 2)} | {_fmt(e['reached_rate'], 2)} | "
+                         f"{_fmt(e['mean_evals_to_plain_elite_quality'], 1)} | {_fmt(da.get('mean'), 1)} "
+                         f"[{_fmt(da.get('ci_lo'), 1)}, {_fmt(da.get('ci_hi'), 1)}] | "
+                         f"{_fmt(q['mean'], 2)} [{_fmt(q['ci_lo'], 2)}, {_fmt(q['ci_hi'], 2)}] | {_fmt(qa.get('mean'), 2)} "
+                         f"[{_fmt(qa.get('ci_lo'), 2)}, {_fmt(qa.get('ci_hi'), 2)}] | {_fmt(s['elite_coverage'], 2)} |")
+            L += ['', 'Elite quality: 0 = centre seed (unchanged policy), 1 = plain 3-iteration final top-E mean. '
+                  'plain_alt (independent plain seed) is the fair reference for savings and calibrates elite coverage. '
+                  'Horizons are '
                   'identical in every mode (screen K4/H300, final K8/H_final); warm_it1/2 use fewer CEM iterations only. '
                   'Warm modes keep 20% generic + 10% novelty slices.']
         L += ['']

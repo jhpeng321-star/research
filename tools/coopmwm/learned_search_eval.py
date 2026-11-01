@@ -8,6 +8,8 @@ Modes (all run the real ``mppi_search.search`` code, same seed and budget):
   seeds  - + ``plan_proposer.proposal_seeds`` as ``extra_seeds``
   warm   - proposer ``warm_start`` replaces the initial distribution
   both   - warm start + seeds
+  plain_alt - the plain search with a different RNG seed: calibrates elite coverage
+           (how much of plain's elite set an equally good independent search reaches)
   warm_it1 / warm_it2 - warm start with only 1 / 2 CEM iterations (fewer candidates),
            SAME look-ahead: screen K4/H300 and final K8/H_final are unchanged
            (owner 2026-11-02: never shorten horizons; savings only from fewer
@@ -32,7 +34,9 @@ search's single best value (max) as the target. For each mode,
 evals-to-target is the first screened candidate (in evaluation order) whose
 surrogate value reaches the target. Modes that never reach it are censored at
 budget+1. Final K8 re-scoring is identical for all modes and is not counted.
-World-cluster bootstrap 95% CIs are computed on mode - plain. ELITE COVERAGE asks
+World-cluster bootstrap 95% CIs are computed on mode - plain and on mode - plain_alt.
+plain_alt is the FAIR reference: plain reaches its own final elite mean only at the
+end of its budget, by construction. ELITE COVERAGE asks
 whether a mode still finds what the plain search found. It is the fraction of the
 receipt's recorded real-WM pool elites that the mode's candidates approach at
 least as closely (RMS) as the plain replay's candidates do.
@@ -47,7 +51,7 @@ import numpy as np
 from . import mppi_search as ms
 from . import plan_proposer as pp
 
-MODES = ('plain', 'seeds', 'warm', 'both', 'warm_it1', 'warm_it2')
+MODES = ('plain', 'plain_alt', 'seeds', 'warm', 'both', 'warm_it1', 'warm_it2')
 ITERATIONS = dict(warm_it1=1, warm_it2=2)
 REGISTERED = dict(n_seeds=4, ridge=1e-2, min_pool=16, bootstraps=2000, seed=20261102,
                   curve_fracs=(.1, .25, .5, .75, 1.))
@@ -135,7 +139,7 @@ def replay(receipt, surrogate, mode, model=None, cfg=REGISTERED, config=None):
     if mode in ('warm', 'both') or mode in ITERATIONS:
         cov0 = (receipt.get('initial') or {}).get('covariance')
         kw['warm_start'] = pp.warm_start(record, group, model, regime, cov0=cov0)
-    seed = int(ms._digest([cfg['seed'], receipt.get('search_id')])[:15], 16)
+    seed = int(ms._digest([cfg['seed'], receipt.get('search_id')]+(['alt'] if mode == 'plain_alt' else []))[:15], 16)
     ms.search(record, group, policy, WIDE, evaluate, regime, seed=seed, config=config, **kw)
     return [v for c in calls[:-1] for v in c[0]], [z for c in calls[:-1] for z in c[1]]
 
@@ -226,6 +230,18 @@ def evaluations_curve(model, receipts, modes=MODES, cfg=None, config=None):
         rel = [x['modes'][mode]['evals_to_target']/x['budget'] for x in rows]
         d = [x['modes'][mode]['evals_to_target']-x['modes']['plain']['evals_to_target'] for x in rows]
         de = [x['modes'][mode]['evals_to_elite']-x['modes']['plain']['evals_to_elite'] for x in rows]
+        ref = 'plain_alt' if 'plain_alt' in modes else None
+        alt = {}
+        if ref:
+            # FAIR reference: plain reaches its own final elite mean only at its end by
+            # construction, so savings are quoted against an independent plain search.
+            alt = dict(
+                evals_minus_plain_alt=dict(zip(('mean', 'ci_lo', 'ci_hi'), _ci(
+                    [x['modes'][mode]['evals_to_elite']-x['modes'][ref]['evals_to_elite'] for x in rows],
+                    worlds, cfg['bootstraps'], cfg['seed']+4))),
+                quality_minus_plain_alt=dict(zip(('mean', 'ci_lo', 'ci_hi'), _ci(
+                    [x['modes'][mode]['final_elite_quality']-x['modes'][ref]['final_elite_quality'] for x in rows],
+                    worlds, cfg['bootstraps'], cfg['seed']+5))))
         summary[mode] = dict(
             elite=dict(mean_evals_to_plain_elite_quality=float(np.mean([x['modes'][mode]['evals_to_elite'] for x in rows])),
                        mean_fraction_of_plain_budget=float(np.mean([x['modes'][mode]['evals_to_elite']/x['budget'] for x in rows])),
@@ -234,7 +250,7 @@ def evaluations_curve(model, receipts, modes=MODES, cfg=None, config=None):
                        final_quality=dict(zip(('mean', 'ci_lo', 'ci_hi'), _ci(
                            [x['modes'][mode]['final_elite_quality'] for x in rows], worlds, cfg['bootstraps'], cfg['seed']+3))),
                        quality_curve={str(f): float(np.nanmean([x['modes'][mode]['elite_quality_at_frac'][str(f)]
-                                                                for x in rows])) for f in cfg['curve_fracs']}),
+                                                                for x in rows])) for f in cfg['curve_fracs']}, **alt),
             mean_evals_to_target=float(np.mean(ev)), median_evals_to_target=float(np.median(ev)),
             mean_fraction_of_budget=float(np.mean(rel)),
             reached_rate=float(np.mean([x['modes'][mode]['reached'] for x in rows])),
