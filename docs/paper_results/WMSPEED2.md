@@ -349,3 +349,29 @@ bulk time-axis table construction while preserving the exact interpolation law.
 Initial graph harness failures (Observation tree registration, then CUDA capture
 rejecting host-to-device construction of normalization constants) are retained;
 neither attempt changes the staged worker.
+
+### Measured additional trials (relative to eager speed2)
+
+- **Bulk time-axis acceleration tables:** warm GPU A H120/K4/w34/3 CAVs,
+  **44.987 →35.929s,1.252x** (725.54 →908.47 future-steps/s); warm H300/K8/w10/
+  4 CAVs, **81.175 →75.788s,1.071x** (591.31 →633.35 future-steps/s).
+  Both have exact0 costs/trajectories, identical ordering and draw IDs.
+  Cold CPU H60/K2/w4/4 CAVs also matches exactly (18.039 →17.279s,1.044x).
+  CPU raw/mask/residual tensors match bitwise at4/34/80/136 rows, including empty
+  members, fractional residual windows, unknown IDs, background overwrite, and
+  5-second knots. Table-only construction is37.53–66.89x faster; this is **not**
+  the end-to-end speed-up. Receipts: `tables120`, `tables300`, `tables_cpu60`,
+  and `tablecpu1` on GPU A.
+- **CUDA graphs of the actor and RSU encoder:** after literal-device-constant
+  caching, warm GPU R H60/K2/w4 passes exact0 at **10.273 →8.883s,1.156x**;
+  H120/K4/w34 passes exact0 at **46.030 →45.652s,1.008x**. The latter is too
+  small to establish a material wide-batch gain. Each graph is captured once,
+  then replayed60/120 times; input and output ownership are preserved by copies.
+  Physics/source/controller memory and draws remain eager. Capture overhead is
+  included. Receipts: `actorgraph60v4`, `actorgraph120v4_snapshot1` on GPU R.
+- **Batched newborn parameter writes:** warm GPU A H60/K2/w4/4 CAVs passes exact0
+  at **9.392 →8.578s,1.095x**. Original native `BirthMix.candidate` calls and
+  ordering remain; newborn lane/CAV reads and parameter scatters are batched.
+  A further trial keeps the read-only birth population on the CPU, where its
+  native identity-keyed discrete sampler already runs, avoiding repeated scalar
+  GPU reads. Larger-horizon qualification is pending before release.

@@ -106,9 +106,14 @@ out['owned_process_alive']=p.exists() and p.read_text().split()[21]==o['start_ti
 print(json.dumps(out))
 ''',timeout=30))
     target=LOCAL/'docs/paper_results/coopmwm'/f'WMSPEED2_{host}_{tag}.json'
-    write(target,value)
+    if target.exists() and json.loads(target.read_text())!=value:
+        i=1
+        while target.with_name(target.stem+f'_snapshot{i}.json').exists():i+=1
+        target=target.with_name(target.stem+f'_snapshot{i}.json')
+    if not target.exists():write(target,value)
     print(json.dumps(dict(receipt=str(target),alive=value['owned_process_alive'],
-        result={k:v for k,v in value.get('PARITY',{}).items() if k not in ('reference','optimized')})))
+        result={k:v for k,v in value.get('PARITY',value.get('EXPERIMENT',{})).items() if k not in ('reference','optimized')},
+        failure=value.get('FAILED',{}).get('traceback','')[-1800:])))
 
 
 def stage_release(tag,host):
@@ -172,7 +177,7 @@ if __name__ == '__main__':
     p.add_argument('mode', choices=('launch', 'status','wait','collect','stage-release','trace-summary'))
     p.add_argument('tag')
     p.add_argument('--compact', action='store_true')
-    p.add_argument('--job-mode',choices=('profile','parity','tests','qualification','gpu-profile','gpu-experiment'),default='profile')
+    p.add_argument('--job-mode',choices=('profile','parity','tests','qualification','gpu-profile','gpu-experiment','table-test'),default='profile')
     p.add_argument('--H',type=int,default=60)
     p.add_argument('--K',type=int,default=2)
     p.add_argument('--width',type=int,default=4)
@@ -185,7 +190,7 @@ if __name__ == '__main__':
     p.add_argument('--group-size',type=int,choices=(0,2,3,4),default=0)
     p.add_argument('--duration',type=int,choices=(60,120,300),default=60)
     p.add_argument('--warm',action='store_true')
-    p.add_argument('--experiment',choices=('actor_graphs','tables','wide_batch'),default='actor_graphs')
+    p.add_argument('--experiment',choices=('actor_graphs','tables','wide_batch','births','births_cpu','transfers'),default='actor_graphs')
     a = p.parse_args()
     assert all(re.fullmatch('[A-Za-z0-9_-]+',tag) for tag in a.tag.split(','))
     if a.mode == 'launch':launch(a.tag, a.compact, a.job_mode, a.H,a.K,a.width,a.lines,a.stage,a.fixture_index,a.host,a.gpu,a.group_size,a.duration,a.warm,a.experiment)

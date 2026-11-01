@@ -37,6 +37,71 @@ def vector_table(actions,ids,device):
     return raw.to(device),mask.to(device),residual.to(device)
 
 
+def table_test(root):
+    from .plan_wm import profile_table
+    rt,record,actions=setup(root)
+    assert next(rt.model.parameters()).device.type=='cpu'
+    ids=[r['vid'] for r in record['rows']]
+    actions=[dict(a,background_residuals=record['policy_residuals']) for a in actions]
+    actions.extend([
+        dict(id='empty',members=[],knots=[],duration_s=300),
+        dict(id='fractional',window=3.5,residuals={ids[0]:.123456789,'unobserved':-.3},
+             background_residuals={ids[0]:-.987654321}),
+        dict(id='five_second',members=record['group'],duration_s=120,knot_s=5,
+             knots=[[.0123456789*t-.7 for t in range(25)] for _ in record['group']])])
+    rows=[]
+    for size in (4,34,80,136):
+        batch=[actions[i%len(actions)] for i in range(size)]
+        start=time.perf_counter();a=profile_table(batch,ids,'cpu');old=time.perf_counter()-start
+        start=time.perf_counter();b=vector_table(batch,ids,'cpu');new=time.perf_counter()-start
+        equal=all(torch.equal(x,y) for x,y in zip(a,b))
+        rows.append(dict(rows=size,exact=equal,reference_s=old,optimized_s=new,speedup=old/new))
+    result=dict(experiment='table_cpu_tensors',pass_=all(x['exact'] for x in rows),
+                comparisons=rows,new_sumo_sim_s=0)
+    save(root/'EXPERIMENT.json',result);print(result,flush=True)
+    assert result['pass_']
+
+
+@contextmanager
+def batched_births(cpu_pools=False):
+    """Keep the native identity sampler/order; batch scalar reads and scatters."""
+    from wms.control.hidden_state import BirthMix
+    original_pool=BirthMix.pool_for
+    def pool(mix,b,cav):
+        if not hasattr(mix,'_speed2_cpu_pools'):mix._speed2_cpu_pools={}
+        key=(b,bool(cav))
+        if key not in mix._speed2_cpu_pools:
+            mix._speed2_cpu_pools[key]=original_pool(mix,b,cav).detach().cpu()
+        return mix._speed2_cpu_pools[key]
+    def assign(mix,state,newborn,params,birth_ordinals=None):
+        result={name:value.clone() for name,value in params.items()}
+        index=newborn.nonzero()
+        pairs=index.tolist()
+        if not pairs:return result
+        b,slot=index.unbind(-1)
+        lanes=state['lane'][b,slot].detach().cpu().tolist()
+        cavs=state['is_cav'][b,slot].detach().cpu().tolist()
+        updates={}
+        for (row,col),lane,cav in zip(pairs,lanes,cavs):
+            entrance=int(lane==2)
+            if birth_ordinals is None or (row,col) not in birth_ordinals:
+                raise ValueError('hidden-state birth requires admission identity ordinal')
+            values=mix.candidate(row,entrance,birth_ordinals[row,col],bool(cav))
+            for name,value in values.items():
+                updates.setdefault(name,[]).append((row,col,value))
+            mix.counts[row][entrance]+=1
+            mix.assigned[row]+=1
+        for name,values in updates.items():
+            rows,cols,data=zip(*values)
+            target=result[name]
+            target[torch.tensor(rows,device=target.device),torch.tensor(cols,device=target.device)]=torch.tensor(data,dtype=target.dtype,device=target.device)
+        return result
+    with ExitStack() as stack:
+        stack.enter_context(patch.object(BirthMix,'__call__',assign))
+        if cpu_pools:stack.enter_context(patch.object(BirthMix,'pool_for',pool))
+        yield []
+
+
 class GraphCall:
     """Experimental fixed-shape graph of a pure deterministic callable.
 
@@ -121,7 +186,7 @@ def actor_graphs(rt):
                     args=[node.func.value],keywords=[]),node)
             return self.generic_visit(node)
     tree=Scale().visit(tree);ast.fix_missing_locations(tree)
-    ns=dict(original.__func__.__globals__,cached_scale=field_scale)
+    ns=dict(original.__func__.__globals__,cached_scale=field_scale,cell_geometry=cell_geometry)
     exec(compile(tree,'<speed2-cached-field-scale>','exec'),ns)
     field=types.MethodType(ns['_field_context'],rt.mp.group_encoder)
     with patch.object(policy,'Normal',distribution), \
@@ -131,6 +196,13 @@ def actor_graphs(rt):
          patch.object(rt.mp.policy,'forward',actor), \
          patch.object(rt.mp.group_encoder,'forward',encoder):
         yield [actor,encoder]
+
+
+@contextmanager
+def transfer_trial():
+    from . import plan_wm
+    with patch.object(plan_wm,'profile_table',vector_table),batched_births(cpu_pools=True):
+        yield []
 
 
 def experiment(root,H,K,width):
@@ -155,18 +227,22 @@ def experiment(root,H,K,width):
         return costs(roll,entries,initial)
     rt.frozen.costs=capture
     hs=tuple(h for h in (60,120,300) if h<=H)
+    def sync():
+        if next(rt.model.parameters()).is_cuda:torch.cuda.synchronize()
     def run(batch_width):
-        torch.cuda.synchronize();start=time.perf_counter()
+        sync();start=time.perf_counter()
         out=evaluate(rt,record,actions,K,H,chunk_actions=batch_width,trim=False,
                      pad_actions=batch_width,horizons=hs,speed2=True,memory=memory)
-        torch.cuda.synchronize()
+        sync()
         return out,time.perf_counter()-start
     before,old_wall=run(width)
     save(root/'EAGER_FAST.json',dict(wall_s=old_wall,H=H,K=K,width=width,new_sumo_sim_s=0))
     expected=tapes[:];tapes.clear()
     from . import plan_wm
     context=(actor_graphs(rt) if variant=='actor_graphs' else
-             patch.object(plan_wm,'profile_table',vector_table) if variant=='tables' else nullcontext([]))
+             patch.object(plan_wm,'profile_table',vector_table) if variant=='tables' else
+             batched_births(cpu_pools=variant=='births_cpu') if variant in ('births','births_cpu') else
+             transfer_trial() if variant=='transfers' else nullcontext([]))
     with context as graphs:
         after,new_wall=run(2*width if variant=='wide_batch' else width)
     if variant!='actor_graphs':graphs=[]

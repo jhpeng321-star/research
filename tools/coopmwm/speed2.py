@@ -245,7 +245,7 @@ def tests(root):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument('mode', choices=('profile','parity','tests','qualification','gpu-profile','gpu-experiment'))
+    p.add_argument('mode', choices=('profile','parity','tests','qualification','gpu-profile','gpu-experiment','table-test'))
     p.add_argument('--root', type=Path, required=True)
     p.add_argument('--compact', action='store_true')
     p.add_argument('--speed2', action='store_true')
@@ -270,6 +270,9 @@ def main():
         elif a.mode == 'gpu-experiment':
             from .speed2_gpu import experiment
             experiment(a.root,a.H,a.K,a.width)
+        elif a.mode == 'table-test':
+            from .speed2_gpu import table_test
+            table_test(a.root)
         elif a.mode == 'parity':parity(a.root,a.H,a.K,a.width)
         elif a.mode == 'qualification':
             from .speed2_runtime import qualify
