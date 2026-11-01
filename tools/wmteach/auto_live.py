@@ -7,6 +7,7 @@ from tools.wmteach.ops import remote,ROOT,REMOTE
 
 LIVE='/root/autodl-tmp/wmteach_live20261101_v1'
 PEER='/root/autodl-tmp/distill20261101_v1'
+SCALE='/root/autodl-tmp/wmteach_scale20261101_v1'
 
 
 def prepare():
@@ -18,12 +19,15 @@ def prepare():
     from tools.wmteach.live import budget,PANEL_SHA
     authority=approval(registry.read_text(encoding='utf-8'))
     source=f'''import pathlib,json,hashlib,sys,os,shutil
-root=pathlib.Path({LIVE!r});teacher=pathlib.Path({REMOTE!r});peer=pathlib.Path({PEER!r})
+root=pathlib.Path({LIVE!r});teacher=pathlib.Path({SCALE!r});peer=pathlib.Path({PEER!r})
 if root.exists():
  print(json.dumps(dict(state='STAGED',freeze=json.loads((root/'FREEZE.json').read_text()))));sys.exit()
-student=teacher/'student_setting0_0'
+student=teacher/'student_scale_5120'
 if not (student/'COMPLETE.json').is_file() or not (teacher/'QUALITY.json').is_file():
  print(json.dumps(dict(state='WAIT_STUDENT')));sys.exit()
+gate=json.loads((teacher/'HELPFUL_QUALITY.json').read_text())
+if not gate['pass_']:
+ print(json.dumps(dict(state='WITHHELD_TEACHER_QUALITY',quality=gate)));sys.exit()
 if shutil.disk_usage(root.parent).free<2*2**30:
  print(json.dumps(dict(state='WAIT_DISK')));sys.exit()
 sys.path[:0]=[str(teacher),str(teacher/'deps')]
@@ -32,6 +36,7 @@ from tools.distill.model import predict_values,choose as original_choose
 from tools.distill.data import KEYS
 from tools.coopbandit.protocol import digest,sha
 summary=json.loads((student/'SUMMARY.json').read_text());complete=json.loads((student/'COMPLETE.json').read_text())
+assert summary['states']>=5000
 original=sha(student/'policy.pkl');assert original==complete['policy_sha256']==summary['policy_sha256']
 with (student/'policy.pkl').open('rb') as f:payload=pickle.load(f)
 assert payload['label_horizon_s']==300 and payload['train_worlds']==list(range(969400,969432))
@@ -39,7 +44,7 @@ portable=types.ModuleType('wmteach_frozen_export');sys.modules[portable.__name__
 own=json.loads({json.dumps(files)!r})
 exec(compile(own['pytools/tools/wmteach/portable.py'],'<frozen-wmteach-export>','exec'),portable.__dict__)
 policy=portable.export(payload)
-labels=[json.loads((teacher/'tasks'/f'w{{s}}_t300_setting0'/'LABEL_H300.json').read_text()) for s in range(969400,969432)]
+labels=[json.loads(p.read_text()) for p in sorted((teacher/'labels').glob('*/LABEL_H300.json'))[:32]]
 x=np.array([[r['features'][k] for k in KEYS] for r in labels]);av=np.array([r['available'] for r in labels])
 rng=np.random.default_rng(20261101)
 query=np.concatenate([x,x.mean(0)+rng.normal(size=(200,len(KEYS)))*np.maximum(x.std(0),1.)])
@@ -71,7 +76,8 @@ new_binding.update(workers=2,load_max=16,budget=budget(),panel=panel,
  design_sha256=sha(root/'WMTEACH_LIVE_DESIGN.md'))
 freeze=dict(design_sha256=new_binding['design_sha256'],original_policy_sha256=original,
  policy_sha256=sha(root/'POLICY.json'),panel_sha256=PANEL_SHA,budget=budget(),
- selected_snapshot='student_setting0_0',teacher_identity_sha256=sha(teacher/'IDENTITY.json'),
+  selected_snapshot='student_scale_5120',training_states=summary['states'],helpful_quality=gate,
+  teacher_identity_sha256=sha(teacher/'IDENTITY.json'),
  quality_sha256=sha(teacher/'QUALITY.json'),portable_parity_states=len(query),
  max_prediction_error=float(abs(expected-actual).max()),new_sumo_sim_s=0)
 for name,value in [('BINDING.json',new_binding),('FREEZE.json',freeze),('APPROVAL.json',dict(line={authority!r}))]:
@@ -110,8 +116,9 @@ print(json.dumps(receipt))
 def preregister(freeze):
     registry=Path('E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md')
     line=(f'- S-WMTEACH LIVE FROZEN BEFORE DISPATCH: designSHA256{freeze["design_sha256"]}; '
-          f'FIRST complete student_setting0_0 ONLY/originalpolicySHA{freeze["original_policy_sha256"]}/'
-          f'portablepolicySHA{freeze["policy_sha256"]}, H300 WM-only targets/32FITworlds, '
+          f'FIRST complete student_scale_5120 ONLY/originalpolicySHA{freeze["original_policy_sha256"]}/'
+          f'portablepolicySHA{freeze["policy_sha256"]}, H300 WM-only targets/32FITworlds/'
+          f'{freeze["training_states"]}distinctstates/helpfulqualityPASS, '
           f'qualitySHA{freeze["quality_sha256"]} completed before fitting; portable original parity '
           f'{freeze["portable_parity_states"]}states. SAME S-DISTILL24world DEV984000..984023/'
           f'panelSHA{freeze["panel_sha256"]}, no new seed block/fitting on live worlds. EXACT58800upper='
@@ -181,6 +188,6 @@ if __name__=='__main__':
     if args.plan:
         from tools.wmteach.live import budget,PANEL_SHA
         print(json.dumps(dict(design_sha256=sha(ROOT/'docs/paper_results/WMTEACH_LIVE_DESIGN.md'),
-            budget=budget(),panel_sha256=PANEL_SHA,policy_selection='FIRST complete student_setting0_0 only',
-            live_root=LIVE,dispatch_requires='genuine student + quality + portable parity + CPU/guards + final registration')))
+            budget=budget(),panel_sha256=PANEL_SHA,policy_selection='FIRST complete student_scale_5120 only',
+            live_root=LIVE,dispatch_requires='>=5000distinct states + helpful quality PASS + portable parity + CPU/guards + final registration')))
     else:print(json.dumps(advance()))

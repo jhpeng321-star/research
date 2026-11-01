@@ -22,6 +22,19 @@ def train(root,dest,last_setting):
             if r['role']!='TRAIN' or r['world_id']!=seed or r['horizon_s']!=300:
                 raise ValueError('FIT WM labels only; no diagnostic outcomes in fitting')
             records.append(r)
+    return train_records(root,dest,records)
+
+
+def train_records(root,dest,records):
+    """Shared student fit, including the large-corpus continuation."""
+    from tools.wmteach.run import save
+    if not (root/'QUALITY.json').is_file():
+        raise ValueError('quality check must precede fitting')
+    if len({r['state_id'] for r in records}) != len(records):
+        raise ValueError('duplicate decision states')
+    if any(r['role']!='TRAIN' or r['world_id'] not in range(969400,969432) or
+           r['horizon_s']!=300 for r in records):
+        raise ValueError('FIT-only H300 WM targets required')
     x=np.array([[r['features'][k] for k in KEYS] for r in records],float)
     y=np.array([[r['effects'].get(o,0.) for o in OPTIONS] for r in records],float)
     av=np.array([r['available'] for r in records],bool)
@@ -45,7 +58,7 @@ def train(root,dest,last_setting):
         provenance=dict(identity_sha256=sha(root/'IDENTITY.json'),quality_sha256=sha(root/'QUALITY.json')))
     with (dest/'policy.pkl').open('xb') as f: pickle.dump(payload,f,protocol=5)
     with (dest/'classifier.pkl').open('xb') as f: pickle.dump(dict(model=classifier,keys=KEYS),f,protocol=5)
-    save(dest/'SUMMARY.json',dict(states=len(x),worlds=32,primary_horizon=300,selected=best,
+    save(dest/'SUMMARY.json',dict(states=len(x),worlds=len(set(groups.tolist())),primary_horizon=300,selected=best,
         inner_scores=scores,nested=evaluate(y,av,groups,oof),folds=fold_receipts,
         meaning='world-grouped nested CV against WM labels, NOT exact-SUMO saving or live efficacy',
         policy_sha256=sha(dest/'policy.pkl'),quality_before_fit=True,new_sumo_sim_s=0))

@@ -79,4 +79,24 @@ def quality(rows, expected):
                 mean_within_state_spearman=(fmean(r['within_state_spearman'] for r in rows
                     if r['within_state_spearman'] is not None)
                     if any(r['within_state_spearman'] is not None for r in rows) else None),
-                meaning='conditional exact-state diagnostic; not a live policy comparison')
+                 meaning='conditional exact-state diagnostic; not a live policy comparison')
+
+
+def helpful_quality(rows):
+    """Prospective live gate; exact diagnostics never select a model/snapshot."""
+    helpful = [r for r in rows if r['oracle_saving'] > 0]
+    n = len(helpful)
+    hits = sum(r['agreement'] for r in helpful)
+    rate = hits/n if n else 0.
+    z = 1.959963984540054
+    lower = ((rate+z*z/(2*n)-z*math.sqrt(rate*(1-rate)/n+z*z/(4*n*n))) /
+             (1+z*z/n)) if n else 0.
+    positive = sum(r['exact_saving'] > 0 for r in helpful)
+    return dict(helpful_states=n, exact_argmax_matches=hits, helpful_choice_agreement=rate,
+                helpful_positive_choices=positive, wilson95_lower=lower,
+                helpful_exact_chosen_saving=fmean(r['exact_saving'] for r in helpful) if n else None,
+                pass_=bool(n >= 3 and hits >= 2 and rate >= .2 and lower > .05 and
+                           fmean(r['exact_saving'] for r in helpful) > 0),
+                rule='H300: >=3 helpful states, >=2 exact-argmax hits, >=20% agreement, '
+                     'Wilson95 lower>5%, positive mean exact chosen saving on helpful states',
+                scope='small roster-only exact diagnostic; not generalization or calibrated confidence')

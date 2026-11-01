@@ -41,6 +41,16 @@ first32world-student trigger. FULL-v5 is not released; WMDATA2 is quarantined by
 INT, so scale generation will use the32 permitted FIT worlds. No live efficacy
 result exists. The initial128-context pipeline alone does not meet the new target.
 
+Scale design `WMTEACH_SCALE_DESIGN.md` (7f3bb98d3c5f), preregistered before dispatch:
+FIT32 ×2independent O0imagined lineages ×80clocks307.5..900 =5120distinct states;
+K8paired available O0..O4/H120,H300 per state. Descendant labels use FULL-v4
+physics/frozen FIT joint population, cold motion/controller, causal imagined source
+counter conditioning. This weaker-input adapter is disclosed; generator latents
+never become features. Inherited exact-quality forecasts are reused. Live requires
+>=3helpful states,>=2exact-argmax hits,>=20%agreement, Wilson95lower>5%, positive
+helpful-state exact chosen saving; otherwise live is withheld. Shared student
+code/whole-world nested CV retained; CPU27PASS in existing Python313 environment.
+
 Active immutable gpuA root `/root/autodl-tmp/wmteach20261101_v3`,404source hashes.
 Supervisor437822/startticks888636829/boot a81555d7-176e-4ed8-bc7d-896fc89cc914;
 `wmteach/DISPATCH_V3.json`. Own strict8GiB GPU cap; peer processes untouched.

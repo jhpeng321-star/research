@@ -13,6 +13,22 @@
   The earlier first-small-student live contract is superseded before any dispatch.
 - FULL-v5/FULL-v5-LP explicitly NOT READY in rb2-int/HANDOFF.md; retain FULL-v4.
   WMDATA2 969550..969599 is quarantined by INT, so new scale inputs use FIT32 only.
+- Scale code/design: `tools/wmteach/scale.py`, `scale_ops.py`, `scale_watch.py`,
+  `docs/paper_results/WMTEACH_SCALE_DESIGN.md`; prospective registry receipt
+  `wmteach/SCALE_REGISTRATION.json`, design7f3bb98d3c5f. Target5120DISTINCT states,
+  FIT32 x2O0imagined paths x80clocks307.5..900, one prechosen setting/state,
+  eachK8xavailableO0..O4/H120+H300. Futures batched in one physical rollout.
+- Descendant adapter explicitly uses frozen FIT joint population/cold motion and
+  controller/causal imagined request counters+queues; generator latents excluded.
+  Existing roster-only exact quality is reused, not fully conditioned qualification.
+- Shared student refactored through `train_records` without changing model grid,
+  feature ABI, confidence selection or whole-source-world nested CV. Fit scale
+  only after complete5120corpus. `auto_live.py` now requires this scale snapshot
+  and helpful-quality gate; old `student_setting0_0` cannot trigger live.
+- Helpful H300 live gate fixed before quality: >=3helpful states,>=2argmaxhits,
+  >=20%agreement, Wilson95lower>5%, positive mean chosen exact saving on helpful.
+- CPU27PASS using existing Python313/sklearn (default Python314 lacks sklearn;
+  initial test invocation failed only at that missing dependency; no environment created).
 
 ## Read first; do not duplicate
 - Branch `c4/wmteach`; recovery `9f92c488`, shared student `ee47f395`

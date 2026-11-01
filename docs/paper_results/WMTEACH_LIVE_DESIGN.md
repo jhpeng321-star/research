@@ -1,15 +1,18 @@
-# S-WMTEACH prospective initial live comparison
+# S-WMTEACH prospective scale-student live comparison
 
 - Authority: MAIN11:48 S-WMTEACH BUDGET APPROVED, cap100000actual sim-s.
-- Policy fixed prospectively: FIRST completed `student_setting0_0` snapshot from
-  the registered FULL-v4 job, H300 WM targets/32FIT worlds. No selection by exact
+- OWNER12:53 supersedes the earlier small-student trigger BEFORE any live launch.
+- Policy fixed prospectively: FIRST completed `student_scale_5120` snapshot from
+  the registered FULL-v4 scale continuation, H300 WM targets/32FIT worlds. No selection by exact
   diagnostic results, other student snapshots or LIVE outcomes; retain later models.
-- This initial student uses recorded t300 starts; the fresh-panel receding policy
-  test measures transfer beyond these starts. Imagined-descendant augmentation is
-  subsequent work, not an achieved property of this initial model.
+- Require >=5000distinct observable FIT/imagined decision states, excluding repeat
+  settings/horizons/futures, under `WMTEACH_SCALE_DESIGN.md`; target5120states.
 - Require completed12state/K8 teacher-quality report BEFORE fitting (existing chain),
   genuine complete student, unchanged pickle SHA and exact original/portable
   prediction/action parity before freeze. GBT/MLP family is never substituted.
+- H300 helpful-state teacher gate: >=3helpful states, >=2exact-argmax hits,
+  >=20%agreement, Wilson95lower>5%, positive mean exact chosen saving on helpful
+  states. This gate cannot choose a policy/snapshot; a failed gate withholds live.
 - Same S-DISTILL24world panel DEV984000–984023, two/all12cells/high-share first;
   canonical panel SHA72776ff122956f021d1caf2db9622674b0cde2a74af8bd9f20c3de5ba0a383a6.
   These are shared evaluation worlds, never fitting. No new seed block/subset.
