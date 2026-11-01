@@ -1,5 +1,23 @@
 # S-COOPMWM — live checks
 
+## 19:14 — A resumed independently; B/R volume qualification remains held
+- CPU25 **55PASS/zero skips/1.72s/zero SUMO**, including private multi-window
+  forwarding, exact gate-to-closed-episode matching, R regime quotas, p=0 own-route
+  density, restart checkpoint isolation, and never-attempted precharge adoption.
+- Registered A-only amendment; **5,005,200 allocated/6,000,000 cap**,994,800 free.
+  The extra86,400 retains all original B-u1..3 training charges; no refund.
+- Owned old supervisor quiesced after all attempted jobs closed. Twelve reserved
+  A-dev jobs had never CLAIMed and were adopted exactly once without recharge.
+  Owned A-only supervisor2146725 now continues from existing checkpoints; B/R held.
+- B/R quota/mixture/matching code is CPU-qualified, but guided release remains gated
+  on measured GPU capacity and prospective numeric registration. No efficacy claim.
+- Fused1600-slot two-window K8 parity passes both hosts (max0.0000749veh-s), but
+  capacity is31.06/28.65queries/hour. gpuR four-windowK8 OOM is retained.
+  A960-slot source-capacity candidate changed paired costs by3.506veh-s and was
+  **rejected before training**. Next registered probe retains source draws/capacity,
+  trims universally absent trailing slots only during the one-step model forward,
+  and restores them before inherited insertion/observer. Original deadline retained.
+
 ## OWNER18:54 — guidance-volume HOLD (18:55 recovery)
 - Verified owned cpuQ supervisor1945256 boot/start and paused it before B update4.
   A has update4; B updates1–3 are superseded engineering runs (all bytes/charges retained).
@@ -363,3 +381,11 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - A update6, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
 - Per-bucket trust: .
 - TRAIN GAE variance 4.62821e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_006.json`.
+
+## Live publication — 2026-11-01T11:19:08.132519+00:00
+- Charged 422,840/6,000,000 sim-s; closed jobs 330/354; pending WM 0.
+
+### S0_A_UPDATE_007.json
+- A update7, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
+- Per-bucket trust: .
+- TRAIN GAE variance 4.70447e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_007.json`.
