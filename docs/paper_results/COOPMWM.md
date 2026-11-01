@@ -1874,3 +1874,12 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - Reporting-only check, never checkpoint selection. Full safety/per-cell results in the linked immutable receipt.
 - Receipt: `coopmwm/warm_live/A_CHECK_044.json`.
 <!-- warm-receipt:A_CHECK_044.json:7b77302c4c00b5f936211286602ef5e309c174de96822cd22381f2914dbcd733 -->
+
+## Warm live publication — 2026-11-01T20:41:41.647424+00:00
+- Conservatively charged 2399240/7500000 sim-s.
+
+### Warm continuation — A_VIABILITY_045.json
+- A u45: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_045.json`.
+<!-- warm-receipt:A_VIABILITY_045.json:c68d90ed05a06eac259c0b59743084190d31df5f54ef9a4bd2496cdf66f73141 -->
