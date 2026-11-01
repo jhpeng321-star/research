@@ -1,5 +1,5 @@
 # S-COOPMWM — MAPPO-origin cooperative PPO (speed amendment, 2026-11-01)
-1. Authority: MAIN16:22/16:25/16:38; COOPNATIVE from-native superseded before physics.
+1. Authority: MAIN16:22/16:25/16:38/16:46; COOPNATIVE superseded before physics.
 2. Both arms fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
 4. A: PPO shared team reward=-J, road speed deficit plus source waiting.
@@ -33,16 +33,16 @@
 32. Publish C_G and D_i sign agreement, whole-world10000bootstrap95CI plus Wilson, scale95CI.
 33. Admit EVERY horizon iff BOTH sign CI lower>.5 and scale>0; B stops if none pass.
 34. Zero/tie credits reported separately; no claim from ties. A may continue.
-35. Training reuses UNUSED registered986000..986071 from superseded design, six worlds/cell.
+35. TRAIN986000..986071/987000..987071/988000..988071, six worlds/cell per seed.
 36. Check986072..986083, one/cell, independent TRAIN; never optimizer/selection input.
 37. Every4updates checks A+B vs cached once MAPPO controls, J600/J900/safety.
 38. Dev984000..984023 at update4 and final; update0 uses existing24bitwise MAPPO bytes.
-39. Paired world bootstrap10000/RNG20261101 for A/MAPPO,B/MAPPO,B/A; no dev tuning.
+39. Dev u4 seed0 plus u24 each seed; paired world bootstrap10000/RNG20261101; no tuning.
 40. Final detector-first discovery uses unchanged COOPBEHAV detectors and complete exact twins.
 41. Learning checks report team return/value/KL/gradient, residual execution and credit distribution.
-42. Fixed80updates/arm,24episodes/update; no outcome-based checkpoint/hyperparameter choice.
-43. Exact budget6,000,000 TOTAL: train4,608,000; checks590,400; dev115,200.
-44. Mechanics2,400(two episodes); calibration240,000; discovery240,000; unallocated204,000.
+42. Seeds20261101/2/3: fixed24updates/arm/seed,24episodes/update, paired exploration seeds.
+43. Cap6,000,000 TOTAL: train4,147,200; checks532,800; dev230,400; final_test172,800.
+44. Mechanics2,400; calibration240,000; discovery240,000; unallocated434,400 (not auto-spent).
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.
 46. All failures/warmup/twins charged in full before attempts; no retries/refunds/duplicate dispatch.
 47. Initial cpuQ two nice19 singlethread CPU workers; admission load<=20/RAM8GiB/disk2GiB.
@@ -57,3 +57,12 @@
 56. Report actual PPO advantages across TRAIN windows separately; no empirical SUMO-noise claim.
 57. Same-group CRN removes shared hidden-driver/arrival variation only to extent model supports it.
 58. No credit outcomes inspected before random subset manifest; failed/incomplete quartet=>STOP.
+59. FINAL_TEST989600..989635:36fresh worlds,3/cell; metadata manifest hash registered before SUMO.
+60. Precharge4x36x1200=172800; MAPPO169/native/Aseed0u24/Bseed0u24, no model selection.
+61. Run once after ALL registered training ends; no early result publication/inspection or reruns.
+62. Final paired world-bootstrap95CI B-MAPPO/B-A/A-MAPPO J600/J900, per-cell/safety descriptive.
+63. Final B detector-first exact C_G twins share240000 discovery reserve; complete chronological groups.
+64. Gate/scale fitted ONCE from seed0 initial batch; frozen for all3 seeds; none-pass stops ALL B arms.
+65. TRAIN-cell learning check rule: report paired J/safety, finite PPO/value/KL/gradients and execution.
+66. No learned-policy failure changes fixed24update checkpoints; report incomplete final if B stopped.
+67. Final-test liabilities protected before dispatch; CPU/registry/protocol/host-name audits before physics.

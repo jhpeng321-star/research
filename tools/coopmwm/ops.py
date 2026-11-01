@@ -11,6 +11,7 @@ CPU_ROOT='/home/ubuntu/coopmwm20261101_cpu1'
 RUN_ROOT='/home/ubuntu/coopmwm20261101_v1'
 GPU_ROOT='/root/coopmwm20261101_v1'
 ssh.PYTHON['gpuA']='/root/miniconda3/bin/python'
+ssh.PYTHON['cpuP']='/home/ubuntu/miniconda3/bin/python'
 
 
 def sources():
@@ -92,12 +93,94 @@ print(json.dumps(dict(host={host!r},safe_names=count,hits=hits,pass_=not hits,lo
     return dict(pass_=all(r['pass_'] for r in reports),reports=reports,conflicts=conflicts)
 
 
+def plan_seeds():
+    return sorted({w['seed'] for i in range(3) for w in worlds('train',i)}|
+                  {w['seed'] for r in ('check','final_test') for w in worlds(r)})
+
+
+def audit_host(host):
+    """Names only, no reading any simulation data; one short host call."""
+    from .storage import write
+    home='/home/ubuntu' if host.startswith('cpu') else '/root'
+    source=f'''import os,pathlib,re,json,time
+forbidden=re.compile({FORBIDDEN.pattern!r}+r'|hetdata_truth|vehicle_params|driver_params|vtype',re.I)
+ident=re.compile(r'(?<![0-9a-fA-F.])(?:s|w)?(?:'+'|'.join(map(str,{plan_seeds()!r}))+r')(?![0-9a-fA-F])')
+hits=[];count=0
+for parent,dirs,files in os.walk({home!r}):
+ dirs[:]=[d for d in dirs if d not in ('.git','__pycache__','miniconda3','.cache','.npm','.rustup','.local') and not forbidden.search(str(pathlib.Path(parent)/d)) and not (pathlib.Path(parent)/d).is_symlink()]
+ for name in dirs+files:
+  p=pathlib.Path(parent)/name
+  if forbidden.search(str(p)):continue
+  count+=1
+  if ident.search(name):hits.append(str(p))
+print(json.dumps(dict(host={host!r},safe_names=count,hits=hits,pass_=not hits,unix=time.time())))
+'''
+    result=json.loads(ssh.remote(host,source,timeout=60))
+    write(EVIDENCE/f'FINAL_EXPOSURE_{host}.json',dict(result,seed_plan_sha256=__import__('tools.coopmwm.protocol',fromlist=['digest']).digest(plan_seeds()),sim_s=0))
+    print(json.dumps(result))
+
+
+def audit_protocols():
+    """Explicit safe protocol/source paths, never a recursive content grep."""
+    import os,re
+    from .protocol import digest
+    from .storage import write
+    forbidden=re.compile(FORBIDDEN.pattern+r'|hetdata_truth|vehicle_params|driver_params|vtype',re.I)
+    seeds=plan_seeds();hits=[];files={}
+    reg=checked(REGISTRY);authority(reg.read_text(encoding='utf-8'))
+    conflicts=registry_conflicts(reg.read_text(encoding='utf-8'),set(seeds))
+    if conflicts:hits.append(dict(path=str(reg),lines=conflicts))
+    patterns=('tools/*/protocol.py','tools/*/design.py','tools/*/registration*.json',
+              'docs/paper_results/*DESIGN.md','*REGISTRATION*.md','protocol*.json')
+    for base in Path('E:/agent-work').iterdir():
+        if not base.is_dir() or forbidden.search(str(base)) or base.is_symlink():continue
+        paths={p for pattern in patterns for p in base.glob(pattern)}
+        for p in sorted(paths):
+            if forbidden.search(str(p)) or not p.is_file():continue
+            if 'c4-coopnative' in p.parts and ('coopmwm' in p.parts or p.name=='COOPMWM_DESIGN.md'):continue
+            text=p.read_text(encoding='utf-8',errors='replace')
+            # The seed0 block has already been prospectively reserved by the
+            # explicitly superseded COOPNATIVE protocol. Fresh blocks must be absent.
+            fresh=set(seeds)-set(range(986000,986084))
+            lines=registry_conflicts(text,fresh);files[str(p)]=sha(p)
+            if lines:hits.append(dict(path=str(p),lines=lines))
+    result=dict(pass_=not hits,hits=hits,files_scanned=len(files),files_sha256=digest(files),registry_sha256=sha(reg),seed_plan_sha256=digest(seeds),sim_s=0)
+    write(EVIDENCE/'FINAL_PROTOCOL_AUDIT.json',result);print(json.dumps(result))
+
+
+def plan():
+    from .protocol import digest
+    from .storage import read,write
+    audits=[read(EVIDENCE/f'FINAL_EXPOSURE_{h}.json') for h in ('cpuQ','gpuA','gpuR')]
+    protocols=read(EVIDENCE/'FINAL_PROTOCOL_AUDIT.json')
+    assert protocols['pass_'] and all(a['pass_'] for a in audits)
+    panel=dict(worlds=worlds('final_test'),panel_sha256=digest(worlds('final_test')),
+        access='SEALED_UNTIL_ALL_TRAINING_COMPLETE',run_count=1,reruns=0,
+        arms=['MAPPO169','native','A_seed0_update24','B_seed0_update24'],
+        precharged_sim_s=172800,warmup_s=300,control_s=900,
+        checkpoint_rule='fixed final update24 of primary seed20261101; no outcome selection',
+        analysis='paired whole-world bootstrap10000 RNG20261101 95CI: B-MAPPO/B-A/A-MAPPO J600/J900; per-cell descriptives; collisions/TTC/hard braking; B detector-first complete exact C_G twins')
+    write(EVIDENCE/'FINAL_TEST_PANEL.json',panel)
+    quote=dict(budget(),status='REGISTER_BEFORE_SUMO',new_sumo_sim_s=0,
+        plan='three independent training seeds; 24updates per arm per seed; final24 fixed',
+        checks='u4/8/12/16/20/24 each seed A+B, common12MAPPO controls once',
+        dev='u4 primaryseed and u24 all3seeds, A+B; reuse24MAPPO cache',
+        exposure_hosts=[a['host'] for a in audits],protocols=protocols,
+        extra_host_audit=dict(cpuP='SSH connection closed; unavailable; not admitted for execution'),
+        cpu=read(EVIDENCE/'CPU_coopmwm20261101_cpu6.json'),design_sha256=sha(LOCAL/'docs/paper_results/COOPMWM_DESIGN.md'))
+    write(EVIDENCE/'BUDGET_QUOTE.json',quote)
+    print(json.dumps(dict(budget=budget(),panel_sha256=panel['panel_sha256'],design_sha256=quote['design_sha256'],quote_sha256=sha(EVIDENCE/'BUDGET_QUOTE.json'))))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=['cpu','stage','audit'])
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=['cpu','stage','audit','audit-host','audit-protocols','plan'])
     p.add_argument('--root',default=CPU_ROOT);p.add_argument('--host',default='cpuQ')
     a=p.parse_args()
     if a.mode=='cpu':cpu(a.root)
     elif a.mode=='audit':audit()
+    elif a.mode=='audit-host':audit_host(a.host)
+    elif a.mode=='audit-protocols':audit_protocols()
+    elif a.mode=='plan':plan()
     else:
         r=json.loads(stage(a.host,a.root))
         print(json.dumps(dict(root=r['root'],files=len(r['hashes']))))

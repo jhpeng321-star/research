@@ -119,6 +119,26 @@ class Contracts(unittest.TestCase):
         self.assertEqual(registry_conflicts('another task986000..986083'),[1])
         with self.assertRaises(ValueError):guard(worlds('check')[0],'train')
 
+    def test_three_seed_budget_final_panel_and_scope(self):
+        from .protocol import UPDATES,TRAINING_SEEDS,batch_worlds
+        b=budget();self.assertEqual(UPDATES,24)
+        self.assertEqual(b['phases']['train'],len(TRAINING_SEEDS)*2*UPDATES*24*1200)
+        self.assertEqual(b['phases']['final_test'],4*36*1200)
+        self.assertEqual(b['unallocated'],434400)
+        install_seed_scope();seen=set()
+        for i in range(3):
+            panel=worlds('train',i)
+            self.assertFalse(seen&{w['seed'] for w in panel});seen|={w['seed'] for w in panel}
+            for w in panel:guard(w,'train')
+            self.assertEqual(len(batch_worlds(1,i)),24)
+        final=worlds('final_test')
+        self.assertEqual(len(final),36);self.assertFalse(seen&{w['seed'] for w in final})
+        for w in final:
+            guard(w,'final_test')
+            with self.assertRaises(ValueError):guard(w,'train')
+        with self.assertRaises(ValueError):guard(dict(final[0],seed=964000),'final_test')
+        self.assertEqual(registry_conflicts('other 989599..989636'),[1])
+
     def test_frozen_batched_K8_adapter_multihorizon_structure(self):
         from .wm import adapted_futures
         ns=adapted_futures()
