@@ -1,14 +1,60 @@
 {
-  "unix": 1793501871.8336608,
+  "unix": 1793504245.3130698,
   "protocol": "S-C1SWITCH2/v2",
   "hosts": {
+    "cpuQ": {
+      "unix": 1793504246.3097706,
+      "host": "cpuQ",
+      "load": [
+        9.763671875,
+        9.0068359375,
+        9.1533203125
+      ],
+      "cpu": {
+        "cpu": {
+          "root": "/home/ubuntu/c1switch2_run_eb0eda956a815f14",
+          "process": {
+            "pid": 604784,
+            "state": "EXITED"
+          },
+          "complete": true,
+          "stop": null,
+          "episodes": 84,
+          "decisions": 2520,
+          "closed_jobs": 84,
+          "closed_actual_sim_s": 100800.0,
+          "charged_sim_s": 100800,
+          "ledger_sha256": "ae3ad0953482be22a6bbacc50f0c858deb29ba541dbf9c25ee96418a4300cc9f"
+        },
+        "wm": {
+          "root": "/home/ubuntu/c1switch2_run_292bfffe94b13ed8",
+          "process": {
+            "pid": 649272,
+            "state": "EXITED"
+          },
+          "complete": false,
+          "stop": {
+            "reason": "child failed",
+            "id": "wm__s969141",
+            "code": 1
+          },
+          "episodes": 4,
+          "decisions": 123,
+          "closed_jobs": 6,
+          "closed_actual_sim_s": 5460.0,
+          "charged_sim_s": 5460,
+          "ledger_sha256": "ab62e7ddaa2ffcf1d006ba3fe67ba4c7ec9b3dfafd19ab736f4098ee015c9553"
+        }
+      },
+      "gpu": {}
+    },
     "gpuR": {
-      "unix": 1793501876.989926,
+      "unix": 1793504246.9956617,
       "host": "gpuR",
       "load": [
-        14.58935546875,
-        12.1650390625,
-        16.64599609375
+        11.18310546875,
+        9.9111328125,
+        15.93994140625
       ],
       "cpu": {
         "cpu": {
@@ -70,21 +116,38 @@
           "ready": true,
           "requests": 98,
           "results": 98,
-          "elapsed_wall_s": 31697.741313695908
+          "elapsed_wall_s": 34067.747755765915
         },
         "bb": {
           "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
-          "state": "UNCLAIMED"
+          "process": {
+            "pid": 885526,
+            "state": "EXITED"
+          },
+          "started": {
+            "pid": 885526,
+            "cap_s": 5400.0,
+            "unix": 1793504153.4743981
+          },
+          "finished": {
+            "pid": 885526,
+            "elapsed_s": 21.642283007502556
+          },
+          "stop": null,
+          "ready": true,
+          "requests": 2,
+          "results": 2,
+          "elapsed_wall_s": 93.53361392021179
         }
       }
     },
     "gpuA": {
-      "unix": 1793501878.4585836,
+      "unix": 1793504248.801064,
       "host": "gpuA",
       "load": [
-        4.94482421875,
-        5.1240234375,
-        5.0634765625
+        3.0244140625,
+        3.69580078125,
+        3.97119140625
       ],
       "cpu": {},
       "gpu": {
@@ -107,18 +170,35 @@
           "ready": true,
           "requests": 90,
           "results": 90,
-          "elapsed_wall_s": 31704.191292524338
+          "elapsed_wall_s": 34074.53374648094
         },
         "bb": {
           "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
-          "state": "UNCLAIMED"
+          "process": {
+            "pid": 432280,
+            "state": "EXITED"
+          },
+          "started": {
+            "pid": 432280,
+            "cap_s": 5400.0,
+            "unix": 1793504152.6170995
+          },
+          "finished": {
+            "pid": 432280,
+            "elapsed_s": 21.381694240495563
+          },
+          "stop": null,
+          "ready": true,
+          "requests": 2,
+          "results": 2,
+          "elapsed_wall_s": 96.18511009216309
         }
       }
     }
   },
   "alerts": [
-    "cpuQ: collection transport error RuntimeError('Connection closed by 1.15.42.207 port 22\\n')",
     "current BB follower process missing before completion",
+    "cpuQ/cpu/wm: STOP {'reason': 'child failed', 'id': 'wm__s969141', 'code': 1}",
     "gpuR/cpu/wm: STOP {'reason': 'child failed', 'id': 'wm__s969147', 'code': 1}"
   ],
   "relay": {
@@ -177,14 +257,14 @@
     }
   },
   "latest_task_registration": [
-    "- 05:50 INCIDENT: cpuQ (1.15.42.207) refuses SSH since ~05:3x ('Connection closed by ... port 22' right after TCP connect; port reachable) - possibly sshd MaxStartups saturation from many agents polling, memory pressure, or spot reclaim; agents S-C1SWITCH2/S-SELMAPPO flagged it; live accounting of cpuQ jobs (switching v2 CPU arms done earlier; WM picker; fleet PPO training; COOPFREE idle) unknown. MAIN: retry at each tick; agents told not to assume failure or replay work; if cpuQ does not return by ~07:00, MAIN will check spot status and plan relocation of remaining cpuQ work to gpuA/gpuR CPUs.",
     "- S-C1SWITCH2 WM ORACLE CONTINUATION REGISTERED BEFORE COMPUTE (9dc75c33; MAIN07:07 after11:30): exact planSHA256 8d6ceccb69058bb0c753f57c7558f8a129e608951c280d5cd123e0a109c4926a. ONLY12 previously UNSTARTED registered full-prefix oracle branches for completedgpuRWM worlds969139/j1 and969143/j13, all6controllers each;6000sim-s=6x380+6x620, GPU0. Exact predecessor763520 EXITED/STOPfailed969147, ledgerSHAafa389bda63ba104f9435a6e48c5770a7e64b0fd2a419cf7c14240af7b591447/2700charges retained inclfailed300prefix; NO branch ever charged before scope freeze. New+old gpuRWM8700<=original16320; globalWM79800/base468380sim-s/19GPUh unchanged. Copies original frozen hash-verified runtime/BINDING/GATES/specs, one-use12-job wrapper hardcaps6000/nochildretry; no WM episode/GPU restart, cpuQ/failed/completed-picker replay, replacementworld or outcome-driven state selection. AFTER11:30 only, ONE nice19/load20-yield oracle worker +THREE relocatedBB workers <=4taskgpuRcap; currentprioritywindow SUMO0/GPU0. CPU26/26/RuffPASS; immutable stage receipt follows. FullWM/RLpanel remainsINCOMPLETE/no primaryCI; all original sources/charges/claims/results preserved, no peerPIDactions/newenv/deletion/push.",
     "- S-C1SWITCH2 BB RELOCATION REGISTERED BEFORE ALLOCATION (eb831a29; MAIN07:07 after11:30 placement authority): exact canonical planSHA256 d5037b81825d4788131b49c675934ee71e6007da91fec60012de9ecdbc75abde in tools/c1switch2/evidence/BB_RELOCATION_PLAN.json. ONLY wholly unstarted BB arm, SAME16worlds969136..969151/indices/20s/60sK8/library/objectives, allBBphysics on<=4nice19single-thread gpuR CPUs/load20yield after2026-11-01T11:30+08; originalcpuQ WM unknown/NOTreplayed. Exact BB79800sim-s=19200episodes+60600full-prefix6wayoracles; exact GPU10800s=5400/card BOTHgpuA/gpuR incl loading/parity/idle, no increment/topup/refund/retry. Base468380sim-s/19GPUh and design95aa84cf/panel7c780c25 unchanged. Strict hash-bound placement disables allotherarms and preserves ALL16worlds/originalindices; relay requires16 not old4episodes before ordinary release. BeforeGPU: bothBBroots/noBBphysicsclaims unused/currentauthority/resources; afterone-useclaim, realbothGPU K8/sixway/continuedWALLparity and immutableCPU/frozenv7/WALL/exposure/canary gates required. BB0GPU/physics at registration; local96CPU/RuffPASS with existingMiniconda, immutablegpuRpreflight pending. No priority-window GPU/SUMO, WM/CPUcanary replay, peerPIDactions,newenv,deletion,push. See docs/paper_results/c1switch2/BB_RELOCATION_DESIGN.md; published sources concern placement/accounting/outage-isolated transport only, frozen engines/controllers unchanged.",
     "- 08:27 MAIN REVIEW WM-PHYS interim 07:58 (FULL-v4, all 8 reserved worlds): delay CRPS -393/-3,040/-11,647 veh-s and 60 s HDV error -15.3 m (better), but 300 s breakdown-distance +5.63 pp (FARTHER from real than WM2; with 6 worlds it was -5.83) -> REGISTERED SWITCHING RULE FAILS on point estimates (all three conditions required); S-C1SWITCH/S-C1SWITCH2 keep WM2 unless the final 09:30-11:30 evaluation changes this. Owner's 07:50 message corrected.",
-    "- S-C1SWITCH2 09:18 PREPARATION VERIFIED / STILL NO NEW ALLOCATION (c02867c2/85019961): unusedBB all16-world placement root /root/c1switch2_run_bbd7ba8b48ed5829 CPU143PASS/1host-onlyskip/BOTHguards17, binding54848c3e7059ef2691878116db7c76dbead02962d42e1f281aae4ad8514b5802; originalWM12unstarted-oracle root /root/c1switch2_run_oracles_8d6ceccb69058bb0 CPU-bindingPASS/106original source hashes/unchanged frozen BINDING+GATES. Both prospectively registered plans ready for AFTER11:30 only, resources/realBBGPUparity/one-use gates retained; 3BB+1oracle taskworkers<=4gpuR. Additional physics/GPU0 so far, no WM GPU restart or cpuQ-world replay. Existing112fixed/random+canary preserved; finalWMGPU7.690583h remains exact, cpuQ WM current totals UNKNOWN, final169RL absent. Monitor25348 stillLIVE and committing every20min throughnoon (latest0917a4a46431). OptionalPHYS staysOFF under current independentrule failure. Caps/manifest/engine/controller/metrics unchanged; HANDOFF and immutable receipts published."
+    "- S-C1SWITCH2 09:18 PREPARATION VERIFIED / STILL NO NEW ALLOCATION (c02867c2/85019961): unusedBB all16-world placement root /root/c1switch2_run_bbd7ba8b48ed5829 CPU143PASS/1host-onlyskip/BOTHguards17, binding54848c3e7059ef2691878116db7c76dbead02962d42e1f281aae4ad8514b5802; originalWM12unstarted-oracle root /root/c1switch2_run_oracles_8d6ceccb69058bb0 CPU-bindingPASS/106original source hashes/unchanged frozen BINDING+GATES. Both prospectively registered plans ready for AFTER11:30 only, resources/realBBGPUparity/one-use gates retained; 3BB+1oracle taskworkers<=4gpuR. Additional physics/GPU0 so far, no WM GPU restart or cpuQ-world replay. Existing112fixed/random+canary preserved; finalWMGPU7.690583h remains exact, cpuQ WM current totals UNKNOWN, final169RL absent. Monitor25348 stillLIVE and committing every20min throughnoon (latest0917a4a46431). OptionalPHYS staysOFF under current independentrule failure. Caps/manifest/engine/controller/metrics unchanged; HANDOFF and immutable receipts published.",
+    "- 11:37 OWNER restarted cpuQ; SSH works again, data directories present (c1switch2_*, selmappo*, coopfree*). All cpuQ processes were stopped by the reboot. MAIN: S-SELMAPPO, S-SELMAPPO2 and S-C1SWITCH2 resume their own work on cpuQ from durable checkpoints/receipts (no replays of completed jobs, within registered caps); stale owned-PID/lock receipts from before the reboot must be reconciled first."
   ],
   "final_checkpoint_receipts": {
-    "SELMAPPO_FINAL.json": false,
+    "SELMAPPO_FINAL.json": true,
     "SELMAPPO2_FINAL.json": false
   }
 }
