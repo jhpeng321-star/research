@@ -1,0 +1,21 @@
+{
+ "pid": 31580,
+ "create_filetime": 134379692546368624,
+ "argv": [
+  "C:\\Users\\jpeng\\miniconda3\\python.exe",
+  "-X",
+  "faulthandler",
+  "-u",
+  "-B",
+  "-m",
+  "tools.rbint.compare",
+  "--progress",
+  "--candidate",
+  "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T091409+0800",
+  "--baseline",
+  "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_wm2_20261101T054124+0800",
+  "--out",
+  "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T091409+0800\\A2\\paired"
+ ],
+ "analysis_only": true
+}

@@ -109,8 +109,8 @@ Full-world CIs NA/singletons. Current publication `noon/20261101T075846+0800`.
 
 <!-- NOON-COLLECTOR:BEGIN -->
 ## Bounded noon collector
-2026-11-01T08:49:00+08:00; read-only remote collection, no inference dispatch.
-Latest publication `docs/rbint/noon/20261101T084900+0800/PUBLICATION.json`; 08interim `docs/rbint/noon/20261101T075846+0800`,09:30freeze `PENDING`.
+2026-11-01T09:14:09+08:00; read-only remote collection, no inference dispatch.
+Latest publication `docs/rbint/noon/20261101T091409+0800/PUBLICATION.json`; 08interim `docs/rbint/noon/20261101T075846+0800`,09:30freeze `PENDING`.
 Source22cc32f6 FULL-v4 and prior A/B/C/FULL sources remain immutable.
 Scored-world-only fixed-stratum CIs; singleton uncertainty NA; prior CIs retracted.
 Existing remote supervisors retain own-PID11:30 deadline. Final collection11:35, report by11:45.
