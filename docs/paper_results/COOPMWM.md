@@ -1613,3 +1613,12 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
 - Receipt: `coopmwm/warm_live/A_UPDATE_035.json`.
 <!-- warm-receipt:A_UPDATE_035.json:361218349f22807025846448d433d89032aaf576f52596b7268ab99ca4bd1593 -->
+
+## Warm live publication — 2026-11-01T19:56:23.824685+00:00
+- Conservatively charged 2096840/7500000 sim-s.
+
+### Warm continuation — A_VIABILITY_036.json
+- A u36: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_036.json`.
+<!-- warm-receipt:A_VIABILITY_036.json:6a8ffd5ea3b6eef3c8f019707720d874fca4c66dd6979d4b60f133ec0ff50f6e -->
