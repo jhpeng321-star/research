@@ -1,0 +1,25 @@
+{
+  "host": "cpuQ",
+  "root": "/home/ubuntu/c1switch2_run_10950e88a99994d0",
+  "binding_sha256": "fd71eedebc514f1dc5ab7507a8cf55ff424f2ce2edde517a7a86fe020d98b514",
+  "files": 123,
+  "new_sim_s": 0,
+  "new_gpu_s": 0,
+  "arm": "cav_mappo",
+  "selector_probe": {
+    "status": "PASS",
+    "iteration": 169,
+    "checkpoint_sha256": "82c6745bac50aaf4dee98f5d8b3c60db0e5e558d9abf4667dd8e605774f4b3c4",
+    "choice": {
+      "a": "pi",
+      "b": "native"
+    },
+    "new_sim_s": 0,
+    "new_gpu_s": 0
+  },
+  "unstarted_predecessor": {
+    "root": "/home/ubuntu/c1switch2_run_c1c922c5e9348e23",
+    "status": "UNCLAIMED_ZERO_PHYSICS",
+    "binding_sha256": "1e9baed0776a5a8adab84c92416c08ce26d9d922be144303eab809e3f7fb06d7"
+  }
+}

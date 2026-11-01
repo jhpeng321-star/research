@@ -59,6 +59,21 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**20:30 final reconciliation1793536230 / CPU-only supervision LIVE:** ownedWindows
+20260 replaces EXITED42548; first20min heartbeat committedd37e3281. All GPU
+services remain EXITED, durableOWNER20:14 hold ACTIVE, noGPU admissions possible.
+CorrectedcpuQ per-CAV root `/home/ubuntu/c1switch2_run_10950e88a99994d0` passes
+148CPU/1host-onlyskip and realfinal169/shared+mixedfactory probe; predecessor
+c1c922c5 provenUNCLAIMED/zerojobs/zeroledger, retained. Original12world/71660sim-s
+CPU0GPU reservation remains unstarted: disk2090872832bytes (<2147483648 gate).
+CPU-only watcher observes60s; on resourcePASS it can make ONE originalcpuQ
+dispatch,1nice19worker/no automatic retry; ownedprogress+HANDOFFcommit20min until
+Nov2 12:14+08. It cannot dispatch gpuR, inference or BB. OriginalgpuR per-CAV
+scope terminal300charged/noCLOSE, no rerun; MAIN continuation exception needed
+for its other3unstartedworlds. All112fixed/random+fleet16episodes/96oracles+
+WM36oracles preserved; WM6episodes/primarypanel incomplete. Aggregate247980charged,
+247680closedactualsim-s; finalized27787.12987509556GPU-s (7.7186471875h).
+Final local153CPU PASS/RuffPASS. OwncpuQoutputs364485860bytes; no deletion.
 **20:25 per-CAV infrastructure STOP / CPU-only correction:** originalgpuR973470
 EXITED/STOP on its first969139 backend construction after300sim-s reservation,
 before any controlled decision. Actual has no CLOSE receipt; retain300charged,

@@ -1,8 +1,8 @@
 {
   "protocol": "S-C1SWITCH2/v2",
-  "verified_unix": 1793535895.686844,
+  "verified_unix": 1793536225.8118775,
   "status": "CPU_COMPLETE_WM_TERMINAL_REGISTERED_PANEL_PARTIAL_OWNED_SCOPES_SUPERVISED",
-  "receipt": "tools\\c1switch2\\evidence\\RESUME_RECONCILIATION_1793535904.json",
+  "receipt": "tools\\c1switch2\\evidence\\RESUME_RECONCILIATION_1793536230.json",
   "base_sim_s": 468380,
   "conditional_sim_s": 548180,
   "base_gpu_hours_cap": 19,
@@ -79,7 +79,7 @@
         "ledger_sha256": "cefeba5bbff863606e0f8bb9f9c653f11879672f84e507ca206d145053ee44e6"
       },
       "cav_mappo": {
-        "root": "/home/ubuntu/c1switch2_run_c1c922c5e9348e23",
+        "root": "/home/ubuntu/c1switch2_run_10950e88a99994d0",
         "state": "UNCLAIMED"
       },
       "wm_oracles": {
@@ -211,7 +211,7 @@
         "ready": true,
         "requests": 98,
         "results": 98,
-        "elapsed_wall_s": 65720.19139790535
+        "elapsed_wall_s": 66048.12910985947
       },
       "bb": {
         "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
@@ -232,7 +232,7 @@
         "ready": true,
         "requests": 2,
         "results": 2,
-        "elapsed_wall_s": 19710.108493328094
+        "elapsed_wall_s": 20038.04623413086
       },
       "bb_startup": {
         "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -253,7 +253,7 @@
         "ready": true,
         "requests": 2,
         "results": 2,
-        "elapsed_wall_s": 31745.97751045227
+        "elapsed_wall_s": 32073.915260076523
       }
     },
     "gpuA": {
@@ -276,7 +276,7 @@
         "ready": true,
         "requests": 90,
         "results": 90,
-        "elapsed_wall_s": 65726.96758437157
+        "elapsed_wall_s": 66054.46303915977
       },
       "bb": {
         "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
@@ -297,7 +297,7 @@
         "ready": true,
         "requests": 2,
         "results": 2,
-        "elapsed_wall_s": 19712.944394350052
+        "elapsed_wall_s": 20040.439855337143
       },
       "bb_startup": {
         "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -318,7 +318,7 @@
         "ready": true,
         "requests": 2,
         "results": 2,
-        "elapsed_wall_s": 31748.61910557747
+        "elapsed_wall_s": 32076.11456346512
       }
     }
   },
@@ -329,12 +329,12 @@
     "BB relocated startup terminal STOP: ValueError('current model authority/registry absent')"
   ],
   "cpuQ_resources": {
-    "unix": 1793535903.439492,
-    "uptime_s": 550181.16,
+    "unix": 1793536229.6199088,
+    "uptime_s": 550507.34,
     "disk": {
       "total": 52721041408,
-      "used": 48350461952,
-      "free": 2099232768
+      "used": 48358821888,
+      "free": 2090872832
     },
     "processes": {
       "649272": {
@@ -355,6 +355,10 @@
       "/home/ubuntu/c1switch2_run_99b7e73023ca409c": {
         "bytes": 3089871,
         "files": 104
+      },
+      "/home/ubuntu/c1switch2_run_10950e88a99994d0": {
+        "bytes": 4056822,
+        "files": 195
       },
       "/home/ubuntu/c1switch2_cpu_6d0799ad0ce5": {
         "bytes": 416645,
@@ -411,9 +415,9 @@
     }
   },
   "observer": {
-    "pid": 42548,
-    "state": "EXITED",
-    "error": 87
+    "pid": 20260,
+    "state": "LIVE",
+    "exit_code": 259
   },
   "gpu_hold_owner2014": true,
   "bb_startup_stop": {

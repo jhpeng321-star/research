@@ -5,8 +5,13 @@ import json
 import pytest
 
 from tools.c1switch.storage import canonical
-from tools.c1switch2 import bbcontinue
+from tools.c1switch2 import bbcontinue, gpuhold
 from tools.c1switch2.gpuallocation import AUTHORITY, PREDECESSOR, PRIOR, allocation_cap
+
+
+@pytest.fixture(autouse=True)
+def isolated_operational_hold(tmp_path,monkeypatch):
+    monkeypatch.setattr(gpuhold,'HOLD',tmp_path/'GPU_HOLD.json')
 
 
 def allocation(host):
