@@ -29,7 +29,14 @@ trajectory error and identical ranking** on both GPUs:
 These timings include copying qualification trajectories to the CPU; they compare
 the same fixture, roster, threads, source sampling, and padded candidate width.
 They are evaluator batch measurements, not complete CEM-search plans/hour claims.
-H300/K8/width10 and warm/extended-plan qualification are tracked separately below.
+H300/K8/width10 also passed with zero cost/trajectory error and identical ranking:
+
+- gpuA: **136.321 → 58.456 s, 2.332x**, 352.11 → 821.14 future-steps/s.
+- gpuR: **140.592 → 60.470 s, 2.325x**, 341.41 → 793.78 future-steps/s.
+
+All four comparisons are retained as `coopmwm/WMSPEED2_gpu{A,R}_gpu{120,300}cold1.json`,
+with source manifests, owned PID identities, environments, and per-future costs.
+Warm/extended-plan qualification is tracked separately below.
 
 The implementation is opt-in through `GPU_BINDING.json: "speed2": true`.
 Activation requires a new worker's startup cost/ranking/trajectory qualification.
