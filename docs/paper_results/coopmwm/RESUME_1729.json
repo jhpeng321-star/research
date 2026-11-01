@@ -1,0 +1,15 @@
+{
+  "observed_at_host_local": "2026-11-01T17:29:05",
+  "preserved_head": "500d89fe",
+  "status": "RECOVERED_BEFORE_PHYSICS",
+  "task_sumo_sim_s": 0,
+  "training_updates": 0,
+  "cpuQ": {"task_processes": [], "runtime_exists": false, "load1": 3.62451171875, "cpu_stages": 10},
+  "gpuA": {"task_processes": [], "task_roots": [], "gpu_util_percent": 99},
+  "gpuR": {"task_processes": [], "task_roots": [], "gpu_util_percent": 99},
+  "cpuP": "excluded by MAIN17:07; not contacted",
+  "registry": "17:12 exploration amendment registered at17:27; new MAIN17:27 bucketed empirical-Bayes trust instruction present",
+  "preserved_uncommitted": "deployment/bridge, CPU10 receipt, budget1712, noise-label and GPU-canary fixes",
+  "next": "implement and register MAIN17:27 trust refinement before any physics",
+  "peer_process_actions": 0
+}

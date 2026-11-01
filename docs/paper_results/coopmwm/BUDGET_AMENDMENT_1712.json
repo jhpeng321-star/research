@@ -1,0 +1,62 @@
+{
+  "registered_at_local": "2026-11-01T17:27:00+08:00",
+  "authority": "OWNER/MAIN 17:12; before first task physics or training outcome",
+  "implementation_commit": "500d89fe plus source-bound CPU10 deployment and fresh-noise qualification",
+  "total_cap_sim_s": 6000000,
+  "allocated_sim_s": 5738400,
+  "unallocated_sim_s": 261600,
+  "phases_sim_s": {
+    "train": 4147200,
+    "checks": 532800,
+    "dev": 230400,
+    "mechanics": 2400,
+    "calibration": 240000,
+    "discovery": 240000,
+    "final_test": 172800,
+    "replication_test": 172800
+  },
+  "train": "3 independent seeds 20261101/2/3; A+B; fixed final update24; 24 full 1200s episodes/update/arm; primary first in parallel, then primary final panel once, then each replication and A/B-only panel once",
+  "fresh_train_blocks": [[986000,986071],[987000,987071],[988000,988071]],
+  "independent_train_checks": [986072,986083],
+  "final_panel": {
+    "seeds": [989600,989635],
+    "sha256": "69b8a300eab45fb8208bd4bc66cefd32c6ebd16c71c23b5aac8567d41ee3c182",
+    "worlds": 36,
+    "controls": "MAPPO169/native only once; reused for both replications",
+    "selection": "fixed update24, no dev/test checkpoint selection, tuning, peeking or reruns",
+    "analysis": "paired whole-world bootstrap10000 RNG20261101 95CI B-MAPPO/B-A/A-MAPPO J600/J900; per-cell and safety; detector-first exact C_G twins"
+  },
+  "arm_B": {
+    "reward": "SUMO team delay only including source waiting; WM never enters reward or advantage",
+    "proposals": "FULL-v4 22cc32f6; original WMTEACH K8 paired futures; inherited O1-O4 executors mapped to W10 speed/timegap; highest H300 expected saving, positive against policy and MAPPO",
+    "sampling": {"complete_option_group_probability": 0.0011111111111111111, "ordinary_probability": 0.0002777777777777778, "oversampling_ratio": 4, "GPU_forecast_max": 360},
+    "beta": "start1 each seed; per-update monotone min(previous,max(0,upper95)/(abs(mean)+max(abs(mean-low95),abs(upper95-mean)))); no evidence keeps prior, zero denominator gives0",
+    "evidence": "running H300 SUMO return plus critic tail minus start value, world-cluster IPW randomized route contrast; right-censored windows excluded; executed-vs-own residuals descriptive separately",
+    "importance": "actual augmented route mixture; policy-route ratio pi_new/((1-p*beta)*pi_old); WM-route target mass0 including rejected fallback; exact deterministic atoms never assigned Gaussian behaviour density",
+    "imitation": "executed-proposal members' correlated Gaussian negative log likelihood times beta, mean over decision minibatch",
+    "E2": "random12initialTRAIN windows; exact full-prefix quartets; H60/120/300/600 sign95CI/scale/conditional-WM variance; diagnostic only, no B gate"
+  },
+  "resources": {
+    "cpuQ": "4 interleaved singlethread workers, nice19, load<=20/RAM>=8GiB/disk>=2GiB",
+    "cpuP": "unreachable, excluded by MAIN17:07",
+    "GPU_CPU_helpers": "disabled pending frozen parity qualification",
+    "GPU": "gpuA strict8GiB, WMPLAN pending requests have priority, no peer PID actions",
+    "GPU_quote": {
+      "primary_expected_forecasts_upper_beta1_all_group_windows": 57.6,
+      "all_seeds_expected_forecasts_upper_beta1_all_group_windows": 172.8,
+      "hard_proposal_forecast_cap": 360,
+      "diagnostic_forecasts": 12,
+      "serial_canary_forecasts_max": 2,
+      "maximum_WM_row_steps": 10843200,
+      "assumed_seconds_per_proposal": [60,180],
+      "expected_proposal_GPU_hours_upper": [2.88,8.64],
+      "hard_count_proposal_GPU_hours_estimate": [6,18],
+      "diagnostic_GPU_hours_estimate": [0.4,1.2],
+      "caveat": "Wall-time assumptions unmeasured on this adapter, not a time guarantee; update after first actual canary; priority waits add time. Sampling reduced fivefold prospectively because both GPUs were99% busy. SUMO grading/budgets unchanged."
+    }
+  },
+  "CPU": "CPU10:38PASS/0skips/1.35s/zeroSUMO; exact source/design hashes in CPU_coopmwm20261101_cpu10.json",
+  "exposure": "existing registry+protocol538safe-files and cpuQ/gpuA/gpuR zero-exposure receipts qualify under MAIN17:07; cpuP excluded",
+  "task_sumo_sim_s_before_registration": 0,
+  "training_updates_before_registration": 0
+}

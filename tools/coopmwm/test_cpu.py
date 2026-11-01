@@ -315,5 +315,35 @@ class Contracts(unittest.TestCase):
         self.assertNotIn('B_STOP',source)
         self.assertIn('final_test(root,b,policies,si)',source)
 
+    def test_primary_final_runs_before_replications_and_controls_are_reused(self):
+        import tempfile
+        from .runner import final_test
+        from .storage import write,read
+        calls=[]
+        metrics={h:dict(team_delay_vs=10.,collisions=0.,teleports=0.,ttc_below_3_vs=2.,hard_brake=1.) for h in ('600','900')}
+        def fake(root,b,p,ws,arm,role,ident,phase,*args):
+            calls.append((arm,phase))
+            return [dict(world=w,arm=arm,metrics=copy.deepcopy(metrics)) for w in ws]
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp)
+            write(root/'S0_TRAINING_COMPLETE.json',{})
+            for a in ('A','B'):(root/f'S0_{a}_checkpoint_024.pt').write_bytes(b'fixture')
+            with patch('tools.coopmwm.runner.wave',fake),patch('tools.coopmwm.runner.discover'):
+                final_test(root,{'authority':[]},{'A':Policy(),'B':Policy()})
+                self.assertEqual(calls,[('mappo','final_test'),('native','final_test'),('A','final_test'),('B','final_test')])
+                self.assertTrue((root/'FINAL_TEST_COMPLETE.json').exists())
+                final_test(root,{}, {}) # Completed panel has no physical rerun.
+                self.assertEqual(len(calls),4)
+                write(root/'S1_TRAINING_COMPLETE.json',{})
+                for a in ('A','B'):(root/f'S1_{a}_checkpoint_024.pt').write_bytes(b'fixture')
+                final_test(root,{}, {'A':Policy(),'B':Policy()},1)
+                self.assertEqual(calls[-2:],[('A','replication_test'),('B','replication_test')])
+                self.assertEqual(read(root/'S1_FINAL_TEST_COMPLETE.json')['worlds'],36)
+
+    def test_wave_noise_labels_are_fresh_and_paired(self):
+        from .protocol import digest
+        seeds=[int(digest(dict(training_seed=20261101,world=986000,wave=f's0_u{u:03}'))[:15],16) for u in range(1,25)]
+        self.assertEqual(len(set(seeds)),24)
+
 
 if __name__=='__main__':unittest.main()

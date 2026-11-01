@@ -46,7 +46,8 @@ def wave(root,b,policy,ws,arm,role,ident,phase,deterministic=False,extra=None):
         path=root/'jobs'/key
         if (path/'RESULT.json').exists():results.append(read(path/'RESULT.json'));continue
         jobs.append(dict(id=key,path=str(path),world=w,role=role,arm=arm,
-            weights=weights,runtime=b['runtime'],checkpoint=b['checkpoint'],noise_seed=b.get('training_seed',20261101)+w['seed']+sum(map(ord,ident)),
+            weights=weights,runtime=b['runtime'],checkpoint=b['checkpoint'],
+            noise_seed=int(digest(dict(training_seed=b.get('training_seed',20261101),world=w['seed'],wave=ident))[:15],16),
             deterministic=deterministic,sim_s=1200,queue_root=str(root),
             guided=arm=='B' and role=='train' and not deterministic,beta=b.get('beta',0.),**(extra or {})))
     if jobs:

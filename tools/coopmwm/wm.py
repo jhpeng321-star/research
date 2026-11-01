@@ -144,6 +144,21 @@ def propose(rt,record):
         record_sha256=digest(record),contract='inherited-options/W10-setpoint-adapter/observable-only')
 
 
+def canary(rt,record,result):
+    """Same indexed future alone vs batched; no new SUMO or model selection."""
+    proposal=record.get('mode')=='proposal'
+    acts=proposal_candidates(record) if proposal else candidates(record)
+    if proposal and not result.get('futures'):return dict(deferred=True,reason='no available inherited option')
+    horizons=(300,) if proposal else HORIZONS
+    ns=adapted_futures(horizons);ns['_actions']=acts
+    with executor_adapter():single=ns['futures'](rt,dict(record,setting=record.get('setting',0)),indices=(0,))
+    futures={'300':result['futures']} if proposal else result['replay']['futures']
+    worst=max(abs(single['futures'][str(h)][a['id']][0]['team_delay']-
+        futures[str(h)][a['id']][0]['team_delay']) for h in horizons for a in acts)
+    if worst>1e-3:raise ValueError('frozen K8 batched-vs-single forecast mismatch '+str(worst))
+    return dict(pass_=True,max_team_cost_error=worst,serial_future=0,indices=list(range(8)),new_sumo_sim_s=0)
+
+
 def cost_adapter(fn):
     """Add H60 to the unchanged frozen per-step team/source reducer."""
     tree=ast.parse(inspect.getsource(fn));count=0

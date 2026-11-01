@@ -14,8 +14,8 @@ from tools.coopnative.learner import REWARD_UNIT, advantages
 from tools.coopfree.policy import gaussian_log_prob
 
 # GPU-bound prospective sampling rates, fixed before physical outcomes.
-GROUP_RATE = 1/180
-ORDINARY_RATE = 1/720
+GROUP_RATE = 1/900
+ORDINARY_RATE = 1/3600
 
 
 def rate(rows):

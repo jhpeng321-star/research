@@ -42,10 +42,19 @@ def main(root):
         if (dest/'RESULT.json').exists():result=read(dest/'RESULT.json')
         else:
             while busy():time.sleep(5)
-            write(dest/'CLAIM.json',dict(owner=owner,state_id=key))
+            write(dest/'CLAIM.json',dict(owner=owner,state_id=key,mode=record.get('mode','diagnostic')))
             with contextlib.redirect_stdout(sys.stderr):
                 from .wm import evaluate,propose
-                result=propose(rt,record) if record.get('mode')=='proposal' else evaluate(rt,record)
+                used=sum(read(p)['mode']=='proposal' for p in root.glob('forecasts/*/CLAIM.json'))
+                if record.get('mode')=='proposal' and used>360:
+                    result=dict(accepted=False,option=None,targets={},expected_saving=0.,
+                        reason='registered GPU forecast cap reached',record_sha256=__import__('tools.coopmwm.protocol',fromlist=['digest']).digest(record))
+                else:
+                    result=propose(rt,record) if record.get('mode')=='proposal' else evaluate(rt,record)
+                if not (root/'GPU_PARITY.json').exists():
+                    from .wm import canary
+                    check=canary(rt,record,result)
+                    if not check.get('deferred'):write(root/'GPU_PARITY.json',check)
             write(dest/'RESULT.json',result)
         print('COOPMWM_JSON '+json.dumps(dict(event='RESULT',key=key,result=result)),flush=True)
 

@@ -18,7 +18,7 @@
 17. Observable replay roster only; fitted joint FIT driver population and uniform32FIT source prior.
 18. Cold motion/controller memory and unobserved source prior disclosed; no realised future inputs.
 19. Inherited option group=two upstream mainline CAVs within100m; ordinary windows also sampled.
-20. Query route probability=p*beta; p=1/180 for complete option groups, otherwise1/720.
+20. GPU-busy query route probability=p*beta; p=1/900 for option groups, otherwise1/3600; max360forecasts.
 21. FULL-v4 K8 CRN H300 scores policy action/MAPPO/O1-O4; propose iff saving vs BOTH baselines>0.
 22. Keep non-group chosen targets identical in all futures; after W10 release to MAPPO.
 23. H60/120/300/600. D_i=J(member-revert)-J(joint); D_G=J(all-revert)-J(joint).

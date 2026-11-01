@@ -80,6 +80,7 @@ print(json.dumps(dict(pass_=result.wasSuccessful(),tests=result.testsRun,skips=l
 ''',timeout=90)
     print(out)
     receipt=json.loads(out.strip().splitlines()[-1])
+    receipt.update(source_hashes=staged['hashes'])
     write(EVIDENCE/('CPU_'+Path(root).name+'.json'),receipt)
     if not receipt['pass_'] or receipt['skips']:raise ValueError('CPU tests failed; preserve receipt')
 
