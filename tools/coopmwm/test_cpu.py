@@ -122,11 +122,12 @@ class Contracts(unittest.TestCase):
     def test_random_guide_budget_final_panel_and_scope(self):
         from .protocol import UPDATES,TRAINING_SEEDS,batch_worlds,training_plan
         b=budget();self.assertEqual(UPDATES,24)
-        self.assertEqual(b['phases']['train'],5*UPDATES*24*1200)
+        self.assertEqual(b['phases']['train'],5*UPDATES*24*1200+b['superseded_engineering_train_sim_s'])
+        self.assertEqual(b['superseded_engineering_train_sim_s'],3*24*1200)
         self.assertEqual(TRAINING_SEEDS,(20261101,20261102))
         self.assertEqual(training_plan(),((0,20261101,('A','B')),(0,20261101,('R',)),(1,20261102,('A','B'))))
         self.assertEqual(b['phases']['final_test'],4*36*1200)
-        self.assertEqual(b['unallocated'],1081200)
+        self.assertEqual(b['unallocated'],994800)
         self.assertEqual(b['phases']['replication_test'],86400)
         self.assertEqual(b['phases']['random_guide_test'],43200)
         self.assertEqual(b['phases']['checks'],5*6*12*1200+12*1200)

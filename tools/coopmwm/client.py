@@ -11,7 +11,7 @@ def request(root,record):
     if not path.exists():write(path,record)
     elif read(path)!=record:raise ValueError('request identity collision')
     while not result.exists():
-        if (root/'STOP.json').exists():raise ValueError('STOP while waiting for WM')
+        if (root/'STOP.json').exists() or (root.parent/'STOP.json').exists():raise ValueError('STOP while waiting for WM')
         time.sleep(2)
     value=read(result)
     if value['record_sha256']!=digest(record):raise ValueError('WM response identity mismatch')

@@ -6,7 +6,7 @@ from tools.coopnative.protocol import (worlds as prior_worlds,
 from tools.coopbandit.protocol import CELLS
 
 CAP=6_000_000
-CAPS=dict(train=3_456_000,checks=446_400,dev=230_400,mechanics=3600,
+CAPS=dict(train=3_542_400,checks=446_400,dev=230_400,mechanics=3600,
           calibration=240_000,discovery=240_000,final_test=172_800,
           replication_test=86_400,random_guide_test=43_200)
 UPDATES=24
@@ -96,6 +96,7 @@ def registry_conflicts(text,seeds=None):
 
 def budget():
     return dict(total=CAP,phases=CAPS,unallocated=CAP-sum(CAPS.values()),
+                superseded_engineering_train_sim_s=86_400,
                 training_seeds=list(TRAINING_SEEDS),updates_per_arm_per_seed=UPDATES,
                 episodes_per_update=24,sim_s_per_episode=1200,
                 training_plan=[dict(index=i,seed=s,arms=list(a)) for i,s,a in training_plan()],

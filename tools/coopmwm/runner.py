@@ -16,7 +16,22 @@ from tools.coopnative.learner import update as team_update,save,load
 from .exploration import update as guided_update,evidence,trust
 
 
+def checkpoint_path(root,b,si,arm,update):
+    name=arm+'1854' if b.get('volume_amendment') and arm in ('B','R') else arm
+    return root/f'S{si}_{name}_checkpoint_{update:03}.pt'
+
+
 def verify(root):
+    if (root/'BINDING_1854.json').exists():
+        b=read(root/'BINDING_1854.json')
+        if b['budget']!=budget():raise ValueError('registered volume budget mismatch')
+        if b['amendment_sha256']!=sha(root/'AMENDMENT_1854.json'):raise ValueError('volume amendment mismatch')
+        if b['amendment_sha256'] not in (root/'AUTHORITY_1854.md').read_text():raise ValueError('volume registration absent')
+        if not b['cpu']['pass_'] or b['cpu']['skips'] or b['cpu']['sim_s'] or not b['exposure']['pass_']:raise ValueError('volume CPU/exposure qualification absent')
+        for name,h in b['hashes'].items():
+            if sha(root/name)!=h:raise ValueError('volume source/asset binding mismatch '+name)
+        if (root/'STOP.json').exists():raise ValueError('durable STOP')
+        return b
     amended=(root/'BINDING_1742.json').exists()
     b=read(root/('BINDING_1742.json' if amended else 'BINDING.json'))
     if b['budget']!=budget() or authority((root/('AUTHORITY_1742.md' if amended else 'AUTHORITY.md')).read_text())!=b['authority']:
@@ -49,7 +64,7 @@ def wave(root,b,policy,ws,arm,role,ident,phase,deterministic=False,extra=None):
         jobs.append(dict(id=key,path=str(path),world=w,role=role,arm=arm,
             weights=weights,runtime=b['runtime'],checkpoint=b['checkpoint'],
             noise_seed=int(digest(dict(training_seed=b.get('training_seed',20261101),world=w['seed'],wave=ident))[:15],16),
-            deterministic=deterministic,sim_s=1200,queue_root=str(root),
+            deterministic=deterministic,sim_s=1200,queue_root=b.get('queue_root',str(root)),
             guided=arm in ('B','R') and role=='train' and not deterministic,
             proposer='random' if arm=='R' else 'wm',beta=b.get('beta',0.),sampling=b.get('sampling'),**(extra or {})))
     if jobs:
@@ -146,7 +161,7 @@ def compare(records,baseline,left,right,role):
     return paired(rs,right,role)
 
 
-def report_panel(root,u,records,controls,role,training_seed=0):
+def report_panel(root,u,records,controls,role,training_seed=0,name_prefix=None):
     comparisons={}
     available={r['arm'] for r in records}
     for arm in ('A','B','R'):
@@ -156,7 +171,7 @@ def report_panel(root,u,records,controls,role,training_seed=0):
              safety={a:{h:{k:sum(r['metrics'][h][k] for r in records if r['arm']==a)
                 for k in ('collisions','teleports','ttc_below_3_vs','hard_brake')} for h in ('600','900')}
                 for a in available})
-    prefix='R0' if available=={'R'} else f'S{training_seed}'
+    prefix=name_prefix or ('R0' if available=={'R'} else f'S{training_seed}')
     write(root/f'{prefix}_{role.upper()}_{u:03}.json',out)
 
 
@@ -234,7 +249,7 @@ def random_final_test(root,b,policy):
     if (root/'R_FINAL_TEST_COMPLETE.json').exists():return
     if not (root/'FINAL_TEST_COMPLETE.json').exists() or not (root/'R0_TRAINING_COMPLETE.json').exists():
         raise ValueError('R test requires primary test and R training completion')
-    checkpoint=root/f'S0_R_checkpoint_{UPDATES:03}.pt'
+    checkpoint=checkpoint_path(root,b,0,'R',UPDATES)
     if not checkpoint.exists():raise ValueError('R final checkpoint absent; no fallback')
     if (root/'R_FINAL_TEST_STARTED.json').exists():raise ValueError('R final test one-use claim already exists')
     write(root/'R_FINAL_TEST_STARTED.json',dict(panel_sha256=digest(worlds('final_test')),
@@ -258,7 +273,7 @@ def final_test(root,b,policies,si=0):
     if (root/f'{prefix}_COMPLETE.json').exists():return
     if not (root/f'S{si}_TRAINING_COMPLETE.json').exists():
         raise ValueError('final test forbidden before this seed training ends')
-    required=[root/f'S{si}_{a}_checkpoint_{UPDATES:03}.pt' for a in ('A','B')]
+    required=[checkpoint_path(root,b,si,a,UPDATES) for a in ('A','B')]
     if not all(p.exists() for p in required):
         if not (root/f'{prefix}_NOT_RUN.json').exists():write(root/f'{prefix}_NOT_RUN.json',dict(reason='required registered final checkpoint absent',no_fallback=True))
         return

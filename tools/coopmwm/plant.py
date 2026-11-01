@@ -34,7 +34,7 @@ def episode(job):
     g=torch.Generator().manual_seed(job['noise_seed'])
     from .client import guide,random_guide
     controller=Controller(p,g,deterministic=job['deterministic'],
-        samples=job.get('samples'),branch=job.get('branch'),beta=job.get('beta',0.),sampling=job.get('sampling'),
+        samples=job.get('samples'),branch=job.get('branch'),beta=job.get('beta',0.),sampling=job.get('sampling'),gate_path=job.get('gate_path'),
         guide=(random_guide(g) if job.get('proposer')=='random' else
                guide(job['queue_root'],job['world'])) if job.get('guided') else None)
     b=exact.Backend(path,job['world'],job['sim_s'],job['checkpoint'])

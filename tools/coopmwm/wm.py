@@ -151,11 +151,17 @@ def propose(rt,record):
     if any(not c['population_audit']['finite'] or not c['population_audit']['conserved'] for c in chunks):
         raise ValueError('proposal conservation/finite check failed')
     futures={a['id']:[v for c in chunks for v in c['futures']['300'][a['id']]] for a in acts}
-    means={a:sum(v['team_delay'] for v in fs)/8 for a,fs in futures.items()}
+    return proposal_result(record,futures)
+
+
+def proposal_result(record,futures):
+    acts=proposal_candidates(record)
+    K=len(futures['policy'])
+    means={a:sum(v['team_delay'] for v in fs)/K for a,fs in futures.items()}
     best=min(acts[2:],key=lambda a:(means[a['id']],a['id']))
     saving=min(means['policy'],means['MAPPO'])-means[best['id']]
     return dict(accepted=saving>0,option=best['id'],targets=best['proposal_targets'] if saving>0 else {},
-        expected_saving=saving,means=means,futures=futures,K=8,horizon_s=300,
+        expected_saving=saving,means=means,futures=futures,K=K,horizon_s=300,
         record_sha256=digest(record),contract='inherited-options/W10-setpoint-adapter/observable-only',
         source_prior='uniform32FIT/current-clock inferred integer pseudo-counts; not observed source requests')
 

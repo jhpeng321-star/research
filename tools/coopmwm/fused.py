@@ -114,9 +114,10 @@ def futures(rt,records,indices):
     from .wm import adapted_futures,proposal_candidates,executor_adapter
     proxy=FusedModel(rt.model,len(records))
     runtime=SimpleNamespace(**vars(rt));runtime.model=proxy
+    actions=[proposal_candidates(r) for r in records]
     def one(i):
         proxy.local.index=i
-        ns=adapted_futures((300,));ns['_actions']=proposal_candidates(records[i])
+        ns=adapted_futures((300,));ns['_actions']=actions[i]
         try:
             with torch.no_grad():return ns['futures'](runtime,dict(records[i]),indices=indices)
         except BaseException:

@@ -24,12 +24,13 @@ def group(rows):
 
 class Controller:
     def __init__(self, policy=None, generator=None, deterministic=False, samples=None,
-                 branch=None, guide=None, beta=0.,sampling=None):
+                 branch=None, guide=None, beta=0.,sampling=None,gate_path=None):
         self.policy,self.generator,self.deterministic=policy,generator,deterministic
         self.samples,self.branch=samples,branch
         self.events=[]; self.targets={}; self.until=None
         self.guide,self.beta=guide,beta
         self.sampling=sampling
+        self.gate_path=gate_path
 
     def apply(self, rows, commands, now):
         if self.until is None or now>=self.until:
@@ -47,9 +48,19 @@ class Controller:
             proposal=None
             if self.guide is not None and self.samples is None and not self.deterministic:
                 from .exploration import route,execute
-                if route(sample,rows,self.beta,self.generator,self.sampling):
+                sampling=self.sampling
+                if self.gate_path:
+                    from . import gate
+                    from .wm import proposal_candidates
+                    from tools.coopbandit.protocol import group as upstream_group
+                    members=upstream_group(rows)
+                    available=(len(members)==2 and len(proposal_candidates(dict(rows=rows,
+                        targets=targets(sample),group=members,setting=(int(now)//10)%4)))>2)
+                    sampling=gate.sampling(self.gate_path) if available else {'merge-dense':0.,'ordinary':0.}
+                if route(sample,rows,self.beta,self.generator,sampling):
                     proposal=self.guide(rows,commands,now,sample)
-                    sample=execute(sample,proposal,self.beta,self.generator)
+                    sample=(gate.execute(self.gate_path,sample,proposal,self.beta,self.generator)
+                            if self.gate_path else execute(sample,proposal,self.beta,self.generator))
             self.targets=targets(sample); self.until=now+sample['window']
             if self.branch and now>=self.branch['time_s']:
                 if now==self.branch['time_s']:

@@ -72,8 +72,8 @@ print(json.dumps(dict(records=records,selection='first four chronological availa
 
 def bench_launch(host):
     from .storage import read
-    root='/root/coopmwm20261101_volumeprobe1'
-    assert not (ops.EVIDENCE/f'VOLUME_PROBE1_{host}_DISPATCH.json').exists()
+    root='/root/coopmwm20261101_volumeprobe2'
+    assert not (ops.EVIDENCE/f'VOLUME_PROBE2_{host}_DISPATCH.json').exists()
     files=ops.sources()
     files['FROZEN_COSTS.json']=ops.ssh.remote('gpuA',"import pathlib;print(pathlib.Path('/root/coopmwm20261101_dual2/FROZEN_COSTS.json').read_text())",timeout=20).strip()
     files['INPUTS.json']=json.dumps(read(ops.EVIDENCE/'VOLUME_INPUTS_1854.json'))
@@ -89,18 +89,21 @@ v=dict(pid=p.pid,start_ticks=pathlib.Path(f'/proc/{{p.pid}}/stat').read_text().s
 with (r/'DISPATCH.json').open('x') as f:json.dump(v,f)
 print(json.dumps(v))
 ''',timeout=30))
-    write(ops.EVIDENCE/f'VOLUME_PROBE1_{host}_DISPATCH.json',value);print(json.dumps(value))
+    write(ops.EVIDENCE/f'VOLUME_PROBE2_{host}_DISPATCH.json',value);print(json.dumps(value))
 
 
 def bench_status(host):
     from .storage import read
-    d=read(ops.EVIDENCE/f'VOLUME_PROBE1_{host}_DISPATCH.json')
+    tag='VOLUME_PROBE2' if (ops.EVIDENCE/f'VOLUME_PROBE2_{host}_DISPATCH.json').exists() else 'VOLUME_PROBE1'
+    d=read(ops.EVIDENCE/f'{tag}_{host}_DISPATCH.json')
     v=json.loads(ops.ssh.remote(host,f'''import pathlib,json
 r=pathlib.Path({d['root']!r});out={{n:json.loads((r/n).read_text()) for n in ('COMPLETE.json','FAILED.json','TIMING_2_K8.json','TIMING_4_K8.json','TIMING_4_K4.json') if (r/n).exists()}}
 out['log']=(r/'PROBE.log').read_text()[-12000:]
+import subprocess
+out['gpu']=subprocess.check_output(['nvidia-smi','--query-gpu=utilization.gpu,memory.used','--format=csv,noheader'],text=True)
 print(json.dumps(out))
 ''',timeout=25))
-    if 'COMPLETE.json' in v or 'FAILED.json' in v:write(ops.EVIDENCE/f'VOLUME_PROBE1_{host}_RESULT.json',v)
+    if 'COMPLETE.json' in v or 'FAILED.json' in v:write(ops.EVIDENCE/f'{tag}_{host}_RESULT.json',v)
     print(json.dumps(v))
 
 

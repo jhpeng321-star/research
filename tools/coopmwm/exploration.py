@@ -50,7 +50,7 @@ def route(sample, rows, beta, generator,sampling=None):
     if any(not 0 <= bucket_beta(beta,o,regime(rows)) <= 1 for o in OPTIONS):
         raise ValueError('beta outside probability interval')
     p = rate(rows,sampling)
-    if not 0<p<1:raise ValueError('query probability must leave positive own-route mass')
+    if not 0<=p<1:raise ValueError('query probability must leave positive own-route mass')
     # Query independent of trust: the winning type is unknown until inference.
     # The recorded query indicator is the augmented behaviour measure; its
     # entire WM route has target mass zero, including declined/rejected proposals.
