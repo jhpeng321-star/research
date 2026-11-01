@@ -1,8 +1,8 @@
 {
   "protocol": "S-C1SWITCH2/v2",
-  "verified_unix": 1793536225.8118775,
+  "verified_unix": 1793554686.561659,
   "status": "CPU_COMPLETE_WM_TERMINAL_REGISTERED_PANEL_PARTIAL_OWNED_SCOPES_SUPERVISED",
-  "receipt": "tools\\c1switch2\\evidence\\RESUME_RECONCILIATION_1793536230.json",
+  "receipt": "tools\\c1switch2\\evidence\\RESUME_RECONCILIATION_1793554689.json",
   "base_sim_s": 468380,
   "conditional_sim_s": 548180,
   "base_gpu_hours_cap": 19,
@@ -12,11 +12,11 @@
   "prediction_objective": "on_road_fleet_delay",
   "evaluation_objective": "full_team_delay_fleet_plus_source",
   "host_coverage_complete": true,
-  "charged_sim_s_at_latest_receipts": 247980,
-  "charged_verified_lower_bound_sim_s": 247980,
-  "closed_actual_verified_lower_bound_sim_s": 247680.0,
-  "closed_actual_sim_s_at_latest_receipts": 247680.0,
-  "registered_base_remaining_sim_s": 220400,
+  "charged_sim_s_at_latest_receipts": 250980,
+  "charged_verified_lower_bound_sim_s": 250980,
+  "closed_actual_verified_lower_bound_sim_s": 250660.0,
+  "closed_actual_sim_s_at_latest_receipts": 250660.0,
+  "registered_base_remaining_sim_s": 217400,
   "actual_note": "Closed actual excludes currently open jobs; historical charges are never refunded.",
   "new_gpu_s": 27787.12987509556,
   "finalized_gpu_s": 27787.12987509556,
@@ -80,7 +80,22 @@
       },
       "cav_mappo": {
         "root": "/home/ubuntu/c1switch2_run_10950e88a99994d0",
-        "state": "UNCLAIMED"
+        "process": {
+          "pid": 2380230,
+          "state": "EXITED"
+        },
+        "complete": false,
+        "stop": {
+          "reason": "child failed",
+          "id": "cav_mappo__s969138",
+          "code": 1
+        },
+        "episodes": 2,
+        "decisions": 75,
+        "closed_jobs": 3,
+        "closed_actual_sim_s": 2980.0,
+        "charged_sim_s": 3000,
+        "ledger_sha256": "bd8cd25910dfaa836454c21d4e7c427d15123041526e6363deb35ddeaaa82156"
       },
       "wm_oracles": {
         "root": "/home/ubuntu/c1switch2_run_oracles_0e790a668b7ec5d8",
@@ -211,7 +226,7 @@
         "ready": true,
         "requests": 98,
         "results": 98,
-        "elapsed_wall_s": 66048.12910985947
+        "elapsed_wall_s": 84508.1698012352
       },
       "bb": {
         "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
@@ -232,7 +247,7 @@
         "ready": true,
         "requests": 2,
         "results": 2,
-        "elapsed_wall_s": 20038.04623413086
+        "elapsed_wall_s": 38498.086905002594
       },
       "bb_startup": {
         "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -253,7 +268,7 @@
         "ready": true,
         "requests": 2,
         "results": 2,
-        "elapsed_wall_s": 32073.915260076523
+        "elapsed_wall_s": 50533.955927848816
       }
     },
     "gpuA": {
@@ -276,7 +291,7 @@
         "ready": true,
         "requests": 90,
         "results": 90,
-        "elapsed_wall_s": 66054.46303915977
+        "elapsed_wall_s": 84513.8231048584
       },
       "bb": {
         "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
@@ -297,7 +312,7 @@
         "ready": true,
         "requests": 2,
         "results": 2,
-        "elapsed_wall_s": 20040.439855337143
+        "elapsed_wall_s": 38499.7999150753
       },
       "bb_startup": {
         "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -318,23 +333,24 @@
         "ready": true,
         "requests": 2,
         "results": 2,
-        "elapsed_wall_s": 32076.11456346512
+        "elapsed_wall_s": 50535.47462081909
       }
     }
   },
   "alerts": [
     "cpuQ/cpu/wm: STOP {'reason': 'child failed', 'id': 'wm__s969141', 'code': 1}",
+    "cpuQ/cpu/cav_mappo: STOP {'reason': 'child failed', 'id': 'cav_mappo__s969138', 'code': 1}",
     "gpuR/cpu/wm: STOP {'reason': 'child failed', 'id': 'wm__s969147', 'code': 1}",
     "gpuR/cpu/cav_mappo: STOP {'reason': 'child failed', 'id': 'cav_mappo__s969139', 'code': 1}",
     "BB relocated startup terminal STOP: ValueError('current model authority/registry absent')"
   ],
   "cpuQ_resources": {
-    "unix": 1793536229.6199088,
-    "uptime_s": 550507.34,
+    "unix": 1793554688.7904673,
+    "uptime_s": 568966.51,
     "disk": {
       "total": 52721041408,
-      "used": 48358821888,
-      "free": 2090872832
+      "used": 47233085440,
+      "free": 3216609280
     },
     "processes": {
       "649272": {
@@ -357,8 +373,8 @@
         "files": 104
       },
       "/home/ubuntu/c1switch2_run_10950e88a99994d0": {
-        "bytes": 4056822,
-        "files": 195
+        "bytes": 5919296,
+        "files": 313
       },
       "/home/ubuntu/c1switch2_cpu_6d0799ad0ce5": {
         "bytes": 416645,

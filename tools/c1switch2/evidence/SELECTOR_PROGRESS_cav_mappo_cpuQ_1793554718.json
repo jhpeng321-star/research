@@ -1,0 +1,23 @@
+{
+  "unix": 1793554717.1787372,
+  "root": "/home/ubuntu/c1switch2_run_10950e88a99994d0",
+  "host": "cpuQ",
+  "arm": "cav_mappo",
+  "DISPATCH_SELECTOR.json": {
+    "arm": "cav_mappo",
+    "host": "cpuQ",
+    "root": "/home/ubuntu/c1switch2_run_10950e88a99994d0",
+    "planned_sim_s": 71660,
+    "unix": 1793538230.9129205,
+    "pid": 2380230,
+    "workers": 1,
+    "new_gpu_s": 0
+  },
+  "STOP": {
+    "reason": "child failed",
+    "id": "cav_mappo__s969138",
+    "code": 1
+  },
+  "failed_log": " Retrying in 1 seconds\nWarning: Environment variable SUMO_HOME is not set properly, disabling XML validation. Set 'auto' or 'always' for web lookups.\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\npj_obj_create: Cannot find proj.db\nTraceback (most recent call last):\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 196, in _run_module_as_main\n    return _run_code(code, main_globals, None,\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 86, in _run_code\n    exec(code, run_globals)\n  File \"/home/ubuntu/c1switch2_run_10950e88a99994d0/pytools/tools/c1switch2/runner.py\", line 154, in <module>\n    main()\n  File \"/home/ubuntu/c1switch2_run_10950e88a99994d0/pytools/tools/c1switch2/runner.py\", line 146, in main\n    run_episode(root, binding, a.arm, world)\n  File \"/home/ubuntu/c1switch2_run_10950e88a99994d0/pytools/tools/c1switch2/runner.py\", line 101, in run_episode\n    result = episode(env, arm, world, predictor=predictor, selector=selector, receipt=receipt)\n  File \"/home/ubuntu/c1switch2_run_10950e88a99994d0/pytools/tools/c1switch2/episode.py\", line 64, in episode\n    backend.advance(CADENCE)  # Only 20s of the imagined 60s is ever executed.\n  File \"/home/ubuntu/c1switch2_run_10950e88a99994d0/pytools/tools/c1switch2/runtime.py\", line 91, in advance\n    interval = self.shared.Backend.tick(self)\n  File \"/home/ubuntu/selmappo2_20261101/build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29/pytools/tools/selmappo/runtime.py\", line 222, in tick\n    _, info = self.env.step(command, **kwargs)\n  File \"/home/ubuntu/e3final/runtime/traffic_shepherd/c4/env.py\", line 691, in step\n    interval = self._control_tick(accel_by_slot, fallback, lanes, fallback_ids)\n  File \"/home/ubuntu/e3final/runtime/traffic_shepherd/c4/env.py\", line 460, in _control_tick\n    records = self.fleet.step(self.ownership, frames, now_s=now, live_ids=live,\n  File \"/home/ubuntu/selmappo2_20261101/build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29/pytools/tools/selmappo2/mixed.py\", line 206, in step\n    self.wall = new_wall()\n  File \"/home/ubuntu/selmappo2_20261101/build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29/pytools/tools/selmappo2/mixed.py\", line 32, in _new_wall\n    return importlib.import_module(\n  File \"/home/ubuntu/miniconda3/lib/python3.10/importlib/__init__.py\", line 126, in import_module\n    return _bootstrap._gcd_import(name[level:], package, level)\n  File \"<frozen importlib._bootstrap>\", line 1050, in _gcd_import\n  File \"<frozen importlib._bootstrap>\", line 1027, in _find_and_load\n  File \"<frozen importlib._bootstrap>\", line 1004, in _find_and_load_unlocked\nModuleNotFoundError: No module named 'traffic_shepherd.c4.switchable_wall'\n",
+  "supervisor_log": "Traceback (most recent call last):\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 196, in _run_module_as_main\n    return _run_code(code, main_globals, None,\n  File \"/home/ubuntu/miniconda3/lib/python3.10/runpy.py\", line 86, in _run_code\n    exec(code, run_globals)\n  File \"/home/ubuntu/c1switch2_run_10950e88a99994d0/pytools/tools/c1switch2/supervisor.py\", line 82, in <module>\n    run(checked(args.root), args.host, args.workers)\n  File \"/home/ubuntu/c1switch2_run_10950e88a99994d0/pytools/tools/c1switch2/supervisor.py\", line 49, in run\n    raise ValueError('durable STOP')\nValueError: durable STOP\n"
+}

@@ -59,6 +59,20 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**Nov2 01:38 fresh-session reconciliation1793554689:** existing CPU-only observer
+20260 LIVE; no replacement or dispatch. Its original cpuQ per-CAV admission
+2380230 is now EXITED/durableSTOP on969138:2completeepisodes/75totalchoices,
+3000charged/2980closedactual; failure is missing frozen-runtime import
+`traffic_shepherd.c4.switchable_wall` when the mixed executor first creates WALL.
+Retain failed prefix/claims/no replay; CPU-only adapter diagnosis in progress.
+OriginalgpuRper-CAV terminal300charge/noCLOSE remains unchanged. All112fixed/random,
+fleet16episodes+96oracles, and WM36oracles COMPLETE; WM6episodes only. Exact
+aggregate250980charged/250660closedactualsim-s; finalizedGPU27787.12987509556s.
+AllownedGPUservicesEXITED; OWNER20:14GPUhold ACTIVE/noresumeauthority observed.
+cpuQ uptime6.585days/free3216609280bytes/ownoutputs366348334bytes; no reboot,
+deletion, GPU admission, completed replay or terminal science retry.
+Receipts `RESUME_RECONCILIATION_1793554689.json`,
+`SELECTOR_PROGRESS_cav_mappo_cpuQ_1793554718.json`, and `STATUS_CURRENT.json`.
 **20:30 final reconciliation1793536230 / CPU-only supervision LIVE:** ownedWindows
 20260 replaces EXITED42548; first20min heartbeat committedd37e3281. All GPU
 services remain EXITED, durableOWNER20:14 hold ACTIVE, noGPU admissions possible.
