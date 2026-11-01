@@ -2116,3 +2116,11 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - `{"error": "ValueError('durable guided engineering STOP')", "timestamp_utc": "2026-11-01T21:18:06.783912+00:00"}`
 - Receipt: `coopmwm/warm_live/WARM_R_FAILED_V3.json`.
 <!-- warm-receipt:WARM_R_FAILED_V3.json:e17365eccd47e54e7c26ac5aee1bf8024f0bbb3ace135399d1b681a62c9d3fb8 -->
+
+## Warm live publication — 2026-11-01T22:07:13.978197+00:00
+- Conservatively charged 3242860/7500000 sim-s.
+
+### Warm continuation — B_EXACT_VIABILITY_dccf60491b28433e4500845a95addb7fd0debe0792e7b71f6bef9c65e00b8d5a.json
+- B u1: exact paired SUMO plan saving mean 6.666 veh-s, 95% world-cluster CI `None`, 1 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_dccf60491b28433e4500845a95addb7fd0debe0792e7b71f6bef9c65e00b8d5a.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_dccf60491b28433e4500845a95addb7fd0debe0792e7b71f6bef9c65e00b8d5a.json:2571b2ee336a7c888cf8223afb8ff229f2b3c8e11f6944d3d6625442cef1b7fc -->
