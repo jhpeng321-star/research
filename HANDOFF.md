@@ -1,5 +1,24 @@
 # S-RB-DECIDE handoff
 
+## FINAL routing — fresh-session reconciliation 2026-11-01 17:03 +08
+
+- DECIDE collector PID4984 **completed** at09:01:23+08 at its registered deadline;
+  persistent claim and terminal `COMPLETE.json` agree. It is no longer live.
+  Receipt: `docs/paper_results/wmdecide/RESUME_FINAL_1703.md`.
+- The marked block below is DECIDE's final09:01 snapshot. INT's later final
+  publication supersedes its available-case counts, including C2 availability:
+  `E:/agent-work/c4-rb-int/docs/rbint/noon/20261101T113555+0800/PUBLICATION.json`.
+  Follow each variant's `credibility` path there; verified cached reports can
+  reside in earlier publication directories. FULL-v4's report is at
+  `E:/agent-work/c4-rb-int/docs/rbint/noon/20261101T093000+0800/FULL-v4/credibility/CREDIBILITY.md`.
+- Morning delivery is complete: `E:/agent-work/c4-rb-int/docs/paper_results/WMPHYS_MORNING.md`,
+  especially its **Credibility / schedule** section. The registered switching
+  gate failed; probability calibration/action adoption is not established.
+- Picker/scorer source and completed tests remain preserved:18 decision/credibility,
+  4 snapshot and7 refresh CPU checks recorded in `tools/wmdecide/VERIFICATION.md`.
+  This reconciliation changes documentation only; the earlier routing/status
+  sections below are dated history. No new collection/scoring loop is needed.
+
 <!-- wmdecide-refresh:start -->
 ## Latest automated saved-output credibility refresh
 
