@@ -1,14 +1,14 @@
 {
-  "unix": 1793550716.2501888,
+  "unix": 1793551920.7087471,
   "protocol": "S-C1SWITCH2/v2",
   "hosts": {
     "cpuQ": {
-      "unix": 1793550716.3254402,
+      "unix": 1793551920.698983,
       "host": "cpuQ",
       "load": [
-        3.41845703125,
-        2.18603515625,
-        1.0419921875
+        2.06396484375,
+        2.65185546875,
+        2.232421875
       ],
       "cpu": {
         "cpu": {
@@ -98,12 +98,12 @@
       "gpu": {}
     },
     "gpuR": {
-      "unix": 1793550717.0585887,
+      "unix": 1793551921.3272479,
       "host": "gpuR",
       "load": [
-        25.37890625,
-        38.9853515625,
-        36.51953125
+        39.892578125,
+        32.91357421875,
+        30.3349609375
       ],
       "cpu": {
         "cpu": {
@@ -214,7 +214,7 @@
           "ready": true,
           "requests": 98,
           "results": 98,
-          "elapsed_wall_s": 80537.81718993187
+          "elapsed_wall_s": 81742.0856282711
         },
         "bb": {
           "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
@@ -235,7 +235,7 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 34527.73434591293
+          "elapsed_wall_s": 35732.00272607803
         },
         "bb_startup": {
           "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -256,17 +256,17 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 46563.60337972641
+          "elapsed_wall_s": 47767.871748924255
         }
       }
     },
     "gpuA": {
-      "unix": 1793550718.612934,
+      "unix": 1793551923.6127267,
       "host": "gpuA",
       "load": [
-        4.26513671875,
-        5.83837890625,
-        6.71240234375
+        6.38720703125,
+        6.40869140625,
+        6.29296875
       ],
       "cpu": {},
       "gpu": {
@@ -289,7 +289,7 @@
           "ready": true,
           "requests": 90,
           "results": 90,
-          "elapsed_wall_s": 80544.34562206268
+          "elapsed_wall_s": 81749.34544563293
         },
         "bb": {
           "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
@@ -310,7 +310,7 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 34530.32243680954
+          "elapsed_wall_s": 35735.322261571884
         },
         "bb_startup": {
           "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -331,7 +331,7 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 46565.99714779854
+          "elapsed_wall_s": 47770.99696969986
         }
       }
     }
@@ -441,7 +441,7 @@
     "pid": 20260,
     "gpu_hold": true,
     "admission": {
-      "unix": 1793550656.241396,
+      "unix": 1793551860.6944199,
       "status": "ADMITTED_OR_ATTEMPTED_NO_RETRY"
     },
     "admission_error": null
