@@ -449,3 +449,11 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - A update13, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
 - Per-bucket trust: .
 - TRAIN GAE variance 5.2456e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_013.json`.
+
+## Live publication — 2026-11-01T11:29:09.162719+00:00
+- Charged 653,240/6,000,000 sim-s; closed jobs 522/546; pending WM 0.
+
+### S0_A_UPDATE_014.json
+- A update14, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
+- Per-bucket trust: .
+- TRAIN GAE variance 5.09244e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_014.json`.
