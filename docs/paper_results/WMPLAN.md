@@ -139,23 +139,8 @@ gate evidence are retained in `wmplan/`.
 
 <!-- WMPLAN-PROGRESS:BEGIN -->
 ## Current continuation status
-- Original v1 terminal STOP preserved; all its owned local/remote services exited.
-  Ownership rechecked before preparing the separately approved v2 restart.
-- V2 dispatched once: gpuA GPU478015 / supervisor478016; local gpuR relay17368,
-  with both GPU_READY receipts present. First primary world984000 is the sole smoke.
-- Smoke has passed the repaired executor boundary and completed all four exact
-  H120 branches for its t300 O1 group. Its remaining decision-time forecasts are
-  still running; other primary worlds and the strict arm have not started.
-- Preserved v1: actual900 / charged3600sim-s;3 failed warmups,0 complete episodes,
-  0 controlled post-warmup steps,0 executed groups,0 strict attempts. No v1 efficacy estimate.
-- Active v2: new charged2880sim-s, closed actual1680sim-s plus the open smoke
-  episode (not yet included in closed actual). Combined charged6480/closedactual2580;
-  remaining reserved smoke work is already charged. No complete J600/J900/CI estimate.
-- Three complete K8 states/24 futures retained; source/receipt hashes verified.
-- Local executor-ABI repair `e492210c`: 30 CPU PASS; unchanged stopped v1 root.
-  MAIN15:55 approved the 199,440 charged / 196,740 actual combined upper. V2 adds
-  a first-episode smoke gate and bounded active-slot admission so failed work
-  cannot leave a queued panel. FULL-v4 and all scientific decision rules stay fixed.
+- Approved v2 active: 0/48 complete; closed combined actual2580/charged6480sim-s (1 open jobs excluded from closed actual).
+- Combined upper199440charged/196740actual; no refund. FULL-v4, expected first on both GPUs; strict waits for committed primary report. No full-panel efficacy conclusion yet.
 <!-- WMPLAN-PROGRESS:END -->
 
 ## V2 continuation and receipts
