@@ -152,7 +152,66 @@ def append_final(short_reports):
     return publish(delivery,report,scores)
 
 
-def run(out):
+def hold_ready():
+    """Bind the prior sole publisher's exact source-guard exit before takeover."""
+    from tools.rb2int.resume_ci import alive
+    previous = ROOT/'runs/rb2int_interim_v3'
+    process = load(previous/'PROCESS.json')
+    if (process['pid'], process['create_filetime']) != (44988, 134379973214244749):
+        raise ValueError('prior publisher identity changed')
+    stop = previous/'STOP.json'
+    if stop.exists() and load(stop)['error'] != "ValueError('interim source/target changed; explicit recovery required')":
+        raise ValueError('unexpected prior publisher stop; preserve it')
+    return stop.is_file() and not alive(process)
+
+
+def hold_state():
+    """Cache-only drain completion; no host calls or admission authority."""
+    jobs = []
+    for host, tag in (('gpuA', 'GPUA'), ('gpuR', 'GPUR')):
+        record = load(ROOT/f'docs/rb2int/OWNER_1755_{tag}_HOLD.json')
+        if record['new_gpu_admissions'] != 0 or record['automatic_resume']:
+            raise ValueError('owner1755 hold receipt changed')
+        jobs += [(host, child['job']) for child in record['evaluate_children']]
+    return all((CACHE/host/job/'COLLECTED.json').is_file() for host, job in jobs)
+
+
+def hold_intro(text, result, stamp, count, drained):
+    """Replace stale progress prose while retaining all detailed evidence blocks."""
+    marker = '## What exists'
+    if text.count(marker) != 1:
+        raise ValueError('ambiguous report intro; preserve external text')
+    delta = '/'.join(f"{r['mean']:+,.0f}" for r in result['delay_crps_difference'])
+    intro = f'''# WM-PHYS v5 — INTERIM; final comparison pending
+
+**INTERIM {stamp}: on {len(result['worlds'])} matched complete K8 worlds
+({result['scope']}), v5−v4 delay CRPS is {delta} veh-s at120/300/600s.**
+See the interval-supported detailed results below. This is an available-data
+diagnostic, not model selection or a planner/cooperation switching authorization.
+
+**Owner17:55 GPU hold: ZERO new evaluation admissions on either GPU until MAIN
+appends `S-RB2-INT RESUME`.** Our current admission coordinators and late standbys
+are paused; existing evaluation tasks {'are now collected' if drained else 'are draining naturally'}.
+{count}/216 new registered world jobs are collected. The frozen full comparison
+remains incomplete; this is not final delivery. Cache-only interim publication
+continues about every3h, with an additional snapshot when all hold-time tasks are
+collected and immediately on complete reserved8. No inference is redispatched.
+
+FULL-v5 and FULL-v5-LP remain engineering-ready at frozen sourceb2df7458.
+All four fixes and the all-five-arm600s development canaries are preserved.
+Teacher readiness does not override the owner's GPU hold or establish quality.
+
+'''
+    return intro+text[text.index(marker):]
+
+
+def run(out, owner_hold=False):
+    if owner_hold:
+        deadline = time.time()+600
+        while not hold_ready():
+            if time.time() >= deadline:
+                raise TimeoutError('prior publisher source-guard exit not confirmed; no takeover')
+            time.sleep(5)
     if (COLLECTOR/'COMPLETE.json').exists():
         raise ValueError('original final publication already complete; preserve it')
     expected_collector = load(COLLECTOR/'PROCESS.json')
@@ -161,9 +220,12 @@ def run(out):
             or argv[-3:-1] != ['watch','--out'] or expected_collector.get('inference_dispatch') is not False):
         raise ValueError('collector ownership/command changed')
     files = [Path(__file__), ROOT/'tools/rb2int/interim.py', SHORT]
+    if owner_hold:
+        files += [ROOT/f'docs/rb2int/OWNER_1755_{tag}_HOLD.json' for tag in ('GPUA','GPUR')]
     hashes = {str(p):digest(p) for p in files}
     save_new(out/'START_ONCE.json',dict(source_hashes=hashes,collector=expected_collector,
-        cache_only=True,inference_dispatch=False,collection_dispatch=False,deadline=DEADLINE))
+        cache_only=True,inference_dispatch=False,collection_dispatch=False,deadline=DEADLINE,
+        owner1755_hold=owner_hold,prior_publisher_verified_exited=owner_hold))
     report_hash = digest(REPORT)
     EVIDENCE.mkdir(exist_ok=True)
     registration = load(ROOT/'docs/rb2int/EVALUATION_REGISTRATION.json')
@@ -174,6 +236,11 @@ def run(out):
     published = [seed]
     stamp = Path(seed['receipt']).parent.name.split('_',1)[0]
     last = {seed['scope']:datetime.strptime(stamp,'%Y%m%dT%H%M%S%z').timestamp()}
+    # A new owner-requested look uses the larger current cache, never replays
+    # the completed two-world analysis. Afterwards retain the existing3h cadence.
+    if owner_hold:
+        last = {}
+    drain_published = False
     while True:
         if any(digest(p) != h for p,h in hashes.items()):
             raise ValueError('interim source/target changed; explicit recovery required')
@@ -182,10 +249,12 @@ def run(out):
         worlds, count = cache_state()
         available = scopes(worlds,registration,metadata)
         now = time.time()
+        drained = owner_hold and hold_state()
+        force_drain = drained and not drain_published
         for scope, selected in available.items():
             # First complete replicated set and reserved8 each publish immediately;
             # further snapshots in either scope at approximately3h intervals.
-            if scope in last and now-last[scope] < 10800:
+            if scope in last and now-last[scope] < 10800 and not force_drain:
                 continue
             stamp = datetime.now().astimezone().strftime('%Y%m%dT%H%M%S%z')
             folder = EVIDENCE/(stamp+'_'+scope)
@@ -206,10 +275,15 @@ def run(out):
                     raise ValueError('published interim evidence changed; preserve explicit recovery')
                 latest[entry['scope']] = path
             block = '\n'.join(p.read_text(encoding='utf-8') for p in latest.values())+'\n'+LIMITS
-            REPORT.write_text(replace_block(REPORT.read_text(encoding='utf-8'),block),encoding='utf-8')
+            text = replace_block(REPORT.read_text(encoding='utf-8'),block)
+            if owner_hold:
+                text = hold_intro(text,result,stamp,count,drained)
+            REPORT.write_text(text,encoding='utf-8')
             report_hash = digest(REPORT)
             commit_when_quiet([runs,summary,text_path,REPORT], 'S-RB2-INT: publish INTERIM v5-v4 '+scope+' '+stamp)
             print('PUBLISHED',stamp,scope,len(selected),flush=True)
+        if drained and available:
+            drain_published = True
         if count == 216 and final_guard_ready():
             save_new(out/'FINAL_TAKEOVER_ONCE.json',dict(collector_stop_sha256=digest(COLLECTOR/'STOP.json'),
                 complete_world_jobs=count,source_hashes=hashes,no_inference=True))
@@ -235,15 +309,16 @@ def run(out):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action',choices=('start','watch'))
+    parser.add_argument('action',choices=('start','watch','start-hold','watch-hold'))
     parser.add_argument('--out',default=str(ROOT/'runs/rb2int_interim_v1'))
     args = parser.parse_args();out = Path(args.out)
     if not out.parent.is_dir():
         raise ValueError('existing continuation parent required')
     out.mkdir(exist_ok=True)
-    if args.action == 'start':
+    if args.action in ('start', 'start-hold'):
         save_new(out/'DISPATCH_ONCE.json',dict(source_sha256=digest(__file__),inference_dispatch=False,collection_dispatch=False))
-        argv = [str(PYTHON),'-B','-u',str(Path(__file__).resolve()),'watch','--out',str(out)]
+        argv = [str(PYTHON),'-B','-u',str(Path(__file__).resolve()),
+                'watch-hold' if args.action == 'start-hold' else 'watch','--out',str(out)]
         flags = subprocess.DETACHED_PROCESS|subprocess.CREATE_NEW_PROCESS_GROUP if os.name=='nt' else 0
         with (out/'watch.log').open('x',encoding='utf-8') as log:
             child = subprocess.Popen(argv,cwd=ROOT,stdout=log,stderr=subprocess.STDOUT,creationflags=flags,
@@ -251,7 +326,7 @@ def main():
         receipt = dict(pid=child.pid,argv=argv,**child_incarnation(child),cache_only=True)
         save_new(out/'PROCESS.json',receipt);print(json.dumps(receipt));return
     try:
-        run(out)
+        run(out, owner_hold=args.action == 'watch-hold')
     except Exception as error:
         save_new(out/'STOP.json',dict(error=repr(error),automatic_retry=False,inference_repeated=False))
         raise

@@ -114,6 +114,50 @@ def test_report_block_replaces_only_its_owned_section():
     assert twice.count(interim_watch.BEGIN) == 1
 
 
+def test_hold_handover_requires_exact_stop_and_prior_exit(tmp_path, monkeypatch):
+    old = tmp_path/'runs/rb2int_interim_v3'
+    old.mkdir(parents=True)
+    (old/'PROCESS.json').write_text(json.dumps(dict(pid=44988,create_filetime=134379973214244749)))
+    monkeypatch.setattr(interim_watch,'ROOT',tmp_path)
+    monkeypatch.setattr(resume_ci,'alive',lambda record:True)
+    assert not interim_watch.hold_ready()
+    (old/'STOP.json').write_text(json.dumps(dict(error="ValueError('interim source/target changed; explicit recovery required')")))
+    assert not interim_watch.hold_ready()
+    monkeypatch.setattr(resume_ci,'alive',lambda record:False)
+    assert interim_watch.hold_ready()
+    (old/'STOP.json').write_text(json.dumps(dict(error='unrelated')))
+    with pytest.raises(ValueError,match='unexpected'):
+        interim_watch.hold_ready()
+
+
+def test_hold_drain_waits_for_every_original_child_in_verified_cache(tmp_path, monkeypatch):
+    evidence = tmp_path/'docs/rb2int'
+    evidence.mkdir(parents=True)
+    for tag, job in (('GPUA','v5_1'),('GPUR','wm2_2')):
+        (evidence/f'OWNER_1755_{tag}_HOLD.json').write_text(json.dumps(dict(
+            new_gpu_admissions=0,automatic_resume=False,evaluate_children=[dict(job=job)])))
+    cache = tmp_path/'cache'
+    monkeypatch.setattr(interim_watch,'ROOT',tmp_path)
+    monkeypatch.setattr(interim_watch,'CACHE',cache)
+    assert not interim_watch.hold_state()
+    for host, job in (('gpuA','v5_1'),('gpuR','wm2_2')):
+        folder = cache/host/job
+        folder.mkdir(parents=True)
+        (folder/'COLLECTED.json').write_text('{}')
+    assert interim_watch.hold_state()
+
+
+def test_hold_intro_removes_stale_two_world_claim_but_preserves_details():
+    result = dict(worlds=[1,2,3,4],scope='replicated',
+                  delay_crps_difference=[dict(mean=v) for v in (1,2,3)])
+    text = 'stale two-world prose\n## What exists\nmodel bindings\n'+interim_watch.BEGIN+'\nevidence'
+    changed = interim_watch.hold_intro(text,result,'now',25,False)
+    assert 'stale' not in changed
+    assert '4 matched complete K8' in changed
+    assert 'ZERO new evaluation admissions' in changed
+    assert '## What exists\nmodel bindings\n'+interim_watch.BEGIN+'\nevidence' in changed
+
+
 def test_publication_waits_for_known_collector_staging_to_clear(tmp_path,monkeypatch):
     from tools.rb2int import finish
     monkeypatch.setattr(interim_watch,'COLLECTOR',tmp_path)

@@ -11,6 +11,11 @@ Full receipts: `docs/rb2int/OWNER_1755_{GPUA,GPUR}_HOLD.json`.
 Collector/publisher ownership is preserved; no duplicate process launched.
 Later2/1 continuation is now suspended too: no automatic restart at cutoff.
 Final delivery awaits explicit MAIN release; publish completed-data interims.
+Publication handover: `docs/rb2int/OWNER_1755_PUBLICATION.md`. Existing sole
+collector25240 remains; publisher44988 exits on its source guard, successor
+waits for exact expected STOP AND actual exit before immediate larger-cache
+INTERIM/drain-completion/complete-reserved8/~3h looks.15CPU tests PASS.
+Do not restart old late waiter or any GPU coordinator; new PROCESS follows.
 
 ## LIVE17:56 — current authoritative ownership
 
