@@ -11,11 +11,11 @@ READONLY = Path('E:/agent-work/c4-coopnative/docs/paper_results/coopmwm')
 ROOT = '/root/coopmwm20261101_wmspeed2'
 
 
-def launch(tag, compact=False, mode='profile', H=60, K=2, width=4, lines=False, stage=False, fixture=0, host='gpuA', gpu=False, group_size=0, duration=60, warm=False):
+def launch(tag, compact=False, mode='profile', H=60, K=2, width=4, lines=False, stage=False, fixture=0, host='gpuA', gpu=False, group_size=0, duration=60, warm=False, experiment='actor_graphs'):
     cpu = json.loads((READONLY/'CPU_coopmwm20261101_cpu36.json').read_text())
     if stage:stage_frozen(host, ROOT, cpu)
     files = {name: (LOCAL/'tools/coopmwm'/name).read_text() for name in
-             ('speed2.py','speed2_runtime.py','fused.py','plan_wm.py','plan_service.py','test_speed2_cpu.py','plans.py','speed2_memory.py','accel_diagnostic.py')}
+             ('speed2.py','speed2_runtime.py','fused.py','plan_wm.py','plan_service.py','test_speed2_cpu.py','plans.py','speed2_memory.py','accel_diagnostic.py','speed2_gpu.py')}
     fixture_text = (READONLY/'VOLUME_INPUTS_1854.json').read_text()
     source = f'''import pathlib,json,hashlib,subprocess,os,sys,time
 root=pathlib.Path({ROOT!r});assert root.parent.is_dir()
@@ -48,6 +48,7 @@ manifest=dict(qualified_snapshot_sha256={hashlib.sha256((READONLY/'CPU_coopmwm20
 (run/'MANIFEST.json').write_text(json.dumps(manifest,sort_keys=True))
 env=dict(os.environ,CUDA_VISIBLE_DEVICES='0' if {gpu!r} else '',SPEED2_DEVICE='cuda' if {gpu!r} else 'cpu',SPEED2_GROUP_SIZE={str(group_size)!r},SPEED2_DURATION={str(duration)!r},OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',PYTHONPATH=str(run/'pytools')+':'+str(root/'pytools'))
 env['SPEED2_WARM']='1' if {warm!r} else '0'
+env['SPEED2_EXPERIMENT']={experiment!r}
 with (run/'RUN.log').open('x') as log:
  p=subprocess.Popen([sys.executable,'-B','-u','-m','tools.coopmwm.speed2',{mode!r},'--root',str(run),'--H',{str(H)!r},'--K',{str(K)!r},'--width',{str(width)!r},'--fixture-index',{str(fixture)!r}]+({compact!r} and ['--speed2'] or [])+({lines!r} and ['--lines'] or []),env=env,cwd=root,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
 owner=dict(pid=p.pid,start_ticks=pathlib.Path(f'/proc/{{p.pid}}/stat').read_text().split()[21],root=str(run),host={host!r},CUDA_VISIBLE_DEVICES=env['CUDA_VISIBLE_DEVICES'],new_sumo_sim_s=0)
@@ -94,7 +95,7 @@ def collect(tag, host):
     from .storage import write
     value=json.loads(ssh.remote(host,f'''import pathlib,json
 r=pathlib.Path({ROOT!r})/{tag!r};out={{'host':{host!r},'tag':{tag!r},'root':str(r)}}
-for name in ('OWNER','ENVIRONMENT','PARITY','BASELINE','TESTS','QUALIFICATION','FAILED'):
+for name in ('OWNER','ENVIRONMENT','PARITY','BASELINE','TESTS','QUALIFICATION','GPU_PROFILE','EXPERIMENT','FAILED'):
  p=r/(name+'.json')
  if p.exists():out[name]=json.loads(p.read_text())
 m=json.loads((r/'MANIFEST.json').read_text()) if (r/'MANIFEST.json').exists() else {{'legacy_run_no_manifest':True}}
@@ -147,12 +148,31 @@ print(json.dumps(dict(manifest=manifest,manifest_sha256=hashlib.sha256(text.enco
     print(json.dumps(dict(receipt=str(target),root=value['manifest']['root'],manifest_sha256=value['manifest_sha256'])))
 
 
+def trace_summary(tag,host):
+    value=json.loads(ssh.remote(host,f'''import pathlib,json,collections,hashlib
+r=pathlib.Path({ROOT!r})/{tag!r};p=r/'GPU_TRACE.json'
+events=json.loads(p.read_text())['traceEvents'];kernels=collections.Counter();copies=collections.Counter()
+for e in events:
+ if e.get('ph')!='X':continue
+ if e.get('cat')=='kernel':kernels[e['name']]+=e['dur']
+ if e.get('cat')=='gpu_memcpy':copies[e['name']]+=e['dur']
+total=sum(kernels.values())
+print(json.dumps(dict(host={host!r},tag={tag!r},trace_sha256=hashlib.sha256(p.read_bytes()).hexdigest(),
+ kernel_total_ms=total/1000,kernel_top=[dict(name=k,ms=v/1000,percent=100*v/total) for k,v in kernels.most_common(20)],
+ copies_ms={{k:v/1000 for k,v in copies.items()}},new_sumo_sim_s=0)))
+''',timeout=30))
+    from .storage import write
+    target=LOCAL/'docs/paper_results/coopmwm'/f'WMSPEED2_{host}_{tag}_kernels.json'
+    write(target,value)
+    print(json.dumps(value,indent=2))
+
+
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
-    p.add_argument('mode', choices=('launch', 'status','wait','collect','stage-release'))
+    p.add_argument('mode', choices=('launch', 'status','wait','collect','stage-release','trace-summary'))
     p.add_argument('tag')
     p.add_argument('--compact', action='store_true')
-    p.add_argument('--job-mode',choices=('profile','parity','tests','qualification'),default='profile')
+    p.add_argument('--job-mode',choices=('profile','parity','tests','qualification','gpu-profile','gpu-experiment'),default='profile')
     p.add_argument('--H',type=int,default=60)
     p.add_argument('--K',type=int,default=2)
     p.add_argument('--width',type=int,default=4)
@@ -165,11 +185,13 @@ if __name__ == '__main__':
     p.add_argument('--group-size',type=int,choices=(0,2,3,4),default=0)
     p.add_argument('--duration',type=int,choices=(60,120,300),default=60)
     p.add_argument('--warm',action='store_true')
+    p.add_argument('--experiment',choices=('actor_graphs','tables','wide_batch'),default='actor_graphs')
     a = p.parse_args()
     assert all(re.fullmatch('[A-Za-z0-9_-]+',tag) for tag in a.tag.split(','))
-    if a.mode == 'launch':launch(a.tag, a.compact, a.job_mode, a.H,a.K,a.width,a.lines,a.stage,a.fixture_index,a.host,a.gpu,a.group_size,a.duration,a.warm)
+    if a.mode == 'launch':launch(a.tag, a.compact, a.job_mode, a.H,a.K,a.width,a.lines,a.stage,a.fixture_index,a.host,a.gpu,a.group_size,a.duration,a.warm,a.experiment)
     elif a.mode == 'status':status(a.tag,a.host)
     elif a.mode == 'collect':
         for tag in a.tag.split(','):collect(tag,a.host)
     elif a.mode == 'stage-release':stage_release(a.tag,a.host)
+    elif a.mode == 'trace-summary':trace_summary(a.tag,a.host)
     else:wait(a.tag.split(','),a.wait_seconds)

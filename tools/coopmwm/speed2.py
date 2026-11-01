@@ -245,7 +245,7 @@ def tests(root):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument('mode', choices=('profile','parity','tests','qualification'))
+    p.add_argument('mode', choices=('profile','parity','tests','qualification','gpu-profile','gpu-experiment'))
     p.add_argument('--root', type=Path, required=True)
     p.add_argument('--compact', action='store_true')
     p.add_argument('--speed2', action='store_true')
@@ -264,6 +264,12 @@ def main():
         requested_threads=1,nice=os.getpriority(os.PRIO_PROCESS,0),new_sumo_sim_s=0))
     try:
         if a.mode == 'profile':profile(a.root, a.compact, a.speed2, a.lines)
+        elif a.mode == 'gpu-profile':
+            from .speed2_gpu import profile as gpu_profile
+            gpu_profile(a.root,a.H,a.K,a.width)
+        elif a.mode == 'gpu-experiment':
+            from .speed2_gpu import experiment
+            experiment(a.root,a.H,a.K,a.width)
         elif a.mode == 'parity':parity(a.root,a.H,a.K,a.width)
         elif a.mode == 'qualification':
             from .speed2_runtime import qualify

@@ -312,3 +312,40 @@ Staging creates no binding or service. The training owner performs these steps:
 
 This task supplies a cold/warm GPU-qualified amendment and the worker startup
 gate. Activation belongs to S-COOPMWM. SUMO simulation charge is **zero**.
+
+## Further speed work after OWNER23:04
+
+The staged `9d06c6e9` release above remains the qualified handoff. Additional
+experiments run only in separate immutable WMSPEED2 directories.
+
+### GPU fast-path profile
+
+Torch profiler sampled four consecutive one-step calls after12 wait and2 warmup
+steps, with full H120/K4/w34 and H300/K8/w10 warm rollouts. GPU R/H120 used3 CAVs;
+GPU A/H300 used4. Each launch first required no GPU compute process and <5% GPU
+utilization. Receipt names are `WMSPEED2_gpuR_fastprof120.json` and
+`WMSPEED2_gpuA_fastprof300.json`; hash-bound kernel-only summaries end `_kernels.json`.
+
+- H120:32,980 kernel launches in four sampled steps; launch dispatch **13.23%**
+  of CPU self-time,5,777 stream synchronizations **8.34%**,6,879 async copies
+  **4.02%**. There were2,756 scalar reads and548 `nonzero` operations.
+- H300:30,949 launches; dispatch **17.61%**,3,361 stream synchronizations
+  **8.45%**,4,338 async copies **3.87%**. There were1,516 scalar reads and324
+  `nonzero` operations.
+- Actual kernel durations total167.445ms/H120 and118.050ms/H300 for the four-step
+  samples. Efficient-attention kernels account for **27.97% /25.56%** of these
+  kernel totals; the largest SGEMM kernel accounts for **8.00% /6.61%**.
+  Remaining GPU work is spread across small geometry/copy/reduction kernels.
+
+These are sampled, instrumented attribution numbers, not throughput measurements.
+Use the kernel-only summaries for GPU percentages: the original Torch key-average
+device totals also include overlapping CPU-op attribution and user annotations,
+so adding those device columns would double-count work.
+
+The small GPU cProfile companion (`fastcprof60`, warm H60/K2/w4) takes10.58s:
+LC2013 is22.88% cumulative, the bridge13.87%, and Python acceleration-table
+construction4.00% self. This motivates graphing the fixed-roster neural calls and
+bulk time-axis table construction while preserving the exact interpolation law.
+Initial graph harness failures (Observation tree registration, then CUDA capture
+rejecting host-to-device construction of normalization constants) are retained;
+neither attempt changes the staged worker.
