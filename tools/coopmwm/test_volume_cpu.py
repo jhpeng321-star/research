@@ -12,6 +12,25 @@ from tools.coopnative.test_cpu import rows
 
 
 class VolumeCPU(unittest.TestCase):
+    def test_trim_keeps_recurrent_controller_roster_fixed_as_entries_grow(self):
+        class Model:
+            def rollout(self,state,*,n_steps,cav_controller):
+                out=cav_controller(state)
+                return dict(state=dict(state,s_m=out[...,0]))
+        proxy=FusedModel(Model(),1,trim_absent=True);proxy.local.index=0
+        state=dict(present=torch.tensor([[True,False,False,False]]),s_m=torch.zeros(1,4))
+        memory=torch.zeros(1,4)
+        def cb(s):
+            self.assertEqual(s['present'].shape,memory.shape)
+            memory.add_(1)
+            return torch.stack((s['s_m']+memory,s['s_m']*0,s['s_m']*0,s['s_m']*0),-1)
+        cb.native_lane_mask=lambda s:s['present']
+        for n in (1,2,4):
+            state['present'][0,:n]=True
+            state=proxy.rollout(state,n_steps=1,cav_controller=cb)['state']
+        self.assertTrue(torch.equal(memory,torch.full((1,4),3.)))
+        self.assertEqual(float(state['s_m'][0,0]),6.)
+
     def test_trim_restores_virgin_defaults_before_newborn_insertion(self):
         class Model:
             def rollout(self,state,*,n_steps,cav_controller,history):

@@ -72,8 +72,8 @@ print(json.dumps(dict(records=records,selection='first four chronological availa
 
 def bench_launch(host):
     from .storage import read
-    root='/root/coopmwm20261101_volumeprobe6'
-    assert not (ops.EVIDENCE/f'VOLUME_PROBE6_{host}_DISPATCH.json').exists()
+    root='/root/coopmwm20261101_volumeprobe7'
+    assert not (ops.EVIDENCE/f'VOLUME_PROBE7_{host}_DISPATCH.json').exists()
     files=ops.sources()
     files['FROZEN_COSTS.json']=ops.ssh.remote('gpuA',"import pathlib;print(pathlib.Path('/root/coopmwm20261101_dual2/FROZEN_COSTS.json').read_text())",timeout=20).strip()
     files['INPUTS.json']=json.dumps(read(ops.EVIDENCE/'VOLUME_INPUTS_1854.json'))
@@ -90,7 +90,7 @@ v=dict(pid=p.pid,start_ticks=pathlib.Path(f'/proc/{{p.pid}}/stat').read_text().s
 with (r/'DISPATCH.json').open('x') as f:json.dump(v,f)
 print(json.dumps(v))
 ''',timeout=30))
-    write(ops.EVIDENCE/f'VOLUME_PROBE6_{host}_DISPATCH.json',value);print(json.dumps(value))
+    write(ops.EVIDENCE/f'VOLUME_PROBE7_{host}_DISPATCH.json',value);print(json.dumps(value))
 
 
 def capacity_register():
@@ -117,6 +117,21 @@ def trim_register():
           'No physics; per-worker parity once; original GPU deadline/cap retained.\n')
     with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
     write(ops.EVIDENCE/'VOLUME_TRIM_REGISTRATION_1854.json',dict(line=line,new_sumo_sim_s=0));print(line.strip())
+
+
+def memory_register():
+    from .protocol import REGISTRY,checked
+    line=('\nS-COOPMWM 19:38 BATCH MEMORY ENGINEERING QUALIFICATION REGISTERED: '
+          'probe6 failed forecast parity and is rejected; all arms remain held. '
+          'Candidate repair restores the FULL1600 virgin-slot state before each inherited '
+          'MAPPO callback, preserving recurrent memory/dwell shape when the compact forward '
+          'roster grows; crop only physical outputs, restore before insertion as before. '
+          'Same four previously registered TRAIN geometries, original1600 K8 reference; '
+          'cost parity<=1e-3veh-s, once/worker;2/4-windowK8/K4 on both GPUs,65%memory; '
+          'no SUMO/training, original GPU deadline retained.\n')
+    with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+    write(ops.EVIDENCE/'BATCH_MEMORY_REGISTRATION_1938.json',dict(line=line,new_sumo_sim_s=0))
+    print(line.strip())
 
 
 def quiesce():
@@ -237,7 +252,7 @@ write(r/'A_DISPATCH_1854.json',v);print(json.dumps(v))
 
 def bench_status(host):
     from .storage import read
-    tag=next(t for t in ('VOLUME_PROBE6','VOLUME_PROBE5','VOLUME_PROBE4','VOLUME_PROBE3','VOLUME_PROBE2','VOLUME_PROBE1') if (ops.EVIDENCE/f'{t}_{host}_DISPATCH.json').exists())
+    tag=next(t for t in ('VOLUME_PROBE7','VOLUME_PROBE6','VOLUME_PROBE5','VOLUME_PROBE4','VOLUME_PROBE3','VOLUME_PROBE2','VOLUME_PROBE1') if (ops.EVIDENCE/f'{t}_{host}_DISPATCH.json').exists())
     d=read(ops.EVIDENCE/f'{tag}_{host}_DISPATCH.json')
     v=json.loads(ops.ssh.remote(host,f'''import pathlib,json
 r=pathlib.Path({d['root']!r});out={{n:json.loads((r/n).read_text()) for n in ('COMPLETE.json','FAILED.json','TIMING_2_K8.json','TIMING_4_K8.json','TIMING_4_K4.json') if (r/n).exists()}}
@@ -251,12 +266,13 @@ print(json.dumps(out))
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('hold','inspect','bench-inputs','bench-launch','bench-status','capacity-register','trim-register','quiesce','register-A','bind-A','launch-A'));p.add_argument('--host',default='gpuA');p.add_argument('--cpu',default='CPU_coopmwm20261101_cpu25.json');a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('hold','inspect','bench-inputs','bench-launch','bench-status','capacity-register','trim-register','memory-register','quiesce','register-A','bind-A','launch-A'));p.add_argument('--host',default='gpuA');p.add_argument('--cpu',default='CPU_coopmwm20261101_cpu25.json');a=p.parse_args()
     if a.mode=='hold':hold()
     elif a.mode=='inspect':inspect_runtime()
     elif a.mode=='bench-inputs':bench_inputs()
     elif a.mode=='capacity-register':capacity_register()
     elif a.mode=='trim-register':trim_register()
+    elif a.mode=='memory-register':memory_register()
     elif a.mode=='quiesce':quiesce()
     elif a.mode=='register-A':register_A(a.cpu)
     elif a.mode=='bind-A':bind_A(a.cpu)

@@ -119,9 +119,12 @@ class FusedModel:
 
         def dispatch(current,mask=False):
             outs=[]
-            # The adapter only zero-pads/crops the inherited override cache
-            # when universally absent virgin slots change the tensor shape.
-            control=current
+            # The recurrent MAPPO bridge owns a FIXED virgin-slot roster. Passing
+            # the compact model roster to it resets its memory/dwell whenever a
+            # new entry grows the compact shape, changing the counterfactual.
+            # Restore before the callback as well as before source insertion;
+            # crop only the returned physical controls for the model forward.
+            control=restore(current,capacity,full_state) if self.trim_absent else current
             for i,cb in enumerate(callbacks):
                 a,b=offsets[i:i+2]
                 part=sliced(control,a,b,('state',ns[i]))
@@ -164,5 +167,5 @@ def futures(rt,records,indices,trim_absent=False):
             print('FUSED_WINDOW_ERROR '+str(i)+'\n'+traceback.format_exc(),file=sys.stderr,flush=True)
             proxy.barrier.abort();raise
     # Adapter is process-global: installed once, not independently by each thread.
-    with executor_adapter(resize_cache=trim_absent),ThreadPoolExecutor(max_workers=len(records)) as pool:
+    with executor_adapter(),ThreadPoolExecutor(max_workers=len(records)) as pool:
         return list(pool.map(one,range(len(records))))
