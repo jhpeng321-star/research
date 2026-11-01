@@ -32,7 +32,8 @@ def main(root):
         from tools.wmteach.runtime import bootstrap
         rt=bootstrap()
         from .wm import cost_adapter
-        rt.frozen.costs=cost_adapter(rt.frozen.costs)
+        qualified=read(root/'FROZEN_COSTS.json')
+        rt.frozen.costs=cost_adapter(rt.frozen.costs,qualified['code'])
     owner=dict(pid=os.getpid(),start_ticks=Path(f'/proc/{os.getpid()}/stat').read_text().split()[21],
         boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),backend='FULL-v4')
     write(root/'GPU_READY.json',owner)

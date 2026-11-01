@@ -159,9 +159,22 @@ def canary(rt,record,result):
     return dict(pass_=True,max_team_cost_error=worst,serial_future=0,indices=list(range(8)),new_sumo_sim_s=0)
 
 
-def cost_adapter(fn):
-    """Add H60 to the unchanged frozen per-step team/source reducer."""
-    tree=ast.parse(inspect.getsource(fn));count=0
+def cost_adapter(fn,source=None):
+    """Add H60 to the qualified reducer, without introspecting exec/linecache.
+
+    The frozen producer execs reference snippets under a shared synthetic
+    filename. inspect.getsource can silently retrieve a different snippet.
+    Bind explicit qualified source to the actual function bytecode first.
+    """
+    source=inspect.getsource(fn) if source is None else source
+    original=dict(fn.__globals__)
+    exec(compile(source,'<coopmwm-qualified-cost-source>','exec'),original)
+    def signature(code):
+        return (code.co_code,code.co_names,code.co_varnames,
+                tuple(signature(x) if isinstance(x,types.CodeType) else x for x in code.co_consts))
+    if signature(original[fn.__name__].__code__)!=signature(fn.__code__):
+        raise ValueError('qualified cost source/function bytecode mismatch')
+    tree=ast.parse(source);count=0
     class Horizons(ast.NodeTransformer):
         def visit_Tuple(self,node):
             nonlocal count

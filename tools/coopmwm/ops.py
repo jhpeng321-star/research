@@ -70,7 +70,7 @@ r=pathlib.Path({cpu['root']!r});assert r.is_dir()
 hashes=json.loads({json.dumps(cpu['source_hashes'])!r});files={{}}
 for name,h in hashes.items():
  p=r/name
- assert name=='COOPMWM_DESIGN.md' or (name.startswith('pytools/tools/') and name.endswith('.py'))
+  assert name in ('COOPMWM_DESIGN.md','FROZEN_COSTS.json') or (name.startswith('pytools/tools/') and name.endswith('.py'))
  assert hashlib.sha256(p.read_bytes()).hexdigest()==h
  files[name.removeprefix('pytools/')]=p.read_text()
 print(json.dumps(files))
@@ -80,12 +80,20 @@ print(json.dumps(files))
 
 def cpu(root):
     from tools.coopnative.storage import write
-    staged=json.loads(stage('cpuQ',root))
+    qualified=ssh.remote('gpuA',"""import pathlib,json,hashlib
+p=pathlib.Path('/root/rbeval20261031/phys_code_22cc32f65a80/tools/rbeval/references.json')
+assert p.is_file()
+print(json.dumps(dict(code=json.loads(p.read_text())['costs']['code'],source_file=str(p),
+ source_sha256=hashlib.sha256(p.read_bytes()).hexdigest(),backend='FULL-v4',source='22cc32f6')))
+""",timeout=30)
+    files=sources();files['COOPMWM_DESIGN.md']=checked(LOCAL/'docs/paper_results/COOPMWM_DESIGN.md').read_text(encoding='utf-8')
+    files['FROZEN_COSTS.json']=qualified.strip()+'\n'
+    staged=json.loads(stage('cpuQ',root,files))
     print(json.dumps(dict(root=root,source_files=len(staged['hashes']))))
     out=ssh.remote('cpuQ',f'''import os,sys,pathlib,json,time,unittest
 from unittest.mock import patch
 os.nice(19)
-os.environ.update(CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',COOPMWM_MAPPO='/home/ubuntu/mappospeed/production2/policy_00169.pt')
+ os.environ.update(CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',COOPMWM_MAPPO='/home/ubuntu/mappospeed/production2/policy_00169.pt',COOPMWM_COST_SOURCE={root!r}+'/FROZEN_COSTS.json')
 sys.path[:0]=[{root!r}+'/pytools','/home/ubuntu/e3final/runtime/src','/home/ubuntu/e3final/runtime']
 import torch;torch.set_num_threads(1)
 start=time.monotonic()
