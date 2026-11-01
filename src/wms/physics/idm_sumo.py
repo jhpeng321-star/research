@@ -63,7 +63,7 @@ emergencyDecel=9 confirmed independently by S-RB-FIT).
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Mapping, Optional
 
 import torch
@@ -492,6 +492,15 @@ def sumo_idm_baseline_accel(kin: Tensor, present: Tensor, physics,
                 **{**p.__dict__, "vtype_max_speed": torch_full(
                     float(physics.sumo_cf_vtype_max_mps), v)})
         lane_max = p.des_speed
+    if getattr(physics, 'sumo_cf_lane_speed_limits', False):
+        # MSCFModel_IDM.cpp:133 uses getVehicleMaxSpeed on the CURRENT lane.
+        # v0 is the motion-inferred reference-limit desired speed, so rescale
+        # once here; never overwrite the persistent sampled driver's setting.
+        from .merge_network import lane_desired_speed, model_lane_limit
+        local_limit = model_lane_limit(kin, physics)
+        lane_max = torch.where(local_limit == physics.speed_limit_mps, p.des_speed,
+            lane_desired_speed(p.des_speed, local_limit, physics.speed_limit_mps))
+        p = replace(p, des_speed=lane_max)
     dt_s = float(physics.dt_s)
     iterations = idm_iterations(dt_s, float(physics.sumo_cf_stepping_s))
     _, accel = sumo_idm_step(v, gap, leader_v, lane_max, p, dt_s=dt_s,

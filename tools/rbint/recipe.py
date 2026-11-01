@@ -59,6 +59,11 @@ def load_candidate(checkpoints, configs, device):
         from wms.control.arrival_fit import LearnedArrivalFit
         root = Path(__file__).resolve().parents[2]
         options_full = recipe['variants']['FULL']
+        candidate._wmphys_match_cav_execution_settings = options_full.get('match_cav_execution_settings', False)
+        if not isinstance(candidate._wmphys_match_cav_execution_settings, bool):
+            raise ValueError('match_cav_execution_settings must be boolean')
+        if candidate._wmphys_match_cav_execution_settings:
+            receipt['match_cav_execution_settings'] = True
         if options_full['fitted_lc']:
             from wms.physics.lane_continuation import LaneContinuation
             if not options_full.get('condition_motion', False):
@@ -274,4 +279,10 @@ def candidate_future(*, model, batch, initial, future, seed, frozen, **unused):
     process = plan.kwargs.pop('entries')
     entries = InstrumentedEntries(process, frozen.Entries)
     kwargs.update(plan.kwargs, entries=entries)
+    if getattr(model, '_wmphys_match_cav_execution_settings', False):
+        from wms.control.execution_settings import bind_execution_settings
+        path = os.environ.get('C4_EXECUTION_DRIVER')
+        if not path:
+            raise ValueError('matched CAV settings require the registered execution-driver artifact')
+        plan.receipt.update(bind_execution_settings(kwargs, entries, initial, path))
     return kwargs, entries, plan.receipt

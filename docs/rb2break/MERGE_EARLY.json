@@ -1,0 +1,7695 @@
+{
+ "schema": "rb2break-development/1",
+ "worlds": [
+  969420,
+  969421
+ ],
+ "futures": {
+  "969420": [
+   0
+  ],
+  "969421": [
+   0
+  ]
+ },
+ "matched_task_count": 2,
+ "qualification": false,
+ "rows": [
+  {
+   "seed": 969420,
+   "arm": "native",
+   "horizon": 120,
+   "model": "candidate",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 10939.653793047797,
+    "real": 10425.182941811036,
+    "bias": 514.4708512367615,
+    "crps": 514.4708512367615
+   },
+   "road_delay_vs": {
+    "mean": 5647.278310775757,
+    "real": 5128.857093811035,
+    "bias": 518.4212169647217,
+    "crps": 518.4212169647217
+   },
+   "source_wait_vs": {
+    "mean": 5292.37548227204,
+    "real": 5296.3258479999995,
+    "bias": -3.9503657279592517,
+    "crps": 3.9503657279592517
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.14285714285714285,
+    "speed_crps": 1.5404685638332756,
+    "speed_bias": -1.5404685638332756,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 1.8258697755540891,
+    "speed_bias": 0.7380792340224122,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.7142857142857143,
+    "speed_crps": 8.064281032668708,
+    "speed_bias": 7.172997042228475,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "native",
+   "horizon": 120,
+   "model": "baseline",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 11748.856780718696,
+    "real": 10425.182941811036,
+    "bias": 1323.67383890766,
+    "crps": 1323.67383890766
+   },
+   "road_delay_vs": {
+    "mean": 6456.481298446655,
+    "real": 5128.857093811035,
+    "bias": 1327.6242046356201,
+    "crps": 1327.6242046356201
+   },
+   "source_wait_vs": {
+    "mean": 5292.37548227204,
+    "real": 5296.3258479999995,
+    "bias": -3.9503657279592517,
+    "crps": 3.9503657279592517
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.07142857142857142,
+    "speed_crps": 3.174002735506789,
+    "speed_bias": -3.174002735506789,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 1.0,
+    "speed_crps": 1.4413633068625151,
+    "speed_bias": -1.1026282354604093,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.7142857142857143,
+    "speed_crps": 7.974973284392834,
+    "speed_bias": 7.974973284392834,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "native",
+   "horizon": 300,
+   "model": "candidate",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 29782.857275686438,
+    "real": 33464.917533615226,
+    "bias": -3682.060257928788,
+    "crps": 3682.060257928788
+   },
+   "road_delay_vs": {
+    "mean": 10214.754943847656,
+    "real": 14924.040130615234,
+    "bias": -4709.285186767578,
+    "crps": 4709.285186767578
+   },
+   "source_wait_vs": {
+    "mean": 19568.10233183878,
+    "real": 18540.87740299999,
+    "bias": 1027.2249288387902,
+    "crps": 1027.2249288387902
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.125,
+    "speed_crps": 2.344694370849198,
+    "speed_bias": 1.1123195197825775,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 11.222243735460594,
+    "speed_bias": 10.772123511378522,
+    "speed_supported_bins": 29,
+    "speed_missing_bins": 1
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.5625,
+    "speed_crps": 7.1890673063350885,
+    "speed_bias": 6.270309862516849,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "native",
+   "horizon": 300,
+   "model": "baseline",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 32230.399001798804,
+    "real": 33464.917533615226,
+    "bias": -1234.5185318164222,
+    "crps": 1234.5185318164222
+   },
+   "road_delay_vs": {
+    "mean": 12662.296669960022,
+    "real": 14924.040130615234,
+    "bias": -2261.7434606552124,
+    "crps": 2261.7434606552124
+   },
+   "source_wait_vs": {
+    "mean": 19568.10233183878,
+    "real": 18540.87740299999,
+    "bias": 1027.2249288387902,
+    "crps": 1027.2249288387902
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.125,
+    "speed_crps": 2.947557899837925,
+    "speed_bias": 0.3172100895626662,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 4.662144169665472,
+    "speed_bias": 3.33934590204328,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.3125,
+    "speed_crps": 6.590423762875805,
+    "speed_bias": 6.456878386193429,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "native",
+   "horizon": 600,
+   "model": "candidate",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 75354.55397688496,
+    "real": 83932.69780743032,
+    "bias": -8578.143830545363,
+    "crps": 8578.143830545363
+   },
+   "road_delay_vs": {
+    "mean": 20169.22785282135,
+    "real": 31295.729425430298,
+    "bias": -11126.501572608948,
+    "crps": 11126.501572608948
+   },
+   "source_wait_vs": {
+    "mean": 55185.32612406359,
+    "real": 52636.968382000014,
+    "bias": 2548.3577420635775,
+    "crps": 2548.3577420635775
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.08064516129032258,
+    "speed_crps": 2.3426261373094905,
+    "speed_bias": 1.7172659200025566,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 0.5,
+    "speed_crps": 11.874128130658255,
+    "speed_bias": 10.864426638791565,
+    "speed_supported_bins": 59,
+    "speed_missing_bins": 1
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.6290322580645161,
+    "speed_crps": 7.412690651009667,
+    "speed_bias": 4.33149183245806,
+    "speed_supported_bins": 58,
+    "speed_missing_bins": 2
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "native",
+   "horizon": 600,
+   "model": "baseline",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 77163.31867968189,
+    "real": 83932.69780743032,
+    "bias": -6769.379127748427,
+    "crps": 6769.379127748427
+   },
+   "road_delay_vs": {
+    "mean": 21977.992555618286,
+    "real": 31295.729425430298,
+    "bias": -9317.736869812012,
+    "crps": 9317.736869812012
+   },
+   "source_wait_vs": {
+    "mean": 55185.32612406359,
+    "real": 52636.968382000014,
+    "bias": 2548.3577420635775,
+    "crps": 2548.3577420635775
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.06451612903225806,
+    "speed_crps": 2.66533379410828,
+    "speed_bias": 1.3395311145355755,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 1.0,
+    "speed_crps": 9.028200719330812,
+    "speed_bias": 8.239914038144828,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 7.02669239161962,
+    "speed_bias": 4.633044228088161,
+    "speed_supported_bins": 59,
+    "speed_missing_bins": 1
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "ctrl0",
+   "horizon": 120,
+   "model": "candidate",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 10990.234534930121,
+    "real": 9432.151638405274,
+    "bias": 1558.0828965248475,
+    "crps": 1558.0828965248475
+   },
+   "road_delay_vs": {
+    "mean": 5737.859052658081,
+    "real": 4135.825790405273,
+    "bias": 1602.0332622528076,
+    "crps": 1602.0332622528076
+   },
+   "source_wait_vs": {
+    "mean": 5252.37548227204,
+    "real": 5296.3258479999995,
+    "bias": -43.95036572795925,
+    "crps": 43.95036572795925
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.07142857142857142,
+    "speed_crps": 3.123888225380629,
+    "speed_bias": -3.123888225380629,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 1.0,
+    "speed_crps": 3.1812045518752345,
+    "speed_bias": -3.1812045518752345,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.42857142857142855,
+    "speed_crps": 6.1248673538283755,
+    "speed_bias": 1.9733005364633778,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "ctrl0",
+   "horizon": 120,
+   "model": "baseline",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 11077.42065591706,
+    "real": 9432.151638405274,
+    "bias": 1645.269017511786,
+    "crps": 1645.269017511786
+   },
+   "road_delay_vs": {
+    "mean": 5825.0451736450195,
+    "real": 4135.825790405273,
+    "bias": 1689.219383239746,
+    "crps": 1689.219383239746
+   },
+   "source_wait_vs": {
+    "mean": 5252.37548227204,
+    "real": 5296.3258479999995,
+    "bias": -43.95036572795925,
+    "crps": 43.95036572795925
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.07142857142857142,
+    "speed_crps": 3.4180940485727707,
+    "speed_bias": -3.4180940485727707,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 1.0,
+    "speed_crps": 3.003934274033824,
+    "speed_bias": -2.527111466444494,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 6.077632216164086,
+    "speed_bias": 3.8248526052616825,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "ctrl0",
+   "horizon": 300,
+   "model": "candidate",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 30041.58956786173,
+    "real": 28502.633371093863,
+    "bias": 1538.9561967678674,
+    "crps": 1538.9561967678674
+   },
+   "road_delay_vs": {
+    "mean": 10665.98723602295,
+    "real": 9961.755968093872,
+    "bias": 704.2312679290771,
+    "crps": 704.2312679290771
+   },
+   "source_wait_vs": {
+    "mean": 19375.60233183878,
+    "real": 18540.87740299999,
+    "bias": 834.7249288387902,
+    "crps": 834.7249288387902
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.90625,
+    "speed_crps": 2.377894254176715,
+    "speed_bias": -2.367344249405486,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 1.0,
+    "speed_crps": 10.182596169055502,
+    "speed_bias": 7.308656884267782,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 4.7829879445766155,
+    "speed_bias": 1.9281773838866831,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "ctrl0",
+   "horizon": 300,
+   "model": "baseline",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 29901.99267836588,
+    "real": 28502.633371093863,
+    "bias": 1399.3593072720178,
+    "crps": 1399.3593072720178
+   },
+   "road_delay_vs": {
+    "mean": 10526.3903465271,
+    "real": 9961.755968093872,
+    "bias": 564.6343784332275,
+    "crps": 564.6343784332275
+   },
+   "source_wait_vs": {
+    "mean": 19375.60233183878,
+    "real": 18540.87740299999,
+    "bias": 834.7249288387902,
+    "crps": 834.7249288387902
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.90625,
+    "speed_crps": 2.473343884465089,
+    "speed_bias": -2.462757607520456,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 1.0,
+    "speed_crps": 10.459102106492315,
+    "speed_bias": 8.246683810300988,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.28125,
+    "speed_crps": 5.82418322373373,
+    "speed_bias": 3.9965359716725533,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "ctrl0",
+   "horizon": 600,
+   "model": "candidate",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 74729.0675247823,
+    "real": 73665.01379024892,
+    "bias": 1064.0537345333723,
+    "crps": 1064.0537345333723
+   },
+   "road_delay_vs": {
+    "mean": 20137.74140071869,
+    "real": 20993.5454082489,
+    "bias": -855.8040075302124,
+    "crps": 855.8040075302124
+   },
+   "source_wait_vs": {
+    "mean": 54591.32612406359,
+    "real": 52671.468382000014,
+    "bias": 1919.8577420635775,
+    "crps": 1919.8577420635775
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.967741935483871,
+    "speed_crps": 2.314769220876366,
+    "speed_bias": -2.151793498589781,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 0.6129032258064516,
+    "speed_crps": 12.502165700577963,
+    "speed_bias": 10.581033779339446,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.43548387096774194,
+    "speed_crps": 5.057594279937732,
+    "speed_bias": 0.5071767830530163,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "ctrl0",
+   "horizon": 600,
+   "model": "baseline",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 74655.70219122517,
+    "real": 73665.01379024892,
+    "bias": 990.6884009762434,
+    "crps": 990.6884009762434
+   },
+   "road_delay_vs": {
+    "mean": 20101.87606716156,
+    "real": 20993.5454082489,
+    "bias": -891.6693410873413,
+    "crps": 891.6693410873413
+   },
+   "source_wait_vs": {
+    "mean": 54553.82612406359,
+    "real": 52671.468382000014,
+    "bias": 1882.3577420635775,
+    "crps": 1882.3577420635775
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.967741935483871,
+    "speed_crps": 2.421376084662044,
+    "speed_bias": -2.255803105455963,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 0.6129032258064516,
+    "speed_crps": 12.81646878687814,
+    "speed_bias": 11.573482299416087,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.4838709677419355,
+    "speed_crps": 5.924985067651011,
+    "speed_bias": 1.3669435812336528,
+    "speed_supported_bins": 59,
+    "speed_missing_bins": 1
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "mappo",
+   "horizon": 120,
+   "model": "candidate",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 10938.824830721747,
+    "real": 9452.147644417237,
+    "bias": 1486.6771863045105,
+    "crps": 1486.6771863045105
+   },
+   "road_delay_vs": {
+    "mean": 5670.949348449707,
+    "real": 4155.821796417236,
+    "bias": 1515.1275520324707,
+    "crps": 1515.1275520324707
+   },
+   "source_wait_vs": {
+    "mean": 5267.87548227204,
+    "real": 5296.3258479999995,
+    "bias": -28.45036572795925,
+    "crps": 28.45036572795925
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.07142857142857142,
+    "speed_crps": 3.295805580782359,
+    "speed_bias": -3.295805580782359,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 3.8277544885848758,
+    "speed_bias": -0.27724067971055183,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 6.933238191746523,
+    "speed_bias": 4.737296280084759,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "mappo",
+   "horizon": 120,
+   "model": "baseline",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 11090.858119677436,
+    "real": 9452.147644417237,
+    "bias": 1638.710475260199,
+    "crps": 1638.710475260199
+   },
+   "road_delay_vs": {
+    "mean": 5822.9826374053955,
+    "real": 4155.821796417236,
+    "bias": 1667.1608409881592,
+    "crps": 1667.1608409881592
+   },
+   "source_wait_vs": {
+    "mean": 5267.87548227204,
+    "real": 5296.3258479999995,
+    "bias": -28.45036572795925,
+    "crps": 28.45036572795925
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.07142857142857142,
+    "speed_crps": 3.6757519489765174,
+    "speed_bias": -3.6757519489765174,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 1.0,
+    "speed_crps": 2.8841791647487,
+    "speed_bias": -1.47387696581786,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 6.610641273440051,
+    "speed_bias": 4.810773499099846,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "mappo",
+   "horizon": 300,
+   "model": "candidate",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 29878.771496496374,
+    "real": 27873.221449592704,
+    "bias": 2005.5500469036706,
+    "crps": 2005.5500469036706
+   },
+   "road_delay_vs": {
+    "mean": 10403.669164657593,
+    "real": 9332.344046592712,
+    "bias": 1071.3251180648804,
+    "crps": 1071.3251180648804
+   },
+   "source_wait_vs": {
+    "mean": 19475.10233183878,
+    "real": 18540.87740299999,
+    "bias": 934.2249288387902,
+    "crps": 934.2249288387902
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.90625,
+    "speed_crps": 2.8799379767687374,
+    "speed_bias": -2.8799379767687374,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 1.0,
+    "speed_crps": 9.67964507890823,
+    "speed_bias": 6.250080677014633,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.28125,
+    "speed_crps": 6.3502719342024765,
+    "speed_bias": 5.033920587902158,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "mappo",
+   "horizon": 300,
+   "model": "baseline",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 30676.609029493506,
+    "real": 27873.221449592704,
+    "bias": 2803.387579900802,
+    "crps": 2803.387579900802
+   },
+   "road_delay_vs": {
+    "mean": 11199.506697654724,
+    "real": 9332.344046592712,
+    "bias": 1867.1626510620117,
+    "crps": 1867.1626510620117
+   },
+   "source_wait_vs": {
+    "mean": 19477.10233183878,
+    "real": 18540.87740299999,
+    "bias": 936.2249288387902,
+    "crps": 936.2249288387902
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.90625,
+    "speed_crps": 3.052406899369623,
+    "speed_bias": -3.052406899369623,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 1.0,
+    "speed_crps": 8.088191296840158,
+    "speed_bias": 4.004114337283668,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.5625,
+    "speed_crps": 4.648149301338773,
+    "speed_bias": 3.1143878037455077,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "mappo",
+   "horizon": 600,
+   "model": "candidate",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 77197.87644754993,
+    "real": 72623.33849346548,
+    "bias": 4574.537954084459,
+    "crps": 4574.537954084459
+   },
+   "road_delay_vs": {
+    "mean": 22203.550323486328,
+    "real": 19980.370111465454,
+    "bias": 2223.180212020874,
+    "crps": 2223.180212020874
+   },
+   "source_wait_vs": {
+    "mean": 54994.32612406359,
+    "real": 52642.968382000014,
+    "bias": 2351.3577420635775,
+    "crps": 2351.3577420635775
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.43548387096774194,
+    "speed_crps": 2.8412756110185637,
+    "speed_bias": -2.762381867484659,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.5,
+    "speed_crps": 6.907212651773804,
+    "speed_bias": 4.360535439414337,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.6290322580645161,
+    "speed_crps": 5.7212694933223585,
+    "speed_bias": 2.8811035913944685,
+    "speed_supported_bins": 59,
+    "speed_missing_bins": 1
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "mappo",
+   "horizon": 600,
+   "model": "baseline",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 75749.9269589101,
+    "real": 72623.33849346548,
+    "bias": 3126.588465444627,
+    "crps": 3126.588465444627
+   },
+   "road_delay_vs": {
+    "mean": 20801.100834846497,
+    "real": 19980.370111465454,
+    "bias": 820.7307233810425,
+    "crps": 820.7307233810425
+   },
+   "source_wait_vs": {
+    "mean": 54948.82612406359,
+    "real": 52642.968382000014,
+    "bias": 2305.8577420635775,
+    "crps": 2305.8577420635775
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.43548387096774194,
+    "speed_crps": 3.1026719127236717,
+    "speed_bias": -3.1026719127236717,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.5,
+    "speed_crps": 10.829091062433317,
+    "speed_bias": 8.473436413507006,
+    "speed_supported_bins": 59,
+    "speed_missing_bins": 1
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 4.870718650088867,
+    "speed_bias": 3.164197172518646,
+    "speed_supported_bins": 58,
+    "speed_missing_bins": 2
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "pi",
+   "horizon": 120,
+   "model": "candidate",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 11262.632705401313,
+    "real": 9535.554788010071,
+    "bias": 1727.0779173912415,
+    "crps": 1727.0779173912415
+   },
+   "road_delay_vs": {
+    "mean": 6076.7572231292725,
+    "real": 4239.228940010071,
+    "bias": 1837.5282831192017,
+    "crps": 1837.5282831192017
+   },
+   "source_wait_vs": {
+    "mean": 5185.87548227204,
+    "real": 5296.3258479999995,
+    "bias": -110.45036572795925,
+    "crps": 110.45036572795925
+   },
+   "upstream": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.7142857142857143,
+    "speed_crps": 3.2221322022842447,
+    "speed_bias": -3.2221322022842447,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 1.0,
+    "speed_crps": 3.6107979245199524,
+    "speed_bias": -3.6107979245199524,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 3.809253287190422,
+    "speed_bias": -3.0674706017063254,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "pi",
+   "horizon": 120,
+   "model": "baseline",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 10905.864667605292,
+    "real": 9535.554788010071,
+    "bias": 1370.309879595221,
+    "crps": 1370.309879595221
+   },
+   "road_delay_vs": {
+    "mean": 5719.989185333252,
+    "real": 4239.228940010071,
+    "bias": 1480.7602453231812,
+    "crps": 1480.7602453231812
+   },
+   "source_wait_vs": {
+    "mean": 5185.87548227204,
+    "real": 5296.3258479999995,
+    "bias": -110.45036572795925,
+    "crps": 110.45036572795925
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.07142857142857142,
+    "speed_crps": 2.965485438502016,
+    "speed_bias": -2.965485438502016,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 3.7582141984997643,
+    "speed_bias": -1.266552019392509,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 6.076277664850122,
+    "speed_bias": 4.95887849143896,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "pi",
+   "horizon": 300,
+   "model": "candidate",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 33730.02114935892,
+    "real": 27647.734614112967,
+    "bias": 6082.286535245956,
+    "crps": 6082.286535245956
+   },
+   "road_delay_vs": {
+    "mean": 14773.418817520142,
+    "real": 9106.857211112976,
+    "bias": 5666.5616064071655,
+    "crps": 5666.5616064071655
+   },
+   "source_wait_vs": {
+    "mean": 18956.60233183878,
+    "real": 18540.87740299999,
+    "bias": 415.7249288387902,
+    "crps": 415.7249288387902
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 4.87647984416744,
+    "speed_bias": -4.87647984416744,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 7.347978317645528,
+    "speed_bias": -7.347978317645528,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 3.7109982123267384,
+    "speed_bias": -1.0880883572377111,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "pi",
+   "horizon": 300,
+   "model": "baseline",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 29645.8183333494,
+    "real": 27647.734614112967,
+    "bias": 1998.0837192364343,
+    "crps": 1998.0837192364343
+   },
+   "road_delay_vs": {
+    "mean": 10689.21600151062,
+    "real": 9106.857211112976,
+    "bias": 1582.358790397644,
+    "crps": 1582.358790397644
+   },
+   "source_wait_vs": {
+    "mean": 18956.60233183878,
+    "real": 18540.87740299999,
+    "bias": 415.7249288387902,
+    "crps": 415.7249288387902
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.03125,
+    "speed_crps": 2.8249540202218175,
+    "speed_bias": -2.8249540202218175,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 0.84375,
+    "speed_crps": 10.348887686375512,
+    "speed_bias": 6.220766613294368,
+    "speed_supported_bins": 29,
+    "speed_missing_bins": 1
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.4375,
+    "speed_crps": 5.270875030145291,
+    "speed_bias": 0.9074161627687466,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "pi",
+   "horizon": 600,
+   "model": "candidate",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 83967.99907480823,
+    "real": 68667.91930687337,
+    "bias": 15300.079767934862,
+    "crps": 15300.079767934862
+   },
+   "road_delay_vs": {
+    "mean": 31084.67295074463,
+    "real": 15992.450924873352,
+    "bias": 15092.222025871277,
+    "crps": 15092.222025871277
+   },
+   "source_wait_vs": {
+    "mean": 52883.32612406359,
+    "real": 52675.468382000014,
+    "bias": 207.85774206357746,
+    "crps": 207.85774206357746
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.7741935483870968,
+    "speed_crps": 5.971887940732905,
+    "speed_bias": -5.971887940732905,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 1.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8387096774193549,
+    "speed_crps": 10.607409651213285,
+    "speed_bias": -9.621796770046599,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 4.955144956194865,
+    "speed_bias": -1.1946837676787907,
+    "speed_supported_bins": 59,
+    "speed_missing_bins": 1
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "pi",
+   "horizon": 600,
+   "model": "baseline",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 76096.90192591297,
+    "real": 68667.91930687337,
+    "bias": 7428.982619039598,
+    "crps": 7428.982619039598
+   },
+   "road_delay_vs": {
+    "mean": 23213.575801849365,
+    "real": 15992.450924873352,
+    "bias": 7221.124876976013,
+    "crps": 7221.124876976013
+   },
+   "source_wait_vs": {
+    "mean": 52883.32612406359,
+    "real": 52675.468382000014,
+    "bias": 207.85774206357746,
+    "crps": 207.85774206357746
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.11290322580645161,
+    "speed_crps": 4.066671874787534,
+    "speed_bias": -4.066671874787534,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.3387096774193548,
+    "speed_crps": 11.662330696863759,
+    "speed_bias": -2.0044305918646494,
+    "speed_supported_bins": 59,
+    "speed_missing_bins": 1
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.7096774193548387,
+    "speed_crps": 5.803359158789258,
+    "speed_bias": 1.0440236480272882,
+    "speed_supported_bins": 59,
+    "speed_missing_bins": 1
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "circles",
+   "horizon": 120,
+   "model": "candidate",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 11533.792537402045,
+    "real": 10653.396095650147,
+    "bias": 880.3964417518982,
+    "crps": 880.3964417518982
+   },
+   "road_delay_vs": {
+    "mean": 6193.417055130005,
+    "real": 5340.5702476501465,
+    "bias": 852.8468074798584,
+    "crps": 852.8468074798584
+   },
+   "source_wait_vs": {
+    "mean": 5340.37548227204,
+    "real": 5312.8258479999995,
+    "bias": 27.54963427204075,
+    "crps": 27.54963427204075
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.21428571428571427,
+    "speed_crps": 2.4411152974999424,
+    "speed_bias": -2.4411152974999424,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 1.458622161381087,
+    "speed_bias": -1.458622161381087,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.7142857142857143,
+    "speed_crps": 3.9568787877762124,
+    "speed_bias": 3.022995057691393,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "circles",
+   "horizon": 120,
+   "model": "baseline",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 11253.009013842475,
+    "real": 10653.396095650147,
+    "bias": 599.6129181923279,
+    "crps": 599.6129181923279
+   },
+   "road_delay_vs": {
+    "mean": 5912.633531570435,
+    "real": 5340.5702476501465,
+    "bias": 572.0632839202881,
+    "crps": 572.0632839202881
+   },
+   "source_wait_vs": {
+    "mean": 5340.37548227204,
+    "real": 5312.8258479999995,
+    "bias": 27.54963427204075,
+    "crps": 27.54963427204075
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.2857142857142857,
+    "speed_crps": 2.3449492865047614,
+    "speed_bias": -2.3379166202554194,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 1.1390563661486999,
+    "speed_bias": 0.11783926329526373,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.7142857142857143,
+    "speed_crps": 9.7267229285938,
+    "speed_bias": 9.57116128720959,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "circles",
+   "horizon": 300,
+   "model": "candidate",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 34687.57281752604,
+    "real": 31772.667215088008,
+    "bias": 2914.9056024380297,
+    "crps": 2914.9056024380297
+   },
+   "road_delay_vs": {
+    "mean": 14675.470485687256,
+    "real": 13110.789812088013,
+    "bias": 1564.6806735992432,
+    "crps": 1564.6806735992432
+   },
+   "source_wait_vs": {
+    "mean": 20012.10233183878,
+    "real": 18661.877402999995,
+    "bias": 1350.2249288387866,
+    "crps": 1350.2249288387866
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.03125,
+    "speed_crps": 2.497532181160807,
+    "speed_bias": -2.1376778862232317,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 2.5958026455277348,
+    "speed_bias": -2.5958026455277348,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 3.8873778837913684,
+    "speed_bias": 1.9031458076747791,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "circles",
+   "horizon": 300,
+   "model": "baseline",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 30710.582925520117,
+    "real": 31772.667215088008,
+    "bias": -1062.0842895678907,
+    "crps": 1062.0842895678907
+   },
+   "road_delay_vs": {
+    "mean": 10698.480593681335,
+    "real": 13110.789812088013,
+    "bias": -2412.3092184066772,
+    "crps": 2412.3092184066772
+   },
+   "source_wait_vs": {
+    "mean": 20012.10233183878,
+    "real": 18661.877402999995,
+    "bias": 1350.2249288387866,
+    "crps": 1350.2249288387866
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0625,
+    "speed_crps": 1.9903274892421383,
+    "speed_bias": 0.11718112653806591,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 9.00923246177233,
+    "speed_bias": 8.595101743812624,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.4375,
+    "speed_crps": 7.056524283819459,
+    "speed_bias": 6.473423390952149,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "circles",
+   "horizon": 600,
+   "model": "candidate",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 90189.16341196644,
+    "real": 78766.99999248891,
+    "bias": 11422.163419477525,
+    "crps": 11422.163419477525
+   },
+   "road_delay_vs": {
+    "mean": 33293.33728790283,
+    "real": 25556.53161048889,
+    "bias": 7736.80567741394,
+    "crps": 7736.80567741394
+   },
+   "source_wait_vs": {
+    "mean": 56895.82612406359,
+    "real": 53210.46838200002,
+    "bias": 3685.35774206357,
+    "crps": 3685.35774206357
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.04838709677419355,
+    "speed_crps": 3.9098899786020653,
+    "speed_bias": -3.7299628311332778,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 2.8034810786241393,
+    "speed_bias": -1.988461896166118,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.41935483870967744,
+    "speed_crps": 4.9731762846697665,
+    "speed_bias": 0.2985734589866958,
+    "speed_supported_bins": 59,
+    "speed_missing_bins": 1
+   }
+  },
+  {
+   "seed": 969420,
+   "arm": "circles",
+   "horizon": 600,
+   "model": "baseline",
+   "cell": [
+    2700,
+    0.2
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 76788.71237265217,
+    "real": 78766.99999248891,
+    "bias": -1978.2876198367449,
+    "crps": 1978.2876198367449
+   },
+   "road_delay_vs": {
+    "mean": 19892.886248588562,
+    "real": 25556.53161048889,
+    "bias": -5663.64536190033,
+    "crps": 5663.64536190033
+   },
+   "source_wait_vs": {
+    "mean": 56895.82612406359,
+    "real": 53210.46838200002,
+    "bias": 3685.35774206357,
+    "crps": 3685.35774206357
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.08064516129032258,
+    "speed_crps": 2.200389152768035,
+    "speed_bias": 0.0028017625748509188,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 0.5,
+    "speed_crps": 9.74875564211908,
+    "speed_bias": 8.99684109553626,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.06451612903225806,
+    "speed_crps": 7.117680634058437,
+    "speed_bias": 4.4175143390699665,
+    "speed_supported_bins": 59,
+    "speed_missing_bins": 1
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "native",
+   "horizon": 120,
+   "model": "candidate",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 1086.1954956226195,
+    "real": 1497.5493306404726,
+    "bias": -411.35383501785304,
+    "crps": 411.35383501785304
+   },
+   "road_delay_vs": {
+    "mean": 1070.2506959438324,
+    "real": 1447.3549666404724,
+    "bias": -377.10427069664,
+    "crps": 377.10427069664
+   },
+   "source_wait_vs": {
+    "mean": 15.944799678787088,
+    "real": 50.19436400000015,
+    "bias": -34.24956432121306,
+    "crps": 34.24956432121306
+   },
+   "upstream": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8571428571428571,
+    "speed_crps": 0.39066347759583014,
+    "speed_bias": 0.1628872759552138,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.2857142857142857,
+    "speed_crps": 6.190653398063372,
+    "speed_bias": 4.093675018214995,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.5714285714285714,
+    "speed_crps": 5.573194304357976,
+    "speed_bias": 5.4183129001740795,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "native",
+   "horizon": 120,
+   "model": "baseline",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 1068.9959185294952,
+    "real": 1497.5493306404726,
+    "bias": -428.55341211097743,
+    "crps": 428.55341211097743
+   },
+   "road_delay_vs": {
+    "mean": 1053.051118850708,
+    "real": 1447.3549666404724,
+    "bias": -394.3038477897644,
+    "crps": 394.3038477897644
+   },
+   "source_wait_vs": {
+    "mean": 15.944799678787088,
+    "real": 50.19436400000015,
+    "bias": -34.24956432121306,
+    "crps": 34.24956432121306
+   },
+   "upstream": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8571428571428571,
+    "speed_crps": 0.38965417833868976,
+    "speed_bias": 0.15885926358926206,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.42857142857142855,
+    "speed_crps": 6.868436989486152,
+    "speed_bias": 3.02527541550486,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.5714285714285714,
+    "speed_crps": 6.2112869510979145,
+    "speed_bias": 5.966026926438487,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "native",
+   "horizon": 300,
+   "model": "candidate",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 3435.1411980880853,
+    "real": 4056.845031085083,
+    "bias": -621.7038329969978,
+    "crps": 621.7038329969978
+   },
+   "road_delay_vs": {
+    "mean": 3390.0766932964325,
+    "real": 3920.619234085083,
+    "bias": -530.5425407886505,
+    "crps": 530.5425407886505
+   },
+   "source_wait_vs": {
+    "mean": 45.06450479165271,
+    "real": 136.2257970000002,
+    "bias": -91.16129220834749,
+    "crps": 91.16129220834749
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.21875,
+    "speed_crps": 0.6350125726659585,
+    "speed_bias": 0.2766784074221069,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.28125,
+    "speed_crps": 11.40567577095621,
+    "speed_bias": 7.27250294704186,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.1875,
+    "speed_crps": 6.840912056074536,
+    "speed_bias": -2.4443091742617136,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "native",
+   "horizon": 300,
+   "model": "baseline",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 2842.238495994961,
+    "real": 4056.845031085083,
+    "bias": -1214.6065350901222,
+    "crps": 1214.6065350901222
+   },
+   "road_delay_vs": {
+    "mean": 2797.173991203308,
+    "real": 3920.619234085083,
+    "bias": -1123.445242881775,
+    "crps": 1123.445242881775
+   },
+   "source_wait_vs": {
+    "mean": 45.06450479165271,
+    "real": 136.2257970000002,
+    "bias": -91.16129220834749,
+    "crps": 91.16129220834749
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.21875,
+    "speed_crps": 0.655452611426473,
+    "speed_bias": 0.2760232843624409,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0625,
+    "speed_crps": 8.959717106894777,
+    "speed_bias": 7.2496617182291505,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8125,
+    "speed_crps": 5.957383248072985,
+    "speed_bias": 0.5153232069071828,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "native",
+   "horizon": 600,
+   "model": "candidate",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 11081.008173960257,
+    "real": 9354.742301742279,
+    "bias": 1726.2658722179785,
+    "crps": 1726.2658722179785
+   },
+   "road_delay_vs": {
+    "mean": 10987.312180280685,
+    "real": 9081.384114742279,
+    "bias": 1905.9280655384064,
+    "crps": 1905.9280655384064
+   },
+   "source_wait_vs": {
+    "mean": 93.69599367957287,
+    "real": 273.35818699999993,
+    "bias": -179.66219332042706,
+    "crps": 179.66219332042706
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.16129032258064516,
+    "speed_crps": 1.2734817444518902,
+    "speed_bias": -0.7149052956668794,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.06451612903225806,
+    "speed_crps": 8.716819658193016,
+    "speed_bias": 3.533967720026056,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8064516129032258,
+    "speed_crps": 5.854721710692848,
+    "speed_bias": -0.9006870095502674,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "native",
+   "horizon": 600,
+   "model": "baseline",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 9191.411583679725,
+    "real": 9354.742301742279,
+    "bias": -163.3307180625543,
+    "crps": 163.3307180625543
+   },
+   "road_delay_vs": {
+    "mean": 9097.715590000153,
+    "real": 9081.384114742279,
+    "bias": 16.331475257873535,
+    "crps": 16.331475257873535
+   },
+   "source_wait_vs": {
+    "mean": 93.69599367957287,
+    "real": 273.35818699999993,
+    "bias": -179.66219332042706,
+    "crps": 179.66219332042706
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.16129032258064516,
+    "speed_crps": 1.241441884849492,
+    "speed_bias": -0.40047962520500546,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.06451612903225806,
+    "speed_crps": 7.63623360701519,
+    "speed_bias": 4.017130169719511,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.6451612903225806,
+    "speed_crps": 5.0135434358757,
+    "speed_bias": 0.5814077019650383,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "ctrl0",
+   "horizon": 120,
+   "model": "candidate",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 1129.2798466853942,
+    "real": 1412.2874206787722,
+    "bias": -283.00757399337795,
+    "crps": 283.00757399337795
+   },
+   "road_delay_vs": {
+    "mean": 1113.335047006607,
+    "real": 1362.093056678772,
+    "bias": -248.75800967216492,
+    "crps": 248.75800967216492
+   },
+   "source_wait_vs": {
+    "mean": 15.944799678787088,
+    "real": 50.19436400000015,
+    "bias": -34.24956432121306,
+    "crps": 34.24956432121306
+   },
+   "upstream": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8571428571428571,
+    "speed_crps": 0.3553431269777816,
+    "speed_bias": -0.019712915856263596,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.2857142857142857,
+    "speed_crps": 4.207588377185108,
+    "speed_bias": 3.5859192859320985,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.5714285714285714,
+    "speed_crps": 4.7505786240485195,
+    "speed_bias": 4.465434553190065,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "ctrl0",
+   "horizon": 120,
+   "model": "baseline",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 1172.294579046234,
+    "real": 1412.2874206787722,
+    "bias": -239.9928416325381,
+    "crps": 239.9928416325381
+   },
+   "road_delay_vs": {
+    "mean": 1156.349779367447,
+    "real": 1362.093056678772,
+    "bias": -205.74327731132507,
+    "crps": 205.74327731132507
+   },
+   "source_wait_vs": {
+    "mean": 15.944799678787088,
+    "real": 50.19436400000015,
+    "bias": -34.24956432121306,
+    "crps": 34.24956432121306
+   },
+   "upstream": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8571428571428571,
+    "speed_crps": 0.3537090516532399,
+    "speed_bias": -0.02435989093781199,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.2857142857142857,
+    "speed_crps": 4.640661293716018,
+    "speed_bias": 2.539856831174952,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.5714285714285714,
+    "speed_crps": 4.139407463111999,
+    "speed_bias": 2.9727086079156178,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "ctrl0",
+   "horizon": 300,
+   "model": "candidate",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 3097.009949137127,
+    "real": 3170.067272725174,
+    "bias": -73.05732358804698,
+    "crps": 73.05732358804698
+   },
+   "road_delay_vs": {
+    "mean": 3051.9454443454742,
+    "real": 3033.841475725174,
+    "bias": 18.103968620300293,
+    "crps": 18.103968620300293
+   },
+   "source_wait_vs": {
+    "mean": 45.06450479165271,
+    "real": 136.2257970000002,
+    "bias": -91.16129220834749,
+    "crps": 91.16129220834749
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.125,
+    "speed_crps": 0.5253523535116355,
+    "speed_bias": -0.017237072543240473,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.59375,
+    "speed_crps": 6.481431123825812,
+    "speed_bias": 2.264259536835732,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8125,
+    "speed_crps": 5.820995616471546,
+    "speed_bias": -1.442990177899669,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "ctrl0",
+   "horizon": 300,
+   "model": "baseline",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 3080.594760586178,
+    "real": 3170.067272725174,
+    "bias": -89.47251213899608,
+    "crps": 89.47251213899608
+   },
+   "road_delay_vs": {
+    "mean": 3035.530255794525,
+    "real": 3033.841475725174,
+    "bias": 1.6887800693511963,
+    "crps": 1.6887800693511963
+   },
+   "source_wait_vs": {
+    "mean": 45.06450479165271,
+    "real": 136.2257970000002,
+    "bias": -91.16129220834749,
+    "crps": 91.16129220834749
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.125,
+    "speed_crps": 0.5248171550169493,
+    "speed_bias": -0.016838031130436092,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.59375,
+    "speed_crps": 7.941514422449315,
+    "speed_bias": 1.484755110471991,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8125,
+    "speed_crps": 5.705041223681259,
+    "speed_bias": -0.8935960337053656,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "ctrl0",
+   "horizon": 600,
+   "model": "candidate",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 10986.20209171157,
+    "real": 6762.189092675888,
+    "bias": 4224.012999035682,
+    "crps": 4224.012999035682
+   },
+   "road_delay_vs": {
+    "mean": 10892.506098031998,
+    "real": 6488.830905675888,
+    "bias": 4403.67519235611,
+    "crps": 4403.67519235611
+   },
+   "source_wait_vs": {
+    "mean": 93.69599367957287,
+    "real": 273.35818699999993,
+    "bias": -179.66219332042706,
+    "crps": 179.66219332042706
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.14516129032258066,
+    "speed_crps": 1.8792522356873937,
+    "speed_bias": -1.6251945952031963,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.2903225806451613,
+    "speed_crps": 9.46294234662817,
+    "speed_bias": -2.5531961878814617,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0967741935483871,
+    "speed_crps": 4.9474803617786565,
+    "speed_bias": -1.4508407648175246,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "ctrl0",
+   "horizon": 600,
+   "model": "baseline",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 9590.253375786353,
+    "real": 6762.189092675888,
+    "bias": 2828.064283110465,
+    "crps": 2828.064283110465
+   },
+   "road_delay_vs": {
+    "mean": 9496.557382106781,
+    "real": 6488.830905675888,
+    "bias": 3007.726476430893,
+    "crps": 3007.726476430893
+   },
+   "source_wait_vs": {
+    "mean": 93.69599367957287,
+    "real": 273.35818699999993,
+    "bias": -179.66219332042706,
+    "crps": 179.66219332042706
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.1774193548387097,
+    "speed_crps": 1.2213711326082084,
+    "speed_bias": -0.9141457351865232,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.2903225806451613,
+    "speed_crps": 10.143468507451527,
+    "speed_bias": -2.894330145141427,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.25806451612903225,
+    "speed_crps": 5.203139658538697,
+    "speed_bias": -0.5193447773529817,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "mappo",
+   "horizon": 120,
+   "model": "candidate",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 1157.8081009559478,
+    "real": 1510.4828781372682,
+    "bias": -352.67477718132045,
+    "crps": 352.67477718132045
+   },
+   "road_delay_vs": {
+    "mean": 1141.8633012771606,
+    "real": 1460.288514137268,
+    "bias": -318.4252128601074,
+    "crps": 318.4252128601074
+   },
+   "source_wait_vs": {
+    "mean": 15.944799678787088,
+    "real": 50.19436400000015,
+    "bias": -34.24956432121306,
+    "crps": 34.24956432121306
+   },
+   "upstream": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 0.3314414582368738,
+    "speed_bias": 0.2680717248731221,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.35714285714285715,
+    "speed_crps": 7.80688415171348,
+    "speed_bias": 7.209374041744607,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.21428571428571427,
+    "speed_crps": 3.545276113182517,
+    "speed_bias": 3.2543709612449887,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "mappo",
+   "horizon": 120,
+   "model": "baseline",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 1225.93645145224,
+    "real": 1510.4828781372682,
+    "bias": -284.54642668502834,
+    "crps": 284.54642668502834
+   },
+   "road_delay_vs": {
+    "mean": 1209.9916517734528,
+    "real": 1460.288514137268,
+    "bias": -250.2968623638153,
+    "crps": 250.2968623638153
+   },
+   "source_wait_vs": {
+    "mean": 15.944799678787088,
+    "real": 50.19436400000015,
+    "bias": -34.24956432121306,
+    "crps": 34.24956432121306
+   },
+   "upstream": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 0.32752505416145156,
+    "speed_bias": 0.1340192916062278,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.35714285714285715,
+    "speed_crps": 6.939626940408942,
+    "speed_bias": 5.329342058280189,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.07142857142857142,
+    "speed_crps": 3.4842094608814023,
+    "speed_bias": 2.2655140757751977,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "mappo",
+   "horizon": 300,
+   "model": "candidate",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 4169.522474934018,
+    "real": 3402.6164472723694,
+    "bias": 766.9060276616483,
+    "crps": 766.9060276616483
+   },
+   "road_delay_vs": {
+    "mean": 4124.4579701423645,
+    "real": 3266.3906502723694,
+    "bias": 858.0673198699951,
+    "crps": 858.0673198699951
+   },
+   "source_wait_vs": {
+    "mean": 45.06450479165271,
+    "real": 136.2257970000002,
+    "bias": -91.16129220834749,
+    "crps": 91.16129220834749
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.21875,
+    "speed_crps": 0.4673120587237404,
+    "speed_bias": -0.07361877361770866,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.59375,
+    "speed_crps": 11.221195159078375,
+    "speed_bias": -3.757435250754953,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8125,
+    "speed_crps": 5.428628670852439,
+    "speed_bias": -2.461764434384806,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "mappo",
+   "horizon": 300,
+   "model": "baseline",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 3094.473285128033,
+    "real": 3402.6164472723694,
+    "bias": -308.14316214433666,
+    "crps": 308.14316214433666
+   },
+   "road_delay_vs": {
+    "mean": 3049.40878033638,
+    "real": 3266.3906502723694,
+    "bias": -216.98186993598938,
+    "crps": 216.98186993598938
+   },
+   "source_wait_vs": {
+    "mean": 45.06450479165271,
+    "real": 136.2257970000002,
+    "bias": -91.16129220834749,
+    "crps": 91.16129220834749
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.21875,
+    "speed_crps": 0.4873370117305587,
+    "speed_bias": 0.16853908632830764,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.59375,
+    "speed_crps": 9.11483899681849,
+    "speed_bias": 3.0776036667686997,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8125,
+    "speed_crps": 5.286852365835004,
+    "speed_bias": -2.6871016702878903,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "mappo",
+   "horizon": 600,
+   "model": "candidate",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 11571.59413792472,
+    "real": 7776.1330974499815,
+    "bias": 3795.461040474738,
+    "crps": 3795.461040474738
+   },
+   "road_delay_vs": {
+    "mean": 11477.898144245148,
+    "real": 7502.774910449982,
+    "bias": 3975.123233795166,
+    "crps": 3975.123233795166
+   },
+   "source_wait_vs": {
+    "mean": 93.69599367957287,
+    "real": 273.35818699999993,
+    "bias": -179.66219332042706,
+    "crps": 179.66219332042706
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.03225806451612903,
+    "speed_crps": 1.5447226383345543,
+    "speed_bias": -1.3444734102186322,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.4838709677419355,
+    "speed_crps": 9.210445876154738,
+    "speed_bias": -4.342479687050157,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8548387096774194,
+    "speed_crps": 4.739394346859097,
+    "speed_bias": -0.610890890611618,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "mappo",
+   "horizon": 600,
+   "model": "baseline",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 10581.739093798209,
+    "real": 7776.1330974499815,
+    "bias": 2805.6059963482276,
+    "crps": 2805.6059963482276
+   },
+   "road_delay_vs": {
+    "mean": 10488.043100118637,
+    "real": 7502.774910449982,
+    "bias": 2985.2681896686554,
+    "crps": 2985.2681896686554
+   },
+   "source_wait_vs": {
+    "mean": 93.69599367957287,
+    "real": 273.35818699999993,
+    "bias": -179.66219332042706,
+    "crps": 179.66219332042706
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.03225806451612903,
+    "speed_crps": 1.8808660102410597,
+    "speed_bias": -1.5500431962057475,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.06451612903225806,
+    "speed_crps": 7.90878380817466,
+    "speed_bias": -0.417644878705944,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.9193548387096774,
+    "speed_crps": 4.664423317726698,
+    "speed_bias": -1.0794563192394608,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "pi",
+   "horizon": 120,
+   "model": "candidate",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 1184.58449460791,
+    "real": 1498.741790223755,
+    "bias": -314.157295615845,
+    "crps": 314.157295615845
+   },
+   "road_delay_vs": {
+    "mean": 1168.639694929123,
+    "real": 1448.5474262237549,
+    "bias": -279.90773129463196,
+    "crps": 279.90773129463196
+   },
+   "source_wait_vs": {
+    "mean": 15.944799678787088,
+    "real": 50.19436400000015,
+    "bias": -34.24956432121306,
+    "crps": 34.24956432121306
+   },
+   "upstream": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8571428571428571,
+    "speed_crps": 0.3142678842699717,
+    "speed_bias": 0.2859372648675202,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.2857142857142857,
+    "speed_crps": 5.859807959993236,
+    "speed_bias": 5.239511122126729,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.5714285714285714,
+    "speed_crps": 3.422164752232986,
+    "speed_bias": 3.2672833480490895,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "pi",
+   "horizon": 120,
+   "model": "baseline",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 1166.2753184013213,
+    "real": 1498.741790223755,
+    "bias": -332.46647182243373,
+    "crps": 332.46647182243373
+   },
+   "road_delay_vs": {
+    "mean": 1150.3305187225342,
+    "real": 1448.5474262237549,
+    "bias": -298.2169075012207,
+    "crps": 298.2169075012207
+   },
+   "source_wait_vs": {
+    "mean": 15.944799678787088,
+    "real": 50.19436400000015,
+    "bias": -34.24956432121306,
+    "crps": 34.24956432121306
+   },
+   "upstream": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8571428571428571,
+    "speed_crps": 0.31698864041912217,
+    "speed_bias": 0.28668977548592317,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.2857142857142857,
+    "speed_crps": 5.81123201473509,
+    "speed_bias": 4.1952196890176,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.07142857142857142,
+    "speed_crps": 3.6467583754898723,
+    "speed_bias": 3.4156186295862683,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "pi",
+   "horizon": 300,
+   "model": "candidate",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 4180.624288011944,
+    "real": 3506.6528201723786,
+    "bias": 673.9714678395658,
+    "crps": 673.9714678395658
+   },
+   "road_delay_vs": {
+    "mean": 4135.559783220291,
+    "real": 3370.4270231723785,
+    "bias": 765.1327600479126,
+    "crps": 765.1327600479126
+   },
+   "source_wait_vs": {
+    "mean": 45.06450479165271,
+    "real": 136.2257970000002,
+    "bias": -91.16129220834749,
+    "crps": 91.16129220834749
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0625,
+    "speed_crps": 0.43307786303613344,
+    "speed_bias": -0.0005959012359118295,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.09375,
+    "speed_crps": 9.019929506838375,
+    "speed_bias": -1.885242497821891,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8125,
+    "speed_crps": 6.985780487655412,
+    "speed_bias": -0.7129647131758201,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "pi",
+   "horizon": 300,
+   "model": "baseline",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 4479.283731628811,
+    "real": 3506.6528201723786,
+    "bias": 972.6309114564328,
+    "crps": 972.6309114564328
+   },
+   "road_delay_vs": {
+    "mean": 4434.219226837158,
+    "real": 3370.4270231723785,
+    "bias": 1063.7922036647797,
+    "crps": 1063.7922036647797
+   },
+   "source_wait_vs": {
+    "mean": 45.06450479165271,
+    "real": 136.2257970000002,
+    "bias": -91.16129220834749,
+    "crps": 91.16129220834749
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.03125,
+    "speed_crps": 0.5362069097551062,
+    "speed_bias": -0.1934572265943385,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.09375,
+    "speed_crps": 9.916710899540533,
+    "speed_bias": -3.2298263830460523,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8125,
+    "speed_crps": 5.559227907752389,
+    "speed_bias": 0.27574843437469715,
+    "speed_supported_bins": 28,
+    "speed_missing_bins": 2
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "pi",
+   "horizon": 600,
+   "model": "candidate",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 9324.969992178489,
+    "real": 8613.769038955414,
+    "bias": 711.200953223075,
+    "crps": 711.200953223075
+   },
+   "road_delay_vs": {
+    "mean": 9231.273998498917,
+    "real": 8340.410851955414,
+    "bias": 890.8631465435028,
+    "crps": 890.8631465435028
+   },
+   "source_wait_vs": {
+    "mean": 93.69599367957287,
+    "real": 273.35818699999993,
+    "bias": -179.66219332042706,
+    "crps": 179.66219332042706
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.25806451612903225,
+    "speed_crps": 0.7365978656149593,
+    "speed_bias": 0.07976152156928974,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.04838709677419355,
+    "speed_crps": 9.452514398409141,
+    "speed_bias": 3.0526911731920783,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 6.4651539712362185,
+    "speed_bias": -0.9559719871977662,
+    "speed_supported_bins": 59,
+    "speed_missing_bins": 1
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "pi",
+   "horizon": 600,
+   "model": "baseline",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 9882.06250693183,
+    "real": 8613.769038955414,
+    "bias": 1268.2934679764167,
+    "crps": 1268.2934679764167
+   },
+   "road_delay_vs": {
+    "mean": 9788.366513252258,
+    "real": 8340.410851955414,
+    "bias": 1447.9556612968445,
+    "crps": 1447.9556612968445
+   },
+   "source_wait_vs": {
+    "mean": 93.69599367957287,
+    "real": 273.35818699999993,
+    "bias": -179.66219332042706,
+    "crps": 179.66219332042706
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.2903225806451613,
+    "speed_crps": 0.852912027014831,
+    "speed_bias": -0.3633308834595434,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.04838709677419355,
+    "speed_crps": 10.578185397501247,
+    "speed_bias": -0.23603597263408668,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 5.799867828088632,
+    "speed_bias": 0.6656146747763474,
+    "speed_supported_bins": 57,
+    "speed_missing_bins": 3
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "circles",
+   "horizon": 120,
+   "model": "candidate",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 1307.836919086441,
+    "real": 1595.635893273987,
+    "bias": -287.79897418754604,
+    "crps": 287.79897418754604
+   },
+   "road_delay_vs": {
+    "mean": 1291.8921194076538,
+    "real": 1545.4415292739868,
+    "bias": -253.549409866333,
+    "crps": 253.549409866333
+   },
+   "source_wait_vs": {
+    "mean": 15.944799678787088,
+    "real": 50.19436400000015,
+    "bias": -34.24956432121306,
+    "crps": 34.24956432121306
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.07142857142857142,
+    "speed_crps": 0.6208795048100564,
+    "speed_bias": 0.2526923791425017,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 2.1719720071286535,
+    "speed_bias": 0.0013093571367145767,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.5714285714285714,
+    "speed_crps": 6.315439964958979,
+    "speed_bias": 6.187790754089735,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "circles",
+   "horizon": 120,
+   "model": "baseline",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 1268.1246359519805,
+    "real": 1595.635893273987,
+    "bias": -327.5112573220065,
+    "crps": 327.5112573220065
+   },
+   "road_delay_vs": {
+    "mean": 1252.1798362731934,
+    "real": 1545.4415292739868,
+    "bias": -293.26169300079346,
+    "crps": 293.26169300079346
+   },
+   "source_wait_vs": {
+    "mean": 15.944799678787088,
+    "real": 50.19436400000015,
+    "bias": -34.24956432121306,
+    "crps": 34.24956432121306
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.07142857142857142,
+    "speed_crps": 0.6155489050731257,
+    "speed_bias": 0.2706301428597134,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 2.2424533713428043,
+    "speed_bias": -1.2527967844024335,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.5714285714285714,
+    "speed_crps": 7.722523419118059,
+    "speed_bias": 7.524306553430519,
+    "speed_supported_bins": 12,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "circles",
+   "horizon": 300,
+   "model": "candidate",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 3941.153161217129,
+    "real": 4182.957872214386,
+    "bias": -241.8047109972572,
+    "crps": 241.8047109972572
+   },
+   "road_delay_vs": {
+    "mean": 3707.588656425476,
+    "real": 4046.732075214386,
+    "bias": -339.1434187889099,
+    "crps": 339.1434187889099
+   },
+   "source_wait_vs": {
+    "mean": 233.5645047916527,
+    "real": 136.2257970000002,
+    "bias": 97.3387077916525,
+    "crps": 97.3387077916525
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.21875,
+    "speed_crps": 1.3651115418612396,
+    "speed_bias": -0.5017445336216486,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.53125,
+    "speed_crps": 7.180293535478835,
+    "speed_bias": 5.14244746264857,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8125,
+    "speed_crps": 5.437682432761472,
+    "speed_bias": 0.18408005031241884,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "circles",
+   "horizon": 300,
+   "model": "baseline",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 3585.065049101269,
+    "real": 4182.957872214386,
+    "bias": -597.8928231131172,
+    "crps": 597.8928231131172
+   },
+   "road_delay_vs": {
+    "mean": 3351.500544309616,
+    "real": 4046.732075214386,
+    "bias": -695.2315309047699,
+    "crps": 695.2315309047699
+   },
+   "source_wait_vs": {
+    "mean": 233.5645047916527,
+    "real": 136.2257970000002,
+    "bias": 97.3387077916525,
+    "crps": 97.3387077916525
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.21875,
+    "speed_crps": 1.3485987557242978,
+    "speed_bias": -0.48128014117091455,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0625,
+    "speed_crps": 8.40164956648403,
+    "speed_bias": 4.963532256157128,
+    "speed_supported_bins": 30,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8125,
+    "speed_crps": 6.243441281965758,
+    "speed_bias": 4.76858581431309,
+    "speed_supported_bins": 26,
+    "speed_missing_bins": 4
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "circles",
+   "horizon": 600,
+   "model": "candidate",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 18679.25940920692,
+    "real": 10257.729084769928,
+    "bias": 8421.530324436992,
+    "crps": 8421.530324436992
+   },
+   "road_delay_vs": {
+    "mean": 13089.563415527344,
+    "real": 9983.870897769928,
+    "bias": 3105.6925177574158,
+    "crps": 3105.6925177574158
+   },
+   "source_wait_vs": {
+    "mean": 5589.695993679573,
+    "real": 273.85818699999993,
+    "bias": 5315.837806679573,
+    "crps": 5315.837806679573
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.46774193548387094,
+    "speed_crps": 3.3425358316278158,
+    "speed_bias": -2.91085232750802,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0967741935483871,
+    "speed_crps": 5.961746315416327,
+    "speed_bias": 2.067311858110618,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.11290322580645161,
+    "speed_crps": 4.390558260824774,
+    "speed_bias": -0.3525015267539403,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   }
+  },
+  {
+   "seed": 969421,
+   "arm": "circles",
+   "horizon": 600,
+   "model": "baseline",
+   "cell": [
+    1900,
+    0.4
+   ],
+   "K": 1,
+   "team_delay_vs": {
+    "mean": 17152.115760820918,
+    "real": 10257.729084769928,
+    "bias": 6894.38667605099,
+    "crps": 6894.38667605099
+   },
+   "road_delay_vs": {
+    "mean": 11562.419767141342,
+    "real": 9983.870897769928,
+    "bias": 1578.5488693714142,
+    "crps": 1578.5488693714142
+   },
+   "source_wait_vs": {
+    "mean": 5589.695993679573,
+    "real": 273.85818699999993,
+    "bias": 5315.837806679573,
+    "crps": 5315.837806679573
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.4838709677419355,
+    "speed_crps": 2.9371666317816447,
+    "speed_bias": -2.499325301209644,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.11290322580645161,
+    "speed_crps": 8.326731323259803,
+    "speed_bias": 3.6182122546947237,
+    "speed_supported_bins": 60,
+    "speed_missing_bins": 0
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.3709677419354839,
+    "speed_crps": 5.023775137793306,
+    "speed_bias": 2.5048535249003003,
+    "speed_supported_bins": 56,
+    "speed_missing_bins": 4
+   }
+  }
+ ],
+ "pooled": [
+  {
+   "model": "candidate",
+   "horizon": 120,
+   "worlds": 2,
+   "K_by_world": {
+    "969420": 1,
+    "969421": 1
+   },
+   "cell": null,
+   "arm": null,
+   "team_delay_vs": {
+    "mean": 6153.084325846134,
+    "real": 5701.313042124802,
+    "bias": 451.77128372133166,
+    "crps": 781.5697749205202
+   },
+   "road_delay_vs": {
+    "mean": 3511.22418487072,
+    "real": 3026.4029361248017,
+    "bias": 484.8212487459183,
+    "crps": 780.3701756238937
+   },
+   "source_wait_vs": {
+    "mean": 2641.8601409754133,
+    "real": 2674.9101059999994,
+    "bias": -33.04996502458615,
+    "crps": 38.5598918789943
+   },
+   "upstream": {
+    "rate": 0.5,
+    "real_rate": 0.9,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.38571428571428573,
+    "speed_crps": 1.5636005321670965,
+    "speed_bias": -1.2673534140798357
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.4,
+    "preexisting": 0.3,
+    "real_preexisting": 0.1,
+    "onset_cdf_brier": 0.3214285714285714,
+    "speed_crps": 4.0141154795999086,
+    "speed_bias": 1.234000274169073
+   },
+   "ramp": {
+    "rate": 0.2,
+    "real_rate": 0.7,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.43571428571428567,
+    "speed_crps": 5.249517241199121,
+    "speed_bias": 3.643231083150964
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 300,
+   "worlds": 2,
+   "K_by_world": {
+    "969420": 1,
+    "969421": 1
+   },
+   "cell": null,
+   "arm": null,
+   "team_delay_vs": {
+    "mean": 17694.42633783178,
+    "real": 16758.031362697213,
+    "bias": 936.3949751345648,
+    "crps": 1860.1202002367827
+   },
+   "road_delay_vs": {
+    "mean": 7914.292919516563,
+    "real": 7407.37976269722,
+    "bias": 506.91315681934356,
+    "crps": 1622.7073860883713
+   },
+   "source_wait_vs": {
+    "mean": 9780.133418315216,
+    "real": 9350.651599999997,
+    "bias": 429.48181831522095,
+    "crps": 502.41085208189895
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 0.6,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.28125,
+    "speed_crps": 1.8402405016921601,
+    "speed_bias": -1.1465638310378719
+   },
+   "merge": {
+    "rate": 0.4,
+    "real_rate": 0.3,
+    "preexisting": 0.5,
+    "real_preexisting": 0.3,
+    "onset_cdf_brier": 0.409375,
+    "speed_crps": 8.63367910427752,
+    "speed_bias": 2.342361230743699
+   },
+   "ramp": {
+    "rate": 0.3,
+    "real_rate": 0.6,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.428125,
+    "speed_crps": 5.643470254504769,
+    "speed_bias": 0.7169516835333168
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 600,
+   "worlds": 2,
+   "K_by_world": {
+    "969420": 1,
+    "969421": 1
+   },
+   "cell": null,
+   "arm": null,
+   "team_delay_vs": {
+    "mean": 46308.16942409738,
+    "real": 42042.05320061005,
+    "bias": 4266.116223487332,
+    "crps": 5981.744989596405
+   },
+   "road_delay_vs": {
+    "mean": 18256.708365225793,
+    "real": 15521.589916110039,
+    "bias": 2735.1184491157533,
+    "crps": 5131.579565143586
+   },
+   "source_wait_vs": {
+    "mean": 28051.46105887158,
+    "real": 26520.4632845,
+    "bias": 1530.9977743715742,
+    "crps": 1674.7275290279163
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 0.9,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.3370967741935484,
+    "speed_crps": 2.6157039204256005,
+    "speed_bias": -1.9414424324965505
+   },
+   "merge": {
+    "rate": 0.8,
+    "real_rate": 0.6,
+    "preexisting": 0.2,
+    "real_preexisting": 0.3,
+    "onset_cdf_brier": 0.34354838709677415,
+    "speed_crps": 8.749886580764883,
+    "speed_bias": 1.5954032067729764
+   },
+   "ramp": {
+    "rate": 0.8,
+    "real_rate": 0.3,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.39838709677419354,
+    "speed_crps": 5.451718431652599,
+    "speed_bias": 0.2552769719282334
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 120,
+   "worlds": 2,
+   "K_by_world": {
+    "969420": 1,
+    "969421": 1
+   },
+   "cell": null,
+   "arm": null,
+   "team_delay_vs": {
+    "mean": 6197.763614114223,
+    "real": 5701.313042124802,
+    "bias": 496.45057198942095,
+    "crps": 819.0646539040179
+   },
+   "road_delay_vs": {
+    "mean": 3555.903473138809,
+    "real": 3026.4029361248017,
+    "bias": 529.5005370140076,
+    "crps": 817.8650546073914
+   },
+   "source_wait_vs": {
+    "mean": 2641.8601409754133,
+    "real": 2674.9101059999994,
+    "bias": -33.04996502458615,
+    "crps": 38.5598918789943
+   },
+   "upstream": {
+    "rate": 0.6,
+    "real_rate": 0.9,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.32142857142857145,
+    "speed_crps": 1.7581709287708485,
+    "speed_bias": -1.4745412209210198
+   },
+   "merge": {
+    "rate": 0.1,
+    "real_rate": 0.4,
+    "preexisting": 0.4,
+    "real_preexisting": 0.1,
+    "onset_cdf_brier": 0.43571428571428567,
+    "speed_crps": 3.8729157919982513,
+    "speed_bias": 0.758456778575516
+   },
+   "ramp": {
+    "rate": 0.2,
+    "real_rate": 0.7,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.32857142857142857,
+    "speed_crps": 6.167043303714014,
+    "speed_bias": 5.328481396054901
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 300,
+   "worlds": 2,
+   "K_by_world": {
+    "969420": 1,
+    "969421": 1
+   },
+   "cell": null,
+   "arm": null,
+   "team_delay_vs": {
+    "mean": 17024.7057290967,
+    "real": 16758.031362697213,
+    "bias": 266.67436639948016,
+    "crps": 1168.0179371736572
+   },
+   "road_delay_vs": {
+    "mean": 7244.3723107814785,
+    "real": 7407.37976269722,
+    "bias": -163.00745191574097,
+    "crps": 1178.9348126411437
+   },
+   "source_wait_vs": {
+    "mean": 9780.333418315215,
+    "real": 9350.651599999997,
+    "bias": 429.681818315221,
+    "crps": 502.610852081899
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 0.6,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.284375,
+    "speed_crps": 1.6841002636789981,
+    "speed_bias": -0.8152740339216104
+   },
+   "merge": {
+    "rate": 0.6,
+    "real_rate": 0.3,
+    "preexisting": 0.4,
+    "real_preexisting": 0.3,
+    "onset_cdf_brier": 0.425,
+    "speed_crps": 8.690198871333292,
+    "speed_bias": 4.395173877531585
+   },
+   "ramp": {
+    "rate": 0.5,
+    "real_rate": 0.6,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.609375,
+    "speed_crps": 5.814210162922045,
+    "speed_bias": 2.2927601466934098
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 600,
+   "worlds": 2,
+   "K_by_world": {
+    "969420": 1,
+    "969421": 1
+   },
+   "cell": null,
+   "arm": null,
+   "team_delay_vs": {
+    "mean": 43685.214444939935,
+    "real": 42042.05320061005,
+    "bias": 1643.1612443298843,
+    "crps": 3425.3607374594294
+   },
+   "road_delay_vs": {
+    "mean": 15642.053386068344,
+    "real": 15521.589916110039,
+    "bias": 120.46346995830535,
+    "crps": 3295.073784518242
+   },
+   "source_wait_vs": {
+    "mean": 28043.16105887158,
+    "real": 26520.4632845,
+    "bias": 1522.6977743715743,
+    "crps": 1666.427529027916
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 0.9,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.2806451612903226,
+    "speed_crps": 2.25902005055448,
+    "speed_bias": -1.3810138757123207
+   },
+   "merge": {
+    "rate": 0.9,
+    "real_rate": 0.6,
+    "preexisting": 0.0,
+    "real_preexisting": 0.3,
+    "onset_cdf_brier": 0.35322580645161283,
+    "speed_crps": 9.867824955102753,
+    "speed_bias": 3.9366574682672315
+   },
+   "ramp": {
+    "rate": 0.6,
+    "real_rate": 0.3,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.34516129032258064,
+    "speed_crps": 5.6448185280230225,
+    "speed_bias": 1.677879777398696
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  }
+ ],
+ "cells": [
+  {
+   "model": "candidate",
+   "horizon": 120,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "circles",
+   "team_delay_vs": {
+    "mean": 1307.836919086441,
+    "real": 1595.635893273987,
+    "bias": -287.79897418754604,
+    "crps": 287.79897418754604
+   },
+   "road_delay_vs": {
+    "mean": 1291.8921194076538,
+    "real": 1545.4415292739868,
+    "bias": -253.549409866333,
+    "crps": 253.549409866333
+   },
+   "source_wait_vs": {
+    "mean": 15.944799678787088,
+    "real": 50.19436400000015,
+    "bias": -34.24956432121306,
+    "crps": 34.24956432121306
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.07142857142857142,
+    "speed_crps": 0.6208795048100564,
+    "speed_bias": 0.2526923791425017
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 2.1719720071286535,
+    "speed_bias": 0.0013093571367145767
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.5714285714285714,
+    "speed_crps": 6.315439964958979,
+    "speed_bias": 6.187790754089735
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 120,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "ctrl0",
+   "team_delay_vs": {
+    "mean": 1129.2798466853942,
+    "real": 1412.2874206787722,
+    "bias": -283.00757399337795,
+    "crps": 283.00757399337795
+   },
+   "road_delay_vs": {
+    "mean": 1113.335047006607,
+    "real": 1362.093056678772,
+    "bias": -248.75800967216492,
+    "crps": 248.75800967216492
+   },
+   "source_wait_vs": {
+    "mean": 15.944799678787088,
+    "real": 50.19436400000015,
+    "bias": -34.24956432121306,
+    "crps": 34.24956432121306
+   },
+   "upstream": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8571428571428571,
+    "speed_crps": 0.3553431269777816,
+    "speed_bias": -0.019712915856263596
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.2857142857142857,
+    "speed_crps": 4.207588377185108,
+    "speed_bias": 3.5859192859320985
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.5714285714285714,
+    "speed_crps": 4.7505786240485195,
+    "speed_bias": 4.465434553190065
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 120,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "mappo",
+   "team_delay_vs": {
+    "mean": 1157.8081009559478,
+    "real": 1510.4828781372682,
+    "bias": -352.67477718132045,
+    "crps": 352.67477718132045
+   },
+   "road_delay_vs": {
+    "mean": 1141.8633012771606,
+    "real": 1460.288514137268,
+    "bias": -318.4252128601074,
+    "crps": 318.4252128601074
+   },
+   "source_wait_vs": {
+    "mean": 15.944799678787088,
+    "real": 50.19436400000015,
+    "bias": -34.24956432121306,
+    "crps": 34.24956432121306
+   },
+   "upstream": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 0.3314414582368738,
+    "speed_bias": 0.2680717248731221
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.35714285714285715,
+    "speed_crps": 7.80688415171348,
+    "speed_bias": 7.209374041744607
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.21428571428571427,
+    "speed_crps": 3.545276113182517,
+    "speed_bias": 3.2543709612449887
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 120,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "native",
+   "team_delay_vs": {
+    "mean": 1086.1954956226195,
+    "real": 1497.5493306404726,
+    "bias": -411.35383501785304,
+    "crps": 411.35383501785304
+   },
+   "road_delay_vs": {
+    "mean": 1070.2506959438324,
+    "real": 1447.3549666404724,
+    "bias": -377.10427069664,
+    "crps": 377.10427069664
+   },
+   "source_wait_vs": {
+    "mean": 15.944799678787088,
+    "real": 50.19436400000015,
+    "bias": -34.24956432121306,
+    "crps": 34.24956432121306
+   },
+   "upstream": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8571428571428571,
+    "speed_crps": 0.39066347759583014,
+    "speed_bias": 0.1628872759552138
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.2857142857142857,
+    "speed_crps": 6.190653398063372,
+    "speed_bias": 4.093675018214995
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.5714285714285714,
+    "speed_crps": 5.573194304357976,
+    "speed_bias": 5.4183129001740795
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 120,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "pi",
+   "team_delay_vs": {
+    "mean": 1184.58449460791,
+    "real": 1498.741790223755,
+    "bias": -314.157295615845,
+    "crps": 314.157295615845
+   },
+   "road_delay_vs": {
+    "mean": 1168.639694929123,
+    "real": 1448.5474262237549,
+    "bias": -279.90773129463196,
+    "crps": 279.90773129463196
+   },
+   "source_wait_vs": {
+    "mean": 15.944799678787088,
+    "real": 50.19436400000015,
+    "bias": -34.24956432121306,
+    "crps": 34.24956432121306
+   },
+   "upstream": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8571428571428571,
+    "speed_crps": 0.3142678842699717,
+    "speed_bias": 0.2859372648675202
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.2857142857142857,
+    "speed_crps": 5.859807959993236,
+    "speed_bias": 5.239511122126729
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.5714285714285714,
+    "speed_crps": 3.422164752232986,
+    "speed_bias": 3.2672833480490895
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 120,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "circles",
+   "team_delay_vs": {
+    "mean": 11533.792537402045,
+    "real": 10653.396095650147,
+    "bias": 880.3964417518982,
+    "crps": 880.3964417518982
+   },
+   "road_delay_vs": {
+    "mean": 6193.417055130005,
+    "real": 5340.5702476501465,
+    "bias": 852.8468074798584,
+    "crps": 852.8468074798584
+   },
+   "source_wait_vs": {
+    "mean": 5340.37548227204,
+    "real": 5312.8258479999995,
+    "bias": 27.54963427204075,
+    "crps": 27.54963427204075
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.21428571428571427,
+    "speed_crps": 2.4411152974999424,
+    "speed_bias": -2.4411152974999424
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 1.458622161381087,
+    "speed_bias": -1.458622161381087
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.7142857142857143,
+    "speed_crps": 3.9568787877762124,
+    "speed_bias": 3.022995057691393
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 120,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "ctrl0",
+   "team_delay_vs": {
+    "mean": 10990.234534930121,
+    "real": 9432.151638405274,
+    "bias": 1558.0828965248475,
+    "crps": 1558.0828965248475
+   },
+   "road_delay_vs": {
+    "mean": 5737.859052658081,
+    "real": 4135.825790405273,
+    "bias": 1602.0332622528076,
+    "crps": 1602.0332622528076
+   },
+   "source_wait_vs": {
+    "mean": 5252.37548227204,
+    "real": 5296.3258479999995,
+    "bias": -43.95036572795925,
+    "crps": 43.95036572795925
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.07142857142857142,
+    "speed_crps": 3.123888225380629,
+    "speed_bias": -3.123888225380629
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 1.0,
+    "speed_crps": 3.1812045518752345,
+    "speed_bias": -3.1812045518752345
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.42857142857142855,
+    "speed_crps": 6.1248673538283755,
+    "speed_bias": 1.9733005364633778
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 120,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "mappo",
+   "team_delay_vs": {
+    "mean": 10938.824830721747,
+    "real": 9452.147644417237,
+    "bias": 1486.6771863045105,
+    "crps": 1486.6771863045105
+   },
+   "road_delay_vs": {
+    "mean": 5670.949348449707,
+    "real": 4155.821796417236,
+    "bias": 1515.1275520324707,
+    "crps": 1515.1275520324707
+   },
+   "source_wait_vs": {
+    "mean": 5267.87548227204,
+    "real": 5296.3258479999995,
+    "bias": -28.45036572795925,
+    "crps": 28.45036572795925
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.07142857142857142,
+    "speed_crps": 3.295805580782359,
+    "speed_bias": -3.295805580782359
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 3.8277544885848758,
+    "speed_bias": -0.27724067971055183
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 6.933238191746523,
+    "speed_bias": 4.737296280084759
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 120,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "native",
+   "team_delay_vs": {
+    "mean": 10939.653793047797,
+    "real": 10425.182941811036,
+    "bias": 514.4708512367615,
+    "crps": 514.4708512367615
+   },
+   "road_delay_vs": {
+    "mean": 5647.278310775757,
+    "real": 5128.857093811035,
+    "bias": 518.4212169647217,
+    "crps": 518.4212169647217
+   },
+   "source_wait_vs": {
+    "mean": 5292.37548227204,
+    "real": 5296.3258479999995,
+    "bias": -3.9503657279592517,
+    "crps": 3.9503657279592517
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.14285714285714285,
+    "speed_crps": 1.5404685638332756,
+    "speed_bias": -1.5404685638332756
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 1.8258697755540891,
+    "speed_bias": 0.7380792340224122
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.7142857142857143,
+    "speed_crps": 8.064281032668708,
+    "speed_bias": 7.172997042228475
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 120,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "pi",
+   "team_delay_vs": {
+    "mean": 11262.632705401313,
+    "real": 9535.554788010071,
+    "bias": 1727.0779173912415,
+    "crps": 1727.0779173912415
+   },
+   "road_delay_vs": {
+    "mean": 6076.7572231292725,
+    "real": 4239.228940010071,
+    "bias": 1837.5282831192017,
+    "crps": 1837.5282831192017
+   },
+   "source_wait_vs": {
+    "mean": 5185.87548227204,
+    "real": 5296.3258479999995,
+    "bias": -110.45036572795925,
+    "crps": 110.45036572795925
+   },
+   "upstream": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.7142857142857143,
+    "speed_crps": 3.2221322022842447,
+    "speed_bias": -3.2221322022842447
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 1.0,
+    "speed_crps": 3.6107979245199524,
+    "speed_bias": -3.6107979245199524
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 3.809253287190422,
+    "speed_bias": -3.0674706017063254
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 300,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "circles",
+   "team_delay_vs": {
+    "mean": 3941.153161217129,
+    "real": 4182.957872214386,
+    "bias": -241.8047109972572,
+    "crps": 241.8047109972572
+   },
+   "road_delay_vs": {
+    "mean": 3707.588656425476,
+    "real": 4046.732075214386,
+    "bias": -339.1434187889099,
+    "crps": 339.1434187889099
+   },
+   "source_wait_vs": {
+    "mean": 233.5645047916527,
+    "real": 136.2257970000002,
+    "bias": 97.3387077916525,
+    "crps": 97.3387077916525
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.21875,
+    "speed_crps": 1.3651115418612396,
+    "speed_bias": -0.5017445336216486
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.53125,
+    "speed_crps": 7.180293535478835,
+    "speed_bias": 5.14244746264857
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8125,
+    "speed_crps": 5.437682432761472,
+    "speed_bias": 0.18408005031241884
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 300,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "ctrl0",
+   "team_delay_vs": {
+    "mean": 3097.009949137127,
+    "real": 3170.067272725174,
+    "bias": -73.05732358804698,
+    "crps": 73.05732358804698
+   },
+   "road_delay_vs": {
+    "mean": 3051.9454443454742,
+    "real": 3033.841475725174,
+    "bias": 18.103968620300293,
+    "crps": 18.103968620300293
+   },
+   "source_wait_vs": {
+    "mean": 45.06450479165271,
+    "real": 136.2257970000002,
+    "bias": -91.16129220834749,
+    "crps": 91.16129220834749
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.125,
+    "speed_crps": 0.5253523535116355,
+    "speed_bias": -0.017237072543240473
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.59375,
+    "speed_crps": 6.481431123825812,
+    "speed_bias": 2.264259536835732
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8125,
+    "speed_crps": 5.820995616471546,
+    "speed_bias": -1.442990177899669
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 300,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "mappo",
+   "team_delay_vs": {
+    "mean": 4169.522474934018,
+    "real": 3402.6164472723694,
+    "bias": 766.9060276616483,
+    "crps": 766.9060276616483
+   },
+   "road_delay_vs": {
+    "mean": 4124.4579701423645,
+    "real": 3266.3906502723694,
+    "bias": 858.0673198699951,
+    "crps": 858.0673198699951
+   },
+   "source_wait_vs": {
+    "mean": 45.06450479165271,
+    "real": 136.2257970000002,
+    "bias": -91.16129220834749,
+    "crps": 91.16129220834749
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.21875,
+    "speed_crps": 0.4673120587237404,
+    "speed_bias": -0.07361877361770866
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.59375,
+    "speed_crps": 11.221195159078375,
+    "speed_bias": -3.757435250754953
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8125,
+    "speed_crps": 5.428628670852439,
+    "speed_bias": -2.461764434384806
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 300,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "native",
+   "team_delay_vs": {
+    "mean": 3435.1411980880853,
+    "real": 4056.845031085083,
+    "bias": -621.7038329969978,
+    "crps": 621.7038329969978
+   },
+   "road_delay_vs": {
+    "mean": 3390.0766932964325,
+    "real": 3920.619234085083,
+    "bias": -530.5425407886505,
+    "crps": 530.5425407886505
+   },
+   "source_wait_vs": {
+    "mean": 45.06450479165271,
+    "real": 136.2257970000002,
+    "bias": -91.16129220834749,
+    "crps": 91.16129220834749
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.21875,
+    "speed_crps": 0.6350125726659585,
+    "speed_bias": 0.2766784074221069
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.28125,
+    "speed_crps": 11.40567577095621,
+    "speed_bias": 7.27250294704186
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.1875,
+    "speed_crps": 6.840912056074536,
+    "speed_bias": -2.4443091742617136
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 300,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "pi",
+   "team_delay_vs": {
+    "mean": 4180.624288011944,
+    "real": 3506.6528201723786,
+    "bias": 673.9714678395658,
+    "crps": 673.9714678395658
+   },
+   "road_delay_vs": {
+    "mean": 4135.559783220291,
+    "real": 3370.4270231723785,
+    "bias": 765.1327600479126,
+    "crps": 765.1327600479126
+   },
+   "source_wait_vs": {
+    "mean": 45.06450479165271,
+    "real": 136.2257970000002,
+    "bias": -91.16129220834749,
+    "crps": 91.16129220834749
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0625,
+    "speed_crps": 0.43307786303613344,
+    "speed_bias": -0.0005959012359118295
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.09375,
+    "speed_crps": 9.019929506838375,
+    "speed_bias": -1.885242497821891
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8125,
+    "speed_crps": 6.985780487655412,
+    "speed_bias": -0.7129647131758201
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 300,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "circles",
+   "team_delay_vs": {
+    "mean": 34687.57281752604,
+    "real": 31772.667215088008,
+    "bias": 2914.9056024380297,
+    "crps": 2914.9056024380297
+   },
+   "road_delay_vs": {
+    "mean": 14675.470485687256,
+    "real": 13110.789812088013,
+    "bias": 1564.6806735992432,
+    "crps": 1564.6806735992432
+   },
+   "source_wait_vs": {
+    "mean": 20012.10233183878,
+    "real": 18661.877402999995,
+    "bias": 1350.2249288387866,
+    "crps": 1350.2249288387866
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.03125,
+    "speed_crps": 2.497532181160807,
+    "speed_bias": -2.1376778862232317
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 2.5958026455277348,
+    "speed_bias": -2.5958026455277348
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 3.8873778837913684,
+    "speed_bias": 1.9031458076747791
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 300,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "ctrl0",
+   "team_delay_vs": {
+    "mean": 30041.58956786173,
+    "real": 28502.633371093863,
+    "bias": 1538.9561967678674,
+    "crps": 1538.9561967678674
+   },
+   "road_delay_vs": {
+    "mean": 10665.98723602295,
+    "real": 9961.755968093872,
+    "bias": 704.2312679290771,
+    "crps": 704.2312679290771
+   },
+   "source_wait_vs": {
+    "mean": 19375.60233183878,
+    "real": 18540.87740299999,
+    "bias": 834.7249288387902,
+    "crps": 834.7249288387902
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.90625,
+    "speed_crps": 2.377894254176715,
+    "speed_bias": -2.367344249405486
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 1.0,
+    "speed_crps": 10.182596169055502,
+    "speed_bias": 7.308656884267782
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 4.7829879445766155,
+    "speed_bias": 1.9281773838866831
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 300,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "mappo",
+   "team_delay_vs": {
+    "mean": 29878.771496496374,
+    "real": 27873.221449592704,
+    "bias": 2005.5500469036706,
+    "crps": 2005.5500469036706
+   },
+   "road_delay_vs": {
+    "mean": 10403.669164657593,
+    "real": 9332.344046592712,
+    "bias": 1071.3251180648804,
+    "crps": 1071.3251180648804
+   },
+   "source_wait_vs": {
+    "mean": 19475.10233183878,
+    "real": 18540.87740299999,
+    "bias": 934.2249288387902,
+    "crps": 934.2249288387902
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.90625,
+    "speed_crps": 2.8799379767687374,
+    "speed_bias": -2.8799379767687374
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 1.0,
+    "speed_crps": 9.67964507890823,
+    "speed_bias": 6.250080677014633
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.28125,
+    "speed_crps": 6.3502719342024765,
+    "speed_bias": 5.033920587902158
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 300,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "native",
+   "team_delay_vs": {
+    "mean": 29782.857275686438,
+    "real": 33464.917533615226,
+    "bias": -3682.060257928788,
+    "crps": 3682.060257928788
+   },
+   "road_delay_vs": {
+    "mean": 10214.754943847656,
+    "real": 14924.040130615234,
+    "bias": -4709.285186767578,
+    "crps": 4709.285186767578
+   },
+   "source_wait_vs": {
+    "mean": 19568.10233183878,
+    "real": 18540.87740299999,
+    "bias": 1027.2249288387902,
+    "crps": 1027.2249288387902
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.125,
+    "speed_crps": 2.344694370849198,
+    "speed_bias": 1.1123195197825775
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 11.222243735460594,
+    "speed_bias": 10.772123511378522
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.5625,
+    "speed_crps": 7.1890673063350885,
+    "speed_bias": 6.270309862516849
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 300,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "pi",
+   "team_delay_vs": {
+    "mean": 33730.02114935892,
+    "real": 27647.734614112967,
+    "bias": 6082.286535245956,
+    "crps": 6082.286535245956
+   },
+   "road_delay_vs": {
+    "mean": 14773.418817520142,
+    "real": 9106.857211112976,
+    "bias": 5666.5616064071655,
+    "crps": 5666.5616064071655
+   },
+   "source_wait_vs": {
+    "mean": 18956.60233183878,
+    "real": 18540.87740299999,
+    "bias": 415.7249288387902,
+    "crps": 415.7249288387902
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 4.87647984416744,
+    "speed_bias": -4.87647984416744
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 7.347978317645528,
+    "speed_bias": -7.347978317645528
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 3.7109982123267384,
+    "speed_bias": -1.0880883572377111
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 600,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "circles",
+   "team_delay_vs": {
+    "mean": 18679.25940920692,
+    "real": 10257.729084769928,
+    "bias": 8421.530324436992,
+    "crps": 8421.530324436992
+   },
+   "road_delay_vs": {
+    "mean": 13089.563415527344,
+    "real": 9983.870897769928,
+    "bias": 3105.6925177574158,
+    "crps": 3105.6925177574158
+   },
+   "source_wait_vs": {
+    "mean": 5589.695993679573,
+    "real": 273.85818699999993,
+    "bias": 5315.837806679573,
+    "crps": 5315.837806679573
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.46774193548387094,
+    "speed_crps": 3.3425358316278158,
+    "speed_bias": -2.91085232750802
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0967741935483871,
+    "speed_crps": 5.961746315416327,
+    "speed_bias": 2.067311858110618
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.11290322580645161,
+    "speed_crps": 4.390558260824774,
+    "speed_bias": -0.3525015267539403
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 600,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "ctrl0",
+   "team_delay_vs": {
+    "mean": 10986.20209171157,
+    "real": 6762.189092675888,
+    "bias": 4224.012999035682,
+    "crps": 4224.012999035682
+   },
+   "road_delay_vs": {
+    "mean": 10892.506098031998,
+    "real": 6488.830905675888,
+    "bias": 4403.67519235611,
+    "crps": 4403.67519235611
+   },
+   "source_wait_vs": {
+    "mean": 93.69599367957287,
+    "real": 273.35818699999993,
+    "bias": -179.66219332042706,
+    "crps": 179.66219332042706
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.14516129032258066,
+    "speed_crps": 1.8792522356873937,
+    "speed_bias": -1.6251945952031963
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.2903225806451613,
+    "speed_crps": 9.46294234662817,
+    "speed_bias": -2.5531961878814617
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0967741935483871,
+    "speed_crps": 4.9474803617786565,
+    "speed_bias": -1.4508407648175246
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 600,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "mappo",
+   "team_delay_vs": {
+    "mean": 11571.59413792472,
+    "real": 7776.1330974499815,
+    "bias": 3795.461040474738,
+    "crps": 3795.461040474738
+   },
+   "road_delay_vs": {
+    "mean": 11477.898144245148,
+    "real": 7502.774910449982,
+    "bias": 3975.123233795166,
+    "crps": 3975.123233795166
+   },
+   "source_wait_vs": {
+    "mean": 93.69599367957287,
+    "real": 273.35818699999993,
+    "bias": -179.66219332042706,
+    "crps": 179.66219332042706
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.03225806451612903,
+    "speed_crps": 1.5447226383345543,
+    "speed_bias": -1.3444734102186322
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.4838709677419355,
+    "speed_crps": 9.210445876154738,
+    "speed_bias": -4.342479687050157
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8548387096774194,
+    "speed_crps": 4.739394346859097,
+    "speed_bias": -0.610890890611618
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 600,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "native",
+   "team_delay_vs": {
+    "mean": 11081.008173960257,
+    "real": 9354.742301742279,
+    "bias": 1726.2658722179785,
+    "crps": 1726.2658722179785
+   },
+   "road_delay_vs": {
+    "mean": 10987.312180280685,
+    "real": 9081.384114742279,
+    "bias": 1905.9280655384064,
+    "crps": 1905.9280655384064
+   },
+   "source_wait_vs": {
+    "mean": 93.69599367957287,
+    "real": 273.35818699999993,
+    "bias": -179.66219332042706,
+    "crps": 179.66219332042706
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.16129032258064516,
+    "speed_crps": 1.2734817444518902,
+    "speed_bias": -0.7149052956668794
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.06451612903225806,
+    "speed_crps": 8.716819658193016,
+    "speed_bias": 3.533967720026056
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8064516129032258,
+    "speed_crps": 5.854721710692848,
+    "speed_bias": -0.9006870095502674
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 600,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "pi",
+   "team_delay_vs": {
+    "mean": 9324.969992178489,
+    "real": 8613.769038955414,
+    "bias": 711.200953223075,
+    "crps": 711.200953223075
+   },
+   "road_delay_vs": {
+    "mean": 9231.273998498917,
+    "real": 8340.410851955414,
+    "bias": 890.8631465435028,
+    "crps": 890.8631465435028
+   },
+   "source_wait_vs": {
+    "mean": 93.69599367957287,
+    "real": 273.35818699999993,
+    "bias": -179.66219332042706,
+    "crps": 179.66219332042706
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.25806451612903225,
+    "speed_crps": 0.7365978656149593,
+    "speed_bias": 0.07976152156928974
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.04838709677419355,
+    "speed_crps": 9.452514398409141,
+    "speed_bias": 3.0526911731920783
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 6.4651539712362185,
+    "speed_bias": -0.9559719871977662
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 600,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "circles",
+   "team_delay_vs": {
+    "mean": 90189.16341196644,
+    "real": 78766.99999248891,
+    "bias": 11422.163419477525,
+    "crps": 11422.163419477525
+   },
+   "road_delay_vs": {
+    "mean": 33293.33728790283,
+    "real": 25556.53161048889,
+    "bias": 7736.80567741394,
+    "crps": 7736.80567741394
+   },
+   "source_wait_vs": {
+    "mean": 56895.82612406359,
+    "real": 53210.46838200002,
+    "bias": 3685.35774206357,
+    "crps": 3685.35774206357
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.04838709677419355,
+    "speed_crps": 3.9098899786020653,
+    "speed_bias": -3.7299628311332778
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 2.8034810786241393,
+    "speed_bias": -1.988461896166118
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.41935483870967744,
+    "speed_crps": 4.9731762846697665,
+    "speed_bias": 0.2985734589866958
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 600,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "ctrl0",
+   "team_delay_vs": {
+    "mean": 74729.0675247823,
+    "real": 73665.01379024892,
+    "bias": 1064.0537345333723,
+    "crps": 1064.0537345333723
+   },
+   "road_delay_vs": {
+    "mean": 20137.74140071869,
+    "real": 20993.5454082489,
+    "bias": -855.8040075302124,
+    "crps": 855.8040075302124
+   },
+   "source_wait_vs": {
+    "mean": 54591.32612406359,
+    "real": 52671.468382000014,
+    "bias": 1919.8577420635775,
+    "crps": 1919.8577420635775
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.967741935483871,
+    "speed_crps": 2.314769220876366,
+    "speed_bias": -2.151793498589781
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 0.6129032258064516,
+    "speed_crps": 12.502165700577963,
+    "speed_bias": 10.581033779339446
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.43548387096774194,
+    "speed_crps": 5.057594279937732,
+    "speed_bias": 0.5071767830530163
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 600,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "mappo",
+   "team_delay_vs": {
+    "mean": 77197.87644754993,
+    "real": 72623.33849346548,
+    "bias": 4574.537954084459,
+    "crps": 4574.537954084459
+   },
+   "road_delay_vs": {
+    "mean": 22203.550323486328,
+    "real": 19980.370111465454,
+    "bias": 2223.180212020874,
+    "crps": 2223.180212020874
+   },
+   "source_wait_vs": {
+    "mean": 54994.32612406359,
+    "real": 52642.968382000014,
+    "bias": 2351.3577420635775,
+    "crps": 2351.3577420635775
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.43548387096774194,
+    "speed_crps": 2.8412756110185637,
+    "speed_bias": -2.762381867484659
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.5,
+    "speed_crps": 6.907212651773804,
+    "speed_bias": 4.360535439414337
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.6290322580645161,
+    "speed_crps": 5.7212694933223585,
+    "speed_bias": 2.8811035913944685
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 600,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "native",
+   "team_delay_vs": {
+    "mean": 75354.55397688496,
+    "real": 83932.69780743032,
+    "bias": -8578.143830545363,
+    "crps": 8578.143830545363
+   },
+   "road_delay_vs": {
+    "mean": 20169.22785282135,
+    "real": 31295.729425430298,
+    "bias": -11126.501572608948,
+    "crps": 11126.501572608948
+   },
+   "source_wait_vs": {
+    "mean": 55185.32612406359,
+    "real": 52636.968382000014,
+    "bias": 2548.3577420635775,
+    "crps": 2548.3577420635775
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.08064516129032258,
+    "speed_crps": 2.3426261373094905,
+    "speed_bias": 1.7172659200025566
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 0.5,
+    "speed_crps": 11.874128130658255,
+    "speed_bias": 10.864426638791565
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.6290322580645161,
+    "speed_crps": 7.412690651009667,
+    "speed_bias": 4.33149183245806
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "candidate",
+   "horizon": 600,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "pi",
+   "team_delay_vs": {
+    "mean": 83967.99907480823,
+    "real": 68667.91930687337,
+    "bias": 15300.079767934862,
+    "crps": 15300.079767934862
+   },
+   "road_delay_vs": {
+    "mean": 31084.67295074463,
+    "real": 15992.450924873352,
+    "bias": 15092.222025871277,
+    "crps": 15092.222025871277
+   },
+   "source_wait_vs": {
+    "mean": 52883.32612406359,
+    "real": 52675.468382000014,
+    "bias": 207.85774206357746,
+    "crps": 207.85774206357746
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.7741935483870968,
+    "speed_crps": 5.971887940732905,
+    "speed_bias": -5.971887940732905
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 1.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8387096774193549,
+    "speed_crps": 10.607409651213285,
+    "speed_bias": -9.621796770046599
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 4.955144956194865,
+    "speed_bias": -1.1946837676787907
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 120,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "circles",
+   "team_delay_vs": {
+    "mean": 1268.1246359519805,
+    "real": 1595.635893273987,
+    "bias": -327.5112573220065,
+    "crps": 327.5112573220065
+   },
+   "road_delay_vs": {
+    "mean": 1252.1798362731934,
+    "real": 1545.4415292739868,
+    "bias": -293.26169300079346,
+    "crps": 293.26169300079346
+   },
+   "source_wait_vs": {
+    "mean": 15.944799678787088,
+    "real": 50.19436400000015,
+    "bias": -34.24956432121306,
+    "crps": 34.24956432121306
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.07142857142857142,
+    "speed_crps": 0.6155489050731257,
+    "speed_bias": 0.2706301428597134
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 2.2424533713428043,
+    "speed_bias": -1.2527967844024335
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.5714285714285714,
+    "speed_crps": 7.722523419118059,
+    "speed_bias": 7.524306553430519
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 120,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "ctrl0",
+   "team_delay_vs": {
+    "mean": 1172.294579046234,
+    "real": 1412.2874206787722,
+    "bias": -239.9928416325381,
+    "crps": 239.9928416325381
+   },
+   "road_delay_vs": {
+    "mean": 1156.349779367447,
+    "real": 1362.093056678772,
+    "bias": -205.74327731132507,
+    "crps": 205.74327731132507
+   },
+   "source_wait_vs": {
+    "mean": 15.944799678787088,
+    "real": 50.19436400000015,
+    "bias": -34.24956432121306,
+    "crps": 34.24956432121306
+   },
+   "upstream": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8571428571428571,
+    "speed_crps": 0.3537090516532399,
+    "speed_bias": -0.02435989093781199
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.2857142857142857,
+    "speed_crps": 4.640661293716018,
+    "speed_bias": 2.539856831174952
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.5714285714285714,
+    "speed_crps": 4.139407463111999,
+    "speed_bias": 2.9727086079156178
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 120,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "mappo",
+   "team_delay_vs": {
+    "mean": 1225.93645145224,
+    "real": 1510.4828781372682,
+    "bias": -284.54642668502834,
+    "crps": 284.54642668502834
+   },
+   "road_delay_vs": {
+    "mean": 1209.9916517734528,
+    "real": 1460.288514137268,
+    "bias": -250.2968623638153,
+    "crps": 250.2968623638153
+   },
+   "source_wait_vs": {
+    "mean": 15.944799678787088,
+    "real": 50.19436400000015,
+    "bias": -34.24956432121306,
+    "crps": 34.24956432121306
+   },
+   "upstream": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 0.32752505416145156,
+    "speed_bias": 0.1340192916062278
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.35714285714285715,
+    "speed_crps": 6.939626940408942,
+    "speed_bias": 5.329342058280189
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.07142857142857142,
+    "speed_crps": 3.4842094608814023,
+    "speed_bias": 2.2655140757751977
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 120,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "native",
+   "team_delay_vs": {
+    "mean": 1068.9959185294952,
+    "real": 1497.5493306404726,
+    "bias": -428.55341211097743,
+    "crps": 428.55341211097743
+   },
+   "road_delay_vs": {
+    "mean": 1053.051118850708,
+    "real": 1447.3549666404724,
+    "bias": -394.3038477897644,
+    "crps": 394.3038477897644
+   },
+   "source_wait_vs": {
+    "mean": 15.944799678787088,
+    "real": 50.19436400000015,
+    "bias": -34.24956432121306,
+    "crps": 34.24956432121306
+   },
+   "upstream": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8571428571428571,
+    "speed_crps": 0.38965417833868976,
+    "speed_bias": 0.15885926358926206
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.42857142857142855,
+    "speed_crps": 6.868436989486152,
+    "speed_bias": 3.02527541550486
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.5714285714285714,
+    "speed_crps": 6.2112869510979145,
+    "speed_bias": 5.966026926438487
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 120,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "pi",
+   "team_delay_vs": {
+    "mean": 1166.2753184013213,
+    "real": 1498.741790223755,
+    "bias": -332.46647182243373,
+    "crps": 332.46647182243373
+   },
+   "road_delay_vs": {
+    "mean": 1150.3305187225342,
+    "real": 1448.5474262237549,
+    "bias": -298.2169075012207,
+    "crps": 298.2169075012207
+   },
+   "source_wait_vs": {
+    "mean": 15.944799678787088,
+    "real": 50.19436400000015,
+    "bias": -34.24956432121306,
+    "crps": 34.24956432121306
+   },
+   "upstream": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8571428571428571,
+    "speed_crps": 0.31698864041912217,
+    "speed_bias": 0.28668977548592317
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.2857142857142857,
+    "speed_crps": 5.81123201473509,
+    "speed_bias": 4.1952196890176
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.07142857142857142,
+    "speed_crps": 3.6467583754898723,
+    "speed_bias": 3.4156186295862683
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 120,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "circles",
+   "team_delay_vs": {
+    "mean": 11253.009013842475,
+    "real": 10653.396095650147,
+    "bias": 599.6129181923279,
+    "crps": 599.6129181923279
+   },
+   "road_delay_vs": {
+    "mean": 5912.633531570435,
+    "real": 5340.5702476501465,
+    "bias": 572.0632839202881,
+    "crps": 572.0632839202881
+   },
+   "source_wait_vs": {
+    "mean": 5340.37548227204,
+    "real": 5312.8258479999995,
+    "bias": 27.54963427204075,
+    "crps": 27.54963427204075
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.2857142857142857,
+    "speed_crps": 2.3449492865047614,
+    "speed_bias": -2.3379166202554194
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 1.1390563661486999,
+    "speed_bias": 0.11783926329526373
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.7142857142857143,
+    "speed_crps": 9.7267229285938,
+    "speed_bias": 9.57116128720959
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 120,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "ctrl0",
+   "team_delay_vs": {
+    "mean": 11077.42065591706,
+    "real": 9432.151638405274,
+    "bias": 1645.269017511786,
+    "crps": 1645.269017511786
+   },
+   "road_delay_vs": {
+    "mean": 5825.0451736450195,
+    "real": 4135.825790405273,
+    "bias": 1689.219383239746,
+    "crps": 1689.219383239746
+   },
+   "source_wait_vs": {
+    "mean": 5252.37548227204,
+    "real": 5296.3258479999995,
+    "bias": -43.95036572795925,
+    "crps": 43.95036572795925
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.07142857142857142,
+    "speed_crps": 3.4180940485727707,
+    "speed_bias": -3.4180940485727707
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 1.0,
+    "speed_crps": 3.003934274033824,
+    "speed_bias": -2.527111466444494
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 6.077632216164086,
+    "speed_bias": 3.8248526052616825
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 120,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "mappo",
+   "team_delay_vs": {
+    "mean": 11090.858119677436,
+    "real": 9452.147644417237,
+    "bias": 1638.710475260199,
+    "crps": 1638.710475260199
+   },
+   "road_delay_vs": {
+    "mean": 5822.9826374053955,
+    "real": 4155.821796417236,
+    "bias": 1667.1608409881592,
+    "crps": 1667.1608409881592
+   },
+   "source_wait_vs": {
+    "mean": 5267.87548227204,
+    "real": 5296.3258479999995,
+    "bias": -28.45036572795925,
+    "crps": 28.45036572795925
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.07142857142857142,
+    "speed_crps": 3.6757519489765174,
+    "speed_bias": -3.6757519489765174
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 1.0,
+    "speed_crps": 2.8841791647487,
+    "speed_bias": -1.47387696581786
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 6.610641273440051,
+    "speed_bias": 4.810773499099846
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 120,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "native",
+   "team_delay_vs": {
+    "mean": 11748.856780718696,
+    "real": 10425.182941811036,
+    "bias": 1323.67383890766,
+    "crps": 1323.67383890766
+   },
+   "road_delay_vs": {
+    "mean": 6456.481298446655,
+    "real": 5128.857093811035,
+    "bias": 1327.6242046356201,
+    "crps": 1327.6242046356201
+   },
+   "source_wait_vs": {
+    "mean": 5292.37548227204,
+    "real": 5296.3258479999995,
+    "bias": -3.9503657279592517,
+    "crps": 3.9503657279592517
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.07142857142857142,
+    "speed_crps": 3.174002735506789,
+    "speed_bias": -3.174002735506789
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 1.0,
+    "speed_crps": 1.4413633068625151,
+    "speed_bias": -1.1026282354604093
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.7142857142857143,
+    "speed_crps": 7.974973284392834,
+    "speed_bias": 7.974973284392834
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 120,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "pi",
+   "team_delay_vs": {
+    "mean": 10905.864667605292,
+    "real": 9535.554788010071,
+    "bias": 1370.309879595221,
+    "crps": 1370.309879595221
+   },
+   "road_delay_vs": {
+    "mean": 5719.989185333252,
+    "real": 4239.228940010071,
+    "bias": 1480.7602453231812,
+    "crps": 1480.7602453231812
+   },
+   "source_wait_vs": {
+    "mean": 5185.87548227204,
+    "real": 5296.3258479999995,
+    "bias": -110.45036572795925,
+    "crps": 110.45036572795925
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.07142857142857142,
+    "speed_crps": 2.965485438502016,
+    "speed_bias": -2.965485438502016
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 3.7582141984997643,
+    "speed_bias": -1.266552019392509
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 6.076277664850122,
+    "speed_bias": 4.95887849143896
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 300,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "circles",
+   "team_delay_vs": {
+    "mean": 3585.065049101269,
+    "real": 4182.957872214386,
+    "bias": -597.8928231131172,
+    "crps": 597.8928231131172
+   },
+   "road_delay_vs": {
+    "mean": 3351.500544309616,
+    "real": 4046.732075214386,
+    "bias": -695.2315309047699,
+    "crps": 695.2315309047699
+   },
+   "source_wait_vs": {
+    "mean": 233.5645047916527,
+    "real": 136.2257970000002,
+    "bias": 97.3387077916525,
+    "crps": 97.3387077916525
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.21875,
+    "speed_crps": 1.3485987557242978,
+    "speed_bias": -0.48128014117091455
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0625,
+    "speed_crps": 8.40164956648403,
+    "speed_bias": 4.963532256157128
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8125,
+    "speed_crps": 6.243441281965758,
+    "speed_bias": 4.76858581431309
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 300,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "ctrl0",
+   "team_delay_vs": {
+    "mean": 3080.594760586178,
+    "real": 3170.067272725174,
+    "bias": -89.47251213899608,
+    "crps": 89.47251213899608
+   },
+   "road_delay_vs": {
+    "mean": 3035.530255794525,
+    "real": 3033.841475725174,
+    "bias": 1.6887800693511963,
+    "crps": 1.6887800693511963
+   },
+   "source_wait_vs": {
+    "mean": 45.06450479165271,
+    "real": 136.2257970000002,
+    "bias": -91.16129220834749,
+    "crps": 91.16129220834749
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.125,
+    "speed_crps": 0.5248171550169493,
+    "speed_bias": -0.016838031130436092
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.59375,
+    "speed_crps": 7.941514422449315,
+    "speed_bias": 1.484755110471991
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8125,
+    "speed_crps": 5.705041223681259,
+    "speed_bias": -0.8935960337053656
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 300,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "mappo",
+   "team_delay_vs": {
+    "mean": 3094.473285128033,
+    "real": 3402.6164472723694,
+    "bias": -308.14316214433666,
+    "crps": 308.14316214433666
+   },
+   "road_delay_vs": {
+    "mean": 3049.40878033638,
+    "real": 3266.3906502723694,
+    "bias": -216.98186993598938,
+    "crps": 216.98186993598938
+   },
+   "source_wait_vs": {
+    "mean": 45.06450479165271,
+    "real": 136.2257970000002,
+    "bias": -91.16129220834749,
+    "crps": 91.16129220834749
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.21875,
+    "speed_crps": 0.4873370117305587,
+    "speed_bias": 0.16853908632830764
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.59375,
+    "speed_crps": 9.11483899681849,
+    "speed_bias": 3.0776036667686997
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8125,
+    "speed_crps": 5.286852365835004,
+    "speed_bias": -2.6871016702878903
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 300,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "native",
+   "team_delay_vs": {
+    "mean": 2842.238495994961,
+    "real": 4056.845031085083,
+    "bias": -1214.6065350901222,
+    "crps": 1214.6065350901222
+   },
+   "road_delay_vs": {
+    "mean": 2797.173991203308,
+    "real": 3920.619234085083,
+    "bias": -1123.445242881775,
+    "crps": 1123.445242881775
+   },
+   "source_wait_vs": {
+    "mean": 45.06450479165271,
+    "real": 136.2257970000002,
+    "bias": -91.16129220834749,
+    "crps": 91.16129220834749
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.21875,
+    "speed_crps": 0.655452611426473,
+    "speed_bias": 0.2760232843624409
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0625,
+    "speed_crps": 8.959717106894777,
+    "speed_bias": 7.2496617182291505
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8125,
+    "speed_crps": 5.957383248072985,
+    "speed_bias": 0.5153232069071828
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 300,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "pi",
+   "team_delay_vs": {
+    "mean": 4479.283731628811,
+    "real": 3506.6528201723786,
+    "bias": 972.6309114564328,
+    "crps": 972.6309114564328
+   },
+   "road_delay_vs": {
+    "mean": 4434.219226837158,
+    "real": 3370.4270231723785,
+    "bias": 1063.7922036647797,
+    "crps": 1063.7922036647797
+   },
+   "source_wait_vs": {
+    "mean": 45.06450479165271,
+    "real": 136.2257970000002,
+    "bias": -91.16129220834749,
+    "crps": 91.16129220834749
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.03125,
+    "speed_crps": 0.5362069097551062,
+    "speed_bias": -0.1934572265943385
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.09375,
+    "speed_crps": 9.916710899540533,
+    "speed_bias": -3.2298263830460523
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.8125,
+    "speed_crps": 5.559227907752389,
+    "speed_bias": 0.27574843437469715
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 300,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "circles",
+   "team_delay_vs": {
+    "mean": 30710.582925520117,
+    "real": 31772.667215088008,
+    "bias": -1062.0842895678907,
+    "crps": 1062.0842895678907
+   },
+   "road_delay_vs": {
+    "mean": 10698.480593681335,
+    "real": 13110.789812088013,
+    "bias": -2412.3092184066772,
+    "crps": 2412.3092184066772
+   },
+   "source_wait_vs": {
+    "mean": 20012.10233183878,
+    "real": 18661.877402999995,
+    "bias": 1350.2249288387866,
+    "crps": 1350.2249288387866
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0625,
+    "speed_crps": 1.9903274892421383,
+    "speed_bias": 0.11718112653806591
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 9.00923246177233,
+    "speed_bias": 8.595101743812624
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.4375,
+    "speed_crps": 7.056524283819459,
+    "speed_bias": 6.473423390952149
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 300,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "ctrl0",
+   "team_delay_vs": {
+    "mean": 29901.99267836588,
+    "real": 28502.633371093863,
+    "bias": 1399.3593072720178,
+    "crps": 1399.3593072720178
+   },
+   "road_delay_vs": {
+    "mean": 10526.3903465271,
+    "real": 9961.755968093872,
+    "bias": 564.6343784332275,
+    "crps": 564.6343784332275
+   },
+   "source_wait_vs": {
+    "mean": 19375.60233183878,
+    "real": 18540.87740299999,
+    "bias": 834.7249288387902,
+    "crps": 834.7249288387902
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.90625,
+    "speed_crps": 2.473343884465089,
+    "speed_bias": -2.462757607520456
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 1.0,
+    "speed_crps": 10.459102106492315,
+    "speed_bias": 8.246683810300988
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.28125,
+    "speed_crps": 5.82418322373373,
+    "speed_bias": 3.9965359716725533
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 300,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "mappo",
+   "team_delay_vs": {
+    "mean": 30676.609029493506,
+    "real": 27873.221449592704,
+    "bias": 2803.387579900802,
+    "crps": 2803.387579900802
+   },
+   "road_delay_vs": {
+    "mean": 11199.506697654724,
+    "real": 9332.344046592712,
+    "bias": 1867.1626510620117,
+    "crps": 1867.1626510620117
+   },
+   "source_wait_vs": {
+    "mean": 19477.10233183878,
+    "real": 18540.87740299999,
+    "bias": 936.2249288387902,
+    "crps": 936.2249288387902
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.90625,
+    "speed_crps": 3.052406899369623,
+    "speed_bias": -3.052406899369623
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 1.0,
+    "speed_crps": 8.088191296840158,
+    "speed_bias": 4.004114337283668
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.5625,
+    "speed_crps": 4.648149301338773,
+    "speed_bias": 3.1143878037455077
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 300,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "native",
+   "team_delay_vs": {
+    "mean": 32230.399001798804,
+    "real": 33464.917533615226,
+    "bias": -1234.5185318164222,
+    "crps": 1234.5185318164222
+   },
+   "road_delay_vs": {
+    "mean": 12662.296669960022,
+    "real": 14924.040130615234,
+    "bias": -2261.7434606552124,
+    "crps": 2261.7434606552124
+   },
+   "source_wait_vs": {
+    "mean": 19568.10233183878,
+    "real": 18540.87740299999,
+    "bias": 1027.2249288387902,
+    "crps": 1027.2249288387902
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.125,
+    "speed_crps": 2.947557899837925,
+    "speed_bias": 0.3172100895626662
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 1.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 4.662144169665472,
+    "speed_bias": 3.33934590204328
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.3125,
+    "speed_crps": 6.590423762875805,
+    "speed_bias": 6.456878386193429
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 300,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "pi",
+   "team_delay_vs": {
+    "mean": 29645.8183333494,
+    "real": 27647.734614112967,
+    "bias": 1998.0837192364343,
+    "crps": 1998.0837192364343
+   },
+   "road_delay_vs": {
+    "mean": 10689.21600151062,
+    "real": 9106.857211112976,
+    "bias": 1582.358790397644,
+    "crps": 1582.358790397644
+   },
+   "source_wait_vs": {
+    "mean": 18956.60233183878,
+    "real": 18540.87740299999,
+    "bias": 415.7249288387902,
+    "crps": 415.7249288387902
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.03125,
+    "speed_crps": 2.8249540202218175,
+    "speed_bias": -2.8249540202218175
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 0.84375,
+    "speed_crps": 10.348887686375512,
+    "speed_bias": 6.220766613294368
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.4375,
+    "speed_crps": 5.270875030145291,
+    "speed_bias": 0.9074161627687466
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 600,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "circles",
+   "team_delay_vs": {
+    "mean": 17152.115760820918,
+    "real": 10257.729084769928,
+    "bias": 6894.38667605099,
+    "crps": 6894.38667605099
+   },
+   "road_delay_vs": {
+    "mean": 11562.419767141342,
+    "real": 9983.870897769928,
+    "bias": 1578.5488693714142,
+    "crps": 1578.5488693714142
+   },
+   "source_wait_vs": {
+    "mean": 5589.695993679573,
+    "real": 273.85818699999993,
+    "bias": 5315.837806679573,
+    "crps": 5315.837806679573
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.4838709677419355,
+    "speed_crps": 2.9371666317816447,
+    "speed_bias": -2.499325301209644
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.11290322580645161,
+    "speed_crps": 8.326731323259803,
+    "speed_bias": 3.6182122546947237
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.3709677419354839,
+    "speed_crps": 5.023775137793306,
+    "speed_bias": 2.5048535249003003
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 600,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "ctrl0",
+   "team_delay_vs": {
+    "mean": 9590.253375786353,
+    "real": 6762.189092675888,
+    "bias": 2828.064283110465,
+    "crps": 2828.064283110465
+   },
+   "road_delay_vs": {
+    "mean": 9496.557382106781,
+    "real": 6488.830905675888,
+    "bias": 3007.726476430893,
+    "crps": 3007.726476430893
+   },
+   "source_wait_vs": {
+    "mean": 93.69599367957287,
+    "real": 273.35818699999993,
+    "bias": -179.66219332042706,
+    "crps": 179.66219332042706
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.1774193548387097,
+    "speed_crps": 1.2213711326082084,
+    "speed_bias": -0.9141457351865232
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.2903225806451613,
+    "speed_crps": 10.143468507451527,
+    "speed_bias": -2.894330145141427
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.25806451612903225,
+    "speed_crps": 5.203139658538697,
+    "speed_bias": -0.5193447773529817
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 600,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "mappo",
+   "team_delay_vs": {
+    "mean": 10581.739093798209,
+    "real": 7776.1330974499815,
+    "bias": 2805.6059963482276,
+    "crps": 2805.6059963482276
+   },
+   "road_delay_vs": {
+    "mean": 10488.043100118637,
+    "real": 7502.774910449982,
+    "bias": 2985.2681896686554,
+    "crps": 2985.2681896686554
+   },
+   "source_wait_vs": {
+    "mean": 93.69599367957287,
+    "real": 273.35818699999993,
+    "bias": -179.66219332042706,
+    "crps": 179.66219332042706
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.03225806451612903,
+    "speed_crps": 1.8808660102410597,
+    "speed_bias": -1.5500431962057475
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.06451612903225806,
+    "speed_crps": 7.90878380817466,
+    "speed_bias": -0.417644878705944
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.9193548387096774,
+    "speed_crps": 4.664423317726698,
+    "speed_bias": -1.0794563192394608
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 600,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "native",
+   "team_delay_vs": {
+    "mean": 9191.411583679725,
+    "real": 9354.742301742279,
+    "bias": -163.3307180625543,
+    "crps": 163.3307180625543
+   },
+   "road_delay_vs": {
+    "mean": 9097.715590000153,
+    "real": 9081.384114742279,
+    "bias": 16.331475257873535,
+    "crps": 16.331475257873535
+   },
+   "source_wait_vs": {
+    "mean": 93.69599367957287,
+    "real": 273.35818699999993,
+    "bias": -179.66219332042706,
+    "crps": 179.66219332042706
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.16129032258064516,
+    "speed_crps": 1.241441884849492,
+    "speed_bias": -0.40047962520500546
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.06451612903225806,
+    "speed_crps": 7.63623360701519,
+    "speed_bias": 4.017130169719511
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.6451612903225806,
+    "speed_crps": 5.0135434358757,
+    "speed_bias": 0.5814077019650383
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 600,
+   "worlds": 1,
+   "K_by_world": {
+    "969421": 1
+   },
+   "cell": [
+    1900,
+    0.4
+   ],
+   "arm": "pi",
+   "team_delay_vs": {
+    "mean": 9882.06250693183,
+    "real": 8613.769038955414,
+    "bias": 1268.2934679764167,
+    "crps": 1268.2934679764167
+   },
+   "road_delay_vs": {
+    "mean": 9788.366513252258,
+    "real": 8340.410851955414,
+    "bias": 1447.9556612968445,
+    "crps": 1447.9556612968445
+   },
+   "source_wait_vs": {
+    "mean": 93.69599367957287,
+    "real": 273.35818699999993,
+    "bias": -179.66219332042706,
+    "crps": 179.66219332042706
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.2903225806451613,
+    "speed_crps": 0.852912027014831,
+    "speed_bias": -0.3633308834595434
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.04838709677419355,
+    "speed_crps": 10.578185397501247,
+    "speed_bias": -0.23603597263408668
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 5.799867828088632,
+    "speed_bias": 0.6656146747763474
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 600,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "circles",
+   "team_delay_vs": {
+    "mean": 76788.71237265217,
+    "real": 78766.99999248891,
+    "bias": -1978.2876198367449,
+    "crps": 1978.2876198367449
+   },
+   "road_delay_vs": {
+    "mean": 19892.886248588562,
+    "real": 25556.53161048889,
+    "bias": -5663.64536190033,
+    "crps": 5663.64536190033
+   },
+   "source_wait_vs": {
+    "mean": 56895.82612406359,
+    "real": 53210.46838200002,
+    "bias": 3685.35774206357,
+    "crps": 3685.35774206357
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.08064516129032258,
+    "speed_crps": 2.200389152768035,
+    "speed_bias": 0.0028017625748509188
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 0.5,
+    "speed_crps": 9.74875564211908,
+    "speed_bias": 8.99684109553626
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.06451612903225806,
+    "speed_crps": 7.117680634058437,
+    "speed_bias": 4.4175143390699665
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 600,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "ctrl0",
+   "team_delay_vs": {
+    "mean": 74655.70219122517,
+    "real": 73665.01379024892,
+    "bias": 990.6884009762434,
+    "crps": 990.6884009762434
+   },
+   "road_delay_vs": {
+    "mean": 20101.87606716156,
+    "real": 20993.5454082489,
+    "bias": -891.6693410873413,
+    "crps": 891.6693410873413
+   },
+   "source_wait_vs": {
+    "mean": 54553.82612406359,
+    "real": 52671.468382000014,
+    "bias": 1882.3577420635775,
+    "crps": 1882.3577420635775
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.967741935483871,
+    "speed_crps": 2.421376084662044,
+    "speed_bias": -2.255803105455963
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 0.6129032258064516,
+    "speed_crps": 12.81646878687814,
+    "speed_bias": 11.573482299416087
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.4838709677419355,
+    "speed_crps": 5.924985067651011,
+    "speed_bias": 1.3669435812336528
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 600,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "mappo",
+   "team_delay_vs": {
+    "mean": 75749.9269589101,
+    "real": 72623.33849346548,
+    "bias": 3126.588465444627,
+    "crps": 3126.588465444627
+   },
+   "road_delay_vs": {
+    "mean": 20801.100834846497,
+    "real": 19980.370111465454,
+    "bias": 820.7307233810425,
+    "crps": 820.7307233810425
+   },
+   "source_wait_vs": {
+    "mean": 54948.82612406359,
+    "real": 52642.968382000014,
+    "bias": 2305.8577420635775,
+    "crps": 2305.8577420635775
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.43548387096774194,
+    "speed_crps": 3.1026719127236717,
+    "speed_bias": -3.1026719127236717
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.5,
+    "speed_crps": 10.829091062433317,
+    "speed_bias": 8.473436413507006
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 4.870718650088867,
+    "speed_bias": 3.164197172518646
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 600,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "native",
+   "team_delay_vs": {
+    "mean": 77163.31867968189,
+    "real": 83932.69780743032,
+    "bias": -6769.379127748427,
+    "crps": 6769.379127748427
+   },
+   "road_delay_vs": {
+    "mean": 21977.992555618286,
+    "real": 31295.729425430298,
+    "bias": -9317.736869812012,
+    "crps": 9317.736869812012
+   },
+   "source_wait_vs": {
+    "mean": 55185.32612406359,
+    "real": 52636.968382000014,
+    "bias": 2548.3577420635775,
+    "crps": 2548.3577420635775
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.06451612903225806,
+    "speed_crps": 2.66533379410828,
+    "speed_bias": 1.3395311145355755
+   },
+   "merge": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 1.0,
+    "onset_cdf_brier": 1.0,
+    "speed_crps": 9.028200719330812,
+    "speed_bias": 8.239914038144828
+   },
+   "ramp": {
+    "rate": 0.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.0,
+    "speed_crps": 7.02669239161962,
+    "speed_bias": 4.633044228088161
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  },
+  {
+   "model": "baseline",
+   "horizon": 600,
+   "worlds": 1,
+   "K_by_world": {
+    "969420": 1
+   },
+   "cell": [
+    2700,
+    0.2
+   ],
+   "arm": "pi",
+   "team_delay_vs": {
+    "mean": 76096.90192591297,
+    "real": 68667.91930687337,
+    "bias": 7428.982619039598,
+    "crps": 7428.982619039598
+   },
+   "road_delay_vs": {
+    "mean": 23213.575801849365,
+    "real": 15992.450924873352,
+    "bias": 7221.124876976013,
+    "crps": 7221.124876976013
+   },
+   "source_wait_vs": {
+    "mean": 52883.32612406359,
+    "real": 52675.468382000014,
+    "bias": 207.85774206357746,
+    "crps": 207.85774206357746
+   },
+   "upstream": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.11290322580645161,
+    "speed_crps": 4.066671874787534,
+    "speed_bias": -4.066671874787534
+   },
+   "merge": {
+    "rate": 1.0,
+    "real_rate": 1.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.3387096774193548,
+    "speed_crps": 11.662330696863759,
+    "speed_bias": -2.0044305918646494
+   },
+   "ramp": {
+    "rate": 1.0,
+    "real_rate": 0.0,
+    "preexisting": 0.0,
+    "real_preexisting": 0.0,
+    "onset_cdf_brier": 0.7096774193548387,
+    "speed_crps": 5.803359158789258,
+    "speed_bias": 1.0440236480272882
+   },
+   "CI": null,
+   "CI_note": "descriptive development screen; cells may be singleton; no qualification claim"
+  }
+ ],
+ "candidate": "docs/rb2break/merge_early",
+ "baseline": "docs/rb2break/baseline_verified",
+ "real_receipt_sha256": "01d0d2b7027aad9910496c7bc5b9681c0d1ccf08f46b4e16a1113310a67362e9",
+ "source_sha256": "166132b33a36f7314e0c602ff96a4fce301a548a93da4275092e6c9b99c83ddd"
+}

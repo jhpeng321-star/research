@@ -3,8 +3,8 @@
 Branch `c4/rb2-int`, base engineering source FULL-v4 `22cc32f6`; inherited
 round-1 delivery remains below. Read `docs/rb2int/PLAN.md` when available.
 
-- FULL-v5 and FULL-v5-LP are **NOT READY**. LANE6b4bfbd5 and CAL7c1cf53c
-  engineering intake complete; BREAK/LPHYS and complete dev evidence pending.
+- FULL-v5 and FULL-v5-LP are **NOT READY**. LANE6b4bfbd5/CAL7c1cf53c and
+  BREAK116b2147 engineering intake complete; LPHYS and full dev smoke pending.
   Fresh-session recovery and next steps: `docs/rb2int/PLAN.md`.
 - FIT/selection stays on969400–969431 (development panel969420–969431).
   Reserved969432–969439 only for the final frozen comparison.
@@ -166,6 +166,75 @@ rechecked GPU free46119MiB, preserving shared teacher capacity. Existing code/ev
 below is inherited INT history, not this worker's current result.
 
 ---
+## BREAK engineering intake — source snapshot116b2147
+
+Default-OFF lane-limit and CAV admission/execution consistency switches under
+integration. Worker dev ablations below reject LC/merge shutdowns. INT owns none
+of the peer processes below; source-specific parity/diagnosis is retained.
+INT source/selector/composition suite22PASS/0skips/6.36s;
+`docs/rb2int/INTAKE_BREAK.md`. No traffic improvement or final freeze claimed.
+
+### Preserved S-RB2-BREAK handoff
+
+Owner: S-RB2-BREAK, branch `c4/rb2-break`; FULL-v4 base22cc32f6.
+Development-only plan `docs/rb2break/PLAN.md`; coordination
+`E:/agent-work/rb-shared/RB2_BREAK_TO_LANE_INT.md`.
+Version `6b2d4c01`: guarded all5-arm H600 inference/one-factor adapter.
+Baseline96development tasks fetched with hash-bound archive (a prior scp snapshot
+was truncated; retained separately, never scored). Baseline report
+`docs/rb2break/BASELINE_DEV.json`:600s bias+13,485.24 =road+2,154.35 +source+11,330.89.
+Accounting share84% source is NOT a causal attribution. New runner reproduces
+969420/future0 clocks/speed/event metrics exactly (`PARITY_DEV.json`).
+No candidate or improvement claimed yet. Mainline-LC/merge-advice screens active.
+Reserved969432–969439 forbidden to this workstream. Learned corrections OFF.
+
+## Round2 physical correction (screen pending)
+Core correction commit `8addc19e` (subsequent orchestration1c5fe0cf).
+`physics.sumo_cf_lane_speed_limits=true` (default OFF) maps inferred reference v0
+to CURRENT lane limit for longitudinal SUMO CF. Network ramp approach22.22m/s
+was already mapped in insertion/merge advice but missing in CF. Source
+`MSCFModel_IDM.cpp:131–133` uses current-lane getVehicleMaxSpeed.
+Persistent sampled settings unchanged; mainline/acceleration-lane output unchanged.
+Regression+departure+motion-conditioning+guard13PASS (existing local Miniconda).
+Source fix is available for integration review; do not claim traffic improvement
+until matched development inference completes. No change to frozen recipes yet.
+
+Arrival receipt audit `SOURCE_AUDIT_DEV.json`: mean K8 mainline intensity draw
+adds only0.713 expected requests over600s vs causal count/exposure (ramp−0.109).
+Jeffreys prior alone adds1 request/entrance in600s. This is not an11kveh-s
+direct arrival-count offset. Native mainline admissions average260–290/600s
+across these worlds; source service / induced queue dynamics need isolation.
+Current own queued workers continue the predeclared remaining6 factors serially,
+max2GPU workers, inference only. Immutable roots under `/root/rbeval20261031/rb2break`.
+Engineering repair12:24: `queue.py` shadowed stdlib queue when executing run.py
+as a script. The CPU correction canary failed before importing Torch/inference;
+no result exists. Old sleeping supervisors439275/439291 retired via verified
+own pidfds BEFORE dispatching factors. Renamed `factor_queue.py`, module entry
+(`-m tools.rb2break.run`) avoids shadowing. Initial6b2d4c01 GPU screens unaffected.
+Correction CPU run requires matched same-device baseline; no CPU-vs-GPU ablation
+will be interpreted as a one-factor effect. Both failed source/output preserved.
+
+## Completed ablations12:40 (K1,12dev worlds, all5arms)
+`LC_COMPLETE.json`: no mainline lateral execution adds11,219.37veh-s at600s
+vs matchedfuture0 baseline (source only+26.46, road+11,192.91).300s event rate
+96.67→100%; upstream speed error worsens. Do NOT disable mainline LC.
+`MERGE_COMPLETE.json`: no merge negotiation/advice adds3,436.34veh-s at600s
+(source+1.53, road+3,434.81). Keep lane-end stopping/acceptance in both arms.
+Do NOT disable merge speed advice. These interventions don't explain source bias.
+
+Additional optional CAV consistency helper (unit tested, traffic screen pending):
+`variants.FULL.match_cav_execution_settings=true` binds admission/initial/lane
+settings to the SAME registered motion-fitted CAV artifact already forced by the
+executor. No controller/plant/HDV/RNG change. Default OFF. Use separately from
+lane-limit flag to preserve one-factor attribution. Tests:14targetedPASS;
+separate query/parity suite9PASS/2CUDA skips; CF suite28PASS.
+
+CPU full-matrix pair was operationally retired after12min/no completed task,
+exact own pidfds440933/440949; all logs retained. Next SAME-device pair uses
+existing independently parity-tested wm_phys_cpu recipe (fast exact merge queries).
+Current source/metadata/evidence under docs/rb2break; no reserved or WMDATA2 data.
+
+## Inherited round1 handoff (provenance; not current BREAK process ownership)
 ## Preserved round-1 handoff
 
 # S-RB-INT FINAL — 2026-11-01

@@ -46,7 +46,20 @@ def arguments():
     return p.parse_args()
 
 
-def main(model_loader=None, identity_sources=(), future_builder=None):
+def task_selection(allowed_worlds, worlds=None, future_indices=None, *, final=False):
+    seeds = tuple(allowed_worlds) if worlds is None else tuple(worlds)
+    futures = tuple(range(8)) if future_indices is None else tuple(future_indices)
+    if not seeds or len(set(seeds)) != len(seeds) or not set(seeds) <= set(allowed_worlds):
+        raise ValueError('requested worlds differ from the approved observable roster')
+    if not futures or len(set(futures)) != len(futures) or not set(futures) <= set(range(8)):
+        raise ValueError('invalid future subset')
+    if final and (seeds != tuple(allowed_worlds) or futures != tuple(range(8))):
+        raise ValueError('final execution keeps the registered world roster and complete K8')
+    return seeds, futures
+
+
+def main(model_loader=None, identity_sources=(), future_builder=None,
+         worlds=None, future_indices=None):
     """Optional INT loader has the strict load_members(checkpoints,configs,device)
     interface. It returns ([frozen_model], JSON receipt); its Python source and
     explicitly supplied recipe/helper files are bound into the run identity.
@@ -68,6 +81,8 @@ def main(model_loader=None, identity_sources=(), future_builder=None):
         real_path = safe(panel['real_observables'])
         observation_root = safe(panel['observations_root'])
         install_observations(observation_root, seeds)
+    seeds, futures = task_selection(seeds, worlds, future_indices,
+        final=panel is not None and panel.get('purpose', 'final_comparison') == 'final_comparison')
     if args.endpoint_only:
         assert args.model_name != 'wm2' and 'hdv60' in args.model_name.lower(), 'separate endpoint model identity required'
     rollout_steps = 120 if args.endpoint_only else 1200
@@ -199,6 +214,8 @@ def main(model_loader=None, identity_sources=(), future_builder=None):
             registration_sha256=panel['registration_sha256'],
             observation_registry_sha256=digest(observation_root/'expected_hashes.json'),
             panel_adapter_sha256=digest(panel_inputs.__file__))
+    if future_indices is not None:
+        identity['future_indices'] = futures
     if model_loader is not None:
         identity['construction_loader_sha256'] = digest(inspect.getfile(model_loader))
     # Round-trip tuple/list normalization before exact resume identity comparison.
@@ -258,7 +275,7 @@ def main(model_loader=None, identity_sources=(), future_builder=None):
     by_seed = {b.metadata[0]['seed']: (b, i) for i, b in enumerate(batches)}
     for seed in selected:
         source, bi = by_seed[seed]
-        for fi in range(8):
+        for fi in futures:
             target = out/f'w{seed}_k{fi}.json'
             if target.exists():
                 old = load(target)
@@ -353,8 +370,8 @@ def main(model_loader=None, identity_sources=(), future_builder=None):
             if args.max_tasks and tasks >= args.max_tasks:
                 return
     if not (out/'COMPLETE.json').exists():
-        save_new(out/'COMPLETE.json', dict(tasks=8*len(selected), identity_sha256=identity_sha,
-            hashes={f'w{s}_k{k}.json': digest(out/f'w{s}_k{k}.json') for s in selected for k in range(8)}))
+        save_new(out/'COMPLETE.json', dict(tasks=len(futures)*len(selected), identity_sha256=identity_sha,
+            hashes={f'w{s}_k{k}.json': digest(out/f'w{s}_k{k}.json') for s in selected for k in futures}))
 
 
 if __name__ == '__main__':

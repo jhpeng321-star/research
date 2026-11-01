@@ -1,0 +1,44 @@
+{
+ "owner": "S-RB2-BREAK",
+ "pid": 436537,
+ "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+ "start_ticks": "888607883",
+ "argv": [
+  "nice",
+  "-n",
+  "19",
+  "/root/miniconda3/bin/python",
+  "-B",
+  "-u",
+  "/root/rbeval20261031/rb2break_code_6b2d4c014667/tools/rb2break/run.py",
+  "--out",
+  "/root/rbeval20261031/rb2break/parity_baseline_s0",
+  "--runtime-root",
+  "/root/rbeval20261031/rb2break_code_6b2d4c014667",
+  "--wm-config",
+  "/root/rbeval20261031/rb2break_code_6b2d4c014667/configs/wm_phys.toml",
+  "--model-name",
+  "RB2BREAK_parity_baseline",
+  "--factor",
+  "baseline",
+  "--dev-worlds",
+  "969420",
+  "--futures",
+  "0",
+  "--shard",
+  "0",
+  "--shards",
+  "1",
+  "--memory-gib",
+  "5"
+ ],
+ "resources": {
+  "load": [
+   4.2373046875,
+   4.54833984375,
+   4.8603515625
+  ],
+  "gpu": "48510, 0\n"
+ },
+ "unix": 1793505864.6736674
+}
