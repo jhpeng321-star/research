@@ -1,6 +1,13 @@
 # S-COOPMWM — live checks
 
 ## MAIN05:08 nonblocking admission — repaired release live
+- Observation restored: local41116 is **observe/publish only**; telemetry28752
+  replaces only its receipt-owned predecessor after PID/creation/command checks.
+  Six publication/observer tests and four telemetry tests pass. Restart rates
+  exclude superseded engineering queries/starts; completed receipts remain intact.
+- Opaque final precompute is complete:673jobs/691,800sim-s, MAPPO-reuse gate PASS.
+  Outcomes remain closed; no final outcome values or summaries were read. Original
+  completion/discovery supervisors wait for fixed A48/B48/R24 endpoints.
 - **B/R collection restarted 2026-11-02 05:28:17 UTC+8**, retaining the qualified
   warm-memory/fast-path WM and all four independently qualified GPU processes.
   A has completed its fixed u48. B3432378/R3432791, broker3426521/grader3427015

@@ -90,7 +90,9 @@ def run():
             gpus,cpu=retry(exact_ops.status,verify,record)
             previous.update(gpu=gpus,cpu=cpu)
             if any(v['failed'] for v in gpus.values()):raise ValueError('source-bound GPU failure; preserve/no inference replay')
-            launched=launch_ready(gpus,cpu)
+            if TAG=='EXACT_OBSERVER_V6':
+                adopt(cpu);launched=False  # existing repaired remote owners only
+            else:launched=launch_ready(gpus,cpu)
             if launched:announce()
             retry(publish,verify,record);commit()
             if cpu['stops']:raise ValueError('health/engineering pause; diagnose before registered release')
@@ -105,6 +107,15 @@ def run():
 
 def dispatch():
     target=ops.EVIDENCE/(TAG+'_DISPATCH.json');assert not target.exists()
+    if TAG=='EXACT_OBSERVER_V6':
+        from .protocol import checked,REGISTRY,sha
+        receipt=ops.EVIDENCE/'EXACT_OBSERVER_CAPACITY_RECOVERY.json';assert not receipt.exists()
+        write(receipt,dict(previous_observer_pid=41484,previous_observer_verified_absent=True,
+            purpose='observe repaired V6 B/R and V2 broker/grader; preserve historical owner receipts and SHA-released engineering STOP',
+            status_sha256=sha(ops.LOCAL/'tools/coopmwm/exact_ops.py'),publisher_sha256=sha(ops.LOCAL/'tools/coopmwm/warm_publish.py'),
+            tests=6,new_sumo_sim_s=0,dispatches_training=False))
+        line='\nS-COOPMWM MAIN0508 OBSERVATION RECOVERY REGISTERED amendmentSHA'+sha(receipt)+': V5local41484 verifiedabsent; V6 observe-only existing repaired remote owners, SHA-gated historicalSTOP release, newSTOP_V2/FAILED_V5 public; no launch/retry, originalGPUdeadline preserved; CPU6PASS/zeroSUMO.\n'
+        with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
     if TAG=='EXACT_OBSERVER_V3':
         from .protocol import checked,REGISTRY,sha
         receipt=ops.EVIDENCE/'EXACT_OBSERVER_STAGING_RECOVERY.json'
@@ -133,7 +144,7 @@ def dispatch():
         line='\nS-COOPMWM PUBLICATION PAYLOAD REPAIR REGISTERED amendmentSHA'+sha(receipt)+': observer39060 exited before remote receipt read on IndentationError; verified absent; fixed generated Python indentation and added actual-payload compilation to CPU4PASS. Real one-shot fetch/publication succeeded, recovered A48/check/dev/pause from existing immutable data. V5 restores observation only, original remote owners/deadline preserved, zero new physics/inference.\n'
         with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
     binding=dict(deadline_unix=read(ops.EVIDENCE/'WARM_A48_BINDING.json')['gpu_deadline'],
-        contract='observe/publish; adopt existing owners; once8EXACT0 gates per host, register and launch grader/broker/B/R once; no physics retry')
+        contract='observe/publish only; repaired owners already dispatched; never launch physics/inference' if TAG=='EXACT_OBSERVER_V6' else 'observe/publish; adopt existing owners; once8EXACT0 gates per host, register and launch grader/broker/B/R once; no physics retry')
     write(ops.EVIDENCE/(TAG+'_BINDING.json'),binding)
     with (ops.EVIDENCE/(TAG+'.log')).open('x',encoding='utf-8') as log:
         p=subprocess.Popen([sys.executable,'-X','utf8','-u','-m','tools.coopmwm.exact_watch','run','--tag',TAG],cwd=ops.LOCAL,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT)
@@ -142,5 +153,5 @@ def dispatch():
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('mode',choices=('run','dispatch'))
-    p.add_argument('--tag',choices=('EXACT_OBSERVER_V2','EXACT_OBSERVER_V3','EXACT_OBSERVER_V4','EXACT_OBSERVER_V5'),default=TAG)
+    p.add_argument('--tag',choices=('EXACT_OBSERVER_V2','EXACT_OBSERVER_V3','EXACT_OBSERVER_V4','EXACT_OBSERVER_V5','EXACT_OBSERVER_V6'),default=TAG)
     args=p.parse_args();TAG=args.tag;globals()[args.mode]()

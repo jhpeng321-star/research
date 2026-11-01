@@ -33,5 +33,10 @@ class TelemetryTests(unittest.TestCase):
         self.assertFalse(v['outcomes_opened'])
         self.assertEqual(v['new_sumo_sim_s'],0)
 
+    def test_superseded_engineering_queries_do_not_inflate_restart_rates(self):
+        old=dict(self.q('gpuA@0',400,100),superseded_engineering=True)
+        v=self.report([old,self.q('gpuA@1',500,100)],admitted=300)
+        self.assertEqual(sum(g['queries'] for g in v['rates'].values()),1)
+
 
 if __name__=='__main__':unittest.main()

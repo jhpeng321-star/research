@@ -1,5 +1,14 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+Observationrecovered: localEXACT_OBSERVER_V6 PID41116 observe/publishONLY (no
+trainingdispatch), originalV5 41484 verifiedabsent. CPU6PASS. LIVE_TELEMETRY_V2
+28752 replacesreceipt-owned6216 aftercreation/PID/commandverification; CPU4PASS;
+filters supersededqueries/starts fromrestart rates. BothsameoriginalGPUdeadline.
+FirstV2telemetry1793568925: freshcompletedqueries0/executed0; oldengineering
+forecasts retainedbutexcluded. GPUs93/92%util,48169/22964MiB,163.61/137.43W.
+Finalprecomputecomplete673opaquejobs/691800sim-s/reusePASS; outcomesclosed;
+originalprecompute3316828 anddiscovery3338335 waitregisteredfixedendpoints.
+
 LATESTMAIN0508 REPAIR LIVE: B3432378/start58277467,R3432791/start58278008(cpuQ),
 broker3426521/start58265095,grader3427015/start58266001. B/Rsourcecapacitycpu3;
 broker/gradercapacitycpu2. NoactiveSTOP1793568612; original4GPUowners retained.

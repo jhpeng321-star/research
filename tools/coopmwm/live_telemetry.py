@@ -17,6 +17,7 @@ TAG='LIVE_TELEMETRY'
 def summarize(progress,monitors,dispatches):
     rates={}
     for q in progress['queries']:
+        if q.get('superseded_engineering'):continue
         host=q['slot'].split('@')[0]
         pending_since=dispatches[host]['unix']
         admission=monitors['monitors'][host]['receipts'].get('WARM_REMOTE_ENDPOINT_ADMISSION_'+host+'_SECOND.json')
@@ -89,17 +90,28 @@ def dispatch():
     from .protocol import checked,REGISTRY,sha
     target=ops.EVIDENCE/(TAG+'_DISPATCH.json');assert not target.exists()
     binding=dict(deadline_unix=read(ops.EVIDENCE/'WARM_A48_BINDING.json')['gpu_deadline'],
-        source_sha256=sha(ops.LOCAL/'tools/coopmwm/live_telemetry.py'),tests=3,
+        source_sha256=sha(ops.LOCAL/'tools/coopmwm/live_telemetry.py'),tests=4 if TAG.endswith('_V2') else 3,
         contract='TRAIN-only rate/utilisation, second-worker admission, hash-only final status; observation only, no policy/search/physics changes')
     write(ops.EVIDENCE/(TAG+'_BINDING.json'),binding)
-    line='\nS-COOPMWM LIVE TELEMETRY OBSERVER REGISTERED bindingSHA'+sha(ops.EVIDENCE/(TAG+'_BINDING.json'))+': disjoint completed-TRAIN-search rate/GPU utilisation/admission/opaque final-status observer at300s; CPU3PASS, zeroSUMO, no submission/selection/activation, originaldeadline retained; qualification-overlap and incomplete searches disclosed. Existing learning-check observer retained.\n'
+    line='\nS-COOPMWM LIVE TELEMETRY OBSERVER REGISTERED '+TAG+' bindingSHA'+sha(ops.EVIDENCE/(TAG+'_BINDING.json'))+': disjoint completed-TRAIN-search rate/GPU utilisation/admission/opaque final-status observer at300s; CPU'+str(binding['tests'])+'PASS, zeroSUMO, no submission/selection/activation, originaldeadline retained; qualification-overlap and incomplete searches disclosed. V2 excludes superseded engineering queries from restart rates and retires only prior observer6216 after PID/creation/command verification; original receipts retained. Existing learning-check observer retained.\n'
     with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+    if TAG=='LIVE_TELEMETRY_V2':
+        # Only the receipt-owned local observer is retired; remote owners are
+        # independent. Match PID, command and creation time before signalling.
+        old=read(ops.EVIDENCE/'LIVE_TELEMETRY_DISPATCH.json')
+        code=(f"$p=Get-CimInstance Win32_Process -Filter 'ProcessId = {old['pid']}'; "
+            "if ($null -ne $p) { "
+            "if ($p.CommandLine -notlike '*tools.coopmwm.live_telemetry run*') { throw 'observer command changed' }; "
+            f"$t=([DateTimeOffset]$p.CreationDate).ToUnixTimeMilliseconds()/1000; if ([Math]::Abs($t-{old['unix']}) -gt 2) {{ throw 'observer PID reused' }}; "
+            f"Stop-Process -Id {old['pid']} -ErrorAction Stop }}")
+        subprocess.run(['powershell','-NoProfile','-Command',code],capture_output=True,text=True,check=True)
     with (ops.EVIDENCE/(TAG+'.log')).open('x',encoding='utf-8') as log:
-        p=subprocess.Popen([sys.executable,'-X','utf8','-u','-m','tools.coopmwm.live_telemetry','run'],
+        p=subprocess.Popen([sys.executable,'-X','utf8','-u','-m','tools.coopmwm.live_telemetry','run','--tag',TAG],
             cwd=ops.LOCAL,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT)
     value=dict(pid=p.pid,unix=time.time(),binding=binding);write(target,value);print(json.dumps(value))
 
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('mode',choices=('once','run','dispatch'))
-    globals()[p.parse_args().mode]()
+    p.add_argument('--tag',choices=('LIVE_TELEMETRY','LIVE_TELEMETRY_V2'),default=TAG)
+    a=p.parse_args();TAG=a.tag;globals()[a.mode]()
