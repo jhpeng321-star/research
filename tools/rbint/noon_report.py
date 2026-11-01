@@ -52,6 +52,26 @@ def world_ci(row, replicated):
     return row if replicated else dict(row, low=None, high=None)
 
 
+def switching_point_status(summary, endpoint):
+    """Owner's point-comparison rule, separate from confidence/qualification."""
+    panel = set(range(969432, 969440))
+    if (set(summary.get('worlds', [])) != panel or endpoint is None
+            or set(endpoint.get('worlds', [])) != panel):
+        return 'PENDING: complete reserved8 and HDV60 evidence required'
+    comparisons = summary.get('comparisons', [])
+    delay = {r['horizon_s']: r['mean'] for r in comparisons if r['metric'] == 'delay_crps_difference'}
+    rate = next((r['mean'] for r in comparisons if r['metric'] == 'upstream_rate_distance_difference'
+                 and r['horizon_s'] == 300), None)
+    position = endpoint['primary'].get('mean')
+    if set(delay) != {120, 300, 600} or rate is None or position is None:
+        return 'PENDING: missing registered comparison'
+    failures = []
+    if not all(x < 0 for x in delay.values()): failures.append('delay CRPS not lower at every horizon')
+    if rate >= 0: failures.append('300s breakdown rate not closer to real')
+    if position > 0: failures.append('HDV60 position error worse')
+    return 'FAIL: '+ '; '.join(failures) if failures else 'PASS on point comparisons; confidence and calibration are separate'
+
+
 def render(publication):
     variants = publication['variants']
     full = variants.get('FULL-v4', {})
@@ -71,6 +91,7 @@ def render(publication):
     if endpoint:
         endpoint = dict(endpoint, primary=world_ci(endpoint['primary'],
             replicated_world_cells(endpoint.get('worlds', []), metadata)))
+    point_status = switching_point_status(summary, endpoint)
     speed = [r for r in rows(distribution/'distribution_summary.csv' if distribution else None)
              if r['split'] == 'reserved8' and r['level'] == 'arm' and r['arm'] == 'native'
              and r['horizon_s'] == '600' and r['metric'] == 'speed_upstream']
@@ -82,7 +103,7 @@ def render(publication):
               and r['horizon_s'] == '600' and r['quantity'] == 'delay']
     label = publication['label']
     lines = [f"# WM-PHYS morning report — {label}, {publication['local_time']}",
-        'Physics candidates improve several point scores; adoption and calibrated action confidence remain unestablished.',
+        'Registered switching rule '+point_status+'. Calibrated controller selection is not established.',
         f"Latest engineering source is FULL-v4/22cc32f6; current paired diagnostic below is {fallback}.", '',
         '## Model and engineering',
         '- SUMO IDM +LC2013 highway subset +merge/insertion; all learned corrections OFF; no neural training.',
@@ -90,9 +111,11 @@ def render(publication):
         '- FULL posterior: frozen FIT shrinkage_v1 joint support, strength19.35568 already applied, causal own-start motion;',
         '  unknown drivers/entrants use learned population; Gamma-Poisson arrivals use causal counters. Fitted LC OFF.',
         '- A encoder+hidden settings; B population default; C motion-fitted population point; FULL fitted posterior.',
+        '- A2/B2/C2 use earlier4015b641; FULL-v4 includes later physical/native/source fixes: not a settings-only ablation.',
         '- Touched modules287CPU PASS/4explicit skips; later endpoint/bootstrap21PASS/1skip and credibility18PASS.',
         '- A/B/C/FULL each passed60s on FIT969420/969421 (8rollouts): finite, conserved, no learned corrections.',
         '- FULL-v4 five-arm600s canary PASS370.48s/reused once; live sources/jobs retained, own-PID11:30 deadline.',
+        '- Superseded own FULL-v1/v3 retired after reserved8 completion; all outputs retained; A/B/C/FULL-v4 continued.',
         '', '## Distributional evidence (per-variant available cases; not a cross-variant ranking)',
         '- WM2 baseline full20worlds/fivearms/K8; all candidates share registered969420..969439, H120/300/600.',
         '- Development12/reserved8 remain separate; incomplete ensembles never count as K8. Contrasts below reserved only.']
@@ -142,7 +165,7 @@ def render(publication):
         '- Full-world95%CIs require replication in EVERY scored demand×penetration×split cell; any singleton gives NA here.',
         '- Detailed mixed-cell bootstrap intervals condition on singleton worlds; they are not full-panel confidence claims.',
         '- Earlier04:00/first0545-labelled numeric CIs RETRACTED (unscored-peer bootstrap bug); point estimates unchanged.',
-        '- ALL three conditions are required; no automatic S-C1SWITCH adoption. Sparse cells also prevent distributional qualification.', '',
+        '- Point rule '+point_status+'; no automatic S-C1SWITCH adoption. All conditions required; sparse cells prevent qualification.', '',
         '## Credibility / schedule',
         '- Strict paired P(beats incumbent)>=0.8 plus lower expected delay is only a decision rule; calibration must also hold.']
     credibility = Path(selected['credibility']) if selected.get('credibility') else None
@@ -159,7 +182,9 @@ def render(publication):
     lines += [f"- Same-source selected-switch reliability and50/80/90%/range coverage: {selected.get('credibility','PENDING')}/CREDIBILITY.md.",
         f"- Same-source selected0.8calls observed win%={values('selected_preference','outcome')} vs forecast%={values('selected_preference','probability')}; range coverage%={values('delay','covered',range_only=True)}.",
         '- ~04:00 interim retained:FULL-v1 n4 ΔCRPS−785/−3512/−11041; rate-distance+1.25pp; historical CIs retracted.',
-        f"- ~08:00 interim: {publication.get('interim08','PENDING')}; final engineering freeze09:30: {publication.get('freeze','PENDING')}.",
+        '## ~08:00 interim',
+        '- FULL-v4 reserved8: ΔCRPS120/300/600−393/−3040/−11647veh-s; HDV60−15.26m; breakdown-distance+5.63pp: point rule FAIL.',
+        f"- Receipt: {publication.get('interim08','PENDING')}; primary95%CIs NA (singleton cells). Finalfreeze09:30: {publication.get('freeze','PENDING')}.",
         '- Final evaluation receipts through11:30, final report11:45; frozen source is not selected by reserved outcome tuning.',
         '- Remaining gaps:serial LC negotiation/internal junction state/cold memory; finish matched panels and validate action confidence.',
         f"- Audit/source manifests, per-world attrition, timing/speed/shift/gate/credibility files: {publication['receipt_directory']}."]

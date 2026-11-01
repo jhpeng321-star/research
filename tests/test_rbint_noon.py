@@ -20,6 +20,20 @@ def test_full_world_ci_requires_every_contributing_cell_to_be_replicated():
     assert world_ci(original, False) == dict(mean=-10., low=None, high=None)
     assert world_ci(original, True) == original
     assert original['low'] == -12.  # immutable conditional diagnostic retained
+
+
+def test_switching_rule_keeps_owner_point_conditions_separate_from_CI_availability():
+    from tools.rbint.noon_report import switching_point_status
+    worlds = list(range(969432, 969440))
+    summary = dict(worlds=worlds, comparisons=[
+        dict(metric='delay_crps_difference', horizon_s=h, mean=-10., low=None, high=None)
+        for h in (120, 300, 600)])
+    summary['comparisons'].append(dict(metric='upstream_rate_distance_difference', horizon_s=300, mean=-.01))
+    endpoint = dict(worlds=worlds, primary=dict(mean=0., low=None, high=None))
+    assert switching_point_status(summary, endpoint).startswith('PASS on point')
+    summary['comparisons'][-1]['mean'] = .01
+    assert 'FAIL: 300s breakdown rate' in switching_point_status(summary, endpoint)
+    assert switching_point_status(summary, None).startswith('PENDING')
 from tools.rbint.local_resources import child_incarnation, local_resources
 
 
