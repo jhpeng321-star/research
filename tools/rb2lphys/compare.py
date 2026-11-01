@@ -139,9 +139,20 @@ def main():
     p.add_argument('--panel', type=Path,required=True)
     p.add_argument('--targets',type=Path,required=True)
     p.add_argument('--out',type=Path,required=True)
+    p.add_argument('--local-evidence',type=Path,help='map immutable remote directories to an already fetched local snapshot')
     args = p.parse_args()
     assert args.out.is_dir() and not (args.out/'COMPARISON.json').exists()
-    result = compare(load(args.panel),args.targets)
+    panel = load(args.panel)
+    if args.local_evidence:
+        for params, records in panel['records'].items():
+            for record in records:
+                if record['world'] == 969420:
+                    directory = args.local_evidence/('canary_off' if params == 'off' else 'canary_lp')/'task'
+                else:
+                    directory = args.local_evidence/'panel'/f"{params}_{record['world']}"
+                record['remote_directory'] = record['directory']
+                record['directory'] = str(directory)
+    result = compare(panel,args.targets)
     save_new(args.out/'COMPARISON.json',result)
     for name in ('summary','effects','world_rows'):
         with (args.out/(name+'.csv')).open('x',newline='') as f:

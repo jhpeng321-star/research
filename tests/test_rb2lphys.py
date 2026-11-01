@@ -97,3 +97,28 @@ def test_development_filter_is_before_any_start_artifact_open():
     for world in (969419,969432,969439):
         with pytest.raises(ValueError, match='development panel'):
             restrict_start_source(code, [world])
+
+
+def test_lp_recipe_is_an_exact_two_field_ablation_and_artifact_matches_fit():
+    import tomllib
+    from pathlib import Path
+    root = Path(__file__).resolve().parents[1]
+    baseline = tomllib.loads((root/'configs/wm_phys.toml').read_text())
+    lp = tomllib.loads((root/'configs/wm_phys_lp.toml').read_text())
+    assert lp['physics'].pop('physics_params') == 'learned_v1'
+    path = lp['physics'].pop('physics_params_file')
+    assert lp == baseline
+    artifact = json.loads((root/path).read_text())
+    fitted = json.loads((root/'docs/rb2lphys/departure_fit/learned_v1.json').read_text())
+    assert artifact == fitted
+
+
+def test_gp_search_handles_a_boundary_solution_and_selection_guards():
+    pytest.importorskip('scipy')
+    import numpy as np
+    from tools.rb2lphys.fit_departures import bayes_search, require_fit
+    best, trials = bayes_search(lambda x: float(x@x), iterations=2)
+    np.testing.assert_array_equal(best,np.zeros(3))
+    assert len(trials) == 11
+    for worlds in ([969432],[969439],[True],[969420.5],[]):
+        with pytest.raises(ValueError):require_fit(worlds)

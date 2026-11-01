@@ -19,6 +19,7 @@ def main():
     p.add_argument('--stage')
     p.add_argument('--label')
     p.add_argument('--parent', choices=('/root/rbeval20261031','/root/autodl-tmp/c4/rb2lphys20261101'))
+    p.add_argument('--wait-seconds',type=int,default=0)
     p.add_argument('--command', nargs=argparse.REMAINDER)
     args = p.parse_args()
     parent = '/home/ubuntu/rb2lphys20261101' if args.host == 'cpuQ' else (args.parent or PARENT)
@@ -43,9 +44,10 @@ for p in ('/root/wmdata20261031/views','/root/wmdata20261031','/home/ubuntu/wmda
         sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
         data = subprocess.check_output(['git', 'archive', '--format=tar', sha,
             'src/wms', 'tools/rbint', 'tools/rbeval', 'tools/rbfit', 'tools/rb2lphys',
-            'configs/wm_phys.toml', 'configs/execparity_cav_idm_v1.json',
+            'configs/wm_phys.toml', 'configs/wm_phys_lp.toml', 'configs/execparity_cav_idm_v1.json',
             'configs/native_cav_head_v5.json', 'artifacts/rbfit/shrinkage_v1',
             'artifacts/rb2lphys',
+            'docs/rb2lphys/departure_fit/learned_v1.json',
             'docs/paper_results/rbunc/observed_arrivals.json', 'tests/test_rb2lphys.py'], cwd=ROOT)
         digest = hashlib.sha256(data).hexdigest()
         dest = f'{parent}/lphys_code_{sha[:12]}'
@@ -93,13 +95,22 @@ with (work/'PROCESS.json').open('x') as f:json.dump(receipt,f,indent=2)
 print(json.dumps(receipt))'''
         print(ssh(args.host, code))
     elif args.action == 'status':
-        print(ssh(args.host, f'''import json,os
+        assert 0 <= args.wait_seconds <= 3600
+        print(ssh(args.host, f'''import json,os,time
 from pathlib import Path
 w=Path({work!r});r=json.loads((w/'PROCESS.json').read_text());print(json.dumps(r))
-p=Path('/proc/%s/stat'%r['pid']);print('PROCESS',p.read_text().split()[2] if p.exists() else 'EXITED')
+p=Path('/proc/%s/stat'%r['pid'])
+def own_state():
+ if not p.exists():return 'EXITED'
+ stat=p.read_text().split()
+ if stat[21]!=r['start_ticks'] or Path('/proc/sys/kernel/random/boot_id').read_text().strip()!=r['boot_id']:return 'EXITED_DIFFERENT_INCARNATION'
+ return stat[2]
+end=time.monotonic()+{args.wait_seconds}
+while time.monotonic()<end and own_state() not in ('Z','EXITED','EXITED_DIFFERENT_INCARNATION') and not (w/'PANEL.json').exists():time.sleep(2)
+print('PROCESS',own_state())
 print((w/'stdout.log').read_text())
 for name in ('SUMMARY.json','DIAGNOSIS.json','SEARCH.json'):
- if (w/name).exists():print(name,(w/name).read_text())'''))
+ if (w/name).exists():print(name,(w/name).read_text())''',timeout=args.wait_seconds+60))
     else:
         dest = ROOT/'docs/rb2lphys'/args.label
         assert dest.parent.is_dir() and not dest.exists()

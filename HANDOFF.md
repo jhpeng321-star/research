@@ -11,11 +11,20 @@ Commits fd768d54/cef6321c add the default-OFF departure-parameter reader and GP 
 `physics_params='learned_v1'`, explicit `physics_params_file` (recipe-relative path).
 Current artifact `artifacts/rb2lphys/learned_v1.json`: first-lane0, mainline-last0,
 ramp-last0.01107518819; all other IDM/LC population parameters unchanged.
-13CPU checks PASS on gpuR, receipt `docs/rb2lphys/unit_v1`. Prefix fit1068births;
+31CPU checks PASS/1CUDA skip locally;14own checks PASS on gpuR. Prefix fit1068births;
 later development2059births: objective0.0827416→0.0827994 (slightly WORSE).
-This conditional fit does NOT justify adoption. Autonomous comparison pending.
+This conditional fit does NOT justify adoption. Autonomous comparison LIVE.
 cpuQ owned diagnosis1188078 and fitter1197634 EXITED. gpuR unit891804 EXITED.
-gpuR12:15 audit idle0%/1MiB, load12.25/224cores. Plan at most two5GiB workers.
+gpuR paired969420/K2/fivearms/H600 canaries COMPLETE, finite/conserved, shared
+driver/arrival source receipts verified: `docs/rb2lphys/CANARY_CHECK.json`.
+Commits06eaf9b3/1c5722e9 contain frozen artifact, paired runner and canary evidence.
+Panel coordinator893753 (own) runs at most2×5GiB/nice19/oneCPUthread children,
+`/root/autodl-tmp/c4/rb2lphys20261101/lphys_panel`,12development worlds/K2/fivearms.
+Each canary reused once; no K2 relabelling as K8. Full comparison not yet scored.
+Root-volume12:22 free55.7MB; own NEW stage/results use verified alternate volume
+with2.03GB free; no peer or old own file deleted/moved. Canaries retained in root.
+Support-only revalidation confirms converted tapes end600s: later conditional
+check actually300..600s, not requested upperbound900s. Values/results unchanged.
 Observations.py untouched. No peer PID action; full5-arm development runner ready.
 Candidate NOT READY; FULL-v5-LP must not be qualified from conditional birth scores.
 
