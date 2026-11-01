@@ -139,8 +139,9 @@ gate evidence are retained in `wmplan/`.
 
 <!-- WMPLAN-PROGRESS:BEGIN -->
 ## Current continuation status
-- Approved v2 active: 0/48 complete; closed combined actual2580/charged6480sim-s (1 open jobs excluded from closed actual).
-- Combined upper199440charged/196740actual; no refund. FULL-v4, expected first on both GPUs; strict waits for committed primary report. No full-panel efficacy conclusion yet.
+- Approved v2 continuation STOPPED on a new fault; no retry or new dispatch.
+- Combined charged6480; closed actual3480sim-s, 0 open jobs at receipt time. All prior charges retained.
+- See `wmplan/restart_v2/CONTINUATION_FAULT.json` and `FAULT_RECEIPTS.json`; complete paired efficacy cannot be asserted from an incomplete arm.
 <!-- WMPLAN-PROGRESS:END -->
 
 ## V2 continuation and receipts
