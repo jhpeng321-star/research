@@ -1,5 +1,24 @@
 # S-COOPMWM — live checks
 
+## Fresh-resume live snapshot — MAIN04:23 continuation
+- A has completed u46; latest registered TRAIN check u44 gives J900 A−MAPPO
+  **−952.147 veh-s**, 95% world-bootstrap CI **[−3413.962,1424.270]**, point
+  delay reduction1.05%. The interval includes zero; this does not establish a gain.
+  B/R are still collecting their first update; the B-vs-A curve is not available.
+- Progress1793565861: seven completed TRAIN searches, five executed plan starts;
+  no completed exact grades/smoke. The pending grades cannot seed imitation,
+  trust, covariance or the winning-plan library. No SUMO plan-benefit claim yet.
+- gpuR second worker56877 passed **all8EXACT0** and was hot-added automatically
+  at unix1793566045.8605 (04:47:25UTC+8). Original workers/searches continue.
+  gpuA617099 remains qualifying; the1vs2 capacity comparison awaits new completed
+  searches and keeps qualification/boundary overlaps separate.
+- Original service deadline is still **2026-11-02 18:07:02 UTC+8**. It has not
+  been reset. Full-run resource continuation needs an outcome-blind registered
+  resolution before that deadline; the first completed B-update and post-admission
+  throughput are still needed for a credible end-to-end forecast.
+- Search-depth diagnostics remain deferred under MAIN23:04 while both GPUs serve
+  training/qualification. Warm qualification and03:53UTC+8 B/R restart are retained.
+
 ## MAIN04:23 frozen-policy precompute — CPU qualified and registered
 - Detector-first final continuation is also registered (`bcbbbacb3a73b49cf141d959c8b7a01d17bd221b1528faedf645414b96eb6c94`),
   detached cpuQ3338335. **6 CPU tests PASS / zero skips / 0.064s / zero SUMO**.
