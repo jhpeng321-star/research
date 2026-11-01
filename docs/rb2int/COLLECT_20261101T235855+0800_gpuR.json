@@ -1,0 +1,443 @@
+{
+ "host": "gpuR",
+ "complete": [
+  {
+   "job": {
+    "id": "wm2_969590",
+    "model": "WM2",
+    "seed": 969590,
+    "host": "gpuR",
+    "futures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "primary": true,
+    "stratum_worlds": 2
+   },
+   "complete_sha256": "1b0f213b5ffd038a0b0d13a0f2bc24b2d728b181de2801c8fa44e6858fbdcf5e",
+   "identity_sha256": "8ce6b705bd30b70e3590e9a085b8267e212c5f74c88e0bae929cfa6935ac2bdf"
+  },
+  {
+   "job": {
+    "id": "wm2_969595",
+    "model": "WM2",
+    "seed": 969595,
+    "host": "gpuR",
+    "futures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "primary": true,
+    "stratum_worlds": 2
+   },
+   "complete_sha256": "70428f99f20fbd35b2786a1b92d2796bcff963b0dfe8e685b8bec5dd0b89458d",
+   "identity_sha256": "fc42d955e4fdf5dc1eb42ff4ebeec5227afeead68dba7058c67800d23d1c4a0e"
+  },
+  {
+   "job": {
+    "id": "wm2_969599",
+    "model": "WM2",
+    "seed": 969599,
+    "host": "gpuR",
+    "futures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "primary": true,
+    "stratum_worlds": 2
+   },
+   "complete_sha256": "cde4e5acd69261135ea86a289a294c239a7e116a898d9f09aa548d843891dfa9",
+   "identity_sha256": "3568b8fd22fbfd63cd8b943533fbe2f1702fe257cf47e4a45f19f760eefe5585"
+  },
+  {
+   "job": {
+    "id": "v5_969433",
+    "model": "FULL-v5",
+    "seed": 969433,
+    "host": "gpuR",
+    "futures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "primary": true,
+    "stratum_worlds": 3
+   },
+   "complete_sha256": "033054be903c6f225baf35b1a3cbeb20936e558eceb65e8b5fd4665f6adece65",
+   "identity_sha256": "69df06858c0ac4e33b26baddc8a67e207bc61c0ab59b46fa37ad0ea0546c9c67"
+  },
+  {
+   "job": {
+    "id": "v5-lp_969433",
+    "model": "FULL-v5-LP",
+    "seed": 969433,
+    "host": "gpuR",
+    "futures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "primary": true,
+    "stratum_worlds": 3
+   },
+   "complete_sha256": "14498bf739c398a086b63711c47a03563a2d966aa52be4efee7c0e9b5d315b7b",
+   "identity_sha256": "711e7dd039f979bca8b53f5f0a83300d7272c0999f02db49c4aa8758cff89359"
+  },
+  {
+   "job": {
+    "id": "v5_969437",
+    "model": "FULL-v5",
+    "seed": 969437,
+    "host": "gpuR",
+    "futures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "primary": true,
+    "stratum_worlds": 3
+   },
+   "complete_sha256": "cf9ca440ad72b0a480ba9d1a7629659d509885d1ba67d815620e5b627f688341",
+   "identity_sha256": "79f4fd336430eeea55721c2194efc9a11bc43d7734ad85662da613379bfd1faf"
+  },
+  {
+   "job": {
+    "id": "v5-lp_969437",
+    "model": "FULL-v5-LP",
+    "seed": 969437,
+    "host": "gpuR",
+    "futures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "primary": true,
+    "stratum_worlds": 3
+   },
+   "complete_sha256": "dd3ce9ff5eae45b87ab54585df55bd06cf432b05a1196680dbca2b1089051b23",
+   "identity_sha256": "cf224f91c7c4de3effc44e1e16010047f85705b7f952763a460dd09bbe6e44d6"
+  },
+  {
+   "job": {
+    "id": "v5_969438",
+    "model": "FULL-v5",
+    "seed": 969438,
+    "host": "gpuR",
+    "futures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "primary": true,
+    "stratum_worlds": 3
+   },
+   "complete_sha256": "b8dd6f71f5cb87feddbdd49897e5bcd48ac742110d27a0ecf55b959684d95f71",
+   "identity_sha256": "a0ab5e1af4b327bfe084be58567f7dda75072be9af036b92e79883c6a4292bd0"
+  },
+  {
+   "job": {
+    "id": "v5-lp_969438",
+    "model": "FULL-v5-LP",
+    "seed": 969438,
+    "host": "gpuR",
+    "futures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "primary": true,
+    "stratum_worlds": 3
+   },
+   "complete_sha256": "e50a334c4482fb2910a536785553627ac5b115884d4a2ce02722574316bb877a",
+   "identity_sha256": "629456e63651e34a800b6fea44f519ea42aee7c46f082379fe2b1ea35a891eef"
+  },
+  {
+   "job": {
+    "id": "wm2_969592",
+    "model": "WM2",
+    "seed": 969592,
+    "host": "gpuR",
+    "futures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "primary": true,
+    "stratum_worlds": 3
+   },
+   "complete_sha256": "4975a6ff155d687fa30cd775865b05b518f04e7b053f6fae615f022e49a8934d",
+   "identity_sha256": "9a2982a1f6cede723768a4a50958bda04f308043229876c8258c2e6da909d798"
+  },
+  {
+   "job": {
+    "id": "wm2_969597",
+    "model": "WM2",
+    "seed": 969597,
+    "host": "gpuR",
+    "futures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "primary": true,
+    "stratum_worlds": 3
+   },
+   "complete_sha256": "648355868aeef23a37ad7cfbd4442566d8a06a4d5752f9ef6d06f59b23bc539f",
+   "identity_sha256": "d3c67ac5826822fdd07777cbc41fe31293346bfe5dbf6c152635a19c5ed4f535"
+  },
+  {
+   "job": {
+    "id": "wm2_969598",
+    "model": "WM2",
+    "seed": 969598,
+    "host": "gpuR",
+    "futures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "primary": true,
+    "stratum_worlds": 3
+   },
+   "complete_sha256": "dda21ddeaa3bcf9d572fefe8ed4a23ea19d7f29ab1b00ca6fe5359418316e2e6",
+   "identity_sha256": "bdd9ae175b334fbe2f8e4c944cd70268a51cbe79ca52602bbde60b70c6dbae12"
+  },
+  {
+   "job": {
+    "id": "wm2_969550",
+    "model": "WM2",
+    "seed": 969550,
+    "host": "gpuR",
+    "futures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "primary": true,
+    "stratum_worlds": 10
+   },
+   "complete_sha256": "5e3163313a98f0d2d996d4c3a18e31679daaf6875bdb3ef5f7a2106a9aba1e59",
+   "identity_sha256": "8d8b6c1155c37a9fece25ecc53fd3f224b755385e6b456c8231762c1c77c7d7a"
+  },
+  {
+   "job": {
+    "id": "wm2_969554",
+    "model": "WM2",
+    "seed": 969554,
+    "host": "gpuR",
+    "futures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "primary": true,
+    "stratum_worlds": 10
+   },
+   "complete_sha256": "4c34727841b40ca51fd1edd2893deebf84f7a956899e0dc679a2cf8759671f5f",
+   "identity_sha256": "85555fd13d333c3316ed90ad2cdd0a5115853674f45a04ec53850fb1291f724e"
+  },
+  {
+   "job": {
+    "id": "v5_969432",
+    "model": "FULL-v5",
+    "seed": 969432,
+    "host": "gpuR",
+    "futures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "primary": true,
+    "stratum_worlds": 11
+   },
+   "complete_sha256": "143e96827ccfc65d9ef5820e3ca7ef8268738074e771efaea80929f4bdb3e995",
+   "identity_sha256": "b3f1afc5d07fcad2a34f9d47660fd9b13963156bf5122e2beb6fe42ccc48cbc5"
+  }
+ ],
+ "pending": [
+  "v5_969554",
+  "v5-lp_969554",
+  "wm2_969558",
+  "v5_969558",
+  "v5-lp_969558",
+  "wm2_969562",
+  "v5_969562",
+  "v5-lp_969562",
+  "wm2_969566",
+  "wm2_969570",
+  "wm2_969574",
+  "wm2_969578",
+  "wm2_969582",
+  "v5_969582",
+  "v5-lp_969582",
+  "wm2_969586",
+  "v5_969586",
+  "v5-lp_969586",
+  "v5-lp_969432",
+  "wm2_969551",
+  "wm2_969552",
+  "wm2_969555",
+  "wm2_969556",
+  "v5_969556",
+  "v5-lp_969556",
+  "wm2_969559",
+  "v5_969559",
+  "v5-lp_969559",
+  "wm2_969560",
+  "v5_969560",
+  "v5-lp_969560",
+  "wm2_969563",
+  "wm2_969564",
+  "wm2_969567",
+  "wm2_969568",
+  "wm2_969571",
+  "v5_969571",
+  "v5-lp_969571",
+  "wm2_969572",
+  "v5_969572",
+  "v5-lp_969572",
+  "wm2_969575",
+  "v5_969575",
+  "v5-lp_969575",
+  "wm2_969576",
+  "wm2_969579",
+  "wm2_969580",
+  "wm2_969583",
+  "wm2_969584",
+  "v5_969584",
+  "v5-lp_969584",
+  "wm2_969587",
+  "v5_969587",
+  "v5-lp_969587",
+  "wm2_969588",
+  "v5_969588",
+  "v5-lp_969588",
+  "wm2_969553",
+  "wm2_969557",
+  "wm2_969561",
+  "v5_969561",
+  "v5-lp_969561",
+  "wm2_969565",
+  "v5_969565",
+  "v5-lp_969565",
+  "wm2_969569",
+  "v5_969569",
+  "v5-lp_969569",
+  "wm2_969573",
+  "wm2_969577",
+  "wm2_969581",
+  "wm2_969585",
+  "wm2_969589",
+  "v5_969589",
+  "v5-lp_969589",
+  "wm2_969591",
+  "v5_969591",
+  "v5-lp_969591",
+  "wm2_969593",
+  "v5_969593",
+  "v5-lp_969593",
+  "wm2_969594",
+  "wm2_969596"
+ ],
+ "read_only": true,
+ "unix": 1793548737.3478,
+ "hashes": {},
+ "SUPERVISOR_PROCESS.json": {
+  "pid": 924719,
+  "start_ticks": "4214495421",
+  "boot_id": "d19e6898-efd0-4288-a901-d63b21f11163",
+  "argv": [
+   "nice",
+   "-n",
+   "19",
+   "/root/miniconda3/bin/python",
+   "-B",
+   "-u",
+   "/root/autodl-tmp/c4/rb2int20261101/phys_code_d0df3d66e80a/tools/rb2int/final_worker.py",
+   "--root",
+   "/root/autodl-tmp/c4/rb2int20261101/final_v5_v1",
+   "--host",
+   "gpuR"
+  ],
+  "root": "/root/autodl-tmp/c4/rb2int20261101/final_v5_v1",
+  "host": "gpuR"
+ }
+}
