@@ -5,7 +5,7 @@ from .protocol import digest
 from .credit import paired,noise,wilson
 
 
-def evaluate(rt,record,*,speed2=False,memory=None):
+def evaluate(rt,record,*,speed2=False,memory=None,transfers=False):
     from .plan_wm import evaluate as futures
     plan=record['plan'];members=plan['members']
     acts=[]
@@ -16,7 +16,7 @@ def evaluate(rt,record,*,speed2=False,memory=None):
         p=dict(plan,id=name,members=[members[i] for i in keep],knots=[plan['knots'][i] for i in keep])
         acts.append(p)
     r=dict(record,policy_residuals={})
-    result=futures(rt,r,acts,8,600,chunk_actions=4,trim=False,pad_actions=True,horizons=(60,120,300,600),speed2=speed2,memory=memory)
+    result=futures(rt,r,acts,8,600,chunk_actions=4,trim=False,pad_actions=True,horizons=(60,120,300,600),speed2=speed2,memory=memory,transfers=transfers)
     credits={};variances={}
     for h,fs in result.items():
         draws=[{a:values[k] for a,values in fs.items()} for k in range(8)]

@@ -69,7 +69,7 @@ def plan_executor():
     finally:runtime.option_controller=original
 
 
-def evaluate(rt,record,actions,K,H,chunk_actions=4,trim=True,pad_actions=False,horizons=None,speed2=False,memory=None):
+def evaluate(rt,record,actions,K,H,chunk_actions=4,trim=True,pad_actions=False,horizons=None,speed2=False,memory=None,transfers=False):
     """Same source draws, CRN keys, insertions, departure loop and J reducer.
 
     A single compact-forward proxy retains full virgin-slot controller memory.
@@ -79,8 +79,9 @@ def evaluate(rt,record,actions,K,H,chunk_actions=4,trim=True,pad_actions=False,h
     output={str(h):{a['id']:[] for a in actions} for h in hs}
     proxy=FusedModel(rt.model,1,trim_absent=trim or speed2);proxy.local.index=0
     from .speed2_runtime import ledger,compact_geometry
+    from .speed2_transfers import fast_transfers
     runtime=SimpleNamespace(**vars(rt));runtime.model=proxy
-    with (memory.context(rt,record) if memory is not None else nullcontext()),(compact_geometry(proxy) if speed2 else nullcontext()),executor_adapter(),plan_executor():
+    with (memory.context(rt,record) if memory is not None else nullcontext()),(compact_geometry(proxy) if speed2 else nullcontext()),(fast_transfers() if transfers else nullcontext()),executor_adapter(),plan_executor():
         for start in range(0,len(actions),chunk_actions):
             subset=actions[start:start+chunk_actions]
             subset=[dict(a,background_residuals=record['policy_residuals']) if 'knots' in a else a for a in subset]

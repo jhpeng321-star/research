@@ -277,7 +277,8 @@ def main():
         elif a.mode == 'qualification':
             from .speed2_runtime import qualify
             rt,record,actions=setup(a.root)
-            result=qualify(rt,record,actions,a.K,a.H,a.width)
+            result=qualify(rt,record,actions,a.K,a.H,a.width,memory=getattr(rt,'speed2_memory',None),
+                           transfers=os.environ.get('SPEED2_EXPERIMENT')=='transfers')
             save(a.root/'QUALIFICATION.json',result)
             print(json.dumps(result),flush=True)
             assert result['pass_']

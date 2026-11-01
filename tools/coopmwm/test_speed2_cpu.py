@@ -12,6 +12,34 @@ from .speed2_runtime import bind_ledger, compact_geometry
 
 
 class Speed2CPU(unittest.TestCase):
+    def test_batched_newborns_preserve_native_values_counters_and_scope(self):
+        from wms.control.hidden_state import BirthMix
+        from .speed2_transfers import batched_births
+        native=BirthMix.__call__;pool_for=BirthMix.pool_for
+        mix=BirthMix.__new__(BirthMix)
+        mix.names=['v0','accel'];mix.seed=73;mix.row_keys=[101,202]
+        mix.pools=[torch.tensor([[20.,1.1],[25.,1.8]]) for _ in range(2)]
+        mix.cav_pools=[torch.tensor([[22.,1.3]]) for _ in range(2)]
+        mix.weights=[torch.tensor([.3,.7],dtype=torch.float64) for _ in range(2)]
+        mix.counts=[[0,0],[0,0]];mix.assigned=[0,0];mix.fitted_state=None
+        state=dict(lane=torch.tensor([[0,2,1,0,2,0],[1,0,2,1,0,2]]),
+                   is_cav=torch.tensor([[0,0,0,0,1,0],[0,0,0,0,0,0]],dtype=torch.bool))
+        newborn=torch.zeros(2,6,dtype=torch.bool);newborn[0,1]=True;newborn[0,4]=True;newborn[1,3]=True
+        ordinals={(0,1):4,(0,4):5,(1,3):7}
+        params=dict(v0=torch.full((2,6),21.),accel=torch.full((2,6),1.5))
+        expected_mix=copy.deepcopy(mix);actual_mix=copy.deepcopy(mix)
+        expected=expected_mix(state,newborn,params,birth_ordinals=ordinals)
+        with batched_births(cpu_pools=True):
+            actual=actual_mix(state,newborn,params,birth_ordinals=ordinals)
+            empty=actual_mix(state,torch.zeros_like(newborn),actual,birth_ordinals={})
+        self.assertIs(BirthMix.__call__,native);self.assertIs(BirthMix.pool_for,pool_for)
+        self.assertEqual(expected_mix.counts,actual_mix.counts)
+        self.assertEqual(expected_mix.assigned,actual_mix.assigned)
+        for name in expected:
+            self.assertTrue(torch.equal(expected[name],actual[name]))
+            self.assertTrue(torch.equal(expected[name],empty[name]))
+            self.assertTrue(torch.equal(params[name],torch.full_like(params[name],21. if name=='v0' else 1.5)))
+
     def test_empty_memory_is_cold_and_rejects_unobserved_payload_fields(self):
         from .speed2_memory import WarmQuery
         self.assertIsNone(WarmQuery.from_record(None,dict(warm_memory={})))

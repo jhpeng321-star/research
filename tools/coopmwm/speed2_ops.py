@@ -15,7 +15,7 @@ def launch(tag, compact=False, mode='profile', H=60, K=2, width=4, lines=False, 
     cpu = json.loads((READONLY/'CPU_coopmwm20261101_cpu36.json').read_text())
     if stage:stage_frozen(host, ROOT, cpu)
     files = {name: (LOCAL/'tools/coopmwm'/name).read_text() for name in
-             ('speed2.py','speed2_runtime.py','fused.py','plan_wm.py','plan_service.py','test_speed2_cpu.py','plans.py','speed2_memory.py','accel_diagnostic.py','speed2_gpu.py')}
+             ('speed2.py','speed2_runtime.py','fused.py','plan_wm.py','plan_service.py','test_speed2_cpu.py','plans.py','speed2_memory.py','accel_diagnostic.py','speed2_gpu.py','speed2_transfers.py')}
     fixture_text = (READONLY/'VOLUME_INPUTS_1854.json').read_text()
     source = f'''import pathlib,json,hashlib,subprocess,os,sys,time
 root=pathlib.Path({ROOT!r});assert root.parent.is_dir()
@@ -111,8 +111,9 @@ print(json.dumps(out))
         while target.with_name(target.stem+f'_snapshot{i}.json').exists():i+=1
         target=target.with_name(target.stem+f'_snapshot{i}.json')
     if not target.exists():write(target,value)
+    summary=value.get('PARITY') or value.get('EXPERIMENT') or value.get('QUALIFICATION') or value.get('TESTS') or {}
     print(json.dumps(dict(receipt=str(target),alive=value['owned_process_alive'],
-        result={k:v for k,v in value.get('PARITY',value.get('EXPERIMENT',{})).items() if k not in ('reference','optimized')},
+        result={k:v for k,v in summary.items() if k not in ('reference','optimized')},
         failure=value.get('FAILED',{}).get('traceback','')[-1800:])))
 
 
@@ -123,7 +124,7 @@ def stage_release(tag,host):
     commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=LOCAL,text=True).strip()
     cpu=json.loads((READONLY/'CPU_coopmwm20261101_cpu36.json').read_text())
     names=('fused.py','plan_wm.py','plan_service.py','plans.py','accel_diagnostic.py',
-           'speed2_runtime.py','speed2_memory.py','speed2.py','test_speed2_cpu.py')
+            'speed2_runtime.py','speed2_memory.py','speed2.py','test_speed2_cpu.py','speed2_transfers.py','speed2_gpu.py')
     files={name:(LOCAL/'tools/coopmwm'/name).read_text() for name in names}
     inputs=(READONLY/'VOLUME_INPUTS_1854.json').read_text()
     value=json.loads(ssh.remote(host,f'''import pathlib,json,hashlib

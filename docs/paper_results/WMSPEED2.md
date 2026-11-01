@@ -40,6 +40,12 @@ Warm/extended-plan qualification is tracked separately below.
 
 The implementation is opt-in through `GPU_BINDING.json: "speed2": true`.
 Activation requires a new worker's startup cost/ranking/trajectory qualification.
+The later transfer add-on (`"speed2_transfers": true`) also batches acceleration
+table writes and newborn parameter transfers. Its full-roster qualification gives
+**4.529x warm GPU speed-up at H120** (149.839 →33.085s) and **2.496x cold at H300**
+(137.542 →55.111s), with exact0 costs/trajectories and identical ranks/draw IDs.
+These are paired evaluator measurements; the add-on's separate incremental
+measurements and deployment recipe are below.
 
 ## Measured CPU hotspots
 
@@ -374,4 +380,49 @@ neither attempt changes the staged worker.
   ordering remain; newborn lane/CAV reads and parameter scatters are batched.
   A further trial keeps the read-only birth population on the CPU, where its
   native identity-keyed discrete sampler already runs, avoiding repeated scalar
-  GPU reads. Larger-horizon qualification is pending before release.
+  GPU reads. H120/K4/w34 is exact at **44.577 →41.749s,1.068x** (732.22 →781.82
+  future-steps/s), independently of the table optimization.
+- **Combined table + newborn transfers:** warm GPU R H300/K8/w10/4 CAVs is exact
+  at **80.707 →71.211s,1.133x** (594.74 →674.05 future-steps/s). Warm CPU H60 is
+  exact at26.963 →26.708s,1.010x; cold CPU H120/K4/w4 on qualified roster1 is
+  exact at102.548 →103.034s,0.995x. This add-on targets GPU transfer overhead;
+  the paired CPU measurements do not establish a CPU throughput improvement.
+- **Long graph run:** warm GPU R H300/K8/w10 is exact at81.729 →80.865s,1.011x.
+  Together with H120's1.008x result this does not justify enabling graphs in the
+  worker release. No `torch.compile` or graph mode is enabled by its binding.
+
+### Opt-in transfer add-on API
+
+The measured bulk-table and newborn-transfer functions now live in
+`tools/coopmwm/speed2_transfers.py`. The evaluator accepts
+`evaluate(..., speed2=True, transfers=True, memory=...)`; the persistent binding
+uses `"speed2_transfers": true` alongside `speed2` and startup qualification.
+It propagates to both search and diagnostic evaluation. Newborn slot identities,
+native candidate call order, admission ordinals, counts and assigned totals stay
+unchanged. Only the read-only birth support's device placement and tensor writes
+change; no sampler is rewritten or approximated. Contexts restore their patches
+after each evaluation, including failures.
+
+The add-on's startup gate compares full-roster baseline against both optimizations
+and requires **0.0** errors, ranks and draw IDs, rather than the inherited0.001
+tolerance. The base release's existing tolerance is preserved. Latest CPU suites
+are **79+7 passing, zero skips** (`CPU_coopmwm20261101_wmspeed2_cpu5.json`,
+`WMSPEED2_gpuA_transfers_tests.json`); the extra native-sampler test checks untouched
+slots, CAV/HDV and mainline/ramp births, empty births, counters and patch restoration.
+
+The actual integrated startup API is qualified on full-roster comparisons:
+
+- GPU A warm H120/K4/w34/3 CAVs/120s: **149.839 →33.085s,4.529x**,
+  217.83 →986.54 future-steps/s. Receipt `transfers_gate_warm120_snapshot1`.
+- GPU R cold H300/K8/w10/4 CAVs/300s: **137.542 →55.111s,2.496x**,
+  348.98 →870.97 future-steps/s. Receipt `transfers_gate_cold300`.
+
+Both report `speed2_transfers: true`, `tolerance_veh_s: 0.0`, zero cost and all
+trajectory errors, identical rankings and draw IDs. The combined warm H300 and
+CPU cold/warm comparisons above independently exercise the same transfer functions.
+
+The first68-action wide-batch attempt completed its rollouts but its trajectory
+checker rejected two-chunk versus one-chunk shapes. It is retained as `wide68` and
+does not qualify a width change. The harness now aligns future-major action rows
+before comparing different chunk widths, and writes costs/timings before that
+comparison so a diagnostic failure cannot lose completed numerical evidence.

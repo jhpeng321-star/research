@@ -2,39 +2,14 @@
 import inspect
 import os
 import copy
-from contextlib import contextmanager, ExitStack, nullcontext
+from contextlib import contextmanager, nullcontext
 import time
 from unittest.mock import patch
 
 import torch
 
 from .speed2 import save, setup
-
-
-def vector_table(actions,ids,device):
-    """Bulk time-axis writes; interpolation still uses the exact Python decoder."""
-    from .plans import acceleration_at
-    raw=torch.zeros((len(actions),300,len(ids)),device='cpu')
-    mask=torch.zeros_like(raw,dtype=torch.bool)
-    residual=torch.zeros_like(mask)
-    slots={v:i for i,v in enumerate(ids)}
-    for b,a in enumerate(actions):
-        for v,x in a.get('background_residuals',{}).items():
-            if v in slots:
-                raw[b,:,slots[v]]=x;mask[b,:,slots[v]]=True;residual[b,:,slots[v]]=True
-        if 'knots' in a:
-            values=[acceleration_at(a,t) for t in range(300)]
-            for v in dict.fromkeys(v for row in values for v in row):
-                if v not in slots:continue
-                ts=[t for t,row in enumerate(values) if v in row]
-                raw[b,ts,slots[v]]=torch.tensor([values[t][v] for t in ts],dtype=raw.dtype)
-                mask[b,ts,slots[v]]=True;residual[b,ts,slots[v]]=False
-        else:
-            ts=[t for t in range(300) if t<a.get('window',0)]
-            for v,x in a.get('residuals',{}).items():
-                if v in slots:
-                    raw[b,ts,slots[v]]=x;mask[b,ts,slots[v]]=True;residual[b,ts,slots[v]]=True
-    return raw.to(device),mask.to(device),residual.to(device)
+from .speed2_transfers import vector_table, batched_births
 
 
 def table_test(root):
@@ -60,46 +35,6 @@ def table_test(root):
                 comparisons=rows,new_sumo_sim_s=0)
     save(root/'EXPERIMENT.json',result);print(result,flush=True)
     assert result['pass_']
-
-
-@contextmanager
-def batched_births(cpu_pools=False):
-    """Keep the native identity sampler/order; batch scalar reads and scatters."""
-    from wms.control.hidden_state import BirthMix
-    original_pool=BirthMix.pool_for
-    def pool(mix,b,cav):
-        if not hasattr(mix,'_speed2_cpu_pools'):mix._speed2_cpu_pools={}
-        key=(b,bool(cav))
-        if key not in mix._speed2_cpu_pools:
-            mix._speed2_cpu_pools[key]=original_pool(mix,b,cav).detach().cpu()
-        return mix._speed2_cpu_pools[key]
-    def assign(mix,state,newborn,params,birth_ordinals=None):
-        result={name:value.clone() for name,value in params.items()}
-        index=newborn.nonzero()
-        pairs=index.tolist()
-        if not pairs:return result
-        b,slot=index.unbind(-1)
-        lanes=state['lane'][b,slot].detach().cpu().tolist()
-        cavs=state['is_cav'][b,slot].detach().cpu().tolist()
-        updates={}
-        for (row,col),lane,cav in zip(pairs,lanes,cavs):
-            entrance=int(lane==2)
-            if birth_ordinals is None or (row,col) not in birth_ordinals:
-                raise ValueError('hidden-state birth requires admission identity ordinal')
-            values=mix.candidate(row,entrance,birth_ordinals[row,col],bool(cav))
-            for name,value in values.items():
-                updates.setdefault(name,[]).append((row,col,value))
-            mix.counts[row][entrance]+=1
-            mix.assigned[row]+=1
-        for name,values in updates.items():
-            rows,cols,data=zip(*values)
-            target=result[name]
-            target[torch.tensor(rows,device=target.device),torch.tensor(cols,device=target.device)]=torch.tensor(data,dtype=target.dtype,device=target.device)
-        return result
-    with ExitStack() as stack:
-        stack.enter_context(patch.object(BirthMix,'__call__',assign))
-        if cpu_pools:stack.enter_context(patch.object(BirthMix,'pool_for',pool))
-        yield []
 
 
 class GraphCall:
@@ -198,13 +133,6 @@ def actor_graphs(rt):
         yield [actor,encoder]
 
 
-@contextmanager
-def transfer_trial():
-    from . import plan_wm
-    with patch.object(plan_wm,'profile_table',vector_table),batched_births(cpu_pools=True):
-        yield []
-
-
 def experiment(root,H,K,width):
     """Compare an opt-in graph trial with the already-qualified eager fast path."""
     from .plan_wm import evaluate
@@ -229,10 +157,10 @@ def experiment(root,H,K,width):
     hs=tuple(h for h in (60,120,300) if h<=H)
     def sync():
         if next(rt.model.parameters()).is_cuda:torch.cuda.synchronize()
-    def run(batch_width):
+    def run(batch_width,transfers=False):
         sync();start=time.perf_counter()
         out=evaluate(rt,record,actions,K,H,chunk_actions=batch_width,trim=False,
-                     pad_actions=batch_width,horizons=hs,speed2=True,memory=memory)
+                     pad_actions=batch_width,horizons=hs,speed2=True,memory=memory,transfers=transfers)
         sync()
         return out,time.perf_counter()-start
     before,old_wall=run(width)
@@ -241,11 +169,20 @@ def experiment(root,H,K,width):
     from . import plan_wm
     context=(actor_graphs(rt) if variant=='actor_graphs' else
              patch.object(plan_wm,'profile_table',vector_table) if variant=='tables' else
-             batched_births(cpu_pools=variant=='births_cpu') if variant in ('births','births_cpu') else
-             transfer_trial() if variant=='transfers' else nullcontext([]))
+             batched_births(cpu_pools=variant=='births_cpu') if variant in ('births','births_cpu') else nullcontext([]))
     with context as graphs:
-        after,new_wall=run(2*width if variant=='wide_batch' else width)
+        after,new_wall=run(2*width if variant=='wide_batch' else width,transfers=variant=='transfers')
     if variant!='actor_graphs':graphs=[]
+    save(root/'COMPARISON_INPUTS.json',dict(reference=before,optimized=after,
+        reference_wall_s=old_wall,optimized_wall_s=new_wall))
+    if variant=='wide_batch':
+        # WMTEACH rows are future-major. Concatenating raw B rows would compare
+        # future0/chunk2 with future1/chunk1 when chunk widths differ.
+        def joined(chunks):
+            return [{name:torch.cat([c[name].reshape(K,-1,*c[name].shape[1:])
+                                     for c in chunks],dim=1).flatten(0,1)
+                     for name in chunks[0]}]
+        expected,tapes=joined(expected),joined(tapes)
     errors=trajectory_errors(expected,tapes)
     worst=max(abs(x['team_delay']-y['team_delay']) for h in before for a in before[h]
               for x,y in zip(before[h][a],after[h][a]))
@@ -290,7 +227,8 @@ def profile(root, H, K, width):
         start = time.perf_counter()
         with patch.object(rt.model, 'rollout', step):
             evaluate(rt, record, actions, K, H, chunk_actions=width, trim=False,
-                     pad_actions=width, speed2=True, memory=memory)
+                     pad_actions=width, speed2=True, memory=memory,
+                     transfers=os.environ.get('SPEED2_EXPERIMENT')=='transfers')
         torch.cuda.synchronize()
         wall = time.perf_counter()-start
     events = list(prof.key_averages())
@@ -313,6 +251,7 @@ def profile(root, H, K, width):
     save(root/'MODEL_API.json', methods)
     result = dict(H=H, K=K, width=width, group_size=len(record['group']),
                   warm=memory is not None, sampled_steps=4, model_calls=calls,
+                  transfers=os.environ.get('SPEED2_EXPERIMENT')=='transfers',
                   wall_s=wall, timing_is_profiled_not_speedup=True,
                   cpu_self_ms=cpu/1000, gpu_self_ms=gpu/1000,
                   cpu_top=sorted(rows, key=lambda x: -x['self_cpu_ms'])[:35],
