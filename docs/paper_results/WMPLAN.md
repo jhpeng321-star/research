@@ -1,8 +1,8 @@
 # S-WMPLAN — world-model-guided cooperative planner
 
 ## Plain-language status
-**The approved engineering restart is running its one-episode fail-fast smoke
-on the dual-GPU services. There is no complete live efficacy result yet.** The original test stopped on an executor-wiring error. Three primary-arm
+**The approved engineering restart is running with a one-episode fail-fast smoke
+gate and dual-GPU inference services. There is no complete live efficacy result yet.** The original test stopped on an executor-wiring error. Three primary-arm
 attempts reached the 300-second warmup; none ran a post-warmup physics step or
 completed an episode. A durable STOP was written immediately when the abnormal
 close was detected. All owned v1 local and remote services exited before the restart.
@@ -144,6 +144,13 @@ gate evidence are retained in `wmplan/`.
 <!-- WMPLAN-PROGRESS:END -->
 
 ## V2 continuation and receipts
+- The receipt-only local continuation is PID34272, with its owned gpuR relay
+  PID17368; both identities were checked after launch. Its initial progress/claim
+  was committed as `2f6a011b`. It polls gates every60s and records routine progress
+  every30min; it cannot dispatch a duplicate episode.
+- At the first continuation check the smoke had passed the repaired executor
+  boundary and completed all four H120 branches for its t300 O1 group. The smoke
+  episode itself was still awaiting later WM forecasts; strict had not started.
 - `wmplan/restart_v2/FINAL_FREEZE.json` records the exact pre-dispatch shared
   registration line and source/budget binding; `DISPATCH.json` and
   `GPU_R_READY.json` identify owned services. Original `wmplan/FAULT_RECEIPTS.json`
