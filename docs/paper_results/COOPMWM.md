@@ -1,6 +1,11 @@
 # S-COOPMWM — live checks
 
 ## MAIN05:08 nonblocking admission — repaired release live
+- Latest05:40:54UTC+8 snapshot:20/24 B episodes closed; the four admitted searches
+  are still running, with747.8–750.3s waits. Fresh-release completed searches,
+  executed starts and exact grades were all0 at the preceding05:39:12 poll.
+  Search-time observations are censored, so no completed-search rate or u1 ETA
+  is claimed. Per-episode receipt: `coopmwm/EPISODE_PROGRESS_1793569254.json`.
 - Observation restored: local41116 is **observe/publish only**; telemetry28752
   replaces only its receipt-owned predecessor after PID/creation/command checks.
   Six publication/observer tests and four telemetry tests pass. Restart rates
