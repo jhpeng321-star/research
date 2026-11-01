@@ -21,3 +21,14 @@ Historical wall success is not autonomous feedback or unseen-world success. Keep
 incomplete initialization lineage, negative qualification and partial switching.
 
 Subsequent delivery steps and checks will be appended here.
+
+## Fresh-session continuation — latest owner addendum
+
+Read clean Git status, recent commits and this receipt before continuing. HEAD
+`eeffffea` contains the source-review receipt only; no manuscript or build was
+present. Revisited the current REFRESH/NIGHT_SOURCE_REVIEW, OUTLINE, CLAIMS,
+THREATS, RELATED_WORK, FIGURES, verified bibliography and final WMPHYS report.
+MiKTeX again resolves IEEEtran.cls. The latest prose-first instruction supersedes
+the numerical-results/figure insertion request: keep experiment outcomes and
+graphs empty, use abstract RESULT placeholders, and provide qualitative setup.
+No experiment, observer, remote dispatch or scientific continuation was started.
