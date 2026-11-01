@@ -1,5 +1,19 @@
 # S-COOPMWM — live checks
 
+## 21:00 — full-population batch qualification complete on both GPUs
+- Original probe3 completed once: K4/H120width34 and K8/H300width10 single-vs-batch
+  parity **0.0veh-s on both GPUs**, including nonzero nongroup/afterplan residuals.
+- Same96candidate/3iteration/488future medium search now takes gpuA424.835s,
+  **8.4739plans/hour,4135.26imagined futures/hour**; gpuR439.479s,
+  **8.1915plans/hour,3997.46imagined futures/hour**. Peak allocation13.666GB each.
+- Aggregate16.6654plans/hour is a single-wide-worker measurement, not executed
+  plan throughput. Registered fixed4 multiworker scaling is running on both hosts;
+  its measured best concurrency will determine service sizing. Search unchanged.
+- Existing smoke/charges are preserved. The bounded viability observer38380 polls
+  every30s and will publish each qualification/check, adopt the original smoke,
+  bind/release the registered restart once, and stop after the four-update package.
+  Old superseded observer1116 was identity-verified and stopped before replacement.
+
 ## 20:57 — OWNER20:35 viability registration; CPU76 PASS
 - Preserved all recovered code, checkpoints, jobs and charges. CPU33 74PASS and
   final **CPU34 76PASS/zero skips/2.25s/zero SUMO** qualify the new source snapshot.
