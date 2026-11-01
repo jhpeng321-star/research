@@ -1,5 +1,27 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+LIVE07:39:18UTC+8/unix1793576358: A48/B1/R1; R-u1completedafterfairbroker,
+B-u2at20/24closed/fouropen. No activeSTOP/pause at1793576017; originalB/R,
+grader andfourGPUownerscontinue. Fairbroker3706352/start58959212 isCURRENT;
+olderstatushelpersstillshowQUOTAbroker3514272 exited, notacurrentfault.
+PHYSICALNULLREPORTER3746050/start59055744 LIVE/S/noerrors, source nullreport1,
+amendmentae657cfe,9CPU/PASS. ReplacesONLYoldreporter3357311 (verifiedterminated).
+AllB9grades/8worlds mean275.2106 CI[-44.2595,705.3209]; NOgeneralviabilityclaim.
+Bu2nulls3/6exactgraded; ALLthree(world986002t380,986051/986070t300)centre,
+predictedvsownEXACT0,vsMAPPO113.161/164.137/26.225. Entire420stapeschecked.
+OriginalobserverwillpublishnewB_EXACT_VIABILITY_a4449fdb...report; neverduplicate.
+COMMANDMIRROR: commandcpu3 48CPU/PASS0skips5.67s. Optional final_chain=False
+prototype implements1sdirect_target/slowDown, defaultDISABLED. ActualWMcallback
+CPUreplay(old/prototype)hasEXACTplan-v-ownidentitybothnulls; absoluteSUMOtransition
+errors0.208864/.055090m/s due1sobservablebackgroundreplayremainunchanged. NOTa
+fulltrajectory/GPUparitypass; doNOTactivate/mislabelqualified. MAINcentralnotified.
+Furthernumericalactivationneeds realhalfstepobservableparityandGPUgates; original
+nullpredictionpremise iscontrastconfusion, notdemonstratedmissingcap. Scientific
+acceptancerule(meanpositivevsMAPPOonly)unchanged; OWNER/MAINscopequestionrecorded.
+No newSUMO/GPUinferences dispatched thissession; CPUonlycallbackprobe0.713s onAhost.
+Allocation7495040/7500000/free4960; charge3336950. GPUdeadline18:07:02UTC+8still
+original; registeredresourcecontinuationneededbeforeit. Depthdiagnosticdeferred.
+
 MAIN0718 RESUMED at9bb94362; full296linebrief read. Original A48/B1/R0,
 B3551873/R3551874/grader3427015 adopted/noSTOP. Recoveredfairness CPUqualified/
 registered0c36d106, committeddeaa5c47 andDEPLOYEDbroker3706352/start58959212,

@@ -38,12 +38,21 @@ def deploy():
     config=dict(source_root=SOURCE,source_hashes=q['source_hashes'],qualification=q,
         rule='all qualified same-B/seed TRAIN exact grades retained; inspect every exact-zero observable original/without-plan window; count identical whole-road sensed motion/rewards by update; distinguish saving_vs_policy from whole-road saving_vs_MAPPO',
         training_changes=False,new_sumo_sim_s=0,WM_calls=0,original_deadline_retained=True)
-    p=ops.EVIDENCE/'PHYSICAL_NULL_REPORT_AMENDMENT.json';write(p,config);h=sha(p);config['amendment_sha256']=h
+    p=ops.EVIDENCE/'PHYSICAL_NULL_REPORT_AMENDMENT.json'
+    if p.exists():assert read(p)==config,'adopt identical registered report configuration'
+    else:write(p,config)
+    h=sha(p);config['amendment_sha256']=h
     line='\nS-COOPMWM MAIN0718 PHYSICAL-NULL REPORTER REGISTERED amendmentSHA'+h+': CPU9PASS/zeroSUMO/inference; report only, all exact zeros/losses retained, inspect exact-zero original/without-plan sensed tapes with complete window/clock/receipt checks, per-update null counts and both WM contrasts; no learning/trust/library/quota/search/filter change. Replace only receipt-owned reporter3357311 after PID/start/boot/cmd verification; original learning/search/grader/observers and deadline retained. Existing publisher collects immutable B_EXACT_VIABILITY reports.\n'
-    with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+    registry=checked(REGISTRY)
+    if h not in registry.read_text(encoding='utf-8'):
+        with registry.open('a',encoding='utf-8') as f:f.write(line)
     out=ops.ssh.remote('cpuQ',f'''import pathlib,json,sys,os,subprocess,time,hashlib
 r=pathlib.Path({ROOT!r});s=pathlib.Path({SOURCE!r});sys.path.insert(0,str(s/'pytools'))
 from tools.coopmwm.warm_spool import immutable
+# The older reporter snapshot predates quota_transition. Use only the already
+# qualified CPU4 ownership helper; the reporting modules stay in their snapshot.
+import tools.coopmwm
+tools.coopmwm.__path__.append('/home/ubuntu/coopmwm20261102_quotacpu4/pytools/tools/coopmwm')
 from tools.coopmwm.quota_transition import terminate
 assert not (r/'PHYSICAL_NULL_REPORT_DISPATCH.json').exists(),'adopt existing reporter'
 c=json.loads({json.dumps(config)!r})
@@ -71,7 +80,7 @@ assert not stat or stat[21]==d['start_ticks']
 reports=[]
 for p in r.glob('B_EXACT_VIABILITY_*.json'):
  v=json.loads(p.read_text());e=v.get('exact_plan_evidence',{{}})
- if 'physical_nulls_by_update' in e:reports.append(dict(name=p.name,unix=v['timestamp_utc'],overall=e['overall'],nulls=e['physical_nulls_by_update']))
+ if 'physical_nulls_by_update' in e:reports.append(dict(name=p.name,unix=v['timestamp_utc'],overall=e['overall'],nulls=e['physical_nulls_by_update'],zero_plans=[{{k:row.get(k) for k in ('grade_id','update','world','plan_origin','predicted_saving_vs_policy','predicted_saving_vs_MAPPO','null_classification')}} for row in e['rows'] if row['exact_saving']==0]))
 print(json.dumps(dict(unix=time.time(),owner=d,state=stat[2] if stat else 'exited',reports=sorted(reports,key=lambda v:v['unix']),log=(r/'PHYSICAL_NULL_REPORT.log').read_text()[-3000:],new_sumo_sim_s=0)))''',timeout=45)
     v=json.loads(out);write(ops.EVIDENCE/f'PHYSICAL_NULL_REPORT_STATUS_{int(v["unix"])}.json',v);print(out)
 

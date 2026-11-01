@@ -1,14 +1,31 @@
 # S-COOPMWM — live checks
 
 ## MAIN07:18 clarification and command-chain audit
+- **R-u1 completed** after the centre-fairness repair. A48/B1/R1 at
+  unix1793576017; B-u2 has20/24 closed episodes and four still collecting.
+  Original B/R and grader owners continue with no active STOP or health pause.
+- **Per-update physical-null census is live** under report-only owner3746050/
+  start59055744, immutable `nullreport1`, amendment `ae657cfe…`, **9 CPU tests
+  PASS/zero skips/zero SUMO**. Only the old receipt-owned evidence reporter was
+  replaced; it never changes training, exact grades, trust or library inputs.
+  Initial report is `warm_live/B_EXACT_VIABILITY_a4449fdbeb2d139a7389dd860a754e6bc074192b912825009c097b0cf9b5384e.json`.
+- At unix1793576283: **9 qualified B grades across8 TRAIN worlds**, mean
+  **+275.2106veh-s**, whole-world95% CI **[−44.2595,+705.3209]**. Four positive
+  grades; the interval includes zero. **No general viability conclusion.**
+- B-u1:0/3 physical nulls; B-u2: **3/6 exact-graded plans are confirmed physical
+  nulls**. All three exact-zero tapes were checked over their complete420s
+  windows; identical sensed rosters/motion/rewards. The newly checked third case
+  is world986002/t380, also `origin=centre`, predicted versus own-policy **0.0**,
+  versus MAPPO **+113.1611veh-s**. Counts use graded plans as denominator; pending
+  plans are not imputed. All zeros/losses remain in the exact evidence.
 - Post-safety mirror prototype: **48 CPU tests PASS/zero skips/zero SUMO** in
   immutable `commandcpu3`, including exact float64 agreement with the real
   `CommandOwnership` writer on the four named members and speed-bound/stop
   fixtures. It mirrors one-second `direct_target` and `slowDown` interpolation
   before the inherited half-step speedMode27 cap. **Default remains disabled.**
 - CPU replay of the **actual frozen WM CAV callback** on both named observable
-  tapes gives **identical plan-versus-own-policy member motion on all12 half-step
-  callbacks**, for both original and prototype chains. This independently
+  tapes gives **identical plan-versus-own-policy member motion on every active
+  half-step callback**, for both original and prototype chains. This independently
   corroborates the already-zero WM own-policy contrast. No GPU process changed.
   The tapes contain only integer-second neighbours: the interpolation-based
   check has absolute speed residuals up to0.208864/0.055090m/s against SUMO,
