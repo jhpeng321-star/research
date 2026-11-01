@@ -5,6 +5,7 @@ import numpy as np
 import torch
 from pathlib import Path
 import tempfile
+from unittest.mock import patch
 from tools.coopnative.test_cpu import rows
 from .acceleration import Policy, Controller, requests, encode, PHI
 from .plans import acceleration_at, validate, thompson, population
@@ -13,9 +14,41 @@ from .plan_wm import profile_table, profile_apply
 
 class AccelerationCPU(unittest.TestCase):
     def test_acceleration_modules_import_and_long_credit(self):
-        from . import accel_runner,accel_plant,plan_bridge,plan_service,plan_client
+        from . import accel_runner,accel_plant,plan_bridge,plan_service,plan_client,accel_deploy
         from .accel_learner import GAMMA,LAMBDA
         self.assertGreaterEqual(-1/np.log(GAMMA*LAMBDA),300.)
+
+    def test_one_second_episode_orchestration_and_sumo_only_reward(self):
+        from .accel_plant import episode
+        class Backend:
+            def __init__(self,*args):
+                self.actual=300;self.totals=dict(team_delay_vs=0.,collisions=0.,teleports=0.,ttc_below_3_vs=0.,hard_brake=0.)
+            def fingerprint(self):return dict(clock=self.actual)
+            def close(self):pass
+        def tick(b,controller,trace):
+            controller.apply(rows(),{r['vid']:0. for r in rows() if r['is_cav']},b.actual)
+            b.actual+=1;b.totals['team_delay_vs']+=7.
+            return []
+        from .accel_protocol import worlds
+        with tempfile.TemporaryDirectory() as tmp,patch('tools.leverprobe.backend.setup'),patch('tools.leverprobe.backend.Backend',Backend),patch('tools.coopfree.backend.tick',tick),patch('tools.coopmwm.accel_plant.install_seed_scope'),patch('tools.coopmwm.accel_plant.guard'):
+            e=episode(dict(path=tmp,id='fixture',sim_s=1200,runtime='',checkpoint='',world=worlds()[0],role='train',
+                weights=Policy().state_dict(),noise_seed=1,deterministic=True,arm='A'))
+            self.assertEqual(len(e['steps']),900)
+            self.assertEqual({s['reward'] for s in e['steps']},{-7.})
+            self.assertEqual(e['metrics']['600']['team_delay_vs'],4200.)
+            self.assertEqual(e['metrics']['900']['team_delay_vs'],6300.)
+            self.assertEqual(e['actual_sim_s'],1200)
+
+    def test_duplicate_cem_profiles_keep_complete_separate_k8_futures(self):
+        from .plans import search,SEARCH
+        seed=dict(id='O1',members=['a','b'],knots=[[0.]*7]*2,duration_s=20,family='O1',origin='inherited')
+        record=dict(rows=[],group=['a','b'],commands={},policy_residuals={})
+        def fake(acts,k,h):
+            self.assertEqual(len({a['id'] for a in acts}),len(acts))
+            return {a['id']:[dict(team_delay=100. if a['id'] in ('policy','MAPPO') else 0.) for _ in range(k)] for a in acts}
+        with patch('tools.coopmwm.plans.family_seeds',return_value=[seed]),patch('tools.coopmwm.plans.population',side_effect=lambda r,g,b,s,n,*args:[dict(seed,id='same') for _ in range(n)]):
+            result=search(record,(-3.,2.6),fake)
+        self.assertTrue(result['accepted']);self.assertEqual(result['candidates_searched'],SEARCH['population']*SEARCH['iterations'])
 
     def test_checkpoint_restores_acceleration_optimizer_and_AR_generator(self):
         from .accel_learner import save,load,update
@@ -98,6 +131,13 @@ class AccelerationCPU(unittest.TestCase):
             dict(id='p',members=['a','b'],knots=[[-1.]*7,[2.]*7],duration_s=20)]
         out=profile_apply(torch.full((3,2),.7),0,profile_table(acts,['a','b'],'cpu'),(-3.,2.6))
         self.assertTrue(torch.allclose(out,torch.tensor([[1.2,.7],[.7,.7],[-1.,2.]])))
+
+    def test_unchanged_cavs_and_postcommit_follow_policy_continuation(self):
+        plan=dict(id='p',members=['a','b'],duration_s=20,knots=[[-1.]*7,[2.]*7],background_residuals={'a':.1,'b':.2,'c':.3})
+        table=profile_table([plan],['a','b','c'],'cpu');raw=torch.full((1,3),.5)
+        self.assertTrue(torch.allclose(profile_apply(raw,0,table,(-3.,2.6)),torch.tensor([[-1.,2.,.8]])))
+        self.assertTrue(torch.allclose(profile_apply(raw,40,table,(-3.,2.6)),torch.tensor([[.6,.7,.8]])))
+        self.assertTrue(torch.allclose(profile_apply(raw,598,table,(-3.,2.6)),torch.tensor([[.6,.7,.8]])))
 
     def test_thompson_uses_same_crn_indices_and_beats_both_comparators(self):
         plans=[dict(id='p',family='O1',origin='sampled')]

@@ -21,7 +21,7 @@ def timestamp():return datetime.now(timezone.utc).isoformat()
 
 
 def verify(root):
-    b=read(root/'BINDING.json')
+    b=read(root/('BINDING_TRAINING.json' if (root/'BINDING_TRAINING.json').exists() else 'BINDING.json'))
     if b['budget']!=budget() or b['search']!=SEARCH:raise ValueError('registered plan/budget mismatch')
     if b['amendment_sha256'] not in (root/'AUTHORITY.md').read_text():raise ValueError('numeric amendment unregistered')
     if not b['cpu']['pass_'] or b['cpu']['skips'] or b['cpu']['sim_s']:raise ValueError('CPU gate')
@@ -167,7 +167,9 @@ def final(root,b,policies):
 
 def run(root,smoke_only=False):
     import fcntl
-    b=verify(root);lock=(root/'SUPERVISOR.claim').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+    b=verify(root)
+    if b.get('smoke_only') and not smoke_only:raise ValueError('smoke-only binding forbids training')
+    lock=(root/'SUPERVISOR.claim').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     os.nice(max(0,19-os.getpriority(os.PRIO_PROCESS,0)));torch.set_num_threads(1)
     os.environ.update(CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
     try:

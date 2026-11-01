@@ -23,9 +23,14 @@ def guide(job,generator):
         traffic=regime(rows);selected_ticket=None
         if quota is None:
             # Queue occupancy is infrastructure-only, never predicted/SUMO gain.
-            pending=sum(not (root/'responses'/p.name).exists() for p in (root/'requests').glob('*.json'))
-            workers=read(root/'WORKERS.json')['workers']
-            p=.95 if pending<2*len(workers) else 0.
+            while True:
+                pending=sum(not (root/'responses'/p.name).exists() for p in (root/'requests').glob('*.json'))
+                workers=read(root/'WORKERS.json')['workers']
+                if pending<2*len(workers):break
+                if (root/'STOP.json').exists():raise ValueError('STOP while waiting for GPU slot')
+                if time.time()>job['gpu_deadline']:raise ValueError('registered GPU deadline exceeded')
+                time.sleep(.5)
+            p=.95
         else:
             p=quota['sampling'][traffic]
         queried=float(torch.rand((),generator=generator))<p
@@ -77,6 +82,10 @@ def guide(job,generator):
         return result
     def completed(proposal,executed):
         m=proposal.get('random_match')
-        if m:write(Path(m['path'])/(m['key']+'_END.json'),dict(executed=executed))
+        if m:
+            import fcntl
+            with (Path(m['path'])/'MATCH.claim').open('a') as lock:
+                fcntl.flock(lock,fcntl.LOCK_EX)
+                write(Path(m['path'])/(m['key']+'_END.json'),dict(executed=executed))
     call.completed=completed
     return call

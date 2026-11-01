@@ -85,7 +85,7 @@ def population(record, rng, bounds, seeds, count, mean=None, std=None, durations
 
 
 def baseline_actions(record):
-    return [dict(id='policy', window=60, residuals=record['policy_residuals']),
+    return [dict(id='policy', window=300, residuals=record['policy_residuals']),
             dict(id='MAPPO', window=0, residuals={})]
 
 
@@ -118,6 +118,10 @@ def search(record, bounds, evaluate):
     for iteration in range(SEARCH['iterations']):
         candidates = (seeds if iteration==0 else elites)+population(record,rng,bounds,seeds,
             SEARCH['population']-(len(seeds) if iteration==0 else len(elites)),mean,std,durations)
+        # Empirical CEM variance may legitimately collapse to zero. Distinct
+        # candidate slots still need distinct IDs; never concatenate K draws
+        # under a duplicate dictionary key or fabricate an exploration floor.
+        candidates=[dict(p,id=f'c{iteration}_{j}_'+p['id']) for j,p in enumerate(candidates)]
         scores = evaluate(bases+candidates,SEARCH['screen_K'],SEARCH['screen_H'])
         ranked = sorted(candidates,key=lambda p:(np.mean([f['team_delay'] for f in scores[p['id']]]),p['id']))
         elites = ranked[:SEARCH['elite']]; pool.extend(candidates); searched += len(candidates)

@@ -11,12 +11,18 @@ from .fused import FusedModel
 
 def profile_table(actions, ids, device):
     """Compile once, avoiding per-step CPU rosters or per-vehicle GPU reads."""
-    raw=torch.zeros((len(actions),60,len(ids)),device=device)
+    raw=torch.zeros((len(actions),300,len(ids)),device=device)
     mask=torch.zeros_like(raw,dtype=torch.bool)
     residual=torch.zeros_like(mask)
     slots={v:i for i,v in enumerate(ids)}
     for b,a in enumerate(actions):
-        for t in range(60):
+        for t in range(300):
+            # All unchanged CAVs retain the SAME own-action continuation; after
+            # commitment the selected group rejoins that continuation as well.
+            background=a.get('background_residuals',{})
+            for v,x in background.items():
+                if v in slots:
+                    raw[b,t,slots[v]]=x;mask[b,t,slots[v]]=True;residual[b,t,slots[v]]=True
             if 'knots' in a:
                 values=acceleration_at(a,t);is_residual=False
             else:
@@ -30,7 +36,7 @@ def profile_table(actions, ids, device):
 def profile_apply(accel,tick,table,bounds):
     raw,mask,residual=table
     t=int(tick*.5)
-    if t>=60:return accel
+    if t>=raw.shape[1]:return accel
     n=raw.shape[-1]
     out=accel.clone()
     request=torch.where(residual[:,t],accel[:,:n]+raw[:,t],raw[:,t])
@@ -74,6 +80,7 @@ def evaluate(rt,record,actions,K,H,chunk_actions=4,trim=True,pad_actions=False):
     with executor_adapter(),plan_executor():
         for start in range(0,len(actions),chunk_actions):
             subset=actions[start:start+chunk_actions]
+            subset=[dict(a,background_residuals=record['policy_residuals']) if 'knots' in a else a for a in subset]
             real_ids=[a['id'] for a in subset]
             if pad_actions:
                 subset=list(subset)
