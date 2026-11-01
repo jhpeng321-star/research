@@ -112,6 +112,7 @@ def run(root,host):
                 actions=ms.comparators(rec,600)
                 actions.append(ms.sample_unscored(group,[[0.]*300]*size,bounds,'ordinary',20261101,duration_s=300))
                 for k,h,width in ((4,120,34),(8,420,10)):
+                    width=manifest.get('batch_width_by_K',{}).get(str(k),width)
                     if k==4 and manifest.get('reuse_parity_root'):
                         prior=Path(manifest['reuse_parity_root']);value=read(prior/'PARITY_K4_H120.json')
                         assert value['pass_'] and value['max_cost_error']==0
@@ -134,7 +135,7 @@ def run(root,host):
             begin=time.monotonic()
             policy,mappo,centre=imagined_centres(rt,rec,native_memory,speed2=True,transfers=True)
             def score(r,actions,k,h):
-                width=34 if k==4 else 10
+                width=manifest.get('batch_width_by_K',{}).get(str(k),34 if k==4 else 10)
                 return evaluate(rt,r,actions,k,h,chunk_actions=width,pad_actions=width,trim=False,
                     speed2=True,transfers=True,memory=native_memory)
             result=ms.search(rec,group,policy,bounds,score,'ordinary',mappo_traj=mappo,seed=20261101)
@@ -168,6 +169,17 @@ def stage(host,tag):
             'adopts completed cold/warmE2 and H120 exact-parity receipts by dependencySHA, reruns failed H420 gate then group4/6 timing; '
             'zero SUMO, all failures retained, no process control/deadline reset.\n')
         with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+    if tag=='warmmppiqual4':
+        binding.update(reuse_E2_root='/root/coopmwm20261102_warmmppiqual1',
+            group_sizes=[6] if host=='gpuA' else [4],memory_fraction=.55 if host=='gpuA' else .80,
+            batch_width_by_K={'4':34 if host=='gpuA' else 18,'8':10},expandable_segments=True)
+        from .protocol import REGISTRY
+        line=('\nS-COOPMWM WARM SEARCH MEMORY QUAL4 REGISTERED '+host+
+            ': qual3 exited during full H300 screen (not H420 gate): GPU R65/80% allocators fragmented/oversized atK4width34. '
+            'Use GPU R K4width18/K8width10,80%,expandable_segments; GPU A retains34/10 and measures6CAV search alongside its idle service at55% '
+            '(49GiB total). Same candidate population/iterations/K/H/WM, allocation-only change; source-bound exact full-fast and startup warm single/batch gates. '
+            'Adopt completed E2 by SHA; no completed search repeated, no SUMO, original deadline unchanged.\n')
+        with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
     ops.stage(host,root,{'QUAL_BINDING.json':json.dumps(binding,sort_keys=True)})
     write(ops.EVIDENCE/f'{tag}_STAGE_{host}.json',binding)
     print(json.dumps(dict(host=host,root=root,files=len(staged['hashes']))))
@@ -182,6 +194,8 @@ assert not (r/'DISPATCH.json').exists() and not (r/'QUAL_STARTED.json').exists()
 env=dict(os.environ,OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',
  PYTHONPATH=str(r/'pytools')+':/root/rbeval20261031/phys_code_22cc32f65a80/src:/root/rbeval20261031/phys_code_22cc32f65a80',
  COOPMWM_COST_SOURCE=str(r/'FROZEN_COSTS.json'))
+binding=json.loads((r/'QUAL_BINDING.json').read_text())
+if binding.get('expandable_segments'):env['PYTORCH_CUDA_ALLOC_CONF']='expandable_segments:True'
 cmd=[{ops.ssh.PYTHON[host]!r},'-B','-u','-m','tools.coopmwm.warm_release_qual','run','--host',{host!r},'--tag',{tag!r}]
 with (r/'QUAL.log').open('x') as log:
  p=subprocess.Popen(cmd,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)

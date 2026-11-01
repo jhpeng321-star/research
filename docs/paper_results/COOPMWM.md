@@ -1,5 +1,18 @@
 # S-COOPMWM — live checks
 
+## Fresh recovery — 2026-11-02 ~01:32 host time
+- A completed update16 and exited at the durable SSH-failure STOP; all288 warm
+  jobs are closed, no pending WM requests, **1405640 sim-s conservatively charged**.
+  B/R have no dispatch. Existing checkpoints, failures, labels and charges retained.
+- Both GPUs are idle; no local warm bridge/observer remains. GPU A's completed
+  group2 timing is reused; its group6 geometry failed. GPU R's qual3 passed H420
+  exact parity, then failed H300 screening memory admission. Recovered qual4 edits
+  had not been staged or dispatched; they remain unqualified engineering work.
+- MAIN01:29 permits bounded retries of SSH connection failures only, with identity
+  and receipt reverification. This repair is pending; original STOP stays durable.
+- Explicit resume cap6000000 versus latest brief6473440/cap6500000 is unresolved.
+  New SUMO dispatch remains gated; inference qualification can proceed without SUMO.
+
 ## Pre-outcome MPPI/R integration corrections — CPU8 qualified
 - **126 CPU tests PASS, zero skips, 10.01s, zero SUMO**. Found and fixed a real
   bookkeeping bug before B/R updates: adding MPPI expanded the type/regime buckets
@@ -999,3 +1012,99 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
 - Receipt: `coopmwm/warm_live/A_VIABILITY_012.json`.
 <!-- warm-receipt:A_VIABILITY_012.json:c6d86d9ca9a568571a6a745cec2327befae4134addc91acc220545984270a8fc -->
+
+## Warm memory diagnostic — 2026-11-01T17:15:47.304839+00:00
+- 2 CAVs, gpuA: **559.567s/query, 6.434plans/hour**, 120 candidates/584 futures; screen `{'H': 300, 'K': 4}`, final `{'H': 300, 'K': 8}`; open-loop centre cost gap -52.302veh-s (future0 centre vs K4 closed-loop comparison).
+- cold E2 query times: `[85.88906374387443, 89.05008675158024]`s.
+- cold H60: D_i sign `{'sign_agreement': 0.5, 'n': 2, 'ties': 2, 'ci95': [0.0, 1.0], 'wilson_ci95': [0.09453120573423074, 0.9054687942657693]}`; C_G sign `{'sign_agreement': None, 'n': 0, 'ties': 2, 'ci95': [0.0, 0.0], 'wilson_ci95': [0.0, 1.0]}`.
+- cold H120: D_i sign `{'sign_agreement': 0.0, 'n': 2, 'ties': 2, 'ci95': [0.0, 0.0], 'wilson_ci95': [0.0, 0.6576197724933469]}`; C_G sign `{'sign_agreement': None, 'n': 0, 'ties': 2, 'ci95': [0.0, 0.0], 'wilson_ci95': [0.0, 1.0]}`.
+- cold H300: D_i sign `{'sign_agreement': 0.5, 'n': 2, 'ties': 2, 'ci95': [0.0, 1.0], 'wilson_ci95': [0.09453120573423074, 0.9054687942657693]}`; C_G sign `{'sign_agreement': None, 'n': 0, 'ties': 2, 'ci95': [0.0, 0.0], 'wilson_ci95': [0.0, 1.0]}`.
+- cold H600: D_i sign `{'sign_agreement': 0.5, 'n': 2, 'ties': 2, 'ci95': [0.0, 1.0], 'wilson_ci95': [0.09453120573423074, 0.9054687942657693]}`; C_G sign `{'sign_agreement': None, 'n': 0, 'ties': 2, 'ci95': [0.0, 0.0], 'wilson_ci95': [0.0, 1.0]}`.
+- cold exact-labelled chosen-action savings: `[{'world': 986000, 'horizons': {'120': {'chosen': 'joint', 'exact_labelled_saving': -4.001776687800884e-11, 'predicted_saving': 4.868022978305817}, '300': {'chosen': 'joint', 'exact_labelled_saving': 6.548361852765083e-11, 'predicted_saving': 5.789575934410095}, '60': {'chosen': 'joint', 'exact_labelled_saving': -3.992681740783155e-09, 'predicted_saving': 1.8523305654525757}, '600': {'chosen': 'joint', 'exact_labelled_saving': 6.548361852765083e-11, 'predicted_saving': 86.09206318855286}}}, {'world': 986007, 'horizons': {'120': {'chosen': 'all', 'exact_labelled_saving': 0.0, 'predicted_saving': 0.0}, '300': {'chosen': 'all', 'exact_labelled_saving': 0.0, 'predicted_saving': 0.0}, '60': {'chosen': 'all', 'exact_labelled_saving': 0.0, 'predicted_saving': 0.0}, '600': {'chosen': 'all', 'exact_labelled_saving': 0.0, 'predicted_saving': 0.0}}}]`.
+- warm E2 query times: `[86.10405902191997, 84.69402858614922]`s.
+- warm H60: D_i sign `{'sign_agreement': 0.5, 'n': 2, 'ties': 2, 'ci95': [0.0, 1.0], 'wilson_ci95': [0.09453120573423074, 0.9054687942657693]}`; C_G sign `{'sign_agreement': None, 'n': 0, 'ties': 2, 'ci95': [0.0, 0.0], 'wilson_ci95': [0.0, 1.0]}`.
+- warm H120: D_i sign `{'sign_agreement': 1.0, 'n': 2, 'ties': 2, 'ci95': [1.0, 1.0], 'wilson_ci95': [0.34238022750665303, 1.0]}`; C_G sign `{'sign_agreement': None, 'n': 0, 'ties': 2, 'ci95': [0.0, 0.0], 'wilson_ci95': [0.0, 1.0]}`.
+- warm H300: D_i sign `{'sign_agreement': 0.5, 'n': 2, 'ties': 2, 'ci95': [0.0, 1.0], 'wilson_ci95': [0.09453120573423074, 0.9054687942657693]}`; C_G sign `{'sign_agreement': None, 'n': 0, 'ties': 2, 'ci95': [0.0, 0.0], 'wilson_ci95': [0.0, 1.0]}`.
+- warm H600: D_i sign `{'sign_agreement': 0.5, 'n': 2, 'ties': 2, 'ci95': [0.0, 1.0], 'wilson_ci95': [0.09453120573423074, 0.9054687942657693]}`; C_G sign `{'sign_agreement': None, 'n': 0, 'ties': 2, 'ci95': [0.0, 0.0], 'wilson_ci95': [0.0, 1.0]}`.
+- warm exact-labelled chosen-action savings: `[{'world': 986000, 'horizons': {'120': {'chosen': 'all', 'exact_labelled_saving': 0.0, 'predicted_saving': 0.0}, '300': {'chosen': 'all', 'exact_labelled_saving': 0.0, 'predicted_saving': 0.0}, '60': {'chosen': 'all', 'exact_labelled_saving': 0.0, 'predicted_saving': 0.0}, '600': {'chosen': 'all', 'exact_labelled_saving': 0.0, 'predicted_saving': 0.0}}}, {'world': 986007, 'horizons': {'120': {'chosen': 'joint', 'exact_labelled_saving': -0.07634644157951698, 'predicted_saving': 1.1913661062717438}, '300': {'chosen': 'joint', 'exact_labelled_saving': 1698.600333714603, 'predicted_saving': 1.368777722120285}, '60': {'chosen': 'joint', 'exact_labelled_saving': 0.11916434977320023, 'predicted_saving': 0.5568383932113647}, '600': {'chosen': 'joint', 'exact_labelled_saving': 5723.486351683328, 'predicted_saving': 1.3687926232814789}}}]`.
+- two registered near-parity set-point windows, not novel MPPI plan labels; ties separate, two-world CIs uninformative; no established warm decision-quality improvement. All original exact SUMO labels reused; qualification adds0SUMO.
+- Immutable complete receipt: `coopmwm/WARM_MEMORY_DIAGNOSTIC_1ebc1e2bcdb28522.json`.
+
+## Warm live publication — 2026-11-01T17:29:19.610782+00:00
+- Conservatively charged 1405640/6500000 sim-s.
+
+### Warm continuation — A_CHECK_012.json
+- A_minus_MAPPO: J600 Δ=-11.643 [-1397.644,1337.034] veh-s; delay reduction 0.023%; J900 Δ=847.227 [-1205.672,2963.049] veh-s; delay reduction -0.934%. Negative Δ is better; 95% whole-world bootstrap.
+- Reporting-only check, never checkpoint selection. Full safety/per-cell results in the linked immutable receipt.
+- Receipt: `coopmwm/warm_live/A_CHECK_012.json`.
+<!-- warm-receipt:A_CHECK_012.json:52d09325ea3147d53eaf57e69bc272b8731f0af16f0491d36f8d9f7d9d8ec36b -->
+
+### Warm continuation — A_CHECK_016.json
+- A_minus_MAPPO: J600 Δ=-416.815 [-1811.617,918.673] veh-s; delay reduction 0.822%; J900 Δ=-417.853 [-2879.691,1910.328] veh-s; delay reduction 0.461%. Negative Δ is better; 95% whole-world bootstrap.
+- Reporting-only check, never checkpoint selection. Full safety/per-cell results in the linked immutable receipt.
+- Receipt: `coopmwm/warm_live/A_CHECK_016.json`.
+<!-- warm-receipt:A_CHECK_016.json:365cf59c3c1d444837024b8d8577df9b4a302025a78c9ad9d8cc5c2bcea9bda8 -->
+
+### Warm continuation — A_DEV_016.json
+- A_minus_MAPPO: J600 Δ=53.955 [-622.870,744.081] veh-s; delay reduction -0.0974%; J900 Δ=804.504 [-533.098,2296.395] veh-s; delay reduction -0.819%. Negative Δ is better; 95% whole-world bootstrap.
+- Reporting-only check, never checkpoint selection. Full safety/per-cell results in the linked immutable receipt.
+- Receipt: `coopmwm/warm_live/A_DEV_016.json`.
+<!-- warm-receipt:A_DEV_016.json:c4ea062098cb65d11b2a485b0998f4f56be9435203f52d2fd64dc06875faa047 -->
+
+### Warm continuation — A_UPDATE_013.json
+- A u13: queries/accepted/executed 0/0/0; wall 255.2s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_013.json`.
+<!-- warm-receipt:A_UPDATE_013.json:784fa7060ed4a902f0232359099b865b5a59ae7c242bcba78324295f7c3e00f6 -->
+
+### Warm continuation — A_UPDATE_014.json
+- A u14: queries/accepted/executed 0/0/0; wall 249.4s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_014.json`.
+<!-- warm-receipt:A_UPDATE_014.json:ea13d124960eb7322c2402f767a59b105d5595982b0ce3e4aba028507a7b5f36 -->
+
+### Warm continuation — A_UPDATE_015.json
+- A u15: queries/accepted/executed 0/0/0; wall 254.2s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_015.json`.
+<!-- warm-receipt:A_UPDATE_015.json:4f35c675667539f2158118919a8d9400e76c04c5e6922e3ccb04397b0e0b72e4 -->
+
+### Warm continuation — A_UPDATE_016.json
+- A u16: queries/accepted/executed 0/0/0; wall 249.3s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_016.json`.
+<!-- warm-receipt:A_UPDATE_016.json:237a19c2da948a35738bff9afe3e486d0d3d13f6203b53dd45d19a191b0bfb64 -->
+
+### Warm continuation — A_VIABILITY_013.json
+- A u13: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_013.json`.
+<!-- warm-receipt:A_VIABILITY_013.json:acb908a340073e082f80a223a0fbbef206c257a6538e7bcd6acd3829386206e4 -->
+
+### Warm continuation — A_VIABILITY_014.json
+- A u14: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_014.json`.
+<!-- warm-receipt:A_VIABILITY_014.json:6268dcdb5dd3688522f804c5043f808ea616c609f6dce07d9d3fe43d92fb1b3f -->
+
+### Warm continuation — A_VIABILITY_015.json
+- A u15: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_015.json`.
+<!-- warm-receipt:A_VIABILITY_015.json:ddb34bf89c60c3630f382da5bda8436b3f3bae32c3849c6e7f64d4f860e09967 -->
+
+### Warm continuation — A_VIABILITY_016.json
+- A u16: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_016.json`.
+<!-- warm-receipt:A_VIABILITY_016.json:d623d8870effff5ee581e902166b9907616117327d94a1244f26d359a21c8cec -->
+
+### Warm continuation — STOP.json
+- `{"error": "Connection closed by 1.15.42.207 port 22\n", "source": "owned warm bridge; no automatic retry"}`
+- Receipt: `coopmwm/warm_live/STOP.json`.
+<!-- warm-receipt:STOP.json:a9d41ffc12f5fb372065076f27f18401645865453a3a71678d6ef794419492b0 -->
+
+### Warm continuation — WARM_A_FAILED.json
+- `{"error": "ValueError('durable warm STOP before next wave')", "timestamp_utc": "2026-11-01T17:22:37.917523+00:00"}`
+- Receipt: `coopmwm/warm_live/WARM_A_FAILED.json`.
+<!-- warm-receipt:WARM_A_FAILED.json:6b5d32e58c957eaac717b3af8662087d3027ae48f71271ee3fb5f9e72cf21e8d -->

@@ -6,6 +6,9 @@ from .storage import read,write
 
 
 def main(root):
+    import os
+    binding=read(root/'GPU_BINDING.json')
+    if binding.get('expandable_segments'):os.environ['PYTORCH_CUDA_ALLOC_CONF']='expandable_segments:True'
     import torch
     from tools.wmteach import runtime
     from .plan_service import configured_runtime,batch_width,main as serve
@@ -13,7 +16,6 @@ def main(root):
     from .plan_wm import evaluate
     from .speed2_memory import native_fixture
     from .mppi_search import group_components,sample_unscored,comparators
-    binding=read(root/'GPU_BINDING.json')
     rt=configured_runtime(runtime.bootstrap,binding.get('memory_fraction',.65))
     original=rt.frozen.costs
     try:

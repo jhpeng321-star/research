@@ -53,13 +53,17 @@ print(json.dumps(v))''',timeout=45))
     print(json.dumps(dict(created=len(value['created']),preserved=len(value['preserved']),ram_free=value['ram_free'],disk_free=value['disk_free'])))
 
 
-def backup(arm,update):
+def backup(arm,update,phase='train'):
     """Copies completed allowed artifacts only, without deleting RAM or disk data."""
-    dest=ops.EVIDENCE/f'WARM_BACKUP_{arm}_{update:03}.json';assert not dest.exists()
+    assert phase in ('train','check','dev')
+    suffix='' if phase=='train' else phase.upper()+'_'
+    dest=ops.EVIDENCE/f'WARM_BACKUP_{arm}_{suffix}{update:03}.json';assert not dest.exists()
+    pattern=f'warm_u{update:03}_{arm}_*' if phase=='train' else f'warm{phase}{update:03}_{arm}_{arm}_*'
+    archive=f'{arm}_u{update:03}.tar' if phase=='train' else f'{arm}_{phase}_{update:03}.tar'
     source=f'''import pathlib,subprocess,hashlib,json,sys
 r=pathlib.Path({ROOT!r});ram=pathlib.Path({RAM!r});assert r.is_dir() and ram.is_dir()
 names=[]
-for p in (r/'jobs').glob({f'warm_u{update:03}_{arm}_*'!r}):
+for p in (r/'jobs').glob({pattern!r}):
  if not p.is_symlink():continue
  assert p.resolve().parent==ram
  assert (p/'CLOSE.json').is_file() and (p/'RESULT.json').is_file()
@@ -76,7 +80,7 @@ print(json.dumps(dict(sha256=h.hexdigest(),bytes=n,files=len(names))),file=sys.s
     destination=f'''import pathlib,sys,hashlib,json,shutil
 parent=pathlib.Path('/root/autodl-tmp');assert parent.is_dir() and shutil.disk_usage(parent).free>2*1024**3
 d=parent/'coopmwm20261102_warm_receipts';d.mkdir(exist_ok=True)
-p=d/{f'{arm}_u{update:03}.tar'!r};assert not p.exists();h=hashlib.sha256();n=0
+p=d/{archive!r};assert not p.exists();h=hashlib.sha256();n=0
 with p.open('xb') as f:
  for b in iter(lambda:sys.stdin.buffer.read(1024*1024),b''):f.write(b);h.update(b);n+=len(b)
 h2=hashlib.sha256()
@@ -94,9 +98,9 @@ print(json.dumps(dict(path=str(p),sha256=h2.hexdigest(),bytes=n)))'''
     src=json.loads(aerr.decode().strip().splitlines()[-1]);dst=json.loads(out.decode().strip().splitlines()[-1])
     assert src['sha256']==dst['sha256'] and src['bytes']==dst['bytes']
     write(dest,dict(unix=time.time(),source=src,destination=dst,verified=True,deleted=False,new_sumo_sim_s=0))
-    print(json.dumps(dict(arm=arm,update=update,bytes=src['bytes'],sha256=src['sha256'],verified=True)))
+    print(json.dumps(dict(arm=arm,update=update,phase=phase,bytes=src['bytes'],sha256=src['sha256'],verified=True)))
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('prepare','backup'));p.add_argument('--arm',choices=('A','B','R'));p.add_argument('--update',type=int)
-    a=p.parse_args();prepare() if a.mode=='prepare' else backup(a.arm,a.update)
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('prepare','backup'));p.add_argument('--arm',choices=('A','B','R'));p.add_argument('--update',type=int);p.add_argument('--phase',choices=('train','check','dev'),default='train')
+    a=p.parse_args();prepare() if a.mode=='prepare' else backup(a.arm,a.update,a.phase)

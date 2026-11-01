@@ -1,4 +1,18 @@
-# S-COOPMWM live continuation — OWNER22:08 WARM MEMORY HOLD
+# S-COOPMWM live continuation — infrastructure recovery / explicit cap gate
+
+FRESH RECOVERY 2026-11-02 ~01:32: full208-line brief read through MAIN01:29;
+HEAD39e3ac3a and all recovered edits retained. A owner2767879 has exited after
+u16; all288 warm jobs closed, no pending requests, charge1405640. B/R have no
+dispatch. Original STOP is the cpuQ SSH connection closure, preserved verbatim.
+No local warm Python/SSH process; both GPUs nvidia-smi idle. GPU A qual1 exited
+on the known group6 fixture failure after completed group2 timing; GPU R qual3
+exited OOM in H300 screening after H420 exact parity. The recovered qual4 memory
+repair is LOCAL ONLY: collect currently targets absent roots; do not assume staged
+or running. Existing service startup receipts survive but the worker is no longer
+live. No duplicate qualifier/service/physics launched during recovery.
+Explicit resume cap6000000 conflicts with latest brief allocation6473440/cap6500000;
+inference engineering may continue, but new SUMO dispatch is gated on resolution.
+MAIN01:29 transport-only bounded retry amendment still needs implementation/tests.
 
 LATEST ENGINEERING: B/R MUST launch immutable CPU8, not CPU6 or CPU7. New
 WARM_BR_CPU8_REGISTRATION and per-arm WARM_{B,R}_RUNTIME_BINDING_V2 source

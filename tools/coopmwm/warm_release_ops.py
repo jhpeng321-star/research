@@ -14,15 +14,18 @@ from .warm_bridge import GPU_ROOT
 
 def collect():
     combined={}
-    for host,tag in (('gpuA','warmmppiqual1'),('gpuR','warmmppiqual3')):
+    for host,tag in (('gpuA','warmmppiqual4'),('gpuR','warmmppiqual4')):
         root='/root/coopmwm20261102_'+tag
         value=json.loads(ops.ssh.remote(host,f'''import pathlib,json,time
 r=pathlib.Path({root!r});assert r.is_dir()
 names=['CAUSAL_MEMORY.json','E2_COLD.json','E2_WARM.json','PARITY_K4_H120.json','PARITY_K8_H420.json','EMPTY_COLD_PARITY.json','SEARCH_GROUP2.json','SEARCH_GROUP4.json','SEARCH_GROUP6.json','FAILED.json','COMPLETE.json']
 d=json.loads((r/'DISPATCH.json').read_text());p=pathlib.Path('/proc')/str(d['pid']);s=(p/'stat').read_text().split() if (p/'stat').exists() else None
 assert not s or s[21]==d['start_ticks']
-print(json.dumps(dict(root=str(r),unix=time.time(),state=s[2] if s else 'exited',
- receipts={{n:json.loads((r/n).read_text()) for n in names if (r/n).exists()}})))''',timeout=35))
+receipts={{n:json.loads((r/n).read_text()) for n in names if (r/n).exists()}}
+if {host!r}=='gpuA':
+ prior=pathlib.Path('/root/coopmwm20261102_warmmppiqual1')
+ receipts['SEARCH_GROUP2.json']=json.loads((prior/'SEARCH_GROUP2.json').read_text())
+print(json.dumps(dict(root=str(r),unix=time.time(),state=s[2] if s else 'exited',receipts=receipts)))''',timeout=35))
         combined[host]=value
     from .protocol import digest
     target=ops.EVIDENCE/('WARM_RELEASE_STATE_'+digest({h:v['receipts'] for h,v in combined.items()})[:16]+'.json')
@@ -57,7 +60,7 @@ print(json.dumps(out))''',timeout=35))
     dependencies += ['pytools/tools/coopmwm/'+n+'.py' for n in ('wm','plan_wm','speed2_runtime','speed2_transfers',
         'mppi_search','mppi_runtime','policy_wm','warm_runtime','speed2_memory','fused','plans')]
     audit=json.loads(ops.ssh.remote(host,f'''import pathlib,json,hashlib
-r=pathlib.Path({root!r});prior=pathlib.Path('/root/coopmwm20261102_warmmppiqual3' if {host!r}=='gpuR' else '/root/coopmwm20261102_warmmppiqual1')
+r=pathlib.Path({root!r});prior=pathlib.Path('/root/coopmwm20261102_warmmppiqual4')
 names=json.loads({json.dumps(dependencies)!r});matches={{}}
 for name in names:
  a=r/name;b=prior/name
@@ -73,7 +76,8 @@ print(json.dumps(dict(pass_=True,matches=matches,new_sumo_sim_s=0)))''',timeout=
     b=read(ops.EVIDENCE/'WARM_A48_BINDING.json')
     binding=dict(hashes=staged['hashes'],qualification=dict(pass_=True,receipt=data['receipts']['PARITY_K8_H420.json'],audit=audit),
         deadline_unix=b['gpu_deadline'],memory_fraction=.80 if host=='gpuR' else .65,memory_mode='warm',startup_qualification=True,
-        speed2=True,speed2_transfers=True,batch_width_by_K={'4':34,'8':10},search_config=mppi_search.REGISTERED)
+        speed2=True,speed2_transfers=True,batch_width_by_K={'4':18 if host=='gpuR' else 34,'8':10},
+        expandable_segments=host=='gpuR',search_config=mppi_search.REGISTERED)
     ops.stage(host,root,{'GPU_BINDING.json':json.dumps(binding,sort_keys=True)})
     write(dest,dict(root=root,binding=binding,audit=audit,host=host,new_sumo_sim_s=0))
     print(json.dumps(dict(host=host,root=root,qualified_dependencies=len(dependencies))))
@@ -113,7 +117,12 @@ r=pathlib.Path({root!r});assert r.is_dir()
 names=['STARTUP_WARM_BATCH_SINGLE_K4_H120.json','STARTUP_WARM_BATCH_SINGLE_K8_H300.json',
  'STARTUP_PARITY_K4_H120.json','STARTUP_PARITY_K8_H300.json',
  'STARTUP_WARM_PARITY_K4_H120.json','STARTUP_WARM_PARITY_K8_H300.json','SERVICE_OWNER.json']
-print(json.dumps(dict(unix=time.time(),receipts={{n:json.loads((r/n).read_text()) for n in names if (r/n).exists()}})))''',timeout=30))
+receipts={{n:json.loads((r/n).read_text()) for n in names if (r/n).exists()}}
+alive=False
+if 'SERVICE_OWNER.json' in receipts:
+ d=receipts['SERVICE_OWNER.json'];p=pathlib.Path('/proc')/str(d['pid']);s=(p/'stat').read_text().split() if (p/'stat').exists() else None
+ alive=bool(s and s[21]==d['start_ticks'] and s[2] in ('R','S','D') and pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id'])
+print(json.dumps(dict(unix=time.time(),receipts=receipts,identity_verified_alive=alive)))''',timeout=30))
     from .protocol import digest
     target=ops.EVIDENCE/f'WARM_WORKER_STATE_{host}_{digest(value["receipts"])[:16]}.json'
     if not target.exists():write(target,value)
@@ -125,11 +134,12 @@ def release():
     from .warm_protocol import budget
     target=ops.EVIDENCE/'WARM_RELEASE_REGISTRATION.json';assert not target.exists()
     data=collect()
+    assert all(v['state'] in ('exited','Z') and v['receipts'].get('COMPLETE.json',{}).get('pass_') for v in data.values())
     assert 'SEARCH_GROUP2.json' in data['gpuA']['receipts']
-    assert all(f'SEARCH_GROUP{n}.json' in data['gpuR']['receipts'] for n in (4,6))
+    assert 'SEARCH_GROUP4.json' in data['gpuR']['receipts'] and 'SEARCH_GROUP6.json' in data['gpuA']['receipts']
     workers={h:worker_status(h) for h in ('gpuA','gpuR')}
     for host,w in workers.items():
-        assert len(w['receipts'])==7 and 'SERVICE_OWNER.json' in w['receipts']
+        assert len(w['receipts'])==7 and w['identity_verified_alive'] and 'SERVICE_OWNER.json' in w['receipts']
         for name,v in w['receipts'].items():
             if name=='SERVICE_OWNER.json':continue
             assert v['pass_'] and v['max_cost_error']==0.,host+name
@@ -151,7 +161,7 @@ def release():
         'R baseline-only same-policy centre and zero candidate scoring. Full medium dimension-scaled MPPI, K4H300 screen, '
         'K8Hfinal=min(600,max(300,D+120)), top4 posterior choice; Nexec10/update, R count/regime/size/duration matched. '
         'Quality-first/no hard deadline; actual executed throughput unknown; measured group2/4/6 timings in amendment. '
-        'Both GPUs, widths34/10, allocatorA65%/R80%, original deadline retained. A continues preserved CPU6; '
+        'Both GPUs, widthsA34/10,R18/10, allocatorA65%/R80%+expandable segments, original deadline retained. A continues preserved CPU6; '
         'B/Ru4 viability pause, no final outcome access; full fixed A/B48/R24 and6473440/cap6500000 retained.\n')
     with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
     value['release_amendment_sha256']=h
