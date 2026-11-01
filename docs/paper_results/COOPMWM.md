@@ -1,5 +1,28 @@
 # S-COOPMWM — live checks
 
+## MAIN07:18 clarification and command-chain audit
+- Fresh-session inspection of the **original K8/H420 forecasts** shows both named
+  physical-null plans predicted **0.0 saving versus own-policy continuation** and
+  `centre_open_loop_gap=0.0`. Their +164.1375/+26.2245veh-s predictions compare
+  against whole-road MAPPO. Every returned top-k plan has zero predicted saving
+  versus own-policy in these two searches. Exact zero marginal SUMO grades agree
+  with that relevant contrast; the larger numbers are not marginal plan errors.
+- The registered later MAIN22:39 top-k rule permits mean-positive versus MAPPO;
+  it does not require strict improvement versus own-policy. That scientific
+  acceptance rule is retained. The distinction has been recorded in the central
+  registration log for MAIN. No nulls, losses or quota executions are removed.
+- Independently auditing the exact final command chain: the inherited WM already
+  applies `alwayscmd.inferred_cap` (SUMO IDM speedMode27/allowed-speed ceiling),
+  while plant `CommandOwnership.direct_target` and the one-second `slowDown`
+  target need explicit parity checks. No numerical hot-swap is claimed yet.
+  `COMMAND_CHAIN_SOURCE_{gpuA,cpuQ}.json`, `COMMAND_CHAIN_LAWS_gpuA.json` and
+  `COMMAND_CHAIN_NULL_FIXTURES.json` pin public runtime code/observable TRAIN
+  receipts only; collection launches neither SUMO nor WM inference.
+- Recovered pipeline-starvation repair was already CPU-qualified and registered.
+  It is now deployed as broker3706352/start58959212 at unix1793575314: original
+  four assigned searches adopted, stable per-slot centre/plan interleaving at
+  boundaries. B/R/grader and GPU owners retained. No horizon/search/budget change.
+
 ## MAIN06:58 DIAGNOSIS — two exact-zero grades are physical nulls
 - Read-only diagnosis at unix1793574387, receipt
   `coopmwm/ZERO_GRADE_DIAGNOSIS_986051_986070.json`; no new SUMO or WM calls.
