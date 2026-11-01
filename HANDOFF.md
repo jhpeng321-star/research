@@ -68,6 +68,14 @@ Relay now requires16episodes before releasing GPUs. Local96CPU/Ruff PASS;
 defaultPython has no torch, so existing Miniconda was used, no environment created.
 See docs/paper_results/c1switch2/BB_RELOCATION_DESIGN.md and bbrelocate.py.
 Immutable gpuR CPU preflight and prospective registration precede any allocation.
+**Unused BB placement now REGISTERED + CPU-VERIFIED:** immutable gpuR root
+`/root/c1switch2_run_bbd7ba8b48ed5829`, binding54848c3e7059ef2691878116db7c76dbead02962d42e1f281aae4ad8514b5802;
+143CPU PASS/1host-onlyskip, BOTH guards17/17, no GPU/SUMO. All16BBworlds and
+79800total cap verified. `BB_EXECUTION_BOUND.json` is the ONE prepared config.
+At/after11:30 ONLY: `python -B -m tools.c1switch2.bbrelocate start`; it refuses
+early time/prior claims and starts only with CPU/GPU resources, then real parity.
+Do not run old follower/prepare or duplicate this binding. Scientific start remains
+UNCLAIMED, no automatic science retry. Original cpuQ WM work remains UNKNOWN.
 **06:00 terminal WM GPU receipts reconciled:** BOTH services EXITED after
 ordinary COMPLETE release; gpuA13845.159507265314s + gpuR13840.939484648407s
 =27686.09899191372GPU-s (7.6905830533h), all validation/idle included, no refund.

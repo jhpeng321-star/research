@@ -84,7 +84,10 @@
     "never_redispatch": true
   },
   "bb_arm": {
-    "state": "OBSERVER_PARKED_BEFORE_GPU_RELEASE_CPUQ_ACCESS_REQUIRED_BB_ALLOCATION_UNUSED",
+    "state": "AFTER_1130_GPUR_ALL16_RELOCATION_REGISTERED_CPU_PASS_ALLOCATION_UNUSED",
+    "relocation_plan_sha256": "d5037b81825d4788131b49c675934ee71e6007da91fec60012de9ecdbc75abde",
+    "relocated_cpu_root": "/root/c1switch2_run_bbd7ba8b48ed5829",
+    "relocated_cpu_tests": {"passed":143,"skipped":1},
     "local_follower_pid": 36376,
     "original_follower_pid": 43404,
     "original_follower_state": "EXITED_PRE_DISPATCH_SSH_CONNECTION_CLOSED_ZERO_BB_SPEND",
@@ -96,7 +99,7 @@
     "cpu_checkpoint_probes_both_hosts": "PASS_K8_FULL60s_ALL6_AND_CONTINUED_WALL",
     "main_dispatched": false,
     "new_gpu_s": 0,
-    "configuration": "BB_EXECUTION.json",
+    "configuration": "BB_EXECUTION_BOUND.json",
     "never_duplicate_follower": true
   },
   "fleet_peer_status": "SELMAPPO_MAIN0208_RUNNING.md: continuation owncpuQ645235 running, no final169; never duplicate peer dispatch",
@@ -104,7 +107,7 @@
   "pending_main": [
     "Genuine final169 fleet PPO checkpoint plus source/config/freeze receipt",
     "Genuine final169 per-CAV MAPPO checkpoint plus frozen shared/mixed source receipts",
-    "BB allocation remains unused; restore cpuQ access before any explicit observer continuation and original parity/CPU gates",
+    "Unused BB relocated to gpuR after MAIN07:07; no GPU/SUMO before11:30, then original parity/CPU/one-use gates",
     "Reconcile cpuQ WM STOP/open-job ledgers when access returns; never replay successful or failed charged physics",
     "WM incomplete after infrastructure timeout; no complete-panel primary statistics admitted"
   ],

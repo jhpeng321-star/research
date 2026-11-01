@@ -1,0 +1,78 @@
+{
+  "engine": {
+    "protocol": "S-C1SWITCH2/v2",
+    "arm": "bb",
+    "model": "bb",
+    "library": [
+      "native",
+      "ctrl0",
+      "mappo",
+      "pi",
+      "circles",
+      "wall"
+    ],
+    "history_s": 60,
+    "horizon_s": 60,
+    "K": 8,
+    "objective": "on_road_fleet_delay",
+    "evaluation_objective": "full_team_delay_fleet_plus_source",
+    "objective_design_sha256": "95aa84cf801aea773a0c7f9a208396ed4898e5cacdf8b6177940c7d9e1f5a273",
+    "observable_source_admissions": false,
+    "entries": false,
+    "controller_feedback": true,
+    "wall_start_stop": true,
+    "anonymous_seed": true,
+    "wm_checkpoint_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+    "bb_checkpoint_sha256": "afaaa32cb15079014d1a9e08f78b26e74fd341298d1aa0292a24009d9f783742",
+    "checkpoint_path": "/root/c1switch2_gpu_bb_caeab9eaa303f93c/bb.pt",
+    "service_gpu_cap_s": 5400.0,
+    "prior_gpu_s": 0
+  },
+  "gpus": {
+    "gpuA": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
+    "gpuR": "/root/c1switch2_gpu_bb_caeab9eaa303f93c"
+  },
+  "cpus": {
+    "gpuR": "/root/c1switch2_run_bbd7ba8b48ed5829"
+  },
+  "relocation": {
+    "protocol": "S-C1SWITCH2/v2",
+    "arm": "bb",
+    "host": "gpuR",
+    "seeds": [
+      969136,
+      969137,
+      969138,
+      969139,
+      969140,
+      969141,
+      969142,
+      969143,
+      969144,
+      969145,
+      969146,
+      969147,
+      969148,
+      969149,
+      969150,
+      969151
+    ],
+    "prior_sim_s": 0,
+    "sim_s": 79800,
+    "gpu_s": 10800,
+    "not_before": "2026-11-01T11:30:00+08:00"
+  },
+  "unused_proofs": {
+    "gpuA": {
+      "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
+      "bb_gpu_s": 0,
+      "bb_sim_s": 0
+    },
+    "gpuR": {
+      "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
+      "bb_gpu_s": 0,
+      "bb_sim_s": 0
+    }
+  },
+  "relocation_plan_sha256": "d5037b81825d4788131b49c675934ee71e6007da91fec60012de9ecdbc75abde"
+}
