@@ -36,8 +36,9 @@ the throughput constraint. Outcome-independent numeric fit raises the shared
 B/R dense rate to**0.0022449262636300934**, ordinary**0.0005612315659075234**
 (2.02× historical rates). It uses309dense+219ordinary eligible B-u1 windows and
 274.0465s original48-episode span scaled4→12workers; no efficacy-based sampling.
-Resume original u1 optimizer/RNG/checkpoints and existing GPU queues after the
-numeric registration/binding. Exact allocation remains4,918,800/6,000,000sim-s,
+Numeric registration/binding completed; **18:48 same owned supervisor resumed**
+(`RELEASE_1838.json`, identity checked, stateS), preserving original u1
+optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918,800/6,000,000sim-s,
 1,081,200unallocated; current charge83,200. All final-test/checkpoint rules remain.
 
 ## OWNER18:34 — engineering HOLD (fresh-session recovery)

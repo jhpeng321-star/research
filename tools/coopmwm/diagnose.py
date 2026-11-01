@@ -175,8 +175,39 @@ def amendment():
     write(ops.EVIDENCE/'ENGINEERING_AMENDMENT_1838.json',v);print(json.dumps(v))
 
 
+def release():
+    from .storage import read
+    from .protocol import REGISTRY,checked,digest
+    text=checked(REGISTRY).read_text(encoding='utf-8')
+    a=read(ops.EVIDENCE/'ENGINEERING_AMENDMENT_1838.json')
+    assert any('S-COOPMWM 18:38 ENGINEERING RELEASE REGISTERED' in s and a['diagnosis_sha256'] in s for s in text.splitlines())
+    value=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,os,signal,time
+r=pathlib.Path({deploy.ROOT!r});assert r.is_dir()
+d=json.loads((r/'TRAIN_DISPATCH_1742.json').read_text());p=pathlib.Path('/proc')/str(d['pid'])
+assert pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']
+assert (p/'stat').read_text().split()[21]==d['start_ticks']
+assert 'tools.coopmwm.runner' in (p/'cmdline').read_bytes().replace(bytes([0]),b' ').decode()
+assert (p/'stat').read_text().split()[2]=='T'
+assert not (r/'STOP.json').exists()
+charges=[json.loads(s) for s in (r/'CHARGES.jsonl').read_text().splitlines()]
+assert len(charges)==70 and sum(c['sim_s'] for c in charges)==83200
+assert all((r/'jobs'/c['id']/'CLOSE.json').exists() and (r/'jobs'/c['id']/'RESULT.json').exists() for c in charges)
+s=json.loads((r/'SAMPLING_1755.json').read_text())
+assert s['registration_sha256_of_payload']=={a['numeric_sampling_payload_sha256']!r}
+assert not (r/'RELEASE_1838.json').exists(),'one-use release; inspect existing receipt'
+with (r/'ENGINEERING_AUTHORITY_1838.md').open('x') as f:f.write({ascii(text)})
+v=dict(unix=time.time(),owner=d,amendment=json.loads({json.dumps(a)!r}),charged_sim_s=83200,closed_jobs=70,new_sumo_sim_s=0)
+with (r/'RELEASE_INTENT_1838.json').open('x') as f:json.dump(v,f,sort_keys=True)
+os.kill(d['pid'],signal.SIGCONT)
+v['state_after_signal']=(p/'stat').read_text().split()[2]
+with (r/'RELEASE_1838.json').open('x') as f:json.dump(v,f,sort_keys=True)
+print(json.dumps(v))
+''',timeout=30))
+    write(ops.EVIDENCE/'RELEASE_1838.json',value);print(json.dumps(value))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=['hold','fetch','probe','deltas','collect','wm-cpu','report','amendment']);p.add_argument('--window',type=int,choices=(0,1),default=1);a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=['hold','fetch','probe','deltas','collect','wm-cpu','report','amendment','release']);p.add_argument('--window',type=int,choices=(0,1),default=1);a=p.parse_args()
     if a.mode=='hold':hold()
     elif a.mode=='fetch':fetch()
     elif a.mode=='deltas':deltas()
@@ -184,4 +215,5 @@ if __name__=='__main__':
     elif a.mode=='wm-cpu':wm_cpu()
     elif a.mode=='report':report()
     elif a.mode=='amendment':amendment()
+    elif a.mode=='release':release()
     else:launch_probe(a.window)
