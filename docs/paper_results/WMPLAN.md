@@ -62,15 +62,7 @@ gates and the final model comparison still precede live dispatch.
 
 <!-- WMPLAN-PROGRESS:BEGIN -->
 ## Current continuation status
-- FULL-v4 selected before live outcomes: helpful agreement4/8 vs FULL-v5 2/8;
-  all12 chosen saving+680.307521 vs+172.703890veh-s/state.
-- Byte-identical gpuR mirror complete (2004 initial files). Startup exposed an
-  asset-path allowlist restriction and three missing package JSON initializers.
-  Original manifests/copies and the failed gate receipt are retained. Identical
-  private assets now reside under the already-allowed `/root/rbeval20261031`
-  prefix; package initializers are byte-bound to gpuA. No runtime/predictor change.
-- Repaired gpuR bootstrap PASS on all32 FIT starts, frozen MAPPO export verified;
-  new forecasts0/new SUMO0. Local29 tests PASS. Host CPU/final-freeze/live steps
-  will resume from existing receipts; no model comparison, transfer, or completed
-  computation is repeated.
+- Exclusive amended continuation is waiting for the already-running FULL-v5 quality check.
+- Expected arm first, report before strict, both GPUs; exact199200upper retained.
+- Original owned continuation stopped and retained; no peer process action or duplicated quality.
 <!-- WMPLAN-PROGRESS:END -->
