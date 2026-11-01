@@ -1,5 +1,19 @@
 # S-COOPMWM — live checks
 
+## Early exact-plan viability publication armed
+- Detached cpuQ reporter3357311 is live, immutable `viabilityreport1`; registered
+  amendment `1c66899ddbce10f2cbb99c2117aa3686b528a64a4351b6367028dd23af8da0bb`.
+  **5 CPU tests PASS / zero skips / 0.066s / zero SUMO**. It reads only qualified
+  B/seed20261101 TRAIN grades, verifies receipt/plan SHA and prefix/CRN gates,
+  keeps losing plans, excludes unresolved/ungraded plans without imputation.
+- As exact grades arrive, the existing observer publishes the overall exact
+  marginal saving plus full by-type/regime/predicted-rank/new-vs-known/group-size
+  and update results in immutable `B_EXACT_VIABILITY_<hash>.json` receipts.
+  Inference uses10,000 whole-world cluster resamples; with one world the CI is
+  unavailable. This report is observational and never enters training or search.
+- Status1793566596: reporter alive, no errors, no exact-evidence report yet.
+  Exact-C_G twins and B-vs-A TRAIN checks continue under their existing schedules.
+
 ## Fresh-resume live snapshot — MAIN04:23 continuation
 - A has completed u46; latest registered TRAIN check u44 gives J900 A−MAPPO
   **−952.147 veh-s**, 95% world-bootstrap CI **[−3413.962,1424.270]**, point

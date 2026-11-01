@@ -1,4 +1,5 @@
 """One-use CPU-only exact-evidence publisher deployment. No simulator dispatch."""
+import argparse
 import json
 from . import ops
 from .storage import read,write
@@ -50,4 +51,18 @@ immutable(r/'EXACT_VIABILITY_REPORT_DISPATCH.json',v);print(json.dumps(v))''',ti
     write(target,dict(value,line=line,qualification=qualification));print(json.dumps(value))
 
 
-if __name__=='__main__':deploy()
+def status():
+    value=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,time
+r=pathlib.Path({ROOT!r});d=json.loads((r/'EXACT_VIABILITY_REPORT_DISPATCH.json').read_text())
+assert pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']
+p=pathlib.Path('/proc',str(d['pid']),'stat');s=p.read_text().split() if p.exists() else None
+assert not s or s[21]==d['start_ticks']
+names=('EXACT_VIABILITY_REPORT_FAILED.json','EXACT_VIABILITY_REPORT_COMPLETE.json')
+print(json.dumps(dict(unix=time.time(),owner=d,state=s[2] if s else 'exited',reports=len(list(r.glob('B_EXACT_VIABILITY_*.json'))),receipts={{n:json.loads((r/n).read_text()) for n in names if (r/n).exists()}},new_sumo_sim_s=0)))''',timeout=35))
+    write(ops.EVIDENCE/f'EXACT_VIABILITY_REPORT_STATUS_{int(value["unix"])}.json',value)
+    print(json.dumps(value));return value
+
+
+if __name__=='__main__':
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('deploy','status'),nargs='?',default='deploy')
+    globals()[p.parse_args().mode]()

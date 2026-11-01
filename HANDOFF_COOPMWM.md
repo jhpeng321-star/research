@@ -1,5 +1,12 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+Earlyviabilityautopublisher3357311/start58085285 cpuQ LIVE/noerrors/no reports yet
+at1793566596. Sourceviabilityreport1/CPU5PASS0skips/zeroSUMO, amendment1c66899d.
+Reads ONLY qualified B/seed20261101 TRAIN exactgrades; keepslosses; whole-world
+10000bootstrap bytype/regime/rank/new-known/group-size/update; singleworldnoCI.
+Writes B_EXACT_VIABILITY_<hash>.json, existing34356publishes it; nolearninginput.
+Use viability_ops status; neverduplicate. Finaloutcome files never read byit.
+
 GPURsecond56877 READY8EXACT0/admitted1793566045.8605 viaexistingmonitor; doNOT
 relaunch. GPUAsecond617099stillqualifying. LatestA46/u44CIincludes0; B/Rfirstupdate
 stillcollecting,5executedstarts/noexactgrades at1793565861. OriginalGPUdeadline
