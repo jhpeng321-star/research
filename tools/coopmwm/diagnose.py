@@ -31,6 +31,49 @@ print(json.dumps(v))
     print(json.dumps(value))
 
 
+def fetch():
+    values=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json
+r=pathlib.Path({deploy.ROOT!r});out=[]
+windows=json.loads((r/'CALIBRATION_WINDOWS.json').read_text())['windows'][:2]
+for w in windows:
+ found=[]
+ for p in (r/'requests').glob('*.json'):
+  v=json.loads(p.read_text())
+  if v.get('world_id')==w['world']['seed'] and v.get('time_s')==w['time_s'] and v.get('mode')!='proposal':found.append(v)
+ assert len(found)==1
+ out.append(found[0])
+print(json.dumps(out))
+''',timeout=25))
+    for i,v in enumerate(values):
+        write(ops.EVIDENCE/f'ACTION_PROBE_INPUT_{i:02}.json',v)
+    print(json.dumps([dict(world=v['world_id'],time_s=v['time_s'],group=v['group'],
+        members=[r for r in v['rows'] if r['vid'] in v['group']],
+        targets={k:v['targets'].get(k) for k in v['group']}) for v in values]))
+
+
+def launch_probe():
+    from .storage import read
+    root='/root/coopmwm20261101_actionprobe1'
+    cpu=read(ops.EVIDENCE/'CPU_coopmwm20261101_cpu21.json')
+    ops.stage_frozen('gpuA',root,cpu)
+    ops.stage('gpuA',root,{'tools/coopmwm/action_probe.py':(ops.LOCAL/'tools/coopmwm/action_probe.py').read_text(),
+        'INPUT.json':json.dumps(read(ops.EVIDENCE/'ACTION_PROBE_INPUT_01.json'))})
+    value=json.loads(ops.ssh.remote('gpuA',f'''import os,pathlib,json,subprocess,sys
+r=pathlib.Path({root!r});assert r.is_dir();assert not (r/'DISPATCH.json').exists()
+print_gpu=subprocess.check_output(['nvidia-smi','--query-gpu=memory.free','--format=csv,noheader,nounits'],text=True)
+assert int(print_gpu.strip())>12000
+env=dict(os.environ,PYTHONPATH=str(r/'pytools'),OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
+with (r/'PROBE.log').open('x') as log:
+ p=subprocess.Popen(['nice','-n','19',sys.executable,'-B','-u','-m','tools.coopmwm.action_probe',str(r)],cwd=r,env=env,stdout=log,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL,start_new_session=True)
+v=dict(pid=p.pid,start_ticks=pathlib.Path(f'/proc/{{p.pid}}/stat').read_text().split()[21],boot_id=pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip(),root=str(r),host='gpuA',new_sumo_sim_s=0)
+with (r/'DISPATCH.json').open('x') as f:json.dump(v,f)
+print(json.dumps(v))
+''',timeout=25))
+    write(ops.EVIDENCE/'ACTION_PROBE_DISPATCH_01.json',value);print(json.dumps(value))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=['hold']);a=p.parse_args()
-    hold()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=['hold','fetch','probe']);a=p.parse_args()
+    if a.mode=='hold':hold()
+    elif a.mode=='fetch':fetch()
+    else:launch_probe()
