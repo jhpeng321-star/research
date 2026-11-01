@@ -68,6 +68,18 @@ def decline(root,record,slots,busy,amendment,drain=False):
     immutable(root/'responses'/(key+'.json'),result)
 
 
+def new_item_order(items,last_kind,enabled):
+    """Bound centre starvation at search boundaries; assigned claims stay first.
+
+    At most one centre helper between plan searches when both queues are nonempty.
+    Stable sort keeps the existing dense/time/state priority within either queue.
+    Disabled is the original ordering, without changing a request or model call.
+    """
+    if not enabled:return items
+    prefer_centre=last_kind=='plan'
+    return sorted(items,key=lambda v:(v[0]=='centre')!=prefer_centre)
+
+
 def run(root,config_path):
     import fcntl
     import signal
@@ -89,6 +101,7 @@ def run(root,config_path):
     def worker(endpoint):
         try:
             remote=Remote(root,endpoint);remote.verify()
+            last_kind='plan'
             while not stop.is_set():
                 assert_running(root,'B')
                 if time.time()>binding['deadline_unix']:raise ValueError('original GPU deadline')
@@ -101,6 +114,7 @@ def run(root,config_path):
                     new_items=[v for v in items if not (assignments/(v[1]['state_id']+'.json')).exists()]
                     if config.get('drain_until_handover') and not (root/'MAIN0548_HANDOVER_COMPLETE.json').exists():
                         new_items=[v for v in new_items if v[0]!='plan' or v[1].get('mode')=='diagnostic']
+                    new_items=new_item_order(new_items,last_kind,config.get('pipeline_centre_fairness',False))
                     for kind,record in assigned_items+new_items:
                         key=record['state_id'];p=assignments/(key+'.json')
                         previous=json.loads(p.read_text()) if p.exists() else None
@@ -126,6 +140,7 @@ def run(root,config_path):
                 immutable(root/('centre_responses' if kind=='centre' else 'responses')/(key+'.json'),payload['result'])
                 immutable(root/'broker_completed'/(key+'.json'),dict(slot=endpoint['slot'],kind=kind,key=key,
                     inference_wall_s=payload['wall_s'],delivery_wall_s=time.monotonic()-begin,unix=time.time()))
+                last_kind=kind
                 with mutex:inflight.remove(key)
         except BaseException as error:
             errors.append(repr(error));stop.set()
