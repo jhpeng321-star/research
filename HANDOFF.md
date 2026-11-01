@@ -198,12 +198,12 @@ TRAIN exploration credit is not paired dev-policy performance.
 
 <!-- COOPFREE OWNER1511 BEGIN -->
 ## OWNER15:11 live continuation
-Observed UTC 2026-11-01T09:04:51Z.
+Observed UTC 2026-11-01T09:08:56Z.
 cpuQ owned1579328/start53193103 alive=True; four nice19 workers, load admission12.
-Budget: 2,855,493 precharged / 2,826,693 closed-actual sim-s; total cap6,000,000.
+Budget: 3,311,013 precharged / 2,855,493 closed-actual sim-s; total cap6,000,000.
 Corrected u001 is inherited; every subsequent update uses fresh exploration. TRAIN effects are not DEV gains.
-- u002: 420/420 new arms closed; charge431,640; cachedHOLD48.
 - u003: 431/431 new arms closed; charge442,620; cachedHOLD65.
+- u004: 0/437 new arms closed; charge455,520; cachedHOLD77.
 ### Proposal checkpoint u001
 `tools/coopfree/publications/owner1511/policy_hold_u001.pt`
 SHA256 `7b6ff3254311b7f0e8af773cdd51dbfdeca16a8660d0f872c1c8212c8c03e9c1`; receipt `HOLD_UPDATE_001.json`.
@@ -231,5 +231,24 @@ SHA256 `ed65707fef67c33b37eddc645890499b62154d3fa47884cff9cfe27803ccc2b6`; recei
 - sum_D_i: n=39, mean-296.114, SD5064.113; quantiles[-12552.07263988952, -1846.8236514880264, -0.004952115152264014, 85.4862986420012, 16113.727535690137].
 - C_G: n=39, mean+411.456, SD3946.375; quantiles[-13651.146291759564, -0.09484785609674873, 7.378673763014376e-05, 56.12258040663801, 10643.248926371234].
 - Share exactCG>0=0.5384615384615384; sigma[4.5, 0.5] -> [4.5, 0.5].
+### Paired DEV u003 (24worlds; negative delay is better)
+- vs bandit J600: -387.915, paired95%CI[-1875.940086115498, 1043.8995259593846] vehicle-s.
+- Paired safety: {"collisions": {"ci95": [0.0, 0.0], "mean": 0.0}, "hard_brake": {"ci95": [-2.125, 3.0], "mean": 0.5416666666666666}, "teleports": {"ci95": [0.0, 0.0], "mean": 0.0}, "ttc_below_3_vs": {"ci95": [-62.02916666666667, 50.085937500000014], "mean": -5.9375}}.
+- vs bandit J900: -604.777, paired95%CI[-3475.261433132581, 2077.2669013612654] vehicle-s.
+- Paired safety: {"collisions": {"ci95": [0.0, 0.0], "mean": 0.0}, "hard_brake": {"ci95": [-2.1666666666666665, 5.396354166666669], "mean": 1.5833333333333333}, "teleports": {"ci95": [0.0, 0.0], "mean": 0.0}, "ttc_below_3_vs": {"ci95": [-74.4421875, 73.35781250000002], "mean": -1.1041666666666667}}.
+- vs mappo J600: -387.915, paired95%CI[-1875.940086115498, 1043.8995259593846] vehicle-s.
+- Paired safety: {"collisions": {"ci95": [0.0, 0.0], "mean": 0.0}, "hard_brake": {"ci95": [-2.125, 3.0], "mean": 0.5416666666666666}, "teleports": {"ci95": [0.0, 0.0], "mean": 0.0}, "ttc_below_3_vs": {"ci95": [-62.02916666666667, 50.085937500000014], "mean": -5.9375}}.
+- vs mappo J900: -604.777, paired95%CI[-3475.261433132581, 2077.2669013612654] vehicle-s.
+- Paired safety: {"collisions": {"ci95": [0.0, 0.0], "mean": 0.0}, "hard_brake": {"ci95": [-2.1666666666666665, 5.396354166666669], "mean": 1.5833333333333333}, "teleports": {"ci95": [0.0, 0.0], "mean": 0.0}, "ttc_below_3_vs": {"ci95": [-74.4421875, 73.35781250000002], "mean": -1.1041666666666667}}.
+- vs hold J600: -213.893, paired95%CI[-1181.2491713553165, 670.8053093890187] vehicle-s.
+- Paired safety: {"collisions": {"ci95": [0.0, 0.0], "mean": 0.0}, "hard_brake": {"ci95": [-4.208333333333333, 0.7921875000000018], "mean": -1.4166666666666667}, "teleports": {"ci95": [0.0, 0.0], "mean": 0.0}, "ttc_below_3_vs": {"ci95": [-36.834895833333334, 41.75052083333333], "mean": 1.9375}}.
+- vs hold J900: -931.220, paired95%CI[-3301.985248588218, 1256.0083784468204] vehicle-s.
+- Paired safety: {"collisions": {"ci95": [0.0, 0.0], "mean": 0.0}, "hard_brake": {"ci95": [-4.646354166666667, 1.542187500000002], "mean": -1.2916666666666667}, "teleports": {"ci95": [0.0, 0.0], "mean": 0.0}, "ttc_below_3_vs": {"ci95": [-56.90052083333333, 68.5640625], "mean": 6.666666666666667}}.
+### OWNER02:21 learning self-check
+- Completed corrected fresh updates: [1, 2, 3]; next scheduled check u6.
+- Status: insufficient fresh updates for six-update trend.
+- TRAIN remaining: 2969980 sim-s; one fresh >=150-window joint-only lower bound: 135000 sim-s (HOLD/solos extra).
+- DEV learned-minus-HOLD J600: -213.893 vehicle-s, paired world-bootstrap95%CI [-1181.2491713553165, 670.8053093890187].
+- DEV learned-minus-HOLD J900: -931.220 vehicle-s, paired world-bootstrap95%CI [-3301.985248588218, 1256.0083784468204].
 Discovery: observational COOPBEHAV/clustering exports are separate from exact HOLD C_G; do not infer paired native-release mechanisms.
 <!-- COOPFREE OWNER1511 END -->
