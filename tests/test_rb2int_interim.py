@@ -1,9 +1,16 @@
 import json
+import os
+import subprocess
+import sys
 
 import numpy as np
 import pytest
 
-from tools.rb2int import interim, interim_watch
+from tools.rb2int import interim, interim_watch, resume_ci
+from tools.rbint.local_resources import child_incarnation
+from tools.rb2int.uncertainty import PairedWorldBootstrap
+from tools.rb2int.credibility import ratio_bands
+from tools.rb2int.gate_bootstrap import GateBootstrap
 from tools.rbeval.core import ARMS, HS
 from tools.rbeval.core import digest
 
@@ -16,6 +23,35 @@ def test_only_scored_replicated_cells_or_complete_reserved_are_ready():
     assert interim.scopes([1,2,3,4,6],registration,meta) == {'available_replicated_cells':[1,2,3,4]}
     ready = interim.scopes(range(1,8),registration,meta)
     assert ready == dict(reserved8=[6,7],available_replicated_cells=[1,2,3,4,5])
+
+
+def test_constant_nonbinary_bootstrap_support_never_prints_precision():
+    metadata = [dict(seed=s,demand=1900,penetration=.05) for s in (1,2)]
+    boot = PairedWorldBootstrap(metadata)
+    # Multiple columns trigger NumPy's axis-reduction accumulated-mean error;
+    # a single column often does not reproduce this failure.
+    rows = boot.bands(np.full((2,6),.4))
+    assert all(r['low'] is None and r['unavailable_reason']=='zero_estimable_variance' for r in rows)
+    features = [([dict(seed=s,value=.4) for s in (1,2)],'value')]*6
+    assert all(r['low'] is None for r in ratio_bands(boot,features))
+    gate = GateBootstrap(metadata)
+    assert all(r['low'] is None for r in gate.bands([[(1,.4),(2,.4)]]*6))
+
+
+def test_constant_large_cost_support_is_guarded_relative_to_numerical_scale():
+    metadata = [dict(seed=s,demand=1900,penetration=.05) for s in (1,2)]
+    boot = PairedWorldBootstrap(metadata)
+    assert boot.bands(np.full((2,1),1e8+.4))[0]['low'] is None
+
+
+@pytest.mark.skipif(os.name!='nt',reason='Windows creation-time receipt binding')
+def test_recovery_checks_owned_pid_creation_time_and_exit_without_signals():
+    child = subprocess.Popen([sys.executable,'-B','-c','import time; time.sleep(1)'])
+    record = dict(pid=child.pid,**child_incarnation(child))
+    assert resume_ci.alive(record)
+    assert not resume_ci.alive(dict(record,create_filetime=record['create_filetime']+1))
+    child.wait(timeout=10)
+    assert not resume_ci.alive(record)
 
 
 def test_short_prefix_is_exact_cumulative_reported_cost_not_horizon_interpolation():

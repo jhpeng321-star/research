@@ -22,7 +22,7 @@ from tools.rb2int.interim import scopes, analyze, render
 from tools.rbint.local_resources import child_incarnation
 from tools.rbeval.core import load, digest, save_new
 
-COLLECTOR = ROOT/'runs/rb2int_finish_v2'
+COLLECTOR = ROOT/'runs/rb2int_finish_v3'
 CACHE = ROOT/'runs/rb2int_final_cache'
 REPORT = ROOT/'docs/paper_results/WMPHYS_V5.md'
 EVIDENCE = ROOT/'docs/rb2int/interim'
@@ -31,6 +31,13 @@ SHORT = ROOT/'docs/rb2int/SHORT_TARGETS_BOUNDED_V4.json'
 DEADLINE = datetime.fromisoformat('2026-11-02T09:55:00+08:00').timestamp()
 BEGIN, END = '<!-- RB2-INTERIM:BEGIN -->', '<!-- RB2-INTERIM:END -->'
 LIMITS = '''
+### Interim CI numerical correction
+
+The16:46snapshot is preserved. Its intervals printed as equal endpoints for
+constant direction-accuracy columns are superseded by NA (zero estimable variance).
+Centered variance reduction removes floating-point accumulation artifacts; all
+point estimates and forecasts are unchanged. No model selection or forecast replay.
+
 ## Frozen-candidate engineering limits (later worker development evidence)
 
 LANE's later free-running development diagnostic rejects fitted-LC adoption on
@@ -107,8 +114,10 @@ def run(out):
     if (COLLECTOR/'COMPLETE.json').exists():
         raise ValueError('original final publication already complete; preserve it')
     expected_collector = load(COLLECTOR/'PROCESS.json')
-    if (expected_collector['pid'],expected_collector['create_filetime']) != (9660,134379946028423282):
-        raise ValueError('collector ownership changed')
+    argv = expected_collector['argv']
+    if (Path(argv[-1]) != COLLECTOR or Path(argv[3]) != ROOT/'tools/rb2int/finish.py'
+            or argv[-3:-1] != ['watch','--out'] or expected_collector.get('inference_dispatch') is not False):
+        raise ValueError('collector ownership/command changed')
     files = [Path(__file__), ROOT/'tools/rb2int/interim.py', SHORT]
     hashes = {str(p):digest(p) for p in files}
     save_new(out/'START_ONCE.json',dict(source_hashes=hashes,collector=expected_collector,

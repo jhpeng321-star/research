@@ -27,8 +27,9 @@ def ratio_bands(bootstrap, features):
         out=np.full_like(denom,np.nan),where=denom>0)
     n = counts.sum(0)
     point = np.divide(totals.sum(0),n,out=np.full(len(features),np.nan),where=n>0)
-    sd = np.nanstd(draws,axis=0,ddof=1)
-    valid = np.isfinite(draws).all(0) & np.isfinite(point) & (sd>1e-14) & bootstrap.replicated & ((counts>0).sum(0)>=2)
+    sd = np.nanstd(draws-point[None,:],axis=0,ddof=1)
+    tolerance = 64*np.finfo(float).eps*np.maximum(1.,np.abs(point))
+    valid = np.isfinite(draws).all(0) & np.isfinite(point) & (sd>tolerance) & bootstrap.replicated & ((counts>0).sum(0)>=2)
     critical = float(np.quantile(np.abs((draws[:,valid]-point[valid])/sd[valid]).max(1),.95)) if valid.any() else None
     return [dict(mean=float(point[j]) if n[j] else None,count=int(n[j]),
         contributing_worlds=int((counts[:,j]>0).sum()),low=float(point[j]-critical*sd[j]) if valid[j] else None,

@@ -59,8 +59,12 @@ class PairedWorldBootstrap:
         if point.ndim != 1 or draws.shape != (self.B, len(point)):
             raise ValueError('transform must preserve [draw,feature] convention')
         finite = np.isfinite(draws).all(0) & np.isfinite(point)
-        sd = np.std(draws, axis=0, ddof=1)
-        valid = finite & (sd > 1e-14) & self.replicated
+        # Center before the reduction: summing10000 identical nonbinary floats
+        # can manufacture >1e-14 "variance" solely from the reduction mean.
+        # Constant bootstrap support must remain zero-estimable/NA.
+        sd = np.std(draws-point[None, :], axis=0, ddof=1)
+        tolerance = 64*np.finfo(float).eps*np.maximum(1., np.abs(point))
+        valid = finite & (sd > tolerance) & self.replicated
         # Center at each estimate; the simultaneous family uses one paired draw
         # for every column. Nonlinear transformations retain their paired shape.
         critical = None

@@ -88,9 +88,10 @@ class GateBootstrap(PairedWorldBootstrap):
                     delta[:, local] = value
                 draws += np.divide((self.future_weights[:, i] @ delta)*self.weights[:, i:i+1],
                     denominator, out=np.zeros_like(draws), where=denominator > 0)
-            std = np.nanstd(draws, axis=0, ddof=1)
+            std = np.nanstd(draws-estimates[None,start:stop], axis=0, ddof=1)
             sd[start:stop] = std
-            good = valid[start:stop] & np.isfinite(draws).all(0) & (std > 1e-14)
+            tolerance = 64*np.finfo(float).eps*np.maximum(1.,np.abs(estimates[start:stop]))
+            good = valid[start:stop] & np.isfinite(draws).all(0) & (std > tolerance)
             valid[start:stop] = good
             if good.any():
                 maximum = np.maximum(maximum, np.max(np.abs(
