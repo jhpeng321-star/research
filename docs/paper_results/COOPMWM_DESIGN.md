@@ -1,4 +1,4 @@
-# S-COOPMWM — latest scope registered; warm MPPI release still qualification-gated
+# S-COOPMWM — warm MPPI training live; frozen-policy evaluation precompute registered
 1. MAIN02:24 cap7500000/allocation7473440/free26560; adds1000000 exact-plan-grade reserve to preserved MAIN23:54 allocation; registration required before B/R.
 2. A/B/R fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
@@ -45,8 +45,8 @@
 44. Mechanics3600,calibration57600,discovery200000,pairedbranches691200,reusecheck600; allocated7473440/free26560 not auto-spent; complete-grade precharge or STOP.
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.
 46. All failures/warmup/twins charged in full before attempts; no retries/refunds/duplicate dispatch.
-47. A original4workers retained; B8/R8/exactgrader8nice19singlethread slots, <=28cpuQ total plus2diagnostic only when capacity available; RAM8GiB/disk2GiB; no physics retry.
-48. Source-bound bothGPU cold/warm EXACT0 gates; widths34/10,oneworker/GPU; hot-add same search only; final throughput/quota registration before restart.
+47. A4/B8/R8/grader8nice19; afterA48 MAIN0423 up to24 CPU-only precompute workers SCHED_IDLE/nice19, grade-queue priority/load<28/MemAvailable+RAMfree8GiB/disk2GiB gates; no retries.
+48. OriginalGPU widths34/10 READY8EXACT0; MAIN0419 secondworkers .42cap18/10(A),.34cap4/4(R),fresh8EXACT0 before hotadd; same search/deadline, measure1vs2throughput.
 49. GPU CPU helpers disabled until separate frozen parity qualification; own PIDs only.
 50. Both seed guards, fresh-name exposure, immutable sources/cache/approval bindings before physics.
 51. No prohibited inputs/newenv/push; OWNER20:35 opaque v2archive+SHA256-gated literal source removal only; commit eachstep.
@@ -58,7 +58,7 @@
 57. Same-group CRN removes shared hidden-driver/arrival variation only to extent model supports it.
 58. Nexec>=10minimum/update subject to new measured group2/4/6 throughput; bothGPUqueue saturated beyondmin; R count/regime/size/duration matched; unmet=>STOP.
 59. FINAL96=989600..989635 plus fresh990600..990659,8/cell; SHAd74f685ef75a819248bbe7bb0bef89cf0295037ff3b03b334b13ccec75c40bcc.
-60. Precharge4x96x1200=460800; MAPPO169/native/Au48/Bu48; laterRu24=115200; no selection/reruns; R branches deferred.
+60. Precharge4x96x1200=460800 +Ru24=115200; MAIN0423 afterA48 precomputeMAPPO/native/A48+Abranches,691800incl600reusecheck within existingphases; status/SHAonly until allfixedA48/B48/R24,then B/R episodes+Bbranches+analysis once; no Rbranches.
 61. BranchesT300/500/700/900,H300; exact same MAPPO prefix, mismatchSTOP; MAPPO-reuse600 check first; failure+115200 needs MAIN approval.
 62. Final paired world-bootstrap95CI B-MAPPO/B-A/B-R/A-MAPPO J600/J900; percell/safety; controls reused.
 63. First12executedBstarts RNG20261101 + final detector-first twins share200000reserve; complete n+2 full-prefix reruns before any attempt.

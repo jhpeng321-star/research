@@ -1,5 +1,12 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+MAIN0423 precompute REGISTERED598cd74d/CPU22PASS0skips/zeroSUMO, sourcefinalcpu1.
+final_ops dispatch NEXT, once only; waits A48, first600sMAPPOreusecheck, then
+MAPPO/native/A48episodes+Abranches, SCHED_IDLE/nice19/up-to24cpuQworkers.
+Hash/statusonly until ALL fixedA48/B48/R24; then remainingepisodes/Bbranches
+and registeredanalysis. Allocationsunchanged7473440/7500000; noextraSUMO.
+ObserverV3 now34356, sameoriginaldeadline; stagingconflicts defercommit only.
+
 FreshresumeMAIN0423: all282brief lines/readreceipts; originalA/B/R/grader/broker
 alive, A-u42/B-Ru0collecting/noSTOP/2327240charged at1793564940. SecondGPUowners
 and admissionmonitorsalive/adopted, gatespending; neverduplicate. Observer43408

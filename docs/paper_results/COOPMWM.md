@@ -1,5 +1,25 @@
 # S-COOPMWM — live checks
 
+## MAIN04:23 frozen-policy precompute — CPU qualified and registered
+- **22 CPU tests PASS / zero skips / 1.148s / zero SUMO** in the existing cpuQ
+  environment, immutable `coopmwm20261102_finalcpu1`. Covers fixed endpoints,
+  exact panel/phase liabilities, no partial-job retry, hash-only publication,
+  complete MAPPO branch-continuation equivalence and registered branch/Holm tests.
+  True-native and MAPPO constructor/state-schema preflights also pass.
+- Registered amendment `598cd74d59194ce14bf78c92151061d1bc603d674a29afcbcc9de9f61b7c1946`.
+  Once A48 completes, precompute MAPPO/native/A48 episodes and A branches, with
+  the one-world/one-branch 600s MAPPO reuse check first. **691,800 sim-s** comes
+  entirely from existing final/branch/reuse allocations; total remains
+  **7,473,440 / 7,500,000**, 26,560 unallocated.
+- Up to24 cpuQ workers use **nice19 and Linux SCHED_IDLE**, inherited by SUMO;
+  B/R and exact grading retain priority. New submissions wait while grading is
+  active or load/memory/storage guards bind. Existing training/GPU owners persist.
+- During training only status, job identities and artifact SHA receipts are exposed.
+  No outcome summary or analysis is opened until fixed A48/B48/R24 completion.
+  The continuation then evaluates the remaining B/R episodes and B branches once,
+  followed by the registered paired episode and comparator-specific Holm analyses.
+  Detector-first discovery retains its separately registered reserve.
+
 ## MAIN04:19 additional search workers — qualification running
 - Detached cpuQ admission monitors3287007/3287221 now wait for all eight exact
   gates and hot-add slotsgpuA@1/gpuR@1 to the original broker automatically.
