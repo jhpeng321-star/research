@@ -1,6 +1,46 @@
 # S-WMTEACH resume / ownership
 
-## Latest recovery milestone — read before older ownership
+## CURRENT: PAUSED by MAIN 2026-11-01 17:35 — supersedes all launch instructions below
+- Resume authority is ONLY a new MAIN `S-WMTEACH RESUME` entry. Paper A/S-COOPMWM
+  has GPU priority. Do not start a collector, teacher, student or live job while held.
+- Pause/code/first inventories committed `1df3e615`. Durable local hold:
+  `docs/paper_results/wmteach/OWNER1735_PAUSE.json`; both collector entry points
+  and automatic/direct live launch return `PAUSED_BY_MAIN` before remote work.
+- Local collector43128 was verified by exact command + creation epoch1793511929
+  against its receipt and stopped. No new local collector/dispatch is running.
+- Verified own gpuA453587/start889174202 and453608/start889174685/boot
+  a81555d7-176e-4ed8-bc7d-896fc89cc914, then wrote ONLY their roots' cooperative
+  STOP and owner-pause receipts. Both exited at existing task guards; no GPU signals.
+  `FAILURE.json` in these roots records the intentional `own STOP`, not a new model bug.
+  Former quality453566 was already complete/absent and received no stop action.
+- Final read-only checkpoint1793525989: all three PIDs absent, none in GPU accounting;
+  other workers remain untouched. Live root absent; teacher SUMO0; student not fit.
+- FULL-v4 `/root/autodl-tmp/wmteach_scale20261101_v3`:5120 states/64 complete
+  lineages;47 fully saved K8 paired-future caches with BOTH H120/H300 labels.
+  Next sorted unlabelled state `w969400_line0_t1695`; no partial label directory.
+- FULL-v5 `/root/autodl-tmp/wmteach_scale_v5_20261101_v2`:4993 states/62 complete
+  lineages;1 complete K8/H120+H300 label cache. Partial lineage `w969430_line1`
+  has33 saved states through547.5s (next planned saved clock555s);969431/line1
+  not generated.127 states remain. First sorted unlabelled `w969400_line0_t1005`.
+- Completed v5 quality `/root/autodl-tmp/wmteach_v5quality20261101_v2`:
+  96 futures +24 horizon labels; retain and reuse, never forecast them again.
+- Exact resume inventory: `wmteach/OWNER1735_CHECKPOINT_1793525989.json` plus
+  `_SUMMARY.json` (under docs/paper_results). The full receipt binds all10503
+  saved cache files by relative path/bytes/SHA256, source identities, owner receipts,
+  quality, corpus, next label positions, partial lineage and intentional STOP tracebacks.
+  Scale files are `states/<world_line>/*_t*.json` and
+  `labels/<state>/{FUTURES,LABEL_H120,LABEL_H300}.json`; quality is `tasks/<state>/`.
+- Existing immutable `scale.execute` is NOT a restart entry point: exclusive writes
+  and terminal STOP/FAILURE remain. After authority, continuation must validate/reuse
+  completed caches without recomputation in a separately registered successor.
+  The v5 partial lineage saves observable states, not a serialized latent/controller
+  generator state; exact internal-state continuation is not currently implemented.
+  Preserve this limitation and the prefix; do not claim a bitwise generator restart
+  or silently replay the prefix. No resume or new job was attempted during pause.
+- CPU pause/live checks5PASS. Read-only recheck only:
+  `python -B -m tools.wmteach.pause` (never invokes live/collector/dispatch).
+
+## Historical recovery milestone — superseded by MAIN1735 pause above
 - SOLE CURRENT COLLECTOR: local43128, exact command
   `C:\Users\jpeng\AppData\Local\Programs\Python\Python313\python.exe -B -u -m tools.wmteach.scale_watch`,
   CIM creation2026-11-01 13:45:29+08 / receiptstartedUnix1793511929.2292252.

@@ -46,6 +46,7 @@ for name,location,pid,ticks in jobs:
    with (root/'STOP').open('x') as f:f.write('MAIN1735 PAUSE; retain all work; resume only after S-WMTEACH RESUME\\n')
  files={}
  for item in ('IDENTITY.json','DISPATCH.json','OWNER1735_PAUSE.json','QUALITY.json',
+  'QUALITY_RECORDS.json','QUALITY_COMPLETE.json','QUALITY_PROVENANCE.json',
   'HELPFUL_QUALITY.json','CORPUS.json','COMPLETE.json','FAILURE.json'):
   p=root/item
   if p.is_file():files[item]=json.loads(p.read_text())
@@ -55,7 +56,8 @@ for name,location,pid,ticks in jobs:
  futures=sorted((root/'labels').glob('*/FUTURES.json'))
  # Hash all completed cache outputs, excluding mutable logs/locks and source data.
  cached=states+sorted((root/'states').glob('*/COMPLETE.json'))+futures+labels120+labels300
- cached+=sorted((root/'tasks').glob('*.json'))
+ quality_tasks=sorted((root/'tasks').glob('*/*.json'))
+ cached+=quality_tasks
  manifest={str(p.relative_to(root)):dict(bytes=p.stat().st_size,
   sha256=hashlib.sha256(p.read_bytes()).hexdigest()) for p in cached}
  done120={p.parent.name for p in labels120};done300={p.parent.name for p in labels300}
@@ -66,6 +68,13 @@ for name,location,pid,ticks in jobs:
   complete_lineages=len(list((root/'states').glob('*/COMPLETE.json'))),
   complete_label_pairs=len(done),h120_labels=len(labels120),h300_labels=len(labels300),
   future_caches=len(futures),completed_state_ids=sorted(done),
+  quality_futures=sum(p.name.startswith('k') for p in quality_tasks),
+  quality_labels=sum(p.name.startswith('LABEL_H') for p in quality_tasks),
+  next_unlabelled_state=next((p.stem for p in states if p.stem not in done),None),
+  partial_lineages=[dict(name=p.name,states=len(list(p.glob('*_t*.json'))),
+   last_saved_time_s=max(int(q.stem.rsplit('_t',1)[1])/2 for q in p.glob('*_t*.json')))
+   for p in sorted((root/'states').iterdir()) if p.is_dir() and not (p/'COMPLETE.json').exists()]
+    if (root/'states').is_dir() else [],
   unfinished_label_dirs=sorted(p.name for p in (root/'labels').iterdir() if p.is_dir() and p.name not in done)
     if (root/'labels').is_dir() else [],cache_manifest=manifest,
   log_tail=(root/'RUN.log').read_text()[-2400:] if (root/'RUN.log').is_file() else '')
@@ -81,10 +90,19 @@ print(json.dumps(dict(unix=time.time(),request=REQUEST_VALUE,jobs=out,
     with dest.open('x', encoding='utf-8') as f:
         json.dump(data, f, sort_keys=True, allow_nan=False)
         f.write('\n')
-    print(json.dumps(dict(path=str(dest), jobs=[dict(name=j['name'], process=j['process'],
+    summary = dict(path=str(dest), jobs=[dict(name=j['name'], root=j['root'], process=j['process'],
         generated=j['generated_states'], labelled=j['complete_label_pairs'],
-        stop=j['stop_present'], unfinished=j['unfinished_label_dirs']) for j in data['jobs']],
-        gpu=data['gpu'], live_root_exists=data['live_root_exists'])))
+        complete_lineages=j['complete_lineages'], partial_lineages=j['partial_lineages'],
+        next_unlabelled_state=j['next_unlabelled_state'],
+        quality_futures=j['quality_futures'], quality_labels=j['quality_labels'],
+        stop=j['stop_present'], unfinished=j['unfinished_label_dirs'],
+        failure=j['files'].get('FAILURE.json'),
+        cache_files=len(j['cache_manifest'])) for j in data['jobs']],
+        gpu=data['gpu'], live_root_exists=data['live_root_exists'])
+    with dest.with_name(dest.stem + '_SUMMARY.json').open('x', encoding='utf-8') as f:
+        json.dump(summary, f, indent=2, sort_keys=True)
+        f.write('\n')
+    print(json.dumps(summary))
     return data
 
 

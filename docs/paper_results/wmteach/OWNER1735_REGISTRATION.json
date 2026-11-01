@@ -1,0 +1,17 @@
+{
+  "registry": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md",
+  "marker": "S-WMTEACH MAIN1735 PAUSE COMPLETE",
+  "pause_commit": "1df3e615",
+  "checkpoint": "OWNER1735_CHECKPOINT_1793525989.json",
+  "checkpoint_unix": 1793525989,
+  "cache_files_sha256_bound": 10503,
+  "v4": {"generated": 5120, "labelled": 47, "complete_lineages": 64},
+  "v5": {"generated": 4993, "labelled": 1, "complete_lineages": 62, "partial_lineage": "w969430_line1", "partial_states": 33},
+  "v5_quality": {"futures": 96, "horizon_labels": 24},
+  "gpu_released": true,
+  "collector_stopped": true,
+  "resume_requires": "MAIN appends S-WMTEACH RESUME",
+  "bitwise_partial_generator_resume_implemented": false,
+  "cpu_pause_live_tests_passed": 5,
+  "new_sumo_sim_s": 0
+}

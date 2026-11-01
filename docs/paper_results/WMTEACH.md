@@ -32,13 +32,36 @@
   must pass before the one-use launch. Efficacy-only: no new member-alone C_G branches.
 
 ## Status
-Current verified work: v4scalev3 PID453587 is generating the5120state corpus;
-its first K8 batching canary PASS (maximum cost error1.52587890625e-05veh-s,
-finite/conserved/source-inclusive). Snapshot1793511674:23generated states,
-1complete labelled state; first result reused once. Published-v5 quality PID453566
-has3/96complete futures (snapshot1793511702); v5scalev2 PID453608 waits for that
-quality report. All owned identities match. Teacher SUMO0; scale student/live
-pending. These are running computations, not a completed5000state deliverable.
+**PAUSED by MAIN17:35 (2026-11-01), pending explicit `S-WMTEACH RESUME`.**
+S-COOPMWM/Paper A has GPU priority. Exact-owned local collector43128 stopped;
+gpuA scale453587/453608 cooperatively stopped at existing guards. Quality453566
+was already complete. Final checkpoint1793525989 verifies all three PIDs absent
+and absent from GPU accounting. No student/live dispatch; live root absent; SUMO0.
+
+- FULL-v4:5120/5120 generated states,64 complete lineages,47/5120 fully labelled
+  states (each K8/H120+H300). Root `/root/autodl-tmp/wmteach_scale20261101_v3`;
+  next sorted label `w969400_line0_t1695`, no incomplete label directories.
+- FULL-v5:4993/5120 generated states,62 complete lineages,1/5120 labelled state.
+  Root `/root/autodl-tmp/wmteach_scale_v5_20261101_v2`; partial `w969430_line1`
+  has33 saved clocks through547.5s;127 planned states remain. Next sorted label
+  `w969400_line0_t1005`. No incomplete label directories.
+- FULL-v5 exact quality complete:96 futures/24 horizon labels under
+  `/root/autodl-tmp/wmteach_v5quality20261101_v2`; results below retained.
+- `wmteach/OWNER1735_CHECKPOINT_1793525989.json` hashes all10503 saved cache files
+  (v4:5325;v5:5058;quality:120) by path/size/SHA256, with identities/quality/corpus/
+  STOP tracebacks. Its `_SUMMARY.json` gives human-readable positions. Earlier
+  request and checkpoint receipts preserved. Pause milestone commit `1df3e615`.
+- Both scale `FAILURE.json` files are intentional owner STOP guard exits, not
+  failed forecasts. Existing immutable roots are not restartable via unchanged
+  `scale.execute`. After authority, a separately registered continuation must reuse
+  every complete cache; v5's partial generator has observable snapshots but no
+  serialized latent/controller state, so bitwise internal-state resume is not yet
+  implemented. No automatic retry/replay occurred.
+- Durable local `wmteach/OWNER1735_PAUSE.json` blocks collector/live entry points.
+  CPU pause/live regression checks5PASS. All earlier work and peer processes retained.
+
+The >=5000 **labelled** state target remains incomplete; no scale student or claim
+that a WM-trained policy beats MAPPO exists. Historical canary/staging details follow.
 
 Operational canary repair update: designacf6f48dbd4b. Repairedv4scalev2 exposed
 an observer due-area initialization invariant; preserve the observer wrapper in
@@ -153,8 +176,8 @@ The headline “a policy trained with the world model beats MAPPO” is an objec
 
 <!-- WMTEACH-SCALE:BEGIN -->
 ## OWNER12:53 scale continuation — FULL-v4
-- Snapshot Unix1793525242; GPU ownership {'identity_matches': True, 'pid': 453587, 'state': 'R'}.
-- Generated 5120/5120 distinct planned states; labelled 42/5120 (each K8/H120+H300); teacher SUMO0sim-s.
+- PAUSED checkpoint Unix1793525989; former own PID453587 absent; cooperative STOP retained.
+- Generated 5120/5120 distinct planned states; labelled 47/5120 (each K8/H120+H300); teacher SUMO0sim-s.
 - Exact H300 helpful states: 8; argmax agreement 4/8, positive-saving choices 6, Wilson95lower 0.2152; live quality gate PASS=True.
 - Exact mean chosen saving on helpful states: 1020.461280948498veh-s. Inherited12state roster-only diagnostics; not full descendant qualification.
 - First batched K8 canary PASS; maximum paired-cost serial error 1.52587890625e-05veh-s; result reused once.
@@ -163,8 +186,8 @@ The headline “a policy trained with the world model beats MAPPO” is an objec
 
 <!-- WMTEACH-V5-SCALE:BEGIN -->
 ## OWNER12:53 scale continuation — FULL-v5
-- Snapshot Unix1793525243; GPU ownership {'identity_matches': True, 'pid': 453608, 'state': 'R'}.
-- Generated 4700/5120 distinct planned states; labelled 1/5120 (each K8/H120+H300); teacher SUMO0sim-s.
+- PAUSED checkpoint Unix1793525989; former own PID453608 absent; cooperative STOP retained.
+- Generated 4993/5120 distinct planned states; labelled 1/5120 (each K8/H120+H300); teacher SUMO0sim-s.
 - Exact H300 helpful states: 8; argmax agreement 2/8, positive-saving choices 2, Wilson95lower 0.0715; live quality gate PASS=True.
 - Exact mean chosen saving on helpful states: 388.17162966759815veh-s. Inherited12state roster-only diagnostics; not full descendant qualification.
 - First batched K8 canary PASS; maximum paired-cost serial error 0.0veh-s; result reused once.
