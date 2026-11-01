@@ -32,6 +32,15 @@
   must pass before the one-use launch. Efficacy-only: no new member-alone C_G branches.
 
 ## Status
+OWNER12:53 amendment: scale target >=5000 distinct FIT/imagined decision states;
+helpful-state teacher quality must precede scale fitting and gate live testing.
+Fresh recovery at `e6ba1bde` found original GPU437822 alive (64 futures/16 horizon
+labels, snapshot1793508966). Its completed tasks are retained. Exact-owned local
+collector41120 was stopped before any live launch to supersede the obsolete
+first32world-student trigger. FULL-v5 is not released; WMDATA2 is quarantined by
+INT, so scale generation will use the32 permitted FIT worlds. No live efficacy
+result exists. The initial128-context pipeline alone does not meet the new target.
+
 Active immutable gpuA root `/root/autodl-tmp/wmteach20261101_v3`,404source hashes.
 Supervisor437822/startticks888636829/boot a81555d7-176e-4ed8-bc7d-896fc89cc914;
 `wmteach/DISPATCH_V3.json`. Own strict8GiB GPU cap; peer processes untouched.

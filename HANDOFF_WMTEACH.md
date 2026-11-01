@@ -1,5 +1,19 @@
 # S-WMTEACH resume / ownership
 
+## OWNER12:53 recovery amendment
+- Fresh recovery read clean `e6ba1bde`, registration and all ownership contracts first.
+- Snapshot1793508966: GPU437822 identity MATCH/R,64 complete futures,16 horizon
+  labels; quality/student still pending. Preserve this running initial experiment.
+- Verified local collector41120 by exact command and creation Unix1793507667;
+  stopped ONLY that owned collector to prevent its obsolete first32world-student
+  automatic live launch. GPU and peer processes untouched; no live root/result.
+- New owner priority: report helpful-state exact teacher quality FIRST, generate
+  >=5000 distinct FIT/imagined decision states, then fit the scale student. Live
+  requires meaningfully nonzero helpful-state agreement plus original approvals.
+  The earlier first-small-student live contract is superseded before any dispatch.
+- FULL-v5/FULL-v5-LP explicitly NOT READY in rb2-int/HANDOFF.md; retain FULL-v4.
+  WMDATA2 969550..969599 is quarantined by INT, so new scale inputs use FIT32 only.
+
 ## Read first; do not duplicate
 - Branch `c4/wmteach`; recovery `9f92c488`, shared student `ee47f395`
   (original S-DISTILL `4b139e5f`), teacher `d1584ddc`, canary/dispatch `b919f4bf`.
