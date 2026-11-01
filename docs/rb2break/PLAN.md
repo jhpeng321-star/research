@@ -141,3 +141,15 @@ allowed speed from sumo_idm (known actuator design, not hidden-driver truth).
 Fresh corrected CAV-parent/native-child dev12/K1 screens, with native-child's
 four commanded arms required identical to its corrected parent. No external
 execution equation or controller weights change. No mixing v1/v2 receipts.
+
+## Full development K8 confirmation, frozen before corrected K1 score collection
+Evaluate the source-backed corrected-mode2/native-uncommanded candidate on ALL
+dev12×8futures×5arms/H600, retaining120/300prefixes, regardless of K1 efficacy.
+New immutable latest source includes pre-planning CAV consistency and known-
+actuator fallback when no CAV donor exists. Two disjoint6world shards, max2BREAK
+CUDA workers, each starting only after its owned corrected-K1 predecessor exits.
+No K1 data are relabelled as K8; all96tasks generated under one new common model
+contract. Score only complete K8 worlds; all12required for final dev readout.
+The source-corrected candidate is fixed by actuator/ownership parity, not a
+J-offset or post-hoc threshold. Original FULL-v4 development K8 remains comparator.
+All CIs requiring replicated cells remain NA; no qualification from dev12.

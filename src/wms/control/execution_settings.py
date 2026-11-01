@@ -11,13 +11,15 @@ from pathlib import Path
 import hashlib
 import inspect
 import json
+import os
 
 import torch
 
 from wms.model.driver_encoder import PARAMETER_NAMES
 
 
-def bind_execution_settings(kwargs, entries, initial, path):
+def active_execution_settings(path=None):
+    """Known actuator vector/provenance; callable before latent/LC planning."""
     from .execution import load_learned_driver, mode
     if mode() == 2:
         from . import sumo_idm
@@ -30,19 +32,43 @@ def bind_execution_settings(kwargs, entries, initial, path):
             cav_settings_source_sha256=hashlib.sha256(Path(inspect.getfile(sumo_idm)).read_bytes()).hexdigest(),
             retired_learned_driver_used=False)
     else:
+        path = path or os.environ.get('C4_EXECUTION_DRIVER')
+        if not path:
+            raise ValueError('legacy CAV settings require registered learned-driver artifact')
         settings = load_learned_driver(str(path))
         provenance = dict(cav_settings_source='registered_motion_fitted_execution_driver',
             cav_settings_sha256=hashlib.sha256(Path(path).read_bytes()).hexdigest(),
             retired_learned_driver_used=True)
+    return settings, provenance
+
+
+def bind_parameter_dict(params, state, settings):
+    """Preserve HDVs/padding and replace only observed CAV physical coordinates."""
+    cav = state['is_cav'].bool() & state['present'].bool()
+    result = dict(params)
+    for name, value in settings.items():
+        result[name] = torch.where(cav, torch.full_like(params[name], value), params[name])
+    return result
+
+
+def bind_execution_settings(kwargs, entries, initial, path):
+    settings, provenance = active_execution_settings(path)
     process = entries.process
     mix = process.birth_mix
     params = kwargs['driver_params']
-    cav = initial['is_cav'].bool() & initial['present'].bool()
-    for name, value in settings.items():
-        params[name] = torch.where(cav, torch.full_like(params[name], value), params[name])
-    for pool in mix.cav_pools:
+    params.update(bind_parameter_dict(params, initial, settings))
+    fallback_rows = []
+    for b, pool in enumerate(mix.cav_pools):
+        if not len(pool):
+            # The actuator design is known even when no CAV happened to be
+            # observed at t0. Preserve only inert legacy coordinates from the
+            # frozen pool; replace every physical coordinate below.
+            pool = mix.pools[b][:1].clone()
+            mix.cav_pools[b] = pool
+            fallback_rows.append(b)
         for name, value in settings.items():
             pool[:, PARAMETER_NAMES.index(name)] = value
     # PopulationAdmission and future SumoInsertion both hold this same mix.
-    return dict(**provenance, cav_settings=settings, external_executor_changed=False,
+    return dict(**provenance, cav_settings=settings, cav_known_fallback_rows=fallback_rows,
+        external_executor_changed=False,
         hdv_settings_changed=False, latent_streams_changed=False)

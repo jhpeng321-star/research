@@ -16,7 +16,7 @@ JOB = PARENT+'/rb2break'
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=('stage', 'launch', 'queue', 'queue-corrections', 'queue-native', 'validate-envelope', 'fetch-envelope', 'fit-birth', 'bind-birth', 'fetch-birth', 'fetch-source-audit', 'resources', 'inspect-start', 'inspect-source', 'wait', 'retire-cpu3', 'retire-slow-cpu', 'retire-old-queues', 'status', 'fetch', 'fetch-baseline', 'baseline'))
+    parser.add_argument('action', choices=('stage', 'launch', 'queue', 'queue-corrections', 'queue-native', 'queue-k8', 'validate-envelope', 'fetch-envelope', 'fit-birth', 'bind-birth', 'fetch-birth', 'fetch-source-audit', 'resources', 'inspect-start', 'inspect-source', 'wait', 'retire-cpu3', 'retire-slow-cpu', 'retire-old-queues', 'status', 'fetch', 'fetch-baseline', 'baseline'))
     parser.add_argument('--host', default='gpuA', choices=('gpuA', 'gpuR'))
     parser.add_argument('--runtime')
     parser.add_argument('--factor', default='baseline')
@@ -120,6 +120,21 @@ runtime=Path({args.runtime!r});assert (runtime/'STAGE.json').is_file()
 claim=root/('QUEUE2_'+runtime.name+'_'+{str(args.lane)!r}+'.json');assert not claim.exists()
 argv=['nice','-n','19','/root/miniconda3/bin/python','-B','-u','-m','tools.rb2break.factor_queue',
  '--wait-for',str(root/{wait_for!r}),'--factors',*{factors!r},'--lane',{str(args.lane)!r}]
+env=dict(os.environ,OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',CUDA_VISIBLE_DEVICES='0',
+ PYTHONPATH='/root/autodl-tmp/c4/speedhead20261030/pythondeps')
+with claim.with_suffix('.log').open('x') as log:
+ child=subprocess.Popen(argv,env=env,stdout=log,stderr=subprocess.STDOUT,cwd=runtime,start_new_session=True)
+save(claim,dict(owner='S-RB2-BREAK',pid=child.pid,argv=argv,unix=time.time(),
+ boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
+ start_ticks=Path('/proc/'+str(child.pid)+'/stat').read_text().split()[21]))
+print(claim.read_text())
+'''
+    elif args.action == 'queue-k8':
+        assert args.runtime and args.runtime.startswith(PARENT+'/rb2break_code_')
+        code = f'''
+runtime=Path({args.runtime!r});assert (runtime/'STAGE.json').is_file()
+claim=root/{('K8_QUEUE_'+str(args.lane)+'.json')!r};assert not claim.exists()
+argv=['nice','-n','19','/root/miniconda3/bin/python','-B','-u','-m','tools.rb2break.k8_queue','--lane',{str(args.lane)!r}]
 env=dict(os.environ,OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',CUDA_VISIBLE_DEVICES='0',
  PYTHONPATH='/root/autodl-tmp/c4/speedhead20261030/pythondeps')
 with claim.with_suffix('.log').open('x') as log:

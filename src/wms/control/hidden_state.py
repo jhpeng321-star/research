@@ -293,6 +293,12 @@ def plan_hidden_state_futures(model, state: Mapping, history_args: Mapping, *,
     encoded, embedding, params = model.encode_drivers(dict(state), **args)
     if params is None or set(params) != set(PARAMETER_NAMES):
         raise ValueError('hidden-state futures need physical inferred driver settings')
+    if getattr(model, '_wmphys_match_cav_execution_settings', False):
+        # Known actuator settings must precede population construction and any
+        # subsequent sampled-profile causal LC-memory replay, not just births.
+        from .execution_settings import active_execution_settings, bind_parameter_dict
+        settings, _ = active_execution_settings()
+        params = bind_parameter_dict(params, state, settings)
     point = _stack(params).detach()
     batch, slots, _ = point.shape
     row_keys = list(range(batch)) if row_keys is None else list(row_keys)
