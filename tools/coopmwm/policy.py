@@ -24,10 +24,11 @@ def group(rows):
 
 class Controller:
     def __init__(self, policy=None, generator=None, deterministic=False, samples=None,
-                 branch=None):
+                 branch=None, guide=None, beta=0.):
         self.policy,self.generator,self.deterministic=policy,generator,deterministic
         self.samples,self.branch=samples,branch
         self.events=[]; self.targets={}; self.until=None
+        self.guide,self.beta=guide,beta
 
     def apply(self, rows, commands, now):
         if self.until is None or now>=self.until:
@@ -42,6 +43,12 @@ class Controller:
             else:
                 sample=self.policy.sample(encode(rows,commands),self.generator,
                                           deterministic=self.deterministic)
+            proposal=None
+            if self.guide is not None and self.samples is None and not self.deterministic:
+                from .exploration import route,apply_proposal
+                if route(sample,rows,self.beta,self.generator):
+                    proposal=self.guide(rows,commands,now,sample)
+                    sample=apply_proposal(sample,proposal)
             self.targets=targets(sample); self.until=now+sample['window']
             if self.branch and now>=self.branch['time_s']:
                 if now==self.branch['time_s']:
@@ -49,5 +56,5 @@ class Controller:
                 else:
                     self.targets={} # All twins release to MAPPO after intervention window.
             self.events.append(dict(time_s=int(now),sample=sample,rows=rows,
-                                    targets=dict(self.targets),group=group(rows)))
+                                    targets=dict(self.targets),group=group(rows),proposal=proposal))
         return requests(self.targets,rows,zone=None) if now<self.until else {}

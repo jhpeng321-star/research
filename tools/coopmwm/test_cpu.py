@@ -124,7 +124,8 @@ class Contracts(unittest.TestCase):
         b=budget();self.assertEqual(UPDATES,24)
         self.assertEqual(b['phases']['train'],len(TRAINING_SEEDS)*2*UPDATES*24*1200)
         self.assertEqual(b['phases']['final_test'],4*36*1200)
-        self.assertEqual(b['unallocated'],434400)
+        self.assertEqual(b['unallocated'],261600)
+        self.assertEqual(b['phases']['replication_test'],172800)
         install_seed_scope();seen=set()
         for i in range(3):
             panel=worlds('train',i)
@@ -145,7 +146,7 @@ class Contracts(unittest.TestCase):
         from .storage import write,read
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp)
-            with self.assertRaisesRegex(ValueError,'before all registered training'):
+            with self.assertRaisesRegex(ValueError,'before this seed training'):
                 final_test(root,{}, {})
             self.assertFalse((root/'FINAL_TEST_STARTED.json').exists())
             for i in range(3):write(root/f'S{i}_TRAINING_COMPLETE.json',dict(active_arms=['A']))
@@ -233,6 +234,86 @@ class Contracts(unittest.TestCase):
             self.assertEqual(len(result['steps']),90)
             self.assertEqual(sum(s['reward'] for s in result['steps']),-4500.)
             self.assertEqual(result['metrics']['600']['team_delay_vs'],3000.)
+
+    def test_mixture_deterministic_atom_has_zero_policy_mass(self):
+        from .exploration import mixture_ratio
+        lp=torch.tensor(-3.,requires_grad=True)
+        own=dict(logp=-3.,behaviour=dict(route='policy',mixture_mass=.25))
+        atom=dict(logp=-3.,behaviour=dict(route='wm',mixture_mass=.25))
+        self.assertAlmostEqual(float(mixture_ratio(lp,own)),4/3,places=6)
+        self.assertEqual(float(mixture_ratio(lp,atom)),0.)
+        # Exact enumeration of the route measure integrates the target to one.
+        integral=.75*mixture_ratio(lp,own)+.25*mixture_ratio(lp,atom)
+        self.assertAlmostEqual(float(integral),1.,places=6)
+        integral.backward();self.assertAlmostEqual(float(lp.grad),1.,places=6)
+
+    def test_executed_proposal_imitation_and_SUMO_only_update(self):
+        from .exploration import apply_proposal,update,imitation
+        r=rows();p=Policy();g=torch.Generator().manual_seed(4)
+        s=p.sample(encode(r,{v['vid']:.2 for v in r if v['is_cav']}),g)
+        s['behaviour']=dict(route='wm',beta=1.,mixture_mass=.1,executed=False)
+        proposal=dict(accepted=True,option='O1',targets={'upstream':dict(speed=3.,tau=2.)},expected_saving=1.e9)
+        actual=apply_proposal(s,proposal)
+        for k in ('speed','tau'):
+            self.assertAlmostEqual(targets(actual)['upstream'][k],proposal['targets']['upstream'][k])
+        loss=imitation(p,actual);loss.backward()
+        self.assertGreater(float(p.actor[-1].bias.grad.abs().sum()),0.)
+        episodes=[dict(steps=[dict(sample=actual,reward=-100.)])]
+        before=copy.deepcopy(episodes)
+        update(p,torch.optim.Adam(p.parameters(),lr=3e-4),episodes,g,epochs=1)
+        self.assertEqual(episodes,before)
+        # A forecast cannot leak through the real reward/advantage ABI.
+        other=copy.deepcopy(episodes);other[0]['steps'][0]['sample']['behaviour']['expected_saving']=-1.e9
+        from tools.coopnative.learner import advantages
+        self.assertEqual(advantages(episodes[0]['steps']),advantages(other[0]['steps']))
+
+    def test_adaptive_beta_scale_free_monotone_and_zero_floor(self):
+        from .exploration import trust
+        def data(sign):
+            return [dict(world=i,route=route,executed=route=='wm',q=.25,
+                         advantage=sign*100. if route=='wm' else 0.)
+                    for i in range(12) for route in ('wm','policy','policy','policy')]
+        negative=data(-1);v=trust(1.,negative,100)
+        self.assertEqual(v['beta'],0.);self.assertLess(v['ci95'][1],0.)
+        self.assertEqual(trust(1.,data(1),100)['beta'],1.)
+        self.assertEqual(trust(.3,data(1),100)['beta'],.3)
+        self.assertEqual(trust(0.,data(1),100)['beta'],0.)
+        scaled=copy.deepcopy(negative)
+        for r in scaled:r['advantage']*=1000
+        self.assertEqual(trust(1.,scaled,100)['beta'],v['beta'])
+        self.assertEqual(trust(1.,[],100)['beta'],1.)
+
+    def test_proposal_targets_reuse_inherited_executors_and_whitelist(self):
+        from .wm import proposal_candidates
+        r=rows()
+        # Observable two-mainline group and a ramp: enables multiple inherited options.
+        r[0].update(vid='a',s_m=-20.,lane=0,is_cav=True)
+        r[1].update(vid='b',s_m=-40.,lane=1,is_cav=True)
+        record=dict(state_id='cpu',world_id=986000,time_s=300,rows=r,
+            group=['a','b'],targets={},mode='proposal',setting=0)
+        validate(record);acts=proposal_candidates(record)
+        self.assertEqual([a['id'] for a in acts[:2]],['policy','MAPPO'])
+        self.assertIn('O1',[a['id'] for a in acts])
+        for a in acts[2:]:
+            self.assertEqual(a['window'],10)
+            self.assertLessEqual(set(a['proposal_targets']),{'a','b'})
+        with self.assertRaises(ValueError):validate(dict(record,driver_type=1))
+
+    def test_B_deterministic_evaluation_never_queries_teacher(self):
+        r=rows();cmd={v['vid']:.2 for v in r if v['is_cav']}
+        def forbidden(*a):raise AssertionError('teacher forbidden in evaluation')
+        ctrl=Controller(Policy(),torch.Generator(),True,guide=forbidden,beta=1.)
+        self.assertEqual(ctrl.apply(r,cmd,300),{})
+        self.assertNotIn('behaviour',ctrl.events[0]['sample'])
+
+    def test_diagnostic_cannot_gate_B_or_add_reward(self):
+        import inspect
+        from .runner import run
+        source=inspect.getsource(run)
+        self.assertNotIn('multibonus',source)
+        self.assertNotIn("step['reward']",source)
+        self.assertNotIn('B_STOP',source)
+        self.assertIn('final_test(root,b,policies,si)',source)
 
 
 if __name__=='__main__':unittest.main()

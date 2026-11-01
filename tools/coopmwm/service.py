@@ -44,8 +44,8 @@ def main(root):
             while busy():time.sleep(5)
             write(dest/'CLAIM.json',dict(owner=owner,state_id=key))
             with contextlib.redirect_stdout(sys.stderr):
-                from .wm import evaluate
-                result=evaluate(rt,record)
+                from .wm import evaluate,propose
+                result=propose(rt,record) if record.get('mode')=='proposal' else evaluate(rt,record)
             write(dest/'RESULT.json',result)
         print('COOPMWM_JSON '+json.dumps(dict(event='RESULT',key=key,result=result)),flush=True)
 

@@ -1,4 +1,4 @@
-"""Immutable, single-owner budgeted A/B training with a WM credit qualification gate."""
+"""Immutable, single-owner paired PPO; WM guides exploration, SUMO grades it."""
 import argparse
 import copy
 from concurrent.futures import ProcessPoolExecutor
@@ -11,8 +11,9 @@ import numpy as np
 from .protocol import (authority,budget,worlds,batch_worlds,sha,digest,UPDATES,CHECK_EVERY,HORIZONS,TRAINING_SEEDS)
 from .storage import read,write,reserve,ledger,reconciled
 from .policy import Policy
-from .credit import algebra,multihorizon,multibonus
-from tools.coopnative.learner import update,save,load
+from .credit import algebra,multihorizon
+from tools.coopnative.learner import update as team_update,save,load
+from .exploration import update as guided_update,evidence,trust
 
 
 def verify(root):
@@ -38,14 +39,16 @@ def admission(b):
 
 def wave(root,b,policy,ws,arm,role,ident,phase,deterministic=False,extra=None):
     jobs=[];results=[]
-    weights={k:v.detach().cpu() for k,v in policy.state_dict().items()}
-    for w in ws:
+    policies=policy if isinstance(policy,dict) else {arm:policy}
+    for w,arm in ((w,a) for w in ws for a in policies):
+        weights={k:v.detach().cpu() for k,v in policies[arm].state_dict().items()}
         key=f'{ident}_{arm}_{w["seed"]}'
         path=root/'jobs'/key
         if (path/'RESULT.json').exists():results.append(read(path/'RESULT.json'));continue
         jobs.append(dict(id=key,path=str(path),world=w,role=role,arm=arm,
             weights=weights,runtime=b['runtime'],checkpoint=b['checkpoint'],noise_seed=b.get('training_seed',20261101)+w['seed']+sum(map(ord,ident)),
-            deterministic=deterministic,sim_s=1200,**(extra or {})))
+            deterministic=deterministic,sim_s=1200,queue_root=str(root),
+            guided=arm=='B' and role=='train' and not deterministic,beta=b.get('beta',0.),**(extra or {})))
     if jobs:
         reserve(root,jobs,phase);admission(b)
         from .plant import episode
@@ -119,7 +122,9 @@ def credit_gate(root,b,policy,episodes):
         record=dict(world=ep['world'],time_s=step['time_s'],group=step['group'],
                      wm=wm['credits'],exact=ex,noise=wm['noise'],horizons_s=HORIZONS)
         write(path,record);records.append(record)
-    verdict=multihorizon(records);write(root/'CREDIT_CHECK.json',verdict);return verdict
+    verdict=dict(multihorizon(records),diagnostic_only=True,training_gate=False,
+        timestamp_utc=__import__('datetime').datetime.now(__import__('datetime').timezone.utc).isoformat())
+    write(root/'CREDIT_CHECK.json',verdict);return verdict
 
 
 def compare(records,baseline,left,right,role):
@@ -177,32 +182,35 @@ def training_noise(episodes):
                 scope='empirical across TRAIN windows; unnormalized GAE, team reward only')
 
 
-def final_test(root,b,policies):
-    """Only reached after every registered training seed; no online publication."""
-    if (root/'FINAL_TEST_COMPLETE.json').exists():return
-    if not all((root/f'S{i}_TRAINING_COMPLETE.json').exists() for i in range(3)):
-        raise ValueError('final test forbidden before all registered training ends')
-    required=[root/f'S{i}_{a}_checkpoint_{UPDATES:03}.pt' for i in range(3) for a in ('A','B')]
+def final_test(root,b,policies,si=0):
+    """Primary-first 17:07 rule; fixed replication checkpoints, controls reused."""
+    prefix='FINAL_TEST' if si==0 else f'S{si}_FINAL_TEST'
+    if (root/f'{prefix}_COMPLETE.json').exists():return
+    if not (root/f'S{si}_TRAINING_COMPLETE.json').exists():
+        raise ValueError('final test forbidden before this seed training ends')
+    required=[root/f'S{si}_{a}_checkpoint_{UPDATES:03}.pt' for a in ('A','B')]
     if not all(p.exists() for p in required):
-        if not (root/'FINAL_TEST_NOT_RUN.json').exists():write(root/'FINAL_TEST_NOT_RUN.json',dict(reason='required registered final checkpoint absent',no_fallback=True))
+        if not (root/f'{prefix}_NOT_RUN.json').exists():write(root/f'{prefix}_NOT_RUN.json',dict(reason='required registered final checkpoint absent',no_fallback=True))
         return
-    if (root/'FINAL_TEST_STARTED.json').exists():raise ValueError('final test one-use claim already exists')
+    if (root/f'{prefix}_STARTED.json').exists():raise ValueError('final test one-use claim already exists')
     manifest=dict(panel_sha256=digest(worlds('final_test')),checkpoints={p.name:sha(p) for p in required},
-                  primary_training_seed=20261101,final_update=UPDATES,precharged_sim_s=172800)
-    write(root/'FINAL_TEST_STARTED.json',manifest)
-    records=[]
+                  training_seed=TRAINING_SEEDS[si],final_update=UPDATES,precharged_sim_s=172800 if si==0 else 86400)
+    write(root/f'{prefix}_STARTED.json',manifest)
+    records=[] if si==0 else read(root/'FINAL_TEST_CONTROLS.json')['records']
     zero=Policy()
     # All four complete arms are fixed before the one-use claim, independent of outcomes.
-    for a,p in [('mappo',zero),('native',zero),('A',policies['A']),('B',policies['B'])]:
-        records+=wave(root,b,p,worlds('final_test'),a,'final_test','final','final_test',True,
-                      dict(native_reference=True,authority=b['authority']) if a=='native' else None)
+    arms=([('mappo',zero),('native',zero)] if si==0 else [])+[('A',policies['A']),('B',policies['B'])]
+    for a,p in arms:
+        records+=wave(root,b,p,worlds('final_test'),a,'final_test',f's{si}_final','final_test' if si==0 else 'replication_test',True,
+                       dict(native_reference=True,authority=b['authority']) if a=='native' else None)
+    if si==0:write(root/'FINAL_TEST_CONTROLS.json',dict(records=[r for r in records if r['arm'] in ('mappo','native')]))
     comparisons={k:compare(records,[],l,r,'final_test') for k,l,r in
                  [('B_minus_MAPPO','B','mappo'),('B_minus_A','B','A'),('A_minus_MAPPO','A','mappo')]}
     cells={str(c):{a:{h:{k:float(np.mean([r['metrics'][h][k] for r in records if r['world']['cell']==c and r['arm']==a]))
           for k in ('team_delay_vs','collisions','ttc_below_3_vs','hard_brake')} for h in ('600','900')}
           for a in ('mappo','native','A','B')} for c in range(12)}
-    write(root/'FINAL_TEST_COMPLETE.json',dict(manifest=manifest,comparisons=comparisons,cells=cells,worlds=36))
-    discover(root,b,policies['B'],[r for r in records if r['arm']=='B'],'final_test')
+    write(root/f'{prefix}_COMPLETE.json',dict(manifest=manifest,comparisons=comparisons,cells=cells,worlds=36))
+    if si==0:discover(root,b,policies['B'],[r for r in records if r['arm']=='B'],'final_test')
 
 
 def run(root,smoke_only=False):
@@ -225,7 +233,7 @@ def run(root,smoke_only=False):
                   metrics=smokes[0]['metrics'],MAPPO_baseline_reused=True,new_MAPPO_sim_s=0))
         if smoke_only:return
         controls=wave(root,b,Policy(),worlds('check'),'mappo','check','control','checks',True)
-        active=['A','B'];gate=None
+        active=['A','B']
         for si,seed in enumerate(TRAINING_SEEDS):
             b=dict(b,training_seed=seed);policies={};optimizers={};generators={}
             for a in ('A','B'):
@@ -235,32 +243,41 @@ def run(root,smoke_only=False):
                 generators[a]=torch.Generator().manual_seed(seed)
                 p=root/f'S{si}_{a}_checkpoint_000.pt'
                 if not p.exists():save(p,policies[a],optimizers[a],generators[a],0,sum(r['sim_s'] for r in ledger(root)))
-            if si==0:
-                initial=wave(root,b,policies['B'],batch_worlds(1,si),'B','train','s0_u001','train')
-                gate=credit_gate(root,b,policies['B'],initial)
-                if not gate['pass_']:
-                    active=['A']
-                    if not (root/'B_STOP.json').exists():write(root/'B_STOP.json',dict(reason='registered WM-credit gate failed',credit_check=gate))
+            beta=1.;running=[]
             for u in range(1,UPDATES+1):
                 panel=[];dev=[]
+                # One interleaved wave: both arms use the entire admitted worker pool.
+                # Completed immutable episodes are reused without another charge.
+                for a in active:
+                    prior=root/f'S{si}_{a}_checkpoint_{u-1:03}.pt'
+                    policies[a],optimizers[a],generators[a],_=load(prior)
+                if u>1:
+                    previous=read(root/f'S{si}_B_UPDATE_{u-1:03}.json')
+                    beta=previous['trust']['beta']
+                b=dict(b,beta=beta)
+                episodes_all=wave(root,b,policies,batch_worlds(u,si),'paired','train',f's{si}_u{u:03}','train')
+                if si==0 and u==1:
+                    # E2 remains diagnostic only: never changes reward or stops B.
+                    credit_gate(root,b,policies['B'],[e for e in episodes_all if e['arm']=='B'])
                 for a in active:
                     checkpoint=root/f'S{si}_{a}_checkpoint_{u:03}.pt'
                     if checkpoint.exists():policies[a],optimizers[a],generators[a],_=load(checkpoint)
                     else:
-                        episodes=initial if si==0 and u==1 and a=='B' else wave(root,b,policies[a],batch_worlds(u,si),a,'train',f's{si}_u{u:03}','train')
-                        training=copy.deepcopy(episodes);credits=[]
-                        if a=='B' and u>1:
-                            for ep in training:
-                                for step in ep['steps']:
-                                    if len(step['group'])!=2:continue
-                                    c=forecast(root,ep,step)['credits'];credits.append(c)
-                                    step['reward']+=multibonus(c,u,gate)
-                        metrics=update(policies[a],optimizers[a],training,generators[a])
+                        episodes=[e for e in episodes_all if e['arm']==a]
+                        metrics=(guided_update if a=='B' else team_update)(policies[a],optimizers[a],episodes,generators[a])
+                        ev=evidence(episodes) if a=='B' else []
+                        if a=='B':
+                            running=[r for old in range(1,u) for r in read(root/f'S{si}_B_EVIDENCE_{old:03}.json')['records']]+ev
+                            write(root/f'S{si}_B_EVIDENCE_{u:03}.json',dict(records=ev))
+                        trust_result=trust(beta,running) if a=='B' else dict(beta=0.)
                         charged=sum(r['sim_s'] for r in ledger(root))
                         save(checkpoint,policies[a],optimizers[a],generators[a],u,charged,ppo=metrics)
                         write(root/f'S{si}_{a}_UPDATE_{u:03}.json',dict(update=u,arm=a,training_seed=seed,ppo=metrics,
-                            team_only_noise=training_noise(episodes),training_sim_s=u*28800,charged_sim_s=charged,wm_windows=len(credits),
-                            credit_mean={h:{k:float(np.mean([sum(c[h][k]) if k=='D_i' else c[h][k] for c in credits])) if credits else None for k in ('D_i','C_G','D_G')} for h in map(str,HORIZONS)}))
+                            timestamp_utc=__import__('datetime').datetime.now(__import__('datetime').timezone.utc).isoformat(),
+                            team_only_noise=training_noise(episodes),training_sim_s=u*28800,charged_sim_s=charged,
+                            beta_used=beta if a=='B' else 0.,trust=trust_result,
+                            proposals={k:sum(s['sample'].get('behaviour',{}).get('option')==k for ep in episodes for s in ep['steps']) for k in ('O1','O2','O3','O4')},
+                            reward_source='SUMO team delay only; no WM reward'))
                     if u%CHECK_EVERY==0:panel+=wave(root,b,policies[a],worlds('check'),a,'check',f's{si}_check{u:03}','checks',True)
                     if (si==0 and u==4) or u==UPDATES:dev+=wave(root,b,policies[a],worlds('dev'),a,'dev',f's{si}_dev{u:03}','dev',True)
                 if panel and not (root/f'S{si}_CHECK_{u:03}.json').exists():report_panel(root,u,panel,controls,'check',si)
@@ -268,8 +285,8 @@ def run(root,smoke_only=False):
             if si==0:primary=policies
             write_path=root/f'S{si}_TRAINING_COMPLETE.json'
             if not write_path.exists():write(write_path,dict(training_seed=seed,final_update=UPDATES,active_arms=active))
-        # The final test is never used to choose checkpoints or tune any arm.
-        final_test(root,b,primary)
+            # Final primary panel precedes replications; every checkpoint is fixed.
+            final_test(root,b,policies,si)
         write(root/'COMPLETE.json',dict(updates_per_seed=UPDATES,seeds=TRAINING_SEEDS,active_arms=active,charged_sim_s=reconciled(root),budget=budget()))
     except BaseException as e:
         if not (root/'STOP.json').exists():write(root/'STOP.json',dict(error=repr(e),charged_sim_s=sum(r['sim_s'] for r in ledger(root))))

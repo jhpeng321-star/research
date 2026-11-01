@@ -1,5 +1,19 @@
 # S-COOPMWM — live checks
 
+## 17:12 redesign — implementation CPU-verified before physics
+- Arm B now uses WM-guided exploration and **SUMO-only team reward/advantage**.
+- FULL-v4 K8 H300 compares inherited O1–O4 set-point proposals with policy/MAPPO.
+- Logged random routing permits exact importance correction on the augmented
+  behaviour mixture, including deterministic proposal atoms; imitation weight is beta.
+- Beta starts at1 and uses a monotone, scale-free world-bootstrap SUMO-evidence rule.
+- Primary A/B episodes share an interleaved admitted worker pool; fixed primary u24
+  test precedes replications, with MAPPO/native final-panel controls reused.
+- CPU9: **36 PASS, zero skips, 1.32 s, zero SUMO**, including actual frozen MAPPO
+  parity, proposal-mixture mass, SUMO reward isolation, adaptive trust and leakage checks.
+- CPU8's failed syntax/roundoff checks are preserved; fixed before CPU9 and physics.
+- E2 agreement/variance remains diagnostic; historical reward-credit gates below are superseded.
+- Registration/runtime deployment is next; no task simulation or update dispatched yet.
+
 ## 17:07 amendment — registered before physics
 - MAIN excludes unreachable cpuP; existing registry/protocol and cpuQ/gpuA/gpuR audits qualify.
 - Recovery found no task runtime, training jobs or GPU services on admitted hosts; SUMO remains zero.

@@ -65,9 +65,10 @@ def authority(text):
     c=next((x for x in lines if '16:38 MAIN:' in x and 'S-COOPMWM' in x and '600' in x),None)
     d=next((x for x in lines if '16:46 MAIN:' in x and 'FINAL TEST PANEL' in x and '172,800' in x),None)
     e=next((x for x in lines if '17:07 MAIN:' in x and 'S-COOPMWM' in x and '172,800' in x),None)
-    if not a or not b or not c or not d or not e:
+    f=next((x for x in lines if '17:12 MAIN:' in x and 'S-COOPMWM' in x and 'SUMO-GRADED' in x),None)
+    if not a or not b or not c or not d or not e or not f:
         raise ValueError('owner MAPPO re-scope and speed amendment required')
-    return [a,b,c,d,e]
+    return [a,b,c,d,e,f]
 
 
 def registry_conflicts(text,seeds=None):

@@ -23,8 +23,10 @@ def validate(record):
     from tools.coopnative.policy import encode
     encode(record['rows'])
     allowed={'state_id','world_id','time_s','rows','targets','group'}
-    if set(record)!=allowed or not 300<=record['time_s']<=1190:
+    if set(record) not in (allowed,allowed|{'mode','setting'}) or not 300<=record['time_s']<=1190:
         raise ValueError('observable replay whitelist/clock violation')
+    if 'mode' in record and (record['mode']!='proposal' or record['setting'] not in range(4)):
+        raise ValueError('unregistered proposal mode/setting')
     ids={r['vid'] for r in record['rows'] if r['is_cav']}
     if not set(record['group'])<=ids or not set(record['targets'])<=ids:
         raise ValueError('non-CAV target/group')
@@ -61,7 +63,7 @@ def executor_adapter():
         runtime.prepare_batch=old_prepare
 
 
-def adapted_futures():
+def adapted_futures(horizons=HORIZONS):
     """Minimal AST parameterization: H60/120/300/600, same K8 implementation.
 
     Frozen upstream sources are staged/hash-bound. Fail closed on changed structure.
@@ -74,12 +76,12 @@ def adapted_futures():
         def visit_Constant(self,node):
             if node.value==600:
                 counts['steps']+=1
-                return ast.copy_location(ast.Constant(1200),node)
+                return ast.copy_location(ast.Constant(2*max(horizons)),node)
             return node
         def visit_Tuple(self,node):
             if all(isinstance(v,ast.Constant) for v in node.elts) and [v.value for v in node.elts]==[120,300]:
                 counts['horizons']+=1
-                return ast.copy_location(ast.Tuple([ast.Constant(h) for h in HORIZONS],ast.Load()),node)
+                return ast.copy_location(ast.Tuple([ast.Constant(h) for h in horizons],ast.Load()),node)
             return self.generic_visit(node)
     tree=Horizon().visit(tree);ast.fix_missing_locations(tree)
     if counts!={'steps':1,'horizons':2}:
@@ -95,6 +97,51 @@ def adapted_futures():
                    source_for=source,BACKEND='FULL-v4')
     exec(compile(tree,'<coopmwm-frozen-batched-multihorizon>','exec'),namespace)
     return namespace
+
+
+def proposal_candidates(record):
+    """Decode inherited O1--O4 executors into the learner's W10 set-point ABI.
+
+    Original geometric availability, magnitudes and option requests are reused.
+    At each decision the initial executor target is frozen as a speed/time gap;
+    the inherited common safety layer grades actual execution in both plants.
+    """
+    from tools.wmteach.labels import actions
+    from tools.leverprobe.intervention import targets as fixed, requests as decode
+    from tools.coopfree.policy import leader_gap
+    rows=record['rows'];byid={r['vid']:r for r in rows};chosen=record['targets']
+    result=[dict(id='policy',window=10,targets=chosen),dict(id='MAPPO',window=10,targets={})]
+    for option in actions(rows,record['setting']):
+        if option['id']=='O0':continue
+        requests,_=decode(option,rows,fixed(option,rows))
+        if not requests:continue
+        changed={}
+        for vid,r in requests.items():
+            speed=r['target_mps'];gap=leader_gap(byid[vid],rows)
+            tau=1. if gap is None else max(1e-6,gap/max(speed,1e-6))
+            changed[vid]=dict(speed=speed,tau=tau)
+        targets={**chosen,**changed}
+        result.append(dict(id=option['id'],window=10,targets=targets,proposal_targets=changed))
+    return result
+
+
+def propose(rt,record):
+    validate(record);acts=proposal_candidates(record)
+    if len(acts)==2:
+        return dict(accepted=False,option=None,targets={},expected_saving=0.,record_sha256=digest(record))
+    ns=adapted_futures((300,));ns['_actions']=acts
+    adapted=dict(record)
+    with executor_adapter():
+        chunks=[ns['futures'](rt,adapted,indices=tuple(range(i,i+2))) for i in range(0,8,2)]
+    if any(not c['population_audit']['finite'] or not c['population_audit']['conserved'] for c in chunks):
+        raise ValueError('proposal conservation/finite check failed')
+    futures={a['id']:[v for c in chunks for v in c['futures']['300'][a['id']]] for a in acts}
+    means={a:sum(v['team_delay'] for v in fs)/8 for a,fs in futures.items()}
+    best=min(acts[2:],key=lambda a:(means[a['id']],a['id']))
+    saving=min(means['policy'],means['MAPPO'])-means[best['id']]
+    return dict(accepted=saving>0,option=best['id'],targets=best['proposal_targets'] if saving>0 else {},
+        expected_saving=saving,means=means,futures=futures,K=8,horizon_s=300,
+        record_sha256=digest(record),contract='inherited-options/W10-setpoint-adapter/observable-only')
 
 
 def cost_adapter(fn):
