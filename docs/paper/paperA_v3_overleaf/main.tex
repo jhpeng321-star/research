@@ -16,16 +16,7 @@
 
 \title{World-Model-Guided Exploration for Learning\\Multi-CAV Cooperation in Mixed Traffic}
 
-\author{\IEEEauthorblockN{Author One}
-\IEEEauthorblockA{\textit{Affiliation} \\
-City, Country \\
-email@domain}
-\and
-\IEEEauthorblockN{Author Two}
-\IEEEauthorblockA{\textit{Affiliation} \\
-City, Country \\
-email@domain}
-}
+\author{\IEEEauthorblockN{Author}}
 
 \maketitle
 
@@ -96,23 +87,7 @@ Learn a decentralized policy that (i) reduces $J$ relative to MAPPO and (ii) ach
 
 \begin{figure}[t]
 \centering
-\begin{tikzpicture}[font=\scriptsize, node distance=3mm and 4mm,
-  box/.style={draw, rounded corners=2pt, align=center, minimum height=6mm, inner sep=2pt},
-  arr/.style={-{Latex[length=1.6mm]}, thick}]
-\node[box, fill=gray!10] (sumo) {SUMO episode\\(policy drives)};
-\node[box, right=of sumo] (group) {decision moment:\\group of 2--6 CAVs};
-\node[box, right=of group, fill=blue!8] (wm) {world model:\\infer drivers (60\,s)\\$K$ imagined futures};
-\node[box, below=of wm, fill=blue!8] (search) {policy-centred search\\perturb $\to$ screen $\to$\\refine $\to$ re-score};
-\node[box, left=of search] (choice) {top-$k$ plans\\Thompson choice\\execute w.p.\ $\beta$};
-\node[box, left=of choice, fill=gray!10] (reward) {SUMO outcome\\(team delay)};
-\node[box, below=of choice] (update) {PPO + imitation\\($\propto\beta$) update};
-\node[box, below=of search] (trust) {trust $\beta$, library,\\search covariance};
-\draw[arr] (sumo) -- (group); \draw[arr] (group) -- (wm); \draw[arr] (wm) -- (search);
-\draw[arr] (search) -- (choice); \draw[arr] (choice) -- (reward);
-\draw[arr] (reward) |- (update); \draw[arr] (reward.south) |- (trust.west);
-\draw[arr] (update.west) -| (sumo.south);
-\draw[arr] (trust) -- (search);
-\end{tikzpicture}
+\fbox{\parbox[c][5cm][c]{0.95\columnwidth}{\centering\Large \textcolor{red}{[to be filled in]}}}
 \caption{World-model-guided exploration. The world model only proposes coordinated group plans; all learning uses simulator outcomes, and trust $\beta$ in the proposals fades with evidence.}
 \label{fig:method}
 \end{figure}
@@ -179,7 +154,7 @@ Cooperation is rare, situational and hidden in noise---the gap our method target
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\columnwidth]{figures/fig2_opportunity.pdf}
+\fbox{\parbox[c][5cm][c]{0.95\columnwidth}{\centering\Large \textcolor{red}{[to be filled in]}}}
 \caption{Opportunity above MAPPO. (a) Exact planner minus MAPPO delay saving per scenario by cell; (b) synergy $C_G$ of executed group maneuvers; (c) MAPPO group effect split into individual effects and synergy.}
 \label{fig:opportunity}
 \end{figure}
@@ -210,7 +185,7 @@ A $-$ MAPPO & \tbf & \tbf & \tbf & \tbf & \tbf\\
 
 \begin{figure}[t]
 \centering
-\fbox{\parbox[c][3.0cm][c]{0.92\columnwidth}{\centering Fig.~3 (to be added): learning curves of A, B and R on the checking scenarios, with trust $\beta$ and the share of world-model actions over training.}}
+\fbox{\parbox[c][5cm][c]{0.95\columnwidth}{\centering\Large \textcolor{red}{[to be filled in]}}}
 \caption{Learning progress and trust.}
 \label{fig:curves}
 \end{figure}
@@ -220,7 +195,7 @@ A $-$ MAPPO & \tbf & \tbf & \tbf & \tbf & \tbf\\
 
 \begin{figure}[t]
 \centering
-\fbox{\parbox[c][3.0cm][c]{0.92\columnwidth}{\centering Fig.~4 (to be added): space--time diagram of a learned group behavior with its together-versus-alone replay.}}
+\fbox{\parbox[c][5cm][c]{0.95\columnwidth}{\centering\Large \textcolor{red}{[to be filled in]}}}
 \caption{A discovered cooperative behavior.}
 \label{fig:behavior}
 \end{figure}
