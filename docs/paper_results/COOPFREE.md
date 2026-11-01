@@ -312,12 +312,12 @@ TRAIN exploration credit is not paired dev-policy performance.
 
 <!-- COOPFREE OWNER1511 BEGIN -->
 ## OWNER15:11 live continuation
-Observed UTC 2026-11-01T11:01:56Z.
+Observed UTC 2026-11-01T11:38:47Z.
 cpuQ owned1579328/start53193103 alive=True; four nice19 workers, load admission12.
-Budget: 4,668,693 precharged / 4,245,273 closed-actual sim-s; total cap6,000,000.
+Budget: 5,111,253 precharged / 4,672,773 closed-actual sim-s; total cap6,000,000.
 Corrected u001 is inherited; every subsequent update uses fresh exploration. TRAIN effects are not DEV gains.
-- u006: 464/464 new arms closed; charge485,460; cachedHOLD89.
-- u007: 24/428 new arms closed; charge447,360; cachedHOLD89.
+- u007: 428/428 new arms closed; charge447,360; cachedHOLD89.
+- u008: 4/428 new arms closed; charge442,560; cachedHOLD89.
 ### Proposal checkpoint u001
 `tools/coopfree/publications/owner1511/policy_hold_u001.pt`
 SHA256 `7b6ff3254311b7f0e8af773cdd51dbfdeca16a8660d0f872c1c8212c8c03e9c1`; receipt `HOLD_UPDATE_001.json`.
@@ -372,6 +372,15 @@ SHA256 `ee3dc3db0e951f6769c3d59e8ecaa868693e85dddd8ee4266553e5179b2c009b`; recei
 - sum_D_i: n=39, mean-1034.195, SD6290.259; quantiles[-18020.43079602871, -3409.996359221899, 0.0, 1182.9292360941217, 14783.095930196287].
 - C_G: n=39, mean+245.565, SD4641.078; quantiles[-8608.780579802085, -1458.8073454470323, 0.0, 16.943845184578095, 13717.65469040371].
 - Share exactCG>0=0.3333333333333333; sigma[4.5, 0.5] -> [4.5, 0.5].
+### Proposal checkpoint u007
+`tools/coopfree/publications/owner1511/policy_hold_u007.pt`
+SHA256 `727cc7d01ea60ad162be0969333011bccd57e72f6a9cae269f47aee3d9222fd8`; receipt `HOLD_UPDATE_007.json`.
+- 156windows/24worlds; exactsoloCG 39windows/15worlds.
+- Executed 0.9487; issued 1.0000; executed/issued 0.9487179487179487; overrides 0.8198.
+- D_G: n=156, mean-1061.373, SD4233.096; quantiles[-17880.042169584718, -3052.7307269793164, -1.1476739119489139, 682.4481014981848, 10477.126330436658].
+- sum_D_i: n=39, mean-296.627, SD12159.083; quantiles[-41732.90637981755, -2552.2379754634912, 4.635973280514008, 3361.961425185902, 36424.54380092637].
+- C_G: n=39, mean-28.824, SD10457.780; quantiles[-33071.62555409318, -2545.3007903403195, 0.0, 331.76572347441106, 38021.50654497834].
+- Share exactCG>0=0.3333333333333333; sigma[4.651557406006064, 0.5168397117784516] -> [4.651557406006064, 0.5168397117784516].
 ### Paired DEV u003 (24worlds; negative delay is better)
 - vs bandit J600: -387.915, paired95%CI[-1875.940086115498, 1043.8995259593846] vehicle-s.
 - Paired safety: {"collisions": {"ci95": [0.0, 0.0], "mean": 0.0}, "hard_brake": {"ci95": [-2.125, 3.0], "mean": 0.5416666666666666}, "teleports": {"ci95": [0.0, 0.0], "mean": 0.0}, "ttc_below_3_vs": {"ci95": [-62.02916666666667, 50.085937500000014], "mean": -5.9375}}.
