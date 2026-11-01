@@ -1,5 +1,16 @@
 # S-COOPMWM — live checks
 
+## MAIN01:53 cap confirmation adopted — recovery verified
+- Owner-approved cap **6,500,000 sim-s** supersedes earlier 6,000,000 resume figures
+  (full brief through line225; shared registry lines6011/6053/6054). The approved
+  **6,473,440 allocation leaves26,560**; earlier budget-block receipts are superseded.
+- Fresh status: A preserved at **u16/exited**, **288/288 warm jobs closed**, no
+  pending requests, **1,405,640 sim-s charged**; B/R have no dispatch.
+- Both original qual4 jobs remain identity-verified running with warm K4/H120,
+  K8/H420 and empty-history/cold **EXACT0** gates. Group4/6 timing is pending.
+- Remaining launch work: durable remote service/broker, health pauses and persistent
+  worker startup gates. No duplicate qualifier or new SUMO was launched in recovery.
+
 ## Warm GPU gates passed; restart budget-blocked
 - Both original qual4 jobs now pass **K4/H120 and K8/H420 warm fast-path parity
   with exactly 0.0 cost error**, plus **empty-history == cold, exactly 0.0**.

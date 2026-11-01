@@ -1,4 +1,14 @@
-# S-COOPMWM live continuation — infrastructure recovery / explicit cap gate
+# S-COOPMWM live continuation — MAIN01:53 cap confirmation adopted
+
+FRESH RESUME: all225 brief lines read, including MAIN01:53 confirmation: owner
+cap6500000 SUPERSEDES earlier6000000 resume figures. Full6473440 plan approved,
+26560spare; prior budget-block receipts preserved as superseded. Registry6011/
+6053/6054 independently confirms authority. Source resume_gate now uses6500000.
+Fresh WARM_STATUS_1793555678: A exitedu16,288/288jobsclosed,pending0,charge1405640;
+B/R unstarted. Original qual4 identities both R, K4H120/K8H420/emptycold EXACT0,
+group4/6timing pending; do not duplicate. No local task bridge/observer remains.
+Next: finish timing, durable remote spool/broker and health guards, source/GPU
+startup gates, register and dispatch A exactu16/B-Ru0 once. No design change.
 
 LATEST OBSERVATION: BOTH qual4 hosts now pass warm full/fast K4H120 and K8H420
 EXACT0 plus empty-history==cold EXACT0. Original583229/23014 still R, measuring
