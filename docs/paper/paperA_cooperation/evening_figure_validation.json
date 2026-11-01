@@ -1,0 +1,27 @@
+{
+  "status": "PASS",
+  "source_cells": 4,
+  "source": {
+    "path": "E:/agent-work/c4-bdrank/docs/paper_results/bdrank/option_concordance.csv",
+    "sha256": "3a7b7b2b82030b97034c656a45de3ff6861e3e6556fdd42950165263049402b8",
+    "snapshot": "inputs/F7_option_concordance_source.csv"
+  },
+  "scope": "exact CSV cells, concordance count identity, missing CIs and image integrity; no new statistics",
+  "artifacts": {
+    "inputs/F7_option_concordance_source.csv": {
+      "sha256": "3a7b7b2b82030b97034c656a45de3ff6861e3e6556fdd42950165263049402b8"
+    },
+    "inputs/F7_source_manifest.json": {
+      "sha256": "edac1ca1357b5940f4e2f8221032b4fbf8783577402f4bfff785f1410f39a664"
+    },
+    "figures/F7_option_delay_ranking.csv": {
+      "sha256": "e8fb07e199d70c190c1edecbfd87d5d4d020100aecc1e65862757fc2688f5d48"
+    },
+    "figures/F7_option_delay_ranking.png": {
+      "sha256": "32eee232eca763af727cd71b5b7195247389c287401b359902cd84770fe5724b"
+    },
+    "figures/F7_option_delay_ranking.pdf": {
+      "sha256": "3c08ab6480f186d630aa1e6b39a179d4faeed09240e519a1c8a9c688e433ef97"
+    }
+  }
+}

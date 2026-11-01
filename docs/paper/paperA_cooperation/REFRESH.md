@@ -1,8 +1,30 @@
-# Noon continuation — current evidence and handoff
+# Evening continuation — current evidence and handoff
 
 The exact evidence cut is `source_refresh.json`; pinned report/CSV/JSON bytes remain in `source_snapshots/`. The inherited clean branch and completed first-package registration were preserved. The prior night handoff is retained in `REFRESH_NIGHT_ARCHIVE.md` as history, not an active result queue.
 
-## Current noon delta — supersedes historical status below
+## Current evening delta — supersedes historical status below
+
+- Inherited clean branch `6d675bc1`; git history/status and prior task/registration receipts inspected first. First package already complete/registered, six-page IEEEtran outline v2 already delivered. No duplicate completion line, dispatch, observer or experiment was created. Source step `806b6ef3` pins the new owner/ledger and producer evidence cut.
+- **Primary method now COOPMWM:** WM-guided exploration and imitation, **SUMO-only reward/advantage**, with continued-PPO A and random-guide R controls. A continues independently; original low-volume B updates superseded, B/R held for guidance-volume qualification and isolated MAPPO restart. Exact K/quota/sampling release is pending; fixed final checkpoint/replication design is prospective, not efficacy. W-GUIDE/F3G/F3. <!-- Sources: E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM_DESIGN.md; E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM.md:3-31; E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md, MAIN17:12/17:27/17:42/18:54. -->
+- **Definition issue surfaced:** COOPMWM member-revert marginal diagnostic is not paper singleton-alone C_G; for matching pair branches its sign is opposite. M-CREDIT makes the algebra explicit, retains source labeling and requires a common B/G/ONLY audit before W-RISE. No producer result was silently sign-flipped. <!-- Sources: E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM_DESIGN.md:24-25; E:/agent-work/c4-coopmeasure/AUDIT_DESIGN.md. -->
+- **WMTEACH quality complete:** v4/v5 diagnostics delivered; both helpful gates pass, but v4 has better option selection/ranking. Scale/student/live owner-paused; generated states versus fully labelled states explicitly separated. WMTEACH's prospective v5 choice is distinct from WMPLAN's v4-retention rule. W-TEACH/W-RANK. <!-- Sources: E:/agent-work/c4-wmteach/docs/paper_results/WMTEACH.md:34-64,74-82,103-113,177-204; E:/agent-work/c4-wmplan/docs/paper_results/WMPLAN.md:120-143. -->
+- **WMPLAN held:** no complete episodes or live efficacy; prior engineering charges/caches retained. **COOPFREE continuation authorized:** original terminal STOP remains history; fresh u3/u6 DEV is inconclusive. No final continuation/discovery promoted. P-TRANSFER/N-FREE. <!-- Sources: E:/agent-work/c4-wmplan/docs/paper_results/WMPLAN.md:3-24; E:/agent-work/c4-coopfree/docs/paper_results/COOPFREE.md:313-420. -->
+- **BDRANK complete:** delay ranking more informative than saturated breakdown probabilities, not learned control or C_G fidelity. Added source-pinned F7 PNG/PDF/backing CSV and full producer CSV; exact concordance/tie/missing-CI checks and visual inspection pass. W-RANK/F7; no new statistics or forecasts. <!-- Sources: E:/agent-work/c4-bdrank/docs/paper_results/BDRANK.md:24-46; E:/agent-work/c4-bdrank/docs/paper_results/bdrank/option_concordance.csv; evening_figure_validation.json. -->
+- **v5 interim only:** engineering ready, owner HOLD on new evaluation admissions, available replicated-cell delay CRPS adverse; final four-model gate incomplete. Short-clock fleet+source direction only partially identified. W-V5. <!-- Source: E:/agent-work/c4-rb2-int/docs/paper_results/WMPHYS_V5.md:3-18,61-110. -->
+- All unchanged allowlisted source bytes were reread/hash-checked; completed overnight audit/planner/WMVALUE, failed backup/remedies and bibliography-verification receipts remain. Existing figure pins/artwork and compiled outline v2 are preserved. Current package documents supersede earlier method/status language; old refresh sections below are retained history.
+
+## Current evidence queue
+
+- [[PENDING: guidance-volume GPU qualification, registered numeric K/quota/sampling and isolated B/R release / S-COOPMWM]]. A's progress alone does not establish guidance benefit; old low-volume B runs remain charged history.
+- [[PENDING: complete random-window E2 agreement/scale/noise intervals and singleton-versus-member-revert reconciliation / S-COOPMWM, S-COOPMEASURE]]. Conditional WM variance is not real variance reduction.
+- [[PENDING: fixed proposal-free B−MAPPO/B−A/B−R outcomes, safety, common paper-measure interaction, second-seed replication and final closed accounting / S-COOPMWM, S-COOPEVAL]]. Final outcomes remain unopened by this package.
+- [[PENDING: explicit resume and cache-preserving WMTEACH corpus/student/live continuation / MAIN, S-WMTEACH]]. Teacher quality is complete; efficacy-only live plan cannot supply member-alone interaction.
+- [[PENDING: explicit resume and complete WMPLAN comparison / MAIN, S-WMPLAN]]. No existing live endpoint.
+- [[PENDING: explicit evaluation resume/final FULL-v5 four-model qualification / MAIN, S-RB2-INT]]. Engineering-ready/interim is not qualified improvement.
+- [[PENDING: COOPFREE continuation final trend/DEV/safety/accounting and valid discovery / S-COOPFREE]]. Original STOP does not describe current continuation health.
+- [[PENDING: complete pretraining/data/budget and service/fairness lineage, historical candidate A inventory, closest-method full-text comparison and official venue rules / owner integrator]]. Existing verified bibliography and six-page skeleton already delivered.
+
+## Historical noon delta
 
 - **Final FULL-v4 report delivered:** delay/position point improvement and correct aggregate effect signs coexist with final registered switching **FAIL** on breakdown rate; selected-call confidence remains uncalibrated, full-world CIs NA. Complete frozen-source FULL-v4 snapshot reused in final publication; final noon evaluation is no longer queued. W-DIST/F4P. <!-- Sources: E:/agent-work/c4-rb-int/docs/paper_results/WMPHYS_MORNING.md; E:/agent-work/c4-rb-int/docs/rbint/noon/20261101T113555+0800/PUBLICATION.json. -->
 - **Headline successor and closing delivery:** WMTEACH remains primary, original WMVALUE FAIL a predecessor. S-DISTILL exact-teacher student live panel is now **COMPLETE**: **24-world J600 saving −96.482 [−575.232,+288.473] / J900 −54.565 [−294.222,+188.886] veh-s/world**, no established win; **six** groups, no helpful-superadditive case, **zero** quota prunes, **72960 actual=charged sim-s**. WMTEACH's existing teacher job is running, no quality/student/live result; initial contexts do not yet cover later imagined descendants. Never fit planner DEV, conflate option-delay fitting with C_G-specific learning, or copy oracle gains into student slots. W-TEACH/N-DISTILL/F3T. <!-- Sources: E:/agent-work/c4-distill-1101/docs/paper_results/DISTILL.md:31-44; E:/agent-work/c4-distill-1101/docs/paper_results/distill_live/SUMMARY.json; E:/agent-work/c4-wmteach/docs/paper_results/WMTEACH.md:31-48; E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md, S-WMTEACH GPU DISPATCH / OWNERSHIP. -->
@@ -25,7 +47,7 @@ The exact evidence cut is `source_refresh.json`; pinned report/CSV/JSON bytes re
 - **Paper B:** C1CLOSED complete common-plant panel with inconclusive endpoint superiority; reference switching stopped with partial low-share analysis; switching-v2 incomplete/outage-affected. No partial performance headline imported. <!-- Sources: E:/agent-work/c4-c1closed/docs/paper_results/C1CLOSED.md; E:/agent-work/c4-c1switch/docs/paper_results/C1SWITCH.md; E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md, S-C1SWITCH2 06:00/09:18. -->
 - **Unchanged negatives retained:** stopped SUMOCF backup, Track 3B, calibration, queue prototype and expanded-data head screen remain completed negative/scoped findings; later head checkpoints stay unscored. No favorable teacher-gain ratio is available. <!-- Sources: E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_RUN.md; E:/agent-work/c4-sumoes/docs/paper_results/SUMOES_RUN.md; E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB.md; E:/agent-work/c4-wmqueue/docs/paper_results/WMQUEUE.md; E:/agent-work/c4-wmfixmerge/docs/paper_results/WMFIX_PILOT_V2DATA.md. -->
 
-## Remaining scientific queue
+## Historical noon scientific queue — superseded above
 
 - [[PENDING: WMTEACH teacher-quality/coverage, frozen observable student, exact live design and complete paired J/C_G/safety outcomes / S-WMTEACH, S-COOPMEASURE, S-COOPEVAL]]. The completed failed WMVALUE and final FULL-v4 switching tests are not queued again.
 - DISTILL live outcomes, exact event credits, safety, exposure and closed accounting are delivered; no outstanding live-result request or successful oracle-student denominator. Only future matched-controls/replication remain scientific gaps.
@@ -63,6 +85,7 @@ python -B docs/paper/paperA_cooperation/refresh_sources.py --capture
 python -B docs/paper/paperA_cooperation/build_morning_figures.py --check
 python -B docs/paper/paperA_cooperation/build_noon_figures.py --check
 python -B docs/paper/paperA_cooperation/build_student_figures.py --check
+python -B docs/paper/paperA_cooperation/build_evening_figures.py --check
 python -B docs/paper/paperA_cooperation/validate_package.py
 ```
 
