@@ -1,5 +1,5 @@
-# S-COOPMWM — acceleration plans, SUMO-graded (OWNER19:44 quality-first)
-1. Authority through MAIN19:44; native-start/WM-reward/all prior set-point runs superseded and charged.
+# S-COOPMWM — acceleration plans, SUMO-graded (OWNER20:35 viability first)
+1. Authority through MAIN20:35; native-start/WM-reward/all prior set-point runs superseded and charged.
 2. A/B/R fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
 4. A: PPO shared team reward=-J, road speed deficit plus source waiting.
@@ -40,26 +40,26 @@
 39. TRAIN checks every4updates and dev every8 are reporting only; no checkpoint selection/tuning.
 40. Final detector-first discovery uses unchanged COOPBEHAV detectors and complete exact twins.
 41. Learning checks report team return/value/KL/gradient, beta, proposal routes/acceptance/O1-O4 counts.
-42. Fixed24updates x24episodes x1200 per A/B/R; seed2 dropped under19:38 first-drop rule (would cost6239240).
+42. Full fixed24updates x24episodes x1200 per A/B/R; first stopu4 allarms for viability review; seed2 dropped.
 43. Cap6000000: superseded811640; newtrain2073600; checks259200; dev259200; primaryfinal460800; Rtest115200.
 44. Newmechanics3600; calibration57600; discovery240000; allocated4280840/free1719160 not automatically spent.
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.
 46. All failures/warmup/twins charged in full before attempts; no retries/refunds/duplicate dispatch.
 47. Primary A/B parallel first; cpuQ12nice19singlethread workers+2E2; load<=20/RAM8GiB/disk2GiB.
-48. Both GPUs batched services <=65%memory each; measured capacity; once/worker single parity; original24h deadline.
+48. Both GPUs fixed4 medium batches; measure1/2/4/8(A),1/2/4(R), bestaggregate; once/worker parity; original24h deadline.
 49. GPU CPU helpers disabled until separate frozen parity qualification; own PIDs only.
 50. Both seed guards, fresh-name exposure, immutable sources/cache/approval bindings before physics.
-51. No prohibited paths/truth/assignments, no newenv/deletion/push; commit every completed step.
+51. No prohibited inputs/newenv/push; OWNER20:35 opaque v2archive+SHA256-gated literal source removal only; commit eachstep.
 52. E2 diagnostic multi-H weights normalize measured agreement on horizons with sign95CI lower>.5.
 53. Eligible windows pause for GPU queue slots, p=.95 when admitted/dense priority; numericalNexec/throughput before restart.
 54. Per-window/H report K8 joint-return advantage variance and paired-credit variance in veh-s².
 55. Frozen critic baseline is constant within window; variance is conditional WM-estimated noise.
 56. Report actual PPO advantages across TRAIN windows separately; no empirical SUMO-noise claim.
 57. Same-group CRN removes shared hidden-driver/arrival variation only to extent model supports it.
-58. Gate counts closed executed PLAN STARTS; R matches B count/regime/duration; unmet quota=>STOP/no extraepisodes.
+58. Nexec10minimum/update from measured11.1728plans/h; keep GPUqueue saturated beyondmin; R count/regime/duration matched; unmet=>STOP.
 59. FINAL96=989600..989635 plus fresh990600..990659,8/cell; SHAd74f685ef75a819248bbe7bb0bef89cf0295037ff3b03b334b13ccec75c40bcc.
 60. Precharge4x96x1200=460800; MAPPO169/native/Au24/Bu24; laterR96x1200=115200; no selection/reruns.
-61. Primary four-arm sealed test ONCE after BOTH primaryu24; publish, then R train/test; controls reused.
+61. Viability A/Bu1..4 first then matchedRu1..4, pause; no final access. Fulltest only after BOTH primaryu24, Rtestlater.
 62. Final paired world-bootstrap95CI B-MAPPO/B-A/B-R/A-MAPPO J600/J900; percell/safety; controls reused.
 63. First12executedBstarts sampled RNG20261101 across completed updates + detector-first final twins share240000reserve.
 64. Trust: H300 SUMO return+critic tail-baseline; Hajek executed(type,regime) minus own(regime) residuals.

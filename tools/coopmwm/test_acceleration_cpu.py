@@ -18,6 +18,54 @@ class AccelerationCPU(unittest.TestCase):
         from .accel_learner import GAMMA,LAMBDA
         self.assertGreaterEqual(-1/np.log(GAMMA*LAMBDA),300.)
 
+    def test_viability_has_a_fixed_pre_final_endpoint(self):
+        from .accel_runner import update_limit
+        self.assertEqual(update_limit(dict(viability_updates=4)),4)
+        self.assertEqual(update_limit({}),24)
+        with self.assertRaises(ValueError):update_limit(dict(viability_updates=3))
+
+    def test_control_observes_same_eligible_windows_without_queries_or_rng_change(self):
+        from .plan_client import guide
+        g=torch.Generator().manual_seed(5);sample={};before=g.get_state().clone()
+        with tempfile.TemporaryDirectory() as tmp,patch('tools.coopmwm.plan_client.group',return_value=['a','b']),patch('tools.wmteach.labels.actions',return_value=[dict(id='O1',members=['a','b'])]):
+            fn=guide(dict(queue_root=tmp,accel_bounds=[-3.,2.6],arm='A'),g)
+            self.assertIsNone(fn(rows(),{},300,sample))
+            self.assertEqual(sample['behaviour']['sample_probability'],0.)
+            self.assertEqual(sample['behaviour']['route'],'policy')
+            self.assertTrue(torch.equal(before,g.get_state()))
+            self.assertFalse((Path(tmp)/'requests').exists())
+
+    def test_viability_runner_pauses_all_arms_without_touching_final_panel(self):
+        from . import accel_runner as runner
+        from .accel_storage import read,write
+        waves=[]
+        def wave(root,b,policies,ws,role,ident,phase,*args):
+            self.assertNotEqual(role,'final_test');waves.append((ident,tuple(policies)))
+            return [dict(arm=a,steps=[dict(time_s=700,reward=-1.,sample=dict(value=0.)),
+                dict(time_s=701,reward=-2.,sample=dict(value=0.))]) for a in policies]
+        route=dict(executed=10,durations=[dict(regime='ordinary',duration_s=20)]*10,
+            sampling=dict(ordinary=.5,**{'merge-dense':.5}))
+        with tempfile.TemporaryDirectory() as tmp,patch.object(runner,'verify',return_value=dict(viability_updates=4,N_exec=10,eta_primary_hours=None)),patch.object(runner,'wave',side_effect=wave),patch.object(runner,'routing',return_value=route),patch.object(runner,'evidence',return_value=[]),patch.object(runner,'viability',return_value={}),patch.object(runner,'update',return_value=[]),patch.object(runner,'save'),patch.object(runner,'panel_report'),patch.object(runner,'final',side_effect=AssertionError('sealed panel forbidden during viability')):
+            root=Path(tmp);write(root/'SMOKE.json',dict(pass_=True));write(root/'MAPPO_CHECK.json',dict(records=[]))
+            runner.run(root)
+            self.assertEqual(read(root/'VIABILITY_PAUSED.json')['update'],4)
+            self.assertEqual(len(list(root.glob('*_UPDATE_*.json'))),12)
+            self.assertFalse((root/'FINAL_TEST_STARTED.json').exists())
+            self.assertFalse((root/'COMPLETE.json').exists())
+            self.assertTrue(any(arms==('R',) for _,arms in waves))
+
+    def test_lossless_episode_storage_digest_and_no_overwrite(self):
+        from .accel_storage import read,write
+        from tools.coopnative.storage import read as plain
+        value=dict(steps=[dict(reward=-3.125,action=[0.,-1.],context='repeat'*100)]*100)
+        with tempfile.TemporaryDirectory() as tmp:
+            p=Path(tmp)/'RESULT.json';write(p,value)
+            self.assertEqual(read(p),value)
+            self.assertEqual(plain(p)['encoding'],'coopmwm-lossless-gzip-v1')
+            self.assertLess((p.parent/'RESULT.json.gz').stat().st_size,plain(p)['uncompressed_bytes'])
+            with self.assertRaises(FileExistsError):write(p,value)
+            self.assertEqual(read(p),value)
+
     def test_diagnostic_pairing_uses_actual_profile_and_mappo_background(self):
         from .accel_diagnostic import evaluate,agreement
         from types import SimpleNamespace
@@ -182,6 +230,11 @@ class AccelerationCPU(unittest.TestCase):
         for t in range(300,320):
             result=c.apply(sensor,cmd,t)
             self.assertEqual(result[members[0]]['requested_raw'],-1.)
+            b=c.events[-1]['sample']['behaviour']
+            self.assertTrue(b['executed'])
+            self.assertEqual(b['route'],'wm' if t==300 else 'plan')
+            from .accel_learner import ratio
+            self.assertEqual(float(ratio(torch.tensor(0.),c.events[-1]['sample'])),0.)
         self.assertEqual(calls,[300])
         saved=copy.deepcopy(c.events[0]['sample']);snapshot=copy.deepcopy(saved)
         r=Controller(Policy(),None,replay={'300':saved})

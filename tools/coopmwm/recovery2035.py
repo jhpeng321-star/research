@@ -131,6 +131,13 @@ print(json.dumps(dict(unix=time.time(),source_removed=True,disk_free=shutil.disk
     out['archive']=v;write(ops.EVIDENCE/'ARCHIVE2035_COMPLETE.json',out);print(json.dumps(out))
 
 
+def archive_status():
+    print(ops.ssh.remote('gpuA',r'''import pathlib,json,time
+p=pathlib.Path('/root/autodl-tmp/archive_cpuQ_20261101/coopmwm20261101_v2.tar')
+print(json.dumps(dict(unix=time.time(),exists=p.exists(),bytes=p.stat().st_size if p.exists() else 0)))
+''',timeout=20))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('inventory','archive','start-archive','remove-verified-source'));a=p.parse_args()
-    {'inventory':inventory,'archive':archive,'start-archive':start_archive,'remove-verified-source':remove_verified_source}[a.mode]()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('inventory','archive','start-archive','archive-status','remove-verified-source'));a=p.parse_args()
+    {'inventory':inventory,'archive':archive,'start-archive':start_archive,'archive-status':archive_status,'remove-verified-source':remove_verified_source}[a.mode]()

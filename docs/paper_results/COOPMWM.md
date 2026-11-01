@@ -1,5 +1,30 @@
 # S-COOPMWM — live checks
 
+## 20:57 — OWNER20:35 viability registration; CPU76 PASS
+- Preserved all recovered code, checkpoints, jobs and charges. CPU33 74PASS and
+  final **CPU34 76PASS/zero skips/2.25s/zero SUMO** qualify the new source snapshot.
+- Fixed a pre-training augmented-behaviour logging bug: a committed plan crossing
+  an otherwise eligible10s decision tick retained the policy-route label. It now
+  remains an executed plan atom with zero policy-route importance mass at **every**
+  committed step. The regression covers the tick boundary and all plan steps.
+- Registered amendment SHA `4d8a37137b052224cbe81def95d406307d18a9694e25412f0eaa272c705b18f2`:
+  **Nexec10 minimum/update**, medium32x3/elite8/K4H120/top8K8H300 search unchanged,
+  A/Bu1..4 first then count/regime/duration-matchedRu1..4, durable owner-review pause.
+- At the prior measured11.1728queries/hour,10accepted starts has a **0.895h capacity
+  floor** per update if acceptance were100%. Actual acceptance/latency is unknown;
+  this is not an execution ETA. Both GPUs stay busy beyond the minimum when possible.
+- Concurrency supervisors are owned gpuA542616/gpuR977289; each waits for the
+  original probe3 to finish, then measures A1/2/4/8 and R1/2/4 workers. The best
+  aggregate medium-search capacity is selected without training outcome input.
+- Four-update viability maximum450000sim-s includes the already-reserved3600smoke;
+  with811640superseded charges, maximum1261640. Full allocation remains
+  **4280840/6000000**, free1719160; sealed96-world test awaits the full run.
+- Episode tapes now use digest-checked, lossless gzip storage; identical decoded
+  optimizer/exact-twin inputs. Real-SUMO diagnostics run asynchronously and do not
+  gate optimizer updates. A logs comparable eligible-group SUMO noise without queries.
+- Approved opaque archive transfer is in progress (2.38GB at20:57); no extraction
+  or scenario-content inspection. Source removal still requires matching SHA256.
+
 ## 20:28 — first measured medium-CEM throughput; full-population batches qualifying
 - Complete fixed-width4 search: **gpuA635.987s =5.6605plans/hour**;
   **gpuR653.082s =5.5123plans/hour**. Each searches96candidate slots over3CEM

@@ -1,6 +1,6 @@
 """Registered one-use acceleration restart. No old checkpoint/job is overwritten."""
 import argparse
-from concurrent.futures import ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor,ThreadPoolExecutor
 from datetime import datetime,timezone
 import multiprocessing
 import os
@@ -23,13 +23,29 @@ def timestamp():return datetime.now(timezone.utc).isoformat()
 def verify(root):
     b=read(root/('BINDING_TRAINING.json' if (root/'BINDING_TRAINING.json').exists() else 'BINDING.json'))
     if b['budget']!=budget() or b['search']!=SEARCH:raise ValueError('registered plan/budget mismatch')
-    if b['amendment_sha256'] not in (root/'AUTHORITY.md').read_text():raise ValueError('numeric amendment unregistered')
+    if b['amendment_sha256'] not in (root/b.get('authority_file','AUTHORITY.md')).read_text():raise ValueError('numeric amendment unregistered')
     if not b['cpu']['pass_'] or b['cpu']['skips'] or b['cpu']['sim_s']:raise ValueError('CPU gate')
     if not all(v['pass_'] for v in b['gpu_qualification'].values()):raise ValueError('GPU qualification gate')
     for name,h in b['hashes'].items():
         if sha(root/name)!=h:raise ValueError('immutable source mismatch '+name)
     if (root/'STOP.json').exists():raise ValueError('durable STOP; no automatic retry')
+    if (root/'VIABILITY_PAUSED.json').exists():raise ValueError('owner viability pause; new registered continuation required')
     return b
+
+
+def update_limit(binding):
+    limit=binding.get('viability_updates',24)
+    if limit not in (4,5,6,24):raise ValueError('unregistered viability endpoint')
+    return limit
+
+
+def diagnostic_task(root,b,state,ep,step,index):
+    # Independent CPU physics, never an optimizer gate or replay reward.
+    policy=Policy();policy.load_state_dict(state)
+    try:exact_plan(root,b,policy,ep,step,index)
+    except Exception as error:
+        write(root/f'ACCEL_EXACT_PLAN_{index:03}_FAILED.json',dict(timestamp_utc=timestamp(),error=repr(error),
+            diagnostic_only=True,physics_retry=False))
 
 
 def wave(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None):
@@ -44,7 +60,7 @@ def wave(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None):
                 noise_seed=int(digest(dict(seed=SEED,world=w['seed'],wave=ident))[:15],16),
                 deterministic=deterministic,sim_s=1200,queue_root=str(root),accel_bounds=b['accel_bounds'],
                 gpu_deadline=b['gpu_deadline'],guided=not deterministic and arm in ('B','R'),
-                beta=b.get('beta',1.),**(extras or {})))
+                beta=b.get('beta',1.),N_exec=b.get('N_exec'),**(extras or {})))
     if jobs:
         reserve(root,jobs,phase)
         from .runner import admission
@@ -178,6 +194,7 @@ def run(root,smoke_only=False):
     lock=(root/'SUPERVISOR.claim').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     os.nice(max(0,19-os.getpriority(os.PRIO_PROCESS,0)));torch.set_num_threads(1)
     os.environ.update(CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
+    diagnostics=ThreadPoolExecutor(max_workers=1)
     try:
         if not (root/'SMOKE.json').exists():
             smoke=wave(root,b,{a:Policy() for a in ('A','B','R')},worlds('dev')[:1],'dev','smoke','mechanics')
@@ -196,7 +213,7 @@ def run(root,smoke_only=False):
                 torch.manual_seed(SEED);policies[a]=Policy();opts[a]=torch.optim.Adam(policies[a].parameters(),lr=3e-4)
                 rngs[a]=torch.Generator().manual_seed(SEED)
                 save(root/f'{a}_checkpoint_000.pt',policies[a],opts[a],rngs[a],0,charged(root))
-            for u in range(1,25):
+            for u in range(1,update_limit(b)+1):
                 start=time.monotonic();extra=dict(update=u)
                 if arms==('R',):extra['random_quota']=str(root/f'B_RANDOM_QUOTA_{u:03}.json')
                 # Each arm's trust differs after update1; keep the same common
@@ -237,26 +254,39 @@ def run(root,smoke_only=False):
                             tickets=[dict(t,id=i) for i,t in enumerate(routes['durations'])]))
                         candidates=[(e,s) for e in eps for s in e['steps'] if s['time_s']<=600 and s['sample'].get('behaviour',{}).get('plan_start')]
                         for i in exact_rng.permutation(len(candidates))[:max(0,12-exact_count)]:
-                            e,s=candidates[int(i)];exact_plan(root,b,policies[a],e,s,exact_count);exact_count+=1
+                            e,s=candidates[int(i)]
+                            state={k:v.detach().clone() for k,v in policies[a].state_dict().items()}
+                            diagnostics.submit(diagnostic_task,root,b,state,e,s,exact_count);exact_count+=1
                 if u%4==0:
                     check=wave(root,b,policies,worlds('check'),'check',f'check{u:03}_'+''.join(arms),'checks')
                     panel_report(root,f'{"".join(arms)}_CHECK_{u:03}.json',check,controls,'check')
                 if u%8==0:
                     dev=wave(root,b,policies,worlds('dev'),'dev',f'dev{u:03}_'+''.join(arms),'dev')
                     panel_report(root,f'{"".join(arms)}_DEV_{u:03}.json',dev,read(root/'MAPPO_DEV.json')['records'],'dev')
-            if arms==('A','B'):primary=policies;final(root,b,policies)
+            if arms==('A','B'):
+                primary=policies
+                if update_limit(b)<24:
+                    write(root/'PRIMARY_VIABILITY_COMPLETE.json',dict(timestamp_utc=timestamp(),update=update_limit(b)))
+                else:
+                    write(root/'PRIMARY_TRAINING_COMPLETE.json',dict(timestamp_utc=timestamp(),update=24))
+                    final(root,b,policies)
             else:
+                if update_limit(b)<24:continue
                 if not (root/'FINAL_TEST_COMPLETE.json').exists():raise ValueError('R test before primary panel')
                 write(root/'R_FINAL_STARTED.json',dict(checkpoint_sha256=sha(root/'R_checkpoint_024.pt'),panel_sha256=digest(worlds('final_test'))))
                 rs=wave(root,b,policies,worlds('final_test'),'final_test','finalR','random_guide_test')
                 primary_results=[read(root/'jobs'/f'final_{a}_{w["seed"]}'/'RESULT.json') for a in ('A','B','mappo') for w in worlds('final_test')]
                 panel_report(root,'R_FINAL_COMPLETE.json',rs+[r for r in primary_results if r['arm'] in ('A','B')],
                     [r for r in primary_results if r['arm']=='mappo'],'final_test')
-        write(root/'COMPLETE.json',dict(timestamp_utc=timestamp(),charged_sim_s=charged(root)))
+        diagnostics.shutdown(wait=True)
+        if update_limit(b)<24:
+            write(root/'VIABILITY_PAUSED.json',dict(timestamp_utc=timestamp(),update=update_limit(b),arms=['A','B','R'],
+                charged_sim_s=charged(root),reason='OWNER20:35 pause for viability review; final panel remains sealed'))
+        else:write(root/'COMPLETE.json',dict(timestamp_utc=timestamp(),charged_sim_s=charged(root)))
     except BaseException as e:
         if not (root/'STOP.json').exists():write(root/'STOP.json',dict(error=repr(e),timestamp_utc=timestamp(),charged_sim_s=charged(root)))
         raise
-    finally:lock.close()
+    finally:diagnostics.shutdown(wait=True);lock.close()
 
 
 if __name__=='__main__':

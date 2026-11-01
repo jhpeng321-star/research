@@ -17,23 +17,28 @@ GPU_ROOT='/root/coopmwm20261101_accel1'
 def pending():
     return json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json
 r=pathlib.Path({ROOT!r});assert r.is_dir()
-out=dict(stop=(r/'STOP.json').exists() or (r/'COMPLETE.json').exists(),workers=json.loads((r/'WORKERS.json').read_text())['workers'],records=[])
+admissions=sorted(r.glob('WORKER_ADMISSION_*.json'))
+out=dict(stop=(r/'STOP.json').exists() or (r/'COMPLETE.json').exists(),workers=json.loads((admissions[-1] if admissions else r/'WORKERS.json').read_text())['workers'],records=[])
 if not out['stop']:
  for p in (r/'requests').glob('*.json'):
   if not (r/'responses'/p.name).exists():out['records'].append(json.loads(p.read_text()))
+if (r/'PRIMARY_TRAINING_COMPLETE.json').exists() and not out['records']:out['stop']=True
+if (r/'VIABILITY_PAUSED.json').exists() and not out['records']:out['stop']=True
 print(json.dumps(out))
 ''',timeout=25))
 
 
 class Service:
-    def __init__(self,host):
+    def __init__(self,slot):
+        host,index=slot.split('@') if '@' in slot else (slot,None)
+        root=GPU_ROOT+('_w'+index if index is not None else '')
         self.host=host
-        log=(ops.EVIDENCE/f'ACCEL_GPU_{host}.log').open('x',encoding='utf-8')
-        command=f'/root/miniconda3/bin/python -B -u -c "import sys;sys.path.insert(0,\'{GPU_ROOT}/pytools\');from pathlib import Path;from tools.coopmwm.plan_service import main;main(Path(\'{GPU_ROOT}\'))"'
+        log=(ops.EVIDENCE/f'ACCEL_GPU_{slot}.log').open('x',encoding='utf-8')
+        command=f'nice -n 19 /root/miniconda3/bin/python -B -u -c "import sys;sys.path.insert(0,\'{GPU_ROOT}/pytools\');from pathlib import Path;from tools.coopmwm.plan_service import main;main(Path(\'{root}\'))"'
         self.process=subprocess.Popen(['ssh','-o','BatchMode=yes',host,command],stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,stderr=log,text=True,encoding='utf-8',bufsize=1)
-        write(ops.EVIDENCE/f'ACCEL_GPU_{host}_SSH.json',dict(pid=self.process.pid,unix=time.time(),host=host))
-        write(ops.EVIDENCE/f'ACCEL_GPU_{host}_READY.json',self.receive('READY'))
+        write(ops.EVIDENCE/f'ACCEL_GPU_{slot}_SSH.json',dict(pid=self.process.pid,unix=time.time(),host=host,slot=slot))
+        write(ops.EVIDENCE/f'ACCEL_GPU_{slot}_READY.json',self.receive('READY'))
 
     def receive(self,event):
         while True:

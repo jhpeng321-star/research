@@ -80,9 +80,9 @@ write(r/'SMOKE_DISPATCH.json',d);print(json.dumps(d))
 
 
 def status():
-    v=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,time
+    v=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,time,shutil
 r=pathlib.Path({ROOT!r});assert r.is_dir()
-receipts={{p.name:json.loads(p.read_text()) for pattern in ('SMOKE.json','STOP.json','TRAINING_STARTED.json','*_UPDATE_*.json','*_VIABILITY_*.json','*_CHECK_*.json','*_DEV_*.json','ACCEL_EXACT_PLAN_*.json','*COMPLETE.json') for p in r.glob(pattern)}}
+receipts={{p.name:json.loads(p.read_text()) for pattern in ('SMOKE.json','STOP.json','VIABILITY_PAUSED.json','TRAINING_STARTED.json','*_UPDATE_*.json','*_VIABILITY_*.json','*_CHECK_*.json','*_DEV_*.json','ACCEL_EXACT_PLAN_*.json','ACCEL_CREDIT_*.json','*COMPLETE.json') for p in r.glob(pattern)}}
 charges=[json.loads(x) for x in (r/'CHARGES.jsonl').read_text().splitlines()] if (r/'CHARGES.jsonl').exists() else []
 owners=[]
 for name in ('SMOKE_DISPATCH.json','TRAIN_DISPATCH.json'):
@@ -90,7 +90,9 @@ for name in ('SMOKE_DISPATCH.json','TRAIN_DISPATCH.json'):
  d=json.loads((r/name).read_text());p=pathlib.Path('/proc')/str(d['pid']);s=(p/'stat').read_text().split() if (p/'stat').exists() else None
  assert not s or (s[21]==d['start_ticks'] and pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id'])
  owners.append(dict(d,state=s[2] if s else 'exited'))
-print(json.dumps(dict(unix=time.time(),charged_sim_s=811640+sum(c['sim_s'] for c in charges),jobs=len(charges),closed=sum((r/'jobs'/c['id']/'CLOSE.json').exists() for c in charges),owners=owners,receipts=receipts,log=(r/('TRAIN.log' if (r/'TRAIN.log').exists() else 'SMOKE.log')).read_text()[-5000:])))
+pending=sum(not (r/'responses'/p.name).exists() for p in (r/'requests').glob('*.json'))
+starts={{p.name:sum(1 for _ in p.glob('*.json')) for p in (r/'guided_starts').glob('u*') if p.is_dir()}}
+print(json.dumps(dict(unix=time.time(),charged_sim_s=811640+sum(c['sim_s'] for c in charges),jobs=len(charges),closed=sum((r/'jobs'/c['id']/'CLOSE.json').exists() for c in charges),pending_WM=pending,executed_starts=starts,disk_free=shutil.disk_usage(r).free,owners=owners,receipts=receipts,log=(r/('TRAIN.log' if (r/'TRAIN.log').exists() else 'SMOKE.log')).read_text()[-5000:])))
 ''',timeout=35))
     for name,value in v['receipts'].items():
         p=ops.EVIDENCE/'accel_runtime'/name

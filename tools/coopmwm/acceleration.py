@@ -95,7 +95,7 @@ class Controller:
                 if hasattr(self.guide,'completed'):
                     self.guide.completed(proposal,b.get('executed',False))
         if self.plan is not None and self.replay is None:
-            if 'behaviour' not in sample:
+            if not sample.get('behaviour',{}).get('plan_start'):
                 sample['behaviour'] = dict(route='plan', executed=True, plan_start=False,
                     beta=bucket_beta(self.beta, self.plan['family'], regime(rows)),
                     option=self.plan['family'], regime=regime(rows))

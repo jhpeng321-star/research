@@ -1,4 +1,23 @@
-# S-COOPMWM live continuation — OWNER19:44 quality-first recovery
+# S-COOPMWM live continuation — OWNER20:35 four-update viability
+
+20:57 recovery: read `coopmwm/RECOVERY_2035.md` and newest VIABILITY2035 receipts.
+CPU34 76PASS/0skips/zeroSUMO. New sources fix committed-plan behaviour-atom labels
+at eligible10s ticks, add hashed lossless result compression, async exact diagnostics,
+fixedu4 all-arm pause and multiworker/hot-add broker. No acceleration update yet.
+Registered `VIABILITY2035_REGISTRATION.json`, amendmentSHA4d8a37137b052224cbe81def95d406307d18a9694e25412f0eaa272c705b18f2;
+Nexec10minimum, A/Bu1..4 then matchedRu1..4; no sealed test until fullrun.
+Original smoke2280552/start54957271 still waiting, never duplicate. Originalprobe3
+539643/974432 followed by registered scale supervisors542616/977289 (wait for probe3,
+then A1/2/4/8,R1/2/4 medium searches); no duplicate probes. CPU34 forecast/search
+sources match scale's CPU33. All815240current conservative sim-s remain charged.
+Local archive22248 streams opaque3GBv2 through existing SSH keys to gpuA; inspect
+`ARCHIVE2035.log`/VERIFIED/COMPLETE before action. Only exact matching hashes allow
+literal approved v2 removal. `viability2035 watch` adopts existing smoke, waits for
+scale completion, binds immutable train source `/home/ubuntu/coopmwm20261101_acceltrain1`
+to original accel1 queue, one-use dispatch, publishes/commits each check and pausesu4.
+Inspect WATCH_DISPATCH/FAILED/log first; never duplicate or auto-retry a partial bind.
+Full allocation4280840/cap6M/free1719160; viability maximum1261640 includes alloldcharges.
+Historical notes below are retained; old v2 set-point path is superseded/archival only.
 
 20:18 continuation: CPU31 71PASS/0skips/zeroSUMO. New acceleration sources and
 96-world metadata registration are committed (ca0b9884; panel SHA in DESIGN).

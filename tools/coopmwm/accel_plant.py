@@ -25,7 +25,7 @@ def episode(job):
     generator=torch.Generator().manual_seed(job['noise_seed'])
     from .plan_client import guide
     controller=Controller(policy,generator,job['deterministic'],
-        guide=guide(job,generator) if job.get('guided') else None,beta=job.get('beta',1.),
+        guide=guide(job,generator) if not job['deterministic'] else None,beta=job.get('beta',1.),
         replay=job.get('samples'),branch=job.get('branch'))
     b=exact.Backend(path,job['world'],job['sim_s'],job['checkpoint'])
     steps=[];metrics={};prefixes={};horizon_totals={};requested=overrides=0
@@ -39,6 +39,12 @@ def episode(job):
                 before=b.totals['team_delay_vs'];n=len(controller.events)
                 audit=cf.tick(b,controller,trace);requested+=len(audit);overrides+=sum(x['clamped'] for x in audit)
                 if len(controller.events)!=n+1:raise ValueError('expected one acceleration action per1s')
+                event=controller.events[-1]
+                if job.get('guided') and job['arm']=='B' and event['sample'].get('behaviour',{}).get('plan_start'):
+                    # Recorded only AFTER the real SUMO step succeeded. This
+                    # controls queue backpressure, not the final closed-job gate.
+                    write(Path(job['queue_root'])/'guided_starts'/f'u{job["update"]:03}'/(event['proposal']['record_sha256']+'.json'),
+                        dict(job=job['id'],time_s=t,behaviour=event['sample']['behaviour']))
                 steps.append(dict(controller.events[-1],reward=before-b.totals['team_delay_vs']))
                 if t+1 in (900,1200):metrics[str(t+1-300)]=dict(b.totals)
                 if branch and t+1-branch['time_s'] in (60,120,300,600):
