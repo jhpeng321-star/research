@@ -1,5 +1,6 @@
 """Exclusive one-use development smoke launch and read-only incarnation status."""
 import argparse
+import hashlib
 import json
 from pathlib import Path
 import re
@@ -17,10 +18,13 @@ def main():
     parser.add_argument('--device', choices=('cpu', 'cuda'), default='cpu')
     parser.add_argument('--receipt', help='exclusive local launch receipt')
     args = parser.parse_args()
+    launcher_sha = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
     if not re.fullmatch(r'/root/(?:rbeval20261031|autodl-tmp/c4/rb2int20261101)/phys_code_[a-f0-9]{12}', args.runtime):
         raise ValueError('immutable INT stage required')
     target = Path(args.receipt) if args.receipt else None
-    if args.action == 'launch' and (target is None or not target.parent.is_dir() or target.exists()):
+    if args.action == 'launch' and target is None:
+        raise ValueError('new local launch receipt in existing parent required')
+    if target is not None and (not target.parent.is_dir() or target.exists()):
         raise ValueError('new local launch receipt in existing parent required')
     name = args.kind+'_'+('lp' if '_lp.' in args.recipe else 'v5')+'_'+args.device
     common = f'''
@@ -59,7 +63,7 @@ print(json.dumps(result))
 assert not root.exists(), 'preserve existing development smoke; never relaunch'
 assert root.parent.is_dir()
 assert shutil.disk_usage(root.parent).free>512*2**20, 'wait for free own output disk'
-assert os.getloadavg()[0]<20, 'leave CPU headroom'
+assert os.getloadavg()[0]<os.cpu_count()/2, 'leave half-host CPU headroom'
 cg=Path('/sys/fs/cgroup');maximum=cg/'cpu.max';stat=cg/'cpu.stat'
 resources=dict(load=os.getloadavg(),disk_free=shutil.disk_usage(root.parent).free)
 if maximum.is_file() and maximum.read_text().split()[0]!='max':
@@ -78,7 +82,7 @@ resources['gpu']=gpu.stdout.strip()
 if {args.device!r}=='cuda':
  free,util=map(int,gpu.stdout.strip().split(','));assert free>13*1024, '5GiB own cap plus8GiB shared headroom'
  assert {args.kind!r}=='fivearm600', 'closed smoke is CPU only'
-root.mkdir();save(root/'CLAIM_ONCE.json',dict(owner='S-RB2-INT',stage=stage,kind={args.kind!r},recipe={args.recipe!r},device={args.device!r},resources=resources,automatic_retry=False))
+root.mkdir();save(root/'CLAIM_ONCE.json',dict(owner='S-RB2-INT',stage=stage,kind={args.kind!r},recipe={args.recipe!r},device={args.device!r},resources=resources,automatic_retry=False,launcher_sha256={launcher_sha!r}))
 entry=runtime/('tools/rbint/smoke.py' if {args.kind!r}=='closed60' else 'tools/rb2int/dev_canary.py')
 argv=['nice','-n','19','/root/miniconda3/bin/python','-B','-u',str(entry),'--out',str(root/'CLOSED_SMOKE.json' if {args.kind!r}=='closed60' else root/'tasks'),'--wm-config',str(runtime/'configs'/{args.recipe!r})]
 if {args.kind!r}=='closed60': argv+=['--variants','FULL']
@@ -86,13 +90,17 @@ else: argv+=['--runtime-root',str(runtime),'--model-name','RB2-INT-DEV-'+{name!r
 env=dict(os.environ,CUDA_VISIBLE_DEVICES='0' if {args.device!r}=='cuda' else '',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',PYTHONPATH='/root/autodl-tmp/c4/speedhead20261030/pythondeps')
 with (root/'worker.log').open('x') as log:
  child=subprocess.Popen(argv,cwd=runtime,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
-receipt=dict(**incarnation(child.pid),argv=argv,root=str(root),stage=stage,entry_sha256=sha(entry),resources=resources)
+receipt=dict(**incarnation(child.pid),argv=argv,root=str(root),stage=stage,entry_sha256=sha(entry),resources=resources,launcher_sha256={launcher_sha!r})
 save(root/'PROCESS.json',receipt);print(json.dumps(receipt))
 '''
     result = json.loads(ssh(args.host, common+code, timeout=60))
-    if args.action == 'launch':
+    if target is not None:
         with target.open('x', encoding='utf-8') as stream:
             json.dump(dict(host=args.host, **result), stream, indent=1)
+    if args.action == 'status':
+        result = {k: result[k] for k in ('root', 'exists', 'alive', 'tasks', 'log_tail') if k in result} | dict(
+            receipts={k: {field: value[field] for field in ('passed', 'seconds', 'recipe_sha256', 'checkpoint_sha256', 'worlds', 'K_completed', 'horizon_s') if field in value}
+                      for k, value in result.get('receipts', {}).items()})
     print(json.dumps(result, indent=1))
 
 

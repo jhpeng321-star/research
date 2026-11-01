@@ -61,6 +61,36 @@ def rate_transform(values):
                            for a, b in CONTRASTS], axis=1)
 
 
+def propagate_rate_distance(candidate, baseline):
+    """Conservative simultaneous propagation avoids bootstrapping an abs() kink."""
+    cm, bm = candidate['mean'], baseline['mean']
+    good = candidate['uncertainty_available'] and baseline['uncertainty_available']
+
+    def absolute_range(row):
+        low, high = max(-1., row['low']), min(1., row['high'])
+        return (0. if low <= 0 <= high else min(abs(low), abs(high)), max(abs(low), abs(high)))
+
+    low = high = None
+    if good:
+        ca, cb = absolute_range(candidate), absolute_range(baseline)
+        low, high = ca[0]-cb[1], ca[1]-cb[0]
+    return dict(mean=abs(cm)-abs(bm) if cm is not None and bm is not None else None,
+        low=low, high=high, uncertainty_available=good,
+        unavailable_reason=None if good else 'signed_rate_bias_interval_unavailable',
+        worlds=candidate['worlds'], family_size=18, signed_bias_family_size=12,
+        maxstat_critical=candidate['maxstat_critical'],
+        uncertainty='joint signed rate-bias world+K8 bands; conservative absolute-distance propagation')
+
+
+def rate_distance_bands(bootstrap, rate_futures):
+    signed = rate_futures[:, :, :len(MODELS)]-rate_futures[:, :, -1:]
+    signed = signed.reshape(len(bootstrap.worlds), 8, len(MODELS)*len(HS))
+    bands = bootstrap.bands(signed.mean(1), futures=signed)
+    indexed = {(m, h): band for (m, h), band in zip(
+        ((m, h) for m in MODELS for h in HS), bands)}
+    return [propagate_rate_distance(indexed[a, h], indexed[b, h]) for a, b in CONTRASTS for h in HS]
+
+
 def label_bands(rows):
     return [dict(candidate=a, baseline=b, horizon_s=h, **row)
             for (a, b, h), row in zip(((a, b, h) for a, b in CONTRASTS for h in HS), rows)]
@@ -138,8 +168,7 @@ def main():
     values = features(predictions, real, worlds)
     delay = label_bands(boot.bands(values['delay_contrasts']))
     fair = label_bands(boot.bands(values['fair_contrasts']))
-    futures = values['rate_futures'].reshape(len(worlds), 8, (len(MODELS)+1)*len(HS))
-    rates = label_bands(boot.bands(futures.mean(1), futures=futures, transform=rate_transform))
+    rates = label_bands(rate_distance_bands(boot, values['rate_futures']))
     prefix = (attach_reserved_wm2_endpoints(predictions, args.wm2_reserved_endpoints, real)
               if args.wm2_reserved_endpoints else None)
     endpoint_rows, endpoint_values = {}, []

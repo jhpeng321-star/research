@@ -1,0 +1,56 @@
+{
+ "host": "gpuA",
+ "root": "/root/autodl-tmp/c4/rb2int20261101/dev_b2df7458a41f_fivearm600_v5_cuda",
+ "exists": true,
+ "process": {
+  "pid": 446421,
+  "start_ticks": "888936830",
+  "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+  "argv": [
+   "nice",
+   "-n",
+   "19",
+   "/root/miniconda3/bin/python",
+   "-B",
+   "-u",
+   "/root/autodl-tmp/c4/rb2int20261101/phys_code_b2df7458a41f/tools/rb2int/dev_canary.py",
+   "--out",
+   "/root/autodl-tmp/c4/rb2int20261101/dev_b2df7458a41f_fivearm600_v5_cuda/tasks",
+   "--wm-config",
+   "/root/autodl-tmp/c4/rb2int20261101/phys_code_b2df7458a41f/configs/wm_phys_v5.toml",
+   "--runtime-root",
+   "/root/autodl-tmp/c4/rb2int20261101/phys_code_b2df7458a41f",
+   "--model-name",
+   "RB2-INT-DEV-fivearm600_v5_cuda",
+   "--device",
+   "cuda",
+   "--memory-gib",
+   "5"
+  ],
+  "root": "/root/autodl-tmp/c4/rb2int20261101/dev_b2df7458a41f_fivearm600_v5_cuda",
+  "stage": {
+   "host": "gpuA",
+   "commit": "b2df7458a41f5f4d3a048532bc40d8d4435ec381",
+   "archive_sha256": "83cfe685d21c975a7776eb06817e31beaee9d152a32f4ca5f26af647f4128d1c",
+   "runtime": "/root/autodl-tmp/c4/rb2int20261101/phys_code_b2df7458a41f",
+   "endpoint_only": false
+  },
+  "entry_sha256": "bf38c24f03b14c32333348248e94a0f3eecdd85dbb25cc1ad2fcbe6f8cf0fc1f",
+  "resources": {
+   "load": [
+    10.8603515625,
+    13.080078125,
+    12.14453125
+   ],
+   "disk_free": 97232556032,
+   "cpu_capacity": 20.0,
+   "cpu_used": 9.083482561999947,
+   "memory_free": 9641824256,
+   "gpu": "46171, 99"
+  }
+ },
+ "alive": true,
+ "tasks": 0,
+ "receipts": {},
+ "log_tail": ""
+}

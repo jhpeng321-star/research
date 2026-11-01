@@ -3,6 +3,12 @@
 Branch `c4/rb2-int`, base engineering source FULL-v4 `22cc32f6`; inherited
 round-1 delivery remains below. Read `docs/rb2int/PLAN.md` when available.
 
+**LIVE OWNERSHIP: read `docs/rb2int/CURRENT_JOBS.md` before any launch.** Immutable
+gpuA model stageb2df7458; closed60 v5/LP both PASS/EXITED446051/446341. Own v5
+fivearm600 development canary446421 is LIVE (boot/startticks in receipt); do not
+duplicate. LP full-canary admission rejected before claim/Popen; root absent.
+No final evaluation job exists yet. WMPHYS_V5.md is explicitly a progress report.
+
 - FULL-v5 and FULL-v5-LP are **NOT READY**. All four engineering intakes merged:
   LANE6b4bfbd5/CAL7c1cf53c/BREAK116b2147/LPHYSf6cf52ab. Integrated recipes
   `configs/wm_phys_v5{,_lp}.toml`; staged smoke/full exposure release still pending.

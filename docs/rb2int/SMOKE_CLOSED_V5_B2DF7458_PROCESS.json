@@ -1,0 +1,42 @@
+{
+ "host": "gpuA",
+ "pid": 446051,
+ "start_ticks": "888923081",
+ "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+ "argv": [
+  "nice",
+  "-n",
+  "19",
+  "/root/miniconda3/bin/python",
+  "-B",
+  "-u",
+  "/root/autodl-tmp/c4/rb2int20261101/phys_code_b2df7458a41f/tools/rbint/smoke.py",
+  "--out",
+  "/root/autodl-tmp/c4/rb2int20261101/dev_b2df7458a41f_closed60_v5_cpu/CLOSED_SMOKE.json",
+  "--wm-config",
+  "/root/autodl-tmp/c4/rb2int20261101/phys_code_b2df7458a41f/configs/wm_phys_v5.toml",
+  "--variants",
+  "FULL"
+ ],
+ "root": "/root/autodl-tmp/c4/rb2int20261101/dev_b2df7458a41f_closed60_v5_cpu",
+ "stage": {
+  "host": "gpuA",
+  "commit": "b2df7458a41f5f4d3a048532bc40d8d4435ec381",
+  "archive_sha256": "83cfe685d21c975a7776eb06817e31beaee9d152a32f4ca5f26af647f4128d1c",
+  "runtime": "/root/autodl-tmp/c4/rb2int20261101/phys_code_b2df7458a41f",
+  "endpoint_only": false
+ },
+ "entry_sha256": "0428f3c60eba0543e2dddc1cf03d9f6971eba4e51c31ec9b077c0fdff98e40e1",
+ "resources": {
+  "load": [
+   12.48486328125,
+   14.52587890625,
+   12.3896484375
+  ],
+  "disk_free": 97232609280,
+  "cpu_capacity": 20.0,
+  "cpu_used": 8.14647232660341,
+  "memory_free": 10758066176,
+  "gpu": "46201, 97"
+ }
+}

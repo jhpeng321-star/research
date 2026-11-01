@@ -1,6 +1,6 @@
 import numpy as np
 
-from tools.rb2int.compare import MODELS, features, rate_transform, switching
+from tools.rb2int.compare import MODELS, features, rate_transform, switching, propagate_rate_distance
 from tools.rb2int.uncertainty import PairedWorldBootstrap
 from tools.rbeval.core import ARMS, HS
 
@@ -47,3 +47,18 @@ def test_switch_rule_distinguishes_point_failure_and_missing_qualification():
     assert switching(delay, rates, None, complete=True)['point_status'] == 'FAIL'
     rates[1]['mean'] = -.1
     assert switching(delay, rates, endpoint, complete=False)['switching_eligibility'] == 'NOT_ESTABLISHED'
+
+
+def test_absolute_rate_distance_ci_is_valid_through_zero_bias_kink():
+    def band(mean, low, high):
+        return dict(mean=mean, low=low, high=high, uncertainty_available=True,
+                    worlds=54, maxstat_critical=2.)
+    candidate, baseline = band(0., -.2, .3), band(-.3, -.5, -.1)
+    interval = propagate_rate_distance(candidate, baseline)
+    assert interval['mean'] == -.3
+    assert np.isclose(interval['low'], -.5) and np.isclose(interval['high'], .2)
+    # All compatible pairs of signed biases must remain inside the induced CI,
+    # including exactly calibrated zero bias where a naive abs bootstrap is nonregular.
+    for c in np.linspace(-.2, .3, 11):
+        for b in np.linspace(-.5, -.1, 11):
+            assert interval['low']-1e-12 <= abs(c)-abs(b) <= interval['high']+1e-12
