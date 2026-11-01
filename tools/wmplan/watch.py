@@ -57,7 +57,7 @@ def progress(text):
 
 def main(hours=96,interval=60):
     # A permanent exclusive claim protects against accidental second collectors.
-    ops.save('AUTO_CLAIM_1448.json',dict(pid=os.getpid(),unix=time.time(),max_hours=hours,
+    ops.save('AUTO_CLAIM_1448_V2.json',dict(pid=os.getpid(),unix=time.time(),max_hours=hours,
                                   command='tools.wmplan.watch',interval_s=interval,
                                   role='complete_registered_plan_once',peer_process_control=False))
     frozen = {p:sha(p) for p in (ops.LOCAL/'tools/wmplan').glob('*.py')}
@@ -142,7 +142,8 @@ print(json.dumps(dict(primary_published=True,strict_released=True)))
 def launch():
     assert (ops.LOCAL/'_out').is_dir()
     assert (ops.OUT/'RECOVERY_1448.json').exists()
-    assert not (ops.OUT/'AUTO_CLAIM_1448.json').exists()
+    assert (ops.OUT/'PRELIVE_PATH_ISOLATION.json').exists()
+    assert not (ops.OUT/'AUTO_CLAIM_1448_V2.json').exists()
     logfile = ops.LOCAL/'_out'/f'wmplan_watch_{int(time.time())}.log'
     with logfile.open('x',encoding='utf-8') as log:
         p = subprocess.Popen([sys.executable,'-B','-u','-m','tools.wmplan.watch'],cwd=ops.LOCAL,

@@ -63,8 +63,11 @@ def stdio(root):
         raise RuntimeError('gpuR startup resource gate')
     os.environ['WMTEACH_BACKEND'] = manifest['model']
     with contextlib.redirect_stdout(sys.stderr):
-        from tools.wmteach.runtime import bootstrap
-        rt = bootstrap()
+        from tools.wmteach import runtime
+        # Relocate three byte-identical shared assets, including the gpuA-bound
+        # provenance receipt, rather than replacing gpuR's existing receipt.
+        runtime.BASE = Path(manifest['base'])
+        rt = runtime.bootstrap()
     owner = dict(host='gpuR',pid=os.getpid(),backend=manifest['model'],
                  command=[sys.executable,*sys.argv],
                  start_ticks=Path(f'/proc/{os.getpid()}/stat').read_text().split()[21],

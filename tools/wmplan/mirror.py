@@ -36,7 +36,11 @@ extra=[phys+'/tools/rbeval/references.json','/root/wmcalib/expected_hashes.json'
 export=json.loads(pathlib.Path(extra[-1]).read_text());extra.append(export['path'])
 for seed in range(969400,969432):
  for n in ('result.json','start.pt','start_history.npz'):extra.append(f'/root/wmcalib/data/jobs/s{{seed}}_ctrl0/{{n}}')
-for name in extra:add(name,name)
+base='/root/autodl-tmp/c4/'
+private=('wmcombined_wm2/wm_s.pt','setupaudit20261030/policy_000190.pt','speedhead20261030/EXPORT_BOUND.json')
+for name in extra:
+ target=groot/'base'/name[len(base):] if name.startswith(base) and name[len(base):] in private else name
+ add(name,target)
 deps=pathlib.Path(b['wm_deps'])
 for p in deps.rglob('*'):
  if not p.is_file() or '__pycache__' in p.parts or 'tests' in p.parts:continue
@@ -82,7 +86,7 @@ with tarfile.open('/root/wmplan_gpuR_transfer_v1.tar') as tar:
   p.parent.mkdir(parents=True,exist_ok=True)
   with p.open('xb') as f:shutil.copyfileobj(tar.extractfile(member),f)
   assert hashlib.sha256(p.read_bytes()).hexdigest()==h
-manifest=dict(model={selected!r},hashes={{n:v['sha256'] for n,v in items.items()}},
+manifest=dict(model={selected!r},base=str(root/'base'),hashes={{n:v['sha256'] for n,v in items.items()}},
  new_sumo_sim_s=0,inference_only=True)
 with (root/'MIRROR.json').open('x') as f:json.dump(manifest,f,sort_keys=True)
 print(json.dumps(dict(root=str(root),manifest=manifest,files=len(items),new_sumo_sim_s=0)))
@@ -98,8 +102,9 @@ for name,h in m['hashes'].items():assert hashlib.sha256(pathlib.Path(name).read_
 sys.path[:0]=[str(root/'pywm'),str(root/'deps')]
 os.environ.update(WMTEACH_BACKEND=m['model'],OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
 with contextlib.redirect_stdout(sys.stderr):
- from tools.wmteach.runtime import bootstrap
- rt=bootstrap()
+ from tools.wmteach import runtime
+ runtime.BASE=pathlib.Path(m['base'])
+ rt=runtime.bootstrap()
 print(json.dumps(dict(pass_=True,host='gpuR',model=m['model'],fit_worlds=len(rt.batches),
  export=rt.export,new_sumo_sim_s=0,new_forecasts=0)))
 ''',host='gpuR',timeout=240))
