@@ -571,6 +571,20 @@ class ExactGradeCPU(unittest.TestCase):
         phase=inspect.signature(xg.accel_charge).parameters['phase'].default
         self.assertEqual(budget()['phases'][phase],1000000)
 
+    def test_completed_gpu_gates_adopted_only_with_exact_receipt_and_numeric_source(self):
+        from .warm_service import adopted_gates,ADOPTABLE,NUMERICAL
+        root=Path(self.tmp)
+        self.assertFalse(adopted_gates(root,{}))
+        for name in ADOPTABLE:(root/name).write_text('{"pass_":true,"max_cost_error":0.0}')
+        hashes={name:'sourcehash' for name in NUMERICAL}
+        binding=dict(hashes=hashes,adopted_startup_gates=dict(receipts={name:sha(root/name) for name in ADOPTABLE},numerical_hashes=dict(hashes)))
+        self.assertTrue(adopted_gates(root,binding))
+        binding['hashes'][NUMERICAL[0]]='changed'
+        with self.assertRaises(ValueError):adopted_gates(root,binding)
+        binding['hashes'][NUMERICAL[0]]='sourcehash'
+        (root/ADOPTABLE[0]).write_text('{"pass_":true,"max_cost_error":1.0}')
+        with self.assertRaises(ValueError):adopted_gates(root,binding)
+
     def test_runner_adopts_only_authorized_budget_amendment(self):
         from . import warm_runner as wr
         from .warm_protocol import budget

@@ -1,5 +1,15 @@
 # S-COOPMWM live continuation — MAIN03:03 integration pending
 
+LATEST: exactcpu5 immutable204PASS/0skips/38.21s/zeroSUMO; use this source.
+GPUA596572 READY/all8EXACT0, retainedunchanged. GPUR concurrent2 completed4EXACT0
+then failed immutableINPUTS hash (print addednewline); noforecast/request attempted.
+CONCURRENT_GPUR_INPUTS_REPAIR registered: rawJSONtext copySHA fixed, fourcompleted
+gates SHA/numerical-source adopted(no rerun); concurrent3 PID43005/start4218867411
+runs ONLYfourremaining full-fastcold/warmgates. ROOT /root/coopmwm20261102_concurrent3.
+EXACT_REMOTE_AUTHORIZATION_V3 uses routes5 key (cpuQonly). Oldobserver40888 exited
+onfailedGPU, verifiedabsent. exact_watch now V2 tag, dispatchpending; never restartold.
+Proposer preregistrationSHA c9f349e2 registeredbeforeB/Rupdates, OWNERapprovalrequired.
+
 LOCAL OBSERVER40888 dispatched once (EXACT_OBSERVER_DISPATCH/BINDING); running
 exact_watch polls60s, adopts existingremoteowners, waits8EXACT0gatesbothhosts, then
 registers and launches grader/broker/B/Ronce from exactcpu4; publishes/commits checks.

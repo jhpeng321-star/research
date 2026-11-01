@@ -10,6 +10,7 @@ from .storage import read,write
 
 DISPATCHES={'grader':'EXACT_GRADER_DISPATCH.json','broker':'WARM_REMOTE_BROKER_DISPATCH.json',
             'B':'WARM_B_DISPATCH_V4.json','R':'WARM_R_DISPATCH_V4.json'}
+TAG='EXACT_OBSERVER_V2'
 
 
 def adopt(cpu):
@@ -46,7 +47,7 @@ def announce():
     doc=ops.LOCAL/'docs/paper_results/COOPMWM.md'
     with doc.open('a',encoding='utf-8') as f:
         f.write('\n## TRAINING STARTED B/R — '+value['timestamp_utc']+'\n'
-            '- MAPPOu0, immutable exactcpu4; B/R and exact grader/broker detached on cpuQ.\n'
+            '- MAPPOu0, immutable exactcpu5; B/R and exact grader/broker detached on cpuQ.\n'
             '- WARM MEMORY QUALIFIED retained; both concurrent GPU workers pass8source-bound EXACT0 gates.\n'
             '- K4/H300 screen, K8/Hfinal, Nexec10; no look-ahead reduction. Exact grades only for trust/imitation/library, asynchronous.\n'
             '- R centre requests retain lower priority until B finishes; no candidate scoring/library for R.\n'
@@ -65,10 +66,10 @@ def run():
     import msvcrt
     from .warm_publish import publish
     from .warm_transport import retry
-    lock=(ops.EVIDENCE/'EXACT_OBSERVER.claim').open('a+b');lock.seek(0)
+    lock=(ops.EVIDENCE/(TAG+'.claim')).open('a+b');lock.seek(0)
     if not lock.read(1):lock.write(b'1');lock.flush()
     lock.seek(0);msvcrt.locking(lock.fileno(),msvcrt.LK_NBLCK,1)
-    binding=read(ops.EVIDENCE/'EXACT_OBSERVER_BINDING.json')
+    binding=read(ops.EVIDENCE/(TAG+'_BINDING.json'))
     previous={}
     def record(event):write(ops.EVIDENCE/f'EXACT_OBSERVER_TRANSPORT_{time.time_ns()}.json',event)
     def verify():
@@ -96,11 +97,11 @@ def run():
 
 
 def dispatch():
-    target=ops.EVIDENCE/'EXACT_OBSERVER_DISPATCH.json';assert not target.exists()
+    target=ops.EVIDENCE/(TAG+'_DISPATCH.json');assert not target.exists()
     binding=dict(deadline_unix=read(ops.EVIDENCE/'WARM_A48_BINDING.json')['gpu_deadline'],
         contract='observe/publish; adopt existing owners; once8EXACT0 gates per host, register and launch grader/broker/B/R once; no physics retry')
-    write(ops.EVIDENCE/'EXACT_OBSERVER_BINDING.json',binding)
-    with (ops.EVIDENCE/'EXACT_OBSERVER.log').open('x',encoding='utf-8') as log:
+    write(ops.EVIDENCE/(TAG+'_BINDING.json'),binding)
+    with (ops.EVIDENCE/(TAG+'.log')).open('x',encoding='utf-8') as log:
         p=subprocess.Popen([sys.executable,'-X','utf8','-u','-m','tools.coopmwm.exact_watch','run'],cwd=ops.LOCAL,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT)
     value=dict(pid=p.pid,unix=time.time(),binding=binding);write(target,value);print(json.dumps(value))
 

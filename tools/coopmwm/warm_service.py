@@ -5,9 +5,38 @@ import time
 from .storage import read,write
 
 
+ADOPTABLE=('STARTUP_COMMITTED_K4_H300.json','STARTUP_COMMITTED_K8_H420.json',
+           'STARTUP_WARM_BATCH_SINGLE_K4_H120.json','STARTUP_WARM_BATCH_SINGLE_K8_H300.json')
+NUMERICAL=tuple('pytools/tools/coopmwm/'+n+'.py' for n in ('plan_wm','speed2_runtime','speed2_transfers',
+    'speed2_memory','policy_wm','mppi_search','mppi_runtime','wm','committed','overlap','plan_service',
+    'plan_proposer','warm_runtime','warm_history'))+('FROZEN_COSTS.json','FROZEN_MOTION_SOURCE.py',
+    'pytools/tools/wmteach/runtime.py','pytools/tools/coopnative/policy.py')
+
+
+def adopted_gates(root,binding):
+    """Reuse completed exact gates only under source/SHA-bound engineering admission."""
+    from .protocol import sha
+    adopted=binding.get('adopted_startup_gates')
+    if not adopted:return False
+    if set(adopted['receipts'])!=set(ADOPTABLE):raise ValueError('incomplete adopted startup gate set')
+    if set(adopted['numerical_hashes'])!=set(NUMERICAL):raise ValueError('incomplete adopted numerical source set')
+    for name,h in adopted['receipts'].items():
+        r=read(root/name)
+        if sha(root/name)!=h or not r['pass_'] or r['max_cost_error']!=0.:
+            raise ValueError('adopted startup receipt mismatch')
+    for name,h in adopted['numerical_hashes'].items():
+        if binding['hashes'].get(name)!=h:raise ValueError('adopted numerical source changed')
+    return True
+
+
 def main(root):
     import os
     binding=read(root/'GPU_BINDING.json')
+    if adopted_gates(root,binding):
+        from .plan_service import main as serve
+        # Fresh process still runs all four cold/warm full-vs-fast gates before
+        # READY. Only the four already completed same-source checks are adopted.
+        return serve(root)
     if binding.get('expandable_segments'):os.environ['PYTORCH_CUDA_ALLOC_CONF']='expandable_segments:True'
     import torch
     from tools.wmteach import runtime

@@ -7,16 +7,16 @@ from .storage import read,write
 from .protocol import checked,REGISTRY,sha
 from .warm_deploy import ROOT
 
-CPU='/home/ubuntu/coopmwm20261102_exactcpu4'
+CPU='/home/ubuntu/coopmwm20261102_exactcpu5'
 GPU='/root/coopmwm20261102_concurrent1'
-ROUTES='/home/ubuntu/coopmwm20261102_remote_routes4'
-GPU_R='/root/coopmwm20261102_concurrent2'
+ROUTES='/home/ubuntu/coopmwm20261102_remote_routes5'
+GPU_R='/root/coopmwm20261102_concurrent3'
 
 
 def authorize():
     from . import warm_remote_ops as w
     w.GPU=GPU;w.ROUTES=ROUTES
-    w.authorize('EXACT_REMOTE_AUTHORIZATION_V2.json',roots={'gpuA':GPU,'gpuR':GPU_R})
+    w.authorize('EXACT_REMOTE_AUTHORIZATION_V3.json',roots={'gpuA':GPU,'gpuR':GPU_R})
 
 
 def telemetry():
@@ -95,13 +95,48 @@ def retry_gpur():
     write(ops.EVIDENCE/'CONCURRENT_RETRY_gpuR.json',dict(root=GPU_R,inventory=inventory,new_sumo_sim_s=0))
 
 
+def resume_gpur():
+    from .warm_service import ADOPTABLE,NUMERICAL
+    from . import concurrent_ops as c
+    cpu=read(ops.EVIDENCE/'CPU_coopmwm20261102_exactcpu5.json')
+    assert cpu['pass_'] and cpu['skips']==cpu['sim_s']==0
+    previous=json.loads(ops.ssh.remote('gpuR',f'''import pathlib,sys,json,subprocess
+r=pathlib.Path('/root/coopmwm20261102_concurrent2');sys.path.insert(0,str(r/'pytools'))
+from tools.coopmwm.warm_rpc import status
+v=status(r);assert not v['alive'] and v['failed']
+assert v['receipts']['SPOOL_FAILED.json']['error']=="ValueError('immutable GPU source mismatch INPUTS.json')"
+original=pathlib.Path('/root/coopmwm20261102_concurrent1')
+print(json.dumps(dict(status=v,binding=json.loads((r/'GPU_BINDING.json').read_text()),
+ receipts={{n:(r/n).read_text() for n in {ADOPTABLE!r}}},inputs=(original/'INPUTS.json').read_text(),
+ inventory=subprocess.check_output(['nvidia-smi','--query-compute-apps=pid,process_name,used_memory','--format=csv,noheader'],text=True))))''',timeout=40))
+    assert not previous['inventory'].strip(),'inspect GPU ownership before admission'
+    staged=json.loads(ops.stage_frozen('gpuR',GPU_R,cpu))
+    additional=json.loads(ops.stage('gpuR',GPU_R,dict(previous['receipts'],**{'INPUTS.json':previous['inputs']})))
+    hashes=dict(staged['hashes'],**additional['hashes'])
+    assert hashes['INPUTS.json']==previous['binding']['hashes']['INPUTS.json'],'exact bytes required'
+    numerical={name:previous['binding']['hashes'][name] for name in NUMERICAL}
+    for name,h in numerical.items():assert hashes[name]==h,name
+    binding=dict(previous['binding'],hashes=hashes,adopted_startup_gates=dict(
+        receipts={n:hashes[n] for n in ADOPTABLE},numerical_hashes=numerical,
+        origin='/root/coopmwm20261102_concurrent2',reason='four successful exact gates reused; INPUTS staging newline fault only'))
+    ops.stage('gpuR',GPU_R,{'GPU_BINDING.json':json.dumps(binding,sort_keys=True)})
+    value=dict(root=GPU_R,cpu=cpu,previous=previous,binding=binding,new_sumo_sim_s=0)
+    path=ops.EVIDENCE/'CONCURRENT_GPUR_INPUTS_REPAIR.json';write(path,value);h=sha(path)
+    line='\nS-COOPMWM GPU-R INPUTS BYTE-EXACT REPAIR REGISTERED amendmentSHA'+h+': failed concurrent2 source-hash check before READY/no requests; JSON-encoded raw text avoids print newline; prior four EXACT0 completed gates SHA/numerical-source adopted, never recomputed; immutable exactcpu5 CPU204PASS; fresh concurrent3 runs remaining four cold/warm full-fast gates; same MPPI/H300/K8/weights, zeroSUMO.\n'
+    with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+    c.GPU=GPU_R;original=c.read;writer=c.write
+    c.read=lambda p:dict(root=GPU_R) if p.name=='CONCURRENT_STAGE_gpuR.json' else original(p)
+    c.write=lambda p,v:writer(p.with_name('CONCURRENT_REPAIR_DISPATCH_gpuR.json') if p.name=='CONCURRENT_DISPATCH_gpuR.json' else p,v)
+    c.dispatch('gpuR')
+
+
 def register():
     from .warm_protocol import budget
     from .resume_gate import check_budget
     from . import concurrent_ops as c
     check_budget(budget())
     target=ops.EVIDENCE/'EXACT_RUNTIME_REGISTRATION.json';assert not target.exists()
-    cpu=read(ops.EVIDENCE/'CPU_coopmwm20261102_exactcpu4.json')
+    cpu=read(ops.EVIDENCE/'CPU_coopmwm20261102_exactcpu5.json')
     assert cpu['pass_'] and cpu['sim_s']==cpu['skips']==0
     c.GPU=GPU;workers={'gpuA':c.status('gpuA')};c.GPU=GPU_R;workers['gpuR']=c.status('gpuR')
     assert all(v['alive'] and v['ready'] and not v['failed'] for v in workers.values()),'adopt running qualifications; no duplicate'
@@ -116,7 +151,7 @@ def register():
         for name in numerical:
             key='pytools/tools/coopmwm/'+name
             assert gpu['hashes'][key]==cpu['source_hashes'][key],name
-    endpoints=read(ops.EVIDENCE/'EXACT_REMOTE_AUTHORIZATION_V2.json')['endpoints']
+    endpoints=read(ops.EVIDENCE/'EXACT_REMOTE_AUTHORIZATION_V3.json')['endpoints']
     value=dict(cpu=cpu,workers=workers,endpoints=endpoints,budget=budget(),new_sumo_sim_s=0,
         learning='own-step PPO; critic all steps; only exact-positive full buffer imitation; weight1 until20 then frozen RMSfirst20 T,clip20,coefficient1',
         grades='marginal SUMO Dexecuted+120; all other concurrent plans replayed; prefix/CRN fault STOP; unresolved shared members excluded; no physics retries',
@@ -190,5 +225,5 @@ print(json.dumps(v))''',timeout=45))
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('authorize','register','dispatch','retire-gpur','retry-gpur','telemetry','status'));p.add_argument('--component',choices=('B','R','grader','broker'))
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('authorize','register','dispatch','retire-gpur','retry-gpur','resume-gpur','telemetry','status'));p.add_argument('--component',choices=('B','R','grader','broker'))
     a=p.parse_args();dispatch(a.component) if a.mode=='dispatch' else globals()[a.mode.replace('-','_')]()
