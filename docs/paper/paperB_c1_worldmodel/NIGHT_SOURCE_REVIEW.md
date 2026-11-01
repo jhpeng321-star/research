@@ -48,6 +48,32 @@ recovery, selector-evaluation and prospective teacher/rebuild entries;
 in the explicit inventory. No job, observer, inference or dispatch was started by
 the paper task. This receipt supersedes the historical morning live-status cut below.
 
+### Noon closing review and verification
+
+The closing bounded inventory reread the complete safe allowlist. No numerical
+figure input changed. The per-CAV producer's later live section advanced training
+only; final policy delivery and paired efficacy remain absent. Its current
+collection, rather than the earlier scheduled-supervision header, supplies the
+training snapshot in C1-SWITCH2. Final physics and fleet-delivery receipts remain
+unchanged. Shared-log teacher/student and successor-physics entries are prospective
+or in progress, not completed scientific gates. Exact cut/hashes are in
+`SOURCE_REFRESH.json`.
+
+`python -B "docs/paper/paperB_c1_worldmodel/validate_package.py"` passed after the
+evidence refresh. Existing source snapshots, PNGs, vector twins, backing CSVs and
+verified bibliography are preserved. Their numerical sources did not change, so
+the prior visual review remains applicable without rerendering. Focused Ruff
+syntax/undefined-name checks on the inventory and validator, and Git whitespace
+review, passed. The validator also confirms the shared first-package completion
+line matches `REGISTRATION_RECEIPT.md` exactly and appears only once; this refresh
+does not append another registration. No scientific process, observer or dispatch
+was started or duplicated, and no restricted input was opened by this session.
+
+Resume from the **current noon** section of `REFRESH.md`, whose queue distinguishes
+resolved final reports/training from incomplete evaluation and independently
+registered successor work. Historical morning/evening receipts below are retained
+as provenance, not current job instructions.
+
 ## Morning fresh-session source cut
 
 Preserved the clean committed package and first-registration receipt. Read Git
