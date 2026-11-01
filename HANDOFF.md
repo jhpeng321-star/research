@@ -59,6 +59,12 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**11:55 original recovered-cpuQ oracle continuation now LIVE:** own1163082,
+`/home/ubuntu/c1switch2_run_oracles_0e790a668b7ec5d8`, exactly24 original
+UNSTARTED branches/14640sim-s cap/GPU0. Registered plan and immutable original
+source/gate/predecessor-ledger proof checked before exclusive claim; no episodes
+or GPU services restarted. FleetcpuQ1152412 remains independent under its own cap.
+Receipt `CPUQ_WM_ORACLE_DISPATCH.json`; observer checks use exact owned roots.
 **11:55 recovered-cpuQ ORIGINAL oracle-only scope prepared (no compute):** all
 four durably completed WM episodes have24 original six-way specs and ZERO prior
 branch charges/jobs. Exact14640sim-s/GPU0; retain original5460incl both failures,

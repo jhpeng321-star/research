@@ -45,7 +45,7 @@ def current_status(snapshot, receipt):
                  if host in ('gpuA', 'gpuR') for arm in ('wm', 'bb')]
     gpu_complete = len(terminals) == 4 and all(terminals)
     return dict(protocol='S-C1SWITCH2/v2', verified_unix=snapshot['unix'],
-        status='CPU_COMPLETE_WM_TERMINAL_ORACLES_COMPLETE_BB_TERMINAL_FLEET_EVALUATING',
+        status='CPU_COMPLETE_WM_TERMINAL_ORACLE_CONTINUATIONS_BB_TERMINAL_FLEET_EVALUATING',
         receipt=str(receipt), base_sim_s=468380, conditional_sim_s=548180,
         base_gpu_hours_cap=19, conditional_gpu_hours_cap=35,
         design_sha256='95aa84cf801aea773a0c7f9a208396ed4898e5cacdf8b6177940c7d9e1f5a273',
