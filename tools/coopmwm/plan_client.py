@@ -22,6 +22,8 @@ def used_tickets(match):
 
 
 def guide(job,generator):
+    from .warm_history import ObservableHistory
+    history=ObservableHistory()
     root=Path(job['queue_root']);bounds=tuple(job['accel_bounds'])
     quota=read(Path(job['random_quota'])) if job.get('random_quota') else None
     def call(rows,commands,now,sample):
@@ -63,7 +65,7 @@ def guide(job,generator):
         if not queried:return None
         deltas={v:float(a[0]) for v,a in zip(sample['context']['members'],sample['own_action'])}
         r=dict(world_id=job['world']['seed'],time_s=int(now),rows=rows,group=members,
-            commands=commands,policy_residuals=deltas)
+            commands=commands,policy_residuals=deltas,history=history.snapshot(now))
         r['state_id']=digest(dict(record=r,job=job['id']))
         if quota is None:
             request=root/'requests'/(r['state_id']+'.json');response=root/'responses'/request.name
@@ -109,4 +111,5 @@ def guide(job,generator):
                 fcntl.flock(lock,fcntl.LOCK_EX)
                 write(Path(m['path'])/(m['key']+'_END.json'),dict(executed=executed))
     call.completed=completed
+    call.observe=lambda rows,now:history.push(now,rows)
     return call

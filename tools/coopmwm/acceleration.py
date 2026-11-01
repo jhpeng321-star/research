@@ -69,6 +69,8 @@ class Controller:
     def apply(self, rows, commands, now):
         from .plans import acceleration_at
         from .exploration import regime, bucket_beta
+        if self.guide and hasattr(self.guide,'observe'):
+            self.guide.observe(rows,now)
         context = encode(rows)
         if self.replay is not None:
             sample = copy.deepcopy(self.replay[str(int(now))])

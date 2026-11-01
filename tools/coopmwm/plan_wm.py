@@ -7,6 +7,7 @@ import torch
 from .plans import acceleration_at
 from .wm import adapted_futures, executor_adapter
 from .fused import FusedModel
+from .warm_runtime import adapter as warm_adapter
 
 
 def profile_table(actions, ids, device):
@@ -78,7 +79,7 @@ def evaluate(rt,record,actions,K,H,chunk_actions=4,trim=True,pad_actions=False,h
     output={str(h):{a['id']:[] for a in actions} for h in hs}
     proxy=FusedModel(rt.model,1,trim_absent=trim);proxy.local.index=0
     runtime=SimpleNamespace(**vars(rt));runtime.model=proxy
-    with executor_adapter(),plan_executor():
+    with executor_adapter(),plan_executor(),warm_adapter(rt,record):
         for start in range(0,len(actions),chunk_actions):
             subset=actions[start:start+chunk_actions]
             subset=[dict(a,background_residuals=record['policy_residuals']) if 'knots' in a else a for a in subset]

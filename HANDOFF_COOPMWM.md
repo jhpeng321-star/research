@@ -1,5 +1,16 @@
 # S-COOPMWM live continuation — OWNER22:08 WARM MEMORY HOLD
 
+23:01 fresh recovery: complete174-line brief read through22:58. A5 identity
+2611888/start55895612 remains S; acceleration A updates1..3 exist, u4 episodes
+draining. Original supervisor2477255 and all24 held B identities remain T.
+Fresh receipts RESUME_A_1793545173 and WARM_RECOVERY_1793545177; conservative
+charge973640sim-s, no new dispatch. Both GPUs have existing S-WMSPEED2 warm300
+qualification jobs (gpuA562706/gpuR997501); do not duplicate/control them.
+Recovered warm_history/runtime/client edits are preserved as INCOMPLETE, unqualified
+engineering work. Latest discovery-pure/group2..6/long-hold/library/depth/significance
+amendments still need integration and registration. Explicit resume cap6M retained
+despite the brief's22:58 cap6.5M; fit the quote under6M before new physics.
+
 22:51 A5 REGISTERED/DISPATCHED2611888/start55895612, verified S, no failure.
 SUMO_HOME/PATH restored exactly from original accel_deploy and binary verified.
 Twelve completed A episodes reused; twelve failed A4 reservations/claims retained,
