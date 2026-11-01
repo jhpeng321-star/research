@@ -12,6 +12,11 @@
 - **First live timing** (EXACT_PROGRESS_1793563243): gpuA 2-CAV query445.607s,
   8.079queries/inference-hour for ONE query, accepted0/executed0. This is not
   steady-state throughput or an executed-plan ETA. No exact grades yet.
+- **First executed plan** (EXACT_PROGRESS_1793563560): gpuR 2-CAV query542.437s,
+  6.637queries/inference-hour for ONE query, accepted1/executed1. B world986024,
+  t300, ramp.29/ramp.32,90s,120screened candidates/3iterations, predictedrank2,
+  posthoc-new, beta1. Predicted saving18.754veh-s is a WM estimate only. The exact
+  marginal SUMO grade/smoke awaits the completed episode; no benefit claim yet.
 - Source/registration/owners: `coopmwm/EXACT_RUNTIME_REGISTRATION.json`,
   `EXACT_TRAINING_STARTED.json`; observerV2 43408 publishes minute-by-minute.
 
