@@ -1,5 +1,11 @@
 # S-RB-INT FINAL — 2026-11-01
 
+Fresh-session closure verified: `docs/rbint/RESUME_FINAL_VERIFIED_20261101.md`.
+Report/publication hashes match FINAL_PRESENTATION; original local collector12952
+and observer25668 are absent. Final registration already exists. No original INT
+work remains; round two is separately owned by `c4/rb2-int` (currently GPU HOLD).
+Historical LIVE/next-action notes below are superseded by Final publication.
+
 Branch `c4/rb-int`. Retain all prior work and immutable jobs. Earlier detail:
 `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_{0034,0515}.md`.
 Owner schedule: interim04/08, freeze09:30, evaluation through11:30, report11:45.
