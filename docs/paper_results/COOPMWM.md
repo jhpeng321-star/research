@@ -144,3 +144,16 @@
 - Actual team-only GAE variance is logged separately from conditional WM credit noise.
 - cpuP SSH still closes at the second bounded metadata-only probe. No runtime binding,
   owned training/GPU service, smoke, credit agreement or learning update has been dispatched.
+
+## Live publication — 2026-11-01T10:15:00.034770+00:00
+- Charged 74,400/6,000,000 sim-s; closed jobs 62/62; pending WM 1.
+
+### S0_A_UPDATE_001.json
+- A update1, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
+- Per-bucket trust: .
+- TRAIN GAE variance 4.66493e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_001.json`.
+
+### S0_B_UPDATE_001.json
+- B update1, seed20261101; SUMO-only reward; queries/accepted/executed 1/0/0; next pooled beta 1.0.
+- Per-bucket trust: O1|merge-dense=1; O1|ordinary=1; O2|merge-dense=1; O2|ordinary=1; O3|merge-dense=1; O3|ordinary=1; O4|merge-dense=1; O4|ordinary=1.
+- TRAIN GAE variance 4.69666e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_B_UPDATE_001.json`.
