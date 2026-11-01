@@ -1,5 +1,19 @@
 # S-SELMAPPO fleet-picker integration handoff
 
+## Fresh resume verified — 2026-11-01 20:34 +08:00
+- Re-read git log/status, shared registration and task receipts before acting.
+- Existing final169/source/finite-policy/ledger validation PASS on cpuQ; peer handoff
+  is byte-identical. Fresh progress:169updates/7,728complete/0open/0newfailures,
+  original645235 absent and no live own-build processes. Receipt committed369a294e.
+- C1SWITCH2's20:30 status now records fleet evaluation COMPLETE on BOTH hosts:
+  16episodes/480decisions/96oraclebranches,79,800charged=actual under its budget.
+  Local14,400 remains UNSTARTED; fleet training charges remain6,998,400.
+- Overall WM/BB/per-CAV comparison remains incomplete in peer receipts; evaluation
+  completion alone is not an efficacy result. Peer retains all panel/statistics work.
+- cpuQ disk probe:2,081,378,304bytes free, below the unchanged2GiB admission gate.
+  No training restart, dispatch, new observer, simulation or process signals needed.
+- Bound evidence: `docs/paper_results/selmappo/RESUME_20261101_2034.json`.
+
 ## Noon supervision complete — 2026-11-01 12:01 +08:00
 - Existing noon publisher44716 emitted its12:00 heartbeat and exited at deadline;
   observer3668 already exited after final169 publication. Both local PIDs absent.
@@ -193,7 +207,7 @@ Peer registered16worlds969136..969151 and explicitly owns ALL evaluation physics
 including fleetPPO and its300s held-last-action tail to t1200 for secondary J900.
 Leave this task's prospective14,400sim-s reservation UNSTARTED and reuse peer receipts;
 no duplicate main episodes or branches here. Await its exact hash-bound manifest/binding.
-Supply ONLY final169 checkpoint/config/source SHA256 to the peer; no weights exist yet.
+Final169 checkpoint/config/source SHA256 was supplied and revalidated on fresh resume.
 `selector.FrozenFleetSelector(checkpoint, expected_sha)` provides `reset()` per world,
 then exactly30 `select(payload)->controller_name` calls at300..880. It verifies final169,
 protocol/library/hash, uses the same builder/incumbent memory, frozen deterministic argmax,

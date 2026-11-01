@@ -41,3 +41,19 @@ Frozen-final validation was rerun idempotently against the durable checkpoint, a
 - Final-build training tree5,088,964KiB; whole owned root5,153,712KiB, all retained.
 - C1SWITCH2 PANEL_v2 SHA256 independently matches the registered
   `7c780c25237dde73a657937ab577b8e48f71766817f4363f3298982e90144827`.
+
+## Later fresh-session reconciliation — 2026-11-01 20:34 +08:00
+- Re-read current git log/status, registration and receipts. Existing final-validation
+  entry point `tools.selmappo.watch.freeze` PASS: all staged source hashes, exact169
+  updates/schedule,7,728distinct closed IDs, retained charges and finite final policy.
+  Existing remote frozen receipt and local/peer handoff bytes remain unchanged.
+- Fresh read-only progress receipt reconfirms169updates/7,728complete/0outstanding/
+  0newfailures; original645235 absent and no owned-build processes. Accounting unchanged.
+- Current peer status independently passes16fleet episodes/480decisions/112closed jobs
+  (16episodes+96oracle branches),79,800charged=actual, both supervisors EXITED/noSTOP.
+  This evaluation belongs entirely to C1SWITCH2; local14,400reservation remains unspent.
+- Peer WM/BB/per-CAV comparison remains incomplete. No efficacy statistics claimed here.
+- cpuQ disk probe now2,081,378,304bytes free (<2GiB); no new outputs dispatched.
+- Training receipt committed369a294e; compact reconciliation with peer receipt/ledger
+  hashes: `selmappo/RESUME_20261101_2034.json`. All prior sources and untracked peer
+  notices preserved; no new simulator/GPU work, replacement observer or process signals.
