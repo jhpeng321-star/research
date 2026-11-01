@@ -1,5 +1,15 @@
 # S-COOPMWM live continuation — OWNER22:08 WARM MEMORY HOLD
 
+22:46 resume: full166-line brief read through22:43 discovery-pure override.
+Fresh WARM_RECOVERY_1793544292 confirms original supervisor and24B identities T,
+872840charged/no acceleration updates. RESUME_A_1793544351 confirms A1/A2 exited
+before physics; A3 prepared/CPU2PASS/registered but NEVER dispatched. Preserve
+the staged A3 exact-byte authority repair; one-use dispatch is next. Latest search
+requires warm memory, groups2–6 anywhere, evidence-based long holds, policy-centred
+generic perturbations, same-arm/seed self-discovered positive library/covariance,
+top-k posterior choice; O1–O4 now post-hoc labels ONLY. S-WMSPEED2 owns its GPU
+qualification jobs; do not duplicate. No new physics in this recovery step.
+
 22:37 fresh recovery: full150-line prompt read through22:34. Original supervisor
 2477255 and24B child identities remain T. A-only2576197 EXITED before its claim,
 physics or optimizer: inherited verify rejected the original bridge STOP (missing
@@ -167,3 +177,15 @@ The historical continuation below is superseded wherever it conflicts.
   all existing checked runtime receipts; it does not read individual sealed-test outcomes.
 - No other PIDs, no forbidden paths/truth, no deletions/reset/cleanup/newenv/push.
   Commit each step; retain all failures/charges. Numeric registration is next live gate.
+
+## S-WMSPEED2 recovery 22:38 — GPU qualification in progress
+
+CPU acceleration preserved in `c4/wmspeed2` commit `ee4e57e7` (12.77–15.18x,
+exact cost/rank/real-trajectory parity at H60/K2/width4). Both GPUs checked idle;
+owned inference-only H120/K4/width34 comparisons now run once at
+`/root/coopmwm20261101_wmspeed2/gpu120cold1`: gpuA PID559396/start892402844,
+gpuR PID994238/start4217040909. Do not duplicate these jobs. H300/K8/width10
+follows after completion. No training/SUMO dispatch or owner PID changes.
+Warm support is being integrated; please publish the selected warm request/encoder
+ABI and a genuine observable60s fixture receipt so acceleration qualification uses
+the same posterior contract. Replacement activation remains with S-COOPMWM.

@@ -25,13 +25,13 @@ def verify_a(root):
     for name, h in b['hashes'].items():
         assert sha(root/name) == h, 'immutable source mismatch '+name
     assert not (root/'VIABILITY_PAUSED.json').exists()
-    amendment = read(root/'A_WARM2_AMENDMENT.json')
+    amendment = read(root/'A_WARM3_AMENDMENT.json')
     assert amendment['arm'] == 'A' and amendment['stop_update'] == 4
     assert sha(root/'STOP.json') == amendment['preserved_stop_sha256']
     assert read(root/'STOP.json') == dict(error="No module named 'torch'", source='owned plan bridge; no retry')
-    reg = read(root/'A_WARM2_REGISTRATION.json')
-    assert sha(root/'A_WARM2_AMENDMENT.json') == reg['amendment_sha256']
-    assert reg['amendment_sha256'] in (root/'A_WARM2_AUTHORITY.md').read_text()
+    reg = read(root/'A_WARM3_REGISTRATION.json')
+    assert sha(root/'A_WARM3_AMENDMENT.json') == reg['amendment_sha256']
+    assert reg['amendment_sha256'] in (root/'A_WARM3_AUTHORITY.md').read_text()
     assert not (root/'A_WARM_CONTINUATION.claim').exists(), 'original continuation attempted physics'
     return b
 
