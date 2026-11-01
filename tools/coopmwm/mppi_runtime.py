@@ -7,12 +7,12 @@ from .plan_wm import evaluate
 from .exploration import regime
 
 
-def imagined_centres(rt,record,memory,width=2,speed2=True):
+def imagined_centres(rt,record,memory,width=2,speed2=True,transfers=False):
     trace=[]
     acts=search.comparators(record,600)
     begin=time.monotonic()
     scores=evaluate(rt,record,acts,1,300,chunk_actions=2,trim=False,
-                    pad_actions=width,speed2=speed2,memory=memory,trace=trace)
+                    pad_actions=width,speed2=speed2,memory=memory,trace=trace,transfers=transfers)
     if len(trace)!=300:raise ValueError('incomplete comparator acceleration trace')
     ids=[r['vid'] for r in record['rows']]
     slots=[ids.index(v) for v in record['group']]
@@ -26,14 +26,14 @@ def plan(rt,record,memory,binding):
     groups=search.group_components(record['rows'])
     group=next((g for g in groups if g['members']==record['group']),None)
     if group is None:raise ValueError('group does not match registered observable components')
-    policy,mappo,receipt=imagined_centres(rt,record,memory,speed2=binding.get('speed2',False))
+    policy,mappo,receipt=imagined_centres(rt,record,memory,speed2=binding.get('speed2',False),transfers=binding.get('speed2_transfers',False))
     learning=record.get('search_learning')
     covariance=search.CovarianceModel.from_json(learning['covariance']) if learning else None
     library=search.PlanLibrary.from_json(learning['library']) if learning else None
     def score(rec,actions,k,h):
         width=batch_width(binding,k)
         return evaluate(rt,rec,actions,k,h,chunk_actions=width,trim=False,
-                        pad_actions=width,speed2=binding.get('speed2',False),memory=memory)
+                        pad_actions=width,speed2=binding.get('speed2',False),memory=memory,transfers=binding.get('speed2_transfers',False))
     bounds=(float(rt.mp.policy.accel_min),float(rt.mp.policy.accel_max))
     result=search.search(record,group,policy,bounds,score,regime(record['rows']),
         mappo_traj=mappo,covariance=covariance,library=library,

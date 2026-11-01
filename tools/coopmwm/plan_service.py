@@ -55,6 +55,7 @@ def main(root):
     rt.frozen.costs=cost_adapter(rt.frozen.costs,read(root/'FROZEN_COSTS.json')['code'],
         horizons=(60,120,300,360,420,600))
     speed2=binding.get('speed2',False)
+    transfers=binding.get('speed2_transfers',False)
     if speed2 and not binding.get('startup_qualification'):
         raise ValueError('speed2 requires source-bound startup qualification')
     if binding.get('startup_qualification'):
@@ -71,7 +72,7 @@ def main(root):
             width=batch_width(binding,k)
             if speed2:
                 from .speed2_runtime import qualify
-                receipt=dict(qualify(rt,record,acts,k,h,width),pid=os.getpid())
+                receipt=dict(qualify(rt,record,acts,k,h,width,transfers=transfers),pid=os.getpid())
             else:
                 ref=evaluate(rt,record,acts,k,h,chunk_actions=1,trim=False,pad_actions=width)
                 batch=evaluate(rt,record,acts,k,h,chunk_actions=width,trim=False,pad_actions=width)
@@ -85,7 +86,7 @@ def main(root):
             warm_acts=baseline_actions(warm_record)
             for k,h in ((4,120),(8,300)):
                 width=batch_width(binding,k)
-                receipt=dict(qualify(rt,warm_record,warm_acts,k,h,width,memory=memory),pid=os.getpid(),memory=memory.receipt)
+                receipt=dict(qualify(rt,warm_record,warm_acts,k,h,width,memory=memory,transfers=transfers),pid=os.getpid(),memory=memory.receipt)
                 write(root/f'STARTUP_WARM_PARITY_K{k}_H{h}.json',receipt)
                 if not receipt['pass_']:raise ValueError('persistent worker warm speed2 parity failed')
     def emit(event,**kw):print('COOPMWM_JSON '+json.dumps(dict(event=event,**kw)),flush=True)
@@ -105,7 +106,7 @@ def main(root):
         start=time.monotonic()
         if diagnostic:
             from .accel_diagnostic import evaluate as credit
-            result=credit(rt,r,speed2=speed2,memory=memory)
+            result=credit(rt,r,speed2=speed2,memory=memory,transfers=transfers)
         else:
             from .mppi_runtime import plan
             result=plan(rt,r,memory,binding)

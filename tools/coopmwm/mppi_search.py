@@ -231,6 +231,13 @@ def isotropic_covariance(members, sigma, n=None, length_knots=REGISTERED['length
 
 
 def _sampler(cov):
+    # The prior/update are positive definite. Cholesky fixes the basis uniquely;
+    # repeated eigenvalues of identical member blocks otherwise allow LAPACK to
+    # rotate/sign-flip the same seeded noise differently across worker hosts.
+    try:
+        return np.linalg.cholesky((cov+cov.T)/2)
+    except np.linalg.LinAlgError:
+        pass
     w, V = np.linalg.eigh((cov+cov.T)/2)
     return V*np.sqrt(np.clip(w, 0., None))
 

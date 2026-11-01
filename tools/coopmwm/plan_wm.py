@@ -80,7 +80,7 @@ def plan_executor(horizon=300, policy=None, trace=None):
     finally:runtime.option_controller=original
 
 
-def evaluate(rt,record,actions,K,H,chunk_actions=4,trim=True,pad_actions=False,horizons=None,speed2=False,memory=None,trace=None):
+def evaluate(rt,record,actions,K,H,chunk_actions=4,trim=True,pad_actions=False,horizons=None,speed2=False,memory=None,trace=None,transfers=False):
     """Same source draws, CRN keys, insertions, departure loop and J reducer.
 
     A single compact-forward proxy retains full virgin-slot controller memory.
@@ -91,11 +91,13 @@ def evaluate(rt,record,actions,K,H,chunk_actions=4,trim=True,pad_actions=False,h
     proxy=FusedModel(rt.model,1,trim_absent=trim or speed2);proxy.local.index=0
     from .speed2_runtime import ledger,compact_geometry
     runtime=SimpleNamespace(**vars(rt));runtime.model=proxy
+    if transfers and not speed2:raise ValueError('transfer batching requires qualified speed2 geometry')
+    from .speed2_transfers import fast_transfers
     policy=None
     if record.get('policy_state') is not None:
         from .policy_wm import load_actor
         policy=load_actor(record['policy_state'],next(rt.mp.policy.parameters()).device)
-    with (memory.context(rt,record) if memory is not None else warm_adapter(rt,record)),(compact_geometry(proxy) if speed2 else nullcontext()),executor_adapter(),plan_executor(H,policy,trace):
+    with (memory.context(rt,record) if memory is not None else warm_adapter(rt,record)),(compact_geometry(proxy) if speed2 else nullcontext()),(fast_transfers() if transfers else nullcontext()),executor_adapter(),plan_executor(H,policy,trace):
         for start in range(0,len(actions),chunk_actions):
             subset=actions[start:start+chunk_actions]
             subset=[dict(a,background_residuals=record['policy_residuals']) if ('knots' in a or 'profile' in a) else a for a in subset]

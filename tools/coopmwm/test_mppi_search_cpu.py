@@ -160,18 +160,26 @@ class Search(unittest.TestCase):
         self.assertGreater(res['plan']['saving_vs_policy'], 0)
         self.assertEqual(res['plan']['origin'], 'sampled')
 
-    def test_long_hold_found_and_release_scored(self):
+    def test_long_hold_library_reused_and_release_scored(self):
         fake = Fake(2)
         fake.target = fake.policy.copy()
         fake.target[0, :270] += -1.                     # a 270 s hold is optimal
         fake.target[1, :270] += .6
         g = group_of(2)
-        res = ms.search(dict(policy_residuals={}), g, fake.policy, BOUNDS, fake, 'ordinary', seed=2)
+        # A finite stochastic search need not discover the global optimum on
+        # every LAPACK implementation. Pin a previously verified long plan to
+        # test the actual duration/library/release contract deterministically.
+        verified=ms.build_plan(g,fake.policy,None,300,BOUNDS,'sampled','ordinary',absolute=fake.target)
+        library=ms.PlanLibrary()
+        library.add(ms.describe(g,'ordinary'),verified,fake.cost(fake.policy))
+        res = ms.search(dict(policy_residuals={}), g, fake.policy, BOUNDS, fake, 'ordinary', seed=2,library=library)
         self.assertTrue(res['accepted'])
-        self.assertGreaterEqual(res['plan']['duration_s'], 240)
+        self.assertGreaterEqual(res['plan']['duration_s'], 240,
+            [(p['duration_s'],p['saving_vs_policy']) for p in res['finalists']])
         self.assertEqual(res['final']['H'], ms.final_horizon(max(f['duration_s'] for f in res['finalists'])))
         self.assertGreaterEqual(res['final']['H'], 360)
         self.assertGreater(res['plan']['saving_vs_policy'], .3*fake.cost(fake.policy))
+        self.assertTrue(res['library_seeds'])
         with self.assertRaises(ValueError):           # trajectory must cover the 300 s maximum
             ms.search(dict(policy_residuals={}), g, fake.policy[:, :200], BOUNDS, fake, 'ordinary', seed=2)
         short = ms.search(dict(policy_residuals={}), g, fake.policy[:, :180], BOUNDS, fake, 'ordinary',

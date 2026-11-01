@@ -48,7 +48,7 @@ class AccelerationCPU(unittest.TestCase):
         from .plan_client import guide
         from .storage import write
         g=torch.Generator().manual_seed(5);sample={}
-        with tempfile.TemporaryDirectory() as tmp,patch('tools.coopmwm.plan_client.group',return_value=['a','b']),patch('tools.wmteach.labels.actions',return_value=[dict(id='O1',members=['a','b'])]):
+        with tempfile.TemporaryDirectory() as tmp,patch('tools.coopmwm.plan_client.group_components',return_value=[dict(members=['a','b'],size=2)]):
             root=Path(tmp);q=root/'quota.json'
             write(q,dict(sampling=dict(ordinary=.95,**{'merge-dense':.95}),tickets=[]))
             fn=guide(dict(queue_root=tmp,accel_bounds=[-3.,2.6],arm='R',update=1,random_quota=str(q)),g)
@@ -59,7 +59,7 @@ class AccelerationCPU(unittest.TestCase):
     def test_control_observes_same_eligible_windows_without_queries_or_rng_change(self):
         from .plan_client import guide
         g=torch.Generator().manual_seed(5);sample={};before=g.get_state().clone()
-        with tempfile.TemporaryDirectory() as tmp,patch('tools.coopmwm.plan_client.group',return_value=['a','b']),patch('tools.wmteach.labels.actions',return_value=[dict(id='O1',members=['a','b'])]):
+        with tempfile.TemporaryDirectory() as tmp,patch('tools.coopmwm.plan_client.group_components',return_value=[dict(members=['a','b'],size=2)]):
             fn=guide(dict(queue_root=tmp,accel_bounds=[-3.,2.6],arm='A'),g)
             self.assertIsNone(fn(rows(),{},300,sample))
             self.assertEqual(sample['behaviour']['sample_probability'],0.)
@@ -75,9 +75,9 @@ class AccelerationCPU(unittest.TestCase):
             self.assertNotEqual(role,'final_test');waves.append((ident,tuple(policies)))
             return [dict(arm=a,steps=[dict(time_s=700,reward=-1.,sample=dict(value=0.)),
                 dict(time_s=701,reward=-2.,sample=dict(value=0.))]) for a in policies]
-        route=dict(executed=10,durations=[dict(regime='ordinary',duration_s=20)]*10,
+        route=dict(executed=10,durations=[dict(regime='ordinary',duration_s=20,group_size=2)]*10,
             sampling=dict(ordinary=.5,**{'merge-dense':.5}))
-        with tempfile.TemporaryDirectory() as tmp,patch.object(runner,'verify',return_value=dict(viability_updates=4,N_exec=10,eta_primary_hours=None)),patch.object(runner,'wave',side_effect=wave),patch.object(runner,'routing',return_value=route),patch.object(runner,'evidence',return_value=[]),patch.object(runner,'viability',return_value={}),patch.object(runner,'update',return_value=[]),patch.object(runner,'save'),patch.object(runner,'panel_report'),patch.object(runner,'final',side_effect=AssertionError('sealed panel forbidden during viability')):
+        with tempfile.TemporaryDirectory() as tmp,patch.object(runner,'verify',return_value=dict(viability_updates=4,N_exec=10,eta_primary_hours=None,accel_bounds=[-3.,2.6])),patch.object(runner,'wave',side_effect=wave),patch.object(runner,'routing',return_value=route),patch.object(runner,'evidence',return_value=[]),patch.object(runner,'viability',return_value={}),patch.object(runner,'update',return_value=[]),patch.object(runner,'save'),patch.object(runner,'panel_report'),patch.object(runner,'final',side_effect=AssertionError('sealed panel forbidden during viability')):
             root=Path(tmp);write(root/'SMOKE.json',dict(pass_=True));write(root/'MAPPO_CHECK.json',dict(records=[]))
             runner.run(root)
             self.assertEqual(read(root/'VIABILITY_PAUSED.json')['update'],4)

@@ -31,7 +31,7 @@ def trajectory_errors(expected, actual):
     return errors
 
 
-def qualify(rt, record, actions, K, H, width, memory=None):
+def qualify(rt, record, actions, K, H, width, memory=None, transfers=False):
     """Old full-roster vs optimized, once per newly bound persistent worker."""
     from .plan_wm import evaluate
     tapes = []
@@ -51,7 +51,7 @@ def qualify(rt, record, actions, K, H, width, memory=None):
         expected = tapes[:]
         tapes.clear()
         sync();start=time.perf_counter()
-        new = evaluate(rt,record,actions,K,H,chunk_actions=width,trim=False,pad_actions=width,speed2=True,memory=memory)
+        new = evaluate(rt,record,actions,K,H,chunk_actions=width,trim=False,pad_actions=width,speed2=True,memory=memory,transfers=transfers)
         sync();new_wall=time.perf_counter()-start
         errors = trajectory_errors(expected,tapes)
     finally:
@@ -61,12 +61,13 @@ def qualify(rt, record, actions, K, H, width, memory=None):
     rank = lambda values: sorted(values,key=lambda a:(sum(v['team_delay'] for v in values[a]),a))
     ranking = rank(old)==rank(new)
     steps=K*width*((len(actions)+width-1)//width)*2*H
-    return dict(pass_=cost<=.001 and draw_ids and ranking and max(errors.values())<=.001,
+    tolerance=0. if transfers else .001
+    return dict(pass_=cost<=tolerance and draw_ids and ranking and max(errors.values())<=tolerance,
                 max_cost_error=cost,trajectory_errors=errors,identical_candidate_ranking=ranking,
                 identical_draw_ids=draw_ids,K=K,H=H,width=width,device=str(device),
                 reference_wall_s=old_wall,optimized_wall_s=new_wall,speedup=old_wall/new_wall,
                 reference_future_steps_per_s=steps/old_wall,optimized_future_steps_per_s=steps/new_wall,
-                timing_includes_trajectory_capture=True,new_sumo_sim_s=0)
+                timing_includes_trajectory_capture=True,transfers=transfers,new_sumo_sim_s=0)
 
 
 def bind_ledger(proxy, bind, restores=None):
