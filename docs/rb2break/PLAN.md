@@ -75,3 +75,17 @@ driver-truth lookup. Same initial CAV mask and source CAV-ordinal identities;
 HDV particles, arrival streams, controller/executor unchanged. Explicit opt-in.
 Inherited execution artifact TRAIN fit-world manifest is unchanged; no additional
 TRAIN tape opened or physical fit performed by BREAK.
+
+##12:47 incoming-population likelihood investigation (before fitting)
+Source admission deficit is essentially invariant to LC/merge advice ablations.
+Investigate whether a population fitted to road-resident drivers transports to
+incoming drivers. Use ONLY development12 observable pre-t0 histories and observed
+birth times/CAV ownership, not arrival assignments/types or future trajectories.
+If feasible, fit weights on the SAME frozen joint IDM support using stable-leader
+motion likelihood for a birth-defined cohort (no residence-time weighting or
+hand-chosen physical parameters). Freeze independent birth/time-prefix validation
+inside pre-t0 and report physical acceleration CRPS before outcome inference.
+No outcome objective selects mixture weights. Proposed change, if it passes that
+motion check, affects entrant HDV population only; present-driver posteriors,
+CAV executor, arrival process and ordinal keys remain unchanged. This is an
+additional one-factor candidate; not an assumption that it will repair congestion.

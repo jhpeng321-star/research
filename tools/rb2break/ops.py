@@ -16,7 +16,7 @@ JOB = PARENT+'/rb2break'
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=('stage', 'launch', 'queue', 'wait', 'retire-slow-cpu', 'retire-old-queues', 'status', 'fetch', 'fetch-baseline', 'baseline'))
+    parser.add_argument('action', choices=('stage', 'launch', 'queue', 'fit-birth', 'fetch-birth', 'resources', 'inspect-start', 'wait', 'retire-slow-cpu', 'retire-old-queues', 'status', 'fetch', 'fetch-baseline', 'baseline'))
     parser.add_argument('--host', default='gpuA', choices=('gpuA', 'gpuR'))
     parser.add_argument('--runtime')
     parser.add_argument('--factor', default='baseline')
@@ -185,13 +185,49 @@ while True:
  time.sleep(15)
 print(json.dumps(dict(jobs=rows,load=os.getloadavg())))
 '''
-    elif args.action == 'status':
+    elif args.action == 'resources':
         code = '''
+result=dict(load=os.getloadavg(),cpus=os.cpu_count())
+for name in ('cpu.max','cpu.stat','memory.max','memory.current'):
+ path=Path('/sys/fs/cgroup')/name
+ if path.exists(): result[name]=path.read_text()
+print(json.dumps(result))
+'''
+    elif args.action == 'fit-birth':
+        assert args.runtime and args.runtime.startswith(PARENT+'/rb2break_code_')
+        code = f'''
+runtime=Path({args.runtime!r});assert (runtime/'STAGE.json').is_file()
+assert os.getloadavg()[0]<16, 'wait for spare CPU'
+out=root/'birth_fit_v1';assert not out.exists()
+claim=root/'BIRTH_FIT_PROCESS.json';assert not claim.exists()
+argv=['nice','-n','19','/root/miniconda3/bin/python','-B','-u','-m','tools.rb2break.birth_population','--out',str(out)]
+env=dict(os.environ,OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',CUDA_VISIBLE_DEVICES='')
+with (root/'birth_fit_v1.log').open('x') as log:
+ child=subprocess.Popen(argv,env=env,stdout=log,stderr=subprocess.STDOUT,cwd=runtime,start_new_session=True)
+save(claim,dict(owner='S-RB2-BREAK',pid=child.pid,argv=argv,unix=time.time(),
+ boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
+ start_ticks=Path('/proc/'+str(child.pid)+'/stat').read_text().split()[21]))
+print(claim.read_text())
+'''
+    elif args.action == 'inspect-start':
+        code = '''
+import sys
+runtime=parent/'rb2break_code_116b214765e9'
+sys.path[:0]=[str(runtime),str(runtime/'src')]
+from tools.rbint.observations import load_motion_history
+start,history=load_motion_history(969420)
+print(json.dumps(dict(seed=start['seed'],entry_keys=sorted(start['past_entries'][0]),
+ history_shapes={k:list(v.shape) for k,v in history.items()},
+ names_type=type(start['vehicle_ids']).__name__,entry_observable={k:v for k,v in start['past_entries'][0].items() if k in ('time','id','vehicle_id','vid','lane','is_cav')})))
+'''
+    elif args.action == 'status':
+        code = f'''
 print('LOAD',os.getloadavg())
 print(subprocess.check_output(['nvidia-smi'],text=True))
 if root.is_dir():
  for out in sorted(root.iterdir()):
   if not out.is_dir(): continue
+  if {args.jobs!r} and out.name not in {args.jobs!r}: continue
   print('JOB',out.name,'tasks',len(list(out.glob('w*_k*.json'))),'complete',(out/'COMPLETE.json').exists())
   dispatch=out/'DISPATCH.json'
   if dispatch.exists():
@@ -231,7 +267,8 @@ print(json.dumps(dict(tasks=len(manifest),development_only=True)))
             raise ValueError('local evidence parent missing')
         if target.exists():
             raise ValueError('new immutable local snapshot required')
-        remote_name = 'frozen_baseline' if args.action == 'fetch-baseline' else out_name
+        remote_name = ('frozen_baseline' if args.action == 'fetch-baseline' else
+                       'birth_fit_v1' if args.action == 'fetch-birth' else out_name)
         code = f'''import hashlib,io,json,sys,tarfile
 from pathlib import Path
 root=Path({JOB!r})/{remote_name!r};assert root.is_dir()
@@ -245,7 +282,7 @@ for seed in range(969420,969432):
    except json.JSONDecodeError: continue
    assert task['seed']==seed and task['future']==future
    files[path.name]=data
-for name in ('IDENTITY.json','DISPATCH.json','COMPLETE.json','BASELINE.json'):
+for name in ('IDENTITY.json','DISPATCH.json','COMPLETE.json','BASELINE.json','FIT.json','entrant_population.json'):
  path=root/name
  if path.exists(): files[name]=path.read_bytes()
 receipt=dict(source=str(root),hashes={{name:hashlib.sha256(data).hexdigest() for name,data in files.items()}})
