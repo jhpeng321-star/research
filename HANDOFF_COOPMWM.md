@@ -1,4 +1,9 @@
-# S-COOPMWM live continuation — MAIN02:53 integration pending
+# S-COOPMWM live continuation — MAIN03:03 integration pending
+
+Recovery RESUME_MAIN0303_20261102.md: all274brief lines read; A2998262 alive/u25,
+612closed/1722440charged; B/R/broker unstarted. Original GPU owners READY/sixEXACT0.
+NEW recovered concurrent qualifiers596572/36740 both alive/R; adopt, never duplicate.
+Integrate exact-grade526465de, immutable runtime/release, then launch B/Ru0 once.
 
 Fresh recovery RESUME_MAIN0253_20261102.md: all270brief lines read; original A
 2998262 running/u23/552closed/1650440charged; both original GPU owners READY/
