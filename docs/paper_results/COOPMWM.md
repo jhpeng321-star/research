@@ -1,6 +1,17 @@
 # S-COOPMWM — live checks
 
 ## MAIN04:23 frozen-policy precompute — CPU qualified and registered
+- Detector-first final continuation is also registered (`bcbbbacb3a73b49cf141d959c8b7a01d17bd221b1528faedf645414b96eb6c94`),
+  detached cpuQ3338335. **6 CPU tests PASS / zero skips / 0.064s / zero SUMO**.
+  It waits for all fixed endpoints and final outcome opening/analysis, then uses
+  unchanged detectors and observable2–6-member components for complete n+2 exact
+  twins within the remaining200,000 discovery reserve. No legacy pair-only gate,
+  new detector threshold, partial-group spending or outcome-based selection.
+- Dedicated local telemetry observer6216 records TRAIN search throughput/GPU use,
+  admission and hash-only final status every300s. Qualification-overlap queries
+  are reported separately from one-worker/two-worker operation; unfinished
+  searches are disclosed as censored. Existing learning-check observer34356 stays
+  live. Both retain the original GPU deadline.
 - Detached supervisor **cpuQ3316828/start57982222** is running; status1793565552
   confirms STARTED, zero evaluation jobs while waiting for A48, outcomes closed.
 - **22 CPU tests PASS / zero skips / 1.148s / zero SUMO** in the existing cpuQ

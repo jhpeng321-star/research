@@ -112,6 +112,11 @@ p=pathlib.Path('/proc',str(d['pid']),'stat');s=p.read_text().split() if p.exists
 assert not s or s[21]==d['start_ticks']
 allowed=('FINAL_PRECOMPUTE_STARTED.json','FINAL_PRECOMPUTE_FIXED_A.json','FINAL_MAPPO_REUSE_PASS.json','FINAL_PRECOMPUTE_COMPLETE.json','FINAL_PRECOMPUTE_FAILED.json','FINAL_DISCOVERY_STARTED.json','FINAL_DISCOVERY_FAILED.json')
 v=dict(unix=time.time(),owner=d,state=s[2] if s else 'exited',receipts={{n:json.loads((r/n).read_text()) for n in allowed if (r/n).exists()}},completed_jobs=len(list((r/'final_receipts').glob('*.json'))),outcomes_read=False)
+if (r/'FINAL_DISCOVERY_DISPATCH.json').exists():
+ e=json.loads((r/'FINAL_DISCOVERY_DISPATCH.json').read_text());assert e['boot_id']==d['boot_id']
+ p=pathlib.Path('/proc',str(e['pid']),'stat');s=p.read_text().split() if p.exists() else None
+ assert not s or s[21]==e['start_ticks']
+ v['discovery_owner']=dict(owner=e,state=s[2] if s else 'exited')
 latest=sorted(r.glob('FINAL_PRECOMPUTE_STATUS_*.json'))
 if latest:v['latest_status']=json.loads(latest[-1].read_text())
 print(json.dumps(v))''',timeout=40))

@@ -1,5 +1,13 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+Finalcompletion hooks now INTEGRATED: precompute3316828; discovery3338335/
+start58037338(sourcefinaldiscovery1, amendmentbcbbbacb, CPU6PASS0skips/0SUMO).
+DiscoverywaitsALLfixedendpoints+finaloutcomeopening/analysis; unchangeddetectors,
+observedcomponents2..6, full n+2exacttwins withinremaining200000reserve; nolegacy
+pair-onlygate/nooutcomeselection. Older "completion-hook pending" note superseded.
+Telemetry6216 observesrates/GPUutil/admissions/opaquefinalstatus every300s,
+disjointfromlearningobserver34356; sameoriginaldeadline, nojobsubmission.
+
 MAIN0423 precompute DISPATCHED3316828/start57982222(cpuQ), status1793565552aliveS/
 STARTED/outcomesclosed/0jobs; neverduplicate. REGISTERED598cd74d/CPU22PASS0skips,
 sourcefinalcpu1. Waits A48, first600sMAPPOreusecheck, then
