@@ -265,6 +265,11 @@ def load_arm(ckpt: Path, variant: str, run_physics: dict | None = None):
         # attribution arm: WM2's own physics core, every learned acceleration
         # correction OFF (isolates the CF model from the correction removal).
         flags = RolloutFlags(pure_physics=True)
+    if variant == "legacy_pure_euler":
+        # attribution arm: legacy core + corrections OFF + SUMO Euler position
+        # (isolates the integrator rule from the CF core choice).
+        flags = RolloutFlags(pure_physics=True)
+        physics["position_rule"] = "sumo_euler"
     p = WmsPredictor.from_checkpoint(str(ckpt), flags, physics=physics)
     cap = {"last": None}
     orig = p.model.rollout
