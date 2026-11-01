@@ -8,6 +8,7 @@ from .mppi_search import group_components,sample_unscored
 from .protocol import digest
 from .storage import read,write
 from .exploration import regime
+from .warm_health import assert_running
 
 
 def worker_slots(root):
@@ -44,7 +45,7 @@ def guide(job,generator):
                 if pending<2*len(workers):break
                 starts=root/'guided_starts'/f'u{job["update"]:03}'
                 if sum(1 for _ in starts.glob('*.json'))>=job['N_exec']:break
-                if (root/'STOP.json').exists():raise ValueError('STOP while waiting for GPU slot')
+                assert_running(root,job['arm'])
                 if time.time()>job['gpu_deadline']:raise ValueError('registered GPU deadline exceeded')
                 time.sleep(.5)
             p=.95 if pending<2*len(workers) else 0.
@@ -74,7 +75,7 @@ def guide(job,generator):
             request=root/'requests'/(r['state_id']+'.json');response=root/'responses'/request.name
             write(request,r);start=time.monotonic()
             while not response.exists():
-                if (root/'STOP.json').exists():raise ValueError('STOP during plan imagination')
+                assert_running(root,job['arm'])
                 if time.time()>job['gpu_deadline']:raise ValueError('registered GPU deadline exceeded')
                 time.sleep(.5)
             result=read(response)

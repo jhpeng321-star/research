@@ -1,5 +1,22 @@
 # S-COOPMWM — live checks
 
+## Durable runtime and health guards — CPU qualified, remote gates running
+- **160 CPU tests PASS, zero skips, 8.99s, zero SUMO**. Health pauses are integrated
+  into live guided episodes, pre-update checks and paired learning checks. A remains
+  independent of B/R health pauses. The original transport STOP is SHA-bound and
+  preserved; completed A-u16/check/dev/Adam/RNG were verified, all348 new jobs closed.
+- Detached GPU workers dispatched once: gpuA588981/start893707080 and
+  gpuR29230/start4218346888. Six exact source-bound startup gates precede READY.
+  The unchanged registered warm MPPI search and original deadline are retained.
+- Real cpuQ→bothGPU restricted RPC route probes pass; task-only private key stays
+  on cpuQ. GPU model processes and forecasts now survive local/SSH disconnects.
+- Registered runtime amendment `dc9879ebb44596573c8520a8291809903b737795548afa800129fb513b70e10b`.
+  Source `/home/ubuntu/coopmwm20261102_durablecpu2`; V3 learner bindings enforce
+  MAIN02:01. A resumes exactu16; B/R await full GPU gates and release registration.
+- Retained failed durablecpu1 receipt: its sole failure was a stale test asserting
+  the superseded6M cap; latest6.5M boundary is tested in durablecpu2. One SSH reset
+  while staging was retried once; no physics or inference was repeated.
+
 ## MAIN02:01 learner correction — CPU qualified and registered
 - **133 CPU tests PASS, zero skips, 8.86s, zero SUMO** on cpuQ, including 7 new
   AWR semantic tests. Committed plan steps are never policy-scored or ratioed;

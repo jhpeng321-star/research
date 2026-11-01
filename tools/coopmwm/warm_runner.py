@@ -16,6 +16,7 @@ from .protocol import sha,digest
 from .warm_protocol import budget,batch_worlds,worlds,SEED,install_accounting
 from .exploration import trust
 from . import search_learning
+from .warm_health import assert_running,HealthPause,before_update,after_check,braking
 
 
 def verify(root,arm):
@@ -25,25 +26,29 @@ def verify(root,arm):
     for name,h in b['hashes'].items():assert sha(root/name)==h,'immutable warm source '+name
     text=(root/'AUTHORITY.md').read_text()
     assert b['scope_amendment_sha256'] in text and b['release_amendment_sha256'] in text
-    assert not (root/'STOP.json').exists()
+    assert_running(root,arm)
     if arm in ('B','R'):
         release=read(root/'WARM_RELEASE.json')
         assert release['pass_'] and release['N_exec']>=10
         assert release['release_amendment_sha256'] in text
-    if arm in ('B','R'):
-        runtime=read(root/f'WARM_{arm}_RUNTIME_BINDING_V2.json')
+    v3=root/f'WARM_{arm}_RUNTIME_BINDING_V3.json'
+    if arm in ('B','R') or v3.exists():
+        runtime=read(v3 if v3.exists() else root/f'WARM_{arm}_RUNTIME_BINDING_V2.json')
         assert runtime['cpu']['pass_'] and not runtime['cpu']['skips']
         assert runtime['amendment_sha256'] in text
         source=Path(runtime['source_root'])
         assert Path(__file__).resolve()==source/'pytools/tools/coopmwm/warm_runner.py'
         for name,h in runtime['hashes'].items():assert sha(source/name)==h,arm+' runtime source '+name
+        if v3.exists():
+            awr=read(root/'AWR_BINDING.json');assert awr['amendment_sha256'] in text
+            b=dict(b,**runtime['operational'],awr=awr['config'])
     install_accounting()
     return b
 
 
-def wait(root,path,deadline):
+def wait(root,path,deadline,arm='B'):
     while not path.exists():
-        if (root/'STOP.json').exists():raise ValueError('durable warm STOP while waiting')
+        assert_running(root,arm)
         if time.time()>deadline:raise ValueError('registered warm runtime deadline')
         time.sleep(2)
     return read(path)
@@ -57,7 +62,8 @@ def check(root,b,arm,policy,u):
     panel_report(root,f'{arm}_CHECK_{u:03}.json',records,controls,'check')
     if arm=='B':
         a=wait(root,root/f'A_CHECK_RECORDS_{u:03}.json',b['gpu_deadline'])
-        panel_report(root,f'AB_CHECK_{u:03}.json',a+records,controls,'check')
+        report=panel_report(root,f'AB_CHECK_{u:03}.json',a+records,controls,'check')
+        if b.get('health_guards'):after_check(root,arm,u,report)
 
 
 def run_arm(root,arm):
@@ -65,28 +71,37 @@ def run_arm(root,arm):
     import os
     b=verify(root,arm)
     lock=(root/f'WARM_{arm}.claim').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-    assert not (root/f'WARM_{arm}_STARTED.json').exists(),'one-use warm arm already started'
+    suffix='_V3' if b.get('health_guards') else ''
+    assert not (root/f'WARM_{arm}_STARTED{suffix}.json').exists(),'one-use warm arm already started'
     os.nice(max(0,19-os.getpriority(os.PRIO_PROCESS,0)));torch.set_num_threads(1)
     torch.manual_seed(SEED)
     if arm=='A':
-        policy,opt,rng,payload=load(root/'A_checkpoint_004.pt');assert payload['update']==4
-        first,last=5,48
+        resume=b.get('A_resume_update',4)
+        policy,opt,rng,payload=load(root/f'A_checkpoint_{resume:03}.pt');assert payload['update']==resume
+        first,last=resume+1,48
     else:
         policy=Policy();opt=torch.optim.Adam(policy.parameters(),lr=3e-4)
         rng=torch.Generator().manual_seed(SEED);first,last=1,4
         save(root/f'{arm}_checkpoint_000.pt',policy,opt,rng,0,charged(root))
-    write(root/f'WARM_{arm}_STARTED.json',dict(timestamp_utc=timestamp(),first_update=first,
+    write(root/f'WARM_{arm}_STARTED{suffix}.json',dict(timestamp_utc=timestamp(),first_update=first,
         pause_update=last,full_endpoint=budget()['updates'][arm],charged_sim_s=charged(root)))
     running=[];beta=1.;learned=search_learning.empty(arm,SEED,b['accel_bounds'])
     exact_rng=np.random.default_rng(SEED);exact_count=0
     diagnostics=ThreadPoolExecutor(max_workers=1)
     try:
+        if arm=='A' and b.get('health_guards'):
+            # Finish any due reporting interrupted after the durable u16 checkpoint.
+            if not (root/'A_CHECK_016.json').exists():check(root,b,arm,policy,16)
+            if not (root/'A_DEV_016.json').exists():
+                dev=wave(root,b,{arm:policy},worlds('dev'),'dev','warmdev016_A','dev')
+                panel_report(root,'A_DEV_016.json',dev,read(root/'MAPPO_DEV.json')['records'],'dev')
         for u in range(first,last+1):
-            if (root/'STOP.json').exists():raise ValueError('durable warm STOP before next wave')
+            assert_running(root,arm)
             start=time.monotonic();extra=dict(update=u)
+            if b.get('health_guards'):extra.update(health_guards=True,safety_reference=b['safety_reference'])
             if arm=='B':extra['search_learning']=learned
             if arm=='R':
-                wait(root,root/f'B_RANDOM_QUOTA_{u:03}.json',b['gpu_deadline'])
+                wait(root,root/f'B_RANDOM_QUOTA_{u:03}.json',b['gpu_deadline'],arm)
                 extra['random_quota']=str(root/f'B_RANDOM_QUOTA_{u:03}.json')
             eps=wave(root,dict(b,beta=beta),{arm:policy},batch_worlds(u),'train',f'warm_u{u:03}','train',False,extra)
             routes=routing(eps)
@@ -99,6 +114,16 @@ def run_arm(root,arm):
                     actual=sorted((t['group_size'],t['duration_s']) for t in routes['durations'] if t['regime']==regime)
                     assert actual==expected,'R count/regime/group-size/duration gate'
             ev=evidence(eps);running+=ev
+            tr=trust(beta,running) if arm in ('B','R') else dict(beta=0.)
+            if b.get('health_guards'):
+                before_update(root,arm,u,routes, running,tr,b['N_exec'])
+                if arm in ('B','R'):
+                    a_records=[]
+                    for w in batch_worlds(u):
+                        ident=f'warm_u{u:03}_A_{w["seed"]}'
+                        p=root/'jobs'/ident/'RESULT.json'
+                        if p.exists():a_records.append(read(p))
+                    braking(root,arm,u,eps,a_records)
             if arm=='B':
                 learned=search_learning.update(learned,eps,ev,arm,SEED)
                 write(root/f'B_SEARCH_LEARNING_{u:03}.json',learned)
@@ -106,8 +131,7 @@ def run_arm(root,arm):
                 arm=arm,viability=viability(ev),cumulative=viability(running),routing=routes))
             # Snapshot the rollout policy BEFORE the optimizer for exact twins.
             state={k:v.detach().clone() for k,v in policy.state_dict().items()}
-            metrics=update(policy,opt,eps,rng)
-            tr=trust(beta,running) if arm in ('B','R') else dict(beta=0.)
+            metrics=update(policy,opt,eps,rng,**({'awr':b['awr']} if 'awr' in b else {}))
             save(root/f'{arm}_checkpoint_{u:03}.pt',policy,opt,rng,u,charged(root))
             raw=[v*UNIT for e in eps for v,_ in advantages(e['steps'])]
             write(root/f'{arm}_UPDATE_{u:03}.json',dict(timestamp_utc=timestamp(),update=u,arm=arm,
@@ -133,8 +157,10 @@ def run_arm(root,arm):
             full_endpoint=budget()['updates'][arm],charged_sim_s=charged(root),
             reason='early viability owner review; final panel unopened' if arm!='A' else 'A fixedu48 complete; wait for B48 before final panel'))
     except BaseException as error:
-        write(root/f'WARM_{arm}_FAILED.json',dict(timestamp_utc=timestamp(),error=repr(error)))
-        if not (root/'STOP.json').exists():write(root/'STOP.json',dict(arm=arm,error=repr(error),timestamp_utc=timestamp()))
+        write(root/f'WARM_{arm}_FAILED{suffix}.json',dict(timestamp_utc=timestamp(),error=repr(error)))
+        if not isinstance(error,HealthPause):
+            stop=root/('WARM_GUIDED_STOP.json' if arm in ('B','R') and b.get('health_guards') else 'STOP.json')
+            if not stop.exists():write(stop,dict(arm=arm,error=repr(error),timestamp_utc=timestamp()))
         raise
     finally:
         diagnostics.shutdown(wait=True);lock.close()

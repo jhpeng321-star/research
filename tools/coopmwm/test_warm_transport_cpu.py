@@ -61,7 +61,9 @@ class Transport(unittest.TestCase):
 
     def test_explicit_resume_budget_cap(self):
         check_budget(dict(allocated=6000000))
-        with self.assertRaisesRegex(ValueError,'473440'):check_budget(dict(allocated=6473440))
+        check_budget(dict(allocated=6473440))
+        check_budget(dict(allocated=6500000))
+        with self.assertRaisesRegex(ValueError,'1'):check_budget(dict(allocated=6500001))
 
 
 if __name__=='__main__':unittest.main()

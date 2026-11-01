@@ -10,7 +10,8 @@ def trajectory(root,record,deadline):
     request=root/'centre_requests'/(key+'.json');response=root/'centre_responses'/request.name
     write(request,record)
     while not response.exists():
-        if (root/'STOP.json').exists():raise ValueError('STOP while waiting for shared policy centre')
+        from .warm_health import assert_running
+        assert_running(root,'R')
         if time.time()>deadline:raise ValueError('original GPU deadline while waiting for centre')
         time.sleep(.5)
     value=read(response)

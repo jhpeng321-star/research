@@ -1,5 +1,15 @@
 # S-COOPMWM live continuation — MAIN02:01 learner correction pending
 
+LATEST: MAIN02:01 learner now registered0bb2f157/CPU133PASS; positive completed-plan
+AWR T4.822766875237093 from preB/R MAPPO baseline, clip20, no plan PPO scores/ratios.
+DurableCPU2 now160PASS/0skips/zeroSUMO with health/client/plant integration; runtime
+amendmentdc9879eb and per-armV3bindings registered. Exact A-u16/Adam/RNG verified,
+all348newjobsclosed, check/dev16complete, charge1405640. A V3dispatch pending.
+GPU durable1 detached spools dispatched ONCE: A588981/start893707080, R29230/
+start4218346888. Startup gates running; inspect warm_remote_ops gpu-status before
+anything. Real cpuQ->bothGPU restricted RPC works; private key remains cpuQ only.
+Do not dispatch old warm_bridge/services. B/R full GPU release still pending.
+
 Fresh resume: complete233-line brief read, HEAD73a42ad1/work preserved. Status
 1793556145 confirms A-u16 exited,288/288closed,charge1405640,pending0,B/R unstarted.
 Both original qual4 jobs have now EXITED; adopt exact0 gates and group2/4/6timings

@@ -39,11 +39,17 @@ def episode(job):
     try:
         with gzip.open(path/'observable.jsonl.gz','xt',encoding='utf-8') as trace:
             for t in range(300,job.get('stop',1200)):
+                if job.get('health_guards'):
+                    from .warm_health import assert_running
+                    assert_running(Path(job['queue_root']),job['arm'])
                 prefixes[str(t)]=b.fingerprint()
                 if branch and t<=branch['time_s'] and prefixes[str(t)]!=branch['prefixes'][str(t)]:
                     raise ValueError('exact full-prefix mismatch before acceleration intervention')
                 before=b.totals['team_delay_vs'];n=len(controller.events)
                 audit=cf.tick(b,controller,trace);requested+=len(audit);overrides+=sum(x['clamped'] for x in audit)
+                if job.get('health_guards') and job.get('guided'):
+                    from .warm_health import live_safety
+                    live_safety(Path(job['queue_root']),job['arm'],b.totals,job['world']['seed'],job['safety_reference'])
                 if len(controller.events)!=n+1:raise ValueError('expected one acceleration action per1s')
                 event=controller.events[-1]
                 if job.get('guided') and job['arm']=='B' and event['sample'].get('behaviour',{}).get('plan_start'):

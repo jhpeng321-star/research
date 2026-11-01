@@ -1,0 +1,109 @@
+"""MAIN01:38 pre-registered pauses. No final-panel access or outcome selection."""
+from pathlib import Path
+import time
+import numpy as np
+from .storage import read,write
+from .protocol import sha
+
+
+class HealthPause(RuntimeError):
+    pass
+
+
+def active_stop(root):
+    root=Path(root);p=root/'STOP.json'
+    if not p.exists():return False
+    release=root/'WARM_TRANSPORT_RELEASE.json'
+    if not release.exists():return True
+    v=read(release)
+    # Only this diagnosed transport stop is releasable; original stays on disk.
+    return not (v.get('original_stop_sha256')==sha(p) and
+        read(p)==dict(error='Connection closed by 1.15.42.207 port 22\n',
+            source='owned warm bridge; no automatic retry') and
+        v['amendment_sha256'] in (root/'AUTHORITY.md').read_text())
+
+
+def assert_running(root,arm):
+    root=Path(root)
+    if active_stop(root):raise ValueError('durable warm STOP')
+    if arm in ('B','R'):
+        pauses=sorted(root.glob('PAUSE_*.json'))
+        if pauses:raise HealthPause('registered health pause '+pauses[0].name)
+        if (root/'WARM_GUIDED_STOP.json').exists():raise ValueError('durable guided engineering STOP')
+
+
+def pause(root,rule,evidence):
+    path=Path(root)/('PAUSE_'+rule+'.json')
+    value=dict(rule=rule,evidence=evidence,unix=time.time(),arms=['B','R'],
+        action='pause; preserve receipts/checkpoints/charges; diagnosis and registered release required',
+        checkpoint_selection=False,final_panel_access=False)
+    if not path.exists():write(path,value)
+    raise HealthPause('registered health pause '+rule)
+
+
+def safety_reference(records):
+    # Existing MAPPO check episodes are the available no-new-physics benchmark.
+    # For unmatched TRAIN worlds, a zero-event benchmark is conservative, never
+    # an assertion that the MAPPO counterfactual has been run on that world.
+    by_world={str(e['world']['seed']):{k:float(e['metrics']['900'][k])
+        for k in ('collisions','teleports')} for e in records}
+    if not by_world:raise ValueError('MAPPO safety reference absent')
+    zero=all(v[k]==0 for v in by_world.values() for k in v)
+    return dict(by_world=by_world,unmatched_zero_event_benchmark=zero,
+        source='existing registered MAPPO TRAIN-check panel; unmatched TRAIN zero-event pause is conservative')
+
+
+def live_safety(root,arm,totals,world,reference):
+    if arm not in ('B','R'):return
+    assert_running(root,arm)
+    baseline=reference['by_world'].get(str(world))
+    if baseline is None:
+        if not reference['unmatched_zero_event_benchmark']:
+            raise ValueError('unmatched TRAIN safety reference is not zero; require MAIN decision')
+        baseline=dict(collisions=0.,teleports=0.)
+    delta={k:float(totals[k])-baseline[k] for k in baseline}
+    if any(v>0 for v in delta.values()):
+        pause(root,'SAFETY',dict(world=world,arm=arm,totals={k:totals[k] for k in baseline},
+            baseline=baseline,difference=delta,source=reference['source']))
+
+
+def before_update(root,arm,u,routes,cumulative,trust_state,n_exec):
+    assert_running(root,arm)
+    if arm not in ('B','R'):return
+    if arm=='B':
+        executed=sum(r['executed'] for r in cumulative)
+        interval=trust_state.get('ci95')
+        if executed>=30 and interval is not None and interval[1]<0:
+            pause(root,'HARMFUL_PLANS',dict(update=u,executed=executed,trust=trust_state))
+        previous=Path(root)/f'B_UPDATE_{u-1:03}.json'
+        if routes['executed']<n_exec and previous.exists() and read(previous)['proposal_routing']['executed']<n_exec:
+            pause(root,'STARVATION',dict(update=u,previous_update=u-1,N_exec=n_exec,
+                previous=read(previous)['proposal_routing'],current=routes))
+        buckets=trust_state.get('buckets',{})
+        if u<8 and trust_state.get('beta')==0 and (not buckets or all(v['beta']==0 for v in buckets.values())):
+            pause(root,'STARVATION',dict(update=u,reason='trust collapsed to zero before u8',trust=trust_state))
+
+
+def after_check(root,arm,u,report):
+    if arm!='B':return
+    metrics=report['comparisons']['B_minus_A']['metrics']
+    bad={k:v for k,v in metrics.items() if k in ('600_team_delay_vs','900_team_delay_vs') and v['ci95'][0]>0}
+    previous=Path(root)/f'AB_CHECK_{u-4:03}.json'
+    if bad and previous.exists():
+        prior=read(previous)['comparisons']['B_minus_A']['metrics']
+        if any(prior[k]['ci95'][0]>0 for k in bad):
+            pause(root,'LEARNING',dict(update=u,current=bad,previous_update=u-4,
+                previous={k:prior[k] for k in bad}))
+
+
+def braking(root,arm,u,episodes,a_records):
+    if arm not in ('B','R'):return
+    a={e['world']['seed']:e for e in a_records}
+    common=[e for e in episodes if e['world']['seed'] in a]
+    if len(common)<2:return
+    delta=np.array([e['metrics']['900']['hard_brake']-a[e['world']['seed']]['metrics']['900']['hard_brake'] for e in common])/900.
+    idx=np.random.default_rng(20261101).integers(0,len(delta),(10000,len(delta)))
+    ci=np.quantile(delta[idx].mean(1),[.025,.975]).tolist()
+    if ci[0]>0:pause(root,'SAFETY',dict(update=u,arm=arm,metric='hard-brake vehicle-seconds / 900 control seconds',
+        worlds=[e['world']['seed'] for e in common],mean=float(delta.mean()),ci95=ci,
+        method='10000 paired whole-world bootstrap; RNG20261101; vs same-update A'))
