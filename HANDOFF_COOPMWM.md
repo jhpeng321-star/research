@@ -1,5 +1,14 @@
 # S-COOPMWM live continuation — OWNER22:08 WARM MEMORY HOLD
 
+23:23 fresh recovery: complete194-line brief read through23:21. Receipt
+WARM_RECOVERY_1793546587 verifies supervisor2477255 and all24B identities T;
+A acceleration u1..4/check episodes preserved; conservative charge988040sim-s.
+Both GPUs currently empty; gpuA552073/552087 are pre-existing S-WMSPEED2 CPU
+processes and preserved. No duplicate jobs/dispatch or new physics. Explicit
+resume cap6M retained. Integrate landed search ef76db18 and branch0fe621ae;
+warm E2 fixtures/CPU runtime already exist and must be reused. Current warm
+service transport is preserved; end-to-end MPPI/restart remains unqualified.
+
 23:18 fresh recovery: read full187-line brief through23:16. Receipt
 WARM_RECOVERY_1793546303 verifies original2477255 and all24B identities T;
 A acceleration updates1..4 and all12u4check episodes retained; charge988040.
