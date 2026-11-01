@@ -116,6 +116,7 @@ after each matched prediction file exists; all10completed states included.
   driver/source-prior marginalization and cold memory; not calibrated confidence,
   whole-panel qualification, student recognition, or real-policy efficacy.
 
+### Historical initial protocol — superseded by current status above
 Historical immutable gpuA root `/root/autodl-tmp/wmteach20261101_v3`,404source hashes
 (original process now EXITED; complete quality/terminal FIT guard retained).
 Supervisor437822/startticks888636829/boot a81555d7-176e-4ed8-bc7d-896fc89cc914;
@@ -126,17 +127,17 @@ Shared S-DISTILL code imported from4b139e5f; full local25CPU PASS, frozen host17
 Numpy-only export supports the selected GBT OR MLP plus unseen-option constants;
 128query parity/choices per family pass (no family substitution). Eight complete
 K8/H120+H300 contexts pass actual published S-RB-DECIDE probability/selection parity;
-`wmteach/WMDECIDE_PARITY_1793507555.json`. Quality panel is still incomplete.
+`wmteach/WMDECIDE_PARITY_1793507555.json`. At that initial snapshot quality was incomplete.
 No new environment: sklearn/scipy/joblib/threadpoolctl pinned in own `deps/` directory.
 Initial quality panel:12EXAM states, one per cell, selected by observable availability
 then earliest clock/world, not outcomes; H120/H300, K8. Roster-only EXAM lacks causal
 history/source counters: explicitly marginalize the32FIT source queue/arrival priors
 and fitted driver population, cold controller memory; this is a weaker observation
 contract than the fully conditioned FIT labels and must be reported as such.
-Fit plan:32FIT worlds ×4settings ×2horizons=256WM label contexts, K8;
+Superseded initial fit plan:32FIT worlds ×4settings ×2horizons=256WM label contexts, K8;
 student snapshots after each complete32world pass, H300 fixed, nested outer4/inner3
 world CV and same GBT/MLP/classifier/confidence grid as S-DISTILL. No exact fitting.
-Initial quality labels exist; full teacher-quality estimate/student/live result pending.
+The complete quality result and active scale continuation supersede that initial plan.
 The headline “a policy trained with the world model beats MAPPO” is an objective, not a result.
 
 <!-- WMTEACH-WATCH:BEGIN -->

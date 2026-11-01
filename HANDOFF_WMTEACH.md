@@ -1,6 +1,14 @@
 # S-WMTEACH resume / ownership
 
 ## Latest recovery milestone — read before older ownership
+- SOLE CURRENT COLLECTOR: local43128, exact command
+  `C:\Users\jpeng\AppData\Local\Programs\Python\Python313\python.exe -B -u -m tools.wmteach.scale_watch`,
+  CIM creation2026-11-01 13:45:29+08 / receiptstartedUnix1793511929.2292252.
+  OS-exclusive SCALE_WATCH.lock; every20min, up to168h. First full collection and
+  owned auto-commit succeeded. Do not launch another collector/GPU dispatch.
+  Prior local41120/9796 collectors were exact-owned stopped and remain historical.
+  Snapshot1793511933:245generated v4states/1labelled; v5quality8futures/2labels;
+  v5scale waits its quality parent. Auto-live only sees the complete v5 scale policy.
 - ACTIVE verified gpuA (common boot a81555d7-176e-4ed8-bc7d-896fc89cc914):
   v4scalev3 PID453587/start889174202, v5qualityv2 PID453566/start889173543,
   v5scalev2 PID453608/start889174685 (waits own v5 quality, no CUDA allocation).
@@ -11,6 +19,8 @@
   23generated states/1labelled state and owned process R. Full5120corpus still pending.
 - V5 new quality snapshot1793511702:3/96complete futures, owned process R,
   ~49s/future; no v5 quality/student/live result claimed yet. Teacher SUMO0.
+
+### Earlier canary/staging history — preserve, not active launch instructions
 - Latest operational canary repair (new designacf6f48dbd4b): v4scalev2 EXITED0states
   at observer due_area initialization after its raw process was unwrapped; keep
   InstrumentedEntries attached. V5qualityv1 EXITED0forecasts because a no-CAV
