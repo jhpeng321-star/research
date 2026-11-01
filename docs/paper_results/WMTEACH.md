@@ -51,7 +51,32 @@ never become features. Inherited exact-quality forecasts are reused. Live requir
 helpful-state exact chosen saving; otherwise live is withheld. Shared student
 code/whole-world nested CV retained; CPU27PASS in existing Python313 environment.
 
-## Exact teacher quality — interim, before scale fitting
+## Exact teacher quality — COMPLETE before scale fitting
+Complete receipt `wmteach/EXACT_QUALITY_1793510517.json`, shared registration
+`S-WMTEACH TEACHER QUALITY FIRST COMPLETE`:12/12selected states (12/300EXAM),
+96complete futures, no repeated forecasts/newSUMO0.
+- H120: argmax50.0%, strict-Pgate41.7%, Dsign59.4%, rank0.308; exact chosen
+  D+19.5veh-s/state, oracle+59.8, regret40.2.
+- H300: argmax66.7%, strict-Pgate41.7%, Dsign68.8%, rank0.516; exact chosen
+  D+680.3veh-s/state, oracle+1273.3, regret593.0.
+- Helpful H300:4/8argmax matches,6/8positive-saving choices, Wilson95lower21.5%,
+  mean exact chosen D+1020.5veh-s/helpful state. Prospective quality gate PASS.
+- Coverage/conditioning limitations below still apply; no student/live result.
+
+### FIT bridge diagnosis / immutable failures
+After quality, original437822 exited at the first FIT source969400 because the
+frozen `rbint.observations.load_observations` accepts only exported969420..969439.
+Scale447666 independently reached the same guard before its first generation
+rollout:0generated states/0FITlabels. `SCALE_SNAPSHOT_1793510546.json` retains the
+traceback and complete quality. No old root is relaunched. The planned cooperative
+small-job retirement correctly refused to act on an absent/replaced PID; no
+signal/STOP was sent. Collector9796 was exact-owned stopped for bridge repair.
+FULL-v5 sourceb2df7458 is now explicitly READY for teacher-quality rerun; native
+exporter restrictions must not be bypassed by substituting packed IDs for recorded
+identities. New versions will use an explicit population-marginalized observable
+FIT-start generator and preserve every v4 result/failure.
+
+### Retained interim readout
 Read-only receipt `wmteach/EXACT_QUALITY_1793509786.json`:10/12selected states
 complete (10/300fullEXAM coverage), no new forecasting/SUMO. Targets consulted only
 after each matched prediction file exists; all10completed states included.

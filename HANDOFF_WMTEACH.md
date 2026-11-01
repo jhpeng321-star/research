@@ -1,5 +1,22 @@
 # S-WMTEACH resume / ownership
 
+## Latest recovery milestone — read before older ownership
+- FULL-v4 quality COMPLETE: receipt1793510517/12states/96futures; H3008/12argmax,
+  helpful4/8argmaxhits/6positivechoices, exactchosenD+680.3/regret593.0veh-s/state.
+  Helpful-quality gate PASS. Shared REGISTRATION result line appended.
+- Original437822 EXITED at firstFIT969400 loader guard; scale447666 EXITED at
+  same guard before any imagined state/rollout (SCALE_SNAPSHOT1793510546).
+  Frozen native exporter only accepts969420..969439, not allFIT32. All roots,
+  quality futures and failures preserved; NO restart/replay of either root.
+- retire_small correctly refused absent/changed ownership; no STOP/signal sent.
+  Exact-owned local collector9796 stopped before source/bridge repair.
+- FULL-v5 READY now published: sourceb2df7458a41f5f4d3a048532bc40d8d4435ec381,
+  gpuA `/root/autodl-tmp/c4/rb2int20261101/phys_code_b2df7458a41f`,
+  recipe023fa74a4d3059115ec0a5f28d39030a76137d871db5798eb1d23a13fc1e32c5.
+  Shared `rb-shared/RB2_INT_FULL_V5_READY.md`/two-world allfivearm receipt verified;
+  current-jobs older prose is superseded by explicit READY+completion evidence.
+  LP449208 is PEER-owned/live, never duplicate/signal it. Final qualification pending.
+
 ## OWNER12:53 recovery amendment
 - Fresh recovery read clean `e6ba1bde`, registration and all ownership contracts first.
 - Snapshot1793508966: GPU437822 identity MATCH/R,64 complete futures,16 horizon
