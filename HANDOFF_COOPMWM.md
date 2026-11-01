@@ -1,5 +1,21 @@
 # S-COOPMWM live continuation — OWNER22:08 WARM MEMORY HOLD
 
+LIVE A: warm1 registered source CPU6(123PASS/0skips/8.87s/zeroSUMO), A-only
+PID2767879/start56464482/bootb8bc1fcb-c656-4e1e-a43d-4543118c834e. It resumes
+exactA-u4/Adam/RNG ->48, checks4/dev16, no final access; u5 already complete.
+Run `python -X utf8 -m tools.coopmwm.warm_deploy status` before any dispatch.
+A48amendment5477f8ab6bfd11e4f4b05f2c5b53f96002df73dbfc219fc5435b87f66c374d17.
+Root /home/ubuntu/coopmwm20261102_warm1, original988040charges copied/reclassified,
+all old held identities untouched. RAM_STORAGE admits future-only owned output
+symlinks into /dev/shm/coopmwm20261102_warm1; existing48casepaths preserved,
+NO deletions/moves. Back up closed allowed observable/RESULT/CLAIM/CLOSE artifacts
+with warm_storage backup --arm A --update7 (first fully RAM-staged update) onward.
+Do not archive/traverse scenario files. Retain RAM and verify durableGPU copySHA.
+GPU R qual1 exited BEFORE planner scoring (nonchained fixture); new qual2
+PID11430/start4217652067 adopts completedE2 and measures valid connected4/6 groups.
+GPU A573068 still runs original group2 search; its later group6 fixture will fail
+admission and must be retained, not rerun. B/R remain unstarted pending final release.
+
 ACTIVE QUALIFICATION: `warmmppiqual1`, cpu117PASS/noSUMO in dd06b2aa;
 GPU A573068/start892945885, GPU R9694/start4217587618, each owns exactly one
 inference-only qualifier under /root/coopmwm20261102_warmmppiqual1. Inspect

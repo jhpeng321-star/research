@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 import time
 from .storage import read,write
-from .protocol import digest,sha
+from .protocol import digest,sha,checked
 
 
 def setpoint_futures(rt,record,memory):
@@ -43,7 +43,7 @@ def run(root,host):
     for name,h in manifest['hashes'].items():assert sha(root/name)==h,name
     claim=root/'QUAL_STARTED.json'
     write(claim,dict(unix=time.time(),host=host,new_sumo_sim_s=0))
-    rt=bootstrap();torch.cuda.set_per_process_memory_fraction(.65)
+    rt=bootstrap();torch.cuda.set_per_process_memory_fraction(manifest.get('memory_fraction',.65))
     rt.frozen.costs=cost_adapter(rt.frozen.costs,read(root/'FROZEN_COSTS.json')['code'],
         horizons=(60,120,300,360,420,600))
     try:
@@ -112,6 +112,14 @@ def run(root,host):
                 actions=ms.comparators(rec,600)
                 actions.append(ms.sample_unscored(group,[[0.]*300]*size,bounds,'ordinary',20261101,duration_s=300))
                 for k,h,width in ((4,120,34),(8,420,10)):
+                    if k==4 and manifest.get('reuse_parity_root'):
+                        prior=Path(manifest['reuse_parity_root']);value=read(prior/'PARITY_K4_H120.json')
+                        assert value['pass_'] and value['max_cost_error']==0
+                        old=read(prior/'QUAL_BINDING.json')
+                        for n in ('plan_wm','speed2_runtime','speed2_transfers','mppi_search','mppi_runtime','policy_wm','speed2_memory'):
+                            key=f'pytools/tools/coopmwm/{n}.py';assert old['hashes'][key]==manifest['hashes'][key],n
+                        write(root/'PARITY_K4_H120.json',dict(value,reused_from=str(prior),prior_sha256=sha(prior/'PARITY_K4_H120.json')))
+                        continue
                     receipt=qualify(rt,rec,actions,k,h,width,memory=native_memory,transfers=True)
                     write(root/f'PARITY_K{k}_H{h}.json',receipt)
                     assert receipt['pass_'],'integrated warm batch exact parity failed'
@@ -149,9 +157,17 @@ def stage(host,tag):
     staged=json.loads(ops.stage(host,root,files))
     binding=dict(hashes=staged['hashes'],host=host,root=root,new_sumo_sim_s=0,
         search='registered medium dimension-scaled MPPI; no training outcome selection')
-    if tag=='warmmppiqual2':
+    if tag in ('warmmppiqual2','warmmppiqual3'):
         assert host=='gpuR','qual2 repairs only GPU R group4/6 admission; original GPU A keeps running'
         binding.update(reuse_E2_root='/root/coopmwm20261102_warmmppiqual1',group_sizes=[4,6])
+    if tag=='warmmppiqual3':
+        binding.update(reuse_parity_root='/root/coopmwm20261102_warmmppiqual2',memory_fraction=.80)
+        from .protocol import REGISTRY
+        line=('\nS-COOPMWM GPU-R H420 MEMORY ADMISSION: qual2 exited OOM at allocator65% (15.29GiB), physical7.83GiB free; '
+            'no peer compute PID. New source-bound warmmppiqual3 uses80% allocator, unchanged widths34/10/WM/search, '
+            'adopts completed cold/warmE2 and H120 exact-parity receipts by dependencySHA, reruns failed H420 gate then group4/6 timing; '
+            'zero SUMO, all failures retained, no process control/deadline reset.\n')
+        with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
     ops.stage(host,root,{'QUAL_BINDING.json':json.dumps(binding,sort_keys=True)})
     write(ops.EVIDENCE/f'{tag}_STAGE_{host}.json',binding)
     print(json.dumps(dict(host=host,root=root,files=len(staged['hashes']))))

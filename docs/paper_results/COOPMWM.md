@@ -1,5 +1,24 @@
 # S-COOPMWM — live checks
 
+## A continuation active; warm qualification progresses
+- Final CPU6: **123 PASS, zero skips, 8.87s, zero SUMO**, including nonzero imagined
+  actor vs observable plant actor, warmup-history priming, A-u4→u48 resume and
+  exact prospective focus/budget/branch-family contracts. Speed2's frozen-WM
+  bridge test requires its GPU-host runtime; the retained CPU5 environment failure
+  does not substitute for GPU qualification.
+- A resumed once, owned PID2767879/start56464482, from exact preservedu4/Adam/RNG.
+  Its u5 update has completed. New root `coopmwm20261102_warm1`; A continues to48,
+  checks4/dev16; B/R remain qualification-held. All988040prior charges are retained.
+- Storage amendment is nondestructive: new unclaimed output paths use an owned
+  RAM root (27.22GB free at admission); existing48paths stay in place. No deletion
+  or move. Closed observable/results/claim/close files receive digest-verified GPU
+  backups; scenario/truth files are excluded from traversal and backup.
+- GPU A has passed warm H120/H420 full-vs-fast parity and empty-history equality.
+  GPU R's first fixture used nonconnected CAVs and stopped before search; replacement
+ 11430 reuses both completed E2 measurements and chooses connected groups. Original
+  GPU A group2 timing continues; group4/6 timing is pending. Qualification/restart
+  announcements remain gated on complete evidence.
+
 ## Integrated warm MPPI — qualification running
 - `dd06b2aa`: **117 CPU tests PASS, zero skips, 8.66s, zero SUMO**. Real frozen
   MAPPO parity, observable-history guards, landed MPPI/branch modules and extended

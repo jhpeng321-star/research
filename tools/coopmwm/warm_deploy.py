@@ -105,6 +105,32 @@ print(json.dumps(v))''',timeout=35))
     write(ops.EVIDENCE/f'WARM_{arm}_DISPATCH2.json',value);print(json.dumps(value))
 
 
+def status():
+    value=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,time,os,shutil,sys
+r=pathlib.Path({ROOT!r});assert r.is_dir();sys.path.insert(0,str(r/'pytools'))
+from tools.coopmwm.accel_storage import read,charged,ledger
+owners={{}};logs={{}}
+for arm in ('A','B','R'):
+ path=r/f'WARM_{{arm}}_DISPATCH.json'
+ if not path.exists():continue
+ d=read(path);p=pathlib.Path('/proc')/str(d['pid']);s=(p/'stat').read_text().split() if (p/'stat').exists() else None
+ assert not s or s[21]==d['start_ticks']
+ owners[arm]=dict(owner=d,state=s[2] if s else 'exited')
+ logs[arm]=(r/f'WARM_{{arm}}.log').read_text()[-6000:]
+names=[p.name for p in r.glob('*_UPDATE_*.json')]
+receipts={{p.name:read(p) for pattern in ('WARM_*_FAILED.json','WARM_*_PAUSED.json','STOP.json') for p in r.glob(pattern)}}
+charges=ledger(r);fresh=[c for c in charges if c['id'].startswith('warm_')]
+print(json.dumps(dict(unix=time.time(),owners=owners,updates=sorted(names),receipts=receipts,logs=logs,
+ charged_sim_s=charged(r),new_jobs=len(fresh),closed=sum((r/'jobs'/c['id']/'CLOSE.json').exists() for c in fresh),
+ pending_requests=sum(not (r/'responses'/p.name).exists() for p in (r/'requests').glob('*.json')),
+ load=os.getloadavg(),disk_free=shutil.disk_usage(r).free)))''',timeout=30))
+    write(ops.EVIDENCE/f'WARM_STATUS_{int(value["unix"])}.json',value)
+    print(json.dumps(value))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('prepare','dispatch'));p.add_argument('--arm',choices=('A','B','R'),default='A')
-    a=p.parse_args();prepare() if a.mode=='prepare' else dispatch(a.arm)
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('prepare','dispatch','status'));p.add_argument('--arm',choices=('A','B','R'),default='A')
+    a=p.parse_args()
+    if a.mode=='prepare':prepare()
+    elif a.mode=='status':status()
+    else:dispatch(a.arm)
