@@ -1,4 +1,4 @@
-# WM-PHYS morning report — interim, 2026-11-01T09:59:36+08:00
+# WM-PHYS morning report — interim, 2026-11-01T10:25:23+08:00
 Registered switching rule FAIL: 300s breakdown rate not closer to real. Calibrated controller selection is not established.
 Latest engineering source is FULL-v4/22cc32f6; current paired diagnostic below is FULL-v4.
 
@@ -19,7 +19,7 @@ Latest engineering source is FULL-v4/22cc32f6; current paired diagnostic below i
 - Development12/reserved8 remain separate; incomplete ensembles never count as K8. Contrasts below reserved only.
 - A2:n=8, ΔCRPS120/300/600=-526/-3175/-12100veh-s; Δ300s rate-distance=2.81pp.
 - B2:n=8, ΔCRPS120/300/600=-75/58/-2643veh-s; Δ300s rate-distance=4.06pp.
-- C2:n=6, ΔCRPS120/300/600=-538/-2691/-10655veh-s; Δ300s rate-distance=6.67pp.
+- C2:n=7, ΔCRPS120/300/600=-526/-2777/-11327veh-s; Δ300s rate-distance=4.64pp.
 - FULL-v3:n=8, ΔCRPS120/300/600=-390/-3047/-11811veh-s; Δ300s rate-distance=5.94pp.
 - FULL-v4:n=8, ΔCRPS120/300/600=-393/-3040/-11647veh-s; Δ300s rate-distance=5.63pp.
 - Same-world absolute delay CRPS120/300/600:WM2 1499/6817/24752; FULL-v4 1105/3777/13105veh-s (all five arms).
@@ -54,4 +54,4 @@ Latest engineering source is FULL-v4/22cc32f6; current paired diagnostic below i
 - Receipt: docs/rbint/noon/20261101T075846+0800; primary95%CIs NA (singleton cells). Finalfreeze09:30: docs/rbint/noon/20261101T093000+0800/FREEZE.json.
 - Final evaluation receipts through11:30, final report11:45; frozen source is not selected by reserved outcome tuning.
 - Remaining gaps:serial LC negotiation/internal junction state/cold memory; finish matched panels and validate action confidence.
-- Audit/source manifests, per-world attrition, timing/speed/shift/gate/credibility files: docs/rbint/noon/20261101T095936+0800.
+- Audit/source manifests, per-world attrition, timing/speed/shift/gate/credibility files: docs/rbint/noon/20261101T102523+0800.
