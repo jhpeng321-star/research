@@ -33,9 +33,12 @@ def main():
     root = runtime.parent/'rb2break'
     wait = Path(args.wait_for)
     assert wait.parent == root
+    deadline = time.monotonic()+12*3600
+    while not (wait/'DISPATCH.json').is_file():
+        assert time.monotonic() < deadline
+        time.sleep(15)
     old = json.loads((wait/'DISPATCH.json').read_text())
     assert old['owner'] == 'S-RB2-BREAK'
-    deadline = time.monotonic()+12*3600
     while alive(old):
         assert time.monotonic() < deadline
         time.sleep(15)
@@ -69,7 +72,7 @@ def main():
         assert result == 0 and (out/'COMPLETE.json').is_file(), 'failure is terminal'
         completed.append(factor)
         print('COMPLETE_FACTOR', factor, flush=True)
-    save(root/f'QUEUE_{args.lane}_COMPLETE.json', dict(factors=completed, unix=time.time()))
+    save(root/f'QUEUE_{runtime.name}_{args.lane}_COMPLETE.json', dict(factors=completed, unix=time.time()))
 
 
 if __name__ == '__main__':

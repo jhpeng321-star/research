@@ -239,9 +239,10 @@ def candidate_future(*, model, batch, initial, future, seed, frozen, **unused):
     entries = InstrumentedEntries(process, frozen.Entries)
     kwargs.update(plan.kwargs, entries=entries)
     if getattr(model, '_wmphys_match_cav_execution_settings', False):
+        from wms.control.execution import enabled as execution_enabled
         from wms.control.execution_settings import bind_execution_settings
         path = os.environ.get('C4_EXECUTION_DRIVER')
-        if not path:
+        if not execution_enabled() or not path:
             raise ValueError('matched CAV settings require the registered execution-driver artifact')
         plan.receipt.update(bind_execution_settings(kwargs, entries, initial, path))
     return kwargs, entries, plan.receipt

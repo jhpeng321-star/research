@@ -16,7 +16,7 @@ JOB = PARENT+'/rb2break'
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=('stage', 'launch', 'queue', 'fit-birth', 'fetch-birth', 'resources', 'inspect-start', 'wait', 'retire-slow-cpu', 'retire-old-queues', 'status', 'fetch', 'fetch-baseline', 'baseline'))
+    parser.add_argument('action', choices=('stage', 'launch', 'queue', 'queue-corrections', 'fit-birth', 'bind-birth', 'fetch-birth', 'resources', 'inspect-start', 'wait', 'retire-cpu3', 'retire-slow-cpu', 'retire-old-queues', 'status', 'fetch', 'fetch-baseline', 'baseline'))
     parser.add_argument('--host', default='gpuA', choices=('gpuA', 'gpuR'))
     parser.add_argument('--runtime')
     parser.add_argument('--factor', default='baseline')
@@ -103,10 +103,14 @@ receipt=dict(owner='S-RB2-BREAK',pid=p.pid,boot_id=Path('/proc/sys/kernel/random
  start_ticks=Path('/proc/'+str(p.pid)+'/stat').read_text().split()[21],argv=argv,resources=resources,unix=time.time())
 save(out/'DISPATCH.json',receipt);print(json.dumps(receipt))
 '''
-    elif args.action == 'queue':
+    elif args.action in ('queue', 'queue-corrections'):
         assert args.runtime and args.runtime.startswith(PARENT+'/rb2break_code_')
-        wait_for = 'screen_no_mainline_lc_s0' if args.lane == 0 else 'screen_no_merge_advice_s0'
-        factors = ['depart_last', 'population', 'point_v0'] if args.lane == 0 else ['depart_first', 'point_tau', 'fixed_rate']
+        if args.action == 'queue':
+            wait_for = 'screen_no_mainline_lc_s0' if args.lane == 0 else 'screen_no_merge_advice_s0'
+            factors = ['depart_last', 'population', 'point_v0'] if args.lane == 0 else ['depart_first', 'point_tau', 'fixed_rate']
+        else:
+            wait_for = 'screen_point_v0_s0' if args.lane == 0 else 'screen_fixed_rate_s0'
+            factors = ['raw_posterior', 'lane_limits'] if args.lane == 0 else ['cav_settings']
         code = f'''
 runtime=Path({args.runtime!r});assert (runtime/'STAGE.json').is_file()
 claim=root/('QUEUE2_'+runtime.name+'_'+{str(args.lane)!r}+'.json');assert not claim.exists()
@@ -121,11 +125,13 @@ save(claim,dict(owner='S-RB2-BREAK',pid=child.pid,argv=argv,unix=time.time(),
  start_ticks=Path('/proc/'+str(child.pid)+'/stat').read_text().split()[21]))
 print(claim.read_text())
 '''
-    elif args.action == 'retire-slow-cpu':
+    elif args.action in ('retire-slow-cpu', 'retire-cpu3'):
+        names = (('controlcpu2_baseline_s0', 'fixcpu2_lane_limits_s0') if args.action == 'retire-slow-cpu'
+                 else ('controlcpu3_baseline_s0', 'fixcpu3_lane_limits_s0', 'cavcpu3_cav_settings_s0', 'rawcpu3_raw_posterior_s0'))
         code = '''
 import ctypes,signal
 libc=ctypes.CDLL(None,use_errno=True)
-for name in ('controlcpu2_baseline_s0','fixcpu2_lane_limits_s0'):
+for name in OWN_CPU_NAMES:
  out=root/name;assert not list(out.glob('w*_k*.json')), 'task exists; no pre-inference retirement'
  r=json.loads((out/'DISPATCH.json').read_text())
  assert r['owner']=='S-RB2-BREAK' and r['argv'][r['argv'].index('--device')+1]=='cpu'
@@ -136,11 +142,11 @@ for name in ('controlcpu2_baseline_s0','fixcpu2_lane_limits_s0'):
   assert (Path('/proc')/str(r['pid'])/'stat').read_text().split()[21]==r['start_ticks']
   actual=(Path('/proc')/str(r['pid'])/'cmdline').read_bytes().split(b'\\0')
   assert str(out).encode() in actual and b'tools.rb2break.run' in actual
-  save(out/'OPERATIONAL_STOP.json',dict(process=r,reason='12min no completed task; replace full-matrix CPU queries by independently parity-tested CPU recipe; no efficacy inspected',unix=time.time()))
+  save(out/'OPERATIONAL_STOP.json',dict(process=r,reason='No completed task after engineering runtime budget; preserve output and move to GPU queue without viewing efficacy',unix=time.time()))
   assert libc.syscall(424,pidfd,int(signal.SIGTERM),0,0)==0
  finally: os.close(pidfd)
 print('Stopped exact own slow CPU pair; all outputs retained')
-'''
+'''.replace('OWN_CPU_NAMES', repr(names))
     elif args.action == 'retire-old-queues':
         code = '''
 import ctypes,signal
@@ -197,7 +203,15 @@ print(json.dumps(result))
         assert args.runtime and args.runtime.startswith(PARENT+'/rb2break_code_')
         code = f'''
 runtime=Path({args.runtime!r});assert (runtime/'STAGE.json').is_file()
-assert os.getloadavg()[0]<16, 'wait for spare CPU'
+assert os.getloadavg()[0]<os.cpu_count()/2, 'host busy'
+cg=Path('/sys/fs/cgroup');quota,period=(cg/'cpu.max').read_text().split()
+capacity=os.cpu_count() if quota=='max' else int(quota)/int(period)
+def usage(): return int(dict(line.split() for line in (cg/'cpu.stat').read_text().splitlines())['usage_usec'])
+before=usage();begin=time.monotonic();time.sleep(2)
+used=(usage()-before)/1e6/(time.monotonic()-begin)
+assert used+1<.8*capacity, 'wait for spare container CPU quota'
+limit=(cg/'memory.max').read_text().strip()
+assert limit=='max' or int(limit)-int((cg/'memory.current').read_text())>2*2**30, 'leave memory headroom'
 out=root/'birth_fit_v1';assert not out.exists()
 claim=root/'BIRTH_FIT_PROCESS.json';assert not claim.exists()
 argv=['nice','-n','19','/root/miniconda3/bin/python','-B','-u','-m','tools.rb2break.birth_population','--out',str(out)]
@@ -208,6 +222,21 @@ save(claim,dict(owner='S-RB2-BREAK',pid=child.pid,argv=argv,unix=time.time(),
  boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
  start_ticks=Path('/proc/'+str(child.pid)+'/stat').read_text().split()[21]))
 print(claim.read_text())
+'''
+    elif args.action == 'bind-birth':
+        assert args.runtime and args.runtime.startswith(PARENT+'/rb2break_code_')
+        code = f'''
+import sys
+runtime=Path({args.runtime!r});sys.path[:0]=[str(runtime),str(runtime/'src')]
+from tools.rbint.observations import load_observations
+fit=root/'birth_fit_v1';artifact=json.loads((fit/'entrant_population.json').read_text())
+assert artifact['source_sha256']==hashlib.sha256((runtime/'tools/rb2break/birth_population.py').read_bytes()).hexdigest()
+observations={{}}
+for seed in range(969420,969432):
+ _,_,hashes=load_observations(seed);observations[str(seed)]=hashes
+save(fit/'OBSERVATION_BINDING.json',dict(observations=observations,stage=json.loads((runtime/'STAGE.json').read_text()),
+ source_sha256=artifact['source_sha256'],fitting_end_s=300,traffic_outcomes_used=False))
+print(json.dumps(dict(worlds=len(observations),motion_validation_improved=artifact['motion_validation_improved'])))
 '''
     elif args.action == 'inspect-start':
         code = '''
@@ -282,7 +311,7 @@ for seed in range(969420,969432):
    except json.JSONDecodeError: continue
    assert task['seed']==seed and task['future']==future
    files[path.name]=data
-for name in ('IDENTITY.json','DISPATCH.json','COMPLETE.json','BASELINE.json','FIT.json','entrant_population.json'):
+for name in ('IDENTITY.json','DISPATCH.json','COMPLETE.json','BASELINE.json','FIT.json','entrant_population.json','OBSERVATION_BINDING.json','OPERATIONAL_STOP.json'):
  path=root/name
  if path.exists(): files[name]=path.read_bytes()
 receipt=dict(source=str(root),hashes={{name:hashlib.sha256(data).hexdigest() for name,data in files.items()}})
