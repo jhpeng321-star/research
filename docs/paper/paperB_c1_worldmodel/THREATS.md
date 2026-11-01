@@ -100,17 +100,27 @@ Each response is an argument the current evidence permits, not polished rebuttal
 ## “Does faithful physics prove a best-achievable information ceiling?”
 
 - **Threat:** observable initialization can lose internal state; a physics prior can improve fields while misjudging controller effects.
-- **Answer:** SUMOCORE retains initialization collision flags, different encoder/ensemble contracts and small cohorts. Its short-clock improvement does not establish a clean ceiling or long-clock action accuracy. WM-PHYS interim is available-case with missing adoption conditions and earlier unverified saved-ID mapping; later direct-motion variants are distinct candidates. Require final identity-bound qualification before changing switching models. WM-PHYS.
+- **Answer:** SUMOCORE retains initialization collision flags, different encoder/ensemble contracts and small cohorts. Its short-clock improvement does not establish a clean ceiling or long-clock action accuracy. Latest causal-motion FULL-v4 improves delay-distribution/endpoint point estimates but worsens breakdown-rate distance, failing the conjunctive adoption rule at this cut. Earlier saved-ID concerns belong to older variants; they neither validate nor describe this binding. Earlier-source A/B/C versus later FULL changes physics too, so it is not a settings-only ablation. Final identity-bound qualification remains pending. WM-PHYS.
+
+## “Do the rebuilt model's confidence intervals establish superiority?”
+
+- **Threat:** an interim scorer resampled unscored same-cell peers; after correction, mixed-cell bootstrap intervals still condition on singleton worlds. Quoting either as full-panel uncertainty overstates evidence.
+- **Answer:** retain the explicit retraction. Report the latest candidate's favorable point estimates with full-world intervals unavailable under its registered resampling plan. The breakdown-distance point condition already fails, independently of missing uncertainty. Later engineering variants need their own frozen identity, matched complete cohorts and corrected inference; no inference of qualification from missing CIs. WM-PHYS; WMPHYS_MORNING.md, switching-eligibility section.
 
 ## “Is WM-guided switching fairly compared with RL?”
 
 - **Threat:** cadence, wall lifecycle, memory resets, observation budget, source objective, training expenditure and joint action space can favor one selector.
 - **Answer:** C1SWITCH2 registers shared library/cadence/handovers/evaluation panel; evaluation is peer-owned once, with frozen final RL weights. Fleet PPO is the like-for-like primary selector; per-CAV MAPPO has a different joint action space. Disclose road-only WM/BB prediction versus full-team evaluation, both model-data and RL training costs, and independent WM-PHYS adoption. Training progress and complete fixed-controller arms cannot substitute for the pending paired picker result. C1-SWITCH2.
 
+## “Can the incomplete main switching panel be treated as a null result?”
+
+- **Threat:** shared cpuQ connectivity loss leaves current training/WM accounting unknown; model-service timeout and GPU release leave selective completed episodes. A staged relocation is not completed inference.
+- **Answer:** label the main paired campaign incomplete and infrastructure-interrupted. Keep completed fixed/random arms, distinguish historical lower accounting bounds from exact final totals, and retain missing final RL checkpoints. Do not analyze the reachable-host subset as the planned population or infer remote job death from transport loss. Source owners already have read-only observers and registered continuation/placement plans; this package supplies no replay or new dispatch. C1-SWITCH2; `E:/agent-work/c4-c1switch2/HANDOFF.md`, Current execution state; selector status reports.
+
 ## “Where is uncertainty calibration or an abstention controller?”
 
 - **Threat:** sampled future spread measures neither all model error nor calibrated epistemic uncertainty. Diagnostic confident calls can be wrong.
-- **Answer:** no claim of calibrated uncertainty, formal admissibility level, or tested refusal policy. Horizon/plant/population scope is an empirical reporting discipline. A deployment gate would require independently measured coverage, calibration, cost and efficacy; none is supplied by a direction curve.
+- **Answer:** no claim of calibrated uncertainty, formal admissibility level, or tested refusal policy. Latest WM-PHYS selected-switch win rates are below their forecast probabilities despite favorable delay-distribution point estimates; a probability threshold is a rule, not demonstrated calibration. Horizon/plant/population scope is an empirical reporting discipline. A deployment gate would require independently measured coverage, calibration, cost and efficacy; none is supplied by a direction curve. WM-PHYS.
 
 ## “How independent are the data and intervals?”
 
@@ -126,5 +136,5 @@ Each response is an argument the current evidence permits, not polished rebuttal
 
 - Completed current common-plant feedback is available; strict initialization lineage and causal wall feedback remain dependencies for stronger zero-shot/wall wording.
 - Essential for exact wording of trust limits: original direction-panel binding and distinction between covariance share, queue causality and source bookkeeping.
-- Completed evidence to retain: calibration/value failures, killed queue prototype, repair early-stop partial result, distributional bias, bounded pulse/RNG references and mixed closed-loop results. Reference switching stays partial. Pending updates: main wall-inclusive paired pickers/final RL weights and independent physics-rebuild qualification; no partial efficacy promotion.
+- Completed evidence to retain: calibration/value failures, killed queue prototype, repair early-stop partial result, distributional bias, bounded pulse/RNG references and mixed closed-loop results. Reference switching stays partial. Latest rebuild interim fails the breakdown-distance adoption condition and retracts earlier CIs. Pending updates: connectivity/accounting reconciliation, complete main wall-inclusive paired pickers/final RL weights and final independent physics-rebuild qualification; no partial efficacy promotion.
 - Formatting: `[[PENDING: final prose, authors, conference requirements, accessible final figure sizing and compiled pagination / owner]]`.

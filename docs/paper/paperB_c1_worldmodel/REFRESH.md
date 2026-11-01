@@ -1,6 +1,6 @@
 # Paper B — source refresh and end-of-night handoff
 
-## Current overnight handoff
+## Current morning handoff
 
 The previous session's clean package, bibliography verification and first-package
 registration are preserved. Fresh-session review and exact safe source hashes are
@@ -34,20 +34,28 @@ semantically. Current claims supersede the historical evening queues below.
 - **Observable-start physics reference complete:** short-range improvements
   coexist with initialization collision flags and long-range effect errors;
   this is not a clean information ceiling.
-- **Main wall-inclusive switching running:** existing CPU arms complete, WM
-  picker running, BB queued, final RL receipts undelivered at this cut. Existing
-  workers, relay, queue and observers already own execution.
-- **WM-PHYS interim only:** available-case results and missing adoption conditions
-  do not qualify it. Earlier unverified identity mapping and later direct-motion
-  variants must not be conflated.
+- **Main wall-inclusive switching infrastructure-interrupted:** fixed/random CPU
+  arms remain complete. Both WM GPU services exited; the reachable worker stopped
+  on an inference timeout, and current cpuQ state/final accounting is UNKNOWN.
+  BB remains unstarted with a registered post-priority-window placement staged;
+  original-WM oracle continuation is also staged, not measured. Final RL weights
+  remain undelivered. Existing source-owner observers/plans own follow-up; stale
+  running headers or inaccessible hosts do not authorize a paper-task restart.
+- **WM-PHYS interim point-rule FAIL:** latest causal-motion candidate improves
+  delay-distribution/endpoint point estimates but worsens breakdown-rate distance.
+  Earlier numerical CIs were retracted for an unscored-peer bootstrap bug; full-world
+  intervals remain unavailable under the registered singleton-stratum plan.
+  Same-source action confidence is not calibrated. Final freeze/evaluation remains
+  pending; earlier saved-ID mapping concerns and earlier-source A/B/C comparisons
+  must not be transferred to the newer candidate as validation or isolated ablation.
 - **Artwork delivered:** completed common-plant, distributional and value-tail
   panels with vector twins, exact source snapshots and backing CSVs. New PNGs
   visually inspected; package validation passed. No historical artwork was replaced.
 
 ### Current insertion queue
 
-- `[[PENDING: complete main wall-inclusive paired WM/BB/fleet-PPO/per-CAV-MAPPO results and final selector/data/training-budget receipts / S-C1SWITCH2 + S-SELMAPPO + S-SELMAPPO2]]`.
-- `[[PENDING: complete identity-bound physics-rebuild qualification, endpoint non-regression and independent switching-adoption receipt / S-RB-INT + S-RB-EVAL + MAIN]]`.
+- `[[PENDING: source-owner cpuQ connectivity/accounting reconciliation, complete main wall-inclusive paired WM/BB/fleet-PPO/per-CAV-MAPPO results and final selector/data/training-budget receipts / S-C1SWITCH2 + S-SELMAPPO + S-SELMAPPO2 + MAIN]]`.
+- `[[PENDING: final identity-bound physics-rebuild qualification with corrected uncertainty, endpoint non-regression and independent switching-adoption receipt / S-RB-INT + S-RB-EVAL + MAIN]]`.
 - `[[PENDING: causal wall executor/memory restoration and eligible autonomous wall feedback / S-C1CLOSED + MAIN]]`.
 - `[[PENDING: unbroken initialization exclusion, exact historical E1 cost/plant binding and original E2 direction-panel/checkpoint/rule binding / S-C1GAP + MAIN]]`.
 - `[[PENDING: matched architecture ablations and original baseline data/compute comparability if claimed / MAIN]]`.
@@ -58,6 +66,13 @@ contract; the completed separate reseeding probe does not fill it. Unscored repa
 checkpoints and unmeasured long-WM A stay unavailable, rather than open dispatch
 requests. Main closed-loop completion, final calibration and WMVALUE verdict are
 resolved; do not keep waiting for those already delivered reports.
+
+The current morning semantic review is recorded at the top of
+`NIGHT_SOURCE_REVIEW.md`; `SOURCE_REFRESH.json` binds the exact permitted source
+bytes. Historical/overnight numerical figure inputs did not change, so delivered
+artwork and bibliography verification are preserved without rerendering. The
+switching handoff and latest rebuild interim supersede earlier live-status headers;
+placement registration and conditional bootstrap intervals are not efficacy.
 
 ### Reproduce and verify
 

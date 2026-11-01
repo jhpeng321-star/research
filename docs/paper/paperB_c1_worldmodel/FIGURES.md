@@ -70,7 +70,7 @@ Every delivered figure has a PNG and vector PDF twin. Use the vector version at 
 - **Generating command:** common render command, wall extraction and wall block in `render()`.
 - **Status:** GENERATED from existing report cells, rather than a preexisting wall CSV. This plot's new CSV is a traceable tabular transcription of those cells. No marginal error bars are supplied because the original table's IQR is dispersion, not uncertainty. The newly delivered C1_GAPS independently supplies marginal CIs at the short headline clock; these are recorded in the ledger and frozen audit snapshot, not retroactively treated as IQR-derived bars. Paired world-bootstrap differences are not inferred from plotted median gaps.
 - **Caption claim:** “Historical unseen-wall HDV response prediction, entries disabled and recorded CAV motion supplied to structured and BB-traj. BB-id learns CAV motion and is not teacher matched. At **60 s**, the reported median errors are **8.71 / 25.41 / 40.07 m**, respectively; **67 states / 29 worlds**. The longer-clock count differs and cohorts must not be pooled.” <!-- Source: E:/agent-work/c4-c1gap/docs/paper_results/c1gap/WALL_C1_RESULT.recovered.md:7-28,290-296. -->
-- **Placement:** supporting material/package, or a compact historical table if the pending feedback comparison is unavailable. It never fills the full-feedback result slot.
+- **Placement:** supporting material/package, or a compact historical table alongside the completed common-plant feedback comparison. It never fills the full-feedback result slot.
 
 ## Planned tables — specifications for the owner's LaTeX
 
@@ -187,7 +187,14 @@ Selection/transcription only: no experiment, model execution, fit or resampling.
 - **Purpose:** the requested controller-choice comparison with the primary fleet-PPO baseline and secondary per-CAV MAPPO selector.
 - **Planned columns/panels:** full-team episode cost/paired differences; decision regret; each model's training/data/compute budget; library/cadence/plant/handovers; safety; complete coverage; optional independently qualified model version.
 - **Sources:** `E:/agent-work/c4-c1switch2/docs/paper_results/C1SWITCH2_DESIGN.md`, `HANDOFF.md`, eventual complete identity-bound outputs and final selector receipts.
-- **Generating command/status:** `[[PENDING: completed paired exports and producer analysis/render command / S-C1SWITCH2 + S-SELMAPPO + S-SELMAPPO2]]`. Existing jobs/queue/observers already own execution; do not dispatch from this package. No partial main efficacy figure.
+- **Generating command/status:** `[[PENDING: source-owner reconciliation, completed paired exports and producer analysis/render command / S-C1SWITCH2 + S-SELMAPPO + S-SELMAPPO2 + MAIN]]`. Current WM services exited after an infrastructure interruption; cpuQ accounting/health is unknown, BB remains unstarted, and final RL weights are absent. Registered after-priority-window placement/oracle plans are staged, not results. Existing source-owner observers own follow-up. No partial main efficacy figure. Sources: `E:/agent-work/c4-c1switch2/HANDOFF.md`, Current execution state; selector status reports listed in `SOURCE_REFRESH.json`.
+
+### Physics rebuild — interim ledger only; final figure withheld
+
+- **Purpose:** preserve the independent adoption test without turning favorable available-case cells into a qualified replacement model.
+- **Source:** `E:/agent-work/c4-rb-int/docs/paper_results/WMPHYS_MORNING.md`, latest FULL-v4, switching-eligibility and credibility sections; source hash in `SOURCE_REFRESH.json`.
+- **Current status:** delay-distribution/endpoint point estimates improve, but breakdown-rate distance worsens: interim point-rule FAIL. Earlier numerical CIs were retracted; current full-world uncertainty remains unavailable under the registered sparse-stratum plan. Same-source action probabilities are not calibrated. Earlier-source A/B/C and later FULL cannot form a settings-only ablation figure.
+- **Generating command/status:** `[[PENDING: final identity-bound producer exports, corrected uncertainty, matched cohorts and final analysis/render command / S-RB-INT + S-RB-EVAL]]`. No interim model-ranking or switching-adoption figure is generated. Existing completed artwork and its backing CSVs remain valid; this source refresh changed no numerical figure input.
 
 ## Visual QA
 

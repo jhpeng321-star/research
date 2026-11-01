@@ -68,6 +68,7 @@ SOURCES = {
     "Configured RNG ensemble": "E:/agent-work/c4-ensprobe/docs/paper_results/ENSPROBE.md",
     "Observable-start physics reference": "E:/agent-work/c4-sumocore/docs/paper_results/SUMOCORE.md",
     "Physics rebuild interim": "E:/agent-work/c4-rb-int/docs/paper_results/WMPHYS_MORNING.md",
+    "Frozen interim selected-switch credibility": "E:/agent-work/c4-rb-int/docs/rbint/noon/20261101T075846+0800/FULL-v4/credibility/CREDIBILITY.md",
 }
 
 
