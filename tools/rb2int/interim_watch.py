@@ -50,6 +50,48 @@ performance or cooperation/planner authorization follows from engineering readin
 '''
 
 
+def commit_when_quiet(paths, message):
+    """Avoid the sole collector's20min commit window; never redo analysis."""
+    from tools.rb2int.finish import command
+    deadline = time.time()+1500
+    while True:
+        staged = command(['git','diff','--cached','--name-only']).splitlines()
+        if any(not p.startswith('docs/rb2int/COLLECT_') for p in staged):
+            raise ValueError('foreign non-collector staging present; preserve it')
+        log = COLLECTOR/'watch.log'
+        polls = [line.split()[1] for line in log.read_text(encoding='utf-8').splitlines()
+                 if line.startswith('COLLECT ')] if log.exists() else []
+        terminal = any((COLLECTOR/name).is_file() for name in ('STOP.json','INCOMPLETE_AT_DEADLINE.json'))
+        age = time.time()-datetime.strptime(polls[-1],'%Y%m%dT%H%M%S%z').timestamp() if polls else None
+        if not staged and (terminal or age is not None and 30 <= age <= 1000):
+            return git_commit(paths,message)
+        if time.time() >= deadline:
+            raise TimeoutError('no quiet collector commit window; preserve completed analysis')
+        time.sleep(2)
+
+
+def recovered_publication():
+    """Reuse the completed corrected16:57analysis after commit-only contention."""
+    previous = ROOT/'runs/rb2int_interim_v2'
+    expected = "ValueError('foreign staging present; preserve it')"
+    if not (previous/'STOP.json').is_file() or load(previous/'STOP.json')['error'] != expected:
+        raise ValueError('expected prior commit-only STOP required')
+    from tools.rb2int.resume_ci import alive
+    if alive(load(previous/'PROCESS.json')):
+        raise ValueError('prior cache publisher is still alive')
+    repair = load(ROOT/'runs/rb2int_ci_resume_v1/COMPLETE.json')
+    for name in ('uncertainty.py','credibility.py','gate_bootstrap.py'):
+        path = ROOT/'tools/rb2int'/name
+        if repair['source_hashes'][str(path)] != digest(path):
+            raise ValueError('corrected snapshot CI lineage changed')
+    receipt = EVIDENCE/'20261101T165709+0800_available_replicated_cells/SUMMARY.json'
+    data = load(receipt)
+    if data['source_sha256'] != digest(ROOT/'tools/rb2int/interim.py'):
+        raise ValueError('completed corrected analysis source changed')
+    return dict(scope=data['scope'],receipt=str(receipt),sha256=digest(receipt),
+        markdown_sha256=digest(receipt.with_name('INTERIM.md')))
+
+
 def replace_block(text, block):
     if BEGIN in text:
         if text.count(BEGIN) != 1 or text.count(END) != 1:
@@ -127,7 +169,11 @@ def run(out):
     registration = load(ROOT/'docs/rb2int/EVALUATION_REGISTRATION.json')
     real = load(DATA/'REAL_OBSERVABLES.json')['episodes']
     metadata = {r['seed']:r for r in real}
-    published, last, seen = [], {}, set()
+    seed = recovered_publication()
+    save_new(out/'REUSED_PUBLICATION.json',seed)
+    published = [seed]
+    stamp = Path(seed['receipt']).parent.name.split('_',1)[0]
+    last = {seed['scope']:datetime.strptime(stamp,'%Y%m%dT%H%M%S%z').timestamp()}
     while True:
         if any(digest(p) != h for p,h in hashes.items()):
             raise ValueError('interim source/target changed; explicit recovery required')
@@ -150,16 +196,19 @@ def run(out):
                 SHORT,selected,scope,summary)
             section = render(result,stamp)
             text_path = folder/'INTERIM.md';text_path.write_text(section,encoding='utf-8')
-            published.append(dict(scope=scope,receipt=str(summary),sha256=digest(summary)))
-            seen.add(scope);last[scope]=now
+            published.append(dict(scope=scope,receipt=str(summary),sha256=digest(summary),markdown_sha256=digest(text_path)))
+            last[scope]=now
             # Keep newest reserved and newest replicated view together.
             latest = {}
             for entry in published:
-                latest[entry['scope']] = Path(entry['receipt']).with_name('INTERIM.md')
+                path = Path(entry['receipt']).with_name('INTERIM.md')
+                if digest(entry['receipt']) != entry['sha256'] or digest(path) != entry['markdown_sha256']:
+                    raise ValueError('published interim evidence changed; preserve explicit recovery')
+                latest[entry['scope']] = path
             block = '\n'.join(p.read_text(encoding='utf-8') for p in latest.values())+'\n'+LIMITS
             REPORT.write_text(replace_block(REPORT.read_text(encoding='utf-8'),block),encoding='utf-8')
             report_hash = digest(REPORT)
-            git_commit([runs,summary,text_path,REPORT], 'S-RB2-INT: publish INTERIM v5-v4 '+scope+' '+stamp)
+            commit_when_quiet([runs,summary,text_path,REPORT], 'S-RB2-INT: publish INTERIM v5-v4 '+scope+' '+stamp)
             print('PUBLISHED',stamp,scope,len(selected),flush=True)
         if count == 216 and final_guard_ready():
             save_new(out/'FINAL_TAKEOVER_ONCE.json',dict(collector_stop_sha256=digest(COLLECTOR/'STOP.json'),
@@ -176,7 +225,7 @@ def run(out):
             receipt = EVIDENCE/'INCOMPLETE_AT_DEADLINE.json';save_new(receipt,status)
             block = f'## INTERIM — incomplete evaluation at {stamp}\n{count}/216 world jobs complete. Full gate/switching NOT ESTABLISHED. Partial snapshots remain below.\n'
             REPORT.write_text(REPORT.read_text(encoding='utf-8')+'\n'+block,encoding='utf-8')
-            git_commit([receipt,REPORT],'S-RB2-INT: retain explicit incomplete final-panel deadline')
+            commit_when_quiet([receipt,REPORT],'S-RB2-INT: retain explicit incomplete final-panel deadline')
             return
         if (COLLECTOR/'COMPLETE.json').exists():
             raise ValueError('uncoordinated final publication; preserve it')

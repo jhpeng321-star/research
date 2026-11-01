@@ -2,6 +2,7 @@ import json
 import os
 import subprocess
 import sys
+from datetime import datetime
 
 import numpy as np
 import pytest
@@ -111,6 +112,28 @@ def test_report_block_replaces_only_its_owned_section():
     assert twice.startswith(text)
     assert 'first' not in twice and 'second' in twice
     assert twice.count(interim_watch.BEGIN) == 1
+
+
+def test_publication_waits_for_known_collector_staging_to_clear(tmp_path,monkeypatch):
+    from tools.rb2int import finish
+    monkeypatch.setattr(interim_watch,'COLLECTOR',tmp_path)
+    stamp = datetime.fromtimestamp(interim_watch.time.time()-60).astimezone().strftime('%Y%m%dT%H%M%S%z')
+    (tmp_path/'watch.log').write_text('COLLECT '+stamp+' 12 /216 complete world jobs\n')
+    staged = iter(['docs/rb2int/COLLECT_owned.json\n',''])
+    monkeypatch.setattr(finish,'command',lambda args:next(staged))
+    waits = []
+    monkeypatch.setattr(interim_watch.time,'sleep',lambda seconds:waits.append(seconds))
+    monkeypatch.setattr(interim_watch,'git_commit',lambda paths,message:'committed-once')
+    assert interim_watch.commit_when_quiet([], 'test') == 'committed-once'
+    assert waits == [2]
+
+
+def test_publication_never_waits_through_foreign_source_staging(tmp_path,monkeypatch):
+    from tools.rb2int import finish
+    monkeypatch.setattr(interim_watch,'COLLECTOR',tmp_path)
+    monkeypatch.setattr(finish,'command',lambda args:'src/user_change.py\n')
+    with pytest.raises(ValueError,match='foreign non-collector'):
+        interim_watch.commit_when_quiet([], 'test')
 
 
 def test_takeover_requires_exact_expected_stop_and_unchanged_original_sources(tmp_path,monkeypatch):
