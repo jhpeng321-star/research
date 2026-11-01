@@ -124,7 +124,32 @@ def register():
     print(json.dumps(dict(registered=True,evidence_sha256=sha(path),new_sumo_sim_s=0)))
 
 
+def classify():
+    evidence=ops.EVIDENCE/'ZERO_GRADE_DIAGNOSIS_986051_986070.json'
+    probes=read(evidence)['probes']
+    snapshot=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,time
+r=pathlib.Path({ROOT!r})/'exact_grades/receipts'
+g=[json.loads(p.read_text()) for p in r.glob('*.json')]
+g=[v for v in g if v['arm']=='B' and v.get('training_seed')==20261101 and v['status']=='graded']
+print(json.dumps(dict(unix=time.time(),grades=[dict(grade_id=v['grade_id'],grade=v['grade_veh_s']) for v in g])))''',timeout=40))
+    flags={p['grade_id']:dict(observed_physical_null=True,
+        raw_requests_identical=not any(r['raw_request_differences'] for r in p['members'].values()),
+        pre_ownership_safe_commands_identical=p['issued_command_differences']==0,
+        post_ownership_records_persisted=False,
+        classification='observed physical-null plan; pre-ownership requests differ; final ownership speed clipping can still erase differences') for p in probes}
+    value=dict(snapshot,flags=flags,probe_evidence_sha256=sha(evidence),new_sumo_sim_s=0,
+        inspected=len(flags),inspected_pre_ownership_command_identical=0,
+        confirmed_physical_nulls=len(flags),exact_graded_B_plans=len(snapshot['grades']),
+        confirmed_physical_null_fraction=len(flags)/len(snapshot['grades']),
+        qualification='case-driven diagnosis of named exact zeros; fraction is a descriptive confirmed lower bound among current exact-graded B plans, not population rate; raw/safe command trace is before CommandOwnership and cannot establish final issued action equality',
+        learning='counted as executed; exact-zero trust evidence retained; no imitation/library under existing positive-only rule')
+    target=ops.EVIDENCE/'ZERO_GRADE_NOOP_CLASSIFICATION.json';write(target,value)
+    line='\nS-COOPMWM MAIN0658 NOOP REPORT evidenceSHA'+sha(target)+': two named centre plans flagged observed_physical_null, counted executed; pre-ownership safe commands differ in both, final ownership records not persisted so strict final-issued-action no-op cannot be established from these tapes. Confirmed physical-null fraction'+str(value['confirmed_physical_nulls'])+'/'+str(value['exact_graded_B_plans'])+' at'+str(snapshot['unix'])+' (descriptive/case-driven, no outcome filtering); trust zeros retained, imitation/library excluded by unchanged rule; no new physics/inference.\n'
+    with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+    print(json.dumps(value));return value
+
+
 if __name__=='__main__':
     import argparse
-    parser=argparse.ArgumentParser();parser.add_argument('mode',choices=('collect','register'),default='collect',nargs='?')
+    parser=argparse.ArgumentParser();parser.add_argument('mode',choices=('collect','register','classify'),default='collect',nargs='?')
     globals()[parser.parse_args().mode]()
