@@ -93,11 +93,11 @@ def episode(root,world,arm):
     baseline = read(Path(binding['baseline_root'])/'jobs'/f's{seed}_mappo'/'RESULT.json')
     b,path = p.fresh(root,f's{seed}_{arm}',1200,world,'paired')
     history,clocks,credits = [],{},[]
-    if canonical(baseline['warmup']) != canonical(b.fingerprint()):
-        b.close();raise ValueError('reused baseline warmup BITWISE mismatch')
     planner = OnlinePlanner(root,seed,arm)
     spent = requests = overrides = 0
     try:
+        if canonical(baseline['warmup']) != canonical(b.fingerprint()):
+            raise ValueError('reused baseline warmup BITWISE mismatch')
         with ProcessPoolExecutor(1,mp_context=multiprocessing.get_context('spawn')) as pool:
             with gzip.open(path/'observable.jsonl.gz','xt',encoding='utf-8',compresslevel=3) as tape:
                 while b.env.now < 1200:
@@ -108,6 +108,9 @@ def episode(root,world,arm):
                         rows = observations(b.env)
                         key = f's{seed}_{arm}_t{t}'
                         event = planner.step(ObservableState(t,tuple(rows),key))
+                        # Same event-to-executor ABI as coopplan.runner. The
+                        # frozen plant anchors option targets to this roster.
+                        event['initial_rows'] = rows
                         cost = admit(event,spent)
                         if cost:
                             chosen = event['executed_action']
@@ -142,6 +145,11 @@ def episode(root,world,arm):
             result['all_O0_bitwise_pass'] = True
         write(path/'RESULT.json',result)
         return dict(seed=seed,arm=arm)
+    except BaseException:
+        # Stop before this failed Future reaches the outer episode supervisor;
+        # its pool shutdown can otherwise wait for queued worlds to run.
+        stop(root,traceback.format_exc())
+        raise
     finally:
         b.close()
 

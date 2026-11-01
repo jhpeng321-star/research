@@ -94,7 +94,8 @@ class Contracts(unittest.TestCase):
         b.fingerprint = lambda:dict(time=b.env.now)
         b.close = lambda:None
         observations = types.ModuleType('tools.leverprobe.backend')
-        observations.observations = lambda env:[]
+        rows = [dict(vid='observed',s_m=0.,v_mps=5.,lane=0,is_cav=True)]
+        observations.observations = lambda env:deepcopy(rows)
         def step(state):
             a = dict(id='O1',members=['a','b']) if state.time_s==300 else dict(id='O0',members=[])
             return dict(time_s=state.time_s,executed_action=a,group=a['members'])
@@ -106,23 +107,27 @@ class Contracts(unittest.TestCase):
                 credits_done.append(action['id'])
                 value = dict(O0=100,O1=60,O1_solo0=90,O1_solo1=80)[action['id']]
                 return types.SimpleNamespace(result=lambda:value)
-        def tick(backend,event,tape):
+        def frozen_tick(backend,*,plan,initial,start,trace):
+            self.assertEqual(initial,rows)
+            self.assertLessEqual(start,backend.env.now)
             if backend.env.now==300:
                 self.assertEqual(credits_done,['O0','O1','O1_solo0','O1_solo1'])
                 self.assertIn('synthetic/reservations/s984000_expected_t300.json',writes)
             backend.env.now+=1;backend.actual+=1
             backend.totals['team_delay_vs']+=1
             return dict(requests=0,overrides=0)
+        frozen = types.ModuleType('tools.coopbandit.backend')
+        frozen.tick = frozen_tick
         fake = types.SimpleNamespace(fresh=lambda *a:(b,Path('synthetic/job')))
-        with patch.dict('sys.modules',{'tools.leverprobe.backend':observations}), \
+        with patch.dict('sys.modules',{'tools.leverprobe.backend':observations,
+                                      'tools.coopbandit.backend':frozen}), \
              patch.object(live,'setup',return_value={'baseline_root':'baseline'}), \
              patch.object(live,'configure',return_value=fake), \
              patch.object(live,'read',return_value={'warmup':{'time':300}}), \
              patch.object(live,'write',side_effect=lambda p,v:writes.update({p.as_posix():deepcopy(v)})), \
              patch.object(live,'ProcessPoolExecutor',Pool), \
              patch.object(predict,'OnlinePlanner',return_value=types.SimpleNamespace(step=step)), \
-             patch.object(live.gzip,'open',side_effect=lambda *a,**k:nullcontext(io.StringIO())), \
-             patch.object(plant,'tick',side_effect=tick):
+             patch.object(live.gzip,'open',side_effect=lambda *a,**k:nullcontext(io.StringIO())):
             live.episode(Path('synthetic'),panel()[0],'expected')
         result = writes['synthetic/job/RESULT.json']
         self.assertEqual(len(result['history']),12)
@@ -130,6 +135,26 @@ class Contracts(unittest.TestCase):
         self.assertEqual(result['clocks']['600']['team_delay_vs'],600)
         self.assertEqual(result['clocks']['900']['team_delay_vs'],900)
         self.assertEqual(result['credit_sim_s'],1680)
+
+    def test_warmup_fault_writes_stop_before_closing_without_starting_pool(self):
+        from tools.wmplan import live
+        from tools.wmplan import predict
+        events = []
+        b = types.SimpleNamespace(fingerprint=lambda:dict(bits='wrong'),
+                                  close=lambda:events.append('close'))
+        fake = types.SimpleNamespace(fresh=lambda *a:(b,Path('synthetic/job')))
+        observations = types.ModuleType('tools.leverprobe.backend')
+        observations.observations = lambda env:[]
+        with patch.dict('sys.modules',{'tools.leverprobe.backend':observations}), \
+             patch.object(live,'setup',return_value={'baseline_root':'baseline'}), \
+             patch.object(live,'configure',return_value=fake), \
+             patch.object(live,'read',return_value={'warmup':{'bits':'right'}}), \
+             patch.object(live,'stop',side_effect=lambda *a:events.append('stop')), \
+             patch.object(live,'ProcessPoolExecutor',side_effect=AssertionError('no pool after warmup fault')), \
+             patch.object(predict,'OnlinePlanner'):
+            with self.assertRaisesRegex(ValueError,'BITWISE'):
+                live.episode(Path('synthetic'),panel()[0],'expected')
+        self.assertEqual(events,['stop','close'])
 
 
 if __name__ == '__main__':
