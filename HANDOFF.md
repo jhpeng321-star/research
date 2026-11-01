@@ -59,6 +59,15 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**11:55 recovered-cpuQ ORIGINAL oracle-only scope prepared (no compute):** all
+four durably completed WM episodes have24 original six-way specs and ZERO prior
+branch charges/jobs. Exact14640sim-s/GPU0; retain original5460incl both failures,
+combinedcpuQWM20100<=original63480. Same registered measured indices/prefixes;
+no failed/new WM episode, inference restart, replacement world, or completed replay.
+PlanSHA0e790a668b7ec5d8140510203f997067b0b301cb90a72db0a81b3b89157f3a86;
+one nice19/load28/disk2GiB-yieldcpuQworker, original byteverified runtime/gates,
+one-use claim and stop-on-child-error. CPU5/5/RuffPASS; prospective registration
+and final source/binding verification precede launch. OriginalgpuR12oraclesDONE.
 **11:52 accounted heartbeat:** fleet cpuQ1152412 LIVE/noSTOP,2episodes complete,
 103decisions,4160charged/2400closedactual; gpuR partition stillUNCLAIMED/diskblocked.
 Task aggregate157400charged/155640closedactual at1793505157, exact totalGPU

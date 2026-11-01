@@ -108,8 +108,9 @@ def collect():
             prepared = read_json(EVIDENCE / ('SELECTOR_PREPARED_'+arm+'_'+host+'.json'))
             if prepared:
                 cpus[arm] = prepared['root']
-        if host == 'gpuR':
-            oracle = read_json(EVIDENCE / 'WM_ORACLE_CONTINUATION_DISPATCH.json')
+        if host in ('cpuQ', 'gpuR'):
+            oracle = read_json(EVIDENCE / ('CPUQ_WM_ORACLE_DISPATCH.json' if host == 'cpuQ'
+                                         else 'WM_ORACLE_CONTINUATION_DISPATCH.json'))
             if oracle:
                 cpus['wm_oracles'] = oracle['root']
         try:
