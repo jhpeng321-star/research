@@ -1,5 +1,20 @@
 # S-COOPMWM — live checks
 
+## Warm restart live — 2026-11-02 03:53:05 UTC+8
+- **TRAINING STARTED B/R**, MAPPOu0, immutable exactcpu5 (204CPU PASS/0skips).
+  B3209145, R3209416, grader3208762, broker3208897 detached on cpuQ; original
+  A2998262 continues (u35 at restart). Both GPU owners have8source-bound EXACT0
+  startup gates; prior warm qualification/E2 labels retained without repetition.
+- Registered cap7500000/allocation7473440/free26560; exact-only marginal SUMO
+  grades, K4H300 always, K8Hfinal and Nexec10. The library/covariance use only
+  same-B-seed exact-positive complete plans; R has neither. Proposer logging only,
+  activation requires explicit OWNER approval as well as the offline check.
+- **First live timing** (EXACT_PROGRESS_1793563243): gpuA 2-CAV query445.607s,
+  8.079queries/inference-hour for ONE query, accepted0/executed0. This is not
+  steady-state throughput or an executed-plan ETA. No exact grades yet.
+- Source/registration/owners: `coopmwm/EXACT_RUNTIME_REGISTRATION.json`,
+  `EXACT_TRAINING_STARTED.json`; observerV2 43408 publishes minute-by-minute.
+
 ## MAIN03:03 exact-grader integration — CPU qualified
 - Final runtime snapshot **exactcpu4:203PASS,0skips,38.11s,zeroSUMO**. Two live-binding
   regressions additionally verify SHA-authorized budget adoption and the exact
@@ -1640,3 +1655,12 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - Reporting-only check, never checkpoint selection. Full safety/per-cell results in the linked immutable receipt.
 - Receipt: `coopmwm/warm_live/A_CHECK_036.json`.
 <!-- warm-receipt:A_CHECK_036.json:01e954fedaa7fed16c29a3d5b5c4207cf3d8e84a42a1a0fd2c11e87616634e65 -->
+
+## Warm live publication — 2026-11-01T20:01:51.538925+00:00
+- Conservatively charged 2140040/7500000 sim-s.
+
+### Warm continuation — A_VIABILITY_037.json
+- A u37: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_037.json`.
+<!-- warm-receipt:A_VIABILITY_037.json:bb25af20d5d20aaf5c6ba1b58f18d951b597d23d54856d918f9917adc97f32cb -->
