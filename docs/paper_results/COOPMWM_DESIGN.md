@@ -44,7 +44,7 @@
 43. Cap7500000: superseded811640,train3477600,checks432000,dev201600,final460800,Rtest115200,coldB28800,failedA14400; exact-plan-grades1000000.
 44. Mechanics3600,calibration57600,discovery200000,pairedbranches691200,reusecheck600; allocated7495040/free4960 not auto-spent; complete-grade precharge or STOP.
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.
-46. All failures/warmup/twins charged in full before attempts; no retries/refunds/duplicate dispatch.
+46. All failures/warmup/twins precharged/no refunds or automatic retries; af8b16e5 permits one qualified new-ID attempt per missing failed diagnostic branch, complete originals adopted, whole missing group charged inside discovery200000.
 47. A48complete; B24/R4/grader4nice19; MAIN0423 up to24 CPU-only precompute workers SCHED_IDLE/nice19, grade-queue priority/load<28/MemAvailable+RAMfree8GiB/disk2GiB gates; no retries.
 48. OriginalGPU widths34/10 READY8EXACT0; MAIN0419 secondworkers .42cap18/10(A),.34cap4/4(R),fresh8EXACT0 before hotadd; same search/deadline, measure1vs2throughput.
 49. GPU CPU helpers disabled until separate frozen parity qualification; own PIDs only.

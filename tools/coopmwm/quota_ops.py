@@ -193,7 +193,15 @@ for p in (r/'requests').glob('*.json'):
  if (r/'responses'/p.name).exists():continue
  v=json.loads(p.read_text());a=r/'broker_assignments'/p.name
  pending.append(dict(key=v['state_id'],world=v['world_id'],time_s=v['time_s'],group_size=len(v['group']),age_s=time.time()-p.stat().st_mtime,assignment=json.loads(a.read_text()) if a.exists() else None))
-print(json.dumps(dict(unix=time.time(),owners=owners,receipts=receipts,pending=pending,all24closed=completed(r),load=os.getloadavg(),updates={{a:max([0]+[int(p.stem.rsplit('_',1)[1]) for p in r.glob(a+'_UPDATE_[0-9][0-9][0-9].json')]) for a in ('A','B','R')}},logs={{name:(r/name).read_text()[-5000:] for name in ('MAIN0548_TRANSITION.log','QUOTA_B.log','QUOTA_R.log','QUOTA_broker.log') if (r/name).exists()}})))''',timeout=45)
+updates={{a:max([0]+[int(p.stem.rsplit('_',1)[1]) for p in r.glob(a+'_UPDATE_[0-9][0-9][0-9].json')]) for a in ('A','B','R')}}
+library=None;lp=r/f'B_SEARCH_LEARNING_{{updates["B"]:03}}.json'
+if lp.exists():
+ l=json.loads(lp.read_text());library=dict(arm=l['arm'],seed=l['seed'],entries=len(l['library']['entries']),exact_grade_ids=l['exact_grade_ids'],covariance_buckets=sorted(l['favoured_directions']))
+from tools.coopmwm.quota_admission import state as quota_state
+claims={{a:len(list((r/'jobs').glob(f'warm_u{{updates[a]+1:03}}_{{a}}_*/CLAIM.json'))) for a in ('B','R')}}
+print(json.dumps(dict(unix=time.time(),owners=owners,receipts=receipts,pending=pending,all24closed=completed(r),load=os.getloadavg(),updates=updates,library=library,
+ R_has_search_library=bool(list(r.glob('R_SEARCH_LEARNING_*.json'))),current_collection_claims=claims,quota_state=quota_state(r,updates['B']+1),
+ logs={{name:(r/name).read_text()[-5000:] for name in ('MAIN0548_TRANSITION.log','QUOTA_B.log','QUOTA_R.log','QUOTA_broker.log') if (r/name).exists()}})))''',timeout=45)
     v=json.loads(out);write(ops.EVIDENCE/f'MAIN0548_STATUS_{int(v["unix"])}.json',v)
     for name,receipt in v['receipts'].items():
         if name.startswith('MAIN0548_') and not (ops.EVIDENCE/name).exists():write(ops.EVIDENCE/name,receipt)

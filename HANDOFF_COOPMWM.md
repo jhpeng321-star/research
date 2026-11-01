@@ -1,5 +1,20 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+LIVE06:49:19UTC+8 (1793573359): A48/B1/R0 checkpoints; B-u2 andR-u1 BOTH
+24/24jobsclaimed. B-u2 executed2 +potentiallyexecutableinflight8 (quota10),
+noactiveSTOP/pause. CurrentB3551873,R3551874,broker3514272,grader3427015 retained.
+ActualB-u1libraryverified TWOentries, sameB/seed20261101 exact-positivegradeIDs,
+adaptedcovariance ordinary|3 andordinary|4; R_has_search_libraryFALSE.
+READ-ONLYobserverV7 46108 LIVE/adoptednewQUOTAowners; V6 41116verifiedabsent.
+V7two+actualstatus/publicationcyclesPASS; source tests6PASS; no launcher/physics
+dispatch inV7. Telemetry28752 unchanged. KeepALL owners; doNOTduplicate.
+Exactdiagnosticrepair3589919 LIVE/noerrors, indices000..002complete, awaitsnext
+samefirst12registeredrandomsamples. Finaldiscovery3604109 LIVE/S/waiting; all
+opaque673precompute outcomesclosed. Budget7495040/7500000/free4960 unchanged;
+latesttotalcharge3331280 at1793573281 includesretainedfailures/registeredrepair.
+Nextdeliverable B-u4..6 curves/exactviability; u2+mustmeetquota10, validfullrunETA
+awaitsquota-compliantupdate. OriginalGPUdeadline Nov2 18:07:02UTC+8 NOTextended.
+
 FIRSTTHREE n+2diagnostics NOW COMPLETE afterisolatedrepair3589919/start58671297;
 sameoriginalrandomsample, nocompletedbranchrerun. H300 C_G index000=-868.1767,
 001=+0.36668,002=-2015.2881veh-s; H600=-6459.3298,+5.87089,-3877.9212.
