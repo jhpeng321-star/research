@@ -32,6 +32,9 @@ def main(root):
     rt=configured_runtime(bootstrap,binding.get('memory_fraction',.65))
     rt.frozen.costs=cost_adapter(rt.frozen.costs,read(root/'FROZEN_COSTS.json')['code'])
     width=binding.get('batch_width',4)
+    speed2=binding.get('speed2',False)
+    if speed2 and not binding.get('startup_qualification'):
+        raise ValueError('speed2 requires source-bound startup qualification')
     if binding.get('startup_qualification'):
         # Once per persistent worker, never per query. Same registered geometry
         # and source-bound full roster as the concurrency qualification.
@@ -43,10 +46,14 @@ def main(root):
         bounds=(float(rt.mp.policy.accel_min),float(rt.mp.policy.accel_max))
         acts=baseline_actions(record)+family_seeds(record['rows'],record['group'],commands,bounds)[:2]
         for k,h in ((4,120),(8,300)):
-            ref=evaluate(rt,record,acts,k,h,chunk_actions=1,trim=False,pad_actions=width)
-            batch=evaluate(rt,record,acts,k,h,chunk_actions=width,trim=False,pad_actions=width)
-            error=max(abs(a['team_delay']-b['team_delay']) for key in ref for a,b in zip(ref[key],batch[key]))
-            receipt=dict(pass_=error<=.001,max_cost_error=error,K=k,H=h,width=width,pid=os.getpid())
+            if speed2:
+                from .speed2_runtime import qualify
+                receipt=dict(qualify(rt,record,acts,k,h,width),pid=os.getpid())
+            else:
+                ref=evaluate(rt,record,acts,k,h,chunk_actions=1,trim=False,pad_actions=width)
+                batch=evaluate(rt,record,acts,k,h,chunk_actions=width,trim=False,pad_actions=width)
+                error=max(abs(a['team_delay']-b['team_delay']) for key in ref for a,b in zip(ref[key],batch[key]))
+                receipt=dict(pass_=error<=.001,max_cost_error=error,K=k,H=h,width=width,pid=os.getpid())
             write(root/f'STARTUP_PARITY_K{k}_H{h}.json',receipt)
             if not receipt['pass_']:raise ValueError('persistent worker batch parity failed')
     def emit(event,**kw):print('COOPMWM_JSON '+json.dumps(dict(event=event,**kw)),flush=True)
@@ -70,7 +77,7 @@ def main(root):
             result=credit(rt,r)
         else:
             result=search(r,(float(rt.mp.policy.accel_min),float(rt.mp.policy.accel_max)),
-                lambda a,k,h:evaluate(rt,r,a,k,h,chunk_actions=width,trim=False,pad_actions=width))
+                lambda a,k,h:evaluate(rt,r,a,k,h,chunk_actions=width,trim=False,pad_actions=width,speed2=speed2))
         payload=dict(key=key,result=result,wall_s=time.monotonic()-start,unix=time.time())
         write(dest,payload);emit('RESULT',**payload)
 

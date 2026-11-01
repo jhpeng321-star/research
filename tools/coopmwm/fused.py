@@ -111,8 +111,13 @@ class FusedModel:
         # Preserve the complete source draw and private virgin-slot ledger.
         # Omit universally absent trailing slots only from the N² model forward;
         # restore them BEFORE the inherited insertion/cost phase.
-        live=state['present'].any(0).nonzero().flatten()
-        n=max(1,int(live[-1])+1) if live.numel() else 1
+        n=capacity
+        if self.trim_absent:
+            if hasattr(self,'live_slots'):
+                n=min(capacity,max(1,self.live_slots))
+            else:
+                live=state['present'].any(0).nonzero().flatten()
+                n=max(1,int(live[-1])+1) if live.numel() else 1
         full_state,full_kwargs=state,kwargs
         if self.trim_absent:
             state=crop(state,n,capacity);kwargs=crop(kwargs,n,capacity)

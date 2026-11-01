@@ -1,6 +1,7 @@
 """Acceleration decoding at the inherited WMTEACH pre-safety boundary only."""
 import ast
 from contextlib import contextmanager
+from contextlib import nullcontext
 import inspect
 from types import SimpleNamespace
 import torch
@@ -11,7 +12,7 @@ from .fused import FusedModel
 
 def profile_table(actions, ids, device):
     """Compile once, avoiding per-step CPU rosters or per-vehicle GPU reads."""
-    raw=torch.zeros((len(actions),300,len(ids)),device=device)
+    raw=torch.zeros((len(actions),300,len(ids)),device='cpu')
     mask=torch.zeros_like(raw,dtype=torch.bool)
     residual=torch.zeros_like(mask)
     slots={v:i for i,v in enumerate(ids)}
@@ -30,7 +31,7 @@ def profile_table(actions, ids, device):
             for v,x in values.items():
                 if v not in slots:continue
                 raw[b,t,slots[v]]=x;mask[b,t,slots[v]]=True;residual[b,t,slots[v]]=is_residual
-    return raw,mask,residual
+    return raw.to(device),mask.to(device),residual.to(device)
 
 
 def profile_apply(accel,tick,table,bounds):
@@ -68,7 +69,7 @@ def plan_executor():
     finally:runtime.option_controller=original
 
 
-def evaluate(rt,record,actions,K,H,chunk_actions=4,trim=True,pad_actions=False,horizons=None):
+def evaluate(rt,record,actions,K,H,chunk_actions=4,trim=True,pad_actions=False,horizons=None,speed2=False):
     """Same source draws, CRN keys, insertions, departure loop and J reducer.
 
     A single compact-forward proxy retains full virgin-slot controller memory.
@@ -76,9 +77,10 @@ def evaluate(rt,record,actions,K,H,chunk_actions=4,trim=True,pad_actions=False,h
     """
     hs=tuple(horizons or (H,))
     output={str(h):{a['id']:[] for a in actions} for h in hs}
-    proxy=FusedModel(rt.model,1,trim_absent=trim);proxy.local.index=0
+    proxy=FusedModel(rt.model,1,trim_absent=trim or speed2);proxy.local.index=0
+    from .speed2_runtime import ledger,compact_geometry
     runtime=SimpleNamespace(**vars(rt));runtime.model=proxy
-    with executor_adapter(),plan_executor():
+    with (compact_geometry(proxy) if speed2 else nullcontext()),executor_adapter(),plan_executor():
         for start in range(0,len(actions),chunk_actions):
             subset=actions[start:start+chunk_actions]
             subset=[dict(a,background_residuals=record['policy_residuals']) if 'knots' in a else a for a in subset]
@@ -89,7 +91,10 @@ def evaluate(rt,record,actions,K,H,chunk_actions=4,trim=True,pad_actions=False,h
                 while len(subset)<width:
                     subset.append(dict(subset[-1],id=f'_pad{len(subset)}'))
             ns=adapted_futures(hs);ns['_actions']=subset
-            with torch.no_grad():result=ns['futures'](runtime,dict(record,setting=0),indices=tuple(range(K)))
+            if speed2:
+                proxy.live_slots=max(1,len(record['rows']))
+            with (ledger(proxy) if speed2 else nullcontext()),torch.no_grad():
+                result=ns['futures'](runtime,dict(record,setting=0),indices=tuple(range(K)))
             if not result['population_audit']['finite'] or not result['population_audit']['conserved']:
                 raise ValueError('imagined population accounting failed')
             for h in hs:
