@@ -32,3 +32,17 @@ MiKTeX again resolves IEEEtran.cls. The latest prose-first instruction supersede
 the numerical-results/figure insertion request: keep experiment outcomes and
 graphs empty, use abstract RESULT placeholders, and provide qualitative setup.
 No experiment, observer, remote dispatch or scientific continuation was started.
+
+## Step 2 — final scope and resumed source check
+
+Fresh resume from clean `aab6799c`; no TeX process was present. The owner's final
+14:57 clarification supersedes the previous prose-first scope above: write all
+Results paragraphs with existing verified findings; leave graphs empty. Read the
+package's claim/outline/threat/reference/refresh/review/figure receipts and directly
+checked C1_GAPS, C1PIDIAG, C1CLOSED, WMPHYS_MORNING, C1SWITCH_WINNERS,
+C1SWITCH, E2_direction_horizon, SUMOCORE and ENSPROBE. IEEEtran resolves in
+MiKTeX. No scientific job or source-owner continuation was started. Preserve the
+eight-world reserved rebuild contrast within its twenty-world campaign, historical
+teacher forcing, provisional initialization lineage, inconclusive current feedback
+endpoints, final FULL-v4 FAIL and PARTIAL switching. Deliver PDF first, matching
+Markdown, number-source checklist and upload ZIP; graphs remain empty by request.
