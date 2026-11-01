@@ -1,0 +1,542 @@
+{
+  "captured_local": "2026-11-01T19:26:26.171690+08:00",
+  "reports": {
+    "owner_read_first": {
+      "path": "E:/research-dense/docs/OWNER_UPDATE_20261030_EVENING.md",
+      "exists": true,
+      "sha256": "7685e7bf738def7dfbd135b85691b7acbda9115726cece3fed5d09c20b9a1ec1",
+      "bytes": 33945,
+      "modified_local": "2026-11-01T16:54:41.470123+08:00",
+      "snapshot": "source_snapshots/owner_read_first_7685e7bf738def7d.md"
+    },
+    "registration": {
+      "path": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md",
+      "exists": true,
+      "sha256": "d670a2c2b15e59ae5efb5c71f2987f8864d4a4e5c39eadb6798b043022089917",
+      "bytes": 2472031,
+      "modified_local": "2026-11-01T19:24:08.414652+08:00",
+      "snapshot": "source_snapshots/registration_d670a2c2b15e59ae.md"
+    },
+    "wmvalue_design": {
+      "path": "E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md",
+      "exists": true,
+      "sha256": "5216be65c8116f22ee0ddf71ea9154bc987eaa28bd3a1553ce86b576c28ad1f6",
+      "bytes": 11291,
+      "modified_local": "2026-10-31T21:15:14.793128+08:00",
+      "snapshot": "source_snapshots/wmvalue_design_5216be65c8116f22.md"
+    },
+    "wmvalue_report": {
+      "path": "E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE.md",
+      "exists": true,
+      "sha256": "257f7798cd42eb077ab36581db1bc56decba85b363abb51d2f056555304f852a",
+      "bytes": 2406,
+      "modified_local": "2026-10-31T23:21:31.123265+08:00",
+      "snapshot": "source_snapshots/wmvalue_report_257f7798cd42eb07.md"
+    },
+    "sumocf_design": {
+      "path": "E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_DESIGN.md",
+      "exists": true,
+      "sha256": "28759b79e8f9064def2c933551dd4a8bb117a63eba383b108f9e49b5b366dd3f",
+      "bytes": 32676,
+      "modified_local": "2026-10-31T18:20:17.623369+08:00",
+      "snapshot": "source_snapshots/sumocf_design_28759b79e8f9064d.md"
+    },
+    "sumocf_run": {
+      "path": "E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_RUN.md",
+      "exists": true,
+      "sha256": "1c6095d7bfa316701b0e6af661f210b6ef350f9e6911e31734e83c26dd6299a4",
+      "bytes": 23156,
+      "modified_local": "2026-10-31T20:01:28.939560+08:00",
+      "snapshot": "source_snapshots/sumocf_run_1c6095d7bfa31670.md"
+    },
+    "sumocf_artifact": {
+      "path": "E:/agent-work/c4-sumocf/docs/paper_results/ARTIFACT_CHECK.md",
+      "exists": true,
+      "sha256": "4ac2b3e82b61bbdb9e2fbbf788af8311a0e8f4d62b07c88b48868ca31410d6af",
+      "bytes": 7549,
+      "modified_local": "2026-10-31T17:52:03.669811+08:00",
+      "snapshot": "source_snapshots/sumocf_artifact_4ac2b3e82b61bbdb.md"
+    },
+    "sumocf_root_run": {
+      "path": "E:/agent-work/c4-sumocf/SUMOCF_RUN.md",
+      "exists": false
+    },
+    "sumocf_canary": {
+      "path": "E:/agent-work/c4-sumocf/tools/sumocf/evidence/CANARY_V2.json",
+      "exists": true,
+      "sha256": "b55a3b8eb1f49b6baf607a69409834d5f43578083296581f9dbd0115096e0e5c",
+      "bytes": 292,
+      "modified_local": "2026-10-31T16:05:49.428191+08:00",
+      "snapshot": "source_snapshots/sumocf_canary_b55a3b8eb1f49b6b.json"
+    },
+    "audit_design": {
+      "path": "E:/agent-work/c4-coopmeasure/AUDIT_DESIGN.md",
+      "exists": true,
+      "sha256": "11e853961b785fddd1167af9a91026b1d1beebbed09134224293bc0c01f5bf07",
+      "bytes": 17111,
+      "modified_local": "2026-11-01T04:37:27.939605+08:00",
+      "snapshot": "source_snapshots/audit_design_11e853961b785fdd.md"
+    },
+    "audit_report": {
+      "path": "E:/agent-work/c4-coopmeasure/docs/paper_results/COOPAUDIT.md",
+      "exists": true,
+      "sha256": "4988011101f185fb175179d28564541a4ed4f2d94e438f73bfa7401e5c6b274b",
+      "bytes": 4510,
+      "modified_local": "2026-11-01T05:17:04.477616+08:00",
+      "snapshot": "source_snapshots/audit_report_4988011101f185fb.md"
+    },
+    "audit_canary": {
+      "path": "E:/agent-work/c4-coopmeasure/tools/coopaudit/evidence/CANARY_VERIFIED.json",
+      "exists": true,
+      "sha256": "f46f5f0240291558b3b8ac0e7ae1afdfcb8e366f9e491e9cbdef6b7731514e91",
+      "bytes": 2614,
+      "modified_local": "2026-10-31T16:01:26.041632+08:00",
+      "snapshot": "source_snapshots/audit_canary_f46f5f0240291558.json"
+    },
+    "audit_exposure_note": {
+      "path": "E:/agent-work/c4-coopmeasure/tools/coopaudit/evidence/EXPOSURE_NOTE.md",
+      "exists": true,
+      "sha256": "ada219936bf3560a33f4c967fb1b208a6e20240fa55999ad0104f1c3c02ebbdf",
+      "bytes": 829,
+      "modified_local": "2026-10-31T15:47:39.905434+08:00",
+      "snapshot": "source_snapshots/audit_exposure_note_ada219936bf3560a.md"
+    },
+    "behavior_report": {
+      "path": "E:/agent-work/c4-coopbehav/docs/paper_results/COOPBEHAV.md",
+      "exists": true,
+      "sha256": "577aa335926d7dc77a4aba6c5a2229d530cd4e4d3429fc2aa0e511fec66dd1fd",
+      "bytes": 17817,
+      "modified_local": "2026-10-31T20:03:23.506922+08:00",
+      "snapshot": "source_snapshots/behavior_report_577aa335926d7dc7.md"
+    },
+    "eval_report": {
+      "path": "E:/agent-work/c4-coopeval/docs/paper_results/COOPEVAL.md",
+      "exists": true,
+      "sha256": "896f68bea7de9ce1fb7ba809a364c9bf350bfae995c5bd7e5bf9e816c958f3e8",
+      "bytes": 6932,
+      "modified_local": "2026-10-31T16:10:52.502869+08:00",
+      "snapshot": "source_snapshots/eval_report_896f68bea7de9ce1.md"
+    },
+    "eval_horizons": {
+      "path": "E:/agent-work/c4-coopeval/tools/coopeval/__init__.py",
+      "exists": true,
+      "sha256": "fbac2f6ddc2a1d57b02d0089714e176029fa1d713c2c4c908116d6afa2134042",
+      "bytes": 525,
+      "modified_local": "2026-10-31T15:49:19.362940+08:00",
+      "snapshot": "source_snapshots/eval_horizons_fbac2f6ddc2a1d57.py"
+    },
+    "historical_cooperation": {
+      "path": "E:/research-dense/docs/paper_results/COOPMEAS2.md",
+      "exists": true,
+      "sha256": "71dad413ac6488ea608c9ffd89ea09546821d5412095da5081c702a520921b0f",
+      "bytes": 6076,
+      "modified_local": "2026-10-28T15:38:28.004665+08:00",
+      "snapshot": "source_snapshots/historical_cooperation_71dad413ac6488ea.md"
+    },
+    "sumoes_report": {
+      "path": "E:/agent-work/c4-sumoes/docs/paper_results/SUMOES_RUN.md",
+      "exists": true,
+      "sha256": "6fac40cff7065ee997a4e4428911d7020c2a3ad7832176b8686affb3dc22d7a1",
+      "bytes": 21728,
+      "modified_local": "2026-10-31T16:47:04.519727+08:00",
+      "snapshot": "source_snapshots/sumoes_report_6fac40cff7065ee9.md"
+    },
+    "sumoes_log": {
+      "path": "E:/agent-work/c4-sumoes/tools/sumoes/RUN.md",
+      "exists": true,
+      "sha256": "4244e3870f0e9aeaaba4e8a1045b29fa53432f7134ce01386a822bb58406b394",
+      "bytes": 21387,
+      "modified_local": "2026-10-31T16:50:46.484412+08:00",
+      "snapshot": "source_snapshots/sumoes_log_4244e3870f0e9aea.md"
+    },
+    "pilotdiag_report": {
+      "path": "E:/agent-work/c4-pilotdiag/docs/paper_results/PILOTDIAG.md",
+      "exists": true,
+      "sha256": "6eed1739967f2e6d8c8da53abf889dae0aa85e66f31c19c9ae7af5a95599e950",
+      "bytes": 4316,
+      "modified_local": "2026-10-31T12:21:24.667099+08:00",
+      "snapshot": "source_snapshots/pilotdiag_report_6eed1739967f2e6d.md"
+    },
+    "wmrequal3_report": {
+      "path": "E:/agent-work/c4-wmrequal3/docs/paper_results/WMREQUAL3.md",
+      "exists": true,
+      "sha256": "6a692d83b4cc949c5cad1ff37ff972cde15ece91b9142189e8f57e67c497af25",
+      "bytes": 8237,
+      "modified_local": "2026-10-31T02:44:05.348919+08:00",
+      "snapshot": "source_snapshots/wmrequal3_report_6a692d83b4cc949c.md"
+    },
+    "speedhead_report": {
+      "path": "E:/agent-work/c4-speedhead/docs/paper_results/SPEEDHEAD.md",
+      "exists": true,
+      "sha256": "ddf295ec72024014982f291fd7789c92d2a7acec14ddeaa709171f15a103ea42",
+      "bytes": 7504,
+      "modified_local": "2026-10-31T05:43:33.767409+08:00",
+      "snapshot": "source_snapshots/speedhead_report_ddf295ec72024014.md"
+    },
+    "wmfix_retarget": {
+      "path": "E:/agent-work/c4-wmfixmerge/docs/paper_results/WMFIX_RETARGET.md",
+      "exists": true,
+      "sha256": "0ec45023b084e04e9fff5201f53a8db1abdda996c5d69afb80a8a752e9b8e634",
+      "bytes": 3390,
+      "modified_local": "2026-10-31T08:56:45.358275+08:00",
+      "snapshot": "source_snapshots/wmfix_retarget_0ec45023b084e04e.md"
+    },
+    "wmfix_v2data": {
+      "path": "E:/agent-work/c4-wmfixmerge/docs/paper_results/WMFIX_PILOT_V2DATA.md",
+      "exists": true,
+      "sha256": "3e0bd4cf680cefa2a141f52232cf867d2b6e85f900a141ce3ae54770944ec9a8",
+      "bytes": 19807,
+      "modified_local": "2026-10-31T21:37:51.366266+08:00",
+      "snapshot": "source_snapshots/wmfix_v2data_3e0bd4cf680cefa2.md"
+    },
+    "wmcalib_report": {
+      "path": "E:/agent-work/c4-wmcalib/docs/paper_results/WMCALIB.md",
+      "exists": true,
+      "sha256": "be56ae652810e3602e9243858be88b0829e90a8c4059227feda45e98a53670f2",
+      "bytes": 5282,
+      "modified_local": "2026-10-31T19:36:06.797134+08:00",
+      "snapshot": "source_snapshots/wmcalib_report_be56ae652810e360.md"
+    },
+    "wmqueue_report": {
+      "path": "E:/agent-work/c4-wmqueue/docs/paper_results/WMQUEUE.md",
+      "exists": true,
+      "sha256": "3fbe64e7da2e44f673fcc100496d7db90dad8184b2169a1518700286d42eb38d",
+      "bytes": 5036,
+      "modified_local": "2026-10-31T18:27:32.631432+08:00",
+      "snapshot": "source_snapshots/wmqueue_report_3fbe64e7da2e44f6.md"
+    },
+    "c1pidiag_report": {
+      "path": "E:/agent-work/c4-c1pidiag/docs/paper_results/C1PIDIAG.md",
+      "exists": true,
+      "sha256": "ef442d7dc93c3eddbac15ee5af7ff96c8ee06213639dae180abbe0913b7dac20",
+      "bytes": 7803,
+      "modified_local": "2026-10-31T17:54:45.723595+08:00",
+      "snapshot": "source_snapshots/c1pidiag_report_ef442d7dc93c3edd.md"
+    },
+    "c1gap_report": {
+      "path": "E:/agent-work/c4-c1gap/docs/paper_results/C1_GAPS.md",
+      "exists": true,
+      "sha256": "f713bd7bacf89392596c7a496e5043f0f60bb6592cda614cc3de2d19c65a19c8",
+      "bytes": 13641,
+      "modified_local": "2026-10-31T16:20:56.738488+08:00",
+      "snapshot": "source_snapshots/c1gap_report_f713bd7bacf89392.md"
+    },
+    "c1floor_report": {
+      "path": "E:/agent-work/c4-c1floor/docs/paper_results/C1FLOOR.md",
+      "exists": true,
+      "sha256": "1f10c5c0a4776eb5f8d914cccbe51a5028215a10d6c9eca4dc94464069d8b3ab",
+      "bytes": 3889,
+      "modified_local": "2026-10-31T17:48:19.952904+08:00",
+      "snapshot": "source_snapshots/c1floor_report_1f10c5c0a4776eb5.md"
+    },
+    "c1switch_report": {
+      "path": "E:/agent-work/c4-c1switch/docs/paper_results/C1SWITCH_WINNERS.md",
+      "exists": true,
+      "sha256": "d303074e68bd0122190cd74cabcc9b2aa310ea28be277ffd15969f78b6d13853",
+      "bytes": 11022,
+      "modified_local": "2026-10-31T18:56:28.210453+08:00",
+      "snapshot": "source_snapshots/c1switch_report_d303074e68bd0122.md"
+    },
+    "c1closed_report": {
+      "path": "E:/agent-work/c4-c1closed/docs/paper_results/C1CLOSED.md",
+      "exists": true,
+      "sha256": "8f0ff88355a405162b5a9910f9fb903009200661bf94446bff7b1454d51b3118",
+      "bytes": 5913,
+      "modified_local": "2026-10-31T23:13:06.134316+08:00",
+      "snapshot": "source_snapshots/c1closed_report_8f0ff88355a40516.md"
+    },
+    "c1switch_main": {
+      "path": "E:/agent-work/c4-c1switch/docs/paper_results/C1SWITCH.md",
+      "exists": true,
+      "sha256": "af775961ac368d4fa412a91ff22877e8e38e51f3a74a96ba561d5c90db5b3aa7",
+      "bytes": 11776,
+      "modified_local": "2026-11-01T01:33:48.359829+08:00",
+      "snapshot": "source_snapshots/c1switch_main_af775961ac368d4f.md"
+    },
+    "coopbandit_report": {
+      "path": "E:/agent-work/c4-coopbandit/docs/paper_results/COOPBANDIT.md",
+      "exists": true,
+      "sha256": "3a1148560492f10893394073c0a32db6d30d48bb346cd8091870d3df6e6ce46c",
+      "bytes": 4215,
+      "modified_local": "2026-11-01T01:19:45.700876+08:00",
+      "snapshot": "source_snapshots/coopbandit_report_3a1148560492f108.md"
+    },
+    "coopfree_report": {
+      "path": "E:/agent-work/c4-coopfree/docs/paper_results/COOPFREE.md",
+      "exists": true,
+      "sha256": "99a4e8cfb3a05d097341e468b52be9ce89e035e49444cacc39ec23f651b586ce",
+      "bytes": 37059,
+      "modified_local": "2026-11-01T19:01:57.389472+08:00",
+      "snapshot": "source_snapshots/coopfree_report_99a4e8cfb3a05d09.md"
+    },
+    "coopfree_stop": {
+      "path": "E:/agent-work/c4-coopfree/tools/coopfree/publications/hold/HOLD_STOP.json",
+      "exists": true,
+      "sha256": "1280a9bc3403ff53ec3b4f2b8a66b5b258b692083a8c23d97c61bb2a86ec02a7",
+      "bytes": 1435,
+      "modified_local": "2026-11-01T11:35:24.941630+08:00",
+      "snapshot": "source_snapshots/coopfree_stop_1280a9bc3403ff53.json"
+    },
+    "coopfree_status": {
+      "path": "E:/agent-work/c4-coopfree/tools/coopfree/publications/hold/LATEST_STATUS.json",
+      "exists": true,
+      "sha256": "4df9b466ffe3cb26c282eb53b298491444690951ef7ac286fcbafad19866dba7",
+      "bytes": 646,
+      "modified_local": "2026-11-01T11:35:25.061727+08:00",
+      "snapshot": "source_snapshots/coopfree_status_4df9b466ffe3cb26.json"
+    },
+    "coopfree_manifest": {
+      "path": "E:/agent-work/c4-coopfree/tools/coopfree/publications/hold/MANIFEST.json",
+      "exists": true,
+      "sha256": "b211c900c2703322688d811095dcab05e3d1d387e09262a1285f7adc83d7f795",
+      "bytes": 1629,
+      "modified_local": "2026-11-01T11:35:25.065728+08:00",
+      "snapshot": "source_snapshots/coopfree_manifest_b211c900c2703322.json"
+    },
+    "distill_report": {
+      "path": "E:/agent-work/c4-distill-1101/docs/paper_results/DISTILL.md",
+      "exists": true,
+      "sha256": "b1fb3328b92b5a9535cbee839b23c9ac7e51c8685a5745cc2778e7a67140dc6b",
+      "bytes": 4781,
+      "modified_local": "2026-11-01T12:11:59.197496+08:00",
+      "snapshot": "source_snapshots/distill_report_b1fb3328b92b5a95.md"
+    },
+    "distill_design": {
+      "path": "E:/agent-work/c4-distill-1101/docs/paper_results/DISTILL_DESIGN.md",
+      "exists": true,
+      "sha256": "a470dbfaa2da0af559fca3e25910d748895a0752f2e889520b46c8380db927c5",
+      "bytes": 2737,
+      "modified_local": "2026-11-01T11:49:42.326297+08:00",
+      "snapshot": "source_snapshots/distill_design_a470dbfaa2da0af5.md"
+    },
+    "distill_live_design": {
+      "path": "E:/agent-work/c4-distill-1101/docs/paper_results/DISTILL_LIVE_DESIGN.md",
+      "exists": true,
+      "sha256": "f934b45ddd6ac024a9ac6889029151984722c4a5472813d8431ed8ce272f220e",
+      "bytes": 2917,
+      "modified_local": "2026-11-01T11:58:16.281194+08:00",
+      "snapshot": "source_snapshots/distill_live_design_f934b45ddd6ac024.md"
+    },
+    "distill_live_summary": {
+      "path": "E:/agent-work/c4-distill-1101/docs/paper_results/distill_live/SUMMARY.json",
+      "exists": true,
+      "sha256": "ece80f45ff3d96082121bd919af8aa039046f1ce521c85d2a3e4b1d79182e4a6",
+      "bytes": 1208,
+      "modified_local": "2026-11-01T12:10:53.711424+08:00",
+      "snapshot": "source_snapshots/distill_live_summary_ece80f45ff3d9608.json"
+    },
+    "distill_live_qa": {
+      "path": "E:/agent-work/c4-distill-1101/docs/paper_results/distill_live/QA.json",
+      "exists": true,
+      "sha256": "44e38727bddc62ed40544f7e7034a979da6c41a22432743669412a6c6527af34",
+      "bytes": 202,
+      "modified_local": "2026-11-01T12:10:53.715835+08:00",
+      "snapshot": "source_snapshots/distill_live_qa_44e38727bddc62ed.json"
+    },
+    "distill_live_worlds": {
+      "path": "E:/agent-work/c4-distill-1101/docs/paper_results/distill_live/WORLD_METRICS.json",
+      "exists": true,
+      "sha256": "c39d8627cf23372e7c67de18db3b8556a5840815754e395e1e8c3661e55ed4ec",
+      "bytes": 7058,
+      "modified_local": "2026-11-01T12:10:53.714309+08:00",
+      "snapshot": "source_snapshots/distill_live_worlds_c39d8627cf23372e.json"
+    },
+    "distill_live_credits": {
+      "path": "E:/agent-work/c4-distill-1101/docs/paper_results/distill_live/CREDITS.json",
+      "exists": true,
+      "sha256": "079cc7f6d10114bd9e80c0696e4507d2a78e3fba5ca7e4f2032e192ff648927a",
+      "bytes": 2174,
+      "modified_local": "2026-11-01T12:10:53.715835+08:00",
+      "snapshot": "source_snapshots/distill_live_credits_079cc7f6d10114bd.json"
+    },
+    "wmteach_report": {
+      "path": "E:/agent-work/c4-wmteach/docs/paper_results/WMTEACH.md",
+      "exists": true,
+      "sha256": "c4d69bea70fd62c1be2c038f926fd75da4b334e562b00e178965ffa57452e245",
+      "bytes": 15549,
+      "modified_local": "2026-11-01T17:41:17.562254+08:00",
+      "snapshot": "source_snapshots/wmteach_report_c4d69bea70fd62c1.md"
+    },
+    "coopmwm_report": {
+      "path": "E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM.md",
+      "exists": true,
+      "sha256": "7508151e2cb3e684a4803775235229207c6b84738fe1dd5d6039bf2498f108fc",
+      "bytes": 33214,
+      "modified_local": "2026-11-01T19:25:59.568290+08:00",
+      "snapshot": "source_snapshots/coopmwm_report_7508151e2cb3e684.md"
+    },
+    "coopmwm_design": {
+      "path": "E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM_DESIGN.md",
+      "exists": true,
+      "sha256": "19676a81407029513f0d8ee6535786ae90e9674e79912b31664fffe2896fd63d",
+      "bytes": 6824,
+      "modified_local": "2026-11-01T19:18:19.545443+08:00",
+      "snapshot": "source_snapshots/coopmwm_design_19676a8140702951.md"
+    },
+    "wmplan_report": {
+      "path": "E:/agent-work/c4-wmplan/docs/paper_results/WMPLAN.md",
+      "exists": true,
+      "sha256": "bae73f1a77a9257b6bb1303db66d76751e8594974bd34088fe20fb6de2a5fb0a",
+      "bytes": 13926,
+      "modified_local": "2026-11-01T17:58:50.774369+08:00",
+      "snapshot": "source_snapshots/wmplan_report_bae73f1a77a9257b.md"
+    },
+    "bdrank_report": {
+      "path": "E:/agent-work/c4-bdrank/docs/paper_results/BDRANK.md",
+      "exists": true,
+      "sha256": "f0a8b6549dda5697c329f331fdd15df91c525f7c7e884b63b2c2b71f0b835896",
+      "bytes": 8841,
+      "modified_local": "2026-11-01T16:51:00.377335+08:00",
+      "snapshot": "source_snapshots/bdrank_report_f0a8b6549dda5697.md"
+    },
+    "wmphys_v5_report": {
+      "path": "E:/agent-work/c4-rb2-int/docs/paper_results/WMPHYS_V5.md",
+      "exists": true,
+      "sha256": "678cb18220a1ac2f6e8cf1299ffd56c9e85a7c75ec13ce939fda777187b767f0",
+      "bytes": 24995,
+      "modified_local": "2026-11-01T18:39:13.594453+08:00",
+      "snapshot": "source_snapshots/wmphys_v5_report_678cb18220a1ac2f.md"
+    },
+    "sumocore_report": {
+      "path": "E:/agent-work/c4-sumocore/docs/paper_results/SUMOCORE.md",
+      "exists": true,
+      "sha256": "01ca05bccdf493cf91eeec912b50a1419acb8d09d55e97519641ae40dd44afe5",
+      "bytes": 6290,
+      "modified_local": "2026-11-01T00:25:57.921595+08:00",
+      "snapshot": "source_snapshots/sumocore_report_01ca05bccdf493cf.md"
+    },
+    "coopplan_report": {
+      "path": "E:/agent-work/c4-coopplan/docs/paper_results/COOPPLAN.md",
+      "exists": true,
+      "sha256": "965bd7c5b286aac02344321f03919abdd124f84c88ddf96fe42d3f984da3c24a",
+      "bytes": 15536,
+      "modified_local": "2026-11-01T02:43:35.712830+08:00",
+      "snapshot": "source_snapshots/coopplan_report_965bd7c5b286aac0.md"
+    },
+    "coopplan_worlds": {
+      "path": "E:/agent-work/c4-coopplan/docs/paper_results/coopplan/extension/final/pooled36.csv",
+      "exists": true,
+      "sha256": "c8ad986376cfa3ff1687e95e79da95f49ec4c38564ad2741e45faebf58599c97",
+      "bytes": 4163,
+      "modified_local": "2026-11-01T02:08:06.362921+08:00",
+      "snapshot": "source_snapshots/coopplan_worlds_c8ad986376cfa3ff.csv"
+    },
+    "coopplan_summary": {
+      "path": "E:/agent-work/c4-coopplan/docs/paper_results/coopplan/extension/final/SUMMARY.json",
+      "exists": true,
+      "sha256": "13054b89c4a37fdfc96934b016ac53e4c88bfa12c46a73c5e1ad0a2da7044b75",
+      "bytes": 5804,
+      "modified_local": "2026-11-01T02:08:03.751307+08:00",
+      "snapshot": "source_snapshots/coopplan_summary_13054b89c4a37fdf.json"
+    },
+    "coopplan_h300_summary": {
+      "path": "E:/agent-work/c4-coopplan/docs/paper_results/coopplan/h300/final/SUMMARY.json",
+      "exists": true,
+      "sha256": "1a5ec2b0dbf310e49247e8593fb99caf46e88aeaf778dfdba21540908526a54d",
+      "bytes": 16994,
+      "modified_local": "2026-11-01T02:41:04.919029+08:00",
+      "snapshot": "source_snapshots/coopplan_h300_summary_1a5ec2b0dbf310e4.json"
+    },
+    "audit_v2_csv": {
+      "path": "E:/agent-work/c4-coopmeasure/tools/coopaudit/evidence/v2_analysis/COOPAUDIT.csv",
+      "exists": true,
+      "sha256": "0abe14ec6f66b030422d34031d9573adbe16f1f36d2fe6b6ec98eff71f8a22be",
+      "bytes": 37181,
+      "modified_local": "2026-11-01T05:17:04.447683+08:00",
+      "snapshot": "source_snapshots/audit_v2_csv_0abe14ec6f66b030.csv"
+    },
+    "wmvalue_short_test": {
+      "path": "E:/agent-work/c4-wmvalue/tools/wmvalue/evidence/short_test.json",
+      "exists": true,
+      "sha256": "7dcebed8a07b913280e31a1c348bf85a64def163d74c110de2cb59e2f45fff7c",
+      "bytes": 43931,
+      "modified_local": "2026-10-31T23:21:31.080242+08:00",
+      "snapshot": "source_snapshots/wmvalue_short_test_7dcebed8a07b9132.json"
+    },
+    "leverprobe_report": {
+      "path": "E:/agent-work/c4-leverprobe/docs/paper_results/LEVERPROBE.md",
+      "exists": true,
+      "sha256": "2b1019637a9de4e5cdd96b8693010fc472c2a7c835bb4601bb61019618eef2b5",
+      "bytes": 4647,
+      "modified_local": "2026-10-31T23:25:42.710354+08:00",
+      "snapshot": "source_snapshots/leverprobe_report_2b1019637a9de4e5.md"
+    },
+    "breakdown_report": {
+      "path": "E:/agent-work/c4-wmbreakdown/docs/paper_results/WMBREAKDOWN.md",
+      "exists": true,
+      "sha256": "0cc38b112092f707b40dcdddaa5e5dfe25304cfdabc980407d7dbc40520e0bda",
+      "bytes": 13173,
+      "modified_local": "2026-10-31T22:37:59.045955+08:00",
+      "snapshot": "source_snapshots/breakdown_report_0cc38b112092f707.md"
+    },
+    "ensemble_report": {
+      "path": "E:/agent-work/c4-ensprobe/docs/paper_results/ENSPROBE.md",
+      "exists": true,
+      "sha256": "38a75d6d2ca78edf8922dcb8adaa1ab16c2569736d8147f992b27814e5f6064a",
+      "bytes": 5329,
+      "modified_local": "2026-10-31T23:22:59.212209+08:00",
+      "snapshot": "source_snapshots/ensemble_report_38a75d6d2ca78edf.md"
+    },
+    "wmphys_morning": {
+      "path": "E:/agent-work/c4-rb-int/docs/paper_results/WMPHYS_MORNING.md",
+      "exists": true,
+      "sha256": "44ad6b2a1dd2cc09277f8023357aed451ce0b0cdaebe15d3a5c1322746177f77",
+      "bytes": 5758,
+      "modified_local": "2026-11-01T11:47:39.344606+08:00",
+      "snapshot": "source_snapshots/wmphys_morning_44ad6b2a1dd2cc09.md"
+    },
+    "wmphys_freeze": {
+      "path": "E:/agent-work/c4-rb-int/docs/rbint/noon/20261101T093000+0800/FREEZE.json",
+      "exists": true,
+      "sha256": "14ce2eea2932afffc28c09ad91f8a724e0f79652eada4e08d0522f862ca26dd8",
+      "bytes": 752,
+      "modified_local": "2026-11-01T09:39:29.323749+08:00",
+      "snapshot": "source_snapshots/wmphys_freeze_14ce2eea2932afff.json"
+    },
+    "wmphys_final_publication": {
+      "path": "E:/agent-work/c4-rb-int/docs/rbint/noon/20261101T113555+0800/PUBLICATION.json",
+      "exists": true,
+      "sha256": "2b38479c841b2776d184ca861be61a96294d0eeddfaca9ebeddd287c0ca9a42a",
+      "bytes": 5160,
+      "modified_local": "2026-11-01T11:46:40.945494+08:00",
+      "snapshot": "source_snapshots/wmphys_final_publication_2b38479c841b2776.json"
+    },
+    "wm_design": {
+      "path": "E:/agent-work/c4-papera/docs/WM_C4_DESIGN.md",
+      "exists": true,
+      "sha256": "0a45b5bdae45c712756d8b39c0cd69fedf085afca9d0b40b626da11615dc334c",
+      "bytes": 14132,
+      "modified_local": "2026-10-31T15:55:24.729919+08:00",
+      "snapshot": "source_snapshots/wm_design_0a45b5bdae45c712.md"
+    },
+    "prior_checklist": {
+      "path": "E:/research-dense/docs/paper/CLAIM_EVIDENCE_CHECKLIST.md",
+      "exists": true,
+      "sha256": "80f844509300789061ab3734d61a53009d90bc500da0b3e9f70e01e16bcd5597",
+      "bytes": 24097,
+      "modified_local": "2026-10-28T22:01:57.968937+08:00",
+      "snapshot": "source_snapshots/prior_checklist_80f8445093007890.md"
+    },
+    "prior_draft": {
+      "path": "E:/research-dense/docs/paper/IEEE_IV_2027_DRAFT.md",
+      "exists": true,
+      "sha256": "fb2c0effa842de3a88ffb44df0acd9f28adf2715135ff641e8d90d7ed6eb05e3",
+      "bytes": 32482,
+      "modified_local": "2026-10-28T22:01:57.940448+08:00",
+      "snapshot": "source_snapshots/prior_draft_fb2c0effa842de3a.md"
+    }
+  },
+  "changed_since_prior_cut": [
+    "owner_read_first",
+    "registration",
+    "coopfree_report",
+    "wmteach_report",
+    "coopmwm_report",
+    "coopmwm_design",
+    "wmplan_report",
+    "bdrank_report",
+    "wmphys_v5_report"
+  ],
+  "scope": "explicit local report snapshots only; no simulator/model or restricted input access",
+  "claim_review": "manual; file appearance or a canary is not an efficacy result"
+}

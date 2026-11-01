@@ -13,7 +13,7 @@
     "reference_verification.csv"
   ],
   "verified_bibliography_entries": 16,
-  "controller_contract_rows": 13,
+  "controller_contract_rows": 18,
   "git_index_byte_checks": [
     "inputs/COOPMEAS2.csv",
     "inputs/E2_direction_horizon.csv",
@@ -56,7 +56,12 @@
     "figures/F3T_exact_teacher_student.csv",
     "figures/F3T_exact_teacher_student_worlds.csv",
     "figures/F3T_exact_teacher_student.png",
-    "figures/F3T_exact_teacher_student.pdf"
+    "figures/F3T_exact_teacher_student.pdf",
+    "inputs/F7_option_concordance_source.csv",
+    "inputs/F7_source_manifest.json",
+    "figures/F7_option_delay_ranking.csv",
+    "figures/F7_option_delay_ranking.png",
+    "figures/F7_option_delay_ranking.pdf"
   ],
   "report_snapshot_checks": [
     "owner_read_first",
@@ -103,6 +108,11 @@
     "distill_live_worlds",
     "distill_live_credits",
     "wmteach_report",
+    "coopmwm_report",
+    "coopmwm_design",
+    "wmplan_report",
+    "bdrank_report",
+    "wmphys_v5_report",
     "sumocore_report",
     "coopplan_report",
     "coopplan_worlds",
@@ -124,27 +134,28 @@
   "morning_figure_source_cells": 47,
   "noon_figure_source_cells": 29,
   "student_figure_source_cells": 21,
+  "evening_figure_source_cells": 4,
   "pending_insertions": {
     "README.md": 3,
-    "OUTLINE.md": 13,
-    "CLAIMS.md": 18,
-    "FIGURES.md": 13,
+    "OUTLINE.md": 17,
+    "CLAIMS.md": 21,
+    "FIGURES.md": 15,
     "RELATED_WORK.md": 4,
-    "THREATS.md": 12,
+    "THREATS.md": 16,
     "EVIDENCE_SOURCES.md": 4,
-    "REFRESH.md": 9
+    "REFRESH.md": 17
   },
   "scope": "local links, provenance structure, bibliography identity coverage, CSV schema, plotted source values and hashes",
   "limitations": "Not a scientific efficacy check, exhaustive numerical prose proof, full BibTeX compile, or IEEE pagination check",
   "document_sha256": {
-    "README.md": "db255f8a8b765f4766e469a09d6215be7878b509ac8ed05d40a43bbb09671e7e",
-    "OUTLINE.md": "f219925248d34b3a8f7674bbddcb7cae7cfe585c45cfde54fb898500144ab367",
-    "CLAIMS.md": "96bd804ef9bf372cca92e5a4125f9617d7d9d3d4d03a8ef623041fac6923ab79",
-    "FIGURES.md": "b5dbb251455301d83387f4300c23235eafb78a03a10451825e77c5312eebd357",
-    "RELATED_WORK.md": "5f4ca427a1779adaaa81b86f4bb3311ef3ca6b271cd64b6187036c227bd37680",
-    "THREATS.md": "a79c150edc121abf2d627af016f3dd837fb0ffb0f41469a6f6f922314a9310f1",
-    "EVIDENCE_SOURCES.md": "da4fe42771460925eb3970f76e669e4fd5234e5ce03b42cff58190d380bba630",
-    "REFRESH.md": "f3f8920e5dfdfbac0d4805d687868f4a3e42e58ae5ffee1d987dbd3b2f299b4c",
+    "README.md": "ec3026ab3756a54b1f11d82ccc35a3b9e16bbcb5fe20b31fc291aa75216e194d",
+    "OUTLINE.md": "244d12f7be3773a0f2165b6539d66043b60a694e1f71159b37154833d5c70a57",
+    "CLAIMS.md": "ab4004a221520d321b19291433ffb7abb5e8651e605f4889adbd73f11507f200",
+    "FIGURES.md": "37fe029e0ac0fff511d78610ce39860a69876d46d1805056c4884bb5dc27a97a",
+    "RELATED_WORK.md": "17672f20377afad2a668fcd9c9966ed334cda003c3314a8e6bea72fcf043feeb",
+    "THREATS.md": "a6969e3be17d5903d7275d2fb2d58f8ee01441f044401102f2329e6b831b3e12",
+    "EVIDENCE_SOURCES.md": "d1457114025a8bff6fbe748cef12e9cd18e2121868bccc701a266537ae941cba",
+    "REFRESH.md": "dbabf36ce67317b24ff69cd228fafc79091e191ba8ea6ea346e464640acc2f06",
     "refs.bib": "2401075b868a49e8b783b12dcdee5a07f137e70eb716bce54ea06f5f0b31ecbc",
     "reference_verification.csv": "cdb4b1409d2850cb965e5d2b94440fc0a708498a3809894dd61ebd5f05e88cab"
   }

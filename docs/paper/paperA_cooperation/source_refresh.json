@@ -1,5 +1,5 @@
 {
-  "captured_local": "2026-11-01T19:26:26.171690+08:00",
+  "captured_local": "2026-11-01T19:39:34.161734+08:00",
   "reports": {
     "owner_read_first": {
       "path": "E:/research-dense/docs/OWNER_UPDATE_20261030_EVENING.md",
@@ -12,10 +12,10 @@
     "registration": {
       "path": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md",
       "exists": true,
-      "sha256": "d670a2c2b15e59ae5efb5c71f2987f8864d4a4e5c39eadb6798b043022089917",
-      "bytes": 2472031,
-      "modified_local": "2026-11-01T19:24:08.414652+08:00",
-      "snapshot": "source_snapshots/registration_d670a2c2b15e59ae.md"
+      "sha256": "ddcc161b183277bb5282432edc4d9a5e3363d934bbd2024593fc090bc5bb76ac",
+      "bytes": 2473442,
+      "modified_local": "2026-11-01T19:38:20.511989+08:00",
+      "snapshot": "source_snapshots/registration_ddcc161b183277bb.md"
     },
     "wmvalue_design": {
       "path": "E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md",
@@ -264,10 +264,10 @@
     "coopfree_report": {
       "path": "E:/agent-work/c4-coopfree/docs/paper_results/COOPFREE.md",
       "exists": true,
-      "sha256": "99a4e8cfb3a05d097341e468b52be9ce89e035e49444cacc39ec23f651b586ce",
-      "bytes": 37059,
-      "modified_local": "2026-11-01T19:01:57.389472+08:00",
-      "snapshot": "source_snapshots/coopfree_report_99a4e8cfb3a05d09.md"
+      "sha256": "8f99f2351f6d24877b45b6038b9f7c8f04a297af82980005498745ad22488ef7",
+      "bytes": 37975,
+      "modified_local": "2026-11-01T19:38:48.782595+08:00",
+      "snapshot": "source_snapshots/coopfree_report_8f99f2351f6d2487.md"
     },
     "coopfree_stop": {
       "path": "E:/agent-work/c4-coopfree/tools/coopfree/publications/hold/HOLD_STOP.json",
@@ -360,10 +360,10 @@
     "coopmwm_report": {
       "path": "E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM.md",
       "exists": true,
-      "sha256": "7508151e2cb3e684a4803775235229207c6b84738fe1dd5d6039bf2498f108fc",
-      "bytes": 33214,
-      "modified_local": "2026-11-01T19:25:59.568290+08:00",
-      "snapshot": "source_snapshots/coopmwm_report_7508151e2cb3e684.md"
+      "sha256": "cfdea3fbc089a6661b6841090f8632f1304539dd6f205a4cbc64a77ea65bd67a",
+      "bytes": 39011,
+      "modified_local": "2026-11-01T19:37:10.531210+08:00",
+      "snapshot": "source_snapshots/coopmwm_report_cfdea3fbc089a666.md"
     },
     "coopmwm_design": {
       "path": "E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM_DESIGN.md",
@@ -527,15 +527,9 @@
     }
   },
   "changed_since_prior_cut": [
-    "owner_read_first",
     "registration",
     "coopfree_report",
-    "wmteach_report",
-    "coopmwm_report",
-    "coopmwm_design",
-    "wmplan_report",
-    "bdrank_report",
-    "wmphys_v5_report"
+    "coopmwm_report"
   ],
   "scope": "explicit local report snapshots only; no simulator/model or restricted input access",
   "claim_review": "manual; file appearance or a canary is not an efficacy result"

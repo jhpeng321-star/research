@@ -4,6 +4,8 @@ The exact evidence cut is `source_refresh.json`; pinned report/CSV/JSON bytes re
 
 ## Current evening delta — supersedes historical status below
 
+**Closing reread takes precedence over earlier evening bullets:** latest owner requests acceleration residuals for every arm, committed CEM group plans, bootstrap-future Thompson choice, widened candidates and **96-world/eight-per-cell** final evaluation. All set-point A/B runs superseded, all arms held; report **811640 sim-s charged** is not final closed-actual accounting. The formal acceleration/search/panel/quote/exposure freeze is not yet delivered. Slot-trimming forecast parity failed and is rejected. Current source cut in `source_refresh.json` captures this closing amendment; older plan/report snapshots remain preserved. <!-- Sources: E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md, MAIN19:23/19:30/19:34/19:38; E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM.md:3-14. -->
+
 - Inherited clean branch `6d675bc1`; git history/status and prior task/registration receipts inspected first. First package already complete/registered, six-page IEEEtran outline v2 already delivered. No duplicate completion line, dispatch, observer or experiment was created. Source step `806b6ef3` pins the new owner/ledger and producer evidence cut.
 - **Primary method now COOPMWM:** WM-guided exploration and imitation, **SUMO-only reward/advantage**, with continued-PPO A and random-guide R controls. A continues independently; original low-volume B updates superseded, B/R held for guidance-volume qualification and isolated MAPPO restart. Exact K/quota/sampling release is pending; fixed final checkpoint/replication design is prospective, not efficacy. W-GUIDE/F3G/F3. <!-- Sources: E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM_DESIGN.md; E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM.md:3-31; E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md, MAIN17:12/17:27/17:42/18:54. -->
 - **Definition issue surfaced:** COOPMWM member-revert marginal diagnostic is not paper singleton-alone C_G; for matching pair branches its sign is opposite. M-CREDIT makes the algebra explicit, retains source labeling and requires a common B/G/ONLY audit before W-RISE. No producer result was silently sign-flipped. <!-- Sources: E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM_DESIGN.md:24-25; E:/agent-work/c4-coopmeasure/AUDIT_DESIGN.md. -->
@@ -15,14 +17,16 @@ The exact evidence cut is `source_refresh.json`; pinned report/CSV/JSON bytes re
 
 ## Current evidence queue
 
-- [[PENDING: guidance-volume GPU qualification, registered numeric K/quota/sampling and isolated B/R release / S-COOPMWM]]. A's progress alone does not establish guidance benefit; old low-volume B runs remain charged history.
+- [[PENDING: acceleration-plan/search/Thompson/route/trust implementation freeze, corrected GPU batching parity, numeric execution quotas and isolated A/B/R release / S-COOPMWM]]. All set-point runs remain charged history.
 - [[PENDING: complete random-window E2 agreement/scale/noise intervals and singleton-versus-member-revert reconciliation / S-COOPMWM, S-COOPMEASURE]]. Conditional WM variance is not real variance reduction.
-- [[PENDING: fixed proposal-free B−MAPPO/B−A/B−R outcomes, safety, common paper-measure interaction, second-seed replication and final closed accounting / S-COOPMWM, S-COOPEVAL]]. Final outcomes remain unopened by this package.
+- [[PENDING: enlarged final-panel metadata/guards/exposure/quote/checkpoint registration, actual seed scope, fixed proposal-free B−MAPPO/B−A/B−R outcomes, safety, common interaction and final closed accounting / S-COOPMWM, S-COOPEVAL]]. Final outcomes remain unopened by this package.
 - [[PENDING: explicit resume and cache-preserving WMTEACH corpus/student/live continuation / MAIN, S-WMTEACH]]. Teacher quality is complete; efficacy-only live plan cannot supply member-alone interaction.
 - [[PENDING: explicit resume and complete WMPLAN comparison / MAIN, S-WMPLAN]]. No existing live endpoint.
 - [[PENDING: explicit evaluation resume/final FULL-v5 four-model qualification / MAIN, S-RB2-INT]]. Engineering-ready/interim is not qualified improvement.
 - [[PENDING: COOPFREE continuation final trend/DEV/safety/accounting and valid discovery / S-COOPFREE]]. Original STOP does not describe current continuation health.
 - [[PENDING: complete pretraining/data/budget and service/fairness lineage, historical candidate A inventory, closest-method full-text comparison and official venue rules / owner integrator]]. Existing verified bibliography and six-page skeleton already delivered.
+
+Closing capture also updates COOPFREE: u7 completed/u8 underway, without a new DEV endpoint; existing u6 efficacy remains inconclusive. All other producer hashes unchanged. Source-manifest/figure/bibliography/link checks are recorded by `package_validation.json`; F7 visual inspection and targeted Ruff checks passed. Existing compiled outline v2 predates the closing acceleration redesign and is preserved as a skeleton, not promoted to a finalized method manuscript. <!-- Sources: E:/agent-work/c4-coopfree/docs/paper_results/COOPFREE.md:313-429; source_refresh.json; evening_figure_validation.json; E:/agent-work/c4-papera/docs/paper/paperA_overleaf/BUILD_QA.json. -->
 
 ## Historical noon delta
 

@@ -93,6 +93,8 @@ Only explicit report/export/code paths needed to interpret the package are used.
 
 ## Evening continuation — current cut
 
+**Closing cut supersedes earlier evening progress:** owner19:30/19:34/19:38 orders acceleration-space A/B/R restart, committed searched plans, Thompson candidate exploration and enlarged final evaluation. COOPMWM all arms HELD; all set-point results charged/superseded, new full design/quote/panel exposure registration pending. COOPFREE u7 completes/u8 progresses without a new DEV endpoint. Exact updated report/ledger bytes and the previous manifest are preserved in `source_refresh.json`. <!-- Sources: E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md, MAIN19:30/19:34/19:38; E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM.md:3-14; E:/agent-work/c4-coopfree/docs/paper_results/COOPFREE.md:313-429. -->
+
 - Inherited clean branch at `6d675bc1`; first package already registered and six-page outline v2 already delivered. Source commit `806b6ef3` captures owner/ledger changes and newly relevant producer reports. Existing scientific receipts, artwork and bibliography-verification bytes preserved.
 - **Current owner method:** `E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM_DESIGN.md` and `COOPMWM.md`. WM-guided exploration/SUMO-only reward; A continued PPO, B fixed-model guidance, R random-guide ablation. A continues, B/R held for volume-qualified restart; old B evidence retained. Public evaluation metadata only; no final outcomes opened. W-GUIDE/W-NOISE/M-CREDIT.
 - **Definition gate:** member-revert marginal diagnostic differs from singleton-alone paper C_G. Producer labels preserved and explicitly separated pending common audit; no relabeling of earlier plots.
