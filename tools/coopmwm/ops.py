@@ -97,7 +97,7 @@ os.environ.update(CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1
 sys.path[:0]=[{root!r}+'/pytools','/home/ubuntu/e3final/runtime/src','/home/ubuntu/e3final/runtime']
 import torch;torch.set_num_threads(1)
 start=time.monotonic()
-suite=unittest.TestSuite([unittest.defaultTestLoader.loadTestsFromName(n) for n in ['tools.coopnative.test_cpu','tools.coopmwm.test_cpu','tools.coopmwm.test_volume_cpu']])
+suite=unittest.TestSuite([unittest.defaultTestLoader.loadTestsFromName(n) for n in ['tools.coopnative.test_cpu','tools.coopmwm.test_cpu','tools.coopmwm.test_volume_cpu','tools.coopmwm.test_acceleration_cpu']])
 with patch('subprocess.Popen',side_effect=AssertionError('physics forbidden during CPU tests')):
  result=unittest.TextTestRunner(stream=sys.stdout,verbosity=2).run(suite)
 print(json.dumps(dict(pass_=result.wasSuccessful(),tests=result.testsRun,skips=len(result.skipped),sim_s=0,wall_s=time.monotonic()-start,root={root!r})))
