@@ -8,6 +8,7 @@ from .protocol import checked,REGISTRY,sha,digest
 from .warm_deploy import ROOT
 
 SOURCE='/home/ubuntu/coopmwm20261102_finalcpu1'
+DISCOVERY='/home/ubuntu/coopmwm20261102_finaldiscovery1'
 
 
 def qualify():
@@ -109,7 +110,7 @@ r=pathlib.Path({ROOT!r});d=json.loads((r/'FINAL_PRECOMPUTE_DISPATCH.json').read_
 assert pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']
 p=pathlib.Path('/proc',str(d['pid']),'stat');s=p.read_text().split() if p.exists() else None
 assert not s or s[21]==d['start_ticks']
-allowed=('FINAL_PRECOMPUTE_STARTED.json','FINAL_PRECOMPUTE_FIXED_A.json','FINAL_MAPPO_REUSE_PASS.json','FINAL_PRECOMPUTE_COMPLETE.json','FINAL_PRECOMPUTE_FAILED.json')
+allowed=('FINAL_PRECOMPUTE_STARTED.json','FINAL_PRECOMPUTE_FIXED_A.json','FINAL_MAPPO_REUSE_PASS.json','FINAL_PRECOMPUTE_COMPLETE.json','FINAL_PRECOMPUTE_FAILED.json','FINAL_DISCOVERY_STARTED.json','FINAL_DISCOVERY_FAILED.json')
 v=dict(unix=time.time(),owner=d,state=s[2] if s else 'exited',receipts={{n:json.loads((r/n).read_text()) for n in allowed if (r/n).exists()}},completed_jobs=len(list((r/'final_receipts').glob('*.json'))),outcomes_read=False)
 latest=sorted(r.glob('FINAL_PRECOMPUTE_STATUS_*.json'))
 if latest:v['latest_status']=json.loads(latest[-1].read_text())
@@ -118,6 +119,59 @@ print(json.dumps(v))''',timeout=40))
     print(json.dumps(value));return value
 
 
+def discovery():
+    target=ops.EVIDENCE/'FINAL_DISCOVERY_DISPATCH.json';assert not target.exists()
+    cpu=read(ops.EVIDENCE/'FINAL_CPU_QUALIFICATION.json')
+    assert cpu['pass_'] and cpu['skips']==cpu['sim_s']==0
+    frozen=json.loads(ops.stage_frozen('cpuQ',DISCOVERY,dict(root=cpu['source_root'],source_hashes=cpu['source_hashes'])))
+    files={'tools/coopmwm/'+n:checked(ops.LOCAL/'tools/coopmwm'/n).read_text(encoding='utf-8')
+           for n in ('final_discovery.py','test_final_discovery_cpu.py')}
+    staged=json.loads(ops.stage('cpuQ',DISCOVERY,files))
+    hashes=dict(frozen['hashes'],**staged['hashes'])
+    output=ops.ssh.remote('cpuQ',f'''import os,sys,time,json,unittest
+os.nice(19);os.environ.update(CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1')
+sys.path[:0]=[{DISCOVERY!r}+'/pytools','/home/ubuntu/e3final/runtime/src','/home/ubuntu/e3final/runtime']
+from unittest.mock import patch
+start=time.monotonic()
+with patch('subprocess.Popen',side_effect=AssertionError('SUMO forbidden during discovery CPU tests')):
+ result=unittest.TextTestRunner(stream=sys.stdout,verbosity=2).run(unittest.defaultTestLoader.loadTestsFromName('tools.coopmwm.test_final_discovery_cpu'))
+print(json.dumps(dict(pass_=result.wasSuccessful(),tests=result.testsRun,skips=len(result.skipped),sim_s=0,wall_s=time.monotonic()-start)))''',timeout=60)
+    print(output);qual=json.loads(output.strip().splitlines()[-1])
+    write(ops.EVIDENCE/'FINAL_DISCOVERY_CPU.json',dict(qual,source_root=DISCOVERY,source_hashes=hashes))
+    assert qual['pass_'] and qual['skips']==qual['sim_s']==0
+    config=dict(source_root=DISCOVERY,source_hashes=hashes,qualification=qual,
+        opening_gate='all fixedA48/B48/R24 + FINAL_OUTCOMES_OPENED + FINAL_REGISTERED_EVALUATION_COMPLETE',
+        executor='existing immutable accel_runner.exact_plan n+2 full-prefix reruns, H60/120/300/600; B48 recorded raw1s acceleration; MAPPO member reversion; no WM or truth input',
+        group_rule='unchanged observable100m components2..6 containing detector members; no new detector thresholds',
+        duration_rule='round detector measured duration up to registered grid30/60/90/120/150/180/240/300; unknown end uses registered60s',
+        sampling='fixed panel order then event time/group, no gain-based selection; remaining registered discovery200000 only, preserve existing TRAIN charges; incomplete n+2 budget -> uncovered, never partial group',
+        priority='nice19; submit2twinworkers only under existing grade/resource idle admission; no physics retry, no new allocation')
+    path=ops.EVIDENCE/'FINAL_DISCOVERY_AMENDMENT.json';write(path,config);h=sha(path)
+    config['amendment_sha256']=h
+    line='\nS-COOPMWM FINAL DETECTOR-FIRST DISCOVERY CONTINUATION REGISTERED amendmentSHA'+h+': after fixedA48/B48/R24 and registered final outcome opening/analysis only; unchanged COOPBEHAV detectors, existing100m components2..6 containing observed event members (no legacy pair-only gate), registered duration grid; immutable n+2 exact executor/prefix gates, remaining discovery200000 only, all previous charges retained, insufficient whole-group budget recorded uncovered; fixed panel/time/group order, no outcome selection, no new behavioural threshold, nice19/grade-resource priority, no retries/refunds/new allocation.\n'
+    with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+    value=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,sys,os,json,time,subprocess,hashlib
+r=pathlib.Path({ROOT!r});source=pathlib.Path({DISCOVERY!r});assert r.is_dir() and source.is_dir()
+sys.path.insert(0,str(source/'pytools'))
+from tools.coopmwm.warm_spool import immutable
+c=json.loads({json.dumps(config)!r})
+for n,h in c['source_hashes'].items():assert hashlib.sha256((source/n).read_bytes()).hexdigest()==h,n
+assert not (r/'FINAL_DISCOVERY_DISPATCH.json').exists()
+assert not (r/'FINAL_DISCOVERY_STARTED.json').exists()
+with (r/'AUTHORITY.md').open('a') as f:f.write({line!r})
+immutable(r/'FINAL_DISCOVERY_CONFIG.json',c)
+env=dict(os.environ,CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',
+ SUMO_HOME='/home/ubuntu/miniconda3/lib/python3.10/site-packages/sumo',
+ PYTHONPATH=str(source/'pytools')+':/home/ubuntu/e3final/runtime/src:/home/ubuntu/e3final/runtime')
+env['PATH']=env['SUMO_HOME']+'/bin:'+env['PATH']
+with (r/'FINAL_DISCOVERY.log').open('x') as log:
+ p=subprocess.Popen(['nice','-n','19',{ops.ssh.PYTHON['cpuQ']!r},'-B','-u','-m','tools.coopmwm.final_discovery',str(r),str(r/'FINAL_DISCOVERY_CONFIG.json')],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+s=pathlib.Path('/proc',str(p.pid),'stat').read_text().split()
+v=dict(pid=p.pid,start_ticks=s[21],boot_id=pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip(),unix=time.time(),source=str(source),root=str(r),amendment_sha256=c['amendment_sha256'])
+immutable(r/'FINAL_DISCOVERY_DISPATCH.json',v);print(json.dumps(v))''',timeout=40))
+    write(target,dict(value,line=line));print(json.dumps(value))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('qualify','register','dispatch','status'))
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('qualify','register','dispatch','status','discovery'))
     globals()[p.parse_args().mode]()
