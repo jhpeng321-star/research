@@ -1,5 +1,16 @@
 # S-COOPMWM — live checks
 
+## 2026-11-01 18:10 — owner17:55 dual-GPU amendment active
+- Registered unchanged **4,918,800 allocated /6,000,000 cap**,1,081,200 unallocated.
+- CPU18/19: **47PASS/zero skips/zero SUMO**; finalCPU19 2.87s. Design remains70lines.
+- Both immutable FULL-v4 services are ready: gpuA ownedPID516897, gpuR ownedPID951313;
+  each has an8GiB cap. Original failed bridge/startup receipts remain untouched.
+- Same registered first-window K8 diagnostic is running on both GPUs for cross-host
+  parity; next is one H300 proposal timing per host and outcome-independent sampling fit.
+- cpuQ will adopt all62finished jobs/74,400charged;12nice19training workers plus2E2
+  workers, shared serialized accounting. E2 now runs beside PPO and cannot gate learning.
+- A/B/R final checkpoints, primary-first once-only test and remaining seed2 plan unchanged.
+
 ## 2026-11-01 18:01 — fresh recovery and frozen reducer repair
 - Recovered all62 closed jobs /74,400sim-s; no live task supervisor or GPU service.
 - Prior GPU startup failed because `inspect` resolved an exec-created reducer against

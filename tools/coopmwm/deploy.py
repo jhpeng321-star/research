@@ -112,7 +112,7 @@ for name in ('SMOKE_DISPATCH.json','TRAIN_DISPATCH.json','TRAIN_DISPATCH_1742.js
  owners.append(dict(d,alive=alive))
 charges=[json.loads(line) for line in (r/'CHARGES.jsonl').read_text().splitlines()] if (r/'CHARGES.jsonl').exists() else []
 finished=[c['id'] for c in charges if (r/'jobs'/c['id']/'RESULT.json').exists() and (r/'jobs'/c['id']/'CLOSE.json').exists()]
-receipts={{p.name:read(p) for pattern in ('SMOKE.json','R_SMOKE.json','STOP.json','CALIBRATION_WINDOWS.json','CREDIT_WINDOW_*.json','CREDIT_CHECK.json','S*_CHECK_*.json','S*_DEV_*.json','S*_UPDATE_*.json','R0_CHECK_*.json','R0_DEV_*.json','*TEST_COMPLETE.json','COMPLETE.json') for p in r.glob(pattern)}}
+receipts={{p.name:read(p) for pattern in ('SMOKE.json','R_SMOKE.json','STOP.json','CALIBRATION_WINDOWS.json','CREDIT_WINDOW_*.json','CREDIT_CHECK.json','CREDIT_DIAGNOSTIC_ERROR.json','S*_CHECK_*.json','S*_DEV_*.json','S*_UPDATE_*.json','R0_CHECK_*.json','R0_DEV_*.json','*TEST_COMPLETE.json','COMPLETE.json') for p in r.glob(pattern)}}
 pending=[p.name for p in (r/'requests').glob('*.json') if not (r/'responses'/p.name).exists()]
 print(json.dumps(dict(unix=time.time(),owners=owners,charged_sim_s=sum(c['sim_s'] for c in charges),jobs=len(charges),finished=len(finished),pending_WM=pending,
   load=os.getloadavg(),receipts=receipts,log_tail=(r/('TRAIN_1742.log' if (r/'TRAIN_1742.log').exists() else 'TRAIN.log' if (r/'TRAIN.log').exists() else 'SMOKE.log')).read_text()[-12000:] if owners else '')))
@@ -126,6 +126,7 @@ print(json.dumps(dict(unix=time.time(),owners=owners,charged_sim_s=sum(c['sim_s'
     summary={k:v for k,v in result.items() if k not in ('receipts',)}
     summary['receipts']=list(result['receipts'])
     print(json.dumps(summary))
+    return result
 
 
 if __name__=='__main__':
