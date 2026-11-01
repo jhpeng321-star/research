@@ -1,5 +1,15 @@
 # S-COOPMWM live continuation — OWNER22:08 WARM MEMORY HOLD
 
+ACTIVE QUALIFICATION: `warmmppiqual1`, cpu117PASS/noSUMO in dd06b2aa;
+GPU A573068/start892945885, GPU R9694/start4217587618, each owns exactly one
+inference-only qualifier under /root/coopmwm20261102_warmmppiqual1. Inspect
+`python -X utf8 -m tools.coopmwm.warm_release_qual status --host gpuA` (then gpuR).
+No duplicate dispatch. E2 causal preparation/cold/warm and first GPUA parity
+have completed at latest observation; full parity/group2/4/6 timing still runs.
+WARM2354 full budget/branch/focus registration now appended, SHA
+b03f152870331ac6e56f2b692cb5b02682c2bd3d677259dc2b80aece487a9a21.
+Warm restart source still incomplete/unqualified; historical cold commands forbidden.
+
 LATEST RESUME: complete206-line brief read through MAIN23:54. This supersedes
 the23:36 budget blocker below: cap6500000, TRAIN4/dev16, discovery200000,
 R branches deferred; target allocation6473440/free26560. Fresh identity receipt

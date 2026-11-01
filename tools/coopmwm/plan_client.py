@@ -102,6 +102,7 @@ def guide(job,generator):
         b.update(queried_option=result.get('option'),proposal_accepted=result['accepted'],
             query_wall_s=result.get('query_wall_s',0.))
         if result['accepted']:
+            result['history']=r['history']
             b.update(option=result['option'],proposal_members=result['plan']['members'],
                 expected_saving=result.get('expected_saving'),predicted_rank=result.get('predicted_rank'),
                 known_family=result.get('known_family'),duration_s=result['plan']['duration_s'],
@@ -118,4 +119,7 @@ def guide(job,generator):
                 write(Path(m['path'])/(m['key']+'_END.json'),dict(executed=executed))
     call.completed=completed
     call.observe=lambda rows,now:history.push(now,rows)
+    def prime(frames):
+        for frame in frames:history.push(frame['time_s'],frame['rows'],frame['entrance_counts'])
+    call.prime=prime
     return call

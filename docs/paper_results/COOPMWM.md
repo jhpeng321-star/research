@@ -1,5 +1,25 @@
 # S-COOPMWM — live checks
 
+## Integrated warm MPPI — qualification running
+- `dd06b2aa`: **117 CPU tests PASS, zero skips, 8.66s, zero SUMO**. Real frozen
+  MAPPO parity, observable-history guards, landed MPPI/branch modules and extended
+  profile/transfer integration are covered. Failed CPU2/3 receipts are retained.
+- Fixed legacy integration-test mocks for group-components; the stochastic long-hold
+  test now checks reuse/release of a verified long library plan rather than assuming
+  a finite search finds a global optimum for every LAPACK basis. Sampling uses a
+  unique Cholesky factor for the positive-definite covariance (same distribution).
+- One source-bound inference-only qualifier per GPU: gpuA573068, gpuR9694.
+  Existing exact-labelled E2 windows00/01 and genuine archived60s observable
+  histories are reused. Causal posterior preparation and cold/warm comparisons
+  are running; batch exact parity and group2/4/6 timing follow, no new SUMO.
+- **Full scope registered before B/R training**, amendment
+  `b03f152870331ac6e56f2b692cb5b02682c2bd3d677259dc2b80aece487a9a21`:
+  6473440/6500000 allocation, fixed A/B48,R24, TRAIN4/dev16, discovery200000,
+  R branches deferred; four branch moments, comparator-specific Holm families.
+  Existing COOPBANDIT lines7–23/COOPPLAN73–102 are SHA-pinned for the owner focus
+  hypothesis; prospective TRAIN batches contain12focus+12other existing worlds.
+  A completedu1..4/Adam/RNG/check is retained; emphasis starts prospectivelyu5.
+
 ## Latest resume — MAIN23:54 budget resolution adopted
 - Full206-line brief read, including all ordered addenda. MAIN22:58/23:54 supersede
   the earlier6M cap and the23:36 blocker: **6500000 cap**, TRAIN every4/dev every16,

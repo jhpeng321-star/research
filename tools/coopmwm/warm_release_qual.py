@@ -57,6 +57,24 @@ def run(root,host):
         e2={}
         exact=read(root/'E2_LABELS.json')[ix]['exact']
         for mode,mem in (('cold',None),('warm',memory)):
+            if manifest.get('reuse_E2_root'):
+                prior=Path(manifest['reuse_E2_root'])
+                old=read(prior/'QUAL_BINDING.json')
+                dependencies=('plan_wm','speed2_runtime','speed2_transfers','warm_runtime','fused','wm')
+                for name in dependencies:
+                    key=f'pytools/tools/coopmwm/{name}.py'
+                    assert old['hashes'][key]==manifest['hashes'][key],name
+                # Only native_fixture's FIT seed selector changed. The transport
+                # class used by these E2 receipts must remain source-identical.
+                import ast
+                def transport(path):
+                    tree=ast.parse(path.read_text())
+                    return ast.dump(next(n for n in tree.body if isinstance(n,ast.ClassDef) and n.name=='WarmQuery'))
+                assert transport(prior/'pytools/tools/coopmwm/speed2_memory.py')==transport(root/'pytools/tools/coopmwm/speed2_memory.py')
+                value=read(prior/f'E2_{mode.upper()}.json')
+                assert value['world_id']==record['world_id']
+                write(root/f'E2_{mode.upper()}.json',dict(value,reused_from=str(prior),prior_sha256=sha(prior/f'E2_{mode.upper()}.json')))
+                continue
             start=time.monotonic();result=setpoint_futures(rt,record,mem)
             credits={h:paired([{a:fs[k] for a,fs in values.items()} for k in range(8)])
                 for h,values in result['futures'].items()}
@@ -73,10 +91,20 @@ def run(root,host):
         cavs=[r['vid'] for r in native['rows'] if r['is_cav']]
         write(root/'NATIVE_GEOMETRY.json',dict(world_id=native['world_id'],cavs=len(cavs),
             groups=ms.group_components(native['rows']),new_sumo_sim_s=0))
-        sizes=(2,6) if host=='gpuA' else (4,)
+        sizes=manifest.get('group_sizes',(2,6) if host=='gpuA' else (4,))
+        parent=max(ms.group_components(native['rows']),key=lambda g:g['size'])
         for size in sizes:
-            assert len(cavs)>=size,'qualified fixture lacks requested CAV count'
-            group=ms.group_components([r for r in native['rows'] if r['vid'] in cavs[:size]])
+            if parent['size']<size:
+                for seed in range(969421,969432):
+                    trial,trial_memory=native_fixture(rt,seed)
+                    groups=ms.group_components(trial['rows'])
+                    if groups and max(g['size'] for g in groups)>=size:
+                        native,native_memory=trial,trial_memory
+                        parent=max(groups,key=lambda g:g['size']);break
+                write(root/f'GROUP{size}_GEOMETRY.json',dict(world_id=native['world_id'],group=parent,new_sumo_sim_s=0))
+            assert parent['size']>=size,'qualified fixture lacks requested connected CAV count'
+            selected=parent['members'][:size]
+            group=ms.group_components([r for r in native['rows'] if r['vid'] in selected])
             assert len(group)==1 and group[0]['size']==size
             group=group[0];rec=dict(native,group=group['members'],policy_state=actor_state(Policy()))
             bounds=(float(rt.mp.policy.accel_min),float(rt.mp.policy.accel_max))
@@ -115,12 +143,15 @@ def stage(host,tag):
     root='/root/coopmwm20261102_'+tag
     files=ops.sources()
     frozen=ops.ssh.remote('gpuA',"import pathlib;print(pathlib.Path('/root/coopmwm20261101_warmqual1/FROZEN_COSTS.json').read_text())",timeout=20)
-    fixtures=ops.ssh.remote('gpuA',"import pathlib;print(pathlib.Path('/root/coopmwm20261101_warmqual1/E2_INPUTS.json').read_text())",timeout=25)
+    fixtures=ops.ssh.remote('gpuA',"import pathlib;print(pathlib.Path('/root/coopmwm20261101_warmqual1/E2_INPUTS.json').read_text())",timeout=60)
     files.update({'FROZEN_COSTS.json':frozen,'E2_INPUTS.json':fixtures,
         'E2_LABELS.json':json.dumps([read(ops.EVIDENCE/f'runtime/CREDIT_WINDOW_{i:02}.json') for i in (0,1)])})
     staged=json.loads(ops.stage(host,root,files))
     binding=dict(hashes=staged['hashes'],host=host,root=root,new_sumo_sim_s=0,
         search='registered medium dimension-scaled MPPI; no training outcome selection')
+    if tag=='warmmppiqual2':
+        assert host=='gpuR','qual2 repairs only GPU R group4/6 admission; original GPU A keeps running'
+        binding.update(reuse_E2_root='/root/coopmwm20261102_warmmppiqual1',group_sizes=[4,6])
     ops.stage(host,root,{'QUAL_BINDING.json':json.dumps(binding,sort_keys=True)})
     write(ops.EVIDENCE/f'{tag}_STAGE_{host}.json',binding)
     print(json.dumps(dict(host=host,root=root,files=len(staged['hashes']))))
@@ -159,7 +190,9 @@ receipts={{n:json.loads((r/n).read_text()) for n in names if (r/n).exists()}}
 print(json.dumps(dict(unix=time.time(),state=s[2] if s else 'exited',receipts=receipts,log=(r/'QUAL.log').read_text()[-12000:],new_sumo_sim_s=0)))''',timeout=25))
     write(ops.EVIDENCE/f'{tag}_STATUS_{host}_{int(value["unix"])}.json',value)
     # Keep the terminal short; all full receipts remain durable locally.
-    print(json.dumps(dict(state=value['state'],receipts=list(value['receipts']),log=value['log'][-5000:])))
+    geometry=value['receipts'].get('NATIVE_GEOMETRY.json',{})
+    print(json.dumps(dict(state=value['state'],receipts=list(value['receipts']),
+        native_group_sizes=[g['size'] for g in geometry.get('groups',[])],log=value['log'][-5000:])))
 
 
 if __name__=='__main__':

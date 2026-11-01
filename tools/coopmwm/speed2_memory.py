@@ -98,7 +98,7 @@ class WarmQuery:
             yield
 
 
-def native_fixture(rt):
+def native_fixture(rt,seed=969420):
     """Fixed FIT-only observable fixture; native posterior construction, no physics.
 
     The frozen loader admits969420..969439; explicitly pin969420 (within the
@@ -108,8 +108,7 @@ def native_fixture(rt):
     from tools.rbint.recipe import fitted_state_at_start
     from .protocol import digest
     start=time.perf_counter()
-    seed=969420
-    assert 969400<=seed<969432
+    assert 969420<=seed<969432
     observed,raw=load_motion_history(seed)
     source=copy.deepcopy(rt.batches[seed-969400])
     selected=observed['state']['present'][0].bool()

@@ -214,7 +214,8 @@ def build_plan(worlds=None, arms=PRIMARY_ARMS, later_arms=LATER_ARMS, n_branches
                 one='paired branch test, all worlds (co-primary #1)',
                 two='same paired branch metric restricted to the focus stratum worlds (co-primary #2)',
                 family=[h['id'] for h in fam],
-                multiplicity=f'Holm step-down over the 4-hypothesis family, FWER alpha={alpha} two-sided'),
+                families={c:[h['id'] for h in fam if h['comparator']==c] for _,c in CO_PRIMARY_CONTRASTS},
+                multiplicity=f'Two Holm families, one per comparator, each over all-branch and focus; alpha={alpha} two-sided'),
             focus=dict(definition=focus, n_worlds=len(fw), seeds=[w['seed'] for w in fw],
                        sources=list(FOCUS_SOURCES),
                        secondary='full-panel J600/J900 episode results stay registered secondary'),
@@ -486,7 +487,9 @@ def analyze(records, plan, contrasts=None):
         for t, c in contrasts:
             results[f'{scope}:{t}-{c}'] = dict(scope=scope, treatment=t, comparator=c,
                                                **cluster_bootstrap(table[t][mask], table[c][mask], n_boot, seed, alpha))
-    adj = holm({h['id']: results[h['id']]['p_two_sided'] for h in fam}, alpha)
+    adj = {}
+    for _,comparator in CO_PRIMARY_CONTRASTS:
+        adj.update(holm({h['id']: results[h['id']]['p_two_sided'] for h in fam if h['comparator']==comparator}, alpha))
     for k, v in adj.items():
         results[k].update(holm=v, co_primary=True)
     times = plan['branches']['times_s']

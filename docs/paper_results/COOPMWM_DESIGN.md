@@ -1,5 +1,5 @@
-# S-COOPMWM — BUDGET STOP23:36; historical registered design below
-1. Latest requested A48/B48/R24+branch plan unregistered: minimum6657440>explicit6M; RESUME_BUDGET_BLOCK_1793547402. Owner decision before physics.
+# S-COOPMWM — latest scope registered; warm MPPI release still qualification-gated
+1. MAIN23:54 allocation6473440/cap6500000/free26560; WARM2354_AMENDMENT/REGISTRATION pin exact plan; earlier budget STOP superseded.
 2. A/B/R fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
 4. A: PPO shared team reward=-J, road speed deficit plus source waiting.
@@ -13,58 +13,58 @@
 12. Reuse PPO4epochs/Adam3e-4/clip.2/KL.045; gamma exp(-1/600),lambda exp(-1/1200).
 13. Critic GAE e-folding400s; complete900s task after300s warmup, terminal0.
 14. WM fixed FULL-v4 source22cc32f6; later qualified v5 requires a new registered arm.
-15. Reuse WMTEACH futures/executors; fixed-width batches, full1600-slot forward/source/controller; compact path rejected.
-16. R=B except random acceleration profiles from identical bounds/plan space, matched count/regime/duration; noWM.
+15. Reuse WMTEACH futures/executors; speed2 masked-virgin-prefix pure geometry, full1600-slot source/controller; transfers opt-in exact parity.
+16. R=random unscored generic policy-centred profiles; matched count/regime/group-size/duration; noWM/library/covariance learning.
 17. Roster only; joint FIT driver prior/uniform32FIT source: integer round(rate*t) pseudo-counts/exposure t.
-18. Cold memory/unobserved source pseudo-exposure disclosed; not causal request conditioning; no future inputs.
-19. Inherited option group=two upstream mainline CAVs within100m; ordinary windows also sampled.
+18. Rolling60s genuine observable history -> frozen FULL-v4 encoder/motion posteriors/shrinkage; unseen prior; CRN across candidates; source pseudo-exposure disclosed.
+19. Groups2..6 anywhere/all lanes/ramp,100m chaining; >6 contiguous subsets prefer lane diversity, smallest span, downstream; disjoint rechaining.
 20. All A/B/R restart MAPPOu0 in isolated acceleration namespaces;811640superseded charges retained.
-21. MediumCEM32population x3iterations/elite8; K4H120screen,top8K8H300rescore; seeds O1-O4 xallsettings+random.
-22. Plans per-member bounded acceleration knots10s/duration10..60s; committed; sharedK8bootstrap Thompson beats BOTH baselines.
+21. Discovery-pure MPPI3iterations,N=max(32,2*members*10)rounded4,eliteceil(N/4); K4H300screen,8finalistsK8; top4 mean-positive vsMAPPO.
+22. No O1-O4 seeds; policy-centred generic smooth noise sigma.5, unique Cholesky basis; posterior bootstrap Thompson choice, beta1 initially.
 23. H60/120/300/600. D_i=J(member-revert)-J(joint); D_G=J(all-revert)-J(joint).
 24. C_G=D_G-sum(D_i); complete paired futures required, including negative values.
 25. beta starts1 per training seed; immutable update receipts supply the next update's beta.
 26. Log query mass p over eligible uncommitted decisions only; beta(type,regime); R quota exhausted=>own/p0.
 27. Target own-nonquery mass1/query0: ratio=pi_new/[(1-p)*pi_old] or0, including declined/rejected queries.
 28. Per-step clipped PPO respects singular guided-route mass; executed member residual imitation weightbeta.
-29. Original initial12cell E2 retained; acceleration E2 uses registered first12random executed TRAIN plans, RNG20261101.
+29. Original E2 retained; cold/warm qualification reuses exact-labelled00/01; acceleration E2 first12random executed TRAIN plans,RNG20261101.
 30. Exact/WM E2 keeps all background CAVs on MAPPO after decision, group commitment then MAPPO; no native reversion.
 31. Select t<=600 so all H600 twins finish by1200; full-prefix COOPFREE quartet once/window.
-32. Publish C_G and D_i sign agreement, whole-world10000bootstrap95CI plus Wilson, scale95CI.
+32. Publish C_G/D_i sign agreement, whole-world10000bootstrap95CI plus Wilson, scale95CI; 2-state qualification is descriptive, not accuracy proof.
 33. E2 runs in a2worker diagnostic thread beside PPO; serialized accounting; never reward/training gate.
 34. Zero/tie credits reported separately; scale fitted from exact data, diagnostic only.
 35. TRAIN986000..986071 primary seed20261101 only, six worlds/cell; original fresh guards/registrations retained.
-36. Check986072..986083, one/cell, independent TRAIN; never optimizer/selection input.
+36. Check986072..986083,one/cell; TRAIN50%focus(demand2400/2700,share.2/.4),12focus+12other existing worlds; same prospective schedule/arm.
 37. Every4updates checks A/B/R vs once-only MAPPO controls, J600/J900/safety; forced counts/type and SNR.
-38. Dev984000..984023 every8updates A/B/R; existing24bitwise MAPPO bytes reused; no MAPPO dev rerun.
-39. TRAIN checks every4updates and dev every8 are reporting only; no checkpoint selection/tuning.
+38. Dev984000..984023 every16updates A/B/R; existing24bitwise MAPPO bytes reused; no MAPPO dev rerun.
+39. TRAIN4/dev16 reporting only; final checkpoints fixedA/B48,R24; A completed balancedu1..4/check/Adam/RNG retained, focus startsA-u5.
 40. Final detector-first discovery uses unchanged COOPBEHAV detectors and complete exact twins.
 41. Learning checks report team return/value/KL/gradient, beta, proposal routes/acceptance/O1-O4 counts.
-42. Full fixed24updates x24episodes x1200 per A/B/R; first stopu4 allarms for viability review; seed2 dropped.
-43. Cap6000000: superseded811640; newtrain2073600; checks259200; dev259200; primaryfinal460800; Rtest115200.
-44. Newmechanics3600; calibration57600; discovery240000; allocated4280840/free1719160 not automatically spent.
+42. FixedA/B48,R24 x24episodes x1200; first B-u4 viability publication/pause retained pending owner full-run review; seed2 dropped.
+43. Cap6500000: superseded811640,train3456000,checks432000,dev201600,final460800,Rtest115200,coldB28800,failedA14400.
+44. Mechanics3600,calibration57600,discovery200000,pairedbranches691200,reusecheck600; allocated6473440/free26560 not auto-spent.
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.
 46. All failures/warmup/twins charged in full before attempts; no retries/refunds/duplicate dispatch.
 47. Primary A/B parallel first; cpuQ12nice19singlethread workers+2E2; load<=20/RAM8GiB/disk2GiB.
-48. Capacity amendment: fastest measured wide34/10 singleworker/GPU; slower unfinished4/8 trials afteru4; once/worker parity/24hdeadline.
+48. Source-bound bothGPU cold/warm EXACT0 gates; widths34/10,oneworker/GPU; hot-add same search only; final throughput/quota registration before restart.
 49. GPU CPU helpers disabled until separate frozen parity qualification; own PIDs only.
 50. Both seed guards, fresh-name exposure, immutable sources/cache/approval bindings before physics.
 51. No prohibited inputs/newenv/push; OWNER20:35 opaque v2archive+SHA256-gated literal source removal only; commit eachstep.
 52. E2 diagnostic multi-H weights normalize measured agreement on horizons with sign95CI lower>.5.
-53. Eligible windows pause for GPU queue slots, p=.95 when admitted/dense priority; numericalNexec/throughput before restart.
+53. Eligible uncommitted10s windows pause for GPU slots,p=.95 when admitted; no outcome-based sampling; numericalNexec/throughput before restart.
 54. Per-window/H report K8 joint-return advantage variance and paired-credit variance in veh-s².
 55. Frozen critic baseline is constant within window; variance is conditional WM-estimated noise.
 56. Report actual PPO advantages across TRAIN windows separately; no empirical SUMO-noise claim.
 57. Same-group CRN removes shared hidden-driver/arrival variation only to extent model supports it.
-58. Nexec10minimum/update from measured11.1728plans/h; keep GPUqueue saturated beyondmin; R count/regime/duration matched; unmet=>STOP.
+58. Nexec>=10minimum/update subject to new measured group2/4/6 throughput; bothGPUqueue saturated beyondmin; R count/regime/size/duration matched; unmet=>STOP.
 59. FINAL96=989600..989635 plus fresh990600..990659,8/cell; SHAd74f685ef75a819248bbe7bb0bef89cf0295037ff3b03b334b13ccec75c40bcc.
-60. Precharge4x96x1200=460800; MAPPO169/native/Au24/Bu24; laterR96x1200=115200; no selection/reruns.
-61. Viability A/Bu1..4 first then matchedRu1..4, pause; no final access. Fulltest only after BOTH primaryu24, Rtestlater.
+60. Precharge4x96x1200=460800; MAPPO169/native/Au48/Bu48; laterRu24=115200; no selection/reruns; R branches deferred.
+61. BranchesT300/500/700/900,H300; exact same MAPPO prefix, mismatchSTOP; MAPPO-reuse600 check first; failure+115200 needs MAIN approval.
 62. Final paired world-bootstrap95CI B-MAPPO/B-A/B-R/A-MAPPO J600/J900; percell/safety; controls reused.
-63. First12executedBstarts sampled RNG20261101 across completed updates + detector-first final twins share240000reserve.
+63. First12executedBstarts RNG20261101 + final detector-first twins share200000reserve; complete n+2 full-prefix reruns before any attempt.
 64. Trust: H300 SUMO return+critic tail-baseline; Hajek executed(type,regime) minus own(regime) residuals.
 65. 10000 world bootstrap95CI[L,U]; e=max(|mean-L|,|U-mean|); beta=min(old,max(0,U)/(|mean|+e)).
-66. Eight type x regime normal-means EB buckets: tau²=max(0,var(bucketmeans)-mean(bootstrapSE²)); weight=tau²/(tau²+SE²).
-67. Test liabilities protected; cpuP unreachable/excluded; registry/protocol+cpuQ/gpuA/gpuR audits qualify.
+66. MPPI/type x regime EB buckets: tau²=max(0,var(bucketmeans)-mean(bootstrapSE²)); weight=tau²/(tau²+SE²); O1-O4 posthoc labels only.
+67. Two Holm families per comparator B-MAPPO/B-A over{allbranch,focus},two-sidedalpha.05; whole-world clusters; focus sources exact lines/SHA in amendment.
 68. Regime=LEVERPROBE ramp+crosslane pair+union of four recorded upper-quartile CAV/density bands; observable only.
-69. World-bootstrap EB residual contrasts are selection-conditional, not causal twins; missing bucket=>pooled; no pooled evidence=>keep beta.
+69. PlansD={30,60,90,120,150,180,240,300},knots<=10; Hfinal=min(600,max(300,D+120)); same-arm/seed SUMO-positive discovered library/covariance only.

@@ -61,7 +61,7 @@ def wave(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None):
                 noise_seed=int(digest(dict(seed=SEED,world=w['seed'],wave=ident))[:15],16),
                 deterministic=deterministic,sim_s=1200,queue_root=str(root),accel_bounds=b['accel_bounds'],
                 gpu_deadline=b['gpu_deadline'],guided=not deterministic and arm in ('B','R'),
-                beta=b.get('beta',1.),N_exec=b.get('N_exec'),policy_state=actor_state(policy),**(extras or {})))
+                beta=b.get('beta',1.),N_exec=b.get('N_exec'),policy_state=actor_state(policy),warm_history=b.get('warm_history',False),**(extras or {})))
     if jobs:
         reserve(root,jobs,phase)
         from .runner import admission
@@ -131,7 +131,8 @@ def exact_plan(root,b,policy,ep,step,index,role='train'):
     diagnostic=None
     if role=='train':
         diagnostic=dict(mode='diagnostic',world_id=ep['world']['seed'],time_s=t,rows=step['rows'],group=group,
-            commands=step['commands'],policy_residuals={},plan=plan)
+             commands=step['commands'],policy_residuals={},plan=plan)
+        if 'history' in proposal:diagnostic['history']=proposal['history']
         diagnostic['state_id']=digest(diagnostic)
         write(root/'requests'/(diagnostic['state_id']+'.json'),diagnostic)
     write(root/f'ACCEL_EXACT_PLAN_{index:03}.json',dict(timestamp_utc=timestamp(),world=ep['world'],
