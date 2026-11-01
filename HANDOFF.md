@@ -59,6 +59,21 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**11:40 fresh-session reconciliation:** cpuQ uptime6.003days, NOT rebooted.
+Original WM supervisors649272/763520 both EXITED with durable STOP; cpuQ now
+reconciled5460charged=closedactual (4episodes/123decisions), gpuR2700 (2/60).
+All112fixed/random episodes134400 and mechanics4680 remain complete. No replay.
+Original gpuR oracle continuation885469 LIVE/noSTOP,6/12branches complete,
+2840charged/2280closedactual at1793504329;6000cap/GPU0 unchanged.
+BB startup before this resume passed real both-GPU parity, then stopped BEFORE
+physics on registry audit false-positive: the task's own06:00 failure report
+mentions world969147. GPU services432280/885526 EXITED, retain exact spent
+21.381694240495563+21.642283007502556=43.02397724799812GPU-s; BBphysics0.
+Do not retry its terminal one-use dispatch or reset/refund its allocation.
+Fleet final169 checkpoint receipt now delivered as `SELMAPPO_FINAL.json` (peer
+training645235 EXITED); per-CAV606968 remains LIVE, final169 receipt absent.
+Observer25348 LIVE throughnoon. cpuQ free3,049,521,152bytes; our task roots total
+296,200,608bytes. Read-only evidence `RESUME_RECONCILIATION_1793504400.json`.
 **11:35 fresh-session continuation:** original registered twelve UNSTARTED WM
 oracle branches now dispatched once on gpuR, ownPID885469, root
 `/root/c1switch2_run_oracles_8d6ceccb69058bb0`;6000sim-s cap/GPU0.
