@@ -1,14 +1,14 @@
 {
-  "unix": 1793536198.441844,
+  "unix": 1793537430.1702864,
   "protocol": "S-C1SWITCH2/v2",
   "hosts": {
     "cpuQ": {
-      "unix": 1793536199.1558862,
+      "unix": 1793537430.4756281,
       "host": "cpuQ",
       "load": [
-        0.0830078125,
-        0.203125,
-        1.40771484375
+        0.18701171875,
+        0.14453125,
+        0.44970703125
       ],
       "cpu": {
         "cpu": {
@@ -83,12 +83,12 @@
       "gpu": {}
     },
     "gpuR": {
-      "unix": 1793536200.8979816,
+      "unix": 1793537431.3901045,
       "host": "gpuR",
       "load": [
-        11.080078125,
-        9.97998046875,
-        14.142578125
+        21.04248046875,
+        27.6142578125,
+        23.9453125
       ],
       "cpu": {
         "cpu": {
@@ -199,7 +199,7 @@
           "ready": true,
           "requests": 98,
           "results": 98,
-          "elapsed_wall_s": 66021.65650057793
+          "elapsed_wall_s": 67252.1485247612
         },
         "bb": {
           "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
@@ -220,7 +220,7 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 20011.57362985611
+          "elapsed_wall_s": 21242.065646886826
         },
         "bb_startup": {
           "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -241,17 +241,17 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 32047.442650556564
+          "elapsed_wall_s": 33277.934664964676
         }
       }
     },
     "gpuA": {
-      "unix": 1793536202.6650918,
+      "unix": 1793537433.0755458,
       "host": "gpuA",
       "load": [
-        6.50048828125,
-        7.09765625,
-        7.63525390625
+        9.380859375,
+        9.35791015625,
+        8.46875
       ],
       "cpu": {},
       "gpu": {
@@ -274,7 +274,7 @@
           "ready": true,
           "requests": 90,
           "results": 90,
-          "elapsed_wall_s": 66028.3977856636
+          "elapsed_wall_s": 67258.80824947357
         },
         "bb": {
           "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
@@ -295,7 +295,7 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 20014.37459540367
+          "elapsed_wall_s": 21244.785059452057
         },
         "bb_startup": {
           "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -316,7 +316,7 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 32050.049302101135
+          "elapsed_wall_s": 33280.45977091789
         }
       }
     }
@@ -411,11 +411,11 @@
     }
   },
   "latest_task_registration": [
-    "2026-11-01 15:56 MAIN: gpuR /root/c4_heavy already moved (EXIT=0, sha verified earlier; / now 49%). gpuR data disk 97% (1.7G) blocks S-C1SWITCH2's 2 GiB gate -> moving idle /root/autodl-tmp/c4/e3data (4.9G, untouched since 10-27, lsof-checked) to gpuA archive_cpuQ_20261101/gpuR_e3data.tar; source removed only if sha256 matches (script /root/move_e3data.sh, log /root/move_e3data_20261101.log).",
     "2026-11-01 20:14 MAIN: GPUs reserved for S-COOPMWM -> S-C1SWITCH2 told to disarm/hold its GPU followers (BB continuation) until 'S-C1SWITCH2 GPU RESUME'; CPU-only work continues at nice 19. S-COOPMWM: 96-world final panel registered (a6bb1ab0), acceleration PPO + committed plans CPU-qualified (27591d6f), plan-profile GPU probe PASS (parity 0.0, WM sensitivity up to 1281 veh-s).",
     "- S-C1SWITCH2 OWNER20:14 GPU HOLD APPLIED (receipt1793535350): exact-owned Windows admission supervisor42548/create12:24:02/command verified and stopped; no GPU follower admission armed. BOTH originalWM, originalBB and continuationBB services EXITED/final receipts retained, total247680charged=closedactualsim-s and27787.12987509556GPU-s; all112fixed/random+fleet16episodes/96oracles+originalWM36oracles COMPLETE, WM6episodes only/primarypanel incomplete. Durable OWNER2014_GPU_HOLD.json plus preclaim GPU-service/model/supervisor guards; CPU8PASS/RuffPASS. Await explicit later MAIN GPU resume authority and reconcile flag before any new inference; no terminal science retry/claim reset authorised. CPU-only final169per-CAV delivery received; prepare under original89900sim-s/GPU0 only/nice19 below S-COOPMWM, disk/load gates retained. cpuQfree2106318848bytes/ownoutputs356383743bytes, no deletion/newphysics/peerPIDsignals/newenv/push.",
     "- S-C1SWITCH2 FINAL PER-CAV EVALUATION REGISTERED BEFORE COMPUTE (buildae34e17d; original MAIN01:48 final-only authority, OWNER20:14 GPU hold retained): genuine final169 checkpointSHA25682c6745bac50aaf4dee98f5d8b3c60db0e5e558d9abf4667dd8e605774f4b3c4, deliverySHA9ae72e2702aac270afb97e0dce555006c651c040925f3885127e40ba18ced30e from S-SELMAPPO2 immutable buildc141d571; SAME16world PANEL_v2SHA7c780c25237dde73a657937ab577b8e48f71766817f4363f3298982e90144827, original12cpuQ/4gpuR partition, cadence20s/30choices/1200sepisodes/fullteamJ600/J900 unchanged. ONLY original cav_mappo arm89900sim-s=19200episodes+60600sixway fullprefix oracles+10100heldjoint branches; cpuQ71660/gpuR18240/GPU0. Source-bound training shared runtime/observations/model plus exact mixed grouped-WALL executor validated before actual final-policy CPU probe and immutable host preflight; no checkpoint selection/training restart or peer evaluation. Local109CPU PASS/RuffPASS, final host preflights required BEFORE one-use per-host claims, duplicate arm claims across taskroots refused. Nice19/CUDAhidden/singlethread start1worker/host, <=14cpuQ/4gpuR, yield load28/20 and disk>=2GiB, below S-COOPMWM; no relocation if disk fails. Existing247680sim-s/27787.12987509556GPU-s preserved; totalbase468380sim-s/19GPUh unchanged, PHYSOFF/finalruleFAIL, WM6episodes/primarypanel stillincomplete, BBterminal/no new attempt. At registration newphysics/GPU0; no deletion/newenv/push/peerPIDsignals.",
-    "- S-C1SWITCH2 PER-CAV CONSTRUCTION STOP / UNSTARTED CPUQ REPAIR REGISTERED (6f6fa0d9; OWNER20:14 GPU hold retained): own gpuR973470 terminalSTOP during first969139 backend construction, zero controlleddecisions,300sim-s charged/noCLOSE so closedactual0not300; retained original89900armcap and allclaims. Error: frozen CommandOwnership lacks execute_residual; evaluation overlay incorrectly saved missing hook, while training installs it even when absent. CPU repair mirrors training installation, preserves exact prior hook presence/converter at fleet handback; realpeer groupedWALL regression BOTHABIs,37targetedCPU/RuffPASS. NO failedgpuRworld/scope replay or automaticretry; explicit MAIN continuation scope requested for other3whollyunstartedgpuRworlds. OriginalcpuQstagec1c922c5 UNCLAIMED/zerojobs/zeroledger after disk preclaimrefusal; corrected immutable stage may replace ONLY this whollyunusedstage, retaining its binding/preflight/proof. Its original12worlds/71660sim-s/GPU0 unchanged, genuinefinal169/peers/panel/indices unchanged; re-run new immutableCPUpreflight BEFORE firstdispatch. New CPU-only supervisor observes20min/commitsprogress, resource60s, admits ONLY originalunclaimedcpuQcav_mappo at1nice19worker/load28/disk>=2GiB and remoteemptyclaimproof; durableonce-attempt forbids automatic science retry; noGPU admissionpath/BBfollower. Old42548EXITED required, deadline originalNov2noon. Aggregate247980charged/247680closedactualsim-s/GPU27787.12987509556s; no capincrease/refund/deletion/newenv/push/peerPIDsignals."
+    "- S-C1SWITCH2 PER-CAV CONSTRUCTION STOP / UNSTARTED CPUQ REPAIR REGISTERED (6f6fa0d9; OWNER20:14 GPU hold retained): own gpuR973470 terminalSTOP during first969139 backend construction, zero controlleddecisions,300sim-s charged/noCLOSE so closedactual0not300; retained original89900armcap and allclaims. Error: frozen CommandOwnership lacks execute_residual; evaluation overlay incorrectly saved missing hook, while training installs it even when absent. CPU repair mirrors training installation, preserves exact prior hook presence/converter at fleet handback; realpeer groupedWALL regression BOTHABIs,37targetedCPU/RuffPASS. NO failedgpuRworld/scope replay or automaticretry; explicit MAIN continuation scope requested for other3whollyunstartedgpuRworlds. OriginalcpuQstagec1c922c5 UNCLAIMED/zerojobs/zeroledger after disk preclaimrefusal; corrected immutable stage may replace ONLY this whollyunusedstage, retaining its binding/preflight/proof. Its original12worlds/71660sim-s/GPU0 unchanged, genuinefinal169/peers/panel/indices unchanged; re-run new immutableCPUpreflight BEFORE firstdispatch. New CPU-only supervisor observes20min/commitsprogress, resource60s, admits ONLY originalunclaimedcpuQcav_mappo at1nice19worker/load28/disk>=2GiB and remoteemptyclaimproof; durableonce-attempt forbids automatic science retry; noGPU admissionpath/BBfollower. Old42548EXITED required, deadline originalNov2noon. Aggregate247980charged/247680closedactualsim-s/GPU27787.12987509556s; no capincrease/refund/deletion/newenv/push/peerPIDsignals.",
+    "- S-C1SWITCH2 OWNER20:14 CPU-ONLY SUPERVISION LIVE (6f6fa0d9/firstheartbeatd37e3281; receipt1793536230): ownWindows20260 LIVE/old42548EXITED,20minprogress+commits/60sresourcecheck throughoriginalNov2 12:14+08. CorrectedcpuQ immutable root10950e88a99994d0 passes148CPU/1hostonlyskip, BOTHguards17, realfinal169/shared+mixedfactoryPASS; oldc1c922c5 provenUNCLAIMED/zeroledger/jobs and preserved. Original12world/71660sim-s/GPU0 scope stillUNSTARTED: disk2090872832bytes<2GiB, ownoutputs364485860bytes; no deletion/relocation. Observer can admit ONLY that CPU scope ONCE/1nice19worker after resource/source/registry/finalpolicy gates; noGPU/gpuR/BB admissionpath. AllownedGPUservicesEXITED/OWNER2014_GPU_HOLD active, no new inference; aggregate247980charged/247680closedactualsim-s/finalGPU27787.12987509556s unchanged. Final local153CPU/RuffPASS; allfinishedscopes retained, originalgpuRper-CAV terminal300charge/noCLOSE/zerochoices and no rerun. MAIN notice E:/agent-work/_sol/C1SWITCH2_OWNER2014_STATUS.md requests cpuQdisk relief and explicit unused3worldgpuR continuation scope; WM primarypanel remainsincomplete/no efficacyCI. No peerPIDsignals/newenv/push."
   ],
   "final_checkpoint_receipts": {
     "SELMAPPO_FINAL.json": true,
@@ -424,7 +424,18 @@
   "owner2014": {
     "pid": 20260,
     "gpu_hold": true,
-    "admission": null,
+    "admission": {
+      "unix": 1793537368.289838,
+      "status": "WAIT_CPU_DISK_NO_CLAIM",
+      "states": {
+        "load": 0.11279296875,
+        "free_bytes": 2068176896,
+        "claimed": false,
+        "stopped": false,
+        "jobs": false,
+        "ledger": false
+      }
+    },
     "admission_error": null
   }
 }
