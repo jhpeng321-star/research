@@ -1,0 +1,74 @@
+{
+  "status": "PASS",
+  "source_cells": 47,
+  "sources": {
+    "audit": {
+      "source_path": "E:/agent-work/c4-coopmeasure/tools/coopaudit/evidence/v2_analysis/COOPAUDIT.csv",
+      "source_sha256": "0abe14ec6f66b030422d34031d9573adbe16f1f36d2fe6b6ec98eff71f8a22be",
+      "snapshot": "source_snapshots/audit_v2_csv_0abe14ec6f66b030.csv"
+    },
+    "value": {
+      "source_path": "E:/agent-work/c4-wmvalue/tools/wmvalue/evidence/short_test.json",
+      "source_sha256": "7dcebed8a07b913280e31a1c348bf85a64def163d74c110de2cb59e2f45fff7c",
+      "snapshot": "source_snapshots/wmvalue_short_test_7dcebed8a07b9132.json"
+    },
+    "planner": {
+      "source_path": "E:/agent-work/c4-coopplan/docs/paper_results/coopplan/extension/final/SUMMARY.json",
+      "source_sha256": "13054b89c4a37fdfc96934b016ac53e4c88bfa12c46a73c5e1ad0a2da7044b75",
+      "snapshot": "source_snapshots/coopplan_summary_13054b89c4a37fdf.json"
+    },
+    "h300": {
+      "source_path": "E:/agent-work/c4-coopplan/docs/paper_results/coopplan/h300/final/SUMMARY.json",
+      "source_sha256": "1a5ec2b0dbf310e49247e8593fb99caf46e88aeaf778dfdba21540908526a54d",
+      "snapshot": "source_snapshots/coopplan_h300_summary_1a5ec2b0dbf310e4.json"
+    },
+    "worlds": {
+      "source_path": "E:/agent-work/c4-coopplan/docs/paper_results/coopplan/extension/final/pooled36.csv",
+      "source_sha256": "c8ad986376cfa3ff1687e95e79da95f49ec4c38564ad2741e45faebf58599c97",
+      "snapshot": "source_snapshots/coopplan_worlds_c8ad986376cfa3ff.csv"
+    }
+  },
+  "artifacts": {
+    "figures/F2_corrected_controller_audit.csv": {
+      "sha256": "c1a8bd838e6c95124a3e8ea98051ebef33ff07bdfd6f4ecd7b12507b99fd8f5e",
+      "bytes": 5390
+    },
+    "figures/F2_corrected_controller_audit.png": {
+      "sha256": "2aa1af4047cf570e3af382199008a5c1d03777a351d57db8e9c252bb0ff6bd9c",
+      "bytes": 150525
+    },
+    "figures/F2_corrected_controller_audit.pdf": {
+      "sha256": "a677b89dceff16f5652342a45d91bf5f6d749921458a961cc9ae3dd1f9329340",
+      "bytes": 29527
+    },
+    "figures/F3V_failed_wm_value_gate.csv": {
+      "sha256": "ff88aa56f37d5122240feaaec79dacf75af8de4c7f6679ca0e71bb2e44c94b11",
+      "bytes": 7876
+    },
+    "figures/F3V_failed_wm_value_gate.png": {
+      "sha256": "be4d73a69b4a7194175eb6f5cd56c8f33b8f144a592487e71c50a08ff2f3bbab",
+      "bytes": 161286
+    },
+    "figures/F3V_failed_wm_value_gate.pdf": {
+      "sha256": "506a5a541bd15345e3b0bdb549853b24fa34993257ca29924f3754428deb3254",
+      "bytes": 22422
+    },
+    "figures/F6_exact_model_planner.csv": {
+      "sha256": "607802246b0bece86f9e93b93caf4ce650fb5beb5fb9059abc8db6f3bc6a38a0",
+      "bytes": 6383
+    },
+    "figures/F6_exact_model_planner.png": {
+      "sha256": "fca100b64d5fb3d6f9587498d59b4e521aecdda14eec0370967364e9f7e690ec",
+      "bytes": 264940
+    },
+    "figures/F6_exact_model_planner.pdf": {
+      "sha256": "934a7c17f94cf4823a1037ec8686cb22fedc83243a212a2162a1603b6715e1a6",
+      "bytes": 29639
+    },
+    "figures/F6_pooled36_source_worlds.csv": {
+      "sha256": "c8ad986376cfa3ff1687e95e79da95f49ec4c38564ad2741e45faebf58599c97",
+      "bytes": 4163
+    }
+  },
+  "scope": "Pinned source values/copied CIs/algebra/world-CSV identities/image integrity; no new statistics"
+}
