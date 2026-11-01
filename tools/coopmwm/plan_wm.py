@@ -11,24 +11,24 @@ from .fused import FusedModel
 from .warm_runtime import adapter as warm_adapter
 
 
-def profile_table(actions, ids, device):
+def profile_table(actions, ids, device, horizon=300, dynamic_policy=False):
     """Compile once, avoiding per-step CPU rosters or per-vehicle GPU reads."""
-    raw=torch.zeros((len(actions),300,len(ids)),device='cpu')
+    raw=torch.zeros((len(actions),int(horizon),len(ids)),device='cpu')
     mask=torch.zeros_like(raw,dtype=torch.bool)
     residual=torch.zeros_like(mask)
     slots={v:i for i,v in enumerate(ids)}
     for b,a in enumerate(actions):
-        for t in range(300):
+        for t in range(int(horizon)):
             # All unchanged CAVs retain the SAME own-action continuation; after
             # commitment the selected group rejoins that continuation as well.
-            background=a.get('background_residuals',{})
+            background={} if dynamic_policy else a.get('background_residuals',{})
             for v,x in background.items():
                 if v in slots:
                     raw[b,t,slots[v]]=x;mask[b,t,slots[v]]=True;residual[b,t,slots[v]]=True
             if 'knots' in a or 'profile' in a:
                 values=acceleration_at(a,t);is_residual=False
             else:
-                values=a.get('residuals',{}) if t<a.get('window',0) else {};is_residual=True
+                values=a.get('residuals',{}) if t<a.get('window',0) and not dynamic_policy else {};is_residual=True
             for v,x in values.items():
                 if v not in slots:continue
                 raw[b,t,slots[v]]=x;mask[b,t,slots[v]]=True;residual[b,t,slots[v]]=is_residual
@@ -47,7 +47,7 @@ def profile_apply(accel,tick,table,bounds):
 
 
 @contextmanager
-def plan_executor():
+def plan_executor(horizon=300, policy=None, trace=None):
     """Keep original bridge, memory, lane mask, cap, and safe_accel implementation."""
     from tools.wmteach import runtime
     original=runtime.option_controller
@@ -56,21 +56,31 @@ def plan_executor():
     # Inherited fixed targets are irrelevant to acceleration profiles.
     for i,node in enumerate(outer.body):
         if isinstance(node,ast.Assign) and any(isinstance(x,ast.Name) and x.id=='fixed' for x in node.targets):
-            outer.body[i]=ast.parse("table=profile_table(candidate_actions,ids,next(mp.policy.parameters()).device)").body[0]
+            outer.body[i]=ast.parse("table=profile_table(candidate_actions,ids,next(mp.policy.parameters()).device,horizon,dynamic_policy=policy is not None)").body[0]
     for node in ast.walk(tree):
         if isinstance(node,ast.FunctionDef) and node.name=='injected':
             matches+=1
-            node.body=ast.parse("return safe_accel(state,profile_apply(accel,tick,table,(mp.policy.accel_min,mp.policy.accel_max)),**kw)").body
+            node.body=ast.parse("raw=decode(state,accel,tick,table,(mp.policy.accel_min,mp.policy.accel_max),candidate_actions,ids)\nreturn safe_accel(state,raw,**kw)").body
     if matches!=1:raise ValueError('inherited pre-safety ABI changed')
     ast.fix_missing_locations(tree)
-    ns=dict(original.__globals__,profile_table=profile_table,profile_apply=profile_apply)
+    held=[None]
+    def decode(state,accel,tick,table,bounds,actions,ids):
+        if policy is not None:
+            from .policy_wm import residuals
+            if tick%2==0 or held[0] is None:held[0]=residuals(policy,state,ids)
+            own=torch.tensor([a['id']!='MAPPO' for a in actions],device=accel.device)[:,None]
+            accel=accel+held[0]*own
+        raw=profile_apply(accel,tick,table,bounds)
+        if trace is not None and tick%2==0:trace.append(raw.detach().clone())
+        return raw
+    ns=dict(original.__globals__,profile_table=profile_table,horizon=horizon,policy=policy,decode=decode)
     exec(compile(tree,'<coopmwm-acceleration-profile-decoder>','exec'),ns)
     runtime.option_controller=ns['option_controller']
     try:yield
     finally:runtime.option_controller=original
 
 
-def evaluate(rt,record,actions,K,H,chunk_actions=4,trim=True,pad_actions=False,horizons=None,speed2=False,memory=None):
+def evaluate(rt,record,actions,K,H,chunk_actions=4,trim=True,pad_actions=False,horizons=None,speed2=False,memory=None,trace=None):
     """Same source draws, CRN keys, insertions, departure loop and J reducer.
 
     A single compact-forward proxy retains full virgin-slot controller memory.
@@ -81,7 +91,11 @@ def evaluate(rt,record,actions,K,H,chunk_actions=4,trim=True,pad_actions=False,h
     proxy=FusedModel(rt.model,1,trim_absent=trim or speed2);proxy.local.index=0
     from .speed2_runtime import ledger,compact_geometry
     runtime=SimpleNamespace(**vars(rt));runtime.model=proxy
-    with (memory.context(rt,record) if memory is not None else warm_adapter(rt,record)),(compact_geometry(proxy) if speed2 else nullcontext()),executor_adapter(),plan_executor():
+    policy=None
+    if record.get('policy_state') is not None:
+        from .policy_wm import load_actor
+        policy=load_actor(record['policy_state'],next(rt.mp.policy.parameters()).device)
+    with (memory.context(rt,record) if memory is not None else warm_adapter(rt,record)),(compact_geometry(proxy) if speed2 else nullcontext()),executor_adapter(),plan_executor(H,policy,trace):
         for start in range(0,len(actions),chunk_actions):
             subset=actions[start:start+chunk_actions]
             subset=[dict(a,background_residuals=record['policy_residuals']) if ('knots' in a or 'profile' in a) else a for a in subset]

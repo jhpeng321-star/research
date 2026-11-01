@@ -76,9 +76,10 @@ class Controller:
             sample = copy.deepcopy(self.replay[str(int(now))])
         else:
             sample, self.memory = self.policy.sample(context, self.generator, self.deterministic, self.memory)
-        from .plans import group as observable_group
-        observed_group=observable_group(rows)
-        if self.replay is None and not self.deterministic and int(now)%10==0 and len(observed_group)==2:
+        from .mppi_search import group_components
+        groups=group_components(rows)
+        observed_group=groups[0]['members'] if groups else []
+        if self.replay is None and not self.deterministic and int(now)%10==0 and len(observed_group)>=2:
             sample['behaviour']=dict(route='policy',executed=False,sample_probability=0.,q=0.,regime=regime(rows))
         proposal = None
         if self.plan and now >= self.plan_start+self.plan['duration_s']:

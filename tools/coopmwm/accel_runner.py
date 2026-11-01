@@ -50,6 +50,7 @@ def diagnostic_task(root,b,state,ep,step,index):
 
 def wave(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None):
     jobs=[];results=[]
+    from .policy_wm import actor_state
     for w in ws:
         for arm,policy in policies.items():
             key=f'{ident}_{arm}_{w["seed"]}';path=root/'jobs'/key
@@ -60,7 +61,7 @@ def wave(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None):
                 noise_seed=int(digest(dict(seed=SEED,world=w['seed'],wave=ident))[:15],16),
                 deterministic=deterministic,sim_s=1200,queue_root=str(root),accel_bounds=b['accel_bounds'],
                 gpu_deadline=b['gpu_deadline'],guided=not deterministic and arm in ('B','R'),
-                beta=b.get('beta',1.),N_exec=b.get('N_exec'),**(extras or {})))
+                beta=b.get('beta',1.),N_exec=b.get('N_exec'),policy_state=actor_state(policy),**(extras or {})))
     if jobs:
         reserve(root,jobs,phase)
         from .runner import admission
@@ -100,8 +101,8 @@ def routing(episodes):
         executed=sum(b.get('executed',False) and b.get('plan_start',False) for b in xs))
     return dict(counts(bs),by_regime={r:counts([b for b in bs if b.get('regime')==r]) for r in ('merge-dense','ordinary')},
         by_bucket={o+'|'+r:counts([b for b in bs if b.get('option')==o and b.get('regime')==r])
-            for o in ('O1','O2','O3','O4') for r in ('merge-dense','ordinary')},
-        durations=[dict(regime=b['regime'],duration_s=b['duration_s']) for b in executed],
+            for o in ('O1','O2','O3','O4','MPPI') for r in ('merge-dense','ordinary')},
+        durations=[dict(regime=b['regime'],duration_s=b['duration_s'],group_size=b.get('group_size',len(b.get('proposal_members',[])))) for b in executed],
         candidates_searched=sum(b.get('candidates_searched') or 0 for b in bs),
         query_wait_wall_s=sum(b.get('query_wall_s',0.) for b in bs),
         eligible_query_windows=len(eligible),
@@ -208,6 +209,8 @@ def run(root,smoke_only=False):
         write(root/'TRAINING_STARTED.json',dict(timestamp_utc=timestamp(),search=SEARCH,N_exec=b['N_exec'],
             eta_primary_hours=b['eta_primary_hours'],charged_sim_s=charged(root)))
         primary={};exact_count=0;exact_rng=np.random.default_rng(SEED)
+        from . import search_learning
+        learned=search_learning.empty('B',SEED,b['accel_bounds'])
         controls=read(root/'MAPPO_CHECK.json')['records']
         for arms in (('A','B'),('R',)):
             policies={};opts={};rngs={};running={a:[] for a in arms};betas={a:1. for a in arms}
@@ -216,7 +219,7 @@ def run(root,smoke_only=False):
                 rngs[a]=torch.Generator().manual_seed(SEED)
                 save(root/f'{a}_checkpoint_000.pt',policies[a],opts[a],rngs[a],0,charged(root))
             for u in range(1,update_limit(b)+1):
-                start=time.monotonic();extra=dict(update=u)
+                start=time.monotonic();extra=dict(update=u,search_learning=learned) if 'B' in arms else dict(update=u)
                 if arms==('R',):extra['random_quota']=str(root/f'B_RANDOM_QUOTA_{u:03}.json')
                 # Each arm's trust differs after update1; keep the same common
                 # worker pool while passing arm-specific immutable trust states.
@@ -234,10 +237,13 @@ def run(root,smoke_only=False):
                         if a=='R':
                             q=read(root/f'B_RANDOM_QUOTA_{u:03}.json')
                             for r in ('merge-dense','ordinary'):
-                                expected=sorted(t['duration_s'] for t in q['tickets'] if t['regime']==r)
-                                actual=sorted(t['duration_s'] for t in routes['durations'] if t['regime']==r)
+                                expected=sorted((t['group_size'],t['duration_s']) for t in q['tickets'] if t['regime']==r)
+                                actual=sorted((t['group_size'],t['duration_s']) for t in routes['durations'] if t['regime']==r)
                                 if actual!=expected:raise ValueError('R count/regime/duration matching gate unmet')
                     ev=evidence(eps);running[a]+=ev
+                    if a=='B':
+                        learned=search_learning.update(learned,eps,ev,a,SEED)
+                        write(root/f'B_SEARCH_LEARNING_{u:03}.json',learned)
                     vr=viability(ev)
                     # Publish real-SUMO evidence BEFORE any optimizer work.
                     write(root/f'{a}_VIABILITY_{u:03}.json',dict(timestamp_utc=timestamp(),update=u,arm=a,viability=vr,routing=routes))

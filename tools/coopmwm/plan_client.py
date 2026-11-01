@@ -4,7 +4,7 @@ from pathlib import Path
 import time
 import numpy as np
 import torch
-from .plans import group,family_seeds,population
+from .mppi_search import group_components,sample_unscored
 from .protocol import digest
 from .storage import read,write
 from .exploration import regime
@@ -27,12 +27,10 @@ def guide(job,generator):
     root=Path(job['queue_root']);bounds=tuple(job['accel_bounds'])
     quota=read(Path(job['random_quota'])) if job.get('random_quota') else None
     def call(rows,commands,now,sample):
-        if int(now)%10 or now>1140:return None
-        members=group(rows)
-        if len(members)!=2:return None
-        from tools.wmteach.labels import actions
-        if not any(a['id']!='O0' and set(a['members'])<=set(members) for setting in range(4) for a in actions(rows,setting)):
-            return None
+        if int(now)%10 or now>900:return None
+        groups=group_components(rows)
+        if not groups:return None
+        chosen_group=groups[0];members=chosen_group['members']
         traffic=regime(rows);selected_ticket=None
         if job['arm']=='A':
             sample['behaviour']=dict(route='policy',sample_probability=0.,mixture_mass=0.,
@@ -56,7 +54,10 @@ def guide(job,generator):
             with (match/'MATCH.claim').open('a') as lock:
                 fcntl.flock(lock,fcntl.LOCK_EX)
                 used=used_tickets(match)
-                remaining=any(t['regime']==traffic and t['id'] not in used for t in quota['tickets'])
+                available=[t for t in quota['tickets'] if t['regime']==traffic and t['id'] not in used]
+                chosen_group=next((g for g in groups if any(t['group_size']==g['size'] for t in available)),None)
+                remaining=chosen_group is not None
+                if remaining:members=chosen_group['members']
             p=quota['sampling'][traffic] if remaining else 0.
         queried=float(torch.rand((),generator=generator))<p
         b=dict(route='wm' if queried else 'policy',sample_probability=p,mixture_mass=p,
@@ -65,7 +66,9 @@ def guide(job,generator):
         if not queried:return None
         deltas={v:float(a[0]) for v,a in zip(sample['context']['members'],sample['own_action'])}
         r=dict(world_id=job['world']['seed'],time_s=int(now),rows=rows,group=members,
-            commands=commands,policy_residuals=deltas,history=history.snapshot(now))
+             commands=commands,policy_residuals=deltas,history=history.snapshot(now))
+        if job.get('policy_state') is not None:r['policy_state']=job['policy_state']
+        if job.get('search_learning') is not None and quota is None:r['search_learning']=job['search_learning']
         r['state_id']=digest(dict(record=r,job=job['id']))
         if quota is None:
             request=root/'requests'/(r['state_id']+'.json');response=root/'responses'/request.name
@@ -83,17 +86,19 @@ def guide(job,generator):
             with (match/'MATCH.claim').open('a') as lock:
                 fcntl.flock(lock,fcntl.LOCK_EX)
                 used=used_tickets(match)
-                selected_ticket=next((t for t in quota['tickets'] if t['regime']==traffic and t['id'] not in used),None)
+                selected_ticket=next((t for t in quota['tickets'] if t['regime']==traffic and t['group_size']==len(members) and t['id'] not in used),None)
                 if selected_ticket is not None:
                     write(match/(r['state_id']+'_START.json'),dict(ticket=selected_ticket['id']))
             if selected_ticket is None:
                 return dict(accepted=False,reason='matched quota exhausted',behaviour=b)
-            seeds=family_seeds(rows,members,commands,bounds)
-            rng=np.random.default_rng(int(torch.randint(2**31,(),generator=generator)))
-            plan=population(r,rng,bounds,seeds,1)[0]
-            plan['duration_s']=selected_ticket['duration_s']
+            # Model-free current-command continuation; no WM evaluation, labels,
+            # library or learned covariance enters R's random choice.
+            centre=[[float(np.clip(commands[v]+deltas[v],*bounds))]*300 for v in members]
+            plan=sample_unscored(chosen_group,centre,bounds,traffic,
+                int(torch.randint(2**31,(),generator=generator)),duration_s=selected_ticket['duration_s'])
             result=dict(accepted=True,plan=plan,option=plan['family'],expected_saving=None,
-                known_family=False,record_sha256=digest(r),random_match=dict(path=str(match),key=r['state_id']))
+                known_family=False,record_sha256=digest(r),random_match=dict(path=str(match),key=r['state_id']),
+                centre_contract='model-free current-policy raw-command continuation; no WM')
         b.update(queried_option=result.get('option'),proposal_accepted=result['accepted'],
             query_wall_s=result.get('query_wall_s',0.))
         if result['accepted']:
@@ -101,6 +106,7 @@ def guide(job,generator):
                 expected_saving=result.get('expected_saving'),predicted_rank=result.get('predicted_rank'),
                 known_family=result.get('known_family'),duration_s=result['plan']['duration_s'],
                 candidates_searched=result.get('candidates_searched'),iterations=result.get('iterations'))
+            b['group_size']=len(result['plan']['members'])
         result['behaviour']=b
         return result
     def completed(proposal,executed):

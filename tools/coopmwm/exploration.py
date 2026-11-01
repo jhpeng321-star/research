@@ -17,7 +17,7 @@ from tools.coopfree.policy import gaussian_log_prob
 # GPU-bound prospective sampling rates, fixed before physical outcomes.
 GROUP_RATE = 1/900
 ORDINARY_RATE = 1/3600
-OPTIONS = ('O1', 'O2', 'O3', 'O4')
+OPTIONS = ('O1', 'O2', 'O3', 'O4', 'MPPI')
 REGIMES = ('merge-dense', 'ordinary')
 BUCKETS = tuple(o+'|'+r for o in OPTIONS for r in REGIMES)
 # LEVERPROBE RECORDED_QUANTILES.json: original four TRAIN-cell upper quartiles.

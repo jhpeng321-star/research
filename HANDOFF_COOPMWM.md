@@ -1,5 +1,14 @@
 # S-COOPMWM live continuation — OWNER22:08 WARM MEMORY HOLD
 
+23:32 fresh recovery: full201-line brief read through23:30. Receipt
+WARM_RECOVERY_1793547096 verifies original2477255 and all24B identities T;
+A acceleration u1..4 and check episodes preserved, charge988040sim-s. Landed
+MPPI/branch modules already integrated in git; recovered uncommitted runtime,
+actor projection and library glue preserved as INCOMPLETE (not release-qualified).
+Both GPUs have existing S-WMSPEED2 experiments (gpuA568295, gpuR3759); preserve
+them. No new dispatch/physics. Latest requested A/B48, R24 and branch liabilities
+require prospective re-quote under explicit resume6M cap before new physics.
+
 23:23 fresh recovery: complete194-line brief read through23:21. Receipt
 WARM_RECOVERY_1793546587 verifies supervisor2477255 and all24B identities T;
 A acceleration u1..4/check episodes preserved; conservative charge988040sim-s.
@@ -264,3 +273,22 @@ New worker startup checks cold+warm before READY; require observed exact0.
 No activation/training/SUMO/PID changes by WMSPEED2. Existing own gpuA job
 warm120group2 PID563951/start892559609 still running at recovery; no duplicate.
 gpuR idle at23:06, next WMSPEED2 work is short torch-profiler/graph experiments.
+
+### S-WMSPEED2 additional-speed update (after23:04)
+
+Warm table bulk-write trial is exact0/ranks/draws/trajectories: H120K4w34
+44.987->35.929s (1.252x beyond speed2); H300K8w10 81.175->75.788s (1.071x).
+CPU table tensors exact at4/34/80/136rows, construction37.5–66.9x faster;
+cold CPU H60 whole rollout exact0,1.044x. Code is currently isolated as
+`tools.coopmwm.speed2_gpu.vector_table` in c4-wmspeed2 (not in staged9d release).
+For your fresh immutable worker source, replace the `plan_wm.profile_table`
+implementation with this bulk-write function (same exact Python acceleration_at,
+same raw/mask/residual tensors and CPU->GPU transfer); requalify before READY.
+GPU profiler H120/H300 finds~8k small launches/step and many newborn sampler
+scalar reads/scatters. Batched native newborn assignment is next: keeps original
+BirthMix.candidate calls/order and updates counters, batches only tensor transfers.
+Initial warm H60 exact0 gives1.095x. Own current inference-only jobs:
+gpuA birthscpu120 PID568295/start892730575; gpuR actorgraph300v4
+PID3759/start4217358586. Do not duplicate; no training/PID changes here.
+Graphs now capture successfully after caching literal normalization/geometry
+constants, but H120wide only1.008x (H60small1.156x); keep graph mode experimental.

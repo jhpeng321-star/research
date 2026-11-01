@@ -523,13 +523,16 @@ def _span(cfg, durations, D):
     return durations[-1] if cfg['frame'] == 'absolute' else D
 
 
-def sample_unscored(group, policy_traj, bounds, regime, seed, covariance=None, config=None):
+def sample_unscored(group, policy_traj, bounds, regime, seed, covariance=None, config=None, duration_s=None):
     """Arm R: one generic correlated perturbation of the policy, NOT scored by the WM."""
     cfg = dict(REGISTERED, **(config or {})); durations = allowed_durations(cfg['durations_s'], cfg['max_duration_s'])
     m = len(group['members']); rng = np.random.default_rng(seed)
     mu, cov, pd = _distribution(cfg, m, durations, covariance, regime, default_sigma(bounds))
     z = mu+_sampler(cov)@rng.standard_normal(mu.size)
     D = int(durations[rng.choice(len(durations), p=pd)])
+    if duration_s is not None:
+        if duration_s not in durations:raise ValueError('unregistered matched duration')
+        D=int(duration_s)
     nc = canonical_knots(durations[-1])
     return build_plan(group, policy_traj, z.reshape(m, nc), D, bounds, 'sampled', regime, 'R',
                       span_s=_span(cfg, durations, D), n_canon=nc)

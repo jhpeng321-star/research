@@ -27,6 +27,7 @@ def request_memory(rt,record,binding):
     allowed={'state_id','world_id','time_s','rows','group','commands','policy_residuals'}|({'mode','plan'} if diagnostic else set())
     if 'warm_memory' in record:allowed.add('warm_memory')
     if 'history' in record:allowed.add('history')
+    allowed|={k for k in ('policy_state','search_learning') if k in record}
     if set(record)!=allowed:raise ValueError('observable plan request whitelist')
     if 'history' in record and 'warm_memory' in record:
         raise ValueError('ambiguous warm memory payload')
@@ -50,9 +51,9 @@ def main(root):
     from tools.wmteach.runtime import bootstrap
     from .wm import cost_adapter
     from .plan_wm import evaluate
-    from .plans import search
     rt=configured_runtime(bootstrap,binding.get('memory_fraction',.65))
-    rt.frozen.costs=cost_adapter(rt.frozen.costs,read(root/'FROZEN_COSTS.json')['code'])
+    rt.frozen.costs=cost_adapter(rt.frozen.costs,read(root/'FROZEN_COSTS.json')['code'],
+        horizons=(60,120,300,360,420,600))
     speed2=binding.get('speed2',False)
     if speed2 and not binding.get('startup_qualification'):
         raise ValueError('speed2 requires source-bound startup qualification')
@@ -106,8 +107,8 @@ def main(root):
             from .accel_diagnostic import evaluate as credit
             result=credit(rt,r,speed2=speed2,memory=memory)
         else:
-            result=search(r,(float(rt.mp.policy.accel_min),float(rt.mp.policy.accel_max)),
-                lambda a,k,h:evaluate(rt,r,a,k,h,chunk_actions=batch_width(binding,k),trim=False,pad_actions=batch_width(binding,k),speed2=speed2,memory=memory))
+            from .mppi_runtime import plan
+            result=plan(rt,r,memory,binding)
         payload=dict(key=key,result=result,wall_s=time.monotonic()-start,unix=time.time())
         write(dest,payload);emit('RESULT',**payload)
 

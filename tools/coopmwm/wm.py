@@ -199,7 +199,7 @@ def canary(rt,record,result):
     return dict(pass_=True,max_team_cost_error=worst,serial_future=0,indices=list(range(8)),new_sumo_sim_s=0)
 
 
-def cost_adapter(fn,source=None):
+def cost_adapter(fn,source=None,horizons=None):
     """Add H60 to the qualified reducer, without introspecting exec/linecache.
 
     The frozen producer execs reference snippets under a shared synthetic
@@ -220,7 +220,7 @@ def cost_adapter(fn,source=None):
             nonlocal count
             if all(isinstance(v,ast.Constant) for v in node.elts) and [v.value for v in node.elts]==[90,120,300,600]:
                 count+=1
-                return ast.copy_location(ast.Tuple([ast.Constant(h) for h in HORIZONS],ast.Load()),node)
+                return ast.copy_location(ast.Tuple([ast.Constant(h) for h in (horizons or HORIZONS)],ast.Load()),node)
             return self.generic_visit(node)
     tree=Horizons().visit(tree);ast.fix_missing_locations(tree)
     if count!=1:raise ValueError('frozen team-cost horizon ABI changed')
