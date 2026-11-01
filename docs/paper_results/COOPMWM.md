@@ -1,5 +1,22 @@
 # S-COOPMWM — live checks
 
+## 19:56 — acceleration CPU and enlarged-panel registration
+- CPU29 **65 PASS / zero skips / zero SUMO**, including real frozen MAPPO
+  executor byte parity at1s, AR conditional density, committed acceleration
+  profiles, Thompson dual-comparator gate and all96worlds through both seed guards.
+- Fresh60metadata worlds **990600–990659**, five/cell, augment original36 to
+  **96worlds/eight per cell**. Registry+539safe protocol files and all admitted
+  host filename audits have **zero exposures**. cpuP remains excluded.
+- Panel SHA256 `d74f685ef75a819248bbe7bb0bef89cf0295037ff3b03b334b13ccec75c40bcc`.
+  Primary MAPPO/native/A/B once after fixedu24, R later once; no outcome access yet.
+- Registered allocation **4,280,840 /6,000,000sim-s**, including all811,640 old
+  charges;1,719,160 remains unallocated. Seed2 dropped under owner19:38:
+  retaining both replications with required checks/dev/test costs6,239,240.
+- Medium quality-first search registered:32population,3CEM iterations,elite8,
+  K4/H120screen then top8K8/H300, shared-future-bootstrap Thompson selection.
+  Numerical guidance quota and end-to-end plan throughput still await qualification;
+  **all arms remain held**. No acceleration training or efficacy result is claimed.
+
 ## 19:41 — fresh-session recovery; OWNER19:38 pending qualification
 - Owned A supervisor2146725 boot/start identity verified, state **T**.672/678
   jobs closed; six remaining update20 reservations never CLAIMed. All **811,640

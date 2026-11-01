@@ -10,6 +10,34 @@ from .plan_wm import profile_table, profile_apply
 
 
 class AccelerationCPU(unittest.TestCase):
+    def test_real_frozen_mappo_acceleration_executor_parity(self):
+        import os
+        from wms.control.policy import load_policy_fn
+        from tools.coopnative.test_cpu import state,env
+        from tools.coopfree.execution import inject
+        a,b=[load_policy_fn(os.environ['COOPMWM_MAPPO'],device='cpu') for _ in range(2)]
+        a.reset();b.reset();sensor=rows();e=env(sensor)
+        s=state(sensor);s['a_mps2']=torch.zeros_like(s['v_mps'])
+        controller=Controller(Policy(),torch.Generator().manual_seed(1),True)
+        for t in range(300,310):
+            expected,_=a(s,with_lanes=True)
+            with inject(b,e,sensor,controller,t,[]):actual,_=b(s,with_lanes=True)
+            self.assertEqual(expected.tobytes(),actual.tobytes())
+        self.assertEqual(len(controller.events),10)
+
+    def test_96_panel_roles_dual_seed_guards_and_full_budget(self):
+        from .accel_protocol import worlds,budget,guard,install_seed_scope
+        panel=worlds('final_test');self.assertEqual(len(panel),96)
+        self.assertEqual(len({w['seed'] for w in panel}),96)
+        for c in range(12):self.assertEqual(sum(w['cell']==c for w in panel),8)
+        install_seed_scope()
+        for w in panel:guard(w,'final_test')
+        with self.assertRaises(ValueError):guard(panel[-1],'train')
+        for seed in (964000,962001,977001):
+            with self.assertRaises(ValueError):guard(dict(panel[0],seed=seed),'final_test')
+        b=budget();self.assertEqual(b['allocated']+b['unallocated'],6000000)
+        self.assertGreater(b['with_seed2_total'],6000000)
+
     def test_zero_update_is_exact_mappo_before_unchanged_safety(self):
         sensor=rows();commands={r['vid']:2.59707 for r in sensor if r['is_cav']}
         p=Policy();s,_=p.sample(encode(sensor),torch.Generator().manual_seed(1),True)
