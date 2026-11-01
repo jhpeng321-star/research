@@ -21,6 +21,17 @@ def reusable_component(directory, name, artifact, previous, same_ensemble):
     return previous if same_ensemble and previous else None
 
 
+def saved_snapshot(directory, key, previous):
+    process = directory/('snapshot_'+key+'_PROCESS.json')
+    if not process.exists():
+        # A failure may precede later variants' transfer. Reuse their ACTUAL
+        # older snapshot/receipt rather than relabeling it as a new collection.
+        return Path(previous['snapshot']), True
+    args = load(process)['argv']
+    assert load(directory/('snapshot_'+key+'_EXIT.json'))['returncode'] == 0
+    return Path(args[args.index('--out')+1]), False
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--round', required=True)
@@ -31,9 +42,10 @@ def main():
     assert directory.parent == PUBLISH and not (directory/'PUBLICATION.json').exists()
     stop = load(args.stop)
     assert stop['automatic_retry'] is False and stop['remote_inference_dispatched'] is False
-    assert 'compare_FULL-v4 failed' in stop['error'], 'this recovery diagnoses one exact analysis failure'
+    failures = [prefix+'_'+key+' failed:' for prefix in ('compare','distribution','credibility','endpoints') for key in VARIANTS]
+    assert any(name in stop['error'] for name in failures), 'explicit failed analysis component required'
     save_new(directory/'EXPLICIT_CPU_RECOVERY.json', dict(stop=args.stop,
-        reason='single failed CPU comparison exit1 without traceback; memory/crash-log audit found no persistent cause',
+        reason='explicit failed CPU-analysis component exit; cause unresolved; successful saved components are never repeated',
         automatic_retry=False, forecast_bytes_unchanged=True, inference_dispatched=False,
         recovery_time=datetime.now().astimezone().isoformat()))
     previous = load(args.previous)
@@ -45,13 +57,14 @@ def main():
             Path(__file__), ROOT/'tools/rbint/compare.py', ROOT/'tools/rbint/noon_report.py')})
     baseline, endpoint_baseline = state['baseline'], state['endpoint_baseline']
     for key in VARIANTS:
-        process = load(directory/('snapshot_'+key+'_PROCESS.json'))
-        assert load(directory/('snapshot_'+key+'_EXIT.json'))['returncode'] == 0
-        snapshot = Path(process['argv'][process['argv'].index('--out')+1])
+        old = previous['variants'].get(key, {})
+        snapshot, older = saved_snapshot(directory,key,old)
         info = fingerprint(snapshot)
         item = dict(info, snapshot=str(snapshot))
-        old = previous['variants'].get(key, {})
         same = old.get('sha256') == info['sha256']
+        if older:
+            assert same, 'prior snapshot bytes changed'
+            item['reused_older_snapshot_not_collected_before_stop'] = True
         report = directory/key
         report.mkdir(exist_ok=True)
         components = [
