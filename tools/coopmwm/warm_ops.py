@@ -133,7 +133,8 @@ jobs=[dict(id=c['id'],claimed=(r/'jobs'/c['id']/'CLAIM.json').exists(),
 print(json.dumps(dict(unix=time.time(),owner=d,state=s[2] if s else 'exited',children=children,jobs=jobs,
  charged_sim_s=811640+sum(c['sim_s'] for c in charges),updates=sorted(x.name for x in r.glob('*_UPDATE_*.json')),new_sumo_sim_s=0)))
 ''',timeout=25))
-    write(ops.EVIDENCE/'WARM2222_RECOVERY.json',value)
+    # Recovery is a fresh observation, not a replacement for an immutable receipt.
+    write(ops.EVIDENCE/f'WARM_RECOVERY_{int(value["unix"])}.json',value)
     print(json.dumps(value))
 
 

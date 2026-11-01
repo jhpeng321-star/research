@@ -1,5 +1,15 @@
 # S-COOPMWM live continuation — OWNER22:08 WARM MEMORY HOLD
 
+22:29 fresh recovery: read all 148 lines of owner prompt through22:28. Verified
+supervisor2477255 and all24 held B worker/SUMO identities remain T; no optimizer
+update; twelve A episodes complete, twelve A reservations unclaimed. Conservative
+charge872840 unchanged. No local COOPMWM observer/bridge remains running; both GPUs
+have no compute allocation. gpuA speed2 processes belong to separate tooling;
+do not touch/adopt without ownership receipts. New recovery receipt1793543351.
+Pending owner requirements include same-arm/seed winning library, WM-only depth/
+knot/group/distance/long-hold diagnostic, all-road2–4member groups and evidence-based
+long durations before warm B/R restart. Preserve old smoke/parity/results.
+
 22:11 recovery: OWNER22:08 supersedes cold B/R viability. Identity-verified cpuQ
 supervisor2477255/start55545604 is T; all twelve active B workers and SUMO children
 are identity/ancestry-verified T. No acceleration optimizer update exists. Twelve A
