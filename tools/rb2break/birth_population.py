@@ -96,7 +96,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--out', required=True, type=Path)
     parser.add_argument('--acceleration-envelope', action='store_true')
+    parser.add_argument('--motion-seconds', type=float, default=60.)
     args = parser.parse_args()
+    assert 0 < args.motion_seconds <= 60.
     assert args.out.parent.is_dir() and not args.out.exists()
     torch.set_num_threads(1)
     root = Path(__file__).resolve().parents[2]
@@ -120,7 +122,7 @@ def main():
             if birth['time'] > 270:
                 continue
             selected = rows[(rows[:, 1] == identity) & (rows[:, 0] >= birth['time'])
-                            & (rows[:, 0]+rows[:, 9] <= min(300., birth['time']+60))]
+                            & (rows[:, 0]+rows[:, 9] <= min(300., birth['time']+args.motion_seconds))]
             if not len(selected):
                 continue
             assert np.all(selected[:, 0]+selected[:, 9] <= 300.)
@@ -167,6 +169,7 @@ def main():
         conditioning_end_s=300, physical_likelihood='stable-mainline HDV SUMO IDM accelerations; frozen Gaussian scale',
         sigma_accel_mps2=sigma, motion_validation_improved=bool(improved), metrics=metrics,
         acceleration_envelope=bool(args.acceleration_envelope),
+        per_driver_motion_window_s=args.motion_seconds,
         kernel_sha256=kernel_sha, source_sha256=digest(__file__),
         caution='birth-disjoint internal motion validation, not independent-world or traffic qualification')
     args.out.mkdir()

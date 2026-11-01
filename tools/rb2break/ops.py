@@ -31,7 +31,7 @@ def main():
     parser.add_argument('--jobs', nargs='+')
     parser.add_argument('--wait-seconds', type=int, default=480)
     parser.add_argument('--cpu-fast', action='store_true')
-    parser.add_argument('--birth-version', choices=('v1', 'v2'), default='v1')
+    parser.add_argument('--birth-version', choices=('v1', 'v2', 'v3'), default='v1')
     args = parser.parse_args()
     if not set(args.worlds) <= set(range(969420, 969432)) or not args.worlds:
         raise ValueError('development only')
@@ -250,6 +250,7 @@ out=root/{('birth_fit_'+args.birth_version)!r};assert not out.exists()
 claim=root/{('BIRTH_FIT_'+args.birth_version+'_PROCESS.json')!r};assert not claim.exists()
 argv=['nice','-n','19','/root/miniconda3/bin/python','-B','-u','-m','tools.rb2break.birth_population','--out',str(out)]
 if {args.birth_version!r}=='v2': argv+=['--acceleration-envelope']
+if {args.birth_version!r}=='v3': argv+=['--motion-seconds','10']
 env=dict(os.environ,OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',CUDA_VISIBLE_DEVICES='')
 with (root/{('birth_fit_'+args.birth_version+'.log')!r}).open('x') as log:
  child=subprocess.Popen(argv,env=env,stdout=log,stderr=subprocess.STDOUT,cwd=runtime,start_new_session=True)

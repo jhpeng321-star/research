@@ -153,3 +153,14 @@ contract. Score only complete K8 worlds; all12required for final dev readout.
 The source-corrected candidate is fixed by actuator/ownership parity, not a
 J-offset or post-hoc threshold. Original FULL-v4 development K8 remains comparator.
 All CIs requiring replicated cells remain NA; no qualification from dev12.
+
+## Startup-only incoming-motion check (registered before v3 fit)
+V1/V2 used up to60s after each birth; later motion can include native LC speed
+patching despite stable same-lane leaders, which the isolated CF likelihood
+does not model. Test the SAME frozen-support mixture fit/validation cohorts
+using only the FIRST10s after birth, emphasizing source startup dynamics.
+This is a fitting observation window, not a runtime behavior threshold; no
+forward equation, arrival process or parameter value is hand-set by this choice.
+All pre-t0, native, dev12; same fixed Gaussian scale. Keep original priors unless
+birth-disjoint startup acceleration CRPS improves. Report its restricted scope;
+do not claim longer-horizon validation or adopt without autonomous dev evidence.
