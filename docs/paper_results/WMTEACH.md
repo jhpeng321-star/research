@@ -29,7 +29,11 @@
   A frozen policy/design and exact per-arm budget are still required before dispatch.
 
 ## Status
-Code staged at gpuA `/root/autodl-tmp/wmteach20261101_v1`,404source hashes.
+Active immutable gpuA root `/root/autodl-tmp/wmteach20261101_v3`,404source hashes.
+Supervisor437822/startticks888636829/boot a81555d7-176e-4ed8-bc7d-896fc89cc914;
+`wmteach/DISPATCH_V3.json`. Own strict8GiB GPU cap; peer processes untouched.
+H300 canary34.248s PASS finite/conserved/source-inclusive costs, reused once.
+v1 startup hash-helper failure before rollouts and undispatched v2 both retained.
 Shared S-DISTILL code imported from4b139e5f; full local19CPU PASS, portable host17PASS.
 No new environment: sklearn/scipy/joblib/threadpoolctl pinned in own `deps/` directory.
 Initial quality panel:12EXAM states, one per cell, selected by observable availability

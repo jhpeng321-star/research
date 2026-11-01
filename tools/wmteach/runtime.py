@@ -39,7 +39,7 @@ def bootstrap():
         WMS_SPEED_PIVOT_DIAG_OFF='1', WMS_SPEED_FAST_MERGE_LANE='1', WMS_SPEED_FAST_CAV_DRIVE='1',
         WMS_SPEED_FAST_LONG_HISTORY='1', WMS_SPEED_GRAPH_CVAR='1')
     torch.set_num_threads(1)
-    torch.cuda.set_per_process_memory_fraction(.65)
+    torch.cuda.set_per_process_memory_fraction(8*2**30/torch.cuda.get_device_properties(0).total_memory)
     torch.backends.cuda.matmul.allow_tf32 = False
     torch.backends.cudnn.allow_tf32 = False
     from wms.control.bridge import make_cav_controller
@@ -48,7 +48,8 @@ def bootstrap():
     from wms.model.entries import build_entrance_history, _counts_counter
     from tools.rbint.recipe import load_candidate
     from tools.rbeval.core import reference
-    namespace = dict(globals(), **locals(), ACTORS=[])
+    # The frozen producer's digest means FILE SHA, unlike our JSON-value digest.
+    namespace = dict(globals(), **locals(), ACTORS=[], digest=sha)
     for key in ('worker','costs','motion'):
         reference(key, namespace)
     frozen = SimpleNamespace(**namespace)

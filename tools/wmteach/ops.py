@@ -6,10 +6,12 @@ import subprocess
 
 ROOT = Path(__file__).resolve().parents[2]
 PHYS = '/root/rbeval20261031/phys_code_22cc32f65a80'
-REMOTE = '/root/autodl-tmp/wmteach20261101_v1'
+REMOTE = '/root/autodl-tmp/wmteach20261101_v3'
+HOST = 'gpuA'
 
 
-def remote(source, host='gpuA', timeout=60):
+def remote(source, host=None, timeout=60):
+    host=host or HOST
     command = '/root/miniconda3/bin/python -c "import sys;exec(compile(sys.stdin.read(),\'<wmteach-remote>\',\'exec\'))"'
     r = subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10', host, command],
                        input=source,capture_output=True, text=True, timeout=timeout, encoding='utf-8')
@@ -79,6 +81,7 @@ for name,text in files.items():
  p=root/name;p.parent.mkdir(parents=True,exist_ok=True)
  with p.open('x') as f:f.write(text)
 (root/'tasks').mkdir()
+(root/'deps').symlink_to('/root/autodl-tmp/wmteach20261101_v1/deps',target_is_directory=True)
 sources={{str(root/name):hashlib.sha256((root/name).read_bytes()).hexdigest() for name in files}}
 phys=pathlib.Path({PHYS!r})
 for directory in ('src/wms','tools/rbint','tools/rbeval','tools/rbfit'):
@@ -132,8 +135,8 @@ def launch_canary():
     return remote(f'''import pathlib,json,subprocess,os,time
 root=pathlib.Path({REMOTE!r});assert (root/'CPU.json').is_file()
 assert not (root/'CANARY_DISPATCH.json').exists()
-gpu=subprocess.check_output(['nvidia-smi','--query-compute-apps=pid','--format=csv,noheader'],text=True).strip()
-assert not gpu, 'GPU occupied; do not displace any job'
+gpu=subprocess.check_output(['nvidia-smi','--query-gpu=memory.free','--format=csv,noheader,nounits'],text=True).strip()
+assert int(gpu)>12*1024, 'insufficient free capacity for own strict8GiB cap'
 assert os.getloadavg()[0]<24
 with (root/'CANARY.log').open('x') as log:
  p=subprocess.Popen(['/root/miniconda3/bin/python','-B','-u','-m','tools.wmteach.run',str(root),'--canary'],
@@ -160,9 +163,43 @@ print('TASKS',len(list((root/'tasks').glob('*/k*.json'))))
 ''')
 
 
+def launch():
+    return remote(f'''import pathlib,json,subprocess,os,time,hashlib
+root=pathlib.Path({REMOTE!r});assert (root/'CPU.json').is_file()
+canary=json.loads((root/'CANARY_DISPATCH.json').read_text())
+p=pathlib.Path(f'/proc/{{canary["pid"]}}/stat')
+if p.exists():
+ stat=p.read_text().split()
+ assert stat[21]!=canary['start_ticks'] or stat[2]=='Z', 'canary still running; no duplicate'
+assert not (root/'DISPATCH.json').exists()
+tasks=list((root/'tasks').glob('*/k0.json'));assert len(tasks)==1
+task=json.loads(tasks[0].read_text());assert task['population_audit']['finite'] and task['population_audit']['conserved']
+assert set(task['results'])=={{'120','300'}}
+for h,actions in task['results'].items():
+ assert 'O0' in actions
+ for a,f in actions.items():
+  road,source=task['road_source'][h][a]
+  assert abs(f['team_delay']-road-source)<1e-6
+gate=dict(task_sha256=hashlib.sha256(tasks[0].read_bytes()).hexdigest(),canary_reused=True,
+ population_audit=task['population_audit'],wall_s=task['wall_s'],new_sumo_sim_s=0)
+with (root/'CANARY_PASS.json').open('x') as f:json.dump(gate,f)
+with (root/'RUN.log').open('x') as log:
+ p=subprocess.Popen(['/root/miniconda3/bin/python','-B','-u','-m','tools.wmteach.run',str(root)],
+  cwd=root,stdout=log,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL,start_new_session=True,
+  env={{**os.environ,'PYTHONPATH':str(root/'deps'),'OMP_NUM_THREADS':'1','MKL_NUM_THREADS':'1','OPENBLAS_NUM_THREADS':'1'}})
+receipt=dict(pid=p.pid,start_ticks=pathlib.Path(f'/proc/{{p.pid}}/stat').read_text().split()[21],
+ boot_id=pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip(),started_unix=time.time(),
+ canary_reused=True,canary_task_sha256=gate['task_sha256'],strict_memory_gib=8,new_sumo_sim_s=0)
+with (root/'DISPATCH.json').open('x') as f:json.dump(receipt,f)
+print(json.dumps(receipt))
+''')
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=['inspect', 'inspect-data','stage','cpu','deps','canary','status'])
+    parser.add_argument('--host',choices=['gpuA','gpuR'],default='gpuA')
+    parser.add_argument('action', choices=['inspect', 'inspect-data','stage','cpu','deps','canary','status','launch'])
     args = parser.parse_args()
+    HOST=args.host
     print({'inspect':inspect,'inspect-data':inspect_data,'stage':stage,'cpu':cpu,'deps':dependencies,
-           'canary':launch_canary,'status':status}[args.action]())
+           'canary':launch_canary,'status':status,'launch':launch}[args.action]())
