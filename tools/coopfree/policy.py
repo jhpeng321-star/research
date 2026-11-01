@@ -121,10 +121,10 @@ def decode(sample):
             for vid,a in zip(sample['context']['members'],sample['action'])}
 
 
-def requests(targets, rows):
+def requests(targets, rows, *, zone=ZONE):
     requested = {}
     for own in rows:
-        if own['vid'] not in targets or not ZONE[0] <= own['s_m'] <= ZONE[1]:
+        if own['vid'] not in targets or (zone is not None and not zone[0] <= own['s_m'] <= zone[1]):
             continue
         target = targets[own['vid']]
         speed = target['speed']
