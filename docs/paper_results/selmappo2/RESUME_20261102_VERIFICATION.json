@@ -1,0 +1,25 @@
+{
+  "schema": "selmappo2.resume_verification/1",
+  "session_date": "2026-11-02",
+  "cpu_checks": {
+    "command": "C:/Users/jpeng/miniconda3/python.exe -B -m pytest -p no:cacheprovider tests/test_selmappo2_report.py tests/test_selmappo2_watch.py -q",
+    "passed": 26,
+    "failed": 0,
+    "duration_s": 5.76,
+    "warning": "Unknown config option: cache_dir (cache provider disabled)"
+  },
+  "report_asset_sha256": {
+    "selmappo2/selmappo2_curve_1793555693498991700_d0a8501561f74218bcf1e148136e76f1.csv": "e40639362b2015d43a2eef300e2a5c87d129228f1cc1ed52481adec8a7d36e07",
+    "selmappo2/selmappo2_curve_1793555693498991700_d0a8501561f74218bcf1e148136e76f1.svg": "de06c0073b30a252d2bbc7e200232383ea84352ee800c6e15fb0700f48a97117"
+  },
+  "verified_curve_rows": 169,
+  "iteration_sequence_complete": true,
+  "final_checkpoint_matches": true,
+  "failed_smoke_gap_retained_all_rows": true,
+  "final_actual_sim_s": 6997800,
+  "final_reserved_sim_s": 6998400,
+  "peer_receipt_hashes_match": true,
+  "complete_peer_evaluation_available": false,
+  "new_sumo_seconds": 0,
+  "new_dispatches": 0
+}

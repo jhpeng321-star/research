@@ -15,6 +15,14 @@ Training supervision through final169 is already complete; the remaining depende
 is C1SWITCH2's final-policy panel evaluation. Its Nov2 01:46 handoff reports both
 per-CAV scopes terminal after2completeepisodes; CPU-only repair verified, narrow
 unstarted-scope continuation requested from MAIN. Full evaluation remains pending.
+Hash-bound peer accounting/failure/CPU-repair status is retained in
+`docs/paper_results/selmappo2/PEER_STATUS_20261102.json`; report now distinguishes
+3300peer-evaluation charged/2980closedactual from unchanged training accounting.
+Nov2 verification:26report/watcher CPU checks PASS; all169curve rows, final
+checkpoint, retained600sim-s smoke accounting gap and all3peer receipt hashes
+validate (`selmappo2/RESUME_20261102_VERIFICATION.json`). Existing watcher remains
+the sole complete-result importer. MAIN notice:
+`E:/agent-work/_sol/SELMAPPO2_EVALUATION_STATUS_20261102.md`.
 
 **FINAL169 COMPLETE /17:31+08 verified:** original606968 has EXITED normally;
 169updates/all7774production/no open reservations/no new failures. Actual6997800,
