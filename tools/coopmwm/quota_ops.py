@@ -6,7 +6,7 @@ from .storage import read,write
 from .protocol import checked,REGISTRY,sha
 from .warm_deploy import ROOT
 
-SOURCE='/home/ubuntu/coopmwm20261102_quotacpu1'
+SOURCE='/home/ubuntu/coopmwm20261102_quotacpu3'
 
 
 def preregister():
@@ -34,5 +34,78 @@ print(json.dumps(dict(registered=True,amendment_sha256={h!r},new_sumo_sim_s=0)))
     value=json.loads(reply);write(ops.EVIDENCE/'MAIN0548_ADMISSION_PREREGISTRATION.json',value);print(reply)
 
 
+def freeze():
+    reg=read(ops.EVIDENCE/'MAIN0548_ADMISSION_PREREGISTRATION.json')
+    out=ops.ssh.remote('cpuQ',f'''import pathlib,json,os,signal,time,sys
+r=pathlib.Path({ROOT!r});assert {reg['amendment_sha256']!r} in (r/'AUTHORITY.md').read_text()
+sys.path.insert(0,'/home/ubuntu/coopmwm20261102_capacitycpu3/pytools')
+from tools.coopmwm.warm_spool import immutable
+assert not (r/'B_UPDATE_001.json').exists(),'boundary passed; inspect before controlling owners'
+assert not list((r/'jobs').glob('warm_u001_R_*/CLAIM.json')),'R already collecting'
+owners={{}}
+for arm in ('B','R'):
+ d=json.loads((r/f'WARM_{{arm}}_DISPATCH_V6.json').read_text());p=pathlib.Path('/proc',str(d['pid']))
+ assert d['boot_id']==pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+ st=(p/'stat').read_text().split();assert st[21]==d['start_ticks'] and st[2] in ('S','R','T')
+ cmd=(p/'cmdline').read_bytes().replace(bytes([0]),b' ').decode()
+ assert 'tools.coopmwm.capacity_recovery' in cmd and '--component '+arm in cmd and str(r) in cmd
+ os.kill(d['pid'],signal.SIGSTOP);owners[arm]=dict(d,command=cmd)
+immutable(r/'MAIN0548_FROZEN_PARENTS.json',dict(owners=owners,unix=time.time(),amendment_sha256={reg['amendment_sha256']!r},children_signalled=False))
+print(json.dumps(dict(frozen_parents=owners,children_signalled=False,new_sumo_sim_s=0)))''',timeout=40)
+    v=json.loads(out);write(ops.EVIDENCE/'MAIN0548_FROZEN_PARENTS.json',v);print(out)
+
+
+def qualify():
+    prior=read(ops.EVIDENCE/'CPU_coopmwm20261102_capacitycpu3.json')
+    files=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,hashlib
+r=pathlib.Path({prior['root']!r});files={{}}
+for name,h in json.loads({json.dumps(prior['source_hashes'])!r}).items():
+ p=r/name;assert hashlib.sha256(p.read_bytes()).hexdigest()==h
+ files[name.removeprefix('pytools/')]=p.read_text()
+print(json.dumps(files))''',timeout=40))
+    names=('quota_ops','quota_runtime','quota_transition','quota_admission','test_quota_admission_cpu','plan_client','capacity_broker','warm_runner')
+    for name in names:files['tools/coopmwm/'+name+'.py']=(ops.LOCAL/'tools/coopmwm'/(name+'.py')).read_text(encoding='utf-8')
+    staged=json.loads(ops.stage('cpuQ',SOURCE,files))
+    out=ops.ssh.remote('cpuQ',f'''import sys,unittest,os,json,time
+sys.path[:0]=[{SOURCE!r}+'/pytools','/home/ubuntu/e3final/runtime/src','/home/ubuntu/e3final/runtime']
+os.environ.update(CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',COOPMWM_MAPPO='/home/ubuntu/mappospeed/production2/policy_00169.pt',COOPMWM_COST_SOURCE={SOURCE!r}+'/FROZEN_COSTS.json',COOPMWM_MOTION_SOURCE={SOURCE!r}+'/FROZEN_MOTION_SOURCE.py')
+import torch;torch.set_num_threads(1)
+from unittest.mock import patch
+start=time.monotonic()
+names=['tools.coopnative.test_cpu']+['tools.coopmwm.'+n for n in ('test_cpu','test_volume_cpu','test_acceleration_cpu','test_warm_cpu','test_mppi_search_cpu','test_branch_eval_cpu','test_mppi_runtime_cpu','test_warm_protocol_cpu','test_awr_cpu','test_warm_health_cpu','test_warm_transport_cpu','test_warm_spool_cpu','test_warm_broker_cpu','test_committed_cpu','test_overlap_cpu','test_exact_grade_cpu','test_plan_proposer_cpu','test_capacity_broker_cpu','test_capacity_recovery_cpu','test_quota_admission_cpu')]
+suite=unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromName(n) for n in names)
+with patch('subprocess.Popen',side_effect=AssertionError('no SUMO in qualification')):
+ result=unittest.TextTestRunner(stream=sys.stdout,verbosity=1).run(suite)
+print(json.dumps(dict(pass_=result.wasSuccessful(),tests=result.testsRun,skips=len(result.skipped),sim_s=0,root={SOURCE!r},wall_s=time.monotonic()-start)))''',timeout=90)
+    print(out);v=json.loads(out.strip().splitlines()[-1]);v['source_hashes']=staged['hashes']
+    write(ops.EVIDENCE/'CPU_coopmwm20261102_quotacpu3.json',v);assert v['pass_'] and not v['skips']
+
+
+def register():
+    cpu=read(ops.EVIDENCE/'CPU_coopmwm20261102_quotacpu3.json')
+    assert cpu['pass_'] and cpu['skips']==cpu['sim_s']==0
+    reg=read(ops.EVIDENCE/'MAIN0548_ADMISSION_PREREGISTRATION.json')
+    v=dict(cpu=cpu,source_root=SOURCE,plan_amendment_sha256=reg['amendment_sha256'],
+        new_sumo_sim_s=0,gpu_source_changes=False,library_and_search_unchanged=True,
+        migration='original B/R parents frozen by identity; children finish once; all24 closed B results adopted, checkpoint0 Adam/RNG preserved; broker claims/forecasts retained; grader stays original',
+        boundary_drain='until all24 old B episodes close, adopt every already assigned search but decline NEW unassigned searches with logged zero-compute admission; finish the four pending queries once instead of repeatedly extending the old-client wave; release drain only at completed-result handover; no extra SUMO')
+    path=ops.EVIDENCE/'MAIN0548_RUNTIME_AMENDMENT.json';write(path,v);h=sha(path)
+    line='\nS-COOPMWM MAIN0548 QUOTA RUNTIME QUALIFIED REGISTERED amendmentSHA'+h+': '+json.dumps({k:x for k,x in v.items() if k!='cpu'},sort_keys=True)+'\n'
+    registry=checked(REGISTRY)
+    if h not in registry.read_text(encoding='utf-8'):
+        with registry.open('a',encoding='utf-8') as f:f.write(line)
+    reply=ops.ssh.remote('cpuQ',f'''import pathlib,json,sys,hashlib
+r=pathlib.Path({ROOT!r});s=pathlib.Path({SOURCE!r});sys.path.insert(0,str(s/'pytools'))
+from tools.coopmwm.warm_spool import immutable
+for name,h in json.loads({json.dumps(cpu['source_hashes'])!r}).items():assert hashlib.sha256((s/name).read_bytes()).hexdigest()==h
+if {h!r} not in (r/'AUTHORITY.md').read_text():
+ with (r/'AUTHORITY.md').open('a') as f:f.write({line!r})
+immutable(r/'MAIN0548_RUNTIME_BINDING.json',json.loads({json.dumps(dict(v,amendment_sha256=h))!r}))
+old=json.loads((r/'WARM_REMOTE_BINDING.json').read_text())
+immutable(r/'QUOTA_BROKER_CONFIG.json',dict(amendment_sha256={h!r},source_root=str(s),deadline_unix=old['deadline_unix'],receipt_tag='_Q1',drain_until_handover=True))
+print(json.dumps(dict(registered=True,amendment_sha256={h!r},new_sumo_sim_s=0)))''',timeout=40)
+    write(ops.EVIDENCE/'MAIN0548_RUNTIME_REGISTRATION.json',dict(v,amendment_sha256=h,remote=json.loads(reply)));print(reply)
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('preregister',));a=p.parse_args();globals()[a.mode]()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('preregister','freeze','qualify','register'));a=p.parse_args();globals()[a.mode]()

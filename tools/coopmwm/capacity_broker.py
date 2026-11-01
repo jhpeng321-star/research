@@ -35,7 +35,7 @@ def pending(root):
     return items
 
 
-def capacity_declines(items,assigned,slots):
+def capacity_declines(items,assigned,slots,blocking=(),drain=False):
     """Keep enough unassigned requests for free slots; preserve ALL old claims."""
     busy={assigned[r['state_id']]['slot'] for _,r in items if r['state_id'] in assigned}
     free=max(0,len(set(slots)-busy));declines=[]
@@ -43,18 +43,25 @@ def capacity_declines(items,assigned,slots):
         if r['state_id'] in assigned:continue
         # Diagnostic/centre requests wait, never become fabricated model outputs.
         if kind!='plan' or r.get('mode')=='diagnostic':continue
+        if drain:
+            declines.append(r);continue
+        # MAIN05:48 quota reservations wait for real inference even while all
+        # slots are occupied; they are never fabricated capacity declines.
+        if r['state_id'] in blocking:
+            if free:free-=1
+            continue
         if free:free-=1
         else:declines.append(r)
     return declines,busy
 
 
-def decline(root,record,slots,busy,amendment):
+def decline(root,record,slots,busy,amendment,drain=False):
     key=record['state_id']
     admission=dict(stage='live broker boundary',available=False,
-        wm_admission_probability=0.,capacity_predicate='all registered slots occupied or reserved by earlier requests',
+        wm_admission_probability=0.,capacity_predicate=('registered old-wave boundary drain; existing assigned searches finish once' if drain else 'all registered slots occupied or reserved by earlier requests'),
         slots=sorted(slots),busy_slots=sorted(busy),amendment_sha256=amendment,
         legacy_query_probability_unchanged=True,unix=time.time())
-    result=dict(accepted=False,reason='capacity unavailable; policy continues',
+    result=dict(accepted=False,reason='boundary drain; policy continues' if drain else 'capacity unavailable; policy continues',
         record_sha256=digest(record),query_admission=admission,
         candidates_searched=0,imagined_futures=0)
     immutable(root/'capacity_declines'/(key+'.json'),dict(key=key,**admission))
@@ -92,6 +99,8 @@ def run(root,config_path):
                     # this slot, even when the new request is dense/preferred.
                     assigned_items=[v for v in items if (assignments/(v[1]['state_id']+'.json')).exists()]
                     new_items=[v for v in items if not (assignments/(v[1]['state_id']+'.json')).exists()]
+                    if config.get('drain_until_handover') and not (root/'MAIN0548_HANDOVER_COMPLETE.json').exists():
+                        new_items=[v for v in new_items if v[0]!='plan' or v[1].get('mode')=='diagnostic']
                     for kind,record in assigned_items+new_items:
                         key=record['state_id'];p=assignments/(key+'.json')
                         previous=json.loads(p.read_text()) if p.exists() else None
@@ -134,8 +143,11 @@ def run(root,config_path):
                 items=pending(root)
                 assigned={r['state_id']:json.loads((assignments/(r['state_id']+'.json')).read_text())
                     for _,r in items if (assignments/(r['state_id']+'.json')).exists()}
-                declines,busy=capacity_declines(items,assigned,endpoints)
-                for r in declines:decline(root,r,endpoints,busy,config['amendment_sha256'])
+                blocking={p.stem for p in (root/'quota_admissions').glob('*.json')
+                    if json.loads(p.read_text()).get('blocking')}
+                drain=config.get('drain_until_handover',False) and not (root/'MAIN0548_HANDOVER_COMPLETE.json').exists()
+                declines,busy=capacity_declines(items,assigned,endpoints,blocking,drain)
+                for r in declines:decline(root,r,endpoints,busy,config['amendment_sha256'],drain)
                 slots=tuple(sorted(endpoints))
                 if slots!=last_slots:
                     # Existing live clients dynamically read this file; truthful

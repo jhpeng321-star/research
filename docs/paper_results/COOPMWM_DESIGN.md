@@ -51,12 +51,12 @@
 50. Both seed guards, fresh-name exposure, immutable sources/cache/approval bindings before physics.
 51. No prohibited inputs/newenv/push; OWNER20:35 opaque v2archive+SHA256-gated literal source removal only; commit eachstep.
 52. E2 diagnostic multi-H weights normalize measured agreement on horizons with sign95CI lower>.5.
-53. MAIN0508 eligible10s windows NEVER wait for capacity: p=.95 if pending<actualGPUslots,otherwisep0/own; broker rejects races promptly; admitted queries wait for answer; exact behaviour/admission receipts.
+53. MAIN0548 serialized quota-aware10s admission: p=.95/queued while executed+potentiallyexecutable-inflight<Nexec10; thereafter p=.95 if pending<actualGPUslots,else0/own; broker preserves quota reservations; exact behaviour/admission receipts.
 54. Per-window/H report K8 joint-return advantage variance and paired-credit variance in veh-s².
 55. Frozen critic baseline is constant within window; variance is conditional WM-estimated noise.
 56. Report actual PPO advantages across TRAIN windows separately; no empirical SUMO-noise claim.
 57. Same-group CRN removes shared hidden-driver/arrival variation only to extent model supports it.
-58. Nexec>=10minimum/update subject to new measured group2/4/6 throughput; bothGPUqueue saturated beyondmin; R count/regime/size/duration matched; unmet=>STOP.
+58. Nexec>=10/update; MAIN0548 permits retainedu1shortfall with explicitdeviation/noextraSUMO, later unmet=>STOP; bothGPUqueue saturated beyondmin; independentR(u) matches finalB(u) count/regime/size/duration concurrently withB(u+1).
 59. FINAL96=989600..989635 plus fresh990600..990659,8/cell; SHAd74f685ef75a819248bbe7bb0bef89cf0295037ff3b03b334b13ccec75c40bcc.
 60. Precharge4x96x1200=460800 +Ru24=115200; MAIN0423 afterA48 precomputeMAPPO/native/A48+Abranches,691800incl600reusecheck within existingphases; status/SHAonly until allfixedA48/B48/R24,then B/R episodes+Bbranches+analysis once; no Rbranches.
 61. BranchesT300/500/700/900,H300; exact same MAPPO prefix, mismatchSTOP; MAPPO-reuse600 check first; failure+115200 needs MAIN approval.

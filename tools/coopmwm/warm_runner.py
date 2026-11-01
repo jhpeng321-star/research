@@ -108,6 +108,7 @@ def run_arm(root,arm):
         for u in range(first,last+1):
             assert_running(root,arm)
             start=time.monotonic();extra=dict(update=u)
+            if b.get('quota_aware_admission'):extra['quota_aware_admission']=True
             if b.get('health_guards'):extra.update(health_guards=True,safety_reference=b['safety_reference'])
             if arm=='B':extra['search_learning']=learned
             if arm=='R':
@@ -115,8 +116,10 @@ def run_arm(root,arm):
                 extra['random_quota']=str(root/f'B_RANDOM_QUOTA_{u:03}.json')
             eps=wave(root,dict(b,beta=beta),{arm:policy},batch_worlds(u),'train',f'warm_u{u:03}','train',False,extra)
             routes=routing(eps)
+            deviation=None
             if arm=='B' and routes['executed']<b['N_exec']:
-                raise ValueError(f'B plan gate unmet {routes["executed"]}<{b["N_exec"]}; no extra SUMO')
+                from .quota_admission import first_update_deviation
+                deviation=first_update_deviation(root,arm,u,routes['executed'],b['N_exec'])
             if arm=='R':
                 quota=read(root/f'B_RANDOM_QUOTA_{u:03}.json')
                 for regime in ('merge-dense','ordinary'):
@@ -161,6 +164,7 @@ def run_arm(root,arm):
                 proposal_routing=routes,team_only_noise=dict(advantage_variance_veh_s_squared=float(np.var(raw,ddof=1))),
                 wall_s=time.monotonic()-start,eta_final_hours=(budget()['updates'][arm]-u)*(time.monotonic()-start)/3600,
                 exact_imitation=weights,grading_lag=grade_lag,
+                quota_deviation=deviation,
                 concurrently_active_plans=max(s.get('simultaneously_active_plans',0) for e in eps for s in e['steps']),
                 overlap_rechecks=[s['proposal']['overlap_recheck'] for e in eps for s in e['steps']
                     if s.get('proposal') and s['proposal'].get('overlap_recheck')],
@@ -185,7 +189,7 @@ def run_arm(root,arm):
     except BaseException as error:
         write(root/f'WARM_{arm}_FAILED{suffix}.json',dict(timestamp_utc=timestamp(),error=repr(error)))
         if not isinstance(error,HealthPause):
-            guided_stop='WARM_GUIDED_STOP_V2.json' if suffix=='_V5' else 'WARM_GUIDED_STOP.json'
+            guided_stop='WARM_GUIDED_STOP_V2.json' if (root/'MAIN0508_GUIDED_RELEASE.json').exists() else 'WARM_GUIDED_STOP.json'
             stop=root/(guided_stop if arm in ('B','R') and b.get('health_guards') else 'STOP.json')
             if not stop.exists():write(stop,dict(arm=arm,error=repr(error),timestamp_utc=timestamp()))
         raise

@@ -39,13 +39,18 @@ def guide(job,generator):
             sample['behaviour']=dict(route='policy',sample_probability=0.,mixture_mass=0.,
                 regime=traffic,executed=False,beta=0.,q=0.,eligible_query=True)
             return None
+        reservation=None;admission=None
         if quota is None:
             # Queue occupancy is infrastructure-only, never predicted/SUMO gain.
             pending=sum(not (root/'responses'/p.name).exists() for p in (root/'requests').glob('*.json'))
             workers=worker_slots(root)
             # Availability is observed at this decision, never waited for. The
             # broker resolves simultaneous clients racing for the final slot.
-            p=.95 if pending<len(workers) else 0.
+            if job.get('quota_aware_admission'):
+                from .quota_admission import choose
+                p,queried,admission,reservation=choose(root,job,now,
+                    lambda:float(torch.rand((),generator=generator)),pending,len(workers))
+            else:p=.95 if pending<len(workers) else 0.
         else:
             import fcntl
             match=root/'random_match'/f'u{job["update"]:03}';match.mkdir(parents=True,exist_ok=True)
@@ -57,12 +62,12 @@ def guide(job,generator):
                 remaining=chosen_group is not None
                 if remaining:members=chosen_group['members']
             p=quota['sampling'][traffic] if remaining else 0.
-        queried=float(torch.rand((),generator=generator))<p
+        if admission is None:queried=float(torch.rand((),generator=generator))<p
         b=dict(route='wm' if queried else 'policy',sample_probability=p,mixture_mass=p,
             regime=traffic,executed=False,beta=0.,q=0.,eligible_query=True)
         sample['behaviour']=b
         if quota is None:
-            b['capacity_admission']=dict(pending=pending,slots=len(workers),available=p>0.,
+            b['capacity_admission']=admission or dict(pending=pending,slots=len(workers),available=p>0.,
                 query_probability=p,nonblocking=True)
         if not queried:return None
         deltas={v:float(a[0]) for v,a in zip(sample['context']['members'],sample['own_action'])}
@@ -73,6 +78,9 @@ def guide(job,generator):
         if job.get('search_learning') is not None and quota is None:r['search_learning']=job['search_learning']
         r['state_id']=digest(dict(record=r,job=job['id']))
         if quota is None:
+            if reservation:
+                from .quota_admission import bind
+                bind(reservation,r)
             request=root/'requests'/(r['state_id']+'.json');response=root/'responses'/request.name
             from .warm_spool import immutable
             immutable(request,r);start=time.monotonic()
@@ -83,6 +91,7 @@ def guide(job,generator):
             result=read(response)
             if result['record_sha256']!=digest(r):raise ValueError('plan response identity mismatch')
             result['query_wall_s']=time.monotonic()-start
+            if reservation:result['quota_reservation']=reservation
         else:
             import fcntl
             match=root/'random_match'/f'u{job["update"]:03}';match.mkdir(parents=True,exist_ok=True)
@@ -117,6 +126,9 @@ def guide(job,generator):
         result['behaviour']=b
         return result
     def completed(proposal,executed):
+        if proposal.get('quota_reservation'):
+            from .quota_admission import resolved
+            resolved(proposal['quota_reservation'],executed)
         m=proposal.get('random_match')
         if m:
             import fcntl

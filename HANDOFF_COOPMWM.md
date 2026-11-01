@@ -1,5 +1,18 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+MAIN0548 recovery: full290linebrief read, originalowners/observers adopted.
+Quota-aware admission QUALIFIED231CPU/PASS0skips/37.49s/zeroSUMO, immutable
+/home/ubuntu/coopmwm20261102_quotacpu3. Registered plan981e496c + runtimebfef6422.
+B3432378/R3432791 supervisorPARENTS frozenT ONLY; allchildSUMO/GPUwork continues.
+Current24Bu1 results MUST be adopted, never rerun. Old parents cannot applyu1;
+qualified newrunner permits MAINu1shortfall/noextraepisodes, exactAdam/RNGfromu0.
+Brokerhandover must adopt everyassignedsearch; boundarydrain declines only NEW
+unassignedold-wavequeries until all24close, then resumes quota-awareB/R.
+R(u)independentlyconsumes finalB(u)quota concurrently withB(u+1), noRlibrary.
+Next: quota_ops deployment; doNOTunfreeze oldparents orduplicateGPU/observers.
+CPU1failedmissingdirectory retained; CPU2full227PASS; finalCPU3 adds drain and
+identity/one-usedispatch tests231PASS. Budget7495040/7500000/free4960 unchanged.
+
 Lastprogress1793569254(05:40:54UTC+8):20/24Bclosed; fouradmittedsearchesstill
 runningT300/300/300/310, waits747.8..750.3s; Rquotaabsent/noRclaims. Newrelease
 completedqueries/executedstarts/exactgrades all0 at1793569152; noETA/benefitclaim.

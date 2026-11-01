@@ -1,5 +1,27 @@
 # S-COOPMWM — live checks
 
+## MAIN05:48 quota-aware admission — qualified and registered
+- Full recovery adopted the existing owners and completed warm-memory evidence.
+  A is at fixed u48. At unix1793570244,20/24 current B episodes were closed;
+  the other four had admitted queries at t300/310/320/320. R had no claims.
+- **231 CPU tests PASS, zero skips,37.49s, zero SUMO**, immutable
+  `coopmwm20261102_quotacpu3`. Tests include24-way serialized quota reservation,
+  rejected/trust-rejected query release, no double-counting a confirmed start,
+  exclusion of superseded starts, unchanged GPU request identity, existing-claim
+  adoption, boundary drain, identity-checked parent controls and one-use dispatch.
+- Registered plan `981e496c…`, runtime `bfef6422…`: queue eligible queries while
+  executed plus potentially executable in-flight queries is below10; thereafter
+  use free-slot-only admission. Probability and queue predicate are recorded.
+  R(u) consumes B(u)'s final matching quota independently of B(u+1).
+- Only the verified B/R supervisor parents were frozen before optimization.
+  Their SUMO children and GPU searches continue. Safe migration finishes every
+  already assigned search once, declines further unassigned old-wave queries,
+  adopts all24 completed B results and preserves checkpoint0 Adam/RNG. MAIN's
+  permitted u1 shortfall will be explicit; no extra traffic episodes are added.
+- The failed CPU1 missing-directory receipt is retained; CPU2 passed227 tests.
+  Allocation remains **7,495,040 /7,500,000 sim-s**,4,960 unallocated. Deployment
+  and first-update/exact-grade viability evidence are pending at this entry.
+
 ## MAIN05:08 nonblocking admission — repaired release live
 - Latest05:40:54UTC+8 snapshot:20/24 B episodes closed; the four admitted searches
   are still running, with747.8–750.3s waits. Fresh-release completed searches,
