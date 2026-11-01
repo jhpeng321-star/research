@@ -1,4 +1,4 @@
-# S-RB-INT handoff — 08:00 interim published, 2026-11-01 08:07 +08
+# S-RB-INT handoff — ~09:30 freeze published, 2026-11-01
 
 Branch `c4/rb-int`. Retain all prior work and immutable jobs. Earlier detail:
 `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_{0034,0515}.md`.
@@ -8,12 +8,13 @@ completed scores preserved;08:26round recovered after isolated CPU child exit1.
 Peer observer retained. WM2-HDV60 now160/160 COMPLETE; no cpuQ dependency.
 08interim COMPLETE: `docs/rbint/INTERIM_0800.md`, all8reserved FULL-v4 K8 worlds.
 CRPS−393/−3040/−11647;HDV60−15.26m;300srate-distance+5.63pp→point switching FAIL.
-Full-world CIs NA/singletons. Current publication `noon/20261101T075846+0800`.
+Full-world CIs NA/singletons. Freeze `docs/rbint/FREEZE_0930.md`; current publication
+`noon/20261101T093000+0800`. Collector receipt `runs/rbint_noon_v7/PROCESS.json`.
 
 ## READY FOR EVAL / existing ownership
-- FULL-v4-gpu LIVE source22cc32f65a80af482a1a277c5f22377fa727d0a3:
+- FULL-v4-gpu FROZEN/160tasks/20worlds COMPLETE source22cc32f65a80af482a1a277c5f22377fa727d0a3:
   gpuA `/root/rbeval20261031/phys_code_22cc32f65a80/configs/wm_phys.toml`.
-  Own398268/398269/398270, monitor398303; root `/root/rbeval20261031/int/WM-PHYS-FULL-v4-gpu`.
+  Prior398268/398269/398270+monitor398303 all EXITED; root `/root/rbeval20261031/int/WM-PHYS-FULL-v4-gpu`.
   Canary370.48s reused. Final LANE +move→LC→emit source phase; do not redispatch.
 - FULL-v3-gpu OPERATIONALLY RETIRED07:03, sourcef378ac6033079bdd87c0059627e27e394a1d7cbe:
   gpuA `/root/rbeval20261031/phys_code_f378ac603307/configs/wm_phys.toml`.
@@ -34,9 +35,9 @@ Full-world CIs NA/singletons. Current publication `noon/20261101T075846+0800`.
   `E:/agent-work/rb-shared/evalclaims/WM-PHYS-C2.runa.json`
   `E:/agent-work/rb-shared/evalclaims/WM-PHYS-B2.runb.json`
   Old failed A/C sources and all STOPs retained. No peer process action.
-- WM2-HDV60 LIVE gpuR, original WM2 runtime, short120step prefix-matched protocol;
+- WM2-HDV60 COMPLETE160/160 gpuR, original WM2 runtime, short120step prefix-matched protocol;
   own812962/812963/812964, monitor814672; root `/root/rbeval20261031/int/WM2-HDV60`.
-  Last05:03 audit45tasks, FULL-v3 34tasks; all workers/monitors live, no STOP.
+  All original workers/monitor EXITED; all three COMPLETE markers, no STOP.
   Original WM2 H600 panel/finalizer remain EVAL-owned. SUMOCORE144/144 complete.
 
 ## Current candidate engineering
