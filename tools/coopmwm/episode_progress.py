@@ -13,13 +13,16 @@ r=pathlib.Path({ROOT!r});sys.path.insert(0,{CPU!r}+'/pytools')
 from tools.coopmwm.warm_protocol import batch_worlds
 from tools.coopmwm.accel_storage import read
 now=time.time();episodes=[]
+repair=r/'MAIN0508_REPAIR_BINDING.json'
+plan=read(repair)['repair_plan'] if repair.exists() else None
+ws=plan['worlds'] if plan else batch_worlds(1)
 requests=[]
 for p in (r/'requests').glob('*.json'):
  q=read(p)
  if q.get('mode')=='diagnostic':continue
  requests.append((p,q))
 for arm in ('B','R'):
- for w in batch_worlds(1):
+ for w in ws:
   ident=f'warm_u001_{{arm}}_{{w["seed"]}}';p=r/'jobs'/ident
   claim=read(p/'CLAIM.json') if (p/'CLAIM.json').exists() else None
   result=(p/'RESULT.json').exists();last=None;trace=p/'observable.jsonl.gz'
@@ -48,11 +51,14 @@ for arm in ('B','R'):
    current_query_wait_s=sum(q['age_s'] for q in pending)))
 quota=r/'B_RANDOM_QUOTA_001.json'
 print(json.dumps(dict(unix=now,episodes=episodes,R_quota_ready=quota.exists(),load=os.getloadavg(),
+ superseded_jobs=plan['failed_jobs'] if plan else [],
  note='trace has buffered/incomplete tail; pending-query time is exact stopped decision; completed inference time excludes admission waits')))
 ''',timeout=60))
     path=ops.EVIDENCE/f'EPISODE_PROGRESS_{int(value["unix"])}.json'
     write(path,value)
-    print(json.dumps(value))
+    print(json.dumps(dict(receipt=str(path),unix=value['unix'],R_quota_ready=value['R_quota_ready'],
+        B=[{k:e[k] for k in ('id','claimed','closed','observed_sim_time_s','current_query_wait_s')} for e in value['episodes'] if e['arm']=='B'],
+        R_claimed=sum(e['claimed'] for e in value['episodes'] if e['arm']=='R'))))
     return value
 
 

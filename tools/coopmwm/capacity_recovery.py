@@ -33,7 +33,8 @@ def repair_budget(original,additional):
 
 
 def binding(root):
-    root=Path(root);b=json.loads((root/'MAIN0508_REPAIR_BINDING.json').read_text())
+    root=Path(root);p=root/'MAIN0508_REPAIR_BINDING_V2.json'
+    b=json.loads((p if p.exists() else root/'MAIN0508_REPAIR_BINDING.json').read_text())
     assert b['amendment_sha256'] in (root/'AUTHORITY.md').read_text()
     assert b['cpu']['pass_'] and b['cpu']['sim_s']==b['cpu']['skips']==0
     source=Path(b['source_root']);assert Path(__file__).resolve()==source/'pytools/tools/coopmwm/capacity_recovery.py'
@@ -62,9 +63,11 @@ def install(root):
         for w in b['repair_plan']['worlds']:
             ident=f'warm_u001_{arm}_{w["seed"]}'
             assert not (r/'jobs'/ident/'CLAIM.json').exists(),'repair job was already attempted'
-        return dict(original,**operational,budget=b['budget'],awr=awr,resume_update=0,
+        result=dict(original);result.update(operational)
+        result.update(budget=b['budget'],awr=awr,resume_update=0,
             runtime_receipt_suffix='_V5',workers=24 if arm=='B' else 4,
             precharged_unattempted=b['repair_plan']['precharged_unattempted'] if arm=='B' else [])
+        return result
     wr.verify=verify
     return wr,b
 

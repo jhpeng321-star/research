@@ -1,5 +1,52 @@
 # S-COOPMWM — live checks
 
+## MAIN05:08 nonblocking admission — repaired release live
+- **B/R collection restarted 2026-11-02 05:28:17 UTC+8**, retaining the qualified
+  warm-memory/fast-path WM and all four independently qualified GPU processes.
+  A has completed its fixed u48. B3432378/R3432791, broker3426521/grader3427015
+  are detached and identity-verified; status1793568612 has no active STOP/pause.
+- B now launches **24 episodes concurrently**. At1793568595, **20/24 have closed**;
+  four are waiting for genuinely admitted searches at simulation t300/300/300/310,
+  with current query waits88.8–91.4s. Each episode's progress/wait is recorded in
+  `coopmwm/EPISODE_PROGRESS_1793568595.json`; incomplete gzip tails are censored.
+- Busy eligible windows execute the policy with query probability0; free capacity
+  uses the registered0.95 Bernoulli draw. Simultaneous-client races receive an
+  explicit zero-compute capacity decline. Admitted queries wait for their actual
+  forecast. The old pre-query capacity-wait loop is removed. K4/H300, K8/Hfinal,
+  MPPI population/iterations and Nexec10 are unchanged.
+- R is alive but awaits B's final exact matching quota: it has no episode claims.
+  Its shared current-policy-centre extraction uses the WM at lower priority;
+  its random plans are never WM-scored and have no library/covariance learning.
+  Exact matching prevents claiming concurrent R episode collection at this point.
+- No completed new B update/exact grades yet. New-release plan acceptance and
+  steady-state four-worker throughput are not measured; a finite u1/u48 ETA is
+  not established. Per-update wall-time/ETA remains automatic once u1 closes.
+  The original service deadline stays Nov2 18:07:02UTC+8.
+
+### DIAGNOSIS — failed handover and charged recovery
+- The first admission-broker release read a legacy request after file creation
+  but before JSON writing finished. Its engineering STOP fired; **18 attempted
+  B episodes became incomplete, six reserved jobs had never been claimed**.
+  No B optimizer update had occurred. This was our newly introduced metadata-read
+  race, not a WM ranking result. All failures, requests, forecasts and charges
+  remain on disk. GPU searches were not restarted or recomputed.
+- Fix: new requests publish atomically; a legacy in-progress JSON file gets a
+  bounded30s metadata grace, while a persistent malformed request still stops.
+  Old assignment/admission receipts are adopted, the first STOP is SHA-released
+  under a registered engineering amendment, and any new fault has a fresh STOP_V2.
+- **216 CPU tests PASS/zero skips/zero SUMO** cover the full inherited release
+  plus admission, partial-request and same-cell recovery tests. A separate launch
+  merge error was caught before any new claim/physics; its repair passed
+  **19 focused CPU tests** and a real production-binding/u0 Adam/RNG preflight.
+- Recovery adopts only the six never-claimed jobs and selects18 different
+  registered TRAIN worlds by ascending unused seed within the same cells.
+  The exact24-episode,12focus/12other mix remains. **21,600 additional sim-s**
+  were registered before collection; no failed world is replayed. Allocation is
+  now **7,495,040 /7,500,000**, **4,960 unallocated**; exact-grade/discovery/final
+  liabilities are unchanged. Amendments `e70b67aa5e429cdb…` and `a073c07b5daf9904…`.
+- Receipts: `MAIN0508_REPAIR_REGISTRATION.json`, `CAPACITY_LAUNCH_PREFLIGHT.json`,
+  `WARM_{B,R}_DISPATCH_V6.json`, `CAPACITY_REPAIR_STATUS_1793568520.json`.
+
 ## Early exact-plan viability publication armed
 - Detached cpuQ reporter3357311 is live, immutable `viabilityreport1`; registered
   amendment `1c66899ddbce10f2cbb99c2117aa3686b528a64a4351b6367028dd23af8da0bb`.

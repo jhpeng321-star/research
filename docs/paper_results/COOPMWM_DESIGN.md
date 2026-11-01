@@ -1,5 +1,5 @@
 # S-COOPMWM — warm MPPI training live; frozen-policy evaluation precompute registered
-1. MAIN02:24 cap7500000/allocation7473440/free26560; adds1000000 exact-plan-grade reserve to preserved MAIN23:54 allocation; registration required before B/R.
+1. MAIN0508 engineering repair cap7500000/allocation7495040/free4960; +21600 fresh TRAIN sim-s, all failed reservations retained; original1000000 exact-grade reserve unchanged.
 2. A/B/R fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
 4. A: PPO shared team reward=-J, road speed deficit plus source waiting.
@@ -34,24 +34,24 @@
 33. E2 runs in a2worker diagnostic thread beside PPO; serialized accounting; never reward/training gate.
 34. Zero/tie credits reported separately; scale fitted from exact data, diagnostic only.
 35. TRAIN986000..986071 primary seed20261101 only, six worlds/cell; original fresh guards/registrations retained.
-36. Check986072..986083,one/cell; TRAIN50%focus(demand2400/2700,share.2/.4),12focus+12other existing worlds; same prospective schedule/arm.
+36. Check986072..986083,one/cell; TRAIN50%focus,12focus+12other; MAIN0508 B/Ru1 same-cell ascending-seed replacements for18failedBjobs plus6neverclaimed originals; later schedule unchanged.
 37. Every4updates checks A/B/R vs once-only MAPPO controls, J600/J900/safety; forced counts/type and SNR.
 38. Dev984000..984023 every16updates A/B/R; existing24bitwise MAPPO bytes reused; no MAPPO dev rerun.
 39. TRAIN4/dev16 reporting only; final checkpoints fixedA/B48,R24; A completed balancedu1..4/check/Adam/RNG retained, focus startsA-u5.
 40. Final detector-first discovery uses unchanged COOPBEHAV detectors and complete exact twins.
 41. Learning checks report team return/value/KL/gradient, beta, proposal routes/acceptance/O1-O4 counts.
 42. FixedA/B48,R24 x24episodes x1200; MAIN02:34 auto-continue under health guards, publish u4 viability without owner-review pause; seed2 dropped.
-43. Cap7500000: superseded811640,train3456000,checks432000,dev201600,final460800,Rtest115200,coldB28800,failedA14400; exact-plan-grades1000000.
-44. Mechanics3600,calibration57600,discovery200000,pairedbranches691200,reusecheck600; allocated7473440/free26560 not auto-spent; complete-grade precharge or STOP.
+43. Cap7500000: superseded811640,train3477600,checks432000,dev201600,final460800,Rtest115200,coldB28800,failedA14400; exact-plan-grades1000000.
+44. Mechanics3600,calibration57600,discovery200000,pairedbranches691200,reusecheck600; allocated7495040/free4960 not auto-spent; complete-grade precharge or STOP.
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.
 46. All failures/warmup/twins charged in full before attempts; no retries/refunds/duplicate dispatch.
-47. A4/B8/R8/grader8nice19; afterA48 MAIN0423 up to24 CPU-only precompute workers SCHED_IDLE/nice19, grade-queue priority/load<28/MemAvailable+RAMfree8GiB/disk2GiB gates; no retries.
+47. A48complete; B24/R4/grader4nice19; MAIN0423 up to24 CPU-only precompute workers SCHED_IDLE/nice19, grade-queue priority/load<28/MemAvailable+RAMfree8GiB/disk2GiB gates; no retries.
 48. OriginalGPU widths34/10 READY8EXACT0; MAIN0419 secondworkers .42cap18/10(A),.34cap4/4(R),fresh8EXACT0 before hotadd; same search/deadline, measure1vs2throughput.
 49. GPU CPU helpers disabled until separate frozen parity qualification; own PIDs only.
 50. Both seed guards, fresh-name exposure, immutable sources/cache/approval bindings before physics.
 51. No prohibited inputs/newenv/push; OWNER20:35 opaque v2archive+SHA256-gated literal source removal only; commit eachstep.
 52. E2 diagnostic multi-H weights normalize measured agreement on horizons with sign95CI lower>.5.
-53. Eligible uncommitted10s windows pause for GPU slots,p=.95 when admitted; no outcome-based sampling; numericalNexec/throughput before restart.
+53. MAIN0508 eligible10s windows NEVER wait for capacity: p=.95 if pending<actualGPUslots,otherwisep0/own; broker rejects races promptly; admitted queries wait for answer; exact behaviour/admission receipts.
 54. Per-window/H report K8 joint-return advantage variance and paired-credit variance in veh-s².
 55. Frozen critic baseline is constant within window; variance is conditional WM-estimated noise.
 56. Report actual PPO advantages across TRAIN windows separately; no empirical SUMO-noise claim.

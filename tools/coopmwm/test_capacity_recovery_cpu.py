@@ -5,6 +5,24 @@ from .warm_protocol import batch_worlds,budget,worlds
 
 
 class RepairTests(unittest.TestCase):
+    def test_real_operational_binding_merge_and_u0_preflight(self):
+        import tempfile,json
+        from pathlib import Path
+        from unittest.mock import patch
+        from . import capacity_recovery as recovery
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)
+            for name,value in [('EXACT_OPERATIONAL_BINDING.json',dict(workers=4)),
+                ('WARM_B_RUNTIME_BINDING_V4.json',dict(operational=dict(workers=8,health_guards=True))),
+                ('AWR_BINDING.json',dict(config=dict(coefficient=1)))]:
+                (root/name).write_text(json.dumps(value))
+            b=dict(budget=budget(),repair_plan=dict(worlds=[],precharged_unattempted=['one']))
+            with patch.object(recovery,'binding',return_value=b),patch('tools.coopmwm.warm_health.assert_running'):
+                wr,_=recovery.install(root)
+                self.assertEqual(wr.verify(root,'B')['workers'],24)
+                self.assertEqual(wr.verify(root,'R')['workers'],4)
+                self.assertEqual(wr.verify(root,'B')['resume_update'],0)
+
     def test_exact_six_precharges_and_eighteen_fresh_same_cell_worlds(self):
         old=batch_worlds(1);claimed={w['seed'] for w in old[:-6]}
         plan=replacement_plan(old,worlds('train'),claimed)

@@ -1,5 +1,20 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+LATESTMAIN0508 REPAIR LIVE: B3432378/start58277467,R3432791/start58278008(cpuQ),
+broker3426521/start58265095,grader3427015/start58266001. B/Rsourcecapacitycpu3;
+broker/gradercapacitycpu2. NoactiveSTOP1793568612; original4GPUowners retained.
+Restart05:28:17UTC+8Nov2. B24workers;20/24closedat1793568595;fouradmittedqueries
+atT300/300/300/310. RwaitsBfinalquota; noRphysicsyet, nuisancecentreGPUuse disclosed.
+DoNOTduplicate. Usecapacity_repair_ops status,exact_ops status/progress,episode_progress.
+Repairregistered e70b67aa + launchadaptera073c07b;216CPUfullPASS plus19focusedPASS
+andrealbinding/u0Adam-RNGpreflight. Budget7495040/7500000/free4960; noreserve cuts.
+Ourfirstcapacitybroker readlegacycreate-before-fillJSON andSTOPped;18attemptedB
+incompleteepisodes retained/superseded,6neverclaimedprechargesadoptedonce,18fresh
+samecellTRAINworlds21600newcharge. No failedworldrerun/nooptimizerupdate lost.
+Secondlaunchmergefault wasbeforeclaim/physics andfixed. SHA-boundoriginalSTOP
+preserved; anyfreshfaultusesSTOP_V2. DetailedDIAGNOSISinCOOPMWM.md; allreceiptskept.
+OriginalGPUdeadlineunchanged; scientificviability/firstBupdate stillpending.
+
 FreshresumeMAIN0508: full284linebrief read; A48complete/exited; original B/R/grader/
 broker alive/noSTOP, both original GPUs8EXACT0. Ten searches/sevenstarts/noexactgrades.
 EPISODE_PROGRESS_1793567498 pins eightclaimedB/16unclaimed; fourqueries pending at

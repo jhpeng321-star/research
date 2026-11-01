@@ -44,15 +44,24 @@ for name in ('STARTUP_COMMITTED_K4_H300.json','STARTUP_COMMITTED_K8_H420.json'):
 print(json.dumps(v))''',timeout=30))
         values[host]=value
     cpu=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,sys,json,time,os
-r=pathlib.Path({ROOT!r});sys.path.insert(0,{CPU!r}+'/pytools')
+r=pathlib.Path({ROOT!r});repair=r/'MAIN0508_REPAIR_BINDING_V2.json'
+source=json.loads(repair.read_text())['source_root'] if repair.exists() else {CPU!r}
+sys.path.insert(0,source+'/pytools')
 from tools.coopmwm.accel_storage import read,charged
 owners={{}}
-for name in ['WARM_A_DISPATCH_V3.json','WARM_B_DISPATCH_V4.json','WARM_R_DISPATCH_V4.json','EXACT_GRADER_DISPATCH.json','WARM_REMOTE_BROKER_DISPATCH.json']:
+for name in ['WARM_A_DISPATCH_V3.json','WARM_B_DISPATCH_V4.json','WARM_R_DISPATCH_V4.json','EXACT_GRADER_DISPATCH.json','WARM_REMOTE_BROKER_DISPATCH.json',
+ 'WARM_B_DISPATCH_V6.json','WARM_R_DISPATCH_V6.json','EXACT_GRADER_DISPATCH_V2.json','CAPACITY_BROKER_DISPATCH_V2.json']:
  if not (r/name).exists():continue
  d=read(r/name);assert pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']
  p=pathlib.Path('/proc')/str(d['pid'])/'stat';s=p.read_text().split() if p.exists() else None
  assert not s or s[21]==d['start_ticks'];owners[name]=dict(owner=d,state=s[2] if s else 'exited')
-stops={{p.name:read(p) for pattern in ('PAUSE_*.json','WARM_GUIDED_STOP.json','WARM_*_FAILED_V3.json') for p in r.glob(pattern)}}
+stops={{p.name:read(p) for pattern in ('PAUSE_*.json','WARM_GUIDED_STOP*.json','WARM_*_FAILED_V3.json','WARM_*_FAILED_V5.json') for p in r.glob(pattern)}}
+if repair.exists():
+ from tools.coopmwm.warm_health import assert_running
+ try:assert_running(r,'B')
+ except (ValueError,RuntimeError):pass
+ else:
+  for name in ('WARM_GUIDED_STOP.json','WARM_B_FAILED_V3.json','WARM_R_FAILED_V3.json'):stops.pop(name,None)
 print(json.dumps(dict(unix=time.time(),owners=owners,stops=stops,updates={{a:max([0]+[int(p.stem.rsplit('_',1)[1]) for p in r.glob(a+'_UPDATE_*.json')]) for a in ('A','B','R')}},charged_sim_s=charged(r),load=os.getloadavg(),pending_plan_queries=sum(not (r/'responses'/p.name).exists() for p in (r/'requests').glob('*.json')))))''',timeout=40))
     write(ops.EVIDENCE/f'EXACT_STATUS_{int(cpu["unix"])}.json',dict(gpu=values,cpu=cpu))
     print(json.dumps(dict(cpu=cpu,gpu={h:dict(alive=v['alive'],ready=v['ready'],failed=v['failed'],owner=v['receipts'].get('SPOOL_OWNER.json'),gates={n:dict(pass_=r['pass_'],max_cost_error=r['max_cost_error']) for n,r in v['receipts'].items() if n.startswith('STARTUP_')},failure=v['receipts'].get('SPOOL_FAILED.json')) for h,v in values.items()})))
@@ -64,6 +73,9 @@ def progress():
     value=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,sys,time
 r=pathlib.Path({ROOT!r});sys.path.insert(0,{CPU!r}+'/pytools')
 from tools.coopmwm.accel_storage import read,ledger,charged
+repair=read(r/'MAIN0508_REPAIR_BINDING.json') if (r/'MAIN0508_REPAIR_BINDING.json').exists() else None
+failed=set(repair['repair_plan']['failed_jobs']) if repair else set()
+failed_worlds={{w['failed']['seed'] for w in repair['repair_plan']['replaced']}} if repair else set()
 queries=[]
 for p in (r/'broker_completed').glob('*.json'):
  c=read(p)
@@ -75,10 +87,13 @@ for p in (r/'broker_completed').glob('*.json'):
   world=request['world_id'],time_s=request['time_s'],inference_wall_s=c['inference_wall_s'],
   accepted=result['accepted'],candidates=result.get('candidates_searched'),futures=result.get('imagined_futures'),
   duration_s=(result.get('plan') or {{}}).get('duration_s'),predicted_rank=result.get('predicted_rank'),
-  predicted_saving=result.get('expected_saving'),known_family=result.get('known_family'),unix=c['unix']))
+   predicted_saving=result.get('expected_saving'),known_family=result.get('known_family'),unix=c['unix'],
+   superseded_engineering=bool(repair and request['world_id'] in failed_worlds and (r/'requests'/p.name).stat().st_mtime<repair['state']['unix'])))
 starts=[]
 for d in (r/'guided_starts').glob('u[0-9][0-9][0-9]'):
- for p in d.glob('*.json'):starts.append(dict(update=int(d.name[1:]),**read(p)))
+ for p in d.glob('*.json'):
+  v=read(p)
+  if v['job'] not in failed:starts.append(dict(update=int(d.name[1:]),**v))
 phase={{}}
 for c in ledger(r):phase[c['phase']]=phase.get(c['phase'],0)+c['sim_s']
 statuses=sorted(r.glob('EXACT_GRADER_STATUS_*.json'))
@@ -87,6 +102,7 @@ print(json.dumps(dict(unix=time.time(),queries=queries,executed_starts=starts,ph
     write(ops.EVIDENCE/f'EXACT_PROGRESS_{int(value["unix"])}.json',value)
     groups={}
     for q in value['queries']:
+        if q.get('superseded_engineering'):continue
         key=q['slot']+'|n'+str(q['group_size']);g=groups.setdefault(key,dict(queries=0,accepted=0,inference_wall_s=0.))
         g['queries']+=1;g['accepted']+=q['accepted'];g['inference_wall_s']+=q['inference_wall_s']
     for g in groups.values():g['measured_queries_per_inference_hour']=3600*g['queries']/g['inference_wall_s']

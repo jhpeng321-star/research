@@ -121,12 +121,16 @@ def status():
     value=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,time,os
 r=pathlib.Path({ROOT!r});owners={{}}
 for component,name in json.loads({json.dumps(DISPATCHES)!r}).items():
+ if component in ('B','R') and (r/f'WARM_{{component}}_DISPATCH_V6.json').exists():name=f'WARM_{{component}}_DISPATCH_V6.json'
  p=r/name
  if not p.exists():continue
  d=json.loads(p.read_text());st=pathlib.Path('/proc',str(d['pid']),'stat');s=st.read_text().split() if st.exists() else None
  assert not s or s[21]==d['start_ticks'];assert pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']
  owners[component]=dict(owner=d,state=s[2] if s else 'exited')
-logs={{a:(r/('CAPACITY_REPAIR_'+a+'.log')).read_text()[-5000:] for a in ('broker','grader','B','R') if (r/('CAPACITY_REPAIR_'+a+'.log')).exists()}}
+logs={{}}
+for a in ('broker','grader','B','R'):
+ p=r/('CAPACITY_REPAIR_'+a+('_V6' if a in ('B','R') and (r/f'WARM_{{a}}_DISPATCH_V6.json').exists() else '')+'.log')
+ if p.exists():logs[a]=p.read_text()[-5000:]
 print(json.dumps(dict(unix=time.time(),owners=owners,logs=logs,stop=json.loads((r/'WARM_GUIDED_STOP_V2.json').read_text()) if (r/'WARM_GUIDED_STOP_V2.json').exists() else None,
 declines=len(list((r/'capacity_declines').glob('*.json'))),load=os.getloadavg(),updates={{a:max([0]+[int(p.stem.rsplit('_',1)[1]) for p in r.glob(a+'_UPDATE_*.json')]) for a in ('A','B','R')}})))''',timeout=40))
     write(ops.EVIDENCE/f'CAPACITY_REPAIR_STATUS_{int(value["unix"])}.json',value);print(json.dumps(value));return value
