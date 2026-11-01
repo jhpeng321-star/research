@@ -1,0 +1,14 @@
+{
+  "state": "PAUSED_BY_MAIN",
+  "authority": "MAIN ADDENDUM 2026-11-01 17:35",
+  "reason": "S-COOPMWM supersedes the student path for now; release GPU priority for Paper A",
+  "resume_requires": "MAIN appends S-WMTEACH RESUME",
+  "collector": {
+    "pid": 43128,
+    "started_unix": 1793511929.2292252,
+    "command": "C:\\Users\\jpeng\\AppData\\Local\\Programs\\Python\\Python313\\python.exe -B -u -m tools.wmteach.scale_watch",
+    "action": "Exact command and creation epoch verified with CIM; Stop-Process completed successfully"
+  },
+  "new_dispatch_allowed": false,
+  "new_sumo_sim_s": 0
+}

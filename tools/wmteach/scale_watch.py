@@ -53,6 +53,9 @@ def update(text,begin,end,block):
 
 
 def main(interval=1200,hours=168):
+    if (HERE/'OWNER1735_PAUSE.json').exists():
+        print(json.dumps(dict(state='PAUSED_BY_MAIN',resume_requires='S-WMTEACH RESUME')),flush=True)
+        return
     lock=(HERE/'SCALE_WATCH.lock').open('a+')
     if os.name=='nt':
         import msvcrt
@@ -70,6 +73,7 @@ def main(interval=1200,hours=168):
         ROOT/'tools/wmteach/auto_live.py',ROOT/'tools/wmteach/scale_ops.py',ROOT/'tools/wmteach/scale.py')}
     deadline=time.monotonic()+hours*3600
     while time.monotonic()<deadline:
+        if (HERE/'OWNER1735_PAUSE.json').exists():return
         if any(hashlib.sha256(p.read_bytes()).hexdigest()!=h for p,h in frozen.items()):
             raise RuntimeError('collector source changed; stop without touching new work')
         from tools.wmteach.auto_live import advance
@@ -117,6 +121,8 @@ def main(interval=1200,hours=168):
 
 
 def launch():
+    if (HERE/'OWNER1735_PAUSE.json').exists():
+        return dict(state='PAUSED_BY_MAIN',resume_requires='S-WMTEACH RESUME')
     # The child's OS lock enforces uniqueness, including cross-session races.
     path=HERE/f'SCALE_WATCH_{int(time.time())}.log'
     with path.open('x',encoding='utf-8') as log:

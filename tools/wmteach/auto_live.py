@@ -141,6 +141,8 @@ def preregister(freeze):
 
 
 def launch():
+    if (ROOT/'docs/paper_results/wmteach/OWNER1735_PAUSE.json').exists():
+        return dict(state='PAUSED_BY_MAIN', resume_requires='S-WMTEACH RESUME')
     return json.loads(remote(f'''import pathlib,json,subprocess,sys,os,shutil,time
 root=pathlib.Path({LIVE!r})
 for name in ('DISPATCH_ONCE.json','LAUNCH_ONCE.json','STOP'):
@@ -168,6 +170,8 @@ print(json.dumps(receipt))
 
 
 def advance():
+    if (ROOT/'docs/paper_results/wmteach/OWNER1735_PAUSE.json').exists():
+        return dict(state='PAUSED_BY_MAIN', resume_requires='S-WMTEACH RESUME')
     result=prepare()
     if result['state']!='STAGED':return result
     gate=cpu();assert gate['pass_']
