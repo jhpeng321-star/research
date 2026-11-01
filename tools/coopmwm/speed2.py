@@ -42,6 +42,10 @@ def setup(root):
     from .wm import cost_adapter
     torch.set_num_threads(1)
     rt = runtime.bootstrap() if gpu else cpu_function(runtime.bootstrap)()
+    if gpu:
+        # Warm buffers need the registered persistent-worker allocation, applied
+        # after the frozen bootstrap's smaller inherited8GiB cap.
+        torch.cuda.set_per_process_memory_fraction(float(os.environ.get('SPEED2_MEMORY_FRACTION','.65')))
     if not gpu:runtime.move = cpu_function(runtime.move)
     rt.frozen.costs = cost_adapter(rt.frozen.costs, json.loads((root/'FROZEN_COSTS.json').read_text())['code'])
     original = plan_wm.adapted_futures
@@ -72,6 +76,21 @@ def setup(root):
         acts.append(dict(id=f'fixture_profile_{j}',members=record['group'],duration_s=60,
                          knots=[[max(bounds[0],min(bounds[1],v))]*7 for v in values]))
     assert len(acts) == 4
+    if os.environ.get('SPEED2_WARM')=='1':
+        from .speed2_memory import native_fixture
+        record,rt.speed2_memory=native_fixture(rt)
+        commands=record['commands']
+    group_size=int(os.environ.get('SPEED2_GROUP_SIZE','0'))
+    duration=int(os.environ.get('SPEED2_DURATION','60'))
+    if group_size or os.environ.get('SPEED2_WARM')=='1':
+        group_size=group_size or 2
+        record['group']=list(commands)[:group_size]
+        assert len(record['group'])==group_size
+        acts=baseline_actions(record)
+        for j in range(2):
+            acts.append(dict(id=f'long_group_{j}',members=record['group'],duration_s=duration,
+                knots=[[(-.7 if (i+t+j)%2 else .4) for t in range(duration//10+1)]
+                       for i in range(group_size)]))
     return rt, record, acts
 
 
@@ -130,6 +149,7 @@ def parity(root, H, K, width):
     rt, record, acts = setup(root)
     from .plan_wm import evaluate
     old = reference(root)
+    memory=getattr(rt,'speed2_memory',None)
     tapes = []
     costs = rt.frozen.costs
     def capture(roll, entries, initial):
@@ -141,15 +161,17 @@ def parity(root, H, K, width):
         if os.environ.get('SPEED2_DEVICE') == 'cuda':torch.cuda.synchronize()
     sync();start = time.perf_counter()
     print('REFERENCE', H, K, width, flush=True)
-    before = old(rt, record, acts, K, H, chunk_actions=width, trim=False,
-                 pad_actions=width, horizons=hs)
+    from contextlib import nullcontext
+    with (memory.context(rt,record) if memory is not None else nullcontext()):
+        before = old(rt, record, acts, K, H, chunk_actions=width, trim=False,
+                     pad_actions=width, horizons=hs)
     sync();old_wall = time.perf_counter()-start
     expected = tapes[:]
     tapes.clear()
     sync();start = time.perf_counter()
     print('OPTIMIZED', H, K, width, flush=True)
     after = evaluate(rt, record, acts, K, H, chunk_actions=width, trim=False,
-                     pad_actions=width, horizons=hs, speed2=True)
+                     pad_actions=width, horizons=hs, speed2=True,memory=memory)
     sync();new_wall = time.perf_counter()-start
     worst = max(abs(x['team_delay']-y['team_delay']) for h in before for a in before[h]
                 for x,y in zip(before[h][a], after[h][a]))
@@ -167,7 +189,11 @@ def parity(root, H, K, width):
         optimized_future_steps_per_s=K*max(4,width)*2*H/new_wall,
         H=H,K=K,width=width,horizons=hs,state_id=record['state_id'],
         device=os.environ.get('SPEED2_DEVICE','cpu'),timing_includes_trajectory_capture=True,
+        group_size=len(record['group']),plan_duration_s=max(a.get('duration_s',0) for a in acts),
         reference=before,optimized=after,new_sumo_sim_s=0)
+    if memory is not None:
+        result['memory']=dict(memory.receipt,encoder_calls=len(memory.encoder_seconds),
+                              encoder_wall_s=memory.encoder_seconds)
     save(root/'PARITY.json', result)
     print(json.dumps({k:v for k,v in result.items() if k not in ('reference','optimized')}),flush=True)
     assert result['pass_'], 'speed2 parity failed'
@@ -184,7 +210,8 @@ def profile(root, compact=False, speed2=False, lines=False):
     if lines:sys.settrace(timer.trace)
     try:
         with profiler:
-            result = evaluate(rt, record, acts, 2, 60, chunk_actions=4, trim=compact, pad_actions=4,speed2=speed2)
+            result = evaluate(rt, record, acts, 2, 60, chunk_actions=4, trim=compact, pad_actions=4,speed2=speed2,
+                              memory=getattr(rt,'speed2_memory',None))
     finally:
         sys.settrace(None)
     wall = time.perf_counter() - start
@@ -194,8 +221,12 @@ def profile(root, compact=False, speed2=False, lines=False):
     for (file, line, name), (cc, nc, tt, ct, _) in sorted(stats.stats.items(), key=lambda x: -x[1][2])[:40]:
         top.append(dict(file=file, line=line, name=name, calls=nc, self_s=tt,
                         cumulative_s=ct, self_percent=100*tt/stats.total_tt))
-    save(root/'BASELINE.json', dict(wall_s=wall, future_steps_per_s=8*120/wall,
-        H=60, K=2, width=4, top=top, lines=timer.result(), result=result, new_sumo_sim_s=0))
+    receipt=dict(wall_s=wall, future_steps_per_s=8*120/wall,
+        H=60, K=2, width=4, top=top, lines=timer.result(), result=result, new_sumo_sim_s=0)
+    if hasattr(rt,'speed2_memory'):
+        memory=rt.speed2_memory
+        receipt['memory']=dict(memory.receipt,encoder_calls=len(memory.encoder_seconds),encoder_wall_s=memory.encoder_seconds)
+    save(root/'BASELINE.json',receipt)
     print(json.dumps(dict(wall_s=wall, top=top[:20])), flush=True)
 
 

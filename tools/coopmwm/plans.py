@@ -23,9 +23,10 @@ def validate(plan, bounds):
 
 
 def acceleration_at(plan, elapsed):
-    if not 0 <= elapsed < plan['duration_s']:
+    if not plan['members'] or not 0 <= elapsed < plan['duration_s']:
         return {}
-    j = min(5, int(elapsed//10)); f = (elapsed-10*j)/10
+    stride = plan.get('knot_s', 10)
+    j = min(len(plan['knots'][0])-2, int(elapsed//stride)); f = (elapsed-stride*j)/stride
     return {v:float((1-f)*k[j]+f*k[j+1]) for v,k in zip(plan['members'], plan['knots'])}
 
 

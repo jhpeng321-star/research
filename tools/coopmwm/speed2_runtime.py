@@ -31,7 +31,7 @@ def trajectory_errors(expected, actual):
     return errors
 
 
-def qualify(rt, record, actions, K, H, width):
+def qualify(rt, record, actions, K, H, width, memory=None):
     """Old full-roster vs optimized, once per newly bound persistent worker."""
     from .plan_wm import evaluate
     tapes = []
@@ -46,12 +46,12 @@ def qualify(rt, record, actions, K, H, width):
         if device.type == 'cuda':torch.cuda.synchronize(device)
     try:
         sync();start=time.perf_counter()
-        old = evaluate(rt,record,actions,K,H,chunk_actions=width,trim=False,pad_actions=width)
+        old = evaluate(rt,record,actions,K,H,chunk_actions=width,trim=False,pad_actions=width,memory=memory)
         sync();old_wall=time.perf_counter()-start
         expected = tapes[:]
         tapes.clear()
         sync();start=time.perf_counter()
-        new = evaluate(rt,record,actions,K,H,chunk_actions=width,trim=False,pad_actions=width,speed2=True)
+        new = evaluate(rt,record,actions,K,H,chunk_actions=width,trim=False,pad_actions=width,speed2=True,memory=memory)
         sync();new_wall=time.perf_counter()-start
         errors = trajectory_errors(expected,tapes)
     finally:

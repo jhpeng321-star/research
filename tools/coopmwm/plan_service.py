@@ -18,7 +18,19 @@ def configured_runtime(bootstrap,fraction):
 
 
 def batch_width(binding,k):
-    return int(binding.get('batch_widths',{}).get(str(k),binding.get('batch_width',4)))
+    widths=binding.get('batch_widths',binding.get('batch_width_by_K',{}))
+    return int(widths.get(str(k),binding.get('batch_width',4)))
+
+
+def request_memory(rt,record,binding):
+    diagnostic=record.get('mode')=='diagnostic'
+    allowed={'state_id','world_id','time_s','rows','group','commands','policy_residuals'}|({'mode','plan'} if diagnostic else set())
+    if 'warm_memory' in record:allowed.add('warm_memory')
+    if set(record)!=allowed:raise ValueError('observable plan request whitelist')
+    if binding.get('memory_mode')=='warm' and 'warm_memory' not in record:
+        raise ValueError('warm worker requires an explicit memory payload (empty allowed)')
+    from .speed2_memory import WarmQuery
+    return WarmQuery.from_record(rt,record)
 
 
 def main(root):
@@ -60,6 +72,15 @@ def main(root):
                 receipt=dict(pass_=error<=.001,max_cost_error=error,K=k,H=h,width=width,pid=os.getpid())
             write(root/f'STARTUP_PARITY_K{k}_H{h}.json',receipt)
             if not receipt['pass_']:raise ValueError('persistent worker batch parity failed')
+        if speed2 and binding.get('memory_mode')=='warm':
+            from .speed2_memory import native_fixture
+            warm_record,memory=native_fixture(rt)
+            warm_acts=baseline_actions(warm_record)
+            for k,h in ((4,120),(8,300)):
+                width=batch_width(binding,k)
+                receipt=dict(qualify(rt,warm_record,warm_acts,k,h,width,memory=memory),pid=os.getpid(),memory=memory.receipt)
+                write(root/f'STARTUP_WARM_PARITY_K{k}_H{h}.json',receipt)
+                if not receipt['pass_']:raise ValueError('persistent worker warm speed2 parity failed')
     def emit(event,**kw):print('COOPMWM_JSON '+json.dumps(dict(event=event,**kw)),flush=True)
     ready=dict(pid=os.getpid(),start_ticks=Path(f'/proc/{os.getpid()}/stat').read_text().split()[21],
         boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),unix=time.time())
@@ -69,8 +90,7 @@ def main(root):
         r=json.loads(line);key=r['state_id'];dest=root/'forecasts'/(key+'.json')
         if dest.exists():raise ValueError('duplicate inference attempt; inspect owned receipt')
         diagnostic=r.get('mode')=='diagnostic'
-        allowed={'state_id','world_id','time_s','rows','group','commands','policy_residuals'}|({'mode','plan'} if diagnostic else set())
-        if set(r)!=allowed:raise ValueError('observable plan request whitelist')
+        memory=request_memory(rt,r,binding)
         from tools.coopnative.policy import encode
         encode(r['rows'])
         ids={v['vid'] for v in r['rows'] if v['is_cav']}
@@ -78,10 +98,10 @@ def main(root):
         start=time.monotonic()
         if diagnostic:
             from .accel_diagnostic import evaluate as credit
-            result=credit(rt,r)
+            result=credit(rt,r,speed2=speed2,memory=memory)
         else:
             result=search(r,(float(rt.mp.policy.accel_min),float(rt.mp.policy.accel_max)),
-                lambda a,k,h:evaluate(rt,r,a,k,h,chunk_actions=batch_width(binding,k),trim=False,pad_actions=batch_width(binding,k),speed2=speed2))
+                lambda a,k,h:evaluate(rt,r,a,k,h,chunk_actions=batch_width(binding,k),trim=False,pad_actions=batch_width(binding,k),speed2=speed2,memory=memory))
         payload=dict(key=key,result=result,wall_s=time.monotonic()-start,unix=time.time())
         write(dest,payload);emit('RESULT',**payload)
 

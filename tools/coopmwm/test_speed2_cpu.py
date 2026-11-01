@@ -12,6 +12,44 @@ from .speed2_runtime import bind_ledger, compact_geometry
 
 
 class Speed2CPU(unittest.TestCase):
+    def test_empty_memory_is_cold_and_rejects_unobserved_payload_fields(self):
+        from .speed2_memory import WarmQuery
+        self.assertIsNone(WarmQuery.from_record(None,dict(warm_memory={})))
+        self.assertIsNone(WarmQuery.from_record(None,{}))
+        with self.assertRaises(ValueError):
+            WarmQuery.from_record(None,dict(time_s=300,warm_memory=dict(t0_s=300,driver_defaults=[])))
+
+    def test_service_accepts_explicit_empty_warm_request_and_uses_phase_widths(self):
+        from .plan_service import request_memory,batch_width
+        r=dict(state_id='fixture',world_id=986000,time_s=600,rows=[],group=[],commands={},policy_residuals={})
+        binding=dict(memory_mode='warm',batch_width=4,batch_width_by_K={'4':34,'8':10})
+        self.assertIsNone(request_memory(None,dict(r,warm_memory={}),binding))
+        with self.assertRaises(ValueError):request_memory(None,r,binding)
+        with self.assertRaises(ValueError):request_memory(None,dict(r,warm_memory={},hidden_settings={}),binding)
+        self.assertEqual((batch_width(binding,4),batch_width(binding,8)),(34,10))
+        self.assertEqual(batch_width(dict(batch_width=4),8),4)
+
+    def test_long_four_member_profiles_and_legacy_interpolation(self):
+        from .plans import acceleration_at
+        from .plan_wm import profile_table,profile_apply
+        members=['a','b','c','d']
+        p=dict(members=members,duration_s=300,
+               knots=[[(-.5 if (i+t)%2 else .7) for t in range(31)] for i in range(4)])
+        for t in range(300):
+            j=t//10;f=(t-10*j)/10
+            expected={v:(1-f)*k[j]+f*k[j+1] for v,k in zip(members,p['knots'])}
+            self.assertEqual(acceleration_at(p,t),expected)
+        table=profile_table([p],members+['background'],'cpu')
+        for t in (59,60,119,120,299):
+            actual=profile_apply(torch.zeros(1,5),2*t,table,(-3.,3.))
+            expected=torch.tensor([[*acceleration_at(p,t).values(),0.]])
+            self.assertTrue(torch.equal(actual,expected))
+        legacy=dict(members=['a','b'],duration_s=60,knots=[list(range(7))]*2)
+        self.assertEqual(acceleration_at(dict(legacy,members=[],knots=[]),0),{})
+        for tick in range(120):
+            t=tick*.5;j=min(5,int(t//10));f=(t-10*j)/10
+            self.assertEqual(acceleration_at(legacy,t),dict(a=(1-f)*j+f*(j+1),b=(1-f)*j+f*(j+1)))
+
     def test_host_ledger_observer_preserves_return_and_tracks_all_rows(self):
         calls = []
         process = SimpleNamespace(_commit=lambda *a: calls.append(a) or a[-1])
