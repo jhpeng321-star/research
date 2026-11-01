@@ -1,5 +1,17 @@
 # S-COOPMWM — live checks
 
+## 2026-11-01 17:48 — recovery and random-guide amendment
+- Registered owner17:42 arm R before any UPDATE/E2 outcome; registration and exact quote
+  preserved in `BUDGET_AMENDMENT_1742.json` and commit `bb9d6fdb`.
+- Revised allocation **4,918,800 / 6,000,000 sim-s**, unallocated1,081,200; A/B seeds1+2,
+  R primary only, fixedu24; seed3 dropped. Primary A/B test still precedes R/replications.
+- Recovered owned supervisor1877910; let all **62/62 jobs close** before controlled adoption.
+  **74,400 sim-s charged** includes smoke,12TRAIN-check controls and48initial A/B episodes.
+- At the E2 forecast wait, verified boot/start identity and no active/queued physics;
+  stopped only that supervisor. Original jobs/checkpoints/charge ledger/WM queue survive.
+  Receipt `QUIESCE_1742.json`; existing GPU bridge retained, no duplicate dispatch.
+- R implementation/CPU qualification underway; no training update or R physics yet.
+
 ## 2026-11-01 17:41 — full-episode zero-update smoke PASS
 - Owned cpuQ smoke PID1872644 finished; both registered1200s episodes closed.
 - A and B metrics exactly equal reused bitwise MAPPO baseline at J600/J900;
