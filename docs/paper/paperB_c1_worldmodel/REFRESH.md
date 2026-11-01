@@ -1,6 +1,6 @@
 # Paper B — source refresh and end-of-night handoff
 
-## Current morning handoff
+## Current noon handoff
 
 The previous session's clean package, bibliography verification and first-package
 registration are preserved. Fresh-session review and exact safe source hashes are
@@ -34,28 +34,40 @@ semantically. Current claims supersede the historical evening queues below.
 - **Observable-start physics reference complete:** short-range improvements
   coexist with initialization collision flags and long-range effect errors;
   this is not a clean information ceiling.
-- **Main wall-inclusive switching infrastructure-interrupted:** fixed/random CPU
-  arms remain complete. Both WM GPU services exited; the reachable worker stopped
-  on an inference timeout, and current cpuQ state/final accounting is UNKNOWN.
-  BB remains unstarted with a registered post-priority-window placement staged;
-  original-WM oracle continuation is also staged, not measured. Final RL weights
-  remain undelivered. Existing source-owner observers/plans own follow-up; stale
-  running headers or inaccessible hosts do not authorize a paper-task restart.
-- **WM-PHYS interim point-rule FAIL:** latest causal-motion candidate improves
-  delay-distribution/endpoint point estimates but worsens breakdown-rate distance.
-  Earlier numerical CIs were retracted for an unscored-peer bootstrap bug; full-world
-  intervals remain unavailable under the registered singleton-stratum plan.
-  Same-source action confidence is not calibrated. Final freeze/evaluation remains
-  pending; earlier saved-ID mapping concerns and earlier-source A/B/C comparisons
-  must not be transferred to the newer candidate as validation or isolated ablation.
+- **Main wall-inclusive switching recovered but incomplete:** fixed/random CPU
+  arms remain complete. SSH recovery reconciles original WM episodes as
+  terminal/incomplete; original oracle-only continuations are source-owned, with
+  gpuR's scope complete and cpuQ's running at the noon cut. BB startup is terminal
+  before physics, retaining its debit and requiring an explicit continuation
+  exception. The frozen final fleet checkpoint/source/config is delivered and its
+  evaluator is running; the other host partition is resource-blocked. Per-CAV
+  training/final-only handoff continues, with no final delivery. Current handoff
+  supersedes stale outage/weights-unavailable headers. No full paired efficacy
+  estimate exists; all existing science remains owned by its original supervisors.
+- **WM-PHYS FINAL point-rule FAIL:** the frozen causal-motion candidate improves
+  delay-distribution/endpoint point estimates and the reported controller-effect
+  signs but worsens breakdown-rate distance. Earlier numerical CIs were retracted
+  for an unscored-peer bootstrap bug; full-world intervals remain unavailable under
+  the singleton-stratum plan. Same-source action confidence is not calibrated.
+  Engineering freeze/final report/adoption decision are now resolved: keep WM2.
+  Final publication reuses verified complete same-source forecasts. Earlier
+  saved-ID concerns and earlier-source A/B/C comparisons must not be transferred
+  to this candidate as validation or isolated ablation. Successor-physics work has
+  its own prospective registrations; it is not a revision of this final verdict.
+- **Companion morning context bound:** exact-model planner benefit is not a
+  WM-control win; pooled superadditivity remains inconclusive. The bandit deploys
+  fallback and the free-form learner does not establish learned improvement.
+  Student live work is dispatched and the WM-teacher protocol is registered;
+  neither supplies completed efficacy.
 - **Artwork delivered:** completed common-plant, distributional and value-tail
   panels with vector twins, exact source snapshots and backing CSVs. New PNGs
   visually inspected; package validation passed. No historical artwork was replaced.
 
 ### Current insertion queue
 
-- `[[PENDING: source-owner cpuQ connectivity/accounting reconciliation, complete main wall-inclusive paired WM/BB/fleet-PPO/per-CAV-MAPPO results and final selector/data/training-budget receipts / S-C1SWITCH2 + S-SELMAPPO + S-SELMAPPO2 + MAIN]]`.
-- `[[PENDING: final identity-bound physics-rebuild qualification with corrected uncertainty, endpoint non-regression and independent switching-adoption receipt / S-RB-INT + S-RB-EVAL + MAIN]]`.
+- `[[PENDING: complete main wall-inclusive paired WM/BB/fleet-PPO/per-CAV-MAPPO coverage/exports, per-CAV final delivery and final model/RL data-compute accounting; explicit BB continuation decision if any / S-C1SWITCH2 + S-SELMAPPO2 + MAIN]]`.
+- `[[PENDING: independently frozen successor-physics results with replicated-cell uncertainty and calibrated action confidence / S-RB2-INT + S-RB2-LANE + S-RB2-BREAK + S-RB2-CAL + S-RB2-LPHYS + MAIN]]`.
+- `[[PENDING: completed companion live student-policy results and WM-teacher-quality/transfer evidence / S-DISTILL + S-WMTEACH]]`.
 - `[[PENDING: causal wall executor/memory restoration and eligible autonomous wall feedback / S-C1CLOSED + MAIN]]`.
 - `[[PENDING: unbroken initialization exclusion, exact historical E1 cost/plant binding and original E2 direction-panel/checkpoint/rule binding / S-C1GAP + MAIN]]`.
 - `[[PENDING: matched architecture ablations and original baseline data/compute comparability if claimed / MAIN]]`.
@@ -64,15 +76,16 @@ semantically. Current claims supersede the historical evening queues below.
 The original simulator-RNG floor is unavailable under its failed restoration
 contract; the completed separate reseeding probe does not fill it. Unscored repair
 checkpoints and unmeasured long-WM A stay unavailable, rather than open dispatch
-requests. Main closed-loop completion, final calibration and WMVALUE verdict are
-resolved; do not keep waiting for those already delivered reports.
+requests. Main closed-loop completion, final calibration, WMVALUE verdict, frozen
+FULL-v4 final report/adoption verdict and fleet final training/delivery are
+resolved; do not keep waiting for those already delivered receipts.
 
-The current morning semantic review is recorded at the top of
+The current noon semantic review is recorded at the top of
 `NIGHT_SOURCE_REVIEW.md`; `SOURCE_REFRESH.json` binds the exact permitted source
 bytes. Historical/overnight numerical figure inputs did not change, so delivered
 artwork and bibliography verification are preserved without rerendering. The
-switching handoff and latest rebuild interim supersede earlier live-status headers;
-placement registration and conditional bootstrap intervals are not efficacy.
+switching handoff and final rebuild report supersede earlier live-status headers;
+training completion, partial evaluation and conditional intervals are not efficacy.
 
 ### Reproduce and verify
 
@@ -157,7 +170,7 @@ Then semantically reread newly present/changed reports using their exact paths. 
 - C1CLOSED is now complete and incorporated. Future revisions must preserve its plant/cohort/mixed-results scope; only missing causal wall restoration or a separately authorized candidate may change those fields. Historical recorded-motion evidence stays historical.
 - Completed calibration is already incorporated; retain raw-WM/arm-mean comparators, independent transfer, reference arms and cost definitions. Do not replace the final negative verdict with old smoke results.
 - WMVALUE's necessary-condition FAIL and the expanded repair's early-stop partial result are also incorporated. Do not restart them, infer missing A or later-checkpoint values, or wait on their stale historical pending headers.
-- Recheck the model plan/change log, E1/E2 exports, corrected qualification and entry retarget reports. Never silently transfer the frozen direction envelope to a different model or population.
+- Recheck the model plan/change log, E1/E2 exports, corrected qualification and entry retarget reports. Never silently transfer the frozen direction envelope to a different model or population. FULL-v4's final freeze/report/adoption verdict and fleet final training/delivery are already resolved; only independently identity-bound successor or remaining evaluation evidence can change their open follow-ups.
 - If numerical figure inputs changed, review provenance/metrics first, then refresh the appropriate historical/evening/overnight builder's explicit allowlist. Otherwise reuse frozen inputs. New result CSVs need an explicit rendering change, not a directory crawl.
 - Update `CLAIMS.md`, affected outline paragraphs/captions, and this handoff; retain failed and missing outcomes. Every numerical insertion needs an adjacent HTML source comment. Mark each remaining missing result `[[PENDING: what / agent]]`.
 - Run `python -B "docs/paper/paperB_c1_worldmodel/validate_package.py"`, inspect any changed PNGs, inspect status/diff/recent commits, and commit only package files. Source snapshots are byte-preserved by local `.gitattributes`; the data directory is intentionally tracked despite the repository's broad local exclusion.
