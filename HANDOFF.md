@@ -19,9 +19,13 @@ Task S-RB-CF: SUMO 1.27.1 IDM car-following parity + a pure-physics preset.
   rb-shared LANE_TO_CF_POSITION_20261101: 2,346,379 FIT intervals, Euler
   residual 3.5e-5 m vs trapezoid 0.039 m).  Tests
   `tests/test_rb_cf_position_rule.py` (6) + full CF/equivalence suite: 92
-  passed.  Tape check 60 s (`tape_check_euler60.json`): vs the frozen
-  trapezoid sumo_enc arm, speed MAE -0.032 m/s @30 s / **-0.122 m/s @60 s**
-  (21/32, 19/32 worlds better), position/gap neutral — value is generator
+  passed.  Tape check 60 s (`tape_check_euler60.json`, attribution arms
+  `tape_check_legacy_euler60.json`/`tape_check_legacy_pure60.json`): Euler
+  position improves HDV speed MAE on BOTH cores vs the frozen trapezoid arms
+  (SUMO core -0.032/-0.122 m/s @30/60 s, 21/32 and 19/32 worlds; LEGACY core
+  -0.054/-0.096 m/s, 20/32 and 19/32 — core-independent integrator effect);
+  gap MAE neutral at matched horizon (+0.08/+0.22 m; an initial -8.4 m gap
+  delta was a 120s-vs-60s horizon mismatch, discarded).  Value is generator
   parity + bias removal, not the error score.  Measured per-step bias of the
   legacy rule on the 40 native dev tapes (merge zone): braking steps overshoot
   downstream +8.5 cm mean (p99 19.8 cm, n=195,638), accelerating steps
