@@ -45,6 +45,13 @@ _DEFAULT_IDM = (2.6, 4.5, 1.1, 2.5, 4)
 #: ``_v`` sub-stepping, SUMO minNextSpeed/emergencyDecel floor, maxNextSpeed
 #: cap, ``stopSpeed`` at the accel-lane end).
 CF_MODELS = ("legacy", "sumo_idm")
+#: S-RB-CF (2026-11-01): longitudinal position integration rule.  SUMO's default
+#: (semi-implicit Euler, ``--step-method.ballistic`` off) advances the position
+#: with the NEW speed: ``s' = s + v'*dt`` (``MSVehicle.cpp:4954-4963``,
+#: ``deltaPos = SPEED2DIST(vNext)``; 2,346,379 FIT motion intervals agree,
+#: rb-shared LANE_TO_CF_POSITION_20261101).  ``legacy_trapezoid`` keeps the WM's
+#: historical ``s' = s + 0.5 (v + v') dt`` (bit-identical default).
+POSITION_RULES = ("legacy_trapezoid", "sumo_euler")
 #: Lane-rule selectors (C4): full MOBIL discretionary changes or forced merges only.
 LANE_RULES = ("mobil", "forced_merge_only", "learned_discretionary")
 #: Gap-acceptance rule of the lane-change feasibility mask (GAPRULE): the legacy fixed
@@ -324,6 +331,9 @@ class PhysicsConfig:
     #: SUMO vType ``actionStepLength`` (None = every step, the SUMO default; the
     #: rollout does not carry the held-acceleration state for larger values yet).
     sumo_cf_action_step_s: float | None = None
+    #: S-RB-CF (2026-11-01, default "legacy_trapezoid" = bit-identical): the
+    #: longitudinal position rule of the WM step (see POSITION_RULES).
+    position_rule: str = "legacy_trapezoid"
 
     def __post_init__(self) -> None:
         if not isinstance(self.secure_gap_veto, bool):
@@ -426,6 +436,9 @@ class PhysicsConfig:
             raise ValueError("entry_learned must be a boolean")
         if self.cf_model not in CF_MODELS:
             raise ValueError(f"cf_model must be one of {CF_MODELS}: {self.cf_model!r}")
+        if self.position_rule not in POSITION_RULES:
+            raise ValueError(f"position_rule must be one of {POSITION_RULES}: "
+                             f"{self.position_rule!r}")
         for name in ("sumo_cf_stepping_s",):
             value = getattr(self, name)
             if (isinstance(value, bool) or not isinstance(value, (int, float))

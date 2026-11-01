@@ -38,10 +38,16 @@ no downloaded code is executed).  Sources and line anchors:
 
 Conventions/limits (documented gaps, no silent deviation):
 
-* Semi-implicit Euler update (``--step-method.ballistic`` off, the SUMO default).
-  The WM integrator (``WmSModel.step``: ``v' = max(0, v + a dt)``,
-  ``s' = s + (v + v')/2 dt``) reproduces the SUMO ballistic position rule and
-  the Euler speed rule from the acceleration returned here.
+* Speed rule: semi-implicit Euler (``--step-method.ballistic`` off, the SUMO
+  default): ``v' = max(0, v + a dt)``.  Position rule (SUMO default, same
+  flag): ``s' = s + v' dt`` — ``MSVehicle.cpp:4954-4963``
+  (``updateState``: ``deltaPos = SPEED2DIST(vNext)``).  The WM's historical
+  integrator used the trapezoid ``s' = s + (v + v')/2 dt`` instead; that is
+  neither SUMO's default nor its ballistic option and is kept only as the
+  default-OFF-compatible ``position_rule='legacy_trapezoid'``
+  (``position_rule='sumo_euler'`` restores SUMO parity; evidence: 2,346,379
+  FIT motion intervals, Euler residual 3.5e-5 m vs trapezoid 0.039 m,
+  rb-shared LANE_TO_CF_POSITION_20261101).
 * ``actionStepLength == stepLength`` (the SUMO default): the model is
   re-evaluated every 0.5 s step.  A larger action step would hold the last
   acceleration between action steps (``MSVehicle.cpp:4654-4663``); the
@@ -440,6 +446,13 @@ PURE_SUMO_PHYSICS = {
     "merge_impatience": False,
     "entry_learned": False,
 }
+
+#: S-RB-CF (2026-11-01) full-parity variant: PURE_SUMO_PHYSICS plus SUMO's
+#: Euler position rule (``s' = s + v' dt``).  ``PURE_SUMO_PHYSICS`` itself is
+#: deliberately left unchanged (trapezoid position) so every result produced
+#: with it — including the frozen FULL-v4 panel — keeps its exact provenance;
+#: use this preset for post-freeze parity runs.
+PURE_SUMO_PHYSICS_EULER = {**PURE_SUMO_PHYSICS, "position_rule": "sumo_euler"}
 
 
 # ------------------------------------------------------- WM baseline dispatch

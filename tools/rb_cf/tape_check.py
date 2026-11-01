@@ -251,13 +251,14 @@ def roll(predictor, capture, rec: dict, arm: str, horizon_s: float) -> dict:
 def load_arm(ckpt: Path, variant: str, run_physics: dict | None = None):
     import torch
     from wms.eval.predictor import RolloutFlags, WmsPredictor
-    from wms.physics.idm_sumo import PURE_SUMO_PHYSICS
+    from wms.physics.idm_sumo import PURE_SUMO_PHYSICS, PURE_SUMO_PHYSICS_EULER
     torch.set_num_threads(1)
     flags = RolloutFlags()
     physics = dict(run_physics or {})
-    if variant in ("sumo_enc", "sumo_pop"):
+    if variant in ("sumo_enc", "sumo_enc_euler", "sumo_pop"):
         flags = RolloutFlags(pure_physics=True)
-        physics.update(PURE_SUMO_PHYSICS)
+        physics.update(PURE_SUMO_PHYSICS_EULER if variant == "sumo_enc_euler"
+                       else PURE_SUMO_PHYSICS)
     if variant == "sumo_pop":
         flags = RolloutFlags(pure_physics=True, diag_encoder_population=True)
     if variant == "legacy_pure":

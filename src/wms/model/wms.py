@@ -1824,16 +1824,23 @@ class WmSModel(nn.Module):
         dt = self.physics.dt_s
         if self.merge_pivot is not None:
             moved = pivot.advance_longitudinal(state_kin(state), out["accel_mps2"], dt,
-                                               self.physics.stop_time_integration)
+                                               self.physics.stop_time_integration,
+                                               position_rule=self.physics.position_rule)
             next_s, next_v = moved[..., 0], moved[..., 4]
         else:
             next_v = (v + out["accel_mps2"] * dt).clamp_min(0.0)
-            next_s = s + 0.5 * (v + next_v) * dt
-            if self.physics.stop_time_integration:
-                accel = out["accel_mps2"]
-                decel = torch.where(accel < 0.0, -accel, torch.ones_like(accel))
-                stopping_distance = v.square() / (2.0 * decel)
-                next_s = torch.where(v + accel * dt < 0.0, s + stopping_distance, next_s)
+            # S-RB-CF position_rule: SUMO's default Euler update advances the
+            # position with the NEW speed (MSVehicle.cpp:4954-4963); the
+            # trapezoid rule (plus its exact-stop fallback) is the WM legacy.
+            if self.physics.position_rule == "sumo_euler":
+                next_s = s + next_v * dt
+            else:
+                next_s = s + 0.5 * (v + next_v) * dt
+                if self.physics.stop_time_integration:
+                    accel = out["accel_mps2"]
+                    decel = torch.where(accel < 0.0, -accel, torch.ones_like(accel))
+                    stopping_distance = v.square() / (2.0 * decel)
+                    next_s = torch.where(v + accel * dt < 0.0, s + stopping_distance, next_s)
         if self._samples_lanes:
             if lane_uniform is None:
                 lane_uniform = torch.rand(present.shape, device=present.device)
@@ -1951,14 +1958,16 @@ class WmSModel(nn.Module):
                                 fixed_next_lane=None, route_shift=None, delegated=None):
         """P1 LC substep shared by deployment and recorded causal replay.
 
-        Decision is after the single trapezoid/stop-time longitudinal update and
+        Decision is after the single longitudinal update (``physics.position_rule``,
+        default trapezoid/stop-time; ``sumo_euler`` = SUMO's default rule) and
         causal CAV execution, before exits/projection; lanes are the t snapshot.
         This is the WM contract, not a claim of verified SUMO internal ordering.
         """
         kin = state_kin(state)
         if next_s is None or next_v is None:
             moved = pivot.advance_longitudinal(kin, accel, self.physics.dt_s,
-                                               self.physics.stop_time_integration)
+                                               self.physics.stop_time_integration,
+                                               position_rule=self.physics.position_rule)
         else:
             moved = kin.clone()
             moved[..., 0], moved[..., 4], moved[..., 5] = next_s, next_v, accel

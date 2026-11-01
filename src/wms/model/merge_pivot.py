@@ -590,19 +590,32 @@ def hybrid_quadrature_report(c: Tensor, tau: Tensor, w: Tensor, *,
 
 
 def advance_longitudinal(kin: Tensor, accel: Tensor, dt: float,
-                         stop_time_integration: bool = False) -> Tensor:
+                         stop_time_integration: bool = False,
+                         position_rule: str = "legacy_trapezoid") -> Tensor:
     """Return updated kin, matching WmSModel.step's single longitudinal update.
 
     Lane/length are copied; s,v,a are updated.  No exits, lane-end projection,
     lane changes or future observations are applied by this primitive.
+
+    S-RB-CF ``position_rule='sumo_euler'`` (default ``'legacy_trapezoid'``):
+    SUMO's default semi-implicit Euler update advances the position with the NEW
+    speed, ``s' = s + v' dt`` (``MSVehicle.cpp:4954-4963``,
+    ``deltaPos = SPEED2DIST(vNext)`` with ``gSemiImplicitEulerUpdate``); the
+    trapezoid rule is the WM's historical integrator, not SUMO's.  Under Euler a
+    clamped stop (``v' = 0``) simply does not move the car that step, so the
+    exact ``stop_time_integration`` stopping-distance fallback is a trapezoid-
+    only correction and is skipped.
     """
     s, v = kin[..., 0], kin[..., 4]
     next_v = (v + accel * dt).clamp_min(0.0)
-    next_s = s + 0.5 * (v + next_v) * dt
-    if stop_time_integration:
-        decel = torch.where(accel < 0.0, -accel, torch.ones_like(accel))
-        stopping_distance = v.square() / (2.0 * decel)
-        next_s = torch.where(v + accel * dt < 0.0, s + stopping_distance, next_s)
+    if position_rule == "sumo_euler":
+        next_s = s + next_v * dt
+    else:
+        next_s = s + 0.5 * (v + next_v) * dt
+        if stop_time_integration:
+            decel = torch.where(accel < 0.0, -accel, torch.ones_like(accel))
+            stopping_distance = v.square() / (2.0 * decel)
+            next_s = torch.where(v + accel * dt < 0.0, s + stopping_distance, next_s)
     out = kin.clone()
     out[..., 0], out[..., 4], out[..., 5] = next_s, next_v, accel
     return out
