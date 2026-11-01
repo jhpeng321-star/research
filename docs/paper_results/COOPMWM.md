@@ -1789,3 +1789,30 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
 - Receipt: `coopmwm/warm_live/A_VIABILITY_041.json`.
 <!-- warm-receipt:A_VIABILITY_041.json:ea1b12c678678bfac66d7cc55569efcd11fffc9cf4857b5afa096ad00c1a032b -->
+
+## Warm live publication — 2026-11-01T20:31:58.229602+00:00
+- Conservatively charged 2327240/7500000 sim-s.
+
+### Warm continuation — A_UPDATE_041.json
+- A u41: queries/accepted/executed 0/0/0; wall 277.3s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_041.json`.
+<!-- warm-receipt:A_UPDATE_041.json:1dda282394530f02a1dfff1c084077e75d5752bfa2702131768d265162f71133 -->
+
+### Warm continuation — A_UPDATE_042.json
+- A u42: queries/accepted/executed 0/0/0; wall 269.1s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_042.json`.
+<!-- warm-receipt:A_UPDATE_042.json:dc1b2356b24a7dfc1330c199a5b5549fe243890be11017f282001fab0eeac25d -->
+
+### Warm continuation — A_VIABILITY_042.json
+- A u42: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_042.json`.
+<!-- warm-receipt:A_VIABILITY_042.json:e66ac23dbb764bcfba6d62e4426e2bf9bd958bb109d5e3e38f2454ef44afde0a -->
+
+### Warm continuation — A_VIABILITY_043.json
+- A u43: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_043.json`.
+<!-- warm-receipt:A_VIABILITY_043.json:4a0aa010e0514563ea325251ce661555f436ed317d2d40c7870ba340bd873bd6 -->
