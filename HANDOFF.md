@@ -4,6 +4,11 @@ Branch `c4/rb-merge`, basef0db3c82. Prior work fully retained; see
 `docs/rb_merge/HANDOFF_HISTORY_{0100,0315,FINAL_VALIDATION}.md` and source ledger.
 
 ## Status
+- Fresh-session recovery after noon on2026-11-01: clean HEAD3ce7aa6a retained;
+  four final local PIDs absent at12:57:50+08. INT confirms MERGE intake and frozen
+  FULL-v4 post-motion departure wiring; no new owned integration repair requested.
+  Recovery receipt `docs/rb_merge/RESUME_20261101_AFTER_NOON.md`. Prior tests/results
+  retained; no dispatch/re-score after the elapsed09:30freeze.
 - **ALL owned inference jobs EXITED. No running dispatch remains.**
   v7fast682380 H600, v8end120750052 H120, v8end600789747 H600,
   v9latest300840607 H300 all32/32 complete. Earlier v3/v4/v5/v6 terminal.
