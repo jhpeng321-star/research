@@ -34,6 +34,9 @@ Prior notes/inherited INT history preserved in `docs/rb2break/HANDOFF_1318_ARCHI
   validation drivers/13,635rows;910birth matches/0unmatched. Physical acceleration
   CRPS0.163291→0.165448m/s²: motion gateFAIL, rejected BEFORE traffic inference.
   Hash-bound artifact `docs/rb2break/birthfit_v1_bound/` (no neural fitting).
+- V2 population fit with SUMO's observed-acceleration support constraint also
+  FAILS motion CRPS(0.179727); no traffic inference. Current-driver-only causal
+  prefix support check is separate and pending; active FULL-v5 is unchanged.
 - Tau homogenization changes600s delay−241/source−85; population-only current
   drivers−327/source+2. Neither fixes over-breakdown. `TAU/POPULATION_COMPLETE.json`.
 

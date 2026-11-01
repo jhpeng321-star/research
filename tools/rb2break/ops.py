@@ -16,7 +16,7 @@ JOB = PARENT+'/rb2break'
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=('stage', 'launch', 'queue', 'queue-corrections', 'fit-birth', 'bind-birth', 'fetch-birth', 'resources', 'inspect-start', 'wait', 'retire-cpu3', 'retire-slow-cpu', 'retire-old-queues', 'status', 'fetch', 'fetch-baseline', 'baseline'))
+    parser.add_argument('action', choices=('stage', 'launch', 'queue', 'queue-corrections', 'validate-envelope', 'fetch-envelope', 'fit-birth', 'bind-birth', 'fetch-birth', 'resources', 'inspect-start', 'wait', 'retire-cpu3', 'retire-slow-cpu', 'retire-old-queues', 'status', 'fetch', 'fetch-baseline', 'baseline'))
     parser.add_argument('--host', default='gpuA', choices=('gpuA', 'gpuR'))
     parser.add_argument('--runtime')
     parser.add_argument('--factor', default='baseline')
@@ -200,6 +200,21 @@ for name in ('cpu.max','cpu.stat','memory.max','memory.current'):
  if path.exists(): result[name]=path.read_text()
 print(json.dumps(result))
 '''
+    elif args.action == 'validate-envelope':
+        assert args.runtime and args.runtime.startswith(PARENT+'/rb2break_code_')
+        code = f'''
+runtime=Path({args.runtime!r});assert (runtime/'STAGE.json').is_file()
+assert os.getloadavg()[0]<16, 'wait for spare CPU'
+out=root/'envelope_validation';assert not out.exists();out.mkdir()
+argv=['nice','-n','19','/root/miniconda3/bin/python','-B','-u','-m','tools.rb2break.validate_envelope','--out',str(out/'VALIDATION.json')]
+env=dict(os.environ,OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',CUDA_VISIBLE_DEVICES='')
+with (out/'worker.log').open('x') as log:
+ child=subprocess.Popen(argv,env=env,stdout=log,stderr=subprocess.STDOUT,cwd=runtime,start_new_session=True)
+save(out/'DISPATCH.json',dict(owner='S-RB2-BREAK',pid=child.pid,argv=argv,unix=time.time(),
+ boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
+ start_ticks=Path('/proc/'+str(child.pid)+'/stat').read_text().split()[21]))
+print((out/'DISPATCH.json').read_text())
+'''
     elif args.action == 'fit-birth':
         assert args.runtime and args.runtime.startswith(PARENT+'/rb2break_code_')
         code = f'''
@@ -299,7 +314,8 @@ print(json.dumps(dict(tasks=len(manifest),development_only=True)))
         if target.exists():
             raise ValueError('new immutable local snapshot required')
         remote_name = ('frozen_baseline' if args.action == 'fetch-baseline' else
-                       'birth_fit_'+args.birth_version if args.action == 'fetch-birth' else out_name)
+                       'birth_fit_'+args.birth_version if args.action == 'fetch-birth' else
+                       'envelope_validation' if args.action == 'fetch-envelope' else out_name)
         code = f'''import hashlib,io,json,sys,tarfile
 from pathlib import Path
 root=Path({JOB!r})/{remote_name!r};assert root.is_dir()
@@ -313,7 +329,7 @@ for seed in range(969420,969432):
    except json.JSONDecodeError: continue
    assert task['seed']==seed and task['future']==future
    files[path.name]=data
-for name in ('IDENTITY.json','DISPATCH.json','COMPLETE.json','BASELINE.json','FIT.json','entrant_population.json','OBSERVATION_BINDING.json','OPERATIONAL_STOP.json'):
+for name in ('IDENTITY.json','DISPATCH.json','COMPLETE.json','BASELINE.json','FIT.json','VALIDATION.json','entrant_population.json','OBSERVATION_BINDING.json','OPERATIONAL_STOP.json'):
  path=root/name
  if path.exists(): files[name]=path.read_bytes()
 receipt=dict(source=str(root),hashes={{name:hashlib.sha256(data).hexdigest() for name,data in files.items()}})

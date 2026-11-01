@@ -103,3 +103,16 @@ driver => fail closed, never clip an observed acceleration or invent a profile.
 Unconditioned later-birth acceleration CRPS must improve before any traffic run.
 No throughput/delay/breakdown target enters either fit. Entrant-only ablation
 would preserve current-driver posteriors and all arrival/controller streams.
+
+##13:55 current-driver envelope validation (before scoring)
+The v2 population gate failed; do NOT infer traffic with either birth-population
+fit. Separately validate a current-driver physical support correction, without
+refitting ANY population or noise scale: after the existing19.35568 shrinkage,
+zero/renormalize profiles that violate that driver's observed positive-acceleration
+envelope. This prevents the population-contamination component from resurrecting
+physically impossible settings. No evidence leaves the population unchanged;
+no compatible positive-weight profile fails closed. Same outward IEEE bounds.
+Use only240..270s own motion to condition, then270..300s stable-leader acceleration
+CRPS on the same registered surviving HDV cohort. This is an internal conditional
+motion check (survivor cohort, not prospective independent-world qualification).
+Only a lower mean-world physical acceleration CRPS permits a traffic screen.
