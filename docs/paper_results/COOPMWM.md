@@ -1,5 +1,37 @@
 # S-COOPMWM — live checks
 
+## MAIN06:58 DIAGNOSIS — two exact-zero grades are physical nulls
+- Read-only diagnosis at unix1793574387, receipt
+  `coopmwm/ZERO_GRADE_DIAGNOSIS_986051_986070.json`; no new SUMO or WM calls.
+  Both are B-u2, t300, two-member nominal300s plans, exact window300–720s.
+- **Both selected `origin=centre`**, with all generic perturbation knots exactly0
+  and **predicted saving versus current policy0**. Predicted savings versus MAPPO
+  were164.1375 and26.2245veh-s. These are policy-centre executions, not evidence
+  that a new cooperative perturbation was discovered. The registered top-k rule
+  permits mean-positive versus MAPPO; the two contrasts are explicitly distinct.
+- Independent original and without-plan tapes have **identical sensed vehicle
+  rosters, positions, speeds and lanes across all420 recorded seconds**, identical
+  observable fingerprints and every per-second reward. Whole-window totals
+  independently agree:56395.37730018104 and49187.82654237546veh-s, respectively.
+- The without-plan controller executed **zero plan steps**. Requests really differ:
+  max raw-command changes per member are0.21710/0.69096m/s² (986051) and
+  0.13606/0.22765m/s² (986070). Some post-safety commands differ too, yet these
+  did not produce observable motion or reward changes before the members left.
+  Members are present for only2/4s and1/3s after start, respectively; a nominal
+  long commitment therefore did not imply a long physical intervention here.
+- **Verdict: genuine exact physical-null effects; no grading artifact found.**
+  Prefix/CRN checks pass. Zeros remain registered exact trust evidence and enter
+  neither positive-only imitation nor the winning-plan library. No outcome-based
+  filtering, behavioural threshold, retry or search change was introduced.
+
+### MAIN guard state compatibility repaired
+- `warm_watch state` now resolves current A/V3 and B/R QUOTA owners with boot/PID
+  start identity, uses the existing registered health guard for active STOPs,
+  exposes health pauses/current supervisor failures, and retains the released old
+  SSH STOP separately as historical evidence. **11 CPU tests PASS**; real cpuQ
+  state has A48/B1/R0, original B/R alive, active STOPnull, no health pause.
+  Registered receipt `coopmwm/WARM_STATE_CURRENT_OWNERS_REPAIR.json`.
+
 ## Current continuation snapshot — 06:49:19UTC+8
 - A48 complete; B-u2 and R-u1 are collecting concurrently, **24/24 jobs claimed
   for each**. B-u2 has two confirmed plan starts plus eight unresolved potential

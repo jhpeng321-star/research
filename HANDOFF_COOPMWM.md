@@ -1,5 +1,12 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+MAIN0658 ZEROGRADE DIAGNOSED: ZERO_GRADE_DIAGNOSIS_986051_986070.json, read-only
+existingTRAINtapes/noSUMO-WM. BOTHorigincentre/perturbationknots0/savingvpolicy0;
+raw/issuedcommandsdiffer butALL420sobservedmotion/rosters/rewardsidentical.
+Memberspresent2/4sand1/3sthenleave. Withoutbranches0plansteps/prefixCRNPASS.
+Genuinephysicalnulls; nogradingartifactfound. Zerosretainedtrust/notimitated-or-
+library underexistingrule. Noscientificfilter/search/budgetchange.
+
 GUARDCOMPATIBILITY FIXED/REGISTERED at1793574193: warm_watchstate nowcurrent
 A/V3,B-R/QUOTAowners; realstopNULL/pausesnone. HistoricalSSHSTOPretainedseparately,
 SHA/authorityreleaseverifiedbyexistingwarm_health. Actualpayload11CPUtestsPASS,
