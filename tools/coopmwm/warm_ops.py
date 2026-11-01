@@ -84,6 +84,59 @@ def register():
     write(ops.EVIDENCE/'WARM2208_REGISTRATION.json',dict(line=line,amendment_sha256=h));print(line.strip())
 
 
+def inspect_frozen():
+    value=json.loads(ops.ssh.remote('gpuA', '''import pathlib,json,hashlib
+r=pathlib.Path('/root/rbeval20261031/phys_code_22cc32f65a80')
+names=['src/wms/control/hidden_state.py','src/wms/control/fitted_hidden.py',
+ 'src/wms/model/history.py','tools/rbint/recipe.py','tools/rbint/motion_posterior.py',
+  'src/wms/eval/rollout_inputs.py','src/wms/model/driver_inference.py',
+  'src/wms/model/driver_encoder.py','src/wms/data/history.py',
+  'src/wms/physics/motion_fit.py']
+out={}
+for n in names:
+ p=r/n
+ if p.is_file():out[n]=dict(source=p.read_text(),sha256=hashlib.sha256(p.read_bytes()).hexdigest())
+print(json.dumps(out))
+''',timeout=30))
+    target=ops.EVIDENCE/'WARM2208_FROZEN_API.json'
+    if target.exists():
+        old=read(target);assert all(value[k]==v for k,v in old.items())
+        if value!=old:
+            target=ops.EVIDENCE/'WARM2208_FROZEN_API3.json'
+            if target.exists():assert read(target)==value
+            else:write(target,value)
+    else:write(target,value)
+    for name,item in value.items():
+        target=ops.EVIDENCE/'warm_api'/name.replace('/','__')
+        target.parent.mkdir(exist_ok=True)
+        if target.exists():assert target.read_text(encoding='utf-8')==item['source']
+        else:
+            with target.open('x',encoding='utf-8') as f:f.write(item['source'])
+    print(json.dumps({k:dict(sha256=v['sha256'],lines=len(v['source'].splitlines())) for k,v in value.items()}))
+
+
+def recover():
+    value=json.loads(ops.ssh.remote('cpuQ', '''import pathlib,json,time
+r=pathlib.Path('/home/ubuntu/coopmwm20261101_accel1');assert r.is_dir()
+d=json.loads((r/'TRAIN_DISPATCH.json').read_text());p=pathlib.Path('/proc')/str(d['pid'])
+boot=pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+s=(p/'stat').read_text().split() if (p/'stat').exists() else None
+assert not s or (boot==d['boot_id'] and s[21]==d['start_ticks'] and s[2] in ('T','Z'))
+held=json.loads((r/'HOLD_WARM2208.json').read_text());children=[]
+for ident in held['stopped_owned_processes']:
+ q=pathlib.Path('/proc')/str(ident['pid']);st=(q/'stat').read_text().split() if (q/'stat').exists() else None
+ assert not st or (st[21]==ident['start_ticks'] and st[2] in ('T','Z'))
+ children.append(dict(pid=ident['pid'],state=st[2] if st else 'exited'))
+charges=[json.loads(x) for x in (r/'CHARGES.jsonl').read_text().splitlines()]
+jobs=[dict(id=c['id'],claimed=(r/'jobs'/c['id']/'CLAIM.json').exists(),
+ complete=(r/'jobs'/c['id']/'RESULT.json').exists(),closed=(r/'jobs'/c['id']/'CLOSE.json').exists()) for c in charges]
+print(json.dumps(dict(unix=time.time(),owner=d,state=s[2] if s else 'exited',children=children,jobs=jobs,
+ charged_sim_s=811640+sum(c['sim_s'] for c in charges),updates=sorted(x.name for x in r.glob('*_UPDATE_*.json')),new_sumo_sim_s=0)))
+''',timeout=25))
+    write(ops.EVIDENCE/'WARM2222_RECOVERY.json',value)
+    print(json.dumps(value))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('hold','register'));a=p.parse_args()
-    hold() if a.mode=='hold' else register()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('hold','register','inspect-frozen','recover'));a=p.parse_args()
+    {'hold':hold,'register':register,'inspect-frozen':inspect_frozen,'recover':recover}[a.mode]()

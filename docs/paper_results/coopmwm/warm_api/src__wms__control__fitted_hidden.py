@@ -1,0 +1,165 @@
+"""Persistent draws from S-RB-FIT's motion-only joint finite-support posterior."""
+from __future__ import annotations
+
+import gzip
+import copy
+import hashlib
+import json
+import math
+from pathlib import Path
+
+import torch
+
+from wms.model.driver_encoder import PARAMETER_NAMES
+
+IDM_ORDER = ('v0', 'time_headway', 'accel', 'decel', 'min_gap')
+LC_ORDER = ('lcStrategic', 'lcCooperative', 'lcSpeedGain', 'lcKeepRight', 'lcAssertive')
+BAD = ('sealed', 'holdout', 'heldout', 'cal_split', 'chunk5', 'j4b', 'inc1',
+       'hetdata_truth', 'vehicle_params', 'driver_params', 'vtype')
+
+
+def read_artifact(path):
+    path = Path(path)
+    if any(word in str(path.resolve()).lower() for word in BAD):
+        raise ValueError('prohibited physical-fit artifact path')
+    raw = path.read_bytes()
+    return json.loads(gzip.decompress(raw) if path.suffix == '.gz' else raw), hashlib.sha256(raw).hexdigest()
+
+
+class FittedHiddenState:
+    """No clipping/re-fitting/shrinkage of an already fitted joint posterior.
+
+    LC is explicitly separate because the delivered LC candidate was not adopted.
+    No cross-IDM/LC posterior covariance was estimated by FIT; these two joint
+    blocks are sampled independently, with that approximation in the receipt.
+    """
+    def __init__(self, population, posterior, *, lane_population=None, lane_posterior=None,
+                 provenance=None):
+        self.population, self.posterior = population, posterior
+        self.lane_population, self.lane_posterior = lane_population, lane_posterior
+        self.provenance = provenance or {}
+        self._cache = {}
+        self._validate_headers(population, posterior, 'idm', IDM_ORDER)
+        if population.get('distribution') != 'finite_support_mixture':
+            raise ValueError('fitted hidden-state adapter requires joint finite support')
+        self.support, self.weights = self._distribution(population, population, IDM_ORDER)
+        if (lane_population is None) != (lane_posterior is None):
+            raise ValueError('both LC population and posterior are required')
+        if lane_population is not None:
+            self._validate_headers(lane_population, lane_posterior, 'lc2013', LC_ORDER)
+            self._distribution(lane_population, lane_population, LC_ORDER)
+
+    @classmethod
+    def from_directory(cls, directory, *, lane_directory=None):
+        root = Path(directory)
+        pop, a = read_artifact(root/'idm_population.json')
+        path = root/'idm_posteriors.json.gz'
+        if not path.exists():
+            path = root/'idm_posteriors.json'
+        post, b = read_artifact(path)
+        kwargs = dict(provenance={'idm_population_sha256': a, 'idm_posterior_sha256': b})
+        if lane_directory is not None:
+            lp, c = read_artifact(Path(lane_directory)/'lc2013_population.json')
+            ls, d = read_artifact(Path(lane_directory)/'lc2013_posteriors.json')
+            kwargs.update(lane_population=lp, lane_posterior=ls)
+            kwargs['provenance'].update(lc_population_sha256=c, lc_posterior_sha256=d)
+        return cls(pop, post, **kwargs)
+
+    @staticmethod
+    def _validate_headers(pop, post, family, order):
+        if (pop['schema'] != f'wm_phys.{family}_population.v1'
+                or post['schema'] != f'wm_phys.{family}_posteriors.v1'
+                or tuple(pop['parameter_order']) != order
+                or tuple(post.get('parameter_order', pop['parameter_order'])) != order):
+            raise ValueError('unsupported fitted posterior schema/order')
+
+    @staticmethod
+    def _distribution(pop, distribution, order):
+        support = torch.as_tensor(pop['support'], dtype=torch.float64)
+        if support.ndim != 2 or support.shape[1] != len(order):
+            raise ValueError('invalid fitted joint support')
+        indices = torch.as_tensor(distribution.get('support_indices', list(range(len(support)))))
+        weights = torch.as_tensor(distribution['weights'], dtype=torch.float64)
+        if (indices.ndim != 1 or indices.dtype not in (torch.int32, torch.int64)
+                or (indices < 0).any() or (indices >= len(support)).any()
+                or weights.shape != indices.shape or not torch.isfinite(weights).all()
+                or (weights < 0).any() or weights.sum() <= 0
+                or not torch.isfinite(support).all()):
+            raise ValueError('invalid fitted support indices/weights')
+        if tuple(order) == LC_ORDER:
+            # SUMO LC2013 permits disabled motivations at zero; cooperative is
+            # a fraction. Assertiveness divides accepted gaps and must be >0.
+            invalid = ((support[:, :4] < 0).any() or (support[:, 1] > 1).any()
+                       or (support[:, 4] <= 0).any())
+        else:
+            invalid = (support <= 0).any()
+        if invalid:
+            raise ValueError('invalid fitted physical support domain')
+        return support[indices], weights
+
+    def check_time(self, t0_s):
+        for post in (self.posterior, self.lane_posterior):
+            if post is not None and t0_s != post['conditioning_end_s']:
+                raise ValueError('posterior conditioning time mismatch')
+
+    def with_motion_posteriors(self, drivers, *, t0_s):
+        """Bind caller-computed causal finite posteriors to observable identities.
+
+        ``drivers[(world, vid)]`` are outputs of FIT's ``condition_motion`` using
+        THIS population support. No saved-ID posterior is inherited into the new
+        observation. Unknown identities use the fitted population. LC is omitted:
+        the longitudinal observation likelihood supplies no LC evidence.
+        """
+        if isinstance(t0_s, bool) or not math.isfinite(t0_s) or t0_s < 0:
+            raise ValueError('invalid motion posterior conditioning time')
+        records = {}
+        for (world, vid), distribution in drivers.items():
+            if (isinstance(world, bool) or isinstance(vid, bool)
+                    or int(world) != world or int(vid) != vid or world < 0 or vid < 0):
+                raise ValueError('motion posterior requires observable world and VID')
+            if distribution.get('conditioning_end_s') != t0_s:
+                raise ValueError('motion posterior conditioning time mismatch')
+            self._distribution(self.population, distribution, IDM_ORDER)
+            records[f'{int(world)}:{int(vid)}'] = copy.deepcopy(distribution)
+        posterior = dict(schema='wm_phys.idm_posteriors.v1', parameter_order=IDM_ORDER,
+                         conditioning_end_s=t0_s, drivers=records)
+        digest = hashlib.sha256(json.dumps(posterior, sort_keys=True,
+            separators=(',', ':'), allow_nan=False).encode()).hexdigest()
+        provenance = {k:v for k,v in self.provenance.items() if k.startswith('idm_')}
+        provenance.update(idm_posterior_sha256=digest,
+            posterior_source='caller_causal_motion', conditioning_end_s=t0_s,
+            posterior_hash_encoding='canonical_json',
+            source_population_sha256=self.provenance.get('idm_population_sha256'))
+        return type(self)(copy.deepcopy(self.population), posterior, provenance=provenance)
+
+    def draw(self, world, vid, *, generator, lane=False):
+        pop, post, order = ((self.lane_population, self.lane_posterior, LC_ORDER) if lane
+                            else (self.population, self.posterior, IDM_ORDER))
+        if pop is None:
+            return {}
+        if vid is not None and (int(vid) != vid or vid < 0):
+            raise ValueError('present drivers require observable nonnegative numeric VID')
+        distribution = pop if vid is None else post['drivers'].get(f'{int(world)}:{int(vid)}', pop)
+        # FIT explicitly emits summary-only records for unidentifiable/ramp-only
+        # drivers. Their missing finite weights mean POPULATION, not lognormal.
+        if 'weights' not in distribution:
+            distribution = pop
+        key = (lane, None if distribution is pop else f'{int(world)}:{int(vid)}')
+        if key not in self._cache:
+            self._cache[key] = self._distribution(pop, distribution, order)
+        support, weights = self._cache[key]
+        index = int(torch.multinomial(weights, 1, generator=generator))
+        return dict(zip(order, support[index].tolist()))
+
+    def as_population(self, params, state, mask):
+        from .hidden_state import Population
+        observed = Population.from_motion(params, state, mask)
+        pools = []
+        for b in range(state['present'].shape[0]):
+            # Non-IDM coordinates remain inert legacy values, never LC proxies.
+            base = torch.stack([params[n][b, 0] for n in PARAMETER_NAMES])
+            pool = base.expand(len(self.support), -1).clone()
+            for j, name in enumerate(IDM_ORDER):
+                pool[:, PARAMETER_NAMES.index(name)] = self.support[:, j].to(pool)
+            pools.append(pool)
+        return Population(pools, observed.cav, [self.weights.clone() for _ in pools])
