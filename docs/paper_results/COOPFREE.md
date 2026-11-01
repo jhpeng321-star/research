@@ -205,7 +205,8 @@ terminal failure `STOP.json` (never cleared automatically), budget exit `BUDGET_
 ## Corrected HOLD-credit production
 Public artifacts: `tools/coopfree/publications/hold/`; verify its `MANIFEST.json`.
 Legacy MAPPO-credit checkpoint is retained remotely and excluded from corrected learning.
-Owned cpuQ supervisor PID615088/start48394231; alive=True; four nice19 single-thread workers.
+Remote status observed at 2026-11-01T03:35:24Z.
+Owned cpuQ supervisor PID615088/start48394231; alive=False; four nice19 single-thread workers.
 New HOLD physics: 455/455 complete tasks; 156 baselines; exact solo diagnostics for 66/156 windows.
 ### Learned proposal checkpoint u001
 - `tools/coopfree/publications/hold/policy_u001.pt`
@@ -252,6 +253,7 @@ Learned minus comparator; total team delay in vehicle-seconds (negative is bette
 - **Updates3/6/9 are budget-blocked. Prospective owner phase/budget amendment required; no replay or automatic dispatch.**
 - DEV learned-minus-HOLD J600: -156.526 vehicle-s, paired world-bootstrap95%CI [-1211.4653697340573, 625.4487812527271].
 - DEV learned-minus-HOLD J900: -774.415 vehicle-s, paired world-bootstrap95%CI [-2569.3527833601424, 556.8341841770399].
-Budget: 1952433 precharged / 1900133 closed-actual sim-s; hard cap2,000,000; no refunds/retries.
+Budget: 1952433 precharged / 1952433 closed-actual sim-s; hard cap2,000,000; no refunds/retries.
 TRAIN exploration credit is not paired dev-policy performance.
+**Durable STOP observed; inspect receipts. No automatic restart.**
 <!-- COOPFREE PUBLICATIONS END -->
