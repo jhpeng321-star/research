@@ -1,4 +1,4 @@
-"""One-second SUMO-only PPO with logged AR state and singular plan-route correction."""
+"""MAIN02:01: own-action PPO, SUMO-positive completed-plan AWR, all-step critic."""
 import math
 import numpy as np
 import torch
@@ -26,47 +26,104 @@ def advantages(steps):
     return list(reversed(out))
 
 
+def own_step(sample):
+    return not sample.get('behaviour',{}).get('executed',False)
+
+
 def ratio(logp,sample):
-    b=sample.get('behaviour',{})
-    # The plan/WM query route is an atom in the augmented behaviour measure.
-    # Its target policy-route mass is exactly zero, never a fictitious density.
-    if b.get('route') in ('wm','plan'):return logp*0
-    p=b.get('sample_probability',0.)
-    if not 0<=p<1:raise ValueError('own-route mass must remain positive')
-    return (logp-sample['logp']-math.log1p(-p)).exp()
+    if not own_step(sample):raise ValueError('no policy ratio exists for an executed plan step')
+    return (logp-sample['logp']).exp()
 
 
-def imitation(policy,sample):
+def awr_config(controls):
+    """Freeze temperature from existing MAPPO TRAIN-check 300s delay intervals."""
+    delays=[float(e['metrics']['900']['team_delay_vs'])-float(e['metrics']['600']['team_delay_vs']) for e in controls]
+    if not delays or not np.isfinite(delays).all():raise ValueError('invalid MAPPO AWR scale data')
+    temperature=float(np.sqrt(np.mean(np.square(delays))))/UNIT
+    if temperature<=0:raise ValueError('MAPPO AWR temperature must be positive')
+    return dict(temperature=temperature,weight_clip=20.,coefficient=1.,return_unit_veh_s=UNIT,
+        scale_source='RMS source-inclusive MAPPO TRAIN-check J900-J600; frozen before B/R outcomes',
+        worlds=[e['world']['seed'] for e in controls])
+
+
+def awr_weight(advantage,config):
+    if not math.isfinite(advantage):raise ValueError('nonfinite plan advantage')
+    if advantage<=0:return 0.
+    temperature=config['temperature'];clip=config['weight_clip']
+    if temperature<=0 or clip<1:raise ValueError('invalid registered AWR settings')
+    return math.exp(min(advantage/temperature,math.log(clip)))
+
+
+def plan_targets(episode,config):
+    """Only completed commitments with frozen rollout values and SUMO returns.
+
+    No WM score, beta, or unexecuted sample becomes a target. Plans extending
+    past the observed episode are excluded, not truncated wins.
+    """
+    steps=episode['steps'];targets={}
+    for i,s in enumerate(steps):
+        b=s['sample'].get('behaviour',{})
+        if not (b.get('executed') and b.get('plan_start')):continue
+        duration=int(s.get('proposal',{}).get('plan',{}).get('duration_s',b.get('duration_s',0)))
+        if duration<=0:raise ValueError('executed plan duration missing')
+        end=i+duration
+        if end>len(steps):continue
+        segment=steps[i:end]
+        if any(x['time_s']!=s['time_s']+j or not x['sample'].get('behaviour',{}).get('executed') or
+            x['sample']['behaviour'].get('plan_id')!=b['plan_id'] for j,x in enumerate(segment)):
+            raise ValueError('incomplete committed plan tape')
+        advantage=sum(GAMMA**j*x['reward']/UNIT for j,x in enumerate(segment))
+        advantage+=GAMMA**duration*(steps[end]['sample']['value'] if end<len(steps) else 0.)
+        advantage-=s['sample']['value']
+        weight=awr_weight(advantage,config)
+        for j in range(i,end):targets[j]=dict(advantage=advantage,weight=weight,plan_id=b['plan_id'])
+    return targets
+
+
+def imitation(policy,sample,weight=0.):
     b=sample.get('behaviour',{});mean,_=policy(sample['context'])
-    if not b.get('executed'):return mean.sum()*0
+    if not b.get('executed') or weight<=0:return mean.sum()*0
     indices=[sample['context']['members'].index(v) for v in b['proposal_members'] if v in sample['context']['members']]
     if not indices:return mean.sum()*0
     action=torch.tensor(sample['action']).reshape(-1,1)
-    return -b['beta']*gaussian_log_prob(action[indices],mean[indices],RHO,policy.log_std.exp())/len(indices)
+    return -weight*gaussian_log_prob(action[indices],mean[indices],RHO,policy.log_std.exp())/len(indices)
 
 
-def update(policy,optimizer,episodes,generator,epochs=4):
-    records=[(s,a,r) for ep in episodes for s,(a,r) in zip(ep['steps'],advantages(ep['steps']))]
-    adv=torch.tensor([a for _,a,_ in records]);adv=(adv-adv.mean())/adv.std(unbiased=False).clamp_min(1e-8)
+def update(policy,optimizer,episodes,generator,epochs=4,awr=None):
+    if awr is None and any(s['sample'].get('behaviour',{}).get('executed') for ep in episodes for s in ep['steps']):
+        raise ValueError('executed plans require pre-registered AWR scale')
+    records=[]
+    for ep in episodes:
+        targets=plan_targets(ep,awr) if awr is not None else {}
+        records.extend((s,a,r,targets.get(i,{}).get('weight',0.)) for i,(s,(a,r)) in enumerate(zip(ep['steps'],advantages(ep['steps']))))
+    adv=torch.tensor([a for _,a,_,_ in records]);own=torch.tensor([own_step(s['sample']) for s,_,_,_ in records])
+    if own.any():adv=(adv-adv[own].mean())/adv[own].std(unbiased=False).clamp_min(1e-8)
     metrics=[]
     for _ in range(epochs):
         for idx in torch.randperm(len(records),generator=generator).split(128):
             samples=[records[int(i)][0]['sample'] for i in idx]
-            scores=[policy.score(s) for s in samples];logps,values=map(torch.stack,zip(*scores))
-            ratios=torch.stack([ratio(lp,s) for lp,s in zip(logps,samples)])
-            mask=torch.tensor([s.get('behaviour',{}).get('route') not in ('wm','plan') for s in samples])
-            a=adv[idx];actor=-(torch.minimum(ratios*a,ratios.clamp(.8,1.2)*a)*mask).mean()
+            values=torch.stack([policy(s['context'])[1] for s in samples])
+            own_indices=[j for j,s in enumerate(samples) if own_step(s)]
+            scores=[policy.score(samples[j])[0] for j in own_indices]
+            if scores:
+                logps=torch.stack(scores);ratios=torch.stack([ratio(lp,samples[j]) for lp,j in zip(logps,own_indices)])
+                a=adv[idx[own_indices]];actor=-torch.minimum(ratios*a,ratios.clamp(.8,1.2)*a).mean()
+                delta=logps-torch.tensor([samples[j]['logp'] for j in own_indices])
+                kl=float((delta.exp()-1-delta).mean().detach())
+            else:actor=values.sum()*0;kl=0.
             returns=torch.tensor([records[int(i)][2] for i in idx]);old=torch.tensor([s['value'] for s in samples])
             clipped=old+(values-old).clamp(-.2,.2)
             vloss=torch.maximum((values-returns).square(),(clipped-returns).square()).mean()
-            auxiliary=torch.stack([imitation(policy,s) for s in samples]).mean()
+            weights=[records[int(i)][3] for i in idx]
+            auxiliary=torch.stack([imitation(policy,s,w) for s,w in zip(samples,weights)]).mean()
+            auxiliary=auxiliary*(awr['coefficient'] if awr is not None else 1.)
             loss=actor+.5*vloss+auxiliary
             if not bool(torch.isfinite(loss)):raise ValueError('nonfinite acceleration PPO')
             optimizer.zero_grad();loss.backward()
             norm=torch.nn.utils.clip_grad_norm_(policy.parameters(),.5,error_if_nonfinite=True);optimizer.step()
-            delta=logps-torch.tensor([s['logp'] for s in samples])
-            kl=float((((delta.exp()-1-delta)*mask).sum()/mask.sum().clamp_min(1)).detach())
-            metrics.append(dict(loss=float(loss.detach()),kl=kl,gradient_norm=float(norm),imitation=float(auxiliary.detach())))
+            metrics.append(dict(loss=float(loss.detach()),kl=kl,gradient_norm=float(norm),imitation=float(auxiliary.detach()),
+                own_policy_steps=len(own_indices),critic_steps=len(samples),awr_positive_steps=sum(w>0 for w in weights),
+                loss_rule='MAIN0201 own PPO; positive completed-plan AWR; all-step critic'))
             if kl>.045:return metrics
     return metrics
 

@@ -163,16 +163,16 @@ class AccelerationCPU(unittest.TestCase):
             update(p,opt,[ep],g,epochs=1);update(restored,other,[ep],rg,epochs=1)
             for a,b in zip(p.parameters(),restored.parameters()):self.assertTrue(torch.equal(a,b))
 
-    def test_singular_plan_ratio_never_invents_gaussian_mass(self):
+    def test_plan_ratio_forbidden_and_own_ratio_standard(self):
         from .accel_learner import ratio,imitation
         p=Policy();s,_=p.sample(encode(rows()),torch.Generator().manual_seed(9))
         lp,_=p.score(s);s['behaviour']=dict(route='wm',executed=True,beta=1.,proposal_members=s['context']['members'])
-        self.assertEqual(float(ratio(lp,s)),0.)
+        with self.assertRaises(ValueError):ratio(lp,s)
         s['action']=[[1.] for _ in s['action']]
-        loss=imitation(p,s);loss.backward()
+        loss=imitation(p,s,weight=2.);loss.backward()
         self.assertGreater(float(p.actor[-1].bias.grad.abs().sum()),0.)
         s['behaviour']=dict(route='policy',sample_probability=.25)
-        self.assertAlmostEqual(float(ratio(lp,s)),1/.75,places=5)
+        self.assertAlmostEqual(float(ratio(lp,s)),1.,places=5)
 
     def test_real_frozen_mappo_acceleration_executor_parity(self):
         import os
@@ -266,7 +266,7 @@ class AccelerationCPU(unittest.TestCase):
             self.assertTrue(b['executed'])
             self.assertEqual(b['route'],'wm' if t==300 else 'plan')
             from .accel_learner import ratio
-            self.assertEqual(float(ratio(torch.tensor(0.),c.events[-1]['sample'])),0.)
+            with self.assertRaises(ValueError):ratio(torch.tensor(0.),c.events[-1]['sample'])
         self.assertEqual(calls,[300])
         saved=copy.deepcopy(c.events[0]['sample']);snapshot=copy.deepcopy(saved)
         r=Controller(Policy(),None,replay={'300':saved})

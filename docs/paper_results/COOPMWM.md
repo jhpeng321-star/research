@@ -1,5 +1,19 @@
 # S-COOPMWM — live checks
 
+## MAIN02:01 learner correction — CPU qualified and registered
+- **133 CPU tests PASS, zero skips, 8.86s, zero SUMO** on cpuQ, including 7 new
+  AWR semantic tests. Committed plan steps are never policy-scored or ratioed;
+  PPO uses standard own-action ratios, including rejected/declined query steps.
+- The critic trains on all steps. Only completed plans with positive realized
+  discounted SUMO advantage become imitation targets; negative/incomplete plans
+  contribute zero imitation. AWR weights=min(20,exp(A/T)), coefficient1, no beta.
+- Baseline-only temperature **T=4.822766875237093** learner units, frozen from
+  RMS MAPPO TRAIN-check(J900−J600)/10000. No A/B/R outcomes used for this scale.
+- Registered amendment `0bb2f157cea8d3f5d65d7e7927f5e8460a873d62b8a7bbe64864434e4aed7ef4`.
+  A/B seed1 u24 is a fixed secondary point only if later 24-update replications
+  are approved. Finals A/B48,R24 and the approved budget remain unchanged.
+- Receipt `coopmwm/MAIN0201_AWR_REGISTRATION.json`; runtime binding/restart pending.
+
 ## Fresh resume — MAIN02:01 correction adopted before B/R outcomes
 - Preserved HEAD73a42ad1 and all recovered edits. A is at u16/exited; 288/288 warm
   jobs closed, zero pending WM requests, 1,405,640 sim-s charged. B/R unstarted.

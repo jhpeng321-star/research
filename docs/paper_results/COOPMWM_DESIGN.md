@@ -25,8 +25,8 @@
 24. C_G=D_G-sum(D_i); complete paired futures required, including negative values.
 25. beta starts1 per training seed; immutable update receipts supply the next update's beta.
 26. Log query mass p over eligible uncommitted decisions only; beta(type,regime); R quota exhausted=>own/p0.
-27. Target own-nonquery mass1/query0: ratio=pi_new/[(1-p)*pi_old] or0, including declined/rejected queries.
-28. Per-step clipped PPO respects singular guided-route mass; executed member residual imitation weightbeta.
+27. MAIN02:01 PPO only nonexecuted/own steps (including rejected queries), standard pi_new/pi_old; never score/ratio plan steps.
+28. Critic allsteps; completed-plan A=sum gamma^j SUMOreward/10000+gamma^D V_end-V_start; A>0 AWR min(20,exp(A/T)), coefficient1; T=RMS MAPPO-check(J900-J600)/10000 fixed preB/R, no beta imitation.
 29. Original E2 retained; cold/warm qualification reuses exact-labelled00/01; acceleration E2 first12random executed TRAIN plans,RNG20261101.
 30. Exact/WM E2 keeps all background CAVs on MAPPO after decision, group commitment then MAPPO; no native reversion.
 31. Select t<=600 so all H600 twins finish by1200; full-prefix COOPFREE quartet once/window.
