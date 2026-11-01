@@ -15,7 +15,7 @@ PARENT = '/root/autodl-tmp/c4/rb2int20261101'
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=('export', 'status', 'download', 'upload'))
+    parser.add_argument('action', choices=('export', 'status', 'download', 'upload', 'view'))
     parser.add_argument('--host', choices=('gpuA', 'gpuR'), required=True)
     parser.add_argument('--tag', default='prefix_all58_v1')
     parser.add_argument('--receipt', required=True)
@@ -68,6 +68,20 @@ with (root/'worker.log').open('x') as log:
 fields=Path('/proc/'+str(child.pid)+'/stat').read_text().split()
 result=dict(root=str(root),pid=child.pid,start_ticks=fields[21],boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),argv=argv,source_sha256={hashlib.sha256(source).hexdigest()!r})
 save(root/'PROCESS.json',result);print(json.dumps(result))
+'''
+        result = json.loads(ssh(args.host, code, timeout=45))
+    elif args.action == 'view':
+        source = Path(__file__).with_name('prepare_inputs.py').read_text(encoding='utf-8')
+        base = PARENT+'/received_'+args.tag if args.host == 'gpuA' else root+'/inputs58'
+        destination = PARENT+'/view_new50_'+args.tag
+        code = f'''
+import json,os
+os.nice(19)
+namespace={{'__name__':'rb2_causal_view'}}
+exec(compile({source!r},'<trusted causal view>','exec'),namespace)
+result=namespace['make_view']({base!r},{destination!r},list(range(969550,969600)))
+result['root']={destination!r}
+print(json.dumps(result))
 '''
         result = json.loads(ssh(args.host, code, timeout=45))
     elif args.action == 'status':

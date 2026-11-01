@@ -19,6 +19,11 @@ closed/full smoke processes EXITED/PASS. Earlier LP admission failures preceded
 claim/Popen. No duplicate job. No INT final-panel job has been dispatched yet.
 WMPHYS_V5.md is explicitly a progress report, not a completed final evaluation.
 
+Final causal inputs58 exported/transferred/verified; past-bin proof max error0.
+Original WM2/FULL-v4 source audits300/334files PASS. Next: one dev969420/k0
+orchestration bridge per baseline, then owned matched-K8 dispatch. Details and
+exact existing input roots: `docs/rb2int/INPUT_AND_BASELINE_AUDIT.md`.
+
 - FULL-v5 and FULL-v5-LP engineering READY. All four intakes merged:
   LANE6b4bfbd5/CAL7c1cf53c/BREAK116b2147/LPHYSf6cf52ab. Integrated recipes
   `configs/wm_phys_v5{,_lp}.toml`; v5 staged smoke/fit audit PASS, final dispatch release pending.

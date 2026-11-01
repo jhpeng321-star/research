@@ -5,6 +5,8 @@ from pathlib import Path
 import subprocess
 import sys
 
+import pytest
+
 from tools.rb2int.audit import ROOT
 
 
@@ -17,11 +19,15 @@ def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def test_frozen_recipe_wins_over_new_control_stage_recipe(tmp_path):
+@pytest.mark.parametrize('direct', [False, True])
+def test_frozen_recipe_wins_over_new_control_stage_recipe(tmp_path, direct):
     control, runtime = tmp_path/'control', tmp_path/'frozen'
     entry = control/'tools/rb2int/evaluate.py'
     put(entry, (ROOT/'tools/rb2int/evaluate.py').read_text(encoding='utf-8'))
+    put(control/'tools/rb2int/__init__.py', '')
     put(control/'tools/rb2int/inputs.py', 'import json\ndef validate_panel(p): return json.load(open(p))\n')
+    put(runtime/'tools/rb2int/__init__.py', 'raise RuntimeError("STALE MODEL-STAGE HARNESS IMPORTED")\n')
+    put(runtime/'tools/rb2int/inputs.py', 'raise RuntimeError("STALE INPUT ADAPTER IMPORTED")\n')
     put(control/'tools/rbint/recipe.py', 'raise RuntimeError("NEW CONTROL RECIPE LEAKED INTO BASELINE")\n')
     recipe = runtime/'tools/rbint/recipe.py'
     put(recipe, 'def load_candidate(*args): pass\ndef candidate_future(*args): pass\n')
@@ -33,7 +39,7 @@ def digest(p): return hashlib.sha256(Path(p).read_bytes()).hexdigest()
 ''')
     put(control/'tools/rbeval/run_wm.py', '''import inspect,json
 def main(**kwargs):
- print(json.dumps(dict(recipe=inspect.getfile(kwargs['model_loader']), sources=[str(p) for p in kwargs['identity_sources']])))
+ print(json.dumps(dict(recipe=inspect.getfile(kwargs['model_loader']), sources=[str(p) for p in kwargs['identity_sources']],worlds=kwargs.get('worlds'),futures=kwargs.get('future_indices'))))
 ''')
     config = runtime/'config.toml'
     put(config, '# frozen\n')
@@ -44,10 +50,21 @@ def main(**kwargs):
         config_sha256=sha(config), wm_sha256=sha(checkpoint), variant='FULL', sources={str(recipe): sha(recipe)})))))
     panel = tmp_path/'panel.json'
     put(panel, json.dumps(dict(release_path=str(release), registration_path=str(tmp_path/'registration.json'))))
+    extra = ['--registered-panel', str(panel)]
+    model_name = 'example'
+    if direct:
+        model_name = 'WM-PHYS-FULL-v4-gpu'
+        audit = tmp_path/'baseline.json'
+        put(audit, json.dumps(dict(schema='rb2int-frozen-baseline-audit/1', label='FULL-v4',
+            passed=True, runtime_root=str(runtime), config_sha256=sha(config), wm_sha256=sha(checkpoint),
+            variant='FULL', semantic_frozen_sources={str(recipe): sha(recipe)})))
+        extra = ['--development-direct', '--baseline-audit', str(audit)]
     result = subprocess.run([sys.executable, '-B', str(entry), '--variant', 'FULL',
-        '--runtime-root', str(runtime), '--wm-config', str(config), '--wm', str(checkpoint), '--model-name', 'example',
-        '--registered-panel', str(panel)], capture_output=True, text=True, timeout=15)
+        '--runtime-root', str(runtime), '--wm-config', str(config), '--wm', str(checkpoint), '--model-name', model_name,
+        *extra], capture_output=True, text=True, timeout=15)
     assert result.returncode == 0, result.stdout+result.stderr
     output = json.loads(result.stdout)
     assert Path(output['recipe']) == recipe
     assert str(recipe) in output['sources']
+    assert output['worlds'] == ([969420] if direct else None)
+    assert output['futures'] == ([0] if direct else None)

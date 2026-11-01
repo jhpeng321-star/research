@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 import torch
 
-from tools.rb2int.prepare_inputs import build, package, prefix_bins, sha
+from tools.rb2int.prepare_inputs import build, package, prefix_bins, sha, make_view
 
 
 def put(path, obj):
@@ -56,6 +56,12 @@ def test_export_is_causal_and_removes_ancillary_result_outcomes(tmp_path, monkey
         assert all(not m.issym() and not m.islnk() for m in stream.getmembers())
     with pytest.raises(ValueError, match='new input root'):
         build(reg, metadata, source, out, [969550])
+    view = tmp_path/'new50_view'
+    subset = make_view(out, view, [969550])
+    assert subset['passed'] and subset['forecast_tasks_copied'] is False
+    assert sha(view/'data/jobs/s969550_ctrl0/start.pt') == sha(out/'data/jobs/s969550_ctrl0/start.pt')
+    with pytest.raises(ValueError, match='declared subset'):
+        make_view(out, tmp_path/'unregistered_view', [969551])
 
 
 def test_changed_metadata_or_arm_warmup_stops_before_forecasting(tmp_path, monkeypatch):

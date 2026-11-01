@@ -1,0 +1,28 @@
+{
+ "passed": true,
+ "worlds": 58,
+ "arms": 5,
+ "regions": 3,
+ "bins": 6,
+ "max_absolute_prefix_error": 0.0,
+ "absolute_tolerance": 1e-08,
+ "final_outcome_values_used": false,
+ "model_fit_or_selection": false,
+ "source_fields_used": [
+  "seed",
+  "arm",
+  "demand",
+  "penetration",
+  "initial_sha256",
+  "bins.*.speed[:6]"
+ ],
+ "source_sha256": "54d628b7d1b5ba03c5b9bebe40dfd3e8fbb9fd56c72d3d82bf86fb3b0ce94830",
+ "registration_sha256": "b88e57bca228f6022a85c4c8e2bf8949848ded7e041eb7c8e201e75f2ba74dff",
+ "exported_prefix_sha256": "7bcae45b0b5b4b6f684fdf37e2c9888f5e44bc7ed17173ac65e77ca8671fd029",
+ "archive_sha256": "110eac8053d616fde09cb5c78420c753c4314589c6f8bddf9b039de1e3e24eba",
+ "recorded_receipts": {
+  "E:\\agent-work\\c4-rb2-int\\tools\\rbeval\\real_observables.json": "01d0d2b7027aad9910496c7bc5b9681c0d1ccf08f46b4e16a1113310a67362e9",
+  "E:\\agent-work\\c4-wmbreakdown\\docs\\paper_results\\wmbreakdown\\wmdata2_observables.json": "a2b3ecf7a6ea9d6904fafa44d57a502e77781024b42b9b9469cbddaf44779fb4"
+ },
+ "canonical_prefix_sha256": "dd452d70da688a4c922584818e6870b7b8b4b5d70dc4e5772320ed029421d6a3"
+}

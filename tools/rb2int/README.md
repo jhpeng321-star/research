@@ -23,6 +23,10 @@ it cannot dispatch a final panel. Development release is distinct from final.
   transfer. It never reads future trajectories/cumulative targets. Ancillary
   result containers supply only start hashes/initial IDs; no outcome field is
   copied into the forecaster's input root. Production bridge/release still needed.
+- `baseline_audit`, `prove_prefix`, `bridge_ops`: verify the original baseline
+  code/weights/controllers, exact causal prefix equivalence, and one fixed
+  development-only kernel replay before final orchestration. The direct replay
+  cannot request reserved/additional worlds and never replaces a final K8 task.
 - `uncertainty`: joint18-contrast score/rate families; fixed-cell whole-world
   bootstrap, paired future resampling for forecast means. Singleton factual cells
   remain NA even when the K8 forecast varies.

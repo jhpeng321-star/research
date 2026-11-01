@@ -149,6 +149,47 @@ def package(root, archive):
     return dict(archive=str(archive), sha256=sha(archive), bytes=archive.stat().st_size)
 
 
+def make_view(base, out, worlds):
+    """An explicit baseline-new50 view reuses validated causal bytes, not forecasts."""
+    import os
+    base, out = safe(base), safe(out)
+    parent = read(base/'INPUTS_BUILD.json')
+    if not parent['passed'] or not worlds or not set(worlds) <= set(parent['worlds']) or len(set(worlds)) != len(worlds):
+        raise ValueError('view must be a declared subset of a completed causal input build')
+    if not out.parent.is_dir() or out.exists():
+        raise ValueError('exclusive causal view root required')
+    design = read(base/'data/design.json')
+    source = read(base/'prefix_observables.json')
+    expected = read(base/'expected_hashes.json')
+    out.mkdir()
+    (out/'data/jobs').mkdir(parents=True)
+    selected = {}
+    for seed in worlds:
+        job = out/'data/jobs'/f's{seed}_ctrl0'
+        job.mkdir()
+        for name in ('start.pt', 'start_history.npz', 'result.json'):
+            key = f'jobs/s{seed}_ctrl0/{name}'
+            original = base/'data'/key
+            if sha(original) != expected[key]:
+                raise ValueError('base causal bytes changed before subset view')
+            try:
+                os.link(original, job/name)
+            except OSError:
+                shutil.copyfile(original, job/name)
+            selected[key] = expected[key]
+    save(out/'data/design.json', dict(worlds=[w for w in design['worlds'] if w['seed'] in worlds]))
+    save(out/'expected_hashes.json', selected)
+    save(out/'prefix_observables.json', dict(source, episodes=[e for e in source['episodes'] if e['seed'] in worlds]))
+    shutil.copyfile(base/'registration.json', out/'registration.json')
+    result = dict(schema='rb2int-causal-input-build/1', passed=True, worlds=list(worlds),
+        base_build_sha256=sha(base/'INPUTS_BUILD.json'), base_root=str(base),
+        registration_sha256=sha(out/'registration.json'), observation_registry_sha256=sha(out/'expected_hashes.json'),
+        prefix_observables_sha256=sha(out/'prefix_observables.json'), final_outcomes_exported=False,
+        population_fit=False, forecast_tasks_copied=False)
+    save(out/'INPUTS_BUILD.json', result)
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--registration', required=True)
