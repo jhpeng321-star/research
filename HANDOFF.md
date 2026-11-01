@@ -1,6 +1,17 @@
 # S-RB-RUNB handoff
 
-Updated 2026-11-01 07:10 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+Updated 2026-11-01 08:02 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+
+## 08:00 interim — B2 87/160, boundary resource wait
+- Three original owned workers801887/801888/801889 +supervisor762343 live,
+  tasks87 (28/31/28), deadline11:30, no terminal receipt. Ten-minute monitoring
+  uninterrupted; watcher07:51:35 healthy, same A2/C2/B2 claimed manifests.
+- Independent08:00:23 GPU2963MiB/0%,load52.35; no task advancement since07:50.
+  Read-only ps: all three workers hrtimer_nanosleep; published run_wm.py waits
+  between tasks while CPUload>24. No source edit, restart or failed-job replay.
+- Shared `RUNB_INTERIM_0800.json` +short `RUNB_B2_INTERIM_0800.md`; local
+  `runs/rbrunb/OBSERVE_1793491223644376700.json`. No full-panel `.done` or score.
+- Session remains alive until11:30, with09:30 new-intake freeze retained.
 
 ### 07:09 continuation checkpoint
 - B2 tasks75/160 (24/27/24), same three owned workers/supervisor alive beyond
