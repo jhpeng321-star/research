@@ -24,8 +24,11 @@ recorded pool. Its leave-one-out R^2 is reported per search. Replays work in
 perturbation space (zero policy trajectory, no clipping, no MAPPO seed; the same
 for every mode).
 
-Quality is normalised: 0 = the 'centre' seed (unchanged policy), 1 = plain's
-best surrogate value over its whole screen budget (the target). For each mode,
+PRIMARY ('elite') quality is the mean of the best E candidates found so far, with
+E = ceil(N/4), the search's own elite count. Its target is the plain search's final
+elite mean, and it is normalised so that 0 = the 'centre' seed (unchanged policy)
+and 1 = the plain final elite mean. A secondary, strict metric uses the plain
+search's single best value (max) as the target. For each mode,
 evals-to-target is the first screened candidate (in evaluation order) whose
 surrogate value reaches the target. Modes that never reach it are censored at
 budget+1. Final K8 re-scoring is identical for all modes and is not counted.
@@ -146,6 +149,17 @@ def _first_reach(values, target, budget):
     return int(hit[0])+1 if hit.size else budget+1, ext
 
 
+def _running_elite_mean(values, E, budget):
+    """Mean of the best E values found so far (NaN before E evaluations), extended to budget."""
+    import bisect
+    top, out = [], []
+    for v in values:
+        bisect.insort(top, -float(v)); top = top[:E]
+        out.append(-float(np.mean(top)) if len(top) >= E else np.nan)
+    out += [out[-1]]*max(0, budget-len(out))
+    return np.asarray(out)
+
+
 def _mean_or_none(v):
     v = [x for x in v if x is not None]
     return float(np.mean(v)) if v else None
@@ -176,15 +190,28 @@ def evaluations_curve(model, receipts, modes=MODES, cfg=None, config=None):
             Z = np.stack(Z)
             return [float(np.sqrt(((Z-e)**2).mean((1, 2))).min()) for e in elites]
         d_plain = nearest(plain_z) if elites else []
+        # ELITE quality (primary): mean of the best E (= the search's per-iteration elite
+        # count ceil(N/4)) values found so far; target = plain's final elite mean.
+        E = ms.scaling(len(r['members']), ms.canonical_knots())['elites']
+        plain_e = _running_elite_mean(plain, E, len(plain)); target_e = float(plain_e[-1])
         row = dict(id=r.get('search_id'), world=str(r.get('world_id')), m=len(r['members']), budget=len(plain),
-                   target=target, centre=base, surrogate_loo_r2=sur.loo_r2, recorded_elites=len(elites), modes={})
+                   target=target, target_elite=target_e, elites_E=E, centre=base, surrogate_loo_r2=sur.loo_r2,
+                   recorded_elites=len(elites), modes={})
         for mode in modes:
             vals, zs = (plain, plain_z) if mode == 'plain' else replay(r, sur, mode, model, cfg, config)
             n, best = _first_reach(vals, target, len(plain))
             q = (best-base)/(target-base)
             pts = {str(f): float(q[max(0, int(math.ceil(f*len(plain)))-1)]) for f in cfg['curve_fracs']}
             d = nearest(zs) if elites else []
-            row['modes'][mode] = dict(evals_to_target=n, reached=n <= len(vals), quality_at_frac=pts,
+            em = _running_elite_mean(vals, E, len(plain))
+            hit = np.nonzero(em[:len(vals)] >= target_e-1e-9*max(1., abs(target_e)))[0]
+            ne = int(hit[0])+1 if hit.size else len(plain)+1
+            eq = (em-base)/(target_e-base) if target_e > base else em*np.nan
+            row['modes'][mode] = dict(evals_to_elite=ne, elite_reached=ne <= len(vals),
+                                      final_elite_quality=float(eq[len(vals)-1]),
+                                      elite_quality_at_frac={str(f): float(eq[max(0, int(math.ceil(f*len(plain)))-1)])
+                                                             for f in cfg['curve_fracs']},
+                                      evals_to_target=n, reached=n <= len(vals), quality_at_frac=pts,
                                       evaluations=len(vals), final_quality=float(q[len(vals)-1]),
                                       # elite coverage: comes at least as close to each recorded elite as plain did
                                       elite_coverage=float(np.mean([a <= b+1e-12 for a, b in zip(d, d_plain)])) if d else None,
@@ -198,7 +225,16 @@ def evaluations_curve(model, receipts, modes=MODES, cfg=None, config=None):
         ev = [x['modes'][mode]['evals_to_target'] for x in rows]
         rel = [x['modes'][mode]['evals_to_target']/x['budget'] for x in rows]
         d = [x['modes'][mode]['evals_to_target']-x['modes']['plain']['evals_to_target'] for x in rows]
+        de = [x['modes'][mode]['evals_to_elite']-x['modes']['plain']['evals_to_elite'] for x in rows]
         summary[mode] = dict(
+            elite=dict(mean_evals_to_plain_elite_quality=float(np.mean([x['modes'][mode]['evals_to_elite'] for x in rows])),
+                       mean_fraction_of_plain_budget=float(np.mean([x['modes'][mode]['evals_to_elite']/x['budget'] for x in rows])),
+                       reached_rate=float(np.mean([x['modes'][mode]['elite_reached'] for x in rows])),
+                       minus_plain=dict(zip(('mean', 'ci_lo', 'ci_hi'), _ci(de, worlds, cfg['bootstraps'], cfg['seed']+2))),
+                       final_quality=dict(zip(('mean', 'ci_lo', 'ci_hi'), _ci(
+                           [x['modes'][mode]['final_elite_quality'] for x in rows], worlds, cfg['bootstraps'], cfg['seed']+3))),
+                       quality_curve={str(f): float(np.nanmean([x['modes'][mode]['elite_quality_at_frac'][str(f)]
+                                                                for x in rows])) for f in cfg['curve_fracs']}),
             mean_evals_to_target=float(np.mean(ev)), median_evals_to_target=float(np.median(ev)),
             mean_fraction_of_budget=float(np.mean(rel)),
             reached_rate=float(np.mean([x['modes'][mode]['reached'] for x in rows])),

@@ -51,6 +51,10 @@ class Curve(unittest.TestCase):
         self.assertEqual(s['plain']['elite_coverage'], 1.)
         self.assertGreater(s['warm']['elite_coverage'], 0)
         self.assertAlmostEqual(s['plain']['final_quality']['mean'], 1.)
+        self.assertAlmostEqual(s['plain']['elite']['final_quality']['mean'], 1.)
+        self.assertEqual(s['plain']['elite']['reached_rate'], 1.)
+        self.assertLess(s['warm']['elite']['mean_evals_to_plain_elite_quality'],
+                        s['plain']['elite']['mean_evals_to_plain_elite_quality'])
 
     def test_reduced_iterations_keep_horizons(self):
         from .test_mppi_search_cpu import Fake, group_of
