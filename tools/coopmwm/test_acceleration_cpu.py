@@ -3,6 +3,8 @@ import copy
 import unittest
 import numpy as np
 import torch
+from pathlib import Path
+import tempfile
 from tools.coopnative.test_cpu import rows
 from .acceleration import Policy, Controller, requests, encode, PHI
 from .plans import acceleration_at, validate, thompson, population
@@ -10,6 +12,34 @@ from .plan_wm import profile_table, profile_apply
 
 
 class AccelerationCPU(unittest.TestCase):
+    def test_acceleration_modules_import_and_long_credit(self):
+        from . import accel_runner,accel_plant,plan_bridge,plan_service,plan_client
+        from .accel_learner import GAMMA,LAMBDA
+        self.assertGreaterEqual(-1/np.log(GAMMA*LAMBDA),300.)
+
+    def test_checkpoint_restores_acceleration_optimizer_and_AR_generator(self):
+        from .accel_learner import save,load,update
+        p=Policy();opt=torch.optim.Adam(p.parameters(),lr=3e-4);g=torch.Generator().manual_seed(1)
+        sample,_=p.sample(encode(rows()),g)
+        ep=dict(steps=[dict(sample=sample,reward=-123.)])
+        update(p,opt,[ep],g,epochs=1)
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/'accel.pt';save(path,p,opt,g,1,811640)
+            restored,other,rg,_=load(path)
+            update(p,opt,[ep],g,epochs=1);update(restored,other,[ep],rg,epochs=1)
+            for a,b in zip(p.parameters(),restored.parameters()):self.assertTrue(torch.equal(a,b))
+
+    def test_singular_plan_ratio_never_invents_gaussian_mass(self):
+        from .accel_learner import ratio,imitation
+        p=Policy();s,_=p.sample(encode(rows()),torch.Generator().manual_seed(9))
+        lp,_=p.score(s);s['behaviour']=dict(route='wm',executed=True,beta=1.,proposal_members=s['context']['members'])
+        self.assertEqual(float(ratio(lp,s)),0.)
+        s['action']=[[1.] for _ in s['action']]
+        loss=imitation(p,s);loss.backward()
+        self.assertGreater(float(p.actor[-1].bias.grad.abs().sum()),0.)
+        s['behaviour']=dict(route='policy',sample_probability=.25)
+        self.assertAlmostEqual(float(ratio(lp,s)),1/.75,places=5)
+
     def test_real_frozen_mappo_acceleration_executor_parity(self):
         import os
         from wms.control.policy import load_policy_fn

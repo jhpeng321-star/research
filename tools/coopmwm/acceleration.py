@@ -53,6 +53,8 @@ def requests(sample, commands):
             raise ValueError('nonfinite acceleration residual')
         if delta != 0.:
             out[vid] = dict(requested_raw=commands[vid]+delta, acceleration_residual=delta)
+    for vid,raw in sample.get('absolute_accels',{}).items():
+        if vid in commands:out[vid]=dict(requested_raw=raw,acceleration_residual=raw-commands[vid])
     return out
 
 
@@ -72,6 +74,10 @@ class Controller:
             sample = copy.deepcopy(self.replay[str(int(now))])
         else:
             sample, self.memory = self.policy.sample(context, self.generator, self.deterministic, self.memory)
+        from .plans import group as observable_group
+        observed_group=observable_group(rows)
+        if self.replay is None and not self.deterministic and int(now)%10==0 and len(observed_group)==2:
+            sample['behaviour']=dict(route='policy',executed=False,sample_probability=0.,q=0.,regime=regime(rows))
         proposal = None
         if self.plan and now >= self.plan_start+self.plan['duration_s']:
             self.plan = self.plan_start = None
@@ -82,9 +88,12 @@ class Controller:
                 sample['behaviour'] = b
                 if proposal['accepted']:
                     b['beta'] = bucket_beta(self.beta, proposal['option'], b['regime'])
+                    b['q'] = b.get('sample_probability',1.)*b['beta']
                     if float(torch.rand((), generator=self.generator)) < b['beta']:
                         self.plan, self.plan_start = proposal['plan'], now
                         b.update(executed=True, plan_start=True)
+                if hasattr(self.guide,'completed'):
+                    self.guide.completed(proposal,b.get('executed',False))
         if self.plan is not None and self.replay is None:
             if 'behaviour' not in sample:
                 sample['behaviour'] = dict(route='plan', executed=True, plan_start=False,
@@ -92,16 +101,18 @@ class Controller:
                     option=self.plan['family'], regime=regime(rows))
             b = sample['behaviour']
             b.update(plan_id=self.plan['id'], proposal_members=self.plan['members'])
-            for vid, raw in acceleration_at(self.plan, now-self.plan_start).items():
+            sample['absolute_accels']=acceleration_at(self.plan,now-self.plan_start)
+            for vid, raw in sample['absolute_accels'].items():
                 if vid in context['members']:
                     sample['action'][context['members'].index(vid)] = [raw-commands[vid]]
         desired = requests(sample, commands)
         # Exact twins release only the selected group's whole committed plan;
         # all non-group sampled actions are byte-identical on the replayed prefix.
         if self.branch and now >= self.branch['time_s']:
-            for vid in self.branch['revert']:
+            release=(self.branch.get('group',[]) if now>=self.branch.get('until',float('inf')) else self.branch['revert'])
+            for vid in release:
                 desired.pop(vid, None)
         self.events.append(dict(time_s=int(now), sample=sample, rows=rows,
-            commands=commands, group=(self.plan['members'] if self.plan else []),
+            commands=commands, group=(self.plan['members'] if self.plan else observed_group),
             proposal=proposal, requests=desired))
         return desired
