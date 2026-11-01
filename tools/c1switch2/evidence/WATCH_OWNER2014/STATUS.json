@@ -1,14 +1,14 @@
 {
-  "unix": 1793537430.1702864,
+  "unix": 1793538651.962642,
   "protocol": "S-C1SWITCH2/v2",
   "hosts": {
     "cpuQ": {
-      "unix": 1793537430.4756281,
+      "unix": 1793538652.3226793,
       "host": "cpuQ",
       "load": [
-        0.18701171875,
-        0.14453125,
-        0.44970703125
+        3.20166015625,
+        3.04541015625,
+        1.7197265625
       ],
       "cpu": {
         "cpu": {
@@ -62,7 +62,22 @@
         },
         "cav_mappo": {
           "root": "/home/ubuntu/c1switch2_run_10950e88a99994d0",
-          "state": "UNCLAIMED"
+          "process": {
+            "pid": 2380230,
+            "state": "EXITED"
+          },
+          "complete": false,
+          "stop": {
+            "reason": "child failed",
+            "id": "cav_mappo__s969138",
+            "code": 1
+          },
+          "episodes": 2,
+          "decisions": 75,
+          "closed_jobs": 3,
+          "closed_actual_sim_s": 2980.0,
+          "charged_sim_s": 3000,
+          "ledger_sha256": "bd8cd25910dfaa836454c21d4e7c427d15123041526e6363deb35ddeaaa82156"
         },
         "wm_oracles": {
           "root": "/home/ubuntu/c1switch2_run_oracles_0e790a668b7ec5d8",
@@ -83,12 +98,12 @@
       "gpu": {}
     },
     "gpuR": {
-      "unix": 1793537431.3901045,
+      "unix": 1793538653.8182125,
       "host": "gpuR",
       "load": [
-        21.04248046875,
-        27.6142578125,
-        23.9453125
+        35.0615234375,
+        31.947265625,
+        29.8291015625
       ],
       "cpu": {
         "cpu": {
@@ -199,7 +214,7 @@
           "ready": true,
           "requests": 98,
           "results": 98,
-          "elapsed_wall_s": 67252.1485247612
+          "elapsed_wall_s": 68474.57666993141
         },
         "bb": {
           "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
@@ -220,7 +235,7 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 21242.065646886826
+          "elapsed_wall_s": 22464.49377131462
         },
         "bb_startup": {
           "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -241,17 +256,17 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 33277.934664964676
+          "elapsed_wall_s": 34500.36278939247
         }
       }
     },
     "gpuA": {
-      "unix": 1793537433.0755458,
+      "unix": 1793538655.117426,
       "host": "gpuA",
       "load": [
-        9.380859375,
-        9.35791015625,
-        8.46875
+        14.2177734375,
+        14.10009765625,
+        12.53369140625
       ],
       "cpu": {},
       "gpu": {
@@ -274,7 +289,7 @@
           "ready": true,
           "requests": 90,
           "results": 90,
-          "elapsed_wall_s": 67258.80824947357
+          "elapsed_wall_s": 68480.85011100769
         },
         "bb": {
           "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
@@ -295,7 +310,7 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 21244.785059452057
+          "elapsed_wall_s": 22466.826919317245
         },
         "bb_startup": {
           "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -316,13 +331,14 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 33280.45977091789
+          "elapsed_wall_s": 34502.50162577629
         }
       }
     }
   },
   "alerts": [
     "cpuQ/cpu/wm: STOP {'reason': 'child failed', 'id': 'wm__s969141', 'code': 1}",
+    "cpuQ/cpu/cav_mappo: STOP {'reason': 'child failed', 'id': 'cav_mappo__s969138', 'code': 1}",
     "gpuR/cpu/wm: STOP {'reason': 'child failed', 'id': 'wm__s969147', 'code': 1}",
     "gpuR/cpu/cav_mappo: STOP {'reason': 'child failed', 'id': 'cav_mappo__s969139', 'code': 1}",
     "BB relocated startup terminal STOP: ValueError('current model authority/registry absent')"
@@ -425,16 +441,8 @@
     "pid": 20260,
     "gpu_hold": true,
     "admission": {
-      "unix": 1793537368.289838,
-      "status": "WAIT_CPU_DISK_NO_CLAIM",
-      "states": {
-        "load": 0.11279296875,
-        "free_bytes": 2068176896,
-        "claimed": false,
-        "stopped": false,
-        "jobs": false,
-        "ledger": false
-      }
+      "unix": 1793538591.9517171,
+      "status": "ADMITTED_OR_ATTEMPTED_NO_RETRY"
     },
     "admission_error": null
   }
