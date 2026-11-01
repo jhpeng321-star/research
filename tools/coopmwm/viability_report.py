@@ -31,9 +31,11 @@ def summarize(rows,excluded):
     for label in ('type','regime','predicted_rank','known_label','group_size','update'):
         keys=sorted({str(r[label]) for r in rows})
         groups[label]={k:bootstrap([r for r in rows if str(r[label])==k]) for k in keys}
-    return dict(overall=bootstrap(rows),by=groups,excluded=excluded,rows=rows,
+    from .noop_report import by_update
+    nulls=by_update(rows) if all('null_classification' in r for r in rows) else {}
+    return dict(overall=bootstrap(rows),by=groups,excluded=excluded,rows=rows,physical_nulls_by_update=nulls,
         estimator='mean over exact-graded executed TRAIN plans; 10000 whole-world cluster resamples, RNG20261101; one-world CI unavailable; selection-conditional marginal same-state effects',
-        prediction_comparison='WM mean saving at registered Hfinal versus exact executedD+120 marginal SUMO saving; horizons may differ; no assumption that predictions equal causal effects',
+        prediction_comparison='WM saving_vs_policy is the own-policy comparator; saving_vs_MAPPO uses whole-road MAPPO and is a different contrast. WM Hfinal and exact executedD+120 horizons may differ. Physical null flags are descriptive only; all exact zeros/losses retained.',
         training_effect=False)
 
 
@@ -66,15 +68,20 @@ def collect(root):
             proposal=step['proposal'];b=step['sample']['behaviour']
             assert b['executed'] and b['plan_start'] and proposal['plan']['id']==r['plan']['id']
             assert digest(proposal['plan'])==r['plan']['plan_sha256']
+            from .noop_report import classify
+            null=classify(root,r,ep)
             rows.append(dict(grade_id=r['grade_id'],receipt_sha256=r['receipt_sha256'],world=r['world_seed'],
                 update=r['update'],exact_saving=r['grade_veh_s'],type=r['plan']['option'],
                 regime=r['plan']['regime'],predicted_rank=proposal.get('predicted_rank'),
                 known_label='known-like' if proposal.get('known_family') else 'new',
                 group_size=len(r['plan']['members']),duration_s=r['plan']['duration_s'],
                 predicted_saving=proposal.get('expected_saving'),
+                predicted_saving_vs_policy=proposal.get('expected_saving_vs_policy',proposal['plan'].get('saving_vs_policy')),
+                predicted_saving_vs_MAPPO=proposal['plan'].get('saving_vs_mappo',proposal.get('expected_saving')),
+                plan_origin=proposal['plan'].get('origin'),null_classification=null,
                 posthoc_label=proposal.get('posthoc'),
                 descriptors=proposal['plan'].get('descriptors',proposal['plan'].get('shape'))))
-    key=digest(dict(receipts=[r['receipt_sha256'] for r in receipts],excluded=dict(excluded)))
+    key=digest(dict(receipts=[r['receipt_sha256'] for r in receipts],excluded=dict(excluded),report_schema='exact-contrasts-physical-nulls/2'))
     return key,summarize(rows,dict(excluded))
 
 
