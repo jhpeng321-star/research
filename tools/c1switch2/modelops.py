@@ -85,6 +85,8 @@ print(json.dumps(out))
 
 
 def dispatch(host, root, model, workers, parity_path=None):
+    from .gpuhold import require_available
+    require_available()
     from .audit import registration_audit
     text = checked(REGISTRATION).read_text(encoding='utf-8')
     audit = registration_audit(REGISTRATION)

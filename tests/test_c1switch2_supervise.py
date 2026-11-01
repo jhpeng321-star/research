@@ -7,6 +7,7 @@ from tools.c1switch2 import supervise
 
 
 def setup(tmp_path,monkeypatch,free):
+    monkeypatch.setattr(supervise.gpuhold,'HOLD',tmp_path/'GPU_HOLD.json')
     monkeypatch.setattr(supervise,'EVIDENCE',tmp_path)
     monkeypatch.setattr(supervise,'SCOPE',tmp_path)
     monkeypatch.setattr(supervise,'ssh',lambda *args,**kwargs:dict(load=1,free_bytes=free))

@@ -1,8 +1,8 @@
 {
   "protocol": "S-C1SWITCH2/v2",
-  "verified_unix": 1793535160.9135315,
+  "verified_unix": 1793535345.6944106,
   "status": "CPU_COMPLETE_WM_TERMINAL_REGISTERED_PANEL_PARTIAL_OWNED_SCOPES_SUPERVISED",
-  "receipt": "tools\\c1switch2\\evidence\\RESUME_RECONCILIATION_1793535166.json",
+  "receipt": "tools\\c1switch2\\evidence\\RESUME_RECONCILIATION_1793535350.json",
   "base_sim_s": 468380,
   "conditional_sim_s": 548180,
   "base_gpu_hours_cap": 19,
@@ -188,7 +188,7 @@
         "ready": true,
         "requests": 98,
         "results": 98,
-        "elapsed_wall_s": 64983.51807141304
+        "elapsed_wall_s": 65167.98191738129
       },
       "bb": {
         "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
@@ -209,7 +209,7 @@
         "ready": true,
         "requests": 2,
         "results": 2,
-        "elapsed_wall_s": 18973.435141801834
+        "elapsed_wall_s": 19157.898997545242
       },
       "bb_startup": {
         "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -230,7 +230,7 @@
         "ready": true,
         "requests": 2,
         "results": 2,
-        "elapsed_wall_s": 31009.304121494293
+        "elapsed_wall_s": 31193.76798582077
       }
     },
     "gpuA": {
@@ -253,7 +253,7 @@
         "ready": true,
         "requests": 90,
         "results": 90,
-        "elapsed_wall_s": 64991.163949251175
+        "elapsed_wall_s": 65174.26789188385
       },
       "bb": {
         "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
@@ -274,7 +274,7 @@
         "ready": true,
         "requests": 2,
         "results": 2,
-        "elapsed_wall_s": 18977.140766382217
+        "elapsed_wall_s": 19160.2446975708
       },
       "bb_startup": {
         "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -295,7 +295,7 @@
         "ready": true,
         "requests": 2,
         "results": 2,
-        "elapsed_wall_s": 31012.81547474861
+        "elapsed_wall_s": 31195.919404745102
       }
     }
   },
@@ -305,12 +305,12 @@
     "BB relocated startup terminal STOP: ValueError('current model authority/registry absent')"
   ],
   "cpuQ_resources": {
-    "unix": 1793535166.2525752,
-    "uptime_s": 549443.98,
+    "unix": 1793535349.7354655,
+    "uptime_s": 549627.46,
     "disk": {
       "total": 52721041408,
-      "used": 48299991040,
-      "free": 2149703680
+      "used": 48343375872,
+      "free": 2106318848
     },
     "processes": {
       "649272": {
@@ -384,8 +384,8 @@
   },
   "observer": {
     "pid": 42548,
-    "state": "LIVE",
-    "exit_code": 259
+    "state": "EXITED",
+    "error": 87
   },
   "bb_startup_stop": {
     "unix": 1793504172.9679978,

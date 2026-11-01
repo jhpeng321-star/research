@@ -1,0 +1,15 @@
+{
+  "authority": "2026-11-01 20:14 MAIN / OWNER: both GPUs reserved for S-COOPMWM until MAIN appends S-C1SWITCH2 GPU RESUME",
+  "status": "HELD",
+  "supervisor_pid": 42548,
+  "verified_creation_local": "2026-11-01 12:24:02",
+  "verified_command": "C:\\Python314\\python.exe -B -u -m tools.c1switch2.supervise run",
+  "action": "Verified exact incarnation and stopped only owned admission supervisor42548; all terminal scientific claims preserved",
+  "reconciliation_receipt": "tools/c1switch2/evidence/RESUME_RECONCILIATION_1793535350.json",
+  "gpu_services": "All owned original WM, original BB and continuation BB GPU services EXITED with final receipts",
+  "charged_sim_s": 247680,
+  "finalized_gpu_s": 27787.12987509556,
+  "new_gpu_s": 0,
+  "new_sim_s": 0,
+  "resume_requirement": "Keep this flag until MAIN explicitly appends GPU RESUME and a new operational reconciliation records it; terminal one-use claims are never reset"
+}

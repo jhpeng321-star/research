@@ -9,6 +9,7 @@ import time
 
 from tools.c1switch.storage import write
 from . import bbcontinue, selectorops, watch
+from . import gpuhold
 from .operations import EVIDENCE, ssh
 
 ROOT = watch.ROOT
@@ -18,6 +19,8 @@ DEADLINE = datetime.fromisoformat('2026-11-02T12:14:00+08:00').timestamp()
 
 def admit():
     """Preclaim refusal is observable; any admitted attempt is durably one-use."""
+    if gpuhold.active():
+        return dict(status='OWNER2014_GPU_HOLD_NO_ADMISSION')
     states = ssh('gpuR', '''import json,os,shutil
 print(json.dumps(dict(load=os.getloadavg()[0],free_bytes=shutil.disk_usage('/root').free)))''',timeout=30)
     if states['load'] >= 20 or states['free_bytes'] < 2*1024**3:

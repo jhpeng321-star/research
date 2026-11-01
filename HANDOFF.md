@@ -59,6 +59,15 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**OWNER20:14 GPU HOLD applied (fresh receipt1793535350):** exact owned admission
+supervisor42548/create12:24:02/command verified and stopped; no follower admission
+remains armed. All owned GPU services are EXITED; final charges247680sim-s and
+27787.12987509556GPU-s retained. Durable `OWNER2014_GPU_HOLD.json` blocks GPU
+service starts, model dispatch and supervisor admission before claims/remote work.
+Reconcile an explicit later MAIN GPU RESUME before releasing this flag; original
+terminal claims/caps remain binding. CPU-only per-CAV final169 preparation may
+continue nice19 below S-COOPMWM. cpuQ free2106318848bytes (<2GiB gate) at receipt;
+ownoutputs356383743bytes. No new physics/GPU, peer signals or completed replays.
 **20:12 fresh-session reconciliation (1793535166):** original observer42548 LIVE;
 all112fixed/random and finalfleet16episodes+96oracles COMPLETE, no replay.
 All36originalWMoracles COMPLETE; WM6episodes only, terminal failures retained.

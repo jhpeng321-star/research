@@ -91,6 +91,8 @@ out['output']=log.getvalue();(root/'CPU.json').write_text(json.dumps(out,indent=
 
 
 def start(host, root, continuation=None):
+    from .gpuhold import require_available
+    require_available()
     # CPU provenance comparison against the already validated original-host checkpoint.
     model = 'wm' if Path(root).name.startswith('c1switch2_gpu_wm_') else 'bb'
     cpu = json.loads((EVIDENCE/('GPU_CPU_'+host+'_'+Path(root).name+'.json')).read_text())

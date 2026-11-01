@@ -134,6 +134,8 @@ print(json.dumps(dict(free_bytes=shutil.disk_usage('/root').free)))''', timeout=
 
 
 def start():
+    from .gpuhold import require_available
+    require_available()
     text, _ = authority()
     config = json.loads(BOUND.read_text())
     if config['continuation_plan_sha256'] != canonical(json.loads(PLAN.read_text())):
