@@ -4,7 +4,7 @@ Branch `c4/rb-int`. Retain all prior work and immutable jobs. Earlier detail:
 `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_{0034,0515}.md`.
 Owner schedule: interim04/08, freeze09:30, evaluation through11:30, report11:45.
 Fresh-session recovery: `docs/rbint/RESUME_0627.md`. Original collectors and
-completed scores preserved; current11932 paused after08publication for owner edits.
+completed scores preserved;08:26round recovered after isolated CPU child exit1.
 Peer observer retained. WM2-HDV60 now160/160 COMPLETE; no cpuQ dependency.
 08interim COMPLETE: `docs/rbint/INTERIM_0800.md`, all8reserved FULL-v4 K8 worlds.
 CRPS−393/−3040/−11647;HDV60−15.26m;300srate-distance+5.63pp→point switching FAIL.
@@ -109,10 +109,8 @@ Full-world CIs NA/singletons. Current publication `noon/20261101T075846+0800`.
 
 <!-- NOON-COLLECTOR:BEGIN -->
 ## Bounded noon collector
-2026-11-01T07:58:46+08:00; read-only remote collection, no inference dispatch.
-Latest publication `docs/rbint/noon/20261101T075846+0800/PUBLICATION.json`; 08interim `docs/rbint/noon/20261101T075846+0800`,09:30freeze `PENDING`.
-Source22cc32f6 FULL-v4 and prior A/B/C/FULL sources remain immutable.
-Scored-world-only fixed-stratum CIs; singleton uncertainty NA; prior CIs retracted.
-Existing remote supervisors retain own-PID11:30 deadline. Final collection11:35, report by11:45.
-Collector owns ONLY its local CPU analysis children and publication files; foreign work stops it.
+Explicit saved-component CPU recovery completed; no new inference.
+Latest publication `docs/rbint/noon/20261101T082618+0800/PUBLICATION.json`;08interim retained.
+All successful components reused; only previously unfinished analysis executed.
+Next bounded collector resumes this committed publication/cache;09:30freeze/11:45report unchanged.
 <!-- NOON-COLLECTOR:END -->

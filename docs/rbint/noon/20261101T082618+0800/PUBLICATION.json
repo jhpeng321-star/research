@@ -1,0 +1,117 @@
+{
+ "local_time": "2026-11-01T08:26:18+08:00",
+ "label": "interim",
+ "source_head": "a01b7132f21aa23b0b20d63eb3d28ed5fd3ddec0",
+ "code_hashes": {
+  "tools\\rbint\\finish_saved_round.py": "30afc6d6115ef8d38e0c626d015fe5b108a04574b321b8e5e07d363d6c8999df",
+  "tools\\rbint\\compare.py": "ffa2e9ca903e0919da864e627415022a29c5755d1d7b8f9272c3aa9d1bef79b1",
+  "tools\\rbint\\noon_report.py": "085a6400fe84933497890ae46e1443148a6af918647fd279587232941055558b"
+ },
+ "variants": {
+  "A2": {
+   "tasks": 100,
+   "complete": [
+    969420,
+    969421,
+    969422,
+    969425,
+    969432,
+    969433,
+    969434,
+    969435,
+    969436,
+    969437,
+    969438,
+    969439
+   ],
+   "sha256": "af3a911b2f130fb239d25e40d21786a1138e5db41ebc5fe58dacff2125cea39c",
+   "snapshot": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T082618+0800",
+   "comparison": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T082618+0800\\A2\\paired\\COMPARISON.json",
+   "distribution": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T082618+0800\\A2\\distribution",
+   "credibility": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T082618+0800\\A2\\credibility"
+  },
+  "B2": {
+   "tasks": 95,
+   "complete": [
+    969421,
+    969422,
+    969432,
+    969433,
+    969434,
+    969435,
+    969436,
+    969437,
+    969438,
+    969439
+   ],
+   "sha256": "528f8402e95026ac3998bf7a8ca3655456d9e61624035032efc8011b9ed2d80c",
+   "snapshot": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_B2_20261101T082618+0800",
+   "comparison": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T082618+0800\\B2\\paired\\COMPARISON.json",
+   "distribution": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T082618+0800\\B2\\distribution",
+   "credibility": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T082618+0800\\B2\\credibility"
+  },
+  "C2": {
+   "tasks": 31,
+   "complete": [
+    969432,
+    969433,
+    969434
+   ],
+   "sha256": "832f32a10c957717eef0508407518a174a40dd3061af7ecba07b83b5b8ac79aa",
+   "snapshot": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_C2_20261101T082618+0800",
+   "comparison": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T082618+0800\\C2\\paired\\COMPARISON.json",
+   "distribution": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T082618+0800\\C2\\distribution",
+   "credibility": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T082618+0800\\C2\\credibility"
+  },
+  "FULL-v3": {
+   "tasks": 87,
+   "complete": [
+    969422,
+    969425,
+    969432,
+    969433,
+    969434,
+    969435,
+    969436,
+    969437,
+    969438,
+    969439
+   ],
+   "sha256": "fd8a1b45a7555c1873ef74e3a49df27704d3e94a2c03fc58541ff63a8e4e54d4",
+   "snapshot": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v3_20261101T082618+0800",
+   "comparison": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T070717+0800\\FULL-v3\\paired\\COMPARISON.json",
+   "distribution": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T070717+0800\\FULL-v3\\distribution",
+   "credibility": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T070717+0800\\FULL-v3\\credibility",
+   "endpoints": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T070717+0800\\FULL-v3\\endpoints\\HDV60_COMPARISON.json"
+  },
+  "FULL-v4": {
+   "tasks": 115,
+   "complete": [
+    969420,
+    969421,
+    969422,
+    969425,
+    969428,
+    969432,
+    969433,
+    969434,
+    969435,
+    969436,
+    969437,
+    969438,
+    969439
+   ],
+   "sha256": "a0828739a9ea573a7579ca3295fa2c46b22fd6e28d2687ebf73ca0773e0a584b",
+   "snapshot": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T082618+0800",
+   "comparison": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T082618+0800\\FULL-v4\\paired_recovered\\COMPARISON.json",
+   "distribution": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T082618+0800\\FULL-v4\\distribution_recovered",
+   "credibility": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T082618+0800\\FULL-v4\\credibility_recovered",
+   "endpoints": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T082618+0800\\FULL-v4\\endpoints_recovered\\HDV60_COMPARISON.json"
+  }
+ },
+ "read_only_remote": true,
+ "receipt_directory": "docs/rbint/noon/20261101T082618+0800",
+ "freeze": "PENDING",
+ "interim08": "docs/rbint/noon/20261101T075846+0800",
+ "explicit_cpu_recovery": true
+}
