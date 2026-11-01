@@ -62,7 +62,7 @@ def guard(head=None, allowed=()):
 def command(argv, directory, name, *, cwd=ROOT, optional_missing=False):
     env = dict(os.environ, CUDA_VISIBLE_DEVICES='', OMP_NUM_THREADS='1',
                MKL_NUM_THREADS='1', OPENBLAS_NUM_THREADS='1')
-    args = [sys.executable, '-B', *map(str, argv)]
+    args = [sys.executable, '-X', 'faulthandler', '-u', '-B', *map(str, argv)]
     flags = subprocess.BELOW_NORMAL_PRIORITY_CLASS if os.name == 'nt' else 0
     with (directory/(name+'.log')).open('x', encoding='utf-8') as log:
         child = subprocess.Popen(args, cwd=cwd, env=env, stdout=log,
@@ -249,7 +249,7 @@ def collect(state, *, now=None):
         else:
             report = target/key
             report.mkdir()
-            command(['-m', 'tools.rbint.compare', '--candidate', path, '--baseline', baseline,
+            command(['-m', 'tools.rbint.compare', '--progress', '--candidate', path, '--baseline', baseline,
                      '--out', report/'paired'], target, 'compare_'+key)
             item['comparison'] = str(report/'paired/COMPARISON.json')
             if info['complete']:

@@ -7,6 +7,7 @@ Missing endpoints/partial panels never imply switching eligibility.
 import argparse
 import json
 from pathlib import Path
+import time
 
 import numpy as np
 
@@ -90,14 +91,22 @@ def main():
     parser.add_argument('--candidate', nargs='+', required=True)
     parser.add_argument('--baseline', nargs='+', required=True)
     parser.add_argument('--out', required=True)
+    parser.add_argument('--progress', action='store_true')
     args = parser.parse_args()
+    def progress(phase):
+        if args.progress:
+            print(json.dumps(dict(phase=phase, unix=time.time())), flush=True)
+    progress('start')
     out = Path(args.out)
     if not out.parent.is_dir() or out.exists():
         raise ValueError('new report in an existing parent required')
     real_path = Path(__file__).resolve().parents[1]/'rbeval/real_observables.json'
     real = load(real_path)['episodes']
+    progress('factual_observables_loaded')
     candidate, ca = read_predictions([Path(p) for p in args.candidate], real, partial=True)
+    progress('candidate_complete_ensembles_loaded')
     baseline, ba = read_predictions([Path(p) for p in args.baseline], real, partial=True)
+    progress('baseline_loaded')
     if ba['model'] is None or ba['model']['model'] != 'wm2':
         raise ValueError('baseline must be the registered WM2 inference contract')
     common = sorted(set(ca['complete_worlds']) & set(ba['complete_worlds']))
@@ -107,6 +116,7 @@ def main():
             ('reserved8', [s for s in common if s >= 969432])):
         bootstrap = matched_bootstrap(real, worlds)
         summaries[split] = summarize_features(paired_features(candidate, baseline, real, worlds), worlds, bootstrap)
+        progress(split+'_summarized')
     out.mkdir()
     save_new(out/'COMPARISON.json', dict(schema='wmphys-paired-comparison/1',
         real_receipt_sha256=digest(real_path), source_sha256=digest(Path(__file__)),
