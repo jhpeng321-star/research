@@ -31,6 +31,27 @@ Proposal consumers: COOPPLAN/WMPLAN; new exports `publications/owner1511/`.
 Untilu002 completes, latest learned checkpoint is still correctedu001 below; no new gain claim.
 Commits:e9c26214 implementation/CPU;ea6d2a6c predispatch registry receipt.
 
+### Recovered u001 learned-behaviour discovery (CPU only; no reruns)
+All20 originally selected DEV group comparisons have exact same-prefix HOLD,
+joint and every-member-solo closed results; verify their targets and prefix/trace
+hashes before analysis. Original discovery STOP and raw traces remain untouched.
+At600s: DGmean+229.732/SD996.641, sumDimean+375.637/SD1153.565,
+CGmean-145.905/SD635.988;5/20positive. Most differences are near numerical zero;
+the positiveCG maximum is only0.00690vehicle-s and minimum-2918.114. This
+u001 sample does not establish learned superadditivity or a helpful novel mechanism.
+Existing COOPBEHAV observational counts:3897wave-damping,1921gap-creation,
+157cross-lane-hold,10yield candidates across full post-event tapes. These include
+background motion; they are NOT counts of learned walls/yields/metering or causal
+paired-release support. Held setpoints cannot be relabelled native/policy commands.
+Continuous action/motion clustering selects k2/silhouette0.474 (19/1groups), purely
+descriptive; cluster names/novel beneficial behaviours are not inferred.
+`RECOVERED_HOLD_DISCOVERY_001.json` binds all20group credits/events and the
+corrected u001 SHA7b6ff325; CPU recovery sim-s0/newphysics0. Existing88833discovery
+sim-s remain charged. A singleton CPU lock protects recovery; no original STOP cleared.
+Verified local publication observer42732/creation15:25:44 runs48h/poll120s;
+5/5observerCPU testsPASS0.006s/SUMO0. It publishes hash-verified checkpoints,
+pairedchecks and registered phase changes automatically, without physics retries.
+
 ## Fresh-session recovery: current evidence and blockers
 Resumed clean at `0f9f60c2`; preserved inherited physics, charges and checkpoints.
 Publisher5020 had exited on an uncaught SSH RuntimeError. Both a read-only cpuQ

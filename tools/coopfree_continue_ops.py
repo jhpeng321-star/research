@@ -2,6 +2,7 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
 from tools.coopbandit.ops import remote
 
@@ -113,9 +114,29 @@ print(json.dumps(out))
 ''',timeout=25)
 
 
+def watch():
+    import subprocess
+    import sys
+    import time
+    receipt=LOCAL/'coopfree/evidence/CONTINUE_PUBLISHER_DISPATCH.json'
+    assert not receipt.exists(),'observer already dispatched; inspect exact owned PID first'
+    parent=Path('E:/Temp/opencode');assert parent.is_dir()
+    logpath=parent/f'coopfree_owner1511_publisher_{time.time_ns()}.log'
+    command=[sys.executable,'-B','-u','-m','tools.coopfree_continue_publish','--watch','--commit']
+    with logpath.open('xb') as log:
+        process=subprocess.Popen(command,cwd=LOCAL.parent,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
+            creationflags=(subprocess.CREATE_NO_WINDOW|subprocess.BELOW_NORMAL_PRIORITY_CLASS) if os.name=='nt' else 0)
+    value=dict(pid=process.pid,command=command,log=str(logpath),watch_hours=48,
+               interval_s=120,physics_dispatch=False,created_unix=time.time())
+    receipt.write_text(json.dumps(value,sort_keys=True)+'\n',encoding='utf-8')
+    time.sleep(1)
+    assert process.poll() is None,'observer exited at startup; inspect retained log'
+    return json.dumps(value)
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('stage-cpu','launch','status'));a=p.parse_args()
-    output={'stage-cpu':stage_cpu,'launch':launch,'status':status}[a.mode]()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('stage-cpu','launch','status','watch'));a=p.parse_args()
+    output={'stage-cpu':stage_cpu,'launch':launch,'status':status,'watch':watch}[a.mode]()
     print(output)
     evidence=LOCAL/'coopfree/evidence'
     if a.mode in ('launch','status','stage-cpu'):

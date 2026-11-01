@@ -18,6 +18,15 @@ until next completion, correctedu001 in `publications/hold/` remains latest lear
 Learning checks/dev at u3/u6/u9/final; if six-update effects stall, supervisor parks
 for registered phase-fix authority before fresh next batch/ES; no replay.
 The historical budget blockers below are superseded by the15:11 approval.
+Verified local singleton observer42732/creation2026-11-01T15:25:44 is live48h,
+poll120s, auto-commits publications/checks; receipt CONTINUE_PUBLISHER_DISPATCH.json.
+Do not duplicate it. Firstpoll u00241/420arms closed,2,384,073precharged/
+1,995,273closedactual. Observer5/5CPU testsPASS0.006s/SUMO0.
+Recovered original20learned DEV discovery groups without physics or STOP mutation:
+DGmean+229.732, sumDimean+375.637, CGmean-145.905,25%CG>0; no demonstrated
+superadditive learned mechanism. Observational-only COOPBEHAV+2clusters complete;
+`RECOVERED_HOLD_DISCOVERY_001.json` publishes in owner1511 exports. No fake
+policy-release labels used. Recovery has own CPU lock/receipts, source+trace checks.
 
 ## Fresh resume: observer transport failure
 Starting `0f9f60c2`, clean worktree. Publisher5020 is absent; its retained log ends
