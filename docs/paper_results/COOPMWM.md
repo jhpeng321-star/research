@@ -1525,3 +1525,12 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
 - Receipt: `coopmwm/warm_live/A_VIABILITY_031.json`.
 <!-- warm-receipt:A_VIABILITY_031.json:f60e91651700d8e2201d9ca1337c681ccf506c82b6dfd427707c6a826d389c29 -->
+
+## Warm live publication — 2026-11-01T19:34:10.064374+00:00
+- Conservatively charged 1909640/7500000 sim-s.
+
+### Warm continuation — A_VIABILITY_032.json
+- A u32: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_032.json`.
+<!-- warm-receipt:A_VIABILITY_032.json:bc95b4d5348aaf907be171b8f485079d352d64ca03774058a413f5c13ad4eb86 -->

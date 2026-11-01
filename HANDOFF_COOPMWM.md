@@ -1,5 +1,13 @@
 # S-COOPMWM live continuation — MAIN03:03 integration pending
 
+LOCAL OBSERVER40888 dispatched once (EXACT_OBSERVER_DISPATCH/BINDING); running
+exact_watch polls60s, adopts existingremoteowners, waits8EXACT0gatesbothhosts, then
+registers and launches grader/broker/B/Ronce from exactcpu4; publishes/commits checks.
+Do not duplicate watcher or launch alongside it. OriginalA continues (u31latest).
+BackupA17 transport timedout; source144916480bytes retained, GPUcopy76698624partial
+SHA differs. WARM_BACKUP_RECOVERY_A_017.json records UNVERIFIED; no deletion/retry.
+Future recovery may preserve/export to a freshpath, never treatpartialcopydurable.
+
 LATEST CPU RELEASE: exactcpu4,203PASS/0skips/38.11s/zeroSUMO. Adopts SHA-authorized
 MAIN0224 budget without mutating original WARM_BINDING; charges registered phase
 exact_plan_grading (not unregistered exact_grade). Grader supervisor exclusive lock,

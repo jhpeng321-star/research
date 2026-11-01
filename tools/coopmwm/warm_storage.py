@@ -101,6 +101,39 @@ print(json.dumps(dict(path=str(p),sha256=h2.hexdigest(),bytes=n)))'''
     print(json.dumps(dict(arm=arm,update=update,phase=phase,bytes=src['bytes'],sha256=src['sha256'],verified=True)))
 
 
+def verify_backup(arm,update):
+    """Adopt an existing transfer after transport loss; never retransmit or delete."""
+    pattern=f'warm_u{update:03}_{arm}_*'
+    source=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,subprocess,hashlib,json
+r=pathlib.Path({ROOT!r});ram=pathlib.Path({RAM!r});names=[]
+for p in (r/'jobs').glob({pattern!r}):
+ if not p.is_symlink():continue
+ assert p.resolve().parent==ram and (p/'CLOSE.json').is_file() and (p/'RESULT.json').is_file()
+ for name in ('RESULT.json','RESULT.json.gz','observable.jsonl.gz','CLAIM.json','CLOSE.json'):
+  if (p/name).is_file():names.append(p.name+'/'+name)
+assert names
+p=subprocess.Popen(['tar','-C',str(ram),'-cf','-',*sorted(names)],stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+h=hashlib.sha256();n=0
+for block in iter(lambda:p.stdout.read(1024*1024),b''):h.update(block);n+=len(block)
+err=p.stderr.read();assert p.wait()==0,err
+print(json.dumps(dict(sha256=h.hexdigest(),bytes=n,files=len(names))))''',timeout=45))
+    archive=f'/root/autodl-tmp/coopmwm20261102_warm_receipts/{arm}_u{update:03}.tar'
+    destination=json.loads(ops.ssh.remote('gpuA',f'''import pathlib,hashlib,json
+p=pathlib.Path({archive!r});assert p.is_file();h=hashlib.sha256();n=0
+with p.open('rb') as f:
+ for b in iter(lambda:f.read(1024*1024),b''):h.update(b);n+=len(b)
+print(json.dumps(dict(path=str(p),sha256=h.hexdigest(),bytes=n)))''',timeout=45))
+    verified=source['sha256']==destination['sha256'] and source['bytes']==destination['bytes']
+    value=dict(unix=time.time(),source=source,destination=destination,verified=verified,deleted=False,
+        retransmitted=False,new_sumo_sim_s=0,reason='transport timeout; inspect existing copy only')
+    write(ops.EVIDENCE/f'WARM_BACKUP_RECOVERY_{arm}_{update:03}.json',value)
+    if verified:write(ops.EVIDENCE/f'WARM_BACKUP_{arm}_{update:03}.json',value)
+    print(json.dumps(value))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('prepare','backup'));p.add_argument('--arm',choices=('A','B','R'));p.add_argument('--update',type=int);p.add_argument('--phase',choices=('train','check','dev'),default='train')
-    a=p.parse_args();prepare() if a.mode=='prepare' else backup(a.arm,a.update,a.phase)
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('prepare','backup','verify'));p.add_argument('--arm',choices=('A','B','R'));p.add_argument('--update',type=int);p.add_argument('--phase',choices=('train','check','dev'),default='train')
+    a=p.parse_args()
+    if a.mode=='prepare':prepare()
+    elif a.mode=='verify':verify_backup(a.arm,a.update)
+    else:backup(a.arm,a.update,a.phase)
