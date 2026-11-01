@@ -639,3 +639,8 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 
 ### SCALE_gpuR_FIXED4_K8_H300.json
 - SCALE_gpuR_FIXED4_K8_H300.json: {"H":300,"K":8,"max_cost_error":0.0,"pass_":true,"width":4}
+
+## Acceleration viability — 2026-11-01T13:03:17.429398+00:00
+
+### ARCHIVE2035_COMPLETE.json
+- ARCHIVE2035_COMPLETE.json: {"archive":{"destination":{"bytes":3119974400,"path":"/root/autodl-tmp/archive_cpuQ_20261101/coopmwm20261101_v2.tar","sha256":"5b3b74cf25f6bc3e09f8be0b0c676436f102925292e5112d9dfe5c4add8dc1bc"},"new_sumo_sim_s":0,"source":"/home/ubuntu/coopmwm20261101_v2","source_stream":{"bytes":3119974400,"sha256":"5b3b74cf25f6bc3e09f8be0b0c676436f102925292e5112d9dfe5c4add8dc1bc"},"transport":"opaque tar stream via existing cpuQ/gpuA SSH keys; no extraction/content inspection","unix":1793538181.6069808,"verified":true},"disk_free":5200531456,"new_sumo_sim_s":0,"source_removed":true,"unix":1793538196.7923505}
