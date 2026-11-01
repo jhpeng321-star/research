@@ -731,3 +731,11 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 
 ### TRAINING_STARTED.json
 - TRAINING_STARTED.json: {"N_exec":10,"charged_sim_s":815240,"eta_primary_hours":{"acceptance_unknown":true,"capacity_lower_bound":14.401095344890471},"search":{"elite":8,"final_H":300,"final_K":8,"finalists":8,"iterations":3,"knot_s":10,"max_duration_s":60,"population":32,"screen_H":120,"screen_K":4},"timestamp_utc":"2026-11-01T13:52:59.130144+00:00"}
+
+## Acceleration viability — 2026-11-01T13:53:31.481315+00:00
+
+### VIABILITY2035v4_TRAIN_DISPATCH.json
+- VIABILITY2035v4_TRAIN_DISPATCH.json: {"boot_id":"b8bc1fcb-c656-4e1e-a43d-4543118c834e","pid":2477255,"root":"/home/ubuntu/coopmwm20261101_accel1","source":"/home/ubuntu/coopmwm20261101_acceltrain1","start_ticks":"55545604","unix":1793541178.313232}
+
+### VIABILITY2035v4_BRIDGE_DISPATCH.json
+- VIABILITY2035v4_BRIDGE_DISPATCH.json: {"pid":8760,"root":"/home/ubuntu/coopmwm20261101_accel1","unix":1793541179.244051}
