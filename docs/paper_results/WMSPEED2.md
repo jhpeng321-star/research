@@ -115,10 +115,12 @@ snapshot, separately from the candidate overlay. CPU placement is translated in
 the frozen bootstrap/device literals only; both sides use the same CPU runtime.
 The qualified cost-source bytecode binding remains active.
 
-CPU regression suites: **79 existing tests pass, zero skips**, plus **3 focused
+CPU regression suites: **79 existing tests pass, zero skips**, plus **6 focused
 tests pass, zero skips**. Focused tests cover host insertion high-water across
 rows, a real frozen MAPPO bridge through new slots and exits, and trajectory
-comparison including an exit movement while excluding virgin placeholders.
+comparison including an exit movement while excluding virgin placeholders,
+legacy/300s four-member interpolation, and empty-memory/observable-field guards.
+Latest full-suite snapshot: `coopmwm/CPU_coopmwm20261101_wmspeed2_cpu4.json`.
 
 The extended parity matrix is recorded in the companion evidence receipts.
 Every comparison checks per-action/per-future team costs (limit 0.001 veh-s),
@@ -132,6 +134,66 @@ qualified rosters that lack such family seeds use fixed absolute -1/+0.5 m/s²
 group profiles, shared by old and new. Wider batches pad these four real actions
 to their declared width, as in the qualification probes. Thus width-34 checks
 exercise 34 batch columns, with four distinct candidate costs/ranks.
+
+## Warm memory and longer/larger plans
+
+`evaluate(..., memory=WarmQuery(...), speed2=True)` transports an owner-prepared
+observable history and native finite-support per-driver posteriors through the
+same frozen WMTEACH sampler. The warm adapter does not fit a new posterior law:
+native FULL-v4 `fitted_state_at_start` / `condition_population` constructs the
+engineering fixture's causal motion posterior. The inherited learned history
+encoder still runs with the full roster; its embedding and shrinkage survive
+compaction. Native population fallback, lane continuation, arrivals, CRN row keys,
+and sampling order are unchanged between full and accelerated warm comparisons.
+
+The fixed warm engineering fixture is **FIT world969420 at t300**, explicitly
+inside the bootstrap's969400..969431 allowlist. It contains94 observed vehicles,
+61 one-second history samples per slot over240..300s,4,371 valid samples,
+70 motion-conditioned HDV posteriors and9 HDV population fallbacks. Only genuine
+observable start/history exports and the frozen model's inferred population are
+used. This is separate from the TRAIN-roster cold fixture; it exercises the native
+warm model API without fabricating histories for unrelated vehicles.
+
+- Warm GPU R, H120/K4/width34,3 CAVs/120s varying plans:
+  **168.265 → 46.079 s,3.652x**,193.98 →708.35 future-steps/s;
+  **zero cost and trajectory error, identical ranking and draw IDs**.
+- Warm GPU A, H300/K8/width10,4 CAVs/300s varying plans:
+  **279.503 →81.154 s,3.444x**,171.73 →591.47 future-steps/s;
+  zero cost/trajectory error and identical ranking/draw IDs.
+- Warm CPU, H60/K2/width4,2 CAVs:592.790 →25.626s,23.132x observed wall ratio,
+  zero cost/trajectory error and identical ranking/draw IDs. Existing CPU-only
+  qualifications were concurrent; this ratio is not an isolated throughput guarantee.
+- Cold extended plans: gpuR3 CAVs/120s gives2.933x; gpuA4 CAVs/300s gives2.281x,
+  both with zero cost/trajectory error and identical ranking/draw IDs.
+- Warm CPU cProfile + statement timing:33.633s for optimized H60/K2/width4.
+  Linear layers15.03% self, attention9.06%, `where`5.61%, contiguous5.59%,
+  lane-neighbor4.42%, deepcopy4.36%; LC2013 now12.39% cumulative.
+  The single learned history-encoder call costs **0.619s/query (1.84%)**;
+  native posterior preparation is separately0.618s outside the rollout timer.
+  GPU R encoder calls in the paired H120 run were0.370s first-use and0.062s
+  subsequent-use, one encoder call per evaluator batch, not per future step.
+
+The long-plan decoder supports arbitrary supplied member count and supplied knot
+count/spacing (`knot_s`, default10); tested profiles include2–4 members and300s.
+The registered CEM sampling/search limits in `SEARCH` are preserved. The warm
+restart owner supplies its separately registered group/duration/search amendment.
+Reference and optimized extended-plan tests share that decoder, while preserving
+the frozen reference rollout/model/controller implementation.
+
+`WarmQuery.from_record(rt, record)` accepts an optional `warm_memory` JSON payload:
+`t0_s`, `driver_history [1,N,H,9]`, `driver_history_mask [1,N,H]`, optional short
+`history`/`history_mask`, and `posteriors_by_vid` (native finite-support records).
+History slots align exactly with `record.rows`; no driver-default/hidden-setting
+field is accepted. The history producer owns causal60s sensing/identity validation
+and native posterior construction. Empty payload or fully masked history with no
+posterior follows the exact cold path. A warm worker requires an explicit payload,
+including `{}` for a legitimate empty history. These interfaces let S-COOPMWM use
+its genuine rolling history rather than this task's fixed FIT fixture.
+
+The first two wide warm attempts hit the inherited8GiB bootstrap allocator cap.
+Their failures are retained. Subsequent qualification applies the registered
+0.65 memory fraction **after bootstrap**, as persistent workers already do. No
+other GPU process was present at admission; free device memory was not the issue.
 
 ## Evidence and reproduction
 
