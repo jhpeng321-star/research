@@ -130,3 +130,14 @@ All four commanded-controller arms MUST remain exactly unchanged. Unit gate:
 with identical physical settings, an uncontrolled CAV and an HDV clone produce
 identical motion, including emergency finalization and carried LC speed advice.
 No externally commanded plant, controller or black box changes.
+
+## Afternoon source correction: active mode2 actuator vs retired mirror
+alwayscmd.py explicitly states that mode2's executed law ignores EXEC_CAP_KEY
+and the learned mirror, and calls shared sumo_idm.executed_accel instead. The
+v1 CAV binder targeted the retired fit incorrectly. Preserve v1 outputs as old-
+vector diagnostics; withdraw the claim of mode2 plant consistency. Corrected
+binder reads the ACTUAL registered CAV control-law parameters and mainline
+allowed speed from sumo_idm (known actuator design, not hidden-driver truth).
+Fresh corrected CAV-parent/native-child dev12/K1 screens, with native-child's
+four commanded arms required identical to its corrected parent. No external
+execution equation or controller weights change. No mixing v1/v2 receipts.

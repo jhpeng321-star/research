@@ -203,6 +203,11 @@ def main(model_loader=None, identity_sources=(), future_builder=None,
             mask = state['present'].bool() & state['is_cav'].bool()
             state[WM_MERGE_KEY] = mask & (state['lane'] == 2)
             lane = torch.where(state['lane'] != 2, state[WM_LANE_TARGET_KEY], state['lane'])
+            if getattr(model, '_wmphys_native_model', None) == 'sumo_uncommanded':
+                # Dispatcher payload is ignored for these physically delegated
+                # slots; do not consult the retired commanded-driver mirror.
+                return torch.stack((state['s_m']+.5*state['v_mps'], lane,
+                    state['v_mps'], torch.zeros_like(state['v_mps'])), -1)
             return frozen.native_background_motion(state, lane, native)
         calls = [native_call, frozen.callback_for('ctrl0', cp, ce, mp, native),
                  frozen.callback_for('mappo', cp, ce, mp, native)]
