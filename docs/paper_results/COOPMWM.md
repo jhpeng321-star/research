@@ -338,3 +338,12 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - A update4, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
 - Per-bucket trust: .
 - TRAIN GAE variance 5.03716e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_004.json`.
+
+## Live publication — 2026-11-01T11:15:29.022889+00:00
+- Charged 336,440/6,000,000 sim-s; closed jobs 258/282; pending WM 0.
+
+### S0_A_CHECK_004.json
+- A_minus_MAPPO: {"bootstrap":"10000 whole-world paired resamples; RNG20261101; negative delay is better","learned_minus":"mappo","metrics":{"600_collisions":{"ci95":[0.0,0.0],"mean":0.0},"600_hard_brake":{"ci95":[-2.7510416666666657,7.5],"mean":2.2083333333333335},"600_team_delay_vs":{"ci95":[-1249.1101470572473,3372.3958383866448],"mean":1203.3873745997926},"600_teleports":{"ci95":[0.0,0.0],"mean":0.0},"600_ttc_below_3_vs":{"ci95":[-11.709375,97.91770833333332],"mean":44.0},"900_collisions":{"ci95":[0.0,0.0],"mean":0.0},"900_hard_brake":{"ci95":[-7.5,4.583333333333333],"mean":-1.875},"900_team_delay_vs":{"ci95":[-1868.5913824377792,4332.582430582843],"mean":1372.7795884038114},"900_teleports":{"ci95":[0.0,0.0],"mean":0.0},"900_ttc_below_3_vs":{"ci95":[-55.21041666666667,109.5],"mean":28.833333333333332}},"worlds":12}
+
+### S0_A_DEV_004.json
+- A_minus_MAPPO: {"bootstrap":"10000 whole-world paired resamples; RNG20261101; negative delay is better","learned_minus":"mappo","metrics":{"600_collisions":{"ci95":[0.0,0.0],"mean":0.0},"600_hard_brake":{"ci95":[-4.645833333333333,2.625],"mean":-0.875},"600_team_delay_vs":{"ci95":[-2008.6695155343664,953.7011788286733],"mean":-526.333169436575},"600_teleports":{"ci95":[0.0,0.0],"mean":0.0},"600_ttc_below_3_vs":{"ci95":[-90.14583333333333,9.750520833333326],"mean":-40.354166666666664},"900_collisions":{"ci95":[0.0,0.0],"mean":0.0},"900_hard_brake":{"ci95":[-4.083333333333333,4.416666666666667],"mean":0.2916666666666667},"900_team_delay_vs":{"ci95":[-2525.7345253020353,2240.0123362352256],"mean":-184.73109833748217},"900_teleports":{"ci95":[0.0,0.0],"mean":0.0},"900_ttc_below_3_vs":{"ci95":[-107.08333333333333,23.75104166666665],"mean":-43.104166666666664}},"worlds":24}
