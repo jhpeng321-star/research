@@ -2421,3 +2421,11 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - Exact-grade queue/lag: `{"failed": 0, "graded": 6, "max_lag_s": 19.90656304359436, "mean_lag_s": 13.826808452606201, "orphaned": 0, "overlap_unresolved": 0, "pending": 0, "running": 0, "stopped": 0, "update": 1}`; final ETA 27.92h.
 - Receipt: `coopmwm/warm_live/R_UPDATE_001.json`.
 <!-- warm-receipt:R_UPDATE_001.json:8cc72c87a0ad82ec69e37247c90d6a2e783eca948c31572b02cce6bcd3f5a885 -->
+
+## Warm live publication — 2026-11-01T23:31:47.063278+00:00
+- Conservatively charged 3336950/7500000 sim-s.
+
+### Warm continuation — B_EXACT_VIABILITY_5628d6582e2b51d75a30e3c7bc6eb5541e450dd3f471eae3ed8f8709c780dc18.json
+- B u2: exact paired SUMO plan saving mean 275.2 veh-s, 95% world-cluster CI `[-44.25950977327648, 705.3208916745057]`, 9 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_5628d6582e2b51d75a30e3c7bc6eb5541e450dd3f471eae3ed8f8709c780dc18.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_5628d6582e2b51d75a30e3c7bc6eb5541e450dd3f471eae3ed8f8709c780dc18.json:1ede4a277240e882bae056f32591738d6206ff022648794627f8c480e82918fe -->
