@@ -1,5 +1,15 @@
 # S-COOPMWM — live checks
 
+## Fresh resume — full brief through MAIN02:43
+- Original detached A2998262 remains running: **u21 complete, 496/504 jobs
+  closed, 1,592,840 sim-s charged**. B/R/broker unstarted; no active pause/STOP.
+- Both original GPU spools are alive/READY with all six startup gates EXACT0;
+  the already-published warm qualification is retained without rerunning it.
+- Exact-only asynchronous grading and concurrent-plan WM backgrounds remain
+  pre-launch integration work. Delegated grader implementation is in progress.
+  Latest cap7.5M/allocation7,473,440 and fixed H300 screen are adopted.
+- Recovery receipt: `coopmwm/RESUME_MAIN0243_20261102.md`; zero new dispatch.
+
 ## Latest budget/control registered before B/R outcomes
 - **7,473,440 allocated / 7,500,000 cap / 26,560 unallocated**, including a
   1,000,000 sim-s exact-plan-grade reserve. Complete prefix+horizon precharge

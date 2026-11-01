@@ -1,4 +1,12 @@
-# S-COOPMWM live continuation — MAIN02:36 fixed H300; exact integration pending
+# S-COOPMWM live continuation — MAIN02:43 concurrent-plan correctness pending
+
+FRESH RESUME: complete255-line brief read, HEAD5e4f296e/work preserved. Receipt
+RESUME_MAIN0243_20261102.md: original A2998262 running,u21complete,496/504closed,
+charge1592840; B/R/broker unstarted. BOTH original GPU spools alive/S/READY with
+all6gatesEXACT0; adopt/no duplicates. Exact-grade delegated files now uncommitted,
+not yet landed. Integrate exact-only async grades plus concurrent-plan background
+correctness, CPU/GPU gates and prospective runtime registration before B/Ru0.
+Latest cap7500000/allocation7473440; H300always; auto-continue48/48/24 with guards.
 
 WARM MEMORY QUALIFIED published2026-11-01T18:42:03.622059Z (Nov2 02:42+08),
 qualification-only receipt WARM_MEMORY_QUALIFIED.json/registry. Original qualifiers
