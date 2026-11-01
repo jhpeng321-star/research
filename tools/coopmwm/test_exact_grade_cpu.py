@@ -20,7 +20,7 @@ from .protocol import digest, sha
 
 WORLD = dict(seed=986001, cell=0, demand=2400, penetration=.2, repeat=0)
 STOP = 520
-OFFERS = (320, 340, 400, 450)
+OFFERS = {320: 'c1', 340: 'c1', 400: 'c4', 480: 'c1'}  # time -> anchor CAV of the offered group
 
 
 class Plant:
@@ -29,7 +29,8 @@ class Plant:
     def __init__(self, world):
         r = world['seed'] % 7
         self.veh = {'c1': [0., 20., 0, True], 'c2': [-30., 19.5, 0, True], 'c3': [-70., 18.+.1*r, 1, True],
-                    'h1': [40., 18., 0, False], 'h2': [-200., 15., 1, False]}
+                    'h1': [40., 18., 0, False], 'h2': [-200., 15., 1, False],
+                    'c4': [-1500., 20., 0, True], 'c5': [-1530., 19.5, 1, True]}
         self.totals = dict(team_delay_vs=0., road_delay_vs=0., source_wait_vs=0., collisions=0., teleports=0.,
                            hard_brake=0.)
         self.h = hashlib.sha256(str(world['seed']).encode())
@@ -89,8 +90,8 @@ def fake_sumo(perturb_at=None):
 class FakeGuide:
     """Same generator consumption as plan_client.guide (rand per eligible query; R: randint)."""
 
-    def __init__(self, generator, arm, accel):
-        self.g, self.arm, self.accel = generator, arm, accel
+    def __init__(self, generator, arm, accel, offers=None):
+        self.g, self.arm, self.accel, self.offers = generator, arm, accel, offers or OFFERS
 
     def __call__(self, rows, commands, now, sample):
         from .mppi_search import group_components
@@ -105,10 +106,11 @@ class FakeGuide:
         sample['behaviour'] = b
         if not queried:
             return None
-        if int(now) not in OFFERS:
+        group = next((g for g in groups if self.offers.get(int(now)) in g['members']), None)
+        if group is None:
             result = dict(accepted=False)
         else:
-            members = groups[0]['members']
+            members = group['members']
             plan = dict(id=f'P{int(now)}', members=members, duration_s=30, knot_s=10, family='MPPI',
                         knots=[[self.accel]*4 for _ in members])
             result = dict(accepted=True, plan=plan, option='MPPI', expected_saving=1.)
@@ -142,14 +144,15 @@ class ScriptedGuide:
         if p.get('random_match') is not None:
             torch.randint(2**31, (), generator=self.g)
         out = copy.deepcopy(p);out['behaviour'] = sample['behaviour']
-        if int(now) >= self.t0:
+        if int(now) == self.t0:      # only the graded plan is removed; later plans execute as recorded
             out['option'] = 'NOEXEC'
         return out
 
 
 def policy():
     torch.manual_seed(5);p = Policy()
-    torch.nn.init.normal_(p.actor[-1].weight, std=.3);torch.nn.init.constant_(p.actor[-1].bias, .1)
+    torch.nn.init.normal_(p.actor[-1].weight, std=.05);torch.nn.init.constant_(p.actor[-1].bias, .05)
+    torch.nn.init.constant_(p.log_std, math.log(.1))
     return p
 
 
@@ -166,7 +169,7 @@ def run_episode(root, ident, weights, noise_seed, guide_factory, arm='B', stop=S
 
 
 class Fixture:
-    def __init__(self, tmp, arm='B', accel=-3.):
+    def __init__(self, tmp, arm='B', accel=-3., offers=None):
         from .accel_learner import save
         self.tmp, self.arm = Path(tmp), arm
         self.policy = policy();self.weights = self.policy.state_dict()
@@ -176,7 +179,7 @@ class Fixture:
         self.ident = f'warm_u001_{arm}_{WORLD["seed"]}'
         with fake_sumo():
             self.original = run_episode(self.tmp/'run', self.ident, self.weights, self.noise_seed,
-                                        lambda job, g: FakeGuide(g, arm, accel), arm)
+                                        lambda job, g: FakeGuide(g, arm, accel, offers), arm)
         self.meta = dict(run_root=str(self.tmp/'run'), result_path=str(self.tmp/'run'/'jobs'/self.ident/'RESULT.json'),
                          result_sha256=digest(self.original), update=1, arm=arm, checkpoint_path=str(self.ckpt),
                          checkpoint_sha256=sha(self.ckpt), checkpoint_update=0, noise_seed=self.noise_seed,
@@ -195,8 +198,9 @@ class Fixture:
                                lambda job, g: ScriptedGuide(g, self.original, t0, self.arm), self.arm, beta=beta)
 
 
-def receipt(gid, g, world=1, status='graded', option='MPPI'):
+def receipt(gid, g, world=1, status='graded', option='MPPI', arm='B', finished=0.):
     body = dict(schema=xg.SCHEMA, grade_id=gid, status=status, grade_veh_s=g if status == 'graded' else None,
+                arm=arm, finished_unix=finished,
                 world_seed=world, episode_id='e'+gid, plan=dict(id='p'+gid, start_s=300, duration_s=2, option=option,
                                                                regime='ordinary'))
     return xg._seal(body, 'receipt_sha256')
@@ -235,6 +239,8 @@ class ExactGradeCPU(unittest.TestCase):
             self.assertEqual(r['J_without_veh_s'], J(oracle));self.assertEqual(r['J_with_veh_s'], J(fx.original))
             self.assertEqual(r['grade_veh_s'], J(oracle)-J(fx.original))
             self.assertEqual(r['charged_sim_s'], t_end)
+            self.assertEqual(r['noise']['replayed_plans'], {str(o['id']): o['seconds'] for o in r['replayed_plans']})
+        self.assertTrue(any(r['replayed_plans'] for r in receipts), 'fixture must replay another plan')
         return fx, q, receipts
 
     def test_prefix_identical_grade_equals_independent_oracle_arm_B(self):
@@ -261,7 +267,7 @@ class ExactGradeCPU(unittest.TestCase):
         self.assertEqual(r['status'], 'stopped');self.assertIsNone(r['grade_veh_s'])
         self.assertIn('PrefixMismatch', r['reason']);self.assertFalse(r['prefix']['pass_'])
         self.assertEqual(again, r);self.assertEqual(len(calls), 1)
-        w = xg.imitation_weights([r], 10.)
+        w = xg.imitation_weights([r], 'B', dict(temperature_veh_s=10.))
         self.assertEqual(w['weights'], {});self.assertEqual(w['counts']['stopped'], 1)
 
     def test_post_hoc_fingerprint_check_catches_runner_without_in_loop_check(self):
@@ -282,11 +288,18 @@ class ExactGradeCPU(unittest.TestCase):
                 t = int(s['time_s'])
                 if t < t0:
                     self.assertEqual(s['requests'], orig[t]['requests']);continue
-                smp = s['sample'];self.assertNotIn('absolute_accels', smp)
-                self.assertFalse(smp['behaviour']['executed'])
-                self.assertEqual(smp['action'], smp['own_action'])
+                smp = s['sample'];self.assertFalse(smp['behaviour']['executed'])
+                replay = smp.get('absolute_accels', {})
+                if t < t0+r['plan']['duration_s']:
+                    self.assertEqual(replay, {})
+                else:                       # another plan: replayed exactly as recorded
+                    self.assertEqual(replay, orig[t]['sample'].get('absolute_accels', {}))
+                    self.assertFalse(set(replay) & set(r['plan']['members']))
                 for v, (a,) in zip(smp['context']['members'], smp['own_action']):
-                    self.assertEqual(s['requests'][v]['requested_raw'], s['commands'][v]+a)
+                    want = replay[v] if v in replay else s['commands'][v]+a
+                    self.assertEqual(s['requests'][v]['requested_raw'], want)
+                    if v in r['plan']['members']:
+                        self.assertNotIn(v, replay)
                 with torch.no_grad():
                     mb = fx.policy(smp['context'])[0];mo = fx.policy(orig[t]['sample']['context'])[0]
                 nb = [a-float(m) for (a,), m in zip(smp['own_action'], mb[:, 0])]
@@ -343,26 +356,46 @@ class ExactGradeCPU(unittest.TestCase):
         with self.assertRaises(ValueError):
             xg.grade(tampered, orig, run)
 
-    def test_only_exact_positive_grades_are_imitated(self):
+    def test_only_exact_positive_grades_imitated_uniform_then_frozen_temperature_whole_buffer(self):
         rs = [receipt('a', 5.), receipt('b', 0.), receipt('c', -4.), receipt('d', None, status='stopped'),
-              receipt('e', None, status='failed'), receipt('f', 1000.)]
-        T = xg.temperature(rs, fallback_veh_s=1e4)
-        self.assertEqual(T['rule'], 'fallback_registered_awr_temperature')
-        many = [receipt(str(i), float(i-5), world=i % 3) for i in range(12)]
-        T2 = xg.temperature(many, 1e4);rms = math.sqrt(sum((i-5.)**2 for i in range(12))/12)
-        self.assertEqual(T2['rule'], 'rms_all_exact_grades');self.assertAlmostEqual(T2['temperature_veh_s'], rms)
-        w = xg.imitation_weights(rs, 5., consumed={'f'})
-        self.assertEqual(set(w['weights']), {'a'});self.assertAlmostEqual(w['weights']['a']['weight'], math.e)
-        self.assertEqual(w['counts'], dict(graded=4, positive=2, nonpositive=2, stopped=1, failed=1, already_consumed=1))
-        self.assertEqual(xg.imitation_weights(rs, 5.)['weights']['f']['weight'], 20.)
+              receipt('e', None, status='failed'), receipt('f', 1000.), receipt('g', None, status='overlap_unresolved'),
+              receipt('h', 9., arm='R')]
+        T = xg.temperature(rs, 'B')
+        self.assertEqual((T['rule'], T['temperature_veh_s']), ('uniform_before_freeze', None))
+        w = xg.imitation_weights(rs, 'B', T)
+        self.assertEqual({k: v['weight'] for k, v in w['weights'].items()}, {'a': 1., 'f': 1.})
+        self.assertEqual(w['counts'], dict(graded=4, positive=2, nonpositive=2, stopped=1, failed=1,
+                                           overlap_unresolved=1, other_arm=1))
+        many = [receipt(f'm{i:02}', float(i-5), world=i % 3, finished=100.-i) for i in range(25)]
+        T2 = xg.temperature(many, 'B')       # first 20 by completion time = i in 24..5
+        first = [float(i-5) for i in range(24, 4, -1)]
+        self.assertEqual(T2['grade_ids'][0], 'm24');self.assertEqual(len(T2['grade_ids']), 20)
+        self.assertAlmostEqual(T2['temperature_veh_s'], math.sqrt(sum(g*g for g in first)/20))
+        self.assertEqual(xg.temperature(many[:19], 'B')['temperature_veh_s'], None)
+        self.assertEqual(xg.temperature([receipt(f'z{i}', .1, finished=i) for i in range(20)], 'B')['temperature_veh_s'], 1.)
+        w2 = xg.imitation_weights(many+rs, 'B', T2)  # whole positive buffer, every update
+        self.assertEqual(set(w2['weights']), {f'm{i:02}' for i in range(6, 25)} | {'a', 'f'})
+        self.assertEqual(w2['weights']['f']['weight'], 20.)
+        self.assertAlmostEqual(w2['weights']['m06']['weight'], math.exp(1./T2['temperature_veh_s']))
         with self.assertRaises(ValueError):
-            xg.imitation_weights([dict(rs[0], grade_veh_s=99.)], 5.)
+            xg.imitation_weights([dict(rs[0], grade_veh_s=99.)], 'B', T)
+        # Durable freeze: first write wins; later grades never move T.
+        q = xg.GradeQueue(Path(self.tmp)/'gq')
+        q.receipts = lambda: many[:19]
+        self.assertIsNone(q.frozen_temperature('B')['temperature_veh_s'])
+        q.receipts = lambda: many
+        frozen = q.frozen_temperature('B')
+        q.receipts = lambda: many+[receipt('late', 500., finished=-1.)]
+        self.assertEqual(q.frozen_temperature('B'), frozen)
+        self.assertTrue((Path(self.tmp)/'gq'/'TEMPERATURE_B_None.json').exists())
+        with self.assertRaises(ValueError):
+            xg.temperature([], 'R', frozen=frozen)
 
     def test_exact_update_imitates_graded_pairs_only_no_plan_ratios(self):
         fx = Fixture(self.tmp)
         q, _, receipts = self.grade_all(fx)
         r = dict(receipts[0], status='graded', grade_veh_s=7.);r = xg._seal({k: v for k, v in r.items() if k != 'receipt_sha256'}, 'receipt_sha256')
-        entry = xg.imitation_weights([r], 7.)['weights'][r['grade_id']]
+        entry = xg.imitation_weights([r], r['arm'], dict(temperature_veh_s=7.))['weights'][r['grade_id']]
         pairs = xg.imitation_pairs(fx.original, entry)
         self.assertEqual(len(pairs), r['plan']['duration_s']);self.assertTrue(all(w == math.e for _, w in pairs))
         p = policy();orig_score = p.score;scored = []
@@ -431,6 +464,35 @@ class ExactGradeCPU(unittest.TestCase):
             q.run_one(spec['grade_id'], types.SimpleNamespace(run=lambda s, o: self.fail('ran')), lambda s: fx.original)
         self.assertIsNone(q.receipt(spec['grade_id']));self.assertTrue((fx.tmp/'grader'/'GRADER_BLOCKED.json').exists())
         self.assertEqual(q.status(spec['grade_id']), 'pending')
+
+    def test_overlap_with_shared_members_is_unresolved_never_run_or_imitated(self):
+        fx = Fixture(self.tmp, accel=-.5, offers={320: 'c1', 400: 'c2'})
+        specs = {s['window']['start_s']: s for s in fx.specs()}
+        self.assertTrue(specs[320]['overlap_unresolved']);self.assertEqual(specs[320]['sim_s'], 0)
+        self.assertTrue(specs[320]['overlap_clash_members'])
+        self.assertFalse(specs[400]['overlap_unresolved'])
+        q = fx.queue(charge=lambda s, a: self.fail('charged'))
+        q.enqueue(specs[320])
+        r = q.run_one(specs[320]['grade_id'], types.SimpleNamespace(run=lambda s, o: self.fail('ran')), None)
+        self.assertEqual((r['status'], r['grade_veh_s']), ('overlap_unresolved', None))
+        self.assertEqual(xg.imitation_weights([r], 'B', dict(temperature_veh_s=None))['weights'], {})
+        self.assertEqual(xg.trust_evidence([r], 1.)['overlap_unresolved'], 1)
+        with self.assertRaises(ValueError):
+            xg.grade(specs[320], fx.original, None)
+
+    def test_smoke_grades_one_real_episode_plan_once(self):
+        fx = Fixture(self.tmp, accel=-.5)
+        binding = fx.tmp/'binding.json'
+        binding.write_text('{"runtime": "", "checkpoint": "", "accel_bounds": [-3.0, 2.6], "warm_history": false}')
+        with fake_sumo():
+            r = xg.smoke(fx.tmp/'run', fx.ident, fx.tmp/'smoke', binding, training_seed=20261101, charge='local')
+            again = xg.smoke(fx.tmp/'run', fx.ident, fx.tmp/'smoke', binding, training_seed=20261101, charge='local')
+        self.assertEqual(r['status'], 'graded');self.assertEqual(again, r)
+        out = xg.summary(r)
+        self.assertTrue(out['prefix_pass']);self.assertTrue(out['crn_verified_t0'])
+        self.assertEqual(len(list((fx.tmp/'smoke'/'receipts').glob('*.json'))), 1)
+        with self.assertRaises(ValueError):
+            xg.smoke(fx.tmp/'run', 'final_B_1', fx.tmp/'smoke', binding, training_seed=20261101, charge='local')
 
     def test_trust_evidence_and_harm_guard(self):
         good = [receipt(f'g{i}', 3.+i % 2, world=i % 5) for i in range(10)]
