@@ -25,6 +25,8 @@ class AccelerationCPU(unittest.TestCase):
         with patch('torch.cuda.set_per_process_memory_fraction',side_effect=lambda n:events.append(n)):
             self.assertIs(configured_runtime(bootstrap,.1),sentinel)
         self.assertEqual(events,['inherited cap',.1])
+        from .plan_service import batch_width
+        self.assertEqual([batch_width(dict(batch_widths={'4':34,'8':10}),k) for k in (4,8)],[34,10])
 
     def test_viability_has_a_fixed_pre_final_endpoint(self):
         from .accel_runner import update_limit

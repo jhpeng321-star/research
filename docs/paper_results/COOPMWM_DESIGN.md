@@ -46,7 +46,7 @@
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.
 46. All failures/warmup/twins charged in full before attempts; no retries/refunds/duplicate dispatch.
 47. Primary A/B parallel first; cpuQ12nice19singlethread workers+2E2; load<=20/RAM8GiB/disk2GiB.
-48. Both GPUs fixed4 medium batches; measure1/2/4/8(A),1/2/4(R), bestaggregate; once/worker parity; original24h deadline.
+48. Capacity amendment: fastest measured wide34/10 singleworker/GPU; slower unfinished4/8 trials afteru4; once/worker parity/24hdeadline.
 49. GPU CPU helpers disabled until separate frozen parity qualification; own PIDs only.
 50. Both seed guards, fresh-name exposure, immutable sources/cache/approval bindings before physics.
 51. No prohibited inputs/newenv/push; OWNER20:35 opaque v2archive+SHA256-gated literal source removal only; commit eachstep.

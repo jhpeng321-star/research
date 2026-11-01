@@ -16,8 +16,8 @@ from .plans import SEARCH
 from .plan_bridge import ROOT,GPU_ROOT
 
 SOURCE='/home/ubuntu/coopmwm20261101_acceltrain1'
-CPU='CPU_coopmwm20261101_cpu36.json'
-TAG='VIABILITY2035v3'
+CPU='CPU_coopmwm20261101_cpu37.json'
+TAG='VIABILITY2035v4'
 
 
 def dependency_names(previous):
@@ -43,14 +43,14 @@ def register():
         order='A/B primary u1..4 in parallel, then matched R u1..4, durable pause; no sealed outcomes',
         subset_precharge_max_sim_s=dict(train=345600,checks=43200,discovery=57600,mechanics=3600),
         including_superseded_max_sim_s=1261640,full_allocation_sim_s=budget()['allocated'],
-        service_size='best aggregate of fixed4 medium CEM concurrency tests A1/2/4/8,R1/2/4; exact ties fewer workers',
+        service_size='CAPACITY2035 admission: fastest completed qualified measurement, one wide34/10 worker/GPU; unfinished4/8 trials after viability',
         quota_basis=dict(measured_plans_per_hour_gpuA=5.6605,measured_plans_per_hour_gpuR=5.5123,
             minimum_executed_starts=10,capacity_lower_bound_hours_per_update=10/(5.6605+5.5123),
             acceptance='unknown; >=10 executed may require more than one hour; no fabricated acceptance ETA'),
         gpu_quote=dict(original_deadline_unix=read(ops.EVIDENCE/'DUAL_1755_DISPATCH.json')['unix']+86400,
             concurrency_estimated_hours_per_host=[1,3],viability_service_estimated_hours_per_host=[4,12],
             deadline_not_extended=True,actual_worker_time_and_throughput_reported=True),
-        infrastructure='opaque verified archive; CPU36 lossless hashed gzip results; committed-plan continuation atom preserved even on eligible10s ticks; R query rate estimated only over ex-ante eligible uncommitted windows; persistent GPU caps applied after inherited bootstrap; immutable new training source, old smoke reused',
+        infrastructure='opaque verified archive; CPU37 lossless hashed gzip results; committed-plan continuation atom preserved even on eligible10s ticks; R query rate estimated only over ex-ante eligible uncommitted windows; persistent GPU caps applied after inherited bootstrap; immutable new training source, old smoke reused',
         reporting='each UPDATE/VIABILITY/CHECK/E2 immediately; pertype/regime/rank/new-family SUMO advantage/CI; after u4 pause',
         no_new_sumo_sim_s=0)
     write(ops.EVIDENCE/f'{TAG}_AMENDMENT.json',value);h=sha(ops.EVIDENCE/f'{TAG}_AMENDMENT.json')
@@ -61,7 +61,8 @@ def register():
         'Nexec=10 executed plan-starts minimum per B update from measured5.6605+5.5123queries/hour; '
         'acceptanceunknown/capacity floor.895h perupdate, no fabricated execution ETA. '
         'Live free-slot sampling p.95/densepriority, bothGPUs saturated beyondminimum; R count/regime/duration matched. '
-        'Fixed4 concurrency A1/2/4/8,R1/2/4, choose highestaggregate with fewerworkers on exacttie; '
+        'CAPACITY2035 amendment admits fastest completed source-qualified timing: wide34/10 one worker/GPU now; '
+        'fixed4 uncompleted4/8 trials deferred until after viability, completed1/2 never rerun; '
         'once/persistentworker K4H120/K8H300 parity; hot-add only admitted frozen-source same-search workers. '
         'A/B primaryu1..4 then Ru1..4/checks; durablePAUSE for MAIN/owner viability review, no sealed-test access. '
         'First12executedB windows t<=600 sampled RNG20261101 for exact complete H60/120/300/600 twins, '
@@ -71,7 +72,7 @@ def register():
         '96sealedworlds and fixedfullu24 checkpoint/test rules protected; seed2 remainsdropped. '
         'GPU quote concurrency1..3h/host +viability4..12h/host estimates, original24hGPUdeadline notreset; '
         'actual times published. Owner-approved v2 opaque tar/hashmatched archive then literal root removal only; '
-        'CPU36 lossless digest-checked gzip 1s tapes/newimmutable training namespace; '
+        'CPU37 lossless digest-checked gzip 1s tapes/newimmutable training namespace; '
         'CPU regressions fix continuation plan-route atom on eligible10s ticks and R sampling denominator '
         '(eligible uncommitted decisions only, not all committed1s steps); R exhausted matched tickets routeown/p0, '
         'with no fictitious empty-proposal atoms, before ANY acceleration update. '
@@ -93,8 +94,9 @@ r=pathlib.Path({ROOT!r});assert not (r/'STOP.json').exists();assert not (r/'BIND
 v=json.loads((r/'SMOKE.json').read_text());assert v['pass_'];print(json.dumps(v))
 ''',timeout=20))
     assert read(ops.EVIDENCE/'ARCHIVE2035_COMPLETE.json')['source_removed']
-    scale={h:read(ops.EVIDENCE/f'SCALE2035_{h}_COMPLETE.json') for h in ('gpuA','gpuR')}
-    assert all(v['pass_'] and v['best']['source_bound_full_search_parity'] for v in scale.values())
+    admission=read(ops.EVIDENCE/'CAPACITY2035_ADMISSION.json')
+    scale=admission['hosts']
+    assert all(v['pass_'] and v['best']['source_bound_full_search_parity'] and v['qualification']['pass_'] for v in scale.values())
     staged=json.loads(ops.stage_frozen('cpuQ',SOURCE,cpu))
     hashes={SOURCE+'/'+name:h for name,h in staged['hashes'].items()}
     slots=[];qual={}
@@ -112,7 +114,7 @@ v=json.loads((r/'SMOKE.json').read_text());assert v['pass_'];print(json.dumps(v)
             slot=f'{host}@{index}';slots.append(slot);worker=GPU_ROOT+f'_w{index}'
             binding=dict(hashes={GPU_ROOT+'/'+k:h for k,h in gpu_source['hashes'].items()},qualification=v['best'],
                 deadline_unix=amend['gpu_quote']['original_deadline_unix'],memory_fraction=min(.65,.80/n),
-                batch_width=4,startup_qualification=True,search=SEARCH,slot=slot)
+                batch_widths=v['batch_widths'],startup_qualification=True,search=SEARCH,slot=slot)
             ops.stage(host,worker,{'GPU_BINDING.json':json.dumps(binding),'FROZEN_COSTS.json':frozen,'INPUTS.json':inputs})
             qual[slot]=v['best']
     throughput=sum(v['best']['plans_per_hour'] for v in scale.values())
@@ -221,8 +223,9 @@ def publish_receipts(receipts,folder='accel_runtime'):
 
 def once():
     from . import recovery2035,accel_deploy,plan_scale
-    complete=True
-    if not (ops.EVIDENCE/f'{TAG}_BINDING.json').exists():
+    complete=(ops.EVIDENCE/'CAPACITY2035_ADMISSION.json').exists()
+    if not complete and not (ops.EVIDENCE/f'{TAG}_BINDING.json').exists():
+        complete=True
         for host in ('gpuA','gpuR'):
             with contextlib.redirect_stdout(io.StringIO()):v=plan_scale.status(host)
             publish_receipts({f'SCALE_{host}_{n}':r for n,r in v['receipts'].items()},'accel_scale')
@@ -236,10 +239,13 @@ def once():
     publish_receipts(state['receipts'])
     if 'STOP.json' in state['receipts']:return 'STOP'
     if 'VIABILITY_PAUSED.json' in state['receipts']:
-        return 'PAUSED' if state['pending_WM']==0 else 'DRAIN_DIAGNOSTICS'
+        if state['pending_WM']:return 'DRAIN_DIAGNOSTICS'
+        from .capacity2035 import deferred_after_pause
+        return deferred_after_pause(CPU)
     if 'SMOKE.json' not in state['receipts']:return 'WAIT_EXISTING_SMOKE'
     if not (ops.EVIDENCE/f'{TAG}_BINDING.json').exists():
         if not complete:return 'WAIT_SCALE'
+        publish_receipts({'CAPACITY2035_ADMISSION.json':read(ops.EVIDENCE/'CAPACITY2035_ADMISSION.json')})
         bind()
         publish_receipts({f'{TAG}_BINDING.json':read(ops.EVIDENCE/f'{TAG}_BINDING.json')})
     if not (ops.EVIDENCE/f'{TAG}_TRAIN_DISPATCH.json').exists():launch()

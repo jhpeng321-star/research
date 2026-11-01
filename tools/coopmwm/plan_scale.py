@@ -55,9 +55,15 @@ def run(root,host):
         p=Path('/proc')/str(owner['pid']);s=(p/'stat').read_text().split()
         assert s[21]==owner['start_ticks'] and Path('/proc/sys/kernel/random/boot_id').read_text().strip()==owner['boot_id']
         time.sleep(5)
-    ctx=mp.get_context('spawn');levels=(1,2,4,8) if host=='gpuA' else (1,2,4)
-    reference=None;measurements=[]
+    ctx=mp.get_context('spawn');mode=read(root/'MODE.json') if (root/'MODE.json').exists() else {}
+    levels=mode.get('levels',(1,2,4,8) if host=='gpuA' else (1,2,4))
+    reference=read(root/'REFERENCE.json') if (root/'REFERENCE.json').exists() else None
+    measurements=mode.get('completed',[])
+    assert not set(levels)&{m['workers'] for m in measurements},'completed concurrency must not be repeated'
     for count in levels:
+        if time.time()>mode.get('deadline_unix',float('inf')):
+            write(root/f'C{count}_NOT_ADMITTED.json',dict(reason='original GPU deadline; no new search'))
+            continue
         inventory=subprocess.check_output(['nvidia-smi'],text=True)
         write(root/f'GPU_BEFORE_C{count}.json',dict(unix=time.time(),inventory=inventory))
         free=int(subprocess.check_output(['nvidia-smi','--query-gpu=memory.free','--format=csv,noheader,nounits'],text=True).strip())

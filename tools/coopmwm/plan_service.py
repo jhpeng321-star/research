@@ -17,6 +17,10 @@ def configured_runtime(bootstrap,fraction):
     return rt
 
 
+def batch_width(binding,k):
+    return int(binding.get('batch_widths',{}).get(str(k),binding.get('batch_width',4)))
+
+
 def main(root):
     import fcntl
     lock=(root/'SERVICE.claim').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
@@ -31,7 +35,6 @@ def main(root):
     from .plans import search
     rt=configured_runtime(bootstrap,binding.get('memory_fraction',.65))
     rt.frozen.costs=cost_adapter(rt.frozen.costs,read(root/'FROZEN_COSTS.json')['code'])
-    width=binding.get('batch_width',4)
     if binding.get('startup_qualification'):
         # Once per persistent worker, never per query. Same registered geometry
         # and source-bound full roster as the concurrency qualification.
@@ -43,6 +46,7 @@ def main(root):
         bounds=(float(rt.mp.policy.accel_min),float(rt.mp.policy.accel_max))
         acts=baseline_actions(record)+family_seeds(record['rows'],record['group'],commands,bounds)[:2]
         for k,h in ((4,120),(8,300)):
+            width=batch_width(binding,k)
             ref=evaluate(rt,record,acts,k,h,chunk_actions=1,trim=False,pad_actions=width)
             batch=evaluate(rt,record,acts,k,h,chunk_actions=width,trim=False,pad_actions=width)
             error=max(abs(a['team_delay']-b['team_delay']) for key in ref for a,b in zip(ref[key],batch[key]))
@@ -70,7 +74,7 @@ def main(root):
             result=credit(rt,r)
         else:
             result=search(r,(float(rt.mp.policy.accel_min),float(rt.mp.policy.accel_max)),
-                lambda a,k,h:evaluate(rt,r,a,k,h,chunk_actions=width,trim=False,pad_actions=width))
+                lambda a,k,h:evaluate(rt,r,a,k,h,chunk_actions=batch_width(binding,k),trim=False,pad_actions=batch_width(binding,k)))
         payload=dict(key=key,result=result,wall_s=time.monotonic()-start,unix=time.time())
         write(dest,payload);emit('RESULT',**payload)
 

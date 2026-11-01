@@ -1,5 +1,20 @@
 # S-COOPMWM live continuation — OWNER20:35 four-update viability
 
+21:49 ACTIVE RELEASE CPU37 79PASS/0skips/zeroSUMO, tag `VIABILITY2035v4`.
+Capacity amendment780fa80741ef2f573c79ee8eb377e3c4f07c20c41e5d3554b3a6a0ac1b4ad38b:
+fixed4 concurrency2 SLOWER than1 on BOTH GPUs; use already-qualified wide34/10
+oneworker/GPU now (8.4739+8.1915plans/h), same medium search. Source30-dependency
+audit against actual wide-probe GPU sources PASS both. Final release amendment
+4b0709ee6ce986d050aa57a244c45cf3ca89b137adcda6f65a9fc907d48c70b8.
+Old observer45784 identity-verified/stopped; scale parent/descendant trees verified
+and ended inference-only under registered amendment; all completed1/2results kept,
+incomplete4worker trials deferred. Both GPUs empty afterwards; no SUMO job touched.
+New v4observer binds/releases once from immutable CPU37; check its DISPATCH/log/FAILED
+before any action. After allA/B/Ru4: PPO durably PAUSED, sealed panel untouched;
+observer then measures deferred4/8 pure-inference trials using retained1/2reference.
+Current design line48 reflects capacity amendment; CPU37 archival design snapshot is
+superseded for hardware sizing by the explicit registered capacity/release amendments.
+
 21:29 FINAL RELEASE SNAPSHOT CPU36 79PASS/0skips/zeroSUMO. Persistent GPU worker
 allocator limit now applied AFTER inherited bootstrap, which otherwise resets8GiB.
 Both30forecast/WMTEACH/cost dependency hashes match original CPU33 scale sources.

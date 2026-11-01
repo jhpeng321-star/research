@@ -1,5 +1,22 @@
 # S-COOPMWM — live checks
 
+## 21:49 — fastest qualified capacity admitted for early viability
+- Fixed4 two-worker searches are slower than one: gpuA4.6604vs5.3373plans/hour;
+  gpuR4.7692vs5.1416. All workers reproduce the complete reference search exactly.
+- Capacity amendment SHA `780fa80741ef2f573c79ee8eb377e3c4f07c20c41e5d3554b3a6a0ac1b4ad38b`
+  admits the faster already-qualified **one wide34/10 worker/GPU**, aggregate
+  **16.6654plans/hour /8132.71imagined futures/hour**, same medium search.
+- Verified/stopped only the owned inference supervisor/descendant trees; both
+  GPUs now have no compute processes. Completed1/2timings retained; incomplete
+  four-worker trials marked deferred, not counted as completed measurements.
+- Deferred4/8trials resume as new inference-only jobs **after** the u4 PPO pause,
+  retaining completed1/2measurements and source-bound full-search reference.
+- **CPU37 79PASS/zero skips/2.26s/zero SUMO**; both30-dependency audits match the
+  actual completed wide-probe source. Startup single/batch parity is once per
+  persistent worker under its final admitted memory cap.
+- Final release amendment SHA `4b0709ee6ce986d050aa57a244c45cf3ca89b137adcda6f65a9fc907d48c70b8`.
+  Nexec10, R matching, fixedu4pause,4280840allocation/6Mcap and sealed96 unchanged.
+
 ## 21:29 — persistent-worker memory admission finalized
 - **CPU36 79PASS/zero skips/2.26s/zero SUMO**. Worker allocator fractions are now
   applied after the inherited WM bootstrap (which installs its own8GiB cap), so
