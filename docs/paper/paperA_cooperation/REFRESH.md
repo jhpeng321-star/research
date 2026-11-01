@@ -1,8 +1,28 @@
-# Evening continuation — current evidence and handoff
+# Overnight continuation — current evidence and handoff
 
 The exact evidence cut is `source_refresh.json`; pinned report/CSV/JSON bytes remain in `source_snapshots/`. The inherited clean branch and completed first-package registration were preserved. The prior night handoff is retained in `REFRESH_NIGHT_ARCHIVE.md` as history, not an active result queue.
 
-## Current evening delta — supersedes historical status below
+## Current overnight delta — supersedes all historical status below
+
+- Recovery preserved inherited commit `62a3fd50`, the existing Overleaf v3 draft/ZIP and its untracked compiled PDF. Git history/status, task receipts, first-completion registration, owner READ FIRST and later ledger were inspected first. No producer process, job, observer or dispatch was created or controlled by this task.
+- **Primary method now warm policy-centred MPPI:** generic acceleration profiles, observable-history driver inference, SUMO-only reward/advantage, matched unscored R; O1–O4 are post-hoc labels only. W-GUIDE/W-WARM update the implemented algorithm and distinguish fixture speed/parity from current long-search qualification. <!-- Sources: E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM_DESIGN.md; E:/agent-work/c4-mppi-search/MPPI_SEARCH_README.md; E:/agent-work/c4-wmspeed2/docs/paper_results/WMSPEED2.md. -->
+- **Execution:** A-u16 exited at transport STOP, **288/288 warm jobs closed / 1405640 sim-s conservatively charged**; warm B/R have no dispatch. Latest source says original qual4 GPU jobs are identity-verified running, with final timings/release pending. Registered **6473440/cap6500000** conflicts with a later explicit **6000000** resume cap; the producer's dispatch guard blocks physics. Treat producer receipts as the local cut, not remote liveness freshly checked by this package. <!-- Source: E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM.md:3-15. -->
+- **Evaluation now registered:** expanded **96-world/eight-per-cell**, A/B-u48/R-u24, single seed; co-primary **H300** branches at **T300/500/700/900**, all/focus scopes, separate per-comparator Holm families. R branches deferred; own-episode J and branch takeover effects separate. Integrated `WARM2354_AMENDMENT.json` supersedes the standalone branch README's earlier design. W-EVAL/F3. <!-- Sources: E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM_DESIGN.md:35-68; E:/agent-work/c4-coopnative/docs/paper_results/coopmwm/WARM2354_AMENDMENT.json. -->
+- **COOPFREE:** u9 paired DEV delivered, still inconclusive against MAPPO and HOLD. Completion/live/queued-next-update statements conflict; final continuation receipt remains pending. **Behavior:** corrected audit crop verified but geometric fields absent; detector NA must not become zero. N-FREE/A-BEHAV/F5. <!-- Sources: E:/agent-work/c4-coopfree/docs/paper_results/COOPFREE.md:313-320,428-472; E:/agent-work/c4-coopbehav/docs/paper_results/COOPBEHAV.md:238-270. -->
+- WMTEACH remains paused with completed teacher diagnostics; v5 remains interim/admission-held with unchanged adverse available-cell delay scores. Paper B final per-CAV delivery supersedes training-pending text, but primary switching comparison is still incomplete under GPU hold and CPU faults/admission. Completed audit/planner/value/backup/negative-remedy evidence and all existing figure/bibliography pins are preserved. <!-- Sources: E:/agent-work/c4-wmteach/docs/paper_results/WMTEACH.md:34-69; E:/agent-work/c4-rb2-int/docs/paper_results/WMPHYS_V5.md; E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md, S-C1SWITCH2 OWNER20:14 and CPU-ONLY SUPERVISION LIVE. -->
+- Source step `34fdd16d` captures every changed allowlisted report plus MPPI/initial-branch/speed2/integrated-scope sources. First package already has its required registration line; do not append a duplicate.
+
+## Current evidence queue
+
+- [[PENDING: cap/scope reconciliation, complete warm MPPI long-search parity/timings, source-bound remote supervision/health rules and B/R release / MAIN, S-COOPMWM]]. Existing qualifier dispatches must not be duplicated.
+- [[PENDING: B-u4 viability and later fixed-checkpoint proposal-free branch/episode/safety effects, actual R matching and full charged/closed accounting / S-COOPMWM, S-COOPEVAL]]. Checkpoints and panel are registered, not completed results; replications dropped and R branches deferred.
+- [[PENDING: complete random executed-plan E2 sign/scale/noise and singleton/member-revert reconciliation, common native-release policy audit / S-COOPMWM, S-COOPMEASURE]]. No model-variance-to-real-variance claim.
+- [[PENDING: normalized observable geometry/control-status audit ready index and replicated beneficial deployed mechanism / S-COOPMEASURE, S-COOPBEHAV]]. Current audit crop is geometrically unidentifiable, not zero-event evidence.
+- [[PENDING: COOPFREE final-update/DEV/terminal/accounting reconciliation and valid discovery / S-COOPFREE]]. u9 is delivered; original STOP is history.
+- [[PENDING: explicit WMTEACH/WMPLAN/v5 resume and completed successor outcomes / MAIN, respective existing producers]]. No restart or completion inferred from stale status.
+- [[PENDING: complete acquisition/pretraining/fairness lineage, candidate-A inventory, full-text closest-method comparison, official venue rules and final result-filled manuscript QA / owner integrator]]. Existing citation identities and compiled skeletons already delivered.
+
+## Historical evening delta
 
 **Closing reread takes precedence over earlier evening bullets:** latest owner requests acceleration residuals for every arm, committed CEM group plans, bootstrap-future Thompson choice, widened candidates and **96-world/eight-per-cell** final evaluation. All set-point A/B runs superseded, all arms held; report **811640 sim-s charged** is not final closed-actual accounting. The formal acceleration/search/panel/quote/exposure freeze is not yet delivered. Slot-trimming forecast parity failed and is rejected. Current source cut in `source_refresh.json` captures this closing amendment; older plan/report snapshots remain preserved. <!-- Sources: E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md, MAIN19:23/19:30/19:34/19:38; E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM.md:3-14. -->
 
@@ -15,7 +35,7 @@ The exact evidence cut is `source_refresh.json`; pinned report/CSV/JSON bytes re
 - **v5 interim only:** engineering ready, owner HOLD on new evaluation admissions, available replicated-cell delay CRPS adverse; final four-model gate incomplete. Short-clock fleet+source direction only partially identified. W-V5. <!-- Source: E:/agent-work/c4-rb2-int/docs/paper_results/WMPHYS_V5.md:3-18,61-110. -->
 - All unchanged allowlisted source bytes were reread/hash-checked; completed overnight audit/planner/WMVALUE, failed backup/remedies and bibliography-verification receipts remain. Existing figure pins/artwork and compiled outline v2 are preserved. Current package documents supersede earlier method/status language; old refresh sections below are retained history.
 
-## Current evidence queue
+## Historical evening evidence queue — superseded above
 
 - [[PENDING: acceleration-plan/search/Thompson/route/trust implementation freeze, corrected GPU batching parity, numeric execution quotas and isolated A/B/R release / S-COOPMWM]]. All set-point runs remain charged history.
 - [[PENDING: complete random-window E2 agreement/scale/noise intervals and singleton-versus-member-revert reconciliation / S-COOPMWM, S-COOPMEASURE]]. Conditional WM variance is not real variance reduction.
