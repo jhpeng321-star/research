@@ -1597,3 +1597,19 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
 - Receipt: `coopmwm/warm_live/A_VIABILITY_035.json`.
 <!-- warm-receipt:A_VIABILITY_035.json:1924b86d6d05098e864e0bd2b1e27643c0a3ee76cd4c62ae2e453bb47506b4ec -->
+
+## TRAINING STARTED B/R — 2026-11-01T19:53:05.522558+00:00
+- MAPPOu0, immutable exactcpu5; B/R and exact grader/broker detached on cpuQ.
+- WARM MEMORY QUALIFIED retained; both concurrent GPU workers pass8source-bound EXACT0 gates.
+- K4/H300 screen, K8/Hfinal, Nexec10; no look-ahead reduction. Exact grades only for trust/imitation/library, asynchronous.
+- R centre requests retain lower priority until B finishes; no candidate scoring/library for R.
+- First-update executed-plan rate/ETA pending. Owners: `coopmwm/EXACT_TRAINING_STARTED.json`.
+
+## Warm live publication — 2026-11-01T19:53:06.574668+00:00
+- Conservatively charged 2096840/7500000 sim-s.
+
+### Warm continuation — A_UPDATE_035.json
+- A u35: queries/accepted/executed 0/0/0; wall 276.3s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_035.json`.
+<!-- warm-receipt:A_UPDATE_035.json:361218349f22807025846448d433d89032aaf576f52596b7268ab99ca4bd1593 -->
