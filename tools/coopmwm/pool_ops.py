@@ -34,15 +34,15 @@ def register():
     write(target,dict(amendment_sha256=h,line=line,**value));print(json.dumps(dict(registered=True,sha256=h)))
 
 
-def dispatch(host):
+def dispatch(host,root=None,receipt_prefix='POOL_EXPORT',require_ready=True):
     reg=read(ops.EVIDENCE/'POOL_EXPORT_REGISTRATION.json')
-    root=exact_ops.GPU if host=='gpuA' else exact_ops.GPU_R
+    root=root or (exact_ops.GPU if host=='gpuA' else exact_ops.GPU_R)
     code=f'''import pathlib,json,sys,subprocess,os,hashlib
 r=pathlib.Path({root!r});source=pathlib.Path({EXPORT!r});assert r.is_dir() and source.is_dir()
 sys.path.insert(0,str(r/'pytools'))
 from tools.coopmwm.warm_rpc import status
 from tools.coopmwm.warm_spool import immutable
-v=status(r);assert v['alive'] and v['ready'] and not v['failed']
+v=status(r);assert v['alive'] and (v['ready'] or not {require_ready!r}) and not v['failed']
 assert not (r/'PROPOSER_EXPORT_DISPATCH.json').exists()
 for name,h in {reg['stages'][host]['staged']['hashes']!r}.items():assert hashlib.sha256((source/name).read_bytes()).hexdigest()==h
 cmd=['nice','-n','19',{ops.ssh.PYTHON[host]!r},'-B','-u',str(source/'pytools/tools/coopmwm/pool_export.py'),str(r),'--deadline',{str(reg['deadline_unix'])!r}]
@@ -52,7 +52,7 @@ s=pathlib.Path('/proc',str(p.pid),'stat').read_text().split()
 d=dict(pid=p.pid,start_ticks=s[21],boot_id=pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip(),amendment_sha256={reg['amendment_sha256']!r},root=str(r),source=str(source),gpu_owner=v['receipts']['SPOOL_OWNER.json'])
 immutable(r/'PROPOSER_EXPORT_DISPATCH.json',d);print(json.dumps(d))'''
     v=json.loads(ops.ssh.remote(host,code,timeout=30))
-    write(ops.EVIDENCE/f'POOL_EXPORT_DISPATCH_{host}.json',v);print(json.dumps(v))
+    write(ops.EVIDENCE/f'{receipt_prefix}_DISPATCH_{host}.json',v);print(json.dumps(v))
 
 
 def status(host):

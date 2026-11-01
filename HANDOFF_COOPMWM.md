@@ -1,5 +1,17 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+FreshresumeMAIN0423: all282brief lines/readreceipts; originalA/B/R/grader/broker
+alive, A-u42/B-Ru0collecting/noSTOP/2327240charged at1793564940. SecondGPUowners
+and admissionmonitorsalive/adopted, gatespending; neverduplicate. Observer43408
+EXIT1793564486 onstagingconflict, remoteownersunaffected; restoreobservationonly.
+Receipt RESUME_MAIN0423_20261102.md. MAIN0423 frozen-policyprecompute pending.
+
+MAIN0419 remoteadmissionmonitors LIVEcpuQ3287007/3287221, sourcehotadd1;
+registeredrestrictedkeys staycpuQ. Monitors independentlywait ALL8EXACT0 then
+hotaddslotsgpuA@1/gpuR@1 to ORIGINALbroker, noBpause. BothnewGPUprocessesalive/
+nogatesyet/noerror at17935648xx; totalGPUutil92/99%, memory32/16GiB duringqualification.
+Loggingonly second-root exporters618085/57740live, noextraWMcalls/activation.
+
 MAIN0419 secondworkers DISPATCHED once: GPUA617099/start894491938,
 GPUR56877/start4219130608, roots /root/coopmwm20261102_second1. CPU26PASS/0skips/
 zeroSUMO; originalowners/searches continue. ALL8freshgates required beforehotadd;

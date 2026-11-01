@@ -1,6 +1,12 @@
 # S-COOPMWM — live checks
 
 ## MAIN04:19 additional search workers — qualification running
+- Detached cpuQ admission monitors3287007/3287221 now wait for all eight exact
+  gates and hot-add slotsgpuA@1/gpuR@1 to the original broker automatically.
+  Restricted private keys stay on cpuQ; connection-only retries are bounded.
+  Second-root full-pool exporters618085/57740 are live (logging only).
+  During qualification total GPU utilisation rose to92%/99%, memory32.0/16.5GB;
+  this is a health observation, not a search-throughput claim.
 - Registered source-identical second search workers before dispatch; original
   GPU workers and all in-flight B searches continue. New owned GPU PIDs
   **gpuA617099 / gpuR56877**; roots `coopmwm20261102_second1` on each host.

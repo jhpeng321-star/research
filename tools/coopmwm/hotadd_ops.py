@@ -126,9 +126,35 @@ print(json.dumps(v))''',timeout=35))
     return value
 
 
+def export(host):
+    from .pool_ops import dispatch
+    assert read(ops.EVIDENCE/f'SECOND_REGISTRATION_{host}.json')['amendment_sha256']
+    target=ops.EVIDENCE/f'SECOND_POOL_REGISTRATION_{host}.json';assert not target.exists()
+    line='\nS-COOPMWM MAIN0413/0419 SECOND-WORKER POOL EXPORT REGISTERED '+host+': existing CPU-qualified logging-only pool_export sidecar extended to '+ROOTS[host]+'; preserve forecast bytes/SHA, full accepted/rejected pools, no WM calls, no activation, original GPU deadline. Exporter may wait through qualification; cannot admit a GPU worker or submit requests.\n'
+    with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+    write(target,dict(line=line,new_sumo_sim_s=0))
+    dispatch(host,root=ROOTS[host],receipt_prefix='SECOND_POOL',require_ready=False)
+
+
+def monitor_status():
+    from .warm_deploy import ROOT
+    value=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,time
+r=pathlib.Path({ROOT!r});result={{}}
+for host in ('gpuA','gpuR'):
+ d=json.loads((r/('HOTADD_'+host+'_DISPATCH.json')).read_text())
+ assert pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']
+ p=pathlib.Path('/proc',str(d['pid']),'stat');s=p.read_text().split() if p.exists() else None
+ assert not s or s[21]==d['start_ticks']
+ names=['HOTADD_'+host+'_FAILED.json','WARM_REMOTE_ENDPOINT_ADMISSION_'+host+'_SECOND.json']
+ result[host]=dict(owner=d,state=s[2] if s else 'exited',receipts={{n:json.loads((r/n).read_text()) for n in names if (r/n).exists()}})
+print(json.dumps(dict(unix=time.time(),monitors=result)))''',timeout=35))
+    write(ops.EVIDENCE/f'SECOND_MONITORS_STATUS_{int(value["unix"])}.json',value)
+    print(json.dumps(value));return value
+
+
 if __name__=='__main__':
-    parser=argparse.ArgumentParser();parser.add_argument('mode',choices=('cpu','stage','dispatch','authorize','monitor','status'))
+    parser=argparse.ArgumentParser();parser.add_argument('mode',choices=('cpu','stage','dispatch','authorize','monitor','status','export','monitor_status'))
     parser.add_argument('--host',choices=('gpuA','gpuR'));args=parser.parse_args()
-    if args.mode in ('authorize','cpu'):globals()[args.mode]()
+    if args.mode in ('authorize','cpu','monitor_status'):globals()[args.mode]()
     else:
         assert args.host;globals()[args.mode](args.host)
