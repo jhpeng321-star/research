@@ -1,5 +1,13 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+CURRENTTELEMETRY1793574892: `episode_progress --current` nowtracksB-u2/R-u1,
+notstaleu1-only; actualpayloadCPU1PASS/realremotePASS/noSUMO. B17/24closed,
+sevenopenT310..400; R21/24closed, THREEcentrequeriesWAIT3234..3293s.
+All24claimedbotharms. RCPUisconcurrentbutnuisancecentresstarvedbehindBsearches
+becausecapacity_broker.pending ALWAYSsortscentreaftereveryplan. Investigate
+boundary-onlycomputefairness underMAIN0518pipeline; nochangeappliedyet.
+ReceiptEPISODE_PROGRESS_1793574892.json pinsper-episodeprogress/currentwaits.
+
 MAIN0658 ZEROGRADE DIAGNOSED: ZERO_GRADE_DIAGNOSIS_986051_986070.json, read-only
 existingTRAINtapes/noSUMO-WM. BOTHorigincentre/perturbationknots0/savingvpolicy0;
 raw/issuedcommandsdiffer butALL420sobservedmotion/rosters/rewardsidentical.
