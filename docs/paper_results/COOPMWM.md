@@ -1,6 +1,8 @@
 # S-COOPMWM — live checks
 
 ## MAIN04:23 frozen-policy precompute — CPU qualified and registered
+- Detached supervisor **cpuQ3316828/start57982222** is running; status1793565552
+  confirms STARTED, zero evaluation jobs while waiting for A48, outcomes closed.
 - **22 CPU tests PASS / zero skips / 1.148s / zero SUMO** in the existing cpuQ
   environment, immutable `coopmwm20261102_finalcpu1`. Covers fixed endpoints,
   exact panel/phase liabilities, no partial-job retry, hash-only publication,

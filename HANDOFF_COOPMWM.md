@@ -1,7 +1,8 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
-MAIN0423 precompute REGISTERED598cd74d/CPU22PASS0skips/zeroSUMO, sourcefinalcpu1.
-final_ops dispatch NEXT, once only; waits A48, first600sMAPPOreusecheck, then
+MAIN0423 precompute DISPATCHED3316828/start57982222(cpuQ), status1793565552aliveS/
+STARTED/outcomesclosed/0jobs; neverduplicate. REGISTERED598cd74d/CPU22PASS0skips,
+sourcefinalcpu1. Waits A48, first600sMAPPOreusecheck, then
 MAPPO/native/A48episodes+Abranches, SCHED_IDLE/nice19/up-to24cpuQworkers.
 Hash/statusonly until ALL fixedA48/B48/R24; then remainingepisodes/Bbranches
 and registeredanalysis. Allocationsunchanged7473440/7500000; noextraSUMO.
