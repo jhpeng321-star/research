@@ -26,6 +26,9 @@ def main():
               'tools/rbfit', 'tests/unit/test_rbfit.py', 'tests/unit/test_rbfit_directional.py',
               'tests/test_rbint_merge_fast.py', 'tests/test_rbint_lane_fast.py',
               'tests/test_rbint_motion_posterior.py', 'tests/test_rbint_endpoints.py']
+    # Explicit round-2 LC continuation dependency closure; old recipe remains OFF.
+    paths += ['tools/rblane', 'configs/wm_phys_rb2_lane.toml',
+              'artifacts/rbfit/lane_raw_c5602102891e']
     if args.endpoint_only:
         paths = ['tools/rbint', 'tools/rbeval']
     archive = subprocess.check_output(['git', 'archive', '--format=tar', sha, *paths], cwd=root)

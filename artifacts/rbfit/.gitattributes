@@ -1,6 +1,7 @@
 # Preserve SHA-bound addendum artifacts byte-for-byte on every checkout.
 shrinkage_v1/** -text
 lane_v2/** -text
+lane_raw_c5602102891e/** -text
 finite_mixture_v4/idm_population.json -text
 receipts/ADDENDUM*.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 receipts/CPU_ADDENDUM.xml -text
