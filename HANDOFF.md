@@ -1,6 +1,25 @@
 # S-RB-RUNB handoff
 
-Updated 2026-11-01 10:33 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+Updated 2026-11-01 11:38 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+
+## FINAL — owner cutoff verified; B2 157/160, NO RETRY
+- Stayed alive beyond11:30 and independently verified terminal state. Remote
+  STOPs11:30:11; final in-flight task preserved; owned GPU supervisor762343 and
+  workers801887/801888/801889 all exited by11:33:56. No peer process action.
+- Final157tasks (53/56/48),19complete K8 worlds. Missing only world969429 k5–7;
+  its k0–4 retained. Verified every157 task hash/identity, completed-shard manifests
+  and unchanged source/checkpoint/config hashes. No full-panel score or `.done`.
+- Root `/root/rbeval20261031/runb/WM-PHYS-B2`; closure
+  `CUTOFF_VERIFIED_1130.json`, original FAILED.json/logs/STOPs retained.
+- Shared `evalclaims/WM-PHYS-B2.partial.json` (all157hashes) +failed.json (no retry);
+  short `evalclaims/RUNB_FINAL_1130.md`. Local
+  `runs/rbrunb/B2_CUTOFF_VERIFIED_1130.json`. INT's existing corrected collector
+  owns complete-K8 diagnostic scoring; no duplicate analysis/inference started.
+- `tools/rbrunb/close_cutoff.py` performed the real closure verification without
+  process actions/dispatch/scoring.09:30 intake freeze and04/08interims retained.
+- Late observed polling gap: watcher STATUS remained11:11, while the in-session
+ 600s observation returned11:33; cause unverified. Independent remote cutoff fired
+  on time. Watcher35616 remains bounded to12:00 collection, no replacement launched.
 
 ### 10:32 live final-hour checkpoint
 - B2 tasks144/160 (44/54/46), all original three workers +supervisor762343 live,
