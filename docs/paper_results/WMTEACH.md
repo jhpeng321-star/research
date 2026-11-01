@@ -50,3 +50,12 @@ student snapshots after each complete32world pass, H300 fixed, nested outer4/inn
 world CV and same GBT/MLP/classifier/confidence grid as S-DISTILL. No exact fitting.
 Initial quality labels exist; full teacher-quality estimate/student/live result pending.
 The headline “a policy trained with the world model beats MAPPO” is an objective, not a result.
+
+<!-- WMTEACH-WATCH:BEGIN -->
+## Collected GPU progress
+- Snapshot Unix1793506824; owned PID437822, identity-match=True, process-state=R.
+- Complete future tasks: 15; complete H120/H300 label contexts: 2; new SUMO:0sim-s.
+- Full preregistered teacher-quality check pending; student fitting waits for it.
+- No completed student snapshot yet.
+- No live result or claim of beating MAPPO.
+<!-- WMTEACH-WATCH:END -->
