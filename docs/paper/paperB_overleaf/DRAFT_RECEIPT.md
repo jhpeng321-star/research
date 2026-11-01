@@ -59,3 +59,20 @@ PDF and upload ZIP were delivered, and the Desktop PDF matched the project hash.
 Visually reviewed all six rendered pages; text, equations, red placeholders and
 references are readable and within margins. The companion Markdown is generated
 from the same TeX/BibTeX output; final source-comment/metadata checks follow.
+
+## Step 4 — final delivery verification
+
+Manuscript and matching text committed as `3cee5b57`. Final delivery retains the
+six-page PDF (including all references), the matching Markdown, verified cited-only
+BibTeX, optional original artwork, checklist, build report and self-contained upload
+ZIP. All six pages were visually inspected. Local final log has no overfull boxes,
+undefined citations/references or rerun request; ordinary underfull justification
+warnings remain. The Markdown preserves every numerical source comment exactly,
+including its path and precision. Focused Ruff syntax/undefined-name checks and
+Git whitespace checks passed. ZIP integrity and every member's byte equality are
+checked by the delivery builder; the Desktop PDF is byte-identical to main.pdf.
+One completion line is recorded in the shared REGISTRATION.md, with its exact
+text preserved in REGISTRATION_RECEIPT.md. No scientific dispatch, restricted-input
+read, peer-process action, deletion or push was performed. Remaining owner edits:
+author/affiliation/funding, conference-specific submission details, graph insertion,
+and genuinely pending picker/successor results.

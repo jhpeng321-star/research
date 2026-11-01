@@ -196,7 +196,7 @@ def deliver() -> None:
         page.get_pixmap(matrix=fitz.Matrix(1.2, 1.2)).save(ROOT / "_review" / f"page_{index + 1}.png")
     included = [ROOT / name for name in (
         "main.tex", "refs.bib", "main.pdf", "DRAFT_TEXT.md", "README_OVERLEAF.md",
-        "DRAFT_RECEIPT.md", "build_delivery.py",
+        "DRAFT_RECEIPT.md", "REGISTRATION_RECEIPT.md", "build_delivery.py",
     )]
     included += sorted((ROOT / "figures").glob("*"))
     report = {
@@ -209,6 +209,9 @@ def deliver() -> None:
         "overfull_boxes": re.findall(r"Overfull .*", log),
         "underfull_box_count": len(re.findall(r"Underfull ", log)),
         "unresolved_citations_or_references": False,
+        "numerical_source_comments_preserved_exactly": text.count("<!-- Source:"),
+        "page_size_points": [float(reader.pages[0].mediabox.width), float(reader.pages[0].mediabox.height)],
+        "font_types": sorted({font[2] for page in doc for font in page.get_fonts()}),
         "bibliography_keys": re.findall(r"\\bibitem\{([^}]+)\}", (ROOT / "main.bbl").read_text(encoding="utf-8")),
         "page_text_characters": [len(p.extract_text() or "") for p in reader.pages],
         "files_sha256": {str(p.relative_to(ROOT)).replace("\\", "/"): sha256(p) for p in included},
@@ -221,8 +224,8 @@ def deliver() -> None:
             bundle.write(path, str(path.relative_to(ROOT)).replace("\\", "/"))
     with ZipFile(archive) as bundle:
         assert bundle.testzip() is None
-        assert bundle.read("main.pdf") == pdf.read_bytes()
-        assert bundle.read("main.tex") == (ROOT / "main.tex").read_bytes()
+        for path in included:
+            assert bundle.read(str(path.relative_to(ROOT)).replace("\\", "/")) == path.read_bytes()
     print(f"DELIVERED: {pages} pages including references; {len(included)} ZIP members; Desktop PDF hash verified.")
     print(f"Overfull boxes: {len(report['overfull_boxes'])}; unresolved references/citations: none.")
 
