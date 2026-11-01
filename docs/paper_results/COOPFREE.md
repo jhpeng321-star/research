@@ -312,8 +312,8 @@ TRAIN exploration credit is not paired dev-policy performance.
 
 <!-- COOPFREE OWNER1511 BEGIN -->
 ## OWNER15:11 live continuation
-Observed UTC 2026-11-01T13:33:04Z.
-cpuQ owned1579328/start53193103 alive=True; four nice19 workers, load admission12.
+Observed UTC 2026-11-01T18:20:15Z.
+cpuQ owned1579328/start53193103 alive=False; four nice19 workers, load admission12.
 Budget: 5,530,353 precharged / 5,530,353 closed-actual sim-s; total cap6,000,000.
 Corrected u001 is inherited; every subsequent update uses fresh exploration. TRAIN effects are not DEV gains.
 - u009: 373/373 new arms closed; charge390,300; cachedHOLD94.
