@@ -726,3 +726,8 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 
 ### SCALE_gpuR_CONCURRENCY_2.json
 - SCALE_gpuR_CONCURRENCY_2.json: {"final_width":4,"host":"gpuR","imagined_futures":488,"imagined_futures_per_hour":2327.3484840710466,"new_sumo_sim_s":0,"pass_":true,"peak_worker_allocated_bytes":2973430272,"plans_per_hour":4.769156729653784,"screen_width":4,"source_bound_full_search_parity":true,"unix":1793540350.4746027,"wall_s":1509.7008565962315,"workers":2}
+
+## Acceleration viability — 2026-11-01T13:53:29.877407+00:00
+
+### TRAINING_STARTED.json
+- TRAINING_STARTED.json: {"N_exec":10,"charged_sim_s":815240,"eta_primary_hours":{"acceptance_unknown":true,"capacity_lower_bound":14.401095344890471},"search":{"elite":8,"final_H":300,"final_K":8,"finalists":8,"iterations":3,"knot_s":10,"max_duration_s":60,"population":32,"screen_H":120,"screen_K":4},"timestamp_utc":"2026-11-01T13:52:59.130144+00:00"}
