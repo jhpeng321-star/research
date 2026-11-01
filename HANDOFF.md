@@ -1,8 +1,36 @@
 # S-RB-RUNA handoff
 
-Updated 2026-11-01 02:43 +08:00. Branch `c4/rb-runa`, base `f0db3c82`.
+Updated 2026-11-02; closure verified06:47:58 +08. Branch `c4/rb-runa`, base `f0db3c82`.
 
-## Current: owner-authorized noon continuation VERIFIED
+## Current: A2 COMPLETE; November1 noon program CLOSED
+- Fresh resume preserved HEAD61a4d155 and all existing jobs/claims/artifacts.
+  Audit6fd6b4e4 and verificationd2b1743e committed sequentially. November1's
+  09:30freeze/11:30supervision deadline has passed; INT/EVAL final handoffs close
+  this program. No new dispatch, scoring, replacement watcher or process signal.
+- **WM-PHYS-A2:160/160 tasks,20complete K8 worlds,five arms**. Own peak GPU
+  **3272MiB**, below18500guard. Existing shared `WM-PHYS-A2.done` preserved.
+  Outputs: `gpuA:/root/rbeval20261031/runa/WM-PHYS-A2/reports/complete`.
+- Read-only verification:160task hashes,3identities,15final+30interim report
+  hashes,26preserved artifacts PASS; local/remote RESULT match, no FAILED marker.
+  Receipt `docs/rbruna/RESUME_CLOSURE_VERIFIED_20261102.json`.
+- Interims04:00:07/08:00:24 November1 contain4/10complete worlds. All registered
+  A2 worker/supervisor/monitor incarnations are no longer live; local watcher
+  PIDs15824/44796/33696 absent. Saved polls extend through11:34:16; max gap
+  ~29m33s, so uninterrupted ten-minute polling is not established at the end.
+- Original gate **NOT_QUALIFIED**. Original `.done` bootstrap intervals are
+  historical; corrected final comparison/provenance belongs to INT:
+  `E:/agent-work/c4-rb-int/docs/rbint/noon/20261101T113555+0800/PUBLICATION.json`
+  and `docs/rbint/FINAL_DELIVERY.md`. Full-world CIs unavailable for singleton
+  cells. INT reports A2/B2/C2/FULL-v4 fail the registered point switching rule.
+- C2 is **INT-owned**, terminal102tasks/12complete worlds; B2 peer-owned terminal
+  157tasks/19worlds. All8reserved worlds complete for each; never redispatch.
+- Current shared closure notice:
+  `E:/agent-work/rb-shared/evalclaims/RUNA_CLOSED_20261102.json`.
+  Earlier `RUNA_NOON_CONTINUATION.json` is an immutable historical02:43 snapshot.
+- gpuA current observation44959MiBused/3552free/78%; no new allocation.
+  Full audit `docs/rbruna/RESUME_NOON_20261101.md` (November2 closure sections).
+
+## Historical02:43: owner-authorized noon continuation VERIFIED
 - Preserved implementation HEAD393bf36a and recovered already-executed handover;
   no deployment replay, duplicate watcher, inference launch or peer signal.
 - Live local watcher **15824** replaces44796; ten-minute INT/EVAL polls through

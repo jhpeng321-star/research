@@ -124,3 +124,13 @@ Execution/verification receipts will be appended after implementation.
 - Final corrected candidate comparisons belong to INT's existing publication;
   original frozen reports and shared `.done` remain immutable provenance. Do not
   reuse the historical bootstrap intervals as corrected qualification evidence.
+
+## Closure publication
+
+- Updated the current section of `HANDOFF.md`; prior live-state sections remain
+  explicitly historical. Published the new shared notice
+  `E:/agent-work/rb-shared/evalclaims/RUNA_CLOSED_20261102.json`, referring to
+  verification commit `d2b1743e` and INT's canonical final publication.
+- Preserved original `RUNA_NOON_CONTINUATION.json`, every claim, `.done`, failure,
+  forecast and report. There is no remaining RUNA evaluation dispatch under this
+  expired program. This is a closure/verification receipt, not a new experiment.
