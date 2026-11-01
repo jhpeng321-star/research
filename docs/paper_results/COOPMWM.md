@@ -1,6 +1,10 @@
 # S-COOPMWM — live checks
 
 ## MAIN03:03 exact-grader integration — CPU qualified
+- Final runtime snapshot **exactcpu4:203PASS,0skips,38.11s,zeroSUMO**. Two live-binding
+  regressions additionally verify SHA-authorized budget adoption and the exact
+  registered `exact_plan_grading` phase. Grader supervision is exclusive and its
+  status receipts are append-only. A remains on its original immutable runtime.
 - **201 CPU tests PASS, zero skips, 38.25 s, zero SUMO** on cpuQ, immutable
   `/home/ubuntu/coopmwm20261102_exactcpu3`; failed CPU1/CPU2 receipts retained.
 - Integrated landed grader526465de: only exact marginal SUMO grades drive plan

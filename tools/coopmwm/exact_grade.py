@@ -471,7 +471,7 @@ def local_charge(root):
     return charge
 
 
-def accel_charge(run_root, phase='exact_grade'):
+def accel_charge(run_root, phase='exact_plan_grading'):
     """Charge into the live run ledger under the registered exact_grade phase (Linux, fcntl)."""
     def charge(spec, attempt):
         from .warm_protocol import install_accounting
@@ -963,7 +963,7 @@ def exact_update(policy, optimizer, episodes, generator, pairs, coefficient=1., 
 # ---------------------------------------------------------------- smoke
 
 def smoke(run_root, episode_id, grade_root, binding=None, training_seed=None, t0=None, charge='accel',
-          phase='exact_grade', path_map=None):
+          phase='exact_plan_grading', path_map=None):
     """Grade ONE plan of one real completed training episode, once (idempotent by receipt).
 
     Episode id format warm_u<UUU>_<B|R>_<world seed> (accel_runner.wave). Runtime, SUMO checkpoint,
@@ -1025,7 +1025,7 @@ def main(argv=None):
     sm.add_argument('--run-root', type=Path, required=True);sm.add_argument('--episode-id', required=True)
     sm.add_argument('--grade-root', type=Path, required=True);sm.add_argument('--binding', type=Path)
     sm.add_argument('--t0', type=int);sm.add_argument('--charge', choices=('accel', 'local'), default='accel')
-    sm.add_argument('--phase', default='exact_grade');sm.add_argument('--path-map', default='{}')
+    sm.add_argument('--phase', default='exact_plan_grading');sm.add_argument('--path-map', default='{}')
     a = p.parse_args(argv)
     if a.cmd == 'smoke':
         if os.name == 'posix':
@@ -1041,7 +1041,7 @@ def main(argv=None):
         os.nice(max(0, 19-os.nice(0)))
     torch.set_num_threads(1)
     cfg = _read(a.root/'GRADER_CONFIG.json')     # dict(run_root=..., phase='exact_grade', path_map={})
-    q = GradeQueue(a.root, charge=accel_charge(cfg['run_root'], cfg.get('phase', 'exact_grade')))
+    q = GradeQueue(a.root, charge=accel_charge(cfg['run_root'], cfg.get('phase', 'exact_plan_grading')))
     pm = cfg.get('path_map')
     r = q.run_one(a.grade_id, AccelPlantGradeRunner(a.root, pm), lambda s: load_original_from_disk(s, pm))
     print(json.dumps(dict(grade_id=a.grade_id, status=None if r is None else r['status'],

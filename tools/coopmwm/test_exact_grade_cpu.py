@@ -565,6 +565,23 @@ class ExactGradeCPU(unittest.TestCase):
         learned=sl.exact_update(state,records,lambda p:self.fail('invalid library source read'),'B',20261101)
         self.assertEqual(learned['library']['entries'],[])
 
+    def test_production_grade_phase_matches_registered_budget(self):
+        from .warm_protocol import budget
+        import inspect
+        phase=inspect.signature(xg.accel_charge).parameters['phase'].default
+        self.assertEqual(budget()['phases'][phase],1000000)
+
+    def test_runner_adopts_only_authorized_budget_amendment(self):
+        from . import warm_runner as wr
+        from .warm_protocol import budget
+        root=Path(self.tmp);(root/'MAIN0224_EXACT_BUDGET.json').write_text('{"amendment_sha256":"approved","budget":'+__import__('json').dumps(budget())+'}')
+        (root/'AUTHORITY.md').write_text('approved scope release')
+        b=dict(budget={'total':6500000},cpu=dict(pass_=True,skips=0,sim_s=0),hashes={},scope_amendment_sha256='scope',release_amendment_sha256='release')
+        with patch.object(wr,'read',side_effect=lambda p:b if p.name=='WARM_BINDING.json' else __import__('json').loads(p.read_text())),patch.object(wr,'assert_running'),patch.object(wr,'install_accounting'):
+            self.assertEqual(wr.verify(root,'A')['budget'],budget())
+            (root/'AUTHORITY.md').write_text('scope release')
+            with self.assertRaises(AssertionError):wr.verify(root,'A')
+
 
 def q_branch(fx, r):
     from .accel_storage import read

@@ -1,5 +1,13 @@
 # S-COOPMWM live continuation — MAIN03:03 integration pending
 
+LATEST CPU RELEASE: exactcpu4,203PASS/0skips/38.11s/zeroSUMO. Adopts SHA-authorized
+MAIN0224 budget without mutating original WARM_BINDING; charges registered phase
+exact_plan_grading (not unregistered exact_grade). Grader supervisor exclusive lock,
+append-only status snapshots. exact_ops now points immutable exactcpu4.
+Status1793561057: originalA2998262/u29/1852040charged; B/Runstarted/noSTOP.
+Aconcurrent1 has3gatesEXACT0 inclbothnewbackgroundgates; Rconcurrent2 hasfirst
+backgroundgateEXACT0; bothalive. Adopt, no replacement dispatch.
+
 CPU exactcpu3 immutable201PASS/0skips/38.25s/zeroSUMO; f57e3abf integrates
 exact-only async runtime/grader, full48/48/24 endpoints, concurrent marginal replay,
 truncated grades and exact-positive library. Query-metadata RNG bug fixed/tested.

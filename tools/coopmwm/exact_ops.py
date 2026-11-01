@@ -7,7 +7,7 @@ from .storage import read,write
 from .protocol import checked,REGISTRY,sha
 from .warm_deploy import ROOT
 
-CPU='/home/ubuntu/coopmwm20261102_exactcpu3'
+CPU='/home/ubuntu/coopmwm20261102_exactcpu4'
 GPU='/root/coopmwm20261102_concurrent1'
 ROUTES='/home/ubuntu/coopmwm20261102_remote_routes4'
 GPU_R='/root/coopmwm20261102_concurrent2'
@@ -24,6 +24,33 @@ def telemetry():
         value=json.loads(ops.ssh.remote(host,f'''import subprocess,json,time,os
 print(json.dumps(dict(unix=time.time(),load=os.getloadavg(),gpu=subprocess.check_output(['nvidia-smi','--query-gpu=utilization.gpu,memory.used,power.draw','--format=csv,noheader'],text=True),processes=subprocess.run(['ps','-p',{pids!r},'-o','pid,ppid,stat,etime,time,pcpu,pmem,args'],capture_output=True,text=True).stdout)))''',timeout=30))
         write(ops.EVIDENCE/f'EXACT_TELEMETRY_{host}_{int(value["unix"])}.json',value);print(json.dumps(dict(host=host,**value)))
+
+
+def status():
+    values={}
+    for host,root in [('gpuA',GPU),('gpuR',GPU_R)]:
+        value=json.loads(ops.ssh.remote(host,f'''import pathlib,sys,json
+r=pathlib.Path({root!r});sys.path.insert(0,str(r/'pytools'))
+from tools.coopmwm.warm_rpc import status
+v=status(r)
+for name in ('STARTUP_COMMITTED_K4_H300.json','STARTUP_COMMITTED_K8_H420.json'):
+ if (r/name).exists():v['receipts'][name]=json.loads((r/name).read_text())
+print(json.dumps(v))''',timeout=30))
+        values[host]=value
+    cpu=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,sys,json,time,os
+r=pathlib.Path({ROOT!r});sys.path.insert(0,{CPU!r}+'/pytools')
+from tools.coopmwm.accel_storage import read,charged
+owners={{}}
+for name in ['WARM_A_DISPATCH_V3.json','WARM_B_DISPATCH_V4.json','WARM_R_DISPATCH_V4.json','EXACT_GRADER_DISPATCH.json','WARM_REMOTE_BROKER_DISPATCH.json']:
+ if not (r/name).exists():continue
+ d=read(r/name);assert pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']
+ p=pathlib.Path('/proc')/str(d['pid'])/'stat';s=p.read_text().split() if p.exists() else None
+ assert not s or s[21]==d['start_ticks'];owners[name]=dict(owner=d,state=s[2] if s else 'exited')
+stops={{p.name:read(p) for pattern in ('PAUSE_*.json','WARM_GUIDED_STOP.json','WARM_*_FAILED_V3.json') for p in r.glob(pattern)}}
+print(json.dumps(dict(unix=time.time(),owners=owners,stops=stops,updates={{a:max([0]+[int(p.stem.rsplit('_',1)[1]) for p in r.glob(a+'_UPDATE_*.json')]) for a in ('A','B','R')}},charged_sim_s=charged(r),load=os.getloadavg(),pending_plan_queries=sum(not (r/'responses'/p.name).exists() for p in (r/'requests').glob('*.json')))))''',timeout=40))
+    write(ops.EVIDENCE/f'EXACT_STATUS_{int(cpu["unix"])}.json',dict(gpu=values,cpu=cpu))
+    print(json.dumps(dict(cpu=cpu,gpu={h:dict(alive=v['alive'],ready=v['ready'],failed=v['failed'],owner=v['receipts'].get('SPOOL_OWNER.json'),gates={n:dict(pass_=r['pass_'],max_cost_error=r['max_cost_error']) for n,r in v['receipts'].items() if n.startswith('STARTUP_')},failure=v['receipts'].get('SPOOL_FAILED.json')) for h,v in values.items()})))
+    return values,cpu
 
 
 def retire_gpur():
@@ -74,7 +101,7 @@ def register():
     from . import concurrent_ops as c
     check_budget(budget())
     target=ops.EVIDENCE/'EXACT_RUNTIME_REGISTRATION.json';assert not target.exists()
-    cpu=read(ops.EVIDENCE/'CPU_coopmwm20261102_exactcpu3.json')
+    cpu=read(ops.EVIDENCE/'CPU_coopmwm20261102_exactcpu4.json')
     assert cpu['pass_'] and cpu['sim_s']==cpu['skips']==0
     c.GPU=GPU;workers={'gpuA':c.status('gpuA')};c.GPU=GPU_R;workers['gpuR']=c.status('gpuR')
     assert all(v['alive'] and v['ready'] and not v['failed'] for v in workers.values()),'adopt running qualifications; no duplicate'
@@ -163,5 +190,5 @@ print(json.dumps(v))''',timeout=45))
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('authorize','register','dispatch','retire-gpur','retry-gpur','telemetry'));p.add_argument('--component',choices=('B','R','grader','broker'))
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('authorize','register','dispatch','retire-gpur','retry-gpur','telemetry','status'));p.add_argument('--component',choices=('B','R','grader','broker'))
     a=p.parse_args();dispatch(a.component) if a.mode=='dispatch' else globals()[a.mode.replace('-','_')]()

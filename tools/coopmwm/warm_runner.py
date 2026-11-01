@@ -21,6 +21,11 @@ from .warm_health import assert_running,HealthPause,before_update,after_check,br
 
 def verify(root,arm):
     b=read(root/'WARM_BINDING.json')
+    latest=root/'MAIN0224_EXACT_BUDGET.json'
+    if latest.exists():
+        amendment=read(latest)
+        assert amendment['amendment_sha256'] in (root/'AUTHORITY.md').read_text()
+        b=dict(b,budget=amendment['budget'])
     assert b['budget']==budget()
     assert b['cpu']['pass_'] and not b['cpu']['skips'] and b['cpu']['sim_s']==0
     for name,h in b['hashes'].items():assert sha(root/name)==h,'immutable warm source '+name

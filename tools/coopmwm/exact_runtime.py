@@ -49,10 +49,14 @@ def evidence(root,arm,beta):
 def supervise(root,workers=8):
     """Monitor completed TRAIN receipts and grade in owned isolated subprocesses."""
     import subprocess
+    import fcntl
+    import signal
     import torch
     torch.set_num_threads(1)
     root=Path(root);q=queue(root);running={};seen=set()
-    immutable(q.root/'GRADER_CONFIG.json',dict(run_root=str(root),phase='exact_grade',path_map={}))
+    lock=(q.root/'SUPERVISOR.claim').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+    signal.signal(signal.SIGHUP,signal.SIG_IGN)
+    immutable(q.root/'GRADER_CONFIG.json',dict(run_root=str(root),phase='exact_plan_grading',path_map={}))
     while True:
         from .warm_health import assert_running
         assert_running(root,'B')
@@ -91,7 +95,7 @@ def supervise(root,workers=8):
             running[gid]=p
             stat=Path(f'/proc/{p.pid}/stat').read_text().split()
             with (q.root/'WORKERS.jsonl').open('a') as f:f.write(json.dumps(dict(pid=p.pid,start_ticks=stat[21],grade_id=gid,unix=time.time()))+'\n')
-        write(root/'EXACT_GRADER_STATUS.json',dict(unix=time.time(),running=len(running),pending=len(q.pending()),receipts=len(receipts),smoke_passed=(q.root/'SMOKE_PASSED.json').exists(),workers=workers))
+        write(root/f'EXACT_GRADER_STATUS_{time.time_ns()}.json',dict(unix=time.time(),running=len(running),pending=len(q.pending()),receipts=len(receipts),smoke_passed=(q.root/'SMOKE_PASSED.json').exists(),workers=workers))
         time.sleep(10)
 
 
