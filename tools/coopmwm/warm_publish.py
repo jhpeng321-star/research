@@ -72,7 +72,7 @@ known=set(json.loads({json.dumps(known)!r}));out={{}};rules=json.loads({json.dum
 patterns=('*_UPDATE_*.json','*_CHECK_*.json','*_DEV_*.json','*_VIABILITY_*.json','ACCEL_EXACT_PLAN_*.json','WARM_*_FAILED.json','WARM_*_FAILED_V3.json','WARM_*_PAUSED.json','PAUSE_*.json','WARM_GUIDED_STOP.json','STOP.json')
 for pattern in patterns:
  for p in r.glob(pattern):
-   if p.name in known or not any(re.fullmatch(rule,p.name) for rule in rules):continue
+  if p.name in known or not any(re.fullmatch(rule,p.name) for rule in rules):continue
   out[p.name]=read(p)
 p=pathlib.Path({PRIOR!r})/'A_CHECK_004.json';key='A_CHECK_PRESERVED_004.json'
 if key not in known and p.is_file():out[key]=read(p)

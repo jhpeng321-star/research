@@ -27,7 +27,10 @@ class PublishTests(unittest.TestCase):
             name='A_UPDATE_048.json';write(local/name,value)
             original=(local/name).read_bytes()
             result=json.dumps(dict(receipts={name:value,'EXACT_VIABILITY_REPORT_CONFIG.json':dict(private='metadata')},charged_sim_s=100))
-            with patch.object(p.ops,'LOCAL',root),patch.object(p.ops,'EVIDENCE',e),patch.object(p.ops.ssh,'remote',return_value=result):
+            def remote(host,source,timeout):
+                compile(source,'<actual publication transport payload>','exec')
+                return result
+            with patch.object(p.ops,'LOCAL',root),patch.object(p.ops,'EVIDENCE',e),patch.object(p.ops.ssh,'remote',side_effect=remote):
                 p.publish();first=doc.read_text();p.publish()
             self.assertIn('warm-receipt:A_UPDATE_048.json:',first)
             self.assertEqual(first,doc.read_text())

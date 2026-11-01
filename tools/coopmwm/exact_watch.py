@@ -124,6 +124,14 @@ def dispatch():
             repair='strict TRAIN receipt whitelist; cache existence is not publication; adopt identical cached values and append missing markers; metadata excluded; no overwrite/replay'))
         line='\nS-COOPMWM TRAIN PUBLICATION SCHEMA RECOVERY REGISTERED amendmentSHA'+sha(receipt)+': observer34356 exited KeyError(viability) on reporter metadata matched by broad glob; verified absent. CPU4PASS, strict TRAIN/health receipt whitelist, retain metadata/cached files; identical already-fetched unpublished A receipts adopted and missing paper markers restored, no overwrite/deletion/physics/inference replay. V4 observes existing owners only, originaldeadline retained.\n'
         with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+    if TAG=='EXACT_OBSERVER_V5':
+        from .protocol import checked,REGISTRY,sha
+        receipt=ops.EVIDENCE/'EXACT_OBSERVER_PAYLOAD_RECOVERY.json';assert not receipt.exists()
+        write(receipt,dict(previous_exit=read(ops.EVIDENCE/'EXACT_OBSERVER_EXIT_1793567134.json'),
+            publisher_sha256=sha(ops.LOCAL/'tools/coopmwm/warm_publish.py'),tests=4,new_sumo_sim_s=0,
+            repair='correct remote payload indentation; CPU tests compile actual transport payload; real one-shot publication recovered4receipts without overwrite/replay'))
+        line='\nS-COOPMWM PUBLICATION PAYLOAD REPAIR REGISTERED amendmentSHA'+sha(receipt)+': observer39060 exited before remote receipt read on IndentationError; verified absent; fixed generated Python indentation and added actual-payload compilation to CPU4PASS. Real one-shot fetch/publication succeeded, recovered A48/check/dev/pause from existing immutable data. V5 restores observation only, original remote owners/deadline preserved, zero new physics/inference.\n'
+        with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
     binding=dict(deadline_unix=read(ops.EVIDENCE/'WARM_A48_BINDING.json')['gpu_deadline'],
         contract='observe/publish; adopt existing owners; once8EXACT0 gates per host, register and launch grader/broker/B/R once; no physics retry')
     write(ops.EVIDENCE/(TAG+'_BINDING.json'),binding)
@@ -134,5 +142,5 @@ def dispatch():
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('mode',choices=('run','dispatch'))
-    p.add_argument('--tag',choices=('EXACT_OBSERVER_V2','EXACT_OBSERVER_V3','EXACT_OBSERVER_V4'),default=TAG)
+    p.add_argument('--tag',choices=('EXACT_OBSERVER_V2','EXACT_OBSERVER_V3','EXACT_OBSERVER_V4','EXACT_OBSERVER_V5'),default=TAG)
     args=p.parse_args();TAG=args.tag;globals()[args.mode]()

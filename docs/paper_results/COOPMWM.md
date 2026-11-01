@@ -1981,3 +1981,29 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
 - Receipt: `coopmwm/warm_live/A_VIABILITY_048.json`.
 <!-- warm-receipt:A_VIABILITY_048.json:b48f2c1cdc38fdd952f4e30f352150c74c5113af336ad00beca2dc98af048f02 -->
+
+## Warm live publication — 2026-11-01T21:07:17.489483+00:00
+- Conservatively charged 2919640/7500000 sim-s.
+
+### Warm continuation — A_CHECK_048.json
+- A_minus_MAPPO: J600 Δ=-16.713 [-1461.458,1462.350] veh-s; delay reduction 0.033%; J900 Δ=500.964 [-2369.329,3196.457] veh-s; delay reduction -0.552%. Negative Δ is better; 95% whole-world bootstrap.
+- Reporting-only check, never checkpoint selection. Full safety/per-cell results in the linked immutable receipt.
+- Receipt: `coopmwm/warm_live/A_CHECK_048.json`.
+<!-- warm-receipt:A_CHECK_048.json:8efc4c0ed6ec7fc2935a193b708e77fd3a7f9348b09e1b29fd560c119e0fcd05 -->
+
+### Warm continuation — A_DEV_048.json
+- A_minus_MAPPO: J600 Δ=-763.695 [-1999.903,326.983] veh-s; delay reduction 1.38%; J900 Δ=-536.708 [-2002.688,902.116] veh-s; delay reduction 0.547%. Negative Δ is better; 95% whole-world bootstrap.
+- Reporting-only check, never checkpoint selection. Full safety/per-cell results in the linked immutable receipt.
+- Receipt: `coopmwm/warm_live/A_DEV_048.json`.
+<!-- warm-receipt:A_DEV_048.json:77a91f06e148dc591d931dd2105d332877ea36d653257181d2b108179a922771 -->
+
+### Warm continuation — A_UPDATE_048.json
+- A u48: queries/accepted/executed 0/0/0; wall 273.4s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_048.json`.
+<!-- warm-receipt:A_UPDATE_048.json:a0c4d732b834d5fa039028f1aa6db48ef33ff3826fc940436a97c209847923c5 -->
+
+### Warm continuation — WARM_A_PAUSED.json
+- `{"charged_sim_s": 2528840, "full_endpoint": 48, "reason": "A fixedu48 complete; wait for B48 before final panel", "timestamp_utc": "2026-11-01T21:00:22.741918+00:00", "update": 48}`
+- Receipt: `coopmwm/warm_live/WARM_A_PAUSED.json`.
+<!-- warm-receipt:WARM_A_PAUSED.json:24bdd81f07433591de0aaad97516dbc2697e6f2fa58acba29059fd6d0e61d47d -->
