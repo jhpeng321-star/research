@@ -1843,3 +1843,12 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
 - Receipt: `coopmwm/warm_live/A_UPDATE_044.json`.
 <!-- warm-receipt:A_UPDATE_044.json:0fb9ff83813c3f8b49350cc24fc8fdf3b33d4ce620d2d55c5f14f51484e3a9a9 -->
+
+## Warm live publication — 2026-11-01T20:38:28.431693+00:00
+- Conservatively charged 2399240/7500000 sim-s.
+
+### Warm continuation — A_CHECK_044.json
+- A_minus_MAPPO: J600 Δ=-713.607 [-1867.982,279.454] veh-s; delay reduction 1.41%; J900 Δ=-952.147 [-3413.962,1424.270] veh-s; delay reduction 1.05%. Negative Δ is better; 95% whole-world bootstrap.
+- Reporting-only check, never checkpoint selection. Full safety/per-cell results in the linked immutable receipt.
+- Receipt: `coopmwm/warm_live/A_CHECK_044.json`.
+<!-- warm-receipt:A_CHECK_044.json:7b77302c4c00b5f936211286602ef5e309c174de96822cd22381f2914dbcd733 -->
