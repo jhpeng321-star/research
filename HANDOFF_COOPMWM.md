@@ -1,5 +1,16 @@
 # S-COOPMWM live continuation — infrastructure recovery / explicit cap gate
 
+FRESH RESUME 2026-11-02 ~01:40: complete221-line brief read through MAIN01:38.
+Verified A exited at u16; all288 warm jobs closed, pending0, charge1405640.
+B/R have no dispatch. Existing qual4 GPUs are BOTH identity-verified R; each
+has causal-memory/E2-cold/E2-warm/H120-parity receipts, no failure/completion yet.
+Do not duplicate them. No local warm bridge/observer/SSH remains alive. Recovered
+bounded-transport registration already exists (8CPU PASS); preserve/adopt it.
+Explicit resume cap6000000 still conflicts with full6473440 allocation; new SUMO
+dispatch stays blocked. MAIN01:33/01:38 remote supervision and health pause rules
+must be integrated/qualified before launch; design freeze applies. Original STOP,
+all checkpoints/charges and recovered edits retained; zero new physics this recovery.
+
 FRESH RECOVERY 2026-11-02 ~01:32: full208-line brief read through MAIN01:29;
 HEAD39e3ac3a and all recovered edits retained. A owner2767879 has exited after
 u16; all288 warm jobs closed, no pending requests, charge1405640. B/R have no

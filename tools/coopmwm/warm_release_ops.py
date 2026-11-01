@@ -132,6 +132,8 @@ print(json.dumps(dict(unix=time.time(),receipts=receipts,identity_verified_alive
 def release():
     from .warm_report import summary,publish
     from .warm_protocol import budget
+    from .resume_gate import check_budget
+    check_budget(budget())
     target=ops.EVIDENCE/'WARM_RELEASE_REGISTRATION.json';assert not target.exists()
     data=collect()
     assert all(v['state'] in ('exited','Z') and v['receipts'].get('COMPLETE.json',{}).get('pass_') for v in data.values())

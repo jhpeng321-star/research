@@ -9,6 +9,12 @@ from .plan_bridge import Service as OriginalService
 from .warm_deploy import ROOT
 
 GPU_ROOT='/root/coopmwm20261102_warmservice1'
+transport=None
+
+
+def queue_call(code,timeout=30):
+    assert transport is not None,'identity-verified transport required'
+    return transport.call(code,timeout=timeout)
 
 
 class Service(OriginalService):
@@ -24,7 +30,7 @@ class Service(OriginalService):
 
 
 def pending():
-    return json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,sys
+    return json.loads(queue_call(f'''import pathlib,json,sys
 r=pathlib.Path({ROOT!r});assert r.is_dir();sys.path.insert(0,str(r/'pytools'))
 from tools.coopmwm.storage import read
 from tools.coopmwm.exploration import regime
@@ -40,9 +46,15 @@ print(json.dumps(out))''',timeout=30))
 
 def run():
     import msvcrt
+    from .warm_transport import QueueTransport
+    global transport
     claim=(ops.EVIDENCE/'WARM_BRIDGE.claim').open('a+b');claim.seek(0)
     if not claim.read(1):claim.write(b'1');claim.flush()
     claim.seek(0);msvcrt.locking(claim.fileno(),msvcrt.LK_NBLCK,1)
+    def event(value):
+        import uuid
+        write(ops.EVIDENCE/('WARM_TRANSPORT_'+uuid.uuid4().hex+'.json'),dict(value,unix=time.time()))
+    transport=QueueTransport(ops.ssh.remote,ROOT,event)
     lock=threading.Lock();inflight=set();stop=threading.Event();workers={};errors=[]
     def worker(slot):
         service=None
@@ -56,10 +68,12 @@ def run():
                     if record:inflight.add(record['state_id'])
                 if record is None:stop.wait(2);continue
                 result=service.call(record)
-                ops.ssh.remote('cpuQ',f'''import pathlib,json,sys
+                queue_call(f'''import pathlib,json,sys
 r=pathlib.Path({ROOT!r});sys.path.insert(0,str(r/'pytools'))
-from tools.coopmwm.storage import write
-write(r/'responses'/{(record['state_id']+'.json')!r},json.loads({json.dumps(result['result'])!r}))
+from tools.coopmwm.storage import write,read
+p=r/'responses'/{(record['state_id']+'.json')!r};value=json.loads({json.dumps(result['result'])!r})
+if p.exists():assert read(p)==value,'conflicting immutable response'
+else:write(p,value)
 print('persisted')''',timeout=45)
                 write(ops.EVIDENCE/'warm_forecasts'/(record['state_id']+'.json'),
                     dict(slot=slot,wall_s=result['wall_s'],unix=time.time(),state_id=record['state_id']))

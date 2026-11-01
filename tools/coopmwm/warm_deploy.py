@@ -83,6 +83,8 @@ write(r/'WARM_PRESERVED.json',value);print(json.dumps(value))''',timeout=45))
 
 
 def dispatch(arm):
+    from .resume_gate import check_budget
+    check_budget(budget())
     b=read(ops.EVIDENCE/'WARM_A48_BINDING.json')
     value=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,os,subprocess,time,sys
 r=pathlib.Path({ROOT!r});assert r.is_dir()

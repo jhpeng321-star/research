@@ -1,5 +1,19 @@
 # S-COOPMWM — live checks
 
+## Fresh resume — 2026-11-02 ~01:40
+- Complete brief read through MAIN01:38. Fresh status verifies A at u16/exited,
+  **288/288 warm jobs closed, zero pending requests, 1,405,640 sim-s charged**;
+  B/R have no dispatch. Original SSH-failure STOP and all checkpoints are preserved.
+- Both original qual4 GPU jobs are identity-verified running, each with causal
+  memory, reused cold/warm E2 and H120 parity receipts. H420/group timing remains
+  pending; no replacement qualification or new physics was launched.
+- Recovered transport qualification is already registered: **8 CPU tests PASS,
+  zero skips/SUMO**, bounded connection-only recovery with identity/receipt checks.
+  Remote supervision and MAIN01:38 health pauses remain launch requirements.
+- Explicit resume cap **6,000,000** conflicts with the registered full allocation
+  **6,473,440**. Dispatch is guarded pending cap/scope resolution; inference-only
+  engineering continues. Warm qualification and B/R restart are not yet claimed.
+
 ## Fresh recovery — 2026-11-02 ~01:32 host time
 - A completed update16 and exited at the durable SSH-failure STOP; all288 warm
   jobs are closed, no pending WM requests, **1405640 sim-s conservatively charged**.

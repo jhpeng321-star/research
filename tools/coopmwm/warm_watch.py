@@ -142,7 +142,8 @@ def dispatch():
     b=read(ops.EVIDENCE/'WARM_A48_BINDING.json')
     binding=dict(brief_sha256=sha(BRIEF),deadline_unix=b['gpu_deadline'],new_sumo_sim_s=0,
         helper_hashes={f'tools/coopmwm/{name}.py':sha(ops.LOCAL/f'tools/coopmwm/{name}.py') for name in
-            ('warm_watch','warm_release_ops','warm_publish','warm_report','warm_deploy','warm_storage')},
+            ('warm_watch','warm_release_ops','warm_publish','warm_report','warm_deploy','warm_storage',
+             'resume_gate','warm_transport','warm_bridge')},
         contract='receipt-only observer; qualify/register before B/R dispatch once; publish/backup each check; no final test/retry/PID control')
     write(ops.EVIDENCE/'WARM_WATCH_BINDING.json',binding)
     with (ops.EVIDENCE/'WARM_WATCH.log').open('x',encoding='utf-8') as log:
