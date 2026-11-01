@@ -1,0 +1,449 @@
+{
+  "unix": 1793545890.8482125,
+  "protocol": "S-C1SWITCH2/v2",
+  "hosts": {
+    "cpuQ": {
+      "unix": 1793545890.9917374,
+      "host": "cpuQ",
+      "load": [
+        0.013671875,
+        0.57861328125,
+        1.13818359375
+      ],
+      "cpu": {
+        "cpu": {
+          "root": "/home/ubuntu/c1switch2_run_eb0eda956a815f14",
+          "process": {
+            "pid": 604784,
+            "state": "EXITED"
+          },
+          "complete": true,
+          "stop": null,
+          "episodes": 84,
+          "decisions": 2520,
+          "closed_jobs": 84,
+          "closed_actual_sim_s": 100800.0,
+          "charged_sim_s": 100800,
+          "ledger_sha256": "ae3ad0953482be22a6bbacc50f0c858deb29ba541dbf9c25ee96418a4300cc9f"
+        },
+        "wm": {
+          "root": "/home/ubuntu/c1switch2_run_292bfffe94b13ed8",
+          "process": {
+            "pid": 649272,
+            "state": "EXITED"
+          },
+          "complete": false,
+          "stop": {
+            "reason": "child failed",
+            "id": "wm__s969141",
+            "code": 1
+          },
+          "episodes": 4,
+          "decisions": 123,
+          "closed_jobs": 6,
+          "closed_actual_sim_s": 5460.0,
+          "charged_sim_s": 5460,
+          "ledger_sha256": "ab62e7ddaa2ffcf1d006ba3fe67ba4c7ec9b3dfafd19ab736f4098ee015c9553"
+        },
+        "fleet_ppo": {
+          "root": "/home/ubuntu/c1switch2_run_e79775aa1f380c25",
+          "process": {
+            "pid": 1152412,
+            "state": "EXITED"
+          },
+          "complete": true,
+          "stop": null,
+          "episodes": 12,
+          "decisions": 360,
+          "closed_jobs": 84,
+          "closed_actual_sim_s": 63480.0,
+          "charged_sim_s": 63480,
+          "ledger_sha256": "cefeba5bbff863606e0f8bb9f9c653f11879672f84e507ca206d145053ee44e6"
+        },
+        "cav_mappo": {
+          "root": "/home/ubuntu/c1switch2_run_10950e88a99994d0",
+          "process": {
+            "pid": 2380230,
+            "state": "EXITED"
+          },
+          "complete": false,
+          "stop": {
+            "reason": "child failed",
+            "id": "cav_mappo__s969138",
+            "code": 1
+          },
+          "episodes": 2,
+          "decisions": 75,
+          "closed_jobs": 3,
+          "closed_actual_sim_s": 2980.0,
+          "charged_sim_s": 3000,
+          "ledger_sha256": "bd8cd25910dfaa836454c21d4e7c427d15123041526e6363deb35ddeaaa82156"
+        },
+        "wm_oracles": {
+          "root": "/home/ubuntu/c1switch2_run_oracles_0e790a668b7ec5d8",
+          "process": {
+            "pid": 1163082,
+            "state": "EXITED"
+          },
+          "complete": true,
+          "stop": null,
+          "episodes": 0,
+          "decisions": 0,
+          "closed_jobs": 24,
+          "closed_actual_sim_s": 14640.0,
+          "charged_sim_s": 14640,
+          "ledger_sha256": "d9566de3ce750db3dfa652e7712c50fa102fd218edf4cd5d155e4c5c20cb2cb3"
+        }
+      },
+      "gpu": {}
+    },
+    "gpuR": {
+      "unix": 1793545892.5925233,
+      "host": "gpuR",
+      "load": [
+        51.29541015625,
+        37.04248046875,
+        35.5048828125
+      ],
+      "cpu": {
+        "cpu": {
+          "root": "/root/c1switch2_run_716d39f08986c84f",
+          "process": {
+            "pid": 759845,
+            "state": "EXITED"
+          },
+          "complete": true,
+          "stop": null,
+          "episodes": 28,
+          "decisions": 840,
+          "closed_jobs": 28,
+          "closed_actual_sim_s": 33600.0,
+          "charged_sim_s": 33600,
+          "ledger_sha256": "098f42cd14d79e5fe94398001523c6d8c405eb2687d8aa9ea6c352f109460938"
+        },
+        "wm": {
+          "root": "/root/c1switch2_run_292bfffe94b13ed8",
+          "process": {
+            "pid": 763520,
+            "state": "EXITED"
+          },
+          "complete": false,
+          "stop": {
+            "reason": "child failed",
+            "id": "wm__s969147",
+            "code": 1
+          },
+          "episodes": 2,
+          "decisions": 60,
+          "closed_jobs": 3,
+          "closed_actual_sim_s": 2700.0,
+          "charged_sim_s": 2700,
+          "ledger_sha256": "afa389bda63ba104f9435a6e48c5770a7e64b0fd2a419cf7c14240af7b591447"
+        },
+        "bb": {
+          "root": "/root/c1switch2_run_bbd7ba8b48ed5829",
+          "state": "UNCLAIMED"
+        },
+        "fleet_ppo": {
+          "root": "/root/c1switch2_run_6e152d9a0b7bf7a4",
+          "process": {
+            "pid": 918286,
+            "state": "EXITED"
+          },
+          "complete": true,
+          "stop": null,
+          "episodes": 4,
+          "decisions": 120,
+          "closed_jobs": 28,
+          "closed_actual_sim_s": 16320.0,
+          "charged_sim_s": 16320,
+          "ledger_sha256": "f2db8da87c5e1bab60ae18e7bba7c024334f70055c3930793b10f6a8ca1893d4"
+        },
+        "cav_mappo": {
+          "root": "/root/c1switch2_run_edcdbebb738ef1c6",
+          "process": {
+            "pid": 973470,
+            "state": "EXITED"
+          },
+          "complete": false,
+          "stop": {
+            "reason": "child failed",
+            "id": "cav_mappo__s969139",
+            "code": 1
+          },
+          "episodes": 0,
+          "decisions": 0,
+          "closed_jobs": 0,
+          "closed_actual_sim_s": 0,
+          "charged_sim_s": 300,
+          "ledger_sha256": "6571e2b56aceaca0415a7565a9ebe97da2cc7ecdee1175c1049ae13ced5435cb"
+        },
+        "wm_oracles": {
+          "root": "/root/c1switch2_run_oracles_8d6ceccb69058bb0",
+          "process": {
+            "pid": 885469,
+            "state": "EXITED"
+          },
+          "complete": true,
+          "stop": null,
+          "episodes": 0,
+          "decisions": 0,
+          "closed_jobs": 12,
+          "closed_actual_sim_s": 6000.0,
+          "charged_sim_s": 6000,
+          "ledger_sha256": "74a6a1acadc6d0ffaedc3795e416f3de932bf2b61556a858e24f86ee838e2cab"
+        }
+      },
+      "gpu": {
+        "wm": {
+          "root": "/root/c1switch2_gpu_wm_95614dbfc754e322",
+          "process": {
+            "pid": 761968,
+            "state": "EXITED"
+          },
+          "started": {
+            "pid": 761968,
+            "cap_s": 28800.0,
+            "unix": 1793470179.259909
+          },
+          "finished": {
+            "pid": 761968,
+            "elapsed_s": 13840.939484648407
+          },
+          "stop": null,
+          "ready": true,
+          "requests": 98,
+          "results": 98,
+          "elapsed_wall_s": 75713.34819197655
+        },
+        "bb": {
+          "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
+          "process": {
+            "pid": 918383,
+            "state": "EXITED"
+          },
+          "started": {
+            "pid": 918383,
+            "cap_s": 5378.357716992497,
+            "unix": 1793516189.3431368
+          },
+          "finished": {
+            "pid": 918383,
+            "elapsed_s": 28.955177523195744
+          },
+          "stop": null,
+          "ready": true,
+          "requests": 2,
+          "results": 2,
+          "elapsed_wall_s": 29703.265259981155
+        },
+        "bb_startup": {
+          "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
+          "process": {
+            "pid": 885526,
+            "state": "EXITED"
+          },
+          "started": {
+            "pid": 885526,
+            "cap_s": 5400.0,
+            "unix": 1793504153.4743981
+          },
+          "finished": {
+            "pid": 885526,
+            "elapsed_s": 21.642283007502556
+          },
+          "stop": null,
+          "ready": true,
+          "requests": 2,
+          "results": 2,
+          "elapsed_wall_s": 41739.13423490524
+        }
+      }
+    },
+    "gpuA": {
+      "unix": 1793545896.2149985,
+      "host": "gpuA",
+      "load": [
+        10.16064453125,
+        11.875,
+        12.109375
+      ],
+      "cpu": {},
+      "gpu": {
+        "wm": {
+          "root": "/root/c1switch2_gpu_wm_95614dbfc754e322",
+          "process": {
+            "pid": 342449,
+            "state": "EXITED"
+          },
+          "started": {
+            "pid": 342449,
+            "cap_s": 28800.0,
+            "unix": 1793470174.2682555
+          },
+          "finished": {
+            "pid": 342449,
+            "elapsed_s": 13845.159507265314
+          },
+          "stop": null,
+          "ready": true,
+          "requests": 90,
+          "results": 90,
+          "elapsed_wall_s": 75721.94772219658
+        },
+        "bb": {
+          "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
+          "process": {
+            "pid": 466657,
+            "state": "EXITED"
+          },
+          "started": {
+            "pid": 466657,
+            "cap_s": 5378.618305759504,
+            "unix": 1793516188.291644
+          },
+          "finished": {
+            "pid": 466657,
+            "elapsed_s": 29.05172841064632
+          },
+          "stop": null,
+          "ready": true,
+          "requests": 2,
+          "results": 2,
+          "elapsed_wall_s": 29707.924537420273
+        },
+        "bb_startup": {
+          "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
+          "process": {
+            "pid": 432280,
+            "state": "EXITED"
+          },
+          "started": {
+            "pid": 432280,
+            "cap_s": 5400.0,
+            "unix": 1793504152.6170995
+          },
+          "finished": {
+            "pid": 432280,
+            "elapsed_s": 21.381694240495563
+          },
+          "stop": null,
+          "ready": true,
+          "requests": 2,
+          "results": 2,
+          "elapsed_wall_s": 41743.59925246239
+        }
+      }
+    }
+  },
+  "alerts": [
+    "cpuQ/cpu/wm: STOP {'reason': 'child failed', 'id': 'wm__s969141', 'code': 1}",
+    "cpuQ/cpu/cav_mappo: STOP {'reason': 'child failed', 'id': 'cav_mappo__s969138', 'code': 1}",
+    "gpuR/cpu/wm: STOP {'reason': 'child failed', 'id': 'wm__s969147', 'code': 1}",
+    "gpuR/cpu/cav_mappo: STOP {'reason': 'child failed', 'id': 'cav_mappo__s969139', 'code': 1}",
+    "BB relocated startup terminal STOP: ValueError('current model authority/registry absent')"
+  ],
+  "relay": {
+    "unix": 1793481610.36372,
+    "cpus": {
+      "cpuQ": {
+        "stop": null,
+        "episodes": 4,
+        "expected": 12,
+        "complete": false
+      },
+      "gpuR": {
+        "stop": null,
+        "episodes": 1,
+        "expected": 4,
+        "complete": false
+      }
+    },
+    "gpus": {
+      "gpuA": {
+        "stop": null,
+        "finished": null
+      },
+      "gpuR": {
+        "stop": null,
+        "finished": null
+      }
+    },
+    "transferred": 0
+  },
+  "bb_wait": {
+    "unix": 1793483953.0254462,
+    "states": {
+      "gpuA": {
+        "wm_finished": false,
+        "free_mib": 37673
+      },
+      "gpuR": {
+        "wm_finished": false,
+        "free_mib": 20736
+      }
+    }
+  },
+  "bb_stop": null,
+  "bb_complete": null,
+  "bb_relocation_stop": {
+    "unix": 1793504172.9679978,
+    "error": "ValueError('current model authority/registry absent')",
+    "started": [
+      [
+        "gpuA",
+        "/root/c1switch2_gpu_bb_caeab9eaa303f93c"
+      ],
+      [
+        "gpuR",
+        "/root/c1switch2_gpu_bb_caeab9eaa303f93c"
+      ]
+    ]
+  },
+  "bb_continuation_stop": {
+    "unix": 1793516216.542117,
+    "error": "RuntimeError('Traceback (most recent call last):\\n  File \"<stdin>\", line 11, in <module>\\nAssertionError: yield spare CPU priority\\n')",
+    "started": [
+      [
+        "gpuA",
+        "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c"
+      ],
+      [
+        "gpuR",
+        "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c"
+      ]
+    ]
+  },
+  "local_processes": {
+    "31696": {
+      "pid": 31696,
+      "state": "EXITED",
+      "error": 87
+    },
+    "36376": {
+      "pid": 36376,
+      "state": "EXITED",
+      "error": 87
+    }
+  },
+  "latest_task_registration": [
+    "2026-11-01 20:14 MAIN: GPUs reserved for S-COOPMWM -> S-C1SWITCH2 told to disarm/hold its GPU followers (BB continuation) until 'S-C1SWITCH2 GPU RESUME'; CPU-only work continues at nice 19. S-COOPMWM: 96-world final panel registered (a6bb1ab0), acceleration PPO + committed plans CPU-qualified (27591d6f), plan-profile GPU probe PASS (parity 0.0, WM sensitivity up to 1281 veh-s).",
+    "- S-C1SWITCH2 OWNER20:14 GPU HOLD APPLIED (receipt1793535350): exact-owned Windows admission supervisor42548/create12:24:02/command verified and stopped; no GPU follower admission armed. BOTH originalWM, originalBB and continuationBB services EXITED/final receipts retained, total247680charged=closedactualsim-s and27787.12987509556GPU-s; all112fixed/random+fleet16episodes/96oracles+originalWM36oracles COMPLETE, WM6episodes only/primarypanel incomplete. Durable OWNER2014_GPU_HOLD.json plus preclaim GPU-service/model/supervisor guards; CPU8PASS/RuffPASS. Await explicit later MAIN GPU resume authority and reconcile flag before any new inference; no terminal science retry/claim reset authorised. CPU-only final169per-CAV delivery received; prepare under original89900sim-s/GPU0 only/nice19 below S-COOPMWM, disk/load gates retained. cpuQfree2106318848bytes/ownoutputs356383743bytes, no deletion/newphysics/peerPIDsignals/newenv/push.",
+    "- S-C1SWITCH2 FINAL PER-CAV EVALUATION REGISTERED BEFORE COMPUTE (buildae34e17d; original MAIN01:48 final-only authority, OWNER20:14 GPU hold retained): genuine final169 checkpointSHA25682c6745bac50aaf4dee98f5d8b3c60db0e5e558d9abf4667dd8e605774f4b3c4, deliverySHA9ae72e2702aac270afb97e0dce555006c651c040925f3885127e40ba18ced30e from S-SELMAPPO2 immutable buildc141d571; SAME16world PANEL_v2SHA7c780c25237dde73a657937ab577b8e48f71766817f4363f3298982e90144827, original12cpuQ/4gpuR partition, cadence20s/30choices/1200sepisodes/fullteamJ600/J900 unchanged. ONLY original cav_mappo arm89900sim-s=19200episodes+60600sixway fullprefix oracles+10100heldjoint branches; cpuQ71660/gpuR18240/GPU0. Source-bound training shared runtime/observations/model plus exact mixed grouped-WALL executor validated before actual final-policy CPU probe and immutable host preflight; no checkpoint selection/training restart or peer evaluation. Local109CPU PASS/RuffPASS, final host preflights required BEFORE one-use per-host claims, duplicate arm claims across taskroots refused. Nice19/CUDAhidden/singlethread start1worker/host, <=14cpuQ/4gpuR, yield load28/20 and disk>=2GiB, below S-COOPMWM; no relocation if disk fails. Existing247680sim-s/27787.12987509556GPU-s preserved; totalbase468380sim-s/19GPUh unchanged, PHYSOFF/finalruleFAIL, WM6episodes/primarypanel stillincomplete, BBterminal/no new attempt. At registration newphysics/GPU0; no deletion/newenv/push/peerPIDsignals.",
+    "- S-C1SWITCH2 PER-CAV CONSTRUCTION STOP / UNSTARTED CPUQ REPAIR REGISTERED (6f6fa0d9; OWNER20:14 GPU hold retained): own gpuR973470 terminalSTOP during first969139 backend construction, zero controlleddecisions,300sim-s charged/noCLOSE so closedactual0not300; retained original89900armcap and allclaims. Error: frozen CommandOwnership lacks execute_residual; evaluation overlay incorrectly saved missing hook, while training installs it even when absent. CPU repair mirrors training installation, preserves exact prior hook presence/converter at fleet handback; realpeer groupedWALL regression BOTHABIs,37targetedCPU/RuffPASS. NO failedgpuRworld/scope replay or automaticretry; explicit MAIN continuation scope requested for other3whollyunstartedgpuRworlds. OriginalcpuQstagec1c922c5 UNCLAIMED/zerojobs/zeroledger after disk preclaimrefusal; corrected immutable stage may replace ONLY this whollyunusedstage, retaining its binding/preflight/proof. Its original12worlds/71660sim-s/GPU0 unchanged, genuinefinal169/peers/panel/indices unchanged; re-run new immutableCPUpreflight BEFORE firstdispatch. New CPU-only supervisor observes20min/commitsprogress, resource60s, admits ONLY originalunclaimedcpuQcav_mappo at1nice19worker/load28/disk>=2GiB and remoteemptyclaimproof; durableonce-attempt forbids automatic science retry; noGPU admissionpath/BBfollower. Old42548EXITED required, deadline originalNov2noon. Aggregate247980charged/247680closedactualsim-s/GPU27787.12987509556s; no capincrease/refund/deletion/newenv/push/peerPIDsignals.",
+    "- S-C1SWITCH2 OWNER20:14 CPU-ONLY SUPERVISION LIVE (6f6fa0d9/firstheartbeatd37e3281; receipt1793536230): ownWindows20260 LIVE/old42548EXITED,20minprogress+commits/60sresourcecheck throughoriginalNov2 12:14+08. CorrectedcpuQ immutable root10950e88a99994d0 passes148CPU/1hostonlyskip, BOTHguards17, realfinal169/shared+mixedfactoryPASS; oldc1c922c5 provenUNCLAIMED/zeroledger/jobs and preserved. Original12world/71660sim-s/GPU0 scope stillUNSTARTED: disk2090872832bytes<2GiB, ownoutputs364485860bytes; no deletion/relocation. Observer can admit ONLY that CPU scope ONCE/1nice19worker after resource/source/registry/finalpolicy gates; noGPU/gpuR/BB admissionpath. AllownedGPUservicesEXITED/OWNER2014_GPU_HOLD active, no new inference; aggregate247980charged/247680closedactualsim-s/finalGPU27787.12987509556s unchanged. Final local153CPU/RuffPASS; allfinishedscopes retained, originalgpuRper-CAV terminal300charge/noCLOSE/zerochoices and no rerun. MAIN notice E:/agent-work/_sol/C1SWITCH2_OWNER2014_STATUS.md requests cpuQdisk relief and explicit unused3worldgpuR continuation scope; WM primarypanel remainsincomplete/no efficacyCI. No peerPIDsignals/newenv/push."
+  ],
+  "final_checkpoint_receipts": {
+    "SELMAPPO_FINAL.json": true,
+    "SELMAPPO2_FINAL.json": true
+  },
+  "owner2014": {
+    "pid": 20260,
+    "gpu_hold": true,
+    "admission": {
+      "unix": 1793545830.8103118,
+      "status": "ADMITTED_OR_ATTEMPTED_NO_RETRY"
+    },
+    "admission_error": null
+  }
+}
