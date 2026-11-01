@@ -73,6 +73,18 @@ def load_candidate(checkpoints, configs, device):
         candidate._wmphys_fitted_state = FittedHiddenState.from_directory(
             root/options_full['parameter_directory'])
         candidate._wmphys_arrival_fit = LearnedArrivalFit.from_file(root/options_full['arrival_json'])
+        calibration_path = options_full.get('spread_calibration_json')
+        if calibration_path is not None:
+            from wms.control.spread_calibration import SpreadCalibration
+            calibration = SpreadCalibration.from_file(root/calibration_path)
+            if not options_full.get('condition_motion', False):
+                raise ValueError('spread calibration requires causal motion conditioning')
+            shrinkage_sha = hashlib.sha256((root/options_full['parameter_directory']/'idm_shrinkage.json').read_bytes()).hexdigest()
+            if calibration.artifact['shrinkage_sha256'] != shrinkage_sha:
+                raise ValueError('spread calibration/shrinkage mismatch')
+            candidate._wmphys_fitted_state = calibration.hidden(candidate._wmphys_fitted_state)
+            candidate._wmphys_arrival_fit = calibration.arrivals(candidate._wmphys_arrival_fit)
+            receipt['spread_calibration'] = calibration.receipt()
         candidate._wmphys_condition_motion = options_full.get('condition_motion', False)
         if candidate._wmphys_condition_motion:
             if (physics.cf_model != 'sumo_idm' or physics.sumo_cf_stepping_s != .25
@@ -134,7 +146,14 @@ def fitted_state_at_start(model, seed):
             from tools.rblane.runtime_history import lane_arrays
             records, lane_receipt = continuation.condition(lane_arrays(start, raw),
                 world=int(seed), t0_s=300., physics=model.physics)
+            # LC attachment reconstructs the finite-support base object. Preserve
+            # the future-owned entrant-mixture/retention wrapper around that new
+            # joint object; copying its provenance alone would silently disable
+            # the calibrated hidden-state behavior.
+            calibration = getattr(conditioned, 'calibration', None)
             conditioned = continuation.attach(conditioned, records, t0_s=300., receipt=lane_receipt)
+            if calibration is not None:
+                conditioned = calibration.hidden(conditioned)
             receipt.update(lane_receipt)
         model._wmphys_conditioned_cache[int(seed)] = conditioned, receipt
     return model._wmphys_conditioned_cache[int(seed)]

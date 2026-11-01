@@ -1,0 +1,4341 @@
+{
+  "schema": "rb2cal.count_validation/1",
+  "summary": [
+    {
+      "method": "baseline",
+      "entrance": null,
+      "worlds": 32,
+      "outcomes": 64,
+      "crps": 6.023303235406159,
+      "nll": 3.7466072190316346,
+      "coverage": {
+        "0.5": 0.515625,
+        "0.8": 0.75,
+        "0.9": 0.859375
+      },
+      "discrete_nominal_mass": {
+        "0.5": 0.5396796135771246,
+        "0.8": 0.8210106051223546,
+        "0.9": 0.9124032918319038
+      }
+    },
+    {
+      "method": "scalar_world_excluded",
+      "entrance": null,
+      "worlds": 32,
+      "outcomes": 64,
+      "crps": 6.053651072119676,
+      "nll": 3.745984526171224,
+      "coverage": {
+        "0.5": 0.625,
+        "0.8": 0.84375,
+        "0.9": 0.890625
+      },
+      "discrete_nominal_mass": {
+        "0.5": 0.5348114428166525,
+        "0.8": 0.8180619117098525,
+        "0.9": 0.9114602231601595
+      }
+    },
+    {
+      "method": "baseline",
+      "entrance": 0,
+      "worlds": 32,
+      "outcomes": 32,
+      "crps": 8.10574750123142,
+      "nll": 4.074673493448653,
+      "coverage": {
+        "0.5": 0.53125,
+        "0.8": 0.8125,
+        "0.9": 0.875
+      },
+      "discrete_nominal_mass": {
+        "0.5": 0.5231042992422864,
+        "0.8": 0.8126443750560413,
+        "0.9": 0.9073214290041409
+      }
+    },
+    {
+      "method": "scalar_world_excluded",
+      "entrance": 0,
+      "worlds": 32,
+      "outcomes": 32,
+      "crps": 8.171149061011816,
+      "nll": 4.098700699827299,
+      "coverage": {
+        "0.5": 0.71875,
+        "0.8": 0.875,
+        "0.9": 0.875
+      },
+      "discrete_nominal_mass": {
+        "0.5": 0.5212677348111852,
+        "0.8": 0.8109547232709584,
+        "0.9": 0.9065835354674519
+      }
+    },
+    {
+      "method": "baseline",
+      "entrance": 1,
+      "worlds": 32,
+      "outcomes": 32,
+      "crps": 3.940858969580897,
+      "nll": 3.418540944614615,
+      "coverage": {
+        "0.5": 0.5,
+        "0.8": 0.6875,
+        "0.9": 0.84375
+      },
+      "discrete_nominal_mass": {
+        "0.5": 0.5562549279119628,
+        "0.8": 0.8293768351886677,
+        "0.9": 0.9174851546596667
+      }
+    },
+    {
+      "method": "scalar_world_excluded",
+      "entrance": 1,
+      "worlds": 32,
+      "outcomes": 32,
+      "crps": 3.9361530832275387,
+      "nll": 3.3932683525151477,
+      "coverage": {
+        "0.5": 0.53125,
+        "0.8": 0.8125,
+        "0.9": 0.90625
+      },
+      "discrete_nominal_mass": {
+        "0.5": 0.5483551508221198,
+        "0.8": 0.8251691001487466,
+        "0.9": 0.9163369108528671
+      }
+    }
+  ],
+  "records": [
+    {
+      "world": 969400,
+      "entrance": 0,
+      "prefix": 88,
+      "target": 73,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 9.365353231175392,
+      "nll": 4.111440892304934,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 79,
+          "high": 97,
+          "covered": false,
+          "discrete_nominal_mass": 0.5263615152434877
+        },
+        {
+          "level": 0.8,
+          "low": 72,
+          "high": 106,
+          "covered": true,
+          "discrete_nominal_mass": 0.8121235063204449
+        },
+        {
+          "level": 0.9,
+          "low": 68,
+          "high": 111,
+          "covered": true,
+          "discrete_nominal_mass": 0.9021067555385567
+        }
+      ]
+    },
+    {
+      "world": 969400,
+      "entrance": 0,
+      "prefix": 88,
+      "target": 73,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.437699054570161,
+      "crps": 9.106239513377417,
+      "nll": 4.071798107951203,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 78,
+          "high": 98,
+          "covered": false,
+          "discrete_nominal_mass": 0.5271413972419996
+        },
+        {
+          "level": 0.8,
+          "low": 70,
+          "high": 108,
+          "covered": true,
+          "discrete_nominal_mass": 0.8168328464343
+        },
+        {
+          "level": 0.9,
+          "low": 65,
+          "high": 114,
+          "covered": true,
+          "discrete_nominal_mass": 0.9123582592306398
+        }
+      ]
+    },
+    {
+      "world": 969400,
+      "entrance": 1,
+      "prefix": 11,
+      "target": 29,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 14.840118571823366,
+      "nll": 7.148425187347641,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 8,
+          "high": 14,
+          "covered": false,
+          "discrete_nominal_mass": 0.5471320615650227
+        },
+        {
+          "level": 0.8,
+          "low": 6,
+          "high": 18,
+          "covered": false,
+          "discrete_nominal_mass": 0.8298587719843746
+        },
+        {
+          "level": 0.9,
+          "low": 5,
+          "high": 20,
+          "covered": false,
+          "discrete_nominal_mass": 0.9077457879056545
+        }
+      ]
+    },
+    {
+      "world": 969400,
+      "entrance": 1,
+      "prefix": 11,
+      "target": 29,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.437699054570161,
+      "crps": 14.59208784813704,
+      "nll": 6.5040156901130945,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 8,
+          "high": 15,
+          "covered": false,
+          "discrete_nominal_mass": 0.5544656474327538
+        },
+        {
+          "level": 0.8,
+          "low": 5,
+          "high": 19,
+          "covered": false,
+          "discrete_nominal_mass": 0.8551732309595638
+        },
+        {
+          "level": 0.9,
+          "low": 4,
+          "high": 21,
+          "covered": false,
+          "discrete_nominal_mass": 0.9201794633959867
+        }
+      ]
+    },
+    {
+      "world": 969401,
+      "entrance": 0,
+      "prefix": 104,
+      "target": 94,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 6.06946564963113,
+      "nll": 3.790488552064744,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 94,
+          "high": 114,
+          "covered": true,
+          "discrete_nominal_mass": 0.5336795059172857
+        },
+        {
+          "level": 0.8,
+          "low": 86,
+          "high": 123,
+          "covered": true,
+          "discrete_nominal_mass": 0.8126074254620976
+        },
+        {
+          "level": 0.9,
+          "low": 82,
+          "high": 129,
+          "covered": true,
+          "discrete_nominal_mass": 0.9033878948136786
+        }
+      ]
+    },
+    {
+      "world": 969401,
+      "entrance": 0,
+      "prefix": 104,
+      "target": 94,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.6845016818417768,
+      "crps": 6.15622757430209,
+      "nll": 3.8613978869317833,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 93,
+          "high": 115,
+          "covered": true,
+          "discrete_nominal_mass": 0.5092460651921864
+        },
+        {
+          "level": 0.8,
+          "low": 84,
+          "high": 126,
+          "covered": true,
+          "discrete_nominal_mass": 0.8018412385997988
+        },
+        {
+          "level": 0.9,
+          "low": 78,
+          "high": 133,
+          "covered": true,
+          "discrete_nominal_mass": 0.9066080349653411
+        }
+      ]
+    },
+    {
+      "world": 969401,
+      "entrance": 1,
+      "prefix": 18,
+      "target": 12,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 3.7201516041894593,
+      "nll": 3.118048095447632,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 14,
+          "high": 22,
+          "covered": false,
+          "discrete_nominal_mass": 0.5484213729197831
+        },
+        {
+          "level": 0.8,
+          "low": 11,
+          "high": 27,
+          "covered": true,
+          "discrete_nominal_mass": 0.8414130620447039
+        },
+        {
+          "level": 0.9,
+          "low": 9,
+          "high": 29,
+          "covered": true,
+          "discrete_nominal_mass": 0.9214667312522589
+        }
+      ]
+    },
+    {
+      "world": 969401,
+      "entrance": 1,
+      "prefix": 18,
+      "target": 12,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.6845016818417768,
+      "crps": 3.536381256854805,
+      "nll": 3.0712496264609985,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 13,
+          "high": 23,
+          "covered": false,
+          "discrete_nominal_mass": 0.5757676515275724
+        },
+        {
+          "level": 0.8,
+          "low": 10,
+          "high": 28,
+          "covered": true,
+          "discrete_nominal_mass": 0.8301693844024749
+        },
+        {
+          "level": 0.9,
+          "low": 8,
+          "high": 31,
+          "covered": true,
+          "discrete_nominal_mass": 0.9187464577737594
+        }
+      ]
+    },
+    {
+      "world": 969402,
+      "entrance": 0,
+      "prefix": 117,
+      "target": 126,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 5.603893546042324,
+      "nll": 3.8508345865262896,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 107,
+          "high": 128,
+          "covered": true,
+          "discrete_nominal_mass": 0.5272039174805718
+        },
+        {
+          "level": 0.8,
+          "low": 98,
+          "high": 137,
+          "covered": true,
+          "discrete_nominal_mass": 0.8091979825181245
+        },
+        {
+          "level": 0.9,
+          "low": 93,
+          "high": 144,
+          "covered": true,
+          "discrete_nominal_mass": 0.9104466273801638
+        }
+      ]
+    },
+    {
+      "world": 969402,
+      "entrance": 0,
+      "prefix": 117,
+      "target": 126,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.7336139409073617,
+      "crps": 6.017323714941545,
+      "nll": 3.972008062872746,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 105,
+          "high": 129,
+          "covered": true,
+          "discrete_nominal_mass": 0.515937328725403
+        },
+        {
+          "level": 0.8,
+          "low": 95,
+          "high": 141,
+          "covered": true,
+          "discrete_nominal_mass": 0.8113346694035765
+        },
+        {
+          "level": 0.9,
+          "low": 89,
+          "high": 148,
+          "covered": true,
+          "discrete_nominal_mass": 0.9069610603900504
+        }
+      ]
+    },
+    {
+      "world": 969402,
+      "entrance": 1,
+      "prefix": 20,
+      "target": 17,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 2.047390338200927,
+      "nll": 2.8078184727774413,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 16,
+          "high": 25,
+          "covered": true,
+          "discrete_nominal_mass": 0.5671185493257535
+        },
+        {
+          "level": 0.8,
+          "low": 13,
+          "high": 29,
+          "covered": true,
+          "discrete_nominal_mass": 0.818073041863839
+        },
+        {
+          "level": 0.9,
+          "low": 11,
+          "high": 32,
+          "covered": true,
+          "discrete_nominal_mass": 0.9163850528643055
+        }
+      ]
+    },
+    {
+      "world": 969402,
+      "entrance": 1,
+      "prefix": 20,
+      "target": 17,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.7336139409073617,
+      "crps": 2.1361826278771794,
+      "nll": 2.9108017027292776,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 15,
+          "high": 25,
+          "covered": true,
+          "discrete_nominal_mass": 0.5466654285097312
+        },
+        {
+          "level": 0.8,
+          "low": 12,
+          "high": 30,
+          "covered": true,
+          "discrete_nominal_mass": 0.8014995606427227
+        },
+        {
+          "level": 0.9,
+          "low": 10,
+          "high": 34,
+          "covered": true,
+          "discrete_nominal_mass": 0.907351190339738
+        }
+      ]
+    },
+    {
+      "world": 969403,
+      "entrance": 0,
+      "prefix": 80,
+      "target": 85,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 3.72613583314633,
+      "nll": 3.56331900987135,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 72,
+          "high": 89,
+          "covered": true,
+          "discrete_nominal_mass": 0.5221790632197478
+        },
+        {
+          "level": 0.8,
+          "low": 65,
+          "high": 97,
+          "covered": true,
+          "discrete_nominal_mass": 0.807032573614355
+        },
+        {
+          "level": 0.9,
+          "low": 61,
+          "high": 102,
+          "covered": true,
+          "discrete_nominal_mass": 0.9024293768721674
+        }
+      ]
+    },
+    {
+      "world": 969403,
+      "entrance": 0,
+      "prefix": 80,
+      "target": 85,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.6555834813676726,
+      "crps": 4.131908369122195,
+      "nll": 3.693773464437143,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 70,
+          "high": 90,
+          "covered": true,
+          "discrete_nominal_mass": 0.5294911897007044
+        },
+        {
+          "level": 0.8,
+          "low": 62,
+          "high": 100,
+          "covered": true,
+          "discrete_nominal_mass": 0.8193026644966419
+        },
+        {
+          "level": 0.9,
+          "low": 58,
+          "high": 106,
+          "covered": true,
+          "discrete_nominal_mass": 0.9066217205795808
+        }
+      ]
+    },
+    {
+      "world": 969403,
+      "entrance": 1,
+      "prefix": 17,
+      "target": 9,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 5.384820915056488,
+      "nll": 3.623496564983049,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 13,
+          "high": 21,
+          "covered": false,
+          "discrete_nominal_mass": 0.561672637614389
+        },
+        {
+          "level": 0.8,
+          "low": 10,
+          "high": 25,
+          "covered": false,
+          "discrete_nominal_mass": 0.8322830523723821
+        },
+        {
+          "level": 0.9,
+          "low": 9,
+          "high": 28,
+          "covered": true,
+          "discrete_nominal_mass": 0.9112690807396071
+        }
+      ]
+    },
+    {
+      "world": 969403,
+      "entrance": 1,
+      "prefix": 17,
+      "target": 9,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.6555834813676726,
+      "crps": 5.051873398471162,
+      "nll": 3.4126123033976183,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 13,
+          "high": 22,
+          "covered": false,
+          "discrete_nominal_mass": 0.5396075074428234
+        },
+        {
+          "level": 0.8,
+          "low": 9,
+          "high": 27,
+          "covered": true,
+          "discrete_nominal_mass": 0.8453866675103454
+        },
+        {
+          "level": 0.9,
+          "low": 8,
+          "high": 30,
+          "covered": true,
+          "discrete_nominal_mass": 0.9108061028703902
+        }
+      ]
+    },
+    {
+      "world": 969404,
+      "entrance": 0,
+      "prefix": 114,
+      "target": 125,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 6.547869275181582,
+      "nll": 3.9333720212401033,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 104,
+          "high": 124,
+          "covered": false,
+          "discrete_nominal_mass": 0.5133903158675271
+        },
+        {
+          "level": 0.8,
+          "low": 95,
+          "high": 134,
+          "covered": true,
+          "discrete_nominal_mass": 0.8149631021364449
+        },
+        {
+          "level": 0.9,
+          "low": 90,
+          "high": 140,
+          "covered": true,
+          "discrete_nominal_mass": 0.9089286035024621
+        }
+      ]
+    },
+    {
+      "world": 969404,
+      "entrance": 0,
+      "prefix": 114,
+      "target": 125,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.7344048466323565,
+      "crps": 6.8446020288321545,
+      "nll": 4.033559343074472,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 102,
+          "high": 126,
+          "covered": true,
+          "discrete_nominal_mass": 0.5215994346681182
+        },
+        {
+          "level": 0.8,
+          "low": 92,
+          "high": 138,
+          "covered": true,
+          "discrete_nominal_mass": 0.8170507386388979
+        },
+        {
+          "level": 0.9,
+          "low": 87,
+          "high": 145,
+          "covered": true,
+          "discrete_nominal_mass": 0.9048992310831896
+        }
+      ]
+    },
+    {
+      "world": 969404,
+      "entrance": 1,
+      "prefix": 19,
+      "target": 17,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 1.7003037112483819,
+      "nll": 2.7415690872362166,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 15,
+          "high": 23,
+          "covered": true,
+          "discrete_nominal_mass": 0.5360623651487203
+        },
+        {
+          "level": 0.8,
+          "low": 12,
+          "high": 28,
+          "covered": true,
+          "discrete_nominal_mass": 0.8295479877126959
+        },
+        {
+          "level": 0.9,
+          "low": 10,
+          "high": 31,
+          "covered": true,
+          "discrete_nominal_mass": 0.9245876758945327
+        }
+      ]
+    },
+    {
+      "world": 969404,
+      "entrance": 1,
+      "prefix": 19,
+      "target": 17,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.7344048466323565,
+      "crps": 1.8482562309818658,
+      "nll": 2.8685136067122814,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 14,
+          "high": 24,
+          "covered": true,
+          "discrete_nominal_mass": 0.5586730544013367
+        },
+        {
+          "level": 0.8,
+          "low": 11,
+          "high": 29,
+          "covered": true,
+          "discrete_nominal_mass": 0.8136252694670147
+        },
+        {
+          "level": 0.9,
+          "low": 9,
+          "high": 33,
+          "covered": true,
+          "discrete_nominal_mass": 0.9163953767219583
+        }
+      ]
+    },
+    {
+      "world": 969405,
+      "entrance": 0,
+      "prefix": 121,
+      "target": 111,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 6.146362560484301,
+      "nll": 3.836447245319661,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 111,
+          "high": 132,
+          "covered": true,
+          "discrete_nominal_mass": 0.5197990085195644
+        },
+        {
+          "level": 0.8,
+          "low": 102,
+          "high": 142,
+          "covered": true,
+          "discrete_nominal_mass": 0.8118820814855049
+        },
+        {
+          "level": 0.9,
+          "low": 97,
+          "high": 148,
+          "covered": true,
+          "discrete_nominal_mass": 0.9049207268347459
+        }
+      ]
+    },
+    {
+      "world": 969405,
+      "entrance": 0,
+      "prefix": 121,
+      "target": 111,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.7168848195637159,
+      "crps": 6.311291041848342,
+      "nll": 3.922129859855559,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 109,
+          "high": 133,
+          "covered": true,
+          "discrete_nominal_mass": 0.5099148158185014
+        },
+        {
+          "level": 0.8,
+          "low": 99,
+          "high": 145,
+          "covered": true,
+          "discrete_nominal_mass": 0.8051473022258782
+        },
+        {
+          "level": 0.9,
+          "low": 93,
+          "high": 153,
+          "covered": true,
+          "discrete_nominal_mass": 0.9071596976805124
+        }
+      ]
+    },
+    {
+      "world": 969405,
+      "entrance": 1,
+      "prefix": 20,
+      "target": 16,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 2.484391209356038,
+      "nll": 2.8787702087497014,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 16,
+          "high": 25,
+          "covered": true,
+          "discrete_nominal_mass": 0.5671185493257535
+        },
+        {
+          "level": 0.8,
+          "low": 13,
+          "high": 29,
+          "covered": true,
+          "discrete_nominal_mass": 0.818073041863839
+        },
+        {
+          "level": 0.9,
+          "low": 11,
+          "high": 32,
+          "covered": true,
+          "discrete_nominal_mass": 0.9163850528643055
+        }
+      ]
+    },
+    {
+      "world": 969405,
+      "entrance": 1,
+      "prefix": 20,
+      "target": 16,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.7168848195637159,
+      "crps": 2.493033442787672,
+      "nll": 2.9464971612647615,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 15,
+          "high": 25,
+          "covered": true,
+          "discrete_nominal_mass": 0.5480332903768609
+        },
+        {
+          "level": 0.8,
+          "low": 12,
+          "high": 30,
+          "covered": true,
+          "discrete_nominal_mass": 0.8028602091331691
+        },
+        {
+          "level": 0.9,
+          "low": 10,
+          "high": 34,
+          "covered": true,
+          "discrete_nominal_mass": 0.9083352147302917
+        }
+      ]
+    },
+    {
+      "world": 969406,
+      "entrance": 0,
+      "prefix": 71,
+      "target": 78,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 4.3552391134954105,
+      "nll": 3.6091177699783543,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 63,
+          "high": 79,
+          "covered": true,
+          "discrete_nominal_mass": 0.5247062525709613
+        },
+        {
+          "level": 0.8,
+          "low": 57,
+          "high": 87,
+          "covered": true,
+          "discrete_nominal_mass": 0.8056341415410225
+        },
+        {
+          "level": 0.9,
+          "low": 53,
+          "high": 92,
+          "covered": true,
+          "discrete_nominal_mass": 0.9060261565648534
+        }
+      ]
+    },
+    {
+      "world": 969406,
+      "entrance": 0,
+      "prefix": 71,
+      "target": 78,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.731967885301596,
+      "crps": 4.696798416167431,
+      "nll": 3.733287215957141,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 62,
+          "high": 80,
+          "covered": true,
+          "discrete_nominal_mass": 0.5056286060861316
+        },
+        {
+          "level": 0.8,
+          "low": 54,
+          "high": 90,
+          "covered": true,
+          "discrete_nominal_mass": 0.816286333397126
+        },
+        {
+          "level": 0.9,
+          "low": 50,
+          "high": 96,
+          "covered": true,
+          "discrete_nominal_mass": 0.9079996495873881
+        }
+      ]
+    },
+    {
+      "world": 969406,
+      "entrance": 1,
+      "prefix": 17,
+      "target": 14,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 1.9807295384839363,
+      "nll": 2.7352743985415664,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 13,
+          "high": 21,
+          "covered": true,
+          "discrete_nominal_mass": 0.561672637614389
+        },
+        {
+          "level": 0.8,
+          "low": 10,
+          "high": 25,
+          "covered": true,
+          "discrete_nominal_mass": 0.8322830523723821
+        },
+        {
+          "level": 0.9,
+          "low": 9,
+          "high": 28,
+          "covered": true,
+          "discrete_nominal_mass": 0.9112690807396071
+        }
+      ]
+    },
+    {
+      "world": 969406,
+      "entrance": 1,
+      "prefix": 17,
+      "target": 14,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.731967885301596,
+      "crps": 2.0374091335312063,
+      "nll": 2.8280074797702524,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 13,
+          "high": 22,
+          "covered": true,
+          "discrete_nominal_mass": 0.5332213254727796
+        },
+        {
+          "level": 0.8,
+          "low": 9,
+          "high": 27,
+          "covered": true,
+          "discrete_nominal_mass": 0.8396530905523029
+        },
+        {
+          "level": 0.9,
+          "low": 8,
+          "high": 30,
+          "covered": true,
+          "discrete_nominal_mass": 0.9062904923114048
+        }
+      ]
+    },
+    {
+      "world": 969407,
+      "entrance": 0,
+      "prefix": 109,
+      "target": 99,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 6.089868443012611,
+      "nll": 3.804209160548993,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 99,
+          "high": 119,
+          "covered": true,
+          "discrete_nominal_mass": 0.5232434246921319
+        },
+        {
+          "level": 0.8,
+          "low": 91,
+          "high": 129,
+          "covered": true,
+          "discrete_nominal_mass": 0.8128056524225197
+        },
+        {
+          "level": 0.9,
+          "low": 86,
+          "high": 135,
+          "covered": true,
+          "discrete_nominal_mass": 0.9091785837321722
+        }
+      ]
+    },
+    {
+      "world": 969407,
+      "entrance": 0,
+      "prefix": 109,
+      "target": 99,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.7376007432778728,
+      "crps": 6.209155059718796,
+      "nll": 3.884407500152797,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 97,
+          "high": 121,
+          "covered": true,
+          "discrete_nominal_mass": 0.5313167838212155
+        },
+        {
+          "level": 0.8,
+          "low": 88,
+          "high": 132,
+          "covered": true,
+          "discrete_nominal_mass": 0.8074048019501356
+        },
+        {
+          "level": 0.9,
+          "low": 82,
+          "high": 139,
+          "covered": true,
+          "discrete_nominal_mass": 0.9072552111138208
+        }
+      ]
+    },
+    {
+      "world": 969407,
+      "entrance": 1,
+      "prefix": 16,
+      "target": 17,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 1.3907583183204393,
+      "nll": 2.7008330109858285,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 12,
+          "high": 20,
+          "covered": true,
+          "discrete_nominal_mass": 0.5759275450530551
+        },
+        {
+          "level": 0.8,
+          "low": 10,
+          "high": 24,
+          "covered": true,
+          "discrete_nominal_mass": 0.8109525692801486
+        },
+        {
+          "level": 0.9,
+          "low": 8,
+          "high": 27,
+          "covered": true,
+          "discrete_nominal_mass": 0.9213425779153637
+        }
+      ]
+    },
+    {
+      "world": 969407,
+      "entrance": 1,
+      "prefix": 16,
+      "target": 17,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.7376007432778728,
+      "crps": 1.628153530946571,
+      "nll": 2.861863131477529,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 12,
+          "high": 21,
+          "covered": true,
+          "discrete_nominal_mass": 0.546545782375753
+        },
+        {
+          "level": 0.8,
+          "low": 9,
+          "high": 25,
+          "covered": true,
+          "discrete_nominal_mass": 0.8014187013024818
+        },
+        {
+          "level": 0.9,
+          "low": 7,
+          "high": 29,
+          "covered": true,
+          "discrete_nominal_mass": 0.9169473063519952
+        }
+      ]
+    },
+    {
+      "world": 969408,
+      "entrance": 0,
+      "prefix": 127,
+      "target": 92,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 26.580992203321635,
+      "nll": 6.33600716282821,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 116,
+          "high": 138,
+          "covered": false,
+          "discrete_nominal_mass": 0.529655416401681
+        },
+        {
+          "level": 0.8,
+          "low": 107,
+          "high": 148,
+          "covered": false,
+          "discrete_nominal_mass": 0.8126336333146919
+        },
+        {
+          "level": 0.9,
+          "low": 102,
+          "high": 155,
+          "covered": false,
+          "discrete_nominal_mass": 0.9094135278538267
+        }
+      ]
+    },
+    {
+      "world": 969408,
+      "entrance": 0,
+      "prefix": 127,
+      "target": 92,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.4897085434480204,
+      "crps": 25.640403841130457,
+      "nll": 5.887490563961663,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 115,
+          "high": 139,
+          "covered": false,
+          "discrete_nominal_mass": 0.5183207972068893
+        },
+        {
+          "level": 0.8,
+          "low": 105,
+          "high": 151,
+          "covered": false,
+          "discrete_nominal_mass": 0.8136390692665331
+        },
+        {
+          "level": 0.9,
+          "low": 99,
+          "high": 158,
+          "covered": false,
+          "discrete_nominal_mass": 0.9085687874625913
+        }
+      ]
+    },
+    {
+      "world": 969408,
+      "entrance": 1,
+      "prefix": 10,
+      "target": 19,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 6.2074569783676194,
+      "nll": 4.159270312298007,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 7,
+          "high": 13,
+          "covered": false,
+          "discrete_nominal_mass": 0.569570538686585
+        },
+        {
+          "level": 0.8,
+          "low": 5,
+          "high": 17,
+          "covered": false,
+          "discrete_nominal_mass": 0.8512117818035178
+        },
+        {
+          "level": 0.9,
+          "low": 4,
+          "high": 19,
+          "covered": true,
+          "discrete_nominal_mass": 0.9242984702435546
+        }
+      ]
+    },
+    {
+      "world": 969408,
+      "entrance": 1,
+      "prefix": 10,
+      "target": 19,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.4897085434480204,
+      "crps": 6.098634179816223,
+      "nll": 4.036996305219937,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 7,
+          "high": 13,
+          "covered": false,
+          "discrete_nominal_mass": 0.5220273053072473
+        },
+        {
+          "level": 0.8,
+          "low": 5,
+          "high": 17,
+          "covered": false,
+          "discrete_nominal_mass": 0.8055875054518828
+        },
+        {
+          "level": 0.9,
+          "low": 3,
+          "high": 20,
+          "covered": true,
+          "discrete_nominal_mass": 0.9333893092640826
+        }
+      ]
+    },
+    {
+      "world": 969409,
+      "entrance": 0,
+      "prefix": 77,
+      "target": 70,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 4.456208006542744,
+      "nll": 3.557422250357689,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 69,
+          "high": 86,
+          "covered": true,
+          "discrete_nominal_mass": 0.5306228337940804
+        },
+        {
+          "level": 0.8,
+          "low": 62,
+          "high": 94,
+          "covered": true,
+          "discrete_nominal_mass": 0.8155464504701516
+        },
+        {
+          "level": 0.9,
+          "low": 58,
+          "high": 99,
+          "covered": true,
+          "discrete_nominal_mass": 0.9088146174985062
+        }
+      ]
+    },
+    {
+      "world": 969409,
+      "entrance": 0,
+      "prefix": 77,
+      "target": 70,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.610802487494474,
+      "crps": 4.606064062751188,
+      "nll": 3.6411644673141126,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 68,
+          "high": 87,
+          "covered": true,
+          "discrete_nominal_mass": 0.518452802637906
+        },
+        {
+          "level": 0.8,
+          "low": 60,
+          "high": 96,
+          "covered": true,
+          "discrete_nominal_mass": 0.8080520347114173
+        },
+        {
+          "level": 0.9,
+          "low": 55,
+          "high": 102,
+          "covered": true,
+          "discrete_nominal_mass": 0.9099541865037288
+        }
+      ]
+    },
+    {
+      "world": 969409,
+      "entrance": 1,
+      "prefix": 8,
+      "target": 19,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 8.293208071297844,
+      "nll": 5.045708081022481,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 6,
+          "high": 11,
+          "covered": false,
+          "discrete_nominal_mass": 0.5365735288626203
+        },
+        {
+          "level": 0.8,
+          "low": 4,
+          "high": 14,
+          "covered": false,
+          "discrete_nominal_mass": 0.8242039359502367
+        },
+        {
+          "level": 0.9,
+          "low": 3,
+          "high": 16,
+          "covered": false,
+          "discrete_nominal_mass": 0.9157030257711248
+        }
+      ]
+    },
+    {
+      "world": 969409,
+      "entrance": 1,
+      "prefix": 8,
+      "target": 19,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.610802487494474,
+      "crps": 8.093265211671724,
+      "nll": 4.700417248613834,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 5,
+          "high": 11,
+          "covered": false,
+          "discrete_nominal_mass": 0.5653154126511546
+        },
+        {
+          "level": 0.8,
+          "low": 3,
+          "high": 15,
+          "covered": false,
+          "discrete_nominal_mass": 0.8507378363575294
+        },
+        {
+          "level": 0.9,
+          "low": 2,
+          "high": 17,
+          "covered": false,
+          "discrete_nominal_mass": 0.9267336363002056
+        }
+      ]
+    },
+    {
+      "world": 969410,
+      "entrance": 0,
+      "prefix": 89,
+      "target": 99,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 5.928748217856953,
+      "nll": 3.8297502687485263,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 80,
+          "high": 98,
+          "covered": false,
+          "discrete_nominal_mass": 0.5238580881343325
+        },
+        {
+          "level": 0.8,
+          "low": 73,
+          "high": 107,
+          "covered": true,
+          "discrete_nominal_mass": 0.8096068606217586
+        },
+        {
+          "level": 0.9,
+          "low": 68,
+          "high": 112,
+          "covered": true,
+          "discrete_nominal_mass": 0.9085316420674613
+        }
+      ]
+    },
+    {
+      "world": 969410,
+      "entrance": 0,
+      "prefix": 89,
+      "target": 99,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.741375588388003,
+      "crps": 6.190406643364886,
+      "nll": 3.9291970572739103,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 79,
+          "high": 100,
+          "covered": true,
+          "discrete_nominal_mass": 0.517948312044265
+        },
+        {
+          "level": 0.8,
+          "low": 70,
+          "high": 110,
+          "covered": true,
+          "discrete_nominal_mass": 0.8108495969920301
+        },
+        {
+          "level": 0.9,
+          "low": 65,
+          "high": 116,
+          "covered": true,
+          "discrete_nominal_mass": 0.9045070940210923
+        }
+      ]
+    },
+    {
+      "world": 969410,
+      "entrance": 1,
+      "prefix": 14,
+      "target": 14,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 1.2356319811202976,
+      "nll": 2.589504836837204,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 11,
+          "high": 18,
+          "covered": true,
+          "discrete_nominal_mass": 0.5446294990758744
+        },
+        {
+          "level": 0.8,
+          "low": 8,
+          "high": 22,
+          "covered": true,
+          "discrete_nominal_mass": 0.8410097387581367
+        },
+        {
+          "level": 0.9,
+          "low": 7,
+          "high": 24,
+          "covered": true,
+          "discrete_nominal_mass": 0.9077356307172008
+        }
+      ]
+    },
+    {
+      "world": 969410,
+      "entrance": 1,
+      "prefix": 14,
+      "target": 14,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.741375588388003,
+      "crps": 1.4399553662136677,
+      "nll": 2.7470506789508082,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 10,
+          "high": 18,
+          "covered": true,
+          "discrete_nominal_mass": 0.5373188556551978
+        },
+        {
+          "level": 0.8,
+          "low": 7,
+          "high": 23,
+          "covered": true,
+          "discrete_nominal_mass": 0.833100860492695
+        },
+        {
+          "level": 0.9,
+          "low": 6,
+          "high": 26,
+          "covered": true,
+          "discrete_nominal_mass": 0.9075247673257374
+        }
+      ]
+    },
+    {
+      "world": 969411,
+      "entrance": 0,
+      "prefix": 110,
+      "target": 106,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 3.8960753098258873,
+      "nll": 3.634871100884496,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 100,
+          "high": 120,
+          "covered": true,
+          "discrete_nominal_mass": 0.5212279142958144
+        },
+        {
+          "level": 0.8,
+          "low": 92,
+          "high": 130,
+          "covered": true,
+          "discrete_nominal_mass": 0.8107773404763462
+        },
+        {
+          "level": 0.9,
+          "low": 87,
+          "high": 136,
+          "covered": true,
+          "discrete_nominal_mass": 0.9076822244999795
+        }
+      ]
+    },
+    {
+      "world": 969411,
+      "entrance": 0,
+      "prefix": 110,
+      "target": 106,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.7517874246729077,
+      "crps": 4.385007308505444,
+      "nll": 3.7793214414617893,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 98,
+          "high": 122,
+          "covered": true,
+          "discrete_nominal_mass": 0.5281331440375142
+        },
+        {
+          "level": 0.8,
+          "low": 89,
+          "high": 133,
+          "covered": true,
+          "discrete_nominal_mass": 0.8041943246295343
+        },
+        {
+          "level": 0.9,
+          "low": 83,
+          "high": 140,
+          "covered": true,
+          "discrete_nominal_mass": 0.9048848753053713
+        }
+      ]
+    },
+    {
+      "world": 969411,
+      "entrance": 1,
+      "prefix": 16,
+      "target": 16,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 1.3210539230729648,
+      "nll": 2.6557125757053495,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 12,
+          "high": 20,
+          "covered": true,
+          "discrete_nominal_mass": 0.5759275450530551
+        },
+        {
+          "level": 0.8,
+          "low": 10,
+          "high": 24,
+          "covered": true,
+          "discrete_nominal_mass": 0.8109525692801486
+        },
+        {
+          "level": 0.9,
+          "low": 8,
+          "high": 27,
+          "covered": true,
+          "discrete_nominal_mass": 0.9213425779153637
+        }
+      ]
+    },
+    {
+      "world": 969411,
+      "entrance": 1,
+      "prefix": 16,
+      "target": 16,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.7517874246729077,
+      "crps": 1.5432480331652276,
+      "nll": 2.81519147984256,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 12,
+          "high": 21,
+          "covered": true,
+          "discrete_nominal_mass": 0.5453706384042617
+        },
+        {
+          "level": 0.8,
+          "low": 8,
+          "high": 25,
+          "covered": true,
+          "discrete_nominal_mass": 0.8332570709083129
+        },
+        {
+          "level": 0.9,
+          "low": 7,
+          "high": 29,
+          "covered": true,
+          "discrete_nominal_mass": 0.9161685408155146
+        }
+      ]
+    },
+    {
+      "world": 969412,
+      "entrance": 0,
+      "prefix": 95,
+      "target": 78,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 10.833859670647984,
+      "nll": 4.281346733297177,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 86,
+          "high": 105,
+          "covered": false,
+          "discrete_nominal_mass": 0.5309713648522338
+        },
+        {
+          "level": 0.8,
+          "low": 78,
+          "high": 114,
+          "covered": true,
+          "discrete_nominal_mass": 0.819838923035989
+        },
+        {
+          "level": 0.9,
+          "low": 74,
+          "high": 119,
+          "covered": true,
+          "discrete_nominal_mass": 0.9042489611178356
+        }
+      ]
+    },
+    {
+      "world": 969412,
+      "entrance": 0,
+      "prefix": 95,
+      "target": 78,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.6959807391808697,
+      "crps": 10.345527339780942,
+      "nll": 4.19547873260165,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 84,
+          "high": 106,
+          "covered": false,
+          "discrete_nominal_mass": 0.528274506838426
+        },
+        {
+          "level": 0.8,
+          "low": 75,
+          "high": 116,
+          "covered": true,
+          "discrete_nominal_mass": 0.8117335616394286
+        },
+        {
+          "level": 0.9,
+          "low": 70,
+          "high": 123,
+          "covered": true,
+          "discrete_nominal_mass": 0.9088954984946996
+        }
+      ]
+    },
+    {
+      "world": 969412,
+      "entrance": 1,
+      "prefix": 15,
+      "target": 16,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 1.3509900288420773,
+      "nll": 2.671712917051808,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 12,
+          "high": 19,
+          "covered": true,
+          "discrete_nominal_mass": 0.529265019389085
+        },
+        {
+          "level": 0.8,
+          "low": 9,
+          "high": 23,
+          "covered": true,
+          "discrete_nominal_mass": 0.8256429983936997
+        },
+        {
+          "level": 0.9,
+          "low": 7,
+          "high": 25,
+          "covered": true,
+          "discrete_nominal_mass": 0.9190027447789105
+        }
+      ]
+    },
+    {
+      "world": 969412,
+      "entrance": 1,
+      "prefix": 15,
+      "target": 16,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.6959807391808697,
+      "crps": 1.5695256034935428,
+      "nll": 2.8251062032358094,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 11,
+          "high": 19,
+          "covered": true,
+          "discrete_nominal_mass": 0.5249479237422385
+        },
+        {
+          "level": 0.8,
+          "low": 8,
+          "high": 24,
+          "covered": true,
+          "discrete_nominal_mass": 0.8202705550213056
+        },
+        {
+          "level": 0.9,
+          "low": 6,
+          "high": 27,
+          "covered": true,
+          "discrete_nominal_mass": 0.9201680565992482
+        }
+      ]
+    },
+    {
+      "world": 969413,
+      "entrance": 0,
+      "prefix": 89,
+      "target": 101,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 7.080699598467084,
+      "nll": 3.9528483012870907,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 80,
+          "high": 98,
+          "covered": false,
+          "discrete_nominal_mass": 0.5238580881343325
+        },
+        {
+          "level": 0.8,
+          "low": 73,
+          "high": 107,
+          "covered": true,
+          "discrete_nominal_mass": 0.8096068606217586
+        },
+        {
+          "level": 0.9,
+          "low": 68,
+          "high": 112,
+          "covered": true,
+          "discrete_nominal_mass": 0.9085316420674613
+        }
+      ]
+    },
+    {
+      "world": 969413,
+      "entrance": 0,
+      "prefix": 89,
+      "target": 101,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.7316165860794304,
+      "crps": 7.216386820131422,
+      "nll": 4.02292890732555,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 79,
+          "high": 100,
+          "covered": false,
+          "discrete_nominal_mass": 0.5187313062895991
+        },
+        {
+          "level": 0.8,
+          "low": 70,
+          "high": 110,
+          "covered": true,
+          "discrete_nominal_mass": 0.8116356132791822
+        },
+        {
+          "level": 0.9,
+          "low": 65,
+          "high": 116,
+          "covered": true,
+          "discrete_nominal_mass": 0.9050933337992195
+        }
+      ]
+    },
+    {
+      "world": 969413,
+      "entrance": 1,
+      "prefix": 18,
+      "target": 17,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 1.4679994881887133,
+      "nll": 2.7001838710733814,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 14,
+          "high": 22,
+          "covered": true,
+          "discrete_nominal_mass": 0.5484213729197831
+        },
+        {
+          "level": 0.8,
+          "low": 11,
+          "high": 27,
+          "covered": true,
+          "discrete_nominal_mass": 0.8414130620447039
+        },
+        {
+          "level": 0.9,
+          "low": 9,
+          "high": 29,
+          "covered": true,
+          "discrete_nominal_mass": 0.9214667312522589
+        }
+      ]
+    },
+    {
+      "world": 969413,
+      "entrance": 1,
+      "prefix": 18,
+      "target": 17,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.7316165860794304,
+      "crps": 1.661496232277083,
+      "nll": 2.8445952829261447,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 13,
+          "high": 23,
+          "covered": true,
+          "discrete_nominal_mass": 0.5718194236096387
+        },
+        {
+          "level": 0.8,
+          "low": 10,
+          "high": 28,
+          "covered": true,
+          "discrete_nominal_mass": 0.8265164831576768
+        },
+        {
+          "level": 0.9,
+          "low": 8,
+          "high": 31,
+          "covered": true,
+          "discrete_nominal_mass": 0.9161848813586234
+        }
+      ]
+    },
+    {
+      "world": 969414,
+      "entrance": 0,
+      "prefix": 109,
+      "target": 111,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 3.5576502938107355,
+      "nll": 3.629926139765587,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 99,
+          "high": 119,
+          "covered": true,
+          "discrete_nominal_mass": 0.5232434246921319
+        },
+        {
+          "level": 0.8,
+          "low": 91,
+          "high": 129,
+          "covered": true,
+          "discrete_nominal_mass": 0.8128056524225197
+        },
+        {
+          "level": 0.9,
+          "low": 86,
+          "high": 135,
+          "covered": true,
+          "discrete_nominal_mass": 0.9091785837321722
+        }
+      ]
+    },
+    {
+      "world": 969414,
+      "entrance": 0,
+      "prefix": 109,
+      "target": 111,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.6613156487107803,
+      "crps": 4.091442616347162,
+      "nll": 3.77274752560556,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 98,
+          "high": 121,
+          "covered": true,
+          "discrete_nominal_mass": 0.5182800627408458
+        },
+        {
+          "level": 0.8,
+          "low": 88,
+          "high": 132,
+          "covered": true,
+          "discrete_nominal_mass": 0.8136448260255279
+        },
+        {
+          "level": 0.9,
+          "low": 83,
+          "high": 139,
+          "covered": true,
+          "discrete_nominal_mass": 0.9052791619608203
+        }
+      ]
+    },
+    {
+      "world": 969414,
+      "entrance": 1,
+      "prefix": 14,
+      "target": 7,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 4.679318239787513,
+      "nll": 3.4386657241181693,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 11,
+          "high": 18,
+          "covered": false,
+          "discrete_nominal_mass": 0.5446294990758744
+        },
+        {
+          "level": 0.8,
+          "low": 8,
+          "high": 22,
+          "covered": false,
+          "discrete_nominal_mass": 0.8410097387581367
+        },
+        {
+          "level": 0.9,
+          "low": 7,
+          "high": 24,
+          "covered": true,
+          "discrete_nominal_mass": 0.9077356307172008
+        }
+      ]
+    },
+    {
+      "world": 969414,
+      "entrance": 1,
+      "prefix": 14,
+      "target": 7,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.6613156487107803,
+      "crps": 4.378837227426269,
+      "nll": 3.2374178663660667,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 10,
+          "high": 18,
+          "covered": false,
+          "discrete_nominal_mass": 0.5438422175265905
+        },
+        {
+          "level": 0.8,
+          "low": 7,
+          "high": 23,
+          "covered": true,
+          "discrete_nominal_mass": 0.8391641751070276
+        },
+        {
+          "level": 0.9,
+          "low": 6,
+          "high": 26,
+          "covered": true,
+          "discrete_nominal_mass": 0.9121857976629631
+        }
+      ]
+    },
+    {
+      "world": 969415,
+      "entrance": 0,
+      "prefix": 94,
+      "target": 65,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 21.836826144955236,
+      "nll": 6.013322226629164,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 85,
+          "high": 103,
+          "covered": false,
+          "discrete_nominal_mass": 0.5118504491048124
+        },
+        {
+          "level": 0.8,
+          "low": 77,
+          "high": 112,
+          "covered": false,
+          "discrete_nominal_mass": 0.8110779820515165
+        },
+        {
+          "level": 0.9,
+          "low": 73,
+          "high": 118,
+          "covered": false,
+          "discrete_nominal_mass": 0.9060174696999684
+        }
+      ]
+    },
+    {
+      "world": 969415,
+      "entrance": 0,
+      "prefix": 94,
+      "target": 65,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.4961962533893356,
+      "crps": 21.027795265207043,
+      "nll": 5.587869787156464,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 84,
+          "high": 104,
+          "covered": false,
+          "discrete_nominal_mass": 0.5074533055301409
+        },
+        {
+          "level": 0.8,
+          "low": 75,
+          "high": 115,
+          "covered": false,
+          "discrete_nominal_mass": 0.819203174633832
+        },
+        {
+          "level": 0.9,
+          "low": 70,
+          "high": 121,
+          "covered": false,
+          "discrete_nominal_mass": 0.9106080240120034
+        }
+      ]
+    },
+    {
+      "world": 969415,
+      "entrance": 1,
+      "prefix": 20,
+      "target": 12,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 5.2358621541996175,
+      "nll": 3.524813424776548,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 16,
+          "high": 25,
+          "covered": false,
+          "discrete_nominal_mass": 0.5671185493257535
+        },
+        {
+          "level": 0.8,
+          "low": 13,
+          "high": 29,
+          "covered": false,
+          "discrete_nominal_mass": 0.818073041863839
+        },
+        {
+          "level": 0.9,
+          "low": 11,
+          "high": 32,
+          "covered": true,
+          "discrete_nominal_mass": 0.9163850528643055
+        }
+      ]
+    },
+    {
+      "world": 969415,
+      "entrance": 1,
+      "prefix": 20,
+      "target": 12,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.4961962533893356,
+      "crps": 4.99498300985504,
+      "nll": 3.4029112634841905,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 15,
+          "high": 25,
+          "covered": false,
+          "discrete_nominal_mass": 0.5670480410055669
+        },
+        {
+          "level": 0.8,
+          "low": 12,
+          "high": 30,
+          "covered": true,
+          "discrete_nominal_mass": 0.8213194391403795
+        },
+        {
+          "level": 0.9,
+          "low": 10,
+          "high": 33,
+          "covered": true,
+          "discrete_nominal_mass": 0.9117213033137292
+        }
+      ]
+    },
+    {
+      "world": 969416,
+      "entrance": 0,
+      "prefix": 92,
+      "target": 83,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 5.502670885361559,
+      "nll": 3.707252334949075,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 83,
+          "high": 101,
+          "covered": true,
+          "discrete_nominal_mass": 0.5165546725245377
+        },
+        {
+          "level": 0.8,
+          "low": 75,
+          "high": 110,
+          "covered": true,
+          "discrete_nominal_mass": 0.8158464945613102
+        },
+        {
+          "level": 0.9,
+          "low": 71,
+          "high": 116,
+          "covered": true,
+          "discrete_nominal_mass": 0.9095603320820927
+        }
+      ]
+    },
+    {
+      "world": 969416,
+      "entrance": 0,
+      "prefix": 92,
+      "target": 83,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.7376322124579946,
+      "crps": 5.617012358316923,
+      "nll": 3.7890141901544254,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 81,
+          "high": 103,
+          "covered": true,
+          "discrete_nominal_mass": 0.532052384689961
+        },
+        {
+          "level": 0.8,
+          "low": 73,
+          "high": 113,
+          "covered": true,
+          "discrete_nominal_mass": 0.8036714976622665
+        },
+        {
+          "level": 0.9,
+          "low": 68,
+          "high": 120,
+          "covered": true,
+          "discrete_nominal_mass": 0.9046046008878084
+        }
+      ]
+    },
+    {
+      "world": 969416,
+      "entrance": 1,
+      "prefix": 22,
+      "target": 23,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 1.6089678440776445,
+      "nll": 2.8470264054389176,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 18,
+          "high": 27,
+          "covered": true,
+          "discrete_nominal_mass": 0.5454137193977138
+        },
+        {
+          "level": 0.8,
+          "low": 14,
+          "high": 31,
+          "covered": true,
+          "discrete_nominal_mass": 0.8268749767959467
+        },
+        {
+          "level": 0.9,
+          "low": 12,
+          "high": 34,
+          "covered": true,
+          "discrete_nominal_mass": 0.9182523002443824
+        }
+      ]
+    },
+    {
+      "world": 969416,
+      "entrance": 1,
+      "prefix": 22,
+      "target": 23,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.7376322124579946,
+      "crps": 1.883330244611972,
+      "nll": 3.006979903298319,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 17,
+          "high": 27,
+          "covered": true,
+          "discrete_nominal_mass": 0.5243888790500807
+        },
+        {
+          "level": 0.8,
+          "low": 13,
+          "high": 33,
+          "covered": true,
+          "discrete_nominal_mass": 0.8255670201434465
+        },
+        {
+          "level": 0.9,
+          "low": 11,
+          "high": 37,
+          "covered": true,
+          "discrete_nominal_mass": 0.9175842621966308
+        }
+      ]
+    },
+    {
+      "world": 969417,
+      "entrance": 0,
+      "prefix": 108,
+      "target": 140,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 23.465891444404704,
+      "nll": 5.8069942065949505,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 98,
+          "high": 118,
+          "covered": false,
+          "discrete_nominal_mass": 0.5252822311801328
+        },
+        {
+          "level": 0.8,
+          "low": 90,
+          "high": 128,
+          "covered": false,
+          "discrete_nominal_mass": 0.814845976886348
+        },
+        {
+          "level": 0.9,
+          "low": 85,
+          "high": 134,
+          "covered": false,
+          "discrete_nominal_mass": 0.9106760175039486
+        }
+      ]
+    },
+    {
+      "world": 969417,
+      "entrance": 0,
+      "prefix": 108,
+      "target": 140,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.5671128930273113,
+      "crps": 22.667379244437143,
+      "nll": 5.489364767855292,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 97,
+          "high": 119,
+          "covered": false,
+          "discrete_nominal_mass": 0.510696846200186
+        },
+        {
+          "level": 0.8,
+          "low": 88,
+          "high": 130,
+          "covered": false,
+          "discrete_nominal_mass": 0.8032915388760057
+        },
+        {
+          "level": 0.9,
+          "low": 82,
+          "high": 137,
+          "covered": false,
+          "discrete_nominal_mass": 0.9076092274242022
+        }
+      ]
+    },
+    {
+      "world": 969417,
+      "entrance": 1,
+      "prefix": 21,
+      "target": 14,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 4.3958342517272015,
+      "nll": 3.2949416874735213,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 17,
+          "high": 26,
+          "covered": false,
+          "discrete_nominal_mass": 0.5559474158662471
+        },
+        {
+          "level": 0.8,
+          "low": 13,
+          "high": 30,
+          "covered": true,
+          "discrete_nominal_mass": 0.8370694926982538
+        },
+        {
+          "level": 0.9,
+          "low": 12,
+          "high": 33,
+          "covered": true,
+          "discrete_nominal_mass": 0.9081979198719627
+        }
+      ]
+    },
+    {
+      "world": 969417,
+      "entrance": 1,
+      "prefix": 21,
+      "target": 14,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.5671128930273113,
+      "crps": 4.198521877931249,
+      "nll": 3.231021840313634,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 16,
+          "high": 26,
+          "covered": false,
+          "discrete_nominal_mass": 0.5492883911210218
+        },
+        {
+          "level": 0.8,
+          "low": 13,
+          "high": 31,
+          "covered": true,
+          "discrete_nominal_mass": 0.8038479801322655
+        },
+        {
+          "level": 0.9,
+          "low": 11,
+          "high": 35,
+          "covered": true,
+          "discrete_nominal_mass": 0.9086866657140819
+        }
+      ]
+    },
+    {
+      "world": 969418,
+      "entrance": 0,
+      "prefix": 75,
+      "target": 81,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 3.997032462788035,
+      "nll": 3.5788901258755033,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 67,
+          "high": 83,
+          "covered": true,
+          "discrete_nominal_mass": 0.5126449000794864
+        },
+        {
+          "level": 0.8,
+          "low": 60,
+          "high": 92,
+          "covered": true,
+          "discrete_nominal_mass": 0.8213412809033644
+        },
+        {
+          "level": 0.9,
+          "low": 56,
+          "high": 97,
+          "covered": true,
+          "discrete_nominal_mass": 0.9130840234829074
+        }
+      ]
+    },
+    {
+      "world": 969418,
+      "entrance": 0,
+      "prefix": 75,
+      "target": 81,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.7437652815689486,
+      "crps": 4.4022816629591865,
+      "nll": 3.7159795799375743,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 65,
+          "high": 85,
+          "covered": true,
+          "discrete_nominal_mass": 0.5367314404066169
+        },
+        {
+          "level": 0.8,
+          "low": 58,
+          "high": 94,
+          "covered": true,
+          "discrete_nominal_mass": 0.8029700688714617
+        },
+        {
+          "level": 0.9,
+          "low": 53,
+          "high": 100,
+          "covered": true,
+          "discrete_nominal_mass": 0.9063227971026151
+        }
+      ]
+    },
+    {
+      "world": 969418,
+      "entrance": 1,
+      "prefix": 21,
+      "target": 19,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 1.7613848138275716,
+      "nll": 2.7911957914870573,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 17,
+          "high": 26,
+          "covered": true,
+          "discrete_nominal_mass": 0.5559474158662471
+        },
+        {
+          "level": 0.8,
+          "low": 13,
+          "high": 30,
+          "covered": true,
+          "discrete_nominal_mass": 0.8370694926982538
+        },
+        {
+          "level": 0.9,
+          "low": 12,
+          "high": 33,
+          "covered": true,
+          "discrete_nominal_mass": 0.9081979198719627
+        }
+      ]
+    },
+    {
+      "world": 969418,
+      "entrance": 1,
+      "prefix": 21,
+      "target": 19,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.7437652815689486,
+      "crps": 1.928425073577718,
+      "nll": 2.9225170455652627,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 16,
+          "high": 26,
+          "covered": true,
+          "discrete_nominal_mass": 0.5345304962073363
+        },
+        {
+          "level": 0.8,
+          "low": 12,
+          "high": 32,
+          "covered": true,
+          "discrete_nominal_mass": 0.8357001913831843
+        },
+        {
+          "level": 0.9,
+          "low": 10,
+          "high": 35,
+          "covered": true,
+          "discrete_nominal_mass": 0.9160284852864149
+        }
+      ]
+    },
+    {
+      "world": 969419,
+      "entrance": 0,
+      "prefix": 111,
+      "target": 110,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 3.5083687552523375,
+      "nll": 3.6185854943407207,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 101,
+          "high": 121,
+          "covered": true,
+          "discrete_nominal_mass": 0.5192352659346195
+        },
+        {
+          "level": 0.8,
+          "low": 93,
+          "high": 131,
+          "covered": true,
+          "discrete_nominal_mass": 0.808761007089769
+        },
+        {
+          "level": 0.9,
+          "low": 88,
+          "high": 137,
+          "covered": true,
+          "discrete_nominal_mass": 0.9061871144923462
+        }
+      ]
+    },
+    {
+      "world": 969419,
+      "entrance": 0,
+      "prefix": 111,
+      "target": 110,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.7191519300730869,
+      "crps": 4.0692023157511725,
+      "nll": 3.7703716660039035,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 99,
+          "high": 123,
+          "covered": true,
+          "discrete_nominal_mass": 0.528754553185846
+        },
+        {
+          "level": 0.8,
+          "low": 90,
+          "high": 134,
+          "covered": true,
+          "discrete_nominal_mass": 0.8048090232792274
+        },
+        {
+          "level": 0.9,
+          "low": 84,
+          "high": 141,
+          "covered": true,
+          "discrete_nominal_mass": 0.9053257796599712
+        }
+      ]
+    },
+    {
+      "world": 969419,
+      "entrance": 1,
+      "prefix": 13,
+      "target": 20,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 4.335038946311192,
+      "nll": 3.51369766280631,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 10,
+          "high": 17,
+          "covered": false,
+          "discrete_nominal_mass": 0.5614382201235473
+        },
+        {
+          "level": 0.8,
+          "low": 7,
+          "high": 20,
+          "covered": true,
+          "discrete_nominal_mass": 0.8332964182821404
+        },
+        {
+          "level": 0.9,
+          "low": 6,
+          "high": 23,
+          "covered": true,
+          "discrete_nominal_mass": 0.9204205014500088
+        }
+      ]
+    },
+    {
+      "world": 969419,
+      "entrance": 1,
+      "prefix": 13,
+      "target": 20,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.7191519300730869,
+      "crps": 4.32860113462976,
+      "nll": 3.5205706987766696,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 9,
+          "high": 17,
+          "covered": false,
+          "discrete_nominal_mass": 0.5567212571642537
+        },
+        {
+          "level": 0.8,
+          "low": 6,
+          "high": 22,
+          "covered": true,
+          "discrete_nominal_mass": 0.851914174791882
+        },
+        {
+          "level": 0.9,
+          "low": 5,
+          "high": 25,
+          "covered": true,
+          "discrete_nominal_mass": 0.9223200004631474
+        }
+      ]
+    },
+    {
+      "world": 969420,
+      "entrance": 0,
+      "prefix": 98,
+      "target": 119,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 13.690838923264394,
+      "nll": 4.673262046285643,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 89,
+          "high": 108,
+          "covered": false,
+          "discrete_nominal_mass": 0.5240927788910208
+        },
+        {
+          "level": 0.8,
+          "low": 81,
+          "high": 117,
+          "covered": false,
+          "discrete_nominal_mass": 0.8129814342210018
+        },
+        {
+          "level": 0.9,
+          "low": 76,
+          "high": 122,
+          "covered": true,
+          "discrete_nominal_mass": 0.9069742038264346
+        }
+      ]
+    },
+    {
+      "world": 969420,
+      "entrance": 0,
+      "prefix": 98,
+      "target": 119,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.672657318202462,
+      "crps": 13.281346730412704,
+      "nll": 4.581258102006494,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 87,
+          "high": 109,
+          "covered": false,
+          "discrete_nominal_mass": 0.5232758963363735
+        },
+        {
+          "level": 0.8,
+          "low": 78,
+          "high": 120,
+          "covered": true,
+          "discrete_nominal_mass": 0.8161645047551762
+        },
+        {
+          "level": 0.9,
+          "low": 73,
+          "high": 126,
+          "covered": true,
+          "discrete_nominal_mass": 0.9051317536525799
+        }
+      ]
+    },
+    {
+      "world": 969420,
+      "entrance": 1,
+      "prefix": 16,
+      "target": 22,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 3.5399596514816256,
+      "nll": 3.28898616256936,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 12,
+          "high": 20,
+          "covered": false,
+          "discrete_nominal_mass": 0.5759275450530551
+        },
+        {
+          "level": 0.8,
+          "low": 10,
+          "high": 24,
+          "covered": true,
+          "discrete_nominal_mass": 0.8109525692801486
+        },
+        {
+          "level": 0.9,
+          "low": 8,
+          "high": 27,
+          "covered": true,
+          "discrete_nominal_mass": 0.9213425779153637
+        }
+      ]
+    },
+    {
+      "world": 969420,
+      "entrance": 1,
+      "prefix": 16,
+      "target": 22,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.672657318202462,
+      "crps": 3.612895997700819,
+      "nll": 3.3518586706426046,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 12,
+          "high": 21,
+          "covered": false,
+          "discrete_nominal_mass": 0.5520186195880974
+        },
+        {
+          "level": 0.8,
+          "low": 9,
+          "high": 25,
+          "covered": true,
+          "discrete_nominal_mass": 0.8067075294418768
+        },
+        {
+          "level": 0.9,
+          "low": 7,
+          "high": 29,
+          "covered": true,
+          "discrete_nominal_mass": 0.9205117313795872
+        }
+      ]
+    },
+    {
+      "world": 969421,
+      "entrance": 0,
+      "prefix": 84,
+      "target": 74,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 6.01477803206132,
+      "nll": 3.7351057843342943,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 75,
+          "high": 93,
+          "covered": false,
+          "discrete_nominal_mass": 0.5367421378760544
+        },
+        {
+          "level": 0.8,
+          "low": 68,
+          "high": 101,
+          "covered": true,
+          "discrete_nominal_mass": 0.8107087723582153
+        },
+        {
+          "level": 0.9,
+          "low": 64,
+          "high": 107,
+          "covered": true,
+          "discrete_nominal_mass": 0.9098529725745164
+        }
+      ]
+    },
+    {
+      "world": 969421,
+      "entrance": 0,
+      "prefix": 84,
+      "target": 74,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.730688624331375,
+      "crps": 6.010633009711098,
+      "nll": 3.7908232002261997,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 74,
+          "high": 94,
+          "covered": true,
+          "discrete_nominal_mass": 0.5125752587924014
+        },
+        {
+          "level": 0.8,
+          "low": 66,
+          "high": 104,
+          "covered": true,
+          "discrete_nominal_mass": 0.8021940402727458
+        },
+        {
+          "level": 0.9,
+          "low": 61,
+          "high": 111,
+          "covered": true,
+          "discrete_nominal_mass": 0.9073496848291633
+        }
+      ]
+    },
+    {
+      "world": 969421,
+      "entrance": 1,
+      "prefix": 16,
+      "target": 16,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 1.3210539230729648,
+      "nll": 2.6557125757053495,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 12,
+          "high": 20,
+          "covered": true,
+          "discrete_nominal_mass": 0.5759275450530551
+        },
+        {
+          "level": 0.8,
+          "low": 10,
+          "high": 24,
+          "covered": true,
+          "discrete_nominal_mass": 0.8109525692801486
+        },
+        {
+          "level": 0.9,
+          "low": 8,
+          "high": 27,
+          "covered": true,
+          "discrete_nominal_mass": 0.9213425779153637
+        }
+      ]
+    },
+    {
+      "world": 969421,
+      "entrance": 1,
+      "prefix": 16,
+      "target": 16,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.730688624331375,
+      "crps": 1.5374418808190833,
+      "nll": 2.811316279087393,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 12,
+          "high": 21,
+          "covered": true,
+          "discrete_nominal_mass": 0.5471209538269548
+        },
+        {
+          "level": 0.8,
+          "low": 9,
+          "high": 25,
+          "covered": true,
+          "discrete_nominal_mass": 0.8019777957837622
+        },
+        {
+          "level": 0.9,
+          "low": 7,
+          "high": 29,
+          "covered": true,
+          "discrete_nominal_mass": 0.9173267383864793
+        }
+      ]
+    },
+    {
+      "world": 969422,
+      "entrance": 0,
+      "prefix": 96,
+      "target": 85,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 6.605877025836848,
+      "nll": 3.8220745213261793,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 87,
+          "high": 106,
+          "covered": false,
+          "discrete_nominal_mass": 0.5286487818903102
+        },
+        {
+          "level": 0.8,
+          "low": 79,
+          "high": 115,
+          "covered": true,
+          "discrete_nominal_mass": 0.8175381443578548
+        },
+        {
+          "level": 0.9,
+          "low": 75,
+          "high": 120,
+          "covered": true,
+          "discrete_nominal_mass": 0.902482758868962
+        }
+      ]
+    },
+    {
+      "world": 969422,
+      "entrance": 0,
+      "prefix": 96,
+      "target": 85,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.7311134067580984,
+      "crps": 6.585826917797726,
+      "nll": 3.873729235963161,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 85,
+          "high": 107,
+          "covered": true,
+          "discrete_nominal_mass": 0.5230915849603894
+        },
+        {
+          "level": 0.8,
+          "low": 76,
+          "high": 118,
+          "covered": true,
+          "discrete_nominal_mass": 0.816016557572109
+        },
+        {
+          "level": 0.9,
+          "low": 71,
+          "high": 124,
+          "covered": true,
+          "discrete_nominal_mass": 0.9050475290804197
+        }
+      ]
+    },
+    {
+      "world": 969422,
+      "entrance": 1,
+      "prefix": 12,
+      "target": 13,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 1.2240330418003185,
+      "nll": 2.5725968256185414,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 9,
+          "high": 16,
+          "covered": true,
+          "discrete_nominal_mass": 0.5799362470862153
+        },
+        {
+          "level": 0.8,
+          "low": 7,
+          "high": 19,
+          "covered": true,
+          "discrete_nominal_mass": 0.8098096820635188
+        },
+        {
+          "level": 0.9,
+          "low": 5,
+          "high": 21,
+          "covered": true,
+          "discrete_nominal_mass": 0.9196136505312681
+        }
+      ]
+    },
+    {
+      "world": 969422,
+      "entrance": 1,
+      "prefix": 12,
+      "target": 13,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.7311134067580984,
+      "crps": 1.4315079000459798,
+      "nll": 2.7336920918451195,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 8,
+          "high": 16,
+          "covered": true,
+          "discrete_nominal_mass": 0.5752329405296334
+        },
+        {
+          "level": 0.8,
+          "low": 6,
+          "high": 20,
+          "covered": true,
+          "discrete_nominal_mass": 0.8112837739380482
+        },
+        {
+          "level": 0.9,
+          "low": 4,
+          "high": 23,
+          "covered": true,
+          "discrete_nominal_mass": 0.9248627461850574
+        }
+      ]
+    },
+    {
+      "world": 969423,
+      "entrance": 0,
+      "prefix": 116,
+      "target": 119,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 3.7931031212744837,
+      "nll": 3.674741715756099,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 106,
+          "high": 127,
+          "covered": true,
+          "discrete_nominal_mass": 0.5291046191000506
+        },
+        {
+          "level": 0.8,
+          "low": 97,
+          "high": 136,
+          "covered": true,
+          "discrete_nominal_mass": 0.8111090718779537
+        },
+        {
+          "level": 0.9,
+          "low": 92,
+          "high": 142,
+          "covered": true,
+          "discrete_nominal_mass": 0.9060726870916262
+        }
+      ]
+    },
+    {
+      "world": 969423,
+      "entrance": 0,
+      "prefix": 116,
+      "target": 119,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.7450317691229205,
+      "crps": 4.400241176115941,
+      "nll": 3.8313302942331333,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 104,
+          "high": 128,
+          "covered": true,
+          "discrete_nominal_mass": 0.5169142886263138
+        },
+        {
+          "level": 0.8,
+          "low": 94,
+          "high": 140,
+          "covered": true,
+          "discrete_nominal_mass": 0.8123334802186399
+        },
+        {
+          "level": 0.9,
+          "low": 88,
+          "high": 147,
+          "covered": true,
+          "discrete_nominal_mass": 0.9077069851593798
+        }
+      ]
+    },
+    {
+      "world": 969423,
+      "entrance": 1,
+      "prefix": 14,
+      "target": 12,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 1.5399179424939566,
+      "nll": 2.5905345263051913,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 11,
+          "high": 18,
+          "covered": true,
+          "discrete_nominal_mass": 0.5446294990758744
+        },
+        {
+          "level": 0.8,
+          "low": 8,
+          "high": 22,
+          "covered": true,
+          "discrete_nominal_mass": 0.8410097387581367
+        },
+        {
+          "level": 0.9,
+          "low": 7,
+          "high": 24,
+          "covered": true,
+          "discrete_nominal_mass": 0.9077356307172008
+        }
+      ]
+    },
+    {
+      "world": 969423,
+      "entrance": 1,
+      "prefix": 14,
+      "target": 12,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.7450317691229205,
+      "crps": 1.6397150620207277,
+      "nll": 2.7078987946631834,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 10,
+          "high": 18,
+          "covered": true,
+          "discrete_nominal_mass": 0.5370262234679627
+        },
+        {
+          "level": 0.8,
+          "low": 7,
+          "high": 23,
+          "covered": true,
+          "discrete_nominal_mass": 0.8328261236052252
+        },
+        {
+          "level": 0.9,
+          "low": 6,
+          "high": 26,
+          "covered": true,
+          "discrete_nominal_mass": 0.907312107835775
+        }
+      ]
+    },
+    {
+      "world": 969424,
+      "entrance": 0,
+      "prefix": 82,
+      "target": 74,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 4.952842679489267,
+      "nll": 3.6236479662628795,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 74,
+          "high": 91,
+          "covered": true,
+          "discrete_nominal_mass": 0.5167671102600178
+        },
+        {
+          "level": 0.8,
+          "low": 66,
+          "high": 99,
+          "covered": true,
+          "discrete_nominal_mass": 0.8160568966402454
+        },
+        {
+          "level": 0.9,
+          "low": 62,
+          "high": 104,
+          "covered": true,
+          "discrete_nominal_mass": 0.9070738208476986
+        }
+      ]
+    },
+    {
+      "world": 969424,
+      "entrance": 0,
+      "prefix": 82,
+      "target": 74,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.738671690254611,
+      "crps": 5.091418400259481,
+      "nll": 3.7125644222405114,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 72,
+          "high": 92,
+          "covered": true,
+          "discrete_nominal_mass": 0.51723770021526
+        },
+        {
+          "level": 0.8,
+          "low": 64,
+          "high": 102,
+          "covered": true,
+          "discrete_nominal_mass": 0.8070098855973222
+        },
+        {
+          "level": 0.9,
+          "low": 59,
+          "high": 108,
+          "covered": true,
+          "discrete_nominal_mass": 0.9052988371797516
+        }
+      ]
+    },
+    {
+      "world": 969424,
+      "entrance": 1,
+      "prefix": 18,
+      "target": 18,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 1.4012827350412058,
+      "nll": 2.7141701130481,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 14,
+          "high": 22,
+          "covered": true,
+          "discrete_nominal_mass": 0.5484213729197831
+        },
+        {
+          "level": 0.8,
+          "low": 11,
+          "high": 27,
+          "covered": true,
+          "discrete_nominal_mass": 0.8414130620447039
+        },
+        {
+          "level": 0.9,
+          "low": 9,
+          "high": 29,
+          "covered": true,
+          "discrete_nominal_mass": 0.9214667312522589
+        }
+      ]
+    },
+    {
+      "world": 969424,
+      "entrance": 1,
+      "prefix": 18,
+      "target": 18,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.738671690254611,
+      "crps": 1.6338734855122583,
+      "nll": 2.8712605845920773,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 13,
+          "high": 23,
+          "covered": true,
+          "discrete_nominal_mass": 0.5712348167170002
+        },
+        {
+          "level": 0.8,
+          "low": 10,
+          "high": 28,
+          "covered": true,
+          "discrete_nominal_mass": 0.8259724505084011
+        },
+        {
+          "level": 0.9,
+          "low": 8,
+          "high": 31,
+          "covered": true,
+          "discrete_nominal_mass": 0.9158013804126673
+        }
+      ]
+    },
+    {
+      "world": 969425,
+      "entrance": 0,
+      "prefix": 82,
+      "target": 109,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 19.555712655930815,
+      "nll": 5.526444781201988,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 74,
+          "high": 91,
+          "covered": false,
+          "discrete_nominal_mass": 0.5167671102600178
+        },
+        {
+          "level": 0.8,
+          "low": 66,
+          "high": 99,
+          "covered": false,
+          "discrete_nominal_mass": 0.8160568966402454
+        },
+        {
+          "level": 0.9,
+          "low": 62,
+          "high": 104,
+          "covered": false,
+          "discrete_nominal_mass": 0.9070738208476986
+        }
+      ]
+    },
+    {
+      "world": 969425,
+      "entrance": 0,
+      "prefix": 82,
+      "target": 109,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.5004150140969967,
+      "crps": 18.97001859288116,
+      "nll": 5.27062555530393,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 72,
+          "high": 92,
+          "covered": false,
+          "discrete_nominal_mass": 0.5373201274461156
+        },
+        {
+          "level": 0.8,
+          "low": 65,
+          "high": 101,
+          "covered": false,
+          "discrete_nominal_mass": 0.8034336394339656
+        },
+        {
+          "level": 0.9,
+          "low": 60,
+          "high": 107,
+          "covered": false,
+          "discrete_nominal_mass": 0.9064928121897772
+        }
+      ]
+    },
+    {
+      "world": 969425,
+      "entrance": 1,
+      "prefix": 22,
+      "target": 11,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 7.832273003241525,
+      "nll": 4.340291687490791,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 18,
+          "high": 27,
+          "covered": false,
+          "discrete_nominal_mass": 0.5454137193977138
+        },
+        {
+          "level": 0.8,
+          "low": 14,
+          "high": 31,
+          "covered": false,
+          "discrete_nominal_mass": 0.8268749767959467
+        },
+        {
+          "level": 0.9,
+          "low": 12,
+          "high": 34,
+          "covered": false,
+          "discrete_nominal_mass": 0.9182523002443824
+        }
+      ]
+    },
+    {
+      "world": 969425,
+      "entrance": 1,
+      "prefix": 22,
+      "target": 11,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.5004150140969967,
+      "crps": 7.4722536808018205,
+      "nll": 4.053178975595101,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 17,
+          "high": 27,
+          "covered": false,
+          "discrete_nominal_mass": 0.5443519576926634
+        },
+        {
+          "level": 0.8,
+          "low": 13,
+          "high": 32,
+          "covered": false,
+          "discrete_nominal_mass": 0.8268629619270809
+        },
+        {
+          "level": 0.9,
+          "low": 11,
+          "high": 36,
+          "covered": true,
+          "discrete_nominal_mass": 0.9220161581487801
+        }
+      ]
+    },
+    {
+      "world": 969426,
+      "entrance": 0,
+      "prefix": 114,
+      "target": 116,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 3.633545775858543,
+      "nll": 3.651537033611021,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 104,
+          "high": 124,
+          "covered": true,
+          "discrete_nominal_mass": 0.5133903158675271
+        },
+        {
+          "level": 0.8,
+          "low": 95,
+          "high": 134,
+          "covered": true,
+          "discrete_nominal_mass": 0.8149631021364449
+        },
+        {
+          "level": 0.9,
+          "low": 90,
+          "high": 140,
+          "covered": true,
+          "discrete_nominal_mass": 0.9089286035024621
+        }
+      ]
+    },
+    {
+      "world": 969426,
+      "entrance": 0,
+      "prefix": 114,
+      "target": 116,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.743236176330288,
+      "crps": 4.241996325349154,
+      "nll": 3.809532719232479,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 102,
+          "high": 126,
+          "covered": true,
+          "discrete_nominal_mass": 0.5208917884096053
+        },
+        {
+          "level": 0.8,
+          "low": 92,
+          "high": 138,
+          "covered": true,
+          "discrete_nominal_mass": 0.8163463236814585
+        },
+        {
+          "level": 0.9,
+          "low": 87,
+          "high": 145,
+          "covered": true,
+          "discrete_nominal_mass": 0.9043664561197208
+        }
+      ]
+    },
+    {
+      "world": 969426,
+      "entrance": 1,
+      "prefix": 18,
+      "target": 23,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 2.9144319623307178,
+      "nll": 3.141222294701066,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 14,
+          "high": 22,
+          "covered": false,
+          "discrete_nominal_mass": 0.5484213729197831
+        },
+        {
+          "level": 0.8,
+          "low": 11,
+          "high": 27,
+          "covered": true,
+          "discrete_nominal_mass": 0.8414130620447039
+        },
+        {
+          "level": 0.9,
+          "low": 9,
+          "high": 29,
+          "covered": true,
+          "discrete_nominal_mass": 0.9214667312522589
+        }
+      ]
+    },
+    {
+      "world": 969426,
+      "entrance": 1,
+      "prefix": 18,
+      "target": 23,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.743236176330288,
+      "crps": 3.0688299624137416,
+      "nll": 3.24861593499336,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 13,
+          "high": 23,
+          "covered": true,
+          "discrete_nominal_mass": 0.5708574950063483
+        },
+        {
+          "level": 0.8,
+          "low": 10,
+          "high": 28,
+          "covered": true,
+          "discrete_nominal_mass": 0.8256208850759136
+        },
+        {
+          "level": 0.9,
+          "low": 8,
+          "high": 31,
+          "covered": true,
+          "discrete_nominal_mass": 0.9155532795088853
+        }
+      ]
+    },
+    {
+      "world": 969427,
+      "entrance": 0,
+      "prefix": 72,
+      "target": 81,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 5.330903874056544,
+      "nll": 3.7283178857150787,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 64,
+          "high": 80,
+          "covered": false,
+          "discrete_nominal_mass": 0.5216120531573023
+        },
+        {
+          "level": 0.8,
+          "low": 57,
+          "high": 88,
+          "covered": true,
+          "discrete_nominal_mass": 0.8180535046769049
+        },
+        {
+          "level": 0.9,
+          "low": 54,
+          "high": 93,
+          "covered": true,
+          "discrete_nominal_mass": 0.9036762857272097
+        }
+      ]
+    },
+    {
+      "world": 969427,
+      "entrance": 0,
+      "prefix": 72,
+      "target": 81,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.429160860354952,
+      "crps": 5.4679324718004585,
+      "nll": 3.788559916382674,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 63,
+          "high": 81,
+          "covered": true,
+          "discrete_nominal_mass": 0.5281558253867483
+        },
+        {
+          "level": 0.8,
+          "low": 56,
+          "high": 90,
+          "covered": true,
+          "discrete_nominal_mass": 0.8140647609467362
+        },
+        {
+          "level": 0.9,
+          "low": 52,
+          "high": 95,
+          "covered": true,
+          "discrete_nominal_mass": 0.9038528333988564
+        }
+      ]
+    },
+    {
+      "world": 969427,
+      "entrance": 1,
+      "prefix": 24,
+      "target": 7,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 13.57762223711094,
+      "nll": 7.178594207090211,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 20,
+          "high": 29,
+          "covered": false,
+          "discrete_nominal_mass": 0.5260321015273636
+        },
+        {
+          "level": 0.8,
+          "low": 16,
+          "high": 34,
+          "covered": false,
+          "discrete_nominal_mass": 0.8276136635631159
+        },
+        {
+          "level": 0.9,
+          "low": 14,
+          "high": 37,
+          "covered": false,
+          "discrete_nominal_mass": 0.9153104886149016
+        }
+      ]
+    },
+    {
+      "world": 969427,
+      "entrance": 1,
+      "prefix": 24,
+      "target": 7,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.429160860354952,
+      "crps": 13.188340662851076,
+      "nll": 6.468338513615793,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 19,
+          "high": 29,
+          "covered": false,
+          "discrete_nominal_mass": 0.5308092170131208
+        },
+        {
+          "level": 0.8,
+          "low": 15,
+          "high": 35,
+          "covered": false,
+          "discrete_nominal_mass": 0.8311189069065328
+        },
+        {
+          "level": 0.9,
+          "low": 13,
+          "high": 38,
+          "covered": false,
+          "discrete_nominal_mass": 0.9119960692428872
+        }
+      ]
+    },
+    {
+      "world": 969428,
+      "entrance": 0,
+      "prefix": 100,
+      "target": 90,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 6.05476791233605,
+      "nll": 3.7794250388506185,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 91,
+          "high": 110,
+          "covered": false,
+          "discrete_nominal_mass": 0.5196515521119577
+        },
+        {
+          "level": 0.8,
+          "low": 83,
+          "high": 119,
+          "covered": true,
+          "discrete_nominal_mass": 0.8084842563615082
+        },
+        {
+          "level": 0.9,
+          "low": 78,
+          "high": 125,
+          "covered": true,
+          "discrete_nominal_mass": 0.9098824974626317
+        }
+      ]
+    },
+    {
+      "world": 969428,
+      "entrance": 0,
+      "prefix": 100,
+      "target": 90,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.5913944309529748,
+      "crps": 6.109787588294493,
+      "nll": 3.837875137793837,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 89,
+          "high": 111,
+          "covered": true,
+          "discrete_nominal_mass": 0.5255883297502567
+        },
+        {
+          "level": 0.8,
+          "low": 80,
+          "high": 122,
+          "covered": true,
+          "discrete_nominal_mass": 0.8184252530031042
+        },
+        {
+          "level": 0.9,
+          "low": 75,
+          "high": 128,
+          "covered": true,
+          "discrete_nominal_mass": 0.9068010584379211
+        }
+      ]
+    },
+    {
+      "world": 969428,
+      "entrance": 1,
+      "prefix": 18,
+      "target": 8,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 7.1641413778109655,
+      "nll": 4.288472868576284,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 14,
+          "high": 22,
+          "covered": false,
+          "discrete_nominal_mass": 0.5484213729197831
+        },
+        {
+          "level": 0.8,
+          "low": 11,
+          "high": 27,
+          "covered": false,
+          "discrete_nominal_mass": 0.8414130620447039
+        },
+        {
+          "level": 0.9,
+          "low": 9,
+          "high": 29,
+          "covered": false,
+          "discrete_nominal_mass": 0.9214667312522589
+        }
+      ]
+    },
+    {
+      "world": 969428,
+      "entrance": 1,
+      "prefix": 18,
+      "target": 8,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.5913944309529748,
+      "crps": 6.774900547362094,
+      "nll": 3.9374984190675453,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 14,
+          "high": 23,
+          "covered": false,
+          "discrete_nominal_mass": 0.532215481728743
+        },
+        {
+          "level": 0.8,
+          "low": 10,
+          "high": 28,
+          "covered": false,
+          "discrete_nominal_mass": 0.8374893393100827
+        },
+        {
+          "level": 0.9,
+          "low": 8,
+          "high": 31,
+          "covered": true,
+          "discrete_nominal_mass": 0.923808147172304
+        }
+      ]
+    },
+    {
+      "world": 969429,
+      "entrance": 0,
+      "prefix": 129,
+      "target": 107,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 14.403585904049175,
+      "nll": 4.629472988033896,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 118,
+          "high": 140,
+          "covered": false,
+          "discrete_nominal_mass": 0.5261862707659162
+        },
+        {
+          "level": 0.8,
+          "low": 109,
+          "high": 150,
+          "covered": false,
+          "discrete_nominal_mass": 0.8091606978614864
+        },
+        {
+          "level": 0.9,
+          "low": 104,
+          "high": 157,
+          "covered": true,
+          "discrete_nominal_mass": 0.9068529262251592
+        }
+      ]
+    },
+    {
+      "world": 969429,
+      "entrance": 0,
+      "prefix": 129,
+      "target": 107,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.6348492300626027,
+      "crps": 13.755069211847655,
+      "nll": 4.504056835956106,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 117,
+          "high": 142,
+          "covered": false,
+          "discrete_nominal_mass": 0.5187296394792308
+        },
+        {
+          "level": 0.8,
+          "low": 106,
+          "high": 154,
+          "covered": true,
+          "discrete_nominal_mass": 0.8162267627716947
+        },
+        {
+          "level": 0.9,
+          "low": 100,
+          "high": 161,
+          "covered": true,
+          "discrete_nominal_mass": 0.9076083048065096
+        }
+      ]
+    },
+    {
+      "world": 969429,
+      "entrance": 1,
+      "prefix": 9,
+      "target": 16,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 4.5268175964223625,
+      "nll": 3.6472789874366125,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 6,
+          "high": 12,
+          "covered": false,
+          "discrete_nominal_mass": 0.5950289648191556
+        },
+        {
+          "level": 0.8,
+          "low": 4,
+          "high": 15,
+          "covered": false,
+          "discrete_nominal_mass": 0.847793956348017
+        },
+        {
+          "level": 0.9,
+          "low": 3,
+          "high": 17,
+          "covered": true,
+          "discrete_nominal_mass": 0.9264077297303093
+        }
+      ]
+    },
+    {
+      "world": 969429,
+      "entrance": 1,
+      "prefix": 9,
+      "target": 16,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.6348492300626027,
+      "crps": 4.483960207266408,
+      "nll": 3.605360390780529,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 6,
+          "high": 12,
+          "covered": false,
+          "discrete_nominal_mass": 0.5345845880154196
+        },
+        {
+          "level": 0.8,
+          "low": 4,
+          "high": 16,
+          "covered": true,
+          "discrete_nominal_mass": 0.8197091475657072
+        },
+        {
+          "level": 0.9,
+          "low": 3,
+          "high": 19,
+          "covered": true,
+          "discrete_nominal_mass": 0.9157601685657647
+        }
+      ]
+    },
+    {
+      "world": 969430,
+      "entrance": 0,
+      "prefix": 79,
+      "target": 81,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 3.0631893424928776,
+      "nll": 3.47599882256214,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 71,
+          "high": 88,
+          "covered": true,
+          "discrete_nominal_mass": 0.5249490752348678
+        },
+        {
+          "level": 0.8,
+          "low": 64,
+          "high": 96,
+          "covered": true,
+          "discrete_nominal_mass": 0.80984687005385
+        },
+        {
+          "level": 0.9,
+          "low": 60,
+          "high": 101,
+          "covered": true,
+          "discrete_nominal_mass": 0.9045546177650077
+        }
+      ]
+    },
+    {
+      "world": 969430,
+      "entrance": 0,
+      "prefix": 79,
+      "target": 81,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.752665332367578,
+      "crps": 3.577332797058781,
+      "nll": 3.635713860957047,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 69,
+          "high": 89,
+          "covered": true,
+          "discrete_nominal_mass": 0.5243748807916973
+        },
+        {
+          "level": 0.8,
+          "low": 61,
+          "high": 99,
+          "covered": true,
+          "discrete_nominal_mass": 0.814268822403321
+        },
+        {
+          "level": 0.9,
+          "low": 57,
+          "high": 105,
+          "covered": true,
+          "discrete_nominal_mass": 0.9028331387626627
+        }
+      ]
+    },
+    {
+      "world": 969430,
+      "entrance": 1,
+      "prefix": 16,
+      "target": 19,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 1.9237381007134915,
+      "nll": 2.869433346299985,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 12,
+          "high": 20,
+          "covered": true,
+          "discrete_nominal_mass": 0.5759275450530551
+        },
+        {
+          "level": 0.8,
+          "low": 10,
+          "high": 24,
+          "covered": true,
+          "discrete_nominal_mass": 0.8109525692801486
+        },
+        {
+          "level": 0.9,
+          "low": 8,
+          "high": 27,
+          "covered": true,
+          "discrete_nominal_mass": 0.9213425779153637
+        }
+      ]
+    },
+    {
+      "world": 969430,
+      "entrance": 1,
+      "prefix": 16,
+      "target": 19,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.752665332367578,
+      "crps": 2.145487987756296,
+      "nll": 3.017397416418458,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 12,
+          "high": 21,
+          "covered": true,
+          "discrete_nominal_mass": 0.5452981530554465
+        },
+        {
+          "level": 0.8,
+          "low": 8,
+          "high": 25,
+          "covered": true,
+          "discrete_nominal_mass": 0.8331932751525216
+        },
+        {
+          "level": 0.9,
+          "low": 7,
+          "high": 29,
+          "covered": true,
+          "discrete_nominal_mass": 0.9161203490546643
+        }
+      ]
+    },
+    {
+      "world": 969431,
+      "entrance": 0,
+      "prefix": 99,
+      "target": 103,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 3.735564147351186,
+      "nll": 3.6230776230044484,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 90,
+          "high": 109,
+          "covered": true,
+          "discrete_nominal_mass": 0.5218581176986514
+        },
+        {
+          "level": 0.8,
+          "low": 82,
+          "high": 118,
+          "covered": true,
+          "discrete_nominal_mass": 0.8107254266515759
+        },
+        {
+          "level": 0.9,
+          "low": 77,
+          "high": 124,
+          "covered": true,
+          "discrete_nominal_mass": 0.9115096520557987
+        }
+      ]
+    },
+    {
+      "world": 969431,
+      "entrance": 0,
+      "prefix": 99,
+      "target": 103,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.7060707519721074,
+      "crps": 4.2527115338564805,
+      "nll": 3.769062986293264,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 88,
+          "high": 110,
+          "covered": true,
+          "discrete_nominal_mass": 0.5183071107010775
+        },
+        {
+          "level": 0.8,
+          "low": 79,
+          "high": 121,
+          "covered": true,
+          "discrete_nominal_mass": 0.8111721890015965
+        },
+        {
+          "level": 0.9,
+          "low": 74,
+          "high": 128,
+          "covered": true,
+          "discrete_nominal_mass": 0.9066675100770714
+        }
+      ]
+    },
+    {
+      "world": 969431,
+      "entrance": 1,
+      "prefix": 19,
+      "target": 13,
+      "method": "baseline",
+      "multiplier": 1.0,
+      "crps": 3.7008045275693466,
+      "nll": 3.1193483166683738,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 15,
+          "high": 23,
+          "covered": false,
+          "discrete_nominal_mass": 0.5360623651487203
+        },
+        {
+          "level": 0.8,
+          "low": 12,
+          "high": 28,
+          "covered": true,
+          "discrete_nominal_mass": 0.8295479877126959
+        },
+        {
+          "level": 0.9,
+          "low": 10,
+          "high": 31,
+          "covered": true,
+          "discrete_nominal_mass": 0.9245876758945327
+        }
+      ]
+    },
+    {
+      "world": 969431,
+      "entrance": 1,
+      "prefix": 19,
+      "target": 13,
+      "method": "scalar_world_excluded",
+      "multiplier": 1.7060707519721074,
+      "crps": 3.5254906244739583,
+      "nll": 3.0838346906645135,
+      "intervals": [
+        {
+          "level": 0.5,
+          "low": 14,
+          "high": 24,
+          "covered": false,
+          "discrete_nominal_mass": 0.5610158506822456
+        },
+        {
+          "level": 0.8,
+          "low": 11,
+          "high": 29,
+          "covered": true,
+          "discrete_nominal_mass": 0.8158796094870728
+        },
+        {
+          "level": 0.9,
+          "low": 9,
+          "high": 33,
+          "covered": true,
+          "discrete_nominal_mass": 0.9179649606029912
+        }
+      ]
+    }
+  ],
+  "qualification": "FIT scalar crossfits only; prefix-count outcomes, NOT traffic-delay coverage",
+  "interval_reference": "inclusive discrete quantiles; exact nominal mass reported; no full-world CIs claimed"
+}

@@ -1,0 +1,42 @@
+{
+  "owner": "S-RB2-CAL",
+  "branch": "c4/rb2-cal",
+  "physics_version": "rb2-cal-v1",
+  "physics_source": "0711a02646bb014a785e190f24e0838460ed8e23",
+  "analysis_source": "0782c9bf",
+  "gpu_canary": {
+    "host": "gpuA",
+    "root": "/root/rbeval20261031/rb2cal/dev_v1",
+    "pid": 438985,
+    "status": "passed_and_exited",
+    "wall_seconds": 187.57,
+    "world": 969420,
+    "future": 0,
+    "arms": 5,
+    "horizon_s": 600,
+    "panel_launched": false
+  },
+  "cpu_canary": {
+    "host": "gpuA",
+    "root": "/root/rbeval20261031/rb2cal/dev_v1_cpu",
+    "pid": 440092,
+    "start_ticks": "888711700",
+    "state_at_publication": "running",
+    "device": "cpu",
+    "successful_task_reuse": "once in its own two-worker CPU panel only"
+  },
+  "collector": {
+    "local_pid": 33284,
+    "create_filetime": 134379810406680562,
+    "exclusive_claim": "runs/rb2cal_completion_cpu_v1",
+    "deadline": "2026-11-02T09:00:00+08:00",
+    "launches_cpu_panel": "once after own CPU canary success and resource admission",
+    "scores_only_after_complete_tasks": 96,
+    "reserved_worlds_allowed": false,
+    "scientific_retries": false,
+    "peer_pid_signals": false
+  },
+  "result_receipt": "docs/paper_results/rb2cal/COMPLETION.json",
+  "result_report": "docs/paper_results/rb2cal/DEVELOPMENT_PHYSICAL_V1_CPU.md",
+  "qualified_overconfidence_fix": false
+}

@@ -1,0 +1,41 @@
+[
+  {
+    "horizon_s": 120,
+    "raw_pair_brier": 0.23841145833333333,
+    "oof_pair_brier": 0.22043790564701654,
+    "raw_selected_calls": 23,
+    "raw_selected_brier": 0.24592391304347827,
+    "oof_selected_calls": 2,
+    "oof_selected_brier": 0.038252884042575035,
+    "oof_selected_probability": 0.8044275057398309,
+    "oof_selected_observed_win": 1.0,
+    "oof_switch_rate": 0.03333333333333333,
+    "oof_observed_saving": 0.9208224137624105
+  },
+  {
+    "horizon_s": 300,
+    "raw_pair_brier": 0.26875,
+    "oof_pair_brier": 0.24497650775324567,
+    "raw_selected_calls": 13,
+    "raw_selected_brier": 0.14182692307692307,
+    "oof_selected_calls": 0,
+    "oof_selected_brier": null,
+    "oof_selected_probability": null,
+    "oof_selected_observed_win": null,
+    "oof_switch_rate": 0.0,
+    "oof_observed_saving": 0.0
+  },
+  {
+    "horizon_s": 600,
+    "raw_pair_brier": 0.24244791666666668,
+    "oof_pair_brier": 0.2250333226692713,
+    "raw_selected_calls": 24,
+    "raw_selected_brier": 0.19466145833333334,
+    "oof_selected_calls": 1,
+    "oof_selected_brier": 0.6594019150904447,
+    "oof_selected_probability": 0.812035661218425,
+    "oof_selected_observed_win": 0.0,
+    "oof_switch_rate": 0.016666666666666666,
+    "oof_observed_saving": -3.820626656214396
+  }
+]

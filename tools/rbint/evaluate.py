@@ -23,7 +23,18 @@ def main(variant):
                     ROOT/'artifacts/rbfit/shrinkage_v1/idm_population.json',
                     ROOT/'artifacts/rbfit/shrinkage_v1/idm_posteriors.json.gz',
                     ROOT/'artifacts/rbfit/shrinkage_v1/idm_shrinkage.json',
-                    ROOT/'docs/paper_results/rbunc/observed_arrivals.json']
+                     ROOT/'docs/paper_results/rbunc/observed_arrivals.json']
+        # A selected calibration is part of immutable model identity, not just a
+        # mutable runtime option. The recipe itself is already identity-bound.
+        import tomllib
+        config_parser = argparse.ArgumentParser(add_help=False)
+        config_parser.add_argument('--wm-config')
+        config_args, _ = config_parser.parse_known_args()
+        if config_args.wm_config:
+            recipe = tomllib.loads(Path(config_args.wm_config).read_text(encoding='utf-8'))
+            calibration_path = recipe['variants']['FULL'].get('spread_calibration_json')
+            if calibration_path:
+                sources += [ROOT/calibration_path]
     run_wm.main(model_loader=load_candidate, future_builder=candidate_future,
                 identity_sources=sources)
 

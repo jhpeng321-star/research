@@ -3,8 +3,8 @@
 Branch `c4/rb2-int`, base engineering source FULL-v4 `22cc32f6`; inherited
 round-1 delivery remains below. Read `docs/rb2int/PLAN.md` when available.
 
-- FULL-v5 and FULL-v5-LP are **NOT READY**. LANE engineering intake6b4bfbd5 is
-  being integrated; BREAK/CAL/LPHYS delivery and complete development evidence pending.
+- FULL-v5 and FULL-v5-LP are **NOT READY**. LANE6b4bfbd5 and CAL7c1cf53c
+  engineering intake complete; BREAK/LPHYS and complete dev evidence pending.
   Fresh-session recovery and next steps: `docs/rb2int/PLAN.md`.
 - FIT/selection stays on969400–969431 (development panel969420–969431).
   Reserved969432–969439 only for the final frozen comparison.
@@ -85,6 +85,87 @@ round-1 final-delivery HEAD `03c81f91`).
   lane/segment counts/rates/timing and per-predicted-motivation precision/recall
   contributions, exact versions/tests. Full qualification belongs to INT.
 
+## CAL engineering intake — source snapshot7c1cf53c
+
+Imported CAL work and diagnostics below are peer source evidence/process ownership.
+The source-bound v4 probability map is not an integrated v5 map. INT identified
+that LC attachment rebuilds FittedHiddenState and must preserve CAL's wrapper;
+the composition fix and regression gate are part of this intake.
+INT composition/sampling/recipe gate69PASS/0skips/27.44s; `docs/rb2int/INTAKE_CAL.md`.
+
+### Preserved S-RB2-CAL handoff
+
+Branch `c4/rb2-cal`, base frozen FULL-v4 `22cc32f6`. Design frozen before fit:
+`docs/paper_results/RB2_CAL_DESIGN.md`. Physical v1 IMPLEMENTED; parameters:
+posterior retention=1, Gamma-rate variance=1.667235195661008,
+entrant Dirichlet prior concentration=0 (condition on causal soft driver counts).
+All fitted ONLY on native FIT969400–969431; dev outcome diagnostics969420–969431.
+Artifact `docs/paper_results/rb2cal/v1/fit/calibration.json`; explicit recipe
+`configs/wm_phys_rb2_cal_v1.toml`, switch `variants.FULL.spread_calibration_json`.
+Runtime source `src/wms/control/spread_calibration.py`; minimal hooks in
+`hidden_state.BirthMix`, `rbint/recipe.py`, identity binding in `rbint/evaluate.py`.
+Present drivers stay VID-keyed; one future-owned Dirichlet entrant mixture;
+request/admission ordinal coupling and fixed joint physical support preserved.
+74 CPU tests PASS plus4finite-collector tests; Ruff PASS.
+No neural training; no per-step noise or output-cost corrections are deployed.
+
+FIT115652 later-prefix motion rows/2460drivers. All32 scalar crossfits retain
+posterior=1 and entrant concentration=0; rate variance range1.42916–1.75267.
+Count NLL3.746607→3.724368 in fit, but3.746607→3.745985 world-excluded:
+**very weak crossfit improvement, no coverage/decision qualification**.
+World-excluded count CRPS6.02330→6.05365vehicles (worse); 50/80/90% coverage
+51.6/75.0/85.9→62.5/84.4/89.1%; exact discrete nominal masses are in
+`v1/COUNT_VALIDATION.json`. These are request counts, not team-delay coverage.
+Dev baseline and outcome-scale limitation check:
+`docs/paper_results/rb2cal/DEVELOPMENT_BASELINE.md` + adjacent JSON;
+proper-score-fitted outcome scales1.498/1.219/1.579 at120/300/600s.
+OOF paired90% coverage only71.7/65.8/68.3%; a scalar cannot solve the task.
+These output-scale diagnostics ARE NOT simulation or a selectable model.
+Reliability SVG/CSV and exact summaries in `rb2cal/dev_fullv4_v1/`.
+Code/evidence commit `0711a026` (design `c20b82ac`); probability/audit/collector
+commit `0782c9bf`. Later strict malformed-posterior validation adds no change on
+the valid frozen artifact; the running physical comparison stays source0711a026.
+Dev12-only GPU canary
+PASS187.57s, own438985 EXITED, runtime
+`/root/rbeval20261031/rb2cal/code_0711a02646bb`, output
+`/root/rbeval20261031/rb2cal/dev_v1`; all five arms/H600, world969420/k0.
+Shared GPU subsequently99% busy with peer jobs; no GPU panel launched.
+NEW CPU canary LIVE own440092/start_ticks888711700, same immutable source,
+output `/root/rbeval20261031/rb2cal/dev_v1_cpu`. Separate model identity/device;
+do not mix its futures with the GPU canary. Quota audit20cores/3.31used,
+19.36GiBfree; CPU continuation will use two nice19/one-thread workers.
+Own shared claim `E:/agent-work/rb-shared/evalclaims/S-RB2-CAL-dev-v1.json`.
+Fresh physical outcome results not yet available; do not adopt v1 as qualified.
+
+Separate source-bound probability map/API: `tools/rbcal/probability.py`, evidence
+`rb2cal/probability_fullv4_v1/`. Lambdas120/300/600=.553247/.355783/.539945.
+All-pair OOF Brier .23841/.26875/.24245→.22044/.24498/.22503.
+The full-data map implies NO0.8switches. OOF selected calls2/0/1, wins2/NA/0;
+**not useful-switch qualification**. Full-v4 map MUST NOT be applied to the new
+physical candidate or integrated physics: source fingerprints reject mismatch.
+Refit only on new dev12 forecasts after integration. `rb2cal/INTEGRATION.md`
+documents APIs, switches, exact exposure limits and final CI requirements.
+K8 central intervals remain descriptive: continuous iid range reference7/9,
+not90%; saved central/range coverage and proper scores stay separate.
+
+Finite CPU continuation/collection tool `tools/rbcal/finish.py` is prepared;
+it waits for successful own CPU canary, launches its two-worker panel ONCE,
+then only after all96tasks fetches/validates/scores, refits the probability map
+and publishes `rb2cal/COMPLETION.json` + `DEVELOPMENT_PHYSICAL_V1_CPU.md`.
+Deadline Nov2 09:00+08; no scientific retries or peer PID control. Collector
+LIVE local33284/create_filetime134379810406680562; exclusive receipts in
+`runs/rb2cal_completion_cpu_v1/{PROCESS,START,TERMINAL}.json` and `poll.jsonl`.
+First poll verified CPU canary alive,0tasks,noSTOP; no GPU continuation.
+Until completion no nominal traffic-coverage claim. Integrator can read
+`rb2cal/COMPLETION.json` after collection; no second collector is needed.
+No reserved raw tasks opened. Owner-required historical aggregate reports were
+read (disclosed exposure); they cannot qualify an independent final comparison.
+Local NVIDIA driver unavailable; gpuA12:02 audit idle (49139MiB free), cpuQ
+single nice19/one-thread fit COMPLETE (own1181880/terminalrc0). Canary launch
+rechecked GPU free46119MiB, preserving shared teacher capacity. Existing code/evidence
+below is inherited INT history, not this worker's current result.
+
+---
 ## Preserved round-1 handoff
 
 # S-RB-INT FINAL — 2026-11-01
