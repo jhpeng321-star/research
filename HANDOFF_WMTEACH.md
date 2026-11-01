@@ -37,6 +37,14 @@
 - Do not stage/launch this root again. Collect with
   `python -B -m tools.wmteach.scale_ops collect`. Any FAILURE.json is terminal;
   preserve partial work and diagnose. The original437822 remains independent.
+- Read-only partial quality report1793509786 (no repeated forecasts):10/12states,
+  H300argmax70%/sign61.5%/rank0.485/exactchosenD+802.0/regret313.8veh-s;
+  helpful4/7argmaxhits,5/7positivechoices. PARTIAL, cannot arm live. Full12state
+  estimate still awaited. `python -B -m tools.wmteach.quality_report` reads completed
+  predictions before their exact targets and writes a bounded receipt.
+- New exclusive scale collector local9796 runs every20min, maximum168hours;
+  `wmteach/SCALE_WATCH_PROCESS_9796.json` and `SCALE_WATCH_1793509708.log`.
+  It commits own progress and gates the approved scale live once; do not duplicate.
 
 ## Read first; do not duplicate
 - Branch `c4/wmteach`; recovery `9f92c488`, shared student `ee47f395`

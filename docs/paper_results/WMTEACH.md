@@ -51,6 +51,20 @@ never become features. Inherited exact-quality forecasts are reused. Live requir
 helpful-state exact chosen saving; otherwise live is withheld. Shared student
 code/whole-world nested CV retained; CPU27PASS in existing Python313 environment.
 
+## Exact teacher quality — interim, before scale fitting
+Read-only receipt `wmteach/EXACT_QUALITY_1793509786.json`:10/12selected states
+complete (10/300fullEXAM coverage), no new forecasting/SUMO. Targets consulted only
+after each matched prediction file exists; all10completed states included.
+- H120: argmax agreement60%, strict-Pgate agreement40%, Dsign61.5%, mean
+  within-state rank0.372; exact chosen D+22.6veh-s/state, oracle D+69.6, regret47.0.
+- H300: argmax agreement70%, strict-Pgate agreement40%, Dsign61.5%, mean
+  within-state rank0.485; exact chosen D+802.0veh-s/state, oracle D+1115.8, regret313.8.
+- H300 helpful states:4/7exact-argmax matches (57.1%);5/7positive-saving choices;
+  Wilson95lower25.0%, mean exact chosen D+1145.7veh-s/helpful state.
+- This is PARTIAL and cannot arm live. It uses the previously disclosed roster-only
+  driver/source-prior marginalization and cold memory; not calibrated confidence,
+  whole-panel qualification, student recognition, or real-policy efficacy.
+
 Active immutable gpuA root `/root/autodl-tmp/wmteach20261101_v3`,404source hashes.
 Supervisor437822/startticks888636829/boot a81555d7-176e-4ed8-bc7d-896fc89cc914;
 `wmteach/DISPATCH_V3.json`. Own strict8GiB GPU cap; peer processes untouched.
