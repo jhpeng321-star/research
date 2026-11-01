@@ -1,6 +1,15 @@
 # S-WMTEACH resume / ownership
 
 ## Latest recovery milestone — read before older ownership
+- Latest operational canary repair (new designacf6f48dbd4b): v4scalev2 EXITED0states
+  at observer due_area initialization after its raw process was unwrapped; keep
+  InstrumentedEntries attached. V5qualityv1 EXITED0forecasts because a no-CAV
+  roster can still have future CAV arrivals; add frozen plant CAV prior then v5
+  registered execution settings. V5scalev1 stopped on failed-quality-parent guard.
+  All three old claims/tracebacks retained, no completed task replayed.
+- Current staged roots: v4scalev3 identityc7678363/431bindings/9CPU;
+  v5qualityv2 identity69f975d0/446bindings/10CPU (LC/CAL+empty-CAV regression);
+  v5scalev2 identity7c9e636a/485bindings/9CPU. Every older root stays terminal.
 - Repair/successor code staged and CPU-checked under designa3684b70abda,
   `WMTEACH_SCALE_V2_DESIGN.md`. All three prospective registry receipts committed
   before dispatch. Original failed roots are immutable and remain terminal.

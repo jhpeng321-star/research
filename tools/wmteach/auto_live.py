@@ -7,7 +7,7 @@ from tools.wmteach.ops import remote,ROOT,REMOTE
 
 LIVE='/root/autodl-tmp/wmteach_live20261101_v1'
 PEER='/root/autodl-tmp/distill20261101_v1'
-SCALE='/root/autodl-tmp/wmteach_scale_v5_20261101_v1'
+SCALE='/root/autodl-tmp/wmteach_scale_v5_20261101_v2'
 
 
 def prepare():

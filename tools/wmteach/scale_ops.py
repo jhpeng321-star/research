@@ -7,9 +7,10 @@ import time
 from tools.coopbandit.protocol import sha
 from tools.wmteach.ops import remote,ROOT,REMOTE
 
-PROFILES={'v4repair':('/root/autodl-tmp/wmteach_scale20261101_v2',REMOTE,'FULL-v4'),
-          'v5':('/root/autodl-tmp/wmteach_scale_v5_20261101_v1',
-                '/root/autodl-tmp/wmteach_v5quality20261101_v1','FULL-v5')}
+PROFILES={'v4repair':('/root/autodl-tmp/wmteach_scale20261101_v3',REMOTE,'FULL-v4'),
+          'v5':('/root/autodl-tmp/wmteach_scale_v5_20261101_v2',
+                '/root/autodl-tmp/wmteach_v5quality20261101_v2','FULL-v5')}
+REG_TAG={'v4repair':'V4REPAIR_V3','v5':'V5_V2'}
 PROFILE=os.environ.get('WMTEACH_SCALE_PROFILE','v4repair')
 SCALE,PARENT,BACKEND=PROFILES[PROFILE]
 HERE=ROOT/'docs/paper_results/wmteach'
@@ -68,6 +69,8 @@ def register():
           f'backend{BACKEND}/root{SCALE}/qualityparent{PARENT}. '
           'Originalv4quality96futuresCOMPLETE; originalsmall and scalev1 both EXITED at native-export '
           '969420..969439-only guard BEFORE any FIT rollout/label. Preserve all roots; no replay. '
+          'Additionalv4v2observer-hook and v5qualityv1emptyCAVcanaries completed0states/0forecasts; '
+          'fixed observer attachment and frozen/registered entrant-CAV prior, all old roots terminal. '
           'Use population-marginal observable FIT-start generator, no exporter identity substitution; '
           'v5 uses releasedb2df7458/recipe023fa74a/fittedLCpopulation+CALphysicalspread+CAVsettings, '
           'cold motion/LC/controller memory retained and disclosed. v4repair reuses completedv4quality; '
@@ -93,14 +96,14 @@ def register():
     registry=Path('E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md')
     if line not in registry.read_text(encoding='utf-8'):
         with registry.open('a',encoding='utf-8') as f:f.write(line);f.flush()
-    receipt=HERE/f'SCALE_{PROFILE.upper()}_REGISTRATION.json'
+    receipt=HERE/f'SCALE_{REG_TAG[PROFILE]}_REGISTRATION.json'
     if not receipt.exists():
         with receipt.open('x',encoding='utf-8') as f:json.dump(dict(line=line,design_sha256=design),f);f.write('\n')
     return json.dumps(dict(path=str(receipt),design_sha256=design))
 
 
 def launch():
-    registration=json.loads((HERE/f'SCALE_{PROFILE.upper()}_REGISTRATION.json').read_text(encoding='utf-8'))
+    registration=json.loads((HERE/f'SCALE_{REG_TAG[PROFILE]}_REGISTRATION.json').read_text(encoding='utf-8'))
     return remote(f'''import pathlib,json,subprocess,os,time,hashlib,shutil
 root=pathlib.Path({SCALE!r})
 assert not (root/'LAUNCH_ONCE.json').exists(), 'existing dispatch; never duplicate'

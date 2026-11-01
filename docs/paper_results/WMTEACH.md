@@ -32,6 +32,14 @@
   must pass before the one-use launch. Efficacy-only: no new member-alone C_G branches.
 
 ## Status
+Operational canary repair update: designacf6f48dbd4b. Repairedv4scalev2 exposed
+an observer due-area initialization invariant; preserve the observer wrapper in
+path generation. V5qualityv1 exposed an empty-current-CAV/future-CAV-arrival case;
+supply frozen plant CAV population and then v5 registered execution settings.
+Both attempts completed0FITstates/0v5forecasts; v5scalev1 stopped on its failed
+quality parent. All partial evidence is retained. New roots v4scalev3/v5qualityv2/
+v5scalev2 staged; host9/10/9CPU PASS including LC/CAL+empty-CAV regression.
+
 Latest repair/release contract: `WMTEACH_SCALE_V2_DESIGN.md`/a3684b70abda.
 Three immutable roots staged: repairedv4scale(9hostCPU), v5quality-only(10hostCPU),
 v5scale(9hostCPU). The real released-type regression confirms LC attachment retains

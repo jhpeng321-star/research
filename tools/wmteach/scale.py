@@ -153,9 +153,8 @@ def generate(rt,source,lineage):
         queues=[b.entry_spec['queues'][0]],observations={str(seed):original},
         t0_s=300.,seed=190,n_samples=2)[lineage]
     kw,entries,receipt=bind(rt,current,kw,plan)
-    # No team costs are needed for unlabelled path generation; the raw source
-    # process carries queues/ordinals. Avoid retaining an entire600s observer tape.
-    kw['entries']=entries.process
+    # Keep the observer attached: InstrumentedEntries owns the source-clock
+    # hook whose due-area accumulator is initialized by observer.insert().
     cb=option_controller(rt.mp,[dict(id='O0',available=True)],roster(current))
     for j,t in enumerate(TIMES):
         kw['k0']=j*15

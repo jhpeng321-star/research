@@ -17,6 +17,18 @@ def plans(rt,initial,kwargs,*,row_keys,histories,queues,observations,t0_s,seed,n
         fitted=continuation.attach(fitted,{},t0_s=t0_s,
             receipt=dict(lc_conditioning='unobserved_population_only',saved_lc_driver_id_lookup=False))
         if calibration is not None:fitted=calibration.hidden(fitted)
+    # A roster can contain zero CAVs even when the observable entrance prior
+    # permits future CAV arrivals. Use the frozen plant prior in that case;
+    # v5 bind() subsequently installs the registered execution-driver vector.
+    original_population=fitted.as_population
+    def population(params,state,mask):
+        from wms.physics.state import state_kin
+        result=original_population(params,state,mask)
+        if any(not len(pool) for pool in result.cav):
+            defaults=rt.model._default_driver_parameters(state_kin(state),*state['present'].shape)
+            result.cav=[pool if len(pool) else defaults[b,:1].clone() for b,pool in enumerate(result.cav)]
+        return result
+    fitted.as_population=population
     original=rt.model._wmphys_arrival_fit
     arrival=LearnedArrivalFit({**original.artifact,'conditioning_end_s':t0_s,
                               'worlds':copy.deepcopy(observations)})
@@ -33,6 +45,7 @@ def plans(rt,initial,kwargs,*,row_keys,histories,queues,observations,t0_s,seed,n
         plan.receipt.update(observation_contract='roster_and_observable_source_population_marginal',
             saved_ID_lookup=False,causal_motion_conditioning=False,lc_wish_initialization='cold',
             fitted_lc_population=continuation is not None,
+            entrant_CAV_population='observed_or_frozen_plant_prior_then_registered_execution_settings',
             spread_calibration_preserved=getattr(fitted,'calibration',None) is not None)
     return result
 

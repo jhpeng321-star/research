@@ -5,7 +5,7 @@ from pathlib import Path,PurePosixPath
 from tools.coopbandit.protocol import sha
 from tools.wmteach.ops import remote,ROOT,REMOTE
 
-QUALITY='/root/autodl-tmp/wmteach_v5quality20261101_v1'
+QUALITY='/root/autodl-tmp/wmteach_v5quality20261101_v2'
 PHYS='/root/autodl-tmp/c4/rb2int20261101/phys_code_b2df7458a41f'
 SOURCE='b2df7458a41f5f4d3a048532bc40d8d4435ec381'
 RECIPE_SHA='023fa74a4d3059115ec0a5f28d39030a76137d871db5798eb1d23a13fc1e32c5'
@@ -65,6 +65,8 @@ def register():
     line=(f'- S-WMTEACH FULL-v5 QUALITY RERUN REGISTERED BEFORE DISPATCH: source{SOURCE}/recipeSHA{RECIPE_SHA}/'
           f'designSHA{design}/immutable{QUALITY}. Published FULL-v5 READY + two-world allfivearm600 smoke + '
           '406file exposure audit verified, no oldv4probabilitymap. Same fixed12EXAMstates/K8/H120,H300, '
+          'Previousv5qualityv1empty-CAV canary completed0forecasts; frozen/registered CAV prior now '
+          'covers future CAV arrivals when current roster has none, CPU regression PASS; old root terminal. '
           'roster-only/sourceprior/coldmemory limitations retained; preserve new physical LC population, '
           'CALlatent wrapper/arrivalspread and registered CAVsettings. Quality-only job cannot enter native '
           'FIT exporter path. Exact targets read only after forecasts; report choice/sign/rank/regret/helpful '
@@ -75,14 +77,14 @@ def register():
     registry=Path('E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md')
     if line not in registry.read_text(encoding='utf-8'):
         with registry.open('a',encoding='utf-8') as f:f.write(line);f.flush()
-    dest=HERE/'V5_QUALITY_REGISTRATION.json'
+    dest=HERE/'V5_QUALITY_V2_REGISTRATION.json'
     if not dest.exists():
         with dest.open('x',encoding='utf-8') as f:json.dump(dict(line=line,design_sha256=design),f);f.write('\n')
     return json.dumps(dict(path=str(dest),design_sha256=design))
 
 
 def launch():
-    registration=json.loads((HERE/'V5_QUALITY_REGISTRATION.json').read_text())
+    registration=json.loads((HERE/'V5_QUALITY_V2_REGISTRATION.json').read_text())
     return remote(f'''import pathlib,json,subprocess,os,shutil,time
 root=pathlib.Path({QUALITY!r});assert not (root/'LAUNCH_ONCE.json').exists()
 assert json.loads((root/'CPU.json').read_text())['pass_'] and not list((root/'tasks').iterdir())

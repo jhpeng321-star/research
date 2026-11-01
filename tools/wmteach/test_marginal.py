@@ -10,6 +10,7 @@ class MarginalIntegration(unittest.TestCase):
         from wms.control.fitted_hidden import FittedHiddenState,IDM_ORDER,LC_ORDER
         from wms.control.spread_calibration import SpreadCalibration,CalibratedHidden,CalibratedArrivals
         from wms.control.arrival_fit import LearnedArrivalFit
+        from wms.model.driver_encoder import PARAMETER_NAMES
         from wms.physics.lane_continuation import LaneContinuation
         from tools.wmteach.marginal import plans
         pop=dict(schema='wm_phys.idm_population.v1',parameter_order=IDM_ORDER,
@@ -28,8 +29,11 @@ class MarginalIntegration(unittest.TestCase):
             generator_family='piecewise_constant_poisson',conditioning_end_s=300.,observed_phase_end_s=1200.,worlds={}))
         arrival.sha256='arrivals'
         model=types.SimpleNamespace(_wmphys_fitted_state=calibration.hidden(fitted),
-            _wmphys_lane_continuation=lc,_wmphys_arrival_fit=calibration.arrivals(arrival))
-        initial=dict(present=torch.ones((2,4),dtype=torch.bool))
+            _wmphys_lane_continuation=lc,_wmphys_arrival_fit=calibration.arrivals(arrival),
+            _default_driver_parameters=lambda kin,b,n:torch.full((b,n,len(PARAMETER_NAMES)),2.))
+        initial=dict(present=torch.ones((2,4),dtype=torch.bool),is_cav=torch.zeros((2,4),dtype=torch.bool),
+            s_m=torch.zeros((2,4)),v_mps=torch.zeros((2,4)),a_mps2=torch.zeros((2,4)),
+            lane=torch.zeros((2,4),dtype=torch.long),length_m=torch.full((2,4),5.))
         observations={'96940000':dict(total=[30,20],exposure_s=307.5,final_backlog=[2,1])}
         with patch('wms.control.hidden_state.plan_hidden_state_futures',
                    return_value=[types.SimpleNamespace(receipt={})]) as forecast:
@@ -46,6 +50,11 @@ class MarginalIntegration(unittest.TestCase):
         self.assertEqual(fitted.posterior['drivers'],post['drivers'])
         self.assertTrue(result[0].receipt['spread_calibration_preserved'])
         self.assertTrue(torch.equal(initial['vehicle_id'],torch.arange(4).expand(2,4)))
+        params={name:torch.ones((2,4)) for name in PARAMETER_NAMES}
+        population=kw['fitted_state'].as_population(params,initial,torch.zeros((2,4,1),dtype=torch.bool))
+        population.validate(2)
+        self.assertEqual([len(pool) for pool in population.cav],[1,1])
+        self.assertTrue(torch.equal(population.cav[0],torch.full((1,len(PARAMETER_NAMES)),2.)))
 
 
 if __name__=='__main__':unittest.main()
