@@ -1,0 +1,9817 @@
+{
+ "load": [
+  5.55810546875,
+  6.66015625,
+  6.01708984375
+ ],
+ "cpus": 208,
+ "gpu": {
+  "returncode": 0,
+  "stdout": "memory.free [MiB], memory.total [MiB], utilization.gpu [%]\n45903 MiB, 49140 MiB, 99 %\n",
+  "stderr": ""
+ },
+ "compute": {
+  "returncode": 0,
+  "stdout": "pid, process_name, used_gpu_memory [MiB]\n436533, /root/miniconda3/bin/python, 1152 MiB\n437512, /root/miniconda3/bin/python, 904 MiB\n437822, /root/miniconda3/bin/python, 532 MiB\n",
+  "stderr": ""
+ },
+ "cgroup": {
+  "cpu.max": "2000000 100000\n",
+  "cpu.stat": "usage_usec 1279027759533\nuser_usec 1193439180304\nsystem_usec 85588579229\nnr_periods 5027949\nnr_throttled 91119\nthrottled_usec 379924298194\n",
+  "memory.max": "96636764160\n",
+  "memory.current": "73436913664\n"
+ },
+ "records": [
+  {
+   "collection": "WMDATA",
+   "seed": 969432,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": true,
+      "size": 40753
+     },
+     "start_history.npz": {
+      "exists": true,
+      "size": 244510
+     },
+     "result.json": {
+      "exists": true,
+      "size": 6853
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA",
+   "seed": 969433,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": true,
+      "size": 39985
+     },
+     "start_history.npz": {
+      "exists": true,
+      "size": 224862
+     },
+     "result.json": {
+      "exists": true,
+      "size": 6872
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA",
+   "seed": 969434,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": true,
+      "size": 41905
+     },
+     "start_history.npz": {
+      "exists": true,
+      "size": 258552
+     },
+     "result.json": {
+      "exists": true,
+      "size": 6871
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA",
+   "seed": 969435,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": true,
+      "size": 45553
+     },
+     "start_history.npz": {
+      "exists": true,
+      "size": 293354
+     },
+     "result.json": {
+      "exists": true,
+      "size": 6862
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA",
+   "seed": 969436,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": true,
+      "size": 42033
+     },
+     "start_history.npz": {
+      "exists": true,
+      "size": 266366
+     },
+     "result.json": {
+      "exists": true,
+      "size": 6875
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA",
+   "seed": 969437,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": true,
+      "size": 43057
+     },
+     "start_history.npz": {
+      "exists": true,
+      "size": 293290
+     },
+     "result.json": {
+      "exists": true,
+      "size": 6909
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA",
+   "seed": 969438,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": true,
+      "size": 39409
+     },
+     "start_history.npz": {
+      "exists": true,
+      "size": 221192
+     },
+     "result.json": {
+      "exists": true,
+      "size": 6855
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA",
+   "seed": 969439,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": true,
+      "size": 42353
+     },
+     "start_history.npz": {
+      "exists": true,
+      "size": 261134
+     },
+     "result.json": {
+      "exists": true,
+      "size": 6853
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969550,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969551,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969552,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969553,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969554,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969555,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969556,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969557,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969558,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969559,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969560,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969561,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969562,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969563,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969564,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969565,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969566,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969567,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969568,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969569,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969570,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969571,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969572,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969573,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969574,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969575,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969576,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969577,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969578,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969579,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969580,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969581,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969582,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969583,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969584,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969585,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969586,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969587,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969588,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969589,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969590,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969591,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969592,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969593,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969594,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969595,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969596,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969597,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969598,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  },
+  {
+   "collection": "WMDATA2",
+   "seed": 969599,
+   "arms": {
+    "native": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "ctrl0": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "mappo": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "pi": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    },
+    "circles": {
+     "start.pt": {
+      "exists": false,
+      "size": null
+     },
+     "start_history.npz": {
+      "exists": false,
+      "size": null
+     },
+     "result.json": {
+      "exists": false,
+      "size": null
+     },
+     "traj_base.npz": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_120.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_300.json": {
+      "exists": false,
+      "size": null
+     },
+     "cumulative_600.json": {
+      "exists": false,
+      "size": null
+     }
+    }
+   }
+  }
+ ],
+ "own_receipts": [
+  {
+   "path": "/root/rbeval20261031/int/WM-PHYS-FULL-v1/SPEC.json",
+   "sha256": "d42e9fc05900547131738c5cd047e2b3899e2c3d621329fcf54b75e93e1c111c",
+   "receipt": {
+    "owner": "S-RB-INT",
+    "host": "gpuA",
+    "runtime": "/root/rbeval20261031/phys_code_4015b6412cdf",
+    "stage": {
+     "host": "gpuA",
+     "commit": "4015b6412cdfa2a94168b7095a59287d0fddcd3b",
+     "archive_sha256": "cebb09af0d5388013d37db9399621bdffff3df113dc6d3915ee5e625b1d6e551",
+     "runtime": "/root/rbeval20261031/phys_code_4015b6412cdf"
+    },
+    "smoke_sha256": "8cfb30c91e6d81c9cb4ef2e1d04b7eb6621c36cfa381388533874828037a90eb",
+    "variant": "FULL",
+    "tasks": 160,
+    "world_order": "reserved-first",
+    "training": false
+   },
+   "incarnations": []
+  },
+  {
+   "path": "/root/rbeval20261031/int/WM-PHYS-FULL-v1/CANARY_PROCESS.json",
+   "sha256": "e870ddd7556efd3442c35b67972bff20efcb7c3a7619cf5daa4a13e643a89925",
+   "receipt": {
+    "pid": 332674,
+    "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+    "start_ticks": "884769499",
+    "argv": [
+     "nice",
+     "-n",
+     "19",
+     "/root/miniconda3/bin/python",
+     "-B",
+     "-u",
+     "/root/rbeval20261031/phys_code_4015b6412cdf/tools/rbint/evaluate_FULL.py",
+     "--out",
+     "/root/rbeval20261031/int/WM-PHYS-FULL-v1/shard0",
+     "--runtime-root",
+     "/root/rbeval20261031/phys_code_4015b6412cdf",
+     "--wm",
+     "/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt",
+     "--wm-config",
+     "/root/rbeval20261031/phys_code_4015b6412cdf/configs/wm_phys.toml",
+     "--model-name",
+     "WM-PHYS-FULL-v1",
+     "--shard",
+     "0",
+     "--shards",
+     "3",
+     "--memory-gib",
+     "5",
+     "--max-tasks",
+     "1"
+    ],
+    "unix": 1793467480.8332493
+   },
+   "incarnations": [
+    {
+     "pid": 332674,
+     "exited": true
+    }
+   ]
+  },
+  {
+   "path": "/root/rbeval20261031/int/WM-PHYS-FULL-v1/PANEL_PROCESS.json",
+   "sha256": "15a3a389cf9ac30c9de4bcbb16e90759a5973672a03dacff69f829096eed9301",
+   "receipt": {
+    "workers": [
+     {
+      "pid": 333463,
+      "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+      "start_ticks": "884795567",
+      "argv": [
+       "nice",
+       "-n",
+       "19",
+       "/root/miniconda3/bin/python",
+       "-B",
+       "-u",
+       "/root/rbeval20261031/phys_code_4015b6412cdf/tools/rbint/evaluate_FULL.py",
+       "--out",
+       "/root/rbeval20261031/int/WM-PHYS-FULL-v1/shard0",
+       "--runtime-root",
+       "/root/rbeval20261031/phys_code_4015b6412cdf",
+       "--wm",
+       "/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt",
+       "--wm-config",
+       "/root/rbeval20261031/phys_code_4015b6412cdf/configs/wm_phys.toml",
+       "--model-name",
+       "WM-PHYS-FULL-v1",
+       "--shard",
+       "0",
+       "--shards",
+       "3",
+       "--memory-gib",
+       "5"
+      ],
+      "unix": 1793467741.5207853
+     },
+     {
+      "pid": 333464,
+      "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+      "start_ticks": "884795567",
+      "argv": [
+       "nice",
+       "-n",
+       "19",
+       "/root/miniconda3/bin/python",
+       "-B",
+       "-u",
+       "/root/rbeval20261031/phys_code_4015b6412cdf/tools/rbint/evaluate_FULL.py",
+       "--out",
+       "/root/rbeval20261031/int/WM-PHYS-FULL-v1/shard1",
+       "--runtime-root",
+       "/root/rbeval20261031/phys_code_4015b6412cdf",
+       "--wm",
+       "/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt",
+       "--wm-config",
+       "/root/rbeval20261031/phys_code_4015b6412cdf/configs/wm_phys.toml",
+       "--model-name",
+       "WM-PHYS-FULL-v1",
+       "--shard",
+       "1",
+       "--shards",
+       "3",
+       "--memory-gib",
+       "5"
+      ],
+      "unix": 1793467741.5213792
+     },
+     {
+      "pid": 333465,
+      "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+      "start_ticks": "884795567",
+      "argv": [
+       "nice",
+       "-n",
+       "19",
+       "/root/miniconda3/bin/python",
+       "-B",
+       "-u",
+       "/root/rbeval20261031/phys_code_4015b6412cdf/tools/rbint/evaluate_FULL.py",
+       "--out",
+       "/root/rbeval20261031/int/WM-PHYS-FULL-v1/shard2",
+       "--runtime-root",
+       "/root/rbeval20261031/phys_code_4015b6412cdf",
+       "--wm",
+       "/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt",
+       "--wm-config",
+       "/root/rbeval20261031/phys_code_4015b6412cdf/configs/wm_phys.toml",
+       "--model-name",
+       "WM-PHYS-FULL-v1",
+       "--shard",
+       "2",
+       "--shards",
+       "3",
+       "--memory-gib",
+       "5"
+      ],
+      "unix": 1793467741.5222056
+     }
+    ]
+   },
+   "incarnations": [
+    {
+     "pid": 333463,
+     "exited": true
+    },
+    {
+     "pid": 333464,
+     "exited": true
+    },
+    {
+     "pid": 333465,
+     "exited": true
+    }
+   ]
+  },
+  {
+   "path": "/root/rbeval20261031/int/WM-PHYS-FULL-v1/MONITOR_PROCESS.json",
+   "sha256": "78c1d22dee283b5a060a85c7bfaa30b966a0eec47a61cc484ce25b7cac67e08e",
+   "receipt": {
+    "pid": 335983,
+    "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+    "start_ticks": "884876682",
+    "argv": [
+     "nice",
+     "-n",
+     "19",
+     "/root/miniconda3/bin/python",
+     "-B",
+     "-u",
+     "/root/rbeval20261031/int/WM-PHYS-FULL-v1/PANEL_MONITOR.py",
+     "--root",
+     "/root/rbeval20261031/int/WM-PHYS-FULL-v1"
+    ],
+    "source_sha256": "8df057650e7a5b3ed11e18700c4e4ba371b4a37a360108fb5806d99e813cd4b2"
+   },
+   "incarnations": [
+    {
+     "pid": 335983,
+     "exited": true
+    }
+   ]
+  },
+  {
+   "path": "/root/rbeval20261031/int/WM-PHYS-FULL-v2-cpu/SPEC.json",
+   "sha256": "d108a0e4acad9562f86d8e21ed604a2d85164680254f3860c3aeee1a5e6b729a",
+   "receipt": {
+    "owner": "S-RB-INT",
+    "host": "gpuA",
+    "runtime": "/root/rbeval20261031/phys_code_95e81e79493a",
+    "stage": {
+     "host": "gpuA",
+     "commit": "95e81e79493a2817df499b51b899d81d0c272f13",
+     "archive_sha256": "c854225a8b2b5c2a007fa828260f8121ce400f57bff15902b6c42a04b7f04e92",
+     "runtime": "/root/rbeval20261031/phys_code_95e81e79493a"
+    },
+    "smoke_sha256": "fcd53b43329dec6c94e528fefad9684a7c21d4786d9f4c54064ae97cf80129b4",
+    "variant": "FULL",
+    "tasks": 160,
+    "world_order": "reserved-first",
+    "training": false,
+    "device": "cpu",
+    "recipe": "wm_phys_cpu.toml",
+    "resources": {
+     "load": [
+      15.3681640625,
+      16.13134765625,
+      14.60888671875
+     ],
+     "device": "cpu",
+     "effective_free_memory_bytes": 27097927680
+    }
+   },
+   "incarnations": []
+  },
+  {
+   "path": "/root/rbeval20261031/int/WM-PHYS-FULL-v2-cpu/CANARY_PROCESS.json",
+   "sha256": "4351effd9dd935c11e15d5dfd073d656f52d1e815ccb0f03e370580a10b50d21",
+   "receipt": {
+    "pid": 356826,
+    "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+    "start_ticks": "885381226",
+    "argv": [
+     "nice",
+     "-n",
+     "19",
+     "/root/miniconda3/bin/python",
+     "-B",
+     "-u",
+     "/root/rbeval20261031/phys_code_95e81e79493a/tools/rbint/evaluate_FULL.py",
+     "--out",
+     "/root/rbeval20261031/int/WM-PHYS-FULL-v2-cpu/shard0",
+     "--runtime-root",
+     "/root/rbeval20261031/phys_code_95e81e79493a",
+     "--wm",
+     "/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt",
+     "--wm-config",
+     "/root/rbeval20261031/phys_code_95e81e79493a/configs/wm_phys_cpu.toml",
+     "--model-name",
+     "WM-PHYS-FULL-v2-cpu",
+     "--shard",
+     "0",
+     "--shards",
+     "3",
+     "--memory-gib",
+     "5",
+     "--device",
+     "cpu",
+     "--max-tasks",
+     "1"
+    ],
+    "unix": 1793473598.1043942
+   },
+   "incarnations": [
+    {
+     "pid": 356826,
+     "exited": true
+    }
+   ]
+  },
+  {
+   "path": "/root/rbeval20261031/int/WM-PHYS-FULL-v3-gpu/SPEC.json",
+   "sha256": "23280dc66bfd0739220cf480d80ed8ce1b122c7823bf426e84dbcac4964b9d5c",
+   "receipt": {
+    "owner": "S-RB-INT",
+    "host": "gpuA",
+    "runtime": "/root/rbeval20261031/phys_code_f378ac603307",
+    "stage": {
+     "host": "gpuA",
+     "commit": "f378ac6033079bdd87c0059627e27e394a1d7cbe",
+     "archive_sha256": "e5c52634ede67a07979d8300a4c3e4823d71f28b36c9bb4a16703cecf7c34a98",
+     "runtime": "/root/rbeval20261031/phys_code_f378ac603307"
+    },
+    "smoke_sha256": "c7e152130dee5b322938c21681e77cdce657e0994d94941e65ffef3248f1e357",
+    "variant": "FULL",
+    "tasks": 160,
+    "world_order": "reserved-first",
+    "training": false,
+    "device": "cuda",
+    "recipe": "wm_phys.toml",
+    "resources": {
+     "load": [
+      14.06396484375,
+      14.96484375,
+      14.189453125
+     ],
+     "device": "cuda",
+     "gpu_free_mib": 42917
+    }
+   },
+   "incarnations": []
+  },
+  {
+   "path": "/root/rbeval20261031/int/WM-PHYS-FULL-v3-gpu/CANARY_PROCESS.json",
+   "sha256": "1649978fc141599cb5d87d22daf56e3e5d76bd5d009872b929ff48b9e1fcc80e",
+   "receipt": {
+    "pid": 367592,
+    "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+    "start_ticks": "885645232",
+    "argv": [
+     "nice",
+     "-n",
+     "19",
+     "/root/miniconda3/bin/python",
+     "-B",
+     "-u",
+     "/root/rbeval20261031/phys_code_f378ac603307/tools/rbint/evaluate_FULL.py",
+     "--out",
+     "/root/rbeval20261031/int/WM-PHYS-FULL-v3-gpu/shard0",
+     "--runtime-root",
+     "/root/rbeval20261031/phys_code_f378ac603307",
+     "--wm",
+     "/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt",
+     "--wm-config",
+     "/root/rbeval20261031/phys_code_f378ac603307/configs/wm_phys.toml",
+     "--model-name",
+     "WM-PHYS-FULL-v3-gpu",
+     "--shard",
+     "0",
+     "--shards",
+     "3",
+     "--memory-gib",
+     "5",
+     "--device",
+     "cuda",
+     "--max-tasks",
+     "1"
+    ],
+    "unix": 1793476238.1703346
+   },
+   "incarnations": [
+    {
+     "pid": 367592,
+     "exited": true
+    }
+   ]
+  },
+  {
+   "path": "/root/rbeval20261031/int/WM-PHYS-FULL-v3-gpu/PANEL_PROCESS.json",
+   "sha256": "e63eb1c70397cd55e169dbaebe68f2880dc2792d8bb3c173d49c71a749065793",
+   "receipt": {
+    "workers": [
+     {
+      "pid": 370037,
+      "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+      "start_ticks": "885692686",
+      "argv": [
+       "nice",
+       "-n",
+       "19",
+       "/root/miniconda3/bin/python",
+       "-B",
+       "-u",
+       "/root/rbeval20261031/phys_code_f378ac603307/tools/rbint/evaluate_FULL.py",
+       "--out",
+       "/root/rbeval20261031/int/WM-PHYS-FULL-v3-gpu/shard0",
+       "--runtime-root",
+       "/root/rbeval20261031/phys_code_f378ac603307",
+       "--wm",
+       "/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt",
+       "--wm-config",
+       "/root/rbeval20261031/phys_code_f378ac603307/configs/wm_phys.toml",
+       "--model-name",
+       "WM-PHYS-FULL-v3-gpu",
+       "--shard",
+       "0",
+       "--shards",
+       "3",
+       "--memory-gib",
+       "5",
+       "--device",
+       "cuda"
+      ],
+      "unix": 1793476712.7094715
+     },
+     {
+      "pid": 370038,
+      "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+      "start_ticks": "885692686",
+      "argv": [
+       "nice",
+       "-n",
+       "19",
+       "/root/miniconda3/bin/python",
+       "-B",
+       "-u",
+       "/root/rbeval20261031/phys_code_f378ac603307/tools/rbint/evaluate_FULL.py",
+       "--out",
+       "/root/rbeval20261031/int/WM-PHYS-FULL-v3-gpu/shard1",
+       "--runtime-root",
+       "/root/rbeval20261031/phys_code_f378ac603307",
+       "--wm",
+       "/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt",
+       "--wm-config",
+       "/root/rbeval20261031/phys_code_f378ac603307/configs/wm_phys.toml",
+       "--model-name",
+       "WM-PHYS-FULL-v3-gpu",
+       "--shard",
+       "1",
+       "--shards",
+       "3",
+       "--memory-gib",
+       "5",
+       "--device",
+       "cuda"
+      ],
+      "unix": 1793476712.710494
+     },
+     {
+      "pid": 370039,
+      "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+      "start_ticks": "885692686",
+      "argv": [
+       "nice",
+       "-n",
+       "19",
+       "/root/miniconda3/bin/python",
+       "-B",
+       "-u",
+       "/root/rbeval20261031/phys_code_f378ac603307/tools/rbint/evaluate_FULL.py",
+       "--out",
+       "/root/rbeval20261031/int/WM-PHYS-FULL-v3-gpu/shard2",
+       "--runtime-root",
+       "/root/rbeval20261031/phys_code_f378ac603307",
+       "--wm",
+       "/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt",
+       "--wm-config",
+       "/root/rbeval20261031/phys_code_f378ac603307/configs/wm_phys.toml",
+       "--model-name",
+       "WM-PHYS-FULL-v3-gpu",
+       "--shard",
+       "2",
+       "--shards",
+       "3",
+       "--memory-gib",
+       "5",
+       "--device",
+       "cuda"
+      ],
+      "unix": 1793476712.7114556
+     }
+    ]
+   },
+   "incarnations": [
+    {
+     "pid": 370037,
+     "exited": true
+    },
+    {
+     "pid": 370038,
+     "exited": true
+    },
+    {
+     "pid": 370039,
+     "exited": true
+    }
+   ]
+  },
+  {
+   "path": "/root/rbeval20261031/int/WM-PHYS-FULL-v3-gpu/MONITOR_PROCESS.json",
+   "sha256": "e0cfa1b979e398139dd0aedd24ec8c8ae66cd6ce46a52e50f1640325458825b3",
+   "receipt": {
+    "pid": 370088,
+    "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+    "start_ticks": "885693467",
+    "argv": [
+     "nice",
+     "-n",
+     "19",
+     "/root/miniconda3/bin/python",
+     "-B",
+     "-u",
+     "/root/rbeval20261031/int/WM-PHYS-FULL-v3-gpu/PANEL_MONITOR.py",
+     "--root",
+     "/root/rbeval20261031/int/WM-PHYS-FULL-v3-gpu"
+    ],
+    "source_sha256": "52f1e81036e94cca79a25966cabe12cc75e55931aad136b7cf6355297f90af2e"
+   },
+   "incarnations": [
+    {
+     "pid": 370088,
+     "exited": true
+    }
+   ]
+  },
+  {
+   "path": "/root/rbeval20261031/int/WM-PHYS-FULL-v4-gpu/SPEC.json",
+   "sha256": "413a766dd6b29c11fcf3f5dd67827dc3e27ae1904ae834216041b617a6b3ecb8",
+   "receipt": {
+    "owner": "S-RB-INT",
+    "host": "gpuA",
+    "runtime": "/root/rbeval20261031/phys_code_22cc32f65a80",
+    "model_runtime": "/root/rbeval20261031/phys_code_22cc32f65a80",
+    "stage": {
+     "host": "gpuA",
+     "commit": "22cc32f65a80af482a1a277c5f22377fa727d0a3",
+     "archive_sha256": "ea6f39b6fdcd5e79da6543e64b533cf30bf92f79b4427123e64bc724867213a8",
+     "runtime": "/root/rbeval20261031/phys_code_22cc32f65a80",
+     "endpoint_only": false
+    },
+    "smoke_sha256": "df49d7e6effa259c9bd516f448eb116afcfdd492eba4e0bc8925a18b5e203a6f",
+    "variant": "FULL",
+    "tasks": 160,
+    "world_order": "reserved-first",
+    "training": false,
+    "device": "cuda",
+    "recipe": "wm_phys.toml",
+    "resources": {
+     "load": [
+      13.12109375,
+      14.22265625,
+      14.77685546875
+     ],
+     "device": "cuda",
+     "gpu_free_mib": 40703
+    }
+   },
+   "incarnations": []
+  },
+  {
+   "path": "/root/rbeval20261031/int/WM-PHYS-FULL-v4-gpu/CANARY_PROCESS.json",
+   "sha256": "d32884d81b314f11b1b4c67526dabf3b733842886988439b64faaa190c3be938",
+   "receipt": {
+    "pid": 395510,
+    "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+    "start_ticks": "886146694",
+    "argv": [
+     "nice",
+     "-n",
+     "19",
+     "/root/miniconda3/bin/python",
+     "-B",
+     "-u",
+     "/root/rbeval20261031/phys_code_22cc32f65a80/tools/rbint/evaluate_FULL.py",
+     "--out",
+     "/root/rbeval20261031/int/WM-PHYS-FULL-v4-gpu/shard0",
+     "--runtime-root",
+     "/root/rbeval20261031/phys_code_22cc32f65a80",
+     "--wm",
+     "/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt",
+     "--wm-config",
+     "/root/rbeval20261031/phys_code_22cc32f65a80/configs/wm_phys.toml",
+     "--model-name",
+     "WM-PHYS-FULL-v4-gpu",
+     "--shard",
+     "0",
+     "--shards",
+     "3",
+     "--memory-gib",
+     "5",
+     "--device",
+     "cuda",
+     "--max-tasks",
+     "1"
+    ],
+    "unix": 1793481252.7919495
+   },
+   "incarnations": [
+    {
+     "pid": 395510,
+     "exited": true
+    }
+   ]
+  },
+  {
+   "path": "/root/rbeval20261031/int/WM-PHYS-FULL-v4-gpu/PANEL_PROCESS.json",
+   "sha256": "d742d149d8e40bad1c6c710a789f95b0f05c546b68e483e2295ed2a171bac33e",
+   "receipt": {
+    "workers": [
+     {
+      "pid": 398268,
+      "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+      "start_ticks": "886209893",
+      "argv": [
+       "nice",
+       "-n",
+       "19",
+       "/root/miniconda3/bin/python",
+       "-B",
+       "-u",
+       "/root/rbeval20261031/phys_code_22cc32f65a80/tools/rbint/evaluate_FULL.py",
+       "--out",
+       "/root/rbeval20261031/int/WM-PHYS-FULL-v4-gpu/shard0",
+       "--runtime-root",
+       "/root/rbeval20261031/phys_code_22cc32f65a80",
+       "--wm",
+       "/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt",
+       "--wm-config",
+       "/root/rbeval20261031/phys_code_22cc32f65a80/configs/wm_phys.toml",
+       "--model-name",
+       "WM-PHYS-FULL-v4-gpu",
+       "--shard",
+       "0",
+       "--shards",
+       "3",
+       "--memory-gib",
+       "5",
+       "--device",
+       "cuda"
+      ],
+      "unix": 1793481884.7818577
+     },
+     {
+      "pid": 398269,
+      "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+      "start_ticks": "886209894",
+      "argv": [
+       "nice",
+       "-n",
+       "19",
+       "/root/miniconda3/bin/python",
+       "-B",
+       "-u",
+       "/root/rbeval20261031/phys_code_22cc32f65a80/tools/rbint/evaluate_FULL.py",
+       "--out",
+       "/root/rbeval20261031/int/WM-PHYS-FULL-v4-gpu/shard1",
+       "--runtime-root",
+       "/root/rbeval20261031/phys_code_22cc32f65a80",
+       "--wm",
+       "/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt",
+       "--wm-config",
+       "/root/rbeval20261031/phys_code_22cc32f65a80/configs/wm_phys.toml",
+       "--model-name",
+       "WM-PHYS-FULL-v4-gpu",
+       "--shard",
+       "1",
+       "--shards",
+       "3",
+       "--memory-gib",
+       "5",
+       "--device",
+       "cuda"
+      ],
+      "unix": 1793481884.782729
+     },
+     {
+      "pid": 398270,
+      "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+      "start_ticks": "886209894",
+      "argv": [
+       "nice",
+       "-n",
+       "19",
+       "/root/miniconda3/bin/python",
+       "-B",
+       "-u",
+       "/root/rbeval20261031/phys_code_22cc32f65a80/tools/rbint/evaluate_FULL.py",
+       "--out",
+       "/root/rbeval20261031/int/WM-PHYS-FULL-v4-gpu/shard2",
+       "--runtime-root",
+       "/root/rbeval20261031/phys_code_22cc32f65a80",
+       "--wm",
+       "/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt",
+       "--wm-config",
+       "/root/rbeval20261031/phys_code_22cc32f65a80/configs/wm_phys.toml",
+       "--model-name",
+       "WM-PHYS-FULL-v4-gpu",
+       "--shard",
+       "2",
+       "--shards",
+       "3",
+       "--memory-gib",
+       "5",
+       "--device",
+       "cuda"
+      ],
+      "unix": 1793481884.783324
+     }
+    ]
+   },
+   "incarnations": [
+    {
+     "pid": 398268,
+     "exited": true
+    },
+    {
+     "pid": 398269,
+     "exited": true
+    },
+    {
+     "pid": 398270,
+     "exited": true
+    }
+   ]
+  },
+  {
+   "path": "/root/rbeval20261031/int/WM-PHYS-FULL-v4-gpu/MONITOR_PROCESS.json",
+   "sha256": "4abab2482ce29857d3482624a6aa4817ce8d7539fbf3472843abd0cd7467b558",
+   "receipt": {
+    "pid": 398303,
+    "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+    "start_ticks": "886210382",
+    "argv": [
+     "nice",
+     "-n",
+     "19",
+     "/root/miniconda3/bin/python",
+     "-B",
+     "-u",
+     "/root/rbeval20261031/int/WM-PHYS-FULL-v4-gpu/PANEL_MONITOR.py",
+     "--root",
+     "/root/rbeval20261031/int/WM-PHYS-FULL-v4-gpu"
+    ],
+    "source_sha256": "75826170c97b298af167497bc9023be2be75fe46bf8289e214940b735dd4b955"
+   },
+   "incarnations": [
+    {
+     "pid": 398303,
+     "exited": true
+    }
+   ]
+  }
+ ],
+ "schema": "rb2int-read-only-resources/1",
+ "host": "gpuA",
+ "recorded_at": "2026-11-01T12:12:54.208306+08:00",
+ "source_sha256": "219139790aa58ff51eb0756a9ec28ca5e09787a3268a065f45d6656117df45c5",
+ "opened_record_outcomes": false,
+ "launched_jobs": false
+}

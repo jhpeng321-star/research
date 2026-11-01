@@ -24,6 +24,15 @@ round-1 delivery remains below. Read `docs/rb2int/PLAN.md` when available.
 - Metadata warning: reserved8 + all50 WMDATA2 still leave FOUR of12 cells with
   one world. Pre-register any scoped replicated panel honestly; singleton fixed-
   stratum bootstrap cannot supply valid full-12-cell CIs or a gate PASS.
+- Prospective design frozen: `docs/rb2int/EVALUATION_DESIGN.md` SHA77df3a969e43;
+  registration receipt SHAb88e57bca228. All58/fivearms/K8/H120,300,600; primary54
+  in8replicated cells; four singletons descriptive. Owner REGISTRATION line added.
+  Metadata/registration CPU checks6PASS. Exact worker artifact exposure and final
+  freeze/smoke still required before final inference. No new INT jobs launched.
+- Remote path audit: all50 WMDATA2 raw fivearm records available on gpuR; prior
+  WMDATA evaluation uses staged ctrl0 starts plus cached observable targets.
+  MAIN12:14 reports gpuR disk-full incident and its own archive recovery. Admission
+  must check disk; do not mutate/archive/delete any peer file or job.
 
 ## Preserved round-1 handoff
 

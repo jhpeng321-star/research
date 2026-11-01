@@ -1,0 +1,745 @@
+{
+  "schema": "rb2int-panel-metadata/1",
+  "assembled_at": "2026-11-01T12:11:12.210303+08:00",
+  "selection": "all recorded WMDATA reserved8 + all WMDATA2; primary cells require n>=2",
+  "selection_used_outcomes": false,
+  "worlds": [
+    {
+      "demand": 2700,
+      "penetration": 0.2,
+      "seed": 969432,
+      "collection": "WMDATA"
+    },
+    {
+      "demand": 1900,
+      "penetration": 0.4,
+      "seed": 969433,
+      "collection": "WMDATA"
+    },
+    {
+      "demand": 2400,
+      "penetration": 0.4,
+      "seed": 969434,
+      "collection": "WMDATA"
+    },
+    {
+      "demand": 2700,
+      "penetration": 0.4,
+      "seed": 969435,
+      "collection": "WMDATA"
+    },
+    {
+      "demand": 1900,
+      "penetration": 0.05,
+      "seed": 969436,
+      "collection": "WMDATA"
+    },
+    {
+      "demand": 2700,
+      "penetration": 0.05,
+      "seed": 969437,
+      "collection": "WMDATA"
+    },
+    {
+      "demand": 1900,
+      "penetration": 0.4,
+      "seed": 969438,
+      "collection": "WMDATA"
+    },
+    {
+      "demand": 2700,
+      "penetration": 0.4,
+      "seed": 969439,
+      "collection": "WMDATA"
+    },
+    {
+      "seed": 969550,
+      "penetration": 0.2,
+      "demand": 2400,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969551,
+      "penetration": 0.2,
+      "demand": 2700,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969552,
+      "penetration": 0.4,
+      "demand": 2400,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969553,
+      "penetration": 0.4,
+      "demand": 2700,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969554,
+      "penetration": 0.2,
+      "demand": 2400,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969555,
+      "penetration": 0.2,
+      "demand": 2700,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969556,
+      "penetration": 0.4,
+      "demand": 2400,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969557,
+      "penetration": 0.4,
+      "demand": 2700,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969558,
+      "penetration": 0.2,
+      "demand": 2400,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969559,
+      "penetration": 0.2,
+      "demand": 2700,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969560,
+      "penetration": 0.4,
+      "demand": 2400,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969561,
+      "penetration": 0.4,
+      "demand": 2700,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969562,
+      "penetration": 0.2,
+      "demand": 2400,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969563,
+      "penetration": 0.2,
+      "demand": 2700,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969564,
+      "penetration": 0.4,
+      "demand": 2400,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969565,
+      "penetration": 0.4,
+      "demand": 2700,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969566,
+      "penetration": 0.2,
+      "demand": 2400,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969567,
+      "penetration": 0.2,
+      "demand": 2700,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969568,
+      "penetration": 0.4,
+      "demand": 2400,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969569,
+      "penetration": 0.4,
+      "demand": 2700,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969570,
+      "penetration": 0.2,
+      "demand": 2400,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969571,
+      "penetration": 0.2,
+      "demand": 2700,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969572,
+      "penetration": 0.4,
+      "demand": 2400,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969573,
+      "penetration": 0.4,
+      "demand": 2700,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969574,
+      "penetration": 0.2,
+      "demand": 2400,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969575,
+      "penetration": 0.2,
+      "demand": 2700,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969576,
+      "penetration": 0.4,
+      "demand": 2400,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969577,
+      "penetration": 0.4,
+      "demand": 2700,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969578,
+      "penetration": 0.2,
+      "demand": 2400,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969579,
+      "penetration": 0.2,
+      "demand": 2700,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969580,
+      "penetration": 0.4,
+      "demand": 2400,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969581,
+      "penetration": 0.4,
+      "demand": 2700,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969582,
+      "penetration": 0.2,
+      "demand": 2400,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969583,
+      "penetration": 0.2,
+      "demand": 2700,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969584,
+      "penetration": 0.4,
+      "demand": 2400,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969585,
+      "penetration": 0.4,
+      "demand": 2700,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969586,
+      "penetration": 0.2,
+      "demand": 2400,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969587,
+      "penetration": 0.2,
+      "demand": 2700,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969588,
+      "penetration": 0.4,
+      "demand": 2400,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969589,
+      "penetration": 0.4,
+      "demand": 2700,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969590,
+      "penetration": 0.05,
+      "demand": 1900,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969591,
+      "penetration": 0.05,
+      "demand": 2400,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969592,
+      "penetration": 0.05,
+      "demand": 2700,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969593,
+      "penetration": 0.1,
+      "demand": 1900,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969594,
+      "penetration": 0.1,
+      "demand": 2400,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969595,
+      "penetration": 0.1,
+      "demand": 2700,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969596,
+      "penetration": 0.2,
+      "demand": 1900,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969597,
+      "penetration": 0.4,
+      "demand": 1900,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969598,
+      "penetration": 0.05,
+      "demand": 2700,
+      "collection": "WMDATA2"
+    },
+    {
+      "seed": 969599,
+      "penetration": 0.1,
+      "demand": 2700,
+      "collection": "WMDATA2"
+    }
+  ],
+  "final_comparison_worlds": [
+    969432,
+    969433,
+    969434,
+    969435,
+    969436,
+    969437,
+    969438,
+    969439,
+    969550,
+    969551,
+    969552,
+    969553,
+    969554,
+    969555,
+    969556,
+    969557,
+    969558,
+    969559,
+    969560,
+    969561,
+    969562,
+    969563,
+    969564,
+    969565,
+    969566,
+    969567,
+    969568,
+    969569,
+    969570,
+    969571,
+    969572,
+    969573,
+    969574,
+    969575,
+    969576,
+    969577,
+    969578,
+    969579,
+    969580,
+    969581,
+    969582,
+    969583,
+    969584,
+    969585,
+    969586,
+    969587,
+    969588,
+    969589,
+    969590,
+    969591,
+    969592,
+    969593,
+    969594,
+    969595,
+    969596,
+    969597,
+    969598,
+    969599
+  ],
+  "replicated_primary_worlds": [
+    969432,
+    969433,
+    969434,
+    969435,
+    969436,
+    969437,
+    969438,
+    969439,
+    969550,
+    969551,
+    969552,
+    969553,
+    969554,
+    969555,
+    969556,
+    969557,
+    969558,
+    969559,
+    969560,
+    969561,
+    969562,
+    969563,
+    969564,
+    969565,
+    969566,
+    969567,
+    969568,
+    969569,
+    969570,
+    969571,
+    969572,
+    969573,
+    969574,
+    969575,
+    969576,
+    969577,
+    969578,
+    969579,
+    969580,
+    969581,
+    969582,
+    969583,
+    969584,
+    969585,
+    969586,
+    969587,
+    969588,
+    969589,
+    969590,
+    969592,
+    969595,
+    969597,
+    969598,
+    969599
+  ],
+  "descriptive_singleton_worlds": [
+    969591,
+    969593,
+    969594,
+    969596
+  ],
+  "reserved8": [
+    969432,
+    969433,
+    969434,
+    969435,
+    969436,
+    969437,
+    969438,
+    969439
+  ],
+  "cells": [
+    {
+      "penetration": 0.05,
+      "demand": 1900,
+      "seeds": [
+        969436,
+        969590
+      ],
+      "n": 2,
+      "replicated": true
+    },
+    {
+      "penetration": 0.05,
+      "demand": 2400,
+      "seeds": [
+        969591
+      ],
+      "n": 1,
+      "replicated": false
+    },
+    {
+      "penetration": 0.05,
+      "demand": 2700,
+      "seeds": [
+        969437,
+        969592,
+        969598
+      ],
+      "n": 3,
+      "replicated": true
+    },
+    {
+      "penetration": 0.1,
+      "demand": 1900,
+      "seeds": [
+        969593
+      ],
+      "n": 1,
+      "replicated": false
+    },
+    {
+      "penetration": 0.1,
+      "demand": 2400,
+      "seeds": [
+        969594
+      ],
+      "n": 1,
+      "replicated": false
+    },
+    {
+      "penetration": 0.1,
+      "demand": 2700,
+      "seeds": [
+        969595,
+        969599
+      ],
+      "n": 2,
+      "replicated": true
+    },
+    {
+      "penetration": 0.2,
+      "demand": 1900,
+      "seeds": [
+        969596
+      ],
+      "n": 1,
+      "replicated": false
+    },
+    {
+      "penetration": 0.2,
+      "demand": 2400,
+      "seeds": [
+        969550,
+        969554,
+        969558,
+        969562,
+        969566,
+        969570,
+        969574,
+        969578,
+        969582,
+        969586
+      ],
+      "n": 10,
+      "replicated": true
+    },
+    {
+      "penetration": 0.2,
+      "demand": 2700,
+      "seeds": [
+        969432,
+        969551,
+        969555,
+        969559,
+        969563,
+        969567,
+        969571,
+        969575,
+        969579,
+        969583,
+        969587
+      ],
+      "n": 11,
+      "replicated": true
+    },
+    {
+      "penetration": 0.4,
+      "demand": 1900,
+      "seeds": [
+        969433,
+        969438,
+        969597
+      ],
+      "n": 3,
+      "replicated": true
+    },
+    {
+      "penetration": 0.4,
+      "demand": 2400,
+      "seeds": [
+        969434,
+        969552,
+        969556,
+        969560,
+        969564,
+        969568,
+        969572,
+        969576,
+        969580,
+        969584,
+        969588
+      ],
+      "n": 11,
+      "replicated": true
+    },
+    {
+      "penetration": 0.4,
+      "demand": 2700,
+      "seeds": [
+        969435,
+        969439,
+        969553,
+        969557,
+        969561,
+        969565,
+        969569,
+        969573,
+        969577,
+        969581,
+        969585,
+        969589
+      ],
+      "n": 12,
+      "replicated": true
+    }
+  ],
+  "arms": [
+    "native",
+    "ctrl0",
+    "mappo",
+    "pi",
+    "circles"
+  ],
+  "K": 8,
+  "horizons_s": [
+    120,
+    300,
+    600
+  ],
+  "designs": {
+    "E:\\agent-work\\c4-wmdata\\tools\\wmdata\\design.json": "09394b100f82a8e8bde7dbff131fc222f71807250086b15b34f9e19506047ba5",
+    "E:\\agent-work\\c4-wmdata2\\tools\\wmdata2\\design.json": "53b239c61cd1b59a35c4a3c90ca86d744232ce9182adcfb3273ab3c3e746a109"
+  },
+  "inherited_fit": {
+    "path": "E:\\agent-work\\c4-rb2-int\\artifacts\\rbfit\\shrinkage_v1\\idm_shrinkage.json",
+    "sha256": "73283ffa206380d53ddaa037f6fb57fb61bbc9876c868253617db089da6cb299",
+    "fit_worlds": [
+      969400,
+      969401,
+      969402,
+      969403,
+      969404,
+      969405,
+      969406,
+      969407,
+      969408,
+      969409,
+      969410,
+      969411,
+      969412,
+      969413,
+      969414,
+      969415,
+      969416,
+      969417,
+      969418,
+      969419,
+      969420,
+      969421,
+      969422,
+      969423,
+      969424,
+      969425,
+      969426,
+      969427,
+      969428,
+      969429,
+      969430,
+      969431
+    ]
+  },
+  "worker_snapshots": [
+    {
+      "worker": "lane",
+      "head": "73a5685bf1ca7e40c6dfc340527517d16cd9e1b0",
+      "status": "M src/wms/physics/lc2013.py\n M tools/rbint/recipe.py\n?? src/wms/physics/lane_continuation.py\n?? tests/test_lane_continuation.py\n?? tools/rblane/export_continuation.py\n?? tools/rblane/runtime_history.py",
+      "handoff": "E:\\agent-work\\c4-rb2-lane\\HANDOFF.md",
+      "handoff_sha256": "dd6ec27e8c510c199848212bca0940c6e07813792d3041e9c347b9058ecfb238",
+      "text": "# S-RB2-LANE \u2014 round 2 active, 2026-11-01\n\nBranch `c4/rb2-lane`; engineering base FULL-v4 `22cc32f6` (inherited\nround-1 final-delivery HEAD `03c81f91`).\n\n## Round-2 status\n- Source comparison underway against read-only SUMO1.27.1 cache\n  `E:/Temp/opencode/sumo-1.27.1-rb-lane`. No downloaded source executed.\n- Required LC continuation: `E:/agent-work/c4-rb-fit/artifacts/rbfit/lane_raw_c5602102891e`.\n  Existing `FittedHiddenState` accepts legal zero LC weights. Recipe rejects\n  fitted LC; `with_motion_posteriors` drops LC: need explicit opt-in continuation.\n- No round-2 candidate ready yet. Learned corrections stay OFF.\n- Exposure: prior rules/morning/handoffs/noon freeze and aggregate evidence read;\n  new diagnosis ONLY FIT969400\u2013969431. No reserved outcome files opened for\n  round-2 selection. No WMDATA2 access; respect INT exposure quarantine.\n- Resource audit: local nvidia-smi driver unavailable; cpuQ12:01 load12.93.\n  No jobs launched yet; no peer processes signalled.\n- Delivery: physics parity, persistent fitted LC/causal conditioning, FIT\n  lane/segment counts/rates/timing and per-predicted-motivation precision/recall\n  contributions, exact versions/tests. Full qualification belongs to INT.\n\n## Preserved round-1 handoff\n\n# S-RB-INT FINAL \u2014 2026-11-01\n\nBranch `c4/rb-int`. Retain all prior work and immutable jobs. Earlier detail:\n`docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_{0034,0515}.md`.\nOwner schedule: interim04/08, freeze09:30, evaluation through11:30, report11:45.\nFINAL report59lines: `docs/paper_results/WMPHYS_MORNING.md`; delivery/provenance\n`docs/rbint/FINAL_DELIVERY.md`. Actual assembly11:46:40 (100s late); no inference rerun.\nWM2/A2/FULL-v4 each20complete worlds;B2=19,C2=12;all candidates reserved8 COMPLETE.\nFULL-v4 point switchingFAIL;53CPU analysis/orchestration +10final report checks PASS.\nFresh-session recovery: `docs/rbint/RESUME_0627.md`. Original collectors and\ncompleted scores preserved;08:26round recovered after isolated CPU child exit1.\nPeer observer retained. WM2-HDV60 now160/160 COMPLETE; no cpuQ dependency.\n08interim COMPLETE: `docs/rbint/INTERIM_0800.md`, all8reserved FULL-v4 K8 worlds.\nCRPS\u2212393/\u22123040/\u221211647;HDV60\u221215.26m;300srate-distance+5.63pp\u2192point switching FAIL.\nFull-world CIs NA/singletons. Freeze `docs/rbint/FREEZE_0930.md`; current publication\n`noon/20261101T093000+0800`. Collector receipt `runs/rbint_noon_v7/PROCESS.json`.\n\n## READY FOR EVAL / existing ownership\n- FULL-v4-gpu FROZEN/160tasks/20worlds COMPLETE source22cc32f65a80af482a1a277c5f22377fa727d0a3:\n  gpuA `/root/rbeval20261031/phys_code_22cc32f65a80/configs/wm_phys.toml`.\n  Prior398268/398269/398270+monitor398303 all EXITED; root `/root/rbeval20261031/int/WM-PHYS-FULL-v4-gpu`.\n  Canary370.48s reused. Final LANE +move\u2192LC\u2192emit source phase; do not redispatch.\n- FULL-v3-gpu OPERATIONALLY RETIRED07:03, sourcef378ac6033079bdd87c0059627e27e394a1d7cbe:\n  gpuA `/root/rbeval20261031/phys_code_f378ac603307/configs/wm_phys.toml`.\n  Own370037/370038/370039, monitor370088; root `/root/rbeval20261031/int/WM-PHYS-FULL-v3-gpu`.\n  Canary223.28s reused; causal motion posterior, learned arrivals, physics-native\n  CAVs and fast lane arbitration. Original observed-ID60s endpoints retained.\n- FULL-v1 OPERATIONALLY RETIRED07:03 source4015b641; prior333463/333464/333465, monitor335983,\n  gpuA `/root/rbeval20261031/int/WM-PHYS-FULL-v1`. Saved-ID crosswalk unverified;\n  newer FULL-v3 removes that dependence. Never redispatch either source.\n- All8reserved K8 worlds retained for EACH retired source;81/87total completed\n  tasks preserved. Exact-own pidfd stop receipts `docs/rbint/SUPERSEDED_STOPPED_0703.md`.\n  Six old GPU workers released for latest FULL-v4 throughput; no efficacy-selected stop.\n- A2 owned by RUNA; B2 owned by RUNB; C2 handover below. Shared claims bind ownership.\n- C2 now exclusively INT-owned on gpuR; original4015b641 source+smoke hashes\n  verified; NEW `/root/rbeval20261031/int/WM-PHYS-C2`. CanaryPASS318.98s,reusedONCE;\n  EXITED843902/843903/843904+monitor843928 at own cutoff;102tasks/12K8worlds retained.\n  All8reserved complete; no redispatch. `docs/rbint/FINAL_DELIVERY.md`.\n  `E:/agent-work/rb-shared/evalclaims/WM-PHYS-A2.runa.json`\n  `E:/agent-work/rb-shared/evalclaims/WM-PHYS-C2.runa.json`\n  `E:/agent-work/rb-shared/evalclaims/WM-PHYS-B2.runb.json`\n  Old failed A/C sources and all STOPs retained. No peer process action.\n- WM2-HDV60 COMPLETE160/160 gpuR, original WM2 runtime, short120step prefix-matched protocol;\n  own812962/812963/812964, monitor814672; root `/root/rbeval20261031/int/WM2-HDV60`.\n  All original workers/monitor EXITED; all three COMPLETE markers, no STOP.\n  Original WM2 H600 panel/finalizer remain EVAL-owned. SUMOCORE144/144 complete.\n\n## Current candidate engineering\n- Merged LANE b8037c1d/aefc4bd9: signed keep-right/cooperative early returns,\n  float32 endpoint normalization, urgency/message presence and blending.\n  Three-value step output reconciled with INT ramp ownership and fast arbitration.\n  Targeted66CPU PASS/1CUDA skip. Full lane precision still poor (default3.006%,\n  encoder2.400%; recall37.942%/40.492%, conditional FIT32/fivearms).\n- MERGE3ce7aa6a intake: post-movement source phase available; retain INT's\n  default-OFF exact merge query switch. Merge/phase/receipt/combined/query suite\n  59CPU PASS/1CUDA skip. Multi-step evaluation wiring now explicit below.\n- NEW explicit recipe rollout.departure_phase='after_movement_and_lanes' now\n  selects inference-only multi-step adapter (shared model default unchanged).\n  Carries settings/history/absolute controller clock; repairs cost observer's\n  old-road cohort, preserving exit speed/no birth charge and source ordinals.\n  Phase/recipe/source suite27CPU PASS;8x60s recorded smoke+fivearm600s canary PASS.\n- Complete touched-module CPU gate287PASS/4skips/60.55s (two local CUDA,\n  optional SciPy prefix diagnostic, unfetched historical GPU canary).\n- CF47b7742c and UNC84ee27b9 already integrated; FULL uses frozen\n  FIT shrinkage_v1 population and causal condition_motion, not saved tape IDs.\n  Learned strength19.35568 already applied. Fitted LC remains OFF.\n- All recipes SUMO IDM/LC2013/highway merge; learned motion/lane/merge/courtesy/\n  admission/noise corrections OFF. A encoder+uncertainty, B population,\n  C fitted population point, FULL fitted joint posterior+learned Gamma-Poisson arrivals.\n- Current SUMO-merge HDV integrator ALREADY uses Euler; CAVs retain registered\n  executor plant. Legacy/checkpoint paths default unchanged. No training tonight.\n- DECIDEe8302db3 intake: explicit matched --worlds, selected-switch reliability,\n  reverse preference directions/ties and coverage visible in CREDIBILITY.md.\n\n## Evidence and next actions\n- Recovered100episode factual60s observable targets, committed ee6bb6d2:\n  `docs/rbint/hdv60/FACTUAL_065e9853.json`. Extraction not repeated.\n  Exact t0 identity/junction carry matching; future targets isolated from forecasts.\n  Existing Miniconda endpoint/protocol suite9PASS; paired common-K8 scorer delivered.\n- ~04 report:4paired reserved worlds, FULL-v1\u2212WM2 CRPS\u2212785/\u22123512/\u221211041veh-s;\n  300s rate-distance+1.25pp. CORRECTION05:25: old CIs retracted; unscored same-cell\n  peers must not create bootstrap variation. Corrected singleton-stratum CIs NA.\n- Existing20min read-only peer observer retained (`runs/rbint_poll`); do not start\n  another observer. Both GPUs busy in last audit; preserve live evaluation jobs.\n- FULL-v4 canary395510/source22cc32f6 PASS370.48s/reused ONCE; panel now\n  LIVE gpuA own398268/398269/398270 +monitor398303; shared exclusive claim.\n- NEW paired FULL-v3 endpoints/delay, actual snapshot05:15:55 (path label0545):\n  HDV60 mean-world-median error\u221233.94m,574common endpoints;\n  CRPS120/300/600\u2212573/\u22123359/\u221211150; rate-distance300+2.5pp (worse point).\n  ALL paired95%world CIs NA after scored-world-only fixed-stratum correction:\n  four complete worlds are distinct singleton cells. Old0545 report CIs RETRACTED;\n  use paired_0525_corrected outputs. NOT switch eligible. No inference repeated.\n  Endpoint/protocol/comparator suite18PASS; immutable manifests/attrition retained.\n  WM2 full panel160/160tasks fetched read-only. No inference repeated.\n- A2 snapshot6complete reserved worlds:\u0394CRPS\u2212501/\u22122591/\u22129243veh-s,300srate-\n  distance\u22123.75pp. B2 snapshot1world969433:\u22122492/\u22128183/\u221219790,rate-distance\u22122.5pp.\n  All paired world CIs NA/singleton strata; endpoints absent. C2 still pending.\n  Reports docs/rbint/variants/{A2,B2}_0528. Different available sets, not rankings.\n- Next: collect complete K8 matched worlds, scored-world-only endpoint CIs and\n  DECIDE credibility, update \u226460line WMPHYS_MORNING.md at08:00/freeze09:30/final11:45.\n- Full-world CI presentation also requires EVERY contributing scored cell to\n  have replication; mixed singleton+replicated bootstrap intervals remain only\n  conditional diagnostics. `docs/rbint/FULL_WORLD_UNCERTAINTY_0650.md`;9CPU PASS.\n- Remaining parity gaps: synchronous LC, incomplete serial negotiation/internal\n  junction state and cold lane memory; no full distributional qualification.\n- Bounded local noon collector delivered: read-only snapshots,\n  complete-K8-only cached scoring, source-specific endpoint/credibility/traffic\n  reports,08:00interim/09:30engineering-freeze/11:35final collection by11:45.\n  Foreign-work/branch/staged/source guards; commits only own generated files.\n  tests/test_rbint_noon.py+endpoint/bootstrap/credibility gate36PASS/1historical skip.\n- First complete collection/scoring publication retained at docs/rbint/noon/\n  20261101T054124+0800. Local39728 stopped only at Windows allowed-path guard,\n  BEFORE staging; all completed analyses preserved. Diagnosed v3 recovery uses\n  --resume-publication and never repeats unchanged complete-ensemble scores.\n\n<!-- NOON-COLLECTOR:BEGIN -->\n## Final publication\nFinal report assembled from completed score components and verified frozen-source cache.\nPublication `docs/rbint/noon/20261101T113555+0800/PUBLICATION.json`; FINAL_ASSEMBLY.json records actual delivery time.\nNo remaining collector daemon; no new inference/scoring. Point switching rule FAIL; full-world CIs NA.\nFULL-v4 complete20; actual A/B/C coverage in final publication. All original failures/partial transfers retained.\n<!-- NOON-COLLECTOR:END -->\n",
+      "attestation_accepted": false
+    },
+    {
+      "worker": "break",
+      "head": "6b2d4c0146676e820b97e063da020ed6c08f62ed",
+      "status": "M tools/rb2break/ops.py\n?? docs/rb2break/BASELINE_DEV.json\n?? docs/rb2break/PARITY_DEV.json\n?? docs/rb2break/baseline/\n?? docs/rb2break/baseline_verified/\n?? docs/rb2break/parity/\n?? tools/rb2break/summarize.py",
+      "handoff": "E:\\agent-work\\c4-rb2-break\\HANDOFF.md",
+      "handoff_sha256": "cce047ff568067ccdf452b690ec565b31722aecd8dd4133450fb322c4b68b6f8",
+      "text": "# S-RB2-BREAK \u2014 round2 in progress, 2026-11-01 ~12:00\n\nOwner: S-RB2-BREAK, branch `c4/rb2-break`; FULL-v4 base22cc32f6.\nDevelopment-only plan `docs/rb2break/PLAN.md`; coordination\n`E:/agent-work/rb-shared/RB2_BREAK_TO_LANE_INT.md`.\nNo candidate or improvement claimed yet. Attribution screen being implemented.\nReserved969432\u2013969439 forbidden to this workstream. Learned corrections OFF.\n\n## Inherited round1 handoff (provenance; not current BREAK process ownership)\n\n# S-RB-INT FINAL \u2014 2026-11-01\n\nBranch `c4/rb-int`. Retain all prior work and immutable jobs. Earlier detail:\n`docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_{0034,0515}.md`.\nOwner schedule: interim04/08, freeze09:30, evaluation through11:30, report11:45.\nFINAL report59lines: `docs/paper_results/WMPHYS_MORNING.md`; delivery/provenance\n`docs/rbint/FINAL_DELIVERY.md`. Actual assembly11:46:40 (100s late); no inference rerun.\nWM2/A2/FULL-v4 each20complete worlds;B2=19,C2=12;all candidates reserved8 COMPLETE.\nFULL-v4 point switchingFAIL;53CPU analysis/orchestration +10final report checks PASS.\nFresh-session recovery: `docs/rbint/RESUME_0627.md`. Original collectors and\ncompleted scores preserved;08:26round recovered after isolated CPU child exit1.\nPeer observer retained. WM2-HDV60 now160/160 COMPLETE; no cpuQ dependency.\n08interim COMPLETE: `docs/rbint/INTERIM_0800.md`, all8reserved FULL-v4 K8 worlds.\nCRPS\u2212393/\u22123040/\u221211647;HDV60\u221215.26m;300srate-distance+5.63pp\u2192point switching FAIL.\nFull-world CIs NA/singletons. Freeze `docs/rbint/FREEZE_0930.md`; current publication\n`noon/20261101T093000+0800`. Collector receipt `runs/rbint_noon_v7/PROCESS.json`.\n\n## READY FOR EVAL / existing ownership\n- FULL-v4-gpu FROZEN/160tasks/20worlds COMPLETE source22cc32f65a80af482a1a277c5f22377fa727d0a3:\n  gpuA `/root/rbeval20261031/phys_code_22cc32f65a80/configs/wm_phys.toml`.\n  Prior398268/398269/398270+monitor398303 all EXITED; root `/root/rbeval20261031/int/WM-PHYS-FULL-v4-gpu`.\n  Canary370.48s reused. Final LANE +move\u2192LC\u2192emit source phase; do not redispatch.\n- FULL-v3-gpu OPERATIONALLY RETIRED07:03, sourcef378ac6033079bdd87c0059627e27e394a1d7cbe:\n  gpuA `/root/rbeval20261031/phys_code_f378ac603307/configs/wm_phys.toml`.\n  Own370037/370038/370039, monitor370088; root `/root/rbeval20261031/int/WM-PHYS-FULL-v3-gpu`.\n  Canary223.28s reused; causal motion posterior, learned arrivals, physics-native\n  CAVs and fast lane arbitration. Original observed-ID60s endpoints retained.\n- FULL-v1 OPERATIONALLY RETIRED07:03 source4015b641; prior333463/333464/333465, monitor335983,\n  gpuA `/root/rbeval20261031/int/WM-PHYS-FULL-v1`. Saved-ID crosswalk unverified;\n  newer FULL-v3 removes that dependence. Never redispatch either source.\n- All8reserved K8 worlds retained for EACH retired source;81/87total completed\n  tasks preserved. Exact-own pidfd stop receipts `docs/rbint/SUPERSEDED_STOPPED_0703.md`.\n  Six old GPU workers released for latest FULL-v4 throughput; no efficacy-selected stop.\n- A2 owned by RUNA; B2 owned by RUNB; C2 handover below. Shared claims bind ownership.\n- C2 now exclusively INT-owned on gpuR; original4015b641 source+smoke hashes\n  verified; NEW `/root/rbeval20261031/int/WM-PHYS-C2`. CanaryPASS318.98s,reusedONCE;\n  EXITED843902/843903/843904+monitor843928 at own cutoff;102tasks/12K8worlds retained.\n  All8reserved complete; no redispatch. `docs/rbint/FINAL_DELIVERY.md`.\n  `E:/agent-work/rb-shared/evalclaims/WM-PHYS-A2.runa.json`\n  `E:/agent-work/rb-shared/evalclaims/WM-PHYS-C2.runa.json`\n  `E:/agent-work/rb-shared/evalclaims/WM-PHYS-B2.runb.json`\n  Old failed A/C sources and all STOPs retained. No peer process action.\n- WM2-HDV60 COMPLETE160/160 gpuR, original WM2 runtime, short120step prefix-matched protocol;\n  own812962/812963/812964, monitor814672; root `/root/rbeval20261031/int/WM2-HDV60`.\n  All original workers/monitor EXITED; all three COMPLETE markers, no STOP.\n  Original WM2 H600 panel/finalizer remain EVAL-owned. SUMOCORE144/144 complete.\n\n## Current candidate engineering\n- Merged LANE b8037c1d/aefc4bd9: signed keep-right/cooperative early returns,\n  float32 endpoint normalization, urgency/message presence and blending.\n  Three-value step output reconciled with INT ramp ownership and fast arbitration.\n  Targeted66CPU PASS/1CUDA skip. Full lane precision still poor (default3.006%,\n  encoder2.400%; recall37.942%/40.492%, conditional FIT32/fivearms).\n- MERGE3ce7aa6a intake: post-movement source phase available; retain INT's\n  default-OFF exact merge query switch. Merge/phase/receipt/combined/query suite\n  59CPU PASS/1CUDA skip. Multi-step evaluation wiring now explicit below.\n- NEW explicit recipe rollout.departure_phase='after_movement_and_lanes' now\n  selects inference-only multi-step adapter (shared model default unchanged).\n  Carries settings/history/absolute controller clock; repairs cost observer's\n  old-road cohort, preserving exit speed/no birth charge and source ordinals.\n  Phase/recipe/source suite27CPU PASS;8x60s recorded smoke+fivearm600s canary PASS.\n- Complete touched-module CPU gate287PASS/4skips/60.55s (two local CUDA,\n  optional SciPy prefix diagnostic, unfetched historical GPU canary).\n- CF47b7742c and UNC84ee27b9 already integrated; FULL uses frozen\n  FIT shrinkage_v1 population and causal condition_motion, not saved tape IDs.\n  Learned strength19.35568 already applied. Fitted LC remains OFF.\n- All recipes SUMO IDM/LC2013/highway merge; learned motion/lane/merge/courtesy/\n  admission/noise corrections OFF. A encoder+uncertainty, B population,\n  C fitted population point, FULL fitted joint posterior+learned Gamma-Poisson arrivals.\n- Current SUMO-merge HDV integrator ALREADY uses Euler; CAVs retain registered\n  executor plant. Legacy/checkpoint paths default unchanged. No training tonight.\n- DECIDEe8302db3 intake: explicit matched --worlds, selected-switch reliability,\n  reverse preference directions/ties and coverage visible in CREDIBILITY.md.\n\n## Evidence and next actions\n- Recovered100episode factual60s observable targets, committed ee6bb6d2:\n  `docs/rbint/hdv60/FACTUAL_065e9853.json`. Extraction not repeated.\n  Exact t0 identity/junction carry matching; future targets isolated from forecasts.\n  Existing Miniconda endpoint/protocol suite9PASS; paired common-K8 scorer delivered.\n- ~04 report:4paired reserved worlds, FULL-v1\u2212WM2 CRPS\u2212785/\u22123512/\u221211041veh-s;\n  300s rate-distance+1.25pp. CORRECTION05:25: old CIs retracted; unscored same-cell\n  peers must not create bootstrap variation. Corrected singleton-stratum CIs NA.\n- Existing20min read-only peer observer retained (`runs/rbint_poll`); do not start\n  another observer. Both GPUs busy in last audit; preserve live evaluation jobs.\n- FULL-v4 canary395510/source22cc32f6 PASS370.48s/reused ONCE; panel now\n  LIVE gpuA own398268/398269/398270 +monitor398303; shared exclusive claim.\n- NEW paired FULL-v3 endpoints/delay, actual snapshot05:15:55 (path label0545):\n  HDV60 mean-world-median error\u221233.94m,574common endpoints;\n  CRPS120/300/600\u2212573/\u22123359/\u221211150; rate-distance300+2.5pp (worse point).\n  ALL paired95%world CIs NA after scored-world-only fixed-stratum correction:\n  four complete worlds are distinct singleton cells. Old0545 report CIs RETRACTED;\n  use paired_0525_corrected outputs. NOT switch eligible. No inference repeated.\n  Endpoint/protocol/comparator suite18PASS; immutable manifests/attrition retained.\n  WM2 full panel160/160tasks fetched read-only. No inference repeated.\n- A2 snapshot6complete reserved worlds:\u0394CRPS\u2212501/\u22122591/\u22129243veh-s,300srate-\n  distance\u22123.75pp. B2 snapshot1world969433:\u22122492/\u22128183/\u221219790,rate-distance\u22122.5pp.\n  All paired world CIs NA/singleton strata; endpoints absent. C2 still pending.\n  Reports docs/rbint/variants/{A2,B2}_0528. Different available sets, not rankings.\n- Next: collect complete K8 matched worlds, scored-world-only endpoint CIs and\n  DECIDE credibility, update \u226460line WMPHYS_MORNING.md at08:00/freeze09:30/final11:45.\n- Full-world CI presentation also requires EVERY contributing scored cell to\n  have replication; mixed singleton+replicated bootstrap intervals remain only\n  conditional diagnostics. `docs/rbint/FULL_WORLD_UNCERTAINTY_0650.md`;9CPU PASS.\n- Remaining parity gaps: synchronous LC, incomplete serial negotiation/internal\n  junction state and cold lane memory; no full distributional qualification.\n- Bounded local noon collector delivered: read-only snapshots,\n  complete-K8-only cached scoring, source-specific endpoint/credibility/traffic\n  reports,08:00interim/09:30engineering-freeze/11:35final collection by11:45.\n  Foreign-work/branch/staged/source guards; commits only own generated files.\n  tests/test_rbint_noon.py+endpoint/bootstrap/credibility gate36PASS/1historical skip.\n- First complete collection/scoring publication retained at docs/rbint/noon/\n  20261101T054124+0800. Local39728 stopped only at Windows allowed-path guard,\n  BEFORE staging; all completed analyses preserved. Diagnosed v3 recovery uses\n  --resume-publication and never repeats unchanged complete-ensemble scores.\n\n<!-- NOON-COLLECTOR:BEGIN -->\n## Final publication\nFinal report assembled from completed score components and verified frozen-source cache.\nPublication `docs/rbint/noon/20261101T113555+0800/PUBLICATION.json`; FINAL_ASSEMBLY.json records actual delivery time.\nNo remaining collector daemon; no new inference/scoring. Point switching rule FAIL; full-world CIs NA.\nFULL-v4 complete20; actual A/B/C coverage in final publication. All original failures/partial transfers retained.\n<!-- NOON-COLLECTOR:END -->\n",
+      "attestation_accepted": false
+    },
+    {
+      "worker": "cal",
+      "head": "c20b82ac21837d61add7074ffa3f120f576e99db",
+      "status": "M docs/paper_results/RB2_CAL_DESIGN.md\n M src/wms/control/hidden_state.py\n M tools/rbint/evaluate.py\n M tools/rbint/recipe.py\n?? docs/paper_results/rb2cal/\n?? src/wms/control/spread_calibration.py\n?? tests/test_rb2_spread_calibration.py\n?? tools/rbcal/evaluate_dev.py\n?? tools/rbcal/fit.py\n?? tools/rbcal/ops.py\n?? tools/rbcal/outcomes.py",
+      "handoff": "E:\\agent-work\\c4-rb2-cal\\HANDOFF.md",
+      "handoff_sha256": "aaae49997991f6e1d9eff45a94ebc7386cd9101b9efc304d535ec1dfb6adb7da",
+      "text": "# S-RB2-CAL \u2014 2026-11-01 (active)\n\nBranch `c4/rb2-cal`, base frozen FULL-v4 `22cc32f6`. Design frozen before fit:\n`docs/paper_results/RB2_CAL_DESIGN.md`. Implementing motion-likelihood power,\nGamma-rate dispersion and hierarchical entrant-mix concentration fitted ONLY\non native FIT969400\u2013969431. Outcome diagnostics restricted to dev969420\u2013969431.\nNo reserved raw tasks opened. Owner-required historical aggregate reports were\nread (disclosed exposure); they cannot qualify an independent final comparison.\nLocal NVIDIA driver unavailable; no GPU jobs launched. Existing code/evidence\nbelow is inherited INT history, not this worker's current result.\n\n---\n\n# S-RB-INT FINAL \u2014 2026-11-01\n\nBranch `c4/rb-int`. Retain all prior work and immutable jobs. Earlier detail:\n`docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_{0034,0515}.md`.\nOwner schedule: interim04/08, freeze09:30, evaluation through11:30, report11:45.\nFINAL report59lines: `docs/paper_results/WMPHYS_MORNING.md`; delivery/provenance\n`docs/rbint/FINAL_DELIVERY.md`. Actual assembly11:46:40 (100s late); no inference rerun.\nWM2/A2/FULL-v4 each20complete worlds;B2=19,C2=12;all candidates reserved8 COMPLETE.\nFULL-v4 point switchingFAIL;53CPU analysis/orchestration +10final report checks PASS.\nFresh-session recovery: `docs/rbint/RESUME_0627.md`. Original collectors and\ncompleted scores preserved;08:26round recovered after isolated CPU child exit1.\nPeer observer retained. WM2-HDV60 now160/160 COMPLETE; no cpuQ dependency.\n08interim COMPLETE: `docs/rbint/INTERIM_0800.md`, all8reserved FULL-v4 K8 worlds.\nCRPS\u2212393/\u22123040/\u221211647;HDV60\u221215.26m;300srate-distance+5.63pp\u2192point switching FAIL.\nFull-world CIs NA/singletons. Freeze `docs/rbint/FREEZE_0930.md`; current publication\n`noon/20261101T093000+0800`. Collector receipt `runs/rbint_noon_v7/PROCESS.json`.\n\n## READY FOR EVAL / existing ownership\n- FULL-v4-gpu FROZEN/160tasks/20worlds COMPLETE source22cc32f65a80af482a1a277c5f22377fa727d0a3:\n  gpuA `/root/rbeval20261031/phys_code_22cc32f65a80/configs/wm_phys.toml`.\n  Prior398268/398269/398270+monitor398303 all EXITED; root `/root/rbeval20261031/int/WM-PHYS-FULL-v4-gpu`.\n  Canary370.48s reused. Final LANE +move\u2192LC\u2192emit source phase; do not redispatch.\n- FULL-v3-gpu OPERATIONALLY RETIRED07:03, sourcef378ac6033079bdd87c0059627e27e394a1d7cbe:\n  gpuA `/root/rbeval20261031/phys_code_f378ac603307/configs/wm_phys.toml`.\n  Own370037/370038/370039, monitor370088; root `/root/rbeval20261031/int/WM-PHYS-FULL-v3-gpu`.\n  Canary223.28s reused; causal motion posterior, learned arrivals, physics-native\n  CAVs and fast lane arbitration. Original observed-ID60s endpoints retained.\n- FULL-v1 OPERATIONALLY RETIRED07:03 source4015b641; prior333463/333464/333465, monitor335983,\n  gpuA `/root/rbeval20261031/int/WM-PHYS-FULL-v1`. Saved-ID crosswalk unverified;\n  newer FULL-v3 removes that dependence. Never redispatch either source.\n- All8reserved K8 worlds retained for EACH retired source;81/87total completed\n  tasks preserved. Exact-own pidfd stop receipts `docs/rbint/SUPERSEDED_STOPPED_0703.md`.\n  Six old GPU workers released for latest FULL-v4 throughput; no efficacy-selected stop.\n- A2 owned by RUNA; B2 owned by RUNB; C2 handover below. Shared claims bind ownership.\n- C2 now exclusively INT-owned on gpuR; original4015b641 source+smoke hashes\n  verified; NEW `/root/rbeval20261031/int/WM-PHYS-C2`. CanaryPASS318.98s,reusedONCE;\n  EXITED843902/843903/843904+monitor843928 at own cutoff;102tasks/12K8worlds retained.\n  All8reserved complete; no redispatch. `docs/rbint/FINAL_DELIVERY.md`.\n  `E:/agent-work/rb-shared/evalclaims/WM-PHYS-A2.runa.json`\n  `E:/agent-work/rb-shared/evalclaims/WM-PHYS-C2.runa.json`\n  `E:/agent-work/rb-shared/evalclaims/WM-PHYS-B2.runb.json`\n  Old failed A/C sources and all STOPs retained. No peer process action.\n- WM2-HDV60 COMPLETE160/160 gpuR, original WM2 runtime, short120step prefix-matched protocol;\n  own812962/812963/812964, monitor814672; root `/root/rbeval20261031/int/WM2-HDV60`.\n  All original workers/monitor EXITED; all three COMPLETE markers, no STOP.\n  Original WM2 H600 panel/finalizer remain EVAL-owned. SUMOCORE144/144 complete.\n\n## Current candidate engineering\n- Merged LANE b8037c1d/aefc4bd9: signed keep-right/cooperative early returns,\n  float32 endpoint normalization, urgency/message presence and blending.\n  Three-value step output reconciled with INT ramp ownership and fast arbitration.\n  Targeted66CPU PASS/1CUDA skip. Full lane precision still poor (default3.006%,\n  encoder2.400%; recall37.942%/40.492%, conditional FIT32/fivearms).\n- MERGE3ce7aa6a intake: post-movement source phase available; retain INT's\n  default-OFF exact merge query switch. Merge/phase/receipt/combined/query suite\n  59CPU PASS/1CUDA skip. Multi-step evaluation wiring now explicit below.\n- NEW explicit recipe rollout.departure_phase='after_movement_and_lanes' now\n  selects inference-only multi-step adapter (shared model default unchanged).\n  Carries settings/history/absolute controller clock; repairs cost observer's\n  old-road cohort, preserving exit speed/no birth charge and source ordinals.\n  Phase/recipe/source suite27CPU PASS;8x60s recorded smoke+fivearm600s canary PASS.\n- Complete touched-module CPU gate287PASS/4skips/60.55s (two local CUDA,\n  optional SciPy prefix diagnostic, unfetched historical GPU canary).\n- CF47b7742c and UNC84ee27b9 already integrated; FULL uses frozen\n  FIT shrinkage_v1 population and causal condition_motion, not saved tape IDs.\n  Learned strength19.35568 already applied. Fitted LC remains OFF.\n- All recipes SUMO IDM/LC2013/highway merge; learned motion/lane/merge/courtesy/\n  admission/noise corrections OFF. A encoder+uncertainty, B population,\n  C fitted population point, FULL fitted joint posterior+learned Gamma-Poisson arrivals.\n- Current SUMO-merge HDV integrator ALREADY uses Euler; CAVs retain registered\n  executor plant. Legacy/checkpoint paths default unchanged. No training tonight.\n- DECIDEe8302db3 intake: explicit matched --worlds, selected-switch reliability,\n  reverse preference directions/ties and coverage visible in CREDIBILITY.md.\n\n## Evidence and next actions\n- Recovered100episode factual60s observable targets, committed ee6bb6d2:\n  `docs/rbint/hdv60/FACTUAL_065e9853.json`. Extraction not repeated.\n  Exact t0 identity/junction carry matching; future targets isolated from forecasts.\n  Existing Miniconda endpoint/protocol suite9PASS; paired common-K8 scorer delivered.\n- ~04 report:4paired reserved worlds, FULL-v1\u2212WM2 CRPS\u2212785/\u22123512/\u221211041veh-s;\n  300s rate-distance+1.25pp. CORRECTION05:25: old CIs retracted; unscored same-cell\n  peers must not create bootstrap variation. Corrected singleton-stratum CIs NA.\n- Existing20min read-only peer observer retained (`runs/rbint_poll`); do not start\n  another observer. Both GPUs busy in last audit; preserve live evaluation jobs.\n- FULL-v4 canary395510/source22cc32f6 PASS370.48s/reused ONCE; panel now\n  LIVE gpuA own398268/398269/398270 +monitor398303; shared exclusive claim.\n- NEW paired FULL-v3 endpoints/delay, actual snapshot05:15:55 (path label0545):\n  HDV60 mean-world-median error\u221233.94m,574common endpoints;\n  CRPS120/300/600\u2212573/\u22123359/\u221211150; rate-distance300+2.5pp (worse point).\n  ALL paired95%world CIs NA after scored-world-only fixed-stratum correction:\n  four complete worlds are distinct singleton cells. Old0545 report CIs RETRACTED;\n  use paired_0525_corrected outputs. NOT switch eligible. No inference repeated.\n  Endpoint/protocol/comparator suite18PASS; immutable manifests/attrition retained.\n  WM2 full panel160/160tasks fetched read-only. No inference repeated.\n- A2 snapshot6complete reserved worlds:\u0394CRPS\u2212501/\u22122591/\u22129243veh-s,300srate-\n  distance\u22123.75pp. B2 snapshot1world969433:\u22122492/\u22128183/\u221219790,rate-distance\u22122.5pp.\n  All paired world CIs NA/singleton strata; endpoints absent. C2 still pending.\n  Reports docs/rbint/variants/{A2,B2}_0528. Different available sets, not rankings.\n- Next: collect complete K8 matched worlds, scored-world-only endpoint CIs and\n  DECIDE credibility, update \u226460line WMPHYS_MORNING.md at08:00/freeze09:30/final11:45.\n- Full-world CI presentation also requires EVERY contributing scored cell to\n  have replication; mixed singleton+replicated bootstrap intervals remain only\n  conditional diagnostics. `docs/rbint/FULL_WORLD_UNCERTAINTY_0650.md`;9CPU PASS.\n- Remaining parity gaps: synchronous LC, incomplete serial negotiation/internal\n  junction state and cold lane memory; no full distributional qualification.\n- Bounded local noon collector delivered: read-only snapshots,\n  complete-K8-only cached scoring, source-specific endpoint/credibility/traffic\n  reports,08:00interim/09:30engineering-freeze/11:35final collection by11:45.\n  Foreign-work/branch/staged/source guards; commits only own generated files.\n  tests/test_rbint_noon.py+endpoint/bootstrap/credibility gate36PASS/1historical skip.\n- First complete collection/scoring publication retained at docs/rbint/noon/\n  20261101T054124+0800. Local39728 stopped only at Windows allowed-path guard,\n  BEFORE staging; all completed analyses preserved. Diagnosed v3 recovery uses\n  --resume-publication and never repeats unchanged complete-ensemble scores.\n\n<!-- NOON-COLLECTOR:BEGIN -->\n## Final publication\nFinal report assembled from completed score components and verified frozen-source cache.\nPublication `docs/rbint/noon/20261101T113555+0800/PUBLICATION.json`; FINAL_ASSEMBLY.json records actual delivery time.\nNo remaining collector daemon; no new inference/scoring. Point switching rule FAIL; full-world CIs NA.\nFULL-v4 complete20; actual A/B/C coverage in final publication. All original failures/partial transfers retained.\n<!-- NOON-COLLECTOR:END -->\n",
+      "attestation_accepted": false
+    },
+    {
+      "worker": "lphys",
+      "head": "fd768d54864263a16de8970fa2ede92a318ea456",
+      "status": "M src/wms/model/sumo_insertion.py\n M src/wms/physics/config.py\n M tools/rbint/evaluate.py\n M tools/rbint/recipe.py\n?? src/wms/physics/learned_parameters.py",
+      "handoff": "E:\\agent-work\\c4-rb2-lphys\\HANDOFF.md",
+      "handoff_sha256": "974d4c5c089bec04c4a219e7f517a7beeb2dede237a743e8f41c23976244eb30",
+      "text": "# S-RB2-LPHYS \u2014 round 2 active, 2026-11-01\n\nBranch `c4/rb2-lphys`, frozen engineering source22cc32f6; inherited HEAD03c81f91.\nPlan: `docs/rb2lphys/PLAN.md`; coordination: `rb-shared/RB2_LPHYS_OWNERSHIP.md`.\nLPHYS owns default-OFF physical parameter artifact/switch, starting with SUMO\ndeparture parameters; FIT/LANE own five LC and IDM population/posterior settings.\nNo independent refit of those supports; no acceleration residuals.\nOnly969400\u2013969431 allowed for fit/selection; no WMDATA2 or reserved outcomes read\nfor round-2 selection. Required prior aggregate evidence read. No jobs launched.\nLocal NVIDIA driver unavailable; remote resource audit pending. Candidate NOT READY.\n\n## Preserved round-1 handoff\n\n# S-RB-INT FINAL \u2014 2026-11-01\n\nBranch `c4/rb-int`. Retain all prior work and immutable jobs. Earlier detail:\n`docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_{0034,0515}.md`.\nOwner schedule: interim04/08, freeze09:30, evaluation through11:30, report11:45.\nFINAL report59lines: `docs/paper_results/WMPHYS_MORNING.md`; delivery/provenance\n`docs/rbint/FINAL_DELIVERY.md`. Actual assembly11:46:40 (100s late); no inference rerun.\nWM2/A2/FULL-v4 each20complete worlds;B2=19,C2=12;all candidates reserved8 COMPLETE.\nFULL-v4 point switchingFAIL;53CPU analysis/orchestration +10final report checks PASS.\nFresh-session recovery: `docs/rbint/RESUME_0627.md`. Original collectors and\ncompleted scores preserved;08:26round recovered after isolated CPU child exit1.\nPeer observer retained. WM2-HDV60 now160/160 COMPLETE; no cpuQ dependency.\n08interim COMPLETE: `docs/rbint/INTERIM_0800.md`, all8reserved FULL-v4 K8 worlds.\nCRPS\u2212393/\u22123040/\u221211647;HDV60\u221215.26m;300srate-distance+5.63pp\u2192point switching FAIL.\nFull-world CIs NA/singletons. Freeze `docs/rbint/FREEZE_0930.md`; current publication\n`noon/20261101T093000+0800`. Collector receipt `runs/rbint_noon_v7/PROCESS.json`.\n\n## READY FOR EVAL / existing ownership\n- FULL-v4-gpu FROZEN/160tasks/20worlds COMPLETE source22cc32f65a80af482a1a277c5f22377fa727d0a3:\n  gpuA `/root/rbeval20261031/phys_code_22cc32f65a80/configs/wm_phys.toml`.\n  Prior398268/398269/398270+monitor398303 all EXITED; root `/root/rbeval20261031/int/WM-PHYS-FULL-v4-gpu`.\n  Canary370.48s reused. Final LANE +move\u2192LC\u2192emit source phase; do not redispatch.\n- FULL-v3-gpu OPERATIONALLY RETIRED07:03, sourcef378ac6033079bdd87c0059627e27e394a1d7cbe:\n  gpuA `/root/rbeval20261031/phys_code_f378ac603307/configs/wm_phys.toml`.\n  Own370037/370038/370039, monitor370088; root `/root/rbeval20261031/int/WM-PHYS-FULL-v3-gpu`.\n  Canary223.28s reused; causal motion posterior, learned arrivals, physics-native\n  CAVs and fast lane arbitration. Original observed-ID60s endpoints retained.\n- FULL-v1 OPERATIONALLY RETIRED07:03 source4015b641; prior333463/333464/333465, monitor335983,\n  gpuA `/root/rbeval20261031/int/WM-PHYS-FULL-v1`. Saved-ID crosswalk unverified;\n  newer FULL-v3 removes that dependence. Never redispatch either source.\n- All8reserved K8 worlds retained for EACH retired source;81/87total completed\n  tasks preserved. Exact-own pidfd stop receipts `docs/rbint/SUPERSEDED_STOPPED_0703.md`.\n  Six old GPU workers released for latest FULL-v4 throughput; no efficacy-selected stop.\n- A2 owned by RUNA; B2 owned by RUNB; C2 handover below. Shared claims bind ownership.\n- C2 now exclusively INT-owned on gpuR; original4015b641 source+smoke hashes\n  verified; NEW `/root/rbeval20261031/int/WM-PHYS-C2`. CanaryPASS318.98s,reusedONCE;\n  EXITED843902/843903/843904+monitor843928 at own cutoff;102tasks/12K8worlds retained.\n  All8reserved complete; no redispatch. `docs/rbint/FINAL_DELIVERY.md`.\n  `E:/agent-work/rb-shared/evalclaims/WM-PHYS-A2.runa.json`\n  `E:/agent-work/rb-shared/evalclaims/WM-PHYS-C2.runa.json`\n  `E:/agent-work/rb-shared/evalclaims/WM-PHYS-B2.runb.json`\n  Old failed A/C sources and all STOPs retained. No peer process action.\n- WM2-HDV60 COMPLETE160/160 gpuR, original WM2 runtime, short120step prefix-matched protocol;\n  own812962/812963/812964, monitor814672; root `/root/rbeval20261031/int/WM2-HDV60`.\n  All original workers/monitor EXITED; all three COMPLETE markers, no STOP.\n  Original WM2 H600 panel/finalizer remain EVAL-owned. SUMOCORE144/144 complete.\n\n## Current candidate engineering\n- Merged LANE b8037c1d/aefc4bd9: signed keep-right/cooperative early returns,\n  float32 endpoint normalization, urgency/message presence and blending.\n  Three-value step output reconciled with INT ramp ownership and fast arbitration.\n  Targeted66CPU PASS/1CUDA skip. Full lane precision still poor (default3.006%,\n  encoder2.400%; recall37.942%/40.492%, conditional FIT32/fivearms).\n- MERGE3ce7aa6a intake: post-movement source phase available; retain INT's\n  default-OFF exact merge query switch. Merge/phase/receipt/combined/query suite\n  59CPU PASS/1CUDA skip. Multi-step evaluation wiring now explicit below.\n- NEW explicit recipe rollout.departure_phase='after_movement_and_lanes' now\n  selects inference-only multi-step adapter (shared model default unchanged).\n  Carries settings/history/absolute controller clock; repairs cost observer's\n  old-road cohort, preserving exit speed/no birth charge and source ordinals.\n  Phase/recipe/source suite27CPU PASS;8x60s recorded smoke+fivearm600s canary PASS.\n- Complete touched-module CPU gate287PASS/4skips/60.55s (two local CUDA,\n  optional SciPy prefix diagnostic, unfetched historical GPU canary).\n- CF47b7742c and UNC84ee27b9 already integrated; FULL uses frozen\n  FIT shrinkage_v1 population and causal condition_motion, not saved tape IDs.\n  Learned strength19.35568 already applied. Fitted LC remains OFF.\n- All recipes SUMO IDM/LC2013/highway merge; learned motion/lane/merge/courtesy/\n  admission/noise corrections OFF. A encoder+uncertainty, B population,\n  C fitted population point, FULL fitted joint posterior+learned Gamma-Poisson arrivals.\n- Current SUMO-merge HDV integrator ALREADY uses Euler; CAVs retain registered\n  executor plant. Legacy/checkpoint paths default unchanged. No training tonight.\n- DECIDEe8302db3 intake: explicit matched --worlds, selected-switch reliability,\n  reverse preference directions/ties and coverage visible in CREDIBILITY.md.\n\n## Evidence and next actions\n- Recovered100episode factual60s observable targets, committed ee6bb6d2:\n  `docs/rbint/hdv60/FACTUAL_065e9853.json`. Extraction not repeated.\n  Exact t0 identity/junction carry matching; future targets isolated from forecasts.\n  Existing Miniconda endpoint/protocol suite9PASS; paired common-K8 scorer delivered.\n- ~04 report:4paired reserved worlds, FULL-v1\u2212WM2 CRPS\u2212785/\u22123512/\u221211041veh-s;\n  300s rate-distance+1.25pp. CORRECTION05:25: old CIs retracted; unscored same-cell\n  peers must not create bootstrap variation. Corrected singleton-stratum CIs NA.\n- Existing20min read-only peer observer retained (`runs/rbint_poll`); do not start\n  another observer. Both GPUs busy in last audit; preserve live evaluation jobs.\n- FULL-v4 canary395510/source22cc32f6 PASS370.48s/reused ONCE; panel now\n  LIVE gpuA own398268/398269/398270 +monitor398303; shared exclusive claim.\n- NEW paired FULL-v3 endpoints/delay, actual snapshot05:15:55 (path label0545):\n  HDV60 mean-world-median error\u221233.94m,574common endpoints;\n  CRPS120/300/600\u2212573/\u22123359/\u221211150; rate-distance300+2.5pp (worse point).\n  ALL paired95%world CIs NA after scored-world-only fixed-stratum correction:\n  four complete worlds are distinct singleton cells. Old0545 report CIs RETRACTED;\n  use paired_0525_corrected outputs. NOT switch eligible. No inference repeated.\n  Endpoint/protocol/comparator suite18PASS; immutable manifests/attrition retained.\n  WM2 full panel160/160tasks fetched read-only. No inference repeated.\n- A2 snapshot6complete reserved worlds:\u0394CRPS\u2212501/\u22122591/\u22129243veh-s,300srate-\n  distance\u22123.75pp. B2 snapshot1world969433:\u22122492/\u22128183/\u221219790,rate-distance\u22122.5pp.\n  All paired world CIs NA/singleton strata; endpoints absent. C2 still pending.\n  Reports docs/rbint/variants/{A2,B2}_0528. Different available sets, not rankings.\n- Next: collect complete K8 matched worlds, scored-world-only endpoint CIs and\n  DECIDE credibility, update \u226460line WMPHYS_MORNING.md at08:00/freeze09:30/final11:45.\n- Full-world CI presentation also requires EVERY contributing scored cell to\n  have replication; mixed singleton+replicated bootstrap intervals remain only\n  conditional diagnostics. `docs/rbint/FULL_WORLD_UNCERTAINTY_0650.md`;9CPU PASS.\n- Remaining parity gaps: synchronous LC, incomplete serial negotiation/internal\n  junction state and cold lane memory; no full distributional qualification.\n- Bounded local noon collector delivered: read-only snapshots,\n  complete-K8-only cached scoring, source-specific endpoint/credibility/traffic\n  reports,08:00interim/09:30engineering-freeze/11:35final collection by11:45.\n  Foreign-work/branch/staged/source guards; commits only own generated files.\n  tests/test_rbint_noon.py+endpoint/bootstrap/credibility gate36PASS/1historical skip.\n- First complete collection/scoring publication retained at docs/rbint/noon/\n  20261101T054124+0800. Local39728 stopped only at Windows allowed-path guard,\n  BEFORE staging; all completed analyses preserved. Diagnosed v3 recovery uses\n  --resume-publication and never repeats unchanged complete-ensemble scores.\n\n<!-- NOON-COLLECTOR:BEGIN -->\n## Final publication\nFinal report assembled from completed score components and verified frozen-source cache.\nPublication `docs/rbint/noon/20261101T113555+0800/PUBLICATION.json`; FINAL_ASSEMBLY.json records actual delivery time.\nNo remaining collector daemon; no new inference/scoring. Point switching rule FAIL; full-world CIs NA.\nFULL-v4 complete20; actual A/B/C coverage in final publication. All original failures/partial transfers retained.\n<!-- NOON-COLLECTOR:END -->\n",
+      "attestation_accepted": false
+    }
+  ],
+  "historical_exposure": "Prior aggregate reports and corpus analyses disclosed; not historically untouched.",
+  "final_inference_authorized": false,
+  "pending": [
+    "four worker fit/selection and inherited artifact exposure attestations",
+    "identity-bound remote record availability and ownership audit",
+    "candidate freeze and development-only smoke"
+  ],
+  "full12_gate": "cannot qualify from four singleton cells; replicated subset is explicitly scoped"
+}
