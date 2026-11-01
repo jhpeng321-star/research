@@ -5,6 +5,20 @@ Original advance-approved exact cap7,012,800; designSHA09499f2af60311b3690a940dc
 
 ## Current state
 
+**12:00 supervision completed normally:** final scheduled heartbeat committed
+`cb9b7a20`, zero alerts;87/169updates,4002/7774production successes,12open,
+3603000actual/3614400reserved sim-s. Latest verified checkpoint087SHA
+`e0881634a1ee4553445ea22bf01be39b27bdde3619f6523bf091ef20624c5ffb`.
+No new failure/control-window collision/teleport. Supervisor46520 printed
+`NOON_SUPERVISION_COMPLETE` and exited as designed; watcher12432 remains live.
+12:00:46 read-only audit again validates originalcpuQ606968/exactUID/start/command/
+nice19; disk now4958941184free bytes, inventoried training output1971388416allocated
+bytes. Evidence `selmappo2/RECOVERY_AUDIT_1793505647316442600.json`.
+Training is still incomplete; continue the EXISTING trainer/watcher, not either
+one-use launch. Watcher publishes every300s and hands ONLY final169 to C1SWITCH2;
+local evaluation remains unstarted. The noon publisher's normal exit is not a
+training failure. No restart, cap/schedule change, replay, deletion or new monitor.
+
 **11:41 SSH recovery reconciled (MAIN11:37 correction):** cpuQ was not rebooted.
 Read-only audit verifies original606968/UID1000/startticks48374316, exact command,
 nice19, elapsed35015.6s and host uptime518758.8s. Original watcher12432 and

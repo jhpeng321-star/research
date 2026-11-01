@@ -1,5 +1,16 @@
 # S-SELMAPPO2 SSH recovery — 2026-11-01 11:41 +08
 
+## Noon follow-up
+
+Noon heartbeat `cb9b7a20`:87/169updates,4002production successes,12open,
+3603000actual/3614400reserved, zero alerts/no new failures. Supervisor46520
+completed normally; original trainer606968 and watcher12432 remain live.
+12:00:46 ownership audit confirms nice19/exact start/command and4.959GBfree disk;
+inventoried training output1.971GBallocated. Final169/evaluation still pending.
+Evidence `selmappo2/RECOVERY_AUDIT_1793505647316442600.json`.
+
+## Recovery
+
 Recovery commit: `40f753a0`. The original cpuQ trainer **606968** remains live,
 UID1000/startticks48374316/exact command verified, nice19. Host uptime6days
 confirms MAIN11:37 correction. No restart or replacement job was launched.

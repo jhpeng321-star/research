@@ -2,6 +2,20 @@
 
 ## Status (2026-11-01)
 
+**12:00 +08:00 supervision endpoint:** final scheduled heartbeat committed
+`cb9b7a20` with **zero alerts**:87/169updates,4002/7774production successes,
+12open,3603000actual/3614400reserved sim-s; only the original failed smoke remains.
+Latest verified checkpoint087SHA256
+`e0881634a1ee4553445ea22bf01be39b27bdde3619f6523bf091ef20624c5ffb`.
+No recorded control-window collisions/teleports. Supervisor46520 completed its
+registered noon schedule normally; original trainer606968 and five-minute
+watcher12432 remain live. An exact ownership/nice19 audit at12:00:46 records
+4.959GBfree disk and1.971GBallocated inventoried training output, excluding blocked
+entries: `selmappo2/RECOVERY_AUDIT_1793505647316442600.json`.
+Training continues within the original cap and169-update schedule; final169 and
+S-C1SWITCH2 evaluation remain pending. Existing automatic final-only handoff stays
+armed. Later live results below supersede this supervision snapshot.
+
 **11:41 +08:00 SSH recovery reconciled:** the original cpuQ606968 training process
 is live, UID1000/startticks48374316/exact command verified, nice19, with9.73h
 elapsed on a host with6.00days uptime. The MAIN11:37 correction is confirmed:
@@ -216,11 +230,11 @@ Evidence is under `docs/paper_results/selmappo2/`.
 
 
 
-Evidence: `selmappo2/COLLECTION_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29_1793505406516964700_2fff6aec17ae41e6ac37c595474f45b0.json`; SHA256 `bb7eeeb515230e924cb9118858c1037d05070a92c60a52b9c429b2290ed3ee9f`.
+Evidence: `selmappo2/COLLECTION_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29_1793505711638650200_db099dbd13694ca0bf2dc776684daa98.json`; SHA256 `64d627a6dd8b977681b87ee3b56ed350cc420576f5ab9fda492036fd95c5988f`.
 
 Remote root: `/home/ubuntu/selmappo2_20261101/build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29/training`.
 
-Dispatch PID: `606968`; alive at observation: `True`; observation timestamp (ns): `1793505351129498177`.
+Dispatch PID: `606968`; alive at observation: `True`; observation timestamp (ns): `1793505708108733191`.
 
 
 
@@ -228,15 +242,15 @@ Dispatch PID: `606968`; alive at observation: `True`; observation timestamp (ns)
 
 
 
-Verified complete updates: 87/169 (46 fresh episodes/update).
+Verified complete updates: 88/169 (46 fresh episodes/update).
 
-Update records observed: 87.
+Update records observed: 88.
 
-Coordinator successful episodes: 4002/7,774 production + 1/2 smoke.
+Coordinator successful episodes: 4075/7,774 production + 1/2 smoke.
 
-Reservations: 4016; unresolved: 12; failed: 1; actual not yet receipted: 12.
+Reservations: 4087; unresolved: 10; failed: 1; actual not yet receipted: 10.
 
-Raw newly incurred training + smoke simulation: 3,603,000.0 actual s; 3,614,400 reserved s (no refunds).
+Raw newly incurred training + smoke simulation: 3,668,700.0 actual s; 3,678,300 reserved s (no refunds).
 
 
 
@@ -258,11 +272,11 @@ J600 is full-team delay over the 600 s control interval; lower is better. Each p
 
 
 
-![Training learning curve](selmappo2/selmappo2_curve_1793505407167762600_753085b8fa364483bc25a4373c18ed56.svg)
+![Training learning curve](selmappo2/selmappo2_curve_1793505712293620100_84a1b5249af34da59796606d549e636a.svg)
 
 
 
-[Complete-update metrics CSV](selmappo2/selmappo2_curve_1793505407167762600_753085b8fa364483bc25a4373c18ed56.csv)
+[Complete-update metrics CSV](selmappo2/selmappo2_curve_1793505712293620100_84a1b5249af34da59796606d549e636a.csv)
 
 
 
@@ -270,7 +284,7 @@ J600 is full-team delay over the 600 s control interval; lower is better. Each p
 
 
 
-Collected complete episode result receipts: 4003. collisions: 0.000; teleports: 0.000; ttc_below_3_vs: 1,652,374.000; hard_brake_vs: 63,479.000.
+Collected complete episode result receipts: 4076. collisions: 0.000; teleports: 0.000; ttc_below_3_vs: 1,681,763.000; hard_brake_vs: 64,543.500.
 
 These are recorded control-interval components only. Warmup safety and dropped-vehicle counters are not separately recorded in result.jsonl; unrecorded metrics are not asserted to be zero.
 
