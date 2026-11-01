@@ -59,6 +59,13 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**11:50 fleet CPU evaluation LIVE / disk gate yielded:** owncpuQ1152412,
+two workers at original `e79775aa1f380c25`,1340charged/37decisions/noSTOP at
+1793505028. OriginalgpuR four-world partition `6e152d9a0b7bf7a4` UNCLAIMED:
+resource refusal BEFORE claim/physics, rootfree143589376bytes/data2032021504bytes
+(both<2GiB). No deletion or relocation. MAIN notice `_sol/C1SWITCH2_1150_DISK_AND_BB_ALERT.md`.
+cpuQfree2972311552bytes/taskoutputs301123940bytes, per-CAV606968LIVE,
+observer25348LIVE. Reconciliation receipt1793505031; original caps unchanged.
 **11:47 original WM oracle scope COMPLETE:** own885469 EXITED/noSTOP, all12
 branches closed, charged=actual6000sim-s/GPU0. Never redispatch. Original WM
 total now14160sim-s (5460cpuQ+2700gpuR+6000continuation), six completed episodes.
