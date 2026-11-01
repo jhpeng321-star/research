@@ -1,0 +1,20 @@
+{
+  "host": "gpuR",
+  "root": "/root/c1switch2_run_edcdbebb738ef1c6",
+  "binding_sha256": "43f3c157a2958878bf26e84e302f726f50c36e43be6de06e0ec3422796032060",
+  "files": 122,
+  "new_sim_s": 0,
+  "new_gpu_s": 0,
+  "arm": "cav_mappo",
+  "selector_probe": {
+    "status": "PASS",
+    "iteration": 169,
+    "checkpoint_sha256": "82c6745bac50aaf4dee98f5d8b3c60db0e5e558d9abf4667dd8e605774f4b3c4",
+    "choice": {
+      "a": "pi",
+      "b": "native"
+    },
+    "new_sim_s": 0,
+    "new_gpu_s": 0
+  }
+}

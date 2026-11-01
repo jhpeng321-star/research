@@ -1,6 +1,7 @@
 """Final-only selector evaluation on the original disjoint CPU world partitions."""
 import argparse
 import json
+import time
 
 from tools.c1switch.design import checked, sha
 from tools.c1switch.storage import canonical, write
@@ -65,10 +66,32 @@ print(json.dumps(dict(root=str(root),sources=sources)))
                 frozen_receipt=root+'/FROZEN_FINAL.json'), peers
 
 
-def prepare(host, resume_root=None, arm='fleet_ppo'):
+def prepared_path(arm, host, evidence=None):
+    evidence = evidence if evidence is not None else EVIDENCE
+    base = 'SELECTOR_PREPARED_'+arm+'_'+host
+    repaired = evidence/(base+'_REPAIRED.json')
+    return repaired if repaired.exists() else evidence/(base+'.json')
+
+
+def prepare(host, resume_root=None, arm='fleet_ppo', repair_unclaimed=False):
     if arm not in ('fleet_ppo', 'cav_mappo'):
         raise ValueError('registered selector arm required')
     path = EVIDENCE/('SELECTOR_PREPARED_'+arm+'_'+host+'.json')
+    predecessor = None
+    if repair_unclaimed:
+        if arm != 'cav_mappo' or host != 'cpuQ' or resume_root:
+            raise ValueError('only the wholly unstarted original cpuQ per-CAV stage may be repaired')
+        old = json.loads(path.read_text())
+        path = path.with_name(path.stem+'_REPAIRED.json')
+        if path.exists():
+            raise ValueError('unstarted repair already prepared; inspect retained receipts')
+        predecessor = ssh(host, f'''import hashlib,json
+from pathlib import Path
+root=Path({old['root']!r})
+assert not any((root/n).exists() for n in ('accounting.jsonl','SELECTOR_DISPATCH_ONCE.json','DISPATCH_SELECTOR.json','GATES.json','STOP'))
+assert not list((root/'jobs').iterdir())
+print(json.dumps(dict(root=str(root),status='UNCLAIMED_ZERO_PHYSICS',binding_sha256=hashlib.sha256((root/'BINDING.json').read_bytes()).hexdigest())))
+''', timeout=30)
     if path.exists():
         raise ValueError('selector already prepared; inspect existing receipt')
     peers = None
@@ -128,14 +151,34 @@ with (root/'SELECTOR_CPU.json').open('x') as stream:json.dump(out,stream,indent=
 print(json.dumps(out))
 ''', timeout=45)
     result = dict(staged, host=host, arm=arm, selector_probe=probe)
+    if predecessor:
+        result['unstarted_predecessor'] = predecessor
     write(path, result)
     print(json.dumps(result, indent=2))
+
+
+def collect(host, arm):
+    prepared = json.loads(prepared_path(arm,host).read_text())
+    result = ssh(host, f'''import json,time
+from pathlib import Path
+root=Path({prepared['root']!r});out=dict(unix=time.time(),root=str(root),host={host!r},arm={arm!r})
+for name in ('DISPATCH_SELECTOR.json','STOP','supervisor/COMPLETE.json'):
+ path=root/name
+ if path.exists():out[name]=json.loads(path.read_text())
+if out.get('STOP'):
+ ident=out['STOP']['id'];assert ident.startswith({arm+'__s'!r}) and '/' not in ident
+ out['failed_log']=(root/'logs'/(ident+'.log')).read_text()
+ out['supervisor_log']=(root/'SELECTOR.log').read_text()
+print(json.dumps(out))
+''', timeout=45)
+    write(EVIDENCE/('SELECTOR_PROGRESS_'+arm+'_'+host+'_'+str(int(time.time()))+'.json'),result)
+    print(json.dumps(result,indent=2))
 
 
 def dispatch(host, workers, arm='fleet_ppo'):
     if arm not in ('fleet_ppo', 'cav_mappo'):
         raise ValueError('registered selector arm required')
-    prepared = json.loads((EVIDENCE/('SELECTOR_PREPARED_'+arm+'_'+host+'.json')).read_text())
+    prepared = json.loads(prepared_path(arm,host).read_text())
     text = checked(REGISTRATION).read_text(encoding='utf-8')
     audit = registration_audit(REGISTRATION)
     if not approval(text) or not cpu_authority(text) or audit['hits']:
@@ -203,13 +246,16 @@ print(json.dumps(out))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('command', choices=('prepare', 'dispatch'))
+    parser.add_argument('command', choices=('prepare', 'dispatch', 'collect'))
     parser.add_argument('--host', choices=('cpuQ', 'gpuR'), required=True)
     parser.add_argument('--workers', type=int, default=1)
     parser.add_argument('--resume-root')
     parser.add_argument('--arm', choices=('fleet_ppo','cav_mappo'), default='fleet_ppo')
+    parser.add_argument('--repair-unclaimed', action='store_true')
     args = parser.parse_args()
     if args.command == 'prepare':
-        prepare(args.host, args.resume_root, args.arm)
+        prepare(args.host, args.resume_root, args.arm, args.repair_unclaimed)
+    elif args.command == 'collect':
+        collect(args.host, args.arm)
     else:
         dispatch(args.host, args.workers, args.arm)

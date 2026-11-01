@@ -1,0 +1,23 @@
+{
+  "unix": 1793535921.2291486,
+  "root": "/root/c1switch2_run_edcdbebb738ef1c6",
+  "host": "gpuR",
+  "arm": "cav_mappo",
+  "DISPATCH_SELECTOR.json": {
+    "arm": "cav_mappo",
+    "host": "gpuR",
+    "root": "/root/c1switch2_run_edcdbebb738ef1c6",
+    "planned_sim_s": 18240,
+    "unix": 1793535774.506776,
+    "pid": 973470,
+    "workers": 1,
+    "new_gpu_s": 0
+  },
+  "STOP": {
+    "reason": "child failed",
+    "id": "cav_mappo__s969139",
+    "code": 1
+  },
+  "failed_log": " Retrying in 1 seconds\nWarning: Environment variable SUMO_HOME is not set properly, disabling XML validation. Set 'auto' or 'always' for web lookups.\nTraceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/root/c1switch2_run_edcdbebb738ef1c6/pytools/tools/c1switch2/runner.py\", line 154, in <module>\n    main()\n  File \"/root/c1switch2_run_edcdbebb738ef1c6/pytools/tools/c1switch2/runner.py\", line 146, in main\n    run_episode(root, binding, a.arm, world)\n  File \"/root/c1switch2_run_edcdbebb738ef1c6/pytools/tools/c1switch2/runner.py\", line 94, in run_episode\n    env = backend(root, binding, arm, world, ident)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/c1switch2_run_edcdbebb738ef1c6/pytools/tools/c1switch2/runner.py\", line 89, in backend\n    return runtime.create_backend(path, world, ArmLedger(root, arm, binding), 'main', ident, arm=arm)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/c1switch2_run_edcdbebb738ef1c6/pytools/tools/c1switch2/runtime.py\", line 147, in create_backend\n    return cls(path, world, ledger, stage, ident, self.inputs, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/root/c1switch2_run_edcdbebb738ef1c6/pytools/tools/c1switch2/runtime.py\", line 29, in __init__\n    self.original_residual = self.env.ownership.execute_residual\n                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAttributeError: 'CommandOwnership' object has no attribute 'execute_residual'\nError: tcpip::Socket::recvAndCheck @ recv: peer shutdown\nQuitting (on error).\n",
+  "supervisor_log": "Traceback (most recent call last):\n  File \"<frozen runpy>\", line 198, in _run_module_as_main\n  File \"<frozen runpy>\", line 88, in _run_code\n  File \"/root/c1switch2_run_edcdbebb738ef1c6/pytools/tools/c1switch2/supervisor.py\", line 82, in <module>\n    run(checked(args.root), args.host, args.workers)\n  File \"/root/c1switch2_run_edcdbebb738ef1c6/pytools/tools/c1switch2/supervisor.py\", line 49, in run\n    raise ValueError('durable STOP')\nValueError: durable STOP\n"
+}

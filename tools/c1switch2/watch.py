@@ -111,7 +111,8 @@ def collect():
         if continuation and bb_original and host in bb_original['gpus']:
             gpus['bb_startup'] = bb_original['gpus'][host]
         for arm in ('fleet_ppo', 'cav_mappo'):
-            prepared = read_json(EVIDENCE / ('SELECTOR_PREPARED_'+arm+'_'+host+'.json'))
+            from .selectorops import prepared_path
+            prepared = read_json(prepared_path(arm,host,EVIDENCE))
             if prepared:
                 cpus[arm] = prepared['root']
         if host in ('cpuQ', 'gpuR'):

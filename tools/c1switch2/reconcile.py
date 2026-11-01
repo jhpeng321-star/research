@@ -63,6 +63,7 @@ def current_status(snapshot, receipt):
         canary=dict(state='COMPLETE', charged_sim_s=4680, closed_actual_sim_s=4680, never_redispatch=True),
         cpu=cpus, gpu=gpu, alerts=snapshot['alerts'],
         cpuQ_resources=snapshot.get('cpuQ_resources'), observer=snapshot['observer'],
+        gpu_hold_owner2014=snapshot.get('gpu_hold_owner2014', False),
         bb_startup_stop=snapshot['bb_startup_stop'],
         final_checkpoint_receipts=snapshot['final_checkpoint_receipts'],
         optional_wm_phys='OFF: MAIN11:48 final report says registered switching rule FAIL; keep WM2',
@@ -75,10 +76,14 @@ def run():
     snapshot['cpuQ_resources'] = ssh('cpuQ',
         "import sys\nsys.path.insert(0,'/home/ubuntu/c1switch2_run_292bfffe94b13ed8/pytools')\n" + CPUQ,
         timeout=45)
-    observer = EVIDENCE/'WATCH_MAIN1214/DISPATCH.json'
+    observer = EVIDENCE/'WATCH_OWNER2014/DISPATCH.json'
+    if not observer.exists():
+        observer = EVIDENCE/'WATCH_MAIN1214/DISPATCH.json'
     snapshot['observer'] = local_process(json.loads(observer.read_text())['pid'] if observer.exists() else 25348)
     snapshot['bb_startup_stop'] = json.loads((EVIDENCE/'BB_RELOCATION_STOP.json').read_text())
     snapshot['read_only'] = True
+    from .gpuhold import active
+    snapshot['gpu_hold_owner2014'] = active()
     path = EVIDENCE/('RESUME_RECONCILIATION_'+str(int(time.time()))+'.json')
     write(path, snapshot)
     write(EVIDENCE/'STATUS_CURRENT.json', current_status(snapshot, path))

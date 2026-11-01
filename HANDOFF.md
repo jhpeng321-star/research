@@ -59,6 +59,22 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**20:25 per-CAV infrastructure STOP / CPU-only correction:** originalgpuR973470
+EXITED/STOP on its first969139 backend construction after300sim-s reservation,
+before any controlled decision. Actual has no CLOSE receipt; retain300charged,
+closedactual0 for this failed job. Exact error: frozen CommandOwnership has no
+`execute_residual` attribute; adapter incorrectly tried to save it before install.
+Training installs that instance hook even when absent. Corrected adapter preserves
+presence/absence and restores the exact acceleration converter on fleet handback;
+real-peer grouped-WALL regression now covers BOTH hook-present and hook-absent.
+37targetedCPU PASS/RuffPASS. gpuR terminal claim/world MUST NOT be replayed;
+explicit MAIN continuation scope required for its other3 wholly unstarted worlds.
+cpuQ originalstagec1c922c5 is UNCLAIMED/zerojobs/zerocharges, disk admission refused;
+one corrected CPU-only immutable stage may replace it while retaining its receipts.
+New CPU-only observer source admits ONLY the original unused cpuQ per-CAV partition,
+waits load28/disk2GiB, checks remote claims, records one permanent attempt, never
+retries science, and has no GPU admission path. Not launched yet. Aggregate latest
+247980charged/247680closedactual, GPU27787.12987509556s unchanged; GPU HOLD active.
 **Final per-CAV CPU admission built (OWNER20:14 hold retained):** `selectorops`
 now accepts `--arm cav_mappo` for the original12cpuQ/4gpuR partitions, original
 89900sim-s/GPU0. Genuine delivered checkpoint82c6745b and immutable training

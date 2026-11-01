@@ -1,8 +1,8 @@
 {
   "protocol": "S-C1SWITCH2/v2",
-  "verified_unix": 1793535345.6944106,
+  "verified_unix": 1793535895.686844,
   "status": "CPU_COMPLETE_WM_TERMINAL_REGISTERED_PANEL_PARTIAL_OWNED_SCOPES_SUPERVISED",
-  "receipt": "tools\\c1switch2\\evidence\\RESUME_RECONCILIATION_1793535350.json",
+  "receipt": "tools\\c1switch2\\evidence\\RESUME_RECONCILIATION_1793535904.json",
   "base_sim_s": 468380,
   "conditional_sim_s": 548180,
   "base_gpu_hours_cap": 19,
@@ -12,11 +12,11 @@
   "prediction_objective": "on_road_fleet_delay",
   "evaluation_objective": "full_team_delay_fleet_plus_source",
   "host_coverage_complete": true,
-  "charged_sim_s_at_latest_receipts": 247680,
-  "charged_verified_lower_bound_sim_s": 247680,
+  "charged_sim_s_at_latest_receipts": 247980,
+  "charged_verified_lower_bound_sim_s": 247980,
   "closed_actual_verified_lower_bound_sim_s": 247680.0,
   "closed_actual_sim_s_at_latest_receipts": 247680.0,
-  "registered_base_remaining_sim_s": 220700,
+  "registered_base_remaining_sim_s": 220400,
   "actual_note": "Closed actual excludes currently open jobs; historical charges are never refunded.",
   "new_gpu_s": 27787.12987509556,
   "finalized_gpu_s": 27787.12987509556,
@@ -77,6 +77,10 @@
         "closed_actual_sim_s": 63480.0,
         "charged_sim_s": 63480,
         "ledger_sha256": "cefeba5bbff863606e0f8bb9f9c653f11879672f84e507ca206d145053ee44e6"
+      },
+      "cav_mappo": {
+        "root": "/home/ubuntu/c1switch2_run_c1c922c5e9348e23",
+        "state": "UNCLAIMED"
       },
       "wm_oracles": {
         "root": "/home/ubuntu/c1switch2_run_oracles_0e790a668b7ec5d8",
@@ -148,6 +152,25 @@
         "charged_sim_s": 16320,
         "ledger_sha256": "f2db8da87c5e1bab60ae18e7bba7c024334f70055c3930793b10f6a8ca1893d4"
       },
+      "cav_mappo": {
+        "root": "/root/c1switch2_run_edcdbebb738ef1c6",
+        "process": {
+          "pid": 973470,
+          "state": "EXITED"
+        },
+        "complete": false,
+        "stop": {
+          "reason": "child failed",
+          "id": "cav_mappo__s969139",
+          "code": 1
+        },
+        "episodes": 0,
+        "decisions": 0,
+        "closed_jobs": 0,
+        "closed_actual_sim_s": 0,
+        "charged_sim_s": 300,
+        "ledger_sha256": "6571e2b56aceaca0415a7565a9ebe97da2cc7ecdee1175c1049ae13ced5435cb"
+      },
       "wm_oracles": {
         "root": "/root/c1switch2_run_oracles_8d6ceccb69058bb0",
         "process": {
@@ -188,7 +211,7 @@
         "ready": true,
         "requests": 98,
         "results": 98,
-        "elapsed_wall_s": 65167.98191738129
+        "elapsed_wall_s": 65720.19139790535
       },
       "bb": {
         "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
@@ -209,7 +232,7 @@
         "ready": true,
         "requests": 2,
         "results": 2,
-        "elapsed_wall_s": 19157.898997545242
+        "elapsed_wall_s": 19710.108493328094
       },
       "bb_startup": {
         "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -230,7 +253,7 @@
         "ready": true,
         "requests": 2,
         "results": 2,
-        "elapsed_wall_s": 31193.76798582077
+        "elapsed_wall_s": 31745.97751045227
       }
     },
     "gpuA": {
@@ -253,7 +276,7 @@
         "ready": true,
         "requests": 90,
         "results": 90,
-        "elapsed_wall_s": 65174.26789188385
+        "elapsed_wall_s": 65726.96758437157
       },
       "bb": {
         "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
@@ -274,7 +297,7 @@
         "ready": true,
         "requests": 2,
         "results": 2,
-        "elapsed_wall_s": 19160.2446975708
+        "elapsed_wall_s": 19712.944394350052
       },
       "bb_startup": {
         "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -295,22 +318,23 @@
         "ready": true,
         "requests": 2,
         "results": 2,
-        "elapsed_wall_s": 31195.919404745102
+        "elapsed_wall_s": 31748.61910557747
       }
     }
   },
   "alerts": [
     "cpuQ/cpu/wm: STOP {'reason': 'child failed', 'id': 'wm__s969141', 'code': 1}",
     "gpuR/cpu/wm: STOP {'reason': 'child failed', 'id': 'wm__s969147', 'code': 1}",
+    "gpuR/cpu/cav_mappo: STOP {'reason': 'child failed', 'id': 'cav_mappo__s969139', 'code': 1}",
     "BB relocated startup terminal STOP: ValueError('current model authority/registry absent')"
   ],
   "cpuQ_resources": {
-    "unix": 1793535349.7354655,
-    "uptime_s": 549627.46,
+    "unix": 1793535903.439492,
+    "uptime_s": 550181.16,
     "disk": {
       "total": 52721041408,
-      "used": 48343375872,
-      "free": 2106318848
+      "used": 48350461952,
+      "free": 2099232768
     },
     "processes": {
       "649272": {
@@ -376,6 +400,10 @@
         "bytes": 728693,
         "files": 118
       },
+      "/home/ubuntu/c1switch2_run_c1c922c5e9348e23": {
+        "bytes": 4045295,
+        "files": 194
+      },
       "/home/ubuntu/c1switch2_run_e79775aa1f380c25": {
         "bytes": 44750287,
         "files": 1217
@@ -387,6 +415,7 @@
     "state": "EXITED",
     "error": 87
   },
+  "gpu_hold_owner2014": true,
   "bb_startup_stop": {
     "unix": 1793504172.9679978,
     "error": "ValueError('current model authority/registry absent')",

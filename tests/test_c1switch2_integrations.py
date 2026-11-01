@@ -179,7 +179,8 @@ def test_real_peer_final169_feature_and_deterministic_inference(tmp_path, varian
         (selectors.Fleet if variant == 'fleet' else selectors.PerCav)(spec)
 
 
-def test_grouped_backend_uses_peer_atomic_wall_and_retires_to_exact_fleet_controller(monkeypatch):
+@pytest.mark.parametrize('residual_hook_exists', (False, True))
+def test_grouped_backend_uses_peer_atomic_wall_and_retires_to_exact_fleet_controller(monkeypatch, residual_hook_exists):
     from tools.c1switch2 import runtime
     from tools.c1switch2.core import Handover
     definition = importlib.util.spec_from_file_location('_c1switch2_wall_cpu_fixture',
@@ -196,8 +197,10 @@ def test_grouped_backend_uses_peer_atomic_wall_and_retires_to_exact_fleet_contro
     shared = importlib.import_module(source_package(shared_root)+'.runtime')
     mixed = importlib.import_module(source_package(cav_root)+'.mixed')
     env, calls = fixture.fake_env()
-    original_residual = lambda *a, **k: {}  # Local tree predates frozen host's half-step hook.
-    env.ownership.execute_residual = original_residual
+    original_residual = lambda *a, **k: {}
+    if residual_hook_exists:
+        env.ownership.execute_residual = original_residual
+    original_convert = env._accel_by_vehicle
     def base_init(self, *args, **kwargs):
         self.env, self.wall, self.inputs = env, kwargs['wall'], {}
         self.handover = Handover(lambda name: runtime.v7.Controller(name, {}))
@@ -220,6 +223,10 @@ def test_grouped_backend_uses_peer_atomic_wall_and_retires_to_exact_fleet_contro
     assert backend.current_names()['0'] == 'wall'
     backend.select('native')
     assert backend.mixed is None and env.fleet is None and not group.running
-    assert env.ownership.execute_residual is original_residual
+    if residual_hook_exists:
+        assert env.ownership.execute_residual is original_residual
+    else:
+        assert not hasattr(env.ownership, 'execute_residual')
+    assert env._accel_by_vehicle is original_convert
     assert backend.handover.name == 'native'
     assert all(call[2] != '3' for call in calls)  # No HDV writer through either ownership path.

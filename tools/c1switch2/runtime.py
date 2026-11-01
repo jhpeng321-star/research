@@ -24,9 +24,14 @@ class PerCavBackend(Backend):
         self.env.fleet = self.mixed
         self.mixed.handover.sync(self.self_ids())
         original = self.env._accel_by_vehicle
+        self.original_convert = original
         import math
         self.env._accel_by_vehicle = lambda value: {k: v for k, v in original(value).items() if math.isfinite(v)}
-        self.original_residual = self.env.ownership.execute_residual
+        # The frozen runtime may implement residual recomposition internally
+        # without an ownership hook. Training installs this instance hook even
+        # when absent; remember that exact prior state for fleet-oracle handback.
+        self.residual_existed = hasattr(self.env.ownership, 'execute_residual')
+        self.original_residual = getattr(self.env.ownership, 'execute_residual', None)
         self.env.ownership.execute_residual = self.mixed.execute_residual
 
     def observable(self):
@@ -59,7 +64,11 @@ class PerCavBackend(Backend):
         for key, context in self.mixed.handover.contexts.items():
             context.close(live=key in live)
         self.mixed, self.env.fleet = None, None
-        self.env.ownership.execute_residual = self.original_residual
+        if self.residual_existed:
+            self.env.ownership.execute_residual = self.original_residual
+        else:
+            del self.env.ownership.execute_residual
+        self.env._accel_by_vehicle = self.original_convert
 
     def select(self, action):
         if isinstance(action, str):
