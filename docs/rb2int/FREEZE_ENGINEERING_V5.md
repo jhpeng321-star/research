@@ -30,5 +30,7 @@ settings; copying the recipe alone would silently omit these new behaviors.
 Unknown history remains cold/prior, explicitly weaker than authentic conditioning.
 
 LP recipe `configs/wm_phys_v5_lp.toml` SHA95802e9bc6d4661cd86dd738db0853cb0ce6055ebcf23194943a5c745f945c15
-is fixed alongside v5; only the physical departure distribution differs. Separate
-full canary449208 is running. Final input/bridge/dispatch and full evaluation remain.
+is fixed alongside v5; only the physical departure distribution differs. Its separate
+full canary449208 has now PASSED both dev worlds218.12/215.52s and EXITED;
+`CANARY_LP_B2DF7458_STATUS01.json`. Both variants are engineering READY. Final
+input/bridge/dispatch and full evaluation remain.

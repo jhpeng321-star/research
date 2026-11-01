@@ -18,6 +18,11 @@ it cannot dispatch a final panel. Development release is distinct from final.
 - `dev_canary`/`smoke_ops`: exclusive, incarnation-recorded development execution
   on the immutable INT stage. Closed60s smoke or dev969420/969421 K1/all5arm/H600;
   no replay of a completed smoke root. Resource/disk admission precedes claiming.
+- `prepare_inputs`/`input_ops`: one-use causal source exporter, sanitized producer
+  receipts, pre-t0-only speed bins, pairing/hash checks and verified archive
+  transfer. It never reads future trajectories/cumulative targets. Ancillary
+  result containers supply only start hashes/initial IDs; no outcome field is
+  copied into the forecaster's input root. Production bridge/release still needed.
 - `uncertainty`: joint18-contrast score/rate families; fixed-cell whole-world
   bootstrap, paired future resampling for forecast means. Singleton factual cells
   remain NA even when the K8 forecast varies.
@@ -44,8 +49,8 @@ it cannot dispatch a final panel. Development release is distinct from final.
    explicitly allow `final_comparison` (or only `development_bridge` for an early
    mechanics check). `models` binds every runtime/source/config/checkpoint.
 3. A `rb2int-panel-inputs/1` manifest binds the registration/release, selected
-   worlds, observable registry and factual receipt. Final input preparation and
-   panel dispatch still need implementation/review; do not manufacture these files
+   worlds, observable registry and factual receipt. Input preparation is implemented;
+   production verification/bridging and panel dispatch remain. Do not manufacture these files
    as a substitute for missing exposure/smoke evidence.
 4. A `rb2int-approved-runs/1` registry lists exact approved shard identity hashes,
    the frozen semantic model source subset and each real-receipt hash. It binds

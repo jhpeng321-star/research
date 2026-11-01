@@ -10,12 +10,16 @@ Both dev worlds/allfivearms/H600/K1 PASS220.56/232.72s;446421 EXITED. Read
 `docs/rb2int/CANARY_V5_B2DF7458_STATUS03.json` and shared RB2_INT_FULL_V5_READY.md.
 Distributional qualification/switching remain pending; no final panel exists yet.
 
-**LIVE OWNERSHIP: read `docs/rb2int/CURRENT_JOBS.md` before any launch.** LP full
-canary449208/start889033367 is LIVE; earlier admission failures occurred BEFORE
-claim/Popen. No duplicate job. Closed60 v5/LP both PASS/EXITED446051/446341.
+**FULL-v5-LP engineering READY too:** same source, recipeSHA95802e9bc6d4661cd86dd738db0853cb0ce6055ebcf23194943a5c745f945c15;
+allfivearm600s dev canary PASS218.12/215.52s,449208 EXITED. Read exact completion
+`docs/rb2int/CANARY_LP_B2DF7458_STATUS01.json`. Both variants frozen before final outcomes.
+
+**OWNERSHIP: read `docs/rb2int/CURRENT_JOBS.md` before any launch.** All four
+closed/full smoke processes EXITED/PASS. Earlier LP admission failures preceded
+claim/Popen. No duplicate job. No INT final-panel job has been dispatched yet.
 WMPHYS_V5.md is explicitly a progress report, not a completed final evaluation.
 
-- FULL-v5 engineering READY; FULL-v5-LP full-canary pending. All four intakes merged:
+- FULL-v5 and FULL-v5-LP engineering READY. All four intakes merged:
   LANE6b4bfbd5/CAL7c1cf53c/BREAK116b2147/LPHYSf6cf52ab. Integrated recipes
   `configs/wm_phys_v5{,_lp}.toml`; v5 staged smoke/fit audit PASS, final dispatch release pending.
 - Cross-worker physical/sampling/recipe integration gate135PASS/0skips/20.11s;
@@ -24,6 +28,10 @@ WMPHYS_V5.md is explicitly a progress report, not a completed final evaluation.
   tooling prepared; source/launcher gate11PASS/6.05s and Ruff PASS. Final tasks
   remain unlaunched. New canary is dev969420/969421, K1/all5arms/H600, distinct
   from final K8 and guarded against learned corrections.
+- Causal final-input exporter/transfer tooling prepared and18CPU checks PASS.
+  Export contains only pre-t0 states/history/bins and sanitized start receipts;
+  full producer result's future fields never enter model inputs. Production
+  export/bridge/owned final dispatch remain the next steps.
   Fresh-session recovery and next steps: `docs/rb2int/PLAN.md`.
 - FIT/selection stays on969400–969431 (development panel969420–969431).
   Reserved969432–969439 only for the final frozen comparison.

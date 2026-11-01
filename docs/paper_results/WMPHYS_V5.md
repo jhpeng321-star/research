@@ -3,7 +3,8 @@
 **The four fixes are integrated, but round-2 performance is not yet established.**
 FULL-v5 and FULL-v5-LP pass the local physical integration tests and two-world
 60s recorded-start smoke. FULL-v5 also passes the all-five-arm600s development
-canary and is engineering-ready for the teacher rerun; LP's full canary is running.
+canary; LP passes its separate full canary too. Both are engineering-ready for the
+teacher-quality rerun, frozen before new final outcomes.
 Final evaluation, distributional scores, confidence intervals and switching
 eligibility are still pending. This is not the completed Nov2 delivery.
 
@@ -40,7 +41,7 @@ eligibility are still pending. This is not the completed Nov2 delivery.
 
 ## Remaining work / teacher status
 
-Finish LP five-arm smoke; complete baseline/source/input parity and final
+Complete baseline/source/input parity and final
 release; execute only missing identity-bound tasks; score all models on matched
 complete K8 worlds, distributional components, credibility and switching rule.
 Keep source-bound v4 decision maps separate from v5. The FULL-v5 READY signal and

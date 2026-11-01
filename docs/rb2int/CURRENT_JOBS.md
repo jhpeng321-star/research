@@ -20,16 +20,18 @@ Use this existing stage; do not restage/replay merely because Git HEAD advances.
 - v5 fivearm600 own446421 EXITED/PASS: dev969420/969421, K1/allfivearms/H600;
   task times220.56/232.72s. `CANARY_V5_B2DF7458_STATUS03.json` saves the complete
   `DEV_CANARY_PASS.json` and identity-bound task hashes. Never rerun this canary.
+- LP fivearm600 own449208 EXITED/PASS: same two dev worlds/allfivearms/H600/K1,
+ 218.12/215.52s. `CANARY_LP_B2DF7458_STATUS01.json` saves its exact pass/hashes.
 
-## Running; status only
+## No remaining INT smoke process
 
-- LP fivearm600: own449208/start_ticks889033367/boot
+- Completed LP fivearm600: own449208/start_ticks889033367/boot
   a81555d7-176e-4ed8-bc7d-896fc89cc914. Root:
   `/root/autodl-tmp/c4/rb2int20261101/dev_b2df7458a41f_fivearm600_lp_cuda`.
   Dev969420/969421, K1/allfivearms/H600, strict5GiB CUDA/nice19/oneCPU thread.
   Earlier coarse-load/memory admission failures preceded claim/Popen. Launch
   succeeded only after v5 completed/released memory; exact PROCESS receipt saved.
-  Do not duplicate or stop it.
+  It has now completed; do not duplicate it.
 - Read: `python -B -m tools.rb2int.smoke_ops status --host gpuA --runtime /root/autodl-tmp/c4/rb2int20261101/phys_code_b2df7458a41f --recipe wm_phys_v5_lp.toml --kind fivearm600 --device cuda`.
 - Completion requires `tasks/DEV_CANARY_PASS.json`, not merely a COMPLETE marker
   or process exit. This K1 development canary is never counted as final K8.
@@ -56,7 +58,7 @@ Rate-distance CI implementation now conservatively propagates joint signed-bias
 bands through abs/subtraction (zero-bias kink); see RATE_CI_IMPLEMENTATION.md.
 New audit/CI/launcher checks20PASS; all-four-source integration135PASS.
 
-FULL-v5 **READY for engineering/teacher-quality rerun**, source/recipe/smoke bound
+FULL-v5 and FULL-v5-LP **READY for engineering/teacher-quality rerun**, source/recipe/smoke bound
 in FREEZE_ENGINEERING_V5.md and HANDOFF.md. Distributional qualification remains
-pending. LP readiness awaits its own successful integrated five-arm receipt.
+pending. Both integrated five-arm receipts are now PASS; no final forecast exists.
 Recheck worker handoffs for later dev evidence without duplicating their jobs.
