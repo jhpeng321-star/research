@@ -1,5 +1,20 @@
 # S-COOPMWM — live checks
 
+## Current continuation snapshot — 06:49:19UTC+8
+- A48 complete; B-u2 and R-u1 are collecting concurrently, **24/24 jobs claimed
+  for each**. B-u2 has two confirmed plan starts plus eight unresolved potential
+  executions toward Nexec10. No active health/engineering STOP at this snapshot.
+- Winning-plan seeding is verified in the durable B-u1 receipt: **two library
+  entries**, both exact-positive grades from B/seed20261101; covariance buckets
+  ordinary|3 and ordinary|4. **R has no search library.**
+- Observe-only local46108 (V7) is live with successful repeated status/publication
+  cycles; telemetry28752 is retained. Detached training, grading and diagnostic
+  owners remain live. All three repaired exact-synergy results below are published.
+- Allocated **7,495,040/7,500,000sim-s**,4,960 unallocated; latest charged
+  3,331,280 includes retained failures and registered diagnostic repair attempts.
+  Original GPU deadline **Nov2 18:07:02UTC+8** is retained. The B-u4–6 viability
+  package and a quota-compliant full-run timing estimate are still pending.
+
 ## First three complete exact-synergy diagnostics
 - Isolated diagnostic owner3589919 has completed the same registered first three
   n+2 groups after the departed-roster repair. Successful original branches are
@@ -2301,3 +2316,11 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - B u2: exact paired SUMO plan saving mean 650.4 veh-s, 95% world-cluster CI `[6.666416322528676, 1290.9455121911988]`, 4 graded plans. Positive saving is better. Ungraded plans excluded.
 - Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_0c40c7b9c10e3da061f60f02d832269ac712fb969ee703f8a080cd5267aac28d.json`.
 <!-- warm-receipt:B_EXACT_VIABILITY_0c40c7b9c10e3da061f60f02d832269ac712fb969ee703f8a080cd5267aac28d.json:fc63cc1e92cffab2fa092355ad470494a0647fe95103d4d46dd51a5cdfdf8cc8 -->
+
+## Warm live publication — 2026-11-01T22:51:46.862946+00:00
+- Conservatively charged 3332720/7500000 sim-s.
+
+### Warm continuation — B_EXACT_VIABILITY_be5d56ed3ddcb8d9ec6857124c703778a2ada7f233594620f930bb630f8c8ec5.json
+- B u2: exact paired SUMO plan saving mean 433.6 veh-s, 95% world-cluster CI `[1.333283264505735, 969.8162260524452]`, 6 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_be5d56ed3ddcb8d9ec6857124c703778a2ada7f233594620f930bb630f8c8ec5.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_be5d56ed3ddcb8d9ec6857124c703778a2ada7f233594620f930bb630f8c8ec5.json:a445bfe79082a5fc9328cba29128c0af7a63d2ae134878b84ea173481c7c5715 -->
