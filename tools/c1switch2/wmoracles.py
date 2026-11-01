@@ -133,6 +133,7 @@ assert os.getloadavg()[0]<20,'yield to priority CPU pressure'
 assert time.time()>={NOT_BEFORE!r}
 assert hashlib.sha256((old/'accounting.jsonl').read_bytes()).hexdigest()=={value['predecessor_ledger_sha256']!r}
 assert hashlib.sha256((root/'ORACLE_SUPERVISOR.py').read_bytes()).hexdigest()=={stage['supervisor_sha256']!r}
+assert json.loads((root/'CPU_BINDING_CHECK.json').read_text())['status']=='PASS'
 assert not (root/'accounting.jsonl').exists() and not list((root/'jobs').iterdir())
 claim=root.parent/'C1SWITCH2_WM_ORACLE_CONTINUE_ONCE.json'
 with claim.open('x') as stream:json.dump(dict(root=str(root),plan_sha256={canonical(value)!r},unix=time.time()),stream)
@@ -147,13 +148,33 @@ out=dict(root=str(root),pid=process.pid,unix=time.time(),new_sim_s_cap=6000,new_
     print(json.dumps(result))
 
 
+def check():
+    stage = json.loads((EVIDENCE/'WM_ORACLE_CONTINUATION_STAGE.json').read_text())
+    result = ssh('gpuR', f'''import json,os,sys
+from pathlib import Path
+root=Path({stage['root']!r});os.environ['CUDA_VISIBLE_DEVICES']='';sys.path.insert(0,str(root/'pytools'));os.chdir(root/'pytools')
+from tools.c1switch2.runner import admitted
+binding=admitted(root)
+assert binding['enabled_arms']==['wm'] and binding['cpu_host']=='gpuR'
+compile((root/'ORACLE_SUPERVISOR.py').read_text(),'<oracle-only-supervisor>','exec')
+assert not (root/'accounting.jsonl').exists() and not list((root/'jobs').iterdir())
+out=dict(status='PASS',root=str(root),sources=len(binding['sources']),original_binding_and_gates=True,new_sim_s=0,new_gpu_s=0)
+with (root/'CPU_BINDING_CHECK.json').open('x') as stream:json.dump(out,stream,indent=2)
+print(json.dumps(out))
+''', timeout=30)
+    write(EVIDENCE/'WM_ORACLE_CONTINUATION_CPU.json', result)
+    print(json.dumps(result))
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('command', choices=('probe', 'stage', 'start'))
+    parser.add_argument('command', choices=('probe', 'stage', 'start', 'check'))
     command = parser.parse_args().command
     if command == 'probe':
         probe()
     elif command == 'stage':
         stage()
+    elif command == 'check':
+        check()
     else:
         start()

@@ -70,6 +70,12 @@ adds a one-use12-job supervisor, preserves every predecessor artifact and stops
 on any child error. Original measured states/prefix costs remain380x6+620x6.
 One oracle worker plus THREE relocatedBB workers respect the task's4gpuR cap.
 CPU26/26/Ruff PASS; source/plan committed before prospective registration/stage.
+Original-WM oracle stage now REGISTERED and CPU binding verifiedPASS:
+`/root/c1switch2_run_oracles_8d6ceccb69058bb0`,106original source hashes and
+unchanged original BINDING/GATES; no jobs/ledger/GPU. First metadata check used
+the wrong cwd and stopped before any job, corrected check uses pytools as worker
+dispatch already does. At/after11:30 ONLY: `python -B -m tools.c1switch2.wmoracles start`.
+Plan/stage/CPU receipts are WM_ORACLE_CONTINUATION_{PLAN,STAGE,CPU}.json.
 **08:xx MAIN07:07 unused-BB relocation prepared in source, NO compute:**
 prospective plan d5037b81825d4788131b49c675934ee71e6007da91fec60012de9ecdbc75abde
 moves ONLY unstarted BB's same16worlds to<=4gpuRCPUworkers AFTER11:30, with
