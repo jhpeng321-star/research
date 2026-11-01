@@ -1,5 +1,17 @@
 # S-COOPMWM — live checks
 
+### DIAGNOSIS — completed-wave parent-exit race repaired
+- All24 current B-u1 episodes closed once; no queries remained. The handover
+  watcher stopped at unix1793571197 because Linux cleared a verified exiting
+  supervisor's command line before its `/proc` entry disappeared. No B optimizer
+  update or new B/R supervisor had been launched. All results/failure receipts kept.
+- Qualified immutable `quotacpu4`: **234 CPU tests PASS, zero skips,39.22s,
+  zero SUMO**. Same boot/start-tick identity remains mandatory; an empty command
+  line is polled as“exiting” without another signal. Wrong nonempty commands stop.
+  Real complete-result-adoption/checkpoint0 Adam/RNG preflight also passes.
+- Registered engineering amendment `5693f169…`; original GPU owners, broker and
+  grader retained. No traffic rerun, new physics charge or search-design change.
+
 ## First qualified exact TRAIN plan grade — descriptive only
 - Existing detached reporter published
   `warm_live/B_EXACT_VIABILITY_dccf60491b28433e4500845a95addb7fd0debe0792e7b71f6bef9c65e00b8d5a.json`.
