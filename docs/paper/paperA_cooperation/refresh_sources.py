@@ -59,6 +59,7 @@ REPORTS = {
     "breakdown_report": "E:/agent-work/c4-wmbreakdown/docs/paper_results/WMBREAKDOWN.md",
     "ensemble_report": "E:/agent-work/c4-ensprobe/docs/paper_results/ENSPROBE.md",
     "wmphys_morning": "E:/agent-work/c4-rb-int/docs/paper_results/WMPHYS_MORNING.md",
+    "wmphys_freeze": "E:/agent-work/c4-rb-int/docs/rbint/noon/20261101T093000+0800/FREEZE.json",
     "wm_design": "E:/agent-work/c4-papera/docs/WM_C4_DESIGN.md",
     "prior_checklist": "E:/research-dense/docs/paper/CLAIM_EVIDENCE_CHECKLIST.md",
     "prior_draft": "E:/research-dense/docs/paper/IEEE_IV_2027_DRAFT.md",

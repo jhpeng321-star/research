@@ -39,7 +39,17 @@
     "figures/F4N_failed_tail_remedies.pdf",
     "figures/F4D_expanded_data_screen.csv",
     "figures/F4D_expanded_data_screen.png",
-    "figures/F4D_expanded_data_screen.pdf"
+    "figures/F4D_expanded_data_screen.pdf",
+    "figures/F2_corrected_controller_audit.csv",
+    "figures/F2_corrected_controller_audit.png",
+    "figures/F2_corrected_controller_audit.pdf",
+    "figures/F3V_failed_wm_value_gate.csv",
+    "figures/F3V_failed_wm_value_gate.png",
+    "figures/F3V_failed_wm_value_gate.pdf",
+    "figures/F6_exact_model_planner.csv",
+    "figures/F6_exact_model_planner.png",
+    "figures/F6_exact_model_planner.pdf",
+    "figures/F6_pooled36_source_worlds.csv"
   ],
   "report_snapshot_checks": [
     "owner_read_first",
@@ -85,6 +95,7 @@
     "breakdown_report",
     "ensemble_report",
     "wmphys_morning",
+    "wmphys_freeze",
     "wm_design",
     "prior_checklist",
     "prior_draft"
@@ -94,7 +105,7 @@
   "pending_insertions": {
     "README.md": 3,
     "OUTLINE.md": 11,
-    "CLAIMS.md": 15,
+    "CLAIMS.md": 16,
     "FIGURES.md": 13,
     "RELATED_WORK.md": 4,
     "THREATS.md": 10,
@@ -104,14 +115,14 @@
   "scope": "local links, provenance structure, bibliography identity coverage, CSV schema, plotted source values and hashes",
   "limitations": "Not a scientific efficacy check, exhaustive numerical prose proof, full BibTeX compile, or IEEE pagination check",
   "document_sha256": {
-    "README.md": "20f1e4e484704125bee96f953a94ec39cb696242bf5346c058081cce8b8bb711",
+    "README.md": "4b6a0dd409d55bdd4276b54429c43421ef263292f6877ea0d7077b715de4715e",
     "OUTLINE.md": "2d333f4a6668e690ce9fae692ff94a9b464966ff21ade69aafec789044bd393d",
-    "CLAIMS.md": "e121cdfa545c28e835abf00249173e358a6e57c56a63ae9562474c7cd70ab15c",
-    "FIGURES.md": "ec789562d76ba650227871e0db6bfd14186eb44d9023bf885619939955f6f796",
+    "CLAIMS.md": "4fa20358ca8ce12236f9b1aeb7310d31fbee7c2fd0e37ad22d64c835f0cc66dd",
+    "FIGURES.md": "2ef65daca965d65610174c41227b2b673f51437b2f1c98107dc39d3a29e00430",
     "RELATED_WORK.md": "5f4ca427a1779adaaa81b86f4bb3311ef3ca6b271cd64b6187036c227bd37680",
-    "THREATS.md": "73d9b1503035ca1d7c49b025db79cc47134c329c47918fd9c15d073f7e4472f5",
-    "EVIDENCE_SOURCES.md": "69b6cdb8bf6ac080b1c64500500eca631db51e1ba81d79b6673b0aed95970c59",
-    "REFRESH.md": "10fb78d0025744e0b7e7a197572a8b9e9ed7d991f96210f5a5d38148d243a9c7",
+    "THREATS.md": "772b399ddb90499949bf1e7db7af903f7772bb3853f6880b77eae581a75bc427",
+    "EVIDENCE_SOURCES.md": "06e48e9e99e5ff936a8230d98caafae09f2c14967abcfbb6357ff9f71ee5fc39",
+    "REFRESH.md": "74f2d91e40bcbf1565eeecf602bf768da6157fed58ee2109e1659755138122ce",
     "refs.bib": "2401075b868a49e8b783b12dcdee5a07f137e70eb716bce54ea06f5f0b31ecbc",
     "reference_verification.csv": "cdb4b1409d2850cb965e5d2b94440fc0a708498a3809894dd61ebd5f05e88cab"
   }

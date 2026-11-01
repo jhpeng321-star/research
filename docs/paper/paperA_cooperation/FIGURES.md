@@ -164,6 +164,7 @@ Initial capture used the same command with `--freeze-inputs`. That option reads 
 - **Source expected:** complete producer reports plus durable accounting summaries. Allocation is not consumption; screen-only no-step costs are not new SUMO panel measurements.
 - **Generating command:** [[PENDING: schema-bound export and final IEEEtran table source / S-COOPEVAL, owner]].
 - **Main-text minimum:** collisions/teleports/dropped steps, TTC/braking and worst-group/service effects alongside efficiency; incident zeros are not safety equivalence. Full components/cells remain in the artifact.
+- **New delivered reference costs/safety:** exact planner total **725280 actual=charged sim-s**, separate from learning cost; H120 braking **765→733 veh-s**, H300 confirmation **413.5→457.0**, no collisions/teleports. COOPBANDIT **1567326 actual / 1569840 charged sim-s**, all-O0 live outcome; COOPFREE latest snapshot **1900133 closed-actual / 1952433 precharged**, not final reconciled consumption during the outage, with adverse paired braking. Do not add stale active reservations as if they were final costs or claim equal-budget efficacy. <!-- Sources: E:/agent-work/c4-coopplan/docs/paper_results/COOPPLAN.md:45-48,105-108; E:/agent-work/c4-coopbandit/docs/paper_results/COOPBANDIT.md:58-59; E:/agent-work/c4-coopfree/docs/paper_results/COOPFREE.md:23-39. -->
 
 ## Paper B figure routing
 

@@ -1,5 +1,5 @@
 {
-  "captured_local": "2026-11-01T09:34:55.263259+08:00",
+  "captured_local": "2026-11-01T09:49:10.260599+08:00",
   "reports": {
     "owner_read_first": {
       "path": "E:/research-dense/docs/OWNER_UPDATE_20261030_EVENING.md",
@@ -12,10 +12,10 @@
     "registration": {
       "path": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md",
       "exists": true,
-      "sha256": "95aee720ba0b3e28323e99aa13c1e9212d961390a47d83734d3a54178f3936a5",
-      "bytes": 2358294,
-      "modified_local": "2026-11-01T09:26:41.575946+08:00",
-      "snapshot": "source_snapshots/registration_95aee720ba0b3e28.md"
+      "sha256": "42b25b694253fad17f8a9b60d3a34bcdfa63a0598efe038a3d9eed7b31c358e9",
+      "bytes": 2360019,
+      "modified_local": "2026-11-01T09:47:41.048579+08:00",
+      "snapshot": "source_snapshots/registration_42b25b694253fad1.md"
     },
     "wmvalue_design": {
       "path": "E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md",
@@ -344,10 +344,18 @@
     "wmphys_morning": {
       "path": "E:/agent-work/c4-rb-int/docs/paper_results/WMPHYS_MORNING.md",
       "exists": true,
-      "sha256": "d04d278e580a61a9724191b1cbefaccb43d480ae9569b93adc929aca99f92e19",
-      "bytes": 5375,
-      "modified_local": "2026-11-01T09:23:00.886401+08:00",
-      "snapshot": "source_snapshots/wmphys_morning_d04d278e580a61a9.md"
+      "sha256": "ae9087f2fd96d8e73e65dbf44e5bdc80ab789cb23fd09fd44d68f990b80d275a",
+      "bytes": 5415,
+      "modified_local": "2026-11-01T09:39:30.397895+08:00",
+      "snapshot": "source_snapshots/wmphys_morning_ae9087f2fd96d8e7.md"
+    },
+    "wmphys_freeze": {
+      "path": "E:/agent-work/c4-rb-int/docs/rbint/noon/20261101T093000+0800/FREEZE.json",
+      "exists": true,
+      "sha256": "14ce2eea2932afffc28c09ad91f8a724e0f79652eada4e08d0522f862ca26dd8",
+      "bytes": 752,
+      "modified_local": "2026-11-01T09:39:29.323749+08:00",
+      "snapshot": "source_snapshots/wmphys_freeze_14ce2eea2932afff.json"
     },
     "wm_design": {
       "path": "E:/agent-work/c4-papera/docs/WM_C4_DESIGN.md",
@@ -375,25 +383,9 @@
     }
   },
   "changed_since_prior_cut": [
-    "owner_read_first",
     "registration",
-    "wmvalue_report",
-    "audit_design",
-    "audit_report",
-    "c1closed_report",
-    "c1switch_main",
-    "coopbandit_report",
-    "coopfree_report",
-    "coopplan_report",
-    "coopplan_worlds",
-    "coopplan_summary",
-    "coopplan_h300_summary",
-    "audit_v2_csv",
-    "wmvalue_short_test",
-    "leverprobe_report",
-    "breakdown_report",
-    "ensemble_report",
-    "wmphys_morning"
+    "wmphys_morning",
+    "wmphys_freeze"
   ],
   "scope": "explicit local report snapshots only; no simulator/model or restricted input access",
   "claim_review": "manual; file appearance or a canary is not an efficacy result"
