@@ -59,6 +59,17 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**12:15 fresh-session reconciliation1793506521:** cpuQ fleet1152412 remains
+LIVE/noSTOP, all12local episodes/360decisions complete and original oracles
+progressing (34closedjobs,28680charged/28080closedactual). Original cpuQ WM
+oracle1163082 COMPLETE24/24,14640actual; original gpuR12/12 COMPLETE6000actual.
+No completed work replayed. Aggregate196560charged/195960closedactual,
+GPU27729.12296916172s retained. cpuQ uptime6.028days/free6580211712bytes,
+ownoutputs334586200bytes. Peer per-CAV606968 stillLIVE/final169absent.
+MAIN12:14 registered BB startup continuation exception observed; original
+43.02397724799812GPU-s MUST remain charged. Continuation not yet built/claimed.
+gpuR fleet remains UNCLAIMED: fresh load12.963 passes but rootfree104337408
+and datafree2032021504bytes fail2GiB gate; wait for MAIN archival, no dispatch.
 **12:00 final foreground supervision receipt1793505658:** cpuQ1152412 LIVE/noSTOP,
 fleet8/12local episodes complete/292decisions,11240charged/9600closedactual;
 cpuQ originalWMoracle1163082 LIVE/noSTOP,8/24branches closed,
