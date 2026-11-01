@@ -1,14 +1,14 @@
 {
-  "unix": 1793514397.2525036,
+  "unix": 1793515620.9753063,
   "protocol": "S-C1SWITCH2/v2",
   "hosts": {
     "cpuQ": {
-      "unix": 1793514397.8174477,
+      "unix": 1793515621.501158,
       "host": "cpuQ",
       "load": [
-        11.21630859375,
-        10.02294921875,
-        9.64453125
+        10.15478515625,
+        9.20556640625,
+        9.21923828125
       ],
       "cpu": {
         "cpu": {
@@ -79,12 +79,12 @@
       "gpu": {}
     },
     "gpuR": {
-      "unix": 1793514398.6503854,
+      "unix": 1793515622.3214972,
       "host": "gpuR",
       "load": [
-        19.806640625,
-        15.771484375,
-        14.92333984375
+        37.716796875,
+        41.400390625,
+        32.759765625
       ],
       "cpu": {
         "cpu": {
@@ -165,7 +165,7 @@
           "ready": true,
           "requests": 98,
           "results": 98,
-          "elapsed_wall_s": 44219.40213942528
+          "elapsed_wall_s": 45443.073404073715
         },
         "bb": {
           "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
@@ -190,17 +190,17 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 10245.187942028046
+          "elapsed_wall_s": 11468.859213590622
         }
       }
     },
     "gpuA": {
-      "unix": 1793514399.7403853,
+      "unix": 1793515623.259819,
       "host": "gpuA",
       "load": [
-        11.77783203125,
-        11.84375,
-        11.43310546875
+        11.203125,
+        10.7236328125,
+        10.93896484375
       ],
       "cpu": {},
       "gpu": {
@@ -223,7 +223,7 @@
           "ready": true,
           "requests": 90,
           "results": 90,
-          "elapsed_wall_s": 44225.47306680679
+          "elapsed_wall_s": 45448.99249148369
         },
         "bb": {
           "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
@@ -248,7 +248,7 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 10247.124421834946
+          "elapsed_wall_s": 11470.64384484291
         }
       }
     }
@@ -342,11 +342,11 @@
   "postnoon_supervision": {
     "pid": 42548,
     "admission": {
-      "unix": 1793514336.3283818,
+      "unix": 1793515560.1048853,
       "status": "WAIT_CPU_DISK_NO_CLAIM",
       "states": {
-        "load": 16.8720703125,
-        "free_bytes": 316497920
+        "load": 36.85595703125,
+        "free_bytes": 16873189376
       }
     },
     "admission_error": {
