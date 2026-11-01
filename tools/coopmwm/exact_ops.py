@@ -75,6 +75,23 @@ immutable(r/'SPOOL_STOP.json',dict(amendment_sha256={h!r},reason='superseded idl
 print(json.dumps(dict(graceful_stop_requested=True,pid=d['pid'],new_sumo_sim_s=0)))''',timeout=40))
 
 
+def retire_gpua():
+    path=ops.EVIDENCE/'CONCURRENT_GPUA_IDLE_RETIREMENT.json';assert not path.exists()
+    line='\nS-COOPMWM GPU-A IDLE PREDECESSOR RETIREMENT REGISTERED: concurrent1 replacement READY/all8EXACT0; verify original588981/start893707080 idle/no requests, graceful SPOOL_STOP only; no inference/physics retry, free old model memory for same qualified search.\n'
+    with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+    value=json.loads(ops.ssh.remote('gpuA',f'''import pathlib,json,sys
+new=pathlib.Path({GPU!r});r=pathlib.Path('/root/coopmwm20261102_durable1');sys.path.insert(0,str(new/'pytools'))
+from tools.coopmwm.warm_rpc import status
+from tools.coopmwm.warm_spool import immutable
+v=status(new);assert v['alive'] and v['ready'] and not v['failed']
+old=status(r);assert old['alive'] and old['ready'] and not old['failed']
+d=old['receipts']['SPOOL_OWNER.json'];assert d['pid']==588981 and d['start_ticks']=='893707080'
+for name in ('inbox','inference_claims','forecasts'):assert not list((r/name).glob('*.json')),'not idle'
+immutable(r/'SPOOL_STOP.json',dict(reason='qualified replacement READY; release idle predecessor memory',registration={line!r}))
+print(json.dumps(dict(owner=d,graceful_stop_requested=True,qualified_replacement=v['receipts']['SPOOL_OWNER.json'],new_sumo_sim_s=0)))''',timeout=40))
+    write(path,value);print(json.dumps(value))
+
+
 def retry_gpur():
     from . import concurrent_ops as c
     from . import warm_remote_ops as w
@@ -225,5 +242,5 @@ print(json.dumps(v))''',timeout=45))
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('authorize','register','dispatch','retire-gpur','retry-gpur','resume-gpur','telemetry','status'));p.add_argument('--component',choices=('B','R','grader','broker'))
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('authorize','register','dispatch','retire-gpur','retire-gpua','retry-gpur','resume-gpur','telemetry','status'));p.add_argument('--component',choices=('B','R','grader','broker'))
     a=p.parse_args();dispatch(a.component) if a.mode=='dispatch' else globals()[a.mode.replace('-','_')]()
