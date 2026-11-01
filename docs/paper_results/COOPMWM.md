@@ -435,3 +435,9 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - A update12, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
 - Per-bucket trust: .
 - TRAIN GAE variance 4.69977e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_012.json`.
+
+## Live publication — 2026-11-01T11:26:31.329316+00:00
+- Charged 595,640/6,000,000 sim-s; closed jobs 474/498; pending WM 0.
+
+### S0_A_CHECK_012.json
+- A_minus_MAPPO: {"bootstrap":"10000 whole-world paired resamples; RNG20261101; negative delay is better","learned_minus":"mappo","metrics":{"600_collisions":{"ci95":[0.0,0.0],"mean":0.0},"600_hard_brake":{"ci95":[-3.2083333333333335,4.583333333333333],"mean":0.375},"600_team_delay_vs":{"ci95":[-661.2338917042277,2949.737879335951],"mean":1282.3524654967944},"600_teleports":{"ci95":[0.0,0.0],"mean":0.0},"600_ttc_below_3_vs":{"ci95":[6.833333333333333,98.54270833333332],"mean":50.083333333333336},"900_collisions":{"ci95":[0.0,0.0],"mean":0.0},"900_hard_brake":{"ci95":[-6.208333333333333,4.6260416666666515],"mean":-1.125},"900_team_delay_vs":{"ci95":[-41.61367904337277,4606.31203827328],"mean":2363.594791228685},"900_teleports":{"ci95":[0.0,0.0],"mean":0.0},"900_ttc_below_3_vs":{"ci95":[-31.46145833333333,117.54166666666667],"mean":42.791666666666664}},"worlds":12}
