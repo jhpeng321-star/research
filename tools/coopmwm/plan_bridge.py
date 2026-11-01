@@ -65,7 +65,7 @@ def run():
                     state=pending()
                     if state['stop']:stop.set();break
                     from .exploration import regime
-                    candidates=sorted(state['records'],key=lambda r:(regime(r['rows'])!='merge-dense',r['time_s'],r['state_id']))
+                    candidates=sorted(state['records'],key=lambda r:(r.get('mode')=='diagnostic',regime(r['rows'])!='merge-dense',r['time_s'],r['state_id']))
                     r=next((r for r in candidates if r['state_id'] not in inflight),None)
                     if r:inflight.add(r['state_id'])
                 if r is None:stop.wait(1);continue

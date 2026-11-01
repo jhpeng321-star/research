@@ -133,5 +133,5 @@ def search(record, bounds, evaluate):
     scores=evaluate(bases+finalists,SEARCH['final_K'],SEARCH['final_H'])
     result=thompson(record,finalists,scores,rng)
     result.update(candidates_searched=searched,iterations=SEARCH['iterations'],
-                  imagined_futures=searched*SEARCH['screen_K']+(len(finalists)+2)*SEARCH['final_K'])
+                  imagined_futures=(searched+2*SEARCH['iterations'])*SEARCH['screen_K']+(len(finalists)+2)*SEARCH['final_K'])
     return result

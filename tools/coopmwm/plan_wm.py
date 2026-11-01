@@ -68,13 +68,14 @@ def plan_executor():
     finally:runtime.option_controller=original
 
 
-def evaluate(rt,record,actions,K,H,chunk_actions=4,trim=True,pad_actions=False):
+def evaluate(rt,record,actions,K,H,chunk_actions=4,trim=True,pad_actions=False,horizons=None):
     """Same source draws, CRN keys, insertions, departure loop and J reducer.
 
     A single compact-forward proxy retains full virgin-slot controller memory.
     Candidate chunks bound memory without changing future IDs or source capacity.
     """
-    output={a['id']:[] for a in actions}
+    hs=tuple(horizons or (H,))
+    output={str(h):{a['id']:[] for a in actions} for h in hs}
     proxy=FusedModel(rt.model,1,trim_absent=trim);proxy.local.index=0
     runtime=SimpleNamespace(**vars(rt));runtime.model=proxy
     with executor_adapter(),plan_executor():
@@ -84,11 +85,13 @@ def evaluate(rt,record,actions,K,H,chunk_actions=4,trim=True,pad_actions=False):
             real_ids=[a['id'] for a in subset]
             if pad_actions:
                 subset=list(subset)
-                while len(subset)<4:
+                width=4 if pad_actions is True else int(pad_actions)
+                while len(subset)<width:
                     subset.append(dict(subset[-1],id=f'_pad{len(subset)}'))
-            ns=adapted_futures((H,));ns['_actions']=subset
+            ns=adapted_futures(hs);ns['_actions']=subset
             with torch.no_grad():result=ns['futures'](runtime,dict(record,setting=0),indices=tuple(range(K)))
             if not result['population_audit']['finite'] or not result['population_audit']['conserved']:
                 raise ValueError('imagined population accounting failed')
-            for a in real_ids:output[a]=result['futures'][str(H)][a]
-    return output
+            for h in hs:
+                for a in real_ids:output[str(h)][a]=result['futures'][str(h)][a]
+    return output if horizons is not None else output[str(H)]

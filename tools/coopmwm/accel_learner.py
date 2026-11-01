@@ -101,7 +101,15 @@ def viability(records):
         subset=[r for r in records if r['route']=='policy' or r.get('rank')==rank]
         by_rank[str(rank)]=trust(1.,subset)
     predictions=[r for r in records if r['executed']]
+    def snr(xs):
+        values=[r['advantage'] for r in xs]
+        variance=float(np.var(values,ddof=1)) if len(values)>1 else None
+        mean=float(np.mean(values)) if values else None
+        return dict(windows=len(values),mean_advantage_veh_s=mean,variance_veh_s_squared=variance,
+            snr_squared=mean*mean/variance if variance else None)
     return dict(overall=pooled,by_rank=by_rank,
+        cooperative_move_noise=dict(eligible_group=snr(records),executed_plan=snr(predictions),
+            horizon_s=300,scope='empirical SUMO H300 critic residual; eligible RSU groups not certified cooperation'),
         new_plans=sum(r.get('known_family') is False for r in predictions),
         inherited_plans=sum(r.get('known_family') is True for r in predictions),
         predicted_vs_realized=[{k:r.get(k) for k in ('world','option','rank','expected_saving','advantage')} for r in predictions],

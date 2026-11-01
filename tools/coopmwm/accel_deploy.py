@@ -100,9 +100,25 @@ print(json.dumps(dict(unix=time.time(),charged_sim_s=811640+sum(c['sim_s'] for c
     print(json.dumps(dict(v,receipts=list(v['receipts']))));return v
 
 
+def report_disk():
+    v=read(ops.EVIDENCE/'CPUQ_DISK_ADMISSION_BLOCK.json')
+    line=('\nS-COOPMWM ACCELERATION SMOKE DISK ADMISSION BLOCK (20:18): '
+        'CPU31 71PASS/0skips/zeroSUMO; both GPUs fixedfull1600/fourcandidate K8 parityEXACT0; '
+        'original medium-CEM throughput probes still running gpuA535910/gpuR970438, not duplicated. '
+        f'Owned cpuQ smoke2280552/start54957271 at /home/ubuntu/coopmwm20261101_accel1 reserves3600sim-s, '
+        f'3jobs/0CLAIM/newSUMO0; totalcharge{v["total_charged_sim_s"]}. '
+        f'cpuQ free{v["disk_free_bytes"]}bytes<unchanged2GiB({v["minimum_free_bytes"]}) guard; '
+        'RAM54GB/load<1 clear. Existing supervisor waits; no deletion, guard weakening, retry or duplicate. '
+        'MAIN storage admission needed; all training remainsHELD. '
+        'Receipt docs/paper_results/coopmwm/CPUQ_DISK_ADMISSION_BLOCK.json.\n')
+    with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+    write(ops.EVIDENCE/'DISK_BLOCK_REGISTRATION.json',dict(line=line,new_sumo_sim_s=0));print(line.strip())
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('smoke-register','bind-smoke','smoke','status'));p.add_argument('--cpu',default='CPU_coopmwm20261101_cpu31.json');a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('smoke-register','bind-smoke','smoke','status','report-disk'));p.add_argument('--cpu',default='CPU_coopmwm20261101_cpu31.json');a=p.parse_args()
     if a.mode=='smoke-register':smoke_register(a.cpu)
     elif a.mode=='bind-smoke':bind_smoke(a.cpu)
     elif a.mode=='smoke':smoke()
+    elif a.mode=='report-disk':report_disk()
     else:status()

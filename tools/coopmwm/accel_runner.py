@@ -101,7 +101,7 @@ def exact_plan(root,b,policy,ep,step,index,role='train'):
         jobs.append(dict(id=key,path=str(path),world=ep['world'],role=role,arm=name,
             weights=policy.state_dict(),runtime=b['runtime'],checkpoint=b['checkpoint'],noise_seed=0,
             deterministic=True,sim_s=t+600,stop=t+600,samples=samples,accel_bounds=b['accel_bounds'],gpu_deadline=b['gpu_deadline'],
-            branch=dict(time_s=t,revert=revert,group=group,until=t+plan['duration_s'],prefixes=ep['prefixes'])))
+            branch=dict(time_s=t,revert=revert,group=group,until=t+plan['duration_s'],prefixes=ep['prefixes'],mappo_background=role=='train')))
     reserve(root,jobs,'discovery')
     from .accel_plant import episode
     with ProcessPoolExecutor(max_workers=2,mp_context=multiprocessing.get_context('spawn')) as pool:
@@ -109,8 +109,14 @@ def exact_plan(root,b,policy,ep,step,index,role='train'):
     credits={str(h):algebra(results['joint']['horizon_totals'][str(h)]['team_delay_vs'],
         [results[f'revert{i}']['horizon_totals'][str(h)]['team_delay_vs'] for i in range(len(group))],
         results['all']['horizon_totals'][str(h)]['team_delay_vs']) for h in (60,120,300,600)}
+    diagnostic=None
+    if role=='train':
+        diagnostic=dict(mode='diagnostic',world_id=ep['world']['seed'],time_s=t,rows=step['rows'],group=group,
+            commands=step['commands'],policy_residuals={},plan=plan)
+        diagnostic['state_id']=digest(diagnostic)
+        write(root/'requests'/(diagnostic['state_id']+'.json'),diagnostic)
     write(root/f'ACCEL_EXACT_PLAN_{index:03}.json',dict(timestamp_utc=timestamp(),world=ep['world'],
-        time_s=t,plan=plan,credits=credits,predicted_saving=proposal['expected_saving']))
+        time_s=t,plan=plan,credits=credits,predicted_saving=proposal['expected_saving'],wm_request=diagnostic))
 
 
 def discovery(root,b,policy,episodes,index=12):

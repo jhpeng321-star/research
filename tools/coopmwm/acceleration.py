@@ -109,6 +109,9 @@ class Controller:
         # Exact twins release only the selected group's whole committed plan;
         # all non-group sampled actions are byte-identical on the replayed prefix.
         if self.branch and now >= self.branch['time_s']:
+            if self.branch.get('mappo_background'):
+                allowed=set(self.branch['group'])-set(self.branch['revert']) if now<self.branch['until'] else set()
+                desired={v:r for v,r in desired.items() if v in allowed}
             release=(self.branch.get('group',[]) if now>=self.branch.get('until',float('inf')) else self.branch['revert'])
             for vid in release:
                 desired.pop(vid, None)

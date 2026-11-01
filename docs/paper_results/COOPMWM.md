@@ -1,5 +1,41 @@
 # S-COOPMWM — live checks
 
+## 20:28 — first measured medium-CEM throughput; full-population batches qualifying
+- Complete fixed-width4 search: **gpuA635.987s =5.6605plans/hour**;
+  **gpuR653.082s =5.5123plans/hour**. Each searches96candidate slots over3CEM
+  iterations, K4/H120screen then top8K8/H300; peak allocated2.978/2.981GB.
+- Original receipts report2,626/2,558candidate futures/hour (their numerator
+  excludes the24screen-comparator futures). Including all comparator futures,
+  each query evaluates488real futures; subsequent receipts count all488.
+- This capacity is not sufficient for50executed starts/update within the original
+  GPU-time quote: even100%acceptance would require~107service-wall-hours for1200
+  primary B starts. This is a capacity lower bound, **not a training ETA**.
+- Registered probe3 retains the medium search and full1600roster, widens to34
+  screening candidates/10finalists per batch, and qualifies both K4/H120 and
+  K8/H300 on nonzero own-policy residuals. New owned PIDs gpuA539643/gpuR974432;
+  earlier probes are complete, not duplicated. Numeric quota/re-quote still pending.
+- CPU32 **72PASS/zero skips/2.14s/zeroSUMO** adds exact/WM profile-reversion algebra,
+  MAPPO background matching, conditional-noise accounting and world-cluster scale
+  checks. No guidance/training reward uses a WM number.
+
+## 20:18 — exact GPU plan parity PASS; registered smoke waits on disk
+- Both GPUs pass full1600-slot/fixed-four-candidate K8 parity with **0.0veh-s
+  maximum error**. Large acceleration profiles change futures/costs by up to
+  **1,281.163veh-s** on the registered engineering geometry. Compact-forward
+  candidate's318.494veh-s parity failure is retained/rejected.
+- CPU31 **71PASS / zero skips /2.15s /zero SUMO** adds full1s fake-plant
+  orchestration, actual frozen MAPPO command parity, exact Adam/RNG resume,
+  singular-mixture likelihood, per-member committed profiles, nongroup/postcommit
+  own-policy continuation and duplicate-CEM-ID regression.
+- Medium CEM end-to-end throughput remains pending on both original probe2 PIDs;
+  no throughput or training ETA is inferred from the parity timing alone.
+- Acceleration smoke registered/bound once; owned cpuQ supervisor2280552,
+  start54957271, reserves **3,600sim-s for A/B/R**. Total conservative charge
+  **815,240sim-s**. No new SUMO: all three jobs remain unclaimed at disk admission.
+- cpuQ free2,105,962,496bytes is below unchanged2,147,483,648-byte guard;
+  memory54,077,566,976bytes/load<1 are clear. No deletion/guard weakening/retry.
+  Receipt `coopmwm/CPUQ_DISK_ADMISSION_BLOCK.json`. Training remains held.
+
 ## 19:56 — acceleration CPU and enlarged-panel registration
 - CPU29 **65 PASS / zero skips / zero SUMO**, including real frozen MAPPO
   executor byte parity at1s, AR conditional density, committed acceleration

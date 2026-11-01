@@ -1,5 +1,20 @@
 # S-COOPMWM live continuation — OWNER19:44 quality-first recovery
 
+20:18 continuation: CPU31 71PASS/0skips/zeroSUMO. New acceleration sources and
+96-world metadata registration are committed (ca0b9884; panel SHA in DESIGN).
+Fresh60=990600..990659, audits allzero; allocated4,280,840/6M; seed2 dropped.
+PLAN_PROBE2 gpuA535910/gpuR970438: full1600/fixed4 K8 parity EXACT0 on BOTH;
+full medium-CEM timing still runs. Do not duplicate these inference attempts.
+`accel_deploy smoke` owns cpuQ2280552/start54957271 at new root
+`/home/ubuntu/coopmwm20261101_accel1`; original3,600sim-s reserved, no jobCLAIM.
+Disk2,105,962,496bytes <2GiB admission guard; waits without SUMO. Conservative
+taskcharge815,240. Original A supervisor2146725 stays T; old publisher1116 alive.
+GPU source currently planprobe2 snapshot; CPU31 adds correct nongroup/afterplan
+own-residual continuation and collision-free CEM IDs. Training requires final
+source-bound GPU/K4 qualification, full search throughput, numerical quota/GPU
+quote registration and training binding (smoke binding explicitly forbids it).
+Do not use historical set-point deploy commands. Pending disk blocker posted.
+
 19:47 fresh recovery: owned A supervisor2146725 remains T,672/678 closed,
 811,640sim-s charged. Publisher1116 remains running; do not duplicate it.
 GPU inventories had no task processes; registered CPU27 fixed-roster repair

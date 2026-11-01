@@ -30,15 +30,20 @@ def main(root):
         if time.time()>binding['deadline_unix']:raise ValueError('registered GPU deadline')
         r=json.loads(line);key=r['state_id'];dest=root/'forecasts'/(key+'.json')
         if dest.exists():raise ValueError('duplicate inference attempt; inspect owned receipt')
-        allowed={'state_id','world_id','time_s','rows','group','commands','policy_residuals'}
+        diagnostic=r.get('mode')=='diagnostic'
+        allowed={'state_id','world_id','time_s','rows','group','commands','policy_residuals'}|({'mode','plan'} if diagnostic else set())
         if set(r)!=allowed:raise ValueError('observable plan request whitelist')
         from tools.coopnative.policy import encode
         encode(r['rows'])
         ids={v['vid'] for v in r['rows'] if v['is_cav']}
         if not set(r['commands'])<=ids or not set(r['group'])<=ids:raise ValueError('non-CAV request')
         start=time.monotonic()
-        result=search(r,(float(rt.mp.policy.accel_min),float(rt.mp.policy.accel_max)),
-            lambda a,k,h:evaluate(rt,r,a,k,h,chunk_actions=4,trim=False,pad_actions=True))
+        if diagnostic:
+            from .accel_diagnostic import evaluate as credit
+            result=credit(rt,r)
+        else:
+            result=search(r,(float(rt.mp.policy.accel_min),float(rt.mp.policy.accel_max)),
+                lambda a,k,h:evaluate(rt,r,a,k,h,chunk_actions=34 if k==4 else 10,trim=False,pad_actions=34 if k==4 else 10))
         payload=dict(key=key,result=result,wall_s=time.monotonic()-start,unix=time.time())
         write(dest,payload);emit('RESULT',**payload)
 

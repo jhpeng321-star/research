@@ -14,9 +14,30 @@ from .plan_wm import profile_table, profile_apply
 
 class AccelerationCPU(unittest.TestCase):
     def test_acceleration_modules_import_and_long_credit(self):
-        from . import accel_runner,accel_plant,plan_bridge,plan_service,plan_client,accel_deploy
+        from . import accel_runner,accel_plant,plan_bridge,plan_service,plan_client,accel_deploy,accel_diagnostic
         from .accel_learner import GAMMA,LAMBDA
         self.assertGreaterEqual(-1/np.log(GAMMA*LAMBDA),300.)
+
+    def test_diagnostic_pairing_uses_actual_profile_and_mappo_background(self):
+        from .accel_diagnostic import evaluate,agreement
+        from types import SimpleNamespace
+        plan=dict(id='p',members=['a','b'],duration_s=60,knots=[[-1.]*7,[1.]*7])
+        r=dict(plan=plan,policy_residuals={'a':1.},state_id='fixture')
+        def fake(rt,record,acts,K,H,**kw):
+            self.assertEqual(record['policy_residuals'],{})
+            self.assertEqual([len(a['members']) for a in acts],[2,1,1,0])
+            self.assertEqual(kw['horizons'],(60,120,300,600))
+            return {str(h):{a['id']:[dict(draw_id=str(k),team_delay=v+k) for k in range(8)]
+                for a,v in zip(acts,[50.,80.,70.,110.])} for h in kw['horizons']}
+        with patch('tools.coopmwm.plan_wm.evaluate',fake):result=evaluate(SimpleNamespace(),r)
+        self.assertEqual(result['credits']['300'],dict(D_i=[30.,20.],D_G=60.,C_G=10.))
+        self.assertEqual(result['noise']['300']['paired_credit_variance'],0.)
+        self.assertGreater(result['noise']['300']['team_return_advantage_variance'],0.)
+        rs=[dict(world=dict(seed=i),wm=result['credits'],exact=result['credits']) for i in range(3)]
+        summary=agreement(rs,100)
+        self.assertEqual(summary['horizons']['300']['scale'],1.)
+        self.assertEqual(summary['weights']['300'],.25)
+        self.assertFalse(agreement(rs[:1],10)['horizons']['300']['pass_'])
 
     def test_one_second_episode_orchestration_and_sumo_only_reward(self):
         from .accel_plant import episode

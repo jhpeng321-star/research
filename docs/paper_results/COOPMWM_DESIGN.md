@@ -13,7 +13,7 @@
 12. Reuse PPO4epochs/Adam3e-4/clip.2/KL.045; gamma exp(-1/600),lambda exp(-1/1200).
 13. Critic GAE e-folding400s; complete900s task after300s warmup, terminal0.
 14. WM fixed FULL-v4 source22cc32f6; later qualified v5 requires a new registered arm.
-15. Reuse WMTEACH futures/executors; fuse private windows at one-step forward; original1600-slot draws preserved.
+15. Reuse WMTEACH futures/executors; fixed-width batches, full1600-slot forward/source/controller; compact path rejected.
 16. R=B except random acceleration profiles from identical bounds/plan space, matched count/regime/duration; noWM.
 17. Roster only; joint FIT driver prior/uniform32FIT source: integer round(rate*t) pseudo-counts/exposure t.
 18. Cold memory/unobserved source pseudo-exposure disclosed; not causal request conditioning; no future inputs.
@@ -27,8 +27,8 @@
 26. Log query route mass p, within-query execute beta(type,regime); own nonquery mass1-p.
 27. Target own-nonquery mass1/query0: ratio=pi_new/[(1-p)*pi_old] or0, including declined/rejected queries.
 28. Per-step clipped PPO respects singular guided-route mass; executed member residual imitation weightbeta.
-29. Initial random subset: twelve TRAIN windows, RNG20261101, one per12cells.
-30. Select uniformly from complete group windows in first TRAIN batch, before credit outcomes.
+29. Original initial12cell E2 retained; acceleration E2 uses registered first12random executed TRAIN plans, RNG20261101.
+30. Exact/WM E2 keeps all background CAVs on MAPPO after decision, group commitment then MAPPO; no native reversion.
 31. Select t<=600 so all H600 twins finish by1200; full-prefix COOPFREE quartet once/window.
 32. Publish C_G and D_i sign agreement, whole-world10000bootstrap95CI plus Wilson, scale95CI.
 33. E2 runs in a2worker diagnostic thread beside PPO; serialized accounting; never reward/training gate.
@@ -51,7 +51,7 @@
 50. Both seed guards, fresh-name exposure, immutable sources/cache/approval bindings before physics.
 51. No prohibited paths/truth/assignments, no newenv/deletion/push; commit every completed step.
 52. E2 diagnostic multi-H weights normalize measured agreement on horizons with sign95CI lower>.5.
-53. GPU slots drive outcome-independent live sampling, dense priority; numericalNexec/throughput registered before restart.
+53. Eligible windows pause for GPU queue slots, p=.95 when admitted/dense priority; numericalNexec/throughput before restart.
 54. Per-window/H report K8 joint-return advantage variance and paired-credit variance in veh-s².
 55. Frozen critic baseline is constant within window; variance is conditional WM-estimated noise.
 56. Report actual PPO advantages across TRAIN windows separately; no empirical SUMO-noise claim.
