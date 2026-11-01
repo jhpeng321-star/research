@@ -4,6 +4,8 @@
 sampling denominator (eligible uncommitted windows only), exhausted R quota=>own/p0.
 Latest amendment d3d30eeed563b4844121d6e851bd1d23a5fb542647627baa64cb2eb09f0161ad,
 new observer tag `VIABILITY2035v2`; inspect its WATCH_DISPATCH/log/FAILED first.
+Replacement observer35020 is live (poll30s), publishing/committing qualification
+receipts and waiting for original scale jobs. No TRAIN_DISPATCH/BINDING yet.
 Old observer38380 was identity-verified/stopped before any training binding/physics.
 No smoke/probe/scale retried. CPU35 frozen forecast/search/WMTEACH hashes must match
 original CPU33 scaling dependencies before binding; numerical quota/budget unchanged.
