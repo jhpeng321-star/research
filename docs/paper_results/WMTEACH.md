@@ -75,9 +75,17 @@ The headline “a policy trained with the world model beats MAPPO” is an objec
 
 <!-- WMTEACH-WATCH:BEGIN -->
 ## Collected GPU progress
-- Snapshot Unix1793508877; owned PID437822, identity-match=True, process-state=R.
-- Complete future tasks: 62; complete H120/H300 label contexts: 14; teacher SUMO:0sim-s.
+- Snapshot Unix1793509711; owned PID437822, identity-match=True, process-state=R.
+- Complete future tasks: 80; complete H120/H300 label contexts: 20; teacher SUMO:0sim-s.
 - Full preregistered teacher-quality check pending; student fitting waits for it.
 - No completed student snapshot yet.
 - No complete live result or claim of beating MAPPO yet.
 <!-- WMTEACH-WATCH:END -->
+
+<!-- WMTEACH-SCALE:BEGIN -->
+## OWNER12:53 scale continuation
+- Snapshot Unix1793509713; GPU ownership {'identity_matches': True, 'pid': 447666, 'state': 'S'}.
+- Generated 0/5120 distinct planned states; labelled 0/5120 (each K8/H120+H300); teacher SUMO0sim-s.
+- Waiting for the existing exact-quality computation; no repeated forecasts or scale fitting.
+- Scale student pending. No claim of beating MAPPO.
+<!-- WMTEACH-SCALE:END -->
