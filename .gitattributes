@@ -93,8 +93,8 @@ R9_GATE2.md text eol=lf
 
 # RB2-LPHYS immutable parameter/result bytes are SHA-bound on Linux and Windows.
 /artifacts/rb2lphys/*.json text eol=lf
-/docs/rb2lphys/**/*.json text eol=lf
-/docs/rb2lphys/**/*.csv text eol=lf
+/docs/rb2lphys/**/*.json -text whitespace=cr-at-eol
+/docs/rb2lphys/**/*.csv -text whitespace=cr-at-eol
 
 # Preserve SHA-bound S-C2H60 source and receipt bytes on Windows checkouts.
 /configs/c4_policy14_c2h60.toml -text

@@ -52,7 +52,7 @@ used by diagnostics and the development12 five-arm comparison. WMDATA2 is
 quarantined; no reserved969432–969439 row enters fitting, scores or selection.
 The canonical inherited reference bundle contains other rows, excluded from scores.
 
-Hashing: old Windows `git archive` exports contain CRLF. The final artifact and
-result attributes pin LF. `verify_delivery.py` records LF/blob hashes, raw
+Hashing: old Windows `git archive` exports contain CRLF. The final artifact pins
+LF; sealed result JSON/CSV preserve exact raw bytes. `verify_delivery.py` records LF/blob hashes, raw
 worktree hashes and the ACTUAL historical evaluated archive hashes separately,
 and verifies equality of parsed parameters/rule source modulo line endings.

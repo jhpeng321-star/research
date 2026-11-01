@@ -17,7 +17,7 @@ Report `docs/paper_results/RB2_LPHYS.md` (≤40lines); exact before/after table
 - Canonical artifact SHA256 e1387b5fa606b3fa8c51050dab69c5935cbf0bc1468769e6fb948f0e7d7e366f.
   Evaluated Windows-archive CRLF SHA20a4d7774d365d2ec1915c749f3159d17813b9726504fdac8704738c1e18286a.
   `docs/rb2lphys/DELIVERY_AUDIT_FINAL.json` verifies equal JSON/rule source modulo endings;
-  final artifact/results attributes pin LF. Raw/stage/source hashes are separated.
+  artifact attributes pin LF; sealed results preserve exact raw bytes. Hashes are separated.
 
 ## Development result / readiness limits
 - GP Bayesian optimisation57trials/16common support draws;1068native prefix births.
