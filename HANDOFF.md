@@ -316,3 +316,5 @@ owns all evaluation physics incl J900 tail; no duplicate local evaluation.
 - 2026-11-01 15:36 +08:00 automated supervision: cpuQ606968 alive=True; watcher12432 identity/live=True; 142/169 updates, 6535/7774 production, 12 open; 5.8827e+06 actual/5894100 reserved sim-s; failures=1 (original smoke retained), collisions=0/teleports=0; alerts=none. Evidence `docs/paper_results/selmappo2/SUPERVISION_1793518618955245800.json`.
 
 - 2026-11-01 15:57 +08:00 automated supervision: cpuQ606968 alive=True; watcher12432 identity/live=True; 146/169 updates, 6761/7774 production, 1 open; 6.0861e+06 actual/6087600 reserved sim-s; failures=1 (original smoke retained), collisions=0/teleports=0; alerts=none. Evidence `docs/paper_results/selmappo2/SUPERVISION_1793519834532169600.json`.
+
+- 2026-11-01 16:17 +08:00 automated supervision: cpuQ606968 alive=True; watcher12432 identity/live=True; 152/169 updates, 6992/7774 production, 12 open; 6.294e+06 actual/6305400 reserved sim-s; failures=1 (original smoke retained), collisions=0/teleports=0; alerts=none. Evidence `docs/paper_results/selmappo2/SUPERVISION_1793521046570552400.json`.
