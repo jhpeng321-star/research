@@ -1,5 +1,19 @@
 # S-COOPMWM — live checks
 
+## 21:29 — persistent-worker memory admission finalized
+- **CPU36 79PASS/zero skips/2.26s/zero SUMO**. Worker allocator fractions are now
+  applied after the inherited WM bootstrap (which installs its own8GiB cap), so
+  the registered service limit min(.65,.80/N) is actually enforced. CPU regression
+  checks ordering; each persistent worker still qualifies K4/K8 parity once.
+- Original CPU33 scale jobs continue unchanged and report actual measured peaks
+  under the inherited8GiB cap. No running search was cancelled or duplicated.
+- Both30-dependency audits PASS: CPU36 forecast/search/WMTEACH/frozen-cost hashes
+  are identical to the original CPU33 scale source. Both SSH environments select
+  the frozen FULL-v4 default; no v5 switch was made.
+- Latest prospective amendment SHA
+  `63ac5e1f9248a658a42ab6ce99e2ee82131f1503141c535bcb035bd5232d8b66`.
+  Numerical quota10, u4pause, all budgets and sealed-panel rules unchanged.
+
 ## 21:14 — random-arm matching bookkeeping qualified before restart
 - **CPU35 78PASS/zero skips/2.28s/zero SUMO**. Corrected the random-arm sampling
   denominator: estimate B's query probability over ex-ante eligible, uncommitted

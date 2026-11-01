@@ -8,6 +8,15 @@ from .storage import read,write
 from .protocol import sha,digest
 
 
+def configured_runtime(bootstrap,fraction):
+    # The inherited bootstrap installs its own 8GiB cap. Worker-specific limits
+    # must be applied AFTER it, otherwise concurrent service limits are ignored.
+    rt=bootstrap()
+    import torch
+    torch.cuda.set_per_process_memory_fraction(fraction)
+    return rt
+
+
 def main(root):
     import fcntl
     lock=(root/'SERVICE.claim').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
@@ -20,8 +29,7 @@ def main(root):
     from .wm import cost_adapter
     from .plan_wm import evaluate
     from .plans import search
-    torch.cuda.set_per_process_memory_fraction(binding.get('memory_fraction',.65))
-    rt=bootstrap()
+    rt=configured_runtime(bootstrap,binding.get('memory_fraction',.65))
     rt.frozen.costs=cost_adapter(rt.frozen.costs,read(root/'FROZEN_COSTS.json')['code'])
     width=binding.get('batch_width',4)
     if binding.get('startup_qualification'):

@@ -18,6 +18,14 @@ class AccelerationCPU(unittest.TestCase):
         from .accel_learner import GAMMA,LAMBDA
         self.assertGreaterEqual(-1/np.log(GAMMA*LAMBDA),300.)
 
+    def test_worker_memory_limit_applies_after_inherited_bootstrap(self):
+        from .plan_service import configured_runtime
+        events=[];sentinel=object()
+        def bootstrap():events.append('inherited cap');return sentinel
+        with patch('torch.cuda.set_per_process_memory_fraction',side_effect=lambda n:events.append(n)):
+            self.assertIs(configured_runtime(bootstrap,.1),sentinel)
+        self.assertEqual(events,['inherited cap',.1])
+
     def test_viability_has_a_fixed_pre_final_endpoint(self):
         from .accel_runner import update_limit
         self.assertEqual(update_limit(dict(viability_updates=4)),4)

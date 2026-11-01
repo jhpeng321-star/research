@@ -1,5 +1,14 @@
 # S-COOPMWM live continuation — OWNER20:35 four-update viability
 
+21:29 FINAL RELEASE SNAPSHOT CPU36 79PASS/0skips/zeroSUMO. Persistent GPU worker
+allocator limit now applied AFTER inherited bootstrap, which otherwise resets8GiB.
+Both30forecast/WMTEACH/cost dependency hashes match original CPU33 scale sources.
+Latest tag `VIABILITY2035v3`, amendment63ac5e1f9248a658a42ab6ce99e2ee82131f1503141c535bcb035bd5232d8b66.
+Observer35020 identity-verified/stopped before any binding. Inspect v3WATCH_DISPATCH,
+WATCH.log/FAILED first. Original scale542616/977289 runs unchanged, measured actual
+peaks under inherited cap; new persistent services qualify once under final cap.
+No training binding/update yet at this note; Nexec10/u4pause/all budgets unchanged.
+
 21:14: CPU35 78PASS/0skips/zeroSUMO supersedes release metadata CPU34: correct R
 sampling denominator (eligible uncommitted windows only), exhausted R quota=>own/p0.
 Latest amendment d3d30eeed563b4844121d6e851bd1d23a5fb542647627baa64cb2eb09f0161ad,

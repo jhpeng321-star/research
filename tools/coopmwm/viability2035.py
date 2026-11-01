@@ -16,8 +16,25 @@ from .plans import SEARCH
 from .plan_bridge import ROOT,GPU_ROOT
 
 SOURCE='/home/ubuntu/coopmwm20261101_acceltrain1'
-CPU='CPU_coopmwm20261101_cpu35.json'
-TAG='VIABILITY2035v2'
+CPU='CPU_coopmwm20261101_cpu36.json'
+TAG='VIABILITY2035v3'
+
+
+def dependency_names(previous):
+    return [name for name in previous['source_hashes'] if name.startswith('pytools/tools/wmteach/')]+['FROZEN_COSTS.json']+[
+        'pytools/tools/coopmwm/'+n for n in ('plan_wm.py','plans.py','wm.py','fused.py')]
+
+
+def audit_dependencies():
+    current=read(ops.EVIDENCE/CPU);results={}
+    for host in ('gpuA','gpuR'):
+        dispatch=read(ops.EVIDENCE/f'SCALE2035_{host}_DISPATCH.json')
+        previous=read(ops.EVIDENCE/dispatch['cpu']);names=dependency_names(previous)
+        different=[n for n in names if previous['source_hashes'][n]!=current['source_hashes'].get(n)]
+        results[host]=dict(pass_=not different,dependencies=len(names),different=different,original_cpu=dispatch['cpu'])
+    value=dict(pass_=all(v['pass_'] for v in results.values()),cpu=CPU,hosts=results,new_sumo_sim_s=0)
+    write(ops.EVIDENCE/f'{TAG}_DEPENDENCY_AUDIT.json',value);print(json.dumps(value))
+    assert value['pass_'],'forecast dependencies changed; qualification remains held'
 
 
 def register():
@@ -33,7 +50,7 @@ def register():
         gpu_quote=dict(original_deadline_unix=read(ops.EVIDENCE/'DUAL_1755_DISPATCH.json')['unix']+86400,
             concurrency_estimated_hours_per_host=[1,3],viability_service_estimated_hours_per_host=[4,12],
             deadline_not_extended=True,actual_worker_time_and_throughput_reported=True),
-        infrastructure='opaque verified archive; CPU35 lossless hashed gzip results; committed-plan continuation atom preserved even on eligible10s ticks; R query rate estimated only over ex-ante eligible uncommitted windows; immutable new training source, old smoke reused',
+        infrastructure='opaque verified archive; CPU36 lossless hashed gzip results; committed-plan continuation atom preserved even on eligible10s ticks; R query rate estimated only over ex-ante eligible uncommitted windows; persistent GPU caps applied after inherited bootstrap; immutable new training source, old smoke reused',
         reporting='each UPDATE/VIABILITY/CHECK/E2 immediately; pertype/regime/rank/new-family SUMO advantage/CI; after u4 pause',
         no_new_sumo_sim_s=0)
     write(ops.EVIDENCE/f'{TAG}_AMENDMENT.json',value);h=sha(ops.EVIDENCE/f'{TAG}_AMENDMENT.json')
@@ -54,11 +71,14 @@ def register():
         '96sealedworlds and fixedfullu24 checkpoint/test rules protected; seed2 remainsdropped. '
         'GPU quote concurrency1..3h/host +viability4..12h/host estimates, original24hGPUdeadline notreset; '
         'actual times published. Owner-approved v2 opaque tar/hashmatched archive then literal root removal only; '
-        'CPU35 lossless digest-checked gzip 1s tapes/newimmutable training namespace; '
+        'CPU36 lossless digest-checked gzip 1s tapes/newimmutable training namespace; '
         'CPU regressions fix continuation plan-route atom on eligible10s ticks and R sampling denominator '
         '(eligible uncommitted decisions only, not all committed1s steps); R exhausted matched tickets routeown/p0, '
         'with no fictitious empty-proposal atoms, before ANY acceleration update. '
-        'Supersedes CPU34 release metadata only; all original probes/smoke/charges reused. No outcome-dependent tuning.\n')
+        'Persistent-worker memory fraction min(.65,.80/N) applied AFTER inherited bootstrap overrides; '
+        'original CPU33 scaling retains measured actual peaks and inherited8GiB cap, not a promised customfraction; '
+        'final persistent workers qualify under their actual admitted cap. '
+        'Supersedes prior release metadata only; all original probes/smoke/charges reused. No outcome-dependent tuning.\n')
     with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
     write(ops.EVIDENCE/f'{TAG}_REGISTRATION.json',dict(line=line,amendment_sha256=h));print(line.strip())
 
@@ -83,9 +103,7 @@ v=json.loads((r/'SMOKE.json').read_text());assert v['pass_'];print(json.dumps(v)
         # Qualification and final service must share the forecast/search source.
         dispatch=read(ops.EVIDENCE/f'SCALE2035_{host}_DISPATCH.json')
         previous=read(ops.EVIDENCE/dispatch['cpu'])
-        dependencies=[name for name in previous['source_hashes'] if name.startswith('pytools/tools/wmteach/')]
-        dependencies+=['FROZEN_COSTS.json']+['pytools/tools/coopmwm/'+n for n in ('plan_wm.py','plans.py','wm.py','fused.py')]
-        for name in dependencies:
+        for name in dependency_names(previous):
             assert previous['source_hashes'][name]==cpu['source_hashes'][name]
         gpu_source=json.loads(ops.stage_frozen(host,GPU_ROOT,cpu))
         inputs=json.dumps(read(ops.EVIDENCE/'VOLUME_INPUTS_1854.json'))
@@ -261,5 +279,5 @@ def start_watch():
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('register','bind','launch','once','watch','start-watch'));a=p.parse_args()
-    {'register':register,'bind':bind,'launch':launch,'once':once,'watch':watch,'start-watch':start_watch}[a.mode]()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('register','audit-dependencies','bind','launch','once','watch','start-watch'));a=p.parse_args()
+    {'register':register,'audit-dependencies':audit_dependencies,'bind':bind,'launch':launch,'once':once,'watch':watch,'start-watch':start_watch}[a.mode]()

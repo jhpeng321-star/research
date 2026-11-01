@@ -18,8 +18,9 @@ def worker(root,count,index,connection,qualify):
     from .wm import cost_adapter
     from .plans import search,baseline_actions,family_seeds
     from .plan_wm import evaluate
-    torch.cuda.set_per_process_memory_fraction(min(.65,.80/count))
-    rt=bootstrap();rt.frozen.costs=cost_adapter(rt.frozen.costs,read(root/'FROZEN_COSTS.json')['code'])
+    from .plan_service import configured_runtime
+    rt=configured_runtime(bootstrap,min(.65,.80/count))
+    rt.frozen.costs=cost_adapter(rt.frozen.costs,read(root/'FROZEN_COSTS.json')['code'])
     source=read(root/'INPUTS.json')['records'][0]
     commands={r['vid']:0. for r in source['rows'] if r['is_cav']}
     record=dict(state_id=source['state_id'],world_id=source['world_id'],rows=source['rows'],group=source['group'],
