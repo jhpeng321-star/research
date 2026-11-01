@@ -24,7 +24,7 @@ world model can choose cooperative actions online better than MAPPO alone.
   `/root/autodl-tmp/wmteach_v5quality20261101_v2`. Read completed evidence only;
   never duplicate its forecasts or control its process.
 - Before any live outcome, select FULL-v5 source `b2df7458` only if its same-12
-  H300 helpful-state agreement AND helpful chosen saving are at least FULL-v4;
+  H300 helpful-state agreement AND all-12 chosen saving are at least FULL-v4;
   otherwise select frozen FULL-v4 `22cc32f6`. Preserve both comparison results.
 - Exact live budget, immutable sources, baseline hashes, model choice, CPU and
   prefix-integrity gates must be registered before dispatch. No live dispatch
