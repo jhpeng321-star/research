@@ -142,7 +142,7 @@ The headline “a policy trained with the world model beats MAPPO” is an objec
 
 <!-- WMTEACH-WATCH:BEGIN -->
 ## Collected GPU progress
-- Snapshot Unix1793513142; owned PID437822, identity-match=False, process-state=None.
+- Snapshot Unix1793514351; owned PID437822, identity-match=False, process-state=None.
 - Complete future tasks: 96; complete H120/H300 label contexts: 24; teacher SUMO:0sim-s.
 - Exact diagnostic H120: 12/300 states, choice agreement 0.500, sign agreement 0.59375, within-state rank 0.3080542080414245, chosen exact saving 19.504veh-s, regret 40.249veh-s.
 - Exact diagnostic H300: 12/300 states, choice agreement 0.667, sign agreement 0.6875, within-state rank 0.51646716637129, chosen exact saving 680.308veh-s, regret 592.978veh-s.
@@ -153,8 +153,8 @@ The headline “a policy trained with the world model beats MAPPO” is an objec
 
 <!-- WMTEACH-SCALE:BEGIN -->
 ## OWNER12:53 scale continuation — FULL-v4
-- Snapshot Unix1793513144; GPU ownership {'identity_matches': True, 'pid': 453587, 'state': 'R'}.
-- Generated 1270/5120 distinct planned states; labelled 1/5120 (each K8/H120+H300); teacher SUMO0sim-s.
+- Snapshot Unix1793514352; GPU ownership {'identity_matches': True, 'pid': 453587, 'state': 'R'}.
+- Generated 2280/5120 distinct planned states; labelled 1/5120 (each K8/H120+H300); teacher SUMO0sim-s.
 - Exact H300 helpful states: 8; argmax agreement 4/8, positive-saving choices 6, Wilson95lower 0.2152; live quality gate PASS=True.
 - Exact mean chosen saving on helpful states: 1020.461280948498veh-s. Inherited12state roster-only diagnostics; not full descendant qualification.
 - First batched K8 canary PASS; maximum paired-cost serial error 1.52587890625e-05veh-s; result reused once.
@@ -163,7 +163,7 @@ The headline “a policy trained with the world model beats MAPPO” is an objec
 
 <!-- WMTEACH-V5-SCALE:BEGIN -->
 ## OWNER12:53 scale continuation — FULL-v5
-- Snapshot Unix1793513146; GPU ownership {'identity_matches': True, 'pid': 453608, 'state': 'S'}.
+- Snapshot Unix1793514354; GPU ownership {'identity_matches': True, 'pid': 453608, 'state': 'S'}.
 - Generated 0/5120 distinct planned states; labelled 0/5120 (each K8/H120+H300); teacher SUMO0sim-s.
 - Waiting for the existing exact-quality computation; no repeated forecasts or scale fitting.
 - Scale student pending. No claim of beating MAPPO.
@@ -171,6 +171,6 @@ The headline “a policy trained with the world model beats MAPPO” is an objec
 
 <!-- WMTEACH-V5-QUALITY:BEGIN -->
 ## Published FULL-v5 teacher-quality rerun
-- Owned process {'identity_matches': True, 'pid': 453566, 'state': 'R'}; 28/96futures, 6/24horizon contexts; SUMO0sim-s.
+- Owned process {'identity_matches': True, 'pid': 453566, 'state': 'R'}; 49/96futures, 12/24horizon contexts; SUMO0sim-s.
 - Roster-only/cold-memory/source-prior diagnostics; model availability is not efficacy.
 <!-- WMTEACH-V5-QUALITY:END -->
