@@ -1,0 +1,27 @@
+{
+ "analysis": "S-MAPPODAMP",
+ "bootstrap": {
+  "B": 10000,
+  "seed": 20261102,
+  "unit": "whole world, within split"
+ },
+ "inputs": {
+  "E:\\agent-work\\c4-mappo-damping\\evidence\\wmdata_vehicle_metrics.json": "70502a2ccd661f4901cfabd4f2a194ab35286d259eb90dc739610be95eea7b72",
+  "E:\\agent-work\\c4-wmbreakdown\\docs\\paper_results\\wmbreakdown\\wmdata_observables.json": "01d0d2b7027aad9910496c7bc5b9681c0d1ccf08f46b4e16a1113310a67362e9",
+  "E:\\agent-work\\c4-mappo-damping\\evidence\\wmdata2_vehicle_metrics.json": "caac4caabaa5e965359700cc0b382b88a2d557c3080bdbaf4bb345d0bb52e86d",
+  "E:\\agent-work\\c4-wmbreakdown\\docs\\paper_results\\wmbreakdown\\wmdata2_observables.json": "a2b3ecf7a6ea9d6904fafa44d57a502e77781024b42b9b9469cbddaf44779fb4",
+  "E:\\agent-work\\c4-coopbehav\\tools\\coopbehav\\evidence\\WMDATA_final\\episodes.json": "9d7d0136c06103f703c4352e4f43cf33a76b261883a7bc797d3735b2deb234a5",
+  "E:\\agent-work\\c4-coopbehav\\tools\\coopbehav\\evidence\\WMDATA2_final\\episodes.json": "9f81627b3ce159c207d4bf3ca93a60106389facd797e69cdb8ce147f9d31de48",
+  "E:\\agent-work\\c4-mappo-damping\\evidence\\coopbehav_native_circles\\WMDATA\\episodes.json": "ec2416c2a480f716aa376685067bb7046c8f81cf54b33e26c45408e84d3c5bce",
+  "E:\\agent-work\\c4-mappo-damping\\evidence\\coopbehav_native_circles\\WMDATA2\\episodes.json": "5d8935e7cc2184ee62e225e63b1d7e330bd0e6f589ecf9ddabca0d2afa39ad3e",
+  "E:\\agent-work\\c4-coopmeasure\\docs\\paper_results\\COOPAUDIT.md": "4988011101f185fb175179d28564541a4ed4f2d94e438f73bfa7401e5c6b274b",
+  "E:\\agent-work\\c4-mappo-damping\\tools\\mappo_damping\\reduce_remote.py": "d2bd179b457c18e87a6e8aaf182bc689a4193ebec5ef7a6acef0302acbec791c",
+  "E:\\agent-work\\c4-mappo-damping\\tools\\mappo_damping\\collect.py": "e30c99d15e5c5ec875b20e5aa5fe3bf356d1efd167fdd56adc288a98a96793ff",
+  "E:\\agent-work\\c4-mappo-damping\\tools\\mappo_damping\\analyze.py": "920c55a82331d489dabfb29f1c1c3d42534a22baf8c908d017cf295503d5e29f"
+ },
+ "outputs": {
+  "paired_indicators.csv": "f67af61460d82fc207bf449d2e6fb074fad90d7abd417b62b0ab977f061dffac",
+  "coopbehav_rates.csv": "3a4522db1db440f81a8f481e472a17c082d303f7c0fc4f492d27d0cbc1fd3a43",
+  "attribution.csv": "5961bff470dadd154ff313f92c8578026c81766159eb977d6505c2c2c1da1a70"
+ }
+}

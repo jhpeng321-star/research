@@ -1,0 +1,1793 @@
+[
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969400m1900p05t300__circles",
+    "arm": "circles",
+    "seed": 969400,
+    "exposure_cav_s": 1494.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 8,
+      "junction_vehicle_frames": 535,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 43,
+      "gap_creation": 17
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969400m1900p05t300__native",
+    "arm": "native",
+    "seed": 969400,
+    "exposure_cav_s": 1421.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 8,
+      "junction_vehicle_frames": 467,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 48,
+      "gap_creation": 7
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969401m2400p05t300__circles",
+    "arm": "circles",
+    "seed": 969401,
+    "exposure_cav_s": 1946.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 10,
+      "junction_vehicle_frames": 581,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 43,
+      "gap_creation": 29,
+      "cross_lane_hold": 4,
+      "yield_to_merge": 1
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969401m2400p05t300__native",
+    "arm": "native",
+    "seed": 969401,
+    "exposure_cav_s": 1570.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 9,
+      "junction_vehicle_frames": 491,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 29,
+      "gap_creation": 24,
+      "cross_lane_hold": 1
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969402m2700p05t300__circles",
+    "arm": "circles",
+    "seed": 969402,
+    "exposure_cav_s": 1852.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 16,
+      "junction_vehicle_frames": 706,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 26,
+      "gap_creation": 13,
+      "yield_to_merge": 1,
+      "cross_lane_hold": 2
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969402m2700p05t300__native",
+    "arm": "native",
+    "seed": 969402,
+    "exposure_cav_s": 1900.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 15,
+      "junction_vehicle_frames": 667,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 33,
+      "gap_creation": 30,
+      "cross_lane_hold": 1
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969403m1900p10t300__circles",
+    "arm": "circles",
+    "seed": 969403,
+    "exposure_cav_s": 1895.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 10,
+      "junction_vehicle_frames": 328,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 14,
+      "wave_damping": 35,
+      "cross_lane_hold": 1
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969403m1900p10t300__native",
+    "arm": "native",
+    "seed": 969403,
+    "exposure_cav_s": 1913.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 10,
+      "junction_vehicle_frames": 321,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 22,
+      "wave_damping": 28,
+      "cross_lane_hold": 1,
+      "yield_to_merge": 1
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969404m2400p10t300__circles",
+    "arm": "circles",
+    "seed": 969404,
+    "exposure_cav_s": 2581.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 21,
+      "junction_vehicle_frames": 460,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 50,
+      "gap_creation": 14,
+      "cross_lane_hold": 2,
+      "yield_to_merge": 1
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969404m2400p10t300__native",
+    "arm": "native",
+    "seed": 969404,
+    "exposure_cav_s": 2439.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 18,
+      "junction_vehicle_frames": 313,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 27,
+      "gap_creation": 7
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969405m2700p10t300__circles",
+    "arm": "circles",
+    "seed": 969405,
+    "exposure_cav_s": 3587.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 20,
+      "junction_vehicle_frames": 690,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 43,
+      "wave_damping": 70,
+      "yield_to_merge": 4,
+      "cross_lane_hold": 2
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969405m2700p10t300__native",
+    "arm": "native",
+    "seed": 969405,
+    "exposure_cav_s": 3667.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 19,
+      "junction_vehicle_frames": 646,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 132,
+      "gap_creation": 107,
+      "yield_to_merge": 5,
+      "cross_lane_hold": 5
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969406m1900p20t300__circles",
+    "arm": "circles",
+    "seed": 969406,
+    "exposure_cav_s": 5389.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 35,
+      "junction_vehicle_frames": 283,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 57,
+      "wave_damping": 96,
+      "cross_lane_hold": 3
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969406m1900p20t300__native",
+    "arm": "native",
+    "seed": 969406,
+    "exposure_cav_s": 5469.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 36,
+      "junction_vehicle_frames": 270,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 107,
+      "gap_creation": 70,
+      "cross_lane_hold": 4
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969407m2400p20t300__circles",
+    "arm": "circles",
+    "seed": 969407,
+    "exposure_cav_s": 4629.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 29,
+      "junction_vehicle_frames": 257,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 47,
+      "wave_damping": 81,
+      "yield_to_merge": 1
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969407m2400p20t300__native",
+    "arm": "native",
+    "seed": 969407,
+    "exposure_cav_s": 5125.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 34,
+      "junction_vehicle_frames": 475,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 128,
+      "gap_creation": 106,
+      "yield_to_merge": 8,
+      "cross_lane_hold": 2
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969408m2700p20t300__circles",
+    "arm": "circles",
+    "seed": 969408,
+    "exposure_cav_s": 4541.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 25,
+      "junction_vehicle_frames": 611,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 57,
+      "wave_damping": 113,
+      "cross_lane_hold": 3,
+      "yield_to_merge": 6
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969408m2700p20t300__native",
+    "arm": "native",
+    "seed": 969408,
+    "exposure_cav_s": 4423.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 23,
+      "junction_vehicle_frames": 592,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 66,
+      "gap_creation": 38,
+      "cross_lane_hold": 8,
+      "yield_to_merge": 8
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969409m1900p40t300__circles",
+    "arm": "circles",
+    "seed": 969409,
+    "exposure_cav_s": 7626.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 66,
+      "junction_vehicle_frames": 230,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 52,
+      "wave_damping": 135,
+      "cross_lane_hold": 12
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969409m1900p40t300__native",
+    "arm": "native",
+    "seed": 969409,
+    "exposure_cav_s": 7572.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 62,
+      "junction_vehicle_frames": 280,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 114,
+      "wave_damping": 165,
+      "cross_lane_hold": 14,
+      "yield_to_merge": 3
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969410m2400p40t300__circles",
+    "arm": "circles",
+    "seed": 969410,
+    "exposure_cav_s": 8811.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 78,
+      "junction_vehicle_frames": 364,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 90,
+      "wave_damping": 204,
+      "cross_lane_hold": 10,
+      "yield_to_merge": 6
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969410m2400p40t300__native",
+    "arm": "native",
+    "seed": 969410,
+    "exposure_cav_s": 8182.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 77,
+      "junction_vehicle_frames": 271,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 139,
+      "wave_damping": 183,
+      "yield_to_merge": 1,
+      "cross_lane_hold": 2
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969411m2700p40t300__circles",
+    "arm": "circles",
+    "seed": 969411,
+    "exposure_cav_s": 10648.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 74,
+      "junction_vehicle_frames": 578,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 140,
+      "wave_damping": 247,
+      "cross_lane_hold": 13,
+      "yield_to_merge": 2
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969411m2700p40t300__native",
+    "arm": "native",
+    "seed": 969411,
+    "exposure_cav_s": 10958.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 77,
+      "junction_vehicle_frames": 550,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 252,
+      "wave_damping": 323,
+      "yield_to_merge": 6,
+      "cross_lane_hold": 46
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969412m1900p05t300__circles",
+    "arm": "circles",
+    "seed": 969412,
+    "exposure_cav_s": 1451.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 11,
+      "junction_vehicle_frames": 361,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 22,
+      "wave_damping": 34
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969412m1900p05t300__native",
+    "arm": "native",
+    "seed": 969412,
+    "exposure_cav_s": 1419.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 10,
+      "junction_vehicle_frames": 303,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 41,
+      "gap_creation": 21,
+      "yield_to_merge": 1
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969413m2400p05t300__circles",
+    "arm": "circles",
+    "seed": 969413,
+    "exposure_cav_s": 2110.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 17,
+      "junction_vehicle_frames": 738,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 43,
+      "gap_creation": 15
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969413m2400p05t300__native",
+    "arm": "native",
+    "seed": 969413,
+    "exposure_cav_s": 2061.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 12,
+      "junction_vehicle_frames": 554,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 67,
+      "wave_damping": 88,
+      "cross_lane_hold": 1
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969414m2700p05t300__circles",
+    "arm": "circles",
+    "seed": 969414,
+    "exposure_cav_s": 1829.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 11,
+      "junction_vehicle_frames": 319,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 43,
+      "gap_creation": 20,
+      "yield_to_merge": 3
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969414m2700p05t300__native",
+    "arm": "native",
+    "seed": 969414,
+    "exposure_cav_s": 1734.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 8,
+      "junction_vehicle_frames": 300,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 53,
+      "gap_creation": 30
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969415m1900p10t300__circles",
+    "arm": "circles",
+    "seed": 969415,
+    "exposure_cav_s": 2008.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 22,
+      "junction_vehicle_frames": 221,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 18,
+      "wave_damping": 45,
+      "cross_lane_hold": 2
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969415m1900p10t300__native",
+    "arm": "native",
+    "seed": 969415,
+    "exposure_cav_s": 1968.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 21,
+      "junction_vehicle_frames": 217,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 32,
+      "gap_creation": 9,
+      "cross_lane_hold": 1
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969416m2400p10t300__circles",
+    "arm": "circles",
+    "seed": 969416,
+    "exposure_cav_s": 3212.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 22,
+      "junction_vehicle_frames": 682,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 30,
+      "wave_damping": 61,
+      "yield_to_merge": 4,
+      "cross_lane_hold": 1
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969416m2400p10t300__native",
+    "arm": "native",
+    "seed": 969416,
+    "exposure_cav_s": 3422.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 20,
+      "junction_vehicle_frames": 694,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 88,
+      "wave_damping": 135,
+      "cross_lane_hold": 7,
+      "yield_to_merge": 3
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969417m2700p10t300__circles",
+    "arm": "circles",
+    "seed": 969417,
+    "exposure_cav_s": 2261.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 22,
+      "junction_vehicle_frames": 338,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 21,
+      "wave_damping": 62,
+      "yield_to_merge": 1
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969417m2700p10t300__native",
+    "arm": "native",
+    "seed": 969417,
+    "exposure_cav_s": 2218.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 18,
+      "junction_vehicle_frames": 343,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 66,
+      "wave_damping": 51,
+      "yield_to_merge": 1
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969418m1900p20t300__circles",
+    "arm": "circles",
+    "seed": 969418,
+    "exposure_cav_s": 3561.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 35,
+      "junction_vehicle_frames": 377,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 48,
+      "wave_damping": 79,
+      "cross_lane_hold": 1
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969418m1900p20t300__native",
+    "arm": "native",
+    "seed": 969418,
+    "exposure_cav_s": 3311.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 36,
+      "junction_vehicle_frames": 382,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 133,
+      "gap_creation": 41,
+      "cross_lane_hold": 4,
+      "yield_to_merge": 3
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969419m2400p20t300__circles",
+    "arm": "circles",
+    "seed": 969419,
+    "exposure_cav_s": 7887.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 52,
+      "junction_vehicle_frames": 537,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 118,
+      "wave_damping": 222,
+      "yield_to_merge": 7,
+      "cross_lane_hold": 12
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969419m2400p20t300__native",
+    "arm": "native",
+    "seed": 969419,
+    "exposure_cav_s": 7175.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 44,
+      "junction_vehicle_frames": 522,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 123,
+      "wave_damping": 163,
+      "yield_to_merge": 6,
+      "cross_lane_hold": 13
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969420m2700p20t300__circles",
+    "arm": "circles",
+    "seed": 969420,
+    "exposure_cav_s": 4773.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 34,
+      "junction_vehicle_frames": 619,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 77,
+      "wave_damping": 89,
+      "yield_to_merge": 2,
+      "cross_lane_hold": 8
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969420m2700p20t300__native",
+    "arm": "native",
+    "seed": 969420,
+    "exposure_cav_s": 5009.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 36,
+      "junction_vehicle_frames": 732,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 191,
+      "gap_creation": 185,
+      "cross_lane_hold": 9,
+      "yield_to_merge": 7
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969421m1900p40t300__circles",
+    "arm": "circles",
+    "seed": 969421,
+    "exposure_cav_s": 8660.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 56,
+      "junction_vehicle_frames": 256,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 85,
+      "wave_damping": 250,
+      "cross_lane_hold": 5,
+      "yield_to_merge": 3
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969421m1900p40t300__native",
+    "arm": "native",
+    "seed": 969421,
+    "exposure_cav_s": 8379.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 57,
+      "junction_vehicle_frames": 261,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 72,
+      "wave_damping": 217,
+      "cross_lane_hold": 12,
+      "yield_to_merge": 3
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969422m2400p40t300__circles",
+    "arm": "circles",
+    "seed": 969422,
+    "exposure_cav_s": 10072.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 81,
+      "junction_vehicle_frames": 315,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 92,
+      "wave_damping": 208,
+      "yield_to_merge": 2,
+      "cross_lane_hold": 3
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969422m2400p40t300__native",
+    "arm": "native",
+    "seed": 969422,
+    "exposure_cav_s": 9821.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 75,
+      "junction_vehicle_frames": 294,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 127,
+      "wave_damping": 271,
+      "cross_lane_hold": 8
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969423m2700p40t300__circles",
+    "arm": "circles",
+    "seed": 969423,
+    "exposure_cav_s": 9067.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 56,
+      "junction_vehicle_frames": 361,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "cross_lane_hold": 8,
+      "gap_creation": 101,
+      "wave_damping": 266,
+      "yield_to_merge": 3
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969423m2700p40t300__native",
+    "arm": "native",
+    "seed": 969423,
+    "exposure_cav_s": 8458.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 59,
+      "junction_vehicle_frames": 250,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 229,
+      "gap_creation": 83,
+      "yield_to_merge": 2,
+      "cross_lane_hold": 5
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969424m1900p05t300__circles",
+    "arm": "circles",
+    "seed": 969424,
+    "exposure_cav_s": 923.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 8,
+      "junction_vehicle_frames": 496,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 9,
+      "wave_damping": 17,
+      "yield_to_merge": 1
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969424m1900p05t300__native",
+    "arm": "native",
+    "seed": 969424,
+    "exposure_cav_s": 897.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 7,
+      "junction_vehicle_frames": 330,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 13,
+      "gap_creation": 16,
+      "yield_to_merge": 1
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969425m2400p05t300__circles",
+    "arm": "circles",
+    "seed": 969425,
+    "exposure_cav_s": 836.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 4,
+      "junction_vehicle_frames": 262,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 24,
+      "yield_to_merge": 1
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969425m2400p05t300__native",
+    "arm": "native",
+    "seed": 969425,
+    "exposure_cav_s": 832.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 5,
+      "junction_vehicle_frames": 272,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 14,
+      "gap_creation": 3,
+      "yield_to_merge": 1
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969426m2700p05t300__circles",
+    "arm": "circles",
+    "seed": 969426,
+    "exposure_cav_s": 1611.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 13,
+      "junction_vehicle_frames": 414,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 15,
+      "wave_damping": 32,
+      "yield_to_merge": 2
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969426m2700p05t300__native",
+    "arm": "native",
+    "seed": 969426,
+    "exposure_cav_s": 1574.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 13,
+      "junction_vehicle_frames": 570,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 12,
+      "wave_damping": 18,
+      "cross_lane_hold": 1
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969427m1900p10t300__circles",
+    "arm": "circles",
+    "seed": 969427,
+    "exposure_cav_s": 2454.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 23,
+      "junction_vehicle_frames": 364,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 17,
+      "wave_damping": 41,
+      "cross_lane_hold": 1
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969427m1900p10t300__native",
+    "arm": "native",
+    "seed": 969427,
+    "exposure_cav_s": 2455.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 28,
+      "junction_vehicle_frames": 318,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 19,
+      "wave_damping": 34,
+      "yield_to_merge": 1
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969428m2400p10t300__circles",
+    "arm": "circles",
+    "seed": 969428,
+    "exposure_cav_s": 1673.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 13,
+      "junction_vehicle_frames": 285,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 32,
+      "gap_creation": 1
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969428m2400p10t300__native",
+    "arm": "native",
+    "seed": 969428,
+    "exposure_cav_s": 1712.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 14,
+      "junction_vehicle_frames": 341,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 40,
+      "gap_creation": 14
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969429m2700p10t300__circles",
+    "arm": "circles",
+    "seed": 969429,
+    "exposure_cav_s": 2825.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 25,
+      "junction_vehicle_frames": 276,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 43,
+      "wave_damping": 51,
+      "yield_to_merge": 2,
+      "cross_lane_hold": 1
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969429m2700p10t300__native",
+    "arm": "native",
+    "seed": 969429,
+    "exposure_cav_s": 2816.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 20,
+      "junction_vehicle_frames": 302,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 205,
+      "gap_creation": 113
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969430m1900p20t300__circles",
+    "arm": "circles",
+    "seed": 969430,
+    "exposure_cav_s": 4794.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 35,
+      "junction_vehicle_frames": 475,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 59,
+      "wave_damping": 150,
+      "yield_to_merge": 1,
+      "cross_lane_hold": 4
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969430m1900p20t300__native",
+    "arm": "native",
+    "seed": 969430,
+    "exposure_cav_s": 4578.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 35,
+      "junction_vehicle_frames": 356,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 199,
+      "gap_creation": 130,
+      "cross_lane_hold": 3,
+      "yield_to_merge": 2
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969431m2400p20t300__circles",
+    "arm": "circles",
+    "seed": 969431,
+    "exposure_cav_s": 5844.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 44,
+      "junction_vehicle_frames": 371,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 70,
+      "wave_damping": 113,
+      "cross_lane_hold": 5,
+      "yield_to_merge": 6
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969431m2400p20t300__native",
+    "arm": "native",
+    "seed": 969431,
+    "exposure_cav_s": 5877.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 43,
+      "junction_vehicle_frames": 418,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 161,
+      "gap_creation": 181,
+      "cross_lane_hold": 6,
+      "yield_to_merge": 4
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969432m2700p20t300__circles",
+    "arm": "circles",
+    "seed": 969432,
+    "exposure_cav_s": 4891.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 42,
+      "junction_vehicle_frames": 353,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 60,
+      "wave_damping": 117,
+      "yield_to_merge": 6,
+      "cross_lane_hold": 3
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969432m2700p20t300__native",
+    "arm": "native",
+    "seed": 969432,
+    "exposure_cav_s": 4963.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 48,
+      "junction_vehicle_frames": 383,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 172,
+      "wave_damping": 240,
+      "yield_to_merge": 6,
+      "cross_lane_hold": 2
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969433m1900p40t300__circles",
+    "arm": "circles",
+    "seed": 969433,
+    "exposure_cav_s": 8548.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 63,
+      "junction_vehicle_frames": 277,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "cross_lane_hold": 9,
+      "gap_creation": 86,
+      "wave_damping": 215
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969433m1900p40t300__native",
+    "arm": "native",
+    "seed": 969433,
+    "exposure_cav_s": 8562.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 64,
+      "junction_vehicle_frames": 260,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "cross_lane_hold": 9,
+      "gap_creation": 58,
+      "wave_damping": 213,
+      "yield_to_merge": 1
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969434m2400p40t300__circles",
+    "arm": "circles",
+    "seed": 969434,
+    "exposure_cav_s": 10011.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 68,
+      "junction_vehicle_frames": 365,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "cross_lane_hold": 17,
+      "gap_creation": 97,
+      "wave_damping": 188,
+      "yield_to_merge": 6
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969434m2400p40t300__native",
+    "arm": "native",
+    "seed": 969434,
+    "exposure_cav_s": 10243.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 58,
+      "junction_vehicle_frames": 408,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 330,
+      "gap_creation": 286,
+      "yield_to_merge": 4,
+      "cross_lane_hold": 28
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969435m2700p40t300__circles",
+    "arm": "circles",
+    "seed": 969435,
+    "exposure_cav_s": 13704.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 88,
+      "junction_vehicle_frames": 637,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 203,
+      "wave_damping": 352,
+      "cross_lane_hold": 61,
+      "yield_to_merge": 11
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969435m2700p40t300__native",
+    "arm": "native",
+    "seed": 969435,
+    "exposure_cav_s": 13619.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 89,
+      "junction_vehicle_frames": 664,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 462,
+      "cross_lane_hold": 95,
+      "gap_creation": 387,
+      "yield_to_merge": 9
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969436m1900p05t300__circles",
+    "arm": "circles",
+    "seed": 969436,
+    "exposure_cav_s": 680.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 11,
+      "junction_vehicle_frames": 396,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 16,
+      "gap_creation": 7,
+      "cross_lane_hold": 1
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969436m1900p05t300__native",
+    "arm": "native",
+    "seed": 969436,
+    "exposure_cav_s": 678.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 11,
+      "junction_vehicle_frames": 399,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 12,
+      "gap_creation": 4
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969437m2700p05t300__circles",
+    "arm": "circles",
+    "seed": 969437,
+    "exposure_cav_s": 1811.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 16,
+      "junction_vehicle_frames": 716,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "gap_creation": 33,
+      "wave_damping": 51,
+      "yield_to_merge": 5
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969437m2700p05t300__native",
+    "arm": "native",
+    "seed": 969437,
+    "exposure_cav_s": 1486.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 11,
+      "junction_vehicle_frames": 639,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 29,
+      "gap_creation": 46,
+      "yield_to_merge": 1
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969438m1900p40t300__circles",
+    "arm": "circles",
+    "seed": 969438,
+    "exposure_cav_s": 9023.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 65,
+      "junction_vehicle_frames": 404,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "cross_lane_hold": 16,
+      "gap_creation": 113,
+      "wave_damping": 245,
+      "yield_to_merge": 3
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969438m1900p40t300__native",
+    "arm": "native",
+    "seed": 969438,
+    "exposure_cav_s": 8955.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 67,
+      "junction_vehicle_frames": 430,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 219,
+      "gap_creation": 74,
+      "yield_to_merge": 10,
+      "cross_lane_hold": 7
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969439m2700p40t300__circles",
+    "arm": "circles",
+    "seed": 969439,
+    "exposure_cav_s": 9742.5,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 68,
+      "junction_vehicle_frames": 457,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 266,
+      "gap_creation": 107,
+      "cross_lane_hold": 9,
+      "yield_to_merge": 5
+    }
+  },
+  {
+    "source": "MAPPODAMP_WMDATA",
+    "episode": "w969439m2700p40t300__native",
+    "arm": "native",
+    "seed": 969439,
+    "exposure_cav_s": 9487.0,
+    "exposure_episode_s": 300.0,
+    "coverage": {
+      "missing_cav_command_frames": 73,
+      "junction_vehicle_frames": 437,
+      "command_ledger_available": true,
+      "branch_start_s": 300.0,
+      "branch_end_s": 600.0,
+      "trace_scope": "full_observable_fleet",
+      "disabled_detectors": []
+    },
+    "counts": {
+      "wave_damping": 301,
+      "cross_lane_hold": 8,
+      "gap_creation": 176,
+      "yield_to_merge": 7
+    }
+  }
+]
