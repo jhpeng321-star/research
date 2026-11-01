@@ -1,0 +1,95 @@
+{
+  "predecessor": "/root/c1switch2_run_292bfffe94b13ed8",
+  "host": "gpuR",
+  "historical_sim_s": 2700,
+  "predecessor_ledger_sha256": "afa389bda63ba104f9435a6e48c5770a7e64b0fd2a419cf7c14240af7b591447",
+  "branches": [
+    {
+      "id": "wm__s969139__j1__circles",
+      "seed": 969139,
+      "controller": "circles",
+      "sim_s": 380,
+      "sha256": "ed35d8ba52b4dec143d93e1c7ab5e77b00ab69c8fc643971cfa682a04f3051e4"
+    },
+    {
+      "id": "wm__s969139__j1__ctrl0",
+      "seed": 969139,
+      "controller": "ctrl0",
+      "sim_s": 380,
+      "sha256": "ee7db99e928ab16a166d68c2b86f0761a871af3d81b91c7e49decfd14e70c439"
+    },
+    {
+      "id": "wm__s969139__j1__mappo",
+      "seed": 969139,
+      "controller": "mappo",
+      "sim_s": 380,
+      "sha256": "ddbd73060fdf382fdfb8198fafa55bab87b457ca64607d220336f44bf2ab187f"
+    },
+    {
+      "id": "wm__s969139__j1__native",
+      "seed": 969139,
+      "controller": "native",
+      "sim_s": 380,
+      "sha256": "b17171f5f3debe2ff06999fbd2efd405e3ac4701c122f6c10b9dc9bc872d68f8"
+    },
+    {
+      "id": "wm__s969139__j1__pi",
+      "seed": 969139,
+      "controller": "pi",
+      "sim_s": 380,
+      "sha256": "debd984e29cc7c4cec3ad9bc248f37bd1a10eb59b81dcccf14b26ed2352801b9"
+    },
+    {
+      "id": "wm__s969139__j1__wall",
+      "seed": 969139,
+      "controller": "wall",
+      "sim_s": 380,
+      "sha256": "cddfc82524e9fdbaefc88de548709f48810e14ca266d4032e2d023b8a6ab7998"
+    },
+    {
+      "id": "wm__s969143__j13__circles",
+      "seed": 969143,
+      "controller": "circles",
+      "sim_s": 620,
+      "sha256": "47288b20408fadfcdf725f92309b99862e6d42afedd567d256dd401b3b3b5c46"
+    },
+    {
+      "id": "wm__s969143__j13__ctrl0",
+      "seed": 969143,
+      "controller": "ctrl0",
+      "sim_s": 620,
+      "sha256": "ff7f61ea65122ebacda4a76579ff65124ac23e40a9d2fb275782da7a812358e4"
+    },
+    {
+      "id": "wm__s969143__j13__mappo",
+      "seed": 969143,
+      "controller": "mappo",
+      "sim_s": 620,
+      "sha256": "e69abf1c6dfdddfbc42d7f21bc5d20a89db7f34de19d87416ed9488dffa7a0a3"
+    },
+    {
+      "id": "wm__s969143__j13__native",
+      "seed": 969143,
+      "controller": "native",
+      "sim_s": 620,
+      "sha256": "af735f0c7744a706b352136a35273bdbf90ff40fa1f86be1962f15cfcb9c12ec"
+    },
+    {
+      "id": "wm__s969143__j13__pi",
+      "seed": 969143,
+      "controller": "pi",
+      "sim_s": 620,
+      "sha256": "5d0f876d26a4827a37b29cf30118cffb11051edbd24beb41ac0e5734c2cd1a8c"
+    },
+    {
+      "id": "wm__s969143__j13__wall",
+      "seed": 969143,
+      "controller": "wall",
+      "sim_s": 620,
+      "sha256": "ad29a7aad298319b7681ea4fc0f562c6fb9f410ef12279fa3e69059f457dd09c"
+    }
+  ],
+  "new_sim_s": 6000,
+  "new_gpu_s": 0,
+  "not_before_unix": 1793503800.0
+}

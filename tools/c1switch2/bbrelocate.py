@@ -122,7 +122,8 @@ print(json.dumps(dict(ready=(root/'rpc/READY.json').exists())))
             if time.monotonic() >= deadline:
                 raise TimeoutError('BB parity exceeded five-minute allocation gate')
             time.sleep(5)
-        modelops.dispatch('gpuR', config['cpus']['gpuR'], 'bb', 4)
+        # One of this task's four gpuR slots is reserved for original WM oracles.
+        modelops.dispatch('gpuR', config['cpus']['gpuR'], 'bb', 3)
         modelops.relay_start(BOUND_PATH)
         operations.archive_binding('gpuR', config['cpus']['gpuR'])
         write(EVIDENCE/'BB_RELOCATION_RUNNING.json', dict(unix=time.time(), cpus=config['cpus'],

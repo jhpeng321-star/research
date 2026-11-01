@@ -59,6 +59,17 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**Additional CPU-only original-WM oracle continuation (after11:30 only):**
+gpuR stopped-stage proof confirms2700charged, no oracle branch ever charged,
+and exactly12 registered specs for completed worlds969139/j1 and969143/j13.
+Finish these UNSTARTED six-way sets for6000sim-s/GPU0; retain old2700 incl failure,
+combinedgpuRWM8700<=16320. No new WM pick or GPU allocation, no cpuQ-world replay.
+Plan8d6ceccb69058bb0c753f57c7558f8a129e608951c280d5cd123e0a109c4926a.
+`wmoracles.py` copies the original byte-verified runtime/BINDING/GATES/specs,
+adds a one-use12-job supervisor, preserves every predecessor artifact and stops
+on any child error. Original measured states/prefix costs remain380x6+620x6.
+One oracle worker plus THREE relocatedBB workers respect the task's4gpuR cap.
+CPU26/26/Ruff PASS; source/plan committed before prospective registration/stage.
 **08:xx MAIN07:07 unused-BB relocation prepared in source, NO compute:**
 prospective plan d5037b81825d4788131b49c675934ee71e6007da91fec60012de9ecdbc75abde
 moves ONLY unstarted BB's same16worlds to<=4gpuRCPUworkers AFTER11:30, with
