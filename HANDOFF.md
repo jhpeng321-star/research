@@ -1,6 +1,25 @@
 # S-RB-RUNB handoff
 
-Updated 2026-11-01 11:38 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+Updated 2026-11-01 15:55 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+
+## Fresh-session post-cutoff verification — 15:55
+- Resumed clean HEAD `baeab991`; read log/status, common rules, prior closure,
+  noon continuation request and current INT/EVAL handoffs before any operation.
+  The extended11:30 evaluation cutoff has already passed.
+- Existing read-only `observe.py` confirmed B2 unchanged at157/160tasks
+  (53/56/48); no live owned supervisor and all three owned workers absent.
+  gpuR nvidia-smi:10901MiB/100%, CPUload11.06. No dispatch or process action.
+  Receipt: `runs/rbrunb/OBSERVE_1793519717435297300.json`.
+- Windows CIM confirms watcher35616 absent; its last successful STATUS poll was
+  11:59:08, consistent with the existing12:00 collection bound. No replacement.
+- INT final publication `docs/rbint/noon/20261101T113555+0800/PUBLICATION.json`
+  incorporated B2's19complete K8worlds, including all8reserved. Its final report
+  `docs/paper_results/WMPHYS_MORNING.md` records reserved B2 ΔCRPS120/300/600
+  −75/+58/−2643veh-s and Δ300s breakdown-rate distance +4.06pp versus WM2.
+  These are INT's existing diagnostics; full-world CIs remain NA, not qualification.
+- Original claims, cutoff/partial/failed receipts and all completed tasks retained.
+  No `.done` for the incomplete panel; no replay, new claim or duplicate scoring.
+  Shared resume note: `rb-shared/evalclaims/RUNB_RESUME_POST_CUTOFF_1555.md`.
 
 ## FINAL — owner cutoff verified; B2 157/160, NO RETRY
 - Stayed alive beyond11:30 and independently verified terminal state. Remote
