@@ -1,5 +1,21 @@
 # S-COOPMWM — live checks
 
+## 17:27 refinement — CPU qualification and prospective registration
+- Recovered at17:29: no task runtime/jobs/services on cpuQ/gpuA/gpuR; no duplicate dispatch.
+- CPU13: **40 PASS, zero skips, 1.36 s, zero SUMO**; CPU11/12 failed receipts preserved.
+- Eight option-type x observable-regime trust buckets use normal-means empirical Bayes:
+  between-bucket variance and bootstrap uncertainty determine shrinkage toward pooled evidence.
+- Independent random query precedes winner-type selection; execute with that bucket's beta.
+  PPO uses the logged query measure, including rejected/declined query atoms; reward remains SUMO-only.
+- Observable merge-dense rule projects the union of LEVERPROBE's four recorded upper-quartile
+  bands, with ramp and cross-lane CAV pair; no true demand/share input or new behavioural cutoff.
+- Trust evidence is a critic-based selected-type residual contrast against own actions in the
+  same regime. It is **not** an exact type-specific causal effect; nonquery winner labels are unobserved.
+- Cap remains **6,000,000 sim-s**, allocated5,738,400, unallocated261,600. Three paired training
+  seeds and all primary/replication final-test liabilities remain protected.
+- Source/design hashes are frozen in CPU13; exact amendment: `coopmwm/BUDGET_AMENDMENT_1727.json`.
+- Next: immutable binding, one full-episode zero-update parity smoke per arm, then primary training/E2.
+
 ## 17:12 redesign — implementation CPU-verified before physics
 - Arm B now uses WM-guided exploration and **SUMO-only team reward/advantage**.
 - FULL-v4 K8 H300 compares inherited O1–O4 set-point proposals with policy/MAPPO.

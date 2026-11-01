@@ -183,6 +183,17 @@ def training_noise(episodes):
                 scope='empirical across TRAIN windows; unnormalized GAE, team reward only')
 
 
+def proposal_report(episodes):
+    bs=[s['sample']['behaviour'] for ep in episodes for s in ep['steps']
+        if 'behaviour' in s['sample']]
+    return dict(windows=len(bs),queries=sum(b['route']=='wm' for b in bs),
+        accepted=sum(b.get('proposal_accepted',False) for b in bs),
+        executed=sum(b['executed'] for b in bs),
+        by_bucket={o+'|'+r:dict(proposed=sum(b.get('option')==o and b['regime']==r for b in bs),
+            executed=sum(b.get('option')==o and b['regime']==r and b['executed'] for b in bs))
+            for o in ('O1','O2','O3','O4') for r in ('merge-dense','ordinary')})
+
+
 def final_test(root,b,policies,si=0):
     """Primary-first 17:07 rule; fixed replication checkpoints, controls reused."""
     prefix='FINAL_TEST' if si==0 else f'S{si}_FINAL_TEST'
@@ -254,7 +265,7 @@ def run(root,smoke_only=False):
                     policies[a],optimizers[a],generators[a],_=load(prior)
                 if u>1:
                     previous=read(root/f'S{si}_B_UPDATE_{u-1:03}.json')
-                    beta=previous['trust']['beta']
+                    beta=previous['trust']
                 b=dict(b,beta=beta)
                 episodes_all=wave(root,b,policies,batch_worlds(u,si),'paired','train',f's{si}_u{u:03}','train')
                 if si==0 and u==1:
@@ -276,7 +287,8 @@ def run(root,smoke_only=False):
                         write(root/f'S{si}_{a}_UPDATE_{u:03}.json',dict(update=u,arm=a,training_seed=seed,ppo=metrics,
                             timestamp_utc=__import__('datetime').datetime.now(__import__('datetime').timezone.utc).isoformat(),
                             team_only_noise=training_noise(episodes),training_sim_s=u*28800,charged_sim_s=charged,
-                            beta_used=beta if a=='B' else 0.,trust=trust_result,
+                             beta_used=beta if a=='B' else 0.,trust=trust_result,
+                             proposal_routing=proposal_report(episodes),
                             proposals={k:sum(s['sample'].get('behaviour',{}).get('option')==k for ep in episodes for s in ep['steps']) for k in ('O1','O2','O3','O4')},
                             reward_source='SUMO team delay only; no WM reward'))
                     if u%CHECK_EVERY==0:panel+=wave(root,b,policies[a],worlds('check'),a,'check',f's{si}_check{u:03}','checks',True)

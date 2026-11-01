@@ -1,5 +1,5 @@
-# S-COOPMWM — WM-guided exploration, SUMO-graded (2026-11-01 17:12)
-1. Authority: MAIN16:22/25/38/46/17:07/17:12; native-start and WM-reward arms superseded.
+# S-COOPMWM — WM-guided exploration, SUMO-graded (2026-11-01 17:27)
+1. Authority: MAIN16:22/25/38/46/17:07/12/27; native-start and WM-reward arms superseded.
 2. Both arms fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
 4. A: PPO shared team reward=-J, road speed deficit plus source waiting.
@@ -18,14 +18,14 @@
 17. Observable replay roster only; fitted joint FIT driver population and uniform32FIT source prior.
 18. Cold motion/controller memory and unobserved source prior disclosed; no realised future inputs.
 19. Inherited option group=two upstream mainline CAVs within100m; ordinary windows also sampled.
-20. GPU-busy query route probability=p*beta; p=1/900 for option groups, otherwise1/3600; max360forecasts.
+20. Query p=1/900 merge-dense,1/3600 otherwise; max360forecasts; execute winner with bucket beta.
 21. FULL-v4 K8 CRN H300 scores policy action/MAPPO/O1-O4; propose iff saving vs BOTH baselines>0.
 22. Keep non-group chosen targets identical in all futures; after W10 release to MAPPO.
 23. H60/120/300/600. D_i=J(member-revert)-J(joint); D_G=J(all-revert)-J(joint).
 24. C_G=D_G-sum(D_i); complete paired futures required, including negative values.
 25. beta starts1 per training seed; immutable update receipts supply the next update's beta.
-26. Behaviour includes logged random route: own mass1-p*beta, WM massp*beta (including rejection).
-27. Target joint measure has own-route mass1, WM-route0: ratio=pi_new/[(1-p*beta)*pi_old] or0.
+26. Log query route mass p, within-query execute beta(type,regime); own nonquery mass1-p.
+27. Target own-nonquery mass1/query0: ratio=pi_new/[(1-p)*pi_old] or0, including declined/rejected queries.
 28. Clipped PPO respects zero WM-route mass; executed proposals get beta-weighted joint-Gaussian NLL.
 29. Initial random subset: twelve TRAIN windows, RNG20261101, one per12cells.
 30. Select uniformly from complete group windows in first TRAIN batch, before credit outcomes.
@@ -62,7 +62,9 @@
 61. Run once after BOTH primary u24 checkpoints; publish, then train seeds2/3 and test A/B once each.
 62. Final paired world-bootstrap95CI B-MAPPO/B-A/A-MAPPO J600/J900, per-cell/safety descriptive.
 63. Final B detector-first exact C_G twins share240000 discovery reserve; complete chronological groups.
-64. Adaptive trust: H300 SUMO return+critic tail-baseline; running world-cluster IPW route contrast.
+64. Trust: H300 SUMO return+critic tail-baseline; Hajek executed(type,regime) minus own(regime) residuals.
 65. 10000 world bootstrap95CI[L,U]; e=max(|mean-L|,|U-mean|); beta=min(old,max(0,U)/(|mean|+e)).
-66. No evidence=>keep beta; zero denominator=>0. Report executed-vs-own residual descriptives separately.
+66. Eight type x regime normal-means EB buckets: tau²=max(0,var(bucketmeans)-mean(bootstrapSE²)); weight=tau²/(tau²+SE²).
 67. Test liabilities protected; cpuP unreachable/excluded; registry/protocol+cpuQ/gpuA/gpuR audits qualify.
+68. Regime=LEVERPROBE ramp+crosslane pair+union of four recorded upper-quartile CAV/density bands; observable only.
+69. World-bootstrap EB residual contrasts are selection-conditional, not causal twins; missing bucket=>pooled; no pooled evidence=>keep beta.

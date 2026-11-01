@@ -18,6 +18,7 @@ def bind(cpu_name):
     assert staged['hashes']==cpu['source_hashes'],'CPU-tested source/design binding required'
     text=checked(REGISTRY).read_text(encoding='utf-8');auth=authority(text)
     assert 'S-COOPMWM 17:12 EXPLORATION AMENDMENT REGISTERED' in text
+    assert 'S-COOPMWM 17:27 BUCKET TRUST AMENDMENT REGISTERED' in text
     hosts=[read(EVIDENCE/f'FINAL_EXPOSURE_{h}.json') for h in ('cpuQ','gpuA','gpuR')]
     protocols=read(EVIDENCE/'FINAL_PROTOCOL_AUDIT.json')
     assert all(h['pass_'] for h in hosts) and protocols['pass_']

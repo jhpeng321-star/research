@@ -45,10 +45,10 @@ class Controller:
                                           deterministic=self.deterministic)
             proposal=None
             if self.guide is not None and self.samples is None and not self.deterministic:
-                from .exploration import route,apply_proposal
+                from .exploration import route,execute
                 if route(sample,rows,self.beta,self.generator):
                     proposal=self.guide(rows,commands,now,sample)
-                    sample=apply_proposal(sample,proposal)
+                    sample=execute(sample,proposal,self.beta,self.generator)
             self.targets=targets(sample); self.until=now+sample['window']
             if self.branch and now>=self.branch['time_s']:
                 if now==self.branch['time_s']:

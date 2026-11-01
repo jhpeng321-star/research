@@ -345,5 +345,47 @@ class Contracts(unittest.TestCase):
         seeds=[int(digest(dict(training_seed=20261101,world=986000,wave=f's0_u{u:03}'))[:15],16) for u in range(1,25)]
         self.assertEqual(len(set(seeds)),24)
 
+    def test_bucket_EB_trust_separates_winners_losers_and_is_scale_free(self):
+        from .exploration import trust
+        data=[]
+        for w in range(12):
+            data.append(dict(world=w,route='policy',executed=False,p=.01,q=0.,
+                             option=None,regime='merge-dense',advantage=-100.))
+            for o,gain in [('O1',40.),('O2',-40.)]:
+                data.append(dict(world=w,route='wm',executed=True,p=.01,q=.01,
+                    option=o,regime='merge-dense',advantage=-100.+gain))
+        v=trust(1.,data,300)
+        self.assertAlmostEqual(v['buckets']['O1|merge-dense']['beta'],1.)
+        self.assertEqual(v['buckets']['O2|merge-dense']['beta'],0.)
+        self.assertGreater(v['between_bucket_variance'],0.)
+        self.assertEqual(v['buckets']['O4|ordinary']['shrinkage_to_local'],0.)
+        scaled=copy.deepcopy(data)
+        for r in scaled:r['advantage']*=1000
+        vs=trust(1.,scaled,300)
+        for k,b in v['buckets'].items():
+            self.assertAlmostEqual(vs['buckets'][k]['beta'],b['beta'])
+        later=trust(v,data,300)
+        self.assertEqual(later['buckets']['O2|merge-dense']['beta'],0.)
+        self.assertAlmostEqual(trust(v,[],100)['buckets']['O1|merge-dense']['beta'],1.)
+
+    def test_query_then_bucket_execution_preserves_actual_behaviour_measure(self):
+        from .exploration import execute,route,regime,rate,BUCKETS
+        r=rows();p=Policy();g=torch.Generator().manual_seed(8)
+        s=p.sample(encode(r,{v['vid']:.2 for v in r if v['is_cav']}),g)
+        prior=dict(beta=1.,buckets={k:dict(beta=0. if k.startswith('O1|') else 1.) for k in BUCKETS})
+        with patch('tools.coopmwm.exploration.torch.rand',return_value=torch.tensor(0.)):
+            self.assertTrue(route(s,r,prior,g))
+        self.assertEqual(s['behaviour']['mixture_mass'],rate(r))
+        proposal=dict(accepted=True,option='O1',targets={'upstream':dict(speed=3.,tau=2.)},expected_saving=10.)
+        stopped=execute(copy.deepcopy(s),proposal,prior,g)
+        self.assertFalse(stopped['behaviour']['executed'])
+        self.assertEqual(stopped['behaviour']['beta'],0.)
+        proposal['option']='O2';actual=execute(copy.deepcopy(s),proposal,prior,g)
+        self.assertTrue(actual['behaviour']['executed'])
+        self.assertEqual(actual['behaviour']['q'],rate(r))
+        self.assertEqual(regime(list(reversed(r))),regime(r))
+        # No seed/demand/share/truth is passed to the observable regime rule.
+        self.assertNotIn('demand',__import__('inspect').getsource(regime))
+
 
 if __name__=='__main__':unittest.main()

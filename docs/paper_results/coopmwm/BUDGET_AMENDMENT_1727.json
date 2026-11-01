@@ -1,0 +1,21 @@
+{
+  "authority": "MAIN/OWNER2026-11-01 17:27; registered before task physics/outcomes",
+  "cap_sim_s": 6000000,
+  "allocated_sim_s": 5738400,
+  "unallocated_sim_s": 261600,
+  "phases_sim_s": {"train":4147200,"checks":532800,"dev":230400,"mechanics":2400,"calibration":240000,"discovery":240000,"final_test":172800,"replication_test":172800},
+  "trust_buckets": "O1/O2/O3/O4 x merge-dense/ordinary; beta starts1 each seed; monotone independent previous beta per bucket, floor0",
+  "regime": "observable LEVERPROBE features: ramp present and cross-lane upstream CAV pair and membership in union of four original RECORDED_QUANTILES upper-quartile CAV-count/density bands; no true cell/demand/share inputs",
+  "query_probability": {"merge-dense":0.0011111111111111111,"ordinary":0.0002777777777777778},
+  "routing": "query Bernoulli(p) independently of beta, then WM selects winner, execute Bernoulli(beta_type_regime). Logged augmented nonquery own-route probability1-p, query-route probabilityp and execute probabilitybeta; target own-nonquery mass1/query mass0; PPO ratio pi_new/((1-p)*pi_old) or0 including rejected/declined queries; executed member imitation weightbeta",
+  "evidence": "H300 SUMO team-return plus frozen critic tail minus start critic, right-censored windows excluded; Hajek inverse-route weighted executed bucket residual minus own nonquery residual in same regime; pooled contrast uses executed regime composition. Winner type missing in nonqueries, therefore these are selection-conditional critic-based comparisons, not type-specific causal effects or exact grading",
+  "empirical_bayes": "world bootstrap10000 RNG20261101 of running evidence; local bucket means and bootstrap SE2; tau2=max(0,sample_variance(valid_bucket_means)-mean(SE2)); local weight=tau2/(tau2+SE2), missing/insufficient bucket weight0; posterior=weight*local+(1-weight)*pooled; intervals from world-bootstrap posterior draws with fitted shrinkage weights; >=2 proposal worlds for local fit; insufficient pooled evidence keeps prior",
+  "decay": "per bucket 95CI[L,U], e=max(abs(mean-L),abs(U-mean)); beta=min(previous,max(0,U)/(abs(mean)+e)), zero denominator0; pooled follows same rule; machine-precision cancellation only is numerical zero",
+  "report": "per-update beta per bucket, proposals/acceptance/execution counts, executed-vs-own critic residual and CI; deterministic checks/dev/final are proposal-free policy persistence tests",
+  "reward": "SUMO team delay including source waiting ONLY; no WM reward",
+  "GPU": {"host":"gpuA","strict_memory_GiB":8,"priority":"WMPLAN queued forecasts first; MAIN17:35 reduces other owners admissions","hard_proposal_forecasts":360,"diagnostic_forecasts":12,"canaries_max":2,"expected_all_seeds_forecasts_upper_beta1":172.8,"proposal_seconds_assumption":[60,180],"expected_proposal_GPU_hours_upper":[2.88,8.64],"hard_cap_proposal_GPU_hours_estimate":[6,18],"diagnostic_GPU_hours_estimate":[0.4,1.2],"caveat":"timing unmeasured on adapter; report first real forecast timing; priority waits extra; queries remain sampled after beta decays to identify winning type"},
+  "CPU":"CPU13:40PASS/0skips/1.36s/zeroSUMO; source/design binding in CPU_coopmwm20261101_cpu13.json; CPU11/12 failed receipts preserved, fixed before physics",
+  "seed_test_budget_order":"unchanged from17:07 and17:12 receipts; primaryA/B parallel first, fixedu24, final989600..989635 fourarmsONCE; replication seeds later A/B-only once, reused controls; no selection/tuning/reruns",
+  "task_sumo_sim_s_before_registration":0,
+  "training_updates_before_registration":0
+}
