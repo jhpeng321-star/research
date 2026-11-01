@@ -1,5 +1,5 @@
-"""MAIN01:53 confirms the owner-approved cap; earlier resume caps are superseded."""
-RESUME_CAP=6500000
+"""MAIN02:24 owner-approved cap; every earlier resume cap is superseded."""
+RESUME_CAP=7500000
 
 
 def check_budget(plan):

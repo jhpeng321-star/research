@@ -1,5 +1,15 @@
 # S-COOPMWM — live checks
 
+## Latest budget/control registered before B/R outcomes
+- **7,473,440 allocated / 7,500,000 cap / 26,560 unallocated**, including a
+  1,000,000 sim-s exact-plan-grade reserve. Complete prefix+horizon precharge
+  required per grade; failures retained. Budget/transport contracts: **11 PASS**,
+  zero SUMO. Budget amendment `4dc4d875e0730e3c5a71f58e7c2cdc1c5c72259c1d77e129ab991f3aabe1c977`.
+- Control amendment `cf82885ccdfd6f842fe4b6722f85a4df4406bd274a4d53ab68873a2a610f4cee`
+  fixes K4/H300 screen, K8/Hfinal, auto-continue A/B48,R24 under health guards,
+  and nonblocking asynchronous exact grading. Ungraded plans cannot enter
+  imitation/trust/library/covariance. No B/R physics authorized by this alone.
+
 ## Fresh resume — full brief through MAIN02:36
 - Original detached A2998262 is running: **u20 complete, 458/480 jobs closed,
   1,564,040 sim-s charged**. B/R/broker unstarted, no pending request or active pause.

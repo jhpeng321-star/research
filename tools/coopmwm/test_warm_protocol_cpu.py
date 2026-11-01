@@ -6,12 +6,13 @@ from .branch_eval import build_plan
 
 class LatestScope(unittest.TestCase):
     def test_exact_owner_budget_and_protected_liabilities(self):
-        b=budget();self.assertEqual((b['total'],b['allocated'],b['unallocated']),(6500000,6473440,26560))
+        b=budget();self.assertEqual((b['total'],b['allocated'],b['unallocated']),(7500000,7473440,26560))
         self.assertEqual(sum(b['phases'].values()),b['allocated'])
         self.assertEqual(b['phases']['paired_branch'],691200)
         self.assertEqual(b['phases']['discovery'],200000)
         self.assertEqual(b['phases']['cold_B_retained'],28800)
         self.assertEqual(b['phases']['failed_A_retained'],14400)
+        self.assertEqual(b['phases']['exact_plan_grading'],1000000)
 
     def test_all_batches_use_existing_worlds_and_exact_shared_focus_fraction(self):
         observed=set()

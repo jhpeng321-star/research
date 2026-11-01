@@ -64,7 +64,9 @@ class Transport(unittest.TestCase):
         check_budget(dict(allocated=6000000))
         check_budget(dict(allocated=6473440))
         check_budget(dict(allocated=6500000))
-        with self.assertRaisesRegex(ValueError,'1'):check_budget(dict(allocated=6500001))
+        check_budget(dict(allocated=7473440))
+        check_budget(dict(allocated=7500000))
+        with self.assertRaisesRegex(ValueError,'1'):check_budget(dict(allocated=7500001))
 
 
 if __name__=='__main__':unittest.main()
