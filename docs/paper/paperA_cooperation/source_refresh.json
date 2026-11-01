@@ -1,5 +1,5 @@
 {
-  "captured_local": "2026-11-02T01:42:17.048791+08:00",
+  "captured_local": "2026-11-02T01:51:07.201487+08:00",
   "reports": {
     "owner_read_first": {
       "path": "E:/research-dense/docs/OWNER_UPDATE_20261030_EVENING.md",
@@ -12,10 +12,10 @@
     "registration": {
       "path": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md",
       "exists": true,
-      "sha256": "f64d8d7c86125981ef947c5b59d0e9b409a019215bfb5ccc09d06f1b4129cd69",
-      "bytes": 2522910,
-      "modified_local": "2026-11-02T01:38:32.000745+08:00",
-      "snapshot": "source_snapshots/registration_f64d8d7c86125981.md"
+      "sha256": "bbfd140087c664855cfd309b3cc9d125f8a42dbc8d84096894f2638af0424bc8",
+      "bytes": 2525122,
+      "modified_local": "2026-11-02T01:46:16.665505+08:00",
+      "snapshot": "source_snapshots/registration_bbfd140087c66485.md"
     },
     "wmvalue_design": {
       "path": "E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md",
@@ -360,10 +360,10 @@
     "coopmwm_report": {
       "path": "E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM.md",
       "exists": true,
-      "sha256": "9c2a0f947b1025c81c8d4a807d107846ff77aef36f6d87a75b03451dbb68beb3",
-      "bytes": 94316,
-      "modified_local": "2026-11-02T01:40:00.932042+08:00",
-      "snapshot": "source_snapshots/coopmwm_report_9c2a0f947b1025c8.md"
+      "sha256": "703d6db9c2cab279786927b409eff20fa740671f36277646a18ad1ab298e8b31",
+      "bytes": 96591,
+      "modified_local": "2026-11-02T01:50:46.661403+08:00",
+      "snapshot": "source_snapshots/coopmwm_report_703d6db9c2cab279.md"
     },
     "coopmwm_design": {
       "path": "E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM_DESIGN.md",
@@ -560,16 +560,7 @@
   },
   "changed_since_prior_cut": [
     "registration",
-    "behavior_report",
-    "coopfree_report",
-    "wmteach_report",
-    "coopmwm_report",
-    "coopmwm_design",
-    "coopmwm_warm_scope",
-    "mppi_search_contract",
-    "branch_eval_initial_contract",
-    "wmspeed2_report",
-    "wmphys_v5_report"
+    "coopmwm_report"
   ],
   "scope": "explicit local report snapshots only; no simulator/model or restricted input access",
   "claim_review": "manual; file appearance or a canary is not an efficacy result"
