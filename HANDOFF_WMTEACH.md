@@ -45,6 +45,12 @@
 - New exclusive scale collector local9796 runs every20min, maximum168hours;
   `wmteach/SCALE_WATCH_PROCESS_9796.json` and `SCALE_WATCH_1793509708.log`.
   It commits own progress and gates the approved scale live once; do not duplicate.
+- Fixed-milestone resource decision BEFORE full quality closes: after all12exact
+  diagnostics finish, retire the obsolete128context/small-student continuation
+  cooperatively at its next future boundary, regardless of quality outcome.
+  `python -B -m tools.wmteach.retire_small` verifies exact ownership +24quality
+  rows before writing ONLY its own STOP/retirement receipt. Preserve every prior
+  future/label; no GPU signal, replay or relaunch. Scale5120 job remains active.
 
 ## Read first; do not duplicate
 - Branch `c4/wmteach`; recovery `9f92c488`, shared student `ee47f395`
