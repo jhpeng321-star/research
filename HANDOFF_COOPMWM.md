@@ -1,5 +1,17 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+MAIN0548 DEPLOYED: quota broker3514272/start58480523, transitionwatch3514691/
+start58480999 cpuQ, bothS/noerrors at1793570536. Originalbroker3426521 exited by
+verifiedPID; ALLoriginalGPUowners/claims preserved/noinferenceretry. Grader3427015
+retained. ParentsB3432378/R3432791 remainT until24Bresultsclose, then watch adopts
+results/u0AdamRNG and dispatches QUOTA_B/QUOTA_R exactlyonce, releasesold-wave
+drain. DoNOTunfreezeparents, duplicatewatcher ormanuallydispatch newB/R.
+Use `python -X utf8 -m tools.coopmwm.quota_ops status`; itcollectsnewowners/STOPs.
+At1793570600oneoldwaitingepisode resumedSUMO(t648), threequeriesstillpending.
+First4newcompletedqueries:2/3CAV gpuA796.56/769.08s, gpuAsecond2CAV848.45s,
+gpuR4CAV1194.88s; ONE executedstart, ZERO exactgrades. These are smallsamples,
+notsteady-state rates/viability. No finiteu1ETA; allremainingwaits censored.
+
 MAIN0548 recovery: full290linebrief read, originalowners/observers adopted.
 Quota-aware admission QUALIFIED231CPU/PASS0skips/37.49s/zeroSUMO, immutable
 /home/ubuntu/coopmwm20261102_quotacpu3. Registered plan981e496c + runtimebfef6422.

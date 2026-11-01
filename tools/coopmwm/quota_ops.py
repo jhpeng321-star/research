@@ -107,5 +107,55 @@ print(json.dumps(dict(registered=True,amendment_sha256={h!r},new_sumo_sim_s=0)))
     write(ops.EVIDENCE/'MAIN0548_RUNTIME_REGISTRATION.json',dict(v,amendment_sha256=h,remote=json.loads(reply)));print(reply)
 
 
+def deploy_broker():
+    assert read(ops.EVIDENCE/'MAIN0548_RUNTIME_REGISTRATION.json')['amendment_sha256']
+    out=ops.ssh.remote('cpuQ',f'''import sys,json
+sys.path[:0]=[{SOURCE!r}+'/pytools','/home/ubuntu/e3final/runtime/src','/home/ubuntu/e3final/runtime']
+from tools.coopmwm.quota_transition import replace_broker
+print(json.dumps(replace_broker({ROOT!r})))''',timeout=45)
+    v=json.loads(out);write(ops.EVIDENCE/'QUOTA_broker_DISPATCH.json',v);print(out)
+
+
+def dispatch_watch():
+    out=ops.ssh.remote('cpuQ',f'''import pathlib,sys,json,os,subprocess,time
+sys.path.insert(0,{SOURCE!r}+'/pytools')
+from tools.coopmwm.quota_runtime import binding
+from tools.coopmwm.warm_spool import immutable
+r=pathlib.Path({ROOT!r});binding(r)
+assert not (r/'MAIN0548_TRANSITION_DISPATCH.json').exists(),'adopt existing watcher'
+d=json.loads((r/'QUOTA_broker_DISPATCH.json').read_text());st=pathlib.Path('/proc',str(d['pid']),'stat').read_text().split();assert st[21]==d['start_ticks'] and st[2] in ('S','R')
+env=dict(os.environ,CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',PYTHONPATH={SOURCE!r}+'/pytools:/home/ubuntu/e3final/runtime/src:/home/ubuntu/e3final/runtime')
+with (r/'MAIN0548_TRANSITION.log').open('x') as log:
+ p=subprocess.Popen([{ops.ssh.PYTHON['cpuQ']!r},'-B','-u','-m','tools.coopmwm.quota_transition','watch',str(r)],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+st=pathlib.Path('/proc',str(p.pid),'stat').read_text().split()
+v=dict(pid=p.pid,start_ticks=st[21],boot_id=pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip(),root=str(r),source={SOURCE!r},unix=time.time())
+immutable(r/'MAIN0548_TRANSITION_DISPATCH.json',v);print(json.dumps(v))''',timeout=40)
+    v=json.loads(out);write(ops.EVIDENCE/'MAIN0548_TRANSITION_DISPATCH.json',v);print(out)
+
+
+def status():
+    out=ops.ssh.remote('cpuQ',f'''import pathlib,json,time,os,sys
+r=pathlib.Path({ROOT!r});sys.path.insert(0,{SOURCE!r}+'/pytools')
+from tools.coopmwm.quota_transition import completed
+names=['QUOTA_broker_DISPATCH.json','QUOTA_B_DISPATCH.json','QUOTA_R_DISPATCH.json','MAIN0548_TRANSITION_DISPATCH.json','EXACT_GRADER_DISPATCH_V2.json']
+owners={{}}
+for name in names:
+ if not (r/name).exists():continue
+ d=json.loads((r/name).read_text());s=pathlib.Path('/proc',str(d['pid']),'stat');st=s.read_text().split() if s.exists() else None
+ assert not st or st[21]==d['start_ticks'];assert d['boot_id']==pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+ owners[name]=dict(owner=d,state=st[2] if st else 'exited')
+receipts={{}}
+for name in ('MAIN0548_BROKER_HANDOVER.json','MAIN0548_HANDOVER_COMPLETE.json','MAIN0548_TRAINING_CONTINUED.json','MAIN0548_TRANSITION_FAILED.json','WARM_GUIDED_STOP_V2.json','WARM_B_FAILED_Q1.json','WARM_R_FAILED_Q1.json'):
+ if (r/name).exists():receipts[name]=json.loads((r/name).read_text())
+for p in r.glob('PAUSE_*.json'):receipts[p.name]=json.loads(p.read_text())
+print(json.dumps(dict(unix=time.time(),owners=owners,receipts=receipts,all24closed=completed(r),load=os.getloadavg(),updates={{a:max([0]+[int(p.stem.rsplit('_',1)[1]) for p in r.glob(a+'_UPDATE_*.json')]) for a in ('A','B','R')}},logs={{name:(r/name).read_text()[-5000:] for name in ('MAIN0548_TRANSITION.log','QUOTA_B.log','QUOTA_R.log','QUOTA_broker.log') if (r/name).exists()}})))''',timeout=45)
+    v=json.loads(out);write(ops.EVIDENCE/f'MAIN0548_STATUS_{int(v["unix"])}.json',v)
+    for name,receipt in v['receipts'].items():
+        if name.startswith('MAIN0548_') and not (ops.EVIDENCE/name).exists():write(ops.EVIDENCE/name,receipt)
+    for name,owner in v['owners'].items():
+        if name.startswith('QUOTA_') and not (ops.EVIDENCE/name).exists():write(ops.EVIDENCE/name,owner['owner'])
+    print(out);return v
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('preregister','freeze','qualify','register'));a=p.parse_args();globals()[a.mode]()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('preregister','freeze','qualify','register','deploy_broker','dispatch_watch','status'));a=p.parse_args();globals()[a.mode]()
