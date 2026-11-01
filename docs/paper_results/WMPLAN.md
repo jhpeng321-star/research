@@ -169,3 +169,12 @@ gate evidence are retained in `wmplan/`.
   `wmplan/restart_v2/CONTINUATION_LAUNCH.json` / `CONTINUATION_ONCE.json` and
   `_out/wmplan_v2_continuation.log` before doing anything else. Do not duplicate the
   dispatch, relay, or continuation.
+- Fresh-session recovery at 16:35 on November 1 verified the existing local
+  continuation PID34272 (creation16:10:32) and relay PID17368 (creation16:00:47),
+  including their exact command lines. All three registered remote service
+  identities still matched and were alive; no STOP or completed smoke was present.
+  `wmplan/restart_v2/STATUS_1793522135.json` preserves the read-only snapshot:
+  the smoke remained the sole open episode, with six observable requests and
+  44 recorded future files (including preserved forecasts). Closed combined
+  actual2580/charged6480sim-s was unchanged. The existing continuation retains
+  exclusive gate/report ownership; recovery launched no job and issued no retry.
