@@ -288,3 +288,22 @@ Budget: 1952433 precharged / 1952433 closed-actual sim-s; hard cap2,000,000; no 
 TRAIN exploration credit is not paired dev-policy performance.
 **Durable STOP observed; inspect receipts. No automatic restart.**
 <!-- COOPFREE PUBLICATIONS END -->
+
+<!-- COOPFREE OWNER1511 BEGIN -->
+## OWNER15:11 live continuation
+Observed UTC 2026-11-01T07:24:30Z.
+cpuQ owned1579328/start53193103 alive=True; four nice19 workers, load admission12.
+Budget: 2,384,073 precharged / 1,987,953 closed-actual sim-s; total cap6,000,000.
+Corrected u001 is inherited; every subsequent update uses fresh exploration. TRAIN effects are not DEV gains.
+- u002: 34/420 new arms closed; charge431,640; cachedHOLD48.
+### Proposal checkpoint u001
+`tools/coopfree/publications/owner1511/policy_hold_u001.pt`
+SHA256 `7b6ff3254311b7f0e8af773cdd51dbfdeca16a8660d0f872c1c8212c8c03e9c1`; receipt `HOLD_UPDATE_001.json`.
+- 156windows/24worlds; exactsoloCG 66windows/24worlds.
+- Executed 0.9359; issued 0.9936; executed/issued 0.9419354838709677; overrides 0.8489.
+- D_G: n=156, mean+90.197, SD3449.764; quantiles[-8317.091993191709, -1390.1680599792962, 0.0, 1328.7216175734357, 10477.92906897259].
+- sum_D_i: n=66, mean-65.034, SD5926.824; quantiles[-28846.295312834518, -526.097014879484, 0.0, 1070.5607845780341, 17124.851342755195].
+- C_G: n=66, mean+435.331, SD4176.503; quantiles[-13926.098354165588, -0.03209833001710649, 0.0, 0.03883376025260077, 22048.17800766611].
+- Share exactCG>0=0.3333333333333333; sigma[4.5, 0.5] -> [4.5, 0.5].
+Discovery: observational COOPBEHAV/clustering exports are separate from exact HOLD C_G; do not infer paired native-release mechanisms.
+<!-- COOPFREE OWNER1511 END -->
