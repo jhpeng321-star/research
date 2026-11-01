@@ -20,6 +20,7 @@ def collect():
 r=pathlib.Path({root!r});assert r.is_dir()
 names=['CAUSAL_MEMORY.json','E2_COLD.json','E2_WARM.json','PARITY_K4_H120.json','PARITY_K8_H420.json','EMPTY_COLD_PARITY.json','SEARCH_GROUP2.json','SEARCH_GROUP4.json','SEARCH_GROUP6.json','FAILED.json','COMPLETE.json']
 d=json.loads((r/'DISPATCH.json').read_text());p=pathlib.Path('/proc')/str(d['pid']);s=(p/'stat').read_text().split() if (p/'stat').exists() else None
+assert pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']
 assert not s or s[21]==d['start_ticks']
 receipts={{n:json.loads((r/n).read_text()) for n in names if (r/n).exists()}}
 if {host!r}=='gpuA':
@@ -34,7 +35,10 @@ print(json.dumps(dict(root=str(r),unix=time.time(),state=s[2] if s else 'exited'
         plans_per_hour=value['receipts'][f'SEARCH_GROUP{size}.json']['plans_per_hour'],
         centre_open_loop_gap=value['receipts'][f'SEARCH_GROUP{size}.json']['result']['centre_open_loop_gap'])
         for host,value in combined.items() for size in (2,4,6) if f'SEARCH_GROUP{size}.json' in value['receipts']}
-    print(json.dumps(dict(states={h:v['state'] for h,v in combined.items()},timing=timing)))
+    parity={host:{name:{k:receipt.get(k) for k in ('pass_','max_cost_error')}
+        for name,receipt in value['receipts'].items() if 'PARITY' in name}
+        for host,value in combined.items()}
+    print(json.dumps(dict(states={h:v['state'] for h,v in combined.items()},timing=timing,parity=parity)))
     return combined
 
 

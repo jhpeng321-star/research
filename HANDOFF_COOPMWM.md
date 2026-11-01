@@ -1,5 +1,17 @@
 # S-COOPMWM live continuation — infrastructure recovery / explicit cap gate
 
+LATEST OBSERVATION: BOTH qual4 hosts now pass warm full/fast K4H120 and K8H420
+EXACT0 plus empty-history==cold EXACT0. Original583229/23014 still R, measuring
+missing group6(A)/group4(R); do not duplicate. collect now checks bootID as well
+as PID/start and prints exact gate values. Persistent-service startup gates and
+MAIN01:38 health integration are still pending. Full release not claimed.
+RESUME_CAP6000000_BLOCK_20261102.json pins fresh quote:6473440 required versus
+explicit6000000, short473440 (6500000 would leave26560). No new SUMO dispatched.
+Next: obtain cap/scope confirmation; adopt original timing completions; integrate
+spool broker + health pauses into a fresh immutable source, CPU/source/GPU gates,
+then register/release A exactu16 and B/Ru0 once. Existing WARM_*STARTED/DISPATCH
+and STOP files forbid blindly reusing warm_deploy dispatch for A continuation.
+
 MAIN01:33 durability engineering: warm_spool.py wraps the UNCHANGED warm service
 with disk-backed stdin on a detached GPU process; completed forecasts survive SSH
 loss, repeated identical submissions adopt one result, interrupted claims STOP/no

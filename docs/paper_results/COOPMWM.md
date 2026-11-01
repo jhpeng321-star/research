@@ -1,5 +1,21 @@
 # S-COOPMWM — live checks
 
+## Warm GPU gates passed; restart budget-blocked
+- Both original qual4 jobs now pass **K4/H120 and K8/H420 warm fast-path parity
+  with exactly 0.0 cost error**, plus **empty-history == cold, exactly 0.0**.
+  Their boot/PID/start identities were reverified. Group4/6 search timing is still
+  running; completed 2-member timing remains **559.567 s/query, 6.434 plans/h**.
+- No duplicate qualifier, service or SUMO job was launched. The detached spool
+  probe completed normally; its 9 CPU tests and lifecycle evidence are retained.
+- Fresh receipt-only re-quote confirms **6,473,440 sim-s** for the registered
+  full plan, **473,440 above the explicit 6,000,000 resume cap**. The brief's
+  later 6,500,000 cap would leave 26,560. No training/test allocation was changed.
+  Receipt: `coopmwm/RESUME_CAP6000000_BLOCK_20261102.json`.
+- A remains preserved at u16; B/R have not started. Full warm qualification still
+  requires the remaining timing and persistent-service startup gates. MAIN01:38
+  health pauses and durable-spool broker integration remain pre-launch work.
+  **WARM MEMORY QUALIFIED / TRAINING STARTED B/R are not yet claimed.**
+
 ## Remote-worker durability engineering — MAIN01:33
 - Added a disk-spool input adapter around the unchanged warm GPU service. A
   detached worker can retain its model process, request claim and completed

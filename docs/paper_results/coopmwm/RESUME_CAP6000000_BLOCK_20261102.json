@@ -1,0 +1,47 @@
+{
+  "new_sumo_sim_s": 0,
+  "explicit_resume_cap_sim_s": 6000000,
+  "registered_full_plan_sim_s": 6473440,
+  "shortfall_sim_s": 473440,
+  "registered_brief_cap_sim_s": 6500000,
+  "unallocated_under_brief_cap_sim_s": 26560,
+  "source": "Complete coopmwm_prompt.md through MAIN01:38; receipt-only tools.coopmwm.resume_quote.quote(6000000)",
+  "phases": {
+    "superseded": 811640,
+    "train": 3456000,
+    "checks": 432000,
+    "dev": 201600,
+    "mechanics": 3600,
+    "calibration": 57600,
+    "discovery": 200000,
+    "final_test": 460800,
+    "random_guide_test": 115200,
+    "cold_B_retained": 28800,
+    "failed_A_retained": 14400,
+    "paired_branch": 691200,
+    "branch_reuse_equivalence": 600
+  },
+  "live_verified": {
+    "charged_sim_s": 1405640,
+    "A_last_update": 16,
+    "A_owner_state": "exited",
+    "warm_jobs_closed": 288,
+    "warm_jobs_reserved": 288,
+    "pending_requests": 0,
+    "B_R_dispatches": 0,
+    "original_stop_preserved": true
+  },
+  "existing_inference_jobs": {
+    "gpuA": {"pid": 583229, "start_ticks": "893460775", "root": "/root/coopmwm20261102_warmmppiqual4", "state": "R"},
+    "gpuR": {"pid": 23014, "start_ticks": "4218101457", "root": "/root/coopmwm20261102_warmmppiqual4", "state": "R"}
+  },
+  "both_gpu_exact_gates": {
+    "K4_H120_max_cost_error": 0.0,
+    "K8_H420_max_cost_error": 0.0,
+    "empty_history_cold_max_cost_error": 0.0,
+    "pass_": true,
+    "group4_group6_timing_pending": true,
+    "persistent_service_startup_gates_pending": true
+  },
+  "decision": "STOP before new SUMO; confirmation of the 6500000 cap or an approved scope reduction is required. Preserve existing GPU qualifiers without duplicate dispatch. Warm-release and B/R restart are not yet claimed."
+}
