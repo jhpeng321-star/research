@@ -1,5 +1,45 @@
 # S-COOPMWM — live checks
 
+## DIAGNOSIS — 2026-11-01 18:47, OWNER18:38 fast path
+**No action-injection/roster/reversion bug found; release the engineering hold.**
+Window01 `.139` has target-minus-MAPPO speed **+5.70434m/s**, tau−0.000249751s;
+`.154` −0.076919m/s, tau−0.202225s. Window00 `ramp.72` −3.53868m/s,
+tau+0.279726s; `.214` +0.477607m/s, tau+0.00685912s. Thus targets are not uniformly
+tiny. The decoded requests reach the inherited WM callback, with both members
+present/CAV. For `.139`, initial bounded raw action2.60000 vs MAPPO2.59707m/s²
+becomes **the same safe action−0.265855m/s²**; all traced12s positions/speeds
+remain identical despite differing raw requests. This is safety/plant saturation,
+not a missing action. Non-requested CAVs run the frozen deterministic MAPPO
+bridge, not native/IDM; a real CPU callback test verifies standalone MAPPO equality
+and nonzero speed/position response to an unsaturated braking set-point.
+Inherited available O1/O3/O4 proposals DO alter `.139` trajectories (maximum12s
+position difference8.569/8.228/8.228m); H60 single-draw costs are distinct from
+policy/MAPPO (O3/O4 legitimately coincide in this geometry). O2 is unavailable
+here and retains its availability mask. Window00 also responds (ramp12s maximum
+position difference1.146m), with no inherited upstream option available.
+`ACTION_DELTAS_1838.json`, `ACTION_PROBE2_RESULT_00/01.json`, `DIAGNOSIS_1838.json`
+retain decoded requests, every0.5s accel/speed/position and before/after-safety
+values. **CPU WM regression1PASS/0skips, CUDA disabled, SUMO forbidden.** CPU22's
+wrong-runtime fixture failure and first focused fixture failure are preserved;
+the qualified WM library fixture passes in `CPU_WM_ACTION_RESPONSE2_1838.json`.
+Exact twins and original K8 results are reused; these diagnostic rerolls add0SUMO.
+The late exact-SUMO divergence (H60/H120 near0; H300/H600 +1699/+5723veh-s)
+is compatible with amplification of small execution differences, but two windows
+do not establish an empirical variance reduction or WM accuracy/scale CI.
+Conditional WM variance alone cannot support the paper's noise-reduction claim.
+
+### Suggestion-rate diagnosis and prospective release
+Original B-u1 used1/900 dense and1/3600 ordinary query probability, before
+availability was known: **1 query,0 accepted,0 executed**. Both GPUs' real available
+H300 K8+canary calls took213.67/234.79s (aggregate32.18queries/hour), explaining
+the throughput constraint. Outcome-independent numeric fit raises the shared
+B/R dense rate to**0.0022449262636300934**, ordinary**0.0005612315659075234**
+(2.02× historical rates). It uses309dense+219ordinary eligible B-u1 windows and
+274.0465s original48-episode span scaled4→12workers; no efficacy-based sampling.
+Resume original u1 optimizer/RNG/checkpoints and existing GPU queues after the
+numeric registration/binding. Exact allocation remains4,918,800/6,000,000sim-s,
+1,081,200unallocated; current charge83,200. All final-test/checkpoint rules remain.
+
 ## OWNER18:34 — engineering HOLD (fresh-session recovery)
 - Verified supervisor PID1945256 boot/start identity; paused it with SIGSTOP at the
   update-2 sampling gate. B/R are held at update1/not-started respectively. The
