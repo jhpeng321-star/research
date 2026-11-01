@@ -110,3 +110,66 @@ print(json.dumps(dict(pass_=True,host='gpuR',model=m['model'],fit_worlds=len(rt.
 ''',host='gpuR',timeout=240))
     ops.save('MIRROR_CPU_GPU_GATE.json',result)
     print(json.dumps(result))
+
+
+def repair_base():
+    """Relocate identical private assets inside the loader's existing allowlist.
+
+    Preserve the initial manifest and all initial copies; no loader/code change.
+    """
+    initial = json.loads((ops.OUT/'MIRROR.json').read_text())['manifest']
+    result = json.loads(ops.remote(f'''import pathlib,json,hashlib,shutil
+root=pathlib.Path({GROOT!r});p=root/'MIRROR.json';old=json.loads(p.read_text())
+assert old==json.loads({json.dumps(initial)!r})
+assert not (root/'MIRROR_INITIAL.json').exists()
+with (root/'MIRROR_INITIAL.json').open('x') as f:f.write(p.read_text())
+base=pathlib.Path('/root/rbeval20261031/wmplan20261101_v1/base')
+assert base.parent.parent.is_dir() and not base.exists()
+new=dict(old);new['hashes']=dict(old['hashes']);new['base']=str(base)
+copies=[]
+for name,h in old['hashes'].items():
+ source=pathlib.Path(name)
+ if not source.is_relative_to(pathlib.Path(old['base'])):continue
+ target=base/source.relative_to(old['base']);target.parent.mkdir(parents=True,exist_ok=True)
+ assert hashlib.sha256(source.read_bytes()).hexdigest()==h
+ with source.open('rb') as src,target.open('xb') as dst:shutil.copyfileobj(src,dst)
+ assert hashlib.sha256(target.read_bytes()).hexdigest()==h
+ new['hashes'][str(target)]=h;copies.append(dict(source=str(source),target=str(target),sha256=h))
+assert len(copies)==3
+with (root/'MIRROR_REPAIRED.json').open('x') as f:json.dump(new,f,sort_keys=True)
+# This is our own pre-dispatch manifest; its original bytes remain above.
+with p.open('w') as f:json.dump(new,f,sort_keys=True)
+print(json.dumps(dict(pass_=True,initial_manifest=old,repaired_manifest=new,copies=copies,
+ new_sumo_sim_s=0,new_forecasts=0,runtime_source_changed=False)))
+''',host='gpuR',timeout=90))
+    ops.save('MIRROR_BASE_REPAIR.json',result)
+    print(json.dumps(dict(pass_=result['pass_'],copies=len(result['copies']),new_sumo_sim_s=0)))
+
+
+def repair_assets():
+    """Bind the three package JSON initializers required during checkpoint load."""
+    assets = json.loads(ops.remote('''import pathlib,json,base64,hashlib
+root=pathlib.Path('/root/rbeval20261031/phys_code_22cc32f65a80/src/wms/model')
+out={}
+for name in ('entry_learned.json','merge_core_init.json','ramp_speed_adapt_init.json'):
+ p=root/name;data=p.read_bytes()
+ out[str(p)]=dict(sha256=hashlib.sha256(data).hexdigest(),content=base64.b64encode(data).decode())
+print(json.dumps(out))
+'''))
+    result = json.loads(ops.remote(f'''import pathlib,json,base64,hashlib
+assets=json.loads({json.dumps(assets)!r});root=pathlib.Path({GROOT!r})
+p=root/'MIRROR.json';m=json.loads(p.read_text())
+for name,value in assets.items():
+ target=pathlib.Path(name);data=base64.b64decode(value['content']);h=value['sha256']
+ assert target.parent.is_dir() and hashlib.sha256(data).hexdigest()==h
+ if target.exists():assert hashlib.sha256(target.read_bytes()).hexdigest()==h
+ else:
+  with target.open('xb') as f:f.write(data)
+ m['hashes'][name]=h
+with (root/'MIRROR_ASSETS.json').open('x') as f:json.dump(m,f,sort_keys=True)
+with p.open('w') as f:json.dump(m,f,sort_keys=True)
+print(json.dumps(dict(pass_=True,assets={{n:v['sha256'] for n,v in assets.items()}},
+ manifest=m,new_sumo_sim_s=0,new_forecasts=0,runtime_source_changed=False)))
+''',host='gpuR'))
+    ops.save('MIRROR_PACKAGE_ASSETS.json',result)
+    print(json.dumps(dict(pass_=True,files=len(assets),new_sumo_sim_s=0)))

@@ -55,9 +55,10 @@ def progress(text):
         f.write(before+section+after)
 
 
-def main(hours=96,interval=60):
+def main(hours=96,interval=60,resume=False):
     # A permanent exclusive claim protects against accidental second collectors.
-    ops.save('AUTO_CLAIM_1448_V2.json',dict(pid=os.getpid(),unix=time.time(),max_hours=hours,
+    claim = 'AUTO_CLAIM_RESUME_BASE.json' if resume else 'AUTO_CLAIM_1448_V2.json'
+    ops.save(claim,dict(pid=os.getpid(),unix=time.time(),max_hours=hours,
                                   command='tools.wmplan.watch',interval_s=interval,
                                   role='complete_registered_plan_once',peer_process_control=False))
     frozen = {p:sha(p) for p in (ops.LOCAL/'tools/wmplan').glob('*.py')}
@@ -85,13 +86,19 @@ def main(hours=96,interval=60):
                  f'{model["v5_all"]["exact_chosen_saving"]:+.6f} veh-s/state.\n'
                  '- Reused existing predictions; no new quality forecasts or SUMO.')
         commit('wmplan: freeze preregistered model comparison before live outcomes')
-        guard();ops.stage();commit('wmplan: bind immutable CPU GPU and reused baseline sources')
+        if not (ops.OUT/'STAGED.json').is_file():
+            guard();ops.stage();commit('wmplan: bind immutable CPU GPU and reused baseline sources')
         from tools.wmplan.mirror import stage as mirror_stage, check as mirror_check
-        guard();mirror_stage();commit('wmplan: freeze byte-identical gpuR inference mirror')
-        guard();mirror_check();commit('wmplan: verify gpuR frozen runtime bootstrap without forecasting')
-        guard();ops.cpu();commit('wmplan: verify frozen host contracts and all24 dual guards')
-        guard();ops.freeze();commit('wmplan: register final model source and exact budget freeze')
-        guard();ops.launch();commit('wmplan: bind one-use online planner dispatch and owned PIDs')
+        if not (ops.OUT/'MIRROR.json').is_file():
+            guard();mirror_stage();commit('wmplan: freeze byte-identical gpuR inference mirror')
+        if not (ops.OUT/'MIRROR_CPU_GPU_GATE.json').is_file():
+            guard();mirror_check();commit('wmplan: verify gpuR frozen runtime bootstrap without forecasting')
+        if not (ops.OUT/'CPU.json').is_file():
+            guard();ops.cpu();commit('wmplan: verify frozen host contracts and all24 dual guards')
+        if not (ops.OUT/'FINAL_FREEZE.json').is_file():
+            guard();ops.freeze();commit('wmplan: register final model source and exact budget freeze')
+        if not (ops.OUT/'DISPATCH.json').is_file():
+            guard();ops.launch();commit('wmplan: bind one-use online planner dispatch and owned PIDs')
         while True:
             guard();s=ops.status()
             progress(f'- Model fixed as {model["selected"]}; {s["episodes"]}/48 episodes complete.\n'
@@ -129,9 +136,10 @@ print(json.dumps(dict(primary_published=True,strict_released=True)))
         commit('wmplan: publish independently verified paired results and safety')
     except BaseException:
         error = traceback.format_exc()
-        ops.save('AUTO_FAILURE.json',dict(unix=time.time(),error=error,automatic_retry=False))
+        failure_name = f'AUTO_FAILURE_{os.getpid()}.json' if (ops.OUT/'AUTO_FAILURE.json').exists() else 'AUTO_FAILURE.json'
+        ops.save(failure_name,dict(unix=time.time(),error=error,automatic_retry=False))
         progress('- Continuation stopped; preserve all completed evidence and existing remote work.\n'
-                 '- No automatic retry or new dispatch is armed. See `wmplan/AUTO_FAILURE.json`.')
+                  f'- No automatic retry or new dispatch is armed. See `wmplan/{failure_name}`.')
         try:
             commit('wmplan: preserve continuation fault without retry or peer mutation')
         except BaseException:
@@ -139,14 +147,18 @@ print(json.dumps(dict(primary_published=True,strict_released=True)))
         raise
 
 
-def launch():
+def launch(resume=False):
     assert (ops.LOCAL/'_out').is_dir()
     assert (ops.OUT/'RECOVERY_1448.json').exists()
     assert (ops.OUT/'PRELIVE_PATH_ISOLATION.json').exists()
-    assert not (ops.OUT/'AUTO_CLAIM_1448_V2.json').exists()
+    if resume:
+        assert (ops.OUT/'MIRROR_BASE_REPAIR.json').is_file()
+        assert not (ops.OUT/'AUTO_CLAIM_RESUME_BASE.json').exists()
+    else:
+        assert not (ops.OUT/'AUTO_CLAIM_1448_V2.json').exists()
     logfile = ops.LOCAL/'_out'/f'wmplan_watch_{int(time.time())}.log'
     with logfile.open('x',encoding='utf-8') as log:
-        p = subprocess.Popen([sys.executable,'-B','-u','-m','tools.wmplan.watch'],cwd=ops.LOCAL,
+        p = subprocess.Popen([sys.executable,'-B','-u','-m','tools.wmplan.watch',*(['--resume'] if resume else [])],cwd=ops.LOCAL,
                              stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
                              creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name=='nt' else 0)
     return dict(pid=p.pid,log=str(logfile),command='tools.wmplan.watch',new_sumo_sim_s=0)
@@ -155,8 +167,9 @@ def launch():
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
     p.add_argument('--launch',action='store_true')
+    p.add_argument('--resume',action='store_true')
     a = p.parse_args()
     if a.launch:
-        print(json.dumps(launch()))
+        print(json.dumps(launch(resume=a.resume)))
     else:
-        main()
+        main(resume=a.resume)

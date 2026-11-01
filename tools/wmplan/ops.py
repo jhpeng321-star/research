@@ -269,6 +269,8 @@ def freeze():
             f'Existing same12 completed teacher forecasts reused/newforecasts0/newSUMO0; '
              f'hostCPU{cpu_result["tests"]}PASS/24dualguards/allbaselinebytesfrozen. '
              f'gpuRbyteidenticalmirrorSHA256{sha(OUT/"MIRROR.json")}/bootstrapPASS32FIT/newforecasts0; '
+             f'privatebaseallowlistrepairSHA256{sha(OUT/"MIRROR_BASE_REPAIR.json")}/unchangedloader; '
+             f'packageinitializersSHA256{sha(OUT/"MIRROR_PACKAGE_ASSETS.json")}; '
              'expected24+primaryreport before strict24; one8GiBservice each gpuA/gpuR. '
             'Original EXACT199200upper, equal2950credit quotas, resource-limited '
             'estimand and no-new-MAPPO contract retained. One-use gpuA root '
@@ -276,7 +278,9 @@ def freeze():
     with REG.open('a',encoding='utf-8') as f:
         f.write(line);f.flush()
     receipt = dict(line=line,binding_sha256=digest(b),comparison_sha256=sha(OUT/'MODEL_COMPARISON.json'),
-                   mirror_sha256=sha(OUT/'MIRROR.json'),mirror_gate_sha256=sha(OUT/'MIRROR_CPU_GPU_GATE.json'))
+                   mirror_sha256=sha(OUT/'MIRROR.json'),mirror_gate_sha256=sha(OUT/'MIRROR_CPU_GPU_GATE.json'),
+                   mirror_base_repair_sha256=sha(OUT/'MIRROR_BASE_REPAIR.json'),
+                   mirror_package_assets_sha256=sha(OUT/'MIRROR_PACKAGE_ASSETS.json'))
     save('FINAL_FREEZE.json',receipt)
     print(remote(f'''import pathlib,json
 root=pathlib.Path({ROOT!r})
@@ -289,6 +293,8 @@ def launch():
     freeze_receipt = json.loads((OUT/'FINAL_FREEZE.json').read_text())
     assert freeze_receipt['mirror_sha256']==sha(OUT/'MIRROR.json')
     assert freeze_receipt['mirror_gate_sha256']==sha(OUT/'MIRROR_CPU_GPU_GATE.json')
+    assert freeze_receipt['mirror_base_repair_sha256']==sha(OUT/'MIRROR_BASE_REPAIR.json')
+    assert freeze_receipt['mirror_package_assets_sha256']==sha(OUT/'MIRROR_PACKAGE_ASSETS.json')
     result = json.loads(remote(f'''import pathlib,sys,os,json,subprocess,shutil,time
 root=pathlib.Path({ROOT!r});assert root.is_dir()
 b=json.loads((root/'BINDING.json').read_text())
