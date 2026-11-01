@@ -675,3 +675,8 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 
 ### SMOKE.json
 - SMOKE.json: {"arms":["A","B","R"],"new_MAPPO_sim_s":0,"pass_":true,"sim_s":3600,"timestamp_utc":"2026-11-01T13:04:03.970616+00:00"}
+
+## Acceleration viability — 2026-11-01T13:16:39.800621+00:00
+
+### SCALE_gpuA_CONCURRENCY_1.json
+- SCALE_gpuA_CONCURRENCY_1.json: {"final_width":4,"host":"gpuA","imagined_futures":488,"imagined_futures_per_hour":2604.6138264975925,"new_sumo_sim_s":0,"pass_":true,"peak_worker_allocated_bytes":3486505472,"plans_per_hour":5.337323414954083,"screen_width":4,"source_bound_full_search_parity":true,"unix":1793538723.0724921,"wall_s":674.4953828193247,"workers":1}
