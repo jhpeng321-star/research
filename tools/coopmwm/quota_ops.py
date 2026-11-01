@@ -202,5 +202,50 @@ print(json.dumps(dict(unix=time.time(),owners=owners,receipts=receipts,pending=p
     print(out);return v
 
 
+def first_update():
+    existing=ops.EVIDENCE/'B_UPDATE_001_TIMING.json'
+    if existing.exists():
+        v=read(existing);print(json.dumps(v));return v
+    out=ops.ssh.remote('cpuQ',f'''import pathlib,json,sys,datetime,time
+r=pathlib.Path({ROOT!r});sys.path.insert(0,{SOURCE!r}+'/pytools')
+from tools.coopmwm.accel_storage import read
+from tools.coopmwm.warm_spool import immutable
+u=read(r/'B_UPDATE_001.json');start=read(r/'WARM_B_DISPATCH_V6.json')['unix']
+finish=datetime.datetime.fromisoformat(u['timestamp_utc']).timestamp()
+v=dict(update=1,arm='B',collection_dispatch_unix=start,finished_unix=finish,
+ total_elapsed_s=finish-start,adopted_wave_processing_wall_s=u['wall_s'],
+ raw_eta_final_hours=u['eta_final_hours'],raw_eta_valid=False,
+ eta_reason='adopted completed wave: raw stopwatch excludes original collection; u1 quota exception is not representative of quota10 future updates; wait for a quota-compliant update for a full-run forecast',
+ quota_deviation=u.get('quota_deviation'),routing=u['proposal_routing'],trust=u['trust'],
+ grading_lag=u['grading_lag'],exact_imitation_counts=u['exact_imitation']['counts'],
+ concurrently_active_plans=u['concurrently_active_plans'],checkpoint_update=1,
+ collection_claims={{a:len(list((r/'jobs').glob(f'warm_u{{n:03}}_{{a}}_*/CLAIM.json'))) for a,n in [('B',2),('R',1)]}},
+ new_sumo_sim_s=0,observational_timing_only=True)
+immutable(r/'B_UPDATE_001_TIMING.json',v)
+print(json.dumps(v))''',timeout=40)
+    v=json.loads(out);write(ops.EVIDENCE/'B_UPDATE_001_TIMING.json',v);print(out);return v
+
+
+def first_volume():
+    out=ops.ssh.remote('cpuQ',f'''import pathlib,json,sys
+r=pathlib.Path({ROOT!r});sys.path.insert(0,{SOURCE!r}+'/pytools')
+from tools.coopmwm.accel_storage import read
+from tools.coopmwm.warm_spool import immutable
+t=read(r/'B_UPDATE_001_TIMING.json');queries=[]
+allowed={{w['seed'] for w in read(r/'MAIN0508_REPAIR_BINDING.json')['repair_plan']['worlds']}}
+for p in (r/'broker_completed').glob('*.json'):
+ c=read(p)
+ if c['kind']!='plan' or not t['collection_dispatch_unix']<=c['unix']<=t['finished_unix']:continue
+ q=read(r/'requests'/p.name)
+ if q.get('mode')=='diagnostic' or q['world_id'] not in allowed:continue
+ a=read(r/'responses'/p.name)
+ queries.append(dict(key=q['state_id'],slot=c['slot'],group_size=len(q['group']),inference_wall_s=c['inference_wall_s'],accepted=a['accepted'],candidates_searched=a.get('candidates_searched'),imagined_futures=a.get('imagined_futures')))
+v=dict(update=1,query_attempts=t['routing']['queries'],actual_WM_queries=len(queries),accepted=sum(q['accepted'] for q in queries),executed=t['routing']['executed'],
+ elapsed_s=t['total_elapsed_s'],observed_executed_plans_per_hour=3600*t['routing']['executed']/t['total_elapsed_s'],
+ steady_state=False,queries=queries,explanation='query attempts include explicit zero-compute capacity/boundary declines; actual WM calls require broker completion; full elapsed includes handover; no horizon reduction',new_sumo_sim_s=0)
+immutable(r/'B_QUERY_VOLUME_001.json',v);print(json.dumps(v))''',timeout=40)
+    v=json.loads(out);write(ops.EVIDENCE/'B_QUERY_VOLUME_001.json',v);print(out);return v
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('preregister','freeze','qualify','register','deploy_broker','repair_register','handover','dispatch_watch','status'));a=p.parse_args();globals()[a.mode]()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('preregister','freeze','qualify','register','deploy_broker','repair_register','handover','dispatch_watch','status','first_update','first_volume'));a=p.parse_args();globals()[a.mode]()

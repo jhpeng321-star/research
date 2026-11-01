@@ -1,5 +1,43 @@
 # S-COOPMWM — live checks
 
+## B-u1 complete; quota-aware B-u2 and pipelined R-u1 live
+- **B-u1 completed2026-11-02 06:19:04UTC+8.** The retained24-episode wave was
+  adopted once. Its registered engineering deviation is3 executed plan-starts
+  against Nexec10; no extra episodes. All24 B-u2 jobs are now claimed; ten
+  quota-reserved queries were observed, four assigned and six queued. R-u1 is
+  collecting independently (six claims at the timing snapshot).
+- **Eight actual WM searches, three accepted/executed plans.** The171 logged
+  query attempts also include explicit zero-compute capacity/boundary declines.
+  Search sizes included2/3/4/6 members; K4/H300 and K8/Hfinal were retained.
+  `B_QUERY_VOLUME_001.json` keeps every completed WM call and its effort/timing.
+- Three qualified exact marginal grades across **two TRAIN worlds**: two positive,
+  one negative. Mean **+862.8525veh-s**; registered world-cluster bootstrap95% CI
+  **[+6.6664,+1290.9455]veh-s**. With only two worlds this is very sparse,
+  selection-conditional evidence; it does not establish population performance.
+  Rank1: two positive grades; rank3: one negative grade. All are ordinary-regime
+  MPPI plans, tagged“new” by the existing matcher; a missing matching prototype
+  alone is not proof of novel behaviour. Full type/regime/rank/group breakdown:
+  `warm_live/B_EXACT_VIABILITY_08bc9c74435ce8b6fd1e10f5a29cfa890d4303ed5c1860dd689915bb0612c110.json`.
+- Exact-only trust next beta **0.75097**. Only the two exact-positive plans enter
+  imitation/library; the losing plan is retained as trust evidence and is not
+  imitated. Uniform AWR weights remain in effect before20 grades. Grade lag
+  mean12.18s/max15.69s, no pending/orphan/failed grades at the update snapshot.
+  Up to two plans were concurrently active; one overlap re-check, no truncation.
+- **Timing correction:** full elapsed from current collection dispatch through
+  u1 completion is **3047.69s (50m48s)**. The adopted-wave stopwatch is93.53s;
+  its automatic1.22h final ETA is **invalid** because it omits collection.
+  `B_UPDATE_001_TIMING.json` preserves both and marks the raw ETA invalid. A
+  full-run ETA awaits a quota-compliant update; the original GPU deadline remains
+  Nov2 18:07:02UTC+8.
+- Continuation owners B3551873/R3551874 started06:17:29UTC+8 from immutable
+  `quotacpu4`; broker3514272/grader3427015 and all original GPUs are retained.
+  Old transition failure is historical, followed by the registered repair and
+  `MAIN0548_HANDOVER_COMPLETE.json`; no active health/engineering STOP.
+- Separate n+2 diagnostic twins000/001 failed on a departed recorded vehicle
+  (`KeyError mainline.158/.137`). Their charges/failures are retained. This is
+  the diagnostic open-loop replay path, not the exact marginal grader; the latter
+  passed its prefix/CRN gates. Isolated diagnostic repair is being qualified.
+
 ### DIAGNOSIS — completed-wave parent-exit race repaired
 - All24 current B-u1 episodes closed once; no queries remained. The handover
   watcher stopped at unix1793571197 because Linux cleared a verified exiting

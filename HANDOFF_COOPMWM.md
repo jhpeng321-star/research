@@ -1,5 +1,22 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+LATEST B-u1COMPLETE06:19:04UTC+8. SOURCEquotacpu4 liveB3551873/start58572732,
+R3551874/start58572733 since06:17:29; broker3514272/grader3427015 retained.
+All24Bu1RESULTsadopted/u0AdamRNGpreserved; REGISTEREDu1quotaexception3/10.
+ActualWMqueries8, attemptrecords171(includeszero-computedeclines), accepted3/
+executed3. B-u2ALL24claimed, TEN quotaqueries4assigned6queued; R-u1collecting
+concurrently(sixclaimsattimingsnapshot). NoactiveSTOP/pause. OldtransitionFAILED
+ishistoricalafterregistered5693f169repair +HANDOVER_COMPLETE, notanactiveblocker.
+Exactgrades3/2worlds:2positive1negative; mean+862.85248 CI[6.66642,1290.94551],
+very sparse/selectionconditional, NOTgeneralviability. beta.7509695; twoexact
+positiveplansimitated/library; lagmean12.18/max15.69s; ungradedneverestimated.
+CORRECTEDu1elapsed3047.685s(50m48); raw93.53s/adoptedprocessingand1.221hETA
+excludeoriginalcollection andmustNOTbeusedforfull-runforecast. B_UPDATE_001_TIMING
+andB_QUERY_VOLUME_001 pinboth. Deadlineoriginal18:07:02UTC+8unchanged.
+NewblockerDIAGNOSTICONLY: ACCEL_EXACT_PLAN000/001_FAILED KeyError departed
+mainline.158/.137 inoldopen-loopreplay; marginalgraderhealthy. Fixfutureisolated
+diagnosticworkers; doNOTrestartB/R orreruncompletedjobs. Allfailedchargesretained.
+
 QUOTAHANDOVER ENGINEERINGFIX QUALIFIED: all24currentB-u1RESULTsnowcomplete,
 ZEROqueriespending, noBoptimizer/newB-Rdispatch at1793571242. Detachedtransition
 3514691 exited on Linux emptycmdline during verifiedoldparentexit; originalfailure
