@@ -3,7 +3,6 @@
 **Grade** for every executed plan in arms B and R: `grade = J_without - J_with` (veh-s; positive means the plan helped). J is the increase in the cumulative `team_delay_vs` (road speed deficit + source waiting, the comparator J) over `[t0, t_end]`. `t_end = min(t0 + D + 120, episode end)`, so a window is truncated at 1200 s when `t0 + D > 1080`; the receipt says `truncated`. Totals come from the per-second accel_plant fingerprints (`branch_eval.totals_at`).
 - **with-plan**: the real training episode's RESULT. No new physics is run.
 - **without-plan**: one `accel_plant.episode` rerun to `t_end` with the same world, rollout checkpoint (`{arm}_checkpoint_{u-1}`, SHA-checked), `noise_seed` and runtime. Seconds 300..t0-1 replay the recorded one-second samples, as the existing `exact_plan` twins do. Every fingerprint from 300 to t0 must be bitwise equal to the original: the episode checks this inside its loop, and it is checked again after the run. On any difference the receipt is `stopped` with a `PrefixMismatch` reason. Stopped grades are never imputed and never retried.
-
 ## Fairness of the without-plan branch
 - From t0, `GradeController` has no plan and no guide. The group and every other CAV follow the policy's own stochastic actions, which is the behaviour the PPO baseline describes.
 - **Same noise draws (CRN).** The torch generator is fast-forwarded through the original's exact draw schedule for 300..t0-1:
@@ -16,7 +15,6 @@
 - **Registered fallback** (`noise_mode_used='mean'`): if the t0 check fails, plan members use the policy's mean action and everyone else keeps sampling. The expected rate is 0, so treat any fallback as a code-drift alarm.
 - **Why not mean action by default:** with-plan non-members are stochastic. A deterministic baseline would compare the plan against a different policy. CRN keeps the estimator unbiased and cancels shared noise.
 - Later plans that start inside the with-plan window are listed in `overlapping_plan_starts`. They are part of the realised with-plan outcome (see open questions).
-
 ## Receipt schema (`coopmwm/exact_grade/v1`, `receipts/<grade_id>.json`, sealed with `receipt_sha256`)
 - Identity: `grade_id = xg_<episode_id>_t<t0>`, `spec_sha256`, `episode_id`, `result_path`, `world_seed`, `arm`, `update`.
 - `plan` (`id`, `members`, `duration_s`, `start_s`, `option`, `regime`, `expected_saving`, `plan_sha256`) and `window`.
@@ -24,17 +22,14 @@
 - `noise`: `crn_verified_t0`, `noise_mode_used`, `aligned_until_s`.
 - Also: `prefix`, `overlapping_plan_starts`, `charged_sim_s`, `attempt`, `host`, `pid`, `started_unix`, `finished_unix`.
 - Specs (`queue/<id>.json`) are sealed with `spec_sha256`, which also binds `result_sha256` and `checkpoint_sha256`.
-
 ## Queue / worker (cpuQ)
 - Directory layout: `queue/` (specs), `claims/` (O_EXCL claim per attempt holding pid, host and /proc start time), `attempts/` (history), `receipts/` (final, never overwritten). The grade root's `GRADER_CONFIG.json` holds `{run_root, phase:"exact_grade", path_map}`.
 - Run it as `cd <pytools>; nohup python -m tools.coopmwm.exact_grade supervise --root <grade_root> --workers N &`. Workers are owned subprocesses at nice 19 with 1 torch thread, and their PIDs are logged in `WORKERS.jsonl`. The supervisor never kills a process.
 - **Charging:** each attempt is charged before any physics via `accel_storage.reserve(..., phase='exact_grade')`. If the budget is refused, the supervisor writes `GRADER_BLOCKED.json` and stops; nothing runs and nothing is imputed.
 - **Resume:** enqueue is idempotent (same SHA is a no-op; a different spec raises). A claim whose worker is dead goes to `attempts/` and the grade is re-queued, up to 2 attempts, then gets a `failed` receipt. A claim on a foreign host or a still-live PID is never taken over. Physics or executor errors produce a `failed` receipt with no retry.
-
 ## Budget
 - Each plan costs `sim_s = t_end` (from t=0, warmup included, like every accel_plant job). The maximum is 1200.
 - Plans start between 300 and 900 s with D up to 300, so a plan typically costs 700–1100 sim-s, in line with the owner's ~1,000 estimate. `quote([(t0, D), ...])` gives the exact total.
-
 ## Integration recipe (S-COOPMWM `warm_runner.run_arm`, B and R)
 0. Register the `exact_grade` phase in the budget quote, re-quoted within 7,500,000. Create the grade root and `GRADER_CONFIG.json`, then start the supervisor under nohup. **Gate:** the first B update must not apply until the supervisor PID is alive.
 1. After `eps = wave(...)`, call `GradeQueue(grade_root).enqueue_episode(ep, meta)` for each episode. `meta`:
@@ -52,7 +47,6 @@
 4. Write `W`, `T`, the newly consumed ids and `xg.lag_report(q, u)` (grading lag per update) into `{arm}_UPDATE_{u}.json`. Add the loss to COOPMWM_DESIGN.md.
 
 Temperature rule (registered here; confirm): once there are at least 10 grades, `T = max(1, RMS of all exact grades so far, both signs)`. Before that, T is the frozen AWR temperature (about uniform weights). Weight = `min(20, exp(g/T))` for g > 0, otherwise 0. Each plan is imitated once.
-
 ## Tests
 `python -m pytest -q tools/coopmwm/test_exact_grade_cpu.py` gives 14 passed. Together with the awr, branch_eval and mppi_search suites: 50 passed (rl_driving, Windows, CPU). The fake plant runs behind the real `accel_plant.episode`, `Controller` and `Policy`. The tests cover:
 - the grade equals an independent oracle (the original live controller with a scripted guide that never executes from t0), bitwise for every fingerprint, for both B and R (R includes the randint draws);
