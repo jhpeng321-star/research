@@ -33,8 +33,9 @@
 
 ## Status
 **PAUSED by MAIN17:35 (2026-11-01), pending explicit `S-WMTEACH RESUME`.**
-Fresh-session read-only recheck1793533462 confirms all10503 cached files have the
-same paths/sizes/SHA256 as checkpoint1793525989; all three owned jobs remain
+Nov2 fresh-session read-only recheck1793556739 (checkpoint commit `57a03fca`)
+confirms all10503 cached files have the same paths/sizes/SHA256 as checkpoint
+1793533462 (itself identical to1793525989); all three owned jobs remain
 inactive, both scale STOPs remain, live root is absent, and local CIM audit finds
 no collector/auto-live process. No subsequent MAIN resume authorization is present.
 New checkpoint and `_SUMMARY.json` are retained under `wmteach/`.

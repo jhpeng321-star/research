@@ -1,6 +1,12 @@
 # S-WMTEACH resume / ownership
 
 ## CURRENT: PAUSED by MAIN 2026-11-01 17:35 — supersedes all launch instructions below
+- Nov2 fresh-session recheck1793556739 (recovered clean `6de1e69e`): no MAIN
+  resume authorization in shared registration. All10503 cached files byte-identical
+  to1793533462; three owned jobs inactive, scale STOPs retained, live root absent.
+  Local CIM audit finds no WMTEACH collector/auto-live process. Checkpoint committed
+  `57a03fca`; receipt `wmteach/OWNER1735_CHECKPOINT_1793556739.json` + `_SUMMARY.json`.
+  Remain held; no new dispatch, inference or SUMO. See `PAUSE_RECHECK_1793556739.md`.
 - Fresh-session recheck1793533462 (2026-11-01): registry still has no MAIN resume
   authorization. Read-only checkpoint confirms all10503 cached files byte-identical
   to1793525989, all three owned jobs inactive, both scale STOPs retained and live
