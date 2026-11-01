@@ -1,0 +1,443 @@
+{
+  "status": "COMPLETE",
+  "worlds": [
+    969426,
+    969427,
+    969428,
+    969429,
+    969430,
+    969431
+  ],
+  "arms": [
+    "ctrl0",
+    "mappo",
+    "pi",
+    "circles"
+  ],
+  "samples": 8,
+  "settings": "same frozen pooled IDM; source-default versus persistent sampled raw-fitted LC",
+  "diagnosis": "teacher-forced conditional proposals, not free-running lane rates",
+  "motivation_contract": "predicted reason; recall is contribution to all-event recall, no true reason labels",
+  "continuation": {
+    "lc_conditioning": "caller_causal_motion.v1",
+    "saved_lc_driver_id_lookup": false,
+    "lc_population_sha256": "b903fa49fe1f3f1a15428ae48de5c8f86863aa5c5821dbb0acc8275c77d4483f"
+  },
+  "summary": {
+    "60": {
+      "source_default": {
+        "exact": {
+          "matched": 214.0,
+          "recorded": 508.0,
+          "predicted": 9638.0,
+          "timing_abs_sum_s": 0.0,
+          "timing_signed_sum_s": 0.0,
+          "position_abs_sum_m": 0.0,
+          "precision": 0.022203776717161238,
+          "recall": 0.421259842519685,
+          "timing_mae_s": 0.0
+        },
+        "window_2s": {
+          "matched": 214.0,
+          "recorded": 508.0,
+          "predicted": 9638.0,
+          "timing_abs_sum_s": 0.0,
+          "timing_signed_sum_s": 0.0,
+          "position_abs_sum_m": 0.0,
+          "precision": 0.022203776717161238,
+          "recall": 0.421259842519685,
+          "timing_mae_s": 0.0
+        },
+        "run_window_2s": {
+          "matched": 162.0,
+          "recorded": 508.0,
+          "predicted": 679.0,
+          "timing_abs_sum_s": 84.5,
+          "timing_signed_sum_s": -84.5,
+          "position_abs_sum_m": 901.5094615936309,
+          "precision": 0.23858615611192932,
+          "recall": 0.3188976377952756,
+          "timing_mae_s": 0.5216049382716049
+        },
+        "positive_runs": 679.0,
+        "by_motivation": {
+          "strategic": {
+            "exact": {
+              "matched": 83.0,
+              "recorded": 508.0,
+              "predicted": 365.0,
+              "timing_abs_sum_s": 0.0,
+              "timing_signed_sum_s": 0.0,
+              "position_abs_sum_m": 0.0,
+              "precision": 0.2273972602739726,
+              "recall": 0.16338582677165353,
+              "timing_mae_s": 0.0
+            },
+            "run_window_2s": {
+              "matched": 81.0,
+              "recorded": 508.0,
+              "predicted": 128.0,
+              "timing_abs_sum_s": 53.0,
+              "timing_signed_sum_s": -53.0,
+              "position_abs_sum_m": 39.29624366760254,
+              "precision": 0.6328125,
+              "recall": 0.1594488188976378,
+              "timing_mae_s": 0.654320987654321
+            }
+          },
+          "cooperative": {
+            "exact": {
+              "matched": 27.0,
+              "recorded": 508.0,
+              "predicted": 128.0,
+              "timing_abs_sum_s": 0.0,
+              "timing_signed_sum_s": 0.0,
+              "position_abs_sum_m": 0.0,
+              "precision": 0.2109375,
+              "recall": 0.0531496062992126,
+              "timing_mae_s": 0.0
+            },
+            "run_window_2s": {
+              "matched": 26.0,
+              "recorded": 508.0,
+              "predicted": 51.0,
+              "timing_abs_sum_s": 12.5,
+              "timing_signed_sum_s": -12.5,
+              "position_abs_sum_m": 331.2331947326679,
+              "precision": 0.5098039215686274,
+              "recall": 0.051181102362204724,
+              "timing_mae_s": 0.4807692307692308
+            }
+          },
+          "speed_gain": {
+            "exact": {
+              "matched": 37.0,
+              "recorded": 508.0,
+              "predicted": 690.0,
+              "timing_abs_sum_s": 0.0,
+              "timing_signed_sum_s": 0.0,
+              "position_abs_sum_m": 0.0,
+              "precision": 0.0536231884057971,
+              "recall": 0.07283464566929133,
+              "timing_mae_s": 0.0
+            },
+            "run_window_2s": {
+              "matched": 32.0,
+              "recorded": 508.0,
+              "predicted": 100.0,
+              "timing_abs_sum_s": 10.5,
+              "timing_signed_sum_s": -10.5,
+              "position_abs_sum_m": 276.7054382324254,
+              "precision": 0.32,
+              "recall": 0.06299212598425197,
+              "timing_mae_s": 0.328125
+            }
+          },
+          "keep_right": {
+            "exact": {
+              "matched": 67.0,
+              "recorded": 508.0,
+              "predicted": 8455.0,
+              "timing_abs_sum_s": 0.0,
+              "timing_signed_sum_s": 0.0,
+              "position_abs_sum_m": 0.0,
+              "precision": 0.007924305144884684,
+              "recall": 0.13188976377952755,
+              "timing_mae_s": 0.0
+            },
+            "run_window_2s": {
+              "matched": 23.0,
+              "recorded": 508.0,
+              "predicted": 406.0,
+              "timing_abs_sum_s": 8.5,
+              "timing_signed_sum_s": -8.5,
+              "position_abs_sum_m": 254.27458496093504,
+              "precision": 0.05665024630541872,
+              "recall": 0.045275590551181105,
+              "timing_mae_s": 0.3695652173913043
+            }
+          }
+        },
+        "lane_segment": {
+          "upstream/1": {
+            "recorded": 234.0,
+            "exposure_veh_s": 32396.0,
+            "predicted_steps": 708.0,
+            "matched_steps": 59.0,
+            "predicted_runs": 115.0,
+            "recorded_rate_per_veh_h": 26.003210272873194,
+            "proposed_step_rate_per_veh_h": 78.67637979997531
+          },
+          "upstream/0": {
+            "recorded": 143.0,
+            "exposure_veh_s": 41335.5,
+            "predicted_steps": 7820.0,
+            "matched_steps": 68.0,
+            "predicted_runs": 345.0,
+            "recorded_rate_per_veh_h": 12.454185869289109,
+            "proposed_step_rate_per_veh_h": 681.0610734114744
+          },
+          "downstream/1": {
+            "recorded": 10.0,
+            "exposure_veh_s": 7199.5,
+            "recorded_rate_per_veh_h": 5.000347246336551,
+            "proposed_step_rate_per_veh_h": 0.0
+          },
+          "ramp/2": {
+            "recorded": 108.0,
+            "exposure_veh_s": 5713.0,
+            "predicted_steps": 366.0,
+            "matched_steps": 83.0,
+            "predicted_runs": 129.0,
+            "recorded_rate_per_veh_h": 68.05531244530019,
+            "proposed_step_rate_per_veh_h": 230.63189217573955
+          },
+          "downstream/0": {
+            "recorded": 3.0,
+            "exposure_veh_s": 6808.0,
+            "predicted_steps": 618.0,
+            "matched_steps": 0.0,
+            "predicted_runs": 51.0,
+            "recorded_rate_per_veh_h": 1.5863689776733254,
+            "proposed_step_rate_per_veh_h": 326.79200940070507
+          },
+          "merge/1": {
+            "recorded": 10.0,
+            "exposure_veh_s": 4567.0,
+            "predicted_steps": 65.0,
+            "matched_steps": 4.0,
+            "predicted_runs": 22.0,
+            "recorded_rate_per_veh_h": 7.882636303919422,
+            "proposed_step_rate_per_veh_h": 51.23713597547624
+          },
+          "merge/0": {
+            "recorded": 0.0,
+            "exposure_veh_s": 1143.5,
+            "predicted_steps": 61.0,
+            "matched_steps": 0.0,
+            "predicted_runs": 17.0,
+            "recorded_rate_per_veh_h": 0.0,
+            "proposed_step_rate_per_veh_h": 192.0419763882816
+          }
+        },
+        "probability_scores": {
+          "n": 198325,
+          "categorical_brier_sum": 19436.0,
+          "event_brier_sum": 9718.0,
+          "event_brier": 0.04900037816714988,
+          "categorical_brier": 0.09800075633429976
+        }
+      },
+      "fitted_samples": {
+        "exact": {
+          "matched": 36.0,
+          "recorded": 508.0,
+          "predicted": 503.0,
+          "timing_abs_sum_s": 0.0,
+          "timing_signed_sum_s": 0.0,
+          "position_abs_sum_m": 0.0,
+          "precision": 0.07157057654075547,
+          "recall": 0.07086614173228346,
+          "timing_mae_s": 0.0
+        },
+        "window_2s": {
+          "matched": 47.125,
+          "recorded": 508.0,
+          "predicted": 503.0,
+          "timing_abs_sum_s": 10.75,
+          "timing_signed_sum_s": -10.75,
+          "position_abs_sum_m": 7.840218877792495,
+          "precision": 0.09368787276341949,
+          "recall": 0.09276574803149606,
+          "timing_mae_s": 0.22811671087533156
+        },
+        "run_window_2s": {
+          "matched": 42.5,
+          "recorded": 508.0,
+          "predicted": 88.5,
+          "timing_abs_sum_s": 34.6875,
+          "timing_signed_sum_s": -34.6875,
+          "position_abs_sum_m": 89.17366721630168,
+          "precision": 0.480225988700565,
+          "recall": 0.08366141732283465,
+          "timing_mae_s": 0.8161764705882353
+        },
+        "positive_runs": 88.5,
+        "by_motivation": {
+          "strategic": {
+            "exact": {
+              "matched": 25.375,
+              "recorded": 508.0,
+              "predicted": 93.875,
+              "timing_abs_sum_s": 0.0,
+              "timing_signed_sum_s": 0.0,
+              "position_abs_sum_m": 0.0,
+              "precision": 0.27030625832223704,
+              "recall": 0.049950787401574805,
+              "timing_mae_s": 0.0
+            },
+            "run_window_2s": {
+              "matched": 35.625,
+              "recorded": 508.0,
+              "predicted": 41.375,
+              "timing_abs_sum_s": 31.375,
+              "timing_signed_sum_s": -31.375,
+              "position_abs_sum_m": 9.34162437915802,
+              "precision": 0.8610271903323263,
+              "recall": 0.07012795275590551,
+              "timing_mae_s": 0.8807017543859649
+            }
+          },
+          "cooperative": {
+            "exact": {
+              "matched": 4.125,
+              "recorded": 508.0,
+              "predicted": 26.0,
+              "timing_abs_sum_s": 0.0,
+              "timing_signed_sum_s": 0.0,
+              "position_abs_sum_m": 0.0,
+              "precision": 0.15865384615384615,
+              "recall": 0.00812007874015748,
+              "timing_mae_s": 0.0
+            },
+            "run_window_2s": {
+              "matched": 4.375,
+              "recorded": 508.0,
+              "predicted": 9.625,
+              "timing_abs_sum_s": 1.375,
+              "timing_signed_sum_s": -1.375,
+              "position_abs_sum_m": 32.78050742149401,
+              "precision": 0.45454545454545453,
+              "recall": 0.00861220472440945,
+              "timing_mae_s": 0.3142857142857143
+            }
+          },
+          "speed_gain": {
+            "exact": {
+              "matched": 4.875,
+              "recorded": 508.0,
+              "predicted": 238.25,
+              "timing_abs_sum_s": 0.0,
+              "timing_signed_sum_s": 0.0,
+              "position_abs_sum_m": 0.0,
+              "precision": 0.020461699895068207,
+              "recall": 0.009596456692913386,
+              "timing_mae_s": 0.0
+            },
+            "run_window_2s": {
+              "matched": 2.625,
+              "recorded": 508.0,
+              "predicted": 25.125,
+              "timing_abs_sum_s": 1.8125,
+              "timing_signed_sum_s": -1.8125,
+              "position_abs_sum_m": 42.43474769592319,
+              "precision": 0.1044776119402985,
+              "recall": 0.00516732283464567,
+              "timing_mae_s": 0.6904761904761905
+            }
+          },
+          "keep_right": {
+            "exact": {
+              "matched": 1.625,
+              "recorded": 508.0,
+              "predicted": 144.875,
+              "timing_abs_sum_s": 0.0,
+              "timing_signed_sum_s": 0.0,
+              "position_abs_sum_m": 0.0,
+              "precision": 0.011216566005176877,
+              "recall": 0.0031988188976377952,
+              "timing_mae_s": 0.0
+            },
+            "run_window_2s": {
+              "matched": 0.125,
+              "recorded": 508.0,
+              "predicted": 13.875,
+              "timing_abs_sum_s": 0.25,
+              "timing_signed_sum_s": -0.25,
+              "position_abs_sum_m": 7.154611206054653,
+              "precision": 0.009009009009009009,
+              "recall": 0.00024606299212598425,
+              "timing_mae_s": 2.0
+            }
+          }
+        },
+        "lane_segment": {
+          "upstream/1": {
+            "recorded": 234.0,
+            "exposure_veh_s": 32396.0,
+            "predicted_steps": 184.375,
+            "matched_steps": 8.375,
+            "predicted_runs": 29.0,
+            "recorded_rate_per_veh_h": 26.003210272873194,
+            "proposed_step_rate_per_veh_h": 20.488640572910235
+          },
+          "upstream/0": {
+            "recorded": 143.0,
+            "exposure_veh_s": 41335.5,
+            "predicted_steps": 188.75,
+            "matched_steps": 2.25,
+            "predicted_runs": 13.25,
+            "recorded_rate_per_veh_h": 12.454185869289109,
+            "proposed_step_rate_per_veh_h": 16.438654425372864
+          },
+          "downstream/1": {
+            "recorded": 10.0,
+            "exposure_veh_s": 7199.5,
+            "predicted_steps": 0.5,
+            "matched_steps": 0.0,
+            "predicted_runs": 0.375,
+            "recorded_rate_per_veh_h": 5.000347246336551,
+            "proposed_step_rate_per_veh_h": 0.2500173623168276
+          },
+          "ramp/2": {
+            "recorded": 108.0,
+            "exposure_veh_s": 5713.0,
+            "predicted_steps": 93.875,
+            "matched_steps": 25.375,
+            "predicted_runs": 41.375,
+            "recorded_rate_per_veh_h": 68.05531244530019,
+            "proposed_step_rate_per_veh_h": 59.154559775949586
+          },
+          "downstream/0": {
+            "recorded": 3.0,
+            "exposure_veh_s": 6808.0,
+            "predicted_steps": 26.875,
+            "matched_steps": 0.0,
+            "predicted_runs": 2.875,
+            "recorded_rate_per_veh_h": 1.5863689776733254,
+            "proposed_step_rate_per_veh_h": 14.211222091656873
+          },
+          "merge/1": {
+            "recorded": 10.0,
+            "exposure_veh_s": 4567.0,
+            "predicted_steps": 8.625,
+            "matched_steps": 0.0,
+            "predicted_runs": 1.625,
+            "recorded_rate_per_veh_h": 7.882636303919422,
+            "proposed_step_rate_per_veh_h": 6.798773812130501
+          },
+          "merge/0": {
+            "recorded": 0.0,
+            "exposure_veh_s": 1143.5,
+            "recorded_rate_per_veh_h": 0.0,
+            "proposed_step_rate_per_veh_h": 0.0
+          }
+        },
+        "probability_scores": {
+          "n": 198325,
+          "categorical_brier_sum": 1128.4375,
+          "event_brier_sum": 564.21875,
+          "event_brier": 0.002844919954619942,
+          "categorical_brier": 0.005689839909239884
+        }
+      }
+    }
+  },
+  "elapsed_s": 691.7649064064026,
+  "source_sha256": {
+    "/home/ubuntu/rb2lane20261101_arms60_b_v1_ef9c9384783e/tools/rblane/round2_validate.py": "6035f60ca542516ea2f26f6257320dd908d46a6f404f64fe70aa618a631d76ab",
+    "/home/ubuntu/rb2lane20261101_arms60_b_v1_ef9c9384783e/src/wms/physics/lc2013.py": "99979114e5f31a0174660dcc274b3e97e402b4ceda43f9bae73a2ddaa3a44031",
+    "/home/ubuntu/rb2lane20261101_arms60_b_v1_ef9c9384783e/src/wms/physics/lc2013_geometry.py": "9ea4d814c46f313c8734babc6354609fe212902bfc34335e2bc7a55e3dd17672",
+    "/home/ubuntu/rb2lane20261101_arms60_b_v1_ef9c9384783e/src/wms/physics/lane_continuation.py": "61c8106daf8ebab81553d2b506770fc460e7e85b344e523ac6c1dec73ffbb785"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "alive": false,
+  "complete": true,
+  "load": [
+    9.61962890625,
+    10.005859375,
+    9.2626953125
+  ],
+  "progress": [
+    "{\"world\": 969420, \"sample\": 0, \"conserved\": true, \"elapsed_s\": 24.4490864276886}",
+    "{\"world\": 969420, \"sample\": 1, \"conserved\": true, \"elapsed_s\": 27.16276741027832}",
+    "{\"world\": 969421, \"sample\": 0, \"conserved\": true, \"elapsed_s\": 47.67739796638489}",
+    "{\"world\": 969421, \"sample\": 1, \"conserved\": true, \"elapsed_s\": 50.38093972206116}"
+  ],
+  "process": {
+    "pid": 442354,
+    "start_ticks": "888790350",
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "/root/miniconda3/bin/python",
+      "-B",
+      "-u",
+      "-m",
+      "tools.rblane.round2_runtime_smoke",
+      "--out",
+      "/root/rbeval20261031/rb2lane_runtime_v1/SMOKE.json"
+    ],
+    "root": "/root/rbeval20261031/rb2lane_runtime_v1",
+    "stage": {
+      "host": "gpuA",
+      "commit": "6b4bfbd5cff82fe518c3ede7777bf16cb46778f9",
+      "archive_sha256": "b29730193661d9b50dabb9f76905cf56e25d9c0964d3b498ec42ff8a8a081b70",
+      "runtime": "/root/rbeval20261031/phys_code_6b4bfbd5cff8",
+      "endpoint_only": false
+    },
+    "load": [
+      9.26171875,
+      9.2158203125,
+      8.818359375
+    ],
+    "cpu_only": true
+  },
+  "collected_at": 1793507893.2679143
+}

@@ -1,0 +1,6302 @@
+{
+  "seed": 969429,
+  "arm": "mappo",
+  "episode": "w969429m2700p10t300__mappo",
+  "input_sha256": {
+    "episode.json": "b71f21e65747ba35f4459da16e323d95e438c3fef34fa476fbb26088a55bbc94",
+    "time_s.npy": "d199113bc056e5c20bf444cecd15f575a34d8ffd1801cac82e59e555e802e5b4",
+    "veh_kin.npy": "75e548ae3a431a71c502aa8be3970373b27619c6a146e02585584d75463da108",
+    "veh_mask.npy": "e440b6c7bd58c9d952ef870eba4eb92f0f5fb5efb8b5dfe3c4d06920a57ef424",
+    "is_cav.npy": "5649d11ef8d947c303478860072568cc056aaebd2a4d86cc8dc3e7d1c0e64506",
+    "vid.npy": "18baaa6d061e0310b964e61d9517a0868fdda532183f5c69dcb7c14c6b7afcd7"
+  },
+  "conditioning": {
+    "lc_conditioning": "caller_causal_motion.v1",
+    "saved_lc_driver_id_lookup": false,
+    "lc_population_sha256": "b903fa49fe1f3f1a15428ae48de5c8f86863aa5c5821dbb0acc8275c77d4483f",
+    "conditioning_interval_s": [
+      240.0,
+      300.0
+    ],
+    "conditioned_lc_drivers": 101,
+    "active_lc_profiles": 36,
+    "lc_fit_source_sha256": "1bb1c7612a5ae250725a05ebfff18dd0abcd145c6e9a6abf46ce6e930d5a2695",
+    "lc_runtime_source_sha256": "99979114e5f31a0174660dcc274b3e97e402b4ceda43f9bae73a2ddaa3a44031"
+  },
+  "horizons": {
+    "60": {
+      "recorded": 14,
+      "source_default": {
+        "exact": {
+          "matched": 3,
+          "recorded": 14,
+          "predicted": 422,
+          "recall": 0.21428571428571427,
+          "precision": 0.0071090047393364926,
+          "timing_abs_sum_s": 0.0,
+          "timing_signed_sum_s": 0.0,
+          "position_abs_sum_m": 0.0
+        },
+        "window_2s": {
+          "matched": 3,
+          "recorded": 14,
+          "predicted": 422,
+          "recall": 0.21428571428571427,
+          "precision": 0.0071090047393364926,
+          "timing_abs_sum_s": 0.0,
+          "timing_signed_sum_s": 0.0,
+          "position_abs_sum_m": 0.0
+        },
+        "run_window_2s": {
+          "matched": 2,
+          "recorded": 14,
+          "predicted": 26,
+          "recall": 0.14285714285714285,
+          "precision": 0.07692307692307693,
+          "timing_abs_sum_s": 1.0,
+          "timing_signed_sum_s": -1.0,
+          "position_abs_sum_m": 25.117625427246367
+        },
+        "positive_runs": 26,
+        "by_motivation": {
+          "strategic": {
+            "exact": {
+              "matched": 1,
+              "recorded": 14,
+              "predicted": 11,
+              "recall": 0.07142857142857142,
+              "precision": 0.09090909090909091,
+              "timing_abs_sum_s": 0.0,
+              "timing_signed_sum_s": 0.0,
+              "position_abs_sum_m": 0.0
+            },
+            "run_window_2s": {
+              "matched": 1,
+              "recorded": 14,
+              "predicted": 3,
+              "recall": 0.07142857142857142,
+              "precision": 0.3333333333333333,
+              "timing_abs_sum_s": 0.0,
+              "timing_signed_sum_s": 0.0,
+              "position_abs_sum_m": 0.0
+            }
+          },
+          "cooperative": {
+            "exact": {
+              "matched": 1,
+              "recorded": 14,
+              "predicted": 13,
+              "recall": 0.07142857142857142,
+              "precision": 0.07692307692307693,
+              "timing_abs_sum_s": 0.0,
+              "timing_signed_sum_s": 0.0,
+              "position_abs_sum_m": 0.0
+            },
+            "run_window_2s": {
+              "matched": 1,
+              "recorded": 14,
+              "predicted": 4,
+              "recall": 0.07142857142857142,
+              "precision": 0.25,
+              "timing_abs_sum_s": 1.0,
+              "timing_signed_sum_s": -1.0,
+              "position_abs_sum_m": 25.117625427246367
+            }
+          },
+          "speed_gain": {
+            "exact": {
+              "matched": 1,
+              "recorded": 14,
+              "predicted": 65,
+              "recall": 0.07142857142857142,
+              "precision": 0.015384615384615385,
+              "timing_abs_sum_s": 0.0,
+              "timing_signed_sum_s": 0.0,
+              "position_abs_sum_m": 0.0
+            },
+            "run_window_2s": {
+              "matched": 0,
+              "recorded": 14,
+              "predicted": 9,
+              "recall": 0.0,
+              "precision": 0.0,
+              "timing_abs_sum_s": 0,
+              "timing_signed_sum_s": 0,
+              "position_abs_sum_m": 0
+            }
+          },
+          "keep_right": {
+            "exact": {
+              "matched": 0,
+              "recorded": 14,
+              "predicted": 333,
+              "recall": 0.0,
+              "precision": 0.0,
+              "timing_abs_sum_s": 0,
+              "timing_signed_sum_s": 0,
+              "position_abs_sum_m": 0
+            },
+            "run_window_2s": {
+              "matched": 0,
+              "recorded": 14,
+              "predicted": 10,
+              "recall": 0.0,
+              "precision": 0.0,
+              "timing_abs_sum_s": 0,
+              "timing_signed_sum_s": 0,
+              "position_abs_sum_m": 0
+            }
+          }
+        }
+      },
+      "fitted_samples": [
+        {
+          "exact": {
+            "matched": 1,
+            "recorded": 14,
+            "predicted": 3,
+            "recall": 0.07142857142857142,
+            "precision": 0.3333333333333333,
+            "timing_abs_sum_s": 0.0,
+            "timing_signed_sum_s": 0.0,
+            "position_abs_sum_m": 0.0
+          },
+          "window_2s": {
+            "matched": 1,
+            "recorded": 14,
+            "predicted": 3,
+            "recall": 0.07142857142857142,
+            "precision": 0.3333333333333333,
+            "timing_abs_sum_s": 0.0,
+            "timing_signed_sum_s": 0.0,
+            "position_abs_sum_m": 0.0
+          },
+          "run_window_2s": {
+            "matched": 1,
+            "recorded": 14,
+            "predicted": 2,
+            "recall": 0.07142857142857142,
+            "precision": 0.5,
+            "timing_abs_sum_s": 0.5,
+            "timing_signed_sum_s": -0.5,
+            "position_abs_sum_m": 10.151293945312773
+          },
+          "positive_runs": 2,
+          "by_motivation": {
+            "strategic": {
+              "exact": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              },
+              "run_window_2s": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              }
+            },
+            "cooperative": {
+              "exact": {
+                "matched": 1,
+                "recorded": 14,
+                "predicted": 3,
+                "recall": 0.07142857142857142,
+                "precision": 0.3333333333333333,
+                "timing_abs_sum_s": 0.0,
+                "timing_signed_sum_s": 0.0,
+                "position_abs_sum_m": 0.0
+              },
+              "run_window_2s": {
+                "matched": 1,
+                "recorded": 14,
+                "predicted": 2,
+                "recall": 0.07142857142857142,
+                "precision": 0.5,
+                "timing_abs_sum_s": 0.5,
+                "timing_signed_sum_s": -0.5,
+                "position_abs_sum_m": 10.151293945312773
+              }
+            },
+            "speed_gain": {
+              "exact": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              },
+              "run_window_2s": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              }
+            },
+            "keep_right": {
+              "exact": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              },
+              "run_window_2s": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              }
+            }
+          }
+        },
+        {
+          "exact": {
+            "matched": 1,
+            "recorded": 14,
+            "predicted": 42,
+            "recall": 0.07142857142857142,
+            "precision": 0.023809523809523808,
+            "timing_abs_sum_s": 0.0,
+            "timing_signed_sum_s": 0.0,
+            "position_abs_sum_m": 0.0
+          },
+          "window_2s": {
+            "matched": 1,
+            "recorded": 14,
+            "predicted": 42,
+            "recall": 0.07142857142857142,
+            "precision": 0.023809523809523808,
+            "timing_abs_sum_s": 0.0,
+            "timing_signed_sum_s": 0.0,
+            "position_abs_sum_m": 0.0
+          },
+          "run_window_2s": {
+            "matched": 1,
+            "recorded": 14,
+            "predicted": 5,
+            "recall": 0.07142857142857142,
+            "precision": 0.2,
+            "timing_abs_sum_s": 0.5,
+            "timing_signed_sum_s": -0.5,
+            "position_abs_sum_m": 10.151293945312773
+          },
+          "positive_runs": 5,
+          "by_motivation": {
+            "strategic": {
+              "exact": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              },
+              "run_window_2s": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              }
+            },
+            "cooperative": {
+              "exact": {
+                "matched": 1,
+                "recorded": 14,
+                "predicted": 21,
+                "recall": 0.07142857142857142,
+                "precision": 0.047619047619047616,
+                "timing_abs_sum_s": 0.0,
+                "timing_signed_sum_s": 0.0,
+                "position_abs_sum_m": 0.0
+              },
+              "run_window_2s": {
+                "matched": 1,
+                "recorded": 14,
+                "predicted": 4,
+                "recall": 0.07142857142857142,
+                "precision": 0.25,
+                "timing_abs_sum_s": 0.5,
+                "timing_signed_sum_s": -0.5,
+                "position_abs_sum_m": 10.151293945312773
+              }
+            },
+            "speed_gain": {
+              "exact": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 21,
+                "recall": 0.0,
+                "precision": 0.0,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              },
+              "run_window_2s": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 2,
+                "recall": 0.0,
+                "precision": 0.0,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              }
+            },
+            "keep_right": {
+              "exact": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              },
+              "run_window_2s": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              }
+            }
+          }
+        },
+        {
+          "exact": {
+            "matched": 2,
+            "recorded": 14,
+            "predicted": 11,
+            "recall": 0.14285714285714285,
+            "precision": 0.18181818181818182,
+            "timing_abs_sum_s": 0.0,
+            "timing_signed_sum_s": 0.0,
+            "position_abs_sum_m": 0.0
+          },
+          "window_2s": {
+            "matched": 2,
+            "recorded": 14,
+            "predicted": 11,
+            "recall": 0.14285714285714285,
+            "precision": 0.18181818181818182,
+            "timing_abs_sum_s": 0.0,
+            "timing_signed_sum_s": 0.0,
+            "position_abs_sum_m": 0.0
+          },
+          "run_window_2s": {
+            "matched": 2,
+            "recorded": 14,
+            "predicted": 3,
+            "recall": 0.14285714285714285,
+            "precision": 0.6666666666666666,
+            "timing_abs_sum_s": 0.5,
+            "timing_signed_sum_s": -0.5,
+            "position_abs_sum_m": 10.151293945312773
+          },
+          "positive_runs": 3,
+          "by_motivation": {
+            "strategic": {
+              "exact": {
+                "matched": 1,
+                "recorded": 14,
+                "predicted": 1,
+                "recall": 0.07142857142857142,
+                "precision": 1.0,
+                "timing_abs_sum_s": 0.0,
+                "timing_signed_sum_s": 0.0,
+                "position_abs_sum_m": 0.0
+              },
+              "run_window_2s": {
+                "matched": 1,
+                "recorded": 14,
+                "predicted": 1,
+                "recall": 0.07142857142857142,
+                "precision": 1.0,
+                "timing_abs_sum_s": 0.0,
+                "timing_signed_sum_s": 0.0,
+                "position_abs_sum_m": 0.0
+              }
+            },
+            "cooperative": {
+              "exact": {
+                "matched": 1,
+                "recorded": 14,
+                "predicted": 10,
+                "recall": 0.07142857142857142,
+                "precision": 0.1,
+                "timing_abs_sum_s": 0.0,
+                "timing_signed_sum_s": 0.0,
+                "position_abs_sum_m": 0.0
+              },
+              "run_window_2s": {
+                "matched": 1,
+                "recorded": 14,
+                "predicted": 2,
+                "recall": 0.07142857142857142,
+                "precision": 0.5,
+                "timing_abs_sum_s": 0.5,
+                "timing_signed_sum_s": -0.5,
+                "position_abs_sum_m": 10.151293945312773
+              }
+            },
+            "speed_gain": {
+              "exact": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              },
+              "run_window_2s": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              }
+            },
+            "keep_right": {
+              "exact": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              },
+              "run_window_2s": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              }
+            }
+          }
+        },
+        {
+          "exact": {
+            "matched": 1,
+            "recorded": 14,
+            "predicted": 3,
+            "recall": 0.07142857142857142,
+            "precision": 0.3333333333333333,
+            "timing_abs_sum_s": 0.0,
+            "timing_signed_sum_s": 0.0,
+            "position_abs_sum_m": 0.0
+          },
+          "window_2s": {
+            "matched": 1,
+            "recorded": 14,
+            "predicted": 3,
+            "recall": 0.07142857142857142,
+            "precision": 0.3333333333333333,
+            "timing_abs_sum_s": 0.0,
+            "timing_signed_sum_s": 0.0,
+            "position_abs_sum_m": 0.0
+          },
+          "run_window_2s": {
+            "matched": 1,
+            "recorded": 14,
+            "predicted": 2,
+            "recall": 0.07142857142857142,
+            "precision": 0.5,
+            "timing_abs_sum_s": 0.5,
+            "timing_signed_sum_s": -0.5,
+            "position_abs_sum_m": 10.151293945312773
+          },
+          "positive_runs": 2,
+          "by_motivation": {
+            "strategic": {
+              "exact": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              },
+              "run_window_2s": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              }
+            },
+            "cooperative": {
+              "exact": {
+                "matched": 1,
+                "recorded": 14,
+                "predicted": 3,
+                "recall": 0.07142857142857142,
+                "precision": 0.3333333333333333,
+                "timing_abs_sum_s": 0.0,
+                "timing_signed_sum_s": 0.0,
+                "position_abs_sum_m": 0.0
+              },
+              "run_window_2s": {
+                "matched": 1,
+                "recorded": 14,
+                "predicted": 2,
+                "recall": 0.07142857142857142,
+                "precision": 0.5,
+                "timing_abs_sum_s": 0.5,
+                "timing_signed_sum_s": -0.5,
+                "position_abs_sum_m": 10.151293945312773
+              }
+            },
+            "speed_gain": {
+              "exact": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              },
+              "run_window_2s": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              }
+            },
+            "keep_right": {
+              "exact": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              },
+              "run_window_2s": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              }
+            }
+          }
+        },
+        {
+          "exact": {
+            "matched": 1,
+            "recorded": 14,
+            "predicted": 32,
+            "recall": 0.07142857142857142,
+            "precision": 0.03125,
+            "timing_abs_sum_s": 0.0,
+            "timing_signed_sum_s": 0.0,
+            "position_abs_sum_m": 0.0
+          },
+          "window_2s": {
+            "matched": 1,
+            "recorded": 14,
+            "predicted": 32,
+            "recall": 0.07142857142857142,
+            "precision": 0.03125,
+            "timing_abs_sum_s": 0.0,
+            "timing_signed_sum_s": 0.0,
+            "position_abs_sum_m": 0.0
+          },
+          "run_window_2s": {
+            "matched": 0,
+            "recorded": 14,
+            "predicted": 8,
+            "recall": 0.0,
+            "precision": 0.0,
+            "timing_abs_sum_s": 0,
+            "timing_signed_sum_s": 0,
+            "position_abs_sum_m": 0
+          },
+          "positive_runs": 8,
+          "by_motivation": {
+            "strategic": {
+              "exact": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 19,
+                "recall": 0.0,
+                "precision": 0.0,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              },
+              "run_window_2s": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 5,
+                "recall": 0.0,
+                "precision": 0.0,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              }
+            },
+            "cooperative": {
+              "exact": {
+                "matched": 1,
+                "recorded": 14,
+                "predicted": 5,
+                "recall": 0.07142857142857142,
+                "precision": 0.2,
+                "timing_abs_sum_s": 0.0,
+                "timing_signed_sum_s": 0.0,
+                "position_abs_sum_m": 0.0
+              },
+              "run_window_2s": {
+                "matched": 1,
+                "recorded": 14,
+                "predicted": 2,
+                "recall": 0.07142857142857142,
+                "precision": 0.5,
+                "timing_abs_sum_s": 0.5,
+                "timing_signed_sum_s": -0.5,
+                "position_abs_sum_m": 10.151293945312773
+              }
+            },
+            "speed_gain": {
+              "exact": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 5,
+                "recall": 0.0,
+                "precision": 0.0,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              },
+              "run_window_2s": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 1,
+                "recall": 0.0,
+                "precision": 0.0,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              }
+            },
+            "keep_right": {
+              "exact": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 3,
+                "recall": 0.0,
+                "precision": 0.0,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              },
+              "run_window_2s": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 1,
+                "recall": 0.0,
+                "precision": 0.0,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              }
+            }
+          }
+        },
+        {
+          "exact": {
+            "matched": 1,
+            "recorded": 14,
+            "predicted": 16,
+            "recall": 0.07142857142857142,
+            "precision": 0.0625,
+            "timing_abs_sum_s": 0.0,
+            "timing_signed_sum_s": 0.0,
+            "position_abs_sum_m": 0.0
+          },
+          "window_2s": {
+            "matched": 1,
+            "recorded": 14,
+            "predicted": 16,
+            "recall": 0.07142857142857142,
+            "precision": 0.0625,
+            "timing_abs_sum_s": 0.0,
+            "timing_signed_sum_s": 0.0,
+            "position_abs_sum_m": 0.0
+          },
+          "run_window_2s": {
+            "matched": 1,
+            "recorded": 14,
+            "predicted": 8,
+            "recall": 0.07142857142857142,
+            "precision": 0.125,
+            "timing_abs_sum_s": 0.5,
+            "timing_signed_sum_s": -0.5,
+            "position_abs_sum_m": 10.151293945312773
+          },
+          "positive_runs": 8,
+          "by_motivation": {
+            "strategic": {
+              "exact": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              },
+              "run_window_2s": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              }
+            },
+            "cooperative": {
+              "exact": {
+                "matched": 1,
+                "recorded": 14,
+                "predicted": 2,
+                "recall": 0.07142857142857142,
+                "precision": 0.5,
+                "timing_abs_sum_s": 0.0,
+                "timing_signed_sum_s": 0.0,
+                "position_abs_sum_m": 0.0
+              },
+              "run_window_2s": {
+                "matched": 1,
+                "recorded": 14,
+                "predicted": 1,
+                "recall": 0.07142857142857142,
+                "precision": 1.0,
+                "timing_abs_sum_s": 0.5,
+                "timing_signed_sum_s": -0.5,
+                "position_abs_sum_m": 10.151293945312773
+              }
+            },
+            "speed_gain": {
+              "exact": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 14,
+                "recall": 0.0,
+                "precision": 0.0,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              },
+              "run_window_2s": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 7,
+                "recall": 0.0,
+                "precision": 0.0,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              }
+            },
+            "keep_right": {
+              "exact": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              },
+              "run_window_2s": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              }
+            }
+          }
+        },
+        {
+          "exact": {
+            "matched": 1,
+            "recorded": 14,
+            "predicted": 93,
+            "recall": 0.07142857142857142,
+            "precision": 0.010752688172043012,
+            "timing_abs_sum_s": 0.0,
+            "timing_signed_sum_s": 0.0,
+            "position_abs_sum_m": 0.0
+          },
+          "window_2s": {
+            "matched": 1,
+            "recorded": 14,
+            "predicted": 93,
+            "recall": 0.07142857142857142,
+            "precision": 0.010752688172043012,
+            "timing_abs_sum_s": 0.0,
+            "timing_signed_sum_s": 0.0,
+            "position_abs_sum_m": 0.0
+          },
+          "run_window_2s": {
+            "matched": 1,
+            "recorded": 14,
+            "predicted": 19,
+            "recall": 0.07142857142857142,
+            "precision": 0.05263157894736842,
+            "timing_abs_sum_s": 0.5,
+            "timing_signed_sum_s": -0.5,
+            "position_abs_sum_m": 10.151293945312773
+          },
+          "positive_runs": 19,
+          "by_motivation": {
+            "strategic": {
+              "exact": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              },
+              "run_window_2s": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              }
+            },
+            "cooperative": {
+              "exact": {
+                "matched": 1,
+                "recorded": 14,
+                "predicted": 11,
+                "recall": 0.07142857142857142,
+                "precision": 0.09090909090909091,
+                "timing_abs_sum_s": 0.0,
+                "timing_signed_sum_s": 0.0,
+                "position_abs_sum_m": 0.0
+              },
+              "run_window_2s": {
+                "matched": 1,
+                "recorded": 14,
+                "predicted": 3,
+                "recall": 0.07142857142857142,
+                "precision": 0.3333333333333333,
+                "timing_abs_sum_s": 0.5,
+                "timing_signed_sum_s": -0.5,
+                "position_abs_sum_m": 10.151293945312773
+              }
+            },
+            "speed_gain": {
+              "exact": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 80,
+                "recall": 0.0,
+                "precision": 0.0,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              },
+              "run_window_2s": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 15,
+                "recall": 0.0,
+                "precision": 0.0,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              }
+            },
+            "keep_right": {
+              "exact": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 2,
+                "recall": 0.0,
+                "precision": 0.0,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              },
+              "run_window_2s": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 1,
+                "recall": 0.0,
+                "precision": 0.0,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              }
+            }
+          }
+        },
+        {
+          "exact": {
+            "matched": 1,
+            "recorded": 14,
+            "predicted": 38,
+            "recall": 0.07142857142857142,
+            "precision": 0.02631578947368421,
+            "timing_abs_sum_s": 0.0,
+            "timing_signed_sum_s": 0.0,
+            "position_abs_sum_m": 0.0
+          },
+          "window_2s": {
+            "matched": 1,
+            "recorded": 14,
+            "predicted": 38,
+            "recall": 0.07142857142857142,
+            "precision": 0.02631578947368421,
+            "timing_abs_sum_s": 0.0,
+            "timing_signed_sum_s": 0.0,
+            "position_abs_sum_m": 0.0
+          },
+          "run_window_2s": {
+            "matched": 0,
+            "recorded": 14,
+            "predicted": 5,
+            "recall": 0.0,
+            "precision": 0.0,
+            "timing_abs_sum_s": 0,
+            "timing_signed_sum_s": 0,
+            "position_abs_sum_m": 0
+          },
+          "positive_runs": 5,
+          "by_motivation": {
+            "strategic": {
+              "exact": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              },
+              "run_window_2s": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              }
+            },
+            "cooperative": {
+              "exact": {
+                "matched": 1,
+                "recorded": 14,
+                "predicted": 3,
+                "recall": 0.07142857142857142,
+                "precision": 0.3333333333333333,
+                "timing_abs_sum_s": 0.0,
+                "timing_signed_sum_s": 0.0,
+                "position_abs_sum_m": 0.0
+              },
+              "run_window_2s": {
+                "matched": 1,
+                "recorded": 14,
+                "predicted": 2,
+                "recall": 0.07142857142857142,
+                "precision": 0.5,
+                "timing_abs_sum_s": 0.5,
+                "timing_signed_sum_s": -0.5,
+                "position_abs_sum_m": 10.151293945312773
+              }
+            },
+            "speed_gain": {
+              "exact": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 35,
+                "recall": 0.0,
+                "precision": 0.0,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              },
+              "run_window_2s": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 4,
+                "recall": 0.0,
+                "precision": 0.0,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              }
+            },
+            "keep_right": {
+              "exact": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              },
+              "run_window_2s": {
+                "matched": 0,
+                "recorded": 14,
+                "predicted": 0,
+                "recall": 0.0,
+                "precision": null,
+                "timing_abs_sum_s": 0,
+                "timing_signed_sum_s": 0,
+                "position_abs_sum_m": 0
+              }
+            }
+          }
+        }
+      ],
+      "lane_segment_source_default": {
+        "upstream/1": {
+          "recorded": 8,
+          "exposure_veh_s": 1393.5,
+          "predicted_steps": 73,
+          "matched_steps": 2,
+          "predicted_runs": 11
+        },
+        "upstream/0": {
+          "recorded": 3,
+          "exposure_veh_s": 2040.5,
+          "predicted_steps": 328,
+          "matched_steps": 0,
+          "predicted_runs": 10
+        },
+        "downstream/1": {
+          "recorded": 1,
+          "exposure_veh_s": 298.0
+        },
+        "downstream/0": {
+          "recorded": 0,
+          "exposure_veh_s": 343.0
+        },
+        "ramp/2": {
+          "recorded": 2,
+          "exposure_veh_s": 296.0,
+          "predicted_steps": 11,
+          "matched_steps": 1,
+          "predicted_runs": 3
+        },
+        "merge/0": {
+          "recorded": 0,
+          "exposure_veh_s": 56.5,
+          "predicted_steps": 5,
+          "matched_steps": 0
+        },
+        "merge/1": {
+          "recorded": 0,
+          "exposure_veh_s": 57.0,
+          "predicted_steps": 5,
+          "matched_steps": 0,
+          "predicted_runs": 2
+        }
+      },
+      "lane_segment_fitted_samples": [
+        {
+          "upstream/1": {
+            "recorded": 8,
+            "exposure_veh_s": 1393.5,
+            "predicted_steps": 2,
+            "matched_steps": 1,
+            "predicted_runs": 1
+          },
+          "upstream/0": {
+            "recorded": 3,
+            "exposure_veh_s": 2040.5
+          },
+          "downstream/1": {
+            "recorded": 1,
+            "exposure_veh_s": 298.0
+          },
+          "downstream/0": {
+            "recorded": 0,
+            "exposure_veh_s": 343.0
+          },
+          "ramp/2": {
+            "recorded": 2,
+            "exposure_veh_s": 296.0
+          },
+          "merge/0": {
+            "recorded": 0,
+            "exposure_veh_s": 56.5
+          },
+          "merge/1": {
+            "recorded": 0,
+            "exposure_veh_s": 57.0,
+            "predicted_steps": 1,
+            "matched_steps": 0,
+            "predicted_runs": 1
+          }
+        },
+        {
+          "upstream/1": {
+            "recorded": 8,
+            "exposure_veh_s": 1393.5,
+            "predicted_steps": 37,
+            "matched_steps": 1,
+            "predicted_runs": 4
+          },
+          "upstream/0": {
+            "recorded": 3,
+            "exposure_veh_s": 2040.5
+          },
+          "downstream/1": {
+            "recorded": 1,
+            "exposure_veh_s": 298.0
+          },
+          "downstream/0": {
+            "recorded": 0,
+            "exposure_veh_s": 343.0
+          },
+          "ramp/2": {
+            "recorded": 2,
+            "exposure_veh_s": 296.0
+          },
+          "merge/0": {
+            "recorded": 0,
+            "exposure_veh_s": 56.5
+          },
+          "merge/1": {
+            "recorded": 0,
+            "exposure_veh_s": 57.0,
+            "predicted_steps": 5,
+            "matched_steps": 0,
+            "predicted_runs": 1
+          }
+        },
+        {
+          "upstream/1": {
+            "recorded": 8,
+            "exposure_veh_s": 1393.5,
+            "predicted_steps": 10,
+            "matched_steps": 1,
+            "predicted_runs": 2
+          },
+          "upstream/0": {
+            "recorded": 3,
+            "exposure_veh_s": 2040.5
+          },
+          "downstream/1": {
+            "recorded": 1,
+            "exposure_veh_s": 298.0
+          },
+          "downstream/0": {
+            "recorded": 0,
+            "exposure_veh_s": 343.0
+          },
+          "ramp/2": {
+            "recorded": 2,
+            "exposure_veh_s": 296.0,
+            "predicted_steps": 1,
+            "matched_steps": 1,
+            "predicted_runs": 1
+          },
+          "merge/0": {
+            "recorded": 0,
+            "exposure_veh_s": 56.5
+          },
+          "merge/1": {
+            "recorded": 0,
+            "exposure_veh_s": 57.0
+          }
+        },
+        {
+          "upstream/1": {
+            "recorded": 8,
+            "exposure_veh_s": 1393.5,
+            "predicted_steps": 2,
+            "matched_steps": 1,
+            "predicted_runs": 1
+          },
+          "upstream/0": {
+            "recorded": 3,
+            "exposure_veh_s": 2040.5
+          },
+          "downstream/1": {
+            "recorded": 1,
+            "exposure_veh_s": 298.0
+          },
+          "downstream/0": {
+            "recorded": 0,
+            "exposure_veh_s": 343.0
+          },
+          "ramp/2": {
+            "recorded": 2,
+            "exposure_veh_s": 296.0
+          },
+          "merge/0": {
+            "recorded": 0,
+            "exposure_veh_s": 56.5
+          },
+          "merge/1": {
+            "recorded": 0,
+            "exposure_veh_s": 57.0,
+            "predicted_steps": 1,
+            "matched_steps": 0,
+            "predicted_runs": 1
+          }
+        },
+        {
+          "upstream/1": {
+            "recorded": 8,
+            "exposure_veh_s": 1393.5,
+            "predicted_steps": 10,
+            "matched_steps": 1,
+            "predicted_runs": 2
+          },
+          "upstream/0": {
+            "recorded": 3,
+            "exposure_veh_s": 2040.5,
+            "predicted_steps": 3,
+            "matched_steps": 0,
+            "predicted_runs": 1
+          },
+          "downstream/1": {
+            "recorded": 1,
+            "exposure_veh_s": 298.0
+          },
+          "downstream/0": {
+            "recorded": 0,
+            "exposure_veh_s": 343.0
+          },
+          "ramp/2": {
+            "recorded": 2,
+            "exposure_veh_s": 296.0,
+            "predicted_steps": 19,
+            "matched_steps": 0,
+            "predicted_runs": 5
+          },
+          "merge/0": {
+            "recorded": 0,
+            "exposure_veh_s": 56.5
+          },
+          "merge/1": {
+            "recorded": 0,
+            "exposure_veh_s": 57.0
+          }
+        },
+        {
+          "upstream/1": {
+            "recorded": 8,
+            "exposure_veh_s": 1393.5,
+            "predicted_steps": 16,
+            "matched_steps": 1,
+            "predicted_runs": 8
+          },
+          "upstream/0": {
+            "recorded": 3,
+            "exposure_veh_s": 2040.5
+          },
+          "downstream/1": {
+            "recorded": 1,
+            "exposure_veh_s": 298.0
+          },
+          "downstream/0": {
+            "recorded": 0,
+            "exposure_veh_s": 343.0
+          },
+          "ramp/2": {
+            "recorded": 2,
+            "exposure_veh_s": 296.0
+          },
+          "merge/0": {
+            "recorded": 0,
+            "exposure_veh_s": 56.5
+          },
+          "merge/1": {
+            "recorded": 0,
+            "exposure_veh_s": 57.0
+          }
+        },
+        {
+          "upstream/1": {
+            "recorded": 8,
+            "exposure_veh_s": 1393.5,
+            "predicted_steps": 87,
+            "matched_steps": 1,
+            "predicted_runs": 17
+          },
+          "upstream/0": {
+            "recorded": 3,
+            "exposure_veh_s": 2040.5,
+            "predicted_steps": 2,
+            "matched_steps": 0,
+            "predicted_runs": 1
+          },
+          "downstream/1": {
+            "recorded": 1,
+            "exposure_veh_s": 298.0
+          },
+          "downstream/0": {
+            "recorded": 0,
+            "exposure_veh_s": 343.0
+          },
+          "ramp/2": {
+            "recorded": 2,
+            "exposure_veh_s": 296.0
+          },
+          "merge/0": {
+            "recorded": 0,
+            "exposure_veh_s": 56.5
+          },
+          "merge/1": {
+            "recorded": 0,
+            "exposure_veh_s": 57.0,
+            "predicted_steps": 4,
+            "matched_steps": 0,
+            "predicted_runs": 1
+          }
+        },
+        {
+          "upstream/1": {
+            "recorded": 8,
+            "exposure_veh_s": 1393.5,
+            "predicted_steps": 37,
+            "matched_steps": 1,
+            "predicted_runs": 4
+          },
+          "upstream/0": {
+            "recorded": 3,
+            "exposure_veh_s": 2040.5
+          },
+          "downstream/1": {
+            "recorded": 1,
+            "exposure_veh_s": 298.0
+          },
+          "downstream/0": {
+            "recorded": 0,
+            "exposure_veh_s": 343.0
+          },
+          "ramp/2": {
+            "recorded": 2,
+            "exposure_veh_s": 296.0
+          },
+          "merge/0": {
+            "recorded": 0,
+            "exposure_veh_s": 56.5
+          },
+          "merge/1": {
+            "recorded": 0,
+            "exposure_veh_s": 57.0,
+            "predicted_steps": 1,
+            "matched_steps": 0,
+            "predicted_runs": 1
+          }
+        }
+      ],
+      "probability_scores": [
+        {
+          "n": 8969,
+          "categorical_brier_sum": 860.0,
+          "event_brier_sum": 430.0
+        },
+        {
+          "n": 8969,
+          "categorical_brier_sum": 35.625,
+          "event_brier_sum": 17.8125
+        }
+      ],
+      "recorded_events": [
+        [
+          193,
+          1,
+          0,
+          302.5,
+          -2590.700439453125
+        ],
+        [
+          185,
+          2,
+          1,
+          303.5,
+          33.62564468383789
+        ],
+        [
+          188,
+          1,
+          0,
+          309.5,
+          -2283.0771484375
+        ],
+        [
+          129,
+          1,
+          0,
+          309.5,
+          -122.22896575927734
+        ],
+        [
+          176,
+          2,
+          1,
+          311.0,
+          59.601776123046875
+        ],
+        [
+          182,
+          0,
+          1,
+          314.0,
+          -1847.8663330078125
+        ],
+        [
+          195,
+          1,
+          0,
+          319.0,
+          -2356.880859375
+        ],
+        [
+          128,
+          1,
+          0,
+          319.5,
+          -79.96550750732422
+        ],
+        [
+          172,
+          1,
+          0,
+          324.5,
+          -1587.0855712890625
+        ],
+        [
+          193,
+          0,
+          1,
+          327.0,
+          -2036.57958984375
+        ],
+        [
+          185,
+          1,
+          0,
+          332.5,
+          296.92437744140625
+        ],
+        [
+          208,
+          1,
+          0,
+          334.5,
+          -2407.61669921875
+        ],
+        [
+          194,
+          0,
+          1,
+          342.5,
+          -1543.298828125
+        ],
+        [
+          191,
+          1,
+          0,
+          359.0,
+          -1240.725341796875
+        ]
+      ],
+      "source_default_events": [
+        [
+          155,
+          2,
+          1,
+          300.5,
+          75.33650207519531
+        ],
+        [
+          173,
+          0,
+          1,
+          300.5,
+          -2024.9695556640622
+        ],
+        [
+          173,
+          0,
+          1,
+          301.0,
+          -2009.9179199218747
+        ],
+        [
+          173,
+          0,
+          1,
+          301.5,
+          -1994.7603271484372
+        ],
+        [
+          173,
+          0,
+          1,
+          302.0,
+          -1979.5009277343747
+        ],
+        [
+          173,
+          0,
+          1,
+          302.5,
+          -1964.1438720703122
+        ],
+        [
+          173,
+          0,
+          1,
+          303.0,
+          -1948.6935546874997
+        ],
+        [
+          185,
+          2,
+          1,
+          303.5,
+          33.62564468383789
+        ],
+        [
+          173,
+          0,
+          1,
+          303.5,
+          -1933.1541259765622
+        ],
+        [
+          173,
+          0,
+          1,
+          304.0,
+          -1917.5296142578122
+        ],
+        [
+          173,
+          0,
+          1,
+          304.5,
+          -1901.8241699218747
+        ],
+        [
+          173,
+          0,
+          1,
+          305.0,
+          -1886.0418212890622
+        ],
+        [
+          173,
+          0,
+          1,
+          305.5,
+          -1870.1864746093747
+        ],
+        [
+          173,
+          0,
+          1,
+          306.0,
+          -1854.2621582031247
+        ],
+        [
+          173,
+          0,
+          1,
+          306.5,
+          -1838.2727783203122
+        ],
+        [
+          173,
+          0,
+          1,
+          307.0,
+          -1822.2219970703122
+        ],
+        [
+          173,
+          0,
+          1,
+          307.5,
+          -1806.1134765624997
+        ],
+        [
+          160,
+          1,
+          0,
+          308.0,
+          -1222.5032226562503
+        ],
+        [
+          173,
+          0,
+          1,
+          308.0,
+          -1789.9510009765622
+        ],
+        [
+          160,
+          1,
+          0,
+          308.5,
+          -1208.1569091796878
+        ],
+        [
+          129,
+          1,
+          0,
+          308.5,
+          -147.3465911865237
+        ],
+        [
+          173,
+          0,
+          1,
+          308.5,
+          -1773.7378662109372
+        ],
+        [
+          160,
+          1,
+          0,
+          309.0,
+          -1193.8154785156253
+        ],
+        [
+          129,
+          1,
+          0,
+          309.0,
+          -134.6568939208987
+        ],
+        [
+          173,
+          0,
+          1,
+          309.0,
+          -1757.4777343749997
+        ],
+        [
+          160,
+          1,
+          0,
+          309.5,
+          -1179.4785644531253
+        ],
+        [
+          129,
+          1,
+          0,
+          309.5,
+          -122.22896575927734
+        ],
+        [
+          173,
+          0,
+          1,
+          309.5,
+          -1741.1737792968747
+        ],
+        [
+          160,
+          1,
+          0,
+          310.0,
+          -1165.1460449218753
+        ],
+        [
+          173,
+          0,
+          1,
+          310.0,
+          -1724.8292968749997
+        ],
+        [
+          160,
+          1,
+          0,
+          310.5,
+          -1150.8176757812503
+        ],
+        [
+          173,
+          0,
+          1,
+          310.5,
+          -1708.4474609374997
+        ],
+        [
+          160,
+          1,
+          0,
+          311.0,
+          -1136.4930908203128
+        ],
+        [
+          173,
+          0,
+          1,
+          311.0,
+          -1692.0313232421872
+        ],
+        [
+          160,
+          1,
+          0,
+          311.5,
+          -1122.1720458984378
+        ],
+        [
+          173,
+          0,
+          1,
+          311.5,
+          -1675.5839355468747
+        ],
+        [
+          160,
+          1,
+          0,
+          312.0,
+          -1107.8546630859378
+        ],
+        [
+          173,
+          0,
+          1,
+          312.0,
+          -1659.1079833984372
+        ],
+        [
+          160,
+          1,
+          0,
+          312.5,
+          -1093.5405761718753
+        ],
+        [
+          173,
+          0,
+          1,
+          312.5,
+          -1642.6065185546872
+        ],
+        [
+          160,
+          1,
+          0,
+          313.0,
+          -1079.2296630859378
+        ],
+        [
+          173,
+          0,
+          1,
+          313.0,
+          -1626.0819824218747
+        ],
+        [
+          160,
+          1,
+          0,
+          313.5,
+          -1064.9219238281253
+        ],
+        [
+          173,
+          0,
+          1,
+          313.5,
+          -1609.5371826171872
+        ],
+        [
+          160,
+          1,
+          0,
+          314.0,
+          -1050.6172363281253
+        ],
+        [
+          173,
+          0,
+          1,
+          314.0,
+          -1592.9744384765622
+        ],
+        [
+          160,
+          1,
+          0,
+          314.5,
+          -1036.3154785156253
+        ],
+        [
+          173,
+          0,
+          1,
+          314.5,
+          -1576.3963134765622
+        ],
+        [
+          138,
+          1,
+          0,
+          315.0,
+          -334.210437011719
+        ],
+        [
+          160,
+          1,
+          0,
+          315.0,
+          -1022.0167114257815
+        ],
+        [
+          173,
+          0,
+          1,
+          315.0,
+          -1559.8051269531247
+        ],
+        [
+          160,
+          1,
+          0,
+          315.5,
+          -1007.7207519531253
+        ],
+        [
+          178,
+          0,
+          1,
+          315.5,
+          -1617.6194580078122
+        ],
+        [
+          173,
+          0,
+          1,
+          315.5,
+          -1543.2029541015622
+        ],
+        [
+          160,
+          1,
+          0,
+          316.0,
+          -993.427722167969
+        ],
+        [
+          178,
+          0,
+          1,
+          316.0,
+          -1601.0349853515622
+        ],
+        [
+          173,
+          0,
+          1,
+          316.0,
+          -1526.5921142578122
+        ],
+        [
+          160,
+          1,
+          0,
+          316.5,
+          -979.1375610351565
+        ],
+        [
+          178,
+          0,
+          1,
+          316.5,
+          -1584.4381835937497
+        ],
+        [
+          128,
+          1,
+          0,
+          316.5,
+          -143.54970092773465
+        ],
+        [
+          155,
+          2,
+          1,
+          316.5,
+          75.44000244140625
+        ],
+        [
+          173,
+          0,
+          1,
+          316.5,
+          -1509.9748046874997
+        ],
+        [
+          160,
+          1,
+          0,
+          317.0,
+          -964.850329589844
+        ],
+        [
+          178,
+          0,
+          1,
+          317.0,
+          -1567.8305175781247
+        ],
+        [
+          128,
+          1,
+          0,
+          317.0,
+          -132.56129760742215
+        ],
+        [
+          155,
+          2,
+          1,
+          317.0,
+          75.44000244140625
+        ],
+        [
+          173,
+          0,
+          1,
+          317.0,
+          -1493.3527343749997
+        ],
+        [
+          160,
+          1,
+          0,
+          317.5,
+          -950.5776855468753
+        ],
+        [
+          178,
+          0,
+          1,
+          317.5,
+          -1551.2135742187497
+        ],
+        [
+          128,
+          1,
+          0,
+          317.5,
+          -121.70992584228543
+        ],
+        [
+          155,
+          2,
+          1,
+          317.5,
+          75.44000244140625
+        ],
+        [
+          173,
+          0,
+          1,
+          317.5,
+          -1476.7281005859372
+        ],
+        [
+          160,
+          1,
+          0,
+          318.0,
+          -936.3301269531253
+        ],
+        [
+          178,
+          0,
+          1,
+          318.0,
+          -1534.5888183593747
+        ],
+        [
+          128,
+          1,
+          0,
+          318.0,
+          -111.00793762207059
+        ],
+        [
+          155,
+          2,
+          1,
+          318.0,
+          75.44000244140625
+        ],
+        [
+          173,
+          0,
+          1,
+          318.0,
+          -1460.1026123046872
+        ],
+        [
+          160,
+          1,
+          0,
+          318.5,
+          -922.1092407226565
+        ],
+        [
+          178,
+          0,
+          1,
+          318.5,
+          -1517.9575927734372
+        ],
+        [
+          128,
+          1,
+          0,
+          318.5,
+          -100.47085113525418
+        ],
+        [
+          155,
+          2,
+          1,
+          318.5,
+          75.44000244140625
+        ],
+        [
+          173,
+          0,
+          1,
+          318.5,
+          -1443.4781005859372
+        ],
+        [
+          160,
+          1,
+          0,
+          319.0,
+          -907.9163696289065
+        ],
+        [
+          178,
+          0,
+          1,
+          319.0,
+          -1501.3213623046872
+        ],
+        [
+          128,
+          1,
+          0,
+          319.0,
+          -90.11680145263699
+        ],
+        [
+          155,
+          2,
+          1,
+          319.0,
+          75.44000244140625
+        ],
+        [
+          173,
+          0,
+          1,
+          319.0,
+          -1426.8563964843747
+        ],
+        [
+          160,
+          1,
+          0,
+          319.5,
+          -893.7615844726565
+        ],
+        [
+          178,
+          0,
+          1,
+          319.5,
+          -1484.6814697265622
+        ],
+        [
+          128,
+          1,
+          0,
+          319.5,
+          -79.96550750732422
+        ],
+        [
+          155,
+          2,
+          1,
+          319.5,
+          75.44000244140625
+        ],
+        [
+          173,
+          0,
+          1,
+          319.5,
+          -1410.2389648437497
+        ],
+        [
+          160,
+          1,
+          0,
+          320.0,
+          -879.6538574218753
+        ],
+        [
+          178,
+          0,
+          1,
+          320.0,
+          -1468.0391357421872
+        ],
+        [
+          155,
+          2,
+          1,
+          320.0,
+          75.44000244140625
+        ],
+        [
+          173,
+          0,
+          1,
+          320.0,
+          -1393.6275146484372
+        ],
+        [
+          160,
+          1,
+          0,
+          320.5,
+          -865.5762817382815
+        ],
+        [
+          178,
+          0,
+          1,
+          320.5,
+          -1451.3958251953122
+        ],
+        [
+          155,
+          2,
+          1,
+          320.5,
+          75.44000244140625
+        ],
+        [
+          173,
+          0,
+          1,
+          320.5,
+          -1377.0235107421872
+        ],
+        [
+          160,
+          1,
+          0,
+          321.0,
+          -851.5162841796878
+        ],
+        [
+          178,
+          0,
+          1,
+          321.0,
+          -1434.7526367187497
+        ],
+        [
+          173,
+          0,
+          1,
+          321.0,
+          -1360.4284179687497
+        ],
+        [
+          160,
+          1,
+          0,
+          321.5,
+          -837.4718505859378
+        ],
+        [
+          178,
+          0,
+          1,
+          321.5,
+          -1418.1107910156247
+        ],
+        [
+          173,
+          0,
+          1,
+          321.5,
+          -1343.8437011718747
+        ],
+        [
+          160,
+          1,
+          0,
+          322.0,
+          -823.441394042969
+        ],
+        [
+          178,
+          0,
+          1,
+          322.0,
+          -1401.4715087890622
+        ],
+        [
+          173,
+          0,
+          1,
+          322.0,
+          -1327.2707031249997
+        ],
+        [
+          160,
+          1,
+          0,
+          322.5,
+          -809.4481079101565
+        ],
+        [
+          178,
+          0,
+          1,
+          322.5,
+          -1384.8357666015622
+        ],
+        [
+          173,
+          0,
+          1,
+          322.5,
+          -1310.7106445312497
+        ],
+        [
+          160,
+          1,
+          0,
+          323.0,
+          -795.513171386719
+        ],
+        [
+          178,
+          0,
+          1,
+          323.0,
+          -1368.2047851562497
+        ],
+        [
+          173,
+          0,
+          1,
+          323.0,
+          -1294.1647460937497
+        ],
+        [
+          160,
+          1,
+          0,
+          323.5,
+          -781.6285278320315
+        ],
+        [
+          178,
+          0,
+          1,
+          323.5,
+          -1351.5796630859372
+        ],
+        [
+          153,
+          1,
+          0,
+          323.5,
+          -670.3274414062503
+        ],
+        [
+          173,
+          0,
+          1,
+          323.5,
+          -1277.6343505859372
+        ],
+        [
+          160,
+          1,
+          0,
+          324.0,
+          -767.7874633789065
+        ],
+        [
+          178,
+          0,
+          1,
+          324.0,
+          -1334.9613769531247
+        ],
+        [
+          153,
+          1,
+          0,
+          324.0,
+          -656.094226074219
+        ],
+        [
+          173,
+          0,
+          1,
+          324.0,
+          -1261.1205566406247
+        ],
+        [
+          160,
+          1,
+          0,
+          324.5,
+          -754.0203735351565
+        ],
+        [
+          178,
+          0,
+          1,
+          324.5,
+          -1318.3510253906247
+        ],
+        [
+          153,
+          1,
+          0,
+          324.5,
+          -641.874743652344
+        ],
+        [
+          173,
+          0,
+          1,
+          324.5,
+          -1244.6243408203122
+        ],
+        [
+          160,
+          1,
+          0,
+          325.0,
+          -740.3546630859378
+        ],
+        [
+          178,
+          0,
+          1,
+          325.0,
+          -1301.7493408203122
+        ],
+        [
+          153,
+          1,
+          0,
+          325.0,
+          -627.6709472656253
+        ],
+        [
+          173,
+          0,
+          1,
+          325.0,
+          -1228.1468017578122
+        ],
+        [
+          160,
+          1,
+          0,
+          325.5,
+          -726.747790527344
+        ],
+        [
+          178,
+          0,
+          1,
+          325.5,
+          -1285.1576660156247
+        ],
+        [
+          153,
+          1,
+          0,
+          325.5,
+          -613.4852783203128
+        ],
+        [
+          173,
+          0,
+          1,
+          325.5,
+          -1211.6890380859372
+        ],
+        [
+          160,
+          1,
+          0,
+          326.0,
+          -713.1697265625003
+        ],
+        [
+          178,
+          0,
+          1,
+          326.0,
+          -1268.5766113281247
+        ],
+        [
+          153,
+          1,
+          0,
+          326.0,
+          -599.3202392578128
+        ],
+        [
+          173,
+          0,
+          1,
+          326.0,
+          -1195.2519042968747
+        ],
+        [
+          160,
+          1,
+          0,
+          326.5,
+          -699.6335937500003
+        ],
+        [
+          178,
+          0,
+          1,
+          326.5,
+          -1252.0073974609372
+        ],
+        [
+          153,
+          1,
+          0,
+          326.5,
+          -585.1783325195315
+        ],
+        [
+          173,
+          0,
+          1,
+          326.5,
+          -1178.8363769531247
+        ],
+        [
+          160,
+          1,
+          0,
+          327.0,
+          -686.1506835937503
+        ],
+        [
+          178,
+          0,
+          1,
+          327.0,
+          -1235.4506347656247
+        ],
+        [
+          153,
+          1,
+          0,
+          327.0,
+          -571.061999511719
+        ],
+        [
+          173,
+          0,
+          1,
+          327.0,
+          -1162.4433105468747
+        ],
+        [
+          160,
+          1,
+          0,
+          327.5,
+          -672.691149902344
+        ],
+        [
+          178,
+          0,
+          1,
+          327.5,
+          -1218.9072998046872
+        ],
+        [
+          153,
+          1,
+          0,
+          327.5,
+          -556.973376464844
+        ],
+        [
+          173,
+          0,
+          1,
+          327.5,
+          -1146.0736816406247
+        ],
+        [
+          178,
+          0,
+          1,
+          328.0,
+          -1202.3783691406247
+        ],
+        [
+          153,
+          1,
+          0,
+          328.0,
+          -542.9141113281253
+        ],
+        [
+          173,
+          0,
+          1,
+          328.0,
+          -1129.7281005859372
+        ],
+        [
+          160,
+          1,
+          0,
+          328.5,
+          -645.6194335937503
+        ],
+        [
+          178,
+          0,
+          1,
+          328.5,
+          -1185.8645751953122
+        ],
+        [
+          153,
+          1,
+          0,
+          328.5,
+          -528.8856079101565
+        ],
+        [
+          173,
+          0,
+          1,
+          328.5,
+          -1113.4075439453122
+        ],
+        [
+          178,
+          0,
+          1,
+          329.0,
+          -1169.3667724609372
+        ],
+        [
+          173,
+          0,
+          1,
+          329.0,
+          -1097.1126220703122
+        ],
+        [
+          160,
+          1,
+          0,
+          329.5,
+          -618.4813720703128
+        ],
+        [
+          178,
+          0,
+          1,
+          329.5,
+          -1152.8856933593747
+        ],
+        [
+          158,
+          0,
+          1,
+          329.5,
+          -574.727062988281
+        ],
+        [
+          173,
+          0,
+          1,
+          329.5,
+          -1080.8441894531247
+        ],
+        [
+          178,
+          0,
+          1,
+          330.0,
+          -1136.4221923828122
+        ],
+        [
+          158,
+          0,
+          1,
+          330.0,
+          -561.1365478515622
+        ],
+        [
+          160,
+          1,
+          0,
+          330.5,
+          -591.2239868164065
+        ],
+        [
+          178,
+          0,
+          1,
+          330.5,
+          -1119.9771240234372
+        ],
+        [
+          158,
+          0,
+          1,
+          330.5,
+          -547.5098388671872
+        ],
+        [
+          178,
+          0,
+          1,
+          331.0,
+          -1103.5510986328122
+        ],
+        [
+          158,
+          0,
+          1,
+          331.0,
+          -533.8473632812497
+        ],
+        [
+          160,
+          1,
+          0,
+          331.5,
+          -563.8301269531253
+        ],
+        [
+          178,
+          0,
+          1,
+          331.5,
+          -1087.1449707031247
+        ],
+        [
+          158,
+          0,
+          1,
+          331.5,
+          -520.1504638671872
+        ],
+        [
+          178,
+          0,
+          1,
+          332.0,
+          -1070.7595947265622
+        ],
+        [
+          158,
+          0,
+          1,
+          332.0,
+          -506.4210327148435
+        ],
+        [
+          178,
+          0,
+          1,
+          332.5,
+          -1054.3954589843747
+        ],
+        [
+          158,
+          0,
+          1,
+          332.5,
+          -492.661389160156
+        ],
+        [
+          178,
+          0,
+          1,
+          333.0,
+          -1038.0534179687497
+        ],
+        [
+          158,
+          0,
+          1,
+          333.0,
+          -478.87412719726535
+        ],
+        [
+          178,
+          0,
+          1,
+          333.5,
+          -1021.7342041015622
+        ],
+        [
+          158,
+          0,
+          1,
+          333.5,
+          -465.0619323730466
+        ],
+        [
+          178,
+          0,
+          1,
+          334.0,
+          -1005.4385498046872
+        ],
+        [
+          158,
+          0,
+          1,
+          334.0,
+          -451.22752075195285
+        ],
+        [
+          178,
+          0,
+          1,
+          334.5,
+          -989.1671264648435
+        ],
+        [
+          158,
+          0,
+          1,
+          334.5,
+          -437.3735778808591
+        ],
+        [
+          178,
+          0,
+          1,
+          335.0,
+          -972.920666503906
+        ],
+        [
+          158,
+          0,
+          1,
+          335.0,
+          -423.50266723632785
+        ],
+        [
+          178,
+          0,
+          1,
+          335.5,
+          -956.6998413085935
+        ],
+        [
+          158,
+          0,
+          1,
+          335.5,
+          -409.617199707031
+        ],
+        [
+          178,
+          0,
+          1,
+          336.0,
+          -940.5053222656247
+        ],
+        [
+          158,
+          0,
+          1,
+          336.0,
+          -395.7193725585935
+        ],
+        [
+          178,
+          0,
+          1,
+          336.5,
+          -924.3377807617185
+        ],
+        [
+          158,
+          0,
+          1,
+          336.5,
+          -381.8111999511716
+        ],
+        [
+          178,
+          0,
+          1,
+          337.0,
+          -908.1979492187497
+        ],
+        [
+          158,
+          0,
+          1,
+          337.0,
+          -367.894543457031
+        ],
+        [
+          178,
+          0,
+          1,
+          337.5,
+          -892.0863769531247
+        ],
+        [
+          158,
+          0,
+          1,
+          337.5,
+          -353.970959472656
+        ],
+        [
+          180,
+          0,
+          1,
+          338.0,
+          -955.7086303710935
+        ],
+        [
+          178,
+          0,
+          1,
+          338.0,
+          -876.0037963867185
+        ],
+        [
+          158,
+          0,
+          1,
+          338.0,
+          -340.0419433593747
+        ],
+        [
+          180,
+          0,
+          1,
+          338.5,
+          -939.5705078124997
+        ],
+        [
+          178,
+          0,
+          1,
+          338.5,
+          -859.9506347656247
+        ],
+        [
+          158,
+          0,
+          1,
+          338.5,
+          -326.1086853027341
+        ],
+        [
+          180,
+          0,
+          1,
+          339.0,
+          -923.4467285156247
+        ],
+        [
+          178,
+          0,
+          1,
+          339.0,
+          -843.9275634765622
+        ],
+        [
+          158,
+          0,
+          1,
+          339.0,
+          -312.2052734374997
+        ],
+        [
+          180,
+          0,
+          1,
+          339.5,
+          -907.3380859374997
+        ],
+        [
+          178,
+          0,
+          1,
+          339.5,
+          -827.935070800781
+        ],
+        [
+          158,
+          0,
+          1,
+          339.5,
+          -298.3638427734372
+        ],
+        [
+          180,
+          0,
+          1,
+          340.0,
+          -891.2450683593747
+        ],
+        [
+          178,
+          0,
+          1,
+          340.0,
+          -811.9737060546872
+        ],
+        [
+          158,
+          0,
+          1,
+          340.0,
+          -284.5629394531247
+        ],
+        [
+          180,
+          0,
+          1,
+          340.5,
+          -875.1683471679685
+        ],
+        [
+          178,
+          0,
+          1,
+          340.5,
+          -796.0438354492185
+        ],
+        [
+          158,
+          0,
+          1,
+          340.5,
+          -270.78696899414035
+        ],
+        [
+          180,
+          0,
+          1,
+          341.0,
+          -859.1085937499997
+        ],
+        [
+          178,
+          0,
+          1,
+          341.0,
+          -780.1458862304685
+        ],
+        [
+          158,
+          0,
+          1,
+          341.0,
+          -257.0245483398435
+        ],
+        [
+          180,
+          0,
+          1,
+          341.5,
+          -843.0663574218747
+        ],
+        [
+          178,
+          0,
+          1,
+          341.5,
+          -764.2802246093747
+        ],
+        [
+          158,
+          0,
+          1,
+          341.5,
+          -243.26733093261691
+        ],
+        [
+          180,
+          0,
+          1,
+          342.0,
+          -827.042248535156
+        ],
+        [
+          178,
+          0,
+          1,
+          342.0,
+          -748.4472167968747
+        ],
+        [
+          158,
+          0,
+          1,
+          342.0,
+          -229.54499511718723
+        ],
+        [
+          180,
+          0,
+          1,
+          342.5,
+          -811.036877441406
+        ],
+        [
+          178,
+          0,
+          1,
+          342.5,
+          -732.646984863281
+        ],
+        [
+          158,
+          0,
+          1,
+          342.5,
+          -215.8847320556638
+        ],
+        [
+          180,
+          0,
+          1,
+          343.0,
+          -795.0508544921872
+        ],
+        [
+          178,
+          0,
+          1,
+          343.0,
+          -716.8797729492185
+        ],
+        [
+          158,
+          0,
+          1,
+          343.0,
+          -202.27772216796848
+        ],
+        [
+          180,
+          0,
+          1,
+          343.5,
+          -779.0846069335935
+        ],
+        [
+          178,
+          0,
+          1,
+          343.5,
+          -701.1458251953122
+        ],
+        [
+          158,
+          0,
+          1,
+          343.5,
+          -188.71690063476535
+        ],
+        [
+          180,
+          0,
+          1,
+          344.0,
+          -763.1388061523435
+        ],
+        [
+          178,
+          0,
+          1,
+          344.0,
+          -685.445080566406
+        ],
+        [
+          158,
+          0,
+          1,
+          344.0,
+          -175.17925720214816
+        ],
+        [
+          180,
+          0,
+          1,
+          344.5,
+          -747.213879394531
+        ],
+        [
+          178,
+          0,
+          1,
+          344.5,
+          -669.7776611328122
+        ],
+        [
+          158,
+          0,
+          1,
+          344.5,
+          -161.6483581542966
+        ],
+        [
+          160,
+          1,
+          0,
+          345.0,
+          -190.93744201660184
+        ],
+        [
+          180,
+          0,
+          1,
+          345.0,
+          -731.310314941406
+        ],
+        [
+          178,
+          0,
+          1,
+          345.0,
+          -654.1436279296872
+        ],
+        [
+          158,
+          0,
+          1,
+          345.0,
+          -148.1266296386716
+        ],
+        [
+          160,
+          1,
+          0,
+          345.5,
+          -177.41571350097684
+        ],
+        [
+          180,
+          0,
+          1,
+          345.5,
+          -715.4286010742185
+        ],
+        [
+          178,
+          0,
+          1,
+          345.5,
+          -638.5427978515622
+        ],
+        [
+          158,
+          0,
+          1,
+          345.5,
+          -134.61607055664035
+        ],
+        [
+          175,
+          0,
+          1,
+          346.0,
+          -915.057141113281
+        ],
+        [
+          180,
+          0,
+          1,
+          346.0,
+          -699.5692260742185
+        ],
+        [
+          178,
+          0,
+          1,
+          346.0,
+          -622.975109863281
+        ],
+        [
+          158,
+          0,
+          1,
+          346.0,
+          -121.10335235595676
+        ],
+        [
+          175,
+          0,
+          1,
+          346.5,
+          -899.5501831054685
+        ],
+        [
+          180,
+          0,
+          1,
+          346.5,
+          -683.7324951171872
+        ],
+        [
+          178,
+          0,
+          1,
+          346.5,
+          -607.440441894531
+        ],
+        [
+          158,
+          0,
+          1,
+          346.5,
+          -107.57917480468723
+        ],
+        [
+          175,
+          0,
+          1,
+          347.0,
+          -884.0436523437497
+        ],
+        [
+          180,
+          0,
+          1,
+          347.0,
+          -667.9188354492185
+        ],
+        [
+          178,
+          0,
+          1,
+          347.0,
+          -591.9386108398435
+        ],
+        [
+          158,
+          0,
+          1,
+          347.0,
+          -94.04961090087863
+        ],
+        [
+          175,
+          0,
+          1,
+          347.5,
+          -868.5375488281247
+        ],
+        [
+          180,
+          0,
+          1,
+          347.5,
+          -652.1286132812497
+        ],
+        [
+          178,
+          0,
+          1,
+          347.5,
+          -576.4693725585935
+        ],
+        [
+          158,
+          0,
+          1,
+          347.5,
+          -80.51990966796848
+        ],
+        [
+          175,
+          0,
+          1,
+          348.0,
+          -853.0320556640622
+        ],
+        [
+          180,
+          0,
+          1,
+          348.0,
+          -636.3621948242185
+        ],
+        [
+          178,
+          0,
+          1,
+          348.0,
+          -561.0325439453122
+        ],
+        [
+          158,
+          0,
+          1,
+          348.0,
+          -66.98074798583957
+        ],
+        [
+          175,
+          0,
+          1,
+          348.5,
+          -837.5272949218747
+        ],
+        [
+          180,
+          0,
+          1,
+          348.5,
+          -620.6198242187497
+        ],
+        [
+          178,
+          0,
+          1,
+          348.5,
+          -545.6278808593747
+        ],
+        [
+          183,
+          0,
+          1,
+          348.5,
+          -976.4589355468747
+        ],
+        [
+          158,
+          0,
+          1,
+          348.5,
+          -53.4258239746091
+        ],
+        [
+          175,
+          0,
+          1,
+          349.0,
+          -822.0233886718747
+        ],
+        [
+          180,
+          0,
+          1,
+          349.0,
+          -604.9017456054685
+        ],
+        [
+          178,
+          0,
+          1,
+          349.0,
+          -530.2550170898435
+        ],
+        [
+          183,
+          0,
+          1,
+          349.0,
+          -962.0485351562497
+        ],
+        [
+          158,
+          0,
+          1,
+          349.0,
+          -39.85104827880832
+        ],
+        [
+          160,
+          1,
+          0,
+          349.5,
+          -68.62824554443387
+        ],
+        [
+          175,
+          0,
+          1,
+          349.5,
+          -806.5204589843747
+        ],
+        [
+          180,
+          0,
+          1,
+          349.5,
+          -589.2083251953122
+        ],
+        [
+          178,
+          0,
+          1,
+          349.5,
+          -514.9137084960935
+        ],
+        [
+          183,
+          0,
+          1,
+          349.5,
+          -947.6348999023435
+        ],
+        [
+          158,
+          0,
+          1,
+          349.5,
+          -26.254067230224337
+        ],
+        [
+          160,
+          1,
+          0,
+          350.0,
+          -55.03126449584988
+        ],
+        [
+          175,
+          0,
+          1,
+          350.0,
+          -791.018566894531
+        ],
+        [
+          180,
+          0,
+          1,
+          350.0,
+          -573.5396850585935
+        ],
+        [
+          178,
+          0,
+          1,
+          350.0,
+          -499.6037109374997
+        ],
+        [
+          183,
+          0,
+          1,
+          350.0,
+          -933.2182128906247
+        ],
+        [
+          158,
+          0,
+          1,
+          350.0,
+          -12.633823204040254
+        ],
+        [
+          160,
+          1,
+          0,
+          350.5,
+          -41.366152954101835
+        ],
+        [
+          175,
+          0,
+          1,
+          350.5,
+          -775.5178955078122
+        ],
+        [
+          180,
+          0,
+          1,
+          350.5,
+          -557.8960693359372
+        ],
+        [
+          178,
+          0,
+          1,
+          350.5,
+          -484.3246582031247
+        ],
+        [
+          183,
+          0,
+          1,
+          350.5,
+          -918.7985351562497
+        ],
+        [
+          158,
+          0,
+          1,
+          350.5,
+          1.0097374737265454
+        ],
+        [
+          160,
+          1,
+          0,
+          351.0,
+          -27.722592544555937
+        ],
+        [
+          175,
+          0,
+          1,
+          351.0,
+          -760.0185058593747
+        ],
+        [
+          180,
+          0,
+          1,
+          351.0,
+          -542.2776611328122
+        ],
+        [
+          178,
+          0,
+          1,
+          351.0,
+          -469.07627563476535
+        ],
+        [
+          183,
+          0,
+          1,
+          351.0,
+          -904.3760498046872
+        ],
+        [
+          158,
+          0,
+          1,
+          351.0,
+          10.225908279418945
+        ],
+        [
+          160,
+          1,
+          0,
+          351.5,
+          -14.015351486206328
+        ],
+        [
+          175,
+          0,
+          1,
+          351.5,
+          -744.5204589843747
+        ],
+        [
+          180,
+          0,
+          1,
+          351.5,
+          -526.6846435546872
+        ],
+        [
+          178,
+          0,
+          1,
+          351.5,
+          -453.85825805664035
+        ],
+        [
+          183,
+          0,
+          1,
+          351.5,
+          -889.9508178710935
+        ],
+        [
+          202,
+          0,
+          1,
+          351.5,
+          -1663.9507568359372
+        ],
+        [
+          158,
+          0,
+          1,
+          351.5,
+          23.913414001464844
+        ],
+        [
+          175,
+          0,
+          1,
+          352.0,
+          -729.0238769531247
+        ],
+        [
+          180,
+          0,
+          1,
+          352.0,
+          -511.117199707031
+        ],
+        [
+          178,
+          0,
+          1,
+          352.0,
+          -438.6703613281247
+        ],
+        [
+          183,
+          0,
+          1,
+          352.0,
+          -875.522961425781
+        ],
+        [
+          202,
+          0,
+          1,
+          352.0,
+          -1649.1995361328122
+        ],
+        [
+          158,
+          0,
+          1,
+          352.0,
+          37.620567321777344
+        ],
+        [
+          175,
+          0,
+          1,
+          352.5,
+          -713.528820800781
+        ],
+        [
+          180,
+          0,
+          1,
+          352.5,
+          -495.575451660156
+        ],
+        [
+          178,
+          0,
+          1,
+          352.5,
+          -423.5122497558591
+        ],
+        [
+          183,
+          0,
+          1,
+          352.5,
+          -861.092541503906
+        ],
+        [
+          187,
+          0,
+          1,
+          352.5,
+          -983.1295898437497
+        ],
+        [
+          202,
+          0,
+          1,
+          352.5,
+          -1634.4440429687497
+        ],
+        [
+          158,
+          0,
+          1,
+          352.5,
+          51.34538269042969
+        ],
+        [
+          160,
+          1,
+          0,
+          353.0,
+          25.592683792114258
+        ],
+        [
+          175,
+          0,
+          1,
+          353.0,
+          -698.0354736328122
+        ],
+        [
+          180,
+          0,
+          1,
+          353.0,
+          -480.05955200195285
+        ],
+        [
+          178,
+          0,
+          1,
+          353.0,
+          -408.3837097167966
+        ],
+        [
+          183,
+          0,
+          1,
+          353.0,
+          -846.659680175781
+        ],
+        [
+          187,
+          0,
+          1,
+          353.0,
+          -968.8589599609372
+        ],
+        [
+          202,
+          0,
+          1,
+          353.0,
+          -1619.6842773437497
+        ],
+        [
+          158,
+          0,
+          1,
+          353.0,
+          65.085693359375
+        ],
+        [
+          160,
+          1,
+          0,
+          353.5,
+          39.369266510009766
+        ],
+        [
+          175,
+          0,
+          1,
+          353.5,
+          -682.5438964843747
+        ],
+        [
+          180,
+          0,
+          1,
+          353.5,
+          -464.5696228027341
+        ],
+        [
+          178,
+          0,
+          1,
+          353.5,
+          -393.28440551757785
+        ],
+        [
+          183,
+          0,
+          1,
+          353.5,
+          -832.2244995117185
+        ],
+        [
+          187,
+          0,
+          1,
+          353.5,
+          -954.5841796874997
+        ],
+        [
+          202,
+          0,
+          1,
+          353.5,
+          -1604.9203613281247
+        ],
+        [
+          160,
+          1,
+          0,
+          354.0,
+          53.122779846191406
+        ],
+        [
+          175,
+          0,
+          1,
+          354.0,
+          -667.0540893554685
+        ],
+        [
+          180,
+          0,
+          1,
+          354.0,
+          -449.1057556152341
+        ],
+        [
+          178,
+          0,
+          1,
+          354.0,
+          -378.214123535156
+        ],
+        [
+          183,
+          0,
+          1,
+          354.0,
+          -817.7870605468747
+        ],
+        [
+          187,
+          0,
+          1,
+          354.0,
+          -940.3053100585935
+        ],
+        [
+          202,
+          0,
+          1,
+          354.0,
+          -1590.1525390624997
+        ],
+        [
+          160,
+          1,
+          0,
+          354.5,
+          66.92070007324219
+        ],
+        [
+          175,
+          0,
+          1,
+          354.5,
+          -651.5662353515622
+        ],
+        [
+          180,
+          0,
+          1,
+          354.5,
+          -433.6681335449216
+        ],
+        [
+          178,
+          0,
+          1,
+          354.5,
+          -363.17258911132785
+        ],
+        [
+          183,
+          0,
+          1,
+          354.5,
+          -803.3473632812497
+        ],
+        [
+          187,
+          0,
+          1,
+          354.5,
+          -926.022473144531
+        ],
+        [
+          202,
+          0,
+          1,
+          354.5,
+          -1575.3809326171872
+        ],
+        [
+          175,
+          0,
+          1,
+          355.0,
+          -636.0804565429685
+        ],
+        [
+          180,
+          0,
+          1,
+          355.0,
+          -418.2567871093747
+        ],
+        [
+          178,
+          0,
+          1,
+          355.0,
+          -348.15952758789035
+        ],
+        [
+          183,
+          0,
+          1,
+          355.0,
+          -788.9056518554685
+        ],
+        [
+          187,
+          0,
+          1,
+          355.0,
+          -911.7357299804685
+        ],
+        [
+          202,
+          0,
+          1,
+          355.0,
+          -1560.6056640624997
+        ],
+        [
+          175,
+          0,
+          1,
+          355.5,
+          -620.596691894531
+        ],
+        [
+          180,
+          0,
+          1,
+          355.5,
+          -402.8718688964841
+        ],
+        [
+          178,
+          0,
+          1,
+          355.5,
+          -333.1746948242185
+        ],
+        [
+          183,
+          0,
+          1,
+          355.5,
+          -774.4618652343747
+        ],
+        [
+          187,
+          0,
+          1,
+          355.5,
+          -897.4452026367185
+        ],
+        [
+          202,
+          0,
+          1,
+          355.5,
+          -1545.8267333984372
+        ],
+        [
+          175,
+          0,
+          1,
+          356.0,
+          -605.1151245117185
+        ],
+        [
+          180,
+          0,
+          1,
+          356.0,
+          -387.513439941406
+        ],
+        [
+          178,
+          0,
+          1,
+          356.0,
+          -318.217785644531
+        ],
+        [
+          183,
+          0,
+          1,
+          356.0,
+          -760.016125488281
+        ],
+        [
+          187,
+          0,
+          1,
+          356.0,
+          -883.1509521484372
+        ],
+        [
+          202,
+          0,
+          1,
+          356.0,
+          -1531.0445068359372
+        ],
+        [
+          175,
+          0,
+          1,
+          356.5,
+          -589.6358764648435
+        ],
+        [
+          180,
+          0,
+          1,
+          356.5,
+          -372.1815612792966
+        ],
+        [
+          178,
+          0,
+          1,
+          356.5,
+          -303.28855590820285
+        ],
+        [
+          183,
+          0,
+          1,
+          356.5,
+          -745.5684936523435
+        ],
+        [
+          187,
+          0,
+          1,
+          356.5,
+          -868.853039550781
+        ],
+        [
+          202,
+          0,
+          1,
+          356.5,
+          -1516.2589843749997
+        ],
+        [
+          189,
+          0,
+          1,
+          356.5,
+          -929.4700439453122
+        ],
+        [
+          175,
+          0,
+          1,
+          357.0,
+          -574.158947753906
+        ],
+        [
+          180,
+          0,
+          1,
+          357.0,
+          -356.8763549804685
+        ],
+        [
+          178,
+          0,
+          1,
+          357.0,
+          -288.3866699218747
+        ],
+        [
+          183,
+          0,
+          1,
+          357.0,
+          -731.1190307617185
+        ],
+        [
+          187,
+          0,
+          1,
+          357.0,
+          -854.551525878906
+        ],
+        [
+          202,
+          0,
+          1,
+          357.0,
+          -1501.4704101562497
+        ],
+        [
+          189,
+          0,
+          1,
+          357.0,
+          -915.287365722656
+        ],
+        [
+          175,
+          0,
+          1,
+          357.5,
+          -558.6843994140622
+        ],
+        [
+          180,
+          0,
+          1,
+          357.5,
+          -341.5978210449216
+        ],
+        [
+          178,
+          0,
+          1,
+          357.5,
+          -273.5118530273435
+        ],
+        [
+          183,
+          0,
+          1,
+          357.5,
+          -716.6678588867185
+        ],
+        [
+          187,
+          0,
+          1,
+          357.5,
+          -840.246594238281
+        ],
+        [
+          202,
+          0,
+          1,
+          357.5,
+          -1486.6787841796872
+        ],
+        [
+          189,
+          0,
+          1,
+          357.5,
+          -901.1004760742185
+        ],
+        [
+          175,
+          0,
+          1,
+          358.0,
+          -543.2124755859372
+        ],
+        [
+          180,
+          0,
+          1,
+          358.0,
+          -326.3459899902341
+        ],
+        [
+          183,
+          0,
+          1,
+          358.0,
+          -702.2149780273435
+        ],
+        [
+          187,
+          0,
+          1,
+          358.0,
+          -825.9381835937497
+        ],
+        [
+          202,
+          0,
+          1,
+          358.0,
+          -1471.8843505859372
+        ],
+        [
+          189,
+          0,
+          1,
+          358.0,
+          -886.909436035156
+        ],
+        [
+          175,
+          0,
+          1,
+          358.5,
+          -527.7431152343747
+        ],
+        [
+          180,
+          0,
+          1,
+          358.5,
+          -311.1209228515622
+        ],
+        [
+          183,
+          0,
+          1,
+          358.5,
+          -687.7604492187497
+        ],
+        [
+          187,
+          0,
+          1,
+          358.5,
+          -811.6264160156247
+        ],
+        [
+          202,
+          0,
+          1,
+          358.5,
+          -1457.0871093749997
+        ],
+        [
+          162,
+          1,
+          0,
+          358.5,
+          70.61710357666016
+        ],
+        [
+          189,
+          0,
+          1,
+          358.5,
+          -872.7143066406247
+        ],
+        [
+          175,
+          0,
+          1,
+          359.0,
+          -512.2764404296872
+        ],
+        [
+          180,
+          0,
+          1,
+          359.0,
+          -295.92258911132785
+        ],
+        [
+          183,
+          0,
+          1,
+          359.0,
+          -673.3043334960935
+        ],
+        [
+          187,
+          0,
+          1,
+          359.0,
+          -797.3113525390622
+        ],
+        [
+          202,
+          0,
+          1,
+          359.0,
+          -1442.2875488281247
+        ],
+        [
+          189,
+          0,
+          1,
+          359.0,
+          -858.5150878906247
+        ],
+        [
+          175,
+          0,
+          1,
+          359.5,
+          -496.812512207031
+        ],
+        [
+          180,
+          0,
+          1,
+          359.5,
+          -280.75095825195285
+        ],
+        [
+          183,
+          0,
+          1,
+          359.5,
+          -658.8467529296872
+        ],
+        [
+          187,
+          0,
+          1,
+          359.5,
+          -782.9930541992185
+        ],
+        [
+          202,
+          0,
+          1,
+          359.5,
+          -1427.4854248046872
+        ],
+        [
+          189,
+          0,
+          1,
+          359.5,
+          -844.3119628906247
+        ],
+        [
+          165,
+          0,
+          1,
+          360.0,
+          -0.5562592029568805
+        ],
+        [
+          175,
+          0,
+          1,
+          360.0,
+          -481.3514831542966
+        ],
+        [
+          180,
+          0,
+          1,
+          360.0,
+          -265.605969238281
+        ],
+        [
+          183,
+          0,
+          1,
+          360.0,
+          -644.3876464843747
+        ],
+        [
+          187,
+          0,
+          1,
+          360.0,
+          -768.671643066406
+        ],
+        [
+          202,
+          0,
+          1,
+          360.0,
+          -1412.6811035156247
+        ],
+        [
+          189,
+          0,
+          1,
+          360.0,
+          -830.1049316406247
+        ]
+      ],
+      "fitted_sample_events": [
+        [
+          [
+            128,
+            1,
+            0,
+            319.0,
+            -90.11680145263699
+          ],
+          [
+            128,
+            1,
+            0,
+            319.5,
+            -79.96550750732422
+          ],
+          [
+            162,
+            1,
+            0,
+            358.5,
+            70.61710357666016
+          ]
+        ],
+        [
+          [
+            128,
+            1,
+            0,
+            319.0,
+            -90.11680145263699
+          ],
+          [
+            128,
+            1,
+            0,
+            319.5,
+            -79.96550750732422
+          ],
+          [
+            153,
+            1,
+            0,
+            322.5,
+            -698.8284790039065
+          ],
+          [
+            153,
+            1,
+            0,
+            323.0,
+            -684.5726196289065
+          ],
+          [
+            153,
+            1,
+            0,
+            323.5,
+            -670.3274414062503
+          ],
+          [
+            153,
+            1,
+            0,
+            324.0,
+            -656.094226074219
+          ],
+          [
+            153,
+            1,
+            0,
+            324.5,
+            -641.874743652344
+          ],
+          [
+            153,
+            1,
+            0,
+            325.0,
+            -627.6709472656253
+          ],
+          [
+            153,
+            1,
+            0,
+            325.5,
+            -613.4852783203128
+          ],
+          [
+            153,
+            1,
+            0,
+            326.0,
+            -599.3202392578128
+          ],
+          [
+            153,
+            1,
+            0,
+            326.5,
+            -585.1783325195315
+          ],
+          [
+            153,
+            1,
+            0,
+            327.0,
+            -571.061999511719
+          ],
+          [
+            153,
+            1,
+            0,
+            327.5,
+            -556.973376464844
+          ],
+          [
+            153,
+            1,
+            0,
+            328.0,
+            -542.9141113281253
+          ],
+          [
+            153,
+            1,
+            0,
+            328.5,
+            -528.8856079101565
+          ],
+          [
+            153,
+            1,
+            0,
+            329.0,
+            -514.8885375976565
+          ],
+          [
+            153,
+            1,
+            0,
+            329.5,
+            -500.923327636719
+          ],
+          [
+            153,
+            1,
+            0,
+            330.0,
+            -486.9898254394534
+          ],
+          [
+            153,
+            1,
+            0,
+            330.5,
+            -473.0874511718753
+          ],
+          [
+            153,
+            1,
+            0,
+            331.0,
+            -459.21522827148465
+          ],
+          [
+            153,
+            1,
+            0,
+            342.0,
+            -158.10876770019559
+          ],
+          [
+            153,
+            1,
+            0,
+            342.5,
+            -144.47685546875027
+          ],
+          [
+            153,
+            1,
+            0,
+            343.0,
+            -130.84483642578152
+          ],
+          [
+            153,
+            1,
+            0,
+            343.5,
+            -117.21293182373074
+          ],
+          [
+            153,
+            1,
+            0,
+            344.0,
+            -103.58143920898465
+          ],
+          [
+            153,
+            1,
+            0,
+            344.5,
+            -89.95075531005887
+          ],
+          [
+            153,
+            1,
+            0,
+            345.0,
+            -76.32133789062527
+          ],
+          [
+            153,
+            1,
+            0,
+            345.5,
+            -62.693701934814726
+          ],
+          [
+            153,
+            1,
+            0,
+            346.0,
+            -49.068423461914335
+          ],
+          [
+            153,
+            1,
+            0,
+            346.5,
+            -35.45159835815457
+          ],
+          [
+            153,
+            1,
+            0,
+            347.0,
+            -21.842974853515898
+          ],
+          [
+            153,
+            1,
+            0,
+            347.5,
+            -8.242461395263945
+          ],
+          [
+            153,
+            1,
+            0,
+            348.0,
+            3.7999188899993896
+          ],
+          [
+            160,
+            1,
+            0,
+            349.5,
+            -68.62824554443387
+          ],
+          [
+            160,
+            1,
+            0,
+            350.0,
+            -55.03126449584988
+          ],
+          [
+            160,
+            1,
+            0,
+            350.5,
+            -41.366152954101835
+          ],
+          [
+            160,
+            1,
+            0,
+            351.0,
+            -27.722592544555937
+          ],
+          [
+            160,
+            1,
+            0,
+            351.5,
+            -14.015351486206328
+          ],
+          [
+            160,
+            1,
+            0,
+            353.0,
+            25.592683792114258
+          ],
+          [
+            160,
+            1,
+            0,
+            353.5,
+            39.369266510009766
+          ],
+          [
+            160,
+            1,
+            0,
+            354.0,
+            53.122779846191406
+          ],
+          [
+            160,
+            1,
+            0,
+            354.5,
+            66.92070007324219
+          ]
+        ],
+        [
+          [
+            185,
+            2,
+            1,
+            303.5,
+            33.62564468383789
+          ],
+          [
+            128,
+            1,
+            0,
+            319.0,
+            -90.11680145263699
+          ],
+          [
+            128,
+            1,
+            0,
+            319.5,
+            -79.96550750732422
+          ],
+          [
+            132,
+            1,
+            0,
+            320.0,
+            -124.77685089111355
+          ],
+          [
+            132,
+            1,
+            0,
+            320.5,
+            -115.20297546386746
+          ],
+          [
+            132,
+            1,
+            0,
+            321.0,
+            -105.79519958496121
+          ],
+          [
+            132,
+            1,
+            0,
+            321.5,
+            -96.62707824707059
+          ],
+          [
+            132,
+            1,
+            0,
+            322.0,
+            -87.56505889892605
+          ],
+          [
+            132,
+            1,
+            0,
+            322.5,
+            -78.53129882812527
+          ],
+          [
+            132,
+            1,
+            0,
+            323.0,
+            -69.52798767089871
+          ],
+          [
+            132,
+            1,
+            0,
+            323.5,
+            -60.59502334594754
+          ]
+        ],
+        [
+          [
+            128,
+            1,
+            0,
+            319.0,
+            -90.11680145263699
+          ],
+          [
+            128,
+            1,
+            0,
+            319.5,
+            -79.96550750732422
+          ],
+          [
+            160,
+            1,
+            0,
+            354.0,
+            53.122779846191406
+          ]
+        ],
+        [
+          [
+            155,
+            2,
+            1,
+            300.5,
+            75.33650207519531
+          ],
+          [
+            155,
+            2,
+            1,
+            301.0,
+            75.44000244140625
+          ],
+          [
+            155,
+            2,
+            1,
+            301.5,
+            75.44000244140625
+          ],
+          [
+            130,
+            1,
+            0,
+            310.0,
+            -201.13702697753934
+          ],
+          [
+            130,
+            1,
+            0,
+            310.5,
+            -188.15956420898465
+          ],
+          [
+            130,
+            1,
+            0,
+            311.0,
+            -175.2916595458987
+          ],
+          [
+            155,
+            2,
+            1,
+            311.0,
+            75.44000244140625
+          ],
+          [
+            155,
+            2,
+            1,
+            311.5,
+            75.44000244140625
+          ],
+          [
+            128,
+            1,
+            0,
+            316.5,
+            -143.54970092773465
+          ],
+          [
+            155,
+            2,
+            1,
+            316.5,
+            75.44000244140625
+          ],
+          [
+            128,
+            1,
+            0,
+            317.0,
+            -132.56129760742215
+          ],
+          [
+            155,
+            2,
+            1,
+            317.0,
+            75.44000244140625
+          ],
+          [
+            128,
+            1,
+            0,
+            317.5,
+            -121.70992584228543
+          ],
+          [
+            155,
+            2,
+            1,
+            317.5,
+            75.44000244140625
+          ],
+          [
+            128,
+            1,
+            0,
+            318.0,
+            -111.00793762207059
+          ],
+          [
+            155,
+            2,
+            1,
+            318.0,
+            75.44000244140625
+          ],
+          [
+            128,
+            1,
+            0,
+            318.5,
+            -100.47085113525418
+          ],
+          [
+            155,
+            2,
+            1,
+            318.5,
+            75.44000244140625
+          ],
+          [
+            128,
+            1,
+            0,
+            319.0,
+            -90.11680145263699
+          ],
+          [
+            155,
+            2,
+            1,
+            319.0,
+            75.44000244140625
+          ],
+          [
+            128,
+            1,
+            0,
+            319.5,
+            -79.96550750732422
+          ],
+          [
+            155,
+            2,
+            1,
+            319.5,
+            75.44000244140625
+          ],
+          [
+            155,
+            2,
+            1,
+            320.0,
+            75.44000244140625
+          ],
+          [
+            155,
+            2,
+            1,
+            320.5,
+            75.44000244140625
+          ],
+          [
+            155,
+            2,
+            1,
+            321.0,
+            75.44000244140625
+          ],
+          [
+            155,
+            2,
+            1,
+            321.5,
+            75.44000244140625
+          ],
+          [
+            155,
+            2,
+            1,
+            325.5,
+            75.44000244140625
+          ],
+          [
+            196,
+            0,
+            1,
+            326.0,
+            -2109.4616210937497
+          ],
+          [
+            196,
+            0,
+            1,
+            326.5,
+            -2095.8651855468747
+          ],
+          [
+            155,
+            2,
+            1,
+            327.0,
+            75.44000244140625
+          ],
+          [
+            196,
+            0,
+            1,
+            327.0,
+            -2082.2689941406247
+          ],
+          [
+            155,
+            2,
+            1,
+            327.5,
+            75.44000244140625
+          ]
+        ],
+        [
+          [
+            128,
+            1,
+            0,
+            319.0,
+            -90.11680145263699
+          ],
+          [
+            128,
+            1,
+            0,
+            319.5,
+            -79.96550750732422
+          ],
+          [
+            194,
+            1,
+            0,
+            346.0,
+            -1448.8116943359378
+          ],
+          [
+            194,
+            1,
+            0,
+            347.0,
+            -1421.3121826171878
+          ],
+          [
+            194,
+            1,
+            0,
+            347.5,
+            -1407.5580322265628
+          ],
+          [
+            194,
+            1,
+            0,
+            348.0,
+            -1393.8590576171878
+          ],
+          [
+            194,
+            1,
+            0,
+            349.0,
+            -1366.3198730468753
+          ],
+          [
+            194,
+            1,
+            0,
+            349.5,
+            -1352.5519287109378
+          ],
+          [
+            194,
+            1,
+            0,
+            350.0,
+            -1338.8419677734378
+          ],
+          [
+            194,
+            1,
+            0,
+            351.0,
+            -1311.2635986328128
+          ],
+          [
+            194,
+            1,
+            0,
+            351.5,
+            -1297.4818603515628
+          ],
+          [
+            194,
+            1,
+            0,
+            352.5,
+            -1269.8842041015628
+          ],
+          [
+            194,
+            1,
+            0,
+            353.0,
+            -1256.0991699218753
+          ],
+          [
+            194,
+            1,
+            0,
+            354.0,
+            -1228.4736816406253
+          ],
+          [
+            194,
+            1,
+            0,
+            354.5,
+            -1214.6794921875003
+          ],
+          [
+            194,
+            1,
+            0,
+            355.5,
+            -1187.0270263671878
+          ]
+        ],
+        [
+          [
+            160,
+            1,
+            0,
+            302.0,
+            -1395.1052734375003
+          ],
+          [
+            160,
+            1,
+            0,
+            302.5,
+            -1380.6938964843753
+          ],
+          [
+            160,
+            1,
+            0,
+            303.0,
+            -1366.2849609375003
+          ],
+          [
+            160,
+            1,
+            0,
+            303.5,
+            -1351.8801757812503
+          ],
+          [
+            160,
+            1,
+            0,
+            304.0,
+            -1337.4805175781253
+          ],
+          [
+            160,
+            1,
+            0,
+            304.5,
+            -1323.0865966796878
+          ],
+          [
+            160,
+            1,
+            0,
+            305.0,
+            -1308.6990234375003
+          ],
+          [
+            160,
+            1,
+            0,
+            305.5,
+            -1294.3177978515628
+          ],
+          [
+            160,
+            1,
+            0,
+            306.0,
+            -1279.9429199218753
+          ],
+          [
+            160,
+            1,
+            0,
+            306.5,
+            -1265.5742675781253
+          ],
+          [
+            160,
+            1,
+            0,
+            307.0,
+            -1251.2115966796878
+          ],
+          [
+            160,
+            1,
+            0,
+            307.5,
+            -1236.8546630859378
+          ],
+          [
+            160,
+            1,
+            0,
+            308.0,
+            -1222.5032226562503
+          ],
+          [
+            160,
+            1,
+            0,
+            308.5,
+            -1208.1569091796878
+          ],
+          [
+            160,
+            1,
+            0,
+            309.0,
+            -1193.8154785156253
+          ],
+          [
+            160,
+            1,
+            0,
+            309.5,
+            -1179.4785644531253
+          ],
+          [
+            160,
+            1,
+            0,
+            310.0,
+            -1165.1460449218753
+          ],
+          [
+            160,
+            1,
+            0,
+            310.5,
+            -1150.8176757812503
+          ],
+          [
+            160,
+            1,
+            0,
+            311.0,
+            -1136.4930908203128
+          ],
+          [
+            160,
+            1,
+            0,
+            311.5,
+            -1122.1720458984378
+          ],
+          [
+            160,
+            1,
+            0,
+            312.0,
+            -1107.8546630859378
+          ],
+          [
+            160,
+            1,
+            0,
+            312.5,
+            -1093.5405761718753
+          ],
+          [
+            160,
+            1,
+            0,
+            313.0,
+            -1079.2296630859378
+          ],
+          [
+            160,
+            1,
+            0,
+            313.5,
+            -1064.9219238281253
+          ],
+          [
+            160,
+            1,
+            0,
+            314.0,
+            -1050.6172363281253
+          ],
+          [
+            160,
+            1,
+            0,
+            314.5,
+            -1036.3154785156253
+          ],
+          [
+            160,
+            1,
+            0,
+            315.0,
+            -1022.0167114257815
+          ],
+          [
+            160,
+            1,
+            0,
+            315.5,
+            -1007.7207519531253
+          ],
+          [
+            160,
+            1,
+            0,
+            316.0,
+            -993.427722167969
+          ],
+          [
+            160,
+            1,
+            0,
+            316.5,
+            -979.1375610351565
+          ],
+          [
+            160,
+            1,
+            0,
+            317.0,
+            -964.850329589844
+          ],
+          [
+            160,
+            1,
+            0,
+            317.5,
+            -950.5776855468753
+          ],
+          [
+            160,
+            1,
+            0,
+            318.0,
+            -936.3301269531253
+          ],
+          [
+            160,
+            1,
+            0,
+            318.5,
+            -922.1092407226565
+          ],
+          [
+            160,
+            1,
+            0,
+            319.0,
+            -907.9163696289065
+          ],
+          [
+            128,
+            1,
+            0,
+            319.0,
+            -90.11680145263699
+          ],
+          [
+            160,
+            1,
+            0,
+            319.5,
+            -893.7615844726565
+          ],
+          [
+            128,
+            1,
+            0,
+            319.5,
+            -79.96550750732422
+          ],
+          [
+            160,
+            1,
+            0,
+            320.0,
+            -879.6538574218753
+          ],
+          [
+            160,
+            1,
+            0,
+            320.5,
+            -865.5762817382815
+          ],
+          [
+            160,
+            1,
+            0,
+            321.0,
+            -851.5162841796878
+          ],
+          [
+            160,
+            1,
+            0,
+            321.5,
+            -837.4718505859378
+          ],
+          [
+            160,
+            1,
+            0,
+            322.0,
+            -823.441394042969
+          ],
+          [
+            160,
+            1,
+            0,
+            322.5,
+            -809.4481079101565
+          ],
+          [
+            160,
+            1,
+            0,
+            323.0,
+            -795.513171386719
+          ],
+          [
+            160,
+            1,
+            0,
+            323.5,
+            -781.6285278320315
+          ],
+          [
+            160,
+            1,
+            0,
+            324.0,
+            -767.7874633789065
+          ],
+          [
+            160,
+            1,
+            0,
+            324.5,
+            -754.0203735351565
+          ],
+          [
+            160,
+            1,
+            0,
+            325.0,
+            -740.3546630859378
+          ],
+          [
+            160,
+            1,
+            0,
+            325.5,
+            -726.747790527344
+          ],
+          [
+            160,
+            1,
+            0,
+            326.0,
+            -713.1697265625003
+          ],
+          [
+            160,
+            1,
+            0,
+            326.5,
+            -699.6335937500003
+          ],
+          [
+            160,
+            1,
+            0,
+            327.0,
+            -686.1506835937503
+          ],
+          [
+            160,
+            1,
+            0,
+            327.5,
+            -672.691149902344
+          ],
+          [
+            160,
+            1,
+            0,
+            328.5,
+            -645.6194335937503
+          ],
+          [
+            160,
+            1,
+            0,
+            329.5,
+            -618.4813720703128
+          ],
+          [
+            160,
+            1,
+            0,
+            330.5,
+            -591.2239868164065
+          ],
+          [
+            160,
+            1,
+            0,
+            331.5,
+            -563.8301269531253
+          ],
+          [
+            160,
+            1,
+            0,
+            332.5,
+            -536.3030883789065
+          ],
+          [
+            160,
+            1,
+            0,
+            333.5,
+            -508.6573974609378
+          ],
+          [
+            160,
+            1,
+            0,
+            334.5,
+            -480.91261596679715
+          ],
+          [
+            160,
+            1,
+            0,
+            335.5,
+            -453.0895263671878
+          ],
+          [
+            160,
+            1,
+            0,
+            336.5,
+            -425.207507324219
+          ],
+          [
+            160,
+            1,
+            0,
+            337.5,
+            -397.2834045410159
+          ],
+          [
+            160,
+            1,
+            0,
+            338.5,
+            -369.3310119628909
+          ],
+          [
+            160,
+            1,
+            0,
+            339.0,
+            -355.3977539062503
+          ],
+          [
+            160,
+            1,
+            0,
+            339.5,
+            -341.4943420410159
+          ],
+          [
+            160,
+            1,
+            0,
+            340.0,
+            -327.6529113769534
+          ],
+          [
+            160,
+            1,
+            0,
+            340.5,
+            -313.852038574219
+          ],
+          [
+            160,
+            1,
+            0,
+            341.0,
+            -300.07606811523465
+          ],
+          [
+            160,
+            1,
+            0,
+            341.5,
+            -286.31361694335965
+          ],
+          [
+            160,
+            1,
+            0,
+            342.0,
+            -272.55641479492215
+          ],
+          [
+            160,
+            1,
+            0,
+            342.5,
+            -258.8340942382815
+          ],
+          [
+            160,
+            1,
+            0,
+            343.0,
+            -245.17381591796902
+          ],
+          [
+            160,
+            1,
+            0,
+            343.5,
+            -231.5668060302737
+          ],
+          [
+            160,
+            1,
+            0,
+            344.0,
+            -218.00598449707059
+          ],
+          [
+            160,
+            1,
+            0,
+            344.5,
+            -204.4683410644534
+          ],
+          [
+            160,
+            1,
+            0,
+            345.0,
+            -190.93744201660184
+          ],
+          [
+            160,
+            1,
+            0,
+            345.5,
+            -177.41571350097684
+          ],
+          [
+            160,
+            1,
+            0,
+            346.5,
+            -150.2549163818362
+          ],
+          [
+            160,
+            1,
+            0,
+            347.5,
+            -123.06848449707059
+          ],
+          [
+            160,
+            1,
+            0,
+            348.5,
+            -95.87201232910184
+          ],
+          [
+            160,
+            1,
+            0,
+            349.5,
+            -68.62824554443387
+          ],
+          [
+            160,
+            1,
+            0,
+            350.0,
+            -55.03126449584988
+          ],
+          [
+            160,
+            1,
+            0,
+            350.5,
+            -41.366152954101835
+          ],
+          [
+            160,
+            1,
+            0,
+            351.0,
+            -27.722592544555937
+          ],
+          [
+            160,
+            1,
+            0,
+            351.5,
+            -14.015351486206328
+          ],
+          [
+            160,
+            1,
+            0,
+            353.0,
+            25.592683792114258
+          ],
+          [
+            160,
+            1,
+            0,
+            353.5,
+            39.369266510009766
+          ],
+          [
+            160,
+            1,
+            0,
+            354.0,
+            53.122779846191406
+          ],
+          [
+            160,
+            1,
+            0,
+            354.5,
+            66.92070007324219
+          ],
+          [
+            172,
+            0,
+            1,
+            359.5,
+            -547.025646972656
+          ],
+          [
+            172,
+            0,
+            1,
+            360.0,
+            -531.8163574218747
+          ]
+        ],
+        [
+          [
+            132,
+            1,
+            0,
+            307.5,
+            -425.5935852050784
+          ],
+          [
+            132,
+            1,
+            0,
+            308.0,
+            -412.449206542969
+          ],
+          [
+            132,
+            1,
+            0,
+            308.5,
+            -399.33156127929715
+          ],
+          [
+            132,
+            1,
+            0,
+            309.0,
+            -386.24281616210965
+          ],
+          [
+            132,
+            1,
+            0,
+            309.5,
+            -373.1851684570315
+          ],
+          [
+            132,
+            1,
+            0,
+            310.0,
+            -360.16078491210965
+          ],
+          [
+            132,
+            1,
+            0,
+            310.5,
+            -347.17189331054715
+          ],
+          [
+            132,
+            1,
+            0,
+            311.0,
+            -334.2213012695315
+          ],
+          [
+            132,
+            1,
+            0,
+            311.5,
+            -321.3503906250003
+          ],
+          [
+            138,
+            1,
+            0,
+            312.0,
+            -416.1706115722659
+          ],
+          [
+            132,
+            1,
+            0,
+            312.0,
+            -308.5220825195315
+          ],
+          [
+            138,
+            1,
+            0,
+            312.5,
+            -402.3900634765628
+          ],
+          [
+            132,
+            1,
+            0,
+            312.5,
+            -295.7446777343753
+          ],
+          [
+            138,
+            1,
+            0,
+            313.0,
+            -388.6438476562503
+          ],
+          [
+            132,
+            1,
+            0,
+            313.0,
+            -283.02589721679715
+          ],
+          [
+            138,
+            1,
+            0,
+            313.5,
+            -374.9361145019534
+          ],
+          [
+            132,
+            1,
+            0,
+            313.5,
+            -270.37294311523465
+          ],
+          [
+            138,
+            1,
+            0,
+            314.0,
+            -361.27077026367215
+          ],
+          [
+            132,
+            1,
+            0,
+            314.0,
+            -257.79262084960965
+          ],
+          [
+            138,
+            1,
+            0,
+            314.5,
+            -347.6517822265628
+          ],
+          [
+            132,
+            1,
+            0,
+            314.5,
+            -245.29169006347684
+          ],
+          [
+            138,
+            1,
+            0,
+            315.0,
+            -334.210437011719
+          ],
+          [
+            132,
+            1,
+            0,
+            315.0,
+            -232.87712402343777
+          ],
+          [
+            138,
+            1,
+            0,
+            315.5,
+            -321.0801574707034
+          ],
+          [
+            132,
+            1,
+            0,
+            315.5,
+            -220.55578918457059
+          ],
+          [
+            132,
+            1,
+            0,
+            316.0,
+            -208.48854370117215
+          ],
+          [
+            128,
+            1,
+            0,
+            316.5,
+            -143.54970092773465
+          ],
+          [
+            128,
+            1,
+            0,
+            317.0,
+            -132.56129760742215
+          ],
+          [
+            128,
+            1,
+            0,
+            317.5,
+            -121.70992584228543
+          ],
+          [
+            132,
+            1,
+            0,
+            317.5,
+            -174.8424407958987
+          ],
+          [
+            128,
+            1,
+            0,
+            318.0,
+            -111.00793762207059
+          ],
+          [
+            132,
+            1,
+            0,
+            318.0,
+            -164.4355804443362
+          ],
+          [
+            128,
+            1,
+            0,
+            318.5,
+            -100.47085113525418
+          ],
+          [
+            132,
+            1,
+            0,
+            318.5,
+            -154.20262451171902
+          ],
+          [
+            128,
+            1,
+            0,
+            319.0,
+            -90.11680145263699
+          ],
+          [
+            132,
+            1,
+            0,
+            319.0,
+            -144.18835754394559
+          ],
+          [
+            128,
+            1,
+            0,
+            319.5,
+            -79.96550750732422
+          ],
+          [
+            160,
+            1,
+            0,
+            354.0,
+            53.122779846191406
+          ]
+        ]
+      ],
+      "source_default_wishes": {
+        "keep_right/blocked": 49,
+        "speed_gain/blocked": 209,
+        "strategic/safe": 11,
+        "keep_right/safe": 333,
+        "strategic/blocked": 370,
+        "cooperative/blocked": 119,
+        "speed_gain/safe": 65,
+        "cooperative/safe": 13
+      },
+      "fitted_sample_wishes": [
+        {
+          "cooperative/blocked": 135,
+          "strategic/blocked": 381,
+          "speed_gain/blocked": 65,
+          "cooperative/safe": 3
+        },
+        {
+          "cooperative/blocked": 118,
+          "speed_gain/blocked": 155,
+          "strategic/blocked": 380,
+          "cooperative/safe": 21,
+          "speed_gain/safe": 21
+        },
+        {
+          "cooperative/blocked": 123,
+          "speed_gain/blocked": 114,
+          "strategic/blocked": 378,
+          "strategic/safe": 1,
+          "cooperative/safe": 10,
+          "keep_right/blocked": 27
+        },
+        {
+          "cooperative/blocked": 135,
+          "strategic/blocked": 375,
+          "speed_gain/blocked": 88,
+          "cooperative/safe": 3
+        },
+        {
+          "speed_gain/blocked": 244,
+          "strategic/safe": 19,
+          "strategic/blocked": 357,
+          "cooperative/blocked": 119,
+          "cooperative/safe": 5,
+          "speed_gain/safe": 5,
+          "keep_right/safe": 3,
+          "keep_right/blocked": 43
+        },
+        {
+          "cooperative/blocked": 137,
+          "strategic/blocked": 381,
+          "speed_gain/blocked": 237,
+          "cooperative/safe": 2,
+          "speed_gain/safe": 14
+        },
+        {
+          "cooperative/blocked": 127,
+          "speed_gain/blocked": 154,
+          "strategic/blocked": 379,
+          "speed_gain/safe": 80,
+          "cooperative/safe": 11,
+          "keep_right/blocked": 37,
+          "keep_right/safe": 2
+        },
+        {
+          "cooperative/blocked": 135,
+          "strategic/blocked": 380,
+          "speed_gain/blocked": 262,
+          "speed_gain/safe": 35,
+          "cooperative/safe": 3,
+          "keep_right/blocked": 37
+        }
+      ]
+    }
+  }
+}

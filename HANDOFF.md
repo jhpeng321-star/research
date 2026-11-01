@@ -1,14 +1,17 @@
-# S-RB2-LANE — round 2 active, 2026-11-01
+# S-RB2-LANE — candidate + FIT evidence delivered, 2026-11-01
 
 Branch `c4/rb2-lane`; engineering base FULL-v4 `22cc32f6` (inherited
 round-1 final-delivery HEAD `03c81f91`).
 
-## Round-2 status (12:23 update)
+## Round-2 delivery
+- **Engineering ready for INT comparison; fitted LC NOT distributionally qualified.**
+  Implementation commits `a29116e9` + `6b4bfbd5` (plan `73a5685b`);
+  final evidence version `docs/rb2lane/fit_v2`, report `docs/paper_results/RB2_LANE.md`.
 - Source comparison complete against read-only SUMO1.27.1 cache
   `E:/Temp/opencode/sumo-1.27.1-rb-lane`. No downloaded source executed.
 - Required LC continuation: `E:/agent-work/c4-rb-fit/artifacts/rbfit/lane_raw_c5602102891e`.
   Population SHA256 `b903fa49fe1f3f1a15428ae48de5c8f86863aa5c5821dbb0acc8275c77d4483f`.
-- Candidate implementation exists; not yet qualified. `configs/wm_phys_rb2_lane.toml`
+- Explicit candidate `configs/wm_phys_rb2_lane.toml`
   differs only by `fitted_lc=true` and `lane_parameter_directory`. Base recipe
   stays OFF. Separate LC causal conditioning attaches AFTER independent IDM;
   native tape saved-ID posteriors never transfer to another export's identities.
@@ -17,21 +20,40 @@ round-1 final-delivery HEAD `03c81f91`).
   wishes/decay; source tauRemainder secure speeds for nondefault action steps.
   No generic changeWish decay exists in this SUMO tag. Full serial negotiation
   and internal critical leaders remain incomplete; see `docs/RB2_LANE_SOURCE_AUDIT.md`.
-- 84 targeted CPU tests PASS before last recipe-only addition. First FIT969400
-  smoke: pooled IDM/LCdefault547 proposals,15TP/30events; fitted K8mean31.375,
-  3.5TP (precision2.74→11.16%, recall50→11.67%). Count improvement loses recall;
-  no declaration that matching lane dynamics is solved.
-- CPU nice19 diagnostics LIVE: native FIT32 H300 in two disjoint16world shards;
-  development12 four nonnative arms H60 in two disjoint6world shards. K8 persistent
-  LC draws, same pooled IDM, no fitting. Receipts `docs/rb2lane/*_DISPATCH.json`.
+- 85 targeted CPU tests PASS: `docs/rb2lane/CPU_FINAL.xml`. Actual strict-loaded
+  checkpoint/recipe four60s native closed-cohort futures (FIT969420/969421,K2)
+  PASS finite/conserved/no corrections; sampled LC state remains finite/warm.
+  `docs/rb2lane/runtime_v1_SMOKE.json`, source `6b4bfbd5`; this smoke has no arrivals.
+- All80 conditional diagnostic episodes COMPLETE/collected: native FIT32 H60/300,
+  development12 four nonnative arms H60, K8 persistent profiles, same pooled IDM.
+  Native300 precision2.478→13.662%, recall41.489→11.357%; FP56,794→2,496.25
+  (−95.6%). Keep-right FP48,368→763.125 (−98.4%) but precision only0.761→1.437%.
+- Native300 recorded3,478 vs proposal steps58,237→2,891.25; compressed positive
+  runs3,716→706.5. **Proposal-step count proximity is NOT a lane-event-rate match.**
+  Upstream lane0 proposed-step rate650.0→12.28 vs recorded11.01/veh-h; fitted
+  positive-run rate only0.538. Recall/rate/timing remain inadequate for adoption.
+- Native300 fair-K8 event Brier.043621→.002436 vs never-change.002579;
+  empirical K8 Brier.002648 (finite-sample penalty). No calibration/CI claim.
+- Per-motivation precision/all-event recall contributions: `fit_v2/motivation.csv`;
+  per-lane/segment rates: `lane_segment.csv`; timing curves: `timing_10s.csv`.
+  Recorded motivation labels do not exist, so true class recalls are unidentified.
+- Target reconciliation:4,432/4,439 scored HDV events match independent target
+  table, max position difference.005m; seven absent events are the known300.5s
+  first-tape-frame boundary. All other events match. Raw receipts retained.
 - Exposure: prior rules/morning/handoffs/noon freeze and aggregate evidence read;
   new diagnosis ONLY FIT969400–969431. No reserved outcome files opened for
   round-2 selection. No WMDATA2 access; respect INT exposure quarantine.
-- Resource audit: local nvidia-smi driver unavailable; cpuQ12:01 load12.93.
-  Four own CPU workers now launched; no peer processes signalled. No GPU used.
-- Delivery: physics parity, persistent fitted LC/causal conditioning, FIT
-  lane/segment counts/rates/timing and per-predicted-motivation precision/recall
-  contributions, exact versions/tests. Full qualification belongs to INT.
+- Resource audit: local NVIDIA driver unavailable; gpuA GPU99% occupied during
+  check, so all diagnostics/smoke CPU-only. All five own workers EXITED; no signals.
+- Follow-up frozen before launch: paired native development12,K2,H300, entrants ON,
+  both variants causally warm, common IDM/arrival draws; LC block is the only
+  factor. Measures actual full-traffic LC counts/rates against targets, addressing
+  the positive-run under-frequency concern. FIT-only start-loader guard2CPU PASS;
+  no reserved starts can be read. This pilot is not the INT distributional gate.
+- INT composition: apply CAL spread wrapper after LC attachment (or retain its
+  subclass); INT already identified this intake requirement. New evidence does
+  not alter the tested dynamics. Full arrivals/fivearm/free-running gate and
+  final reserved comparison remain INT-owned. Do not infer FULL-v5 READY here.
 
 ## Preserved round-1 handoff
 
