@@ -1,9 +1,13 @@
 # S-WMPLAN — world-model-guided cooperative planner
 
 ## Plain-language status
-Preparation is in progress. No S-WMPLAN live episode has run and no claim of
-beating MAPPO is supported yet. The owner-approved question is whether the
-world model can choose cooperative actions online better than MAPPO alone.
+The live evaluation is running, with the primary expected-saving arm first and
+decision-time world-model inference on both gpuA and gpuR. No complete paired
+24-world result is available yet, so no claim of beating MAPPO is supported.
+The owner-approved question is whether the world model can choose cooperative
+actions online better than MAPPO alone. FULL-v4 was selected before live outcomes:
+helpful-state agreement4/8 vs FULL-v5 2/8, all12 exact chosen saving+680.308 vs
++172.704veh-s/state. These are teacher-quality diagnostics, not live efficacy.
 The exact 199,200 sim-s plan is registered. Complete full-prefix C_G twins require
 fixed 2,950 sim-s credit per world-arm: at most one early group can execute, and
 none after t600 fits. This is explicitly a budget-limited planner comparison;
@@ -24,15 +28,15 @@ raw proposals, executions and resource-forced O0 decisions will all be reported.
 - S-WMTEACH FULL-v4 quality is complete on 12 prospectively chosen exact
   states: H300 helpful agreement 4/8 and helpful exact chosen saving
   +1020.461280948498 veh-s/state; all-state chosen saving +680.307521.
-- Matching FULL-v5 quality is already running in the peer-owned immutable root
+- At intake, matching FULL-v5 quality was already running in the peer-owned immutable root
   `/root/autodl-tmp/wmteach_v5quality20261101_v2`. Read completed evidence only;
   never duplicate its forecasts or control its process.
 - Before any live outcome, select FULL-v5 source `b2df7458` only if its same-12
   H300 helpful-state agreement AND all-12 chosen saving are at least FULL-v4;
   otherwise select frozen FULL-v4 `22cc32f6`. Preserve both comparison results.
 - Exact live budget, immutable sources, baseline hashes, model choice, CPU and
-  prefix-integrity gates must be registered before dispatch. No live dispatch
-  is armed by this preparation note.
+  prefix-integrity gates passed and were registered before the one-use dispatch;
+  see `wmplan/FINAL_FREEZE.json`, `CPU.json`, and `DISPATCH.json`.
 
 ## Required final evidence
 Paired J600/J900 savings (MAPPO minus planner, source-inclusive team delay),
@@ -57,8 +61,11 @@ root filesystem; no inference output goes to its nearly-full autodl-tmp mount.
 
 Local contract gate:29 tests PASS, including primary-only full-panel accounting,
 rejection of incomplete/secondary jobs at primary reporting, exact choices,
-full-prefix credit quotas and generated remote-script compilation. Host/mirror
-gates and the final model comparison still precede live dispatch.
+full-prefix credit quotas and generated remote-script compilation. Host29 tests/
+24dual guards and gpuR32FIT bootstrap also PASS; final model/source/budget freeze
+was registered before live dispatch. The asset-path/package startup repairs used
+identical bytes and the unchanged teacher runtime; original manifests and failed
+gate evidence are retained in `wmplan/`.
 
 <!-- WMPLAN-PROGRESS:BEGIN -->
 ## Current continuation status
