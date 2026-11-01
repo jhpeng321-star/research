@@ -1,3 +1,26 @@
+# S-RB2-LANE — round 2 active, 2026-11-01
+
+Branch `c4/rb2-lane`; engineering base FULL-v4 `22cc32f6` (inherited
+round-1 final-delivery HEAD `03c81f91`).
+
+## Round-2 status
+- Source comparison underway against read-only SUMO1.27.1 cache
+  `E:/Temp/opencode/sumo-1.27.1-rb-lane`. No downloaded source executed.
+- Required LC continuation: `E:/agent-work/c4-rb-fit/artifacts/rbfit/lane_raw_c5602102891e`.
+  Existing `FittedHiddenState` accepts legal zero LC weights. Recipe rejects
+  fitted LC; `with_motion_posteriors` drops LC: need explicit opt-in continuation.
+- No round-2 candidate ready yet. Learned corrections stay OFF.
+- Exposure: prior rules/morning/handoffs/noon freeze and aggregate evidence read;
+  new diagnosis ONLY FIT969400–969431. No reserved outcome files opened for
+  round-2 selection. No WMDATA2 access; respect INT exposure quarantine.
+- Resource audit: local nvidia-smi driver unavailable; cpuQ12:01 load12.93.
+  No jobs launched yet; no peer processes signalled.
+- Delivery: physics parity, persistent fitted LC/causal conditioning, FIT
+  lane/segment counts/rates/timing and per-predicted-motivation precision/recall
+  contributions, exact versions/tests. Full qualification belongs to INT.
+
+## Preserved round-1 handoff
+
 # S-RB-INT FINAL — 2026-11-01
 
 Branch `c4/rb-int`. Retain all prior work and immutable jobs. Earlier detail:
