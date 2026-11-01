@@ -166,9 +166,26 @@ print(json.dumps(out))
     print(json.dumps(result))
 
 
+def collect():
+    stage = json.loads((EVIDENCE/'WM_ORACLE_CONTINUATION_STAGE.json').read_text())
+    result = ssh('gpuR', f'''import json,time
+from pathlib import Path
+root=Path({stage['root']!r});dispatch=json.loads((root/'DISPATCH_ORACLES.json').read_text())
+proc=Path('/proc',str(dispatch['pid']));rows=[json.loads(x) for x in (root/'accounting.jsonl').read_text().splitlines()] if (root/'accounting.jsonl').exists() else []
+out=dict(unix=time.time(),root=str(root),pid=dispatch['pid'],pid_state=proc.joinpath('stat').read_text().split()[2] if proc.exists() else 'EXITED',charged_sim_s=sum(r['sim_s'] for r in rows),closed_actual_sim_s=0,branches=[],complete=(root/'COMPLETE.json').exists(),stop=json.loads((root/'STOP').read_text()) if (root/'STOP').exists() else None,new_gpu_s=0)
+for job in sorted((root/'jobs').iterdir()):
+ if (job/'CLOSE.json').exists():out['closed_actual_sim_s']+=json.loads((job/'CLOSE.json').read_text())['actual_sim_s']
+ if (job/'RESULT.json').exists():out['branches'].append(dict(id=job.name,result=json.loads((job/'RESULT.json').read_text())))
+if out['stop']:out['log']=(root/'ORACLE.log').read_text()
+print(json.dumps(out))
+''', timeout=30)
+    write(EVIDENCE/('WM_ORACLE_PROGRESS_'+str(int(result['unix']))+'.json'), result)
+    print(json.dumps({k: len(v) if k == 'branches' else v for k, v in result.items()}, indent=2))
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('command', choices=('probe', 'stage', 'start', 'check'))
+    parser.add_argument('command', choices=('probe', 'stage', 'start', 'check', 'collect'))
     command = parser.parse_args().command
     if command == 'probe':
         probe()
@@ -176,5 +193,7 @@ if __name__ == '__main__':
         stage()
     elif command == 'check':
         check()
+    elif command == 'collect':
+        collect()
     else:
         start()
