@@ -203,6 +203,24 @@ class Contracts(unittest.TestCase):
         self.assertEqual(n['D_G_variance'],6.)
         self.assertEqual(n['D_i_variance'],[0.,0.])
 
+    def test_qualified_cost_source_binds_exec_function_without_linecache(self):
+        import os,json
+        from .wm import cost_adapter
+        source='def reducer(x):\n return {h:x*h for h in (90,120,300,600)}\n'
+        ns={};exec(compile(source,'<shared-frozen-reference>','exec'),ns)
+        adapted=cost_adapter(ns['reducer'],source)
+        self.assertEqual(adapted(2),{60:120,120:240,300:600,600:1200})
+        with self.assertRaisesRegex(ValueError,'bytecode mismatch'):
+            cost_adapter(ns['reducer'],source.replace('x*h','x+h'))
+        path=os.environ.get('COOPMWM_COST_SOURCE')
+        self.assertIsNotNone(path,'explicit qualified reducer receipt required')
+        from pathlib import Path
+        frozen=json.loads(Path(path).read_text())['code'];bound={}
+        exec(compile(frozen,'<actual-frozen-cost-reference>','exec'),bound)
+        fn=next(v for v in bound.values() if callable(v) and hasattr(v,'__code__'))
+        actual=cost_adapter(fn,frozen)
+        self.assertEqual(actual.__name__,fn.__name__)
+
     def test_random_window_selection_uses_only_eligibility_not_credit(self):
         from .runner import select_calibration
         episodes=[dict(world=dict(cell=i,seed=986000+i),steps=[

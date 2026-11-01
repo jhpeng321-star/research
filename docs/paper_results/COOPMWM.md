@@ -1,5 +1,14 @@
 # S-COOPMWM — live checks
 
+## 2026-11-01 18:01 — fresh recovery and frozen reducer repair
+- Recovered all62 closed jobs /74,400sim-s; no live task supervisor or GPU service.
+- Prior GPU startup failed because `inspect` resolved an exec-created reducer against
+  the producer's shared synthetic filename. Explicit qualified22cc32f6 reducer source
+  is now frozen and bytecode-matched before adapting only the horizon tuple.
+- CPU17: **44 PASS / zero skips /1.72s / zero SUMO**, including the actual frozen
+  reducer, incorrect-source rejection and MAPPO command parity. Failure receipts retained.
+- Owner17:55 dual-GPU service/sampling amendment is next; no finished physics repeated.
+
 ## 2026-11-01 17:48 — recovery and random-guide amendment
 - Registered owner17:42 arm R before any UPDATE/E2 outcome; registration and exact quote
   preserved in `BUDGET_AMENDMENT_1742.json` and commit `bb9d6fdb`.
