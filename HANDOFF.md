@@ -1,6 +1,36 @@
 # S-COOPFREE resume receipt
 
-## CURRENT: OWNER15:11 approved continuation RUNNING
+## CURRENT: completed through u009; verified 2026-11-02
+Resumed clean `bbf36bc4`; terminal receipts now published by `6d912032`.
+Exact cpuQ supervisor1579328/start53193103 and local observer42732 are absent;
+no open owned arms. Production finished normally with CONTINUE_COMPLETE(last_update9)
+and CONTINUE_BUDGET_STOP(before_update10), rather than a crash needing recovery.
+All5,530,353sim-s are closedactual; cap6M. TRAIN352,720 remains but frozen whole
+u010 costs416,160;0/396arms executed. Preserve the plan and all completed physics.
+u3/u6/u9 learning checks and paired24world DEV are published. Atu6, falling DG/CG
+triggered the registered measured-scale/shared-output ES + observable-state-focus fix
+for freshu7..u9. Atu9 the trend check still fails; learning cooperation is NOT established.
+Latest proposal for S-COOPPLAN/S-WMPLAN:
+`tools/coopfree/publications/owner1511/policy_hold_u009.pt`
+SHA256 `9c891c6323b4d3139e18c298054c9bb4067279e8d1c1cf23153c5f8b0f6a80b3`.
+Use `HOLD_UPDATE_009.json`, `MANIFEST.json`, and `docs/paper_results/COOPFREE_PROPOSALS.md`;
+anchors are actual MAPPO pre-safety commands. This is a candidate proposal, not a
+qualified improvement. All earlier checkpoint hashes remain published for consumers.
+u9 DEV learned-minus-MAPPO J600-581.946[-2059.892,+811.408],
+J900-550.428[-3131.635,+1852.079]vehicle-s; vs HOLD J600-407.925
+[-1827.760,+660.388], J900-876.871[-3344.213,+1345.729]. All CIs include zero.
+Frozen bandit results coincide with MAPPO; superiority over helpful cooperative
+options is not demonstrated. TRAIN u9 executed89.10%, overrides79.94%; DGmean-321.650
+on156windows. Exact39window subset DG+18.193,sumDi+977.370,CG-959.177,15/39positive.
+Do not combine all156-window DG with39-window sumDi to reconstruct CG.
+u9 detector/clustering export describes TRAIN explorations, not deterministic learned
+DEV behaviour. No causally supported rediscovered wall/yield/metering or novel helpful
+mechanism; actual u001 learned DEV discovery CGmean-145.905/20groups remains reported.
+CPU publisher/check tests11/11PASS0skips; read-only final audit38/38artifact hashesPASS,
+9checkpoint bindings/allphase accountingPASS/SUMO0. Re-run `python -B -m tools.coopfree_final_receipt`.
+See COOPFREE.md final summary and evidence/RESUME_FINAL_VERIFIED.md / FINAL_PUBLICATION_CPU.md.
+
+## Historical launch receipt: OWNER15:11 approved continuation
 Clean resume1ff7c6ac; implementatione9c26214/registrationea6d2a6c committed.
 Separate cpuQ `/home/ubuntu/coopfree20261101_owner1511` supervisor
 1579328/start53193103 verified live; workers1579331-1579334 executing freshu002.

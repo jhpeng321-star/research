@@ -1,6 +1,76 @@
 # S-COOPFREE — implementation and execution receipt
 
-## CURRENT — OWNER15:11 continuation running (supersedes historical budget blocker)
+## FINAL — u009 complete; learned cooperation not established (2026-11-02)
+Fresh read-only verification after resume at `bbf36bc4` finds the cpuQ supervisor
+and local publisher both exited normally. `CONTINUE_COMPLETE.json` records u009;
+`CONTINUE_BUDGET_STOP.json` rejects u010 before any of its396arms ran. All nine
+corrected checkpoints, u3/u6/u9 learning checks, paired DEV and diagnostic exports
+are public under `tools/coopfree/publications/owner1511/` with `MANIFEST.json`.
+
+### Accounting and implementation
+Closedactual = precharged = **5,530,353sim-s**, below the6,000,000cap;0unclosed.
+Spent: TRAIN5,141,280; DEV259,200; discovery88,833; screen27,360; repeat13,680.
+Remaining: TRAIN352,720, DEV28,800, discovery43,167, unallocated44,960 =469,647total.
+The frozen next whole156window batch needs416,160TRAINsim-s; it cannot fit its
+registered phase allocation. No batch was shortened or phase funds transferred.
+u001 was retained with its optimizer; u002..u009 are eight fresh updates, each with
+156windows/24TRAINworlds and exact all-member solos on39random windows (25%).
+These sparse exact diagnostics reduce cost but provide noisy cooperation estimates.
+Continuous speed/log-gap setpoints, correlated exploration, safety/ownership and
+noise remain as designed; the70line design and production source bindings are retained.
+
+### Learning checks and phase fix
+u3: executed92.31%, DGmean+87.608; exactsubset sumDi-296.114,CG+411.456,
+21/39CGpositive; insufficient history for the six-update trend check.
+u6: executed93.59%, DGmean-610.566; exactsubset sumDi-1034.195,CG+245.565,
+13/39positive. Six-update DG/CG slopes-63.217/-44.789vehicle-s/update triggered
+the registered fix. Freshu7..u9 use shared sigma(4.6515574,0.5168397), scaled from
+measured execution by1.0336794; doubled signed observable EXAM log-priority with
+ordinary support; output-bias population ES plus conditional Gaussian body score.
+u9: issued99.36%, executed89.10%, executed/issued89.68%, safety override79.94%;
+DGmean-321.650/SD3146.182 on156windows. On the **same39exact windows**,
+DGmean+18.193, sumDi+977.370, CG-959.177/SD8084.113;15/39(38.46%)positive.
+All-window DG and subset sumDi have different denominators and must not be subtracted.
+u9's six-update DG/CG slopes remain-143.669/-214.378; the fix did not establish
+an upward cooperation trend. TRAIN exploration effects are not learned DEV gains.
+
+### Final paired DEV (24worlds; learned minus comparator; negative delay is better)
+vs MAPPO J600 **-581.946[-2059.892,+811.408]**, J900 **-550.428[-3131.635,+1852.079]**.
+vs zero-update HOLD J600 **-407.925[-1827.760,+660.388]**,
+J900 **-876.871[-3344.213,+1345.729]**vehicle-s. All paired world-bootstrap95%CIs
+include zero; neither superiority to MAPPO nor learned improvement over HOLD is established.
+HOLD-minus-MAPPO structural baseline remains separate: J600-174.021[-1630.261,+1204.276],
+J900+326.443[-2378.223,+2941.878]. Initial-command parity does not mean rollout parity.
+The frozen COOPBANDIT comparator coincides with MAPPO on this panel; these results
+do not demonstrate superiority over executing helpful cooperative options.
+Paired collision/teleport deltas are0. Hard-brake deltas vs MAPPO: J600+1.0625
+[-0.8542,+3.0625], J900+2.5625[-0.5000,+5.5214]; TTC<3 deltas-9.5208/-1.4167,
+both CIs include zero. No overall safety improvement is established.
+
+### Discovery: explored patterns and learned-behaviour limits
+u9 observational detector counts on39full TRAIN exploration tapes:12,092wave-damping,
+5,842gap-creation,939cross-lane-hold,7yield-to-merge candidates. Full tapes contain
+background motion; these counts are not learned walls/yields/metering or causal support.
+Standardized action/window/group-size clustering selects k7, silhouette0.2263,
+sizes5/9/6/7/4/5/3; weak descriptive separation, no demonstrated helpful novel mechanism.
+The extension's u3/u6/u9 discovery exports use **explored TRAIN proposals**, not
+deterministic learned DEV actions; their exact CG is an exploration diagnostic.
+The actual u001 learned DEV discovery remains20groups: DG+229.732,sumDi+375.637,
+CG-145.905,5/20positive (positive maximum only0.00690vehicle-s). No superadditive
+learned mechanism is demonstrated. Exact deterministic-u009 learned-group discovery
+was not run; this is an outstanding scientific limitation, not a positive discovery result.
+
+### Proposal handoff and verification
+Latest `policy_hold_u009.pt`, SHA256
+`9c891c6323b4d3139e18c298054c9bb4067279e8d1c1cf23153c5f8b0f6a80b3`,
+is published for COOPPLAN/WMPLAN as a candidate, with `HOLD_UPDATE_009.json`.
+Use actual MAPPO pre-safety anchors per COOPFREE_PROPOSALS.md; no best-checkpoint claim.
+Final publisher/check CPU11/11PASS/0skips/0.045s; original bound buildCPU34/34PASS.
+`python -B -m tools.coopfree_final_receipt`:38artifact hashes/9checkpoint bindings,
+complete phase accounting and subset discovery summaries verified; SUMO0 at resume.
+Resume/status/CPU receipts are committed; all historical receipts below are retained.
+
+## Historical launch receipt — OWNER15:11 continuation
 Registry explicitly approves+4M/total6M. Immutable separate phase root
 `/home/ubuntu/coopfree20261101_owner1511`, cpuQ supervisor1579328/start53193103,
 four workers1579331-1579334, all freshu002 arms observed active after launch.
