@@ -29,11 +29,14 @@ def build_source_index(kind,root,out):
             if not result_path.is_file(): continue
             result=read_json(result_path)
             if kind=="coopaudit":
-                # Current published audit has no observed lengths, no mainline
-                # neighbours and no non-wall command status. Never infer them.
+                # Full-prefix v2 adds issued requests, but retains the members+
+                # ramp-only crop. Neither version supplies slot/follower geometry.
                 status["complete_jobs"]+=1
-                status["blocked"].append(dict(job=jobdir.name,reason=
-                    "Audit v1 crop lacks length_m/is_cav, mainline neighbours and non-wall executed commands"))
+                corrected=result.get("branch_mode")=="full_prefix_rerun"
+                reason="Audit crop lacks length_m/is_cav and mainline neighbours"
+                if not corrected: reason+=", with non-wall executed commands unavailable in v1"
+                status["blocked"].append(dict(job=jobdir.name,
+                    branch_mode=result.get("branch_mode","historical_saved_state"),reason=reason))
                 continue
             if kind!="sumocf": raise ValueError("Unknown source adapter")
             job=result.get("job",{})

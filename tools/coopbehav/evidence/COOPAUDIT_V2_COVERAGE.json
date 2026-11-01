@@ -1,0 +1,6492 @@
+{
+  "source": "COOPAUDIT full-prefix v2",
+  "kind": "coverage_only",
+  "hashes_verified": true,
+  "collection_sha256": "1cce55edf8c083f9f94ee8b1733dc3c16bb1c5c114529d0561333d3677f9b258",
+  "manifest_sha256": "3f454d0c4c05ba769e46a1e2f6f33a3b954e45dad2ee8b9cbc1074546ee99c28",
+  "production_worlds": 21,
+  "totals": {
+    "rows": 528644,
+    "non_null_issued_request_rows": 14294,
+    "length_m_rows": 0,
+    "is_cav_rows": 0,
+    "controller_rows": 0,
+    "canary_files": 16,
+    "nonmember_nonramp_rows": 0,
+    "production_files": 231
+  },
+  "arms": {
+    "canary/mappo": {
+      "files": 5,
+      "rows": 6900,
+      "non_null_issued_request_rows": 297
+    },
+    "canary/native": {
+      "files": 2,
+      "rows": 2760,
+      "non_null_issued_request_rows": 0
+    },
+    "canary/sumocf": {
+      "files": 5,
+      "rows": 6900,
+      "non_null_issued_request_rows": 297
+    },
+    "canary/wall": {
+      "files": 4,
+      "rows": 5647,
+      "non_null_issued_request_rows": 448
+    },
+    "production/mappo": {
+      "files": 63,
+      "rows": 137505,
+      "non_null_issued_request_rows": 6609
+    },
+    "production/native": {
+      "files": 42,
+      "rows": 92564,
+      "non_null_issued_request_rows": 0
+    },
+    "production/sumocf": {
+      "files": 63,
+      "rows": 137506,
+      "non_null_issued_request_rows": 6611
+    },
+    "production/wall": {
+      "files": 63,
+      "rows": 138862,
+      "non_null_issued_request_rows": 32
+    }
+  },
+  "files": [
+    {
+      "file": "jobs/v2_canary_s969699/traces/mappo_DISABLED.jsonl.gz",
+      "sha256": "434a9b66b0ca037c19ab2f0c53001e69965128ef7f18ad784794577ae648d1f9",
+      "seed": 969699,
+      "cohort": "canary",
+      "rows": 1380,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1380,
+        "lane": 1380,
+        "member": 1380,
+        "ramp_observed": 1380,
+        "requested_accel": 1380,
+        "s": 1380,
+        "t": 1380,
+        "v": 1380,
+        "vid": 1380
+      },
+      "member_identities": [
+        "mainline.108",
+        "mainline.109"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_canary_s969699/traces/mappo_GROUP.jsonl.gz",
+      "sha256": "5d799bdfce4b7ea6271cd263294f123916a0ccc52337b12497405b896f3782c5",
+      "seed": 969699,
+      "cohort": "canary",
+      "rows": 1380,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1380,
+        "lane": 1380,
+        "member": 1380,
+        "ramp_observed": 1380,
+        "requested_accel": 1380,
+        "s": 1380,
+        "t": 1380,
+        "v": 1380,
+        "vid": 1380
+      },
+      "member_identities": [
+        "mainline.108",
+        "mainline.109"
+      ],
+      "non_null_issued_request_rows": 99,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_canary_s969699/traces/mappo_GROUP_repeat.jsonl.gz",
+      "sha256": "848b4b0b83238cc2bf44760219eb7e6d52e5585190cc5a5875916a919faf7864",
+      "seed": 969699,
+      "cohort": "canary",
+      "rows": 1380,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1380,
+        "lane": 1380,
+        "member": 1380,
+        "ramp_observed": 1380,
+        "requested_accel": 1380,
+        "s": 1380,
+        "t": 1380,
+        "v": 1380,
+        "vid": 1380
+      },
+      "member_identities": [
+        "mainline.108",
+        "mainline.109"
+      ],
+      "non_null_issued_request_rows": 99,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_canary_s969699/traces/mappo_ONLY_0.jsonl.gz",
+      "sha256": "4774e1e25d9916d97bf219b87b4c904fbbe5c355f8964406a0f3cbcd7faf1c02",
+      "seed": 969699,
+      "cohort": "canary",
+      "rows": 1380,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1380,
+        "lane": 1380,
+        "member": 1380,
+        "ramp_observed": 1380,
+        "requested_accel": 1380,
+        "s": 1380,
+        "t": 1380,
+        "v": 1380,
+        "vid": 1380
+      },
+      "member_identities": [
+        "mainline.108",
+        "mainline.109"
+      ],
+      "non_null_issued_request_rows": 51,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_canary_s969699/traces/mappo_ONLY_1.jsonl.gz",
+      "sha256": "6e79fb2d3f878a867d6d310d426aea52406d53632ec7e31647b069db7fac2913",
+      "seed": 969699,
+      "cohort": "canary",
+      "rows": 1380,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1380,
+        "lane": 1380,
+        "member": 1380,
+        "ramp_observed": 1380,
+        "requested_accel": 1380,
+        "s": 1380,
+        "t": 1380,
+        "v": 1380,
+        "vid": 1380
+      },
+      "member_identities": [
+        "mainline.108",
+        "mainline.109"
+      ],
+      "non_null_issued_request_rows": 48,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_canary_s969699/traces/native_B.jsonl.gz",
+      "sha256": "ae47e83bdc7ed9612ade98eaf28e22e617861d031da3f84710b4282679cd0207",
+      "seed": 969699,
+      "cohort": "canary",
+      "rows": 1380,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1380,
+        "lane": 1380,
+        "member": 1380,
+        "ramp_observed": 1380,
+        "requested_accel": 1380,
+        "s": 1380,
+        "t": 1380,
+        "v": 1380,
+        "vid": 1380
+      },
+      "member_identities": [
+        "mainline.108",
+        "mainline.109"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_canary_s969699/traces/native_B_repeat.jsonl.gz",
+      "sha256": "1f29bdf2f9a88ab8b025a8273aaed5abb3e66912a0deb11e32ff528c2e3f06e5",
+      "seed": 969699,
+      "cohort": "canary",
+      "rows": 1380,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1380,
+        "lane": 1380,
+        "member": 1380,
+        "ramp_observed": 1380,
+        "requested_accel": 1380,
+        "s": 1380,
+        "t": 1380,
+        "v": 1380,
+        "vid": 1380
+      },
+      "member_identities": [
+        "mainline.108",
+        "mainline.109"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_canary_s969699/traces/sumocf_DISABLED.jsonl.gz",
+      "sha256": "ef68402190bde6d58f89de2b995f88f04efd2fcf209b6949cf3796660498efe1",
+      "seed": 969699,
+      "cohort": "canary",
+      "rows": 1380,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1380,
+        "lane": 1380,
+        "member": 1380,
+        "ramp_observed": 1380,
+        "requested_accel": 1380,
+        "s": 1380,
+        "t": 1380,
+        "v": 1380,
+        "vid": 1380
+      },
+      "member_identities": [
+        "mainline.108",
+        "mainline.109"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_canary_s969699/traces/sumocf_GROUP.jsonl.gz",
+      "sha256": "46e4efe41d8bcc10f5d0c9596928c5f841a94f1ed5cb380d52d72ced850c1534",
+      "seed": 969699,
+      "cohort": "canary",
+      "rows": 1380,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1380,
+        "lane": 1380,
+        "member": 1380,
+        "ramp_observed": 1380,
+        "requested_accel": 1380,
+        "s": 1380,
+        "t": 1380,
+        "v": 1380,
+        "vid": 1380
+      },
+      "member_identities": [
+        "mainline.108",
+        "mainline.109"
+      ],
+      "non_null_issued_request_rows": 99,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_canary_s969699/traces/sumocf_GROUP_repeat.jsonl.gz",
+      "sha256": "d58964f36f294e813dd25d66c5568994ee6ca715abc90907176cdc938ac29ee9",
+      "seed": 969699,
+      "cohort": "canary",
+      "rows": 1380,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1380,
+        "lane": 1380,
+        "member": 1380,
+        "ramp_observed": 1380,
+        "requested_accel": 1380,
+        "s": 1380,
+        "t": 1380,
+        "v": 1380,
+        "vid": 1380
+      },
+      "member_identities": [
+        "mainline.108",
+        "mainline.109"
+      ],
+      "non_null_issued_request_rows": 99,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_canary_s969699/traces/sumocf_ONLY_0.jsonl.gz",
+      "sha256": "f447dc299f754f6ff2c50d66da6ad29cfdceaa2dbd7f952ec196eb761a6f90fe",
+      "seed": 969699,
+      "cohort": "canary",
+      "rows": 1380,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1380,
+        "lane": 1380,
+        "member": 1380,
+        "ramp_observed": 1380,
+        "requested_accel": 1380,
+        "s": 1380,
+        "t": 1380,
+        "v": 1380,
+        "vid": 1380
+      },
+      "member_identities": [
+        "mainline.108",
+        "mainline.109"
+      ],
+      "non_null_issued_request_rows": 51,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_canary_s969699/traces/sumocf_ONLY_1.jsonl.gz",
+      "sha256": "c40a567a262b07ebbc8f49cdac93dc72334e2d10f2506a233169c2b8cbac4e44",
+      "seed": 969699,
+      "cohort": "canary",
+      "rows": 1380,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1380,
+        "lane": 1380,
+        "member": 1380,
+        "ramp_observed": 1380,
+        "requested_accel": 1380,
+        "s": 1380,
+        "t": 1380,
+        "v": 1380,
+        "vid": 1380
+      },
+      "member_identities": [
+        "mainline.108",
+        "mainline.109"
+      ],
+      "non_null_issued_request_rows": 48,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_canary_s969699/traces/wall_GROUP.jsonl.gz",
+      "sha256": "b4f7b2091af74214b64aed33f18214cf5077ec2e05dffdc9ec256aca240f00d2",
+      "seed": 969699,
+      "cohort": "canary",
+      "rows": 1428,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1428,
+        "lane": 1428,
+        "member": 1428,
+        "ramp_observed": 1428,
+        "requested_accel": 1428,
+        "s": 1428,
+        "t": 1428,
+        "v": 1428,
+        "vid": 1428
+      },
+      "member_identities": [
+        "mainline.108",
+        "mainline.109"
+      ],
+      "non_null_issued_request_rows": 210,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_canary_s969699/traces/wall_GROUP_repeat.jsonl.gz",
+      "sha256": "bbb31e98bff2de9f39d7837b331e8493bf043bc3066ad4c8ba52aae555b6ddfb",
+      "seed": 969699,
+      "cohort": "canary",
+      "rows": 1428,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1428,
+        "lane": 1428,
+        "member": 1428,
+        "ramp_observed": 1428,
+        "requested_accel": 1428,
+        "s": 1428,
+        "t": 1428,
+        "v": 1428,
+        "vid": 1428
+      },
+      "member_identities": [
+        "mainline.108",
+        "mainline.109"
+      ],
+      "non_null_issued_request_rows": 210,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_canary_s969699/traces/wall_ONLY_0.jsonl.gz",
+      "sha256": "20a847435579340893c73470fbe2bad8fdffe1dffc4b1cbed1e8e0311c6cc01f",
+      "seed": 969699,
+      "cohort": "canary",
+      "rows": 1402,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1402,
+        "lane": 1402,
+        "member": 1402,
+        "ramp_observed": 1402,
+        "requested_accel": 1402,
+        "s": 1402,
+        "t": 1402,
+        "v": 1402,
+        "vid": 1402
+      },
+      "member_identities": [
+        "mainline.108",
+        "mainline.109"
+      ],
+      "non_null_issued_request_rows": 20,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_canary_s969699/traces/wall_ONLY_1.jsonl.gz",
+      "sha256": "02878b01a15fa8a974c5718cfb36f65c9f60932e8a78ed26fa042fe3c13ee449",
+      "seed": 969699,
+      "cohort": "canary",
+      "rows": 1389,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1389,
+        "lane": 1389,
+        "member": 1389,
+        "ramp_observed": 1389,
+        "requested_accel": 1389,
+        "s": 1389,
+        "t": 1389,
+        "v": 1389,
+        "vid": 1389
+      },
+      "member_identities": [
+        "mainline.108",
+        "mainline.109"
+      ],
+      "non_null_issued_request_rows": 8,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969650/traces/mappo_GROUP.jsonl.gz",
+      "sha256": "f2c53b1c522c036f6d3cbeb12f33636f7da43cdd0ffcb17c848a6daa5144d5a2",
+      "seed": 969650,
+      "cohort": "production",
+      "rows": 2496,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2496,
+        "lane": 2496,
+        "member": 2496,
+        "ramp_observed": 2496,
+        "requested_accel": 2496,
+        "s": 2496,
+        "t": 2496,
+        "v": 2496,
+        "vid": 2496
+      },
+      "member_identities": [
+        "mainline.105",
+        "ramp.29"
+      ],
+      "non_null_issued_request_rows": 167,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969650/traces/mappo_ONLY_0.jsonl.gz",
+      "sha256": "4631a4543e62bcf762ecc65cea288caef08dc3e9ba663d98555a8352dcd801dc",
+      "seed": 969650,
+      "cohort": "production",
+      "rows": 2496,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2496,
+        "lane": 2496,
+        "member": 2496,
+        "ramp_observed": 2496,
+        "requested_accel": 2496,
+        "s": 2496,
+        "t": 2496,
+        "v": 2496,
+        "vid": 2496
+      },
+      "member_identities": [
+        "mainline.105",
+        "ramp.29"
+      ],
+      "non_null_issued_request_rows": 116,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969650/traces/mappo_ONLY_1.jsonl.gz",
+      "sha256": "b62a6b98dfd0f90aadb6d6bce120baa6fbc9ffda8b192ebbe4ebf4b1a40e63db",
+      "seed": 969650,
+      "cohort": "production",
+      "rows": 2531,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2531,
+        "lane": 2531,
+        "member": 2531,
+        "ramp_observed": 2531,
+        "requested_accel": 2531,
+        "s": 2531,
+        "t": 2531,
+        "v": 2531,
+        "vid": 2531
+      },
+      "member_identities": [
+        "mainline.105",
+        "ramp.29"
+      ],
+      "non_null_issued_request_rows": 51,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969650/traces/native_B.jsonl.gz",
+      "sha256": "9303b59ee03a82d346bcdfbe441759fa784797272baaa764035cf76fdde779c6",
+      "seed": 969650,
+      "cohort": "production",
+      "rows": 2531,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2531,
+        "lane": 2531,
+        "member": 2531,
+        "ramp_observed": 2531,
+        "requested_accel": 2531,
+        "s": 2531,
+        "t": 2531,
+        "v": 2531,
+        "vid": 2531
+      },
+      "member_identities": [
+        "mainline.105",
+        "ramp.29"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969650/traces/native_B_repeat.jsonl.gz",
+      "sha256": "4df8e49e0c9f32050482f4629f19fe89bf996be5880c3aac066f72ff3c9b91bd",
+      "seed": 969650,
+      "cohort": "production",
+      "rows": 2531,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2531,
+        "lane": 2531,
+        "member": 2531,
+        "ramp_observed": 2531,
+        "requested_accel": 2531,
+        "s": 2531,
+        "t": 2531,
+        "v": 2531,
+        "vid": 2531
+      },
+      "member_identities": [
+        "mainline.105",
+        "ramp.29"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969650/traces/sumocf_GROUP.jsonl.gz",
+      "sha256": "6ea0004965d0480c6e2011e96a113fa857ea1254c446864ed1e8db4dc3d579a5",
+      "seed": 969650,
+      "cohort": "production",
+      "rows": 2496,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2496,
+        "lane": 2496,
+        "member": 2496,
+        "ramp_observed": 2496,
+        "requested_accel": 2496,
+        "s": 2496,
+        "t": 2496,
+        "v": 2496,
+        "vid": 2496
+      },
+      "member_identities": [
+        "mainline.105",
+        "ramp.29"
+      ],
+      "non_null_issued_request_rows": 165,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969650/traces/sumocf_ONLY_0.jsonl.gz",
+      "sha256": "84f98881425ba4ce0839721c35346f20671e7465d9b1cccff62a044e159b39ec",
+      "seed": 969650,
+      "cohort": "production",
+      "rows": 2496,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2496,
+        "lane": 2496,
+        "member": 2496,
+        "ramp_observed": 2496,
+        "requested_accel": 2496,
+        "s": 2496,
+        "t": 2496,
+        "v": 2496,
+        "vid": 2496
+      },
+      "member_identities": [
+        "mainline.105",
+        "ramp.29"
+      ],
+      "non_null_issued_request_rows": 116,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969650/traces/sumocf_ONLY_1.jsonl.gz",
+      "sha256": "a849ac049fed529dd4df728a359f34667d23a34f826206b58460b48c81f3019c",
+      "seed": 969650,
+      "cohort": "production",
+      "rows": 2531,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2531,
+        "lane": 2531,
+        "member": 2531,
+        "ramp_observed": 2531,
+        "requested_accel": 2531,
+        "s": 2531,
+        "t": 2531,
+        "v": 2531,
+        "vid": 2531
+      },
+      "member_identities": [
+        "mainline.105",
+        "ramp.29"
+      ],
+      "non_null_issued_request_rows": 49,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969650/traces/wall_GROUP.jsonl.gz",
+      "sha256": "b74c2faa4dabf5e97f1052256afd7fef08d616f3d43973ecf5e3b4f804cae98a",
+      "seed": 969650,
+      "cohort": "production",
+      "rows": 2531,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2531,
+        "lane": 2531,
+        "member": 2531,
+        "ramp_observed": 2531,
+        "requested_accel": 2531,
+        "s": 2531,
+        "t": 2531,
+        "v": 2531,
+        "vid": 2531
+      },
+      "member_identities": [
+        "mainline.105",
+        "ramp.29"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969650/traces/wall_ONLY_0.jsonl.gz",
+      "sha256": "f9f23aceb22e99b24461ed0379d2544d4682c38ef7abe3ced94ef67f5c2d5ab4",
+      "seed": 969650,
+      "cohort": "production",
+      "rows": 2531,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2531,
+        "lane": 2531,
+        "member": 2531,
+        "ramp_observed": 2531,
+        "requested_accel": 2531,
+        "s": 2531,
+        "t": 2531,
+        "v": 2531,
+        "vid": 2531
+      },
+      "member_identities": [
+        "mainline.105",
+        "ramp.29"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969650/traces/wall_ONLY_1.jsonl.gz",
+      "sha256": "c38d4d19da1e6462acae2b4866c3b96fddbdf1bb8b18155b959132ae4076508e",
+      "seed": 969650,
+      "cohort": "production",
+      "rows": 2531,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2531,
+        "lane": 2531,
+        "member": 2531,
+        "ramp_observed": 2531,
+        "requested_accel": 2531,
+        "s": 2531,
+        "t": 2531,
+        "v": 2531,
+        "vid": 2531
+      },
+      "member_identities": [
+        "mainline.105",
+        "ramp.29"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969651/traces/mappo_GROUP.jsonl.gz",
+      "sha256": "0f14fb6d91a6324bcf3ee0c887b87920a3d86a5fcc3c54b0982dde2ed336fede",
+      "seed": 969651,
+      "cohort": "production",
+      "rows": 1727,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1727,
+        "lane": 1727,
+        "member": 1727,
+        "ramp_observed": 1727,
+        "requested_accel": 1727,
+        "s": 1727,
+        "t": 1727,
+        "v": 1727,
+        "vid": 1727
+      },
+      "member_identities": [
+        "mainline.106",
+        "mainline.108"
+      ],
+      "non_null_issued_request_rows": 150,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969651/traces/mappo_ONLY_0.jsonl.gz",
+      "sha256": "017f4b1ee06863eb086fb090da27e2e8c9c66e821638a127f5023a2f61a6234f",
+      "seed": 969651,
+      "cohort": "production",
+      "rows": 1731,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1731,
+        "lane": 1731,
+        "member": 1731,
+        "ramp_observed": 1731,
+        "requested_accel": 1731,
+        "s": 1731,
+        "t": 1731,
+        "v": 1731,
+        "vid": 1731
+      },
+      "member_identities": [
+        "mainline.106",
+        "mainline.108"
+      ],
+      "non_null_issued_request_rows": 76,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969651/traces/mappo_ONLY_1.jsonl.gz",
+      "sha256": "67bff2a278496cee9696c3aad030ff37b76ec521332c0d3f53667899e3c8dcef",
+      "seed": 969651,
+      "cohort": "production",
+      "rows": 1731,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1731,
+        "lane": 1731,
+        "member": 1731,
+        "ramp_observed": 1731,
+        "requested_accel": 1731,
+        "s": 1731,
+        "t": 1731,
+        "v": 1731,
+        "vid": 1731
+      },
+      "member_identities": [
+        "mainline.106",
+        "mainline.108"
+      ],
+      "non_null_issued_request_rows": 73,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969651/traces/native_B.jsonl.gz",
+      "sha256": "1cade1794d564e8aa46d0a5226d2b4acb75eb01b7344557d82fa99b179149450",
+      "seed": 969651,
+      "cohort": "production",
+      "rows": 1731,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1731,
+        "lane": 1731,
+        "member": 1731,
+        "ramp_observed": 1731,
+        "requested_accel": 1731,
+        "s": 1731,
+        "t": 1731,
+        "v": 1731,
+        "vid": 1731
+      },
+      "member_identities": [
+        "mainline.106",
+        "mainline.108"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969651/traces/native_B_repeat.jsonl.gz",
+      "sha256": "e1c92f67eac59d865e3a0c0899ff956686480a13eae704ca31847e66e6ef0b0a",
+      "seed": 969651,
+      "cohort": "production",
+      "rows": 1731,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1731,
+        "lane": 1731,
+        "member": 1731,
+        "ramp_observed": 1731,
+        "requested_accel": 1731,
+        "s": 1731,
+        "t": 1731,
+        "v": 1731,
+        "vid": 1731
+      },
+      "member_identities": [
+        "mainline.106",
+        "mainline.108"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969651/traces/sumocf_GROUP.jsonl.gz",
+      "sha256": "02287a32b723f7ce0d82f9eaac47de5e0eb24f250b7930415766f75b0c3d0450",
+      "seed": 969651,
+      "cohort": "production",
+      "rows": 1727,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1727,
+        "lane": 1727,
+        "member": 1727,
+        "ramp_observed": 1727,
+        "requested_accel": 1727,
+        "s": 1727,
+        "t": 1727,
+        "v": 1727,
+        "vid": 1727
+      },
+      "member_identities": [
+        "mainline.106",
+        "mainline.108"
+      ],
+      "non_null_issued_request_rows": 150,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969651/traces/sumocf_ONLY_0.jsonl.gz",
+      "sha256": "134d9eb3798524e771a5744cc44def60b71bcee6afc3f58b3ba344c7fae6e43d",
+      "seed": 969651,
+      "cohort": "production",
+      "rows": 1731,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1731,
+        "lane": 1731,
+        "member": 1731,
+        "ramp_observed": 1731,
+        "requested_accel": 1731,
+        "s": 1731,
+        "t": 1731,
+        "v": 1731,
+        "vid": 1731
+      },
+      "member_identities": [
+        "mainline.106",
+        "mainline.108"
+      ],
+      "non_null_issued_request_rows": 76,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969651/traces/sumocf_ONLY_1.jsonl.gz",
+      "sha256": "e8101547917a76b3b72825916b6ad86895b73e9487d851ce80c97128f44d6d30",
+      "seed": 969651,
+      "cohort": "production",
+      "rows": 1731,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1731,
+        "lane": 1731,
+        "member": 1731,
+        "ramp_observed": 1731,
+        "requested_accel": 1731,
+        "s": 1731,
+        "t": 1731,
+        "v": 1731,
+        "vid": 1731
+      },
+      "member_identities": [
+        "mainline.106",
+        "mainline.108"
+      ],
+      "non_null_issued_request_rows": 73,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969651/traces/wall_GROUP.jsonl.gz",
+      "sha256": "2e6611007f9a373d5ef3c441b5ffc423e0610af8b87b06039bfa4f01a7c1200e",
+      "seed": 969651,
+      "cohort": "production",
+      "rows": 1731,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1731,
+        "lane": 1731,
+        "member": 1731,
+        "ramp_observed": 1731,
+        "requested_accel": 1731,
+        "s": 1731,
+        "t": 1731,
+        "v": 1731,
+        "vid": 1731
+      },
+      "member_identities": [
+        "mainline.106",
+        "mainline.108"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969651/traces/wall_ONLY_0.jsonl.gz",
+      "sha256": "f5552dd3a794179c613cf759a18a93cba5917ef9980e061b9e602d587430888e",
+      "seed": 969651,
+      "cohort": "production",
+      "rows": 1731,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1731,
+        "lane": 1731,
+        "member": 1731,
+        "ramp_observed": 1731,
+        "requested_accel": 1731,
+        "s": 1731,
+        "t": 1731,
+        "v": 1731,
+        "vid": 1731
+      },
+      "member_identities": [
+        "mainline.106",
+        "mainline.108"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969651/traces/wall_ONLY_1.jsonl.gz",
+      "sha256": "fb4b8e4f5465536579b7395260e9822c3dfca7adbebdb4f162d12ce1912ec388",
+      "seed": 969651,
+      "cohort": "production",
+      "rows": 1731,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1731,
+        "lane": 1731,
+        "member": 1731,
+        "ramp_observed": 1731,
+        "requested_accel": 1731,
+        "s": 1731,
+        "t": 1731,
+        "v": 1731,
+        "vid": 1731
+      },
+      "member_identities": [
+        "mainline.106",
+        "mainline.108"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969652/traces/mappo_GROUP.jsonl.gz",
+      "sha256": "2c592a1eb05ae418ef2ea467989c8ef8032fa0f009b0ee439b90ee7f04e97f28",
+      "seed": 969652,
+      "cohort": "production",
+      "rows": 1935,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1935,
+        "lane": 1935,
+        "member": 1935,
+        "ramp_observed": 1935,
+        "requested_accel": 1935,
+        "s": 1935,
+        "t": 1935,
+        "v": 1935,
+        "vid": 1935
+      },
+      "member_identities": [
+        "mainline.107",
+        "mainline.108"
+      ],
+      "non_null_issued_request_rows": 81,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969652/traces/mappo_ONLY_0.jsonl.gz",
+      "sha256": "df28f736bf235f139a1100700e699c7e13a51252687711d0c5827033ca50275e",
+      "seed": 969652,
+      "cohort": "production",
+      "rows": 1935,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1935,
+        "lane": 1935,
+        "member": 1935,
+        "ramp_observed": 1935,
+        "requested_accel": 1935,
+        "s": 1935,
+        "t": 1935,
+        "v": 1935,
+        "vid": 1935
+      },
+      "member_identities": [
+        "mainline.107",
+        "mainline.108"
+      ],
+      "non_null_issued_request_rows": 37,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969652/traces/mappo_ONLY_1.jsonl.gz",
+      "sha256": "fe09b2735c081fadc7c348cab8b0f671a6afc16fb32c1c5c5eb487ec484813cb",
+      "seed": 969652,
+      "cohort": "production",
+      "rows": 1935,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1935,
+        "lane": 1935,
+        "member": 1935,
+        "ramp_observed": 1935,
+        "requested_accel": 1935,
+        "s": 1935,
+        "t": 1935,
+        "v": 1935,
+        "vid": 1935
+      },
+      "member_identities": [
+        "mainline.107",
+        "mainline.108"
+      ],
+      "non_null_issued_request_rows": 44,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969652/traces/native_B.jsonl.gz",
+      "sha256": "df4e5803d1a99440c8dd21b2c1b2dcc3e2cd3f51b11f93b1805bbd61ba0cf8b1",
+      "seed": 969652,
+      "cohort": "production",
+      "rows": 1935,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1935,
+        "lane": 1935,
+        "member": 1935,
+        "ramp_observed": 1935,
+        "requested_accel": 1935,
+        "s": 1935,
+        "t": 1935,
+        "v": 1935,
+        "vid": 1935
+      },
+      "member_identities": [
+        "mainline.107",
+        "mainline.108"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969652/traces/native_B_repeat.jsonl.gz",
+      "sha256": "bad481430b5b3b07d54c19de37b8d5875bbe482ffed5d757e45a8ab138da8c2e",
+      "seed": 969652,
+      "cohort": "production",
+      "rows": 1935,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1935,
+        "lane": 1935,
+        "member": 1935,
+        "ramp_observed": 1935,
+        "requested_accel": 1935,
+        "s": 1935,
+        "t": 1935,
+        "v": 1935,
+        "vid": 1935
+      },
+      "member_identities": [
+        "mainline.107",
+        "mainline.108"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969652/traces/sumocf_GROUP.jsonl.gz",
+      "sha256": "a5f77a426f76c3607411269fa1861149eb76e6257e127da691b63b895bb137a5",
+      "seed": 969652,
+      "cohort": "production",
+      "rows": 1935,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1935,
+        "lane": 1935,
+        "member": 1935,
+        "ramp_observed": 1935,
+        "requested_accel": 1935,
+        "s": 1935,
+        "t": 1935,
+        "v": 1935,
+        "vid": 1935
+      },
+      "member_identities": [
+        "mainline.107",
+        "mainline.108"
+      ],
+      "non_null_issued_request_rows": 81,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969652/traces/sumocf_ONLY_0.jsonl.gz",
+      "sha256": "82cf8abc5a8da5f0d3ebda13ab4413dd31ccce6349e9a7371c694247c7fbf2cf",
+      "seed": 969652,
+      "cohort": "production",
+      "rows": 1935,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1935,
+        "lane": 1935,
+        "member": 1935,
+        "ramp_observed": 1935,
+        "requested_accel": 1935,
+        "s": 1935,
+        "t": 1935,
+        "v": 1935,
+        "vid": 1935
+      },
+      "member_identities": [
+        "mainline.107",
+        "mainline.108"
+      ],
+      "non_null_issued_request_rows": 37,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969652/traces/sumocf_ONLY_1.jsonl.gz",
+      "sha256": "75deb559228b69343747d244223c422c86a1cb5b9fbacedb53a412568a0f36f5",
+      "seed": 969652,
+      "cohort": "production",
+      "rows": 1935,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1935,
+        "lane": 1935,
+        "member": 1935,
+        "ramp_observed": 1935,
+        "requested_accel": 1935,
+        "s": 1935,
+        "t": 1935,
+        "v": 1935,
+        "vid": 1935
+      },
+      "member_identities": [
+        "mainline.107",
+        "mainline.108"
+      ],
+      "non_null_issued_request_rows": 44,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969652/traces/wall_GROUP.jsonl.gz",
+      "sha256": "0b91ff69c1000c0e894895fee6e432adff899cb1de8b3adc2e07fbfc4801fd6a",
+      "seed": 969652,
+      "cohort": "production",
+      "rows": 1935,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1935,
+        "lane": 1935,
+        "member": 1935,
+        "ramp_observed": 1935,
+        "requested_accel": 1935,
+        "s": 1935,
+        "t": 1935,
+        "v": 1935,
+        "vid": 1935
+      },
+      "member_identities": [
+        "mainline.107",
+        "mainline.108"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969652/traces/wall_ONLY_0.jsonl.gz",
+      "sha256": "4f8bcd494adb6c5b2bc632d6e5643df96800f75d56110d7916b0b9be7f170ce1",
+      "seed": 969652,
+      "cohort": "production",
+      "rows": 1935,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1935,
+        "lane": 1935,
+        "member": 1935,
+        "ramp_observed": 1935,
+        "requested_accel": 1935,
+        "s": 1935,
+        "t": 1935,
+        "v": 1935,
+        "vid": 1935
+      },
+      "member_identities": [
+        "mainline.107",
+        "mainline.108"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969652/traces/wall_ONLY_1.jsonl.gz",
+      "sha256": "a6f5cf61fd863e03803ce0bf5a915107d828bf2d3f1e457179ff1cebd8627b43",
+      "seed": 969652,
+      "cohort": "production",
+      "rows": 1935,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1935,
+        "lane": 1935,
+        "member": 1935,
+        "ramp_observed": 1935,
+        "requested_accel": 1935,
+        "s": 1935,
+        "t": 1935,
+        "v": 1935,
+        "vid": 1935
+      },
+      "member_identities": [
+        "mainline.107",
+        "mainline.108"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969653/traces/mappo_GROUP.jsonl.gz",
+      "sha256": "c25516dad82fc0240ada6cc567a04f0cb65edc4e0a0adfca589cfdcf49030d9a",
+      "seed": 969653,
+      "cohort": "production",
+      "rows": 2111,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2111,
+        "lane": 2111,
+        "member": 2111,
+        "ramp_observed": 2111,
+        "requested_accel": 2111,
+        "s": 2111,
+        "t": 2111,
+        "v": 2111,
+        "vid": 2111
+      },
+      "member_identities": [
+        "mainline.86",
+        "ramp.35"
+      ],
+      "non_null_issued_request_rows": 228,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969653/traces/mappo_ONLY_0.jsonl.gz",
+      "sha256": "6a5e9079b45694d6376f08a3e158b109be955893021f00ec7b3de7a3f3db671d",
+      "seed": 969653,
+      "cohort": "production",
+      "rows": 2144,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2144,
+        "lane": 2144,
+        "member": 2144,
+        "ramp_observed": 2144,
+        "requested_accel": 2144,
+        "s": 2144,
+        "t": 2144,
+        "v": 2144,
+        "vid": 2144
+      },
+      "member_identities": [
+        "mainline.86",
+        "ramp.35"
+      ],
+      "non_null_issued_request_rows": 114,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969653/traces/mappo_ONLY_1.jsonl.gz",
+      "sha256": "7a30040b34d037cca9ec73e325db2ede38145958e84fb86c5537b71eafc6cd4c",
+      "seed": 969653,
+      "cohort": "production",
+      "rows": 1935,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1935,
+        "lane": 1935,
+        "member": 1935,
+        "ramp_observed": 1935,
+        "requested_accel": 1935,
+        "s": 1935,
+        "t": 1935,
+        "v": 1935,
+        "vid": 1935
+      },
+      "member_identities": [
+        "mainline.86",
+        "ramp.35"
+      ],
+      "non_null_issued_request_rows": 116,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969653/traces/native_B.jsonl.gz",
+      "sha256": "147fa636b9a522d40545246ee9418abb333ad5f7411241da868e36217283988f",
+      "seed": 969653,
+      "cohort": "production",
+      "rows": 2098,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2098,
+        "lane": 2098,
+        "member": 2098,
+        "ramp_observed": 2098,
+        "requested_accel": 2098,
+        "s": 2098,
+        "t": 2098,
+        "v": 2098,
+        "vid": 2098
+      },
+      "member_identities": [
+        "mainline.86",
+        "ramp.35"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969653/traces/native_B_repeat.jsonl.gz",
+      "sha256": "2fbc98ff2691144d1ccacf613522c9d0276b67837098387b7abf3618429b177e",
+      "seed": 969653,
+      "cohort": "production",
+      "rows": 2098,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2098,
+        "lane": 2098,
+        "member": 2098,
+        "ramp_observed": 2098,
+        "requested_accel": 2098,
+        "s": 2098,
+        "t": 2098,
+        "v": 2098,
+        "vid": 2098
+      },
+      "member_identities": [
+        "mainline.86",
+        "ramp.35"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969653/traces/sumocf_GROUP.jsonl.gz",
+      "sha256": "072c2b2f1b01614a28779142af0ff563a569e3c38afd77a48ed6e3979f1bd963",
+      "seed": 969653,
+      "cohort": "production",
+      "rows": 2111,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2111,
+        "lane": 2111,
+        "member": 2111,
+        "ramp_observed": 2111,
+        "requested_accel": 2111,
+        "s": 2111,
+        "t": 2111,
+        "v": 2111,
+        "vid": 2111
+      },
+      "member_identities": [
+        "mainline.86",
+        "ramp.35"
+      ],
+      "non_null_issued_request_rows": 228,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969653/traces/sumocf_ONLY_0.jsonl.gz",
+      "sha256": "59a65d2de8c896a89015fe26ded55780d892cb66fb8b0afd896857621e0868bc",
+      "seed": 969653,
+      "cohort": "production",
+      "rows": 2144,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2144,
+        "lane": 2144,
+        "member": 2144,
+        "ramp_observed": 2144,
+        "requested_accel": 2144,
+        "s": 2144,
+        "t": 2144,
+        "v": 2144,
+        "vid": 2144
+      },
+      "member_identities": [
+        "mainline.86",
+        "ramp.35"
+      ],
+      "non_null_issued_request_rows": 114,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969653/traces/sumocf_ONLY_1.jsonl.gz",
+      "sha256": "3f6a1d81b5e6ae798d8c314b6e0f1929da7d326846050c197e68bfcc0b267082",
+      "seed": 969653,
+      "cohort": "production",
+      "rows": 1935,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1935,
+        "lane": 1935,
+        "member": 1935,
+        "ramp_observed": 1935,
+        "requested_accel": 1935,
+        "s": 1935,
+        "t": 1935,
+        "v": 1935,
+        "vid": 1935
+      },
+      "member_identities": [
+        "mainline.86",
+        "ramp.35"
+      ],
+      "non_null_issued_request_rows": 116,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969653/traces/wall_GROUP.jsonl.gz",
+      "sha256": "890117e457ed789b5813ac8fc52994f9fe91f62af6aa65d2d67362de6eb99c92",
+      "seed": 969653,
+      "cohort": "production",
+      "rows": 2098,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2098,
+        "lane": 2098,
+        "member": 2098,
+        "ramp_observed": 2098,
+        "requested_accel": 2098,
+        "s": 2098,
+        "t": 2098,
+        "v": 2098,
+        "vid": 2098
+      },
+      "member_identities": [
+        "mainline.86",
+        "ramp.35"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969653/traces/wall_ONLY_0.jsonl.gz",
+      "sha256": "973efaac6d2b5b0276f570af0ddfc780c1d2435cc0074bc4e138ec1a3086389d",
+      "seed": 969653,
+      "cohort": "production",
+      "rows": 2098,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2098,
+        "lane": 2098,
+        "member": 2098,
+        "ramp_observed": 2098,
+        "requested_accel": 2098,
+        "s": 2098,
+        "t": 2098,
+        "v": 2098,
+        "vid": 2098
+      },
+      "member_identities": [
+        "mainline.86",
+        "ramp.35"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969653/traces/wall_ONLY_1.jsonl.gz",
+      "sha256": "1478da5a830fa439d9a2882b1011ab79be40e23e208fd22c228e7b1f64641c6c",
+      "seed": 969653,
+      "cohort": "production",
+      "rows": 2098,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2098,
+        "lane": 2098,
+        "member": 2098,
+        "ramp_observed": 2098,
+        "requested_accel": 2098,
+        "s": 2098,
+        "t": 2098,
+        "v": 2098,
+        "vid": 2098
+      },
+      "member_identities": [
+        "mainline.86",
+        "ramp.35"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969655/traces/mappo_GROUP.jsonl.gz",
+      "sha256": "620f29667397441bfc8bb67cd49518029c272edd9a41b6c12aa9b23dc16cca7f",
+      "seed": 969655,
+      "cohort": "production",
+      "rows": 1557,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1557,
+        "lane": 1557,
+        "member": 1557,
+        "ramp_observed": 1557,
+        "requested_accel": 1557,
+        "s": 1557,
+        "t": 1557,
+        "v": 1557,
+        "vid": 1557
+      },
+      "member_identities": [
+        "ramp.17",
+        "ramp.21"
+      ],
+      "non_null_issued_request_rows": 106,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969655/traces/mappo_ONLY_0.jsonl.gz",
+      "sha256": "db155fc85eddea9984da31611a720526aae2612268a7b0825d8fc497ec60dff7",
+      "seed": 969655,
+      "cohort": "production",
+      "rows": 1559,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1559,
+        "lane": 1559,
+        "member": 1559,
+        "ramp_observed": 1559,
+        "requested_accel": 1559,
+        "s": 1559,
+        "t": 1559,
+        "v": 1559,
+        "vid": 1559
+      },
+      "member_identities": [
+        "ramp.17",
+        "ramp.21"
+      ],
+      "non_null_issued_request_rows": 57,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969655/traces/mappo_ONLY_1.jsonl.gz",
+      "sha256": "365e6990d890e6f0697ef9d08fed52c26c995374e4ba33c5ac2b488dbcdda937",
+      "seed": 969655,
+      "cohort": "production",
+      "rows": 1557,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1557,
+        "lane": 1557,
+        "member": 1557,
+        "ramp_observed": 1557,
+        "requested_accel": 1557,
+        "s": 1557,
+        "t": 1557,
+        "v": 1557,
+        "vid": 1557
+      },
+      "member_identities": [
+        "ramp.17",
+        "ramp.21"
+      ],
+      "non_null_issued_request_rows": 50,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969655/traces/native_B.jsonl.gz",
+      "sha256": "8bfff7bce68c59674545526711e6334ea6c2aa4c3e0a48e353c6edbbd93157dc",
+      "seed": 969655,
+      "cohort": "production",
+      "rows": 1561,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1561,
+        "lane": 1561,
+        "member": 1561,
+        "ramp_observed": 1561,
+        "requested_accel": 1561,
+        "s": 1561,
+        "t": 1561,
+        "v": 1561,
+        "vid": 1561
+      },
+      "member_identities": [
+        "ramp.17",
+        "ramp.21"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969655/traces/native_B_repeat.jsonl.gz",
+      "sha256": "e99334f8e7ecb8c0ca779495793132c9fde7542d5c6dbf2974c697e1cf1e3c39",
+      "seed": 969655,
+      "cohort": "production",
+      "rows": 1561,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1561,
+        "lane": 1561,
+        "member": 1561,
+        "ramp_observed": 1561,
+        "requested_accel": 1561,
+        "s": 1561,
+        "t": 1561,
+        "v": 1561,
+        "vid": 1561
+      },
+      "member_identities": [
+        "ramp.17",
+        "ramp.21"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969655/traces/sumocf_GROUP.jsonl.gz",
+      "sha256": "9b2cf2d7e5efd19fb5f72e91a9b040198cbd5e03f4af9bba5b7cbd70e9926da0",
+      "seed": 969655,
+      "cohort": "production",
+      "rows": 1557,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1557,
+        "lane": 1557,
+        "member": 1557,
+        "ramp_observed": 1557,
+        "requested_accel": 1557,
+        "s": 1557,
+        "t": 1557,
+        "v": 1557,
+        "vid": 1557
+      },
+      "member_identities": [
+        "ramp.17",
+        "ramp.21"
+      ],
+      "non_null_issued_request_rows": 106,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969655/traces/sumocf_ONLY_0.jsonl.gz",
+      "sha256": "a04c7b1302f7eb63ce2375bdb8187df8acc8a8dbf9bea600eb7504cb9fd814eb",
+      "seed": 969655,
+      "cohort": "production",
+      "rows": 1559,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1559,
+        "lane": 1559,
+        "member": 1559,
+        "ramp_observed": 1559,
+        "requested_accel": 1559,
+        "s": 1559,
+        "t": 1559,
+        "v": 1559,
+        "vid": 1559
+      },
+      "member_identities": [
+        "ramp.17",
+        "ramp.21"
+      ],
+      "non_null_issued_request_rows": 57,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969655/traces/sumocf_ONLY_1.jsonl.gz",
+      "sha256": "82aedaf88e4749fbd0c5bedcab56291b71c8f9a7448a723ce3f0a7ec322a98e5",
+      "seed": 969655,
+      "cohort": "production",
+      "rows": 1557,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1557,
+        "lane": 1557,
+        "member": 1557,
+        "ramp_observed": 1557,
+        "requested_accel": 1557,
+        "s": 1557,
+        "t": 1557,
+        "v": 1557,
+        "vid": 1557
+      },
+      "member_identities": [
+        "ramp.17",
+        "ramp.21"
+      ],
+      "non_null_issued_request_rows": 50,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969655/traces/wall_GROUP.jsonl.gz",
+      "sha256": "79b07d4d8fcfdda53784736487ec711014eaec5087cacdd2d98415f51da79479",
+      "seed": 969655,
+      "cohort": "production",
+      "rows": 1561,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1561,
+        "lane": 1561,
+        "member": 1561,
+        "ramp_observed": 1561,
+        "requested_accel": 1561,
+        "s": 1561,
+        "t": 1561,
+        "v": 1561,
+        "vid": 1561
+      },
+      "member_identities": [
+        "ramp.17",
+        "ramp.21"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969655/traces/wall_ONLY_0.jsonl.gz",
+      "sha256": "5cd7198dc86dffeb00a87fc79187bf98cac2f3380063870f039c5bd5a39af0ce",
+      "seed": 969655,
+      "cohort": "production",
+      "rows": 1561,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1561,
+        "lane": 1561,
+        "member": 1561,
+        "ramp_observed": 1561,
+        "requested_accel": 1561,
+        "s": 1561,
+        "t": 1561,
+        "v": 1561,
+        "vid": 1561
+      },
+      "member_identities": [
+        "ramp.17",
+        "ramp.21"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969655/traces/wall_ONLY_1.jsonl.gz",
+      "sha256": "4eed816b84e3158e5d6348b53b110b5e9fa872cb12e711948d3a8879bdba0d43",
+      "seed": 969655,
+      "cohort": "production",
+      "rows": 1561,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1561,
+        "lane": 1561,
+        "member": 1561,
+        "ramp_observed": 1561,
+        "requested_accel": 1561,
+        "s": 1561,
+        "t": 1561,
+        "v": 1561,
+        "vid": 1561
+      },
+      "member_identities": [
+        "ramp.17",
+        "ramp.21"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969656/traces/mappo_GROUP.jsonl.gz",
+      "sha256": "36d905a9056f44b0aef9011f584d0df4b27d1fcd9ced990d2b05549203b98d82",
+      "seed": 969656,
+      "cohort": "production",
+      "rows": 2832,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2832,
+        "lane": 2832,
+        "member": 2832,
+        "ramp_observed": 2832,
+        "requested_accel": 2832,
+        "s": 2832,
+        "t": 2832,
+        "v": 2832,
+        "vid": 2832
+      },
+      "member_identities": [
+        "ramp.20",
+        "ramp.23"
+      ],
+      "non_null_issued_request_rows": 192,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969656/traces/mappo_ONLY_0.jsonl.gz",
+      "sha256": "e56fac5789a1f006a1742cba9756e3f13770af33c0754ab9a2287ef7520b25b6",
+      "seed": 969656,
+      "cohort": "production",
+      "rows": 2646,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2646,
+        "lane": 2646,
+        "member": 2646,
+        "ramp_observed": 2646,
+        "requested_accel": 2646,
+        "s": 2646,
+        "t": 2646,
+        "v": 2646,
+        "vid": 2646
+      },
+      "member_identities": [
+        "ramp.20",
+        "ramp.23"
+      ],
+      "non_null_issued_request_rows": 91,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969656/traces/mappo_ONLY_1.jsonl.gz",
+      "sha256": "d9e0d98944ec268f3704cd716c3372bf2e9c0ea58594c84b2707e7e2e4627964",
+      "seed": 969656,
+      "cohort": "production",
+      "rows": 2499,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2499,
+        "lane": 2499,
+        "member": 2499,
+        "ramp_observed": 2499,
+        "requested_accel": 2499,
+        "s": 2499,
+        "t": 2499,
+        "v": 2499,
+        "vid": 2499
+      },
+      "member_identities": [
+        "ramp.20",
+        "ramp.23"
+      ],
+      "non_null_issued_request_rows": 72,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969656/traces/native_B.jsonl.gz",
+      "sha256": "d38b8f378e38498c54fa4f44fe5d4c8e39059acc7aaba5f866f4747f13c00716",
+      "seed": 969656,
+      "cohort": "production",
+      "rows": 2499,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2499,
+        "lane": 2499,
+        "member": 2499,
+        "ramp_observed": 2499,
+        "requested_accel": 2499,
+        "s": 2499,
+        "t": 2499,
+        "v": 2499,
+        "vid": 2499
+      },
+      "member_identities": [
+        "ramp.20",
+        "ramp.23"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969656/traces/native_B_repeat.jsonl.gz",
+      "sha256": "e9141b261a57a2004a949e8e54a76567ad4dfaa8ebb863382ea60c661244a373",
+      "seed": 969656,
+      "cohort": "production",
+      "rows": 2499,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2499,
+        "lane": 2499,
+        "member": 2499,
+        "ramp_observed": 2499,
+        "requested_accel": 2499,
+        "s": 2499,
+        "t": 2499,
+        "v": 2499,
+        "vid": 2499
+      },
+      "member_identities": [
+        "ramp.20",
+        "ramp.23"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969656/traces/sumocf_GROUP.jsonl.gz",
+      "sha256": "bdf2ede6279cd0cbd651f8487987a02bb8458a6250e305bd8007d6fec9f852b8",
+      "seed": 969656,
+      "cohort": "production",
+      "rows": 2832,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2832,
+        "lane": 2832,
+        "member": 2832,
+        "ramp_observed": 2832,
+        "requested_accel": 2832,
+        "s": 2832,
+        "t": 2832,
+        "v": 2832,
+        "vid": 2832
+      },
+      "member_identities": [
+        "ramp.20",
+        "ramp.23"
+      ],
+      "non_null_issued_request_rows": 192,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969656/traces/sumocf_ONLY_0.jsonl.gz",
+      "sha256": "931539a82e4af8f6bcb97b4ba83b054afe04ef0376d6b439193af97c6bdc5b63",
+      "seed": 969656,
+      "cohort": "production",
+      "rows": 2646,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2646,
+        "lane": 2646,
+        "member": 2646,
+        "ramp_observed": 2646,
+        "requested_accel": 2646,
+        "s": 2646,
+        "t": 2646,
+        "v": 2646,
+        "vid": 2646
+      },
+      "member_identities": [
+        "ramp.20",
+        "ramp.23"
+      ],
+      "non_null_issued_request_rows": 91,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969656/traces/sumocf_ONLY_1.jsonl.gz",
+      "sha256": "920fe2a7c5c774f43f7836387ec955118446fc48f9ba3e390ee419f843ecb520",
+      "seed": 969656,
+      "cohort": "production",
+      "rows": 2499,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2499,
+        "lane": 2499,
+        "member": 2499,
+        "ramp_observed": 2499,
+        "requested_accel": 2499,
+        "s": 2499,
+        "t": 2499,
+        "v": 2499,
+        "vid": 2499
+      },
+      "member_identities": [
+        "ramp.20",
+        "ramp.23"
+      ],
+      "non_null_issued_request_rows": 72,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969656/traces/wall_GROUP.jsonl.gz",
+      "sha256": "ad006793c4a2906ace25a35ef55fe550bfb5b65f344d5d36ed7dc54d54d4c256",
+      "seed": 969656,
+      "cohort": "production",
+      "rows": 2499,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2499,
+        "lane": 2499,
+        "member": 2499,
+        "ramp_observed": 2499,
+        "requested_accel": 2499,
+        "s": 2499,
+        "t": 2499,
+        "v": 2499,
+        "vid": 2499
+      },
+      "member_identities": [
+        "ramp.20",
+        "ramp.23"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969656/traces/wall_ONLY_0.jsonl.gz",
+      "sha256": "be2aa249cf86d0d374c86598e2d9df780dfab941204be59afc3a0d1ca39f6dd2",
+      "seed": 969656,
+      "cohort": "production",
+      "rows": 2499,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2499,
+        "lane": 2499,
+        "member": 2499,
+        "ramp_observed": 2499,
+        "requested_accel": 2499,
+        "s": 2499,
+        "t": 2499,
+        "v": 2499,
+        "vid": 2499
+      },
+      "member_identities": [
+        "ramp.20",
+        "ramp.23"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969656/traces/wall_ONLY_1.jsonl.gz",
+      "sha256": "05c4c541530f225515603e2fb70f00c7767cf202f16d7b397deabeef7435b90b",
+      "seed": 969656,
+      "cohort": "production",
+      "rows": 2499,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2499,
+        "lane": 2499,
+        "member": 2499,
+        "ramp_observed": 2499,
+        "requested_accel": 2499,
+        "s": 2499,
+        "t": 2499,
+        "v": 2499,
+        "vid": 2499
+      },
+      "member_identities": [
+        "ramp.20",
+        "ramp.23"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969657/traces/mappo_GROUP.jsonl.gz",
+      "sha256": "6a443840fbb0974ae161a66883d11a721991cc45c94cc1cab26589329432569b",
+      "seed": 969657,
+      "cohort": "production",
+      "rows": 1852,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1852,
+        "lane": 1852,
+        "member": 1852,
+        "ramp_observed": 1852,
+        "requested_accel": 1852,
+        "s": 1852,
+        "t": 1852,
+        "v": 1852,
+        "vid": 1852
+      },
+      "member_identities": [
+        "mainline.113",
+        "mainline.117"
+      ],
+      "non_null_issued_request_rows": 155,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969657/traces/mappo_ONLY_0.jsonl.gz",
+      "sha256": "ec707f960b2944507c2501a2dfcaec4626d25aa1d435da897810ab3a7affdbf1",
+      "seed": 969657,
+      "cohort": "production",
+      "rows": 1991,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1991,
+        "lane": 1991,
+        "member": 1991,
+        "ramp_observed": 1991,
+        "requested_accel": 1991,
+        "s": 1991,
+        "t": 1991,
+        "v": 1991,
+        "vid": 1991
+      },
+      "member_identities": [
+        "mainline.113",
+        "mainline.117"
+      ],
+      "non_null_issued_request_rows": 39,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969657/traces/mappo_ONLY_1.jsonl.gz",
+      "sha256": "22ef0e27e4d9c1b0fd88e761b27007b33ac8ec7dd47f96db683b94117b7e2e97",
+      "seed": 969657,
+      "cohort": "production",
+      "rows": 1852,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1852,
+        "lane": 1852,
+        "member": 1852,
+        "ramp_observed": 1852,
+        "requested_accel": 1852,
+        "s": 1852,
+        "t": 1852,
+        "v": 1852,
+        "vid": 1852
+      },
+      "member_identities": [
+        "mainline.113",
+        "mainline.117"
+      ],
+      "non_null_issued_request_rows": 116,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969657/traces/native_B.jsonl.gz",
+      "sha256": "c12ccd7ba4327d184233b0e2010922ef44e14ecca5bb2ed8a4b685cbf2dcee42",
+      "seed": 969657,
+      "cohort": "production",
+      "rows": 1991,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1991,
+        "lane": 1991,
+        "member": 1991,
+        "ramp_observed": 1991,
+        "requested_accel": 1991,
+        "s": 1991,
+        "t": 1991,
+        "v": 1991,
+        "vid": 1991
+      },
+      "member_identities": [
+        "mainline.113",
+        "mainline.117"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969657/traces/native_B_repeat.jsonl.gz",
+      "sha256": "0e2f65c5313f8ee62d5f457793983248e791c11bab4dff65eb17182fa0ada286",
+      "seed": 969657,
+      "cohort": "production",
+      "rows": 1991,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1991,
+        "lane": 1991,
+        "member": 1991,
+        "ramp_observed": 1991,
+        "requested_accel": 1991,
+        "s": 1991,
+        "t": 1991,
+        "v": 1991,
+        "vid": 1991
+      },
+      "member_identities": [
+        "mainline.113",
+        "mainline.117"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969657/traces/sumocf_GROUP.jsonl.gz",
+      "sha256": "ab1ca6929dbed3a600e7973fb849fc0c775b7c5b04bca1de86e3f8e914c58093",
+      "seed": 969657,
+      "cohort": "production",
+      "rows": 1852,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1852,
+        "lane": 1852,
+        "member": 1852,
+        "ramp_observed": 1852,
+        "requested_accel": 1852,
+        "s": 1852,
+        "t": 1852,
+        "v": 1852,
+        "vid": 1852
+      },
+      "member_identities": [
+        "mainline.113",
+        "mainline.117"
+      ],
+      "non_null_issued_request_rows": 155,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969657/traces/sumocf_ONLY_0.jsonl.gz",
+      "sha256": "5e625cc543b32679d1a9f8c30e40a07b138e51db6fbdf309faa114eadc08aca9",
+      "seed": 969657,
+      "cohort": "production",
+      "rows": 1991,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1991,
+        "lane": 1991,
+        "member": 1991,
+        "ramp_observed": 1991,
+        "requested_accel": 1991,
+        "s": 1991,
+        "t": 1991,
+        "v": 1991,
+        "vid": 1991
+      },
+      "member_identities": [
+        "mainline.113",
+        "mainline.117"
+      ],
+      "non_null_issued_request_rows": 39,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969657/traces/sumocf_ONLY_1.jsonl.gz",
+      "sha256": "c4fc25759826b558e59c14493aa94c0e123719f7d69c49a35a06f3bc83c69983",
+      "seed": 969657,
+      "cohort": "production",
+      "rows": 1852,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1852,
+        "lane": 1852,
+        "member": 1852,
+        "ramp_observed": 1852,
+        "requested_accel": 1852,
+        "s": 1852,
+        "t": 1852,
+        "v": 1852,
+        "vid": 1852
+      },
+      "member_identities": [
+        "mainline.113",
+        "mainline.117"
+      ],
+      "non_null_issued_request_rows": 116,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969657/traces/wall_GROUP.jsonl.gz",
+      "sha256": "06d8923213a021299fcf43569a733dbc23d455672969a87fa3f7a330e3a0f2de",
+      "seed": 969657,
+      "cohort": "production",
+      "rows": 1991,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1991,
+        "lane": 1991,
+        "member": 1991,
+        "ramp_observed": 1991,
+        "requested_accel": 1991,
+        "s": 1991,
+        "t": 1991,
+        "v": 1991,
+        "vid": 1991
+      },
+      "member_identities": [
+        "mainline.113",
+        "mainline.117"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969657/traces/wall_ONLY_0.jsonl.gz",
+      "sha256": "fd571263487439ff08f0e2b0875c8c13845b7fe38aeac1715044e56975c37b16",
+      "seed": 969657,
+      "cohort": "production",
+      "rows": 1991,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1991,
+        "lane": 1991,
+        "member": 1991,
+        "ramp_observed": 1991,
+        "requested_accel": 1991,
+        "s": 1991,
+        "t": 1991,
+        "v": 1991,
+        "vid": 1991
+      },
+      "member_identities": [
+        "mainline.113",
+        "mainline.117"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969657/traces/wall_ONLY_1.jsonl.gz",
+      "sha256": "21597a35fd31734cc3a0b4ee20c5cf3cb4e431a1c132d5458796a2c97bdced1d",
+      "seed": 969657,
+      "cohort": "production",
+      "rows": 1991,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1991,
+        "lane": 1991,
+        "member": 1991,
+        "ramp_observed": 1991,
+        "requested_accel": 1991,
+        "s": 1991,
+        "t": 1991,
+        "v": 1991,
+        "vid": 1991
+      },
+      "member_identities": [
+        "mainline.113",
+        "mainline.117"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969659/traces/mappo_GROUP.jsonl.gz",
+      "sha256": "57e7f3c240d94a0681f241f4492088ce11c87f72f5ac1d6857f217fe35b12dda",
+      "seed": 969659,
+      "cohort": "production",
+      "rows": 3053,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 3053,
+        "lane": 3053,
+        "member": 3053,
+        "ramp_observed": 3053,
+        "requested_accel": 3053,
+        "s": 3053,
+        "t": 3053,
+        "v": 3053,
+        "vid": 3053
+      },
+      "member_identities": [
+        "mainline.136",
+        "ramp.42"
+      ],
+      "non_null_issued_request_rows": 238,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969659/traces/mappo_ONLY_0.jsonl.gz",
+      "sha256": "52adaafb691bf6599d133dfe220fb8cbe7826eb86755c4183012f0ca999b92bb",
+      "seed": 969659,
+      "cohort": "production",
+      "rows": 2938,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2938,
+        "lane": 2938,
+        "member": 2938,
+        "ramp_observed": 2938,
+        "requested_accel": 2938,
+        "s": 2938,
+        "t": 2938,
+        "v": 2938,
+        "vid": 2938
+      },
+      "member_identities": [
+        "mainline.136",
+        "ramp.42"
+      ],
+      "non_null_issued_request_rows": 118,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969659/traces/mappo_ONLY_1.jsonl.gz",
+      "sha256": "1d060012865971f9d82cce3a13b401c27c12d6be782c1637215909df959da010",
+      "seed": 969659,
+      "cohort": "production",
+      "rows": 3015,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 3015,
+        "lane": 3015,
+        "member": 3015,
+        "ramp_observed": 3015,
+        "requested_accel": 3015,
+        "s": 3015,
+        "t": 3015,
+        "v": 3015,
+        "vid": 3015
+      },
+      "member_identities": [
+        "mainline.136",
+        "ramp.42"
+      ],
+      "non_null_issued_request_rows": 118,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969659/traces/native_B.jsonl.gz",
+      "sha256": "1d6c8fe4de51d5a2bf44704d57161853068345a23028562653ecf045ac338249",
+      "seed": 969659,
+      "cohort": "production",
+      "rows": 2944,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2944,
+        "lane": 2944,
+        "member": 2944,
+        "ramp_observed": 2944,
+        "requested_accel": 2944,
+        "s": 2944,
+        "t": 2944,
+        "v": 2944,
+        "vid": 2944
+      },
+      "member_identities": [
+        "mainline.136",
+        "ramp.42"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969659/traces/native_B_repeat.jsonl.gz",
+      "sha256": "55984c7b8e52344c0543a07b5d18534fa1eb9eaf5306e5cec3b1c02eca956024",
+      "seed": 969659,
+      "cohort": "production",
+      "rows": 2944,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2944,
+        "lane": 2944,
+        "member": 2944,
+        "ramp_observed": 2944,
+        "requested_accel": 2944,
+        "s": 2944,
+        "t": 2944,
+        "v": 2944,
+        "vid": 2944
+      },
+      "member_identities": [
+        "mainline.136",
+        "ramp.42"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969659/traces/sumocf_GROUP.jsonl.gz",
+      "sha256": "f5317bbe91c1a271c8e3ff7f0e62f6807a498b891c57c96579c1ec8bd15406c7",
+      "seed": 969659,
+      "cohort": "production",
+      "rows": 3053,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 3053,
+        "lane": 3053,
+        "member": 3053,
+        "ramp_observed": 3053,
+        "requested_accel": 3053,
+        "s": 3053,
+        "t": 3053,
+        "v": 3053,
+        "vid": 3053
+      },
+      "member_identities": [
+        "mainline.136",
+        "ramp.42"
+      ],
+      "non_null_issued_request_rows": 238,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969659/traces/sumocf_ONLY_0.jsonl.gz",
+      "sha256": "8e08ddb6332f6d67e699c74121bc6ed2e6f41ba68c12c5c4bc8be2ce003d1bc3",
+      "seed": 969659,
+      "cohort": "production",
+      "rows": 2938,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2938,
+        "lane": 2938,
+        "member": 2938,
+        "ramp_observed": 2938,
+        "requested_accel": 2938,
+        "s": 2938,
+        "t": 2938,
+        "v": 2938,
+        "vid": 2938
+      },
+      "member_identities": [
+        "mainline.136",
+        "ramp.42"
+      ],
+      "non_null_issued_request_rows": 118,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969659/traces/sumocf_ONLY_1.jsonl.gz",
+      "sha256": "2ad4bda27aef7b3a59e5cc3087bb943d0c5c47c4e63281261ff3865a733b90b8",
+      "seed": 969659,
+      "cohort": "production",
+      "rows": 3015,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 3015,
+        "lane": 3015,
+        "member": 3015,
+        "ramp_observed": 3015,
+        "requested_accel": 3015,
+        "s": 3015,
+        "t": 3015,
+        "v": 3015,
+        "vid": 3015
+      },
+      "member_identities": [
+        "mainline.136",
+        "ramp.42"
+      ],
+      "non_null_issued_request_rows": 118,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969659/traces/wall_GROUP.jsonl.gz",
+      "sha256": "08b1d645d8ab5f680f4204fddc51472f58e09c581fc13ea6550f41e49611f354",
+      "seed": 969659,
+      "cohort": "production",
+      "rows": 2944,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2944,
+        "lane": 2944,
+        "member": 2944,
+        "ramp_observed": 2944,
+        "requested_accel": 2944,
+        "s": 2944,
+        "t": 2944,
+        "v": 2944,
+        "vid": 2944
+      },
+      "member_identities": [
+        "mainline.136",
+        "ramp.42"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969659/traces/wall_ONLY_0.jsonl.gz",
+      "sha256": "e6b68880370d9334b9b45cbe07401d65cf7a7a264b1266de58099319c67455bc",
+      "seed": 969659,
+      "cohort": "production",
+      "rows": 2944,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2944,
+        "lane": 2944,
+        "member": 2944,
+        "ramp_observed": 2944,
+        "requested_accel": 2944,
+        "s": 2944,
+        "t": 2944,
+        "v": 2944,
+        "vid": 2944
+      },
+      "member_identities": [
+        "mainline.136",
+        "ramp.42"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969659/traces/wall_ONLY_1.jsonl.gz",
+      "sha256": "f7d2db91ab2057ed5a5251de48d32a7aec2a7127e388b2f1d2f51e1842e31f57",
+      "seed": 969659,
+      "cohort": "production",
+      "rows": 2944,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2944,
+        "lane": 2944,
+        "member": 2944,
+        "ramp_observed": 2944,
+        "requested_accel": 2944,
+        "s": 2944,
+        "t": 2944,
+        "v": 2944,
+        "vid": 2944
+      },
+      "member_identities": [
+        "mainline.136",
+        "ramp.42"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969660/traces/mappo_GROUP.jsonl.gz",
+      "sha256": "a19bbad13fcb1e22e6af7650380770e265f77d8bb4d2d9c1d9ca2e13dd0a697c",
+      "seed": 969660,
+      "cohort": "production",
+      "rows": 2652,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2652,
+        "lane": 2652,
+        "member": 2652,
+        "ramp_observed": 2652,
+        "requested_accel": 2652,
+        "s": 2652,
+        "t": 2652,
+        "v": 2652,
+        "vid": 2652
+      },
+      "member_identities": [
+        "mainline.113",
+        "ramp.34"
+      ],
+      "non_null_issued_request_rows": 151,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969660/traces/mappo_ONLY_0.jsonl.gz",
+      "sha256": "f65f98e5f6ea5e6f2c4fb40d215422f887ce5ebf2a2a8f03b4170dfcca7783c3",
+      "seed": 969660,
+      "cohort": "production",
+      "rows": 2786,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2786,
+        "lane": 2786,
+        "member": 2786,
+        "ramp_observed": 2786,
+        "requested_accel": 2786,
+        "s": 2786,
+        "t": 2786,
+        "v": 2786,
+        "vid": 2786
+      },
+      "member_identities": [
+        "mainline.113",
+        "ramp.34"
+      ],
+      "non_null_issued_request_rows": 35,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969660/traces/mappo_ONLY_1.jsonl.gz",
+      "sha256": "2ed3e5fc0244c906110f31cc090071c9b91dca277c8e75820f6852c7d8c6be92",
+      "seed": 969660,
+      "cohort": "production",
+      "rows": 2652,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2652,
+        "lane": 2652,
+        "member": 2652,
+        "ramp_observed": 2652,
+        "requested_accel": 2652,
+        "s": 2652,
+        "t": 2652,
+        "v": 2652,
+        "vid": 2652
+      },
+      "member_identities": [
+        "mainline.113",
+        "ramp.34"
+      ],
+      "non_null_issued_request_rows": 116,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969660/traces/native_B.jsonl.gz",
+      "sha256": "aa708437a76632213b53cec367e438d36dfc1bd45617c71f69d6d8bb80f22008",
+      "seed": 969660,
+      "cohort": "production",
+      "rows": 2786,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2786,
+        "lane": 2786,
+        "member": 2786,
+        "ramp_observed": 2786,
+        "requested_accel": 2786,
+        "s": 2786,
+        "t": 2786,
+        "v": 2786,
+        "vid": 2786
+      },
+      "member_identities": [
+        "mainline.113",
+        "ramp.34"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969660/traces/native_B_repeat.jsonl.gz",
+      "sha256": "3b14c4593d5e74a7fd1be73ea4302e92cfd15a6b131f8ef1e291de0f9a504e67",
+      "seed": 969660,
+      "cohort": "production",
+      "rows": 2786,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2786,
+        "lane": 2786,
+        "member": 2786,
+        "ramp_observed": 2786,
+        "requested_accel": 2786,
+        "s": 2786,
+        "t": 2786,
+        "v": 2786,
+        "vid": 2786
+      },
+      "member_identities": [
+        "mainline.113",
+        "ramp.34"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969660/traces/sumocf_GROUP.jsonl.gz",
+      "sha256": "477c40cb8b7d0c2b5a0abf6dc875a40e0f44488e9745530267b77849c1916c1b",
+      "seed": 969660,
+      "cohort": "production",
+      "rows": 2652,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2652,
+        "lane": 2652,
+        "member": 2652,
+        "ramp_observed": 2652,
+        "requested_accel": 2652,
+        "s": 2652,
+        "t": 2652,
+        "v": 2652,
+        "vid": 2652
+      },
+      "member_identities": [
+        "mainline.113",
+        "ramp.34"
+      ],
+      "non_null_issued_request_rows": 151,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969660/traces/sumocf_ONLY_0.jsonl.gz",
+      "sha256": "5bbf0c18dcc6060c52c0138b2a5fb2467efffc8966ffe80fd70aa52c448a465a",
+      "seed": 969660,
+      "cohort": "production",
+      "rows": 2786,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2786,
+        "lane": 2786,
+        "member": 2786,
+        "ramp_observed": 2786,
+        "requested_accel": 2786,
+        "s": 2786,
+        "t": 2786,
+        "v": 2786,
+        "vid": 2786
+      },
+      "member_identities": [
+        "mainline.113",
+        "ramp.34"
+      ],
+      "non_null_issued_request_rows": 35,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969660/traces/sumocf_ONLY_1.jsonl.gz",
+      "sha256": "81e4abfa9c9877af73e170315b2680a70444f34ffd3c14d529bf402ab718949f",
+      "seed": 969660,
+      "cohort": "production",
+      "rows": 2652,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2652,
+        "lane": 2652,
+        "member": 2652,
+        "ramp_observed": 2652,
+        "requested_accel": 2652,
+        "s": 2652,
+        "t": 2652,
+        "v": 2652,
+        "vid": 2652
+      },
+      "member_identities": [
+        "mainline.113",
+        "ramp.34"
+      ],
+      "non_null_issued_request_rows": 116,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969660/traces/wall_GROUP.jsonl.gz",
+      "sha256": "44f7f22b569e1ff047dee192f13ade80cea41f7132b56e3ce49e7ae64b9744c6",
+      "seed": 969660,
+      "cohort": "production",
+      "rows": 2786,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2786,
+        "lane": 2786,
+        "member": 2786,
+        "ramp_observed": 2786,
+        "requested_accel": 2786,
+        "s": 2786,
+        "t": 2786,
+        "v": 2786,
+        "vid": 2786
+      },
+      "member_identities": [
+        "mainline.113",
+        "ramp.34"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969660/traces/wall_ONLY_0.jsonl.gz",
+      "sha256": "a1bee741213ea59a77aa47d0bfb5cd9dbfc8ae29f7d44fa2b7eda511fe4854e8",
+      "seed": 969660,
+      "cohort": "production",
+      "rows": 2786,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2786,
+        "lane": 2786,
+        "member": 2786,
+        "ramp_observed": 2786,
+        "requested_accel": 2786,
+        "s": 2786,
+        "t": 2786,
+        "v": 2786,
+        "vid": 2786
+      },
+      "member_identities": [
+        "mainline.113",
+        "ramp.34"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969660/traces/wall_ONLY_1.jsonl.gz",
+      "sha256": "66c3aafd6e0a0f459ba441d38e94a4c3af1da4611555a47d1168491be6576b7f",
+      "seed": 969660,
+      "cohort": "production",
+      "rows": 2786,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2786,
+        "lane": 2786,
+        "member": 2786,
+        "ramp_observed": 2786,
+        "requested_accel": 2786,
+        "s": 2786,
+        "t": 2786,
+        "v": 2786,
+        "vid": 2786
+      },
+      "member_identities": [
+        "mainline.113",
+        "ramp.34"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969661/traces/mappo_GROUP.jsonl.gz",
+      "sha256": "27033145956f66d1bdbe69acc4bcfb6addfaa2f22b514b813aa0104f478be7d4",
+      "seed": 969661,
+      "cohort": "production",
+      "rows": 1831,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1831,
+        "lane": 1831,
+        "member": 1831,
+        "ramp_observed": 1831,
+        "requested_accel": 1831,
+        "s": 1831,
+        "t": 1831,
+        "v": 1831,
+        "vid": 1831
+      },
+      "member_identities": [
+        "ramp.24",
+        "ramp.25"
+      ],
+      "non_null_issued_request_rows": 198,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969661/traces/mappo_ONLY_0.jsonl.gz",
+      "sha256": "0b19b2891192b1b917e71da8fb7b751e0388a4a9be30d919f9ae678422460536",
+      "seed": 969661,
+      "cohort": "production",
+      "rows": 1973,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1973,
+        "lane": 1973,
+        "member": 1973,
+        "ramp_observed": 1973,
+        "requested_accel": 1973,
+        "s": 1973,
+        "t": 1973,
+        "v": 1973,
+        "vid": 1973
+      },
+      "member_identities": [
+        "ramp.24",
+        "ramp.25"
+      ],
+      "non_null_issued_request_rows": 114,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969661/traces/mappo_ONLY_1.jsonl.gz",
+      "sha256": "03edfdcaf36eff3b88e4fe703090649cb573a06470d82f2d04873d98730417d5",
+      "seed": 969661,
+      "cohort": "production",
+      "rows": 1963,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1963,
+        "lane": 1963,
+        "member": 1963,
+        "ramp_observed": 1963,
+        "requested_accel": 1963,
+        "s": 1963,
+        "t": 1963,
+        "v": 1963,
+        "vid": 1963
+      },
+      "member_identities": [
+        "ramp.24",
+        "ramp.25"
+      ],
+      "non_null_issued_request_rows": 84,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969661/traces/native_B.jsonl.gz",
+      "sha256": "bc8ea8b6ba09f09156fecadf41df11317c49437d14324939989d50d38f66189c",
+      "seed": 969661,
+      "cohort": "production",
+      "rows": 2007,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2007,
+        "lane": 2007,
+        "member": 2007,
+        "ramp_observed": 2007,
+        "requested_accel": 2007,
+        "s": 2007,
+        "t": 2007,
+        "v": 2007,
+        "vid": 2007
+      },
+      "member_identities": [
+        "ramp.24",
+        "ramp.25"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969661/traces/native_B_repeat.jsonl.gz",
+      "sha256": "071e6ed0e789d636cff62f5bf67820e4ccc755335527e0ec8f0ee56efb2a7b65",
+      "seed": 969661,
+      "cohort": "production",
+      "rows": 2007,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2007,
+        "lane": 2007,
+        "member": 2007,
+        "ramp_observed": 2007,
+        "requested_accel": 2007,
+        "s": 2007,
+        "t": 2007,
+        "v": 2007,
+        "vid": 2007
+      },
+      "member_identities": [
+        "ramp.24",
+        "ramp.25"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969661/traces/sumocf_GROUP.jsonl.gz",
+      "sha256": "fa37120aaeff41f95832cbb32a31367c3f845b4a8048c399915e41fbf0fbe9bc",
+      "seed": 969661,
+      "cohort": "production",
+      "rows": 1831,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1831,
+        "lane": 1831,
+        "member": 1831,
+        "ramp_observed": 1831,
+        "requested_accel": 1831,
+        "s": 1831,
+        "t": 1831,
+        "v": 1831,
+        "vid": 1831
+      },
+      "member_identities": [
+        "ramp.24",
+        "ramp.25"
+      ],
+      "non_null_issued_request_rows": 198,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969661/traces/sumocf_ONLY_0.jsonl.gz",
+      "sha256": "44b7f76c56bc56f05436b88c4e24f1d3d002738e4f06adbfc5a3fde2fca872eb",
+      "seed": 969661,
+      "cohort": "production",
+      "rows": 1973,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1973,
+        "lane": 1973,
+        "member": 1973,
+        "ramp_observed": 1973,
+        "requested_accel": 1973,
+        "s": 1973,
+        "t": 1973,
+        "v": 1973,
+        "vid": 1973
+      },
+      "member_identities": [
+        "ramp.24",
+        "ramp.25"
+      ],
+      "non_null_issued_request_rows": 114,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969661/traces/sumocf_ONLY_1.jsonl.gz",
+      "sha256": "96b6bb8e19824bdb4bc6093ece5510c6f018919de08b1445b81f08d708660498",
+      "seed": 969661,
+      "cohort": "production",
+      "rows": 1963,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1963,
+        "lane": 1963,
+        "member": 1963,
+        "ramp_observed": 1963,
+        "requested_accel": 1963,
+        "s": 1963,
+        "t": 1963,
+        "v": 1963,
+        "vid": 1963
+      },
+      "member_identities": [
+        "ramp.24",
+        "ramp.25"
+      ],
+      "non_null_issued_request_rows": 84,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969661/traces/wall_GROUP.jsonl.gz",
+      "sha256": "67e4dc5703100ab4390c5a5f753606780726d90bcd50c664af21c4ef1c7a6a01",
+      "seed": 969661,
+      "cohort": "production",
+      "rows": 2007,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2007,
+        "lane": 2007,
+        "member": 2007,
+        "ramp_observed": 2007,
+        "requested_accel": 2007,
+        "s": 2007,
+        "t": 2007,
+        "v": 2007,
+        "vid": 2007
+      },
+      "member_identities": [
+        "ramp.24",
+        "ramp.25"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969661/traces/wall_ONLY_0.jsonl.gz",
+      "sha256": "bece4747321e328623cc41b60b5c661213bb4f0faa212707f390a6ca71a7deda",
+      "seed": 969661,
+      "cohort": "production",
+      "rows": 2007,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2007,
+        "lane": 2007,
+        "member": 2007,
+        "ramp_observed": 2007,
+        "requested_accel": 2007,
+        "s": 2007,
+        "t": 2007,
+        "v": 2007,
+        "vid": 2007
+      },
+      "member_identities": [
+        "ramp.24",
+        "ramp.25"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969661/traces/wall_ONLY_1.jsonl.gz",
+      "sha256": "e7123ad760eb49e401c144eeb7dc1180f829a18b96ea6a6f5b4ced42a15ab11c",
+      "seed": 969661,
+      "cohort": "production",
+      "rows": 2007,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2007,
+        "lane": 2007,
+        "member": 2007,
+        "ramp_observed": 2007,
+        "requested_accel": 2007,
+        "s": 2007,
+        "t": 2007,
+        "v": 2007,
+        "vid": 2007
+      },
+      "member_identities": [
+        "ramp.24",
+        "ramp.25"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969662/traces/mappo_GROUP.jsonl.gz",
+      "sha256": "5f8b6953173883e42d63269fd59bb716aca762a1aaf14bdb325eea9dceef98c4",
+      "seed": 969662,
+      "cohort": "production",
+      "rows": 1767,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1767,
+        "lane": 1767,
+        "member": 1767,
+        "ramp_observed": 1767,
+        "requested_accel": 1767,
+        "s": 1767,
+        "t": 1767,
+        "v": 1767,
+        "vid": 1767
+      },
+      "member_identities": [
+        "mainline.106",
+        "ramp.29"
+      ],
+      "non_null_issued_request_rows": 159,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969662/traces/mappo_ONLY_0.jsonl.gz",
+      "sha256": "77e54e96f74657cf75e0408a5e554afe1a134151e8361ddb9fd8efe3cc7eddf9",
+      "seed": 969662,
+      "cohort": "production",
+      "rows": 1767,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1767,
+        "lane": 1767,
+        "member": 1767,
+        "ramp_observed": 1767,
+        "requested_accel": 1767,
+        "s": 1767,
+        "t": 1767,
+        "v": 1767,
+        "vid": 1767
+      },
+      "member_identities": [
+        "mainline.106",
+        "ramp.29"
+      ],
+      "non_null_issued_request_rows": 39,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969662/traces/mappo_ONLY_1.jsonl.gz",
+      "sha256": "c86b6d896f3943ef4cc8fdef5c8986635da3c899685c88b8db4429d04f1bc070",
+      "seed": 969662,
+      "cohort": "production",
+      "rows": 1767,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1767,
+        "lane": 1767,
+        "member": 1767,
+        "ramp_observed": 1767,
+        "requested_accel": 1767,
+        "s": 1767,
+        "t": 1767,
+        "v": 1767,
+        "vid": 1767
+      },
+      "member_identities": [
+        "mainline.106",
+        "ramp.29"
+      ],
+      "non_null_issued_request_rows": 120,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969662/traces/native_B.jsonl.gz",
+      "sha256": "9e41257974f6b6d4bbc42f320a0f4ccea5977cdf2ac8ef3185610b6f3476313c",
+      "seed": 969662,
+      "cohort": "production",
+      "rows": 1767,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1767,
+        "lane": 1767,
+        "member": 1767,
+        "ramp_observed": 1767,
+        "requested_accel": 1767,
+        "s": 1767,
+        "t": 1767,
+        "v": 1767,
+        "vid": 1767
+      },
+      "member_identities": [
+        "mainline.106",
+        "ramp.29"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969662/traces/native_B_repeat.jsonl.gz",
+      "sha256": "85efcd12afbb20c2136ae466dc52bc46f0e1087aa8eea2ba7939f1d7fde7e8d1",
+      "seed": 969662,
+      "cohort": "production",
+      "rows": 1767,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1767,
+        "lane": 1767,
+        "member": 1767,
+        "ramp_observed": 1767,
+        "requested_accel": 1767,
+        "s": 1767,
+        "t": 1767,
+        "v": 1767,
+        "vid": 1767
+      },
+      "member_identities": [
+        "mainline.106",
+        "ramp.29"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969662/traces/sumocf_GROUP.jsonl.gz",
+      "sha256": "60199018e7a9729b285488d6fb38779f364900e9b7a7f6e8e33ff52881f58e14",
+      "seed": 969662,
+      "cohort": "production",
+      "rows": 1767,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1767,
+        "lane": 1767,
+        "member": 1767,
+        "ramp_observed": 1767,
+        "requested_accel": 1767,
+        "s": 1767,
+        "t": 1767,
+        "v": 1767,
+        "vid": 1767
+      },
+      "member_identities": [
+        "mainline.106",
+        "ramp.29"
+      ],
+      "non_null_issued_request_rows": 159,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969662/traces/sumocf_ONLY_0.jsonl.gz",
+      "sha256": "721004ab8f6dbc64f49a867a9cc5bb87e8daa7d236d9168f5a2f68a0171ecb3d",
+      "seed": 969662,
+      "cohort": "production",
+      "rows": 1767,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1767,
+        "lane": 1767,
+        "member": 1767,
+        "ramp_observed": 1767,
+        "requested_accel": 1767,
+        "s": 1767,
+        "t": 1767,
+        "v": 1767,
+        "vid": 1767
+      },
+      "member_identities": [
+        "mainline.106",
+        "ramp.29"
+      ],
+      "non_null_issued_request_rows": 39,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969662/traces/sumocf_ONLY_1.jsonl.gz",
+      "sha256": "2428b70dc2912d530bfe140c19d31401dfc7a35f4cb690d1f59489feb282f85c",
+      "seed": 969662,
+      "cohort": "production",
+      "rows": 1767,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1767,
+        "lane": 1767,
+        "member": 1767,
+        "ramp_observed": 1767,
+        "requested_accel": 1767,
+        "s": 1767,
+        "t": 1767,
+        "v": 1767,
+        "vid": 1767
+      },
+      "member_identities": [
+        "mainline.106",
+        "ramp.29"
+      ],
+      "non_null_issued_request_rows": 120,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969662/traces/wall_GROUP.jsonl.gz",
+      "sha256": "9924ce458e7d643e4fc5e59b0c28d2d62a1cd8791d6f5549fd27779b80efd175",
+      "seed": 969662,
+      "cohort": "production",
+      "rows": 1767,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1767,
+        "lane": 1767,
+        "member": 1767,
+        "ramp_observed": 1767,
+        "requested_accel": 1767,
+        "s": 1767,
+        "t": 1767,
+        "v": 1767,
+        "vid": 1767
+      },
+      "member_identities": [
+        "mainline.106",
+        "ramp.29"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969662/traces/wall_ONLY_0.jsonl.gz",
+      "sha256": "306eab356e2f1b9064c7868ace0a1db62b84c0caf16539c9d7d55958d3af637a",
+      "seed": 969662,
+      "cohort": "production",
+      "rows": 1767,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1767,
+        "lane": 1767,
+        "member": 1767,
+        "ramp_observed": 1767,
+        "requested_accel": 1767,
+        "s": 1767,
+        "t": 1767,
+        "v": 1767,
+        "vid": 1767
+      },
+      "member_identities": [
+        "mainline.106",
+        "ramp.29"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969662/traces/wall_ONLY_1.jsonl.gz",
+      "sha256": "492f5ac341ea244338ad57f946e559505d58b7f4811c1e11a43db230f3f82668",
+      "seed": 969662,
+      "cohort": "production",
+      "rows": 1767,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1767,
+        "lane": 1767,
+        "member": 1767,
+        "ramp_observed": 1767,
+        "requested_accel": 1767,
+        "s": 1767,
+        "t": 1767,
+        "v": 1767,
+        "vid": 1767
+      },
+      "member_identities": [
+        "mainline.106",
+        "ramp.29"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969663/traces/mappo_GROUP.jsonl.gz",
+      "sha256": "69ff5e93841c81136814643e1a81160eec113bd400787c71ffd404fda6353691",
+      "seed": 969663,
+      "cohort": "production",
+      "rows": 4266,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 4266,
+        "lane": 4266,
+        "member": 4266,
+        "ramp_observed": 4266,
+        "requested_accel": 4266,
+        "s": 4266,
+        "t": 4266,
+        "v": 4266,
+        "vid": 4266
+      },
+      "member_identities": [
+        "mainline.88",
+        "ramp.37"
+      ],
+      "non_null_issued_request_rows": 199,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969663/traces/mappo_ONLY_0.jsonl.gz",
+      "sha256": "afa0aa87b2cf83f65737fb2ced0ef1b9d38f2f3708ea0c1aa9aad46156ce9ac1",
+      "seed": 969663,
+      "cohort": "production",
+      "rows": 4266,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 4266,
+        "lane": 4266,
+        "member": 4266,
+        "ramp_observed": 4266,
+        "requested_accel": 4266,
+        "s": 4266,
+        "t": 4266,
+        "v": 4266,
+        "vid": 4266
+      },
+      "member_identities": [
+        "mainline.88",
+        "ramp.37"
+      ],
+      "non_null_issued_request_rows": 79,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969663/traces/mappo_ONLY_1.jsonl.gz",
+      "sha256": "9c7392cfa758ba2e82a78c8cc7e1b4cf6ed346808c4e2abb3aa2426abaf7a4eb",
+      "seed": 969663,
+      "cohort": "production",
+      "rows": 4483,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 4483,
+        "lane": 4483,
+        "member": 4483,
+        "ramp_observed": 4483,
+        "requested_accel": 4483,
+        "s": 4483,
+        "t": 4483,
+        "v": 4483,
+        "vid": 4483
+      },
+      "member_identities": [
+        "mainline.88",
+        "ramp.37"
+      ],
+      "non_null_issued_request_rows": 120,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969663/traces/native_B.jsonl.gz",
+      "sha256": "51c403e6432f15d5a441826161d8dce4466867ea46763ee0426d849aaac82420",
+      "seed": 969663,
+      "cohort": "production",
+      "rows": 4483,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 4483,
+        "lane": 4483,
+        "member": 4483,
+        "ramp_observed": 4483,
+        "requested_accel": 4483,
+        "s": 4483,
+        "t": 4483,
+        "v": 4483,
+        "vid": 4483
+      },
+      "member_identities": [
+        "mainline.88",
+        "ramp.37"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969663/traces/native_B_repeat.jsonl.gz",
+      "sha256": "79ef9f9682c17543b093a2fbc52c83ebd98b14b527a9617a75531b62584ec8a5",
+      "seed": 969663,
+      "cohort": "production",
+      "rows": 4483,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 4483,
+        "lane": 4483,
+        "member": 4483,
+        "ramp_observed": 4483,
+        "requested_accel": 4483,
+        "s": 4483,
+        "t": 4483,
+        "v": 4483,
+        "vid": 4483
+      },
+      "member_identities": [
+        "mainline.88",
+        "ramp.37"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969663/traces/sumocf_GROUP.jsonl.gz",
+      "sha256": "32c93f6222608d726db69adf68db193d901a0e8a8c1d80d65830a372f924bdd4",
+      "seed": 969663,
+      "cohort": "production",
+      "rows": 4266,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 4266,
+        "lane": 4266,
+        "member": 4266,
+        "ramp_observed": 4266,
+        "requested_accel": 4266,
+        "s": 4266,
+        "t": 4266,
+        "v": 4266,
+        "vid": 4266
+      },
+      "member_identities": [
+        "mainline.88",
+        "ramp.37"
+      ],
+      "non_null_issued_request_rows": 199,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969663/traces/sumocf_ONLY_0.jsonl.gz",
+      "sha256": "80a2d833cf9c3d497545fc5c69bfc116bfae72ab63667f8a85f3a8de70731f9b",
+      "seed": 969663,
+      "cohort": "production",
+      "rows": 4266,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 4266,
+        "lane": 4266,
+        "member": 4266,
+        "ramp_observed": 4266,
+        "requested_accel": 4266,
+        "s": 4266,
+        "t": 4266,
+        "v": 4266,
+        "vid": 4266
+      },
+      "member_identities": [
+        "mainline.88",
+        "ramp.37"
+      ],
+      "non_null_issued_request_rows": 79,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969663/traces/sumocf_ONLY_1.jsonl.gz",
+      "sha256": "8b4f169092b825f3fe3dc2b0f1b159ba64ce9b7106ccc4e8c09e5796c3d26504",
+      "seed": 969663,
+      "cohort": "production",
+      "rows": 4483,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 4483,
+        "lane": 4483,
+        "member": 4483,
+        "ramp_observed": 4483,
+        "requested_accel": 4483,
+        "s": 4483,
+        "t": 4483,
+        "v": 4483,
+        "vid": 4483
+      },
+      "member_identities": [
+        "mainline.88",
+        "ramp.37"
+      ],
+      "non_null_issued_request_rows": 120,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969663/traces/wall_GROUP.jsonl.gz",
+      "sha256": "f0f2d00968dc81cd495ba22ee9f5496c525935a680e62202151cdfc516151ada",
+      "seed": 969663,
+      "cohort": "production",
+      "rows": 4483,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 4483,
+        "lane": 4483,
+        "member": 4483,
+        "ramp_observed": 4483,
+        "requested_accel": 4483,
+        "s": 4483,
+        "t": 4483,
+        "v": 4483,
+        "vid": 4483
+      },
+      "member_identities": [
+        "mainline.88",
+        "ramp.37"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969663/traces/wall_ONLY_0.jsonl.gz",
+      "sha256": "3dce46661ac818a446b12589454f609b05a5c9d6b1ddc36112ee57800cc93d1b",
+      "seed": 969663,
+      "cohort": "production",
+      "rows": 4483,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 4483,
+        "lane": 4483,
+        "member": 4483,
+        "ramp_observed": 4483,
+        "requested_accel": 4483,
+        "s": 4483,
+        "t": 4483,
+        "v": 4483,
+        "vid": 4483
+      },
+      "member_identities": [
+        "mainline.88",
+        "ramp.37"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969663/traces/wall_ONLY_1.jsonl.gz",
+      "sha256": "6b3c249c8880492be510bf022e3552543b2ee66668dd14df31f7c933bf0b135c",
+      "seed": 969663,
+      "cohort": "production",
+      "rows": 4483,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 4483,
+        "lane": 4483,
+        "member": 4483,
+        "ramp_observed": 4483,
+        "requested_accel": 4483,
+        "s": 4483,
+        "t": 4483,
+        "v": 4483,
+        "vid": 4483
+      },
+      "member_identities": [
+        "mainline.88",
+        "ramp.37"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969664/traces/mappo_GROUP.jsonl.gz",
+      "sha256": "2670dc67b2111cf614154c2fd9839cb4b67ba1296e65017e1a8d9b260fc16127",
+      "seed": 969664,
+      "cohort": "production",
+      "rows": 3228,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 3228,
+        "lane": 3228,
+        "member": 3228,
+        "ramp_observed": 3228,
+        "requested_accel": 3228,
+        "s": 3228,
+        "t": 3228,
+        "v": 3228,
+        "vid": 3228
+      },
+      "member_identities": [
+        "mainline.108",
+        "ramp.36"
+      ],
+      "non_null_issued_request_rows": 158,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969664/traces/mappo_ONLY_0.jsonl.gz",
+      "sha256": "581318484a6079b513111b9842b42f3ee5ebdea931a19bb3ec4e589e1eb5f9f9",
+      "seed": 969664,
+      "cohort": "production",
+      "rows": 3228,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 3228,
+        "lane": 3228,
+        "member": 3228,
+        "ramp_observed": 3228,
+        "requested_accel": 3228,
+        "s": 3228,
+        "t": 3228,
+        "v": 3228,
+        "vid": 3228
+      },
+      "member_identities": [
+        "mainline.108",
+        "ramp.36"
+      ],
+      "non_null_issued_request_rows": 118,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969664/traces/mappo_ONLY_1.jsonl.gz",
+      "sha256": "0a6fc9a5e4e811c7544208773322fd6882dd67b12927077d2c4e354b832e88d5",
+      "seed": 969664,
+      "cohort": "production",
+      "rows": 3082,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 3082,
+        "lane": 3082,
+        "member": 3082,
+        "ramp_observed": 3082,
+        "requested_accel": 3082,
+        "s": 3082,
+        "t": 3082,
+        "v": 3082,
+        "vid": 3082
+      },
+      "member_identities": [
+        "mainline.108",
+        "ramp.36"
+      ],
+      "non_null_issued_request_rows": 40,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969664/traces/native_B.jsonl.gz",
+      "sha256": "57dd5cfe7bb9b6184544fe85a5478e120f3d07de39aaf5edbe81b8885d1c3f0a",
+      "seed": 969664,
+      "cohort": "production",
+      "rows": 3082,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 3082,
+        "lane": 3082,
+        "member": 3082,
+        "ramp_observed": 3082,
+        "requested_accel": 3082,
+        "s": 3082,
+        "t": 3082,
+        "v": 3082,
+        "vid": 3082
+      },
+      "member_identities": [
+        "mainline.108",
+        "ramp.36"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969664/traces/native_B_repeat.jsonl.gz",
+      "sha256": "4b32c0c3e5b5055ad2f1e9f4b37c9833ffc096f8912f3767625b105e88a1ad52",
+      "seed": 969664,
+      "cohort": "production",
+      "rows": 3082,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 3082,
+        "lane": 3082,
+        "member": 3082,
+        "ramp_observed": 3082,
+        "requested_accel": 3082,
+        "s": 3082,
+        "t": 3082,
+        "v": 3082,
+        "vid": 3082
+      },
+      "member_identities": [
+        "mainline.108",
+        "ramp.36"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969664/traces/sumocf_GROUP.jsonl.gz",
+      "sha256": "964c5bf62d6cc335a4471c1e8895840d527721d75a45fabed67e89b152953f59",
+      "seed": 969664,
+      "cohort": "production",
+      "rows": 3228,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 3228,
+        "lane": 3228,
+        "member": 3228,
+        "ramp_observed": 3228,
+        "requested_accel": 3228,
+        "s": 3228,
+        "t": 3228,
+        "v": 3228,
+        "vid": 3228
+      },
+      "member_identities": [
+        "mainline.108",
+        "ramp.36"
+      ],
+      "non_null_issued_request_rows": 158,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969664/traces/sumocf_ONLY_0.jsonl.gz",
+      "sha256": "9da7660110851e0563b82e7e1295f23a9c2adffe5a46cf67f09575c3fee8d50b",
+      "seed": 969664,
+      "cohort": "production",
+      "rows": 3228,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 3228,
+        "lane": 3228,
+        "member": 3228,
+        "ramp_observed": 3228,
+        "requested_accel": 3228,
+        "s": 3228,
+        "t": 3228,
+        "v": 3228,
+        "vid": 3228
+      },
+      "member_identities": [
+        "mainline.108",
+        "ramp.36"
+      ],
+      "non_null_issued_request_rows": 118,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969664/traces/sumocf_ONLY_1.jsonl.gz",
+      "sha256": "8e81140e031b2cf34939ca167f0f4f8784f06470e5d63d746a875f528396f6e3",
+      "seed": 969664,
+      "cohort": "production",
+      "rows": 3082,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 3082,
+        "lane": 3082,
+        "member": 3082,
+        "ramp_observed": 3082,
+        "requested_accel": 3082,
+        "s": 3082,
+        "t": 3082,
+        "v": 3082,
+        "vid": 3082
+      },
+      "member_identities": [
+        "mainline.108",
+        "ramp.36"
+      ],
+      "non_null_issued_request_rows": 40,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969664/traces/wall_GROUP.jsonl.gz",
+      "sha256": "e3b0118efdb1a8432ef63cc907f78d7b3d06505c3d28aad3eca769cd6ce73605",
+      "seed": 969664,
+      "cohort": "production",
+      "rows": 3082,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 3082,
+        "lane": 3082,
+        "member": 3082,
+        "ramp_observed": 3082,
+        "requested_accel": 3082,
+        "s": 3082,
+        "t": 3082,
+        "v": 3082,
+        "vid": 3082
+      },
+      "member_identities": [
+        "mainline.108",
+        "ramp.36"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969664/traces/wall_ONLY_0.jsonl.gz",
+      "sha256": "33fd0a629d160a4fbe774da10a7bc7c7309926d1ea46db3babdc7bb68613be45",
+      "seed": 969664,
+      "cohort": "production",
+      "rows": 3082,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 3082,
+        "lane": 3082,
+        "member": 3082,
+        "ramp_observed": 3082,
+        "requested_accel": 3082,
+        "s": 3082,
+        "t": 3082,
+        "v": 3082,
+        "vid": 3082
+      },
+      "member_identities": [
+        "mainline.108",
+        "ramp.36"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969664/traces/wall_ONLY_1.jsonl.gz",
+      "sha256": "ec4382c5e35bd10a2d7e673733cf52b6978a0225a4ad56996a3fd267da040cf4",
+      "seed": 969664,
+      "cohort": "production",
+      "rows": 3082,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 3082,
+        "lane": 3082,
+        "member": 3082,
+        "ramp_observed": 3082,
+        "requested_accel": 3082,
+        "s": 3082,
+        "t": 3082,
+        "v": 3082,
+        "vid": 3082
+      },
+      "member_identities": [
+        "mainline.108",
+        "ramp.36"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969665/traces/mappo_GROUP.jsonl.gz",
+      "sha256": "ca70e398729b55fc72c23b747d8036e516925088d11f6dffc804883ba5497dd0",
+      "seed": 969665,
+      "cohort": "production",
+      "rows": 2128,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2128,
+        "lane": 2128,
+        "member": 2128,
+        "ramp_observed": 2128,
+        "requested_accel": 2128,
+        "s": 2128,
+        "t": 2128,
+        "v": 2128,
+        "vid": 2128
+      },
+      "member_identities": [
+        "mainline.112",
+        "ramp.32"
+      ],
+      "non_null_issued_request_rows": 120,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969665/traces/mappo_ONLY_0.jsonl.gz",
+      "sha256": "496b424cd8aab408293625dfa3d9f2354858eaf2d739021459ec87f6846c3d16",
+      "seed": 969665,
+      "cohort": "production",
+      "rows": 2127,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2127,
+        "lane": 2127,
+        "member": 2127,
+        "ramp_observed": 2127,
+        "requested_accel": 2127,
+        "s": 2127,
+        "t": 2127,
+        "v": 2127,
+        "vid": 2127
+      },
+      "member_identities": [
+        "mainline.112",
+        "ramp.32"
+      ],
+      "non_null_issued_request_rows": 60,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969665/traces/mappo_ONLY_1.jsonl.gz",
+      "sha256": "32e10efa7f0e5ab024fb82f4d10122bf7803ee205a39792558bcb7b8f0177f6d",
+      "seed": 969665,
+      "cohort": "production",
+      "rows": 2223,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2223,
+        "lane": 2223,
+        "member": 2223,
+        "ramp_observed": 2223,
+        "requested_accel": 2223,
+        "s": 2223,
+        "t": 2223,
+        "v": 2223,
+        "vid": 2223
+      },
+      "member_identities": [
+        "mainline.112",
+        "ramp.32"
+      ],
+      "non_null_issued_request_rows": 60,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969665/traces/native_B.jsonl.gz",
+      "sha256": "81b5dac79e41d2c9cb0d33597094ddf58e5d0a2b653bd417ece30efa4801df61",
+      "seed": 969665,
+      "cohort": "production",
+      "rows": 2222,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2222,
+        "lane": 2222,
+        "member": 2222,
+        "ramp_observed": 2222,
+        "requested_accel": 2222,
+        "s": 2222,
+        "t": 2222,
+        "v": 2222,
+        "vid": 2222
+      },
+      "member_identities": [
+        "mainline.112",
+        "ramp.32"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969665/traces/native_B_repeat.jsonl.gz",
+      "sha256": "1d24b4b39a935e506f0b4504bfbc40348e0d1ab2066bb796a2ac332cddb2442f",
+      "seed": 969665,
+      "cohort": "production",
+      "rows": 2222,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2222,
+        "lane": 2222,
+        "member": 2222,
+        "ramp_observed": 2222,
+        "requested_accel": 2222,
+        "s": 2222,
+        "t": 2222,
+        "v": 2222,
+        "vid": 2222
+      },
+      "member_identities": [
+        "mainline.112",
+        "ramp.32"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969665/traces/sumocf_GROUP.jsonl.gz",
+      "sha256": "c8634d762956a6eee1283bb72821b3f7876e4a7da0129f5a72b69f58e635665d",
+      "seed": 969665,
+      "cohort": "production",
+      "rows": 2128,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2128,
+        "lane": 2128,
+        "member": 2128,
+        "ramp_observed": 2128,
+        "requested_accel": 2128,
+        "s": 2128,
+        "t": 2128,
+        "v": 2128,
+        "vid": 2128
+      },
+      "member_identities": [
+        "mainline.112",
+        "ramp.32"
+      ],
+      "non_null_issued_request_rows": 120,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969665/traces/sumocf_ONLY_0.jsonl.gz",
+      "sha256": "c1117b9899b1e7d2bcd13d1d93aa23e55968e2ec2cc3a5fcbb45b2715949b0ad",
+      "seed": 969665,
+      "cohort": "production",
+      "rows": 2127,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2127,
+        "lane": 2127,
+        "member": 2127,
+        "ramp_observed": 2127,
+        "requested_accel": 2127,
+        "s": 2127,
+        "t": 2127,
+        "v": 2127,
+        "vid": 2127
+      },
+      "member_identities": [
+        "mainline.112",
+        "ramp.32"
+      ],
+      "non_null_issued_request_rows": 60,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969665/traces/sumocf_ONLY_1.jsonl.gz",
+      "sha256": "de63b7e94a2ad0513f77551785bcaaae3484868c657b76b6485ca11a1a20ee74",
+      "seed": 969665,
+      "cohort": "production",
+      "rows": 2223,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2223,
+        "lane": 2223,
+        "member": 2223,
+        "ramp_observed": 2223,
+        "requested_accel": 2223,
+        "s": 2223,
+        "t": 2223,
+        "v": 2223,
+        "vid": 2223
+      },
+      "member_identities": [
+        "mainline.112",
+        "ramp.32"
+      ],
+      "non_null_issued_request_rows": 60,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969665/traces/wall_GROUP.jsonl.gz",
+      "sha256": "8b4002a81e20da31b29194cf55255131154c35309e2480681bec342c752ff37d",
+      "seed": 969665,
+      "cohort": "production",
+      "rows": 2222,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2222,
+        "lane": 2222,
+        "member": 2222,
+        "ramp_observed": 2222,
+        "requested_accel": 2222,
+        "s": 2222,
+        "t": 2222,
+        "v": 2222,
+        "vid": 2222
+      },
+      "member_identities": [
+        "mainline.112",
+        "ramp.32"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969665/traces/wall_ONLY_0.jsonl.gz",
+      "sha256": "1b01d58681a7324cfde9c6f6faa01b3d315285a9ed1cf1241cf9e7091811d306",
+      "seed": 969665,
+      "cohort": "production",
+      "rows": 2222,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2222,
+        "lane": 2222,
+        "member": 2222,
+        "ramp_observed": 2222,
+        "requested_accel": 2222,
+        "s": 2222,
+        "t": 2222,
+        "v": 2222,
+        "vid": 2222
+      },
+      "member_identities": [
+        "mainline.112",
+        "ramp.32"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969665/traces/wall_ONLY_1.jsonl.gz",
+      "sha256": "0be09b54e5bbb1dc0f0004f3971427302e827cc8e872c161673f79b5054f890d",
+      "seed": 969665,
+      "cohort": "production",
+      "rows": 2222,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2222,
+        "lane": 2222,
+        "member": 2222,
+        "ramp_observed": 2222,
+        "requested_accel": 2222,
+        "s": 2222,
+        "t": 2222,
+        "v": 2222,
+        "vid": 2222
+      },
+      "member_identities": [
+        "mainline.112",
+        "ramp.32"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969667/traces/mappo_GROUP.jsonl.gz",
+      "sha256": "e66ad4ab24ce7acd45fc292099d5970b3e8bd53415d0fb0138a6201f6e7ce12c",
+      "seed": 969667,
+      "cohort": "production",
+      "rows": 1286,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1286,
+        "lane": 1286,
+        "member": 1286,
+        "ramp_observed": 1286,
+        "requested_accel": 1286,
+        "s": 1286,
+        "t": 1286,
+        "v": 1286,
+        "vid": 1286
+      },
+      "member_identities": [
+        "mainline.101",
+        "mainline.106"
+      ],
+      "non_null_issued_request_rows": 110,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969667/traces/mappo_ONLY_0.jsonl.gz",
+      "sha256": "67c6ad27522a0f1c57dc4677c393476654dd0b763f5726440d719ccd6f61e992",
+      "seed": 969667,
+      "cohort": "production",
+      "rows": 1286,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1286,
+        "lane": 1286,
+        "member": 1286,
+        "ramp_observed": 1286,
+        "requested_accel": 1286,
+        "s": 1286,
+        "t": 1286,
+        "v": 1286,
+        "vid": 1286
+      },
+      "member_identities": [
+        "mainline.101",
+        "mainline.106"
+      ],
+      "non_null_issued_request_rows": 66,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969667/traces/mappo_ONLY_1.jsonl.gz",
+      "sha256": "79a2590eeea38536549006e85a7e4971d4c92f8c6462d85de6375ea722052fdd",
+      "seed": 969667,
+      "cohort": "production",
+      "rows": 1287,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1287,
+        "lane": 1287,
+        "member": 1287,
+        "ramp_observed": 1287,
+        "requested_accel": 1287,
+        "s": 1287,
+        "t": 1287,
+        "v": 1287,
+        "vid": 1287
+      },
+      "member_identities": [
+        "mainline.101",
+        "mainline.106"
+      ],
+      "non_null_issued_request_rows": 44,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969667/traces/native_B.jsonl.gz",
+      "sha256": "35faf1d6545487a93ed2d9608bc2ede8bad650b700148a77ac382319fda6a502",
+      "seed": 969667,
+      "cohort": "production",
+      "rows": 1286,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1286,
+        "lane": 1286,
+        "member": 1286,
+        "ramp_observed": 1286,
+        "requested_accel": 1286,
+        "s": 1286,
+        "t": 1286,
+        "v": 1286,
+        "vid": 1286
+      },
+      "member_identities": [
+        "mainline.101",
+        "mainline.106"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969667/traces/native_B_repeat.jsonl.gz",
+      "sha256": "dda69e27f15877948d88cc874e0dc473d014c8b9e986859aaeef93a93d477ea1",
+      "seed": 969667,
+      "cohort": "production",
+      "rows": 1286,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1286,
+        "lane": 1286,
+        "member": 1286,
+        "ramp_observed": 1286,
+        "requested_accel": 1286,
+        "s": 1286,
+        "t": 1286,
+        "v": 1286,
+        "vid": 1286
+      },
+      "member_identities": [
+        "mainline.101",
+        "mainline.106"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969667/traces/sumocf_GROUP.jsonl.gz",
+      "sha256": "c86f79b5db6cf3eba8d03bef24467bb1b4ffdfa13e0bf4adb6409c8ab31c5b0a",
+      "seed": 969667,
+      "cohort": "production",
+      "rows": 1287,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1287,
+        "lane": 1287,
+        "member": 1287,
+        "ramp_observed": 1287,
+        "requested_accel": 1287,
+        "s": 1287,
+        "t": 1287,
+        "v": 1287,
+        "vid": 1287
+      },
+      "member_identities": [
+        "mainline.101",
+        "mainline.106"
+      ],
+      "non_null_issued_request_rows": 113,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969667/traces/sumocf_ONLY_0.jsonl.gz",
+      "sha256": "a270eaf9e308c06abd83a29e704c1e4d110e741020ceecad9c156a287704a8d1",
+      "seed": 969667,
+      "cohort": "production",
+      "rows": 1286,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1286,
+        "lane": 1286,
+        "member": 1286,
+        "ramp_observed": 1286,
+        "requested_accel": 1286,
+        "s": 1286,
+        "t": 1286,
+        "v": 1286,
+        "vid": 1286
+      },
+      "member_identities": [
+        "mainline.101",
+        "mainline.106"
+      ],
+      "non_null_issued_request_rows": 66,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969667/traces/sumocf_ONLY_1.jsonl.gz",
+      "sha256": "fccf0a2b1eb97b9c57cd9ef2c61700da2eb223c31620dbd1c4304f72ae75af4d",
+      "seed": 969667,
+      "cohort": "production",
+      "rows": 1287,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1287,
+        "lane": 1287,
+        "member": 1287,
+        "ramp_observed": 1287,
+        "requested_accel": 1287,
+        "s": 1287,
+        "t": 1287,
+        "v": 1287,
+        "vid": 1287
+      },
+      "member_identities": [
+        "mainline.101",
+        "mainline.106"
+      ],
+      "non_null_issued_request_rows": 47,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969667/traces/wall_GROUP.jsonl.gz",
+      "sha256": "3b94f4b05c1af2de119a9a011e363dbe2b1291aa1052181621486c451168bbc5",
+      "seed": 969667,
+      "cohort": "production",
+      "rows": 1286,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1286,
+        "lane": 1286,
+        "member": 1286,
+        "ramp_observed": 1286,
+        "requested_accel": 1286,
+        "s": 1286,
+        "t": 1286,
+        "v": 1286,
+        "vid": 1286
+      },
+      "member_identities": [
+        "mainline.101",
+        "mainline.106"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969667/traces/wall_ONLY_0.jsonl.gz",
+      "sha256": "27e1c5d9f96c7adf8097c64b23a35e03a04120014acb4f2f9c5a72a0cfd42bbf",
+      "seed": 969667,
+      "cohort": "production",
+      "rows": 1286,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1286,
+        "lane": 1286,
+        "member": 1286,
+        "ramp_observed": 1286,
+        "requested_accel": 1286,
+        "s": 1286,
+        "t": 1286,
+        "v": 1286,
+        "vid": 1286
+      },
+      "member_identities": [
+        "mainline.101",
+        "mainline.106"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969667/traces/wall_ONLY_1.jsonl.gz",
+      "sha256": "6dfa7d81bc5593b6e8e81aa5320a6d541d93f32b2d08cb388bdfa8dd88807cdc",
+      "seed": 969667,
+      "cohort": "production",
+      "rows": 1286,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1286,
+        "lane": 1286,
+        "member": 1286,
+        "ramp_observed": 1286,
+        "requested_accel": 1286,
+        "s": 1286,
+        "t": 1286,
+        "v": 1286,
+        "vid": 1286
+      },
+      "member_identities": [
+        "mainline.101",
+        "mainline.106"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969668/traces/mappo_GROUP.jsonl.gz",
+      "sha256": "9532e3504e7d787eb81d8410f4e049eb99274d1345b18526061f5287b904c530",
+      "seed": 969668,
+      "cohort": "production",
+      "rows": 1653,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1653,
+        "lane": 1653,
+        "member": 1653,
+        "ramp_observed": 1653,
+        "requested_accel": 1653,
+        "s": 1653,
+        "t": 1653,
+        "v": 1653,
+        "vid": 1653
+      },
+      "member_identities": [
+        "mainline.111",
+        "mainline.116"
+      ],
+      "non_null_issued_request_rows": 151,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969668/traces/mappo_ONLY_0.jsonl.gz",
+      "sha256": "e869f1434c914ffd5d4d14ee068268bfc3f4b7a054e512170b9cf0a30ec9498d",
+      "seed": 969668,
+      "cohort": "production",
+      "rows": 1755,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1755,
+        "lane": 1755,
+        "member": 1755,
+        "ramp_observed": 1755,
+        "requested_accel": 1755,
+        "s": 1755,
+        "t": 1755,
+        "v": 1755,
+        "vid": 1755
+      },
+      "member_identities": [
+        "mainline.111",
+        "mainline.116"
+      ],
+      "non_null_issued_request_rows": 102,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969668/traces/mappo_ONLY_1.jsonl.gz",
+      "sha256": "64d560084acc8ec5af8874e8f432fe82b37607d662c771845c9c8e04032d5505",
+      "seed": 969668,
+      "cohort": "production",
+      "rows": 1653,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1653,
+        "lane": 1653,
+        "member": 1653,
+        "ramp_observed": 1653,
+        "requested_accel": 1653,
+        "s": 1653,
+        "t": 1653,
+        "v": 1653,
+        "vid": 1653
+      },
+      "member_identities": [
+        "mainline.111",
+        "mainline.116"
+      ],
+      "non_null_issued_request_rows": 55,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969668/traces/native_B.jsonl.gz",
+      "sha256": "956e503a6ce688cd605e059978894ca1fe829f33614ead65e75aba25d37812e7",
+      "seed": 969668,
+      "cohort": "production",
+      "rows": 1778,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1778,
+        "lane": 1778,
+        "member": 1778,
+        "ramp_observed": 1778,
+        "requested_accel": 1778,
+        "s": 1778,
+        "t": 1778,
+        "v": 1778,
+        "vid": 1778
+      },
+      "member_identities": [
+        "mainline.111",
+        "mainline.116"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969668/traces/native_B_repeat.jsonl.gz",
+      "sha256": "0cea4cbe63c07ad4c03ae6d203932f6357e6c294c13db4b3006bbdfe6523b979",
+      "seed": 969668,
+      "cohort": "production",
+      "rows": 1778,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1778,
+        "lane": 1778,
+        "member": 1778,
+        "ramp_observed": 1778,
+        "requested_accel": 1778,
+        "s": 1778,
+        "t": 1778,
+        "v": 1778,
+        "vid": 1778
+      },
+      "member_identities": [
+        "mainline.111",
+        "mainline.116"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969668/traces/sumocf_GROUP.jsonl.gz",
+      "sha256": "b50a4241bc1355ace98d1ad3b663414d0cd5062cc4b4920852cb007519995181",
+      "seed": 969668,
+      "cohort": "production",
+      "rows": 1653,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1653,
+        "lane": 1653,
+        "member": 1653,
+        "ramp_observed": 1653,
+        "requested_accel": 1653,
+        "s": 1653,
+        "t": 1653,
+        "v": 1653,
+        "vid": 1653
+      },
+      "member_identities": [
+        "mainline.111",
+        "mainline.116"
+      ],
+      "non_null_issued_request_rows": 151,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969668/traces/sumocf_ONLY_0.jsonl.gz",
+      "sha256": "dccb708d9c1753d2c995c4fbd51d3d1dcbe31865e6381dd2ce3203f6f4d7dab6",
+      "seed": 969668,
+      "cohort": "production",
+      "rows": 1755,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1755,
+        "lane": 1755,
+        "member": 1755,
+        "ramp_observed": 1755,
+        "requested_accel": 1755,
+        "s": 1755,
+        "t": 1755,
+        "v": 1755,
+        "vid": 1755
+      },
+      "member_identities": [
+        "mainline.111",
+        "mainline.116"
+      ],
+      "non_null_issued_request_rows": 102,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969668/traces/sumocf_ONLY_1.jsonl.gz",
+      "sha256": "3d7468d693859c868ceddccb15d129f913b66f60086cf1a20da773726404e1af",
+      "seed": 969668,
+      "cohort": "production",
+      "rows": 1653,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1653,
+        "lane": 1653,
+        "member": 1653,
+        "ramp_observed": 1653,
+        "requested_accel": 1653,
+        "s": 1653,
+        "t": 1653,
+        "v": 1653,
+        "vid": 1653
+      },
+      "member_identities": [
+        "mainline.111",
+        "mainline.116"
+      ],
+      "non_null_issued_request_rows": 55,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969668/traces/wall_GROUP.jsonl.gz",
+      "sha256": "44dfe99eb85cdcb7b8e03b2a783e07d1d03d6fb270c968e8aec28633c62c5ca7",
+      "seed": 969668,
+      "cohort": "production",
+      "rows": 1778,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1778,
+        "lane": 1778,
+        "member": 1778,
+        "ramp_observed": 1778,
+        "requested_accel": 1778,
+        "s": 1778,
+        "t": 1778,
+        "v": 1778,
+        "vid": 1778
+      },
+      "member_identities": [
+        "mainline.111",
+        "mainline.116"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969668/traces/wall_ONLY_0.jsonl.gz",
+      "sha256": "34d06fc5bb1347ae5ec0168c26b1aa1a6adfc07bff75702b3c8eddf08579b896",
+      "seed": 969668,
+      "cohort": "production",
+      "rows": 1778,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1778,
+        "lane": 1778,
+        "member": 1778,
+        "ramp_observed": 1778,
+        "requested_accel": 1778,
+        "s": 1778,
+        "t": 1778,
+        "v": 1778,
+        "vid": 1778
+      },
+      "member_identities": [
+        "mainline.111",
+        "mainline.116"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969668/traces/wall_ONLY_1.jsonl.gz",
+      "sha256": "b0d53aefee91012a43f3d3f29792936cff0edc41ba19e31327b626220bb954a2",
+      "seed": 969668,
+      "cohort": "production",
+      "rows": 1778,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1778,
+        "lane": 1778,
+        "member": 1778,
+        "ramp_observed": 1778,
+        "requested_accel": 1778,
+        "s": 1778,
+        "t": 1778,
+        "v": 1778,
+        "vid": 1778
+      },
+      "member_identities": [
+        "mainline.111",
+        "mainline.116"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969669/traces/mappo_GROUP.jsonl.gz",
+      "sha256": "dac5bd73e7a2c2f4e48d8f08eceb54531269e1f3a47328fc21acc93465066a72",
+      "seed": 969669,
+      "cohort": "production",
+      "rows": 1243,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1243,
+        "lane": 1243,
+        "member": 1243,
+        "ramp_observed": 1243,
+        "requested_accel": 1243,
+        "s": 1243,
+        "t": 1243,
+        "v": 1243,
+        "vid": 1243
+      },
+      "member_identities": [
+        "mainline.114",
+        "ramp.27"
+      ],
+      "non_null_issued_request_rows": 78,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969669/traces/mappo_ONLY_0.jsonl.gz",
+      "sha256": "e5fcbc3e229e05ffd9816aa7eb8934a5753829c731c353ddb7fd49fe407dd362",
+      "seed": 969669,
+      "cohort": "production",
+      "rows": 1243,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1243,
+        "lane": 1243,
+        "member": 1243,
+        "ramp_observed": 1243,
+        "requested_accel": 1243,
+        "s": 1243,
+        "t": 1243,
+        "v": 1243,
+        "vid": 1243
+      },
+      "member_identities": [
+        "mainline.114",
+        "ramp.27"
+      ],
+      "non_null_issued_request_rows": 47,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969669/traces/mappo_ONLY_1.jsonl.gz",
+      "sha256": "13904e34c07e587a60b955ba4401e64999c0e4e8d13025bf7beb945b1fb59e34",
+      "seed": 969669,
+      "cohort": "production",
+      "rows": 1260,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1260,
+        "lane": 1260,
+        "member": 1260,
+        "ramp_observed": 1260,
+        "requested_accel": 1260,
+        "s": 1260,
+        "t": 1260,
+        "v": 1260,
+        "vid": 1260
+      },
+      "member_identities": [
+        "mainline.114",
+        "ramp.27"
+      ],
+      "non_null_issued_request_rows": 31,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969669/traces/native_B.jsonl.gz",
+      "sha256": "443cbd21b753d929847aa67175bbde851aadf68b9468eab671584ad3e6148612",
+      "seed": 969669,
+      "cohort": "production",
+      "rows": 1260,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1260,
+        "lane": 1260,
+        "member": 1260,
+        "ramp_observed": 1260,
+        "requested_accel": 1260,
+        "s": 1260,
+        "t": 1260,
+        "v": 1260,
+        "vid": 1260
+      },
+      "member_identities": [
+        "mainline.114",
+        "ramp.27"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969669/traces/native_B_repeat.jsonl.gz",
+      "sha256": "af96c54920582c4bdab17ac7bf86316d179e1050976ea72674b62d66ba68eb7f",
+      "seed": 969669,
+      "cohort": "production",
+      "rows": 1260,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1260,
+        "lane": 1260,
+        "member": 1260,
+        "ramp_observed": 1260,
+        "requested_accel": 1260,
+        "s": 1260,
+        "t": 1260,
+        "v": 1260,
+        "vid": 1260
+      },
+      "member_identities": [
+        "mainline.114",
+        "ramp.27"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969669/traces/sumocf_GROUP.jsonl.gz",
+      "sha256": "f5618ab75c45b1e712de0e76158734e4bdefe761fb30490f2f79880fa0658f61",
+      "seed": 969669,
+      "cohort": "production",
+      "rows": 1243,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1243,
+        "lane": 1243,
+        "member": 1243,
+        "ramp_observed": 1243,
+        "requested_accel": 1243,
+        "s": 1243,
+        "t": 1243,
+        "v": 1243,
+        "vid": 1243
+      },
+      "member_identities": [
+        "mainline.114",
+        "ramp.27"
+      ],
+      "non_null_issued_request_rows": 78,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969669/traces/sumocf_ONLY_0.jsonl.gz",
+      "sha256": "fb58c3fede691edc87cc741bb9a4245d20afc0a1a83541b54ad0953046c58fc9",
+      "seed": 969669,
+      "cohort": "production",
+      "rows": 1243,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1243,
+        "lane": 1243,
+        "member": 1243,
+        "ramp_observed": 1243,
+        "requested_accel": 1243,
+        "s": 1243,
+        "t": 1243,
+        "v": 1243,
+        "vid": 1243
+      },
+      "member_identities": [
+        "mainline.114",
+        "ramp.27"
+      ],
+      "non_null_issued_request_rows": 47,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969669/traces/sumocf_ONLY_1.jsonl.gz",
+      "sha256": "20360a09dd77e4030011726ee7cbba3ad225ad96da24248e5b6721708a0dccc1",
+      "seed": 969669,
+      "cohort": "production",
+      "rows": 1260,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1260,
+        "lane": 1260,
+        "member": 1260,
+        "ramp_observed": 1260,
+        "requested_accel": 1260,
+        "s": 1260,
+        "t": 1260,
+        "v": 1260,
+        "vid": 1260
+      },
+      "member_identities": [
+        "mainline.114",
+        "ramp.27"
+      ],
+      "non_null_issued_request_rows": 31,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969669/traces/wall_GROUP.jsonl.gz",
+      "sha256": "ac15e0a888e88dc292d4d32526ee846b1e599e47e90c6125b0bacdb8cfcb3b8b",
+      "seed": 969669,
+      "cohort": "production",
+      "rows": 1268,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1268,
+        "lane": 1268,
+        "member": 1268,
+        "ramp_observed": 1268,
+        "requested_accel": 1268,
+        "s": 1268,
+        "t": 1268,
+        "v": 1268,
+        "vid": 1268
+      },
+      "member_identities": [
+        "mainline.114",
+        "ramp.27"
+      ],
+      "non_null_issued_request_rows": 16,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969669/traces/wall_ONLY_0.jsonl.gz",
+      "sha256": "2a55cc4838456817d29ee8f0931ee767f4fbfc1fe5ca808b47dc5b0b22ac2f15",
+      "seed": 969669,
+      "cohort": "production",
+      "rows": 1261,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1261,
+        "lane": 1261,
+        "member": 1261,
+        "ramp_observed": 1261,
+        "requested_accel": 1261,
+        "s": 1261,
+        "t": 1261,
+        "v": 1261,
+        "vid": 1261
+      },
+      "member_identities": [
+        "mainline.114",
+        "ramp.27"
+      ],
+      "non_null_issued_request_rows": 8,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969669/traces/wall_ONLY_1.jsonl.gz",
+      "sha256": "aedb3881ca4ab3021f30ef2dfae1448ab066134ce5c846c557453a94880d0750",
+      "seed": 969669,
+      "cohort": "production",
+      "rows": 1267,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1267,
+        "lane": 1267,
+        "member": 1267,
+        "ramp_observed": 1267,
+        "requested_accel": 1267,
+        "s": 1267,
+        "t": 1267,
+        "v": 1267,
+        "vid": 1267
+      },
+      "member_identities": [
+        "mainline.114",
+        "ramp.27"
+      ],
+      "non_null_issued_request_rows": 8,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969670/traces/mappo_GROUP.jsonl.gz",
+      "sha256": "59db9262b2ce79b7ac8a0b05671049e33fdeb257259da585c22965cbafe244ac",
+      "seed": 969670,
+      "cohort": "production",
+      "rows": 1937,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1937,
+        "lane": 1937,
+        "member": 1937,
+        "ramp_observed": 1937,
+        "requested_accel": 1937,
+        "s": 1937,
+        "t": 1937,
+        "v": 1937,
+        "vid": 1937
+      },
+      "member_identities": [
+        "mainline.104",
+        "mainline.94"
+      ],
+      "non_null_issued_request_rows": 178,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969670/traces/mappo_ONLY_0.jsonl.gz",
+      "sha256": "e20357222477ebceb5bfca112334b511cd96fd701ad6c3b6039ffd16f8974a3c",
+      "seed": 969670,
+      "cohort": "production",
+      "rows": 2134,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2134,
+        "lane": 2134,
+        "member": 2134,
+        "ramp_observed": 2134,
+        "requested_accel": 2134,
+        "s": 2134,
+        "t": 2134,
+        "v": 2134,
+        "vid": 2134
+      },
+      "member_identities": [
+        "mainline.104",
+        "mainline.94"
+      ],
+      "non_null_issued_request_rows": 79,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969670/traces/mappo_ONLY_1.jsonl.gz",
+      "sha256": "51d7bd16a475385df2783365ece9e2c1307bce25e49d3fbdff069a36a90d2082",
+      "seed": 969670,
+      "cohort": "production",
+      "rows": 1937,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1937,
+        "lane": 1937,
+        "member": 1937,
+        "ramp_observed": 1937,
+        "requested_accel": 1937,
+        "s": 1937,
+        "t": 1937,
+        "v": 1937,
+        "vid": 1937
+      },
+      "member_identities": [
+        "mainline.104",
+        "mainline.94"
+      ],
+      "non_null_issued_request_rows": 99,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969670/traces/native_B.jsonl.gz",
+      "sha256": "893d7f529158c708005abc795fc9f9330071683da753d5bf7f20a51abb1a7a21",
+      "seed": 969670,
+      "cohort": "production",
+      "rows": 2134,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2134,
+        "lane": 2134,
+        "member": 2134,
+        "ramp_observed": 2134,
+        "requested_accel": 2134,
+        "s": 2134,
+        "t": 2134,
+        "v": 2134,
+        "vid": 2134
+      },
+      "member_identities": [
+        "mainline.104",
+        "mainline.94"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969670/traces/native_B_repeat.jsonl.gz",
+      "sha256": "98b6a77b00447d20bd956982f68e4597d55111fbd606ca105a1d6914334fad44",
+      "seed": 969670,
+      "cohort": "production",
+      "rows": 2134,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2134,
+        "lane": 2134,
+        "member": 2134,
+        "ramp_observed": 2134,
+        "requested_accel": 2134,
+        "s": 2134,
+        "t": 2134,
+        "v": 2134,
+        "vid": 2134
+      },
+      "member_identities": [
+        "mainline.104",
+        "mainline.94"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969670/traces/sumocf_GROUP.jsonl.gz",
+      "sha256": "36419708bb0f100772e828d5646f9afc93973ae497813d54cddf5cd8d19aa95d",
+      "seed": 969670,
+      "cohort": "production",
+      "rows": 1937,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1937,
+        "lane": 1937,
+        "member": 1937,
+        "ramp_observed": 1937,
+        "requested_accel": 1937,
+        "s": 1937,
+        "t": 1937,
+        "v": 1937,
+        "vid": 1937
+      },
+      "member_identities": [
+        "mainline.104",
+        "mainline.94"
+      ],
+      "non_null_issued_request_rows": 178,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969670/traces/sumocf_ONLY_0.jsonl.gz",
+      "sha256": "6bc888f0160f7c8da80e5a1866086c5858a514dfdaef31ab9e90b2b8a66748f7",
+      "seed": 969670,
+      "cohort": "production",
+      "rows": 2134,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2134,
+        "lane": 2134,
+        "member": 2134,
+        "ramp_observed": 2134,
+        "requested_accel": 2134,
+        "s": 2134,
+        "t": 2134,
+        "v": 2134,
+        "vid": 2134
+      },
+      "member_identities": [
+        "mainline.104",
+        "mainline.94"
+      ],
+      "non_null_issued_request_rows": 79,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969670/traces/sumocf_ONLY_1.jsonl.gz",
+      "sha256": "fad3608de61aa0bfdbb7d3b67e8ddd6ec45cfa37dc379a96818b3e2a2dfc8d5b",
+      "seed": 969670,
+      "cohort": "production",
+      "rows": 1937,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1937,
+        "lane": 1937,
+        "member": 1937,
+        "ramp_observed": 1937,
+        "requested_accel": 1937,
+        "s": 1937,
+        "t": 1937,
+        "v": 1937,
+        "vid": 1937
+      },
+      "member_identities": [
+        "mainline.104",
+        "mainline.94"
+      ],
+      "non_null_issued_request_rows": 99,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969670/traces/wall_GROUP.jsonl.gz",
+      "sha256": "acff53c24c619908d7eb5d304e1aabfc08a92071f0b06d1cb312c655d82ea7ea",
+      "seed": 969670,
+      "cohort": "production",
+      "rows": 2134,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2134,
+        "lane": 2134,
+        "member": 2134,
+        "ramp_observed": 2134,
+        "requested_accel": 2134,
+        "s": 2134,
+        "t": 2134,
+        "v": 2134,
+        "vid": 2134
+      },
+      "member_identities": [
+        "mainline.104",
+        "mainline.94"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969670/traces/wall_ONLY_0.jsonl.gz",
+      "sha256": "2cecc28767208175738e28179d2a3993abc4da2a1a34f45e8ec2eda9a8e4ed6b",
+      "seed": 969670,
+      "cohort": "production",
+      "rows": 2134,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2134,
+        "lane": 2134,
+        "member": 2134,
+        "ramp_observed": 2134,
+        "requested_accel": 2134,
+        "s": 2134,
+        "t": 2134,
+        "v": 2134,
+        "vid": 2134
+      },
+      "member_identities": [
+        "mainline.104",
+        "mainline.94"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969670/traces/wall_ONLY_1.jsonl.gz",
+      "sha256": "1d84fc6fb5077acf5bfee2a5e24d54d35de4c95110ef3bf593b6945d9a8a0897",
+      "seed": 969670,
+      "cohort": "production",
+      "rows": 2134,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2134,
+        "lane": 2134,
+        "member": 2134,
+        "ramp_observed": 2134,
+        "requested_accel": 2134,
+        "s": 2134,
+        "t": 2134,
+        "v": 2134,
+        "vid": 2134
+      },
+      "member_identities": [
+        "mainline.104",
+        "mainline.94"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969672/traces/mappo_GROUP.jsonl.gz",
+      "sha256": "f3b5fccb0a57771862497e34894e4815c8c8d03246fb2059506505b9b2c667ec",
+      "seed": 969672,
+      "cohort": "production",
+      "rows": 1724,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1724,
+        "lane": 1724,
+        "member": 1724,
+        "ramp_observed": 1724,
+        "requested_accel": 1724,
+        "s": 1724,
+        "t": 1724,
+        "v": 1724,
+        "vid": 1724
+      },
+      "member_identities": [
+        "mainline.110",
+        "ramp.34"
+      ],
+      "non_null_issued_request_rows": 155,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969672/traces/mappo_ONLY_0.jsonl.gz",
+      "sha256": "e6d5751a2dec6a1eb44cb26b691537a750283e44905d0ac19c8259ad92d14fbb",
+      "seed": 969672,
+      "cohort": "production",
+      "rows": 1724,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1724,
+        "lane": 1724,
+        "member": 1724,
+        "ramp_observed": 1724,
+        "requested_accel": 1724,
+        "s": 1724,
+        "t": 1724,
+        "v": 1724,
+        "vid": 1724
+      },
+      "member_identities": [
+        "mainline.110",
+        "ramp.34"
+      ],
+      "non_null_issued_request_rows": 37,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969672/traces/mappo_ONLY_1.jsonl.gz",
+      "sha256": "c1c25729129b5fec04d5725a5d141c5bb8a75605ce7098176f87606aa6108be8",
+      "seed": 969672,
+      "cohort": "production",
+      "rows": 1724,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1724,
+        "lane": 1724,
+        "member": 1724,
+        "ramp_observed": 1724,
+        "requested_accel": 1724,
+        "s": 1724,
+        "t": 1724,
+        "v": 1724,
+        "vid": 1724
+      },
+      "member_identities": [
+        "mainline.110",
+        "ramp.34"
+      ],
+      "non_null_issued_request_rows": 118,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969672/traces/native_B.jsonl.gz",
+      "sha256": "abbeef7095310818384e990a9fd671720d575c00ba6051f3dabb8c710a8b5a1e",
+      "seed": 969672,
+      "cohort": "production",
+      "rows": 1724,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1724,
+        "lane": 1724,
+        "member": 1724,
+        "ramp_observed": 1724,
+        "requested_accel": 1724,
+        "s": 1724,
+        "t": 1724,
+        "v": 1724,
+        "vid": 1724
+      },
+      "member_identities": [
+        "mainline.110",
+        "ramp.34"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969672/traces/native_B_repeat.jsonl.gz",
+      "sha256": "82515a34848d3a8fdb28a8a822ff89f092b452a08191b0cb9e51b60e7cdf503f",
+      "seed": 969672,
+      "cohort": "production",
+      "rows": 1724,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1724,
+        "lane": 1724,
+        "member": 1724,
+        "ramp_observed": 1724,
+        "requested_accel": 1724,
+        "s": 1724,
+        "t": 1724,
+        "v": 1724,
+        "vid": 1724
+      },
+      "member_identities": [
+        "mainline.110",
+        "ramp.34"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969672/traces/sumocf_GROUP.jsonl.gz",
+      "sha256": "6e2d6a92a825b5195fe0a7bb0e86a3a3929e61ad84f55249222203e2236b18c7",
+      "seed": 969672,
+      "cohort": "production",
+      "rows": 1724,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1724,
+        "lane": 1724,
+        "member": 1724,
+        "ramp_observed": 1724,
+        "requested_accel": 1724,
+        "s": 1724,
+        "t": 1724,
+        "v": 1724,
+        "vid": 1724
+      },
+      "member_identities": [
+        "mainline.110",
+        "ramp.34"
+      ],
+      "non_null_issued_request_rows": 155,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969672/traces/sumocf_ONLY_0.jsonl.gz",
+      "sha256": "ee4ed59106ec01d0988bf41e2e4e9ab8bda2d28d49af6a8bae9a3ee1744f052d",
+      "seed": 969672,
+      "cohort": "production",
+      "rows": 1724,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1724,
+        "lane": 1724,
+        "member": 1724,
+        "ramp_observed": 1724,
+        "requested_accel": 1724,
+        "s": 1724,
+        "t": 1724,
+        "v": 1724,
+        "vid": 1724
+      },
+      "member_identities": [
+        "mainline.110",
+        "ramp.34"
+      ],
+      "non_null_issued_request_rows": 37,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969672/traces/sumocf_ONLY_1.jsonl.gz",
+      "sha256": "5cfc0175f4ee169947d85006f12cfa6be894ade01f1120a0cc8ac420c361111f",
+      "seed": 969672,
+      "cohort": "production",
+      "rows": 1724,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1724,
+        "lane": 1724,
+        "member": 1724,
+        "ramp_observed": 1724,
+        "requested_accel": 1724,
+        "s": 1724,
+        "t": 1724,
+        "v": 1724,
+        "vid": 1724
+      },
+      "member_identities": [
+        "mainline.110",
+        "ramp.34"
+      ],
+      "non_null_issued_request_rows": 118,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969672/traces/wall_GROUP.jsonl.gz",
+      "sha256": "ac54760b933dc895a47bdeae44decfa91825b512e40b31d7cb49005c1b761613",
+      "seed": 969672,
+      "cohort": "production",
+      "rows": 1724,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1724,
+        "lane": 1724,
+        "member": 1724,
+        "ramp_observed": 1724,
+        "requested_accel": 1724,
+        "s": 1724,
+        "t": 1724,
+        "v": 1724,
+        "vid": 1724
+      },
+      "member_identities": [
+        "mainline.110",
+        "ramp.34"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969672/traces/wall_ONLY_0.jsonl.gz",
+      "sha256": "2bba27fe09936e37e6d541b8b0f0a7d859869efdf29ec22b1e33727d84067a55",
+      "seed": 969672,
+      "cohort": "production",
+      "rows": 1724,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1724,
+        "lane": 1724,
+        "member": 1724,
+        "ramp_observed": 1724,
+        "requested_accel": 1724,
+        "s": 1724,
+        "t": 1724,
+        "v": 1724,
+        "vid": 1724
+      },
+      "member_identities": [
+        "mainline.110",
+        "ramp.34"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969672/traces/wall_ONLY_1.jsonl.gz",
+      "sha256": "01a99e98def3fec2db2229714d9acd34b8ef0df56fdca08084897f5662aceb0d",
+      "seed": 969672,
+      "cohort": "production",
+      "rows": 1724,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1724,
+        "lane": 1724,
+        "member": 1724,
+        "ramp_observed": 1724,
+        "requested_accel": 1724,
+        "s": 1724,
+        "t": 1724,
+        "v": 1724,
+        "vid": 1724
+      },
+      "member_identities": [
+        "mainline.110",
+        "ramp.34"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969673/traces/mappo_GROUP.jsonl.gz",
+      "sha256": "229ff63237fff3709bb78451ce110f7d2cc755ab4e095f89f7c423a1b063e00c",
+      "seed": 969673,
+      "cohort": "production",
+      "rows": 2584,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2584,
+        "lane": 2584,
+        "member": 2584,
+        "ramp_observed": 2584,
+        "requested_accel": 2584,
+        "s": 2584,
+        "t": 2584,
+        "v": 2584,
+        "vid": 2584
+      },
+      "member_identities": [
+        "ramp.24",
+        "ramp.25"
+      ],
+      "non_null_issued_request_rows": 234,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969673/traces/mappo_ONLY_0.jsonl.gz",
+      "sha256": "e5070a1be9900f84277ebb8a505c7c0cf38fea22e63aa138ab1018e513cba8bf",
+      "seed": 969673,
+      "cohort": "production",
+      "rows": 2704,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2704,
+        "lane": 2704,
+        "member": 2704,
+        "ramp_observed": 2704,
+        "requested_accel": 2704,
+        "s": 2704,
+        "t": 2704,
+        "v": 2704,
+        "vid": 2704
+      },
+      "member_identities": [
+        "ramp.24",
+        "ramp.25"
+      ],
+      "non_null_issued_request_rows": 116,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969673/traces/mappo_ONLY_1.jsonl.gz",
+      "sha256": "a26b4c29dba5956e9c632e21b72056405da703543a8caa8b747e755843612f62",
+      "seed": 969673,
+      "cohort": "production",
+      "rows": 2741,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2741,
+        "lane": 2741,
+        "member": 2741,
+        "ramp_observed": 2741,
+        "requested_accel": 2741,
+        "s": 2741,
+        "t": 2741,
+        "v": 2741,
+        "vid": 2741
+      },
+      "member_identities": [
+        "ramp.24",
+        "ramp.25"
+      ],
+      "non_null_issued_request_rows": 116,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969673/traces/native_B.jsonl.gz",
+      "sha256": "6440e9a171a65ddd1b492dbeb86d83a705abba00c899aed9c49e25811e0ebec6",
+      "seed": 969673,
+      "cohort": "production",
+      "rows": 2668,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2668,
+        "lane": 2668,
+        "member": 2668,
+        "ramp_observed": 2668,
+        "requested_accel": 2668,
+        "s": 2668,
+        "t": 2668,
+        "v": 2668,
+        "vid": 2668
+      },
+      "member_identities": [
+        "ramp.24",
+        "ramp.25"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969673/traces/native_B_repeat.jsonl.gz",
+      "sha256": "cedb0724db8a652be1da4ea9350360de622b60ddae7bfc648573366c0dc1bade",
+      "seed": 969673,
+      "cohort": "production",
+      "rows": 2668,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2668,
+        "lane": 2668,
+        "member": 2668,
+        "ramp_observed": 2668,
+        "requested_accel": 2668,
+        "s": 2668,
+        "t": 2668,
+        "v": 2668,
+        "vid": 2668
+      },
+      "member_identities": [
+        "ramp.24",
+        "ramp.25"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969673/traces/sumocf_GROUP.jsonl.gz",
+      "sha256": "eb39ff5fcd8a257829c97e53ba3a1a422221f6de364c2b3a7d2cec85cd2ec990",
+      "seed": 969673,
+      "cohort": "production",
+      "rows": 2584,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2584,
+        "lane": 2584,
+        "member": 2584,
+        "ramp_observed": 2584,
+        "requested_accel": 2584,
+        "s": 2584,
+        "t": 2584,
+        "v": 2584,
+        "vid": 2584
+      },
+      "member_identities": [
+        "ramp.24",
+        "ramp.25"
+      ],
+      "non_null_issued_request_rows": 234,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969673/traces/sumocf_ONLY_0.jsonl.gz",
+      "sha256": "3baf3b96503c4bc41267c1e82020854b025d8a4948e7e7b2cbbc565153a22463",
+      "seed": 969673,
+      "cohort": "production",
+      "rows": 2704,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2704,
+        "lane": 2704,
+        "member": 2704,
+        "ramp_observed": 2704,
+        "requested_accel": 2704,
+        "s": 2704,
+        "t": 2704,
+        "v": 2704,
+        "vid": 2704
+      },
+      "member_identities": [
+        "ramp.24",
+        "ramp.25"
+      ],
+      "non_null_issued_request_rows": 116,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969673/traces/sumocf_ONLY_1.jsonl.gz",
+      "sha256": "0bcd8533b2cbd5e944de5fbab321108e5e9fb2605b15c88e42a73e0ba49ef54f",
+      "seed": 969673,
+      "cohort": "production",
+      "rows": 2741,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2741,
+        "lane": 2741,
+        "member": 2741,
+        "ramp_observed": 2741,
+        "requested_accel": 2741,
+        "s": 2741,
+        "t": 2741,
+        "v": 2741,
+        "vid": 2741
+      },
+      "member_identities": [
+        "ramp.24",
+        "ramp.25"
+      ],
+      "non_null_issued_request_rows": 116,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969673/traces/wall_GROUP.jsonl.gz",
+      "sha256": "2ed472046a4efeb1d84491f7a12782c566f1522867ab8f534d372b877cc16205",
+      "seed": 969673,
+      "cohort": "production",
+      "rows": 2668,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2668,
+        "lane": 2668,
+        "member": 2668,
+        "ramp_observed": 2668,
+        "requested_accel": 2668,
+        "s": 2668,
+        "t": 2668,
+        "v": 2668,
+        "vid": 2668
+      },
+      "member_identities": [
+        "ramp.24",
+        "ramp.25"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969673/traces/wall_ONLY_0.jsonl.gz",
+      "sha256": "9e6fb1ba511f8125eaef0ac453286eb3c7dfcf499c26339a8483b4008048023d",
+      "seed": 969673,
+      "cohort": "production",
+      "rows": 2668,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2668,
+        "lane": 2668,
+        "member": 2668,
+        "ramp_observed": 2668,
+        "requested_accel": 2668,
+        "s": 2668,
+        "t": 2668,
+        "v": 2668,
+        "vid": 2668
+      },
+      "member_identities": [
+        "ramp.24",
+        "ramp.25"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969673/traces/wall_ONLY_1.jsonl.gz",
+      "sha256": "23980e10d2bb20a0bbc8c223ff0b98aca7bf1a22b1a202e463c3684748e09538",
+      "seed": 969673,
+      "cohort": "production",
+      "rows": 2668,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 2668,
+        "lane": 2668,
+        "member": 2668,
+        "ramp_observed": 2668,
+        "requested_accel": 2668,
+        "s": 2668,
+        "t": 2668,
+        "v": 2668,
+        "vid": 2668
+      },
+      "member_identities": [
+        "ramp.24",
+        "ramp.25"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969677/traces/mappo_GROUP.jsonl.gz",
+      "sha256": "b88399cee60b35d8ac4d5f9b8bf2f92c93a2881121a9b6404a05c29eceed6c5f",
+      "seed": 969677,
+      "cohort": "production",
+      "rows": 1794,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1794,
+        "lane": 1794,
+        "member": 1794,
+        "ramp_observed": 1794,
+        "requested_accel": 1794,
+        "s": 1794,
+        "t": 1794,
+        "v": 1794,
+        "vid": 1794
+      },
+      "member_identities": [
+        "mainline.112",
+        "ramp.28"
+      ],
+      "non_null_issued_request_rows": 109,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969677/traces/mappo_ONLY_0.jsonl.gz",
+      "sha256": "8bd97368cf56769eaf9fb9ea7f8caf7df94a3c4ba4558a89bb4886ae1625e856",
+      "seed": 969677,
+      "cohort": "production",
+      "rows": 1795,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1795,
+        "lane": 1795,
+        "member": 1795,
+        "ramp_observed": 1795,
+        "requested_accel": 1795,
+        "s": 1795,
+        "t": 1795,
+        "v": 1795,
+        "vid": 1795
+      },
+      "member_identities": [
+        "mainline.112",
+        "ramp.28"
+      ],
+      "non_null_issued_request_rows": 45,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969677/traces/mappo_ONLY_1.jsonl.gz",
+      "sha256": "e01319cd614d2a2a4ee913fad5a213f59e9333d12c479a4ce07734f23b72d0b4",
+      "seed": 969677,
+      "cohort": "production",
+      "rows": 1794,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1794,
+        "lane": 1794,
+        "member": 1794,
+        "ramp_observed": 1794,
+        "requested_accel": 1794,
+        "s": 1794,
+        "t": 1794,
+        "v": 1794,
+        "vid": 1794
+      },
+      "member_identities": [
+        "mainline.112",
+        "ramp.28"
+      ],
+      "non_null_issued_request_rows": 64,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969677/traces/native_B.jsonl.gz",
+      "sha256": "c390f4480dcc435076141b302ebe67b71645c4809dcffece672decb56e57267a",
+      "seed": 969677,
+      "cohort": "production",
+      "rows": 1795,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1795,
+        "lane": 1795,
+        "member": 1795,
+        "ramp_observed": 1795,
+        "requested_accel": 1795,
+        "s": 1795,
+        "t": 1795,
+        "v": 1795,
+        "vid": 1795
+      },
+      "member_identities": [
+        "mainline.112",
+        "ramp.28"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969677/traces/native_B_repeat.jsonl.gz",
+      "sha256": "75fd28d392af34fa361fbe821cf932dfb89541dde81e1de062325a6572298b13",
+      "seed": 969677,
+      "cohort": "production",
+      "rows": 1795,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1795,
+        "lane": 1795,
+        "member": 1795,
+        "ramp_observed": 1795,
+        "requested_accel": 1795,
+        "s": 1795,
+        "t": 1795,
+        "v": 1795,
+        "vid": 1795
+      },
+      "member_identities": [
+        "mainline.112",
+        "ramp.28"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969677/traces/sumocf_GROUP.jsonl.gz",
+      "sha256": "74b2be873aacdcf8d182de84593b73a539a00001bbdcd478e671cfca3677c55e",
+      "seed": 969677,
+      "cohort": "production",
+      "rows": 1794,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1794,
+        "lane": 1794,
+        "member": 1794,
+        "ramp_observed": 1794,
+        "requested_accel": 1794,
+        "s": 1794,
+        "t": 1794,
+        "v": 1794,
+        "vid": 1794
+      },
+      "member_identities": [
+        "mainline.112",
+        "ramp.28"
+      ],
+      "non_null_issued_request_rows": 109,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969677/traces/sumocf_ONLY_0.jsonl.gz",
+      "sha256": "04f10d8bf8faced02a888a75aa0ae686a5ebe6b2d68121503f6530d38bbcd4ec",
+      "seed": 969677,
+      "cohort": "production",
+      "rows": 1795,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1795,
+        "lane": 1795,
+        "member": 1795,
+        "ramp_observed": 1795,
+        "requested_accel": 1795,
+        "s": 1795,
+        "t": 1795,
+        "v": 1795,
+        "vid": 1795
+      },
+      "member_identities": [
+        "mainline.112",
+        "ramp.28"
+      ],
+      "non_null_issued_request_rows": 45,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969677/traces/sumocf_ONLY_1.jsonl.gz",
+      "sha256": "98168b6d7c629e598c6972d1854ecb96dc0772409f3e29bad087e3de260b190c",
+      "seed": 969677,
+      "cohort": "production",
+      "rows": 1794,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1794,
+        "lane": 1794,
+        "member": 1794,
+        "ramp_observed": 1794,
+        "requested_accel": 1794,
+        "s": 1794,
+        "t": 1794,
+        "v": 1794,
+        "vid": 1794
+      },
+      "member_identities": [
+        "mainline.112",
+        "ramp.28"
+      ],
+      "non_null_issued_request_rows": 64,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969677/traces/wall_GROUP.jsonl.gz",
+      "sha256": "af5ba1d3d48d89fe1515eb01aa6f6b5d1ddcd1f812c25adb812a4ac0f5836b21",
+      "seed": 969677,
+      "cohort": "production",
+      "rows": 1795,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1795,
+        "lane": 1795,
+        "member": 1795,
+        "ramp_observed": 1795,
+        "requested_accel": 1795,
+        "s": 1795,
+        "t": 1795,
+        "v": 1795,
+        "vid": 1795
+      },
+      "member_identities": [
+        "mainline.112",
+        "ramp.28"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969677/traces/wall_ONLY_0.jsonl.gz",
+      "sha256": "f15856f58df65850cdb64fc2ef69b3ed3b30b3678a7fe47adc4868c6b8942a1c",
+      "seed": 969677,
+      "cohort": "production",
+      "rows": 1795,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1795,
+        "lane": 1795,
+        "member": 1795,
+        "ramp_observed": 1795,
+        "requested_accel": 1795,
+        "s": 1795,
+        "t": 1795,
+        "v": 1795,
+        "vid": 1795
+      },
+      "member_identities": [
+        "mainline.112",
+        "ramp.28"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    },
+    {
+      "file": "jobs/v2_s969677/traces/wall_ONLY_1.jsonl.gz",
+      "sha256": "0c479198353fcf5d1f88c6a3a2e9276577c7717c446331b6bf2a17bf97b54c40",
+      "seed": 969677,
+      "cohort": "production",
+      "rows": 1795,
+      "min_t": 270.5,
+      "max_t": 390.0,
+      "field_rows": {
+        "a": 1795,
+        "lane": 1795,
+        "member": 1795,
+        "ramp_observed": 1795,
+        "requested_accel": 1795,
+        "s": 1795,
+        "t": 1795,
+        "v": 1795,
+        "vid": 1795
+      },
+      "member_identities": [
+        "mainline.112",
+        "ramp.28"
+      ],
+      "non_null_issued_request_rows": 0,
+      "nonmember_nonramp_rows": 0
+    }
+  ],
+  "detector_eligible": false,
+  "detector_counts": null,
+  "blockers": [
+    "No observed vehicle lengths: bumper gaps and overlapping bodies are not identifiable",
+    "Members-and-ramp-only crop: true mainline leaders and follower chains are not identifiable",
+    "No per-row is_cav/controller fields: fleet exposure and normalized release status are unavailable"
+  ],
+  "interpretation": "Unavailable geometry is missing evidence, not zero events. requested_accel is an issued-safe request, not realised acceleration. No v1 credits are pooled."
+}
