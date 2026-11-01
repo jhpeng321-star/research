@@ -629,3 +629,8 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 
 ### SCALE_gpuR_FIXED4_K4_H120.json
 - SCALE_gpuR_FIXED4_K4_H120.json: {"H":120,"K":4,"max_cost_error":0.0,"pass_":true,"width":4}
+
+## Acceleration viability — 2026-11-01T13:01:21.640167+00:00
+
+### SCALE_gpuA_FIXED4_K8_H300.json
+- SCALE_gpuA_FIXED4_K8_H300.json: {"H":300,"K":8,"max_cost_error":0.0,"pass_":true,"width":4}
