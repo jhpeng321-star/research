@@ -6,6 +6,28 @@ Task S-RB-CF: SUMO 1.27.1 IDM car-following parity + a pure-physics preset.
 
 ## Status (updated as work lands; all times 2026-10-31/11-01 +08:00)
 
+- `18291ef5` **Euler position parity** (2026-11-01 ~10:15, post-freeze
+  increment): `physics.position_rule` = `'legacy_trapezoid'` (default,
+  bit-identical) | `'sumo_euler'` = SUMO's default position update
+  `s' = s + v' dt` (`MSVehicle.cpp:4954-4963`, `deltaPos = SPEED2DIST(vNext)`),
+  wired through `WmSModel.step` (pivot AND non-pivot longitudinal updates);
+  `stop_time_integration` is a trapezoid-only correction (skipped under Euler:
+  a clamped SUMO stop does not move).  Preset
+  `PURE_SUMO_PHYSICS_EULER` (frozen `PURE_SUMO_PHYSICS` unchanged for
+  provenance).  Fixes my earlier WRONG doc claim that the WM trapezoid
+  "reproduces the SUMO ballistic position rule" (evidence:
+  rb-shared LANE_TO_CF_POSITION_20261101: 2,346,379 FIT intervals, Euler
+  residual 3.5e-5 m vs trapezoid 0.039 m).  Tests
+  `tests/test_rb_cf_position_rule.py` (6) + full CF/equivalence suite: 92
+  passed.  Tape check 60 s (`tape_check_euler60.json`): vs the frozen
+  trapezoid sumo_enc arm, speed MAE -0.032 m/s @30 s / **-0.122 m/s @60 s**
+  (21/32, 19/32 worlds better), position/gap neutral — value is generator
+  parity + bias removal, not the error score.  Measured per-step bias of the
+  legacy rule on the 40 native dev tapes (merge zone): braking steps overshoot
+  downstream +8.5 cm mean (p99 19.8 cm, n=195,638), accelerating steps
+  undershoot -8.5 cm (n=91,762) — both directions align with the
+  "too severe / too slow to clear" symptom (see rb-shared
+  CF_POSITION_EULER_1015.md).
 - `e9992767` **SUMO IDM parity module** `src/wms/physics/idm_sumo.py`: a
   line-annotated tensor port of SUMO 1.27.1 `MSCFModel_IDM` (`_v` iterated safe
   speed with the `TS/0.25` sub-stepping = 2 iterations at 0.5 s; `minNextSpeed`
@@ -59,8 +81,10 @@ Task S-RB-CF: SUMO 1.27.1 IDM car-following parity + a pure-physics preset.
 ## Tests
 
 `python -m pytest tests/test_rb_cf_sumo_idm.py tests/test_rb_cf_switch.py
-tests/test_rb_cf_pure_physics.py tests/equivalence -q` (conda env
-`rl_driving` python; 16 + 5 + 5 + 60 pass). Expected values are derived from an
+tests/test_rb_cf_pure_physics.py tests/test_rb_cf_position_rule.py
+tests/equivalence -q` (92 + 16 pre-existing skips pass; conda base python
+3.13.13 / torch 2.14.1+cpu — note: the `rl_driving` env no longer exists on
+this machine, no new env was created). Expected values are derived from an
 independent scalar transcription of the SUMO source formulas, hand-derived
 anchors, and the idmspec reference vectors.
 
@@ -68,9 +92,11 @@ anchors, and the idmspec reference vectors.
 
 ```python
 from wms.eval.predictor import RolloutFlags, WmsPredictor
-from wms.physics.idm_sumo import PURE_SUMO_PHYSICS
+from wms.physics.idm_sumo import PURE_SUMO_PHYSICS, PURE_SUMO_PHYSICS_EULER
 p = WmsPredictor.from_checkpoint(ckpt, RolloutFlags(pure_physics=True),
-                                 physics=PURE_SUMO_PHYSICS)
+                                 physics=PURE_SUMO_PHYSICS)          # frozen recipe
+q = WmsPredictor.from_checkpoint(ckpt, RolloutFlags(pure_physics=True),
+                                 physics=PURE_SUMO_PHYSICS_EULER)    # + Euler position
 ```
 
 Checkpoints load unchanged (no new tensors, no key changes); without the
@@ -81,8 +107,10 @@ switches every existing result is bit-identical.
 - `actionStepLength > stepLength` holds the last acceleration between action
   steps; helpers exist (`action_step_enabled`/`action_step_update`) but the WM
   rollout does not carry that state (SUMO default does not need it).
-- Semi-implicit Euler speed rule + ballistic position rule assumed (SUMO
-  defaults); the WM integrator already matches that combination.
+- Semi-implicit Euler speed rule is the WM default and matches SUMO; the
+  POSITION rule differs by default (`legacy_trapezoid`) — SUMO parity needs
+  `position_rule='sumo_euler'` (or `PURE_SUMO_PHYSICS_EULER`).  The frozen
+  FULL-v4 panel ran trapezoid (see above for the measured bias).
 - Junction/internal-lane link speeds, perception errors, IDMM adaptation,
   startup delay: out of car-following parity scope (S-RB-MERGE / defaults are
   no-ops).
