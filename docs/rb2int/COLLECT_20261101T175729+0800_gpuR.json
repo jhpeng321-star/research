@@ -1,0 +1,405 @@
+{
+ "host": "gpuR",
+ "complete": [
+  {
+   "job": {
+    "id": "wm2_969590",
+    "model": "WM2",
+    "seed": 969590,
+    "host": "gpuR",
+    "futures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "primary": true,
+    "stratum_worlds": 2
+   },
+   "complete_sha256": "1b0f213b5ffd038a0b0d13a0f2bc24b2d728b181de2801c8fa44e6858fbdcf5e",
+   "identity_sha256": "8ce6b705bd30b70e3590e9a085b8267e212c5f74c88e0bae929cfa6935ac2bdf"
+  },
+  {
+   "job": {
+    "id": "wm2_969595",
+    "model": "WM2",
+    "seed": 969595,
+    "host": "gpuR",
+    "futures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "primary": true,
+    "stratum_worlds": 2
+   },
+   "complete_sha256": "70428f99f20fbd35b2786a1b92d2796bcff963b0dfe8e685b8bec5dd0b89458d",
+   "identity_sha256": "fc42d955e4fdf5dc1eb42ff4ebeec5227afeead68dba7058c67800d23d1c4a0e"
+  },
+  {
+   "job": {
+    "id": "wm2_969599",
+    "model": "WM2",
+    "seed": 969599,
+    "host": "gpuR",
+    "futures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "primary": true,
+    "stratum_worlds": 2
+   },
+   "complete_sha256": "cde4e5acd69261135ea86a289a294c239a7e116a898d9f09aa548d843891dfa9",
+   "identity_sha256": "3568b8fd22fbfd63cd8b943533fbe2f1702fe257cf47e4a45f19f760eefe5585"
+  },
+  {
+   "job": {
+    "id": "v5_969433",
+    "model": "FULL-v5",
+    "seed": 969433,
+    "host": "gpuR",
+    "futures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "primary": true,
+    "stratum_worlds": 3
+   },
+   "complete_sha256": "033054be903c6f225baf35b1a3cbeb20936e558eceb65e8b5fd4665f6adece65",
+   "identity_sha256": "69df06858c0ac4e33b26baddc8a67e207bc61c0ab59b46fa37ad0ea0546c9c67"
+  },
+  {
+   "job": {
+    "id": "v5-lp_969433",
+    "model": "FULL-v5-LP",
+    "seed": 969433,
+    "host": "gpuR",
+    "futures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "primary": true,
+    "stratum_worlds": 3
+   },
+   "complete_sha256": "14498bf739c398a086b63711c47a03563a2d966aa52be4efee7c0e9b5d315b7b",
+   "identity_sha256": "711e7dd039f979bca8b53f5f0a83300d7272c0999f02db49c4aa8758cff89359"
+  },
+  {
+   "job": {
+    "id": "v5_969437",
+    "model": "FULL-v5",
+    "seed": 969437,
+    "host": "gpuR",
+    "futures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "primary": true,
+    "stratum_worlds": 3
+   },
+   "complete_sha256": "cf9ca440ad72b0a480ba9d1a7629659d509885d1ba67d815620e5b627f688341",
+   "identity_sha256": "79f4fd336430eeea55721c2194efc9a11bc43d7734ad85662da613379bfd1faf"
+  },
+  {
+   "job": {
+    "id": "v5-lp_969437",
+    "model": "FULL-v5-LP",
+    "seed": 969437,
+    "host": "gpuR",
+    "futures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "primary": true,
+    "stratum_worlds": 3
+   },
+   "complete_sha256": "dd3ce9ff5eae45b87ab54585df55bd06cf432b05a1196680dbca2b1089051b23",
+   "identity_sha256": "cf224f91c7c4de3effc44e1e16010047f85705b7f952763a460dd09bbe6e44d6"
+  },
+  {
+   "job": {
+    "id": "v5_969438",
+    "model": "FULL-v5",
+    "seed": 969438,
+    "host": "gpuR",
+    "futures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "primary": true,
+    "stratum_worlds": 3
+   },
+   "complete_sha256": "b8dd6f71f5cb87feddbdd49897e5bcd48ac742110d27a0ecf55b959684d95f71",
+   "identity_sha256": "a0ab5e1af4b327bfe084be58567f7dda75072be9af036b92e79883c6a4292bd0"
+  },
+  {
+   "job": {
+    "id": "v5-lp_969438",
+    "model": "FULL-v5-LP",
+    "seed": 969438,
+    "host": "gpuR",
+    "futures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "primary": true,
+    "stratum_worlds": 3
+   },
+   "complete_sha256": "e50a334c4482fb2910a536785553627ac5b115884d4a2ce02722574316bb877a",
+   "identity_sha256": "629456e63651e34a800b6fea44f519ea42aee7c46f082379fe2b1ea35a891eef"
+  },
+  {
+   "job": {
+    "id": "wm2_969592",
+    "model": "WM2",
+    "seed": 969592,
+    "host": "gpuR",
+    "futures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "primary": true,
+    "stratum_worlds": 3
+   },
+   "complete_sha256": "4975a6ff155d687fa30cd775865b05b518f04e7b053f6fae615f022e49a8934d",
+   "identity_sha256": "9a2982a1f6cede723768a4a50958bda04f308043229876c8258c2e6da909d798"
+  },
+  {
+   "job": {
+    "id": "wm2_969597",
+    "model": "WM2",
+    "seed": 969597,
+    "host": "gpuR",
+    "futures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "primary": true,
+    "stratum_worlds": 3
+   },
+   "complete_sha256": "648355868aeef23a37ad7cfbd4442566d8a06a4d5752f9ef6d06f59b23bc539f",
+   "identity_sha256": "d3c67ac5826822fdd07777cbc41fe31293346bfe5dbf6c152635a19c5ed4f535"
+  },
+  {
+   "job": {
+    "id": "wm2_969598",
+    "model": "WM2",
+    "seed": 969598,
+    "host": "gpuR",
+    "futures": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7
+    ],
+    "primary": true,
+    "stratum_worlds": 3
+   },
+   "complete_sha256": "dda21ddeaa3bcf9d572fefe8ed4a23ea19d7f29ab1b00ca6fe5359418316e2e6",
+   "identity_sha256": "bdd9ae175b334fbe2f8e4c944cd70268a51cbe79ca52602bbde60b70c6dbae12"
+  }
+ ],
+ "pending": [
+  "wm2_969550",
+  "wm2_969554",
+  "v5_969554",
+  "v5-lp_969554",
+  "wm2_969558",
+  "v5_969558",
+  "v5-lp_969558",
+  "wm2_969562",
+  "v5_969562",
+  "v5-lp_969562",
+  "wm2_969566",
+  "wm2_969570",
+  "wm2_969574",
+  "wm2_969578",
+  "wm2_969582",
+  "v5_969582",
+  "v5-lp_969582",
+  "wm2_969586",
+  "v5_969586",
+  "v5-lp_969586",
+  "v5_969432",
+  "v5-lp_969432",
+  "wm2_969551",
+  "wm2_969552",
+  "wm2_969555",
+  "wm2_969556",
+  "v5_969556",
+  "v5-lp_969556",
+  "wm2_969559",
+  "v5_969559",
+  "v5-lp_969559",
+  "wm2_969560",
+  "v5_969560",
+  "v5-lp_969560",
+  "wm2_969563",
+  "wm2_969564",
+  "wm2_969567",
+  "wm2_969568",
+  "wm2_969571",
+  "v5_969571",
+  "v5-lp_969571",
+  "wm2_969572",
+  "v5_969572",
+  "v5-lp_969572",
+  "wm2_969575",
+  "v5_969575",
+  "v5-lp_969575",
+  "wm2_969576",
+  "wm2_969579",
+  "wm2_969580",
+  "wm2_969583",
+  "wm2_969584",
+  "v5_969584",
+  "v5-lp_969584",
+  "wm2_969587",
+  "v5_969587",
+  "v5-lp_969587",
+  "wm2_969588",
+  "v5_969588",
+  "v5-lp_969588",
+  "wm2_969553",
+  "wm2_969557",
+  "wm2_969561",
+  "v5_969561",
+  "v5-lp_969561",
+  "wm2_969565",
+  "v5_969565",
+  "v5-lp_969565",
+  "wm2_969569",
+  "v5_969569",
+  "v5-lp_969569",
+  "wm2_969573",
+  "wm2_969577",
+  "wm2_969581",
+  "wm2_969585",
+  "wm2_969589",
+  "v5_969589",
+  "v5-lp_969589",
+  "wm2_969591",
+  "v5_969591",
+  "v5-lp_969591",
+  "wm2_969593",
+  "v5_969593",
+  "v5-lp_969593",
+  "wm2_969594",
+  "wm2_969596"
+ ],
+ "read_only": true,
+ "unix": 1793527052.041969,
+ "hashes": {
+  "wm2_969597/tasks/w969597_k0.json": "23c9510cd5d6ccc06c031a3e32f302fdb75af44845f02590b72bb824c211660a",
+  "wm2_969597/tasks/w969597_k1.json": "16c9a4ddd6222e692183ebddce60a95421d4e90e7f52d21f08679a7db89c58e0",
+  "wm2_969597/tasks/w969597_k2.json": "0ef2e7d28d86a278cc99f4c610b9be941b4c4aa5413ad508a4c7f232a72f66df",
+  "wm2_969597/tasks/w969597_k3.json": "7bc84d9befa472960804d7248db32564a20436da0cc08d54e4fcb2d0e3967423",
+  "wm2_969597/tasks/w969597_k4.json": "c5ab71d197de08ae102d58fd89dca0b261ed7d051874303bc9c3b8a5b1e87f79",
+  "wm2_969597/tasks/w969597_k5.json": "6932beb10903c89e5806df6d7cbf5a7129bb996edcdf226c2753e269da92d275",
+  "wm2_969597/tasks/w969597_k6.json": "84f2e4180868521851530e593abaf22457bcd276e81b1f9f6fd387147a1a6c61",
+  "wm2_969597/tasks/w969597_k7.json": "9ad84b3f96178455bf9bc13451ce1885e730b4c9e3889ae60e1b4edaca80fd9b",
+  "wm2_969597/tasks/IDENTITY.json": "d3c67ac5826822fdd07777cbc41fe31293346bfe5dbf6c152635a19c5ed4f535",
+  "wm2_969597/tasks/COMPLETE.json": "648355868aeef23a37ad7cfbd4442566d8a06a4d5752f9ef6d06f59b23bc539f",
+  "wm2_969597/CLAIM_ONCE.json": "d03880632f181d1ddf62e38d4319c9aa97a9b318532ada5fb2fdb0df688a8071",
+  "wm2_969597/PROCESS.json": "9f95444a3c442459cb2dde6943537ccf64841ad6a222e6b26b3eb061fab10e1e",
+  "wm2_969598/tasks/w969598_k0.json": "c118cb070a6d59f80a9c76770fe864574c67aa8de5546e5917155e7b9b978eb3",
+  "wm2_969598/tasks/w969598_k1.json": "a55b9bac24e5c9b275af11f2a6a8905617d6ec49dab7c416a3cd7c0cf7b970ab",
+  "wm2_969598/tasks/w969598_k2.json": "4d7b1a1d8fff8f58a28ac287e6d3288167c0f5be0b382993c735b2b502ef4c5c",
+  "wm2_969598/tasks/w969598_k3.json": "d5060d099471ae704b83166f82731d5188a7d8d93bdfa391ff5f51bf5aaf73e1",
+  "wm2_969598/tasks/w969598_k4.json": "cc951d4b92806343a2884690146352847cfac0723ea70b884d4cbf1a1a9eca0f",
+  "wm2_969598/tasks/w969598_k5.json": "aac73b33db735b86dca4e05bb550d0581bc350228dcc6569fb3276f956c34a07",
+  "wm2_969598/tasks/w969598_k6.json": "1dae0b4d324bdc6093849c830c7ebe1b123078e9c51a806b9fb49cb3d217d9e1",
+  "wm2_969598/tasks/w969598_k7.json": "7d64caaa6f1d5bc153bfd6b4b0cc43968a4d0071f71943861c19f0b75d59f1c4",
+  "wm2_969598/tasks/IDENTITY.json": "bdd9ae175b334fbe2f8e4c944cd70268a51cbe79ca52602bbde60b70c6dbae12",
+  "wm2_969598/tasks/COMPLETE.json": "dda21ddeaa3bcf9d572fefe8ed4a23ea19d7f29ab1b00ca6fe5359418316e2e6",
+  "wm2_969598/CLAIM_ONCE.json": "4555b9b39d54142978ea29b341b2c9c31ab542479c1a675509c756dc3c41fbeb",
+  "wm2_969598/PROCESS.json": "76ad7dc74d3866d51cca64bfd6b183e59d6706c957c4d6cab990be19549d1e9c"
+ },
+ "SUPERVISOR_PROCESS.json": {
+  "pid": 924719,
+  "start_ticks": "4214495421",
+  "boot_id": "d19e6898-efd0-4288-a901-d63b21f11163",
+  "argv": [
+   "nice",
+   "-n",
+   "19",
+   "/root/miniconda3/bin/python",
+   "-B",
+   "-u",
+   "/root/autodl-tmp/c4/rb2int20261101/phys_code_d0df3d66e80a/tools/rb2int/final_worker.py",
+   "--root",
+   "/root/autodl-tmp/c4/rb2int20261101/final_v5_v1",
+   "--host",
+   "gpuR"
+  ],
+  "root": "/root/autodl-tmp/c4/rb2int20261101/final_v5_v1",
+  "host": "gpuR"
+ }
+}
