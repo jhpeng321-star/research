@@ -24,7 +24,7 @@
 23. H60/120/300/600. D_i=J(member-revert)-J(joint); D_G=J(all-revert)-J(joint).
 24. C_G=D_G-sum(D_i); complete paired futures required, including negative values.
 25. beta starts1 per training seed; immutable update receipts supply the next update's beta.
-26. Log query route mass p, within-query execute beta(type,regime); own nonquery mass1-p.
+26. Log query mass p over eligible uncommitted decisions only; beta(type,regime); R quota exhausted=>own/p0.
 27. Target own-nonquery mass1/query0: ratio=pi_new/[(1-p)*pi_old] or0, including declined/rejected queries.
 28. Per-step clipped PPO respects singular guided-route mass; executed member residual imitation weightbeta.
 29. Original initial12cell E2 retained; acceleration E2 uses registered first12random executed TRAIN plans, RNG20261101.

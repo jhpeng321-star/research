@@ -24,6 +24,28 @@ class AccelerationCPU(unittest.TestCase):
         self.assertEqual(update_limit({}),24)
         with self.assertRaises(ValueError):update_limit(dict(viability_updates=3))
 
+    def test_R_sampling_rate_excludes_committed_steps_and_unavailable_windows(self):
+        from .accel_runner import routing
+        eligible=dict(route='wm',sample_probability=.95,eligible_query=True,regime='ordinary')
+        continuation=dict(route='plan',executed=True,plan_start=False,regime='ordinary')
+        unavailable=dict(route='policy',sample_probability=0.,regime='ordinary')
+        steps=[dict(sample=dict(behaviour=b)) for b in [eligible]+[continuation]*59+[unavailable]*10]
+        result=routing([dict(steps=steps)])
+        self.assertEqual(result['sampling']['ordinary'],.95)
+        self.assertEqual(result['eligible_query_windows'],1)
+
+    def test_random_guide_returns_to_policy_route_when_matched_quota_is_exhausted(self):
+        from .plan_client import guide
+        from .storage import write
+        g=torch.Generator().manual_seed(5);sample={}
+        with tempfile.TemporaryDirectory() as tmp,patch('tools.coopmwm.plan_client.group',return_value=['a','b']),patch('tools.wmteach.labels.actions',return_value=[dict(id='O1',members=['a','b'])]):
+            root=Path(tmp);q=root/'quota.json'
+            write(q,dict(sampling=dict(ordinary=.95,**{'merge-dense':.95}),tickets=[]))
+            fn=guide(dict(queue_root=tmp,accel_bounds=[-3.,2.6],arm='R',update=1,random_quota=str(q)),g)
+            self.assertIsNone(fn(rows(),{},300,sample))
+            self.assertEqual(sample['behaviour']['route'],'policy')
+            self.assertEqual(sample['behaviour']['sample_probability'],0.)
+
     def test_control_observes_same_eligible_windows_without_queries_or_rng_change(self):
         from .plan_client import guide
         g=torch.Generator().manual_seed(5);sample={};before=g.get_state().clone()

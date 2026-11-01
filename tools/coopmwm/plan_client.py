@@ -15,6 +15,12 @@ def worker_slots(root):
     return read(admissions[-1] if admissions else root/'WORKERS.json')['workers']
 
 
+def used_tickets(match):
+    return {read(x)['ticket'] for x in match.glob('*_START.json')
+        if not (match/x.name.replace('_START','_END')).exists()
+        or read(match/x.name.replace('_START','_END')).get('executed')}
+
+
 def guide(job,generator):
     root=Path(job['queue_root']);bounds=tuple(job['accel_bounds'])
     quota=read(Path(job['random_quota'])) if job.get('random_quota') else None
@@ -28,7 +34,7 @@ def guide(job,generator):
         traffic=regime(rows);selected_ticket=None
         if job['arm']=='A':
             sample['behaviour']=dict(route='policy',sample_probability=0.,mixture_mass=0.,
-                regime=traffic,executed=False,beta=0.,q=0.)
+                regime=traffic,executed=False,beta=0.,q=0.,eligible_query=True)
             return None
         if quota is None:
             # Queue occupancy is infrastructure-only, never predicted/SUMO gain.
@@ -43,10 +49,16 @@ def guide(job,generator):
                 time.sleep(.5)
             p=.95 if pending<2*len(workers) else 0.
         else:
-            p=quota['sampling'][traffic]
+            import fcntl
+            match=root/'random_match'/f'u{job["update"]:03}';match.mkdir(parents=True,exist_ok=True)
+            with (match/'MATCH.claim').open('a') as lock:
+                fcntl.flock(lock,fcntl.LOCK_EX)
+                used=used_tickets(match)
+                remaining=any(t['regime']==traffic and t['id'] not in used for t in quota['tickets'])
+            p=quota['sampling'][traffic] if remaining else 0.
         queried=float(torch.rand((),generator=generator))<p
         b=dict(route='wm' if queried else 'policy',sample_probability=p,mixture_mass=p,
-            regime=traffic,executed=False,beta=0.,q=0.)
+            regime=traffic,executed=False,beta=0.,q=0.,eligible_query=True)
         sample['behaviour']=b
         if not queried:return None
         deltas={v:float(a[0]) for v,a in zip(sample['context']['members'],sample['own_action'])}
@@ -68,9 +80,7 @@ def guide(job,generator):
             match=root/'random_match'/f'u{job["update"]:03}';match.mkdir(parents=True,exist_ok=True)
             with (match/'MATCH.claim').open('a') as lock:
                 fcntl.flock(lock,fcntl.LOCK_EX)
-                used={read(x)['ticket'] for x in match.glob('*.json')
-                    if x.name.endswith('_START.json') and (not (match/(x.name.replace('_START','_END'))).exists()
-                    or read(match/(x.name.replace('_START','_END'))).get('executed'))}
+                used=used_tickets(match)
                 selected_ticket=next((t for t in quota['tickets'] if t['regime']==traffic and t['id'] not in used),None)
                 if selected_ticket is not None:
                     write(match/(r['state_id']+'_START.json'),dict(ticket=selected_ticket['id']))

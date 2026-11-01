@@ -1,5 +1,13 @@
 # S-COOPMWM live continuation — OWNER20:35 four-update viability
 
+21:14: CPU35 78PASS/0skips/zeroSUMO supersedes release metadata CPU34: correct R
+sampling denominator (eligible uncommitted windows only), exhausted R quota=>own/p0.
+Latest amendment d3d30eeed563b4844121d6e851bd1d23a5fb542647627baa64cb2eb09f0161ad,
+new observer tag `VIABILITY2035v2`; inspect its WATCH_DISPATCH/log/FAILED first.
+Old observer38380 was identity-verified/stopped before any training binding/physics.
+No smoke/probe/scale retried. CPU35 frozen forecast/search/WMTEACH hashes must match
+original CPU33 scaling dependencies before binding; numerical quota/budget unchanged.
+
 21:04: ARCHIVE2035_COMPLETE verified3,119,974,400-byte opaque backup SHA
 5b3b74cf25f6bc3e09f8be0b0c676436f102925292e5112d9dfe5c4add8dc1bc;
 approved v2 source removed only aftermatch, cpuQfree5,200,531,456bytes. All historical

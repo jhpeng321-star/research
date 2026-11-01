@@ -1,5 +1,18 @@
 # S-COOPMWM — live checks
 
+## 21:14 — random-arm matching bookkeeping qualified before restart
+- **CPU35 78PASS/zero skips/2.28s/zero SUMO**. Corrected the random-arm sampling
+  denominator: estimate B's query probability over ex-ante eligible, uncommitted
+  decisions, excluding the many1s committed-plan records and unavailable windows.
+- R returns to the own-policy route with p0 after its matched regime tickets are
+  exhausted; empty proposals cannot manufacture extra query atoms or lose PPO data.
+- Amended registration SHA `d3d30eeed563b4844121d6e851bd1d23a5fb542647627baa64cb2eb09f0161ad`;
+  quota10/update, medium search, budget, fixedu4pause and sealed rules unchanged.
+  The old observer was identity-verified/quiesced before any training binding.
+- All original smoke/probes/scaling jobs continue/reuse their completed results.
+  GPU model/search source and full WMTEACH dependency hashes must match the CPU35
+  service binding; the new qualification does not dispatch duplicate GPU work.
+
 ## 21:04 — disk admission restored; original A/B/R smoke PASS
 - Opaque archive **3119974400bytes** is durable on gpuA at
   `/root/autodl-tmp/archive_cpuQ_20261101/coopmwm20261101_v2.tar`.
