@@ -1,4 +1,4 @@
-# Morning continuation — current evidence and handoff
+# Late-morning continuation — current evidence and handoff
 
 The exact evidence cut is `source_refresh.json`; pinned report/CSV/JSON bytes remain in `source_snapshots/`. The inherited clean branch and completed first-package registration were preserved. The prior night handoff is retained in `REFRESH_NIGHT_ARCHIVE.md` as history, not an active result queue.
 
@@ -31,6 +31,13 @@ The exact evidence cut is `source_refresh.json`; pinned report/CSV/JSON bytes re
 - `validate_package.py` covers document/link/provenance structure, bibliography-verification coverage, source snapshots, controller CSV and every generated figure family. `package_validation.json` records the final check; it is not scientific qualification or IEEE pagination.
 - First completion is already recorded in `REGISTRATION_ENTRY.md` and the shared ledger. No duplicate completion line is needed for this refresh.
 - Final reread captured the engineering-freeze receipt and updated shared-ledger/WM-PHYS report bytes after the initial morning source commit. All other allowlisted producer hashes remained unchanged. `source_refresh.json` records the exact final cut; existing frozen figure pins were not moved. Source/evidence commit `bb101eb4` and package/artwork commit `068328d9` precede the final integrity/handoff commit. <!-- Source: source_refresh.json; E:/agent-work/c4-rb-int/docs/rbint/noon/20261101T093000+0800/FREEZE.json. -->
+
+## Fresh-session delta
+
+- Inherited clean `c4/papera` at `49f2ef49`; preserved the completed package, first registration and all prior commits/artwork. Source step `28d499d2` captures the newer ledger/report plus the previous manifest. All other allowlisted report hashes were unchanged; the missing root-level SUMOCF duplicate is already covered by the authoritative `docs/paper_results/SUMOCF_RUN.md`. <!-- Source: source_refresh.json; E:/agent-work/c4-sumocf/docs/paper_results/SUMOCF_RUN.md. -->
+- The latest interim is **not** the final noon receipt. Existing failed breakdown-closeness and unavailable full-world CIs remain. Added the delivered selected-call confidence mismatch to CLAIMS/OUTLINE/FIGURES/THREATS so that lower delay CRPS cannot be mistaken for calibrated action choice. No new WM-policy result or revised qualification is supplied. <!-- Source: E:/agent-work/c4-rb-int/docs/paper_results/WMPHYS_MORNING.md:38-57, report 2026-11-01T10:25:23+08:00; source_snapshots/wmphys_morning_344831334d419ed2.md. -->
+- Shared ledger now explicitly says selector recovery needs actual checkpoint/optimizer bytes and reconciled consumed-world accounting; saved hashes and later spare resources do not authorize restart. This is Paper B operational context, not a Paper A outcome. Existing producers/observers were not duplicated. <!-- Source: E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md, S-SELMAPPO 10:17 and S-SELMAPPO2 09:26; source_snapshots/registration_123b01edd48ba1dc.md. -->
+- Final noon WM-PHYS qualification and COOPFREE discovery/terminal receipt remain the principal live evidence gaps. Continue via the explicit allowlist below; new report appearance never automatically promotes a claim. First-package completion is already registered and requires no duplicate line.
 
 ## Exact continuation procedure
 
