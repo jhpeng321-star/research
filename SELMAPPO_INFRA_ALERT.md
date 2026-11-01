@@ -26,3 +26,9 @@ records checkpoint hashes/remote paths, not weight bytes. No intermediate model/
 optimizer transfer is recorded. Need an actual verified checkpoint and exact consumed
 world/charge reconciliation before resuming on any host; cannot resume from hashes
 or rerun completed worlds. Original protocol/update count/cap remain unchanged.
+
+10:17: registered this recovery-input dependency explicitly in REGISTRATION.md.
+Targeted safe globs found no `checkpoint_*.pt` in the task evidence tree or
+worktree root; the observer's source confirms metadata-only intermediate records.
+Both local processes verified alive10:15; latest heartbeat commit9ed3beeb.
+No CPU relocation, reinitialization or new simulation has been attempted.
