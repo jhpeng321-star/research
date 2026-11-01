@@ -14,6 +14,14 @@ Explicit resume cap6000000 conflicts with latest brief allocation6473440/cap6500
 inference engineering may continue, but new SUMO dispatch is gated on resolution.
 MAIN01:29 transport-only bounded retry amendment still needs implementation/tests.
 
+01:34 ENGINEERING DISPATCH: after both GPUs verified idle and qual1/qual3 exited,
+registered/staged qual4 once per GPU. GPU A583229/start893460775; GPU R23014/
+start4218101457. Roots /root/coopmwm20261102_warmmppiqual4, receipts
+warmmppiqual4_{STAGE,DISPATCH}_{gpuA,gpuR}.json. Same MPPI/search/WM; GPU R
+K4width18/K8width10,80% allocator+expandable segments; GPU A34/10,55%.
+Only missing group6(A)/group4(R) timing plus source-bound exact gates; completed
+E2 adopted by SHA. Zero SUMO. Inspect status before any further dispatch.
+
 LATEST ENGINEERING: B/R MUST launch immutable CPU8, not CPU6 or CPU7. New
 WARM_BR_CPU8_REGISTRATION and per-arm WARM_{B,R}_RUNTIME_BINDING_V2 source
 /home/ubuntu/coopmwm20261102_mppicpu8:126PASS/0skips/10.01s/zeroSUMO. MPPI trust
