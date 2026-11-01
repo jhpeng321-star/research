@@ -1,5 +1,5 @@
 {
-  "captured_local": "2026-11-01T12:16:12.701531+08:00",
+  "captured_local": "2026-11-01T12:21:31.060233+08:00",
   "reports": {
     "owner_read_first": {
       "path": "E:/research-dense/docs/OWNER_UPDATE_20261030_EVENING.md",
@@ -12,10 +12,10 @@
     "registration": {
       "path": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md",
       "exists": true,
-      "sha256": "d24580050b0d32102cf579e548ed173bfbe54a37aebff6ef59923c8eb7b04021",
-      "bytes": 2384923,
-      "modified_local": "2026-11-01T12:15:41.700997+08:00",
-      "snapshot": "source_snapshots/registration_d24580050b0d3210.md"
+      "sha256": "7727aae9884699b134ac4d629852e4f926aec7047b6322ce46d15ec02768e0fa",
+      "bytes": 2386457,
+      "modified_local": "2026-11-01T12:20:13.845821+08:00",
+      "snapshot": "source_snapshots/registration_7727aae9884699b1.md"
     },
     "wmvalue_design": {
       "path": "E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md",
@@ -352,10 +352,10 @@
     "wmteach_report": {
       "path": "E:/agent-work/c4-wmteach/docs/paper_results/WMTEACH.md",
       "exists": true,
-      "sha256": "eecd1091301b36070c21c41e06ac7c3101ae689d541e6e3b319bdebdb87e3d4b",
-      "bytes": 3783,
-      "modified_local": "2026-11-01T12:09:26.432886+08:00",
-      "snapshot": "source_snapshots/wmteach_report_eecd1091301b3607.md"
+      "sha256": "5ae351f64915e093fc65b526af1d4b374bf6f025469dfcb5f35bd30df10c6156",
+      "bytes": 4597,
+      "modified_local": "2026-11-01T12:20:27.603812+08:00",
+      "snapshot": "source_snapshots/wmteach_report_5ae351f64915e093.md"
     },
     "sumocore_report": {
       "path": "E:/agent-work/c4-sumocore/docs/paper_results/SUMOCORE.md",
@@ -488,11 +488,6 @@
   },
   "changed_since_prior_cut": [
     "registration",
-    "distill_report",
-    "distill_live_summary",
-    "distill_live_qa",
-    "distill_live_worlds",
-    "distill_live_credits",
     "wmteach_report"
   ],
   "scope": "explicit local report snapshots only; no simulator/model or restricted input access",

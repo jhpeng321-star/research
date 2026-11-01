@@ -1,0 +1,45 @@
+{
+  "status": "PASS",
+  "source_cells": 21,
+  "sources": {
+    "summary": {
+      "source_path": "E:/agent-work/c4-distill-1101/docs/paper_results/distill_live/SUMMARY.json",
+      "source_sha256": "ece80f45ff3d96082121bd919af8aa039046f1ce521c85d2a3e4b1d79182e4a6",
+      "snapshot": "source_snapshots/distill_live_summary_ece80f45ff3d9608.json"
+    },
+    "credits": {
+      "source_path": "E:/agent-work/c4-distill-1101/docs/paper_results/distill_live/CREDITS.json",
+      "source_sha256": "079cc7f6d10114bd9e80c0696e4507d2a78e3fba5ca7e4f2032e192ff648927a",
+      "snapshot": "source_snapshots/distill_live_credits_079cc7f6d10114bd.json"
+    },
+    "worlds": {
+      "source_path": "E:/agent-work/c4-distill-1101/docs/paper_results/distill_live/WORLD_METRICS.json",
+      "source_sha256": "c39d8627cf23372e7c67de18db3b8556a5840815754e395e1e8c3661e55ed4ec",
+      "snapshot": "source_snapshots/distill_live_worlds_c39d8627cf23372e.json"
+    },
+    "qa": {
+      "source_path": "E:/agent-work/c4-distill-1101/docs/paper_results/distill_live/QA.json",
+      "source_sha256": "44e38727bddc62ed40544f7e7034a979da6c41a22432743669412a6c6527af34",
+      "snapshot": "source_snapshots/distill_live_qa_44e38727bddc62ed.json"
+    }
+  },
+  "artifacts": {
+    "figures/F3T_exact_teacher_student.csv": {
+      "sha256": "f738f95b40fd47e4d3715d3d78f79f52ea556a6da9c73a2cb5022acc29050079",
+      "bytes": 9455
+    },
+    "figures/F3T_exact_teacher_student_worlds.csv": {
+      "sha256": "808f8eac3eabbe0eaf4c947cc4fd3236d90e767da8e4c9f0f4c4dd6fef4d01ed",
+      "bytes": 2797
+    },
+    "figures/F3T_exact_teacher_student.png": {
+      "sha256": "38a05358f5a96782244c67147bc653733d76c0081c81fe137cd3d5d26ce2be4b",
+      "bytes": 238514
+    },
+    "figures/F3T_exact_teacher_student.pdf": {
+      "sha256": "a4ad1a1c4a3953fb4b9ddbdf31867a9e6213cdc76a82efa679ca973aa2493a5b",
+      "bytes": 27556
+    }
+  },
+  "scope": "source hashes/QA/CSV identity, world pairing/means, all-event interaction algebra; no new CIs"
+}
