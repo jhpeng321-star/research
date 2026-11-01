@@ -1,0 +1,25 @@
+{
+  "schema": "selmappo2.resume_reconciliation/1",
+  "session_date": "2026-11-02",
+  "training_state": "COMPLETE",
+  "verified_updates": 169,
+  "checkpoint_sha256": "82c6745bac50aaf4dee98f5d8b3c60db0e5e558d9abf4667dd8e605774f4b3c4",
+  "collection_sha256": "a8a08f8c30279c1473b78421d740332e2ef158f3ad117ad8839851723e1de8c0",
+  "handoff_sha256": "9ae72e2702aac270afb97e0dce555006c651c040925f3885127e40ba18ced30e",
+  "handoff_peer_bytes_equal": true,
+  "actual_training_sim_s": 6997800,
+  "reserved_training_sim_s": 6998400,
+  "original_cap_sim_s": 7012800,
+  "local_evaluation_sim_s": 0,
+  "watcher": {
+    "pid": 12432,
+    "alive": true,
+    "executable": "C:\\Users\\jpeng\\miniconda3\\python.exe",
+    "creation_date": "/Date(1793469838604)/",
+    "exact_command_and_source_verified": true
+  },
+  "verification": "tools.selmappo2.report.analyze on the original final collection; scripts.selmappo2_supervise.identity on the existing watcher; exact local/peer final-handoff byte comparison",
+  "peer_evaluation_manifest_exists": false,
+  "new_sumo_seconds": 0,
+  "new_dispatches": 0
+}

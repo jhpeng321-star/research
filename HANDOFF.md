@@ -5,6 +5,17 @@ Original advance-approved exact cap7,012,800; designSHA09499f2af60311b3690a940dc
 
 ## Current state
 
+**Nov2 fresh-session reconciliation:** the original final collection again passes
+`report.analyze`: COMPLETE/169updates, checkpoint82c6745b, collectiona8a08f8c,
+6997800actual/6998400reserved training+smoke. Local/peer final handoff bytes still
+match SHA9ae72e27. Existing watcher12432 retains its exact executable, command,
+creation time and script SHA; no peer evaluation manifest exists. Receipt:
+`docs/paper_results/selmappo2/RESUME_20261102_FINAL_RECONCILIATION.json`.
+Training supervision through final169 is already complete; the remaining dependency
+is C1SWITCH2's final-policy panel evaluation. Its Nov2 01:46 handoff reports both
+per-CAV scopes terminal after2completeepisodes; CPU-only repair verified, narrow
+unstarted-scope continuation requested from MAIN. Full evaluation remains pending.
+
 **FINAL169 COMPLETE /17:31+08 verified:** original606968 has EXITED normally;
 169updates/all7774production/no open reservations/no new failures. Actual6997800,
 reserved6998400training+smoke; original900/300failure retained;14400local evaluation
