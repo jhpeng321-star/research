@@ -150,6 +150,9 @@ class BirthMix:
         self.counts = [[0, 0] for _ in self.pools]
         self.assigned = [0] * len(self.pools)
         self.fitted_state = fitted_state
+        if fitted_state is not None and hasattr(fitted_state, 'entrant_weights'):
+            self.weights = [fitted_state.entrant_weights(world, seed=self.seed)
+                            for world in self.row_keys]
 
     def pool_for(self, b, cav):
         pool = self.cav_pools[b] if cav else self.pools[b]

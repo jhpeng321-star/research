@@ -15,10 +15,10 @@ Frozen before fitting, 2026-11-01. Base FULL-v4 `22cc32f6`.
 
 ## Learned quantities (no neural training, no trajectory residual)
 
-1. Likelihood power in [0,1], retaining FIT's learned shrinkage strength. Learn
+1. Posterior-retention fraction in [0,1], retaining FIT's learned shrinkage strength. Learn
    by physical acceleration-profile CRPS: motion 240–270 predicts 270–300 using
    the actual deployed SUMO CF step and lane-chain geometry. Zero is population;
-   one is the frozen likelihood. Driver settings remain joint support draws.
+   one is the frozen shrunk posterior. Driver settings remain joint support draws.
 2. Gamma-rate variance multiplier >=0, holding conditional mean fixed. Learn
    by negative-binomial log score: causal request counts 0–150 predict 150–300.
    The zero endpoint is a point rate; one reproduces Jeffreys Gamma-Poisson.
@@ -42,3 +42,9 @@ input calibration alone does not establish outcome coverage or reliable calls.
 Integrator owns fresh recorded-world exposure audit, replicated strata, valid
 CIs and final fixed-source comparison. Versioned artifacts and source hashes
 are published in HANDOFF.md.
+
+Pre-fit implementation clarification: posterior retention replaces likelihood
+power, allowing an exact quadratic physical-profile CRPS objective without
+changing the frozen Gaussian observation likelihood. Entrant concentration is
+identified through other-driver predictive shrinkage; it is not by itself an
+identified long-run traffic variance component. Exact infinity is allowed.

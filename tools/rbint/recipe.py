@@ -68,6 +68,18 @@ def load_candidate(checkpoints, configs, device):
         candidate._wmphys_fitted_state = FittedHiddenState.from_directory(
             root/options_full['parameter_directory'])
         candidate._wmphys_arrival_fit = LearnedArrivalFit.from_file(root/options_full['arrival_json'])
+        calibration_path = options_full.get('spread_calibration_json')
+        if calibration_path is not None:
+            from wms.control.spread_calibration import SpreadCalibration
+            calibration = SpreadCalibration.from_file(root/calibration_path)
+            if not options_full.get('condition_motion', False):
+                raise ValueError('spread calibration requires causal motion conditioning')
+            shrinkage_sha = hashlib.sha256((root/options_full['parameter_directory']/'idm_shrinkage.json').read_bytes()).hexdigest()
+            if calibration.artifact['shrinkage_sha256'] != shrinkage_sha:
+                raise ValueError('spread calibration/shrinkage mismatch')
+            candidate._wmphys_fitted_state = calibration.hidden(candidate._wmphys_fitted_state)
+            candidate._wmphys_arrival_fit = calibration.arrivals(candidate._wmphys_arrival_fit)
+            receipt['spread_calibration'] = calibration.receipt()
         candidate._wmphys_condition_motion = options_full.get('condition_motion', False)
         if candidate._wmphys_condition_motion:
             if (physics.cf_model != 'sumo_idm' or physics.sumo_cf_stepping_s != .25

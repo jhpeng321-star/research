@@ -1,12 +1,34 @@
 # S-RB2-CAL — 2026-11-01 (active)
 
 Branch `c4/rb2-cal`, base frozen FULL-v4 `22cc32f6`. Design frozen before fit:
-`docs/paper_results/RB2_CAL_DESIGN.md`. Implementing motion-likelihood power,
-Gamma-rate dispersion and hierarchical entrant-mix concentration fitted ONLY
-on native FIT969400–969431. Outcome diagnostics restricted to dev969420–969431.
+`docs/paper_results/RB2_CAL_DESIGN.md`. Physical v1 IMPLEMENTED; parameters:
+posterior retention=1, Gamma-rate variance=1.667235195661008,
+entrant Dirichlet prior concentration=0 (condition on causal soft driver counts).
+All fitted ONLY on native FIT969400–969431; dev outcome diagnostics969420–969431.
+Artifact `docs/paper_results/rb2cal/v1/fit/calibration.json`; explicit recipe
+`configs/wm_phys_rb2_cal_v1.toml`, switch `variants.FULL.spread_calibration_json`.
+Runtime source `src/wms/control/spread_calibration.py`; minimal hooks in
+`hidden_state.BirthMix`, `rbint/recipe.py`, identity binding in `rbint/evaluate.py`.
+Present drivers stay VID-keyed; one future-owned Dirichlet entrant mixture;
+request/admission ordinal coupling and fixed joint physical support preserved.
+40 CPU tests PASS before additional exposure guards; Ruff PASS. No neural training.
+
+FIT115652 later-prefix motion rows/2460drivers. All32 scalar crossfits retain
+posterior=1 and entrant concentration=0; rate variance range1.42916–1.75267.
+Count NLL3.746607→3.724368 in fit, but3.746607→3.745985 world-excluded:
+**very weak crossfit improvement, no coverage/decision qualification**.
+Dev baseline and outcome-scale limitation check:
+`docs/paper_results/rb2cal/DEVELOPMENT_BASELINE.md` + adjacent JSON;
+proper-score-fitted outcome scales1.498/1.219/1.579 at120/300/600s.
+OOF paired90% coverage only71.7/65.8/68.3%; a scalar cannot solve the task.
+These output-scale diagnostics ARE NOT simulation or a selectable model.
+Reliability SVG/CSV and exact summaries in `rb2cal/dev_fullv4_v1/`.
+Next: dev12-only physical v1 canary/panel; fresh results not yet available.
 No reserved raw tasks opened. Owner-required historical aggregate reports were
 read (disclosed exposure); they cannot qualify an independent final comparison.
-Local NVIDIA driver unavailable; no GPU jobs launched. Existing code/evidence
+Local NVIDIA driver unavailable; gpuA12:02 audit idle (49139MiB free), cpuQ
+single nice19/one-thread fit COMPLETE (own1181880/terminalrc0). GPU job not
+launched yet. Existing code/evidence
 below is inherited INT history, not this worker's current result.
 
 ---
