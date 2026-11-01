@@ -1,0 +1,15 @@
+DONE 969420 0 439.94
+DONE 969420 1 472.43
+DONE 969420 2 445.77
+DONE 969420 3 364.48
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/root/rbeval20261031/rb2break_code_5947c801ba93/tools/rb2break/run.py", line 176, in <module>
+    main()
+  File "/root/rbeval20261031/rb2break_code_5947c801ba93/tools/rb2break/run.py", line 170, in main
+    run_wm.main(model_loader=load, future_builder=future,
+  File "/root/rbeval20261031/rb2break_code_5947c801ba93/tools/rbeval/run_wm.py", line 268, in main
+    assert not (out/'STOP').exists(), 'cooperative stop'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: cooperative stop

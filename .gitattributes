@@ -136,3 +136,5 @@ R9_GATE2.md text eol=lf
 # Scope only nested evidence JSON; top-level locally generated summaries are ordinary text.
 /docs/rb2break/*/*.json -text
 /artifacts/rb2break/startup_v3/*.json -text
+/docs/rb2break/devk8_pause_s*/STOP -text
+/docs/rb2break/devk8_pause_s*/worker.log -text

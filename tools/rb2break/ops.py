@@ -405,7 +405,7 @@ for seed in range(969420,969432):
    except json.JSONDecodeError: continue
    assert task['seed']==seed and task['future']==future
    files[path.name]=data
- for name in ('IDENTITY.json','DISPATCH.json','COMPLETE.json','BASELINE.json','FIT.json','VALIDATION.json','entrant_population.json','OBSERVATION_BINDING.json','OPERATIONAL_STOP.json','SOURCE_OBSERVABLE_AUDIT.json','GPU_PAUSE_1735.json','STOP'):
+for name in ('IDENTITY.json','DISPATCH.json','COMPLETE.json','BASELINE.json','FIT.json','VALIDATION.json','entrant_population.json','OBSERVATION_BINDING.json','OPERATIONAL_STOP.json','SOURCE_OBSERVABLE_AUDIT.json','GPU_PAUSE_1735.json','STOP','EXIT.json','worker.log'):
  path=root/name
  if path.exists(): files[name]=path.read_bytes()
 receipt=dict(source=str(root),hashes={{name:hashlib.sha256(data).hexdigest() for name,data in files.items()}})
