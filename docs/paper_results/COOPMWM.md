@@ -304,3 +304,17 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - B update3, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 1.0.
 - Per-bucket trust: O1|merge-dense=1; O1|ordinary=1; O2|merge-dense=1; O2|ordinary=1; O3|merge-dense=1; O3|ordinary=1; O4|merge-dense=1; O4|ordinary=1.
 - TRAIN GAE variance 4.50958e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_B_UPDATE_003.json`.
+
+## Live publication — 2026-11-01T10:54:40.121508+00:00
+- Charged 264,440/6,000,000 sim-s; closed jobs 222/222; pending WM 1.
+
+### CREDIT_WINDOW_03.json
+- E2 window world986019 t310: exact quartet complete.
+- H120 conditional WM K8 variance: joint-team advantage 966381, paired C_G 7.21099e-12 veh-s²; not empirical SUMO noise.
+- H120 WM/exact C_G -1.19209e-06/0; D_i [8.344650268554688e-07, 4.76837158203125e-07]/[0.0, 0.0]; zero C_G is a tie, not sign evidence.
+- H300 conditional WM K8 variance: joint-team advantage 1.51445e+07, paired C_G 7.21099e-12 veh-s²; not empirical SUMO noise.
+- H300 WM/exact C_G -1.19209e-06/0; D_i [8.344650268554688e-07, 4.76837158203125e-07]/[0.0, 0.0]; zero C_G is a tie, not sign evidence.
+- H60 conditional WM K8 variance: joint-team advantage 55320.5, paired C_G 7.21099e-12 veh-s²; not empirical SUMO noise.
+- H60 WM/exact C_G -1.19209e-06/0; D_i [8.344650268554688e-07, 4.76837158203125e-07]/[0.0, 0.0]; zero C_G is a tie, not sign evidence.
+- H600 conditional WM K8 variance: joint-team advantage 1.31309e+08, paired C_G 7.21099e-12 veh-s²; not empirical SUMO noise.
+- H600 WM/exact C_G -1.19209e-06/0; D_i [8.344650268554688e-07, 4.76837158203125e-07]/[0.0, 0.0]; zero C_G is a tie, not sign evidence.
