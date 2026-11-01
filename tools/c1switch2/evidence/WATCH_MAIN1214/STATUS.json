@@ -1,14 +1,14 @@
 {
-  "unix": 1793527842.850044,
+  "unix": 1793529084.349409,
   "protocol": "S-C1SWITCH2/v2",
   "hosts": {
     "cpuQ": {
-      "unix": 1793527843.217692,
+      "unix": 1793529084.8335907,
       "host": "cpuQ",
       "load": [
-        3.6728515625,
-        3.68701171875,
-        4.21923828125
+        3.5849609375,
+        3.634765625,
+        3.78759765625
       ],
       "cpu": {
         "cpu": {
@@ -79,12 +79,12 @@
       "gpu": {}
     },
     "gpuR": {
-      "unix": 1793527844.0837612,
+      "unix": 1793529085.6167598,
       "host": "gpuR",
       "load": [
-        15.12353515625,
-        11.74072265625,
-        15.8232421875
+        17.52783203125,
+        24.11083984375,
+        21.4423828125
       ],
       "cpu": {
         "cpu": {
@@ -176,7 +176,7 @@
           "ready": true,
           "requests": 98,
           "results": 98,
-          "elapsed_wall_s": 57664.84174466133
+          "elapsed_wall_s": 58906.374743938446
         },
         "bb": {
           "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
@@ -197,7 +197,7 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 11654.758883714676
+          "elapsed_wall_s": 12896.29184794426
         },
         "bb_startup": {
           "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -218,17 +218,17 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 23690.627910375595
+          "elapsed_wall_s": 24932.160884141922
         }
       }
     },
     "gpuA": {
-      "unix": 1793527845.5622604,
+      "unix": 1793529086.5644016,
       "host": "gpuA",
       "load": [
-        8.50927734375,
-        8.22802734375,
-        9.92578125
+        9.845703125,
+        8.59521484375,
+        8.9970703125
       ],
       "cpu": {},
       "gpu": {
@@ -251,7 +251,7 @@
           "ready": true,
           "requests": 90,
           "results": 90,
-          "elapsed_wall_s": 57671.294974565506
+          "elapsed_wall_s": 58912.29710507393
         },
         "bb": {
           "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
@@ -272,7 +272,7 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 11657.271790981293
+          "elapsed_wall_s": 12898.27392578125
         },
         "bb_startup": {
           "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -293,7 +293,7 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 23692.946495771408
+          "elapsed_wall_s": 24933.94863629341
         }
       }
     }
@@ -400,16 +400,16 @@
   "postnoon_supervision": {
     "pid": 42548,
     "admission": {
-      "unix": 1793527781.505823,
-      "status": "ADMITTED_OR_TERMINAL_NO_RETRY",
+      "unix": 1793529023.3869216,
+      "status": "WAIT_CPU_DISK_NO_CLAIM",
       "states": {
-        "load": 13.7734375,
-        "free_bytes": 16478949376
+        "load": 37.1240234375,
+        "free_bytes": 16477741056
       }
     },
     "admission_error": {
-      "unix": 1793516218.3784554,
-      "error": "RuntimeError('Traceback (most recent call last):\\n  File \"<stdin>\", line 11, in <module>\\nAssertionError: yield spare CPU priority\\n')"
+      "unix": 1793527922.7876875,
+      "error": "RuntimeError('Connection closed by 172.19.0.16 port 53897\\n')"
     }
   }
 }
