@@ -1,8 +1,9 @@
 {
-  "checked_at_utc": "2026-11-01T08:55:33.019670+00:00",
+  "checked_at_utc": "2026-11-01T09:23:33.746689+00:00",
   "purpose": "Outline/document QA only; no scientific result recomputed",
+  "version": "v2: WM-guided exploration, SUMO-graded; owner MAIN17:12/17:14",
   "status": "PASS",
-  "pdf_pages_including_references": 5,
+  "pdf_pages_including_references": 6,
   "page_limit": 6,
   "sections": [
     "Introduction",
@@ -32,58 +33,64 @@
   "bibliographic_entries_match_inherited_verified_bytes_modulo_whitespace": true,
   "figure_placeholders": 4,
   "table_placeholders": 2,
-  "tex_pending_markers": 25,
+  "tex_pending_markers": 27,
   "tex_citation_needed_markers": 2,
-  "source_comment_count": 15,
+  "source_comment_count": 19,
   "overfull_or_undefined_latex_warnings": false,
   "pages": [
     {
       "page": 1,
-      "words": 631,
+      "words": 698,
       "red_spans": 85,
       "outside_page": []
     },
     {
       "page": 2,
-      "words": 722,
-      "red_spans": 75,
+      "words": 748,
+      "red_spans": 104,
       "outside_page": []
     },
     {
       "page": 3,
-      "words": 724,
-      "red_spans": 81,
+      "words": 747,
+      "red_spans": 126,
       "outside_page": []
     },
     {
       "page": 4,
-      "words": 573,
-      "red_spans": 100,
+      "words": 657,
+      "red_spans": 89,
       "outside_page": []
     },
     {
       "page": 5,
-      "words": 709,
-      "red_spans": 115,
+      "words": 565,
+      "red_spans": 154,
+      "outside_page": []
+    },
+    {
+      "page": 6,
+      "words": 334,
+      "red_spans": 0,
       "outside_page": []
     }
   ],
   "artifacts": {
     "main.tex": {
-      "sha256": "827d093448c0e99669004d5d1dbc21e79c712fb791837e4810ef1ebd3942fd85",
-      "bytes": 26342
+      "sha256": "e27bc938fc3d3ad16d846b1ec6a919dac388662546ba759e55914d98223e27ca",
+      "bytes": 29640
     },
     "refs.bib": {
       "sha256": "2968bb9fd98f30957c02a0623371cbeb2f0b082ca233c49a8086da0c43c0c3dd",
       "bytes": 5944
     },
     "main.pdf": {
-      "sha256": "37e10a533eb788a1c9696bb90a62aafd53968f80fe48819ce9f27a5f8accb7c3",
-      "bytes": 243069
+      "sha256": "545f8f70d7c485478b1811806c4cdef2838d88bbc340de5325a777b443a5be32",
+      "bytes": 248377
     },
     "OUTLINE_IEEEIV.md": {
-      "sha256": "5b14768b2ebf0cd2706dc95ec2dd9e1939ee9e0caf90f1dfcac2a69c16525512",
-      "bytes": 30103
+      "sha256": "5d909fbe836c60255d70d7d95b7fd7386b0736c5c3bbc95728a4e2e4020c10fa",
+      "bytes": 34317
     }
   },
   "source_reports_at_qa_cut": {
@@ -97,7 +104,7 @@
     },
     "wm_teacher_diagnostic": {
       "path": "E:\\agent-work\\c4-wmteach\\docs\\paper_results\\WMTEACH.md",
-      "sha256": "9512896cf51e9a63d06cfa1671c4e10bca8faa557d86769b67060716a8bb298b"
+      "sha256": "ee371d1c9f86c0b70fba4b00e82ca5e82b7071f5eaba3de84d111bb0b73325e1"
     },
     "negative_distillation": {
       "path": "E:\\agent-work\\c4-distill-1101\\docs\\paper_results\\DISTILL.md",
@@ -105,7 +112,7 @@
     },
     "earlier_learner_design": {
       "path": "E:\\agent-work\\c4-coopnative\\docs\\paper_results\\COOPMWM_DESIGN.md",
-      "sha256": "941c9387107f9654d7857f2ceec8f7dbfef9fe6312f1e6c35dde62410b88ed29"
+      "sha256": "84d6c9b0f0ac0bd39d68da05f113002ce4662e83e2cf5fabbc3b282e116e6656"
     },
     "wm_planner_status": {
       "path": "E:\\agent-work\\c4-wmplan\\docs\\paper_results\\WMPLAN.md",
@@ -117,7 +124,11 @@
     },
     "owner_authority": {
       "path": "E:\\research-dense\\runs\\active\\C4-V7FT-20261017\\REGISTRATION.md",
-      "sha256": "337d61eb433fd360d807767ca9707e5dea76e36225e265fb3860f41b5585e58c"
+      "sha256": "823a10b6949827a8c4c9fc6e9673e9edc0b363059eed51519a7d5dd55ad1883f"
+    },
+    "owner_redesign": {
+      "path": "E:\\agent-work\\_sol\\coopmwm_prompt.md",
+      "sha256": "76ad0fb4d881129889fa8694ca1db6d772f57b1076a19d99c9086ddec1410b78"
     },
     "verified_bibliography": {
       "path": "E:\\agent-work\\c4-papera\\docs\\paper\\paperA_cooperation\\refs.bib",
@@ -128,5 +139,5 @@
       "sha256": "cdb4b1409d2850cb965e5d2b94440fc0a708498a3809894dd61ebd5f05e88cab"
     }
   },
-  "visual_inspection": "Rendered all pages; inspect qa_render/contact_sheet.png and page images"
+  "visual_inspection": "Reviewed all six pages in qa_render/contact_sheet.png and page_3.png at full size; title, section flow, equations, red pending slots and empty framed placeholders are legible and within page bounds."
 }
