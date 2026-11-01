@@ -1,14 +1,14 @@
 {
-  "unix": 1793492271.8312047,
+  "unix": 1793493471.831378,
   "protocol": "S-C1SWITCH2/v2",
   "hosts": {
     "gpuR": {
-      "unix": 1793492277.2722154,
+      "unix": 1793493476.8867555,
       "host": "gpuR",
       "load": [
-        17.97314453125,
-        21.76806640625,
-        29.7890625
+        19.060546875,
+        16.396484375,
+        18.8388671875
       ],
       "cpu": {
         "cpu": {
@@ -44,6 +44,10 @@
           "closed_actual_sim_s": 2700.0,
           "charged_sim_s": 2700,
           "ledger_sha256": "afa389bda63ba104f9435a6e48c5770a7e64b0fd2a419cf7c14240af7b591447"
+        },
+        "bb": {
+          "root": "/root/c1switch2_run_bbd7ba8b48ed5829",
+          "state": "UNCLAIMED"
         }
       },
       "gpu": {
@@ -66,7 +70,7 @@
           "ready": true,
           "requests": 98,
           "results": 98,
-          "elapsed_wall_s": 22098.024300575256
+          "elapsed_wall_s": 23297.63880801201
         },
         "bb": {
           "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -75,12 +79,12 @@
       }
     },
     "gpuA": {
-      "unix": 1793492278.0578537,
+      "unix": 1793493477.9465797,
       "host": "gpuA",
       "load": [
-        8.00439453125,
-        9.994140625,
-        10.85498046875
+        10.79638671875,
+        11.9189453125,
+        10.81787109375
       ],
       "cpu": {},
       "gpu": {
@@ -103,7 +107,7 @@
           "ready": true,
           "requests": 90,
           "results": 90,
-          "elapsed_wall_s": 22103.790546894073
+          "elapsed_wall_s": 23303.679291009903
         },
         "bb": {
           "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
@@ -173,11 +177,11 @@
     }
   },
   "latest_task_registration": [
-    "- S-C1SWITCH2 MODEL-SCOPED ADMISSION REGISTERED BEFORE GPU (build53d80d39; MAIN01:48): existingdesignSHA95aa84cf/panel7c780c25/budgets UNCHANGED. Start WM2 allocation on BOTHgpuA/gpuR only after each immediate free-memory>=7GiB gate (inspection43,565/8,124MiB respectively; peer workloads active/untouched), ownallocator<=2.5GiB, nice19/single-thread. Immutable /root/c1switch2_gpu_wm_95614dbfc754e322 on BOTH hosts; realWM2 CPU K8/full60s/all6/continuedWALL PASS identicalsampleSHA67e20ef7 and checkpoint/config/candidate/MAPPO provenance. HardWMcap28800GPU-s/card=16haggregate INCLUDES loading/validation/idle; no restart/refund; BBcap5400/card=3htotal reserved/unspent. Before mainmodelphysics require synthetic real-GPU all6/K8/fresh+continuedWALL cross-card parity (rtol/atol1e-6 numerical only), commonCPU/WALL/exposure/canary gates, ownmodelinference binding; unusedRL/othermodelgates stayPENDING. LocalCPU133PASS/1skip; finalmodelCPUstage gate required EACHCPUhost. Distinct one-use WM/BB arm claims on originalCPUworld partitions; no fixed/random/canary redispatch. Release own services immediately after16modelepisodes, then finish original fullprefix oracle branches withoutGPU; contenthashrelay cannot respawn scientificjobs. WM79800/BB79800sim-s unchanged, fullteamJ600/J900+oracle, COMMONroad-only predictions/entriesOFF/mixINACTIVE disclosed. OptionalPHYS disabled pending independentrule; final169RL absent. No GPU/WMpickerphysics at this line; no peer signals/newenv/deletions/push.",
-    "- S-C1SWITCH2 04:32 RESUME VERIFIED (e23a7269/7db88b42/a898b96f; Unix1793478748): BOTH original CPU panels COMPLETE/noSTOP, all112episodes across6fixed+random, actual=charged134400sim-s/GPU0; supervisors604784/759845 EXITED, NEVER replay. WM supervisors649272/763520 live/noSTOP,3completeepisodes/131validated20sdecisions,5320charged/3600closedactual; ownGPU342449/761968 and localrelay31696 live under original28800GPU-s/card cap including validation/idle, no reset/topup. Originalone-useBBfollower43404 live/waiting, BB0physics/0GPU until bothWMrelease+memory/parity/CPUadmission. Totalatreceipts144400charged/142680closedactual incl retained4680canary; no completeWMpairedpanel/efficacyclaim. Genuinefinal169RLreceipts stillabsent; optionalPHYS remainsOFF under independentqualification (04:07 MAIN interim does not qualify). Ownread-onlymonitor27200 checks exactroots/PIDidentity/accounting/errors/registration every20min through12:00+08 and commits short HANDOFF progress+immutableevidence, firstheartbeat9da788a4/zeroalerts; monitoring CPU4/4/RuffPASS. No duplicate dispatch, peerPIDactions, forbiddenreads,newenv,deletions,push; design95aa84cf/panel7c780c25/base468380sim-s+19GPUh unchanged.",
-    "- S-C1SWITCH2 05:13 ZERO-SPEND BB OBSERVER CORRECTION (c6350ced; MAIN04:27 fix-own-jobs instruction): ownWindows43404 EXITED during read-only WM-release SSH poll (`Connection closed by 172.19.0.17 port 11000`), BEFORE scientific try-block. Exact BB GPU roots on BOTH hosts have no DISPATCH/GPU_STARTED; BBphysics/GPU0, original caps entirely unused. Preserve original START/WAIT/error/closed exclusive lock and both zero-spend receipts1793481208/1212. New one-use resume-wait-start revalidates exited exactPID/config hashes/noSTOP/noBBbinding/noGPUorBBphysicsclaims before observer-only continuation; wait transport errors are retained/repolled, scientific start/parity/preflight/dispatch remains one-use/no automatic science retry. CPU7/7/RuffPASS; no WM/CPU redispatch, no completed replay/refund/topup or peer signals. Original design95aa84cf/panel7c780c25/base468380sim-s+19GPUh unchanged; successor PID/claim follows in HANDOFF.",
     "- S-C1SWITCH2 06:00 INFRASTRUCTURE STOP / GPU RELEASE (ead0fe29): shared cpuQ SSH remains unreachable, current own WM649272 state/ledger UNKNOWN. gpuR own763520 EXITED durableSTOP on wm__s969147 inference-unavailable timeout,2700charged=actual incl failed300prefix;2completeepisodes/60decisions preserved. Relay31696 LIVE but first-host transport failure prevented ordinary ANY-CPU-STOP global GPU release; explicit hash-bound/ownPID-checked COMPLETE release applied SAME policy to both services, now342449/761968 EXITED. FINAL aggregateWMGPU27686.09899191372s=13845.159507265314+13840.939484648407 (~7.690583h), loading/idle included/no refund/reset/restart. Corrected BB waiter36376 deliberately parked by exactidentity/PID BEFORE release; BOTH BB stages still unclaimed at1793484097/4103, BB0physics/GPU, retain originalunused79800sim-s/3GPUh until cpuQ access/CPU/parity gates. All112fixed/random COMPLETE134400actual+4680canary retained; sixWMepisodes confirmed (last relaycpuQ4+gpuR2), fullWM/oracle/RLpanel INCOMPLETE/no primaryCI. Verifiedtotal lowerbounds146620charged/145380closedactual only; do not mislabel unknowncpuQ final totals as exact. No physics replay/newallocation/topup/peerPIDactions. Design95aa84cf/panel7c780c25/base468380sim-s+19GPUh unchanged; optionalPHYS unqualified, final169RL unavailable. Monitor25348 continues20min receipts/commits throughnoon; MAIN please restore cpuQ connectivity.",
-    "- 05:50 INCIDENT: cpuQ (1.15.42.207) refuses SSH since ~05:3x ('Connection closed by ... port 22' right after TCP connect; port reachable) - possibly sshd MaxStartups saturation from many agents polling, memory pressure, or spot reclaim; agents S-C1SWITCH2/S-SELMAPPO flagged it; live accounting of cpuQ jobs (switching v2 CPU arms done earlier; WM picker; fleet PPO training; COOPFREE idle) unknown. MAIN: retry at each tick; agents told not to assume failure or replay work; if cpuQ does not return by ~07:00, MAIN will check spot status and plan relocation of remaining cpuQ work to gpuA/gpuR CPUs."
+    "- 05:50 INCIDENT: cpuQ (1.15.42.207) refuses SSH since ~05:3x ('Connection closed by ... port 22' right after TCP connect; port reachable) - possibly sshd MaxStartups saturation from many agents polling, memory pressure, or spot reclaim; agents S-C1SWITCH2/S-SELMAPPO flagged it; live accounting of cpuQ jobs (switching v2 CPU arms done earlier; WM picker; fleet PPO training; COOPFREE idle) unknown. MAIN: retry at each tick; agents told not to assume failure or replay work; if cpuQ does not return by ~07:00, MAIN will check spot status and plan relocation of remaining cpuQ work to gpuA/gpuR CPUs.",
+    "- S-C1SWITCH2 WM ORACLE CONTINUATION REGISTERED BEFORE COMPUTE (9dc75c33; MAIN07:07 after11:30): exact planSHA256 8d6ceccb69058bb0c753f57c7558f8a129e608951c280d5cd123e0a109c4926a. ONLY12 previously UNSTARTED registered full-prefix oracle branches for completedgpuRWM worlds969139/j1 and969143/j13, all6controllers each;6000sim-s=6x380+6x620, GPU0. Exact predecessor763520 EXITED/STOPfailed969147, ledgerSHAafa389bda63ba104f9435a6e48c5770a7e64b0fd2a419cf7c14240af7b591447/2700charges retained inclfailed300prefix; NO branch ever charged before scope freeze. New+old gpuRWM8700<=original16320; globalWM79800/base468380sim-s/19GPUh unchanged. Copies original frozen hash-verified runtime/BINDING/GATES/specs, one-use12-job wrapper hardcaps6000/nochildretry; no WM episode/GPU restart, cpuQ/failed/completed-picker replay, replacementworld or outcome-driven state selection. AFTER11:30 only, ONE nice19/load20-yield oracle worker +THREE relocatedBB workers <=4taskgpuRcap; currentprioritywindow SUMO0/GPU0. CPU26/26/RuffPASS; immutable stage receipt follows. FullWM/RLpanel remainsINCOMPLETE/no primaryCI; all original sources/charges/claims/results preserved, no peerPIDactions/newenv/deletion/push.",
+    "- S-C1SWITCH2 BB RELOCATION REGISTERED BEFORE ALLOCATION (eb831a29; MAIN07:07 after11:30 placement authority): exact canonical planSHA256 d5037b81825d4788131b49c675934ee71e6007da91fec60012de9ecdbc75abde in tools/c1switch2/evidence/BB_RELOCATION_PLAN.json. ONLY wholly unstarted BB arm, SAME16worlds969136..969151/indices/20s/60sK8/library/objectives, allBBphysics on<=4nice19single-thread gpuR CPUs/load20yield after2026-11-01T11:30+08; originalcpuQ WM unknown/NOTreplayed. Exact BB79800sim-s=19200episodes+60600full-prefix6wayoracles; exact GPU10800s=5400/card BOTHgpuA/gpuR incl loading/parity/idle, no increment/topup/refund/retry. Base468380sim-s/19GPUh and design95aa84cf/panel7c780c25 unchanged. Strict hash-bound placement disables allotherarms and preserves ALL16worlds/originalindices; relay requires16 not old4episodes before ordinary release. BeforeGPU: bothBBroots/noBBphysicsclaims unused/currentauthority/resources; afterone-useclaim, realbothGPU K8/sixway/continuedWALLparity and immutableCPU/frozenv7/WALL/exposure/canary gates required. BB0GPU/physics at registration; local96CPU/RuffPASS with existingMiniconda, immutablegpuRpreflight pending. No priority-window GPU/SUMO, WM/CPUcanary replay, peerPIDactions,newenv,deletion,push. See docs/paper_results/c1switch2/BB_RELOCATION_DESIGN.md; published sources concern placement/accounting/outage-isolated transport only, frozen engines/controllers unchanged.",
+    "- 08:27 MAIN REVIEW WM-PHYS interim 07:58 (FULL-v4, all 8 reserved worlds): delay CRPS -393/-3,040/-11,647 veh-s and 60 s HDV error -15.3 m (better), but 300 s breakdown-distance +5.63 pp (FARTHER from real than WM2; with 6 worlds it was -5.83) -> REGISTERED SWITCHING RULE FAILS on point estimates (all three conditions required); S-C1SWITCH/S-C1SWITCH2 keep WM2 unless the final 09:30-11:30 evaluation changes this. Owner's 07:50 message corrected."
   ],
   "final_checkpoint_receipts": {
     "SELMAPPO_FINAL.json": false,
