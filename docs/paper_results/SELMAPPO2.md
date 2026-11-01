@@ -238,15 +238,15 @@ Evidence is under `docs/paper_results/selmappo2/`.
 
 
 
-**Training status: PARTIAL**
+**Training status: COMPLETE**
 
 
 
-Evidence: `selmappo2/COLLECTION_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29_1793524777615955200_a3f63f8451f14235b8af3e24b3aafffc.json`; SHA256 `00b524ee744120170cda17a6816c116baa6e5844788c6cc44105f75634422d45`.
+Evidence: `selmappo2/COLLECTION_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29_1793525084353376800_1c382a5072b74e3fb0080392b1c9f416.json`; SHA256 `a8a08f8c30279c1473b78421d740332e2ef158f3ad117ad8839851723e1de8c0`.
 
 Remote root: `/home/ubuntu/selmappo2_20261101/build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29/training`.
 
-Dispatch PID: `606968`; alive at observation: `True`; observation timestamp (ns): `1793524772338736985`.
+Dispatch PID: `606968`; alive at observation: `False`; observation timestamp (ns): `1793525079125782565`.
 
 
 
@@ -254,15 +254,15 @@ Dispatch PID: `606968`; alive at observation: `True`; observation timestamp (ns)
 
 
 
-Verified complete updates: 168/169 (46 fresh episodes/update).
+Verified complete updates: 169/169 (46 fresh episodes/update).
 
-Update records observed: 168.
+Update records observed: 169.
 
-Coordinator successful episodes: 7742/7,774 production + 1/2 smoke.
+Coordinator successful episodes: 7774/7,774 production + 1/2 smoke.
 
-Reservations: 7755; unresolved: 11; failed: 1; actual not yet receipted: 11.
+Reservations: 7776; unresolved: 0; failed: 1; actual not yet receipted: 0.
 
-Raw newly incurred training + smoke simulation: 6,969,000.0 actual s; 6,979,500 reserved s (no refunds).
+Raw newly incurred training + smoke simulation: 6,997,800.0 actual s; 6,998,400 reserved s (no refunds).
 
 
 
@@ -284,11 +284,11 @@ J600 is full-team delay over the 600 s control interval; lower is better. Each p
 
 
 
-![Training learning curve](selmappo2/selmappo2_curve_1793524778589642300_4fdd6a15aa1640419bb5114877519614.svg)
+![Training learning curve](selmappo2/selmappo2_curve_1793525385602691800_9e09d888156e490da7700d1bce9af594.svg)
 
 
 
-[Complete-update metrics CSV](selmappo2/selmappo2_curve_1793524778589642300_4fdd6a15aa1640419bb5114877519614.csv)
+[Complete-update metrics CSV](selmappo2/selmappo2_curve_1793525385602691800_9e09d888156e490da7700d1bce9af594.csv)
 
 
 
@@ -296,7 +296,7 @@ J600 is full-team delay over the 600 s control interval; lower is better. Each p
 
 
 
-Collected complete episode result receipts: 7743. collisions: 0.000; teleports: 0.000; ttc_below_3_vs: 3,221,652.000; hard_brake_vs: 125,411.500.
+Collected complete episode result receipts: 7775. collisions: 0.000; teleports: 0.000; ttc_below_3_vs: 3,234,677.000; hard_brake_vs: 125,921.500.
 
 These are recorded control-interval components only. Warmup safety and dropped-vehicle counters are not separately recorded in result.jsonl; unrecorded metrics are not asserted to be zero.
 
@@ -306,7 +306,7 @@ These are recorded control-interval components only. Warmup safety and dropped-v
 
 
 
-Final169 manifest/checkpoint hash not yet verified.
+Verified checkpoint SHA256: `82c6745bac50aaf4dee98f5d8b3c60db0e5e558d9abf4667dd8e605774f4b3c4`.
 
 
 
