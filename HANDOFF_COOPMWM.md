@@ -1,5 +1,12 @@
 # S-COOPMWM live continuation — OWNER22:08 WARM MEMORY HOLD
 
+22:48 A4 authority/base64 repair passed real preflight and dispatched2604907;
+it EXITED before SUMO initialization: SUMO binary absent from inherited PATH.
+Preserve A4 claims/failure; no optimizer update. A continuation must set the same
+SUMO_HOME/PATH as original accel_deploy and retain failed reservations/charges.
+A3 had failed before dispatch because read_text normalized CRLF authority bytes;
+A4 fixes that with raw base64. See RESUME_A_1793544492.json for original errors.
+
 22:46 resume: full166-line brief read through22:43 discovery-pure override.
 Fresh WARM_RECOVERY_1793544292 confirms original supervisor and24B identities T,
 872840charged/no acceleration updates. RESUME_A_1793544351 confirms A1/A2 exited

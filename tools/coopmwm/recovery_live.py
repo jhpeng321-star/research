@@ -8,8 +8,8 @@ from .storage import write
 def inspect_a():
     source = '''import pathlib,json,time
 r=pathlib.Path('/home/ubuntu/coopmwm20261101_accel1');assert r.is_dir()
-names=['A_WARM_CONTINUATION_DISPATCH.json','A_WARM2_DISPATCH.json','A_WARM3_DISPATCH.json',
- 'A_WARM_CONTINUATION.log','A_WARM2.log','A_WARM3.log','A_WARM_FAILED.json','A_WARM_PAUSED.json']
+names=['A_WARM_CONTINUATION_DISPATCH.json','A_WARM2_DISPATCH.json','A_WARM3_DISPATCH.json','A_WARM4_DISPATCH.json',
+ 'A_WARM_CONTINUATION.log','A_WARM2.log','A_WARM3.log','A_WARM4.log','A_WARM_FAILED.json','A_WARM_PAUSED.json']
 out={n:(r/n).read_text() if (r/n).is_file() else None for n in names}
 out['updates']={p.name:json.loads(p.read_text()) for p in r.glob('A_UPDATE_*.json')}
 out['processes']={}
