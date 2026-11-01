@@ -1,0 +1,25 @@
+{
+ "passed": true,
+ "development_only": true,
+ "world": 969420,
+ "future": 0,
+ "arms": 5,
+ "horizons_s": [
+  120,
+  300,
+  600
+ ],
+ "max_absolute_error": 0.0,
+ "absolute_tolerance": 1e-08,
+ "region_fields": 15,
+ "event_decisions": 45,
+ "new_task_sha256": "ec3c0a02546cc5c248b0b6ab642729e94e25c39536ee641308086830b4c7fea0",
+ "original_task_sha256": "35fa2020ce2df461a413b8e3a0bb593ec1501cef0b759cd9fb4f83c0f7f8fdc2",
+ "new_identity_sha256": "315ffe4d573f0bd386f5ea57ddc9d6aee4501e2a461b0211c074f18c2e76c4c1",
+ "original_identity_sha256": "eb9d4c72af2de55cc40f301a21c3b069b025c2babdf02f6261522dad51db2ac3",
+ "final_worlds_used": false,
+ "factual_future_targets_used": false,
+ "host": "gpuR",
+ "model": "WM2",
+ "action": "verify"
+}

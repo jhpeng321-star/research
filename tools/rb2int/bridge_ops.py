@@ -30,11 +30,14 @@ def main():
     model_name = audit['original_identity']['model']
     original_task = str(Path(audit['identity_path']).parent).replace('\\', '/')+'/w969420_k0.json'
     name = 'wm2' if args.model == 'WM2' else 'v4'
+    memory_source = Path(__file__).with_name('admission.py').read_text(encoding='utf-8')
     root = args.control.rsplit('/', 1)[0]+'/bridge_'+args.control.rsplit('_', 1)[1]+'_'+name
     common = f'''
 from pathlib import Path
 import hashlib,json,os,shutil,subprocess,time
 root=Path({root!r});control=Path({args.control!r})
+memory_helpers={{}}
+exec(compile({memory_source!r},'<read-only memory accounting>','exec'),memory_helpers)
 def sha(path): return hashlib.sha256(path.read_bytes()).hexdigest()
 def save(path,data):
  with path.open('x') as f: json.dump(data,f,indent=1)
@@ -54,18 +57,18 @@ if maximum.is_file() and maximum.read_text().split()[0]!='max':
  def usage(): return int(dict(line.split() for line in stat.read_text().splitlines())['usage_usec'])
  begin=time.monotonic();before=usage();time.sleep(1);used=(usage()-before)/1e6/(time.monotonic()-begin)
  assert used+1<.8*capacity, 'wait for baseline-bridge CPU quota'
-memory=cg/'memory.max';current=cg/'memory.current'
-if memory.is_file() and memory.read_text().strip()!='max': assert int(memory.read_text())-int(current.read_text())>8*2**30, 'wait for baseline-bridge memory'
+memory=memory_helpers['memory_snapshot']()
+assert memory['effective_available_bytes']>8*2**30, 'wait for baseline-bridge memory'
 gpu=subprocess.check_output(['nvidia-smi','--query-gpu=memory.free,utilization.gpu','--format=csv,noheader,nounits'],text=True)
 assert int(gpu.split(',')[0])>13*1024, '5GiB bridge plus8GiB shared GPU headroom'
-root.mkdir();save(root/'CLAIM_ONCE.json',dict(owner='S-RB2-INT',model={args.model!r},worlds=[969420],future_indices=[0],validation_only=True,automatic_retry=False,audit_sha256={hashlib.sha256(raw).hexdigest()!r},gpu=gpu.strip()))
+root.mkdir();save(root/'CLAIM_ONCE.json',dict(owner='S-RB2-INT',model={args.model!r},worlds=[969420],future_indices=[0],validation_only=True,automatic_retry=False,audit_sha256={hashlib.sha256(raw).hexdigest()!r},gpu=gpu.strip(),memory=memory,memory_helper_sha256={hashlib.sha256(memory_source.encode()).hexdigest()!r}))
 with (root/'BASELINE_AUDIT.json').open('xb') as f: f.write({raw!r})
 argv=['nice','-n','19','/root/miniconda3/bin/python','-B','-u',str(control/'tools/rb2int/evaluate.py'),'--variant',{audit['variant']!r},'--runtime-root',{audit['runtime_root']!r},'--wm-config',{audit['config']!r},'--wm','/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt','--model-name',{model_name!r},'--development-direct','--baseline-audit',str(root/'BASELINE_AUDIT.json'),'--out',str(root/'tasks'),'--device','cuda','--memory-gib','5']
 env=dict(os.environ,CUDA_VISIBLE_DEVICES='0',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',PYTHONPATH='/root/autodl-tmp/c4/speedhead20261030/pythondeps')
 with (root/'worker.log').open('x') as log:
  child=subprocess.Popen(argv,env=env,cwd=control,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
 fields=Path('/proc/'+str(child.pid)+'/stat').read_text().split()
-result=dict(root=str(root),pid=child.pid,start_ticks=fields[21],boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),argv=argv)
+result=dict(root=str(root),pid=child.pid,start_ticks=fields[21],boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),argv=argv,memory=memory)
 save(root/'PROCESS.json',result);print(json.dumps(result))
 '''
     elif args.action == 'status':

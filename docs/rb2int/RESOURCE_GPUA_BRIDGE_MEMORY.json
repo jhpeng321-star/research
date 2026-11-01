@@ -1,0 +1,46 @@
+{
+ "load": [
+  8.7822265625,
+  10.1962890625,
+  10.5986328125
+ ],
+ "cpus": 208,
+ "disk": {
+  "/root": {
+   "total": 32212254720,
+   "used": 28452438016,
+   "free": 3759816704
+  },
+  "/root/autodl-tmp": {
+   "total": 268435456000,
+   "used": 181481791488,
+   "free": 86953664512
+  }
+ },
+ "gpu": {
+  "returncode": 0,
+  "stdout": "memory.free [MiB], memory.total [MiB], utilization.gpu [%]\n45257 MiB, 49140 MiB, 99 %\n",
+  "stderr": ""
+ },
+ "compute": {
+  "returncode": 0,
+  "stdout": "pid, process_name, used_gpu_memory [MiB]\n452849, /root/miniconda3/bin/python, 824 MiB\n453566, /root/miniconda3/bin/python, 520 MiB\n453587, /root/miniconda3/bin/python, 702 MiB\n457825, /root/miniconda3/bin/python, 1182 MiB\n",
+  "stderr": ""
+ },
+ "cgroup": {
+  "cpu.max": "2000000 100000\n",
+  "cpu.stat": "usage_usec 1323768409090\nuser_usec 1230591763108\nsystem_usec 93176645982\nnr_periods 5095814\nnr_throttled 91131\nthrottled_usec 379962770866\n",
+  "memory.max": "96636764160\n",
+  "memory.current": "93104488448\n",
+  "memory.stat": "anon 10784251904\nfile 80953556992\nkernel_stack 12369920\npagetables 43446272\npercpu 7488\nsock 16384\nshmem 72769536\nfile_mapped 106762240\nfile_dirty 3960832\nfile_writeback 0\nswapcached 0\nanon_thp 0\nfile_thp 0\nshmem_thp 0\ninactive_anon 10856140800\nactive_anon 331776\ninactive_file 50314874880\nactive_file 30566219776\nunevictable 0\nslab_reclaimable 1287650256\nslab_unreclaimable 11025232\nslab 1298675488\nworkingset_refault_anon 0\nworkingset_refault_file 3830452\nworkingset_activate_anon 0\nworkingset_activate_file 1969225\nworkingset_restore_anon 0\nworkingset_restore_file 1745012\nworkingset_nodereclaim 0\npgfault 50646353582\npgmajfault 169423\npgrefill 15043347\npgscan 38735209\npgsteal 37575092\npgactivate 26909970\npgdeactivate 14978107\npglazyfree 2626\npglazyfreed 1182\nthp_fault_alloc 0\nthp_collapse_alloc 0\n"
+ },
+ "host_mem_available": 1026912223232,
+ "records": [],
+ "own_receipts": [],
+ "schema": "rb2int-read-only-resources/1",
+ "host": "gpuA",
+ "recorded_at": "2026-11-01T14:05:58.614117+08:00",
+ "source_sha256": "580c2346c6b6060ca9d1cd131bd12acd4945f5d4d66248fe8492b93684906806",
+ "opened_record_outcomes": false,
+ "launched_jobs": false
+}

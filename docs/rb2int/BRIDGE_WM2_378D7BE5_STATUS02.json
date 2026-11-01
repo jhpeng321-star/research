@@ -1,0 +1,51 @@
+{
+ "root": "/root/autodl-tmp/c4/rb2int20261101/bridge_378d7be5c182_wm2",
+ "exists": true,
+ "process": {
+  "root": "/root/autodl-tmp/c4/rb2int20261101/bridge_378d7be5c182_wm2",
+  "pid": 909809,
+  "start_ticks": "4213959815",
+  "boot_id": "d19e6898-efd0-4288-a901-d63b21f11163",
+  "argv": [
+   "nice",
+   "-n",
+   "19",
+   "/root/miniconda3/bin/python",
+   "-B",
+   "-u",
+   "/root/autodl-tmp/c4/rb2int20261101/phys_code_378d7be5c182/tools/rb2int/evaluate.py",
+   "--variant",
+   "WM2",
+   "--runtime-root",
+   "/root/autodl-tmp/c4/setupaudit20261030/fix",
+   "--wm-config",
+   "/root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml",
+   "--wm",
+   "/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt",
+   "--model-name",
+   "wm2",
+   "--development-direct",
+   "--baseline-audit",
+   "/root/autodl-tmp/c4/rb2int20261101/bridge_378d7be5c182_wm2/BASELINE_AUDIT.json",
+   "--out",
+   "/root/autodl-tmp/c4/rb2int20261101/bridge_378d7be5c182_wm2/tasks",
+   "--device",
+   "cuda",
+   "--memory-gib",
+   "5"
+  ]
+ },
+ "alive": false,
+ "tasks": 1,
+ "tasks/COMPLETE.json": {
+  "tasks": 1,
+  "identity_sha256": "315ffe4d573f0bd386f5ea57ddc9d6aee4501e2a461b0211c074f18c2e76c4c1",
+  "hashes": {
+   "w969420_k0.json": "ec3c0a02546cc5c248b0b6ab642729e94e25c39536ee641308086830b4c7fea0"
+  }
+ },
+ "log_tail": "DONE 969420 0 150.7\n",
+ "host": "gpuR",
+ "model": "WM2",
+ "action": "status"
+}

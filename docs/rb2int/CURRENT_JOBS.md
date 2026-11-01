@@ -36,6 +36,21 @@ Use this existing stage; do not restage/replay merely because Git HEAD advances.
 - Completion requires `tasks/DEV_CANARY_PASS.json`, not merely a COMPLETE marker
   or process exit. This K1 development canary is never counted as final K8.
 
+## Baseline protocol verification active
+
+- WM2 bridge own gpuR909809/start4213959815/boot
+  d19e6898-efd0-4288-a901-d63b21f11163, root
+  `/root/autodl-tmp/c4/rb2int20261101/bridge_378d7be5c182_wm2`.
+  Fixed dev969420/future0/all5arms/H600, EXITED/PASS150.70s. Verification:
+  BRIDGE_WM2_378D7BE5_PASS.json, max absolute clock/speed error0 against saved
+  original forecast,15region fields/45event decisions equal. Never replay it.
+- Control stage378d7be5 exists on BOTH hosts with archive
+  SHA531494803bb989e331e7679092fdd7c354c23718a4698aac21d1b1c69da7ac54.
+  Model/teacher source remainsb2df7458. Do not confuse these two roles.
+- v4 bridge first admission stopped before root/claim/Popen on a misleading raw
+  cgroup-free-memory check. Read-only correction accounts for clean inactive file
+  cache; see MEMORY_ACCOUNTING.md. No v4 bridge PID yet; next launch is one-use.
+
 ## Not launched
 
 - LP fivearm600 initial admissions were rejected on host load/effective memory,
@@ -43,8 +58,9 @@ Use this existing stage; do not restage/replay merely because Git HEAD advances.
   half-physical-host headroom plus measured effective cgroup quota (<80% after
   adding one thread), retaining memory/disk/GPU caps. The one successful LP launch
   followed actual memory release; no forecast or successful claim was repeated.
-- No final panel/collector/dispatcher is running for INT. Final input preparation,
-  baseline-source/observation bridge and exclusive final dispatch remain pending.
+- No final panel/collector/dispatcher is running for INT. Final causal inputs are
+  prepared, transferred and exact-prefix verified; kernel bridges and exclusive
+  final dispatch remain pending. Preserve the completed export904864 and transfers.
 
 ## Exposure and uncertainty
 

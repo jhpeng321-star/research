@@ -12,8 +12,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('host', choices=('gpuA', 'gpuR'))
     parser.add_argument('--out', required=True)
+    parser.add_argument('--resources-only', action='store_true')
     args = parser.parse_args()
-    code = r'''
+    code = 'SKIP_RECORDS='+repr(args.resources_only)+'\n'+r'''
 import hashlib,json,os,shutil,subprocess
 from pathlib import Path
 def command(argv):
@@ -29,9 +30,10 @@ result=dict(load=os.getloadavg(),cpus=os.cpu_count(),
  gpu=command(['nvidia-smi','--query-gpu=memory.free,memory.total,utilization.gpu','--format=csv']),
  compute=command(['nvidia-smi','--query-compute-apps=pid,process_name,used_gpu_memory','--format=csv']))
 cg=Path('/sys/fs/cgroup')
-result['cgroup']={n:(cg/n).read_text() for n in ('cpu.max','cpu.stat','memory.max','memory.current') if (cg/n).is_file()}
+result['cgroup']={n:(cg/n).read_text() for n in ('cpu.max','cpu.stat','memory.max','memory.current','memory.stat') if (cg/n).is_file()}
+result['host_mem_available']=next(int(line.split()[1])*1024 for line in Path('/proc/meminfo').read_text().splitlines() if line.startswith('MemAvailable:'))
 result['records']=[]
-for source,base,seeds in [('WMDATA','/root/wmcalib/data/jobs',range(969432,969440)),('WMDATA2','/root/wmdata2/jobs',range(969550,969600))]:
+for source,base,seeds in ([] if SKIP_RECORDS else [('WMDATA','/root/wmcalib/data/jobs',range(969432,969440)),('WMDATA2','/root/wmdata2/jobs',range(969550,969600))]):
  for s in seeds:
   row=dict(collection=source,seed=s,arms={})
   for arm in ('native','ctrl0','mappo','pi','circles'):
@@ -40,7 +42,7 @@ for source,base,seeds in [('WMDATA','/root/wmcalib/data/jobs',range(969432,96944
    row['arms'][arm]={n:dict(exists=(root/n).is_file(),size=(root/n).stat().st_size if (root/n).is_file() else None) for n in names}
   result['records'].append(row)
 result['own_receipts']=[]
-for base in ('/root/rbeval20261031/int','/root/rb2int20261101'):
+for base in (() if SKIP_RECORDS else ('/root/rbeval20261031/int','/root/rb2int20261101')):
  root=Path(base)
  if not root.is_dir(): continue
  dirs=[root]+[p for p in root.iterdir() if p.is_dir() and p.name.startswith(('WM-PHYS-','FULL-','WM2','shard'))]
@@ -67,7 +69,7 @@ print(json.dumps(result))
                for a, files in r['arms'].items() for n, f in files.items() if not f['exists']]
     print(json.dumps(dict(receipt=str(out), sha256=sha(out), host=args.host,
         load=data['load'], gpu=data['gpu'], compute=data['compute'],
-        cgroup=data['cgroup'], missing_record_files=len(missing),
+        cgroup=data['cgroup'], host_mem_available=data['host_mem_available'], disk=data['disk'], missing_record_files=len(missing),
         missing_by_collection={collection: sum(1 for m in missing
             if (m['seed'] < 969550) == (collection == 'WMDATA'))
             for collection in ('WMDATA', 'WMDATA2')},
