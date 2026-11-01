@@ -17,7 +17,7 @@ EVIDENCE = Path('tools/c1switch2/evidence')
 TESTS = ['tests/test_c1switch2.py', 'tests/test_c1switch2_wall.py',
          'tests/test_c1switch2_relocation.py',
          'tests/test_c1switch2_integrations.py', 'tests/test_switchable_wall.py',
-         'tests/test_c1switch.py', 'tests/test_c1switch_feedback.py', 'tests/test_c1switch_merge_fast.py']
+          'tests/test_c1switch.py', 'tests/test_c1switch_feedback.py', 'tests/test_c1switch_merge_fast.py']
 
 
 def ssh(host, code, timeout=60):
@@ -86,7 +86,7 @@ print(json.dumps(out))
 
 
 def stage(host, predecessor=None, cpu_only=False, model=None, inference=None, relocation=None,
-          selector=None, selector_spec=None):
+          selector=None, selector_spec=None, execution_peers=None):
     registration_bytes = checked(REGISTRATION).read_bytes()
     text = registration_bytes.decode('utf-8')
     digest = sha(DESIGN)
@@ -123,7 +123,7 @@ def stage(host, predecessor=None, cpu_only=False, model=None, inference=None, re
     sources = {name: sha(path) for name, path in staged.items()}
     identity = canonical(dict(sources=sources, registration=sha(REGISTRATION),
                               scope=selector or model or ('cpu' if cpu_only else 'canary'), inference=inference,
-                              relocation=relocation, selector_spec=selector_spec))[:16]
+                               relocation=relocation, selector_spec=selector_spec, execution_peers=execution_peers))[:16]
     root = ('/home/ubuntu' if host == 'cpuQ' else '/root')+'/c1switch2_run_'+identity
     binding = dict(protocol=PROTOCOL, cpu_host=host, include_phys=False, sim_s=budget(),
         library=list(CONTROLLERS), gpu_seconds={a: GPU_SECONDS[a] for a in budget()},
@@ -149,6 +149,10 @@ def stage(host, predecessor=None, cpu_only=False, model=None, inference=None, re
             raise ValueError('genuine final169 selector specification required')
         binding.update(dispatch_phase='selector', enabled_arms=[selector])
         binding['selector_specs'][selector] = selector_spec
+        if selector == 'cav_mappo':
+            if not execution_peers or set(execution_peers) != {'shared', 'per_cav'}:
+                raise ValueError('per-CAV final source-bound grouped execution required')
+            binding['execution_peers'] = execution_peers
     if relocation is not None:
         from .relocation import validate
         binding['relocation'] = relocation

@@ -59,6 +59,15 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**Final per-CAV CPU admission built (OWNER20:14 hold retained):** `selectorops`
+now accepts `--arm cav_mappo` for the original12cpuQ/4gpuR partitions, original
+89900sim-s/GPU0. Genuine delivered checkpoint82c6745b and immutable training
+shared/mixed sources are hash-validated; both execution packages enter BINDING.
+CPU-only final-policy probe synchronizes live incumbent features and loads the
+actual grouped execution factory before claims. No evaluation dispatched yet;
+prospective registration and EACH-host immutable preflight/resource gates remain.
+Local109CPU PASS/RuffPASS, including substituted panels/checkpoints/executors
+and GPU hold falsifiers. All existing scientific scopes/claims remain preserved.
 **OWNER20:14 GPU HOLD applied (fresh receipt1793535350):** exact owned admission
 supervisor42548/create12:24:02/command verified and stopped; no follower admission
 remains armed. All owned GPU services are EXITED; final charges247680sim-s and

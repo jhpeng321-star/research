@@ -36,16 +36,52 @@ print(json.dumps(dict(root=str(root),sources=sources)))
                 frozen_receipt=root+'/FROZEN_FINAL.json')
 
 
-def prepare(host, resume_root=None):
-    path = EVIDENCE/('SELECTOR_PREPARED_fleet_ppo_'+host+'.json')
+def copy_per_cav(spec, peers):
+    entries = [('checkpoint.pt', spec['checkpoint'], spec['checkpoint_sha256']),
+               ('FROZEN_FINAL.json', spec['frozen_receipt'], spec['frozen_receipt_sha256'])]
+    for key, package in peers.items():
+        entries += [(key+'/'+n, package['root']+'/'+n, v) for n, v in package['sources'].items()]
+    archive = ssh('cpuQ', f'''import base64,hashlib,json
+from pathlib import Path
+out={{}}
+for name,path,digest in {entries!r}:
+ raw=Path(path).read_bytes();assert hashlib.sha256(raw).hexdigest()==digest
+ out[name]=base64.b64encode(raw).decode()
+print(json.dumps(out))
+''', timeout=45)
+    root = '/root/c1switch2_selector_cav_'+canonical(dict(spec=spec, peers=peers))[:16]
+    result = ssh('gpuR', f'''import base64,hashlib,json
+from pathlib import Path
+root=Path({root!r});assert root.parent.is_dir() and not root.exists(),'preserve existing selector copy'
+root.mkdir();sources={{}}
+for name,value in {archive!r}.items():
+ path=root/name;path.parent.mkdir(parents=True,exist_ok=True);raw=base64.b64decode(value);path.write_bytes(raw)
+ sources[name]=hashlib.sha256(raw).hexdigest()
+print(json.dumps(dict(root=str(root),sources=sources)))
+''', timeout=45)
+    write(EVIDENCE/'SELECTOR_COPY_cav_mappo_gpuR.json', result)
+    peers = {key: dict(package, root=root+'/'+key) for key, package in peers.items()}
+    return dict(spec, root=peers['shared']['root'], checkpoint=root+'/checkpoint.pt',
+                frozen_receipt=root+'/FROZEN_FINAL.json'), peers
+
+
+def prepare(host, resume_root=None, arm='fleet_ppo'):
+    if arm not in ('fleet_ppo', 'cav_mappo'):
+        raise ValueError('registered selector arm required')
+    path = EVIDENCE/('SELECTOR_PREPARED_'+arm+'_'+host+'.json')
     if path.exists():
         raise ValueError('selector already prepared; inspect existing receipt')
-    delivery = json.loads(checked('SELMAPPO_FINAL.json').read_text())
-    spec = delivery['spec']
-    if (delivery['host'] != 'cpuQ' or delivery['receipt']['iteration'] != 169 or
-            delivery['receipt']['status'] != 'FROZEN_FINAL' or
-            spec['checkpoint_sha256'] != delivery['receipt']['checkpoint_sha256']):
-        raise ValueError('genuine peer final169 delivery required')
+    peers = None
+    if arm == 'cav_mappo':
+        from .selectorhandoff import load_per_cav
+        spec, peers = load_per_cav()
+    else:
+        delivery = json.loads(checked('SELMAPPO_FINAL.json').read_text())
+        spec = delivery['spec']
+        if (delivery['host'] != 'cpuQ' or delivery['receipt']['iteration'] != 169 or
+                delivery['receipt']['status'] != 'FROZEN_FINAL' or
+                spec['checkpoint_sha256'] != delivery['receipt']['checkpoint_sha256']):
+            raise ValueError('genuine peer final169 delivery required')
     if resume_root:
         # Reuse the already-passed immutable preflight after a CPU-only probe
         # setup error. No claims/jobs/charges may exist; do not rerun preflight.
@@ -56,8 +92,11 @@ def prepare(host, resume_root=None):
         preflight = json.loads((EVIDENCE/('PREFLIGHT_'+host+'_'+resume_root.rsplit('/', 1)[-1]+'.json')).read_text())
     else:
         if host == 'gpuR':
-            spec = copy_fleet(spec)
-        staged = operations.stage(host, selector='fleet_ppo', selector_spec=spec)
+            if arm == 'cav_mappo':
+                spec, peers = copy_per_cav(spec, peers)
+            else:
+                spec = copy_fleet(spec)
+        staged = operations.stage(host, selector=arm, selector_spec=spec, execution_peers=peers)
         preflight = operations.preflight(host, staged['root'])
     if preflight['status'] != 'PASS':
         raise ValueError('immutable selector CPU preflight failed; no physics')
@@ -68,30 +107,41 @@ os.environ['PATH']=str(Path(sysconfig.get_paths()['purelib'])/'sumo/bin')+':'+os
 assert not (root/'accounting.jsonl').exists() and not list((root/'jobs').iterdir())
 assert not (root/'SELECTOR_DISPATCH_ONCE.json').exists()
 sys.path.insert(0,str(root/'pytools'));os.chdir(root/'pytools')
-from tools.c1switch2.selectors import Fleet
+from tools.c1switch2.selectors import Fleet,PerCav,package
 from tools.c1switch2.hostcheck import belief
 from tools.c1switch2.runtime import Runtime
 binding=json.loads((root/'BINDING.json').read_text());Runtime(binding)
-assert binding['enabled_arms']==['fleet_ppo'] and binding['cpu_host']=={host!r}
-selector=Fleet(binding['selector_specs']['fleet_ppo'])
-raw=belief(now=300);choice=selector.select(raw);assert choice in binding['library']
+assert binding['enabled_arms']==[{arm!r}] and binding['cpu_host']=={host!r}
+selector=(Fleet if {arm!r}=='fleet_ppo' else PerCav)(binding['selector_specs'][{arm!r}])
+raw=belief(now=300)
+if {arm!r}=='cav_mappo':
+ import importlib
+ shared=package(binding['execution_peers']['shared'],{{'runtime.py','environment.py','observations.py'}})
+ mixed=package(binding['execution_peers']['per_cav'],{{'mixed.py'}})
+ factory=importlib.import_module(mixed+'.mixed').make_mixed_fleet(importlib.import_module(shared+'.runtime'))
+ assert callable(factory)
+ selector.sync_incumbents({{r['vehicle_id']:'native' for r in raw['history'][-1]['self_reports']}})
+choice=selector.select(raw)
+assert (choice in binding['library']) if isinstance(choice,str) else all(v in binding['library'] for v in choice.values())
 out=dict(status='PASS',iteration=169,checkpoint_sha256={spec['checkpoint_sha256']!r},choice=choice,new_sim_s=0,new_gpu_s=0)
 with (root/'SELECTOR_CPU.json').open('x') as stream:json.dump(out,stream,indent=2)
 print(json.dumps(out))
 ''', timeout=45)
-    result = dict(staged, host=host, arm='fleet_ppo', selector_probe=probe)
+    result = dict(staged, host=host, arm=arm, selector_probe=probe)
     write(path, result)
     print(json.dumps(result, indent=2))
 
 
-def dispatch(host, workers):
-    arm = 'fleet_ppo'
+def dispatch(host, workers, arm='fleet_ppo'):
+    if arm not in ('fleet_ppo', 'cav_mappo'):
+        raise ValueError('registered selector arm required')
     prepared = json.loads((EVIDENCE/('SELECTOR_PREPARED_'+arm+'_'+host+'.json')).read_text())
     text = checked(REGISTRATION).read_text(encoding='utf-8')
     audit = registration_audit(REGISTRATION)
     if not approval(text) or not cpu_authority(text) or audit['hits']:
         raise ValueError('current selector authority/registry absent')
-    if not any('S-C1SWITCH2 FINAL FLEET EVALUATION REGISTERED' in line and
+    marker = 'FINAL FLEET' if arm == 'fleet_ppo' else 'FINAL PER-CAV'
+    if not any('S-C1SWITCH2 '+marker+' EVALUATION REGISTERED' in line and
                prepared['selector_probe']['checkpoint_sha256'] in line for line in text.splitlines()):
         raise ValueError('final checkpoint evaluation must be prospectively registered')
     archive = json.loads((EVIDENCE/'CANARY_BINDING_c1switch2_run_4ad4ece01d5a9ac1.json').read_text())
@@ -108,7 +158,7 @@ from pathlib import Path
 root=Path({root!r});assert root.name.startswith('c1switch2_run_')
 assert os.getloadavg()[0]<{28 if host == 'cpuQ' else 20} and shutil.disk_usage(root).free>=2*1024**3,'yield CPU/disk pressure'
 binding=json.loads((root/'BINDING.json').read_text())
-assert binding['dispatch_phase']=='selector' and binding['enabled_arms']==['fleet_ppo'] and binding['cpu_host']=={host!r}
+assert binding['dispatch_phase']=='selector' and binding['enabled_arms']==[{arm!r}] and binding['cpu_host']=={host!r}
 assert hashlib.sha256((root/'REGISTRATION.md').read_bytes()).hexdigest()==binding['registration_sha256']
 assert all(hashlib.sha256((root/'pytools'/n).read_bytes()).hexdigest()==v for n,v in binding['sources'].items())
 assert all(binding['sources'][n]==v for n,v in {frozen!r}.items()),'frozen v7 changed'
@@ -119,22 +169,24 @@ for entry in os.scandir(root.parent):
  if entry.name.startswith('c1switch2_run_') and entry.is_dir(follow_symlinks=False):
   for name in ('SELECTOR_DISPATCH_ONCE.json','MODEL_DISPATCH_ONCE.json'):
    claim=Path(entry.path,name)
-   if claim.exists():assert json.loads(claim.read_text())['arm']!='fleet_ppo','selector arm already claimed'
+   if claim.exists():assert json.loads(claim.read_text())['arm']!={arm!r},'selector arm already claimed'
 sys.path.insert(0,str(root/'pytools'));os.chdir(root/'pytools');os.nice(19);os.environ.update({env(host, root)!r})
 os.environ['PATH']=str(Path(sysconfig.get_paths()['purelib'])/'sumo/bin')+':'+os.environ['PATH']
 from tools.c1switch.storage import canonical
-from tools.c1switch2.selectors import Fleet
+from tools.c1switch2.selectors import Fleet,PerCav,package
 from tools.c1switch2.gate import REQUIRED,CPU_REQUIRED,admission
 from tools.c1switch2.design import local_budget
 from tools.c1switch2.runtime import Runtime
 Runtime(binding)
-Fleet(binding['selector_specs']['fleet_ppo'])
-needed=CPU_REQUIRED+('fleet_ppo',)
+(Fleet if {arm!r}=='fleet_ppo' else PerCav)(binding['selector_specs'][{arm!r}])
+if {arm!r}=='cav_mappo':
+ for package_spec in binding['execution_peers'].values():package(package_spec,{{'__init__.py'}})
+needed=CPU_REQUIRED+({arm!r},)
 evidence={{k:dict(status='PASS' if k in needed else 'PENDING',binding_sha256=canonical(binding),source='immutable CPU/source/WALL/canary/exposure/final169 selector validation') for k in REQUIRED}}
 evidence.update(registry_audit={audit!r},exposure_receipt_sha256={exposures!r},mechanics_sha256={archive['canary_sha256']!r})
 assert admission((root/'REGISTRATION.md').read_text(),binding,evidence)['dispatch_authorized']
 with (root/'GATES.json').open('x') as stream:json.dump(evidence,stream,indent=2)
-claim=dict(arm='fleet_ppo',host={host!r},root=str(root),planned_sim_s=local_budget({host!r})['fleet_ppo'],unix=time.time())
+claim=dict(arm={arm!r},host={host!r},root=str(root),planned_sim_s=local_budget({host!r})[{arm!r}],unix=time.time())
 with (root/'SELECTOR_DISPATCH_ONCE.json').open('x') as stream:
  json.dump(claim,stream,indent=2);stream.flush();os.fsync(stream.fileno())
 environment=dict(os.environ,**{env(host, root)!r},PYTHONPATH=str(root/'pytools'))
@@ -155,8 +207,9 @@ if __name__ == '__main__':
     parser.add_argument('--host', choices=('cpuQ', 'gpuR'), required=True)
     parser.add_argument('--workers', type=int, default=1)
     parser.add_argument('--resume-root')
+    parser.add_argument('--arm', choices=('fleet_ppo','cav_mappo'), default='fleet_ppo')
     args = parser.parse_args()
     if args.command == 'prepare':
-        prepare(args.host, args.resume_root)
+        prepare(args.host, args.resume_root, args.arm)
     else:
-        dispatch(args.host, args.workers)
+        dispatch(args.host, args.workers, args.arm)
