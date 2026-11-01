@@ -1,6 +1,22 @@
 # S-COOPMWM — live checks
 
 ## MAIN07:18 clarification and command-chain audit
+- Post-safety mirror prototype: **48 CPU tests PASS/zero skips/zero SUMO** in
+  immutable `commandcpu3`, including exact float64 agreement with the real
+  `CommandOwnership` writer on the four named members and speed-bound/stop
+  fixtures. It mirrors one-second `direct_target` and `slowDown` interpolation
+  before the inherited half-step speedMode27 cap. **Default remains disabled.**
+- CPU replay of the **actual frozen WM CAV callback** on both named observable
+  tapes gives **identical plan-versus-own-policy member motion on all12 half-step
+  callbacks**, for both original and prototype chains. This independently
+  corroborates the already-zero WM own-policy contrast. No GPU process changed.
+  The tapes contain only integer-second neighbours: the interpolation-based
+  check has absolute speed residuals up to0.208864/0.055090m/s against SUMO,
+  unchanged by the prototype. This is **not an exact full-trajectory parity
+  pass** and therefore does not authorize a numerical hot-swap. Receipt
+  `COMMAND_CHAIN_NULL_CALLBACK_PROBE.json` retains every error and the stated
+  limited observation contract. Earlier CPU1/2 harness failures (missing test
+  environment/newer GPU runtime) are retained; no physics/inference retries.
 - Fresh-session inspection of the **original K8/H420 forecasts** shows both named
   physical-null plans predicted **0.0 saving versus own-policy continuation** and
   `centre_open_loop_gap=0.0`. Their +164.1375/+26.2245veh-s predictions compare
