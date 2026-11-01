@@ -1,0 +1,17 @@
+{
+  "protocol": "S-C1SWITCH2/v2",
+  "reconciliation_commit": "f4a4f416",
+  "failure_receipt": "tools/c1switch2/evidence/SELECTOR_PROGRESS_cav_mappo_cpuQ_1793554718.json",
+  "regression_before_fix": {"passed": 2, "failed": 2, "error": "ModuleNotFoundError: traffic_shepherd.c4.switchable_wall"},
+  "verification_after_fix": {"passed": 156, "failed": 0, "skipped": 0, "duration_s": 9.82},
+  "pytest_command": "& \"C:/Users/jpeng/Miniconda3/python.exe\" -B -m pytest tests/test_c1switch2.py tests/test_c1switch2_integrations.py tests/test_c1switch2_wall.py tests/test_c1switch2_selector_admission.py tests/test_c1switch2_cpuwatch.py tests/test_c1switch2_gpu_hold.py tests/test_c1switch2_reconcile.py tests/test_c1switch2_watch.py tests/test_c1switch2_supervise.py tests/test_c1switch2_follow_wait.py tests/test_c1switch2_cpuqoracles.py tests/test_c1switch2_wm_oracles.py tests/test_c1switch2_relocation.py tests/test_c1switch2_bb_continuation.py -q",
+  "ruff_command": "& \"C:/Users/jpeng/Miniconda3/python.exe\" -B -m ruff check tools/c1switch2/runtime.py tools/c1switch2/wall.py tools/c1switch2/selectorops.py tests/test_c1switch2_integrations.py",
+  "ruff_status": "PASS",
+  "coverage": ["missing additive module path and module cache", "real peer atomic WALL and fleet handback", "both optional ownership hook ABIs", "missing dependency refused before physics backend construction"],
+  "remote_immutable_stages_modified": false,
+  "science_dispatches": 0,
+  "new_sim_s": 0,
+  "new_gpu_s": 0,
+  "gpu_hold_owner2014": true,
+  "terminal_scope_restart_authorized": false
+}

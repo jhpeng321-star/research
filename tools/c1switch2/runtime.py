@@ -15,6 +15,10 @@ from .wall import Wall, optional
 
 class PerCavBackend(Backend):
     def __init__(self, *args, shared, mixed_factory, **kwargs):
+        # The peer mixed executor imports WALL directly, bypassing create_sumo.
+        # Resolve the hash-bound additive module before any SUMO construction;
+        # don't depend on an earlier fleet WALL choice warming the import path.
+        Wall.prepare()
         self.mixed, self._terminal_time = None, None
         super().__init__(*args, **kwargs)
         self.shared = shared

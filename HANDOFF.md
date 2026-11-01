@@ -59,6 +59,16 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**Nov2 CPU-only import correction VERIFIED:** `PER_CAV_IMPORT_STOP.md` records
+the exact failure and no-replay scope request. Regressions reproduce the production
+missing-WALL error with the additive import path/cache removed, then PASS through
+the real peer atomic group/fleet handback with BOTH ownership-hook ABIs. The WALL
+facade now resolves its staged extension BEFORE per-CAV backend/SUMO construction;
+CPU selector admission also exercises start/stop. All156taskCPU PASS/RuffPASS.
+No remote immutable runtime or terminal scope changed/restarted. MAIN approval
+requested ONLY for still-unstarted CPU work excluding failed969138/969139:
+76840sim-s/GPU0 (cpuQ62460/gpuR14380), retaining all historical charges and completed
+episodes; no authority inferred and no corrected dispatch armed. GPU hold ACTIVE.
 **Nov2 01:38 fresh-session reconciliation1793554689:** existing CPU-only observer
 20260 LIVE; no replacement or dispatch. Its original cpuQ per-CAV admission
 2380230 is now EXITED/durableSTOP on969138:2completeepisodes/75totalchoices,

@@ -139,6 +139,8 @@ selector=(Fleet if {arm!r}=='fleet_ppo' else PerCav)(binding['selector_specs'][{
 raw=belief(now=300)
 if {arm!r}=='cav_mappo':
  import importlib
+ from tools.c1switch2.wall import Wall
+ controller=Wall.prepare()();controller.start(now_s=300);controller.stop(now_s=320)
  shared=package(binding['execution_peers']['shared'],{{'runtime.py','environment.py','observations.py'}})
  mixed=package(binding['execution_peers']['per_cav'],{{'mixed.py'}})
  factory=importlib.import_module(mixed+'.mixed').make_mixed_fleet(importlib.import_module(shared+'.runtime'))

@@ -4,6 +4,7 @@ import importlib
 import json
 import os
 from pathlib import Path
+import sys
 from types import SimpleNamespace
 
 import pytest
@@ -180,7 +181,8 @@ def test_real_peer_final169_feature_and_deterministic_inference(tmp_path, varian
 
 
 @pytest.mark.parametrize('residual_hook_exists', (False, True))
-def test_grouped_backend_uses_peer_atomic_wall_and_retires_to_exact_fleet_controller(monkeypatch, residual_hook_exists):
+@pytest.mark.parametrize('extension_missing', (False, True))
+def test_grouped_backend_uses_peer_atomic_wall_and_retires_to_exact_fleet_controller(monkeypatch, residual_hook_exists, extension_missing):
     from tools.c1switch2 import runtime
     from tools.c1switch2.core import Handover
     definition = importlib.util.spec_from_file_location('_c1switch2_wall_cpu_fixture',
@@ -213,6 +215,12 @@ def test_grouped_backend_uses_peer_atomic_wall_and_retires_to_exact_fleet_contro
             return raw
         self.belief = SimpleNamespace(payload=observed)
     monkeypatch.setattr(runtime.Backend, '__init__', base_init)
+    if extension_missing:
+        # Frozen v7 has no additive wall module. A prior WALL/WM test must not
+        # supply the extension path/cache that a pristine per-CAV process lacks.
+        c4 = importlib.import_module('traffic_shepherd.c4')
+        monkeypatch.setattr(c4, '__path__', [])
+        monkeypatch.delitem(sys.modules, 'traffic_shepherd.c4.switchable_wall', raising=False)
     backend = runtime.PerCavBackend(shared=shared, mixed_factory=mixed.make_mixed_fleet(shared), wall=Wall())
     assert backend.current_names() == {'0': 'native', '1': 'native', '2': 'native'}
     backend.select({'0': 'wall', '1': 'wall', '2': 'native'})
@@ -230,3 +238,14 @@ def test_grouped_backend_uses_peer_atomic_wall_and_retires_to_exact_fleet_contro
     assert env._accel_by_vehicle is original_convert
     assert backend.handover.name == 'native'
     assert all(call[2] != '3' for call in calls)  # No HDV writer through either ownership path.
+
+
+def test_per_cav_missing_wall_dependency_refuses_before_backend_construction(monkeypatch):
+    from tools.c1switch2 import runtime
+    def unavailable():
+        raise ModuleNotFoundError('missing staged WALL extension')
+    monkeypatch.setattr(Wall, 'prepare', unavailable)
+    monkeypatch.setattr(runtime.Backend, '__init__',
+                        lambda *a, **k: pytest.fail('physics backend constructed before WALL admission'))
+    with pytest.raises(ModuleNotFoundError, match='staged WALL'):
+        runtime.PerCavBackend(shared=None, mixed_factory=None, wall=Wall())

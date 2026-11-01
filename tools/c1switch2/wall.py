@@ -13,11 +13,16 @@ def optional(value):
 
 class Wall:
     @staticmethod
-    def create_sumo():
+    def prepare():
+        """Install and resolve the additive module before backend construction."""
         from tools.c1switch.library import install_wall_extension
         install_wall_extension()
         from traffic_shepherd.c4.switchable_wall import SwitchableWallController
-        return SwitchableWallController()
+        return SwitchableWallController
+
+    @staticmethod
+    def create_sumo():
+        return Wall.prepare()()
 
     @staticmethod
     def capture_memory(controller, env):
