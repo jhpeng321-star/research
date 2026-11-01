@@ -44,6 +44,21 @@ def fixture():
 
 
 class Analysis(unittest.TestCase):
+    def test_primary_requires_all24_closed_worlds_and_no_secondary_jobs(self):
+        r = fixture()
+        r.update(complete=False,primary_complete=True,episodes=24,actual=28800,charged=28800)
+        r['results'] = {k:v for k,v in r['results'].items() if k.endswith('_expected')}
+        r['charges'] = [v for v in r['charges'] if v['arm']=='expected']
+        r['closed'] = [v for v in r['closed'] if v['id'].endswith('_expected')]
+        summary,worlds,_ = build(r,primary=True)
+        self.assertEqual(list(summary['arms']),['expected'])
+        self.assertEqual(len(worlds),24)
+        with self.assertRaisesRegex(ValueError,'full completed'):
+            build(r)
+        r['incomplete'] = ['s984000_strict']
+        with self.assertRaisesRegex(ValueError,'full completed'):
+            build(r,primary=True)
+
     def test_full_zero_effect_panel_and_budget(self):
         summary,worlds,credits = build(fixture())
         self.assertEqual(len(worlds),48)

@@ -59,14 +59,27 @@ the already-running peer quality forecasts or control any peer process.
 
 ## Runtime, checks and analysis
 Immutable gpuA root /root/autodl-tmp/wmplan20261101_v1; SUMO on host CPUs,
-WM inference on gpuA GPU; no gpuR output. <=2nice19/single-thread CPU episode
-workers, <=2isolated creditworkers, <=2GPU services each strict8GiB. Resource
-admission load<=20, available RAM>=8GiB, disk>=2GiB, GPUfree>12GiB before load.
+WM inference on BOTH gpuA and gpuR (OWNER14:48 amendment). gpuR inference-only
+root /root/wmplan20261101_v1 uses its root filesystem (16GiB free at recovery);
+its /root/autodl-tmp has only1.8GiB free and is not an output destination.
+One persistent service per GPU, byte-identical frozen source/model/FIT32 inputs,
+same serial runtime.fit_futures for all8 draws. Local owned SSH relay transports
+requests and complete per-future audit/results; exclusive claims and all simulation
+ledgers remain on gpuA. Missing immutable files may be copied to their registered
+runtime paths only after conflict/hash checks; never overwrite existing bytes.
+<=2nice19/single-thread CPU episode workers, <=2isolated creditworkers, <=2GPU
+services each strict8GiB. gpuA CPU admission load<=20, available RAM>=8GiB,
+disk>=2GiB; each GPU requires free>12GiB and output disk>=2GiB before load.
 Freeze source/model/artifact/runtime/checkpoint/baseline/design hashes; run CPU
 contract tests and BOTH guards for all24worlds with SUMO creation blocked.
 Durable registry/design/model freeze must precede one-use dispatch. Exclusive
 claims/charges; any own fault writes durable STOP, preserves partial evidence,
 and prevents automatic retry. All created PIDs bind boot/startticks/command.
+
+OWNER14:48 order: finish all24 PRIMARY expected episodes and their exact twins,
+collect/recompute/publish the complete paired primary report and commit it, then
+release SECONDARY strict. Strict always runs after that fixed reporting milestone,
+regardless of primary results. The primary reporting gate spends no simulation.
 
 Paired J600(t300..900)/J900(t300..1200): MAPPO-minus-planner veh-s/world,
 10000whole-world paired bootstrap resamples/RNG20261101, primary and secondary

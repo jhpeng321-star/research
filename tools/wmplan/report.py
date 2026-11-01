@@ -37,8 +37,10 @@ def credit_ci(world_credits):
                 resampling='whole24world clusters including zero-action worlds; event-weighted mean')
 
 
-def build(r):
-    if not r['complete'] or r['stopped'] or r['incomplete'] or r['episodes'] != 48:
+def build(r, primary=False):
+    arms = ('expected',) if primary else ARMS
+    complete = r.get('primary_complete',False) if primary else r['complete']
+    if not complete or r['stopped'] or r['incomplete'] or r['episodes'] != 24*len(arms):
         raise ValueError('full completed panel required')
     if r['actual'] != r['charged'] or r['charged'] > budget()['total']:
         raise ValueError('charge/actual cap')
@@ -57,7 +59,7 @@ def build(r):
         key = digest({a:[vars(v) for v in fs] for a,fs in p.actions.items()})
         predictions[key] = (p,r['observations'][identity])
     summaries, worlds, credits, expected_jobs = {},[],[],set()
-    for arm in ARMS:
+    for arm in arms:
         safety = {a:{k:0. for k in ('collisions','teleports','ttc_below_3_vs','hard_brake')}
                   for a in ('mappo',arm)}
         actions, proposals = Counter(),Counter()
@@ -147,18 +149,19 @@ def build(r):
             worlds,credits)
 
 
-def run(verify=False):
-    r = json.loads((OUT/'RECEIPTS.json').read_text())
+def run(verify=False, primary=False):
+    prefix = 'PRIMARY_' if primary else ''
+    r = json.loads((OUT/(prefix+'RECEIPTS.json')).read_text())
     if r['binding'] != json.loads((OUT/'STAGED.json').read_text())['binding']:
         raise ValueError('staging identity')
-    summary,worlds,credits = build(r)
+    summary,worlds,credits = build(r,primary)
     distill = json.loads((LOCAL.parent/'c4-distill-1101/docs/paper_results/distill_live/WORLD_METRICS.json').read_text())
     byseed = {v['world_id']:v for v in distill}
     if set(byseed) != {w['seed'] for w in panel()}:
         raise ValueError('student comparison panel mismatch')
     summary['paired_vs_SUMO_teacher_student'] = {
         arm:{clock:ci([v[f'saving_J{clock}_team_delay_vs']-byseed[v['world_id']][f'saving_J{clock}']
-                       for v in worlds if v['arm']==arm]) for clock in ('600','900')} for arm in ARMS}
+                       for v in worlds if v['arm']==arm]) for clock in ('600','900')} for arm in summary['arms']}
     summary['paired_vs_WM_teacher_student'] = None
     if r.get('wm_student'):
         pairs = r['wm_student']['pairs']
@@ -174,21 +177,22 @@ def run(verify=False):
                                 p['student']['clocks'][clock]['team_delay_vs'] for clock in ('600','900')}
         summary['paired_vs_WM_teacher_student'] = {
             arm:{clock:ci([v[f'saving_J{clock}_team_delay_vs']-byseed[v['world_id']][clock]
-                           for v in worlds if v['arm']==arm]) for clock in ('600','900')} for arm in ARMS}
+                           for v in worlds if v['arm']==arm]) for clock in ('600','900')} for arm in summary['arms']}
     qa = dict(pass_=True,all24pairs_each_arm=True,all_executed_groups_have_twins=True,
-              forecast_action_accounting_recomputed=True,receipt_sha256=sha(OUT/'RECEIPTS.json'))
+               forecast_action_accounting_recomputed=True,receipt_sha256=sha(OUT/(prefix+'RECEIPTS.json')))
     for name,value in [('SUMMARY.json',summary),('WORLD_METRICS.json',worlds),('CREDITS.json',credits),('QA.json',qa)]:
         if verify:
-            if json.loads((OUT/name).read_text()) != value:
+            if json.loads((OUT/(prefix+name)).read_text()) != value:
                 raise ValueError('report recomputation mismatch '+name)
         else:
-            save(name,value)
+            save(prefix+name,value)
     print(json.dumps(summary))
 
 
-def publish():
+def publish(primary=False):
     from tools.wmplan.ops import REG
-    s = json.loads((OUT/'SUMMARY.json').read_text())
+    prefix = 'PRIMARY_' if primary else ''
+    s = json.loads((OUT/(prefix+'SUMMARY.json')).read_text())
     model = json.loads((OUT/'MODEL_COMPARISON.json').read_text())
     def interval(v):
         return f'{v["mean"]:+.3f} [{v["ci95"][0]:+.3f}, {v["ci95"][1]:+.3f}]'
@@ -205,7 +209,9 @@ def publish():
              'Positive saving below means less source-inclusive full-team delay than MAPPO. Units are veh-s/world; '
              'brackets are 95% paired whole-world bootstrap intervals (10,000 resamples, RNG 20261101).','',
              '## Paired efficacy and behaviour']
-    for arm in ARMS:
+    if primary:
+        lines += ['**Primary arm complete; secondary strict arm pending.** The strict arm starts after this report is saved.','']
+    for arm in s['arms']:
         a = s['arms'][arm]
         lines += [f'### {arm}'+(' — PRIMARY' if arm=='expected' else ' — SECONDARY'),
                   f'- J600 saving: **{interval(a["savings"]["600"]["team_delay_vs"])}**.',
@@ -240,12 +246,12 @@ def publish():
               '## Comparisons',
               '- S-DISTILL uses these identical24 worlds and MAPPO baseline bytes. Its published savings were '
               'J600 -96.482 [-575.232,+288.473], J900 -54.565 [-294.222,+188.886].']
-    for arm in ARMS:
+    for arm in s['arms']:
         d = s['paired_vs_SUMO_teacher_student'][arm]
         lines += [f'- {arm} minus SUMO-teacher-student paired saving: J600 {interval(d["600"])}; '
                   f'J900 {interval(d["900"])}. Positive favours the online planner.']
     if s['paired_vs_WM_teacher_student']:
-        for arm in ARMS:
+        for arm in s['arms']:
             d = s['paired_vs_WM_teacher_student'][arm]
             lines += [f'- {arm} minus WM-teacher-student paired saving: J600 {interval(d["600"])}; J900 {interval(d["900"])}.']
     else:
@@ -254,7 +260,7 @@ def publish():
               'J600 +767.979 [157.470,1606.905], J900 +821.068 [-944.174,2576.533]. '
               'This is descriptive context only, not a paired oracle/WM difference. No same-panel oracle rerun was authorized.','',
               '## Integrity, resources and limitations',
-              f'- All48 episodes/576 decisions and {s["executed_groups"]} executed-group quartets complete; '
+              f'- All{24*len(s["arms"])} episodes/{288*len(s["arms"])} decisions and {s["executed_groups"]} executed-group quartets complete; '
               f'{s["exact_credit_prefixes"]} exact branch prefix gates pass. Independent QA recomputes forecasts, actions, quotas and C_G.',
               f'- Actual=charged **{s["actual"]:g} sim-s**, below registered199200upper/owner200000cap. '
               'No new MAPPO or mechanics episode; every replay step is charged. No retries/refunds/transfers.',
@@ -266,36 +272,39 @@ def publish():
               'cold motion/controller memory, no observed queue/history claim, no hidden truth inputs. '
               'K8 empirical strict probabilities are not asserted calibrated.',
               '- Fresh DEV984000..984023/two per12cells, panelSHA72776ff1; these are development results, not final generalization evidence.',
-              '- Immutable gpuA `/root/autodl-tmp/wmplan20261101_v1`; model/baseline/source/design hashes, '
+              '- Dual-GPU inference: gpuA plus gpuR `/root/wmplan20261101_v1`; immutable gpuA `/root/autodl-tmp/wmplan20261101_v1` ledger; model/baseline/source/design hashes, '
               'charges, closed jobs, forecasts, complete twins and QA in `wmplan/`.',
-              '- Reproduce: `py -3.13 -B -m tools.wmplan.report --verify`. MAIN owns master-ledger/route integration.']
+              f'- Reproduce: `py -3.13 -B -m tools.wmplan.report --verify'+(' --primary' if primary else '')+'`. MAIN owns master-ledger/route integration.']
     report = LOCAL/'docs/paper_results/WMPLAN.md'
     with report.open('w',encoding='utf-8') as f:
         f.write('\n'.join(lines)+'\n')
-    line = (f'- S-WMPLAN LIVE COMPLETE: {model["selected"]}/same24DEV984000..984023/reusedMAPPO0newbaseline; '
+    secondary = ('SECONDARYstrict pending; ' if primary else
+                 f'SECONDARYstrict J600{interval(s["arms"]["strict"]["savings"]["600"]["team_delay_vs"])} '
+                 f'J900{interval(s["arms"]["strict"]["savings"]["900"]["team_delay_vs"])}; ')
+    line = (f'- S-WMPLAN {"PRIMARY" if primary else "LIVE"} COMPLETE: {model["selected"]}/same24DEV984000..984023/reusedMAPPO0newbaseline; '
             f'PRIMARYexpected J600{interval(expected["savings"]["600"]["team_delay_vs"])} '
             f'J900{interval(expected["savings"]["900"]["team_delay_vs"])}veh-s/world; '
-            f'SECONDARYstrict J600{interval(s["arms"]["strict"]["savings"]["600"]["team_delay_vs"])} '
-            f'J900{interval(s["arms"]["strict"]["savings"]["900"]["team_delay_vs"])}; '
-            f'all48episodes/576decisions/{s["executed_groups"]}completeCGquartets/'
+            +secondary+
+            f'all{24*len(s["arms"])}episodes/{288*len(s["arms"])}decisions/{s["executed_groups"]}completeCGquartets/'
             f'{s["exact_credit_prefixes"]}BITWISEprefixes; actual=charged{s["actual"]:g}<=199200upper<=200000cap. '
             'Budget-limited2950/world-arm<=1earlygroup/noaftert600; proposals/refusals/safety/studentcomparisons/'
             'modelnoninferiority documented. No unlimited-planner or trained-policy headline implied. '
-            f'Report E:/agent-work/c4-wmplan/docs/paper_results/WMPLAN.md; QAsha{sha(OUT/"QA.json")}; '
+            f'Report E:/agent-work/c4-wmplan/docs/paper_results/WMPLAN.md; QAsha{sha(OUT/(prefix+"QA.json"))}; '
             'MAIN master-ledger integration pending.\n')
     text = REG.read_text(encoding='utf-8')
     if line not in text:
         with REG.open('a',encoding='utf-8') as f:
             f.write(line);f.flush()
-    save('RESULT_REGISTRATION.json',dict(line=line,report_sha256=sha(report)))
+    save(prefix+'RESULT_REGISTRATION.json',dict(line=line,report_sha256=sha(report)))
 
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
     p.add_argument('--verify',action='store_true')
     p.add_argument('--publish',action='store_true')
+    p.add_argument('--primary',action='store_true')
     a = p.parse_args()
     if a.publish:
-        publish()
+        publish(primary=a.primary)
     else:
-        run(a.verify)
+        run(a.verify,primary=a.primary)

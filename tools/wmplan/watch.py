@@ -55,9 +55,9 @@ def progress(text):
         f.write(before+section+after)
 
 
-def main(hours=96,interval=300):
+def main(hours=96,interval=60):
     # A permanent exclusive claim protects against accidental second collectors.
-    ops.save('AUTO_CLAIM.json',dict(pid=os.getpid(),unix=time.time(),max_hours=hours,
+    ops.save('AUTO_CLAIM_1448.json',dict(pid=os.getpid(),unix=time.time(),max_hours=hours,
                                   command='tools.wmplan.watch',interval_s=interval,
                                   role='complete_registered_plan_once',peer_process_control=False))
     frozen = {p:sha(p) for p in (ops.LOCAL/'tools/wmplan').glob('*.py')}
@@ -69,10 +69,10 @@ def main(hours=96,interval=300):
         if time.monotonic() >= deadline:
             raise TimeoutError('finite continuation deadline; preserve all remote work')
     try:
-        progress('- Exclusive continuation is waiting for the already-running FULL-v5 quality check.\n'
-                 '- Exact199200upper preregistered; no new SUMO or model-selection outcome yet.\n'
-                 '- No peer process will be signalled and no quality computation duplicated.')
-        commit('wmplan: bind finite one-use quality-to-report continuation')
+        progress('- Exclusive amended continuation is waiting for the already-running FULL-v5 quality check.\n'
+                 '- Expected arm first, report before strict, both GPUs; exact199200upper retained.\n'
+                 '- Original owned continuation stopped and retained; no peer process action or duplicated quality.')
+        commit('wmplan: bind expected-first dual-GPU continuation')
         while not (ops.OUT/'MODEL_COMPARISON.json').is_file():
             guard();ops.compare()
             if not (ops.OUT/'MODEL_COMPARISON.json').is_file():
@@ -86,13 +86,14 @@ def main(hours=96,interval=300):
                  '- Reused existing predictions; no new quality forecasts or SUMO.')
         commit('wmplan: freeze preregistered model comparison before live outcomes')
         guard();ops.stage();commit('wmplan: bind immutable CPU GPU and reused baseline sources')
+        from tools.wmplan.mirror import stage as mirror_stage, check as mirror_check
+        guard();mirror_stage();commit('wmplan: freeze byte-identical gpuR inference mirror')
+        guard();mirror_check();commit('wmplan: verify gpuR frozen runtime bootstrap without forecasting')
         guard();ops.cpu();commit('wmplan: verify frozen host contracts and all24 dual guards')
         guard();ops.freeze();commit('wmplan: register final model source and exact budget freeze')
         guard();ops.launch();commit('wmplan: bind one-use online planner dispatch and owned PIDs')
         while True:
-            guard();ops.status()
-            snapshots = sorted(ops.OUT.glob('STATUS_*.json'))
-            s = json.loads(snapshots[-1].read_text())
+            guard();s=ops.status()
             progress(f'- Model fixed as {model["selected"]}; {s["episodes"]}/48 episodes complete.\n'
                      f'- Charged {s["charged"]:g}; closed actual {s["actual"]:g} sim-s; '
                      f'{len(s["incomplete"])} open jobs. Registered upper199200/cap200000.\n'
@@ -102,6 +103,17 @@ def main(hours=96,interval=300):
             commit('wmplan: collect owned live budget and complete-forecast progress')
             if s['stopped']:
                 raise RuntimeError('remote durable STOP: '+str(s['stop']))
+            if s['primary_complete'] and not (ops.OUT/'PRIMARY_RESULT_REGISTRATION.json').is_file():
+                guard();ops.status(collect=True,primary=True)
+                from tools.wmplan import report
+                report.run(primary=True);report.run(verify=True,primary=True);report.publish(primary=True)
+                commit('wmplan: publish verified primary expected-arm results before strict')
+                print(ops.remote(f'''import pathlib,json,time
+root=pathlib.Path({ops.ROOT!r})
+with (root/'PRIMARY_REPORTED.json').open('x') as f:json.dump(dict(unix=time.time(),
+ report_sha256={sha(REPORT)!r}),f)
+print(json.dumps(dict(primary_published=True,strict_released=True)))
+'''),flush=True)
             live = next(v for v in s['owners'] if v['name']=='LIVE')
             if not s['complete'] and (not live['identity_match'] or live['state']=='Z'):
                 raise RuntimeError('owned supervisor ended incomplete; no automatic replay')
@@ -129,7 +141,8 @@ def main(hours=96,interval=300):
 
 def launch():
     assert (ops.LOCAL/'_out').is_dir()
-    assert not (ops.OUT/'AUTO_CLAIM.json').exists()
+    assert (ops.OUT/'RECOVERY_1448.json').exists()
+    assert not (ops.OUT/'AUTO_CLAIM_1448.json').exists()
     logfile = ops.LOCAL/'_out'/f'wmplan_watch_{int(time.time())}.log'
     with logfile.open('x',encoding='utf-8') as log:
         p = subprocess.Popen([sys.executable,'-B','-u','-m','tools.wmplan.watch'],cwd=ops.LOCAL,

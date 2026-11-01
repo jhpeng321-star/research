@@ -19,6 +19,70 @@ def publish(path, value):
     os.link(tmp,path)
 
 
+def evaluate(rt, record, emit):
+    """Identical serial K8 teacher path on either GPU; transport is separate."""
+    from tools.wmteach.runtime import fit_futures
+    from tools.wmteach.labels import actions
+    values = {}
+    for k in range(8):
+        result = fit_futures(rt,None,record,k)
+        audit = result['population_audit']
+        if not audit['finite'] or not audit['conserved']:
+            raise ValueError('WM population integrity')
+        for h, rows in result['results'].items():
+            for a,f in rows.items():
+                road,source = result['road_source'][h][a]
+                if abs(f['team_delay']-road-source) > 1e-6:
+                    raise ValueError('source-inclusive delay integrity')
+        emit(k,result)
+        for a,f in result['results']['300'].items():
+            values.setdefault(a,[]).append(f)
+        import gc
+        import torch
+        gc.collect()
+        torch.cuda.empty_cache()
+    Prediction({a:tuple(Outcome(**f) for f in fs) for a,fs in values.items()},
+               False,'WM-PHYS').validate(actions(record['rows'],record['setting']),8)
+    return values
+
+
+def stdio(root):
+    """Persistent gpuR process, controlled through its owned SSH connection."""
+    import contextlib
+    import hashlib
+    import shutil
+    import subprocess
+    import sys
+    manifest = read(root/'MIRROR.json')
+    for name,expected in manifest['hashes'].items():
+        if hashlib.sha256(Path(name).read_bytes()).hexdigest() != expected:
+            raise ValueError('gpuR immutable mirror: '+name)
+    free = int(subprocess.check_output(['nvidia-smi','--query-gpu=memory.free',
+               '--format=csv,noheader,nounits'],text=True).strip())
+    if free <= 12*1024 or shutil.disk_usage(root).free < 2*2**30:
+        raise RuntimeError('gpuR startup resource gate')
+    os.environ['WMTEACH_BACKEND'] = manifest['model']
+    with contextlib.redirect_stdout(sys.stderr):
+        from tools.wmteach.runtime import bootstrap
+        rt = bootstrap()
+    owner = dict(host='gpuR',pid=os.getpid(),backend=manifest['model'],
+                 command=[sys.executable,*sys.argv],
+                 start_ticks=Path(f'/proc/{os.getpid()}/stat').read_text().split()[21],
+                 boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip())
+    print('WMPLAN_JSON '+json.dumps(dict(event='READY',owner=owner)),flush=True)
+    for line in sys.stdin:
+        record = json.loads(line)
+        with contextlib.redirect_stdout(sys.stderr):
+            # emit must write to the original protocol stream during redirection.
+            def send(k,result):
+                sys.__stdout__.write('WMPLAN_JSON '+json.dumps(dict(event='FUTURE',
+                    key=record['state_id'],k=k,result=result))+'\n')
+                sys.__stdout__.flush()
+            values = evaluate(rt,record,send)
+        print('WMPLAN_JSON '+json.dumps(dict(event='RESULT',key=record['state_id'],
+              futures=values,backend=manifest['model'],complete_futures=8)),flush=True)
+
+
 class Client:
     def __init__(self, root, seed, arm):
         self.root, self.seed, self.arm = root, seed, arm
@@ -79,7 +143,7 @@ def serve(root, worker):
     from tools.wmplan.live import verify
     binding = verify(root)
     os.environ['WMTEACH_BACKEND'] = binding['model']['selected']
-    from tools.wmteach.runtime import bootstrap, fit_futures
+    from tools.wmteach.runtime import bootstrap
     # Admission happens before CUDA allocation and never changes a peer process.
     while True:
         if (root/'STOP.json').exists():
@@ -105,29 +169,7 @@ def serve(root, worker):
                 r = read(request)
                 folder = root/'forecasts'/key
                 folder.mkdir()
-                values = {}
-                for k in range(8):
-                    # This is the same function, not a newly qualified input or
-                    # sampling adapter. Its source hashes are frozen at staging.
-                    result = fit_futures(rt,None,r,k)
-                    audit = result['population_audit']
-                    if not audit['finite'] or not audit['conserved']:
-                        raise ValueError('WM population integrity')
-                    for h, rows in result['results'].items():
-                        for a,f in rows.items():
-                            road,source = result['road_source'][h][a]
-                            if abs(f['team_delay']-road-source) > 1e-6:
-                                raise ValueError('source-inclusive delay integrity')
-                    write(folder/f'k{k}.json',result)
-                    for a,f in result['results']['300'].items():
-                        values.setdefault(a,[]).append(f)
-                    import gc
-                    import torch
-                    gc.collect()
-                    torch.cuda.empty_cache()
-                from tools.wmteach.labels import actions
-                Prediction({a:tuple(Outcome(**f) for f in fs) for a,fs in values.items()},
-                           False,'WM-PHYS').validate(actions(r['rows'],r['setting']),8)
+                values = evaluate(rt,r,lambda k,result:write(folder/f'k{k}.json',result))
                 publish(root/'responses'/f'{key}.json',dict(futures=values,
                       backend=binding['model']['selected'],complete_futures=8))
             if not found:
@@ -142,10 +184,15 @@ if __name__ == '__main__':
     p = argparse.ArgumentParser()
     p.add_argument('root',type=Path)
     p.add_argument('--worker',type=int,required=True)
+    p.add_argument('--stdio',action='store_true')
     a = p.parse_args()
     try:
-        serve(a.root,a.worker)
+        if a.stdio:
+            stdio(a.root)
+        else:
+            serve(a.root,a.worker)
     except BaseException:
         from tools.coopplan.storage import stop
-        stop(a.root,traceback.format_exc())
+        if not a.stdio:
+            stop(a.root,traceback.format_exc())
         raise

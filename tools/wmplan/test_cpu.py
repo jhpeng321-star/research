@@ -16,16 +16,19 @@ from tools.wmplan.design import (panel,budget,PANEL_SHA,CREDIT,model_choice,deci
 class Contracts(unittest.TestCase):
     def test_remote_operations_compile_before_dispatch(self):
         from tools.wmplan import ops
-        tree = ast.parse(Path(ops.__file__).read_text(encoding='utf-8'))
         scripts = 0
-        for node in ast.walk(tree):
-            if (isinstance(node,ast.Call) and isinstance(node.func,ast.Name) and
-                    node.func.id == 'remote' and node.args and isinstance(node.args[0],ast.JoinedStr)):
-                # Replace interpolated data by a syntactically valid literal;
-                # this verifies generated Python, including remote indentation.
-                text = ''.join(v.value if isinstance(v,ast.Constant) else 'None' for v in node.args[0].values)
-                compile(text,'<remote-contract>','exec')
-                scripts += 1
+        for name in ('ops.py','mirror.py','bridge.py','watch.py'):
+            tree = ast.parse(Path(ops.__file__).with_name(name).read_text(encoding='utf-8'))
+            for node in ast.walk(tree):
+                if (isinstance(node,ast.Call) and
+                        ((isinstance(node.func,ast.Name) and node.func.id=='remote') or
+                         (isinstance(node.func,ast.Attribute) and node.func.attr=='remote')) and
+                        node.args and isinstance(node.args[0],ast.JoinedStr)):
+                    # Replace interpolated data by a syntactically valid literal;
+                    # this verifies generated Python, including remote indentation.
+                    text = ''.join(v.value if isinstance(v,ast.Constant) else 'None' for v in node.args[0].values)
+                    compile(text,'<remote-contract>','exec')
+                    scripts += 1
         self.assertGreaterEqual(scripts,7)
 
     def test_shared_panel_and_budget(self):

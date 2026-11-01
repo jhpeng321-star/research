@@ -160,9 +160,18 @@ def run(root):
                     raise RuntimeError('GPU startup fault before physics')
                 time.sleep(1)
             with ProcessPoolExecutor(binding['workers'],mp_context=multiprocessing.get_context('spawn')) as pool:
-                jobs = [pool.submit(episode,root,w,arm) for w in panel() for arm in ARMS]
-                for f in as_completed(jobs):
-                    print(json.dumps(dict(event='EPISODE_COMPLETE',**f.result())),flush=True)
+                for arm in ARMS:
+                    # Owner14:48: publish the entire primary arm before starting
+                    # any secondary episode. No outcome controls this ordering.
+                    jobs = [pool.submit(episode,root,w,arm) for w in panel()]
+                    for f in as_completed(jobs):
+                        print(json.dumps(dict(event='EPISODE_COMPLETE',**f.result())),flush=True)
+                    write(root/f'ARM_COMPLETE_{arm}.json',dict(arm=arm,worlds=24,unix=time.time()))
+                    if arm == 'expected':
+                        while not (root/'PRIMARY_REPORTED.json').is_file():
+                            if (root/'STOP.json').exists():
+                                raise RuntimeError('STOP while waiting for primary report')
+                            time.sleep(2)
             write(root/'COMPLETE.json',dict(worlds=24,arms=list(ARMS),unix=time.time()))
         except BaseException:
             stop(root,traceback.format_exc())

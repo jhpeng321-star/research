@@ -4,9 +4,9 @@
 Preparation is in progress. No S-WMPLAN live episode has run and no claim of
 beating MAPPO is supported yet. The owner-approved question is whether the
 world model can choose cooperative actions online better than MAPPO alone.
-The exact199200sim-s plan is registered. Complete full-prefix C_G twins require
-fixed2950sim-s credit per world-arm: at most one early group can execute, and
-none aftert600 fits. This is explicitly a budget-limited planner comparison;
+The exact 199,200 sim-s plan is registered. Complete full-prefix C_G twins require
+fixed 2,950 sim-s credit per world-arm: at most one early group can execute, and
+none after t600 fits. This is explicitly a budget-limited planner comparison;
 raw proposals, executions and resource-forced O0 decisions will all be reported.
 
 ## Recovered authority and evidence
@@ -45,6 +45,20 @@ The inherited exact-quality adapter is roster-only with frozen FIT population,
 sampled FIT source priors, and cold motion/controller memory. Its quality is not
 qualification of a richer history-conditioned observation adapter or calibration
 of empirical K8 win probabilities. Preserve that limitation in live reporting.
+
+## Owner14:48 speed amendment
+The expected arm now runs all24 worlds first. Its complete paired efficacy,
+safety and group-twin report is independently recomputed and committed before
+the strict arm is released, regardless of the primary result. One WM service
+uses gpuA and one uses gpuR, with the identical serial teacher-quality function
+and byte-frozen model/FIT32 artifacts. Exclusive forecast claims and all SUMO
+charges remain on gpuA. The gpuR service uses `/root/wmplan20261101_v1` on the
+root filesystem; no inference output goes to its nearly-full autodl-tmp mount.
+
+Local contract gate:29 tests PASS, including primary-only full-panel accounting,
+rejection of incomplete/secondary jobs at primary reporting, exact choices,
+full-prefix credit quotas and generated remote-script compilation. Host/mirror
+gates and the final model comparison still precede live dispatch.
 
 <!-- WMPLAN-PROGRESS:BEGIN -->
 ## Current continuation status

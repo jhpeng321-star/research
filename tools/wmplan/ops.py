@@ -110,6 +110,31 @@ def register():
     print(json.dumps(dict(design_sha256=design,budget=budget(),new_sumo_sim_s=0)))
 
 
+def amend():
+    """Owner14:48 scheduling/host amendment, before all live outcomes."""
+    from tools.wmplan.design import budget
+    old = json.loads((OUT/'REGISTRATION.json').read_text())
+    design = sha(LOCAL/'docs/paper_results/WMPLAN_DESIGN.md')
+    line = (f'- S-WMPLAN OWNER14:48 SPEED AMENDMENT REGISTERED BEFORE LIVE: '
+            f'designSHA256{design}; supersedes host/order clauses only of original{old["design_sha256"]}. '
+            'PRIMARYexpected all24 worlds+completeCG+verified paired report saved before '
+            'SECONDARYstrict starts; no outcome-dependent continuation. One WM service on gpuA '
+            'and one on gpuR via owned persistent SSH relay; same runtime.fit_futures K8/H300 '
+            'serial computation, byte-identical source/artifact/FIT32 mirror; exclusive gpuA '
+            'claims/results/charges. gpuR outputs /root/wmplan20261101_v1 on root filesystem '
+            '(16GiBfree), not its nearly-full autodl-tmp; missing immutable runtime files only '
+            'copied after hash/conflict gates, no overwrite/deletion/newenv. Strict8GiB/process, '
+            'GPUfree>12GiB and rootdisk>=2GiB startup; GPUA CPU load20/RAM8GiB gates retained. '
+            'All exact199200upper/cap200000, model noninferiority rule, same24 reusedMAPPO, '
+            'equal2950credit quotas, O0..O4/safety/cadence/bootstrap unchanged. Old owned '
+            'local watcher21412 identity-checked stopped; no existing live dispatch or physics.\n')
+    with REG.open('a',encoding='utf-8') as f:
+        f.write(line);f.flush()
+    save('REGISTRATION_1448.json',dict(**{k:v for k,v in old.items() if k not in ('line','design_sha256','budget')},
+        line=line,design_sha256=design,original_design_sha256=old['design_sha256'],budget=budget()))
+    print(json.dumps(dict(design_sha256=design,budget=budget(),new_sumo_sim_s=0)))
+
+
 def compare():
     from tools.wmplan.design import model_choice
     result = json.loads(remote(f'''import pathlib,json,hashlib,time
@@ -140,7 +165,7 @@ else:print(json.dumps(dict(complete=True,models=out,unix=time.time())))
 def stage():
     from tools.wmplan.design import panel, budget
     comparison = json.loads((OUT/'MODEL_COMPARISON.json').read_text())
-    registration = json.loads((OUT/'REGISTRATION.json').read_text())
+    registration = json.loads((OUT/'REGISTRATION_1448.json').read_text())
     assert registration['design_sha256'] == sha(LOCAL/'docs/paper_results/WMPLAN_DESIGN.md')
     model = comparison['selected']
     quality_root = QUALITY if model == 'FULL-v5' else '/root/autodl-tmp/wmteach20261101_v3'
@@ -191,7 +216,7 @@ binding=dict(runtime=old['runtime'],checkpoint=old['checkpoint'],deps=old['deps'
  load_max=20,budget={budget()!r},panel={panel()!r},baseline_root=str(base),
  model=dict(selected={model!r},comparison_sha256=artifacts['MODEL_COMPARISON.json']),
  sources=sources,artifacts=artifacts,external_sources={{**external,**baseline_hashes}},
- design_sha256=artifacts['WMPLAN_DESIGN.md'],gpu_workers=2,
+  design_sha256=artifacts['WMPLAN_DESIGN.md'],gpu_workers=2,inference_hosts=['gpuA','gpuR'],
  wm_deps='/root/autodl-tmp/wmteach20261101_v1/deps')
 with (root/'BINDING.json').open('x') as f:json.dump(binding,f,sort_keys=True)
 for name in ('jobs','states','reservations','requests','responses','forecast_claims','forecasts'):(root/name).mkdir()
@@ -230,6 +255,8 @@ def freeze():
     staged = json.loads((OUT/'STAGED.json').read_text())
     cpu_result = json.loads((OUT/'CPU.json').read_text())
     assert cpu_result['pass_']
+    mirror = json.loads((OUT/'MIRROR_CPU_GPU_GATE.json').read_text())
+    assert mirror['pass_'] and mirror['fit_worlds']==32
     b = staged['binding']
     line = (f'- S-WMPLAN FINAL MODEL/SOURCE FREEZE BEFORE LIVE OUTCOMES: '
             f'model{comparison["selected"]}; v4helpfulagreement'
@@ -240,13 +267,16 @@ def freeze():
             f'comparisonSHA256{sha(OUT/"MODEL_COMPARISON.json")}/'
             f'design{b["design_sha256"]}/sourcebinding{digest(b)}. '
             f'Existing same12 completed teacher forecasts reused/newforecasts0/newSUMO0; '
-            f'hostCPU{cpu_result["tests"]}PASS/24dualguards/allbaselinebytesfrozen. '
+             f'hostCPU{cpu_result["tests"]}PASS/24dualguards/allbaselinebytesfrozen. '
+             f'gpuRbyteidenticalmirrorSHA256{sha(OUT/"MIRROR.json")}/bootstrapPASS32FIT/newforecasts0; '
+             'expected24+primaryreport before strict24; one8GiBservice each gpuA/gpuR. '
             'Original EXACT199200upper, equal2950credit quotas, resource-limited '
             'estimand and no-new-MAPPO contract retained. One-use gpuA root '
             f'{ROOT}; no model switch or live-outcome selection.\n')
     with REG.open('a',encoding='utf-8') as f:
         f.write(line);f.flush()
-    receipt = dict(line=line,binding_sha256=digest(b),comparison_sha256=sha(OUT/'MODEL_COMPARISON.json'))
+    receipt = dict(line=line,binding_sha256=digest(b),comparison_sha256=sha(OUT/'MODEL_COMPARISON.json'),
+                   mirror_sha256=sha(OUT/'MIRROR.json'),mirror_gate_sha256=sha(OUT/'MIRROR_CPU_GPU_GATE.json'))
     save('FINAL_FREEZE.json',receipt)
     print(remote(f'''import pathlib,json
 root=pathlib.Path({ROOT!r})
@@ -257,6 +287,8 @@ print(json.dumps(dict(frozen=True,new_sumo_sim_s=0)))
 
 def launch():
     freeze_receipt = json.loads((OUT/'FINAL_FREEZE.json').read_text())
+    assert freeze_receipt['mirror_sha256']==sha(OUT/'MIRROR.json')
+    assert freeze_receipt['mirror_gate_sha256']==sha(OUT/'MIRROR_CPU_GPU_GATE.json')
     result = json.loads(remote(f'''import pathlib,sys,os,json,subprocess,shutil,time
 root=pathlib.Path({ROOT!r});assert root.is_dir()
 b=json.loads((root/'BINDING.json').read_text())
@@ -277,7 +309,7 @@ def start(name,args,env):
   stdout=log,stderr=subprocess.STDOUT,start_new_session=True,stdin=subprocess.DEVNULL)
  owners.append(dict(name=name,pid=p.pid,start_ticks=pathlib.Path(f'/proc/{{p.pid}}/stat').read_text().split()[21],
   boot_id=pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip(),command=args))
-for i in range(b['gpu_workers']):
+for i in range(1):
  start('GPU'+str(i),['-m','tools.wmplan.predict',str(root),'--worker',str(i)],
   dict(common,PYTHONPATH=str(root/'pywm')+':'+b['wm_deps'],WMTEACH_BACKEND=b['model']['selected']))
 start('LIVE',['-m','tools.wmplan.live',str(root)],dict(common,CUDA_VISIBLE_DEVICES='',
@@ -288,9 +320,11 @@ print(json.dumps(receipt))
 ''',timeout=90))
     save('DISPATCH.json',result)
     print(json.dumps(result))
+    from tools.wmplan.bridge import launch as launch_bridge
+    print(json.dumps(launch_bridge()))
 
 
-def status(collect=False):
+def status(collect=False, primary=False):
     result = json.loads(remote(f'''import pathlib,json,time,hashlib
 root=pathlib.Path({ROOT!r})
 def load(p):return json.loads(p.read_text())
@@ -307,6 +341,7 @@ for job in (root/'jobs').iterdir():
  else:incomplete.append(job.name)
  if (job/'RESULT.json').is_file():results[job.name]=load(job/'RESULT.json')
 out=dict(unix=time.time(),root=str(root),complete=(root/'COMPLETE.json').is_file(),
+ primary_complete=(root/'ARM_COMPLETE_expected.json').is_file(),
  stopped=(root/'STOP.json').is_file(),owners=owners,charged=sum(r['sim_s'] for r in charges),
  actual=sum(r['actual_sim_s'] for r in closed),incomplete=incomplete,
  episodes=sum('_t' not in k for k in results),forecasts=len(list((root/'responses').glob('*.json'))),
@@ -315,7 +350,7 @@ out=dict(unix=time.time(),root=str(root),complete=(root/'COMPLETE.json').is_file
  stop=load(root/'STOP.json') if (root/'STOP.json').exists() else None,
  logs={{p.name:p.read_text()[-3000:] for p in root.glob('*.log')}})
 if {collect!r}:
- assert out['complete'] and not out['stopped'] and not incomplete and out['episodes']==48
+ assert (out['primary_complete'] if {primary!r} else out['complete']) and not out['stopped'] and not incomplete and out['episodes']=={24 if primary else 48}
  import sys
  sys.path.insert(0,str(root/'pytools'))
  from tools.wmplan.live import verify
@@ -338,18 +373,24 @@ if {collect!r}:
 print(json.dumps(out))
 ''',timeout=180))
     if collect:
-        save('RECEIPTS.json',result)
+        save(('PRIMARY_' if primary else '')+'RECEIPTS.json',result)
     else:
         save(f'STATUS_{int(result["unix"])}.json',result)
     print(json.dumps({k:v for k,v in result.items() if k not in
                      ('binding','charges','closed','results','baselines','forecasts','observations','reservations','result_hashes','wm_student')}))
+    return result
 
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
-    p.add_argument('action', choices=['recover','inspect','register','compare','stage','cpu','freeze','launch','status','collect'])
+    p.add_argument('action', choices=['recover','inspect','register','amend','compare','stage','mirror','cpu','freeze','launch','status','collect','primary'])
     a = p.parse_args().action
-    if a in ('status','collect'):
+    if a == 'mirror':
+        from tools.wmplan.mirror import stage as mirror_stage
+        mirror_stage()
+    elif a == 'primary':
+        status(collect=True,primary=True)
+    elif a in ('status','collect'):
         status(a == 'collect')
     else:
         globals()[a]()
