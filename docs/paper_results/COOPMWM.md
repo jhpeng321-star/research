@@ -11,6 +11,17 @@
   workers, shared serialized accounting. E2 now runs beside PPO and cannot gate learning.
 - A/B/R final checkpoints, primary-first once-only test and remaining seed2 plan unchanged.
 
+### 18:15 — first-update ETA
+- Both primaryu1 checkpoints/UPDATE receipts exist; supervisor ownedPID1945256 is alive.
+  The62closed jobs were adopted without new SUMO;74,400sim-s remains charged.
+- B u1 query1/accepted0/executed0; no learned-cooperation efficacy claim.
+- Initial48-episode rollout closes span254.33s with4workers;12worker CPU scaling plus
+  PPO/check overhead gives a provisional **1–3h after numeric u2 sampling release**
+  for both primaryu24 checkpoints. This is a planning range, not measured end-to-end
+  throughput; update after u2 elapsed time and WM queue latency are available.
+- u2 cannot launch physics until the outcome-independent sampling fit is numerically
+  registered and hash-bound. First dual-GPU E2 forecast is still running; no agreement result yet.
+
 ## 2026-11-01 18:01 — fresh recovery and frozen reducer repair
 - Recovered all62 closed jobs /74,400sim-s; no live task supervisor or GPU service.
 - Prior GPU startup failed because `inspect` resolved an exec-created reducer against
@@ -157,3 +168,13 @@
 - B update1, seed20261101; SUMO-only reward; queries/accepted/executed 1/0/0; next pooled beta 1.0.
 - Per-bucket trust: O1|merge-dense=1; O1|ordinary=1; O2|merge-dense=1; O2|ordinary=1; O3|merge-dense=1; O3|ordinary=1; O4|merge-dense=1; O4|ordinary=1.
 - TRAIN GAE variance 4.69666e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_B_UPDATE_001.json`.
+
+## Live publication — 2026-11-01T10:20:31.236333+00:00
+- Charged 79,200/6,000,000 sim-s; closed jobs 66/66; pending WM 7.
+
+### CREDIT_WINDOW_00.json
+- E2 window world986000 t600: exact quartet complete.
+- H120 conditional WM K8 variance: joint-team advantage 801277, paired C_G 0 veh-s²; not empirical SUMO noise.
+- H300 conditional WM K8 variance: joint-team advantage 9.8999e+06, paired C_G 0 veh-s²; not empirical SUMO noise.
+- H60 conditional WM K8 variance: joint-team advantage 86872.7, paired C_G 0 veh-s²; not empirical SUMO noise.
+- H600 conditional WM K8 variance: joint-team advantage 5.84757e+07, paired C_G 0 veh-s²; not empirical SUMO noise.
