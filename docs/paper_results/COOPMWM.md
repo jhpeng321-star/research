@@ -479,3 +479,11 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 
 ### S0_A_CHECK_016.json
 - A_minus_MAPPO: {"bootstrap":"10000 whole-world paired resamples; RNG20261101; negative delay is better","learned_minus":"mappo","metrics":{"600_collisions":{"ci95":[0.0,0.0],"mean":0.0},"600_hard_brake":{"ci95":[0.041666666666666664,9.25],"mean":4.125},"600_team_delay_vs":{"ci95":[-78.65468623970786,3459.082650857894],"mean":1686.0698296149446},"600_teleports":{"ci95":[0.0,0.0],"mean":0.0},"600_ttc_below_3_vs":{"ci95":[-10.626041666666666,101.25],"mean":43.291666666666664},"900_collisions":{"ci95":[0.0,0.0],"mean":0.0},"900_hard_brake":{"ci95":[-3.3333333333333335,7.2093749999999845],"mean":1.25},"900_team_delay_vs":{"ci95":[331.8738344183094,6951.7146298653915],"mean":3346.086848854511},"900_teleports":{"ci95":[0.0,0.0],"mean":0.0},"900_ttc_below_3_vs":{"ci95":[-27.0,99.08437499999998],"mean":29.291666666666668}},"worlds":12}
+
+## Live publication — 2026-11-01T11:33:53.736644+00:00
+- Charged 754,040/6,000,000 sim-s; closed jobs 612/630; pending WM 0.
+
+### S0_A_UPDATE_017.json
+- A update17, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
+- Per-bucket trust: .
+- TRAIN GAE variance 5.19562e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_017.json`.
