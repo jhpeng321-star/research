@@ -1,5 +1,13 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+MAIN0413 pool logging RESOLVED without touching running searches: existing live
+RecordingEvaluator embeds FULL pools in forecast.proposer_receipt. Registered
+POOL_EXPORT amendment a2a729c1; fourCPUtests/hostPASS; detached exporters614389(A)/
+54031(R) copy full embedded pools into proposer_receipts/, rejected included.
+First5actualforecasts SHA/byteidentical, screen120/240; noWM/SUMOcalls oractivation.
+Originalobserver43408alive; A-u39/B-Ru0collecting, noSTOP, charge2226440at1793564063.
+Use pool_ops status --host gpuA/gpuR; never duplicate exporters/services.
+
 TRAINING STARTED B/R2026-11-02 03:53:05UTC+8, source exactcpu5/204PASS.
 B3209145/start57706006,R3209416/start57706200,grader3208762/start57705728,
 broker3208897/start57705818(cpuQbootb8bc1fcb). OriginalA2998262 continues/u35atstart.

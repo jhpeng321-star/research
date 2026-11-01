@@ -1,5 +1,21 @@
 # S-COOPMWM — live checks
 
+## MAIN04:13 full-pool logging export — deployed without search interruption
+- **DIAGNOSIS:** immutable live mppi_runtime already uses RecordingEvaluator and
+  embeds complete screened pools in every B forecast. The missing standalone
+  proposer_receipts directory caused the apparent missing-pool report.
+- Registered logging-only amendment
+  `a2a729c1c243b22f2f2ee84ba66e062c72f2da820afa75f3e68c147ec4fb50aa`.
+  Detached exporters gpuA614389/gpuR54031 write the embedded receipts into each
+  GPU root's proposer_receipts directory, including rejected searches. Running
+  model/search sources and in-flight queries are preserved; no learned seeds or
+  warm-start activation. Same original GPU deadline; zero new WM/SUMO calls.
+- **4 CPU tests PASS on each GPU host**, zero skips/SUMO. First five real recorded
+  forecasts export with byte-identical search output (SHA audits): gpuA3 pools,
+  gpuR2 pools; complete screen counts120 or240,128–252 candidate records including
+  finalists. Export is idempotent; conflicting/incomplete pools stop the exporter.
+- Receipts: `coopmwm/POOL_EXPORT_REGISTRATION.json`, `POOL_EXPORT_STATUS_*`.
+
 ## Warm restart live — 2026-11-02 03:53:05 UTC+8
 - **TRAINING STARTED B/R**, MAPPOu0, immutable exactcpu5 (204CPU PASS/0skips).
   B3209145, R3209416, grader3208762, broker3208897 detached on cpuQ; original
