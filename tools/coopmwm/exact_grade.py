@@ -48,13 +48,13 @@ TAIL_S = 120
 METRIC = 'team_delay_vs'
 NOISE_MODES = ('crn', 'mean')
 MAX_ATTEMPTS = 2           # orphaned (dead worker) attempts only; physics/executor errors never retry
-N_MIN_TEMPERATURE = 10     # exact grades needed before the RMS temperature rule replaces the fallback
 T_FLOOR_VEH_S = 1.
 WEIGHT_CLIP = 20.          # same registered clip as the AWR amendment
 HARM_MIN_PLANS = 30        # owner health guard 3b
 BOOT_SEED = 20261101
 N_BOOT = 10000
-STATUSES = ('graded', 'stopped', 'failed')
+STATUSES = ('graded', 'stopped', 'failed', 'overlap_unresolved')
+N_FREEZE_TEMPERATURE = 20  # MAIN 2026-11-02: uniform weights before, then T frozen from the first 20 grades
 
 
 class PrefixMismatch(ValueError):
@@ -134,11 +134,14 @@ def job_specs(result, meta, noise_mode='crn'):
             raise ValueError('executed plan duration missing')
         t_end = window_end(t0, D, end)
         later = [int(x['time_s']) for _, x in starts if t0 < int(x['time_s']) < t_end]
+        others = other_plans(result, t0, D, t_end)
+        clash = sorted({v for o in others for v in o['members']} & set(plan['members']))
         spec = dict(
             schema=SCHEMA, experiment=EXPERIMENT, grade_id=grade_id(result['id'], t0),
             episode=dict(id=result['id'], world=result['world'], arm=meta['arm'], update=int(meta['update']),
                          run_root=str(meta.get('run_root', '')), result_path=str(meta.get('result_path', '')),
-                         result_sha256=result_sha, end_s=end, role=meta.get('role', 'train')),
+                         result_sha256=result_sha, end_s=end, role=meta.get('role', 'train'),
+                         training_seed=meta.get('training_seed')),
             policy=dict(checkpoint_path=str(meta['checkpoint_path']), checkpoint_sha256=meta['checkpoint_sha256'],
                         checkpoint_update=int(meta.get('checkpoint_update', int(meta['update'])-1))),
             rng=dict(noise_seed=int(meta['noise_seed']), generator='torch.Generator(cpu).manual_seed(noise_seed)',
@@ -154,10 +157,26 @@ def job_specs(result, meta, noise_mode='crn'):
             window=dict(start_s=t0, end_s=t_end, nominal_end_s=t0+D+TAIL_S, tail_s=TAIL_S,
                         truncated=t_end < t0+D+TAIL_S, metric=METRIC),
             overlapping_plan_starts=later,
-            sim_s=budget_sim_s_window(t_end),
+            replayed_plans=others,
+            overlap_unresolved=bool(clash), overlap_clash_members=clash,
+            sim_s=0 if clash else budget_sim_s_window(t_end),
         )
         specs.append(_seal(spec, 'spec_sha256'))
     return specs
+
+
+def other_plans(result, t0, duration_s, t_end):
+    """Every OTHER executed plan active in [t0, t_end) of the original episode (MAIN overlap rule):
+    replayed in the without-plan branch exactly as recorded (per-second absolute accelerations)."""
+    out = {}
+    for s in result['steps']:
+        t = int(s['time_s']);b = s['sample'].get('behaviour') or {}
+        if not (t0 <= t < t_end) or t0 <= t < t0+duration_s or 'absolute_accels' not in s['sample']:
+            continue
+        pid = b.get('plan_id');members = list(b.get('proposal_members') or s['sample']['absolute_accels'])
+        o = out.setdefault((pid, tuple(members)), dict(id=pid, members=members, first_s=t, last_s=t, seconds=0))
+        o['last_s'] = t;o['seconds'] += 1
+    return sorted(out.values(), key=lambda o: o['first_s'])
 
 
 def budget_sim_s_window(t_end):
@@ -226,19 +245,23 @@ def grade_controller_class():
     from .acceleration import Controller, requests
 
     class GradeController(Controller):
-        """Replays the recorded prefix, then the policy continues with no plan and no guide."""
+        """Replays the recorded prefix, then the graded plan's members follow the policy (no guide);
+        every OTHER plan active after t0 is replayed from its recorded per-second accelerations."""
 
-        def __init__(self, policy, generator, original_steps, t0, plan_members, arm, noise_mode='crn'):
+        def __init__(self, policy, generator, original_steps, t0, plan_members, arm, noise_mode='crn',
+                     duration_s=0):
             super().__init__(policy, generator, deterministic=False, guide=None, beta=0., replay=None, branch=None)
             self.by_time = {int(s['time_s']): s for s in original_steps}
             self.t0, self.plan_members, self.arm, self.mode = int(t0), list(plan_members), arm, noise_mode
+            self.duration = int(duration_s)
             missing = [t for t in range(WARMUP_S, self.t0+1) if t not in self.by_time]
             if missing:
                 raise ValueError(f'original tape lacks seconds {missing[:3]}')
             fast_forward(generator, [self.by_time[t] for t in range(WARMUP_S, self.t0)], arm)
             self.audit = dict(noise_mode_requested=noise_mode, noise_mode_used=None, crn_verified_t0=None,
                               crn_failure=None, aligned_until_s=None, live_steps=0,
-                              replayed_prefix_steps=0, without_plan_of=None)
+                              replayed_prefix_steps=0, without_plan_of=None, replayed_plans={},
+                              replay_skipped_member_seconds=0)
             self._aligned = True
 
         def apply(self, rows, commands, now):
@@ -268,23 +291,40 @@ def grade_controller_class():
                     self.mode = 'mean'
                     self.audit['crn_failure'] = 'live own action at t0 differs from the recorded own action'
                 self.audit['noise_mode_used'] = self.mode
+            orig = self.by_time.get(t)
+            changed = False
             if self.mode == 'mean':
                 with torch.no_grad():
                     mean, _ = self.policy(sample['context'])
                 for i, v in enumerate(sample['context']['members']):
                     if v in self.plan_members:
                         sample['action'][i] = [float(mean[i, 0])]
+                changed = True
+            replayed = None
+            if orig is not None and not (self.t0 <= t < self.t0+self.duration) and 'absolute_accels' in orig['sample']:
+                accels = dict(orig['sample']['absolute_accels'])
+                if set(accels) & set(self.plan_members):
+                    raise ValueError('other-plan replay touches the graded plan members (overlap_unresolved)')
+                sample['absolute_accels'] = accels
+                members = sample['context']['members']
+                for v, raw in accels.items():
+                    if v in members:
+                        sample['action'][members.index(v)] = [raw-commands[v]]
+                replayed = (orig['sample'].get('behaviour') or {}).get('plan_id')
+                key = str(replayed);self.audit['replayed_plans'][key] = self.audit['replayed_plans'].get(key, 0)+1
+                self.audit['replay_skipped_member_seconds'] += sum(v not in commands for v in accels)
+                changed = True
+            if changed:
                 desired = requests(sample, commands)
                 event['requests'] = desired
-            orig = self.by_time.get(t)
             if self._aligned and (orig is None or orig['sample']['context']['members'] != sample['context']['members']):
                 self._aligned = False
                 self.audit['aligned_until_s'] = t
             if orig is not None:
                 for c in guide_draws(orig, self.arm):
                     issue(self.generator, c)
-            sample['behaviour'] = dict(sample.get('behaviour') or {}, route='policy', executed=False,
-                                       exact_grade_branch='without_plan')
+            sample['behaviour'] = dict(sample.get('behaviour') or {}, route='plan_replay' if replayed else 'policy',
+                                       executed=False, replayed_plan_id=replayed, exact_grade_branch='without_plan')
             self.audit['live_steps'] += 1
             return desired
 
@@ -318,6 +358,8 @@ def grade(spec, original, runner):
 
     Raises PrefixMismatch (caller writes a STOP receipt)."""
     verify_sealed(spec, 'spec_sha256')
+    if spec.get('overlap_unresolved'):
+        raise ValueError('overlap_unresolved specs are never run')
     if original['id'] != spec['episode']['id']:
         raise ValueError('original episode identity mismatch')
     t0, t_end = spec['window']['start_s'], spec['window']['end_s']
@@ -329,6 +371,16 @@ def grade(spec, original, runner):
         raise ValueError('spec plan start not found in the original tape')
     branch = runner.run(spec, original)
     check_prefix(branch, original, t0)
+    audit = branch.get('audit') or {}
+    if 'replayed_plans' in audit:
+        expected = {}
+        for o in spec.get('replayed_plans', []):
+            o_end = min(o['last_s'], t_end-1)
+            n = sum(1 for s in original['steps'] if o['first_s'] <= int(s['time_s']) <= o_end
+                    and 'absolute_accels' in s['sample'] and not (t0 <= int(s['time_s']) < t0+spec['plan']['duration_s']))
+            expected[str(o['id'])] = expected.get(str(o['id']), 0)+n
+        if audit['replayed_plans'] != {k: v for k, v in expected.items() if v}:
+            raise ValueError('other-plan replay does not match the recorded plans')
     for s in branch.get('steps', []):
         if int(s['time_s']) >= t0 and (s['sample'].get('behaviour') or {}).get('executed'):
             raise ValueError('without-plan branch recorded an executed plan step')
@@ -343,9 +395,10 @@ def grade(spec, original, runner):
 def receipt(spec, body, attempt, started, **extra):
     r = dict(schema=SCHEMA, grade_id=spec['grade_id'], spec_sha256=spec['spec_sha256'],
              episode_id=spec['episode']['id'], world_seed=spec['episode']['world']['seed'],
-             result_path=spec['episode']['result_path'],
+             result_path=spec['episode']['result_path'], training_seed=spec['episode'].get('training_seed'),
              arm=spec['episode']['arm'], update=spec['episode']['update'], plan=spec['plan'],
              window=spec['window'], overlapping_plan_starts=spec['overlapping_plan_starts'],
+             replayed_plans=spec.get('replayed_plans', []), overlap_clash_members=spec.get('overlap_clash_members', []),
              charged_sim_s=spec['sim_s'], attempt=attempt, started_unix=started, finished_unix=time.time(),
              host=socket.gethostname(), pid=os.getpid(), sign='grade = J_without - J_with; positive = plan helped',
              **body, **extra)
@@ -492,6 +545,12 @@ class GradeQueue:
         if self.receipt(gid) is not None:
             return self.receipt(gid)              # idempotent: graded/stopped/failed are final
         spec = self.spec(gid)
+        if spec.get('overlap_unresolved'):     # MAIN overlap rule: no physics, no charge, never imputed
+            r = receipt(spec, dict(status='overlap_unresolved', grade_veh_s=None,
+                                   reason='another executed plan in the window shares members with this plan'),
+                        0, time.time())
+            _write_new(self.root/'receipts'/f'{gid}.json', r)
+            return r
         try:
             claim = self.claim(gid)
         except FileExistsError:
@@ -526,6 +585,20 @@ class GradeQueue:
             if r is not None:
                 done.append(r)
         return done
+
+    def frozen_temperature(self, arm, training_seed=None):
+        """Durable MAIN temperature: uniform until the 20th exact grade of this arm/seed, then frozen
+        (first write wins; TEMPERATURE_<arm>_<seed>.json is never rewritten)."""
+        path = self.root/f'TEMPERATURE_{arm}_{training_seed}.json'
+        if path.exists():
+            return temperature([], arm, training_seed, frozen=_read(path))
+        t = temperature(self.receipts(), arm, training_seed)
+        if t['temperature_veh_s'] is not None:
+            try:
+                _write_new(path, t)
+            except FileExistsError:
+                return temperature([], arm, training_seed, frozen=_read(path))
+        return t
 
     def receipts(self):
         out = []
@@ -582,7 +655,8 @@ def grade_controller(original_steps, spec):
         if guide is not None or replay is not None:
             raise ValueError('grade episodes must not construct a live guide or replay tape')
         holder['controller'] = cls(policy, generator, original_steps, spec['window']['start_s'],
-                                   spec['plan']['members'], spec['episode']['arm'], spec['rng']['noise_mode'])
+                                   spec['plan']['members'], spec['episode']['arm'], spec['rng']['noise_mode'],
+                                   spec['plan']['duration_s'])
         return holder['controller']
     original = accel_plant.Controller
     accel_plant.Controller = factory
@@ -653,48 +727,66 @@ def graded(receipts):
     return [r for r in receipts if r['status'] == 'graded']
 
 
-def temperature(receipts, fallback_veh_s, n_min=N_MIN_TEMPERATURE, floor=T_FLOOR_VEH_S):
-    """Registered rule: T = max(floor, RMS of ALL exact grades available at update time, both signs),
-    once >= n_min grades exist; before that the frozen AWR temperature (veh-s) is used."""
-    g = [float(r['grade_veh_s']) for r in graded(receipts)]
-    if len(g) < n_min:
-        return dict(temperature_veh_s=float(fallback_veh_s), rule='fallback_registered_awr_temperature', n=len(g))
-    return dict(temperature_veh_s=max(floor, float(np.sqrt(np.mean(np.square(g))))), rule='rms_all_exact_grades',
-                n=len(g))
+def _same(r, arm, training_seed):
+    return r['arm'] == arm and (training_seed is None or r.get('training_seed') == training_seed)
+
+
+def temperature(receipts, arm, training_seed=None, frozen=None, n_freeze=N_FREEZE_TEMPERATURE, floor=T_FLOOR_VEH_S):
+    """MAIN rule: before n_freeze exact grades exist in this arm/seed -> uniform weights (T=None);
+    at the n_freeze-th grade T = max(floor, RMS of those FIRST n_freeze grades, both signs, ordered by
+    receipt completion time) is frozen for the rest of the run. Pass the persisted record as ``frozen``."""
+    if frozen is not None:
+        verify_sealed(frozen, 'temperature_sha256')
+        if frozen['arm'] != arm or frozen.get('training_seed') != training_seed:
+            raise ValueError('frozen temperature belongs to another arm/seed')
+        return frozen
+    g = sorted((r for r in graded(receipts) if _same(r, arm, training_seed)),
+               key=lambda r: (r['finished_unix'], r['grade_id']))
+    if len(g) < n_freeze:
+        return dict(rule='uniform_before_freeze', arm=arm, training_seed=training_seed, n=len(g),
+                    n_freeze=n_freeze, temperature_veh_s=None)
+    first = [float(r['grade_veh_s']) for r in g[:n_freeze]]
+    return _seal(dict(rule='frozen_rms_first_exact_grades', arm=arm, training_seed=training_seed, n_freeze=n_freeze,
+                      floor_veh_s=floor, grade_ids=[r['grade_id'] for r in g[:n_freeze]], grades_veh_s=first,
+                      temperature_veh_s=max(floor, float(np.sqrt(np.mean(np.square(first)))))),
+                 'temperature_sha256')
 
 
 def weight(grade_veh_s, temperature_veh_s, clip=WEIGHT_CLIP):
+    """0 for non-positive grades; 1 (uniform) before the freeze; else min(clip, exp(g/T))."""
     if not math.isfinite(grade_veh_s):
         raise ValueError('nonfinite exact grade')
     if grade_veh_s <= 0:
         return 0.
+    if temperature_veh_s is None:
+        return 1.
     if temperature_veh_s <= 0 or clip < 1:
         raise ValueError('invalid registered temperature/clip')
     z = grade_veh_s/temperature_veh_s
     return float(clip) if z >= math.log(clip) else math.exp(z)
 
 
-def imitation_weights(receipts, temperature_veh_s, consumed=(), clip=WEIGHT_CLIP):
-    """Only exact-positive graded plans are imitated; stopped/failed/ungraded plans never are.
-
-    consumed: grade ids already imitated by an earlier update (each plan is imitated once)."""
-    consumed = set(consumed);out = {}
-    counts = dict(graded=0, positive=0, nonpositive=0, stopped=0, failed=0, already_consumed=0)
+def imitation_weights(receipts, arm, temperature_record, training_seed=None, clip=WEIGHT_CLIP):
+    """Buffer of ALL exact-positive graded plans of this arm/seed; every update imitates the whole buffer.
+    Stopped / failed / overlap_unresolved / ungraded / non-positive plans are never imitated."""
+    T = temperature_record['temperature_veh_s'];out = {}
+    counts = dict(graded=0, positive=0, nonpositive=0, stopped=0, failed=0, overlap_unresolved=0, other_arm=0)
     for r in receipts:
         verify_sealed(r, 'receipt_sha256')
+        if not _same(r, arm, training_seed):
+            counts['other_arm'] += 1;continue
         if r['status'] != 'graded':
             counts[r['status']] += 1;continue
         counts['graded'] += 1
         if r['grade_veh_s'] <= 0:
             counts['nonpositive'] += 1;continue
         counts['positive'] += 1
-        if r['grade_id'] in consumed:
-            counts['already_consumed'] += 1;continue
-        out[r['grade_id']] = dict(weight=weight(r['grade_veh_s'], temperature_veh_s, clip), grade_veh_s=r['grade_veh_s'],
+        out[r['grade_id']] = dict(weight=weight(r['grade_veh_s'], T, clip), grade_veh_s=r['grade_veh_s'],
                                   episode_id=r['episode_id'], result_path=r.get('result_path'),
                                   plan_id=r['plan']['id'], start_s=r['plan']['start_s'],
                                   duration_s=r['plan']['duration_s'], receipt_sha256=r['receipt_sha256'])
-    return dict(weights=out, counts=counts, temperature_veh_s=temperature_veh_s, clip=clip)
+    return dict(weights=out, counts=counts, temperature=temperature_record, clip=clip, arm=arm,
+                training_seed=training_seed, rule='whole exact-positive buffer every update')
 
 
 def imitation_pairs(original, entry):
@@ -727,16 +819,19 @@ def _bootstrap_mean(values, worlds, n_boot, seed):
     return mean, list(map(float, np.quantile(m, [.025, .975])))
 
 
-def trust_evidence(receipts, previous, n_boot=N_BOOT, seed=BOOT_SEED):
+def trust_evidence(receipts, previous, n_boot=N_BOOT, seed=BOOT_SEED, arm=None, training_seed=None):
     """Trust (beta) from exact grades only: world-cluster bootstrap of the mean paired grade
     (veh-s, positive = plans help), same decay rule as exploration.trust, pooled and per bucket.
     Also evaluates owner health guard 3b (>= 30 plans and CI upper bound < 0 -> pause)."""
     from .exploration import BUCKETS, bucket_beta, decay
     prior = previous if isinstance(previous, dict) else dict(beta=float(previous))
+    if arm is not None:
+        receipts = [r for r in receipts if _same(r, arm, training_seed)]
     g = graded(receipts)
     out = dict(beta=prior['beta'], buckets={}, estimand='exact paired SUMO grade J_without-J_with (veh-s)',
                graded=len(g), stopped=sum(r['status'] == 'stopped' for r in receipts),
-               failed=sum(r['status'] == 'failed' for r in receipts), worlds=len({r['world_seed'] for r in g}),
+               failed=sum(r['status'] == 'failed' for r in receipts),
+               overlap_unresolved=sum(r['status'] == 'overlap_unresolved' for r in receipts), worlds=len({r['world_seed'] for r in g}),
                harm_guard=dict(min_plans=HARM_MIN_PLANS, pause=False, ci95=None))
     if len(g) < 2 or out['worlds'] < 2:
         out.update(mean=None, ci95=None, reason='insufficient exact grades in two independent worlds')
@@ -757,7 +852,8 @@ def trust_evidence(receipts, previous, n_boot=N_BOOT, seed=BOOT_SEED):
 
 def lag_report(queue, update, now=None):
     """Per-update grading status and lag (s) from enqueue to receipt."""
-    now = now or time.time();rows = dict(pending=0, running=0, orphaned=0, graded=0, stopped=0, failed=0)
+    now = now or time.time()
+    rows = dict(pending=0, running=0, orphaned=0, graded=0, stopped=0, failed=0, overlap_unresolved=0)
     lags = []
     for gid in queue.ids():
         spec = _read(queue.root/'queue'/f'{gid}.json')
@@ -821,6 +917,56 @@ def exact_update(policy, optimizer, episodes, generator, pairs, coefficient=1., 
     return metrics
 
 
+# ---------------------------------------------------------------- smoke
+
+def smoke(run_root, episode_id, grade_root, binding=None, training_seed=None, t0=None, charge='accel',
+          phase='exact_grade', path_map=None):
+    """Grade ONE plan of one real completed training episode, once (idempotent by receipt).
+
+    Episode id format warm_u<UUU>_<B|R>_<world seed> (accel_runner.wave). Runtime, SUMO checkpoint,
+    accel bounds and warm_history come from the run's binding JSON (default <run_root>/WARM_BINDING.json)."""
+    import re
+    from .accel_storage import read
+    from .protocol import sha
+    m = re.fullmatch(r'warm_u(\d{3})_([BR])_(\d+)', episode_id)
+    if not m:
+        raise ValueError('expected a training episode id warm_uUUU_<B|R>_<seed>')
+    u, arm = int(m.group(1)), m.group(2)
+    run_root = Path(run_root)
+    if training_seed is None:
+        from .warm_protocol import SEED as training_seed
+    b = read(Path(binding) if binding else run_root/'WARM_BINDING.json')
+    missing = [k for k in ('runtime', 'checkpoint', 'accel_bounds') if k not in b]
+    if missing:
+        raise ValueError(f'binding lacks {missing}; pass --binding with the operational runtime binding')
+    result_path = run_root/'jobs'/episode_id/'RESULT.json';result = read(result_path)
+    ckpt = run_root/f'{arm}_checkpoint_{u-1:03}.pt'
+    meta = dict(run_root=str(run_root), result_path=str(result_path), result_sha256=digest(result), update=u, arm=arm,
+                checkpoint_path=str(ckpt), checkpoint_sha256=sha(ckpt), checkpoint_update=u-1,
+                noise_seed=train_noise_seed(result['world']['seed'], u, training_seed), training_seed=training_seed,
+                runtime=b['runtime'], sumo_checkpoint=b['checkpoint'], beta=b.get('beta', 1.),
+                warm_history=b.get('warm_history', False), accel_bounds=b['accel_bounds'])
+    specs = [x for x in job_specs(result, meta) if t0 is None or x['window']['start_s'] == int(t0)]
+    specs = [x for x in specs if not x['overlap_unresolved']] or specs
+    if not specs:
+        raise ValueError('no executed plan to grade in this episode')
+    q = GradeQueue(grade_root, charge=accel_charge(run_root, phase) if charge == 'accel' else None)
+    q.enqueue(specs[0])
+    return q.run_one(specs[0]['grade_id'], AccelPlantGradeRunner(grade_root, path_map),
+                     lambda x: load_original_from_disk(x, path_map))
+
+
+def summary(r):
+    keys = ('grade_id', 'status', 'grade_veh_s', 'J_with_veh_s', 'J_without_veh_s', 'charged_sim_s', 'reason')
+    out = {k: r.get(k) for k in keys}
+    out.update(window=r.get('window'), prefix_pass=(r.get('prefix') or {}).get('pass_'),
+               crn_verified_t0=(r.get('noise') or {}).get('crn_verified_t0'),
+               noise_mode_used=(r.get('noise') or {}).get('noise_mode_used'),
+               aligned_until_s=(r.get('noise') or {}).get('aligned_until_s'),
+               replayed_plans=(r.get('noise') or {}).get('replayed_plans'))
+    return out
+
+
 # ---------------------------------------------------------------- CLI
 
 def main(argv=None):
@@ -832,7 +978,20 @@ def main(argv=None):
     sup = sub.add_parser('supervise');sup.add_argument('--root', type=Path, required=True)
     sup.add_argument('--workers', type=int, default=4);sup.add_argument('--poll', type=float, default=10.)
     sup.add_argument('--once', action='store_true')
+    sm = sub.add_parser('smoke', help='grade one plan of one completed episode once')
+    sm.add_argument('--run-root', type=Path, required=True);sm.add_argument('--episode-id', required=True)
+    sm.add_argument('--grade-root', type=Path, required=True);sm.add_argument('--binding', type=Path)
+    sm.add_argument('--t0', type=int);sm.add_argument('--charge', choices=('accel', 'local'), default='accel')
+    sm.add_argument('--phase', default='exact_grade');sm.add_argument('--path-map', default='{}')
     a = p.parse_args(argv)
+    if a.cmd == 'smoke':
+        if os.name == 'posix':
+            os.nice(max(0, 19-os.nice(0)))
+        torch.set_num_threads(1)
+        r = smoke(a.run_root, a.episode_id, a.grade_root, a.binding, t0=a.t0, charge=a.charge, phase=a.phase,
+                  path_map=json.loads(a.path_map))
+        print(json.dumps(summary(r), sort_keys=True))
+        return r
     if a.cmd == 'supervise':
         return supervise(a.root, a.workers, a.poll, once=a.once)
     if os.name == 'posix':
