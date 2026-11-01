@@ -11,14 +11,19 @@ READONLY = Path('E:/agent-work/c4-coopnative/docs/paper_results/coopmwm')
 ROOT = '/root/coopmwm20261101_wmspeed2'
 
 
-def launch(tag, compact=False, mode='profile', H=60, K=2, width=4, lines=False, stage=False, fixture=0):
+def launch(tag, compact=False, mode='profile', H=60, K=2, width=4, lines=False, stage=False, fixture=0, host='gpuA', gpu=False):
     cpu = json.loads((READONLY/'CPU_coopmwm20261101_cpu36.json').read_text())
-    if stage:stage_frozen('gpuA', ROOT, cpu)
+    if stage:stage_frozen(host, ROOT, cpu)
     files = {name: (LOCAL/'tools/coopmwm'/name).read_text() for name in
              ('speed2.py','speed2_runtime.py','fused.py','plan_wm.py','plan_service.py','test_speed2_cpu.py')}
     fixture_text = (READONLY/'VOLUME_INPUTS_1854.json').read_text()
     source = f'''import pathlib,json,hashlib,subprocess,os,sys,time
 root=pathlib.Path({ROOT!r});assert root.parent.is_dir()
+if {gpu!r}:
+ inventory=subprocess.check_output(['nvidia-smi','--query-gpu=utilization.gpu,memory.used','--format=csv,noheader,nounits'],text=True)
+ active=subprocess.check_output(['nvidia-smi','--query-compute-apps=pid','--format=csv,noheader,nounits'],text=True).strip()
+ assert not active,'GPU compute owner present: '+active
+ assert all(int(row.split(',')[0])<5 for row in inventory.strip().splitlines()),inventory
 root.mkdir(exist_ok=True)
 snapshot=root
 hashes=json.loads({json.dumps(cpu['source_hashes'])!r})
@@ -39,19 +44,19 @@ for name,text in files.items():(overlay/name).write_text(text)
 manifest=dict(qualified_snapshot_sha256={hashlib.sha256((READONLY/'CPU_coopmwm20261101_cpu36.json').read_bytes()).hexdigest()!r},
  fixture_sha256=hashlib.sha256((run/'INPUTS.json').read_bytes()).hexdigest(),
  overlay_sha256={{name:hashlib.sha256((overlay/name).read_bytes()).hexdigest() for name in files}},
- frozen_sha256=hashes,CUDA_VISIBLE_DEVICES='',new_sumo_sim_s=0)
+  frozen_sha256=hashes,CUDA_VISIBLE_DEVICES='0' if {gpu!r} else '',new_sumo_sim_s=0)
 (run/'MANIFEST.json').write_text(json.dumps(manifest,sort_keys=True))
-env=dict(os.environ,CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',PYTHONPATH=str(run/'pytools')+':'+str(root/'pytools'))
+env=dict(os.environ,CUDA_VISIBLE_DEVICES='0' if {gpu!r} else '',SPEED2_DEVICE='cuda' if {gpu!r} else 'cpu',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',PYTHONPATH=str(run/'pytools')+':'+str(root/'pytools'))
 with (run/'RUN.log').open('x') as log:
  p=subprocess.Popen([sys.executable,'-B','-u','-m','tools.coopmwm.speed2',{mode!r},'--root',str(run),'--H',{str(H)!r},'--K',{str(K)!r},'--width',{str(width)!r},'--fixture-index',{str(fixture)!r}]+({compact!r} and ['--speed2'] or [])+({lines!r} and ['--lines'] or []),env=env,cwd=root,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
-owner=dict(pid=p.pid,start_ticks=pathlib.Path(f'/proc/{{p.pid}}/stat').read_text().split()[21],root=str(run),CUDA_VISIBLE_DEVICES='',new_sumo_sim_s=0)
+owner=dict(pid=p.pid,start_ticks=pathlib.Path(f'/proc/{{p.pid}}/stat').read_text().split()[21],root=str(run),host={host!r},CUDA_VISIBLE_DEVICES=env['CUDA_VISIBLE_DEVICES'],new_sumo_sim_s=0)
 (run/'OWNER.json').write_text(json.dumps(owner));print(json.dumps(owner))
 '''
-    print(ssh.remote('gpuA', source, timeout=45))
+    print(ssh.remote(host, source, timeout=45))
 
 
-def status(tag):
-    print(ssh.remote('gpuA', f'''import pathlib,json
+def status(tag, host='gpuA'):
+    print(ssh.remote(host, f'''import pathlib,json
 r=pathlib.Path({ROOT!r})/{tag!r}
 print((r/'RUN.log').read_text()[-16000:])
 if (r/'BASELINE.json').exists():print((r/'BASELINE.json').read_text())
@@ -84,9 +89,29 @@ print(json.dumps(dict(pending=sorted(pending))))
 ''', timeout=seconds+30))
 
 
+def collect(tag, host):
+    from .storage import write
+    value=json.loads(ssh.remote(host,f'''import pathlib,json
+r=pathlib.Path({ROOT!r})/{tag!r};out={{'host':{host!r},'tag':{tag!r},'root':str(r)}}
+for name in ('OWNER','ENVIRONMENT','PARITY','BASELINE','TESTS','QUALIFICATION','FAILED'):
+ p=r/(name+'.json')
+ if p.exists():out[name]=json.loads(p.read_text())
+m=json.loads((r/'MANIFEST.json').read_text())
+out['manifest']={{k:v for k,v in m.items() if k!='frozen_sha256'}}
+out['log_tail']=(r/'RUN.log').read_text()[-2000:]
+o=out['OWNER'];p=pathlib.Path('/proc')/str(o['pid'])/'stat'
+out['owned_process_alive']=p.exists() and p.read_text().split()[21]==o['start_ticks'] and p.read_text().split()[2]!='Z'
+print(json.dumps(out))
+''',timeout=30))
+    target=LOCAL/'docs/paper_results/coopmwm'/f'WMSPEED2_{host}_{tag}.json'
+    write(target,value)
+    print(json.dumps(dict(receipt=str(target),alive=value['owned_process_alive'],
+        result={k:v for k,v in value.get('PARITY',{}).items() if k not in ('reference','optimized')})))
+
+
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
-    p.add_argument('mode', choices=('launch', 'status','wait'))
+    p.add_argument('mode', choices=('launch', 'status','wait','collect'))
     p.add_argument('tag')
     p.add_argument('--compact', action='store_true')
     p.add_argument('--job-mode',choices=('profile','parity','tests','qualification'),default='profile')
@@ -97,8 +122,11 @@ if __name__ == '__main__':
     p.add_argument('--stage',action='store_true',help='stage the frozen CPU36 snapshot on first use')
     p.add_argument('--fixture-index',type=int,choices=range(4),default=0)
     p.add_argument('--wait-seconds',type=int,default=600)
+    p.add_argument('--host',choices=('gpuA','gpuR'),default='gpuA')
+    p.add_argument('--gpu',action='store_true')
     a = p.parse_args()
     assert all(re.fullmatch('[A-Za-z0-9_-]+',tag) for tag in a.tag.split(','))
-    if a.mode == 'launch':launch(a.tag, a.compact, a.job_mode, a.H,a.K,a.width,a.lines,a.stage,a.fixture_index)
-    elif a.mode == 'status':status(a.tag)
+    if a.mode == 'launch':launch(a.tag, a.compact, a.job_mode, a.H,a.K,a.width,a.lines,a.stage,a.fixture_index,a.host,a.gpu)
+    elif a.mode == 'status':status(a.tag,a.host)
+    elif a.mode == 'collect':collect(a.tag,a.host)
     else:wait(a.tag.split(','),a.wait_seconds)

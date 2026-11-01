@@ -34,14 +34,15 @@ def cpu_function(fn):
 
 
 def setup(root):
-    assert os.environ.get('CUDA_VISIBLE_DEVICES') == '', 'hide CUDA before Python starts'
+    gpu = os.environ.get('SPEED2_DEVICE') == 'cuda'
+    assert gpu or os.environ.get('CUDA_VISIBLE_DEVICES') == '', 'hide CUDA before CPU Python starts'
     import torch
     from tools.wmteach import runtime
     from . import plan_wm
     from .wm import cost_adapter
     torch.set_num_threads(1)
-    rt = cpu_function(runtime.bootstrap)()
-    runtime.move = cpu_function(runtime.move)
+    rt = runtime.bootstrap() if gpu else cpu_function(runtime.bootstrap)()
+    if not gpu:runtime.move = cpu_function(runtime.move)
     rt.frozen.costs = cost_adapter(rt.frozen.costs, json.loads((root/'FROZEN_COSTS.json').read_text())['code'])
     original = plan_wm.adapted_futures
     def adapted(horizons):
@@ -53,7 +54,7 @@ def setup(root):
         code = fn.__code__.replace(co_consts=tuple('cpu' if x == 'cuda' else x for x in fn.__code__.co_consts))
         ns['futures'] = types.FunctionType(code, ns, fn.__name__, fn.__defaults__)
         return ns
-    plan_wm.adapted_futures = adapted
+    if not gpu:plan_wm.adapted_futures = adapted
     source = json.loads((root/'INPUTS.json').read_text())['records'][int(os.environ.get('SPEED2_FIXTURE_INDEX','0'))]
     commands = {r['vid']: 0. for r in source['rows'] if r['is_cav']}
     record = dict(state_id=source['state_id'], world_id=source['world_id'], rows=source['rows'],
@@ -125,41 +126,47 @@ def reference(root):
 
 def parity(root, H, K, width):
     import torch
-    print('BOOTSTRAP_CPU', flush=True)
+    print('BOOTSTRAP',os.environ.get('SPEED2_DEVICE','cpu'), flush=True)
     rt, record, acts = setup(root)
     from .plan_wm import evaluate
     old = reference(root)
     tapes = []
     costs = rt.frozen.costs
     def capture(roll, entries, initial):
-        tapes.append({k: roll[k].clone() for k in ('positions','speeds','lanes','masks','accel')})
+        tapes.append({k: roll[k].detach().cpu().clone() for k in ('positions','speeds','lanes','masks','accel')})
         return costs(roll, entries, initial)
     rt.frozen.costs = capture
     hs = tuple(h for h in (60,120,300) if h <= H)
-    start = time.perf_counter()
+    def sync():
+        if os.environ.get('SPEED2_DEVICE') == 'cuda':torch.cuda.synchronize()
+    sync();start = time.perf_counter()
     print('REFERENCE', H, K, width, flush=True)
     before = old(rt, record, acts, K, H, chunk_actions=width, trim=False,
                  pad_actions=width, horizons=hs)
-    old_wall = time.perf_counter()-start
+    sync();old_wall = time.perf_counter()-start
     expected = tapes[:]
     tapes.clear()
-    start = time.perf_counter()
+    sync();start = time.perf_counter()
     print('OPTIMIZED', H, K, width, flush=True)
     after = evaluate(rt, record, acts, K, H, chunk_actions=width, trim=False,
                      pad_actions=width, horizons=hs, speed2=True)
-    new_wall = time.perf_counter()-start
+    sync();new_wall = time.perf_counter()-start
     worst = max(abs(x['team_delay']-y['team_delay']) for h in before for a in before[h]
                 for x,y in zip(before[h][a], after[h][a]))
     rank = lambda values: sorted(values, key=lambda a: (sum(v['team_delay'] for v in values[a]), a))
     rankings = all(rank(before[h]) == rank(after[h]) for h in before)
+    draws = all(x['draw_id']==y['draw_id'] for h in before for a in before[h]
+                for x,y in zip(before[h][a],after[h][a]))
     from .speed2_runtime import trajectory_errors
     errors = trajectory_errors(expected,tapes)
-    result = dict(pass_=worst<=.001 and rankings and max(errors.values())<=.001,
+    result = dict(pass_=worst<=.001 and rankings and draws and max(errors.values())<=.001,
         max_cost_error_veh_s=worst, identical_candidate_ranking=rankings,
+        identical_draw_ids=draws,
         trajectory_errors=errors, reference_wall_s=old_wall, optimized_wall_s=new_wall,
         speedup=old_wall/new_wall, reference_future_steps_per_s=K*max(4,width)*2*H/old_wall,
         optimized_future_steps_per_s=K*max(4,width)*2*H/new_wall,
         H=H,K=K,width=width,horizons=hs,state_id=record['state_id'],
+        device=os.environ.get('SPEED2_DEVICE','cpu'),timing_includes_trajectory_capture=True,
         reference=before,optimized=after,new_sumo_sim_s=0)
     save(root/'PARITY.json', result)
     print(json.dumps({k:v for k,v in result.items() if k not in ('reference','optimized')}),flush=True)
