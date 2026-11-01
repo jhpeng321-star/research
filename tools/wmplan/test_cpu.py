@@ -17,7 +17,7 @@ class Contracts(unittest.TestCase):
     def test_remote_operations_compile_before_dispatch(self):
         from tools.wmplan import ops
         scripts = 0
-        for name in ('ops.py','mirror.py','bridge.py','watch.py'):
+        for name in ('ops.py','mirror.py','bridge.py','watch.py','restart.py'):
             tree = ast.parse(Path(ops.__file__).with_name(name).read_text(encoding='utf-8'))
             for node in ast.walk(tree):
                 if (isinstance(node,ast.Call) and
@@ -155,6 +155,31 @@ class Contracts(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,'BITWISE'):
                 live.episode(Path('synthetic'),panel()[0],'expected')
         self.assertEqual(events,['stop','close'])
+
+    def test_bounded_supervisor_never_queues_remaining_panel_after_fault(self):
+        from concurrent.futures import Future
+        from tools.wmplan import live
+        submitted = []
+        class Pool:
+            def submit(self,fn,root,world,arm):
+                submitted.append(world)
+                f = Future()
+                if len(submitted) == 1:
+                    f.set_exception(ValueError('new fault, stop'))
+                else:
+                    f.set_result(dict(seed=world['seed'],arm=arm))
+                return f
+        with self.assertRaisesRegex(ValueError,'new fault'):
+            live.run_panel(Pool(),Path('synthetic'),panel(),'expected',2)
+        self.assertEqual(len(submitted),2)
+
+    def test_guarded_episode_stops_on_constructor_failure(self):
+        from tools.wmplan import live
+        with patch.object(live,'episode',side_effect=ValueError('constructor fault')), \
+             patch.object(live,'stop') as durable_stop:
+            with self.assertRaisesRegex(ValueError,'constructor fault'):
+                live.guarded_episode(Path('synthetic'),panel()[0],'expected')
+        durable_stop.assert_called_once()
 
 
 if __name__ == '__main__':

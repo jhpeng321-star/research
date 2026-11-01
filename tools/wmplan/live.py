@@ -1,5 +1,5 @@
 """Two planner arms, reused baselines, all-executed-group exact credit."""
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, wait, FIRST_COMPLETED
 from copy import deepcopy
 import gzip
 import json
@@ -31,11 +31,19 @@ def verify(root):
             raise ValueError('immutable source/artifact: '+name)
     if b['model']['selected'] not in ('FULL-v4','FULL-v5'):
         raise ValueError('preregistered model')
+    if 'restart' in b:
+        r = b['restart']
+        if (r['prior_charged_sim_s'],r['prior_actual_sim_s'],r['new_run_upper_sim_s'],
+                r['combined_charged_upper_sim_s'],r['combined_actual_upper_sim_s']) != (3600,900,195840,199440,196740):
+            raise ValueError('approved restart accounting')
+        if (b['model']['selected'] != 'FULL-v4' or
+                '15:55' not in read(root/'RESTART_APPROVAL.json')['line']):
+            raise ValueError('approved engineering restart only')
     return b
 
 
 def charge(root, ident, seconds, world, kind):
-    verify(root)
+    binding = verify(root)
     if world not in panel() or kind not in ('paired','credit'):
         raise ValueError('registered world/kind')
     arm = ident.split('_')[1]
@@ -48,6 +56,8 @@ def charge(root, ident, seconds, world, kind):
             raise ValueError('duplicate attempt; no retry/refund')
         if sum(r['sim_s'] for r in ledger)+seconds > budget()['total']:
             raise ValueError('global cap')
+        if 'restart' in binding and sum(r['sim_s'] for r in ledger)+seconds > binding['restart']['new_run_upper_sim_s']:
+            raise ValueError('restart combined charge cap, no prior refund')
         prior = [r for r in ledger if (r['seed'],r['arm'],r['kind']) == (world['seed'],arm,kind)]
         if sum(r['sim_s'] for r in prior)+seconds > (CREDIT if kind == 'credit' else 1200):
             raise ValueError('disjoint world-arm quota')
@@ -168,12 +178,21 @@ def run(root):
                     raise RuntimeError('GPU startup fault before physics')
                 time.sleep(1)
             with ProcessPoolExecutor(binding['workers'],mp_context=multiprocessing.get_context('spawn')) as pool:
+                smoke_world = None
+                if 'restart' in binding:
+                    smoke_world = panel()[0]
+                    result = pool.submit(guarded_episode,root,smoke_world,'expected').result()
+                    write(root/'SMOKE_COMPLETE.json',dict(**result,unix=time.time(),
+                          result_sha256=sha(root/'jobs'/f's{smoke_world["seed"]}_expected'/'RESULT.json')))
+                    while not (root/'SMOKE_APPROVED.json').is_file():
+                        if (root/'STOP.json').exists():
+                            raise RuntimeError('STOP at smoke gate; no retry')
+                        time.sleep(2)
                 for arm in ARMS:
                     # Owner14:48: publish the entire primary arm before starting
                     # any secondary episode. No outcome controls this ordering.
-                    jobs = [pool.submit(episode,root,w,arm) for w in panel()]
-                    for f in as_completed(jobs):
-                        print(json.dumps(dict(event='EPISODE_COMPLETE',**f.result())),flush=True)
+                    worlds = [w for w in panel() if not (arm == 'expected' and w == smoke_world)]
+                    run_panel(pool,root,worlds,arm,binding['workers'])
                     write(root/f'ARM_COMPLETE_{arm}.json',dict(arm=arm,worlds=24,unix=time.time()))
                     if arm == 'expected':
                         while not (root/'PRIMARY_REPORTED.json').is_file():
@@ -184,6 +203,39 @@ def run(root):
         except BaseException:
             stop(root,traceback.format_exc())
             raise
+
+
+def guarded_episode(root,world,arm):
+    """Include setup/warmup constructor faults in immediate durable STOP."""
+    try:
+        if (root/'STOP.json').exists():
+            raise RuntimeError('STOP before episode admission')
+        return episode(root,world,arm)
+    except BaseException:
+        stop(root,traceback.format_exc())
+        raise
+
+
+def run_panel(pool,root,worlds,arm,workers):
+    """Bound admission to active slots; no queued panel after a failed Future."""
+    remaining = iter(worlds)
+    active = set()
+    def submit():
+        if (root/'STOP.json').exists():
+            raise RuntimeError('STOP before next episode; no retry')
+        world = next(remaining,None)
+        if world is not None:
+            active.add(pool.submit(guarded_episode,root,world,arm))
+    for _ in range(workers):
+        submit()
+    while active:
+        done,_ = wait(active,return_when=FIRST_COMPLETED)
+        # Resolve all completed Futures before admitting another episode.
+        results = [f.result() for f in done]
+        active.difference_update(done)
+        for result in results:
+            print(json.dumps(dict(event='EPISODE_COMPLETE',**result)),flush=True)
+            submit()
 
 
 if __name__ == '__main__':

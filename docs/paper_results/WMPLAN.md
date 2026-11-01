@@ -1,8 +1,8 @@
 # S-WMPLAN — world-model-guided cooperative planner
 
 ## Plain-language status
-**The live test stopped on an executor-wiring error. There is no live efficacy
-result and no evidence here that the planner beats MAPPO.** Three primary-arm
+**MAIN approved the engineering restart at 15:55; it is being prepared with a
+one-episode fail-fast smoke gate. There is no live efficacy result yet.** The original test stopped on an executor-wiring error. Three primary-arm
 attempts reached the 300-second warmup; none ran a post-warmup physics step or
 completed an episode. A durable STOP was written immediately when the abnormal
 close was detected. All owned local and remote services have now exited.
@@ -11,8 +11,8 @@ The error was a missing `initial_rows` field between the online planner and the
 inherited executor. The observable roster is now attached exactly as in
 `coopplan.runner`; the repair is committed as `e492210c` and 30 CPU tests pass,
 including the real plant adapter. The stopped immutable run was preserved, and
-the repair has **not** been dispatched. The registered plan forbids retries;
-an explicit owner amendment is required before an engineering restart.
+the repair has **not yet** been dispatched. MAIN's 15:55 amendment authorizes one
+new attempt per episode; any new fault stops the run and is reported.
 
 Accounting is **900 actual sim-s; 3,600 charged sim-s, with no refund**. The strict
 arm and all group-twin simulations remain unstarted. Both GPUs produced forecasts;
@@ -64,7 +64,7 @@ STOP, traceback and exited ownership identities. `FAULT_REGISTRATION.json` is th
 shared registration receipt. Original claims, startup-gate failures, mirror
 manifests, transferred files and every forecast remain preserved.
 
-## Engineering restart proposal — NOT APPROVED / NOT DISPATCHED
+## Engineering restart — APPROVED 15:55 / not yet dispatched
 The same model, panel, decision rules, credit quotas, executors and expected-first
 reporting order can fit under the owner's original cap if a restart is explicitly
 authorized. The tighter mathematical bound is:
@@ -74,10 +74,14 @@ authorized. The tighter mathematical bound is:
 - New run upper: 195,840 sim-s; plus all 3,600 existing charges = **199,440 charged
   sim-s**, below 200,000. Worst-case combined actual is 195,840 + 900 = **196,740 sim-s**.
 
-This proposal refunds no prior charge, changes no behavioural rule, and would
-reuse the completed forecasts rather than duplicate them. It is only a feasible
-recovery bound; it does not amend the registered no-retry rule or arm a dispatch.
-See `wmplan/RESTART_PROPOSAL.json`.
+The owner delegated approval to MAIN, whose 15:55 amendment is in the shared
+registration. It refunds no prior charge and changes no behavioural rule. The
+first expected-arm world (984000) is the smoke and counts toward the 24 primary
+worlds and 48 total episodes; it is not an extra episode. After its full-episode
+integrity check, run the other 23 primary worlds on both GPUs, commit the verified
+primary report, then release strict. Completed forecasts are reused. The stopped
+v1 root and original proposal remain preserved; v2 uses a new immutable root.
+See `wmplan/RESTART_PROPOSAL.json` and `wmplan/restart_v2/APPROVAL.json`.
 
 ## Recovered authority and evidence
 - Branch `c4/wmplan`, clean initial HEAD `df52de61`, inherited from S-WMTEACH.
@@ -135,12 +139,13 @@ gate evidence are retained in `wmplan/`.
 
 <!-- WMPLAN-PROGRESS:BEGIN -->
 ## Current continuation status
-- Terminal STOP; all owned local/remote services exited. No automatic continuation
-  or replacement dispatch is armed.
+- Original v1 terminal STOP preserved; all its owned local/remote services exited.
+  Ownership rechecked before preparing the separately approved v2 restart.
 - Actual 900 / charged 3,600 sim-s; 3 failed warmups, 0 complete episodes, 0 controlled
   post-warmup steps, 0 executed groups, 0 strict attempts. No J600/J900/CI estimate.
 - Three complete K8 states/24 futures retained; source/receipt hashes verified.
-- Local executor-ABI/fail-fast repair `e492210c`: 30 CPU PASS, not deployed to the
-  preserved stopped root. Restart proposal 199,440 charged upper awaits an explicit
-  amendment to the registered no-retry plan.
+- Local executor-ABI repair `e492210c`: 30 CPU PASS; unchanged stopped v1 root.
+  MAIN15:55 approved the 199,440 charged / 196,740 actual combined upper. V2 adds
+  a first-episode smoke gate and bounded active-slot admission so failed work
+  cannot leave a queued panel. FULL-v4 and all scientific decision rules stay fixed.
 <!-- WMPLAN-PROGRESS:END -->

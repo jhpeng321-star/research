@@ -13,6 +13,10 @@ import traceback
 from tools.wmplan import ops
 
 GROOT = '/root/wmplan20261101_v1'
+TAG = os.environ.get('WMPLAN_RELAY_TAG','wmplan_gpuR')
+if os.environ.get('WMPLAN_RUN_ROOT'):
+    ops.ROOT = os.environ['WMPLAN_RUN_ROOT']
+    ops.OUT = Path(os.environ['WMPLAN_RECEIPT_DIR'])
 
 
 def next_message(process):
@@ -63,7 +67,7 @@ def main():
     command = (f'cd {GROOT} && {env} nice -n 19 /root/miniconda3/bin/python -B -u '
                f'-m tools.wmplan.predict {GROOT} --worker 1 --stdio')
     assert (ops.LOCAL/'_out').is_dir()
-    with (ops.LOCAL/'_out'/'wmplan_gpuR_stderr.log').open('x',encoding='utf-8') as err:
+    with (ops.LOCAL/'_out'/(TAG+'_stderr.log')).open('x',encoding='utf-8') as err:
         process = subprocess.Popen(['ssh','-o','BatchMode=yes','-o','ConnectTimeout=10',
                                     'gpuR',command],stdin=subprocess.PIPE,stdout=subprocess.PIPE,
                                    stderr=err,text=True,encoding='utf-8',bufsize=1)
@@ -118,7 +122,7 @@ print('durable STOP; no retry')
 def launch():
     assert (ops.LOCAL/'_out').is_dir()
     assert not (ops.OUT/'GPU_R_RELAY.json').exists()
-    with (ops.LOCAL/'_out'/'wmplan_gpuR_relay.log').open('x',encoding='utf-8') as log:
+    with (ops.LOCAL/'_out'/(TAG+'_relay.log')).open('x',encoding='utf-8') as log:
         p = subprocess.Popen([sys.executable,'-B','-u','-m','tools.wmplan.bridge'],
             cwd=ops.LOCAL,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP if os.name=='nt' else 0)
