@@ -119,5 +119,55 @@ class Contracts(unittest.TestCase):
         self.assertEqual(registry_conflicts('another task986000..986083'),[1])
         with self.assertRaises(ValueError):guard(worlds('check')[0],'train')
 
+    def test_frozen_batched_K8_adapter_H90_structure(self):
+        from .wm import adapted_futures
+        ns=adapted_futures()
+        self.assertIn('futures',ns)
+        self.assertIn(180,ns['futures'].__code__.co_consts)
+        self.assertIn((90,),ns['futures'].__code__.co_consts)
+
+    def test_random_window_selection_uses_only_eligibility_not_credit(self):
+        from .runner import select_calibration
+        episodes=[dict(world=dict(cell=i,seed=986000+i),steps=[
+            dict(time_s=300+j*10,group=['a','b'],wm_credit=(-1)**j*10000) for j in range(5)]) for i in range(12)]
+        first,missing=select_calibration(episodes)
+        self.assertFalse(missing)
+        changed=copy.deepcopy(episodes)
+        for ep in changed:
+            for s in ep['steps']:s['wm_credit']*=-1
+        second,_=select_calibration(changed)
+        self.assertEqual([s['time_s'] for ep,s in first],[s['time_s'] for ep,s in second])
+
+    def test_runner_CPU_fake_episode_and_exact_prefix(self):
+        import tempfile
+        from types import SimpleNamespace
+        from .plant import episode
+        from tools.leverprobe import backend as exact
+        from tools.coopfree import backend as cf
+        r=rows()
+        class Fake:
+            def __init__(self,*args):
+                self.env=SimpleNamespace(now=300);self.actual=300.
+                self.totals=dict.fromkeys(('team_delay_vs','road_delay_vs','source_wait_vs','collisions',
+                    'teleports','ttc_below_3_vs','hard_brake'),0.)
+            def fingerprint(self):return dict(time_s=self.env.now,J=self.totals['team_delay_vs'])
+            def close(self):pass
+        def tick(b,c,trace):
+            c.apply(r,{x['vid']:.2 for x in r if x['is_cav']},b.env.now)
+            b.env.now+=1;b.actual+=1
+            b.totals['team_delay_vs']+=5
+            b.totals['road_delay_vs']+=2;b.totals['source_wait_vs']+=3
+            return []
+        with tempfile.TemporaryDirectory() as temp:
+            job=dict(id='cpu',path=temp,world=worlds()[0],role='train',arm='A',
+                weights=Policy().state_dict(),runtime='unused',checkpoint='unused',noise_seed=1,
+                deterministic=True,sim_s=1200)
+            with patch.object(exact,'setup'),patch.object(exact,'Backend',Fake),patch.object(cf,'tick',tick):
+                result=episode(job)
+            self.assertEqual(result['actual_sim_s'],1200)
+            self.assertEqual(len(result['steps']),90)
+            self.assertEqual(sum(s['reward'] for s in result['steps']),-4500.)
+            self.assertEqual(result['metrics']['600']['team_delay_vs'],3000.)
+
 
 if __name__=='__main__':unittest.main()

@@ -3,7 +3,7 @@ import argparse
 import json
 from pathlib import Path
 from tools.coopbandit import ops as ssh
-from .protocol import checked,sha,budget
+from .protocol import checked,sha,budget,worlds,registry_conflicts,REGISTRY,FORBIDDEN,authority
 
 LOCAL=Path(__file__).resolve().parents[2]
 EVIDENCE=LOCAL/'docs/paper_results/coopmwm'
@@ -18,6 +18,7 @@ def sources():
     for package,base in [('coopmwm',LOCAL),('coopnative',LOCAL),('coopfree',LOCAL),
                          ('coopbandit',LOCAL),('leverprobe',Path('E:/agent-work/c4-leverprobe')),
                          ('coopbehav',Path('E:/agent-work/c4-coopbehav')),
+                         ('coopplan',Path('E:/agent-work/c4-coopplan')),
                          ('wmteach',Path('E:/agent-work/c4-wmteach'))]:
         for p in (base/'tools'/package).glob('*.py'):
             files[f'tools/{package}/{p.name}']=checked(p).read_text(encoding='utf-8')
@@ -64,11 +65,39 @@ print(json.dumps(dict(pass_=result.wasSuccessful(),tests=result.testsRun,skips=l
     if not receipt['pass_'] or receipt['skips']:raise ValueError('CPU tests failed; preserve receipt')
 
 
+def audit():
+    from .storage import write
+    registry=checked(REGISTRY).read_text(encoding='utf-8');authority(registry)
+    conflicts=registry_conflicts(registry)
+    if conflicts:raise ValueError('seed conflicts '+str(conflicts))
+    seeds=[w['seed'] for role in ('train','check') for w in worlds(role)]
+    reports=[]
+    for host,home in [('cpuQ','/home/ubuntu'),('gpuA','/root'),('gpuR','/root')]:
+        result=json.loads(ssh.remote(host,f'''import os,pathlib,re,json,time
+forbidden=re.compile({FORBIDDEN.pattern!r},re.I)
+ident=re.compile(r'(?<![0-9a-fA-F.])(?:s|w)?(?:'+'|'.join(map(str,{seeds!r}))+r')(?![0-9a-fA-F])')
+hits=[];count=0
+for parent,dirs,files in os.walk({home!r}):
+ dirs[:]=[d for d in dirs if d not in ('.git','__pycache__','miniconda3','.cache','.npm','.rustup','.local') and not forbidden.search(str(pathlib.Path(parent)/d)) and not (pathlib.Path(parent)/d).is_symlink()]
+ for name in dirs+files:
+  p=pathlib.Path(parent)/name
+  if forbidden.search(str(p)):continue
+  count+=1
+  if ident.search(name):hits.append(str(p))
+print(json.dumps(dict(host={host!r},safe_names=count,hits=hits,pass_=not hits,load=os.getloadavg(),unix=time.time())))
+''',timeout=60))
+        write(EVIDENCE/f'EXPOSURE_{host}.json',dict(result,registry_sha256=sha(REGISTRY),sim_s=0))
+        reports.append(result)
+        print(json.dumps(result))
+    return dict(pass_=all(r['pass_'] for r in reports),reports=reports,conflicts=conflicts)
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=['cpu','stage'])
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=['cpu','stage','audit'])
     p.add_argument('--root',default=CPU_ROOT);p.add_argument('--host',default='cpuQ')
     a=p.parse_args()
     if a.mode=='cpu':cpu(a.root)
+    elif a.mode=='audit':audit()
     else:
         r=json.loads(stage(a.host,a.root))
         print(json.dumps(dict(root=r['root'],files=len(r['hashes']))))
