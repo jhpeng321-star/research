@@ -36,7 +36,7 @@ def build_source_index(kind,root,out):
                 reason="Audit crop lacks length_m/is_cav and mainline neighbours"
                 if not corrected: reason+=", with non-wall executed commands unavailable in v1"
                 status["blocked"].append(dict(job=jobdir.name,
-                    branch_mode=result.get("branch_mode","historical_saved_state"),reason=reason))
+                    branch_mode=result.get("branch_mode","unspecified"),reason=reason))
                 continue
             if kind!="sumocf": raise ValueError("Unknown source adapter")
             job=result.get("job",{})

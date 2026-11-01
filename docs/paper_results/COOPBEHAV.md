@@ -235,13 +235,49 @@ The second-largest has `C_G=74.78veh-s` and `D_G=74.78veh-s`. These post-selecte
 training observations require independent deployed-policy replication. Cluster
 overlap is descriptive co-occurrence, not proof that a detector caused the gain.
 
+## Corrected S-COOPMEASURE v2 coverage (2026-11-02 recovery)
+
+The producer's corrected full-prefix audit is complete. Its observable export is
+local at `E:/agent-work/c4-coopmeasure/tools/coopaudit/evidence/v2_complete/`;
+the contract is `tools/coopaudit/TRACE_HANDOFF.md` in that worktree. Recovery
+verified **all 247 gzip SHA256s** against `COLLECTION.json`, and reconciled all
+**231 production files** against `v2_analysis/TRACE_MANIFEST.csv` (SHA256, rows,
+minimum/maximum clock). These cover **21 eligible production worlds** of the
+28 prospective worlds, with seven missing groups; the other 16 files are the
+separate mechanics canary. Receipt: `tools/coopbehav/evidence/COOPAUDIT_V2_COVERAGE.json`.
+
+Across 528,644 vehicle-frame rows, **none contains vehicle length, per-row CAV
+status or controller status**. All rows are frozen members or ramp-observed
+vehicles; no additional mainline leader/follower rows are exported. In contrast
+to historical v1, non-null issued-safe requests **are** present for MAPPO and
+SUMOCF (production 6,609/6,611 rows respectively), as well as wall (32 rows).
+These are vehicle-frame observations of requests, not independent control ticks
+and not realised acceleration. The inherited scanner's obsolete v1/non-wall-
+command blocker has been corrected for full-prefix v2.
+
+Consequently yield-slot geometry, unaccepted gap openings, overlapping-body walls,
+fixed follower chains and neighbour-complete discovery signatures remain
+**unidentifiable from this crop**. The coverage receipt uses null detector counts,
+never fabricated zero events or default lengths. Producer cost/credit evidence is
+separate from geometric identifiability. A complete normalized ready index with
+observable lengths, mainline neighbours and explicit release status can be consumed
+by the existing watcher. No new simulator run is part of this analysis task.
+
+The canonical SUMOCF index still selects the already-completed u15 TRAIN report.
+A read-only inspection of published `COOPBEHAV_dev_u*_INDEX.json` files found
+only the existing u03 and scope-corrected u03 full-fleet indices; no newer ready
+deployed-policy behaviour export was present. Existing reports were retained
+without regeneration, and no additional report worker was dispatched.
+
 ## Runtime, checks and continuing handoff
 
-- CPU suite: **54 synthetic tests** covering all four detectors, identity/slot
+- CPU suite: **59 synthetic tests** covering all four detectors, identity/slot
   recycling, native/policy-mean contracts, credit reconstruction, discovery,
-  source precision/hashes, complete reports and advancing-index publication.
-  Fresh-session rerun:50detector/discovery/report tests plus4poller/source tests
-  all passed; exact commands/results in `evidence/RESUME_VERIFIED_20261031.json`.
+  source precision/hashes, complete reports and advancing-index publication,
+  plus corrected audit coverage, corrupted-file rejection, manifest rosters and
+  restricted-seed preflight. The final full CPU suite passed in 2.70 s during this recovery;
+  exact command/results in `evidence/RESUME_VERIFIED_20261102.json`. Prior 54-test
+  verification remains in `evidence/RESUME_VERIFIED_20261031.json`.
 - Final descriptive runs use the physical closure implementation committed as
   `05a2b210`; executed source and input hashes are embedded in every report.
   Earlier pilot/v2 outputs are preserved as QA history and are not the final
@@ -265,10 +301,10 @@ overlap is descriptive co-occurrence, not proof that a detector caused the gain.
   implemented. All completed snapshots are inventoried even if the live index
   advances. Historical cumulative snapshots overlap; canonical corrected update
   cohorts remain distinct from deployed DEV and are never pooled indiscriminately.
-- COOPMEAS2 has costs/hashes but no replayable frames. The current COOPAUDIT
-  crop lacks observable lengths, mainline neighbours and non-wall executed
-  command status; its geometric analysis is explicitly blocked. A complete
-  normalized ready-index handoff can be consumed automatically. The producer
+- COOPMEAS2 has costs/hashes but no replayable frames. The corrected COOPAUDIT
+  crop has issued-safe requests but lacks observable lengths, mainline neighbours
+  and normalized per-row CAV/controller flags; its geometric analysis is blocked.
+  A complete normalized ready-index handoff can be consumed automatically. The producer
   contract and commands are in `tools/coopbehav/README.md`.
 - This task incurred **zero SUMO sim-s**. No peer process was signalled, and
   restricted source paths, truth/assignment files and prohibited seeds were not read.

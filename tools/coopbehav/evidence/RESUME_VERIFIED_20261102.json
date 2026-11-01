@@ -1,0 +1,68 @@
+{
+  "task": "S-COOPBEHAV",
+  "recovery_commit": "78143119",
+  "coverage_implementation_and_evidence_commit": "2b53bd36",
+  "cpu_checks": [
+    {
+      "command": "python -m pytest tests/unit/test_coopbehav_audit_coverage.py tests/unit/test_coopbehav_sources.py -q",
+      "passed": 7,
+      "failed": 0,
+      "elapsed_s": 0.41
+    },
+    {
+      "command": "python -m pytest tests/unit/test_coopbehav.py tests/unit/test_coopbehav_discovery.py tests/unit/test_coopbehav_report.py tests/unit/test_coopbehav_poll.py tests/unit/test_coopbehav_sources.py tests/unit/test_coopbehav_audit_coverage.py -q",
+      "passed": 59,
+      "failed": 0,
+      "elapsed_s": 2.70
+    }
+  ],
+  "corrected_audit": {
+    "receipt": "COOPAUDIT_V2_COVERAGE.json",
+    "command": "python -m tools.coopbehav.audit_coverage --collection E:/agent-work/c4-coopmeasure/tools/coopaudit/evidence/v2_complete/COLLECTION.json --manifest E:/agent-work/c4-coopmeasure/tools/coopaudit/evidence/v2_analysis/TRACE_MANIFEST.csv --out tools/coopbehav/evidence/COOPAUDIT_V2_COVERAGE.json",
+    "verified_trace_sha256s": 247,
+    "production_files_reconciled_with_manifest": 231,
+    "production_worlds_with_traces": 21,
+    "separate_canary_files": 16,
+    "vehicle_frame_rows": 528644,
+    "geometry_blockers": ["No observed lengths", "No additional mainline neighbours", "No per-row is_cav/controller flags"],
+    "non_wall_issued_requests_present": true,
+    "detector_counts": null,
+    "completed_reports_regenerated": 0
+  },
+  "sumocf_ready_exports": {
+    "canonical_index_sha256": "1c94ebe359532d3d00e6fa2d72af557791e71709691a78b26196cd4973f76c2e",
+    "canonical_already_complete": true,
+    "remote_read_only_inventory": "gpuR:/root/sumocf20261031/COOPBEHAV_dev_u*_INDEX.json",
+    "deployed_indices_found": [
+      {"name": "COOPBEHAV_dev_u03_INDEX.json", "sha256": "eafd90892099bfc0e8ac18967208b1c297d89f12386ccc656bd333d5d5a41998", "pairs": 2},
+      {"name": "COOPBEHAV_dev_u03_fullfleet_INDEX.json", "sha256": "bc782dd4b08fb81b8c2775732fb97b4148acb92707716600f10f20ccc934452d", "pairs": 2}
+    ],
+    "new_eligible_report_dispatches": 0
+  },
+  "polling": {
+    "pid": 29244,
+    "parent_pid": 23892,
+    "creation_local": "2026-10-31T17:07:54",
+    "executable": "C:/Python314/python.exe",
+    "exact_identity_live_at_final_check": true,
+    "watcher_restarted": false,
+    "watch2_stderr_empty": true,
+    "observed_corrected_blocker_poll_timestamp": 1793553414.1413412,
+    "observed_corrected_audit_jobs": 29,
+    "new_remote_report_workers_running": 0,
+    "source_adapter_deployment": {
+      "host": "gpuR",
+      "path": "/root/coopbehav20261031_analysis/tools/coopbehav/sources.py",
+      "previous_sha256": "501f472da23eaccd53dbb4e3e77d4f23eeceb6688ee313d3793a3532151c35eb",
+      "intermediate_sha256": "7ce031caaceec0830f8f16ea2c1a2fa2bc4c0ff1926a6726211967175e1acf97",
+      "sha256": "d0486c69437bc480158eb6cf711c9ae5fb215f152583dfdce19c91e03d2c6c8d",
+      "final_metadata_correction": "Unspecified branch modes are not assumed to be saved-state branches (including census-only jobs)",
+      "method": "SHA-verified atomic replacement inside own analysis root; existing watcher imports adapter in a fresh remote interpreter each poll",
+      "report_or_watcher_launches": 0
+    }
+  },
+  "new_simulation_seconds": 0,
+  "process_signals": 0,
+  "research_data_deletions": 0,
+  "pushes": 0
+}

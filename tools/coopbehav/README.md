@@ -4,7 +4,7 @@ Requires the existing Python environment with NumPy and Matplotlib; tests use
 pytest. No model, TraCI, SUMO, hidden driver labels or assignment files are read.
 
 ```
-python -m pytest tests/unit/test_coopbehav.py tests/unit/test_coopbehav_discovery.py tests/unit/test_coopbehav_report.py tests/unit/test_coopbehav_poll.py tests/unit/test_coopbehav_sources.py -q
+python -m pytest tests/unit/test_coopbehav.py tests/unit/test_coopbehav_discovery.py tests/unit/test_coopbehav_report.py tests/unit/test_coopbehav_poll.py tests/unit/test_coopbehav_sources.py tests/unit/test_coopbehav_audit_coverage.py -q
 python -m tools.coopbehav.report --views /root/wmdata2/views --label WMDATA2 --out /root/coopbehav20261031_analysis/WMDATA2
 python -m tools.coopbehav.report --views /home/ubuntu/wmdata20261031/views --label WMDATA --out /home/ubuntu/coopbehav20261031_analysis/WMDATA
 python -m tools.coopbehav.report --pairs COOPBEHAV_INDEX.json --out paired_report
@@ -82,9 +82,11 @@ with corrected full-rerun samples.** The live watcher consumes the producer's
 canonical `gpuR:/root/sumocf20261031/COOPBEHAV_INDEX.json` instead. Historical
 scanner outputs remain provenance, not current inference. See producer
 `tools/sumocf/TRACE_HANDOFF.md` and this task's `evidence/SELECTION.json`.
-The original COOPAUDIT crop is explicitly
-blocked for missing geometry/neighbour/action fields; no default lengths or
-guessed controller commands are substituted.
+The original COOPAUDIT crop is explicitly blocked for missing geometry/neighbour/
+action fields. Corrected full-prefix v2 includes MAPPO/SUMOCF issued-safe requests,
+but still lacks vehicle lengths, per-row CAV/controller flags and mainline
+neighbours. Its geometric analysis remains blocked; counts are unavailable, not
+zero. No default lengths or guessed controller commands are substituted.
 Place `STOP` in the poller's output directory for cooperative exit. Remote
 reporting uses `remote.py` and stores exact owned PID/start-tick receipts; it
 never signals a process or imports a simulator.
@@ -99,3 +101,21 @@ engine. Reproduce its current independent output reconciliation with:
 ```
 python -m tools.coopbehav.verify --report tools/coopbehav/evidence/WMDATA_final --report tools/coopbehav/evidence/WMDATA2_final --report tools/coopbehav/evidence/live/paired_bc782dd4b08fb81b8c2775732fb97b4148acb92707716600f10f20ccc934452d --report tools/coopbehav/evidence/live/paired_1c94ebe359532d3d00e6fa2d72af557791e71709691a78b26196cd4973f76c2e --out tools/coopbehav/evidence/CURRENT_COMPARISON.json
 ```
+
+## Corrected audit crop coverage
+
+The v2 producer publishes local observable traces with a SHA256 collection and
+a production row/clock manifest. Verify that handoff without rerunning physics:
+
+```
+python -m tools.coopbehav.audit_coverage --collection E:/agent-work/c4-coopmeasure/tools/coopaudit/evidence/v2_complete/COLLECTION.json --manifest E:/agent-work/c4-coopmeasure/tools/coopaudit/evidence/v2_analysis/TRACE_MANIFEST.csv --out tools/coopbehav/evidence/COOPAUDIT_V2_COVERAGE.json
+```
+
+This checks every selected compressed-file SHA, the complete production roster,
+row counts/clocks, identity uniqueness per frame and field coverage. Canary and
+production remain separate. It reads only inventoried observable gzip traces,
+not archived simulator state. The coverage receipt explicitly has
+`detector_eligible: false` and `detector_counts: null`: this crop cannot identify
+true receiving slots, body overlap or follower chains. The report generator
+continues to accept a complete normalized ready index at the configured handoff
+path when the required observables are available.

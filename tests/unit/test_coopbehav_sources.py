@@ -32,4 +32,5 @@ def test_audit_adapter_reports_missing_schema_instead_of_guessing_lengths_or_act
     out=tmp_path/"analysis"
     status=build_source_index("coopaudit",tmp_path/"audit",out)
     assert status["pairs"]==0 and "lacks length_m" in status["blocked"][0]["reason"]
+    assert status["blocked"][0]["branch_mode"]=="unspecified"
     assert not json.loads((out/"COOPBEHAV_INDEX.json").read_text())["ready"]
