@@ -3,7 +3,13 @@
 Owner: S-RB2-BREAK, branch `c4/rb2-break`; FULL-v4 base22cc32f6.
 Development-only plan `docs/rb2break/PLAN.md`; coordination
 `E:/agent-work/rb-shared/RB2_BREAK_TO_LANE_INT.md`.
-No candidate or improvement claimed yet. Attribution screen being implemented.
+Version `6b2d4c01`: guarded all5-arm H600 inference/one-factor adapter.
+Baseline96development tasks fetched with hash-bound archive (a prior scp snapshot
+was truncated; retained separately, never scored). Baseline report
+`docs/rb2break/BASELINE_DEV.json`:600s bias+13,485.24 =road+2,154.35 +source+11,330.89.
+Accounting share84% source is NOT a causal attribution. New runner reproduces
+969420/future0 clocks/speed/event metrics exactly (`PARITY_DEV.json`).
+No candidate or improvement claimed yet. Mainline-LC/merge-advice screens active.
 Reserved969432–969439 forbidden to this workstream. Learned corrections OFF.
 
 ## Inherited round1 handoff (provenance; not current BREAK process ownership)

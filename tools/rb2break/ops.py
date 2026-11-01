@@ -1,10 +1,12 @@
 """Explicit own-root development dispatch. No peer signalling; no reserved task reads."""
 import argparse
 import hashlib
+import io
 import json
 from pathlib import Path
 import shlex
 import subprocess
+import tarfile
 
 from tools.rbint.remote import ssh
 
@@ -14,7 +16,7 @@ JOB = PARENT+'/rb2break'
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=('stage', 'launch', 'status', 'fetch', 'baseline'))
+    parser.add_argument('action', choices=('stage', 'launch', 'queue', 'status', 'fetch', 'fetch-baseline', 'baseline'))
     parser.add_argument('--host', default='gpuA', choices=('gpuA', 'gpuR'))
     parser.add_argument('--runtime')
     parser.add_argument('--factor', default='baseline')
@@ -23,6 +25,8 @@ def main():
     parser.add_argument('--shard', type=int, default=0)
     parser.add_argument('--shards', type=int, default=1)
     parser.add_argument('--tag', default='screen')
+    parser.add_argument('--snapshot-name')
+    parser.add_argument('--lane', type=int, choices=(0, 1), default=0)
     args = parser.parse_args()
     if not set(args.worlds) <= set(range(969420, 969432)) or not args.worlds:
         raise ValueError('development only')
@@ -93,6 +97,24 @@ receipt=dict(owner='S-RB2-BREAK',pid=p.pid,boot_id=Path('/proc/sys/kernel/random
  start_ticks=Path('/proc/'+str(p.pid)+'/stat').read_text().split()[21],argv=argv,resources=resources,unix=time.time())
 save(out/'DISPATCH.json',receipt);print(json.dumps(receipt))
 '''
+    elif args.action == 'queue':
+        assert args.runtime and args.runtime.startswith(PARENT+'/rb2break_code_')
+        wait_for = 'screen_no_mainline_lc_s0' if args.lane == 0 else 'screen_no_merge_advice_s0'
+        factors = ['depart_last', 'population', 'point_v0'] if args.lane == 0 else ['depart_first', 'point_tau', 'fixed_rate']
+        code = f'''
+runtime=Path({args.runtime!r});assert (runtime/'STAGE.json').is_file()
+claim=root/{('QUEUE_'+str(args.lane)+'.json')!r};assert not claim.exists()
+argv=['nice','-n','19','/root/miniconda3/bin/python','-B','-u','-m','tools.rb2break.queue',
+ '--wait-for',str(root/{wait_for!r}),'--factors',*{factors!r},'--lane',{str(args.lane)!r}]
+env=dict(os.environ,OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',CUDA_VISIBLE_DEVICES='0',
+ PYTHONPATH='/root/autodl-tmp/c4/speedhead20261030/pythondeps')
+with (root/{('QUEUE_'+str(args.lane)+'.log')!r}).open('x') as log:
+ child=subprocess.Popen(argv,env=env,stdout=log,stderr=subprocess.STDOUT,cwd=runtime,start_new_session=True)
+save(claim,dict(owner='S-RB2-BREAK',pid=child.pid,argv=argv,unix=time.time(),
+ boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),
+ start_ticks=Path('/proc/'+str(child.pid)+'/stat').read_text().split()[21]))
+print(claim.read_text())
+'''
     elif args.action == 'status':
         code = '''
 print('LOAD',os.getloadavg())
@@ -131,12 +153,50 @@ save(out/'BASELINE.json',dict(owner='S-RB2-BREAK',development_only=True,source='
 print(json.dumps(dict(tasks=len(manifest),development_only=True)))
 '''
     else:
-        target = root/'docs/rb2break'/args.tag
+        snapshot_name = args.snapshot_name or args.tag
+        if not snapshot_name.replace('_', '').isalnum():
+            raise ValueError('simple snapshot name required')
+        target = root/'docs/rb2break'/snapshot_name
         if not target.parent.is_dir():
             raise ValueError('local evidence parent missing')
-        target.mkdir(exist_ok=True)
-        subprocess.run(['scp', '-r', '-o', 'BatchMode=yes', f'{args.host}:{JOB}/{out_name}', str(target)],
-                       check=True, timeout=600)
+        if target.exists():
+            raise ValueError('new immutable local snapshot required')
+        remote_name = 'frozen_baseline' if args.action == 'fetch-baseline' else out_name
+        code = f'''import hashlib,io,json,sys,tarfile
+from pathlib import Path
+root=Path({JOB!r})/{remote_name!r};assert root.is_dir()
+files={{}}
+for seed in range(969420,969432):
+ for future in range(8):
+  path=root/f'w{{seed}}_k{{future}}.json'
+  if path.exists():
+   data=path.read_bytes()
+   try: task=json.loads(data)
+   except json.JSONDecodeError: continue
+   assert task['seed']==seed and task['future']==future
+   files[path.name]=data
+for name in ('IDENTITY.json','DISPATCH.json','COMPLETE.json','BASELINE.json'):
+ path=root/name
+ if path.exists(): files[name]=path.read_bytes()
+receipt=dict(source=str(root),hashes={{name:hashlib.sha256(data).hexdigest() for name,data in files.items()}})
+files['SNAPSHOT.json']=json.dumps(receipt,indent=1).encode()
+with tarfile.open(fileobj=sys.stdout.buffer,mode='w|gz') as tar:
+ for name,data in files.items():
+  info=tarfile.TarInfo(name);info.size=len(data);tar.addfile(info,io.BytesIO(data))
+'''
+        result = subprocess.run(['ssh', '-o', 'BatchMode=yes', args.host,
+            '/root/miniconda3/bin/python -B -c '+shlex.quote(code)], capture_output=True, timeout=180)
+        if result.returncode:
+            raise RuntimeError(result.stderr.decode())
+        with tarfile.open(fileobj=io.BytesIO(result.stdout), mode='r:gz') as tar:
+            for member in tar.getmembers():
+                assert member.isfile() and not member.name.startswith('/') and '..' not in Path(member.name).parts
+            receipt = json.loads(tar.extractfile('SNAPSHOT.json').read())
+            for name, expected in receipt['hashes'].items():
+                assert hashlib.sha256(tar.extractfile(name).read()).hexdigest() == expected
+            target.mkdir()
+            tar.extractall(target, filter='data')
+        print(json.dumps(dict(snapshot=str(target), files=len(receipt['hashes']))))
         return
     print(ssh(args.host, common+code, timeout=120))
 
