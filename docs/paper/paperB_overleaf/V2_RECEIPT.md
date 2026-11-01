@@ -40,3 +40,19 @@ the short-horizon choice result is exploratory/offline; reference switching is
 PARTIAL. Preserve these source qualifications in the owner checklist and adjacent
 LaTeX comments while retaining the owner's approved prose. Successor-v5 and
 learned-picker efficacy remain red PENDING items.
+
+## Step 2 - approved text port
+
+Ported the title, Abstract, Index Terms, all seven main sections, contributions,
+both empty figure captions, pending items, Table I and Acknowledgment. Preserved
+the Doc's reference numbering and existing verified bibliography. Every empirical
+numerical sentence has an adjacent source-path comment, including repetitions.
+Updated the owner checklist with rounding, sign reversal and minute conversions.
+
+The delivery builder now targets only Desktop `PaperB_draft_v2.pdf`, verifies that
+the previous v1 hash is unchanged, and includes the approved Doc and this receipt
+in the upload archive. Generated DRAFT_TEXT.md from the TeX. A full comparison of
+all approved prose words and number tokens (ignoring only markup, equation layout,
+headings and the unfilled table) matches 3,291 tokens exactly. Both figure caption
+texts are included in this comparison; no main-paragraph wording was rewritten.
+PDF compilation, visual inspection and final packaging are the next step.

@@ -6,6 +6,7 @@ import hashlib
 import json
 import re
 import shutil
+import unicodedata
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 
@@ -56,7 +57,7 @@ def readable(text: str) -> str:
         text = text.replace(literal, f"LITERALTOKEN{index}END", 1)
     text = text.replace("\\%", "%").replace("\\&", "&")
     for command in ("emph", "textit", "textbf", "mathrm", "mathbb", "text", "url"):
-        text = unwrap(text, command)
+        text = unwrap(text, command, r"**\1**" if command == "textbf" else r"\1")
     text = unwrap(text, "pending", r"[PENDING: \1]")
     text = re.sub(r"\\textcolor\{red\}\{([^{}]*)\}", r"\1", text)
     text = text.replace("\\,", " ").replace("~", " ")
@@ -85,6 +86,7 @@ def markdown() -> str:
     # Empirical source comments survive in the companion drafting text.
     text = re.sub(r"(?m) ?% Source: (.*)$", r"\n<!-- Source: \1 -->", text)
     text = re.sub(r"(?m)^%.*$", "", text)
+    text = re.sub(r"\\nocite\{[^}]+\}", "", text)
     text = text.replace("\\begin{abstract}", "## Abstract\n")
     text = text.replace("\\end{abstract}", "")
     text = text.replace("\\begin{IEEEkeywords}", "## Index Terms\n")
@@ -115,7 +117,8 @@ def markdown() -> str:
         block = match.group(0)
         box = re.search(r"\\graphbox\{([^}]+)\}", block).group(1)
         caption = re.search(r"\\caption\{([^}]+)\}", block).group(1)
-        return f"\n[FIGURE: {box}]\n\n**Figure {figure_index}.** {caption}\n"
+        sources = "\n".join(re.findall(r"<!-- Source: .*? -->", block))
+        return f"\n[FIGURE: {box}]\n\n**Figure {figure_index}.** {caption}\n{sources}\n"
 
     text = re.sub(r"(?s)\\begin\{figure\}.*?\\end\{figure\}", figure, text)
 
@@ -124,7 +127,7 @@ def markdown() -> str:
         caption = re.search(r"\\caption\{([^}]+)\}", block).group(1)
         return (
             f"\n**Table I.** {caption}\n\n"
-            "Columns: selector; fleet/source cost; branch regret.\n\n"
+            "Columns: selector; fleet + source cost; branch regret.\n\n"
             "- WM selector: [--]; [--].\n"
             "- BB-traj selector: [--]; [--].\n"
             "- Fleet PPO picker: [--]; [--].\n"
@@ -164,6 +167,43 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def verify_approved(text: str) -> int:
+    """Compare every prose word/number with the Doc, ignoring typesetting only."""
+    from difflib import unified_diff
+
+    approved = (ROOT / "DOC_CONFIDENT_v2.md").read_text(encoding="utf-8")
+    assert text.splitlines()[0] == approved.splitlines()[0], "Approved title changed"
+    # The export writes the coupled equations inline, rather than as an align block.
+    text = re.sub(
+        r"(?s)\$\$\s*\\begin\{aligned\}.*?\\end\{aligned\}\s*\$\$",
+        "(u_k, m_{k+1}) = π(o(x̂_k), m_k) and x̂_{k+1} = F_θ(x̂_k, u_k; z),",
+        text,
+    )
+
+    def tokens(value: str) -> list[str]:
+        value = value.split("## References", 1)[0].split("## Abstract", 1)[1]
+        value = re.sub(r"(?s)<!--.*?-->", "", value)
+        value = re.sub(r"(?ms)^(?:TABLE I|\*\*Table I).*?(?=^## VI\.)", "", value)
+        value = re.sub(r"(?m)^#+ .*\n", "", value)
+        value = re.sub(r"\[FIGURE[^\]]+\]", "", value)
+        value = re.sub(r"\*\*Figure \d+\.\*\*", "", value)
+        for command in ("mathrm", "mathbb"):
+            value = unwrap(value, command)
+        value = value.replace(r"\tfrac12", "1/2").replace("½", "1/2")
+        value = re.sub(r"\\(?:begin|end)\{equation\}", "", value)
+        for latin, greek in (("pi", "π"), ("theta", "θ"), ("eta", "η"), ("Delta", "Δ")):
+            value = value.replace("\\" + latin, f" {latin} ").replace(greek, f" {latin} ")
+        value = value.replace(r"\hat", "").replace(r"\times", "times").replace("×", "times")
+        value = "".join(c for c in unicodedata.normalize("NFD", value) if not unicodedata.combining(c))
+        return re.findall(r"[A-Za-z]+|\d+(?:\.\d+)?", value)
+
+    expected, actual = tokens(approved), tokens(text)
+    assert expected == actual, "Approved prose mismatch:\n" + "\n".join(
+        unified_diff(expected, actual, fromfile="owner Doc", tofile="draft", n=8)
+    )
+    return len(expected)
+
+
 def deliver() -> None:
     import pymupdf as fitz
     from pypdf import PdfReader
@@ -180,15 +220,19 @@ def deliver() -> None:
     assert not any(item in log for item in forbidden), "Unresolved build error/reference"
     assert not re.search(r"LaTeX Warning: (?:Citation|Reference).*undefined", log)
     text = markdown()
+    approved_tokens = verify_approved(text)
     assert "\\pending" not in text and "\\caption" not in text
     tex = (ROOT / "main.tex").read_text(encoding="utf-8")
     assert text.count("<!-- Source:") == tex.count("% Source:")
     assert re.findall(r"<!-- Source: (.*?) -->", text) == re.findall(r"% Source: (.*)", tex)
     (ROOT / "DRAFT_TEXT.md").write_text(text, encoding="utf-8")
     assert DESKTOP.is_dir(), DESKTOP
-    desktop_pdf = DESKTOP / "PaperB_draft_v1.pdf"
+    previous_pdf = DESKTOP / "PaperB_draft_v1.pdf"
+    previous_sha = sha256(previous_pdf) if previous_pdf.is_file() else None
+    desktop_pdf = DESKTOP / "PaperB_draft_v2.pdf"
     shutil.copy2(pdf, desktop_pdf)
     assert sha256(pdf) == sha256(desktop_pdf)
+    assert previous_sha is None or sha256(previous_pdf) == previous_sha, "v1 changed"
     # Page renders are local review artifacts, not upload dependencies.
     (ROOT / "_review").mkdir(exist_ok=True)
     doc = fitz.open(pdf)
@@ -197,6 +241,7 @@ def deliver() -> None:
     included = [ROOT / name for name in (
         "main.tex", "refs.bib", "main.pdf", "DRAFT_TEXT.md", "README_OVERLEAF.md",
         "DRAFT_RECEIPT.md", "REGISTRATION_RECEIPT.md", "build_delivery.py",
+        "DOC_CONFIDENT_v2.md", "V2_RECEIPT.md",
     )]
     included += sorted((ROOT / "figures").glob("*"))
     report = {
@@ -204,8 +249,13 @@ def deliver() -> None:
         "class": "IEEEtran conference",
         "compiler": "MiKTeX pdfLaTeX + BibTeX + pdfLaTeX + pdfLaTeX",
         "graphs": "intentionally empty per final owner clarification",
+        "approved_prose": "DOC_CONFIDENT_v2.md (owner-review Doc revision 11)",
+        "approved_prose_word_and_number_tokens_matched": approved_tokens,
+        "unsourced_numerical_results": [],
         "desktop_pdf": str(desktop_pdf),
         "desktop_matches_project_pdf": True,
+        "previous_desktop_pdf_preserved": previous_sha is not None,
+        "previous_desktop_pdf_sha256": previous_sha,
         "overfull_boxes": re.findall(r"Overfull .*", log),
         "underfull_box_count": len(re.findall(r"Underfull ", log)),
         "unresolved_citations_or_references": False,
@@ -237,7 +287,9 @@ if __name__ == "__main__":
     if args.action == "prepare":
         prepare()
     elif args.action == "text":
-        (ROOT / "DRAFT_TEXT.md").write_text(markdown(), encoding="utf-8")
-        print("Generated matching DRAFT_TEXT.md.")
+        text = markdown()
+        matched = verify_approved(text)
+        (ROOT / "DRAFT_TEXT.md").write_text(text, encoding="utf-8")
+        print(f"Generated matching DRAFT_TEXT.md; {matched} approved prose word/number tokens verified.")
     else:
         deliver()
