@@ -17,7 +17,7 @@ class Contracts(unittest.TestCase):
     def test_remote_operations_compile_before_dispatch(self):
         from tools.wmplan import ops
         scripts = 0
-        for name in ('ops.py','mirror.py','bridge.py','watch.py','restart.py'):
+        for name in ('ops.py','mirror.py','bridge.py','watch.py','restart.py','continuation.py'):
             tree = ast.parse(Path(ops.__file__).with_name(name).read_text(encoding='utf-8'))
             for node in ast.walk(tree):
                 if (isinstance(node,ast.Call) and

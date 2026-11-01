@@ -1,22 +1,22 @@
 # S-WMPLAN — world-model-guided cooperative planner
 
 ## Plain-language status
-**MAIN approved the engineering restart at 15:55; it is being prepared with a
-one-episode fail-fast smoke gate. There is no live efficacy result yet.** The original test stopped on an executor-wiring error. Three primary-arm
+**The approved engineering restart is running its one-episode fail-fast smoke
+on the dual-GPU services. There is no complete live efficacy result yet.** The original test stopped on an executor-wiring error. Three primary-arm
 attempts reached the 300-second warmup; none ran a post-warmup physics step or
 completed an episode. A durable STOP was written immediately when the abnormal
-close was detected. All owned local and remote services have now exited.
+close was detected. All owned v1 local and remote services exited before the restart.
 
 The error was a missing `initial_rows` field between the online planner and the
 inherited executor. The observable roster is now attached exactly as in
 `coopplan.runner`; the repair is committed as `e492210c` and 30 CPU tests pass,
 including the real plant adapter. The stopped immutable run was preserved, and
-the repair has **not yet** been dispatched. MAIN's 15:55 amendment authorizes one
+the repair was dispatched only to the new immutable v2 root. MAIN's 15:55 amendment authorizes one
 new attempt per episode; any new fault stops the run and is reported.
 
-Accounting is **900 actual sim-s; 3,600 charged sim-s, with no refund**. The strict
-arm and all group-twin simulations remain unstarted. Both GPUs produced forecasts;
-all three completed K8 states (24 futures) are preserved for potential reuse.
+Stopped v1 accounting is **900 actual sim-s; 3,600 charged sim-s, with no refund**.
+V1 had no strict-arm or group-twin simulation. Both GPUs produced forecasts;
+all three completed K8 states (24 futures) are preserved and reused in v2.
 
 FULL-v4 was selected before live outcomes: helpful-state agreement 4/8 vs FULL-v5
 2/8, all-12 exact chosen saving +680.308 vs +172.704 veh-s/state. These are
@@ -64,10 +64,10 @@ STOP, traceback and exited ownership identities. `FAULT_REGISTRATION.json` is th
 shared registration receipt. Original claims, startup-gate failures, mirror
 manifests, transferred files and every forecast remain preserved.
 
-## Engineering restart — APPROVED 15:55 / not yet dispatched
-The same model, panel, decision rules, credit quotas, executors and expected-first
-reporting order can fit under the owner's original cap if a restart is explicitly
-authorized. The tighter mathematical bound is:
+## Engineering restart — APPROVED 15:55 / v2 dispatched
+The approved restart keeps the same model, panel, decision rules, credit quotas,
+executors and expected-first reporting order under the owner's original cap.
+The tighter mathematical bound is:
 - New 48 episodes: 57,600 sim-s.
 - New group twins: at most 48 x 2,880 = 138,240 sim-s. The unchanged 2,950/world-arm
   quota admits at most one group, and the latest affordable clock is t600.
@@ -141,11 +141,39 @@ gate evidence are retained in `wmplan/`.
 ## Current continuation status
 - Original v1 terminal STOP preserved; all its owned local/remote services exited.
   Ownership rechecked before preparing the separately approved v2 restart.
-- Actual 900 / charged 3,600 sim-s; 3 failed warmups, 0 complete episodes, 0 controlled
-  post-warmup steps, 0 executed groups, 0 strict attempts. No J600/J900/CI estimate.
+- V2 dispatched once: gpuA GPU478015 / supervisor478016; local gpuR relay17368,
+  with both GPU_READY receipts present. First primary world984000 is the sole smoke.
+- Smoke has passed the repaired executor boundary and completed all four exact
+  H120 branches for its t300 O1 group. Its remaining decision-time forecasts are
+  still running; other primary worlds and the strict arm have not started.
+- Preserved v1: actual900 / charged3600sim-s;3 failed warmups,0 complete episodes,
+  0 controlled post-warmup steps,0 executed groups,0 strict attempts. No v1 efficacy estimate.
+- Active v2: new charged2880sim-s, closed actual1680sim-s plus the open smoke
+  episode (not yet included in closed actual). Combined charged6480/closedactual2580;
+  remaining reserved smoke work is already charged. No complete J600/J900/CI estimate.
 - Three complete K8 states/24 futures retained; source/receipt hashes verified.
 - Local executor-ABI repair `e492210c`: 30 CPU PASS; unchanged stopped v1 root.
   MAIN15:55 approved the 199,440 charged / 196,740 actual combined upper. V2 adds
   a first-episode smoke gate and bounded active-slot admission so failed work
   cannot leave a queued panel. FULL-v4 and all scientific decision rules stay fixed.
 <!-- WMPLAN-PROGRESS:END -->
+
+## V2 continuation and receipts
+- `wmplan/restart_v2/FINAL_FREEZE.json` records the exact pre-dispatch shared
+  registration line and source/budget binding; `DISPATCH.json` and
+  `GPU_R_READY.json` identify owned services. Original `wmplan/FAULT_RECEIPTS.json`
+  and the entire stopped v1 root remain preserved.
+- Frozen-host gate:32 CPU tests /24 seed guards PASS. Additional independent
+  smoke/report/continuation checks:34 CPU tests PASS, zero new SUMO
+  (`wmplan/restart_v2/CONTINUATION_CPU.json`).
+- The receipt-only continuation never launches or retries an episode. It checks
+  recorded service PID/start-tick/boot identities, verifies every smoke decision,
+  executor roster and exact twin, commits the smoke receipt, then releases the
+  remaining23 primary worlds. The verified full primary report is committed before
+  strict is released, irrespective of efficacy. Any new fault writes durable STOP
+  and preserves partial accounting; no automatic retry is available.
+- Read-only resume checks: `py -3.13 -B -m tools.wmplan.continuation --gate` and
+  `py -3.13 -B -m tools.wmplan.restart status`. Inspect
+  `wmplan/restart_v2/CONTINUATION_LAUNCH.json` / `CONTINUATION_ONCE.json` and
+  `_out/wmplan_v2_continuation.log` before doing anything else. Do not duplicate the
+  dispatch, relay, or continuation.

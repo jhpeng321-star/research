@@ -168,7 +168,23 @@ def status():
     ops.status()
 
 
+def progress():
+    configure()
+    result = json.loads(ops.remote(f'''import pathlib,json,time
+root=pathlib.Path({ROOT!r})
+def load(p):return json.loads(p.read_text())
+print(json.dumps(dict(unix=time.time(),smoke=load(root/'SMOKE_COMPLETE.json') if (root/'SMOKE_COMPLETE.json').exists() else None,
+ ready=[p.name for p in root.glob('GPU_READY_*.json')],
+ jobs=[dict(id=p.name,close=load(p/'CLOSE.json') if (p/'CLOSE.json').exists() else None,
+ decisions=[dict(time_s=e['time_s'],action=e['executed_action']['id'],proposed=e.get('proposed_action',{{}}).get('id'))
+ for e in [load(f) for f in sorted(p.glob('DECISION_*.json'))]]) for p in (root/'jobs').iterdir()],
+ forecasts=[dict(key=p.name,complete=(root/'responses'/(p.name+'.json')).exists(),futures=len(list(p.glob('k*.json')))) for p in (root/'forecasts').iterdir()])))
+'''))
+    ops.save(f'PROGRESS_{int(result["unix"])}.json',result)
+    print(json.dumps(result))
+
+
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
-    p.add_argument('action', choices=['inspect','register','stage','cpu','freeze','launch','status'])
+    p.add_argument('action', choices=['inspect','register','stage','cpu','freeze','launch','status','progress'])
     globals()[p.parse_args().action]()

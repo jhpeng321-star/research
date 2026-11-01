@@ -30,7 +30,11 @@ def credit_ci(world_credits):
     den = counts[draws].sum(1)
     good = den > 0
     boot = sums[draws].sum(1)[good]/den[good]
+    dg = np.array([sum(c['D_G'] for c in rows) for rows in world_credits],float)
+    solo = np.array([sum(sum(c['member_alone_D']) for c in rows) for rows in world_credits],float)
     return dict(mean=float(sums.sum()/counts.sum()),ci95=np.quantile(boot,[.025,.975]).tolist(),
+                joint_saving_mean=float(dg.sum()/counts.sum()),
+                sum_member_alone_saving_mean=float(solo.sum()/counts.sum()),
                 events=int(counts.sum()),positive=sum(c['C_G']>0 for rows in world_credits for c in rows),
                 beneficial_superadditive=sum(c['C_G']>0 and c['D_G']>0 for rows in world_credits for c in rows),
                 active_worlds=int((counts>0).sum()),zero_event_draws=int((~good).sum()),
@@ -44,6 +48,11 @@ def build(r, primary=False):
         raise ValueError('full completed panel required')
     if r['actual'] != r['charged'] or r['charged'] > budget()['total']:
         raise ValueError('charge/actual cap')
+    restart = r['binding'].get('restart')
+    if restart and (r['charged'] > restart['new_run_upper_sim_s'] or
+                    r['charged']+restart['prior_charged_sim_s'] > restart['combined_charged_upper_sim_s'] or
+                    r['actual']+restart['prior_actual_sim_s'] > restart['combined_actual_upper_sim_s']):
+        raise ValueError('combined restart cap including retained prior charges')
     charges = {v['id']:v for v in r['charges']}
     closes = {v['id']:v for v in r['closed']}
     if len(charges) != len(r['charges']) or charges.keys() != closes.keys():
@@ -143,7 +152,9 @@ def build(r, primary=False):
         raise ValueError('unexpected/missing job or branch')
     if len(r['reservations']) != len(credits):
         raise ValueError('outstanding reservations')
-    return (dict(arms=summaries,worlds=24,actual=r['actual'],charged=r['charged'],upper=budget()['total'],
+    accounting = dict(restart=restart,combined_actual=r['actual']+restart['prior_actual_sim_s'],
+                      combined_charged=r['charged']+restart['prior_charged_sim_s']) if restart else {}
+    return (dict(arms=summaries,worlds=24,actual=r['actual'],charged=r['charged'],upper=budget()['total'],**accounting,
                 model=r['binding']['model'],decisions_per_arm=288,executed_groups=len(credits),
                 exact_credit_prefixes=4*len(credits),bootstrap=dict(resamples=10000,seed=20261101,unit='whole_world')),
             worlds,credits)
@@ -179,7 +190,9 @@ def run(verify=False, primary=False):
             arm:{clock:ci([v[f'saving_J{clock}_team_delay_vs']-byseed[v['world_id']][clock]
                            for v in worlds if v['arm']==arm]) for clock in ('600','900')} for arm in summary['arms']}
     qa = dict(pass_=True,all24pairs_each_arm=True,all_executed_groups_have_twins=True,
-               forecast_action_accounting_recomputed=True,receipt_sha256=sha(OUT/(prefix+'RECEIPTS.json')))
+               forecast_action_accounting_recomputed=True,receipt_sha256=sha(OUT/(prefix+'RECEIPTS.json')),
+               analysis_sources={str(p.relative_to(LOCAL)):sha(p) for p in
+                                 (LOCAL/'tools/wmplan/report.py',LOCAL/'tools/wmplan/design.py')})
     for name,value in [('SUMMARY.json',summary),('WORLD_METRICS.json',worlds),('CREDITS.json',credits),('QA.json',qa)]:
         if verify:
             if json.loads((OUT/(prefix+name)).read_text()) != value:
@@ -197,6 +210,11 @@ def publish(primary=False):
     def interval(v):
         return f'{v["mean"]:+.3f} [{v["ci95"][0]:+.3f}, {v["ci95"][1]:+.3f}]'
     expected = s['arms']['expected']
+    restart = s.get('restart')
+    accounting_text = (f'New run actual=charged {s["actual"]:g}; retained prior actual900/charged3600; '
+                       f'combined actual **{s["combined_actual"]:g}**, charged **{s["combined_charged"]:g} sim-s** '
+                       '(no refund), within approved combined199440charged/196740actual upper and owner200000cap.'
+                       if restart else f'Actual=charged **{s["actual"]:g} sim-s**, below registered199200upper/owner200000cap.')
     supported = all(expected['savings'][clock]['team_delay_vs']['ci95'][0] > 0 for clock in ('600','900'))
     conclusion = ('The expected-saving planner improved both registered delay scores on this '
                   'resource-limited development panel.' if supported else
@@ -204,11 +222,15 @@ def publish(primary=False):
     lines = ['# S-WMPLAN — online world-model-guided cooperative planner','',
              '## Plain-language result',conclusion,
              'The world model was used to look ahead at decision time; this is an online planner, not a trained student.',
-             'Every executed group received complete exact member-alone twins. The simulation budget restricted each world-arm '
+              'Every executed group received complete exact member-alone twins. The simulation budget restricted each world-arm '
              'to at most one early group; these results do not measure an unrestricted planner.','',
-             'Positive saving below means less source-inclusive full-team delay than MAPPO. Units are veh-s/world; '
+              'Positive saving below means less source-inclusive full-team delay than MAPPO. Units are veh-s/world; '
              'brackets are 95% paired whole-world bootstrap intervals (10,000 resamples, RNG 20261101).','',
-             '## Paired efficacy and behaviour']
+              '## Paired efficacy and behaviour']
+    if restart:
+        lines[6:6] = ['MAIN15:55 approved an engineering restart after an initial_rows executor-ABI startup fault; '
+                      'the failed v1 start had no efficacy endpoint. All900actual/3600charged sim-s remain accounted; '
+                      'the successful first primary episode was the smoke and was counted once.','']
     if primary:
         lines += ['**Primary arm complete; secondary strict arm pending.** The strict arm starts after this report is saved.','']
     for arm in s['arms']:
@@ -226,13 +248,18 @@ def publish(primary=False):
         if cg:
             lines += [f'- Exact H120 C_G: {interval(cg)} veh-s/group; {cg["positive"]}/{cg["events"]} positive, '
                       f'{cg["beneficial_superadditive"]} with BOTH D_G>0 and C_G>0. '
-                      'CI resamples all24 world clusters, including zero-action worlds.']
+                      'CI resamples all24 world clusters, including zero-action worlds.',
+                      f'- C_G decomposition: mean joint saving D_G {cg["joint_saving_mean"]:+.3f}; '
+                      f'mean sum of member-alone savings {cg["sum_member_alone_saving_mean"]:+.3f} veh-s/group.']
         else:
             lines += ['- No executed group in this arm; no C_G estimate is defined.']
         lines += [f'- Safety MAPPO/planner: '+', '.join(f'{k} {a["safety"]["mappo"][k]:g}/{a["safety"][arm][k]:g}'
                   for k in ('collisions','teleports','ttc_below_3_vs','hard_brake'))+'.',
                   f'- Safety-clamped requests {a["overrides"]}/{a["requests"]}; TTC and hard braking above are exposure veh-s.']
-    lines += ['', '## Model choice made before live outcomes',
+    lines += ['', 'Option types: O0 = MAPPO; O1/L2 = each member slows relative to its initial speed; '
+              'O2/L3 = cross-lane pair shares a fixed slower speed target; O3/L4 = ramp-conditioned gap/headway target; '
+              'O4/L1 = gap/headway target. All retain inherited executors and safety.',
+              '', '## Model choice made before live outcomes',
               f'- Selected **{model["selected"]}** by the preregistered two-condition rule; reused existing forecasts, new quality SUMO0.',
               f'- FULL-v4: helpful argmax {model["v4_helpful"]["exact_argmax_matches"]}/'
               f'{model["v4_helpful"]["helpful_states"]}, all12 exact chosen saving '
@@ -262,8 +289,8 @@ def publish(primary=False):
               '## Integrity, resources and limitations',
               f'- All{24*len(s["arms"])} episodes/{288*len(s["arms"])} decisions and {s["executed_groups"]} executed-group quartets complete; '
               f'{s["exact_credit_prefixes"]} exact branch prefix gates pass. Independent QA recomputes forecasts, actions, quotas and C_G.',
-              f'- Actual=charged **{s["actual"]:g} sim-s**, below registered199200upper/owner200000cap. '
-              'No new MAPPO or mechanics episode; every replay step is charged. No retries/refunds/transfers.',
+              '- '+accounting_text+' No new MAPPO or mechanics episode; every replay step is charged. '
+              'One attempt per episode in the approved restart; no further retries/refunds/transfers.',
               '- Fixed2950 credit allowance per world-arm; full-prefix H120 quartet4*(t+120). '
               'At most one group can fit, none aftert600. Refusals above quantify this material restriction.',
               '- Same inherited O0..O4/executors/safety; K8 paired futures/H300/cadence60 at t300..960; '
@@ -272,9 +299,12 @@ def publish(primary=False):
               'cold motion/controller memory, no observed queue/history claim, no hidden truth inputs. '
               'K8 empirical strict probabilities are not asserted calibrated.',
               '- Fresh DEV984000..984023/two per12cells, panelSHA72776ff1; these are development results, not final generalization evidence.',
-              '- Dual-GPU inference: gpuA plus gpuR `/root/wmplan20261101_v1`; immutable gpuA `/root/autodl-tmp/wmplan20261101_v1` ledger; model/baseline/source/design hashes, '
-              'charges, closed jobs, forecasts, complete twins and QA in `wmplan/`.',
-              f'- Reproduce: `py -3.13 -B -m tools.wmplan.report --verify'+(' --primary' if primary else '')+'`. MAIN owns master-ledger/route integration.']
+              '- Dual-GPU inference: gpuA plus gpuR `/root/wmplan20261101_v1`; immutable gpuA '
+              + ('`/root/autodl-tmp/wmplan20261101_v2`' if restart else '`/root/autodl-tmp/wmplan20261101_v1`')
+              + ' ledger; model/baseline/source/design hashes, charges, closed jobs, forecasts, complete twins and QA in '
+              + ('`wmplan/restart_v2/`.' if restart else '`wmplan/`.'),
+              '- Reproduce: `py -3.13 -B -m '+('tools.wmplan.continuation' if restart else 'tools.wmplan.report')
+              +' --verify'+(' --primary' if primary else '')+'`. MAIN owns master-ledger/route integration.']
     report = LOCAL/'docs/paper_results/WMPLAN.md'
     with report.open('w',encoding='utf-8') as f:
         f.write('\n'.join(lines)+'\n')
@@ -286,7 +316,7 @@ def publish(primary=False):
             f'J900{interval(expected["savings"]["900"]["team_delay_vs"])}veh-s/world; '
             +secondary+
             f'all{24*len(s["arms"])}episodes/{288*len(s["arms"])}decisions/{s["executed_groups"]}completeCGquartets/'
-            f'{s["exact_credit_prefixes"]}BITWISEprefixes; actual=charged{s["actual"]:g}<=199200upper<=200000cap. '
+            f'{s["exact_credit_prefixes"]}BITWISEprefixes; '+accounting_text+' '
             'Budget-limited2950/world-arm<=1earlygroup/noaftert600; proposals/refusals/safety/studentcomparisons/'
             'modelnoninferiority documented. No unlimited-planner or trained-policy headline implied. '
             f'Report E:/agent-work/c4-wmplan/docs/paper_results/WMPLAN.md; QAsha{sha(OUT/(prefix+"QA.json"))}; '

@@ -84,6 +84,32 @@ class Analysis(unittest.TestCase):
         with self.assertRaises(ValueError):
             ci([0]*23)
 
+    def test_restart_keeps_prior_charges_and_enforces_combined_upper(self):
+        from tools.wmplan.restart import ACCOUNTING
+        r = fixture()
+        r['binding']['restart'] = ACCOUNTING
+        summary,_,_ = build(r)
+        self.assertEqual(summary['combined_actual'],58500)
+        self.assertEqual(summary['combined_charged'],61200)
+        r['actual'] = r['charged'] = 195841
+        with self.assertRaisesRegex(ValueError,'combined restart cap'):
+            build(r)
+
+    def test_smoke_checks_full_cadence_and_executor_observable_roster(self):
+        from tools.wmplan.continuation import check_smoke
+        f = fixture();ident = 's984000_expected'
+        s = f['results'][ident]
+        for e in s['history']:
+            e['initial_rows'] = []
+        r = dict(results={ident:s},baseline=f['baselines']['984000'],
+                 observations=f['observations'],forecasts=f['forecasts'],reservations={},
+                 smoke={'result_sha256':'bound'},result_hashes={ident:'bound'},
+                 charges=[f['charges'][0]],closed={ident:f['closed'][0]})
+        self.assertTrue(check_smoke(r)['pass_'])
+        s['history'][0]['initial_rows'] = [{'unobserved':'injected'}]
+        with self.assertRaises(AssertionError):
+            check_smoke(r)
+
 
 if __name__ == '__main__':
     unittest.main()
