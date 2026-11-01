@@ -70,7 +70,7 @@ gate evidence are retained in `wmplan/`.
 <!-- WMPLAN-PROGRESS:BEGIN -->
 ## Current continuation status
 - Model fixed as FULL-v4; 0/48 episodes complete.
-- Charged 3600; closed actual 300 sim-s; 2 open jobs. Registered upper199200/cap200000.
-- Complete K8 forecast states 1; future tasks 15.
+- Charged 3600; closed actual 900 sim-s; 0 open jobs. Registered upper199200/cap200000.
+- Complete K8 forecast states 1; future tasks 18.
 - Full paired efficacy and safety report waits for all24 pairs per arm. No claim of beating MAPPO is supported by progress counts.
 <!-- WMPLAN-PROGRESS:END -->
