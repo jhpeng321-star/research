@@ -1,0 +1,62 @@
+{
+ "exists": true,
+ "time": "2026-11-01T17:47:25.392110+08:00",
+ "process": {
+  "host": "gpuA",
+  "pid": 513448,
+  "start_ticks": "890664618",
+  "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+  "argv": [
+   "nice",
+   "-n",
+   "19",
+   "/root/miniconda3/bin/python",
+   "-B",
+   "-u",
+   "/root/autodl-tmp/c4/rb2int20261101/final_v5_v1/owner1735_control/capped_worker.py",
+   "--root",
+   "/root/autodl-tmp/c4/rb2int20261101/final_v5_v1",
+   "--host",
+   "gpuA"
+  ],
+  "phase": "wait for all original children; then exclusive capped continuation",
+  "cap": 2,
+  "source_commit": "87ef677dac708cb944a5c44d76f8126111d81504",
+  "source_sha256": "9150d74817f8c908f3c915a25e40d3098a0ed9a4657e611af743024b277e1ed0",
+  "started_at": "2026-11-01T17:47:12.024630+08:00"
+ },
+ "alive": true,
+ "log_tail": "DRAIN gpuA active ['v5_969592'] prior_claims 13\n",
+ "OWNER_1735_CAPPED_START_ONCE.json": {
+  "pid": 513448,
+  "start_ticks": "890664618",
+  "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+  "source_sha256": "9150d74817f8c908f3c915a25e40d3098a0ed9a4657e611af743024b277e1ed0",
+  "cap": 2,
+  "no_evaluate_signals": true,
+  "original": {
+   "pid": 473053,
+   "start_ticks": "889857083",
+   "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+   "argv": [
+    "nice",
+    "-n",
+    "19",
+    "/root/miniconda3/bin/python",
+    "-B",
+    "-u",
+    "/root/autodl-tmp/c4/rb2int20261101/phys_code_d0df3d66e80a/tools/rb2int/final_worker.py",
+    "--root",
+    "/root/autodl-tmp/c4/rb2int20261101/final_v5_v1",
+    "--host",
+    "gpuA"
+   ],
+   "root": "/root/autodl-tmp/c4/rb2int20261101/final_v5_v1",
+   "host": "gpuA"
+  },
+  "started_at": "2026-11-01T17:47:12.063503+08:00"
+ },
+ "original_alive": true,
+ "original_state": "T",
+ "gpu": "47082, 35"
+}

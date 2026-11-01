@@ -54,6 +54,27 @@ and09:40/09:55 collection/publication bounds need a later explicit amendment if
 the reduced-resource panel is to continue beyond them; do not claim full delivery
 from a partial cache.
 
+## Prospective later-delivery pass (prepared before its tasks)
+
+The owner explicitly permits later final delivery. A separate standby late pass
+is prepared with admission cutoff **Nov4 09:00+08**, collection/publication bound
+**Nov4 09:55+08**, and immediate full delivery whenever all216new world jobs exist.
+It waits for each current capped supervisor's **natural** clean cutoff terminal
+AND actual exit, acquires both locks, validates every old claim, and admits only
+unclaimed jobs at the same2/1 cap. No current process is restarted, no task
+retried, and the original Nov2 cutoff/attrition receipt is preserved. A failure
+or source STOP stops this bridge instead of silently selecting/retrying results.
+The frozen model/recipe/panel/design/gate/CI families are unchanged.
+
+`late_watch.py` is a standby local owner, NOT an additional active collector. It
+takes collection AND publication only after both existing local owners naturally
+write deadline-incomplete receipts and exit (exact Windows creation-time checks).
+An already completed final causes no takeover; an unexpected STOP requires explicit
+recovery. It carries forward prior interim timestamps/bytes, keeps3h/reserved8
+triggers, and uses the same cache/scorers/final report assembly. Existing watched
+analysis/collector/publisher sources are not modified. The new late pass and
+standby PROCESS receipts must be read before any future dispatch.
+
 Recovery read git status/log, common rules, morning report/HANDOFF/noon publication,
 current INT receipts and all four current worker handoffs before action. Latest
 remote snapshots show19/216complete world jobs and no failed jobs; sourceb2df7458

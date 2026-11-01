@@ -149,9 +149,13 @@ def run(root, host, fw):
         priority='remaining reserved FULL-v5 first; otherwise original stable order',
         plan_sha256=fw.sha(root/'RUN_PLAN.json'), source_sha256=fw.sha(__file__),
         handover_at=datetime.now().astimezone().isoformat(), redispatched_tasks=0))
+    dispatch_pending(root, host, fw, plan, release, pending, claimed,
+        datetime.fromisoformat(plan['dispatch_cutoff']).timestamp(), 'OWNER_1735')
+
+
+def dispatch_pending(root, host, fw, plan, release, pending, claimed, cutoff, label):
     running, completed, failed = {}, list(claimed), []
-    cutoff = datetime.fromisoformat(plan['dispatch_cutoff']).timestamp()
-    with (root/'OWNER_1735_capped_status.jsonl').open('x') as journal:
+    with (root/(label+'_capped_status.jsonl')).open('x') as journal:
         while pending or running:
             for key, entry in list(running.items()):
                 child, job, directory, process = entry
@@ -206,21 +210,69 @@ def run(root, host, fw):
         unstarted_world_jobs=[job['id'] for job in pending], cutoff_reached=time.time() >= cutoff,
         complete=not pending and not failed, forecast_efficacy_values_read=False,
         final_time=datetime.now().astimezone().isoformat(), cap=CAPS[host])
-    fw.save(root/('PANEL_COMPLETE.json' if final['complete'] else 'PANEL_TERMINAL_INCOMPLETE.json'), final)
+    terminal = 'PANEL_TERMINAL_INCOMPLETE.json' if label == 'OWNER_1735' else label+'_PANEL_TERMINAL_INCOMPLETE.json'
+    fw.save(root/('PANEL_COMPLETE.json' if final['complete'] else terminal), final)
+
+
+def late_run(root, host, fw):
+    """Stand by until the capped pass naturally exits; then finish only missing claims."""
+    import fcntl
+    previous = fw.load(root/'owner1735_control/PROCESS.json')
+    fw.save(root/'OWNER_LATE_WAIT_ONCE.json', dict(**fw.incarnation(os.getpid()),
+        previous=previous, cap=CAPS[host], source_sha256=fw.sha(__file__),
+        dispatch_cutoff='2026-11-04T09:00:00+08:00', signals_sent=False))
+    while True:
+        if (root/'OWNER_1735_CAPPED_STOP.json').exists():
+            raise ValueError('prior capped pass stopped unexpectedly; preserve explicit recovery')
+        if (root/'PANEL_COMPLETE.json').exists():
+            print('PREVIOUS_PASS_COMPLETE; no dispatch required', flush=True)
+            return
+        terminal = root/'PANEL_TERMINAL_INCOMPLETE.json'
+        if terminal.exists() and not fw.alive(previous):
+            record = fw.load(terminal)
+            if record['failed_world_jobs'] or not record['cutoff_reached']:
+                raise ValueError('only a clean dispatch-cutoff continuation is allowed')
+            break
+        print('STANDBY original capped pass still owns dispatch', flush=True)
+        time.sleep(60)
+    own = (root/'OWNER_1735_COORDINATOR.lock').open('a')
+    fcntl.flock(own, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    lock = (root/'SUPERVISOR.lock').open('a')
+    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    spec = fw.load(root/'SPEC.json')
+    if spec['host'] != host or Path(spec['control']) != CONTROL:
+        raise ValueError('late host/control differs')
+    for name, expected in spec['files'].items():
+        if fw.sha(root/name) != expected:
+            raise ValueError('frozen execution metadata changed')
+    plan, release = fw.load(root/'RUN_PLAN.json'), fw.load(root/'RELEASE.json')
+    jobs = [job for job in plan['jobs'] if job['host'] == host]
+    active, recovered, pending, claimed = recovery_plan(root, jobs, fw.completed_world, fw.alive)
+    if active or recovered:
+        raise ValueError('prior clean terminal must have reaped/recorded all claimed tasks')
+    fw.save(root/'OWNER_LATE_CAPPED_HANDOVER.json', dict(
+        process=fw.incarnation(os.getpid()), previous_exited=True, signals_sent=False,
+        claimed_jobs_preserved=claimed, pending_jobs=[job['id'] for job in pending],
+        cap=CAPS[host], previous_terminal_sha256=fw.sha(terminal),
+        dispatch_cutoff='2026-11-04T09:00:00+08:00',
+        handover_at=datetime.now().astimezone().isoformat(), redispatched_tasks=0))
+    dispatch_pending(root, host, fw, plan, release, pending, claimed,
+        datetime.fromisoformat('2026-11-04T09:00:00+08:00').timestamp(), 'OWNER_LATE')
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', required=True)
     parser.add_argument('--host', choices=tuple(CAPS), required=True)
+    parser.add_argument('--after-current', action='store_true')
     args = parser.parse_args()
     spec = importlib.util.spec_from_file_location('frozen_rb2int_final_worker', CONTROL/'tools/rb2int/final_worker.py')
     fw = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(fw)
     try:
-        run(Path(args.root), args.host, fw)
+        (late_run if args.after_current else run)(Path(args.root), args.host, fw)
     except Exception as error:
-        fw.save(Path(args.root)/'OWNER_1735_CAPPED_STOP.json', dict(
+        fw.save(Path(args.root)/('OWNER_LATE_CAPPED_STOP.json' if args.after_current else 'OWNER_1735_CAPPED_STOP.json'), dict(
             error=repr(error), automatic_retry=False, evaluate_process_signals=False))
         raise
 

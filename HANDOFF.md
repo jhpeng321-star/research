@@ -12,6 +12,17 @@
 - Collector25240 and publisher44988 ownership stays unchanged. Complete tasks
   remain collectable while supervisors are paused.19/216world jobs complete at
   recovery, no failures. Existing report/interim qualification limits still apply.
+- Capped coordinator waiters now LIVE: gpuA513448/start890664618 and
+  gpuR948148/start4215302457, both source87ef677d. Their PROCESS/STATUS receipts
+  are `docs/rb2int/OWNER_1735_*_CAPPED_*.json`. gpuA waits for last old evaluate
+  childv5_969592; gpuR waits for three old WM2children. No replacement dispatch
+  occurs until all old children exit and old dispatcher lock is released.
+- Later-delivery extension is prospectively registered: bounded late standbys
+  (Nov4 09:00admission/09:55publication) will wait for NATURAL current-pass/local
+  deadline exits, then exclusively finish only unclaimed work and reuse caches.
+  Do not launch another supervisor/collector. Exact late PROCESS receipts follow.
+  Existing report publisher guards prohibit external WMPHYS_V5.md edits; owner
+  priority is recorded here/in registration without stopping that publisher.
 
 ## LIVE17:03 — authoritative continuation ownership
 

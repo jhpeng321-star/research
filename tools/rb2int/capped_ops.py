@@ -13,19 +13,20 @@ from tools.rbint.remote import ssh
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=('start', 'status'))
+    parser.add_argument('action', choices=('start', 'status', 'start-late', 'status-late'))
     parser.add_argument('--host', choices=tuple(EXPECTED), required=True)
     parser.add_argument('--receipt', required=True)
     args = parser.parse_args()
     out = Path(args.receipt)
     if out.exists() or not out.parent.is_dir():
         raise ValueError('exclusive local receipt in existing parent required')
+    late = args.action.endswith('-late')
     common = f'''
 import hashlib,json,os,subprocess,time
 from datetime import datetime
 from pathlib import Path
 root=Path({REMOTE_ROOT!r});control=Path({CONTROL!r});expected={EXPECTED[args.host]!r}
-stage=root/'owner1735_control'
+stage=root/{'owner_late_control' if late else 'owner1735_control'!r}
 def save(path,value):
  with path.open('x') as stream: json.dump(value,stream,indent=1)
 def alive(process):
@@ -34,7 +35,7 @@ def alive(process):
   return fields[2]!='Z' and fields[21]==process['start_ticks'] and Path('/proc/sys/kernel/random/boot_id').read_text().strip()==process['boot_id']
  except FileNotFoundError: return False
 '''
-    if args.action == 'start':
+    if args.action in ('start', 'start-late'):
         source = ROOT/'tools/rb2int/capped_worker.py'
         committed = subprocess.run(['git', 'show', 'HEAD:tools/rb2int/capped_worker.py'],
             cwd=ROOT, capture_output=True, check=True).stdout
@@ -46,20 +47,24 @@ def alive(process):
 assert not stage.exists(), 'preserve prior coordinator deployment'
 assert root.is_dir() and (root/'OWNER_1735_DRAIN_APPLIED.json').is_file()
 original=json.loads((root/'SUPERVISOR_PROCESS.json').read_text())
-assert {{k:original[k] for k in expected}}==expected and alive(original)
-assert Path('/proc/'+str(original['pid'])+'/stat').read_text().split()[2]=='T'
+assert {{k:original[k] for k in expected}}==expected
+if not {late!r}:
+ assert alive(original) and Path('/proc/'+str(original['pid'])+'/stat').read_text().split()[2]=='T'
+else:
+ assert (root/'owner1735_control/PROCESS.json').is_file()
 raw={committed!r};compile(raw,'capped_worker.py','exec')
 stage.mkdir()
 with (stage/'capped_worker.py').open('xb') as stream: stream.write(raw)
 save(stage/'DEPLOYED.json',dict(source_commit={head!r},source_sha256={hashlib.sha256(committed).hexdigest()!r},model_source_changed=False))
 save(stage/'START_ONCE.json',dict(owner='S-RB2-INT',original=original,evaluate_signals=False,redispatched_tasks=0))
 argv=['nice','-n','19','/root/miniconda3/bin/python','-B','-u',str(stage/'capped_worker.py'),'--root',str(root),'--host',{args.host!r}]
+if {late!r}: argv.append('--after-current')
 env=dict(os.environ,CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
 with (stage/'coordinator.log').open('x') as log:
  child=subprocess.Popen(argv,cwd=control,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
 fields=Path('/proc/'+str(child.pid)+'/stat').read_text().split()
 result=dict(host={args.host!r},pid=child.pid,start_ticks=fields[21],boot_id=expected['boot_id'],argv=argv,
- phase='wait for all original children; then exclusive capped continuation',
+ phase={'wait for current capped pass to exit naturally; then only missing claims' if late else 'wait for all original children; then exclusive capped continuation'!r},
  cap={2 if args.host == 'gpuA' else 1},source_commit={head!r},source_sha256={hashlib.sha256(committed).hexdigest()!r},
  started_at=datetime.now().astimezone().isoformat())
 save(stage/'PROCESS.json',result)
@@ -71,7 +76,7 @@ result=dict(exists=stage.is_dir(),time=datetime.now().astimezone().isoformat())
 if stage.is_dir():
  process=json.loads((stage/'PROCESS.json').read_text());result.update(process=process,alive=alive(process))
  result['log_tail']=(stage/'coordinator.log').read_text()[-5000:]
- for name in ('OWNER_1735_CAPPED_START_ONCE.json','OWNER_1735_CAPPED_HANDOVER.json','OWNER_1735_CAPPED_STOP.json','PANEL_COMPLETE.json','PANEL_TERMINAL_INCOMPLETE.json'):
+ for name in ('OWNER_1735_CAPPED_START_ONCE.json','OWNER_1735_CAPPED_HANDOVER.json','OWNER_1735_CAPPED_STOP.json','OWNER_LATE_WAIT_ONCE.json','OWNER_LATE_CAPPED_HANDOVER.json','OWNER_LATE_CAPPED_STOP.json','PANEL_COMPLETE.json','PANEL_TERMINAL_INCOMPLETE.json'):
   if (root/name).is_file(): result[name]=json.loads((root/name).read_text())
  original=json.loads((root/'SUPERVISOR_PROCESS.json').read_text());result['original_alive']=alive(original)
  if alive(original): result['original_state']=Path('/proc/'+str(original['pid'])+'/stat').read_text().split()[2]
