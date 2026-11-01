@@ -1,6 +1,16 @@
 # S-COOPMWM — live checks
 
 ## MAIN05:48 quota-aware admission — qualified and registered
+- **DEPLOYED:** quota broker3514272/start58480523 and detached handover
+  supervisor3514691/start58480999 are alive/no errors at unix1793570536.
+  Original GPU searches and grader3427015 continue. The watcher automatically
+  adopts the closed B-u1 wave, then starts B/R once with the qualified runtime;
+  its receipts are exposed by `tools.coopmwm.quota_ops status`.
+- At unix1793570600, one formerly waiting episode had resumed SUMO to t648;
+  three admitted queries remained pending. Four completed current-release queries
+  measured769.08–1194.88s across2/3/4-member groups. One plan start, zero exact
+  grades: these are small inference samples, not steady-state throughput or
+  evidence of beneficial SUMO cooperation. A finite u1 ETA is not yet established.
 - Full recovery adopted the existing owners and completed warm-memory evidence.
   A is at fixed u48. At unix1793570244,20/24 current B episodes were closed;
   the other four had admitted queries at t300/310/320/320. R had no claims.
@@ -19,8 +29,8 @@
   adopts all24 completed B results and preserves checkpoint0 Adam/RNG. MAIN's
   permitted u1 shortfall will be explicit; no extra traffic episodes are added.
 - The failed CPU1 missing-directory receipt is retained; CPU2 passed227 tests.
-  Allocation remains **7,495,040 /7,500,000 sim-s**,4,960 unallocated. Deployment
-  and first-update/exact-grade viability evidence are pending at this entry.
+  Allocation remains **7,495,040 /7,500,000 sim-s**,4,960 unallocated.
+  First-update/exact-grade viability evidence is pending at this entry.
 
 ## MAIN05:08 nonblocking admission — repaired release live
 - Latest05:40:54UTC+8 snapshot:20/24 B episodes closed; the four admitted searches
