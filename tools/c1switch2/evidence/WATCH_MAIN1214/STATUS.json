@@ -1,14 +1,14 @@
 {
-  "unix": 1793508278.6435049,
+  "unix": 1793509501.3399675,
   "protocol": "S-C1SWITCH2/v2",
   "hosts": {
     "cpuQ": {
-      "unix": 1793508279.349406,
+      "unix": 1793509501.9862528,
       "host": "cpuQ",
       "load": [
-        11.87841796875,
-        11.837890625,
-        11.80078125
+        10.9697265625,
+        9.8203125,
+        10.267578125
       ],
       "cpu": {
         "cpu": {
@@ -49,20 +49,16 @@
           "root": "/home/ubuntu/c1switch2_run_e79775aa1f380c25",
           "process": {
             "pid": 1152412,
-            "state": "S",
-            "start_ticks": 51924786,
-            "uid": 1000,
-            "own_root_in_command": true
+            "state": "EXITED"
           },
-          "complete": false,
+          "complete": true,
           "stop": null,
           "episodes": 12,
           "decisions": 360,
-          "closed_jobs": 76,
-          "closed_actual_sim_s": 57920.0,
-          "charged_sim_s": 59140,
-          "ledger_sha256": "b90f77c1419cdbe92ef7ec2494d4707ad53e03bab3204bcec2bdacf8150cf071",
-          "no_progress_ticks": 0
+          "closed_jobs": 84,
+          "closed_actual_sim_s": 63480.0,
+          "charged_sim_s": 63480,
+          "ledger_sha256": "cefeba5bbff863606e0f8bb9f9c653f11879672f84e507ca206d145053ee44e6"
         },
         "wm_oracles": {
           "root": "/home/ubuntu/c1switch2_run_oracles_0e790a668b7ec5d8",
@@ -83,12 +79,12 @@
       "gpu": {}
     },
     "gpuR": {
-      "unix": 1793508280.1942024,
+      "unix": 1793509502.7136996,
       "host": "gpuR",
       "load": [
-        16.93017578125,
-        15.396484375,
-        14.3193359375
+        12.42138671875,
+        23.3837890625,
+        23.67138671875
       ],
       "cpu": {
         "cpu": {
@@ -169,7 +165,7 @@
           "ready": true,
           "requests": 98,
           "results": 98,
-          "elapsed_wall_s": 38100.94798326492
+          "elapsed_wall_s": 39323.46755862236
         },
         "bb": {
           "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
@@ -194,17 +190,17 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 4126.733838319778
+          "elapsed_wall_s": 5349.253920078278
         }
       }
     },
     "gpuA": {
-      "unix": 1793508281.5251548,
+      "unix": 1793509503.5315945,
       "host": "gpuA",
       "load": [
-        15.4287109375,
-        10.798828125,
-        9.5751953125
+        13.068359375,
+        14.15576171875,
+        13.0830078125
       ],
       "cpu": {},
       "gpu": {
@@ -227,7 +223,7 @@
           "ready": true,
           "requests": 90,
           "results": 90,
-          "elapsed_wall_s": 38107.25782442093
+          "elapsed_wall_s": 39329.26429152489
         },
         "bb": {
           "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
@@ -252,7 +248,7 @@
           "ready": true,
           "requests": 2,
           "results": 2,
-          "elapsed_wall_s": 4128.9091827869415
+          "elapsed_wall_s": 5350.915654182434
         }
       }
     }
@@ -346,11 +342,11 @@
   "postnoon_supervision": {
     "pid": 42548,
     "admission": {
-      "unix": 1793508217.849623,
+      "unix": 1793509440.5452123,
       "status": "WAIT_CPU_DISK_NO_CLAIM",
       "states": {
-        "load": 22.666015625,
-        "free_bytes": 316493824
+        "load": 17.18359375,
+        "free_bytes": 316497920
       }
     },
     "admission_error": {
