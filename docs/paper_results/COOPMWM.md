@@ -1,5 +1,16 @@
 # S-COOPMWM — live checks
 
+## 19:41 — fresh-session recovery; OWNER19:38 pending qualification
+- Owned A supervisor2146725 boot/start identity verified, state **T**.672/678
+  jobs closed; six remaining update20 reservations never CLAIMed. All **811,640
+  sim-s** retained, including these reservations. No new physics or dispatch.
+- Both GPUs have no task process and no occupied compute memory at inventory.
+- Latest requested experiment is common1s acceleration-residual A/B/R from MAPPOu0,
+  committed joint acceleration plans with Thompson selection,96 sealed test worlds.
+  Old set-point sources/results remain superseded; training stays held pending
+  corrected parity, CPU qualification, panel exposure audit, exact re-quote and registration.
+- Recovery receipt: `coopmwm/RECOVERY_ACCEL_1938.json`.
+
 ## OWNER19:34 — acceleration-space restart HOLD (fresh recovery)
 - Verified cpuQ supervisor2146725 boot/start identity and SIGSTOPed that owned
   supervisor. A reached update19; eighteen update20 jobs remain incomplete at the

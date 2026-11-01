@@ -1,4 +1,12 @@
-# S-COOPMWM live continuation — OWNER19:34 recovery
+# S-COOPMWM live continuation — OWNER19:38 recovery
+
+Fresh-session verification19:41: owned A supervisor2146725 is identity-verified
+and stopped (T);672/678 reserved jobs closed, remaining6 never claimed.
+All811,640sim-s remain charged, including those6 reservations. No new physics.
+Both GPU inventories show no task service/process and no occupied GPU memory.
+Latest19:38 requires96-world sealed metadata panel and Thompson-sampled
+acceleration plans. These amendments are not yet registered/qualified; all arms held.
+Do not run old deploy/train commands against a changed protocol.
 
 LATEST OVERRIDE: `HOLD_ACCEL_1934.json` pauses verified owned A-only supervisor
 2146725; A u1..19 and draining u20 are superseded set-point engineering runs.
