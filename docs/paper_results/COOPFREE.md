@@ -1,5 +1,36 @@
 # S-COOPFREE — implementation and execution receipt
 
+## CURRENT — OWNER15:11 continuation running (supersedes historical budget blocker)
+Registry explicitly approves+4M/total6M. Immutable separate phase root
+`/home/ubuntu/coopfree20261101_owner1511`, cpuQ supervisor1579328/start53193103,
+four workers1579331-1579334, all freshu002 arms observed active after launch.
+Original1,952,433sim-s are closed; its discovery STOP was detector reference-label
+postprocessing failure, not incomplete physics. All original sources/STOP/charges kept.
+Corrected u001 policy AND optimizer retained; newu002 has independent sampled noise,
+156windows/24worlds, exact solos on39/156 simple-random complete groups chosen before
+outcomes.420newarms cost431,640sim-s;48exact zero-HOLD cache hits. Full-prefix gates,
+safety/ownership/native lanes/noise unchanged. All legacy MAPPO-credit learning excluded.
+Exact total caps: screen27,360+repeat13,680+TRAIN5,494,000+DEV288,000+
+discovery132,000+UNALLOCATED44,960=6M; extension4M=3,844,000TRAIN+115,200DEV+
+40,800discovery. Whole-batch reservation determines actual update count;20–25 is a
+target, not a promised affordable count. No refunds/retries/completed simulation replay.
+CPU34/34PASS0skips3.35s/SUMO0: original frozen22 gates,7 new continuation tests,
+5 paired/trend checks. Old Windows-only observer compile test is independent of this
+Linux phase and not part of34. Precertificate missing-import failures ran no SUMO;
+their staging copies remain. Certificate binds new sources/design/full TRAIN EXAM prior.
+Full peer EXAM prior is observable-only, SHA9f8728624c106cf534124b4a212823ccc90ad8d9b24c5b19dc0e01724b35b2ea.
+Four nice19/single-thread workers admit only load<=12, memory>=8GiB/disk>=2GiB;
+priority below WMPLAN/C1SWITCH2. First live check load10.43/disk8.24GB.
+Dev learned24world panels at u3/u6/u9/final reuse exact MAPPO/bandit/zero-HOLD
+controls; paired J600/J900/bootstrap/safety vs all three. Four new panels reserved.
+Each update publishes checkpoint/hash, executed/issued/override shares, DG/sumDi/CG
+distributions and positiveCG share. At stalled6update slopes or execution<=50%,
+pause until a registry line authorizes measured-scale/shared-output population ES,
+stronger signed observable sampling, and fresh next-batch phase restart; no old replay.
+Proposal consumers: COOPPLAN/WMPLAN; new exports `publications/owner1511/`.
+Untilu002 completes, latest learned checkpoint is still correctedu001 below; no new gain claim.
+Commits:e9c26214 implementation/CPU;ea6d2a6c predispatch registry receipt.
+
 ## Fresh-session recovery: current evidence and blockers
 Resumed clean at `0f9f60c2`; preserved inherited physics, charges and checkpoints.
 Publisher5020 had exited on an uncaught SSH RuntimeError. Both a read-only cpuQ

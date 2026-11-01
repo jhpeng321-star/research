@@ -1,5 +1,24 @@
 # S-COOPFREE resume receipt
 
+## CURRENT: OWNER15:11 approved continuation RUNNING
+Clean resume1ff7c6ac; implementatione9c26214/registrationea6d2a6c committed.
+Separate cpuQ `/home/ubuntu/coopfree20261101_owner1511` supervisor
+1579328/start53193103 verified live; workers1579331-1579334 executing freshu002.
+Never launch a duplicate. `python -m tools.coopfree_continue_ops status` is read-only.
+Original615088 is absent; its HOLD_STOP is retained (postprocessing label rejection),
+all original1,952,433 charges closed. Corrected u001 checkpoint/optimizer reused;
+no old exploration or optimizer step replayed. Source/design certificates remain separate.
+OWNER15:11 +4M approval is registered; total cap6M, exact phase plan in70line design.
+CPU34/34PASS0skips3.35s/SUMO0. Newu002=156windows/24worlds/39random exactsolo
+groups/420newarms/431,640sim-s precharge;48cached HOLD baselines reused.
+At first verification load10.43; four nice19/singlethread workers, admission<=12,
+memory>=8GiB/disk>=2GiB; lower priority than WMPLAN/C1SWITCH2. No peer signals.
+New checkpoints publish separately under `tools/coopfree/publications/owner1511/`;
+until next completion, correctedu001 in `publications/hold/` remains latest learned.
+Learning checks/dev at u3/u6/u9/final; if six-update effects stall, supervisor parks
+for registered phase-fix authority before fresh next batch/ES; no replay.
+The historical budget blockers below are superseded by the15:11 approval.
+
 ## Fresh resume: observer transport failure
 Starting `0f9f60c2`, clean worktree. Publisher5020 is absent; its retained log ends
 with SSH `Connection closed`, which escaped as RuntimeError. cpuQ read-only status
