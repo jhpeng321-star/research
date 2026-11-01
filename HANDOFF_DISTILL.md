@@ -21,3 +21,12 @@
 - Status/collect: `py -3.13 -B -m tools.distill.ops status` / `collect`.
   Never relaunch/retry an existing dispatch or overwrite sources/policy/receipts.
 - All training uses existing labels, zero newSUMO. Report `docs/paper_results/DISTILL.md`.
+
+## COMPLETE — no live winner
+- All24pairs/288decisions COMPLETE; actual=charged72960sim-s, ZEROquota-pruned actions.
+- J600 saving−96.482[−575.232,+288.473]; J900−54.565[−294.222,+188.886]veh-s/world.
+- Six executed groups/5worlds, including one wall;24exact creditprefixes/BOTHsolos complete.
+- C_Gmean−35.890[−59.837,+6.218],2/6positive but both jointD_Gnegative;0beneficial-superadditive groups.
+- No collision/teleport either arm;19all-O0worlds bitwise equal. Full independent QA/report recomputation PASS.
+- Frozen original root COMPLETE/noSTOP/noincomplete; never relaunch. Unused authority is not a new dispatch.
+- This EXAM-only student did not establish generalization benefit. PlannerDEV never-fit roles preserved.
