@@ -1,17 +1,83 @@
 # S-WMPLAN — world-model-guided cooperative planner
 
 ## Plain-language status
-The live evaluation is running, with the primary expected-saving arm first and
-decision-time world-model inference on both gpuA and gpuR. No complete paired
-24-world result is available yet, so no claim of beating MAPPO is supported.
-The owner-approved question is whether the world model can choose cooperative
-actions online better than MAPPO alone. FULL-v4 was selected before live outcomes:
-helpful-state agreement4/8 vs FULL-v5 2/8, all12 exact chosen saving+680.308 vs
-+172.704veh-s/state. These are teacher-quality diagnostics, not live efficacy.
+**The live test stopped on an executor-wiring error. There is no live efficacy
+result and no evidence here that the planner beats MAPPO.** Three primary-arm
+attempts reached the 300-second warmup; none ran a post-warmup physics step or
+completed an episode. A durable STOP was written immediately when the abnormal
+close was detected. All owned local and remote services have now exited.
+
+The error was a missing `initial_rows` field between the online planner and the
+inherited executor. The observable roster is now attached exactly as in
+`coopplan.runner`; the repair is committed as `e492210c` and 30 CPU tests pass,
+including the real plant adapter. The stopped immutable run was preserved, and
+the repair has **not** been dispatched. The registered plan forbids retries;
+an explicit owner amendment is required before an engineering restart.
+
+Accounting is **900 actual sim-s; 3,600 charged sim-s, with no refund**. The strict
+arm and all group-twin simulations remain unstarted. Both GPUs produced forecasts;
+all three completed K8 states (24 futures) are preserved for potential reuse.
+
+FULL-v4 was selected before live outcomes: helpful-state agreement 4/8 vs FULL-v5
+2/8, all-12 exact chosen saving +680.308 vs +172.704 veh-s/state. These are
+teacher-quality diagnostics, not live efficacy.
+
+## Original registered live design
 The exact 199,200 sim-s plan is registered. Complete full-prefix C_G twins require
 fixed 2,950 sim-s credit per world-arm: at most one early group can execute, and
 none after t600 fits. This is explicitly a budget-limited planner comparison;
 raw proposals, executions and resource-forced O0 decisions will all be reported.
+
+## Requested outcomes — not estimable from this failed start
+- **Paired J600/J900 and bootstrap CIs:** unavailable; zero complete 1,200-second
+  episodes and zero post-warmup scoring exposure. Failed warmups are not assigned
+  zero savings and are not substituted with reused MAPPO endpoints.
+- **Executed moves:** zero post-warmup executed moves and zero group moves. One
+  O0 decision was recorded at t300, but the adapter failed before executing its tick.
+- **C_G member-alone twins:** no group execution, reservation or twin simulation;
+  no C_G estimate is defined.
+- **Safety:** no post-warmup collision/TTC/hard-braking comparison is available;
+  the startup failure is not evidence of full-panel safety.
+- **SUMO-oracle / S-DISTILL / WM-student comparisons:** no WMPLAN endpoint exists
+  to compare. All 24 S-DISTILL MAPPO baseline bytes remain bound and were not rerun.
+  The existing SUMO-oracle panel differs, so it cannot supply missing paired outcomes.
+
+## Fault, repair and retained evidence
+The first complete decision reached `coopplan.plant.tick`, which requires
+`event['initial_rows']` to anchor inherited executor targets. The WMPLAN wrapper
+omitted that field; the inherited SUMO-oracle runner supplies it. The resulting
+`KeyError: 'initial_rows'` occurred before `frozen_tick` or a controlled physics step.
+The episode supervisor's pool shutdown waited for queued work before exposing the
+exception. Recovery detected a closed job at 300 without RESULT and wrote STOP;
+admission then rejected further worlds. Exactly three jobs consumed warmup time.
+
+The local repair also writes STOP inside a failed episode before its Future
+returns to the outer supervisor. The earlier mocked-tick CPU test did not exercise
+the missing field; its replacement now calls the real `coopplan.plant.tick`
+adapter and mocks only the lower SUMO boundary. A second regression verifies
+warmup faults stop before backend closure and before creating a worker pool.
+`wmplan/EXECUTOR_ABI_FIX_CPU.json` records 30 PASS, zero new SUMO, no deployment.
+
+`wmplan/FAULT_RECEIPTS.json` binds the original sources, all charges/closes,
+recorded decision, all three observable requests/K8 predictions and future hashes,
+STOP, traceback and exited ownership identities. `FAULT_REGISTRATION.json` is the
+shared registration receipt. Original claims, startup-gate failures, mirror
+manifests, transferred files and every forecast remain preserved.
+
+## Engineering restart proposal — NOT APPROVED / NOT DISPATCHED
+The same model, panel, decision rules, credit quotas, executors and expected-first
+reporting order can fit under the owner's original cap if a restart is explicitly
+authorized. The tighter mathematical bound is:
+- New 48 episodes: 57,600 sim-s.
+- New group twins: at most 48 x 2,880 = 138,240 sim-s. The unchanged 2,950/world-arm
+  quota admits at most one group, and the latest affordable clock is t600.
+- New run upper: 195,840 sim-s; plus all 3,600 existing charges = **199,440 charged
+  sim-s**, below 200,000. Worst-case combined actual is 195,840 + 900 = **196,740 sim-s**.
+
+This proposal refunds no prior charge, changes no behavioural rule, and would
+reuse the completed forecasts rather than duplicate them. It is only a feasible
+recovery bound; it does not amend the registered no-retry rule or arm a dispatch.
+See `wmplan/RESTART_PROPOSAL.json`.
 
 ## Recovered authority and evidence
 - Branch `c4/wmplan`, clean initial HEAD `df52de61`, inherited from S-WMTEACH.
@@ -69,6 +135,12 @@ gate evidence are retained in `wmplan/`.
 
 <!-- WMPLAN-PROGRESS:BEGIN -->
 ## Current continuation status
-- Continuation stopped; preserve all completed evidence and existing remote work.
-- No automatic retry or new dispatch is armed. See `wmplan/AUTO_FAILURE_38256.json`.
+- Terminal STOP; all owned local/remote services exited. No automatic continuation
+  or replacement dispatch is armed.
+- Actual 900 / charged 3,600 sim-s; 3 failed warmups, 0 complete episodes, 0 controlled
+  post-warmup steps, 0 executed groups, 0 strict attempts. No J600/J900/CI estimate.
+- Three complete K8 states/24 futures retained; source/receipt hashes verified.
+- Local executor-ABI/fail-fast repair `e492210c`: 30 CPU PASS, not deployed to the
+  preserved stopped root. Restart proposal 199,440 charged upper awaits an explicit
+  amendment to the registered no-retry plan.
 <!-- WMPLAN-PROGRESS:END -->

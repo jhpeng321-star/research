@@ -387,9 +387,79 @@ print(json.dumps(out))
     return result
 
 
+def fault():
+    """Preserve a terminal startup fault, never treat failed warmups as efficacy."""
+    result = json.loads(remote(f'''import pathlib,json,hashlib,sys,time
+root=pathlib.Path({ROOT!r});sys.path.insert(0,str(root/'pytools'))
+from tools.wmplan.live import verify
+binding=verify(root)
+def load(p):return json.loads(p.read_text())
+assert (root/'STOP.json').is_file() and not (root/'COMPLETE.json').exists()
+charges=[json.loads(s) for s in (root/'CHARGES.jsonl').read_text().splitlines()]
+jobs={{}}
+for p in (root/'jobs').iterdir():
+ assert (p/'CLOSE.json').is_file() and not (p/'RESULT.json').exists()
+ jobs[p.name]=dict(close=load(p/'CLOSE.json'),
+  decisions={{f.name:load(f) for f in p.glob('DECISION_*.json')}},
+  hashes={{f.name:hashlib.sha256(f.read_bytes()).hexdigest() for f in p.glob('*.json')}})
+assert len(charges)==len(jobs)==3
+assert all(v['close']['actual_sim_s']==300 and v['close']['charged_sim_s']==1200 for v in jobs.values())
+assert not list((root/'reservations').iterdir())
+assert all(e['executed_action']['id']=='O0' and e['time_s']==300
+ for v in jobs.values() for e in v['decisions'].values())
+forecasts={{}}
+for p in (root/'requests').glob('*.json'):
+ key=p.stem;q=root/'responses'/p.name;futures=sorted((root/'forecasts'/key).glob('k*.json'))
+ assert q.is_file() and len(futures)==8
+ forecasts[key]=dict(request=load(p),response=load(q),
+  hashes={{str(f.relative_to(root)):hashlib.sha256(f.read_bytes()).hexdigest() for f in [p,q,*futures]}})
+owners=[]
+for row in load(root/'DISPATCH.json')['owners']:
+ p=pathlib.Path(f'/proc/{{row["pid"]}}/stat');s=p.read_text().split() if p.exists() else None
+ alive=bool(s and s[21]==row['start_ticks'] and s[2]!='Z' and
+  pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()==row['boot_id'])
+ assert not alive,'owned service still finishing; no signals or duplicate collection'
+ owners.append(dict(**row,alive=False))
+print(json.dumps(dict(unix=time.time(),root=str(root),binding=binding,charges=charges,jobs=jobs,
+ actual=sum(v['close']['actual_sim_s'] for v in jobs.values()),charged=sum(v['sim_s'] for v in charges),
+ complete_episodes=0,post_warmup_steps=0,executed_groups=0,strict_started=False,
+ forecasts=forecasts,stop=load(root/'STOP.json'),owners=owners,
+ logs={{p.name:p.read_text() for p in root.glob('*.log')}},automatic_retry=False)))
+''',timeout=90))
+    owner = json.loads((OUT/'GPU_R_READY.json').read_text())
+    gpu_r = json.loads(remote(f'''import pathlib,json
+owner={owner!r};p=pathlib.Path(f'/proc/{{owner["pid"]}}/stat');s=p.read_text().split() if p.exists() else None
+alive=bool(s and s[21]==owner['start_ticks'] and s[2]!='Z' and
+ pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()==owner['boot_id'])
+assert not alive,'owned gpuR service still finishing; do not duplicate or signal'
+print(json.dumps(dict(owner=owner,alive=False)))
+''',host='gpuR'))
+    result['gpuR'] = gpu_r
+    save('FAULT_RECEIPTS.json',result)
+    line = ('- S-WMPLAN STARTUP FAULT / NO EFFICACY RESULT: FULL-v4 selected before live '
+            '(helpful4/8 vs v5 2/8; exact chosen all12 +680.307521 vs +172.703890veh-s/state). '
+            'Primary attempted984000..984002; all3 closed at warmup300, actual900sim-s/charged3600 '
+            '(no refund), completeepisodes0/postwarmupsteps0/groupmoves0/strict0/newMAPPO0. '
+            'KeyError initial_rows at inherited plant.tick boundary; durable own STOP; all owned '
+            'remote services exited, all24 completed WM futures preserved, no retry/new dispatch. '
+            'Local e492210c restores coopplan.runner observable-roster ABI and immediate episode '
+            'STOP;30CPU PASS including real plant adapter; stopped immutable root unmodified. '
+            'J600/J900/CIs/CG/full-panel safety unavailable. Any restart needs an explicit '
+            'amendment to the registered no-retry plan. '
+            'E:/agent-work/c4-wmplan/docs/paper_results/WMPLAN.md; '
+            f'faultreceiptSHA256{sha(OUT/"FAULT_RECEIPTS.json")}.\n')
+    text = REG.read_text(encoding='utf-8')
+    if line not in text:
+        with REG.open('a',encoding='utf-8') as f:
+            f.write(line);f.flush()
+    save('FAULT_REGISTRATION.json',dict(line=line,receipt_sha256=sha(OUT/'FAULT_RECEIPTS.json')))
+    print(json.dumps(dict(actual=result['actual'],charged=result['charged'],complete_episodes=0,
+                          cached_K8_states=len(result['forecasts']),all_owned_remote_services_exited=True)))
+
+
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
-    p.add_argument('action', choices=['recover','inspect','register','amend','compare','stage','mirror','cpu','freeze','launch','status','collect','primary'])
+    p.add_argument('action', choices=['recover','inspect','register','amend','compare','stage','mirror','cpu','freeze','launch','status','collect','primary','fault'])
     a = p.parse_args().action
     if a == 'mirror':
         from tools.wmplan.mirror import stage as mirror_stage
