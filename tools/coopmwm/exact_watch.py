@@ -59,7 +59,14 @@ def commit():
     patterns=('EXACT_*.json','CONCURRENT_STATUS_*.json','warm_live/*.json')
     paths=[str(p.relative_to(ops.LOCAL)) for pattern in patterns for p in ops.EVIDENCE.glob(pattern)]
     paths.append('docs/paper_results/COOPMWM.md')
-    checked_commit(paths)
+    try:
+        checked_commit(paths)
+    except ValueError as error:
+        if str(error)!='other staged work; preserve it':raise
+        # Observation must survive an operator's independent commit. Leave the
+        # index untouched and publish all pending immutable receipts next poll.
+        write(ops.EVIDENCE/f'EXACT_COMMIT_DEFERRED_{time.time_ns()}.json',dict(
+            unix=time.time(),reason=str(error),index_untouched=True,physics_retry=False))
 
 
 def run():
@@ -98,13 +105,26 @@ def run():
 
 def dispatch():
     target=ops.EVIDENCE/(TAG+'_DISPATCH.json');assert not target.exists()
+    if TAG=='EXACT_OBSERVER_V3':
+        from .protocol import checked,REGISTRY,sha
+        receipt=ops.EVIDENCE/'EXACT_OBSERVER_STAGING_RECOVERY.json'
+        assert not receipt.exists()
+        value=dict(previous_exit=read(ops.EVIDENCE/'EXACT_OBSERVER_EXIT_1793564486.json'),
+            observer_source_sha256=sha(ops.LOCAL/'tools/coopmwm/exact_watch.py'),
+            purpose='restore receipt observation after operator staging conflict; defer only this commit conflict',
+            tests=2,new_sumo_sim_s=0,automatic_physics_retry=False)
+        write(receipt,value)
+        line='\nS-COOPMWM OBSERVER STAGING RECOVERY REGISTERED amendmentSHA'+sha(receipt)+': local observer43408 exited on other-staged-work guard; verified absent; V3 restores observation/adopts existing remote owners, does not repeat launches, defers index-conflict commit until next poll; all physics/inference and original GPU deadline unchanged; CPU2PASS/zeroSUMO.\n'
+        with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
     binding=dict(deadline_unix=read(ops.EVIDENCE/'WARM_A48_BINDING.json')['gpu_deadline'],
         contract='observe/publish; adopt existing owners; once8EXACT0 gates per host, register and launch grader/broker/B/R once; no physics retry')
     write(ops.EVIDENCE/(TAG+'_BINDING.json'),binding)
     with (ops.EVIDENCE/(TAG+'.log')).open('x',encoding='utf-8') as log:
-        p=subprocess.Popen([sys.executable,'-X','utf8','-u','-m','tools.coopmwm.exact_watch','run'],cwd=ops.LOCAL,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT)
+        p=subprocess.Popen([sys.executable,'-X','utf8','-u','-m','tools.coopmwm.exact_watch','run','--tag',TAG],cwd=ops.LOCAL,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT)
     value=dict(pid=p.pid,unix=time.time(),binding=binding);write(target,value);print(json.dumps(value))
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('run','dispatch'));globals()[p.parse_args().mode]()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('run','dispatch'))
+    p.add_argument('--tag',choices=('EXACT_OBSERVER_V2','EXACT_OBSERVER_V3'),default=TAG)
+    args=p.parse_args();TAG=args.tag;globals()[args.mode]()
