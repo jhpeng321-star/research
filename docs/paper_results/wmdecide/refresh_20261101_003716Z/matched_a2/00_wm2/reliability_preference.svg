@@ -1,0 +1,201 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="975" viewBox="0 0 760 975" role="img">
+<title>wm2: preference reliability</title>
+<rect width="100%" height="100%" fill="#fff"/>
+<g font-family="sans-serif" font-size="11" fill="#162638">
+<text x="20" y="24" font-size="18">wm2 · preference reliability</text>
+<text x="20" y="44">Fixed deciles; dots show forecast vs observed rate; bars: pointwise 95% world CIs.</text>
+<text x="20" y="60">Sparse / constant bins may have no CI. A diagonal-looking small panel does not qualify a model.</text>
+<text x="55" y="87" font-weight="bold">development12 · 120 s</text>
+<path d="M 55 105 V 310 M 55 310 H 260" stroke="#e6ebf0"/>
+<text x="55" y="326" text-anchor="middle">0</text>
+<text x="47" y="314" text-anchor="end">0</text>
+<path d="M 106.25 105 V 310 M 55 258.75 H 260" stroke="#e6ebf0"/>
+<text x="106.25" y="326" text-anchor="middle">0.25</text>
+<text x="47" y="262.75" text-anchor="end">0.25</text>
+<path d="M 157.5 105 V 310 M 55 207.5 H 260" stroke="#e6ebf0"/>
+<text x="157.5" y="326" text-anchor="middle">0.5</text>
+<text x="47" y="211.5" text-anchor="end">0.5</text>
+<path d="M 208.75 105 V 310 M 55 156.25 H 260" stroke="#e6ebf0"/>
+<text x="208.75" y="326" text-anchor="middle">0.75</text>
+<text x="47" y="160.25" text-anchor="end">0.75</text>
+<path d="M 260 105 V 310 M 55 105 H 260" stroke="#e6ebf0"/>
+<text x="260" y="326" text-anchor="middle">1</text>
+<text x="47" y="109" text-anchor="end">1</text>
+<path d="M 55 310 L 260 105" stroke="#8795a5" stroke-dasharray="4 4"/>
+<text x="157.5" y="344" text-anchor="middle">Predicted probability</text>
+<text transform="translate(20 207.5) rotate(-90)" text-anchor="middle">Observed rate</text>
+<circle cx="80.625" cy="228.0" r="4" fill="#176fa7"><title>all pairs n=5, worlds=3; pred=0.125, observed=0.400</title></circle>
+<circle cx="131.875" cy="258.75" r="4" fill="#176fa7"><title>all pairs n=4, worlds=3; pred=0.375, observed=0.250</title></circle>
+<circle cx="157.5" cy="146.0" r="4" fill="#176fa7"><title>all pairs n=5, worlds=3; pred=0.500, observed=0.800</title></circle>
+<circle cx="183.125" cy="105.0" r="4" fill="#176fa7"><title>all pairs n=4, worlds=1; pred=0.625, observed=1.000</title></circle>
+<circle cx="208.75" cy="105.0" r="4" fill="#176fa7"><title>all pairs n=5, worlds=2; pred=0.750, observed=1.000</title></circle>
+<circle cx="234.375" cy="187.0" r="4" fill="#176fa7"><title>all pairs n=5, worlds=3; pred=0.875, observed=0.600</title></circle>
+<circle cx="260.0" cy="122.08333333333334" r="4" fill="#176fa7"><title>all pairs n=12, worlds=3; pred=1.000, observed=0.917</title></circle>
+<text x="270" y="125" fill="#176fa7">all pairs</text>
+<text x="435" y="87" font-weight="bold">development12 · 300 s</text>
+<path d="M 435 105 V 310 M 435 310 H 640" stroke="#e6ebf0"/>
+<text x="435" y="326" text-anchor="middle">0</text>
+<text x="427" y="314" text-anchor="end">0</text>
+<path d="M 486.25 105 V 310 M 435 258.75 H 640" stroke="#e6ebf0"/>
+<text x="486.25" y="326" text-anchor="middle">0.25</text>
+<text x="427" y="262.75" text-anchor="end">0.25</text>
+<path d="M 537.5 105 V 310 M 435 207.5 H 640" stroke="#e6ebf0"/>
+<text x="537.5" y="326" text-anchor="middle">0.5</text>
+<text x="427" y="211.5" text-anchor="end">0.5</text>
+<path d="M 588.75 105 V 310 M 435 156.25 H 640" stroke="#e6ebf0"/>
+<text x="588.75" y="326" text-anchor="middle">0.75</text>
+<text x="427" y="160.25" text-anchor="end">0.75</text>
+<path d="M 640 105 V 310 M 435 105 H 640" stroke="#e6ebf0"/>
+<text x="640" y="326" text-anchor="middle">1</text>
+<text x="427" y="109" text-anchor="end">1</text>
+<path d="M 435 310 L 640 105" stroke="#8795a5" stroke-dasharray="4 4"/>
+<text x="537.5" y="344" text-anchor="middle">Predicted probability</text>
+<text transform="translate(400 207.5) rotate(-90)" text-anchor="middle">Observed rate</text>
+<circle cx="460.625" cy="310.0" r="4" fill="#176fa7"><title>all pairs n=2, worlds=1; pred=0.125, observed=0.000</title></circle>
+<circle cx="486.25" cy="105.0" r="4" fill="#176fa7"><title>all pairs n=1, worlds=1; pred=0.250, observed=1.000</title></circle>
+<circle cx="511.875" cy="275.83333333333337" r="4" fill="#176fa7"><title>all pairs n=6, worlds=2; pred=0.375, observed=0.167</title></circle>
+<circle cx="537.5" cy="163.57142857142856" r="4" fill="#176fa7"><title>all pairs n=7, worlds=3; pred=0.500, observed=0.714</title></circle>
+<circle cx="563.125" cy="173.33333333333334" r="4" fill="#176fa7"><title>all pairs n=6, worlds=3; pred=0.625, observed=0.667</title></circle>
+<circle cx="588.75" cy="173.33333333333334" r="4" fill="#176fa7"><title>all pairs n=6, worlds=4; pred=0.750, observed=0.667</title></circle>
+<circle cx="614.375" cy="251.42857142857144" r="4" fill="#176fa7"><title>all pairs n=7, worlds=4; pred=0.875, observed=0.286</title></circle>
+<circle cx="640.0" cy="146.0" r="4" fill="#176fa7"><title>all pairs n=5, worlds=2; pred=1.000, observed=0.800</title></circle>
+<text x="650" y="125" fill="#176fa7">all pairs</text>
+<text x="55" y="387" font-weight="bold">development12 · 600 s</text>
+<path d="M 55 405 V 610 M 55 610 H 260" stroke="#e6ebf0"/>
+<text x="55" y="626" text-anchor="middle">0</text>
+<text x="47" y="614" text-anchor="end">0</text>
+<path d="M 106.25 405 V 610 M 55 558.75 H 260" stroke="#e6ebf0"/>
+<text x="106.25" y="626" text-anchor="middle">0.25</text>
+<text x="47" y="562.75" text-anchor="end">0.25</text>
+<path d="M 157.5 405 V 610 M 55 507.5 H 260" stroke="#e6ebf0"/>
+<text x="157.5" y="626" text-anchor="middle">0.5</text>
+<text x="47" y="511.5" text-anchor="end">0.5</text>
+<path d="M 208.75 405 V 610 M 55 456.25 H 260" stroke="#e6ebf0"/>
+<text x="208.75" y="626" text-anchor="middle">0.75</text>
+<text x="47" y="460.25" text-anchor="end">0.75</text>
+<path d="M 260 405 V 610 M 55 405 H 260" stroke="#e6ebf0"/>
+<text x="260" y="626" text-anchor="middle">1</text>
+<text x="47" y="409" text-anchor="end">1</text>
+<path d="M 55 610 L 260 405" stroke="#8795a5" stroke-dasharray="4 4"/>
+<text x="157.5" y="644" text-anchor="middle">Predicted probability</text>
+<text transform="translate(20 507.5) rotate(-90)" text-anchor="middle">Observed rate</text>
+<circle cx="80.625" cy="507.5" r="4" fill="#176fa7"><title>all pairs n=2, worlds=2; pred=0.125, observed=0.500</title></circle>
+<circle cx="131.875" cy="580.7142857142858" r="4" fill="#176fa7"><title>all pairs n=7, worlds=3; pred=0.375, observed=0.143</title></circle>
+<circle cx="157.5" cy="446.0" r="4" fill="#176fa7"><title>all pairs n=5, worlds=4; pred=0.500, observed=0.800</title></circle>
+<circle cx="183.125" cy="558.75" r="4" fill="#176fa7"><title>all pairs n=8, worlds=3; pred=0.625, observed=0.250</title></circle>
+<circle cx="208.75" cy="473.33333333333337" r="4" fill="#176fa7"><title>all pairs n=9, worlds=4; pred=0.750, observed=0.667</title></circle>
+<circle cx="234.375" cy="473.33333333333337" r="4" fill="#176fa7"><title>all pairs n=3, worlds=2; pred=0.875, observed=0.667</title></circle>
+<circle cx="260.0" cy="439.16666666666663" r="4" fill="#176fa7"><title>all pairs n=6, worlds=3; pred=1.000, observed=0.833</title></circle>
+<text x="270" y="425" fill="#176fa7">all pairs</text>
+<text x="435" y="387" font-weight="bold">reserved8 · 120 s</text>
+<path d="M 435 405 V 610 M 435 610 H 640" stroke="#e6ebf0"/>
+<text x="435" y="626" text-anchor="middle">0</text>
+<text x="427" y="614" text-anchor="end">0</text>
+<path d="M 486.25 405 V 610 M 435 558.75 H 640" stroke="#e6ebf0"/>
+<text x="486.25" y="626" text-anchor="middle">0.25</text>
+<text x="427" y="562.75" text-anchor="end">0.25</text>
+<path d="M 537.5 405 V 610 M 435 507.5 H 640" stroke="#e6ebf0"/>
+<text x="537.5" y="626" text-anchor="middle">0.5</text>
+<text x="427" y="511.5" text-anchor="end">0.5</text>
+<path d="M 588.75 405 V 610 M 435 456.25 H 640" stroke="#e6ebf0"/>
+<text x="588.75" y="626" text-anchor="middle">0.75</text>
+<text x="427" y="460.25" text-anchor="end">0.75</text>
+<path d="M 640 405 V 610 M 435 405 H 640" stroke="#e6ebf0"/>
+<text x="640" y="626" text-anchor="middle">1</text>
+<text x="427" y="409" text-anchor="end">1</text>
+<path d="M 435 610 L 640 405" stroke="#8795a5" stroke-dasharray="4 4"/>
+<text x="537.5" y="644" text-anchor="middle">Predicted probability</text>
+<text transform="translate(400 507.5) rotate(-90)" text-anchor="middle">Observed rate</text>
+<path d="M 435.0 548.5 V 456.25" stroke="#176fa7" stroke-width="2"/>
+<circle cx="435.0" cy="498.1818181818182" r="4" fill="#176fa7"><title>all pairs n=11, worlds=3; pred=0.000, observed=0.545</title></circle>
+<path d="M 460.625 541.6666666666667 V 405.0" stroke="#176fa7" stroke-width="2"/>
+<circle cx="460.625" cy="473.33333333333337" r="4" fill="#176fa7"><title>all pairs n=3, worlds=3; pred=0.125, observed=0.667</title></circle>
+<path d="M 486.25 558.75 V 439.16666666666663" stroke="#176fa7" stroke-width="2"/>
+<circle cx="486.25" cy="487.0" r="4" fill="#176fa7"><title>all pairs n=5, worlds=4; pred=0.250, observed=0.600</title></circle>
+<path d="M 511.875 473.33333333333337 V 434.2857142857143" stroke="#176fa7" stroke-width="2"/>
+<circle cx="511.875" cy="446.0" r="4" fill="#176fa7"><title>all pairs n=5, worlds=4; pred=0.375, observed=0.800</title></circle>
+<circle cx="537.5" cy="456.25" r="4" fill="#176fa7"><title>all pairs n=4, worlds=3; pred=0.500, observed=0.750</title></circle>
+<path d="M 563.125 507.5 V 456.25" stroke="#176fa7" stroke-width="2"/>
+<circle cx="563.125" cy="473.33333333333337" r="4" fill="#176fa7"><title>all pairs n=3, worlds=3; pred=0.625, observed=0.667</title></circle>
+<path d="M 588.75 551.4285714285714 V 541.6666666666667" stroke="#176fa7" stroke-width="2"/>
+<circle cx="588.75" cy="546.9230769230769" r="4" fill="#176fa7"><title>all pairs n=13, worlds=6; pred=0.750, observed=0.308</title></circle>
+<path d="M 614.375 498.1818181818182 V 446.0" stroke="#176fa7" stroke-width="2"/>
+<circle cx="614.375" cy="468.0769230769231" r="4" fill="#176fa7"><title>all pairs n=13, worlds=6; pred=0.875, observed=0.692</title></circle>
+<path d="M 640.0 462.4 V 434.2857142857143" stroke="#176fa7" stroke-width="2"/>
+<circle cx="640.0" cy="449.5652173913044" r="4" fill="#176fa7"><title>all pairs n=23, worlds=6; pred=1.000, observed=0.783</title></circle>
+<text x="650" y="425" fill="#176fa7">all pairs</text>
+<text x="55" y="687" font-weight="bold">reserved8 · 300 s</text>
+<path d="M 55 705 V 910 M 55 910 H 260" stroke="#e6ebf0"/>
+<text x="55" y="926" text-anchor="middle">0</text>
+<text x="47" y="914" text-anchor="end">0</text>
+<path d="M 106.25 705 V 910 M 55 858.75 H 260" stroke="#e6ebf0"/>
+<text x="106.25" y="926" text-anchor="middle">0.25</text>
+<text x="47" y="862.75" text-anchor="end">0.25</text>
+<path d="M 157.5 705 V 910 M 55 807.5 H 260" stroke="#e6ebf0"/>
+<text x="157.5" y="926" text-anchor="middle">0.5</text>
+<text x="47" y="811.5" text-anchor="end">0.5</text>
+<path d="M 208.75 705 V 910 M 55 756.25 H 260" stroke="#e6ebf0"/>
+<text x="208.75" y="926" text-anchor="middle">0.75</text>
+<text x="47" y="760.25" text-anchor="end">0.75</text>
+<path d="M 260 705 V 910 M 55 705 H 260" stroke="#e6ebf0"/>
+<text x="260" y="926" text-anchor="middle">1</text>
+<text x="47" y="709" text-anchor="end">1</text>
+<path d="M 55 910 L 260 705" stroke="#8795a5" stroke-dasharray="4 4"/>
+<text x="157.5" y="944" text-anchor="middle">Predicted probability</text>
+<text transform="translate(20 807.5) rotate(-90)" text-anchor="middle">Observed rate</text>
+<path d="M 55.0 807.5 V 705.0" stroke="#176fa7" stroke-width="2"/>
+<circle cx="55.0" cy="756.25" r="4" fill="#176fa7"><title>all pairs n=8, worlds=2; pred=0.000, observed=0.750</title></circle>
+<circle cx="80.625" cy="910.0" r="4" fill="#176fa7"><title>all pairs n=3, worlds=3; pred=0.125, observed=0.000</title></circle>
+<path d="M 106.25 851.4285714285714 V 828.0" stroke="#176fa7" stroke-width="2"/>
+<circle cx="106.25" cy="841.6666666666667" r="4" fill="#176fa7"><title>all pairs n=6, worlds=4; pred=0.250, observed=0.333</title></circle>
+<path d="M 131.875 818.8888888888889 V 734.2857142857143" stroke="#176fa7" stroke-width="2"/>
+<circle cx="131.875" cy="781.875" r="4" fill="#176fa7"><title>all pairs n=8, worlds=5; pred=0.375, observed=0.625</title></circle>
+<path d="M 157.5 864.4444444444445 V 792.8571428571429" stroke="#176fa7" stroke-width="2"/>
+<circle cx="157.5" cy="833.125" r="4" fill="#176fa7"><title>all pairs n=8, worlds=5; pred=0.500, observed=0.375</title></circle>
+<path d="M 183.125 792.8571428571429 V 756.25" stroke="#176fa7" stroke-width="2"/>
+<circle cx="183.125" cy="779.5454545454545" r="4" fill="#176fa7"><title>all pairs n=11, worlds=5; pred=0.625, observed=0.636</title></circle>
+<path d="M 208.75 787.0 V 756.25" stroke="#176fa7" stroke-width="2"/>
+<circle cx="208.75" cy="773.3333333333334" r="4" fill="#176fa7"><title>all pairs n=9, worlds=5; pred=0.750, observed=0.667</title></circle>
+<path d="M 234.375 773.3333333333334 V 720.7692307692307" stroke="#176fa7" stroke-width="2"/>
+<circle cx="234.375" cy="742.2727272727273" r="4" fill="#176fa7"><title>all pairs n=11, worlds=7; pred=0.875, observed=0.818</title></circle>
+<path d="M 260.0 759.6666666666666 V 729.1176470588235" stroke="#176fa7" stroke-width="2"/>
+<circle cx="260.0" cy="743.4375" r="4" fill="#176fa7"><title>all pairs n=16, worlds=5; pred=1.000, observed=0.812</title></circle>
+<text x="270" y="725" fill="#176fa7">all pairs</text>
+<text x="435" y="687" font-weight="bold">reserved8 · 600 s</text>
+<path d="M 435 705 V 910 M 435 910 H 640" stroke="#e6ebf0"/>
+<text x="435" y="926" text-anchor="middle">0</text>
+<text x="427" y="914" text-anchor="end">0</text>
+<path d="M 486.25 705 V 910 M 435 858.75 H 640" stroke="#e6ebf0"/>
+<text x="486.25" y="926" text-anchor="middle">0.25</text>
+<text x="427" y="862.75" text-anchor="end">0.25</text>
+<path d="M 537.5 705 V 910 M 435 807.5 H 640" stroke="#e6ebf0"/>
+<text x="537.5" y="926" text-anchor="middle">0.5</text>
+<text x="427" y="811.5" text-anchor="end">0.5</text>
+<path d="M 588.75 705 V 910 M 435 756.25 H 640" stroke="#e6ebf0"/>
+<text x="588.75" y="926" text-anchor="middle">0.75</text>
+<text x="427" y="760.25" text-anchor="end">0.75</text>
+<path d="M 640 705 V 910 M 435 705 H 640" stroke="#e6ebf0"/>
+<text x="640" y="926" text-anchor="middle">1</text>
+<text x="427" y="709" text-anchor="end">1</text>
+<path d="M 435 910 L 640 705" stroke="#8795a5" stroke-dasharray="4 4"/>
+<text x="537.5" y="944" text-anchor="middle">Predicted probability</text>
+<text transform="translate(400 807.5) rotate(-90)" text-anchor="middle">Observed rate</text>
+<path d="M 435.0 910.0 V 705.0" stroke="#176fa7" stroke-width="2"/>
+<circle cx="435.0" cy="746.0" r="4" fill="#176fa7"><title>all pairs n=5, worlds=2; pred=0.000, observed=0.800</title></circle>
+<circle cx="460.625" cy="910.0" r="4" fill="#176fa7"><title>all pairs n=5, worlds=3; pred=0.125, observed=0.000</title></circle>
+<path d="M 486.25 756.25 V 705.0" stroke="#176fa7" stroke-width="2"/>
+<circle cx="486.25" cy="730.625" r="4" fill="#176fa7"><title>all pairs n=8, worlds=5; pred=0.250, observed=0.875</title></circle>
+<path d="M 511.875 816.8181818181818 V 796.1111111111111" stroke="#176fa7" stroke-width="2"/>
+<circle cx="511.875" cy="807.5" r="4" fill="#176fa7"><title>all pairs n=10, worlds=6; pred=0.375, observed=0.500</title></circle>
+<path d="M 537.5 841.6666666666667 V 796.1111111111111" stroke="#176fa7" stroke-width="2"/>
+<circle cx="537.5" cy="818.8888888888889" r="4" fill="#176fa7"><title>all pairs n=9, worlds=6; pred=0.500, observed=0.444</title></circle>
+<path d="M 563.125 779.5454545454545 V 763.5714285714286" stroke="#176fa7" stroke-width="2"/>
+<circle cx="563.125" cy="773.3333333333334" r="4" fill="#176fa7"><title>all pairs n=9, worlds=4; pred=0.625, observed=0.667</title></circle>
+<path d="M 588.75 773.3333333333334 V 760.9090909090909" stroke="#176fa7" stroke-width="2"/>
+<circle cx="588.75" cy="766.5" r="4" fill="#176fa7"><title>all pairs n=10, worlds=7; pred=0.750, observed=0.700</title></circle>
+<path d="M 614.375 752.3076923076923 V 720.7692307692307" stroke="#176fa7" stroke-width="2"/>
+<circle cx="614.375" cy="736.5384615384615" r="4" fill="#176fa7"><title>all pairs n=13, worlds=6; pred=0.875, observed=0.846</title></circle>
+<path d="M 640.0 766.5 V 756.25" stroke="#176fa7" stroke-width="2"/>
+<circle cx="640.0" cy="760.9090909090909" r="4" fill="#176fa7"><title>all pairs n=11, worlds=4; pred=1.000, observed=0.727</title></circle>
+<text x="650" y="725" fill="#176fa7">all pairs</text>
+</g></svg>
