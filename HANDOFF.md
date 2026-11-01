@@ -1,5 +1,28 @@
 # S-RB2-INT — round 2 active, 2026-11-01 ~12:00 +08
 
+## LIVE17:03 — authoritative continuation ownership
+
+- Original remote supervisors473053/gpuA +924719/gpuR remain LIVE, same boot/start
+  identities and fixed queue/source; latest status no failures. nvidia-smi checked
+  both hosts16:55/56 (both99% utilized); no GPU/PID intervention or new dispatch.
+- **Sole collectorV3 LIVE25240/create_filetime134379970282244431**,
+  `runs/rb2int_finish_v3`; first poll16:57:08 collected12/216complete world jobs.
+- **Cache-only publisherV3 LIVE44988/create_filetime134379973214244749**,
+  `runs/rb2int_interim_v3`; first loop12/216,4matched v5/v4worlds. Reuses the
+  completed corrected2world snapshot04885264, no analysis/forecast replay. Next
+  replicated refresh~19:57; complete reserved8 triggers immediate separate view.
+- All earlier local publishers/collectorV2 and recovery waiter are EXITED. CI
+  recovery itself completed; corrected publisherV2 stopped only on simultaneous
+  collector staging. Commit-window fix36703851 +12targeted CPU PASS/Ruff avoids
+  that collision; foreign staging is preserved.36broader CI/analysis tests PASS.
+- Read `docs/rb2int/LIVE_CONTINUATION_1703.md`, actual PROCESS/STOP/COMPLETE receipts
+  before any launch. Do NOT restart old continuations or either remote supervisor.
+  Final216-job exact report-guard STOP handover now belongs to collectorV3 and
+  publisherV3. Full four-model final evaluation remains pending, dueNov2~10:00.
+- Teacher engineering READY remains sourceb2df7458/recipes below; updated shared
+  READY note carries candidate limits and short decision-quality uncertainty.
+  No planner/cooperation switch is qualified by this2world interim.
+
 ## Owner16:28 continuation — read before any new collector or dispatch
 
 **16:53 update:** first INTERIM committed5512f402, two matched K8 worlds969436/969590

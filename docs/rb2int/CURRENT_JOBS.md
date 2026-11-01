@@ -1,5 +1,22 @@
 # Resume here — INT owned development jobs, sourceb2df7458
 
+## LIVE17:03 — highest-priority ownership (supersedes older local PID notes)
+
+- Remote supervisors473053/gpuA and924719/gpuR: same incarnations, healthy/no
+  failures.12new world jobs complete; no live-reorder API; no restart/redispatch.
+- Sole read-only collector25240/create_filetime134379970282244431,
+  `runs/rb2int_finish_v3`, first successful poll16:57:08=12/216.
+- Cache-only publisher44988/create_filetime134379973214244749,
+  `runs/rb2int_interim_v3`, first loop12/216 and4matched v5/v4worlds; reused corrected
+  snapshot16:57 without rescoring. Next scored-cell update~19:57; complete reserved8
+  publishes immediately. Own source36703851; report source/model identities unchanged.
+- Old collectorV2/publishersV1,V2/recovery waiter all EXITED. V2 publisher's only
+  post-correction issue was commit contention; completed analysis committed04885264.
+  Commit-window serialization now waits for sole collector staging to clear.
+- Read LIVE_CONTINUATION_1703.md and all current START/PROCESS/STOP receipts before
+  action. Final exact report-guard handover binds collectorV3/publisherV3. Never
+  duplicate either remote supervisor, collector or completed task.
+
 ## Latest16:53 local continuation correction — overrides collector notes below
 
 Both original remote supervisors remain untouched. First INTERIM5512f402 published

@@ -1,5 +1,15 @@
 # Bounded read-only scoring continuation
 
+**LIVE17:03 override:** sole collectorV3=25240/create_filetime134379970282244431,
+`runs/rb2int_finish_v3`,12/216complete world jobs at16:57:08. Cache-only interim/
+final publisherV3=44988/create_filetime134379973214244749 at
+`runs/rb2int_interim_v3`; reuses completed corrected16:57snapshot04885264.
+Previous local continuations have exited. CI-only repair587416ad and commit-window
+serialization36703851 preserve all forecasts/cache/point estimates. Read
+LIVE_CONTINUATION_1703.md. CollectorV3 alone transfers forecasts; publisherV3 alone
+takes final scoring/publishing after all216 and its exact report-guard STOP.
+OldV2-only final-publication and PID statements below are historical, superseded.
+
 Inference ownership is already fixed: final supervisors473053/gpuA and924719/gpuR.
 The `finish.py` continuation **never launches inference**. Do not create a second
 dispatcher or repeat an original/candidate rollout to obtain a score.
