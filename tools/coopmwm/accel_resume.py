@@ -25,7 +25,7 @@ print(json.dumps(dict(unix=time.time(),owner=d,identity_verified=identity,
  jobs=len(charges),incomplete=incomplete,new_sumo_sim_s=0,
  updates=sorted(x.name for x in r.glob('S*_UPDATE_*.json')))))
 ''', timeout=25))
-    write(ops.EVIDENCE/'RECOVERY_ACCEL_1938.json', value)
+    write(ops.EVIDENCE/f'RECOVERY_ACCEL_{int(value["unix"])}.json', value)
     print(json.dumps(value))
 
 

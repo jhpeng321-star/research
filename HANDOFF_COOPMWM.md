@@ -1,4 +1,12 @@
-# S-COOPMWM live continuation — OWNER19:38 recovery
+# S-COOPMWM live continuation — OWNER19:44 quality-first recovery
+
+19:47 fresh recovery: owned A supervisor2146725 remains T,672/678 closed,
+811,640sim-s charged. Publisher1116 remains running; do not duplicate it.
+GPU inventories had no task processes; registered CPU27 fixed-roster repair
+now runs once as volumeprobe7 (gpuA533318/gpuR967735). All arms stay held.
+Latest owner19:44 removes the deadline: quality-first CEM acceleration plans,
+Thompson execution,96-world sealed panel, early real-SUMO viability evidence.
+No acceleration training has started. Original receipts and charges retained.
 
 Fresh-session verification19:41: owned A supervisor2146725 is identity-verified
 and stopped (T);672/678 reserved jobs closed, remaining6 never claimed.
