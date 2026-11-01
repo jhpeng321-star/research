@@ -1,0 +1,46 @@
+{
+ "load": [
+  29.00244140625,
+  27.74609375,
+  26.2041015625
+ ],
+ "cpus": 224,
+ "disk": {
+  "/root": {
+   "total": 32212254720,
+   "used": 15732183040,
+   "free": 16480071680
+  },
+  "/root/autodl-tmp": {
+   "total": 53687091200,
+   "used": 46774226944,
+   "free": 6912864256
+  }
+ },
+ "gpu": {
+  "returncode": 0,
+  "stdout": "memory.free [MiB], memory.total [MiB], utilization.gpu [%]\n20952 MiB, 24564 MiB, 99 %\n",
+  "stderr": ""
+ },
+ "compute": {
+  "returncode": 0,
+  "stdout": "pid, process_name, used_gpu_memory [MiB]\n929330, /root/miniconda3/bin/python, 572 MiB\n935304, /root/miniconda3/bin/python, 1130 MiB\n935336, /root/miniconda3/bin/python, 726 MiB\n935970, /root/miniconda3/bin/python, 688 MiB\n",
+  "stderr": ""
+ },
+ "cgroup": {
+  "cpu.max": "2500000 100000\n",
+  "cpu.stat": "usage_usec 3404789161823\nuser_usec 2889271839071\nsystem_usec 515517322752\nnr_periods 13511872\nnr_throttled 48315\nthrottled_usec 179416856239\n",
+  "memory.max": "96636764160\n",
+  "memory.current": "38224003072\n",
+  "memory.stat": "anon 7102369792\nfile 30339629056\nkernel_stack 12075008\npagetables 31551488\npercpu 8064\nsock 4096\nshmem 1556230144\nfile_mapped 275443712\nfile_dirty 0\nfile_writeback 0\nswapcached 0\nanon_thp 0\nfile_thp 0\nshmem_thp 0\ninactive_anon 8638550016\nactive_anon 19542016\ninactive_file 6469038080\nactive_file 22314799104\nunevictable 0\nslab_reclaimable 715204632\nslab_unreclaimable 12671880\nslab 727876512\nworkingset_refault_anon 0\nworkingset_refault_file 2559110\nworkingset_activate_anon 0\nworkingset_activate_file 1504804\nworkingset_restore_anon 0\nworkingset_restore_file 579959\nworkingset_nodereclaim 0\npgfault 253505201969\npgmajfault 97724\npgrefill 4310415\npgscan 7390921\npgsteal 7383118\npgactivate 37166272\npgdeactivate 5654177\npglazyfree 1605\npglazyfreed 1306\nthp_fault_alloc 0\nthp_collapse_alloc 0\n"
+ },
+ "host_mem_available": 628807536640,
+ "records": [],
+ "own_receipts": [],
+ "schema": "rb2int-read-only-resources/1",
+ "host": "gpuR",
+ "recorded_at": "2026-11-01T16:56:02.439343+08:00",
+ "source_sha256": "580c2346c6b6060ca9d1cd131bd12acd4945f5d4d66248fe8492b93684906806",
+ "opened_record_outcomes": false,
+ "launched_jobs": false
+}

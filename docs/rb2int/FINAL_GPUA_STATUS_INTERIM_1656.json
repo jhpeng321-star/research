@@ -1,0 +1,60 @@
+{
+ "root": "/root/autodl-tmp/c4/rb2int20261101/final_v5_v1",
+ "exists": true,
+ "process": {
+  "pid": 473053,
+  "start_ticks": "889857083",
+  "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+  "argv": [
+   "nice",
+   "-n",
+   "19",
+   "/root/miniconda3/bin/python",
+   "-B",
+   "-u",
+   "/root/autodl-tmp/c4/rb2int20261101/phys_code_d0df3d66e80a/tools/rb2int/final_worker.py",
+   "--root",
+   "/root/autodl-tmp/c4/rb2int20261101/final_v5_v1",
+   "--host",
+   "gpuA"
+  ],
+  "root": "/root/autodl-tmp/c4/rb2int20261101/final_v5_v1",
+  "host": "gpuA"
+ },
+ "alive": true,
+ "complete_world_jobs": [
+  "v4_969590",
+  "v4_969595",
+  "v5-lp_969436",
+  "v5-lp_969590",
+  "v5_969436",
+  "v5_969590"
+ ],
+ "failed_world_jobs": [],
+ "running": [
+  {
+   "job": "v4_969599",
+   "pid": 494347,
+   "alive": true
+  },
+  {
+   "job": "v5-lp_969595",
+   "pid": 481106,
+   "alive": true
+  },
+  {
+   "job": "v5_969595",
+   "pid": 480897,
+   "alive": true
+  },
+  {
+   "job": "v5_969599",
+   "pid": 496347,
+   "alive": true
+  }
+ ],
+ "future_task_files": 63,
+ "log_tail": "WORLD_START v5_969436 473062\nWORLD_START v5-lp_969436 473068\nWORLD_START v4_969590 473081\nWORLD_START v5_969590 473094\nWORLD_COMPLETE v4_969590\nWORLD_START v5-lp_969590 478972\nWORLD_COMPLETE v5_969590\nWORLD_START v4_969595 480216\nWORLD_COMPLETE v5-lp_969436\nWORLD_START v5_969595 480897\nWORLD_COMPLETE v5_969436\nWORLD_START v5-lp_969595 481106\nWORLD_COMPLETE v5-lp_969590\nWORLD_START v4_969599 494347\nWORLD_COMPLETE v4_969595\nWORLD_START v5_969599 496347\n",
+ "action": "status",
+ "host": "gpuA"
+}

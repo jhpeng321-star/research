@@ -58,7 +58,7 @@ immutable source/recipe/smoke binding in HANDOFF.md are now published for
 S-WMTEACH's engineering/quality rerun; final qualification is pending.
 
 <!-- RB2-INTERIM:BEGIN -->
-## INTERIM v5 versus v4 — 20261101T164650+0800 (available_replicated_cells)
+## INTERIM v5 versus v4 — 20261101T165709+0800 (available_replicated_cells)
 
 **2 matched complete K8 worlds; all five arms.** This is an interim diagnostic, not model selection or switching authorization.
 Worlds: 969436, 969590.
@@ -74,7 +74,7 @@ Strata: [{'demand': 1900, 'penetration': 0.05, 'worlds': 2}].
 - v5−v4 HDV60 mean-world-median position-error difference: -8.7 [95% CI -12.2, -5.1]m.
 
 ### Controller-effect signs and credibility
-- FULL-v4/120s:0.8calls n=8, observed win 25.0; CI NA (insufficient support/variance)% vs forecast 95.3 [95% CI 90.6, 100.0]%; range coverage 50.0 [95% CI 0.0, 100.0]%; all10pair direction accuracy 40.0 [95% CI 40.0, 40.0]%.
+- FULL-v4/120s:0.8calls n=8, observed win 25.0; CI NA (insufficient support/variance)% vs forecast 95.3 [95% CI 90.6, 100.0]%; range coverage 50.0 [95% CI 0.0, 100.0]%; all10pair direction accuracy 40.0; CI NA (insufficient support/variance)%.
 - FULL-v4/300s:0.8calls n=2, observed win 50.0; CI NA (insufficient support/variance)% vs forecast 87.5; CI NA (insufficient support/variance)%; range coverage 50.0 [95% CI 0.0, 100.0]%; all10pair direction accuracy 75.0 [95% CI 60.0, 90.0]%.
 - FULL-v4/600s:0.8calls n=2, observed win 50.0; CI NA (insufficient support/variance)% vs forecast 87.5; CI NA (insufficient support/variance)%; range coverage 50.0 [95% CI 0.0, 100.0]%; all10pair direction accuracy 50.0 [95% CI 40.0, 60.0]%.
 - FULL-v4 ctrl0−native expected delay effect120/300/600: -0.9 [95% CI -7.0, 5.2] / -175.2 [95% CI -771.9, 421.6] / 222.2 [95% CI -3,329.4, 3,773.8]veh-s; recorded 0.0; CI NA (insufficient support/variance) / -3.3 [95% CI -26.2, 19.6] / 2,560.0 [95% CI -4,278.0, 9,398.0]veh-s. Negative means lower delay.
@@ -85,9 +85,9 @@ Strata: [{'demand': 1900, 'penetration': 0.05, 'worlds': 2}].
 - FULL-v4 mappo−ctrl0 expected delay effect120/300/600: 0.6 [95% CI -2.9, 4.0] / -42.0 [95% CI -260.5, 176.6] / -1,061.1 [95% CI -4,728.9, 2,606.6]veh-s; recorded 0.0; CI NA (insufficient support/variance) / -546.8 [95% CI -1,999.6, 906.0] / -2,373.4 [95% CI -6,355.5, 1,608.6]veh-s. Negative means lower delay.
 - FULL-v4 pi−ctrl0 expected delay effect120/300/600: -4.1 [95% CI -10.0, 1.7] / 79.5 [95% CI -449.4, 608.4] / -916.4 [95% CI -4,488.0, 2,655.2]veh-s; recorded 0.0; CI NA (insufficient support/variance) / -3.7 [95% CI -11.3, 3.8] / 882.7 [95% CI -2,094.2, 3,859.7]veh-s. Negative means lower delay.
 - FULL-v4 circles−ctrl0 expected delay effect120/300/600: 12.3 [95% CI -7.5, 32.1] / 388.7 [95% CI -567.7, 1,345.1] / 89.5 [95% CI -3,878.9, 4,057.9]veh-s; recorded 3.2 [95% CI -1.5, 7.8] / 57.8 [95% CI -56.0, 171.6] / 614.1 [95% CI -4,977.0, 6,205.1]veh-s. Negative means lower delay.
-- FULL-v5/120s:0.8calls n=2, observed win 100.0; CI NA (insufficient support/variance)% vs forecast 93.8 [95% CI 87.5, 100.0]%; range coverage 50.0 [95% CI 0.0, 100.0]%; all10pair direction accuracy 40.0 [95% CI 40.0, 40.0]%.
+- FULL-v5/120s:0.8calls n=2, observed win 100.0; CI NA (insufficient support/variance)% vs forecast 93.8 [95% CI 87.5, 100.0]%; range coverage 50.0 [95% CI 0.0, 100.0]%; all10pair direction accuracy 40.0; CI NA (insufficient support/variance)%.
 - FULL-v5/300s:0.8calls n=2, observed win 50.0; CI NA (insufficient support/variance)% vs forecast 93.8; CI NA (insufficient support/variance)%; range coverage 50.0 [95% CI 0.0, 100.0]%; all10pair direction accuracy 80.0 [95% CI 70.0, 90.0]%.
-- FULL-v5/600s:0.8calls n=1, observed win 100.0; CI NA (insufficient support/variance)% vs forecast 87.5; CI NA (insufficient support/variance)%; range coverage 50.0 [95% CI 0.0, 100.0]%; all10pair direction accuracy 70.0 [95% CI 70.0, 70.0]%.
+- FULL-v5/600s:0.8calls n=1, observed win 100.0; CI NA (insufficient support/variance)% vs forecast 87.5; CI NA (insufficient support/variance)%; range coverage 50.0 [95% CI 0.0, 100.0]%; all10pair direction accuracy 70.0; CI NA (insufficient support/variance)%.
 - FULL-v5 ctrl0−native expected delay effect120/300/600: -0.2 [95% CI -11.2, 10.8] / 55.5 [95% CI -465.4, 576.3] / -6.4 [95% CI -4,159.9, 4,147.0]veh-s; recorded 0.0; CI NA (insufficient support/variance) / -3.3 [95% CI -26.2, 19.6] / 2,560.0 [95% CI -4,278.0, 9,398.0]veh-s. Negative means lower delay.
 - FULL-v5 mappo−native expected delay effect120/300/600: 1.1 [95% CI -10.3, 12.4] / 23.3 [95% CI -479.7, 526.3] / -482.3 [95% CI -3,614.9, 2,650.3]veh-s; recorded 0.0; CI NA (insufficient support/variance) / -550.1 [95% CI -2,025.8, 925.6] / 186.6 [95% CI -2,669.4, 3,042.5]veh-s. Negative means lower delay.
 - FULL-v5 pi−native expected delay effect120/300/600: 9.5 [95% CI -52.4, 71.4] / -80.8 [95% CI -377.3, 215.6] / 229.9 [95% CI -2,396.6, 2,856.5]veh-s; recorded 0.0; CI NA (insufficient support/variance) / -7.1 [95% CI -22.5, 8.3] / 3,442.7 [95% CI -418.3, 7,303.8]veh-s. Negative means lower delay.
@@ -101,14 +101,21 @@ Strata: [{'demand': 1900, 'penetration': 0.05, 'worlds': 2}].
 Exact total-delay accuracy is **partially identified**: the recorded data saved total/source clocks only at120/300/600s. Reconstructed road clocks match recorded120s road delay; unknown short source waiting is bounded between0 and each arm's recorded120s source waiting. The intervals below bound all-pair team-effect accuracy without inventing a source trajectory. Road-only accuracy is a separate diagnostic.
 These are five recorded controller options, not unrecorded cooperation membership/group interventions. Cooperation/planner short-horizon qualification remains NOT ESTABLISHED.
 - FULL-v4/30s: team direction accuracy identification lower 0.0; CI NA (insufficient support/variance)%, upper 100.0; CI NA (insufficient support/variance)%; resolved-pair fraction 0.0; CI NA (insufficient support/variance)%; resolved-only accuracy NA; CI NA (insufficient support/variance)%; road-only direction accuracy 45.0 [95% CI 40.0, 50.0]%.
-- FULL-v4/60s: team direction accuracy identification lower 0.0; CI NA (insufficient support/variance)%, upper 100.0; CI NA (insufficient support/variance)%; resolved-pair fraction 0.0; CI NA (insufficient support/variance)%; resolved-only accuracy NA; CI NA (insufficient support/variance)%; road-only direction accuracy 40.0 [95% CI 40.0, 40.0]%.
-- FULL-v4/90s: team direction accuracy identification lower 0.0; CI NA (insufficient support/variance)%, upper 100.0; CI NA (insufficient support/variance)%; resolved-pair fraction 0.0; CI NA (insufficient support/variance)%; resolved-only accuracy NA; CI NA (insufficient support/variance)%; road-only direction accuracy 40.0 [95% CI 40.0, 40.0]%.
+- FULL-v4/60s: team direction accuracy identification lower 0.0; CI NA (insufficient support/variance)%, upper 100.0; CI NA (insufficient support/variance)%; resolved-pair fraction 0.0; CI NA (insufficient support/variance)%; resolved-only accuracy NA; CI NA (insufficient support/variance)%; road-only direction accuracy 40.0; CI NA (insufficient support/variance)%.
+- FULL-v4/90s: team direction accuracy identification lower 0.0; CI NA (insufficient support/variance)%, upper 100.0; CI NA (insufficient support/variance)%; resolved-pair fraction 0.0; CI NA (insufficient support/variance)%; resolved-only accuracy NA; CI NA (insufficient support/variance)%; road-only direction accuracy 40.0; CI NA (insufficient support/variance)%.
 - FULL-v5/30s: team direction accuracy identification lower 0.0; CI NA (insufficient support/variance)%, upper 100.0; CI NA (insufficient support/variance)%; resolved-pair fraction 0.0; CI NA (insufficient support/variance)%; resolved-only accuracy NA; CI NA (insufficient support/variance)%; road-only direction accuracy 45.0 [95% CI 40.0, 50.0]%.
-- FULL-v5/60s: team direction accuracy identification lower 0.0; CI NA (insufficient support/variance)%, upper 100.0; CI NA (insufficient support/variance)%; resolved-pair fraction 0.0; CI NA (insufficient support/variance)%; resolved-only accuracy NA; CI NA (insufficient support/variance)%; road-only direction accuracy 40.0 [95% CI 40.0, 40.0]%.
-- FULL-v5/90s: team direction accuracy identification lower 0.0; CI NA (insufficient support/variance)%, upper 100.0; CI NA (insufficient support/variance)%; resolved-pair fraction 0.0; CI NA (insufficient support/variance)%; resolved-only accuracy NA; CI NA (insufficient support/variance)%; road-only direction accuracy 40.0 [95% CI 40.0, 40.0]%.
+- FULL-v5/60s: team direction accuracy identification lower 0.0; CI NA (insufficient support/variance)%, upper 100.0; CI NA (insufficient support/variance)%; resolved-pair fraction 0.0; CI NA (insufficient support/variance)%; resolved-only accuracy NA; CI NA (insufficient support/variance)%; road-only direction accuracy 40.0; CI NA (insufficient support/variance)%.
+- FULL-v5/90s: team direction accuracy identification lower 0.0; CI NA (insufficient support/variance)%, upper 100.0; CI NA (insufficient support/variance)%; resolved-pair fraction 0.0; CI NA (insufficient support/variance)%; resolved-only accuracy NA; CI NA (insufficient support/variance)%; road-only direction accuracy 40.0; CI NA (insufficient support/variance)%.
 
 Strict paired P(beats incumbent)>=0.8 plus lower expected delay; ties are non-wins. K8 min–max range is not a90% interval (continuous exchangeability reference7/9). Zero-selected worlds remain in resampling. Full gate/switching: NOT ESTABLISHED at this interim.
 
+
+### Interim CI numerical correction
+
+The16:46snapshot is preserved. Its intervals printed as equal endpoints for
+constant direction-accuracy columns are superseded by NA (zero estimable variance).
+Centered variance reduction removes floating-point accumulation artifacts; all
+point estimates and forecasts are unchanged. No model selection or forecast replay.
 
 ## Frozen-candidate engineering limits (later worker development evidence)
 

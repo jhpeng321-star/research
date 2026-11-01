@@ -1,0 +1,46 @@
+{
+ "load": [
+  15.3173828125,
+  16.26513671875,
+  15.63916015625
+ ],
+ "cpus": 208,
+ "disk": {
+  "/root": {
+   "total": 32212254720,
+   "used": 28770770944,
+   "free": 3441483776
+  },
+  "/root/autodl-tmp": {
+   "total": 268435456000,
+   "used": 190958280704,
+   "free": 77477175296
+  }
+ },
+ "gpu": {
+  "returncode": 0,
+  "stdout": "memory.free [MiB], memory.total [MiB], utilization.gpu [%]\n39295 MiB, 49140 MiB, 99 %\n",
+  "stderr": ""
+ },
+ "compute": {
+  "returncode": 0,
+  "stdout": "pid, process_name, used_gpu_memory [MiB]\n453587, /root/miniconda3/bin/python, 1860 MiB\n453608, /root/miniconda3/bin/python, 700 MiB\n476379, /root/miniconda3/bin/python, 1262 MiB\n476394, /root/miniconda3/bin/python, 1306 MiB\n478015, /root/miniconda3/bin/python, 444 MiB\n480897, /root/miniconda3/bin/python, 862 MiB\n481106, /root/miniconda3/bin/python, 852 MiB\n494347, /root/miniconda3/bin/python, 978 MiB\n496347, /root/miniconda3/bin/python, 904 MiB\n",
+  "stderr": ""
+ },
+ "cgroup": {
+  "cpu.max": "2000000 100000\n",
+  "cpu.stat": "usage_usec 1406169536188\nuser_usec 1307188952349\nsystem_usec 98980583839\nnr_periods 5197794\nnr_throttled 91133\nthrottled_usec 379968046319\n",
+  "memory.max": "96636764160\n",
+  "memory.current": "88444506112\n",
+  "memory.stat": "anon 20624838656\nfile 66405609472\nkernel_stack 12828672\npagetables 79659008\npercpu 7488\nsock 8192\nshmem 163762176\nfile_mapped 245653504\nfile_dirty 0\nfile_writeback 0\nswapcached 0\nanon_thp 0\nfile_thp 0\nshmem_thp 0\ninactive_anon 20787761152\nactive_anon 368640\ninactive_file 40226295808\nactive_file 26015604736\nunevictable 0\nslab_reclaimable 1285993048\nslab_unreclaimable 13116776\nslab 1299109824\nworkingset_refault_anon 0\nworkingset_refault_file 3831693\nworkingset_activate_anon 0\nworkingset_activate_file 1970417\nworkingset_restore_anon 0\nworkingset_restore_file 1745259\nworkingset_nodereclaim 0\npgfault 54317908722\npgmajfault 169458\npgrefill 16267331\npgscan 44848233\npgsteal 43688104\npgactivate 27077230\npgdeactivate 16202091\npglazyfree 2626\npglazyfreed 1243\nthp_fault_alloc 0\nthp_collapse_alloc 0\n"
+ },
+ "host_mem_available": 1010856341504,
+ "records": [],
+ "own_receipts": [],
+ "schema": "rb2int-read-only-resources/1",
+ "host": "gpuA",
+ "recorded_at": "2026-11-01T16:55:56.804344+08:00",
+ "source_sha256": "580c2346c6b6060ca9d1cd131bd12acd4945f5d4d66248fe8492b93684906806",
+ "opened_record_outcomes": false,
+ "launched_jobs": false
+}
