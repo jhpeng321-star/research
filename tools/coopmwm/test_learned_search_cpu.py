@@ -50,3 +50,58 @@ class Curve(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class ReportPath(unittest.TestCase):
+    """Offline (no-fetch) real-data path on a synthetic local cache."""
+
+    def _cache(self, d):
+        import json
+        from pathlib import Path
+        from .test_mppi_search_cpu import BOUNDS, Fake, group_of
+        root = Path(d)/'cpuQ'/'home/ubuntu/coopmwm20261103_b'
+        for sub in ('requests', 'responses', 'proposer_receipts'):
+            (root/sub).mkdir(parents=True)
+        g = group_of(2); fake = Fake(2)
+        for i, world in enumerate((986001, 986002, 984000)):          # 984000 = dev: must be dropped
+            req = dict(state_id=f's{i}', world_id=world, rows=g['rows'], group=g['members'],
+                       search_learning=dict(entries=[]))
+            res = ms.search(dict(req, policy_residuals={v: 0. for v in g['members']}), g, fake.policy, BOUNDS,
+                            fake, 'ordinary', mappo_traj=fake.mappo, seed=i)
+            (root/'requests'/f's{i}.json').write_text(json.dumps(req))
+            (root/'responses'/f's{i}.json').write_text(json.dumps(dict(res, record_sha256=f's{i}')))
+        full = pp.synthetic_receipts(60, 12, seed=5, sizes=(2,), population=16)
+        for k, r in enumerate(full):
+            r['world_id'] = 986010+k % 12
+            (root/'proposer_receipts'/f'f{k}.json').write_text(json.dumps(r))
+        bad = Path(d)/'cpuQ'/'home/ubuntu/coopmwm20261103_sealed'/'proposer_receipts'
+        bad.mkdir(parents=True)
+        (bad/'x.json').write_text(json.dumps(dict(full[0], search_id='SEALED', world_id=986001)))
+        return root
+
+    def test_load_cache_filters_and_pairs(self):
+        import tempfile
+        from . import learned_search_report as lr
+        with tempfile.TemporaryDirectory() as d:
+            self._cache(d)
+            rec, stats = lr.load_cache(d)
+            self.assertEqual(stats['pairs'], 3); self.assertEqual(stats['non_train'], 1)
+            self.assertNotIn('SEALED', {r['search_id'] for r in rec})
+            self.assertEqual(sum(lr.is_full_pool(r) for r in rec), 60)
+            self.assertEqual(len(rec), 62)
+
+    def test_run_writes_report_without_activation(self):
+        import tempfile
+        from pathlib import Path
+        from unittest.mock import patch
+        from . import learned_search_report as lr
+        with tempfile.TemporaryDirectory() as d:
+            self._cache(d)
+            with patch.dict(pp.REGISTERED, steps=40, eval_every=20, d_model=32), \
+                    patch.object(lr, 'MIN_FULL_POOL', 10), patch.dict(le.REGISTERED, bootstraps=50):
+                res = lr.run(Path(d), Path(d)/'REPORT.md', fetch_remote=False)
+            text = (Path(d)/'REPORT.md').read_text()
+            self.assertIn('NOT ACTIVATED', text)
+            self.assertIn('offline_check', res)
+            self.assertIn('summary', res['evaluations_curve'])
+            self.assertTrue((Path(d)/'REPORT.json').exists())
