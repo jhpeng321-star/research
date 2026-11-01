@@ -6,7 +6,7 @@
 5. B: same SUMO-only reward/advantage, WM-guided exploration; no WM or behavioural bonus.
 6. All live CAVs choose1s acceleration residuals added to MAPPO raw commands; no gap/speed action coordinates.
 7. Exact zero abstains before unchanged safety: actual frozen MAPPO executor bitwise parity CPU-tested.
-8. Reuse COOPFREE pre-safety injection, unchanged safety and CommandOwnership.
+8. Reuse COOPFREE pre-safety injection, unchanged safety and CommandOwnership; post-safety WM mirror prototype defaultOFF pending exact-trajectory/GPU qualification.
 9. Actor uses whitelisted local telemetry/neighbours; zero-init4D RSU broadcast.
 10. Central critic pools CAV features plus12RSU zone observations; no hidden channels.
 11. AR1 phi=exp(-1/5), spatialshared rho.5, sigma.5m/s²; logged conditional joint density/previous noise.
@@ -20,7 +20,7 @@
 19. Groups2..6 anywhere/all lanes/ramp,100m chaining; >6 contiguous subsets prefer lane diversity, smallest span, downstream; disjoint rechaining.
 20. All A/B/R restart MAPPOu0 in isolated acceleration namespaces;811640superseded charges retained.
 21. Discovery-pure MPPI3iterations,N=max(32,2*members*10)rounded4,eliteceil(N/4); K4H300screen,8finalistsK8; top4 mean-positive vsMAPPO.
-22. No O1-O4 seeds; policy-centred generic smooth noise sigma.5, unique Cholesky basis; posterior bootstrap Thompson choice, beta1 initially.
+22. No O1-O4 seeds; policy-centred generic smooth noise sigma.5, unique Cholesky basis; posterior bootstrap Thompson choice, beta1 initially; top-k gate is positive-vsMAPPO, own-policy contrast reported separately.
 23. H60/120/300/600. D_i=J(member-revert)-J(joint); D_G=J(all-revert)-J(joint).
 24. C_G=D_G-sum(D_i); complete paired futures required, including negative values.
 25. beta starts1 per training seed; immutable update receipts supply the next update's beta.
