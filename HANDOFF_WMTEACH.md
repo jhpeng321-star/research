@@ -1,6 +1,16 @@
 # S-WMTEACH resume / ownership
 
 ## Latest recovery milestone — read before older ownership
+- ACTIVE verified gpuA (common boot a81555d7-176e-4ed8-bc7d-896fc89cc914):
+  v4scalev3 PID453587/start889174202, v5qualityv2 PID453566/start889173543,
+  v5scalev2 PID453608/start889174685 (waits own v5 quality, no CUDA allocation).
+  Dispatch once only; all older attempt roots remain terminal.
+- BATCHED CANARY PASS on first new FIT state:8complete futures, finite/conserved,
+  source-inclusive team costs, max batch-vs-single error1.52587890625e-05veh-s
+  (<1e-3 gate). First production result reused once; snapshot1793511674 shows
+  23generated states/1labelled state and owned process R. Full5120corpus still pending.
+- V5 new quality snapshot1793511702:3/96complete futures, owned process R,
+  ~49s/future; no v5 quality/student/live result claimed yet. Teacher SUMO0.
 - Latest operational canary repair (new designacf6f48dbd4b): v4scalev2 EXITED0states
   at observer due_area initialization after its raw process was unwrapped; keep
   InstrumentedEntries attached. V5qualityv1 EXITED0forecasts because a no-CAV

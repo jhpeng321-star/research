@@ -32,6 +32,14 @@
   must pass before the one-use launch. Efficacy-only: no new member-alone C_G branches.
 
 ## Status
+Current verified work: v4scalev3 PID453587 is generating the5120state corpus;
+its first K8 batching canary PASS (maximum cost error1.52587890625e-05veh-s,
+finite/conserved/source-inclusive). Snapshot1793511674:23generated states,
+1complete labelled state; first result reused once. Published-v5 quality PID453566
+has3/96complete futures (snapshot1793511702); v5scalev2 PID453608 waits for that
+quality report. All owned identities match. Teacher SUMO0; scale student/live
+pending. These are running computations, not a completed5000state deliverable.
+
 Operational canary repair update: designacf6f48dbd4b. Repairedv4scalev2 exposed
 an observer due-area initialization invariant; preserve the observer wrapper in
 path generation. V5qualityv1 exposed an empty-current-CAV/future-CAV-arrival case;
