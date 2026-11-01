@@ -24,11 +24,12 @@ def group(rows):
 
 class Controller:
     def __init__(self, policy=None, generator=None, deterministic=False, samples=None,
-                 branch=None, guide=None, beta=0.):
+                 branch=None, guide=None, beta=0.,sampling=None):
         self.policy,self.generator,self.deterministic=policy,generator,deterministic
         self.samples,self.branch=samples,branch
         self.events=[]; self.targets={}; self.until=None
         self.guide,self.beta=guide,beta
+        self.sampling=sampling
 
     def apply(self, rows, commands, now):
         if self.until is None or now>=self.until:
@@ -46,7 +47,7 @@ class Controller:
             proposal=None
             if self.guide is not None and self.samples is None and not self.deterministic:
                 from .exploration import route,execute
-                if route(sample,rows,self.beta,self.generator):
+                if route(sample,rows,self.beta,self.generator,self.sampling):
                     proposal=self.guide(rows,commands,now,sample)
                     sample=execute(sample,proposal,self.beta,self.generator)
             self.targets=targets(sample); self.until=now+sample['window']

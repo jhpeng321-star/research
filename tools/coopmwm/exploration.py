@@ -41,14 +41,16 @@ def bucket_beta(previous, option, traffic):
     return previous.get('buckets', {}).get(option+'|'+traffic, {}).get('beta', previous['beta'])
 
 
-def rate(rows):
+def rate(rows,sampling=None):
+    if sampling is not None:return sampling[regime(rows)]
     return GROUP_RATE if regime(rows) == 'merge-dense' else ORDINARY_RATE
 
 
-def route(sample, rows, beta, generator):
+def route(sample, rows, beta, generator,sampling=None):
     if any(not 0 <= bucket_beta(beta,o,regime(rows)) <= 1 for o in OPTIONS):
         raise ValueError('beta outside probability interval')
-    p = rate(rows)
+    p = rate(rows,sampling)
+    if not 0<p<1:raise ValueError('query probability must leave positive own-route mass')
     # Query independent of trust: the winning type is unknown until inference.
     # The recorded query indicator is the augmented behaviour measure; its
     # entire WM route has target mass zero, including declined/rejected proposals.

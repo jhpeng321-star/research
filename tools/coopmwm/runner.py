@@ -51,7 +51,7 @@ def wave(root,b,policy,ws,arm,role,ident,phase,deterministic=False,extra=None):
             noise_seed=int(digest(dict(training_seed=b.get('training_seed',20261101),world=w['seed'],wave=ident))[:15],16),
             deterministic=deterministic,sim_s=1200,queue_root=str(root),
             guided=arm in ('B','R') and role=='train' and not deterministic,
-            proposer='random' if arm=='R' else 'wm',beta=b.get('beta',0.),**(extra or {})))
+            proposer='random' if arm=='R' else 'wm',beta=b.get('beta',0.),sampling=b.get('sampling'),**(extra or {})))
     if jobs:
         reserve(root,jobs,phase);admission(b)
         from .plant import episode
@@ -290,7 +290,7 @@ def run(root,smoke_only=False):
     os.nice(max(0,19-os.getpriority(os.PRIO_PROCESS,0)))
     os.environ.update(CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
     torch.set_num_threads(1);torch.manual_seed(20261101)
-    primary={}
+    primary={};diagnostic=None
     try:
         reconciled(root)
         if not (root/'SMOKE.json').exists():
@@ -331,11 +331,21 @@ def run(root,smoke_only=False):
                     guide_arm='R' if active==['R'] else 'B'
                     previous=read(root/f'S{si}_{guide_arm}_UPDATE_{u-1:03}.json')
                     beta=previous['trust']
-                b=dict(b,beta=beta)
+                b=dict(b,beta=beta,sampling=None if u==1 else b.get('proposal_sampling'))
                 episodes_all=wave(root,b,policies,batch_worlds(u,si),'paired','train',f's{si}_u{u:03}','train')
                 if si==0 and u==1 and 'B' in active:
                     # E2 remains diagnostic only: never changes reward or stops B.
-                    credit_gate(root,b,policies['B'],[e for e in episodes_all if e['arm']=='B'])
+                    import threading
+                    diagnostic_policy=copy.deepcopy(policies['B'])
+                    diagnostic_binding=dict(b,workers=2)
+                    diagnostic_episodes=[e for e in episodes_all if e['arm']=='B']
+                    def check_credit():
+                        try:credit_gate(root,diagnostic_binding,diagnostic_policy,diagnostic_episodes)
+                        except BaseException as error:
+                            if not (root/'CREDIT_DIAGNOSTIC_ERROR.json').exists():
+                                write(root/'CREDIT_DIAGNOSTIC_ERROR.json',dict(error=repr(error),training_gate=False))
+                    diagnostic=threading.Thread(target=check_credit,name='registered-E2',daemon=True)
+                    diagnostic.start()
                 for a in active:
                     checkpoint=root/f'S{si}_{a}_checkpoint_{u:03}.pt'
                     if checkpoint.exists():policies[a],optimizers[a],generators[a],_=load(checkpoint)
@@ -367,6 +377,7 @@ def run(root,smoke_only=False):
             # Final primary panel precedes replications; every checkpoint is fixed.
             if active==['R']:random_final_test(root,b,policies['R'])
             else:final_test(root,b,policies,si)
+        if diagnostic:diagnostic.join()
         write(root/'COMPLETE.json',dict(updates_per_seed=UPDATES,seeds=TRAINING_SEEDS,training_plan=training_plan(),charged_sim_s=reconciled(root),budget=budget()))
     except BaseException as e:
         if not (root/'STOP.json').exists():write(root/'STOP.json',dict(error=repr(e),charged_sim_s=sum(r['sim_s'] for r in ledger(root))))

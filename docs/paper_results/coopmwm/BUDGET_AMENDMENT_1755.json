@@ -1,0 +1,17 @@
+{
+  "authority": "MAIN OWNER 2026-11-01 17:55; registered before amended physics or training update outcomes",
+  "cap_sim_s": 6000000,
+  "allocated_sim_s": 4918800,
+  "unallocated_sim_s": 1081200,
+  "phases_sim_s": {"train":3456000,"checks":446400,"dev":230400,"mechanics":3600,"calibration":240000,"discovery":240000,"final_test":172800,"replication_test":86400,"random_guide_test":43200},
+  "already_charged_sim_s": 74400,
+  "reuse": "all62 completed original jobs, original IDs, checkpoints, calibration subset and charge ledger; no rerun",
+  "cpu": "CPU_coopmwm20261101_cpu18.json;47PASS/zero skips/2.10s/zero SUMO",
+  "gpu": {"hosts":["gpuA","gpuR"],"workers_per_host":1,"per_worker_memory_GiB":8,"max_service_wall_hours_per_host":24,"proposal_cap_per_host":10000,"source":"FULL-v4 22cc32f6; inherited K8 H300 paired futures/executors","qualification":"both hosts same registered first diagnostic; all Di,DG,CG coordinates absolute difference<=0.001veh-s; original batch/single canary","timing":"one K8 H300 proposal per host on that observable roster; no SUMO; fit before u2 physics","priority":"owner17:55 supersedes WMPLAN-priority wait while HOLD; drain peer PIDs untouched"},
+  "sampling": {"update1":"historical dense1/900 ordinary1/3600, same B/R/both seeds","update2_plus":"p_dense=min(0.5,aggregate_measured_queries_per_s*initial48episode_wall_s*4/12/(initial_B_complete_group_dense_windows+initial_B_complete_group_ordinary_windows/4));p_ordinary=p_dense/4","freeze":"same fitted probabilities for B and R and both training seeds; from timing/count metadata only; register numeric values before u2 physics","cap_exhaustion":"explicit rejected proposal, preserve SUMO grading"},
+  "cpu_workers": {"train":12,"diagnostic":2,"nice":19,"load_max":20,"single_thread":true},
+  "E2": "asynchronous diagnostic thread in the same supervisor; calibration accounting serialized with train; diagnostic failure published, never a training gate; proposal requests take GPU priority",
+  "checkpoint_and_test": "unchanged fixed u24; primary A/B then once-only four-arm final989600-989635; R and seed2 A/B later; reused controls; no selection or reruns",
+  "new_sumo_at_registration": 0,
+  "new_training_updates_at_registration": 0
+}

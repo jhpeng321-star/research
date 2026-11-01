@@ -54,7 +54,9 @@ def bind(cpu_name):
     text=checked(REGISTRY).read_text(encoding='utf-8')
     assert 'S-COOPMWM 17:42 RANDOM-GUIDE AMENDMENT REGISTERED' in text
     auth=authority(text)
-    amendment=read(ops.EVIDENCE/'BUDGET_AMENDMENT_1742.json')
+    assert 'S-COOPMWM 17:55 DUAL-GPU AMENDMENT REGISTERED' in text
+    amendment=read(ops.EVIDENCE/'BUDGET_AMENDMENT_1755.json')
+    sampling=read(ops.EVIDENCE/'SAMPLING_1755.json')
     out=ops.ssh.remote('cpuQ',f'''import sys,pathlib,json,hashlib
 r=pathlib.Path({deploy.ROOT!r});s=pathlib.Path({SOURCE_ROOT!r});assert r.is_dir() and s.is_dir()
 sys.path[:0]=[str(s/'pytools'),'/home/ubuntu/e3final/runtime/src','/home/ubuntu/e3final/runtime']
@@ -63,6 +65,7 @@ assert (r/'QUIESCE_1742.json').exists()
 old=read(r/'BINDING.json');b=dict(old)
 b.update(cpu=json.loads({json.dumps(cpu)!r}),budget=json.loads({json.dumps(budget())!r}),
  authority=json.loads({json.dumps(auth)!r}),amendment=json.loads({json.dumps(amendment)!r}),
+ workers=12,proposal_sampling=json.loads({json.dumps(sampling['probabilities'])!r}),
  parent_binding_sha256=hashlib.sha256((r/'BINDING.json').read_bytes()).hexdigest())
 b['hashes']=dict(old['hashes'])
 for name,h in json.loads({json.dumps(staged['hashes'])!r}).items():b['hashes']['../'+s.name+'/'+name]=h
@@ -106,7 +109,7 @@ write(r/'TRAIN_DISPATCH_1742.json',d);print(json.dumps(d))
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('mode',choices=('quiesce','bind','launch'))
-    p.add_argument('--cpu',default='CPU_coopmwm20261101_cpu16.json');a=p.parse_args()
+    p.add_argument('--cpu',default='CPU_coopmwm20261101_cpu19.json');a=p.parse_args()
     if a.mode=='quiesce':quiesce()
     elif a.mode=='bind':bind(a.cpu)
     else:launch()

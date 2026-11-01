@@ -221,6 +221,38 @@ class Contracts(unittest.TestCase):
         actual=cost_adapter(fn,frozen)
         self.assertEqual(actual.__name__,fn.__name__)
 
+    def test_dual_GPU_parity_checks_all_credit_coordinates(self):
+        import copy
+        from .dual import credit_difference
+        a=dict(credits={str(h):dict(D_i=[1.,-1.],D_G=3.,C_G=3.) for h in (60,120,300,600)})
+        b=copy.deepcopy(a);self.assertEqual(credit_difference(a,b),0.)
+        b['credits']['600']['D_i'][1]+=2.
+        self.assertEqual(credit_difference(a,b),2.)
+
+    def test_throughput_sampling_logs_exact_mixture_mass(self):
+        from .exploration import route,mixture_ratio
+        from unittest.mock import patch
+        import math
+        sample=dict(logp=0.)
+        with patch('tools.coopmwm.exploration.regime',return_value='ordinary'):
+            route(sample,[],1.,torch.Generator().manual_seed(123),dict(ordinary=.125))
+        self.assertEqual(sample['behaviour']['mixture_mass'],.125)
+        sample['behaviour']['route']='policy'
+        self.assertAlmostEqual(float(mixture_ratio(torch.tensor(0.),sample)),1/.875,places=6)
+
+    def test_concurrent_diagnostic_and_train_reservations_are_once_only(self):
+        from concurrent.futures import ThreadPoolExecutor
+        from tempfile import TemporaryDirectory
+        from pathlib import Path
+        from .storage import reserve,ledger
+        with TemporaryDirectory() as d:
+            root=Path(d)
+            def charge(i):reserve(root,[dict(id=str(i),sim_s=1200)],'train' if i%2 else 'calibration')
+            with ThreadPoolExecutor(max_workers=4) as pool:list(pool.map(charge,range(12)))
+            rows=ledger(root)
+            self.assertEqual(len(rows),12);self.assertEqual(sum(r['sim_s'] for r in rows),14400)
+            with self.assertRaisesRegex(ValueError,'duplicate charge'):charge(0)
+
     def test_random_window_selection_uses_only_eligibility_not_credit(self):
         from .runner import select_calibration
         episodes=[dict(world=dict(cell=i,seed=986000+i),steps=[

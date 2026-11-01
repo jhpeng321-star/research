@@ -19,14 +19,16 @@ def busy():
 
 def main(root):
     os.nice(19)
+    started=time.monotonic()
     from .protocol import sha
     identity=read(root/'GPU_BINDING.json')
+    released=identity.get('owner_release')=='2026-11-01 17:55'
     for n,h in identity['hashes'].items():
         if sha(root/n)!=h:raise ValueError('immutable GPU source mismatch '+n)
     os.environ['WMTEACH_BACKEND']='FULL-v4'
     while True:
         free=int(subprocess.check_output(['nvidia-smi','--query-gpu=memory.free','--format=csv,noheader,nounits'],text=True).strip())
-        if free>12*1024 and not busy():break
+        if free>12*1024 and (released or not busy()):break
         time.sleep(10)
     with contextlib.redirect_stdout(sys.stderr):
         from tools.wmteach.runtime import bootstrap
@@ -39,15 +41,16 @@ def main(root):
     write(root/'GPU_READY.json',owner)
     print('COOPMWM_JSON '+json.dumps(dict(event='READY',owner=owner)),flush=True)
     for line in sys.stdin:
-        record=json.loads(line);key=record['state_id'];dest=root/'forecasts'/key
+        if time.monotonic()-started>24*3600:raise ValueError('registered 24h GPU service wall cap reached')
+        record=json.loads(line);key=record['state_id'];dest=root/'forecasts'/key;begin=time.monotonic()
         if (dest/'RESULT.json').exists():result=read(dest/'RESULT.json')
         else:
-            while busy():time.sleep(5)
+            while not released and busy():time.sleep(5)
             write(dest/'CLAIM.json',dict(owner=owner,state_id=key,mode=record.get('mode','diagnostic')))
             with contextlib.redirect_stdout(sys.stderr):
                 from .wm import evaluate,propose
                 used=sum(read(p)['mode']=='proposal' for p in root.glob('forecasts/*/CLAIM.json'))
-                if record.get('mode')=='proposal' and used>360:
+                if record.get('mode')=='proposal' and used>identity.get('proposal_cap',360):
                     result=dict(accepted=False,option=None,targets={},expected_saving=0.,
                         reason='registered GPU forecast cap reached',record_sha256=__import__('tools.coopmwm.protocol',fromlist=['digest']).digest(record))
                 else:
@@ -57,7 +60,7 @@ def main(root):
                     check=canary(rt,record,result)
                     if not check.get('deferred'):write(root/'GPU_PARITY.json',check)
             write(dest/'RESULT.json',result)
-        print('COOPMWM_JSON '+json.dumps(dict(event='RESULT',key=key,result=result)),flush=True)
+        print('COOPMWM_JSON '+json.dumps(dict(event='RESULT',key=key,result=result,wall_s=time.monotonic()-begin)),flush=True)
 
 
 if __name__=='__main__':main(Path(sys.argv[1]))
