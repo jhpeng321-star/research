@@ -613,6 +613,45 @@ def proposal_seeds(record, group, policy_traj, n, proposer, bounds, regime=None,
     return out
 
 
+@torch.no_grad()
+def mixture_moments(model, x, cov0=None):
+    """Moment-matched single Gaussian of the defensive proposer mixture for tokens x.
+
+    Returns (mean m*n, cov (m*n)^2) in canonical m/s^2 and duration probabilities.
+    mean = sum_k w_k mu_k; cov = sum_k w_k (diag s_k^2 + mu_k mu_k^T) - mean mean^T,
+    with w = (1-eps) pi and the eps defensive component N(0, cov0) (isotropic-smooth
+    prior if None), uniform over durations.
+    """
+    m = x.shape[0]; n = ms.canonical_knots(); nd = len(durations_registered())
+    xb, mask = _batch([dict(x=x, m=m)])
+    mu, logstd, logpi, logdur = model(xb, mask)
+    mu = mu[0, :m].permute(1, 0, 2).reshape(mu.shape[2], -1).double().numpy()          # M x (m*n)
+    var = (2*logstd[0, :m]).exp().permute(1, 0, 2).reshape(mu.shape[0], -1).double().numpy()
+    eps = float(model.cfg.get('defensive', 0.))
+    w = (1-eps)*logpi[0].exp().double().numpy()
+    c0 = ms.isotropic_covariance(m, Z_SCALE, n)/Z_SCALE**2 if cov0 is None else np.asarray(cov0, float)
+    mean = w@mu
+    cov = sum(w[k]*(np.diag(var[k])+np.outer(mu[k], mu[k])) for k in range(len(w)))+eps*c0-np.outer(mean, mean)
+    cov = (cov+cov.T)/2+1e-6*np.eye(len(mean))
+    pd = (w@logdur[0].exp().double().numpy())+eps/nd
+    return mean*Z_SCALE, cov*Z_SCALE**2, pd/pd.sum()
+
+
+def warm_start(record, group, proposer, regime=None, cov0=None):
+    """Learned-search hook: ``mppi_search.search(..., warm_start=warm_start(...))``.
+
+    The proposer's (moment-matched, defensive) distribution replaces the
+    policy-centred initial N(0, Sigma_0) and uniform durations; the search itself
+    (population, iterations, WM scoring, top-k, Thompson) is unchanged unless the
+    caller also passes a smaller ``config``. Flag-only: never used by default.
+    """
+    model = proposer[0] if isinstance(proposer, tuple) else proposer
+    regime = regime or record.get('regime') or 'unknown'
+    x = member_features(record.get('rows') or group['rows'], group['members'], regime)
+    mean, cov, pd = mixture_moments(model, x, None if cov0 is None else np.asarray(cov0, float)/Z_SCALE**2)
+    return dict(mean=mean.tolist(), cov=cov.tolist(), duration_probs=pd.tolist(), source='plan_proposer')
+
+
 # --------------------------------------------------------------------------- offline evaluation
 
 def initial_elite_loglik(s):

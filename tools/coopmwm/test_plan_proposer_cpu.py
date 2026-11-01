@@ -239,3 +239,45 @@ class Integration(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class WarmStart(unittest.TestCase):
+    def _run(self, **kw):
+        fake = Fake(3); g = group_of(3)
+        res = ms.search(dict(state_id='w', policy_residuals={v: 0. for v in g['members']}), g, fake.policy, BOUNDS,
+                        fake, 'ordinary', mappo_traj=fake.mappo, seed=5, **kw)
+        return res, fake, g
+
+    def test_flag_off_is_byte_identical_and_prior_warm_start_reproduces_search(self):
+        plain, _, g = self._run()
+        self.assertNotIn('warm_start', plain)
+        prior = dict(mean=np.zeros(3*ms.canonical_knots()).tolist(),
+                     cov=ms.isotropic_covariance(3, ms.default_sigma(BOUNDS)).tolist(),
+                     duration_probs=[1.]*len(ms.allowed_durations()))
+        warm, _, _ = self._run(warm_start=prior)
+        self.assertIn('warm_start', warm)
+        warm.pop('warm_start')
+        self.assertEqual(json.dumps(plain, sort_keys=True), json.dumps(warm, sort_keys=True))
+
+    def test_proposer_warm_start_runs_and_validates(self):
+        g = group_of(3); fake = Fake(3)
+        model = pp.ProposerNet(dict(pp.REGISTERED, d_model=32))
+        ws = pp.warm_start(dict(state_id='w', rows=g['rows']), g, model, 'ordinary')
+        self.assertEqual(len(ws['mean']), 3*ms.canonical_knots())
+        self.assertAlmostEqual(sum(ws['duration_probs']), 1.)
+        res, fake, _ = self._run(warm_start=ws)
+        self.assertEqual(res['warm_start']['source'], 'plan_proposer')
+        for p in fake.seen:
+            ms.validate_plan(p, BOUNDS, ms.allowed_durations())
+        with self.assertRaises(ValueError):
+            self._run(warm_start=dict(ws, mean=ws['mean'][:-1]))
+        with self.assertRaises(ValueError):
+            self._run(warm_start=dict(ws, cov=(-np.eye(30)).tolist()))
+
+    def test_fully_defensive_moments_equal_the_prior(self):
+        model = pp.ProposerNet(dict(pp.REGISTERED, d_model=32, defensive=1.))
+        x = dataset(5, 1)[2]['x']; m = x.shape[0]
+        mean, cov, pd = pp.mixture_moments(model, x)
+        np.testing.assert_allclose(mean, 0, atol=1e-12)
+        np.testing.assert_allclose(cov, ms.isotropic_covariance(m, pp.Z_SCALE), atol=1e-5)
+        np.testing.assert_allclose(pd, 1/len(ms.allowed_durations()))

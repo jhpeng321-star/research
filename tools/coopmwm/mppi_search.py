@@ -532,6 +532,19 @@ def _span(cfg, durations, D):
     return durations[-1] if cfg['frame'] == 'absolute' else D
 
 
+def _warm_start(ws, mu, pd):
+    m0 = np.asarray(ws['mean'], float).reshape(-1); c0 = np.asarray(ws['cov'], float)
+    if m0.shape != mu.shape or c0.shape != (mu.size, mu.size) or not (np.isfinite(m0).all() and np.isfinite(c0).all()):
+        raise ValueError('warm start must match members x canonical knots')
+    c0 = (c0+c0.T)/2
+    if np.linalg.eigvalsh(c0).min() <= 0:
+        raise ValueError('warm-start covariance must be positive definite')
+    p = pd if ws.get('duration_probs') is None else np.asarray(ws['duration_probs'], float)
+    if p.shape != pd.shape or (p < 0).any() or not p.sum() > 0:
+        raise ValueError('warm-start duration probabilities must cover the allowed durations')
+    return m0, c0, p/p.sum()
+
+
 def sample_unscored(group, policy_traj, bounds, regime, seed, covariance=None, config=None, duration_s=None):
     """Arm R: one generic correlated perturbation of the policy, NOT scored by the WM."""
     cfg = dict(REGISTERED, **(config or {})); durations = allowed_durations(cfg['durations_s'], cfg['max_duration_s'])
@@ -548,7 +561,7 @@ def sample_unscored(group, policy_traj, bounds, regime, seed, covariance=None, c
 
 
 def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None,
-           covariance=None, library=None, seed=None, config=None, extra_seeds=None):
+           covariance=None, library=None, seed=None, config=None, extra_seeds=None, warm_start=None):
     """Policy-centred MPPI/CEM joint-plan search with WM screening and K_final rescoring.
 
     record: request passed unchanged to ``evaluate`` (needs ``policy_residuals``
@@ -560,6 +573,12 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
     extra_seeds: optional iteration-0 seeds (dicts with ``perturbation_canonical``
     on the current canonical grid and ``duration_s``; e.g. plan-proposer plans).
     They take population slots and are WM-scored like every other candidate.
+    warm_start: optional learned initial sampling distribution replacing the
+    policy-centred N(0, Sigma_0)/uniform-duration start (flag; default None =
+    unchanged search): dict ``mean`` (members*n_canon), ``cov`` (square, same
+    dimension, canonical m/s^2) and optional ``duration_probs`` over the allowed
+    durations. Population/iterations/scoring are unchanged unless ``config``
+    overrides them; the 'centre' (and MAPPO/library) seeds are still evaluated.
     """
     cfg = dict(REGISTERED, **(config or {}))
     durations = allowed_durations(cfg['durations_s'], cfg['max_duration_s'])
@@ -576,6 +595,8 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
     H_screen = int(min(cfg['final_H_max'], max(cfg['screen_H_min'], durations[-1])))
     sigma = default_sigma(bounds)
     mu, cov, pd = _distribution(cfg, m, durations, covariance, regime, sigma)
+    if warm_start is not None:
+        mu, cov, pd = _warm_start(warm_start, mu, pd)
     desc = describe(group, regime)
     base = comparators(record, cfg['final_H_max'])
     seeds = [(np.zeros((m, nc)), durations[-1], 'centre', None)]
@@ -650,6 +671,10 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
                                saving_vs_policy=float((costs['policy']-costs[p['id']]).mean())) for p in finalists])
     if extra_seeds:  # key absent by default: unchanged output bytes without seeds
         out['extra_seeds'] = len(extra_seeds)
+    if warm_start is not None:
+        out['warm_start'] = dict(source=warm_start.get('source', 'proposer'), sha256=_digest(
+            dict(mean=_f([np.asarray(warm_start['mean'], float).reshape(-1)])[0],
+                 duration_probs=warm_start.get('duration_probs'))))
     if not t['accepted']:
         out.update(reason=t['reason'], plan=None, option=None, expected_saving=None)
         return out
