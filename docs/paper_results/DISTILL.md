@@ -1,5 +1,5 @@
 # S-DISTILL — observable-only exact-teacher student
-Status: offline fit frozen; MAIN11:48 approved live test, preparing dispatch.
+Status: offline fit frozen; MAIN11:48-approved live24world test running on gpuA436287.
 
 ## Data and registered roles
 Existing EXAM300states/60TRAINworlds, all4500D120/D300/D600 labels verified by original byte hashes.
@@ -29,14 +29,15 @@ O0-only shortcuts and quota-pruned candidates lack lookahead labels; never imput
 These horizons differ from trainedD600; incomplete-label conditional saving is not a full-panel policy estimate.
 
 ## Live test
-Pending prospective fresh24world panel/exposure/dualguard/source/policy/CPU/mechanics gates.
-Target<=200000sim-s; pairedJ600/J900 whole-world10000bootstrap, safety/moves, completeC_G twins.
+FreshDEV984000..984023/all12cells, all3hostexposure+dualguards+CPU gates PASS; mechanics BITWISE PASS.
+Upper199200<=200000sim-s; pairedJ600/J900/10000world-bootstrap/safety/moves/ALLexecutedC_G twins.
+Credit5850/world; explicit resourcepruning/O0 if next reference/joint/BOTHsolo H120quartet cannot fit.
 No trained-policy-beats-MAPPO claim is supported by offline results; live evidence is required.
 
 ## Reproducibility
 Design:`DISTILL_DESIGN.md`; code:`tools/distill/`; immutable evidence:`distill_v1/`.
 Run:`py -3.13 -B -m tools.distill.train <new-output-directory>` (exclusive-create; never overwrite).
-CPU:`py -3.13 -B -m unittest tools.distill.test_cpu -v`:15PASS;RuffPASS.
+CPU:local23PASS; frozen gpuA8PASS/0skips/BOTH24guards; original-vs-numpy1020context parityPASS;RuffPASS.
 Evidence includes world folds/OOF, all model-confidence scores, full teacher DEV records/hashes,
 TRAIN feature importance/prediction sensitivity and per-option observable trigger summaries.
 TRAIN prediction sensitivity is descriptive, not causal feature attribution.

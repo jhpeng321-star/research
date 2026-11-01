@@ -202,14 +202,27 @@ report=dict(complete=(root/'COMPLETE.json').exists(),stopped=(root/'STOP.json').
  charged=sum(r['sim_s'] for r in charges),actual=sum(r['actual_sim_s'] for r in closed),incomplete=incomplete,
  mechanics=json.loads((root/'MECHANICS.json').read_text()) if (root/'MECHANICS.json').exists() else None,
  stop=json.loads((root/'STOP.json').read_text()) if (root/'STOP.json').exists() else None)
-if {collect!r}:report.update(records=records,charges=charges,closed=closed,binding=json.loads((root/'BINDING.json').read_text()))
+if {collect!r}:
+ import sys,hashlib
+ sys.path.insert(0,str(root/'pytools'))
+ from tools.distill.live import verify
+ binding=verify(root)
+ branch_results={{}};hashes={{}}
+ for job in (root/'jobs').iterdir():
+  path=job/'RESULT.json'
+  if path.exists():
+   hashes[str(path.relative_to(root))]=hashlib.sha256(path.read_bytes()).hexdigest()
+   if '_t' in job.name:branch_results[job.name]=json.loads(path.read_text())
+ reservations={{p.stem:json.loads(p.read_text()) for p in (root/'reservations').iterdir()}}
+ report.update(records=records,charges=charges,closed=closed,binding=binding,branch_results=branch_results,
+               result_hashes=hashes,reservations=reservations)
 print(json.dumps(report))
 ''',timeout=180))
     if collect:
         if not result['complete'] or result['stopped'] or result['incomplete'] or result['worlds'] != 24:
             raise ValueError('full24paired panel required; status='+str({k:v for k,v in result.items() if k!='records'}))
         save(OUT/'RECEIPTS.json',result)
-    print(json.dumps({k:v for k,v in result.items() if k not in ('records','charges','closed','binding')}))
+    print(json.dumps({k:v for k,v in result.items() if k not in ('records','charges','closed','binding','branch_results','result_hashes','reservations')}))
 
 
 def main():
