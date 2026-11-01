@@ -41,16 +41,11 @@ def guide(job,generator):
             return None
         if quota is None:
             # Queue occupancy is infrastructure-only, never predicted/SUMO gain.
-            while True:
-                pending=sum(not (root/'responses'/p.name).exists() for p in (root/'requests').glob('*.json'))
-                workers=worker_slots(root)
-                if pending<2*len(workers):break
-                starts=root/'guided_starts'/f'u{job["update"]:03}'
-                if sum(1 for _ in starts.glob('*.json'))>=job['N_exec']:break
-                assert_running(root,job['arm'])
-                if time.time()>job['gpu_deadline']:raise ValueError('registered GPU deadline exceeded')
-                time.sleep(.5)
-            p=.95 if pending<2*len(workers) else 0.
+            pending=sum(not (root/'responses'/p.name).exists() for p in (root/'requests').glob('*.json'))
+            workers=worker_slots(root)
+            # Availability is observed at this decision, never waited for. The
+            # broker resolves simultaneous clients racing for the final slot.
+            p=.95 if pending<len(workers) else 0.
         else:
             import fcntl
             match=root/'random_match'/f'u{job["update"]:03}';match.mkdir(parents=True,exist_ok=True)
@@ -66,6 +61,9 @@ def guide(job,generator):
         b=dict(route='wm' if queried else 'policy',sample_probability=p,mixture_mass=p,
             regime=traffic,executed=False,beta=0.,q=0.,eligible_query=True)
         sample['behaviour']=b
+        if quota is None:
+            b['capacity_admission']=dict(pending=pending,slots=len(workers),available=p>0.,
+                query_probability=p,nonblocking=True)
         if not queried:return None
         deltas={v:float(a[0]) for v,a in zip(sample['context']['members'],sample['own_action'])}
         r=dict(world_id=job['world']['seed'],time_s=int(now),rows=rows,group=members,
