@@ -34,6 +34,39 @@ print(json.dumps(out))
 '''
 
 
+def current_status(snapshot, receipt):
+    """Missing hosts remain unknown; closed actual excludes open-job physics."""
+    coverage = all(host in snapshot['hosts'] for host in ('cpuQ', 'gpuR', 'gpuA'))
+    cpus = {host: data['cpu'] for host, data in snapshot['hosts'].items()}
+    gpu = {host: data['gpu'] for host, data in snapshot['hosts'].items()}
+    charged = 4680 + sum(row.get('charged_sim_s', 0) for rows in cpus.values() for row in rows.values())
+    closed = 4680 + sum(row.get('closed_actual_sim_s', 0) for rows in cpus.values() for row in rows.values())
+    terminals = [rows.get(arm, {}).get('finished') for host, rows in gpu.items()
+                 if host in ('gpuA', 'gpuR') for arm in ('wm', 'bb')]
+    gpu_complete = len(terminals) == 4 and all(terminals)
+    return dict(protocol='S-C1SWITCH2/v2', verified_unix=snapshot['unix'],
+        status='CPU_COMPLETE_WM_TERMINAL_ORACLES_COMPLETE_BB_TERMINAL_FLEET_EVALUATING',
+        receipt=str(receipt), base_sim_s=468380, conditional_sim_s=548180,
+        base_gpu_hours_cap=19, conditional_gpu_hours_cap=35,
+        design_sha256='95aa84cf801aea773a0c7f9a208396ed4898e5cacdf8b6177940c7d9e1f5a273',
+        panel_sha256='7c780c25237dde73a657937ab577b8e48f71766817f4363f3298982e90144827',
+        prediction_objective='on_road_fleet_delay', evaluation_objective='full_team_delay_fleet_plus_source',
+        host_coverage_complete=coverage, charged_sim_s_at_latest_receipts=charged if coverage else None,
+        charged_verified_lower_bound_sim_s=charged, closed_actual_verified_lower_bound_sim_s=closed,
+        closed_actual_sim_s_at_latest_receipts=closed if coverage else None,
+        registered_base_remaining_sim_s=468380-charged if coverage else None,
+        actual_note='Closed actual excludes currently open jobs; historical charges are never refunded.',
+        new_gpu_s=sum(row['elapsed_s'] for row in terminals) if gpu_complete else None,
+        gpu_accounting_note='Final monotonic loading/parity/idle-inclusive WM and BB receipts; terminal allocations never reset.',
+        canary=dict(state='COMPLETE', charged_sim_s=4680, closed_actual_sim_s=4680, never_redispatch=True),
+        cpu=cpus, gpu=gpu, alerts=snapshot['alerts'],
+        cpuQ_resources=snapshot.get('cpuQ_resources'), observer=snapshot['observer'],
+        bb_startup_stop=snapshot['bb_startup_stop'],
+        final_checkpoint_receipts=snapshot['final_checkpoint_receipts'],
+        optional_wm_phys='OFF pending independent registered qualification',
+        efficacy_status='Primary full paired WM-vs-RL panel incomplete; no primary efficacy CI')
+
+
 def run():
     snapshot = collect()
     # Install only the already-frozen source path to obtain the path-pruning regex.
@@ -45,6 +78,7 @@ def run():
     snapshot['read_only'] = True
     path = EVIDENCE/('RESUME_RECONCILIATION_'+str(int(time.time()))+'.json')
     write(path, snapshot)
+    write(EVIDENCE/'STATUS_CURRENT.json', current_status(snapshot, path))
     resources = snapshot['cpuQ_resources']
     print(json.dumps(dict(receipt=str(path), observer=snapshot['observer'],
         uptime_days=resources['uptime_s']/86400, disk=resources['disk'],

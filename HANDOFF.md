@@ -59,6 +59,15 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**11:52 accounted heartbeat:** fleet cpuQ1152412 LIVE/noSTOP,2episodes complete,
+103decisions,4160charged/2400closedactual; gpuR partition stillUNCLAIMED/diskblocked.
+Task aggregate157400charged/155640closedactual at1793505157, exact totalGPU
+27729.12296916172s (WM27686.09899191372+BB43.02397724799812). Basecap468380
+unchanged; unspent reservations do NOT authorize terminal-arm retries. Updated
+`STATUS_CURRENT.json` supersedes old UNKNOWNcpuQ/unusedBB/finalFleetPending state.
+Reconciler now preserves unknown exact totals if a host is unreachable and excludes
+open-job physics from closedactual; accounting regressions2/2/RuffPASS.
+cpuQ housekeeping increased free space to5034971136bytes; ownoutputs302384354bytes.
 **11:50 fleet CPU evaluation LIVE / disk gate yielded:** owncpuQ1152412,
 two workers at original `e79775aa1f380c25`,1340charged/37decisions/noSTOP at
 1793505028. OriginalgpuR four-world partition `6e152d9a0b7bf7a4` UNCLAIMED:
