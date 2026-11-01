@@ -1,5 +1,5 @@
 {
-  "captured_local": "2026-11-01T09:49:10.260599+08:00",
+  "captured_local": "2026-11-01T10:59:39.547333+08:00",
   "reports": {
     "owner_read_first": {
       "path": "E:/research-dense/docs/OWNER_UPDATE_20261030_EVENING.md",
@@ -12,10 +12,10 @@
     "registration": {
       "path": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md",
       "exists": true,
-      "sha256": "42b25b694253fad17f8a9b60d3a34bcdfa63a0598efe038a3d9eed7b31c358e9",
-      "bytes": 2360019,
-      "modified_local": "2026-11-01T09:47:41.048579+08:00",
-      "snapshot": "source_snapshots/registration_42b25b694253fad1.md"
+      "sha256": "123b01edd48ba1dc8e04a5d1e7767d11d2afc89e34262a24ec0288d546d96be4",
+      "bytes": 2361191,
+      "modified_local": "2026-11-01T10:16:23.064244+08:00",
+      "snapshot": "source_snapshots/registration_123b01edd48ba1dc.md"
     },
     "wmvalue_design": {
       "path": "E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md",
@@ -344,10 +344,10 @@
     "wmphys_morning": {
       "path": "E:/agent-work/c4-rb-int/docs/paper_results/WMPHYS_MORNING.md",
       "exists": true,
-      "sha256": "ae9087f2fd96d8e73e65dbf44e5bdc80ab789cb23fd09fd44d68f990b80d275a",
+      "sha256": "344831334d419ed250b1fc1df1a23dd409398aadd6f1c2f84c83c225004f2281",
       "bytes": 5415,
-      "modified_local": "2026-11-01T09:39:30.397895+08:00",
-      "snapshot": "source_snapshots/wmphys_morning_ae9087f2fd96d8e7.md"
+      "modified_local": "2026-11-01T10:32:00.149036+08:00",
+      "snapshot": "source_snapshots/wmphys_morning_344831334d419ed2.md"
     },
     "wmphys_freeze": {
       "path": "E:/agent-work/c4-rb-int/docs/rbint/noon/20261101T093000+0800/FREEZE.json",
@@ -384,8 +384,7 @@
   },
   "changed_since_prior_cut": [
     "registration",
-    "wmphys_morning",
-    "wmphys_freeze"
+    "wmphys_morning"
   ],
   "scope": "explicit local report snapshots only; no simulator/model or restricted input access",
   "claim_review": "manual; file appearance or a canary is not an efficacy result"
