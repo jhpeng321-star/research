@@ -150,14 +150,34 @@ print(json.dumps(receipt))
     save(OUT/'CPU.json',result);print(json.dumps(result))
 
 
-def launch():
+def startup_zero():
+    result = json.loads(remote(HOST,f'''import pathlib,json,sys
+root=pathlib.Path({ROOT!r});claim=json.loads((root/'LAUNCH_ONCE.json').read_text())
+assert set(claim)=={{'parent'}}
+assert not (root/'DISPATCH_ONCE.json').exists() and not (root/'LIVE.log').exists() and not (root/'CHARGES.jsonl').exists()
+assert not list((root/'jobs').iterdir())
+sys.path.insert(0,'/root/autodl-tmp/c4/speedhead20261030/pythondeps')
+import sumo
+print(json.dumps(dict(zero_physics=True,claim=claim,dependency=str(pathlib.Path(sumo.__file__).parent),jobs=0,charged=0)))
+'''))
+    save(OUT/'ZERO_PHYSICS_LAUNCH.json',result);print(json.dumps(result))
+
+
+def launch(corrected=False):
     result = json.loads(remote(HOST,f'''import pathlib,sys,os,json,subprocess
 root=pathlib.Path({ROOT!r});assert root.is_dir()
 assert json.loads((root/'CPU.json').read_text())['pass_']
-assert not (root/'LAUNCH_ONCE.json').exists() and not (root/'DISPATCH_ONCE.json').exists()
-with (root/'LAUNCH_ONCE.json').open('x') as f:f.write(json.dumps(dict(parent=os.getpid())))
+sys.path.insert(0,'/root/autodl-tmp/c4/speedhead20261030/pythondeps')
 import sumo
 home=str(pathlib.Path(sumo.__file__).parent)
+assert not (root/'DISPATCH_ONCE.json').exists() and not (root/'LIVE.log').exists() and not (root/'CHARGES.jsonl').exists()
+assert not list((root/'jobs').iterdir())
+if {corrected!r}:
+ assert set(json.loads((root/'LAUNCH_ONCE.json').read_text()))=={{'parent'}}
+ marker='LAUNCH_ZERO_PHYSICS_CORRECTION_ONCE.json'
+else:
+ assert not (root/'LAUNCH_ONCE.json').exists();marker='LAUNCH_ONCE.json'
+with (root/marker).open('x') as f:f.write(json.dumps(dict(parent=os.getpid(),zero_physics_correction={corrected!r})))
 env=dict(os.environ,CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',
  PYTHONPATH=str(root/'pytools')+':/root/autodl-tmp/c4/speedhead20261030/pythondeps',SUMO_HOME=home,PATH=home+'/bin:'+os.environ['PATH'])
 log=(root/'LIVE.log').open('x')
@@ -193,9 +213,10 @@ print(json.dumps(report))
 
 
 def main():
-    p = argparse.ArgumentParser();p.add_argument('mode',choices=('export','inspect','manifest','audit','stage','cpu','launch','status','collect'))
+    p = argparse.ArgumentParser();p.add_argument('mode',choices=('export','inspect','manifest','audit','stage','cpu','launch','startup_zero','launch_corrected','status','collect'))
     a = p.parse_args()
     if a.mode in ('status','collect'):status(a.mode == 'collect')
+    elif a.mode == 'launch_corrected':launch(corrected=True)
     else:globals()[a.mode]()
 
 
