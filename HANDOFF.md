@@ -1,6 +1,18 @@
 # S-RB-RUNB handoff
 
-Updated 2026-11-01 08:02 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+Updated 2026-11-01 09:31 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+
+## 09:30 freeze — B2 123/160; existing evaluation continues
+- New-claim intake closed by explicit09:30 watcher policy; existing B2 retained,
+  no new unclaimed RUNB variant published. Evaluation/supervision through11:30.
+- 09:30:40 B2 tasks123/160 (37/46/40), original three workers +supervisor alive,
+  GPU3853MiB/37%,load35.69, no terminal receipt. No source/claim/dispatch changes.
+- `rb-shared/evalclaims/RUNB_FREEZE_0930.md`; independent receipt
+  `runs/rbrunb/OBSERVE_1793496640094194000.json`. Continuous in-session10min polls.
+- EVAL's corrected baseline/uncertainty notice read. Frozen original B2 scoring
+  remains source-bound; do not cite original bootstrap CIs as corrected evidence.
+  INT's existing corrected collector owns source-specific matched diagnostics;
+  no duplicate CPU analysis or inference started. `.done` still pending160tasks.
 
 ## 08:00 interim — B2 87/160, boundary resource wait
 - Three original owned workers801887/801888/801889 +supervisor762343 live,
