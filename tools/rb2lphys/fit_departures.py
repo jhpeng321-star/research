@@ -177,6 +177,7 @@ def main():
     begin = time.monotonic()
     for world in range(969400, 969432):
         a, receipt = read_episode(native_episode(args.root, world), world)
+        receipt['observable_time_support_s'] = [float(a['time_s'][0]),float(a['time_s'][-1])]
         rows.extend(component_rows(a, world, support, weights))
         provenance.append(receipt)
     # Prefix fit then later development-panel conditional check, both development.
@@ -187,7 +188,7 @@ def main():
     artifact = dict(schema='wm_phys.learned_parameters.v1', name='learned_v1',
         fit_worlds=list(range(969400, 969432)), selection_worlds=list(range(969420, 969432)),
         departure_parameters=dict(zip(NAMES, best.tolist())),
-        fit_interval_s=[240, 300], conditional_check_interval_s=[300, 900],
+        fit_interval_s=[240, 300], conditional_check_interval_s=[300, min(r['observable_time_support_s'][1] for r in provenance)],
         frozen_idm_population_sha256=hashlib.sha256(population_file.read_bytes()).hexdigest(),
         rule_forms='SUMO1.27.1 SumoInsertion; max/last speed; free/first lane',
         ownership='IDM/LC populations unchanged; FIT/LANE own those coordinates',

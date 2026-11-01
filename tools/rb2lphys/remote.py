@@ -18,9 +18,10 @@ def main():
     p.add_argument('--host', default='gpuR', choices=('gpuR', 'gpuA', 'cpuQ'))
     p.add_argument('--stage')
     p.add_argument('--label')
+    p.add_argument('--parent', choices=('/root/rbeval20261031','/root/autodl-tmp/c4/rb2lphys20261101'))
     p.add_argument('--command', nargs=argparse.REMAINDER)
     args = p.parse_args()
-    parent = '/home/ubuntu/rb2lphys20261101' if args.host == 'cpuQ' else PARENT
+    parent = '/home/ubuntu/rb2lphys20261101' if args.host == 'cpuQ' else (args.parent or PARENT)
     python = '/home/ubuntu/miniconda3/bin/python' if args.host == 'cpuQ' else '/root/miniconda3/bin/python'
     if args.action == 'audit':
         print(ssh(args.host, '''import os,json,subprocess,importlib.util
@@ -28,6 +29,10 @@ from pathlib import Path
 print('LOAD',os.getloadavg(),'CPUS',os.cpu_count())
 import shutil
 if shutil.which('nvidia-smi'):print(subprocess.run(['nvidia-smi'],capture_output=True,text=True).stdout)
+print('DISK',shutil.disk_usage(Path.home()))
+for path in ('/root/autodl-tmp','/root/rbeval20261031','/home/ubuntu'):
+ try:print('DISK_PATH',path,shutil.disk_usage(path))
+ except (PermissionError,FileNotFoundError):pass
 print('MODULES',[(m,bool(importlib.util.find_spec(m))) for m in ('torch','scipy','pytest')])
 for p in ('/root/wmdata20261031/views','/root/wmdata20261031','/home/ubuntu/wmdata20261031/views','/root/rbeval20261031/phys_code_22cc32f65a80'):
  try:print('PATH',p,Path(p).is_dir())
@@ -75,6 +80,8 @@ print(json.dumps(receipt))'''
 from pathlib import Path
 stage=Path({args.stage!r});assert (stage/'LP_STAGE.json').is_file()
 parent=Path({parent!r});assert parent.is_dir()
+import shutil
+assert shutil.disk_usage(parent).free > 512*2**20, 'insufficient free disk for own compact receipts'
 work=Path({work!r});assert not work.exists();work.mkdir()
 assert os.getloadavg()[0] < os.cpu_count()/2
 cmd=[{python!r},'-B',*{args.command!r}]

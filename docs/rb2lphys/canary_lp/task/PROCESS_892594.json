@@ -1,0 +1,23 @@
+{
+ "pid": 892594,
+ "boot_id": "d19e6898-efd0-4288-a901-d63b21f11163",
+ "start_ticks": "4213325726",
+ "argv": [
+  "/root/rbeval20261031/lphys_code_06eaf9b3b58f/tools/rb2lphys/evaluate.py",
+  "--out",
+  "/root/rbeval20261031/lphys_canary_lp/task",
+  "--runtime-root",
+  "/root/rbeval20261031/lphys_code_06eaf9b3b58f",
+  "--wm-config",
+  "/root/rbeval20261031/lphys_canary_lp/task_recipe.toml",
+  "--model-name",
+  "LPDEV_learned_v1",
+  "--device",
+  "cuda",
+  "--memory-gib",
+  "5",
+  "--max-tasks",
+  "2"
+ ],
+ "started_unix": 1793506672.6855204
+}
