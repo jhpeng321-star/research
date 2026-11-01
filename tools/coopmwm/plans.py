@@ -23,6 +23,9 @@ def validate(plan, bounds):
 
 
 def acceleration_at(plan, elapsed):
+    if 'profile' in plan:  # policy-centred MPPI profile plans (mppi_search)
+        from .mppi_search import acceleration_at as profile_at
+        return profile_at(plan, elapsed)
     if not plan['members'] or not 0 <= elapsed < plan['duration_s']:
         return {}
     stride = plan.get('knot_s', 10)
