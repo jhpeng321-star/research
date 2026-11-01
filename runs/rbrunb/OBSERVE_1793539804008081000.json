@@ -1,0 +1,74 @@
+{
+  "time": "2026-11-01T21:30:04.007978+08:00",
+  "owner": "S-RB-RUNB",
+  "handoffs": [
+    {
+      "path": "E:\\agent-work\\c4-rb-int\\HANDOFF.md",
+      "sha256": "75286af9c5f0b2260bfe4173d3f64ac932f06ba70f4ccf6561867b2fa19c6a5b"
+    },
+    {
+      "path": "E:\\agent-work\\c4-rb-eval\\HANDOFF.md",
+      "sha256": "44e5be2b1ac0d97d79c732bc4e744784c556ffb040bf48d9c4bbc60dd333a5fb"
+    }
+  ],
+  "watcher_status": {
+    "time": "2026-11-01T11:59:08.679161+08:00",
+    "owner": "S-RB-RUNB",
+    "handoffs": [
+      {
+        "path": "E:\\agent-work\\c4-rb-int\\HANDOFF.md",
+        "sha256": "368cfdf73bc0e7403297f80e627f652e2f82e819ee38a097473771bf055d8292",
+        "present": true
+      },
+      {
+        "path": "E:\\agent-work\\c4-rb-eval\\HANDOFF.md",
+        "sha256": "9e8825b1cef0ae5524cb6af9f53de667a630c958393f44e4a9fbc1513100af0e",
+        "present": true
+      }
+    ],
+    "state": "Ordered ready manifests found",
+    "ready": [
+      "WM-PHYS-A2",
+      "WM-PHYS-C2",
+      "WM-PHYS-B2"
+    ]
+  },
+  "remote": {
+    "gpu": "4542, 98",
+    "load": 25.91796875,
+    "supervisors": [],
+    "workers": [
+      {
+        "pid": 801887,
+        "exists": false
+      },
+      {
+        "pid": 801888,
+        "exists": false
+      },
+      {
+        "pid": 801889,
+        "exists": false
+      }
+    ],
+    "tasks": 157,
+    "shards": {
+      "shard0": 53,
+      "shard1": 56,
+      "shard2": 48
+    },
+    "dispatched": true,
+    "terminal": {
+      "FAILED.json": {
+        "error": "RuntimeError('Owned workers exited [1, 0, 0]; no automatic retry')",
+        "unix": 1793504036.3433967,
+        "owned_pids": [
+          801887,
+          801888,
+          801889
+        ]
+      }
+    },
+    "last_log": "RuntimeError: Owned workers exited [1, 0, 0]; no automatic retry"
+  }
+}

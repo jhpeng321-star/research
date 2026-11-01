@@ -1,6 +1,18 @@
 # S-RB-RUNB handoff
 
-Updated 2026-11-01 19:01 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+Updated 2026-11-01 21:30 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+
+## Fresh-session terminal reconciliation — 21:30
+- Preserved clean HEAD `84997ea0`; read log/status, common rules, existing cutoff
+  receipts, noon continuation request and both current handoffs before observing.
+  Current time21:30+08 is beyond the completed11:30 supervision deadline; INT/EVAL
+  confirm final publication and no remaining original-round work.
+- Existing read-only observer confirms B2 unchanged157/160 (53/56/48), no live
+  owned supervisor, workers801887/801888/801889 absent, original FAILED retained.
+  gpuR nvidia-smi4542MiB/98%, CPUload25.92. Receipt:
+  `runs/rbrunb/OBSERVE_1793539804008081000.json`.
+- Claims, completed tasks and partial/failed receipts preserved. Original-round
+  closure remains in effect; no dispatch, replay, scoring or process action.
 
 ## Fresh-session terminal reconciliation — 19:01
 - Preserved clean HEAD `4ef1b487`; read log/status, common rules, noon request,
