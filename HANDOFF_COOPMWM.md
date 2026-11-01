@@ -1,5 +1,14 @@
 # S-COOPMWM live continuation — OWNER22:08 WARM MEMORY HOLD
 
+23:36 BUDGET STOP: receipt RESUME_BUDGET_BLOCK_1793547402.json verifies A5 exited
+at registeredu4pause, charge988040. Full latest A48/B48/R24 plus four branch moments
+and96-world tests requires6657440sim-s after prescribed checks8/dev16 reductions
+(completedA-u4check retained). Exceeds explicit resume6M by657440, also6.5M by157440.
+Do not dispatch new physics pending owner budget/scope decision. No new job/PID
+control; warm/MPPI glue is preserved but NOT release-qualified. Reproduce quote
+with tools.coopmwm.resume_quote (receipt-only, never physics); earlier cold/search
+release commands are not authorization for the latest plan.
+
 23:32 fresh recovery: full201-line brief read through23:30. Receipt
 WARM_RECOVERY_1793547096 verifies original2477255 and all24B identities T;
 A acceleration u1..4 and check episodes preserved, charge988040sim-s. Landed

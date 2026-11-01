@@ -1,5 +1,30 @@
 # S-COOPMWM — live checks
 
+## 23:36 — resume verified; latest full plan BLOCKED by budget
+- Read the complete 201-line brief through MAIN23:30. Recovered runtime/actor/
+  library integration is preserved in `3f70f405`; it remains release-unqualified.
+- Fresh identity receipt `WARM_RECOVERY_1793547096.json`: original supervisor
+  2477255 and all24 held B worker/SUMO identities remain T. A continuation2611888
+  has exited after its registered u4 pause; all four acceleration updates and
+  the completed u4 TRAIN check survive. **988040sim-s conservatively charged.**
+- Latest scope is A48/B48/R24, 24episodes/update,96-world episode test plus
+  four branch moments300/500/700/900 with300s continuation and later R branches.
+  Original mechanics/calibration/discovery reserves and every failed/superseded
+  reservation remain charged. MAPPO branch reuse is assumed to pass.
+- `RESUME_BUDGET_BLOCK_1793547402.json` records all prescribed reductions in order:
+  checks4/dev8:7089440; checks4/dev16:6859040; checks8/dev16:**6657440sim-s**.
+  The last includes the already-completed A-u4 check14400 rather than refunding it.
+- Explicit resume cap**6000000**: shortfall**657440sim-s**. Even the brief's
+  6500000cap is short157440. Seed2 was already dropped. A failed MAPPO-reuse
+  equivalence check would additionally require115200sim-s, not included above.
+- **STOP before new physics**, as required by the budget rule. No new dispatch,
+  job duplication, process-control action or final-panel outcome access occurred.
+  Existing S-WMSPEED2 GPU experiments are preserved. A is at its existing pause;
+  B/R stay held. Full-plan registration/restart needs an owner budget/scope decision.
+- End-to-end MPPI/warm decision-quality/restart qualification remains incomplete;
+  **WARM MEMORY QUALIFIED and a restart time are not claimed**. Pre-start depth
+  diagnostic is deferred under MAIN23:04; existing qualification receipts are retained.
+
 ## 22:37 — fresh recovery; A continuation preflight failure identified
 - Original B/R hold identities remain stopped; all prior work and charges retained.
 - A-only continuation PID2576197 exited before acquiring a claim or launching physics:

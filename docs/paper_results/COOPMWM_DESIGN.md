@@ -1,5 +1,5 @@
-# S-COOPMWM — acceleration plans, SUMO-graded (OWNER20:35 viability first)
-1. Authority through MAIN20:35; native-start/WM-reward/all prior set-point runs superseded and charged.
+# S-COOPMWM — BUDGET STOP23:36; historical registered design below
+1. Latest requested A48/B48/R24+branch plan unregistered: minimum6657440>explicit6M; RESUME_BUDGET_BLOCK_1793547402. Owner decision before physics.
 2. A/B/R fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
 4. A: PPO shared team reward=-J, road speed deficit plus source waiting.
