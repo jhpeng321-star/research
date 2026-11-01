@@ -26,6 +26,7 @@ REPORTS = {
     "wm_planner_status": Path("E:/agent-work/c4-wmplan/docs/paper_results/WMPLAN.md"),
     "cached_action_ranking": Path("E:/agent-work/c4-bdrank/docs/paper_results/BDRANK.md"),
     "owner_authority": Path("E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md"),
+    "owner_redesign": Path("E:/agent-work/_sol/coopmwm_prompt.md"),
     "verified_bibliography": INHERITED / "refs.bib",
     "verification_receipt": INHERITED / "reference_verification.csv",
 }
@@ -70,6 +71,12 @@ def main() -> None:
     assert all(f"E{i}:" in tex for i in range(1, 6))
     assert "member-revert" in outline and "member-revert" in tex
     assert "same-budget" in outline and "same-budget" in tex
+    assert "World-Model-Guided Exploration for Learning" in tex and "World-Model-Guided Exploration for Learning" in outline
+    assert "neither WM delay nor" in tex and "no WM delay or C_G is added" in outline
+    assert "diagnostics no longer gate B training" in tex and "no diagnostic horizon gates training" in outline
+    for document in (tex, outline):
+        assert all(term in document for term in ("989600", "989635", "20261102", "20261103", "112/120", "65.5/75.9", "proposal-free"))
+    assert "w_{\\rm coop}" not in tex, "Superseded WM reward equation remains"
     log = (ROOT / "main.log").read_text(encoding="utf-8", errors="replace")
     assert not re.search(r"Overfull \\[hv]box|undefined references|Citation .* undefined|^!", log, re.M)
 
@@ -112,6 +119,7 @@ def main() -> None:
     receipt = {
         "checked_at_utc": datetime.now(timezone.utc).isoformat(),
         "purpose": "Outline/document QA only; no scientific result recomputed",
+        "version": "v2: WM-guided exploration, SUMO-graded; owner MAIN17:12/17:14",
         "status": "PASS",
         "pdf_pages_including_references": len(pdf),
         "page_limit": 6,

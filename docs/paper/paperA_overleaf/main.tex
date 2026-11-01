@@ -1,5 +1,5 @@
-% Paper A: professor-review outline, owner framing 2026-11-01 16:40.
-% source: owner S-PAPERA-OUTLINE brief; shared REGISTRATION.md MAIN16:22--16:40.
+% Paper A v2: professor-review outline, owner redesign 2026-11-01 17:12/17:14.
+% source: E:/agent-work/_sol/coopmwm_prompt.md:42--51; shared REGISTRATION.md MAIN17:12/17:14.
 % Editorial target: 6 pages including references; no pending result is a finding.
 \documentclass[conference]{IEEEtran}
 \usepackage[T1]{fontenc}
@@ -7,7 +7,7 @@
 \usepackage{xcolor}
 \usepackage{cite}
 \usepackage[hidelinks]{hyperref}
-\hypersetup{pdftitle={Paper A: Learning to Cooperate from Imagined Counterfactuals},
+\hypersetup{pdftitle={Paper A: World-Model-Guided Exploration for Learning Multi-CAV Cooperation},
  pdfauthor={Paper A research team},pdfsubject={Evidence-bound IEEE IV outline}}
 \newcommand{\pending}[1]{\textcolor{red!80!black}{[PENDING: #1]}}
 \newcommand{\citeneeded}[1]{\textcolor{red!80!black}{[CITE NEEDED: #1]}}
@@ -18,8 +18,7 @@
 \newcommand{\para}[1]{\noindent\textbf{#1}\ }
 \begin{document}
 
-\title{Learning to Cooperate from Imagined Counterfactuals:\\
-World-Model Replay Credit for Multi-CAV Merge Control}
+\title{World-Model-Guided Exploration for Learning\\Multi-CAV Cooperation}
 \author{\IEEEauthorblockN{Author information pending}
 \IEEEauthorblockA{Professor-review outline --- evidence and insertion slots}}
 \maketitle
@@ -27,27 +26,29 @@ World-Model Replay Credit for Multi-CAV Merge Control}
 \begin{abstract}
 MAPPO-style multi-agent learning can teach connected and automated vehicles
 (CAVs) competent individual driving while missing rare cooperative moves.
-Walls, gap creation and metering may pay off minutes later, when variation
-from human drivers, arrivals and other CAVs obscures credit in a shared return.
-We propose a physics-informed world model (WM) that evaluates paired
-counterfactuals from observable state: the group acts, each member acts alone,
-and all members follow baseline. Reusing the same sampled hidden futures
-can cancel shared noise and reveal excess-over-solos cooperation credit.
-The model needs useful action and credit rankings rather than a reconstruction
-of the single realized future. Existing exact-model planning establishes
+Walls, gap creation and metering may pay off minutes later: random exploration
+rarely finds the coordinated moves, while noisy team returns obscure learning.
+We propose a physics-informed world model (WM) as an exploration guide.
+From observable state, it compares joint moves with policy/baseline actions
+under the same sampled hidden futures and proposes likely delay-saving moves.
+The model needs useful action rankings rather than exact future reconstruction.
+All learning reward and advantage come from real SUMO execution.
+Existing exact-model planning establishes
 headroom: it saves
 % source: E:/agent-work/c4-coopplan/docs/paper_results/COOPPLAN.md:22--27.
 $648.407$ $[209.699,1173.616]$ and $1583.821$ $[588.246,2765.414]$
 veh-s/world at the J600 and J900 clocks on $36$ development worlds.
-Starting from MAPPO, we ramp in WM replay credit and compare against both
-frozen MAPPO and same-budget continued training.
-\pending{credit fidelity, variance reduction and learned-policy gains /
-S-COOPMWM; insert final outcome sentence only after complete evidence.}
+Starting from MAPPO, use importance-corrected PPO and trust-weighted imitation;
+proposal trust decays adaptively as SUMO evidence favors the policy's own
+actions. Compare with frozen MAPPO and same-budget continued training, and
+test whether cooperation persists after trust reaches zero.
+\pending{learned gains, proposal advantage/trust and exact deployed synergy /
+S-COOPMWM; insert outcome sentence only after complete evidence.}
 \end{abstract}
 
 \begin{IEEEkeywords}
 Connected and automated vehicles, cooperative merging, multi-agent reinforcement
-learning, world models, counterfactual credit, common random numbers.
+learning, world models, guided exploration, common random numbers.
 \end{IEEEkeywords}
 
 \section{Introduction}
@@ -58,39 +59,40 @@ gap, metering an arrival stream or helping stabilize a cross-lane wall.
 The group benefit can emerge minutes later. A shared traffic reward must
 assign that delayed benefit amid changes caused by hidden human behaviour,
 new arrivals and other agents. Competent individual driving therefore need
-not reveal how to coordinate rare interventions. This motivates a credit
-assignment hypothesis, not a general impossibility claim about MARL.
+not discover rare coordinated interventions through random exploration.
+This is a task-specific exploration hypothesis, not an impossibility theorem.
 In an existing, deliberately oversampled TRAIN corpus, helpful options occur in
 % source: E:/agent-work/c4-coopbandit/docs/paper_results/COOPBANDIT.md:7--18.
 $45/300$ states: $15\%$, with a $95\%$ world-bootstrap interval of
 $[10,20.33]\%$. Only $81$ states have an eligible group.
 This is corpus prevalence, not an on-road event rate.
 
-\para{Compare futures instead of predicting reality.}
-A physics-informed WM can compare interventions under a shared uncertain
-future without reproducing the future that actually occurred. Paired joint,
-member-alone and baseline branches expose the component of a group benefit
-that exceeds the sum of solo benefits. Common random numbers (CRN) can cancel
-background variation. The actor still collects and executes trajectories in
-real SUMO; the WM supplies auxiliary credit. Starting from MAPPO and ramping
-that credit is intended to preserve individual competence while making
-cooperation learnable. \pending{measured noise cancellation, ranking fidelity
-and emergent cooperation / S-COOPMWM.}
+\para{Guide exploration; grade it in SUMO.}
+A physics-informed WM compares interventions under shared uncertain futures,
+without reproducing the one future that happened. Common random numbers (CRN)
+can cancel background variation in predicted savings. Promising proposals
+guide early exploration; real SUMO supplies all reward and advantage.
+Adaptive trust withdraws guidance as the policy catches up. Exact joint,
+member-alone and baseline twins separately assess excess-over-solos synergy.
+\pending{guided discovery, measured noise cancellation and autonomous
+cooperation after trust withdrawal / S-COOPMWM.}
 
 \para{Contributions and their present evidence status.}
 \begin{itemize}
 \item \textbf{C1: opportunity.} Exact counterfactual synergy establishes
 beneficial joint actions, and an exact-model planner improves on MAPPO.
 Helpful options are sparse in the measured corpus.
-\item \textbf{C2: replay credit.} Observable-start physics-informed replay
-uses paired hidden futures and fidelity-gated multi-horizon credit.
-% source: owner brief; E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md MAIN16:38.
-Exact SUMO checks are planned at $60/120/300/600$ s, alongside noise comparisons.
-Cached S-BDRANK rankings are delivered; \pending{S-COOPMWM residual-credit fidelity/noise.}
-\item \textbf{C3: learning from MAPPO.} Compare the WM-credit policy with
+\item \textbf{C2: SUMO-graded guided exploration.} Paired WM futures rank
+joint proposals; behaviour-mixture correction and adaptive trust connect them
+to real-outcome learning.
+% source: E:/agent-work/_sol/coopmwm_prompt.md:26--28,42--51.
+Exact checks at $60/120/300/600$ s and noise comparisons are diagnostics,
+not training gates. Cached S-BDRANK rankings are delivered;
+\pending{S-COOPMWM proposal freeze and fidelity/noise.}
+\item \textbf{C3: learning from MAPPO.} Compare WM-guided exploration with
 MAPPO, a matched continued-training control, an exact-planner empirical upper
 reference and the WM-guided planner S-WMPLAN.
-\pending{paired learned-policy and WM-planning outcomes.}
+\pending{paired gains, WM-planning outcomes and persistence after trust is zero.}
 \item \textbf{C4: discovered mechanisms.} Explain learned walls, gap creation
 and metering with exact joint/solo/baseline twins.
 \pending{beneficial deployed-policy behaviours and replication.}
@@ -105,8 +107,8 @@ establish credit by counterfactual subtraction. Our group excess-over-solos
 quantity differs from an agent's marginal-in-team contribution and from a
 Shapley allocation~\cite{han_shapley2022}. Contextual counterfactual planning
 also measures cooperation~\cite{barnett_counterfactual2026}. The target
-contribution is the traffic-specific long-horizon paired-replay learning and
-verification pipeline, not invention of the subtraction equation.
+contribution is long-horizon guided exploration, SUMO grading and trust
+withdrawal. Here synergy is an evaluation estimand, not a new reward.
 
 \para{World-model imagination.}
 Dreamer-style imagined learning is relevant
@@ -114,11 +116,11 @@ Dreamer-style imagined learning is relevant
 MACD, the Multi-Agent Counterfactual Dreamer, is direct prior art for
 model-based counterfactual credit~\cite{chai_macd2024}.
 Physics-informed traffic MARL is likewise established~\cite{liu_physics_wm2026}.
-Here WM output supplies credit while trajectories come from real SUMO,
-reducing direct dependence on model-generated training transitions.
+Here the WM proposes actions, while transitions, reward and advantage come
+from real SUMO, avoiding direct optimization of imagined reward.
 Action-response validity still needs testing~\cite{oefinger_validate2026};
-the actor can exploit a biased auxiliary credit even without imagined
-transition training.
+biased proposals can waste real budget, and ranking alone cannot establish
+synergy or live improvement.
 
 \para{Mixed-autonomy cooperation.}
 MAPPO~\cite{yu_mappo2022}, on-ramp MARL~\cite{chen_merge2021} and
@@ -179,8 +181,9 @@ beyond-singleton interactions; it is neither a Shapley allocation nor intent.
 Member-removal marginals $J(G\setminus\{i\})-J(G)$ are not solo effects.
 % source: E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM_DESIGN.md:21--28;
 % E:/agent-work/c4-papera/docs/paper/paperA_cooperation/CLAIMS.md M-DEF.
-\pending{reconcile the earlier producer's member-revert credit with the
-coalition-alone definition before importing learning results.}
+The earlier member-revert reward-credit arm is superseded.
+\pending{bind coalition-alone exact diagnostic/discovery exports and their
+declared baseline to the redesigned policy; no WM reward is used.}
 
 \section{Method}
 % Editorial allocation: IV 1.05 pages including Fig. 1.
@@ -196,36 +199,37 @@ Native lanes, command ownership and safety clamping are shared across arms;
 report realized execution rather than interpreting every changed command as
 a changed physical action.
 
-\subsection{Paired Counterfactual Replay from Observable State}
-At a real SUMO decision, freeze the causal observable start, group and targets.
-Sample complete hidden-driver/arrival futures from the fitted population and
-source prior. The inherited backend uses
-% source: E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM_DESIGN.md:15--23.
-$K=8$ draws. For each draw $\xi_k$, reuse identity-bound latent parameters and
-arrivals across baseline, joint and member-alone branches. Nonmember targets
-and continuation are identical. Missing futures invalidate the paired set;
-they are not silently removed. Compute
+\subsection{Rank Likely-Winning Joint Proposals}
+Use registered randomly sampled decision windows, oversampling cooperation-likely
+RSU-observable situations while including ordinary ones. The fixed model is
+% source: E:/agent-work/_sol/coopmwm_prompt.md:44--45,50.
+FULL-v4 (22cc32f6), with inherited $K=8$ paired futures and H300 primary.
+Compare available joint options with the policy's action / MAPPO using
+predicted mean delay. O1 slows together, O2 forms a wall, O3 yields a gap,
+and O4 lengthens a gap; inherited executors map proposals to member setpoints.
+The residual actor is not restricted to an option policy. For the policy
+reference, write
 \begin{equation}
-\begin{split}
-\widehat C_{G,H}=\frac{1}{K}\sum_{k=1}^{K}\Big[&
-\sum_i\widehat J_H^{(k)}(\{i\})-\widehat J_H^{(k)}(G)\\
-&-(|G|-1)\widehat J_H^{(k)}(B)\Big].
-\end{split}
+ a^*=\mathop{\arg\max}_{a\in\mathcal O_{\rm avail}}
+ \frac1K\sum_k\big[\widehat J_H(a_\pi;\xi_k)-\widehat J_H(a;\xi_k)\big].
 \end{equation}
-Ranking fidelity is task-specific. A nonlinear monotone cost transform can
-preserve action order while changing synergy subtraction; hence action-delay
-rank alone cannot qualify $\widehat C_G$. Check exact credit sign/rank too.
+Propose only positive expected saving. Reuse complete identity-bound
+hidden-driver/arrival draws, nonmember actions and continuation across
+comparisons; reject incomplete paired sets. Joint/solo/baseline branches
+separately diagnose $\widehat C_G$.
+\pending{freeze policy-versus-MAPPO reference rule, window sampling fraction,
+availability, proposal distribution and execution mapping / S-COOPMWM.}
 
 \begin{figure}[t]
 \centering\blankpanel{1.20in}
-\caption{F1 plan: real SUMO histories feed the MAPPO residual actor and RSU
-latent. A separate WM path replays baseline/joint/each-alone branches using
-shared future IDs, then horizon weighting and a credit ramp. Exact playback
-checks the signal. The WM supplies credit, not actor training transitions.}
+\caption{F1 plan: causal histories feed actor/RSU and paired WM proposal
+ranking. A trust-controlled action mixture feeds real SUMO. SUMO alone supplies
+PPO reward/advantage and evidence to update trust; imitation scales with trust.
+Exact twins diagnose synergy. No WM-to-reward arrow.}
 \label{fig:method}
 \end{figure}
 
-\subsection{Noise Cancellation and Multi-Horizon Qualification}
+\subsection{Replay Fidelity and Noise Diagnostics}
 For branch costs $X,Y$,
 \begin{equation}
 \operatorname{Var}(X-Y)=\operatorname{Var}(X)+\operatorname{Var}(Y)
@@ -237,47 +241,54 @@ positively correlated variation. It does not remove model bias or guarantee
 that most noise cancels. Compare CRN replay, independently sampled replay
 and real team-return advantage at matched starts/groups/horizons, reporting
 raw variance, standardized signal and world-level uncertainty. Zero or biased
-credit is not useful merely because its variance is small.
-\pending{variance reduction with preserved exact signal / S-COOPMWM.}
+contrast is not useful merely because its variance is small. Separate
+conditional WM-estimated noise from actual PPO-advantage dispersion across
+real windows: their sampling distributions differ.
+% source: E:/agent-work/_sol/coopmwm_prompt.md:26--28,49; COOPMWM_DESIGN.md:55--58.
+Exact playback checks action order, $D$ and coalition-alone $C_G$ at
+$60/120/300/600$ s, with signs, scale, ties and world uncertainty.
+The earlier fidelity-gated multi-horizon reward and credit ramp are superseded;
+diagnostics no longer gate B training. Any multi-horizon proposal weighting
+requires a registered ablation.
+\pending{proposal fidelity and variance reduction preserving exact signal.}
 
-The owner's latest rule tests
-% source: owner brief; shared REGISTRATION.md MAIN16:38 (supersedes earlier H90 design).
-$\mathcal H=\{60,120,300,600\}$ s. Admit a horizon only if the
-$95\%$ sign-agreement interval's lower bound exceeds $0.5$; primary $300$ s
-is used if qualified. Let
-\begin{equation}
-\overline c=\sum_{H\in\mathcal H_{\rm pass}}\alpha_H\widehat c_H,
-\quad\alpha_H\geq0,\quad\sum_H\alpha_H=1.
-\end{equation}
-\pending{freeze agreement-to-weight mapping, ties, sample size and
-no-qualified-horizon fallback / S-COOPMWM.}
-Weights must not be selected by downstream development gains. The earlier
-producer horizon specification is superseded by the owner instruction.
+\subsection{SUMO-Only PPO under a Proposal Mixture}
+At sampled eligible windows, execute a WM proposal with probability $\beta$;
+otherwise use the policy. Elsewhere use policy exploration. For joint behaviour
+law $\mu_\beta$ and proposal law $q_{\rm WM}$, write
+\begin{align}
+\mu_\beta(a\mid h)&=(1-\beta)\pi_{\rm old}(a\mid h)+\beta q_{\rm WM}(a\mid h),\\
+ r_\theta(a,h)&=\pi_\theta(a\mid h)/\mu_\beta(a\mid h).
+\end{align}
+PPO uses clipped importance ratios against the actual behaviour mixture.
+All reward and advantage come from SUMO's source-inclusive team delay;
+neither WM delay nor $\widehat C_G$ enters reward. Add imitation toward
+executed WM proposals with weight proportional to $\beta$.
+\pending{common reference measure and proposal likelihood, including
+deterministic atoms; joint-density correction under masks/execution mapping;
+loss normalization and imitation coefficient.}
+A Gaussian density at a deterministic proposal is not its mixture mass.
 
-\subsection{Exact Playback Check and Credit Ramp}
 Full-prefix exact SUMO reruns check no-op/trajectory parity, controller memory,
 shared exogenous coupling, joint/solo identity and source bookkeeping.
-Use sampled TRAIN windows for calibration/verification; exact costs must not
-become actor features or optimization reward labels. Prior saved-state
-mechanics failures motivate contract-specific prefix checks, not assumed
-exactness from a common seed.
+Exact twins supply diagnostic labels, not actor features or WM-based reward.
+Arm A matches policy capacity, causal inputs, base exploration and real-SUMO
+budget; proposal guidance and its imitation are the treatment.
 
-The intended learning rule retains PPO/MAPPO-style real team-return learning
-and adds ramped WM cooperation credit. A proposed aggregate auxiliary form is
-\begin{align}
-q_G&=w_{\rm ind}\sum_i\widehat D_H(\{i\})
-+w_{\rm coop}\widehat C_{G,H},\\
-&=w_{\rm coop}\widehat D_H(G)
-+(w_{\rm ind}-w_{\rm coop})\sum_i\widehat D_H(\{i\}),\nonumber
-\end{align}
-with $0\leq w_{\rm coop}\leq w_{\rm ind}$. This preserves nonnegative
-expanded singleton weight algebraically; it does not guarantee a good policy.
-\pending{per-CAV allocation, score/advantage insertion, normalization, scale
-and ramp under coalition-alone semantics.}
-The matched control receives the same capacity and continued training with
-the auxiliary credit disabled. Policies execute in real SUMO, reducing direct
-transition-model exploitation while still requiring checks for reward gaming
-through action-dependent credit bias.
+\subsection{Adaptive Trust and Persistence after Withdrawal}
+% source: E:/agent-work/_sol/coopmwm_prompt.md:48--50.
+Trust starts at $\beta=1$ on sampled proposal windows and decays adaptively,
+flooring at $0$, as the policy's own actions match or beat WM proposals in
+SUMO. Use critic-based running estimates, with confidence intervals, of
+realized proposal-versus-own-action advantage. These estimates are observed
+training diagnostics, not exact causal twin comparisons.
+\pending{pre-registered trust update, CI/selection correction and redesigned
+implementation receipt; the inspected producer design still uses old reward credit.}
+At chance replay fidelity, report it rather than stop B; measure how SUMO
+evidence changes trust. Report trust, availability/acceptance/execution,
+proposal type and realized advantage over updates.
+\pending{whether trust reaches zero and exact cooperation persists in
+proposal-free evaluation; distinguish teacher-assisted from autonomous performance.}
 
 \section{Experimental Setup}
 % Editorial allocation: V 0.55 page.
@@ -287,10 +298,11 @@ with declared demand/penetration cells, human/CAV population, causal local/RSU
 sensing, native lanes and unchanged safety executor. Bind simulator,
 configuration, policy, evaluator and observation hashes in the artifact.
 The main comparison is frozen MAPPO versus capacity/input/budget-matched
-continued training versus WM replay credit. Add S-WMPLAN as an online
+continued training A versus WM-guided exploration B. Add S-WMPLAN as an online
 WM-guided planning row and the exact SUMO planner as an empirical upper
 reference. A finite-option oracle is not a mathematical optimum.
-\pending{final learned-arm configurations, panel/freeze and seed lineage.}
+Native is a registered final-test reference.
+\pending{redesigned configuration freeze and proposal GPU quote.}
 
 \para{Matched outcomes and honest uncertainty.}
 Report source-inclusive episode delay, $D_G$, solo savings, $C_G$,
@@ -300,7 +312,26 @@ policy updates, capacity and inputs; separately disclose WM fitting/replay,
 exact checks and MAPPO pretraining. Resample paired worlds, retaining all
 their events and inactive worlds. No-event resamples have undefined event
 means, not zero credits. Retain adverse/null runs and all declared checks.
-\pending{complete physical/service vector and training-seed replication.}
+\pending{complete physical/service vector and realized training-seed variability.}
+
+\para{Registered final panel and primary-first replication.}
+% source: E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md EXACT PLAN16:46 and AMENDMENT17:07; E:/agent-work/_sol/coopmwm_prompt.md:30--39,51.
+The final-test block is $989600$--$989635$: $36$ worlds, $3$ per $12$
+demand/share cells (shares $.05/.10/.20/.40$, demand $1900/2400/2700$).
+Use $300$ s warmup plus $900$ s control and J600/J900 scores.
+Only public registration metadata is used here; test outcomes remain sealed.
+% source: same REGISTRATION.md EXACT PLAN and AMENDMENT17:07; COOPMWM_DESIGN.md:43,60--68.
+Train primary seed $20261101$ first, then replications $20261102/20261103$.
+After both primary update-$24$ checkpoints exist, evaluate MAPPO/native/A/B
+once; later evaluate replication A/B once each on the same panel, reusing
+MAPPO/native. No test-based selection, tuning or reruns.
+% source: same REGISTRATION.md AMENDMENT17:07; registered budgets, not measured consumption.
+Report paired $95\%$ world-bootstrap CIs ($10{,}000$ draws, RNG $20261101$)
+for B--MAPPO, B--A and A--MAPPO, with explicit cost/saving signs, per-cell
+safety and seed dispersion. The $6{,}000{,}000$ sim-s cap includes
+$172{,}800$ each for primary and replication tests; total allocated is
+$5{,}738{,}400$, with $261{,}600$ unallocated. Discovery uses detector-first
+complete exact twins. These counts are registered plans, not completed results.
 
 \para{Existing-panel boundaries.}
 Exact-planner original, extension and pooled cohorts remain separately
@@ -339,7 +370,7 @@ $C_G=+181.570625$ veh-s. Another helpful wall has
 $D_G=+2442.101011$ but $C_G=-428.858726$ veh-s.
 Different worlds and candidate-budget pruning prevent attribution of their
 differences to horizon alone. The sparse helpful-state corpus above
-motivates an informative cooperation signal. COOPBANDIT always fell back to
+motivates guided discovery and real-outcome learning. COOPBANDIT always fell back to
 MAPPO, while the exact-teacher DISTILL student had
 % source: E:/agent-work/c4-distill-1101/docs/paper_results/DISTILL.md:12--21,31--40;
 % E:/agent-work/c4-coopbandit/docs/paper_results/COOPBANDIT.md:35--42.
@@ -356,14 +387,15 @@ COOPBANDIT.md; exact paths are in the outline.}
 \label{fig:opportunity}
 \end{figure}
 
-\subsection{E2: Credit Fidelity, Ranking and Noise}
+\subsection{E2: Proposal Fidelity, Ranking and Noise}
 Report exact-vs-WM action ordering, $C_G$ sign/rank, regret, ties, coverage
 and world-level intervals at all owner-specified horizons.
-\pending{S-COOPMWM exact residual-credit fidelity.}
+\pending{S-COOPMWM proposal fidelity and coalition-alone synergy diagnostics.}
 Compare team-return advantage with independent-future and CRN replay credit
 at matched starts. Report scale-aware variance ratios and preserved exact
 signal, not just smaller unnormalized numbers.
-\pending{noise ratios, admitted horizons and weights / S-COOPMWM.}
+These diagnose proposal quality, without gating training.
+\pending{noise ratios and exact signal preservation / S-COOPMWM.}
 
 An existing FULL-v4 teacher option diagnostic provides limited support:
 % source: E:/agent-work/c4-wmteach/docs/paper_results/WMTEACH.md:80--90,132--136.
@@ -371,45 +403,48 @@ H300 helpful-state argmax agreement is $4/8$; mean exact chosen saving is
 $+680.3$ veh-s/state over all $12$ selected states, and within-state delay
 rank is $0.516$. The helpful-state and all-state denominators differ.
 This roster-only, source-prior/cold-memory option diagnostic is not a
-qualification of continuous residual-policy synergy credit.
+qualification of the redesigned learner's proposals or synergy estimates.
 
 The completed cached S-BDRANK analysis reports
 % source: E:/agent-work/c4-bdrank/docs/paper_results/BDRANK.md:24--46,48--55.
-H300 available-option delay-pair concordance of $75.9\%$ for v4 versus
-$51.7\%$ for v5 on $58$ pairs per horizon/version in that small diagnostic.
-Separate controller diagnostics favor mean-delay ranking over saturated
-breakdown probability on development, but development-selected rules lose on
-the separate reserved panel. These are action-ranking diagnostics, not
-residual $C_G$ qualification or live efficacy; option-breakdown ranking is
-unavailable from the caches.
+available-option delay-pair concordance of $65.5/75.9\%$ for v4 versus
+$63.8/51.7\%$ for v5 at $120/300$ s, on $58$ pairs per horizon/version.
+Breakdown probability saturates: ties on $112/120$ development controller
+pairs at $600$ s. That denominator is distinct from option pairs.
+Mean delay motivates proposal ranking, but development-selected controller
+rules still lose on the reserved panel. These diagnostics imply neither
+live efficacy nor $C_G$ qualification; option-breakdown ranking is unavailable.
 
 \begin{figure}[t]
 \centering\blankpanel{1.10in}
-\caption{F3 plan: aligned credit sign/rank/regret and qualification by horizon;
+\caption{F3 plan: aligned proposal/interaction sign, rank and regret by horizon;
 CRN versus independent replay and team-return-advantage variance, with world
-uncertainty, ties and coverage. Cached option ranks are available;
-\pending{S-COOPMWM residual-credit/noise source exports.}}
+uncertainty, ties and coverage. Add update traces of trust, proposal acceptance
+and SUMO-realized advantage. Cached option ranks are available;
+\pending{S-COOPMWM exact diagnostics and trust exports.}}
 \label{fig:fidelity}
 \end{figure}
 
 \subsection{E3: Main Control and Planning Comparison}
 \begin{itemize}
-\item Frozen MAPPO is the common initial policy; continued training matches
-the WM-credit arm's added budget, inputs, capacity and exploration.
-\item \pending{S-COOPMWM common-panel MAPPO/control/WM-credit outcomes,
-learning trajectories and WM-credit minus continued-training attribution.}
+\item Frozen MAPPO is the common initial policy; continued training A matches
+B's added real budget, inputs, capacity and base exploration.
+\item \pending{S-COOPMWM final-panel gains, B--A attribution, primary and
+replication results, trust/acceptance/realized-advantage traces, and persistence
+after trust is zero.} Distinguish assisted and proposal-free evaluation.
 \item \pending{S-WMPLAN complete paired outcomes, exact twins and resource
 refusals.} Keep the existing different-panel exact reference visibly separate.
 \end{itemize}
-Improvement over MAPPO alone cannot isolate replay credit from additional
+Improvement over MAPPO alone cannot isolate guided exploration from additional
 optimization or new RSU capacity. Exact $C_G$, group benefit and team delay
-must be reported independently; a training-credit curve is not deployed
+must be reported independently; a proposal-acceptance curve is not deployed
 cooperation evidence.
 
 \begin{table}[t]
-\caption{T1 plan: frozen MAPPO; MAPPO+training control; MAPPO+WM credit;
-S-WMPLAN; exact-planner empirical upper reference. Columns: paired J savings,
-$C_G$, $D_G$/solos, moves/coverage, safety and added real/model compute.
+\caption{T1 plan: MAPPO; MAPPO+training A; MAPPO+WM-guided exploration B;
+S-WMPLAN; exact-planner empirical upper reference; native reference.
+Columns: paired J savings, $C_G$, $D_G$/solos, coverage, safety, real/model
+compute and proposal/trust use at evaluation.
 \pending{common-panel learned and WM-planning exports.}}
 \centering\blankpanel{1.10in}
 \label{tab:main}
@@ -421,8 +456,9 @@ $C_G$, $D_G$/solos, moves/coverage, safety and added real/model compute.
 member actions and resulting merge/wave changes. Use unchanged detectors.
 \item Include same-prefix baseline, joint and each-member-alone traces and
 exact $D_G$, solo savings and $C_G$ at the declared horizon.
-\item \pending{deployed WM-credit policy examples and independent
-replication / S-COOPMWM, S-COOPBEHAV.} Exact-planner examples establish
+\item \pending{guided learner examples, option-type/exposure counts,
+replicated proposal-free cases and exact twins / S-COOPMWM, S-COOPBEHAV.}
+Exact-planner examples establish
 opportunity, not discovery by the learned policy.
 \end{itemize}
 Disclose eligibility/exposure, censoring and outcome-based example selection.
@@ -433,7 +469,8 @@ automatically labelled beneficial cooperation.
 \centering\blankpanel{1.25in}
 \caption{F4 plan: compact space--time/action traces for learned wall, gap
 creation and metering with exact joint/solo/baseline twins and group benefit.
-\pending{policy/trace identities, clocks, exposure and replicated cases.}}
+\pending{policy/trace identities, clocks, exposure, trust at execution and
+replicated proposal-free cases.}}
 \label{fig:behaviour}
 \end{figure}
 
@@ -441,18 +478,19 @@ creation and metering with exact joint/solo/baseline twins and group benefit.
 \begin{itemize}
 \item Compare FULL-v4 and FULL-v5 at matched tasks, horizons, seeds and budgets.
 Published teacher-option diagnostics are not a policy-learning ablation.
-\item Compare qualified single horizons with multi-horizon credit; vary
-credit weight/ramp and CRN versus independent future draws.
-\item \pending{model-version, horizon, credit-weight, ramp and pairing
-ablations / S-COOPMWM.} Retain failures, ties and safety-erased interventions.
+\item Compare proposal horizons and any registered multi-horizon weighting;
+adaptive versus fixed/zero trust; imitation weight; CRN versus independent
+futures. Original credit-weight/ramp ablations are superseded.
+\item \pending{separately registered model-version, proposal-horizon, trust,
+imitation and pairing ablations.} Retain failures, ties and safety-erased moves.
 \end{itemize}
-The matched continuation arm is the essential credit-off control, while
-mechanism ablations explain why a qualified credit signal helps or fails.
+Matched continuation is the no-WM-exploration control; proposal-free evaluation
+tests persistence. Proposed ablations do not authorize extra runs.
 
 \begin{table}[t]
-\caption{T2 plan: model-version, horizon-rule, credit-weight/ramp and
-pairing ablations; matched budget, fidelity/noise, delay gain, exact
-cooperation and safety. \pending{ablation exports; no imputed cells.}}
+\caption{T2 plan: proposal model/horizon, trust, imitation and pairing
+ablations; matched budget, fidelity/noise, delay gain, exact cooperation,
+persistence and safety. \pending{ablation exports; no imputed cells.}}
 \centering\blankpanel{0.90in}
 \label{tab:ablations}
 \end{table}
@@ -461,14 +499,15 @@ cooperation and safety. \pending{ablation exports; no imputed cells.}}
 % Editorial allocation: VII 0.25 page.
 Ranking is sufficient only for the decision/contrast being used. Delay order
 does not guarantee synergy subtraction, calibrated probabilities or unbiased
-credit. CRN cancels shared variation only to the extent branches covary;
+contrasts. CRN cancels shared variation only to the extent branches covary;
 hidden-state aliasing, cold controller memory and source priors remain.
 Member-alone and member-removal definitions must be reconciled, and exact
 prefix parity must be verified for each replay contract.
 
 Positive synergy with harmful group delay is not beneficial cooperation.
-Real SUMO execution still permits auxiliary-reward gaming; capacity/input/
-budget-matched controls and service/safety outcomes are essential. The
+SUMO-only grading avoids direct exploitation of imagined reward, but biased
+proposal sampling, critic estimates, imitation or incorrect mixture correction
+can still mislead learning. Matched controls and service/safety are essential. The
 finite-option oracle is an empirical upper reference with privileged
 prediction, not an optimum. Selected examples, different development panels,
 a single merge plant and limited training seeds constrain inference.
@@ -477,11 +516,12 @@ a single merge plant and limited training seeds constrain inference.
 \section{Conclusion}
 % Editorial allocation: VIII 0.10 page; references 0.65 page.
 Exact replays establish rare beneficial joint interventions and planner
-headroom. The proposed method uses imagined matched futures to supply
-long-horizon cooperation credit while MAPPO supplies competent driving.
+headroom. WM-guided exploration aims to find them more often; SUMO-only
+grading and adaptive trust aim to turn guidance into autonomous cooperation.
 \pending{claim emergent cooperation and superiority to both MAPPO and
-matched continued training only after fidelity, policy and behaviour results;
-otherwise conclude with the observed boundary and negative findings.}
+matched continued training only after complete policy/behaviour evidence;
+claim persistence only after proposal-free evaluation. Otherwise report the
+observed boundary and negative findings.}
 
 \bibliographystyle{IEEEtran}
 \bibliography{refs}
