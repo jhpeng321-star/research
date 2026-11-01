@@ -1,0 +1,39 @@
+{
+  "status": "PROPOSED_AWAITING_MAIN",
+  "new_sumo_sim_s": 0,
+  "total_cap_sim_s": 4664400,
+  "phases_sim_s": {
+    "train": 4147200,
+    "checks": 288000,
+    "dev": 115200,
+    "discovery": 96000,
+    "mechanics": 1200,
+    "unallocated": 16800
+  },
+  "training_controlled_sim_s": 3110400,
+  "comparator_controlled_sim_s": 4664400,
+  "comparator_total_sim_s": 6996600,
+  "historical_one_episode": {
+    "host": "cpuQ",
+    "sim_s": 900,
+    "wall_s": 15.895786121021956,
+    "source": "COMPARATOR.json episode; no new simulation"
+  },
+  "estimated_host_sim_s_per_hour": {
+    "cpuQ": {"per_worker": 90000, "initial_workers": 2, "aggregate": 180000},
+    "gpuA": {"per_worker": 70000, "initial_workers": 0, "optional_workers": 1},
+    "gpuR": {"per_worker": 50000, "initial_workers": 0, "optional_workers": 1}
+  },
+  "first_check_update": 8,
+  "first_check_total_sim_s": 332400,
+  "first_dev_total_sim_s": 361200,
+  "eta_hours_after_admission": {
+    "first_check": [2, 3],
+    "first_dev": [2, 3],
+    "final_cpuQ_only": [28, 36],
+    "final_with_qualified_helpers": [16, 24]
+  },
+  "conditions": "Estimates from historical one-episode CPU timing plus CPU-only microbenchmarks; sparse fixtures are not traffic throughput measurements. Optional helpers require priority release and frozen cross-host CPU/parity qualification. Admission waits add wall time.",
+  "cpu_receipt": "CPU_coopnative20261101_cpu5.json",
+  "design_sha256": "1866111aa1b7e5f6b9b521e913c3f002b054db86949e9eb0c5633f59985ab989"
+}
