@@ -270,6 +270,10 @@ def load_arm(ckpt: Path, variant: str, run_physics: dict | None = None):
         # (isolates the integrator rule from the CF core choice).
         flags = RolloutFlags(pure_physics=True)
         physics["position_rule"] = "sumo_euler"
+    if variant == "wm2_euler":
+        # WM2 as-is (full learned stack ON) + SUMO Euler position only:
+        # does the integrator fix help the deployment default too?
+        physics["position_rule"] = "sumo_euler"
     p = WmsPredictor.from_checkpoint(str(ckpt), flags, physics=physics)
     cap = {"last": None}
     orig = p.model.rollout
