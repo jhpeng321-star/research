@@ -1,5 +1,11 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+MAIN0419 secondworkers DISPATCHED once: GPUA617099/start894491938,
+GPUR56877/start4219130608, roots /root/coopmwm20261102_second1. CPU26PASS/0skips/
+zeroSUMO; originalowners/searches continue. ALL8freshgates required beforehotadd;
+newmemorycaps .42/.34 and widths18-10/4-4. Use hotadd_ops status --host first,
+neverduplicate. Restrictedroutes/admissionmonitor wiring pending at this entry.
+
 FreshresumeMAIN0419: full280linebrief read, originalobserver43408alive/adopted.
 Status1793564418 verifies A/B/R/grader/broker allalive, A-u40/B-Ru0collecting,
 noSTOP, charge2269640. BothGPU8EXACT0READY/original596572+43005; fivequeries/

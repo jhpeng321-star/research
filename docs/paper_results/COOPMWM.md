@@ -1,5 +1,22 @@
 # S-COOPMWM — live checks
 
+## MAIN04:19 additional search workers — qualification running
+- Registered source-identical second search workers before dispatch; original
+  GPU workers and all in-flight B searches continue. New owned GPU PIDs
+  **gpuA617099 / gpuR56877**; roots `coopmwm20261102_second1` on each host.
+- **26 CPU tests PASS / zero skips / 0.785s / zero SUMO** on cpuQ, including
+  owner identity, all-eight-exact-gate admission, immutable search/deadline,
+  restricted RPC, transport, durable inference and broker hot-add tests.
+  A local combined-suite attempt had one missing-torch environment error;
+  the complete suite passed in the existing qualified remote environment.
+- GPU-A new worker cap42%, widths18/10; GPU-R cap34%, widths4/4 to fit alongside
+  the existing model. Both run all eight fresh source-bound exact startup gates.
+  Neither is admitted to the broker until READY/all8EXACT0; no inherited gates.
+- Same registered MPPI population/iterations, K4/H300, K8/Hfinal, warm history,
+  Nexec10 and original GPU deadline. No learned proposer activation or new SUMO.
+  Throughput comparison is pending live two-worker searches, not inferred from
+  GPU utilisation. Receipts `coopmwm/SECOND_{STAGE,REGISTRATION,DISPATCH}_*.json`.
+
 ## MAIN04:13 full-pool logging export — deployed without search interruption
 - **DIAGNOSIS:** immutable live mppi_runtime already uses RecordingEvaluator and
   embeds complete screened pools in every B forecast. The missing standalone
@@ -1757,3 +1774,12 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - Reporting-only check, never checkpoint selection. Full safety/per-cell results in the linked immutable receipt.
 - Receipt: `coopmwm/warm_live/A_CHECK_040.json`.
 <!-- warm-receipt:A_CHECK_040.json:559ad6cbbbc424a3cdc7190b6dc29480b13b39cbf794719c828aa72bb93ea2e4 -->
+
+## Warm live publication — 2026-11-01T20:21:26.507075+00:00
+- Conservatively charged 2269640/7500000 sim-s.
+
+### Warm continuation — A_VIABILITY_041.json
+- A u41: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_041.json`.
+<!-- warm-receipt:A_VIABILITY_041.json:ea1b12c678678bfac66d7cc55569efcd11fffc9cf4857b5afa096ad00c1a032b -->
