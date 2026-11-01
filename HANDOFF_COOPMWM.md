@@ -1,4 +1,12 @@
-# S-COOPMWM live continuation — MAIN02:24 exact plan grading pending
+# S-COOPMWM live continuation — MAIN02:30 exact plan grading pending
+
+FRESH RESUME: complete246-line brief read, HEADe6581008/work retained. Receipt
+RESUME_MAIN0230_20261102.md: A original2998262/start57133822 isR, u18 complete,
+420/420closed, charge1492040. B/R/broker unstarted. Original GPU spools alive/R,
+five startup gates each EXACT0; final warm gate still running, never duplicate.
+Exact-grader delegated worktree clean at e6581008 (not landed); integrate when
+available, do not rebuild. Cap7500000; exact grading budget/registration pending.
+MAIN resource-reclamation and full-use instructions adopted; no new dispatch.
 
 FRESH RESUME: complete239-line owner brief read; HEADbdcddfed and recovered edits
 preserved. Status1793557527: A V3 owned2998262/start57133822 is R, u17 complete,

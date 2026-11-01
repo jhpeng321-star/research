@@ -1,5 +1,16 @@
 # S-COOPMWM — live checks
 
+## Fresh resume — full brief through MAIN02:30
+- Preserved HEADe6581008 and existing receipts/claims. A's original detached
+  owner2998262 is running; **u18 complete, 420/420 jobs closed, 1492040sim-s charged**.
+  B/R and broker remain unstarted; no pending request or active pause/STOP.
+- Both original GPU workers are alive and have **five startup gates each EXACT0**;
+  their final warm full-fast gate continues on the existing processes.
+- Owner cap7500000 and exact grades for every executed plan adopted. Delegated
+  grader has not landed; integration/qualification and budget registration remain.
+- MAIN02:30 full-resource sizing will be based on measured capacity and existing
+  worker identities. No duplicate job, new physics or process-control action here.
+
 ## Fresh resume — MAIN02:24 exact-grading amendment adopted
 - Complete239-line brief read; preserved HEADbdcddfed and recovered work.
   A's existing detached V3 owner is running, u17 complete;396/396 jobs closed,
