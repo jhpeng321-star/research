@@ -5,6 +5,14 @@ Original advance-approved exact cap7,012,800; designSHA09499f2af60311b3690a940dc
 
 ## Current state
 
+**13:55+08 foreground disk/ownership audit:** original606968 exactUID/start/
+command/nice19 remainsLIVE and original watcher12432 identity is unchanged.
+Latest13:54heartbeat353823f5 verifies114/169updates,5270production,12open,
+4744200actual/4755600reserved; zero alerts/newfailures/collisions/teleports.
+Metadata-only audit `selmappo2/RECOVERY_AUDIT_1793512515693370300.json` records
+9005645824free diskbytes and2584231936allocated inventoried training bytes.
+No new dispatch, restart, output copies or deletion; active supervision continues.
+
 **MAIN12:14 active supervision extended through final169:** fresh session at
 12:15+08 re-read git history/status, registered exact budget/standing same-cap
 authority, shared design and WALL handoff. Existing cpuQ606968 remains LIVE with
