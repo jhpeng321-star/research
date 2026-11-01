@@ -5,6 +5,20 @@ Original advance-approved exact cap7,012,800; designSHA09499f2af60311b3690a940dc
 
 ## Current state
 
+**MAIN12:14 active supervision extended through final169:** fresh session at
+12:15+08 re-read git history/status, registered exact budget/standing same-cap
+authority, shared design and WALL handoff. Existing cpuQ606968 remains LIVE with
+exact UID1000/startticks48374316/command/nice19; watcher12432 retains its exact
+executable/command/creation identity. Noon supervisor46520 has exited normally.
+Latest existing collection at12:11 verifies91/169updates,4186/7774production,
+12open,3768600actual/3780000reserved sim-s; no new failure/collision/teleport.
+Read-only audit `selmappo2/RECOVERY_AUDIT_1793506534704525500.json` records
+6580183040free diskbytes and2048782336allocated inventoried training bytes.
+Continue foreground ~20min receipt checks/commits until final169, using the
+existing five-minute watcher only. Original cap/schedule/final-only panel handoff
+remain unchanged. Recovered uncommitted collections/curves retained; peer notices
+remain on disk. No restart, second watcher or new training dispatch.
+
 **12:00 supervision completed normally:** final scheduled heartbeat committed
 `cb9b7a20`, zero alerts;87/169updates,4002/7774production successes,12open,
 3603000actual/3614400reserved sim-s. Latest verified checkpoint087SHA

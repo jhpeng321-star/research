@@ -2,6 +2,18 @@
 
 ## Status (2026-11-01)
 
+**12:15 +08:00 / MAIN12:14 continuation:** active supervision now continues until
+the existing per-CAV trainer reaches final checkpoint169. Fresh exact identity
+audit verifies original cpuQ606968/UID1000/startticks48374316/nice19 and local
+watcher12432; noon supervisor46520 exited normally. Latest watcher receipt has
+91/169updates and4186/7774production successes,12open,3768600actual/
+3780000reserved sim-s, with no new failure/collision/teleport. Metadata-only
+owned-output audit records6.580GBfree disk and2.049GBallocated inventoried
+training output (`selmappo2/RECOVERY_AUDIT_1793506534704525500.json`).
+The original7,012,800cap,169-update schedule and peer-owned final-only evaluation
+remain fixed. Foreground checks publish/commit progress about every20min through
+completion; the existing watcher maintains the live curve below.
+
 **12:00 +08:00 supervision endpoint:** final scheduled heartbeat committed
 `cb9b7a20` with **zero alerts**:87/169updates,4002/7774production successes,
 12open,3603000actual/3614400reserved sim-s; only the original failed smoke remains.
@@ -230,11 +242,11 @@ Evidence is under `docs/paper_results/selmappo2/`.
 
 
 
-Evidence: `selmappo2/COLLECTION_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29_1793505711638650200_db099dbd13694ca0bf2dc776684daa98.json`; SHA256 `64d627a6dd8b977681b87ee3b56ed350cc420576f5ab9fda492036fd95c5988f`.
+Evidence: `selmappo2/COLLECTION_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29_1793506331905871400_5b1004c22cc441df8f3f131850902fb8.json`; SHA256 `6a3f3945e5c7c1798186d1e521a01c871c98d94fb4537360b2b53b55207ac0fb`.
 
 Remote root: `/home/ubuntu/selmappo2_20261101/build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29/training`.
 
-Dispatch PID: `606968`; alive at observation: `True`; observation timestamp (ns): `1793505708108733191`.
+Dispatch PID: `606968`; alive at observation: `True`; observation timestamp (ns): `1793506318346185416`.
 
 
 
@@ -242,15 +254,15 @@ Dispatch PID: `606968`; alive at observation: `True`; observation timestamp (ns)
 
 
 
-Verified complete updates: 88/169 (46 fresh episodes/update).
+Verified complete updates: 91/169 (46 fresh episodes/update).
 
-Update records observed: 88.
+Update records observed: 91.
 
-Coordinator successful episodes: 4075/7,774 production + 1/2 smoke.
+Coordinator successful episodes: 4186/7,774 production + 1/2 smoke.
 
-Reservations: 4087; unresolved: 10; failed: 1; actual not yet receipted: 10.
+Reservations: 4200; unresolved: 12; failed: 1; actual not yet receipted: 12.
 
-Raw newly incurred training + smoke simulation: 3,668,700.0 actual s; 3,678,300 reserved s (no refunds).
+Raw newly incurred training + smoke simulation: 3,768,600.0 actual s; 3,780,000 reserved s (no refunds).
 
 
 
@@ -272,11 +284,11 @@ J600 is full-team delay over the 600 s control interval; lower is better. Each p
 
 
 
-![Training learning curve](selmappo2/selmappo2_curve_1793505712293620100_84a1b5249af34da59796606d549e636a.svg)
+![Training learning curve](selmappo2/selmappo2_curve_1793506339496571800_1454158f95ce47b0abe1064972cbecfe.svg)
 
 
 
-[Complete-update metrics CSV](selmappo2/selmappo2_curve_1793505712293620100_84a1b5249af34da59796606d549e636a.csv)
+[Complete-update metrics CSV](selmappo2/selmappo2_curve_1793506339496571800_1454158f95ce47b0abe1064972cbecfe.csv)
 
 
 
@@ -284,7 +296,7 @@ J600 is full-team delay over the 600 s control interval; lower is better. Each p
 
 
 
-Collected complete episode result receipts: 4076. collisions: 0.000; teleports: 0.000; ttc_below_3_vs: 1,681,763.000; hard_brake_vs: 64,543.500.
+Collected complete episode result receipts: 4187. collisions: 0.000; teleports: 0.000; ttc_below_3_vs: 1,727,910.000; hard_brake_vs: 66,383.000.
 
 These are recorded control-interval components only. Warmup safety and dropped-vehicle counters are not separately recorded in result.jsonl; unrecorded metrics are not asserted to be zero.
 
