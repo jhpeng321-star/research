@@ -1,6 +1,15 @@
 # S-RB-RUNB handoff
 
-Updated 2026-11-01 09:31 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+Updated 2026-11-01 10:33 +08:00. Branch `c4/rb-runb`, base `f0db3c82`.
+
+### 10:32 live final-hour checkpoint
+- B2 tasks144/160 (44/54/46), all original three workers +supervisor762343 live,
+  no terminal receipt. GPU4259MiB/94%,load62.56; boundary resource waits persist.
+- Slowest shard0 needs12tasks, completion by11:30 remains uncertain. Existing
+  deadline/task-boundary stop retained, no re-sharding/source edit/replay.
+- Shared `RUNB_B2_PROGRESS_1032.md` alerts INT's existing final collector; audit
+  `runs/rbrunb/OBSERVE_1793500355153587700.json`. No `.done` for partial evidence.
+- In-session10min monitoring continues through11:30; no new READY RUNB variant.
 
 ## 09:30 freeze — B2 123/160; existing evaluation continues
 - New-claim intake closed by explicit09:30 watcher policy; existing B2 retained,
