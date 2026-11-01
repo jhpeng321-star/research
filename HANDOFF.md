@@ -9,6 +9,10 @@ round-1 final-delivery HEAD `03c81f91`).
   Implementation commits `a29116e9` + `6b4bfbd5` (plan `73a5685b`);
   conditional evidence `a60a6a62`/`docs/rb2lane/fit_v2`; native free pilot source
   `a60a6a62`, scoring audit `b5e53b3e`; final evidence `docs/rb2lane/free_v1`.
+  Numerical evidence commit `b56040d9`; take the final byte-integrity followup too.
+  It preserves original machine receipt/CSV bytes on Windows/Linux; normalized
+  scientific contents and all dynamics are unchanged. `round2_release --verify`
+  checks working AND committed artifact hashes against the capsule.
   Report `docs/paper_results/RB2_LANE.md`; shared `rb-shared/RB2_LANE_DEVELOPMENT_RESULT.md`.
   Capsule `docs/rb2lane/DELIVERY.json`, SHA256
   `ff42bac3a7567d803257a03256655539088d00023c1df3da200c6ce88480e329`.

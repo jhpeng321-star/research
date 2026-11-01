@@ -1,4 +1,6 @@
 """Verify completed owned jobs and publish a byte-bound lane delivery capsule."""
+import argparse
+import hashlib
 import json
 from pathlib import Path
 import subprocess
@@ -10,8 +12,25 @@ ROOT=Path(__file__).resolve().parents[2]
 
 
 def main():
+    parser=argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--verify',action='store_true')
+    args=parser.parse_args()
     root=ROOT/'docs/rb2lane'
     out=root/'DELIVERY.json'
+    if args.verify:
+        report=json.loads(out.read_text())
+        expected=dict(report['immutable_artifact_sha256'])
+        expected.update({f'docs/rb2lane/{kind}_COMPLETE.json':value['receipt_sha256']
+            for kind,value in report['completed_owned_jobs'].items()})
+        for name,digest in expected.items():
+            assert sha(ROOT/name)==digest, 'working artifact bytes changed: '+name
+            archived=subprocess.check_output(['git','show','HEAD:'+name],cwd=ROOT)
+            assert hashlib.sha256(archived).hexdigest()==digest, 'git artifact bytes changed: '+name
+        assert sha(Path(report['shared_result']['path']))==report['shared_result']['sha256']
+        print(json.dumps(dict(status='PASS',working_and_committed_artifacts=len(expected),
+            source_publication=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip(),
+            delivery_sha256=sha(out)),indent=2))
+        return
     if out.exists():raise ValueError('immutable delivery exists')
     kinds=('smoke_v1','native300_a_v1','native300_b_v1','arms60_a_v1','arms60_b_v1',
         'runtime_v1','free_canary_v1','free_a_v1','free_b_v1','free_c_v1','free_d_v1','prefix_v1')

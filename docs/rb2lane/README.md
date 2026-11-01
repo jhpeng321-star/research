@@ -41,9 +41,10 @@ Postprocess saved results only (choose a NEW output name):
 ```powershell
 python -m tools.rblane.round2_finalize --out docs/rb2lane/fit_recheck
 python -m tools.rblane.round2_free_finalize --out docs/rb2lane/free_recheck
+python -m tools.rblane.round2_release --verify
 ```
 
-The latter independently rechecks permitted FIT boundary views on cpuQ; model
+The free-pilot postprocessor rechecks permitted FIT boundary views on cpuQ; model
 inference is not repeated. Launch receipts reject duplicate immutable jobs.
 No reserved969432–969439 or WMDATA2 fitting/selection occurred. Sparse cells and
 K2 preclude a full-panel confidence/qualification claim here.
