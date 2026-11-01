@@ -1,5 +1,14 @@
 # S-COOPMWM — live checks
 
+## 2026-11-01 17:41 — full-episode zero-update smoke PASS
+- Owned cpuQ smoke PID1872644 finished; both registered1200s episodes closed.
+- A and B metrics exactly equal reused bitwise MAPPO baseline at J600/J900;
+  A/B final full-state fingerprints equal. **2,400 sim-s charged**, new MAPPO simulation0.
+- Collisions0, teleports0 in both episodes; this is mechanics/parity, not learned performance.
+- One-use CPU dispatch, GPU bridge PID41056 and immutable bindings are preserved;
+  no training update yet. Primary paired training dispatch follows this receipt.
+- E2 agreement/noise is diagnostic only; it will use preselected initial TRAIN windows.
+
 ## 17:27 refinement — CPU qualification and prospective registration
 - Recovered at17:29: no task runtime/jobs/services on cpuQ/gpuA/gpuR; no duplicate dispatch.
 - CPU13: **40 PASS, zero skips, 1.36 s, zero SUMO**; CPU11/12 failed receipts preserved.
