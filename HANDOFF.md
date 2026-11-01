@@ -59,6 +59,19 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**11:47 original WM oracle scope COMPLETE:** own885469 EXITED/noSTOP, all12
+branches closed, charged=actual6000sim-s/GPU0. Never redispatch. Original WM
+total now14160sim-s (5460cpuQ+2700gpuR+6000continuation), six completed episodes.
+**Final-fleet immutable admission ready:** cpuQ root `c1switch2_run_e79775aa1f380c25`
+and gpuR root `c1switch2_run_6e152d9a0b7bf7a4`, EACH147CPU PASS/1host-onlyskip,
+bothguards17/17, real final169 hash/source validation and CPU-policy probePASS.
+CPU probe initially omitted frozen-runtime setup/nice19/SUMO executable PATH;
+all three refusals preceded policy/physics/claims. Reused successful cpuQ stage
+and its existing preflight; installed same runtime environment as real episodes,
+no repeated preflight/jobs/charges. gpuR copy contains only pinned final checkpoint,
+frozenreceipt and declared Python sources. Selector dispatch stillUNCLAIMED.
+Fresh read-only monitor scans now include selector roots and WM-oracle completion;
+original live watcher25348 remains untouched. CPU regression6/6/RuffPASS.
 **Final-fleet evaluation bridge built, not yet dispatched:** delivered genuine
 final169 SHAbe0bb66d is now accepted by selector-only immutable CPU stages.
 Same original12cpuQ/4gpuR worlds, full1200s episodes+registered six-way full-prefix

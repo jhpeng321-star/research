@@ -36,7 +36,7 @@ print(json.dumps(dict(root=str(root),sources=sources)))
                 frozen_receipt=root+'/FROZEN_FINAL.json')
 
 
-def prepare(host):
+def prepare(host, resume_root=None):
     path = EVIDENCE/('SELECTOR_PREPARED_fleet_ppo_'+host+'.json')
     if path.exists():
         raise ValueError('selector already prepared; inspect existing receipt')
@@ -46,18 +46,34 @@ def prepare(host):
             delivery['receipt']['status'] != 'FROZEN_FINAL' or
             spec['checkpoint_sha256'] != delivery['receipt']['checkpoint_sha256']):
         raise ValueError('genuine peer final169 delivery required')
-    if host == 'gpuR':
-        spec = copy_fleet(spec)
-    staged = operations.stage(host, selector='fleet_ppo', selector_spec=spec)
-    if operations.preflight(host, staged['root'])['status'] != 'PASS':
+    if resume_root:
+        # Reuse the already-passed immutable preflight after a CPU-only probe
+        # setup error. No claims/jobs/charges may exist; do not rerun preflight.
+        identity = resume_root.rsplit('_', 1)[-1]
+        staged = json.loads((EVIDENCE/('STAGE_'+host+'_'+identity+'.json')).read_text())
+        if staged['root'] != resume_root:
+            raise ValueError('exact recorded zero-physics stage required')
+        preflight = json.loads((EVIDENCE/('PREFLIGHT_'+host+'_'+resume_root.rsplit('/', 1)[-1]+'.json')).read_text())
+    else:
+        if host == 'gpuR':
+            spec = copy_fleet(spec)
+        staged = operations.stage(host, selector='fleet_ppo', selector_spec=spec)
+        preflight = operations.preflight(host, staged['root'])
+    if preflight['status'] != 'PASS':
         raise ValueError('immutable selector CPU preflight failed; no physics')
-    probe = ssh(host, f'''import json,os,sys
+    probe = ssh(host, f'''import json,os,sys,sysconfig
 from pathlib import Path
-root=Path({staged['root']!r});os.environ['CUDA_VISIBLE_DEVICES']=''
+root=Path({staged['root']!r});os.nice(19);os.environ.update({env(host, staged['root'])!r})
+os.environ['PATH']=str(Path(sysconfig.get_paths()['purelib'])/'sumo/bin')+':'+os.environ['PATH']
+assert not (root/'accounting.jsonl').exists() and not list((root/'jobs').iterdir())
+assert not (root/'SELECTOR_DISPATCH_ONCE.json').exists()
 sys.path.insert(0,str(root/'pytools'));os.chdir(root/'pytools')
 from tools.c1switch2.selectors import Fleet
 from tools.c1switch2.hostcheck import belief
-binding=json.loads((root/'BINDING.json').read_text());selector=Fleet(binding['selector_specs']['fleet_ppo'])
+from tools.c1switch2.runtime import Runtime
+binding=json.loads((root/'BINDING.json').read_text());Runtime(binding)
+assert binding['enabled_arms']==['fleet_ppo'] and binding['cpu_host']=={host!r}
+selector=Fleet(binding['selector_specs']['fleet_ppo'])
 raw=belief(now=300);choice=selector.select(raw);assert choice in binding['library']
 out=dict(status='PASS',iteration=169,checkpoint_sha256={spec['checkpoint_sha256']!r},choice=choice,new_sim_s=0,new_gpu_s=0)
 with (root/'SELECTOR_CPU.json').open('x') as stream:json.dump(out,stream,indent=2)
@@ -104,11 +120,14 @@ for entry in os.scandir(root.parent):
   for name in ('SELECTOR_DISPATCH_ONCE.json','MODEL_DISPATCH_ONCE.json'):
    claim=Path(entry.path,name)
    if claim.exists():assert json.loads(claim.read_text())['arm']!='fleet_ppo','selector arm already claimed'
-sys.path.insert(0,str(root/'pytools'));os.chdir(root/'pytools');os.environ['CUDA_VISIBLE_DEVICES']=''
+sys.path.insert(0,str(root/'pytools'));os.chdir(root/'pytools');os.nice(19);os.environ.update({env(host, root)!r})
+os.environ['PATH']=str(Path(sysconfig.get_paths()['purelib'])/'sumo/bin')+':'+os.environ['PATH']
 from tools.c1switch.storage import canonical
 from tools.c1switch2.selectors import Fleet
 from tools.c1switch2.gate import REQUIRED,CPU_REQUIRED,admission
 from tools.c1switch2.design import local_budget
+from tools.c1switch2.runtime import Runtime
+Runtime(binding)
 Fleet(binding['selector_specs']['fleet_ppo'])
 needed=CPU_REQUIRED+('fleet_ppo',)
 evidence={{k:dict(status='PASS' if k in needed else 'PENDING',binding_sha256=canonical(binding),source='immutable CPU/source/WALL/canary/exposure/final169 selector validation') for k in REQUIRED}}
@@ -121,7 +140,7 @@ with (root/'SELECTOR_DISPATCH_ONCE.json').open('x') as stream:
 environment=dict(os.environ,**{env(host, root)!r},PYTHONPATH=str(root/'pytools'))
 environment['PATH']=str(Path(sysconfig.get_paths()['purelib'])/'sumo/bin')+':'+environment['PATH']
 with (root/'SELECTOR.log').open('x') as log:
- process=subprocess.Popen([sys.executable,'-B','-u','-m','tools.c1switch2.supervisor','--root',str(root),'--host',{host!r},'--workers',{str(workers)!r}],cwd=root/'pytools',env=environment,stdout=log,stderr=subprocess.STDOUT,start_new_session=True,preexec_fn=lambda:os.nice(19))
+ process=subprocess.Popen([sys.executable,'-B','-u','-m','tools.c1switch2.supervisor','--root',str(root),'--host',{host!r},'--workers',{str(workers)!r}],cwd=root/'pytools',env=environment,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
 out=dict(claim,pid=process.pid,workers={workers!r},new_gpu_s=0)
 with (root/'DISPATCH_SELECTOR.json').open('x') as stream:json.dump(out,stream,indent=2)
 print(json.dumps(out))
@@ -135,8 +154,9 @@ if __name__ == '__main__':
     parser.add_argument('command', choices=('prepare', 'dispatch'))
     parser.add_argument('--host', choices=('cpuQ', 'gpuR'), required=True)
     parser.add_argument('--workers', type=int, default=1)
+    parser.add_argument('--resume-root')
     args = parser.parse_args()
     if args.command == 'prepare':
-        prepare(args.host)
+        prepare(args.host, args.resume_root)
     else:
         dispatch(args.host, args.workers)

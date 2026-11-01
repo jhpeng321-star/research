@@ -55,3 +55,25 @@ def test_monitor_replacement_refuses_live_original(tmp_path, monkeypatch):
     with pytest.raises(RuntimeError, match='must be exited'):
         watch.start(resume=True)
     assert not (tmp_path / 'RESUME_ONCE.json').exists()
+
+
+def test_scan_reconciles_oracle_completion_and_selector_dispatch(tmp_path, capsys, monkeypatch):
+    import json
+    import os
+    monkeypatch.setattr(os, 'getloadavg', lambda: (0, 0, 0), raising=False)
+    oracle, fleet = tmp_path/'oracle', tmp_path/'fleet'
+    for root in (oracle, fleet):
+        root.mkdir()
+        (root/'jobs').mkdir()
+    (oracle/'DISPATCH_ORACLES.json').write_text('{"pid":999999999}')
+    (oracle/'COMPLETE.json').write_text('{}')
+    (oracle/'accounting.jsonl').write_text('{"sim_s":380}\n')
+    branch = oracle/'jobs'/'branch'
+    branch.mkdir()
+    (branch/'CLOSE.json').write_text('{"actual_sim_s":380}')
+    (fleet/'DISPATCH_SELECTOR.json').write_text('{"pid":999999998}')
+    exec(watch.SCAN, dict(HOST='gpuR', CPU=dict(wm_oracles=str(oracle), fleet_ppo=str(fleet)), GPU={}))
+    rows = json.loads(capsys.readouterr().out)['cpu']
+    assert rows['wm_oracles']['complete'] is True
+    assert rows['wm_oracles']['closed_actual_sim_s'] == rows['wm_oracles']['charged_sim_s'] == 380
+    assert rows['fleet_ppo']['complete'] is False and rows['fleet_ppo']['process']['state'] == 'EXITED'

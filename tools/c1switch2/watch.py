@@ -33,10 +33,12 @@ def process(pid,root):
              own_root_in_command=str(root) in command)
 out=dict(unix=time.time(),host=HOST,load=os.getloadavg(),cpu={},gpu={})
 for arm,name in CPU.items():
- root=Path(name);dispatch=load(root/('DISPATCH_CPU.json' if arm=='cpu' else 'DISPATCH_MODEL.json'))
+ root=Path(name)
+ dispatch_name=('DISPATCH_CPU.json' if arm=='cpu' else 'DISPATCH_ORACLES.json' if arm=='wm_oracles' else 'DISPATCH_SELECTOR.json' if arm in ('fleet_ppo','cav_mappo') else 'DISPATCH_MODEL.json')
+ dispatch=load(root/dispatch_name)
  if not dispatch:
   out['cpu'][arm]=dict(root=name,state='UNCLAIMED');continue
- row=dict(root=name,process=process(dispatch['pid'],root),complete=(root/'supervisor/COMPLETE.json').is_file(),
+ row=dict(root=name,process=process(dispatch['pid'],root),complete=(root/('COMPLETE.json' if arm=='wm_oracles' else 'supervisor/COMPLETE.json')).is_file(),
           stop=load(root/'STOP'),episodes=0,decisions=0,closed_jobs=0,closed_actual_sim_s=0)
  raw=(root/'accounting.jsonl').read_bytes() if (root/'accounting.jsonl').is_file() else b''
  row.update(charged_sim_s=sum(json.loads(x)['sim_s'] for x in raw.splitlines()),
@@ -102,6 +104,14 @@ def collect():
                 cpus[arm] = config['cpus'][host]
             if config and host in config['gpus']:
                 gpus[arm] = config['gpus'][host]
+        for arm in ('fleet_ppo', 'cav_mappo'):
+            prepared = read_json(EVIDENCE / ('SELECTOR_PREPARED_'+arm+'_'+host+'.json'))
+            if prepared:
+                cpus[arm] = prepared['root']
+        if host == 'gpuR':
+            oracle = read_json(EVIDENCE / 'WM_ORACLE_CONTINUATION_DISPATCH.json')
+            if oracle:
+                cpus['wm_oracles'] = oracle['root']
         try:
             code = f'HOST={host!r};CPU={cpus!r};GPU={gpus!r}\n' + SCAN
             out['hosts'][host] = ssh(host, code, timeout=45)
@@ -114,11 +124,14 @@ def collect():
         out[label] = read_json(path)
     correction = read_json(EVIDENCE / 'BB_FOLLOW_WAIT_RESUME_DISPATCH.json')
     follower = correction['pid'] if correction else 43404
+    parked = read_json(EVIDENCE / 'BB_PARKED_0600.json')
+    out['bb_relocation_stop'] = read_json(EVIDENCE / 'BB_RELOCATION_STOP.json')
     out['local_processes'] = {str(pid): local_process(pid) for pid in (31696, follower)}
     relay_complete = read_json(EVIDENCE / 'RELAY_wm/COMPLETE.json')
     if out['local_processes']['31696']['state'] != 'LIVE' and not relay_complete:
         out['alerts'].append('WM relay process missing before completion')
-    if out['local_processes'][str(follower)]['state'] != 'LIVE' and not (out['bb_complete'] or out['bb_stop']):
+    if out['local_processes'][str(follower)]['state'] != 'LIVE' and not (
+            out['bb_complete'] or out['bb_stop'] or parked or out['bb_relocation_stop']):
         out['alerts'].append('current BB follower process missing before completion')
     for host, data in out['hosts'].items():
         for kind in ('cpu', 'gpu'):
@@ -132,6 +145,8 @@ def collect():
                     out['alerts'].append(f'{host}/{kind}/{arm}: unexpected process exit')
     if out['bb_stop']:
         out['alerts'].append(f'BB follower terminal STOP: {out["bb_stop"]!r}')
+    if out['bb_relocation_stop']:
+        out['alerts'].append(f'BB relocated startup terminal STOP: {out["bb_relocation_stop"]["error"]}')
     previous = read_json(WATCH / 'STATUS.json')
     if previous:
         for host, data in out['hosts'].items():
@@ -153,7 +168,7 @@ def collect():
 def summary(snapshot):
     rows = [v['cpu'] for v in snapshot['hosts'].values()]
     parts = []
-    for arm in ('cpu', 'wm', 'bb'):
+    for arm in ('cpu', 'wm', 'bb', 'fleet_ppo', 'cav_mappo', 'wm_oracles'):
         arms = [r[arm] for r in rows if arm in r and r[arm].get('process')]
         if arms:
             parts.append(f'{arm}:episodes={sum(r["episodes"] for r in arms)},'
