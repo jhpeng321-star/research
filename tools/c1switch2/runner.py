@@ -7,10 +7,11 @@ import os
 from tools.c1switch.design import checked, sha
 from tools.c1switch.storage import Ledger, exclusive, write
 
-from .design import MODEL_ARMS, PROTOCOL, assigned, budget, canary_world, guard, local_budget, worlds
+from .design import MODEL_ARMS, PROTOCOL, budget, canary_world, guard, worlds
 from .episode import episode
 from .gate import admission
 from .rerun import replay
+from .relocation import execution_budget, execution_host, validate as validate_relocation
 
 
 def load_plugin(spec):
@@ -35,7 +36,7 @@ class ArmLedger(Ledger):
             used = sum(r['sim_s'] for r in rows if r['id'].startswith(self.arm+'__'))
             if (self.root/'STOP').exists() or stage != 'main':
                 raise ValueError('durable STOP or wrong accounting stage')
-            limits = local_budget(self.binding['cpu_host'], self.binding.get('include_phys') is True)
+            limits = execution_budget(self.binding)
             if not ident.startswith(self.arm+'__') or used+sim_s > limits[self.arm]:
                 raise ValueError('registered per-arm sim-s exhausted')
             if sum(r['sim_s'] for r in rows)+sim_s > sum(limits.values()):
@@ -57,6 +58,7 @@ def admitted(root, *, phase='main'):
     registration = root/'REGISTRATION.md'
     if sha(registration) != binding.get('registration_sha256'):
         raise ValueError('registered approval snapshot changed')
+    validate_relocation(binding, registration.read_text(encoding='utf-8'))
     status = admission(registration.read_text(encoding='utf-8'), binding, evidence, phase=phase)
     if not status['dispatch_authorized']:
         raise ValueError('S-C1SWITCH2 dispatch blocked: '+json.dumps(status))
@@ -76,7 +78,7 @@ def backend(root, binding, arm, world, ident):
     if type(world.get('seed')) is not int or world not in worlds()+[canary_world()]:
         raise ValueError('unregistered S-C1SWITCH2 world')
     if (arm == 'canary' and binding['cpu_host'] != 'cpuQ') or (
-            arm != 'canary' and assigned(world['seed']) != binding['cpu_host']):
+            arm != 'canary' and execution_host(binding, world['seed']) != binding['cpu_host']):
         raise ValueError('world belongs to other CPU host')
     # Setup/imports that might allocate SUMO occur ONLY after admitted().
     runtime = load_plugin(binding['runtime'])(binding)

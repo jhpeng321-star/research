@@ -59,6 +59,15 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**08:xx MAIN07:07 unused-BB relocation prepared in source, NO compute:**
+prospective plan d5037b81825d4788131b49c675934ee71e6007da91fec60012de9ecdbc75abde
+moves ONLY unstarted BB's same16worlds to<=4gpuRCPUworkers AFTER11:30, with
+original79800sim-s/3GPUh (bothcards) and all scientific/one-use/parity gates.
+Runner/ledger accept only this exact registered arm/host/manifest; no WM replay.
+Relay now requires16episodes before releasing GPUs. Local96CPU/Ruff PASS;
+defaultPython has no torch, so existing Miniconda was used, no environment created.
+See docs/paper_results/c1switch2/BB_RELOCATION_DESIGN.md and bbrelocate.py.
+Immutable gpuR CPU preflight and prospective registration precede any allocation.
 **06:00 terminal WM GPU receipts reconciled:** BOTH services EXITED after
 ordinary COMPLETE release; gpuA13845.159507265314s + gpuR13840.939484648407s
 =27686.09899191372GPU-s (7.6905830533h), all validation/idle included, no refund.

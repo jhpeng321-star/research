@@ -8,14 +8,15 @@ import time
 from tools.c1switch.design import checked
 from tools.c1switch.storage import exclusive, write
 
-from .design import assigned, worlds
+from .design import worlds
 from .runner import admitted
+from .relocation import execution_host
 
 
 def episode_jobs(binding, host):
     return [(f'{a}__s{w["seed"]}', ['episode', '--arm', a, '--seed', str(w['seed'])])
             for a in binding.get('enabled_arms', binding['sim_s']) if a != 'canary'
-            for w in worlds() if assigned(w['seed']) == host]
+            for w in worlds() if execution_host(binding, w['seed']) == host]
 
 
 def run(root, host, workers):

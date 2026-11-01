@@ -121,14 +121,14 @@ for entry in os.scandir(root.parent):
 sys.path.insert(0,str(root/'pytools'));os.chdir(root/'pytools')
 from tools.c1switch.storage import canonical
 from tools.c1switch2.gate import REQUIRED,CPU_REQUIRED,admission
-from tools.c1switch2.design import local_budget
+from tools.c1switch2.relocation import execution_budget
 needed=CPU_REQUIRED+('inference_'+{model!r},'gpuA_parity','gpuR_parity')
 evidence={{k:dict(status='PASS' if k in needed else 'PENDING',binding_sha256=canonical(binding),source='CPU/frozen canary/preallocation exposure/currentregistry/real GPU parity') for k in REQUIRED}}
 evidence['gpu_parity_sha256']={sha(parity_path)!r};evidence['registry_audit']={audit!r};evidence['mechanics_sha256']={archive['canary_sha256']!r}
 assert admission((root/'REGISTRATION.md').read_text(),binding,evidence)['dispatch_authorized']
 for route in binding['inference_specs'][{model!r}]['routes'].values():(root/route).mkdir(parents=True)
 with (root/'GATES.json').open('x') as stream:json.dump(evidence,stream,indent=2)
-claim=dict(arm={model!r},host={host!r},root=str(root),planned_sim_s=local_budget({host!r})[{model!r}],unix=time.time())
+claim=dict(arm={model!r},host={host!r},root=str(root),planned_sim_s=execution_budget(binding)[{model!r}],unix=time.time())
 with (root/'MODEL_DISPATCH_ONCE.json').open('x') as stream:
  json.dump(claim,stream,indent=2);stream.flush();os.fsync(stream.fileno())
 environment=os.environ.copy();environment.update({env(host, root)!r})
@@ -215,7 +215,13 @@ def relay_cycle(config):
     """Isolate host transport failures so one offline CPU cannot hide another's STOP."""
     statuses, gpu_status, errors = {}, {}, {}
     for cpu, root in config['cpus'].items():
-        count = sum(assigned(w['seed']) == cpu for w in worlds())
+        if 'relocation' in config:
+            from .relocation import plan
+            if config['relocation'] != plan() or set(config['cpus']) != {'gpuR'}:
+                raise ValueError('unexpected relay placement')
+            count = len(worlds())
+        else:
+            count = sum(assigned(w['seed']) == cpu for w in worlds())
         try:
             statuses[cpu] = ssh(cpu, f'''import json
 from pathlib import Path

@@ -15,6 +15,7 @@ from .gate import approval
 
 EVIDENCE = Path('tools/c1switch2/evidence')
 TESTS = ['tests/test_c1switch2.py', 'tests/test_c1switch2_wall.py',
+         'tests/test_c1switch2_relocation.py',
          'tests/test_c1switch2_integrations.py', 'tests/test_switchable_wall.py',
          'tests/test_c1switch.py', 'tests/test_c1switch_feedback.py', 'tests/test_c1switch_merge_fast.py']
 
@@ -84,7 +85,7 @@ print(json.dumps(out))
 ''')
 
 
-def stage(host, predecessor=None, cpu_only=False, model=None, inference=None):
+def stage(host, predecessor=None, cpu_only=False, model=None, inference=None, relocation=None):
     registration_bytes = checked(REGISTRATION).read_bytes()
     text = registration_bytes.decode('utf-8')
     digest = sha(DESIGN)
@@ -119,7 +120,8 @@ def stage(host, predecessor=None, cpu_only=False, model=None, inference=None):
             staged['peer/'+peer+'/'+path.name] = checked(path)
     sources = {name: sha(path) for name, path in staged.items()}
     identity = canonical(dict(sources=sources, registration=sha(REGISTRATION),
-                              scope=model or ('cpu' if cpu_only else 'canary'), inference=inference))[:16]
+                              scope=model or ('cpu' if cpu_only else 'canary'), inference=inference,
+                              relocation=relocation))[:16]
     root = ('/home/ubuntu' if host == 'cpuQ' else '/root')+'/c1switch2_run_'+identity
     binding = dict(protocol=PROTOCOL, cpu_host=host, include_phys=False, sim_s=budget(),
         library=list(CONTROLLERS), gpu_seconds={a: GPU_SECONDS[a] for a in budget()},
@@ -140,6 +142,10 @@ def stage(host, predecessor=None, cpu_only=False, model=None, inference=None):
         if inference is None:
             raise ValueError('model stage requires completed immutable two-GPU inference specification')
         binding['inference_specs'][model] = inference
+    if relocation is not None:
+        from .relocation import validate
+        binding['relocation'] = relocation
+        validate(binding, text)
     if old is not None:
         binding['startup_predecessor'] = old
     buf = io.BytesIO()
