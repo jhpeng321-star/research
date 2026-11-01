@@ -7,10 +7,8 @@ qualification. Prior inference jobs exited; publication-only observer active.** 
 `docs/paper_results/RB_LANE_20261101.md`; full iteration/receipts diary preserved.
 
 <!-- LANE-FIT-PRECISION:BEGIN -->
-05:21:26 publication-only observer RUNNING: own localPID3316 through09:00; source80541278.
-Consumes already-running FIT results, reports precision AND recall, commits each new summary.
-Dispatch `FIT_PRECISION_FOLLOWUP_0520_DISPATCH.json`; runtime STATUS/log under
-`E:/Temp/opencode/rblane-fit-precision-20261101-0520`. No new fitting/inference.
+Closed 2026-11-01T09:00:00.219934+08:00 at the09:00 deadline; 0new verified FIT summaries published.
+No inference/fitting/remote dispatch. Keep-right qualification remains unresolved.
 <!-- LANE-FIT-PRECISION:END -->
 
 ## Integration contract
