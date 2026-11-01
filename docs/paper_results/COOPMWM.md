@@ -739,3 +739,8 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 
 ### VIABILITY2035v4_BRIDGE_DISPATCH.json
 - VIABILITY2035v4_BRIDGE_DISPATCH.json: {"pid":8760,"root":"/home/ubuntu/coopmwm20261101_accel1","unix":1793541179.244051}
+
+## Acceleration viability — 2026-11-01T14:12:01.672729+00:00
+
+### STOP.json
+- STOP.json: {"error":"No module named 'torch'","source":"owned plan bridge; no retry"}
