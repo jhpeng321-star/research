@@ -1,4 +1,4 @@
-# WM-PHYS morning report — interim, 2026-11-01T08:26:18+08:00
+# WM-PHYS morning report — interim, 2026-11-01T08:49:00+08:00
 Registered switching rule FAIL: 300s breakdown rate not closer to real. Calibrated controller selection is not established.
 Latest engineering source is FULL-v4/22cc32f6; current paired diagnostic below is FULL-v4.
 
@@ -46,7 +46,7 @@ Latest engineering source is FULL-v4/22cc32f6; current paired diagnostic below i
 
 ## Credibility / schedule
 - Strict paired P(beats incumbent)>=0.8 plus lower expected delay is only a decision rule; calibration must also hold.
-- Same-source selected-switch reliability and50/80/90%/range coverage: E:\agent-work\c4-rb-int\docs\rbint\noon\20261101T082618+0800\FULL-v4\credibility_recovered/CREDIBILITY.md.
+- Same-source selected-switch reliability and50/80/90%/range coverage: E:\agent-work\c4-rb-int\docs\rbint\noon\20261101T084900+0800\FULL-v4\credibility/CREDIBILITY.md.
 - Same-source selected0.8calls observed win%=52.9/55.6/70.0 vs forecast%=92.6/92.4/93.1; range coverage%=45.0/65.0/57.5.
 - ~04:00 interim retained:FULL-v1 n4 ΔCRPS−785/−3512/−11041; rate-distance+1.25pp; historical CIs retracted.
 ## ~08:00 interim
@@ -54,4 +54,4 @@ Latest engineering source is FULL-v4/22cc32f6; current paired diagnostic below i
 - Receipt: docs/rbint/noon/20261101T075846+0800; primary95%CIs NA (singleton cells). Finalfreeze09:30: PENDING.
 - Final evaluation receipts through11:30, final report11:45; frozen source is not selected by reserved outcome tuning.
 - Remaining gaps:serial LC negotiation/internal junction state/cold memory; finish matched panels and validate action confidence.
-- Audit/source manifests, per-world attrition, timing/speed/shift/gate/credibility files: docs/rbint/noon/20261101T082618+0800.
+- Audit/source manifests, per-world attrition, timing/speed/shift/gate/credibility files: docs/rbint/noon/20261101T084900+0800.

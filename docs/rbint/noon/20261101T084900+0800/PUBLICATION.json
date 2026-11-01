@@ -1,0 +1,125 @@
+{
+ "local_time": "2026-11-01T08:49:00+08:00",
+ "label": "interim",
+ "source_head": "e6276acd26eb0a4269a8db7fd6c8a3deb0718f8d",
+ "code_hashes": {
+  "tools\\rbint\\continue_noon.py": "3b25cb0a81b77338465b4b7176b70529bc88658c25eef543694593b943f49411",
+  "tools\\rbint\\noon_report.py": "085a6400fe84933497890ae46e1443148a6af918647fd279587232941055558b",
+  "tools\\rbint\\compare.py": "ffa2e9ca903e0919da864e627415022a29c5755d1d7b8f9272c3aa9d1bef79b1",
+  "tools\\rbint\\score_endpoints.py": "cb2a8d80316168337d64b6e0788fceebc378825cd4d6d8735dd53ed8cc346845",
+  "tools\\rbeval\\score.py": "e6687c7c3534b667b2e337eab5d4692599ee0bf8f9c3788d91f5603a7b073786"
+ },
+ "variants": {
+  "A2": {
+   "tasks": 108,
+   "complete": [
+    969420,
+    969421,
+    969422,
+    969425,
+    969432,
+    969433,
+    969434,
+    969435,
+    969436,
+    969437,
+    969438,
+    969439
+   ],
+   "sha256": "af3a911b2f130fb239d25e40d21786a1138e5db41ebc5fe58dacff2125cea39c",
+   "snapshot": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T084900+0800",
+   "comparison": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T082618+0800\\A2\\paired\\COMPARISON.json",
+   "distribution": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T082618+0800\\A2\\distribution",
+   "credibility": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T082618+0800\\A2\\credibility",
+   "reused_identical_complete_ensemble_scores": true
+  },
+  "B2": {
+   "tasks": 105,
+   "complete": [
+    969420,
+    969421,
+    969422,
+    969425,
+    969432,
+    969433,
+    969434,
+    969435,
+    969436,
+    969437,
+    969438,
+    969439
+   ],
+   "sha256": "2b8ba9167368d8cb802b9a736aa20f3eae7bffe871e9f0396bdcdc1f8904e3a0",
+   "snapshot": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_B2_20261101T084900+0800",
+   "comparison": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T084900+0800\\B2\\paired\\COMPARISON.json",
+   "distribution": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T084900+0800\\B2\\distribution",
+   "credibility": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T084900+0800\\B2\\credibility"
+  },
+  "C2": {
+   "tasks": 38,
+   "complete": [
+    969432,
+    969433,
+    969434
+   ],
+   "sha256": "832f32a10c957717eef0508407518a174a40dd3061af7ecba07b83b5b8ac79aa",
+   "snapshot": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_C2_20261101T084900+0800",
+   "comparison": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T082618+0800\\C2\\paired\\COMPARISON.json",
+   "distribution": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T082618+0800\\C2\\distribution",
+   "credibility": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T082618+0800\\C2\\credibility",
+   "reused_identical_complete_ensemble_scores": true
+  },
+  "FULL-v3": {
+   "tasks": 87,
+   "complete": [
+    969422,
+    969425,
+    969432,
+    969433,
+    969434,
+    969435,
+    969436,
+    969437,
+    969438,
+    969439
+   ],
+   "sha256": "fd8a1b45a7555c1873ef74e3a49df27704d3e94a2c03fc58541ff63a8e4e54d4",
+   "snapshot": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v3_20261101T084900+0800",
+   "comparison": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T070717+0800\\FULL-v3\\paired\\COMPARISON.json",
+   "distribution": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T070717+0800\\FULL-v3\\distribution",
+   "credibility": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T070717+0800\\FULL-v3\\credibility",
+   "endpoints": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T070717+0800\\FULL-v3\\endpoints\\HDV60_COMPARISON.json",
+   "reused_identical_complete_ensemble_scores": true
+  },
+  "FULL-v4": {
+   "tasks": 132,
+   "complete": [
+    969420,
+    969421,
+    969422,
+    969424,
+    969425,
+    969428,
+    969431,
+    969432,
+    969433,
+    969434,
+    969435,
+    969436,
+    969437,
+    969438,
+    969439
+   ],
+   "sha256": "29311bb8eddaed05440309eceac4ecab14b8e21d74844a3b3989c99c9754713f",
+   "snapshot": "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v4_20261101T084900+0800",
+   "comparison": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T084900+0800\\FULL-v4\\paired\\COMPARISON.json",
+   "distribution": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T084900+0800\\FULL-v4\\distribution",
+   "credibility": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T084900+0800\\FULL-v4\\credibility",
+   "endpoints": "E:\\agent-work\\c4-rb-int\\docs\\rbint\\noon\\20261101T084900+0800\\FULL-v4\\endpoints\\HDV60_COMPARISON.json"
+  }
+ },
+ "read_only_remote": true,
+ "receipt_directory": "docs/rbint/noon/20261101T084900+0800",
+ "freeze": "PENDING",
+ "interim08": "docs/rbint/noon/20261101T075846+0800"
+}

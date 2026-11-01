@@ -1,0 +1,22 @@
+{
+ "pid": 18164,
+ "create_filetime": 134379678749552695,
+ "argv": [
+  "C:\\Users\\jpeng\\miniconda3\\python.exe",
+  "-X",
+  "faulthandler",
+  "-u",
+  "-B",
+  "-m",
+  "tools.rbint.snapshot",
+  "--host",
+  "gpuA",
+  "--roots",
+  "/root/rbeval20261031/int/WM-PHYS-FULL-v3-gpu/shard0",
+  "/root/rbeval20261031/int/WM-PHYS-FULL-v3-gpu/shard1",
+  "/root/rbeval20261031/int/WM-PHYS-FULL-v3-gpu/shard2",
+  "--out",
+  "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_FULL-v3_20261101T084900+0800"
+ ],
+ "analysis_only": true
+}

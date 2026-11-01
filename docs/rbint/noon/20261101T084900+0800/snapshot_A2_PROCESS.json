@@ -1,0 +1,22 @@
+{
+ "pid": 14744,
+ "create_filetime": 134379677419043761,
+ "argv": [
+  "C:\\Users\\jpeng\\miniconda3\\python.exe",
+  "-X",
+  "faulthandler",
+  "-u",
+  "-B",
+  "-m",
+  "tools.rbint.snapshot",
+  "--host",
+  "gpuA",
+  "--roots",
+  "/root/rbeval20261031/runa/WM-PHYS-A2/shard0",
+  "/root/rbeval20261031/runa/WM-PHYS-A2/shard1",
+  "/root/rbeval20261031/runa/WM-PHYS-A2/shard2",
+  "--out",
+  "E:\\agent-work\\c4-rb-int\\runs\\rbint_evidence\\noon_A2_20261101T084900+0800"
+ ],
+ "analysis_only": true
+}
