@@ -114,7 +114,7 @@ def render(publication):
         '- A2/B2/C2 use earlier4015b641; FULL-v4 includes later physical/native/source fixes: not a settings-only ablation.',
         '- Touched modules287CPU PASS/4explicit skips; later endpoint/bootstrap21PASS/1skip and credibility18PASS.',
         '- A/B/C/FULL each passed60s on FIT969420/969421 (8rollouts): finite, conserved, no learned corrections.',
-        '- FULL-v4 five-arm600s canary PASS370.48s/reused once; live sources/jobs retained, own-PID11:30 deadline.',
+        '- FULL-v4 five-arm600s canary PASS370.48s/reused once; all160tasks complete; immutable source retained.',
         '- Superseded own FULL-v1/v3 retired after reserved8 completion; all outputs retained; A/B/C/FULL-v4 continued.',
         '', '## Distributional evidence (per-variant available cases; not a cross-variant ranking)',
         '- WM2 baseline full20worlds/fivearms/K8; all candidates share registered969420..969439, H120/300/600.',
@@ -125,7 +125,7 @@ def render(publication):
         if value and value.get('comparisons'):
             d = [r for r in value['comparisons'] if r['metric'] == 'delay_crps_difference']
             r = next(r for r in value['comparisons'] if r['metric'] == 'upstream_rate_distance_difference' and r['horizon_s'] == 300)
-            lines.append(f"- {key}:n={len(value['worlds'])}, ΔCRPS120/300/600="+
+            lines.append(f"- {key}:reserved n={len(value['worlds'])}, total complete={len(item.get('complete', []))}/20; ΔCRPS120/300/600="+
                 '/'.join(number(x['mean']) for x in d)+f"veh-s; Δ300s rate-distance={number(100*r['mean'],2)}pp.")
         else:
             lines.append(f"- {key}:PENDING complete K8 evidence; {item.get('tasks', 0)} saved tasks; no efficacy inferred.")
@@ -150,14 +150,15 @@ def render(publication):
             for label,key in (('real','real_rate'),('WM2','baseline_rate'),(fallback,'candidate_rate')))+'.')
     lines += [f"- {fallback} native600s upstream speed CRPS={number(avg(speed,'wm_crps'),2)} vs cell={number(avg(speed,'cell_crps'),2)}m/s; clearing not qualified.",
         f"- Same native onset-distribution IBS600={number(avg(timing,'wm_ibs'),3)} vs cell={number(avg(timing,'cell_ibs'),3)}; onset-CDF gate retained."]
-    for arm in ('mappo', 'pi'):
+    for arm in ('mappo', 'pi', 'circles'):
         data = [r for r in shifts if r['arm'] == arm]
         lines.append(f"- Expected600s {arm}−native delay={number(avg(data,'wm_effect'))} vs recorded={number(avg(data,'real_effect'))}veh-s (same available worlds).")
     lines += ['- Integrated ramp-delay target remains unavailable; separate nativeFIT32 H300 diagnostic2188 vs2273real is not this panel.',
         '- Final conditional LC FIT32:default precision3.006%/recall37.942%; encoder2.400%/40.492%; keep-right false positives dominate.',
         '- SUMOCORE DIFFERENT8world/3arm/K3:inferred CRPS647/4635/16728 vs defaults1087/5452/19343;',
         '  cell1433/4375/9131.300s rates inferred84.7/default88.9/real62.5%;18/144 startup collisions, validity FAIL.',
-        '  Inferred600s MAPPO/PI effects+3450/+825 vs real−2064/−3858veh-s; not a clean information ceiling.', '',
+        '  Inferred600s MAPPO/PI effects+3450/+825 vs real−2064/−3858veh-s; not a clean information ceiling.',
+        '- SUMOCORE separate-panel600s upstream speed CRPS inferred1.34/default3.03m/s; both-event onset MAE204/134s.', '',
         '## Switching-eligibility rule',
         f"- {fallback}−WM2 delay CRPS differences (veh-s),120/300/600:"+' / '.join(ci(x) for x in crps)+'.' if crps else '- Delay CRPS comparison PENDING;95%CIs NA.',
         f"- 300s breakdown-distance difference (pp): {ci({**rate, 'mean':100*rate['mean'], 'low':None if rate['low'] is None else 100*rate['low'], 'high':None if rate['high'] is None else 100*rate['high']},2)}." if rate else '- Breakdown-distance comparison PENDING;95%CI NA.',
@@ -185,8 +186,8 @@ def render(publication):
         '## ~08:00 interim',
         '- FULL-v4 reserved8: ΔCRPS120/300/600−393/−3040/−11647veh-s; HDV60−15.26m; breakdown-distance+5.63pp: point rule FAIL.',
         f"- Receipt: {publication.get('interim08','PENDING')}; primary95%CIs NA (singleton cells). Finalfreeze09:30: {publication.get('freeze','PENDING')}.",
-        '- Final evaluation receipts through11:30, final report11:45; frozen source is not selected by reserved outcome tuning.',
-        '- Remaining gaps:serial LC negotiation/internal junction state/cold memory; finish matched panels and validate action confidence.',
+        f"- Data cutoff11:30; actual final assembly {publication.get('assembled_at','PENDING')}; frozen source was not outcome-selected.",
+        '- Next:repair serial LC/internal-junction/history parity,measure ramp delay,replicate cells,and validate action confidence.',
         f"- Audit/source manifests, per-world attrition, timing/speed/shift/gate/credibility files: {publication['receipt_directory']}."]
     if len(lines) > 60:
         raise AssertionError(f'report exceeds owner line limit: {len(lines)}')

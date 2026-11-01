@@ -1,8 +1,12 @@
-# S-RB-INT handoff — ~09:30 freeze published, 2026-11-01
+# S-RB-INT FINAL — 2026-11-01
 
 Branch `c4/rb-int`. Retain all prior work and immutable jobs. Earlier detail:
 `docs/paper_results/WMPHYS_INT_HANDOFF_ARCHIVE_{0034,0515}.md`.
 Owner schedule: interim04/08, freeze09:30, evaluation through11:30, report11:45.
+FINAL report59lines: `docs/paper_results/WMPHYS_MORNING.md`; delivery/provenance
+`docs/rbint/FINAL_DELIVERY.md`. Actual assembly11:46:40 (100s late); no inference rerun.
+WM2/A2/FULL-v4 each20complete worlds;B2=19,C2=12;all candidates reserved8 COMPLETE.
+FULL-v4 point switchingFAIL;53CPU analysis/orchestration +10final report checks PASS.
 Fresh-session recovery: `docs/rbint/RESUME_0627.md`. Original collectors and
 completed scores preserved;08:26round recovered after isolated CPU child exit1.
 Peer observer retained. WM2-HDV60 now160/160 COMPLETE; no cpuQ dependency.
@@ -30,7 +34,8 @@ Full-world CIs NA/singletons. Freeze `docs/rbint/FREEZE_0930.md`; current public
 - A2 owned by RUNA; B2 owned by RUNB; C2 handover below. Shared claims bind ownership.
 - C2 now exclusively INT-owned on gpuR; original4015b641 source+smoke hashes
   verified; NEW `/root/rbeval20261031/int/WM-PHYS-C2`. CanaryPASS318.98s,reusedONCE;
-  LIVE843902/843903/843904+monitor843928; no redispatch. `docs/rbint/C2_LIVE_0645.md`.
+  EXITED843902/843903/843904+monitor843928 at own cutoff;102tasks/12K8worlds retained.
+  All8reserved complete; no redispatch. `docs/rbint/FINAL_DELIVERY.md`.
   `E:/agent-work/rb-shared/evalclaims/WM-PHYS-A2.runa.json`
   `E:/agent-work/rb-shared/evalclaims/WM-PHYS-C2.runa.json`
   `E:/agent-work/rb-shared/evalclaims/WM-PHYS-B2.runb.json`
@@ -109,9 +114,9 @@ Full-world CIs NA/singletons. Freeze `docs/rbint/FREEZE_0930.md`; current public
   --resume-publication and never repeats unchanged complete-ensemble scores.
 
 <!-- NOON-COLLECTOR:BEGIN -->
-## Bounded noon collector
-Explicit saved-component CPU recovery completed; no new inference.
-Latest publication `docs/rbint/noon/20261101T105204+0800/PUBLICATION.json`;08interim retained.
-All successful components reused; only previously unfinished analysis executed.
-Next bounded collector resumes this committed publication/cache;09:30freeze/11:45report unchanged.
+## Final publication
+Final report assembled from completed score components and verified frozen-source cache.
+Publication `docs/rbint/noon/20261101T113555+0800/PUBLICATION.json`; FINAL_ASSEMBLY.json records actual delivery time.
+No remaining collector daemon; no new inference/scoring. Point switching rule FAIL; full-world CIs NA.
+FULL-v4 complete20; actual A/B/C coverage in final publication. All original failures/partial transfers retained.
 <!-- NOON-COLLECTOR:END -->
