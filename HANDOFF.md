@@ -59,6 +59,18 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**MAIN12:14 continuation now REGISTERED + immutable CPU PREPARED:** bothGPUroot
+`/root/c1switch2_gpu_bb_cont_74807c59d8cd942c`, realBB full60s/K8/sixway and
+incumbentWALL CPUprobes PASS, identicalsamplesSHA37852b51 on bothcards.
+No newGPU/physics; oldCPUstage reused unmodified. gpuR rootfree55869440bytes
+at latestresourcecheck, bothcards memoryPASS and load13.08PASS, diskBLOCKED.
+Postnoon supervisor built: resource observations60s, ownedprogress+commits20min,
+bounded24h observation. Only first unstarted gpuRfleet and MAIN12:14BB attempt
+may be admitted after strictresources; durable per-scope attemptclaims forbid
+automatic retries even if startup errors. Originalobserver25348EXITED required.
+GPU accounting now includes BOTH original BB startup and new continuation;
+final total staysUNKNOWN while any serviceLIVE, finalized debit always retained.
+CPU22/22/RuffPASS incl liveallocation accounting and no-retry/diskrefusal tests.
 **MAIN12:14 BB continuation built/CPU-tested, NOT dispatched:** exact plan
 74807c59d8cd942ca0dbc39427a7b1264880e2ac5ce2e3d9c72c0ee80e565110.
 Preserve original BB roots/STOP/parity/final receipts and zero-physics CPU stage.

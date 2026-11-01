@@ -41,11 +41,12 @@ def current_status(snapshot, receipt):
     gpu = {host: data['gpu'] for host, data in snapshot['hosts'].items()}
     charged = 4680 + sum(row.get('charged_sim_s', 0) for rows in cpus.values() for row in rows.values())
     closed = 4680 + sum(row.get('closed_actual_sim_s', 0) for rows in cpus.values() for row in rows.values())
-    terminals = [rows.get(arm, {}).get('finished') for host, rows in gpu.items()
-                 if host in ('gpuA', 'gpuR') for arm in ('wm', 'bb')]
-    gpu_complete = len(terminals) == 4 and all(terminals)
+    allocations = [row for host, rows in gpu.items() if host in ('gpuA', 'gpuR')
+                   for row in rows.values() if row.get('started') or row.get('finished')]
+    terminals = [row.get('finished') for row in allocations]
+    gpu_complete = coverage and len(terminals) >= 4 and all(terminals)
     return dict(protocol='S-C1SWITCH2/v2', verified_unix=snapshot['unix'],
-        status='CPU_COMPLETE_WM_TERMINAL_ORACLE_CONTINUATIONS_BB_TERMINAL_FLEET_EVALUATING',
+        status='CPU_COMPLETE_WM_TERMINAL_REGISTERED_PANEL_PARTIAL_OWNED_SCOPES_SUPERVISED',
         receipt=str(receipt), base_sim_s=468380, conditional_sim_s=548180,
         base_gpu_hours_cap=19, conditional_gpu_hours_cap=35,
         design_sha256='95aa84cf801aea773a0c7f9a208396ed4898e5cacdf8b6177940c7d9e1f5a273',
@@ -57,7 +58,8 @@ def current_status(snapshot, receipt):
         registered_base_remaining_sim_s=468380-charged if coverage else None,
         actual_note='Closed actual excludes currently open jobs; historical charges are never refunded.',
         new_gpu_s=sum(row['elapsed_s'] for row in terminals) if gpu_complete else None,
-        gpu_accounting_note='Final monotonic loading/parity/idle-inclusive WM and BB receipts; terminal allocations never reset.',
+        finalized_gpu_s=sum(row['elapsed_s'] for row in terminals if row),
+        gpu_accounting_note='Every original and continuation allocation retained; exact total unknown while any allocation is live. Finalized monotonic receipts include loading/parity/idle.',
         canary=dict(state='COMPLETE', charged_sim_s=4680, closed_actual_sim_s=4680, never_redispatch=True),
         cpu=cpus, gpu=gpu, alerts=snapshot['alerts'],
         cpuQ_resources=snapshot.get('cpuQ_resources'), observer=snapshot['observer'],
@@ -73,7 +75,8 @@ def run():
     snapshot['cpuQ_resources'] = ssh('cpuQ',
         "import sys\nsys.path.insert(0,'/home/ubuntu/c1switch2_run_292bfffe94b13ed8/pytools')\n" + CPUQ,
         timeout=45)
-    snapshot['observer'] = local_process(25348)
+    observer = EVIDENCE/'WATCH_MAIN1214/DISPATCH.json'
+    snapshot['observer'] = local_process(json.loads(observer.read_text())['pid'] if observer.exists() else 25348)
     snapshot['bb_startup_stop'] = json.loads((EVIDENCE/'BB_RELOCATION_STOP.json').read_text())
     snapshot['read_only'] = True
     path = EVIDENCE/('RESUME_RECONCILIATION_'+str(int(time.time()))+'.json')

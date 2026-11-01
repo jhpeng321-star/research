@@ -95,6 +95,10 @@ def collect():
         configs[arm] = read_json(EVIDENCE / (arm.upper() + '_EXECUTION_BOUND.json'))
         if configs[arm] is None:
             configs[arm] = read_json(EVIDENCE / (arm.upper() + '_EXECUTION.json'))
+    bb_original = configs['bb']
+    continuation = read_json(EVIDENCE/'BB_CONTINUATION_BOUND.json')
+    if continuation:
+        configs['bb'] = continuation
     out = dict(unix=time.time(), protocol='S-C1SWITCH2/v2', hosts={}, alerts=[])
     for host in ('cpuQ', 'gpuR', 'gpuA'):
         cpus = {'cpu': CPU_ROOTS[host]} if host in CPU_ROOTS else {}
@@ -104,6 +108,8 @@ def collect():
                 cpus[arm] = config['cpus'][host]
             if config and host in config['gpus']:
                 gpus[arm] = config['gpus'][host]
+        if continuation and bb_original and host in bb_original['gpus']:
+            gpus['bb_startup'] = bb_original['gpus'][host]
         for arm in ('fleet_ppo', 'cav_mappo'):
             prepared = read_json(EVIDENCE / ('SELECTOR_PREPARED_'+arm+'_'+host+'.json'))
             if prepared:
@@ -127,6 +133,7 @@ def collect():
     follower = correction['pid'] if correction else 43404
     parked = read_json(EVIDENCE / 'BB_PARKED_0600.json')
     out['bb_relocation_stop'] = read_json(EVIDENCE / 'BB_RELOCATION_STOP.json')
+    out['bb_continuation_stop'] = read_json(EVIDENCE/'BB_CONTINUATION_STOP.json')
     out['local_processes'] = {str(pid): local_process(pid) for pid in (31696, follower)}
     relay_complete = read_json(EVIDENCE / 'RELAY_wm/COMPLETE.json')
     if out['local_processes']['31696']['state'] != 'LIVE' and not relay_complete:

@@ -30,3 +30,19 @@ def test_closed_actual_excludes_open_jobs_and_gpu_idle_is_retained():
     assert status['closed_actual_sim_s_at_latest_receipts'] == 7380
     assert status['registered_base_remaining_sim_s'] == 468380-8580
     assert status['new_gpu_s'] == 240
+
+
+def test_live_continuation_keeps_original_debit_and_unknown_final_total():
+    data = snapshot()
+    data['hosts']['cpuQ'] = dict(cpu={},gpu={})
+    data['hosts']['gpuA'] = dict(cpu={},gpu={})
+    for host in ('gpuA','gpuR'):
+        data['hosts'][host]['gpu'] = dict(wm=dict(finished=dict(elapsed_s=100)),
+            bb_startup=dict(finished=dict(elapsed_s=20)),
+            bb=dict(started=dict(unix=1),finished=None))
+    status = current_status(data,'receipt.json')
+    assert status['new_gpu_s'] is None
+    assert status['finalized_gpu_s'] == 240
+    for host in ('gpuA','gpuR'):
+        data['hosts'][host]['gpu']['bb']['finished'] = dict(elapsed_s=30)
+    assert current_status(data,'receipt.json')['new_gpu_s'] == 300

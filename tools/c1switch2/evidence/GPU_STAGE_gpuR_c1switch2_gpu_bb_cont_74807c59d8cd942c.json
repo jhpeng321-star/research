@@ -1,0 +1,36 @@
+{
+  "host": "gpuR",
+  "model": "bb",
+  "root": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
+  "engine": {
+    "protocol": "S-C1SWITCH2/v2",
+    "arm": "bb",
+    "model": "bb",
+    "library": [
+      "native",
+      "ctrl0",
+      "mappo",
+      "pi",
+      "circles",
+      "wall"
+    ],
+    "history_s": 60,
+    "horizon_s": 60,
+    "K": 8,
+    "objective": "on_road_fleet_delay",
+    "evaluation_objective": "full_team_delay_fleet_plus_source",
+    "objective_design_sha256": "95aa84cf801aea773a0c7f9a208396ed4898e5cacdf8b6177940c7d9e1f5a273",
+    "observable_source_admissions": false,
+    "entries": false,
+    "controller_feedback": true,
+    "wall_start_stop": true,
+    "anonymous_seed": true,
+    "wm_checkpoint_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+    "bb_checkpoint_sha256": "afaaa32cb15079014d1a9e08f78b26e74fd341298d1aa0292a24009d9f783742",
+    "checkpoint_path": "/root/c1switch2_gpu_bb_caeab9eaa303f93c/bb.pt",
+    "service_gpu_cap_s": 5400.0,
+    "prior_gpu_s": 0
+  },
+  "new_gpu_s": 0,
+  "new_sim_s": 0
+}

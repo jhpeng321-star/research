@@ -1,0 +1,109 @@
+{
+  "engine": {
+    "protocol": "S-C1SWITCH2/v2",
+    "arm": "bb",
+    "model": "bb",
+    "library": [
+      "native",
+      "ctrl0",
+      "mappo",
+      "pi",
+      "circles",
+      "wall"
+    ],
+    "history_s": 60,
+    "horizon_s": 60,
+    "K": 8,
+    "objective": "on_road_fleet_delay",
+    "evaluation_objective": "full_team_delay_fleet_plus_source",
+    "objective_design_sha256": "95aa84cf801aea773a0c7f9a208396ed4898e5cacdf8b6177940c7d9e1f5a273",
+    "observable_source_admissions": false,
+    "entries": false,
+    "controller_feedback": true,
+    "wall_start_stop": true,
+    "anonymous_seed": true,
+    "wm_checkpoint_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+    "bb_checkpoint_sha256": "afaaa32cb15079014d1a9e08f78b26e74fd341298d1aa0292a24009d9f783742",
+    "checkpoint_path": "/root/c1switch2_gpu_bb_caeab9eaa303f93c/bb.pt",
+    "service_gpu_cap_s": 5400.0,
+    "prior_gpu_s": 0
+  },
+  "gpus": {
+    "gpuA": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c",
+    "gpuR": "/root/c1switch2_gpu_bb_cont_74807c59d8cd942c"
+  },
+  "cpus": {
+    "gpuR": "/root/c1switch2_run_bbd7ba8b48ed5829"
+  },
+  "relocation": {
+    "protocol": "S-C1SWITCH2/v2",
+    "arm": "bb",
+    "host": "gpuR",
+    "seeds": [
+      969136,
+      969137,
+      969138,
+      969139,
+      969140,
+      969141,
+      969142,
+      969143,
+      969144,
+      969145,
+      969146,
+      969147,
+      969148,
+      969149,
+      969150,
+      969151
+    ],
+    "prior_sim_s": 0,
+    "sim_s": 79800,
+    "gpu_s": 10800,
+    "not_before": "2026-11-01T11:30:00+08:00"
+  },
+  "unused_proofs": {
+    "gpuA": {
+      "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
+      "bb_gpu_s": 0,
+      "bb_sim_s": 0
+    },
+    "gpuR": {
+      "root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
+      "bb_gpu_s": 0,
+      "bb_sim_s": 0
+    }
+  },
+  "relocation_plan_sha256": "d5037b81825d4788131b49c675934ee71e6007da91fec60012de9ecdbc75abde",
+  "allocations": {
+    "gpuA": {
+      "schema": "S-C1SWITCH2/BB-MAIN1214-v1",
+      "host": "gpuA",
+      "authority": "- 12:14 INCIDENT: gpuR root overlay 100% full (100 MB free; /root/autodl-tmp 97%) - endangers all gpuR jobs (WM eval, S-WMTEACH, S-C1SWITCH2 admission blocked). MAIN archiving idle /root/c4_heavy (16 GB; no files newer than 10-31 12:00, no processes) to gpuA archive_cpuQ_20261101/gpuR_c4_heavy.tar with sha256 verification, source removed only on match. Also: S-C1SWITCH2 BB startup restart AUTHORISED as a registered continuation exception (retain the 43.024 GPU-s charge; within its caps).",
+      "plan_sha256": "74807c59d8cd942ca0dbc39427a7b1264880e2ac5ce2e3d9c72c0ee80e565110",
+      "predecessor_root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
+      "prior_gpu_s": 21.381694240495563,
+      "remaining_gpu_s": 5378.618305759504,
+      "finished": {
+        "pid": 432280,
+        "elapsed_s": 21.381694240495563
+      },
+      "finished_sha256": "2c91dca1c23013b898547325554ec173f98f174d9170c3ffbae9603237c0f070"
+    },
+    "gpuR": {
+      "schema": "S-C1SWITCH2/BB-MAIN1214-v1",
+      "host": "gpuR",
+      "authority": "- 12:14 INCIDENT: gpuR root overlay 100% full (100 MB free; /root/autodl-tmp 97%) - endangers all gpuR jobs (WM eval, S-WMTEACH, S-C1SWITCH2 admission blocked). MAIN archiving idle /root/c4_heavy (16 GB; no files newer than 10-31 12:00, no processes) to gpuA archive_cpuQ_20261101/gpuR_c4_heavy.tar with sha256 verification, source removed only on match. Also: S-C1SWITCH2 BB startup restart AUTHORISED as a registered continuation exception (retain the 43.024 GPU-s charge; within its caps).",
+      "plan_sha256": "74807c59d8cd942ca0dbc39427a7b1264880e2ac5ce2e3d9c72c0ee80e565110",
+      "predecessor_root": "/root/c1switch2_gpu_bb_caeab9eaa303f93c",
+      "prior_gpu_s": 21.642283007502556,
+      "remaining_gpu_s": 5378.357716992497,
+      "finished": {
+        "pid": 885526,
+        "elapsed_s": 21.642283007502556
+      },
+      "finished_sha256": "498fc45224fd82fc10805f0aa79ddd04ba24e65ed8e88616fef1388b0efbf6b2"
+    }
+  },
+  "continuation_plan_sha256": "74807c59d8cd942ca0dbc39427a7b1264880e2ac5ce2e3d9c72c0ee80e565110"
+}
