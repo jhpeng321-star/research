@@ -1,5 +1,13 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+FRESHMAIN0628: full292linebrief read; receiptRESUME_MAIN0628_20261102.md.
+Live1793573946 A48/B1/R0, B-u2/R-u1 BOTH24/24claimed; B-u2starts3+inflight7.
+OriginalB3551873/R3551874/broker3514272/grader3427015 and local46108/28752
+adopted/alive; noactiveSTOP. EightEXACT0originalGPUgatesretained; noduplicates.
+Parseralreadyfixed; realwarm_watchstatePASSbutlegacyowner/releasedSTOPfields
+stale. Investigateobservation-onlyguardcompatibility; traininguntouched.
+Budget7495040/7500000/free4960; charge3332720. Originaldeadlineunchanged.
+
 LIVE06:49:19UTC+8 (1793573359): A48/B1/R0 checkpoints; B-u2 andR-u1 BOTH
 24/24jobsclaimed. B-u2 executed2 +potentiallyexecutableinflight8 (quota10),
 noactiveSTOP/pause. CurrentB3551873,R3551874,broker3514272,grader3427015 retained.
