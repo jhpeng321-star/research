@@ -23,6 +23,14 @@
   Prefix/CRN checks pass. Zeros remain registered exact trust evidence and enter
   neither positive-only imitation nor the winning-plan library. No outcome-based
   filtering, behavioural threshold, retry or search change was introduced.
+- Flags/rate at unix1793574641: **2 confirmed physical-null plans /6 exact-graded
+  B plans (33.3%)**, a case-driven descriptive fraction. Both still count as
+  executed. The trace's acceleration field is **before CommandOwnership**;
+  final ownership speed-bound clipping can erase its command differences.
+  Strict final-issued-action equality is therefore not established by these
+  tapes. `ZERO_GRADE_NOOP_CLASSIFICATION.json` distinguishes physical-null,
+  raw-request equality and pre-ownership command equality instead of treating
+  them as interchangeable no-op definitions. No observations were filtered out.
 
 ### MAIN guard state compatibility repaired
 - `warm_watch state` now resolves current A/V3 and B/R QUOTA owners with boot/PID
