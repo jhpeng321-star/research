@@ -26,6 +26,24 @@ def sources():
     return files
 
 
+def recover(host):
+    home='/home/ubuntu' if host.startswith('cpu') else '/root'
+    print(ssh.remote(host,f'''import pathlib,os,json,subprocess
+home=pathlib.Path({home!r})
+roots=[dict(path=str(p),receipts=[x.name for x in p.glob('*.json')]) for p in home.glob('coopmwm*') if p.is_dir()]
+processes=[]
+for p in pathlib.Path('/proc').iterdir():
+ if not p.name.isdigit():continue
+ try:
+  cmd=(p/'cmdline').read_bytes().replace(bytes([0]),b' ').decode(errors='replace')
+  if 'tools.coopmwm.' in cmd:processes.append(dict(pid=int(p.name),cmd=cmd))
+ except (OSError,PermissionError):pass
+print(json.dumps(dict(host={host!r},load=os.getloadavg(),roots=roots,processes=processes)))
+if {host!r}.startswith('gpu'):
+ print(subprocess.check_output(['nvidia-smi'],text=True))
+''',timeout=40))
+
+
 def stage(host,root):
     files=sources()
     files['COOPMWM_DESIGN.md']=checked(LOCAL/'docs/paper_results/COOPMWM_DESIGN.md').read_text(encoding='utf-8')
@@ -173,10 +191,11 @@ def plan():
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=['cpu','stage','audit','audit-host','audit-protocols','plan'])
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=['cpu','stage','audit','audit-host','audit-protocols','plan','recover'])
     p.add_argument('--root',default=CPU_ROOT);p.add_argument('--host',default='cpuQ')
     a=p.parse_args()
-    if a.mode=='cpu':cpu(a.root)
+    if a.mode=='recover':recover(a.host)
+    elif a.mode=='cpu':cpu(a.root)
     elif a.mode=='audit':audit()
     elif a.mode=='audit-host':audit_host(a.host)
     elif a.mode=='audit-protocols':audit_protocols()

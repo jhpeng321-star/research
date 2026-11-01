@@ -1,5 +1,5 @@
 # S-COOPMWM — MAPPO-origin cooperative PPO (speed amendment, 2026-11-01)
-1. Authority: MAIN16:22/16:25/16:38/16:46; COOPNATIVE superseded before physics.
+1. Authority: MAIN16:22/16:25/16:38/16:46/17:07; COOPNATIVE superseded before physics.
 2. Both arms fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
 4. A: PPO shared team reward=-J, road speed deficit plus source waiting.
@@ -42,10 +42,10 @@
 41. Learning checks report team return/value/KL/gradient, residual execution and credit distribution.
 42. Seeds20261101/2/3: fixed24updates/arm/seed,24episodes/update, paired exploration seeds.
 43. Cap6,000,000 TOTAL: train4,147,200; checks532,800; dev230,400; final_test172,800.
-44. Mechanics2,400; calibration240,000; discovery240,000; unallocated434,400 (not auto-spent).
+44. Mechanics2,400; calibration240,000; discovery240,000; replication-test172,800; unallocated261,600.
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.
 46. All failures/warmup/twins charged in full before attempts; no retries/refunds/duplicate dispatch.
-47. Initial cpuQ two nice19 singlethread CPU workers; admission load<=20/RAM8GiB/disk2GiB.
+47. Primary A/B parallel first; cpuQ nice19 singlethread workers; load<=20/RAM8GiB/disk2GiB.
 48. WM GPUA or GPUR strict8GiB; nvidia-smi and WMPLAN priority release before allocation.
 49. GPU CPU helpers disabled until separate frozen parity qualification; own PIDs only.
 50. Both seed guards, fresh-name exposure, immutable sources/cache/approval bindings before physics.
@@ -59,10 +59,10 @@
 58. No credit outcomes inspected before random subset manifest; failed/incomplete quartet=>STOP.
 59. FINAL_TEST989600..989635:36fresh worlds,3/cell; metadata manifest hash registered before SUMO.
 60. Precharge4x36x1200=172800; MAPPO169/native/Aseed0u24/Bseed0u24, no model selection.
-61. Run once after ALL registered training ends; no early result publication/inspection or reruns.
+61. Run once after BOTH primary u24 checkpoints; publish, then train seeds2/3 and test A/B once each.
 62. Final paired world-bootstrap95CI B-MAPPO/B-A/A-MAPPO J600/J900, per-cell/safety descriptive.
 63. Final B detector-first exact C_G twins share240000 discovery reserve; complete chronological groups.
 64. Gate/scale fitted ONCE from seed0 initial batch; frozen for all3 seeds; none-pass stops ALL B arms.
 65. TRAIN-cell learning check rule: report paired J/safety, finite PPO/value/KL/gradients and execution.
 66. No learned-policy failure changes fixed24update checkpoints; report incomplete final if B stopped.
-67. Final-test liabilities protected before dispatch; CPU/registry/protocol/host-name audits before physics.
+67. Test liabilities protected; cpuP unreachable/excluded; registry/protocol+cpuQ/gpuA/gpuR audits qualify.

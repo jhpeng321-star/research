@@ -1,5 +1,15 @@
 # S-COOPMWM — live checks
 
+## 17:07 amendment — registered before physics
+- MAIN excludes unreachable cpuP; existing registry/protocol and cpuQ/gpuA/gpuR audits qualify.
+- Recovery found no task runtime, training jobs or GPU services on admitted hosts; SUMO remains zero.
+- Stopped the superseded metadata-only waiter by verified owned PID46700.
+- Primary A/B train first in parallel. Run primary four-arm final panel once at both u24 checkpoints;
+  train replications afterwards and evaluate A/B once per seed with MAPPO/native reused.
+- Added replication-test liability172,800: allocated **5,738,400 / 6,000,000**, unallocated261,600.
+- `BUDGET_AMENDMENT_1707.json` and the shared registry record this prospective amendment.
+- Historical entries below describe the prior gate/order; the 17:07 amendment supersedes them.
+
 ## Recovery and prospective registration — 2026-11-01
 - Preserved recovered work in `0a3df807`; previous CPU5 sources matched 108 staged files.
 - No COOPMWM runtime or processes existed at recovery; task SUMO/training updates: zero.

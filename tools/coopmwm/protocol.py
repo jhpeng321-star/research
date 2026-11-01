@@ -7,7 +7,7 @@ from tools.coopbandit.protocol import CELLS
 
 CAP=6_000_000
 CAPS=dict(train=4_147_200,checks=532_800,dev=230_400,mechanics=2400,
-          calibration=240_000,discovery=240_000,final_test=172_800)
+          calibration=240_000,discovery=240_000,final_test=172_800,replication_test=172_800)
 UPDATES=24
 TRAINING_SEEDS=(20261101,20261102,20261103)
 TRAIN_STARTS=(986000,987000,988000)
@@ -64,9 +64,10 @@ def authority(text):
     b=next((x for x in lines if '16:25 MAIN:' in x and 'SPEED MODE' in x and 'FULL-v4' in x),None)
     c=next((x for x in lines if '16:38 MAIN:' in x and 'S-COOPMWM' in x and '600' in x),None)
     d=next((x for x in lines if '16:46 MAIN:' in x and 'FINAL TEST PANEL' in x and '172,800' in x),None)
-    if not a or not b or not c or not d:
+    e=next((x for x in lines if '17:07 MAIN:' in x and 'S-COOPMWM' in x and '172,800' in x),None)
+    if not a or not b or not c or not d or not e:
         raise ValueError('owner MAPPO re-scope and speed amendment required')
-    return [a,b,c,d]
+    return [a,b,c,d,e]
 
 
 def registry_conflicts(text,seeds=None):

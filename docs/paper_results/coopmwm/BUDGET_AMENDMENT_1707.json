@@ -1,0 +1,11 @@
+{
+  "authority":"MAIN 2026-11-01 17:07",
+  "total_cap_sim_s":6000000,
+  "phases_sim_s":{"train":4147200,"checks":532800,"dev":230400,"mechanics":2400,"calibration":240000,"discovery":240000,"final_test":172800,"replication_test":172800},
+  "allocated_sim_s":5738400,
+  "unallocated_sim_s":261600,
+  "final_panel_sha256":"69b8a300eab45fb8208bd4bc66cefd32c6ebd16c71c23b5aac8567d41ee3c182",
+  "checkpoint_rule":"fixed update24; primary A/B first; primary four-arm test once; then replications A/B-only once per seed with MAPPO/native reused",
+  "exposure_qualification":"existing registry/protocol and cpuQ/gpuA/gpuR zero-exposure receipts; cpuP explicitly excluded by MAIN",
+  "sumo_sim_s_at_registration":0
+}

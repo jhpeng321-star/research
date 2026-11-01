@@ -1,0 +1,12 @@
+{
+  "authority": "MAIN 2026-11-01 17:07",
+  "preserved_head": "ad34fbf8",
+  "task_sumo_sim_s_at_resume": 0,
+  "cpuP": "unreachable; excluded by MAIN; no further audit required",
+  "owned_audit_waiter": {"pid":46700,"verified_command":"C:\\Python314\\python.exe -B -m tools.coopmwm.audit_watch","action":"stopped by exact PID after ownership verification; superseded by MAIN exclusion"},
+  "order": "primary A/B parallel; primary final panel once after both u24; replication seeds afterwards, A/B-only panel once per seed",
+  "additional_replication_test_sim_s":172800,
+  "allocated_sim_s":5738400,
+  "unallocated_sim_s":261600,
+  "total_cap_sim_s":6000000
+}
