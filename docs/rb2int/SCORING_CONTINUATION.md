@@ -38,3 +38,11 @@ and STOP/COMPLETE receipts; source edits are preserved and cause a safe stop.
 
 Before starting, inspect local PROCESS/CIM receipts for an existing collector.
 The exclusive `runs/rb2int_finish_v1/DISPATCH_ONCE.json` prevents a duplicate.
+
+## Actual continuation ownership
+
+V1 exited after its successful collection at CRLF-byte whitespace validation;
+see COLLECTOR_V1_RECOVERY.md. V2 is LIVE local9660/create_filetime134379946028423282,
+exclusive `runs/rb2int_finish_v2`. First poll16:16:43:7/216worldjobs collected and
+committed. Same verified cache, no inference replay. Inspect V2 PROCESS and
+STOP/COMPLETE before creating any further continuation.

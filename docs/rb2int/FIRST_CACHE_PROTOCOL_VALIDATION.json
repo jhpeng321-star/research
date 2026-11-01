@@ -1,0 +1,56 @@
+{
+ "passed": true,
+ "protocol_only": true,
+ "scores_computed": false,
+ "registry_sha256": "b7f58361b388884f0456f7adc9a6cf3e2ede57dfc25df86369edae690d596749",
+ "real_sha256": "30b46f592d99f202c2b123b28e06248c4f9360190de8b7a6fb64871d62573282",
+ "models": {
+  "WM2": {
+   "tasks": 88,
+   "complete_worlds": [
+    969432,
+    969433,
+    969434,
+    969435,
+    969436,
+    969437,
+    969438,
+    969439,
+    969590,
+    969595,
+    969599
+   ],
+   "missing_tasks": 376
+  },
+  "FULL-v4": {
+   "tasks": 72,
+   "complete_worlds": [
+    969432,
+    969433,
+    969434,
+    969435,
+    969436,
+    969437,
+    969438,
+    969439,
+    969590
+   ],
+   "missing_tasks": 392
+  },
+  "FULL-v5": {
+   "tasks": 16,
+   "complete_worlds": [
+    969436,
+    969590
+   ],
+   "missing_tasks": 448
+  },
+  "FULL-v5-LP": {
+   "tasks": 8,
+   "complete_worlds": [
+    969436
+   ],
+   "missing_tasks": 456
+  }
+ }
+}

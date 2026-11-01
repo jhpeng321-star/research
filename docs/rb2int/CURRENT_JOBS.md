@@ -22,6 +22,19 @@ Do not launch either supervisor again.
   v5/LP pairs stay on the same host.4gpuA/3gpuR own5GiB workers/nice19/singlethread.
   No new world starts after Nov2 09:00; running own worlds finish, all attrition retained.
 
+## Active read-only collector/delivery continuation
+
+- Local9660/create_filetime134379946028423282, `runs/rb2int_finish_v2`.
+  One20min collector, no inference dispatch. First successful poll16:16:43:
+  7/216complete K8 worlds, committed receipts. Checks and reuses the same cache.
+- V1 local46500 EXITED at a CRLF whitespace-check false positive after collection;
+  exact bytes/caches/STOP retained. Scoped Git attribute correction passes; no
+  hook/check bypass or forecast replay. Do not restart V1.
+- Watch log/PROCESS/START_ONCE/STOP/COMPLETE before any collector action. V2 will
+  score/publish/commit only when full216worldjobs exist; incomplete deadline is
+  explicit, never relabeled full. Watched analysis/source or progress-report edits
+  cause a safe stop; preserve edits and resume explicitly if needed.
+
 Model stage is immutable and remains valid across documentation/scoring commits:
 
 `gpuA:/root/autodl-tmp/c4/rb2int20261101/phys_code_b2df7458a41f`

@@ -11,6 +11,11 @@ Read `docs/rb2int/CURRENT_JOBS.md` and latest final status receipts BEFORE any a
 Scoring-only targets50 extractor926841 EXITED/PASS;350endpoint/450real records
 joined/validated. Bounded no-inference collection/scoring continuation prepared:
 `docs/rb2int/SCORING_CONTINUATION.md`. Inspect its PROCESS before starting another.
+**Collector V2 LIVE local9660/create_filetime134379946028423282**, one20min
+read-only poller at `runs/rb2int_finish_v2`. First poll16:16:43 collected7/216
+complete K8 world jobs and committed receipts. V1 exited only at CRLF receipt
+whitespace check; diagnosed scoped-attribute repair preserved all data/cache.
+Do not restart either remote supervisor, completed model smokes or collector V2.
 
 **FULL-v5 READY for engineering/teacher-quality rerun.** Frozen sourceb2df7458,
 gpuA stage `/root/autodl-tmp/c4/rb2int20261101/phys_code_b2df7458a41f`, recipe
