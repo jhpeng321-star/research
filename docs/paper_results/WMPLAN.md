@@ -48,7 +48,12 @@ of empirical K8 win probabilities. Preserve that limitation in live reporting.
 
 <!-- WMPLAN-PROGRESS:BEGIN -->
 ## Current continuation status
-- Exclusive continuation is waiting for the already-running FULL-v5 quality check.
-- Exact199200upper preregistered; no new SUMO or model-selection outcome yet.
-- No peer process will be signalled and no quality computation duplicated.
+- Fresh-session recovery verified local continuation PID21412 and stopped only that
+  owned process before revising its obsolete launch order. Its claim and log are retained.
+- Both remote S-WMPLAN roots are absent: no live dispatch or SUMO has occurred.
+  Existing FULL-v5 quality is alive with75/96 complete futures; it is not duplicated.
+- Owner14:48 amendment is being implemented: gpuA+gpuR inference, all24 expected
+  worlds and their primary report before the strict arm. Registered199200sim-s upper retained.
+- gpuR has16GiB free on its root filesystem, but only1.8GiB on `/root/autodl-tmp`;
+  inference outputs must use the root filesystem. No peer process is modified.
 <!-- WMPLAN-PROGRESS:END -->

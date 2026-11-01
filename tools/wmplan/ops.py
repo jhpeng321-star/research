@@ -13,10 +13,35 @@ QUALITY = '/root/autodl-tmp/wmteach_v5quality20261101_v2'
 REG = Path('E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md')
 
 
-def remote(source, timeout=60):
+def remote(source, timeout=60, host=None):
     compile(source,'<wmplan-remote-preflight>','exec')
     from tools.wmteach.ops import remote as call
-    return call(source,timeout=timeout)
+    return call(source,timeout=timeout,host=host)
+
+
+def recover():
+    """Read named receipts only; never attach to or change peer processes."""
+    result = {}
+    for host in ('gpuA','gpuR'):
+        result[host] = json.loads(remote(f'''import pathlib,json,os,shutil,subprocess,time
+root=pathlib.Path({ROOT!r});q=pathlib.Path({QUALITY!r})
+names=('BINDING.json','DISPATCH.json','LAUNCH_ONCE.json','COMPLETE.json','STOP.json')
+print(json.dumps(dict(unix=time.time(),root_exists=root.exists(),
+ receipts={{n:json.loads((root/n).read_text()) for n in names if (root/n).is_file()}},
+ quality_futures=len(list((q/'tasks').glob('*/k*.json'))),
+ quality_complete=(q/'QUALITY.json').is_file(),load=os.getloadavg(),
+ disk=shutil.disk_usage('/root/autodl-tmp').free,
+ gpu=subprocess.check_output(['nvidia-smi','--query-gpu=name,memory.free,utilization.gpu','--format=csv,noheader,nounits'],text=True),
+ runtime_paths={{p:pathlib.Path(p).exists() for p in (
+ '/root/rbeval20261031/phys_code_22cc32f65a80',
+ '/root/autodl-tmp/c4/rb2int20261101/phys_code_b2df7458a41f',
+ '/root/wmcalib/data','/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt',
+ '/root/autodl-tmp/wmteach20261101_v1/deps')}})))
+''',host=host))
+    save('RECOVERY_1448.json',dict(hosts=result,old_local_continuation=dict(
+        pid=21412,creation='2026-11-01T14:03:36',command='tools.wmplan.watch',
+        action='identity-checked stop before launch-policy amendment'),new_sumo_sim_s=0))
+    print(json.dumps(result))
 
 
 def save(name, value):
@@ -322,7 +347,7 @@ print(json.dumps(out))
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser()
-    p.add_argument('action', choices=['inspect','register','compare','stage','cpu','freeze','launch','status','collect'])
+    p.add_argument('action', choices=['recover','inspect','register','compare','stage','cpu','freeze','launch','status','collect'])
     a = p.parse_args().action
     if a in ('status','collect'):
         status(a == 'collect')
