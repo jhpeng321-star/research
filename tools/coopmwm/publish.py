@@ -25,6 +25,8 @@ def summarize(name,value):
         for h,v in value['noise'].items():
             lines.append(f"- H{h} conditional WM K8 variance: joint-team advantage {v['team_return_advantage_variance']:.6g}, "
                 f"paired C_G {v['paired_credit_variance']:.6g} veh-s²; not empirical SUMO noise.")
+            lines.append(f"- H{h} WM/exact C_G {value['wm'][h]['C_G']:.6g}/{value['exact'][h]['C_G']:.6g}; "
+                f"D_i {value['wm'][h]['D_i']}/{value['exact'][h]['D_i']}; zero C_G is a tie, not sign evidence.")
         return lines
     if '_UPDATE_' in name:
         routing=value.get('proposal_routing',{});trust=value.get('trust',{})
@@ -42,7 +44,7 @@ def summarize(name,value):
 
 def commit(paths,message):
     # Respect any concurrent user-staged work; stage only generated task artifacts.
-    def git(*args):return subprocess.run(['git',*args],cwd=ops.LOCAL,text=True,capture_output=True,check=True).stdout
+    def git(*args):return subprocess.run(['git',*args],cwd=ops.LOCAL,text=True,encoding='utf-8',errors='replace',capture_output=True,check=True).stdout
     git('status','--short');git('diff','--',*paths);git('log','--oneline','-10')
     staged=git('diff','--cached','--name-only').splitlines()
     if staged:raise ValueError('publisher found pre-existing staged work; preserved, commit deferred')

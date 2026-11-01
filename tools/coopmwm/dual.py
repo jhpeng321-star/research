@@ -162,11 +162,22 @@ def start():
 
 
 def fit_sampling():
-    timing=read(EVIDENCE/f'DUAL_{TAG}_THROUGHPUT.json')
+    manifest=read(EVIDENCE/'TIMING_REQUESTS_1755.json')
+    measured={}
+    for key in manifest['state_ids']:
+        p=EVIDENCE/'dual_forecasts'/(key+'.json')
+        if p.exists():
+            v=read(p)
+            if v['host'] not in measured or v['unix']<measured[v['host']]['unix']:measured[v['host']]=v
+    assert set(measured)=={'gpuA','gpuR'},'real H300 timing pending on one or both hosts'
+    timing=dict(hosts={h:dict(wall_s=v['wall_s'],available=len(manifest['available_options']),K=8,horizon_s=300) for h,v in measured.items()},
+        aggregate_queries_per_s=sum(1/v['wall_s'] for v in measured.values()),sim_s=0,
+        source='first availability-qualified timing completion per host; empty original probe excluded')
     assert all(v['available']>0 for v in timing['hosts'].values()),'timing requires real inherited options'
     metadata=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,sys
 r=pathlib.Path({ROOT!r});sys.path.insert(0,{('/home/ubuntu/coopmwm20261101_cpu19/pytools')!r})
 from tools.coopmwm.exploration import regime
+from tools.coopbandit.protocol import group
 paths=list((r/'jobs').glob('s0_u001_*/RESULT.json'));assert len(paths)==48
 starts=[(p.parent/'CLAIM.json').stat().st_mtime for p in paths]
 ends=[(p.parent/'CLOSE.json').stat().st_mtime for p in paths]
@@ -175,7 +186,7 @@ for p in paths:
  e=json.loads(p.read_text())
  if e['arm']!='B':continue
  for s in e['steps']:
-  if len(s['group'])==2:counts[regime(s['rows'])]+=1
+  if len(group(s['rows']))==2:counts[regime(s['rows'])]+=1
 print(json.dumps(dict(initial48episode_wall_s=max(ends)-min(starts),initial_workers=4,new_workers=12,complete_group_counts=counts)))
 ''',timeout=35))
     counts=metadata['complete_group_counts'];den=counts['merge-dense']+counts['ordinary']/4
@@ -186,9 +197,40 @@ print(json.dumps(dict(initial48episode_wall_s=max(ends)-min(starts),initial_work
     write(EVIDENCE/'SAMPLING_1755.json',value);print(json.dumps(value))
 
 
+def enqueue_timing():
+    assert not (EVIDENCE/'TIMING_REQUESTS_1755.json').exists(),'one-use bounded timing dispatch'
+    out=ops.ssh.remote('cpuQ',f'''import pathlib,json,sys
+r=pathlib.Path({ROOT!r});sys.path[:0]=['/home/ubuntu/coopmwm20261101_v3/pytools','/home/ubuntu/e3final/runtime/src','/home/ubuntu/e3final/runtime']
+from tools.coopmwm.wm import proposal_candidates
+from tools.coopbandit.protocol import group
+from tools.coopmwm.protocol import digest
+from tools.coopmwm.storage import write
+selected=None;available=None
+for p in sorted((r/'jobs').glob('s0_u001_B_*/RESULT.json')):
+ e=json.loads(p.read_text())
+ for s in e['steps']:
+  members=group(s['rows'])
+  if len(members)!=2:continue
+  record=dict(world_id=e['world']['seed'],time_s=s['time_s'],rows=s['rows'],targets=s['targets'],group=members,mode='proposal',setting=0)
+  acts=proposal_candidates(record)
+  if len(acts)>2:selected=record;available=[a['id'] for a in acts[2:]];break
+ if selected is not None:break
+assert selected is not None,'no existing TRAIN option-available timing fixture'
+ids=[]
+for i in range(6):
+ record=dict(selected,state_id=digest(dict(fixture=selected,timing_replicate=i,amendment='1755')))
+ ids.append(record['state_id']);write(r/'requests'/(record['state_id']+'.json'),record)
+print(json.dumps(dict(state_ids=ids,world_id=selected['world_id'],time_s=selected['time_s'],available_options=available,
+ selection='first chronological upstream-group/available inherited option in original B u1 TRAIN; observable geometry only',
+ forecasts=6,K=8,horizon_s=300,sim_s=0)))
+''',timeout=45)
+    value=json.loads(out);write(EVIDENCE/'TIMING_REQUESTS_1755.json',value);print(out)
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('bind','start','run','fit'));p.add_argument('--cpu',default='CPU_coopmwm20261101_cpu19.json');a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('bind','start','run','fit','bench'));p.add_argument('--cpu',default='CPU_coopmwm20261101_cpu19.json');a=p.parse_args()
     if a.mode=='bind':bind(a.cpu)
     elif a.mode=='start':start()
     elif a.mode=='fit':fit_sampling()
+    elif a.mode=='bench':enqueue_timing()
     else:run()
