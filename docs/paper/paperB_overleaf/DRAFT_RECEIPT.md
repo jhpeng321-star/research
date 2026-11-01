@@ -46,3 +46,16 @@ eight-world reserved rebuild contrast within its twenty-world campaign, historic
 teacher forcing, provisional initialization lineage, inconclusive current feedback
 endpoints, final FULL-v4 FAIL and PARTIAL switching. Deliver PDF first, matching
 Markdown, number-source checklist and upload ZIP; graphs remain empty by request.
+
+## Step 3 — complete manuscript and first PDF
+
+Wrote the complete IEEE conference manuscript, verified cited-only bibliography,
+number/source checklist and deterministic Markdown/delivery builder. The final
+owner scope is reflected in Results prose, two empty figure boxes and an empty
+picker-comparison table. Copied only explicitly named existing optional artwork.
+MiKTeX pdfLaTeX/BibTeX/pdfLaTeX/pdfLaTeX compiled the draft to six pages including
+references, with no overfull boxes or unresolved citations/references. The first
+PDF and upload ZIP were delivered, and the Desktop PDF matched the project hash.
+Visually reviewed all six rendered pages; text, equations, red placeholders and
+references are readable and within margins. The companion Markdown is generated
+from the same TeX/BibTeX output; final source-comment/metadata checks follow.
