@@ -1,0 +1,156 @@
+{
+  "status": "DELIVERED",
+  "physics_engineering_ready": true,
+  "fitted_lc_adopted": false,
+  "reason": "Conditional FP reduction does not offset worse autonomous development lane counts/CRPS",
+  "recommendation": "keep fitted LC OFF pending actual integrated-source development ON/OFF comparison",
+  "engineering_commits": [
+    "a29116e9",
+    "6b4bfbd5"
+  ],
+  "conditional_publication_commit": "a60a6a62",
+  "free_pilot_source": "a60a6a62759ee1312c1d453df2fa7941b517880e",
+  "prefix_audit_source": "b5e53b3e8762a077522832b0c28f9630cfd37fff",
+  "physical_code_unchanged_since_freeze": true,
+  "core_cpu_tests": {
+    "tests": 85,
+    "errors": 0,
+    "failures": 0,
+    "skipped": 0
+  },
+  "additional_guard_scorer_ramp_cpu_tests_passed": 5,
+  "immutable_artifact_sha256": {
+    "docs/rb2lane/fit_v2/RESULTS.json": "4513c34d25389c8a2a394be61486a3f0b09878aa68472aa08168728515885a9a",
+    "docs/rb2lane/fit_v2/motivation.csv": "5f0991c9444b123bbeb790f0f621e9b1045593f93900003a1aa7ace37a278a1b",
+    "docs/rb2lane/fit_v2/lane_segment.csv": "2de52ce2ffba86ccde80a1ded0be298c3eccab7a0a2aff1c45d183214c9d1517",
+    "docs/rb2lane/fit_v2/timing_10s.csv": "9278c78cb045adb45a9c208167f32faa3c292d8ab6bc0fe374e6c2fec306cda6",
+    "docs/rb2lane/free_v1/RESULTS.json": "1332423c4b21d7e2ab29bd2429daa295cc84a86ac72b2c17861b0f1620e3076c",
+    "docs/rb2lane/free_v1/lane_rate_10s.csv": "63b6f072dcc956f7321ec753ffab5fe0666d52c78313ff3e7b34dab6cb14eb3a",
+    "docs/rb2lane/free_v1/BOUNDARY_TARGETS.json": "a54299eb25275a6a868dbb1bb9130c16613f3c23e33782da1b23d025a8ef2b93",
+    "docs/rb2lane/runtime_v1_SMOKE.json": "62777872ad245eb086e403eb1792f2bcf78e36d931d76b1566eacf9ca4d6a264",
+    "docs/rb2lane/INITIAL_LANE_AUDIT.json": "4f960f92a0ad33a1a0f7c4f9e95ecbe909a33bdfde9cb8b108146b6174160798",
+    "docs/rb2lane/prefix_v1_results/COMPLETE.json": "1caee9f4035c692196917178df310fd0e84e5072312105ec693476c64e5d1849",
+    "docs/rb2lane/CPU_FINAL.xml": "a771e3bb969ab74f23b544ec40d918e22f84a8c92ed2974d88d739e72d821aba",
+    "artifacts/rbfit/lane_raw_c5602102891e/lc2013_population.json": "b903fa49fe1f3f1a15428ae48de5c8f86863aa5c5821dbb0acc8275c77d4483f"
+  },
+  "shared_result": {
+    "path": "E:\\agent-work\\rb-shared\\RB2_LANE_DEVELOPMENT_RESULT.md",
+    "sha256": "4e6a141f16aa7ceec37921b9167ac71bf11aea11b1df65b73776b7c925c4692f"
+  },
+  "completed_owned_jobs": {
+    "smoke_v1": {
+      "complete": true,
+      "alive": false,
+      "receipt_sha256": "e35211c9038967959ae777bfcb5de55830663b8ea6d1f5acb11fd245fdf29221"
+    },
+    "native300_a_v1": {
+      "complete": true,
+      "alive": false,
+      "receipt_sha256": "6768c3423de4806ec6f6138be00e75a4ce984bf53223a08ed4f4b8e0ad1390c9"
+    },
+    "native300_b_v1": {
+      "complete": true,
+      "alive": false,
+      "receipt_sha256": "819a41191ad2ed53959421fd41eb771dfb4593b4e8a72cf58959d5b047fcf089"
+    },
+    "arms60_a_v1": {
+      "complete": true,
+      "alive": false,
+      "receipt_sha256": "ffa77b0b661356818cd40ad9e75d19c2082f1086809edc56f06618483bf7155c"
+    },
+    "arms60_b_v1": {
+      "complete": true,
+      "alive": false,
+      "receipt_sha256": "258e379a3ec623d66e1f941155274b783991e844092e159d201f089dabab773b"
+    },
+    "runtime_v1": {
+      "complete": true,
+      "alive": false,
+      "receipt_sha256": "0fb55d5e30ce178e59d1f226cca5bbd23c86331e2422db7a6b30aa9d20f6f1ec"
+    },
+    "free_canary_v1": {
+      "complete": true,
+      "alive": false,
+      "receipt_sha256": "a89454ef3865a8250e6260e7f2e95905d6f02053913f922430cfa80eb28116cf"
+    },
+    "free_a_v1": {
+      "complete": true,
+      "alive": false,
+      "receipt_sha256": "0e89c98f54a5e3e5c1a6bd68a02e1f5c9fe12381b330e94fcdeb545f0b290c00"
+    },
+    "free_b_v1": {
+      "complete": true,
+      "alive": false,
+      "receipt_sha256": "810caec41d3c883a050eeca1f49970747b5d98ddc2d4fe40a4ed07822e5ac537"
+    },
+    "free_c_v1": {
+      "complete": true,
+      "alive": false,
+      "receipt_sha256": "a3c38f5f46b70b443c39e530ecb93e85fc0db5fa52251e95033e662b5d9a062c"
+    },
+    "free_d_v1": {
+      "complete": true,
+      "alive": false,
+      "receipt_sha256": "2d590ac4af7d13d72a34fa0dee447ac733da802aefb38ee6c9ad5ca948879057"
+    },
+    "prefix_v1": {
+      "complete": true,
+      "alive": false,
+      "receipt_sha256": "11fa3a4bed08f51e08f070432fd3a6b517c25b19058eb4380f79bf102ccad78b"
+    }
+  },
+  "fit_worlds": [
+    969400,
+    969401,
+    969402,
+    969403,
+    969404,
+    969405,
+    969406,
+    969407,
+    969408,
+    969409,
+    969410,
+    969411,
+    969412,
+    969413,
+    969414,
+    969415,
+    969416,
+    969417,
+    969418,
+    969419,
+    969420,
+    969421,
+    969422,
+    969423,
+    969424,
+    969425,
+    969426,
+    969427,
+    969428,
+    969429,
+    969430,
+    969431
+  ],
+  "new_autonomous_comparison_worlds": [
+    969420,
+    969421,
+    969422,
+    969423,
+    969424,
+    969425,
+    969426,
+    969427,
+    969428,
+    969429,
+    969430,
+    969431
+  ],
+  "reserved_selection": false,
+  "wmdata2_access": false,
+  "neural_training": false,
+  "sumo_execution": false,
+  "gpu_execution": false,
+  "full_distributional_qualification": false
+}

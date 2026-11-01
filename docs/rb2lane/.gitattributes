@@ -1,3 +1,5 @@
 # Immutable scientific receipts bind exact bytes on Windows/Linux checkouts.
 *.json -text
+*.csv -text
+*.xml -text
 *_results/** -text

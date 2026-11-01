@@ -1,0 +1,63 @@
+{
+  "alive": false,
+  "complete": true,
+  "load": [
+    11.85693359375,
+    9.87841796875,
+    10.12109375
+  ],
+  "progress": [
+    "{\"world\": 969430, \"sample\": 0, \"variant\": \"source_default\", \"conserved\": true, \"count\": 176, \"elapsed_s\": 39.3970308303833}",
+    "{\"world\": 969430, \"sample\": 0, \"variant\": \"fitted_lc\", \"conserved\": true, \"count\": 104, \"elapsed_s\": 92.44193935394287}",
+    "{\"world\": 969430, \"sample\": 1, \"variant\": \"source_default\", \"conserved\": true, \"count\": 180, \"elapsed_s\": 132.01076865196228}",
+    "{\"world\": 969430, \"sample\": 1, \"variant\": \"fitted_lc\", \"conserved\": true, \"count\": 88, \"elapsed_s\": 172.18761134147644}",
+    "{\"world\": 969431, \"sample\": 0, \"variant\": \"source_default\", \"conserved\": true, \"count\": 198, \"elapsed_s\": 218.90058135986328}",
+    "{\"world\": 969431, \"sample\": 0, \"variant\": \"fitted_lc\", \"conserved\": true, \"count\": 117, \"elapsed_s\": 282.0748267173767}",
+    "{\"world\": 969431, \"sample\": 1, \"variant\": \"source_default\", \"conserved\": true, \"count\": 166, \"elapsed_s\": 326.13499903678894}",
+    "{\"world\": 969431, \"sample\": 1, \"variant\": \"fitted_lc\", \"conserved\": true, \"count\": 99, \"elapsed_s\": 370.3881859779358}"
+  ],
+  "process": {
+    "pid": 449696,
+    "start_ticks": "889045995",
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "/root/miniconda3/bin/python",
+      "-B",
+      "-u",
+      "-m",
+      "tools.rblane.round2_free_pilot",
+      "--out",
+      "/root/rbeval20261031/rb2lane_free_d_v1/results",
+      "--samples",
+      "2",
+      "--horizon",
+      "300",
+      "--worlds",
+      "969430",
+      "969431"
+    ],
+    "root": "/root/rbeval20261031/rb2lane_free_d_v1",
+    "stage": {
+      "host": "gpuA",
+      "commit": "a60a6a62759ee1312c1d453df2fa7941b517880e",
+      "archive_sha256": "07e1b1a9ebe6f3f9ac0dfe40900bcad492f056711542ff8e806fe660f554539d",
+      "runtime": "/root/rbeval20261031/phys_code_a60a6a62759e",
+      "endpoint_only": false
+    },
+    "worlds": [
+      969430,
+      969431
+    ],
+    "samples": 2,
+    "load": [
+      8.7080078125,
+      12.0361328125,
+      12.55419921875
+    ],
+    "disk_free": 3954438144,
+    "cpu_only": true
+  },
+  "collected_at": 1793512205.47051
+}

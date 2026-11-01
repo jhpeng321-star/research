@@ -58,6 +58,10 @@ does not pretend that its existing fixed-point rules were missing.
   accumulation/decay. Simulation dt still controls CF/braking. The caller must
   supply the actual isActive decision mask for nondefault action steps; no new
   timing threshold or inferred action-step schedule is invented.
+- The same legal-decision guard matters under DEFAULT settings on the one-lane
+  upstream ramp: MSLaneChanger380 never calls wantsChange there. Old code carried
+  an upstream speed peak into the merge-edge lookahead despite no LC decision.
+  The fixed kernel starts lookahead from the first legal merge-edge speed.
 - MSLaneChanger851–925: ego's assertiveness divides both secure gaps; each
   follower's minGap is removed before comparison. IDM.cpp218–220 returns
   max(0,v*tau+v*(v-vLeader)/(2sqrt(ab))). Body overlap still vetoes independently.

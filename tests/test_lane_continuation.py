@@ -86,6 +86,18 @@ def test_non_action_step_freezes_all_wishes_and_lookahead():
     assert not frozen['lc2013_wish'].any()
 
 
+def test_single_lane_upstream_ramp_cannot_accumulate_a_fictitious_lookahead_peak():
+    # SUMO never calls wantsChange on the one-lane upstream ramp
+    # (MSLaneChanger380). First merge-edge lookahead starts at local speed.
+    kin, mask = scene([(-1., 2, 30.)])
+    physics = PhysicsConfig(sumo_fidelity=True)
+    upstream = lane_change(kin, mask, physics)
+    assert upstream['lc2013_lookahead'].item() == 0.
+    kin[..., 0], kin[..., 4] = 10., 5.
+    entering = lane_change(kin, mask, physics, memory=upstream)
+    assert entering['lc2013_lookahead'].item() == 5.
+
+
 def test_longer_action_step_uses_source_reaction_time_secure_gap():
     kin, mask = scene([(40., 2, 10.), (59., 1, 10.)])
     kin[0, 0, 5], kin[0, 1, 5] = 1., -1.

@@ -1,0 +1,69 @@
+{
+  "alive": false,
+  "complete": true,
+  "load": [
+    9.89599609375,
+    11.044921875,
+    10.66259765625
+  ],
+  "progress": [
+    "{\"world\": 969420, \"sample\": 0, \"variant\": \"source_default\", \"excluded\": 1, \"elapsed_s\": 1.6896634101867676}",
+    "{\"world\": 969420, \"sample\": 0, \"variant\": \"fitted_lc\", \"excluded\": 1, \"elapsed_s\": 18.793447971343994}",
+    "{\"world\": 969420, \"sample\": 1, \"variant\": \"source_default\", \"excluded\": 1, \"elapsed_s\": 19.786956787109375}",
+    "{\"world\": 969420, \"sample\": 1, \"variant\": \"fitted_lc\", \"excluded\": 1, \"elapsed_s\": 20.80969738960266}",
+    "{\"world\": 969424, \"sample\": 0, \"variant\": \"source_default\", \"excluded\": 1, \"elapsed_s\": 22.55086851119995}",
+    "{\"world\": 969424, \"sample\": 0, \"variant\": \"fitted_lc\", \"excluded\": 1, \"elapsed_s\": 39.10728144645691}",
+    "{\"world\": 969424, \"sample\": 1, \"variant\": \"source_default\", \"excluded\": 1, \"elapsed_s\": 40.02122926712036}",
+    "{\"world\": 969424, \"sample\": 1, \"variant\": \"fitted_lc\", \"excluded\": 1, \"elapsed_s\": 40.99460291862488}",
+    "{\"world\": 969429, \"sample\": 0, \"variant\": \"source_default\", \"excluded\": 2, \"elapsed_s\": 42.61850833892822}",
+    "{\"world\": 969429, \"sample\": 0, \"variant\": \"fitted_lc\", \"excluded\": 2, \"elapsed_s\": 58.608562707901}",
+    "{\"world\": 969429, \"sample\": 1, \"variant\": \"source_default\", \"excluded\": 2, \"elapsed_s\": 59.56902837753296}",
+    "{\"world\": 969429, \"sample\": 1, \"variant\": \"fitted_lc\", \"excluded\": 2, \"elapsed_s\": 60.55863666534424}"
+  ],
+  "process": {
+    "pid": 455392,
+    "start_ticks": "889237525",
+    "command": [
+      "nice",
+      "-n",
+      "19",
+      "/root/miniconda3/bin/python",
+      "-B",
+      "-u",
+      "-m",
+      "tools.rblane.round2_prefix_audit",
+      "--out",
+      "/root/rbeval20261031/rb2lane_prefix_v1/results",
+      "--samples",
+      "2",
+      "--horizon",
+      "300",
+      "--worlds",
+      "969420",
+      "969424",
+      "969429"
+    ],
+    "root": "/root/rbeval20261031/rb2lane_prefix_v1",
+    "stage": {
+      "host": "gpuA",
+      "commit": "b5e53b3e8762a077522832b0c28f9630cfd37fff",
+      "archive_sha256": "9133674f54dca21aa3d5ef1633ab85f3e25e99bb516b609dea9cbd57c8395726",
+      "runtime": "/root/rbeval20261031/phys_code_b5e53b3e8762",
+      "endpoint_only": false
+    },
+    "worlds": [
+      969420,
+      969424,
+      969429
+    ],
+    "samples": 2,
+    "load": [
+      13.3857421875,
+      9.8642578125,
+      10.126953125
+    ],
+    "disk_free": 3841630208,
+    "cpu_only": true
+  },
+  "collected_at": 1793512451.593833
+}

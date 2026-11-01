@@ -1,5 +1,5 @@
 # S-RB2-LANE — source repair and frozen LC continuation
-Engineering candidate delivered; lane dynamics **not qualified**. Base FULL-v4 `22cc32f6`.
+Source fixes delivered; frozen fitted LC **NOT ADOPTED**. Base FULL-v4 `22cc32f6`.
 
 ## Code and parameters
 - Commits `a29116e9`, `6b4bfbd5`; source comparison `docs/RB2_LANE_SOURCE_AUDIT.md`.
@@ -37,7 +37,17 @@ Engineering candidate delivered; lane dynamics **not qualified**. Base FULL-v4 `
   not model bias; no independent calibration or world-CI claim.
 
 ## Verification and handoff
-- 85CPU tests PASS (`docs/rb2lane/CPU_FINAL.xml`); four real-checkpoint60s futures
+- Entrants-ON native development12,K2,H300:48/48 free futures finite/conserved,
+  no_slot=0, common IDM/arrival draws; both variants causally warm. Actual1,554 LC;
+  default1,986 vs fitted1,048.5 expected. Count bias+36→−42.125/world,
+  MAE36→44.625; empirical CRPS33.125→41.3542 (fair29.4167→37.75): worse.
+- Full-traffic mainline upstream/merge/downstream rates per veh-h:
+  real16.456/16.718/7.893; default26.046/13.899/9.017; fitted10.494/8.070/3.849.
+  `free_v1/RESULTS.json` + lane_rate_10s.csv. No CI claim for K2/singleton cells.
+- Four artificial initial internal→normal counts per variant excluded by ONE-step
+  source-bound replay; no physical forecast changed. First-tape-frame target checked.
+- 85 core CPU tests PASS (`CPU_FINAL.xml`) plus5 guard/scorer/ramp regressions PASS;
+  Ruff PASS. Four real-checkpoint60s futures
   FIT969420/969421,K2 PASS finite/conserved/no learned corrections/warm LC state.
   Actual smoke source `6b4bfbd5`, CPU-only; no arrivals, so no distributional gate.
 - Independent targets:4,432 nonboundary HDV events match, max |Δs|.005m;
@@ -48,4 +58,6 @@ Engineering candidate delivered; lane dynamics **not qualified**. Base FULL-v4 `
 - Source/runtime differences from the older fitted kernel are explicitly hashed.
   Serial negotiation, critical internal leaders and nonlegacy acceptance incomplete.
 - New exposure only FIT969400–969431; no WMDATA2 or reserved selection. All own
-  workers exited; no GPU used, no peer PIDs touched. INT owns final adoption/evaluation.
+  workers exited; CPU-only. INT owns final adoption/evaluation; shared adverse result
+  requests integrated-source LC ON/OFF development comparison before final selection.
+- Byte-bound delivery: `docs/rb2lane/DELIVERY.json`; all12 owned jobs exited.

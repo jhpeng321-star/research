@@ -1,0 +1,205 @@
+{
+ "world": 969424,
+ "sample": 0,
+ "variant": "source_default",
+ "invalid_initial_rows": [
+  {
+   "slot": 27,
+   "source": -1,
+   "destination": 0,
+   "present": true,
+   "s_m": 81.9691390991211,
+   "counted_as_LC": true
+  }
+ ],
+ "excluded_LC_counts": {
+  "downstream/mainline/0": 1
+ },
+ "audit": {
+  "finite": true,
+  "conserved": true,
+  "due": [
+   [
+    1,
+    0
+   ]
+  ],
+  "initial_backlog": [
+   [
+    0,
+    0
+   ]
+  ],
+  "admitted": [
+   [
+    0,
+    0
+   ]
+  ],
+  "final_pending": [
+   [
+    1,
+    0
+   ]
+  ],
+  "exits": [
+   0
+  ]
+ },
+ "receipt": {
+  "future_sampling": "hidden_state",
+  "future": 0,
+  "seed": 190,
+  "driver_branches": {
+   "population": 7,
+   "posterior": 67
+  },
+  "likelihood": [],
+  "posterior_source": "runtime_motion_conditioned_fixed_population",
+  "driver_draw_key": "observable_vid",
+  "fitted_artifacts": {
+   "idm_population_sha256": "d8cee1dabe1c064f2da1b3d49af934e2bfd8f9869250ac31f98f3943532cc092",
+   "idm_posterior_sha256": "4ac7750bec804aff1ac819f136d12a97bb9fc84d219026cabbd173adffdf50d4",
+   "posterior_source": "caller_causal_motion",
+   "conditioning_end_s": 300.0,
+   "posterior_hash_encoding": "canonical_json",
+   "source_population_sha256": "d8cee1dabe1c064f2da1b3d49af934e2bfd8f9869250ac31f98f3943532cc092",
+   "runtime_conditioning": true,
+   "saved_driver_id_lookup": false,
+   "conditioning_interval_s": [
+    240.0,
+    300.0
+   ],
+   "motion_kernel_source_sha256": "3b18a14c92604ecd1329eb811758d876ce3e6ce7aaae853395133dcdb863d2f1",
+   "motion_profile_step": "active_sumo_idm_step",
+   "motion_gap_geometry": "registered_lane_chain"
+  },
+  "fitted_lc": false,
+  "idm_lc_joint_coupling": "independent_fitted_blocks",
+  "likelihood_acceleration_limits": [
+   -9.0,
+   3.0
+  ],
+  "population_sizes": [
+   949
+  ],
+  "arrival_sample": 0,
+  "arrivals": "poisson",
+  "learned_arrival_sha256": "7c13cc59ca3ea01530d7d0dfab2c7037fc01c0433453ec611a688eb07d51f384",
+  "learned_arrival_observations": [
+   {
+    "world": "969424",
+    "conditioning_end_s": 300.0,
+    "source_sha256": "7c13cc59ca3ea01530d7d0dfab2c7037fc01c0433453ec611a688eb07d51f384",
+    "observation_sha256": "85de0e0629420857e167676214ae7eb7be229760277a705703e6ba6de6de69b3",
+    "total": [
+     156,
+     36
+    ],
+    "exposure_s": 300.0
+   }
+  ],
+  "demand_rate_draws": [
+   [
+    [
+     0.5185744581625567,
+     0.1078001180469961
+    ]
+   ]
+  ],
+  "rate_source": "fitted_entrance_counters",
+  "physics_noise": false,
+  "embedding_noise": false,
+  "variant": "FULL",
+  "observable_hashes": {
+   "start.pt": "69cc15a59c9784269dc5d0c678b4c41595dc76e430331e3d8923c7c9ffc787ae",
+   "start_history.npz": "be76ed45c3bd4fadfebc5af3725c007f435635f36e23725946e5116a7dd42afd",
+   "result.json": "fd50fe5cdc4f4556ef7ebea3df0a5ebf78b67c8b02a9965e8aefc564ce98302b"
+  },
+  "identity_source": "recorded start_history numeric vid_index, not packed slot",
+  "conditioning_end_s": 300.0,
+  "present_identities": 78,
+  "runtime_motion_conditioning": true,
+  "saved_driver_id_lookup": false,
+  "motion_rows_by_observed_id": {
+   "153": 120,
+   "154": 119,
+   "145": 119,
+   "189": 9,
+   "147": 120,
+   "172": 59,
+   "150": 118,
+   "155": 117,
+   "105": 113,
+   "186": 18,
+   "190": 6,
+   "156": 109,
+   "171": 67,
+   "144": 119,
+   "148": 119,
+   "164": 91,
+   "176": 47,
+   "174": 51,
+   "178": 38,
+   "179": 37,
+   "180": 0,
+   "101": 110,
+   "102": 115,
+   "188": 0,
+   "191": 3,
+   "124": 115,
+   "110": 115,
+   "111": 116,
+   "130": 120,
+   "112": 117,
+   "113": 117,
+   "173": 53,
+   "114": 114,
+   "151": 119,
+   "139": 118,
+   "116": 114,
+   "117": 112,
+   "118": 114,
+   "166": 83,
+   "120": 118,
+   "121": 0,
+   "122": 113,
+   "123": 116,
+   "125": 120,
+   "167": 78,
+   "157": 109,
+   "128": 119,
+   "138": 119,
+   "168": 79,
+   "141": 117,
+   "142": 120,
+   "135": 117,
+   "129": 118,
+   "149": 118,
+   "158": 57,
+   "175": 0,
+   "159": 103,
+   "152": 117,
+   "160": 54,
+   "163": 94,
+   "162": 98,
+   "169": 0,
+   "170": 71,
+   "181": 30,
+   "182": 0,
+   "183": 27,
+   "131": 119,
+   "132": 120,
+   "133": 119,
+   "184": 23,
+   "161": 102,
+   "165": 87,
+   "185": 0,
+   "187": 17
+  },
+  "conditioned_drivers": 67,
+  "population_fallbacks": 7,
+  "motion_kernel_source_sha256": "3b18a14c92604ecd1329eb811758d876ce3e6ce7aaae853395133dcdb863d2f1",
+  "departure_phase": "after_movement_and_lanes"
+ }
+}

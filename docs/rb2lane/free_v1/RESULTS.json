@@ -1,0 +1,217 @@
+{
+  "status": "COMPLETE",
+  "worlds": [
+    969420,
+    969421,
+    969422,
+    969423,
+    969424,
+    969425,
+    969426,
+    969427,
+    969428,
+    969429,
+    969430,
+    969431
+  ],
+  "samples": 2,
+  "horizon": 300,
+  "source_commit": "a60a6a62759ee1312c1d453df2fa7941b517880e",
+  "variants": {
+    "source_default": {
+      "mean_world_count_bias": 36.0,
+      "mean_world_count_mae": 36.0,
+      "empirical_K2_count_crps": 33.125,
+      "fair_K2_count_crps": 29.416666666666668,
+      "K2_count_range_coverage": 0.08333333333333333,
+      "total_expected_changes": 1986.0,
+      "lane_segment": {
+        "upstream/mainline": {
+          "recorded": 988,
+          "predicted": 1441.5,
+          "recorded_veh_time_s": 216146.5,
+          "predicted_veh_time_s": 199239.5,
+          "recorded_rate_per_veh_h": 16.45550587217466,
+          "predicted_rate_per_veh_h": 26.04604006735612
+        },
+        "upstream/ramp_merge": {
+          "recorded": 0,
+          "predicted": 0.0,
+          "recorded_veh_time_s": 9609.0,
+          "predicted_veh_time_s": 7684.25,
+          "recorded_rate_per_veh_h": 0.0,
+          "predicted_rate_per_veh_h": 0.0
+        },
+        "merge/mainline": {
+          "recorded": 75,
+          "predicted": 58.5,
+          "recorded_veh_time_s": 16150.0,
+          "predicted_veh_time_s": 15152.0,
+          "recorded_rate_per_veh_h": 16.71826625386997,
+          "predicted_rate_per_veh_h": 13.899155227032734
+        },
+        "merge/ramp_merge": {
+          "recorded": 390,
+          "predicted": 364.5,
+          "recorded_veh_time_s": 12525.0,
+          "predicted_veh_time_s": 7761.5,
+          "recorded_rate_per_veh_h": 112.09580838323353,
+          "predicted_rate_per_veh_h": 169.06525800425175
+        },
+        "downstream/mainline": {
+          "recorded": 101,
+          "predicted": 121.5,
+          "recorded_veh_time_s": 46067.0,
+          "predicted_veh_time_s": 48505.75,
+          "recorded_rate_per_veh_h": 7.8928517159789005,
+          "predicted_rate_per_veh_h": 9.017487617447417
+        },
+        "downstream/ramp_merge": {
+          "recorded": 0,
+          "predicted": 0.0,
+          "recorded_veh_time_s": 0.0,
+          "predicted_veh_time_s": 0.0,
+          "recorded_rate_per_veh_h": null,
+          "predicted_rate_per_veh_h": null
+        }
+      }
+    },
+    "fitted_lc": {
+      "mean_world_count_bias": -42.125,
+      "mean_world_count_mae": 44.625,
+      "empirical_K2_count_crps": 41.354166666666664,
+      "fair_K2_count_crps": 37.75,
+      "K2_count_range_coverage": 0.08333333333333333,
+      "total_expected_changes": 1048.5,
+      "lane_segment": {
+        "upstream/mainline": {
+          "recorded": 988,
+          "predicted": 596.5,
+          "recorded_veh_time_s": 216146.5,
+          "predicted_veh_time_s": 204622.25,
+          "recorded_rate_per_veh_h": 16.45550587217466,
+          "predicted_rate_per_veh_h": 10.494459913328097
+        },
+        "upstream/ramp_merge": {
+          "recorded": 0,
+          "predicted": 0.0,
+          "recorded_veh_time_s": 9609.0,
+          "predicted_veh_time_s": 8188.25,
+          "recorded_rate_per_veh_h": 0.0,
+          "predicted_rate_per_veh_h": 0.0
+        },
+        "merge/mainline": {
+          "recorded": 75,
+          "predicted": 37.5,
+          "recorded_veh_time_s": 16150.0,
+          "predicted_veh_time_s": 16729.5,
+          "recorded_rate_per_veh_h": 16.71826625386997,
+          "predicted_rate_per_veh_h": 8.069577692100781
+        },
+        "merge/ramp_merge": {
+          "recorded": 390,
+          "predicted": 363.0,
+          "recorded_veh_time_s": 12525.0,
+          "predicted_veh_time_s": 9408.25,
+          "recorded_rate_per_veh_h": 112.09580838323353,
+          "predicted_rate_per_veh_h": 138.8993702335716
+        },
+        "downstream/mainline": {
+          "recorded": 101,
+          "predicted": 51.5,
+          "recorded_veh_time_s": 46067.0,
+          "predicted_veh_time_s": 48163.5,
+          "recorded_rate_per_veh_h": 7.8928517159789005,
+          "predicted_rate_per_veh_h": 3.8493880220498924
+        },
+        "downstream/ramp_merge": {
+          "recorded": 0,
+          "predicted": 0.0,
+          "recorded_veh_time_s": 0.0,
+          "predicted_veh_time_s": 0.0,
+          "recorded_rate_per_veh_h": null,
+          "predicted_rate_per_veh_h": null
+        }
+      }
+    }
+  },
+  "world_counts": {
+    "969420": {
+      "recorded": 148,
+      "source_default": 165.0,
+      "fitted_lc": 99.0
+    },
+    "969421": {
+      "recorded": 133,
+      "source_default": 156.5,
+      "fitted_lc": 106.0
+    },
+    "969422": {
+      "recorded": 126,
+      "source_default": 177.5,
+      "fitted_lc": 141.0
+    },
+    "969423": {
+      "recorded": 114,
+      "source_default": 153.0,
+      "fitted_lc": 105.5
+    },
+    "969424": {
+      "recorded": 140,
+      "source_default": 159.0,
+      "fitted_lc": 66.0
+    },
+    "969425": {
+      "recorded": 104,
+      "source_default": 159.5,
+      "fitted_lc": 72.0
+    },
+    "969426": {
+      "recorded": 149,
+      "source_default": 183.0,
+      "fitted_lc": 84.5
+    },
+    "969427": {
+      "recorded": 121,
+      "source_default": 158.5,
+      "fitted_lc": 55.5
+    },
+    "969428": {
+      "recorded": 118,
+      "source_default": 159.5,
+      "fitted_lc": 69.5
+    },
+    "969429": {
+      "recorded": 115,
+      "source_default": 154.5,
+      "fitted_lc": 45.5
+    },
+    "969430": {
+      "recorded": 141,
+      "source_default": 178.0,
+      "fitted_lc": 96.0
+    },
+    "969431": {
+      "recorded": 145,
+      "source_default": 182.0,
+      "fitted_lc": 108.0
+    }
+  },
+  "restored_first_frame_events": 0,
+  "target_sha256": "f9adbeff493b661329188bf01f2e055a5e14cf3b23c9ec1ab744f2112847df83",
+  "excluded_initial_internal_normalizations": {
+    "fitted_lc": 4.0,
+    "source_default": 4.0
+  },
+  "prefix_audit_complete_sha256": "1caee9f4035c692196917178df310fd0e84e5072312105ec693476c64e5d1849",
+  "boundary_sha256": "a54299eb25275a6a868dbb1bb9130c16613f3c23e33782da1b23d025a8ef2b93",
+  "all_finite_conserved": true,
+  "no_slot_events": 0,
+  "common_idm_arrival_draws": true,
+  "learned_corrections": false,
+  "wmdata2_access": false,
+  "reserved_selection": false,
+  "confidence_intervals": "not claimed: developmental K2 diagnostic, sparse cells",
+  "comparison": "both variants own-causal-history warm; LC latent block only factor; native CAVs use same physics law",
+  "qualification": "not the five-arm distributional gate; regional rates and timing must be inspected"
+}

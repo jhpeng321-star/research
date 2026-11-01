@@ -1,12 +1,17 @@
-# S-RB2-LANE — candidate + FIT evidence delivered, 2026-11-01
+# S-RB2-LANE — FINAL delivery / fitted LC NOT ADOPTED, 2026-11-01
 
 Branch `c4/rb2-lane`; engineering base FULL-v4 `22cc32f6` (inherited
 round-1 final-delivery HEAD `03c81f91`).
 
 ## Round-2 delivery
-- **Engineering ready for INT comparison; fitted LC NOT distributionally qualified.**
+- **Source fixes ready; exact frozen fitted LC fails free lane-frequency test.**
+  Keep fitted LC OFF pending an integrated-source development comparison.
   Implementation commits `a29116e9` + `6b4bfbd5` (plan `73a5685b`);
-  final evidence version `docs/rb2lane/fit_v2`, report `docs/paper_results/RB2_LANE.md`.
+  conditional evidence `a60a6a62`/`docs/rb2lane/fit_v2`; native free pilot source
+  `a60a6a62`, scoring audit `b5e53b3e`; final evidence `docs/rb2lane/free_v1`.
+  Report `docs/paper_results/RB2_LANE.md`; shared `rb-shared/RB2_LANE_DEVELOPMENT_RESULT.md`.
+  Capsule `docs/rb2lane/DELIVERY.json`, SHA256
+  `ff42bac3a7567d803257a03256655539088d00023c1df3da200c6ce88480e329`.
 - Source comparison complete against read-only SUMO1.27.1 cache
   `E:/Temp/opencode/sumo-1.27.1-rb-lane`. No downloaded source executed.
 - Required LC continuation: `E:/agent-work/c4-rb-fit/artifacts/rbfit/lane_raw_c5602102891e`.
@@ -18,9 +23,12 @@ round-1 final-delivery HEAD `03c81f91`).
   Sampled-profile causal60s replay initializes wishes by ID. No learned corrections.
 - Source fixes: nondecision lookahead freeze; documented actionStepLength for
   wishes/decay; source tauRemainder secure speeds for nondefault action steps.
+  The legal-decision guard also removes fictitious upstream single-lane ramp
+  speed-peak memory before the first legal merge-edge decision (source380).
   No generic changeWish decay exists in this SUMO tag. Full serial negotiation
   and internal critical leaders remain incomplete; see `docs/RB2_LANE_SOURCE_AUDIT.md`.
-- 85 targeted CPU tests PASS: `docs/rb2lane/CPU_FINAL.xml`. Actual strict-loaded
+- 85 core targeted CPU tests PASS (`CPU_FINAL.xml`) plus5 guard/scorer/ramp
+  regressions PASS; Ruff PASS. Actual strict-loaded
   checkpoint/recipe four60s native closed-cohort futures (FIT969420/969421,K2)
   PASS finite/conserved/no corrections; sampled LC state remains finite/warm.
   `docs/rb2lane/runtime_v1_SMOKE.json`, source `6b4bfbd5`; this smoke has no arrivals.
@@ -43,26 +51,26 @@ round-1 final-delivery HEAD `03c81f91`).
 - Exposure: prior rules/morning/handoffs/noon freeze and aggregate evidence read;
   new diagnosis ONLY FIT969400–969431. No reserved outcome files opened for
   round-2 selection. No WMDATA2 access; respect INT exposure quarantine.
-- Resource audit: local NVIDIA driver unavailable; gpuA GPU99% occupied during
-  check, so all diagnostics/smoke CPU-only. All five own workers EXITED; no signals.
-- Follow-up frozen before launch: paired native development12,K2,H300, entrants ON,
-  both variants causally warm, common IDM/arrival draws; LC block is the only
-  factor. Measures actual full-traffic LC counts/rates against targets, addressing
-  the positive-run under-frequency concern. FIT-only start-loader guard2CPU PASS;
-  no reserved starts can be read. This pilot is not the INT distributional gate.
-  Source `a60a6a62`; first969420 canary4/4 futures PASS238.3s, reused once.
-  Remaining11worlds LIVE on four nice19 CPU workers (gpuA449726/449712/449710/449696);
-  `docs/rb2lane/free_{canary,a,b,c,d}_v1_DISPATCH.json` binds ownership/startticks.
-  Pilot records only predictions/counters; independent target restoration/scoring
-  happens afterward. No change to physical dynamics after source freeze.
-  Causal initial-state audit found four junction-internal rows in969420/424/429.
-  A ONE-step scoring audit will exclude their internal→normal initialization
-  from LC event counts; raw forecasts remain immutable. Scoring/future-binding
-  tests2PASS; `INITIAL_LANE_AUDIT.json` retains the initial finding.
+- **Entrants-ON native development12 K2/H300 COMPLETE48/48**, both variants warm,
+  common IDM/arrival draws; LC block only factor. All finite/conserved/no_slot=0.
+  Actual recorded1,554 changes vs default1,986/fitted1,048.5; count bias+36→−42.125
+  per world, MAE36→44.625, empirical CRPS33.125→41.3542 (fair29.4167→37.75).
+  Mainline upstream/merge/downstream rates: real16.456/16.718/7.893 per veh-h;
+  default26.046/13.899/9.017; fitted10.494/8.070/3.849. Under-changing remains.
+- `free_v1/RESULTS.json` + lane_rate_10s.csv bind target comparison, all48 futures,
+  exact common draws, exposure and source. K2/singleton cells: no CI/qualification.
+  This is FULL-v4-derived lane-only evidence, not integrated b2df7458 forecasts.
+- Count scorer excludes four initial internal→normal normalizations per variant,
+  proven by12 ONE-step prefix replays with identical posterior/arrival hashes;
+  physics unchanged. Independent first-frame all-vehicle target audit restored0
+  missing events on these12worlds. Raw forecasts retained. Guard/scorer4CPU PASS.
+- Resources: local NVIDIA driver unavailable; gpuA GPU99% occupied at admission,
+  so all new jobs CPU-only/nice19/single-thread. Every owned worker EXITED; no signals.
 - INT composition: apply CAL spread wrapper after LC attachment (or retain its
   subclass); INT already identified this intake requirement. New evidence does
-  not alter the tested dynamics. Full arrivals/fivearm/free-running gate and
-  final reserved comparison remain INT-owned. Do not infer FULL-v5 READY here.
+  not alter the tested dynamics. INT's integrated engineering READY signal is
+  separate; this adverse component result is shared before final-panel selection.
+  Full fivearm/distributional gate and final reserved comparison remain INT-owned.
 
 ## Preserved round-1 handoff
 

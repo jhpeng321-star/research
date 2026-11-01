@@ -1,0 +1,408 @@
+{
+ "source_commit": "a60a6a62759ee1312c1d453df2fa7941b517880e",
+ "construction": {
+  "encoder_exact": true,
+  "encoder_tensors": 17,
+  "copied_tensors": 108,
+  "unused_source_tensors": [
+   "driver_updater.embed_proj.bias",
+   "driver_updater.embed_proj.weight",
+   "driver_updater.rate_logits",
+   "follower_courtesy.net.0.bias",
+   "follower_courtesy.net.0.weight",
+   "follower_courtesy.net.2.bias",
+   "follower_courtesy.net.2.weight",
+   "follower_courtesy.net.4.bias",
+   "follower_courtesy.net.4.weight",
+   "lane_v5.feature_mu",
+   "lane_v5.feature_sd",
+   "lane_v5.head_ap",
+   "lane_v5.heads.bias",
+   "lane_v5.heads.weight",
+   "lane_v5.trunk.0.bias",
+   "lane_v5.trunk.0.weight",
+   "lane_v5.trunk.2.bias",
+   "lane_v5.trunk.2.weight",
+   "merge_core.alpha_bias",
+   "merge_core.alpha_log_sigma_raw",
+   "merge_core.alpha_net.0.bias",
+   "merge_core.alpha_net.0.weight",
+   "merge_core.alpha_net.2.bias",
+   "merge_core.alpha_net.2.weight",
+   "merge_core.b_raw",
+   "merge_core.init_s0",
+   "merge_core.residual_head.0.bias",
+   "merge_core.residual_head.0.weight",
+   "merge_core.residual_head.2.bias",
+   "merge_core.residual_head.2.weight",
+   "merge_core.residual_scale_raw",
+   "merge_core.s0_raw",
+   "merge_core.t_raw",
+   "merge_core.tau_raw",
+   "merge_core.temperature_raw",
+   "merge_core.yield_head.0.bias",
+   "merge_core.yield_head.0.weight",
+   "merge_core.yield_head.2.bias",
+   "merge_core.yield_head.2.weight",
+   "merge_core.yield_scale_raw",
+   "merge_pivot.T_f_raw",
+   "merge_pivot.T_l_raw",
+   "merge_pivot.b_f_raw",
+   "merge_pivot.b_l_raw",
+   "merge_pivot.s_f_raw",
+   "merge_pivot.s_l_raw",
+   "merge_pivot.tau_raw",
+   "merge_pivot.w_raw",
+   "merge_yield.log_decel",
+   "merge_yield.log_distance",
+   "ramp_speed_adapt.log_headway_scale",
+   "ramp_speed_adapt.log_lookahead",
+   "ramp_speed_adapt.strength_logit",
+   "residual_net.blocks.0.attn.courtesy_bias.bias",
+   "residual_net.blocks.0.attn.courtesy_bias.weight",
+   "residual_net.blocks.1.attn.courtesy_bias.bias",
+   "residual_net.blocks.1.attn.courtesy_bias.weight",
+   "residual_net.blocks.2.attn.courtesy_bias.bias",
+   "residual_net.blocks.2.attn.courtesy_bias.weight",
+   "residual_net.courtesy_proj.0.bias",
+   "residual_net.courtesy_proj.0.weight",
+   "residual_net.courtesy_proj.2.bias",
+   "residual_net.courtesy_proj.2.weight"
+  ],
+  "initialized_inactive_tensors": [],
+  "departure_phase": "after_movement_and_lanes",
+  "fitted_lc": {
+   "lc_conditioning": "caller_causal_motion.v1",
+   "saved_lc_driver_id_lookup": false,
+   "lc_population_sha256": "b903fa49fe1f3f1a15428ae48de5c8f86863aa5c5821dbb0acc8275c77d4483f"
+  },
+  "native_model": "sumo_physics",
+  "saved_driver_id_lookup": false,
+  "runtime_motion_conditioning": true,
+  "shrinkage_policy_sha256": "73283ffa206380d53ddaa037f6fb57fb61bbc9876c868253617db089da6cb299",
+  "fitted_hidden": {
+   "idm_population_sha256": "d8cee1dabe1c064f2da1b3d49af934e2bfd8f9869250ac31f98f3943532cc092",
+   "idm_posterior_sha256": "578e1b2bfeced10db9d30e5104a54de7600786ee7ce5a5be82b99b75824e73b9"
+  },
+  "learned_arrivals_sha256": "7c13cc59ca3ea01530d7d0dfab2c7037fc01c0433453ec611a688eb07d51f384",
+  "source": [
+   {
+    "checkpoint": "/root/autodl-tmp/c4/wmcombined_wm2/wm_s.pt",
+    "config": "/root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml",
+    "checkpoint_sha256": "b8797242c6b736b57eb17b1aed77d2cf01d813770342f9e17ba33dc5b8b33436",
+    "config_sha256": "f95f7c4cbb501ccb85bb3968e29f3d6ca53db4ecef5f586225f96df1f48193e4",
+    "courtesy_state_grad": true,
+    "courtesy_intent": "pivot",
+    "courtesy_off": false,
+    "physics": {
+     "dt_s": 0.5,
+     "open_road": true,
+     "exit_at_road_end": true,
+     "sumo_fidelity": false,
+     "sumo_idm": true,
+     "speed_factor": 1.0,
+     "speed_limit_mps": 31.29,
+     "free_road_gap_m": 250.0,
+     "max_gap_steps": 240,
+     "accel_min_mps2": -9.0,
+     "accel_max_mps2": 3.0,
+     "lane_gap_m": 5.0,
+     "lane_incentive_mps": 0.4,
+     "lane_safe_gap_m": 6.0,
+     "merge_zone_s0_m": 0.0,
+     "merge_zone_s1_m": 75.44,
+     "merge_lane": 2,
+     "merge_target_lane": 1,
+     "merge_model": "legacy",
+     "sumo_merge_query_fast": false,
+     "sumo_lane_conflict_fast": false,
+     "mobil_threshold_mps2": 0.1,
+     "b_safe_base_mps2": 4.0,
+     "b_safe_end_mps2": 6.0,
+     "merge_cal": false,
+     "t_lead_base_s": 1.0,
+     "t_lead_end_s": 0.1,
+     "b_accept_base_mps2": 4.0,
+     "b_accept_end_mps2": 6.0,
+     "gap_floor_m": 0.3,
+     "u_yield": 0.35,
+     "yield_lookahead_m": 120.0,
+     "b_yield_max_mps2": 1.75,
+     "yield_min_speed_mps": 2.5,
+     "yield_min_merger_speed_mps": 3.5,
+     "end_obstacle_range_m": 25.0,
+     "lane_rule": "mobil",
+     "lane_gap_rule": "fixed",
+     "gap_s0_lead_m": 1.0,
+     "gap_t_lead_s": 0.2,
+     "gap_b_lead_mps2": 3.0,
+     "gap_s0_follow_m": 0.5,
+     "gap_t_follow_s": 0.6,
+     "gap_b_follow_mps2": 6.0,
+     "gap_overlap_margin_m": 0.5,
+     "gap_anticipation_s": 0.5,
+     "gap_stopped_relax": false,
+     "gap_stopped_speed_mps": 1.0,
+     "gap_stopped_min_m": 0.5,
+     "stop_time_integration": false,
+     "emergency_decel_mps2": null,
+     "emergency_braking": true,
+     "secure_gap_veto": true,
+     "lane_change_secure_gap": true,
+     "emergency_onset": "driver_b",
+     "merge_end_wait": false,
+     "merge_end_wait_distance_m": 25.0,
+     "merge_end_wait_speed_mps": 2.0,
+     "mainline_merge_yield": true,
+     "mainline_merge_yield_distance_m": 60.0,
+     "mainline_merge_yield_decel_mps2": 2.0,
+     "forced_window_mode": "deterministic",
+     "forced_window_min_hazard": 0.02,
+     "mainline_merge_yield_scope": "lane_end",
+     "merge_end_wait_s0_follow_m": null,
+     "merge_end_wait_t_follow_s": null,
+     "merge_impatience": false,
+     "merge_impatience_distance_m": 25.0,
+     "merge_impatience_speed_mps": 1.0,
+     "merge_impatience_hazard_tau_s": 25.0,
+     "merge_impatience_gap_tau_s": 25.0,
+     "merge_impatience_s0_min_m": 0.5,
+     "merge_impatience_t_min_s": 0.1,
+     "lane_learnable": true,
+     "ramp_lane_end_stop": true,
+     "ramp_risk_retain": true,
+     "lane_physical_margin_m": 0.0,
+     "mainline_lane_mode": "courtesy",
+     "mainline_courtesy_zone_m": 300.0,
+     "entry_learned": false,
+     "cf_model": "legacy",
+     "sumo_cf_stepping_s": 0.25,
+     "sumo_cf_emergency_decel_mps2": null,
+     "sumo_cf_vtype_max_mps": null,
+     "sumo_cf_action_step_s": null
+    }
+   }
+  ],
+  "variant": "FULL",
+  "recipe": {
+   "schema": "wm_phys/1",
+   "source": {
+    "config": "/root/autodl-tmp/c4/restart20261026/runtime_longint/configs/c4_wm_loop14_r16_ft.toml"
+   },
+   "rollout": {
+    "departure_phase": "after_movement_and_lanes"
+   },
+   "physics": {
+    "cf_model": "sumo_idm",
+    "sumo_cf_emergency_decel_mps2": 9.0,
+    "merge_model": "sumo",
+    "sumo_lane_conflict_fast": true,
+    "lane_learnable": false,
+    "merge_cal": false,
+    "merge_end_wait": false,
+    "mainline_merge_yield": false,
+    "merge_impatience": false,
+    "gap_stopped_relax": false,
+    "secure_gap_veto": false,
+    "emergency_braking": false,
+    "emergency_onset": "plant",
+    "emergency_decel_mps2": "off",
+    "lane_change_secure_gap": false,
+    "entry_learned": false
+   },
+   "model": {
+    "rollout_mode": "driver_params",
+    "lane_model": "lc2013",
+    "lane_head": "off",
+    "lane_decision": "argmax",
+    "lane_logit_offsets": [
+     0.0,
+     0.0,
+     0.0
+    ],
+    "lane_hazard_features": "v1",
+    "merge_hazard_zone": "forced_late",
+    "lane_v5_gates": [
+     0.25,
+     0.1,
+     0.5
+    ],
+    "lane_v5_head_ap": [
+     -1.0,
+     -1.0,
+     -1.0
+    ],
+    "lane_v5_mainline": "default",
+    "lane_v5_extra_features": false,
+    "courtesy_inputs": false,
+    "merge_decision": "hazard",
+    "merge_response": false,
+    "merge_negotiation": false,
+    "follower_courtesy": false,
+    "follower_courtesy_version": 1,
+    "follower_courtesy_intent": "none",
+    "follower_courtesy_off": true,
+    "mainline_merge_yield_learnable": false,
+    "ramp_speed_adapt_learnable": false,
+    "mainline_interaction_residual": false,
+    "residual_accel_off": true,
+    "temporal_accel_off": true,
+    "temporal_accel_lane_bias": false,
+    "temporal_accel_state_table": false,
+    "driver_update": "off"
+   },
+   "variants": {
+    "A": {
+     "driver_settings": "encoder_inferred",
+     "future_sampling": "hidden_state"
+    },
+    "B": {
+     "driver_settings": "population_default",
+     "future_sampling": "poisson_arrivals_fixed_population"
+    },
+    "C": {
+     "driver_settings": "fitted_physics_population_point",
+     "future_sampling": "poisson_arrivals_fixed_population",
+     "parameter_json": "artifacts/rbfit/pooled_full_v5/idm_pooled.json"
+    },
+    "FULL": {
+     "driver_settings": "motion_fitted_joint_posterior",
+     "future_sampling": "fitted_hidden_state_and_learned_arrivals",
+     "parameter_directory": "artifacts/rbfit/shrinkage_v1",
+     "arrival_json": "docs/paper_results/rbunc/observed_arrivals.json",
+     "fitted_lc": true,
+     "lane_parameter_directory": "artifacts/rbfit/lane_raw_c5602102891e",
+     "condition_motion": true,
+     "native_model": "sumo_physics"
+    }
+   },
+   "inference": {
+    "training": false,
+    "learned_acceleration_noise": false,
+    "learned_admission": false,
+    "learned_lane_corrections": false,
+    "learned_merge_corrections": false,
+    "conserve_queue": true,
+    "future_observation_inputs": false
+   },
+   "smoke": {
+    "worlds": [
+     969420,
+     969421
+    ],
+    "arm": "native",
+    "t0_s": 300,
+    "duration_s": 60,
+    "variants": [
+     "A",
+     "B",
+     "C",
+     "FULL"
+    ],
+    "arrivals": false
+   }
+  },
+  "settings_B": "inherited physics population defaults, not encoder centre",
+  "sampling": "fitted_hidden_state_and_learned_arrivals"
+ },
+ "starts": {
+  "reference_sha256": "ba4278666097577441bfcb247804408c66b9929867239e11d029c371c413bf33",
+  "fit_guarded_source_sha256": "ad01ee13c19529cca233eb55257c3edd25c4fc95e52e7a8633bff5a669e640f3",
+  "world_guard_applied_before_any_start_reads": true,
+  "worlds": [
+   969424,
+   969425,
+   969426
+  ],
+  "provenance": [
+   {
+    "index": 24,
+    "metadata": {
+     "world_id": "w969424m1900p05t300",
+     "split": "wmdata_fit",
+     "seed": 969424,
+     "demand": 1900,
+     "penetration": 0.05,
+     "t0": 300,
+     "initial_state_sha256": "4925db19670ce0bf6cc11aca589f90a9eda741fecdde74c910a7a8d06f609041"
+    },
+    "hashes": {
+     "start.pt": "69cc15a59c9784269dc5d0c678b4c41595dc76e430331e3d8923c7c9ffc787ae",
+     "start_history.npz": "be76ed45c3bd4fadfebc5af3725c007f435635f36e23725946e5116a7dd42afd",
+     "result.json": "fd50fe5cdc4f4556ef7ebea3df0a5ebf78b67c8b02a9965e8aefc564ce98302b"
+    },
+    "entry_queue": [
+     [
+      0.0,
+      0.0,
+      0.5199999809265137,
+      0.11999999731779099,
+      0.044871795922517776,
+      0.02777777798473835
+     ]
+    ],
+    "slots": 78
+   },
+   {
+    "index": 25,
+    "metadata": {
+     "world_id": "w969425m2400p05t300",
+     "split": "wmdata_fit",
+     "seed": 969425,
+     "demand": 2400,
+     "penetration": 0.05,
+     "t0": 300,
+     "initial_state_sha256": "6b180f8ae642e89613bdf4dc678232f34b531f91b70fe21e03fe1dc38666cbd4"
+    },
+    "hashes": {
+     "start.pt": "72d4774119c491e7b6b449b9c7cc8f40af838a5bc09a7235a95459a51a762d78",
+     "start_history.npz": "41b052c257377a960dfc2b6f5c34c373ea24aa3fd84e6a5ea7ab6e50788246ed",
+     "result.json": "51fb9264d15722cb84edcd4d53130fda632cf608b655e8a47138accf5f31294c"
+    },
+    "entry_queue": [
+     [
+      29.0,
+      0.0,
+      0.6366666555404663,
+      0.10999999940395355,
+      0.0555555559694767,
+      0.03030303120613098
+     ]
+    ],
+    "slots": 83
+   },
+   {
+    "index": 26,
+    "metadata": {
+     "world_id": "w969426m2700p05t300",
+     "split": "wmdata_fit",
+     "seed": 969426,
+     "demand": 2700,
+     "penetration": 0.05,
+     "t0": 300,
+     "initial_state_sha256": "3313cb8e7a689486ef7d03b105332196b5d341934ac51ed00dd3876d6d306fcc"
+    },
+    "hashes": {
+     "start.pt": "5c83a8d17735cf8d4423282a64ea8d0bc67667441e7c3f34e76965e985a1aada",
+     "start_history.npz": "661506c7116ab11e109eecc71a6efadb75f859dd5c3ea675de92e2761a897b81",
+     "result.json": "7942642c8671939f83574b36a3455a0b6c1e77c59ccdf600d25e4951255c5c52"
+    },
+    "entry_queue": [
+     [
+      68.0,
+      0.0,
+      0.7666666507720947,
+      0.1366666704416275,
+      0.0555555559694767,
+      0.04878048598766327
+     ]
+    ],
+    "slots": 85
+   }
+  ]
+ },
+ "samples": 2,
+ "horizon": 300,
+ "comparison": "same causal IDM and arrivals; both LC variants warm; fitted LC only factor",
+ "cuda": false
+}

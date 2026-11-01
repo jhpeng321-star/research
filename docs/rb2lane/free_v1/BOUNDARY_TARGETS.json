@@ -1,0 +1,166 @@
+{
+  "status": "PASS",
+  "simulation_time_s": [
+    300.0,
+    300.5
+  ],
+  "cohort": "all vehicles, same ID, normal adjacent frames",
+  "rows": [
+    {
+      "seed": 969420,
+      "episode": "w969420m2700p20t300__native",
+      "events": [],
+      "input_sha256": {
+        "episode.json": "fedf37814d7127f4034057253237f4ab733593dcd6af36dbbc1909e8b5afe967",
+        "time_s.npy": "d199113bc056e5c20bf444cecd15f575a34d8ffd1801cac82e59e555e802e5b4",
+        "veh_kin.npy": "fc41e0a82574de20553129a7375b221d7771b3be8e999d80bec7c02d530e8f2c",
+        "veh_mask.npy": "409b619d4f371b4f4d57dd69054dac02c3d7638a7a2685c1d47e5e63694320c7",
+        "is_cav.npy": "d7f152edf3556d45ed791e10d1b3b15d58ee86a71e811acb7dfe7306469d20af",
+        "vid.npy": "f08beca2c006cec13984006a4bdb4889377f4741a973a475cb90a3c42aa47d04"
+      }
+    },
+    {
+      "seed": 969421,
+      "episode": "w969421m1900p40t300__native",
+      "events": [],
+      "input_sha256": {
+        "episode.json": "d4f984da08dab3078ef217256c23eb6958d8a2ea82e9b02810f89c18528a0b14",
+        "time_s.npy": "d199113bc056e5c20bf444cecd15f575a34d8ffd1801cac82e59e555e802e5b4",
+        "veh_kin.npy": "9599d1f492f0875f154b35b0d034c4e57cc5060f753bf7fdea2d4c9b8c752b3c",
+        "veh_mask.npy": "0db8f04dd3ce7037e885959252e2d651ad6a90a50a1e270f2c34fb56c00ab677",
+        "is_cav.npy": "94699a336982b60a2c86a3d69a4392d7057fac0f2b8fe941a44d16059d1b8d47",
+        "vid.npy": "7be205cb739929004a4310d94ca4c8eefcf8202a8707b589609fcc11f12d2c5e"
+      }
+    },
+    {
+      "seed": 969422,
+      "episode": "w969422m2400p40t300__native",
+      "events": [],
+      "input_sha256": {
+        "episode.json": "9b14851e85f002daaad4bac9cb9abc2cb5effb0b55c47fa035a82dc54582e8e1",
+        "time_s.npy": "d199113bc056e5c20bf444cecd15f575a34d8ffd1801cac82e59e555e802e5b4",
+        "veh_kin.npy": "1bd8f479950e4dd0ab9c0043c72d8da7a314e01f1a6d00889724500b1fe2a4a7",
+        "veh_mask.npy": "ae1241627ba02357453142d9e80bec141b45d060d699edbf7e91eddeeec23cf3",
+        "is_cav.npy": "0c01d6de4f53413c1ba71ba99076a40571d30f8d46acaa68290f5d6a52f20523",
+        "vid.npy": "9624b25accd8e3eff6c40e3612f7aedce545e70ac6d950912f64a1630eafd546"
+      }
+    },
+    {
+      "seed": 969423,
+      "episode": "w969423m2700p40t300__native",
+      "events": [],
+      "input_sha256": {
+        "episode.json": "a0e03075cf18f1d5477da6ce929682ef14d3bcee2953293d495bdc1f22835f15",
+        "time_s.npy": "d199113bc056e5c20bf444cecd15f575a34d8ffd1801cac82e59e555e802e5b4",
+        "veh_kin.npy": "c4f1a54337f9a5400fa2dfa9820558b7de0b7ebfffed04a6e3c1ffcce2e79c14",
+        "veh_mask.npy": "5980bc50ab823656162e0476c39ffd50ae219573addae7f97c166c4c5bed653b",
+        "is_cav.npy": "da113c97498b0176e625813a1a36b1e0040bef24b303d2001612d4467af72fbe",
+        "vid.npy": "96c1207f46b36f5d3cf0528736e44df1b605497c0c8e57b4a8908f619412987f"
+      }
+    },
+    {
+      "seed": 969424,
+      "episode": "w969424m1900p05t300__native",
+      "events": [],
+      "input_sha256": {
+        "episode.json": "927189496099d6efc4cf97fec88304a323a4ae31c280a02847696719e5021fb6",
+        "time_s.npy": "d199113bc056e5c20bf444cecd15f575a34d8ffd1801cac82e59e555e802e5b4",
+        "veh_kin.npy": "16a6e2434a57a53e6d941f5830778f71c179d9be6db5d2ab311977f19cb023d7",
+        "veh_mask.npy": "841ccf44a6ef3e874c20a9c511e643e27b718dba3c3a3f49e4304c7bd4ca81aa",
+        "is_cav.npy": "7ecb70c23327bdab0a6532b3a4a4c0901a232aaec94968a0a2185ade9165a061",
+        "vid.npy": "7d5cbee47faf98323ed4d30be34f839305fdf431191ed41df30a36f9fd228892"
+      }
+    },
+    {
+      "seed": 969425,
+      "episode": "w969425m2400p05t300__native",
+      "events": [],
+      "input_sha256": {
+        "episode.json": "166baa6df609820997732b01549eea765a7bdcb728a3bb5ca3fb9e76e61bf351",
+        "time_s.npy": "d199113bc056e5c20bf444cecd15f575a34d8ffd1801cac82e59e555e802e5b4",
+        "veh_kin.npy": "2633c53698e79d74c06fcce34b1ced41b569a69bec083e1f0aafa4d8aff41060",
+        "veh_mask.npy": "3af292718062f5cfd9af804ace13bc3044dbdedb3497ef94db4336c9e45a9546",
+        "is_cav.npy": "3fbf706207001f4eacf85600c6e6ece90f7c580e4474305e0b4fb9baf7356213",
+        "vid.npy": "5944ca770684b9037737ae4f51e3147e5636f1644d60c53caa56639f7bec8b71"
+      }
+    },
+    {
+      "seed": 969426,
+      "episode": "w969426m2700p05t300__native",
+      "events": [],
+      "input_sha256": {
+        "episode.json": "166b4e655c37a9a8187aceadafb2321a42481618b1c2b349f52d87388235c167",
+        "time_s.npy": "d199113bc056e5c20bf444cecd15f575a34d8ffd1801cac82e59e555e802e5b4",
+        "veh_kin.npy": "402c5bf303e96455d60220624c354c3d6234f9b9731a836c4688aac19e7df85f",
+        "veh_mask.npy": "7f7a671e57de48c2023d0464e1549c240a85d971d26d4b55a663ce6ee1ede607",
+        "is_cav.npy": "ec98e2ec568022595bcf3272f1de31af03175e37c01066e44ac97d8bc1550b33",
+        "vid.npy": "73a5dbe06ea1dd9ff70655d9a0fce93fda654b2a39057d5cde0db29d98a7372f"
+      }
+    },
+    {
+      "seed": 969427,
+      "episode": "w969427m1900p10t300__native",
+      "events": [],
+      "input_sha256": {
+        "episode.json": "cd066e4e0c71c506b11d15b9ee3707a035f7e7d4ea9e00511097ad7a2db585d0",
+        "time_s.npy": "d199113bc056e5c20bf444cecd15f575a34d8ffd1801cac82e59e555e802e5b4",
+        "veh_kin.npy": "6ef0ce546d3444f512ec7e81757101044f309a269d8668149f21c03178f19560",
+        "veh_mask.npy": "813c65cff5b7262edd9643abf17025d84e9f596bac81b3f2f4ad5af7e18ae228",
+        "is_cav.npy": "8ada02504bdc8ceea06a7b5cc5a1911a44e270597e7aee0222fcf562802f24d8",
+        "vid.npy": "6b9bc6b6fa2aea85ecadf2baba433f5c7d9ebaddfa86622124f32ca0abd41756"
+      }
+    },
+    {
+      "seed": 969428,
+      "episode": "w969428m2400p10t300__native",
+      "events": [],
+      "input_sha256": {
+        "episode.json": "cbdbaf4ddcd8a036f1934ad60015deb393a8e9e7cfe52a4d25a053a5d06e9dec",
+        "time_s.npy": "d199113bc056e5c20bf444cecd15f575a34d8ffd1801cac82e59e555e802e5b4",
+        "veh_kin.npy": "66e0dd77c3254ca14bc6b328615a65a16a32d8d4a436e6e65992d342cf0b5296",
+        "veh_mask.npy": "21906934c780e37e5de4deca2dce82caaedb104994ec509d1d0346200a5c3397",
+        "is_cav.npy": "97dfdb404faf65dfcdde0279ce2b4adbfb04a729917eaeea54b0fe44230676e0",
+        "vid.npy": "10c6ae15849b8922116a14fe0f79c088c17c76af1e43e4079cc115d8e6ddf6a9"
+      }
+    },
+    {
+      "seed": 969429,
+      "episode": "w969429m2700p10t300__native",
+      "events": [],
+      "input_sha256": {
+        "episode.json": "56fc5b8f44afa719208db4e257e230cfe181865699f934b799eecbd222194669",
+        "time_s.npy": "d199113bc056e5c20bf444cecd15f575a34d8ffd1801cac82e59e555e802e5b4",
+        "veh_kin.npy": "f75da1b0869c845f010294b5fc9e643a7e07dba1134a3b7d80f7e344aba0ef8b",
+        "veh_mask.npy": "0d7d8bc39db6a62c5ff51936132cd7c5f2e3aa3fc88930e861bccf03b3fbda30",
+        "is_cav.npy": "0a577983d89d1052026969aeec608fb2e69e530c49ae47ea7902690e6af92def",
+        "vid.npy": "b7889292e794f55f628a3f4ca43ec309471465303c948324be029030457cf540"
+      }
+    },
+    {
+      "seed": 969430,
+      "episode": "w969430m1900p20t300__native",
+      "events": [],
+      "input_sha256": {
+        "episode.json": "f43dc965e9d740a44bc27a5bb859477a4d840a96dc72e32724c6f26421affbc3",
+        "time_s.npy": "d199113bc056e5c20bf444cecd15f575a34d8ffd1801cac82e59e555e802e5b4",
+        "veh_kin.npy": "1521b17d483e975104b2aab1f7547829278beea6bbefa8e044c1c3291f40c94f",
+        "veh_mask.npy": "b76b3c2f196beeb8c9506cef6c6ed7e539efeac66f0e57d2d14937a1b60cca28",
+        "is_cav.npy": "71c7495511544f56717d98e07fc0ba6cbcca41fceeb34d47f47f0dadfb9aae09",
+        "vid.npy": "72b8050d7ab67032a2769ddfc7a84215f6dfe11d6e2a328ae33403154e54cab4"
+      }
+    },
+    {
+      "seed": 969431,
+      "episode": "w969431m2400p20t300__native",
+      "events": [],
+      "input_sha256": {
+        "episode.json": "66ee495913ec3ec8dc074e365a7b7b75357c59d6a3713ff08fc9adcd41b74a8b",
+        "time_s.npy": "d199113bc056e5c20bf444cecd15f575a34d8ffd1801cac82e59e555e802e5b4",
+        "veh_kin.npy": "2a45a5aeb8c6e3215d90d81a4abcb3d5d447cbfce7ad023531e876f06eb34049",
+        "veh_mask.npy": "66e593a4cad98a8ae2197a1a6bba07047d0974379485fe7525d19cceb999c262",
+        "is_cav.npy": "7348ec5a2ed8a37248790018e4ec16fcd35dd6b0f0e6df8f2b5968c70bb18c90",
+        "vid.npy": "10cd800714f7db5825b1ca1b1625994770b252e21244fa9953044c9bdf2cf9e2"
+      }
+    }
+  ]
+}
