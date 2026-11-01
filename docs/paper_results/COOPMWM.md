@@ -1,5 +1,18 @@
 # S-COOPMWM — live checks
 
+## 21:04 — disk admission restored; original A/B/R smoke PASS
+- Opaque archive **3119974400bytes** is durable on gpuA at
+  `/root/autodl-tmp/archive_cpuQ_20261101/coopmwm20261101_v2.tar`.
+  Source-stream and independently rehashed destination SHA256 both
+  `5b3b74cf25f6bc3e09f8be0b0c676436f102925292e5112d9dfe5c4add8dc1bc`.
+- Only after that exact match, removed the owner-approved literal superseded v2
+  source root; no peer directory or PID touched. cpuQ free **5200531456bytes**.
+- Existing smoke2280552 then completed once: **A/B/R PASS**,3600charged sim-s,
+  zero new MAPPO simulation; all three metrics match the reused baseline and
+  final-state fingerprints match. Total conservative charge stays **815240**.
+- CPU34 and numeric viability registration are complete. Acceleration optimizer
+  updates remain held solely for the registered two-GPU concurrency qualification.
+
 ## 21:00 — full-population batch qualification complete on both GPUs
 - Original probe3 completed once: K4/H120width34 and K8/H300width10 single-vs-batch
   parity **0.0veh-s on both GPUs**, including nonzero nongroup/afterplan residuals.

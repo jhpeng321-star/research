@@ -1,5 +1,15 @@
 # S-COOPMWM live continuation — OWNER20:35 four-update viability
 
+21:04: ARCHIVE2035_COMPLETE verified3,119,974,400-byte opaque backup SHA
+5b3b74cf25f6bc3e09f8be0b0c676436f102925292e5112d9dfe5c4add8dc1bc;
+approved v2 source removed only aftermatch, cpuQfree5,200,531,456bytes. All historical
+v2 data/charges now survive in `/root/autodl-tmp/archive_cpuQ_20261101/coopmwm20261101_v2.tar`;
+do not extract prohibited scenario contents. Existing smoke PASS A/B/R once,3600sim-s,
+no MAPPO rerun; conservative total815240. Watcher38380 is live/committing and currently
+WAIT_SCALE. Old observer1116 identity-verified/stopped, do not restart it.
+Probe3 BOTH exact0 K4/K8, complete8.4739+8.1915plans/h widebatch; fixed4 scaling under way.
+Inspect `VIABILITY2035_WATCH.log`/FAILED and scale COMPLETE before any manual action.
+
 20:57 recovery: read `coopmwm/RECOVERY_2035.md` and newest VIABILITY2035 receipts.
 CPU34 76PASS/0skips/zeroSUMO. New sources fix committed-plan behaviour-atom labels
 at eligible10s ticks, add hashed lossless result compression, async exact diagnostics,
