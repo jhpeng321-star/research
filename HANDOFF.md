@@ -198,12 +198,12 @@ TRAIN exploration credit is not paired dev-policy performance.
 
 <!-- COOPFREE OWNER1511 BEGIN -->
 ## OWNER15:11 live continuation
-Observed UTC 2026-11-01T10:59:24Z.
+Observed UTC 2026-11-01T11:01:56Z.
 cpuQ owned1579328/start53193103 alive=True; four nice19 workers, load admission12.
-Budget: 4,221,333 precharged / 4,221,333 closed-actual sim-s; total cap6,000,000.
+Budget: 4,668,693 precharged / 4,245,273 closed-actual sim-s; total cap6,000,000.
 Corrected u001 is inherited; every subsequent update uses fresh exploration. TRAIN effects are not DEV gains.
-- u005: 382/382 new arms closed; charge396,060; cachedHOLD77.
 - u006: 464/464 new arms closed; charge485,460; cachedHOLD89.
+- u007: 24/428 new arms closed; charge447,360; cachedHOLD89.
 ### Proposal checkpoint u001
 `tools/coopfree/publications/owner1511/policy_hold_u001.pt`
 SHA256 `7b6ff3254311b7f0e8af773cdd51dbfdeca16a8660d0f872c1c8212c8c03e9c1`; receipt `HOLD_UPDATE_001.json`.
