@@ -15,9 +15,15 @@ def state(owner,needle):
     assert Path('/proc/sys/kernel/random/boot_id').read_text().strip()==owner['boot_id']
     p=Path('/proc')/str(owner['pid'])
     if not (p/'stat').exists():return 'exited'
-    s=(p/'stat').read_text().split();assert s[21]==owner['start_ticks'],'PID identity changed'
+    try:s=(p/'stat').read_text().split()
+    except FileNotFoundError:return 'exited'
+    assert s[21]==owner['start_ticks'],'PID identity changed'
     if s[2]=='Z':return 'exited'
-    cmd=(p/'cmdline').read_bytes().replace(bytes([0]),b' ').decode()
+    try:cmd=(p/'cmdline').read_bytes().replace(bytes([0]),b' ').decode()
+    except FileNotFoundError:return 'exited'
+    # Linux clears cmdline during exit before /proc disappears or becomes Z.
+    # Same boot/start ticks are still mandatory; never signal this transient.
+    if not cmd:return 'exiting'
     assert needle in cmd and owner['root'] in cmd,'command identity changed'
     return s[2]
 
@@ -25,8 +31,9 @@ def state(owner,needle):
 def terminate(owner,needle):
     status=state(owner,needle)
     if status=='exited':return
-    os.kill(owner['pid'],signal.SIGTERM)
-    if status=='T':os.kill(owner['pid'],signal.SIGCONT)
+    if status!='exiting':
+        os.kill(owner['pid'],signal.SIGTERM)
+        if status=='T':os.kill(owner['pid'],signal.SIGCONT)
     end=time.monotonic()+15
     while state(owner,needle)!='exited':
         if time.monotonic()>end:raise ValueError('owned parent did not exit; no duplicate dispatch')

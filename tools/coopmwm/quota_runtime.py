@@ -8,7 +8,8 @@ from .protocol import sha
 
 
 def binding(root):
-    root=Path(root);v=json.loads((root/'MAIN0548_RUNTIME_BINDING.json').read_text())
+    root=Path(root);p=root/'MAIN0548_RUNTIME_BINDING_V2.json'
+    v=json.loads((p if p.exists() else root/'MAIN0548_RUNTIME_BINDING.json').read_text())
     assert v['amendment_sha256'] in (root/'AUTHORITY.md').read_text()
     assert v['plan_amendment_sha256'] in (root/'AUTHORITY.md').read_text()
     assert v['cpu']['pass_'] and v['cpu']['skips']==v['cpu']['sim_s']==0

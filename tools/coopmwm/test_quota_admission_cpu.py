@@ -103,6 +103,36 @@ class QuotaTests(unittest.TestCase):
             with self.assertRaises(AssertionError):t.terminate(dict(pid=123),'owned-module')
             kill.assert_not_called()
 
+    def test_process_exit_transient_does_not_abort_handover(self):
+        from unittest.mock import patch,call
+        import signal
+        from . import quota_transition as t
+        with patch.object(t,'state',side_effect=['T','exiting','exited']),patch.object(t.os,'kill') as kill,patch.object(t.time,'sleep'):
+            t.terminate(dict(pid=123),'owned-module')
+            self.assertEqual(kill.call_args_list,[call(123,signal.SIGTERM),call(123,signal.SIGCONT)])
+
+    def test_already_exiting_owner_is_only_observed(self):
+        from unittest.mock import patch
+        from . import quota_transition as t
+        with patch.object(t,'state',side_effect=['exiting','exited']),patch.object(t.os,'kill') as kill:
+            t.terminate(dict(pid=123),'owned-module');kill.assert_not_called()
+
+    def test_empty_cmdline_still_requires_original_boot_and_start(self):
+        from unittest.mock import patch
+        from . import quota_transition as t
+        proc=self.root/'proc/123';proc.mkdir(parents=True)
+        fields=['123','(python)','R']+['0']*19;fields[21]='original'
+        (proc/'stat').write_text(' '.join(fields));(proc/'cmdline').write_bytes(b'')
+        boot=self.root/'boot';boot.write_text('boot')
+        def path(*parts):
+            if parts==('/proc/sys/kernel/random/boot_id',):return boot
+            if parts==('/proc',):return self.root/'proc'
+            return Path(*parts)
+        with patch.object(t,'Path',side_effect=path):
+            owner=dict(pid=123,start_ticks='original',boot_id='boot',root='/owned')
+            self.assertEqual(t.state(owner,'module'),'exiting')
+            with self.assertRaises(AssertionError):t.state(dict(owner,start_ticks='reused'),'module')
+
     def test_existing_dispatch_never_relaunched(self):
         from unittest.mock import patch
         from . import quota_transition as t

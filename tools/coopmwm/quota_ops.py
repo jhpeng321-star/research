@@ -6,7 +6,7 @@ from .storage import read,write
 from .protocol import checked,REGISTRY,sha
 from .warm_deploy import ROOT
 
-SOURCE='/home/ubuntu/coopmwm20261102_quotacpu3'
+SOURCE='/home/ubuntu/coopmwm20261102_quotacpu4'
 
 
 def preregister():
@@ -56,7 +56,7 @@ print(json.dumps(dict(frozen_parents=owners,children_signalled=False,new_sumo_si
 
 
 def qualify():
-    prior=read(ops.EVIDENCE/'CPU_coopmwm20261102_capacitycpu3.json')
+    prior=read(ops.EVIDENCE/'CPU_coopmwm20261102_quotacpu3.json')
     files=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,hashlib
 r=pathlib.Path({prior['root']!r});files={{}}
 for name,h in json.loads({json.dumps(prior['source_hashes'])!r}).items():
@@ -78,7 +78,7 @@ with patch('subprocess.Popen',side_effect=AssertionError('no SUMO in qualificati
  result=unittest.TextTestRunner(stream=sys.stdout,verbosity=1).run(suite)
 print(json.dumps(dict(pass_=result.wasSuccessful(),tests=result.testsRun,skips=len(result.skipped),sim_s=0,root={SOURCE!r},wall_s=time.monotonic()-start)))''',timeout=90)
     print(out);v=json.loads(out.strip().splitlines()[-1]);v['source_hashes']=staged['hashes']
-    write(ops.EVIDENCE/'CPU_coopmwm20261102_quotacpu3.json',v);assert v['pass_'] and not v['skips']
+    write(ops.EVIDENCE/'CPU_coopmwm20261102_quotacpu4.json',v);assert v['pass_'] and not v['skips']
 
 
 def register():
@@ -116,6 +116,46 @@ print(json.dumps(replace_broker({ROOT!r})))''',timeout=45)
     v=json.loads(out);write(ops.EVIDENCE/'QUOTA_broker_DISPATCH.json',v);print(out)
 
 
+def repair_register():
+    cpu=read(ops.EVIDENCE/'CPU_coopmwm20261102_quotacpu4.json');assert cpu['pass_'] and cpu['sim_s']==cpu['skips']==0
+    old=read(ops.EVIDENCE/'MAIN0548_RUNTIME_REGISTRATION.json')
+    v=dict(cpu=cpu,source_root=SOURCE,plan_amendment_sha256=old['plan_amendment_sha256'],
+        diagnosis='identity poll observed empty cmdline after verified TERM/CONT of old supervisor; Linux clears argv before proc disappears; all24 B results complete, no optimizer/new B/R dispatch occurred',
+        fix='same boot and start ticks remain mandatory; empty cmdline is observed as exiting without further signals; disappearing proc files count as exited; no relaxed nonempty-command identity checks',
+        new_sumo_sim_s=0,budget_unchanged=True,previous_runtime=old['amendment_sha256'])
+    path=ops.EVIDENCE/'MAIN0548_PARENT_EXIT_AMENDMENT.json';write(path,v);h=sha(path)
+    line='\nS-COOPMWM MAIN0548 PARENT-EXIT ENGINEERING REPAIR REGISTERED amendmentSHA'+h+': '+json.dumps({k:x for k,x in v.items() if k!='cpu'},sort_keys=True)+'\n'
+    with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+    out=ops.ssh.remote('cpuQ',f'''import pathlib,json,sys,hashlib
+r=pathlib.Path({ROOT!r});s=pathlib.Path({SOURCE!r});sys.path[:0]=[str(s/'pytools'),'/home/ubuntu/e3final/runtime/src','/home/ubuntu/e3final/runtime']
+from tools.coopmwm.warm_spool import immutable
+from tools.coopmwm.quota_transition import completed
+failure=json.loads((r/'MAIN0548_TRANSITION_FAILED.json').read_text());assert failure['error']=="AssertionError('command identity changed')"
+assert completed(r) and not (r/'B_UPDATE_001.json').exists()
+for a in ('B','R'):assert not (r/f'QUOTA_{{a}}_DISPATCH.json').exists()
+for name,h in json.loads({json.dumps(cpu['source_hashes'])!r}).items():assert hashlib.sha256((s/name).read_bytes()).hexdigest()==h
+with (r/'AUTHORITY.md').open('a') as f:f.write({line!r})
+immutable(r/'MAIN0548_RUNTIME_BINDING_V2.json',json.loads({json.dumps(dict(v,amendment_sha256=h))!r}))
+from tools.coopmwm.quota_runtime import install
+from tools.coopmwm.accel_learner import load
+wr,_=install(r)
+for a in ('B','R'):
+ b=wr.verify(r,a);_,_,_,payload=load(r/f'{{a}}_checkpoint_000.pt');assert payload['update']==0
+print(json.dumps(dict(registered=True,amendment_sha256={h!r},all24_adopted_preflight=True,u0_Adam_RNG=True,new_sumo_sim_s=0)))''',timeout=45)
+    write(ops.EVIDENCE/'MAIN0548_PARENT_EXIT_REGISTRATION.json',dict(v,amendment_sha256=h,remote=json.loads(out)));print(out)
+
+
+def handover():
+    assert read(ops.EVIDENCE/'MAIN0548_PARENT_EXIT_REGISTRATION.json')['remote']['all24_adopted_preflight']
+    out=ops.ssh.remote('cpuQ',f'''import sys,json
+sys.path[:0]=[{SOURCE!r}+'/pytools','/home/ubuntu/e3final/runtime/src','/home/ubuntu/e3final/runtime']
+from tools.coopmwm.quota_transition import handover
+print(json.dumps(handover({ROOT!r})))''',timeout=45)
+    owners=json.loads(out)
+    for arm,owner in owners.items():write(ops.EVIDENCE/f'QUOTA_{arm}_DISPATCH.json',owner)
+    print(out)
+
+
 def dispatch_watch():
     out=ops.ssh.remote('cpuQ',f'''import pathlib,sys,json,os,subprocess,time
 sys.path.insert(0,{SOURCE!r}+'/pytools')
@@ -148,7 +188,12 @@ receipts={{}}
 for name in ('MAIN0548_BROKER_HANDOVER.json','MAIN0548_HANDOVER_COMPLETE.json','MAIN0548_TRAINING_CONTINUED.json','MAIN0548_TRANSITION_FAILED.json','WARM_GUIDED_STOP_V2.json','WARM_B_FAILED_Q1.json','WARM_R_FAILED_Q1.json'):
  if (r/name).exists():receipts[name]=json.loads((r/name).read_text())
 for p in r.glob('PAUSE_*.json'):receipts[p.name]=json.loads(p.read_text())
-print(json.dumps(dict(unix=time.time(),owners=owners,receipts=receipts,all24closed=completed(r),load=os.getloadavg(),updates={{a:max([0]+[int(p.stem.rsplit('_',1)[1]) for p in r.glob(a+'_UPDATE_*.json')]) for a in ('A','B','R')}},logs={{name:(r/name).read_text()[-5000:] for name in ('MAIN0548_TRANSITION.log','QUOTA_B.log','QUOTA_R.log','QUOTA_broker.log') if (r/name).exists()}})))''',timeout=45)
+pending=[]
+for p in (r/'requests').glob('*.json'):
+ if (r/'responses'/p.name).exists():continue
+ v=json.loads(p.read_text());a=r/'broker_assignments'/p.name
+ pending.append(dict(key=v['state_id'],world=v['world_id'],time_s=v['time_s'],group_size=len(v['group']),age_s=time.time()-p.stat().st_mtime,assignment=json.loads(a.read_text()) if a.exists() else None))
+print(json.dumps(dict(unix=time.time(),owners=owners,receipts=receipts,pending=pending,all24closed=completed(r),load=os.getloadavg(),updates={{a:max([0]+[int(p.stem.rsplit('_',1)[1]) for p in r.glob(a+'_UPDATE_*.json')]) for a in ('A','B','R')}},logs={{name:(r/name).read_text()[-5000:] for name in ('MAIN0548_TRANSITION.log','QUOTA_B.log','QUOTA_R.log','QUOTA_broker.log') if (r/name).exists()}})))''',timeout=45)
     v=json.loads(out);write(ops.EVIDENCE/f'MAIN0548_STATUS_{int(v["unix"])}.json',v)
     for name,receipt in v['receipts'].items():
         if name.startswith('MAIN0548_') and not (ops.EVIDENCE/name).exists():write(ops.EVIDENCE/name,receipt)
@@ -158,4 +203,4 @@ print(json.dumps(dict(unix=time.time(),owners=owners,receipts=receipts,all24clos
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('preregister','freeze','qualify','register','deploy_broker','dispatch_watch','status'));a=p.parse_args();globals()[a.mode]()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('preregister','freeze','qualify','register','deploy_broker','repair_register','handover','dispatch_watch','status'));a=p.parse_args();globals()[a.mode]()

@@ -1,5 +1,14 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+QUOTAHANDOVER ENGINEERINGFIX QUALIFIED: all24currentB-u1RESULTsnowcomplete,
+ZEROqueriespending, noBoptimizer/newB-Rdispatch at1793571242. Detachedtransition
+3514691 exited on Linux emptycmdline during verifiedoldparentexit; originalfailure
+retained. CPU4fix234PASS/0skips/39.22s/zeroSUMO, immutablequotacpu4; amendment
+5693f169 registered. Realall24result-adoption/u0AdamRNGpreflightPASS. Onlysame
+boot/startticks+emptyargv=>'exiting'(observe/noextrasignal); nonemptywrongcmdSTOP.
+Broker3514272/grader3427015/GPUowners unchanged. NEXT `quota_ops handover` ONCE;
+adopt any QUOTA_B/R_DISPATCH alreadycreated beforeanyrepeat. DoNOTrestartphysics.
+
 FIRSTEXACTGRADE: reporterexisting3357311 alive/noerrors, firstpublishedreport
 B_EXACT_VIABILITY_dccf6049...: world986025/t320,3members,D180,rank1,new/ordinary,
 exactmarginalsaving+6.666416veh-s vsWM+240.965869 (differentregisteredhorizons).
