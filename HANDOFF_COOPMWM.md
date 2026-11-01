@@ -1,4 +1,20 @@
-# S-COOPMWM live continuation — MAIN02:30 exact plan grading pending
+# S-COOPMWM live continuation — MAIN02:36 fixed H300; exact integration pending
+
+FRESH RESUME: complete253-line brief read, HEAD81a05412/work preserved. Receipt
+RESUME_MAIN0236_20261102.md: original A2998262 running,u20complete,458/480closed,
+charge1564040; B/R/broker unstarted. Original GPU spools BOTH READY/all6gatesEXACT0;
+adopt, never duplicate. Exact grader clean/not landed at e6581008. Cap7500000,
+allocation7473440; MAIN0236 REVOKES cheaper screen: K4/H300 ALWAYS, K8/Hfinal
+unchanged. MAIN0234 auto-continueA/B48,R24 supersedes old u4 owner-review pause.
+Register/integrate exact-only learning and durable grader before B's first update.
+
+FRESH RESUME: complete251-line brief read, HEAD81a05412/work retained. Receipt
+RESUME_MAIN0234_20261102.md: original A2998262 running,u19complete,444/444closed,
+charge1520840; B/R/broker unstarted. BOTH original GPU spools now READY with all
+SIX startup gates EXACT0; adopt, never duplicate. Delegated exact grader has not
+landed (clean c4/exact-grade ate6581008); integrate when available. Cap7500000;
+register7473440allocation/exactgrades and MAIN0234 conditionalH120screen plus
+auto-continueA/B48,R24 (supersedesu4reviewpause). No new dispatch in recovery.
 
 FRESH RESUME: complete246-line brief read, HEADe6581008/work retained. Receipt
 RESUME_MAIN0230_20261102.md: A original2998262/start57133822 isR, u18 complete,

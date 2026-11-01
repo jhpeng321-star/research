@@ -1,5 +1,26 @@
 # S-COOPMWM — live checks
 
+## Fresh resume — full brief through MAIN02:36
+- Original detached A2998262 is running: **u20 complete, 458/480 jobs closed,
+  1,564,040 sim-s charged**. B/R/broker unstarted, no pending request or active pause.
+- Original GPU spools both READY, all six startup gates each EXACT0. Completed
+  qualification is adopted. Delegated exact grader has not landed (clean e6581008).
+- **MAIN02:36 revokes the cheaper screen:** K4/H300 always; K8/Hfinal unchanged.
+  Auto-continue A/B48,R24 under health guards; asynchronous exact-only plan grades.
+  Cap7,500,000/allocation7,473,440. Receipt `coopmwm/RESUME_MAIN0236_20261102.md`.
+
+## Fresh resume — full brief through MAIN02:34
+- Original detached A2998262 is running; **u19 complete, 444/444 jobs closed,
+  1,520,840 sim-s charged**. B/R/broker unstarted; no pending request or pause.
+- Both original detached GPU spools are now **READY: all six startup gates each
+  EXACT0**, including warm batch/single and full/fast trajectory parity. Existing
+  qualifications are adopted without replay.
+- Latest owner scope: cap7,500,000; every-plan exact SUMO grading; asynchronous
+  grading never blocks own-action PPO. Auto-continue A/B48,R24 under health guards;
+  conditional cheaper screen after first B update if executed-plan rate<20/hour.
+- Delegated exact-grader module has not landed; its integration and prospective
+  runtime registration remain. Recovery receipt `coopmwm/RESUME_MAIN0234_20261102.md`.
+
 ## Fresh resume — full brief through MAIN02:30
 - Preserved HEADe6581008 and existing receipts/claims. A's original detached
   owner2998262 is running; **u18 complete, 420/420 jobs closed, 1492040sim-s charged**.

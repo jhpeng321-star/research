@@ -1,5 +1,5 @@
 # S-COOPMWM — latest scope registered; warm MPPI release still qualification-gated
-1. MAIN23:54 allocation6473440/cap6500000/free26560; WARM2354_AMENDMENT/REGISTRATION pin exact plan; earlier budget STOP superseded.
+1. MAIN02:24 cap7500000/allocation7473440/free26560; adds1000000 exact-plan-grade reserve to preserved MAIN23:54 allocation; registration required before B/R.
 2. A/B/R fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
 4. A: PPO shared team reward=-J, road speed deficit plus source waiting.
@@ -26,7 +26,7 @@
 25. beta starts1 per training seed; immutable update receipts supply the next update's beta.
 26. Log query mass p over eligible uncommitted decisions only; beta(type,regime); R quota exhausted=>own/p0.
 27. MAIN02:01 PPO only nonexecuted/own steps (including rejected queries), standard pi_new/pi_old; never score/ratio plan steps.
-28. Critic allsteps; completed-plan A=sum gamma^j SUMOreward/10000+gamma^D V_end-V_start; A>0 AWR min(20,exp(A/T)), coefficient1; T=RMS MAPPO-check(J900-J600)/10000 fixed preB/R, no beta imitation.
+28. Critic allsteps for own PPO baseline only; plan A=exact paired SUMO saving/10000 over D+120, identical prefix; only exact-positive AWR min(20,exp(A/T)), coefficient1,T4.822766875237093 frozen preB/R; ungraded queued.
 29. Original E2 retained; cold/warm qualification reuses exact-labelled00/01; acceleration E2 first12random executed TRAIN plans,RNG20261101.
 30. Exact/WM E2 keeps all background CAVs on MAPPO after decision, group commitment then MAPPO; no native reversion.
 31. Select t<=600 so all H600 twins finish by1200; full-prefix COOPFREE quartet once/window.
@@ -40,9 +40,9 @@
 39. TRAIN4/dev16 reporting only; final checkpoints fixedA/B48,R24; A completed balancedu1..4/check/Adam/RNG retained, focus startsA-u5.
 40. Final detector-first discovery uses unchanged COOPBEHAV detectors and complete exact twins.
 41. Learning checks report team return/value/KL/gradient, beta, proposal routes/acceptance/O1-O4 counts.
-42. FixedA/B48,R24 x24episodes x1200; first B-u4 viability publication/pause retained pending owner full-run review; seed2 dropped.
-43. Cap6500000: superseded811640,train3456000,checks432000,dev201600,final460800,Rtest115200,coldB28800,failedA14400.
-44. Mechanics3600,calibration57600,discovery200000,pairedbranches691200,reusecheck600; allocated6473440/free26560 not auto-spent.
+42. FixedA/B48,R24 x24episodes x1200; MAIN02:34 auto-continue under health guards, publish u4 viability without owner-review pause; seed2 dropped.
+43. Cap7500000: superseded811640,train3456000,checks432000,dev201600,final460800,Rtest115200,coldB28800,failedA14400; exact-plan-grades1000000.
+44. Mechanics3600,calibration57600,discovery200000,pairedbranches691200,reusecheck600; allocated7473440/free26560 not auto-spent; complete-grade precharge or STOP.
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.
 46. All failures/warmup/twins charged in full before attempts; no retries/refunds/duplicate dispatch.
 47. Primary A/B parallel first; cpuQ12nice19singlethread workers+2E2; load<=20/RAM8GiB/disk2GiB.
@@ -62,7 +62,7 @@
 61. BranchesT300/500/700/900,H300; exact same MAPPO prefix, mismatchSTOP; MAPPO-reuse600 check first; failure+115200 needs MAIN approval.
 62. Final paired world-bootstrap95CI B-MAPPO/B-A/B-R/A-MAPPO J600/J900; percell/safety; controls reused.
 63. First12executedBstarts RNG20261101 + final detector-first twins share200000reserve; complete n+2 full-prefix reruns before any attempt.
-64. Trust: H300 SUMO return+critic tail-baseline; Hajek executed(type,regime) minus own(regime) residuals.
+64. Trust/library/covariance: ONLY exact same-state SUMO plan grades, never critic estimates; prefix mismatch STOP/logged, no imputation; asynchronous CPU grading before first B update, report lag.
 65. 10000 world bootstrap95CI[L,U]; e=max(|mean-L|,|U-mean|); beta=min(old,max(0,U)/(|mean|+e)).
 66. MPPI/type x regime EB buckets: tau²=max(0,var(bucketmeans)-mean(bootstrapSE²)); weight=tau²/(tau²+SE²); O1-O4 posthoc labels only.
 67. Two Holm families per comparator B-MAPPO/B-A over{allbranch,focus},two-sidedalpha.05; whole-world clusters; focus sources exact lines/SHA in amendment.
