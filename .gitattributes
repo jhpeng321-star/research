@@ -131,3 +131,7 @@ R9_GATE2.md text eol=lf
 /tools/autonomy_e5/telemetry_audit.py -text
 /tools/autonomy_e5/summarize.py -text
 /tools/autonomy_e5/verify_report.py -text
+
+# S-RB2-BREAK: fetched remote receipts are SHA-bound raw bytes, not reflowable text.
+# Scope only nested evidence JSON; top-level locally generated summaries are ordinary text.
+/docs/rb2break/*/*.json -text

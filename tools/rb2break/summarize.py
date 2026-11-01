@@ -17,19 +17,50 @@ def crps(values, real):
     return float(np.abs(values-real).mean() - .5*np.abs(values[:, None]-values).mean())
 
 
-def tasks(path):
+def tasks(path, *, require_complete=False):
     result = {}
+    checked = set()
     for seed in DEV:
         for future in range(8):
             files = list(path.glob(f'**/w{seed}_k{future}.json'))
             if len(files) > 1:
                 raise ValueError('duplicate task')
             if files:
+                origin = files[0].parent
+                if require_complete and not any((origin/name).is_file() for name in ('COMPLETE.json', 'BASELINE.json')):
+                    raise ValueError('complete screened subset or frozen baseline receipt required')
+                if require_complete and origin not in checked:
+                    marker = load(origin/'COMPLETE.json') if (origin/'COMPLETE.json').is_file() else load(origin/'BASELINE.json')
+                    names = set(marker.get('hashes', marker.get('files', {})))
+                    assert names <= {f'w{s}_k{f}.json' for s in DEV for f in range(8)}
+                    assert all((origin/name).is_file() for name in names), 'declared complete tasks missing'
+                    checked.add(origin)
+                if (origin/'SNAPSHOT.json').is_file():
+                    assert digest(files[0]) == load(origin/'SNAPSHOT.json')['hashes'][files[0].name], 'snapshot task bytes changed'
                 task = load(files[0])
+                if (origin/'IDENTITY.json').is_file():
+                    assert digest(origin/'IDENTITY.json') == task['identity_sha256'], 'task identity changed'
+                    assert set(load(origin/'IDENTITY.json')['worlds']) <= set(DEV), 'nondevelopment candidate identity'
+                elif (origin/'BASELINE.json').is_file():
+                    receipt = load(origin/'BASELINE.json')
+                    assert digest(files[0]) == receipt['files'][files[0].name]['sha256'], 'frozen baseline bytes changed'
+                else:
+                    raise ValueError('unbound development task input')
                 assert task['seed'] == seed and task['future'] == future
                 assert task['future_sampling']['population_audit']['conserved']
                 result[seed, future] = task
     return result
+
+
+def verify_identical_arms(candidate, baseline, arms):
+    assert set(arms) <= set(ARMS)
+    for key, task in candidate.items():
+        assert key in baseline
+        for arm in arms:
+            new = next(e for e in task['episodes'] if e['arm'] == arm)
+            old = next(e for e in baseline[key]['episodes'] if e['arm'] == arm)
+            if new != old:
+                raise ValueError(f'nonintervened arm changed: {key} {arm}')
 
 
 def onset(event):
@@ -123,12 +154,18 @@ def main():
     parser.add_argument('--candidate', required=True)
     parser.add_argument('--baseline', required=True)
     parser.add_argument('--output', required=True)
+    parser.add_argument('--require-complete', action='store_true')
+    parser.add_argument('--require-identical-arms', nargs='*', choices=ARMS, default=[])
     args = parser.parse_args()
     real_path = Path(__file__).resolve().parents[1]/'rbeval/real_observables.json'
     # This pre-existing mixed-split container is parsed only to extract allowlisted
     # records; no reserved record is used by any computation or output.
     real = {(e['seed'], e['arm']):e for e in load(real_path)['episodes'] if e['seed'] in DEV}
-    result = summarize(tasks(Path(args.candidate)), tasks(Path(args.baseline)), real)
+    candidate = tasks(Path(args.candidate), require_complete=args.require_complete)
+    baseline = tasks(Path(args.baseline), require_complete=args.require_complete)
+    verify_identical_arms(candidate, baseline, args.require_identical_arms)
+    result = summarize(candidate, baseline, real)
+    result['unchanged_arms_verified'] = args.require_identical_arms
     result.update(candidate=str(args.candidate), baseline=str(args.baseline),
                   real_receipt_sha256=digest(real_path), source_sha256=digest(__file__))
     save_new(Path(args.output), result)

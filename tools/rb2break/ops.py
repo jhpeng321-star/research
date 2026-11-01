@@ -16,7 +16,7 @@ JOB = PARENT+'/rb2break'
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('action', choices=('stage', 'launch', 'queue', 'queue-corrections', 'queue-native', 'validate-envelope', 'fetch-envelope', 'fit-birth', 'bind-birth', 'fetch-birth', 'resources', 'inspect-start', 'wait', 'retire-cpu3', 'retire-slow-cpu', 'retire-old-queues', 'status', 'fetch', 'fetch-baseline', 'baseline'))
+    parser.add_argument('action', choices=('stage', 'launch', 'queue', 'queue-corrections', 'queue-native', 'validate-envelope', 'fetch-envelope', 'fit-birth', 'bind-birth', 'fetch-birth', 'fetch-source-audit', 'resources', 'inspect-start', 'inspect-source', 'wait', 'retire-cpu3', 'retire-slow-cpu', 'retire-old-queues', 'status', 'fetch', 'fetch-baseline', 'baseline'))
     parser.add_argument('--host', default='gpuA', choices=('gpuA', 'gpuR'))
     parser.add_argument('--runtime')
     parser.add_argument('--factor', default='baseline')
@@ -258,6 +258,30 @@ save(fit/'OBSERVATION_BINDING.json',dict(observations=observations,stage=json.lo
  source_sha256=artifact['source_sha256'],fitting_end_s=300,traffic_outcomes_used=False))
 print(json.dumps(dict(worlds=len(observations),motion_validation_improved=artifact['motion_validation_improved'])))
 '''
+    elif args.action == 'inspect-source':
+        code = '''
+import sys,numpy as np
+runtime=parent/'rb2break_code_e164b30946af';sys.path[:0]=[str(runtime),str(runtime/'src')]
+from tools.rbint.observations import load_observations
+from wms.model.entries import ENTRY_S_M
+data=[];bindings={}
+for seed in range(969420,969432):
+ start,_,hashes=load_observations(seed);bindings[str(seed)]=hashes
+ for e in start['past_entries']:
+  if e['time']>=180: data.append(dict(seed=seed,**e))
+result={}
+for entrance,lanes in (('mainline',(0,1)),('ramp',(2,))):
+ selected=[e for e in data if e['lane'] in lanes]
+ lengths=np.array([e['s_m']-ENTRY_S_M[e['lane']]-.1 for e in selected])
+ tolerances=np.array([2*abs(float(np.spacing(np.float32(e['s_m'])))) for e in selected])
+ speeds=np.array([e['v_mps'] for e in selected])
+ result[entrance]=dict(n=len(selected),base_position_fraction=float((abs(lengths-5)<=tolerances).mean()),
+  implied_length_quantiles=np.quantile(lengths,[0,.25,.5,.75,1]).tolist(),
+  birth_speed_quantiles_mps=np.quantile(speeds,[0,.25,.5,.75,.95,1]).tolist())
+payload=dict(conditioning_interval_s=[180,300],worlds=list(range(969420,969432)),
+ result=result,observable_hashes=bindings,traffic_outcomes_used=False)
+save(root/'SOURCE_OBSERVABLE_AUDIT.json',payload);print(json.dumps(payload))
+'''
     elif args.action == 'inspect-start':
         code = '''
 import sys
@@ -318,7 +342,8 @@ print(json.dumps(dict(tasks=len(manifest),development_only=True)))
             raise ValueError('new immutable local snapshot required')
         remote_name = ('frozen_baseline' if args.action == 'fetch-baseline' else
                        'birth_fit_'+args.birth_version if args.action == 'fetch-birth' else
-                       'envelope_validation' if args.action == 'fetch-envelope' else out_name)
+                       'envelope_validation' if args.action == 'fetch-envelope' else
+                       '' if args.action == 'fetch-source-audit' else out_name)
         code = f'''import hashlib,io,json,sys,tarfile
 from pathlib import Path
 root=Path({JOB!r})/{remote_name!r};assert root.is_dir()
@@ -332,7 +357,7 @@ for seed in range(969420,969432):
    except json.JSONDecodeError: continue
    assert task['seed']==seed and task['future']==future
    files[path.name]=data
-for name in ('IDENTITY.json','DISPATCH.json','COMPLETE.json','BASELINE.json','FIT.json','VALIDATION.json','entrant_population.json','OBSERVATION_BINDING.json','OPERATIONAL_STOP.json'):
+for name in ('IDENTITY.json','DISPATCH.json','COMPLETE.json','BASELINE.json','FIT.json','VALIDATION.json','entrant_population.json','OBSERVATION_BINDING.json','OPERATIONAL_STOP.json','SOURCE_OBSERVABLE_AUDIT.json'):
  path=root/name
  if path.exists(): files[name]=path.read_bytes()
 receipt=dict(source=str(root),hashes={{name:hashlib.sha256(data).hexdigest() for name,data in files.items()}})
