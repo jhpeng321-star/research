@@ -1,7 +1,7 @@
 # WM-PHYS v5 — INTERIM; final comparison pending
 
-**INTERIM 20261101T183839+0800: on 8 matched complete K8 worlds
-(reserved8), v5−v4 delay CRPS is +169/+1,110/+2,996 veh-s at120/300/600s.**
+**INTERIM 20261101T183853+0800: on 10 matched complete K8 worlds
+(available_replicated_cells), v5−v4 delay CRPS is +167/+1,046/+3,618 veh-s at120/300/600s.**
 See the interval-supported detailed results below. This is an available-data
 diagnostic, not model selection or a planner/cooperation switching authorization.
 
@@ -58,54 +58,54 @@ immutable source/recipe/smoke binding in HANDOFF.md are now published for
 S-WMTEACH's engineering/quality rerun; final qualification is pending.
 
 <!-- RB2-INTERIM:BEGIN -->
-## INTERIM v5 versus v4 — 20261101T182025+0800 (available_replicated_cells)
+## INTERIM v5 versus v4 — 20261101T183853+0800 (available_replicated_cells)
 
-**8 matched complete K8 worlds; all five arms.** This is an interim diagnostic, not model selection or switching authorization.
-Worlds: 969433, 969436, 969437, 969438, 969590, 969592, 969595, 969599.
+**10 matched complete K8 worlds; all five arms.** This is an interim diagnostic, not model selection or switching authorization.
+Worlds: 969433, 969435, 969436, 969437, 969438, 969439, 969590, 969592, 969595, 969599.
 CIs use10,000 paired fixed-cell whole-world resamples; delay/HDV/accuracy condition on stored K8. Rate/effect means include paired future resampling. Each metric family is simultaneous across its displayed horizons/models; this interim two-model family is separate from the final registered six-contrast family. No sequential/repeated-look confidence claim.
-Strata: [{'demand': 1900, 'penetration': 0.05, 'worlds': 2}, {'demand': 1900, 'penetration': 0.4, 'worlds': 2}, {'demand': 2700, 'penetration': 0.05, 'worlds': 2}, {'demand': 2700, 'penetration': 0.1, 'worlds': 2}].
+Strata: [{'demand': 1900, 'penetration': 0.05, 'worlds': 2}, {'demand': 1900, 'penetration': 0.4, 'worlds': 2}, {'demand': 2700, 'penetration': 0.05, 'worlds': 2}, {'demand': 2700, 'penetration': 0.1, 'worlds': 2}, {'demand': 2700, 'penetration': 0.4, 'worlds': 2}].
 
 ### Delay, breakdown and HDV60
-- FULL-v4 delay CRPS120/300/600=1,047/3,570/11,039veh-s; mean bias=1,382/4,683/14,811veh-s.
-- FULL-v5 delay CRPS120/300/600=1,287/4,920/15,500veh-s; mean bias=1,676/6,359/20,621veh-s.
-- 120s v5−v4 delay CRPS: 240.0 [95% CI 118.5, 361.4]veh-s; breakdown absolute rate-distance: 12.50 [95% CI -22.23, 47.23]pp.
-- 300s v5−v4 delay CRPS: 1,350.0 [95% CI 533.0, 2,167.0]veh-s; breakdown absolute rate-distance: 2.50 [95% CI -22.54, 21.42]pp.
-- 600s v5−v4 delay CRPS: 4,460.5 [95% CI 2,613.3, 6,307.7]veh-s; breakdown absolute rate-distance: 0.00 [95% CI -18.29, 17.60]pp.
-- v5−v4 HDV60 mean-world-median position-error difference: 0.5 [95% CI -4.5, 5.5]m.
+- FULL-v4 delay CRPS120/300/600=952/3,321/10,003veh-s; mean bias=1,118/3,805/11,589veh-s.
+- FULL-v5 delay CRPS120/300/600=1,119/4,367/13,622veh-s; mean bias=1,399/5,485/17,537veh-s.
+- 120s v5−v4 delay CRPS: 166.9 [95% CI 64.6, 269.3]veh-s; breakdown absolute rate-distance: 10.50 [95% CI -20.33, 41.33]pp.
+- 300s v5−v4 delay CRPS: 1,046.1 [95% CI 356.5, 1,735.7]veh-s; breakdown absolute rate-distance: 2.25 [95% CI -23.77, 27.31]pp.
+- 600s v5−v4 delay CRPS: 3,618.5 [95% CI 2,051.0, 5,185.9]veh-s; breakdown absolute rate-distance: 0.00 [95% CI -17.70, 17.14]pp.
+- v5−v4 HDV60 mean-world-median position-error difference: 0.7 [95% CI -3.3, 4.8]m.
 
 ### Controller-effect signs and credibility
-- FULL-v4/120s:0.8calls n=18, observed win 44.4 [95% CI 25.5, 63.4]% vs forecast 92.4 [95% CI 88.4, 96.3]%; range coverage 37.5 [95% CI 0.0, 75.4]%; all10pair direction accuracy 48.8 [95% CI 40.0, 57.5]%.
-- FULL-v4/300s:0.8calls n=14, observed win 57.1 [95% CI 32.0, 82.3]% vs forecast 90.2 [95% CI 88.6, 91.7]%; range coverage 57.5 [95% CI 19.4, 95.6]%; all10pair direction accuracy 65.0 [95% CI 55.4, 74.6]%.
-- FULL-v4/600s:0.8calls n=12, observed win 58.3 [95% CI 41.7, 75.0]% vs forecast 93.8 [95% CI 88.8, 98.7]%; range coverage 72.5 [95% CI 39.4, 100.0]%; all10pair direction accuracy 43.8 [95% CI 33.1, 54.4]%.
-- FULL-v4 ctrl0−native expected delay effect120/300/600: -41.3 [95% CI -107.6, 25.1] / -181.6 [95% CI -642.1, 279.0] / -184.5 [95% CI -1,930.4, 1,561.4]veh-s; recorded -40.4 [95% CI -146.1, 65.2] / 38.3 [95% CI -416.8, 493.4] / 1,093.2 [95% CI -1,271.0, 3,457.5]veh-s. Negative means lower delay.
-- FULL-v4 mappo−native expected delay effect120/300/600: -2.1 [95% CI -125.5, 121.3] / -332.3 [95% CI -1,029.9, 365.2] / -871.7 [95% CI -3,063.9, 1,320.6]veh-s; recorded 60.8 [95% CI -32.7, 154.3] / -15.7 [95% CI -952.1, 920.7] / -684.5 [95% CI -2,821.8, 1,452.9]veh-s. Negative means lower delay.
-- FULL-v4 pi−native expected delay effect120/300/600: -45.4 [95% CI -184.5, 93.7] / -254.7 [95% CI -981.3, 471.8] / -843.1 [95% CI -3,080.3, 1,394.2]veh-s; recorded 39.3 [95% CI -80.0, 158.7] / 206.5 [95% CI -659.7, 1,072.6] / 1,194.5 [95% CI -2,477.6, 4,866.6]veh-s. Negative means lower delay.
-- FULL-v4 circles−native expected delay effect120/300/600: 82.7 [95% CI -21.5, 186.9] / 417.6 [95% CI -220.0, 1,055.3] / 1,426.9 [95% CI -386.3, 3,240.0]veh-s; recorded 147.3 [95% CI -128.7, 423.3] / 1,107.5 [95% CI 197.9, 2,017.2] / 3,608.0 [95% CI -86.6, 7,302.5]veh-s. Negative means lower delay.
-- FULL-v4 native−ctrl0 expected delay effect120/300/600: 41.3 [95% CI -25.1, 107.6] / 181.6 [95% CI -279.0, 642.1] / 184.5 [95% CI -1,561.4, 1,930.4]veh-s; recorded 40.4 [95% CI -65.2, 146.1] / -38.3 [95% CI -493.4, 416.8] / -1,093.2 [95% CI -3,457.5, 1,271.0]veh-s. Negative means lower delay.
-- FULL-v4 mappo−ctrl0 expected delay effect120/300/600: 39.2 [95% CI -77.8, 156.2] / -150.8 [95% CI -706.7, 405.2] / -687.1 [95% CI -2,410.0, 1,035.8]veh-s; recorded 101.2 [95% CI -37.4, 239.9] / -54.0 [95% CI -741.0, 633.1] / -1,777.7 [95% CI -3,685.2, 129.8]veh-s. Negative means lower delay.
-- FULL-v4 pi−ctrl0 expected delay effect120/300/600: -4.1 [95% CI -155.5, 147.2] / -73.2 [95% CI -925.1, 778.8] / -658.5 [95% CI -3,242.0, 1,925.0]veh-s; recorded 79.7 [95% CI -85.6, 245.1] / 168.2 [95% CI -619.1, 955.5] / 101.3 [95% CI -3,225.3, 3,427.8]veh-s. Negative means lower delay.
-- FULL-v4 circles−ctrl0 expected delay effect120/300/600: 124.0 [95% CI 11.1, 236.8] / 599.2 [95% CI -147.6, 1,346.0] / 1,611.4 [95% CI -183.7, 3,406.5]veh-s; recorded 187.7 [95% CI -90.7, 466.2] / 1,069.3 [95% CI 65.7, 2,072.8] / 2,514.7 [95% CI -662.3, 5,691.8]veh-s. Negative means lower delay.
-- FULL-v5/120s:0.8calls n=8, observed win 62.5 [95% CI 19.6, 100.0]% vs forecast 90.6 [95% CI 86.2, 95.0]%; range coverage 25.0 [95% CI 0.0, 58.0]%; all10pair direction accuracy 51.2 [95% CI 37.3, 65.2]%.
-- FULL-v5/300s:0.8calls n=10, observed win 70.0 [95% CI 51.3, 88.7]% vs forecast 92.5 [95% CI 89.3, 95.7]%; range coverage 50.0 [95% CI 7.6, 92.4]%; all10pair direction accuracy 65.0 [95% CI 59.6, 70.4]%.
-- FULL-v5/600s:0.8calls n=9, observed win 77.8 [95% CI 42.5, 100.0]% vs forecast 93.1 [95% CI 89.5, 96.6]%; range coverage 67.5 [95% CI 32.8, 100.0]%; all10pair direction accuracy 60.0 [95% CI 54.0, 66.0]%.
-- FULL-v5 ctrl0−native expected delay effect120/300/600: 7.9 [95% CI -74.1, 89.9] / 181.2 [95% CI -440.5, 802.8] / 337.1 [95% CI -1,376.3, 2,050.5]veh-s; recorded -40.4 [95% CI -146.1, 65.2] / 38.3 [95% CI -416.8, 493.4] / 1,093.2 [95% CI -1,271.0, 3,457.5]veh-s. Negative means lower delay.
-- FULL-v5 mappo−native expected delay effect120/300/600: 27.9 [95% CI -51.5, 107.3] / 105.4 [95% CI -340.0, 550.8] / -179.7 [95% CI -1,611.2, 1,251.8]veh-s; recorded 60.8 [95% CI -32.7, 154.3] / -15.7 [95% CI -952.1, 920.7] / -684.5 [95% CI -2,821.8, 1,452.9]veh-s. Negative means lower delay.
-- FULL-v5 pi−native expected delay effect120/300/600: -1.0 [95% CI -91.8, 89.8] / 68.8 [95% CI -495.2, 632.9] / 131.5 [95% CI -1,722.9, 1,986.0]veh-s; recorded 39.3 [95% CI -80.0, 158.7] / 206.5 [95% CI -659.7, 1,072.6] / 1,194.5 [95% CI -2,477.6, 4,866.6]veh-s. Negative means lower delay.
-- FULL-v5 circles−native expected delay effect120/300/600: 107.9 [95% CI -9.4, 225.1] / 677.0 [95% CI -27.4, 1,381.4] / 2,380.2 [95% CI 358.4, 4,402.0]veh-s; recorded 147.3 [95% CI -128.7, 423.3] / 1,107.5 [95% CI 197.9, 2,017.2] / 3,608.0 [95% CI -86.6, 7,302.5]veh-s. Negative means lower delay.
-- FULL-v5 native−ctrl0 expected delay effect120/300/600: -7.9 [95% CI -89.9, 74.1] / -181.2 [95% CI -802.8, 440.5] / -337.1 [95% CI -2,050.5, 1,376.3]veh-s; recorded 40.4 [95% CI -65.2, 146.1] / -38.3 [95% CI -493.4, 416.8] / -1,093.2 [95% CI -3,457.5, 1,271.0]veh-s. Negative means lower delay.
-- FULL-v5 mappo−ctrl0 expected delay effect120/300/600: 20.0 [95% CI -49.0, 89.0] / -75.7 [95% CI -707.8, 556.4] / -516.8 [95% CI -2,187.9, 1,154.3]veh-s; recorded 101.2 [95% CI -37.4, 239.9] / -54.0 [95% CI -741.0, 633.1] / -1,777.7 [95% CI -3,685.2, 129.8]veh-s. Negative means lower delay.
-- FULL-v5 pi−ctrl0 expected delay effect120/300/600: -8.8 [95% CI -96.7, 79.1] / -112.3 [95% CI -648.8, 424.1] / -205.6 [95% CI -2,024.2, 1,613.0]veh-s; recorded 79.7 [95% CI -85.6, 245.1] / 168.2 [95% CI -619.1, 955.5] / 101.3 [95% CI -3,225.3, 3,427.8]veh-s. Negative means lower delay.
-- FULL-v5 circles−ctrl0 expected delay effect120/300/600: 100.0 [95% CI -7.5, 207.5] / 495.8 [95% CI -209.4, 1,201.0] / 2,043.1 [95% CI 227.5, 3,858.7]veh-s; recorded 187.7 [95% CI -90.7, 466.2] / 1,069.3 [95% CI 65.7, 2,072.8] / 2,514.7 [95% CI -662.3, 5,691.8]veh-s. Negative means lower delay.
+- FULL-v4/120s:0.8calls n=21, observed win 47.6 [95% CI 29.7, 65.5]% vs forecast 92.9 [95% CI 89.3, 96.5]%; range coverage 46.0 [95% CI 13.2, 78.8]%; all10pair direction accuracy 51.0 [95% CI 42.7, 59.3]%.
+- FULL-v4/300s:0.8calls n=18, observed win 55.6 [95% CI 32.6, 78.5]% vs forecast 91.0 [95% CI 89.4, 92.5]%; range coverage 62.0 [95% CI 29.0, 95.0]%; all10pair direction accuracy 64.0 [95% CI 53.4, 74.6]%.
+- FULL-v4/600s:0.8calls n=16, observed win 56.2 [95% CI 43.4, 69.1]% vs forecast 94.5 [95% CI 90.3, 98.8]%; range coverage 76.0 [95% CI 47.8, 100.0]%; all10pair direction accuracy 46.0 [95% CI 36.5, 55.5]%.
+- FULL-v4 ctrl0−native expected delay effect120/300/600: -17.9 [95% CI -100.1, 64.3] / -103.8 [95% CI -671.6, 464.1] / 71.0 [95% CI -1,859.3, 2,001.3]veh-s; recorded -106.2 [95% CI -256.9, 44.5] / -658.3 [95% CI -1,468.0, 151.4] / -980.4 [95% CI -5,399.6, 3,438.7]veh-s. Negative means lower delay.
+- FULL-v4 mappo−native expected delay effect120/300/600: 16.4 [95% CI -84.3, 117.0] / -219.1 [95% CI -851.9, 413.6] / -861.9 [95% CI -2,617.9, 894.1]veh-s; recorded 2.1 [95% CI -114.8, 118.9] / -352.2 [95% CI -1,083.3, 379.0] / -1,276.1 [95% CI -3,751.7, 1,199.5]veh-s. Negative means lower delay.
+- FULL-v4 pi−native expected delay effect120/300/600: -50.1 [95% CI -169.4, 69.3] / -244.5 [95% CI -968.1, 479.0] / -864.2 [95% CI -3,005.8, 1,277.4]veh-s; recorded 4.4 [95% CI -103.5, 112.3] / -207.9 [95% CI -1,047.4, 631.6] / 57.4 [95% CI -4,512.8, 4,627.7]veh-s. Negative means lower delay.
+- FULL-v4 circles−native expected delay effect120/300/600: 245.5 [95% CI 132.8, 358.2] / 1,028.4 [95% CI 401.8, 1,655.0] / 3,279.6 [95% CI 1,554.7, 5,004.6]veh-s; recorded 216.1 [95% CI -41.9, 474.1] / 914.8 [95% CI 202.7, 1,626.8] / 3,541.6 [95% CI 587.7, 6,495.6]veh-s. Negative means lower delay.
+- FULL-v4 native−ctrl0 expected delay effect120/300/600: 17.9 [95% CI -64.3, 100.1] / 103.8 [95% CI -464.1, 671.6] / -71.0 [95% CI -2,001.3, 1,859.3]veh-s; recorded 106.2 [95% CI -44.5, 256.9] / 658.3 [95% CI -151.4, 1,468.0] / 980.4 [95% CI -3,438.7, 5,399.6]veh-s. Negative means lower delay.
+- FULL-v4 mappo−ctrl0 expected delay effect120/300/600: 34.3 [95% CI -65.4, 133.9] / -115.3 [95% CI -620.3, 389.6] / -932.9 [95% CI -2,821.6, 955.7]veh-s; recorded 108.2 [95% CI -4.3, 220.8] / 306.1 [95% CI -503.8, 1,116.1] / -295.6 [95% CI -2,931.7, 2,340.4]veh-s. Negative means lower delay.
+- FULL-v4 pi−ctrl0 expected delay effect120/300/600: -32.1 [95% CI -157.8, 93.5] / -140.8 [95% CI -844.3, 562.8] / -935.2 [95% CI -3,073.2, 1,202.8]veh-s; recorded 110.5 [95% CI -35.6, 256.7] / 450.4 [95% CI -196.6, 1,097.4] / 1,037.9 [95% CI -1,577.4, 3,653.2]veh-s. Negative means lower delay.
+- FULL-v4 circles−ctrl0 expected delay effect120/300/600: 263.4 [95% CI 133.6, 393.2] / 1,132.1 [95% CI 537.3, 1,727.0] / 3,208.6 [95% CI 1,465.2, 4,952.0]veh-s; recorded 322.3 [95% CI 106.3, 538.3] / 1,573.1 [95% CI 588.9, 2,557.2] / 4,522.1 [95% CI 392.7, 8,651.5]veh-s. Negative means lower delay.
+- FULL-v5/120s:0.8calls n=12, observed win 66.7 [95% CI 32.7, 100.0]% vs forecast 92.7 [95% CI 89.0, 96.5]%; range coverage 40.0 [95% CI 12.6, 67.4]%; all10pair direction accuracy 54.0 [95% CI 40.8, 67.2]%.
+- FULL-v5/300s:0.8calls n=12, observed win 75.0 [95% CI 57.4, 92.6]% vs forecast 93.8 [95% CI 91.1, 96.4]%; range coverage 60.0 [95% CI 24.7, 95.3]%; all10pair direction accuracy 61.0 [95% CI 56.0, 66.0]%.
+- FULL-v5/600s:0.8calls n=13, observed win 69.2 [95% CI 35.6, 100.0]% vs forecast 94.2 [95% CI 91.6, 96.8]%; range coverage 74.0 [95% CI 45.1, 100.0]%; all10pair direction accuracy 61.0 [95% CI 53.8, 68.2]%.
+- FULL-v5 ctrl0−native expected delay effect120/300/600: 25.5 [95% CI -86.4, 137.3] / 236.9 [95% CI -302.9, 776.6] / 564.5 [95% CI -1,209.9, 2,338.9]veh-s; recorded -106.2 [95% CI -256.9, 44.5] / -658.3 [95% CI -1,468.0, 151.4] / -980.4 [95% CI -5,399.6, 3,438.7]veh-s. Negative means lower delay.
+- FULL-v5 mappo−native expected delay effect120/300/600: 26.3 [95% CI -50.4, 103.0] / 59.8 [95% CI -376.1, 495.8] / -292.8 [95% CI -1,692.1, 1,106.4]veh-s; recorded 2.1 [95% CI -114.8, 118.9] / -352.2 [95% CI -1,083.3, 379.0] / -1,276.1 [95% CI -3,751.7, 1,199.5]veh-s. Negative means lower delay.
+- FULL-v5 pi−native expected delay effect120/300/600: -15.2 [95% CI -99.8, 69.3] / 65.5 [95% CI -423.3, 554.4] / 167.8 [95% CI -1,488.2, 1,823.8]veh-s; recorded 4.4 [95% CI -103.5, 112.3] / -207.9 [95% CI -1,047.4, 631.6] / 57.4 [95% CI -4,512.8, 4,627.7]veh-s. Negative means lower delay.
+- FULL-v5 circles−native expected delay effect120/300/600: 247.7 [95% CI 148.3, 347.1] / 1,318.0 [95% CI 682.8, 1,953.1] / 4,737.9 [95% CI 2,712.5, 6,763.3]veh-s; recorded 216.1 [95% CI -41.9, 474.1] / 914.8 [95% CI 202.7, 1,626.8] / 3,541.6 [95% CI 587.7, 6,495.6]veh-s. Negative means lower delay.
+- FULL-v5 native−ctrl0 expected delay effect120/300/600: -25.5 [95% CI -137.3, 86.4] / -236.9 [95% CI -776.6, 302.9] / -564.5 [95% CI -2,338.9, 1,209.9]veh-s; recorded 106.2 [95% CI -44.5, 256.9] / 658.3 [95% CI -151.4, 1,468.0] / 980.4 [95% CI -3,438.7, 5,399.6]veh-s. Negative means lower delay.
+- FULL-v5 mappo−ctrl0 expected delay effect120/300/600: 0.9 [95% CI -96.9, 98.6] / -177.0 [95% CI -781.2, 427.2] / -857.3 [95% CI -2,783.2, 1,068.5]veh-s; recorded 108.2 [95% CI -4.3, 220.8] / 306.1 [95% CI -503.8, 1,116.1] / -295.6 [95% CI -2,931.7, 2,340.4]veh-s. Negative means lower delay.
+- FULL-v5 pi−ctrl0 expected delay effect120/300/600: -40.7 [95% CI -137.6, 56.2] / -171.4 [95% CI -655.3, 312.6] / -396.7 [95% CI -1,994.8, 1,201.4]veh-s; recorded 110.5 [95% CI -35.6, 256.7] / 450.4 [95% CI -196.6, 1,097.4] / 1,037.9 [95% CI -1,577.4, 3,653.2]veh-s. Negative means lower delay.
+- FULL-v5 circles−ctrl0 expected delay effect120/300/600: 222.3 [95% CI 82.8, 361.8] / 1,081.1 [95% CI 477.6, 1,684.6] / 4,173.4 [95% CI 2,429.9, 5,917.0]veh-s; recorded 322.3 [95% CI 106.3, 538.3] / 1,573.1 [95% CI 588.9, 2,557.2] / 4,522.1 [95% CI 392.7, 8,651.5]veh-s. Negative means lower delay.
 
 ### Short-horizon decision quality:30/60/90s
 Exact total-delay accuracy is **partially identified**: the recorded data saved total/source clocks only at120/300/600s. Reconstructed road clocks match recorded120s road delay; unknown short source waiting is bounded between0 and each arm's recorded120s source waiting. The intervals below bound all-pair team-effect accuracy without inventing a source trajectory. Road-only accuracy is a separate diagnostic.
 These are five recorded controller options, not unrecorded cooperation membership/group interventions. Cooperation/planner short-horizon qualification remains NOT ESTABLISHED.
-- FULL-v4/30s: team direction accuracy identification lower 5.0 [95% CI 0.0, 13.6]%, upper 100.0; CI NA (insufficient support/variance)%; resolved-pair fraction 5.0 [95% CI 0.0, 13.6]%; resolved-only accuracy 100.0; CI NA (insufficient support/variance)%; road-only direction accuracy 60.0 [95% CI 52.5, 67.5]%.
-- FULL-v4/60s: team direction accuracy identification lower 12.5 [95% CI 8.2, 16.8]%, upper 97.5 [95% CI 93.2, 100.0]%; resolved-pair fraction 15.0; CI NA (insufficient support/variance)%; resolved-only accuracy 83.3 [95% CI 54.6, 100.0]%; road-only direction accuracy 55.0 [95% CI 47.5, 62.5]%.
-- FULL-v4/90s: team direction accuracy identification lower 13.8 [95% CI 7.3, 20.2]%, upper 96.2 [95% CI 89.8, 100.0]%; resolved-pair fraction 17.5; CI NA (insufficient support/variance)%; resolved-only accuracy 78.6 [95% CI 41.6, 100.0]%; road-only direction accuracy 50.0 [95% CI 39.9, 60.1]%.
-- FULL-v5/30s: team direction accuracy identification lower 5.0 [95% CI 0.0, 13.6]%, upper 100.0; CI NA (insufficient support/variance)%; resolved-pair fraction 5.0 [95% CI 0.0, 13.6]%; resolved-only accuracy 100.0; CI NA (insufficient support/variance)%; road-only direction accuracy 61.3 [95% CI 57.5, 65.0]%.
-- FULL-v5/60s: team direction accuracy identification lower 12.5 [95% CI 8.2, 16.8]%, upper 97.5 [95% CI 93.2, 100.0]%; resolved-pair fraction 15.0; CI NA (insufficient support/variance)%; resolved-only accuracy 83.3 [95% CI 54.6, 100.0]%; road-only direction accuracy 53.8 [95% CI 42.2, 65.3]%.
-- FULL-v5/90s: team direction accuracy identification lower 16.2 [95% CI 14.1, 18.4]%, upper 98.8 [95% CI 96.6, 100.0]%; resolved-pair fraction 17.5; CI NA (insufficient support/variance)%; resolved-only accuracy 92.9 [95% CI 80.5, 100.0]%; road-only direction accuracy 56.2 [95% CI 42.5, 70.0]%.
+- FULL-v4/30s: team direction accuracy identification lower 4.0 [95% CI 0.0, 10.3]%, upper 100.0; CI NA (insufficient support/variance)%; resolved-pair fraction 4.0 [95% CI 0.0, 10.3]%; resolved-only accuracy 100.0; CI NA (insufficient support/variance)%; road-only direction accuracy 63.0 [95% CI 55.9, 70.1]%.
+- FULL-v4/60s: team direction accuracy identification lower 10.0 [95% CI 6.9, 13.1]%, upper 98.0 [95% CI 94.9, 100.0]%; resolved-pair fraction 12.0; CI NA (insufficient support/variance)%; resolved-only accuracy 83.3 [95% CI 57.2, 100.0]%; road-only direction accuracy 57.0 [95% CI 49.8, 64.2]%.
+- FULL-v4/90s: team direction accuracy identification lower 11.0 [95% CI 6.3, 15.7]%, upper 97.0 [95% CI 92.3, 100.0]%; resolved-pair fraction 14.0; CI NA (insufficient support/variance)%; resolved-only accuracy 78.6 [95% CI 45.0, 100.0]%; road-only direction accuracy 52.0 [95% CI 44.0, 60.0]%.
+- FULL-v5/30s: team direction accuracy identification lower 4.0 [95% CI 0.0, 10.3]%, upper 100.0; CI NA (insufficient support/variance)%; resolved-pair fraction 4.0 [95% CI 0.0, 10.3]%; resolved-only accuracy 100.0; CI NA (insufficient support/variance)%; road-only direction accuracy 64.0 [95% CI 58.6, 69.4]%.
+- FULL-v5/60s: team direction accuracy identification lower 10.0 [95% CI 6.9, 13.1]%, upper 98.0 [95% CI 94.9, 100.0]%; resolved-pair fraction 12.0; CI NA (insufficient support/variance)%; resolved-only accuracy 83.3 [95% CI 57.2, 100.0]%; road-only direction accuracy 56.0 [95% CI 46.3, 65.7]%.
+- FULL-v5/90s: team direction accuracy identification lower 13.0 [95% CI 11.4, 14.6]%, upper 99.0 [95% CI 97.4, 100.0]%; resolved-pair fraction 14.0; CI NA (insufficient support/variance)%; resolved-only accuracy 92.9 [95% CI 81.7, 100.0]%; road-only direction accuracy 59.0 [95% CI 47.2, 70.8]%.
 
 Strict paired P(beats incumbent)>=0.8 plus lower expected delay; ties are non-wins. K8 min–max range is not a90% interval (continuous exchangeability reference7/9). Zero-selected worlds remain in resampling. Full gate/switching: NOT ESTABLISHED at this interim.
 
