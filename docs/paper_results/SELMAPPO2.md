@@ -2,6 +2,24 @@
 
 ## Status (2026-11-01)
 
+**11:41 +08:00 SSH recovery reconciled:** the original cpuQ606968 training process
+is live, UID1000/startticks48374316/exact command verified, nice19, with9.73h
+elapsed on a host with6.00days uptime. The MAIN11:37 correction is confirmed:
+SSH interruption did not require a restart. Existing watcher12432 automatically
+resumed successful collection; supervisor46520 remains live throughnoon.
+Observation11:38:48 verifies **82/169updates,3806/7774production successes,12open**,
+3426600actual/3438000reserved sim-s including the unchanged original failed900/300.
+No new failure;3809complete result snapshots have zero collisions/teleports.
+The learning curve and CSV below now contain82verified updates; final169 and
+peer-owned evaluation are still pending. CollectionSHA
+`66a1eecb4d03134c30ba25bf500212ce781f144659af714ad173633a7c93047e`.
+One-shot ownership/output audit records3.039GBavailable disk and1.825GBlogical
+/1.862GBallocated inventoried training output, excluding blocked/symlink entries
+without opening their contents. Evidence:
+`selmappo2/RECOVERY_AUDIT_1793504481885532800.json`. Resource admission continues
+under the original cap and schedule; no scientific continuation was dispatched.
+Later live results supersede this recovery snapshot.
+
 **05:35 +08:00 transport interruption:** existing collector has three SSH exit255
 errors after its last successful observation at05:18:01 (17updates,
 787production successes,5open,709500actual/714600reserved). A single spaced
@@ -198,11 +216,11 @@ Evidence is under `docs/paper_results/selmappo2/`.
 
 
 
-Evidence: `selmappo2/COLLECTION_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29_1793481482935941700_2913d6467cae46cd881f063292a5f65b.json`; SHA256 `539bb19b0f5522aea0334845256d97338f858aaa6cb779b78972244955ce75b9`.
+Evidence: `selmappo2/COLLECTION_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29_1793504382316439300_0bb9ef6b89bc465bbf6de11493a158de.json`; SHA256 `66a1eecb4d03134c30ba25bf500212ce781f144659af714ad173633a7c93047e`.
 
 Remote root: `/home/ubuntu/selmappo2_20261101/build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29/training`.
 
-Dispatch PID: `606968`; alive at observation: `True`; observation timestamp (ns): `1793481481867360148`.
+Dispatch PID: `606968`; alive at observation: `True`; observation timestamp (ns): `1793504328124929956`.
 
 
 
@@ -210,15 +228,15 @@ Dispatch PID: `606968`; alive at observation: `True`; observation timestamp (ns)
 
 
 
-Verified complete updates: 17/169 (46 fresh episodes/update).
+Verified complete updates: 82/169 (46 fresh episodes/update).
 
-Update records observed: 17.
+Update records observed: 82.
 
-Coordinator successful episodes: 787/7,774 production + 1/2 smoke.
+Coordinator successful episodes: 3806/7,774 production + 1/2 smoke.
 
-Reservations: 794; unresolved: 5; failed: 1; actual not yet receipted: 5.
+Reservations: 3820; unresolved: 12; failed: 1; actual not yet receipted: 12.
 
-Raw newly incurred training + smoke simulation: 709,500.0 actual s; 714,600 reserved s (no refunds).
+Raw newly incurred training + smoke simulation: 3,426,600.0 actual s; 3,438,000 reserved s (no refunds).
 
 
 
@@ -240,11 +258,11 @@ J600 is full-team delay over the 600 s control interval; lower is better. Each p
 
 
 
-![Training learning curve](selmappo2/selmappo2_curve_1793481483083018300_b08a2ff40f3840fea8b61ce9f7ea8980.svg)
+![Training learning curve](selmappo2/selmappo2_curve_1793504382824899700_b0f84f36d4664eb48a47bd970b2e319c.svg)
 
 
 
-[Complete-update metrics CSV](selmappo2/selmappo2_curve_1793481483083018300_b08a2ff40f3840fea8b61ce9f7ea8980.csv)
+[Complete-update metrics CSV](selmappo2/selmappo2_curve_1793504382824899700_b0f84f36d4664eb48a47bd970b2e319c.csv)
 
 
 
@@ -252,7 +270,7 @@ J600 is full-team delay over the 600 s control interval; lower is better. Each p
 
 
 
-Collected complete episode result receipts: 788. collisions: 0.000; teleports: 0.000; ttc_below_3_vs: 322,120.500; hard_brake_vs: 12,082.500.
+Collected complete episode result receipts: 3809. collisions: 0.000; teleports: 0.000; ttc_below_3_vs: 1,572,770.500; hard_brake_vs: 60,393.000.
 
 These are recorded control-interval components only. Warmup safety and dropped-vehicle counters are not separately recorded in result.jsonl; unrecorded metrics are not asserted to be zero.
 

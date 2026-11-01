@@ -5,6 +5,26 @@ Original advance-approved exact cap7,012,800; designSHA09499f2af60311b3690a940dc
 
 ## Current state
 
+**11:41 SSH recovery reconciled (MAIN11:37 correction):** cpuQ was not rebooted.
+Read-only audit verifies original606968/UID1000/startticks48374316, exact command,
+nice19, elapsed35015.6s and host uptime518758.8s. Original watcher12432 and
+supervisor46520 retain their exact recorded executable/command/creation times.
+No lock is stale and no restart, dispatch or scientific repair is needed.
+Existing watcher resumed collection itself: observation11:38:48+08 verifies
+**82/169updates,3806/7774production successes,12open**,3426600actual/3438000reserved
+including the unchanged failed900/300 smoke. CollectionSHA
+`66a1eecb4d03134c30ba25bf500212ce781f144659af714ad173633a7c93047e`;
+no new failure;3809 complete result snapshots have zero collisions/teleports.
+Report/CSV/SVG refreshed automatically; final169/evaluation remain pending.
+Audit `selmappo2/RECOVERY_AUDIT_1793504481885532800.json` records3039195136free
+bytes, training output1825477245logical/1862275072allocated bytes (metadata-only
+inventory,3847 blocked/symlink entries excluded). Tight disk admission remains
+unchanged; no output deletion/compression/extra remote checkpoint copies.
+Audit helper is one-shot/read-only and does not create another monitor. Its first
+two invocations failed at remote Python parsing before any audit or physics;
+the retained error receipt and successful corrected run document this. Existing
+20min supervisor continues throughnoon; no additional training or SSH poller.
+
 **Resume verified 2026-11-01 04:29 +08:00:** existing local watcher12432 has
 the exact recorded executable/command/creation time and remains live. Its latest
 collection Unix1793478465 verifies owned cpuQ606968 live, **11/169 updates,
