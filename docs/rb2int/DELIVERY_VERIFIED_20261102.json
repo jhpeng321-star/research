@@ -1,0 +1,70 @@
+{
+ "time": "2026-11-02T07:17:52.867681+08:00",
+ "status": "PASS",
+ "source_guards": {
+  "rb2int_finish_v3": {
+   "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\finish.py": true,
+   "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\collect.py": true,
+   "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\prepare_scoring.py": true,
+   "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\score_gate.py": true,
+   "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\compare.py": true,
+   "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\credibility.py": true,
+   "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\report.py": true,
+   "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\predictions.py": true,
+   "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\uncertainty.py": true,
+   "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\gate_bootstrap.py": true
+  },
+  "rb2int_interim_hold_v1": {
+   "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\interim_watch.py": true,
+   "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\interim.py": true,
+   "E:\\agent-work\\c4-rb2-int\\docs\\rb2int\\SHORT_TARGETS_BOUNDED_V4.json": true,
+   "E:\\agent-work\\c4-rb2-int\\docs\\rb2int\\OWNER_1755_GPUA_HOLD.json": true,
+   "E:\\agent-work\\c4-rb2-int\\docs\\rb2int\\OWNER_1755_GPUR_HOLD.json": true
+  }
+ },
+ "snapshots": {
+  "reserved8": {
+   "worlds": [
+    969432,
+    969433,
+    969434,
+    969435,
+    969436,
+    969437,
+    969438,
+    969439
+   ],
+   "replicated": false,
+   "summary_sha256": "e9cc35a52cec5adb00dbc6111a19a96b1e471ae05a437e5783e2f8c8afae7c4d",
+   "markdown_sha256": "3a170391fc5e8b16b02f6b0185e410ffc0183c110af8ed200339ef7d3f314c4d"
+  },
+  "available_replicated_cells": {
+   "worlds": [
+    969433,
+    969435,
+    969436,
+    969437,
+    969438,
+    969439,
+    969590,
+    969592,
+    969595,
+    969599
+   ],
+   "replicated": true,
+   "summary_sha256": "5363b3f17955e907be5b6c550ea9538c4baf3bf55ea818fcf0578c75101838dc",
+   "markdown_sha256": "f75f7ccec6bfcabf4d0de6b84af3d4f68093d1c918ef53221e3081494a79ff08"
+  }
+ },
+ "report_sha256": "a67c316874f2eb56ee25da486a32e869fca9081073e478419fd3d60f66af1389",
+ "prospective_registration_count": 1,
+ "latest_main_entries": [
+  "2026-11-01 18:14 MAIN: tick - S-RB2-INT dispatcher still admitting v5 tasks at the 2/1 cap (agent ended 17:58 before the 17:55 zero-admission addendum took effect) -> relaunched to apply zero new admissions. S-COOPMWM bound GPU suggestion services on gpuA+gpuR (589dcc6f), CPU gates ongoing; S-WMPLAN on hold (f4718f5f).",
+  "- S-RB2-INT OWNER1755 HOLD APPLIED18:15 (commit170a9e0a): ZERO new GPU admissions until MAIN appends 'S-RB2-INT RESUME'; exact boot/start/cmd/source-bound own CPU coordinators513448/gpuA,948148/gpuR and late standbys514854/949247 paused via pidfdSIGSTOP/stateT. Three existing evaluate children514556/v5_969435,517852/v5_969439,952289/wm2_969554 drain naturally; zero evaluate/peer signals,zero new inference,zero redispatch/model/recipe/plan change. nvidia-smi and exclusive local/remote HOLD receipts c4-rb2-int/docs/rb2int/OWNER_1755_{GPUA,GPUR}_HOLD.json. Existing collector25240 retained. Cache-only publisher handover waits for exact old44988/create134379973214244749 source-guard STOP AND actual exit; then immediate complete-data INTERIM, drain-completion look, reserved8 immediate,~3h cadence; no duplicate analysis/inference. Four-model/K8/fivearm/H120,300,600/primary54 registration and full-gate limitations unchanged; no switching qualification. Final GPU continuation suspended including Nov4 standbys; final delivery awaits explicit MAIN authority.",
+  "2026-11-02 02:28 MAIN: OWNER ordered GPUs + cpuQ dedicated to S-COOPMWM -> stopped by verified PID (cmdline check): cpuQ superseded set-point volume_runner 2146725 (+13 workers) and cold accel_runner 2477255 (+13 workers, 12 hung u001_B SUMO jobs); gpuA S-RB2-CAL evaluate_dev 448399/448400, S-RB2-INT capped_workers 513448/514854, r17prep idle_guard 17913; gpuR S-RB2-INT capped_workers 948148/949247 (KILL after TERM ignored). Kept: S-COOPMWM warm_runner A 2998262, warm_spool gpuA 588981 / gpuR 29230, cpuQ spot_watch 802419, gpuA gpu_mirror 99141. Exact grader subagent launched (c4/exact-grade)."
+ ],
+ "stale_report_ownership_prose": "All coordinators paused is superseded by RECOVERY_20261102.md; report publisher owns guarded prose.",
+ "analysis_repeated": false,
+ "inference_dispatched": false,
+ "process_signals": false
+}
