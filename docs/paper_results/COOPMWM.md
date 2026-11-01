@@ -1,5 +1,16 @@
 # S-COOPMWM — live checks
 
+## Fresh resume — MAIN02:01 correction adopted before B/R outcomes
+- Preserved HEAD73a42ad1 and all recovered edits. A is at u16/exited; 288/288 warm
+  jobs closed, zero pending WM requests, 1,405,640 sim-s charged. B/R unstarted.
+- Both original qual4 jobs completed: warm K4/H120, K8/H420 full/fast parity and
+  empty-history/cold equality all exactly 0.0. Reused group2/4/6 timings are
+  559.567/1029.964/898.275 s per query (6.434/3.495/4.008 plans/hour).
+- Latest MAIN02:01 requires own-action-only PPO, positive completed-plan SUMO
+  advantage-weighted imitation, critic on all steps. Implementation/CPU tests and
+  registration precede B/R restart. Durable broker/health/startup gates remain.
+- Approved allocation6,473,440/cap6,500,000; no duplicate job or new SUMO in recovery.
+
 ## MAIN01:53 cap confirmation adopted — recovery verified
 - Owner-approved cap **6,500,000 sim-s** supersedes earlier 6,000,000 resume figures
   (full brief through line225; shared registry lines6011/6053/6054). The approved

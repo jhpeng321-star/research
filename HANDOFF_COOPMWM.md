@@ -1,4 +1,14 @@
-# S-COOPMWM live continuation — MAIN01:53 cap confirmation adopted
+# S-COOPMWM live continuation — MAIN02:01 learner correction pending
+
+Fresh resume: complete233-line brief read, HEAD73a42ad1/work preserved. Status
+1793556145 confirms A-u16 exited,288/288closed,charge1405640,pending0,B/R unstarted.
+Both original qual4 jobs have now EXITED; adopt exact0 gates and group2/4/6timings
+(6.434/3.495/4.008plans/h), no replacement inference needed for these benchmarks.
+MAIN02:01 supersedes old mixture PPO/beta imitation: own-step PPO only, positive
+completed-plan SUMO-advantage AWR, critic all steps; implement/test/register BEFORE
+B/R launch. Preserve A-u16 checkpoint/Adam/RNG. Cap6500000/allocation6473440 approved.
+Recovered untracked warm_broker/health/rpc/remote_ops are incomplete engineering;
+finish and qualify durable remote deployment/startup gates, then one-use restart.
 
 FRESH RESUME: all225 brief lines read, including MAIN01:53 confirmation: owner
 cap6500000 SUPERSEDES earlier6000000 resume figures. Full6473440 plan approved,

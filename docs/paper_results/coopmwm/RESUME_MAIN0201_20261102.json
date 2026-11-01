@@ -1,0 +1,18 @@
+{
+  "brief_read_completely_through_line": 233,
+  "preserved_head": "73a42ad1",
+  "latest_learning_amendment": "MAIN 2026-11-02 02:01 own-action PPO and SUMO-positive AWR; required before B/R restart",
+  "cap_sim_s": 6500000,
+  "allocated_sim_s": 6473440,
+  "unallocated_sim_s": 26560,
+  "verified_status_unix": 1793556145.9206889,
+  "A": {"update": 16, "owner_state": "exited", "closed_jobs": 288, "reserved_jobs": 288},
+  "B_R": "unstarted; no dispatch",
+  "charged_sim_s": 1405640,
+  "pending_requests": 0,
+  "original_qual4": "both exited; exact warm K4/H120 and K8/H420 parity and empty/cold error 0.0",
+  "adopted_plans_per_hour": {"group2_gpuA": 6.433542602158574, "group4_gpuR": 3.4952664510501195, "group6_gpuA": 4.007681439937299},
+  "remaining_release_gates": ["MAIN0201 learner tests and registration", "durable remote broker and integrated health guards", "persistent source-bound GPU startup gates", "release registration and one-use dispatch"],
+  "new_sumo_sim_s": 0,
+  "duplicate_dispatches": 0
+}
