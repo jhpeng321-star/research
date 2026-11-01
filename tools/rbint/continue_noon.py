@@ -321,16 +321,16 @@ def collect(state, *, now=None):
 def main():
     global STATE
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('action', choices=('start', 'watch'))
+    p.add_argument('action', choices=('start', 'watch', 'once'))
     p.add_argument('--state-root', default=str(STATE))
     p.add_argument('--recovery-receipt')
     p.add_argument('--resume-publication')
     args = p.parse_args()
     STATE = Path(args.state_root).resolve()
     assert STATE.parent == ROOT/'runs'
-    if args.action == 'start':
+    if args.action in ('start', 'once'):
         guard()
-        assert time.time() < FINAL
+        assert time.time() < (DEADLINE if args.action == 'once' else FINAL)
         assert STATE.parent.is_dir() and EVIDENCE.is_dir() and PUBLISH.parent.is_dir()
         if STATE.name != 'rbint_noon':
             assert args.recovery_receipt, 'diagnosed recovery receipt required'
@@ -344,6 +344,12 @@ def main():
                 (Path(__file__), Path(__file__).with_name('noon_report.py'),
                  Path(__file__).with_name('local_resources.py'), Path(__file__).with_name('compare.py'),
                  Path(__file__).with_name('score_endpoints.py'), ROOT/'tools/rbeval/score.py')}))
+        if args.action == 'once':
+            state = state_from_publication(args.resume_publication) if args.resume_publication else {}
+            result = collect(state)
+            save_new(STATE/'ONCE_COMPLETE.json', dict(unix=time.time(), state=result,
+                foreground=True, inference_dispatched=False))
+            return
         argv = [sys.executable, '-B', '-u', '-m', 'tools.rbint.continue_noon', 'watch', '--state-root', str(STATE)]
         if args.resume_publication:
             assert args.recovery_receipt
