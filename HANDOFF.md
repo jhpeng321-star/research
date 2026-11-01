@@ -1,4 +1,4 @@
-# S-RB2-BREAK — GPU PAUSE requested, 2026-11-01 ~17:38 +08
+# S-RB2-BREAK — GPU RELEASED / PAUSED, 2026-11-01 17:41 +08
 
 Branch `c4/rb2-break`, physical baseFULL-v4/22cc32f6. Plan `docs/rb2break/PLAN.md`.
 **The major congestion/breakdown defect is NOT solved. No qualification claimed.**
@@ -19,6 +19,8 @@ Prior notes preserved in `docs/rb2break/HANDOFF_{1318,1720}_ARCHIVE.md`.
 - Flags remain default OFF in base recipe. No controller/black-box retraining,
   neural residual, outcome offset or hand-set jam threshold.
 - Latest combined local QA134PASS/2CUDA skips; exact source hashes in receipts.
+- Recovery checkpoint8c0445bc preserves prior uncommitted code/artifacts/results;
+  receipt commit7523bbcf verifies GPU release. No new model inference in recovery.
 
 ## Complete dev12 K1/all5arms/H600 evidence
 All results below matched future0, NOT independent K8 qualification.
@@ -47,11 +49,15 @@ inflow or length mistake (`source_observables/SOURCE_OBSERVABLE_AUDIT.json`).
   jobs until MAIN appends `S-RB2-BREAK RESUME`. Cooperative STOP files installed
   after exact owner/PID/boot/start-tick/command checks; workers finish the in-flight
   task, retain its receipt, then exit before another task. No process signals.
-  At request: shard0 had3tasks; shard1 had2. These are PARTIAL K8, no scored worlds.
-- Corrected candidate FULL development K8 source5947c801: two disjoint6world
-  shards `/root/rbeval20261031/rb2break/devk8_native2_s{0,1}`, all96new tasks;
-  own workers501141/500921 at launch,5GiB cap/one CPU thread/nice19 each.
-  Max2BREAKCUDA workers; no peer PID action. Complete K8 worlds only for scores.
+- **Verified17:41:23: both workers EXITED, all9recorded BREAK queues EXITED.**
+  Shard0 saved969420/k0..3; shard1 saved969421/k0..2:7/96tasks,0complete K8worlds.
+  STOP assertions/exit1 are requested administrative checkpoints, not physical
+  failures. Partial results NOT scored or relabelled as K8. No new GPU dispatch.
+- Corrected candidate remains source5947c801, disjoint6world shards under
+  `/root/rbeval20261031/rb2break/devk8_native2_s{0,1}`; all remote files retained.
+  Local hash-verified snapshots `docs/rb2break/devk8_pause_s{0,1}`; raw tasks remain
+  local/remote under existing ignore convention. Committed manifest/owner/process/
+  STOP/log/EXIT receipts and nvidia-smi: `docs/rb2break/GPU_CHECKPOINT_1735.json`.
 - Three motion-only population/support extensions failed pre-t0 CRPS gates and
   got no traffic inference. Startup-only10s v3 improves birth-disjoint pre-t0
   acceleration CRPS0.206464→0.188588m/s² (10/12worlds); packaged entrant-only
