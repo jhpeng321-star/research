@@ -123,5 +123,5 @@ def futures(rt,records,indices):
         except BaseException:
             proxy.barrier.abort();raise
     # Adapter is process-global: installed once, not independently by each thread.
-    with executor_adapter(),ThreadPoolExecutor(max_workers=len(records)) as pool:
+    with executor_adapter(300),ThreadPoolExecutor(max_workers=len(records)) as pool:
         return list(pool.map(one,range(len(records))))

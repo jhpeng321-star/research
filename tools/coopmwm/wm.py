@@ -37,7 +37,7 @@ def validate(record):
 
 
 @contextlib.contextmanager
-def executor_adapter():
+def executor_adapter(horizon=600):
     """Use the original option executor; only its target/request decoder changes."""
     from tools.leverprobe import intervention
     from tools.coopfree.policy import requests
@@ -49,7 +49,7 @@ def executor_adapter():
         def visit_Constant(self,node):
             if type(node.value) is int and node.value in counts:
                 counts[node.value]+=1
-                return ast.copy_location(ast.Constant({300:600,960:1600}[node.value]),node)
+                return ast.copy_location(ast.Constant({300:horizon,960:1600 if horizon>300 else 960}[node.value]),node)
             return node
     tree=Capacity().visit(tree);ast.fix_missing_locations(tree)
     if counts!={300:1,960:1}:raise ValueError('frozen entrant capacity ABI changed')
@@ -146,7 +146,7 @@ def propose(rt,record):
         return dict(accepted=False,option=None,targets={},expected_saving=0.,record_sha256=digest(record))
     ns=adapted_futures((300,));ns['_actions']=acts
     adapted=dict(record)
-    with executor_adapter():
+    with executor_adapter(300):
         chunks=[ns['futures'](rt,adapted,indices=tuple(range(i,i+2))) for i in range(0,8,2)]
     if any(not c['population_audit']['finite'] or not c['population_audit']['conserved'] for c in chunks):
         raise ValueError('proposal conservation/finite check failed')
@@ -173,7 +173,7 @@ def canary(rt,record,result):
     if proposal and not result.get('futures'):return dict(deferred=True,reason='no available inherited option')
     horizons=(300,) if proposal else HORIZONS
     ns=adapted_futures(horizons);ns['_actions']=acts
-    with executor_adapter():single=ns['futures'](rt,dict(record,setting=record.get('setting',0)),indices=(0,))
+    with executor_adapter(max(horizons)):single=ns['futures'](rt,dict(record,setting=record.get('setting',0)),indices=(0,))
     futures={'300':result['futures']} if proposal else result['replay']['futures']
     worst=max(abs(single['futures'][str(h)][a['id']][0]['team_delay']-
         futures[str(h)][a['id']][0]['team_delay']) for h in horizons for a in acts)

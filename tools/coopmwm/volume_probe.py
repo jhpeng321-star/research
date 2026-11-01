@@ -16,7 +16,7 @@ def run(root):
     rt.frozen.costs=cost_adapter(rt.frozen.costs,read(root/'FROZEN_COSTS.json')['code'])
     records=read(root/'INPUTS.json')['records']
     results=[]
-    for count,K in ((2,8),(4,8),(4,4)):
+    for count,K in ((2,8),(4,4),(4,8)):
         torch.cuda.reset_peak_memory_stats();start=time.monotonic()
         values=futures(rt,records[:count],tuple(range(K)))
         torch.cuda.synchronize();wall=time.monotonic()-start
@@ -24,15 +24,20 @@ def run(root):
         assert all(v['population_audit']['finite'] and v['population_audit']['conserved'] for v in values)
         parity=[]
         if count==2 and K==8:
+            previous=read(root/'CAPACITY_REFERENCE.json')
+            capacity_error=max(abs(x['team_delay']-y['team_delay']) for a,b in zip(values,previous)
+                for name,fs in a['futures']['300'].items() for x,y in zip(fs,b['futures']['300'][name]))
+            assert capacity_error<=1e-3,capacity_error
+            parity.append(capacity_error)
             # Once per worker, full K8 and indexed single, actual heterogeneous windows.
             for r,v in zip(records[:count],values):
                 ns=adapted_futures((300,));ns['_actions']=proposal_candidates(r)
-                with executor_adapter():single=ns['futures'](rt,dict(r),indices=(0,))
+                with executor_adapter(300):single=ns['futures'](rt,dict(r),indices=(0,))
                 err=max(abs(fs[0]['team_delay']-single['futures']['300'][a][0]['team_delay']) for a,fs in v['futures']['300'].items())
                 parity.append(err)
             assert max(parity)<=1e-3,parity
         if count==4:
-            previous=read(root/'FUSED_2_K8.json') if K==8 else read(root/'FUSED_4_K8.json')
+            previous=read(root/'FUSED_2_K8.json')
             err=max(abs(x['team_delay']-y['team_delay']) for a,b in zip(values,previous)
                     for name,fs in a['futures']['300'].items() for x,y in zip(fs,b['futures']['300'][name]))
             assert err<=1e-3,err
@@ -46,6 +51,9 @@ def run(root):
         best=min((a for a in means if a not in ('policy','MAPPO')),key=lambda a:(means[a],a))
         return best,min(means['policy'],means['MAPPO'])>means[best]
     k8=read(root/'FUSED_4_K8.json');k4=read(root/'FUSED_4_K4.json')
+    error=max(abs(x['team_delay']-y['team_delay']) for a,b in zip(k8,k4)
+                for name,fs in a['futures']['300'].items() for x,y in zip(fs,b['futures']['300'][name]))
+    assert error<=1e-3,error
     agreement=[winner(a)==winner(b) for a,b in zip(k8,k4)]
     write(root/'COMPLETE.json',dict(pass_=True,timings=results,K8_K4_choice_acceptance_agreement=agreement,
         qualification_windows=[r['state_id'] for r in records[:4]],new_sumo_sim_s=0))

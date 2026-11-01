@@ -72,11 +72,12 @@ print(json.dumps(dict(records=records,selection='first four chronological availa
 
 def bench_launch(host):
     from .storage import read
-    root='/root/coopmwm20261101_volumeprobe2'
-    assert not (ops.EVIDENCE/f'VOLUME_PROBE2_{host}_DISPATCH.json').exists()
+    root='/root/coopmwm20261101_volumeprobe3'
+    assert not (ops.EVIDENCE/f'VOLUME_PROBE3_{host}_DISPATCH.json').exists()
     files=ops.sources()
     files['FROZEN_COSTS.json']=ops.ssh.remote('gpuA',"import pathlib;print(pathlib.Path('/root/coopmwm20261101_dual2/FROZEN_COSTS.json').read_text())",timeout=20).strip()
     files['INPUTS.json']=json.dumps(read(ops.EVIDENCE/'VOLUME_INPUTS_1854.json'))
+    files['CAPACITY_REFERENCE.json']=ops.ssh.remote(host,"import pathlib;print(pathlib.Path('/root/coopmwm20261101_volumeprobe2/FUSED_2_K8.json').read_text())",timeout=25).strip()
     ops.stage(host,root,files)
     value=json.loads(ops.ssh.remote(host,f'''import os,pathlib,json,subprocess,sys,time
 r=pathlib.Path({root!r});assert r.is_dir();assert not (r/'DISPATCH.json').exists()
@@ -89,12 +90,133 @@ v=dict(pid=p.pid,start_ticks=pathlib.Path(f'/proc/{{p.pid}}/stat').read_text().s
 with (r/'DISPATCH.json').open('x') as f:json.dump(v,f)
 print(json.dumps(v))
 ''',timeout=30))
-    write(ops.EVIDENCE/f'VOLUME_PROBE2_{host}_DISPATCH.json',value);print(json.dumps(value))
+    write(ops.EVIDENCE/f'VOLUME_PROBE3_{host}_DISPATCH.json',value);print(json.dumps(value))
+
+
+def capacity_register():
+    from .protocol import REGISTRY,checked
+    line=('\nS-COOPMWM 18:54 BATCH CAPACITY ENGINEERING REGISTERED: H300 proposal preparation '
+          'restores inherited WMTEACH H300/960 entrant capacity instead of COOPMWM H600/1600; '
+          'H600 diagnostics retain1600. Four-window1600 OOM on gpuR preserved; '
+          'prospective960 qualification uses same four registered TRAIN inputs and original2-windowK8 futures '
+          'as parity reference (<=1e-3veh-s), then4windowsK4/K8. No SUMO, no training or outcome-based selection; '
+          'max65%memory, original service deadline retained.\n')
+    with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+    write(ops.EVIDENCE/'VOLUME_CAPACITY_REGISTRATION_1854.json',dict(line=line,new_sumo_sim_s=0))
+    print(line.strip())
+
+
+def quiesce():
+    value=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,os,signal,time
+r=pathlib.Path({deploy.ROOT!r});assert r.is_dir()
+d=json.loads((r/'TRAIN_DISPATCH_1742.json').read_text());p=pathlib.Path('/proc')/str(d['pid'])
+assert pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']
+assert (p/'stat').read_text().split()[21]==d['start_ticks']
+assert (p/'stat').read_text().split()[2]=='T' and (r/'HOLD_1854.json').exists()
+assert not (r/'QUIESCE_1854.json').exists()
+charges=[json.loads(x) for x in (r/'CHARGES.jsonl').read_text().splitlines()]
+incomplete=[x['id'] for x in charges if not all((r/'jobs'/x['id']/f).exists() for f in ('RESULT.json','CLOSE.json'))]
+assert all(x.startswith('s0_dev004_A_') and not (r/'jobs'/x/'CLAIM.json').exists() for x in incomplete),('active physical jobs block adoption',incomplete)
+children=[]
+for child in pathlib.Path('/proc').iterdir():
+ if not child.name.isdigit():continue
+ try:
+  stat=(child/'stat').read_text().split()
+  if int(stat[3])!=d['pid']:continue
+  cmd=(child/'cmdline').read_bytes().replace(bytes([0]),b' ').decode()
+  assert 'multiprocessing' in cmd,cmd
+  children.append(dict(pid=int(child.name),start_ticks=stat[21],cmd=cmd))
+ except FileNotFoundError:pass
+v=dict(owner=d,children=children,unix=time.time(),jobs=len(charges),charged_sim_s=sum(x['sim_s'] for x in charges),unstarted_precharged_jobs=incomplete,
+ reason='adopt closed A jobs/checkpoints; keep B-u1..3 as superseded engineering; new namespace required',new_sumo_sim_s=0)
+with (r/'QUIESCE_1854.json').open('x') as f:json.dump(v,f,sort_keys=True)
+os.kill(d['pid'],signal.SIGTERM);os.kill(d['pid'],signal.SIGCONT)
+for c in children:
+ cp=pathlib.Path('/proc')/str(c['pid'])
+ if (cp/'stat').exists() and (cp/'stat').read_text().split()[21]==c['start_ticks']:os.kill(c['pid'],signal.SIGTERM)
+time.sleep(.5)
+assert not (p/'stat').exists() or (p/'stat').read_text().split()[2]=='Z'
+print(json.dumps(v))
+''',timeout=25))
+    write(ops.EVIDENCE/'QUIESCE_1854.json',value);print(json.dumps(value))
+
+
+def register_A(cpu_name):
+    from .storage import read
+    from .protocol import budget,sha,REGISTRY,checked
+    import time
+    cpu=read(ops.EVIDENCE/cpu_name);assert cpu['pass_'] and not cpu['skips'] and not cpu['sim_s']
+    value=dict(owner='18:54',unix=time.time(),scope='A continuation only; B/R remain held pending volume qualification',
+        budget=budget(),allocated_sim_s=sum(budget()['phases'].values()),
+        preserved='all A checkpoints/finished episodes; old B-u1..3 superseded engineering,86400sim-s retained; unstarted Adev jobs adopted without recharge',
+        quiesce=read(ops.EVIDENCE/'QUIESCE_1854.json'),cpu_sha256=sha(ops.EVIDENCE/cpu_name),
+        design_sha256=sha(ops.LOCAL/'docs/paper_results/COOPMWM_DESIGN.md'),
+        final_rule='fixed primaryA/Bupdate24 then once-only989600..989635; R/seed2 follow; no selection',
+        release_guided=False,new_sumo_sim_s=0)
+    dest=ops.EVIDENCE/'AMENDMENT_1854_A.json';write(dest,value)
+    h=sha(dest);line=('\nS-COOPMWM 18:54 A-ONLY CONTINUATION REGISTERED: amendment_sha256='+h+
+        '; allocated5,005,200/cap6,000,000/unallocated994,800sim-s incl supersededB86,400; '
+        'A adopts completed updates/episodes and only never-CLAIMed precharged Adev jobs; no repeats/recharge. '
+        'B/R HELD, new u0 namespaces only after measured batched GPU qualification and numeric quota/sampling registration; '
+        'primary-first/checkpoint/test/seed2 rules unchanged. CPU='+cpu_name+' design_sha256='+value['design_sha256']+'.\n')
+    with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+    write(ops.EVIDENCE/'REGISTRATION_1854_A.json',dict(line=line,amendment_sha256=h))
+    print(json.dumps(dict(registered=True,amendment_sha256=h,allocated_sim_s=value['allocated_sim_s'])))
+
+
+def bind_A(cpu_name):
+    from .storage import read
+    from .protocol import budget,REGISTRY,checked,sha
+    cpu=read(ops.EVIDENCE/cpu_name);assert cpu['pass_'] and not cpu['skips'] and not cpu['sim_s']
+    source='/home/ubuntu/coopmwm20261101_volumeA1'
+    staged=json.loads(ops.stage_frozen('cpuQ',source,cpu))
+    registry=checked(REGISTRY).read_text(encoding='utf-8');am=read(ops.EVIDENCE/'AMENDMENT_1854_A.json')
+    h=sha(ops.EVIDENCE/'AMENDMENT_1854_A.json');assert h in registry
+    v=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,sys,hashlib
+r=pathlib.Path({deploy.ROOT!r});s=pathlib.Path({source!r});sys.path[:0]=[str(s/'pytools'),'/home/ubuntu/e3final/runtime/src','/home/ubuntu/e3final/runtime']
+from tools.coopmwm.storage import read,write
+assert (r/'QUIESCE_1854.json').exists()
+b=read(r/'BINDING_1742.json');b.update(budget=json.loads({json.dumps(budget())!r}),cpu=json.loads({json.dumps(cpu)!r}),
+ volume_amendment=True,volume=dict(release_guided=False),amendment_sha256={h!r},amendment_file='AMENDMENT_1854_A.json',authority_file='AUTHORITY_1854_A.md',
+ unstarted_precharged_jobs=read(r/'QUIESCE_1854.json')['unstarted_precharged_jobs'])
+for name,h in json.loads({json.dumps(staged['hashes'])!r}).items():b['hashes']['../'+s.name+'/'+name]=h
+write(r/'AMENDMENT_1854_A.json',json.loads({json.dumps(am)!r}))
+assert hashlib.sha256((r/'AMENDMENT_1854_A.json').read_bytes()).hexdigest()=={h!r}
+with (r/'AUTHORITY_1854_A.md').open('x') as f:f.write({ascii(registry)})
+write(r/'BINDING_1854_A.json',b)
+from tools.coopmwm.runner import verify
+verify(r)
+print(json.dumps(dict(bound=True,root=str(r),source_root=str(s),binding_sha256=hashlib.sha256((r/'BINDING_1854_A.json').read_bytes()).hexdigest(),new_sumo_sim_s=0)))
+''',timeout=45))
+    write(ops.EVIDENCE/'BINDING_1854_A.json',v);print(json.dumps(v))
+
+
+def launch_A():
+    from .storage import read
+    d=read(ops.EVIDENCE/'BINDING_1854_A.json');source=d['source_root']
+    v=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,os,sys,subprocess,json,fcntl,time
+r=pathlib.Path({deploy.ROOT!r});s=pathlib.Path({source!r});assert r.is_dir() and s.is_dir()
+sys.path[:0]=[str(s/'pytools'),'/home/ubuntu/e3final/runtime/src','/home/ubuntu/e3final/runtime']
+from tools.coopmwm.runner import verify
+from tools.coopmwm.storage import read,write
+verify(r);assert not (r/'A_DISPATCH_1854.json').exists()
+old=read(r/'TRAIN_DISPATCH_1742.json');p=pathlib.Path('/proc')/str(old['pid'])
+assert not (p/'stat').exists() or (p/'stat').read_text().split()[2]=='Z'
+claim=(r/'SUPERVISOR.claim').open('a');fcntl.flock(claim,fcntl.LOCK_EX|fcntl.LOCK_NB);claim.close()
+import sumo
+home=str(pathlib.Path(sumo.__file__).parent)
+env=dict(os.environ,PYTHONPATH=str(s/'pytools')+':/home/ubuntu/e3final/runtime/src:/home/ubuntu/e3final/runtime',CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',SUMO_HOME=home,PATH=home+'/bin:'+str(pathlib.Path(sys.executable).parent)+':'+os.environ.get('PATH',''))
+with (r/'A_1854.log').open('x') as log:
+ p=subprocess.Popen(['nice','-n','19',sys.executable,'-B','-u','-m','tools.coopmwm.volume_runner',str(r),'--only-A'],cwd=r,env=env,stdout=log,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL,start_new_session=True)
+v=dict(host='cpuQ',pid=p.pid,start_ticks=pathlib.Path(f'/proc/{{p.pid}}/stat').read_text().split()[21],boot_id=pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip(),source_root=str(s),unix=time.time(),scope='A only; B/R held')
+write(r/'A_DISPATCH_1854.json',v);print(json.dumps(v))
+''',timeout=30))
+    write(ops.EVIDENCE/'A_DISPATCH_1854.json',v);print(json.dumps(v))
 
 
 def bench_status(host):
     from .storage import read
-    tag='VOLUME_PROBE2' if (ops.EVIDENCE/f'VOLUME_PROBE2_{host}_DISPATCH.json').exists() else 'VOLUME_PROBE1'
+    tag=next(t for t in ('VOLUME_PROBE3','VOLUME_PROBE2','VOLUME_PROBE1') if (ops.EVIDENCE/f'{t}_{host}_DISPATCH.json').exists())
     d=read(ops.EVIDENCE/f'{tag}_{host}_DISPATCH.json')
     v=json.loads(ops.ssh.remote(host,f'''import pathlib,json
 r=pathlib.Path({d['root']!r});out={{n:json.loads((r/n).read_text()) for n in ('COMPLETE.json','FAILED.json','TIMING_2_K8.json','TIMING_4_K8.json','TIMING_4_K4.json') if (r/n).exists()}}
@@ -108,9 +230,14 @@ print(json.dumps(out))
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('hold','inspect','bench-inputs','bench-launch','bench-status'));p.add_argument('--host',default='gpuA');a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('hold','inspect','bench-inputs','bench-launch','bench-status','capacity-register','quiesce','register-A','bind-A','launch-A'));p.add_argument('--host',default='gpuA');p.add_argument('--cpu',default='CPU_coopmwm20261101_cpu25.json');a=p.parse_args()
     if a.mode=='hold':hold()
     elif a.mode=='inspect':inspect_runtime()
     elif a.mode=='bench-inputs':bench_inputs()
+    elif a.mode=='capacity-register':capacity_register()
+    elif a.mode=='quiesce':quiesce()
+    elif a.mode=='register-A':register_A(a.cpu)
+    elif a.mode=='bind-A':bind_A(a.cpu)
+    elif a.mode=='launch-A':launch_A()
     elif a.mode=='bench-launch':bench_launch(a.host)
     else:bench_status(a.host)

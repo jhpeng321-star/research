@@ -48,7 +48,7 @@ def train_arm(root,b,si,arm,controls,peer_done=None):
                 gate.initialize(gp,quota,b['volume']['sampling']);extra['gate_path']=str(gp)
             # A's existing physical IDs are retained, including update4/check/dev.
             ident=f's{si}_u{u:03}' if arm=='A' else f'v1854_s{si}_u{u:03}'
-            episodes=run.wave(root,dict(b,beta=beta,sampling=b['volume']['sampling']),policy,
+            episodes=run.wave(root,dict(b,beta=beta,sampling=b['volume'].get('sampling')),policy,
                 batch_worlds(u,si),arm,'train',ident,'train',extra=extra)
             verdict=gate.verify(gp,episodes) if arm in ('B','R') else None
             metrics=(guided_update if arm in ('B','R') else team_update)(policy,optimizer,episodes,g)
@@ -76,14 +76,14 @@ def train_arm(root,b,si,arm,controls,peer_done=None):
             rs=run.wave(root,b,policy,worlds('dev'),arm,'dev',ident,'dev',True)
             if not (root/f'{prefix}_DEV_{u:03}.json').exists():run.report_panel(root,u,rs,read(root/'MAPPO_DEV.json')['records'],'dev',si,prefix)
     if peer_done is not None:peer_done.set()
-    write(root/f'{prefix}_TRAINING_COMPLETE.json',dict(final_update=UPDATES,training_seed=seed,arm=arm))
+    if not (root/f'{prefix}_TRAINING_COMPLETE.json').exists():write(root/f'{prefix}_TRAINING_COMPLETE.json',dict(final_update=UPDATES,training_seed=seed,arm=arm))
     return policy
 
 
 INIT_LOCK=threading.Lock()
 
 
-def main(root):
+def main(root,only_A=False):
     import fcntl
     b=run.verify(root);assert b['volume_amendment']
     claim=(root/'SUPERVISOR.claim').open('a');fcntl.flock(claim,fcntl.LOCK_EX|fcntl.LOCK_NB)
@@ -91,8 +91,15 @@ def main(root):
     os.environ.update(CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
     torch.set_num_threads(1)
     try:
+        if b.get('unstarted_precharged_jobs'):
+            policy,_,_,_=restored(run.checkpoint_path(root,b,0,'A',4))
+            run.wave(root,b,policy,worlds('dev'),'A','dev','s0_dev004','dev',True)
         reconciled(root)
         controls=run.wave(root,b,Policy(),worlds('check'),'mappo','check','control','checks',True)
+        if only_A:
+            train_arm(root,b,0,'A',controls)
+            return
+        assert b['volume']['release_guided'],'guided arms are held until measured qualification'
         for si in range(2):
             done=threading.Event()
             with ThreadPoolExecutor(max_workers=2) as pool:
@@ -119,4 +126,4 @@ def main(root):
     finally:claim.close()
 
 
-if __name__=='__main__':main(Path(sys.argv[1]))
+if __name__=='__main__':main(Path(sys.argv[1]),only_A='--only-A' in sys.argv[2:])

@@ -22,11 +22,11 @@ def checkpoint_path(root,b,si,arm,update):
 
 
 def verify(root):
-    if (root/'BINDING_1854.json').exists():
-        b=read(root/'BINDING_1854.json')
+    if (root/'BINDING_1854.json').exists() or (root/'BINDING_1854_A.json').exists():
+        b=read(root/('BINDING_1854.json' if (root/'BINDING_1854.json').exists() else 'BINDING_1854_A.json'))
         if b['budget']!=budget():raise ValueError('registered volume budget mismatch')
-        if b['amendment_sha256']!=sha(root/'AMENDMENT_1854.json'):raise ValueError('volume amendment mismatch')
-        if b['amendment_sha256'] not in (root/'AUTHORITY_1854.md').read_text():raise ValueError('volume registration absent')
+        if b['amendment_sha256']!=sha(root/b.get('amendment_file','AMENDMENT_1854.json')):raise ValueError('volume amendment mismatch')
+        if b['amendment_sha256'] not in (root/b.get('authority_file','AUTHORITY_1854.md')).read_text():raise ValueError('volume registration absent')
         if not b['cpu']['pass_'] or b['cpu']['skips'] or b['cpu']['sim_s'] or not b['exposure']['pass_']:raise ValueError('volume CPU/exposure qualification absent')
         for name,h in b['hashes'].items():
             if sha(root/name)!=h:raise ValueError('volume source/asset binding mismatch '+name)
@@ -68,7 +68,15 @@ def wave(root,b,policy,ws,arm,role,ident,phase,deterministic=False,extra=None):
             guided=arm in ('B','R') and role=='train' and not deterministic,
             proposer='random' if arm=='R' else 'wm',beta=b.get('beta',0.),sampling=b.get('sampling'),**(extra or {})))
     if jobs:
-        reserve(root,jobs,phase);admission(b)
+        existing={r['id'] for r in ledger(root)}
+        adopted=[j for j in jobs if j['id'] in existing]
+        if adopted:
+            allowed=set(b.get('unstarted_precharged_jobs',[]))
+            if any(j['id'] not in allowed or (root/'jobs'/j['id']/'CLAIM.json').exists() for j in adopted):
+                raise ValueError('already-attempted physical job cannot be adopted/retried')
+        fresh=[j for j in jobs if j['id'] not in existing]
+        if fresh:reserve(root,fresh,phase)
+        admission(b)
         from .plant import episode
         with ProcessPoolExecutor(max_workers=b['workers'],mp_context=multiprocessing.get_context('spawn')) as pool:
             results.extend(pool.map(episode,jobs))

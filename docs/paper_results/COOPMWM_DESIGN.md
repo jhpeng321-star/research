@@ -1,5 +1,5 @@
-# S-COOPMWM — WM-guided exploration, SUMO-graded (2026-11-01 17:55)
-1. Authority: MAIN16:22/25/38/46/17:07/12/27/42/55; native-start and WM-reward arms superseded.
+# S-COOPMWM — WM-guided exploration, SUMO-graded (2026-11-01 18:54)
+1. Authority: MAIN16:22/25/38/46/17:07/12/27/42/55/18:54; native-start/WM-reward/old B-u1..3 superseded.
 2. A/B/R fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
 4. A: PPO shared team reward=-J, road speed deficit plus source waiting.
@@ -13,13 +13,13 @@
 12. Reuse PPO4epochs/Adam3e-4/clip.2/KL.045; gamma exp(-10/600),lambda exp(-10/1200).
 13. Critic GAE e-folding400s; complete900s task after300s warmup, terminal0.
 14. WM fixed FULL-v4 source22cc32f6; later qualified v5 requires a new registered arm.
-15. Reuse WMTEACH scale.futures K8 batching and option_controller executor/safety.
+15. Reuse WMTEACH futures/executors; fuse private windows at one-step model forward; H300/960 slots.
 16. R=B except uniform AVAILABLE O1-O4 proposer, no WM/saving filter; same executors/W10 setpoints.
 17. Roster only; joint FIT driver prior/uniform32FIT source: integer round(rate*t) pseudo-counts/exposure t.
 18. Cold memory/unobserved source pseudo-exposure disclosed; not causal request conditioning; no future inputs.
 19. Inherited option group=two upstream mainline CAVs within100m; ordinary windows also sampled.
-20. u1 historical p=1/900 dense,1/3600 ordinary; u2+ fixed throughput-fit p,p/4 shared by B/R/seeds.
-21. FULL-v4 K8 CRN H300 scores policy action/MAPPO/O1-O4; propose iff saving vs BOTH baselines>0.
+20. Old low-volume B-u1..3 retained/charged; B/R restart MAPPOu0 in isolated1854 namespaces after registration.
+21. FULL-v4 CRN H300 scores policy/MAPPO/O1-O4; saving vs BOTH>0; K4 only if measured K8 capacity<300q/h.
 22. Keep non-group chosen targets identical in all futures; after W10 release to MAPPO.
 23. H60/120/300/600. D_i=J(member-revert)-J(joint); D_G=J(all-revert)-J(joint).
 24. C_G=D_G-sum(D_i); complete paired futures required, including negative values.
@@ -41,22 +41,22 @@
 40. Final detector-first discovery uses unchanged COOPBEHAV detectors and complete exact twins.
 41. Learning checks report team return/value/KL/gradient, beta, proposal routes/acceptance/O1-O4 counts.
 42. A/B seeds20261101/2, R primary20261101 only; seed3 DROPPED; fixed24updates x24episodes/arm-seed.
-43. Cap6,000,000 TOTAL: train3,456,000; checks446,400; dev230,400; primaryfinal172,800; Rtest43,200.
-44. Mechanics3,600; calibration240,000; discovery240,000; seed2test86,400; unallocated1,081,200.
+43. Cap6,000,000 TOTAL: train3,542,400 incl86,400 superseded; checks446,400; dev230,400; final172,800; Rtest43,200.
+44. Mechanics3,600; calibration240,000; discovery240,000; seed2test86,400; allocated5,005,200; free994,800.
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.
 46. All failures/warmup/twins charged in full before attempts; no retries/refunds/duplicate dispatch.
 47. Primary A/B parallel first; cpuQ12nice19singlethread workers+2E2; load<=20/RAM8GiB/disk2GiB.
-48. Both GPUs one8GiB worker each, owner17:55 release; max10000proposals/host+12E2+parity/timing; nvidia-smi.
+48. Both GPUs batched services <=65%memory each; measured capacity; once/worker single parity; original24h deadline.
 49. GPU CPU helpers disabled until separate frozen parity qualification; own PIDs only.
 50. Both seed guards, fresh-name exposure, immutable sources/cache/approval bindings before physics.
 51. No prohibited paths/truth/assignments, no newenv/deletion/push; commit every completed step.
 52. E2 diagnostic multi-H weights normalize measured agreement on horizons with sign95CI lower>.5.
-53. Fit p=min(.5,dualqueries/s*initial48episodewall*4/12/(dense+ordinary/4)); complete-group counts only.
+53. Executed-count quota and dense/ordinary probabilities fixed in1854 amendment before restart; unavailable=>p0.
 54. Per-window/H report K8 joint-return advantage variance and paired-credit variance in veh-s².
 55. Frozen critic baseline is constant within window; variance is conditional WM-estimated noise.
 56. Report actual PPO advantages across TRAIN windows separately; no empirical SUMO-noise claim.
 57. Same-group CRN removes shared hidden-driver/arrival variation only to extent model supports it.
-58. No credit outcomes inspected before random subset manifest; failed/incomplete quartet=>STOP.
+58. Per-update guidance gate counts closed SUMO events; R exactly matches B per regime; unmet quota=>STOP, no extra episodes.
 59. FINAL_TEST989600..989635:36fresh worlds,3/cell; metadata manifest hash registered before SUMO.
 60. Precharge4x36x1200=172800; MAPPO169/native/Aseed0u24/Bseed0u24, no model selection.
 61. Primary four-arm test ONCE after BOTH primaryu24; publish, then R train/test, then seed2A/B train/test.
