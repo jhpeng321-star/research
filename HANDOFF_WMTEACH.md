@@ -29,6 +29,14 @@
   >=20%agreement, Wilson95lower>5%, positive mean chosen exact saving on helpful.
 - CPU27PASS using existing Python313/sklearn (default Python314 lacks sklearn;
   initial test invocation failed only at that missing dependency; no environment created).
+- Scale continuation DISPATCHED ONCE: gpuA447666/startticks888983366/boot
+  a81555d7-176e-4ed8-bc7d-896fc89cc914; immutable
+  `/root/autodl-tmp/wmteach_scale20261101_v1`, identity1f465057363203d6,
+  429source bindings, host9CPU PASS. Snapshot1793509643 verifies identity/S,
+  waiting for initial12state exact quality; generation/labels0, SUMO0.
+- Do not stage/launch this root again. Collect with
+  `python -B -m tools.wmteach.scale_ops collect`. Any FAILURE.json is terminal;
+  preserve partial work and diagnose. The original437822 remains independent.
 
 ## Read first; do not duplicate
 - Branch `c4/wmteach`; recovery `9f92c488`, shared student `ee47f395`
