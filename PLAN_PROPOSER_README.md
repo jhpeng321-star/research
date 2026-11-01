@@ -3,29 +3,15 @@
 The plan proposer is an AlphaZero-style prior. It sees the observable situation of a CAV group and proposes joint plan perturbations, so searches can start near good plans. It never scores plans. Its proposals are extra iteration-0 seeds, and the WM still scores every candidate. It runs on CPU only (numpy and torch), uses no SUMO or GPU, and is deterministic.
 
 ## Design
-- **Inputs:** one token per member, built only from rows the plan service already receives (`vid, s_m, v_mps, lane, is_cav[, length_m]`). Each token holds:
-  - position relative to the leader and the group mean, road position, a merge-zone flag;
-  - speed and relative speed, a lane one-hot;
-  - the nearest vehicle ahead and behind in each of the 3 lanes within 100 m;
-  - HDV and CAV counts within 100 m;
-  - group context: regime, size, mean speed, zone occupancy.
-
-  There are no world/seed/demand/share labels, clock, driver parameters or truth. `world_id` is used only to group the split.
+- **Inputs:** one token per member from the rows the plan service already receives (`vid, s_m, v_mps, lane, is_cav[, length_m]`): relative/road position, merge-zone flag, speed and relative speed, lane one-hot, nearest vehicle ahead/behind in each of 3 lanes within 100 m, HDV/CAV counts within 100 m, and group context (regime, size, mean speed, zone occupancy).
+- **Excluded:** world/seed/demand/share labels, clock, driver parameters and truth. `world_id` only groups the split.
 - **Model:** set transformer (d=64, 2 layers, no positional encoding), permutation-equivariant for 2-6 members.
   - Output: M=4 Gaussian joint proposals in `mppi_search`'s canonical space (members x 10 knots over [0, 300] s, relative to the policy trajectory), plus a per-component duration categorical.
   - Defensive mixture: 0.1 of the mass stays on the search's own initial N(0, Sigma_0), uniform over durations.
 - **Training targets:** weighted likelihood of candidates whose WM-predicted saving vs 'policy continues' is > 0. Each search has unit weight, shared in proportion to saving. A SUMO-positive executed plan adds +1. SUMO-losing executed plans are never targets.
-- **Training setup:**
-  - World-grouped split: 25% of worlds, chosen by SHA rank.
-  - Early stopping on an inner world split of the TRAIN worlds only.
-  - AdamW, at most 1500 steps, seed 20261102, 1 thread, deterministic algorithms.
-  - Writes `<out>.pt` and `<out>.json` (cfg, .pt SHA256, own SHA256); the loader verifies both.
-- **Offline check** (`offline_check`), on held-out-world searches against the search's own initial distribution:
-  - elite log-likelihood gain;
-  - nearest-elite RMS distance change (16 samples each), vs initial samples and vs the zero 'centre' seed;
-  - world-bootstrap 95% CIs.
-
-  PASS needs >= 8 worlds, >= 40 searches, LL CI lower > 0, and both distance CI upper bounds < 0.
+- **Training setup:** world-grouped split (25% of worlds by SHA rank); early stopping on an inner world split of the TRAIN worlds only; AdamW, at most 1500 steps, seed 20261102, 1 thread, deterministic algorithms.
+- **Checkpoint:** `<out>.pt` + `<out>.json` (cfg, .pt SHA256, own SHA256); the loader verifies both.
+- **Offline check** (`offline_check`) on held-out-world searches, against the search's own initial distribution: elite log-likelihood gain, and nearest-elite RMS distance change (16 samples each) vs initial samples and vs the zero 'centre' seed, with world-bootstrap 95% CIs. PASS needs >= 8 worlds, >= 40 searches, LL CI lower > 0 and both distance CI uppers < 0.
 
 ## Data needed (schema `coopmwm.plan_proposer.receipt/1`, documented in the module docstring)
 - **Already enough:** plan-service `requests/` + `responses/` (or `forecasts/`). `receipt_from_service` uses the top-k plans and the `search_learning` covariance. It skips arm R, rejected searches and missing rows. `attach_sumo` adds the `search_learning.update` entries.
@@ -57,16 +43,5 @@ The plan proposer is an AlphaZero-style prior. It sees the observable situation 
 
 ## Tests
 - `python -m pytest -q tools/coopmwm/test_plan_proposer_cpu.py` (rl_driving, CPU): **14 passed** in about 35 s.
-- Coverage:
-  - groups of 2-6;
-  - permutation invariance and equivariance;
-  - only row fields are read;
-  - a planted direction is learned and passes on held-out data;
-  - an untrained model, or too little data, fails;
-  - the world-grouped split;
-  - deterministic training and sampling;
-  - checkpoint SHA and tamper detection;
-  - schema tolerance, SUMO weighting, the service adapter and queue loader;
-  - the search output is byte-identical with the recorder;
-  - seeds stay within bounds, knots and durations, and the WM scores them via `extra_seeds`.
+- Coverage: groups of 2-6; permutation invariance/equivariance; only row fields read; planted direction learned with a held-out PASS; untrained model and too little data FAIL; world-grouped split; deterministic training and sampling; checkpoint SHA with tamper detection; schema tolerance; SUMO weighting; service adapter and queue loader; search byte-identical with the recorder; seeds within bounds/knots/durations and WM-scored via `extra_seeds`.
 - `test_mppi_search_cpu.py` still passes 15/15.
