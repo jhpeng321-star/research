@@ -1,4 +1,12 @@
-# S-COOPMWM live continuation — MAIN02:43 concurrent-plan correctness pending
+# S-COOPMWM live continuation — MAIN02:49 integration pending
+
+Fresh recovery receipt RESUME_MAIN0249_20261102.md: complete262-line brief read,
+HEADe7425014 preserved. Original A2998262 running/u22/528closed/1621640charged;
+original GPU owners both READY/sixEXACT0; B/R/broker unstarted. No duplicate jobs.
+MAIN0249 requires all-active-plan K8 overlap recheck/truncation/exact executed-
+portion grades; R keeps all, no WM recheck. Recovered concurrent_ops/service edits
+not dispatched; delegated exact_grade still uncommitted. Continue integration,
+CPU/GPU gates and prospective registration, then release B/Ru0 once.
 
 MAIN0243 concurrentCPU3 now164PASS/0skips/zeroSUMO, immutable
 /home/ubuntu/coopmwm20261102_concurrentcpu3. Multi-disjoint committed plant plans,
