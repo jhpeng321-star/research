@@ -98,6 +98,8 @@ R9_GATE2.md text eol=lf
 
 # RB2-INT prospective registrations and candidate recipes use exact byte hashes.
 /docs/rb2int/*.json -text
+/docs/rb2int/**/*.json -text
+/docs/rb2int/**/*.csv -text
 /docs/rb2int/*.md text eol=lf
 /configs/wm_phys_v5*.toml text eol=lf
 /tools/rb2int/*.py text eol=lf

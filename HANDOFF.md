@@ -8,6 +8,9 @@ gpuR924719 (exact boot/startticks in docs/rb2int/FINAL_{GPUA,GPUR}_PROCESS.json)
 root `/root/autodl-tmp/c4/rb2int20261101/final_v5_v1` on both hosts. Controld0df3d66,
 modelb2df7458, releaseV2/plan frozen.4gpuA+3gpuR own5GiB/nice19/singlethread workers.
 Read `docs/rb2int/CURRENT_JOBS.md` and latest final status receipts BEFORE any action.
+Scoring-only targets50 extractor926841 EXITED/PASS;350endpoint/450real records
+joined/validated. Bounded no-inference collection/scoring continuation prepared:
+`docs/rb2int/SCORING_CONTINUATION.md`. Inspect its PROCESS before starting another.
 
 **FULL-v5 READY for engineering/teacher-quality rerun.** Frozen sourceb2df7458,
 gpuA stage `/root/autodl-tmp/c4/rb2int20261101/phys_code_b2df7458a41f`, recipe

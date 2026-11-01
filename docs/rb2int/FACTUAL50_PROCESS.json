@@ -1,0 +1,23 @@
+{
+ "pid": 926841,
+ "start_ticks": "4214578248",
+ "boot_id": "d19e6898-efd0-4288-a901-d63b21f11163",
+ "argv": [
+  "nice",
+  "-n",
+  "19",
+  "/root/miniconda3/bin/python",
+  "-B",
+  "-u",
+  "/root/autodl-tmp/c4/rb2int20261101/factual50_v1/EXTRACT.py",
+  "--starts",
+  "/root/autodl-tmp/c4/rb2int20261101/export_prefix_all58_v1/inputs58/data/jobs",
+  "--out",
+  "/root/autodl-tmp/c4/rb2int20261101/factual50_v1/FACTUAL50.json"
+ ],
+ "root": "/root/autodl-tmp/c4/rb2int20261101/factual50_v1",
+ "cpu_only": true,
+ "source_sha256": "4264473b67fc4a96de0a97ae2a64cd3e0b8abd01d469d556b606bb4c6c6962ee",
+ "scoring_only": true,
+ "model_inputs": false
+}
