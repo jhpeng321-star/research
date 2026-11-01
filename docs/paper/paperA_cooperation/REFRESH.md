@@ -10,6 +10,7 @@ The exact evidence cut is `source_refresh.json`; pinned report/CSV/JSON bytes re
 - **Paper B operational correction:** SSH-only cpuQ outage, original jobs continued. Genuine final fleet training receipt delivered; final-only peer evaluation proceeding, per-CAV training live, full switching efficacy still incomplete. Historical missing-byte/restart prerequisites below are superseded by reconciled receipts. <!-- Source: E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md, MAIN11:37 CORRECTION, S-SELMAPPO11:40, S-SELMAPPO2 11:41, S-C1SWITCH2 NOON SUPERVISION. -->
 - **New repair program is a plan:** [[PENDING: FULL-v5 source-frozen replicated-cell and action-confidence qualification, explicit teacher version adoption / S-RB2-INT, S-RB2-CAL, S-WMTEACH]]. SUMOCORE direct report captured; collision validity FAIL prevents an information-ceiling claim. <!-- Sources: E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md, MAIN11:58; E:/agent-work/c4-sumocore/docs/paper_results/SUMOCORE.md. -->
 - Source step `8da83815` captured owner/ledger/final report, direct COOPFREE terminal receipts and successor sources. First package is already registered; no duplicate completion line, experimental process or observer was created.
+- Document step `3e5e0648` binds final FULL-v4, successor contracts, recovered discovery STOP and Paper B operational corrections. F4P now has PNG/PDF/backing CSV from the pinned final report, with **29** verified source cells including unplotted diagnostics. Visually inspected; an annotation crossing bars was moved clear. Older figure bytes are unchanged. <!-- Source: build_noon_figures.py; noon_figure_validation.json. -->
 
 ## Historical morning resolutions — noon delta above takes precedence
 
@@ -58,6 +59,7 @@ python -B docs/paper/paperA_cooperation/refresh_sources.py --check
 # Read changed permitted producer reports and review their claims before capture.
 python -B docs/paper/paperA_cooperation/refresh_sources.py --capture
 python -B docs/paper/paperA_cooperation/build_morning_figures.py --check
+python -B docs/paper/paperA_cooperation/build_noon_figures.py --check
 python -B docs/paper/paperA_cooperation/validate_package.py
 ```
 

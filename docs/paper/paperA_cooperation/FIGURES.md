@@ -21,6 +21,9 @@ python -B docs/paper/paperA_cooperation/build_night_figures.py --only F4D
 # Completed morning audit/value/planner, from new immutable pins only.
 python -B docs/paper/paperA_cooperation/build_morning_figures.py
 python -B docs/paper/paperA_cooperation/build_morning_figures.py --check
+# Final FULL-v4 diagnostic, pinned final report only; preserves every older asset.
+python -B docs/paper/paperA_cooperation/build_noon_figures.py
+python -B docs/paper/paperA_cooperation/build_noon_figures.py --check
 ```
 
 Initial capture used the same command with `--freeze-inputs`. That option reads only the explicit allowlist in the script and refuses to replace a differing snapshot. It is not needed for a portable rebuild. PNGs are **300 dpi**; PDFs embed TrueType fonts. <!-- Source: E:/agent-work/c4-papera/docs/paper/paperA_cooperation/build_figures.py, save/rcParams. -->
@@ -134,9 +137,9 @@ Initial capture used the same command with `--freeze-inputs`. That option reads 
 ## F4P — final FULL-v4: prediction improvement is not action qualification
 
 - **Purpose:** show final WM2/FULL-v4 delay-distribution point scores, breakdown/HDV qualification contrasts and overconfident selected calls together, with no invented CIs.
-- **Status: PENDING artwork from delivered final report.** [[PENDING: offline final-report summary transcription/renderer and CSV provenance checks / S-PAPERA]]. Scientific verdict is complete, not pending.
+- **Status: GENERATED, source-checked and visually inspected.** [PNG](figures/F4P_final_wmphys_diagnostics.png), [PDF](figures/F4P_final_wmphys_diagnostics.pdf), [backing CSV](figures/F4P_final_wmphys_diagnostics.csv). `noon_figure_validation.json` binds the final-report hash, plotted/exported cells and output hashes. Scientific verdict is complete.
 - **Sources:** `E:/agent-work/c4-rb-int/docs/paper_results/WMPHYS_MORNING.md`, final pin `source_snapshots/wmphys_morning_44ad6b2a1dd2cc09.md`; `E:/agent-work/c4-rb-int/docs/rbint/noon/20261101T113555+0800/PUBLICATION.json`. The publication explicitly reuses the verified complete frozen FULL-v4 snapshot after a redundant transfer timeout; no repeated inference is required.
-- **Generating command:** [[PENDING: package-only source-pinned renderer / S-PAPERA]]. No producer forecast, scoring or training invocation.
+- **Generating command:** `python -B docs/paper/paperA_cooperation/build_noon_figures.py`; verify with `--check`. Package-only summary transcription; no producer forecast, scoring or training invocation. The CSV also retains paired CRPS changes, HDV position change and range coverage; the plot uses the named subset without inventing whiskers.
 - **Caption requirements:** complete model panels with primary reserved-world point comparison; full-world CIs NA and earlier numeric CIs retracted; all conditions required and breakdown-closeness FAIL; correct aggregate effect signs do not validate individual action probabilities or C_G; source absolute scores and paired differences rounded independently. SUMOCORE's different panel and startup-collision FAIL stay separate. <!-- Sources: E:/agent-work/c4-rb-int/docs/paper_results/WMPHYS_MORNING.md:17-59; E:/agent-work/c4-sumocore/docs/paper_results/SUMOCORE.md:22-27. -->
 
 ## F4N — night falsifiers: calibration and queue/service model

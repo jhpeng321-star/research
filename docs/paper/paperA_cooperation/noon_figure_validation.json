@@ -1,0 +1,25 @@
+{
+  "status": "PASS",
+  "source_cells": 29,
+  "source": {
+    "source_path": "E:/agent-work/c4-rb-int/docs/paper_results/WMPHYS_MORNING.md",
+    "source_sha256": "44ad6b2a1dd2cc09277f8023357aed451ce0b0cdaebe15d3a5c1322746177f77",
+    "snapshot": "source_snapshots/wmphys_morning_44ad6b2a1dd2cc09.md"
+  },
+  "artifacts": {
+    "figures/F4P_final_wmphys_diagnostics.csv": {
+      "sha256": "4c2c00e05eba081cd790b3635e3675371331d971a69205a922c35ad067d1f08b",
+      "bytes": 12601
+    },
+    "figures/F4P_final_wmphys_diagnostics.png": {
+      "sha256": "6d7b38b16bb59ee1503dd7c730539eb5d91eb0a56e23c9faea26f9b28a13c7b6",
+      "bytes": 349910
+    },
+    "figures/F4P_final_wmphys_diagnostics.pdf": {
+      "sha256": "2167c1640aa4373c54821c629613a7aaba84d2388beec94d0275fe756608365a",
+      "bytes": 29466
+    }
+  },
+  "scope": "Immutable final-report summary transcription and CSV/image integrity; no new statistics",
+  "intervals": "Full-world CI NA; source absolutes and paired changes independently rounded"
+}

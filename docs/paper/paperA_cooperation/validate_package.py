@@ -10,6 +10,7 @@ import subprocess
 from build_figures import ROOT, check, extract
 from build_night_figures import check_night, extract_night
 from build_morning_figures import check_morning, extract_morning
+from build_noon_figures import check_noon, extract_noon
 
 
 def main():
@@ -30,7 +31,8 @@ def main():
     for claim in ("W-VALUE", "W-POLICY", "W-RISE", "W-WIN", "W-RATIO", "M-ARTIFACT",
                   "W-CALIB", "W-QUEUE", "W-DATA", "W-DIST", "N-FOLLOWUP",
                    "B-TRANSFER", "B-FLOOR", "B-SWITCH", "B-CLOSED",
-                   "P-WIN", "P-INTERACT", "P-WALL", "P-TRANSFER", "N-BANDIT", "N-FREE"):
+                    "P-WIN", "P-INTERACT", "P-WALL", "P-TRANSFER", "N-BANDIT", "N-FREE",
+                    "W-TEACH", "N-DISTILL", "W-CORE"):
         assert re.search(r"^### " + claim + r"\b", docs["CLAIMS.md"], re.MULTILINE), claim
     for name in ("OUTLINE.md", "FIGURES.md", "THREATS.md", "README.md"):
         assert "WMVALUE" in docs[name], name
@@ -68,6 +70,8 @@ def main():
     night_figures = check_night(night_rows, night_sources)
     morning_rows, morning_sources = extract_morning()
     morning_figures = check_morning(morning_rows, morning_sources)
+    noon_rows, noon_source = extract_noon()
+    noon_figures = check_noon(noon_rows, noon_source)
     # Check staged byte preservation as well as working-copy provenance.
     index_checks = []
     identities = [(entry["snapshot"], entry["snapshot_sha256"]) for entry in manifest.values()]
@@ -75,6 +79,7 @@ def main():
     identities.extend((name, entry["sha256"]) for name, entry in figures["artifacts"].items())
     identities.extend((name, entry["sha256"]) for name, entry in night_figures["artifacts"].items())
     identities.extend((name, entry["sha256"]) for name, entry in morning_figures["artifacts"].items())
+    identities.extend((name, entry["sha256"]) for name, entry in noon_figures["artifacts"].items())
     for name, expected in identities:
         relative = "docs/paper/paperA_cooperation/" + name
         command = subprocess.run(["git", "show", ":" + relative], cwd=ROOT,
@@ -87,7 +92,8 @@ def main():
               "git_index_byte_checks": index_checks,
               "report_snapshot_checks": report_checks,
                "night_figure_source_cells": len(night_rows),
-               "morning_figure_source_cells": len(morning_rows),
+                "morning_figure_source_cells": len(morning_rows),
+                "noon_figure_source_cells": len(noon_rows),
               "pending_insertions": {name: text.count("[[PENDING:") for name, text in docs.items()
                                      if name.endswith(".md")},
               "scope": "local links, provenance structure, bibliography identity coverage, CSV schema, plotted source values and hashes",
