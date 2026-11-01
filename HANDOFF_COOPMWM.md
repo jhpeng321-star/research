@@ -1,5 +1,13 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+FreshresumeMAIN0508: full284linebrief read; A48complete/exited; original B/R/grader/
+broker alive/noSTOP, both original GPUs8EXACT0. Ten searches/sevenstarts/noexactgrades.
+EPISODE_PROGRESS_1793567498 pins eightclaimedB/16unclaimed; fourqueries pending at
+t310/320/410/410, others admissionblocked; Rwaits exactfinalBquota/noepisodeclaims.
+RESUME_MAIN0508_20261102.md records latest7.5M authority and safehandover constraints.
+Do not redo warmqualification/restart or duplicate any owner. MAIN0508 admission/
+concurrency amendment pending; no newphysics/PIDcontrol duringfreshrecovery.
+
 Earlyviabilityautopublisher3357311/start58085285 cpuQ LIVE/noerrors/no reports yet
 at1793566596. Sourceviabilityreport1/CPU5PASS0skips/zeroSUMO, amendment1c66899d.
 Reads ONLY qualified B/seed20261101 TRAIN exactgrades; keepslosses; whole-world
