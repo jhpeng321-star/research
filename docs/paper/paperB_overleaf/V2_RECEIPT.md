@@ -56,3 +56,28 @@ all approved prose words and number tokens (ignoring only markup, equation layou
 headings and the unfilled table) matches 3,291 tokens exactly. Both figure caption
 texts are included in this comparison; no main-paragraph wording was rewritten.
 PDF compilation, visual inspection and final packaging are the next step.
+
+## Step 3 - compiled v2 delivery
+
+Manuscript/text commit: `2320b4c8`. MiKTeX pdfLaTeX, BibTeX and two subsequent
+pdfLaTeX passes compiled the actual IEEEtran conference document to FIVE pages
+INCLUDING references. The final log has no errors, unresolved references/citations,
+rerun request or overfull boxes; four ordinary underfull justification warnings
+remain. All five rendered pages were visually inspected: title/author block,
+equations, all sections, red PENDING items, both empty graph boxes, Table I and
+references are readable and within margins. Only Type 1 fonts are embedded.
+
+`main.pdf` is copied byte-identically to
+`C:/Users/jpeng/Desktop/PaperB_draft_v2.pdf`. The v1 Desktop hash remains
+`a54f0326f6db4ac8b936a58d92cd318ea6fed7621f837d062321ecec3ece4760`, matching
+the original committed delivery receipt. The builder verifies all 34 numerical
+source comments survive identically in DRAFT_TEXT.md, all 3,291 approved prose
+word/number tokens match, and every ZIP member is byte-identical to its source.
+No numerical result could not be sourced; all rounded/derived presentations are
+explicit in the checklist. The bibliography and optional figures are reused.
+
+Focused Ruff syntax/undefined-name checks and Git whitespace checks PASS. One
+additive v2 completion line is recorded in the shared REGISTRATION.md and copied
+in REGISTRATION_RECEIPT.md. The upload ZIP includes the approved Doc and this
+receipt; BUILD_REPORT.json records current artifact hashes. No scientific job,
+remote dispatch, restricted-input read, peer-process action, deletion or push.
