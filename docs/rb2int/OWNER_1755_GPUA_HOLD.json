@@ -1,0 +1,54 @@
+{
+ "host": "gpuA",
+ "time": "2026-11-01T18:15:13.121045+08:00",
+ "paused": [
+  {
+   "stage": "owner_late_control",
+   "process": {
+    "pid": 514854,
+    "start_ticks": "890706569",
+    "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914"
+   },
+   "state": "T"
+  },
+  {
+   "stage": "owner1735_control",
+   "process": {
+    "pid": 513448,
+    "start_ticks": "890664618",
+    "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914"
+   },
+   "state": "T"
+  }
+ ],
+ "new_gpu_admissions": 0,
+ "automatic_resume": false,
+ "evaluate_children": [
+  {
+   "job": "v5_969435",
+   "process": {
+    "pid": 514556,
+    "start_ticks": "890697900",
+    "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914"
+   },
+   "state": "R",
+   "signal_sent": false
+  },
+  {
+   "job": "v5_969439",
+   "process": {
+    "pid": 517852,
+    "start_ticks": "890821011",
+    "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914"
+   },
+   "state": "R",
+   "signal_sent": false
+  }
+ ],
+ "evaluate_signals": 0,
+ "peer_signals": 0,
+ "redispatched_tasks": 0,
+ "source_recipe_plan_changed": false,
+ "gpu_before": "44397, 99",
+ "resume_authority": "MAIN appends S-RB2-INT RESUME"
+}

@@ -1,0 +1,44 @@
+{
+ "host": "gpuR",
+ "time": "2026-11-01T18:15:18.641669+08:00",
+ "paused": [
+  {
+   "stage": "owner_late_control",
+   "process": {
+    "pid": 949247,
+    "start_ticks": "4215344299",
+    "boot_id": "d19e6898-efd0-4288-a901-d63b21f11163"
+   },
+   "state": "T"
+  },
+  {
+   "stage": "owner1735_control",
+   "process": {
+    "pid": 948148,
+    "start_ticks": "4215302457",
+    "boot_id": "d19e6898-efd0-4288-a901-d63b21f11163"
+   },
+   "state": "T"
+  }
+ ],
+ "new_gpu_admissions": 0,
+ "automatic_resume": false,
+ "evaluate_children": [
+  {
+   "job": "wm2_969554",
+   "process": {
+    "pid": 952289,
+    "start_ticks": "4215458888",
+    "boot_id": "d19e6898-efd0-4288-a901-d63b21f11163"
+   },
+   "state": "R",
+   "signal_sent": false
+  }
+ ],
+ "evaluate_signals": 0,
+ "peer_signals": 0,
+ "redispatched_tasks": 0,
+ "source_recipe_plan_changed": false,
+ "gpu_before": "17701, 63",
+ "resume_authority": "MAIN appends S-RB2-INT RESUME"
+}

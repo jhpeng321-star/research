@@ -1,5 +1,17 @@
 # S-RB2-INT — round 2 active, 2026-11-01 ~12:00 +08
 
+## OWNER17:55 HOLD — applied18:15 +08; supersedes ALL admission below
+
+**ZERO new GPU admissions until MAIN appends `S-RB2-INT RESUME`.** Exact
+pidfd-SIGSTOP applied ONLY to our CPU admission owners513448/gpuA,948148/gpuR
+and their later-delivery standbys514854/949247; all four verified stateT.
+Existing evaluate children514556(v5_969435),517852(v5_969439),952289(wm2_969554)
+continue naturally, with zero evaluate/peer signals. No redispatch/model change.
+Full receipts: `docs/rb2int/OWNER_1755_{GPUA,GPUR}_HOLD.json`.
+Collector/publisher ownership is preserved; no duplicate process launched.
+Later2/1 continuation is now suspended too: no automatic restart at cutoff.
+Final delivery awaits explicit MAIN release; publish completed-data interims.
+
 ## LIVE17:56 — current authoritative ownership
 
 Read `docs/rb2int/LIVE_CONTINUATION_1756.md` first. gpuA handover COMPLETE17:52:42:
