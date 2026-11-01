@@ -45,3 +45,10 @@ The inherited exact-quality adapter is roster-only with frozen FIT population,
 sampled FIT source priors, and cold motion/controller memory. Its quality is not
 qualification of a richer history-conditioned observation adapter or calibration
 of empirical K8 win probabilities. Preserve that limitation in live reporting.
+
+<!-- WMPLAN-PROGRESS:BEGIN -->
+## Current continuation status
+- Exclusive continuation is waiting for the already-running FULL-v5 quality check.
+- Exact199200upper preregistered; no new SUMO or model-selection outcome yet.
+- No peer process will be signalled and no quality computation duplicated.
+<!-- WMPLAN-PROGRESS:END -->
