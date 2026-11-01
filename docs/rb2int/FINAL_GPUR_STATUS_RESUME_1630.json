@@ -1,0 +1,52 @@
+{
+ "root": "/root/autodl-tmp/c4/rb2int20261101/final_v5_v1",
+ "exists": true,
+ "process": {
+  "pid": 924719,
+  "start_ticks": "4214495421",
+  "boot_id": "d19e6898-efd0-4288-a901-d63b21f11163",
+  "argv": [
+   "nice",
+   "-n",
+   "19",
+   "/root/miniconda3/bin/python",
+   "-B",
+   "-u",
+   "/root/autodl-tmp/c4/rb2int20261101/phys_code_d0df3d66e80a/tools/rb2int/final_worker.py",
+   "--root",
+   "/root/autodl-tmp/c4/rb2int20261101/final_v5_v1",
+   "--host",
+   "gpuR"
+  ],
+  "root": "/root/autodl-tmp/c4/rb2int20261101/final_v5_v1",
+  "host": "gpuR"
+ },
+ "alive": true,
+ "complete_world_jobs": [
+  "wm2_969590",
+  "wm2_969595",
+  "wm2_969599"
+ ],
+ "failed_world_jobs": [],
+ "running": [
+  {
+   "job": "v5-lp_969433",
+   "pid": 931776,
+   "alive": true
+  },
+  {
+   "job": "v5_969433",
+   "pid": 930945,
+   "alive": true
+  },
+  {
+   "job": "v5_969437",
+   "pid": 932067,
+   "alive": true
+  }
+ ],
+ "future_task_files": 40,
+ "log_tail": "WORLD_START wm2_969590 924722\nWORLD_START wm2_969595 924725\nWORLD_START wm2_969599 924733\nWORLD_COMPLETE wm2_969590\nWORLD_START v5_969433 930945\nWORLD_COMPLETE wm2_969595\nWORLD_START v5-lp_969433 931776\nWORLD_COMPLETE wm2_969599\nWORLD_START v5_969437 932067\n",
+ "action": "status",
+ "host": "gpuR"
+}
