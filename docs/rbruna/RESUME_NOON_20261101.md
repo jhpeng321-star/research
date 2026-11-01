@@ -79,3 +79,29 @@ Execution/verification receipts will be appended after implementation.
 - Current INT/EVAL handoffs and all shared claims inspected. Existing failed A/C,
   peer B/B2/FULL-v1 and active A2 are preserved; C2 remains unclaimed, next in
   list order. Shared `RUNA_NOON_CONTINUATION.json` publishes this recovered state.
+
+## Subsequent resume audit — 2026-11-02 06:45–06:49 +08
+
+- Preserved clean HEAD `61a4d155`; read log/status before program and receipts.
+  The registered continuation is dated **November 1**, not a rolling daily noon
+  schedule. Its 09:30 freeze and 11:30 supervision cutoff have already passed.
+- Recovered existing local A2 `RESULT.json` and shared `WM-PHYS-A2.done`:
+  **160 tasks /20 complete K8 worlds /five arms**, peak own GPU **3272 MiB**,
+  original frozen gate **NOT_QUALIFIED**. Completion verification follows below.
+- Noon watcher log records completion and polls through the cutoff; final poll
+  receipt is `runs/rbruna/POLL_1793504056538577700.json` at11:34:16 November1.
+  Windows PIDs15824/44796/33696 are absent in the current CIM query.
+- Current INT/EVAL handoffs explicitly close this program. C2's existing claim
+  now belongs to INT/gpuR; final delivery retains102tasks/12complete worlds and
+  all8reserved worlds. B2 terminal partial157tasks is peer-owned. Neither is
+  unclaimed work for RUNA. Existing failed A/C claims and completed tasks remain.
+- INT canonical final publication is
+  `docs/rbint/noon/20261101T113555+0800/PUBLICATION.json`; final delivery accounts
+  for A2 completion. EVAL retracts original bootstrap intervals; use corrected
+  scored-world-only results, with full-world uncertainty unavailable for singleton
+  cells. Historical A2 `.done` intervals are not current qualification evidence.
+- Read-only gpuA check: RTX4090D **44959MiB used /3552MiB free /78%**.
+  No evaluation admission or replacement supervision is authorized by this expired
+  schedule. This resume has launched no inference, scoring, SUMO or training and
+  has signalled no process. Next step is read-only A2 completion/hash verification
+  and a current closure handoff/coordination receipt.
