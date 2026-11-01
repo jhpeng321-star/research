@@ -1,0 +1,109 @@
+"""Receipt-only observer and one-use gated launcher; remote training survives its exit."""
+import argparse
+from datetime import datetime,timezone
+import json
+import subprocess
+import sys
+import time
+from . import ops,exact_ops
+from .storage import read,write
+
+DISPATCHES={'grader':'EXACT_GRADER_DISPATCH.json','broker':'WARM_REMOTE_BROKER_DISPATCH.json',
+            'B':'WARM_B_DISPATCH_V4.json','R':'WARM_R_DISPATCH_V4.json'}
+
+
+def adopt(cpu):
+    """Reconcile launch receipts after SSH loss BEFORE considering any dispatch."""
+    for name,entry in cpu['owners'].items():
+        if name not in DISPATCHES.values():continue
+        path=ops.EVIDENCE/name
+        if path.exists():
+            assert read(path)==entry['owner'],'remote owner differs from local dispatch'
+        else:write(path,entry['owner'])
+
+
+def launch_ready(gpus,cpu):
+    adopt(cpu)
+    if cpu['stops']:raise ValueError('registered remote STOP/pause; no automatic restart')
+    if not all(v['alive'] and v['ready'] and not v['failed'] and
+               len([k for k in v['receipts'] if k.startswith('STARTUP_')])==8 for v in gpus.values()):
+        return False
+    if not (ops.EVIDENCE/'EXACT_RUNTIME_REGISTRATION.json').exists():exact_ops.register()
+    for component,name in DISPATCHES.items():
+        if not (ops.EVIDENCE/name).exists():exact_ops.dispatch(component)
+    return True
+
+
+def announce():
+    path=ops.EVIDENCE/'EXACT_TRAINING_STARTED.json'
+    if path.exists():return
+    value=dict(timestamp_utc=datetime.now(timezone.utc).isoformat(),
+        dispatches={k:read(ops.EVIDENCE/v) for k,v in DISPATCHES.items()},
+        source_root=exact_ops.CPU,qualification='WARM MEMORY QUALIFIED retained; concurrent source8EXACT0 gates per host',
+        endpoints=dict(A=48,B=48,R=24),N_exec=10,grade_source='exact marginal SUMO only',
+        ETA='first executed-plan throughput/acceptance measurement pending; no fabricated completion ETA')
+    write(path,value)
+    doc=ops.LOCAL/'docs/paper_results/COOPMWM.md'
+    with doc.open('a',encoding='utf-8') as f:
+        f.write('\n## TRAINING STARTED B/R — '+value['timestamp_utc']+'\n'
+            '- MAPPOu0, immutable exactcpu4; B/R and exact grader/broker detached on cpuQ.\n'
+            '- WARM MEMORY QUALIFIED retained; both concurrent GPU workers pass8source-bound EXACT0 gates.\n'
+            '- K4/H300 screen, K8/Hfinal, Nexec10; no look-ahead reduction. Exact grades only for trust/imitation/library, asynchronous.\n'
+            '- R centre requests retain lower priority until B finishes; no candidate scoring/library for R.\n'
+            '- First-update executed-plan rate/ETA pending. Owners: `coopmwm/EXACT_TRAINING_STARTED.json`.\n')
+
+
+def commit():
+    from .warm_v3_watch import commit as checked_commit
+    patterns=('EXACT_*.json','CONCURRENT_STATUS_*.json','warm_live/*.json')
+    paths=[str(p.relative_to(ops.LOCAL)) for pattern in patterns for p in ops.EVIDENCE.glob(pattern)]
+    paths.append('docs/paper_results/COOPMWM.md')
+    checked_commit(paths)
+
+
+def run():
+    import msvcrt
+    from .warm_publish import publish
+    from .warm_transport import retry
+    lock=(ops.EVIDENCE/'EXACT_OBSERVER.claim').open('a+b');lock.seek(0)
+    if not lock.read(1):lock.write(b'1');lock.flush()
+    lock.seek(0);msvcrt.locking(lock.fileno(),msvcrt.LK_NBLCK,1)
+    binding=read(ops.EVIDENCE/'EXACT_OBSERVER_BINDING.json')
+    previous={}
+    def record(event):write(ops.EVIDENCE/f'EXACT_OBSERVER_TRANSPORT_{time.time_ns()}.json',event)
+    def verify():
+        g,c=exact_ops.status()
+        for host,v in previous.get('gpu',{}).items():
+            assert g[host]['receipts']['SPOOL_OWNER.json']==v['receipts']['SPOOL_OWNER.json']
+            for name,r in v['receipts'].items():assert g[host]['receipts'].get(name)==r,'immutable GPU receipt changed'
+        for name,v in previous.get('cpu',{}).get('owners',{}).items():assert c['owners'][name]['owner']==v['owner']
+    try:
+        while time.time()<binding['deadline_unix']:
+            gpus,cpu=retry(exact_ops.status,verify,record)
+            previous.update(gpu=gpus,cpu=cpu)
+            if any(v['failed'] for v in gpus.values()):raise ValueError('source-bound GPU failure; preserve/no inference replay')
+            launched=launch_ready(gpus,cpu)
+            if launched:announce()
+            retry(publish,verify,record);commit()
+            if cpu['stops']:raise ValueError('health/engineering pause; diagnose before registered release')
+            time.sleep(60)
+        raise ValueError('registered GPU observation deadline reached')
+    except BaseException as error:
+        path=ops.EVIDENCE/f'EXACT_OBSERVER_EXIT_{int(time.time())}.json'
+        write(path,dict(unix=time.time(),error=repr(error),remote_training_survives=True,automatic_physics_retry=False))
+        commit();raise
+    finally:lock.close()
+
+
+def dispatch():
+    target=ops.EVIDENCE/'EXACT_OBSERVER_DISPATCH.json';assert not target.exists()
+    binding=dict(deadline_unix=read(ops.EVIDENCE/'WARM_A48_BINDING.json')['gpu_deadline'],
+        contract='observe/publish; adopt existing owners; once8EXACT0 gates per host, register and launch grader/broker/B/R once; no physics retry')
+    write(ops.EVIDENCE/'EXACT_OBSERVER_BINDING.json',binding)
+    with (ops.EVIDENCE/'EXACT_OBSERVER.log').open('x',encoding='utf-8') as log:
+        p=subprocess.Popen([sys.executable,'-X','utf8','-u','-m','tools.coopmwm.exact_watch','run'],cwd=ops.LOCAL,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT)
+    value=dict(pid=p.pid,unix=time.time(),binding=binding);write(target,value);print(json.dumps(value))
+
+
+if __name__=='__main__':
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('run','dispatch'));globals()[p.parse_args().mode]()
