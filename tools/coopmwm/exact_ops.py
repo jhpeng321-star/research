@@ -50,19 +50,20 @@ sys.path.insert(0,source+'/pytools')
 from tools.coopmwm.accel_storage import read,charged
 owners={{}}
 for name in ['WARM_A_DISPATCH_V3.json','WARM_B_DISPATCH_V4.json','WARM_R_DISPATCH_V4.json','EXACT_GRADER_DISPATCH.json','WARM_REMOTE_BROKER_DISPATCH.json',
- 'WARM_B_DISPATCH_V6.json','WARM_R_DISPATCH_V6.json','EXACT_GRADER_DISPATCH_V2.json','CAPACITY_BROKER_DISPATCH_V2.json']:
+ 'WARM_B_DISPATCH_V6.json','WARM_R_DISPATCH_V6.json','EXACT_GRADER_DISPATCH_V2.json','CAPACITY_BROKER_DISPATCH_V2.json',
+ 'QUOTA_B_DISPATCH.json','QUOTA_R_DISPATCH.json','QUOTA_broker_DISPATCH.json']:
  if not (r/name).exists():continue
  d=read(r/name);assert pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']
  p=pathlib.Path('/proc')/str(d['pid'])/'stat';s=p.read_text().split() if p.exists() else None
  assert not s or s[21]==d['start_ticks'];owners[name]=dict(owner=d,state=s[2] if s else 'exited')
-stops={{p.name:read(p) for pattern in ('PAUSE_*.json','WARM_GUIDED_STOP*.json','WARM_*_FAILED_V3.json','WARM_*_FAILED_V5.json') for p in r.glob(pattern)}}
+stops={{p.name:read(p) for pattern in ('PAUSE_*.json','WARM_GUIDED_STOP*.json','WARM_*_FAILED_V3.json','WARM_*_FAILED_V5.json','WARM_*_FAILED_Q1.json') for p in r.glob(pattern)}}
 if repair.exists():
  from tools.coopmwm.warm_health import assert_running
  try:assert_running(r,'B')
  except (ValueError,RuntimeError):pass
  else:
   for name in ('WARM_GUIDED_STOP.json','WARM_B_FAILED_V3.json','WARM_R_FAILED_V3.json'):stops.pop(name,None)
-print(json.dumps(dict(unix=time.time(),owners=owners,stops=stops,updates={{a:max([0]+[int(p.stem.rsplit('_',1)[1]) for p in r.glob(a+'_UPDATE_*.json')]) for a in ('A','B','R')}},charged_sim_s=charged(r),load=os.getloadavg(),pending_plan_queries=sum(not (r/'responses'/p.name).exists() for p in (r/'requests').glob('*.json')))))''',timeout=40))
+print(json.dumps(dict(unix=time.time(),owners=owners,stops=stops,updates={{a:max([0]+[int(p.stem.rsplit('_',1)[1]) for p in r.glob(a+'_UPDATE_[0-9][0-9][0-9].json')]) for a in ('A','B','R')}},charged_sim_s=charged(r),load=os.getloadavg(),pending_plan_queries=sum(not (r/'responses'/p.name).exists() for p in (r/'requests').glob('*.json')))))''',timeout=40))
     write(ops.EVIDENCE/f'EXACT_STATUS_{int(cpu["unix"])}.json',dict(gpu=values,cpu=cpu))
     print(json.dumps(dict(cpu=cpu,gpu={h:dict(alive=v['alive'],ready=v['ready'],failed=v['failed'],owner=v['receipts'].get('SPOOL_OWNER.json'),gates={n:dict(pass_=r['pass_'],max_cost_error=r['max_cost_error']) for n,r in v['receipts'].items() if n.startswith('STARTUP_')},failure=v['receipts'].get('SPOOL_FAILED.json')) for h,v in values.items()})))
     return values,cpu

@@ -10,7 +10,8 @@ from .storage import write
 class PublishTests(unittest.TestCase):
     def test_metadata_and_final_outcomes_are_never_training_reports(self):
         for n in ('EXACT_VIABILITY_REPORT_CONFIG.json','EXACT_VIABILITY_REPORT_DISPATCH.json',
-                  'EXACT_VIABILITY_REPORT_FAILED.json','FINAL_TEST_COMPLETE.json','A_CHECK_RECORDS_048.json'):
+                  'EXACT_VIABILITY_REPORT_FAILED.json','FINAL_TEST_COMPLETE.json','A_CHECK_RECORDS_048.json',
+                  'B_UPDATE_001_TIMING.json'):
             self.assertFalse(p.publishable(n),n)
 
     def test_actual_reports_and_health_receipts_remain_publishable(self):
@@ -46,6 +47,14 @@ class PublishTests(unittest.TestCase):
             with patch.object(p.ops,'LOCAL',root),patch.object(p.ops,'EVIDENCE',e),patch.object(p.ops.ssh,'remote',return_value=result):
                 with self.assertRaisesRegex(AssertionError,'immutable cached'):p.publish()
             self.assertEqual(json.loads((e/'warm_live/A_UPDATE_048.json').read_text()),dict(value=1))
+
+    def test_adopted_first_update_does_not_publish_partial_stopwatch_eta(self):
+        value=dict(arm='B',update=1,proposal_routing={},trust={},wall_s=93.5,
+            eta_final_hours=1.221,quota_deviation=dict(executed=3,minimum=10),grading_lag={})
+        text=p.describe('B_UPDATE_001.json',value)
+        self.assertIn('excludes collection time',text)
+        self.assertNotIn('1.221h',text)
+        self.assertTrue(p.publishable('WARM_B_FAILED_Q1.json'))
 
 
 if __name__=='__main__':unittest.main()

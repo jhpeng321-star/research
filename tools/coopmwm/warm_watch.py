@@ -36,7 +36,7 @@ for arm in ('A','B','R'):
  owners[arm]=dict(owner=d,state=s[2] if s else 'exited')
 charges=[json.loads(x) for x in (r/'CHARGES.jsonl').read_text().splitlines()]
 print(json.dumps(dict(unix=time.time(),owners=owners,stop=json.loads((r/'STOP.json').read_text()) if (r/'STOP.json').exists() else None,
- updates={{a:sorted(int(p.stem.rsplit('_',1)[1]) for p in r.glob(a+'_UPDATE_*.json')) for a in ('A','B','R')}},
+  updates={{a:sorted(int(p.stem.rsplit('_',1)[1]) for p in r.glob(a+'_UPDATE_[0-9][0-9][0-9].json')) for a in ('A','B','R')}},
  paused={{a:(r/f'WARM_{{a}}_PAUSED.json').exists() for a in ('A','B','R')}},
  charged_sim_s=811640+sum(c['sim_s'] for c in charges),disk_free=shutil.disk_usage(r).free,
  ram_free=shutil.disk_usage('/dev/shm').free)))''',timeout=30))

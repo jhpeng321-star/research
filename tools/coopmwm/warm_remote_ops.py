@@ -210,7 +210,7 @@ receipts={{p.name:read(p) for pattern in ('PAUSE_*.json','WARM_*_FAILED_V3.json'
 logs={{a:(r/f'WARM_{{a}}_V3.log').read_text()[-4000:] for a in ('A','B','R') if (r/f'WARM_{{a}}_FAILED_V3.json').exists()}}
 charges=ledger(r);fresh=[c for c in charges if c['id'].startswith(('warm_','warmcheck','warmdev'))]
 print(json.dumps(dict(unix=time.time(),owners=owners,active_transport_stop=active_stop(r),receipts=receipts,failed_logs=logs,
- updates={{a:max([0]+[int(p.stem.rsplit('_',1)[1]) for p in r.glob(a+'_UPDATE_*.json')]) for a in ('A','B','R')}},
+ updates={{a:max([0]+[int(p.stem.rsplit('_',1)[1]) for p in r.glob(a+'_UPDATE_[0-9][0-9][0-9].json')]) for a in ('A','B','R')}},
  charged_sim_s=charged(r),reserved_jobs=len(fresh),closed_jobs=sum((r/'jobs'/c['id']/'CLOSE.json').exists() for c in fresh),
  pending_requests={{kind:sum(not (r/responses/p.name).exists() for p in (r/requests).glob('*.json')) for kind,requests,responses in [('plan','requests','responses'),('centre','centre_requests','centre_responses')]}},
  completed_forecasts=len(list((r/'broker_completed').glob('*.json'))),load=os.getloadavg(),disk_free=shutil.disk_usage(r).free,ram_free=shutil.disk_usage('/dev/shm').free)))''',timeout=40))

@@ -132,7 +132,7 @@ for a in ('broker','grader','B','R'):
  p=r/('CAPACITY_REPAIR_'+a+('_V6' if a in ('B','R') and (r/f'WARM_{{a}}_DISPATCH_V6.json').exists() else '')+'.log')
  if p.exists():logs[a]=p.read_text()[-5000:]
 print(json.dumps(dict(unix=time.time(),owners=owners,logs=logs,stop=json.loads((r/'WARM_GUIDED_STOP_V2.json').read_text()) if (r/'WARM_GUIDED_STOP_V2.json').exists() else None,
-declines=len(list((r/'capacity_declines').glob('*.json'))),load=os.getloadavg(),updates={{a:max([0]+[int(p.stem.rsplit('_',1)[1]) for p in r.glob(a+'_UPDATE_*.json')]) for a in ('A','B','R')}})))''',timeout=40))
+declines=len(list((r/'capacity_declines').glob('*.json'))),load=os.getloadavg(),updates={{a:max([0]+[int(p.stem.rsplit('_',1)[1]) for p in r.glob(a+'_UPDATE_[0-9][0-9][0-9].json')]) for a in ('A','B','R')}})))''',timeout=40))
     write(ops.EVIDENCE/f'CAPACITY_REPAIR_STATUS_{int(value["unix"])}.json',value);print(json.dumps(value));return value
 
 

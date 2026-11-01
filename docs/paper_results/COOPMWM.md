@@ -1,5 +1,33 @@
 # S-COOPMWM — live checks
 
+## First three complete exact-synergy diagnostics
+- Isolated diagnostic owner3589919 has completed the same registered first three
+  n+2 groups after the departed-roster repair. Successful original branches are
+  adopted; all failed-attempt charges remain. Full receipts000/001/002 are now
+  published under `coopmwm/warm_live/ACCEL_EXACT_PLAN_00*.json`.
+- **H300 C_G**, in registered sample order: **−868.1767, +0.3667, −2015.2881veh-s**.
+  H600: **−6459.3298, +5.8709, −3877.9212veh-s**. These first three diagnostics
+  do **not** show consistent positive synergy. No result was dropped or imputed.
+- These E2 contrasts use the registered MAPPO background; the exact marginal
+  grades above compare against own-policy continuation while retaining other
+  recorded plans. Their different contrasts must not be conflated. WM paired
+  predictions/variance are queued at diagnostic priority and do not gate PPO.
+- The same qualified replay guard is now bound to the still-waiting final
+  discovery executor: owner3604109, immutable `finaldiscovery2`, **84 CPU tests
+  PASS/zero skips/22.73s/zero SUMO**, amendment `a62810d6…`. Detector/sampling,
+  budget and fixed-endpoint/outcome-opening gates are unchanged. Hash-only status
+  confirms all673 precompute artifacts remain closed; no final values were read.
+
+### Publication recovery — timing metadata is not an update
+- Our added `B_UPDATE_001_TIMING.json` matched an older broad status glob and
+  stopped local observer41116 at unix1793571681 on `int('TIMING')`. Remote
+  training, grading and diagnostic workers continued; the receipt is retained.
+- Numeric update indices now require exactly three digits. **Six local CPU tests
+  PASS**, including execution of the actual generated status payload with timing
+  metadata present; real remote status and one-shot publication also pass.
+  QUOTA owners and Q1 failures are now visible. Adopted-u1 partial-stopwatch ETA
+  is suppressed in new formatting. Observation-only V7 restart is next.
+
 ### Departed-roster diagnostic repair qualified and registered
 - Isolated `diagrepaircpu1`: **242 CPU tests PASS, zero skips,38.96s, zero SUMO**.
   Only recorded counterfactual replay at/after the registered branch time may
@@ -2245,3 +2273,31 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - Exact executed-plan twins: `{}`.
 - Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_001_FAILED.json`.
 <!-- warm-receipt:ACCEL_EXACT_PLAN_001_FAILED.json:ec5c2dace890b0b8e481f7a1b63cb46a25649ddf078c8b23218309ad0af09057 -->
+
+## Warm live publication — 2026-11-01T22:41:51.293380+00:00
+- Conservatively charged 3331280/7500000 sim-s.
+
+### Warm continuation — ACCEL_EXACT_PLAN_000.json
+- Exact executed-plan twins: `{"120": {"C_G": 53.17882023977927, "D_G": 6.57300294097513, "D_i": [0.10668684939628292, 19.595361023921214, -66.30786517212164]}, "300": {"C_G": -868.1767234589606, "D_G": 1042.1523691190523, "D_i": [0.114493582801515, 1812.8935004434134, 97.32109855179806]}, "60": {"C_G": 6.2103093511809675, "D_G": -3.061505717970249, "D_i": [0.2528922868045811, -1.982097747957141, -7.542609607998656]}, "600": {"C_G": -6459.329807218768, "D_G": 266.37194287207967, "D_i": [0.11983589885494439, 5633.5996205810225, 1091.9822936109704]}}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_000.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_000.json:67fcf65f9aa005bc1b158c7584ae6d13a54e17c62e495ba0a20d98c40852097a -->
+
+### Warm continuation — ACCEL_EXACT_PLAN_001.json
+- Exact executed-plan twins: `{"120": {"C_G": 8.554533997084945e-05, "D_G": 3.044738833149495, "D_i": [-0.0772545429172169, -1.8969694792758673e-07, 3.121908020423689]}, "300": {"C_G": 0.36667844047406106, "D_G": 12.062233908927738, "D_i": [-0.44386971215863014, 1.3139204384060577e-05, 12.139412041407923]}, "60": {"C_G": 0.003699239289289835, "D_G": 0.5022742682449461, "D_i": [-0.08090635090547948, -2.3617531041963957e-07, 0.5794816160364462]}, "600": {"C_G": 5.8708897903052275, "D_G": -245.68730165935995, "D_i": [-5.948102965368889, 2.4539200239814818e-05, -245.61011302349652]}}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_001.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_001.json:43930167b84d68eac731232210d827bc6504d085bff42759a66a6829accd9022 -->
+
+### Warm continuation — ACCEL_EXACT_PLAN_002.json
+- Exact executed-plan twins: `{"120": {"C_G": 323.14976656404633, "D_G": 51.94878721373425, "D_i": [-178.7850831113292, -61.435964183475335, -30.976000006536196, -0.003932048971364566]}, "300": {"C_G": -2015.288082288851, "D_G": -387.9573838097531, "D_i": [-448.6201439672368, -337.26579334696, 2413.2205122709784, -0.0038764776836615056]}, "60": {"C_G": 4.878723412531144, "D_G": 6.778537182067339, "D_i": [2.52286761295818, -0.9676864238149392, 0.34711848917459065, -0.002485908781636681]}, "600": {"C_G": -3877.9211828140687, "D_G": -5380.062628581938, "D_i": [-2753.352061770296, -3652.751319996758, 4903.965868840714, -0.0039328415296040475]}}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_002.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_002.json:29e8797c3fc3ccbdd75db68e3de8e7fd6aeb559f981e476b77bcb182dec2b73e -->
+
+### Warm continuation — ACCEL_EXACT_PLAN_002_FAILED.json
+- Exact executed-plan twins: `{}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_002_FAILED.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_002_FAILED.json:b9852045f9918ee39b77c38791a59eab2abe6ccbd26b6eb1e0d9eb2331a37ca2 -->
+
+### Warm continuation — B_EXACT_VIABILITY_0c40c7b9c10e3da061f60f02d832269ac712fb969ee703f8a080cd5267aac28d.json
+- B u2: exact paired SUMO plan saving mean 650.4 veh-s, 95% world-cluster CI `[6.666416322528676, 1290.9455121911988]`, 4 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_0c40c7b9c10e3da061f60f02d832269ac712fb969ee703f8a080cd5267aac28d.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_0c40c7b9c10e3da061f60f02d832269ac712fb969ee703f8a080cd5267aac28d.json:fc63cc1e92cffab2fa092355ad470494a0647fe95103d4d46dd51a5cdfdf8cc8 -->

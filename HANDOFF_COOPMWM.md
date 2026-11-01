@@ -1,5 +1,22 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+FIRSTTHREE n+2diagnostics NOW COMPLETE afterisolatedrepair3589919/start58671297;
+sameoriginalrandomsample, nocompletedbranchrerun. H300 C_G index000=-868.1767,
+001=+0.36668,002=-2015.2881veh-s; H600=-6459.3298,+5.87089,-3877.9212.
+No consistent positive synergy in first3; doNOTconflatewithmarginalgrade+862.85.
+E2twinsuseMAPPObackground, marginalgraderkeepsotherplans/policybackground.
+PendingWMdiagnosticqueriesdonotgatePPO. SOURCEdiagrepaircpu1/CPU242PASS.
+Finaldiscoveryguard ALREADY BOUND: newwaiting3604109/start58708446, source
+finaldiscovery2,84CPU/PASS0skips/22.73s/zeroSUMO; amendmenta62810d6. Original
+3338335 verifiedwaiting/terminatedbyownedPID; originalfinalprecompute3316828
+retained/all673opaquejobsremainclosed. No finaloutcomesread/status1793572977.
+OBSERVATIONFIX pendingdispatch: V6local41116 EXIT1793571681 because OUR new
+B_UPDATE_001_TIMING metadata matchedbroadstatusglob(int'TIMING'). No trainingfault.
+FixedALLnumericupdateindexglobstospecific3digits; exact_opsalsoadoptsQUOTAowners.
+6localCPUtestsPASS + realstatus/publicationPASS. Next exact_watch dispatch --tag
+EXACT_OBSERVER_V7 (observe-only, originaldeadline); verifyold41116absent first.
+Telemetry28752 remainslive. DoNOTduplicate anyremoteowner orphysics.
+
 DIAGNOSTICREPAIR QUALIFIED242CPU/PASS0skips/38.96s/zeroSUMO, source
 /home/ubuntu/coopmwm20261102_diagrepaircpu1; amendmentaf8b16e5registered.
 SeparateCPU-onlysidecarwillrepairONLYsamefirst12randomsamples(RNG20261101),

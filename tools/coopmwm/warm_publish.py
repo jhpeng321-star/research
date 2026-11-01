@@ -13,7 +13,7 @@ def number(value):return 'NA' if value is None else f'{value:.4g}'
 
 PUBLIC_RULES=(r'(?:A|B|R|AB)_(?:UPDATE|CHECK|DEV|VIABILITY)_(?:PRESERVED_)?[0-9]{3}\.json',
               r'B_EXACT_VIABILITY_[0-9a-f]{64}\.json',r'ACCEL_EXACT_PLAN_[0-9]{3}(?:_FAILED)?\.json',
-              r'WARM_[ABR]_(?:FAILED(?:_V[35])?|PAUSED)\.json',r'(?:WARM_GUIDED_STOP(?:_V2)?|STOP)\.json',
+              r'WARM_[ABR]_(?:FAILED(?:_V[35]|_Q1)?|PAUSED)\.json',r'(?:WARM_GUIDED_STOP(?:_V2)?|STOP)\.json',
               r'PAUSE_[A-Za-z0-9_]+\.json')
 
 
@@ -28,7 +28,9 @@ def describe(name,value):
             f'wall {number(value.get("wall_s"))}s; next beta {number(value.get("trust",{}).get("beta"))}. SUMO-only reward.\n')
         out.append(f'- Executions by type/regime: `{json.dumps(r.get("by_bucket",{}),sort_keys=True)}`.\n')
         if value.get('grading_lag') is not None:
-            out.append(f'- Exact-grade queue/lag: `{json.dumps(value["grading_lag"],sort_keys=True)}`; final ETA {number(value.get("eta_final_hours"))}h.\n')
+            eta=('unavailable: adopted u1 excludes collection time; see B_UPDATE_001_TIMING.json'
+                if value.get('quota_deviation') and value.get('update')==1 else number(value.get('eta_final_hours'))+'h')
+            out.append(f'- Exact-grade queue/lag: `{json.dumps(value["grading_lag"],sort_keys=True)}`; final ETA {eta}.\n')
     elif '_CHECK_' in name or '_DEV_' in name:
         for contrast,c in value.get('comparisons',{}).items():
             metrics=c['metrics'];parts=[]
@@ -69,7 +71,7 @@ def publish():
 r=pathlib.Path({ROOT!r});assert r.is_dir();sys.path.insert(0,str(r/'pytools'))
 from tools.coopmwm.accel_storage import read,charged
 known=set(json.loads({json.dumps(known)!r}));out={{}};rules=json.loads({json.dumps(PUBLIC_RULES)!r})
-patterns=('*_UPDATE_*.json','*_CHECK_*.json','*_DEV_*.json','*_VIABILITY_*.json','ACCEL_EXACT_PLAN_*.json','WARM_*_FAILED.json','WARM_*_FAILED_V3.json','WARM_*_FAILED_V5.json','WARM_*_PAUSED.json','PAUSE_*.json','WARM_GUIDED_STOP*.json','STOP.json')
+patterns=('*_UPDATE_*.json','*_CHECK_*.json','*_DEV_*.json','*_VIABILITY_*.json','ACCEL_EXACT_PLAN_*.json','WARM_*_FAILED.json','WARM_*_FAILED_V3.json','WARM_*_FAILED_V5.json','WARM_*_FAILED_Q1.json','WARM_*_PAUSED.json','PAUSE_*.json','WARM_GUIDED_STOP*.json','STOP.json')
 for pattern in patterns:
  for p in r.glob(pattern):
   if p.name in known or not any(re.fullmatch(rule,p.name) for rule in rules):continue
