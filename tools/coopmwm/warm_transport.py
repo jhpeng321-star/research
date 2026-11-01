@@ -19,6 +19,7 @@ def connection_error(error):
         r'kex_exchange_identification: (?:read: Connection reset by peer|Connection closed by remote host)',
         r'ssh: connect to host \S+ port \d+: (?:Connection timed out|Connection refused|Connection reset by peer)',
         r'client_loop: send disconnect: (?:Broken pipe|Connection reset)',
+        r'Read from remote host \S+: Connection reset(?: by peer)?',
         r'Connection to \S+ (?:closed by remote host\.|closed\.)')
     return bool(text) and all(any(re.fullmatch(p,line) for p in patterns)
         for line in text.splitlines() if line.strip())
@@ -60,8 +61,8 @@ boot=pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()
 receipts={{}};live={{}}
 def receipt(p):
  if p.exists():receipts[str(p.relative_to(r))]=hashlib.sha256(p.read_bytes()).hexdigest()
-for arm in ('A','B','R'):
- p=r/f'WARM_{{arm}}_DISPATCH.json'
+for name in [f'WARM_{{a}}_DISPATCH.json' for a in ('A','B','R')]+[f'WARM_{{a}}_DISPATCH_V3.json' for a in ('A','B','R')]+['WARM_REMOTE_BROKER_DISPATCH.json']:
+ p=r/name
  if not p.exists():continue
  receipt(p);d=json.loads(p.read_text());assert d['boot_id']==boot
  proc=pathlib.Path('/proc')/str(d['pid'])

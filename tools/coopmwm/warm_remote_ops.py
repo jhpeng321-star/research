@@ -9,6 +9,7 @@ from .protocol import checked,sha,REGISTRY
 from .warm_deploy import ROOT
 
 CPU='/home/ubuntu/coopmwm20261102_durablecpu2'
+BROKER='/home/ubuntu/coopmwm20261102_brokercpu3'
 GPU='/root/coopmwm20261102_durable1'
 ROUTES='/home/ubuntu/coopmwm20261102_remote_routes2'
 
@@ -214,6 +215,75 @@ print(json.dumps(dict(unix=time.time(),owners=owners,active_transport_stop=activ
     write(ops.EVIDENCE/f'WARM_V3_STATUS_{int(value["unix"])}.json',value);print(json.dumps(value));return value
 
 
+def release():
+    from .warm_release_ops import collect
+    from .warm_report import summary,publish
+    from .warm_protocol import budget
+    from .resume_gate import check_budget
+    check_budget(budget())
+    target=ops.EVIDENCE/'WARM_DURABLE_RELEASE_REGISTRATION.json';assert not target.exists()
+    workers={h:gpu_status(h) for h in ('gpuA','gpuR')}
+    assert all(w['alive'] and w['ready'] and not w['failed'] for w in workers.values()),'startup gates incomplete; adopt running workers'
+    routes=probe_routes();assert all(v['alive'] and v['ready'] and not v['failed'] for v in routes.values())
+    data=collect();assert all(v['receipts']['COMPLETE.json']['pass_'] for v in data.values())
+    value=summary(data);runtime=read(ops.EVIDENCE/'WARM_DURABLE_RUNTIME_REGISTRATION.json')
+    broker_cpu=read(ops.EVIDENCE/'CPU_coopmwm20261102_brokercpu3.json')
+    assert broker_cpu['pass_'] and broker_cpu['tests']==161 and broker_cpu['skips']==broker_cpu['sim_s']==0
+    value.update(pass_=True,N_exec=10,workers=workers,routes=routes,cpu_runtime=runtime,broker_cpu=broker_cpu,budget=budget(),
+        AWR=read(ops.EVIDENCE/'MAIN0201_AWR_REGISTRATION.json'),
+        quality_choice='full registered dimension-scaled medium MPPI retained; Nexec10, group-size benchmarks on different hosts/states; no acceptance-based ETA until first update',
+        two_device_capacity_floor_hours_per_10_queries=[10/(2*max(v['plans_per_hour'] for v in value['timing'].values())),10/(2*min(v['plans_per_hour'] for v in value['timing'].values()))],
+        R='same warm current-policy centre; no WM candidate scores/library/covariance learning; centre queue after B-u4 pause',
+        original_deadline_unix=read(ops.EVIDENCE/'WARM_A48_BINDING.json')['gpu_deadline'])
+    write(ops.EVIDENCE/'WARM_DURABLE_RELEASE_AMENDMENT.json',value);h=sha(ops.EVIDENCE/'WARM_DURABLE_RELEASE_AMENDMENT.json')
+    line=('\nS-COOPMWM WARM MEMORY QUALIFIED / DURABLE B-R RESTART REGISTERED amendmentSHA'+h+
+        ': CPU160PASS/0skips/zeroSUMO; rolling60s causal observable per-driver FULLv4 inference/shrinkage; emptyhistory==cold and '
+        'both-host warm K4H120/K8H420 full-fast EXACT0, persistent workers six startup gates EXACT0 including warm batched-single. '
+        'Original E2 cold/warm exact-labelled diagnostic and completed group2/4/6 timings adopted, no outcome-driven search change. '
+        'Full discovery-pure policy-centred medium MPPI dimension-scaled population3iterations, top4 Thompson/K8 Hfinal=min(600,max(300,D+120)), '
+        'groups2..6/knots<=10/D<=300; same-arm/seed SUMO-positive library/covariance only; Nexec10; bothGPU saturated, R count/regime/size/duration matched. '
+        'MAIN0201 own-action PPO/positive completed-plan AWR/allstep critic; MAIN0138 health pauses enforced. '
+        'Detached supervisors/broker/GPU spools, bounded SSH-only identical delivery retries, no physics/inference replay. '
+        'Broker-onlyCPU3/161PASS additionally recognizes observed Read-from-remote-host Connection-reset and supports registered same-search endpoint hot-add; learner/GPU remain immutableCPU2. '
+        'A exactu16 continuation; B/R MAPPOu0, firstu4 viability pause; R centre helper after B-u4, zero candidate scores. '
+        'Full6473440/cap6500000/free26560; final panel unopened; fixed finalsA/B48,R24 and secondaryu24 insurance unchanged.\n')
+    with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+    value['release_amendment_sha256']=h
+    endpoints=read(ops.EVIDENCE/'WARM_REMOTE_AUTHORIZATION.json')['endpoints']
+    broker_binding=dict(endpoints=endpoints,deadline_unix=value['original_deadline_unix'],amendment_sha256=h,source_root=BROKER,
+        hashes=broker_cpu['source_hashes'],search_sha256=runtime['binding']['hashes']['pytools/tools/coopmwm/mppi_search.py'])
+    ops.ssh.remote('cpuQ',f'''import pathlib,json,sys
+r=pathlib.Path({ROOT!r});sys.path.insert(0,{CPU!r}+'/pytools')
+from tools.coopmwm.warm_spool import immutable
+from tools.coopmwm.warm_health import assert_running
+assert_running(r,'B')
+for arm in ('B','R'):assert not (r/f'WARM_{{arm}}_DISPATCH_V3.json').exists()
+with (r/'AUTHORITY.md').open('a') as f:f.write({line!r})
+immutable(r/'WARM_RELEASE.json',json.loads({json.dumps(value)!r}))
+immutable(r/'WARM_REMOTE_BINDING.json',json.loads({json.dumps(broker_binding)!r}))
+print('registered before B/R physics')''',timeout=45)
+    publish(value,qualified=True)
+    write(target,dict(line=line,amendment_sha256=h,new_sumo_sim_s=0));print(line.strip())
+
+
+def dispatch_broker():
+    assert read(ops.EVIDENCE/'WARM_DURABLE_RELEASE_REGISTRATION.json')['amendment_sha256']
+    value=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,os,subprocess,time,sys,hashlib
+r=pathlib.Path({ROOT!r});assert r.is_dir() and (r/'WARM_REMOTE_BINDING.json').is_file()
+assert not (r/'WARM_REMOTE_BROKER_DISPATCH.json').exists() and not (r/'WARM_REMOTE_BROKER_OWNER.json').exists()
+b=json.loads((r/'WARM_REMOTE_BINDING.json').read_text());assert b['source_root']=={BROKER!r}
+for name,h in b['hashes'].items():assert hashlib.sha256((pathlib.Path({BROKER!r})/name).read_bytes()).hexdigest()==h,name
+env=dict(os.environ,CUDA_VISIBLE_DEVICES='',PYTHONPATH={BROKER!r}+'/pytools',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
+cmd=['nice','-n','19',{ops.ssh.PYTHON['cpuQ']!r},'-B','-u','-m','tools.coopmwm.warm_broker',str(r)]
+with (r/'WARM_REMOTE_BROKER.log').open('x') as log:
+ p=subprocess.Popen(cmd,env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+s=pathlib.Path(f'/proc/{{p.pid}}/stat').read_text().split()
+value=dict(pid=p.pid,start_ticks=s[21],boot_id=pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip(),unix=time.time(),root=str(r))
+with (r/'WARM_REMOTE_BROKER_DISPATCH.json').open('x') as f:json.dump(value,f)
+print(json.dumps(value))''',timeout=40))
+    write(ops.EVIDENCE/'WARM_REMOTE_BROKER_DISPATCH.json',value);print(json.dumps(value))
+
+
 def routes():
     known=subprocess.check_output(['ssh-keygen','-F','[connect.bjb1.seetacloud.com]:11000'],text=True)
     assert known.strip()
@@ -235,7 +305,7 @@ print(json.dumps(dict(code=p.returncode,stderr=p.stderr)))''',timeout=35))
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('routes','stage-gpu','dispatch-gpu','gpu-status','authorize','probe-routes','register-runtime','dispatch-arm','status'));p.add_argument('--host',choices=('gpuA','gpuR'));p.add_argument('--arm',choices=('A','B','R'));a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('routes','stage-gpu','dispatch-gpu','gpu-status','authorize','probe-routes','register-runtime','dispatch-arm','status','release','dispatch-broker'));p.add_argument('--host',choices=('gpuA','gpuR'));p.add_argument('--arm',choices=('A','B','R'));a=p.parse_args()
     if a.mode=='dispatch-arm':dispatch_arm(a.arm)
-    elif a.mode in ('routes','authorize','probe-routes','register-runtime','status'):globals()[a.mode.replace('-','_')]()
+    elif a.mode in ('routes','authorize','probe-routes','register-runtime','status','release','dispatch-broker'):globals()[a.mode.replace('-','_')]()
     else:globals()[a.mode.replace('-','_')](a.host)

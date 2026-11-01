@@ -1,5 +1,16 @@
 # S-COOPMWM — live checks
 
+## Fresh resume — MAIN02:24 exact-grading amendment adopted
+- Complete239-line brief read; preserved HEADbdcddfed and recovered work.
+  A's existing detached V3 owner is running, u17 complete;396/396 jobs closed,
+  1,463,240 sim-s charged. B/R and the remote broker have no dispatch.
+- Both original GPU workers remain alive; warm K4/H120 and K8/H300
+  batched/single startup checks are EXACT0. Remaining gates continue unchanged.
+- Latest owner cap is7,500,000 sim-s. Exact same-state SUMO grades for EVERY
+  executed B/R plan supersede critic-based plan imitation/trust/library evidence.
+  Implementation, qualification and prospective registration are pending.
+- No new physics or inference job was dispatched during recovery.
+
 ## A exact-u16 continuation started — detached remote supervision
 - A V3 PID2998262/start57133822, cpuQ boot identity verified; dispatch unix1793557060.492315.
   Exact u16 checkpoint/Adam/RNG retained, now collecting u17; fixed final48 unchanged.

@@ -1,4 +1,15 @@
-# S-COOPMWM live continuation — MAIN02:01 learner correction pending
+# S-COOPMWM live continuation — MAIN02:24 exact plan grading pending
+
+FRESH RESUME: complete239-line owner brief read; HEADbdcddfed and recovered edits
+preserved. Status1793557527: A V3 owned2998262/start57133822 is R, u17 complete,
+396/396 jobs closed, charge1463240; B/R unstarted, no broker dispatch. Do not
+duplicate A. Both durable GPU original identities alive/R: K4H120/K8H300 warm
+batch-single EXACT0, remaining startup gates pending. Adopt original completions.
+MAIN02:24 supersedes critic plan grading: EVERY B/R executed plan needs exact
+paired SUMO grade before imitation/trust/library; asynchronous CPU grader live
+before first B update. Cap7500000 supersedes6500000; re-quote/register first.
+Recovered brokerCPU3 already161PASS, zeroSUMO; hot-add/connection-reset repair
+preserved. No new physics/inference dispatch in this recovery step.
 
 ACTIVE A V3: cpuQ2998262/start57133822 bootb8bc1fcb, dispatch1793557060.492315,
 exactu16 resume nowu17 collecting. `warm_remote_ops status` knows V3owners and

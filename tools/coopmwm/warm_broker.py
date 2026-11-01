@@ -65,6 +65,21 @@ def available(root):
     return result
 
 
+def worker_endpoints(root,binding,previous):
+    admitted=list(binding['endpoints'])
+    for p in sorted(root.glob('WARM_REMOTE_ENDPOINT_ADMISSION_*.json')):
+        v=json.loads(p.read_text())
+        if v['amendment_sha256'] not in (root/'AUTHORITY.md').read_text():raise ValueError('unregistered GPU hot-add')
+        if v['search_sha256']!=binding['search_sha256']:raise ValueError('hot-add search differs')
+        admitted.extend(v['endpoints'])
+    result=dict(previous)
+    for e in admitted:
+        slot=e['slot']
+        if slot in result and result[slot]!=e:raise ValueError('worker endpoint changed')
+        result[slot]=e
+    return result
+
+
 def run(root):
     import fcntl
     import signal
@@ -109,9 +124,19 @@ def run(root):
             if not isinstance(error,HealthPause):
                 immutable(root/'WARM_GUIDED_STOP.json',dict(error=repr(error),source='detached source-bound broker',unix=time.time()))
     (root/'broker_completed').mkdir(exist_ok=True)
-    threads=[threading.Thread(target=worker,args=(e,)) for e in binding['endpoints']]
-    for t in threads:t.start()
-    for t in threads:t.join()
+    threads={};endpoints={}
+    try:
+        while not stop.is_set():
+            endpoints=worker_endpoints(root,binding,endpoints)
+            for slot,e in endpoints.items():
+                if slot not in threads:
+                    threads[slot]=threading.Thread(target=worker,args=(e,));threads[slot].start()
+            stop.wait(3)
+    except BaseException as error:
+        errors.append(repr(error));stop.set()
+        immutable(root/'WARM_GUIDED_STOP.json',dict(error=repr(error),source='detached broker endpoint admission',unix=time.time()))
+    finally:
+        for t in threads.values():t.join()
     if errors:raise ValueError(errors)
 
 

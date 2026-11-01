@@ -10,7 +10,8 @@ class Transport(unittest.TestCase):
     def test_only_explicit_connection_errors(self):
         for text in ('Connection closed by 1.15.42.207 port 22',
             'ssh: connect to host cpuQ port 22: Connection timed out',
-            'kex_exchange_identification: read: Connection reset by peer'):
+            'kex_exchange_identification: read: Connection reset by peer',
+            'Read from remote host 1.15.42.207: Connection reset\nclient_loop: send disconnect: Connection reset'):
             self.assertTrue(connection_error(RuntimeError(text)))
         for error in (RuntimeError('Traceback\nConnection closed by 1.15.42.207 port 22'),
             RuntimeError('parity failed'),RuntimeError('executor timeout'),RuntimeError('Permission denied'),

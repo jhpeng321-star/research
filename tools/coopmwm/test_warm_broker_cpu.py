@@ -4,7 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
-from .warm_broker import Remote,available
+from .warm_broker import Remote,available,worker_endpoints
 from .warm_rpc import GATES,handle
 
 
@@ -52,6 +52,19 @@ class BrokerCPU(unittest.TestCase):
             root=Path(tmp);(root/'GPU_BINDING.json').write_text('{}')
             with self.assertRaises(ValueError):handle(root,dict(action='execute',code='anything'))
             with self.assertRaises(ValueError):handle(root,dict(action='forecast',key='../escape'))
+
+    def test_hot_add_only_same_registered_search_and_immutable_endpoints(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            r=Path(tmp);binding=dict(endpoints=[dict(slot='A',port=1)],search_sha256='same-search')
+            previous=worker_endpoints(r,binding,{})
+            (r/'AUTHORITY.md').write_text('registered-amendment')
+            p=r/'WARM_REMOTE_ENDPOINT_ADMISSION_0001.json'
+            admission=dict(amendment_sha256='registered-amendment',search_sha256='same-search',endpoints=[dict(slot='R',port=2)])
+            p.write_text(json.dumps(admission));self.assertEqual(set(worker_endpoints(r,binding,previous)),{'A','R'})
+            p.write_text(json.dumps(dict(admission,search_sha256='changed')))
+            with self.assertRaises(ValueError):worker_endpoints(r,binding,previous)
+            p.write_text(json.dumps(dict(admission,endpoints=[dict(slot='A',port=9)])))
+            with self.assertRaises(ValueError):worker_endpoints(r,binding,previous)
 
 
 if __name__=='__main__':unittest.main()

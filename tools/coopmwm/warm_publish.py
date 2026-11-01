@@ -49,7 +49,7 @@ def publish():
 r=pathlib.Path({ROOT!r});assert r.is_dir();sys.path.insert(0,str(r/'pytools'))
 from tools.coopmwm.accel_storage import read,charged
 known=set(json.loads({json.dumps(known)!r}));out={{}}
-patterns=('*_UPDATE_*.json','*_CHECK_*.json','*_DEV_*.json','*_VIABILITY_*.json','ACCEL_EXACT_PLAN_*.json','WARM_*_FAILED.json','WARM_*_PAUSED.json','STOP.json')
+patterns=('*_UPDATE_*.json','*_CHECK_*.json','*_DEV_*.json','*_VIABILITY_*.json','ACCEL_EXACT_PLAN_*.json','WARM_*_FAILED.json','WARM_*_FAILED_V3.json','WARM_*_PAUSED.json','PAUSE_*.json','WARM_GUIDED_STOP.json','STOP.json')
 for pattern in patterns:
  for p in r.glob(pattern):
   if '_RECORDS_' in p.name or p.name in known:continue
