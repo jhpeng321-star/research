@@ -44,9 +44,10 @@ if {host!r}.startswith('gpu'):
 ''',timeout=40))
 
 
-def stage(host,root):
-    files=sources()
-    files['COOPMWM_DESIGN.md']=checked(LOCAL/'docs/paper_results/COOPMWM_DESIGN.md').read_text(encoding='utf-8')
+def stage(host,root,files=None):
+    if files is None:
+        files=sources()
+        files['COOPMWM_DESIGN.md']=checked(LOCAL/'docs/paper_results/COOPMWM_DESIGN.md').read_text(encoding='utf-8')
     return ssh.remote(host,f'''import pathlib,json,hashlib
 root=pathlib.Path({root!r});assert root.parent.is_dir()
 root.mkdir(exist_ok=True)
@@ -60,6 +61,21 @@ for name,text in files.items():
  hashes[str(p.relative_to(root))]=hashlib.sha256(p.read_bytes()).hexdigest()
 print(json.dumps(dict(root=str(root),hashes=hashes)))
 ''',timeout=60)
+
+
+def stage_frozen(host,root,cpu):
+    """Deploy the tested snapshot, never a peer's concurrently changing checkout."""
+    files=json.loads(ssh.remote('cpuQ',f'''import pathlib,json,hashlib
+r=pathlib.Path({cpu['root']!r});assert r.is_dir()
+hashes=json.loads({json.dumps(cpu['source_hashes'])!r});files={{}}
+for name,h in hashes.items():
+ p=r/name
+ assert name=='COOPMWM_DESIGN.md' or (name.startswith('pytools/tools/') and name.endswith('.py'))
+ assert hashlib.sha256(p.read_bytes()).hexdigest()==h
+ files[name.removeprefix('pytools/')]=p.read_text()
+print(json.dumps(files))
+''',timeout=45))
+    return stage(host,root,files)
 
 
 def cpu(root):

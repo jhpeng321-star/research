@@ -1,0 +1,14 @@
+{
+  "status":"BOUND_BEFORE_PHYSICS",
+  "CPU":"CPU14:40PASS/0skips/1.35s/zeroSUMO,115 source/design files",
+  "runtime":"/home/ubuntu/coopmwm20261101_v2",
+  "binding_sha256":"0c4f0ee8731a18f01cdea398cf5e5ea2a1a6b1b1f15af3651183152aa238f299",
+  "gpu_runtime":"/root/coopmwm20261101_v2",
+  "gpu_binding_sha256":"f03f85b2c5e45dd935ea3f6e7958323dc00063236b234b567baf15834ade09a8",
+  "prior_attempt":"v1 stage stopped at source-manifest check before binding or SUMO: peer WMTEACH pause tooling changed concurrently",
+  "fix":"stage tested immutable CPU14 snapshot to both hosts; never restage live peer checkouts; v1 untouched",
+  "workers":4,
+  "task_sumo_sim_s":0,
+  "training_updates":0,
+  "plan":"17:27 registered trust and6M budget unchanged; full source hashes are in CPU14 and bound manifests"
+}

@@ -14,7 +14,11 @@
 - Cap remains **6,000,000 sim-s**, allocated5,738,400, unallocated261,600. Three paired training
   seeds and all primary/replication final-test liabilities remain protected.
 - Source/design hashes are frozen in CPU13; exact amendment: `coopmwm/BUDGET_AMENDMENT_1727.json`.
-- Next: immutable binding, one full-episode zero-update parity smoke per arm, then primary training/E2.
+- CPU14 repeats40PASS/0skips/1.35s; deployment now copies the tested immutable snapshot,
+  avoiding concurrently changing peer tooling. Initial v1 staging failure was before binding/SUMO.
+- Bound cpuQ `/home/ubuntu/coopmwm20261101_v2` and gpuA `/root/coopmwm20261101_v2`;
+  source/cache/runtime/checkpoint hashes verified;4nice19workers, task simulation still0 at binding.
+- Next: one full-episode zero-update parity smoke per arm, then primary training/E2.
 
 ## 17:12 redesign — implementation CPU-verified before physics
 - Arm B now uses WM-guided exploration and **SUMO-only team reward/advantage**.

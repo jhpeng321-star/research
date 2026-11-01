@@ -6,15 +6,15 @@ from . import ops
 from .protocol import authority,budget,digest,sha,worlds,REGISTRY,checked
 from .storage import read,write
 
-ROOT='/home/ubuntu/coopmwm20261101_v1'
-GPU_ROOT='/root/coopmwm20261101_v1'
+ROOT='/home/ubuntu/coopmwm20261101_v2'
+GPU_ROOT='/root/coopmwm20261101_v2'
 EVIDENCE=ops.EVIDENCE
 
 
 def bind(cpu_name):
     cpu=read(EVIDENCE/cpu_name)
     assert cpu['pass_'] and not cpu['skips'] and cpu['sim_s']==0
-    staged=json.loads(ops.stage('cpuQ',ROOT))
+    staged=json.loads(ops.stage_frozen('cpuQ',ROOT,cpu))
     assert staged['hashes']==cpu['source_hashes'],'CPU-tested source/design binding required'
     text=checked(REGISTRY).read_text(encoding='utf-8');auth=authority(text)
     assert 'S-COOPMWM 17:12 EXPLORATION AMENDMENT REGISTERED' in text
@@ -55,8 +55,10 @@ print(json.dumps(dict(bound=True,root=str(root),workers=binding['workers'],bindi
     result=json.loads(out);write(EVIDENCE/'RUNTIME_BINDING.json',result);print(out)
 
 
-def bind_gpu():
-    staged=json.loads(ops.stage('gpuA',GPU_ROOT))
+def bind_gpu(cpu_name):
+    cpu=read(EVIDENCE/cpu_name)
+    staged=json.loads(ops.stage_frozen('gpuA',GPU_ROOT,cpu))
+    assert staged['hashes']==cpu['source_hashes']
     out=ops.ssh.remote('gpuA',f'''import pathlib,sys,json,hashlib
 root=pathlib.Path({GPU_ROOT!r});assert root.is_dir()
 sys.path.insert(0,str(root/'pytools'))
@@ -128,8 +130,8 @@ print(json.dumps(dict(unix=time.time(),owners=owners,charged_sim_s=sum(c['sim_s'
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('mode',choices=('bind','bind-gpu','smoke','train','status'))
-    p.add_argument('--cpu',default='CPU_coopmwm20261101_cpu10.json');a=p.parse_args()
+    p.add_argument('--cpu',default='CPU_coopmwm20261101_cpu14.json');a=p.parse_args()
     if a.mode=='bind':bind(a.cpu)
-    elif a.mode=='bind-gpu':bind_gpu()
+    elif a.mode=='bind-gpu':bind_gpu(a.cpu)
     elif a.mode=='status':status()
     else:launch(a.mode=='smoke')
