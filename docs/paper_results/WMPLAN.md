@@ -62,7 +62,8 @@ gates and the final model comparison still precede live dispatch.
 
 <!-- WMPLAN-PROGRESS:BEGIN -->
 ## Current continuation status
-- Model comparison COMPLETE before physics: selected FULL-v4.
-- FULL-v4 helpful agreement 0.500, all12 chosen saving +680.307521; FULL-v5 0.250, +172.703890 veh-s/state.
-- Reused existing predictions; no new quality forecasts or SUMO.
+- Model fixed as FULL-v4; 0/48 episodes complete.
+- Charged 0; closed actual 0 sim-s; 0 open jobs. Registered upper199200/cap200000.
+- Complete K8 forecast states 0; future tasks 0.
+- Full paired efficacy and safety report waits for all24 pairs per arm. No claim of beating MAPPO is supported by progress counts.
 <!-- WMPLAN-PROGRESS:END -->
