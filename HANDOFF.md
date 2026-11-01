@@ -198,12 +198,12 @@ TRAIN exploration credit is not paired dev-policy performance.
 
 <!-- COOPFREE OWNER1511 BEGIN -->
 ## OWNER15:11 live continuation
-Observed UTC 2026-11-01T13:30:58Z.
+Observed UTC 2026-11-01T13:33:04Z.
 cpuQ owned1579328/start53193103 alive=True; four nice19 workers, load admission12.
-Budget: 5,530,353 precharged / 5,507,553 closed-actual sim-s; total cap6,000,000.
+Budget: 5,530,353 precharged / 5,530,353 closed-actual sim-s; total cap6,000,000.
 Corrected u001 is inherited; every subsequent update uses fresh exploration. TRAIN effects are not DEV gains.
-- u008: 428/428 new arms closed; charge442,560; cachedHOLD89.
 - u009: 373/373 new arms closed; charge390,300; cachedHOLD94.
+- u010: 0/396 new arms closed; charge416,160; cachedHOLD97.
 ### Proposal checkpoint u001
 `tools/coopfree/publications/owner1511/policy_hold_u001.pt`
 SHA256 `7b6ff3254311b7f0e8af773cdd51dbfdeca16a8660d0f872c1c8212c8c03e9c1`; receipt `HOLD_UPDATE_001.json`.
@@ -311,6 +311,19 @@ SHA256 `9c891c6323b4d3139e18c298054c9bb4067279e8d1c1cf23153c5f8b0f6a80b3`; recei
 - Paired safety: {"collisions": {"ci95": [0.0, 0.0], "mean": 0.0}, "hard_brake": {"ci95": [-3.0208333333333335, -0.24947916666666478], "mean": -1.5625}, "teleports": {"ci95": [0.0, 0.0], "mean": 0.0}, "ttc_below_3_vs": {"ci95": [-35.39635416666667, 18.771354166666665], "mean": -8.875}}.
 - vs hold J900: -1192.264, paired95%CI[-3222.4215945235987, 579.5480419233244] vehicle-s.
 - Paired safety: {"collisions": {"ci95": [0.0, 0.0], "mean": 0.0}, "hard_brake": {"ci95": [-2.6458333333333335, 3.1666666666666665], "mean": 0.10416666666666667}, "teleports": {"ci95": [0.0, 0.0], "mean": 0.0}, "ttc_below_3_vs": {"ci95": [-49.189062500000006, 33.6671875], "mean": -6.375}}.
+### Paired DEV u009 (24worlds; negative delay is better)
+- vs bandit J600: -581.946, paired95%CI[-2059.892496369173, 811.4079083191791] vehicle-s.
+- Paired safety: {"collisions": {"ci95": [0.0, 0.0], "mean": 0.0}, "hard_brake": {"ci95": [-0.8541666666666666, 3.0625], "mean": 1.0625}, "teleports": {"ci95": [0.0, 0.0], "mean": 0.0}, "ttc_below_3_vs": {"ci95": [-54.79270833333333, 32.1671875], "mean": -9.520833333333334}}.
+- vs bandit J900: -550.428, paired95%CI[-3131.6350779340855, 1852.0791841207879] vehicle-s.
+- Paired safety: {"collisions": {"ci95": [0.0, 0.0], "mean": 0.0}, "hard_brake": {"ci95": [-0.5, 5.521354166666669], "mean": 2.5625}, "teleports": {"ci95": [0.0, 0.0], "mean": 0.0}, "ttc_below_3_vs": {"ci95": [-58.584895833333334, 52.958333333333336], "mean": -1.4166666666666667}}.
+- vs mappo J600: -581.946, paired95%CI[-2059.892496369173, 811.4079083191791] vehicle-s.
+- Paired safety: {"collisions": {"ci95": [0.0, 0.0], "mean": 0.0}, "hard_brake": {"ci95": [-0.8541666666666666, 3.0625], "mean": 1.0625}, "teleports": {"ci95": [0.0, 0.0], "mean": 0.0}, "ttc_below_3_vs": {"ci95": [-54.79270833333333, 32.1671875], "mean": -9.520833333333334}}.
+- vs mappo J900: -550.428, paired95%CI[-3131.6350779340855, 1852.0791841207879] vehicle-s.
+- Paired safety: {"collisions": {"ci95": [0.0, 0.0], "mean": 0.0}, "hard_brake": {"ci95": [-0.5, 5.521354166666669], "mean": 2.5625}, "teleports": {"ci95": [0.0, 0.0], "mean": 0.0}, "ttc_below_3_vs": {"ci95": [-58.584895833333334, 52.958333333333336], "mean": -1.4166666666666667}}.
+- vs hold J600: -407.925, paired95%CI[-1827.760258594855, 660.3883124065055] vehicle-s.
+- Paired safety: {"collisions": {"ci95": [0.0, 0.0], "mean": 0.0}, "hard_brake": {"ci95": [-2.7708333333333335, 0.7708333333333334], "mean": -0.8958333333333334}, "teleports": {"ci95": [0.0, 0.0], "mean": 0.0}, "ttc_below_3_vs": {"ci95": [-33.70989583333334, 30.334895833333338], "mean": -1.6458333333333333}}.
+- vs hold J900: -876.871, paired95%CI[-3344.212839481318, 1345.7288695484606] vehicle-s.
+- Paired safety: {"collisions": {"ci95": [0.0, 0.0], "mean": 0.0}, "hard_brake": {"ci95": [-3.4171875, 2.875520833333335], "mean": -0.3125}, "teleports": {"ci95": [0.0, 0.0], "mean": 0.0}, "ttc_below_3_vs": {"ci95": [-39.313541666666666, 58.15312500000003], "mean": 6.354166666666667}}.
 ### OWNER02:21 learning self-check
 - Completed corrected fresh updates: [1, 2, 3]; next scheduled check u6.
 - Status: insufficient fresh updates for six-update trend.
@@ -328,6 +341,18 @@ SHA256 `9c891c6323b4d3139e18c298054c9bb4067279e8d1c1cf23153c5f8b0f6a80b3`; recei
 - Adopt only observable helpful-state evidence from public COOPBANDIT/COOPPLAN; keep free action space.
 - Prospectively compare group ES perturbations by effect/gradient SNR per charged sim-s.
 - Register new phase, CPU/source binding and budget before physics; retain all completed arms.
+### OWNER02:21 learning self-check
+- Completed corrected fresh updates: [1, 2, 3, 4, 5, 6, 7, 8, 9]; next scheduled check u12.
+- Status: phase fix required.
+- TRAIN remaining: 352720 sim-s; one fresh >=150-window joint-only lower bound: 135000 sim-s (HOLD/solos extra).
+- DEV learned-minus-HOLD J600: -407.925 vehicle-s, paired world-bootstrap95%CI [-1827.760258594855, 660.3883124065055].
+- DEV learned-minus-HOLD J900: -876.871 vehicle-s, paired world-bootstrap95%CI [-3344.212839481318, 1345.7288695484606].
+- Six-update descriptive slopes: D_G -143.669; C_G -214.378 vehicle-s/update.
+- Calibrate shared Gaussian scale against measured execution; retain safety and log before/after.
+- Adopt only observable helpful-state evidence from public COOPBANDIT/COOPPLAN; keep free action space.
+- Prospectively compare group ES perturbations by effect/gradient SNR per charged sim-s.
+- Register new phase, CPU/source binding and budget before physics; retain all completed arms.
 Discovery: observational COOPBEHAV/clustering exports are separate from exact HOLD C_G; do not infer paired native-release mechanisms.
 Registered phase fix: {"es": true, "es_sigma": [4.651557406006064, 0.5168397117784516], "first_update": 7, "id": "owner1511_fix_after6", "measured_execution_share": 0.9358974358974359, "scale_factor": 1.0336794235569031, "sigma": [4.651557406006064, 0.5168397117784516], "state_focus": "double signed full-EXAM observable log-priority; retain ordinary support; no action templates"}.
+Production complete within whole-batch accounting; inspect final DEV and limitations before any gain claim.
 <!-- COOPFREE OWNER1511 END -->
