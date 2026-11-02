@@ -1,5 +1,21 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+Nov3~01:54: FAST V3 qualification231CPU PASS0skips40.538s/zeroSUMO,
+source/home/ubuntu/coopmwm20261103_lsfastcpu3, amendment2ec30ae0.
+Rollinglocalcontroller V2=26152/start1793642031.3420317 CONTINUES firsttier
+Aincident1/Rconcurrent3 then other2 ONLYafterfirst2READY; NEVERduplicate it.
+Firstcontroller42900EXIT onsecond-resolution receiptcollision withobserver;
+historiesnowunique nanosecond names. FirstRsuccessor571419EXIT BEFORE signals
+on inherited LS_GPU_ORIGINALS recover assertion; original500795 untouched.
+V3wrapper recover=True regressiontested, newimmutableoverlayit2k2ops2 and
+generationFASTK2V3/unique dispatchnames. Existingfirstfailure preserved.
+Use LS_FAST_ROLL_V2.log + LS_FAST_DISPATCH_*FASTK2V3.json FIRST; all8fresh
+gates+K2H300full/fastandsingle/batch required; noFASTactivationclaimedyet.
+ObserverV8=15940/start1793641722.0117996(adopt; V7identityverifiedTERM),
+broker1941060/source2 andgrading1834956 LIVE. BANK_STATUS_1793641343:
+25lists/8selectedpositive/0confirmed/0admitted, NOTrestartprerequisite.
+MAINalertdelegatedrelease absent remains; NICHE_READYabsent. Fresh6Mguard.
+
 Nov3~01:40: latest601brief linesread incl01:28/01:33 nichebuild delegated,
 NICHE_READY absent; neverbuildniches yourself. MirrorstillFAIL/OFF detailedverdict
 COMMAND_MIRROR_MAIN0116_VERDICT.md. it2_K2 registered8231451f/source

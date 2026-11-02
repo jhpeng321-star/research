@@ -32,5 +32,12 @@ class PayloadTests(unittest.TestCase):
     def test_broker_handover_payload(self):
         self.check(f.broker,lambda p:dict(cpu=dict(source_hashes={})))
 
+    def test_continuation_dispatch_adopts_existing_owner(self):
+        with patch('pathlib.Path.exists',return_value=True), \
+             patch.object(f,'read',return_value=dict(pid=123,unix=100.)), \
+             patch('subprocess.Popen') as launch:
+            f.continue_dispatch()
+        launch.assert_not_called()
+
 
 if __name__=='__main__':unittest.main()

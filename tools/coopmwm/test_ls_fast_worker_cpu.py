@@ -5,6 +5,20 @@ from .ls_fast_worker import configured_search, drain_applies, pending_claims
 
 
 class FastWorkerTests(unittest.TestCase):
+    def test_successor_adopts_original_receipts_before_any_retirement(self):
+        import sys
+        from types import SimpleNamespace
+        from unittest.mock import Mock,patch
+        import tools.coopmwm as package
+        from . import warm_service,ls_fast_worker
+        delegated=Mock()
+        fake=SimpleNamespace(capture_search=lambda fn,**kw:fn,run=delegated)
+        with patch.dict(sys.modules,{'ls_gpu':fake}),patch.object(sys,'path',list(sys.path)), \
+             patch.object(package,'__path__',list(package.__path__)),patch.object(warm_service,'main'):
+            ls_fast_worker.run('/root/test',dict(pid=12),100.,'sha','/root/overlay')
+        self.assertTrue(delegated.call_args.kwargs['recover'])
+        self.assertEqual(delegated.call_args.kwargs['generation'],'_FASTK2V3')
+
     def test_config_is_explicit_and_preserves_other_parameters(self):
         seen=[]
         def search(*args,**kwargs):

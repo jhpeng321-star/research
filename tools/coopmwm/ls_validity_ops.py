@@ -153,7 +153,7 @@ def gpu_status(host):
         replacement=ops.EVIDENCE/name
         if replacement.exists():
             d=read(replacement);rows=[d if x['root']==d['root'] else x for x in rows]
-    for replacement in ops.EVIDENCE.glob('LS_FAST_DISPATCH_'+host+'_*.json'):
+    for replacement in sorted(ops.EVIDENCE.glob('LS_FAST_DISPATCH_'+host+'_*.json'),key=lambda p:read(p)['unix']):
         d=read(replacement);rows=[d if x['root']==d['root'] else x for x in rows]
     out=remote(host,f'''from pathlib import Path
 import json,time,subprocess
@@ -167,14 +167,14 @@ for d in {rows!r}:
  service=json.loads((r/'SERVICE_OWNER.json').read_text());failure=r/('LS_GPU_FAILED_'+generation+'.json')
  ready=st is not None and st[2] in ('S','R','D') and not failure.exists() and len(gates)==8 and all(x['pass_'] and x['max_cost_error']==0 for x in gates.values()) and all(service[k]==d[k] for k in ('pid','start_ticks','boot_id'))
  variant=r/'STARTUP_VARIANT_IT2K2.json'
- if generation=='FASTK2':ready=ready and variant.exists() and json.loads(variant.read_text())['pass_']
+ if generation.startswith('FASTK2'):ready=ready and variant.exists() and json.loads(variant.read_text())['pass_']
  completed=[json.loads(p.read_text()) for p in (r/'forecasts').glob('*.json') if p.stat().st_mtime>=d['unix']]
  workers.append(dict(owner=d,state=st[2] if st else 'exited',ready=ready,gates=gates,
   failure=json.loads(failure.read_text()) if failure.exists() else None,
   new_forecasts=len(completed),successful_searches=sum(x['result'].get('proposer_receipt') is not None for x in completed),
-  log_tail=(r/('LS_GPU_'+generation+'.log')).read_text()[-1800:],variant_gate=json.loads(variant.read_text()) if generation=='FASTK2' and variant.exists() else None))
+  log_tail=(r/('LS_GPU_'+generation+'.log')).read_text()[-1800:],variant_gate=json.loads(variant.read_text()) if generation.startswith('FASTK2') and variant.exists() else None))
 print(json.dumps(dict(host={host!r},unix=time.time(),workers=workers,gpu=subprocess.check_output(['nvidia-smi','--query-gpu=utilization.gpu,memory.used,power.draw','--format=csv,noheader'],text=True))))''')
-    v=json.loads(out);write(ops.EVIDENCE/f'LS_VALIDITY_GPU_{host}_{int(v["unix"])}.json',v)
+    v=json.loads(out);write(ops.EVIDENCE/f'LS_VALIDITY_GPU_{host}_{__import__("time").time_ns()}.json',v)
     print(json.dumps(dict(host=host,gpu=v['gpu'],workers=[dict(owner=w['owner'],state=w['state'],ready=w['ready'],gates=len(w['gates']),failure=w['failure'],successful_searches=w['successful_searches'],log_tail=w['log_tail']) for w in v['workers']])))
     return v
 
@@ -253,7 +253,7 @@ print(json.dumps(dict(owners=owners,episodes_adopted=72,arrival_admission=cfg['a
 def admit():
     workers=[]
     for host in ('gpuA','gpuR'):
-        p=max(ops.EVIDENCE.glob('LS_VALIDITY_GPU_'+host+'_*.json'),key=lambda p:int(p.stem.rsplit('_',1)[1]))
+        p=max(ops.EVIDENCE.glob('LS_VALIDITY_GPU_'+host+'_*.json'),key=lambda p:p.stat().st_mtime_ns)
         workers.extend(w for w in read(p)['workers'] if w['ready'])
     assert workers,'no eight-gate-qualified slots yet'
     h=sha(ops.EVIDENCE/'LS_VALIDITY_REGISTRATION.json')
@@ -290,7 +290,7 @@ v['successful_searches']=sum(json.loads(p.read_text()).get('proposer_receipt') i
 v['terminal_declines']=len(list((c/'terminal_declines').glob('*.json')))
 v['first_searches']=[dict(json.loads(p.read_text()),key=p.stem) for p in sorted((c/'broker_completed').glob('*.json'),key=lambda p:p.stat().st_mtime)][:2]
 print(json.dumps(v))''')
-    v=json.loads(out);write(ops.EVIDENCE/f'LS_VALIDITY_STATUS_{int(v["unix"])}.json',v)
+    v=json.loads(out);write(ops.EVIDENCE/f'LS_VALIDITY_STATUS_{__import__("time").time_ns()}.json',v)
     print(out);return v
 
 
@@ -522,20 +522,21 @@ def focus_watch_dispatch():
     write(p,d);print(json.dumps(d))
 
 
-def fast_watch_dispatch():
+def fast_watch_dispatch(generation=7):
     """Observe rolling successors by exact owner identity; never launch inference."""
     import psutil,subprocess,sys,time
-    p=ops.EVIDENCE/'LS_VALIDITY_OBSERVER_DISPATCH_V7.json'
+    assert generation in (7,8)
+    p=ops.EVIDENCE/f'LS_VALIDITY_OBSERVER_DISPATCH_V{generation}.json'
     if p.exists():print(json.dumps(read(p)));return
     assert (ops.EVIDENCE/'LS_FAST_BROKER_DISPATCH_V2.json').exists()
-    old=read(ops.EVIDENCE/'LS_VALIDITY_OBSERVER_DISPATCH_V6.json')
+    old=read(ops.EVIDENCE/f'LS_VALIDITY_OBSERVER_DISPATCH_V{generation-1}.json')
     try:owner=psutil.Process(old['pid'])
     except psutil.NoSuchProcess:owner=None
     if owner:
         assert abs(owner.create_time()-old['unix'])<5,'observer creation identity changed'
         assert owner.cmdline()[-3:]==['-m','tools.coopmwm.ls_validity_ops','watch']
         owner.terminate();owner.wait(timeout=15)
-    with (ops.EVIDENCE/'LS_VALIDITY_OBSERVER_V7.log').open('x',encoding='utf-8') as log:
+    with (ops.EVIDENCE/f'LS_VALIDITY_OBSERVER_V{generation}.log').open('x',encoding='utf-8') as log:
         child=subprocess.Popen([sys.executable,'-X','utf8','-u','-m','tools.coopmwm.ls_validity_ops','watch'],
             cwd=ops.LOCAL,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
@@ -544,6 +545,10 @@ def fast_watch_dispatch():
     write(p,d);print(json.dumps(d))
 
 
+def bank_watch_dispatch():
+    fast_watch_dispatch(8)
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=['qualify','cpu_result','register','gpu','gpu_status','cpu','admit','status','watch','watch_dispatch','focus_watch_dispatch','fast_watch_dispatch','cap_register','throughput','support','recover_secondary','recover_primary']);p.add_argument('--host',choices=['gpuA','gpuR'])
+    p=argparse.ArgumentParser();p.add_argument('action',choices=['qualify','cpu_result','register','gpu','gpu_status','cpu','admit','status','watch','watch_dispatch','focus_watch_dispatch','fast_watch_dispatch','bank_watch_dispatch','cap_register','throughput','support','recover_secondary','recover_primary']);p.add_argument('--host',choices=['gpuA','gpuR'])
     a=p.parse_args();globals()[a.action](a.host) if a.action in ('gpu','gpu_status','support') else globals()[a.action]()

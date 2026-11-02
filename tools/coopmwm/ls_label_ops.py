@@ -200,10 +200,10 @@ print(json.dumps(dict(unix=time.time(),arm='B',policy_update=3,entries=len(label
   exact_delay_null_rate=sum(x['all_eight_delay_equal_policy'] for x in null_lists)/len(null_lists) if null_lists else None,
   per_label_null_flags=null_lists,null_definition='all eight complete candidate team delays exactly equal policy; no tolerance or trajectory-equivalence inference',
  R_bank_entries=0,training_changes_from_statistics=False)))'''))
-    target=ops.EVIDENCE/'BANK_STATUS.json';tmp=target.with_suffix('.publishing')
+    target=ops.EVIDENCE/'BANK_STATUS.json';stamp=__import__('time').time_ns();tmp=target.with_name(f'.BANK_STATUS.{stamp}.publishing')
     with tmp.open('w',encoding='utf-8') as f:json.dump(value,f,sort_keys=True)
     __import__('os').replace(tmp,target)
-    write(ops.EVIDENCE/f'BANK_STATUS_{int(value["unix"])}.json',value)
+    write(ops.EVIDENCE/f'BANK_STATUS_{stamp}.json',value)
     print(json.dumps(value));return value
 
 

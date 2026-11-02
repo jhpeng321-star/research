@@ -93,4 +93,4 @@ def run(root, old, deadline, amendment, overlay):
 
     warm_service.main = qualified_main
     ls_gpu.run(str(root), copy.deepcopy(old), deadline, amendment,
-        generation='_FASTK2', overlay=overlay)
+        recover=True, generation='_FASTK2V3', overlay=overlay)

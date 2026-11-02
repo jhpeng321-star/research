@@ -7,9 +7,10 @@ from .ls_validity_ops import remote, payload
 from .protocol import checked, REGISTRY, sha, digest
 from .storage import read, write
 
-SOURCE='/home/ubuntu/coopmwm20261103_lsfastcpu2'
-OVERLAY='/root/coopmwm20261103_it2k2ops1'
-REG='LS_FAST_IT2K2_REGISTRATION_V2.json'
+SOURCE='/home/ubuntu/coopmwm20261103_lsfastcpu3'
+OVERLAY='/root/coopmwm20261103_it2k2ops2'
+REG='LS_FAST_IT2K2_REGISTRATION_V3.json'
+GPU_GENERATION='FASTK2V3'
 SLOTS={'incident1':'gpuA@incident1','deadlineA2':'gpuA@resource1651',
     'concurrent3':'gpuR@0','deadlineR2':'gpuR@resource1651'}
 
@@ -68,6 +69,11 @@ def register():
         line+=('V2 metadata correction: first broker replacement failed BEFORE serving '
             'on an immutable BROKER_OWNER_VALIDITY1 collision. Retain that failure; '
             'explicit new receipt suffix_FASTK2V2, no original owner-file overwrite.\n')
+        line+=('V3 wrapper correction: existing roots already contain LS_GPU_ORIGINALS, '
+            'so inherited ls_gpu.run requires recover=True. First gpuR successor571419 '
+            'failed BEFORE signalling its original500795; no query replay. Keep that '
+            'failure and use new FASTK2V3 receipt generation/overlay, same search. '
+            'Read-only observer/controller history receipts use unique nanosecond names.\n')
         write(p,dict(line=line,cpu=cpu,authority='MAIN2026-11-03 00:48',
             config=dict(name='it2_K2',iterations=2,screen_K=2,screen_H=300,final_K=8),
             new_sumo_sim_s=0,operational_spend_cap=6000000))
@@ -102,12 +108,17 @@ immutable(dest,d);print(json.dumps(d))''',timeout=60)
 
 def drain(host, root):
     """Drain one current owner; call again only to observe the same request."""
+    slot=SLOTS[root.rsplit('_',1)[1]]
+    prior=json.loads(remote('cpuQ',f'''from pathlib import Path
+import json
+c=Path({COLLECTION!r});p=c/'gpu_drains'/({digest(slot)!r}+'.json');done=c/'gpu_drained'/p.name
+print(json.dumps(dict(requested=json.loads(p.read_text()),drained=json.loads(done.read_text()) if done.exists() else None)) if p.exists() else '{{}}')'''))
+    if prior:print(json.dumps(prior));return
     from .ls_validity_ops import gpu_status
     import contextlib,io
     with contextlib.redirect_stdout(io.StringIO()):g=gpu_status(host)
     w=next(w for w in g['workers'] if w['owner']['root']==root)
     d=w['owner'];assert d.get('generation')!='FASTK2'
-    slot=SLOTS[root.rsplit('_',1)[1]]
     out=remote('cpuQ',f'''from pathlib import Path
 import json,sys,time
 c=Path({COLLECTION!r});sys.path.insert(0,{SOURCE!r}+'/pytools')
@@ -138,7 +149,7 @@ print(p.read_text() if p.exists() else json.dumps(dict(wait=True)))'''))
     assert sha(ops.LOCAL/'tools/coopmwm/ls_fast_worker.py')==qualified,'wrapper changed since CPU qualification'
     out=remote(host,f'''from pathlib import Path
 import json,os,time,subprocess,hashlib,base64,shutil
-r=Path({root!r});dest=r/'LS_GPU_DISPATCH_FASTK2.json';overlay=Path({OVERLAY!r})
+r=Path({root!r});dest=r/'LS_GPU_DISPATCH_FASTK2V3.json';overlay=Path({OVERLAY!r})
 if dest.exists():print(dest.read_text());raise SystemExit
 assert overlay.parent.is_dir()
 if not overlay.exists():shutil.copytree('/root/coopmwm20261102_lsvalidops1',overlay,ignore=shutil.ignore_patterns('__pycache__'))
@@ -153,18 +164,106 @@ assert all((r/'forecasts'/q.name).exists() for q in (r/'inbox').glob('*.json'))
 code='import sys;sys.path.insert(0,'+repr(str(overlay))+');from ls_fast_worker import run;run('+repr(str(r))+','+repr(old)+',1793894340.,'+repr({h!r})+','+repr(str(overlay))+')'
 env=dict(os.environ,PYTHONPATH=str(r/'pytools'),WMTEACH_BACKEND='FULL-v4',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
 if {host!r}=='gpuR':env['PYTORCH_CUDA_ALLOC_CONF']='expandable_segments:True'
-with (r/'LS_GPU_FASTK2.log').open('x') as log:
+with (r/'LS_GPU_FASTK2V3.log').open('x') as log:
  proc=subprocess.Popen(['nice','-n','19','/root/miniconda3/bin/python','-B','-u','-c',code],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
-v=dict(pid=proc.pid,start_ticks=Path('/proc',str(proc.pid),'stat').read_text().split()[21],boot_id=old['boot_id'],root=str(r),host={host!r},unix=time.time(),generation='FASTK2',amendment_sha256={h!r},wrapper_sha256=hashlib.sha256(text).hexdigest())
+v=dict(pid=proc.pid,start_ticks=Path('/proc',str(proc.pid),'stat').read_text().split()[21],boot_id=old['boot_id'],root=str(r),host={host!r},unix=time.time(),generation='FASTK2V3',amendment_sha256={h!r},wrapper_sha256=hashlib.sha256(text).hexdigest())
 with dest.open('x') as f:json.dump(v,f)
 print(json.dumps(v))''',timeout=60)
-    v=json.loads(out);p=ops.EVIDENCE/('LS_FAST_DISPATCH_'+host+'_'+root.rsplit('_',1)[1]+'.json')
+    v=json.loads(out);p=ops.EVIDENCE/('LS_FAST_DISPATCH_'+host+'_'+root.rsplit('_',1)[1]+'_'+GPU_GENERATION+'.json')
     if not p.exists():write(p,v)
     print(out)
 
 
+def progress(host,root):
+    """Read-only evidence of the original search being drained, not a retry."""
+    out=remote(host,f'''from pathlib import Path
+import json,time,os
+r=Path({root!r});owner=json.loads((r/'SERVICE_OWNER.json').read_text());p=Path('/proc',str(owner['pid']))
+before=(p/'stat').read_text().split() if p.exists() else None
+pending=[]
+for q in (r/'inbox').glob('*.json'):
+ if (r/'forecasts'/q.name).exists():continue
+ record=json.loads(q.read_text());claim=r/'inference_claims'/q.name
+ c=json.loads(claim.read_text()) if claim.exists() else None
+ pending.append(dict(key=q.stem,world=record['world_id'],time_s=record['time_s'],group_size=len(record['group']),sensed_rows=len(record['rows']),claim=c,age_s=time.time()-c['unix'] if c else None))
+time.sleep(2);after=(p/'stat').read_text().split() if p.exists() else None
+assert not after or after[21]==owner['start_ticks']
+cpu_s=(sum(int(after[i])-int(before[i]) for i in (13,14))/os.sysconf('SC_CLK_TCK')) if before and after else None
+print(json.dumps(dict(unix=time.time(),root=str(r),owner=owner,state=after[2] if after else 'exited',pending=pending,cpu_seconds_over_2s=cpu_s)))''')
+    v=json.loads(out);write(ops.EVIDENCE/f'LS_FAST_DRAIN_PROGRESS_{host}_{int(v["unix"])}.json',v)
+    print(out)
+
+
+def continue_roll():
+    """Durable local deployment observer; only already-registered rolling steps."""
+    import contextlib,io,msvcrt,time
+    lock=(ops.EVIDENCE/'LS_FAST_ROLL.claim').open('a+b');lock.seek(0)
+    if not lock.read(1):lock.write(b'1');lock.flush()
+    lock.seek(0);msvcrt.locking(lock.fileno(),msvcrt.LK_NBLCK,1)
+    from .ls_validity_ops import gpu_status
+    tiers=[(('gpuA','/root/coopmwm20261102_incident1'),('gpuR','/root/coopmwm20261102_concurrent3')),
+        (('gpuA','/root/coopmwm20261102_deadlineA2'),('gpuR','/root/coopmwm20261102_deadlineR2'))]
+    try:
+        for tier in tiers:
+            requested=set()
+            while __import__('time').time()<1793894340.:
+                with contextlib.redirect_stdout(io.StringIO()):
+                    # Idempotent drain/gpu operations adopt immutable remote receipts.
+                    for host,root in tier:
+                        p=ops.EVIDENCE/('LS_FAST_DISPATCH_'+host+'_'+root.rsplit('_',1)[1]+'_'+GPU_GENERATION+'.json')
+                        if not p.exists():
+                            if root not in requested:drain(host,root);requested.add(root)
+                            gpu(host,root)
+                    gpus={h:gpu_status(h) for h in ('gpuA','gpuR')}
+                ready={w['owner']['root'] for g in gpus.values() for w in g['workers']
+                    if w['ready'] and w['owner'].get('generation')==GPU_GENERATION}
+                print(json.dumps(dict(unix=time.time(),it2_K2_ready=sorted(ready),
+                    current_tier=[r for h,r in tier],no_training_or_sumo_dispatch=True)),flush=True)
+                if all(root in ready for host,root in tier):break
+                time.sleep(60)
+            else:raise ValueError('registered resource deadline')
+        value=dict(unix=time.time(),search_config='it2_K2',workers=gpus,
+            amendment_sha256=sha(ops.EVIDENCE/REG),new_sumo_sim_s=0,
+            mirror_active=False,training_paused=True)
+        write(ops.EVIDENCE/'IT2_K2_FOUR_WORKERS_READY.json',value)
+    except BaseException as error:
+        import traceback
+        write(ops.EVIDENCE/f'LS_FAST_ROLL_FAILED_{time.time_ns()}.json',dict(unix=time.time(),
+            error=repr(error),traceback=traceback.format_exc(),inference_replayed=False))
+        raise
+
+
+def continue_dispatch(generation=1):
+    import subprocess,sys,time
+    assert generation in (1,2)
+    suffix='' if generation==1 else '_V2'
+    p=ops.EVIDENCE/('LS_FAST_ROLL_DISPATCH'+suffix+'.json')
+    if p.exists():print(json.dumps(read(p)));return
+    assert (ops.EVIDENCE/'LS_FAST_BROKER_DISPATCH_V2.json').exists()
+    with (ops.EVIDENCE/('LS_FAST_ROLL'+suffix+'.log')).open('x',encoding='utf-8') as log:
+        child=subprocess.Popen([sys.executable,'-X','utf8','-u','-m','tools.coopmwm.ls_fast_ops','continue_roll'],
+            cwd=ops.LOCAL,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+    value=dict(pid=child.pid,unix=time.time(),source_sha256=sha(ops.LOCAL/'tools/coopmwm/ls_fast_ops.py'),
+        amendment_sha256=sha(ops.EVIDENCE/REG),
+        mode='registered rolling metadata/GPU qualification only; no PPO/SUMO dispatch')
+    write(p,value);print(json.dumps(value))
+
+
+def continue_recover():
+    import psutil
+    old=read(ops.EVIDENCE/'LS_FAST_ROLL_DISPATCH.json')
+    try:owner=psutil.Process(old['pid'])
+    except psutil.NoSuchProcess:owner=None
+    if owner:
+        assert abs(owner.create_time()-old['unix'])<5
+        assert owner.cmdline()[-3:]==['-m','tools.coopmwm.ls_fast_ops','continue_roll']
+        print(json.dumps(dict(adopted_running_controller=old)));return
+    continue_dispatch(2)
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('qualify','result','register','broker','drain','gpu'))
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('qualify','result','register','broker','drain','gpu','progress','continue_roll','continue_dispatch','continue_recover'))
     p.add_argument('--host',choices=('gpuA','gpuR'));p.add_argument('--root')
     a=p.parse_args()
-    globals()[a.action](a.host,a.root) if a.action in ('drain','gpu') else globals()[a.action]()
+    globals()[a.action](a.host,a.root) if a.action in ('drain','gpu','progress') else globals()[a.action]()
