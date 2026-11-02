@@ -77,6 +77,8 @@ def run(root,config):
         write(root/'FINAL_DISCOVERY_STARTED.json',dict(unix=time.time(),update=endpoint,checkpoint_sha256=sha(root/f'B_checkpoint_{endpoint:03}.pt')))
         policy,_,_,payload=load(root/f'B_checkpoint_{endpoint:03}.pt');assert payload['update']==endpoint
         b=read(root/'WARM_BINDING.json');index=12;coverage=[];manifest=[]
+        from .resource_config import clocks
+        b=clocks(root,b)
         for w in worlds('final_test'):
             ident=f'fixedfinal_B_{w["seed"]}';path=root/'jobs'/ident
             events=detect(tape(path/'observable.jsonl.gz',w['seed']))['events']

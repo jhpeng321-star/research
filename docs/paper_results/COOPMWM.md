@@ -1,5 +1,25 @@
 # S-COOPMWM — live checks
 
+## Command-mirror CUDA gate FAILED — MAIN16:39 disposition
+- `COMMAND_MIRROR_GPU_GATE_1651.json`: actual WM callback CPU/CUDA trace parity
+  **exact0**, but absolute member-vs-existing-SUMO trajectory errors are nonzero.
+- World986051: maximum position **0.8599243164 m**, speed **0.3810596466 m/s**.
+  World986070: **0.0787963867 m**, **0.0550899506 m/s**. The prototype produces
+  the same errors as the old chain on these two null fixtures.
+- Background half-steps are law-reconstructed from observable 1s endpoints, with
+  roster/lane ambiguities retained. This is a failed necessary observable gate,
+  **not a full-road/true-half-step SUMO parity pass**. No new SUMO was run.
+  **Command mirror remains OFF for BOTH B and R**, per the owner's failure rule.
+
+## Final resource handover completed — 17:24:48 UTC+8
+- Frozen `finalendpoint5`: **90 CPU PASS**, zero skips, **23.806s**, zero physics.
+  Regression verifies opaque result bytes are hashed without JSON decoding.
+- All **480 A24v2** episode/branch completions and **673 original** opaque receipts
+  are adopted. Old waiting owner689787 was identity-verified with no physics
+  children and replaced by **852974/start62576671**. No completed job was rerun.
+- Additive config/suffix uses the authorized Nov5 resource clock and current
+  phase caps. Final outcomes remain closed until fixed B24/R24 endpoints.
+
 ## MAIN16:51 DNS recovery — durable supervisors restarted 17:09:20 UTC+8
 - The transient DNS V4 STOP closed the ten remaining B-u4 attempts without a
   result. Fourteen completed episodes are retained and adopted; ten replacement

@@ -168,6 +168,75 @@ print(json.dumps(dict(unix=time.time(),owner=d,state=st[2] if st else 'exited',r
     v=json.loads(out);write(ops.EVIDENCE/f'FINAL_RECOVERY_STATUS_{int(v["unix"])}.json',v);print(out)
 
 
+def resource_cpu():
+    source='/home/ubuntu/coopmwm20261102_finalendpoint5'
+    prior=read(ops.EVIDENCE/'FINAL_RECOVERY_CPU_V4.json')
+    files=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,hashlib
+r=pathlib.Path({prior['source_root']!r});files={{}}
+for n,h in json.loads({json.dumps(prior['source_hashes'])!r}).items():
+ p=r/n;assert hashlib.sha256(p.read_bytes()).hexdigest()==h;files[n.removeprefix('pytools/')]=p.read_text()
+print(json.dumps(files))''',timeout=45))
+    for n in ('final_endpoint','final_discovery','resource_config','warm_protocol','test_final_endpoint_cpu'):
+        files['tools/coopmwm/'+n+'.py']=checked(ops.LOCAL/'tools/coopmwm'/(n+'.py')).read_text(encoding='utf-8')
+    staged=json.loads(ops.stage('cpuQ',source,files))
+    out=ops.ssh.remote('cpuQ',f'''import os,sys,time,json,unittest
+from unittest.mock import patch
+sys.path[:0]=[{source!r}+'/pytools','/home/ubuntu/e3final/runtime/src','/home/ubuntu/e3final/runtime']
+os.nice(19);os.environ.update(CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',COOPMWM_MAPPO='/home/ubuntu/mappospeed/production2/policy_00169.pt',COOPMWM_COST_SOURCE={source!r}+'/FROZEN_COSTS.json',COOPMWM_MOTION_SOURCE={source!r}+'/FROZEN_MOTION_SOURCE.py')
+import torch;torch.set_num_threads(1)
+names=('test_final_endpoint_cpu','test_final_discovery_cpu','test_final_runtime_cpu','test_branch_eval_cpu','test_acceleration_cpu','test_committed_cpu','test_exact_grade_cpu','test_diagnostic_repair_cpu');start=time.monotonic()
+with patch('subprocess.Popen',side_effect=AssertionError('no physics/inference during resource qualification')):
+ result=unittest.TextTestRunner(stream=sys.stdout,verbosity=1).run(unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromName('tools.coopmwm.'+n) for n in names))
+print(json.dumps(dict(pass_=result.wasSuccessful(),tests=result.testsRun,skips=len(result.skipped),sim_s=0,wall_s=time.monotonic()-start)))''',timeout=90)
+    print(out);v=json.loads(out.strip().splitlines()[-1]);v.update(source_root=source,source_hashes=staged['hashes'])
+    write(ops.EVIDENCE/'FINAL_RESOURCE_CPU_V5.json',v)
+    assert v['pass_'] and v['skips']==v['sim_s']==0
+
+
+def resource_replace():
+    cpu=read(ops.EVIDENCE/'FINAL_RESOURCE_CPU_V5.json')
+    assert cpu['pass_'] and cpu['skips']==cpu['sim_s']==0
+    line='\nS-COOPMWM MAIN1651 FINAL RESOURCE CLOCK HANDOVER REGISTERED: existing480A24v2 plus673original opaque completions adopted by hashes/checkpointSHA only; no outcome decoding/no physics replay. Child-free waiting final coordinator replaced by verified PID; original configs/receipts retained, additive config/owner/resource suffix. Clock2026-11-05 23:59+08 from authorized extension; current registered phase caps incl12000DNS transfer, k8phase inactive; final fixedA24/B24/R24 and secondaryA48 unchanged. CPU'+str(cpu['tests'])+'PASS/0skips/zeroSUMO.\n'
+    target=ops.EVIDENCE/'FINAL_RESOURCE_REGISTRATION_1651.json';assert not target.exists()
+    write(target,dict(line=line,cpu=cpu,new_sim_s=0));h=sha(target)
+    with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line+'amendmentSHA'+h+'\n')
+    out=ops.ssh.remote('cpuQ',f'''import pathlib,json,sys,os,signal,time,subprocess,hashlib
+r=pathlib.Path({ROOT!r});s=pathlib.Path({cpu['source_root']!r});sys.path.insert(0,str(s/'pytools'))
+from tools.coopmwm.warm_spool import immutable
+from tools.coopmwm.final_endpoint import configure,adopt_completed_stage
+from tools.coopmwm import final_runtime as f
+from tools.coopmwm.resource_config import extension
+assert not (r/'FINAL_RESOURCE_DISPATCH_1651.json').exists()
+assert not (r/'FINAL_OUTCOMES_OPENED.json').exists()
+cpu=json.loads({json.dumps(cpu)!r})
+for n,h in cpu['source_hashes'].items():assert hashlib.sha256((s/n).read_bytes()).hexdigest()==h
+cfg=json.loads((r/'FINAL_ENDPOINT_CONFIG_V2.json').read_text());ext=extension(r)
+cfg.update(source_root=str(s),source_hashes=cpu['source_hashes'],amendment_sha256={h!r},budget=ext['budget'],receipt_suffix='_RESOURCE1651')
+configure(r,cfg);assert adopt_completed_stage(r,f.specs(('A',))+f.specs(('A',),branches=True))==480
+d=json.loads((r/'FINAL_ENDPOINT_RECOVERY_DISPATCH_V2.json').read_text());p=pathlib.Path('/proc',str(d['pid']))
+assert d['boot_id']==pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+st=(p/'stat').read_text().split();assert st[21]==d['start_ticks'] and st[2] in ('S','R')
+argv=[x.decode() for x in (p/'cmdline').read_bytes().split(bytes([0])) if x]
+assert argv[-3:]==['tools.coopmwm.final_endpoint',str(r),str(r/'FINAL_ENDPOINT_CONFIG_V2.json')]
+for c in (p/'task'/str(d['pid'])/'children').read_text().split():
+ cp=pathlib.Path('/proc',c);ca=[x.decode() for x in (cp/'cmdline').read_bytes().split(bytes([0])) if x]
+ assert len(ca)==4 and ca[1:3]==['-B','-c'] and ca[3].startswith('from multiprocessing.resource_tracker import main;main('),'active final children; no handover'
+with (r/'AUTHORITY.md').open('a') as handle:handle.write({(line+'amendmentSHA'+h+chr(10))!r})
+immutable(r/'FINAL_RESOURCE_CONFIG_1651.json',cfg)
+immutable(r/'FINAL_RESOURCE_HANDOVER_1651.json',dict(old=d,unix=time.time(),opaque_A24_adopted=480,outcomes_closed=True))
+os.kill(d['pid'],signal.SIGTERM)
+for _ in range(150):
+ if not p.exists() or (p/'stat').read_text().split()[2]=='Z':break
+ assert (p/'stat').read_text().split()[21]==d['start_ticks'];time.sleep(.1)
+else:raise ValueError('old final owner has not exited; no replacement')
+env=dict(os.environ,CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',SUMO_HOME='/home/ubuntu/miniconda3/lib/python3.10/site-packages/sumo',PYTHONPATH=str(s/'pytools')+':/home/ubuntu/e3final/runtime/src:/home/ubuntu/e3final/runtime');env['PATH']=env['SUMO_HOME']+'/bin:'+env['PATH']
+with (r/'FINAL_RESOURCE_1651.log').open('x') as log:
+ proc=subprocess.Popen(['nice','-n','19',sys.executable,'-B','-u','-m','tools.coopmwm.final_endpoint',str(r),str(r/'FINAL_RESOURCE_CONFIG_1651.json')],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+st=pathlib.Path('/proc',str(proc.pid),'stat').read_text().split();v=dict(pid=proc.pid,start_ticks=st[21],boot_id=d['boot_id'],root=str(r),source=str(s),unix=time.time(),outcomes_closed=True)
+immutable(r/'FINAL_RESOURCE_DISPATCH_1651.json',v);print(json.dumps(v))''',timeout=100)
+    write(ops.EVIDENCE/'FINAL_RESOURCE_DISPATCH_1651.json',json.loads(out));print(out)
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('census','register','cpu','replace','status'))
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('census','register','cpu','replace','status','resource_cpu','resource_replace'))
     globals()[p.parse_args().mode]()

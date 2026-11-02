@@ -1,5 +1,33 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+COMMANDMIRROR gatecompletedFAIL: COMMAND_MIRROR_GPU_GATE_1651.json,
+CPU/CUDAtraceEXACT0 but986051absolute0.8599243164m/0.3810596466mps;
+9860700.0787963867m/0.0550899506mps. Old/prototypeerrorssame, halfsteps
+reconstructed/notgenuine; NOactivation/B-RmirrorOFF/noSUMO. Neverrerunthisgate.
+FINAL RESOURCE live852974/start62576671/sourcefinalendpoint5 since1793611489,
+90CPU PASS/0skips23.806s; all480A24v2+673originalopaquejobsadopted, original
+coordinator689787verifiedwaiting/TERM. Nooutcomeopening/finalphysicsreplay.
+
+GPU RESOURCE handoverINPROGRESS: freezeONLYDNSbroker821011/T; B821013/R821014/
+grader821012 remainlive. GPUhelpersinitialwrongscriptpath failedBEFOREtouching
+oldworkers; retained. V2 helpers A918997/918998,R404201/404202 at1793611307/1317;
+NEVERredispatch. Aprimarynow918997 has2/4freshEXACT0gates at17936121xx; original
+eightgates/GPU_BINDING keptbyteidentical; fouradopted/fourfreshchecks. Roldworkers
+stillfinishingoriginalinboxbeforetheirqualifiedrestart. Asecond617099ALREADY
+deadfrom16:29sameunsupportedposthoclabelbug, SPOOL_FAILED preserved; replacement
+helperrefusednoPIDsignals. Newcontroller874363/start62634134/sourceverifybeta11
+153CPU PASS0skips35.852s waitshealthyqualifiedservices, quarantinesdeadslots
+withoutreplayingtheirclaims, thenONEfreshbrokerbaseline/unfreezeviareplacement.
+Oldcontroller840428receiptverified/TERM; noGPU/jobcontrol. Useexplicit
+GPU_RESOURCE_COMPLETE/FAILED/BROKER_DISPATCH_1651 receiptsFIRST; noclaimall4ready.
+
+Observe-only localV12 23628 since1793612367, deadlineNov5 23:59; prior11640verified
+ABSENT. Readonlystatepayload11CPU PASS/combinedobserver19PASS; publisherrealPASS0new.
+V12 cannotlaunchtraining/GPU/physics; reportsDNSowners/newV5failures/pauses. Remote
+bindingsremainimmutable. Lateststate1793612277 A48/B3/R3, noSTOP/noPAUSE/4,450,130
+charged; B4DNSreplacementinprogress/Rwaitsquota. NeedGPUhandoverfinish, liveB4..6
+viability, Asecondreplacementlater, learned/k8stillINACTIVEpendingMAINaddendum.
+
 MAIN1651 ADDITIVE RECOVERY at1793610560/17:09:20UTC+8: full373linebrief read;
 originalqual/u0/library/smoke adopted. DNS V4 killed10remainingB4episodes: all24
 closed/14RESULT. Sourceverifybeta9 CPU153PASS/0skips36.388s/zeroSUMO + real

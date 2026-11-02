@@ -158,6 +158,37 @@ print(json.dumps(v))''',timeout=90)
     print(json.dumps(dict(v,cases=[{k:x for k,x in c.items() if k not in ('trace','errors','unresolved_half_steps')} for c in v['cases']])))
 
 
+def gpu_gate():
+    """Attempt the observable null-case gate on CUDA; mismatch forbids activation."""
+    from .storage import read
+    from .protocol import checked,REGISTRY,sha
+    target=ops.EVIDENCE/'COMMAND_MIRROR_GPU_GATE_1651.json';assert not target.exists()
+    root='/root/coopmwm20261102_commandgpugate1'
+    line='\nS-COOPMWM MAIN1639 COMMAND-MIRROR CUDA GATE REGISTERED: two original TRAIN null fixtures986051/986070 t300, actual WM command callback old/prototype on CPU and GPU, observable replay only/no new SUMO/no truth. Exact absolute member position/speed against existing SUMO observations plus CPU/CUDA trace parity; reconstructed/interpolated background halfsteps disclosed, NOT genuine full-road parity. Any nonzero absolute mismatch or unresolved halfsteps = FAIL, leave mirror OFF for BOTH B/R. Existing training unchanged.\n'
+    with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+    cpu=read(ops.EVIDENCE/'CPU_coopmwm20261102_commandcpu3.json')
+    ops.stage_frozen('gpuA',root,cpu)
+    ops.stage('gpuA',root,{'tools/coopmwm/command_chain_probe.py':checked(ops.LOCAL/'tools/coopmwm/command_chain_probe.py').read_text(encoding='utf-8'),
+        'NULL_FIXTURES.json':checked(ops.EVIDENCE/'COMMAND_CHAIN_NULL_FIXTURES.json').read_text(encoding='utf-8')})
+    out=ops.ssh.remote('gpuA',f'''import sys,os,json,time
+sys.path.insert(0,{root!r}+'/pytools');os.nice(19)
+from tools.coopmwm.command_chain_probe import run
+cuda=run({root!r}+'/NULL_FIXTURES.json',kinematic=True,continuous=True,device='cuda')
+cpu=run({root!r}+'/NULL_FIXTURES.json',kinematic=True,continuous=True,device='cpu')
+errors=[]
+for a,b in zip(cpu['cases'],cuda['cases']):
+ for x,y in zip(a['trace'],b['trace']):
+  for name in ('policy','plan'):
+   for xr,yr in zip(x[name],y[name]):errors.extend(abs(i-j) for i,j in zip(xr,yr))
+mirror=[c for c in cuda['cases'] if c['final_chain']]
+passed=max(errors or [0.])==0. and all(c['max_position_error']==c['max_speed_error']==0. and not c['unresolved_half_steps'] for c in mirror)
+print(json.dumps(dict(unix=time.time(),pass_=passed,cpu_gpu_max_trace_error=max(errors or [0.]),cpu=cpu,cuda=cuda,new_sumo_sim_s=0,activation=False,
+ reason='exact absolute observable member gate; unresolved halfsteps forbid full-trajectory parity claim')))''',timeout=90)
+    v=json.loads(out);write(target,v)
+    print(json.dumps(dict(pass_=v['pass_'],cpu_gpu_max_trace_error=v['cpu_gpu_max_trace_error'],new_sumo_sim_s=0,
+        cases=[{k:c[k] for k in ('world','final_chain','max_position_error','max_speed_error')} for c in v['cuda']['cases']],activation=False)))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('sources','show','laws','fixtures','contrast','qualify','probe','probe_kinematic'))
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('sources','show','laws','fixtures','contrast','qualify','probe','probe_kinematic','gpu_gate'))
     globals()[p.parse_args().mode]()

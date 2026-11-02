@@ -33,8 +33,8 @@ def observable_midpoint(current,following):
     return result,unresolved
 
 
-def run(fixture_path,*,kinematic=False,continuous=False):
-    os.environ.update(CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',C4_SUMO_LEADER_RULE='1')
+def run(fixture_path,*,kinematic=False,continuous=False,device='cpu'):
+    os.environ.update(CUDA_VISIBLE_DEVICES='0' if device=='cuda' else '',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',C4_SUMO_LEADER_RULE='1')
     phys='/root/rbeval20261031/phys_code_22cc32f65a80'
     sys.path[:0]=[phys+'/src',phys]
     import torch
@@ -46,7 +46,7 @@ def run(fixture_path,*,kinematic=False,continuous=False):
     from .policy_wm import load_actor
     from .mppi_search import comparators
     binding=json.loads((runtime.BASE/'speedhead20261030/EXPORT_BOUND.json').read_text())
-    mp=load_policy_fn(binding['path'],device='cpu')
+    mp=load_policy_fn(binding['path'],device=device)
     cases=json.loads(Path(fixture_path).read_text())['cases'];output=[]
     begin=time.monotonic()
     for case in cases:
@@ -54,14 +54,14 @@ def run(fixture_path,*,kinematic=False,continuous=False):
         group=case['plan']['members'];slots=[ids.index(v) for v in group]
         acts=comparators(record,600)+[case['plan']]
         frames={int(f['time_s']):{r['vid']:r for r in f['vehicles']} for f in case['frames'][0]}
-        policy=load_actor(record['policy_state'],'cpu') if record.get('policy_state') is not None else None
+        policy=load_actor(record['policy_state'],device) if record.get('policy_state') is not None else None
         for final_chain in (False,True):
             initial=record['rows'];bs=len(acts)
             def tensor(name,dtype=torch.float32):
-                return torch.tensor([[r[name] for r in initial]]*bs,dtype=dtype)
+                return torch.tensor([[r[name] for r in initial]]*bs,dtype=dtype,device=device)
             state=dict(s_m=tensor('s_m'),v_mps=tensor('v_mps'),lane=tensor('lane',torch.long),
-                present=torch.ones(bs,len(ids),dtype=torch.bool),is_cav=tensor('is_cav',torch.bool),
-                length_m=torch.tensor([[r.get('length_m',5.) for r in initial]]*bs),a_mps2=torch.zeros(bs,len(ids)))
+                present=torch.ones(bs,len(ids),dtype=torch.bool,device=device),is_cav=tensor('is_cav',torch.bool),
+                length_m=torch.tensor([[r.get('length_m',5.) for r in initial]]*bs,device=device),a_mps2=torch.zeros(bs,len(ids),device=device))
             trace=[];errors=[];step_differences=0;unresolved_steps=[]
             with plan_executor(6,policy,final_chain=final_chain):
                 cb=runtime.option_controller(mp,acts,initial)
@@ -101,7 +101,7 @@ def run(fixture_path,*,kinematic=False,continuous=False):
                 nonidentical_plan_policy_steps=step_differences,
                 max_position_error=max([abs(e['error']) for e in errors if e['field']=='s_m'] or [0.]),
                 max_speed_error=max([abs(e['error']) for e in errors if e['field']=='v_mps'] or [0.])))
-    return dict(cases=output,wall_s=time.monotonic()-begin,new_sumo_sim_s=0,
+    return dict(cases=output,wall_s=time.monotonic()-begin,new_sumo_sim_s=0,device=device,
         kinematic_midpoints=kinematic,continuous_group_motion=continuous,
         contract='actual WM callback; observable endpoints only; '+
             ('law-reconstructed semi-implicit half-step backgrounds with unresolved roster/lane changes retained as interpolation fallbacks; ' if kinematic else 'interpolated half-step neighbours; ')+

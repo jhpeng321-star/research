@@ -52,13 +52,26 @@ def secondary(root,b,plan):
     write(root/'FINAL_SECONDARY_A48_BRANCHES.json',dict(checkpoints=dict(A=48,B=24),analysis=analyze(records,plan)))
 
 
+def adopt_completed_stage(root,items):
+    """Validate opaque completion metadata only; never read result values."""
+    for spec in items:
+        meta=read(root/'final_receipts'/(spec['id']+'.json'))
+        assert meta['id']==spec['id'] and meta['outcomes_closed']
+        assert meta['checkpoint_update']==spec['checkpoint_update']==24
+        assert meta['checkpoint_sha256']==sha(root/'A_checkpoint_024.pt')
+        for name,info in meta['files'].items():
+            assert name in ('RESULT.json','RESULT.json.gz','observable.jsonl.gz','CLAIM.json','CLOSE.json')
+            assert sha(root/'jobs'/spec['id']/name)==info['sha256']
+    return len(items)
+
+
 def run(root,config):
     import fcntl
     import os
     root=Path(root);lock=(root/'FINAL_PRECOMPUTE.claim').open('a')
     fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     suffix=config.get('receipt_suffix','')
-    assert suffix in ('','_V2'),'unregistered final attempt suffix'
+    assert suffix in ('','_V2','_RESOURCE1651'),'unregistered final attempt suffix'
     started=root/('FINAL_ENDPOINT_STARTED'+suffix+'.json')
     assert not started.exists(),'adopt existing owner; no duplicate final dispatch'
     assert config['amendment_sha256'] in (root/'AUTHORITY.md').read_text()
@@ -69,11 +82,15 @@ def run(root,config):
     assert not (root/'FINAL_OUTCOMES_OPENED.json').exists()
     configure(root,config)
     b=dict(read(root/'WARM_BINDING.json'),budget=config['budget'])
+    from .resource_config import clocks
+    b=clocks(root,b)
     write(started,dict(unix=time.time(),primary=dict(A=24,B=24,R=24),
         secondary=dict(A=48),adopted_opaque_jobs=673,outcomes_closed=True))
     try:
         # Frozen A24 only, lowest priority; no old A48/MAPPO/native rerun.
-        f.run_stage(root,b,f.specs(('A',))+f.specs(('A',),branches=True),config['workers'])
+        a_items=f.specs(('A',))+f.specs(('A',),branches=True)
+        if suffix=='_RESOURCE1651':assert adopt_completed_stage(root,a_items)==480
+        else:f.run_stage(root,b,a_items,config['workers'])
         while not ready(root):
             if f.blocked(root):raise ValueError('durable final STOP')
             time.sleep(30)

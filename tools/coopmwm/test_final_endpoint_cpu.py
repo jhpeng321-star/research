@@ -10,6 +10,22 @@ from .storage import write
 
 
 class EndpointTests(unittest.TestCase):
+    def test_resource_handover_hashes_opaque_artifacts_without_decoding_outcomes(self):
+        from .final_endpoint import adopt_completed_stage
+        from .protocol import sha
+        with tempfile.TemporaryDirectory() as tmp:
+            r=Path(tmp);(r/'final_receipts').mkdir();p=r/'jobs/fixedfinal_A24v2_989600';p.mkdir(parents=True)
+            (r/'A_checkpoint_024.pt').write_bytes(b'fixed24')
+            # Deliberately invalid JSON: admission must hash, never decode it.
+            (p/'RESULT.json').write_bytes(b'opaque outcome, not JSON')
+            write(r/'final_receipts'/f'{p.name}.json',dict(id=p.name,outcomes_closed=True,
+                checkpoint_update=24,checkpoint_sha256=sha(r/'A_checkpoint_024.pt'),
+                files={'RESULT.json':dict(sha256=sha(p/'RESULT.json'))}))
+            specs=[dict(id=p.name,checkpoint_update=24)]
+            self.assertEqual(adopt_completed_stage(r,specs),1)
+            (p/'RESULT.json').write_bytes(b'changed')
+            with self.assertRaises(AssertionError):adopt_completed_stage(r,specs)
+
     def test_final_phase_caps_use_approved_config_not_older_training_binding(self):
         from .warm_protocol import install_accounting,budget
         from . import accel_storage
