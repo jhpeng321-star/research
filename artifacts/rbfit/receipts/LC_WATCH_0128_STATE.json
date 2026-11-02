@@ -173,11 +173,11 @@
         "name": "lane_fit",
         "claimed": true,
         "pid": 977061,
-        "running": true,
+        "running": false,
         "pid_reused": false,
-        "complete": false,
-        "verified": false,
-        "observation_worlds": 12,
+        "complete": true,
+        "verified": true,
+        "observation_worlds": 32,
         "frozen_bootstrap_sha256": {
           "config.py": "28a064562878bbcfcb508106ddb67520acde798ba043220f0be105b446bc4f32",
           "secure_gap.py": "22b406dd8753e989829bf27a417fec506d627635f8da29ad0b1e8df0fd7dc438",
@@ -186,7 +186,31 @@
           "batched.py": "95da75d003f24ab77e06af7754c2126348ea4062b0707b48403763616dd335bd"
         }
       },
-      "blocked": "{\"argv\": [\"ssh\", \"cpuQ\", \"/home/ubuntu/miniconda3/bin/python /home/ubuntu/rbfit20261101_lc_boundaries/continuation_remote.py --root /home/ubuntu/rbfit20261101_lc_source_da190640f0ca --name lane_fit inspect\"], \"returncode\": 255, \"stdout\": \"\", \"stderr\": \"Connection closed by 1.15.42.207 port 22\\n\"}"
+      "recoveries": [
+        {
+          "timestamp": "2026-11-02T09:01:24.736787+08:00",
+          "status": {
+            "root": "/home/ubuntu/rbfit20261101_lc_source_da190640f0ca",
+            "name": "lane_fit",
+            "claimed": true,
+            "pid": 977061,
+            "running": false,
+            "pid_reused": false,
+            "complete": true,
+            "verified": true,
+            "observation_worlds": 32,
+            "frozen_bootstrap_sha256": {
+              "config.py": "28a064562878bbcfcb508106ddb67520acde798ba043220f0be105b446bc4f32",
+              "secure_gap.py": "22b406dd8753e989829bf27a417fec506d627635f8da29ad0b1e8df0fd7dc438",
+              "mobil.py": "f786dbe67836cf8f66a50644691ca12375f3cd8ce610588a07128cd6ede5ff81",
+              "neighbours.py": "16667d7278e68d5796fb7349487ef3ef9f7c766ef21c4509597313d2ee129a0d",
+              "batched.py": "95da75d003f24ab77e06af7754c2126348ea4062b0707b48403763616dd335bd"
+            }
+          },
+          "previous_blocker": "{\"argv\": [\"ssh\", \"cpuQ\", \"/home/ubuntu/miniconda3/bin/python /home/ubuntu/rbfit20261101_lc_boundaries/continuation_remote.py --root /home/ubuntu/rbfit20261101_lc_source_da190640f0ca --name lane_fit inspect\"], \"returncode\": 255, \"stdout\": \"\", \"stderr\": \"Connection closed by 1.15.42.207 port 22\\n\"}"
+        }
+      ],
+      "published_commit": "0e6cfc11b34700b1798a3b69a2809709a7582ad3"
     },
     {
       "root": "/home/ubuntu/rbfit20261101_lc_source_5a5b15ef118c",
@@ -199,11 +223,11 @@
         "name": "lane_fit",
         "claimed": true,
         "pid": 1076804,
-        "running": true,
+        "running": false,
         "pid_reused": false,
-        "complete": false,
-        "verified": false,
-        "observation_worlds": 4,
+        "complete": true,
+        "verified": true,
+        "observation_worlds": 32,
         "frozen_bootstrap_sha256": {
           "config.py": "28a064562878bbcfcb508106ddb67520acde798ba043220f0be105b446bc4f32",
           "secure_gap.py": "22b406dd8753e989829bf27a417fec506d627635f8da29ad0b1e8df0fd7dc438",
@@ -212,7 +236,31 @@
           "batched.py": "95da75d003f24ab77e06af7754c2126348ea4062b0707b48403763616dd335bd"
         }
       },
-      "blocked": "{\"argv\": [\"ssh\", \"cpuQ\", \"/home/ubuntu/miniconda3/bin/python /home/ubuntu/rbfit20261101_lc_boundaries/continuation_remote.py --root /home/ubuntu/rbfit20261101_lc_source_5a5b15ef118c --name lane_fit inspect\"], \"returncode\": 255, \"stdout\": \"\", \"stderr\": \"Connection closed by 1.15.42.207 port 22\\n\"}"
+      "recoveries": [
+        {
+          "timestamp": "2026-11-02T09:01:46.443074+08:00",
+          "status": {
+            "root": "/home/ubuntu/rbfit20261101_lc_source_5a5b15ef118c",
+            "name": "lane_fit",
+            "claimed": true,
+            "pid": 1076804,
+            "running": false,
+            "pid_reused": false,
+            "complete": true,
+            "verified": true,
+            "observation_worlds": 32,
+            "frozen_bootstrap_sha256": {
+              "config.py": "28a064562878bbcfcb508106ddb67520acde798ba043220f0be105b446bc4f32",
+              "secure_gap.py": "22b406dd8753e989829bf27a417fec506d627635f8da29ad0b1e8df0fd7dc438",
+              "mobil.py": "f786dbe67836cf8f66a50644691ca12375f3cd8ce610588a07128cd6ede5ff81",
+              "neighbours.py": "16667d7278e68d5796fb7349487ef3ef9f7c766ef21c4509597313d2ee129a0d",
+              "batched.py": "95da75d003f24ab77e06af7754c2126348ea4062b0707b48403763616dd335bd"
+            }
+          },
+          "previous_blocker": "{\"argv\": [\"ssh\", \"cpuQ\", \"/home/ubuntu/miniconda3/bin/python /home/ubuntu/rbfit20261101_lc_boundaries/continuation_remote.py --root /home/ubuntu/rbfit20261101_lc_source_5a5b15ef118c --name lane_fit inspect\"], \"returncode\": 255, \"stdout\": \"\", \"stderr\": \"Connection closed by 1.15.42.207 port 22\\n\"}"
+        }
+      ],
+      "published_commit": "bc115e80bf95c59ff50c2dd390db1e86319e151b"
     }
   ],
   "errors": [
@@ -263,22 +311,22 @@
   ],
   "heartbeat": "2026-11-01T09:00:10.796389+08:00",
   "latest_publication": {
-    "timestamp": "2026-11-01T04:37:13+08:00",
-    "commit": "386878bc677a9f2c94be07dac549befbcd109764",
-    "directory": "E:\\agent-work\\c4-rb-fit\\artifacts\\rbfit\\lane_raw_c5602102891e",
+    "timestamp": "2026-11-02T09:02:05+08:00",
+    "commit": "bc115e80bf95c59ff50c2dd390db1e86319e151b",
+    "directory": "E:\\agent-work\\c4-rb-fit\\artifacts\\rbfit\\lane_source_5a5b15ef118c",
     "adopted": false,
-    "source_sha256": "1bb1c7612a5ae250725a05ebfff18dd0abcd145c6e9a6abf46ce6e930d5a2695",
+    "source_sha256": "e61f897c5e7adadde9db2683a5657874399737b572f4cec4892cbe766ad35b2d",
     "raw_physical_scores": {
       "n": 258691,
       "events": 626,
-      "categorical_brier_sum": 1194.0833647554846,
-      "event_brier_sum": 597.0416823777423,
-      "negative_log_sum": 135193.57832266958,
-      "expected_event_count": 435.8442041444617,
-      "expected_correct_direction_event_count": 60.85216712160377,
-      "categorical_brier": 0.004615867443225642,
-      "event_brier": 0.002307933721612821,
-      "negative_log_score": 0.522606423581298
+      "categorical_brier_sum": 3827.06562004969,
+      "event_brier_sum": 1913.5328100248446,
+      "negative_log_sum": 138803.99000120116,
+      "expected_event_count": 5388.26939366196,
+      "expected_correct_direction_event_count": 194.89275748787716,
+      "categorical_brier": 0.014793965078219536,
+      "event_brier": 0.007396982539109766,
+      "negative_log_score": 0.5365628877742216
     },
     "idm_preferred_directory": "E:\\agent-work\\c4-rb-fit\\artifacts\\rbfit\\shrinkage_v1",
     "boundary_reader_required": true,
