@@ -35,6 +35,9 @@ def episode(job):
     if job.get('warm_history') and controller.guide:
         controller.guide.prime([f for f in b.causal_history.snapshot(300) if f['time_s']<300])
     steps=[];metrics={};prefixes={};horizon_totals={};requested=overrides=0
+    if job.get('sumo_verify'):  # owner option 1: blocking exact top-k verification (default off)
+        from .sumo_verify import install
+        install(controller,job,prefixes,generator)
     branch=job.get('branch')
     try:
         with gzip.open(path/'observable.jsonl.gz','xt',encoding='utf-8') as trace:
