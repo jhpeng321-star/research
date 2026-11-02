@@ -283,7 +283,7 @@ v['collection']=json.loads((c/'LS_COLLECT_STATUS.json').read_text())
 v['broker_completed']=len(list((c/'broker_completed').glob('*.json')))
 v['successful_searches']=sum(json.loads(p.read_text()).get('proposer_receipt') is not None for p in (r/'responses').glob('*.json') if (c/'admissions'/p.name).exists())
 v['terminal_declines']=len(list((c/'terminal_declines').glob('*.json')))
-v['first_searches']=[dict(key=p.stem,**json.loads(p.read_text())) for p in sorted((c/'broker_completed').glob('*.json'),key=lambda p:p.stat().st_mtime)][:2]
+v['first_searches']=[dict(json.loads(p.read_text()),key=p.stem) for p in sorted((c/'broker_completed').glob('*.json'),key=lambda p:p.stat().st_mtime)][:2]
 print(json.dumps(v))''')
     v=json.loads(out);write(ops.EVIDENCE/f'LS_VALIDITY_STATUS_{int(v["unix"])}.json',v)
     print(out);return v
