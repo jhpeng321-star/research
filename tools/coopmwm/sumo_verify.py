@@ -190,6 +190,21 @@ def verify(snapshot, candidates, runner, charge, proposer='wm', workers=None, ro
                 predicted_saving=[c.get('saving_vs_policy', c.get('saving_vs_mappo')) for c in candidates],
                 branch_specs_sha256=[s['branch_sha256'] for s in specs],
                 sign='grade = J_policy - J_chosen; positive = chosen plan helped (veh-s)')
+    if root is not None:
+        path = Path(root)/'verifications'/f'{vid}.json'
+        if path.exists():
+            previous = json.loads(path.read_text(encoding='utf-8'))
+            verify_sealed(previous, 'receipt_sha256')
+            if any(previous.get(key) != body[key] for key in
+                   ('snapshot_sha256', 'candidate_plan_sha256', 'proposer')):
+                raise ValueError('verification identity changed; original receipt retained')
+            return previous
+        # An interrupted claim is never replayed, even if its process has exited.
+        # Claim BEFORE charging/preparing/launching any branch, across processes.
+        _write_new(Path(root)/'claims'/f'{vid}.json', dict(
+            verification_id=vid, snapshot_sha256=body['snapshot_sha256'],
+            candidate_plan_sha256=body['candidate_plan_sha256'],
+            pid=os.getpid(), host=socket.gethostname(), unix=started))
     try:
         charge(vid, specs)
     except BudgetBlocked as e:
@@ -243,7 +258,7 @@ def accel_charge(run_root, phase='sumo_verification'):
     def charge(vid, specs):
         from .warm_protocol import install_accounting
         from .accel_storage import reserve
-        install_accounting()
+        install_accounting(run_root)
         try:
             reserve(Path(run_root), [dict(id=f'{vid}_{s["branch"]}', sim_s=s['sim_s']) for s in specs], phase)
         except ValueError as e:
@@ -325,11 +340,25 @@ def verified_guide(guide, verifier, controller, prefixes, job, generator, k=TOP_
             candidates = random_proposer(proposal, k)
         else:
             candidates = list(proposal.get('topk') or [proposal['plan']])[:k]
+        from .exploration import bucket_beta
+        b = proposal['behaviour']
+        beta = bucket_beta(getattr(controller, 'beta', 1.),
+                           proposal.get('option', proposal['plan'].get('family', 'MPPI')),
+                           b.get('regime', 'ordinary'))
+        # Snapshot retains the PRE-draw state: branches consume this same one
+        # draw at t0. Live consumes it here, never again in Controller.apply.
         snap = capture(controller, prefixes, job, now, sample, generator)
+        follows = float(torch.rand((), generator=generator)) < beta
+        b.update(beta=beta, q=b.get('sample_probability', 1.)*beta,
+                 trust_draw_before_verification=True, trust_follow=follows)
+        proposal['sumo_trust_drawn'] = True
+        if not follows:
+            proposal.update(accepted=False, reason='pre-verification trust draw: own policy')
+            b.update(proposal_accepted=False, rejection=proposal['reason'])
+            return proposal
         ended = (proposal.get('overlap_recheck') or {}).get('truncated_plan_ids') or []
         snap['truncate_on_accept'] = sorted(ended)   # committed plans an accepted start would truncate
         r = verifier(snap, candidates, proposer)
-        b = proposal['behaviour']
         b['sumo_verification'] = dict(verification_id=r['verification_id'], status=r['status'],
                                       receipt_sha256=r['receipt_sha256'], chosen=r['chosen'],
                                       grade_veh_s=r['grade_veh_s'], J_policy_veh_s=r['J_policy_veh_s'],
@@ -344,7 +373,6 @@ def verified_guide(guide, verifier, controller, prefixes, job, generator, k=TOP_
             b.update(proposal_members=plan['members'], duration_s=plan['duration_s'],
                      expected_saving=plan.get('saving_vs_mappo'), group_size=len(plan['members']))
             return proposal
-        torch.rand((), generator=generator)       # pad draw == the beta draw an accepted plan consumes
         proposal.update(accepted=False, sumo_verified=False, reason=f'sumo_verify {r["status"]}: {r.get("reason")}')
         b.update(proposal_accepted=False, rejection=proposal['reason'])
         return proposal
@@ -485,9 +513,10 @@ class SubprocessBranchRunner:
         """Write the shared decision snapshot once (before the parallel branches start)."""
         import torch
         d = self.work_root/specs[0]['verification_id'];d.mkdir(parents=True, exist_ok=True)
-        tmp = d/f'.SNAPSHOT.{os.getpid()}.{time.time_ns()}.tmp';torch.save(snapshot, tmp)
-        os.replace(tmp, d/'SNAPSHOT.pt')
-        (d/'SNAPSHOT.sha256').write_text(hashlib.sha256((d/'SNAPSHOT.pt').read_bytes()).hexdigest()+'\n')
+        with (d/'SNAPSHOT.pt').open('xb') as f:
+            torch.save(snapshot, f);f.flush();os.fsync(f.fileno())
+        with (d/'SNAPSHOT.sha256').open('x') as f:
+            f.write(hashlib.sha256((d/'SNAPSHOT.pt').read_bytes()).hexdigest()+'\n')
 
     def run(self, spec, snapshot):
         import subprocess

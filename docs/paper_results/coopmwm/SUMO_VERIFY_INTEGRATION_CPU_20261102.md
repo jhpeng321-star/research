@@ -1,0 +1,10 @@
+# MAIN10:30 verifier integration — CPU-qualified, not activated
+
+- Landed verifier `8ff759fd` integrated as `26466498`, preserving recovered changes.
+- Trust draw now precedes verification. Own-policy draws launch no branches; a verified winner executes with no second trust draw. Behaviour records retain the actual beta and query mass. Both acceptance and rejection consume exactly one aligned draw; branch snapshots retain the pre-draw state.
+- Completed verification receipts are adopted only after sealed snapshot/candidate/proposer identity checks. Exclusive durable claims precede all branch charges/launches; interrupted claims never replay. Snapshot files are exclusive and cannot overwrite earlier work.
+- Verification charging now installs the explicit run-root accounting binding.
+- **82 CPU tests PASS, zero skips, zero SUMO/inference, 22.574s** on existing cpuQ environment, immutable `/home/ubuntu/coopmwm20261102_verifycpu2`. Includes15 verifier tests and67 acceleration/exact-grade/AWR/incident-recovery/concurrent-plan tests. `subprocess.Popen` is forbidden throughout qualification. Receipt: `CPU_coopmwm20261102_verifycpu2.json`.
+- Initial local attempt could not import torch; no local environment was created. First remote harness incorrectly imported unittest files under pytest's alternate package name, so four patch targets missed. All15 verifier tests passed there; original failed82-test receipt retained. CPU2 uses each suite's native runner and passes all82 without skipping or modifying existing tests.
+- **Not live:** no new SUMO verification branches, no smoke decision, no matched B/R boundary switch, no separate-grader replacement or final-endpoint deployment. These still require a resolved cap, registered verification allocation and live replay equivalence smoke. Current remote training owners/queries remain untouched.
+- Cap conflict remains explicit: resume instruction6M versus supplied later owner/canonical approvals9.5M. Existing physics is adopted; this integration adds zero simulation seconds.

@@ -96,7 +96,9 @@ class Controller:
                 if proposal['accepted']:
                     b['beta'] = bucket_beta(self.beta, proposal['option'], b['regime'])
                     b['q'] = b.get('sample_probability',1.)*b['beta']
-                    if float(torch.rand((), generator=self.generator)) < b['beta']:
+                    if (proposal.get('sumo_trust_drawn') and proposal.get('sumo_verified')) or (
+                            not proposal.get('sumo_trust_drawn') and
+                            float(torch.rand((), generator=self.generator)) < b['beta']):
                         recheck=proposal.get('overlap_recheck',{})
                         ended=set(recheck.get('truncated_plan_ids',[]))
                         if ended:

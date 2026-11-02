@@ -231,3 +231,67 @@ def test_hook_passthrough_and_random_arm():
                    dict(accepted=True, plan=cands[0], random_match=dict(path='m', key='k'), behaviour={}), rp=rp)
     out = call([], {}, 400, {})
     assert out['plan']['id'] == 'x' and out['behaviour']['sumo_verification']['grade_veh_s'] == 20.
+
+
+def test_preverification_trust_skip_never_charges_or_verifies():
+    gen = torch.Generator().manual_seed(5)
+    ctrl = FakeController(400);ctrl.beta = 0.
+    prefixes = snapshot()['prefixes'];job = dict(id='e', world={}, arm='B', runtime='rt', checkpoint='ck')
+    guide, _ = live_guide(dict(accepted=True, plan=plan('a'), behaviour={}))
+    call = sv.verified_guide(guide, lambda *a: pytest.fail('no verification'), ctrl, prefixes, job, gen)
+    out = call([], {}, 400, {})
+    assert not out['accepted'] and out['sumo_trust_drawn']
+    assert out['behaviour']['trust_follow'] is False
+    ref = torch.Generator().manual_seed(5);torch.rand((), generator=ref)
+    assert torch.equal(gen.get_state(), ref.get_state())
+
+
+def test_completed_verification_adopts_receipt_without_physics_or_charge(tmp_path):
+    cands = [plan('a', gain=1.)];snap = snapshot()
+    original = sv.verify(snap, cands, FakePlant(), lambda *a: None, root=tmp_path)
+    plant = FakePlant()
+    adopted = sv.verify(snap, cands, plant, lambda *a: pytest.fail('duplicate charge'), root=tmp_path)
+    assert adopted == original and plant.calls == []
+    changed = [dict(cands[0], saving_vs_policy=99.)]
+    with pytest.raises(ValueError, match='identity changed'):
+        sv.verify(snap, changed, plant, lambda *a: pytest.fail('charge'), root=tmp_path)
+
+
+def test_interrupted_verification_claim_never_replays(tmp_path):
+    cands = [plan('a', gain=1.)];snap = snapshot()
+    vid = sv.verification_id(snap['episode']['id'], snap['t0'], cands)
+    sv._write_new(tmp_path/'claims'/f'{vid}.json', dict(interrupted=True))
+    plant = FakePlant()
+    with pytest.raises(FileExistsError):
+        sv.verify(snap, cands, plant, lambda *a: pytest.fail('duplicate charge'), root=tmp_path)
+    assert plant.calls == []
+
+
+def test_accept_and_decline_each_consume_exactly_one_trust_draw():
+    for gain in (1., -1.):
+        gen = torch.Generator().manual_seed(5)
+        call, _ = hook(gen, lambda s, c, p: sv.verify(s, c, FakePlant(), lambda *a: None),
+                       dict(accepted=True, plan=plan('a', gain=gain), behaviour={}))
+        out = call([], {}, 400, {})
+        assert out['accepted'] == (gain > 0.)
+        assert out['sumo_trust_drawn']
+        ref = torch.Generator().manual_seed(5);torch.rand((), generator=ref)
+        assert torch.equal(gen.get_state(), ref.get_state())
+
+
+def test_real_controller_never_draws_trust_again_for_verified_plan(monkeypatch):
+    from tools.coopnative.test_cpu import rows
+    from tools.coopmwm.acceleration import Controller, Policy, encode
+    from tools.coopmwm import mppi_search
+    data = rows();context = encode(data);members = context['members']
+    monkeypatch.setattr(mppi_search, 'group_components', lambda *a, **kw: [dict(members=members)])
+    p = Policy();gen = torch.Generator().manual_seed(12);ref = torch.Generator().manual_seed(12)
+    p.sample(context, ref, False, {})  # Own action sample is the only expected draw here.
+    profile = dict(id='verified', members=members, duration_s=30, knots=[[.2]*10 for _ in members], family='MPPI')
+    def guide(*args):
+        return dict(accepted=True, sumo_trust_drawn=True, sumo_verified=True,
+                    plan=profile, option='MPPI', behaviour=dict(regime='ordinary', sample_probability=.95))
+    c = Controller(p, gen, guide=guide, beta=.5)
+    c.apply(data, {v: 0. for v in members}, 300)
+    assert c.events[-1]['sample']['behaviour']['plan_start']
+    assert torch.equal(gen.get_state(), ref.get_state())

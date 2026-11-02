@@ -38,8 +38,10 @@ the R result only when `job['sumo_verify']` is set.
 4. Quota: an accepted verification returns the proposal with the SUMO-chosen plan (counted executed
    via `guide.completed`); rejected/stopped/failed returns `accepted=False` -> quota DECISION
    executed=False. Check worker budget: 24 episodes x 5 branches concurrently.
-5. DECIDE: the Controller still applies the trust beta draw after acceptance; with beta<1 a
-   SUMO-verified plan can still be dropped. Pin beta=1 for verified plans if that is intended.
+5. MAIN10:30: the wrapper draws trust BEFORE verification. Own-policy draws run no branches;
+   follow-guide draws execute the SUMO-selected plan without another draw. The original beta
+   is retained in the behaviour receipt; each accepted proposal consumes exactly one draw,
+   whether verification accepts or rejects. Branches replay that same pre-draw RNG snapshot.
 6. Smoke before B switches (no SUMO run here): one decision on cpuQ; all 5 branches pass the prefix
    check; chosen-branch fingerprints equal the live continuation up to the next query window (CRN).
 
@@ -48,3 +50,8 @@ specs/window cap, best choice + grade, policy fallback (incl. tie), mismatch -> 
 imputation, charges kept), parallel determinism, budget arithmetic + BudgetBlocked, R variant,
 overlap guard, live hook (choice swap, RNG pad alignment, quota passthrough, R arm).
 `VerifyController`/`LocalBranchRunner` (real plant path) are not exercised on CPU.
+
+Integration repairs: durable decision claims precede charges and subprocesses; completed receipts
+are adopted only after snapshot/candidate/proposer identity checks; interrupted claims never replay.
+Snapshot files are exclusive, not replaced. Accounting installs the explicit run-root binding.
+Additional CPU tests cover pre-trust skipping, single-draw Controller execution and duplicate guards.
