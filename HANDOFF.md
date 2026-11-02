@@ -1,5 +1,21 @@
 # S-SELMAPPO fleet-picker integration handoff
 
+## Fresh resume — 2026-11-03 03:20 +08:00
+- Existing design/build/CPU gates/training remain complete; historical169updates,
+  7,728new production episodes and6,998,400charged sim-s unchanged.
+- Fresh cpuQ probe confirms original645235 and original training root absent after
+  registered owner cleanup; free20,560,855,040bytes. Local3668/44716 also absent.
+- Surviving gpuR final169 at the checkpoint path below still matches checkpoint
+  SHA256be0bb66d...457ddc and frozen receipt9dee8c4f...7a90cb. CPU weights-only
+  load/iteration169/protocol/six-controller library/finite model state PASS, nice19,
+  one thread, CUDA hidden. Full runtime probe retains its earlier peer PASS.
+- Latest peer status1793644985.9132614 retains COMPLETE fleet evaluation:
+  16worlds/480decisions/96oraclebranches,79,800charged=actual under S-C1SWITCH2.
+  Full paired WM/BB/per-CAV comparison remains incomplete; primary efficacy CI absent.
+- Evidence committed4723be1f: `docs/paper_results/selmappo/RESUME_20261103_0320.json`.
+  Local14,400evaluation reservation remains UNSTARTED; exact cap7,012,800unchanged.
+  Peer notices preserved; no restart or further fleet supervision is required.
+
 ## Fresh resume — 2026-11-03 02:06 +08:00
 - Fleet work remains COMPLETE: historical receipts bind169updates/7,728new episodes,
   6,998,400charged sim-s; local14,400evaluation reservation remains UNSTARTED.

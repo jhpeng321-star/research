@@ -1,6 +1,20 @@
 # Fleet PPO controller-selector training status
 
-## Latest reconciliation — 2026-11-03 02:06 +08:00
+## Latest reconciliation — 2026-11-03 03:20 +08:00
+- Training remains COMPLETE:169updates/7,728new episodes; charged6,998,400sim-s.
+  Local14,400evaluation reservation remains UNSTARTED; exact cap7,012,800unchanged.
+- Fresh cpuQ probe confirms original645235/root absent after registered owner cleanup;
+  free disk20,560,855,040bytes. Both historical local monitor PIDs3668/44716 absent.
+- Surviving gpuR checkpoint at the path below retains expected SHA256 and frozen
+  receipt hash. CPU weights-only load verifies iteration169, protocol/library and
+  finite model state (nice19/one thread/CUDAhidden). Full runtime probe not repeated.
+- Peer status1793644985.9132614 still records complete16-world fleet evaluation:
+  480decisions/96oraclebranches/79,800charged=actual, S-C1SWITCH2 budget-owned.
+  Full paired WM-vs-RL comparison remains incomplete; no primary efficacy CI.
+- Evidence: `selmappo/RESUME_20261103_0320.json` (commit `4723be1f`).
+  New simulation/GPU/dispatches/observers/signals:0. No fleet restart is required.
+
+## Previous reconciliation — 2026-11-03 02:06 +08:00
 - Training and fleet evaluation remain complete under the existing receipts below.
 - Owner cleanup removed the original cpuQ training directory (REGISTRATION.md Nov3
   00:38); original645235 is absent. Full-ledger validation cannot be freshly repeated
