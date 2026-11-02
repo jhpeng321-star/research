@@ -120,6 +120,11 @@ RAW_MIXTURE --new NEW_SHRUNK --lane NEW_LANE --out NEW_RECEIPT.json`.
 The local stdlib-only `verify_addendum_mirror.py` checks publication hashes and
 the40-line paper-report limit against that receipt.
 
+For a fresh-session delivery check, append `--publication DIRECTORY` for each
+later LC export to the same stdlib-only mirror command. It checks the copied
+files against each existing `VERIFIED.json` without repeating model inference,
+posterior fitting or the prior UNC runtime checks. The output is create-once.
+
 ## Generic causal posterior when tape VID cannot be resolved
 
 `MotionFit.condition_motion(predicted_next_speed[T,C], speed_before[T],
