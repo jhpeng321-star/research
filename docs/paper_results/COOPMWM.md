@@ -1,5 +1,26 @@
 # S-COOPMWM — live checks
 
+## Nov3 07:53 UTC+8 — durable automatic B-REPLAY start qualified
+- New isolated `coopmwm20261103_replaystartcpu2`: **705 Linux CPU checks PASS,
+  zero failures/skips,82.780s, zero SUMO**. The first snapshot's missing-parent
+  bridge failure is retained; corrected shared-queue publication creates its
+  metadata parents. Existing GPU numerical files/gates are untouched.
+- The watcher polls every120s and requires ten admitted B entries, all four
+  joint-release GPU owners/eight exact gates, and completed collector activation.
+  It uses fresh `replay0735` episode IDs and restores policy/Adam/RNG from u3.
+- Bank snapshots are captured nonblocking during the same24 own-policy PPO
+  episodes; additional collection episode charge is0. Shared LS broker retained;
+  R uses centre-only inference and random candidates, never WM candidate scoring.
+  Frozen-u3 admissions hand over at a no-active-grade boundary; saved labels drain.
+- Confirmation ownership transfers gracefully; whole-decision precharges and
+  no-replay claims remain enforced. Lesson checks run every update. Fixed-u8
+  interim quote is at most345,600 sim-s in its restricted900,000 phase, hash-only
+  while training continues. A/B/R final checkpoints and existing final owner retained.
+- Current live preflight: B/R remainu3, no health STOP; R's old u3 pause certificate
+  is preserved by SHA-checked relocation at the eventual launch boundary. Arrival
+  phase end1200s comes from the existing model-validity binding. Registration and
+  remote dispatch follow; **no training-start claim** at qualification.
+
 ## Nov3 07:29 UTC+8 — qualified latest budget semantics; rolling handover continues
 - Latest frozen replay source `coopmwm20261103_replayreleasecpu6` passes
   **696 Linux CPU checks, zero failures/skips,82.961s, zero SUMO**. It loads

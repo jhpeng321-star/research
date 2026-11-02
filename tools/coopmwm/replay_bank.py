@@ -116,15 +116,38 @@ def collector_guide(job, generator, controller, prefixes):
                   dict(job=job['id'], t0=int(now), max_horizon_s=max_h, demand_phase_end_s=phase_end,
                        groups=len(groups), reason='t0 + max look-ahead outside the fitted demand phase'))
             return None
-        pending = sum(not (root/'responses'/p.name).exists() for p in (root/'requests').glob('*.json'))
-        pending += sum(not (root/'centre_responses'/p.name).exists() for p in (root/'centre_requests').glob('*.json'))
+        # A resumed bank shares the historical run root. Closed engineering-wave
+        # requests are retained forever, but cannot consume current collection slots.
+        scope = None
+        if cfg.get('owned_pending_only'):
+            scope = {p.stem for a in ('B', 'R') for p in
+                     (bank_root(root, a)/'snapshots').glob('*.json')}
+        pending = sum((scope is None or p.stem in scope) and not (root/'responses'/p.name).exists()
+                      for p in (root/'requests').glob('*.json'))
+        pending += sum((scope is None or p.stem in scope) and not (root/'centre_responses'/p.name).exists()
+                       for p in (root/'centre_requests').glob('*.json'))
         room = max(0, int(cfg.get('fanout_factor', 2)*cfg['slots'])-pending)
         traffic = regime(rows)
         for group in groups[:room]:
             r = dict(world_id=job['world']['seed'], time_s=int(now), rows=rows, group=group['members'],
                      commands=commands, policy_residuals={v: float(a[0]) for v, a in
                                                           zip(sample['context']['members'], sample['own_action'])},
-                     history=history.snapshot(now))
+                      history=history.snapshot(now))
+            if arm == 'R':
+                r['mode'] = 'centre'  # centre-only rollout, never score R candidates
+            elif cfg.get('search_config'):
+                r['search_config'] = dict(cfg['search_config'])
+                if cfg.get('niche_alternation'):
+                    import fcntl
+                    from .niche_collect import search_config
+                    admissions = bank/'collection_admissions';admissions.mkdir(exist_ok=True)
+                    with (bank/'COLLECTION_ADMISSION.claim').open('a') as lock:
+                        fcntl.flock(lock, fcntl.LOCK_EX)
+                        ordinal = len(list(admissions.glob('*.json')))
+                        r['search_config'] = search_config(ordinal)
+                        write(admissions/f'{ordinal:09}.json', dict(ordinal=ordinal,
+                            job=job['id'], time_s=now, group=group['members'],
+                            search_config=r['search_config']))
             if arm == 'B':
                 if job.get('policy_state') is not None:
                     r['policy_state'] = job['policy_state']
@@ -229,6 +252,22 @@ def verify_pending(root, arm, bounds, runner, charge, workers, decided, limit=No
         meta, cands, how, match = item
         issued = time.time()
         snap = torch.load(bank/'snapshots'/(meta['state_id']+'.pt'), weights_only=False)
+        folder = 'requests' if arm == 'B' else 'centre_requests'
+        request = Path(root)/folder/(meta['state_id']+'.json')
+        if request.exists():
+            q = json.loads(request.read_text())
+            gate = sv.actionable_gate(cands, q['rows'], q['commands'],
+                snap['samples'][str(snap['t0'])], dict(accel_bounds=bounds))
+            (bank/'actionable_gates').mkdir(exist_ok=True)
+            from .storage import write
+            write(bank/'actionable_gates'/(meta['state_id']+'.json'),
+                dict(inactionable=gate['inactionable'], members_t0=gate['members_t0'],
+                     raw_k=len(cands), available_k=len(gate['actionable'])))
+            cands = gate['actionable']
+            if not cands:
+                (bank/'skipped').mkdir(exist_ok=True)
+                write(bank/'skipped'/(meta['state_id']+'.json'), dict(meta, reason='all candidates inactionable'))
+                return 'inactionable'
         r = sv.verify(snap, cands, runner, charge, how, workers=workers, root=bank/'sumo_verification')
         link = dict(state_id=meta['state_id'], verification_id=r['verification_id'], status=r['status'],
                     policy_update=meta['policy_update'], arm=arm, available_k=len(cands), issued_unix=issued,
@@ -736,7 +775,8 @@ def bank_quality(root, arm, sources=()):
              mean_cooperation_gain_veh_s=(float(np.mean(gains)) if gains else None),
              mean_cooperation_gain_ci95=_boot_ci(gains),
              synergy_twins=twins)
-    path = bank_root(root, arm)/'BANK_QUALITY.json';tmp = path.with_name(path.name+'.publishing')
+    path = bank_root(root, arm)/'BANK_QUALITY.json'
+    tmp = path.with_name(path.name+f'.{os.getpid()}.{time.time_ns()}.publishing')
     tmp.write_text(json.dumps(q, indent=1));os.replace(tmp, path)
     return q
 

@@ -209,6 +209,8 @@ def supervise(root):
         config.update(json.loads((root/'LS_FOCUS_CONFIG.json').read_text()))
     if (root/'LS_NULLFIX_CONFIG.json').exists():
         config.update(json.loads((root/'LS_NULLFIX_CONFIG.json').read_text()))
+    if (root/'LS_REPLAY_DRAIN_CONFIG.json').exists():
+        config.update(json.loads((root/'LS_REPLAY_DRAIN_CONFIG.json').read_text()))
     main=Path(config['run_root']);install_accounting(main,config['budget'])
     if config.get('operational_spend_cap'):
         from . import accel_storage
@@ -270,7 +272,7 @@ def supervise(root):
                 answered={k for k in admitted if (main/'responses'/(k+'.json')).exists()}
                 # The GPU queue stays bounded. Episodes never consult this queue.
                 inflight=admitted-answered
-                if len(admitted)<config['max_searches'] and len(inflight)<8:
+                if not config.get('drain_only') and len(admitted)<config['max_searches'] and len(inflight)<8:
                     counts={}
                     for k in admitted:
                         w=pending[k]['world_id'];counts[w]=counts.get(w,0)+1
