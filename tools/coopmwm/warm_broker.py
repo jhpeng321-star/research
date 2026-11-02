@@ -35,7 +35,11 @@ class Remote:
         if p.returncode:
             error=SSHConnectionError if p.returncode==255 else RuntimeError
             raise error((p.stdout+p.stderr).strip())
-        return json.loads(p.stdout)
+        try:return json.loads(p.stdout)
+        except json.JSONDecodeError as error:
+            # Exit 0 with truncated/empty stdout is a dropped transport stream;
+            # every RPC here is idempotent metadata, so it is bounded-retryable.
+            raise SSHConnectionError('malformed RPC stdout ('+str(len(p.stdout))+' bytes)') from error
 
     def verify(self):
         s=self.raw(dict(action='status'))
