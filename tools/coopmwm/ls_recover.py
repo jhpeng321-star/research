@@ -155,6 +155,7 @@ for d in {rows!r}:
 print(json.dumps(dict(host={host!r},unix=time.time(),workers=out,gpu=subprocess.check_output(['nvidia-smi','--query-gpu=utilization.gpu,memory.used,power.draw','--format=csv,noheader'],text=True))))''',timeout=35)
     v=json.loads(out);write(ops.EVIDENCE/f'LS_RECOVERY_GPU_{host}_{int(v["unix"])}.json',v)
     print(out)
+    return v
 
 
 def launch():
@@ -215,6 +216,7 @@ with tmp.open('x') as f:json.dump(out,f);f.flush();os.fsync(f.fileno())
 os.replace(tmp,target)
 print(json.dumps(dict(admitted_slots=[w['endpoint']['slot'] for w in admitted],unix=time.time(),amendment_sha256=out['amendment_sha256'])))''',timeout=90)
     v=json.loads(out);write(ops.EVIDENCE/f'LS_RECOVERY_ADMISSION_{int(v["unix"])}.json',v);print(out)
+    return v
 
 
 def status():
@@ -229,6 +231,65 @@ for name in ('LS_COLLECT_STATUS.json','LS_COLLECT_FAILED.json','BUDGET_ALERT.jso
 v['broker_assignments']=len(list((c/'broker_assignments').glob('*.json')));v['broker_completed']=len(list((c/'broker_completed').glob('*.json')));v['broker_failures']=len(list((c/'broker_failures').glob('*.json')))
 print(json.dumps(v))''',timeout=35)
     v=json.loads(out);write(ops.EVIDENCE/f'LS_RECOVERY_STATUS_{int(v["unix"])}.json',v);print(out)
+    return v
+
+
+def watch():
+    """Read-only publication and admission of already-dispatched qualified slots."""
+    import msvcrt,os,time
+    from .warm_transport import retry
+    from .warm_v3_watch import commit
+    lock=(ops.EVIDENCE/'LS_COLLECTION_OBSERVER.claim').open('a+b');lock.seek(0)
+    if not lock.read(1):lock.write(b'1');lock.flush()
+    lock.seek(0);msvcrt.locking(lock.fileno(),msvcrt.LK_NBLCK,1)
+    admitted=set();last_publish=0
+    def event(v):write(ops.EVIDENCE/f'LS_COLLECTION_TRANSPORT_{time.time_ns()}.json',v)
+    try:
+        while time.time()<1793894340.:
+            try:
+                gpus={h:retry(lambda h=h:gpu_status(h),lambda:None,event) for h in ('gpuA','gpuR')}
+                ready={w['owner']['root'] for g in gpus.values() for w in g['workers'] if w['ready']}
+                if ready-admitted:
+                    retry(admit,lambda:None,event);admitted|=ready
+                cpu=retry(status,lambda:None,event)
+                assert cpu['training_paused'],'collection observer never resumes training'
+                now=time.time()
+                if now-last_publish>=1800:
+                    samples={h:[read(p) for p in ops.EVIDENCE.glob('LS_RECOVERY_GPU_'+h+'_*.json')] for h in gpus}
+                    summary=dict(cpu.get('LS_COLLECT_STATUS.json',{}),observed_unix=now,
+                        owners=cpu['owners'],broker_assignments=cpu['broker_assignments'],
+                        broker_completed=cpu['broker_completed'],broker_failures=cpu['broker_failures'],
+                        disk_free=cpu['disk_free'],gpu=gpus,
+                        sampled_gpu_busy_share={h:sum(float(s['gpu'].split('%')[0].strip())>0 for s in xs)/len(xs) for h,xs in samples.items()},
+                        gpu_busy_share_contract='fraction of periodic nvidia-smi samples with nonzero utilization; includes startup qualification, not exact duty-cycle measurement',
+                        no_training_resume=True)
+                    target=ops.EVIDENCE/'LS_COLLECT_STATUS.json';tmp=target.with_suffix('.publishing')
+                    with tmp.open('w',encoding='utf-8') as f:json.dump(summary,f,sort_keys=True);f.flush();os.fsync(f.fileno())
+                    os.replace(tmp,target)
+                    paths=[str(p.relative_to(ops.LOCAL)) for pat in ('LS_RECOVERY_*.json','LS_COLLECTION_*.json','LS_COLLECT_STATUS.json') for p in ops.EVIDENCE.glob(pat)]
+                    try:commit(paths)
+                    except ValueError as e:
+                        if str(e)!='other staged work; preserve it':raise
+                    last_publish=now
+            except Exception as error:
+                # Observation failures never signal or restart remote owners.
+                write(ops.EVIDENCE/f'LS_COLLECTION_OBSERVATION_ERROR_{time.time_ns()}.json',dict(unix=time.time(),error=repr(error),remote_owners_untouched=True))
+                print('ALERT '+repr(error),flush=True)
+            time.sleep(60)
+    finally:lock.close()
+
+
+def watch_dispatch():
+    import subprocess,sys,time
+    target=ops.EVIDENCE/'LS_COLLECTION_OBSERVER_DISPATCH.json'
+    if target.exists():print(json.dumps(read(target)));return
+    with (ops.EVIDENCE/'LS_COLLECTION_OBSERVER.log').open('x',encoding='utf-8') as log:
+        p=subprocess.Popen([sys.executable,'-X','utf8','-u','-m','tools.coopmwm.ls_recover','watch'],
+            cwd=ops.LOCAL,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+    value=dict(pid=p.pid,unix=time.time(),source_sha256=sha(ops.LOCAL/'tools/coopmwm/ls_recover.py'),
+        mode='observe/publish; admit already-dispatched source-qualified slots only; no physics/worker/training dispatch')
+    write(target,value);print(json.dumps(value))
 
 
 def census(host):
@@ -261,7 +322,7 @@ print(json.dumps(dict(host={host!r},unix=time.time(),roots=out)))''',timeout=35)
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=['census','qualify','cpu_result','register','gpu','gpu_status','launch','admit','status']);p.add_argument('--host',choices=['cpuQ','gpuA','gpuR'])
+    p=argparse.ArgumentParser();p.add_argument('action',choices=['census','qualify','cpu_result','register','gpu','gpu_status','launch','admit','status','watch','watch_dispatch']);p.add_argument('--host',choices=['cpuQ','gpuA','gpuR'])
     a=p.parse_args()
     if a.action in ('census','gpu','gpu_status'):globals()[a.action](a.host)
     else:globals()[a.action]()
