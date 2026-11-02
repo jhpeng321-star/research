@@ -1,5 +1,15 @@
 # S-COOPMWM — live checks
 
+## Nov3 04:19:56 UTC+8 — offline bank builder LIVE
+- Remote durable owner **2332488/start66507374**, control directory
+  `coopmwm20261102_lscollect1/bank_builder_0406`, adopted by
+  `BANK_BUILDER_DISPATCH_0406.json`. First status verifies the owner alive with
+  branch startup in its log; admission and synergy results are not yet complete.
+- Existing rolling controller finished the authorized configuration handover:
+  **all four it2_K2 workers READY at04:10:38** (unix1793650238). The completed
+  source/parity receipts are retained in `IT2_K2_FOUR_WORKERS_READY.json`.
+  No repeated GPU qualification or training restart for this publication.
+
 ## Nov3 04:19 UTC+8 — offline bank confirmation qualified and registered
 - MAIN04:06 authorizes confirmation now without the full B-REPLAY release.
   Frozen `coopmwm20261103_bankcpu1` pins delegated revision4f090b76 and its

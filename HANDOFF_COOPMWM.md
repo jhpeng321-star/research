@@ -1,5 +1,13 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+BANKBUILDERLIVE04:19:56/unix1793650796:2332488/start66507374/bootb8bc1fcb,
+control/home/ubuntu/coopmwm20261102_lscollect1/bank_builder_0406;
+BANK_BUILDER_DISPATCH_0406.json ADOPT/NEVERredispatch. FirststatusaliveS/real
+branchstartupinlog; no completeconfirmationyet. `bank_builder_ops status`
+publishesBANK_QUALITY_B.json whenavailable. ExistingGPU/collectionownersuntouched.
+ALLFOURIT2_K2READYat1793650238(04:10:38+08); IT2_K2_FOUR_WORKERS_READY.json
+adoptedfromexistingcontroller(no repeatedgates). No B/RPPOrestart.
+
 MAIN04:06NOWREAD/overrideswaitingforREADYforOFFLINEconfirmationONLY.
 Newfrozen/home/ubuntu/coopmwm20261103_bankcpu1:59LinuxCPU PASS0skips22.650s,
 zeroSUMO; delegated4f090b76 replay_bank/sumo_verify/phasecode+offlineadapter.
