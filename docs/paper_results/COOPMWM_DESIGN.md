@@ -40,7 +40,7 @@
 39. TRAIN4/dev16 reportingonly; primaryA24/B24/R24,secondaryA48. Finalspawnfault375800sim-squarantined; MAIN1556approvedreplacement; source4/89CPU PASS explicitcheckpoint/SHA+final-onlycaps; B/Rcontinue.
 40. Final detector-first discovery uses unchanged COOPBEHAV detectors and complete exact twins.
 41. Learning checks report team return/value/KL/gradient, beta, proposal routes/acceptance/O1-O4 counts.
-42. A48/B3/R3;72episodes/14534snapshotsadopted;lslabelcpu2 223CPU PASS0skips40.235s; explicitSUMOenv/reusedpolicybranchsmokePASS;4real9branchlists/1positive,3originalzero-physicsvoidsretained; arrival1200=>t0<=780/SAMEH; B-REPLAYdelegated/pending20positivesandrelease.
+42. A48/B3/R3;72episodes/14534snapshotsadopted;lslabelcpu3 224CPU PASS0skips40.944s; SUMOenv/smokePASS;5real9branchlists/2positive,3voidsretained; 2GiBdiskWAITbeforeclaim/autoresume;4GPUslots8EXACT0; arrival1200=>t0<=780/SAMEH; B-REPLAYpending20positives/release.
 43. Recoverycap7500000: superseded811640,train2811600,checks432000,dev201600,final576000,Rtest115200,coldB28800,failedA14400; exact-plan-grades760000.
 44. Mechanics3600,calibration57600,discovery138200,pairedbranches1297400,reusecheck600; train2852400 inclMAIN1651 tenfresh-ID DNS replacements12000; allfailedchargesretained; verification2800000/exactgrade55360 plusinactivek8phase1500000.
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.

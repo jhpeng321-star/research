@@ -1,5 +1,22 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+LATESTNov3~00:07+08: FIRSTLABELRECOVERYDONE; FIVEreal9branchlists/2exactpositive
+(+522.0370,+.25219veh-s), threevoidoriginalsretained, noWMreplay. SixthfinishedWM
+searchwaitingdisk. Freshsource/home/ubuntu/coopmwm20261102_lslabelcpu3 CPU224PASS/
+0skips/40.944s/zeroSUMO, code1e1ce0c0, registration073040972ba2f0576cd4403a733141b5c7d26c44b530639789510e04c717ee97.
+MetadataONLYhandover1693668->1728233/start64944056 unix1793635162(23:59:22);
+newSUPERVISOR_SUMODISK1 adoptsALLSUMOENV1smoke/claims/labels; NEVERredeployor
+replaycompletedbranches. LS_LABEL_DISK_CONFIGadditive/originalconfigsimmutable.
+At1793635411disk2135511040<2GiB, LABEL_DISK_WAIT_SUMOENV1 recordsQUEUEDbefore
+verificationclaim/physics; automaticallyresumeswhenexistingguardpasses. No
+failedlabelfromthiswait, noguardbypass/deletion. Needstorageexpansion/explicit
+additionalSHAarchiveauthority. Current localOBSERVEV5=7152/unix1793635705;
+V4observation-onlysyntaxfailurefixed(actualremoteSTATUSPASS); old16440identity-
+verifiedTERM. Broker1485244unchanged. ALLFOURGPUworkersnowREADY8EXACT0/admitted
+(A7429/7430,R500795/494955); lastLS_ENDPOINTSfourverified1793635416. NOnewGPU
+dispatch/re-gating. TrainingA48/B3/R3; B-REPLAY releaseHARDEN_INT_READYabsent,
+bank2/20positive, Rbank0; cannotresumePPO. Agentmustnotclaimviability/fullrun.
+
 FIRSTREALSMOKE+LABELPASS: LS_FIRST_REAL_LABEL_SUMOENV1.json. By1793634788 FOUR
 real9branchlistscomplete; originalTHREEbinary-failureattemptsrecoveredwithoutWM
 replay, voidchargeskept. world986016positive+522.037018934veh-s; other3rejected/

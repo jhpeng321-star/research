@@ -137,6 +137,7 @@ assert not p.exists() or (p/'stat').read_text().split()[21]==d['start_ticks']
 labels=[json.loads(p.read_text()) for p in (c/'labels').glob('*_SUMOENV1.json')]
 print(json.dumps(dict(unix=time.time(),owner=d,state=(p/'stat').read_text().split()[2] if p.exists() else 'exited',
  smoke=json.loads((c/'LABEL_SUMO_SMOKE_SUMOENV1.json').read_text()) if (c/'LABEL_SUMO_SMOKE_SUMOENV1.json').exists() else None,
+ disk_wait=json.loads((c/'LABEL_DISK_WAIT_SUMOENV1.json').read_text()) if (c/'LABEL_DISK_WAIT_SUMOENV1.json').exists() else None,
  labels=[dict(search_id=x['search_id'],status=x['verification']['status'],branches=len(x['verification'].get('branches',[])),actual_sim_s=x['verification'].get('actual_sim_s'),grade=x['verification'].get('grade_veh_s'),reason=x['verification'].get('reason')) for x in labels],
  collection=json.loads((c/'LS_COLLECT_STATUS.json').read_text()),disk_free=shutil.disk_usage(c).free,
  log_tail=(c/('SUPERVISOR_'+suffix+'.log')).read_text()[-2200:])))'''))

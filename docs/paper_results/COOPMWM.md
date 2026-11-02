@@ -1,5 +1,23 @@
 # S-COOPMWM — live checks
 
+## Disk-safe grading wait deployed; four GPU slots qualified — Nov3 00:07 UTC+8
+- Frozen `lslabelcpu3`: **224 CPU PASS**, zero skips, **40.944 s**, zero sim-s.
+  Amendment `073040972ba2f0576cd4403a733141b5c7d26c44b530639789510e04c717ee97`.
+- Metadata/grading supervisor **1728233/start64944056** adopts every completed
+  label, smoke and claim. New work waits **before a verification claim** when
+  the existing2GiB disk guard fails, then resumes automatically when space exists.
+- Actual wait receipt: `LABEL_DISK_WAIT_SUMOENV1.json`, free **2,136,055,808 B**,
+  required **2,147,483,648 B**. No new branch claim, physics, failed label or charge
+  occurs while waiting. Storage expansion/additional archive authority is needed.
+- **Five usable k8 lists**, **two exact-positive candidates** (+522.0370 and
+  +0.25219veh-s). Three original missing-binary attempts remain void/no-outcome
+  with charges retained. A sixth WM search is complete and queued for grading.
+- All **four** GPU owners now pass eight fresh **EXACT0** gates and are admitted:
+  gpuA7429/7430; gpuR500795/494955. Existing processes are adopted without another
+  dispatch. Observer V5 **7152** continues receipt publication.
+- **A48/B3/R3**. The qualified B-REPLAY release is not ready and the bank has
+  **2/20** positive entries. No PPO restart or policy-improvement conclusion.
+
 ## Real SUMO labels flowing — 23:53 UTC+8
 - **Real policy-branch smoke PASS** (world986020), including deterministic prefix
   through t300. All nine branches completed; that list was rejected and consumed
