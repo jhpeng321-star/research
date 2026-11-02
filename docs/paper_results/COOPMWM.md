@@ -2693,3 +2693,26 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - Exact executed-plan twins: `{}`.
 - Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_009_FAILED.json`.
 <!-- warm-receipt:ACCEL_EXACT_PLAN_009_FAILED.json:5770e344353ba01ee2b890dff0e2980cafec1076a6c8e8cdfcb2e26ee8ccaea2 -->
+
+## Warm live publication — 2026-11-02T01:07:15.120833+00:00
+- Conservatively charged 3462290/7500000 sim-s.
+
+### Warm continuation — ACCEL_EXACT_PLAN_005.json
+- Exact executed-plan twins: `{"120": {"C_G": 0.0, "D_G": 0.0, "D_i": [0.0, 0.0]}, "300": {"C_G": 0.0, "D_G": 0.0, "D_i": [0.0, 0.0]}, "60": {"C_G": 0.0, "D_G": 0.0, "D_i": [0.0, 0.0]}, "600": {"C_G": 0.0, "D_G": 0.0, "D_i": [0.0, 0.0]}}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_005.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_005.json:f2a928d688bc5b7369a11b7cc97cb37ddb88429112b6dd880bda10ab1fc84bbc -->
+
+### Warm continuation — ACCEL_EXACT_PLAN_006.json
+- Exact executed-plan twins: `{"120": {"C_G": 0.0, "D_G": 0.0, "D_i": [0.0, 0.0]}, "300": {"C_G": 0.0, "D_G": 0.0, "D_i": [0.0, 0.0]}, "60": {"C_G": 0.0, "D_G": 0.0, "D_i": [0.0, 0.0]}, "600": {"C_G": 0.0, "D_G": 0.0, "D_i": [0.0, 0.0]}}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_006.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_006.json:d1251e9dc9a3af439459fc738fb5ed6e093b3007d348f2980fc4671b092cf2aa -->
+
+### Warm continuation — ACCEL_EXACT_PLAN_010_FAILED.json
+- Exact executed-plan twins: `{}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_010_FAILED.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_010_FAILED.json:334e98728cf2c7f1dcad3c350e0c728bbea51d50061518cbc1d1c58ab74f0fb4 -->
+
+### Warm continuation — ACCEL_EXACT_PLAN_011_FAILED.json
+- Exact executed-plan twins: `{}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_011_FAILED.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_011_FAILED.json:1c2bf23ef13ae3b0c11b696b2e38fe5db6dde810047597169d0ca5ce98d0f097 -->
