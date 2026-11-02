@@ -574,3 +574,36 @@ all prior implementation, receipts and source-bound panels remain preserved.
 The owner continuation window has passed. FIT's new November2 publication
 `lane_raw_5a5b15ef118c` will be checked by the existing arithmetic consumer;
 no observer or completed traffic job needs restarting.
+
+### Completed latest-source FIT count consumption
+
+`FIT_RAW_5A5B_PRECISION_20261102.json` verifies the November2 publication's
+PUBLICATION→VERIFIED hash, all six artifact hashes, native-only32FIT world
+identities,240..300 fit interval/snapshotv2, and exact world-sum arithmetic.
+All three published physical-source hashes equal the current worktree bytes:
+lc2013.py e61f897c5e7a, geometry59017d3ec30a, config28a064562878.
+This closes the old-source provenance gap of the earlierc560publication;
+it does not make its pooled-IDM/native-only scoring contract identical to
+the primary160-episode LANE panels.
+
+- Source-default:263/12383 exact directed matches/positive steps;
+  precision2.1239%, recall42.0128% of626recorded events.
+- Learned population:63.6963/549.1720 expected matches/positive steps;
+  precision11.5986%, recall10.1751%.
+- Causal shrunk posterior:60.9829/435.6549 expected matches/positive steps;
+  precision13.9980%, recall9.7417%,374.6721expected false-positive steps.
+  EventBrier0.00230751 versus always-stay0.00241988 still hides the large
+  missed-event mass. These remain ratios of expected counts, not mean-run
+  precision. No scientific improvement over thec560fit is inferred from the
+  small point changes; fitted supports and source versions differ.
+- Population mass atlcKeepRight0 is94.5493%;lcSpeedGain0 is24.5434%.
+  These are upstream motion-inferred mixture weights, not manual motivation
+  disablement. NOT ADOPTED; no autonomous/action-effect qualification.
+- Motivation-stratified upstream counts remain unavailable. Do not replace
+  primary panel14–16 per-motivation diagnostics with invented partitions.
+
+The initial local arithmetic invocation failed before output because PYTHONPATH
+did not include src; the corrected invocation used the existing Python3.13
+environment/PYTHONPATH=src. No model/tape evaluation, fitting, remote dispatch
+or signalling occurred. CPU load2%/22logical CPUs was free; CUDA hidden and
+one-thread environment used. nvidia-smi reported driver unavailable; no GPU used.

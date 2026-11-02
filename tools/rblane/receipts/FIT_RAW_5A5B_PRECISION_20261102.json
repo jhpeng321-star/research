@@ -1,0 +1,73 @@
+{
+  "status": "PASS",
+  "computation": "verified-count aggregation only; zero model/fitter/dispatch runs",
+  "fit_directory": "E:\\agent-work\\c4-rb-fit\\artifacts\\rbfit\\lane_raw_5a5b15ef118c",
+  "publication_timestamp": "2026-11-02T09:04:39+08:00",
+  "verified_sha256": "8fbdb9f7ad5744479707f02fadad5e1ba4d96f625a2cb84df4e480fa41d4ac54",
+  "artifact_sha256": {
+    "lc2013_population.json": "9a053732c1b0f9055fb912221645ca4aa9747c2c5f4aa048c6f4bd39c678fa7b",
+    "lc2013_posteriors.json": "8c0aabbe25e4ddf697be7dc60c4a66cb713b7ae372fe4b15f132736c75d07810",
+    "lc2013_shrinkage.json": "fcb24bb5c4e06954bb1be86bc910e8aaff3c1d48a8c883ab316fb5911b167cbe",
+    "validation.json": "178a2bff246acc07ce8000e443aed96786c357117575372c5482db123265d909",
+    "provenance.json": "1489ec0393dc5136cb5a5b3a843aebc68eb0021d7f06e60badde5ed2bdb17570",
+    "lane_events.json": "9305f80524cba2686d1eff7480b95c81b38d409979c07ee4e583e1d8f8c681e5"
+  },
+  "physical_source_sha256": {
+    "lc2013.py": "e61f897c5e7adadde9db2683a5657874399737b572f4cec4892cbe766ad35b2d",
+    "lc2013_geometry.py": "59017d3ec30a0363c794a4ac922148db06902bfcb8a71427f10749764d2f5bf7",
+    "config.py": "28a064562878bbcfcb508106ddb67520acde798ba043220f0be105b446bc4f32"
+  },
+  "current_source_sha256": {
+    "lc2013.py": "e61f897c5e7adadde9db2683a5657874399737b572f4cec4892cbe766ad35b2d",
+    "lc2013_geometry.py": "59017d3ec30a0363c794a4ac922148db06902bfcb8a71427f10749764d2f5bf7",
+    "config.py": "28a064562878bbcfcb508106ddb67520acde798ba043220f0be105b446bc4f32"
+  },
+  "same_source_as_current": true,
+  "parameters": "published joint mixture, persistent per driver; no averaged-parameter execution",
+  "inference": "native FIT240..300 only; internal empirical Bayes; later300..360 conditional scoring",
+  "scores": {
+    "raw_physics_population": {
+      "scored_steps": 258691,
+      "recorded_events": 626,
+      "expected_positive_steps": 549.1719626443486,
+      "expected_exact_directed_matches": 63.69631104950481,
+      "expected_false_positive_steps": 485.4756515948438,
+      "precision_ratio_of_expected_counts": 0.11598609430604787,
+      "recall_ratio_of_expected_counts": 0.1017512956062377,
+      "event_brier": 0.002317985808938871,
+      "always_stay_event_brier": 0.002419875449861031
+    },
+    "raw_physics_shrunk_posterior": {
+      "scored_steps": 258691,
+      "recorded_events": 626,
+      "expected_positive_steps": 435.654937240321,
+      "expected_exact_directed_matches": 60.98286147426663,
+      "expected_false_positive_steps": 374.6720757660544,
+      "precision_ratio_of_expected_counts": 0.13997973226371715,
+      "recall_ratio_of_expected_counts": 0.09741671162023423,
+      "event_brier": 0.002307512466663763,
+      "always_stay_event_brier": 0.002419875449861031
+    },
+    "raw_physics_source_default": {
+      "scored_steps": 258691,
+      "recorded_events": 626,
+      "expected_positive_steps": 12383.0,
+      "expected_exact_directed_matches": 263.0,
+      "expected_false_positive_steps": 12120.0,
+      "precision_ratio_of_expected_counts": 0.02123879512234515,
+      "recall_ratio_of_expected_counts": 0.42012779552715657,
+      "event_brier": 0.048254481215040335,
+      "always_stay_event_brier": 0.002419875449861031
+    }
+  },
+  "fitted_population_zero_boundary_mass": {
+    "lcStrategic": 0.007981232328881342,
+    "lcCooperative": 0.005798962620781084,
+    "lcSpeedGain": 0.2454335168165324,
+    "lcKeepRight": 0.9454928091384812
+  },
+  "per_motivation": null,
+  "per_motivation_unavailable": "upstream publication lacks motivation-stratified counts",
+  "adopted": false,
+  "scope": "different frozen source/pooled IDM from LANE panels; not a current-panel replacement or autonomous qualification"
+}
