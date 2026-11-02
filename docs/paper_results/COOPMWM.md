@@ -1,5 +1,25 @@
 # S-COOPMWM — live checks
 
+## Nov3 ~02:03 UTC+8 — registered it2_K2 GPU qualification in progress
+- Frozen `lsfastcpu3`: **231 Linux CPU PASS**, zero skips, **40.538 s**, zero
+  sim-s; local ownership/payload/config tests **14 PASS**. Registration V4 SHA
+  `a3de7cf464bb5f23566c705e03230c54fa237e16d0a46766adae07ffe5f29b78`.
+- Existing workers cannot reload search settings. The registered rolling
+  handover drains/delivers the original search first, then verifies actual
+  process exit and lock release. Failed startup attempts are retained; their
+  recovery-flag and shutdown-lock races occurred before GPU qualification.
+- New gpuA **110917** and gpuR **576918** are running qualification. They must
+  pass exact **K2/H300** full/fast and warm batch/single checks plus all **eight
+  fresh inherited gates**. The other two slots continue searching. Samples:
+  gpuA86%, gpuR97%. No activation or throughput improvement is claimed yet.
+- Detached rolling controller **17620** sequences the remaining two slots only
+  after the first pair is READY; observer **34592** publishes and admits gated
+  owners. Broker1941060 and grading1834956 continue. No SUMO job was launched
+  for these qualification steps; fresh-message6M spending guard remains.
+- Latest bank receipt: **25** real nine-branch lists, **8** selected positives,
+  **0 confirmed / 0 admitted**. The ten-confirmed-entry restart gate is unmet.
+  Delegated B-REPLAY and niche READY receipts are absent; B/R remainu3.
+
 ## Nov3 01:20 UTC+8 — latest priority adopted; mirror remains failed
 - Four GPU slots and grading owner1834956 are live; disk13.9GB and unblocked.
   Read-only probes show21 usable nine-branch lists/five selected positives.

@@ -1,5 +1,21 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+Nov3~02:03 CURRENT: controllerV3=17620/start1793642480.6450145 LIVE,
+logLS_FAST_ROLL_V3.log; observerV9=34592/start1793642546.7220485 LIVE.
+NEVERduplicate either. PreviouscontrollerV2=26152creation/argvverifiedTERM
+(metadataonly). BothfirstV3successors failedBEFOREgates onoldworkerflock
+release race (emptyargv != completedexit); allclaimssettled/chargesretained.
+V4AMENDMENTa3de7cf4 usesSAMECPU231-qualifiedwrapper/source3, metadata
+launcherwaitsACTUALexit/zombieandprobeslockreleaseBEFOREhelperlaunch.
+NEWfirst-tierA110917/start902271778,R576918/start4226914352 areRUNNING
+GPUqualification, zero gates/variantnotfinished atlatestprobe; A86%/R97%.
+OtherworkersA7430/R494955 stayREADY/searching. Newdispatch/lognames
+FASTK2V3_RECOVERY preserveallfailedfiles, sourcewrapperhash5ae51ad4.
+Noquery/episode replay. All8+K2gate requiredbeforeREADY/admit; controller
+thenupgradesother2. ActivationNOTyetclaimed. Rawmemory/history unchanged.
+Prompt601lines/MAIN01:33 read; NICHE_READY/delegatedHARDEN_INT_READYabsent.
+Fresh6Mguard remains. StillA48/B3/R3; grading1834956/broker1941060continue.
+
 Nov3~01:54: FAST V3 qualification231CPU PASS0skips40.538s/zeroSUMO,
 source/home/ubuntu/coopmwm20261103_lsfastcpu3, amendment2ec30ae0.
 Rollinglocalcontroller V2=26152/start1793642031.3420317 CONTINUES firsttier

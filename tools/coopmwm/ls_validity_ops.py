@@ -172,7 +172,7 @@ for d in {rows!r}:
  workers.append(dict(owner=d,state=st[2] if st else 'exited',ready=ready,gates=gates,
   failure=json.loads(failure.read_text()) if failure.exists() else None,
   new_forecasts=len(completed),successful_searches=sum(x['result'].get('proposer_receipt') is not None for x in completed),
-  log_tail=(r/('LS_GPU_'+generation+'.log')).read_text()[-1800:],variant_gate=json.loads(variant.read_text()) if generation.startswith('FASTK2') and variant.exists() else None))
+  log_tail=(r/d.get('log_name','LS_GPU_'+generation+'.log')).read_text()[-1800:],variant_gate=json.loads(variant.read_text()) if generation.startswith('FASTK2') and variant.exists() else None))
 print(json.dumps(dict(host={host!r},unix=time.time(),workers=workers,gpu=subprocess.check_output(['nvidia-smi','--query-gpu=utilization.gpu,memory.used,power.draw','--format=csv,noheader'],text=True))))''')
     v=json.loads(out);write(ops.EVIDENCE/f'LS_VALIDITY_GPU_{host}_{__import__("time").time_ns()}.json',v)
     print(json.dumps(dict(host=host,gpu=v['gpu'],workers=[dict(owner=w['owner'],state=w['state'],ready=w['ready'],gates=len(w['gates']),failure=w['failure'],successful_searches=w['successful_searches'],log_tail=w['log_tail']) for w in v['workers']])))
@@ -525,7 +525,7 @@ def focus_watch_dispatch():
 def fast_watch_dispatch(generation=7):
     """Observe rolling successors by exact owner identity; never launch inference."""
     import psutil,subprocess,sys,time
-    assert generation in (7,8)
+    assert generation in (7,8,9)
     p=ops.EVIDENCE/f'LS_VALIDITY_OBSERVER_DISPATCH_V{generation}.json'
     if p.exists():print(json.dumps(read(p)));return
     assert (ops.EVIDENCE/'LS_FAST_BROKER_DISPATCH_V2.json').exists()
@@ -549,6 +549,10 @@ def bank_watch_dispatch():
     fast_watch_dispatch(8)
 
 
+def roll_watch_dispatch():
+    fast_watch_dispatch(9)
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=['qualify','cpu_result','register','gpu','gpu_status','cpu','admit','status','watch','watch_dispatch','focus_watch_dispatch','fast_watch_dispatch','bank_watch_dispatch','cap_register','throughput','support','recover_secondary','recover_primary']);p.add_argument('--host',choices=['gpuA','gpuR'])
+    p=argparse.ArgumentParser();p.add_argument('action',choices=['qualify','cpu_result','register','gpu','gpu_status','cpu','admit','status','watch','watch_dispatch','focus_watch_dispatch','fast_watch_dispatch','bank_watch_dispatch','roll_watch_dispatch','cap_register','throughput','support','recover_secondary','recover_primary']);p.add_argument('--host',choices=['gpuA','gpuR'])
     a=p.parse_args();globals()[a.action](a.host) if a.action in ('gpu','gpu_status','support') else globals()[a.action]()
