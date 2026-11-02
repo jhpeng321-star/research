@@ -1,6 +1,15 @@
 # S-SELMAPPO2 — per-CAV MAPPO controller picker
 
-## Status (reconciled 2026-11-02)
+## Status (reconciled 2026-11-03)
+
+**02:33+08 fresh-session verification:** the original final collection validates
+COMPLETE/169updates/7774production/0open under its explicit final169 checkpoint
+pin. Local/peer handoff bytes match and the latest report-linked169-row learning
+curve has the same CSV/SVG hashes as the previously verified final curve.
+Watcher12432 has EXITED at its configured48-hour deadline: final event
+`WATCH_DEADLINE`, Unix-ns1793642668608050000; fresh exact-PID lookup is empty.
+Its earlier LIVE status below is historical. Training supervision through final169
+is fulfilled. Evidence: `selmappo2/RESUME_20261103_0233.json`.
 
 **23:35+08 fresh-session verification:** final training remains COMPLETE:
 169updates/7774production/0open; explicit continuation build/PID/final169
@@ -64,7 +73,8 @@ peer's terminal-scope protocol. The selector's standing same-cap training repair
 authority does not supersede the evaluation owner's dispatch gates. Hash-bound
 status: `selmappo2/PEER_STATUS_20261102.json`; newer peer inspection hash:
 `selmappo2/RESUME_20261102_2335.json`.
-Watcher12432 remains available to import an explicit hash-bound peer receipt.
+Watcher12432 subsequently exited at its configured48-hour deadline; a future
+complete peer receipt needs an explicit byte-pinned offline import.
 Earlier status paragraphs below are historical snapshots, superseded by this final.
 
 **12:15 +08:00 / MAIN12:14 continuation:** active supervision now continues until
@@ -350,11 +360,11 @@ J600 is full-team delay over the 600 s control interval; lower is better. Each p
 
 
 
-![Training learning curve](selmappo2/selmappo2_curve_1793555693498991700_d0a8501561f74218bcf1e148136e76f1.svg)
+![Training learning curve](selmappo2/selmappo2_curve_1793642368560668700_0e2855f6d2804437a0c808ac52bd99f9.svg)
 
 
 
-[Complete-update metrics CSV](selmappo2/selmappo2_curve_1793555693498991700_d0a8501561f74218bcf1e148136e76f1.csv)
+[Complete-update metrics CSV](selmappo2/selmappo2_curve_1793642368560668700_0e2855f6d2804437a0c808ac52bd99f9.csv)
 
 
 

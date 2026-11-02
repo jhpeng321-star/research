@@ -5,6 +5,17 @@ Original advance-approved exact cap7,012,800; designSHA09499f2af60311b3690a940dc
 
 ## Current state
 
+**Nov3 02:33+08 fresh-session verification:** final collection still validates
+COMPLETE/169updates/7774production/0open with the explicit final169 pin.
+Watcher12432 is now EXITED: exact PID lookup is empty and its final event is
+`WATCH_DEADLINE` after its configured48hours, Unix-ns1793642668608050000.
+The earlier LIVE watcher statements below are historical. Training supervision
+through final169 is complete. Preserve its consumed ownership claim and terminal
+events; no replacement monitor is required while peer evaluation is terminal.
+Local/peer final handoff bytes match, and the latest report-linked169-point
+CSV/SVG have the same hashes as the previously retained final curve. Evidence:
+`selmappo2/RESUME_20261103_0233.json`. No new dispatch or simulation.
+
 **Nov2 23:35+08 fresh-session verification:** original final collection validates
 COMPLETE/169updates/7774production/0open with the explicit continuation build,
 PID and final169 checkpoint pin. Watcher12432 still matches exact process/source
