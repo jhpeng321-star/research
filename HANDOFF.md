@@ -5,13 +5,14 @@ published; current-source physical LS fit reused the completed decision cache.
 All three owned job PIDs exited. Old watcher exited; no repeated LC inference.
 Recovery receipt:`artifacts/rbfit/receipts/RESUME_20261102.md`.
 
-Fresh resume2026-11-03:clean HEADf034bcb3 preserved; LANE physics still80541278
-with no source edits. Read-only cpuQ checks confirm all three recovery jobs
-complete/verified/exited; local watcher23604 absent. Reconciliation:
-`receipts/RESUME_20261103.md`. Existing exports remain the current delivery.
+Latest fresh resume2026-11-03:clean HEAD2146343c preserved; LANE physics still
+80541278 with no source edits. Read-only cpuQ checks confirm all three recovery
+jobs complete/verified/exited; local watcher23604 absent. Reconciliation:
+`artifacts/rbfit/receipts/RESUME_FRESH_20261103.md` (commitcd88354c).
 Local mirror PASS:29artifact hashes across the original IDM/LC bundle and all
-three recovered LC publications; report40lines. Receipt:
-`receipts/DELIVERY_MIRROR_20261103.json`. Prior numerical/UNC checks retained.
+three recovered LC publications; report40lines. Receipt (commitef8aab0a):
+`artifacts/rbfit/receipts/DELIVERY_MIRROR_FRESH_20261103.json`.
+Prior receipts/numerical/UNC checks retained; no pending new-source fit found.
 
 <!-- LC-CONTINUATION:BEGIN -->
 Latest verified `lane_raw_5a5b15ef118c` (2026-11-02T09:04:39+08:00); LC SHAe61f897c5e7a, snapshotv2;3130driver posteriors.

@@ -20,3 +20,13 @@
   next step is a local publication-integrity check and handoff update.
 - No fit, inference, simulation, watcher restart, GPU work, raw tape access,
   downloaded code, process signals, or peer edits occurred during reconciliation.
+
+## Completion
+- Reconciliation committed `cd88354c`; publication-integrity receipt committed
+  `ef8aab0a`. `DELIVERY_MIRROR_FRESH_20261103.json` reports PASS for29 hashes
+  (11 original artifacts plus6 in each of the three recovered publications).
+- `RBFIT.md` is still40 lines. Handoff points to this session's exact receipts;
+  prior reports, models, posteriors, sources, failures and runtime evidence remain.
+- No new fit/publication was needed. LC remains experimental/not adopted;
+  shrinkage is not demonstrated repair of600s action-effect signs. No numerical
+  tests were repeated because model/runtime code and artifacts are unchanged.
