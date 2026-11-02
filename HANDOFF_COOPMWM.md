@@ -1,5 +1,29 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+CURRENT0818TAILREPAIR: newtransition3907544/start59459454/sourceTAILCPU3 LIVE
+since1793580316; ADOPTSoriginalfrozenu2wave/checkpointu1, NEVERredispatch.
+Oldtransition3874249washeldONLYafterrealCPUpreflightcaughtcompressedRESULT
+markerdecodefaultBEFOREanyBlaunch; nowverifiedterminated. SOURCE3fixusesexisting
+accel_storage.read,141CPU/PASS0skips27.091s/zeroSUMO. Realpreflight1793580384PASS:
+checkpoint6606191e940f..., exacttorchRNG/17Adamstates,1226diagnosticrecords,
+prior3selectiondraws, TWOlibraryentries; restoredstateSHA1853bfb4d653521c... .
+Earlierpreflight1793580252library_entries1wascontainer-keycountonly, corrected2;
+stateSHAidentical/fulltrust-libraryequalityPASS. Initialread-onlyfailurekept.
+Currentbroker3893211/start59424477/taildraincpu2 LIVE since1793579967,48CPU/PASS.
+ReplacedONLYverified3706352 viaexactrootlessserveargv+boot/start+sourcePYTHONPATH;
+firstlauncheridentityrefusalwasBEFOREsignals, config1kept, registeredV2.
+One-timeu2drainONLYafterexecutedquota10; ALLassignedoriginalGPUclaimsadopted,
+newunassignedold-wavequeriesdeclined; autoRESTOREatTAIL_HANDOVER_COMPLETE beforeu3.
+Last1793580332A48/B1/R1; Bu2all24claimed/22closed; oldB3551873parentTdeliberate,
+SUMOchildren/GPU/grader3427015/R3551874continue. Originalpending986064t340gpuR@1,
+986038t350gpuR@0 STILLOWNED/incomplete; noqueryreplay/cancellation. Current
+transition/brokerlogsEMPTY/noSTOP. Use `tail_ops status` FIRST; recognizesnewowners.
+AwaitALL24closures->TAIL_HANDOVER_COMPLETE->TAIL_B_DISPATCH->Bu2apply->u3fanout.
+NoCPU/GPU/physicsqualificationrepeatsbesidefault-drivenCPUreleasequalification.
+Observe-only1372 andtelemetryV3 24140continue; allcharges/cap/deadlineunchanged.
+Latestexactevidencestill11Bplans/10worlds mean224.8358 CI[-35.3982,596.7440];
+NOviabilityconclusion. Bu4..6packagepending; numericalcommandmirrorstillOFF.
+
 MAIN0818TAIL qualified139CPU/PASS0skips27.055s/zeroSUMO; immutabletailcpu2,
 code219433e7, registrationf1f363f2/amendmente9af582e914d8a44... BEFOREdeployment.
 OwnedremoteTAIL_TRANSITION3874249/start59377221 DISPATCHEDonce1793579494,
