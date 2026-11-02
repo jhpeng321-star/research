@@ -481,3 +481,28 @@ comparisons remain alive on GPU A and were preserved without duplication:
 `parity300` PID552087/start892109765 and `parity60wide`
 PID552073/start892109667. Their immutable roots remain under the WMSPEED2 root;
 they are not dependencies of the completed CPU/GPU qualifications above.
+
+### Fresh-session recovery — 2026-11-02
+
+At10:00 both hosts' WMSPEED2 owner inventories contain **no live task processes**.
+GPU A is99% utilized with two owner compute processes; GPU R has two owner compute
+processes and23,204MiB allocated despite a0% utilization sample. Neither device
+passes this task's idle-device admission rule. No additional GPU probe was launched.
+Inventory receipts: `WMSPEED2_gpu{A,R}_resume20261102_inventory.json`.
+
+The two inherited CPU runs completed and their original receipts are now collected:
+`WMSPEED2_gpuA_parity300.json` and `WMSPEED2_gpuA_parity60wide.json`. Both report
+zero cost error, identical rankings, exact presence masks and zero reported
+position/speed/acceleration error, but **fail their original lane gate**. They are
+not counted as successful trajectory qualifications or added speed-up claims.
+Inspection of the immutable `parity300` harness confirms that it compares lanes
+over all1,600 slots, including virgin placeholders; its kinematic comparison uses
+only current presence and does not include the exit movement. It does not persist
+trajectory tapes, so these receipts alone cannot localize the lane mismatch to
+real vehicles versus placeholders. Their failed results remain unchanged.
+
+The later cohort-aware gate above includes exit movements and excludes virgin
+placeholders consistently for all trajectory fields. The already-published exact
+CPU and cold/warm GPU qualifications use that corrected gate. The recommended
+`fcc50296` release and its startup exact-parity requirement remain the handoff;
+these older failed probes do not qualify any additional deployment configuration.
