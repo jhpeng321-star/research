@@ -48,7 +48,8 @@ def install_accounting(root=None):
     if root is not None:
         import json
         from pathlib import Path
-        r=Path(root);p=r/'VERIFICATION_RUNTIME_BINDING.json'
+        r=Path(root);p=r/'VERIFICATION_CONTINUATION_BINDING.json'
+        if not p.exists():p=r/'VERIFICATION_RUNTIME_BINDING.json'
         if not p.exists():p=r/'INCIDENT_RECOVERY_BINDING.json'
         if p.exists():
             v=json.loads(p.read_text())

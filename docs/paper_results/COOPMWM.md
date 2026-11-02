@@ -1,5 +1,25 @@
 # S-COOPMWM — live checks
 
+## SUMO VERIFICATION LIVE — common update 4
+- Actual B/R continuation starts **15:23:20 / 15:23:31 UTC+8**; durable live
+  publication **15:25:29**. Frozen `verifycpu12`: **105 CPU PASS**, zero skips,
+  28.041 s. Both arms adopt their u3 checkpoints, optimizer/RNG and trust state.
+- B takes up to four WM candidates; R takes four random candidates. Trust is
+  drawn first. Exact SUMO picks a strict improvement over policy, and its grade
+  is reused for trust/imitation. R's existing beta is **0** after its three
+  legacy exact grades, so its trust draws currently select policy; not reset.
+- Detached owners: **B598899/R599343/grader598089**. Broker545008 and all four
+  qualified GPU workers retained. Both supervisors have fixed **u24** endpoints.
+  Latest state has no active STOP/health pause.
+- Activation preflight found all 24 old B-u4 attempts had warmed to t300 after
+  disk admission recovered, then stopped on the pre-existing V3. No RESULTs or
+  control outcomes exist. All original charges remain. Registered amendment
+  `e84d10e6…` funds **28,800 sim-s** same-cell TRAIN replacements from discovery
+  (179,000→150,200, above the 120,000 floor), within the unchanged 9.5M cap.
+- The transient SSH closure did not cancel the remote binder: its completed
+  receipt was adopted before dispatch. No duplicate binder or episode replay.
+- Final primary A24/B24/R24 hook migration and B-u4–6 viability remain pending.
+
 ## Real five-branch verification smoke passed — 15:13:08 UTC+8
 - Pre-registered first eligible B-u3 TRAIN decision: world986000 at t470.
   **All five exact branches pass prefix and CRN checks.** SUMO rejected all four

@@ -1,5 +1,21 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+SUMOVERIFICATIONLIVE commonu4 unix1793604329 (15:25:29UTC+8); actualBstarted
+15:23:20/R15:23:31. Frozenverifycpu12/105CPU/PASS0skips28.041s; original
+fivebranchsmokegateadopted. NEWownedB598899/start61845041,R599343/start61846054,
+grader598089/start61844043; currentbroker545008retained/4GPUworkersunchanged.
+Bothu3optimizer/RNG/trust/library restored; currentendpointsB24/R24. Rbeta0
+from3exactlegacygrades (so noverificationwhenowntrustdraw); NEVERresettrust.
+ActivationSSHclosedbutremote591503completed; adoptedbinding/preflight/no retry.
+PreflightcaughtOLD B4all24CLAIM+CLOSE(actual300/noRESULT): originalBadvanced
+diskguardbeforeV3noticed. Registered e84d10e6 transfer28800 discovery->train;
+discovery150200>=floor120000; total9.5Munchanged. Same-cellascendingTRAIN
+replacements/nofailedIDreplay. EarlierB4zero-claimnotesaresuperseded, retained.
+Lateststate1793604196A48/B3/R3, ownersLIVE/stopNULL/noPAUSE. Observerstateupdated
+forMATCH/VERIFIEDbindings/owners;16CPU/PASS. Needrefresholdlocalobserverafter
+identitycheck; finalA24/B24/R24hookmigrationstillpending. OriginalGPUdeadline
+18:07:02notextended; registerresourcecontinuationbeforeexpiry. NoVIABILITYclaim.
+
 REALVERIFICATIONSMOKEPASS unix1793603588 (15:13:08UTC+8). ONEdecisionTRAIN
 986000/u3/t470,5branchesPREFIX+CRNPASS; exactrejectedall4, livePOLICYbranch
 11fingerprints470..480EXACT. Initialhelperrequiredacceptedoutcome; registered

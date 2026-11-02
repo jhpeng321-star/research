@@ -30,7 +30,8 @@ def enqueue(root,b,ep,u,arm,beta):
 
 
 def assert_live(root):
-    p=Path(root)/'MATCH_GRADER_DISPATCH.json'
+    p=Path(root)/'VERIFIED_GRADER_DISPATCH.json'
+    if not p.exists():p=Path(root)/'MATCH_GRADER_DISPATCH.json'
     if not p.exists():p=Path(root)/'INCIDENT_GRADER_DISPATCH.json'
     if not p.exists():p=Path(root)/'EXACT_GRADER_DISPATCH_V2.json'
     d=read(p if p.exists() else Path(root)/'EXACT_GRADER_DISPATCH.json')

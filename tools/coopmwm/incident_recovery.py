@@ -43,7 +43,8 @@ def retired_key(record,job_ids):
 
 
 def binding(root):
-    r=Path(root);p=r/'MATCH_RECOVERY_BINDING.json'
+    r=Path(root);p=r/'VERIFICATION_CONTINUATION_BINDING.json'
+    if not p.exists():p=r/'MATCH_RECOVERY_BINDING.json'
     b=json.loads((p if p.exists() else r/'INCIDENT_RECOVERY_BINDING.json').read_text())
     assert b['amendment_sha256'] in (r/'AUTHORITY.md').read_text()
     assert b['cpu']['pass_'] and b['cpu']['skips']==b['cpu']['sim_s']==0
@@ -91,6 +92,7 @@ def install(root,arm=None):
             workers=24 if a=='B' else 4,quota_aware_admission=True,parallel_group_queries=a=='B',
             precharged_unattempted=b['plans'][a]['precharged_unattempted'])
         if a in b.get('stop_after_update',{}):result['stop_after_update']=b['stop_after_update'][a]
+        if b.get('sumo_verify'):result['sumo_verify']=copy.deepcopy(b['sumo_verify'])
         return result
     wr.verify=verify
     return wr,b

@@ -40,9 +40,9 @@
 39. TRAIN4/dev16 reporting only; latest fixed primaryA24/B24/R24, secondaryA48; existing final supervisors still need qualified endpoint migration before release.
 40. Final detector-first discovery uses unchanged COOPBEHAV detectors and complete exact twins.
 41. Learning checks report team return/value/KL/gradient, beta, proposal routes/acceptance/O1-O4 counts.
-42. A48complete,B/R24 endpoints x24episodes x1200; health guards active, u4 viability publication without owner-review pause; seed2 dropped. Verifier CPU9/100PASS, real fivebranch smoke/common-boundary activation pending.
+42. A48complete,B/R24endpoints; healthguards active/no owner-reviewpause; verifierCPU12/105PASS,real5branchPREFIX-CRN/live11fingerprintsPASS; B/RexactverificationLIVEfromcommonu4,pretrustdraw,winningbranchgradesreused.
 43. Recoverycap7500000: superseded811640,train2811600,checks432000,dev201600,final576000,Rtest115200,coldB28800,failedA14400; exact-plan-grades760000.
-44. Mechanics3600,calibration57600,discovery179000,pairedbranches1036800,reusecheck600; allocated7028840/free471160; new verifier phase requires cap resolution/registration/smoke before physics.
+44. Mechanics3600,calibration57600,discovery150200,pairedbranches1036800,reusecheck600; train+28800failed-u4replacements; verification2800000/exactgrade431160; allocated9500000/free0.
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.
 46. All failures/warmup/twins precharged/no refunds or automatic retries; af8b16e5 permits one qualified new-ID attempt per missing failed diagnostic branch, complete originals adopted, whole missing group charged inside discovery200000.
 47. A48complete; B24/R4/grader4nice19; MAIN0423 up to24 CPU-only precompute workers SCHED_IDLE/nice19, grade-queue priority/load<28/MemAvailable+RAMfree8GiB/disk2GiB gates; no retries.
