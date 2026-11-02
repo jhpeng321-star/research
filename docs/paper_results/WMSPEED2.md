@@ -553,3 +553,20 @@ The worktree was clean at entry on `9b76cdc8`. Comparing the numerical source to
 release/hot-swap handoff were verified. Existing exact cold/warm qualification,
 79+7 passing CPU tests, and the source-bound recipe above remain the evidence.
 No completed comparison was rerun and no new inference or training was dispatched.
+
+### Follow-up recovery — 2026-11-02 22:39 host time
+
+Fresh inventories committed as `304c4852` find **no live WMSPEED2 jobs**.
+GPU A is 73% utilized with 44,329 MiB allocated and two compute processes;
+GPU R is 16% utilized with 17,121 MiB allocated and one compute process.
+Neither device passes idle-device admission, so further GPU speed experiments
+remain capacity-blocked. Receipts are
+`coopmwm/WMSPEED2_gpu{A,R}_resume20261102d_inventory.json`.
+
+The integrated full-roster qualification receipts were re-read: warm H120/K4/w34
+remains 4.529x and cold H300/K8/w10 remains 2.496x, with zero cost/trajectory
+errors and identical ranks/draw IDs. Numerical source still matches `fcc50296`;
+only the inventory helper differs under `tools/coopmwm`. Existing CPU 79+7 passing
+evidence applies. The single canonical engineering-amendment entry and owner's
+release/hot-swap handoff were verified and preserved. No completed test or probe
+was repeated, no inference/training was launched, and no process was changed.
