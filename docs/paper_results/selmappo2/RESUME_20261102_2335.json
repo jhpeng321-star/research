@@ -1,0 +1,43 @@
+{
+  "schema": "selmappo2.resume_reconciliation/2",
+  "verified_at": "2026-11-02T23:35:36.629674+08:00",
+  "training_state": "COMPLETE",
+  "verified_updates": 169,
+  "verified_production_episodes": 7774,
+  "open_reservations": 0,
+  "actual_training_sim_s": 6997800,
+  "reserved_training_sim_s": 6998400,
+  "original_cap_sim_s": 7012800,
+  "local_evaluation_sim_s": 0,
+  "checkpoint_sha256": "82c6745bac50aaf4dee98f5d8b3c60db0e5e558d9abf4667dd8e605774f4b3c4",
+  "collection_sha256": "a8a08f8c30279c1473b78421d740332e2ef158f3ad117ad8839851723e1de8c0",
+  "handoff_sha256": "9ae72e2702aac270afb97e0dce555006c651c040925f3885127e40ba18ced30e",
+  "handoff_peer_bytes_equal": true,
+  "watcher": {
+    "ProcessId": 12432,
+    "ExecutablePath": "C:\\Users\\jpeng\\miniconda3\\python.exe",
+    "CommandLine": "C:\\Users\\jpeng\\miniconda3\\python.exe -B E:\\agent-work\\c4-selmappo2\\scripts\\selmappo2_watch.py --watch",
+    "CreationDate": "/Date(1793469838604)/"
+  },
+  "exact_watcher_source_verified": true,
+  "verified_curve_rows": 169,
+  "curve_asset_sha256": {
+    "selmappo2_curve_1793555693498991700_d0a8501561f74218bcf1e148136e76f1.csv": "e40639362b2015d43a2eef300e2a5c87d129228f1cc1ed52481adec8a7d36e07",
+    "selmappo2_curve_1793555693498991700_d0a8501561f74218bcf1e148136e76f1.svg": "de06c0073b30a252d2bbc7e200232383ea84352ee800c6e15fb0700f48a97117"
+  },
+  "all_curve_rows_retain_600_sim_s_smoke_accounting_gap": true,
+  "peer_status_path": "E:\\agent-work\\c4-c1switch2\\tools\\c1switch2\\evidence\\RESUME_RECONCILIATION_1793622925.json",
+  "peer_status_sha256": "0f39eaf3d39def959de3aa7e34f3523330713ff2b93f945e7ff0334119870cf5",
+  "peer_status_unix": 1793622891.1726491,
+  "peer_status_is_remote_inspection_this_session": false,
+  "peer_evaluation_state": "INCOMPLETE_TERMINAL_SCOPES",
+  "peer_complete_episodes": 2,
+  "peer_evaluation_charged_sim_s": 3300,
+  "peer_evaluation_closed_actual_sim_s": 2980,
+  "peer_evaluation_manifest_exists": false,
+  "new_dispatches": 0,
+  "new_sumo_seconds": 0,
+  "new_remote_polls": 0,
+  "next_dependency": "Explicit MAIN authority for peer-owned unstarted-scope continuation, immutable admission gates, and complete byte-pinned final-policy panel results.",
+  "invocation_note": "First offline report CLI omitted the continuation --build and failed ownership validation before any write; corrected explicit build/PID/final169 invocation passed."
+}

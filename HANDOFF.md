@@ -5,6 +5,21 @@ Original advance-approved exact cap7,012,800; designSHA09499f2af60311b3690a940dc
 
 ## Current state
 
+**Nov2 23:35+08 fresh-session verification:** original final collection validates
+COMPLETE/169updates/7774production/0open with the explicit continuation build,
+PID and final169 checkpoint pin. Watcher12432 still matches exact process/source
+identity; local/peer final handoff bytes and all169 retained curve rows validate.
+The newer C1SWITCH2 Nov2 20:37 reconciliation supersedes its01:46 status below:
+all recorded peer CPU/GPU supervisors and its deadline-complete observer20260
+are EXITED, with per-CAV evaluation still2/16episodes/3300charged/2980closedactual.
+Peer receipt SHA`0f39eaf3d39def959de3aa7e34f3523330713ff2b93f945e7ff0334119870cf5`;
+this is a peer-published remote inspection, not fresh SSH from this session.
+Its76840sim-s/GPU0 unstarted-scope continuation remains REQUEST ONLY, pending
+explicit MAIN scope authority and immutable admission gates. No complete panel
+manifest exists; training supervision through final169 is fulfilled. Evidence:
+`selmappo2/RESUME_20261102_2335.json`. Training accounting/cap unchanged; no
+new dispatch, restart, remote poll or simulation.
+
 **Nov2 09:41+08 fresh-session verification:** original final collection again
 validates COMPLETE/169updates/7774production/0open with the explicit final169
 checkpoint pin. Watcher12432 retains exact PID/executable/command/creation/source;
