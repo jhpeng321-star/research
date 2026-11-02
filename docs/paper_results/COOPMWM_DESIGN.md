@@ -40,7 +40,7 @@
 39. TRAIN4/dev16 reportingonly; primaryA24/B24/R24,secondaryA48. Finalspawnfault375800sim-squarantined; MAIN1556approvedreplacement; source4/89CPU PASS explicitcheckpoint/SHA+final-onlycaps; B/Rcontinue.
 40. Final detector-first discovery uses unchanged COOPBEHAV detectors and complete exact twins.
 41. Learning checks report team return/value/KL/gradient, beta, proposal routes/acceptance/O1-O4 counts.
-42. A48/B3/R3;72episodes/14534snapshotsadopted;lsfastcpu2 230CPU PASS0skips40.396s;25real9branchlists; disk13.7GB; arrival1200=>t0<=780/SAMEH; B-REPLAYrequires10CONFIRMEDadmittedBpositives/qualifieddelegatedrelease; it2_K2rollinghandover pendingK2GPU+8freshgates.
+42. A48/B3/R3;72episodes/14534snapshotsadopted;MAIN0319 lspathcpu1 229CPU PASS0skips43.132s;10savedretries/90gradedbranches/62640actualsim-s,64800precharged/total5037230<6M;38usablelists/0confirmed;arrival1200=>t0<=780/SAMEH;B-REPLAYrequires10CONFIRMEDadmittedBpositives/qualifieddelegatedrelease;it2_K2firsttierREADY/remainingone-slotqualification.
 43. Recoverycap7500000: superseded811640,train2811600,checks432000,dev201600,final576000,Rtest115200,coldB28800,failedA14400; exact-plan-grades760000.
 44. Mechanics3600,calibration57600,discovery138200,pairedbranches1297400,reusecheck600; train2852400 inclMAIN1651 tenfresh-ID DNS replacements12000; allfailedchargesretained; verification2800000/exactgrade55360 plusinactivek8phase1500000.
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.

@@ -308,7 +308,62 @@ print(json.dumps(dict(unix=time.time(),owner=d,identity_verified=identity,state=
     print(json.dumps(value))
 
 
+def gpu_status(host):
+    import contextlib
+    import io
+    from .ls_validity_ops import gpu_status as status
+    with contextlib.redirect_stdout(io.StringIO()):
+        value=status(host)
+    print(json.dumps(dict(host=host,unix=value['unix'],gpu=value.get('gpu'),workers=[
+        dict(owner=w['owner'],state=w['state'],ready=w['ready'],gates=len(w['gates']),failure=w['failure'],
+             variant_pass=(w.get('variant_gate') or {}).get('pass_')) for w in value['workers']])))
+
+
+def bank_summary():
+    import contextlib
+    import io
+    from .ls_label_ops import bank_status
+    with contextlib.redirect_stdout(io.StringIO()):
+        value=bank_status()
+    print(json.dumps({k:value[k] for k in ('unix','entries','selected_positive_lists',
+        'confirmed_entries','admitted_positive_entries','prerequisite_met','exact_delay_null_lists',
+        'focus_share','training_paused')}))
+
+
+def publish_regrade():
+    value=json.loads(remote('cpuQ',f'''from pathlib import Path
+import json,sys,time,hashlib
+c=Path({COLLECTION!r});sys.path.insert(0,{SOURCE!r}+'/pytools')
+from tools.coopmwm.protocol import digest
+from tools.coopmwm.accel_storage import charged
+reg=json.loads((c/'SAVED_REGRADE_REGISTRATION_0319.json').read_text())
+assert (c/'saved_regrade_0319/COMPLETE.json').exists()
+rows=[]
+for item in reg['items']:
+ old=json.loads((c/'labels'/item['file']).read_text())
+ assert digest(old)==item['original_label_sha256']
+ path=c/'labels'/(item['search_id']+'_SUMOPATH1.json');x=json.loads(path.read_text());v=x['verification']
+ assert v['status'] in ('accepted','rejected') and len(v['branches'])==9
+ assert all(b['status']=='graded' for b in v['branches']),[b['status'] for b in v['branches']]
+ rows.append(dict(key=item['search_id'],world_id=item['world_id'],status=v['status'],
+  branches=9,actual_sim_s=v['actual_sim_s'],receipt_sha256=v['receipt_sha256'],
+  label_sha256=hashlib.sha256(path.read_bytes()).hexdigest(),original_retained=True))
+smoke=json.loads((c/'LABEL_SUMO_SMOKE_SUMOPATH1.json').read_text());assert smoke['pass_']
+out=dict(unix=time.time(),pass_=True,lists=len(rows),branches=sum(r['branches'] for r in rows),
+ actual_sim_s=sum(r['actual_sim_s'] for r in rows),precharged_sim_s=reg['total_sim_s'],
+ charged_total_sim_s=charged(Path(reg['config']['run_root'])),operational_cap=6000000,
+ new_wm_searches=0,all_originals_retained=True,smoke=smoke,results=rows,
+ amendment_sha256={sha(REGRADE)!r})
+print(json.dumps(out))''',timeout=60))
+    path=ops.EVIDENCE/'LS_SAVED_REGRADE_COMPLETE_0319.json'
+    if not path.exists():write(path,value)
+    print(json.dumps({k:value[k] for k in ('unix','pass_','lists','branches','actual_sim_s',
+        'precharged_sim_s','charged_total_sim_s','new_wm_searches','all_originals_retained')}))
+
+
 if __name__ == '__main__':
     parser=argparse.ArgumentParser()
-    parser.add_argument('action', choices=('diagnose','sources','candidates','register_restore','restore','qualify','cpu_result','regrade_plan','register_regrade','deploy_regrade','regrade_status'))
-    globals()[parser.parse_args().action]()
+    parser.add_argument('action', choices=('diagnose','sources','candidates','register_restore','restore','qualify','cpu_result','regrade_plan','register_regrade','deploy_regrade','regrade_status','gpu_status','bank_summary','publish_regrade'))
+    parser.add_argument('--host',choices=('gpuA','gpuR'))
+    args=parser.parse_args()
+    globals()[args.action](args.host) if args.action=='gpu_status' else globals()[args.action]()

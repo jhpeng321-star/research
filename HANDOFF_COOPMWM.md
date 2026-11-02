@@ -1,5 +1,20 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+MAIN03:19 COMPLETE1793648469/03:41:09+08: ALL10savedregrades/90branches
+GRADED/PREFIXchecksPASS,62640actualsim-s/64800precharge(no refunds),
+alloriginalfailedlabels+chargesretained/ZEROnewWMsearch. Newworker2225116
+exitedNORMALLYwithCOMPLETE; NEVERrestart. LS_SAVED_REGRADE_COMPLETE_0319.json.
+Bankat1793648513=38usable/13selectedpositive/0confirmed/0admitted; noPPOrestart.
+FIRSTit2_K2tierA110917/R588039bothREADY8+variantPASS adopted. Controller33124
+exitedontransportBEFOREsecondtierdispatch; observer8472LIVE. Adoptedexisting
+completedAsecond drain and ONCElaunchedA151635/start902847653 at1793648262,
+FASTK2V5/freshgatesRUNNING. ONLYONEslotqualifies; R494955kept(noinflight at
+1793648280), mustnotupgradeRuntilA151635READY (MAIN02:27). AfterAready,
+`ls_fast_ops drain/gpu --host gpuR --root /root/coopmwm20261102_deadlineR2`
+adoptsexistingdrainthenONEsuccessor. Neverrestartfirsttier. Main03:06niche+
+nullfixjointintegrationNEXTonlywhenNULLFIX_READY; absentatlastcheck.
+HARDEN_INT_READYabsent/delegated6104live; doNOTduplicateitsrehearsals.
+
 MAIN03:19 SAVEDREGRADE LIVE unix1793648036/03:33:56+08: new owned2225116/
 start66231393, source/home/ubuntu/coopmwm20261103_lspathcpu1. 229LinuxCPU
 PASS0skips43.132s/zeroSUMO+3localPASS. Amendment06de06f4 registersTENfailed

@@ -1,5 +1,20 @@
 # S-COOPMWM — live checks
 
+## Nov3 03:41 UTC+8 — all saved failed labels recovered
+- `LS_SAVED_REGRADE_COMPLETE_0319.json`: **10/10 saved-search retries complete,
+  90/90 branches graded**, all registered prefix checks passed. **62,640 actual
+  sim-s** against **64,800 precharged**, with no refunds. All original failure
+  receipts/charges retained; **zero new WM searches**.
+- Recovery owner2225116 exited normally after writing COMPLETE. Existing collection
+  and grading continue. Bank snapshot: **38 usable lists /13 selected positives /
+  0 confirmed admissions**; B/R remainu3 pending the qualified confirmation release.
+- Resumed the interrupted rolling configuration handover by adopting completed
+  first-tier gates (gpuA110917, gpuR588039 both READY) and the existing second-tier
+  drain. Only gpuA's second slot is currently qualifying (151635); gpuR's existing
+  second worker stays intact until that gate completes, per one-slot-at-a-time rule.
+- Niche/nullfix are awaiting their combined release and one joint requalification.
+  The command mirror remains off after the recorded failed gate.
+
 ## Nov3 03:34 UTC+8 — real grading recovered; saved retries underway
 - Frozen `lspathcpu1`: **229 Linux CPU PASS**, zero skips, **43.132 s**, zero
   sim-s. Three local selection/duplicate-prevention tests also pass.
