@@ -1,0 +1,12 @@
+# S-COOPMWM fresh-session adoption — 2026-11-02 09:28 UTC+8
+
+- Read the complete 298-line `E:/agent-work/_sol/coopmwm_prompt.md`, including all later MAIN addenda; read git status/log and the current handoff, live-results and design documents first. Recovered HEAD `a7c9182b`; existing tracked claim changes and untracked receipts preserved.
+- Latest owner authority supersedes older resume caps: **7,500,000 sim-s**, registered allocation **7,495,040**, **4,960 unallocated**. Registry lines 6076, 6078, 6147, 6208 and 6221 confirm cap, fixed horizons, failed-run accounting and qualified tail continuation. Unallocated room is not automatically spendable.
+- Read-only `tail_ops status` at unix **1793582913.1890597** verifies **A48/B2/R1**, no active STOP, transition failure or training failure. B-u3 has all24 episodes claimed/14 closed; R-u2 has7 claimed/3 closed. B quota has0 executed/10 in-flight windows;10 parallel windows submitted33 training queries.
+- Adopt current receipt-owned B **3946079/start59555725**, R **3551874**, broker **3893211**, exact grader **3427015**. Both historical transition owners have exited. Never redispatch these owners or replay their assigned searches/episodes.
+- Current four assigned searches and35 queued requests are already owned by the existing broker. At unix1793582969/70, GPU telemetry reports gpuA **83%**,42,869MiB,164.09W; gpuR **89%**,23,204MiB,139.23W. These are individual samples, not sustained-capacity estimates.
+- Local observe-only V9 **20516** and telemetry V3 **24140** are alive, with matching command lines and creation times. Preserve them; no replacement observer launched.
+- Adopt the published **WARM MEMORY QUALIFIED** and original B/R u0 restart. Same-B/seed20261101 library has **7 exact-positive entries**; R has no library. No new qualification or scientific design change is warranted by this recovery.
+- Last completed B-u2 collection wall **9838.6425s** is pre-fan-out; its125.716h extrapolation is not the new steady-state ETA. Post-fan-out u3 timing is still pending.
+- Charged **3,481,850 sim-s** at the snapshot. Original GPU deadline **2026-11-02 18:07:02 UTC+8** remains unchanged.
+- Next: verify TRAIN episode/search/grade progress and current publication; publish B-u4–6 viability when available. Search-depth diagnostic remains deferred while all GPU slots are occupied. Latest15-plan exact marginal CI includes zero; no general viability claim. No sealed outcome access, new physics/inference dispatch, PID control, deletion or push during recovery.
