@@ -66,9 +66,22 @@ def test_recovered_label_preserves_void_and_precharges_new_attempt(tmp_path):
         return dict(status='rejected')
     with patch('tools.coopmwm.ls_collection.complete_snapshot',return_value={}), patch(
             'tools.coopmwm.sumo_verify.verify',side_effect=verify), patch(
+            'tools.coopmwm.ls_label_runtime.grading_disk_ready',return_value=True), patch(
             'tools.coopmwm.accel_storage.reserve') as reserve:
         label(tmp_path,envelope,dict(collection_top8=[{} for _ in range(8)]),config)
     assert reserve.call_count==1 and reserve.call_args.args[1][0]['sim_s']==900
     assert original.read_bytes()==saved
     assert json.loads((tmp_path/'label_voids'/'query.json').read_text())['charges_retained']
     assert label_path(tmp_path,'query','SUMOENV1').exists()
+
+
+def test_low_disk_waits_before_claim_and_resumes_at_existing_guard(tmp_path):
+    from types import SimpleNamespace
+    from .ls_label_runtime import grading_disk_ready,MIN_FREE_BYTES
+    with patch('tools.coopmwm.ls_label_runtime.shutil.disk_usage',return_value=SimpleNamespace(free=MIN_FREE_BYTES-1)):
+        assert not grading_disk_ready(tmp_path,'SUMOENV1')
+        receipt=tmp_path/'LABEL_DISK_WAIT_SUMOENV1.json';saved=receipt.read_bytes()
+        assert not grading_disk_ready(tmp_path,'SUMOENV1') and receipt.read_bytes()==saved
+        assert not json.loads(saved)['new_verification_claim']
+    with patch('tools.coopmwm.ls_label_runtime.shutil.disk_usage',return_value=SimpleNamespace(free=MIN_FREE_BYTES)):
+        assert grading_disk_ready(tmp_path,'SUMOENV1')

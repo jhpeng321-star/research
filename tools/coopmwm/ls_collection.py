@@ -109,9 +109,10 @@ def label(root,envelope,response,config):
     (root/'label_voids').mkdir(exist_ok=True)
     target=root/'labels'/(key+('_'+generation if generation else '')+'.json')
     if generation:
-        from .ls_label_runtime import SmokeBranchRunner
+        from .ls_label_runtime import SmokeBranchRunner,grading_disk_ready
         runner=SmokeBranchRunner(attempt/'branches',workers=9,timeout_s=3600,
             smoke_path=root/('LABEL_SUMO_SMOKE_'+generation+'.json'))
+        while not grading_disk_ready(root,generation):time.sleep(10)
     else:runner=SubprocessBranchRunner(root/'branches',workers=9,timeout_s=3600)
     def charge(vid,specs):
         # Complete worst-case nine-branch charge was made BEFORE the search.
@@ -164,6 +165,8 @@ def supervise(root):
         config.update(json.loads((root/'LS_VALIDITY_CONFIG.json').read_text()))
     if (root/'LS_LABEL_CONFIG.json').exists():
         config.update(json.loads((root/'LS_LABEL_CONFIG.json').read_text()))
+    if (root/'LS_LABEL_DISK_CONFIG.json').exists():
+        config.update(json.loads((root/'LS_LABEL_DISK_CONFIG.json').read_text()))
     main=Path(config['run_root']);install_accounting(main,config['budget'])
     if config.get('operational_spend_cap'):
         from . import accel_storage

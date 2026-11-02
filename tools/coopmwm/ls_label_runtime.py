@@ -1,8 +1,10 @@
 """MAIN23:32: explicit SUMO environment, append-only retry, real branch smoke."""
 import os
 from pathlib import Path
+import shutil
+import time
 
-from .sumo_verify import SubprocessBranchRunner, check_prefix, POLICY
+from .sumo_verify import SubprocessBranchRunner, check_prefix, POLICY, MIN_FREE_BYTES
 from .warm_spool import immutable
 
 
@@ -26,6 +28,20 @@ def void_environment_failure(label):
 
 def label_path(root, key, generation=None):
     return Path(root)/'labels'/(key+('_'+generation if generation else '')+'.json')
+
+
+def grading_disk_ready(root, generation):
+    """A resource shortage waits BEFORE the verification claim, not a failed label."""
+    root = Path(root)
+    free = shutil.disk_usage(root).free
+    if free >= MIN_FREE_BYTES:
+        return True
+    p = root/('LABEL_DISK_WAIT_'+generation+'.json')
+    if not p.exists():
+        immutable(p, dict(unix=time.time(),free_bytes=free,required_bytes=MIN_FREE_BYTES,
+            queued=True,new_verification_claim=False,physics_started=False,
+            reason='existing 2GiB disk admission guard; wait without label failure'))
+    return False
 
 
 class SmokeBranchRunner(SubprocessBranchRunner):
