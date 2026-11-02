@@ -59,6 +59,23 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**Nov3 04:37 fresh-session reconciliation1793651848 (ffcfcace):** all recorded
+owned CPU supervisors, six GPU services, local relay/follower and observer20260
+EXITED; observer completed its original deadline normally. Ledger hashes/counts
+unchanged:250980charged/250660closedactualsim-s and27787.12987509556GPU-s.
+All112fixed/random episodes, fleet16episodes+96oracles and WM36oracles COMPLETE;
+WM6episodes/per-CAV2episodes only, full paired primary panel incomplete.
+OWNER20:14GPUhold ACTIVE; registry through Nov3 04:36 has no later MAIN GPU RESUME
+or narrow per-CAV continuation approval. No scope armed. cpuQfree19510939648bytes
+(~18.2GiB), ownoutputs366348334bytes unchanged, uptime7.710days.
+MAIN REQUEST ONLY remains76840sim-s/GPU0 (cpuQ62460/gpuR14380), excluding failed
+969138/969139 and all completed jobs. Explicit scope authority, immutable plan,
+no-prior-charge proofs, surviving selector artifact verification and new host CPU/
+resource gates precede any nice19 CPU admission below S-COOPMWM. Terminal WM/BB
+also need scientific-scope authority and reconciled GPU resume. Existing58line
+design/build/156CPU PASS preserved. Receipt
+`tools/c1switch2/evidence/RESUME_RECONCILIATION_1793651848.json`; STATUS_CURRENT's
+legacy SUPERVISED label is superseded by concrete EXITED process/observer fields.
 **Nov3 02:44 fresh-session reconciliation1793645006:** all recorded owned CPU
 supervisors, six GPU services, local relay/follower and observer20260 EXITED;
 original observer deadline completed normally. No duplicate observer/dispatch.
