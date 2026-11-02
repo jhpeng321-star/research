@@ -115,11 +115,16 @@ def run_arm(root,arm):
             if b.get('sumo_verify'):extra['sumo_verify']=b['sumo_verify']
             if b.get('quota_aware_admission'):extra['quota_aware_admission']=True
             if b.get('parallel_group_queries') and arm=='B':extra['parallel_group_queries']=True
+            # HARDEN-3 opt-in (MAIN decision): cap new in-flight group queries per window.
+            if b.get('parallel_fanout_factor') and arm=='B':extra['parallel_fanout_factor']=b['parallel_fanout_factor']
             if b.get('health_guards'):extra.update(health_guards=True,safety_reference=b['safety_reference'])
             if arm=='B':extra['search_learning']=learned
+            # HARDEN-3 opt-in (MAIN decision): R update u may match B's PREVIOUS
+            # completed update (lag 1) so R runs concurrently with B update u.
+            quota_u=u-1 if arm=='R' and b.get('r_concurrent_lag1_quota') else u
             if arm=='R':
-                wait(root,root/f'B_RANDOM_QUOTA_{u:03}.json',b['gpu_deadline'],arm)
-                extra['random_quota']=str(root/f'B_RANDOM_QUOTA_{u:03}.json')
+                wait(root,root/f'B_RANDOM_QUOTA_{quota_u:03}.json',b['gpu_deadline'],arm)
+                extra['random_quota']=str(root/f'B_RANDOM_QUOTA_{quota_u:03}.json')
             eps=wave(root,dict(b,beta=beta),{arm:policy},batch_worlds(u),'train',f'warm_u{u:03}','train',False,extra)
             collection_begin=(min([start_unix]+[(root/'jobs'/e['id']/'CLAIM.json').stat().st_mtime for e in eps])
                 if b.get('parallel_group_queries') else start_unix)
@@ -131,8 +136,9 @@ def run_arm(root,arm):
             matching=None
             if arm=='R':
                 from .r_matching import report
-                quota=read(root/f'B_RANDOM_QUOTA_{u:03}.json')
+                quota=read(root/f'B_RANDOM_QUOTA_{quota_u:03}.json')
                 matching=report(quota['tickets'],routes['durations'])
+                if quota_u!=u:matching=dict(matching,matched_B_update=quota_u,rule='lag-1 concurrent R (opt-in)')
             ev=evidence(eps);running+=ev
             exact_receipts=[];weights=None;pairs=[]
             if arm in ('B','R'):
