@@ -17,12 +17,16 @@ def queue(root):
 
 def enqueue(root,b,ep,u,arm,beta):
     ckpt=Path(root)/f'{arm}_checkpoint_{u-1:03}.pt'
-    return queue(root).enqueue_episode(ep,dict(run_root=str(root),
+    meta=dict(run_root=str(root),
         result_path=str(Path(root)/'jobs'/ep['id']/'RESULT.json'),result_sha256=digest(ep),
         update=u,arm=arm,training_seed=SEED,checkpoint_path=str(ckpt),checkpoint_sha256=sha(ckpt),
         checkpoint_update=u-1,noise_seed=xg.train_noise_seed(ep['world']['seed'],u,SEED),
         runtime=b['runtime'],sumo_checkpoint=b['checkpoint'],beta=beta,
-        warm_history=b.get('warm_history',False),accel_bounds=b['accel_bounds']))
+        warm_history=b.get('warm_history',False),accel_bounds=b['accel_bounds'])
+    if ep.get('sumo_verification_root'):
+        from .verification_grades import enqueue_episode
+        return enqueue_episode(queue(root),ep,meta)
+    return queue(root).enqueue_episode(ep,meta)
 
 
 def assert_live(root):

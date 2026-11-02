@@ -79,8 +79,9 @@ def test_smoke_rejects_incomplete_or_nonidentical_live_continuation(fault):
         sv.check_live_continuation(r, live)
 
 
-def test_actual_episode_loop_and_controller_match_verified_branch(tmp_path, monkeypatch):
-    """Exercise capture, branch controller, command replay and live installation together."""
+@pytest.fixture
+def verified_episode(tmp_path, monkeypatch):
+    """Actual loop/controllers against the deterministic toy plant; never SUMO."""
     from tools.coopmwm import accel_plant, plan_client
     from tools.coopmwm.accel_storage import read
     from tools.coopmwm.test_exact_grade_cpu import WORLD, fake_sumo, policy
@@ -109,6 +110,7 @@ def test_actual_episode_loop_and_controller_match_verified_branch(tmp_path, monk
     monkeypatch.setattr(sv, 'SubprocessBranchRunner', lambda work, **kw: sv.LocalBranchRunner(work))
     monkeypatch.setattr(sv, 'accel_charge', lambda *a, **kw: lambda vid, specs: charges.append(specs))
     job = dict(id=ident, path=str(tmp_path/'jobs'/ident), world=WORLD, role='train', arm='B',
+               update=1, training_seed=20261101,
                weights=policy().state_dict(), runtime='', checkpoint='', noise_seed=11,
                deterministic=False, sim_s=520, stop=520, queue_root=str(tmp_path),
                accel_bounds=[-3., 2.6], gpu_deadline=0, guided=False, beta=1., warm_history=False,
@@ -117,6 +119,105 @@ def test_actual_episode_loop_and_controller_match_verified_branch(tmp_path, monk
         live = accel_plant.episode(job)
     receipts = [read(p) for p in (root/'verifications').glob('*.json')]
     assert len(receipts) == 1 and receipts[0]['status'] == 'accepted'
+    return live, receipts[0], root, charges
+
+
+def test_actual_episode_loop_and_controller_match_verified_branch(verified_episode):
+    live, receipt, _, charges = verified_episode
     assert len(charges) == 1 and len(charges[0]) == 5
-    assert all(b['status'] == 'graded' for b in receipts[0]['branches'])
-    assert sv.check_live_continuation(receipts[0], live)['checked_to_s'] == 330
+    assert all(b['status'] == 'graded' for b in receipt['branches'])
+    assert all(b['audit']['crn_verified_t0'] for b in receipt['branches'])
+    assert sv.check_live_continuation(receipt, live)['checked_to_s'] == 330
+
+
+def grade_meta(live):
+    return dict(run_root='run', result_path='run/RESULT.json', update=1, arm='B', training_seed=20261101,
+                checkpoint_path='checkpoint.pt', checkpoint_sha256='fixture', checkpoint_update=0,
+                noise_seed=11)
+
+
+def test_verified_grade_reuse_is_exact_and_never_runs_or_charges_again(verified_episode, tmp_path):
+    from tools.coopmwm import verification_grades as vg
+    live, source, root, _ = verified_episode
+    vg.record_smoke(root, source, live)
+    q = xg.GradeQueue(tmp_path/'grades', charge=lambda *args: pytest.fail('no duplicate branch charge'))
+    ids = vg.enqueue_episode(q, live, grade_meta(live))
+    assert len(ids) == 1 and q.pending() == []
+    r = q.receipt(ids[0])
+    xg.verify_sealed(r, 'receipt_sha256')
+    assert r['grade_veh_s'] == source['grade_veh_s'] > 0
+    assert r['charged_sim_s'] == r['actual_sim_s'] == 0 and r['no_fresh_branch']
+    assert r['J_without_veh_s']-r['J_with_veh_s'] == r['grade_veh_s']
+    assert r['verification_source']['receipt_sha256'] == source['receipt_sha256']
+    assert vg.enqueue_episode(q, live, grade_meta(live)) == ids
+    assert q.receipt(ids[0]) == r and len(q.receipts()) == 1
+    T = q.frozen_temperature('B', 20261101)
+    weights = xg.imitation_weights(q.receipts(), 'B', T, 20261101)
+    entry = next(iter(weights['weights'].values()))
+    assert xg.imitation_pairs(live, entry)  # usable by existing exact-only learner
+
+
+def test_verified_grade_reuse_requires_real_smoke(verified_episode, tmp_path):
+    from tools.coopmwm import verification_grades as vg
+    live, _, _, _ = verified_episode
+    q = xg.GradeQueue(tmp_path/'grades')
+    with pytest.raises(FileNotFoundError):
+        vg.enqueue_episode(q, live, grade_meta(live))
+    assert q.ids() == [] and q.receipts() == []
+
+
+def test_concurrent_verified_grade_importers_adopt_one_receipt(verified_episode, tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+    from tools.coopmwm import verification_grades as vg
+    live, source, root, _ = verified_episode
+    vg.record_smoke(root, source, live)
+    q = xg.GradeQueue(tmp_path/'grades', charge=lambda *args: pytest.fail('no duplicate charge'))
+    with ThreadPoolExecutor(max_workers=4) as workers:
+        ids = list(workers.map(lambda _: vg.enqueue_episode(q, live, grade_meta(live)), range(8)))
+    assert all(value == ids[0] for value in ids)
+    assert len(q.receipts()) == len(q.ids()) == 1 and not q.pending()
+
+
+def test_importer_rechecks_a_receipt_published_after_its_first_read(verified_episode, tmp_path, monkeypatch):
+    from tools.coopmwm import verification_grades as vg
+    live, source, root, _ = verified_episode
+    vg.record_smoke(root, source, live)
+    q = xg.GradeQueue(tmp_path/'grades')
+    ids = vg.enqueue_episode(q, live, grade_meta(live))
+    original = q.receipt
+    calls = []
+
+    def initially_unpublished(gid):
+        calls.append(gid)
+        return None if len(calls) == 1 else original(gid)
+
+    monkeypatch.setattr(q, 'receipt', initially_unpublished)
+    assert vg.enqueue_episode(q, live, grade_meta(live)) == ids
+    assert len(calls) >= 2 and len(q.receipts()) == 1
+
+
+def test_verified_grade_reuse_rejects_wrong_source_identity(verified_episode, tmp_path):
+    from tools.coopmwm import verification_grades as vg
+    live, source, root, _ = verified_episode
+    vg.record_smoke(root, source, live)
+    bad = copy.deepcopy(live)
+    step = next(s for s in bad['steps'] if s['time_s'] == 320)
+    step['sample']['behaviour']['sumo_verification']['receipt_sha256'] = 'wrong'
+    q = xg.GradeQueue(tmp_path/'grades')
+    with pytest.raises(ValueError, match='source SHA'):
+        vg.enqueue_episode(q, bad, grade_meta(bad))
+    assert q.ids() == [] and q.receipts() == []
+
+
+def test_truncated_verified_plan_queues_executed_portion_not_full_verification(verified_episode, tmp_path):
+    from tools.coopmwm import verification_grades as vg
+    live, source, root, _ = verified_episode
+    vg.record_smoke(root, source, live)
+    truncated = copy.deepcopy(live)
+    step = next(s for s in truncated['steps'] if s['time_s'] == 330)
+    step['sample']['plan_truncations'] = [dict(plan_id=source['chosen_plan']['id'], start_s=320)]
+    q = xg.GradeQueue(tmp_path/'grades')
+    ids = vg.enqueue_episode(q, truncated, grade_meta(truncated))
+    assert len(ids) == 1 and q.pending() == ids and q.receipts() == []
+    assert q.spec(ids[0])['plan']['duration_s'] == 10
+    assert q.spec(ids[0])['window']['end_s'] == 450

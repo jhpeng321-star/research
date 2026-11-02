@@ -67,5 +67,7 @@ def episode(job):
         result=dict(id=job['id'],world=job['world'],arm=job['arm'],steps=steps,metrics=metrics,
             prefixes=prefixes,final=b.fingerprint(),totals=dict(b.totals),horizon_totals=horizon_totals,
             actual_sim_s=b.actual,charged_sim_s=job['sim_s'],requests=requested,overrides=overrides)
+        if job.get('sumo_verify'):
+            result['sumo_verification_root']=job['sumo_verify']['root']
         write(path/'RESULT.json',result);return result
     finally:b.close()

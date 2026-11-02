@@ -486,6 +486,10 @@ def verify_controller_class():
                     self.audit['replayed_prefix_steps'] += 1
             if t == self.t0:
                 self.generator.set_state(self.snap['generator_state'])
+                state_sha = hashlib.sha256(self.generator.get_state().numpy().tobytes()).hexdigest()
+                if state_sha != self.snap['rng']['generator_state_sha256']:
+                    raise ValueError('verification generator snapshot SHA mismatch')
+                self.audit.update(crn_verified_t0=True, noise_mode_used='crn')
                 ended = set(self.snap.get('truncate_on_accept') or []) if self.cand is not None else set()
                 self.active_plans = [dict(plan=copy.deepcopy(c['plan']), start_s=c['start_s'])
                                      for c in self.snap['committed_plans'] if c['plan']['id'] not in ended]
