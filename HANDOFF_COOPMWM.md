@@ -1,5 +1,34 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+CURRENT Nov3~06:15+08: adopt controller37004/start1793656452.6925836,
+activationwaiter16784/start1793657357.4799392, observerV12=14132/start
+1793657441.882769. ALLcreation/argvverifiedLIVE; neverduplicate. Controller
+finishesAincident1->AdeadlineA2->Rconcurrent3->RdeadlineR2, ONEqualifier globally.
+GPUA220668/start903637810 hasFIRSTK4H300gatePASS EXACT0; K8H420running,
+GPU~97-100%/43.6GB; other3serve. ALL8freshrequired, noqualification/inference
+replay. Activationwaiter waitsFOURREADY then verifiedno-grade collectorboundary;
+noactivegradechildren/incompleteclaims may beinterrupted. CollectorGATE/CLAMP
+notyetLIVE; nofalseactivationclaim. Source6 271LinuxPASS/0skips54.868s.
+Bank2388293continuesALLnewpositives; observerV12republishesBANK_QUALITYB30min
+andnull/diversityhourly. At1793657496:56usable/28confirmed/7admitted/3coop,
+0pending. Before-release14/56exactdelaynull; aftercohortsUNOBSERVED. Meanadmitted
+609.483CI[61.826,1559.146], conditionalBANKevidence/notpolicy-learning.
+HARDEN_INT_READYstillABSENT; delegated35968/start1793655335.5754406 LIVE,
+latestlog saysonlyb_slow_searchrehearsal30248running06:13. NEVERduplicateitswork.
+B/Rremainu3; need10admissions+READYintegration+Linuxqualification+registeredbudget
+beforeB-REPLAY. Fixedlatentqualificationpayloadindent/3localPASS, zerojobs.
+Fresh6Mguardretained; noSUMO/manualtraininglaunch or deletion thissession.
+
+Nov3 05:49:23+08: PATH2 also EXIT beforegates onmissing ls_fast_worker (it lived
+inoldoverlay). NEWcompletepackage + metadata worker generationNICHENULL2:
+CPU6 full271LinuxPASS/0skips54.868s/zeroSUMO, actualGPU completeimport smokePASS.
+Amendment7c10945a23493424 registered; NEW220668/start903637810 Aincident1
+ALL8freshgatesqualifying. ADOPT LS_NICHENULL_DISPATCH_gpuA_incident1_PATH3.json;
+original2failedlogs/owners/bindingsretained. Other3serve; noqueryreplay/PPOrestart.
+Newlaunchervalidatesdependencyhashes; future slots useCPU6worker/source+same deps.
+Latestcollection53successful/52usablelists, CPUbroker2472252/supervisor1834956
+LIVE; B/Ru3; HARDEN_INT_READY absentat05:48. No duplicate delegatedwork.
+
 Nov3 05:45:44+08 startup recovery: first A qualifier213896 EXIT before0gates,
 WM-only GPU package lacks traffic_shepherd entirely (PHYS/src is NOT sufficient).
 Additive two package initializers + exact pinned geometry installed/hash-manifest
