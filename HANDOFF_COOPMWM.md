@@ -1,5 +1,44 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+LATEST18:10UTC+8 unix1793614233: A48/B3/R3, B4adopts14completed+TENlive
+warmdns1651_u004_B replacements atsim300..390, oldestqueryages3624..3635s
+(queue/migration-inclusive,censored). R4ZEROclaims/waitsfinalB4quota; doNOTclaim
+botharmsphysicalprogress orfiniteu4ETA. EPISODE_PROGRESS_1793614233 now correctly
+resolvesadditivebinding/joboverridesandunionsbothretiredsets;22localCPU PASS.
+NOnewSTOP/healthPAUSE atlaststate; 4,450,130charged, discovery138200/cap11M.
+
+GPU PRIMARY clocks migrated: A918997/R404201 bothREADYfourFRESHfull-fastcold/warm
+EXACT0 plusfourSHAadoptedgates, originalGPU_BINDING/startupskept. BothGPUsserve
+since17:48:57/1793612937. Newbroker927733/start62785248/sourceverifybeta13 at
+1793613574/17:59:34,155CPU PASS0skips35.240s; originalassignedinferencesadopted.
+ItadmitsonlysignedfreshREADYslots, quarantinesdeadworkersandterminallydeclines
+theirassignedPLANquery(policycontinues/noinference retry); diagnosticsnotfabricated.
+OldCPUcontrollers874363/898950andbroker904893receiptverified/TERM, noGPU/physics
+signalsinthatCPUhandover. Currentbrokerdispatch GPU_RESOURCE_BROKER_DISPATCH_1651_V2.
+
+SECONDARY GPU FIX underway, NEVERredispatch: AnewemptyrootdeadlineA2 PID926556/
+start899315942 since1793612945, SAMEfixedincident1numericfiles(m.42,width18/10),
+8freshgatespending; oldAsecond617099failure+claimretained. RnewrootdeadlineR2
+helper420202/start4224036367 since1793613776: drainsoriginalsecond1/56877old
+inboxclaimbeforeTERMofONLYthatidleoldspool, thenexecsnewwarm_spool SAMEPID with
+8freshgates/m.34,width4/4. OldR56877mayfinishitsALREADYrunningqueryafterold
+18:07deadline; noqueryreplay. Oldwaitingmigrationhelper404202wasverified/TERM;
+primaryR404201continues. IMPORTANTlegacyconcurrent3/second1posthoclabelsource
+stillold; newRrootusesFROZENCPU13 mppi_runtime/plan_service/query_errors, notthe
+unqualifiedlocalplan_service(whichhasaDIFFERENTSHA). ExistingRprimarymayfailon
+accepted4..6label; newbrokerdeclines/quarantinesONLYitsquery, no globalSTOP.
+
+Hotaddauthorizations CPU-only resource_routes1651, privatekeysNEVERexported.
+Read-only8gateadmissionmonitors NEWV2 A957139/R958187/source resourcehotadd2,
+configs/dispatches RESOURCE_MONITOR_DISPATCH_gpuA/gpuR_1651_V2.json. Prior
+monitors942462/943563verified/TERM(metadata-only) tofixpre-READYtransportretry;
+newmonitors reverifyexpectedboot/start/PIDwhilequalificationincomplete; no
+inferenceuntilALL8EXACT0, thenappendnewendpoint+READYmarkers forlivebroker.
+DoNOTredispatcholdcontrollerorhelpers. LocalV12observer23628stillobserve-only;
+itscachedstatepredatesbrokerV2precedence, fresh`warm_watch state`correctnow.
+Needfinishhotadds, refreshobserveratboundary, publishB4..6viability; commandmirror
+gateFAILED/OFF; learned/k8INACTIVEpendingMAINactivation. No finaloutcomesread.
+
 COMMANDMIRROR gatecompletedFAIL: COMMAND_MIRROR_GPU_GATE_1651.json,
 CPU/CUDAtraceEXACT0 but986051absolute0.8599243164m/0.3810596466mps;
 9860700.0787963867m/0.0550899506mps. Old/prototypeerrorssame, halfsteps

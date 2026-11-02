@@ -6,7 +6,7 @@
 5. B: same SUMO-only reward/advantage, WM-guided exploration; no WM or behavioural bonus.
 6. All live CAVs choose1s acceleration residuals added to MAPPO raw commands; no gap/speed action coordinates.
 7. Exact zero abstains before unchanged safety: actual frozen MAPPO executor bitwise parity CPU-tested.
-8. Reuse COOPFREE pre-safety injection, unchanged safety and CommandOwnership; post-safety WM mirror prototype defaultOFF pending exact-trajectory/GPU qualification.
+8. Reuse COOPFREE pre-safety injection, unchanged safety/CommandOwnership; MAIN1639 CUDAcallbackgate CPU/GPU EXACT0 but absoluteobservabletrajectoryFAIL(.860m/.381mps max); mirrorOFF botharms/no full-road parity claim.
 9. Actor uses whitelisted local telemetry/neighbours; zero-init4D RSU broadcast.
 10. Central critic pools CAV features plus12RSU zone observations; no hidden channels.
 11. AR1 phi=exp(-1/5), spatialshared rho.5, sigma.5m/s²; logged conditional joint density/previous noise.
@@ -46,7 +46,7 @@
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.
 46. All failures/warmup/twins precharged/no refunds or automatic retries; af8b16e5 permits one qualified new-ID attempt per missing failed diagnostic branch, complete originals adopted, whole missing group charged inside discovery200000.
 47. A48complete; B24/R4/grader4nice19; MAIN0423 up to24 CPU-only precompute workers SCHED_IDLE/nice19, grade-queue priority/load<28/MemAvailable+RAMfree8GiB/disk2GiB gates; no retries.
-48. MAIN1651 additiveextension/sourceverifybeta9/153CPU PASS; B821013/R821014/broker821011/grader821012 restoredu3/14B4results; tenfresh-ID attempts, DNS-releaseSHA only/V5fatal; newCPUdeadlineNov5 23:59+08; GPU/finalcached-clock handoverpending.
+48. MAIN1651 additiveextension/B821013/R821014/grader821012 restoredu3/14B4results+10freshIDs; Nov5 23:59 clocks CPU/primaryGPUs/final migrated; broker927733/source13/155CPU PASS quarantinesdeadslots/declinesfailedPLANquery withoutreplay; freshfixedsecondspools8gatequalifying.
 49. GPU CPU helpers disabled until separate frozen parity qualification; own PIDs only.
 50. Both seed guards, fresh-name exposure, immutable sources/cache/approval bindings before physics.
 51. No prohibited inputs/newenv/push; OWNER20:35 opaque v2archive+SHA256-gated literal source removal only; commit eachstep.

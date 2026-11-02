@@ -108,6 +108,18 @@ class EpisodeProgressTests(unittest.TestCase):
             self.assertEqual(value['episodes'][0]['pending_query_count'],1)
             self.assertEqual(value['episodes'][0]['pending_queries'][0]['key'],'live')
             self.assertIn('retired',value['superseded_jobs'])
+            old='warm_u003_B_986005';fresh='warmdns1651_u003_B_986005'
+            binding['job_id_overrides']={old:fresh}
+            (root/'RESOURCE_EXTENSION_1651.json').write_text(json.dumps(binding))
+            (root/'DNS_RETIRED_JOBS_1651.json').write_text(json.dumps(dict(jobs=[old],query_keys=['live'])))
+            newjob=root/'jobs'/fresh;newjob.mkdir();(newjob/'CLAIM.json').write_text('{"pid":99999999}')
+            (root/'requests/dns.json').write_text(json.dumps(dict(world_id=986005,time_s=320,state_id='dns')))
+            with patch.object(ep.ops.ssh,'remote',side_effect=remote),patch.object(ep.ops,'EVIDENCE',evidence),patch.object(ep,'write'),contextlib.redirect_stdout(io.StringIO()):
+                value=ep.collect(current=True)
+            self.assertEqual(value['schedule_source'],'RESOURCE_EXTENSION_1651.json')
+            self.assertEqual(value['episodes'][0]['id'],fresh)
+            self.assertEqual([q['key'] for q in value['episodes'][0]['pending_queries']],['dns'])
+            self.assertEqual(set(value['superseded_jobs']),{'retired',old})
 
 
 if __name__=='__main__':unittest.main()

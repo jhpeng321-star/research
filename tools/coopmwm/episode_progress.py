@@ -16,9 +16,12 @@ now=time.time();episodes=[];current={current!r}
 repair=r/'MAIN0508_REPAIR_BINDING_V2.json'
 if not repair.exists():repair=r/'MAIN0508_REPAIR_BINDING.json'
 plan=read(repair)['repair_plan'] if repair.exists() else None
-recovery_path=next((r/n for n in ('VERIFICATION_CONTINUATION_BINDING.json','MATCH_RECOVERY_BINDING.json','INCIDENT_RECOVERY_BINDING.json') if (r/n).exists()),None)
+recovery_path=next((r/n for n in ('RESOURCE_EXTENSION_1651.json','VERIFICATION_CONTINUATION_BINDING.json','MATCH_RECOVERY_BINDING.json','INCIDENT_RECOVERY_BINDING.json') if (r/n).exists()),None)
 recovery=read(recovery_path) if recovery_path else None
 retired=read(r/'INCIDENT_RETIRED_JOBS.json') if (r/'INCIDENT_RETIRED_JOBS.json').exists() else {{}}
+if (r/'DNS_RETIRED_JOBS_1651.json').exists():
+ dns=read(r/'DNS_RETIRED_JOBS_1651.json')
+ retired={{k:retired.get(k,[])+dns.get(k,[]) for k in ('jobs','query_keys')}}
 requests=[]
 for arm,folder in (('B','requests'),('R','centre_requests')):
  for p in (r/folder).glob('*.json'):
@@ -35,7 +38,8 @@ for arm in ('B','R'):
  ws=plan['worlds'] if u==1 and plan else batch_worlds(u)
  if recovery and u==recovery['resume'][arm]+1:ws=recovery['plans'][arm]['worlds']
  for w in ws:
-    ident=f'warm_u{{u:03}}_{{arm}}_{{w["seed"]}}';p=r/'jobs'/ident
+    ident=f'warm_u{{u:03}}_{{arm}}_{{w["seed"]}}'
+    ident=(recovery or {{}}).get('job_id_overrides',{{}}).get(ident,ident);p=r/'jobs'/ident
     claim=read(p/'CLAIM.json') if (p/'CLAIM.json').exists() else None
     result=(p/'RESULT.json').exists();last=None;trace=p/'observable.jsonl.gz'
     if trace.exists() and not result:

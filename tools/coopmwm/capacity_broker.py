@@ -35,6 +35,36 @@ def check_worker(root,endpoint,status,key=None):
     raise WorkerUnavailable(endpoint['slot'])
 
 
+def resource_endpoints(root,endpoints,config):
+    """Admit a migrated slot only after its fresh-service READY receipt."""
+    if not config.get('resource_ready_only'):return endpoints
+    result={}
+    for slot,e in endpoints.items():
+        p=Path(root)/('GPU_RESOURCE_READY_'+slot+'_1651.json')
+        if not p.exists():continue
+        v=json.loads(p.read_text())
+        assert v['amendment_sha256'] in (Path(root)/'AUTHORITY.md').read_text()
+        assert v['slot']==slot and v['owner']['pid']==v['service']['pid']
+        result[slot]=e
+    return result
+
+
+def settle_unavailable(root,slot,items):
+    """A failed model claim is terminally declined, never recomputed or scored."""
+    settled=[]
+    for kind,record in items:
+        if kind!='plan' or record.get('mode')=='diagnostic':continue
+        key=record['state_id'];assignment=Path(root)/'broker_assignments'/(key+'.json')
+        target=Path(root)/'responses'/(key+'.json')
+        if target.exists() or not assignment.exists():continue
+        if json.loads(assignment.read_text())['slot']!=slot:continue
+        immutable(target,dict(accepted=False,reason='assigned worker unavailable; policy continues; inference never replayed',
+            record_sha256=digest(record),compute_counts_unknown=True,
+            worker_unavailable=dict(slot=slot,key=key,inference_retry=False)))
+        settled.append(key)
+    return settled
+
+
 def pending(root):
     from .exploration import regime
     items=[]
@@ -137,7 +167,7 @@ def run(root,config_path):
         'WARM_GUIDED_STOP_V2.json' if tag else 'WARM_GUIDED_STOP.json')
     assignments=root/'broker_assignments';assignments.mkdir(exist_ok=True)
     for name in ('broker_completed','capacity_declines','capacity_admissions'):(root/name).mkdir(exist_ok=True)
-    stop=threading.Event();mutex=threading.Lock();inflight=set();errors=[]
+    stop=threading.Event();mutex=threading.Lock();inflight=set();errors=[];quarantined=set()
 
     def worker(endpoint):
         try:
@@ -193,6 +223,9 @@ def run(root,config_path):
         except WorkerUnavailable:
             # This slot is quarantined until an explicit owned replacement is
             # admitted. Other slots and policy/SUMO episodes remain independent.
+            with mutex:
+                quarantined.add(endpoint['slot'])
+                for key in settle_unavailable(root,endpoint['slot'],pending(root)):inflight.discard(key)
             return
         except BaseException as error:
             errors.append(repr(error));stop.set()
@@ -202,7 +235,8 @@ def run(root,config_path):
     threads={};endpoints={};last_slots=None
     try:
         while not stop.is_set():
-            endpoints=worker_endpoints(root,binding,endpoints)
+            endpoints=resource_endpoints(root,worker_endpoints(root,binding,endpoints),config)
+            endpoints={s:e for s,e in endpoints.items() if s not in quarantined}
             for slot,e in endpoints.items():
                 if slot not in threads:
                     threads[slot]=threading.Thread(target=worker,args=(e,));threads[slot].start()
