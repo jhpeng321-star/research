@@ -3,6 +3,18 @@ from types import SimpleNamespace
 from . import replay_ops
 
 
+def test_integrated_release_payload_compiles_without_remote_dispatch(monkeypatch):
+    monkeypatch.setattr(replay_ops,'release_status',lambda:dict(ready=True,integrated=True,release=dict(commit='abc')))
+    monkeypatch.setattr(replay_ops,'checked',lambda p:SimpleNamespace(read_text=lambda **kw:'# CPU stub'))
+    def remote(host,code,**kwargs):
+        assert host=='cpuQ'
+        compile(code,'<ready-release-qualification>','exec')
+        assert 'DELEGATED_RELEASE.json' in code
+        return '{}'
+    monkeypatch.setattr(replay_ops.ops.ssh,'remote',remote)
+    replay_ops.qualify()
+
+
 def test_absent_ready_does_not_dispatch(monkeypatch, tmp_path, capsys):
     monkeypatch.setattr(replay_ops.ops, 'LOCAL', tmp_path / 'coopnative')
     def forbidden(*args, **kwargs):

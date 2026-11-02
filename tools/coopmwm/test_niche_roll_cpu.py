@@ -17,6 +17,34 @@ def test_one_qualifier_across_hosts_and_failed_owner_blocks_roll():
     with pytest.raises(ValueError,match='diagnose'):nr.roll_target(gpus)
 
 
+def test_activation_requires_all_four_ready_and_never_controls_them(monkeypatch,tmp_path):
+    from . import ls_validity_ops as vo
+    monkeypatch.setattr(nr.ops,'EVIDENCE',tmp_path)
+    monkeypatch.setattr(vo,'gpu_status',lambda host:dict(workers=[dict(ready=False,owner=dict(generation='NICHENULL2'))]*2))
+    def forbidden(*args,**kwargs):raise AssertionError('no collector transport before all GPU gates')
+    monkeypatch.setattr(nr,'remote',forbidden)
+    assert nr.activate() is False
+
+
+def test_activation_payload_compiles_and_waits_on_any_incomplete_claim(monkeypatch,tmp_path):
+    from . import ls_validity_ops as vo
+    monkeypatch.setattr(nr.ops,'EVIDENCE',tmp_path)
+    monkeypatch.setattr(vo,'gpu_status',lambda host:dict(workers=[dict(ready=True,owner=dict(generation='NICHENULL2'))]*2))
+    (tmp_path/'LS_LABEL_CPU_coopmwm20261103_nichenullcpu6.json').write_text('{}')
+    (tmp_path/'NICHE_COLLECTOR_ACTIVATION_REGISTRATION.json').write_text('{}')
+    def remote(host,code,**kwargs):
+        assert host=='cpuQ'
+        compile(code,'<collector-no-grade-boundary>','exec')
+        assert "open_claims" in code and "signal.SIGCONT" in code
+        assert "label_attempts/SUMOENV1/verification/claims" in code
+        assert "resource_tracker" in code
+        assert "operational_spend_cap=6000000" in code
+        return '{"wait":true,"open_claims":["original-grade"]}'
+    monkeypatch.setattr(nr,'remote',remote)
+    assert nr.activate() is False
+    assert not (tmp_path/'NICHE_NULLFIX_COLLECTOR_ACTIVE.json').exists()
+
+
 def test_worker_checks_additive_dependency_before_import(tmp_path):
     import sys
     import types

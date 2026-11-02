@@ -1,5 +1,23 @@
 # S-COOPMWM — live checks
 
+## Nov3 06:10 UTC+8 — supervised release completion and replay readiness guard
+- Sequential rollout controller37004 adopts the live qualifier and will drain,
+  qualify and admit each remaining slot only after its predecessor is READY.
+  First new K4/H300 committed-background gate passes with exact0 cost error;
+  the K8/H420 gate is running. Other3 slots continue serving; no gate replay.
+- Activation waiter16784 is separately locked and waits for all4 fresh-gate
+  workers. The prepared collector handover freezes only its receipt-verified
+  metadata parent, checks for active grade children/incomplete verification
+  claims, and resumes it unchanged if either exists. New configuration preserves
+  all original episodes/claims/precharges and the6M operational guard.
+- Observer14132 replaces only verified7664; it republishes amended
+  `BANK_QUALITY_B.json` every30min and null/diversity cohorts hourly. All parent
+  bindings/failed generations are retained; collector activation is not claimed.
+- Full delegated replay READY is still absent; its existing worker35968 was
+  verified alive, so no duplicate integration/rehearsal was launched. A latent
+  indentation fault in the guarded Linux-qualification payload was fixed with
+  a compile-path regression:3 CPU tests PASS (0.22s), no remote dispatch/SUMO.
+
 ## Nov3 06:03 UTC+8 — bank refresh and explicit null/diversity cohorts
 - Bank owner2388293 remains alive: **25 confirmed /6 admitted /3 cooperative**,
   zero pending/incomplete. Old-rule disclosure:4 admitted/12 safety rejected.

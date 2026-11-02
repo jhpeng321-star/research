@@ -60,9 +60,9 @@ if not r.exists():
  hashes={{str(p.relative_to(r)):hashlib.sha256(p.read_bytes()).hexdigest() for p in (r/'pytools').rglob('*.py')}}
  with (r/'LS_SOURCE_HASHES.json').open('w') as f:json.dump(hashes,f)
  tests=json.loads((base/'LS_RELEASE_TESTS.json').read_text())
-  tests+=['test_harden1_cpu','test_harden2_main_cpu','test_harden2_resume_cpu','test_harden3_cpu','test_mppi_runtime_cpu','test_incident_recovery_cpu','test_hotadd_cpu','test_r_matching_cpu','test_replay_bank_confirm_cpu','test_replay_bank_lesson_cpu']
-  with (r/'LS_RELEASE_TESTS.json').open('w') as f:json.dump(sorted(set(tests)),f)
-  with (r/'DELEGATED_RELEASE.json').open('x') as f:json.dump({release!r},f)
+ tests+=['test_harden1_cpu','test_harden2_main_cpu','test_harden2_resume_cpu','test_harden3_cpu','test_mppi_runtime_cpu','test_incident_recovery_cpu','test_hotadd_cpu','test_r_matching_cpu','test_replay_bank_confirm_cpu','test_replay_bank_lesson_cpu']
+ with (r/'LS_RELEASE_TESTS.json').open('w') as f:json.dump(sorted(set(tests)),f)
+ with (r/'DELEGATED_RELEASE.json').open('x') as f:json.dump({release!r},f)
 for n,text in files.items():assert (r/'pytools/tools/coopmwm'/(n+'.py')).read_text()==text,n
 assert json.loads((r/'DELEGATED_RELEASE.json').read_text())=={release!r}
 done=r/'LS_CPU_RESULT.json';dispatch=r/'LS_CPU_DISPATCH.json'

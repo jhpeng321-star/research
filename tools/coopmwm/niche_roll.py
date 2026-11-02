@@ -394,9 +394,111 @@ def roll_dispatch():
     write(target,value);print(json.dumps(value))
 
 
+def activate():
+    """All-four-gate collector handover, at a verified no-grade boundary only."""
+    import contextlib,io
+    from .ls_validity_ops import gpu_status
+    from .protocol import REGISTRY
+    with contextlib.redirect_stdout(io.StringIO()):
+        gpus={h:gpu_status(h) for h in ('gpuA','gpuR')}
+    workers=[w for g in gpus.values() for w in g['workers']]
+    if len(workers)!=4 or not all(w['ready'] and w['owner'].get('generation')=='NICHENULL2' for w in workers):
+        print(json.dumps(dict(wait=True,reason='all four source-bound GPU gates required')));return False
+    cpu=read(ops.EVIDENCE/'LS_LABEL_CPU_coopmwm20261103_nichenullcpu6.json')
+    reg=ops.EVIDENCE/'NICHE_COLLECTOR_ACTIVATION_REGISTRATION.json'
+    if not reg.exists():
+        line=('\nS-COOPMWM joint niche/nullfix collector activation: all4 source-bound '
+            'eight-gate GPU workers required. Metadata supervisor handover only at '
+            'no-active-grade boundary: freeze receipt-verified parent; require all '
+            'its verification claims have final labels and only metadata tracker '
+            'children; otherwise CONT unchanged and wait. Never interrupt/replay '
+            'physics or claims. Adopt72episodes/allsnapshots/labels/requests/charges; '
+            'new immutable LS_NULLFIX_CONFIG from271CPU-qualified source6 enables '
+            'observable actionable gate before verification and B-only prospective '
+            'niches1/4 admission alternation. Same it2_K2/K8 final/horizons/N, '
+            'same existing precharges/phases and6M operational guard. R/PPO unchanged.\n')
+        write(reg,dict(line=line,cpu=cpu,parent_sha256=sha(ops.EVIDENCE/'NICHE_DEPENDENCY_RECOVERY2.json'),new_sumo_sim_s=0))
+        with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line+'amendmentSHA'+sha(reg)+'\n')
+    value=json.loads(remote('cpuQ',f'''from pathlib import Path
+import json,time,os,signal,subprocess,hashlib
+c=Path({COLLECTION!r});s=Path('/home/ubuntu/coopmwm20261103_nichenullcpu6');dest=c/'SUPERVISOR_DISPATCH_NICHENULL2.json'
+if dest.exists():print(dest.read_text());raise SystemExit
+assert s.is_dir() and c.is_dir()
+cpu={cpu!r}
+for n,h in cpu['source_hashes'].items():assert hashlib.sha256((s/n).read_bytes()).hexdigest()==h,n
+old=json.loads((c/'SUPERVISOR_DISPATCH_SUMOFOCUS1.json').read_text());p=Path('/proc',str(old['pid']))
+assert Path('/proc/sys/kernel/random/boot_id').read_text().strip()==old['boot_id']
+assert p.exists() and (p/'stat').read_text().split()[21]==old['start_ticks']
+argv=(p/'cmdline').read_bytes().replace(bytes([0]),b' ').decode()
+assert 'tools.coopmwm.ls_collection' in argv and str(c) in argv
+os.kill(old['pid'],signal.SIGSTOP)
+try:
+ for _ in range(100):
+  if (p/'stat').read_text().split()[2]=='T':break
+  time.sleep(.01)
+ else:raise ValueError('metadata parent did not freeze')
+ children=(p/'task'/str(old['pid'])/'children').read_text().split()
+ active_children=[k for k in children if 'multiprocessing.resource_tracker' not in (Path('/proc',k)/'cmdline').read_bytes().replace(bytes([0]),b' ').decode()]
+ labelled={{json.loads(q.read_text())['verification']['verification_id'] for q in (c/'labels').glob('*.json')}}
+ attempts=c/'label_attempts/SUMOENV1/verification/claims'
+ open_claims=[q.stem for q in attempts.glob('*.json') if json.loads(q.read_text()).get('pid')==old['pid'] and q.stem not in labelled]
+ if active_children or open_claims:
+  os.kill(old['pid'],signal.SIGCONT)
+  print(json.dumps(dict(wait=True,active_children=active_children,open_claims=open_claims,no_physics_signals=True)));raise SystemExit
+ os.kill(old['pid'],signal.SIGTERM);os.kill(old['pid'],signal.SIGCONT)
+except BaseException:
+ if p.exists() and (p/'stat').read_text().split()[2]=='T':os.kill(old['pid'],signal.SIGCONT)
+ raise
+for _ in range(100):
+ if not p.exists() or (p/'stat').read_text().split()[2]=='Z':break
+ time.sleep(.1)
+else:raise ValueError('old metadata supervisor did not exit')
+cfg=dict(source_root=str(s),receipt_suffix='_NICHENULL2',nullfix_active=True,
+ niche_alternation=dict(start_admission_count=len(list((c/'admissions').glob('*.json')))),
+ operational_spend_cap=6000000,amendment_sha256={sha(reg)!r})
+with (c/'LS_NULLFIX_CONFIG.json').open('x') as f:json.dump(cfg,f)
+env=dict(os.environ,PYTHONPATH=str(s/'pytools')+':/home/ubuntu/e3final/runtime/src:/home/ubuntu/e3final/runtime',CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
+code='from pathlib import Path;from tools.coopmwm.nullfix_geometry import install;install('+repr(str(s/'FROZEN_GEOMETRY_SOURCE.py'))+','+repr(str(s/'FROZEN_NETWORK.net.xml.gz'))+');from tools.coopmwm.ls_collection import supervise;supervise(Path('+repr(str(c))+'))'
+with (c/'SUPERVISOR_NICHENULL2.log').open('x') as log:
+ proc=subprocess.Popen(['nice','-n','19','/home/ubuntu/miniconda3/bin/python','-B','-u','-c',code],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+d=dict(pid=proc.pid,start_ticks=Path('/proc',str(proc.pid),'stat').read_text().split()[21],boot_id=old['boot_id'],unix=time.time(),source_root=str(s),root=str(c),old=old,amendment_sha256={sha(reg)!r},config=cfg,no_physics_signals=True)
+with dest.open('x') as f:json.dump(d,f)
+print(json.dumps(d))''',timeout=60))
+    if value.get('wait'):print(json.dumps(value));return False
+    target=ops.EVIDENCE/'NICHE_NULLFIX_COLLECTOR_ACTIVE.json'
+    if not target.exists():write(target,value)
+    from .ls_validity_ops import fast_watch_dispatch
+    fast_watch_dispatch(12)
+    print(json.dumps(value));return True
+
+
+def activation_watch():
+    """Existing rollout completion event only; no GPU/episode dispatch."""
+    import msvcrt
+    lock=(ops.EVIDENCE/'NICHE_ACTIVATION_WATCH.claim').open('a+b');lock.seek(0)
+    if not lock.read(1):lock.write(b'1');lock.flush()
+    lock.seek(0);msvcrt.locking(lock.fileno(),msvcrt.LK_NBLCK,1)
+    while time.time()<1793894340:
+        if (ops.EVIDENCE/'NICHE_NULLFIX_FOUR_WORKERS_READY.json').exists() and activate():return
+        time.sleep(60)
+
+
+def activation_dispatch():
+    import subprocess,sys
+    target=ops.EVIDENCE/'NICHE_ACTIVATION_WATCH_DISPATCH.json'
+    if target.exists():print(json.dumps(dict(adopted=read(target))));return
+    with (ops.EVIDENCE/'NICHE_ACTIVATION_WATCH.log').open('x',encoding='utf-8') as log:
+        proc=subprocess.Popen([sys.executable,'-X','utf8','-u','-m','tools.coopmwm.niche_roll','activation_watch'],
+            cwd=ops.LOCAL,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+    value=dict(pid=proc.pid,unix=time.time(),source_sha256=sha(ops.LOCAL/'tools/coopmwm/niche_roll.py'),
+        mode='wait four qualified slots; metadata-only no-grade-boundary collector activation')
+    write(target,value);print(json.dumps(value))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('broker','drain','gpu','recover','recover2','continue_roll','roll_dispatch'))
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('broker','drain','gpu','recover','recover2','continue_roll','roll_dispatch','activate','activation_watch','activation_dispatch'))
     p.add_argument('--host',choices=('gpuA','gpuR'));p.add_argument('--root')
     a=p.parse_args()
-    if a.action in ('broker','continue_roll','roll_dispatch'):globals()[a.action]()
+    if a.action in ('broker','continue_roll','roll_dispatch','activate','activation_watch','activation_dispatch'):globals()[a.action]()
     else:globals()[a.action](a.host,a.root)

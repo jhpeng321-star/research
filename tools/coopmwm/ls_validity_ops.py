@@ -282,7 +282,7 @@ def status():
 import json,time,os,shutil
 c=Path({COLLECTION!r});r=Path({ROOT!r});v=dict(unix=time.time(),owners={{}},disk_free=shutil.disk_usage(c).free,load=os.getloadavg(),training_paused=all(not (r/(a+'_checkpoint_004.pt')).exists() for a in ('B','R')))
 for name in ('BROKER','SUPERVISOR'):
- suffix=next(s for s in ('_NICHENULL1','_FASTK2V2','_FASTK2','_SUMOFOCUS1','_SUMODISK1','_SUMOENV1','_VALIDITY1') if (c/(name+'_DISPATCH'+s+'.json')).exists())
+ suffix=next(s for s in ('_NICHENULL2','_NICHENULL1','_FASTK2V2','_FASTK2','_SUMOFOCUS1','_SUMODISK1','_SUMOENV1','_VALIDITY1') if (c/(name+'_DISPATCH'+s+'.json')).exists())
  d=json.loads((c/(name+'_DISPATCH'+suffix+'.json')).read_text());p=Path('/proc',str(d['pid']));st=(p/'stat').read_text().split() if p.exists() else None
  assert not st or st[21]==d['start_ticks']
  v['owners'][name]=dict(d,state=st[2] if st else 'exited',log_tail=(c/(name+suffix+'.log')).read_text()[-1800:])
@@ -499,6 +499,9 @@ def watch():
                 if (ops.EVIDENCE/'LS_LABEL_RECOVERY_DISPATCH.json').exists():
                     from .ls_label_ops import bank_status
                     bank_status()
+                if (ops.EVIDENCE/'BANK_BUILDER_DISPATCH_0426.json').exists():
+                    from .bank_builder_ops import status as bank_quality_status
+                    bank_quality_status()
                 last_publish=now
             if now-last_throughput>=3600:
                 with contextlib.redirect_stdout(io.StringIO()):throughput()
@@ -549,7 +552,7 @@ def focus_watch_dispatch():
 def fast_watch_dispatch(generation=7):
     """Observe rolling successors by exact owner identity; never launch inference."""
     import psutil,subprocess,sys,time
-    assert generation in (7,8,9,10,11)
+    assert generation in (7,8,9,10,11,12)
     p=ops.EVIDENCE/f'LS_VALIDITY_OBSERVER_DISPATCH_V{generation}.json'
     if p.exists():print(json.dumps(read(p)));return
     assert (ops.EVIDENCE/'LS_FAST_BROKER_DISPATCH_V2.json').exists()
