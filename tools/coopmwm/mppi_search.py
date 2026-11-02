@@ -69,6 +69,23 @@ Registered rules (all exposed in ``REGISTERED``):
   paired futures, best first, at most top_k. Thompson: bootstrap the K_final
   future indices (seeded); P(best) from ``thompson_bootstraps`` resamples, the
   executed choice is the winner of one further independent resample.
+* Niches: config flag ``niches``=M (default 1 = exactly the single-mode search
+  above, byte-identical output). For M > 1 the SAME total population N is split
+  into M sub-populations (each a multiple of the WM batch width); every niche
+  starts from the SAME policy-centred distribution with its own independent
+  random stream and keeps its own mean/covariance/duration update, fed only by
+  its own elites. Repulsion (data-driven threshold, no hand-set constant): if
+  two niches' means come closer than the median pairwise ``plan_distance`` of
+  the iteration-0 population, the worse niche is re-seeded from the initial
+  distribution with a fresh stream, at most once per iteration. Horizons
+  (screen K/H, final K8/H_final), the total N, the iteration count, the group
+  sizes and the WM-evaluation count are unchanged versus niches=1. Final
+  shortlist: the best final-scored plan of each niche first (eligible = mean
+  saving vs MAPPO > 0, the registered rule), then a greedy max-min
+  ``plan_distance`` fill, best final score first; every top-k plan records its
+  niche id, and the search reports the mean pairwise top-k plan distance and
+  the number of distinct niches in the top-k. No seeding from known
+  cooperation families: the niched search stays discovery-pure.
 """
 import hashlib
 import json
@@ -471,10 +488,13 @@ def _ess_weights(scores, target):
     return w(lam), ess(lam), lam
 
 
-def thompson_topk(plans, costs, top_k, rng, bootstraps=REGISTERED['thompson_bootstraps']):
+def thompson_topk(plans, costs, top_k, rng, bootstraps=REGISTERED['thompson_bootstraps'], selected=None):
     """Top-k plans with mean saving vs MAPPO > 0, P(best) and one Thompson pick.
 
     costs: {id: K paired future costs} including 'policy' and 'MAPPO'.
+    ``selected``: pre-diversified candidate ids in shortlist order (the niche
+    shortlist); when given, the bootstrap runs on exactly these without the
+    positive-saving re-filter or the score cut (already applied upstream).
     """
     K = len(costs['MAPPO'])
     rows = []
@@ -482,7 +502,11 @@ def thompson_topk(plans, costs, top_k, rng, bootstraps=REGISTERED['thompson_boot
         c = costs[p['id']]
         rows.append(dict(id=p['id'], saving_vs_mappo=float((costs['MAPPO']-c).mean()),
                          saving_vs_policy=float((costs['policy']-c).mean()), mean_cost=float(c.mean())))
-    eligible = sorted([r for r in rows if r['saving_vs_mappo'] > 0], key=lambda r: (r['mean_cost'], r['id']))[:top_k]
+    if selected is None:
+        eligible = sorted([r for r in rows if r['saving_vs_mappo'] > 0], key=lambda r: (r['mean_cost'], r['id']))[:top_k]
+    else:
+        by = {r['id']: r for r in rows}
+        eligible = [by[i] for i in selected]
     if not eligible:
         return dict(accepted=False, reason='no candidate with positive predicted saving vs MAPPO',
                     candidates=sorted(rows, key=lambda r: (r['mean_cost'], r['id'])))
@@ -547,6 +571,242 @@ def sample_unscored(group, policy_traj, bounds, regime, seed, covariance=None, c
                       span_s=_span(cfg, durations, D), n_canon=nc)
 
 
+# --------------------------------------------------------------------------- niches
+
+def plan_distance(a, b):
+    """RMS Euclidean distance between two plans' canonical perturbations (m/s^2).
+
+    Accepts plans (dicts with ``perturbation_canonical``) or canonical arrays
+    (members x knots, e.g. niche means). Zero for identical plans; the units are
+    the searched acceleration noise. No thresholds here: callers compare against
+    data-driven quantities only.
+    """
+    za = np.asarray(a['perturbation_canonical'] if isinstance(a, dict) else a, float).reshape(-1)
+    zb = np.asarray(b['perturbation_canonical'] if isinstance(b, dict) else b, float).reshape(-1)
+    if za.shape != zb.shape or not za.size:
+        raise ValueError('plan distance needs two canonical perturbations of one shape')
+    return float(np.sqrt(np.square(za-zb).mean()))
+
+
+def niche_sizes(population, niches, multiple=REGISTERED['pop_multiple']):
+    """Split the SAME total population into ``niches`` sub-populations.
+
+    Every sub-population stays a multiple of ``multiple`` (the WM batch width)
+    and the total is preserved exactly; the remainder is handed out in
+    ``multiple``-sized blocks to the lower-indexed niches (N=120, M=4 ->
+    [32, 32, 28, 28]).
+    """
+    n, M = int(population), int(niches)
+    if M < 1 or n % int(multiple) or n < M:
+        raise ValueError('population must be a batch multiple with at least one slot per niche')
+    base = (n//M//int(multiple))*int(multiple)
+    q = (n-base*M)//int(multiple)
+    return [base+int(multiple)*(1 if i < q else 0) for i in range(M)]
+
+
+def _median_pair_distance(vectors):
+    """Data-driven repulsion threshold: median pairwise plan_distance."""
+    xs = [np.asarray(v, float).reshape(-1) for v in vectors]
+    ds = [plan_distance(xs[i], xs[j]) for i in range(len(xs)) for j in range(i+1, len(xs))]
+    return float(np.median(ds)) if ds else 0.
+
+
+def _diversified_order(scored, niche_of, top_k):
+    """Shortlist: best plan of each niche first, then greedy max-min fill.
+
+    scored: (id, score, plan) triples with lower score better; niche_of:
+    id -> niche id. The niche bests are taken in best-score order, then the
+    remaining candidates are added one at a time, each maximising its smallest
+    ``plan_distance`` to the already selected plans (ties: better score, then
+    id). Returns ids in selection order, at most ``top_k``.
+    """
+    order = sorted(scored, key=lambda t: (t[1], t[0]))
+    chosen, chosen_plans, seen = [], [], set()
+    for pid, _, plan in order:
+        k = niche_of[pid]
+        if k not in seen:
+            seen.add(k); chosen.append(pid); chosen_plans.append(plan)
+            if len(chosen) == top_k:
+                return chosen
+    rest = [t for t in order if t[0] not in set(chosen)]
+    while len(chosen) < top_k and rest:
+        t = sorted(rest, key=lambda t: (-min(plan_distance(t[2], p) for p in chosen_plans), t[1], t[0]))[0]
+        chosen.append(t[0]); chosen_plans.append(t[2]); rest.remove(t)
+    return chosen
+
+
+def _niche_search(record, group, policy_traj, bounds, evaluate, regime, cfg,
+                  mappo_traj=None, covariance=None, library=None, seed=None, extra_seeds=None):
+    """Multi-modal ('niching') MPPI/CEM search for ``cfg['niches']`` = M > 1.
+
+    Same contract as ``search`` (which dispatches here), except: the SAME total
+    population is split into M batch-width-multiple sub-populations; each niche
+    starts from the same policy-centred distribution with its own independent
+    random stream and keeps its own mean/covariance/duration probabilities,
+    updated only from its own elites; if two niches' means come closer than the
+    median pairwise plan distance of the iteration-0 population, the worse
+    niche is re-seeded from the initial distribution with a fresh stream (at
+    most one re-seed per iteration). Finalists are the best screen-scored plan
+    of each niche first, then filled by screen score, so every niche reaches
+    the K_final re-scoring; the top-k shortlist is the best final-scored plan
+    per niche first, then greedy max-min plan distance. Discovery-pure: no
+    known-family seeds.
+    """
+    cfg = dict(cfg); M = int(cfg['niches'])
+    durations = allowed_durations(cfg['durations_s'], cfg['max_duration_s'])
+    m = len(group['members'])
+    if not cfg['min_size'] <= m <= cfg['max_size']:
+        raise ValueError('group of 2..6 CAVs required')
+    P = _as_traj(policy_traj, group['members'])
+    if P.shape[1] < durations[-1]:
+        raise ValueError('policy trajectory shorter than the maximum plan duration')
+    seed = _seed_from(record, group) if seed is None else int(seed)
+    children = np.random.SeedSequence(seed).spawn(1+M)      # [choice, niche streams...]
+    choice_rng = np.random.default_rng(children[0])
+    rngs = [np.random.default_rng(children[1+i]) for i in range(M)]
+    nc = canonical_knots(durations[-1])
+    sc = scaling(m, nc, cfg['top_k'], cfg)
+    H_screen = int(min(cfg['final_H_max'], max(cfg['screen_H_min'], durations[-1])))
+    sigma = default_sigma(bounds)
+    mu0, cov0, pd0 = _distribution(cfg, m, durations, covariance, regime, sigma)
+    state = [dict(mu=mu0.copy(), cov=cov0.copy(), pd=pd0.copy()) for _ in range(M)]
+    desc = describe(group, regime)
+    base = comparators(record, cfg['final_H_max'])
+    seeds = [(np.zeros((m, nc)), durations[-1], 'centre', None)]
+    if mappo_traj is not None:
+        seeds.append((None, durations[-1], 'mappo', _as_traj(mappo_traj, group['members'])))
+    lib_used = library.nearest(desc, cfg['library_seeds']) if library is not None else []
+    for e in lib_used:
+        D = min(durations, key=lambda d: (abs(d-e['duration_s']), d))
+        old_span = e.get('canonical_span_s') or durations[-1]
+        z = _regrid(e['perturbation_canonical'], old_span, _span(cfg, durations, D), nc)
+        seeds.append((z, D, 'library', None))
+    for e in extra_seeds or ():
+        z = np.asarray(e['perturbation_canonical'], float)
+        if z.shape != (m, nc) or int(e['duration_s']) not in durations:
+            raise ValueError('extra seed must be members x canonical knots with a registered duration')
+        seeds.append((z, int(e['duration_s']), 'proposer', None))
+    sizes = niche_sizes(sc['population'], M, cfg['pop_multiple'])
+    pool, zs, niche_of, log, futures = {}, {}, {}, [], 0
+    threshold = None
+    for it in range(cfg['iterations']):
+        cands, counts = [], []
+        for i in range(M):
+            st, rng, start_i = state[i], rngs[i], len(cands)
+            if it == 0:
+                for j, (z, D, origin, absolute) in enumerate(seeds):
+                    p = build_plan(group, P, z, D, bounds, origin, regime, f'i{it}n{i}s{j}-',
+                                   absolute, _span(cfg, durations, D), nc)
+                    cands.append(p); niche_of[p['id']] = i
+                    zs[p['id']] = np.asarray(p['perturbation_canonical'], float).reshape(-1)
+            mine = len(cands)-start_i
+            L = _sampler(st['cov'])
+            while mine < sizes[i]:
+                z = st['mu']+L@rng.standard_normal(st['mu'].size)
+                D = int(durations[rng.choice(len(durations), p=st['pd'])])
+                p = build_plan(group, P, z.reshape(m, nc), D, bounds, 'sampled', regime,
+                               f'i{it}n{i}s{mine}-', span_s=_span(cfg, durations, D), n_canon=nc)
+                cands.append(p); niche_of[p['id']] = i
+                zs[p['id']] = z
+                mine += 1
+            counts.append(len(cands)-start_i)
+        scores = evaluate(record, base+cands, cfg['screen_K'], H_screen)
+        futures += (len(cands)+len(base))*cfg['screen_K']
+        c = _costs(scores, ['policy', 'MAPPO']+[p['id'] for p in cands], cfg['screen_K'])
+        rel = np.array([float((c[p['id']]-c['policy']).mean()) for p in cands])
+        for p, r in zip(cands, rel):
+            pool[p['id']] = (float(r), p)
+        if it == 0:
+            # Open-loop policy trajectory minus closed-loop 'policy continues' on
+            # the same futures; and the data-driven repulsion threshold.
+            centre_gap = float(rel[0])
+            threshold = _median_pair_distance([zs[p['id']] for p in cands])
+        per, start = [], 0
+        for i in range(M):
+            n_i = counts[i]
+            rel_i, cands_i = rel[start:start+n_i], cands[start:start+n_i]
+            Z = np.stack([zs[p['id']] for p in cands_i])
+            target = max(1, int(math.ceil(cfg['elite_frac']*n_i)))
+            if cfg['method'] == 'cem':
+                top = np.argsort(rel_i, kind='stable')[:target]
+                w = np.zeros(n_i); w[top] = 1./target; neff, lam = float(target), None
+            else:
+                w, neff, lam = _ess_weights(rel_i, target)
+            st = state[i]; mu = w@Z; X = Z-mu
+            st['cov'] = (st['cov']+neff*(X*w[:, None]).T@X)/(1.+neff)
+            st['mu'] = mu
+            wd = np.array([w[[p['duration_s'] == d for p in cands_i]].sum() for d in durations])
+            st['pd'] = (st['pd']+neff*wd/wd.sum())/(1.+neff)
+            per.append(dict(best_rel_cost=float(rel_i.min()), mean_rel_cost=float(rel_i.mean()),
+                            ess=float(neff), temperature=lam))
+            start += n_i
+        # Repulsion: at most one re-seed per iteration, threshold data-driven.
+        repulsion = None
+        if threshold > 0.:
+            pairs = sorted((plan_distance(state[i]['mu'], state[j]['mu']), i, j)
+                           for i in range(M) for j in range(i+1, M))
+            d, i, j = pairs[0]
+            if d < threshold:
+                worse = max((i, j), key=lambda k: (per[k]['best_rel_cost'], per[k]['mean_rel_cost'], k))
+                state[worse] = dict(mu=mu0.copy(), cov=cov0.copy(), pd=pd0.copy())
+                rngs[worse] = np.random.default_rng(np.random.SeedSequence([int(seed), 0x4E494348, it, worse]))
+                repulsion = dict(pair=[int(i), int(j)], reseeded=int(worse), distance=float(d),
+                                 threshold=threshold)
+        log.append(dict(iteration=it, candidates=len(cands), best_rel_cost=float(rel.min()),
+                        mean_rel_cost=float(rel.mean()), ess=float(sum(p['ess'] for p in per)),
+                        temperature=[p['temperature'] for p in per],
+                        duration_probs=dict(zip(map(str, durations),
+                                                map(float, np.mean([s['pd'] for s in state], axis=0)))),
+                        niches=[dict(p, duration_probs=dict(zip(map(str, durations), map(float, state[i]['pd']))))
+                                 for i, p in enumerate(per)],
+                        repulsion=repulsion))
+    order = sorted(pool.items(), key=lambda kv: (kv[1][0], kv[0]))
+    niche_best, seen = [], set()
+    for pid, _ in order:
+        k = niche_of[pid]
+        if k not in seen:
+            seen.add(k); niche_best.append(pid)
+    fill = [pid for pid, _ in order if pid not in set(niche_best)]
+    finalists = [pool[pid][1] for pid in (niche_best+fill)[:sc['finalists']]]
+    H_final = final_horizon(max(p['duration_s'] for p in finalists), cfg)
+    scores = evaluate(record, base+finalists, cfg['final_K'], H_final)
+    futures += (len(finalists)+len(base))*cfg['final_K']
+    costs = _costs(scores, ['policy', 'MAPPO']+[p['id'] for p in finalists], cfg['final_K'])
+    eligible = [(p['id'], float(costs[p['id']].mean()), p) for p in finalists
+                if float((costs['MAPPO']-costs[p['id']]).mean()) > 0]
+    t = thompson_topk(finalists, costs, cfg['top_k'], choice_rng, cfg['thompson_bootstraps'],
+                      selected=_diversified_order(eligible, niche_of, cfg['top_k']))
+    byid = {p['id']: p for p in finalists}
+    out = dict(accepted=t['accepted'], regime=regime, group=dict((k, group[k]) for k in ('id', 'members', 'lanes', 'spread_m', 'leader_s_m')),
+               descriptor=desc, seed=seed, config={k: (list(v) if isinstance(v, tuple) else v) for k, v in cfg.items()},
+               scaling=sc, durations_s=durations, screen=dict(K=cfg['screen_K'], H=H_screen),
+               final=dict(K=cfg['final_K'], H=H_final),
+               comparator_means=dict(policy=float(costs['policy'].mean()), MAPPO=float(costs['MAPPO'].mean())),
+               iterations=log, centre_open_loop_gap=centre_gap, candidates_searched=len(pool), imagined_futures=futures,
+               library_seeds=[e['id'] for e in lib_used], origins_searched=sorted({p['origin'] for _, p in pool.values()}),
+               niches=M, niche_sizes=[int(s) for s in sizes], repulsion_threshold=threshold,
+               finalists=[dict(id=p['id'], origin=p['origin'], duration_s=p['duration_s'], niche=int(niche_of[p['id']]),
+                               saving_vs_mappo=float((costs['MAPPO']-costs[p['id']]).mean()),
+                               saving_vs_policy=float((costs['policy']-costs[p['id']]).mean())) for p in finalists])
+    if extra_seeds:  # key absent by default: mirrors the single-niche output shape
+        out['extra_seeds'] = len(extra_seeds)
+    if not t['accepted']:
+        out.update(reason=t['reason'], plan=None, option=None, expected_saving=None)
+        return out
+    plans = [dict(byid[r['id']], saving_vs_mappo=r['saving_vs_mappo'], saving_vs_policy=r['saving_vs_policy'],
+                  niche=int(niche_of[r['id']]), p_best=r['p_best']) for r in t['candidates']]
+    chosen = next(p for p in plans if p['id'] == t['chosen'])
+    pairs = [plan_distance(a, b) for i, a in enumerate(plans) for b in plans[i+1:]]
+    out.update(plan=chosen, option=PLAN_TYPE, topk=plans, probabilities=t['probabilities'],
+               thompson=dict(bootstrap_indices=t['bootstrap_indices'], bootstraps=t['bootstraps'],
+                             sampled_saving_vs_mappo=t['sampled_saving_vs_mappo'],
+                             sampled_saving_vs_policy=t['sampled_saving_vs_policy']),
+               expected_saving=chosen['saving_vs_mappo'], expected_saving_vs_policy=chosen['saving_vs_policy'],
+               known_family=False, topk_mean_pairwise_distance=float(np.mean(pairs)) if pairs else 0.,
+               topk_distinct_niches=len({p['niche'] for p in plans}))
+    return out
+
+
 def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None,
            covariance=None, library=None, seed=None, config=None, extra_seeds=None):
     """Policy-centred MPPI/CEM joint-plan search with WM screening and K_final rescoring.
@@ -560,8 +820,18 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
     extra_seeds: optional iteration-0 seeds (dicts with ``perturbation_canonical``
     on the current canonical grid and ``duration_s``; e.g. plan-proposer plans).
     They take population slots and are WM-scored like every other candidate.
+    config: ``niches``=M > 1 runs the multi-modal search (``_niche_search``);
+    niches=1 or absent is byte-identical to the single-mode search below.
     """
     cfg = dict(REGISTERED, **(config or {}))
+    M = int(cfg.get('niches', 1) or 1)
+    if M < 1:
+        raise ValueError('niches must be >= 1')
+    if M > 1:
+        return _niche_search(record, group, policy_traj, bounds, evaluate, regime, cfg,
+                             mappo_traj=mappo_traj, covariance=covariance, library=library,
+                             seed=seed, extra_seeds=extra_seeds)
+    cfg.pop('niches', None)  # niches=1 (explicit or default): byte-identical legacy output
     durations = allowed_durations(cfg['durations_s'], cfg['max_duration_s'])
     m = len(group['members'])
     if not cfg['min_size'] <= m <= cfg['max_size']:
