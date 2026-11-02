@@ -1,6 +1,16 @@
 # S-RB-RUNA handoff
 
-Updated 2026-11-03; closure reconciled02:56 +08. Branch `c4/rb-runa`, base `f0db3c82`.
+Updated 2026-11-03; closure reconciled05:38 +08. Branch `c4/rb-runa`, base `f0db3c82`.
+
+## Fresh-session reconciliation — November3 05:38 +08
+- Clean HEAD `ce112618` preserved. Current INT/EVAL handoffs and documented
+  owner continuation confirm the November1 noon program is closed.
+- A2 remains160/160 complete; B2 terminal157 and C2 terminal102/INT-owned.
+  No pending RUNA evaluation; existing claims, completion notes and outputs retained.
+- Fresh read-only gpuA: RTX4090D,18182MiB used/30329free/24%; recorded RUNA
+  workers/supervisor/monitor and local watcher PIDs absent. No process action.
+- Receipt: `docs/rbruna/RESUME_CLOSED_20261103_0538.md`. Previous verification
+  and polling-gap caveat retained; no evaluation or watcher restarted.
 
 ## Fresh-session reconciliation — November3 02:56 +08
 - Clean HEAD `efa6ca69` preserved. Current INT/EVAL handoffs confirm the original
