@@ -114,7 +114,10 @@ def main(root):
         start=time.monotonic()
         if centre:
             from .centre_service import result as centre_result
-            result=centre_result(rt,r,prepared())
+            from .query_errors import execute
+            # R's centre helper is per-query as well: a fault is declined (the
+            # R window continues on its policy), never a worker death.
+            result=execute(r,lambda:centre_result(rt,r,prepared()))
         elif diagnostic:
             from .accel_diagnostic import evaluate as credit
             result=credit(rt,r,speed2=speed2,memory=prepared(),transfers=transfers)

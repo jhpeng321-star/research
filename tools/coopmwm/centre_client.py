@@ -16,5 +16,7 @@ def trajectory(root,record,deadline):
         time.sleep(.5)
     value=read(response)
     if value['record_sha256']!=digest(record):raise ValueError('centre response identity mismatch')
+    if value.get('query_error') or value.get('worker_unavailable'):
+        return None,value  # declined centre query: the R window follows its policy
     if value['candidate_scores']!=0:raise ValueError('R must never score a candidate with the WM')
     return value['policy_traj'],value['receipt']

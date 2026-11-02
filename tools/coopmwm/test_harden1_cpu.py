@@ -120,6 +120,31 @@ class PlanServiceTests(unittest.TestCase):
             self.assertEqual(second['reason'],'no candidate beats policy')
 
 
+class CentreDeclineTests(unittest.TestCase):
+    """R's centre helper shares the worker: its faults must not hang R episodes."""
+
+    def test_centre_query_fault_and_dead_slot_are_declines_for_the_R_client(self):
+        from .capacity_broker import settle_unavailable
+        from .centre_client import trajectory
+        from .query_errors import execute
+        from .protocol import digest
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);(root/'broker_assignments').mkdir()
+            record=dict(state_id='c'*64,world_id=1,time_s=300,rows=[],group=['a','b'])
+            (root/'broker_assignments'/(record['state_id']+'.json')).write_text(json.dumps(dict(slot='gpuA@1')))
+            self.assertEqual(settle_unavailable(root,'gpuA@1',[('centre',record)]),[record['state_id']])
+            with patch('tools.coopmwm.warm_health.assert_running'):
+                centre,value=trajectory(root,record,4e9)
+            self.assertIsNone(centre);self.assertFalse(value['accepted'])
+            other=dict(record,state_id='d'*64)
+            def fault():raise ValueError('complete observable group of two or three required')
+            response=execute(other,fault)
+            (root/'centre_responses'/(other['state_id']+'.json')).write_text(json.dumps(response))
+            with patch('tools.coopmwm.warm_health.assert_running'),patch('tools.coopmwm.centre_client.write'):
+                centre,value=trajectory(root,other,4e9)
+            self.assertIsNone(centre);self.assertEqual(value['record_sha256'],digest(other))
+
+
 class HotAddGateTests(unittest.TestCase):
     """14:24 gpuA hot-add stall: 'missing/nonexact new-worker gate STARTUP_COMMITTED_K4_H300.json'."""
 

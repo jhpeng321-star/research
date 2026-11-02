@@ -53,11 +53,14 @@ def settle_unavailable(root,slot,items):
     """A failed model claim is terminally declined, never recomputed or scored."""
     settled=[]
     for kind,record in items:
-        if kind!='plan' or record.get('mode')=='diagnostic':continue
+        if record.get('mode')=='diagnostic':continue
+        # Centre claims too: an R episode would otherwise wait forever on a
+        # quarantined slot (centre_client treats worker_unavailable as a decline).
         key=record['state_id'];assignment=Path(root)/'broker_assignments'/(key+'.json')
-        target=Path(root)/'responses'/(key+'.json')
+        target=Path(root)/('centre_responses' if kind=='centre' else 'responses')/(key+'.json')
         if target.exists() or not assignment.exists():continue
         if json.loads(assignment.read_text())['slot']!=slot:continue
+        target.parent.mkdir(exist_ok=True)
         immutable(target,dict(accepted=False,reason='assigned worker unavailable; policy continues; inference never replayed',
             record_sha256=digest(record),compute_counts_unknown=True,
             worker_unavailable=dict(slot=slot,key=key,inference_retry=False)))
