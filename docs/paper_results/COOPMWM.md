@@ -1,5 +1,35 @@
 # S-COOPMWM — live checks
 
+## MAIN08:18 — quota-tail concurrent group admission qualified and registered
+- Recovery adopted completed **WARM MEMORY QUALIFIED**, the existing B/R restart,
+  and exact-positive same-B/seed library; no qualification or training was redone.
+- Immutable `tailcpu2`: **139 CPU tests PASS**, zero skips,27.055s, zero SUMO/GPU
+  launches. Includes actual frozen MAPPO parity, own-step PPO/exact-only grade
+  learning, exact CRN draws, concurrency reservations and safe continuation tests.
+  Initial `tailcpu1` fixture failures are retained. Local generated observer and
+  publisher payload suites: **15 PASS**; real guard state passes/no active STOP.
+- Amendment **e9af582e914d8a44…** registered before deployment: admitted windows
+  while the execution quota is unmet publish searches for **all eligible groups
+  before waiting**. Results resolve in inherited spatial order, first accepted;
+  one plan starts per control tick. All other forecasts are logged as searched,
+  not executed. One Bernoulli/window and one possible beta draw preserve the
+  existing exact-grader CRN contract. One batch reserves one executable window.
+- Each query keeps the same warm history, policy centre, search population,
+  K4/H300 screen, K8/Hfinal, top-k/Thompson and exact-only learning. R continues
+  the existing count/regime/size/duration matching. After executed quota10 the
+  original single-group nonblocking admission applies.
+- Detached transition **3874249/start59377221** dispatched once at
+  unix1793579494. It pauses only original B supervisor3551873, while all current
+  SUMO/GPU searches, broker3706352, grader3427015 and R3551874 continue. At
+  unix1793579500: **A48/B1/R1; B-u2 22/24 closed**. It waits for the two original
+  episodes, adopts all24 results, and resumes from exact u1 checkpoint/Adam/RNG,
+  trust/library and diagnostic-selection state. New fan-out applies to the next
+  wave. Never redispatch the transition or those already-owned searches.
+- New update receipts include collection wall time from original claim times and
+  per-slot completed-inference busy fractions (pending work censored). No new
+  simulation allocation: **7,495,040/7,500,000sim-s;4,960 unallocated**. Original
+  GPU deadline remains18:07:02UTC+8. B-u4–6 viability is still pending.
+
 ## 08:12 continuation — Windows publication failure repaired
 - Fresh session adopted A48/B1/R1 and every existing remote owner; no training,
   search or physics job was restarted. At unix1793578141 B-u2 has22/24 episodes
