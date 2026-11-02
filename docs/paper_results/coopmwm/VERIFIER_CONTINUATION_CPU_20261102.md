@@ -37,3 +37,16 @@ the completed warm-memory qualification remain adopted. Pending: verification
 grade reuse, one real five-branch smoke plus live-continuation gate, shared B/R
 update-boundary switch, fixed final-endpoint migration and confirmed budget.
 No new SUMO/inference or PID control was performed for this qualification.
+
+## Integrated CPU episode-loop gate
+
+Frozen `verifycpu5`: **94 CPU PASS**, zero skips,23.139720s, zero SUMO/inference.
+One additional test runs the actual episode loop, live controller and verifier
+installation against the deterministic toy plant, with all five branches
+(four candidates plus policy) and exact live/chosen fingerprints through t330
+after the t320 decision. This checks integration beyond the isolated helpers;
+it is still **not a real SUMO smoke**. `verifycpu4` failed because the first test
+fixture used stochastic admission and produced no proposal at its sole planned
+decision. Its failed receipt remains. The corrected fixture deterministically
+admits that one decision, retaining a real generator admission draw; no runtime
+rule or search was changed.

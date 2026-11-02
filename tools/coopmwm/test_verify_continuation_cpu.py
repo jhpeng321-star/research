@@ -77,3 +77,46 @@ def test_smoke_rejects_incomplete_or_nonidentical_live_continuation(fault):
         b['executed'] = False
     with pytest.raises((sv.PrefixMismatch, ValueError)):
         sv.check_live_continuation(r, live)
+
+
+def test_actual_episode_loop_and_controller_match_verified_branch(tmp_path, monkeypatch):
+    """Exercise capture, branch controller, command replay and live installation together."""
+    from tools.coopmwm import accel_plant, plan_client
+    from tools.coopmwm.accel_storage import read
+    from tools.coopmwm.test_exact_grade_cpu import WORLD, fake_sumo, policy
+
+    class FourCandidates:
+        def __init__(self, generator):
+            self.generator = generator
+
+        def __call__(self, rows, commands, now, sample):
+            if now != 320:
+                return None
+            from tools.coopmwm.mppi_search import group_components
+            members = group_components(rows)[0]['members']
+            torch.rand((), generator=self.generator)  # one admitted query
+            topk = [dict(id=f'P320_{i}', members=members, duration_s=30,
+                         knot_s=10, family='MPPI', knots=[[a]*4 for _ in members])
+                    for i, a in enumerate((-.5, .5, 1.5, 2.6))]
+            return dict(accepted=True, option='MPPI', plan=topk[0], topk=topk,
+                        behaviour=dict(route='wm', eligible_query=True, regime='ordinary',
+                                       sample_probability=1., executed=False))
+
+    ident = 'warm_u001_B_986001'
+    root = tmp_path/'verify'
+    charges = []
+    monkeypatch.setattr(plan_client, 'guide', lambda job, g: FourCandidates(g))
+    monkeypatch.setattr(sv, 'SubprocessBranchRunner', lambda work, **kw: sv.LocalBranchRunner(work))
+    monkeypatch.setattr(sv, 'accel_charge', lambda *a, **kw: lambda vid, specs: charges.append(specs))
+    job = dict(id=ident, path=str(tmp_path/'jobs'/ident), world=WORLD, role='train', arm='B',
+               weights=policy().state_dict(), runtime='', checkpoint='', noise_seed=11,
+               deterministic=False, sim_s=520, stop=520, queue_root=str(tmp_path),
+               accel_bounds=[-3., 2.6], gpu_deadline=0, guided=False, beta=1., warm_history=False,
+               sumo_verify=dict(root=str(root), run_root=str(tmp_path), workers=1))
+    with fake_sumo():
+        live = accel_plant.episode(job)
+    receipts = [read(p) for p in (root/'verifications').glob('*.json')]
+    assert len(receipts) == 1 and receipts[0]['status'] == 'accepted'
+    assert len(charges) == 1 and len(charges[0]) == 5
+    assert all(b['status'] == 'graded' for b in receipts[0]['branches'])
+    assert sv.check_live_continuation(receipts[0], live)['checked_to_s'] == 330
