@@ -11,6 +11,7 @@ from .storage import read,write
 DISPATCHES={'grader':'EXACT_GRADER_DISPATCH.json','broker':'WARM_REMOTE_BROKER_DISPATCH.json',
             'B':'WARM_B_DISPATCH_V4.json','R':'WARM_R_DISPATCH_V4.json'}
 TAG='EXACT_OBSERVER_V2'
+OBSERVE_ONLY=('EXACT_OBSERVER_V6','EXACT_OBSERVER_V7','EXACT_OBSERVER_V8')
 
 
 def adopt(cpu):
@@ -90,7 +91,7 @@ def run():
             gpus,cpu=retry(exact_ops.status,verify,record)
             previous.update(gpu=gpus,cpu=cpu)
             if any(v['failed'] for v in gpus.values()):raise ValueError('source-bound GPU failure; preserve/no inference replay')
-            if TAG in ('EXACT_OBSERVER_V6','EXACT_OBSERVER_V7'):
+            if TAG in OBSERVE_ONLY:
                 adopt(cpu);launched=False  # existing repaired remote owners only
             else:launched=launch_ready(gpus,cpu)
             if launched:announce()
@@ -107,6 +108,24 @@ def run():
 
 def dispatch():
     target=ops.EVIDENCE/(TAG+'_DISPATCH.json');assert not target.exists()
+    if TAG=='EXACT_OBSERVER_V8':
+        from .protocol import checked,REGISTRY,sha
+        receipt=ops.EVIDENCE/'EXACT_OBSERVER_COMMAND_LENGTH_RECOVERY.json';assert not receipt.exists()
+        old=read(ops.EVIDENCE/'EXACT_OBSERVER_EXIT_1793578179.json')
+        assert '206' in old['error'] and old['remote_training_survives']
+        previous=read(ops.EVIDENCE/'EXACT_OBSERVER_V7_DISPATCH.json')
+        # Windows local ownership check, not a process-name kill or remote action.
+        live=subprocess.check_output(['powershell','-NoProfile','-Command',
+            f"Get-CimInstance Win32_Process -Filter 'ProcessId={int(previous['pid'])}' | ConvertTo-Json -Compress"],text=True)
+        assert not live.strip(),'previous observer still exists; never duplicate'
+        value=dict(previous_exit=old,previous_observer_pid=previous['pid'],previous_pid_verified_absent=True,
+            repair='filter changed intended paths; bounded diff argv; literal NUL pathspecs on git-add stdin; preserve unrelated staged work',
+            tests=8,new_sumo_sim_s=0,dispatches_training=False,original_gpu_deadline_retained=True,
+            commit_sha256=sha(ops.LOCAL/'tools/coopmwm/warm_v3_watch.py'),
+            observer_sha256=sha(ops.LOCAL/'tools/coopmwm/exact_watch.py'))
+        write(receipt,value)
+        line='\nS-COOPMWM WINDOWS OBSERVER COMMAND-LENGTH REPAIR REGISTERED amendmentSHA'+sha(receipt)+': '+json.dumps(value,sort_keys=True)+'\n'
+        with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
     if TAG=='EXACT_OBSERVER_V7':
         from .protocol import checked,REGISTRY,sha
         receipt=ops.EVIDENCE/'EXACT_OBSERVER_TIMING_RECOVERY.json';assert not receipt.exists()
@@ -155,7 +174,7 @@ def dispatch():
         line='\nS-COOPMWM PUBLICATION PAYLOAD REPAIR REGISTERED amendmentSHA'+sha(receipt)+': observer39060 exited before remote receipt read on IndentationError; verified absent; fixed generated Python indentation and added actual-payload compilation to CPU4PASS. Real one-shot fetch/publication succeeded, recovered A48/check/dev/pause from existing immutable data. V5 restores observation only, original remote owners/deadline preserved, zero new physics/inference.\n'
         with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
     binding=dict(deadline_unix=read(ops.EVIDENCE/'WARM_A48_BINDING.json')['gpu_deadline'],
-        contract='observe/publish only; repaired owners already dispatched; never launch physics/inference' if TAG in ('EXACT_OBSERVER_V6','EXACT_OBSERVER_V7') else 'observe/publish; adopt existing owners; once8EXACT0 gates per host, register and launch grader/broker/B/R once; no physics retry')
+        contract='observe/publish only; repaired owners already dispatched; never launch physics/inference' if TAG in OBSERVE_ONLY else 'observe/publish; adopt existing owners; once8EXACT0 gates per host, register and launch grader/broker/B/R once; no physics retry')
     write(ops.EVIDENCE/(TAG+'_BINDING.json'),binding)
     with (ops.EVIDENCE/(TAG+'.log')).open('x',encoding='utf-8') as log:
         p=subprocess.Popen([sys.executable,'-X','utf8','-u','-m','tools.coopmwm.exact_watch','run','--tag',TAG],cwd=ops.LOCAL,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT)
@@ -164,5 +183,5 @@ def dispatch():
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('mode',choices=('run','dispatch'))
-    p.add_argument('--tag',choices=('EXACT_OBSERVER_V2','EXACT_OBSERVER_V3','EXACT_OBSERVER_V4','EXACT_OBSERVER_V5','EXACT_OBSERVER_V6','EXACT_OBSERVER_V7'),default=TAG)
+    p.add_argument('--tag',choices=('EXACT_OBSERVER_V2','EXACT_OBSERVER_V3','EXACT_OBSERVER_V4','EXACT_OBSERVER_V5',*OBSERVE_ONLY),default=TAG)
     args=p.parse_args();TAG=args.tag;globals()[args.mode]()

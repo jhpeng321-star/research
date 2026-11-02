@@ -14,14 +14,28 @@ from .warm_transport import QueueTransport
 
 
 def commit(paths):
-    paths=sorted(set(paths))
+    paths=sorted({p.replace('\\','/') for p in paths})
     if not paths:return
     def git(*args):return subprocess.check_output(['git',*args],cwd=ops.LOCAL,text=True,encoding='utf-8')
     if git('diff','--cached','--name-only').strip():raise ValueError('other staged work; preserve it')
+    # Observers retain every immutable receipt, so their complete path list grows
+    # past Windows' CreateProcess limit. Inspect only changed intended files and
+    # send exact staging pathspecs on stdin, never in an unbounded command line.
+    pending=set(git('ls-files','--modified','--others','--exclude-standard','-z').split('\0'))
+    paths=[p for p in paths if p in pending]
+    if not paths:return
     print(git('status','--short','--untracked-files=no'),flush=True)
-    print(git('diff','--stat','--',*paths),flush=True)
+    batch=[]
+    for path in paths:
+        literal=':(literal)'+path
+        if batch and len(subprocess.list2cmdline(['git','diff','--stat','--',*batch,literal]))>16000:
+            print(git('diff','--stat','--',*batch),flush=True);batch=[]
+        batch.append(literal)
+    if batch:print(git('diff','--stat','--',*batch),flush=True)
     print(git('log','--oneline','-10'),flush=True)
-    subprocess.run(['git','add','--',*paths],cwd=ops.LOCAL,check=True)
+    pathspecs='\0'.join(':(literal)'+p for p in paths)+'\0'
+    subprocess.run(['git','add','--pathspec-from-file=-','--pathspec-file-nul'],
+        input=pathspecs.encode('utf-8'),cwd=ops.LOCAL,check=True)
     if git('diff','--cached','--name-only').strip():
         subprocess.run(['git','commit','-m','coopmwm: publish durable warm training checks'],cwd=ops.LOCAL,check=True)
 
