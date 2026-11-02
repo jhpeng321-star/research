@@ -146,7 +146,21 @@ def run_arm(root,arm):
             if replay:
                 from .replay_bank import bank_pairs
                 replay_beta=float(b.get('replay_beta',1.))
-                pairs,weights=bank_pairs(root,arm,SEED,beta=replay_beta)
+                cap=fair=None
+                if arm=='R':
+                    # MAIN fairness: R imitates at most as many verified decisions as B's bank
+                    # had at the matching B update (lag 1 when R runs concurrently).
+                    bu=u-1 if b.get('r_concurrent_lag1_quota') else u
+                    bp=root/f'B_UPDATE_{bu:03}.json'
+                    if bu==u:wait(root,bp,b['gpu_deadline'],arm)
+                    cap=(read(bp).get('trust',{}).get('bank') or {}).get('available',0) if bp.exists() else 0
+                    fair=dict(matched_B_update=bu,B_bank_decisions=cap,B_update_receipt_found=bp.exists())
+                pairs,weights=bank_pairs(root,arm,SEED,beta=replay_beta,sources=b.get('replay_sources',{}).get(arm,()),
+                    max_decisions=cap)
+                if fair is not None:
+                    have=weights['counts']['available'];fair.update(R_available=have,R_used=weights['counts']['used'],
+                        shortfall=max(0,cap-have),excess_not_used=max(0,have-cap),padding_from_B=False)
+                    weights['fairness']=fair
                 tr=dict(beta=replay_beta,graded=weights['counts']['positive'],bank=weights['counts'],
                     mode='B-REPLAY: no executed plans; trust/beta fixed by binding')
             elif arm in ('B','R'):

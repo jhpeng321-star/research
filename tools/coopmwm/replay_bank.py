@@ -16,7 +16,6 @@ first 20 exact advantages, both signs) frozen and persisted) and the same clip; 
 multiplies the weight. The collector reloads the newest checkpoint of its arm at every
 episode, so its snapshot policy refreshes after each update.
 """
-import copy
 import json
 from pathlib import Path
 import time
@@ -57,11 +56,25 @@ def collector_guide(job, generator, controller, prefixes):
     root = Path(job['queue_root']);cfg = job['collect'];arm = job['arm']
     bank = bank_root(root, arm);(bank/'snapshots').mkdir(parents=True, exist_ok=True)
 
+    from .mppi_search import REGISTERED, final_horizon
+    # MAIN: the WM arrival model is fitted only up to the observed demand phase end
+    # (arrival_fit 'forecast exceeds observed/documented fitted demand phase'):
+    # admit a window only if t0 + the longest registered look-ahead stays inside it.
+    max_h = max(300, int(min(REGISTERED['final_H_max'], max(REGISTERED['screen_H_min'], REGISTERED['max_duration_s']))),
+                final_horizon(REGISTERED['max_duration_s']))
+    phase_end = float(cfg.get('demand_phase_end_s', 1200.))
+
     def call(rows, commands, now, sample):
         if int(now) % 10 or now > cfg.get('last_window_s', 900):
             return None
         groups = group_components(rows)
         if not groups:
+            return None
+        if now+max_h > phase_end:
+            (bank/'admission_exclusions').mkdir(exist_ok=True)
+            write(bank/'admission_exclusions'/f'{job["id"]}_t{int(now):04d}.json',
+                  dict(job=job['id'], t0=int(now), max_horizon_s=max_h, demand_phase_end_s=phase_end,
+                       groups=len(groups), reason='t0 + max look-ahead outside the fitted demand phase'))
             return None
         pending = sum(not (root/'responses'/p.name).exists() for p in (root/'requests').glob('*.json'))
         pending += sum(not (root/'centre_responses'/p.name).exists() for p in (root/'centre_requests').glob('*.json'))
@@ -193,7 +206,6 @@ def collect(root, arm, binding, worlds, stop, episodes_per_round=2, verify_worke
     import multiprocessing
     from .accel_plant import episode
     from .accel_storage import reserve
-    from .acceleration import Policy
     from .accel_learner import load
     from .policy_wm import actor_state
     root = Path(root);bank = bank_root(root, arm);bank.mkdir(parents=True, exist_ok=True)
@@ -218,7 +230,8 @@ def collect(root, arm, binding, worlds, stop, episodes_per_round=2, verify_worke
                              gpu_deadline=binding['gpu_deadline'], guided=False, beta=1.,
                              policy_state=actor_state(policy), warm_history=binding.get('warm_history', False),
                              collector_policy_update=u, b_replay=True,
-                             collect=dict(slots=binding['slots'], fanout_factor=binding.get('parallel_fanout_factor', 2))))
+                             collect=dict(slots=binding['slots'], fanout_factor=binding.get('parallel_fanout_factor', 2),
+                                          demand_phase_end_s=binding.get('demand_phase_end_s', 1200.))))
         reserve(root, jobs, binding.get('collect_phase', 'train'))
         with ProcessPoolExecutor(max_workers=len(jobs), mp_context=multiprocessing.get_context('spawn')) as pool:
             list(pool.map(episode, jobs))
@@ -236,17 +249,37 @@ def collect(root, arm, binding, worlds, stop, episodes_per_round=2, verify_worke
 
 # ---------------------------------------------------------------- bank reader (trainer side)
 
-def bank_decisions(root, arm, upto_unix=None):
-    """Completed sealed verification receipts of this arm (accepted/rejected)."""
-    out = []
-    for p in sorted((bank_root(root, arm)/'sumo_verification'/'verifications').glob('*.json')):
+def _receipts(root, arm, sources=()):
+    """(receipt, branches_dir) from this bank and optional live LS-COLLECT label dirs.
+
+    LS layout (c4/coopnative ls_collection): <src>/labels/<key>.json {'verification': receipt},
+    branch tapes under <src>/branches/<verification_id>/<branch>/RESULT.json.
+    """
+    own = bank_root(root, arm)/'sumo_verification'
+    links = {}
+    for p in (bank_root(root, arm)/'decisions').glob('*.json'):
+        v = json.loads(p.read_text());links[v['verification_id']] = v.get('policy_update')
+    for p in sorted((own/'verifications').glob('*.json')):
         r = json.loads(p.read_text())
+        u = links.get(r['verification_id'])
+        yield r, own/'branches', (f'u{int(u)}' if u is not None else 'unknown')
+    for src in sources:
+        # MAIN: live frozen-u3 LS-COLLECT labels count as B bank entries, tagged u3.
+        src = Path(src)
+        for p in sorted((src/'labels').glob('*.json')):
+            yield json.loads(p.read_text())['verification'], src/'branches', 'u3'
+
+
+def bank_decisions(root, arm, upto_unix=None, sources=()):
+    """Completed sealed verification receipts of this arm (accepted/rejected), oldest first."""
+    out = []
+    for r, branches, version in _receipts(root, arm, sources):
         xg.verify_sealed(r, 'receipt_sha256')
-        if r['status'] not in ('accepted', 'rejected'):
+        if r['status'] not in ('accepted', 'rejected') or r['episode']['arm'] != arm:
             continue
         if upto_unix is not None and r['timing']['finished_unix'] > upto_unix:
             continue
-        out.append(r)
+        out.append(dict(r, _branches=str(branches), _policy_version=version))
     return sorted(out, key=lambda r: (r['timing']['finished_unix'], r['verification_id']))
 
 
@@ -272,17 +305,23 @@ def temperature(root, arm, training_seed, decisions):
     return t
 
 
-def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT_CLIP):
-    """(pairs, summary): imitation pairs for ALL exact-advantage>0 bank entries, weight*beta."""
-    decisions = bank_decisions(root, arm, upto_unix)
-    T = temperature(root, arm, training_seed, decisions)
+def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT_CLIP, sources=(),
+               max_decisions=None):
+    """(pairs, summary): imitation pairs for ALL exact-advantage>0 bank entries, weight*beta.
+
+    max_decisions (R fairness, MAIN): use at most this many verified decisions, oldest first;
+    never padded from another arm's data.
+    """
+    everything = bank_decisions(root, arm, upto_unix, sources)
+    T = temperature(root, arm, training_seed, everything)
+    decisions = everything if max_decisions is None else everything[:max(0, int(max_decisions))]
     pairs, entries, counts = [], [], dict(decisions=len(decisions), positive=0, nonpositive=0)
     for r in decisions:
         if r['status'] != 'accepted' or not r['grade_veh_s'] or r['grade_veh_s'] <= 0:
             counts['nonpositive'] += 1;continue
         counts['positive'] += 1
         plan = r['chosen_plan'];branch = r['branches'][r['chosen']+1]
-        result_path = bank_root(root, arm)/'sumo_verification'/'branches'/r['verification_id']/branch['branch']/'RESULT.json'
+        result_path = Path(r['_branches'])/r['verification_id']/branch['branch']/'RESULT.json'
         from .accel_storage import read
         tape = read(result_path)
         if branch.get('result_sha256') and digest(tape) != branch['result_sha256']:
@@ -291,9 +330,14 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
         entry = dict(start_s=r['t0'], duration_s=int(plan['duration_s']), plan_id=plan['id'], weight=w)
         pairs.extend(xg.imitation_pairs(tape, entry))
         entries.append(dict(verification_id=r['verification_id'], grade_veh_s=r['grade_veh_s'], weight=w,
+                            policy_version=r['_policy_version'], available_k=r.get('available_k', r['k']),
                             duration_s=entry['duration_s'], receipt_sha256=r['receipt_sha256']))
+    counts.update(available=len(everything), used=len(decisions),
+                  by_policy_version={v: sum(r['_policy_version'] == v for r in decisions)
+                                     for v in sorted({r['_policy_version'] for r in decisions})})
     return pairs, dict(rule='B-REPLAY bank: all exact-advantage>0 entries every update; weight x beta',
-                       temperature=T, beta=float(beta), counts=counts, entries=entries, clip=clip)
+                       temperature=T, beta=float(beta), counts=counts, entries=entries, clip=clip,
+                       max_decisions=max_decisions)
 
 
 def main(argv=None):

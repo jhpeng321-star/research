@@ -494,7 +494,7 @@ def child_install(parent=False):
     _install_fcntl()
     _fake_leverprobe()
     from tools.coopfree import backend as cf
-    from . import accel_plant, sumo_verify
+    from . import accel_plant
     cf.tick = fake_tick
     accel_plant.install_seed_scope = lambda: None           # registered-world guards: TRAIN worlds only
     accel_plant.guard = lambda world, role: None

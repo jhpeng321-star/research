@@ -102,6 +102,11 @@ def install(root,arm=None):
         # in flight) and R concurrent with B on B's previous completed quota (lag 1).
         result.update(parallel_fanout_factor=b.get('parallel_fanout_factor',2),
             r_concurrent_lag1_quota=b.get('r_concurrent_lag1_quota',True))
+        if b.get('b_replay'):
+            # MAIN B-REPLAY: live frozen-u3 LS-COLLECT labels count as B bank entries (tag u3).
+            result.update(b_replay=True,replay_beta=b.get('replay_beta',1.),
+                replay_sources=b.get('replay_sources',{'B':['/home/ubuntu/coopmwm20261102_lscollect1']}),
+                demand_phase_end_s=b['demand_phase_end_s'])
         if a in b.get('stop_after_update',{}):result['stop_after_update']=b['stop_after_update'][a]
         if b.get('sumo_verify'):result['sumo_verify']=copy.deepcopy(b['sumo_verify'])
         return result
