@@ -8,8 +8,13 @@ records owner-stopping CAL448399/448400 for S-COOPMWM priority. Direct read-only
 gpuA audit: both ABSENT; local33284 absent; original collector terminal is BLOCKED
 after SSH failure. Existing57/96futures fetched/transport-hash checked: six complete
 K8devworlds969420–969425; nine other futures retained but excluded from scoring.
-No new inference/dispatch, signals or fit. Current work is partial cached evidence
-publication; full dev12 coverage/reliability qualification remains incomplete.
+No new inference/dispatch, signals or fit. Partial cached evidence is published in
+`rb2cal/dev_physical_v1_cpu_partial/RESULTS.json` (all paths below relative to
+`docs/paper_results`). Complete6only; baseline matched to same6 saved observations.
+Physical v1 paired90%coverage120/300/600=51.7/51.7/50.0%; raw selected0.8calls
+win68.8/70.0/85.7% vs forecast96.1/96.3/95.5%, n16/10/14. Still overconfident;
+no outcome-coverage qualification. CPU-vs-GPU comparison is descriptive only.
+New recovery admission tests4PASS; RuffPASS. Full dev12 qualification incomplete.
 
 Branch `c4/rb2-cal`, base frozen FULL-v4 `22cc32f6`. Design frozen before fit:
 `docs/paper_results/RB2_CAL_DESIGN.md`. Physical v1 IMPLEMENTED; parameters:
