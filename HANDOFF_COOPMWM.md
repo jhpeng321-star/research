@@ -1,5 +1,22 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+Nov3~01:40: latest601brief linesread incl01:28/01:33 nichebuild delegated,
+NICHE_READY absent; neverbuildniches yourself. MirrorstillFAIL/OFF detailedverdict
+COMMAND_MIRROR_MAIN0116_VERDICT.md. it2_K2 registered8231451f/source
+/home/ubuntu/coopmwm20261103_lsfastcpu2,230CPU PASS0skips40.396s; local7testsPASS.
+NEWbroker1941060/start65509411 LIVE/S source2, adoptsalloldassignments;
+first1933278failedBEFOREserveonBROKER_OWNER_VALIDITY1immutablecollision,retained.
+Original1485244receiptverifiedTERM(metadataonly); GPU/gradingownersunchanged.
+DrainrequestedAincident1andRconcurrent3 ONLY, finishcurrentsearchthenreturn;
+neitherreplacementdispatched yet. Use ls_fast_ops gpu --host... --root... FIRST;
+wait=true meansleaveoriginalrunning. Newworker needsK2H300gate+ALL8freshgates.
+Other2slotsandgradingcontinue; observerV7=30560/start1793640961.8278377,
+V6creation/argvverifiedTERM. NewobserverknowsFASTownerIDs/explicitbrokerV2.
+At1793641293 broker+supervisorlive,25usablelists/disk13.775GB/B-Ru3.
+Delegated13928 NOWABSENT/HARDEN_INT_READYabsent, hardenint.logend missingtorch;
+MAINalert _sol/COOPMWM_REPLAY_RELEASE_BLOCKED_0135.md. No duplicatework launched.
+LATEST10CONFIRMEDadmittedBpositives; rawselectednotconfirmation. Fresh6Mguard.
+
 Fresh Nov3 01:20 adoption: ALL592 brief lines read; HEADb611829c/untrackedwork
 retained. RESUME_20261103_0120.md pins read-only current owners: CPU1834956,
 A7429/7430,R500795/494955 all live/fourREADY8gates, disk13.9GB/unblocked.

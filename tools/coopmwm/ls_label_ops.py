@@ -170,7 +170,7 @@ def bank_status():
     value=json.loads(remote('cpuQ',f'''from pathlib import Path
 import json,time,sys
 sys.path.insert(0,{SOURCE!r}+'/pytools')
-from tools.coopmwm.exact_grade import _bootstrap_mean
+from tools.coopmwm.exact_grade import _bootstrap_mean,verify_sealed
 c=Path({COLLECTION!r});all_labels=[json.loads(p.read_text()) for p in (c/'labels').glob('*.json')]
 labels=[x for x in all_labels if x['verification']['status'] in ('accepted','rejected')]
 assert len({{x['search_id'] for x in labels}})==len(labels),'duplicate usable labels'
@@ -178,6 +178,10 @@ positive=[x for x in labels if x['verification']['status']=='accepted' and x['ve
 values=[x['verification']['best_margin_veh_s'] for x in labels]
 mean,ci=_bootstrap_mean(values,[x['world_id'] for x in labels],10000,20261101) if labels else (None,None)
 focus=lambda x:x['verification']['episode']['world']['demand'] in (2400,2700) and x['verification']['episode']['world']['penetration'] in (.2,.4)
+confirmed=[]
+for p in (Path({ROOT!r})/'replay_bank/B/confirmations').glob('*.json'):
+ x=json.loads(p.read_text());verify_sealed(x,'confirmation_sha256');confirmed.append(x)
+admitted=[x for x in confirmed if x['admitted']]
 null_lists=[dict(search_id=x['search_id'],world_id=x['world_id'],
  all_eight_delay_equal_policy=len(x['verification'].get('J_candidates_veh_s') or [])==8 and
  all(v is not None and v==x['verification']['J_policy_veh_s'] for v in x['verification']['J_candidates_veh_s']),
@@ -189,7 +193,9 @@ print(json.dumps(dict(unix=time.time(),arm='B',policy_update=3,entries=len(label
  rank5_8_share_of_positive_winners=sum(x['verification']['chosen']>=4 for x in positive)/len(positive) if positive else None,
  worlds=sorted(set(x['world_id'] for x in labels)),focus_share=sum(focus(x) for x in labels)/len(labels) if labels else None,
  void_attempts=len(list((c/'label_voids').glob('*.json'))),training_paused=True,
-  prerequisite_positive_entries=20,prerequisite_met=len(positive)>=20,
+   prerequisite_positive_entries=10,prerequisite_met=len(admitted)>=10,
+   prerequisite_contract='MAIN00:40 ten confirmed/admitted positive B entries; raw best-of-eight positives are not admissions; qualified release also required',
+   selected_positive_lists=len(positive),confirmed_entries=len(confirmed),admitted_positive_entries=len(admitted),
   exact_delay_null_lists=sum(x['all_eight_delay_equal_policy'] for x in null_lists),
   exact_delay_null_rate=sum(x['all_eight_delay_equal_policy'] for x in null_lists)/len(null_lists) if null_lists else None,
   per_label_null_flags=null_lists,null_definition='all eight complete candidate team delays exactly equal policy; no tolerance or trajectory-equivalence inference',

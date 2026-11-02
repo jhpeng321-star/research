@@ -134,6 +134,8 @@ print(p.read_text() if p.exists() else json.dumps(dict(wait=True)))'''))
     old=d['owner']
     from .protocol import checked
     packed=__import__('base64').b64encode(checked(ops.LOCAL/'tools/coopmwm/ls_fast_worker.py').read_bytes()).decode()
+    qualified=read(ops.EVIDENCE/REG)['cpu']['source_hashes']['pytools/tools/coopmwm/ls_fast_worker.py']
+    assert sha(ops.LOCAL/'tools/coopmwm/ls_fast_worker.py')==qualified,'wrapper changed since CPU qualification'
     out=remote(host,f'''from pathlib import Path
 import json,os,time,subprocess,hashlib,base64,shutil
 r=Path({root!r});dest=r/'LS_GPU_DISPATCH_FASTK2.json';overlay=Path({OVERLAY!r})
