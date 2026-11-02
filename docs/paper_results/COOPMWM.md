@@ -2627,3 +2627,18 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - B u2: exact paired SUMO plan saving mean 145.2 veh-s, 95% world-cluster CI `[-59.979113030558544, 479.8055757232458]`, 15 graded plans. Positive saving is better. Ungraded plans excluded.
 - Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_VIABILITY_002.json`.
 <!-- warm-receipt:B_VIABILITY_002.json:52176300eae65e80b012a3d3d54da4e1a9dbd815f23d2773e7f0a8d38d6de39f -->
+
+## Warm live publication — 2026-11-02T01:03:54.208857+00:00
+- Conservatively charged 3414470/7500000 sim-s.
+
+### Warm continuation — ACCEL_EXACT_PLAN_003_FAILED.json
+- Exact executed-plan twins: `{}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_003_FAILED.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_003_FAILED.json:ef6452a96db97502e476028361280bd68886cd4222877450b3571a380fc2b33a -->
+
+### Warm continuation — B_UPDATE_002.json
+- B u2: queries/accepted/executed 93/15/12; wall 9839s; next beta 0.751. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 15, "executed": 12, "queries": 14}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Exact-grade queue/lag: `{"failed": 0, "graded": 12, "max_lag_s": 17.956080436706543, "mean_lag_s": 11.755984206994375, "orphaned": 0, "overlap_unresolved": 0, "pending": 0, "running": 0, "stopped": 0, "update": 2}`; final ETA 125.7h.
+- Receipt: `coopmwm/warm_live/B_UPDATE_002.json`.
+<!-- warm-receipt:B_UPDATE_002.json:89ebeceb585f0139702643c5b4216ffe88d469024aa793f6f64d9f05901b0caf -->
