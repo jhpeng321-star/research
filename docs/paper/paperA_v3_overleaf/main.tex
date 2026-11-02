@@ -116,8 +116,9 @@ Executed plans run to completion or to the episode end, and are recorded as trun
 
 Each executed plan $p$ starting at $t_0$ with duration $D$ receives an exact grade
 \begin{equation}
-g_p = J^{\text{without}}[t_0,t_e] - J^{\text{with}}[t_0,t_e],\qquad t_e=\min(t_0+D+120,\,1200),
+g_p = J^{\text{without}}[t_0,t_e] - J^{\text{with}}[t_0,t_e],
 \end{equation}
+with $t_e=\min(t_0+D+120,\,1200)$\,s,
 where ``with'' is the executed episode and ``without'' is an exact rerun from the identical prefix in which the plan's members follow the policy's own stochastic actions (same noise draws) and every other executed plan in the window is replayed as recorded. Plans that share members with another plan in the window are excluded from grading. % EXACT_GRADE_README.md
 These training branches (selection and grading) are counted in the simulation budget (Sec.~V-C).
 
