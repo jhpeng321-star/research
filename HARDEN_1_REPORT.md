@@ -49,7 +49,42 @@ Line numbers refer to `aadee535`.
 
 ## Test counts
 
-All runs were local on Windows in the `rl_driving` env. Commands: `python -X utf8 -m unittest tools.coopmwm.<module>` over every `tools/coopmwm/test_*cpu*.py`, with a local, uncommitted `fcntl` no-op shim on `PYTHONPATH`. See the end of this file for the counts.
+All runs were local on Windows in the `rl_driving` env. Commands: `python -X utf8 -m unittest tools.coopmwm.<module>` over every `tools/coopmwm/test_*cpu*.py`, with a local, uncommitted `fcntl` no-op shim on `PYTHONPATH`. A Linux run on cpuQ (the repo's convention) was not possible because the remote hosts are read-only for this task.
+
+| | aadee535 (50 modules) | c4/harden-1 `a0f000d7` (51 modules) |
+|---|---|---|
+| tests run | 356 | 372 (16 new) |
+| failing tests | 37 | 33 |
+| new failures vs aadee535 | - | **0** |
+
+- All 33 remaining failures also fail on aadee535 locally, and all are environment-only: the `tools.leverprobe` and `tools.wmteach` packages are absent from this worktree, plus Linux `/proc` and Windows file locking.
+- 4 errors seen on aadee535 did not recur. They were flaky under parallel load.
+- `test_plan_proposer_cpu` hit the 300 s per-module timeout on both trees. That module is unchanged.
+- **A full Linux run on cpuQ is still required before deployment.**
+- Every suite I touched passes:
+  - test_harden1_cpu 12/12
+  - test_parallel_groups_cpu 10/10
+  - test_capacity_broker_cpu 9/9
+  - test_resource_config_cpu 5/5
+  - test_warm_spool_cpu 9/9
+  - test_hotadd_cpu 4/4
+  - test_warm_transport_cpu 9/9
+  - test_r_matching_cpu 6/6
+  - test_incident_recovery_cpu 8/8
+  - test_incident_cpu 3/6: the 3 errors are the 4/5/6-member subtests that already failed on aadee535 because `tools.leverprobe` is missing.
+- **Fail before, pass after:** I ran the new tests against an export of aadee535. 13 of the 16 fail there:
+  - u4 stall: 4
+  - family_seeds for 4-6 member groups
+  - per-query declines: 2
+  - plan_service
+  - hot-add gate
+  - broker quarantine
+  - GPU clock
+  - extend_register
+  - warm_runner TypeError
+  - centre decline
+
+  The 3 that pass on both are intentional guards: 2-3 member prototypes are unchanged, invariants stay fatal, and the wait for earlier groups is kept.
 
 ## Could not fix / left open (by design or by instruction)
 
