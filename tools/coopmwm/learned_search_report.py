@@ -76,7 +76,7 @@ def remote_dirs(host, src):
     prune = ' -o '.join(f"-iname '*{f}*'" for f in FORBIDDEN)
     names = ' -o '.join(f"-name {shlex.quote(d)}" for d in src['dirs'])
     roots = ' '.join(shlex.quote(r) for r in src['roots'])
-    cmd = (f"find {roots} -mindepth 1 -maxdepth 4 \\( {prune} \\) -prune -o -type d \\( {names} \\) "
+    cmd = (f"find {roots} -mindepth 0 -maxdepth 4 \\( {prune} \\) -prune -o -type d \\( {names} \\) "
            f"-path {shlex.quote('*/'+src['name_glob']+'/*')} -print 2>/dev/null; true")
     return [d for d in ssh(host, cmd).decode().split()
             if d and not _forbidden(d) and not any(x in d.lower() for x in SKIP_DIRS)]
@@ -103,8 +103,9 @@ def collect(cache, sources=SOURCES):
     log = []
     for host, src in sources.items():
         try:
-            for d in remote_dirs(host, src):
-                log.append(fetch(host, d, cache))
+            h = src.get('host', host)          # 'cpuQ#ls'-style keys carry their SSH alias
+            for d in remote_dirs(h, src):
+                log.append(fetch(h, d, cache))
         except (RuntimeError, subprocess.TimeoutExpired) as e:
             log.append(dict(host=host, error=str(e)[:300]))
     return log
@@ -166,10 +167,13 @@ def is_full_pool(r):
     return any(c.get('stage', 'screen') == 'screen' for c in r.get('candidates') or [])
 
 
-def run(cache, report, fetch_remote=True):
+MAX_CURVE = 40     # held-out full-pool searches replayed per refresh (deterministic: first by search id)
+
+
+def run(cache, report, fetch_remote=True, sources=None):
     cache = Path(cache); cache.mkdir(parents=True, exist_ok=True)
     when = dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds')
-    fetch_log = collect(cache) if fetch_remote else [dict(note='no fetch; cache only')]
+    fetch_log = collect(cache, sources or SOURCES) if fetch_remote else [dict(note='no fetch; cache only')]
     receipts, stats = load_cache(cache)
     searches, why = pp.build_dataset(receipts)
     with_elites = [s for s in searches if s['elites']]
@@ -192,6 +196,7 @@ def run(cache, report, fetch_remote=True):
         vcheck = pp.verification_check(model, va)
         res['verification_check'] = {k: v for k, v in vcheck.items() if k != 'per_list'}
         res['rank5to8'] = pp.rank58_share(searches, receipts)
+        res['nested_best_of_4_vs_8'] = pp.nested_best_of(searches)
         ck = pp.save_checkpoint(model, dict(validation_worlds=vw, dataset_sha256=pp._digest(
             sorted(r['search_id'] for r in receipts)), offline_check={k: v for k, v in check.items() if k != 'per_search'}),
             cache/'checkpoints'/f'proposer_{when[:19].replace(":", "")}')
@@ -201,7 +206,8 @@ def run(cache, report, fetch_remote=True):
                    registered_minimum_met=res['full_pool_searches'] >= REGISTERED_MIN['full_pool']
                    and res['worlds'] >= REGISTERED_MIN['worlds'])
         if len(full) >= MIN_FULL_POOL:
-            held = [r for r in full if str(r.get('world_id')) in set(vw)]
+            held = sorted((r for r in full if str(r.get('world_id')) in set(vw)),
+                          key=lambda r: str(r.get('search_id')))[:MAX_CURVE]
             curve = le.evaluations_curve(model, held)
             res['evaluations_curve'] = {k: v for k, v in curve.items() if k not in ('per_search', 'cfg')}
         else:
@@ -259,7 +265,8 @@ def write_report(res, path):
               f"exact-best LL gain {v.get('exact_best_loglik_gain')}; exact-best WM rank counts "
               f"{v.get('exact_best_wm_rank')}; rank quality {v.get('rank_quality')}." if v.get('lists') else f" {v.get('reason', '')}"),
               f"- Share of verified decisions where a WM rank 5-8 candidate would be exact best (top-8 verification): "
-              f"{res.get('rank5to8')}.", '']
+              f"{res.get('rank5to8')}.",
+              f"- Nested best-of-4 vs best-of-8 (exact k=8 lists): {res.get('nested_best_of_4_vs_8')}.", '']
         ev = res.get('evaluations_curve')
         L += ['## Evaluations needed to reach the plain search\'s final elite quality (surrogate replay)']
         if isinstance(ev, str) or not ev or not ev.get('summary'):

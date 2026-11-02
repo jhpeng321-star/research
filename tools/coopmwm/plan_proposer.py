@@ -473,15 +473,20 @@ def build_search(receipt, cfg=REGISTERED):
     if pos:   # exactly-positive verified candidates: likelihood targets, weight above the WM unit
         tot = sum(pos.values())
         targets += [item(cands[cid], w=float(cfg['gold_weight'])*g/tot, source='gold') for cid, g in sorted(pos.items())]
-    rank = []
+    rank, gold_ranked = [], []
     if gold:  # listwise ranking over the verified candidates + the 'policy continues' branch
+        order = list(gold)
+        wmf = {cid: cands[cid].get('final', cands[cid].get('screen', {})).get('saving') for cid in order}
+        if all(v is not None for v in wmf.values()):
+            order = sorted(order, key=lambda c: (-wmf[c], order.index(c)))     # WM rank 1 = best final saving
+        gold_ranked = [gold[c] for c in order]
         zero = dict(z=np.zeros((m, n)), D=ms.REGISTERED['max_duration_s'])
-        rank = [dict(item(zero), gold=0., policy=True)]+[dict(item(cands[cid]), gold=g, policy=False)
-                                                           for cid, g in gold.items()]
+        rank = [dict(item(zero), gold=0., policy=True)]+[dict(item(cands[cid]), gold=gold[cid], policy=False)
+                                                           for cid in order]
     topk = set(receipt.get('topk') or [])
     elites = good if full_pool else [c for c in good if c['id'] in topk and 'final' in c] or good
     return dict(id=str(receipt.get('search_id')), world=str(receipt.get('world_id')), regime=regime, m=m,
-                rank=rank, verified=bool(gold), gold_saving=gold,
+                rank=rank, verified=bool(gold), gold_saving=gold, gold_ranked=gold_ranked,
                 post_fix=bool((receipt.get('service') or {}).get('command_mirror')),
                 full_pool=full_pool, accepted=bool(any(c[k]['u'] > 0 for c in cands.values() for k in ('screen', 'final')
                                                        if k in c)),
@@ -1065,6 +1070,28 @@ def _ndcg(gains_in_order):
     return float((g*disc).sum()/ideal) if ideal > 0 else 1.
 
 
+def nested_best_of(searches, bootstraps=2000, seed=0):
+    """Exact-SUMO value of verifying 8 instead of 4 candidates (k=8 lists only).
+
+    For each verified search with >= 8 exact candidate outcomes (WM-rank order):
+    gain = best exact saving among WM ranks 1-8 minus best among ranks 1-4 (veh-s,
+    >= 0 by construction), share with gain > 0 (a rank 5-8 candidate is the exact
+    best), and how often best-of-4 / best-of-8 beat 'policy continues'.
+    World-cluster bootstrap CIs.
+    """
+    rows = [(s['world'], np.asarray(s['gold_ranked'], float)) for s in searches if len(s.get('gold_ranked') or []) >= 8]
+    if not rows:
+        return dict(estimable=False, k8_lists=0)
+    w = [x for x, _ in rows]
+    gain = [float(g[:8].max()-g[:4].max()) for _, g in rows]
+    hit = [float(g[:8].max() > g[:4].max()) for _, g in rows]
+    beat4 = [float(g[:4].max() > 0) for _, g in rows]; beat8 = [float(g[:8].max() > 0) for _, g in rows]
+    ci = lambda v, k: dict(zip(('mean', 'ci_lo', 'ci_hi'), _bootstrap_ci(v, w, bootstraps, seed+k)))
+    return dict(estimable=True, k8_lists=len(rows), worlds=len(set(w)), gain_best8_minus_best4_veh_s=ci(gain, 0),
+                share_rank5to8_exact_best=ci(hit, 1), share_best4_beats_policy=ci(beat4, 2),
+                share_best8_beats_policy=ci(beat8, 3))
+
+
 def rank58_share(searches, receipts, draws=2000, seed=0, min_lists=10):
     """Estimated share of exact-verified decisions in which a WM rank 5-8 candidate
     would have been the exact best (owner: verification moves from top-4 to top-8).
@@ -1076,6 +1103,11 @@ def rank58_share(searches, receipts, draws=2000, seed=0, min_lists=10):
     drawn from the model (ranks 1-4 keep their exact values) and P(best of 8 in
     5-8) is averaged. Returns None fields when not estimable.
     """
+    direct = nested_best_of(searches)
+    if direct.get('estimable') and direct['k8_lists'] >= min_lists:
+        return dict(estimable=True, method='direct: exact k=8 verification lists',
+                    verified_lists=direct['k8_lists'], share_rank5to8_best=direct['share_rank5to8_exact_best']['mean'],
+                    ci95=[direct['share_rank5to8_exact_best']['ci_lo'], direct['share_rank5to8_exact_best']['ci_hi']])
     by = {str(r.get('search_id')): r for r in receipts}
     lists = []
     for s in searches:
@@ -1110,7 +1142,7 @@ def rank58_share(searches, receipts, draws=2000, seed=0, min_lists=10):
                 model='exact = list intercept + b*WM final saving + N(0, sd^2); ranks 5-8 = remaining K8 finalists')
 
 
-def synthetic_verification(receipts, seed=0, sumo_noise=.5, policy_noise=.5):
+def synthetic_verification(receipts, seed=0, sumo_noise=.5, policy_noise=.5, k=None):
     """Attach synthetic exact-SUMO verifications to synthetic receipts (tests/curves).
 
     Exact J for each top-k candidate = planted noise-free cost (scaled like the WM
@@ -1129,6 +1161,9 @@ def synthetic_verification(receipts, seed=0, sumo_noise=.5, policy_noise=.5):
             dur_pen = .02*abs(durations.index(D)-durations.index(Dstar))
             return float(((np.asarray(z)/Z_SCALE*knot_mask(D)-zstar)**2).mean()+dur_pen)*100.
         ids = list(r['topk'])
+        if k:   # top-k finalists by WM final saving (LS-COLLECT verifies k=8)
+            fin = sorted((c for c in r['candidates'] if c.get('stage') == 'final'), key=lambda c: -c['saving_vs_policy'])
+            ids = [c['id'] for c in fin[:k]]
         Jp = J(np.zeros_like(zstar), 300)+policy_noise*100*rng.standard_normal()*.05
         Jc = [J(byid[i]['perturbation_canonical'], byid[i]['duration_s'])+sumo_noise*100*rng.standard_normal()*.05
               for i in ids]

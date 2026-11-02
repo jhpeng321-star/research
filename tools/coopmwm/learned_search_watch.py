@@ -42,6 +42,17 @@ REPO = Path(__file__).resolve().parents[2]
 READY = REPO/'docs/paper_results/LEARNED_SEARCH_ACTIVATION_READY.json'
 REPORT = REPO/'docs/paper_results/LEARNED_SEARCH_REPORT.md'
 NONINFERIOR = -.05     # quality - plain_alt CI lower bound for a mode to count as non-inferior (descriptive)
+# MAIN 2026-11-02 evening: B/R paused for LS-COLLECT (frozen B u3 policy on TRAIN worlds, plain
+# search logging full pools on 4 GPU slots, exact SUMO branches for top-8 + policy = k=8 gold).
+REGISTRATION_NAME = 'LS_COLLECT_REGISTRATION.json'
+LOCAL_REGISTRATION_ROOTS = ('E:/agent-work/c4-coopnative/docs/paper_results', 'E:/agent-work/_sol')
+DEADLINE = dt.datetime(2026, 11, 3, 10, 0, tzinfo=dt.timezone(dt.timedelta(hours=8)))
+REFRESH_S = 3600.
+# Measured warm fast-path full-medium search wall per query (docs/paper_results/COOPMWM.md, MAIN
+# throughput table: 2 CAVs gpuA 559.567 s, 4 CAVs gpuR 1029.964 s, 6 CAVs gpuA 898.275 s);
+# 3 and 5 CAVs linearly interpolated.
+SEARCH_WALL_S = {2: 559.567, 3: 794.766, 4: 1029.964, 5: 964.120, 6: 898.275}
+DIRS = ['requests', 'responses', 'proposer_receipts', 'verifications']
 
 
 def b_updates():
@@ -128,6 +139,84 @@ def expected_saving(curve):
                 note='surrogate replay of held-out full WM pools; plain_alt = independent plain search'), best
 
 
+def _paths(obj, out):
+    if isinstance(obj, dict):
+        for v in obj.values():
+            _paths(v, out)
+    elif isinstance(obj, list):
+        for v in obj:
+            _paths(v, out)
+    elif isinstance(obj, str) and obj.startswith('/') and not lr._forbidden(obj):
+        out.add(obj.rstrip('/'))
+    return out
+
+
+def find_registration(cache):
+    """LS_COLLECT_REGISTRATION.json: local (c4-coopnative docs, _sol; read-only) or cpuQ
+    (read-only find). Returns (registration dict or None, where)."""
+    for root in LOCAL_REGISTRATION_ROOTS:
+        hits = sorted(Path(root).rglob(REGISTRATION_NAME)) if Path(root).exists() else []
+        hits = [h for h in hits if not lr._forbidden(h)]
+        if hits:
+            return json.loads(hits[-1].read_text(encoding='utf-8')), str(hits[-1])
+    prune = ' -o '.join(f"-iname '*{f}*'" for f in lr.FORBIDDEN)
+    try:
+        out = lr.ssh('cpuQ', f"find /home/ubuntu -maxdepth 3 \\( {prune} \\) -prune -o -name {REGISTRATION_NAME} "
+                             f"-print 2>/dev/null | sort | tail -1; true").decode().strip()
+        if out:
+            local = Path(cache)/'registration'; local.mkdir(parents=True, exist_ok=True)
+            raw = lr.ssh('cpuQ', f"cat '{out}'"); (local/REGISTRATION_NAME).write_bytes(raw)
+            return json.loads(raw.decode('utf-8')), 'cpuQ:'+out
+    except (RuntimeError, ValueError):
+        pass
+    return None, None
+
+
+def ls_sources(registration):
+    """Collection sources = registered absolute paths: /home/ubuntu/... on cpuQ, /root/... on gpuA
+    and gpuR (each probed read-only); only requests/responses/proposer_receipts/verifications."""
+    paths = sorted(_paths(registration, set()))
+    src = {}
+    for path in paths:
+        hosts = ['cpuQ'] if path.startswith('/home/ubuntu') else ['gpuA', 'gpuR'] if path.startswith('/root') else []
+        root = path if not path.endswith('.json') else path.rsplit('/', 1)[0]
+        for h in hosts:
+            src.setdefault(h, dict(roots=[], dirs=DIRS, name_glob='*'))
+            if root not in src[h]['roots']:
+                src[h]['roots'].append(root)
+    return src
+
+
+def merged_sources(cache):
+    reg, where = find_registration(cache)
+    src = {h: dict(v, roots=list(v['roots']), dirs=list(v['dirs'])) for h, v in lr.SOURCES.items()}
+    if reg:
+        for h, v in ls_sources(reg).items():
+            # registered LS-COLLECT roots are searched under their own path (any name)
+            src[h+'#ls'] = dict(v, host=h)
+    return src, where
+
+
+def search_time_saving(saving_fraction, sizes):
+    """Expected GPU search-time saving per search at equal elite quality (GPU-bound):
+    measured wall per query x screen share of WM futures x screen-evaluation saving."""
+    if not sizes or saving_fraction is None:
+        return dict(available=False)
+    per = []
+    for m in sizes:
+        t = SEARCH_WALL_S[min(6, max(2, m))]
+        per.append(dict(m=m, wall_s=t, saved_s=t*screen_share([m], 4)*saving_fraction))
+    by = {}
+    for r in per:
+        by.setdefault(r['m'], []).append(r['saved_s'])
+    return dict(available=True, evaluation_saving_fraction=saving_fraction,
+                mean_saved_s_per_search=sum(r['saved_s'] for r in per)/len(per),
+                mean_wall_s_per_search=sum(r['wall_s'] for r in per)/len(per),
+                saved_s_by_group_size={str(k): sum(v)/len(v) for k, v in sorted(by.items())},
+                basis='SEARCH_WALL_S (COOPMWM.md measured) x screen share (top-4) x saving; GPU-bound, '
+                      'final K8 re-score unchanged; top-8 adds 8 finalists x K8 futures')
+
+
 def ready(res):
     c, v = res.get('offline_check') or {}, res.get('verification_check') or {}
     wm = bool(c.get('passed') and c.get('enough_data') and res.get('registered_minimum_met'))
@@ -141,8 +230,8 @@ def git_commit(paths, msg):
                     msg+'\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>'], check=False)
 
 
-def refresh(cache, tag):
-    res = lr.run(cache, REPORT, fetch_remote=True)
+def refresh(cache, tag, sources=None):
+    res = lr.run(cache, REPORT, fetch_remote=True, sources=sources)
     try:
         fetch_updates(cache)
     except Exception as e:   # noqa: BLE001 - timing is descriptive; never blocks the check
@@ -152,13 +241,16 @@ def refresh(cache, tag):
     sv = saving['modes'][mode]['evaluation_saving_fraction'] if mode else 0.
     res['expected_saving'] = saving
     res['wallclock'] = wallclock(cache, sv, sizes)
+    res['search_time_saving'] = search_time_saving(sv, sizes)
     ok, wm, ver = ready(res)
     res['ready'] = dict(ready=ok, wm_pool_check=wm, verification_check=ver)
     lr.write_report(res, REPORT)
     with REPORT.open('a', encoding='utf-8') as f:
         f.write(f"\n## Watch refresh {tag}\n- READY: **{ok}** (WM-pool {wm}, verification {ver}); expected saving "
                 f"{json.dumps(saving.get('modes', {}).get(mode) if mode else 'none non-inferior')}; wall-clock "
-                f"{json.dumps({k: v for k, v in res['wallclock'].items() if k != 'updates'})}.\n")
+                f"{json.dumps({k: v for k, v in res['wallclock'].items() if k != 'updates'})}; search-time saving "
+                f"{json.dumps(res['search_time_saving'])}; nested best-of-4 vs 8 "
+                f"{json.dumps(res.get('nested_best_of_4_vs_8'), default=str)}.\n")
     files = [REPORT, REPORT.with_suffix('.json')]
     if ok:
         body = dict(
@@ -172,7 +264,8 @@ def refresh(cache, tag):
                       command_mirror=res.get('command_mirror')),
             expected_evaluation_saving=saving, recommended_mode=mode,
             learned_search_config=dict(mode=mode, top_k=8, generic_share=.2, novelty_share=.1, novelty_oversample=4),
-            rank5to8_best_share=res.get('rank5to8'), wallclock=res['wallclock'],
+            rank5to8_best_share=res.get('rank5to8'), nested_best_of_4_vs_8=res.get('nested_best_of_4_vs_8'),
+            wallclock=res['wallclock'], search_time_saving=res['search_time_saving'],
             integration='mppi_runtime.plan: model, meta = plan_proposer.load_checkpoint(<cache ckpt>); verify '
                         'meta["pt_sha256"]; search(..., **plan_proposer.learned_search_kwargs(record, group, model, '
                         'regime, mode, policy, bounds))',
@@ -191,26 +284,35 @@ def main(argv=None):
     a = ap.parse_args(argv)
     state = Path(a.cache)/'watch_state.json'
     seen = json.loads(state.read_text()).get('updates', []) if state.exists() else []
-    end = time.time()+3600*a.max_hours
-    first = True
-    while time.time() < end:
+    end = min(time.time()+3600*a.max_hours, DEADLINE.timestamp())
+    first, last, reg_seen = True, 0., None
+    while True:
+        deadline = time.time() >= end
         try:
             ups = b_updates()
         except RuntimeError as e:
-            print('poll error', e, flush=True); time.sleep(a.poll_s); continue
-        if first or ups != seen:
-            tag = f"B_u{max(ups) if ups else 0:03d}"
-            ok, res = refresh(a.cache, tag)
-            seen = ups; state.write_text(json.dumps(dict(updates=seen, last=tag, ready=ok)))
+            print('poll error', e, flush=True)
+            if not deadline:
+                time.sleep(a.poll_s); continue
+            ups = seen
+        sources, where = merged_sources(a.cache)
+        due = first or ups != seen or (where and where != reg_seen) or time.time()-last >= REFRESH_S or deadline
+        if due:
+            tag = (f"LS@{dt.datetime.now(dt.timezone(dt.timedelta(hours=8))).strftime('%m%d_%H%M')}+08"
+                   if where else f"B_u{max(ups) if ups else 0:03d}")+('_DEADLINE' if deadline else '')
+            ok, res = refresh(a.cache, tag, sources)
+            seen, last, reg_seen = ups, time.time(), where
+            state.write_text(json.dumps(dict(updates=seen, last=tag, ready=ok, registration=where)))
             print(json.dumps(dict(tag=tag, ready=res['ready'], full_pools=res.get('full_pool_searches'),
-                                  verified=res.get('verified_searches'))), flush=True)
+                                  verified=res.get('verified_searches'), registration=where)), flush=True)
             if ok:
                 return 0
+            if deadline:
+                return 4
         first = False
         if a.once:
             return 1
         time.sleep(a.poll_s)
-    return 3
 
 
 if __name__ == '__main__':

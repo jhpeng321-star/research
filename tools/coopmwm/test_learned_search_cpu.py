@@ -181,3 +181,27 @@ class Watch(unittest.TestCase):
         self.assertEqual(len(res['finalists']), 16); self.assertLessEqual(len(res.get('topk') or []), 8)
         with self.assertRaises(ValueError):
             pp.learned_search_kwargs(rec, g, model, 'ordinary', 'nope')
+
+
+class LSCollect(unittest.TestCase):
+    def test_sources_saving_and_k8_nested(self):
+        from . import learned_search_watch as lw
+        reg = dict(cpuQ=dict(root='/home/ubuntu/coopmwm20261102_lscollect1', receipts='/home/ubuntu/coopmwm20261102_lscollect1/x.json'),
+                   gpu=['/root/coopmwm20261102_lscollect1/proposer_receipts', '/root/sealed_panel/proposer_receipts'],
+                   note='not a path')
+        src = lw.ls_sources(reg)
+        self.assertEqual(src['cpuQ']['roots'], ['/home/ubuntu/coopmwm20261102_lscollect1'])
+        self.assertEqual(src['gpuA']['roots'], ['/root/coopmwm20261102_lscollect1/proposer_receipts'])   # sealed dropped
+        self.assertIn('verifications', src['gpuR']['dirs'])
+        t = lw.search_time_saving(.2, [2, 6])
+        self.assertAlmostEqual(t['saved_s_by_group_size']['2'], lw.SEARCH_WALL_S[2]*lw.screen_share([2], 4)*.2)
+        self.assertFalse(lw.search_time_saving(None, [2])['available'])
+        rec = pp.synthetic_receipts(40, 10, seed=7, sizes=(2,), population=16)
+        pp.attach_verification(rec, pp.synthetic_verification(rec, seed=9, k=8))
+        S, _ = pp.build_dataset(rec)
+        nb = pp.nested_best_of(S, bootstraps=100)
+        self.assertTrue(nb['estimable']); self.assertGreaterEqual(nb['gain_best8_minus_best4_veh_s']['ci_lo'], 0)
+        s = next(x for x in S if len(x['gold_ranked']) >= 8)
+        self.assertEqual(len(s['rank']), 9)
+        r58 = pp.rank58_share(S, rec)
+        self.assertEqual(r58['method'], 'direct: exact k=8 verification lists')
