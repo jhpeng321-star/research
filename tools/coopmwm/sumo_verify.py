@@ -249,21 +249,25 @@ def check_live_continuation(verification, live):
     can change later traffic, so this gate makes no whole-window replay claim.
     """
     verify_sealed(verification, 'receipt_sha256')
-    if verification['status'] != 'accepted' or verification['chosen'] is None:
-        raise ValueError('smoke needs an accepted verified decision')
+    if verification['status'] not in ('accepted','rejected'):
+        raise ValueError('smoke needs a completed exact verified decision')
     if live['id'] != verification['episode']['id']:
         raise ValueError('live continuation episode identity differs')
     t0 = verification['t0']
     step = next((s for s in live['steps'] if int(s['time_s']) == t0), None)
     proposal = (step or {}).get('proposal') or {}
     behaviour = (step or {}).get('sample', {}).get('behaviour') or {}
-    if (not behaviour.get('executed') or not behaviour.get('plan_start') or
-            digest(proposal.get('plan')) != digest(verification['chosen_plan'])):
-        raise ValueError('live continuation did not execute the verified plan')
+    if verification['status']=='accepted':
+        if (verification['chosen'] is None or not behaviour.get('executed') or not behaviour.get('plan_start') or
+                digest(proposal.get('plan')) != digest(verification['chosen_plan'])):
+            raise ValueError('live continuation did not execute the verified plan')
+    elif (verification['chosen'] is not None or proposal.get('accepted') or
+          behaviour.get('plan_start') or any(p.get('plan_start') for p in (step or {}).get('sample',{}).get('plan_executions',[]))):
+        raise ValueError('rejected verification must continue policy without starting a plan')
     identity = behaviour.get('sumo_verification') or {}
     if identity.get('receipt_sha256') != verification['receipt_sha256']:
         raise ValueError('live continuation verification receipt differs')
-    chosen = verification['branches'][verification['chosen']+1]
+    chosen = verification['branches'][verification['chosen']+1 if verification['status']=='accepted' else 0]
     if chosen['status'] != 'graded':
         raise ValueError('chosen branch was not graded')
     hashes = chosen.get('continuation_prefix_sha256') or {}
@@ -277,6 +281,7 @@ def check_live_continuation(verification, live):
         if fp is None or hashes.get(str(t)) != digest(fp):
             raise PrefixMismatch(f'chosen branch differs from live continuation at t={t}')
     return dict(pass_=True, verification_id=verification['verification_id'],
+                decision_status=verification['status'],continuation_branch=chosen['branch'],
                 verification_receipt_sha256=verification['receipt_sha256'],
                 checked_from_s=t0, checked_to_s=end, fingerprints=end-t0+1,
                 new_sim_s=0, scope='chosen branch to next query window, not whole grading window')

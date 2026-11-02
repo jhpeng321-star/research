@@ -1,5 +1,23 @@
 # S-COOPMWM — live checks
 
+## Real five-branch verification smoke passed — 15:13:08 UTC+8
+- Pre-registered first eligible B-u3 TRAIN decision: world986000 at t470.
+  **All five exact branches pass prefix and CRN checks.** SUMO rejected all four
+  candidates; the live policy continuation matches the policy branch at all
+  **11 fingerprints, t470–480**. Original smoke cost **3,730 sim-s**.
+- The first helper wrongly required an accepted candidate to pass. Registered
+  engineering amendment `4dc2f2f6…` makes the gate outcome-independent: compare
+  the accepted candidate branch, or the policy branch on rejection. No repeated
+  SUMO, inference or charge; the original completed receipts were rechecked.
+- Frozen `verifycpu11`: **105 CPU PASS**, zero skips, **28.153 s**, zero physics.
+  Original `verifycpu10` and the failed helper log remain preserved. Smoke SHA
+  `ca3a470c04a5ced54e473973b78c66906636847e1d4588a9bd26589fa3241342`.
+- Owner-approved **9.5M sim-s** allocation registered (`5f73c1e3…`): 2.8M
+  verification phase; separate exact grading 431,160, retaining all spent grades.
+  Variable acceptance can exhaust a phase: accounting blockers remain binding.
+- R-u2 applied with **0/12 requested matches**, fully reported; R-u3 collecting.
+  **SUMO VERIFICATION LIVE is not yet claimed:** common-u4 activation is next.
+
 ## MAIN14:47 recovery — completed R episodes adopted; matching is best effort
 - Frozen `matchcpu1`: **125 CPU PASS**, zero skips, **21.715 s**, zero SUMO/GPU
   inference. Amendment `d54fbc440e931a9eec1e192e98fc1c4dab8d69d69fa634045fd41d72641c2967`

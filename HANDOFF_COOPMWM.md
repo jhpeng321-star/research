@@ -1,5 +1,17 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+REALVERIFICATIONSMOKEPASS unix1793603588 (15:13:08UTC+8). ONEdecisionTRAIN
+986000/u3/t470,5branchesPREFIX+CRNPASS; exactrejectedall4, livePOLICYbranch
+11fingerprints470..480EXACT. Initialhelperrequiredacceptedoutcome; registered
+4dc2f2f6gatefix/CPU105PASS0skips28.153s verifycpu11; RECHECKONLYsamecompleted
+receipts/zeroadditionalphysics. Originalsmoke3730sim-s/568133dispatchretained.
+Gateca3a470c... in sumo_verification/SMOKE_PASSED.json, noVERIFICATIONLIVEyet.
+Budget5f73c1e3registered9.5Mallocated:verification2.8M,exactgrade431160;
+allpreviouschargesretained/nohorizoncut/noreservebypass. Bindingverifycpu10is
+immutable; upcomingactivationMUSTusequalifiedcpu11+matchingpatches/newbinding.
+R2applied(0executed/12requested,fullshortfallrecord),R3running; B3held/B4precharges.
+Nextcommonu4switch+primaryA24/B24/R24finalhookmigration,observe-onlyownerrefresh.
+
 MAIN1447 continuation: full332linebrief read, HEADadc365df retained. A48/B3/R1;
 ALL24replacementRu2RESULTScomplete, neverrerun. ExactmatchingassertionV3 diagnosed;
 registered d54fbc440e931a9eec1e192e98fc1c4dab8d69d69fa634045fd41d72641c2967.

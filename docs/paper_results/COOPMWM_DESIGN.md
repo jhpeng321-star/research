@@ -1,5 +1,5 @@
 # S-COOPMWM — warm MPPI training live; frozen-policy evaluation precompute registered
-1. Latest owner cap9500000 supersedes earlier resume figures; current recovery binding cap7500000/allocation7028840/free471160 retained until verifier re-quote/registration; failed charges retained.
+1. Ownercap9500000/latestallocation9500000: verification2800000, exactgrade431160, remainingphasesunchanged; allfailedchargesretained, phaseguardsSTOP on exhaustion.
 2. A/B/R fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
 4. A: PPO shared team reward=-J, road speed deficit plus source waiting.

@@ -60,6 +60,24 @@ def test_chosen_branch_matches_live_to_next_query_window():
     assert sv.check_live_continuation(r, live) == gate
 
 
+@pytest.mark.parametrize('fault',[None,'missing','different','plan_started'])
+def test_rejected_verification_checks_policy_branch_without_outcome_selection(fault):
+    r,live=continuation()
+    r.update(status='rejected',chosen=None,chosen_plan=None)
+    r=sv._seal(r,'receipt_sha256')
+    step=live['steps'][0];step['proposal']['accepted']=False
+    b=step['sample']['behaviour'];b.update(executed=False,plan_start=False,
+        sumo_verification=dict(receipt_sha256=r['receipt_sha256']))
+    if fault=='missing':live['prefixes'].pop('405')
+    if fault=='different':live['prefixes']['410']=fp(410,-1.)
+    if fault=='plan_started':b['plan_start']=True
+    if fault:
+        with pytest.raises((ValueError,sv.PrefixMismatch)):sv.check_live_continuation(r,live)
+    else:
+        gate=sv.check_live_continuation(r,live)
+        assert gate['pass_'] and gate['decision_status']=='rejected' and gate['continuation_branch']=='policy'
+
+
 @pytest.mark.parametrize('fault', ['missing', 'different', 'wrong_plan', 'wrong_receipt', 'not_executed'])
 def test_smoke_rejects_incomplete_or_nonidentical_live_continuation(fault):
     r, live = continuation()
@@ -128,6 +146,27 @@ def test_actual_episode_loop_and_controller_match_verified_branch(verified_episo
     assert all(b['status'] == 'graded' for b in receipt['branches'])
     assert all(b['audit']['crn_verified_t0'] for b in receipt['branches'])
     assert sv.check_live_continuation(receipt, live)['checked_to_s'] == 330
+
+
+def test_registered_smoke_replays_prefix_then_verifies_five_branches(verified_episode,tmp_path,monkeypatch):
+    from tools.coopmwm import accel_plant
+    from tools.coopmwm.test_exact_grade_cpu import fake_sumo,policy
+    from tools.coopmwm.verification_smoke import controller_class
+    from tools.coopmwm.accel_storage import read
+    original,_,_,_=verified_episode
+    proposal=next(s['proposal'] for s in original['steps'] if s['time_s']==320)
+    monkeypatch.setattr(accel_plant,'Controller',controller_class(original,320,proposal))
+    root=tmp_path/'smoke'
+    job=dict(id='real_smoke_fixture',path=str(tmp_path/'smoke_job'),world=original['world'],
+        role='train',arm='B',weights=policy().state_dict(),runtime='',checkpoint='',noise_seed=11,
+        deterministic=False,sim_s=330,stop=330,queue_root=str(tmp_path),accel_bounds=[-3.,2.6],
+        gpu_deadline=0,guided=False,beta=1.,warm_history=False,
+        branch=dict(time_s=320,takeover_s=320,revert=[],prefixes=original['prefixes']),
+        sumo_verify=dict(root=str(root),run_root=str(tmp_path),workers=1))
+    with fake_sumo():live=accel_plant.episode(job)
+    receipts=[read(p) for p in (root/'verifications').glob('*.json')]
+    assert len(receipts)==1 and len(receipts[0]['branches'])==5
+    assert sv.check_live_continuation(receipts[0],live)['checked_to_s']==330
 
 
 def grade_meta(live):

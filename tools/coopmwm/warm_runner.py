@@ -112,6 +112,7 @@ def run_arm(root,arm):
         for u in range(first,last+1):
             assert_running(root,arm)
             start=time.monotonic();start_unix=time.time();extra=dict(update=u)
+            if b.get('sumo_verify'):extra['sumo_verify']=b['sumo_verify']
             if b.get('quota_aware_admission'):extra['quota_aware_admission']=True
             if b.get('parallel_group_queries') and arm=='B':extra['parallel_group_queries']=True
             if b.get('health_guards'):extra.update(health_guards=True,safety_reference=b['safety_reference'])
