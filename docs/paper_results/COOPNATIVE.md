@@ -1,5 +1,11 @@
 # S-COOPNATIVE — DESIGN READY; awaiting MAIN budget approval
 
+> Recovery 2026-11-02: this heading and quote describe the historical native-start
+> build. MAIN superseded it at 2026-11-01 16:22 with S-COOPMWM; the proposed TRAIN
+> seeds have since been consumed by that successor. Native-start launch is blocked
+> pending explicit reactivation, fresh seeds and budget reconciliation. See
+> [the recovery receipt](coopnative/RESUME_20261102.md). No new simulation was launched.
+
 Build commit `8368ce1a`, branch `c4/coopnative`, parent `7f2a96c3`.
 **New SUMO: 0 sim-s. No training/evaluation/timing simulation or dispatcher started.**
 Design: [COOPNATIVE_DESIGN.md](COOPNATIVE_DESIGN.md), 61 lines, SHA256
