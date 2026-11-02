@@ -1,4 +1,18 @@
-# S-COOPMWM live continuation — WARM B/R STARTED
+# S-COOPMWM continuation — MAIN18:38 LS-COLLECT handover
+
+Fresh session read ALL407 prompt lines and adopted HEAD9bc17ca4/user changes.
+MAIN18:38 SUPERSEDES prior training-running notes: B/R PAUSED at durableu3,
+no u4 checkpoint/update. LS_COLLECT_PAUSED.json verifies BOTH checkpoint SHAs;
+TEN warmdns1651_u004_B attempts closed permanently (charges/accepted GPU
+responses/pools retained). Only receipt/boot/start/argv-verified B/R parents
+and their children terminated; GPU/broker/grader/final owners untouched.
+Pause helper first failed BEFORE signals (missing import path, then parent
+argv mismatch); corrected to actual incident_recovery entrypoint.
+NEXT: quote/register LS-COLLECT within11M BEFORE new SUMO; frozenBu3 TRAIN
+986000..986071, nonblocking snapshots/no plans; plain warm search four slots,
+full pools, top8+policy exact labels. Stop at readiness or Nov3 10:00+08,
+publish summary then WAIT MAIN; NEVER auto-resume training. Mirror gate
+already FAILED/OFF; do not rerun. Learned/k8 training activation INACTIVE.
 
 LATEST18:10UTC+8 unix1793614233: A48/B3/R3, B4adopts14completed+TENlive
 warmdns1651_u004_B replacements atsim300..390, oldestqueryages3624..3635s

@@ -1,5 +1,15 @@
 # S-COOPMWM — live checks
 
+## MAIN18:38 adopted — B/R paused for LS-COLLECT
+- Durable B/R checkpoints remain **u3**; **no u4 PPO update**. The ten stalled
+  `warmdns1651_u004_B_*` attempts are closed permanently, with all charges kept.
+- `LS_COLLECT_PAUSED.json` records checkpoint hashes and the exact verified
+  process tree. GPU searches, completed responses and full-pool receipts remain
+  preserved. No new SUMO was launched during the pause.
+- Next is the registered frozen-B-u3, non-blocking TRAIN collection; training
+  resumes only on MAIN's subsequent addendum. Latest owner cap is **11,000,000
+  sim-s**. The command-mirror gate has already failed and remains off.
+
 ## Both GPU clocks migrated; collection status — 18:10 UTC+8
 - Both primary GPU services passed four fresh **EXACT0** full/fast cold/warm
   gates plus four source/SHA-adopted gates. Original bindings and startup receipts
