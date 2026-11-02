@@ -1,5 +1,34 @@
 # S-COOPMWM — live checks
 
+## Final-only engineering hold — spawned-worker checkpoint authority
+- **Final coordinator625637 is deliberately frozen**, before any outcome opening.
+  B/R training, four GPU workers, exact grader and observer continue.
+- Code inspection found that spawned final workers import the original u48
+  budget; they do not inherit the coordinator's in-memory u24 override. The
+  A24-labelled specs lacked explicit checkpoint authority, so they loaded A48.
+  This invalidates those attempted primary jobs; no outcome values were read.
+- **386 reserved jobs / 375,800 sim-s** completed and are quarantined with every
+  original charge retained. The original 673 opaque precompute receipts remain
+  intact. No invalid job is reused as an A24 result.
+- Registered incident `078cf357…`; frozen corrected `finalendpoint3` passes
+  **88 CPU tests**, zero skips, **23.115 s**, zero physics. Each serialized policy
+  spec now carries `checkpoint_update`; missing authority fails closed, workers
+  load the exact checkpoint and publish its SHA. The regression simulates a
+  fresh u48 worker import consuming a serialized u24 spec. Fresh A24v2 IDs and
+  separate continuation markers preserve every prior artifact.
+- **Replacement final physics awaits MAIN allocation approval:** 375,800 exceeds
+  the delegated 50,000 limit. Proposed within the existing9.5M cap: exact-grade
+  allocation431,160→55,360; final-test +115,200; paired-branch +260,600. No
+  transfer has been applied. See `_sol/COOPMWM_FINAL_SPAWN_BUDGET_ALERT.md`.
+- Current B-u4 replacement schedule at unix1793605168: **24 claimed /14 closed**;
+  ten windows t300–390 await WM responses (oldest unresolved ages950–962s,
+  censored). R-u4 waits for B's final quota. Four search slots assigned,38queued;
+  gpuA sample95% utilisation/45,083MiB/171.92W. No finite update ETA yet.
+- MAIN14:59 clarification: disk recovery used cache cleanup and SHA-verified
+  in-place gzip; the relay archive was stopped. Earlier relay attribution is
+  superseded. This continuation performed no deletion. Original GPU/service
+  deadline18:07:02 remains unchanged; resource continuation requested.
+
 ## Fixed-u24 final hooks migrated; opaque precompute retained
 - Frozen `finalendpoint1`: **87 CPU PASS**, zero skips, **22.584 s**, zero
   SUMO/inference during qualification. Registered amendment `0b877c48…`.

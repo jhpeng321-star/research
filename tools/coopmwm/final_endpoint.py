@@ -21,7 +21,7 @@ def ready(root,arms=('A','B','R')):
 def configure(root,config):
     from .warm_protocol import install_accounting
     primary=copy.deepcopy(config['budget']);primary['updates']=dict(A=24,B=24,R=24)
-    f.ID_ALIASES={'A':'A24'}
+    f.ID_ALIASES={'A':'A24v2'}
     f.budget=lambda:copy.deepcopy(primary)
     f.endpoints_ready=ready
     d.budget=lambda:copy.deepcopy(primary)
@@ -57,7 +57,10 @@ def run(root,config):
     import os
     root=Path(root);lock=(root/'FINAL_PRECOMPUTE.claim').open('a')
     fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
-    assert not (root/'FINAL_ENDPOINT_STARTED.json').exists(),'adopt existing owner; no duplicate final dispatch'
+    suffix=config.get('receipt_suffix','')
+    assert suffix in ('','_V2'),'unregistered final attempt suffix'
+    started=root/('FINAL_ENDPOINT_STARTED'+suffix+'.json')
+    assert not started.exists(),'adopt existing owner; no duplicate final dispatch'
     assert config['amendment_sha256'] in (root/'AUTHORITY.md').read_text()
     for n,h in config['source_hashes'].items():assert sha(Path(config['source_root'])/n)==h
     complete=read(root/'FINAL_PRECOMPUTE_COMPLETE.json')
@@ -66,7 +69,7 @@ def run(root,config):
     assert not (root/'FINAL_OUTCOMES_OPENED.json').exists()
     configure(root,config)
     b=dict(read(root/'WARM_BINDING.json'),budget=config['budget'])
-    write(root/'FINAL_ENDPOINT_STARTED.json',dict(unix=time.time(),primary=dict(A=24,B=24,R=24),
+    write(started,dict(unix=time.time(),primary=dict(A=24,B=24,R=24),
         secondary=dict(A=48),adopted_opaque_jobs=673,outcomes_closed=True))
     try:
         # Frozen A24 only, lowest priority; no old A48/MAPPO/native rerun.
@@ -81,7 +84,7 @@ def run(root,config):
         # Same previously qualified departed-member replay executor/detectors.
         d.run(root,dict(config,source_hashes=config['source_hashes']))
     except BaseException as error:
-        write(root/'FINAL_ENDPOINT_FAILED.json',dict(unix=time.time(),error_type=type(error).__name__,
+        write(root/('FINAL_ENDPOINT_FAILED'+suffix+'.json'),dict(unix=time.time(),error_type=type(error).__name__,
             physics_retry=False,outcomes_closed=not (root/'FINAL_OUTCOMES_OPENED.json').exists()))
         raise
     finally:lock.close()

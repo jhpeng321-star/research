@@ -16,7 +16,8 @@ now=time.time();episodes=[];current={current!r}
 repair=r/'MAIN0508_REPAIR_BINDING_V2.json'
 if not repair.exists():repair=r/'MAIN0508_REPAIR_BINDING.json'
 plan=read(repair)['repair_plan'] if repair.exists() else None
-recovery=read(r/'INCIDENT_RECOVERY_BINDING.json') if (r/'INCIDENT_RECOVERY_BINDING.json').exists() else None
+recovery_path=next((r/n for n in ('VERIFICATION_CONTINUATION_BINDING.json','MATCH_RECOVERY_BINDING.json','INCIDENT_RECOVERY_BINDING.json') if (r/n).exists()),None)
+recovery=read(recovery_path) if recovery_path else None
 retired=read(r/'INCIDENT_RETIRED_JOBS.json') if (r/'INCIDENT_RETIRED_JOBS.json').exists() else {{}}
 requests=[]
 for arm,folder in (('B','requests'),('R','centre_requests')):
@@ -65,7 +66,7 @@ for arm in ('B','R'):
 quota=r/f'B_RANDOM_QUOTA_{{collections["R"]:03}}.json'
 print(json.dumps(dict(unix=now,collections=collections,episodes=episodes,R_quota_ready=quota.exists(),load=os.getloadavg(),
   superseded_jobs=(plan.get('failed_jobs',[]) if plan else [])+retired.get('jobs',[]),
-  schedule_source='INCIDENT_RECOVERY_BINDING.json' if recovery else 'registered original wave',
+   schedule_source=recovery_path.name if recovery_path else 'registered original wave',
  note='trace has buffered/incomplete tail; pending-query time is exact stopped decision; current_query_wait_s is oldest unresolved request age (max, not sum), includes queue/admission time and is censored until response; pending_query_age_sum_s is aggregate concurrent request age, not episode wall time; completed inference time excludes admission waits')))
 ''',timeout=60))
     path=ops.EVIDENCE/f'EPISODE_PROGRESS_{int(value["unix"])}.json'

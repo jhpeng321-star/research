@@ -6,7 +6,7 @@ from .storage import read,write
 from .protocol import REGISTRY,checked,sha
 from .warm_deploy import ROOT
 
-SOURCE='/home/ubuntu/coopmwm20261102_finalendpoint1'
+SOURCE='/home/ubuntu/coopmwm20261102_finalendpoint3'
 
 
 def cpu():
@@ -29,7 +29,7 @@ with patch('subprocess.Popen',side_effect=AssertionError('no SUMO/inference in e
  result=unittest.TextTestRunner(stream=sys.stdout,verbosity=1).run(unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromName('tools.coopmwm.'+n) for n in names))
 print(json.dumps(dict(pass_=result.wasSuccessful(),tests=result.testsRun,skips=len(result.skipped),sim_s=0,wall_s=time.monotonic()-start)))''',timeout=90)
     print(out);v=json.loads(out.strip().splitlines()[-1]);v.update(source_root=SOURCE,source_hashes=staged['hashes'])
-    write(ops.EVIDENCE/'FINAL_ENDPOINT_CPU.json',v)
+    write(ops.EVIDENCE/'FINAL_ENDPOINT_CPU_V3.json',v)
     assert v['pass_'] and v['skips']==v['sim_s']==0
 
 
@@ -91,6 +91,46 @@ immutable(r/'FINAL_ENDPOINT_DISPATCH.json',d);print(json.dumps(d))''',timeout=50
     write(ops.EVIDENCE/'FINAL_ENDPOINT_DISPATCH.json',json.loads(out));print(out)
 
 
+def hold():
+    target=ops.EVIDENCE/'FINAL_ENDPOINT_SPAWN_DIAGNOSIS.json'
+    assert not target.exists(),'adopt existing hold'
+    v=dict(diagnosis='spawned final workers do not inherit coordinator monkeypatch of budget(); A24-tagged specs lacked explicit checkpoint update, so children load A48; B would look for B48. Discovered by code inspection before outcome opening',
+        action='freeze ONLY current final coordinator parent by verified PID/boot/start/source; let already-reserved isolated workers finish without outcome reads; preserve all charges/receipts; B/R/GPU/grader continue',
+        repair='carry checkpoint_update explicitly in every policy job spec; spawned make_job consumes it and publishes checkpoint SHA; CPU regression required',
+        budget='replacement final physics above50000sim-s needs MAIN allocation decision; no automatic reserve transfer or rerun')
+    write(target,v);h=sha(target)
+    line='\nS-COOPMWM FINAL SPAWN CHECKPOINT FAULT REGISTERED amendmentSHA'+h+': '+json.dumps(v,sort_keys=True)+'\n'
+    with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+    out=ops.ssh.remote('cpuQ',f'''import pathlib,json,time,os,signal
+r=pathlib.Path({ROOT!r});d=json.loads((r/'FINAL_ENDPOINT_DISPATCH.json').read_text());assert d['pid']==625637 and d['start_ticks']=='61917851'
+assert d['boot_id']==pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+p=pathlib.Path('/proc',str(d['pid']));st=(p/'stat').read_text().split();args=[a.decode() for a in (p/'cmdline').read_bytes().split(bytes([0])) if a]
+assert st[21]==d['start_ticks'] and st[2] in ('S','R') and args[-3:]==['tools.coopmwm.final_endpoint',str(r),str(r/'FINAL_ENDPOINT_CONFIG.json')]
+assert not (r/'FINAL_OUTCOMES_OPENED.json').exists()
+v=dict(unix=time.time(),owner=d,amendment_sha256={h!r},signal='SIGSTOP',reason='spawn checkpoint fault; no new final reservations; reserved workers finish; B/R unaffected',outcomes_closed=True)
+with (r/'FINAL_ENDPOINT_SPAWN_HOLD.json').open('x') as f:json.dump(v,f)
+os.kill(d['pid'],signal.SIGSTOP)
+print(json.dumps(v))''',timeout=40)
+    write(ops.EVIDENCE/'FINAL_ENDPOINT_SPAWN_HOLD.json',json.loads(out));print(out)
+
+
+def request_recovery():
+    cpu=read(ops.EVIDENCE/'FINAL_ENDPOINT_CPU_V3.json')
+    census=read(ops.EVIDENCE/'FINAL_ENDPOINT_QUARANTINE_CENSUS.json')
+    assert cpu['pass_'] and cpu['skips']==cpu['sim_s']==0
+    assert census['quarantined_sim_s']==375800 and not census['outcomes_opened']
+    v=dict(qualification=cpu,quarantine=census,
+        repair='explicit checkpoint_update serialized in every policy spec; missing key fails closed; make_job loads/publishes exact checkpoint SHA; primaryA24v2 fresh IDs; separate V2attempt markers; no previous artifact overwritten',
+        budget_request=dict(total=9500000,additional_final=375800,proposed_transfer_from_exact_plan_grading=375800,
+            proposed_final_test_increase=115200,proposed_paired_branch_increase=260600,proposed_exact_grade_allocation=55360),
+        authority_required='MAIN allocation approval because amount exceeds delegated50000; no replacement physics dispatched',
+        training='B/Ru4+verification/broker/GPU/grader/observer continue; no impact on fixed checkpoint rule; original resource deadline unchanged')
+    target=ops.EVIDENCE/'FINAL_ENDPOINT_SPAWN_REPAIR_QUALIFIED.json';assert not target.exists();write(target,v)
+    line='\nS-COOPMWM FINAL SPAWN REPAIR QUALIFIED / MAIN ALLOCATION REQUEST evidenceSHA'+sha(target)+': '+json.dumps({k:x for k,x in v.items() if k not in ('qualification','quarantine')},sort_keys=True)+'\n'
+    with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+    print(json.dumps(dict(qualified=True,tests=cpu['tests'],new_sumo_sim_s=0,budget_request=v['budget_request'])))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('cpu','register','replace'))
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('cpu','register','replace','hold','request_recovery'))
     globals()[p.parse_args().mode]()

@@ -28,10 +28,11 @@ def job_id(arm,seed,time_s=None):
 
 def specs(arms,branches=False,panel=None):
     panel=worlds('final_test') if panel is None else panel
-    return [dict(id=job_id(a,w['seed'],t),
+    return [dict(dict(id=job_id(a,w['seed'],t),
                  world=w,arm=a,kind='branch' if branches else 'episode',time_s=t,
                  sim_s=t+300 if branches else 1200,
-                 phase='paired_branch' if branches else ('random_guide_test' if a=='R' else 'final_test'))
+                 phase='paired_branch' if branches else ('random_guide_test' if a=='R' else 'final_test')),
+                 **(dict(checkpoint_update=budget()['updates'][a]) if a in ('A','B','R') else {}))
             for a in arms for w in panel for t in (TIMES if branches else (None,))]
 
 
@@ -64,7 +65,9 @@ def make_job(root,b,spec):
         weights=NativePolicy().state_dict()
     elif a=='mappo':weights=Policy().state_dict()
     else:
-        u=budget()['updates'][a]
+        # ProcessPoolExecutor uses spawn: coordinator module globals/closures
+        # are not inherited. The immutable job spec is the checkpoint authority.
+        u=spec['checkpoint_update']
         policy,_,_,payload=load(root/f'{a}_checkpoint_{u:03}.pt')
         assert payload['update']==u
         weights=policy.state_dict()
@@ -105,6 +108,9 @@ def execute_one(root,b,spec):
                 raise ValueError('MAPPO branch-reference final equivalence failed; additional budget needs MAIN')
     else:episode(job)
     meta=public_completion(spec,Path(job['path']))
+    if spec['arm'] in ('A','B','R'):
+        meta.update(checkpoint_update=spec['checkpoint_update'],
+                    checkpoint_sha256=sha(root/f'{spec["arm"]}_checkpoint_{spec["checkpoint_update"]:03}.pt'))
     if spec['kind'] in ('branch','reuse'):meta['prefix_pass']=True
     write(root/'final_receipts'/(spec['id']+'.json'),meta)
     return meta

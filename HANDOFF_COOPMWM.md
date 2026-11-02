@@ -1,5 +1,24 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+URGENTFINALONLYHOLD15:41:48UTC+8: coordinator625637/start61917851 deliberatelyT
+SIGSTOP,NOTdead; B/R/GPU/grader/observercontinue. Codeinspectioncaughtspawnfault:
+childfinal_runtime importedoldbudgetA48/B48, didNOTinheritparentu24monkeypatch.
+A24-taggedjobsloadedA48. NOoutcomesopened/read. ALL386reservedinvalidjobsclosed,
+375800sim-sRETAINED/quarantined; original673opaquejobsunchanged. Neverreuseany
+fixed*_A24_*asprimaryandNEVERresumeold625637withoutqualifiedhandover.
+Registeredfault078cf357; correctedfinalendpoint3/88CPU/PASS0skips23.115s/zero
+SUMO: explicitspeccheckpoint_update/strictmissingkey/publishedcheckpointSHA,
+A24v2freshIDs, separate_V2attemptmarkers. SOURCE3NOTDEPLOYED/no newfinalphysics.
+MAINallocationdecisionREQUIRED375800>delegated50k; proposaltransferexactgrades
+431160->55360,final_test+115200/paired_branch+260600within9.5M. Requestcanonical
+and E:/agent-work/_sol/COOPMWM_FINAL_SPAWN_BUDGET_ALERT.md. Discovery150200unchanged.
+PendingB4..6: at1793605168currentreplacementBu4all24claimed/14closed,10windows
+T300..390waitingoldest950..962s; R4waitsfinalB4quota. FourGPUslotsassigned/38queued,
+gpuA95%45083MiB171.92W; nogatesrerun. latestbrief334lines/MAIN14:59read;
+diskfixwasMAINcacheclean+SHAverifiedin-placegzip, NOTcompletedrelayarchive.
+EpisodeprogressnowprefersVERIFICATIONbinding,3CPU/PASS; originaldeadline18:07:02
+stillunchanged/resourceconfirmationrequested. Nofinaloutcome/viabilityclaim.
+
 FINALHOOKSMIGRATED15:35UTC+8: finalendpoint1/87CPU/PASS0skips22.584s,
 registered0b877c48. Newdurablecoordinator625637/start61917851 cpuQbootb8bc1fcb
 adoptsALL673opaquejobs/reusePASS; A24freshIDs only, primaryA24/B24/R24,

@@ -1,5 +1,7 @@
 import tempfile
 import unittest
+import json
+from types import SimpleNamespace
 from pathlib import Path
 from unittest.mock import patch
 from . import final_runtime as f
@@ -8,6 +10,23 @@ from .storage import write
 
 
 class EndpointTests(unittest.TestCase):
+    def test_spawn_worker_uses_serialized_checkpoint_even_when_import_budget_is_48(self):
+        # Serialize the parent's fixed-u24 spec, then simulate the fresh worker
+        # import's original u48 budget. No checkpoint/outcome is selected by data.
+        from .warm_protocol import budget
+        b=dict(runtime='runtime',checkpoint='mappo',accel_bounds=[-3.,2.6],gpu_deadline=1.)
+        primary=dict(budget(),updates=dict(A=24,B=24,R=24))
+        with patch.object(f,'budget',return_value=primary):
+            spec=json.loads(json.dumps(f.specs(('A',),panel=[dict(seed=989600)])[0]))
+        self.assertEqual(spec['checkpoint_update'],24)
+        policy=SimpleNamespace(state_dict=lambda:{})
+        with patch.object(f,'budget',return_value=dict(primary,updates=dict(A=48,B=48,R=24))),patch(
+                'tools.coopmwm.accel_learner.load',return_value=(policy,None,None,dict(update=24))) as load:
+            f.make_job(Path('run'),b,spec)
+        load.assert_called_once_with(Path('run/A_checkpoint_024.pt'))
+        spec.pop('checkpoint_update')
+        with self.assertRaises(KeyError):f.make_job(Path('run'),b,spec)
+
     def test_A24_jobs_have_fresh_ids_without_changing_arm(self):
         with patch.object(f,'ID_ALIASES',{'A':'A24'}):
             jobs=f.specs(('A',),panel=[dict(seed=989600)])
