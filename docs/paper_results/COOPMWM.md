@@ -1,5 +1,30 @@
 # S-COOPMWM — live checks
 
+## MAIN10:22 fresh recovery — B/R continued from durable checkpoints
+- Complete316-line brief and canonical registration adopted. Latest owner cap
+  **9,500,000sim-s**; primary final checkpoints **A24/B24/R24**, A48 secondary.
+  Both B and R receive exact SUMO candidate selection at the same update index
+  once the delegated verifier is integrated and qualified.
+- Recovered incident source **118 CPU PASS**, zero skips/SUMO/inference,
+ 21.287s. Existing recovery allocation **7,028,840sim-s** is registered under
+  its7.5M binding;179,000discovery reserve after the explicit21,000transfer.
+  Verification allocation under the higher cap is a separate pending registration.
+- Recovery binding completed remotely after the observer SSH timed out; its
+  four durable binding/release/config receipts were verified before launch.
+  No duplicate binder or episode dispatch. Completed episodes and original
+  B-u2/R-u1 optimizer/RNG/library state adopted; only21registered interrupted
+  attempts replaced, failed charges retained,10unclaimed R precharges adopted.
+- **TRAINING CONTINUED B/R at10:27:22/10:27:30UTC+8** (unix1793586442/6450).
+  Remote detached owners: B4146203/start60072070, R4146817/start60072842,
+  broker4145985/start60071018, grader4146093/start60071516. All four live,
+  empty logs and no fresh STOP at unix1793586457. Frozen `recoverycpu1`.
+- gpuA replacement759743 remains in its already-running final startup gate;
+  seven retained exact-zero gates observed. Other three qualified workers retained.
+  Original failed inference is never replayed. Warm qualification/original restart
+  retained; command-mirror OFF pending genuine trajectory parity.
+- B-u4–6 viability remains pending; latest published exact marginal evidence
+  **15plans,+145.2veh-s,95%CI[−60.80,+487.82]** does not establish viability.
+
 ## MAIN09:44 incident — labelling fixed; physics recovery budget blocked
 - The gpuA primary failed at unix1793583692 on the legacy2/3-member family
   validator, called **after** a4–6-member winner had been selected. Broker STOP

@@ -1,5 +1,21 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+MAIN1022 FRESH: full316linebrief read/latestcap9500000adopted; primaryA24/B24/R24,
+A48secondary. Recoverycpu1/118CPU/PASS0skips/21.287s/zeroSUMO qualified5053eec2.
+ExistingMAIN1011plan/registration adopted7028840allocated/7.5Mbinding/471160spare,
+discovery179000 afterauthorised21000transfer. BindingSSH45stimeoutbutremote
+completedall4receipts; VERIFIEDbeforelaunch/NOduplicatebinder. RemoteRECOVERY
+ownersDISPATCHEDonce10:27:22/30UTC+8: B4146203/start60072070,R4146817/start60072842,
+broker4145985/start60071018,grader4146093/start60071516. AllLIVE/logsempty/noV3STOP
+at1793586457. ResumeB2/R1originalAdam/RNG/library; completedB14/R3adopted,
+21registeredinterruptedattemptsreplaced/chargesretained;10unclaimedRprechargesadopted.
+Neverredispatch. GPUA759743stilloriginalqualifier,7EXACT0/eighthpending; others3retained.
+sumo_verify branchstillnolandedcommit atthisread; integratewhenlands/commonB-Rindex
+switch/requote9.5M BEFOREverificationphysics. NeedfinalhooksA24/B24/R24 +A48secondary.
+CommandmirrorOFF/notqualified; latestB15mean145.2CI[-60.80,487.82]/noviabilityclaim.
+Existingfinal3316828/discovery3604109/reporter3746050retained. OriginalGPUdeadline
+18:07:02unchanged. Localobserversabsent; restoreobserve-onlyaftercurrentstatus.
+
 MAIN0944INCIDENT: full303linebrief read; B/R/broker/graderEXIT afterGPUA596572
 posthocfamilylabellingcrashat1793583692, STOP_V2at1793583695. OriginalA48/B2/R1.
 B-u3=14complete10interrupted;R-u2=3complete11interrupted10neverclaimed.
@@ -1042,3 +1058,19 @@ WMSPEED2 processes still alive are CUDA-hidden CPU parity300 PID552087/start8921
 and parity60wide PID552073/start892109667; retained/no duplicate/no PID changes.
 Final receipts include `WMSPEED2_gpu{A,R}_final_recovery_inventory.json` in
 c4-wmspeed2/docs/paper_results/coopmwm. No new simulation or training charges.
+
+### S-WMSPEED2 fresh recovery 2026-11-02 10:00 — receipts closed
+
+Recovery committed in c4/wmspeed2 `e1ccd4f4`. All WMSPEED2 jobs have ended;
+the two previously pending CUDA-hidden CPU jobs were collected without reruns.
+Both have exact costs/ranking, but FAILED the legacy all-slot lane comparison;
+their tapes were not saved, so no retrospective real-vehicle trajectory pass is
+claimed. Original failed receipts are retained as WMSPEED2_gpuA_parity300.json
+and WMSPEED2_gpuA_parity60wide.json. Later cohort-aware CPU/cold/warm GPU gates
+and the recommended releasefcc50296 remain the qualification evidence above.
+Numerical evaluator/runtime/service/transfer modules still match that release.
+At10:00 GPU A99%/two compute owners; GPU R23,204MiB/two compute owners despite
+0% sample: no spare-capacity admission, no new GPU probe or owner PID action.
+Use the existing exact hot-swap recipe and registered amendment; no duplicate
+registration or dispatch. CPU79+7 passing evidence and additional measured
+transfer/width/graph results are preserved in WMSPEED2.md. NewSUMO/training0.
