@@ -50,9 +50,27 @@ registered seed-noise margin — the registered non-inferiority criterion); (c) 
 searches, i.e. seed asymmetry widens the effective safety margin; (d) surrogate replays measure WM-pool quality
 (best-of-final-top-8 by the search's own truth surrogate), not exact-SUMO benefit.
 
-## 2. State triage (v2 B)
+## 2. State triage (v2 B: skip states unlikely to hold best-plan saving)
 
-(added by step 2 below)
+Registered protocol: target y = max(0, best WM-finalist saving vs 'policy continues') per search; ridge (alpha 10,
+standardised) fitted on DEV only (83 searches / 22 worlds); held-out = the fixed 18 worlds (**26 searches / 11 worlds
+evaluated — NOT ENOUGH DATA, < 40**). Score inputs are decision-time fields the collector already has:
+request rows/group (positions, speeds, lanes, group size, regime, merge-zone occupancy) plus the K1/H300 centre
+rollout costs it computes before any screening (MAPPO - policy cost, policy cost, centre open-loop gap).
+
+| searched fraction | kept best-plan saving [95% CI] | searched wall fraction | kept per GPU-second | random | oracle |
+|---|---|---|---|---|---|
+| top 50% by score | **0.644 [0.146, 0.902]** | 0.519 | **1.24x** | 0.500 | 0.984 |
+| top 33% by score | 0.557 [0.076, 0.815] | 0.369 | 1.51x | 0.333 | 0.897 |
+
+- Single features kept 0.697 (50%) / 0.534 (33%) — the fitted ridge (`mappo_minus_policy` dominant, +`sd_v`,
+  +`zone_occupancy`) beats the best single feature.
+- Registered PASS (CI-lo of kept at 50% > 0.5): **FAIL** (0.146) — better than random in mean but not separably so.
+- **Deliverable (portable JSON coefficients):** `docs/paper_results/TRIAGE_SCORE.json`
+  (11 features, means/sds/coef/intercept), score via
+  `budget_search_eval.triage_score(request, centre_costs, model, centre_gap=None)` — higher = search first.
+- Recommendation: **use it for ordering states only** (e.g. which state to search first under contention); do NOT
+  gate searches on it until it passes with enough data.
 
 ## 3. Per-episode warm start (v2 C)
 
