@@ -1,5 +1,25 @@
 # S-COOPMWM — live checks
 
+## 11:18 continuation — verifier grade reuse CPU-qualified
+- Original warm-memory qualification, MAPPO-u0 starts, same-arm/seed library and
+  remote owners adopted. At unix1793589133: **A48/B2/R1**, B/R/broker/grader
+  live, no active STOP or pause receipts; charged **3,507,050sim-s**.
+- **100 CPU PASS, zero skips,27.928785s, zero SUMO/GPU inference**, frozen
+  `verifycpu9`, commit `afbb1082`. Replay now retains pre-verification beta and
+  R-sampler draws even after own-policy/rejected decisions. Legacy draws unchanged.
+- The actual CPU episode/controller loop passes five-branch verification and
+  chosen-branch/live fingerprints through the next query window. Exact source
+  grades import into trust/AWR with no new branch/charge; concurrent importers
+  adopt one receipt. A truncated plan instead queues its executed-portion grade.
+- Reused grades are explicitly **decision-local exact verification** on the
+  common max-candidate-duration+120 window, with unknown future proposals absent;
+  they are not relabelled as later marginal grades of the completed live episode.
+- **Not live:** no real smoke, common B/R boundary switch or endpoint-supervisor
+  migration. Fresh6M versus canonical9.5M cap clarification remains outstanding
+  before new verification spending. Original live training and observers retained.
+- Qualification detail/failures: `coopmwm/VERIFIER_CONTINUATION_CPU_20261102.md`.
+  No new viability claim; B-u4–6 learning checks remain pending.
+
 ## MAIN10:30 continuation — verifier CPU-qualified; current owners retained
 - Full322-line brief read; original warm-memory qualification and MAPPO-u0
   starts adopted. Recovery B/R/broker/grader remain live, no active STOP/pause.
