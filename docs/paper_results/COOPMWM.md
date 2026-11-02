@@ -1,5 +1,35 @@
 # S-COOPMWM — live checks
 
+## 09:34 continuation — owners adopted; parallel-wait reporting corrected
+- Fresh session read the complete298-line brief and recovered receipts. At
+  unix1793583292: **A48/B2/R1**, current B/R/broker/exact-grader live, no active
+  STOP/pause/failure. The existing local observe-only V9 and telemetry V3 remain
+  live. Original warm qualification/restart and all assigned work were adopted.
+- B-u3 has24 episodes claimed/14 closed; ten quota windows submitted33 parallel
+  TRAIN searches. R-u2 has7 claimed/3 closed. All four existing GPU workers are
+  ready with eight retained exact-zero startup gates each; no gates were rerun.
+  Individual GPU samples: gpuA83–84%, gpuR89–95%. No post-fan-out update has
+  completed yet, so the old B-u2 ETA is not a new-rate forecast.
+- **Reporting correction**: `episode_progress` had summed concurrent query ages,
+  producing13,098s for an approximately1,637s episode wait. It now reports the
+  oldest unresolved request age as `current_query_wait_s`, with separate pending
+  count and aggregate request-age effort. At unix1793583125 the ten blocked B
+  episodes are at sim t300–380 with oldest pending ages1725–1736s. Waits include
+  admission/queue time and remain censored. Two actual-payload CPU tests pass;
+  real remote observation passes. Amendment and old receipts retained; commit
+  `dd1e00d9`. This is an observation-only correction.
+- Exact grader at unix1793583156:18 receipts across both arms, no pending/running
+  grades, smoke passed. All12 repaired registered n+2 exact diagnostic receipts
+  000–011 have now been published alongside the retained failed attempts. These
+  diagnostics use their registered MAPPO background; marginal training grades
+  preserve other plans/current-policy background and are a different contrast.
+- Latest B exact marginal evidence remains **15 plans, mean+145.2veh-s,
+  95% world-cluster CI[−60.80,+487.82]**. **Viability is not established**;
+  the B-u4–6 curves/package and full WM diagnostic comparison remain pending.
+- Charged3,481,850sim-s; allocation7,495,040/cap7,500,000,4,960 unallocated.
+  Existing remote training and publication supervisors continue under the
+  registered guards; original GPU deadline18:07:02UTC+8 retained.
+
 ## TRAINING CONTINUED — parallel-group fan-out is live
 - **B continuation started2026-11-02 09:01:19UTC+8**, owned supervisor
   **3946079/start59555725**, immutable `tailcpu3`. All24 original B-u2 results

@@ -1,5 +1,25 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+FRESH ADOPTION 09:34UTC+8/unix1793583292: full298linebrief read; original
+A48/B2/R1, current B3946079/R3551874/broker3893211/grader3427015 allLIVE;
+noactiveSTOP/pause/failure. Neverredispatch. Localobserve-only20516/V9 and
+telemetry24140/V3verifiedalive/creation+command; retained. AllFOURGPUworkers
+READY/8EXACT0gates each, noparityreruns. GPUlastsamples83-84%/89-95%.
+Bu3still24claimed/14closed; TENwindows/33parallelTRAINqueries alreadyowned;
+Ru2sevenclaimed/threeclosed. Exactgrader18receipts(allarms),pending0/running0,
+smokePASS at1793583156; Bbenefitevidencestill15plans mean145.2 CI[-60.80,487.82].
+All12registered repairedexactn+2receipts000..011 NOWpublished; failuresretained.
+No consistentpositive-synergyclaim; fullWMcomparison/package stillpending.
+REPORTINGFIX dd1e00d9: episode_progress summed concurrentqueryages (13,098s
+reportedfor~1,637s elapsed). Nowcurrent_query_wait_s=MAXpendingage; separate
+pending_query_age_sum_s/countretainworkqueueeffort. Registeredreporting-only,
+actualpayload2CPU/PASS/0skips, realremotePASS. At1793583125Bu3blockedwindows
+t300..380, oldestpendingage1725..1736s, groups1..8perwindow; NOT3hwallwaiting.
+No training/GPUdeploymentorPIDcontrol. Resume receipt1ede8b0e preservesownership.
+Charged3481850/allocation7495040/cap7500000/free4960; original18:07:02deadline
+unchanged. Postfanoutu3wall/ETA andBu4..6viabilitystillpending; GPUsoccupied,
+depthdiagnosticdeferred. Existingdetachedsupervisors/observerscontinue.
+
 LIVE TAIL HANDOVER COMPLETE: B3946079/start59555725/sourceTAILCPU3 since
 1793581279.526441 (Nov2 09:01:19UTC+8). A48/B2/R1 completed; B-u3 RUNNING:
 all24claimed/14closed, TEN quota windows fan-out33real TRAIN queries; allFOUR
