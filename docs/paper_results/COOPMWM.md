@@ -1,5 +1,24 @@
 # S-COOPMWM — live checks
 
+## Nov3 00:47 UTC+8 — registered focus allocation deployed; collection continues
+- Corrected an outcome-blind queue-ordering omission: the bank collector now repays
+  its existing focus-admission deficit, then assigns ≥50% to the registered focus
+  demand/share cells while available. Coverage remains new-world/time/group order
+  within each stratum. No candidate state is deleted or excluded by this ordering.
+- Frozen `coopmwm20261103_lsfocuscpu1`: **226 CPU PASS**, zero skips,
+  **40.244 s**, zero sim-s. Amendment SHA
+  `2ad71f6c1f88db2107ad381505a10218aedb4dbee264031ee9c5d11b8d002575`.
+- At **00:47:01**, verified idle grading boundary and settled answers before
+  replacing metadata supervisor1728233 with **1834956/start65229920**. All completed
+  episodes, queued searches, labels, smoke and charges are adopted. Four GPU
+  owners and the broker continue; no completed simulation or inference is replayed.
+- Observer V6 **39872** replaces only identity-verified local V5; three ownership
+  guard CPU tests pass. First live poll confirms **four READY slots**, both CPU
+  owners alive, **15 real searches / 15 usable lists / 5 exact positives**.
+- Focus ordering applies to the next free admission; the existing eight in-flight
+  requests finish unchanged. B/R remain u3 pending the 20-positive prerequisite
+  and delegated B-REPLAY release. Command mirror remains off after its failed gate.
+
 ## Nov3 00:41 UTC+8 — command-mirror gate adopted; activation remains blocked
 - Rechecked source hashes against the completed 48-test CPU qualification and
   adopted the existing GPU receipt; zero new inference or SUMO calls.

@@ -34,13 +34,13 @@
 33. E2 runs in a2worker diagnostic thread beside PPO; serialized accounting; never reward/training gate.
 34. Zero/tie credits reported separately; scale fitted from exact data, diagnostic only.
 35. TRAIN986000..986071 primary seed20261101 only, six worlds/cell; original fresh guards/registrations retained.
-36. Check986072..986083,one/cell; TRAIN50%focus,12focus+12other; MAIN0508 B/Ru1 same-cell ascending-seed replacements for18failedBjobs plus6neverclaimed originals; later schedule unchanged.
+36. Check986072..986083,one/cell; TRAIN50%focus,12focus+12other; MAIN0508 replacements retained; collection focus deficit repaid to>=50% via world-metadata/count ordering, unchanged within-stratum coverage/no dropped states.
 37. Every4updates checks A/B/R vs once-only MAPPO controls, J600/J900/safety; forced counts/type and SNR.
 38. Dev984000..984023 every16updates A/B/R; existing24bitwise MAPPO bytes reused; no MAPPO dev rerun.
 39. TRAIN4/dev16 reportingonly; primaryA24/B24/R24,secondaryA48. Finalspawnfault375800sim-squarantined; MAIN1556approvedreplacement; source4/89CPU PASS explicitcheckpoint/SHA+final-onlycaps; B/Rcontinue.
 40. Final detector-first discovery uses unchanged COOPBEHAV detectors and complete exact twins.
 41. Learning checks report team return/value/KL/gradient, beta, proposal routes/acceptance/O1-O4 counts.
-42. A48/B3/R3;72episodes/14534snapshotsadopted;lslabelcpu3 224CPU PASS0skips40.944s; SUMOenv/smokePASS;5real9branchlists/2positive,3voidsretained; 2GiBdiskWAITbeforeclaim/autoresume;4GPUslots8EXACT0; arrival1200=>t0<=780/SAMEH; B-REPLAYpending20positives/release.
+42. A48/B3/R3;72episodes/14534snapshotsadopted;lsfocuscpu1 226CPU PASS0skips40.244s; SUMOenv/smokePASS;15real9branchlists/5positive,3voidsretained; disk>13GiB/autoresumed;4GPUslots8EXACT0; arrival1200=>t0<=780/SAMEH; B-REPLAYpending20positives/delegatedrelease.
 43. Recoverycap7500000: superseded811640,train2811600,checks432000,dev201600,final576000,Rtest115200,coldB28800,failedA14400; exact-plan-grades760000.
 44. Mechanics3600,calibration57600,discovery138200,pairedbranches1297400,reusecheck600; train2852400 inclMAIN1651 tenfresh-ID DNS replacements12000; allfailedchargesretained; verification2800000/exactgrade55360 plusinactivek8phase1500000.
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.

@@ -276,7 +276,7 @@ def status():
 import json,time,os,shutil
 c=Path({COLLECTION!r});r=Path({ROOT!r});v=dict(unix=time.time(),owners={{}},disk_free=shutil.disk_usage(c).free,load=os.getloadavg(),training_paused=all(not (r/(a+'_checkpoint_004.pt')).exists() for a in ('B','R')))
 for name in ('BROKER','SUPERVISOR'):
- suffix=next(s for s in ('_SUMODISK1','_SUMOENV1','_VALIDITY1') if (c/(name+'_DISPATCH'+s+'.json')).exists())
+ suffix=next(s for s in ('_SUMOFOCUS1','_SUMODISK1','_SUMOENV1','_VALIDITY1') if (c/(name+'_DISPATCH'+s+'.json')).exists())
  d=json.loads((c/(name+'_DISPATCH'+suffix+'.json')).read_text());p=Path('/proc',str(d['pid']));st=(p/'stat').read_text().split() if p.exists() else None
  assert not st or st[21]==d['start_ticks']
  v['owners'][name]=dict(d,state=st[2] if st else 'exited',log_tail=(c/(name+suffix+'.log')).read_text()[-1800:])
@@ -495,6 +495,29 @@ def watch_dispatch():
     write(p,d);print(json.dumps(d))
 
 
+def focus_watch_dispatch():
+    """Refresh only the owned local observer after additive focus handover."""
+    import psutil,subprocess,sys,time
+    p=ops.EVIDENCE/'LS_VALIDITY_OBSERVER_DISPATCH_V6.json'
+    if p.exists():print(json.dumps(read(p)));return
+    assert (ops.EVIDENCE/'LS_FOCUS_DISPATCH.json').exists()
+    old=read(ops.EVIDENCE/'LS_VALIDITY_OBSERVER_DISPATCH_V5.json')
+    try:owner=psutil.Process(old['pid'])
+    except psutil.NoSuchProcess:owner=None
+    if owner:
+        assert abs(owner.create_time()-old['unix'])<5,'observer creation identity changed'
+        argv=owner.cmdline()
+        assert argv[-3:]==['-m','tools.coopmwm.ls_validity_ops','watch'],argv
+        owner.terminate();owner.wait(timeout=15)
+    with (ops.EVIDENCE/'LS_VALIDITY_OBSERVER_V6.log').open('x',encoding='utf-8') as log:
+        child=subprocess.Popen([sys.executable,'-X','utf8','-u','-m','tools.coopmwm.ls_validity_ops','watch'],
+            cwd=ops.LOCAL,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+    d=dict(pid=child.pid,unix=time.time(),source_sha256=sha(ops.LOCAL/'tools/coopmwm/ls_validity_ops.py'),
+        retired_observer=old,mode='observe/publish; adopt four qualified GPU owners; no physics/training dispatch')
+    write(p,d);print(json.dumps(d))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=['qualify','cpu_result','register','gpu','gpu_status','cpu','admit','status','watch','watch_dispatch','cap_register','throughput','support','recover_secondary','recover_primary']);p.add_argument('--host',choices=['gpuA','gpuR'])
+    p=argparse.ArgumentParser();p.add_argument('action',choices=['qualify','cpu_result','register','gpu','gpu_status','cpu','admit','status','watch','watch_dispatch','focus_watch_dispatch','cap_register','throughput','support','recover_secondary','recover_primary']);p.add_argument('--host',choices=['gpuA','gpuR'])
     a=p.parse_args();globals()[a.action](a.host) if a.action in ('gpu','gpu_status','support') else globals()[a.action]()
