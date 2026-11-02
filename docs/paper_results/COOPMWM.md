@@ -1,5 +1,35 @@
 # S-COOPMWM — live checks
 
+### Tail release continuation — real checkpoint preflight passed
+- Real CPU preflight caught a continuation-only fault **before any new B launch**:
+  `restore_progress` read compressed `RESULT.json` completion markers as raw
+  episodes. Only the owned transition controller was held; existing SUMO/GPU,
+  broker, grader and R continued. The original checkpoint and all results remain.
+- Fixed reader to use the existing digest-verified lossless `accel_storage.read`.
+  Immutable **tailcpu3:141 CPU PASS**, zero skips,27.091s, zero SUMO/GPU jobs;
+  adds a real compressed-result fixture and adoption of the already-frozen wave.
+  Repaired transition **3907544/start59459454** is live since unix1793580316;
+  old held controller3874249 was identity-verified and terminated.
+- Real preflight at unix1793580384 passes: exact u1 checkpoint SHA6606191e940…,
+  exact generator state,17 Adam parameter states,1226 cumulative diagnostic
+  records,3 prior diagnostic selections, and **two same-B/seed library entries**.
+  Restored-state SHA1853bfb4d653… matches the prior successful read. The earlier
+  preflight's `library_entries=1` counted the library container key; its state
+  equality was correct and the reporting field is now corrected to2.
+- The one-time quota-complete admission drain is live under broker
+  **3893211/start59424477**, registered V2, **48 CPU PASS**. Its first launcher
+  refused before signalling because the rootless `serve` entry point has no root
+  argv; exact argv + boot/start + source PYTHONPATH now qualify its owned identity.
+  Original broker/config/receipts retained; all assigned inference claims adopted.
+- At unix1793580332: **A48/B1/R1**, B-u2 all24 claimed/22 closed, quota10 executed
+  plus2 in-flight. The two original GPU-R searches remain incomplete and owned;
+  no cancellation or inference replay. Transition/broker logs empty, active STOP
+  null. The controller waits for both episodes, adopts all24 results and continues
+  the exact checkpoint. Ordinary admission restores before new B-u3 fan-out.
+- Latest published exact marginal evidence remains11 B plans/10 worlds,
+  +224.8358veh-s with95% world-cluster CI[−35.3982,+596.7440]. **Viability is not
+  established**; the B-u4–6 package is pending. Allocation/deadline unchanged.
+
 ## MAIN08:18 — quota-tail concurrent group admission qualified and registered
 - Recovery adopted completed **WARM MEMORY QUALIFIED**, the existing B/R restart,
   and exact-positive same-B/seed library; no qualification or training was redone.
