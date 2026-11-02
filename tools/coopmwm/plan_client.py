@@ -121,6 +121,9 @@ def guide(job,generator):
                 known_family=False,record_sha256=digest(r),random_match=dict(path=str(match),key=r['state_id']),
                 centre_contract='same warm K1/H300 current-policy trajectory as B; zero candidate WM scores',
                 centre_receipt=centre_receipt)
+            if job.get('sumo_verify'):  # arm R verification: k random candidates around the same centre
+                result['verify_context']=dict(group=chosen_group,centre=centre,bounds=bounds,regime=traffic,
+                    duration_s=selected_ticket['duration_s'])
         b.update(queried_option=result.get('option'),proposal_accepted=result['accepted'],
             query_wall_s=result.get('query_wall_s',0.))
         if result['accepted']:
