@@ -1,5 +1,26 @@
 # S-COOPMWM — live checks
 
+## MAIN23:32 — SUMO label launcher recovered; real smoke pending
+- Two genuine full-pool searches completed on gpuA in **1,131.52 s** and
+  **839.24 s**. A third completed before the handover. Their original label
+  attempts failed because the collector omitted the installed SUMO environment;
+  all branches failed, with **zero actual sim-s**. These are void/no-outcome
+  attempts; files and charges remain retained.
+- Frozen `lslabelcpu2`: **223 CPU PASS**, zero skips, **40.235 s**, zero sim-s.
+  Amendment SHA `161f2ba5c38e0ba786dda0d11973b1e0df7e020690c1dcda2f5d23431db0fb47`.
+- **23:44:32 UTC+8:** only the verified metadata/grading supervisor was replaced
+  by **1693668/start64854995**. Explicit `SUMO_HOME` and PATH resolve existing
+  **SUMO 1.27.1**. Broker and GPU owners continue without restarts.
+- Recovery uses saved snapshots/top-eight lists, never another WM search. Failed
+  originals remain immutable; new `SUMOENV1` branches are precharged. A real
+  policy branch must pass the recorded prefix before candidate branches launch;
+  it is reused in the nine-branch list, adding no extra simulation.
+- New reservations enforce the fresh-message **6,000,000 sim-s** limit,
+  including retained superseded charges, conservatively pending clarification
+  of the brief's later 14.5M authority. No refunds or reserve bypass.
+- First real smoke/complete label still pending at unix1793634328. **A48/B3/R3**;
+  no training restart and no viability claim.
+
 ## MAIN22:32 restricted budget amendment; qualification packaging follow-up
 - **23:01:53 UTC+8:** gpuR secondary replacement **494955** passed all eight fresh
   **EXACT0** gates and was admitted as `gpuR@resource1651`. The durable broker

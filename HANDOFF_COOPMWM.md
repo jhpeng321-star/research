@@ -1,4 +1,27 @@
-# S-COOPMWM continuation — MAIN21:29 collection recovery
+# S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
+
+Fresh resume read ALL554brief lines; adoptedda7d24ef/uncommittedwork. FirstTWO
+genuineAsearchesfinished1131.52s/839.24s; labelsALL9failed/noSUMObinary/actual0.
+Thirdsearchfinishedbeforehandover, likewisefailed; NEVERredoWMsearches. Fixed
+read-onlystatusduplicatekey(fd0dc8a0), then MAIN2332recoveryCPU223PASS/0skips/
+40.235s/zeroSUMO in IMMUTABLE /home/ubuntu/coopmwm20261102_lslabelcpu2.
+RegisteredSHA161f2ba5c38e0ba786dda0d11973b1e0df7e020690c1dcda2f5d23431db0fb47,
+code76d09a1c. Freshmessage6Mcapvsbrief14.5M handledCONSERVATIVELY: newcollection
+reservations/retrycharges hardcap6M including811640superseded; no charge refund.
+ONLYmetadata/grading1485245boot/start/argv/no-branch-childverifiedandTERM;
+NEW1693668/start64854995(unix1793634272,23:44:32+08) SUPERVISOR_SUMOENV1,
+existingSUMO1.27.1withSUMO_HOME/PATH. Broker1485244andALLGPUownersuntouched.
+NewconfigLS_LABEL_CONFIG; newattemptslabel_attempts/SUMOENV1, labels/*_SUMOENV1;
+originalfailedlabels/chargeskept, label_voids marknooutcome; retrybranchesfreshcharge.
+RealpolicybranchmustPASSrecordedprefixBEFOREcandidates, reused(noextrasim).
+NEXT `python -X utf8 -m tools.coopmwm.ls_label_ops status`; NEVERredeploy.
+At1793634328newownerR/logempty,indexing14534snapshots, noSMOKE/labelyet.
+B/Rstillu3, A48done. Original72episodesneverreplay; mirrorFAILED/OFF.
+gpuA7429/7430bothREADY8/searching; R494955READY8/searching; R500795at3gates
+qualifying(neverrestart); manuallyadmitwhenALL8ready. Existingobserver25264
+stillobservesonlybutitsoldstatusnamesdonotrecognizenewlabels/supervisor.
+HARDEN_INT_READY.json absentwhenchecked; B-REPLAYresumeNEEDSqualifiedrelease,
+registeredquoteand20positiveBbankentries. Prioruntrackedreplay_ops.py preserved.
 
 MAIN23:14/full545linesread. BothA7429/7430nowREADY8EXACT0; THREEslotsadmitted
 1793632663/23:17:43+08 (Aincident1/Aresource/Rresource), preservedoriginalendpoints.
