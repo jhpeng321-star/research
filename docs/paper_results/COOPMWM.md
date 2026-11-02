@@ -1,5 +1,16 @@
 # S-COOPMWM — live checks
 
+## Nov3 03:59 UTC+8 — fresh resume adopts live recovery
+- Existing controller40716 and observer8472 are alive; no duplicate dispatch.
+  gpuA's second successor151635 completed all8 gates at unix1793649461.
+  The controller has already started the final gpuR successor623287; only that
+  slot is qualifying while the other three remain READY.
+- Read-only cpuQ check:39 successful searches/39 usable verified lists,
+  7 terminal declines; broker1941060 and grading1834956 alive, disk20.1GB free.
+- Delegated B-REPLAY replacement15000 is active; READY remains pending.
+  B/R stayu3 until ten confirmed bank admissions and the qualified release.
+  Original qualifications/recovered labels retained; zero new SUMO this step.
+
 ## Nov3 03:45 UTC+8 — durable rolling handover observer restored
 - Registered metadata-only amendment `75405d44…`; new local controller40716
   adopts the existing active qualifier and completed first-tier gates. It writes
