@@ -1,5 +1,37 @@
 # S-COOPMWM — live checks
 
+## MAIN16:07 verified-guidance correction — durable boundary adoption
+- Warm memory, fast-path parity, MAPPO-u0 restarts, library and the original
+  five-branch SUMO verification smoke are completed work and retained.
+- **Effective guide beta=1 for B and R under exact verification** is registered.
+  The adaptive exact-grade trust curve remains reporting-only. The Controller
+  preserves the verifier's effective beta/query probability and consumes exactly
+  one original beta/pad draw; exact-positive plans alone execute and enter AWR.
+  Count-starvation, safety, harmful-plan and learning checks remain active;
+  reporting-only trust reaching zero cannot itself starve verified guidance.
+- Frozen numerical `verifybeta2`: **131 CPU PASS**, zero skips/physics,34.463s.
+  Includes both arms at tracked beta0, exact-positive acceptance/negative rejection,
+  actual episode-loop/five-branch continuation and grade reuse. The initial
+  qualification failure is retained (missing fake-world seed and optional branch
+  behaviour metadata); corrected before release.
+- **R736732** restored u3 Adam/RNG/trust, configured fixed guide beta1 and waiting
+  for B-u4's final matching quota; **no R-u4 claim yet** at unix1793608384.
+  R-u2/u3 had zero executed plans because legacy beta was0; disclosed deviation.
+- **B598899 parent deliberately T**, children continue existing u4 SUMO/GPU work.
+  Registered detached controller **748938/start62256954** waits for all24 current
+  replacement RESULT+CLOSE receipts, then adopts u3 plus this collected wave and
+  applies u4 exactly once. At unix1793608384: **24 claimed/14 complete**, ten open.
+  Existing B-u4 episodes retain pre-correction trust; no claimed episode is replayed.
+  Fixed beta applies to B's subsequent fresh decisions; this timing is disclosed.
+- Controller-only `verifybeta5`: **133 CPU PASS**, zero skips/physics,36.649s.
+  Prior controller failures are preserved: Linux empty-argv exit race after the
+  child-free R parent was killed, then a missing deadline key before B handover.
+  Partial R handover was adopted without re-signalling or redispatching R.
+  Current V3 controller is live with an empty log; numerical source2 is unchanged.
+- Same 9,500,000 cap/MAIN15:56 allocation; no additional handover physics charged.
+  Original **18:07:02 UTC+8** resource deadline retained, not implicitly extended.
+  Final outcomes remain closed. **B-u4–6 viability is still pending.**
+
 ## Approved final-only recovery live — 16:04:22 UTC+8
 - MAIN15:56 allocation registered as `758ad384…`, commit `ca2a1022`:
   **375,800 sim-s** transferred from remaining separate exact grading
