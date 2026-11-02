@@ -99,6 +99,46 @@ def bind_group_batch(reservation,records):
     for r in records:immutable(admissions/(r['state_id']+'.json'),saved['admission'])
 
 
+def bounded_batch(root,job,now,draw,slots,group_count):
+    """MAIN18:44: reserve at most twice live capacity, atomically across episodes.
+
+    A full queue returns 'wait' WITHOUT consuming the window RNG draw while the
+    quota is unmet. Unbound reservations count too, closing the publish race.
+    """
+    import fcntl
+    from .resource_config import retired
+    root=Path(root);folder=root/'quota_requests'/f'u{job["update"]:03}'
+    folder.mkdir(parents=True,exist_ok=True)
+    with (folder/'ADMISSION.claim').open('a') as lock:
+        fcntl.flock(lock,fcntl.LOCK_EX)
+        excluded=set(retired(root)['query_keys'])
+        pending=sum(not (root/'responses'/p.name).exists() and
+            not (root/'query_cancellations'/p.name).exists() and p.stem not in excluded
+            for p in (root/'requests').glob('*.json'))
+        pending+=sum(not (root/'centre_responses'/p.name).exists()
+            for p in (root/'centre_requests').glob('*.json'))
+        for p in folder.glob('*_RESERVE.json'):
+            v=json.loads(p.read_text())
+            if v['job'] in set(retired(root)['jobs']):continue
+            if not (folder/(v['token']+'_REQUEST.json')).exists():
+                pending+=v.get('query_count',1)
+        s=state(root,job['update']);limit=2*slots
+        available=max(0,limit-pending)
+        unmet=s['executed']<job['N_exec']
+        if unmet and not available:return 'wait'
+        count=min(group_count,available)
+        p=.95 if count else 0.
+        queried=draw()<p
+        receipt=dict(s,minimum=job['N_exec'],pending=pending,slots=slots,
+            max_inflight=limit,query_count=count if queried else 0,
+            blocking=True,nonblocking=not unmet,query_probability=p,parallel_groups=True,
+            predicate='MAIN1844 atomic bounded fan-out <=2*live slots; quota-unmet waits for capacity')
+        token=digest(dict(job=job['id'],time_s=int(now)))
+        if queried:immutable(folder/(token+'_RESERVE.json'),dict(token=token,job=job['id'],
+            time_s=int(now),query_count=count,admission=receipt,unix=time.time()))
+    return p,queried,receipt,dict(folder=str(folder),token=token) if queried else None
+
+
 def resolved(reservation,executed):
     immutable(Path(reservation['folder'])/(reservation['token']+'_DECISION.json'),dict(executed=bool(executed)))
 

@@ -46,6 +46,7 @@ def binding(root):
     r=Path(root);p=r/'VERIFICATION_BETA_BINDING.json'
     from .resource_config import NAME
     if (r/NAME).exists():p=r/NAME
+    if (r/'FAST_RESUME_1844.json').exists():p=r/'FAST_RESUME_1844.json'
     if not p.exists():p=r/'VERIFICATION_CONTINUATION_BINDING.json'
     if not p.exists():p=r/'MATCH_RECOVERY_BINDING.json'
     b=json.loads((p if p.exists() else r/'INCIDENT_RECOVERY_BINDING.json').read_text())
@@ -98,6 +99,8 @@ def install(root,arm=None):
             workers=24 if a=='B' else 4,quota_aware_admission=True,parallel_group_queries=a=='B',
              precharged_unattempted=b['plans'][a]['precharged_unattempted'])
         result['job_id_overrides']=b.get('job_id_overrides',{})
+        for key in ('bounded_fanout','concurrent_R'):
+            if key in b:result[key]=b[key]
         if a in b.get('stop_after_update',{}):result['stop_after_update']=b['stop_after_update'][a]
         if b.get('sumo_verify'):result['sumo_verify']=copy.deepcopy(b['sumo_verify'])
         return result

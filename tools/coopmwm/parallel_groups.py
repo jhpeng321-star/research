@@ -20,14 +20,29 @@ from . import quota_admission as quota
 def query(job,generator,history,rows,commands,now,sample,groups,traffic,workers):
     root=Path(job['queue_root'])
     pending=sum(not (root/'responses'/p.name).exists() for p in (root/'requests').glob('*.json'))
-    chosen=quota.choose_group_batch(root,job,now,
-        lambda:float(torch.rand((),generator=generator)),pending,len(workers))
+    bounded=job.get('bounded_fanout',False)
+    draw=lambda:float(torch.rand((),generator=generator))
+    if bounded:
+        capacity_begin=time.monotonic()
+        while True:
+            from .plan_client import worker_slots
+            slots=len(worker_slots(root))
+            chosen=quota.bounded_batch(root,job,now,draw,slots,len(groups))
+            if chosen!='wait':break
+            assert_running(root,job['arm'])
+            if time.time()>job['gpu_deadline']:raise ValueError('registered GPU deadline exceeded')
+            time.sleep(.5)
+    else:
+        chosen=quota.choose_group_batch(root,job,now,draw,pending,len(workers))
     if chosen is None:return None
     p,queried,admission,reservation=chosen
     b=dict(route='wm' if queried else 'policy',sample_probability=p,mixture_mass=p,
         regime=traffic,executed=False,beta=0.,q=0.,eligible_query=True,capacity_admission=admission)
     sample['behaviour']=b
     if not queried:return dict(accepted=False,behaviour=b,reason='parallel window not sampled',record_sha256=None)
+    if bounded:
+        groups=groups[:admission['query_count']]
+        b['capacity_wait_wall_s']=time.monotonic()-capacity_begin
     common=dict(world_id=job['world']['seed'],time_s=int(now),rows=rows,commands=commands,
         policy_residuals={v:float(a[0]) for v,a in zip(sample['context']['members'],sample['own_action'])},
         history=history.snapshot(now))
@@ -55,6 +70,14 @@ def query(job,generator,history,rows,commands,now,sample,groups,traffic,workers)
         if value['accepted'] and value['plan']['members']!=r['group']:
             raise ValueError('parallel plan response group mismatch')
         results.append(value)
+        # An accepted response can enter exact verification immediately. Later
+        # queries are stale for control; assigned searches still finish as data.
+        if bounded and value['accepted']:break
+    if bounded:
+        cancelled=root/'query_cancellations';cancelled.mkdir(exist_ok=True)
+        for r in records[len(results):]:
+            immutable(cancelled/(r['state_id']+'.json'),dict(state_id=r['state_id'],
+                job=job['id'],reason='earlier accepted response consumed; state passed',unix=time.time()))
     selected=next((i for i,v in enumerate(results) if v['accepted']),0)
     result=copy.deepcopy(results[selected]);r=records[selected]
     summaries=[dict(state_id=q['state_id'],record_sha256=digest(q),members=q['group'],
@@ -63,6 +86,9 @@ def query(job,generator,history,rows,commands,now,sample,groups,traffic,workers)
         imagined_futures=v.get('imagined_futures',0)) for i,(q,v) in enumerate(zip(records,results))]
     result.update(query_wall_s=time.monotonic()-start,quota_reservation=reservation,
         parallel_queries=summaries,parallel_selection='first accepted in inherited group order; one start per tick')
+    if bounded:
+        result['parallel_unconsumed_queries']=[r['state_id'] for r in records[len(results):]]
+        result['bounded_fanout']=admission
     b.update(queried_option=result.get('option'),proposal_accepted=result['accepted'],
         query_wall_s=result['query_wall_s'],parallel_query_counts=dict(queries=len(results),
             accepted=sum(v['accepted'] for v in results),candidates_searched=sum(v.get('candidates_searched') or 0 for v in results)))

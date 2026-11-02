@@ -185,6 +185,9 @@ def run(root,config_path):
                     # this slot, even when the new request is dense/preferred.
                     assigned_items=[v for v in items if (assignments/(v[1]['state_id']+'.json')).exists()]
                     new_items=[v for v in items if not (assignments/(v[1]['state_id']+'.json')).exists()]
+                    # Stale unassigned states must never consume new GPU work.
+                    # Assigned claims are still adopted above and finish once.
+                    new_items=[v for v in new_items if not (root/'query_cancellations'/(v[1]['state_id']+'.json')).exists()]
                     if drain_active(root,config):
                         new_items=[v for v in new_items if v[0]!='plan' or v[1].get('mode')=='diagnostic']
                     new_items=new_item_order(new_items,last_kind,config.get('pipeline_centre_fairness',False))
@@ -247,6 +250,11 @@ def run(root,config_path):
                 blocking={p.stem for p in (root/'quota_admissions').glob('*.json')
                     if json.loads(p.read_text()).get('blocking')}
                 drain=drain_active(root,config)
+                stale=[r for kind,r in items if kind=='plan' and r['state_id'] not in assigned
+                    and (root/'query_cancellations'/(r['state_id']+'.json')).exists()]
+                for r in stale:decline(root,r,endpoints,(),config['amendment_sha256'],True)
+                stale_keys={r['state_id'] for r in stale}
+                items=[v for v in items if v[1]['state_id'] not in stale_keys]
                 declines,busy=capacity_declines(items,assigned,endpoints,blocking,drain)
                 for r in declines:decline(root,r,endpoints,busy,config['amendment_sha256'],drain)
                 slots=tuple(sorted(endpoints))

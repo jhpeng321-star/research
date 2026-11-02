@@ -30,7 +30,7 @@ def clocks(root,binding):
 
 def retired(root):
     result=dict(jobs=[],query_keys=[])
-    for name in ('INCIDENT_RETIRED_JOBS.json','DNS_RETIRED_JOBS_1651.json'):
+    for name in ('INCIDENT_RETIRED_JOBS.json','DNS_RETIRED_JOBS_1651.json','FAST_RETIRED_JOBS_1844.json'):
         p=Path(root)/name
         if p.exists():
             for key in result:result[key].extend(read(p).get(key,[]))

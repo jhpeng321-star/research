@@ -72,6 +72,20 @@ def check(root,b,arm,policy,u):
         if b.get('health_guards'):after_check(root,arm,u,report)
 
 
+def random_reference(root,u,concurrent=False):
+    """Pin latest completed B statistics once; never wait for B's current update."""
+    if not concurrent:return root/f'B_RANDOM_QUOTA_{u:03}.json'
+    receipt=root/f'R_MATCH_REFERENCE_{u:03}.json'
+    if receipt.exists():return Path(read(receipt)['path'])
+    choices=[p for p in root.glob('B_RANDOM_QUOTA_[0-9][0-9][0-9].json')
+        if int(p.stem.rsplit('_',1)[1])<=u]
+    if not choices:raise ValueError('no completed B quota for concurrent R')
+    path=max(choices,key=lambda p:int(p.stem.rsplit('_',1)[1]))
+    write(receipt,dict(path=str(path),B_reference_update=int(path.stem.rsplit('_',1)[1]),
+        R_update=u,rule='MAIN1844 latest completed B; best-effort strata; no current-B wait'))
+    return path
+
+
 def run_arm(root,arm):
     import fcntl
     import os
@@ -115,11 +129,13 @@ def run_arm(root,arm):
             if b.get('sumo_verify'):extra['sumo_verify']=b['sumo_verify']
             if b.get('quota_aware_admission'):extra['quota_aware_admission']=True
             if b.get('parallel_group_queries') and arm=='B':extra['parallel_group_queries']=True
+            if b.get('bounded_fanout') and arm=='B':extra['bounded_fanout']=True
             if b.get('health_guards'):extra.update(health_guards=True,safety_reference=b['safety_reference'])
             if arm=='B':extra['search_learning']=learned
             if arm=='R':
-                wait(root,root/f'B_RANDOM_QUOTA_{u:03}.json',b['gpu_deadline'],arm)
-                extra['random_quota']=str(root/f'B_RANDOM_QUOTA_{u:03}.json')
+                reference=random_reference(root,u,b.get('concurrent_R',False))
+                wait(root,reference,b['gpu_deadline'],arm)
+                extra['random_quota']=str(reference)
             eps=wave(root,dict(b,beta=beta),{arm:policy},batch_worlds(u),'train',f'warm_u{u:03}','train',False,extra)
             collection_begin=(min([start_unix]+[(root/'jobs'/e['id']/'CLAIM.json').stat().st_mtime for e in eps])
                 if b.get('parallel_group_queries') else start_unix)
@@ -131,8 +147,9 @@ def run_arm(root,arm):
             matching=None
             if arm=='R':
                 from .r_matching import report
-                quota=read(root/f'B_RANDOM_QUOTA_{u:03}.json')
+                quota=read(Path(extra['random_quota']))
                 matching=report(quota['tickets'],routes['durations'])
+                matching['reference_quota']=extra['random_quota']
             ev=evidence(eps);running+=ev
             exact_receipts=[];weights=None;pairs=[]
             if arm in ('B','R'):
