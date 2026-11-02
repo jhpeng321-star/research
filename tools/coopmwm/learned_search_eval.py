@@ -105,7 +105,7 @@ def _group(receipt):
                 leader_s_m=rows[0]['s_m'])
 
 
-def replay(receipt, surrogate, mode, model=None, cfg=REGISTERED, config=None):
+def replay(receipt, surrogate, mode, model=None, cfg=REGISTERED, config=None, durations=None):
     """Run the real search for one mode on the surrogate.
 
     Returns (values, perturbations m x n in m/s^2) of the SCREENED candidates in
@@ -128,6 +128,8 @@ def replay(receipt, surrogate, mode, model=None, cfg=REGISTERED, config=None):
             out[a['id']] = [c]*K
             if a['id'] in val:
                 vals.append(val[a['id']]); zs.append(np.asarray(a['perturbation_canonical'], float))
+                if durations is not None:
+                    durations.append(int(a['duration_s']))
         calls.append((vals, zs))
         return out
 

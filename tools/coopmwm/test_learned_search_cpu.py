@@ -205,3 +205,26 @@ class LSCollect(unittest.TestCase):
         self.assertEqual(len(s['rank']), 9)
         r58 = pp.rank58_share(S, rec)
         self.assertEqual(r58['method'], 'direct: exact k=8 verification lists')
+
+
+class Diversity(unittest.TestCase):
+    def test_metrics_shapes_and_collapse_detection(self):
+        import torch
+        from . import learned_search_diversity as ld
+        z = np.zeros((2, ms.canonical_knots())); z[1, :3] = -.5
+        self.assertEqual(ld.member_pattern(z, 300), 'm1-'); self.assertEqual(ld.member_pattern(z*0, 300), 'none')
+        Z = [z, z+1e-4, z+1.]
+        self.assertEqual(ld.clusters(Z, .01), 2)
+        self.assertAlmostEqual(ld._norm_entropy(['a', 'a']), 0.); self.assertAlmostEqual(ld._norm_entropy(['a', 'b']), 1.)
+        rec = pp.synthetic_receipts(24, 6, seed=3, sizes=(2,), population=16)
+        S, _ = pp.build_dataset(rec)
+        tr, va, vw = pp.world_split(S, .34, 1)
+        model = pp.ProposerNet(dict(pp.REGISTERED, d_model=32))
+        with torch.no_grad():                    # collapsed proposer: tiny std on every component
+            model.member.bias.view(4, 2, -1)[:, 1].fill_(-30.)
+        held = [r for r in rec if str(r['world_id']) in set(vw)][:3]
+        d = ld.diversity(model, held, tr, cfg=dict(bootstraps=50), n_samples=16)
+        self.assertEqual(d['searches'], 3)
+        self.assertLess(d['proposer_std_ratio']['mean'], 1.)
+        self.assertEqual(set(d['modes']), {'plain', 'plain_alt', 'warm'})
+        self.assertAlmostEqual(d['modes']['plain']['pool_spread_ratio']['mean'], 1.)

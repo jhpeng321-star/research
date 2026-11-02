@@ -126,7 +126,11 @@ def load_cache(cache, train_worlds=TRAIN_WORLDS):
             for e in (request.get('search_learning') or {}).get('entries') or []:
                 entries[e.get('plan')] = e
             stats['pairs'] += 1
-            rec, why = pp.receipt_from_service(request, json.loads(resp.read_text()))
+            response = json.loads(resp.read_text()); result = response.get('result', response)
+            if isinstance(result, dict) and result.get('accepted') and isinstance(result.get('posthoc'), dict):
+                lab = str(result['posthoc'].get('label'))
+                stats.setdefault('posthoc_label_counts', {})[lab] = stats.get('posthoc_label_counts', {}).get(lab, 0)+1
+            rec, why = pp.receipt_from_service(request, response)
             if rec is None:
                 stats['skipped'][why] = stats['skipped'].get(why, 0)+1; continue
             receipts.append(rec)
@@ -209,6 +213,8 @@ def run(cache, report, fetch_remote=True, sources=None):
             held = sorted((r for r in full if str(r.get('world_id')) in set(vw)),
                           key=lambda r: str(r.get('search_id')))[:MAX_CURVE]
             curve = le.evaluations_curve(model, held)
+            from .learned_search_diversity import diversity
+            res['diversity'] = diversity(model, held, tr)
             res['evaluations_curve'] = {k: v for k, v in curve.items() if k not in ('per_search', 'cfg')}
         else:
             res['evaluations_curve'] = f'not run: {len(full)} full-pool receipts < {MIN_FULL_POOL}'
@@ -267,6 +273,17 @@ def write_report(res, path):
               f"- Share of verified decisions where a WM rank 5-8 candidate would be exact best (top-8 verification): "
               f"{res.get('rank5to8')}.",
               f"- Nested best-of-4 vs best-of-8 (exact k=8 lists): {res.get('nested_best_of_4_vs_8')}.", '']
+        dv = res.get('diversity') or {}
+        if dv.get('searches'):
+            L += ['## Diversity / collapse (held-out; warm vs plain vs plain_alt; learned_search_diversity)',
+                  f"- Proposer samples vs plain initial: mean pairwise distance x{_fmt(dv['proposer_spread_ratio']['mean'], 2)}, "
+                  f"per-dim std x{_fmt(dv['proposer_std_ratio']['mean'], 2)}; learned samples in new regions "
+                  f"{_fmt(dv.get('new_region_share_learned', {}).get('mean'), 2)} (initial {_fmt(dv.get('new_region_share_initial'), 2)}).",
+                  *[f"- {m}: pool spread x{_fmt(v['pool_spread_ratio']['mean'], 2)}; top-8 patterns {_fmt(v['top8_patterns'], 1)} / "
+                    f"clusters {_fmt(v['top8_clusters'], 1)}; elite patterns {_fmt(v['elite_patterns'], 1)} / clusters "
+                    f"{_fmt(v['elite_clusters'], 1)}; top-1 most common share {_fmt(v['top1_most_common_share'], 2)}, "
+                    f"distinct {v['top1_distinct']}, entropy {_fmt(v['top1_norm_entropy'], 2)}" for m, v in dv['modes'].items()],
+                  f"- Live post-hoc labels of accepted B plans: {res['load'].get('posthoc_label_counts')}.", '']
         ev = res.get('evaluations_curve')
         L += ['## Evaluations needed to reach the plain search\'s final elite quality (surrogate replay)']
         if isinstance(ev, str) or not ev or not ev.get('summary'):

@@ -1,0 +1,89 @@
+{
+ "searches": 24,
+ "worlds": 8,
+ "proposer_spread_ratio": {
+  "mean": 0.5533192210344228,
+  "ci_lo": 0.4999000495893738,
+  "ci_hi": 0.6114854090203727
+ },
+ "proposer_std_ratio": {
+  "mean": 0.4878334702780481,
+  "ci_lo": 0.42713651034707556,
+  "ci_hi": 0.5622534876069366
+ },
+ "new_region_share_learned": {
+  "mean": 0.16861979166666666,
+  "ci_lo": 0.11160342261904763,
+  "ci_hi": 0.22759507123161735
+ },
+ "new_region_share_initial": 0.66015625,
+ "modes": {
+  "plain": {
+   "pool_spread_ratio": {
+    "mean": 1.0,
+    "ci_lo": 1.0,
+    "ci_hi": 1.0
+   },
+   "top8_patterns": 2.8333333333333335,
+   "top8_clusters": 6.166666666666667,
+   "elite_patterns": 3.3333333333333335,
+   "elite_clusters": 10.375,
+   "top1_most_common": {
+    "m0-": 5,
+    "m1-": 5,
+    "m0+": 5
+   },
+   "top1_most_common_share": 0.20833333333333334,
+   "top1_distinct": 8,
+   "top1_norm_entropy": 0.9229901540532479
+  },
+  "plain_alt": {
+   "pool_spread_ratio": {
+    "mean": 1.0683828346528852,
+    "ci_lo": 1.0091786174230224,
+    "ci_hi": 1.1346211614453816
+   },
+   "top8_patterns": 2.625,
+   "top8_clusters": 6.5,
+   "elite_patterns": 3.5,
+   "elite_clusters": 10.416666666666666,
+   "top1_most_common": {
+    "m0+": 9,
+    "m1+": 6,
+    "none": 3
+   },
+   "top1_most_common_share": 0.375,
+   "top1_distinct": 7,
+   "top1_norm_entropy": 0.8496300207723597
+  },
+  "warm": {
+   "pool_spread_ratio": {
+    "mean": 0.9403676343955102,
+    "ci_lo": 0.8976387201541469,
+    "ci_hi": 0.9902749562663093
+   },
+   "top8_patterns": 3.0416666666666665,
+   "top8_clusters": 6.5,
+   "elite_patterns": 3.9166666666666665,
+   "elite_clusters": 10.083333333333334,
+   "top1_most_common": {
+    "m1+": 7,
+    "m0+": 5,
+    "m1-": 4
+   },
+   "top1_most_common_share": 0.2916666666666667,
+   "top1_distinct": 8,
+   "top1_norm_entropy": 0.8892095498097812
+  }
+ },
+ "note": "ratios vs plain initial distribution (1) or plain pool; clusters linked at the median plain-pool NN spacing; member pattern = dominant member index + sign (|mean| >= 0.1 m/s^2)",
+ "checkpoint": {
+  "path": "E:/agent-work/_plan_proposer_cache/checkpoints\\proposer_2026-11-02T104606.json",
+  "pt_sha256": "ddf1c5d2c98b2601c3c29e2437b2e8d38f006f24c5bd918dd54c1708f109440b"
+ },
+ "train_searches": 82,
+ "live_posthoc_label_counts_accepted_B": {
+  "new": 72
+ },
+ "wall_s": 164.73082971572876
+}
