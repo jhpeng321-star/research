@@ -15,6 +15,16 @@ rule (uniform before the first 20 completed bank decisions, then T = max(1, RMS 
 first 20 exact advantages, both signs) frozen and persisted) and the same clip; beta
 multiplies the weight. The collector reloads the newest checkpoint of its arm at every
 episode, so its snapshot policy refreshes after each update.
+
+Confirmation stage (MAIN 2026-11-02 22:32 / 2026-11-03 00:01): every first-seed positive
+decision runs (a) a second independent CRN seed, (b) the extended window, (c) the safety
+check; only entries passing all three are admitted. For every ADMITTED entry whose plan
+moves >= 2 CAVs, per-member SOLO branches on the first seed (only that member executes its
+plan row, everyone else follows 'policy continues') give the cooperation gain
+advantage(group) - max_m advantage(solo m); the entry is tagged cooperative iff the gain
+is > 0 (single-CAV plans: cooperative=False). The imitation batch oversamples cooperative
+entries up to 50% of the imitation samples (weights unchanged); BANK_QUALITY.json carries
+the cooperative count, the mean gain with CI and the group-vs-best-solo synergy twins.
 """
 import json
 import os
@@ -43,6 +53,17 @@ def latest_checkpoint(root, arm):
     if not found:
         raise ValueError('no checkpoint for the collector policy')
     return found[-1], int(found[-1].stem.rsplit('_', 1)[1])
+
+
+def _boot_ci(values, seed=20261101):
+    """95% bootstrap CI of the mean (same estimator family as bank_quality); None under 2 values."""
+    import numpy as np
+    if len(values) < 2:
+        return None
+    v = np.array(values, float)
+    rng = np.random.default_rng(seed)
+    boots = v[rng.integers(0, len(v), (10000, len(v)))].mean(1)
+    return [float(np.quantile(boots, .025)), float(np.quantile(boots, .975))]
 
 
 # ---------------------------------------------------------------- collector guide (inside episodes)
@@ -334,6 +355,7 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
     pairs, entries, counts = [], [], dict(decisions=len(decisions), positive=0, nonpositive=0)
     conf = confirmations(root, arm)
     counts.update(unconfirmed=0, not_admitted=0)
+    per_entry = []
     for r in decisions:
         if r['status'] != 'accepted' or not r['grade_veh_s'] or r['grade_veh_s'] <= 0:
             counts['nonpositive'] += 1;continue
@@ -351,17 +373,47 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
             raise ValueError('bank branch tape differs from its sealed verification receipt')
         w = float(beta)*xg.weight(c['mean_replicated_advantage_veh_s'], T['temperature_veh_s'], clip)
         entry = dict(start_s=r['t0'], duration_s=int(plan['duration_s']), plan_id=plan['id'], weight=w)
-        pairs.extend(xg.imitation_pairs(tape, entry))
+        coop = c.get('cooperation') or {}
+        per_entry.append((xg.imitation_pairs(tape, entry), coop.get('cooperative') is True,
+                          coop.get('cooperation_gain_veh_s')))
         entries.append(dict(verification_id=r['verification_id'], grade_veh_s=r['grade_veh_s'], weight=w,
                             mean_replicated_advantage_veh_s=c['mean_replicated_advantage_veh_s'],
                             policy_version=r['_policy_version'], available_k=r.get('available_k', r['k']),
-                            duration_s=entry['duration_s'], receipt_sha256=r['receipt_sha256']))
+                            duration_s=entry['duration_s'], receipt_sha256=r['receipt_sha256'],
+                            cooperative=coop.get('cooperative') is True,
+                            group_size=coop.get('group_size'),
+                            cooperation_gain_veh_s=coop.get('cooperation_gain_veh_s')))
+    # MAIN 2026-11-03 00:01 EXPOSURE: cooperative entries must reach the policy at least as
+    # often as non-cooperative ones - oversample them up to 50% of the imitation samples
+    # (pair duplication; the weights themselves are unchanged).
+    other = [p for ps, co, _ in per_entry if not co for p in ps]
+    coop_pairs = [p for ps, co, _ in per_entry if co for p in ps]
+    pairs = other+coop_pairs
+    exposure = dict(cooperative_entries=sum(co for _, co, _ in per_entry),
+                    non_cooperative_entries=sum(not co for _, co, _ in per_entry),
+                    cooperative_samples_raw=len(coop_pairs), non_cooperative_samples=len(other),
+                    duplicated_pairs=0)
+    if coop_pairs and len(coop_pairs) < len(other):
+        full, rem = divmod(len(other)-len(coop_pairs), len(coop_pairs))
+        pairs = other+coop_pairs*(1+full)+coop_pairs[:rem]
+        exposure['duplicated_pairs'] = len(pairs)-len(other)-len(coop_pairs)
+    exposure['rule'] = ('cooperative entries oversampled to 50% of imitation samples, weights unchanged'
+                        if exposure['duplicated_pairs']
+                        else ('cooperative entries already at least half of the imitation samples'
+                              if coop_pairs else 'no cooperative admitted entries; no oversampling'))
+    if pairs:
+        exposure['cooperative_share_of_samples'] = (len(pairs)-len(other))/len(pairs)
+    gains = [g for _, _, g in per_entry if g is not None]
+    import numpy as np
+    exposure.update(mean_cooperation_gain_veh_s=float(np.mean(gains)) if gains else None,
+                    mean_cooperation_gain_ci95=_boot_ci(gains))
     counts.update(available=len(everything), used=len(decisions),
+                  cooperative=exposure['cooperative_entries'],
                   by_policy_version={v: sum(r['_policy_version'] == v for r in decisions)
                                      for v in sorted({r['_policy_version'] for r in decisions})})
-    return pairs, dict(rule='B-REPLAY bank: all CONFIRMED (replication, no later harm, safety) exact-positive entries; weight(mean replicated advantage) x beta',
+    return pairs, dict(rule='B-REPLAY bank: all CONFIRMED (replication, no later harm, safety) exact-positive entries; weight(mean replicated advantage) x beta; cooperative entries oversampled to 50% of samples',
                        temperature=T, beta=float(beta), counts=counts, entries=entries, clip=clip,
-                       max_decisions=max_decisions)
+                       max_decisions=max_decisions, exposure=exposure)
 
 
 def main(argv=None):
@@ -446,8 +498,52 @@ def _confirm_charge(run_root, phase, kind):
     return lambda vid, specs: inner(f'{kind}_{vid}', specs)
 
 
+def solo_candidate(plan, member):
+    """The group plan with ONLY ``member`` executing: it keeps its own profile row, the other
+    members follow 'policy continues' (the branch Controller has no guide). A distinct plan id
+    gives the solo branch its own verification_id so it can never collide with the group
+    decision's receipts, claims or charges."""
+    rows = list(plan['members'])
+    i = rows.index(member)
+    out = dict(plan);out['members'] = [member]
+    for key, val in plan.items():
+        if isinstance(val, list) and len(val) == len(rows) and all(isinstance(x, list) for x in val):
+            out[key] = [val[i]]                      # per-member matrices: keep only this row
+    out['id'] = f"{plan['id']}__solo_{member}"
+    return out
+
+
+def _cooperation(root, arm, receipt, snapshot, runner_for, run_root, phase, workers, best, group_advantage):
+    """MAIN 2026-11-03 00:01: for an ADMITTED multi-CAV plan, one SOLO verification per member
+    on the first seed; cooperative iff advantage(group) > every member-only solo advantage."""
+    bank = bank_root(root, arm);solo_root = bank/'confirm_solo'
+    charge = _confirm_charge(run_root, phase, 'confirm_solo')
+    solos = []
+    for m in best['members']:
+        r = sv.verify(snapshot, [solo_candidate(best, m)], runner_for(solo_root), charge,
+                      receipt['proposer'], workers=workers, root=solo_root)
+        solos.append(dict(member=m, verification_id=r['verification_id'], status=r['status'],
+                          advantage_veh_s=(r['J_policy_veh_s']-r['J_candidates_veh_s'][0]
+                                           if r['status'] in ('accepted', 'rejected') else None),
+                          receipt_sha256=r['receipt_sha256']))
+    advs = [s['advantage_veh_s'] for s in solos]
+    complete = all(a is not None for a in advs)
+    if complete:
+        b = max(range(len(advs)), key=lambda i: advs[i])
+        gain = group_advantage-advs[b]
+        return dict(group_size=len(best['members']), solo=solos, solo_advantages_veh_s=advs,
+                    best_solo_advantage_veh_s=advs[b], best_solo_member=solos[b]['member'],
+                    cooperation_gain_veh_s=gain, cooperative=bool(gain > 0), complete=True,
+                    rule='cooperative iff the group plan beats EVERY member-only solo (first seed)')
+    return dict(group_size=len(best['members']), solo=solos, solo_advantages_veh_s=advs,
+                best_solo_advantage_veh_s=None, best_solo_member=None, cooperation_gain_veh_s=None,
+                cooperative=None, complete=False,
+                reason='a solo branch failed/stopped; never imputed, cooperation undecided')
+
+
 def confirm(root, arm, receipt, snapshot, runner_for, run_root, phase, workers=2, version=None):
-    """Run (a) replication and (b) extended-window confirmations for one first-seed positive decision."""
+    """(a) replication + (b) extended-window confirmations, then (c) admission; an ADMITTED
+    multi-CAV entry additionally gets the per-member SOLO cooperation check (MAIN 00:01)."""
     bank = bank_root(root, arm);best = receipt['chosen_plan'];vid = receipt['verification_id']
     rep_root, ext_root = bank/'confirm_replication', bank/'confirm_extended'
     rep = sv.verify(replicate(snapshot, vid), [best], runner_for(rep_root),
@@ -477,6 +573,15 @@ def confirm(root, arm, receipt, snapshot, runner_for, run_root, phase, workers=2
     else:
         out.update(admitted=False, checks=dict(confirmation_branches_complete=False),
                    reason='confirmation branch failed/stopped/budget; never imputed')
+    if out.get('admitted'):
+        if len(best.get('members', [])) >= 2:
+            out['cooperation'] = _cooperation(root, arm, receipt, snapshot, runner_for, run_root, phase,
+                                              workers, best, out['first_seed_advantage_veh_s'])
+        else:   # single-CAV plan: cooperative=False by definition, no solo branches
+            out['cooperation'] = dict(group_size=len(best.get('members', [])), solo=[], solo_advantages_veh_s=[],
+                                      best_solo_advantage_veh_s=None, best_solo_member=None,
+                                      cooperation_gain_veh_s=None, cooperative=False, complete=True,
+                                      rule='single-CAV plan: cooperative=False by definition')
     d = bank/'confirmations';d.mkdir(parents=True, exist_ok=True)
     xg._write_new(d/(vid+'.json'), xg._seal(out, 'confirmation_sha256'))
     return out
@@ -532,7 +637,9 @@ def confirmations(root, arm):
 
 
 def bank_quality(root, arm, sources=()):
-    """BANK_QUALITY.json: decisions, first-seed positives, confirmation rate, admitted, mean (95% CI), safety rejections."""
+    """BANK_QUALITY.json: decisions, first-seed positives, confirmation rate, admitted, mean (95% CI), safety rejections,
+    plus the cooperation/synergy record (MAIN 2026-11-03 00:01): cooperative count, mean gain (95% CI)
+    and the group-vs-best-solo 'synergy twins' table."""
     import numpy as np
     decisions = bank_decisions(root, arm, sources=sources)
     conf = confirmations(root, arm)
@@ -540,11 +647,16 @@ def bank_quality(root, arm, sources=()):
     confirmed = [conf[r['verification_id']] for r in positives if r['verification_id'] in conf]
     admitted = [c for c in confirmed if c['admitted']]
     values = np.array([c['mean_replicated_advantage_veh_s'] for c in admitted], float)
-    ci = None
-    if len(values) >= 2:
-        rng = np.random.default_rng(20261101)
-        boots = values[rng.integers(0, len(values), (10000, len(values)))].mean(1)
-        ci = [float(np.quantile(boots, .025)), float(np.quantile(boots, .975))]
+    ci = _boot_ci(values)
+    coop_rec = [(c, c.get('cooperation') or {}) for c in admitted]
+    cooperative = [c for c, co in coop_rec if co.get('cooperative') is True]
+    gains = [co['cooperation_gain_veh_s'] for _, co in coop_rec if co.get('cooperation_gain_veh_s') is not None]
+    twins = [dict(verification_id=c['verification_id'], t0=c['t0'], policy_version=c['policy_version'],
+                  group_size=co.get('group_size'), first_seed_advantage_veh_s=c['first_seed_advantage_veh_s'],
+                  best_solo_advantage_veh_s=co.get('best_solo_advantage_veh_s'),
+                  best_solo_member=co.get('best_solo_member'),
+                  cooperation_gain_veh_s=co.get('cooperation_gain_veh_s'), cooperative=co.get('cooperative'))
+             for c, co in coop_rec]
     q = dict(arm=arm, unix=time.time(), decisions=len(decisions), first_seed_positives=len(positives),
              confirmed=len(confirmed), pending_confirmation=len(positives)-len(confirmed), admitted=len(admitted),
              confirmation_rate=(len(admitted)/len(confirmed) if confirmed else None),
@@ -555,7 +667,12 @@ def bank_quality(root, arm, sources=()):
                              safety=sum(not c['checks'].get('safety', True) for c in confirmed),
                              incomplete=sum('confirmation_branches_complete' in c['checks'] for c in confirmed)),
              by_policy_version={v: sum(c['policy_version'] == v for c in admitted)
-                                for v in sorted({c['policy_version'] for c in admitted})})
+                                for v in sorted({c['policy_version'] for c in admitted})},
+             cooperative=len(cooperative),
+             cooperation_undecided=sum(co.get('cooperative') is None for _, co in coop_rec),
+             mean_cooperation_gain_veh_s=(float(np.mean(gains)) if gains else None),
+             mean_cooperation_gain_ci95=_boot_ci(gains),
+             synergy_twins=twins)
     path = bank_root(root, arm)/'BANK_QUALITY.json';tmp = path.with_name(path.name+'.publishing')
     tmp.write_text(json.dumps(q, indent=1));os.replace(tmp, path)
     return q
