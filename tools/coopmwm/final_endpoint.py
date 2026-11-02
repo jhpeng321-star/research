@@ -25,8 +25,8 @@ def configure(root,config):
     f.budget=lambda:copy.deepcopy(primary)
     f.endpoints_ready=ready
     d.budget=lambda:copy.deepcopy(primary)
-    d.install_accounting=lambda:install_accounting(root)
-    install_accounting(root)
+    d.install_accounting=lambda:install_accounting(root,budget_override=config['budget'])
+    install_accounting(root,budget_override=config['budget'])
 
 
 def secondary(root,b,plan):

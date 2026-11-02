@@ -39,7 +39,7 @@ def batch_worlds(update):
     return result
 
 
-def install_accounting(root=None):
+def install_accounting(root=None,budget_override=None):
     """Only the new registered runtime calls this; old run roots stay immutable."""
     import types
     from tools.coopnative import storage
@@ -55,5 +55,9 @@ def install_accounting(root=None):
             v=json.loads(p.read_text())
             assert v['amendment_sha256'] in (r/'AUTHORITY.md').read_text()
             b=v['budget']
+    if budget_override is not None:
+        assert sum(budget_override['phases'].values())==budget_override['allocated']
+        assert budget_override['allocated']<=budget_override['total']
+        b=budget_override
     accel_storage._reserve=types.FunctionType(storage.reserve.__code__,
         dict(storage.reserve.__globals__,CAP=b['total']-SUPERSEDED_CHARGE,CAPS=b['phases']))

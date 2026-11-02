@@ -10,6 +10,19 @@ from .storage import write
 
 
 class EndpointTests(unittest.TestCase):
+    def test_final_phase_caps_use_approved_config_not_older_training_binding(self):
+        from .warm_protocol import install_accounting,budget
+        from . import accel_storage
+        from .accel_protocol import SUPERSEDED_CHARGE
+        b=budget();b['phases']=dict(b['phases'],final_test=691200,paired_branch=1297400)
+        b['allocated']=sum(b['phases'].values());b['total']=9500000
+        with patch.object(accel_storage,'_reserve'):
+            install_accounting(budget_override=b)
+            globals_=accel_storage._reserve.__globals__
+            self.assertEqual(globals_['CAPS']['final_test'],691200)
+            self.assertEqual(globals_['CAPS']['paired_branch'],1297400)
+            self.assertEqual(globals_['CAP'],9500000-SUPERSEDED_CHARGE)
+
     def test_spawn_worker_uses_serialized_checkpoint_even_when_import_budget_is_48(self):
         # Serialize the parent's fixed-u24 spec, then simulate the fresh worker
         # import's original u48 budget. No checkpoint/outcome is selected by data.

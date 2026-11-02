@@ -56,6 +56,30 @@ def register():
     print(json.dumps(dict(registered=True,amendment_sha256=h,budget=b,new_sumo_sim_s=0)))
 
 
+def cpu():
+    prior=read(ops.EVIDENCE/'FINAL_ENDPOINT_CPU_V3.json')
+    files=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,hashlib
+r=pathlib.Path({prior['source_root']!r});files={{}}
+for n,h in json.loads({json.dumps(prior['source_hashes'])!r}).items():
+ p=r/n;assert hashlib.sha256(p.read_bytes()).hexdigest()==h;files[n.removeprefix('pytools/')]=p.read_text()
+print(json.dumps(files))''',timeout=45))
+    for n in ('final_endpoint','warm_protocol','test_final_endpoint_cpu'):
+        files['tools/coopmwm/'+n+'.py']=checked(ops.LOCAL/'tools/coopmwm'/(n+'.py')).read_text(encoding='utf-8')
+    staged=json.loads(ops.stage('cpuQ',SOURCE,files))
+    out=ops.ssh.remote('cpuQ',f'''import os,sys,time,json,unittest
+from unittest.mock import patch
+sys.path[:0]=[{SOURCE!r}+'/pytools','/home/ubuntu/e3final/runtime/src','/home/ubuntu/e3final/runtime']
+os.nice(19);os.environ.update(CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',COOPMWM_MAPPO='/home/ubuntu/mappospeed/production2/policy_00169.pt',COOPMWM_COST_SOURCE={SOURCE!r}+'/FROZEN_COSTS.json',COOPMWM_MOTION_SOURCE={SOURCE!r}+'/FROZEN_MOTION_SOURCE.py')
+import torch;torch.set_num_threads(1)
+names=('test_final_endpoint_cpu','test_final_discovery_cpu','test_final_runtime_cpu','test_branch_eval_cpu','test_acceleration_cpu','test_committed_cpu','test_exact_grade_cpu','test_diagnostic_repair_cpu');start=time.monotonic()
+with patch('subprocess.Popen',side_effect=AssertionError('no SUMO/inference in endpoint qualification')):
+ result=unittest.TextTestRunner(stream=sys.stdout,verbosity=1).run(unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromName('tools.coopmwm.'+n) for n in names))
+print(json.dumps(dict(pass_=result.wasSuccessful(),tests=result.testsRun,skips=len(result.skipped),sim_s=0,wall_s=time.monotonic()-start)))''',timeout=90)
+    print(out);v=json.loads(out.strip().splitlines()[-1]);v.update(source_root=SOURCE,source_hashes=staged['hashes'])
+    target=ops.EVIDENCE/'FINAL_RECOVERY_CPU_V4.json';assert not target.exists();write(target,v)
+    assert v['pass_'] and v['skips']==v['sim_s']==0
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('census','register'))
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('census','register','cpu'))
     globals()[p.parse_args().mode]()
