@@ -1,5 +1,13 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+ROLLCONTROLLER V5=40716/unix1793648712 ACTIVE, logLS_FAST_ROLL_V5.log.
+Adopt NEVERduplicate. Amendment75405d44 registersV4transport-exit recovery;
+metadata6CPUtestsPASS0.12s/zeroSUMO. Pure scheduler now blocks ANY second
+qualifier while oneFASTK2successor is live/notREADY (MAIN02:27). It adopts
+A151635alreadyrunning, then upgradesRsecondONLYafterAready; originaldrains/
+dispatches/gates retained. Observer8472continuesautomaticqualifiedadmission.
+NoPPO/SUMOdispatch bycontroller; no numericalcode/search/horizonchange.
+
 MAIN03:19 COMPLETE1793648469/03:41:09+08: ALL10savedregrades/90branches
 GRADED/PREFIXchecksPASS,62640actualsim-s/64800precharge(no refunds),
 alloriginalfailedlabels+chargesretained/ZEROnewWMsearch. Newworker2225116

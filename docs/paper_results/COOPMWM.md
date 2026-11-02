@@ -1,5 +1,17 @@
 # S-COOPMWM — live checks
 
+## Nov3 03:45 UTC+8 — durable rolling handover observer restored
+- Registered metadata-only amendment `75405d44…`; new local controller40716
+  adopts the existing active qualifier and completed first-tier gates. It writes
+  `LS_FAST_ROLL_V5.log`; the original transport failure remains recorded.
+- Added a tested scheduling guard: **at most one slot qualifies across both
+  GPUs**. After the current gpuA successor is READY, the controller completes the
+  remaining gpuR successor from its existing drain receipt. Six targeted local
+  CPU tests pass (0.12 s). This controller launches no PPO or SUMO jobs.
+- Existing observer8472 continues qualified admission/publication; collection and
+  grading retain their owners. Combined niche/nullfix release and delegated
+  B-REPLAY release remain pending; no duplicate delegated work was launched.
+
 ## Nov3 03:41 UTC+8 — all saved failed labels recovered
 - `LS_SAVED_REGRADE_COMPLETE_0319.json`: **10/10 saved-search retries complete,
   90/90 branches graded**, all registered prefix checks passed. **62,640 actual

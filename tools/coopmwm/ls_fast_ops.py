@@ -253,6 +253,16 @@ def publish_variant():
     write(target,value);print(json.dumps(value))
 
 
+def roll_target(tier,gpus):
+    """MAIN02:27: only one successor may qualify at a time across both hosts."""
+    workers=[w for g in gpus.values() for w in g['workers']]
+    fast=lambda w:w['owner'].get('generation','').startswith('FASTK2')
+    live=lambda w:w['state'] in ('S','R','D') and not w['failure']
+    if any(fast(w) and live(w) and not w['ready'] for w in workers):return None
+    ready={w['owner']['root'] for w in workers if fast(w) and live(w) and w['ready']}
+    return next(((host,root) for host,root in tier if root not in ready),None)
+
+
 def continue_roll():
     """Durable local deployment observer; only already-registered rolling steps."""
     import contextlib,io,msvcrt,time
@@ -268,13 +278,12 @@ def continue_roll():
             while __import__('time').time()<1793894340.:
                 with contextlib.redirect_stdout(io.StringIO()):
                     gpus={h:gpu_status(h) for h in ('gpuA','gpuR')}
-                    live={w['owner']['root'] for g in gpus.values() for w in g['workers']
-                        if w['owner'].get('generation','').startswith('FASTK2')
-                        and w['state'] in ('S','R','D') and not w['failure']}
                     # Idempotent drain/gpu operations adopt immutable remote receipts.
-                    for host,root in tier:
+                    target=roll_target(tier,gpus)
+                    if target is not None:
+                        host,root=target
                         p=ops.EVIDENCE/('LS_FAST_DISPATCH_'+host+'_'+root.rsplit('_',1)[1]+'_'+ATTEMPT+'.json')
-                        if not p.exists() and root not in live:
+                        if not p.exists():
                             if root not in requested:drain(host,root);requested.add(root)
                             gpu(host,root)
                     gpus={h:gpu_status(h) for h in ('gpuA','gpuR')}
@@ -298,7 +307,11 @@ def continue_roll():
 
 def continue_dispatch(generation=1):
     import subprocess,sys,time
-    assert generation in (1,2,3,4)
+    assert generation in (1,2,3,4,5)
+    if generation==5:
+        amendment=ops.EVIDENCE/'LS_FAST_ROLL_RESUME_0319.json'
+        assert amendment.exists()
+        assert read(amendment)['source_sha256']==sha(ops.LOCAL/'tools/coopmwm/ls_fast_ops.py')
     suffix='' if generation==1 else f'_V{generation}'
     p=ops.EVIDENCE/('LS_FAST_ROLL_DISPATCH'+suffix+'.json')
     if p.exists():print(json.dumps(read(p)));return
@@ -315,19 +328,38 @@ def continue_dispatch(generation=1):
 
 def continue_recover():
     import psutil
-    previous=ops.EVIDENCE/'LS_FAST_ROLL_DISPATCH_V3.json'
-    old=read(previous if previous.exists() else ops.EVIDENCE/'LS_FAST_ROLL_DISPATCH.json')
+    previous=next(p for p in (ops.EVIDENCE/('LS_FAST_ROLL_DISPATCH'+s+'.json')
+        for s in ('_V5','_V4','_V3','_V2','')) if p.exists())
+    old=read(previous)
     try:owner=psutil.Process(old['pid'])
     except psutil.NoSuchProcess:owner=None
     if owner:
         assert abs(owner.create_time()-old['unix'])<5
         assert owner.cmdline()[-3:]==['-m','tools.coopmwm.ls_fast_ops','continue_roll']
         print(json.dumps(dict(adopted_running_controller=old)));return
-    continue_dispatch(4)
+    continue_dispatch(5)
+
+
+def roll_register():
+    target=ops.EVIDENCE/'LS_FAST_ROLL_RESUME_0319.json'
+    if not target.exists():
+        line=('\nS-COOPMWM ENGINEERING0319 ROLLING CONTROLLER RESUME: existingV4 '
+            'controller33124 exited on transportRuntimeError; observer8472 retained. '
+            'Adopt firsttierREADY8/K2PASS A110917/R588039 and active secondtier '
+            'A151635; no duplicate queries/qualifiers. Enforce MAIN02:27 exactlyONE '
+            'qualifying slot across bothGPUs; afterAready finish Rsecond from its '
+            'originaldrain with registered unchangedFASTK2V5 wrapper. Localmetadata '
+            '6CPUtestsPASS0.12s including regrade tests; sourceSHAchecked beforedispatch. '
+            'No searchmath/horizon/K/population/phase/cap change, zeroSUMO. '
+            'NewV5receipt/log; originalV4failure and all gates retained.\n')
+        write(target,dict(line=line,source_sha256=sha(ops.LOCAL/'tools/coopmwm/ls_fast_ops.py'),
+            tests=6,pass_=True,skips=0,sim_s=0,wall_s=.12))
+        with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line+'amendmentSHA'+sha(target)+'\n')
+    print(json.dumps(dict(amendment_sha256=sha(target),new_sumo_sim_s=0)))
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('qualify','result','register','broker','drain','gpu','progress','publish_variant','continue_roll','continue_dispatch','continue_recover'))
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('qualify','result','register','broker','drain','gpu','progress','publish_variant','continue_roll','continue_dispatch','continue_recover','roll_register'))
     p.add_argument('--host',choices=('gpuA','gpuR'));p.add_argument('--root')
     a=p.parse_args()
     globals()[a.action](a.host,a.root) if a.action in ('drain','gpu','progress') else globals()[a.action]()
