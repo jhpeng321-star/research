@@ -1,5 +1,11 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+IT2_K2LIVEconfirmed04:02:49/unix1793649769: FOURactualforecastsconfigmatched/
+all8returned; A/n2mean1019.7s(n2), R/n2=1014.3s(n1),R/n6=2910.0s(n1).
+Read-onlysearch_timingreport4CPU PASS0.06s; ZEROnewWM/SUMO/ownercontrol.
+IT2_K2_LIVE_TIMING_1793649769525748300.json pinsforecastSHA/config. Rolloutwindow
+3.55completions/hNOTsteadythroughput/speedupclaim. R623287stillqualifierowner.
+
 FRESH03:59 resume: ALL627brief linesread,7fd0bdb1/uncommittedworkADOPTED.
 Controller40716/observer8472 LIVE; NEVERduplicate. A151635nowREADY8at1793649461;
 controllerALREADYlaunchedlastR623287/start4227610216at1793649515, gateRUNNING.

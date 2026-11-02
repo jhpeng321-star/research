@@ -1,5 +1,20 @@
 # S-COOPMWM — live checks
 
+## Nov3 04:02:49 UTC+8 — first completed it2_K2 searches verified
+- `coopmwm/IT2_K2_LIVE_TIMING_1793649769525748300.json` reads four completed,
+  hash-pinned forecasts. Every receipt records **iterations2/screenK2/H300,
+  full population/finalK8/H_final**, and all8 candidates were returned. Warm
+  memory is retained; command mirror is OFF. This establishes live use of the
+  authorized variant, not completion of the remaining worker rollout.
+- Completed-query mean wall: gpuA/n2 **1019.7s** (n=2), gpuR/n2 **1014.3s**
+  (n=1), gpuR/n6 **2910.0s** (n=1). No completed n4 query in this variant sample.
+  Four completions over1.126h since the first completed-query start give
+  **3.55 completions/h** across the rollout window, including gaps and unfinished
+  work. These small, configuration-separated samples are not a steady-state
+  throughput estimate or evidence of a2.47x live speedup.
+- Read-only reporter has4 CPU tests PASS (0.06s), zero new WM searches/SUMO.
+  It controls no processes and changes no numerical sources or live settings.
+
 ## Nov3 03:59 UTC+8 — fresh resume adopts live recovery
 - Existing controller40716 and observer8472 are alive; no duplicate dispatch.
   gpuA's second successor151635 completed all8 gates at unix1793649461.
