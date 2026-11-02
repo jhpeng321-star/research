@@ -1,5 +1,31 @@
 # S-COOPMWM — live checks
 
+## 08:12 continuation — Windows publication failure repaired
+- Fresh session adopted A48/B1/R1 and every existing remote owner; no training,
+  search or physics job was restarted. At unix1793578141 B-u2 has22/24 episodes
+  closed; both remaining worlds have advanced to new, already-owned searches.
+  R-u2 awaits B-u2's final matching quota. No finite completion ETA is asserted.
+- Local observer46108 exited at unix1793578179 with Windows error206. Its log
+  identifies an unbounded `git diff --stat` argument list: immutable receipt names
+  accumulated across polls. Remote B/R, broker, grading and GPU work survived.
+- Repair `0fc421c3`: intersect intended paths with changed/untracked filenames,
+  bound diff command lines to16000 characters, and stage literal NUL-delimited
+  pathspecs through stdin. Existing operator-staged work still defers publication.
+  **Eight CPU tests PASS**, including1500 long receipt names and an actual
+  observe-only run that cannot launch training; real Git stdin dry-run passes.
+- Registered `coopmwm/EXACT_OBSERVER_COMMAND_LENGTH_RECOVERY.json`; replacement
+  **observe-only1372/V8** started2026-11-02 08:12:36UTC+8 after46108 was verified
+  absent. Its first real status/publication/commit cycle passed (`b830163f`).
+  Existing telemetry28752 remains live. Original GPU deadline is unchanged.
+- At unix1793578173:13 current B executed starts; exact grader14 receipts,
+  pending/running0, smoke passed. Receipt count includes both arms and is not a
+  count of B-qualified effects. Charged3338010sim-s; allocated7495040/cap7500000,
+  spare4960 unchanged under the later owner-approved addenda.
+- Warm qualification, original restart, exact-positive same-arm/seed library and
+  covariance integration are adopted, not rerun. The command-mirror prototype is
+  still disabled: completed CPU callback checks do not establish absolute
+  trajectory/GPU parity. B-u4–6 viability remains pending; no new scientific claim.
+
 ## Fresh continuation — independent command audit and live evidence
 - Read-only guard/status compatibility now includes the **current fairness broker
   and exact grader** with newest-dispatch precedence and boot/start identity.
