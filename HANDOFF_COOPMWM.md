@@ -1,5 +1,14 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+Fresh Nov3 01:20 adoption: ALL592 brief lines read; HEADb611829c/untrackedwork
+retained. RESUME_20261103_0120.md pins read-only current owners: CPU1834956,
+A7429/7430,R500795/494955 all live/fourREADY8gates, disk13.9GB/unblocked.
+36requested/28terminal/21usablelists/5selectedpositive, NOTconfirmedentries.
+HARDEN_INT_READY absent; neverduplicate delegatedimplementation/rehearsal.
+LATESTstartthreshold10CONFIRMEDpositives supersedes20. A48/B3/R3 retained.
+Priority MAIN01:16 mirror qualification then it2_K2; existing gateFAIL retained.
+Fresh6Moperationalguard unchanged/noSUMOorGPUdispatch/signals thisstep.
+
 00:59/unix1793638755 LIVE FOCUS VERIFIED: first3NEWadmissions986044/45/46 all
 focus at t300, noLS_COLLECT_FAILED. EvidenceFOCUS_ALLOCATION_LIVE_1793638755.json.
 BothGPUstatus probes2READY8each/A66%R95%, currentoriginalowners unchanged.
