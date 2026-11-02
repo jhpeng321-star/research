@@ -2642,3 +2642,26 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - Exact-grade queue/lag: `{"failed": 0, "graded": 12, "max_lag_s": 17.956080436706543, "mean_lag_s": 11.755984206994375, "orphaned": 0, "overlap_unresolved": 0, "pending": 0, "running": 0, "stopped": 0, "update": 2}`; final ETA 125.7h.
 - Receipt: `coopmwm/warm_live/B_UPDATE_002.json`.
 <!-- warm-receipt:B_UPDATE_002.json:89ebeceb585f0139702643c5b4216ffe88d469024aa793f6f64d9f05901b0caf -->
+
+## Warm live publication — 2026-11-02T01:05:00.834516+00:00
+- Conservatively charged 3426740/7500000 sim-s.
+
+### Warm continuation — ACCEL_EXACT_PLAN_004_FAILED.json
+- Exact executed-plan twins: `{}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_004_FAILED.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_004_FAILED.json:007bc8ea9688cc7aba35ab1749353d33600ee6ed7d04b91feb2df295c9a48e8c -->
+
+### Warm continuation — ACCEL_EXACT_PLAN_005_FAILED.json
+- Exact executed-plan twins: `{}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_005_FAILED.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_005_FAILED.json:63243f3992fef9b7ee8b06bd1380592e5bbd7ad6ec0112f84d859d24333820c7 -->
+
+### Warm continuation — ACCEL_EXACT_PLAN_006_FAILED.json
+- Exact executed-plan twins: `{}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_006_FAILED.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_006_FAILED.json:56eda232125b706f2a7ba6d3da0da4c88d1ced6ffb396888e8f3c33b71eaf579 -->
+
+### Warm continuation — B_EXACT_VIABILITY_99cf50a5c7abc1694be3d527c9ee6cc65d900cea0a353767d86da2594cbdb73c.json
+- B u2: exact paired SUMO plan saving mean 145.2 veh-s, 95% world-cluster CI `[-60.80176778292476, 487.8205913035406]`, 15 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_99cf50a5c7abc1694be3d527c9ee6cc65d900cea0a353767d86da2594cbdb73c.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_99cf50a5c7abc1694be3d527c9ee6cc65d900cea0a353767d86da2594cbdb73c.json:d1a48a5473159954368b4347245c2daa1ffbd11e487c3f1d02593d822501a5b1 -->
