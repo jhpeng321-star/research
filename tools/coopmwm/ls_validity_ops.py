@@ -166,7 +166,7 @@ for d in {rows!r}:
  gates={{p.name:json.loads(p.read_text()) for p in r.glob('STARTUP_*_LSCOLLECT_'+generation+'.json')}}
  service=json.loads((r/'SERVICE_OWNER.json').read_text());failure=r/('LS_GPU_FAILED_'+generation+'.json')
  ready=st is not None and st[2] in ('S','R','D') and not failure.exists() and len(gates)==8 and all(x['pass_'] and x['max_cost_error']==0 for x in gates.values()) and all(service[k]==d[k] for k in ('pid','start_ticks','boot_id'))
- variant=r/'STARTUP_VARIANT_IT2K2.json'
+ variant=r/d.get('variant_name','STARTUP_VARIANT_IT2K2.json')
  if generation.startswith('FASTK2'):ready=ready and variant.exists() and json.loads(variant.read_text())['pass_']
  completed=[json.loads(p.read_text()) for p in (r/'forecasts').glob('*.json') if p.stat().st_mtime>=d['unix']]
  workers.append(dict(owner=d,state=st[2] if st else 'exited',ready=ready,gates=gates,
@@ -525,7 +525,7 @@ def focus_watch_dispatch():
 def fast_watch_dispatch(generation=7):
     """Observe rolling successors by exact owner identity; never launch inference."""
     import psutil,subprocess,sys,time
-    assert generation in (7,8,9)
+    assert generation in (7,8,9,10)
     p=ops.EVIDENCE/f'LS_VALIDITY_OBSERVER_DISPATCH_V{generation}.json'
     if p.exists():print(json.dumps(read(p)));return
     assert (ops.EVIDENCE/'LS_FAST_BROKER_DISPATCH_V2.json').exists()
@@ -553,6 +553,10 @@ def roll_watch_dispatch():
     fast_watch_dispatch(9)
 
 
+def qualified_watch_dispatch():
+    fast_watch_dispatch(10)
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=['qualify','cpu_result','register','gpu','gpu_status','cpu','admit','status','watch','watch_dispatch','focus_watch_dispatch','fast_watch_dispatch','bank_watch_dispatch','roll_watch_dispatch','cap_register','throughput','support','recover_secondary','recover_primary']);p.add_argument('--host',choices=['gpuA','gpuR'])
+    p=argparse.ArgumentParser();p.add_argument('action',choices=['qualify','cpu_result','register','gpu','gpu_status','cpu','admit','status','watch','watch_dispatch','focus_watch_dispatch','fast_watch_dispatch','bank_watch_dispatch','roll_watch_dispatch','qualified_watch_dispatch','cap_register','throughput','support','recover_secondary','recover_primary']);p.add_argument('--host',choices=['gpuA','gpuR'])
     a=p.parse_args();globals()[a.action](a.host) if a.action in ('gpu','gpu_status','support') else globals()[a.action]()

@@ -17,7 +17,7 @@ class FastWorkerTests(unittest.TestCase):
              patch.object(package,'__path__',list(package.__path__)),patch.object(warm_service,'main'):
             ls_fast_worker.run('/root/test',dict(pid=12),100.,'sha','/root/overlay')
         self.assertTrue(delegated.call_args.kwargs['recover'])
-        self.assertEqual(delegated.call_args.kwargs['generation'],'_FASTK2V3')
+        self.assertEqual(delegated.call_args.kwargs['generation'],'_FASTK2V5')
 
     def test_config_is_explicit_and_preserves_other_parameters(self):
         seen=[]

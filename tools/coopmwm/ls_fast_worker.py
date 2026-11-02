@@ -81,16 +81,34 @@ def run(root, old, deadline, amendment, overlay):
                 full_fast=full_fast, identical_draw_ids=draws, K=2, H=300,
                 width=width, search_config=NAME, new_sumo_sim_s=0,
                 wall_s=time.monotonic()-begin, amendment_sha256=amendment)
-            warm_service.write(r/'STARTUP_VARIANT_IT2K2.json', gate)
+            import os
+            warm_service.write(r/f'STARTUP_VARIANT_IT2K2_{os.getpid()}.json', gate)
             if not gate['pass_']:
                 raise ValueError('it2_K2 exact full/fast and warm batch/single gate failed')
         finally:
             rt.frozen.costs = costs
-        # Fresh inherited eight gates, including committed K4/H300 and K8/H420,
-        # still run. Bootstrap reuses the same loaded model without extra memory.
+        # Adopt the four completed SAME-SOURCE committed and warm single/batch
+        # checks using the inherited, hash-verifying admission mechanism. The
+        # fresh process still runs all four cold/warm full-vs-fast checks. Avoid
+        # re-capturing full 1600-slot H420 traces alongside another live worker.
+        from tools.coopmwm.protocol import sha
+        adopted = dict(binding, adopted_startup_gates=dict(
+            receipts={name:sha(r/name) for name in warm_service.ADOPTABLE},
+            numerical_hashes={name:binding['hashes'][name] for name in warm_service.NUMERICAL}))
+        assert warm_service.adopted_gates(r,adopted)
+        for name,h in adopted['adopted_startup_gates']['receipts'].items():
+            value=warm_service.read(r/name)
+            warm_service.write(r/name,dict(value,adopted=True,original_receipt_sha256=h,
+                numerical_hashes=adopted['adopted_startup_gates']['numerical_hashes']))
+        previous_read=warm_service.read
+        warm_service.read=lambda p:adopted if p==r/'GPU_BINDING.json' else previous_read(p)
+        del single,batch,acts,memory,record,group
+        import gc,torch
+        gc.collect();torch.cuda.empty_cache()
+        # Reuse this loaded model; the standard service runs its four fresh gates.
         with patch.object(runtime, 'bootstrap', return_value=rt):
             return original_main(r)
 
     warm_service.main = qualified_main
     ls_gpu.run(str(root), copy.deepcopy(old), deadline, amendment,
-        recover=True, generation='_FASTK2V3', overlay=overlay)
+        recover=True, generation='_FASTK2V5', overlay=overlay)

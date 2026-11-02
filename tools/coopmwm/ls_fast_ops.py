@@ -7,11 +7,11 @@ from .ls_validity_ops import remote, payload
 from .protocol import checked, REGISTRY, sha, digest
 from .storage import read, write
 
-SOURCE='/home/ubuntu/coopmwm20261103_lsfastcpu3'
-OVERLAY='/root/coopmwm20261103_it2k2ops2'
-REG='LS_FAST_IT2K2_REGISTRATION_V4.json'
-GPU_GENERATION='FASTK2V3'
-ATTEMPT='FASTK2V3_RECOVERY'
+SOURCE='/home/ubuntu/coopmwm20261103_lsfastcpu5'
+OVERLAY='/root/coopmwm20261103_it2k2ops5'
+REG='LS_FAST_IT2K2_REGISTRATION_V5.json'
+GPU_GENERATION='FASTK2V5'
+ATTEMPT='FASTK2V5'
 SLOTS={'incident1':'gpuA@incident1','deadlineA2':'gpuA@resource1651',
     'concurrent3':'gpuR@0','deadlineR2':'gpuR@resource1651'}
 
@@ -82,6 +82,15 @@ def register():
             'probes lock release BEFORE starting successor. Original source/bindings and '
             'all completed queries retained; new RECOVERY dispatch/log names. No inference '
             'retry, no new SUMO, no gate or tolerance weakened.\n')
+        line+=('V5 qualification-memory amendment: gpuR576918 passed K2/H300 and '
+            'committedK4/H300, then full1600-slot H420 trace recapture OOM alongside '
+            'its live peer. Use EXISTING warm_service SHA-bound adoption for four '
+            'unchanged committed/single-batch gates (including K8/H420); run fresh '
+            'K2/H300 plus four cold/warm full-vs-fast gates per successor. No search '
+            'horizon/K/population/action change. Source mismatches or nonzero errors '
+            'still FAIL. Preserve OOM and completed receipts. Release unused cache '
+            'between qualification stages. Adopt any already-live earlier successor; '
+            'never interrupt its inference or restart a successful qualifier.\n')
         write(p,dict(line=line,cpu=cpu,authority='MAIN2026-11-03 00:48',
             config=dict(name='it2_K2',iterations=2,screen_K=2,screen_H=300,final_K=8),
             new_sumo_sim_s=0,operational_spend_cap=6000000))
@@ -157,7 +166,7 @@ print(p.read_text() if p.exists() else json.dumps(dict(wait=True)))'''))
     assert sha(ops.LOCAL/'tools/coopmwm/ls_fast_worker.py')==qualified,'wrapper changed since CPU qualification'
     out=remote(host,f'''from pathlib import Path
 import json,os,time,subprocess,hashlib,base64,shutil,fcntl,signal
-r=Path({root!r});dest=r/'LS_GPU_DISPATCH_FASTK2V3_RECOVERY.json';overlay=Path({OVERLAY!r})
+r=Path({root!r});dest=r/'LS_GPU_DISPATCH_FASTK2V5.json';overlay=Path({OVERLAY!r})
 if dest.exists():print(dest.read_text());raise SystemExit
 dispatch_lock=(r/'FAST_UPGRADE_DISPATCH.claim').open('a');fcntl.flock(dispatch_lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
 assert overlay.parent.is_dir()
@@ -193,9 +202,9 @@ if not retired.exists():
 code='import sys;sys.path.insert(0,'+repr(str(overlay))+');from ls_fast_worker import run;run('+repr(str(r))+','+repr(old)+',1793894340.,'+repr({h!r})+','+repr(str(overlay))+')'
 env=dict(os.environ,PYTHONPATH=str(r/'pytools'),WMTEACH_BACKEND='FULL-v4',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
 if {host!r}=='gpuR':env['PYTORCH_CUDA_ALLOC_CONF']='expandable_segments:True'
-with (r/'LS_GPU_FASTK2V3_RECOVERY.log').open('x') as log:
+with (r/'LS_GPU_FASTK2V5.log').open('x') as log:
  proc=subprocess.Popen(['nice','-n','19','/root/miniconda3/bin/python','-B','-u','-c',code],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
-v=dict(pid=proc.pid,start_ticks=Path('/proc',str(proc.pid),'stat').read_text().split()[21],boot_id=old['boot_id'],root=str(r),host={host!r},unix=time.time(),generation='FASTK2V3',log_name='LS_GPU_FASTK2V3_RECOVERY.log',amendment_sha256={h!r},wrapper_sha256=hashlib.sha256(text).hexdigest())
+v=dict(pid=proc.pid,start_ticks=Path('/proc',str(proc.pid),'stat').read_text().split()[21],boot_id=old['boot_id'],root=str(r),host={host!r},unix=time.time(),generation='FASTK2V5',log_name='LS_GPU_FASTK2V5.log',variant_name='STARTUP_VARIANT_IT2K2_'+str(proc.pid)+'.json',amendment_sha256={h!r},wrapper_sha256=hashlib.sha256(text).hexdigest())
 with dest.open('x') as f:json.dump(v,f)
 print(json.dumps(v))''',timeout=60)
     v=json.loads(out);p=ops.EVIDENCE/('LS_FAST_DISPATCH_'+host+'_'+root.rsplit('_',1)[1]+'_'+ATTEMPT+'.json')
@@ -258,15 +267,19 @@ def continue_roll():
             requested=set()
             while __import__('time').time()<1793894340.:
                 with contextlib.redirect_stdout(io.StringIO()):
+                    gpus={h:gpu_status(h) for h in ('gpuA','gpuR')}
+                    live={w['owner']['root'] for g in gpus.values() for w in g['workers']
+                        if w['owner'].get('generation','').startswith('FASTK2')
+                        and w['state'] in ('S','R','D') and not w['failure']}
                     # Idempotent drain/gpu operations adopt immutable remote receipts.
                     for host,root in tier:
                         p=ops.EVIDENCE/('LS_FAST_DISPATCH_'+host+'_'+root.rsplit('_',1)[1]+'_'+ATTEMPT+'.json')
-                        if not p.exists():
+                        if not p.exists() and root not in live:
                             if root not in requested:drain(host,root);requested.add(root)
                             gpu(host,root)
                     gpus={h:gpu_status(h) for h in ('gpuA','gpuR')}
                 ready={w['owner']['root'] for g in gpus.values() for w in g['workers']
-                    if w['ready'] and w['owner'].get('generation')==GPU_GENERATION}
+                    if w['ready'] and w['owner'].get('generation','').startswith('FASTK2')}
                 print(json.dumps(dict(unix=time.time(),it2_K2_ready=sorted(ready),
                     current_tier=[r for h,r in tier],no_training_or_sumo_dispatch=True)),flush=True)
                 if all(root in ready for host,root in tier):break
@@ -285,7 +298,7 @@ def continue_roll():
 
 def continue_dispatch(generation=1):
     import subprocess,sys,time
-    assert generation in (1,2,3)
+    assert generation in (1,2,3,4)
     suffix='' if generation==1 else f'_V{generation}'
     p=ops.EVIDENCE/('LS_FAST_ROLL_DISPATCH'+suffix+'.json')
     if p.exists():print(json.dumps(read(p)));return
@@ -302,7 +315,7 @@ def continue_dispatch(generation=1):
 
 def continue_recover():
     import psutil
-    previous=ops.EVIDENCE/'LS_FAST_ROLL_DISPATCH_V2.json'
+    previous=ops.EVIDENCE/'LS_FAST_ROLL_DISPATCH_V3.json'
     old=read(previous if previous.exists() else ops.EVIDENCE/'LS_FAST_ROLL_DISPATCH.json')
     try:owner=psutil.Process(old['pid'])
     except psutil.NoSuchProcess:owner=None
@@ -310,7 +323,7 @@ def continue_recover():
         assert abs(owner.create_time()-old['unix'])<5
         assert owner.cmdline()[-3:]==['-m','tools.coopmwm.ls_fast_ops','continue_roll']
         print(json.dumps(dict(adopted_running_controller=old)));return
-    continue_dispatch(3)
+    continue_dispatch(4)
 
 
 if __name__=='__main__':

@@ -1,5 +1,22 @@
 # S-COOPMWM — live checks
 
+## Nov3 ~02:35 UTC+8 — qualification-memory recovery; completed checks retained
+- gpuR576918 passed K2/H300 and committed K4/H300, then exhausted memory while
+  re-capturing a full1600-slot H420 reference trace beside its live peer. The
+  failed qualifier and completed gates are retained; existing inference was not
+  retried. The active earlier gpuA qualifier is adopted without interruption.
+- Amendment `0f6f5efa…`: use the inherited **SHA-verified adoption of four
+  unchanged committed/warm-single-batch checks**, including K8/H420; each new
+  successor still runs a **fresh K2/H300 check plus four fresh cold/warm
+  full-vs-fast checks**. All source hashes and zero-error requirements remain.
+  The search itself retains its horizons, K, population and acceleration plans.
+- `lsfastcpu5`: **231 CPU PASS**, zero skips, **41.268 s**, zero sim-s.
+  Controller33124 and observer8472 continue the registered rolling handover.
+  This supersedes the earlier redundant-eight-fresh-check admission wording.
+- Current bank27 lists /9 selected positives /0 confirmed admissions. The current
+  delegated B-REPLAY worker6104 is active. Niche READY has landed at5df3e853;
+  its code will be integrated and qualified before any niche activation.
+
 ## Nov3 02:10 UTC+8 — it2_K2 parameter-size gates PASS on both GPUs
 - `coopmwm/IT2_K2_VARIANT_GPU_QUALIFIED.json` adopts both completed gates;
   no repeated qualification or SUMO. **K2/H300 full/fast trajectory and cost

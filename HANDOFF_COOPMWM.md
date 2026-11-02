@@ -1,5 +1,26 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+Nov3~02:35 CURRENT recoveryV5: R576918passedK2H300+committedK4H300,
+thenOOMonredundantfull1600-slotH420tracerecapture besidepeer494955;
+failurekept. NEWregistered0f6f5efa/source/home/ubuntu/coopmwm20261103_lsfastcpu5,
+231CPU PASS0skips41.268s. V5 usesINHERITEDSHA-checkedadoptionof4unchanged
+committed/warmbatchgates(inclK8H420), freshK2H300+4freshcold/warmfull-fast;
+newper-PIDvariantreceipts/cacheflush. NOhorizon/search/K/tolerancechange.
+ControllerV4=33124/start1793644383.3681536 ACTIVE (previous17620verifiedTERM),
+observerV10=8472/start1793644543.695046 ACTIVE (V9verifiedTERM).
+Controlleradoptsalready-liveearlierqualifiers (A110917), neverrestarts them;
+replacesONLYfailed/exitedfirsttierbeforeother2. ReadLS_FAST_ROLL_V4.log /
+LS_FAST_DISPATCH_*FASTK2V5.json first; doNOTduplicate. Grading+brokercontinue.
+Latestbank27lists/9selected/0confirmed/0admitted; stillnotrestarteligible.
+NICHE_READY NOWLANDED c4/niche-search5df3e853; integrationNEXTafterthiscommit,
+thenLinuxnichetests/adaptercheck; activationafterit2_K2 perlatestMAIN01:33.
+
+Nov3~02:16 DELEGATIONCORRECTION: readCURRENT_sol/*.wpid receipts,
+HARDEN replacement6104(created1793640182.7892404)ACTIVE, NICHE41564
+(created1793640745.6940918)ACTIVE/Pythonchild. Old13928absencewasSTALE,
+notabsenceofreplacement. DO NOTlaunchduplicates. Shared0135alertCORRECTED.
+BothREADYreceiptsstillabsent; adoptexistingwork whileGPUgatescontinue.
+
 Nov3 02:10 PARAMETER GATEPASS BOTH: IT2_K2_VARIANT_GPU_QUALIFIED.json;
 K2H300 full/fast cost+alltrajectoryerrorsEXACT0, identicaldraws/rankings,
 warmbatch/singleEXACT0; wallA272.589s/R264.914s. Adoptednotrerun/noSUMO.
