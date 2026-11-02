@@ -16,11 +16,14 @@ first 20 exact advantages, both signs) frozen and persisted) and the same clip; 
 multiplies the weight. The collector reloads the newest checkpoint of its arm at every
 episode, so its snapshot policy refreshes after each update.
 
-Confirmation stage (MAIN 2026-11-02 22:32 / 2026-11-03 00:01): every first-seed positive
-decision runs (a) a second independent CRN seed, (b) the extended window, (c) the safety
-check; only entries passing all three are admitted. For every ADMITTED entry whose plan
-moves >= 2 CAVs, per-member SOLO branches on the first seed (only that member executes its
-plan row, everyone else follows 'policy continues') give the cooperation gain
+Confirmation stage (MAIN 2026-11-02 22:32 / 2026-11-03 00:01 / 04:26): every first-seed positive
+decision runs (a) a second independent CRN seed, (b) the extended window, (c) the safety check -
+collisions/teleports must not increase (hard constraints) and the TOTAL of hard-brake + TTC<1.5 s
+events must not increase (the old no-single-metric-may-increase verdict is recorded per decision
+and counted in BANK_QUALITY for disclosure); only entries passing all three are admitted. The
+per-member SOLO cooperation check runs on every decision passing replication + later-harm, as a
+diagnostic even when the safety check rejects it (its twin row is published). For every ADMITTED
+entry whose plan moves >= 2 CAVs, solo branches on the first seed give the cooperation gain
 advantage(group) - max_m advantage(solo m); the entry is tagged cooperative iff the gain
 is > 0 (single-CAV plans: cooperative=False). The imitation batch oversamples cooperative
 entries up to 50% of the imitation samples (weights unchanged); BANK_QUALITY.json carries
@@ -50,6 +53,9 @@ K = 8
 EXTENDED_TAIL_S = 600        # MAIN confirmation (b): window to min(episode end, t0+D+600)
 TTC_EVENT_S = 1.5            # MAIN confirmation (c): TTC<1.5 s vehicle-second events
 SAFETY_KEYS = ('collisions', 'teleports', 'hard_brake')
+SAFETY_RULE = ('MAIN 2026-11-03 04:26: collisions/teleports must not increase (hard constraints); '
+               'the TOTAL of hard-brake + TTC<1.5 s events must not increase; the old '
+               'no-single-metric-may-increase verdict is kept for disclosure')
 LESSON_N = 12                # MAIN 2026-11-03 01:22: fixed lesson list cap
 
 
@@ -487,14 +493,23 @@ def ttc_events(trace_path, start, end, threshold=TTC_EVENT_S):
 
 
 def _safety(receipt, branches_dir):
-    """Per confirmation decision: candidate minus policy deltas; ok iff none is higher."""
+    """Per confirmation decision: candidate minus policy deltas, OLD and NEW verdicts.
+
+    OLD rule (disclosed, never deleted): no metric may increase.
+    NEW rule (MAIN 2026-11-03 04:26, applied identically to B and R): (i) collisions and
+    teleports must NOT increase (hard constraints); (ii) the TOTAL of safety-critical events
+    (hard-brake events + TTC<1.5 s events, same windows, same metric code) must NOT increase.
+    One metric improving may offset another worsening; a collision/teleport increase never can."""
     pol, cand = receipt['branches'][0], receipt['branches'][1]
     deltas = {k: float(cand['window'][k])-float(pol['window'][k]) for k in SAFETY_KEYS}
     w = receipt['window']
     traces = {b['branch']: Path(branches_dir)/receipt['verification_id']/b['branch']/'observable.jsonl.gz' for b in (pol, cand)}
     deltas['ttc_below_1p5_events'] = (ttc_events(traces[cand['branch']], w['start_s'], w['end_s'])
                                       - ttc_events(traces[pol['branch']], w['start_s'], w['end_s']))
-    return deltas, all(v <= 0 for v in deltas.values())
+    old_ok = all(v <= 0 for v in deltas.values())
+    new_ok = (deltas['collisions'] <= 0 and deltas['teleports'] <= 0
+              and deltas['hard_brake']+deltas['ttc_below_1p5_events'] <= 0)
+    return deltas, old_ok, bool(new_ok)
 
 
 def _confirm_charge(run_root, phase, kind):
@@ -572,9 +587,11 @@ def confirm(root, arm, receipt, snapshot, runner_for, run_root, phase, workers=2
     if ok:
         out['replication_advantage_veh_s'] = rep['J_policy_veh_s']-rep['J_candidates_veh_s'][0]
         out['extended_advantage_veh_s'] = ext['J_policy_veh_s']-ext['J_candidates_veh_s'][0]
-        rs, rok = _safety(rep, rep_root/'branches')
-        es, eok = _safety(ext, ext_root/'branches')
+        rs, rok_old, rok = _safety(rep, rep_root/'branches')
+        es, eok_old, eok = _safety(ext, ext_root/'branches')
         out['safety_deltas'] = dict(replication=rs, extended=es)
+        out['safety_rule'] = SAFETY_RULE
+        out['safety_old_rule_ok'] = bool(rok_old and eok_old)   # disclosed alongside the new verdict
         out['checks'] = dict(replication=out['replication_advantage_veh_s'] > 0,
                              no_later_harm=out['extended_advantage_veh_s'] > 0, safety=rok and eok)
         out['admitted'] = all(out['checks'].values())
@@ -582,7 +599,9 @@ def confirm(root, arm, receipt, snapshot, runner_for, run_root, phase, workers=2
     else:
         out.update(admitted=False, checks=dict(confirmation_branches_complete=False),
                    reason='confirmation branch failed/stopped/budget; never imputed')
-    if out.get('admitted'):
+    if ok and out['checks'].get('replication') and out['checks'].get('no_later_harm'):
+        # MAIN 2026-11-03 04:26: the synergy check also runs as a DIAGNOSTIC on every decision
+        # that passes replication + later-harm, even when the safety check rejects the entry.
         if len(best.get('members', [])) >= 2:
             out['cooperation'] = _cooperation(root, arm, receipt, snapshot, runner_for, run_root, phase,
                                               workers, best, out['first_seed_advantage_veh_s'])
@@ -668,12 +687,19 @@ def bank_quality(root, arm, sources=()):
     coop_rec = [(c, c.get('cooperation') or {}) for c in admitted]
     cooperative = [c for c, co in coop_rec if co.get('cooperative') is True]
     gains = [co['cooperation_gain_veh_s'] for _, co in coop_rec if co.get('cooperation_gain_veh_s') is not None]
+    # MAIN 2026-11-03 04:26: the synergy twins table publishes every completed cooperation
+    # record - admitted entries AND diagnostic rows of entries the safety check rejected
+    # (replication + later-harm passers) - each tagged with its admission/safety verdicts.
+    synergy = [c for c in confirmed if (c.get('cooperation') or {}).get('complete') is True]
     twins = [dict(verification_id=c['verification_id'], t0=c['t0'], policy_version=c['policy_version'],
-                  group_size=co.get('group_size'), first_seed_advantage_veh_s=c['first_seed_advantage_veh_s'],
-                  best_solo_advantage_veh_s=co.get('best_solo_advantage_veh_s'),
-                  best_solo_member=co.get('best_solo_member'),
-                  cooperation_gain_veh_s=co.get('cooperation_gain_veh_s'), cooperative=co.get('cooperative'))
-             for c, co in coop_rec]
+                  admitted=c['admitted'], safety_old_rule_ok=c.get('safety_old_rule_ok'),
+                  group_size=(c.get('cooperation') or {}).get('group_size'),
+                  first_seed_advantage_veh_s=c['first_seed_advantage_veh_s'],
+                  best_solo_advantage_veh_s=(c.get('cooperation') or {}).get('best_solo_advantage_veh_s'),
+                  best_solo_member=(c.get('cooperation') or {}).get('best_solo_member'),
+                  cooperation_gain_veh_s=(c.get('cooperation') or {}).get('cooperation_gain_veh_s'),
+                  cooperative=(c.get('cooperation') or {}).get('cooperative'))
+             for c in synergy]
     q = dict(arm=arm, unix=time.time(), decisions=len(decisions), first_seed_positives=len(positives),
              confirmed=len(confirmed), pending_confirmation=len(positives)-len(confirmed), admitted=len(admitted),
              confirmation_rate=(len(admitted)/len(confirmed) if confirmed else None),
@@ -682,11 +708,14 @@ def bank_quality(root, arm, sources=()):
              rejections=dict(replication=sum(not c['checks'].get('replication', True) for c in confirmed),
                              later_harm=sum(not c['checks'].get('no_later_harm', True) for c in confirmed),
                              safety=sum(not c['checks'].get('safety', True) for c in confirmed),
+                             safety_old_rule=sum(not c.get('safety_old_rule_ok', True) for c in confirmed
+                                                 if 'safety_old_rule_ok' in c),
                              incomplete=sum('confirmation_branches_complete' in c['checks'] for c in confirmed)),
              by_policy_version={v: sum(c['policy_version'] == v for c in admitted)
                                 for v in sorted({c['policy_version'] for c in admitted})},
              cooperative=len(cooperative),
              cooperation_undecided=sum(co.get('cooperative') is None for _, co in coop_rec),
+             synergy_diagnostic=sum(c['admitted'] is False for c in synergy),
              mean_cooperation_gain_veh_s=(float(np.mean(gains)) if gains else None),
              mean_cooperation_gain_ci95=_boot_ci(gains),
              synergy_twins=twins)

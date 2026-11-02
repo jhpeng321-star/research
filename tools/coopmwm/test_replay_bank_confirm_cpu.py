@@ -107,6 +107,45 @@ class SumRunner(FakeRunner):
         return self.J_policy-float(sum(x for row in p['profile'] for x in row))
 
 
+class AmdRunner(FakeRunner):
+    """MAIN 2026-11-03 04:26 amendment plant: the candidate branch carries extra window
+    safety totals (collisions/hard_brake) and TTC<1.5 s trace events (a front row faster
+    than its follower scores TTC 0 events), reproducing the real 986016-style pattern."""
+
+    def __init__(self, work, J_policy=500., collisions=0., hard_brake=0., ttc_events=0, cooperative=False):
+        super().__init__(work, J_policy)
+        self.collisions, self.hard_brake, self.ttc_events = collisions, hard_brake, ttc_events
+        self.cooperative = cooperative
+
+    def J(self, p):
+        if p is None:
+            return self.J_policy
+        if self.cooperative:
+            return self.J_policy-float(sum(x for row in p['profile'] for x in row))
+        prof = [x for row in p['profile'] for x in row]
+        return self.J_policy-10.*sum(prof)/len(prof)
+
+    def run(self, spec, snap):
+        cand = spec['branch'] != 'policy'
+        w = snap['episode']['world']['seed'];t0, t_end = spec['window']['start_s'], spec['window']['end_s']
+        d = self.work/'branches'/spec['verification_id']/spec['branch'];d.mkdir(parents=True, exist_ok=True)
+        hexf = lambda x: float(x).hex()
+        row = dict(time_s=t0, vehicles=[dict(lane='m1', s_m=10., v_mps=8., length_m=5.),
+                                        dict(lane='m1', s_m=0., v_mps=12., length_m=5.)])
+        events = 0 if cand else self.ttc_events      # the plan REMOVES TTC events vs 'policy continues'
+        with gzip.open(d/'observable.jsonl.gz', 'wt', encoding='utf-8') as f:
+            for _ in range(events):
+                f.write(canonical(row)+'\n')
+        def fp2(t, delay):
+            return dict(t_s=t, metrics=dict(team_delay_vs=hexf(delay), arrived=hexf(t),
+                                            collisions=hexf(self.collisions if cand else 0.),
+                                            teleports=hexf(0.), ttc_below_3_vs=hexf(0.),
+                                            hard_brake=hexf(self.hard_brake if cand else 0.)))
+        prefixes = {str(t): fp(t, 3.*w+0.5*t*t/100.) for t in range(300, t0+1)}   # CRN: identical prefix tape
+        return dict(prefixes=prefixes, final=fp2(t_end, 3.*w+0.5*t0*t0/100.+self.J(spec['plan'])),
+                    actual_sim_s=t_end-300)
+
+
 def test_replication_and_extended_branches_both_complete_and_charge_distinct(tmp_path):
     root = tmp_path;bank = rb.bank_root(root, 'B');bank.mkdir(parents=True)
     log = []
@@ -244,3 +283,76 @@ def test_quality_counts_admitted_after_confirmation(tmp_path):
     assert q['mean_admitted_advantage_veh_s'] is not None and q['by_policy_version'] == {'u4': 1}
     conf = rb.confirmations(root, 'B')
     assert len(conf) == 1 and next(iter(conf.values()))['admitted'] is True
+
+
+# ---------------------------------------------------------------- MAIN 2026-11-03 04:26 amendment
+
+def test_safety_total_events_offset_admitted_and_old_rule_disclosed(tmp_path):
+    """The 986016 pattern: hard_brake +3 but TTC<1.5 s events -92. The NEW rule (total
+    safety-critical events must not increase) admits; the OLD verdict (no metric may
+    increase) is False and its count is disclosed in BANK_QUALITY."""
+    root = tmp_path;bank = rb.bank_root(root, 'B');bank.mkdir(parents=True)
+    r = lambda work: AmdRunner(work, collisions=0., hard_brake=3., ttc_events=92)
+    first = sv.verify(snapshot(), [plan('a', 1.)], r(bank/'sumo_verification'),
+                      lambda vid, specs: None, root=bank/'sumo_verification')
+    assert first['status'] == 'accepted'
+    receipt = {k: v for k, v in first.items() if not k.startswith('_')}
+    out = rb.confirm(root, 'B', receipt, snapshot(), r, str(root),
+                     'bank_verification_ext', workers=2, version='u4')
+    assert out['safety_deltas']['replication']['hard_brake'] == 3.
+    assert out['safety_deltas']['replication']['ttc_below_1p5_events'] == -92.
+    assert out['checks']['safety'] is True and out['safety_old_rule_ok'] is False
+    assert out['admitted'] is True
+    saved = json.loads((bank/'confirmations'/f'{receipt["verification_id"]}.json').read_text())
+    assert saved['safety_old_rule_ok'] is False and saved['admitted'] is True
+    q = rb.bank_quality(root, 'B')
+    assert q['rejections']['safety'] == 0 and q['rejections']['safety_old_rule'] == 1
+    assert q['admitted'] == 1
+
+
+def test_collision_increase_rejected_under_both_rules(tmp_path):
+    """Hard constraint: a collision increase is never offset - rejected by the NEW rule and
+    by the OLD rule alike; the entry is not admitted and feeds no imitation."""
+    root = tmp_path;bank = rb.bank_root(root, 'B');bank.mkdir(parents=True)
+    r = lambda work: AmdRunner(work, collisions=1.)
+    first = sv.verify(snapshot(), [plan('a', 1.)], r(bank/'sumo_verification'),
+                      lambda vid, specs: None, root=bank/'sumo_verification')
+    receipt = {k: v for k, v in first.items() if not k.startswith('_')}
+    out = rb.confirm(root, 'B', receipt, snapshot(), r, str(root),
+                     'bank_verification_ext', workers=2, version='u4')
+    assert out['checks']['safety'] is False and out['safety_old_rule_ok'] is False
+    assert out['admitted'] is False
+    # the plan moves 2 CAVs and passes replication + later-harm, so its synergy check still
+    # runs as a diagnostic (this mean-J plant makes every solo equal: gain 0, not cooperative)
+    assert out['cooperation']['complete'] is True and out['cooperation']['cooperative'] is False
+    q = rb.bank_quality(root, 'B')
+    assert q['rejections']['safety'] == 1 and q['rejections']['safety_old_rule'] == 1
+    assert q['admitted'] == 0 and q['synergy_diagnostic'] == 1 and q['cooperative'] == 0
+    twins = q['synergy_twins']
+    assert len(twins) == 1 and twins[0]['admitted'] is False and twins[0]['cooperative'] is False
+
+
+def test_synergy_diagnostic_published_when_safety_rejects(tmp_path):
+    """MAIN 04:26: a decision passing replication + later-harm but rejected by safety still
+    runs its SOLO branches as a DIAGNOSTIC and publishes its synergy twin row (tagged
+    not admitted); it never enters imitation, so the admitted cooperative count is 0."""
+    root = tmp_path;bank = rb.bank_root(root, 'B');bank.mkdir(parents=True)
+    r = lambda work: AmdRunner(work, collisions=1., cooperative=True)
+    first = sv.verify(snapshot(), [duo_plan('d', 1., .5)], r(bank/'sumo_verification'),
+                      lambda vid, specs: None, root=bank/'sumo_verification')
+    assert first['status'] == 'accepted' and first['grade_veh_s'] == 180.
+    receipt = {k: v for k, v in first.items() if not k.startswith('_')}
+    out = rb.confirm(root, 'B', receipt, snapshot(), r, str(root),
+                     'bank_verification_ext', workers=2, version='u4')
+    assert out['checks']['replication'] is True and out['checks']['no_later_harm'] is True
+    assert out['checks']['safety'] is False and out['admitted'] is False
+    co = out['cooperation']
+    assert co['complete'] is True and co['cooperative'] is True
+    assert co['solo_advantages_veh_s'] == [120., 60.] and co['cooperation_gain_veh_s'] == 60.
+    q = rb.bank_quality(root, 'B')
+    assert q['admitted'] == 0 and q['cooperative'] == 0 and q['synergy_diagnostic'] == 1
+    twins = q['synergy_twins']
+    assert len(twins) == 1 and twins[0]['admitted'] is False and twins[0]['cooperative'] is True
+    assert twins[0]['safety_old_rule_ok'] is False and twins[0]['best_solo_advantage_veh_s'] == 120.
+    pairs, s = rb.bank_pairs(root, 'B', 12345)
+    assert pairs == [] and s['counts']['used'] == 1 and s['counts']['not_admitted'] == 1
