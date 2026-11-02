@@ -1,5 +1,26 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+FRESH11:18 continuation: all322brief lines/read; adoption7abb1ce5 retained
+originalwarmqualification/u0start/library and allremoteowners. Verified1793589133:
+A48/B2/R1; B4146203/R4146817/broker4145985/grader4146093 LIVE/noSTOP/pausereceipts;
+charge3507050. ReplacementgpuA759743READY8EXACT0 adopted/nogatereruns.
+VERIFIER nowCPU9/100PASS0skips27.928785s/zeroSUMO-inference, commitafbb1082;
+prior5bdc3ec3/84b958ad coverCRNdrawreplay+fivebranchactualCPUloop/liveequivalence.
+Source /home/ubuntu/coopmwm20261102_verifycpu9. exact_grade replaycountsbetadraw
+andRsamplerdrawwhenverificationrejects/ownpolicy; originallegacyunchanged.
+verification_grades importssealed exactdecision-localgrades withzeroextra
+branch/charge,concurrent/idempotentreceipt-before-spec; truncatedplansfallback
+executed-portion marginalgrader. CommonmaxcandidateD+120window explicitlylabelled,
+NOTlaterlivemarginal. Realrecord_smoke requiresfivebranchprefix/CRNpasses+chosen
+livefingerprintsthroughnext10squerywindow. NOrealSMOKE/activation/dispatch/PIDcontrol.
+CPU6SSHinterruptionandfixturefailurekept; nostdinPython sessionalivebeforeretry;
+CPU7/8PASSadopted, CPU9islatestsnapshot. TestsnowpersistremotePID/boot/start/result.
+Canonical11:18engineeringregistrationwritten; capclarificationfileupdated:
+fresh6Mversuscanonical9.5MstillblocksNEWverificationphysics. FinalA24/B24/R24
+primary/A48secondarysupervisormigrationandmatchedswitchstillPENDING.
+DoNOTclaimSUMOVERIFICATIONLIVE. Originalobservers/services/deadlineunchanged;
+doNOTredispatch. B-u4..6pending/noVIABILITYclaim.
+
 MAIN1030 FRESH: full322linebrief read, originalwarmqualification/start/library
 adopted/noSUMO-GPUdispatch/PIDcontrol. CurrentA48/B2/R1; B4146203/R4146817/
 broker4145985/grader4146093 LIVE/noSTOP at1793587436; charge3507050. NEVERredispatch.

@@ -40,7 +40,7 @@
 39. TRAIN4/dev16 reporting only; latest fixed primaryA24/B24/R24, secondaryA48; existing final supervisors still need qualified endpoint migration before release.
 40. Final detector-first discovery uses unchanged COOPBEHAV detectors and complete exact twins.
 41. Learning checks report team return/value/KL/gradient, beta, proposal routes/acceptance/O1-O4 counts.
-42. A48complete,B/R24 endpoints x24episodes x1200; health guards active, u4 viability publication without owner-review pause; seed2 dropped. MAIN1030 verifier integrated CPU-only/not live.
+42. A48complete,B/R24 endpoints x24episodes x1200; health guards active, u4 viability publication without owner-review pause; seed2 dropped. Verifier CPU9/100PASS, real fivebranch smoke/common-boundary activation pending.
 43. Recoverycap7500000: superseded811640,train2811600,checks432000,dev201600,final576000,Rtest115200,coldB28800,failedA14400; exact-plan-grades760000.
 44. Mechanics3600,calibration57600,discovery179000,pairedbranches1036800,reusecheck600; allocated7028840/free471160; new verifier phase requires cap resolution/registration/smoke before physics.
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.
@@ -62,7 +62,7 @@
 61. BranchesT300/500/700/900,H300; exact same MAPPO prefix, mismatchSTOP; MAPPO-reuse600 check first; failure+115200 needs MAIN approval.
 62. Final paired world-bootstrap95CI B-MAPPO/B-A/B-R/A-MAPPO J600/J900; percell/safety; controls reused.
 63. First12executedBstarts RNG20261101 + final detector-first twins share200000reserve; complete n+2 full-prefix reruns before any attempt.
-64. Trust/library/covariance: exact same-state SUMO only, never critic estimates; prefix/CRNfaultSTOP,noimputation; asyncgrader alive beforefirstBupdate; firstrealgrade reusedassmoke before consumption; truncatedD graded, partialplans excludedfromlibrary; reportlag.
+64. Trust/library/covariance exact SUMO only; prefix/CRNfaultSTOP; asyncgrader live. CPU-only verifier adapter reuses exact decision-local common-maxD+120 grades with zero newbranch/charge after fivebranch+live smoke; truncatedD marginalgraded; partialplans excludedfromlibrary; reportlag.
 65. 10000 world bootstrap95CI[L,U]; e=max(|mean-L|,|U-mean|); beta=min(old,max(0,U)/(|mean|+e)).
 66. MPPI/type x regime EB buckets: tau²=max(0,var(bucketmeans)-mean(bootstrapSE²)); weight=tau²/(tau²+SE²); O1-O4 posthoc labels only.
 67. Two Holm families per comparator B-MAPPO/B-A over{allbranch,focus},two-sidedalpha.05; whole-world clusters; focus sources exact lines/SHA in amendment.

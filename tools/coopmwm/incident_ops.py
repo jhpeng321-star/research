@@ -124,5 +124,25 @@ print(json.dumps(dict(unix=time.time(),jobs=result,processes=processes,new_sumo_
     return value
 
 
+def service_status():
+    """Read-only slot/admission/queue census, without displaying credentials."""
+    value=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,sys,time,collections
+r=pathlib.Path({ROOT!r});sys.path.insert(0,'/home/ubuntu/coopmwm20261102_recoverycpu1/pytools')
+from tools.coopmwm.warm_broker import worker_endpoints
+from tools.coopmwm.capacity_broker import pending
+b=json.loads((r/'WARM_REMOTE_BINDING.json').read_text())
+endpoints=worker_endpoints(r,b,{{}});items=pending(r)
+assigned=collections.Counter();unassigned=collections.Counter()
+for kind,record in items:
+ p=r/'broker_assignments'/(record['state_id']+'.json')
+ if p.exists():assigned[json.loads(p.read_text())['slot']]+=1
+ else:unassigned[kind]+=1
+disabled=json.loads((r/'INCIDENT_RETIRED_JOBS.json').read_text()).get('disabled_slots',[])
+print(json.dumps(dict(unix=time.time(),slots=sorted(endpoints),disabled=disabled,assigned=dict(assigned),unassigned=dict(unassigned),
+ admissions=[p.name for p in r.glob('WARM_REMOTE_ENDPOINT_ADMISSION_*.json')],new_sumo_sim_s=0)))''',timeout=40))
+    write(ops.EVIDENCE/f'INCIDENT0944_SERVICE_STATUS_{int(value["unix"])}.json',value)
+    print(json.dumps(value));return value
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('cpu','census','register','gpu_stage','gpu_dispatch','gpu_status'));globals()[p.parse_args().mode]()
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('cpu','census','register','gpu_stage','gpu_dispatch','gpu_status','service_status'));globals()[p.parse_args().mode]()
