@@ -217,6 +217,11 @@ def verify(snapshot, candidates, runner, charge, proposer='wm', workers=None, ro
     except BudgetBlocked as e:
         body.update(status='budget_blocked', chosen=None, chosen_plan=None, grade_veh_s=None, J_policy_veh_s=None,
                     J_candidates_veh_s=None, branches=[], charged_sim_s=0, reason='BudgetBlocked: '+str(e))
+        if root is not None:  # MAIN (d): a blocked verification budget must never be silent
+            alert = Path(root)/'alerts'/f'BUDGET_BLOCKED_{vid}.json'
+            if not alert.exists():
+                _write_new(alert, dict(alert='sumo verification budget blocked; group follows its policy',
+                                       verification_id=vid, phase_reason=str(e), unix=started))
         return _finish(body, started, root)
     if hasattr(runner, 'prepare'):
         try:
