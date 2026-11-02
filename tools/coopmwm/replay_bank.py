@@ -17,6 +17,7 @@ multiplies the weight. The collector reloads the newest checkpoint of its arm at
 episode, so its snapshot policy refreshes after each update.
 """
 import json
+import os
 from pathlib import Path
 import time
 
@@ -28,6 +29,9 @@ from .protocol import digest
 
 BANK = 'replay_bank'
 K = 8
+EXTENDED_TAIL_S = 600        # MAIN confirmation (b): window to min(episode end, t0+D+600)
+TTC_EVENT_S = 1.5            # MAIN confirmation (c): TTC<1.5 s vehicle-second events
+SAFETY_KEYS = ('collisions', 'teleports', 'hard_brake')
 
 
 def bank_root(root, arm):
@@ -216,6 +220,10 @@ def collect(root, arm, binding, worlds, stop, episodes_per_round=2, verify_worke
     runner = sv.SubprocessBranchRunner(vroot/'branches', workers=cfg.get('workers', K+1),
                                        timeout_s=cfg.get('timeout_s', 3600))
     charge = sv.accel_charge(str(root), cfg.get('phase', 'sumo_verification_k8'))
+    confirm_charge = sv.accel_charge(str(root), 'sumo_verification')     # MAIN: confirmation budget phase
+
+    def runner_for(work):
+        return sv.SubprocessBranchRunner(Path(work)/'branches', workers=2, timeout_s=cfg.get('timeout_s', 3600))
     decided = set();n = 0;statuses = []
     while not stop() and (rounds is None or n < rounds):
         path, u = latest_checkpoint(root, arm)
@@ -240,6 +248,9 @@ def collect(root, arm, binding, worlds, stop, episodes_per_round=2, verify_worke
             list(pool.map(episode, jobs))
         statuses += verify_pending(root, arm, binding['accel_bounds'], runner, charge, verify_workers, decided,
                                    verify_per_round)
+        confirm_pending(root, arm, runner_for, confirm_charge, workers=2,
+                        sources=binding.get('replay_sources', {}).get(arm, ()), limit=verify_per_round)
+        bank_quality(root, arm, binding.get('replay_sources', {}).get(arm, ()))
         n += 1
         if 'budget_blocked' in statuses:
             break
@@ -321,26 +332,34 @@ def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT
     T = temperature(root, arm, training_seed, everything)
     decisions = everything if max_decisions is None else everything[:max(0, int(max_decisions))]
     pairs, entries, counts = [], [], dict(decisions=len(decisions), positive=0, nonpositive=0)
+    conf = confirmations(root, arm)
+    counts.update(unconfirmed=0, not_admitted=0)
     for r in decisions:
         if r['status'] != 'accepted' or not r['grade_veh_s'] or r['grade_veh_s'] <= 0:
             counts['nonpositive'] += 1;continue
         counts['positive'] += 1
+        c = conf.get(r['verification_id'])
+        if c is None:
+            counts['unconfirmed'] += 1;continue       # MAIN: only plans that actually work
+        if not c['admitted']:
+            counts['not_admitted'] += 1;continue
         plan = r['chosen_plan'];branch = r['branches'][r['chosen']+1]
         result_path = Path(r['_branches'])/r['verification_id']/branch['branch']/'RESULT.json'
         from .accel_storage import read
         tape = read(result_path)
         if branch.get('result_sha256') and digest(tape) != branch['result_sha256']:
             raise ValueError('bank branch tape differs from its sealed verification receipt')
-        w = float(beta)*xg.weight(r['grade_veh_s'], T['temperature_veh_s'], clip)
+        w = float(beta)*xg.weight(c['mean_replicated_advantage_veh_s'], T['temperature_veh_s'], clip)
         entry = dict(start_s=r['t0'], duration_s=int(plan['duration_s']), plan_id=plan['id'], weight=w)
         pairs.extend(xg.imitation_pairs(tape, entry))
         entries.append(dict(verification_id=r['verification_id'], grade_veh_s=r['grade_veh_s'], weight=w,
+                            mean_replicated_advantage_veh_s=c['mean_replicated_advantage_veh_s'],
                             policy_version=r['_policy_version'], available_k=r.get('available_k', r['k']),
                             duration_s=entry['duration_s'], receipt_sha256=r['receipt_sha256']))
     counts.update(available=len(everything), used=len(decisions),
                   by_policy_version={v: sum(r['_policy_version'] == v for r in decisions)
                                      for v in sorted({r['_policy_version'] for r in decisions})})
-    return pairs, dict(rule='B-REPLAY bank: all exact-advantage>0 entries every update; weight x beta',
+    return pairs, dict(rule='B-REPLAY bank: all CONFIRMED (replication, no later harm, safety) exact-positive entries; weight(mean replicated advantage) x beta',
                        temperature=T, beta=float(beta), counts=counts, entries=entries, clip=clip,
                        max_decisions=max_decisions)
 
@@ -366,3 +385,164 @@ def main(argv=None):
 
 if __name__ == '__main__':
     main()
+
+
+
+# ---------------------------------------------------------------- confirmation stage (MAIN)
+
+def replicate(snapshot, salt):
+    """Same decision state/prefix/t0 sample; an independent post-t0 noise seed (CRN across its branches)."""
+    import hashlib
+    g = torch.Generator().manual_seed(int(digest(dict(replication=salt))[:15], 16))
+    out = dict(snapshot)
+    out['generator_state'] = g.get_state().clone()
+    out['rng'] = dict(snapshot['rng'], generator_state_sha256=hashlib.sha256(g.get_state().numpy().tobytes()).hexdigest(),
+                      replication_salt=salt)
+    return out
+
+
+def ttc_events(trace_path, start, end, threshold=TTC_EVENT_S):
+    """Vehicle-seconds with closing TTC < threshold in [start, end) from the branch's observable trace.
+
+    Reuses traffic_shepherd.metrics.closing_ttc on same-lane follower/leader pairs of the
+    recorded observable rows (gap = leader rear - follower front)."""
+    import gzip
+    from traffic_shepherd.metrics import closing_ttc
+    n = 0
+    with gzip.open(trace_path, 'rt', encoding='utf-8') as f:
+        for line in f:
+            x = json.loads(line)
+            if not start <= x['time_s'] < end:
+                continue
+            lanes = {}
+            for v in x.get('vehicles', []):
+                lanes.setdefault(v['lane'], []).append(v)
+            for rows in lanes.values():
+                rows.sort(key=lambda v: v['s_m'])
+                for a, b in zip(rows, rows[1:]):
+                    ttc = closing_ttc(b['s_m']-a['s_m']-float(b.get('length_m', 5.)), a['v_mps'], b['v_mps'])
+                    n += ttc is not None and ttc < threshold
+    return float(n)
+
+
+def _safety(receipt, branches_dir):
+    """Per confirmation decision: candidate minus policy deltas; ok iff none is higher."""
+    pol, cand = receipt['branches'][0], receipt['branches'][1]
+    deltas = {k: float(cand['window'][k])-float(pol['window'][k]) for k in SAFETY_KEYS}
+    w = receipt['window']
+    traces = {b['branch']: Path(branches_dir)/receipt['verification_id']/b['branch']/'observable.jsonl.gz' for b in (pol, cand)}
+    deltas['ttc_below_1p5_events'] = (ttc_events(traces[cand['branch']], w['start_s'], w['end_s'])
+                                      - ttc_events(traces[pol['branch']], w['start_s'], w['end_s']))
+    return deltas, all(v <= 0 for v in deltas.values())
+
+
+def confirm(root, arm, receipt, snapshot, runner_for, charge, workers=2, version=None):
+    """Run (a) replication and (b) extended-window confirmations for one first-seed positive decision."""
+    bank = bank_root(root, arm);best = receipt['chosen_plan'];vid = receipt['verification_id']
+    rep_root, ext_root = bank/'confirm_replication', bank/'confirm_extended'
+    rep = sv.verify(replicate(snapshot, vid), [best], runner_for(rep_root), charge, receipt['proposer'],
+                    workers=workers, root=rep_root)
+    ext = sv.verify(snapshot, [best], runner_for(ext_root), charge, receipt['proposer'], workers=workers,
+                    root=ext_root, tail_s=EXTENDED_TAIL_S)
+    out = dict(verification_id=vid, arm=arm, policy_version=version, t0=receipt['t0'],
+               duration_s=int(best['duration_s']), first_seed_advantage_veh_s=receipt['grade_veh_s'],
+               replication=dict(verification_id=rep['verification_id'], status=rep['status'],
+                                window=rep.get('window'), receipt_sha256=rep['receipt_sha256']),
+               extended=dict(verification_id=ext['verification_id'], status=ext['status'],
+                             window=ext.get('window'), receipt_sha256=ext['receipt_sha256']),
+               unix=time.time())
+    ok = rep['status'] in ('accepted', 'rejected') and ext['status'] in ('accepted', 'rejected')
+    if ok:
+        out['replication_advantage_veh_s'] = rep['J_policy_veh_s']-rep['J_candidates_veh_s'][0]
+        out['extended_advantage_veh_s'] = ext['J_policy_veh_s']-ext['J_candidates_veh_s'][0]
+        rs, rok = _safety(rep, rep_root/'branches')
+        es, eok = _safety(ext, ext_root/'branches')
+        out['safety_deltas'] = dict(replication=rs, extended=es)
+        out['checks'] = dict(replication=out['replication_advantage_veh_s'] > 0,
+                             no_later_harm=out['extended_advantage_veh_s'] > 0, safety=rok and eok)
+        out['admitted'] = all(out['checks'].values())
+        out['mean_replicated_advantage_veh_s'] = (receipt['grade_veh_s']+out['replication_advantage_veh_s'])/2
+    else:
+        out.update(admitted=False, checks=dict(confirmation_branches_complete=False),
+                   reason='confirmation branch failed/stopped/budget; never imputed')
+    d = bank/'confirmations';d.mkdir(parents=True, exist_ok=True)
+    xg._write_new(d/(vid+'.json'), xg._seal(out, 'confirmation_sha256'))
+    return out
+
+
+def _ls_snapshot(src, key):
+    """Live LS-COLLECT snapshot completion (same rule as ls_collection.complete_snapshot)."""
+    import gzip
+    import io
+    from .accel_storage import read
+    envelope = json.loads(gzip.decompress((Path(src)/'pending'/(key+'.json.gz')).read_bytes()))
+    s = torch.load(io.BytesIO(gzip.decompress((Path(src)/'snapshots'/(envelope['snapshot']+'.pt.gz')).read_bytes())),
+                   map_location='cpu', weights_only=False)
+    ep = read(Path(envelope['episode_path'])/'RESULT.json');t0 = s['t0']
+    assert ep['id'] == s['episode']['id'] and ep['world'] == s['episode']['world']
+    assert 986000 <= ep['world']['seed'] <= 986071
+    s['prefixes'] = {str(t): ep['prefixes'][str(t)] for t in range(300, t0+1)}
+    s['samples'] = {str(x['time_s']): x['sample'] for x in ep['steps'] if x['time_s'] < t0}
+    s['samples'][str(t0)] = s.pop('current_sample')
+    return s
+
+
+def confirm_pending(root, arm, runner_for, charge, workers=2, sources=(), limit=None):
+    """Confirm every first-seed positive decision (own bank and, for B, live LS labels) once."""
+    bank = bank_root(root, arm);done = {p.stem for p in (bank/'confirmations').glob('*.json')}
+    by_vid = {}
+    for p in (bank/'decisions').glob('*.json'):
+        v = json.loads(p.read_text());by_vid[v['verification_id']] = v
+    statuses = []
+    for r in bank_decisions(root, arm, sources=sources):
+        if r['status'] != 'accepted' or r['verification_id'] in done or not (r['grade_veh_s'] or 0) > 0:
+            continue
+        if limit is not None and len(statuses) >= limit:
+            break
+        if r['_policy_version'] == 'u3' and r['verification_id'] not in by_vid:
+            src = Path(r['_branches']).parent
+            key = next(json.loads(p.read_text())['search_id'] for p in (src/'labels').glob('*.json')
+                       if json.loads(p.read_text())['verification']['verification_id'] == r['verification_id'])
+            snap = _ls_snapshot(src, key)
+        else:
+            snap = torch.load(bank/'snapshots'/(by_vid[r['verification_id']]['state_id']+'.pt'), weights_only=False)
+        receipt = {k: v for k, v in r.items() if not k.startswith('_')}
+        statuses.append(confirm(root, arm, receipt, snap, runner_for, charge, workers, r['_policy_version'])['admitted'])
+    return statuses
+
+
+def confirmations(root, arm):
+    out = {}
+    for p in (bank_root(root, arm)/'confirmations').glob('*.json'):
+        v = json.loads(p.read_text());xg.verify_sealed(v, 'confirmation_sha256');out[v['verification_id']] = v
+    return out
+
+
+def bank_quality(root, arm, sources=()):
+    """BANK_QUALITY.json: decisions, first-seed positives, confirmation rate, admitted, mean (95% CI), safety rejections."""
+    import numpy as np
+    decisions = bank_decisions(root, arm, sources=sources)
+    conf = confirmations(root, arm)
+    positives = [r for r in decisions if r['status'] == 'accepted' and (r['grade_veh_s'] or 0) > 0]
+    confirmed = [conf[r['verification_id']] for r in positives if r['verification_id'] in conf]
+    admitted = [c for c in confirmed if c['admitted']]
+    values = np.array([c['mean_replicated_advantage_veh_s'] for c in admitted], float)
+    ci = None
+    if len(values) >= 2:
+        rng = np.random.default_rng(20261101)
+        boots = values[rng.integers(0, len(values), (10000, len(values)))].mean(1)
+        ci = [float(np.quantile(boots, .025)), float(np.quantile(boots, .975))]
+    q = dict(arm=arm, unix=time.time(), decisions=len(decisions), first_seed_positives=len(positives),
+             confirmed=len(confirmed), pending_confirmation=len(positives)-len(confirmed), admitted=len(admitted),
+             confirmation_rate=(len(admitted)/len(confirmed) if confirmed else None),
+             mean_admitted_advantage_veh_s=(float(values.mean()) if len(values) else None),
+             mean_admitted_advantage_ci95=ci, ci_method='10000 bootstrap over admitted decisions, RNG20261101',
+             rejections=dict(replication=sum(not c['checks'].get('replication', True) for c in confirmed),
+                             later_harm=sum(not c['checks'].get('no_later_harm', True) for c in confirmed),
+                             safety=sum(not c['checks'].get('safety', True) for c in confirmed),
+                             incomplete=sum('confirmation_branches_complete' in c['checks'] for c in confirmed)),
+             by_policy_version={v: sum(c['policy_version'] == v for c in admitted)
+                                for v in sorted({c['policy_version'] for c in admitted})})
+    path = bank_root(root, arm)/'BANK_QUALITY.json';tmp = path.with_name(path.name+'.publishing')
+    tmp.write_text(json.dumps(q, indent=1));os.replace(tmp, path)
+    return q

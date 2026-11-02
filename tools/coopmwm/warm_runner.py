@@ -157,6 +157,8 @@ def run_arm(root,arm):
                     fair=dict(matched_B_update=bu,B_bank_decisions=cap,B_update_receipt_found=bp.exists())
                 pairs,weights=bank_pairs(root,arm,SEED,beta=replay_beta,sources=b.get('replay_sources',{}).get(arm,()),
                     max_decisions=cap)
+                from .replay_bank import bank_quality
+                weights['bank_quality']=bank_quality(root,arm,b.get('replay_sources',{}).get(arm,()))
                 if fair is not None:
                     have=weights['counts']['available'];fair.update(R_available=have,R_used=weights['counts']['used'],
                         shortfall=max(0,cap-have),excess_not_used=max(0,have-cap),padding_from_B=False)

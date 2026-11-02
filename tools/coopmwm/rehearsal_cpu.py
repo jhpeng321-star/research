@@ -132,7 +132,7 @@ def fake_tick(b, controller=None, trace=None):
     b.totals['team_delay_vs'] += deficit
     b.totals['hard_brake'] += sum(1. for x in audit if x['clamped'])
     if trace is not None:
-        trace.write(json.dumps(dict(time_s=now, n=len(rows), actions=len(audit)))+'\n')
+        trace.write(json.dumps(dict(time_s=now, vehicles=rows, actions=audit))+'\n')
     b.now += 1.
     b.actual += 1.
     TICKS[0] += 1
@@ -721,7 +721,9 @@ def bank_state(root):
         st = {}
         for p in (d/'sumo_verification'/'verifications').glob('*.json'):
             v = json.loads(p.read_text());st[v['status']] = st.get(v['status'], 0)+1
+        q = d/'BANK_QUALITY.json'
         out[arm] = dict(snapshots=sum(1 for _ in (d/'snapshots').glob('*.json')), verifications=st,
+                        quality=json.loads(q.read_text()) if q.exists() else None,
                         skipped=sum(1 for _ in (d/'skipped').glob('*.json')),
                         charged_check=[json.loads(p.read_text())['charged_sim_s'] ==
                                        (json.loads(p.read_text())['k']+1)*json.loads(p.read_text())['window']['end_s']

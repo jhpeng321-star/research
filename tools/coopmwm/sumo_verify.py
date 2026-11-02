@@ -84,7 +84,7 @@ def snapshot_sha(snapshot):
     return digest({k: snapshot.get(k) for k in keys})
 
 
-def build_branches(snapshot, candidates, proposer='wm'):
+def build_branches(snapshot, candidates, proposer='wm', tail_s=TAIL_S):
     """k+1 sealed branch specs from one decision-time snapshot. Branch 0 is 'policy continues'."""
     if proposer not in PROPOSERS:
         raise ValueError('unregistered proposer')
@@ -102,13 +102,13 @@ def build_branches(snapshot, candidates, proposer='wm'):
             raise ValueError('candidate duration must be positive')
         if set(c['members']) & committed:
             raise ValueError('candidate overlaps a committed plan group')
-    t_end = window_end(t0, candidates, end)
+    t_end = window_end(t0, candidates, end, tail_s)
     vid = verification_id(snapshot['episode']['id'], t0, candidates)
     snap = snapshot_sha(snapshot)
     common = dict(schema=SCHEMA, experiment=EXPERIMENT, verification_id=vid, snapshot_sha256=snap,
                   episode=snapshot['episode'], proposer=proposer,
-                  window=dict(start_s=t0, end_s=t_end, tail_s=TAIL_S, metric=METRIC,
-                              truncated=t_end < t0+max(int(c['duration_s']) for c in candidates)+TAIL_S),
+                  window=dict(start_s=t0, end_s=t_end, tail_s=int(tail_s), metric=METRIC,
+                              truncated=t_end < t0+max(int(c['duration_s']) for c in candidates)+int(tail_s)),
                   committed_plan_ids=[c['plan']['id'] for c in snapshot.get('committed_plans', [])],
                   sim_s=branch_sim_s(t_end))
     out = [_seal(dict(common, branch=POLICY, index=0, plan=None), 'branch_sha256')]
@@ -186,13 +186,13 @@ def choose(branches, candidates):
     return 'rejected', None, 'no graded candidate beats policy continues'+missing
 
 
-def verify(snapshot, candidates, runner, charge, proposer='wm', workers=None, root=None):
+def verify(snapshot, candidates, runner, charge, proposer='wm', workers=None, root=None, tail_s=TAIL_S):
     """Full verification of one decision. Returns a sealed receipt (written to root if given).
 
     charge(verification_id, branch_specs) must durably precharge ALL k+1 branches or raise
     BudgetBlocked (then no physics runs and the group follows its policy)."""
     started = time.time()
-    specs = build_branches(snapshot, candidates, proposer)
+    specs = build_branches(snapshot, candidates, proposer, tail_s)
     vid, t0 = specs[0]['verification_id'], specs[0]['window']['start_s']
     charged = sum(s['sim_s'] for s in specs)
     body = dict(schema=SCHEMA, experiment=EXPERIMENT, verification_id=vid, proposer=proposer,
