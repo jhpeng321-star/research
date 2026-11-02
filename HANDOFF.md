@@ -211,3 +211,22 @@ No canary was launched. The optional future canary requires the owner-approved
 S-C1SWITCH2 allocation: at most **2 worlds / 3600 total sim-s**, charged there
 exactly once, including any warmup/prefix/branches. The consuming task owns
 allocation and receipts. This build's new SUMO debit is **zero**.
+
+## Fresh-session resume receipt — 2026-11-02
+
+- Read branch status, recent commits, this handoff and `WALLSW_PLAN.md` before
+  reviewing implementation. The worktree was clean at `07fb123e`; all four
+  completed WALLSW commits above were preserved.
+- Reviewed the shared lifecycle, SUMO handover/command adapter, additive extension
+  loader, WM callback, integration probe and CPU test coverage. No unfinished
+  build changes were identified.
+- Recomputed the three frozen law/executor Git blob identities in this handoff;
+  all match. The ownership, environment, safety and frozen law implementations
+  have no WALLSW changes relative to base `1121117f`.
+- The **84 passed, 1 skipped** result and cross-worktree probes above are preserved
+  previous-session evidence, not fresh test runs. No tests, probes, simulator
+  jobs or dispatches were relaunched during this resume. New SUMO debit remains
+  **0 sim-s**.
+- Delivery remains ready for S-C1SWITCH2 and S-SELMAPPO/S-SELMAPPO2 integration,
+  subject to the consuming-host gates and owner-approved canary allocation
+  already documented above. This resume adds documentation only.
