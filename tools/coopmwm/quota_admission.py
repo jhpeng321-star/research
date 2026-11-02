@@ -19,11 +19,12 @@ def state(root,update):
         v=json.loads(p.read_text());token=v['token']
         bound=folder/(token+'_REQUEST.json')
         record=json.loads(bound.read_text()) if bound.exists() else None
-        if record and record['record_sha256'] in starts:continue
+        records=(record.get('records',[record]) if record else [])
+        if any(r['record_sha256'] in starts for r in records):continue
         decision=folder/(token+'_DECISION.json')
         if decision.exists() and not json.loads(decision.read_text())['executed']:continue
-        response=root/'responses'/(record['state_id']+'.json') if record else None
-        if response and response.exists() and not json.loads(response.read_text())['accepted']:continue
+        responses=[root/'responses'/(r['state_id']+'.json') for r in records]
+        if responses and all(p.exists() and not json.loads(p.read_text())['accepted'] for p in responses):continue
         unresolved+=1
     return dict(executed=len(starts),inflight=unresolved)
 
@@ -58,6 +59,40 @@ def bind(reservation,record):
     saved=json.loads((folder/(reservation['token']+'_RESERVE.json')).read_text())
     admissions=folder.parent.parent/'quota_admissions';admissions.mkdir(exist_ok=True)
     immutable(admissions/(record['state_id']+'.json'),saved['admission'])
+
+
+def choose_group_batch(root,job,now,draw,pending,slots):
+    """One existing Bernoulli draw/reservation for a parallel group window.
+
+    At most one plan starts at this control tick, so a batch counts as ONE
+    potentially executable window, irrespective of its number of WM queries.
+    None means the minimum is already executed: use the unchanged normal path.
+    """
+    import fcntl
+    root=Path(root);folder=root/'quota_requests'/f'u{job["update"]:03}'
+    folder.mkdir(parents=True,exist_ok=True)
+    token=digest(dict(job=job['id'],time_s=int(now)))
+    with (folder/'ADMISSION.claim').open('a') as lock:
+        fcntl.flock(lock,fcntl.LOCK_EX)
+        s=state(root,job['update'])
+        if s['executed']>=job['N_exec']:return None
+        p,blocking=probability(s['executed'],s['inflight'],job['N_exec'],pending,slots)
+        queried=draw()<p
+        receipt=dict(s,minimum=job['N_exec'],pending=pending,slots=slots,
+            blocking=True,nonblocking=False,query_probability=p,parallel_groups=True,
+            window_would_block=blocking,
+            predicate='quota-unmet admitted window submits all eligible groups; one possible plan-start per window')
+        if queried:immutable(folder/(token+'_RESERVE.json'),dict(token=token,job=job['id'],time_s=int(now),admission=receipt,unix=time.time()))
+    return p,queried,receipt,dict(folder=str(folder),token=token) if queried else None
+
+
+def bind_group_batch(reservation,records):
+    folder=Path(reservation['folder'])
+    immutable(folder/(reservation['token']+'_REQUEST.json'),dict(records=[
+        dict(state_id=r['state_id'],record_sha256=digest(r)) for r in records]))
+    saved=json.loads((folder/(reservation['token']+'_RESERVE.json')).read_text())
+    admissions=folder.parent.parent/'quota_admissions';admissions.mkdir(exist_ok=True)
+    for r in records:immutable(admissions/(r['state_id']+'.json'),saved['admission'])
 
 
 def resolved(reservation,executed):

@@ -79,6 +79,13 @@ class WarmStateTests(unittest.TestCase):
         self.assertIsNotNone(v['stop']);self.assertTrue(v['paused']['B']);self.assertTrue(v['paused']['R'])
         self.assertEqual(v['pause_receipts'],['PAUSE_STARVATION.json'])
 
+    def test_tail_owner_takes_precedence_and_tail_failure_is_visible(self):
+        v=self.collect({'TAIL_B_DISPATCH.json':self.owner(),
+            'QUOTA_B_DISPATCH.json':self.owner(22),'WARM_B_FAILED_T1.json':dict(error='tail fault')})
+        self.assertEqual(v['owners']['B']['dispatch_receipt'],'TAIL_B_DISPATCH.json')
+        self.assertIsNotNone(v['stop'])
+        self.assertIn('WARM_B_FAILED_T1.json',v['failures'])
+
     def test_current_supervisor_failure_visible(self):
         v=self.collect({'WARM_R_FAILED_Q1.json':dict(error='executor fault')})
         self.assertEqual(v['stop']['error'],'current training supervisor failure')

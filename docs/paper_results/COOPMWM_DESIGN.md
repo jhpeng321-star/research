@@ -51,7 +51,7 @@
 50. Both seed guards, fresh-name exposure, immutable sources/cache/approval bindings before physics.
 51. No prohibited inputs/newenv/push; OWNER20:35 opaque v2archive+SHA256-gated literal source removal only; commit eachstep.
 52. E2 diagnostic multi-H weights normalize measured agreement on horizons with sign95CI lower>.5.
-53. MAIN0548 serialized quota-aware10s admission: p=.95/queued while executed+potentiallyexecutable-inflight<Nexec10; thereafter p=.95 if pending<actualGPUslots,else0/own; broker preserves quota reservations; exact behaviour/admission receipts.
+53. MAIN0548 serialized quota-aware10s admission: p=.95 while executed+potentiallyexecutable-inflight<Nexec10,else.95 only if pending<slots; MAIN0818 admitted quota-unmet windows query all eligible groups before waiting, first accepted in inherited order/one start per tick; one reservation/draw per window, all query receipts; after executed10 original single-group path.
 54. Per-window/H report K8 joint-return advantage variance and paired-credit variance in veh-s².
 55. Frozen critic baseline is constant within window; variance is conditional WM-estimated noise.
 56. Report actual PPO advantages across TRAIN windows separately; no empirical SUMO-noise claim.

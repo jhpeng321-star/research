@@ -39,6 +39,10 @@ def guide(job,generator):
             sample['behaviour']=dict(route='policy',sample_probability=0.,mixture_mass=0.,
                 regime=traffic,executed=False,beta=0.,q=0.,eligible_query=True)
             return None
+        if job.get('parallel_group_queries') and job.get('quota_aware_admission') and quota is None:
+            from .parallel_groups import query
+            result=query(job,generator,history,rows,commands,now,sample,groups,traffic,worker_slots(root))
+            if result is not None:return result
         reservation=None;admission=None
         if quota is None:
             # Queue occupancy is infrastructure-only, never predicted/SUMO gain.

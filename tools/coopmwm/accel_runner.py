@@ -99,14 +99,14 @@ def routing(episodes):
     bs=[s['sample'].get('behaviour',{}) for e in episodes for s in e['steps']]
     eligible=[b for b in bs if b.get('eligible_query')]
     executed=[b for b in bs if b.get('executed') and b.get('plan_start')]
-    def counts(xs):return dict(queries=sum(b.get('route')=='wm' for b in xs),
-        accepted=sum(b.get('proposal_accepted',False) for b in xs),
+    def counts(xs):return dict(queries=sum(b.get('parallel_query_counts',{}).get('queries',int(b.get('route')=='wm')) for b in xs),
+        accepted=sum(b.get('parallel_query_counts',{}).get('accepted',int(b.get('proposal_accepted',False))) for b in xs),
         executed=sum(b.get('executed',False) and b.get('plan_start',False) for b in xs))
     return dict(counts(bs),by_regime={r:counts([b for b in bs if b.get('regime')==r]) for r in ('merge-dense','ordinary')},
         by_bucket={o+'|'+r:counts([b for b in bs if b.get('option')==o and b.get('regime')==r])
             for o in ('O1','O2','O3','O4','MPPI') for r in ('merge-dense','ordinary')},
         durations=[dict(regime=b['regime'],duration_s=b['duration_s'],group_size=b.get('group_size',len(b.get('proposal_members',[])))) for b in executed],
-        candidates_searched=sum(b.get('candidates_searched') or 0 for b in bs),
+        candidates_searched=sum(b.get('parallel_query_counts',{}).get('candidates_searched',b.get('candidates_searched') or 0) for b in bs),
         query_wait_wall_s=sum(b.get('query_wall_s',0.) for b in bs),
         eligible_query_windows=len(eligible),
         sampling={r:float(np.mean([b['sample_probability'] for b in eligible if b.get('regime')==r]))

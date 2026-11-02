@@ -97,6 +97,10 @@ def run_arm(root,arm):
         pause_update=last,full_endpoint=budget()['updates'][arm],charged_sim_s=charged(root)))
     running=[];beta=1.;learned=search_learning.empty(arm,SEED,b['accel_bounds'])
     exact_rng=np.random.default_rng(SEED);exact_count=0
+    if b.get('resume_progress'):
+        progress=b['resume_progress'];running=progress['running'];beta=progress['beta']
+        if arm=='B':learned=progress['learned']
+        exact_rng.bit_generator.state=progress['exact_rng_state'];exact_count=progress['exact_count']
     diagnostics=ThreadPoolExecutor(max_workers=1)
     try:
         if arm=='A' and b.get('health_guards'):
@@ -107,14 +111,17 @@ def run_arm(root,arm):
                 panel_report(root,'A_DEV_016.json',dev,read(root/'MAPPO_DEV.json')['records'],'dev')
         for u in range(first,last+1):
             assert_running(root,arm)
-            start=time.monotonic();extra=dict(update=u)
+            start=time.monotonic();start_unix=time.time();extra=dict(update=u)
             if b.get('quota_aware_admission'):extra['quota_aware_admission']=True
+            if b.get('parallel_group_queries') and arm=='B':extra['parallel_group_queries']=True
             if b.get('health_guards'):extra.update(health_guards=True,safety_reference=b['safety_reference'])
             if arm=='B':extra['search_learning']=learned
             if arm=='R':
                 wait(root,root/f'B_RANDOM_QUOTA_{u:03}.json',b['gpu_deadline'],arm)
                 extra['random_quota']=str(root/f'B_RANDOM_QUOTA_{u:03}.json')
             eps=wave(root,dict(b,beta=beta),{arm:policy},batch_worlds(u),'train',f'warm_u{u:03}','train',False,extra)
+            collection_begin=(min([start_unix]+[(root/'jobs'/e['id']/'CLAIM.json').stat().st_mtime for e in eps])
+                if b.get('parallel_group_queries') else start_unix)
             routes=routing(eps)
             deviation=None
             if arm=='B' and routes['executed']<b['N_exec']:
@@ -159,10 +166,17 @@ def run_arm(root,arm):
                 metrics=update(policy,opt,eps,rng,**({'awr':b['awr']} if 'awr' in b else {}));grade_lag=None
             save(root/f'{arm}_checkpoint_{u:03}.pt',policy,opt,rng,u,charged(root))
             raw=[v*UNIT for e in eps for v,_ in advantages(e['steps'])]
+            gpu_busy=None
+            if b.get('parallel_group_queries') and arm=='B':
+                from .tail_runtime import busy_report
+                from .plan_client import worker_slots
+                gpu_busy=busy_report(root,u,collection_begin,time.time(),[w['slot'] for w in worker_slots(root)])
+            elapsed=time.time()-collection_begin if b.get('parallel_group_queries') else time.monotonic()-start
             write(root/f'{arm}_UPDATE_{u:03}.json',dict(timestamp_utc=timestamp(),update=u,arm=arm,
                 training_seed=SEED,ppo=metrics,trust=tr,beta_used=beta if arm!='A' else 0.,
                 proposal_routing=routes,team_only_noise=dict(advantage_variance_veh_s_squared=float(np.var(raw,ddof=1))),
-                wall_s=time.monotonic()-start,eta_final_hours=(budget()['updates'][arm]-u)*(time.monotonic()-start)/3600,
+                wall_s=elapsed,eta_final_hours=(budget()['updates'][arm]-u)*elapsed/3600,
+                gpu_busy=gpu_busy,
                 exact_imitation=weights,grading_lag=grade_lag,
                 quota_deviation=deviation,
                 concurrently_active_plans=max(s.get('simultaneously_active_plans',0) for e in eps for s in e['steps']),
