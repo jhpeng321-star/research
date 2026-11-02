@@ -120,3 +120,16 @@ Shared coordination: `E:/agent-work/rb-shared/EVAL_WM2_COMPLETE_AND_CI_CORRECTIO
   corrected gate remains NOT_QUALIFIED, scored-only-singleton-roundoff-v2.
   Existing verification/test receipts remain applicable; no forecasts, scoring
   or completed tests were repeated. This resume changes documentation only.
+
+## Fresh-session reconciliation — 2026-11-03 01:35+08
+- Clean HEADf402d36f preserved; original registration5683/5697/5753, rationale,
+  frozen design, WMBREAKDOWN gate, RUNA request and INT final delivery reconciled.
+- Read-only `ops status`: all four WM2 shards40/40; original finalizer FINALIZED;
+  support ended at11:30 with REPORT_READY/report_verified=true. No matching EVAL
+  process was listed. `ops candidate-status`: A2/FULL-v4=160, B2=157/FAILED,
+  C2=102, matching the delivered accounting. Both GPUs currently busy.
+- Confirmed future-builder callback and source-identity binding in run_wm.py;
+  corrected gate remains NOT_QUALIFIED/scored-only-singleton-roundoff-v2.
+- Later central registration6072 assigns GPUs to S-COOPMWM; original overnight
+  EVAL work is complete. No inference/scoring/test repeat or process action.
+- Receipt: `docs/paper_results/RBEVAL_RESUME_20261103.md`.
