@@ -161,8 +161,13 @@ print(json.dumps(dict(unix=time.time(),owner=d,state=st[2] if st else 'ABSENT',q
         tmp = target.with_name(f'.BANK_QUALITY_B.{time.time_ns()}.publishing')
         with tmp.open('w', encoding='utf-8') as f:json.dump(value['quality'], f)
         __import__('os').replace(tmp, target)
-    write(ops.EVIDENCE/f'BANK_BUILDER_STATUS_{time.time_ns()}.json', value)
-    print(json.dumps(value))
+    path=ops.EVIDENCE/f'BANK_BUILDER_STATUS_{time.time_ns()}.json'
+    write(path, value)
+    print(json.dumps(dict(receipt=str(path),unix=value['unix'],owner=value['owner'],
+        state=value['state'],quality=value['quality'],
+        first_batch_complete=value['first_batch_complete'] is not None,
+        attempt_statuses={s:sum(a['status']==s for a in value['attempts'])
+            for s in sorted({a['status'] for a in value['attempts']})})))
 
 
 if __name__ == '__main__':

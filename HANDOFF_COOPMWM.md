@@ -1,5 +1,12 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+FIRSTCONFIRMREALcomplete986016/t300/D60:rep+343.462/ext+5380.332veh-s,
+NOTADMITTEDhardbrake+3bothwindows(collisions/teleports0;TTCeventsdecrease).
+Owner2332488continuesrest14; BANK_QUALITY_B.json1confirmed/0admitat1793650869.
+ConditionalunusedSOLOprechargesretained. CompactstatusoutputkeepsFULLattempts/
+logsinuniquereceipts. NULLFIX_READY nowexists21390262/18newCPUtestszero
+newfailures; jointniche/nullfixintegrationNEXTwhileofflinebuildercontinues.
+
 BANKBUILDERLIVE04:19:56/unix1793650796:2332488/start66507374/bootb8bc1fcb,
 control/home/ubuntu/coopmwm20261102_lscollect1/bank_builder_0406;
 BANK_BUILDER_DISPATCH_0406.json ADOPT/NEVERredispatch. FirststatusaliveS/real

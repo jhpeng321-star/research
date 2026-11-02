@@ -1,5 +1,19 @@
 # S-COOPMWM — live checks
 
+## Nov3 04:21 UTC+8 — first real bank confirmation complete
+- Owner2332488 remains live. The first existing positive decision (TRAIN986016,
+  t300,D60) completed replication and extended-window branches with prefix
+  checks: **+343.46 veh-s** on the second seed and **+5380.33 veh-s** extended.
+- It is **not admitted**: both comparisons record3 more hard-braking events than
+  their own-policy branch. Collision/teleport deltas are0; trace TTC<1.5 counts
+  decrease. The pre-registered no-safety-regression rule is applied unchanged.
+  Conditional solo branches are not run for this rejected entry; all5760
+  precharged sim-s remain charged.
+- `BANK_QUALITY_B.json` currently reports1 confirmed/0 admitted/13 pending.
+  This proves the real confirmation path is working; no cooperation/viability
+  claim follows from it. The remaining original batch continues under the same
+  durable owner.
+
 ## Nov3 04:19:56 UTC+8 — offline bank builder LIVE
 - Remote durable owner **2332488/start66507374**, control directory
   `coopmwm20261102_lscollect1/bank_builder_0406`, adopted by
