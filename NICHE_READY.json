@@ -1,0 +1,43 @@
+{
+  "feature": "multi-modal (niching) world-model plan search",
+  "branch": "c4/niche-search",
+  "commit": "5df3e853",
+  "code": {
+    "search": "tools/coopmwm/mppi_search.py",
+    "runtime": "tools/coopmwm/mppi_runtime.py",
+    "tests": "tools/coopmwm/test_niche_search_cpu.py",
+    "byte_identity_fixture": "tools/coopmwm/fixtures/niche1_golden.json"
+  },
+  "config_keys": {
+    "search_config.niches": "int M >= 1 (default 1 = byte-identical single-mode search). Example binding: search_config = {\"niches\": 4}. All other keys unchanged (top_k, finalists_per_k, method='mppi'|'cem', iterations, screen_K, final_K, ...).",
+    "output_keys_M>1": {
+      "niches": "M",
+      "niche_sizes": "per-niche sub-population sizes (batch-width multiples, sum == scaling.population)",
+      "repulsion_threshold": "median pairwise plan_distance of the iteration-0 population (data-driven)",
+      "iterations[].niches": "per-niche best/mean rel cost, ess, temperature, duration_probs",
+      "iterations[].repulsion": "null or {pair, reseeded, distance, threshold} (at most one per iteration)",
+      "finalists[].niche": "niche id per finalist",
+      "topk[].niche": "niche id per shortlisted plan",
+      "topk_mean_pairwise_distance": "mean pairwise plan_distance of the top-k",
+      "topk_distinct_niches": "number of distinct niches in the top-k"
+    },
+    "output_keys_M=1": "unchanged byte-for-byte (no niche keys emitted)"
+  },
+  "test_counts": {
+    "new": {"file": "tools/coopmwm/test_niche_search_cpu.py", "passed": 11, "skipped": 1, "note": "skip = runtime label_list8 wrapper test, torch unavailable in this interpreter; runs where torch is installed"},
+    "legacy_contract": {"file": "tools/coopmwm/test_mppi_search_cpu.py", "passed": 15},
+    "byte_identity": {"method": "committed golden fixture vs current code, fixed seeds", "scenarios": ["plain1", "plain2", "six1", "cem1", "reject1", "explicit niches=1"], "result": "ALL IDENTICAL (old HEAD module vs new, plus fixture on disk)"},
+    "wm_parity": {"m2_N40_futures": 584, "m6_N120_futures": 1544, "identical_calls": true},
+    "two_optima": {"seeds_pinned": [0, 6], "niches4_top8_basins": ["A", "B"], "niches1_top8_basins": "single basin per pinned seed"},
+    "repo_sweep": {"collectable_cpu_files": 41, "with_change": "224 passed, 3 skipped, 31 failed (pre-existing env: torch / tools.wmteach missing)", "pristine_HEAD": "213 passed, 2 skipped, 31 failed (identical env failures) -> zero regressions", "excluded": "test_harden3_cpu.py long rehearsal subprocess (unchanged path; its LabelList8 wrapper test needs torch)"}
+  },
+  "semantics": {
+    "population": "same total N split into M sub-populations, each a multiple of pop_multiple=4",
+    "streams": "SeedSequence(seed).spawn(1+M): child 0 = Thompson choice, children 1..M = niche streams",
+    "elites": "per-niche target = ceil(elite_frac * n_i); own elites only",
+    "repulsion": "closest niche-mean pair closer than the threshold re-seeds the worse niche (best/mean rel cost) from the initial distribution with a fresh stream; at most once per iteration",
+    "finalists": "best screen-scored plan of each niche first, then fill by screen score (count = scaling.finalists, unchanged)",
+    "shortlist": "best final-scored (K8) plan per niche among positive-saving finalists, then greedy max-min plan_distance fill, best score first; Thompson bootstrap runs on the shortlist",
+    "discovery_pure": "no seeding from known cooperation families; O1-O4 remain post-hoc labels only"
+  }
+}
