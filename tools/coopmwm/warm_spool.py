@@ -25,10 +25,19 @@ def immutable(path,value):
         return False
     # Broker/worker ownership serializes each destination. Publish atomically so
     # polling cannot see a partial JSON object after a connection disappears.
-    temporary=path.with_name(path.name+'.publishing')
-    with temporary.open('xb') as f:
-        f.write(canonical(value));f.flush();os.fsync(f.fileno())
-    os.replace(temporary,path)
+    # A per-writer temporary + hard link (fails if the target exists) means a
+    # writer killed mid-publication (full disk, SIGKILL) can never leave a fixed
+    # '.publishing' name that blocks this destination forever.
+    temporary=path.with_name(f'.{path.name}.{os.getpid()}.{time.time_ns()}.publishing')
+    try:
+        with temporary.open('xb') as f:
+            f.write(canonical(value));f.flush();os.fsync(f.fileno())
+        try:os.link(temporary,path)
+        except FileExistsError:
+            if json.loads(path.read_text())!=value:raise ValueError('conflicting immutable spool receipt '+path.name)
+            return False
+    finally:
+        if temporary.exists():temporary.unlink()
     return True
 
 
