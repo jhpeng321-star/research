@@ -133,3 +133,15 @@ Shared coordination: `E:/agent-work/rb-shared/EVAL_WM2_COMPLETE_AND_CI_CORRECTIO
 - Later central registration6072 assigns GPUs to S-COOPMWM; original overnight
   EVAL work is complete. No inference/scoring/test repeat or process action.
 - Receipt: `docs/paper_results/RBEVAL_RESUME_20261103.md`.
+
+## Latest resume check — 2026-11-03, recovered HEAD7b322ed8
+- Clean worktree preserved. Reread program5683, preregistration5697, requested
+  rationale/gate/design, shared helper notice, RUNA request and INT final delivery.
+- Read-only `ops status` confirms four40/40 WM2 shards and FINALIZED; support's
+  terminal11:30 receipt remains REPORT_READY/report_verified=true, with no matching
+  EVAL process listed. `ops candidate-status` confirms A2/FULL-v4=160, B2=157/FAILED,
+  C2=102. Both GPUs busy (gpuA93%, gpuR92–94%); no new dispatch needed.
+- Current source retains the future-builder callback and identity binding; local
+  corrected gate remains NOT_QUALIFIED/scored-only-singleton-roundoff-v2.
+  Existing verification/test receipts apply. This resume updates handoff only;
+  no inference, scoring, test repeat or process action. Original task is complete.
