@@ -148,9 +148,11 @@ def collector_guide(job, generator, controller, prefixes):
                         write(admissions/f'{ordinal:09}.json', dict(ordinal=ordinal,
                             job=job['id'], time_s=now, group=group['members'],
                             search_config=r['search_config']))
+            if job.get('policy_state') is not None:
+                # Both arms need their own CURRENT policy for the centre rollout;
+                # R still never asks the WM to score its random candidates.
+                r['policy_state'] = job['policy_state']
             if arm == 'B':
-                if job.get('policy_state') is not None:
-                    r['policy_state'] = job['policy_state']
                 if job.get('search_learning') is not None:
                     r['search_learning'] = job['search_learning']
             r['state_id'] = digest(dict(record=r, job=job['id']))

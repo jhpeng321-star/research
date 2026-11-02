@@ -17,7 +17,7 @@ import types
 from .protocol import digest, sha
 from .storage import read, write
 
-NAME = 'B_REPLAY_START_0735.json'
+NAME = 'B_REPLAY_START_0735_V2.json'
 PREFIX = 'replay0735'
 
 

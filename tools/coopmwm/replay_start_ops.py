@@ -10,10 +10,11 @@ from .ls_validity_ops import remote
 from .protocol import checked, sha, REGISTRY
 from .storage import read, write
 
-SOURCE='/home/ubuntu/coopmwm20261103_replaystartcpu2'
+SOURCE='/home/ubuntu/coopmwm20261103_replaystartcpu3'
 BASE='/home/ubuntu/coopmwm20261103_replayreleasecpu6'
-CONTROL=ROOT+'/replay_start_0735'
-REG='B_REPLAY_START_REGISTRATION_0735.json'
+CONTROL=ROOT+'/replay_start_0735_v2'
+REG='B_REPLAY_START_REGISTRATION_0735_V2.json'
+BINDING_NAME='B_REPLAY_START_0735_V2.json'
 
 
 def qualification_payload(files, source=SOURCE):
@@ -119,6 +120,9 @@ def register():
             'boundary; new drain-only supervisor finishes saved labels without any new '
             'frozen-u3 admissions, original claims/labels/precharges retained. Broker '
             'delivers Bsearch and Rcentre-only requests; R candidates never WMscored. '
+            'EngineeringV2: R centre requests now include R currentpolicy weights '
+            'as B does; no B weights, scoring or library supplied to R. Replace '
+            'only verified idle V1watcher before any start; original config retained. '
             'B it2_K2 niches1/4 alternating, unchanged finalK8/Hfinal, actionablegate both. '
             'Whole-decision precharge/one-use confirmations; all exact-positive safe '
             'same-arm bank entries AWR/cooperative exposure; per-update lessons. '
@@ -142,7 +146,7 @@ def register():
     binding=dict(value,amendment_sha256=h)
     print(remote('cpuQ',f'''from pathlib import Path
 import json
-r=Path({ROOT!r});p=r/'B_REPLAY_START_0735.json';v=json.loads({json.dumps(binding)!r})
+r=Path({ROOT!r});p=r/{BINDING_NAME!r};v=json.loads({json.dumps(binding)!r})
 assert r.is_dir() and v['demand_phase_end_s'] is not None
 if p.exists():assert json.loads(p.read_text())==v
 else:
@@ -155,23 +159,38 @@ print(json.dumps(dict(registered=True,amendment_sha256={h!r},new_reserved_sim_s=
 
 def launch():
     value=json.loads(remote('cpuQ',f'''from pathlib import Path
-import sys,json,os,time,subprocess,fcntl,hashlib
+import sys,json,os,time,subprocess,fcntl,hashlib,signal
 r=Path({ROOT!r});s=Path({SOURCE!r});c=Path({CONTROL!r});assert c.parent.is_dir()
 c.mkdir(exist_ok=True)
 lock=(c/'DISPATCH.claim').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
 if (c/'DISPATCH.json').exists():print((c/'DISPATCH.json').read_text());raise SystemExit
-v=json.loads((r/'B_REPLAY_START_0735.json').read_text());assert v['amendment_sha256'] in (r/'AUTHORITY.md').read_text()
+v=json.loads((r/{BINDING_NAME!r}).read_text());assert v['amendment_sha256'] in (r/'AUTHORITY.md').read_text()
 cpu=json.loads((s/'LS_CPU_RESULT.json').read_text());assert cpu['pass_'] and cpu['sim_s']==cpu['skips']==0
 for n,h in cpu['source_hashes'].items():assert hashlib.sha256((s/n).read_bytes()).hexdigest()==h,n
 env=dict(os.environ,PYTHONPATH=str(s/'pytools')+':'+str(s/'WM_PACKAGE')+':/home/ubuntu/e3final/runtime/src:/home/ubuntu/e3final/runtime',CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',SUMO_HOME='/home/ubuntu/miniconda3/lib/python3.10/site-packages/sumo')
 env['PATH']=env['SUMO_HOME']+'/bin:'+env['PATH']
 assert Path(env['SUMO_HOME'],'bin/sumo').is_file()
+old=json.loads((r/'replay_start_0735/DISPATCH.json').read_text());p=Path('/proc',str(old['pid']))
+assert not (r/'B_REPLAY_STARTED.json').exists(),'adopt started training; no watcher handover'
+assert Path('/proc/sys/kernel/random/boot_id').read_text().strip()==old['boot_id']
+if p.exists():
+ st=(p/'stat').read_text().split();assert st[21]==old['start_ticks']
+ if st[2]!='Z':
+  argv=(p/'cmdline').read_bytes().replace(bytes([0]),b' ').decode()
+  assert 'tools.coopmwm.replay_start' in argv and str(r) in argv and argv.rstrip().endswith('watch')
+  assert not (p/'task'/str(old['pid'])/'children').read_text().split(),'only idle watcher handover'
+  os.kill(old['pid'],signal.SIGTERM)
+  for _ in range(100):
+   if not p.exists() or (p/'stat').read_text().split()[2]=='Z':break
+   time.sleep(.1)
+  else:raise ValueError('old idle watcher did not exit')
+with (c/'PRIOR_WATCHER.json').open('x') as f:json.dump(old,f)
 with (c/'WATCH.log').open('x') as log:
  p=subprocess.Popen(['nice','-n','19',sys.executable,'-B','-u','-m','tools.coopmwm.replay_start',str(r),'watch'],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
 d=dict(pid=p.pid,start_ticks=Path('/proc',str(p.pid),'stat').read_text().split()[21],boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),unix=time.time(),source_root=str(s),control_root=str(c),amendment_sha256=v['amendment_sha256'])
 with (c/'DISPATCH.json').open('x') as f:json.dump(d,f)
 print(json.dumps(d))''',timeout=60))
-    p=ops.EVIDENCE/'B_REPLAY_START_WATCH_DISPATCH_0735.json'
+    p=ops.EVIDENCE/'B_REPLAY_START_WATCH_DISPATCH_0735_V2.json'
     if not p.exists():write(p,value)
     print(json.dumps(value))
 

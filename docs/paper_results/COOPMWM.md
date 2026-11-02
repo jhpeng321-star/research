@@ -1,5 +1,17 @@
 # S-COOPMWM — live checks
 
+## Nov3 08:00 UTC+8 — current-policy R centre propagation corrected before activation
+- Pre-activation inspection found the inherited bank collector forwarded actor
+  weights only for B; R's centre-only request consequently lacked its current R
+  policy. Both now carry their own actor state. R still receives no B weights,
+  learned covariance/library, or WM candidate scores. A dedicated regression
+  checks R's policy identity and centre-only request contract.
+- New immutable `replaystartcpu3`: **706 Linux CPU checks PASS, zero skips,
+  83.720s, zero SUMO**. No GPU numerical code or serving worker was modified.
+- A new additive V2 binding and idle-watcher handover are prepared; original
+  registration, source, receipts and V1 dispatch remain retained. B/R remainu3;
+  no training outcome was used for this engineering correction.
+
 ## Nov3 07:54 UTC+8 — AUTOMATIC B-REPLAY START WATCHER LIVE
 - Registered locally/canonically and on cpuQ before dispatch: amendment SHA256
   `2b41922c9c5c6d95c20b34d0125860d324987da8507f962bd690b90437b563fa`.

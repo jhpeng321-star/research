@@ -109,6 +109,28 @@ class StartGateTests(unittest.TestCase):
             self.assertEqual(configs,[1,4])
             self.assertEqual({m['policy_update'] for m in metas},{3})
 
+    def test_R_centre_receives_its_current_policy_but_no_scoring_or_library(self):
+        from .replay_bank import collector_guide
+        with tempfile.TemporaryDirectory() as d:
+            r=Path(d)
+            job=dict(id='R_current',arm='R',queue_root=str(r),world=dict(seed=986001),
+                collector_policy_update=5,policy_state={'R_current_weights':[1.,2.]},
+                search_learning={'must_not_reach_R':True},
+                collect=dict(slots=4,owned_pending_only=True,demand_phase_end_s=1200))
+            sample=dict(context=dict(members=['a','b']),own_action=[[0.],[0.]])
+            with patch('tools.coopmwm.mppi_search.group_components',return_value=[dict(members=['a','b'])]), \
+                 patch('tools.coopmwm.exploration.regime',return_value='ordinary'), \
+                 patch('tools.coopmwm.sumo_verify.capture',return_value={}), \
+                 patch('torch.save'):
+                guide=collector_guide(job,None,None,{})
+                self.assertIsNone(guide([],dict(a=0.,b=0.),300,sample))
+            reqs=list((r/'centre_requests').glob('*.json'));self.assertEqual(len(reqs),1)
+            q=json.loads(reqs[0].read_text())
+            self.assertEqual(q['policy_state'],job['policy_state'])
+            self.assertEqual(q['mode'],'centre')
+            self.assertNotIn('search_learning',q)
+            self.assertFalse((r/'requests').exists())
+
 
 
 if __name__=='__main__':unittest.main()
