@@ -4,8 +4,9 @@ import json
 from . import ops
 from .storage import read, write
 
-SOURCE = '/home/ubuntu/coopmwm20261102_verifycpu2'
-OVERLAYS = ('sumo_verify', 'test_sumo_verify_cpu', 'acceleration', 'accel_plant', 'plan_client')
+SOURCE = '/home/ubuntu/coopmwm20261102_verifycpu3'
+OVERLAYS = ('sumo_verify', 'test_sumo_verify_cpu', 'test_verify_continuation_cpu',
+            'exact_grade', 'acceleration', 'accel_plant', 'plan_client')
 
 
 def cpu():
@@ -35,7 +36,7 @@ class Counts:
 c=Counts();start=time.monotonic()
 with patch('subprocess.Popen',side_effect=AssertionError('no physics/inference during CPU qualification')):
  result=unittest.TextTestRunner(stream=sys.stdout,verbosity=1).run(suite)
- code=pytest.main([{SOURCE!r}+'/pytools/tools/coopmwm/test_sumo_verify_cpu.py','-q','-p','no:cacheprovider'],plugins=[c])
+ code=pytest.main([{SOURCE!r}+'/pytools/tools/coopmwm/test_sumo_verify_cpu.py',{SOURCE!r}+'/pytools/tools/coopmwm/test_verify_continuation_cpu.py','-q','-p','no:cacheprovider'],plugins=[c])
 print(json.dumps(dict(pass_=code==0 and result.wasSuccessful(),tests=c.tests+result.testsRun,skips=c.skips+len(result.skipped),sim_s=0,root={SOURCE!r},wall_s=time.monotonic()-start)))''', timeout=90)
     print(out)
     value = json.loads(out.strip().splitlines()[-1]);value['source_hashes'] = staged['hashes']

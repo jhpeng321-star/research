@@ -143,7 +143,8 @@ def run_branch(spec, snapshot, runner):
         w = window_J(result, t0, t_end)
         return dict(branch=spec['branch'], index=spec['index'], status='graded', J_veh_s=w[METRIC], window=w,
                     branch_sha256=spec['branch_sha256'], result_sha256=result.get('result_sha256') or digest(result),
-                    actual_sim_s=result.get('actual_sim_s'), audit=result.get('audit'))
+                    actual_sim_s=result.get('actual_sim_s'), audit=result.get('audit'),
+                    continuation_prefix_sha256=result.get('continuation_prefix_sha256', {}))
     except PrefixMismatch as e:
         return dict(branch=spec['branch'], index=spec['index'], status='stopped', J_veh_s=None,
                     reason='PrefixMismatch: '+str(e), branch_sha256=spec['branch_sha256'])
@@ -238,6 +239,47 @@ def _finish(body, started, root):
     if root is not None:
         _write_new(Path(root)/'verifications'/f'{body["verification_id"]}.json', r)
     return r
+
+
+def check_live_continuation(verification, live):
+    """Smoke gate: exact chosen-branch/live fingerprints through the next query window.
+
+    Reads completed TRAIN results only; no runner, charges or physics. A missing
+    fingerprint is a failure, never a vacuous equivalence pass. Future searches
+    can change later traffic, so this gate makes no whole-window replay claim.
+    """
+    verify_sealed(verification, 'receipt_sha256')
+    if verification['status'] != 'accepted' or verification['chosen'] is None:
+        raise ValueError('smoke needs an accepted verified decision')
+    if live['id'] != verification['episode']['id']:
+        raise ValueError('live continuation episode identity differs')
+    t0 = verification['t0']
+    step = next((s for s in live['steps'] if int(s['time_s']) == t0), None)
+    proposal = (step or {}).get('proposal') or {}
+    behaviour = (step or {}).get('sample', {}).get('behaviour') or {}
+    if (not behaviour.get('executed') or not behaviour.get('plan_start') or
+            digest(proposal.get('plan')) != digest(verification['chosen_plan'])):
+        raise ValueError('live continuation did not execute the verified plan')
+    identity = behaviour.get('sumo_verification') or {}
+    if identity.get('receipt_sha256') != verification['receipt_sha256']:
+        raise ValueError('live continuation verification receipt differs')
+    chosen = verification['branches'][verification['chosen']+1]
+    if chosen['status'] != 'graded':
+        raise ValueError('chosen branch was not graded')
+    hashes = chosen.get('continuation_prefix_sha256') or {}
+    end = min((int(t0)//10+1)*10, int(float(live['final']['t_s'])))
+    if end <= t0:
+        raise ValueError('no live continuation seconds')
+    for t in range(t0, end+1):
+        fp = live['prefixes'].get(str(t))
+        if fp is None and float(live['final']['t_s']) == t:
+            fp = live['final']
+        if fp is None or hashes.get(str(t)) != digest(fp):
+            raise PrefixMismatch(f'chosen branch differs from live continuation at t={t}')
+    return dict(pass_=True, verification_id=verification['verification_id'],
+                verification_receipt_sha256=verification['receipt_sha256'],
+                checked_from_s=t0, checked_to_s=end, fingerprints=end-t0+1,
+                new_sim_s=0, scope='chosen branch to next query window, not whole grading window')
 
 
 # ---------------------------------------------------------------- budget
@@ -496,9 +538,14 @@ class LocalBranchRunner:
             raise
         finally:
             accel_plant.Controller = original
+        continuation = {}
+        for t in range(t0, min((int(t0)//10+1)*10, t_end)+1):
+            fp = result['final'] if t == t_end else result['prefixes'][str(t)]
+            continuation[str(t)] = digest(fp)
         return dict(prefixes={str(t): result['prefixes'][str(t)] for t in range(WARMUP_S, t0+1)},
-                    final=result['final'], actual_sim_s=result.get('actual_sim_s'),
-                    result_sha256=digest(result), audit=holder['c'].audit)
+                     final=result['final'], actual_sim_s=result.get('actual_sim_s'),
+                     result_sha256=digest(result), audit=holder['c'].audit,
+                     continuation_prefix_sha256=continuation)
 
 
 class SubprocessBranchRunner:

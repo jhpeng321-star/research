@@ -230,9 +230,12 @@ def guide_draws(step, arm):
     if arm in ('B', 'R') and b.get('eligible_query'):
         calls.append('rand')
     p = step.get('proposal')
-    if p is not None and p.get('accepted') and p.get('random_match') is not None:
+    # Verification draws trust BEFORE SUMO selection. Its own-policy/rejected
+    # results still consumed the original R sampler draw and the beta draw.
+    drawn = p is not None and p.get('sumo_trust_drawn', False)
+    if p is not None and (p.get('accepted') or drawn) and p.get('random_match') is not None:
         calls.append('randint')
-    if p is not None and p.get('accepted'):
+    if p is not None and (p.get('accepted') or drawn):
         calls.append('rand')
     return calls
 
