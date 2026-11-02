@@ -1,5 +1,25 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+MAIN1651 ADDITIVE RECOVERY at1793610560/17:09:20UTC+8: full373linebrief read;
+originalqual/u0/library/smoke adopted. DNS V4 killed10remainingB4episodes: all24
+closed/14RESULT. Sourceverifybeta9 CPU153PASS/0skips36.388s/zeroSUMO + real
+botharmu3restoration/originalbindingSHA preflight PASS. RESOURCE_EXTENSION_1651
+is NEW additive binding, originals unchanged. plan/registration sha in
+RESOURCE_RECOVERY_REGISTRATION_1651.json;12ksim-s discovery150200->138200,
+train2840400->2852400;cap11M extra1.5M restricted INACTIVE verification_k8.
+TEN NEW warmdns1651_u004_B IDs, same registered worlds/noisewave; completed14
+adopted, oldfailed10/querykeys excludedquota. DNS SHA releaseONLY/V5faultsfatal.
+Ownedcontroller819453 completed handover; oldB598899 verifiedidlepool/parent
+terminated; oldR/broker/grader/controllers verifiedEXIT. NEW B821013/R821014/
+broker821011/grader821012/start6248378x, source9, emptylogs at1793610560.
+RwaitsB4quota; NEVERredispatch anyDNSowner orrepeatresume_register. Registration
+SSH45stimeout butALL4remoteadditivereceiptscompleted, adopted, no retry.
+Deadline1793894340 (Nov5 23:59+08) loadedpriority in NEWCPU runtime. GPUworkers
+and finalcoordinator STILLcacheoldNov2deadline; migration remains needed before
+18:07:02. commandmirrorOFF/fulltrajectoryGPUgate pending, learned/k8inactive,
+B4..6viability pending. NextobserveDNSownersandmigratecachedresourceclocks;
+oldstatus helpers do not yet recognize DNSowners, use explicit dispatch receipts.
+
 MAIN1607CORRECTION currentunix1793608384: originalwarmqualification/u0/library/
 GPUgates/verificationsmoke ADOPTED/norerun. Fixedverifiedguide beta1 REGISTERED
 8d515de4...; numericalverifybeta2/131CPU PASS0skips34.463s, source2unchanged.

@@ -1,5 +1,5 @@
 # S-COOPMWM — warm MPPI training live; frozen-policy evaluation precompute registered
-1. Ownercap9500000/latestallocation9500000: verification2800000, exactgrade55360, final691200/paired1297400 MAIN1556; allfailedchargesretained, phaseguardsSTOP on exhaustion.
+1. Ownercap11000000/allocation11000000: original9500000 + restricted INACTIVE sumo_verification_k8=1500000 MAIN1643; verification2800000/exactgrade55360/final691200/paired1297400 retained; phaseguardsSTOP.
 2. A/B/R fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
 4. A: PPO shared team reward=-J, road speed deficit plus source waiting.
@@ -42,11 +42,11 @@
 41. Learning checks report team return/value/KL/gradient, beta, proposal routes/acceptance/O1-O4 counts.
 42. A48complete,B/R24endpoints; verifierCPU12 real5branch/livePASS retained; fixed-guide sourcebeta2/131CPU PASS, controllerbeta5/133PASS; count/safety/harm/learning guards active, report-only trust collapse cannot suppress verification.
 43. Recoverycap7500000: superseded811640,train2811600,checks432000,dev201600,final576000,Rtest115200,coldB28800,failedA14400; exact-plan-grades760000.
-44. Mechanics3600,calibration57600,discovery150200,pairedbranches1297400,reusecheck600; train2840400inclfailed-u4replacements; verification2800000/exactgrade55360; allocated9500000/free0.
+44. Mechanics3600,calibration57600,discovery138200,pairedbranches1297400,reusecheck600; train2852400 inclMAIN1651 tenfresh-ID DNS replacements12000; allfailedchargesretained; verification2800000/exactgrade55360 plusinactivek8phase1500000.
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.
 46. All failures/warmup/twins precharged/no refunds or automatic retries; af8b16e5 permits one qualified new-ID attempt per missing failed diagnostic branch, complete originals adopted, whole missing group charged inside discovery200000.
 47. A48complete; B24/R4/grader4nice19; MAIN0423 up to24 CPU-only precompute workers SCHED_IDLE/nice19, grade-queue priority/load<28/MemAvailable+RAMfree8GiB/disk2GiB gates; no retries.
-48. Recovery B4146203/R4146817/broker4145985/grader4146093 retained/sourceCPU118PASS; gpuA759743/incident1 admitted1793600890 via originalCPU26 eightgateRPC; other3workersretained, all4assigned; original18:07:02deadline retained.
+48. MAIN1651 additiveextension/sourceverifybeta9/153CPU PASS; B821013/R821014/broker821011/grader821012 restoredu3/14B4results; tenfresh-ID attempts, DNS-releaseSHA only/V5fatal; newCPUdeadlineNov5 23:59+08; GPU/finalcached-clock handoverpending.
 49. GPU CPU helpers disabled until separate frozen parity qualification; own PIDs only.
 50. Both seed guards, fresh-name exposure, immutable sources/cache/approval bindings before physics.
 51. No prohibited inputs/newenv/push; OWNER20:35 opaque v2archive+SHA256-gated literal source removal only; commit eachstep.

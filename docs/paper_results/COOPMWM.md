@@ -1,5 +1,29 @@
 # S-COOPMWM — live checks
 
+## MAIN16:51 DNS recovery — durable supervisors restarted 17:09:20 UTC+8
+- The transient DNS V4 STOP closed the ten remaining B-u4 attempts without a
+  result. Fourteen completed episodes are retained and adopted; ten replacement
+  attempts use fresh `warmdns1651_u004_B_*` IDs on the same registered TRAIN
+  worlds and original noise wave. Every original charge and receipt is retained.
+- Frozen `verifybeta9`: **153 CPU PASS**, zero skips, **36.388 s**, zero physics.
+  Live preflight restored u3 for both arms and checked the original binding SHAs.
+  The extension is a new `RESOURCE_EXTENSION_1651.json`; originals are unchanged.
+- SSH metadata transport now retries DNS/connection/reset/timeout/exit255 errors
+  at most six times over 300 s, rechecking owner/gate receipts before identical
+  delivery. Code/parity/physics faults remain fatal. Only the exact diagnosed
+  DNS-stop SHA is released; a fresh V5 STOP remains fatal.
+- Registered **12,000 sim-s** transfer: discovery150,200→138,200 and
+  train2,840,400→2,852,400. Latest ordered cap11,000,000 includes a separately
+  restricted **1,500,000** k8-verification phase, still inactive pending activation.
+- New detached owners at unix1793610560: **B821013/R821014/broker821011/grader821012**.
+  Effective verified guide beta=1. R waits for B-u4's final matching quota. Initial
+  logs are empty. The registration SSH timed out after remote completion; all
+  additive receipts were verified and adopted before launch, without repeating it.
+- New CPU runtime reads the extended deadline **2026-11-05 23:59 +08**. Existing
+  GPU processes and final coordinator still cache the original deadline and need
+  a qualified handover. Command mirror remains off pending its full trajectory/GPU
+  gate; learned search/k8 verification remain inactive. **B-u4–6 viability pending.**
+
 ## MAIN16:07 verified-guidance correction — durable boundary adoption
 - Warm memory, fast-path parity, MAPPO-u0 restarts, library and the original
   five-branch SUMO verification smoke are completed work and retained.
