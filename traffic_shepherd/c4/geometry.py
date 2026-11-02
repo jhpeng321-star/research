@@ -13,8 +13,10 @@ the merge-relative coordinate (merge zone 0..75.44 m, upstream negative, downstr
 """
 from __future__ import annotations
 
+import gzip
 import heapq
 from typing import Iterable
+from xml.etree import ElementTree
 
 #: lane_offsets_m of the frozen geometry (model s = OFFSETS[lane] + s_down).
 HERE_OFFSETS = (2645.67, 2644.22, 378.66)
@@ -91,3 +93,48 @@ class SlotPool:
 
     def slot_of(self, vid: str):
         return self.current.get(str(vid))
+
+
+#: The preserved merge network, relative to the research-dense data root
+#: (``planner.paths.research_dense_root``; the same file the campaign rewrite
+#: targets). Lane speeds are read from THIS file, never from code constants.
+NET_RELPATH = ("assets", "research", "highway_merge_shepherd_long", "osm.net.xml.gz")
+
+_LANE_SPEEDS_CACHE: dict[str, dict[int, float]] = {}
+
+
+def lane_allowed_speeds_mps(net_path=None) -> dict[int, float]:
+    """Model lane -> allowed speed (m/s), read from the preserved merge net.
+
+    The speeds are the net file's own per-lane ``speed`` values (mainline
+    31.29 m/s, ramp lane 22.22 m/s on the preserved network) keyed by the
+    LANE_TABLE model lane each SUMO lane feeds; a model lane fed by lanes of
+    differing speed takes the slowest (the binding one). The resolved table is
+    cached per net path, so repeated callers stay cheap and deterministic.
+    Raises ``OSError``/``FileNotFoundError`` when the net is unavailable or
+    incomplete; callers decide the fallback (this module has none: no hand-set
+    speed numbers live in code).
+    """
+    if net_path is None:
+        from ..planner.paths import research_dense_root
+        net_path = research_dense_root().joinpath(*NET_RELPATH)
+    key = str(net_path)
+    if key in _LANE_SPEEDS_CACHE:
+        return _LANE_SPEEDS_CACHE[key]
+    opener = gzip.open if key.endswith(".gz") else open
+    with opener(net_path, "rb") as f:
+        root = ElementTree.parse(f).getroot()
+    speed_of = {}
+    for edge in root.iter("edge"):
+        for lane in edge.findall("lane"):
+            lane_id = lane.get("id")
+            if lane_id is not None:
+                speed_of[lane_id] = float(lane.get("speed"))
+    out: dict[int, float] = {}
+    for (edge, index), (lane, _start) in LANE_TABLE.items():
+        speed = speed_of.get(f"{edge}_{index}")
+        if speed is None:
+            raise OSError(f"net {key} lacks LANE_TABLE lane {edge}_{index}")
+        out[lane] = min(out[lane], speed) if lane in out else speed
+    _LANE_SPEEDS_CACHE[key] = out
+    return out

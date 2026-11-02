@@ -186,11 +186,15 @@ def choose(branches, candidates):
     return 'rejected', None, 'no graded candidate beats policy continues'+missing
 
 
-def verify(snapshot, candidates, runner, charge, proposer='wm', workers=None, root=None):
+def verify(snapshot, candidates, runner, charge, proposer='wm', workers=None, root=None, members_t0=None):
     """Full verification of one decision. Returns a sealed receipt (written to root if given).
 
     charge(verification_id, branch_specs) must durably precharge ALL k+1 branches or raise
-    BudgetBlocked (then no physics runs and the group follows its policy)."""
+    BudgetBlocked (then no physics runs and the group follows its policy).
+    ``members_t0`` (NULL_DIAGNOSIS 8.3, from the collector's t0 state rows; optional) labels
+    each member with allowed_mps / headroom_mps2 / policy_raw_at_clip / leader gap-speed so
+    imitation builders can mask infeasible seconds; absent (None) keeps the exact legacy
+    receipt bytes."""
     started = time.time()
     specs = build_branches(snapshot, candidates, proposer)
     vid, t0 = specs[0]['verification_id'], specs[0]['window']['start_s']
@@ -202,6 +206,8 @@ def verify(snapshot, candidates, runner, charge, proposer='wm', workers=None, ro
                 predicted_saving=[c.get('saving_vs_policy', c.get('saving_vs_mappo')) for c in candidates],
                 branch_specs_sha256=[s['branch_sha256'] for s in specs],
                 sign='grade = J_policy - J_chosen; positive = chosen plan helped (veh-s)')
+    if members_t0 is not None:  # additive label fields only; legacy receipts lack the key
+        body['members_t0'] = members_t0
     if root is not None:
         path = Path(root)/'verifications'/f'{vid}.json'
         if path.exists():
@@ -439,6 +445,100 @@ def _state_sha(state):
     return h.hexdigest()
 
 
+# ---------------------------------------------------------------- actionable gate
+
+def issued_target(v_mps, raw, allowed, *, accel_min, accel_max, dt=None):
+    """The plant's issued slowDown target: exactly damping.direct_target's clip.
+
+    lo = max(accel_min, -v/dt), hi = min(accel_max, (allowed - v)/dt); None when
+    infeasible (lo > hi). Once v > allowed - accel_max every raw >= hi issues the
+    same target ``allowed`` — the registered eraser of NULL_DIAGNOSIS section 6.
+    """
+    from .feasible import CONTROL_DT_S, issued_target as _target
+    return _target(v_mps, raw, allowed, accel_min=accel_min, accel_max=accel_max,
+                   dt=CONTROL_DT_S if dt is None else dt)
+
+
+def _centre_profile(cand, bounds):
+    """The candidate's policy-centre plan profile (clip(P, bounds)), or None unknown.
+
+    build_plan stores ``profile = clip(P + perturbation, bounds)`` and
+    ``perturbation_profile = profile - P[:, :D]``, so the centre profile is
+    recoverable exactly (up to the stored 9-decimal rounding) without the
+    policy trajectory: clip(profile - perturbation_profile, bounds).
+    """
+    pert = cand.get('perturbation_profile')
+    if not pert or bounds is None:
+        return None
+    import numpy as np
+    profile = np.asarray(cand['profile'], float)
+    centre = profile-np.asarray(pert, float)
+    return np.clip(centre, float(bounds[0]), float(bounds[1]))
+
+
+def actionable_gate(candidates, rows, commands, sample, job, *, eps=None):
+    """Collector-side actionable gate before verification (NULL_DIAGNOSIS 8.1).
+
+    A candidate is dropped (inactionable) when EVERY member-second maps to the
+    same issued slowDown target as its policy-centre plan under the registered
+    chain semantics (inject clip + direct_target ceiling) — executing it cannot
+    change the world, so a 9-branch SUMO charge would buy nothing — or when a
+    member is not in ``commands`` (requests() would never emit it). Anything the
+    gate cannot evaluate (missing rows/allowed speeds/bounds/perturbation
+    profile) keeps the candidate: the gate only ever SKIPS a provable no-op,
+    never an unproven plan. Returns a dict:
+
+    - ``actionable``: candidates kept for verification (order preserved);
+    - ``inactionable``: dropped candidate ids (empty when the gate never bound);
+    - ``members_t0``: NULL_DIAGNOSIS 8.3 per-member t0 label fields, or None.
+    """
+    from .feasible import CONTROL_DT_S, GATE_EPS_MPS, allowed_speed_mps, member_t0_fields
+    eps = GATE_EPS_MPS if eps is None else float(eps)
+    bounds = job.get('accel_bounds') if isinstance(job, dict) else None
+    bounds = (float(bounds[0]), float(bounds[1])) if bounds else None
+    by_vid = {r['vid']: r for r in (rows or ())}
+    residuals = None
+    if isinstance(sample, dict):
+        context = sample.get('context') or {}
+        own = sample.get('own_action')
+        if context.get('members') and own:
+            residuals = {v: float(a[0]) for v, a in zip(context['members'], own)}
+    members = sorted({v for c in candidates for v in c['members']})
+    members_t0 = (member_t0_fields(list(by_vid.values()), commands, residuals, members, bounds)
+                  if rows and bounds else None)
+    dt = CONTROL_DT_S
+    actionable, inactionable = [], []
+    for cand in candidates:
+        centre = _centre_profile(cand, bounds)
+        if centre is None:               # unknown centre: never block an unevaluated plan
+            actionable.append(cand); continue
+        if any(vid not in commands for vid in cand['members']):
+            # a member requests() would never emit: the plan is not what it proposes
+            inactionable.append(cand['id']); continue
+        prof = cand['profile']
+        keep = False
+        for k, vid in enumerate(cand['members']):
+            row = by_vid.get(vid)
+            allowed = allowed_speed_mps(row)
+            if row is None or not allowed:   # unjudgeable: keep it
+                keep = True; break
+            v0 = float(row['v_mps'])
+            for t in range(int(cand['duration_s'])):
+                # crude single-step propagation of the member speed under the ceiling
+                v = min(allowed, max(0.0, v0+t*min(float(bounds[1]), allowed-v0)))
+                a = issued_target(v, prof[k][t], allowed, accel_min=bounds[0], accel_max=bounds[1], dt=dt)
+                b = issued_target(v, centre[k][t], allowed, accel_min=bounds[0], accel_max=bounds[1], dt=dt)
+                if a is None or b is None or abs(a-b) > eps:
+                    keep = True; break
+            if keep:
+                break
+        if keep:
+            actionable.append(cand)
+        else:
+            inactionable.append(cand['id'])
+    return dict(actionable=actionable, inactionable=inactionable, members_t0=members_t0)
+
+
 def verified_guide(guide, verifier, controller, prefixes, job, generator, k=TOP_K, random_proposer=None, log=None):
     """Wrap the live plan_client guide: BLOCKING verification at the decision moment.
 
@@ -489,7 +589,23 @@ def verified_guide(guide, verifier, controller, prefixes, job, generator, k=TOP_
             return proposal
         ended = (proposal.get('overlap_recheck') or {}).get('truncated_plan_ids') or []
         snap['truncate_on_accept'] = sorted(ended)   # committed plans an accepted start would truncate
-        r = verifier(snap, candidates, proposer)
+        # NULL_DIAGNOSIS 8.1: drop candidates that provably issue the same actuator
+        # targets as the policy centre (ceiling/jam-infeasible); if none remains,
+        # skip the SUMO verification entirely — no snapshot, no charge, the group
+        # follows its policy. The trust/pad draw above stays consumed exactly once,
+        # so the live CRN stream stays aligned with the branch protocol.
+        gate = actionable_gate(candidates, rows, commands, sample, job)
+        if gate['inactionable']:
+            b['verify_k']['inactionable'] = gate['inactionable']
+        candidates = gate['actionable']
+        if not candidates:
+            proposal.update(accepted=False, sumo_verified=False,
+                            reason='sumo_verify skipped: no actionable candidate '
+                                   '(ceiling/jam-infeasible group)')
+            b.update(proposal_accepted=False, rejection=proposal['reason'])
+            return proposal
+        r = verifier(snap, candidates, proposer,
+                     **({'members_t0': gate['members_t0']} if gate['members_t0'] is not None else {}))
         b['sumo_verification'] = dict(verification_id=r['verification_id'], status=r['status'],
                                       receipt_sha256=r['receipt_sha256'], chosen=r['chosen'],
                                       grade_veh_s=r['grade_veh_s'], J_policy_veh_s=r['J_policy_veh_s'],
@@ -535,8 +651,9 @@ def install(controller, job, prefixes, generator, runner=None, charge=None):
             ctx = proposal['verify_context']
             return random_candidates(ctx['group'], ctx['centre'], ctx['bounds'], ctx['regime'],
                                      int(digest(proposal['plan'])[:8], 16), k, ctx.get('duration_s'), proposal['plan'])
-    verifier = lambda snap, cands, proposer: verify(snap, cands, runner, charge, proposer,
-                                                    workers=cfg.get('workers'), root=root)
+    verifier = lambda snap, cands, proposer, members_t0=None: verify(snap, cands, runner, charge, proposer,
+                                                                     workers=cfg.get('workers'), root=root,
+                                                                     members_t0=members_t0)
     controller.guide = verified_guide(controller.guide, verifier, controller, prefixes, job, generator,
                                       k=k, random_proposer=rp)
     return controller

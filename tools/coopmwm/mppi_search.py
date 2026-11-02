@@ -283,15 +283,59 @@ def _to_canonical(per_second, duration, span, n):
     return np.stack([np.interp(canon, t, row, right=0. if span > duration else None) for row in per_second])
 
 
+def centre_feasibility(record, members, P, bounds, durations=None):
+    """Resolved actuator feasibility of the policy centre, or None (clamp inactive).
+
+    NULL_DIAGNOSIS 8.2: propagate the centre rollout speeds ``v_i(t)`` (pure
+    arithmetic, no SUMO) and derive the per-member-second actuator clip of
+    ``damping.direct_target`` — ``hi = min(bounds[1], (allowed-v)/dt)``,
+    ``lo = max(bounds[0], -v/dt)``. Armed ONLY from the request's state rows:
+    each member needs an allowed speed from its subscribed
+    ``allowed_speed_mps`` field or the geometry lane table, so records without
+    rows (and every pre-fix caller) keep the exact legacy search. The rollout
+    integrates the centre profile under the same clip, so the clamped centre is
+    exactly the issuable 'policy continues' profile.
+    """
+    rows = record.get('rows') if isinstance(record, dict) else None
+    if not rows:
+        return None
+    from .feasible import CONTROL_DT_S, resolve_allowed_mps
+    allowed = resolve_allowed_mps(rows, members)
+    if allowed is None:
+        return None
+    by_vid = {r['vid']: r for r in rows}
+    v0 = np.array([float(by_vid[v]['v_mps']) for v in members], float)
+    a = np.array([allowed[v] for v in members], float)
+    T = int(max(durations or (P.shape[1],)))
+    dt = CONTROL_DT_S
+    lo = np.empty((len(members), T)); hi = np.empty((len(members), T))
+    lo[:, 0] = np.maximum(bounds[0], -v0/dt)
+    hi[:, 0] = np.minimum(bounds[1], (a-v0)/dt)
+    centre = np.clip(P[:, :T], bounds[0], bounds[1])
+    v = np.empty((len(members), T))
+    v[:, 0] = v0
+    for t in range(1, T):
+        step = np.clip(centre[:, t-1], lo[:, t-1], hi[:, t-1])
+        v[:, t] = np.clip(v[:, t-1]+dt*step, 0., a)
+        lo[:, t] = np.maximum(bounds[0], -v[:, t]/dt)
+        hi[:, t] = np.minimum(bounds[1], (a-v[:, t])/dt)
+    return dict(members=list(members), allowed=a, v0=v0, v=v, lo=lo, hi=hi, dt=dt)
+
+
 def build_plan(group, policy_traj, delta, duration, bounds, origin, regime, tag='',
-               absolute=None, span_s=None, n_canon=None):
+               absolute=None, span_s=None, n_canon=None, feasibility=None):
     """Plan = policy trajectory + smooth perturbation, clipped to the plant bounds.
 
     ``delta`` is a canonical m x n_canon perturbation (or None when ``absolute`` gives
     an exact per-second m x D profile, used for the MAPPO seed). ``span_s``: the
     canonical knots cover [0, span_s] seconds from plan start (absolute frame,
     default REGISTERED max duration); ``span_s=duration`` gives a duration-
-    normalised frame.
+    normalised frame. ``feasibility`` (``centre_feasibility`` output, NULL_DIAGNOSIS
+    8.2) additionally clips the profile to the actuator ceiling/floor exactly as
+    ``damping.direct_target`` issues it; a candidate that only this clip turns into
+    the clamped policy centre on every member-second is marked ``policy_duplicate``
+    (it executes as 'policy continues' and is excluded from the top-k). None (the
+    default, or an unresolvable group) keeps the exact legacy plan bytes.
     """
     span = int(REGISTERED['max_duration_s'] if span_s is None else span_s)
     n_canon = canonical_knots() if n_canon is None else int(n_canon)
@@ -309,6 +353,14 @@ def build_plan(group, policy_traj, delta, duration, bounds, origin, regime, tag=
         raw = _as_traj(absolute, members)[:, :duration]; kt = knot_times(duration)
         knots = (raw-P[:, :duration])@_interp_matrix(np.arange(duration, dtype=float), kt).T
     profile = np.clip(raw, bounds[0], bounds[1])
+    duplicate = False
+    if feasibility is not None and list(feasibility['members']) == list(members):
+        lo, hi = feasibility['lo'][:, :duration], feasibility['hi'][:, :duration]
+        centre = np.clip(P[:, :duration], bounds[0], bounds[1])
+        centre = np.clip(centre, lo, hi)          # the issuable 'policy continues' profile
+        clamped = np.clip(profile, lo, hi)        # damping.direct_target's issued command
+        duplicate = bool((clamped == centre).all() and (clamped != profile).any())
+        profile = clamped
     effective = profile-P[:, :duration]
     p = dict(members=list(members), duration_s=int(duration), profile=_f(profile),
              knot_times_s=[round(float(t), 9) for t in kt], perturbation_knots=_f(knots),
@@ -316,6 +368,8 @@ def build_plan(group, policy_traj, delta, duration, bounds, origin, regime, tag=
              perturbation_canonical=_f(_to_canonical(effective, duration, span, n_canon)), canonical_span_s=span,
              origin=origin, regime=regime, family=PLAN_TYPE, group_id=group.get('id'))
     p['id'] = tag+'M'+_digest(p)[:16]
+    if duplicate:  # additive key only; plans identical to the pre-fix bytes lack it
+        p['policy_duplicate'] = True
     return p
 
 
@@ -556,8 +610,14 @@ def _span(cfg, durations, D):
     return durations[-1] if cfg['frame'] == 'absolute' else D
 
 
-def sample_unscored(group, policy_traj, bounds, regime, seed, covariance=None, config=None, duration_s=None):
-    """Arm R: one generic correlated perturbation of the policy, NOT scored by the WM."""
+def sample_unscored(group, policy_traj, bounds, regime, seed, covariance=None, config=None, duration_s=None,
+                    feasibility=None):
+    """Arm R: one generic correlated perturbation of the policy, NOT scored by the WM.
+
+    ``feasibility`` (NULL_DIAGNOSIS 8.2, see build_plan) clamps the profile to the
+    actuator ceiling/floor when the caller resolved the members' allowed speeds;
+    default None keeps the exact legacy draw bytes.
+    """
     cfg = dict(REGISTERED, **(config or {})); durations = allowed_durations(cfg['durations_s'], cfg['max_duration_s'])
     m = len(group['members']); rng = np.random.default_rng(seed)
     mu, cov, pd = _distribution(cfg, m, durations, covariance, regime, default_sigma(bounds))
@@ -568,7 +628,7 @@ def sample_unscored(group, policy_traj, bounds, regime, seed, covariance=None, c
         D=int(duration_s)
     nc = canonical_knots(durations[-1])
     return build_plan(group, policy_traj, z.reshape(m, nc), D, bounds, 'sampled', regime, 'R',
-                      span_s=_span(cfg, durations, D), n_canon=nc)
+                      span_s=_span(cfg, durations, D), n_canon=nc, feasibility=feasibility)
 
 
 # --------------------------------------------------------------------------- niches
@@ -660,6 +720,7 @@ def _niche_search(record, group, policy_traj, bounds, evaluate, regime, cfg,
     P = _as_traj(policy_traj, group['members'])
     if P.shape[1] < durations[-1]:
         raise ValueError('policy trajectory shorter than the maximum plan duration')
+    feas = centre_feasibility(record, group['members'], P, bounds, durations)
     seed = _seed_from(record, group) if seed is None else int(seed)
     children = np.random.SeedSequence(seed).spawn(1+M)      # [choice, niche streams...]
     choice_rng = np.random.default_rng(children[0])
@@ -696,7 +757,7 @@ def _niche_search(record, group, policy_traj, bounds, evaluate, regime, cfg,
             if it == 0:
                 for j, (z, D, origin, absolute) in enumerate(seeds):
                     p = build_plan(group, P, z, D, bounds, origin, regime, f'i{it}n{i}s{j}-',
-                                   absolute, _span(cfg, durations, D), nc)
+                                   absolute, _span(cfg, durations, D), nc, feasibility=feas)
                     cands.append(p); niche_of[p['id']] = i
                     zs[p['id']] = np.asarray(p['perturbation_canonical'], float).reshape(-1)
             mine = len(cands)-start_i
@@ -705,7 +766,8 @@ def _niche_search(record, group, policy_traj, bounds, evaluate, regime, cfg,
                 z = st['mu']+L@rng.standard_normal(st['mu'].size)
                 D = int(durations[rng.choice(len(durations), p=st['pd'])])
                 p = build_plan(group, P, z.reshape(m, nc), D, bounds, 'sampled', regime,
-                               f'i{it}n{i}s{mine}-', span_s=_span(cfg, durations, D), n_canon=nc)
+                               f'i{it}n{i}s{mine}-', span_s=_span(cfg, durations, D), n_canon=nc,
+                               feasibility=feas)
                 cands.append(p); niche_of[p['id']] = i
                 zs[p['id']] = z
                 mine += 1
@@ -772,10 +834,19 @@ def _niche_search(record, group, policy_traj, bounds, evaluate, regime, cfg,
     scores = evaluate(record, base+finalists, cfg['final_K'], H_final)
     futures += (len(finalists)+len(base))*cfg['final_K']
     costs = _costs(scores, ['policy', 'MAPPO']+[p['id'] for p in finalists], cfg['final_K'])
-    eligible = [(p['id'], float(costs[p['id']].mean()), p) for p in finalists
-                if float((costs['MAPPO']-costs[p['id']]).mean()) > 0]
-    t = thompson_topk(finalists, costs, cfg['top_k'], choice_rng, cfg['thompson_bootstraps'],
-                      selected=_diversified_order(eligible, niche_of, cfg['top_k']))
+    # NULL_DIAGNOSIS 8.2: clipped duplicates of the policy centre execute as
+    # 'policy continues' and are excluded from the top-k shortlist (they can
+    # never beat policy in SUMO). Absent flags => the identical legacy shortlist.
+    choosable = [p for p in finalists if not p.get('policy_duplicate')]
+    if choosable:
+        eligible = [(p['id'], float(costs[p['id']].mean()), p) for p in choosable
+                    if float((costs['MAPPO']-costs[p['id']]).mean()) > 0]
+        t = thompson_topk(finalists, costs, cfg['top_k'], choice_rng, cfg['thompson_bootstraps'],
+                          selected=_diversified_order(eligible, niche_of, cfg['top_k']))
+    else:
+        t = dict(accepted=False, reason='no actionable finalist: every finalist equals the '
+                                        'clamped policy centre (ceiling-infeasible group)',
+                 candidates=[])
     byid = {p['id']: p for p in finalists}
     out = dict(accepted=t['accepted'], regime=regime, group=dict((k, group[k]) for k in ('id', 'members', 'lanes', 'spread_m', 'leader_s_m')),
                descriptor=desc, seed=seed, config={k: (list(v) if isinstance(v, tuple) else v) for k, v in cfg.items()},
@@ -839,6 +910,7 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
     P = _as_traj(policy_traj, group['members'])
     if P.shape[1] < durations[-1]:
         raise ValueError('policy trajectory shorter than the maximum plan duration')
+    feas = centre_feasibility(record, group['members'], P, bounds, durations)
     seed = _seed_from(record, group) if seed is None else int(seed)
     search_rng, choice_rng = (np.random.default_rng(s) for s in np.random.SeedSequence(seed).spawn(2))
     nc = canonical_knots(durations[-1])
@@ -868,14 +940,15 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
         if it == 0:
             for j, (z, D, origin, absolute) in enumerate(seeds):
                 p = build_plan(group, P, z, D, bounds, origin, regime, f'i{it}s{j}-', absolute,
-                               _span(cfg, durations, D), nc)
+                               _span(cfg, durations, D), nc, feasibility=feas)
                 cands.append(p); zs[p['id']] = np.asarray(p['perturbation_canonical'], float).reshape(-1)
         L = _sampler(cov)
         while len(cands) < sc['population']:
             z = mu+L@search_rng.standard_normal(mu.size)
             D = int(durations[search_rng.choice(len(durations), p=pd)])
             p = build_plan(group, P, z.reshape(m, nc), D, bounds, 'sampled', regime,
-                           f'i{it}s{len(cands)}-', span_s=_span(cfg, durations, D), n_canon=nc)
+                           f'i{it}s{len(cands)}-', span_s=_span(cfg, durations, D), n_canon=nc,
+                           feasibility=feas)
             cands.append(p); zs[p['id']] = z
         scores = evaluate(record, base+cands, cfg['screen_K'], H_screen)
         futures += (len(cands)+len(base))*cfg['screen_K']
@@ -906,7 +979,16 @@ def search(record, group, policy_traj, bounds, evaluate, regime, mappo_traj=None
     scores = evaluate(record, base+finalists, cfg['final_K'], H_final)
     futures += (len(finalists)+len(base))*cfg['final_K']
     costs = _costs(scores, ['policy', 'MAPPO']+[p['id'] for p in finalists], cfg['final_K'])
-    t = thompson_topk(finalists, costs, cfg['top_k'], choice_rng, cfg['thompson_bootstraps'])
+    # NULL_DIAGNOSIS 8.2: clipped duplicates of the policy centre execute as
+    # 'policy continues' and are excluded from the top-k (they can never beat
+    # policy in SUMO). Without the flag this is the identical legacy call.
+    choosable = [p for p in finalists if not p.get('policy_duplicate')]
+    if choosable:
+        t = thompson_topk(choosable, costs, cfg['top_k'], choice_rng, cfg['thompson_bootstraps'])
+    else:
+        t = dict(accepted=False, reason='no actionable finalist: every finalist equals the '
+                                        'clamped policy centre (ceiling-infeasible group)',
+                 candidates=[])
     byid = {p['id']: p for p in finalists}
     out = dict(accepted=t['accepted'], regime=regime, group=dict((k, group[k]) for k in ('id', 'members', 'lanes', 'spread_m', 'leader_s_m')),
                descriptor=desc, seed=seed, config={k: (list(v) if isinstance(v, tuple) else v) for k, v in cfg.items()},
