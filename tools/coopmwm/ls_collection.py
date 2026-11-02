@@ -83,6 +83,19 @@ def envelope_order(envelope):
     return envelope['time_s'],envelope['group_index'],envelope['world_id'],envelope['record']['state_id']
 
 
+def queue_metadata(path):
+    """Keep only the index in RAM, never thousands of full histories/policies."""
+    e=json.loads(gzip.decompress(Path(path).read_bytes()))
+    return dict(path=str(path),world_id=e['world_id'],time_s=e['time_s'],
+        group_index=e['group_index'],episode_path=e['episode_path'],key=e['record']['state_id'])
+
+
+def coverage_order(e,counts):
+    # New worlds first. Then middle/late states, with no outcome-based ordering.
+    n=counts.get(e['world_id'],0);target=(300,600,900)[min(n,2)]
+    return n,abs(e['time_s']-target),e['group_index'],e['world_id'],e['key']
+
+
 def label(root,envelope,response,config):
     from .sumo_verify import verify,SubprocessBranchRunner
     key=envelope['record']['state_id'];root=Path(root)
@@ -126,11 +139,13 @@ def supervise(root):
     from .accel_storage import read,reserve,ledger
     from .warm_protocol import install_accounting
     root=Path(root);config=json.loads((root/'LS_COLLECT_BINDING.json').read_text())
+    if (root/'LS_RECOVERY_CONFIG.json').exists():
+        config.update(json.loads((root/'LS_RECOVERY_CONFIG.json').read_text()))
     main=Path(config['run_root']);install_accounting(main,config['budget'])
     with (root/'SUPERVISOR.claim').open('a') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         signal.signal(signal.SIGHUP,signal.SIG_IGN)
-        immutable(root/'OWNER.json',dict(pid=os.getpid(),start_ticks=Path('/proc/self/stat').read_text().split()[21],
+        immutable(root/('OWNER'+config.get('receipt_suffix','')+'.json'),dict(pid=os.getpid(),start_ticks=Path('/proc/self/stat').read_text().split()[21],
             boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),unix=time.time()))
         from .accel_learner import load
         from .policy_wm import actor_state
@@ -147,7 +162,7 @@ def supervise(root):
         existing={c['id'] for c in ledger(main)}
         if not any(j['id'] in existing for j in jobs):reserve(main,jobs,'train')
         else:assert all(j['id'] in existing for j in jobs),'partial collection episode charge'
-        for n in ('admissions','labels','label_charges','pending','requests','proposer_receipts','snapshots'):(root/n).mkdir(exist_ok=True)
+        for n in ('admissions','labels','label_charges','pending','requests','proposer_receipts','snapshots','label_failures'):(root/n).mkdir(exist_ok=True)
         for n in ('requests','responses','quota_admissions'):(main/n).mkdir(exist_ok=True)
         ctx=multiprocessing.get_context('spawn')
         with futures.ProcessPoolExecutor(max_workers=24,mp_context=ctx) as pool, futures.ThreadPoolExecutor(max_workers=2) as grades:
@@ -165,38 +180,62 @@ def supervise(root):
                 for p in (root/'pending').glob('*.json.gz'):
                     if p.stem in seen:continue
                     seen.add(p.stem)
-                    e=json.loads(gzip.decompress(p.read_bytes()));pending[e['record']['state_id']]=e
+                    e=queue_metadata(p);pending[e['key']]=e
                 for key,f in list(grading.items()):
                     if f.done():
-                        f.result();del grading[key]
+                        try:f.result()
+                        except Exception as error:
+                            import traceback
+                            immutable(root/'label_failures'/(key+'.json'),dict(error=repr(error),
+                                traceback=traceback.format_exc(),unix=time.time(),excluded=True,charges_retained=True))
+                            print('ALERT label_failed '+key+' '+repr(error),flush=True)
+                        del grading[key]
                 admitted={p.stem for p in (root/'admissions').glob('*.json')}
                 answered={k for k in admitted if (main/'responses'/(k+'.json')).exists()}
                 # The GPU queue stays bounded. Episodes never consult this queue.
                 inflight=admitted-answered
                 if len(admitted)<config['max_searches'] and len(inflight)<8:
-                    todo=sorted((e for k,e in pending.items() if k not in admitted and
-                        (Path(e['episode_path'])/'RESULT.json').exists()),key=envelope_order)
-                    for e in todo[:min(8-len(inflight),config['max_searches']-len(admitted))]:
-                        r=e['record'];key=r['state_id'];charge=9*min(1200,r['time_s']+420)
-                        reserve(main,[dict(id='lslabel_'+key,sim_s=charge)],'sumo_verification')
+                    counts={}
+                    for k in admitted:
+                        w=pending[k]['world_id'];counts[w]=counts.get(w,0)+1
+                    todo=[e for k,e in pending.items() if k not in admitted and
+                        (Path(e['episode_path'])/'RESULT.json').exists()]
+                    for _ in range(min(8-len(inflight),config['max_searches']-len(admitted),len(todo))):
+                        e=min(todo,key=lambda e:coverage_order(e,counts));todo.remove(e)
+                        counts[e['world_id']]=counts.get(e['world_id'],0)+1
+                        envelope=json.loads(gzip.decompress(Path(e['path']).read_bytes()))
+                        r=envelope['record'];key=r['state_id'];charge=9*min(1200,r['time_s']+420)
+                        try:reserve(main,[dict(id='lslabel_'+key,sim_s=charge)],'sumo_verification')
+                        except Exception as error:
+                            immutable(root/'BUDGET_ALERT.json',dict(error=repr(error),key=key,unix=time.time(),
+                                phase='sumo_verification',charged_sim_s=charge))
+                            print('ALERT budget_blocked '+repr(error),flush=True);raise
                         immutable(root/'admissions'/(key+'.json'),dict(key=key,charged_sim_s=charge,unix=time.time()))
                         immutable(main/'quota_admissions'/(key+'.json'),dict(blocking=True,collection=True,unix=time.time()))
                         immutable(root/'requests'/(key+'.json'),r)
                         immutable(main/'requests'/(key+'.json'),r)
                 for key in sorted(answered):
-                    if key in grading or (root/'labels'/(key+'.json')).exists():continue
+                    if key in grading or (root/'labels'/(key+'.json')).exists() or (root/'label_failures'/(key+'.json')).exists():continue
                     response=read(main/'responses'/(key+'.json'))
-                    if response.get('query_error'):raise ValueError('collection query error: '+str(response['query_error']))
+                    if response.get('query_error'):
+                        immutable(root/'label_failures'/(key+'.json'),dict(error=response['query_error'],
+                            unix=time.time(),excluded=True,charges_retained=True))
+                        print('ALERT query_code_declined '+key,flush=True);continue
                     receipt=response.get('proposer_receipt')
                     if receipt is None:raise ValueError('collection response has no full-pool receipt')
                     immutable(root/'proposer_receipts'/(key+'.json'),receipt)
-                    if len(grading)<2:grading[key]=grades.submit(label,root,pending[key],response,config)
+                    if len(grading)<2:
+                        envelope=json.loads(gzip.decompress(Path(pending[key]['path']).read_bytes()))
+                        grading[key]=grades.submit(label,root,envelope,response,config)
                 now=time.time()
                 if now-last_status>=30:
                     labels=[json.loads(p.read_text()) for p in (root/'labels').glob('*.json')]
                     v=dict(unix=now,start_unix=started,episodes_completed=sum(f.done() for f in episodes)+len(jobs)-len(episodes),
                         snapshot_queries=len(pending),searches_requested=len(admitted),searches_finished=len(answered),
-                        worlds=sorted({pending[k]['world_id'] for k in answered}),verified_lists=len(labels),
+                        worlds=sorted({pending[k]['world_id'] for k in answered}),
+                        admitted_worlds=sorted({pending[k]['world_id'] for k in admitted}),
+                        episode_worlds=sorted(w['seed'] for w in config['worlds'] if (main/'jobs'/f'lscollect1_B3_{w["seed"]}'/'RESULT.json').exists()),
+                        verified_lists=len(labels),label_failures=len(list((root/'label_failures').glob('*.json'))),
                         verification_statuses=[x['verification']['status'] for x in labels],grading_inflight=len(grading),
                         charged_collection_sim_s=sum(c['sim_s'] for c in ledger(main) if c['id'].startswith(('lscollect1_','lslabel_'))),
                         budget_capacity_searches=config['max_searches'],training_paused=True,mirror_active=False)

@@ -1,5 +1,19 @@
 # S-COOPMWM continuation — MAIN19:12 pause confirmed
 
+FRESH RESUME through ALL485 prompt lines (latest MAIN19:56): B/R remainu3,
+NOtrainingresume. Adopted 341e9417 + uncommitted work. LS-COLLECT episodes
+72/72complete,14534snapshots; NEVERreplay. Original supervisor1217384 exited
+without failure receipt (full-history queue likely memory pressure, not proven).
+Allfour LS GPU handovers exited AFTER draining/TERM of originals, on empty-argv
+exit race; original receipts/pools kept. New immutable lsrecoverycpu1 qualifies
+205CPU PASS/0skips42.859s/zeroSUMO. Includes RAM-light queue metadata, all72-world
+rotation early/middle/late, per-label failure isolation, unfilteredtop8 labels
+with unchanged8finalWMcalls, empty-argv exit regression, strict no claim replay.
+NEXT register/deploy recovery, FOURfresh startup gates + FOURsource-adopted each,
+collection-only broker, supervisor ADOPTS72results/8precharged requests. No new
+episode physics, no training, no mirror/learned activation. Latest cap11900000
+has restricted1500000k8training/900000interim; LS uses existing verification.
+
 LS-COLLECT REGISTERED/BINDING before physics: edacc2b85b04b8c122c5827077be940e6582fe021f18c4b6094b7df507fac7aa.
 Frozen source /home/ubuntu/coopmwm20261102_lsreleasecpu2,201CPU/PASS0skips42.334s.
 Hardening cherry-pick fd8b2ab5 includes MAIN1854 breadth-first + legacy withdrawal
