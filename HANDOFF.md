@@ -1,9 +1,10 @@
 # S-RB2-INT — round 2 active, 2026-11-01 ~12:00 +08
 
-## RECOVERED Nov3 01:23 +08 — HOLD; saved report verified unchanged
+## RECOVERED Nov3 02:12 +08 — HOLD; saved report verified unchanged
 
 Fresh-session authority and direct ownership receipts:
-`docs/rb2int/RECOVERY_20261103.md` and its LOCAL/GPUA/GPUR JSON files.
+`docs/rb2int/RECOVERY_20261103_0209.md` and its LOCAL/GPUA/GPUR JSON files
+(direct ownership audit committed `f738c056`).
 
 - No explicit MAIN `S-RB2-INT RESUME` release found. Both local publication owners
   remain EXITED INCOMPLETE. No replacement collector, publisher or dispatch.
@@ -11,9 +12,10 @@ Fresh-session authority and direct ownership receipts:
   all hold-time children collected. Zero active INT evaluations on either GPU.
   gpuA514854 is still its exact original command/source/incarnation in stateT;
   the other three capped/late owners remain absent. No process signals.
-- nvidia-smi snapshots: gpuA97% utilization/100MiB free; gpuR81%/45MiB free.
+- nvidia-smi snapshots: gpuA100% utilization/12,390MiB free;
+  gpuR79%/8,215MiB free.
   The admission hold and Nov2 resource priority remain controlling.
-- Report hash matched the Nov2 verified publication before this status refresh;
+- Report text matched saved commit `e966b25f` before this status refresh;
   scientific sections are unchanged. Reserved8 and ten-world/five-replicated-cell
   interims retained without rescoring; replicated
   v5 delay CRPS is worse at120/300/600s. Full gate/switching NOT ESTABLISHED.
