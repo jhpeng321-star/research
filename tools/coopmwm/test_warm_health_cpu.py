@@ -8,6 +8,20 @@ from . import warm_health as h
 
 
 class HealthCPU(unittest.TestCase):
+    def test_matching_release_is_sha_and_authority_bound_and_new_stop_remains_fatal(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            r=Path(tmp)
+            write(r/'WARM_GUIDED_STOP_V3.json',dict(error="AssertionError('R count/regime/group-size/duration gate')"))
+            with self.assertRaises(ValueError):h.assert_running(r,'R')
+            (r/'AUTHORITY.md').write_text('matching-amendment')
+            write(r/'MATCH_GUIDED_RELEASE.json',dict(original_stop_sha256=sha(r/'WARM_GUIDED_STOP_V3.json'),amendment_sha256='matching-amendment'))
+            h.assert_running(r,'R')
+            (r/'AUTHORITY.md').write_text('unrelated')
+            with self.assertRaises(ValueError):h.assert_running(r,'R')
+            (r/'AUTHORITY.md').write_text('matching-amendment')
+            write(r/'WARM_GUIDED_STOP_V4.json',dict(error='fresh fault'))
+            with self.assertRaises(ValueError):h.assert_running(r,'R')
+
     def test_transport_release_only_exact_registered_original_stop(self):
         with tempfile.TemporaryDirectory() as tmp:
             r=Path(tmp);write(r/'STOP.json',dict(error='Connection closed by 1.15.42.207 port 22\n',source='owned warm bridge; no automatic retry'))

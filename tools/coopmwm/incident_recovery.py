@@ -43,7 +43,8 @@ def retired_key(record,job_ids):
 
 
 def binding(root):
-    r=Path(root);b=json.loads((r/'INCIDENT_RECOVERY_BINDING.json').read_text())
+    r=Path(root);p=r/'MATCH_RECOVERY_BINDING.json'
+    b=json.loads((p if p.exists() else r/'INCIDENT_RECOVERY_BINDING.json').read_text())
     assert b['amendment_sha256'] in (r/'AUTHORITY.md').read_text()
     assert b['cpu']['pass_'] and b['cpu']['skips']==b['cpu']['sim_s']==0
     s=Path(b['source_root']);assert Path(__file__).resolve()==s/'pytools/tools/coopmwm/incident_recovery.py'
@@ -80,12 +81,16 @@ def install(root,arm=None):
             p=r/'jobs'/f'warm_u{resume+1:03}_{a}_{w["seed"]}'
             assert (p/'RESULT.json').exists() or not (p/'CLAIM.json').exists(),'never retry attempted physics'
         # Restore completed updates using their original schedules, not replacement wave.
-        history=lambda u:copy.deepcopy(previous['repair_plan']['worlds']) if u==1 else batch_worlds(u)
+        def history(u):
+            if u==1:return copy.deepcopy(previous['repair_plan']['worlds'])
+            old=b.get('history_plans',{}).get(a,{})
+            return copy.deepcopy(old[str(u)]) if str(u) in old else batch_worlds(u)
         progress=restore_progress(r,a,resume,history,wr.SEED)
         result.update(budget=b['budget'],awr=json.loads((r/'AWR_BINDING.json').read_text())['config'],
-            resume_update=resume,resume_progress=progress,runtime_receipt_suffix='_I1',
+            resume_update=resume,resume_progress=progress,runtime_receipt_suffix=b.get('receipt_suffix','_I1'),
             workers=24 if a=='B' else 4,quota_aware_admission=True,parallel_group_queries=a=='B',
             precharged_unattempted=b['plans'][a]['precharged_unattempted'])
+        if a in b.get('stop_after_update',{}):result['stop_after_update']=b['stop_after_update'][a]
         return result
     wr.verify=verify
     return wr,b
@@ -99,7 +104,7 @@ def run(root,component):
         return supervise(root,4)
     if component=='broker':
         from .capacity_broker import run as broker
-        return broker(root,root/'INCIDENT_BROKER_CONFIG.json')
+        return broker(root,root/('MATCH_BROKER_CONFIG.json' if (root/'MATCH_RECOVERY_BINDING.json').exists() else 'INCIDENT_BROKER_CONFIG.json'))
     raise ValueError(component)
 
 

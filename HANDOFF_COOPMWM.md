@@ -1,5 +1,21 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+MAIN1447 continuation: full332linebrief read, HEADadc365df retained. A48/B3/R1;
+ALL24replacementRu2RESULTScomplete, neverrerun. ExactmatchingassertionV3 diagnosed;
+registered d54fbc440e931a9eec1e192e98fc1c4dab8d69d69fa634045fd41d72641c2967.
+Frozen matchcpu1:125CPU/PASS0skips21.715s/zeroSUMO-GPU. Rbest-effort same-regime,
+size+-1/stableticket; preserve ticketduration; report allstratumshortfalls/excess.
+MATCHbinding/release unix1793602691 SHA-scopedONLYmatchingV3; freshfaultsV4fatal.
+Restoredverified-exited grader544875/start61697761,broker545008/start61699603,
+R545912/start61700676(cpuQbootb8bc1fcb), sourcesmatchcpu1. FirstlogsEMPTY/noV4.
+Rresumesu1adopting24u2results/Adam/RNG, runsTHROUGHu3thenholdsforcommonu4switch.
+B4146203naturallyEXITonV3at14:57:15; NOsignalsent (haltpreflightfoundabsent).
+B3checkpointretained/B4all24prechargedZEROclaims; DO NOTrerunorrefundprecharges.
+Disknow3404877824bytesafterMAINrelayarchive; archive/deletionsNOTperformedhere.
+Latestcap9.5M supersedes6M; old7.02884Mallocationretainedpendingverifierphasequote.
+Next: realverificationSMOKE/commonu4activation; finalA24/B24/R24hookmigration.
+NeverduplicateMATCHdispatches/4GPUworkers/finalopaqueowners. NoVERIFICATIONLIVEclaim.
+
 MAIN1424 recovery: full328line brief read. gpuA759743/start896453815 retained,
 all8startupgatesEXACT0 alreadycomplete; doNOTrerun. Actualfault was restricted
 warm_rpc exposingonly6receipts. ExistingCPU26-qualified hotadd_rpc wrapper copied

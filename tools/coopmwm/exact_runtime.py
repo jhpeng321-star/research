@@ -30,7 +30,8 @@ def enqueue(root,b,ep,u,arm,beta):
 
 
 def assert_live(root):
-    p=Path(root)/'INCIDENT_GRADER_DISPATCH.json'
+    p=Path(root)/'MATCH_GRADER_DISPATCH.json'
+    if not p.exists():p=Path(root)/'INCIDENT_GRADER_DISPATCH.json'
     if not p.exists():p=Path(root)/'EXACT_GRADER_DISPATCH_V2.json'
     d=read(p if p.exists() else Path(root)/'EXACT_GRADER_DISPATCH.json')
     assert Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']
@@ -88,7 +89,8 @@ def supervise(root,workers=8):
         for r in receipts:
             if r['status'] in ('failed','stopped') or (r['status']=='graded' and not r['noise'].get('crn_verified_t0')):
                 immutable(q.root/'GRADER_STOP.json',dict(grade_id=r['grade_id'],status=r['status'],reason=r.get('reason'),no_imputation=True))
-                target=root/('WARM_GUIDED_STOP_V3.json' if (root/'INCIDENT_GUIDED_RELEASE.json').exists() else
+                target=root/('WARM_GUIDED_STOP_V4.json' if (root/'MATCH_GUIDED_RELEASE.json').exists() else
+                    'WARM_GUIDED_STOP_V3.json' if (root/'INCIDENT_GUIDED_RELEASE.json').exists() else
                     'WARM_GUIDED_STOP_V2.json' if (root/'MAIN0508_GUIDED_RELEASE.json').exists() else 'WARM_GUIDED_STOP.json')
                 immutable(target,dict(source='exact-grade engineering fault',grade_id=r['grade_id']))
                 return

@@ -64,8 +64,8 @@ def guide(job,generator):
             with (match/'MATCH.claim').open('a') as lock:
                 fcntl.flock(lock,fcntl.LOCK_EX)
                 used=used_tickets(match)
-                available=[t for t in quota['tickets'] if t['regime']==traffic and t['id'] not in used]
-                chosen_group=next((g for g in groups if any(t['group_size']==g['size'] for t in available)),None)
+                from .r_matching import nearest
+                chosen_group,_=nearest(groups,quota['tickets'],used,traffic)
                 remaining=chosen_group is not None
                 if remaining:members=chosen_group['members']
             p=quota['sampling'][traffic] if remaining else 0.
@@ -105,7 +105,8 @@ def guide(job,generator):
             with (match/'MATCH.claim').open('a') as lock:
                 fcntl.flock(lock,fcntl.LOCK_EX)
                 used=used_tickets(match)
-                selected_ticket=next((t for t in quota['tickets'] if t['regime']==traffic and t['group_size']==len(members) and t['id'] not in used),None)
+                from .r_matching import nearest
+                _,selected_ticket=nearest([chosen_group],quota['tickets'],used,traffic)
                 if selected_ticket is not None:
                     write(match/(r['state_id']+'_START.json'),dict(ticket=selected_ticket['id']))
             if selected_ticket is None:

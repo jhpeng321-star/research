@@ -27,7 +27,15 @@ def assert_running(root,arm):
     root=Path(root)
     if active_stop(root):raise ValueError('durable warm STOP')
     if arm in ('B','R'):
-        if (root/'WARM_GUIDED_STOP_V3.json').exists():raise ValueError('new durable guided engineering STOP')
+        if (root/'WARM_GUIDED_STOP_V4.json').exists():raise ValueError('new durable guided engineering STOP')
+        p3=root/'WARM_GUIDED_STOP_V3.json'
+        if p3.exists():
+            release=root/'MATCH_GUIDED_RELEASE.json'
+            v=read(release) if release.exists() else {}
+            if not (v.get('original_stop_sha256')==sha(p3)
+                and read(p3).get('error')=="AssertionError('R count/regime/group-size/duration gate')"
+                and v.get('amendment_sha256','UNREGISTERED') in (root/'AUTHORITY.md').read_text()):
+                raise ValueError('new durable guided engineering STOP')
         p2=root/'WARM_GUIDED_STOP_V2.json'
         if p2.exists():
             release=root/'INCIDENT_GUIDED_RELEASE.json'

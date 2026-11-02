@@ -1,5 +1,26 @@
 # S-COOPMWM — live checks
 
+## MAIN14:47 recovery — completed R episodes adopted; matching is best effort
+- Frozen `matchcpu1`: **125 CPU PASS**, zero skips, **21.715 s**, zero SUMO/GPU
+  inference. Amendment `d54fbc440e931a9eec1e192e98fc1c4dab8d69d69fa634045fd41d72641c2967`
+  registered before continuation.
+- All **24 R-u2 replacement episodes** completed before the assertion. They are
+  adopted with the original R-u1 optimizer/RNG; no completed episode is rerun.
+- Matching now prefers the same regime and nearest eligible group size within
+  ±1, retains the ticket duration, and records missing/extra strata explicitly.
+  A shortfall cannot stop the update. R remains an unscored random proposer.
+- Exact SHA/authority release covers only the diagnosed V3 matching assertion;
+  fresh V4 faults and all health pauses remain fatal. Original receipts retained.
+- Restored detached cpuQ owners: grader **544875**, broker **545008**, R **545912**.
+  First logs are empty and no fresh STOP at unix1793602747. R resumes through u3
+  to reach the common u4 verification boundary. B remains at durable u3.
+- B's old supervisor naturally exited on V3 at **14:57:15 UTC+8**. Its 24 B-u4
+  jobs have no claims and retain their existing precharges. No signal was sent.
+- Disk recovered to **3,404,877,824 bytes** after MAIN's relay archive; the
+  existing 2 GiB guard is retained. This continuation performed no archive deletion.
+- **Real verification smoke and matched activation remain pending.** Latest
+  owner cap is 9.5M sim-s; verification-phase allocation still needs registration.
+
 ## MAIN14:24 recovery — both GPUs serving all four slots
 - At **14:28:10 UTC+8**, the existing gpuA replacement **759743** was admitted
   as `gpuA@incident1`. All eight startup gates were already **EXACT0**.

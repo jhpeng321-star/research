@@ -88,7 +88,7 @@ def run_arm(root,arm):
     elif 'resume_update' in b:
         resume=b['resume_update']
         policy,opt,rng,payload=load(root/f'{arm}_checkpoint_{resume:03}.pt');assert payload['update']==resume
-        first,last=resume+1,budget()['updates'][arm]
+        first,last=resume+1,min(budget()['updates'][arm],b.get('stop_after_update',budget()['updates'][arm]))
     else:
         policy=Policy();opt=torch.optim.Adam(policy.parameters(),lr=3e-4)
         rng=torch.Generator().manual_seed(SEED);first,last=1,budget()['updates'][arm]
@@ -127,12 +127,11 @@ def run_arm(root,arm):
             if arm=='B' and routes['executed']<b['N_exec']:
                 from .quota_admission import first_update_deviation
                 deviation=first_update_deviation(root,arm,u,routes['executed'],b['N_exec'])
+            matching=None
             if arm=='R':
+                from .r_matching import report
                 quota=read(root/f'B_RANDOM_QUOTA_{u:03}.json')
-                for regime in ('merge-dense','ordinary'):
-                    expected=sorted((t['group_size'],t['duration_s']) for t in quota['tickets'] if t['regime']==regime)
-                    actual=sorted((t['group_size'],t['duration_s']) for t in routes['durations'] if t['regime']==regime)
-                    assert actual==expected,'R count/regime/group-size/duration gate'
+                matching=report(quota['tickets'],routes['durations'])
             ev=evidence(eps);running+=ev
             exact_receipts=[];weights=None;pairs=[]
             if arm in ('B','R'):
@@ -178,7 +177,7 @@ def run_arm(root,arm):
                 wall_s=elapsed,eta_final_hours=(budget()['updates'][arm]-u)*elapsed/3600,
                 gpu_busy=gpu_busy,
                 exact_imitation=weights,grading_lag=grade_lag,
-                quota_deviation=deviation,
+                quota_deviation=deviation,random_matching=matching,
                 concurrently_active_plans=max(s.get('simultaneously_active_plans',0) for e in eps for s in e['steps']),
                 overlap_rechecks=[s['proposal']['overlap_recheck'] for e in eps for s in e['steps']
                     if s.get('proposal') and s['proposal'].get('overlap_recheck')],
@@ -199,11 +198,12 @@ def run_arm(root,arm):
         diagnostics.shutdown(wait=True)
         write(root/f'WARM_{arm}_PAUSED.json',dict(timestamp_utc=timestamp(),update=last,
             full_endpoint=budget()['updates'][arm],charged_sim_s=charged(root),
-            reason='fixed registered endpoint complete; final evaluation waits for A/B48'))
+            reason='registered checkpoint boundary complete; final evaluation waits for fixed primary endpoints'))
     except BaseException as error:
         write(root/f'WARM_{arm}_FAILED{suffix}.json',dict(timestamp_utc=timestamp(),error=repr(error)))
         if not isinstance(error,HealthPause):
-            guided_stop=('WARM_GUIDED_STOP_V3.json' if (root/'INCIDENT_GUIDED_RELEASE.json').exists() else
+            guided_stop=('WARM_GUIDED_STOP_V4.json' if (root/'MATCH_GUIDED_RELEASE.json').exists() else
+                'WARM_GUIDED_STOP_V3.json' if (root/'INCIDENT_GUIDED_RELEASE.json').exists() else
                 'WARM_GUIDED_STOP_V2.json' if (root/'MAIN0508_GUIDED_RELEASE.json').exists() else 'WARM_GUIDED_STOP.json')
             stop=root/(guided_stop if arm in ('B','R') and b.get('health_guards') else 'STOP.json')
             if not stop.exists():write(stop,dict(arm=arm,error=repr(error),timestamp_utc=timestamp()))

@@ -129,7 +129,8 @@ def run(root,config_path):
         boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),unix=time.time(),source=config['source_root'])
     tag=config.get('receipt_tag','')
     immutable(root/('CAPACITY_BROKER_OWNER'+tag+'.json'),owner)
-    stop_path=root/('WARM_GUIDED_STOP_V3.json' if (root/'INCIDENT_GUIDED_RELEASE.json').exists() else
+    stop_path=root/('WARM_GUIDED_STOP_V4.json' if (root/'MATCH_GUIDED_RELEASE.json').exists() else
+        'WARM_GUIDED_STOP_V3.json' if (root/'INCIDENT_GUIDED_RELEASE.json').exists() else
         'WARM_GUIDED_STOP_V2.json' if tag else 'WARM_GUIDED_STOP.json')
     assignments=root/'broker_assignments';assignments.mkdir(exist_ok=True)
     for name in ('broker_completed','capacity_declines','capacity_admissions'):(root/name).mkdir(exist_ok=True)
