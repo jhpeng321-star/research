@@ -1,5 +1,5 @@
 {
-  "captured_local": "2026-11-03T02:12:53.695628+08:00",
+  "captured_local": "2026-11-03T02:26:45.391704+08:00",
   "reports": {
     "owner_read_first": {
       "path": "E:/research-dense/docs/OWNER_UPDATE_20261030_EVENING.md",
@@ -12,10 +12,10 @@
     "registration": {
       "path": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md",
       "exists": true,
-      "sha256": "d325c46bf13fed3f82d02841e9351ebcabe8bb87287479f81c388bca12063eac",
-      "bytes": 2704933,
-      "modified_local": "2026-11-03T02:10:02.183361+08:00",
-      "snapshot": "source_snapshots/registration_d325c46bf13fed3f.md"
+      "sha256": "07a42cfe4db10cc3ec493fbe420533b2fafd1fed2e2d3d37e3805d26404e0976",
+      "bytes": 2705352,
+      "modified_local": "2026-11-03T02:20:37.745140+08:00",
+      "snapshot": "source_snapshots/registration_07a42cfe4db10cc3.md"
     },
     "wmvalue_design": {
       "path": "E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md",
@@ -360,10 +360,10 @@
     "coopmwm_report": {
       "path": "E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM.md",
       "exists": true,
-      "sha256": "4c3488ac30698bc30fba2c1de559eae962aab62ddc214d35c8077f3093a417ed",
-      "bytes": 305273,
-      "modified_local": "2026-11-03T02:04:40.771620+08:00",
-      "snapshot": "source_snapshots/coopmwm_report_4c3488ac30698bc3.md"
+      "sha256": "a5ce1cebbc47c3643eb6ca56ed88a05ff4f51ba4ef0f6065f9288e565fb0572f",
+      "bytes": 306090,
+      "modified_local": "2026-11-03T02:13:17.466005+08:00",
+      "snapshot": "source_snapshots/coopmwm_report_a5ce1cebbc47c364.md"
     },
     "coopmwm_design": {
       "path": "E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM_DESIGN.md",
@@ -424,10 +424,10 @@
     "wmphys_v5_report": {
       "path": "E:/agent-work/c4-rb2-int/docs/paper_results/WMPHYS_V5.md",
       "exists": true,
-      "sha256": "c0e07e307c7edbec8657b271c382e4c7da336ef5ac53f88b29fad58ca6e6e198",
-      "bytes": 25840,
-      "modified_local": "2026-11-03T01:24:45.462176+08:00",
-      "snapshot": "source_snapshots/wmphys_v5_report_c0e07e307c7edbec.md"
+      "sha256": "be60703a63b9f1d90eaf284d67bc748bcda7949c217d3a896bad1c66d45d8a44",
+      "bytes": 25859,
+      "modified_local": "2026-11-03T02:13:35.412367+08:00",
+      "snapshot": "source_snapshots/wmphys_v5_report_be60703a63b9f1d9.md"
     },
     "sumocore_report": {
       "path": "E:/agent-work/c4-sumocore/docs/paper_results/SUMOCORE.md",
@@ -559,10 +559,8 @@
     }
   },
   "changed_since_prior_cut": [
-    "owner_read_first",
     "registration",
     "coopmwm_report",
-    "coopmwm_design",
     "wmphys_v5_report"
   ],
   "scope": "explicit local report snapshots only; no simulator/model or restricted input access",
