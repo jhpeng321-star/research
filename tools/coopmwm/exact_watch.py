@@ -11,7 +11,7 @@ from .storage import read,write
 DISPATCHES={'grader':'EXACT_GRADER_DISPATCH.json','broker':'WARM_REMOTE_BROKER_DISPATCH.json',
             'B':'WARM_B_DISPATCH_V4.json','R':'WARM_R_DISPATCH_V4.json'}
 TAG='EXACT_OBSERVER_V2'
-OBSERVE_ONLY=('EXACT_OBSERVER_V6','EXACT_OBSERVER_V7','EXACT_OBSERVER_V8','EXACT_OBSERVER_V9','EXACT_OBSERVER_V10')
+OBSERVE_ONLY=('EXACT_OBSERVER_V6','EXACT_OBSERVER_V7','EXACT_OBSERVER_V8','EXACT_OBSERVER_V9','EXACT_OBSERVER_V10','EXACT_OBSERVER_V11')
 
 
 def adopt(cpu):
@@ -108,6 +108,18 @@ def run():
 
 def dispatch():
     target=ops.EVIDENCE/(TAG+'_DISPATCH.json');assert not target.exists()
+    if TAG=='EXACT_OBSERVER_V11':
+        from .protocol import checked,REGISTRY,sha
+        previous=read(ops.EVIDENCE/'EXACT_OBSERVER_V10_DISPATCH.json')
+        live=subprocess.check_output(['powershell','-NoProfile','-Command',
+            f"Get-CimInstance Win32_Process -Filter 'ProcessId={int(previous['pid'])}' | ConvertTo-Json -Compress"],text=True)
+        assert not live.strip(),'previous observer exists; never duplicate'
+        value=dict(previous=previous,previous_verified_absent=True,new_sumo_sim_s=0,
+            purpose='observe-only commonu4 verified B/R/current grader/broker; preserve remote owners/deadline',
+            source_sha256={n:sha(ops.LOCAL/'tools/coopmwm'/n) for n in ('warm_watch.py','exact_ops.py','exact_watch.py')})
+        receipt=ops.EVIDENCE/'EXACT_OBSERVER_VERIFIED_RECOVERY.json';assert not receipt.exists();write(receipt,value)
+        line='\nS-COOPMWM COMMON-U4 OBSERVATION REFRESH REGISTERED amendmentSHA'+sha(receipt)+': '+json.dumps(value,sort_keys=True)+'\n'
+        with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
     if TAG=='EXACT_OBSERVER_V10':
         from .protocol import checked,REGISTRY,sha
         previous=read(ops.EVIDENCE/'EXACT_OBSERVER_V9_DISPATCH.json')

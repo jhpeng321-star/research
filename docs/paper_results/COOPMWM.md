@@ -1,5 +1,23 @@
 # S-COOPMWM — live checks
 
+## Fixed-u24 final hooks migrated; opaque precompute retained
+- Frozen `finalendpoint1`: **87 CPU PASS**, zero skips, **22.584 s**, zero
+  SUMO/inference during qualification. Registered amendment `0b877c48…`.
+- Detached coordinator **625637**, start61917851, replaces only the two verified
+  waiting final/discovery owners. All **673** original MAPPO/native/A48/reuse
+  receipts remain adopted and opaque. The sole old child was Python's owned
+  resource tracker; no episode/branch worker was active and no child was signalled.
+- Frozen A24 episodes/branches use fresh `fixedfinal_A24_…` / `fixedbranch_A24_…`
+  identities inside the already registered 460,800 sim-s allocation. Primary
+  comparisons use A24/B24/R24; A48 episode/branch results are separately labelled
+  secondary. No checkpoint selection, panel change or duplicate precompute.
+- B24/R24 completion still gates outcome opening and registered analysis, then
+  detector-first B24 n+2 twins under the remaining discovery allocation.
+  At unix1793604918: coordinator live, no failure, **outcomes still closed**.
+- Observe-only V11 **11640** restored after V10 was verified absent. **21 CPU
+  checks pass**; first publication recovered eight immutable TRAIN receipts.
+  Existing training/GPU owners and original resource deadline retained.
+
 ## SUMO VERIFICATION LIVE — common update 4
 - Actual B/R continuation starts **15:23:20 / 15:23:31 UTC+8**; durable live
   publication **15:25:29**. Frozen `verifycpu12`: **105 CPU PASS**, zero skips,

@@ -1,5 +1,19 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+FINALHOOKSMIGRATED15:35UTC+8: finalendpoint1/87CPU/PASS0skips22.584s,
+registered0b877c48. Newdurablecoordinator625637/start61917851 cpuQbootb8bc1fcb
+adoptsALL673opaquejobs/reusePASS; A24freshIDs only, primaryA24/B24/R24,
+A48secondaryseparate; B24detector-firsttwinsafteropening/analysis. Original
+waiting3316828+3604109verified+TERM; onlychildwasownedPythonresource_tracker
+(noepisode/branchworker), allowedstrictbookkeepingpreflight; noextrasignal.
+Latest1793604918coordinatorS/STARTED/noFAILED/outcomesOPENfalse. Neverredispatch.
+OBSERVEONLYlocalV11 PID11640/start1793604542; oldV10verifiedabsent;21CPU/PASS
+actualpayload+state/publication/commit. Firstpublish8receiptsinclR2/R3, noSTOP.
+Keepsoriginal18:07:02deadline. Rbeta0explainsu2/u3zeroexecuted, fullshortfalls.
+NeedB4..6viability+timing, liveverificationgrades; commandmirrorstillOFF;
+depthdiagnosticdeferredwhileGPUbusy. Resourceextensionneedsregisteredresolution
+beforeoriginalGPUdeadline; neverextendimplicitly. No finaloutcomesread.
+
 SUMOVERIFICATIONLIVE commonu4 unix1793604329 (15:25:29UTC+8); actualBstarted
 15:23:20/R15:23:31. Frozenverifycpu12/105CPU/PASS0skips28.041s; original
 fivebranchsmokegateadopted. NEWownedB598899/start61845041,R599343/start61846054,

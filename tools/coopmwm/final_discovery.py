@@ -73,8 +73,9 @@ def run(root,config):
         from .final_runtime import idle_admission,RAM
         from tools.coopfree.analysis import tape
         from tools.coopbehav.detectors import detect
-        write(root/'FINAL_DISCOVERY_STARTED.json',dict(unix=time.time(),checkpoint_sha256=sha(root/'B_checkpoint_048.pt')))
-        policy,_,_,payload=load(root/'B_checkpoint_048.pt');assert payload['update']==48
+        endpoint=budget()['updates']['B']
+        write(root/'FINAL_DISCOVERY_STARTED.json',dict(unix=time.time(),update=endpoint,checkpoint_sha256=sha(root/f'B_checkpoint_{endpoint:03}.pt')))
+        policy,_,_,payload=load(root/f'B_checkpoint_{endpoint:03}.pt');assert payload['update']==endpoint
         b=read(root/'WARM_BINDING.json');index=12;coverage=[];manifest=[]
         for w in worlds('final_test'):
             ident=f'fixedfinal_B_{w["seed"]}';path=root/'jobs'/ident

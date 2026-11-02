@@ -47,7 +47,9 @@ print(json.dumps(v))''',timeout=30))
         values[host]=value
     cpu=json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,sys,json,time,os
 r=pathlib.Path({ROOT!r});repair=r/'MAIN0508_REPAIR_BINDING_V2.json'
-current=r/'INCIDENT_RECOVERY_BINDING.json'
+current=r/'VERIFICATION_CONTINUATION_BINDING.json'
+if not current.exists():current=r/'MATCH_RECOVERY_BINDING.json'
+if not current.exists():current=r/'INCIDENT_RECOVERY_BINDING.json'
 source=json.loads(current.read_text())['source_root'] if current.exists() else json.loads(repair.read_text())['source_root'] if repair.exists() else {CPU!r}
 sys.path.insert(0,source+'/pytools')
 from tools.coopmwm.accel_storage import read,charged
@@ -55,12 +57,14 @@ owners={{}}
 for name in ['WARM_A_DISPATCH_V3.json','WARM_B_DISPATCH_V4.json','WARM_R_DISPATCH_V4.json','EXACT_GRADER_DISPATCH.json','WARM_REMOTE_BROKER_DISPATCH.json',
  'WARM_B_DISPATCH_V6.json','WARM_R_DISPATCH_V6.json','EXACT_GRADER_DISPATCH_V2.json','CAPACITY_BROKER_DISPATCH_V2.json',
   'QUOTA_B_DISPATCH.json','QUOTA_R_DISPATCH.json','QUOTA_broker_DISPATCH.json','CENTRE_FAIR_BROKER_DISPATCH.json','TAIL_B_DISPATCH.json','TAIL_DRAIN_BROKER_DISPATCH.json',
-  'INCIDENT_B_DISPATCH.json','INCIDENT_R_DISPATCH.json','INCIDENT_BROKER_DISPATCH.json','INCIDENT_GRADER_DISPATCH.json']:
+  'INCIDENT_B_DISPATCH.json','INCIDENT_R_DISPATCH.json','INCIDENT_BROKER_DISPATCH.json','INCIDENT_GRADER_DISPATCH.json',
+  'MATCH_R_DISPATCH.json','MATCH_BROKER_DISPATCH.json','MATCH_GRADER_DISPATCH.json',
+  'VERIFIED_B_DISPATCH.json','VERIFIED_R_DISPATCH.json','VERIFIED_GRADER_DISPATCH.json']:
  if not (r/name).exists():continue
  d=read(r/name);assert pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']
  p=pathlib.Path('/proc')/str(d['pid'])/'stat';s=p.read_text().split() if p.exists() else None
  assert not s or s[21]==d['start_ticks'];owners[name]=dict(owner=d,state=s[2] if s else 'exited')
-stops={{p.name:read(p) for pattern in ('PAUSE_*.json','WARM_GUIDED_STOP*.json','WARM_*_FAILED_V3.json','WARM_*_FAILED_V5.json','WARM_*_FAILED_Q1.json','WARM_*_FAILED_T1.json','WARM_*_FAILED_I1.json') for p in r.glob(pattern)}}
+stops={{p.name:read(p) for pattern in ('PAUSE_*.json','WARM_GUIDED_STOP*.json','WARM_*_FAILED_V3.json','WARM_*_FAILED_V5.json','WARM_*_FAILED_Q1.json','WARM_*_FAILED_T1.json','WARM_*_FAILED_I1.json','WARM_*_FAILED_M1.json','WARM_*_FAILED_SV1.json') for p in r.glob(pattern)}}
 if repair.exists():
  from tools.coopmwm.warm_health import assert_running
  try:assert_running(r,'B')
@@ -69,6 +73,8 @@ if repair.exists():
    for name in ('WARM_GUIDED_STOP.json','WARM_B_FAILED_V3.json','WARM_R_FAILED_V3.json'):stops.pop(name,None)
    if current.exists():
     for name in ('WARM_GUIDED_STOP_V2.json','WARM_B_FAILED_T1.json','WARM_R_FAILED_Q1.json'):stops.pop(name,None)
+   if (r/'MATCH_GUIDED_RELEASE.json').exists():
+    for name in ('WARM_GUIDED_STOP_V3.json','WARM_B_FAILED_I1.json','WARM_R_FAILED_I1.json'):stops.pop(name,None)
 print(json.dumps(dict(unix=time.time(),owners=owners,stops=stops,updates={{a:max([0]+[int(p.stem.rsplit('_',1)[1]) for p in r.glob(a+'_UPDATE_[0-9][0-9][0-9].json')]) for a in ('A','B','R')}},charged_sim_s=charged(r),load=os.getloadavg(),pending_plan_queries=sum(not (r/'responses'/p.name).exists() for p in (r/'requests').glob('*.json')))))''',timeout=40))
     write(ops.EVIDENCE/f'EXACT_STATUS_{int(cpu["unix"])}.json',dict(gpu=values,cpu=cpu))
     print(json.dumps(dict(cpu=cpu,gpu={h:dict(alive=v['alive'],ready=v['ready'],failed=v['failed'],owner=v['receipts'].get('SPOOL_OWNER.json'),gates={n:dict(pass_=r['pass_'],max_cost_error=r['max_cost_error']) for n,r in v['receipts'].items() if n.startswith('STARTUP_')},failure=v['receipts'].get('SPOOL_FAILED.json')) for h,v in values.items()})))

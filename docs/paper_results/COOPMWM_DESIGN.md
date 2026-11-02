@@ -37,7 +37,7 @@
 36. Check986072..986083,one/cell; TRAIN50%focus,12focus+12other; MAIN0508 B/Ru1 same-cell ascending-seed replacements for18failedBjobs plus6neverclaimed originals; later schedule unchanged.
 37. Every4updates checks A/B/R vs once-only MAPPO controls, J600/J900/safety; forced counts/type and SNR.
 38. Dev984000..984023 every16updates A/B/R; existing24bitwise MAPPO bytes reused; no MAPPO dev rerun.
-39. TRAIN4/dev16 reporting only; latest fixed primaryA24/B24/R24, secondaryA48; existing final supervisors still need qualified endpoint migration before release.
+39. TRAIN4/dev16 reporting only; fixed primaryA24/B24/R24,secondaryA48; finalendpoint1/87CPU PASS adopts673opaquejobs, freshA24IDs/noMAPPO-native-A48rerun; analysis opensonlyafterB24/R24.
 40. Final detector-first discovery uses unchanged COOPBEHAV detectors and complete exact twins.
 41. Learning checks report team return/value/KL/gradient, beta, proposal routes/acceptance/O1-O4 counts.
 42. A48complete,B/R24endpoints; healthguards active/no owner-reviewpause; verifierCPU12/105PASS,real5branchPREFIX-CRN/live11fingerprintsPASS; B/RexactverificationLIVEfromcommonu4,pretrustdraw,winningbranchgradesreused.
@@ -58,7 +58,7 @@
 57. Same-group CRN removes shared hidden-driver/arrival variation only to extent model supports it.
 58. Nexec>=10/update; MAIN0548 permits retainedu1shortfall with explicitdeviation/noextraSUMO, later unmet=>STOP; bothGPUqueue saturated beyondmin; independentR(u) matches finalB(u) count/regime/size/duration concurrently withB(u+1).
 59. FINAL96=989600..989635 plus fresh990600..990659,8/cell; SHAd74f685ef75a819248bbe7bb0bef89cf0295037ff3b03b334b13ccec75c40bcc.
-60. Precharged opaqueMAPPO/native/A48 jobs retained; add primaryA24 episode+branches460800 under recovery quote; final primary gateA24/B24/R24,A48secondary, no Rbranches; live completion-hook migration pending.
+60. OpaqueMAPPO/native/A48 retained; primaryA24episode+branches460800 registered; finalendpoint625637 live/qualified, primaryA24/B24/R24,A48secondaryseparate,noRbranches; detector-firstB24twinsafteranalysis.
 61. BranchesT300/500/700/900,H300; exact same MAPPO prefix, mismatchSTOP; MAPPO-reuse600 check first; failure+115200 needs MAIN approval.
 62. Final paired world-bootstrap95CI B-MAPPO/B-A/B-R/A-MAPPO J600/J900; percell/safety; controls reused.
 63. First12executedBstarts RNG20261101 + final detector-first twins share200000reserve; complete n+2 full-prefix reruns before any attempt.

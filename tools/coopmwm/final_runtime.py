@@ -18,11 +18,17 @@ from .warm_protocol import budget,worlds,install_accounting
 
 TIMES=(300,500,700,900)
 RAM=Path('/dev/shm/coopmwm20261102_final1')
+ID_ALIASES={}
+
+
+def job_id(arm,seed,time_s=None):
+    tag=ID_ALIASES.get(arm,arm)
+    return f'fixedbranch_{tag}_{seed}_t{time_s}' if time_s is not None else f'fixedfinal_{tag}_{seed}'
 
 
 def specs(arms,branches=False,panel=None):
     panel=worlds('final_test') if panel is None else panel
-    return [dict(id=(f'fixedbranch_{a}_{w["seed"]}_t{t}' if branches else f'fixedfinal_{a}_{w["seed"]}'),
+    return [dict(id=job_id(a,w['seed'],t),
                  world=w,arm=a,kind='branch' if branches else 'episode',time_s=t,
                  sim_s=t+300 if branches else 1200,
                  phase='paired_branch' if branches else ('random_guide_test' if a=='R' else 'final_test'))
@@ -167,7 +173,7 @@ def analyze_complete(root,b,plan):
         ref=read(root/'jobs'/f'fixedfinal_mappo_{w["seed"]}'/'RESULT.json')
         for t in TIMES:
             for arm in ('MAPPO','A','B'):
-                result=ref if arm=='MAPPO' else read(root/'jobs'/f'fixedbranch_{arm}_{w["seed"]}_t{t}'/'RESULT.json')
+                result=ref if arm=='MAPPO' else read(root/'jobs'/job_id(arm,w['seed'],t)/'RESULT.json')
                 m=window(result,t,300)
                 records.append(dict(seed=w['seed'],branch_time_s=t,arm=arm,J=m['team_delay_vs'],window=m))
     write(root/'FINAL_BRANCH_COMPLETE.json',analyze(records,plan))
