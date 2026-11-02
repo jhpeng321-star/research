@@ -3,6 +3,24 @@ import json
 from . import niche_roll as nr
 
 
+def test_worker_checks_additive_dependency_before_import(tmp_path):
+    import sys
+    import types
+    from unittest.mock import patch
+    worker=types.ModuleType('tools.coopmwm.niche_worker')
+    calls=[]
+    worker.run=calls.append
+    (tmp_path/'geometry.py').write_bytes(b'pure geometry')
+    (tmp_path/'NICHENULL_DEPENDENCY_HASHES.json').write_text(json.dumps(
+        {'geometry.py':hashlib.sha256(b'pure geometry').hexdigest()}))
+    with patch.dict(sys.modules,{'tools.coopmwm.niche_worker':worker}):
+        exec(nr.worker_command(str(tmp_path)),{})
+        (tmp_path/'geometry.py').write_bytes(b'changed')
+        import pytest
+        with pytest.raises(AssertionError):exec(nr.worker_command(str(tmp_path)),{})
+    assert calls==[str(tmp_path)]
+
+
 def test_broker_payload_compiles_without_process_control(monkeypatch,tmp_path):
     monkeypatch.setattr(nr.ops,'EVIDENCE',tmp_path)
     (tmp_path/nr.REG).write_text(json.dumps(dict(cpu=dict(source_hashes={}),line='test')))

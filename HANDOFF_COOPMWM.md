@@ -1,5 +1,27 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+Nov3 05:45:44+08 startup recovery: first A qualifier213896 EXIT before0gates,
+WM-only GPU package lacks traffic_shepherd entirely (PHYS/src is NOT sufficient).
+Additive two package initializers + exact pinned geometry installed/hash-manifest
+checked; real GPU-environment CPU import probe PASS/noCUDA/noSUMO. Amendment
+7f9db7082967b2f0 registered; five targeted local CPU checks PASS1.03s.
+NEW219214/start903615905 qualifying incident1; ADOPT PATH2 dispatch, NEVERrepeat.
+Other3 original slots READY/serve. Original failed dispatch/log/binding retained.
+Bank refreshed24confirmed/5admitted/3cooperative; owner2388293 LIVE, no pending.
+B/Ru3; tenadmissions+qualifieddelegatedrelease still required. Fresh6Mguard.
+
+ROLLLIVE: metadata-onlybroker2472252/start66863605/sourceCPU5 at1793654358,
+adoptedoriginalqueries/assignments, old1941060retired. Localreceipt
+LS_NICHENULL_BROKER_DISPATCH.json. FIRSTGPUqualifierA213896/start903533639,
+incident1 at1793655122/05:32:02+08: original110917drained/deliveredBEFOREretire,
+numericbackupSHAchecked/originalbindingretained/newbindingactualhashes. ALL8fresh
+gatesRUNNING; NEVERredispatch/inference-replay. Toolreturned90stimeoutAFTER
+printingdurabledispatch; adoptremote/localreceipt, NOTfailure/retry. Other3serve.
+Statushelpersrecognizenewbroker+GPUowner andamendedbankreader; 10hermeticlocal
+metadata/ownershiptestsPASS4.04s. NEXTrefreshobserverV11via niche_watch_dispatch
+(only8472creation/argvverified) thenobserveA8gates; ONEqualifier globally.
+LSgate/clampACTIVATIONstillpendingGPUgate+collectorhandover; nofalseLIVEclaim.
+
 JOINTNICHE/NULLFIXRELEASECPU5PASS271checks/0skips54.795s/0SUMO; registration
 f653a9fa55abf56c... inNICHE_NULLFIX_COMPARISON_REGISTRATION.json BEFORErollout.
 Source/home/ubuntu/coopmwm20261103_nichenullcpu5 includesLSactionablegateadapter

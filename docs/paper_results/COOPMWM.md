@@ -1,5 +1,34 @@
 # S-COOPMWM — live checks
 
+## Nov3 05:45:44 UTC+8 — first qualifier dependency packaging recovered
+- Original qualifier213896 exited before any gate: the WM-only GPU package has
+  no `traffic_shepherd` package. Adding frozen WM source paths alone did not
+  resolve the dependency; that CPU-only probe failed before dispatch.
+- Added only two package initializers and the already pinned pure geometry
+  source, verified against an immutable dependency manifest before import.
+  Actual GPU-environment import/geometry probe PASS with CUDA uninitialized;
+  five targeted local metadata/launch tests PASS (1.03s), zero SUMO.
+- Amendment `7f9db7082967b2f0…` preceded replacement219214/start903615905.
+  All8 fresh gates remain required; original failed dispatch/log and bindings
+  are retained. Other3 slots serve; no inference replay or PPO restart.
+- Bank builder remains live: all24 positive labels confirmed, **5 admitted /
+  3 cooperative**, zero pending/incomplete; original safety rule would admit3.
+  Ten confirmed admissions remain required for B-REPLAY.
+
+## Nov3 05:32:02 UTC+8 — first joint-release GPU qualification started
+- New source-qualified metadata broker2472252 adopts the original requests and
+  assignments. Only its old metadata owner1941060 was retired; no inference or
+  SUMO job was restarted. Per-owner drains preserve historical drain receipts.
+- gpuA incident1 finished/delivered its outstanding search before110917 retired.
+  **New owned qualifier213896/start903533639** is running all8 fresh startup
+  gates. Original numerical files were backed up with exact hashes; the original
+  binding is retained and the new effective binding records current hashes.
+  `LS_NICHENULL_DISPATCH_gpuA_incident1.json` is durable; transport timed out
+  after printing its completed dispatch, so the existing owner is adopted.
+- Other3 slots and the amended bank builder continue. No second qualifier or
+  live clamp/collector activation is claimed before gate completion. Ten local
+  metadata/ownership checks pass (4.04s); observer refresh is metadata-only.
+
 ## Nov3 05:16 UTC+8 — joint niche/nullfix deployment source qualified
 - `nichenullcpu5`: **271 Linux CPU checks PASS, zero skips,54.795s, zero sim-s**.
   Includes the landed niche+nullfix search, pinned road-network fallback, and the
