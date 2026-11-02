@@ -1,0 +1,295 @@
+{
+  "started": "2026-11-01T02:10:27.698483+08:00",
+  "until": "2026-11-01T09:00:00+08:00",
+  "last_start": "2026-11-01T08:40:00+08:00",
+  "seen_source_digests": [
+    "ec0f2a74974b987f7fb3342f4cbd447efac4a50d84b7f3e035c16e8e2a37a35e",
+    "c5602102891e4b3fb79c50478f2843c9f54301643b85a477ae67cb0b5af7b8c4",
+    "da190640f0ca84512bdbf95f2f26f7b9238bfe62e9f0c57a4a61d4e80e367ef8",
+    "c95afc1132b7eb71c17d3d7bb451d6dc3ea9503b920530922adf3ffa12a3d471",
+    "5a5b15ef118ce9011d8b3ff8b849a845e665a7a98a524db03b1bc852114be214"
+  ],
+  "jobs": [
+    {
+      "root": "/home/ubuntu/rbfit20261101_lc_boundaries",
+      "name": "lane_boundaries_v4",
+      "publication": "lane_boundaries_v4",
+      "last_status": {
+        "root": "/home/ubuntu/rbfit20261101_lc_boundaries",
+        "name": "lane_boundaries_v4",
+        "claimed": true,
+        "pid": 579949,
+        "running": false,
+        "pid_reused": false,
+        "complete": true,
+        "verified": true,
+        "observation_worlds": 32,
+        "frozen_bootstrap_sha256": {
+          "config.py": "28a064562878bbcfcb508106ddb67520acde798ba043220f0be105b446bc4f32",
+          "secure_gap.py": "22b406dd8753e989829bf27a417fec506d627635f8da29ad0b1e8df0fd7dc438",
+          "mobil.py": "f786dbe67836cf8f66a50644691ca12375f3cd8ce610588a07128cd6ede5ff81",
+          "neighbours.py": "16667d7278e68d5796fb7349487ef3ef9f7c766ef21c4509597313d2ee129a0d",
+          "batched.py": "95da75d003f24ab77e06af7754c2126348ea4062b0707b48403763616dd335bd"
+        }
+      },
+      "published_commit": "6588e69bc6a44d4dc0a9c89cccd508814ce768f2",
+      "raw_dispatched": true
+    },
+    {
+      "root": "/home/ubuntu/rbfit20261101_lc_source_ec0f2a74974b",
+      "name": "lane_fit",
+      "publication": "lane_source_ec0f2a74974b",
+      "key": "ec0f2a74974b",
+      "last_status": {
+        "root": "/home/ubuntu/rbfit20261101_lc_source_ec0f2a74974b",
+        "name": "lane_fit",
+        "claimed": true,
+        "pid": 617309,
+        "running": false,
+        "pid_reused": false,
+        "complete": true,
+        "verified": false,
+        "observation_worlds": 32,
+        "frozen_bootstrap_sha256": {
+          "config.py": "28a064562878bbcfcb508106ddb67520acde798ba043220f0be105b446bc4f32",
+          "secure_gap.py": "22b406dd8753e989829bf27a417fec506d627635f8da29ad0b1e8df0fd7dc438",
+          "mobil.py": "f786dbe67836cf8f66a50644691ca12375f3cd8ce610588a07128cd6ede5ff81",
+          "neighbours.py": "16667d7278e68d5796fb7349487ef3ef9f7c766ef21c4509597313d2ee129a0d",
+          "batched.py": "95da75d003f24ab77e06af7754c2126348ea4062b0707b48403763616dd335bd"
+        }
+      },
+      "published_commit": "50bc0c6e5cfb443107128e32a73386ac424293ca",
+      "raw_dispatched": true
+    },
+    {
+      "root": "/home/ubuntu/rbfit20261101_lc_boundaries",
+      "name": "lane_raw_v5",
+      "publication": "lane_raw_v5",
+      "last_status": {
+        "root": "/home/ubuntu/rbfit20261101_lc_boundaries",
+        "name": "lane_raw_v5",
+        "claimed": true,
+        "pid": 675891,
+        "running": false,
+        "pid_reused": false,
+        "complete": true,
+        "verified": false,
+        "observation_worlds": 32,
+        "frozen_bootstrap_sha256": {
+          "config.py": "28a064562878bbcfcb508106ddb67520acde798ba043220f0be105b446bc4f32",
+          "secure_gap.py": "22b406dd8753e989829bf27a417fec506d627635f8da29ad0b1e8df0fd7dc438",
+          "mobil.py": "f786dbe67836cf8f66a50644691ca12375f3cd8ce610588a07128cd6ede5ff81",
+          "neighbours.py": "16667d7278e68d5796fb7349487ef3ef9f7c766ef21c4509597313d2ee129a0d",
+          "batched.py": "95da75d003f24ab77e06af7754c2126348ea4062b0707b48403763616dd335bd"
+        }
+      },
+      "published_commit": "0f4861a06f0f0912ced8fe3bdc1e63007817f4bd"
+    },
+    {
+      "root": "/home/ubuntu/rbfit20261101_lc_source_ec0f2a74974b",
+      "name": "lane_raw",
+      "publication": "lane_raw_ec0f2a74974b",
+      "key": "ec0f2a74974b",
+      "last_status": {
+        "root": "/home/ubuntu/rbfit20261101_lc_source_ec0f2a74974b",
+        "name": "lane_raw",
+        "claimed": true,
+        "pid": 810743,
+        "running": false,
+        "pid_reused": false,
+        "complete": true,
+        "verified": false,
+        "observation_worlds": 32,
+        "frozen_bootstrap_sha256": {
+          "config.py": "28a064562878bbcfcb508106ddb67520acde798ba043220f0be105b446bc4f32",
+          "secure_gap.py": "22b406dd8753e989829bf27a417fec506d627635f8da29ad0b1e8df0fd7dc438",
+          "mobil.py": "f786dbe67836cf8f66a50644691ca12375f3cd8ce610588a07128cd6ede5ff81",
+          "neighbours.py": "16667d7278e68d5796fb7349487ef3ef9f7c766ef21c4509597313d2ee129a0d",
+          "batched.py": "95da75d003f24ab77e06af7754c2126348ea4062b0707b48403763616dd335bd"
+        }
+      },
+      "published_commit": "90204dc419cf09fe279297e121bdddc5291b0c11"
+    },
+    {
+      "root": "/home/ubuntu/rbfit20261101_lc_source_c5602102891e",
+      "name": "lane_fit",
+      "publication": "lane_source_c5602102891e",
+      "key": "c5602102891e",
+      "dispatch_pending": false,
+      "last_status": {
+        "root": "/home/ubuntu/rbfit20261101_lc_source_c5602102891e",
+        "name": "lane_fit",
+        "claimed": true,
+        "pid": 811214,
+        "running": false,
+        "pid_reused": false,
+        "complete": true,
+        "verified": false,
+        "observation_worlds": 32,
+        "frozen_bootstrap_sha256": {
+          "config.py": "28a064562878bbcfcb508106ddb67520acde798ba043220f0be105b446bc4f32",
+          "secure_gap.py": "22b406dd8753e989829bf27a417fec506d627635f8da29ad0b1e8df0fd7dc438",
+          "mobil.py": "f786dbe67836cf8f66a50644691ca12375f3cd8ce610588a07128cd6ede5ff81",
+          "neighbours.py": "16667d7278e68d5796fb7349487ef3ef9f7c766ef21c4509597313d2ee129a0d",
+          "batched.py": "95da75d003f24ab77e06af7754c2126348ea4062b0707b48403763616dd335bd"
+        }
+      },
+      "published_commit": "f573e8fc13126e8e0ed2f4d2bbf4f0334ba90eb2",
+      "raw_dispatched": true
+    },
+    {
+      "root": "/home/ubuntu/rbfit20261101_lc_source_c5602102891e",
+      "name": "lane_raw",
+      "publication": "lane_raw_c5602102891e",
+      "key": "c5602102891e",
+      "last_status": {
+        "root": "/home/ubuntu/rbfit20261101_lc_source_c5602102891e",
+        "name": "lane_raw",
+        "claimed": true,
+        "pid": 976558,
+        "running": false,
+        "pid_reused": false,
+        "complete": true,
+        "verified": false,
+        "observation_worlds": 32,
+        "frozen_bootstrap_sha256": {
+          "config.py": "28a064562878bbcfcb508106ddb67520acde798ba043220f0be105b446bc4f32",
+          "secure_gap.py": "22b406dd8753e989829bf27a417fec506d627635f8da29ad0b1e8df0fd7dc438",
+          "mobil.py": "f786dbe67836cf8f66a50644691ca12375f3cd8ce610588a07128cd6ede5ff81",
+          "neighbours.py": "16667d7278e68d5796fb7349487ef3ef9f7c766ef21c4509597313d2ee129a0d",
+          "batched.py": "95da75d003f24ab77e06af7754c2126348ea4062b0707b48403763616dd335bd"
+        }
+      },
+      "published_commit": "386878bc677a9f2c94be07dac549befbcd109764"
+    },
+    {
+      "root": "/home/ubuntu/rbfit20261101_lc_source_da190640f0ca",
+      "name": "lane_fit",
+      "publication": "lane_source_da190640f0ca",
+      "key": "da190640f0ca",
+      "dispatch_pending": false,
+      "last_status": {
+        "root": "/home/ubuntu/rbfit20261101_lc_source_da190640f0ca",
+        "name": "lane_fit",
+        "claimed": true,
+        "pid": 977061,
+        "running": true,
+        "pid_reused": false,
+        "complete": false,
+        "verified": false,
+        "observation_worlds": 12,
+        "frozen_bootstrap_sha256": {
+          "config.py": "28a064562878bbcfcb508106ddb67520acde798ba043220f0be105b446bc4f32",
+          "secure_gap.py": "22b406dd8753e989829bf27a417fec506d627635f8da29ad0b1e8df0fd7dc438",
+          "mobil.py": "f786dbe67836cf8f66a50644691ca12375f3cd8ce610588a07128cd6ede5ff81",
+          "neighbours.py": "16667d7278e68d5796fb7349487ef3ef9f7c766ef21c4509597313d2ee129a0d",
+          "batched.py": "95da75d003f24ab77e06af7754c2126348ea4062b0707b48403763616dd335bd"
+        }
+      },
+      "blocked": "{\"argv\": [\"ssh\", \"cpuQ\", \"/home/ubuntu/miniconda3/bin/python /home/ubuntu/rbfit20261101_lc_boundaries/continuation_remote.py --root /home/ubuntu/rbfit20261101_lc_source_da190640f0ca --name lane_fit inspect\"], \"returncode\": 255, \"stdout\": \"\", \"stderr\": \"Connection closed by 1.15.42.207 port 22\\n\"}"
+    },
+    {
+      "root": "/home/ubuntu/rbfit20261101_lc_source_5a5b15ef118c",
+      "name": "lane_fit",
+      "publication": "lane_source_5a5b15ef118c",
+      "key": "5a5b15ef118c",
+      "dispatch_pending": false,
+      "last_status": {
+        "root": "/home/ubuntu/rbfit20261101_lc_source_5a5b15ef118c",
+        "name": "lane_fit",
+        "claimed": true,
+        "pid": 1076804,
+        "running": true,
+        "pid_reused": false,
+        "complete": false,
+        "verified": false,
+        "observation_worlds": 4,
+        "frozen_bootstrap_sha256": {
+          "config.py": "28a064562878bbcfcb508106ddb67520acde798ba043220f0be105b446bc4f32",
+          "secure_gap.py": "22b406dd8753e989829bf27a417fec506d627635f8da29ad0b1e8df0fd7dc438",
+          "mobil.py": "f786dbe67836cf8f66a50644691ca12375f3cd8ce610588a07128cd6ede5ff81",
+          "neighbours.py": "16667d7278e68d5796fb7349487ef3ef9f7c766ef21c4509597313d2ee129a0d",
+          "batched.py": "95da75d003f24ab77e06af7754c2126348ea4062b0707b48403763616dd335bd"
+        }
+      },
+      "blocked": "{\"argv\": [\"ssh\", \"cpuQ\", \"/home/ubuntu/miniconda3/bin/python /home/ubuntu/rbfit20261101_lc_boundaries/continuation_remote.py --root /home/ubuntu/rbfit20261101_lc_source_5a5b15ef118c --name lane_fit inspect\"], \"returncode\": 255, \"stdout\": \"\", \"stderr\": \"Connection closed by 1.15.42.207 port 22\\n\"}"
+    }
+  ],
+  "errors": [
+    {
+      "timestamp": "2026-11-01T02:15:18.949851+08:00",
+      "job": "lane_boundaries_v4",
+      "error": "{\"argv\": [\"ssh\", \"cpuQ\", \"/home/ubuntu/miniconda3/bin/python /home/ubuntu/rbfit20261101_lc_boundaries/dispatch_raw.py fit\"], \"returncode\": 1, \"stdout\": \"\", \"stderr\": \"Traceback (most recent call last):\\n  File \\\"/home/ubuntu/rbfit20261101_lc_boundaries/dispatch_raw.py\\\", line 58, in <module>\\n    main()\\n  File \\\"/home/ubuntu/rbfit20261101_lc_boundaries/dispatch_raw.py\\\", line 29, in main\\n    raise RuntimeError(\\\"Expected-parent/free-load admission failed\\\")\\nRuntimeError: Expected-parent/free-load admission failed\\n\"}"
+    },
+    {
+      "timestamp": "2026-11-01T02:16:22.417475+08:00",
+      "job": "lane_boundaries_v4",
+      "error": "{\"argv\": [\"ssh\", \"cpuQ\", \"/home/ubuntu/miniconda3/bin/python /home/ubuntu/rbfit20261101_lc_boundaries/dispatch_raw.py fit\"], \"returncode\": 1, \"stdout\": \"\", \"stderr\": \"Traceback (most recent call last):\\n  File \\\"/home/ubuntu/rbfit20261101_lc_boundaries/dispatch_raw.py\\\", line 58, in <module>\\n    main()\\n  File \\\"/home/ubuntu/rbfit20261101_lc_boundaries/dispatch_raw.py\\\", line 29, in main\\n    raise RuntimeError(\\\"Expected-parent/free-load admission failed\\\")\\nRuntimeError: Expected-parent/free-load admission failed\\n\"}"
+    },
+    {
+      "timestamp": "2026-11-01T02:17:25.872827+08:00",
+      "job": "lane_boundaries_v4",
+      "error": "{\"argv\": [\"ssh\", \"cpuQ\", \"/home/ubuntu/miniconda3/bin/python /home/ubuntu/rbfit20261101_lc_boundaries/dispatch_raw.py fit\"], \"returncode\": 1, \"stdout\": \"\", \"stderr\": \"Traceback (most recent call last):\\n  File \\\"/home/ubuntu/rbfit20261101_lc_boundaries/dispatch_raw.py\\\", line 58, in <module>\\n    main()\\n  File \\\"/home/ubuntu/rbfit20261101_lc_boundaries/dispatch_raw.py\\\", line 29, in main\\n    raise RuntimeError(\\\"Expected-parent/free-load admission failed\\\")\\nRuntimeError: Expected-parent/free-load admission failed\\n\"}"
+    },
+    {
+      "timestamp": "2026-11-01T02:21:53.973730+08:00",
+      "job": "lane_boundaries_v4",
+      "error": "{\"argv\": [\"ssh\", \"cpuQ\", \"/home/ubuntu/miniconda3/bin/python /home/ubuntu/rbfit20261101_lc_boundaries/dispatch_raw.py fit\"], \"returncode\": 1, \"stdout\": \"\", \"stderr\": \"Traceback (most recent call last):\\n  File \\\"/home/ubuntu/rbfit20261101_lc_boundaries/dispatch_raw.py\\\", line 58, in <module>\\n    main()\\n  File \\\"/home/ubuntu/rbfit20261101_lc_boundaries/dispatch_raw.py\\\", line 29, in main\\n    raise RuntimeError(\\\"Expected-parent/free-load admission failed\\\")\\nRuntimeError: Expected-parent/free-load admission failed\\n\"}"
+    },
+    {
+      "timestamp": "2026-11-01T02:22:58.161165+08:00",
+      "job": "lane_boundaries_v4",
+      "error": "{\"argv\": [\"ssh\", \"cpuQ\", \"/home/ubuntu/miniconda3/bin/python /home/ubuntu/rbfit20261101_lc_boundaries/dispatch_raw.py fit\"], \"returncode\": 1, \"stdout\": \"\", \"stderr\": \"Traceback (most recent call last):\\n  File \\\"/home/ubuntu/rbfit20261101_lc_boundaries/dispatch_raw.py\\\", line 58, in <module>\\n    main()\\n  File \\\"/home/ubuntu/rbfit20261101_lc_boundaries/dispatch_raw.py\\\", line 29, in main\\n    raise RuntimeError(\\\"Expected-parent/free-load admission failed\\\")\\nRuntimeError: Expected-parent/free-load admission failed\\n\"}"
+    },
+    {
+      "timestamp": "2026-11-01T02:24:02.166158+08:00",
+      "job": "lane_boundaries_v4",
+      "error": "{\"argv\": [\"ssh\", \"cpuQ\", \"/home/ubuntu/miniconda3/bin/python /home/ubuntu/rbfit20261101_lc_boundaries/dispatch_raw.py fit\"], \"returncode\": 1, \"stdout\": \"\", \"stderr\": \"Traceback (most recent call last):\\n  File \\\"/home/ubuntu/rbfit20261101_lc_boundaries/dispatch_raw.py\\\", line 58, in <module>\\n    main()\\n  File \\\"/home/ubuntu/rbfit20261101_lc_boundaries/dispatch_raw.py\\\", line 29, in main\\n    raise RuntimeError(\\\"Expected-parent/free-load admission failed\\\")\\nRuntimeError: Expected-parent/free-load admission failed\\n\"}"
+    },
+    {
+      "timestamp": "2026-11-01T04:58:42.556437+08:00",
+      "job": "lane_source_da190640f0ca",
+      "error": "{\"argv\": [\"ssh\", \"cpuQ\", \"/home/ubuntu/miniconda3/bin/python /home/ubuntu/rbfit20261101_lc_boundaries/continuation_remote.py --root /home/ubuntu/rbfit20261101_lc_source_da190640f0ca --name lane_fit inspect\"], \"returncode\": 255, \"stdout\": \"\", \"stderr\": \"Connection closed by 1.15.42.207 port 22\\n\"}"
+    },
+    {
+      "timestamp": "2026-11-01T04:58:48.307779+08:00",
+      "source_check_error": "{\"argv\": [\"C:\\\\Python314\\\\python.exe\", \"tools/rbfit/freeze_lc_version.py\", \"--lane-commit\", \"aefc4bd9709a1c50e4945de1f1b75847c1093106\", \"--prepare\"], \"returncode\": 1, \"stdout\": \"\", \"stderr\": \"Connection closed by 1.15.42.207 port 22\\nscp: Connection closed\\nTraceback (most recent call last):\\n  File \\\"E:\\\\agent-work\\\\c4-rb-fit\\\\tools\\\\rbfit\\\\freeze_lc_version.py\\\", line 73, in <module>\\n    main()\\n    ~~~~^^\\n  File \\\"E:\\\\agent-work\\\\c4-rb-fit\\\\tools\\\\rbfit\\\\freeze_lc_version.py\\\", line 65, in main\\n    run([\\\"scp\\\",str(bundle/\\\"dispatch_lc_version.py\\\"),f\\\"cpuQ:{BOOTSTRAP}\\\"])\\n    ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n  File \\\"E:\\\\agent-work\\\\c4-rb-fit\\\\tools\\\\rbfit\\\\freeze_lc_version.py\\\", line 17, in run\\n    return subprocess.check_output(argv,**kwargs)\\n           ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^\\n  File \\\"C:\\\\Python314\\\\Lib\\\\subprocess.py\\\", line 472, in check_output\\n    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,\\n           ~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\\n               **kwargs).stdout\\n               ^^^^^^^^^\\n  File \\\"C:\\\\Python314\\\\Lib\\\\subprocess.py\\\", line 577, in run\\n    raise CalledProcessError(retcode, process.args,\\n                             output=stdout, stderr=stderr)\\nsubprocess.CalledProcessError: Command '['scp', 'E:\\\\\\\\agent-work\\\\\\\\c4-rb-fit\\\\\\\\artifacts\\\\\\\\rbfit\\\\\\\\source_versions\\\\\\\\c95afc1132b7\\\\\\\\dispatch_lc_version.py', 'cpuQ:/home/ubuntu/rbfit20261101_addendum/tools/rbfit/dispatch_lc_version.py']' returned non-zero exit status 255.\\n\"}"
+    },
+    {
+      "timestamp": "2026-11-01T05:21:21.059001+08:00",
+      "job": "lane_source_5a5b15ef118c",
+      "error": "{\"argv\": [\"ssh\", \"cpuQ\", \"/home/ubuntu/miniconda3/bin/python /home/ubuntu/rbfit20261101_lc_boundaries/continuation_remote.py --root /home/ubuntu/rbfit20261101_lc_source_5a5b15ef118c --name lane_fit inspect\"], \"returncode\": 255, \"stdout\": \"\", \"stderr\": \"Connection closed by 1.15.42.207 port 22\\n\"}"
+    }
+  ],
+  "heartbeat": "2026-11-01T09:00:10.796389+08:00",
+  "latest_publication": {
+    "timestamp": "2026-11-01T04:37:13+08:00",
+    "commit": "386878bc677a9f2c94be07dac549befbcd109764",
+    "directory": "E:\\agent-work\\c4-rb-fit\\artifacts\\rbfit\\lane_raw_c5602102891e",
+    "adopted": false,
+    "source_sha256": "1bb1c7612a5ae250725a05ebfff18dd0abcd145c6e9a6abf46ce6e930d5a2695",
+    "raw_physical_scores": {
+      "n": 258691,
+      "events": 626,
+      "categorical_brier_sum": 1194.0833647554846,
+      "event_brier_sum": 597.0416823777423,
+      "negative_log_sum": 135193.57832266958,
+      "expected_event_count": 435.8442041444617,
+      "expected_correct_direction_event_count": 60.85216712160377,
+      "categorical_brier": 0.004615867443225642,
+      "event_brier": 0.002307933721612821,
+      "negative_log_score": 0.522606423581298
+    },
+    "idm_preferred_directory": "E:\\agent-work\\c4-rb-fit\\artifacts\\rbfit\\shrinkage_v1",
+    "boundary_reader_required": true,
+    "handoff": "E:\\agent-work\\c4-rb-fit\\HANDOFF.md"
+  },
+  "resumes": [
+    {
+      "timestamp": "2026-11-01T02:21:50.419978+08:00",
+      "run_tag": "0128_resume_v2"
+    }
+  ],
+  "drain_until": "2026-11-01T09:25:00+08:00",
+  "finished": "2026-11-01T09:00:10.798643+08:00"
+}

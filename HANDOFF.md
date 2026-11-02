@@ -1,5 +1,10 @@
 # S-RB-FIT — owner01:28 continuation active
 
+Resume2026-11-02: old watcher exited. Both previously SSH-blocked latest-source
+fits are now COMPLETE on all32FIT worlds, with owned PIDs exited. Recovery receipt:
+`artifacts/rbfit/receipts/RESUME_20261102.md`; independent verification/publication
+in progress. Existing IDM delivery remains ready.
+
 <!-- LC-CONTINUATION:BEGIN -->
 Latest verified `lane_raw_c5602102891e` (2026-11-01T04:37:13+08:00); LC SHA1bb1c7612a5a, snapshotv2;3130driver posteriors.
 Raw physical expected changes435.8 vs626recorded; eventBrier0.002308. Likelihood-emission Brier0.361091 is a separate diagnostic. **NOT ADOPTED**; no free-running/action-effect qualification.
