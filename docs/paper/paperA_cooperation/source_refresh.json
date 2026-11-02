@@ -1,5 +1,5 @@
 {
-  "captured_local": "2026-11-02T22:55:04.502648+08:00",
+  "captured_local": "2026-11-02T23:18:22.600319+08:00",
   "reports": {
     "owner_read_first": {
       "path": "E:/research-dense/docs/OWNER_UPDATE_20261030_EVENING.md",
@@ -12,10 +12,10 @@
     "registration": {
       "path": "E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md",
       "exists": true,
-      "sha256": "0373b8adf699f12e3261c7da9c48f6f03d88de55724a551771ea216cf7c63953",
-      "bytes": 2685620,
-      "modified_local": "2026-11-02T22:42:38.007432+08:00",
-      "snapshot": "source_snapshots/registration_0373b8adf699f12e.md"
+      "sha256": "20f80962db78c0e2c30004af50be3b7242079cb8d448da9f61d6878d29d5e196",
+      "bytes": 2686934,
+      "modified_local": "2026-11-02T23:16:37.156326+08:00",
+      "snapshot": "source_snapshots/registration_20f80962db78c0e2.md"
     },
     "wmvalue_design": {
       "path": "E:/agent-work/c4-wmvalue/docs/paper_results/WMVALUE_DESIGN.md",
@@ -360,10 +360,10 @@
     "coopmwm_report": {
       "path": "E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM.md",
       "exists": true,
-      "sha256": "07ba2c1013424e95f7d3a94a90a01be4f8f9d33f7cd431409f7daace55ef11ca",
-      "bytes": 291728,
-      "modified_local": "2026-11-02T22:24:54.394639+08:00",
-      "snapshot": "source_snapshots/coopmwm_report_07ba2c1013424e95.md"
+      "sha256": "aa79852a95574548b881c58b5c8b5aafa07f74e5245629057d5df68610eff750",
+      "bytes": 293420,
+      "modified_local": "2026-11-02T23:11:08.633559+08:00",
+      "snapshot": "source_snapshots/coopmwm_report_aa79852a95574548.md"
     },
     "coopmwm_design": {
       "path": "E:/agent-work/c4-coopnative/docs/paper_results/COOPMWM_DESIGN.md",
@@ -559,14 +559,8 @@
     }
   },
   "changed_since_prior_cut": [
-    "owner_read_first",
     "registration",
-    "coopfree_report",
-    "wmteach_report",
-    "coopmwm_report",
-    "coopmwm_design",
-    "wmspeed2_report",
-    "wmphys_v5_report"
+    "coopmwm_report"
   ],
   "scope": "explicit local report snapshots only; no simulator/model or restricted input access",
   "claim_review": "manual; file appearance or a canary is not an efficacy result"
