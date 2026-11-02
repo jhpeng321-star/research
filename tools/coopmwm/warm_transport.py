@@ -10,17 +10,24 @@ import re
 import time
 
 
+class SSHConnectionError(RuntimeError):
+    """SSH exit255 is transport failure unless its output exposes a code fault."""
+    pass
+
+
 def connection_error(error):
     if not isinstance(error,RuntimeError):return False
     text=str(error).strip()
     if any(word in text.lower() for word in ('traceback','assertionerror','parity','executor','outofmemory')):
         return False
+    if isinstance(error,SSHConnectionError):return True
     patterns=(r'Connection (?:closed|reset) by [^\r\n]+ port \d+',
         r'kex_exchange_identification: (?:read: Connection reset by peer|Connection closed by remote host)',
         r'ssh: connect to host \S+ port \d+: (?:Connection timed out|Connection refused|Connection reset by peer)',
         r'client_loop: send disconnect: (?:Broken pipe|Connection reset)',
         r'Read from remote host \S+: Connection reset(?: by peer)?',
-        r'Connection to \S+ (?:closed by remote host\.|closed\.)')
+        r'Connection to \S+ (?:closed by remote host\.|closed\.)',
+        r'ssh: Could not resolve hostname \S+: (?:Temporary failure in name resolution|Name or service not known|No such host is known\.?)')
     return bool(text) and all(any(re.fullmatch(p,line) for p in patterns)
         for line in text.splitlines() if line.strip())
 
@@ -35,8 +42,8 @@ def validate_snapshot(before,after):
     return after
 
 
-def retry(operation,verify,record,*,delays=(15,30,60,120),sleep=time.sleep,clock=time.monotonic):
-    """At most five attempts /300s; failed reverification never replays operation."""
+def retry(operation,verify,record,*,delays=(10,20,40,80,120),sleep=time.sleep,clock=time.monotonic):
+    """At most six attempts /300s; failed reverification never replays operation."""
     deadline=clock()+300
     reconnect=False
     for attempt in range(len(delays)+1):

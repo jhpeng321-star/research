@@ -39,6 +39,36 @@ def test_beta_transition_uses_original_nested_operational_deadline(tmp_path):
     assert resource_deadline(tmp_path,dict(gpu_deadline=123.))==123.
 
 
+def test_resource_extension_preserves_scientific_config_and_requires_authority(tmp_path):
+    from tools.coopmwm.verification_beta_ops import extended_config,resource_deadline,RESOURCE_DEADLINE
+    from tools.coopmwm.storage import write
+    from datetime import datetime,timezone,timedelta
+    assert RESOURCE_DEADLINE==datetime(2026,11,5,23,59,tzinfo=timezone(timedelta(hours=8))).timestamp()
+    original=dict(gpu_deadline=123.,operational=dict(gpu_deadline=123.,K=4,H=300),
+        endpoints=[dict(deadline_unix=123.,root='/unchanged')],beta=1.,budget=9500000)
+    changed=extended_config(original)
+    assert original['gpu_deadline']==123.
+    assert changed==dict(gpu_deadline=RESOURCE_DEADLINE,
+        operational=dict(gpu_deadline=RESOURCE_DEADLINE,K=4,H=300),
+        endpoints=[dict(deadline_unix=RESOURCE_DEADLINE,root='/unchanged')],beta=1.,budget=9500000)
+    write(tmp_path/'RESOURCE_EXTENSION_1634.json',dict(gpu_deadline=RESOURCE_DEADLINE,amendment_sha256='approved'))
+    (tmp_path/'AUTHORITY.md').write_text('')
+    with pytest.raises(AssertionError):resource_deadline(tmp_path,original)
+    (tmp_path/'AUTHORITY.md').write_text('approved')
+    assert resource_deadline(tmp_path,original)==RESOURCE_DEADLINE
+
+
+def test_resource_config_replacement_is_atomic_and_retains_original_snapshot(tmp_path):
+    from tools.coopmwm.verification_beta_ops import replace_resource_config
+    from tools.coopmwm.storage import write,read
+    old=dict(gpu_deadline=123.,H=300)
+    write(tmp_path/'ORIGINAL.json',old);write(tmp_path/'BINDING.json',old)
+    replace_resource_config(tmp_path/'BINDING.json',dict(gpu_deadline=456.,H=300))
+    assert read(tmp_path/'ORIGINAL.json')==old
+    assert read(tmp_path/'BINDING.json')==dict(gpu_deadline=456.,H=300)
+    assert not (tmp_path/'BINDING.json.deadline1634.publishing').exists()
+
+
 @pytest.mark.parametrize('arm', ['B', 'R'])
 @pytest.mark.parametrize('accepted', [False, True])
 def test_verification_trust_replay_includes_rejection(arm, accepted):

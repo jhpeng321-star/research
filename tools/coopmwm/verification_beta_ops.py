@@ -6,7 +6,216 @@ import time
 from pathlib import Path
 from .storage import read,write
 
-SOURCE='/home/ubuntu/coopmwm20261102_verifybeta5'
+SOURCE='/home/ubuntu/coopmwm20261102_verifybeta9'
+RESOURCE_DEADLINE=1793894340.0  # 2026-11-05 23:59:00 +08, MAIN16:34
+
+
+def extended_config(value):
+    """Replace only resource-clock fields; preserve every scientific setting."""
+    if isinstance(value,dict):
+        return {k:RESOURCE_DEADLINE if k in ('gpu_deadline','deadline_unix') else extended_config(v)
+                for k,v in value.items()}
+    if isinstance(value,list):return [extended_config(v) for v in value]
+    return value
+
+
+def replace_resource_config(path,value):
+    """Atomic mutable operational pointer; caller first preserves the old receipt."""
+    import os
+    from .warm_spool import canonical
+    path=Path(path);temporary=path.with_name(path.name+'.deadline1634.publishing')
+    with temporary.open('xb') as f:
+        f.write(canonical(value));f.flush();os.fsync(f.fileno())
+    os.replace(temporary,path)
+
+
+def _resource_gpu_main(root,deadline,amendment):
+    """Fresh process after the old worker's last forecast, never replay a claim."""
+    import os,sys,time,json,signal,hashlib,fcntl
+    from pathlib import Path
+    root=Path(root);sys.path.insert(0,str(root/'pytools'))
+    from tools.coopmwm.warm_spool import immutable,SpoolInput
+    def replace(path,value):
+        tmp=path.with_name(path.name+'.deadline1634.publishing')
+        with tmp.open('x') as f:json.dump(value,f);f.flush();os.fsync(f.fileno())
+        os.replace(tmp,path)
+    old=json.loads((root/'SPOOL_OWNER.json').read_text())
+    p=Path('/proc',str(old['pid']))
+    def owned():
+        assert old['boot_id']==Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+        if not p.exists():return False
+        st=(p/'stat').read_text().split();assert st[21]==old['start_ticks']
+        if st[2]=='Z':return False
+        argv=[x.decode() for x in (p/'cmdline').read_bytes().split(b'\0') if x]
+        assert argv[-3:]==['-m','tools.coopmwm.warm_spool',str(root)],argv
+        return True
+    assert owned()
+    # cpuQ's broker is receipt-verified and frozen before this controller starts.
+    quiet=0
+    while quiet<3:
+        assert owned(),'old worker exited before its forecasts settled'
+        missing=[f.stem for f in (root/'inbox').glob('*.json') if not (root/'forecasts'/f.name).exists()]
+        quiet=0 if missing else quiet+1
+        time.sleep(2)
+    names=['GPU_BINDING.json','SPOOL_OWNER.json','SERVICE_OWNER.json']+[f.name for f in root.glob('STARTUP_*.json')]
+    original={n:json.loads((root/n).read_text()) for n in names}
+    b=original['GPU_BINDING.json']
+    for n,h in b['hashes'].items():assert hashlib.sha256((root/n).read_bytes()).hexdigest()==h,n
+    immutable(root/'RESOURCE_EXTENSION_ORIGINALS_1634.json',original)
+    assert owned();os.kill(old['pid'],signal.SIGTERM)
+    for _ in range(150):
+        if not p.exists() or (p/'stat').read_text().split()[2]=='Z':break
+        assert (p/'stat').read_text().split()[21]==old['start_ticks'];time.sleep(.1)
+    else:raise ValueError('old idle worker did not exit; no second signal')
+    claim=(root/'SPOOL_WORKER.claim').open('a');fcntl.flock(claim,fcntl.LOCK_EX|fcntl.LOCK_NB)
+    b.update(deadline_unix=deadline,gpu_deadline=deadline,resource_extension_amendment=amendment)
+    replace(root/'GPU_BINDING.json',b)
+    owner=dict(pid=os.getpid(),start_ticks=Path('/proc/self/stat').read_text().split()[21],
+        boot_id=old['boot_id'],unix=time.time(),new_sumo_sim_s=0)
+    replace(root/'SPOOL_OWNER.json',owner)
+    immutable(root/'RESOURCE_EXTENSION_RESTART_1634.json',dict(old=old,new=owner,
+        gpu_deadline=deadline,amendment_sha256=amendment,all_inbox_completed=True,inference_replayed=False))
+    signal.signal(signal.SIGHUP,signal.SIG_IGN)
+    sys.stdin=SpoolInput(root,deadline)
+    from tools.coopmwm import warm_service,plan_service
+    exclusive=plan_service.write
+    def metadata_write(path,value):
+        # Only the snapshotted startup/owner pointers may be replaced. Inference
+        # forecasts retain the original exclusive-create semantics.
+        if path.parent==root and path.name in original and (path.name.startswith('STARTUP_') or path.name=='SERVICE_OWNER.json'):
+            return replace(path,value)
+        return exclusive(path,value)
+    warm_service.write=plan_service.write=metadata_write
+    warm_service.main(root)  # Same frozen numerics; eight fresh startup gates.
+
+
+def extend_register():
+    """Register MAIN16:34 before changing any resource clocks or process owners."""
+    from . import ops
+    from .protocol import REGISTRY,checked,sha
+    from .warm_deploy import ROOT
+    cpu=read(ops.EVIDENCE/('CPU_'+SOURCE.rsplit('/',1)[1]+'.json'))
+    assert cpu['pass_'] and cpu['skips']==cpu['sim_s']==0
+    line='\nS-COOPMWM MAIN1634 RESOURCE EXTENSION/DESIGN FREEZE REGISTERED: OWNER-delegated MAIN extends all component resource clocks to 2026-11-05 23:59:00 +08 (unix1793894340). Cap9500000/latestMAIN1556 allocation unchanged. NO design/search/horizon/arm/loss/selection change. Original clocks/configs/owners preserved in append-only receipts. Explicit gpu_deadline on active bindings and nested operational configs. Frozen broker prevents new submissions while each owned GPU completes ALL original inbox claims; restart only after every forecast settles, same numerical source and eight fresh startup parity gates per new process. Replace cached-clock broker/controller and child-free waiting R; preserve current B4 physics, adopt u3/Adam/RNG/library/results once, beta1 for fresh B/R decisions. No inference/episode replay. Original B4 live children still have their original cached deadline; monitor completion before expiry and disclose any migration blocker. No new sim-s. Design frozen for rest of run; engineering uptime repairs only. CPU'+str(cpu['tests'])+'PASS.\n'
+    line+='Engineering V2: original registration/deployment retained; exclusive-create storage guard stopped BEFORE the first binding/owner change. Atomic operational pointer replacement only after original configuration snapshot; CPU-qualified repair, no physics replay.\n'
+    target=ops.EVIDENCE/'RESOURCE_EXTENSION_REGISTRATION_1634_V2.json'
+    assert not target.exists(),'adopt existing extension before repeating registration'
+    with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+    write(target,dict(line=line,authority='MAIN2026-11-02 16:34',gpu_deadline=RESOURCE_DEADLINE,
+        cpu=cpu,source_root=SOURCE,new_sim_s=0))
+    h=sha(target)
+    out=ops.ssh.remote('cpuQ',f'''import pathlib,json,sys,time,os,signal,hashlib
+r=pathlib.Path({ROOT!r});s=pathlib.Path({SOURCE!r});sys.path.insert(0,str(s/'pytools'))
+from tools.coopmwm.verification_beta_ops import extended_config,replace_resource_config
+from tools.coopmwm.warm_spool import immutable
+from tools.coopmwm.storage import write
+assert not (r/'RESOURCE_EXTENSION_1634.json').exists(),'adopt existing extension'
+cpu=json.loads({json.dumps(cpu)!r})
+for n,h in cpu['source_hashes'].items():assert hashlib.sha256((s/n).read_bytes()).hexdigest()==h
+names=('WARM_BINDING.json','EXACT_OPERATIONAL_BINDING.json','WARM_B_RUNTIME_BINDING_V4.json','WARM_R_RUNTIME_BINDING_V4.json','VERIFICATION_BETA_BINDING.json','WARM_REMOTE_BINDING.json','MATCH_BROKER_CONFIG.json')
+original={{n:json.loads((r/n).read_text()) for n in names if (r/n).exists()}}
+immutable(r/'RESOURCE_EXTENSION_ORIGINALS_1634.json',original)
+with (r/'AUTHORITY.md').open('a') as f:f.write({line!r}+'amendmentSHA'+{h!r}+'\\n')
+for n,v in original.items():
+ v=extended_config(v);v['gpu_deadline']={RESOURCE_DEADLINE!r}
+ if n=='VERIFICATION_BETA_BINDING.json':v.update(source_root=str(s),cpu=cpu,receipt_suffix='_DL1')
+ replace_resource_config(r/n,v)
+v=dict(unix=time.time(),gpu_deadline={RESOURCE_DEADLINE!r},deadline_unix={RESOURCE_DEADLINE!r},amendment_sha256={h!r},source_root=str(s))
+immutable(r/'RESOURCE_EXTENSION_1634.json',v)
+print(json.dumps(v))''',timeout=40)
+    write(ops.EVIDENCE/'RESOURCE_EXTENSION_1634.json',json.loads(out));print(out)
+
+
+def extend_dispatch():
+    """Start only the durable migration controller; it owns subsequent handovers."""
+    from . import ops
+    from .warm_deploy import ROOT
+    out=ops.ssh.remote('cpuQ',f'''import pathlib,json,sys,time,os,signal,subprocess
+r=pathlib.Path({ROOT!r});s=pathlib.Path({SOURCE!r});sys.path.insert(0,str(s/'pytools'))
+from tools.coopmwm.warm_spool import immutable
+from tools.coopmwm.verification_beta_ops import identity
+assert not (r/'RESOURCE_EXTENSION_DISPATCH_1634.json').exists(),'adopt existing migration'
+v=json.loads((r/'RESOURCE_EXTENSION_1634.json').read_text());assert v['amendment_sha256'] in (r/'AUTHORITY.md').read_text()
+old=json.loads((r/'VERIFICATION_BETA_TRANSITION_DISPATCH_V3.json').read_text())
+p=pathlib.Path('/proc',str(old['pid']));st=(p/'stat').read_text().split();assert st[21]==old['start_ticks'] and old['boot_id']==pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+argv=[x.decode() for x in (p/'cmdline').read_bytes().split(b'\\0') if x]
+assert argv==['/home/ubuntu/miniconda3/bin/python','-B','-u','-m','tools.coopmwm.verification_beta_ops','serve','--root',str(r),'--config','VERIFICATION_BETA_TRANSITION_CONFIG_V3.json']
+assert not (p/'task'/str(old['pid'])/'children').read_text().strip()
+os.kill(old['pid'],signal.SIGTERM)
+broker=json.loads((r/'MATCH_BROKER_DISPATCH.json').read_text());assert identity(broker) in ('S','R')
+os.kill(broker['pid'],signal.SIGSTOP)
+cfg=json.loads((r/'VERIFICATION_BETA_TRANSITION_CONFIG_V3.json').read_text())
+cfg.update(controller_source=str(s),source_root=str(s),receipt_suffix='_V4',binding_sha256=__import__('hashlib').sha256((r/'VERIFICATION_BETA_BINDING.json').read_bytes()).hexdigest(),old_broker=broker)
+immutable(r/'VERIFICATION_BETA_TRANSITION_CONFIG_V4.json',cfg)
+env=dict(os.environ,CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',PYTHONPATH=str(s/'pytools')+':/home/ubuntu/e3final/runtime/src:/home/ubuntu/e3final/runtime')
+with (r/'RESOURCE_EXTENSION_1634.log').open('x') as log:
+ p=subprocess.Popen(['nice','-n','19',sys.executable,'-B','-u','-m','tools.coopmwm.verification_beta_ops','extend_serve','--root',str(r)],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+st=pathlib.Path('/proc',str(p.pid),'stat').read_text().split();d=dict(pid=p.pid,start_ticks=st[21],boot_id=broker['boot_id'],root=str(r),source=str(s),unix=time.time())
+immutable(r/'RESOURCE_EXTENSION_DISPATCH_1634.json',d);print(json.dumps(d))''',timeout=40)
+    write(ops.EVIDENCE/'RESOURCE_EXTENSION_DISPATCH_1634.json',json.loads(out));print(out)
+
+
+def extend_gpu():
+    import inspect
+    from . import ops
+    reg=read(ops.EVIDENCE/'RESOURCE_EXTENSION_1634.json')
+    # Explicit owned roots: no directory discovery, no other project's process.
+    roots=dict(gpuA=('/root/coopmwm20261102_incident1','/root/coopmwm20261102_second1'),
+               gpuR=('/root/coopmwm20261102_concurrent3','/root/coopmwm20261102_second1'))
+    script=inspect.getsource(_resource_gpu_main)+'\nimport sys\n_resource_gpu_main(sys.argv[1],float(sys.argv[2]),sys.argv[3])\n'
+    for host,paths in roots.items():
+        stage='/root/coopmwm20261102_deadlineops1'
+        ops.stage(host,stage,{'restart.py':script})
+        out=ops.ssh.remote(host,f'''import pathlib,json,os,sys,time,subprocess
+s=pathlib.Path({stage!r});out=[]
+for name in {paths!r}:
+ r=pathlib.Path(name);assert r.is_dir();assert not (r/'RESOURCE_EXTENSION_DISPATCH_1634.json').exists(),'adopt existing GPU restart'
+ b=json.loads((r/'GPU_BINDING.json').read_text())
+ env=dict(os.environ,OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',PYTHONPATH=str(r/'pytools'))
+ with (r/'RESOURCE_EXTENSION_1634.log').open('x') as log:
+  p=subprocess.Popen([sys.executable,'-B','-u',str(s/'pytools/restart.py'),str(r),str({RESOURCE_DEADLINE!r}),{reg['amendment_sha256']!r}],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+ st=pathlib.Path('/proc',str(p.pid),'stat').read_text().split();d=dict(pid=p.pid,start_ticks=st[21],boot_id=pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip(),root=str(r),unix=time.time(),host={host!r})
+ with (r/'RESOURCE_EXTENSION_DISPATCH_1634.json').open('x') as f:json.dump(d,f)
+ out.append(d)
+print(json.dumps(out))''',timeout=40)
+        write(ops.EVIDENCE/f'RESOURCE_EXTENSION_GPU_{host}_1634.json',json.loads(out));print(out)
+
+
+def extend_serve(root):
+    import os,signal,subprocess,sys
+    from .warm_spool import immutable
+    from .warm_broker import Remote,worker_endpoints
+    cfg=read(root/'VERIFICATION_BETA_TRANSITION_CONFIG_V4.json')
+    v=read(root/'RESOURCE_EXTENSION_1634.json')
+    assert v['amendment_sha256'] in (root/'AUTHORITY.md').read_text()
+    try:
+        endpoints=worker_endpoints(root,read(root/'WARM_REMOTE_BINDING.json'),{})
+        ready={}
+        while len(ready)<len(endpoints):
+            for slot,e in endpoints.items():
+                if slot in ready:continue
+                s=Remote(root,e).call(dict(action='status'))
+                owner=s['receipts'].get('SPOOL_OWNER.json',{});service=s['receipts'].get('SERVICE_OWNER.json',{})
+                if s['alive'] and s['ready'] and not s['failed'] and owner.get('unix',0)>v['unix'] and service.get('pid')==owner.get('pid'):
+                    ready[slot]=owner
+            if time.time()>RESOURCE_DEADLINE:raise ValueError('extended resource deadline')
+            time.sleep(5)
+        old=cfg['old_broker'];assert identity(old)=='T';os.kill(old['pid'],signal.SIGKILL)
+        for _ in range(150):
+            if identity(old) is None:break
+            time.sleep(.1)
+        else:raise ValueError('old broker did not exit')
+        bc=read(root/'MATCH_BROKER_CONFIG.json');bc['receipt_tag']='_DL1'
+        write(root/'RESOURCE_BROKER_CONFIG_1634.json',bc)
+        with (root/'RESOURCE_BROKER_1634.log').open('x') as log:
+            p=subprocess.Popen(['nice','-n','19',sys.executable,'-B','-u','-m','tools.coopmwm.capacity_broker',str(root),str(root/'RESOURCE_BROKER_CONFIG_1634.json')],stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+        st=Path('/proc',str(p.pid),'stat').read_text().split()
+        immutable(root/'RESOURCE_BROKER_DISPATCH_1634.json',dict(pid=p.pid,start_ticks=st[21],boot_id=old['boot_id'],root=str(root),source=cfg['source_root'],unix=time.time(),component='broker'))
+        immutable(root/'RESOURCE_GPU_HANDOVER_COMPLETE_1634.json',dict(unix=time.time(),workers=ready,gpu_deadline=RESOURCE_DEADLINE))
+        serve(root,'VERIFICATION_BETA_TRANSITION_CONFIG_V4.json')
+    except BaseException as e:
+        immutable(root/'RESOURCE_EXTENSION_FAILED_1634.json',dict(unix=time.time(),error=repr(e)))
+        raise
 
 
 def status():
@@ -50,7 +259,9 @@ def cpu():
     v.SOURCE=SOURCE
     v.OVERLAYS=tuple(dict.fromkeys(v.OVERLAYS+('warm_protocol','warm_runner','warm_health',
         'r_matching','test_r_matching_cpu','test_warm_health_cpu','incident_recovery',
-        'capacity_broker','verification_smoke','verification_beta_ops')))
+        'capacity_broker','verification_smoke','verification_beta_ops','warm_transport',
+        'warm_broker','resource_config','quota_admission','accel_runner',
+        'test_warm_transport_cpu','test_warm_broker_cpu','test_resource_config_cpu')))
     v.cpu()
 
 
@@ -173,6 +384,12 @@ immutable(r/'VERIFICATION_BETA_TRANSITION_DISPATCH_V2.json',v);print(json.dumps(
 
 
 def resource_deadline(root,b):
+    extension=root/'RESOURCE_EXTENSION_1634.json'
+    if extension.exists():
+        v=read(extension)
+        assert v['amendment_sha256'] in (root/'AUTHORITY.md').read_text()
+        assert v['gpu_deadline']==RESOURCE_DEADLINE
+        return v['gpu_deadline']
     if 'gpu_deadline' in b:return b['gpu_deadline']
     return read(root/'EXACT_OPERATIONAL_BINDING.json')['gpu_deadline']
 
@@ -229,10 +446,25 @@ def serve(root,config='VERIFICATION_BETA_TRANSITION_CONFIG.json'):
         for a in ('R','B'):
             existing=root/f'BETA_{a}_DISPATCH.json'
             if existing.exists():
-                assert identity(read(existing)) in ('S','R'),'inspect existing replacement owner'
-                continue
-            d=cfg['owners'][a]
-            partial=(root/f'BETA_{a}_HANDOVER.json').exists()
+                current=read(existing)
+                assert identity(current) in ('S','R'),'inspect existing replacement owner'
+                if suffix!='_V4' or current['source']==b['source_root']:continue
+                # R is still waiting for B4's quota: no live physics may be stopped.
+                assert a=='R' and not children(current)
+                assert not any((root/'jobs'/('warm_u004_R_'+str(w['seed']))/'CLAIM.json').exists()
+                               for w in b['plans']['R']['worlds'])
+                immutable(root/'BETA_R_PRE_EXTENSION_DISPATCH_1634.json',current)
+                os.kill(current['pid'],signal.SIGSTOP)
+                assert identity(current)=='T';os.kill(current['pid'],signal.SIGKILL)
+                for _ in range(150):
+                    if identity(current) is None:break
+                    time.sleep(.1)
+                else:raise ValueError('old waiting R did not exit')
+                # Preserve the original dispatch above; publish the new owner below.
+                d=current;partial=True
+            else:
+                d=cfg['owners'][a]
+                partial=(root/f'BETA_{a}_HANDOVER.json').exists()
             assert identity(d) is None if partial else identity(d)=='T','old parent must remain frozen or verified handover complete'
             if a=='B':
                 while True:
@@ -263,20 +495,163 @@ def serve(root,config='VERIFICATION_BETA_TRANSITION_CONFIG.json'):
             immutable(root/f'BETA_{a}_PREFLIGHT.json',dict(unix=time.time(),resume_update=3,
                 tracked_beta=pre['resume_progress']['beta'],effective_guide_beta=1.,
                 restored_state_sha256=__import__('tools.coopmwm.protocol',fromlist=['digest']).digest(pre['resume_progress']),new_physics=0))
-            assert not (root/f'BETA_{a}_DISPATCH.json').exists()
+            replacing=a=='R' and suffix=='_V4' and existing.exists()
+            assert replacing or not existing.exists()
             env=dict(os.environ);env['PYTHONPATH']=cfg['source_root']+'/pytools:/home/ubuntu/e3final/runtime/src:/home/ubuntu/e3final/runtime'
             with (root/f'BETA_{a}.log').open('x') as log:
                 p=subprocess.Popen(['nice','-n','19',sys.executable,'-B','-u','-m','tools.coopmwm.incident_recovery',str(root),'--component',a],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
             st=Path('/proc',str(p.pid),'stat').read_text().split()
-            immutable(root/f'BETA_{a}_DISPATCH.json',dict(pid=p.pid,start_ticks=st[21],boot_id=d['boot_id'],root=str(root),source=cfg['source_root'],component=a,first_update=4,sumo_verification=True,guide_beta=1.,unix=time.time()))
+            dispatched=dict(pid=p.pid,start_ticks=st[21],boot_id=d['boot_id'],root=str(root),source=cfg['source_root'],component=a,first_update=4,sumo_verification=True,guide_beta=1.,unix=time.time(),gpu_deadline=resource_deadline(root,b))
+            if replacing:
+                immutable(root/'BETA_R_RESOURCE_DISPATCH_1634.json',dispatched)
+                replace_resource_config(existing,dispatched)
+            else:immutable(existing,dispatched)
         immutable(root/('VERIFICATION_BETA_HANDOVER_COMPLETE'+suffix+'.json'),dict(unix=time.time(),guide_beta=1.,source_root=cfg['source_root'],adopted_B4_legacy_wave=True,R4_fresh=True))
     except BaseException as e:
         immutable(root/('VERIFICATION_BETA_TRANSITION_FAILED'+suffix+'.json'),dict(unix=time.time(),error=repr(e)))
         raise
 
 
+def resume_register():
+    """MAIN16:51 additive binding; preserve every original config and failed job."""
+    from . import ops
+    from .warm_deploy import ROOT
+    from .protocol import REGISTRY,checked,sha
+    cpu=read(ops.EVIDENCE/('CPU_'+SOURCE.rsplit('/',1)[1]+'.json'))
+    assert cpu['pass_'] and cpu['skips']==cpu['sim_s']==0
+    target=ops.EVIDENCE/'RESOURCE_RECOVERY_PLAN_1651.json'
+    assert not target.exists(),'adopt existing recovery registration'
+    out=ops.ssh.remote('cpuQ',f'''import pathlib,json,hashlib,time
+r=pathlib.Path({ROOT!r});b=json.loads((r/'VERIFICATION_BETA_BINDING.json').read_text());failed=[];complete=[]
+assert not (r/'RESOURCE_EXTENSION_1651.json').exists()
+assert not list(r.glob('PAUSE_*.json'))
+for a in ('B','R'):assert not (r/(a+'_UPDATE_004.json')).exists()
+for w in b['plans']['B']['worlds']:
+ key='warm_u004_B_'+str(w['seed']);p=r/'jobs'/key
+ assert (p/'CLOSE.json').exists()
+ (complete if (p/'RESULT.json').exists() else failed).append(key)
+assert len(complete)==14 and len(failed)==10
+stop=r/'WARM_GUIDED_STOP_V4.json';v=json.loads(stop.read_text())
+assert v['source']=='capacity broker' and 'Temporary failure in name resolution' in v['error']
+originals={{n:hashlib.sha256((r/n).read_bytes()).hexdigest() for n in ('WARM_BINDING.json','EXACT_OPERATIONAL_BINDING.json','VERIFICATION_BETA_BINDING.json','WARM_REMOTE_BINDING.json')}}
+print(json.dumps(dict(binding=b,failed=failed,complete=complete,stop_sha256=hashlib.sha256(stop.read_bytes()).hexdigest(),originals=originals,unix=time.time())))''',timeout=40)
+    state=json.loads(out);b=state['binding'];cost=1200*len(state['failed'])
+    assert cost<50000
+    b['budget']['phases']['discovery']-=cost;b['budget']['phases']['train']+=cost
+    assert b['budget']['phases']['discovery']>=120000
+    b['budget']['phases']['sumo_verification_k8']=1500000
+    b['budget'].update(total=11000000,allocated=11000000,unallocated=0)
+    assert sum(b['budget']['phases'].values())==b['budget']['allocated']
+    b.update(source_root=SOURCE,cpu=cpu,gpu_deadline=RESOURCE_DEADLINE,receipt_suffix='_DNS1651',
+        job_id_overrides={k:k.replace('warm_u','warmdns1651_u',1) for k in state['failed']},
+        originals=state['originals'],stop_sha256=state['stop_sha256'])
+    assert b['sumo_verify']['k']==4 and b['sumo_verify']['guide_beta']==1.
+    value=dict(binding=b,state={k:v for k,v in state.items() if k!='binding'},new_sim_s=cost,
+        k8_active=False,learned_search_active=False,authority='MAIN16:34/16:43/16:51; MAIN09:58 delegated reserve rule')
+    write(target,value);h=sha(target)
+    line='\nS-COOPMWM MAIN1651 DNS ENGINEERING RECOVERY REGISTERED planSHA'+h+': additive RESOURCE_EXTENSION_1651 only, no immutable binding replacement; all clocks2026-11-05 23:59+08, beta1 both verified guides. Ten closed/no-result B4 attempts replaced with NEW IDs, same registered TRAIN worlds/no fresh seeds, identical noise wave and u3 Adam/RNG/library;14 completed results adopted. Cost12000 transferred discovery150200->138200/train2840400->2852400; all original charges retained. Cap11000000; extra1500000 restricted sumo_verification_k8 INACTIVE pending activation addendum, existing9500000 phases otherwise unchanged. Exact DNS-stop SHA release only; V5 faults fatal. SSH DNS/closed/reset/timeout/exit255 metadata retries6attempts/300s, identity/gates checked before identical delivery; no inference/physics replay. ScreenK4/H300 and finalK8/Hfinal unchanged, search/learned seeds/k8 verification inactive. CPU'+str(cpu['tests'])+'PASS. No sealed outcome access.\n'
+    with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
+    write(ops.EVIDENCE/'RESOURCE_RECOVERY_REGISTRATION_1651.json',dict(line=line,amendment_sha256=h))
+    value['binding']['amendment_sha256']=h
+    out=ops.ssh.remote('cpuQ',f'''import pathlib,json,sys,hashlib,time
+r=pathlib.Path({ROOT!r});s=pathlib.Path({SOURCE!r});sys.path.insert(0,str(s/'pytools'))
+from tools.coopmwm.warm_spool import immutable
+from tools.coopmwm.incident_recovery import retired_key
+v=json.loads({json.dumps(value)!r});b=v['binding']
+for n,h in b['cpu']['source_hashes'].items():assert hashlib.sha256((s/n).read_bytes()).hexdigest()==h,n
+for n,h in b['originals'].items():assert hashlib.sha256((r/n).read_bytes()).hexdigest()==h,n
+keys=[]
+for folder in ('requests','centre_requests'):
+ for p in (r/folder).glob('*.json'):
+  if retired_key(json.loads(p.read_text()),v['state']['failed']):keys.append(p.stem)
+with (r/'AUTHORITY.md').open('a') as f:f.write({line!r})
+immutable(r/'DNS_RETIRED_JOBS_1651.json',dict(jobs=v['state']['failed'],query_keys=keys,amendment_sha256=b['amendment_sha256']))
+immutable(r/'RESOURCE_EXTENSION_1651.json',b)
+immutable(r/'DNS_GUIDED_RELEASE_1651.json',dict(original_stop_sha256=b['stop_sha256'],amendment_sha256=b['amendment_sha256']))
+old=json.loads((r/'MATCH_BROKER_CONFIG.json').read_text())
+old.update(source_root=str(s),gpu_deadline=b['gpu_deadline'],deadline_unix=b['gpu_deadline'],receipt_tag='_DNS1651',amendment_sha256=b['amendment_sha256'])
+immutable(r/'DNS_BROKER_CONFIG_1651.json',old)
+print(json.dumps(dict(bound=True,unix=time.time(),retired_queries=len(keys),new_sim_s=v['new_sim_s'],gpu_deadline=b['gpu_deadline'],budget=b['budget'])))''',timeout=45)
+    write(ops.EVIDENCE/'RESOURCE_RECOVERY_BOUND_1651.json',json.loads(out));print(out)
+
+
+def resume_dispatch():
+    """One durable recovery controller, never duplicate existing dispatch receipts."""
+    from . import ops
+    from .warm_deploy import ROOT
+    out=ops.ssh.remote('cpuQ',f'''import pathlib,json,sys,os,subprocess,time
+r=pathlib.Path({ROOT!r});s=pathlib.Path({SOURCE!r});sys.path.insert(0,str(s/'pytools'))
+from tools.coopmwm.warm_spool import immutable
+from tools.coopmwm.incident_recovery import binding
+assert not (r/'DNS_RECOVERY_DISPATCH_1651.json').exists(),'adopt existing controller'
+b=binding(r)
+env=dict(os.environ,CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',PYTHONPATH=str(s/'pytools')+':/home/ubuntu/e3final/runtime/src:/home/ubuntu/e3final/runtime')
+with (r/'DNS_RECOVERY_1651.log').open('x') as log:
+ p=subprocess.Popen(['nice','-n','19',sys.executable,'-B','-u','-m','tools.coopmwm.verification_beta_ops','resume_serve','--root',str(r)],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+st=pathlib.Path('/proc',str(p.pid),'stat').read_text().split();d=dict(pid=p.pid,start_ticks=st[21],boot_id=pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip(),source=str(s),root=str(r),unix=time.time())
+immutable(r/'DNS_RECOVERY_DISPATCH_1651.json',d);print(json.dumps(d))''',timeout=40)
+    write(ops.EVIDENCE/'DNS_RECOVERY_DISPATCH_1651.json',json.loads(out));print(out)
+
+
+def resume_serve(root):
+    """Reconcile exited owners, stop ONLY the verified idle B pool, restore u3."""
+    import os,sys,signal,subprocess
+    from .incident_recovery import binding,install
+    from .warm_spool import immutable
+    from .warm_health import assert_running
+    b=binding(root);assert_running(root,'B')
+    boot=Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+    def gone(d):
+        assert d['boot_id']==boot
+        p=Path('/proc',str(d['pid']))
+        if not p.exists():return True
+        st=(p/'stat').read_text().split();assert st[21]==d['start_ticks']
+        return st[2]=='Z'
+    try:
+        assert not (root/'DNS_RECOVERY_STARTED_1651.json').exists()
+        old=read(root/'VERIFIED_B_DISPATCH.json')
+        assert identity(old)=='T'
+        cs=children(old)  # refuses physics descendants, checks exact pool argv
+        immutable(root/'DNS_B_IDLE_HANDOVER_1651.json',dict(old=old,children=cs,unix=time.time()))
+        for c in cs:
+            if not c['tracker']:
+                assert Path('/proc',str(c['pid']),'stat').read_text().split()[21]==c['start_ticks']
+                os.kill(c['pid'],signal.SIGTERM)
+        assert identity(old)=='T';os.kill(old['pid'],signal.SIGKILL)
+        for _ in range(150):
+            if gone(old):break
+            time.sleep(.1)
+        else:raise ValueError('held B did not exit')
+        for name in ('BETA_R_DISPATCH.json','VERIFICATION_BETA_TRANSITION_DISPATCH_V3.json','MATCH_BROKER_DISPATCH.json','VERIFIED_GRADER_DISPATCH.json'):
+            assert gone(read(root/name)),name+' still live; adopt before recovery'
+        for a in ('B','R'):
+            wr,_=install(root,a);v=wr.verify(root,a)
+            assert v['resume_update']==3 and v['gpu_deadline']==RESOURCE_DEADLINE and v['sumo_verify']['guide_beta']==1.
+            immutable(root/f'DNS_{a}_PREFLIGHT_1651.json',dict(unix=time.time(),resume_update=3,
+                restored_state_sha256=__import__('tools.coopmwm.protocol',fromlist=['digest']).digest(v['resume_progress']),new_physics=0))
+        # Install must not leak B/R schedule closures into this controller's child processes.
+        env=dict(os.environ,SUMO_HOME='/home/ubuntu/miniconda3/lib/python3.10/site-packages/sumo')
+        env['PATH']=env['SUMO_HOME']+'/bin:'+env['PATH']
+        for component in ('broker','grader','B','R'):
+            name='DNS_'+component.upper()+'_DISPATCH_1651.json'
+            assert not (root/name).exists(),'adopt existing component'
+            cmd=[sys.executable,'-B','-u','-m']
+            if component=='broker':cmd+=['tools.coopmwm.capacity_broker',str(root),str(root/'DNS_BROKER_CONFIG_1651.json')]
+            else:cmd+=['tools.coopmwm.incident_recovery',str(root),'--component',component]
+            with (root/('DNS_'+component.upper()+'_1651.log')).open('x') as log:
+                p=subprocess.Popen(['nice','-n','19']+cmd,env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+            st=Path('/proc',str(p.pid),'stat').read_text().split()
+            immutable(root/name,dict(pid=p.pid,start_ticks=st[21],boot_id=boot,source=b['source_root'],root=str(root),component=component,unix=time.time()))
+        immutable(root/'DNS_RECOVERY_STARTED_1651.json',dict(unix=time.time(),gpu_deadline=RESOURCE_DEADLINE,
+            beta=1.,resume=dict(B=3,R=3),adopt_completed_B4=14,replacement_attempts=10,k8_active=False))
+    except BaseException as e:
+        immutable(root/'DNS_RECOVERY_FAILED_1651.json',dict(unix=time.time(),error=repr(e)));raise
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('status','cpu','dispatch','serve','recover','repair_wait'));p.add_argument('--root',type=Path);p.add_argument('--config',default='VERIFICATION_BETA_TRANSITION_CONFIG.json')
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('status','cpu','dispatch','serve','recover','repair_wait','extend_register','extend_dispatch','extend_gpu','extend_serve','resume_register','resume_dispatch','resume_serve'));p.add_argument('--root',type=Path);p.add_argument('--config',default='VERIFICATION_BETA_TRANSITION_CONFIG.json')
     a=p.parse_args()
     if a.mode=='serve':serve(a.root,a.config)
+    elif a.mode=='extend_serve':extend_serve(a.root)
+    elif a.mode=='resume_serve':resume_serve(a.root)
     else:globals()[a.mode]()

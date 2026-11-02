@@ -2,7 +2,7 @@
 import subprocess
 import unittest
 from unittest.mock import Mock
-from .warm_transport import connection_error,retry,validate_snapshot
+from .warm_transport import connection_error,retry,validate_snapshot,SSHConnectionError
 from .resume_gate import check_budget
 
 
@@ -35,11 +35,16 @@ class Transport(unittest.TestCase):
             retry(op,Mock(side_effect=ValueError('PID changed')),Mock(),sleep=lambda _:None)
         self.assertEqual(op.call_count,1)
 
-    def test_five_attempt_bound(self):
+    def test_dns_and_ssh255_are_transport_but_code_faults_still_stop(self):
+        self.assertTrue(connection_error(RuntimeError('ssh: Could not resolve hostname connect.westb.seetacloud.com: Temporary failure in name resolution')))
+        self.assertTrue(connection_error(SSHConnectionError('unknown SSH disconnect')))
+        self.assertFalse(connection_error(SSHConnectionError('Traceback: parity failed')))
+
+    def test_six_attempt_bound(self):
         op=Mock(side_effect=RuntimeError('Connection closed by host port 22'));verify=Mock();sleeps=[]
         with self.assertRaises(RuntimeError):retry(op,verify,Mock(),sleep=sleeps.append)
-        self.assertEqual(op.call_count,5);self.assertEqual(verify.call_count,4)
-        self.assertEqual(sleeps,[15,30,60,120])
+        self.assertEqual(op.call_count,6);self.assertEqual(verify.call_count,5)
+        self.assertEqual(sleeps,[10,20,40,80,120])
 
     def test_executor_failure_never_retried(self):
         op=Mock(side_effect=RuntimeError('Traceback: executor failed'));verify=Mock()

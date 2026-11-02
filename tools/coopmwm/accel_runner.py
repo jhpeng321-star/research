@@ -53,7 +53,8 @@ def wave(root,b,policies,ws,role,ident,phase,deterministic=True,extras=None):
     from .policy_wm import actor_state
     for w in ws:
         for arm,policy in policies.items():
-            key=f'{ident}_{arm}_{w["seed"]}';path=root/'jobs'/key
+            key=f'{ident}_{arm}_{w["seed"]}'
+            key=b.get('job_id_overrides',{}).get(key,key);path=root/'jobs'/key
             if (path/'RESULT.json').exists():results.append(read(path/'RESULT.json'));continue
             if key in precharged:
                 if key not in b.get('precharged_unattempted',[]) or (path/'CLAIM.json').exists():

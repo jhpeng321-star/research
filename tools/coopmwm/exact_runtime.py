@@ -31,6 +31,7 @@ def enqueue(root,b,ep,u,arm,beta):
 
 def assert_live(root):
     p=Path(root)/'VERIFIED_GRADER_DISPATCH.json'
+    if (Path(root)/'DNS_GRADER_DISPATCH_1651.json').exists():p=Path(root)/'DNS_GRADER_DISPATCH_1651.json'
     if not p.exists():p=Path(root)/'MATCH_GRADER_DISPATCH.json'
     if not p.exists():p=Path(root)/'INCIDENT_GRADER_DISPATCH.json'
     if not p.exists():p=Path(root)/'EXACT_GRADER_DISPATCH_V2.json'
@@ -75,13 +76,15 @@ def supervise(root,workers=8):
         from .accel_storage import ledger
         for c in ledger(root):
             ident=c['id']
-            if ident in seen or not ident.startswith('warm_u'):continue
+            if ident in seen or not ident.startswith(('warm_u','warmdns1651_u')):continue
             bits=ident.split('_')
             if len(bits)!=4 or bits[2] not in ('B','R'):continue
             p=root/'jobs'/ident/'RESULT.json'
             if not p.exists():continue
             ep=read(p);u=int(bits[1][1:]);arm=bits[2]
             b=read(root/'EXACT_OPERATIONAL_BINDING.json')
+            from .resource_config import clocks
+            b=clocks(root,b)
             previous=root/f'{arm}_UPDATE_{u-1:03}.json'
             beta=read(previous)['trust'] if previous.exists() else 1.
             enqueue(root,b,ep,u,arm,beta);seen.add(ident)
@@ -90,7 +93,8 @@ def supervise(root,workers=8):
         for r in receipts:
             if r['status'] in ('failed','stopped') or (r['status']=='graded' and not r['noise'].get('crn_verified_t0')):
                 immutable(q.root/'GRADER_STOP.json',dict(grade_id=r['grade_id'],status=r['status'],reason=r.get('reason'),no_imputation=True))
-                target=root/('WARM_GUIDED_STOP_V4.json' if (root/'MATCH_GUIDED_RELEASE.json').exists() else
+                target=root/('WARM_GUIDED_STOP_V5.json' if (root/'DNS_GUIDED_RELEASE_1651.json').exists() else
+                    'WARM_GUIDED_STOP_V4.json' if (root/'MATCH_GUIDED_RELEASE.json').exists() else
                     'WARM_GUIDED_STOP_V3.json' if (root/'INCIDENT_GUIDED_RELEASE.json').exists() else
                     'WARM_GUIDED_STOP_V2.json' if (root/'MAIN0508_GUIDED_RELEASE.json').exists() else 'WARM_GUIDED_STOP.json')
                 immutable(target,dict(source='exact-grade engineering fault',grade_id=r['grade_id']))

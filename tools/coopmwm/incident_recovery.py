@@ -44,6 +44,8 @@ def retired_key(record,job_ids):
 
 def binding(root):
     r=Path(root);p=r/'VERIFICATION_BETA_BINDING.json'
+    from .resource_config import NAME
+    if (r/NAME).exists():p=r/NAME
     if not p.exists():p=r/'VERIFICATION_CONTINUATION_BINDING.json'
     if not p.exists():p=r/'MATCH_RECOVERY_BINDING.json'
     b=json.loads((p if p.exists() else r/'INCIDENT_RECOVERY_BINDING.json').read_text())
@@ -76,11 +78,14 @@ def install(root,arm=None):
         original=json.loads((r/'EXACT_OPERATIONAL_BINDING.json').read_text())
         operational=json.loads((r/'WARM_B_RUNTIME_BINDING_V4.json').read_text())['operational']
         result=dict(original);result.update(operational)
+        from .resource_config import clocks
+        result=clocks(r,result)
         resume=b['resume'][a]
         assert sha(r/f'{a}_checkpoint_{resume:03}.pt')==b['checkpoints'][a]
         assert not (r/f'{a}_UPDATE_{resume+1:03}.json').exists(),'adopt completed optimizer instead'
         for w in schedule(resume+1):
-            p=r/'jobs'/f'warm_u{resume+1:03}_{a}_{w["seed"]}'
+            key=f'warm_u{resume+1:03}_{a}_{w["seed"]}'
+            p=r/'jobs'/b.get('job_id_overrides',{}).get(key,key)
             assert (p/'RESULT.json').exists() or not (p/'CLAIM.json').exists(),'never retry attempted physics'
         # Restore completed updates using their original schedules, not replacement wave.
         def history(u):
@@ -91,7 +96,8 @@ def install(root,arm=None):
         result.update(budget=b['budget'],awr=json.loads((r/'AWR_BINDING.json').read_text())['config'],
             resume_update=resume,resume_progress=progress,runtime_receipt_suffix=b.get('receipt_suffix','_I1'),
             workers=24 if a=='B' else 4,quota_aware_admission=True,parallel_group_queries=a=='B',
-            precharged_unattempted=b['plans'][a]['precharged_unattempted'])
+             precharged_unattempted=b['plans'][a]['precharged_unattempted'])
+        result['job_id_overrides']=b.get('job_id_overrides',{})
         if a in b.get('stop_after_update',{}):result['stop_after_update']=b['stop_after_update'][a]
         if b.get('sumo_verify'):result['sumo_verify']=copy.deepcopy(b['sumo_verify'])
         return result

@@ -38,8 +38,8 @@ def check_worker(root,endpoint,status,key=None):
 def pending(root):
     from .exploration import regime
     items=[]
-    retired=root/'INCIDENT_RETIRED_JOBS.json'
-    excluded=set(json.loads(retired.read_text()).get('query_keys',[])) if retired.exists() else set()
+    from .resource_config import retired
+    excluded=set(retired(root)['query_keys'])
     for req,resp,kind in [('requests','responses','plan'),('centre_requests','centre_responses','centre')]:
         for p in (root/req).glob('*.json'):
             if p.stem in excluded:continue
@@ -121,6 +121,8 @@ def run(root,config_path):
     import signal
     root=Path(root);config=json.loads(Path(config_path).read_text())
     binding=json.loads((root/'WARM_REMOTE_BINDING.json').read_text())
+    from .resource_config import clocks
+    config=clocks(root,config);binding=clocks(root,binding)
     assert config['amendment_sha256'] in (root/'AUTHORITY.md').read_text()
     assert config['deadline_unix']==binding['deadline_unix']
     lock=(root/'WARM_REMOTE_BROKER.claim').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
@@ -129,7 +131,8 @@ def run(root,config_path):
         boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),unix=time.time(),source=config['source_root'])
     tag=config.get('receipt_tag','')
     immutable(root/('CAPACITY_BROKER_OWNER'+tag+'.json'),owner)
-    stop_path=root/('WARM_GUIDED_STOP_V4.json' if (root/'MATCH_GUIDED_RELEASE.json').exists() else
+    stop_path=root/('WARM_GUIDED_STOP_V5.json' if (root/'DNS_GUIDED_RELEASE_1651.json').exists() else
+        'WARM_GUIDED_STOP_V4.json' if (root/'MATCH_GUIDED_RELEASE.json').exists() else
         'WARM_GUIDED_STOP_V3.json' if (root/'INCIDENT_GUIDED_RELEASE.json').exists() else
         'WARM_GUIDED_STOP_V2.json' if tag else 'WARM_GUIDED_STOP.json')
     assignments=root/'broker_assignments';assignments.mkdir(exist_ok=True)

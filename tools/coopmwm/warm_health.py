@@ -27,7 +27,16 @@ def assert_running(root,arm):
     root=Path(root)
     if active_stop(root):raise ValueError('durable warm STOP')
     if arm in ('B','R'):
-        if (root/'WARM_GUIDED_STOP_V4.json').exists():raise ValueError('new durable guided engineering STOP')
+        if (root/'WARM_GUIDED_STOP_V5.json').exists():raise ValueError('new durable guided engineering STOP')
+        p4=root/'WARM_GUIDED_STOP_V4.json'
+        if p4.exists():
+            release=root/'DNS_GUIDED_RELEASE_1651.json'
+            v=read(release) if release.exists() else {}
+            if not (v.get('original_stop_sha256')==sha(p4)
+                and read(p4).get('source')=='capacity broker'
+                and read(p4).get('error')=="RuntimeError('ssh: Could not resolve hostname connect.westb.seetacloud.com: Temporary failure in name resolution')"
+                and v.get('amendment_sha256','UNREGISTERED') in (root/'AUTHORITY.md').read_text()):
+                raise ValueError('new durable guided engineering STOP')
         p3=root/'WARM_GUIDED_STOP_V3.json'
         if p3.exists():
             release=root/'MATCH_GUIDED_RELEASE.json'

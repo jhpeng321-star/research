@@ -2,6 +2,8 @@
 import json
 import tempfile
 import unittest
+import subprocess
+from types import SimpleNamespace
 from pathlib import Path
 from unittest.mock import patch
 from .warm_broker import Remote,available,worker_endpoints
@@ -9,6 +11,18 @@ from .warm_rpc import GATES,handle
 
 
 class BrokerCPU(unittest.TestCase):
+    def test_raw_classifies_ssh_exit255_and_timeout_only_at_metadata_boundary(self):
+        from .warm_transport import SSHConnectionError,connection_error
+        endpoint=dict(known_hosts='known',identity_file='key',port=22,destination='owned')
+        remote=Remote('.',endpoint)
+        with patch('subprocess.run',return_value=SimpleNamespace(returncode=255,stdout='',stderr='disconnect')):
+            with self.assertRaises(SSHConnectionError):remote.raw(dict(action='status'))
+        with patch('subprocess.run',side_effect=subprocess.TimeoutExpired('ssh',160)):
+            with self.assertRaises(SSHConnectionError):remote.raw(dict(action='status'))
+        with patch('subprocess.run',return_value=SimpleNamespace(returncode=255,stdout='Traceback: executor fault',stderr='')):
+            with self.assertRaises(RuntimeError) as caught:remote.raw(dict(action='status'))
+            self.assertFalse(connection_error(caught.exception))
+
     def status(self):
         receipts={name:dict(pass_=True,max_cost_error=0.) for name in GATES}
         receipts.update({'SPOOL_OWNER.json':dict(pid=1,start_ticks='2',boot_id='b'),'SERVICE_OWNER.json':dict(pid=1)})

@@ -8,8 +8,8 @@ from .warm_spool import immutable
 
 def state(root,update):
     root=Path(root);folder=root/'quota_requests'/f'u{update:03}'
-    retired=root/'INCIDENT_RETIRED_JOBS.json'
-    excluded=set(json.loads(retired.read_text())['jobs']) if retired.exists() else set()
+    from .resource_config import retired
+    excluded=set(retired(root)['jobs'])
     allowed=None
     repair=root/'MAIN0508_REPAIR_BINDING.json'
     if update==1 and repair.exists():

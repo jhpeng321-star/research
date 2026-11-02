@@ -12,7 +12,7 @@ import subprocess
 import threading
 import time
 from .warm_spool import immutable
-from .warm_transport import retry
+from .warm_transport import retry,SSHConnectionError
 from .warm_health import assert_running,HealthPause
 from .protocol import digest
 from .warm_rpc import GATES
@@ -29,8 +29,12 @@ class Remote:
             '-o','ConnectTimeout=20','-o','ConnectionAttempts=1',
             '-o','ServerAliveInterval=15','-o','ServerAliveCountMax=8',
             '-i',e['identity_file'],'-p',str(e['port']),e['destination']]
-        p=subprocess.run(command,input=json.dumps(value),capture_output=True,text=True,timeout=160)
-        if p.returncode:raise RuntimeError((p.stdout+p.stderr).strip())
+        try:p=subprocess.run(command,input=json.dumps(value),capture_output=True,text=True,timeout=160)
+        except subprocess.TimeoutExpired as error:
+            raise SSHConnectionError('SSH metadata transport timed out') from error
+        if p.returncode:
+            error=SSHConnectionError if p.returncode==255 else RuntimeError
+            raise error((p.stdout+p.stderr).strip())
         return json.loads(p.stdout)
 
     def verify(self):
