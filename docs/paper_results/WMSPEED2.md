@@ -506,3 +506,17 @@ placeholders consistently for all trajectory fields. The already-published exact
 CPU and cold/warm GPU qualifications use that corrected gate. The recommended
 `fcc50296` release and its startup exact-parity requirement remain the handoff;
 these older failed probes do not qualify any additional deployment configuration.
+
+Recovery receipt commit: `e1ccd4f4`. A source diff against `fcc50296` confirms no
+changes to the numerical evaluator, fused model, runtime, memory/transfer adapters,
+plan decoder, service/diagnostic propagation, or focused CPU tests. Existing79+7
+passing tests therefore remain the release's test evidence; no repeated inference
+or test dispatch was needed for receipt collection and documentation.
+
+The canonical `E:/research-dense/runs/active/C4-V7FT-20261017/REGISTRATION.md`
+already contains the single `S-WMSPEED2 ENGINEERING AMENDMENT` entry, including
+the recommended manifest and exact startup gate. It was preserved without a
+duplicate entry. Recovery status was appended to
+`E:/agent-work/c4-coopnative/HANDOFF_COOPMWM.md`; that was the only file changed
+in the training owner's worktree. The existing source-bound hot-swap recipe above
+remains the deliverable for its separately registered activation.
