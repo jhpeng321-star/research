@@ -3101,3 +3101,50 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - B u3: exact paired SUMO plan saving mean 96.94 veh-s, 95% world-cluster CI `[-45.644077496616276, 321.15091081315353]`, 24 graded plans. Positive saving is better. Ungraded plans excluded.
 - Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_VIABILITY_003.json`.
 <!-- warm-receipt:B_VIABILITY_003.json:830efd4034f651202b8db61d2b47ad1bae0b65a36f694c4ebaa9d5ca94f97ca6 -->
+
+## Warm live publication — 2026-11-02T07:29:17.592528+00:00
+- Conservatively charged 3601530/7500000 sim-s.
+
+### Warm continuation — R_UPDATE_002.json
+- R u2: queries/accepted/executed 114/114/0; wall 91.67s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 114, "executed": 0, "queries": 114}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Exact-grade queue/lag: `{"failed": 0, "graded": 12, "max_lag_s": 17.956080436706543, "mean_lag_s": 11.755984206994375, "orphaned": 0, "overlap_unresolved": 0, "pending": 0, "running": 0, "stopped": 0, "update": 2}`; final ETA 0.5602h.
+- Receipt: `coopmwm/warm_live/R_UPDATE_002.json`.
+<!-- warm-receipt:R_UPDATE_002.json:14e99afd71c27c362e8c5859f87cffa726b86464b57cb90563af854351d88468 -->
+
+### Warm continuation — R_UPDATE_003.json
+- R u3: queries/accepted/executed 13/13/0; wall 533.7s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 13, "executed": 0, "queries": 13}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Exact-grade queue/lag: `{"failed": 0, "graded": 10, "max_lag_s": 19.058584928512573, "mean_lag_s": 10.514461827278136, "orphaned": 0, "overlap_unresolved": 0, "pending": 0, "running": 0, "stopped": 0, "update": 3}`; final ETA 3.113h.
+- Receipt: `coopmwm/warm_live/R_UPDATE_003.json`.
+<!-- warm-receipt:R_UPDATE_003.json:bb314cdb79ce8f6c206408f40dc4989ed9b901d40bcf1a45106bcb72d76dcd4a -->
+
+### Warm continuation — R_VIABILITY_002.json
+- R u2: exact paired SUMO plan saving mean -1046 veh-s, 95% world-cluster CI `[-2873.630369603925, -0.08526310693014238]`, 3 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/R_VIABILITY_002.json`.
+<!-- warm-receipt:R_VIABILITY_002.json:256b1784d11f1c42b561f1feaf2fb24f31032036734552de1f9f3ef83c97707e -->
+
+### Warm continuation — R_VIABILITY_003.json
+- R u3: exact paired SUMO plan saving mean -1046 veh-s, 95% world-cluster CI `[-2873.630369603925, -0.08526310693014238]`, 3 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/R_VIABILITY_003.json`.
+<!-- warm-receipt:R_VIABILITY_003.json:fb04669f66a74de7d3792ac65704599f191b34ed85653adb509abab67dfaf047 -->
+
+### Warm continuation — WARM_B_FAILED_I1.json
+- `{"error": "ValueError('new durable guided engineering STOP')", "timestamp_utc": "2026-11-02T06:57:15.276917+00:00"}`
+- Receipt: `coopmwm/warm_live/WARM_B_FAILED_I1.json`.
+<!-- warm-receipt:WARM_B_FAILED_I1.json:ac490f96553656a328e87434b74860d8c7d3452dcfb22c488e84ab335a0ad9ab -->
+
+### Warm continuation — WARM_GUIDED_STOP_V3.json
+- `{"arm": "R", "error": "AssertionError('R count/regime/group-size/duration gate')", "timestamp_utc": "2026-11-02T06:43:03.905193+00:00"}`
+- Receipt: `coopmwm/warm_live/WARM_GUIDED_STOP_V3.json`.
+<!-- warm-receipt:WARM_GUIDED_STOP_V3.json:d0e9bca2ff5bccfddd740d4be7961ea0886663a423505cdcfc2814d3669149a9 -->
+
+### Warm continuation — WARM_R_FAILED_I1.json
+- `{"error": "AssertionError('R count/regime/group-size/duration gate')", "timestamp_utc": "2026-11-02T06:43:03.902197+00:00"}`
+- Receipt: `coopmwm/warm_live/WARM_R_FAILED_I1.json`.
+<!-- warm-receipt:WARM_R_FAILED_I1.json:e280d2737807b5f6339c1dd87ae3f94fbe57a48fddc64653294f4986ece75a40 -->
+
+### Warm continuation — WARM_R_PAUSED.json
+- `{"charged_sim_s": 3572730, "full_endpoint": 24, "reason": "registered checkpoint boundary complete; final evaluation waits for fixed primary endpoints", "timestamp_utc": "2026-11-02T07:09:25.480589+00:00", "update": 3}`
+- Receipt: `coopmwm/warm_live/WARM_R_PAUSED.json`.
+<!-- warm-receipt:WARM_R_PAUSED.json:a74c3613d6e5eedcb89a64b452a4e44c517b5f8b8d7be0e70a9e053357d26e3e -->
