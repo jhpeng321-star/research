@@ -537,3 +537,19 @@ errors and identical ranks/draw IDs. Existing CPU 79+7 passing evidence applies.
 The single registration entry and appended owner hot-swap handoff are present.
 No completed probe was rerun, no new inference job was dispatched, and no process
 was changed. The recommended release and exact activation recipe remain above.
+
+### Follow-up recovery — 2026-11-02 19:07 host time
+
+Inventories committed as `08ad3330` again find **no live WMSPEED2 jobs**.
+GPU A is 97% utilized with 46,811 MiB allocated and two compute processes;
+GPU R is 96% utilized with 23,524 MiB allocated and two compute processes.
+Receipts are `coopmwm/WMSPEED2_gpu{A,R}_resume20261102c_inventory.json`.
+The first GPU-A inventory connection closed before returning a receipt; a single
+read-only retry succeeded. Neither host has capacity for another GPU probe.
+
+The worktree was clean at entry on `9b76cdc8`. Comparing the numerical source to
+`fcc50296` again finds no changes; only the inventory helper differs under
+`tools/coopmwm`. The single canonical registration and the owner's appended
+release/hot-swap handoff were verified. Existing exact cold/warm qualification,
+79+7 passing CPU tests, and the source-bound recipe above remain the evidence.
+No completed comparison was rerun and no new inference or training was dispatched.
