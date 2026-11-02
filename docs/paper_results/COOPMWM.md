@@ -1,5 +1,20 @@
 # S-COOPMWM — live checks
 
+## Nov3 01:20 UTC+8 — latest priority adopted; mirror remains failed
+- Four GPU slots and grading owner1834956 are live; disk13.9GB and unblocked.
+  Read-only probes show21 usable nine-branch lists/five selected positives.
+- The command-mirror gate is already complete and failed. CPU/CUDA traces are
+  exact, but absolute member-motion errors are0.859924m/0.381060mps and
+  0.078796m/0.055090mps; genuine half-step background observations are absent.
+  `coopmwm/COMMAND_MIRROR_MAIN0116_VERDICT.md` preserves the exact failure.
+  No rerun of unchanged work or activation is justified by those receipts.
+- Latest restart prerequisite is10 **confirmed/admitted** positive B entries,
+  superseding20. Five selected positives are not five confirmed entries. The
+  delegated HARDEN_INT_READY receipt remains absent; B/R stayu3.
+- Preparing the authorized it2_K2 configuration with unchanged H300 screen and
+  K8/H_final. Current workers cache their settings, so a source-bound boundary
+  handover and K2 batching qualification are required before the switch.
+
 ## Nov3 00:59 UTC+8 — first focus admissions verified
 - The first three admissions after the handover are TRAIN worlds **986044,
   986045, 986046**, all focus-stratum states at t300. Existing queued requests
