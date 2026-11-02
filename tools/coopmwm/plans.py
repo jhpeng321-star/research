@@ -41,6 +41,11 @@ def group(rows):
 
 
 def family_seeds(rows, members, commands, bounds):
+    # Inherited prototypes exist only for 2-3 member groups. Searches are
+    # discovery-pure (groups 2-6), so prototypes are post-hoc labels/qualifier
+    # fixtures: skip other sizes, never raise (gpuA 09:41 and 16:29 deaths).
+    if len(members) not in (2, 3):
+        return []
     from tools.wmteach.labels import actions
     from tools.leverprobe.intervention import targets, requests
     out = []

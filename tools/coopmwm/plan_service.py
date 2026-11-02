@@ -46,6 +46,8 @@ def main(root):
     import fcntl
     lock=(root/'SERVICE.claim').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     binding=read(root/'GPU_BINDING.json')
+    from .resource_config import clocks
+    binding=clocks(root,binding)  # additive RESOURCE_EXTENSION, never a rewrite
     for name,h in binding['hashes'].items():
         if sha(root/name)!=h:raise ValueError('immutable GPU source mismatch '+name)
     assert binding['qualification']['pass_']
@@ -102,22 +104,26 @@ def main(root):
         diagnostic=r.get('mode')=='diagnostic'
         centre=r.get('mode')=='centre'
         if centre:r={k:v for k,v in r.items() if k!='mode'}
-        memory=request_memory(rt,r,binding)
-        from tools.coopnative.policy import encode
-        encode(r['rows'])
-        ids={v['vid'] for v in r['rows'] if v['is_cav']}
-        if not set(r['commands'])<=ids or not set(r['group'])<=ids:raise ValueError('non-CAV request')
+        def prepared(r=r):
+            memory=request_memory(rt,r,binding)
+            from tools.coopnative.policy import encode
+            encode(r['rows'])
+            ids={v['vid'] for v in r['rows'] if v['is_cav']}
+            if not set(r['commands'])<=ids or not set(r['group'])<=ids:raise ValueError('non-CAV request')
+            return memory
         start=time.monotonic()
         if centre:
             from .centre_service import result as centre_result
-            result=centre_result(rt,r,memory)
+            result=centre_result(rt,r,prepared())
         elif diagnostic:
             from .accel_diagnostic import evaluate as credit
-            result=credit(rt,r,speed2=speed2,memory=memory,transfers=transfers)
+            result=credit(rt,r,speed2=speed2,memory=prepared(),transfers=transfers)
         else:
             from .mppi_runtime import plan
             from .query_errors import execute
-            result=execute(r,lambda:plan(rt,r,memory,binding))
+            # Request validation is per-query too: a malformed plan request is
+            # declined (policy continues), never a worker death.
+            result=execute(r,lambda:plan(rt,r,prepared(),binding))
         payload=dict(key=key,result=result,wall_s=time.monotonic()-start,unix=time.time())
         write(dest,payload);emit('RESULT',**payload)
 

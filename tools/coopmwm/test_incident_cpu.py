@@ -41,9 +41,12 @@ class IncidentTests(unittest.TestCase):
         self.assertEqual(execute(record,lambda:dict(accepted=True)),dict(accepted=True))
 
     def test_physics_parity_accounting_validation_faults_remain_fatal(self):
-        for cls in (ValueError,AssertionError,RuntimeError,OSError):
-            def fault():raise cls('fatal')
-            with self.subTest(cls=cls),self.assertRaises(cls):execute({},fault)
+        # MAIN17:26 (HARDEN-1): plain per-query validation errors now decline;
+        # named run invariants and non-OOM RuntimeErrors still propagate.
+        for cls,text in ((ValueError,'parity failed'),(AssertionError,'accounting'),(ValueError,'physics'),
+                         (AssertionError,'safety'),(ValueError,'budget'),(RuntimeError,'fatal'),(OSError,'fatal')):
+            def fault():raise cls(text)
+            with self.subTest(cls=cls,text=text),self.assertRaises(cls):execute({},fault)
 
     def test_error_response_requires_original_record_identity(self):
         def fault():raise KeyError('bad')
