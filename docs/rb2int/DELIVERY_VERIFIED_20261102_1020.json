@@ -1,0 +1,71 @@
+{
+ "time": "2026-11-02T10:22:55.917640+08:00",
+ "status": "PASS",
+ "snapshots": {
+  "reserved8": {
+   "worlds": [
+    969432,
+    969433,
+    969434,
+    969435,
+    969436,
+    969437,
+    969438,
+    969439
+   ],
+   "replicated": false,
+   "summary_sha256": "e9cc35a52cec5adb00dbc6111a19a96b1e471ae05a437e5783e2f8c8afae7c4d",
+   "markdown_sha256": "3a170391fc5e8b16b02f6b0185e410ffc0183c110af8ed200339ef7d3f314c4d"
+  },
+  "available_replicated_cells": {
+   "worlds": [
+    969433,
+    969435,
+    969436,
+    969437,
+    969438,
+    969439,
+    969590,
+    969592,
+    969595,
+    969599
+   ],
+   "replicated": true,
+   "summary_sha256": "5363b3f17955e907be5b6c550ea9538c4baf3bf55ea818fcf0578c75101838dc",
+   "markdown_sha256": "f75f7ccec6bfcabf4d0de6b84af3d4f68093d1c918ef53221e3081494a79ff08"
+  }
+ },
+ "source_guards": {
+  "rb2int_finish_v3": {
+   "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\finish.py": true,
+   "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\collect.py": true,
+   "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\prepare_scoring.py": true,
+   "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\score_gate.py": true,
+   "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\compare.py": true,
+   "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\credibility.py": true,
+   "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\report.py": true,
+   "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\predictions.py": true,
+   "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\uncertainty.py": true,
+   "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\gate_bootstrap.py": true
+  },
+  "rb2int_interim_hold_v1": {
+   "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\interim_watch.py": true,
+   "E:\\agent-work\\c4-rb2-int\\tools\\rb2int\\interim.py": true,
+   "E:\\agent-work\\c4-rb2-int\\docs\\rb2int\\SHORT_TARGETS_BOUNDED_V4.json": true,
+   "E:\\agent-work\\c4-rb2-int\\docs\\rb2int\\OWNER_1755_GPUA_HOLD.json": true,
+   "E:\\agent-work\\c4-rb2-int\\docs\\rb2int\\OWNER_1755_GPUR_HOLD.json": true
+  }
+ },
+ "report_sha256": "c4bd8652c71888c96639bef34089a82565d5a0938c523d759d4de2475e0f0245",
+ "shared_teacher_note_sha256": "af4c15da4dd7ee01e54f2de197d59bbbb3952188b229c2f7fb3bd7b72fbd77fa",
+ "registration_sha256": "2d8958b5c2cadba34445d9284cadb2e0cbee1e0a4cdf2aa15af540cc8ff35ee4",
+ "prospective_registration_count": 1,
+ "scientific_code_recipe_artifact_diff": "",
+ "completed_world_jobs": 31,
+ "remaining_unadmitted": 185,
+ "local_cache_owners_exited": true,
+ "full_gate_switching": "NOT_ESTABLISHED",
+ "analysis_repeated": false,
+ "inference_dispatched": false,
+ "process_signals": false
+}
