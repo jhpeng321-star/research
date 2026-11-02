@@ -2665,3 +2665,31 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - B u2: exact paired SUMO plan saving mean 145.2 veh-s, 95% world-cluster CI `[-60.80176778292476, 487.8205913035406]`, 15 graded plans. Positive saving is better. Ungraded plans excluded.
 - Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_99cf50a5c7abc1694be3d527c9ee6cc65d900cea0a353767d86da2594cbdb73c.json`.
 <!-- warm-receipt:B_EXACT_VIABILITY_99cf50a5c7abc1694be3d527c9ee6cc65d900cea0a353767d86da2594cbdb73c.json:d1a48a5473159954368b4347245c2daa1ffbd11e487c3f1d02593d822501a5b1 -->
+
+## Warm live publication — 2026-11-02T01:06:05.898788+00:00
+- Conservatively charged 3449020/7500000 sim-s.
+
+### Warm continuation — ACCEL_EXACT_PLAN_003.json
+- Exact executed-plan twins: `{"120": {"C_G": -5.606213562714402e-06, "D_G": -5.018876527174143e-05, "D_i": [0.0, 2.053314346994739e-06, -4.2315060454711784e-05, -4.320805601309985e-06, 0.0]}, "300": {"C_G": 0.0001282441990042571, "D_G": -4.351610186859034e-05, "D_i": [0.0, -6.464272883022204e-05, -3.5602570278570056e-05, -7.151500176405534e-05, 0.0]}, "60": {"C_G": 4.793837433680892e-07, "D_G": -4.866109520662576e-05, "D_i": [0.0, -1.959032942977501e-06, -4.6629252210550476e-05, -5.521937964658719e-07, 0.0]}, "600": {"C_G": 0.00022405739582609385, "D_G": 2.9864830139558762e-05, "D_i": [0.0, -0.00012245139805600047, 5.373297608457506e-05, -0.00012547414371510968, 0.0]}}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_003.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_003.json:d55b108ad083bdffe9c080e02f72cdf7c36ab55aa4bbcadbbc2a21439107adc8 -->
+
+### Warm continuation — ACCEL_EXACT_PLAN_004.json
+- Exact executed-plan twins: `{"120": {"C_G": 0.13067381548944468, "D_G": 6.178846435998366, "D_i": [0.3218793296973672, 5.7262932908115545]}, "300": {"C_G": 0.05758131807851896, "D_G": 9.010734297089584, "D_i": [0.3218792337229388, 8.631273745288127]}, "60": {"C_G": 0.10886161458029164, "D_G": 3.420459787325399, "D_i": [0.32186853271718974, 2.9897296400279174]}, "600": {"C_G": 0.13743175230410998, "D_G": 9.143711409749812, "D_i": [0.3218792337283958, 8.684400423717307]}}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_004.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_004.json:e5f0cde12eaf3a610044bf5fca11e201d0ef1a7a756bccaff22c9609f1e81bae -->
+
+### Warm continuation — ACCEL_EXACT_PLAN_007_FAILED.json
+- Exact executed-plan twins: `{}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_007_FAILED.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_007_FAILED.json:c5e8d1a65b6df060f47d2ec0142e97481b38cb74a8915dbcf05a629c2a18e36a -->
+
+### Warm continuation — ACCEL_EXACT_PLAN_008_FAILED.json
+- Exact executed-plan twins: `{}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_008_FAILED.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_008_FAILED.json:db65d973974eae969f4422e3d936957084b097ea37e9f22e578ac370248273dc -->
+
+### Warm continuation — ACCEL_EXACT_PLAN_009_FAILED.json
+- Exact executed-plan twins: `{}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_009_FAILED.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_009_FAILED.json:5770e344353ba01ee2b890dff0e2980cafec1076a6c8e8cdfcb2e26ee8ccaea2 -->
