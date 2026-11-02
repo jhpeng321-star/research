@@ -5,6 +5,11 @@ published; current-source physical LS fit reused the completed decision cache.
 All three owned job PIDs exited. Old watcher exited; no repeated LC inference.
 Recovery receipt:`artifacts/rbfit/receipts/RESUME_20261102.md`.
 
+Fresh resume2026-11-03:clean HEADf034bcb3 preserved; LANE physics still80541278
+with no source edits. Read-only cpuQ checks confirm all three recovery jobs
+complete/verified/exited; local watcher23604 absent. Reconciliation:
+`receipts/RESUME_20261103.md`. Existing exports remain the current delivery.
+
 <!-- LC-CONTINUATION:BEGIN -->
 Latest verified `lane_raw_5a5b15ef118c` (2026-11-02T09:04:39+08:00); LC SHAe61f897c5e7a, snapshotv2;3130driver posteriors.
 Raw physical expected changes435.7 vs626recorded; eventBrier0.002308. Likelihood-emission Brier0.365999 is a separate diagnostic. **NOT ADOPTED**; no free-running/action-effect qualification.
