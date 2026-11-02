@@ -9,7 +9,7 @@ def test_worker_checks_additive_dependency_before_import(tmp_path):
     from unittest.mock import patch
     worker=types.ModuleType('tools.coopmwm.niche_worker')
     calls=[]
-    worker.run=calls.append
+    worker.run=lambda root,generation:calls.append((root,generation))
     (tmp_path/'geometry.py').write_bytes(b'pure geometry')
     (tmp_path/'NICHENULL_DEPENDENCY_HASHES.json').write_text(json.dumps(
         {'geometry.py':hashlib.sha256(b'pure geometry').hexdigest()}))
@@ -18,7 +18,7 @@ def test_worker_checks_additive_dependency_before_import(tmp_path):
         (tmp_path/'geometry.py').write_bytes(b'changed')
         import pytest
         with pytest.raises(AssertionError):exec(nr.worker_command(str(tmp_path)),{})
-    assert calls==[str(tmp_path)]
+    assert calls==[(str(tmp_path),'NICHENULL1')]
 
 
 def test_broker_payload_compiles_without_process_control(monkeypatch,tmp_path):
@@ -44,11 +44,12 @@ def test_gpu_dispatch_payload_compiles_and_preserves_original_binding(monkeypatc
     hashes['FROZEN_NETWORK.net.xml.gz']=hashlib.sha256(
         (nr.ops.LOCAL/'assets/research/highway_merge_shepherd_long/osm.net.xml.gz').read_bytes()).hexdigest()
     (tmp_path/nr.REG).write_text(json.dumps(dict(cpu=dict(source_hashes=hashes))))
+    (tmp_path/'NICHE_DEPENDENCY_RECOVERY2.json').write_text(json.dumps(dict(source_hashes={})))
     seen=[]
     def remote(host,code,**kwargs):
         compile(code,'<gpu-dispatch>','exec');seen.append(host)
         if host=='cpuQ':return json.dumps(dict(pid=1,start_ticks='10',boot_id='b'))
-        assert 'GPU_BINDING_NICHENULL1.json' in code and 'PRE_NICHENULL1' in code
+        assert 'GPU_BINDING_NICHENULL2.json' in code and 'PRE_NICHENULL1' in code
         assert 'actual_exit' not in code or 'SPOOL_WORKER.claim' in code
         return json.dumps(dict(pid=2,start_ticks='20',root='/root/coopmwm20261102_incident1',host=host))
     monkeypatch.setattr(nr,'remote',remote)

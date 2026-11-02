@@ -1,5 +1,20 @@
 # S-COOPMWM — live checks
 
+## Nov3 05:49:23 UTC+8 — complete dependency smoke and fresh worker generation
+- PATH2 also exited before gates: `ls_fast_worker` had existed only in the old
+  overlay and was missing from the new package. Both failed owners/logs remain.
+- Frozen CPU6 full release suite: **271 Linux PASS, zero skips,54.868s, zero
+  SUMO**. Package now includes the same qualified it2_K2 wrapper and geometry
+  dependencies; a complete import/install smoke in the actual GPU environment
+  passes before dispatch, with CUDA still uninitialized.
+- Amendment `7c10945a23493424…` precedes new qualifier **220668/start903637810**.
+  A metadata generation parameter writes new owner/gate/failure names and a new
+  effective binding with actual hashes. All8 fresh gates are still required;
+  one qualifier globally, other3 slots continue serving.
+- Read-only collection probe:53 successful searches/52 usable lists, existing
+  broker2472252 and supervisor1834956 live; no PPO update. Delegated full replay
+  READY remains absent; bank start prerequisite remains5 of10 admissions.
+
 ## Nov3 05:45:44 UTC+8 — first qualifier dependency packaging recovered
 - Original qualifier213896 exited before any gate: the WM-only GPU package has
   no `traffic_shepherd` package. Adding frozen WM source paths alone did not

@@ -8,7 +8,7 @@ from .ls_validity_ops import remote
 from .protocol import checked,sha,REGISTRY
 from .storage import read,write
 
-SOURCE='/home/ubuntu/coopmwm20261103_nichenullcpu5'
+SOURCE='/home/ubuntu/coopmwm20261103_nichenullcpu6'
 BASE='/home/ubuntu/coopmwm20261103_lsfastcpu5'
 
 

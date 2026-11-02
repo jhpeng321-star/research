@@ -15,20 +15,21 @@ SLOTS={'incident1':'gpuA@incident1','deadlineA2':'gpuA@resource1651',
        'concurrent3':'gpuR@0','deadlineR2':'gpuR@resource1651'}
 
 
-def worker_command(root):
+def worker_command(root,generation='NICHENULL1'):
     # Pure geometry is absent from the GPU WM-only package. Validate the additive
     # source-only dependency package before importing the unchanged worker.
     return ('from pathlib import Path;import json,hashlib;'
         'r=Path('+repr(root)+');'
         'h=json.loads((r/"NICHENULL_DEPENDENCY_HASHES.json").read_text());'
         'assert all(hashlib.sha256((r/n).read_bytes()).hexdigest()==s for n,s in h.items());'
-        'from tools.coopmwm.niche_worker import run;run('+repr(root)+')')
+        'from tools.coopmwm.niche_worker import run;run('+repr(root)+','+repr(generation)+')')
 
 
 def dependency_files():
     return {'pytools/'+n:checked(ops.LOCAL/n).read_text(encoding='utf-8') for n in (
         'traffic_shepherd/__init__.py','traffic_shepherd/c4/__init__.py',
-        'traffic_shepherd/c4/geometry.py')}
+        'traffic_shepherd/c4/geometry.py')} | {
+        'pytools/tools/coopmwm/ls_fast_worker.py':checked(ops.LOCAL/'tools/coopmwm/ls_fast_worker.py').read_text(encoding='utf-8')}
 
 
 def broker():
@@ -114,7 +115,8 @@ else:
  d=json.loads(p.read_text());done=c/'gpu_drained_v2'/(d['drain_key']+'.json')
  print(json.dumps(d['owner']) if done.exists() else '{{"wait":true}}')'''))
     if old.get('wait'):print(json.dumps(old));return
-    reg=read(ops.EVIDENCE/REG);expected=reg['cpu']['source_hashes']
+    recovery=read(ops.EVIDENCE/'NICHE_DEPENDENCY_RECOVERY2.json')
+    reg=read(ops.EVIDENCE/REG);expected=dict(reg['cpu']['source_hashes'],**recovery['source_hashes'])
     names=('mppi_search','mppi_runtime','plan_service','ls_gpu','niche_collect','feasible',
            'sumo_verify','nullfix_geometry','niche_worker')
     files={f'pytools/tools/coopmwm/{n}.py':(ops.LOCAL/f'tools/coopmwm/{n}.py').read_text(encoding='utf-8') for n in names}
@@ -155,19 +157,19 @@ for n,text in files.items():
  target.parent.mkdir(parents=True,exist_ok=True);target.write_text(text)
  binding['hashes'][n]=hashlib.sha256(target.read_bytes()).hexdigest()
 net=r/'FROZEN_NETWORK.net.xml.gz';net.write_bytes(base64.b64decode({base64.b64encode(net).decode()!r}));binding['hashes'][net.name]=hashlib.sha256(net.read_bytes()).hexdigest()
-deps={{n:hashlib.sha256(text.encode()).hexdigest() for n,text in files.items() if n.startswith('pytools/traffic_shepherd/')}}
+deps={{n:hashlib.sha256(text.encode()).hexdigest() for n,text in files.items() if n.startswith('pytools/traffic_shepherd/') or n.endswith('/ls_fast_worker.py')}}
 with (r/'NICHENULL_DEPENDENCY_HASHES.json').open('x') as f:json.dump(deps,f)
 binding.pop('adopted_startup_gates',None)
 binding.update(deadline_unix=1793894340.,gpu_deadline=1793894340.,niche_comparison=True,effective_amendment_sha256={sha(ops.EVIDENCE/REG)!r})
 if {host!r}=='gpuR':binding['batch_widths']={{'1':1,'2':1,'4':1,'8':1}}
 for n in ('SPOOL_OWNER.json','SERVICE_OWNER.json'):
  if (r/n).exists():shutil.copy2(r/n,backup/n)
-with (r/'GPU_BINDING_NICHENULL1.json').open('x') as f:json.dump(binding,f)
+with (r/'GPU_BINDING_NICHENULL2.json').open('x') as f:json.dump(binding,f)
 env=dict(os.environ,PYTHONPATH=str(r/'pytools'),WMTEACH_BACKEND='FULL-v4',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
 if {host!r}=='gpuR':env['PYTORCH_CUDA_ALLOC_CONF']='expandable_segments:True'
 with (r/'LS_GPU_NICHENULL1.log').open('x') as log:
-  proc=subprocess.Popen(['nice','-n','19','/root/miniconda3/bin/python','-B','-u','-c',{worker_command(root)!r}],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
-d=dict(pid=proc.pid,start_ticks=Path('/proc',str(proc.pid),'stat').read_text().split()[21],boot_id=old['boot_id'],root=str(r),host={host!r},unix=time.time(),generation='NICHENULL1',log_name='LS_GPU_NICHENULL1.log',amendment_sha256={sha(ops.EVIDENCE/REG)!r})
+  proc=subprocess.Popen(['nice','-n','19','/root/miniconda3/bin/python','-B','-u','-c',{worker_command(root,'NICHENULL2')!r}],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+d=dict(pid=proc.pid,start_ticks=Path('/proc',str(proc.pid),'stat').read_text().split()[21],boot_id=old['boot_id'],root=str(r),host={host!r},unix=time.time(),generation='NICHENULL2',log_name='LS_GPU_NICHENULL1.log',amendment_sha256={sha(ops.EVIDENCE/'NICHE_DEPENDENCY_RECOVERY2.json')!r})
 with dest.open('x') as f:json.dump(d,f)
 print(json.dumps(d))''',timeout=60))
     path=ops.EVIDENCE/f'LS_NICHENULL_DISPATCH_{host}_{root.rsplit("_",1)[1]}.json'
@@ -244,8 +246,79 @@ print(json.dumps(d))''',timeout=60))
     print(json.dumps(value))
 
 
+def recover2(host,root):
+    """Complete source package after the pre-gate ls_fast_worker omission."""
+    import hashlib
+    from .protocol import REGISTRY
+    cpu=read(ops.EVIDENCE/'LS_LABEL_CPU_coopmwm20261103_nichenullcpu6.json')
+    assert cpu['pass_'] and cpu['skips']==cpu['sim_s']==0
+    files=dependency_files()
+    files['pytools/tools/coopmwm/niche_worker.py']=checked(ops.LOCAL/'tools/coopmwm/niche_worker.py').read_text(encoding='utf-8')
+    hashes={n:hashlib.sha256(t.encode()).hexdigest() for n,t in files.items()}
+    for n in ('pytools/tools/coopmwm/niche_worker.py','pytools/tools/coopmwm/ls_fast_worker.py'):
+        assert hashes[n]==cpu['source_hashes'][n],n
+    receipt=ops.EVIDENCE/'NICHE_DEPENDENCY_RECOVERY2.json'
+    if not receipt.exists():
+        line=('\nS-COOPMWM Nov3 pre-gate dependency recovery2: original PATH2 qualifier '
+            'exited before all gates/search on missing tools.coopmwm.ls_fast_worker. '
+            'Copy the SAME CPU-qualified it2_K2 wrapper plus pinned pure geometry '
+            'package; all dependency bytes verified. Metadata-only worker generation '
+            'parameter preserves earlier owner/failure/gate files. New additive '
+            'GPU_BINDING_NICHENULL2 records actual source hashes; original bindings '
+            'and failed logs retained. Full frozen Linux CPU suite PASS/noSUMO. '
+            'Run actual GPU-environment complete dependency smoke BEFORE launch; '
+            'ALL8fresh source-bound gates before admission, ONE qualifier globally. '
+            'No query/episode replay, horizon/K/N/iterations or6Mguard change.\n')
+        write(receipt,dict(line=line,cpu=cpu,source_hashes=hashes,parent_sha256=sha(ops.EVIDENCE/REG),new_sumo_sim_s=0))
+        with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line+'amendmentSHA'+sha(receipt)+'\n')
+    value=json.loads(remote(host,f'''from pathlib import Path
+import os,json,hashlib,time,subprocess,fcntl,shutil
+r=Path({root!r});dest=r/'LS_GPU_DISPATCH_NICHENULL2.json'
+if dest.exists():print(dest.read_text());raise SystemExit
+assert r.parent.is_dir()
+lock=(r/'NICHENULL_DISPATCH.claim').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+old=json.loads((r/'LS_GPU_DISPATCH_NICHENULL1_PATH2.json').read_text());p=Path('/proc',str(old['pid']))
+assert Path('/proc/sys/kernel/random/boot_id').read_text().strip()==old['boot_id']
+st=(p/'stat').read_text().split() if p.exists() else None
+assert st is None or (st[21]==old['start_ticks'] and st[2]=='Z'),'adopt live qualifier'
+assert not list(r.glob('STARTUP_*_LSCOLLECT_NICHENULL1.json'))
+assert not list(r.glob('STARTUP_*_LSCOLLECT_NICHENULL2.json'))
+assert 'No module named' in (r/'LS_GPU_NICHENULL1_PATH2.log').read_text()
+binding=json.loads((r/'GPU_BINDING_NICHENULL1.json').read_text())
+for n,h in binding['hashes'].items():assert hashlib.sha256((r/n).read_bytes()).hexdigest()==h,n
+files={files!r};hashes={hashes!r};backup=r/'PRE_NICHENULL2'
+for n,text in files.items():
+ target=r/n;prior=backup/n
+ if target.exists() and not prior.exists():
+  prior.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(target,prior)
+  assert hashlib.sha256(prior.read_bytes()).hexdigest()==hashlib.sha256(target.read_bytes()).hexdigest()
+ target.parent.mkdir(parents=True,exist_ok=True);target.write_text(text)
+ assert hashlib.sha256(target.read_bytes()).hexdigest()==hashes[n]
+ binding['hashes'][n]=hashes[n]
+old_manifest=r/'NICHENULL_DEPENDENCY_HASHES.json';prior=backup/old_manifest.name
+if not prior.exists():shutil.copy2(old_manifest,prior)
+with old_manifest.open('w') as f:json.dump(hashes,f)
+binding['effective_amendment_sha256']={sha(receipt)!r}
+with (r/'GPU_BINDING_NICHENULL2.json').open('x') as f:json.dump(binding,f)
+env=dict(os.environ,PYTHONPATH=str(r/'pytools'),WMTEACH_BACKEND='FULL-v4',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
+smoke='from tools.coopmwm.ls_fast_worker import configured_search;from tools.coopmwm.ls_gpu import capture_search;from tools.coopmwm import warm_service,plan_service,mppi_search,mppi_runtime;from tools.coopmwm.nullfix_geometry import install;install('+repr(str(r/'FROZEN_GEOMETRY_SOURCE.py'))+','+repr(str(r/'FROZEN_NETWORK.net.xml.gz'))+');import torch;assert not torch.cuda.is_initialized();print("PASS")'
+check=subprocess.run(['/root/miniconda3/bin/python','-B','-c',smoke],env=env,text=True,capture_output=True,timeout=45)
+probe=dict(pass_=check.returncode==0,stdout=check.stdout,stderr=check.stderr,new_sumo_sim_s=0)
+with (r/'NICHENULL2_DEPENDENCY_SMOKE.json').open('x') as f:json.dump(probe,f)
+assert probe['pass_'],probe
+probe_lock=(r/'SPOOL_WORKER.claim').open('a');fcntl.flock(probe_lock,fcntl.LOCK_EX|fcntl.LOCK_NB);fcntl.flock(probe_lock,fcntl.LOCK_UN);probe_lock.close()
+with (r/'LS_GPU_NICHENULL2.log').open('x') as log:
+ proc=subprocess.Popen(['nice','-n','19','/root/miniconda3/bin/python','-B','-u','-c',{worker_command(root,'NICHENULL2')!r}],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+d=dict(pid=proc.pid,start_ticks=Path('/proc',str(proc.pid),'stat').read_text().split()[21],boot_id=old['boot_id'],root=str(r),host={host!r},unix=time.time(),generation='NICHENULL2',log_name='LS_GPU_NICHENULL2.log',amendment_sha256={sha(receipt)!r},previous=old,dependency_smoke=probe)
+with dest.open('x') as f:json.dump(d,f)
+print(json.dumps(d))''',timeout=60))
+    target=ops.EVIDENCE/f'LS_NICHENULL_DISPATCH_{host}_{root.rsplit("_",1)[1]}_PATH3.json'
+    if not target.exists():write(target,value)
+    print(json.dumps(value))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('broker','drain','gpu','recover'))
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('broker','drain','gpu','recover','recover2'))
     p.add_argument('--host',choices=('gpuA','gpuR'));p.add_argument('--root')
     a=p.parse_args()
     if a.action=='broker':broker()

@@ -11,7 +11,7 @@ def atomic(path,value):
     os.replace(temporary,path)
 
 
-def run(root):
+def run(root,generation='NICHENULL1'):
     import fcntl,signal,sys,hashlib
     root=Path(root)
     lock=(root/'SPOOL_WORKER.claim').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
@@ -20,7 +20,8 @@ def run(root):
     from tools.coopmwm.warm_spool import SpoolInput,immutable
     from tools.coopmwm.nullfix_geometry import install
     from tools.coopmwm.protocol import digest
-    binding=json.loads((root/'GPU_BINDING_NICHENULL1.json').read_text())
+    assert generation in ('NICHENULL1','NICHENULL2')
+    binding=json.loads((root/('GPU_BINDING_'+generation+'.json')).read_text())
     for name,h in binding['hashes'].items():
         assert hashlib.sha256((root/name).read_bytes()).hexdigest()==h,name
     install(root/'FROZEN_GEOMETRY_SOURCE.py',root/'FROZEN_NETWORK.net.xml.gz')
@@ -28,7 +29,7 @@ def run(root):
         boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),unix=time.time(),
         amendment_sha256=binding['effective_amendment_sha256'])
     atomic(root/'SPOOL_OWNER.json',owner)
-    immutable(root/'NICHENULL_OWNER.json',owner)
+    immutable(root/(generation+'_OWNER.json'),owner)
     original_read=plan_service.read
     warm_service.read=plan_service.read=lambda p:binding if p==root/'GPU_BINDING.json' else original_read(p)
     original_write=plan_service.write
@@ -37,7 +38,7 @@ def run(root):
         if path.parent==root and path.name.startswith('STARTUP_'):
             value=dict(value,effective_source_manifest_sha256=digest(binding['hashes']),
                 amendment_sha256=binding['effective_amendment_sha256'])
-            return original_write(root/(path.stem+'_LSCOLLECT_NICHENULL1.json'),value)
+            return original_write(root/(path.stem+'_LSCOLLECT_'+generation+'.json'),value)
         return original_write(path,value)
     warm_service.write=plan_service.write=publish
     from tools.coopmwm.ls_gpu import capture_search
@@ -58,7 +59,7 @@ def run(root):
     try:warm_service.main(root)
     except BaseException as error:
         import traceback
-        immutable(root/'LS_GPU_FAILED_NICHENULL1.json',dict(owner=owner,error=repr(error),
+        immutable(root/('LS_GPU_FAILED_'+generation+'.json'),dict(owner=owner,error=repr(error),
             traceback=traceback.format_exc(),unix=time.time(),inference_retry=False))
         raise
 
