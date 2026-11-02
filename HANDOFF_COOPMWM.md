@@ -1,5 +1,19 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+JOINTNICHE/NULLFIXRELEASECPU5PASS271checks/0skips54.795s/0SUMO; registration
+f653a9fa55abf56c... inNICHE_NULLFIX_COMPARISON_REGISTRATION.json BEFORErollout.
+Source/home/ubuntu/coopmwm20261103_nichenullcpu5 includesLSactionablegateadapter
+(raw8preserved; skipinactionablebeforematerializingsnapshot/SUMO; partialKrecorded),
+actualnetSHA-boundhelper, newper-ownerappend-onlydrainbroker, niche_worker fresh8
+gates/originalbinding+sourcebackups. ALLfailuresCPU1/2/4 retained; CPU4foundmissing
+parentdir onskipfixture, fixedbeforedeployment. Localpayloadcompile/drain4PASS4.77s.
+NEXT niche_roll broker (metadataONLY handover1941060, noGPU/SUMO interruption),
+then drain/gpu --host gpuA --root /root/coopmwm20261102_incident1 ONCE; FIRST
+slotonly/all8freshgatebeforeadmit. Other3stayserving. No GPUactivationclaimed.
+Rwidth1registeredformemorysafequalification/serving; horizons/populationunchanged.
+Brokerdrainrequestsv2 preserveoldslotdrains. OriginalnumericfilebackupsSHAverified;
+newGPU_BINDING_NICHENULL1 storesactualnewhashes, originalGPU_BINDINGkept.
+
 MAIN04:26LIVE/COMPLETE04:51:37(unix1793652697):new2388293/start66646196,
 bank_builder_0426/sourcebankcpu2; OLD2332488gracefullyEXIT/no signals.
 17confirmed/5admitted/3cooperative/0pendingrevalidation/0incomplete; oldrule

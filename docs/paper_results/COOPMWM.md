@@ -1,5 +1,24 @@
 # S-COOPMWM — live checks
 
+## Nov3 05:16 UTC+8 — joint niche/nullfix deployment source qualified
+- `nichenullcpu5`: **271 Linux CPU checks PASS, zero skips,54.795s, zero sim-s**.
+  Includes the landed niche+nullfix search, pinned road-network fallback, and the
+  LS adapter that applies the actionable gate before loading a saved snapshot
+  or running SUMO. Inactionable slates have an explicit non-grade receipt;
+  partial slates record availableK while preserving the raw8 search candidates.
+- The original CPU failures remain recorded: cross-BLAS static golden, a
+  globally bound test-network fixture, and a missing labels-parent directory in
+  the new skip-path test. Corrected checks retain exact same-runtime pre-change
+  byte comparisons, without widening numerical tolerances.
+- Amendment `f653a9fa55abf56c…` registers a one-slot-at-a-time rollout with
+  all8 fresh source-bound GPU gates, per-owner append-only broker drains,
+  hash-verified original-source backups and a new effective binding. gpuR batch
+  width1 bounds memory; horizons/futures/population stay registered. Four local
+  metadata/payload tests PASS (4.77s).
+- This is qualification/registration only: the collector gate and search clamp
+  are **not yet live**. Existing four-slot it2_K2 service and the amended bank
+  builder remain active while the first GPU handover is prepared.
+
 ## Nov3 04:51:37 UTC+8 — amended safety revalidation and required solos complete
 - Durable replacement **2388293/start66646196** started04:43:04 after the old
   builder's graceful exit. `BANK_BUILDER_DISPATCH_0426.json` pins its source.

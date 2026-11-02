@@ -59,12 +59,9 @@ def label_list8_search(run):
         values[4]=score
         kwargs['config']=dict(kwargs.get('config') or {},top_k=8,finalists_per_k=1)
         out=run(*values,**kwargs)
-        # Niched search (config niches>1): carry each shortlisted plan's niche id
-        # onto the collected top-8 entries (additive; absent for niches=1).
-        niche_of={p['id']:p['niche'] for p in (out.get('topk') or []) if isinstance(p,dict) and 'niche' in p}
-        if niche_of:
-            for p in last[:8]:
-                if p['id'] in niche_of:p['niche']=niche_of[p['id']]
+        if 'niches' in kwargs['config']:
+            from .niche_collect import annotate
+            last[:]=annotate(out,last,values[0],kwargs['config'])
         out['collection_top8']=last[:8]
         out['topk']=copy.deepcopy(last[:8]);out['available_k']=len(out['topk'])
         return out
@@ -89,9 +86,13 @@ def plan(rt,record,memory,binding):
     from .plan_proposer import RecordingEvaluator
     recording=RecordingEvaluator(score)
     run=label_list8_search(search.search) if binding.get('label_list8') else search.search
+    config=dict(binding.get('search_config') or {})
+    if 'search_config' in record:
+        from .niche_collect import validate
+        config.update(validate(record['search_config']))
     result=run(record,group,policy,bounds,recording,regime(record['rows']),
         mappo_traj=mappo,covariance=covariance,library=library,
-        seed=int(digest(record)[:15],16),config=binding.get('search_config'))
+        seed=int(digest(record)[:15],16),config=config)
     from .plan_proposer import receipt_from_search
     try:
         result['proposer_receipt']=receipt_from_search(record,result,recording,arm='B',

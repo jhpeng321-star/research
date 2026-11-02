@@ -33,6 +33,9 @@ def capture_search(search,label_list8=False):
             # The labelled list is deliberately unfiltered, including losses.
             kwargs['config']=dict(kwargs.get('config') or {},top_k=8,finalists_per_k=1)
         out=search(*values,**kwargs)
+        if label_list8 and 'niches' in kwargs.get('config',{}):
+            from .niche_collect import annotate
+            last[:]=annotate(out,last,args[0],kwargs['config'])
         out['collection_top8']=last[:8]
         if label_list8:out['topk']=copy.deepcopy(last[:8])
         return out

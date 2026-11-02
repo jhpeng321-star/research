@@ -1,4 +1,4 @@
-# S-COOPMWM — frozen B-u3 collection recovery; B-REPLAY integration pending
+# S-COOPMWM — frozen B-u3 bank confirmation; B-REPLAY integration pending
 1. Briefowner cap14500000 retained; freshresume operational6Mhardguard includes811640superseded untilclarified; priorrestrictedbank2600000/k8training1500000/interim900000 unchanged; liveLS usesexistingphases, trainingre-quote before resume; phaseguardsSTOP/ALERT.
 2. A/B/R fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
@@ -19,7 +19,7 @@
 18. Rolling60s genuine observable history -> frozen FULL-v4 encoder/motion posteriors/shrinkage; unseen prior; CRN across candidates; source pseudo-exposure disclosed.
 19. Groups2..6 anywhere/all lanes/ramp,100m chaining; >6 contiguous subsets prefer lane diversity, smallest span, downstream; disjoint rechaining.
 20. All A/B/R restart MAPPOu0 in isolated acceleration namespaces;811640superseded charges retained.
-21. Discovery-pure MPPI3iterations,N=max(32,2*members*10)rounded4,eliteceil(N/4); K4H300screen,8finalistsK8; TRAINtop4positivevsMAPPO; LS-COLLECTtop8unfilteredgoldlabels, same8WMcalls/noexecution.
+21. Discovery-pure N=max(32,2*members*10)rounded4; livecollection it2_K2 uses2iterations/K2H300,finalK8/Hfinal,raw8goldlists/noexecution; jointniches1/4+feasibility271CPUqualified/registered, per-slotGPUactivationpending; no known-family seeds.
 22. No O1-O4 seeds; policy-centred generic smooth noise sigma.5, unique Cholesky basis; posterior bootstrap Thompson choice, beta1 initially; top-k gate is positive-vsMAPPO, own-policy contrast reported separately.
 23. H60/120/300/600. D_i=J(member-revert)-J(joint); D_G=J(all-revert)-J(joint).
 24. C_G=D_G-sum(D_i); complete paired futures required, including negative values.
@@ -40,7 +40,7 @@
 39. TRAIN4/dev16 reportingonly; primaryA24/B24/R24,secondaryA48. Finalspawnfault375800sim-squarantined; MAIN1556approvedreplacement; source4/89CPU PASS explicitcheckpoint/SHA+final-onlycaps; B/Rcontinue.
 40. Final detector-first discovery uses unchanged COOPBEHAV detectors and complete exact twins.
 41. Learning checks report team return/value/KL/gradient, beta, proposal routes/acceptance/O1-O4 counts.
-42. A48/B3/R3;72episodes/14534snapshotsadopted;MAIN0319 lspathcpu1 229CPU PASS0skips43.132s;10savedretries/90gradedbranches/62640actualsim-s,64800precharged/total5037230<6M;38usablelists/0confirmed;arrival1200=>t0<=780/SAMEH;B-REPLAYrequires10CONFIRMEDadmittedBpositives/qualifieddelegatedrelease;it2_K2firsttierREADY/remainingone-slotqualification.
+42. A48/B3/R3;72episodes/14534snapshotsadopted; all4it2_K2slotsREADY. MAIN0406/0426 offlinebankbuilder bankcpu2/68CPU PASS owner2388293;17confirmed/5admitted/3cooperative at0451. Oldverdicts preserved; collision/teleport hard constraints + hardbrake/TTCeventsum no increase; diagnostic solos allrep/laterpasses. B-REPLAY requires10admissions+qualifieddelegatedrelease; no restart yet.
 43. Recoverycap7500000: superseded811640,train2811600,checks432000,dev201600,final576000,Rtest115200,coldB28800,failedA14400; exact-plan-grades760000.
 44. Mechanics3600,calibration57600,discovery138200,pairedbranches1297400,reusecheck600; train2852400 inclMAIN1651 tenfresh-ID DNS replacements12000; allfailedchargesretained; verification2800000/exactgrade55360 plusinactivek8phase1500000.
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.

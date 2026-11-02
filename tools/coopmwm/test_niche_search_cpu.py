@@ -1,13 +1,38 @@
 """CPU-only tests for the multi-modal ('niching') MPPI plan search (no SUMO, no WM, no GPU)."""
 import importlib.util
 import json
+import os
+import sys
 import unittest
+from functools import lru_cache
 from pathlib import Path
 import numpy as np
 from . import mppi_search as ms
 from .test_mppi_search_cpu import BOUNDS, Fake, group_of, run, T
 
 FIXTURE = Path(__file__).resolve().parent/'fixtures'/'niche1_golden.json'
+
+
+@lru_cache(maxsize=1)
+def golden_reference():
+    """A Windows JSON golden is not a bitwise Linux BLAS oracle.
+
+    Linux qualification supplies the immutable PRE-CHANGE Git module, evaluated
+    on the same interpreter/BLAS. Compare exact serialized bytes, never a widened
+    tolerance or a fixture regenerated from the new implementation.
+    """
+    path=os.environ.get('COOPMWM_NICHE_BASELINE')
+    if not path:return json.loads(FIXTURE.read_text())
+    from unittest.mock import patch
+    from . import test_mppi_search_cpu as fixtures
+    spec=importlib.util.spec_from_file_location('tools.coopmwm._pre_niche_reference',path)
+    old=importlib.util.module_from_spec(spec);sys.modules[spec.name]=old;spec.loader.exec_module(old)
+    with patch.object(fixtures,'ms',old),patch.object(sys.modules[__name__],'ms',old):
+        fake=Fake(2);fake.mappo=fake.target.copy();g=group_of(2)
+        return {name:json.dumps(result,sort_keys=True) for name,result in dict(
+            plain1=run(seed=1)[0],plain2=run(seed=2)[0],six1=run(seed=1,m=6)[0],
+            cem1=run(seed=1,config=dict(method='cem'))[0],
+            reject1=old.search(dict(policy_residuals={}),g,fake.policy,BOUNDS,fake,'ordinary',seed=1)).items()}
 
 
 def niche_run(seed=1, m=2, niches=4, **cfg):
@@ -63,7 +88,7 @@ class ByteIdentity(unittest.TestCase):
     """niches=1 (default AND explicit) must be byte-identical to the pre-change search."""
 
     def test_niches1_matches_the_pre_change_golden(self):
-        golden = json.loads(FIXTURE.read_text())
+        golden = golden_reference()
         fake = Fake(2); fake.mappo = fake.target.copy(); g = group_of(2)
         scenarios = {
             'plain1': lambda: run(seed=1)[0],
@@ -77,7 +102,7 @@ class ByteIdentity(unittest.TestCase):
             self.assertEqual(json.dumps(fn(), sort_keys=True), golden[name], name)
 
     def test_explicit_niches1_matches_the_same_golden(self):
-        golden = json.loads(FIXTURE.read_text())
+        golden = golden_reference()
         self.assertEqual(json.dumps(run(seed=1, config=dict(niches=1))[0], sort_keys=True),
                          golden['plain1'])
         self.assertEqual(json.dumps(run(seed=1)[0], sort_keys=True), golden['plain1'])

@@ -109,9 +109,32 @@ def focus_order(e,counts,worlds,fraction):
 def label(root,envelope,response,config):
     from .sumo_verify import verify,SubprocessBranchRunner
     key=envelope['record']['state_id'];root=Path(root)
+    assigned=root/'requests'/(key+'.json')
+    if assigned.exists():
+        record=json.loads(assigned.read_text())
+        if 'search_config' in record:
+            plain=dict(record);plain.pop('search_config')
+            assert plain==envelope['record'],'niche metadata changed observable snapshot'
+            assert response['record_sha256']==digest(record)
+            envelope=dict(envelope,record=record)
     candidates=response.get('collection_top8')
     if not candidates or len(candidates)!=8:
         raise ValueError('collection search lacks the eight original final candidate profiles')
+    feasibility=None
+    if config.get('nullfix_active'):
+        from .ls_feasible import shortlist,skipped
+        candidates,feasibility=shortlist(envelope['record'],candidates,config['accel_bounds'])
+        if not candidates:
+            result=skipped(envelope['record'],envelope,feasibility)
+            generation=config.get('label_generation')
+            target=root/'labels'/(key+('_'+generation if generation else '')+'.json')
+            target.parent.mkdir(parents=True,exist_ok=True)
+            extra={k:response[k] for k in ('variation','search_config','nullfix') if k in response}
+            immutable(target,dict(search_id=key,world_id=envelope['world_id'],
+                record_sha256=digest(envelope['record']),verification=result,
+                feasibility=feasibility,policy_frozen_u3=True,
+                plans_executed_during_collection=False,**extra))
+            return result
     snapshot=complete_snapshot(root,envelope)
     generation=config.get('label_generation')
     attempt=root/'label_attempts'/generation if generation else root
@@ -127,7 +150,7 @@ def label(root,envelope,response,config):
     def charge(vid,specs):
         # Complete worst-case nine-branch charge was made BEFORE the search.
         reservation=json.loads((root/'admissions'/(key+'.json')).read_text())
-        assert len(specs)==9 and sum(s['sim_s'] for s in specs)<=reservation['charged_sim_s']
+        assert len(specs)==len(candidates)+1 and sum(s['sim_s'] for s in specs)<=reservation['charged_sim_s']
         previous=root/'labels'/(key+'.json')
         if generation and previous.exists():
             from .ls_label_runtime import void_environment_failure
@@ -140,10 +163,13 @@ def label(root,envelope,response,config):
                 sim_s=sum(s['sim_s'] for s in specs))],'sumo_verification')
         immutable(attempt/'label_charges'/(key+'.json'),dict(verification_id=vid,
             reservation=reservation,branches=specs,no_double_charge=True))
-    result=verify(snapshot,candidates,runner,charge,'wm',workers=9,root=attempt/'verification')
+    kw=dict(members_t0=feasibility['members_t0']) if feasibility else {}
+    result=verify(snapshot,candidates,runner,charge,'wm',workers=9,root=attempt/'verification',**kw)
+    extra={k:response[k] for k in ('variation','search_config','nullfix') if k in response}
+    if feasibility is not None:extra['feasibility']=feasibility
     immutable(target,dict(search_id=key,world_id=envelope['world_id'],
         record_sha256=digest(envelope['record']),verification=result,
-        policy_frozen_u3=True,plans_executed_during_collection=False))
+        policy_frozen_u3=True,plans_executed_during_collection=False,**extra))
     return result
 
 
@@ -173,12 +199,16 @@ def supervise(root):
         config.update(json.loads((root/'LS_RECOVERY_CONFIG.json').read_text()))
     if (root/'LS_VALIDITY_CONFIG.json').exists():
         config.update(json.loads((root/'LS_VALIDITY_CONFIG.json').read_text()))
+    if (root/'LS_NICHE_CONFIG.json').exists():
+        config.update(json.loads((root/'LS_NICHE_CONFIG.json').read_text()))
     if (root/'LS_LABEL_CONFIG.json').exists():
         config.update(json.loads((root/'LS_LABEL_CONFIG.json').read_text()))
     if (root/'LS_LABEL_DISK_CONFIG.json').exists():
         config.update(json.loads((root/'LS_LABEL_DISK_CONFIG.json').read_text()))
     if (root/'LS_FOCUS_CONFIG.json').exists():
         config.update(json.loads((root/'LS_FOCUS_CONFIG.json').read_text()))
+    if (root/'LS_NULLFIX_CONFIG.json').exists():
+        config.update(json.loads((root/'LS_NULLFIX_CONFIG.json').read_text()))
     main=Path(config['run_root']);install_accounting(main,config['budget'])
     if config.get('operational_spend_cap'):
         from . import accel_storage
@@ -248,12 +278,17 @@ def supervise(root):
                     todo=[e for k,e in pending.items() if k not in admitted and
                         (not config.get('arrival_admission') or feasible(e['time_s'],config['arrival_admission'])) and
                         (Path(e['episode_path'])/'RESULT.json').exists()]
-                    for _ in range(min(8-len(inflight),config['max_searches']-len(admitted),len(todo))):
+                    for admission_offset in range(min(8-len(inflight),config['max_searches']-len(admitted),len(todo))):
                         order=(lambda e:focus_order(e,counts,config['worlds'],config['focus_fraction'])) if 'focus_fraction' in config else (lambda e:coverage_order(e,counts))
                         e=min(todo,key=order);todo.remove(e)
                         counts[e['world_id']]=counts.get(e['world_id'],0)+1
                         envelope=json.loads(gzip.decompress(Path(e['path']).read_bytes()))
-                        r=envelope['record'];key=r['state_id'];charge=9*min(1200,r['time_s']+420)
+                        r=copy.deepcopy(envelope['record'])
+                        if config.get('niche_alternation'):
+                            from .niche_collect import search_config
+                            ordinal=len(admitted)+admission_offset-config['niche_alternation']['start_admission_count']
+                            r['search_config']=search_config(ordinal)
+                        key=r['state_id'];charge=9*min(1200,r['time_s']+420)
                         try:reserve(main,[dict(id='lslabel_'+key,sim_s=charge)],'sumo_verification')
                         except Exception as error:
                             immutable(root/'BUDGET_ALERT.json',dict(error=repr(error),key=key,unix=time.time(),

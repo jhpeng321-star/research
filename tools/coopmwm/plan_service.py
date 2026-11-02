@@ -28,6 +28,10 @@ def request_memory(rt,record,binding):
     if 'warm_memory' in record:allowed.add('warm_memory')
     if 'history' in record:allowed.add('history')
     allowed|={k for k in ('policy_state','search_learning','committed_plans') if k in record}
+    if 'search_config' in record:
+        if not binding.get('niche_comparison'):raise ValueError('niche comparison not bound')
+        from .niche_collect import validate
+        validate(record['search_config']);allowed.add('search_config')
     if set(record)!=allowed:raise ValueError('observable plan request whitelist')
     from .committed import validate
     validate(record.get('committed_plans',[]),record['group'])

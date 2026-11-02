@@ -86,7 +86,10 @@ class ClampIdentity(unittest.TestCase):
     """Feasible groups stay byte-identical to the pre-fix search."""
 
     def test_existing_fixture_matches_the_committed_golden(self):
-        golden = json.loads(GOLDEN.read_text())
+        # Match the unchanged Git reference on the qualification host's own BLAS;
+        # retain the committed Windows golden when no reference is supplied.
+        from .test_niche_search_cpu import golden_reference
+        golden = golden_reference()
         self.assertEqual(bytes_of(run_rows(seed=1)[0]), golden['plain1'])
 
     def test_all_feasible_rows_give_byte_identical_output(self):

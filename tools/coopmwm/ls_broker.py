@@ -16,6 +16,19 @@ def owner_matches(status,expected):
         for k in ('pid','start_ticks','boot_id'))
 
 
+def drain_request(root,slot,owner):
+    """Append-only generation-specific drains supersede the historical slot alias."""
+    from .ls_fast_worker import drain_applies,owner_key
+    root=Path(root)
+    key=digest(dict(slot=slot,owner=owner_key(owner)))
+    paths=(root/'gpu_drains_v2'/(key+'.json'),root/'gpu_drains'/(digest(slot)+'.json'))
+    for path in paths:
+        if path.exists() and drain_applies(json.loads(path.read_text()),owner):
+            parent='gpu_drained_v2' if path.parent.name=='gpu_drains_v2' else 'gpu_drained'
+            return root/parent/path.name
+    return None
+
+
 def run(root,receipt_suffix=None):
     import fcntl,signal
     root=Path(root);cfg=json.loads((root/'LS_RECOVERY_CONFIG.json').read_text())
@@ -39,10 +52,8 @@ def run(root,receipt_suffix=None):
                 key=None
                 # An immutable per-owner drain is checked only between searches.
                 # Finish/deliver the current inference; never withdraw or replay it.
-                from .ls_fast_worker import drain_applies
-                drain=root/'gpu_drains'/(digest(slot)+'.json')
-                if drain.exists() and drain_applies(json.loads(drain.read_text()),expected):
-                    target=root/'gpu_drained'/(digest(slot)+'.json')
+                target=drain_request(root,slot,expected)
+                if target is not None:
                     target.parent.mkdir(exist_ok=True)
                     immutable(target,dict(slot=slot,owner=expected,unix=time.time(),inference_replayed=False))
                     return
@@ -85,9 +96,8 @@ def run(root,receipt_suffix=None):
             assert v['amendment_sha256']==cfg['amendment_sha256']
             for x in v['workers']:
                 slot=x['endpoint']['slot']
-                from .ls_fast_worker import owner_key,drain_applies
-                drain=root/'gpu_drains'/(digest(slot)+'.json')
-                if drain.exists() and drain_applies(json.loads(drain.read_text()),x['owner']):continue
+                from .ls_fast_worker import owner_key
+                if drain_request(root,slot,x['owner']) is not None:continue
                 if slot not in threads or (not threads[slot][0].is_alive() and threads[slot][1]!=owner_key(x['owner'])):
                     t=threading.Thread(target=worker,args=(x['endpoint'],x['owner']),daemon=True)
                     threads[slot]=(t,owner_key(x['owner']));t.start()
