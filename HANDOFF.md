@@ -59,6 +59,26 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**Nov3 02:44 fresh-session reconciliation1793645006:** all recorded owned CPU
+supervisors, six GPU services, local relay/follower and observer20260 EXITED;
+original observer deadline completed normally. No duplicate observer/dispatch.
+Durable ledgers unchanged:250980charged/250660closedactualsim-s and
+27787.12987509556GPU-s. All112fixed/random episodes, fleet16episodes+96oracles
+and WM36oracles COMPLETE; WM6episodes/per-CAV2episodes only, primarypanel incomplete.
+OWNER20:14GPUhold ACTIVE; registry through Nov3 02:36 has no later MAIN GPU RESUME
+or narrow per-CAV continuation approval. cpuQfree20598923264bytes (~19.2GiB),
+ownoutputs366348334bytes unchanged, uptime7.631days. Existing MAIN REQUEST ONLY
+remains76840sim-s/GPU0 (cpuQ62460/gpuR14380), excluding failed969138/969139 and
+allcompletedjobs; immutable plan/no-prior-charge/newhostCPU/resource gates follow
+explicit scope authority, nice19 below S-COOPMWM. Terminal WM/BB additionally need
+scientific-scope authority and reconciled GPU resume. No scope armed.
+Peer `SELMAPPO2_FINAL_LOCATION_20261103.md` reports the original training checkpoint
+absent after owner cleanup; hash-verified gpuR selector copy survives. Fleet peer
+registry02:06 likewise confirms its gpuR copy survives. Historical freeze receipts
+remain immutable; any future admission must use verified surviving artifacts.
+Existing58line design/build/156CPU PASS preserved. Receipt
+`tools/c1switch2/evidence/RESUME_RECONCILIATION_1793645006.json`; STATUS_CURRENT's
+legacy SUPERVISED label is superseded by concrete EXITED process/observer fields.
 **Nov3 00:39 fresh-session reconciliation1793637493 (93755bb9):** all recorded
 owned CPU supervisors, six GPU services and observer20260 remain EXITED; original
 observer deadline completed normally. No new dispatch or replacement supervisor.
