@@ -184,7 +184,10 @@ b=binding(r);assert_running(r,'B');assert_running(r,'R')
 boot=pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()
 for a in ('B','R'):
  assert not (r/('FAST_'+a+'_DISPATCH_1844.json')).exists(),'adopt existing owner'
- wr,_=install(r,a);wr.verify(r,a)
+ pre=json.loads((r/('FAST_'+a+'_PREFLIGHT_1844.json')).read_text())
+ assert pre['resume_update']==3 and pre['new_sim_s']==0
+ assert __import__('hashlib').sha256((r/(a+'_checkpoint_003.pt')).read_bytes()).hexdigest()==b['checkpoints'][a]
+ assert not (r/(a+'_checkpoint_004.pt')).exists()
 old=json.loads((r/'GPU_RESOURCE_BROKER_DISPATCH_1651_V2.json').read_text());p=pathlib.Path('/proc',str(old['pid']))
 assert old['boot_id']==boot
 if p.exists() and (p/'stat').read_text().split()[2]!='Z':
@@ -214,8 +217,48 @@ print(json.dumps(owners))''',timeout=60)
     write(ops.EVIDENCE/'FAST1844_DISPATCH.json',json.loads(out));print(out)
 
 
+def status():
+    """TRAIN-only progress/ownership; no final outcomes or evaluation paths."""
+    out=ops.ssh.remote('cpuQ',f'''import pathlib,json,time,os
+r=pathlib.Path({ROOT!r});now=time.time();b=json.loads((r/'FAST_RESUME_1844.json').read_text())
+started=json.loads((r/'FAST_TRAINING_STARTED_1844.json').read_text());owners={{}}
+boot=pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+def tree(pid):
+ p=pathlib.Path('/proc',str(pid));out=[]
+ try:
+  st=(p/'stat').read_text().split();argv=(p/'cmdline').read_bytes().replace(bytes([0]),b' ').decode()
+  if 'sumo ' in argv:out.append(dict(pid=pid,cpu_ticks=int(st[13])+int(st[14]),state=st[2]))
+  for child in (p/'task'/str(pid)/'children').read_text().split():out+=tree(int(child))
+ except FileNotFoundError:pass
+ return out
+for c in ('broker','B','R'):
+ d=json.loads((r/('FAST_'+c.upper()+'_DISPATCH_1844.json')).read_text());assert d['boot_id']==boot
+ p=pathlib.Path('/proc',str(d['pid']));st=(p/'stat').read_text().split() if p.exists() else None
+ assert not st or st[21]==d['start_ticks']
+ owners[c]=dict(owner=d,state=st[2] if st else 'exited',sumo=tree(d['pid']),log=(r/('FAST_'+c.upper()+'_1844.log')).read_text()[-2500:])
+requests=[p for p in (r/'requests').glob('*.json') if p.stat().st_mtime>=started['unix']]
+responses=[p for p in requests if (r/'responses'/p.name).exists()]
+verifyroot=pathlib.Path(b['sumo_verify']['root']);decisions=[]
+for p in (verifyroot/'verifications').glob('sv_warm*.json'):
+ if p.stat().st_mtime<started['unix']:continue
+ v=json.loads(p.read_text());decisions.append(dict(id=p.stem,status=v['status'],k=v['k'],t0=v['t0']))
+admissions=sorted(r.glob('WORKER_ADMISSION_*.json'));slots=json.loads(admissions[-1].read_text())['workers']
+value=dict(unix=now,training_start_unix=started['unix'],owners=owners,slots=[v['slot'] for v in slots],
+ searches_requested=len(requests),searches_answered=len(responses),searches_pending=len(requests)-len(responses),
+ admitted=sum((r/'capacity_admissions'/p.name).exists() for p in requests),
+ accepted=sum(json.loads((r/'responses'/p.name).read_text()).get('accepted',False) for p in responses),
+ stale=sum((r/'query_cancellations'/p.name).exists() for p in requests),verification_decisions=decisions,
+ verification_launches=len([p for p in (verifyroot/'snapshots').glob('*') if p.stat().st_mtime>=started['unix']]),
+ R_reference=json.loads((r/'R_MATCH_REFERENCE_004.json').read_text()) if (r/'R_MATCH_REFERENCE_004.json').exists() else None,
+ discovery_allocation=b['budget']['phases']['discovery'],cap=b['budget']['total'],load=os.getloadavg(),
+ preflight={{a:json.loads((r/('FAST_'+a+'_PREFLIGHT_1844.json')).read_text()) for a in ('B','R')}},
+ eta_u4=None,eta_reason='pending first quota-compliant verified update; unresolved waits censored')
+print(json.dumps(value))''',timeout=40)
+    v=json.loads(out);write(ops.EVIDENCE/f'FAST1844_CURRENT_{int(v["unix"])}.json',v);print(out)
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('gpu_status','cpu','admit','register','dispatch'))
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('gpu_status','cpu','admit','register','dispatch','status'))
     p.add_argument('--host',choices=('gpuA','gpuR'));a=p.parse_args()
     if a.action in ('gpu_status','admit'):globals()[a.action](a.host)
     else:globals()[a.action]()

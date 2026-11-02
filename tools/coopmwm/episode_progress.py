@@ -16,12 +16,15 @@ now=time.time();episodes=[];current={current!r}
 repair=r/'MAIN0508_REPAIR_BINDING_V2.json'
 if not repair.exists():repair=r/'MAIN0508_REPAIR_BINDING.json'
 plan=read(repair)['repair_plan'] if repair.exists() else None
-recovery_path=next((r/n for n in ('RESOURCE_EXTENSION_1651.json','VERIFICATION_CONTINUATION_BINDING.json','MATCH_RECOVERY_BINDING.json','INCIDENT_RECOVERY_BINDING.json') if (r/n).exists()),None)
+recovery_path=next((r/n for n in ('FAST_RESUME_1844.json','RESOURCE_EXTENSION_1651.json','VERIFICATION_CONTINUATION_BINDING.json','MATCH_RECOVERY_BINDING.json','INCIDENT_RECOVERY_BINDING.json') if (r/n).exists()),None)
 recovery=read(recovery_path) if recovery_path else None
 retired=read(r/'INCIDENT_RETIRED_JOBS.json') if (r/'INCIDENT_RETIRED_JOBS.json').exists() else {{}}
 if (r/'DNS_RETIRED_JOBS_1651.json').exists():
  dns=read(r/'DNS_RETIRED_JOBS_1651.json')
  retired={{k:retired.get(k,[])+dns.get(k,[]) for k in ('jobs','query_keys')}}
+if (r/'FAST_RETIRED_JOBS_1844.json').exists():
+ fast=read(r/'FAST_RETIRED_JOBS_1844.json')
+ retired={{k:retired.get(k,[])+fast.get(k,[]) for k in ('jobs','query_keys')}}
 requests=[]
 for arm,folder in (('B','requests'),('R','centre_requests')):
  for p in (r/folder).glob('*.json'):
@@ -68,6 +71,8 @@ for arm in ('B','R'):
         current_query_wait_s=max([0.]+[q['age_s'] for q in pending]),
         pending_query_count=len(pending),pending_query_age_sum_s=sum(q['age_s'] for q in pending)))
 quota=r/f'B_RANDOM_QUOTA_{{collections["R"]:03}}.json'
+reference=r/f'R_MATCH_REFERENCE_{{collections["R"]:03}}.json'
+if reference.exists():quota=pathlib.Path(read(reference)['path'])
 print(json.dumps(dict(unix=now,collections=collections,episodes=episodes,R_quota_ready=quota.exists(),load=os.getloadavg(),
   superseded_jobs=(plan.get('failed_jobs',[]) if plan else [])+retired.get('jobs',[]),
    schedule_source=recovery_path.name if recovery_path else 'registered original wave',

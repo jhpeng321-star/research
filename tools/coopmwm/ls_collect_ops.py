@@ -239,7 +239,7 @@ def qualify():
     base=read(ops.EVIDENCE/'CPU_coopmwm20261102_fast1844cpu1.json')
     names=('parallel_groups','capacity_broker','test_capacity_broker_cpu','test_parallel_groups_cpu',
            'fcntl_compat','conftest','ls_cpu_test','ls_collection','ls_gpu','accel_plant','test_ls_collection_cpu',
-           'mppi_runtime','plans','test_incident_cpu')
+           'mppi_runtime','plans','test_incident_cpu','ls_broker')
     texts={n:checked(ops.LOCAL/'tools/coopmwm'/(n+'.py')).read_text(encoding='utf-8') for n in names}
     packed=base64.b64encode(zlib.compress(json.dumps(texts).encode())).decode()
     out=ops.ssh.remote('cpuQ',f'''import pathlib,json,hashlib,shutil,zlib,base64,os,time,sys

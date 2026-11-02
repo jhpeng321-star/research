@@ -11,7 +11,7 @@ from .storage import read,write
 DISPATCHES={'grader':'EXACT_GRADER_DISPATCH.json','broker':'WARM_REMOTE_BROKER_DISPATCH.json',
             'B':'WARM_B_DISPATCH_V4.json','R':'WARM_R_DISPATCH_V4.json'}
 TAG='EXACT_OBSERVER_V2'
-OBSERVE_ONLY=('EXACT_OBSERVER_V6','EXACT_OBSERVER_V7','EXACT_OBSERVER_V8','EXACT_OBSERVER_V9','EXACT_OBSERVER_V10','EXACT_OBSERVER_V11','EXACT_OBSERVER_V12')
+OBSERVE_ONLY=('EXACT_OBSERVER_V6','EXACT_OBSERVER_V7','EXACT_OBSERVER_V8','EXACT_OBSERVER_V9','EXACT_OBSERVER_V10','EXACT_OBSERVER_V11','EXACT_OBSERVER_V12','EXACT_OBSERVER_V13','EXACT_OBSERVER_V14')
 
 
 def adopt(cpu):
@@ -88,7 +88,7 @@ def run():
         for name,v in previous.get('cpu',{}).get('owners',{}).items():assert c['owners'][name]['owner']==v['owner']
     try:
         while time.time()<binding['deadline_unix']:
-            if TAG=='EXACT_OBSERVER_V12':
+            if TAG in ('EXACT_OBSERVER_V12','EXACT_OBSERVER_V13','EXACT_OBSERVER_V14'):
                 from .warm_watch import state
                 # Read-only metadata rechecks are themselves safe to repeat.
                 # New source-bound owner receipts may appear during a handover;
@@ -117,6 +117,28 @@ def run():
 
 def dispatch():
     target=ops.EVIDENCE/(TAG+'_DISPATCH.json');assert not target.exists()
+    if TAG=='EXACT_OBSERVER_V14':
+        from .protocol import checked,REGISTRY
+        previous=read(ops.EVIDENCE/'EXACT_OBSERVER_V13_DISPATCH.json')
+        code=(f"$p=Get-CimInstance Win32_Process -Filter 'ProcessId = {previous['pid']}'; "
+            "if ($null -ne $p) { "
+            "if ($p.CommandLine -notlike '*tools.coopmwm.exact_watch run --tag EXACT_OBSERVER_V13*') { throw 'observer command changed' }; "
+            f"$t=([DateTimeOffset]$p.CreationDate).ToUnixTimeMilliseconds()/1000; if ([Math]::Abs($t-{previous['unix']}) -gt 2) {{ throw 'observer PID reused' }}; "
+            f"Stop-Process -Id {previous['pid']} -ErrorAction Stop; Wait-Process -Id {previous['pid']} -Timeout 10 -ErrorAction SilentlyContinue; "
+            f"if (Get-CimInstance Win32_Process -Filter 'ProcessId = {previous['pid']}') {{ throw 'previous observer still present' }} }}")
+        subprocess.run(['powershell','-NoProfile','-Command',code],capture_output=True,text=True,check=True)
+        with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write('\nS-COOPMWM MAIN1844 OBSERVE-ONLY V14: latest FAST owners/broker and new failure receipts, pinned concurrent-R reference, all retired sets;19localCPU PASS. Replace only verified V13 PID/creation/argv; no remote control or physics/inference. Extended Nov5 deadline unchanged.\n')
+    if TAG=='EXACT_OBSERVER_V13':
+        from .protocol import checked,REGISTRY
+        previous=read(ops.EVIDENCE/'EXACT_OBSERVER_V12_DISPATCH.json')
+        code=(f"$p=Get-CimInstance Win32_Process -Filter 'ProcessId = {previous['pid']}'; "
+            "if ($null -ne $p) { "
+            "if ($p.CommandLine -notlike '*tools.coopmwm.exact_watch run --tag EXACT_OBSERVER_V12*') { throw 'observer command changed' }; "
+            f"$t=([DateTimeOffset]$p.CreationDate).ToUnixTimeMilliseconds()/1000; if ([Math]::Abs($t-{previous['unix']}) -gt 2) {{ throw 'observer PID reused' }}; "
+            f"Stop-Process -Id {previous['pid']} -ErrorAction Stop; Wait-Process -Id {previous['pid']} -Timeout 10 -ErrorAction SilentlyContinue; "
+            f"if (Get-CimInstance Win32_Process -Filter 'ProcessId = {previous['pid']}') {{ throw 'previous observer still present' }} }}")
+        subprocess.run(['powershell','-NoProfile','-Command',code],capture_output=True,text=True,check=True)
+        with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write('\nS-COOPMWM MAIN1651 OBSERVE-ONLY V13: current DNS brokerV2 precedence/extended clock; replace only verified localV12 PID/creation/argv, no remote process control or physics/inference.22localCPU PASS.\n')
     if TAG=='EXACT_OBSERVER_V12':
         from .protocol import checked,REGISTRY,sha
         previous=read(ops.EVIDENCE/'EXACT_OBSERVER_V11_DISPATCH.json')
@@ -236,7 +258,7 @@ def dispatch():
         with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
     binding=dict(deadline_unix=read(ops.EVIDENCE/'WARM_A48_BINDING.json')['gpu_deadline'],
         contract='observe/publish only; repaired owners already dispatched; never launch physics/inference' if TAG in OBSERVE_ONLY else 'observe/publish; adopt existing owners; once8EXACT0 gates per host, register and launch grader/broker/B/R once; no physics retry')
-    if TAG=='EXACT_OBSERVER_V12':binding['deadline_unix']=1793894340.
+    if TAG in ('EXACT_OBSERVER_V12','EXACT_OBSERVER_V13','EXACT_OBSERVER_V14'):binding['deadline_unix']=1793894340.
     write(ops.EVIDENCE/(TAG+'_BINDING.json'),binding)
     with (ops.EVIDENCE/(TAG+'.log')).open('x',encoding='utf-8') as log:
         p=subprocess.Popen([sys.executable,'-X','utf8','-u','-m','tools.coopmwm.exact_watch','run','--tag',TAG],cwd=ops.LOCAL,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT)

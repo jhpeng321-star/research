@@ -235,6 +235,15 @@ def extend_serve(root):
 def status():
     from . import ops
     from .warm_deploy import ROOT
+    from .warm_watch import state
+    current=state()
+    if current['owners'].get('B',{}).get('dispatch_receipt')=='DNS_B_DISPATCH_1651.json':
+        write(ops.EVIDENCE/f'RESOURCE_CONTINUATION_STATUS_{int(current["unix"])}.json',current)
+        print(json.dumps(dict(unix=current['unix'],updates={a:max(v or [0]) for a,v in current['updates'].items()},
+            owners=current['owners'],services=current['service_owners'],stop=current['stop'],pauses=current['pause_receipts'],
+            charged_sim_s=current['charged_sim_s'],resource_deadline=RESOURCE_DEADLINE,
+            note='current additive DNS/resource owners; do not dispatch legacy handovers; R waits for final B quota')))
+        return
     out=ops.ssh.remote('cpuQ',f'''import pathlib,json,time
 r=pathlib.Path({ROOT!r});out={{}}
 for a in ('B','R'):

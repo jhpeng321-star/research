@@ -13,6 +13,21 @@ from . import warm_health  # Bind its real pathlib.Path before the transport stu
 
 
 class WarmStateTests(unittest.TestCase):
+    def test_fast_resume_owners_override_closed_dns_and_surface_new_failure(self):
+        files={'FAST_B_DISPATCH_1844.json':self.owner(),
+            'DNS_B_DISPATCH_1651.json':self.owner(22),
+            'FAST_R_DISPATCH_1844.json':self.owner(),
+            'DNS_R_DISPATCH_1651.json':self.owner(22),
+            'FAST_BROKER_DISPATCH_1844.json':self.owner(),
+            'GPU_RESOURCE_BROKER_DISPATCH_1651_V2.json':self.owner(22)}
+        v=self.collect(files)
+        self.assertEqual(v['owners']['B']['dispatch_receipt'],'FAST_B_DISPATCH_1844.json')
+        self.assertEqual(v['owners']['R']['dispatch_receipt'],'FAST_R_DISPATCH_1844.json')
+        self.assertEqual(v['service_owners']['broker']['owner']['pid'],77)
+        self.assertIsNone(v['stop'])
+        files['WARM_B_FAILED_FAST1844.json']={'error':'fresh fault'}
+        self.assertIsNotNone(self.collect(files)['stop'])
+
     def test_dns_recovery_owner_precedence_and_new_failures_remain_visible(self):
         files={'DNS_B_DISPATCH_1651.json':self.owner(),
             'BETA_B_DISPATCH.json':self.owner(22),
