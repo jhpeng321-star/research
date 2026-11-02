@@ -1,6 +1,16 @@
 # S-RB-RUNA handoff
 
-Updated 2026-11-02; closure verified06:47:58 +08. Branch `c4/rb-runa`, base `f0db3c82`.
+Updated 2026-11-02; closure reconciled16:00 +08. Branch `c4/rb-runa`, base `f0db3c82`.
+
+## Fresh-session reconciliation — November2 16:00 +08
+- Clean HEAD `db121dbf` preserved; current INT/EVAL handoffs and owner schedule
+  confirm the November1 noon program is closed. No new unclaimed work remains.
+- Read-only gpuA:45083MiB used/3428free/98%; registered RUNA worker/monitor and
+  local watcher PIDs absent. No dispatch, scoring or process action taken.
+- A2 remains160/160 complete; B2 terminal157; C2 terminal102 and INT-owned.
+  Existing claims, `.done`, reports and prior verification receipts preserved.
+- Receipt: `docs/rbruna/RESUME_CLOSED_20261102_1600.md`. Original closure and
+  corrected final-publication references follow below.
 
 ## Current: A2 COMPLETE; November1 noon program CLOSED
 - Fresh resume preserved HEAD61a4d155 and all existing jobs/claims/artifacts.
