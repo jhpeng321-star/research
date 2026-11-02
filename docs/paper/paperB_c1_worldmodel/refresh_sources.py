@@ -76,6 +76,11 @@ SOURCES = {
     "Companion exact-model planner": "E:/agent-work/c4-coopplan/docs/paper_results/COOPPLAN.md",
     "Companion observable bandit": "E:/agent-work/c4-coopbandit/docs/paper_results/COOPBANDIT.md",
     "Companion free-form learner status": "E:/agent-work/c4-coopfree/docs/paper_results/COOPFREE.md",
+    "Successor physics incomplete comparison": "E:/agent-work/c4-rb2-int/docs/paper_results/WMPHYS_V5.md",
+    "Cached breakdown versus delay ranking": "E:/agent-work/c4-bdrank/docs/paper_results/BDRANK.md",
+    "Completed exact-teacher observable student": "E:/agent-work/c4-distill-1101/docs/paper_results/DISTILL.md",
+    "WM teacher quality and paused scale": "E:/agent-work/c4-wmteach/docs/paper_results/WMTEACH.md",
+    "Final per-CAV selector delivery": "E:/agent-work/c4-c1switch2/SELMAPPO2_FINAL.json",
 }
 
 
