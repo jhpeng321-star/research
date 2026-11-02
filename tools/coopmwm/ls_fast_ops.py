@@ -7,9 +7,9 @@ from .ls_validity_ops import remote, payload
 from .protocol import checked, REGISTRY, sha, digest
 from .storage import read, write
 
-SOURCE='/home/ubuntu/coopmwm20261103_lsfastcpu1'
+SOURCE='/home/ubuntu/coopmwm20261103_lsfastcpu2'
 OVERLAY='/root/coopmwm20261103_it2k2ops1'
-REG='LS_FAST_IT2K2_REGISTRATION.json'
+REG='LS_FAST_IT2K2_REGISTRATION_V2.json'
 SLOTS={'incident1':'gpuA@incident1','deadlineA2':'gpuA@resource1651',
     'concurrent3':'gpuR@0','deadlineR2':'gpuR@resource1651'}
 
@@ -65,6 +65,9 @@ def register():
             'redelivery is transport-only, never an inference retry. Every result records '
             'search_config. All failed receipts/charges retained. Zero new SUMO for '
             'qualification; conservative6000000 operational cap and phase caps unchanged.\n')
+        line+=('V2 metadata correction: first broker replacement failed BEFORE serving '
+            'on an immutable BROKER_OWNER_VALIDITY1 collision. Retain that failure; '
+            'explicit new receipt suffix_FASTK2V2, no original owner-file overwrite.\n')
         write(p,dict(line=line,cpu=cpu,authority='MAIN2026-11-03 00:48',
             config=dict(name='it2_K2',iterations=2,screen_K=2,screen_H=300,final_K=8),
             new_sumo_sim_s=0,operational_spend_cap=6000000))
@@ -76,36 +79,23 @@ def broker():
     reg=read(ops.EVIDENCE/REG);h=sha(ops.EVIDENCE/REG)
     out=remote('cpuQ',f'''from pathlib import Path
 import json,os,sys,time,signal,subprocess,hashlib
-c=Path({COLLECTION!r});s=Path({SOURCE!r});r=Path({ROOT!r});dest=c/'BROKER_DISPATCH_FASTK2.json'
+c=Path({COLLECTION!r});s=Path({SOURCE!r});r=Path({ROOT!r});dest=c/'BROKER_DISPATCH_FASTK2V2.json'
 if dest.exists():print(dest.read_text());raise SystemExit
 reg=json.loads({json.dumps(reg)!r})
 for n,h in reg['cpu']['source_hashes'].items():assert hashlib.sha256((s/n).read_bytes()).hexdigest()==h,n
-old=json.loads((c/'BROKER_DISPATCH_VALIDITY1.json').read_text());p=Path('/proc',str(old['pid']))
+old=json.loads((c/'BROKER_DISPATCH_FASTK2.json').read_text());p=Path('/proc',str(old['pid']))
 assert Path('/proc/sys/kernel/random/boot_id').read_text().strip()==old['boot_id']
-assert (p/'stat').read_text().split()[21]==old['start_ticks']
-argv=(p/'cmdline').read_bytes().replace(bytes([0]),b' ').decode()
-assert 'tools.coopmwm.ls_broker' in argv and str(c) in argv
-os.kill(old['pid'],signal.SIGSTOP)
-try:
- for child in (p/'task'/str(old['pid'])/'children').read_text().split():
-  q=Path('/proc',child);a=(q/'cmdline').read_bytes().replace(bytes([0]),b' ').decode()
-  assert 'ssh ' in a and 'sumo' not in a.lower(),a
- # Existing remote searches are independent; the replacement adopts assignments.
- os.kill(old['pid'],signal.SIGTERM)
-finally:os.kill(old['pid'],signal.SIGCONT)
-for _ in range(100):
- if not p.exists() or (p/'stat').read_text().split()[2]=='Z':break
- time.sleep(.1)
-else:raise ValueError('old metadata broker did not exit')
+assert not p.exists() or ((p/'stat').read_text().split()[21]==old['start_ticks'] and (p/'stat').read_text().split()[2]=='Z'),'adopt live owner'
+assert 'conflicting immutable spool receipt BROKER_OWNER_VALIDITY1.json' in (c/'BROKER_FASTK2.log').read_text()
 sys.path.insert(0,str(s/'pytools'));from tools.coopmwm.warm_spool import immutable
-immutable(c/'BROKER_RETIRED_FASTK2.json',dict(owner=old,unix=time.time(),no_inference_or_physics_signals=True))
+immutable(c/'BROKER_RETIRED_FASTK2V2.json',dict(owner=old,unix=time.time(),no_inference_or_physics_signals=True,reason='startup owner-receipt collision; no queries claimed'))
 with (r/'AUTHORITY.md').open('a') as f:f.write(reg['line']+'amendmentSHA'+{h!r}+chr(10))
 env=dict(os.environ,PYTHONPATH=str(s/'pytools'),OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
-with (c/'BROKER_FASTK2.log').open('x') as log:
- proc=subprocess.Popen(['nice','-n','19','/home/ubuntu/miniconda3/bin/python','-B','-u','-m','tools.coopmwm.ls_broker',str(c)],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+with (c/'BROKER_FASTK2V2.log').open('x') as log:
+ proc=subprocess.Popen(['nice','-n','19','/home/ubuntu/miniconda3/bin/python','-B','-u','-m','tools.coopmwm.ls_broker',str(c),'_FASTK2V2'],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
 d=dict(pid=proc.pid,start_ticks=Path('/proc',str(proc.pid),'stat').read_text().split()[21],boot_id=old['boot_id'],root=str(c),source_root=str(s),unix=time.time(),amendment_sha256={h!r})
 immutable(dest,d);print(json.dumps(d))''',timeout=60)
-    v=json.loads(out);p=ops.EVIDENCE/'LS_FAST_BROKER_DISPATCH.json'
+    v=json.loads(out);p=ops.EVIDENCE/'LS_FAST_BROKER_DISPATCH_V2.json'
     if not p.exists():write(p,v)
     print(out)
 
@@ -123,7 +113,7 @@ import json,sys,time
 c=Path({COLLECTION!r});sys.path.insert(0,{SOURCE!r}+'/pytools')
 from tools.coopmwm.warm_spool import immutable
 from tools.coopmwm.protocol import digest
-broker=json.loads((c/'BROKER_DISPATCH_FASTK2.json').read_text());p=Path('/proc',str(broker['pid']))
+broker=json.loads((c/'BROKER_DISPATCH_FASTK2V2.json').read_text());p=Path('/proc',str(broker['pid']))
 assert (p/'stat').read_text().split()[21]==broker['start_ticks']
 (c/'gpu_drains').mkdir(exist_ok=True)
 target=c/'gpu_drains'/(digest({slot!r})+'.json')

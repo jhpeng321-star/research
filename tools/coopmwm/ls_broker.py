@@ -16,12 +16,12 @@ def owner_matches(status,expected):
         for k in ('pid','start_ticks','boot_id'))
 
 
-def run(root):
+def run(root,receipt_suffix=None):
     import fcntl,signal
     root=Path(root);cfg=json.loads((root/'LS_RECOVERY_CONFIG.json').read_text())
     if (root/'LS_VALIDITY_CONFIG.json').exists():
         cfg.update(json.loads((root/'LS_VALIDITY_CONFIG.json').read_text()))
-    main=Path(cfg['run_root']);suffix=cfg['receipt_suffix']
+    main=Path(cfg['run_root']);suffix=receipt_suffix or cfg['receipt_suffix']
     lock=(root/'BROKER.claim').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     signal.signal(signal.SIGHUP,signal.SIG_IGN)
     immutable(root/('BROKER_OWNER'+suffix+'.json'),dict(pid=os.getpid(),
@@ -97,4 +97,4 @@ def run(root):
 
 if __name__=='__main__':
     import sys
-    run(sys.argv[1])
+    run(sys.argv[1],sys.argv[2] if len(sys.argv)>2 else None)
