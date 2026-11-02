@@ -1,4 +1,34 @@
-# HANDOFF: c4/harden-int (worktree E:/agent-work/c4-harden-int), 2026-11-02 22:40 +08
+# HANDOFF: c4/harden-int (worktree E:/agent-work/c4-harden-int), 2026-11-03 (resumed session)
+
+RESUME STATE (2026-11-03): items (1)-(3) of the original brief were already done (f023f10c, 62b80987);
+(D)/(E)/(F) cooperation+exposure (b58ca5b2) and (G) lesson check (4f090b76) are implemented. This
+session added:
+- c5dccc1b: toy car-following in the rehearsal fake plant (a follower never drives through its
+  leader; faster branches can no longer score TTC<1.5 pass-through bursts, so genuinely gentle
+  plans reach the admit/cooperation path). Unit-tested (FakeFollowingTests).
+- 64b6946d: BANK SAFETY RULE AMENDMENT (MAIN 2026-11-03 04:26, applied identically to B and R):
+  (i) collisions/teleports must NOT increase (hard constraints); (ii) the TOTAL of hard-brake +
+  TTC<1.5 s events must NOT increase. The OLD verdict (no single metric may increase) is recorded
+  per decision (`safety_old_rule_ok`) and disclosed in BANK_QUALITY (`rejections.safety_old_rule`).
+  The synergy solo branches now also run as a DIAGNOSTIC on every decision that passes replication
+  + later-harm even when the safety check rejects it; its twin row is published tagged with the
+  admission verdict (`synergy_diagnostic` count in BANK_QUALITY). Unit tests: the 986016 pattern
+  (hard_brake +3, TTC<1.5 s events -92) is admitted by the new rule and disclosed as an old-rule
+  rejection; a collision increase is rejected by both rules; a safety-rejected cooperative plan
+  still publishes its twin (never imitated).
+- REHEARSAL TO COMPLETION (a_clean, rp4 batch, roots C:/Users/jpeng/AppData/Local/Temp/h3int2,
+  results C:/Users/jpeng/AppData/Local/Temp/h3res/rp4): B and R complete, no STOP, no stall,
+  wall 1258 s. B: 12 decisions / 3 positives / 3 confirmed / 1 admitted; rejections replication 1,
+  later_harm 1, safety 2 (= safety_old_rule 2), 0 incomplete; a safety-rejected 2-CAV entry
+  published a diagnostic twin. R: 9 decisions / 2 positives / 1 admitted / cooperative=True
+  (group of 4: +60.3 first seed vs best solo +44.4, gain +15.9 veh-s). All confirmation branches
+  charged in `bank_verification_ext` with kind-prefixed ids (confirm_replication/extended/solo);
+  LESSON_LIST freezes on first admitted entry (R: 1 entry; B: empty until its first admission),
+  LESSON_CHECK_u004/u005_<arm>.json written after every update (R u5 recapture 9.05, action error
+  1.62 m/s^2); per-update receipts embed bank counts and the exposure record (oversampling
+  unit-tested; in this run no cooperative entry was admitted before an update read the bank).
+  NOTE: the rp3 batch (h3res/rp3) predates the febba5bc charge fix - its budget_blocked
+  confirmations were the duplicate-charge bug, already fixed; rp3 is kept for the record only.
 
 The branch is based on harden-2 final (5d71ff01; it contains the harden-3 stall fix 07dd3cd7 via af56d125). No SUMO, GPU or remote work was done. Every rehearsal ran on local CPU with fake SUMO/GPU/WM leaves.
 
