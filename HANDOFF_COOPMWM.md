@@ -1,5 +1,37 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+LIVE TAIL HANDOVER COMPLETE: B3946079/start59555725/sourceTAILCPU3 since
+1793581279.526441 (Nov2 09:01:19UTC+8). A48/B2/R1 completed; B-u3 RUNNING:
+all24claimed/14closed, TEN quota windows fan-out33real TRAIN queries; allFOUR
+GPUslots assigned/bothGPUsactive (75/96% one telemetrysample179358149x).
+R-u2 concurrently6claimed/2closedat1793581947. R3551874/grader3427015retained.
+Currentbroker3893211/sourceTAILdraincpu2; TAIL_HANDOVER_COMPLETE autoDISABLES
+theone-timeu2drain, ordinaryquota-awareadmissionRESTOREDbeforeu3queries.
+OldB3551873/oldcontroller3874249verifiedterminated; controller3907544completed;
+NEVERredispatch anyoftheseowners.
+WARMqualification/originalu0experiment retained, notrerun. Source3CPU141PASS,
+broker48PASS, observer/publication23PASS; newcensus3PASS/realmetadataPASS.
+SameB/seed20261101 exact-positive LIBRARY NOW7entries; Rstillnolibrary.
+Bu2executed12; originalall24RESULTsadopted/ckptu1AdamRNGpreserved; nooldjobrerun.
+Bu2wall9838.6425s (2h44m; originalclaimclockincluded), beta.7509695;
+125.716hlinearremainingETAisOLDpre-fanoutu2extrapolation, notnewsteady-stateETA.
+QUERYCENSUScorrection: TAIL_QUERY_CENSUS_002 =122boundqueries,22actualWM
+inferences,15acceptedforecasts,100resolvedcapacitydeclines,0pending,0unknown.
+Rawrouting93attemptsundercountslegacyplan-continuationqueryroutes; rawgpu_busy
+pending_queries100miscountsresolvedzero-computedeclines. Usecensussupplement;
+originalB_UPDATE_002retained, training/grades/chargesunchanged, nofilter/imputation.
+Observe-onlyV9local20516replacedONLYverifiedV8local1372after23CPUtests;
+telemetryV3 24140retained. Bothlive/firstpublicationworks; recognizeTAILowners/T1
+failurewhitelist. ActualTRAINSTOPnone. Use `tail_ops status` FIRST (compactoutput,
+fullreceipts+dispatchesadoptedlocal); warm_watchstatealsoTAIL-aware.
+LatestBexactreport99cf50a5... =15gradedplans,mean+145.2veh-s95CI[-60.80,487.82];
+NOgeneralviabilityclaim. Registereddiagnosticrepaircontinuesfirst12same samples;
+new003..006successfulreceiptsretainedbesidefailures, noduplicates.
+Budget7495040/cap7500000/free4960; charged3481850at1793581947. OriginalGPU
+deadlineNov2 18:07:02UTC+8 remains, neverextendwithoutregisteredauthority.
+Pending: B-u4..6 viability/curves and post-fanouttiming; depthdiagnosticdeferred
+whileall4GPUworkersbusy; defaultcommandmirrorOFF/nofulltrajectoryGPUgate.
+
 CURRENT0818TAILREPAIR: newtransition3907544/start59459454/sourceTAILCPU3 LIVE
 since1793580316; ADOPTSoriginalfrozenu2wave/checkpointu1, NEVERredispatch.
 Oldtransition3874249washeldONLYafterrealCPUpreflightcaughtcompressedRESULT

@@ -1,5 +1,6 @@
 """Explicit qualification/registration/one-use boundary deployment for MAIN08:18."""
 import argparse
+import inspect
 import json
 from . import ops
 from .storage import read,write
@@ -9,6 +10,28 @@ from .warm_deploy import ROOT
 SOURCE='/home/ubuntu/coopmwm20261102_tailcpu3'
 OVERLAYS=('quota_admission','parallel_groups','plan_client','accel_runner','warm_runner',
     'tail_runtime','tail_transition','tail_ops','test_parallel_groups_cpu','test_tail_runtime_cpu')
+
+
+def query_census(root,update):
+    """Resolve compute metadata: capacity declines are not unfinished inference."""
+    keys=set()
+    for p in (root/'quota_requests'/f'u{update:03}').glob('*_REQUEST.json'):
+        value=json.loads(p.read_text())
+        keys.update(v['state_id'] for v in value.get('records',[value]))
+    result=dict(update=update,bound_queries=len(keys),completed_inferences=0,
+        accepted_forecasts=0,resolved_capacity_declines=0,pending_responses=0,
+        responses_without_inference_receipt=0)
+    for key in keys:
+        response=root/'responses'/(key+'.json')
+        completed=root/'broker_completed'/(key+'.json')
+        if completed.exists():
+            result['completed_inferences']+=1
+            if response.exists():result['accepted_forecasts']+=bool(json.loads(response.read_text())['accepted'])
+        elif not response.exists():result['pending_responses']+=1
+        elif json.loads(response.read_text()).get('query_admission',{}).get('available') is False:
+            result['resolved_capacity_declines']+=1
+        else:result['responses_without_inference_receipt']+=1
+    return result
 
 
 def qualify():
@@ -170,9 +193,11 @@ print(json.dumps(dict(unix=time.time(),pass_=True,resume_update=resume,adopt_upd
 
 def status():
     out=ops.ssh.remote('cpuQ',f'''import pathlib,json,time,os,sys
+{inspect.getsource(query_census)}
 r=pathlib.Path({ROOT!r});owners={{}}
 sys.path.insert(0,{SOURCE!r}+'/pytools')
 from tools.coopmwm.quota_admission import state as quota_state
+from tools.coopmwm.accel_storage import charged
 for name in ('TAIL_TRANSITION_DISPATCH.json','TAIL_TRANSITION_DISPATCH_V2.json','TAIL_B_DISPATCH.json','QUOTA_B_DISPATCH.json','QUOTA_R_DISPATCH.json','TAIL_DRAIN_BROKER_DISPATCH.json','CENTRE_FAIR_BROKER_DISPATCH.json','EXACT_GRADER_DISPATCH_V2.json'):
  if not (r/name).exists():continue
  d=json.loads((r/name).read_text());assert d['boot_id']==pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()
@@ -182,6 +207,12 @@ receipts={{p.name:json.loads(p.read_text()) for name in ('TAIL_PARENT_FROZEN.jso
 updates={{a:max([0]+[int(p.stem.rsplit('_',1)[1]) for p in r.glob(a+'_UPDATE_[0-9][0-9][0-9].json')]) for a in ('A','B','R')}}
 u=updates['B']+1;jobs=list((r/'jobs').glob(f'warm_u{{u:03}}_B_*'))
 ru=updates['R']+1;rjobs=list((r/'jobs').glob(f'warm_u{{ru:03}}_R_*'))
+latest=json.loads((r/f'B_UPDATE_{{updates["B"]:03}}.json').read_text()) if updates['B'] else {{}}
+learned=json.loads((r/f'B_SEARCH_LEARNING_{{updates["B"]:03}}.json').read_text()) if updates['B'] else {{}}
+library=dict(arm=learned.get('arm'),seed=learned.get('seed'),entries=len(learned.get('library',{{}}).get('entries',[])),exact_grade_ids=learned.get('exact_grade_ids',[]))
+latest_summary={{k:latest.get(k) for k in ('update','wall_s','eta_final_hours','proposal_routing','gpu_busy','grading_lag')}}
+latest_summary['next_beta']=latest.get('trust',{{}}).get('beta')
+latest_summary['query_census']=query_census(r,updates['B'])
 batch_records=[json.loads(p.read_text()) for p in (r/'quota_requests'/f'u{{u:03}}').glob('*_REQUEST.json')]
 parallel=[v for v in batch_records if 'records' in v]
 pending=[]
@@ -189,7 +220,7 @@ for p in (r/'requests').glob('*.json'):
  if (r/'responses'/p.name).exists():continue
  v=json.loads(p.read_text());a=r/'broker_assignments'/p.name
  pending.append(dict(key=p.stem,world=v['world_id'],time_s=v['time_s'],group_size=len(v['group']),assignment=json.loads(a.read_text()) if a.exists() else None))
-print(json.dumps(dict(unix=time.time(),owners=owners,receipts=receipts,updates=updates,current_B=dict(update=u,claimed=sum((p/'CLAIM.json').exists() for p in jobs),closed=sum((p/'RESULT.json').exists() for p in jobs)),current_R=dict(update=ru,claimed=sum((p/'CLAIM.json').exists() for p in rjobs),closed=sum((p/'RESULT.json').exists() for p in rjobs)),quota=quota_state(r,u),parallel_groups=dict(windows=len(parallel),queries=sum(len(v['records']) for v in parallel)),pending=pending,load=os.getloadavg(),logs={{n:(r/n).read_text()[-2000:] for n in ('TAIL_TRANSITION.log','TAIL_TRANSITION_V2.log','TAIL_B.log','TAIL_DRAIN_BROKER.log') if (r/n).exists()}})))''',timeout=40)
+print(json.dumps(dict(unix=time.time(),owners=owners,receipts=receipts,updates=updates,current_B=dict(update=u,claimed=sum((p/'CLAIM.json').exists() for p in jobs),closed=sum((p/'RESULT.json').exists() for p in jobs)),current_R=dict(update=ru,claimed=sum((p/'CLAIM.json').exists() for p in rjobs),closed=sum((p/'RESULT.json').exists() for p in rjobs)),quota=quota_state(r,u),parallel_groups=dict(windows=len(parallel),queries=sum(len(v['records']) for v in parallel)),pending=pending,library=library,latest_update=latest_summary,charged_sim_s=charged(r),load=os.getloadavg(),logs={{n:(r/n).read_text()[-2000:] for n in ('TAIL_TRANSITION.log','TAIL_TRANSITION_V2.log','TAIL_B.log','TAIL_DRAIN_BROKER.log') if (r/n).exists()}})))''',timeout=40)
     v=json.loads(out);write(ops.EVIDENCE/f'TAIL_STATUS_{int(v["unix"])}.json',v)
     adopted={name:x['owner'] for name,x in v['owners'].items() if name=='TAIL_B_DISPATCH.json'}
     adopted.update({name:x for name,x in v['receipts'].items() if name in ('TAIL_HANDOVER_COMPLETE.json','TAIL_DRAIN_BROKER_HANDOVER.json')})
@@ -197,8 +228,14 @@ print(json.dumps(dict(unix=time.time(),owners=owners,receipts=receipts,updates=u
         target=ops.EVIDENCE/name
         if target.exists():assert read(target)==value,'remote immutable receipt changed'
         else:write(target,value)
+    census=v['latest_update']['query_census']
+    if not census['pending_responses']:
+        target=ops.EVIDENCE/f'TAIL_QUERY_CENSUS_{census["update"]:03}.json'
+        if target.exists():assert read(target)==census,'closed update query census changed'
+        else:write(target,census)
     print(json.dumps(dict(unix=v['unix'],owners={k:dict(pid=x['owner']['pid'],state=x['state']) for k,x in v['owners'].items()},
         updates=v['updates'],current_B=v['current_B'],current_R=v['current_R'],quota=v['quota'],parallel_groups=v['parallel_groups'],
+        library=v['library'],charged_sim_s=v['charged_sim_s'],latest_update={k:x for k,x in v['latest_update'].items() if k!='proposal_routing'},
         pending=dict(count=len(v['pending']),queued=sum(x['assignment'] is None for x in v['pending']),
             assigned=[x for x in v['pending'] if x['assignment'] is not None]),
         receipt_names=sorted(v['receipts']),transition_failure=v['receipts'].get('TAIL_TRANSITION_FAILED.json'),
