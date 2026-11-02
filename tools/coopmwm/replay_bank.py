@@ -15,9 +15,30 @@ rule (uniform before the first 20 completed bank decisions, then T = max(1, RMS 
 first 20 exact advantages, both signs) frozen and persisted) and the same clip; beta
 multiplies the weight. The collector reloads the newest checkpoint of its arm at every
 episode, so its snapshot policy refreshes after each update.
+
+Confirmation stage (MAIN 2026-11-02 22:32 / 2026-11-03 00:01 / 04:26): every first-seed positive
+decision runs (a) a second independent CRN seed, (b) the extended window, (c) the safety check -
+collisions/teleports must not increase (hard constraints) and the TOTAL of hard-brake + TTC<1.5 s
+events must not increase (the old no-single-metric-may-increase verdict is recorded per decision
+and counted in BANK_QUALITY for disclosure); only entries passing all three are admitted. The
+per-member SOLO cooperation check runs on every decision passing replication + later-harm, as a
+diagnostic even when the safety check rejects it (its twin row is published). For every ADMITTED
+entry whose plan moves >= 2 CAVs, solo branches on the first seed give the cooperation gain
+advantage(group) - max_m advantage(solo m); the entry is tagged cooperative iff the gain
+is > 0 (single-CAV plans: cooperative=False). The imitation batch oversamples cooperative
+entries up to 50% of the imitation samples (weights unchanged); BANK_QUALITY.json carries
+the cooperative count, the mean gain with CI and the group-vs-best-solo synergy twins.
+
+LESSON-LEARNED CHECK (MAIN 2026-11-03 01:22), after EVERY B and R update in B-REPLAY: on a
+FIXED list of up to 12 admitted bank snapshots (the first admitted, sealed/frozen once chosen)
+run ONE exact SUMO branch of the NEW policy continuing from each snapshot (same window, same
+CRN prefix/generator state). recapture = (J_policy_u3 - J_new_policy) / (J_policy_u3 - J_best_plan)
+per entry plus the mean with CI - how much of each verified win the policy now achieves on its
+own - and the imitation action error (m/s^2) of the new policy vs the plan actions on the chosen
+branch tape. LESSON_CHECK_u<k>_<arm>.json; charges lesson_u<k>-prefixed in bank_verification_ext.
 """
-import copy
 import json
+import os
 from pathlib import Path
 import time
 
@@ -29,6 +50,13 @@ from .protocol import digest
 
 BANK = 'replay_bank'
 K = 8
+EXTENDED_TAIL_S = 600        # MAIN confirmation (b): window to min(episode end, t0+D+600)
+TTC_EVENT_S = 1.5            # MAIN confirmation (c): TTC<1.5 s vehicle-second events
+SAFETY_KEYS = ('collisions', 'teleports', 'hard_brake')
+SAFETY_RULE = ('MAIN 2026-11-03 04:26: collisions/teleports must not increase (hard constraints); '
+               'the TOTAL of hard-brake + TTC<1.5 s events must not increase; the old '
+               'no-single-metric-may-increase verdict is kept for disclosure')
+LESSON_N = 12                # MAIN 2026-11-03 01:22: fixed lesson list cap
 
 
 def bank_root(root, arm):
@@ -40,6 +68,17 @@ def latest_checkpoint(root, arm):
     if not found:
         raise ValueError('no checkpoint for the collector policy')
     return found[-1], int(found[-1].stem.rsplit('_', 1)[1])
+
+
+def _boot_ci(values, seed=20261101):
+    """95% bootstrap CI of the mean (same estimator family as bank_quality); None under 2 values."""
+    import numpy as np
+    if len(values) < 2:
+        return None
+    v = np.array(values, float)
+    rng = np.random.default_rng(seed)
+    boots = v[rng.integers(0, len(v), (10000, len(v)))].mean(1)
+    return [float(np.quantile(boots, .025)), float(np.quantile(boots, .975))]
 
 
 # ---------------------------------------------------------------- collector guide (inside episodes)
@@ -57,11 +96,25 @@ def collector_guide(job, generator, controller, prefixes):
     root = Path(job['queue_root']);cfg = job['collect'];arm = job['arm']
     bank = bank_root(root, arm);(bank/'snapshots').mkdir(parents=True, exist_ok=True)
 
+    from .mppi_search import REGISTERED, final_horizon
+    # MAIN: the WM arrival model is fitted only up to the observed demand phase end
+    # (arrival_fit 'forecast exceeds observed/documented fitted demand phase'):
+    # admit a window only if t0 + the longest registered look-ahead stays inside it.
+    max_h = max(300, int(min(REGISTERED['final_H_max'], max(REGISTERED['screen_H_min'], REGISTERED['max_duration_s']))),
+                final_horizon(REGISTERED['max_duration_s']))
+    phase_end = float(cfg.get('demand_phase_end_s', 1200.))
+
     def call(rows, commands, now, sample):
         if int(now) % 10 or now > cfg.get('last_window_s', 900):
             return None
         groups = group_components(rows)
         if not groups:
+            return None
+        if now+max_h > phase_end:
+            (bank/'admission_exclusions').mkdir(exist_ok=True)
+            write(bank/'admission_exclusions'/f'{job["id"]}_t{int(now):04d}.json',
+                  dict(job=job['id'], t0=int(now), max_horizon_s=max_h, demand_phase_end_s=phase_end,
+                       groups=len(groups), reason='t0 + max look-ahead outside the fitted demand phase'))
             return None
         pending = sum(not (root/'responses'/p.name).exists() for p in (root/'requests').glob('*.json'))
         pending += sum(not (root/'centre_responses'/p.name).exists() for p in (root/'centre_requests').glob('*.json'))
@@ -142,7 +195,7 @@ def candidates_for(root, arm, meta, bounds, k=K):
     return sv.random_candidates(meta['group'], v['policy_traj'], tuple(bounds), meta['regime'], seed, k), 'random'
 
 
-def verify_pending(root, arm, bounds, runner, charge, workers, decided):
+def verify_pending(root, arm, bounds, runner, charge, workers, decided, limit=None):
     """Verify every answered snapshot once; returns the statuses of new receipts.
 
     R decision i uses the available_k of B decision i (issue order); it waits for it.
@@ -169,6 +222,8 @@ def verify_pending(root, arm, bounds, runner, charge, workers, decided):
             (bank/'skipped'/(meta['state_id']+'.json')).write_text(json.dumps(dict(meta, reason=how)))
             continue
         todo.append((meta, cands, how, match))
+        if limit is not None and len(todo) >= limit:
+            break       # remaining answered snapshots are verified in later rounds
 
     def one(item):
         meta, cands, how, match = item
@@ -187,13 +242,13 @@ def verify_pending(root, arm, bounds, runner, charge, workers, decided):
         return list(pool.map(one, todo))
 
 
-def collect(root, arm, binding, worlds, stop, episodes_per_round=2, verify_workers=None, rounds=None):
+def collect(root, arm, binding, worlds, stop, episodes_per_round=2, verify_workers=None, rounds=None,
+            verify_per_round=None):
     """Continuous collector for one arm (until ``stop()`` or budget blocked)."""
     from concurrent.futures import ProcessPoolExecutor
     import multiprocessing
     from .accel_plant import episode
     from .accel_storage import reserve
-    from .acceleration import Policy
     from .accel_learner import load
     from .policy_wm import actor_state
     root = Path(root);bank = bank_root(root, arm);bank.mkdir(parents=True, exist_ok=True)
@@ -201,6 +256,10 @@ def collect(root, arm, binding, worlds, stop, episodes_per_round=2, verify_worke
     runner = sv.SubprocessBranchRunner(vroot/'branches', workers=cfg.get('workers', K+1),
                                        timeout_s=cfg.get('timeout_s', 3600))
     charge = sv.accel_charge(str(root), cfg.get('phase', 'sumo_verification_k8'))
+    confirm_phase = cfg.get('confirm_phase', 'bank_verification_ext')    # MAIN 2026-11-02 22:32 allowance
+
+    def runner_for(work):
+        return sv.SubprocessBranchRunner(Path(work)/'branches', workers=2, timeout_s=cfg.get('timeout_s', 3600))
     decided = set();n = 0;statuses = []
     while not stop() and (rounds is None or n < rounds):
         path, u = latest_checkpoint(root, arm)
@@ -218,35 +277,61 @@ def collect(root, arm, binding, worlds, stop, episodes_per_round=2, verify_worke
                              gpu_deadline=binding['gpu_deadline'], guided=False, beta=1.,
                              policy_state=actor_state(policy), warm_history=binding.get('warm_history', False),
                              collector_policy_update=u, b_replay=True,
-                             collect=dict(slots=binding['slots'], fanout_factor=binding.get('parallel_fanout_factor', 2))))
+                             collect=dict(slots=binding['slots'], fanout_factor=binding.get('parallel_fanout_factor', 2),
+                                          demand_phase_end_s=binding.get('demand_phase_end_s', 1200.))))
         reserve(root, jobs, binding.get('collect_phase', 'train'))
         with ProcessPoolExecutor(max_workers=len(jobs), mp_context=multiprocessing.get_context('spawn')) as pool:
             list(pool.map(episode, jobs))
-        statuses += verify_pending(root, arm, binding['accel_bounds'], runner, charge, verify_workers, decided)
+        statuses += verify_pending(root, arm, binding['accel_bounds'], runner, charge, verify_workers, decided,
+                                   verify_per_round)
+        confirm_pending(root, arm, runner_for, str(root), confirm_phase, workers=2,
+                        sources=binding.get('replay_sources', {}).get(arm, ()), limit=verify_per_round)
+        bank_quality(root, arm, binding.get('replay_sources', {}).get(arm, ()))
         n += 1
         if 'budget_blocked' in statuses:
             break
     # Drain: answered requests issued by the final round.
     deadline = time.time()+binding.get('drain_s', 0)
     while time.time() < deadline:
-        statuses += verify_pending(root, arm, binding['accel_bounds'], runner, charge, verify_workers, decided)
+        statuses += verify_pending(root, arm, binding['accel_bounds'], runner, charge, verify_workers, decided,
+                                   verify_per_round)
         time.sleep(2)
     return statuses
 
 
 # ---------------------------------------------------------------- bank reader (trainer side)
 
-def bank_decisions(root, arm, upto_unix=None):
-    """Completed sealed verification receipts of this arm (accepted/rejected)."""
-    out = []
-    for p in sorted((bank_root(root, arm)/'sumo_verification'/'verifications').glob('*.json')):
+def _receipts(root, arm, sources=()):
+    """(receipt, branches_dir) from this bank and optional live LS-COLLECT label dirs.
+
+    LS layout (c4/coopnative ls_collection): <src>/labels/<key>.json {'verification': receipt},
+    branch tapes under <src>/branches/<verification_id>/<branch>/RESULT.json.
+    """
+    own = bank_root(root, arm)/'sumo_verification'
+    links = {}
+    for p in (bank_root(root, arm)/'decisions').glob('*.json'):
+        v = json.loads(p.read_text());links[v['verification_id']] = v.get('policy_update')
+    for p in sorted((own/'verifications').glob('*.json')):
         r = json.loads(p.read_text())
+        u = links.get(r['verification_id'])
+        yield r, own/'branches', (f'u{int(u)}' if u is not None else 'unknown')
+    for src in sources:
+        # MAIN: live frozen-u3 LS-COLLECT labels count as B bank entries, tagged u3.
+        src = Path(src)
+        for p in sorted((src/'labels').glob('*.json')):
+            yield json.loads(p.read_text())['verification'], src/'branches', 'u3'
+
+
+def bank_decisions(root, arm, upto_unix=None, sources=()):
+    """Completed sealed verification receipts of this arm (accepted/rejected), oldest first."""
+    out = []
+    for r, branches, version in _receipts(root, arm, sources):
         xg.verify_sealed(r, 'receipt_sha256')
-        if r['status'] not in ('accepted', 'rejected'):
+        if r['status'] not in ('accepted', 'rejected') or r['episode']['arm'] != arm:
             continue
         if upto_unix is not None and r['timing']['finished_unix'] > upto_unix:
             continue
-        out.append(r)
+        out.append(dict(r, _branches=str(branches), _policy_version=version))
     return sorted(out, key=lambda r: (r['timing']['finished_unix'], r['verification_id']))
 
 
@@ -272,28 +357,78 @@ def temperature(root, arm, training_seed, decisions):
     return t
 
 
-def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT_CLIP):
-    """(pairs, summary): imitation pairs for ALL exact-advantage>0 bank entries, weight*beta."""
-    decisions = bank_decisions(root, arm, upto_unix)
-    T = temperature(root, arm, training_seed, decisions)
+def bank_pairs(root, arm, training_seed, beta=1., upto_unix=None, clip=xg.WEIGHT_CLIP, sources=(),
+               max_decisions=None):
+    """(pairs, summary): imitation pairs for ALL exact-advantage>0 bank entries, weight*beta.
+
+    max_decisions (R fairness, MAIN): use at most this many verified decisions, oldest first;
+    never padded from another arm's data.
+    """
+    everything = bank_decisions(root, arm, upto_unix, sources)
+    T = temperature(root, arm, training_seed, everything)
+    decisions = everything if max_decisions is None else everything[:max(0, int(max_decisions))]
     pairs, entries, counts = [], [], dict(decisions=len(decisions), positive=0, nonpositive=0)
+    conf = confirmations(root, arm)
+    counts.update(unconfirmed=0, not_admitted=0)
+    per_entry = []
     for r in decisions:
         if r['status'] != 'accepted' or not r['grade_veh_s'] or r['grade_veh_s'] <= 0:
             counts['nonpositive'] += 1;continue
         counts['positive'] += 1
+        c = conf.get(r['verification_id'])
+        if c is None:
+            counts['unconfirmed'] += 1;continue       # MAIN: only plans that actually work
+        if not c['admitted']:
+            counts['not_admitted'] += 1;continue
         plan = r['chosen_plan'];branch = r['branches'][r['chosen']+1]
-        result_path = bank_root(root, arm)/'sumo_verification'/'branches'/r['verification_id']/branch['branch']/'RESULT.json'
+        result_path = Path(r['_branches'])/r['verification_id']/branch['branch']/'RESULT.json'
         from .accel_storage import read
         tape = read(result_path)
         if branch.get('result_sha256') and digest(tape) != branch['result_sha256']:
             raise ValueError('bank branch tape differs from its sealed verification receipt')
-        w = float(beta)*xg.weight(r['grade_veh_s'], T['temperature_veh_s'], clip)
+        w = float(beta)*xg.weight(c['mean_replicated_advantage_veh_s'], T['temperature_veh_s'], clip)
         entry = dict(start_s=r['t0'], duration_s=int(plan['duration_s']), plan_id=plan['id'], weight=w)
-        pairs.extend(xg.imitation_pairs(tape, entry))
+        coop = c.get('cooperation') or {}
+        per_entry.append((xg.imitation_pairs(tape, entry), coop.get('cooperative') is True,
+                          coop.get('cooperation_gain_veh_s')))
         entries.append(dict(verification_id=r['verification_id'], grade_veh_s=r['grade_veh_s'], weight=w,
-                            duration_s=entry['duration_s'], receipt_sha256=r['receipt_sha256']))
-    return pairs, dict(rule='B-REPLAY bank: all exact-advantage>0 entries every update; weight x beta',
-                       temperature=T, beta=float(beta), counts=counts, entries=entries, clip=clip)
+                            mean_replicated_advantage_veh_s=c['mean_replicated_advantage_veh_s'],
+                            policy_version=r['_policy_version'], available_k=r.get('available_k', r['k']),
+                            duration_s=entry['duration_s'], receipt_sha256=r['receipt_sha256'],
+                            cooperative=coop.get('cooperative') is True,
+                            group_size=coop.get('group_size'),
+                            cooperation_gain_veh_s=coop.get('cooperation_gain_veh_s')))
+    # MAIN 2026-11-03 00:01 EXPOSURE: cooperative entries must reach the policy at least as
+    # often as non-cooperative ones - oversample them up to 50% of the imitation samples
+    # (pair duplication; the weights themselves are unchanged).
+    other = [p for ps, co, _ in per_entry if not co for p in ps]
+    coop_pairs = [p for ps, co, _ in per_entry if co for p in ps]
+    pairs = other+coop_pairs
+    exposure = dict(cooperative_entries=sum(co for _, co, _ in per_entry),
+                    non_cooperative_entries=sum(not co for _, co, _ in per_entry),
+                    cooperative_samples_raw=len(coop_pairs), non_cooperative_samples=len(other),
+                    duplicated_pairs=0)
+    if coop_pairs and len(coop_pairs) < len(other):
+        full, rem = divmod(len(other)-len(coop_pairs), len(coop_pairs))
+        pairs = other+coop_pairs*(1+full)+coop_pairs[:rem]
+        exposure['duplicated_pairs'] = len(pairs)-len(other)-len(coop_pairs)
+    exposure['rule'] = ('cooperative entries oversampled to 50% of imitation samples, weights unchanged'
+                        if exposure['duplicated_pairs']
+                        else ('cooperative entries already at least half of the imitation samples'
+                              if coop_pairs else 'no cooperative admitted entries; no oversampling'))
+    if pairs:
+        exposure['cooperative_share_of_samples'] = (len(pairs)-len(other))/len(pairs)
+    gains = [g for _, _, g in per_entry if g is not None]
+    import numpy as np
+    exposure.update(mean_cooperation_gain_veh_s=float(np.mean(gains)) if gains else None,
+                    mean_cooperation_gain_ci95=_boot_ci(gains))
+    counts.update(available=len(everything), used=len(decisions),
+                  cooperative=exposure['cooperative_entries'],
+                  by_policy_version={v: sum(r['_policy_version'] == v for r in decisions)
+                                     for v in sorted({r['_policy_version'] for r in decisions})})
+    return pairs, dict(rule='B-REPLAY bank: all CONFIRMED (replication, no later harm, safety) exact-positive entries; weight(mean replicated advantage) x beta; cooperative entries oversampled to 50% of samples',
+                       temperature=T, beta=float(beta), counts=counts, entries=entries, clip=clip,
+                       max_decisions=max_decisions, exposure=exposure)
 
 
 def main(argv=None):
@@ -317,3 +452,415 @@ def main(argv=None):
 
 if __name__ == '__main__':
     main()
+
+
+
+# ---------------------------------------------------------------- confirmation stage (MAIN)
+
+def replicate(snapshot, salt):
+    """Same decision state/prefix/t0 sample; an independent post-t0 noise seed (CRN across its branches)."""
+    import hashlib
+    g = torch.Generator().manual_seed(int(digest(dict(replication=salt))[:15], 16))
+    out = dict(snapshot)
+    out['generator_state'] = g.get_state().clone()
+    out['rng'] = dict(snapshot['rng'], generator_state_sha256=hashlib.sha256(g.get_state().numpy().tobytes()).hexdigest(),
+                      replication_salt=salt)
+    return out
+
+
+def ttc_events(trace_path, start, end, threshold=TTC_EVENT_S):
+    """Vehicle-seconds with closing TTC < threshold in [start, end) from the branch's observable trace.
+
+    Reuses traffic_shepherd.metrics.closing_ttc on same-lane follower/leader pairs of the
+    recorded observable rows (gap = leader rear - follower front)."""
+    import gzip
+    from traffic_shepherd.metrics import closing_ttc
+    n = 0
+    with gzip.open(trace_path, 'rt', encoding='utf-8') as f:
+        for line in f:
+            x = json.loads(line)
+            if not start <= x['time_s'] < end:
+                continue
+            lanes = {}
+            for v in x.get('vehicles', []):
+                lanes.setdefault(v['lane'], []).append(v)
+            for rows in lanes.values():
+                rows.sort(key=lambda v: v['s_m'])
+                for a, b in zip(rows, rows[1:]):
+                    ttc = closing_ttc(b['s_m']-a['s_m']-float(b.get('length_m', 5.)), a['v_mps'], b['v_mps'])
+                    n += ttc is not None and ttc < threshold
+    return float(n)
+
+
+def _safety(receipt, branches_dir):
+    """Per confirmation decision: candidate minus policy deltas, OLD and NEW verdicts.
+
+    OLD rule (disclosed, never deleted): no metric may increase.
+    NEW rule (MAIN 2026-11-03 04:26, applied identically to B and R): (i) collisions and
+    teleports must NOT increase (hard constraints); (ii) the TOTAL of safety-critical events
+    (hard-brake events + TTC<1.5 s events, same windows, same metric code) must NOT increase.
+    One metric improving may offset another worsening; a collision/teleport increase never can."""
+    pol, cand = receipt['branches'][0], receipt['branches'][1]
+    deltas = {k: float(cand['window'][k])-float(pol['window'][k]) for k in SAFETY_KEYS}
+    w = receipt['window']
+    traces = {b['branch']: Path(branches_dir)/receipt['verification_id']/b['branch']/'observable.jsonl.gz' for b in (pol, cand)}
+    deltas['ttc_below_1p5_events'] = (ttc_events(traces[cand['branch']], w['start_s'], w['end_s'])
+                                      - ttc_events(traces[pol['branch']], w['start_s'], w['end_s']))
+    old_ok = all(v <= 0 for v in deltas.values())
+    new_ok = (deltas['collisions'] <= 0 and deltas['teleports'] <= 0
+              and deltas['hard_brake']+deltas['ttc_below_1p5_events'] <= 0)
+    return deltas, old_ok, bool(new_ok)
+
+
+def _confirm_charge(run_root, phase, kind):
+    """Confirmation-branch charge in the registered extension phase (MAIN 2026-11-02 22:32).
+
+    The ledger ids embed the attempt kind: replication and extended branches of one decision
+    share the verification_id (episode/t0/candidate digest), so unqualified ids would hit the
+    duplicate-charge guard and the second branch could never run."""
+    inner = sv.accel_charge(run_root, phase)
+    return lambda vid, specs: inner(f'{kind}_{vid}', specs)
+
+
+def solo_candidate(plan, member):
+    """The group plan with ONLY ``member`` executing: it keeps its own profile row, the other
+    members follow 'policy continues' (the branch Controller has no guide). A distinct plan id
+    gives the solo branch its own verification_id so it can never collide with the group
+    decision's receipts, claims or charges."""
+    rows = list(plan['members'])
+    i = rows.index(member)
+    out = dict(plan);out['members'] = [member]
+    for key, val in plan.items():
+        if isinstance(val, list) and len(val) == len(rows) and all(isinstance(x, list) for x in val):
+            out[key] = [val[i]]                      # per-member matrices: keep only this row
+    out['id'] = f"{plan['id']}__solo_{member}"
+    return out
+
+
+def _cooperation(root, arm, receipt, snapshot, runner_for, run_root, phase, workers, best, group_advantage):
+    """MAIN 2026-11-03 00:01: for an ADMITTED multi-CAV plan, one SOLO verification per member
+    on the first seed; cooperative iff advantage(group) > every member-only solo advantage."""
+    bank = bank_root(root, arm);solo_root = bank/'confirm_solo'
+    charge = _confirm_charge(run_root, phase, 'confirm_solo')
+    solos = []
+    for m in best['members']:
+        r = sv.verify(snapshot, [solo_candidate(best, m)], runner_for(solo_root), charge,
+                      receipt['proposer'], workers=workers, root=solo_root)
+        solos.append(dict(member=m, verification_id=r['verification_id'], status=r['status'],
+                          advantage_veh_s=(r['J_policy_veh_s']-r['J_candidates_veh_s'][0]
+                                           if r['status'] in ('accepted', 'rejected') else None),
+                          receipt_sha256=r['receipt_sha256']))
+    advs = [s['advantage_veh_s'] for s in solos]
+    complete = all(a is not None for a in advs)
+    if complete:
+        b = max(range(len(advs)), key=lambda i: advs[i])
+        gain = group_advantage-advs[b]
+        return dict(group_size=len(best['members']), solo=solos, solo_advantages_veh_s=advs,
+                    best_solo_advantage_veh_s=advs[b], best_solo_member=solos[b]['member'],
+                    cooperation_gain_veh_s=gain, cooperative=bool(gain > 0), complete=True,
+                    rule='cooperative iff the group plan beats EVERY member-only solo (first seed)')
+    return dict(group_size=len(best['members']), solo=solos, solo_advantages_veh_s=advs,
+                best_solo_advantage_veh_s=None, best_solo_member=None, cooperation_gain_veh_s=None,
+                cooperative=None, complete=False,
+                reason='a solo branch failed/stopped; never imputed, cooperation undecided')
+
+
+def confirm(root, arm, receipt, snapshot, runner_for, run_root, phase, workers=2, version=None):
+    """(a) replication + (b) extended-window confirmations, then (c) admission; an ADMITTED
+    multi-CAV entry additionally gets the per-member SOLO cooperation check (MAIN 00:01)."""
+    bank = bank_root(root, arm);best = receipt['chosen_plan'];vid = receipt['verification_id']
+    rep_root, ext_root = bank/'confirm_replication', bank/'confirm_extended'
+    rep = sv.verify(replicate(snapshot, vid), [best], runner_for(rep_root),
+                    _confirm_charge(run_root, phase, 'confirm_replication'), receipt['proposer'],
+                    workers=workers, root=rep_root)
+    ext = sv.verify(snapshot, [best], runner_for(ext_root),
+                    _confirm_charge(run_root, phase, 'confirm_extended'), receipt['proposer'], workers=workers,
+                    root=ext_root, tail_s=EXTENDED_TAIL_S)
+    out = dict(verification_id=vid, arm=arm, policy_version=version, t0=receipt['t0'],
+               duration_s=int(best['duration_s']), first_seed_advantage_veh_s=receipt['grade_veh_s'],
+               replication=dict(verification_id=rep['verification_id'], status=rep['status'],
+                                window=rep.get('window'), receipt_sha256=rep['receipt_sha256']),
+               extended=dict(verification_id=ext['verification_id'], status=ext['status'],
+                             window=ext.get('window'), receipt_sha256=ext['receipt_sha256']),
+               unix=time.time())
+    ok = rep['status'] in ('accepted', 'rejected') and ext['status'] in ('accepted', 'rejected')
+    if ok:
+        out['replication_advantage_veh_s'] = rep['J_policy_veh_s']-rep['J_candidates_veh_s'][0]
+        out['extended_advantage_veh_s'] = ext['J_policy_veh_s']-ext['J_candidates_veh_s'][0]
+        rs, rok_old, rok = _safety(rep, rep_root/'branches')
+        es, eok_old, eok = _safety(ext, ext_root/'branches')
+        out['safety_deltas'] = dict(replication=rs, extended=es)
+        out['safety_rule'] = SAFETY_RULE
+        out['safety_old_rule_ok'] = bool(rok_old and eok_old)   # disclosed alongside the new verdict
+        out['checks'] = dict(replication=out['replication_advantage_veh_s'] > 0,
+                             no_later_harm=out['extended_advantage_veh_s'] > 0, safety=rok and eok)
+        out['admitted'] = all(out['checks'].values())
+        out['mean_replicated_advantage_veh_s'] = (receipt['grade_veh_s']+out['replication_advantage_veh_s'])/2
+    else:
+        out.update(admitted=False, checks=dict(confirmation_branches_complete=False),
+                   reason='confirmation branch failed/stopped/budget; never imputed')
+    if ok and out['checks'].get('replication') and out['checks'].get('no_later_harm'):
+        # MAIN 2026-11-03 04:26: the synergy check also runs as a DIAGNOSTIC on every decision
+        # that passes replication + later-harm, even when the safety check rejects the entry.
+        if len(best.get('members', [])) >= 2:
+            out['cooperation'] = _cooperation(root, arm, receipt, snapshot, runner_for, run_root, phase,
+                                              workers, best, out['first_seed_advantage_veh_s'])
+        else:   # single-CAV plan: cooperative=False by definition, no solo branches
+            out['cooperation'] = dict(group_size=len(best.get('members', [])), solo=[], solo_advantages_veh_s=[],
+                                      best_solo_advantage_veh_s=None, best_solo_member=None,
+                                      cooperation_gain_veh_s=None, cooperative=False, complete=True,
+                                      rule='single-CAV plan: cooperative=False by definition')
+    d = bank/'confirmations';d.mkdir(parents=True, exist_ok=True)
+    xg._write_new(d/(vid+'.json'), xg._seal(out, 'confirmation_sha256'))
+    return out
+
+
+def _ls_snapshot(src, key):
+    """Live LS-COLLECT snapshot completion (same rule as ls_collection.complete_snapshot)."""
+    import gzip
+    import io
+    from .accel_storage import read
+    envelope = json.loads(gzip.decompress((Path(src)/'pending'/(key+'.json.gz')).read_bytes()))
+    s = torch.load(io.BytesIO(gzip.decompress((Path(src)/'snapshots'/(envelope['snapshot']+'.pt.gz')).read_bytes())),
+                   map_location='cpu', weights_only=False)
+    ep = read(Path(envelope['episode_path'])/'RESULT.json');t0 = s['t0']
+    assert ep['id'] == s['episode']['id'] and ep['world'] == s['episode']['world']
+    assert 986000 <= ep['world']['seed'] <= 986071
+    s['prefixes'] = {str(t): ep['prefixes'][str(t)] for t in range(300, t0+1)}
+    s['samples'] = {str(x['time_s']): x['sample'] for x in ep['steps'] if x['time_s'] < t0}
+    s['samples'][str(t0)] = s.pop('current_sample')
+    return s
+
+
+def _decision_snapshot(root, arm, r, by_vid):
+    """The decision-time snapshot of a first-seed positive decision (own bank or live LS label)."""
+    bank = bank_root(root, arm)
+    link = by_vid.get(r['verification_id'])
+    if link is None:
+        if r['_policy_version'] != 'u3':
+            raise ValueError('no decision link for '+r['verification_id'])
+        src = Path(r['_branches']).parent
+        key = next(json.loads(p.read_text())['search_id'] for p in (src/'labels').glob('*.json')
+                   if json.loads(p.read_text())['verification']['verification_id'] == r['verification_id'])
+        return _ls_snapshot(src, key)
+    return torch.load(bank/'snapshots'/(link['state_id']+'.pt'), weights_only=False)
+
+
+def confirm_pending(root, arm, runner_for, run_root, phase, workers=2, sources=(), limit=None):
+    """Confirm every first-seed positive decision (own bank and, for B, live LS labels) once."""
+    bank = bank_root(root, arm);done = {p.stem for p in (bank/'confirmations').glob('*.json')}
+    by_vid = {}
+    for p in (bank/'decisions').glob('*.json'):
+        v = json.loads(p.read_text());by_vid[v['verification_id']] = v
+    statuses = []
+    for r in bank_decisions(root, arm, sources=sources):
+        if r['status'] != 'accepted' or r['verification_id'] in done or not (r['grade_veh_s'] or 0) > 0:
+            continue
+        if limit is not None and len(statuses) >= limit:
+            break
+        snap = _decision_snapshot(root, arm, r, by_vid)
+        receipt = {k: v for k, v in r.items() if not k.startswith('_')}
+        statuses.append(confirm(root, arm, receipt, snap, runner_for, run_root, phase, workers,
+                                r['_policy_version'])['admitted'])
+    return statuses
+
+
+def confirmations(root, arm):
+    out = {}
+    for p in (bank_root(root, arm)/'confirmations').glob('*.json'):
+        v = json.loads(p.read_text());xg.verify_sealed(v, 'confirmation_sha256');out[v['verification_id']] = v
+    return out
+
+
+def bank_quality(root, arm, sources=()):
+    """BANK_QUALITY.json: decisions, first-seed positives, confirmation rate, admitted, mean (95% CI), safety rejections,
+    plus the cooperation/synergy record (MAIN 2026-11-03 00:01): cooperative count, mean gain (95% CI)
+    and the group-vs-best-solo 'synergy twins' table."""
+    import numpy as np
+    decisions = bank_decisions(root, arm, sources=sources)
+    conf = confirmations(root, arm)
+    positives = [r for r in decisions if r['status'] == 'accepted' and (r['grade_veh_s'] or 0) > 0]
+    confirmed = [conf[r['verification_id']] for r in positives if r['verification_id'] in conf]
+    admitted = [c for c in confirmed if c['admitted']]
+    values = np.array([c['mean_replicated_advantage_veh_s'] for c in admitted], float)
+    ci = _boot_ci(values)
+    coop_rec = [(c, c.get('cooperation') or {}) for c in admitted]
+    cooperative = [c for c, co in coop_rec if co.get('cooperative') is True]
+    gains = [co['cooperation_gain_veh_s'] for _, co in coop_rec if co.get('cooperation_gain_veh_s') is not None]
+    # MAIN 2026-11-03 04:26: the synergy twins table publishes every completed cooperation
+    # record - admitted entries AND diagnostic rows of entries the safety check rejected
+    # (replication + later-harm passers) - each tagged with its admission/safety verdicts.
+    synergy = [c for c in confirmed if (c.get('cooperation') or {}).get('complete') is True]
+    twins = [dict(verification_id=c['verification_id'], t0=c['t0'], policy_version=c['policy_version'],
+                  admitted=c['admitted'], safety_old_rule_ok=c.get('safety_old_rule_ok'),
+                  group_size=(c.get('cooperation') or {}).get('group_size'),
+                  first_seed_advantage_veh_s=c['first_seed_advantage_veh_s'],
+                  best_solo_advantage_veh_s=(c.get('cooperation') or {}).get('best_solo_advantage_veh_s'),
+                  best_solo_member=(c.get('cooperation') or {}).get('best_solo_member'),
+                  cooperation_gain_veh_s=(c.get('cooperation') or {}).get('cooperation_gain_veh_s'),
+                  cooperative=(c.get('cooperation') or {}).get('cooperative'))
+             for c in synergy]
+    q = dict(arm=arm, unix=time.time(), decisions=len(decisions), first_seed_positives=len(positives),
+             confirmed=len(confirmed), pending_confirmation=len(positives)-len(confirmed), admitted=len(admitted),
+             confirmation_rate=(len(admitted)/len(confirmed) if confirmed else None),
+             mean_admitted_advantage_veh_s=(float(values.mean()) if len(values) else None),
+             mean_admitted_advantage_ci95=ci, ci_method='10000 bootstrap over admitted decisions, RNG20261101',
+             rejections=dict(replication=sum(not c['checks'].get('replication', True) for c in confirmed),
+                             later_harm=sum(not c['checks'].get('no_later_harm', True) for c in confirmed),
+                             safety=sum(not c['checks'].get('safety', True) for c in confirmed),
+                             safety_old_rule=sum(not c.get('safety_old_rule_ok', True) for c in confirmed
+                                                 if 'safety_old_rule_ok' in c),
+                             incomplete=sum('confirmation_branches_complete' in c['checks'] for c in confirmed)),
+             by_policy_version={v: sum(c['policy_version'] == v for c in admitted)
+                                for v in sorted({c['policy_version'] for c in admitted})},
+             cooperative=len(cooperative),
+             cooperation_undecided=sum(co.get('cooperative') is None for _, co in coop_rec),
+             synergy_diagnostic=sum(c['admitted'] is False for c in synergy),
+             mean_cooperation_gain_veh_s=(float(np.mean(gains)) if gains else None),
+             mean_cooperation_gain_ci95=_boot_ci(gains),
+             synergy_twins=twins)
+    path = bank_root(root, arm)/'BANK_QUALITY.json';tmp = path.with_name(path.name+'.publishing')
+    tmp.write_text(json.dumps(q, indent=1));os.replace(tmp, path)
+    return q
+
+
+# ---------------------------------------------------------------- lesson check (MAIN 2026-11-03 01:22)
+
+def lesson_list(root, arm, sources=()):
+    """The FIXED lesson list: the first admitted bank decisions of this arm (receipt finish
+    order, up to LESSON_N), sealed once chosen; every later update measures recapture on
+    exactly the same entries (never re-chosen, never extended)."""
+    path = bank_root(root, arm)/f'LESSON_LIST_{arm}.json'
+    if path.exists():
+        v = json.loads(path.read_text());xg.verify_sealed(v, 'lesson_list_sha256');return v
+    conf = confirmations(root, arm)
+    admitted = [r['verification_id'] for r in bank_decisions(root, arm, sources=sources)
+                if r['status'] == 'accepted' and (r['grade_veh_s'] or 0) > 0
+                and conf.get(r['verification_id'], {}).get('admitted')]
+    if not admitted:
+        return None
+    rec = dict(arm=arm, rule='first admitted decisions in receipt finish order, up to 12, frozen once chosen',
+               verification_ids=admitted[:LESSON_N], chosen_unix=time.time())
+    xg._write_new(path, xg._seal(rec, 'lesson_list_sha256'))
+    return rec
+
+
+def _action_error(policy, r, best):
+    """Mean |policy action - plan action| (m/s^2) of the NEW policy over the chosen branch's
+    committed plan steps (the same member-index rule as the imitation loss)."""
+    import numpy as np
+    branch = r['branches'][r['chosen']+1]
+    from .accel_storage import read
+    tape = read(Path(r['_branches'])/r['verification_id']/branch['branch']/'RESULT.json')
+    if branch.get('result_sha256') and digest(tape) != branch['result_sha256']:
+        raise ValueError('bank branch tape differs from its sealed verification receipt')
+    pairs = xg.imitation_pairs(tape, dict(start_s=r['t0'], duration_s=int(best['duration_s']),
+                                          plan_id=best['id'], weight=1.))
+    errs = []
+    with torch.no_grad():
+        for sample, _w in pairs:
+            mean, _ = policy(sample['context'])
+            act = torch.tensor(sample['action']).reshape(-1, 1)
+            idx = [sample['context']['members'].index(v) for v in sample['behaviour']['proposal_members']
+                   if v in sample['context']['members']]
+            if idx:
+                errs.append(float((mean[idx]-act[idx].reshape(-1)).abs().mean()))
+    return float(np.mean(errs)) if errs else None
+
+
+def lesson_check(root, arm, policy, run_root, update, runner_for, workers=2, sources=(),
+                 phase='bank_verification_ext'):
+    """LESSON-LEARNED CHECK after an update (never raises; the training run must not depend on it).
+
+    For each FROZEN lesson entry: ONE exact SUMO branch of the NEW policy continuing from the
+    decision snapshot - same window, same CRN (identical prefix tape and generator state), only
+    the policy weights differ. recapture = (J_policy_u3 - J_new_policy)/(J_policy_u3 - J_best_plan)
+    per entry plus the mean (95% bootstrap CI); plus the imitation action error (m/s^2) on the
+    bank states. Charges are lesson_u<k>-prefixed (the same entry is re-measured every update,
+    so unqualified ids would hit the duplicate-charge guard from the second update on)."""
+    import numpy as np
+    bank = bank_root(root, arm);stamp = f'lesson_u{int(update):03}'
+    out = dict(arm=arm, update=int(update), unix=time.time(), phase=phase,
+               rule='recapture = (J_policy_u3 - J_new_policy) / (J_policy_u3 - J_best_plan); '
+                    '1.0 = the new policy achieves the whole verified win on its own',
+               list_size=0, entries=[])
+    try:
+        lst = lesson_list(root, arm, sources)
+        if lst is None:
+            out['reason'] = 'no admitted entries yet; the lesson list is still empty'
+            return out
+        out.update(list_file=f'LESSON_LIST_{arm}.json', list_size=len(lst['verification_ids']),
+                   list_rule=lst['rule'])
+        by_vid = {}
+        for p in (bank/'decisions').glob('*.json'):
+            v = json.loads(p.read_text());by_vid[v['verification_id']] = v
+        receipts = {r['verification_id']: r for r in bank_decisions(root, arm, sources=sources)}
+        runner = runner_for(bank/'lesson_check'/stamp/'branches')
+        charge = _confirm_charge(run_root, phase, stamp)
+        weights = {k: v.detach().cpu().clone() for k, v in policy.state_dict().items()}
+        new_sha = sv._state_sha(weights)
+        for vid in lst['verification_ids']:
+            e = dict(verification_id=vid)
+            r = receipts.get(vid)
+            if r is None or r['status'] != 'accepted' or r.get('chosen') is None:
+                e.update(status='missing_or_ungraded', recapture=None)
+                out['entries'].append(e);continue
+            try:
+                snap = _decision_snapshot(root, arm, r, by_vid)
+            except Exception as err:
+                e.update(status='snapshot_error', reason=repr(err), recapture=None)
+                out['entries'].append(e);continue
+            J_u3 = float(r['branches'][0]['J_veh_s'])
+            J_best = float(r['branches'][r['chosen']+1]['J_veh_s'])
+            new_snap = dict(snap)
+            new_snap['weights'] = weights
+            new_snap['policy'] = dict(state_dict_sha256=new_sha)
+            best = r['chosen_plan']
+            spec = sv.build_branches(new_snap, [best], r['proposer'])[0]   # branch 0: NEW policy continues
+            try:
+                charge(vid, [spec])        # before physics, like every branch charge
+            except sv.BudgetBlocked as err:
+                e.update(status='budget_blocked', reason=str(err), recapture=None)
+                out['entries'].append(e);continue
+            res = sv.run_branch(spec, new_snap, runner)
+            e.update(status=res['status'], J_policy_u3_veh_s=J_u3, J_best_plan_veh_s=J_best,
+                     new_policy_branch=dict(verification_id=spec['verification_id'],
+                                            snapshot_sha256=spec['snapshot_sha256'],
+                                            window=spec['window'], reason=res.get('reason')))
+            if res['status'] == 'graded':
+                J_new = float(res['J_veh_s'])
+                e['J_new_policy_veh_s'] = J_new
+                denom = J_u3-J_best
+                rec = (J_u3-J_new)/denom if denom > 0 else None
+                e['recapture'] = rec
+                if rec is not None:
+                    out.setdefault('recaptures', []).append(rec)
+                try:
+                    aerr = _action_error(policy, r, best)
+                except Exception as err:
+                    aerr = None;e['action_error_reason'] = repr(err)
+                if aerr is not None:
+                    e['imitation_action_error_mps2'] = aerr
+                    out.setdefault('action_errors_mps2', []).append(aerr)
+            out['entries'].append(e)
+        recaptures = out.get('recaptures', []);errs = out.get('action_errors_mps2', [])
+        out.update(recapture_mean=(float(np.mean(recaptures)) if recaptures else None),
+                   recapture_ci95=_boot_ci(recaptures), graded_entries=len(recaptures),
+                   imitation_action_error_mean_mps2=(float(np.mean(errs)) if errs else None),
+                   imitation_action_error_ci95=_boot_ci(errs))
+    except Exception as err:   # the update must survive any lesson-check failure
+        out['error'] = repr(err)
+    return out
+
+
+def record_lesson(root, arm, policy, run_root, update, runner_for, workers=2, sources=(),
+                  phase='bank_verification_ext'):
+    """Run the lesson check and write LESSON_CHECK_u<k>_<arm>.json (arm-suffixed: B and R share
+    the run root; the check runs after every update of both arms). Atomic replace, so an exact
+    resume that re-applies update k re-measures instead of failing on an existing file."""
+    out = lesson_check(root, arm, policy, run_root, update, runner_for, workers, sources, phase)
+    path = Path(root)/f'LESSON_CHECK_u{int(update):03}_{arm}.json'
+    tmp = path.with_name(path.name+'.writing')
+    tmp.write_text(json.dumps(xg._seal(out, 'lesson_check_sha256'), indent=1))
+    os.replace(tmp, path)
+    return out

@@ -98,5 +98,50 @@ class LabelList8Tests(unittest.TestCase):
         self.assertTrue(all(p['saving_vs_policy'] < 0 for p in out['topk']))
 
 
+class FakeHardBrakeTests(unittest.TestCase):
+    """The fake plant mirrors the real hard_brake (braking_vehicle_seconds): only a requested
+    deceleration beyond the lower bound counts; limiting acceleration is not a hard brake."""
+
+    def test_only_lower_bound_clips_count(self):
+        from .rehearsal_cpu import BOUNDS, FakeBackend, fake_tick
+        b = FakeBackend(Path('unused'), dict(seed=3), None, None)
+        raws = dict(cav0_0=BOUNDS[0]-1., cav0_1=BOUNDS[1]+1., cav1_0=0.)
+
+        class ctrl:
+            def apply(self, rows, commands, now):
+                return {vid: dict(requested_raw=raws[vid]) for vid in raws if vid in commands}
+
+        fake_tick(b, ctrl())
+        self.assertEqual(b.totals['hard_brake'], 1.)   # only cav0_0 braked beyond the bound
+
+
+class FakeFollowingTests(unittest.TestCase):
+    """Toy car-following: a follower never drives through its leader, so a faster branch
+    cannot score TTC<1.5 s pass-through bursts against a slower one in rehearsal."""
+
+    def test_follower_never_passes_through_leader(self):
+        from .rehearsal_cpu import FakeBackend, fake_tick
+        b = FakeBackend(Path('unused'), dict(seed=3), None, None)
+        leader = next(c for c in b.cars if c['vid'] == 'cav0_0')
+        follower = next(c for c in b.cars if c['vid'] == 'cav0_1')
+        for c in b.cars:                      # isolate the pair on an empty lane
+            c['lane'] = 1 if c['vid'] in ('cav0_0', 'cav0_1') else 0
+        leader.update(lane=1, s_m=100., v_mps=10.)
+        follower.update(lane=1, s_m=60., v_mps=25.)
+        b.target['cav0_0'] = 10.              # leader holds its slow speed
+        b.target['cav0_1'] = 30.              # follower wants to be much faster
+
+        class none:
+            def apply(self, rows, commands, now):
+                return {}
+
+        for _ in range(120):
+            fake_tick(b, none())
+            gap = follower['s_m']-leader['s_m']
+            self.assertLessEqual(gap, -4.5)     # length 5 behind, never through
+        self.assertAlmostEqual(gap, -5., places=6)                      # caught up, held
+        self.assertLessEqual(follower['v_mps'], leader['v_mps']+1e-9)   # matched speed
+
+
 if __name__ == '__main__':
     unittest.main()

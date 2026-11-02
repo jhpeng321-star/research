@@ -115,24 +115,43 @@ def fake_tick(b, controller=None, trace=None):
     commands = {r['vid']: float(np.clip(.3*(b.target[r['vid']]-r['v_mps']), *BOUNDS)) for r in rows if r['is_cav']}
     desired = controller.apply(rows, commands, now)
     audit = []
+    hard_brakes = 0
+    accel = {}
     for c in b.cars:
         if c['is_cav']:
             raw = desired[c['vid']]['requested_raw'] if c['vid'] in desired else commands[c['vid']]
             a = float(np.clip(raw, *BOUNDS))
             if c['vid'] in desired:
+                # The real plant counts hard_brake as braking_vehicle_seconds: braking harder than
+                # the plant allows. An upper-bound clip only limits acceleration, so it is not a
+                # hard brake; only a requested deceleration beyond the lower bound counts.
+                hard_brakes += raw < BOUNDS[0]
                 audit.append(dict(vid=c['vid'], clamped=bool(a != raw), mappo_safe=commands[c['vid']]))
         else:
             a = float(np.clip(.5*(b.target[c['vid']]-c['v_mps']), *BOUNDS))
-        c['v_mps'] = float(max(0., c['v_mps']+a))
-        c['s_m'] += c['v_mps']
+        accel[c['vid']] = a
+    # Toy car-following: a follower never drives through its leader. Without it, every
+    # faster branch laps the slow traffic and scores TTC<1.5 s pass-through bursts, so
+    # no winning plan could ever pass the confirmation safety check in rehearsal.
+    for lane in sorted({c['lane'] for c in b.cars}):
+        prev = None
+        for c in sorted((x for x in b.cars if x['lane'] == lane), key=lambda x: -x['s_m']):
+            v = float(max(0., c['v_mps']+accel[c['vid']]))
+            s = c['s_m']+v
+            if prev is not None and s > prev['s_new']-5.:
+                s = prev['s_new']-5.
+                v = min(v, prev['v_new'])
+            c['v_mps'], c['s_m'] = v, s
+            prev = dict(s_new=s, v_new=v)
+    for c in b.cars:
         if c['s_m'] > 500.:
             c['s_m'] -= 1400.
     deficit = sum(max(0., 30.-c['v_mps'])/30. for c in b.cars)
     b.totals['road_delay_vs'] += deficit
     b.totals['team_delay_vs'] += deficit
-    b.totals['hard_brake'] += sum(1. for x in audit if x['clamped'])
+    b.totals['hard_brake'] += float(hard_brakes)
     if trace is not None:
-        trace.write(json.dumps(dict(time_s=now, n=len(rows), actions=len(audit)))+'\n')
+        trace.write(json.dumps(dict(time_s=now, vehicles=rows, actions=audit))+'\n')
     b.now += 1.
     b.actual += 1.
     TICKS[0] += 1
@@ -457,8 +476,9 @@ def build_root(root, cfg):
         policy = Policy();opt = torch.optim.Adam(policy.parameters(), lr=3e-4)
         rng = torch.Generator().manual_seed(SEED)
         save(root/f'{arm}_checkpoint_003.pt', policy, opt, rng, 3, 0)
-    budget = dict(total=11_000_000, phases=dict(superseded=811640, train=3_000_000, checks=500_000, dev=500_000,
+    budget = dict(total=13_600_000, phases=dict(superseded=811640, train=3_000_000, checks=500_000, dev=500_000,
                                                 sumo_verification=1_000_000, sumo_verification_k8=1_500_000,
+                                                bank_verification_ext=2_600_000,          # MAIN 2026-11-02 22:32
                                                 exact_plan_grading=500_000, discovery=138_200))
     budget['allocated'] = sum(budget['phases'].values());budget['unallocated'] = budget['total']-budget['allocated']
     budget.update(updates=dict(A=48, B=24, R=24))
@@ -486,7 +506,7 @@ def build_root(root, cfg):
 
 def _check_worlds():
     from .accel_protocol import worlds
-    return worlds('check')[:3]
+    return worlds('check')        # the complete registered check panel (paired() requires it)
 
 
 def child_install(parent=False):
@@ -494,7 +514,7 @@ def child_install(parent=False):
     _install_fcntl()
     _fake_leverprobe()
     from tools.coopfree import backend as cf
-    from . import accel_plant, sumo_verify
+    from . import accel_plant
     cf.tick = fake_tick
     accel_plant.install_seed_scope = lambda: None           # registered-world guards: TRAIN worlds only
     accel_plant.guard = lambda world, role: None
@@ -650,7 +670,8 @@ def run_scenario(name, cfg, workdir):
                 b = wr.verify(root, arm)
                 st = replay_bank.collect(root, arm, b, train[(0 if arm == 'B' else 7):], lambda: done.is_set(),
                                          episodes_per_round=cfg['collect_episodes'],
-                                         verify_workers=cfg.get('verify_workers'), rounds=rounds)
+                                         verify_workers=cfg.get('verify_workers'), rounds=rounds,
+                                         verify_per_round=cfg.get('verify_per_round'))
                 outcome.setdefault('collector_'+arm, []).append(dict(rounds=rounds, statuses=st))
             except BaseException as error:
                 outcome.setdefault('collector_'+arm, []).append('failed: '+repr(error))
@@ -720,7 +741,9 @@ def bank_state(root):
         st = {}
         for p in (d/'sumo_verification'/'verifications').glob('*.json'):
             v = json.loads(p.read_text());st[v['status']] = st.get(v['status'], 0)+1
+        q = d/'BANK_QUALITY.json'
         out[arm] = dict(snapshots=sum(1 for _ in (d/'snapshots').glob('*.json')), verifications=st,
+                        quality=json.loads(q.read_text()) if q.exists() else None,
                         skipped=sum(1 for _ in (d/'skipped').glob('*.json')),
                         charged_check=[json.loads(p.read_text())['charged_sim_s'] ==
                                        (json.loads(p.read_text())['k']+1)*json.loads(p.read_text())['window']['end_s']
@@ -814,7 +837,7 @@ DEFAULTS = dict(k=8, N_exec=10, slots=4, workers=12, episodes_per_update=6, last
                 stall_s=240., timeout_s=3600., transport_errors=0, malformed=0, branch_crash=0,
                 die_slot=None, die_after=1, decline_withdrawn=True, parallel_groups=True,
                 fanout_factor=2, r_concurrent=True,   # resume config (MAIN, harden-int)
-                b_replay=True, collect_episodes=2, bank_warmup_rounds=1)   # MAIN B-REPLAY
+                b_replay=True, collect_episodes=1, bank_warmup_rounds=1, verify_per_round=2)   # MAIN B-REPLAY
 
 SCENARIOS = dict(
     a_clean=dict(),

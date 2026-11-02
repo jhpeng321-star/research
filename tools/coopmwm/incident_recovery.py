@@ -107,6 +107,11 @@ def install(root,arm=None):
             r_concurrent_lag1_quota=b.get('r_concurrent_lag1_quota',True))
         for key in ('b_replay','replay_beta','collect_worlds','collect_phase'):
             if key in b:result[key]=b[key]
+        if b.get('b_replay'):
+            # MAIN B-REPLAY: live frozen-u3 LS-COLLECT labels count as B bank entries (tag u3).
+            result.update(b_replay=True,replay_beta=b.get('replay_beta',1.),
+                replay_sources=b.get('replay_sources',{'B':['/home/ubuntu/coopmwm20261102_lscollect1']}),
+                demand_phase_end_s=b['demand_phase_end_s'])
         if a in b.get('stop_after_update',{}):result['stop_after_update']=b['stop_after_update'][a]
         if b.get('sumo_verify'):result['sumo_verify']=copy.deepcopy(b['sumo_verify'])
         return result
