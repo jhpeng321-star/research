@@ -133,3 +133,19 @@
 - Read-only reproduce: `python -B -m tools.coopplan.h300_report verify`, `examples`.
   Three figures visually checked; local40CPU/analysisPASS, eachhost30CPU/0skips+
   WMDECIDE parity. Source/design/panel/quotas/all twins/accounting independently QA'd.
+
+## Fresh-session reconciliation — 2026-11-03
+- Resumed clean `c4/coopplan` at `ab4a7706`; read Git status/log, shared S-COOPPLAN
+  approval/amendments/completion entries, this handoff, paper report and final QA receipts first.
+- Existing work fulfills MAIN02:21: all60 fresh pairs complete, separate H120/H300 reports,
+  complete member-alone coverage, two executed H300 walls, and code/design/figures preserved.
+- Read-only `python -B -m tools.coopplan.extension_report --verify` PASS:
+  36worlds/432decisions/52group credits, immutable artifact hashes unchanged.
+- Read-only `python -B -m tools.coopplan.h300_report verify` PASS:
+  24worlds/288decisions/14groups, immutable artifact hashes unchanged.
+- CPU command `python -B -m unittest tools.coopplan.test_cpu tools.coopplan.test_extension tools.coopplan.test_h300 tools.coopplan.test_report tools.coopplan.test_extension_report tools.coopplan.test_h300_report`
+  PASS:40tests/0skips in3.389s, CUDA hidden/single-thread; no SUMO execution.
+- No dispatch, collection, replay or remote process action performed during this resume.
+  Added simulation spend0; verified accounting remains725280/800000,74720unused.
+- Task remains COMPLETE. WM-PHYS efficacy/calibration is still a separate backend qualification;
+  pooled positive mean superadditivity and a causal horizon effect remain unestablished.
