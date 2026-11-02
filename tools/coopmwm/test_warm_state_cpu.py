@@ -81,8 +81,10 @@ class WarmStateTests(unittest.TestCase):
 
     def test_tail_owner_takes_precedence_and_tail_failure_is_visible(self):
         v=self.collect({'TAIL_B_DISPATCH.json':self.owner(),
-            'QUOTA_B_DISPATCH.json':self.owner(22),'WARM_B_FAILED_T1.json':dict(error='tail fault')})
+            'QUOTA_B_DISPATCH.json':self.owner(22),'WARM_B_FAILED_T1.json':dict(error='tail fault'),
+            'TAIL_DRAIN_BROKER_DISPATCH.json':self.owner(),'CENTRE_FAIR_BROKER_DISPATCH.json':self.owner(22)})
         self.assertEqual(v['owners']['B']['dispatch_receipt'],'TAIL_B_DISPATCH.json')
+        self.assertEqual(v['service_owners']['broker']['dispatch_receipt'],'TAIL_DRAIN_BROKER_DISPATCH.json')
         self.assertIsNotNone(v['stop'])
         self.assertIn('WARM_B_FAILED_T1.json',v['failures'])
 

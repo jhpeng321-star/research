@@ -42,7 +42,7 @@ for arm in ('A','B','R'):
  assert not s or s[21]==d['start_ticks'],'owner PID reused'
  owners[arm]=dict(owner=d,state=s[2] if s else 'exited',dispatch_receipt=p.name)
 services={{}}
-for component,names in {{'broker':('CENTRE_FAIR_BROKER_DISPATCH.json','QUOTA_broker_DISPATCH.json','CAPACITY_BROKER_DISPATCH_V2.json','WARM_REMOTE_BROKER_DISPATCH.json'),
+for component,names in {{'broker':('TAIL_DRAIN_BROKER_DISPATCH.json','CENTRE_FAIR_BROKER_DISPATCH.json','QUOTA_broker_DISPATCH.json','CAPACITY_BROKER_DISPATCH_V2.json','WARM_REMOTE_BROKER_DISPATCH.json'),
                         'grader':('EXACT_GRADER_DISPATCH_V2.json','EXACT_GRADER_DISPATCH.json')}}.items():
  p=next((r/name for name in names if (r/name).exists()),None)
  if p is None:continue

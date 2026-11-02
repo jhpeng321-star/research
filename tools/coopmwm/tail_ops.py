@@ -87,12 +87,12 @@ def serve():
 def status():
     out=ops.ssh.remote('cpuQ',f'''import pathlib,json,time,os
 r=pathlib.Path({ROOT!r});owners={{}}
-for name in ('TAIL_TRANSITION_DISPATCH.json','TAIL_B_DISPATCH.json','QUOTA_B_DISPATCH.json','QUOTA_R_DISPATCH.json','CENTRE_FAIR_BROKER_DISPATCH.json','EXACT_GRADER_DISPATCH_V2.json'):
+for name in ('TAIL_TRANSITION_DISPATCH.json','TAIL_B_DISPATCH.json','QUOTA_B_DISPATCH.json','QUOTA_R_DISPATCH.json','TAIL_DRAIN_BROKER_DISPATCH.json','CENTRE_FAIR_BROKER_DISPATCH.json','EXACT_GRADER_DISPATCH_V2.json'):
  if not (r/name).exists():continue
  d=json.loads((r/name).read_text());assert d['boot_id']==pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()
  p=pathlib.Path('/proc',str(d['pid']),'stat');s=p.read_text().split() if p.exists() else None;assert not s or s[21]==d['start_ticks']
  owners[name]=dict(owner=d,state=s[2] if s else 'exited')
-receipts={{p.name:json.loads(p.read_text()) for name in ('TAIL_PARENT_FROZEN.json','TAIL_HANDOVER_COMPLETE.json','TAIL_TRANSITION_FAILED.json','WARM_B_FAILED_T1.json','WARM_GUIDED_STOP_V2.json') for p in [r/name] if p.exists()}}
+receipts={{p.name:json.loads(p.read_text()) for name in ('TAIL_PARENT_FROZEN.json','TAIL_HANDOVER_COMPLETE.json','TAIL_TRANSITION_FAILED.json','WARM_B_FAILED_T1.json','WARM_GUIDED_STOP_V2.json','TAIL_DRAIN_BROKER_HANDOVER.json') for p in [r/name] if p.exists()}}
 updates={{a:max([0]+[int(p.stem.rsplit('_',1)[1]) for p in r.glob(a+'_UPDATE_[0-9][0-9][0-9].json')]) for a in ('A','B','R')}}
 u=updates['B']+1;jobs=list((r/'jobs').glob(f'warm_u{{u:03}}_B_*'))
 print(json.dumps(dict(unix=time.time(),owners=owners,receipts=receipts,updates=updates,current_B=dict(update=u,claimed=sum((p/'CLAIM.json').exists() for p in jobs),closed=sum((p/'RESULT.json').exists() for p in jobs)),load=os.getloadavg(),logs={{n:(r/n).read_text()[-2000:] for n in ('TAIL_TRANSITION.log','TAIL_B.log') if (r/n).exists()}})))''',timeout=40)

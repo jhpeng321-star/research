@@ -80,6 +80,21 @@ def new_item_order(items,last_kind,enabled):
     return sorted(items,key=lambda v:(v[0]=='centre')!=prefer_centre)
 
 
+def drain_active(root,config):
+    """One registered handover boundary; never abandon an assigned search.
+
+    A tail handover may close NEW old-wave admissions only after its executed
+    quota is met. The marker automatically restores ordinary admission before
+    the replacement supervisor starts any new wave.
+    """
+    if config.get('drain_until_handover') and not (root/'MAIN0548_HANDOVER_COMPLETE.json').exists():return True
+    marker=config.get('boundary_drain_until')
+    if marker and not (root/marker).exists():
+        from .quota_admission import state
+        return state(root,config['boundary_drain_update'])['executed']>=config['boundary_drain_minimum']
+    return False
+
+
 def run(root,config_path):
     import fcntl
     import signal
@@ -112,7 +127,7 @@ def run(root,config_path):
                     # this slot, even when the new request is dense/preferred.
                     assigned_items=[v for v in items if (assignments/(v[1]['state_id']+'.json')).exists()]
                     new_items=[v for v in items if not (assignments/(v[1]['state_id']+'.json')).exists()]
-                    if config.get('drain_until_handover') and not (root/'MAIN0548_HANDOVER_COMPLETE.json').exists():
+                    if drain_active(root,config):
                         new_items=[v for v in new_items if v[0]!='plan' or v[1].get('mode')=='diagnostic']
                     new_items=new_item_order(new_items,last_kind,config.get('pipeline_centre_fairness',False))
                     for kind,record in assigned_items+new_items:
@@ -160,7 +175,7 @@ def run(root,config_path):
                     for _,r in items if (assignments/(r['state_id']+'.json')).exists()}
                 blocking={p.stem for p in (root/'quota_admissions').glob('*.json')
                     if json.loads(p.read_text()).get('blocking')}
-                drain=config.get('drain_until_handover',False) and not (root/'MAIN0548_HANDOVER_COMPLETE.json').exists()
+                drain=drain_active(root,config)
                 declines,busy=capacity_declines(items,assigned,endpoints,blocking,drain)
                 for r in declines:decline(root,r,endpoints,busy,config['amendment_sha256'],drain)
                 slots=tuple(sorted(endpoints))

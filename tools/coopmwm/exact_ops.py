@@ -51,7 +51,7 @@ from tools.coopmwm.accel_storage import read,charged
 owners={{}}
 for name in ['WARM_A_DISPATCH_V3.json','WARM_B_DISPATCH_V4.json','WARM_R_DISPATCH_V4.json','EXACT_GRADER_DISPATCH.json','WARM_REMOTE_BROKER_DISPATCH.json',
  'WARM_B_DISPATCH_V6.json','WARM_R_DISPATCH_V6.json','EXACT_GRADER_DISPATCH_V2.json','CAPACITY_BROKER_DISPATCH_V2.json',
-  'QUOTA_B_DISPATCH.json','QUOTA_R_DISPATCH.json','QUOTA_broker_DISPATCH.json','CENTRE_FAIR_BROKER_DISPATCH.json','TAIL_B_DISPATCH.json']:
+  'QUOTA_B_DISPATCH.json','QUOTA_R_DISPATCH.json','QUOTA_broker_DISPATCH.json','CENTRE_FAIR_BROKER_DISPATCH.json','TAIL_B_DISPATCH.json','TAIL_DRAIN_BROKER_DISPATCH.json']:
  if not (r/name).exists():continue
  d=read(r/name);assert pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']
  p=pathlib.Path('/proc')/str(d['pid'])/'stat';s=p.read_text().split() if p.exists() else None

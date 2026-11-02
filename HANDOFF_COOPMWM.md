@@ -1,5 +1,29 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+MAIN0818TAIL qualified139CPU/PASS0skips27.055s/zeroSUMO; immutabletailcpu2,
+code219433e7, registrationf1f363f2/amendmente9af582e914d8a44... BEFOREdeployment.
+OwnedremoteTAIL_TRANSITION3874249/start59377221 DISPATCHEDonce1793579494,
+root/home/ubuntu/coopmwm20261102_warm1. It FROZEONLYoriginalB3551873parentT,
+adoptsu2all24claims/resultswhenclosed, exactu1checkpoint6606191e940f.../AdamRNG/
+trust/library/diagnostic-selectionRNG. Last1793579500A48/B1/R1,Bu2closed22/24.
+ExistingSUMO/GPU/broker3706352/grader3427015/R3551874continue. NEVERredispatch
+transitionoroldB. Use `python -X utf8 -m tools.coopmwm.tail_ops status` FIRST.
+OncompletionitwritesTAIL_HANDOVER_COMPLETE/TAIL_B_DISPATCH andlaunchesBfrom
+qualifiedsource2once; u2RESULTSadopted/noepisodeorcompletedupdate replay.
+Fanoutappliesnewu3+workers: admittedquota-unmetwindowsqueryALLeligiblegroups
+beforewaiting, stablefirstaccepted/spatialorder/ONEplan-startpertick; onequerydraw
+andonebetadrawretainexactgraderCRN; allunexecutedforecastslogged; Runchanged.
+139CPU+15localobserver/publisherPASS; initialtailcpu1fixturefailureskept/noSUMO.
+Currentwarm_watchstatePASS/noSTOP; observe-only1372retained. TelemetryV3local24140
+replacedonlyverifiedV2local28752 at1793579639; CPU12PASS/bounded-githelperloaded.
+BOUNDARYDRAIN ready45CPU/PASS0skips0.862s/zeroSUMO, taildraincpu1; NOTyetdeployed
+here. Originalremainingu2episodesstillopenatT350/T3401793579645, issuingfurther
+queriesafterquota10. One-timeold-waveadmissiondrainwillpreserveALLassignedqueries,
+declineonlyNEWunassignedafterexecuted10, autoRESTOREatTAIL_HANDOVER_COMPLETE.
+Neededforfinitequalifiedboundary, notgain-basedsampling. Checktailstatusbeforedeploy.
+Allocation7495040/cap7500000/free4960andoriginal18:07:02deadlineunchanged.
+Bu4..6viabilitypending; numericalcommandmirrorstillOFF; nofulltrajectory/GPUgate.
+
 MAIN0808recovery: originalremoteownersadopted; A48/B1/R1,stopNULL/pausesnone.
 Bu2still22/24closedat1793578141; worlds986038/t330and986064/t340areALREADYowned
 newsearchesafterpreviousclaimsadvanced. R-u2awaitsfinalB-u2quota. NEVERredispatch.
