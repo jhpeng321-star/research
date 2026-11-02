@@ -77,3 +77,9 @@ Counts verified: 300 unique states, 60 worlds, 4,500 labels, 240 credit rows.
 The 1,452 successful-data ledger charges sum to 1,489,200 sim-s; including retained
 failed attempts, diagnostics and live receipts gives 1,567,326 actual / 1,569,840
 conservative charged sim-s. No new simulations or dispatches were started on resume.
+
+Repeat owner-requested resume on 2026-11-02 started from clean `ca8b8d5d`.
+Rechecked the shared COMPLETE registration and both completion receipts, then
+independently verified all 11 manifest hashes and the 300 unique states / 60 worlds /
+4,500 labels / 240 credit rows / 1,452 data-charge rows. All checks PASS.
+The task is complete; this resume started no simulations or dispatches.
