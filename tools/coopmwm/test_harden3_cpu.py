@@ -98,5 +98,22 @@ class LabelList8Tests(unittest.TestCase):
         self.assertTrue(all(p['saving_vs_policy'] < 0 for p in out['topk']))
 
 
+class FakeHardBrakeTests(unittest.TestCase):
+    """The fake plant mirrors the real hard_brake (braking_vehicle_seconds): only a requested
+    deceleration beyond the lower bound counts; limiting acceleration is not a hard brake."""
+
+    def test_only_lower_bound_clips_count(self):
+        from .rehearsal_cpu import BOUNDS, FakeBackend, fake_tick
+        b = FakeBackend(Path('unused'), dict(seed=3), None, None)
+        raws = dict(cav0_0=BOUNDS[0]-1., cav0_1=BOUNDS[1]+1., cav1_0=0.)
+
+        class ctrl:
+            def apply(self, rows, commands, now):
+                return {vid: dict(requested_raw=raws[vid]) for vid in raws if vid in commands}
+
+        fake_tick(b, ctrl())
+        self.assertEqual(b.totals['hard_brake'], 1.)   # only cav0_0 braked beyond the bound
+
+
 if __name__ == '__main__':
     unittest.main()

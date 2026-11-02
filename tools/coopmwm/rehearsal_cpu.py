@@ -115,11 +115,16 @@ def fake_tick(b, controller=None, trace=None):
     commands = {r['vid']: float(np.clip(.3*(b.target[r['vid']]-r['v_mps']), *BOUNDS)) for r in rows if r['is_cav']}
     desired = controller.apply(rows, commands, now)
     audit = []
+    hard_brakes = 0
     for c in b.cars:
         if c['is_cav']:
             raw = desired[c['vid']]['requested_raw'] if c['vid'] in desired else commands[c['vid']]
             a = float(np.clip(raw, *BOUNDS))
             if c['vid'] in desired:
+                # The real plant counts hard_brake as braking_vehicle_seconds: braking harder than
+                # the plant allows. An upper-bound clip only limits acceleration, so it is not a
+                # hard brake; only a requested deceleration beyond the lower bound counts.
+                hard_brakes += raw < BOUNDS[0]
                 audit.append(dict(vid=c['vid'], clamped=bool(a != raw), mappo_safe=commands[c['vid']]))
         else:
             a = float(np.clip(.5*(b.target[c['vid']]-c['v_mps']), *BOUNDS))
@@ -130,7 +135,7 @@ def fake_tick(b, controller=None, trace=None):
     deficit = sum(max(0., 30.-c['v_mps'])/30. for c in b.cars)
     b.totals['road_delay_vs'] += deficit
     b.totals['team_delay_vs'] += deficit
-    b.totals['hard_brake'] += sum(1. for x in audit if x['clamped'])
+    b.totals['hard_brake'] += float(hard_brakes)
     if trace is not None:
         trace.write(json.dumps(dict(time_s=now, vehicles=rows, actions=audit))+'\n')
     b.now += 1.
