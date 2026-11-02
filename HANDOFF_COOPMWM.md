@@ -1,5 +1,17 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+MAIN0808recovery: originalremoteownersadopted; A48/B1/R1,stopNULL/pausesnone.
+Bu2still22/24closedat1793578141; worlds986038/t330and986064/t340areALREADYowned
+newsearchesafterpreviousclaimsadvanced. R-u2awaitsfinalB-u2quota. NEVERredispatch.
+Localobserver46108EXIT1793578179/Windows206(unboundedgitdiffargv). Repaired
+0fc421c3:pendingintendedpathfilter,bounded16kdiff,NULliteralstdinadd;8CPU/PASS,
+realGitdryrunPASS. RegisteredCOMMAND_LENGTH_RECOVERY; V8observe-only1372started
+08:12:36UTC+8; firstrealstatus/publish/commitb830163fPASS. Telemetry28752retained.
+NOremoteowner/PIDcontrol/newSUMOorGPUdispatch. Originaldeadline18:07:02unchanged.
+Exactprogress1793578173:13currentBstarts,14allarmgraderreceipts,pending/running0.
+Charged3338010/allocation7495040/cap7500000/free4960. AuditprototypeOFF; completed
+CPUprobesarenotfulltrajectory/GPUqualification. Bu4..6viabilitystillpending.
+
 LIVE08:00UTC+8/unix1793577598: A48/B1/R1,stopNULL/pausesnone. Bu2still22/24closed;
 remainingworld986038/t320assignedgpuR@1(wait2757sat1793577529),986064/t330gpuR@0
 (wait570s). NEVERredispatchtheseclaims. Ru2awaitsfinalBu2quota. Fairbroker/grader
