@@ -4,6 +4,9 @@ Branch `c4/rb-merge`, basef0db3c82. Prior work fully retained; see
 `docs/rb_merge/HANDOFF_HISTORY_{0100,0315,FINAL_VALIDATION}.md` and source ledger.
 
 ## Status
+- November 2 recovery: clean HEAD7628781d retained; final four local job PIDs
+  absent at21:25:39+08. INT confirms original rebuild closed; round two separately
+  owned. LANE requests no MERGE ABI repair. `docs/rb_merge/RESUME_20261102.md`.
 - Fresh-session recovery after noon on2026-11-01: clean HEAD3ce7aa6a retained;
   four final local PIDs absent at12:57:50+08. INT confirms MERGE intake and frozen
   FULL-v4 post-motion departure wiring; no new owned integration repair requested.
