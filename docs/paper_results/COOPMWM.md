@@ -2716,3 +2716,11 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - Exact executed-plan twins: `{}`.
 - Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_011_FAILED.json`.
 <!-- warm-receipt:ACCEL_EXACT_PLAN_011_FAILED.json:1c2bf23ef13ae3b0c11b696b2e38fe5db6dde810047597169d0ca5ce98d0f097 -->
+
+## Warm live publication — 2026-11-02T01:08:19.506646+00:00
+- Conservatively charged 3469570/7500000 sim-s.
+
+### Warm continuation — ACCEL_EXACT_PLAN_007.json
+- Exact executed-plan twins: `{"120": {"C_G": -70.79773344534988, "D_G": -82.06016380201527, "D_i": [-4.3038726289523765e-06, -0.09971551787475619, -11.162710534918006]}, "300": {"C_G": -70.84277842292977, "D_G": -82.11204705923774, "D_i": [-4.306133632780984e-06, -0.09970040885127673, -11.16956392132306]}, "60": {"C_G": -62.951096260510894, "D_G": -68.52203141533664, "D_i": [-4.638513928512111e-06, -0.05034652445738175, -5.520583991854437]}, "600": {"C_G": -70.84741214476526, "D_G": -82.11596088526858, "D_i": [-4.306133632780984e-06, -0.09991234323751996, -11.168632091132167]}}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_007.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_007.json:a3e1d31b8814f17d277555b6b15f3ad53bc28d643c414e096673cfdb38806e0f -->
