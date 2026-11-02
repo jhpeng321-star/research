@@ -1,5 +1,17 @@
 # S-COOPMWM — live checks
 
+## Nov3 00:59 UTC+8 — first focus admissions verified
+- The first three admissions after the handover are TRAIN worlds **986044,
+  986045, 986046**, all focus-stratum states at t300. Existing queued requests
+  continue unchanged. `FOCUS_ALLOCATION_LIVE_1793638755.json` records the check.
+- Both GPU hosts retain two READY workers with eight completed gates each; fresh
+  utilization samples are gpuA66% / gpuR95%. Collection has no failure receipt.
+- Read-only accounting snapshot: **4,827,170 sim-s charged**, leaving **1,172,830**
+  under the conservative fresh-message6M guard. The brief's larger cap is not
+  silently activated. Final training/confirmation spending still needs its quote.
+- B-REPLAY's delegated READY receipt is still absent. Existing collection/grading
+  and observer V6 remain live; B/R stay at u3 until restart prerequisites pass.
+
 ## Nov3 00:47 UTC+8 — registered focus allocation deployed; collection continues
 - Corrected an outcome-blind queue-ordering omission: the bank collector now repays
   its existing focus-admission deficit, then assigns ≥50% to the registered focus

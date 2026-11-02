@@ -1,5 +1,13 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+00:59/unix1793638755 LIVE FOCUS VERIFIED: first3NEWadmissions986044/45/46 all
+focus at t300, noLS_COLLECT_FAILED. EvidenceFOCUS_ALLOCATION_LIVE_1793638755.json.
+BothGPUstatus probes2READY8each/A66%R95%, currentoriginalowners unchanged.
+Readonlycharged snapshot4827170/6Mguard =>1172830remaining at~00:54; don't silently
+raise cap to brief14.5M. HARDEN_INT_READY stillabsent; delegatedworker13928
+remainsowner, noduplicateimplementation/rehearsal. ExistingobserverV6 continues
+30minBANK_STATUS/hourlyCOLLECT_THROUGHPUT. All this session's steps committed.
+
 00:47/unix1793638021 FOCUS HANDOVER COMPLETE: registered2ad71f6c/source
 /home/ubuntu/coopmwm20261103_lsfocuscpu1,226CPU PASS0skips40.244s/zeroSUMO.
 Only idle metadata1728233 retired after boot/start/argv/no-branch/settled-answer
