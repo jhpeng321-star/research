@@ -1,5 +1,5 @@
 # S-RB-FIT — observable-motion physical parameter learning
-**Final recovery2026-11-02: IDM exported; current-source LC fitted/verified, but exact-event fidelity remains inadequate.**
+**Delivery rechecked2026-11-03: IDM exported; current-source LC fitted/verified, but exact-event fidelity remains inadequate.**
 
 ## Contract
 - Owner WM-PHYS amendment REGISTRATION.md:5701; branch `c4/rb-fit`, base `f0db3c82`; all prior work retained.
@@ -37,4 +37,4 @@
 - v0 maps to speedFactor by division by actual lane limit; shared CF compatibility note records NUMERICAL_EPS=.001/emergencyDecel9 source defaults.
 - These are conditional held-in FIT engineering results; no unseen-world, intervention, free-running breakdown, queue-clearing or action-value improvement claim. Pooled point candidate is ready for INT/EVAL testing.
 - SUMOCORE saved-six-FIT-state diagnosis: inference changes600s MAPPO/PI effects by **+4171/+3909veh-s**, almost entirely road; native road improves8523 vs controlled4351/4617veh-s. Incumbents+entrant donors changed together; culpable parameter unidentified. See `RBFIT_SUMOCORE_DIAG.md`; no demonstrated sign repair.
-- Recovered complete source jobs977061/1076804 and fitted raw mixture3951028 from existing cache; all exited, watcher exited. Each verified export committed; source/cache hashes and recovery receipts preserved. CPU nice19/single-thread only; no GPU/SUMO/neural training/prohibited data/push.
+- Fresh2026-11-03 checks: owned977061/1076804/3951028 complete/verified/exited, watcher absent, LANE80541278 unchanged.29publication hashes PASS (`receipts/DELIVERY_MIRROR_20261103.json`); numerical/UNC evidence retained. No repeated fit/inference/SUMO/GPU/training/prohibited data/push.

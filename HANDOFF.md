@@ -1,4 +1,4 @@
-# S-RB-FIT — recovered final delivery, 2026-11-02
+# S-RB-FIT — recovered delivery, rechecked 2026-11-03
 
 Resume complete: both previously SSH-blocked fits independently verified and
 published; current-source physical LS fit reused the completed decision cache.
@@ -9,6 +9,9 @@ Fresh resume2026-11-03:clean HEADf034bcb3 preserved; LANE physics still80541278
 with no source edits. Read-only cpuQ checks confirm all three recovery jobs
 complete/verified/exited; local watcher23604 absent. Reconciliation:
 `receipts/RESUME_20261103.md`. Existing exports remain the current delivery.
+Local mirror PASS:29artifact hashes across the original IDM/LC bundle and all
+three recovered LC publications; report40lines. Receipt:
+`receipts/DELIVERY_MIRROR_20261103.json`. Prior numerical/UNC checks retained.
 
 <!-- LC-CONTINUATION:BEGIN -->
 Latest verified `lane_raw_5a5b15ef118c` (2026-11-02T09:04:39+08:00); LC SHAe61f897c5e7a, snapshotv2;3130driver posteriors.
