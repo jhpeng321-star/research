@@ -153,6 +153,8 @@ def gpu_status(host):
         replacement=ops.EVIDENCE/name
         if replacement.exists():
             d=read(replacement);rows=[d if x['root']==d['root'] else x for x in rows]
+    for replacement in ops.EVIDENCE.glob('LS_FAST_DISPATCH_'+host+'_*.json'):
+        d=read(replacement);rows=[d if x['root']==d['root'] else x for x in rows]
     out=remote(host,f'''from pathlib import Path
 import json,time,subprocess
 workers=[]
@@ -164,11 +166,13 @@ for d in {rows!r}:
  gates={{p.name:json.loads(p.read_text()) for p in r.glob('STARTUP_*_LSCOLLECT_'+generation+'.json')}}
  service=json.loads((r/'SERVICE_OWNER.json').read_text());failure=r/('LS_GPU_FAILED_'+generation+'.json')
  ready=st is not None and st[2] in ('S','R','D') and not failure.exists() and len(gates)==8 and all(x['pass_'] and x['max_cost_error']==0 for x in gates.values()) and all(service[k]==d[k] for k in ('pid','start_ticks','boot_id'))
+ variant=r/'STARTUP_VARIANT_IT2K2.json'
+ if generation=='FASTK2':ready=ready and variant.exists() and json.loads(variant.read_text())['pass_']
  completed=[json.loads(p.read_text()) for p in (r/'forecasts').glob('*.json') if p.stat().st_mtime>=d['unix']]
  workers.append(dict(owner=d,state=st[2] if st else 'exited',ready=ready,gates=gates,
   failure=json.loads(failure.read_text()) if failure.exists() else None,
   new_forecasts=len(completed),successful_searches=sum(x['result'].get('proposer_receipt') is not None for x in completed),
-  log_tail=(r/('LS_GPU_'+generation+'.log')).read_text()[-1800:]))
+  log_tail=(r/('LS_GPU_'+generation+'.log')).read_text()[-1800:],variant_gate=json.loads(variant.read_text()) if generation=='FASTK2' and variant.exists() else None))
 print(json.dumps(dict(host={host!r},unix=time.time(),workers=workers,gpu=subprocess.check_output(['nvidia-smi','--query-gpu=utilization.gpu,memory.used,power.draw','--format=csv,noheader'],text=True))))''')
     v=json.loads(out);write(ops.EVIDENCE/f'LS_VALIDITY_GPU_{host}_{int(v["unix"])}.json',v)
     print(json.dumps(dict(host=host,gpu=v['gpu'],workers=[dict(owner=w['owner'],state=w['state'],ready=w['ready'],gates=len(w['gates']),failure=w['failure'],successful_searches=w['successful_searches'],log_tail=w['log_tail']) for w in v['workers']])))
@@ -276,7 +280,7 @@ def status():
 import json,time,os,shutil
 c=Path({COLLECTION!r});r=Path({ROOT!r});v=dict(unix=time.time(),owners={{}},disk_free=shutil.disk_usage(c).free,load=os.getloadavg(),training_paused=all(not (r/(a+'_checkpoint_004.pt')).exists() for a in ('B','R')))
 for name in ('BROKER','SUPERVISOR'):
- suffix=next(s for s in ('_SUMOFOCUS1','_SUMODISK1','_SUMOENV1','_VALIDITY1') if (c/(name+'_DISPATCH'+s+'.json')).exists())
+ suffix=next(s for s in ('_FASTK2','_SUMOFOCUS1','_SUMODISK1','_SUMOENV1','_VALIDITY1') if (c/(name+'_DISPATCH'+s+'.json')).exists())
  d=json.loads((c/(name+'_DISPATCH'+suffix+'.json')).read_text());p=Path('/proc',str(d['pid']));st=(p/'stat').read_text().split() if p.exists() else None
  assert not st or st[21]==d['start_ticks']
  v['owners'][name]=dict(d,state=st[2] if st else 'exited',log_tail=(c/(name+suffix+'.log')).read_text()[-1800:])
@@ -449,7 +453,7 @@ def watch():
         try:
             with contextlib.redirect_stdout(io.StringIO()):
                 gpus={h:gpu_status(h) for h in ('gpuA','gpuR')}
-                ready={w['owner']['root'] for g in gpus.values() for w in g['workers'] if w['ready']}
+                ready={(w['owner']['root'],w['owner']['pid'],w['owner']['start_ticks']) for g in gpus.values() for w in g['workers'] if w['ready']}
                 if ready and ready!=admitted:admit();admitted=ready
                 cpu=status()
             assert cpu['training_paused'],'observer cannot resume training'

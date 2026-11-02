@@ -37,6 +37,15 @@ def run(root):
             remote.verify()
             while not stop.is_set():
                 key=None
+                # An immutable per-owner drain is checked only between searches.
+                # Finish/deliver the current inference; never withdraw or replay it.
+                from .ls_fast_worker import drain_applies
+                drain=root/'gpu_drains'/(digest(slot)+'.json')
+                if drain.exists() and drain_applies(json.loads(drain.read_text()),expected):
+                    target=root/'gpu_drained'/(digest(slot)+'.json')
+                    target.parent.mkdir(exist_ok=True)
+                    immutable(target,dict(slot=slot,owner=expected,unix=time.time(),inference_replayed=False))
+                    return
                 with mutex:
                     for p in sorted((root/'requests').glob('*.json'),key=lambda p:p.stat().st_mtime):
                         k=p.stem;assigned=root/'broker_assignments'/p.name
@@ -76,9 +85,12 @@ def run(root):
             assert v['amendment_sha256']==cfg['amendment_sha256']
             for x in v['workers']:
                 slot=x['endpoint']['slot']
-                if slot not in threads:
+                from .ls_fast_worker import owner_key,drain_applies
+                drain=root/'gpu_drains'/(digest(slot)+'.json')
+                if drain.exists() and drain_applies(json.loads(drain.read_text()),x['owner']):continue
+                if slot not in threads or (not threads[slot][0].is_alive() and threads[slot][1]!=owner_key(x['owner'])):
                     t=threading.Thread(target=worker,args=(x['endpoint'],x['owner']),daemon=True)
-                    threads[slot]=t;t.start()
+                    threads[slot]=(t,owner_key(x['owner']));t.start()
         stop.wait(3)
     stop.set()
 
