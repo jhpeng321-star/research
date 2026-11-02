@@ -5,6 +5,24 @@ Original advance-approved exact cap7,012,800; designSHA09499f2af60311b3690a940dc
 
 ## Current state
 
+**Nov3 final-location / evaluation reconciliation:** fresh read-only cpuQ check
+Unix1793644605 finds original606968 absent; original build directory exists but
+`training/checkpoint_169.pt` is absent. Do not treat the old checkpoint path as
+currently loadable or infer a replay/retraining need. Genuine final169 SURVIVES
+on gpuR at `/root/c1switch2_selector_cav_ac52f915f17dfb7c/checkpoint.pt`;
+all32 explicit peer-copy file hashes, including checkpoint82c6745b and freeze
+995553ec, revalidated remotely at Unix1793644739. No source edits or copies.
+cpuQ available disk20610322432bytes; no growing training job. Peer Nov3 00:39
+receipt1793637493 still has2/16episodes/3300charged/2980closedactual, both per-CAV
+scopes EXITED. Requested76840sim-s/GPU0 continuation remains MAIN-dependent.
+Its peer-published process status is distinct from this session's checkpoint
+inspection. `selmappo2/FINAL_LOCATION_20261103.json` binds both receipts.
+Future evaluation import must be explicit/offline; watcher12432's deadline is
+complete. Historical handoff/collection and all training accounting are retained.
+Five focused watcher/accounting CPU checks PASS; wider report/watch attempt hit
+the60s tool timeout and is not claimed as a complete suite result. No pytest
+process remains; all checks use synthetic data/no SSH or simulation.
+
 **Nov3 02:33+08 fresh-session verification:** final collection still validates
 COMPLETE/169updates/7774production/0open with the explicit final169 pin.
 Watcher12432 is now EXITED: exact PID lookup is empty and its final event is

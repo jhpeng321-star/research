@@ -2,6 +2,25 @@
 
 ## Status (reconciled 2026-11-03)
 
+**Final checkpoint location verified Nov3:** original cpuQ606968 is absent;
+the historical build directory exists but its `training/checkpoint_169.pt` is
+absent at fresh inspection Unix1793644605. The genuine final169 survives at
+**gpuR `/root/c1switch2_selector_cav_ac52f915f17dfb7c/checkpoint.pt`**.
+All32 files in the peer's exact copy receipt match their SHA256 pins, including
+checkpoint82c6745b and freeze995553ec (fresh inspection Unix1793644739).
+Original final collection/handoff remain historical evidence; their old cpuQ
+checkpoint path is not currently loadable. No removal cause/time is inferred.
+cpuQ has20610322432available diskbytes; no growing training job.
+C1SWITCH2's newer Nov3 00:39 receipt still records2/16complete per-CAV episodes,
+3300charged/2980closedactualsim-s and both evaluation scopes EXITED. Its
+76840sim-s/GPU0 unstarted-scope request still requires explicit MAIN authority
+and immutable admission gates. These evaluation figures are peer-published,
+not a fresh remote evaluation inspection here. No complete-panel efficacy CI.
+Hash-bound evidence: `selmappo2/FINAL_LOCATION_20261103.json`.
+Five focused watcher/accounting CPU checks pass; the broader report/watch test
+attempt timed out at60s and is not reported as a completed suite. Original final
+collection analysis and the remote32-file hash validation both pass.
+
 **02:33+08 fresh-session verification:** the original final collection validates
 COMPLETE/169updates/7774production/0open under its explicit final169 checkpoint
 pin. Local/peer handoff bytes match and the latest report-linked169-row learning

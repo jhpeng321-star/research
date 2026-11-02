@@ -1,0 +1,55 @@
+{
+  "schema": "selmappo2.final_location_verification/1",
+  "session_date": "2026-11-03",
+  "cpuQ": {
+    "unix": 1793644605.9254098,
+    "root": "/home/ubuntu/selmappo2_20261101/build_c141d5715f26af4e9b50d0866cdf971ef92d55dd1223c4312c4f25bdec5a8b29",
+    "root_exists": true,
+    "checkpoint_relative_path": "training/checkpoint_169.pt",
+    "checkpoint_exists": false,
+    "original_pid_present": false,
+    "disk_available_bytes": 20610322432,
+    "host_uptime_s": 658883.654368323
+  },
+  "surviving_copy": {
+    "host": "gpuR",
+    "unix": 1793644739.1130273,
+    "root": "/root/c1switch2_selector_cav_ac52f915f17dfb7c",
+    "checkpoint_relative_path": "checkpoint.pt",
+    "checkpoint_sha256": "82c6745bac50aaf4dee98f5d8b3c60db0e5e558d9abf4667dd8e605774f4b3c4",
+    "checkpoint_bytes": 603088,
+    "frozen_sha256": "995553ec28db25eab552e878b8b784790f4f4a7795b9f73cd919527b5163701b",
+    "verified_files": 32,
+    "all_source_hashes_match": true,
+    "copy_receipt": "E:/agent-work/c4-c1switch2/tools/c1switch2/evidence/SELECTOR_COPY_cav_mappo_gpuR.json",
+    "copy_receipt_sha256": "cab347c94ec89c83309c4ac0c77307bc790ae5e3525ca1dbea8811885563a2d6"
+  },
+  "peer_evaluation": {
+    "receipt": "E:/agent-work/c4-c1switch2/tools/c1switch2/evidence/RESUME_RECONCILIATION_1793637493.json",
+    "receipt_sha256": "312c5ca210a2bb8d5c7424af5c74a2e667c45c33b456abe4770b61a5701fc5fe",
+    "unix": 1793637481.76109,
+    "fresh_remote_inspection_this_session": false,
+    "complete_episodes": 2,
+    "panel_episodes": 16,
+    "charged_sim_s": 3300,
+    "closed_actual_sim_s": 2980,
+    "original_cpuQ_process_state": "EXITED",
+    "original_gpuR_process_state": "EXITED",
+    "continuation_sim_s_request_only": 76840,
+    "continuation_gpu_s": 0,
+    "next_dependency": "Explicit MAIN unstarted-scope authority plus immutable plan/no-prior-charge/host CPU/resource gates; complete byte-pinned panel results afterward."
+  },
+  "historical_training_validation": "Original local final collection and final handoff remain valid historical evidence; old cpuQ checkpoint path is no longer available for a fresh load. No cause or time of its removal is inferred.",
+  "validation_scope": "Remote reads only: exact cpuQ path existence/PID absence/filesystem metadata, then all32 explicit receipt-listed gpuR file hashes with symlink refusal. No model inference, full-ledger recollection, physics or output inventory traversal.",
+  "operational_note": "Two initial gpuR interpreter paths were unavailable before validation executed; using the existing peer transport's /root/miniconda3/bin/python completed the same read-only check.",
+  "checks": {
+    "watcher_cpu_tests": "4passed: report publication, final-only handoff refusal, exclusive launch lock, explicit byte-pinned panel import",
+    "report_accounting_cpu_test": "1passed/21deselected: amended collection rejects ledger tampering and new failure",
+    "broader_report_watch_attempt": "60s tool timeout after four passing indicators; exact pytest process confirmed absent afterward. Not a completed suite result; narrowed checks above pass.",
+    "test_warning": "Unknown cache_dir configuration option because pytest cache provider was intentionally disabled."
+  },
+  "new_dispatches": 0,
+  "new_sumo_seconds": 0,
+  "new_gpu_seconds": 0,
+  "new_monitor_processes": 0
+}
