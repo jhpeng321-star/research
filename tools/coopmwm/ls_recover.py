@@ -154,8 +154,6 @@ for d in {rows!r}:
   failure=json.loads(failed.read_text()) if failed.exists() else None,log_tail=(r/'LS_GPU_RECOVERY1.log').read_text()[-1500:]))
 print(json.dumps(dict(host={host!r},unix=time.time(),workers=out,gpu=subprocess.check_output(['nvidia-smi','--query-gpu=utilization.gpu,memory.used,power.draw','--format=csv,noheader'],text=True))))''',timeout=35)
     v=json.loads(out);write(ops.EVIDENCE/f'LS_RECOVERY_GPU_{host}_{int(v["unix"])}.json',v)
-    # Latest is observation only. Dispatches and startup receipts stay immutable.
-    write(ops.EVIDENCE/('LS_RECOVERY_GPU_LATEST_'+host+'.json'),v)
     print(out)
 
 
@@ -192,7 +190,8 @@ print(json.dumps(dict(owners=owners,episodes_adopted=72,no_new_episodes=True,tra
 def admit():
     reg=read(ops.EVIDENCE/'LS_RECOVERY_BOUND.json');workers=[]
     for host in ('gpuA','gpuR'):
-        for w in read(ops.EVIDENCE/('LS_RECOVERY_GPU_LATEST_'+host+'.json'))['workers']:
+        latest=max(ops.EVIDENCE.glob('LS_RECOVERY_GPU_'+host+'_*.json'),key=lambda p:int(p.stem.rsplit('_',1)[1]))
+        for w in read(latest)['workers']:
             if w['ready']:workers.append(dict(owner=w['owner'],gates=w['gates']))
     assert workers,'no fresh-qualified worker yet'
     out=ops.ssh.remote('cpuQ',f'''import pathlib,json,time,sys,os

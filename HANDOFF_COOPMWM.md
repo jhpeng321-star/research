@@ -14,6 +14,18 @@ collection-only broker, supervisor ADOPTS72results/8precharged requests. No new
 episode physics, no training, no mirror/learned activation. Latest cap11900000
 has restricted1500000k8training/900000interim; LS uses existing verification.
 
+RECOVERYDEPLOYED unix1793623592: amendmentf4ea0e3d3c70d66e779e8ad718636336160edaeb85c5decf543f2c8cf752111b
+registeredbeforedeployment. cpuQbrokersupervisor1297398/1297399,start63786972/3,
+source lsrecoverycpu1 LIVE, all72episodes/14534snapshots ADOPTED. FourGPUrecovery
+dispatches A986989/986990 R474268/474269 are RUNNING freshgates; originalsabsent,
+alloriginalinferenceclaims haveforecasts/no replay. NEVERredispatch `gpu`/`launch`;
+adopt LS_GPU_RECOVERY_DISPATCH_gpuA/gpuR + LS_RECOVERY_CPU_DISPATCH first.
+NEXT `python -X utf8 -m tools.coopmwm.ls_recover gpu_status --host gpuA` andgpuR;
+oncefreshREADY, `... ls_recover admit` registersreadyendpointswithliveowner/RPC
+recheck; repeatadmitonlytohotaddnewlyqualifiedslots. CPUbrokerwaitsLS_ENDPOINTS.
+`... ls_recover status` showsnewowners/charges; oldls_collect_ops statusislegacy.
+At1793623759requests8/finished0/gold0,169200collectioncharged, B/Rstillu3.
+
 LS-COLLECT REGISTERED/BINDING before physics: edacc2b85b04b8c122c5827077be940e6582fe021f18c4b6094b7df507fac7aa.
 Frozen source /home/ubuntu/coopmwm20261102_lsreleasecpu2,201CPU/PASS0skips42.334s.
 Hardening cherry-pick fd8b2ab5 includes MAIN1854 breadth-first + legacy withdrawal

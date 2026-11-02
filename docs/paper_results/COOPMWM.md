@@ -1,5 +1,32 @@
 # S-COOPMWM — live checks
 
+## LS-COLLECT engineering recovery — frozen B-u3, training paused
+- Fresh session read **all 485 brief lines**, adopted commit `341e9417` and prior
+  uncommitted work. The latest MAIN18:58/19:12/19:56 collection order is active.
+- **72/72 TRAIN collection episodes completed**, **14,534 observable snapshots**
+  retained. Completed episodes are adopted without another episode simulation.
+- The original CPU supervisor exited without a failure receipt; retaining full
+  history/policy payloads in its queue is a suspected memory cause, not a proven
+  diagnosis. Recovery retains only queue metadata in RAM and loads payloads on demand.
+- Four original GPU handovers drained their work and terminated old workers, then
+  failed an exact command-line assertion during process exit. Recovery treats an
+  empty command line with the same boot/start identity as exiting, never a signal
+  target; changed identities still fail. Original claims and receipts remain intact.
+- Frozen `coopmwm20261102_lsrecoverycpu1`: **205 CPU PASS**, **0 skips**,
+  **42.859 s**, **0 sim-s**. The top-eight label wrapper preserves the original
+  eight finalist WM calls and keeps negative predictions, per MAIN19:56.
+- Registered recovery SHA
+  `f4ea0e3d3c70d66e779e8ad718636336160edaeb85c5decf543f2c8cf752111b`.
+  CPU broker/supervisor **1297398/1297399** are durable. Four replacement GPU
+  owners **986989/986990** and **474268/474269** are qualifying with four fresh
+  exact gates plus four source-identical adopted gates apiece; no READY claim yet.
+- At unix1793623759: all episodes adopted; **8 precharged searches**, **0 finished
+  collection searches / 0 gold lists**. Initial admitted worlds are 986004/986005;
+  subsequent admissions rotate new worlds before repeats, then middle/late states.
+- Registered collection envelope and **11,900,000 sim-s cap** are unchanged;
+  restricted interim/k8-training phases are unused. **B/R remain u3, no u4 update**.
+  Command mirror remains off after its failed gate; learned training awaits MAIN.
+
 ## LS-COLLECT registered before collection physics
 - Registration SHA `edacc2b85b04b8c122c5827077be940e6582fe021f18c4b6094b7df507fac7aa`.
 - **201 CPU PASS**, zero skips, **42.334 s**, zero simulation; frozen release
