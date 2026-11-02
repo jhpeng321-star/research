@@ -142,7 +142,8 @@ def run_arm(root,arm):
             else:tr=dict(beta=0.)
             if b.get('health_guards'):
                 before_update(root,arm,u,routes,
-                    [dict(executed=True)]*tr['graded'] if arm in ('B','R') else running,tr,b['N_exec'])
+                    [dict(executed=True)]*tr['graded'] if arm in ('B','R') else running,tr,b['N_exec'],
+                    effective_guide_beta=(b.get('sumo_verify') or {}).get('guide_beta'))
                 if arm in ('B','R'):
                     a_records=[]
                     for w in batch_worlds(u):
@@ -174,6 +175,7 @@ def run_arm(root,arm):
             elapsed=time.time()-collection_begin if b.get('parallel_group_queries') else time.monotonic()-start
             write(root/f'{arm}_UPDATE_{u:03}.json',dict(timestamp_utc=timestamp(),update=u,arm=arm,
                 training_seed=SEED,ppo=metrics,trust=tr,beta_used=beta if arm!='A' else 0.,
+                effective_guide_beta=(b.get('sumo_verify') or {}).get('guide_beta'),
                 proposal_routing=routes,team_only_noise=dict(advantage_variance_veh_s_squared=float(np.var(raw,ddof=1))),
                 wall_s=elapsed,eta_final_hours=(budget()['updates'][arm]-u)*elapsed/3600,
                 gpu_busy=gpu_busy,

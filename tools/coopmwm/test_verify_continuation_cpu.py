@@ -9,6 +9,26 @@ from tools.coopmwm.protocol import digest
 from tools.coopmwm.test_sumo_verify_cpu import FakePlant, fp, plan, snapshot
 
 
+@pytest.mark.parametrize('fault', [None, 'boot', 'pid', 'argv', 'source'])
+def test_beta_handover_controls_only_receipt_bound_supervisor(tmp_path, fault):
+    from tools.coopmwm.verification_beta_ops import identity
+    proc=tmp_path/'proc';boot=proc/'sys/kernel/random/boot_id'
+    boot.parent.mkdir(parents=True);boot.write_text('boot')
+    d=dict(pid=123,start_ticks='456',boot_id='boot',root='/run',source='/source',component='R')
+    p=proc/'123';p.mkdir()
+    st=['0']*22;st[2]='S';st[21]='789' if fault=='pid' else '456'
+    (p/'stat').write_text(' '.join(st))
+    args=['/home/ubuntu/miniconda3/bin/python','-B','-u','-m','tools.coopmwm.incident_recovery','/run','--component','R']
+    if fault=='argv':args[-1]='B'
+    (p/'cmdline').write_bytes(b'\0'.join(x.encode() for x in args)+b'\0')
+    env='PYTHONPATH='+('/other' if fault=='source' else '/source')+'/pytools:/home/ubuntu/e3final/runtime/src:/home/ubuntu/e3final/runtime'
+    (p/'environ').write_bytes(env.encode()+b'\0')
+    if fault=='boot':d['boot_id']='other'
+    if fault:
+        with pytest.raises(AssertionError):identity(d,proc)
+    else:assert identity(d,proc)=='S'
+
+
 @pytest.mark.parametrize('arm', ['B', 'R'])
 @pytest.mark.parametrize('accepted', [False, True])
 def test_verification_trust_replay_includes_rejection(arm, accepted):
@@ -97,8 +117,8 @@ def test_smoke_rejects_incomplete_or_nonidentical_live_continuation(fault):
         sv.check_live_continuation(r, live)
 
 
-@pytest.fixture
-def verified_episode(tmp_path, monkeypatch):
+@pytest.fixture(params=[False, True], ids=['legacy-trust', 'verified-beta1-zero-trust'])
+def verified_episode(tmp_path, monkeypatch, request):
     """Actual loop/controllers against the deterministic toy plant; never SUMO."""
     from tools.coopmwm import accel_plant, plan_client
     from tools.coopmwm.accel_storage import read
@@ -132,7 +152,10 @@ def verified_episode(tmp_path, monkeypatch):
                weights=policy().state_dict(), runtime='', checkpoint='', noise_seed=11,
                deterministic=False, sim_s=520, stop=520, queue_root=str(tmp_path),
                accel_bounds=[-3., 2.6], gpu_deadline=0, guided=False, beta=1., warm_history=False,
-               sumo_verify=dict(root=str(root), run_root=str(tmp_path), workers=1))
+                sumo_verify=dict(root=str(root), run_root=str(tmp_path), workers=1))
+    if request.param:
+        job['beta']=0.
+        job['sumo_verify']['guide_beta']=1.
     with fake_sumo():
         live = accel_plant.episode(job)
     receipts = [read(p) for p in (root/'verifications').glob('*.json')]
@@ -146,6 +169,8 @@ def test_actual_episode_loop_and_controller_match_verified_branch(verified_episo
     assert all(b['status'] == 'graded' for b in receipt['branches'])
     assert all(b['audit']['crn_verified_t0'] for b in receipt['branches'])
     assert sv.check_live_continuation(receipt, live)['checked_to_s'] == 330
+    step=next(s for s in live['steps'] if s['time_s']==320)
+    assert step['sample']['behaviour']['beta']==1.
 
 
 def test_registered_smoke_replays_prefix_then_verifies_five_branches(verified_episode,tmp_path,monkeypatch):

@@ -60,6 +60,20 @@ class HealthCPU(unittest.TestCase):
             with self.assertRaises(h.HealthPause):h.after_check(r,'B',8,report)
             self.assertTrue((r/'PAUSE_LEARNING.json').exists())
 
+    def test_verified_reporting_trust_cannot_starve_but_count_guard_remains(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            r=Path(tmp)
+            h.before_update(r,'B',4,dict(executed=10),[],dict(beta=0.),10,effective_guide_beta=1.)
+            write(r/'B_UPDATE_003.json',dict(proposal_routing=dict(executed=9)))
+            with self.assertRaises(h.HealthPause):
+                h.before_update(r,'B',4,dict(executed=9),[],dict(beta=0.),10,effective_guide_beta=1.)
+
+    def test_verified_guide_keeps_harmful_plan_guard(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(h.HealthPause):
+                h.before_update(Path(tmp),'B',4,dict(executed=10),[dict(executed=True)]*30,
+                    dict(beta=0.,ci95=[-2.,-1.]),10,effective_guide_beta=1.)
+
     def test_significantly_higher_paired_braking_pauses(self):
         def eps(n):return [dict(world=dict(seed=i),metrics={'900':dict(hard_brake=n)}) for i in range(4)]
         with tempfile.TemporaryDirectory() as tmp:

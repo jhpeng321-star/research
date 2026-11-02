@@ -389,15 +389,20 @@ def verified_guide(guide, verifier, controller, prefixes, job, generator, k=TOP_
             candidates = list(proposal.get('topk') or [proposal['plan']])[:k]
         from .exploration import bucket_beta
         b = proposal['behaviour']
-        beta = bucket_beta(getattr(controller, 'beta', 1.),
-                           proposal.get('option', proposal['plan'].get('family', 'MPPI')),
-                           b.get('regime', 'ordinary'))
+        tracked_beta = bucket_beta(getattr(controller, 'beta', 1.),
+                            proposal.get('option', proposal['plan'].get('family', 'MPPI')),
+                            b.get('regime', 'ordinary'))
+        fixed_beta = job.get('sumo_verify', {}).get('guide_beta')
+        if fixed_beta is not None and (fixed_beta != 1. or job['arm'] not in ('B', 'R')):
+            raise ValueError('verified guide_beta must be 1 for B/R')
+        beta = tracked_beta if fixed_beta is None else 1.
         # Snapshot retains the PRE-draw state: branches consume this same one
         # draw at t0. Live consumes it here, never again in Controller.apply.
         snap = capture(controller, prefixes, job, now, sample, generator)
         follows = float(torch.rand((), generator=generator)) < beta
         b.update(beta=beta, q=b.get('sample_probability', 1.)*beta,
-                 trust_draw_before_verification=True, trust_follow=follows)
+                  trust_draw_before_verification=True, trust_follow=follows,
+                  tracked_trust_beta=tracked_beta, trust_reporting_only=fixed_beta is not None)
         proposal['sumo_trust_drawn'] = True
         if not follows:
             proposal.update(accepted=False, reason='pre-verification trust draw: own policy')

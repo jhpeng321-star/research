@@ -43,7 +43,8 @@ def retired_key(record,job_ids):
 
 
 def binding(root):
-    r=Path(root);p=r/'VERIFICATION_CONTINUATION_BINDING.json'
+    r=Path(root);p=r/'VERIFICATION_BETA_BINDING.json'
+    if not p.exists():p=r/'VERIFICATION_CONTINUATION_BINDING.json'
     if not p.exists():p=r/'MATCH_RECOVERY_BINDING.json'
     b=json.loads((p if p.exists() else r/'INCIDENT_RECOVERY_BINDING.json').read_text())
     assert b['amendment_sha256'] in (r/'AUTHORITY.md').read_text()

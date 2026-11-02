@@ -93,7 +93,7 @@ def live_safety(root,arm,totals,world,reference):
             baseline=baseline,difference=delta,source=reference['source']))
 
 
-def before_update(root,arm,u,routes,cumulative,trust_state,n_exec):
+def before_update(root,arm,u,routes,cumulative,trust_state,n_exec,effective_guide_beta=None):
     assert_running(root,arm)
     if arm not in ('B','R'):return
     if arm=='B':
@@ -106,7 +106,7 @@ def before_update(root,arm,u,routes,cumulative,trust_state,n_exec):
             pause(root,'STARVATION',dict(update=u,previous_update=u-1,N_exec=n_exec,
                 previous=read(previous)['proposal_routing'],current=routes))
         buckets=trust_state.get('buckets',{})
-        if u<8 and trust_state.get('beta')==0 and (not buckets or all(v['beta']==0 for v in buckets.values())):
+        if effective_guide_beta != 1. and u<8 and trust_state.get('beta')==0 and (not buckets or all(v['beta']==0 for v in buckets.values())):
             pause(root,'STARVATION',dict(update=u,reason='trust collapsed to zero before u8',trust=trust_state))
 
 

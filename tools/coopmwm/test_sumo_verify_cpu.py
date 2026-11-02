@@ -267,6 +267,34 @@ def test_interrupted_verification_claim_never_replays(tmp_path):
     assert plant.calls == []
 
 
+@pytest.mark.parametrize('arm', ['B', 'R'])
+@pytest.mark.parametrize('gain', [-1., 2.])
+def test_verified_fixed_beta_ignores_zero_trust_but_only_executes_exact_winners(arm, gain):
+    gen = torch.Generator().manual_seed(5)
+    ctrl = FakeController(400);ctrl.beta = dict(beta=0., buckets={'MPPI|ordinary': dict(beta=0.)})
+    job = dict(id='e', world=dict(seed=7), arm=arm, runtime='rt', checkpoint='ck',
+               sumo_verify=dict(guide_beta=1.))
+    candidate = plan('a', gain=gain)
+    proposal = dict(accepted=True, option='MPPI', plan=candidate,
+                    behaviour=dict(regime='ordinary', sample_probability=.95))
+    if arm == 'R':proposal['random_match'] = dict(key='ticket')
+    g, _ = live_guide(proposal)
+    calls = []
+    def verify(s, c, p):
+        calls.append(p)
+        return sv.verify(s, c, FakePlant(), lambda *a: None, proposer=p)
+    call = sv.verified_guide(g, verify, ctrl, snapshot()['prefixes'], job, gen,
+                             random_proposer=lambda p, k: [candidate])
+    out = call([], {}, 400, {})
+    assert calls == ['random' if arm == 'R' else 'wm']
+    assert out['accepted'] == (gain > 0.)
+    b = out['behaviour']
+    assert b['beta'] == 1. and b['q'] == .95 and b['tracked_trust_beta'] == 0.
+    assert b['trust_reporting_only'] and b['trust_follow']
+    ref = torch.Generator().manual_seed(5);torch.rand((), generator=ref)
+    assert torch.equal(gen.get_state(), ref.get_state())
+
+
 def test_accept_and_decline_each_consume_exactly_one_trust_draw():
     for gain in (1., -1.):
         gen = torch.Generator().manual_seed(5)

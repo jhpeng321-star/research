@@ -29,7 +29,7 @@ r=pathlib.Path({SOURCE!r});attempt=1+len(list(r.glob('CPU_ATTEMPT_*_OWNER.json')
 owner=dict(pid=os.getpid(),start_ticks=pathlib.Path('/proc/self/stat').read_text().split()[21],boot_id=pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip(),unix=time.time())
 with (r/f'CPU_ATTEMPT_{{attempt}}_OWNER.json').open('x') as f:json.dump(owner,f)
 import torch,pytest;torch.set_num_threads(1)
-names=('test_acceleration_cpu','test_exact_grade_cpu','test_awr_cpu','test_incident_recovery_cpu','test_parallel_groups_cpu')
+names=('test_acceleration_cpu','test_exact_grade_cpu','test_awr_cpu','test_incident_recovery_cpu','test_parallel_groups_cpu','test_warm_health_cpu')
 suite=unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromName('tools.coopmwm.'+n) for n in names)
 class Counts:
  def __init__(self):self.tests=0;self.skips=0
