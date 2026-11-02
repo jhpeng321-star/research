@@ -1,0 +1,151 @@
+{
+ "schema": "rb2break-gpu-checkpoint/1",
+ "owner": "S-RB2-BREAK",
+ "reason": "MAIN 2026-11-01 17:35 GPU priority",
+ "resume_requires": "MAIN appends S-RB2-BREAK RESUME",
+ "no_new_gpu_jobs": true,
+ "no_signals": true,
+ "no_deletions": true,
+ "source_head": "5947c801ba93",
+ "development_only": true,
+ "shards": [
+  {
+   "shard": 0,
+   "pid": 501141,
+   "source": "/root/rbeval20261031/rb2break/devk8_native2_s0",
+   "snapshot_sha256": "abf19784988964970e9db824ba8008734e498a44fed462e26dbeabe51f484082",
+   "tasks": [
+    {
+     "name": "w969420_k0.json",
+     "seed": 969420,
+     "future": 0,
+     "sha256": "fa27e7d16b286337074aa1d91bd28b4945170fa7bc150aa6ba3b89f2f74b3a9a"
+    },
+    {
+     "name": "w969420_k1.json",
+     "seed": 969420,
+     "future": 1,
+     "sha256": "785ce4314af2d8c40a2e4c0035df71c7f1926615ed63f3dc7c59cba5590fc10f"
+    },
+    {
+     "name": "w969420_k2.json",
+     "seed": 969420,
+     "future": 2,
+     "sha256": "555ce57a1901c206450e781ffda6c28b1b5a465b75222f0975bed784758418f1"
+    },
+    {
+     "name": "w969420_k3.json",
+     "seed": 969420,
+     "future": 3,
+     "sha256": "31f558f15c1a2ffcda7ef83af5c8e8e58e0de0365dfca1f60c050368e272aa23"
+    }
+   ],
+   "completed_tasks": 4,
+   "complete_k8_worlds": [],
+   "qualification": false
+  },
+  {
+   "shard": 1,
+   "pid": 500921,
+   "source": "/root/rbeval20261031/rb2break/devk8_native2_s1",
+   "snapshot_sha256": "542b4f7a9331e7a6183d6c44912dd76f3718edcb897ebe54c56fb0b2c0fdd129",
+   "tasks": [
+    {
+     "name": "w969421_k0.json",
+     "seed": 969421,
+     "future": 0,
+     "sha256": "3de46f7d557d85e6b388375fc98db2ef12c62227bfeeeebad875caab50646564"
+    },
+    {
+     "name": "w969421_k1.json",
+     "seed": 969421,
+     "future": 1,
+     "sha256": "6753a3582a07faba195ee05fd10a015436d56799aaf9578ae0f1320713641f55"
+    },
+    {
+     "name": "w969421_k2.json",
+     "seed": 969421,
+     "future": 2,
+     "sha256": "99a32df1c0b57d8c90e355074a3943a6da5559fc9fea35f4203f0ee6049528ce"
+    }
+   ],
+   "completed_tasks": 3,
+   "complete_k8_worlds": [],
+   "qualification": false
+  }
+ ],
+ "completed_tasks": 7,
+ "complete_k8_worlds": [],
+ "qualification": false,
+ "resource_audit": {
+  "unix": 1793656451.0466142,
+  "local_time": "2026-11-03T05:54:11+0800",
+  "boot_id": "a81555d7-176e-4ed8-bc7d-896fc89cc914",
+  "load": [
+   37.072265625,
+   19.87939453125,
+   15.009765625
+  ],
+  "workers": [
+   {
+    "receipt": "/root/rbeval20261031/rb2break/devk8_native2_s0/DISPATCH.json",
+    "pid": 501141,
+    "alive": false
+   },
+   {
+    "receipt": "/root/rbeval20261031/rb2break/devk8_native2_s1/DISPATCH.json",
+    "pid": 500921,
+    "alive": false
+   }
+  ],
+  "queues": [
+   {
+    "receipt": "/root/rbeval20261031/rb2break/K8_QUEUE_0.json",
+    "pid": 493762,
+    "alive": false
+   },
+   {
+    "receipt": "/root/rbeval20261031/rb2break/K8_QUEUE_1.json",
+    "pid": 493766,
+    "alive": false
+   },
+   {
+    "receipt": "/root/rbeval20261031/rb2break/QUEUE2_rb2break_code_1c5fe0cfbe15_0.json",
+    "pid": 440884,
+    "alive": false
+   },
+   {
+    "receipt": "/root/rbeval20261031/rb2break/QUEUE2_rb2break_code_1c5fe0cfbe15_1.json",
+    "pid": 440882,
+    "alive": false
+   },
+   {
+    "receipt": "/root/rbeval20261031/rb2break/QUEUE2_rb2break_code_b4012f024798_0.json",
+    "pid": 450241,
+    "alive": false
+   },
+   {
+    "receipt": "/root/rbeval20261031/rb2break/QUEUE2_rb2break_code_b4012f024798_1.json",
+    "pid": 450254,
+    "alive": false
+   },
+   {
+    "receipt": "/root/rbeval20261031/rb2break/QUEUE2_rb2break_code_e164b30946af_1.json",
+    "pid": 464485,
+    "alive": false
+   },
+   {
+    "receipt": "/root/rbeval20261031/rb2break/QUEUE_0.json",
+    "pid": 439275,
+    "alive": false
+   },
+   {
+    "receipt": "/root/rbeval20261031/rb2break/QUEUE_1.json",
+    "pid": 439291,
+    "alive": false
+   }
+  ],
+  "nvidia_smi": "Tue Nov  3 05:54:11 2026       \n+-----------------------------------------------------------------------------------------+\n| NVIDIA-SMI 595.71.05              Driver Version: 595.71.05      CUDA Version: 13.2     |\n+-----------------------------------------+------------------------+----------------------+\n| GPU  Name                 Persistence-M | Bus-Id          Disp.A | Volatile Uncorr. ECC |\n| Fan  Temp   Perf          Pwr:Usage/Cap |           Memory-Usage | GPU-Util  Compute M. |\n|                                         |                        |               MIG M. |\n|=========================================+========================+======================|\n|   0  NVIDIA GeForce RTX 4090 D      On  |   00000000:5B:00.0 Off |                  Off |\n|  0%   60C    P0            249W /  425W |   32655MiB /  49140MiB |    100%      Default |\n|                                         |                        |                  N/A |\n+-----------------------------------------+------------------------+----------------------+\n\n+-----------------------------------------------------------------------------------------+\n| Processes:                                                                              |\n|  GPU   GI   CI              PID   Type   Process name                        GPU Memory |\n|        ID   ID                                                               Usage      |\n|=========================================================================================|\n|    0   N/A  N/A          151635      C   /root/miniconda3/bin/python           18172MiB |\n|    0   N/A  N/A          220668      C   /root/miniconda3/bin/python           14468MiB |\n+-----------------------------------------------------------------------------------------+\n"
+ },
+ "source_sha256": "41d7861e28aae3a57d0dded062163c4490d1f569d54d724b70ab17d76dcc8c1c"
+}
