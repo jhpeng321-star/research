@@ -9,6 +9,16 @@ from .storage import read,write
 
 
 class ObserverTests(unittest.TestCase):
+    def setUp(self):
+        # The observer itself runs on Windows. Exercise its publish/deadline
+        # contract on Linux too without importing a Windows-only lock module.
+        import os,sys
+        from types import SimpleNamespace
+        if os.name != 'nt':
+            stub=SimpleNamespace(LK_NBLCK=2,locking=lambda *args:None)
+            mocked=patch.dict(sys.modules,{'msvcrt':stub})
+            mocked.start();self.addCleanup(mocked.stop)
+
     def test_v14_uses_current_state_without_dispatch_or_legacy_gpu_status(self):
         from contextlib import ExitStack
         with tempfile.TemporaryDirectory() as tmp,ExitStack() as stack:

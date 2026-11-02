@@ -7,6 +7,7 @@ lesson_u<k>-prefixed in bank_verification_ext (the same entry is re-measured eve
 unqualified ids would hit the durable duplicate-charge guard from the second update on).
 """
 import json
+from .test_replay_bank_confirm_cpu import bank_budget
 
 import pytest
 import torch

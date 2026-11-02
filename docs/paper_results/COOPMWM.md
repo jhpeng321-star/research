@@ -1,5 +1,27 @@
 # S-COOPMWM — live checks
 
+## Nov3 07:14 UTC+8 — full Linux B-REPLAY qualification and real bank-read PASS
+- Immutable `coopmwm20261103_replayreleasecpu5`: **694 CPU checks PASS, zero
+  failures/skips,83.664s, zero SUMO** (642 tests plus52 subtests; the already
+  receipted seven-scenario integration rehearsals are adopted, not repeated).
+- Earlier cpu2 pre-test indentation failure and cpu3/cpu4 failed suites remain
+  on disk. Fixes preserve historical acceleration/resume quotes; the later bank
+  budget is loaded through authorized additive bindings. Tests no longer leak
+  the recovery runtime into later tests, and operator compile tests isolate their
+  OS/git fixtures. cpuQ's older WM library is supplemented only in this isolated
+  qualification snapshot with SHA-bound Python source from pinned FULL-v4.
+- Two real integration faults fixed before deployment: the trainer must read the
+  SHA-linked amended safety confirmations, and recovered LS labels must resolve
+  branch tapes under their original `label_attempts/<generation>/branches` root.
+  The original labels/grades/confirmations remain unchanged; no branch rerun.
+- Real TRAIN-only read check, unix1793661278:63 usable decisions,32 first-seed
+  positives, **8 admitted /3 cooperative**, **990 complete imitation samples**.
+  Every admitted tape passes its sealed result digest and committed-step checks.
+  Cooperative sample share54.55%; no duplication needed for this bank.
+- Read check uses diagnostic unit weights only; it writes no temperature,
+  applies no optimizer and reserves/runs no SUMO. B/R remainu3; ten admitted
+  entries are still required. Phase shortfall144,000 remains reported to MAIN.
+
 ## Nov3 07:12:10 UTC+8 — frozen rollout source retained during replay integration
 - V3 correctly refused the newly merged local `sumo_verify.py` hash before
   altering the drained second GPU slot. Completed first-slot gates and all

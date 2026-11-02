@@ -341,7 +341,7 @@ def test_full_disk_snapshot_prepare_fails_decision_not_episode(tmp_path):
             raise OSError(28, 'No space left on device')
     log, charge = charge_log()
     r = sv.verify(snapshot(), eight(), Plant(), charge, root=tmp_path)
-    assert r['status'] == 'failed' and 'prepare failed' in r['reason'] and r['actual_sim_s'] == 0
+    assert r['status'] == 'failed' and 'prepare or startup smoke failed' in r['reason'] and r['actual_sim_s'] == 0
     assert r['charged_sim_s'] == sum(log[0][1])               # precharged, never refunded or replayed
 
 

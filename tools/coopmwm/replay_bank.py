@@ -319,7 +319,19 @@ def _receipts(root, arm, sources=()):
         # MAIN: live frozen-u3 LS-COLLECT labels count as B bank entries, tagged u3.
         src = Path(src)
         for p in sorted((src/'labels').glob('*.json')):
-            yield json.loads(p.read_text())['verification'], src/'branches', 'u3'
+            label = json.loads(p.read_text())
+            key = label['search_id']
+            suffix = p.stem[len(key):]
+            if not p.stem.startswith(key):
+                raise ValueError('LS label filename differs from search identity')
+            if suffix:
+                import re
+                if not re.fullmatch(r'_[A-Z0-9]+', suffix):
+                    raise ValueError('invalid LS label generation')
+                branches = src/'label_attempts'/suffix[1:]/'branches'
+            else:
+                branches = src/'branches'
+            yield label['verification'], branches, 'u3'
 
 
 def bank_decisions(root, arm, upto_unix=None, sources=()):
@@ -331,7 +343,11 @@ def bank_decisions(root, arm, upto_unix=None, sources=()):
             continue
         if upto_unix is not None and r['timing']['finished_unix'] > upto_unix:
             continue
-        out.append(dict(r, _branches=str(branches), _policy_version=version))
+        extra = {}
+        if version == 'u3':
+            extra['_source'] = str(branches.parent.parent.parent
+                if branches.parent.parent.name == 'label_attempts' else branches.parent)
+        out.append(dict(r, _branches=str(branches), _policy_version=version, **extra))
     return sorted(out, key=lambda r: (r['timing']['finished_unix'], r['verification_id']))
 
 
@@ -639,7 +655,7 @@ def _decision_snapshot(root, arm, r, by_vid):
     if link is None:
         if r['_policy_version'] != 'u3':
             raise ValueError('no decision link for '+r['verification_id'])
-        src = Path(r['_branches']).parent
+        src = Path(r.get('_source', Path(r['_branches']).parent))
         key = next(json.loads(p.read_text())['search_id'] for p in (src/'labels').glob('*.json')
                    if json.loads(p.read_text())['verification']['verification_id'] == r['verification_id'])
         return _ls_snapshot(src, key)
@@ -666,10 +682,11 @@ def confirm_pending(root, arm, runner_for, run_root, phase, workers=2, sources=(
 
 
 def confirmations(root, arm):
-    out = {}
-    for p in (bank_root(root, arm)/'confirmations').glob('*.json'):
-        v = json.loads(p.read_text());xg.verify_sealed(v, 'confirmation_sha256');out[v['verification_id']] = v
-    return out
+    # Adopt the SHA-linked MAIN04:26 overlays made by the already-running
+    # offline builder. New confirmations already carry the amended rule; old
+    # originals remain immutable and must not silently replace their overlays.
+    from .bank_safety import confirmations as amended
+    return amended(root, arm)
 
 
 def bank_quality(root, arm, sources=()):

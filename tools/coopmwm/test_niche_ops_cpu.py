@@ -2,6 +2,8 @@ from . import niche_ops
 
 
 def test_qualification_payload_compiles_without_remote_execution(monkeypatch, capsys):
+    import subprocess
+    monkeypatch.setattr(subprocess,'check_output',lambda *a,**k:b'# immutable baseline stub; compile-only test')
     def validate(host, code, **kwargs):
         assert host == 'cpuQ'
         compile(code, '<joint-niche-nullfix-qualification>', 'exec')

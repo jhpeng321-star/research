@@ -10,11 +10,26 @@ of the imitation samples with unchanged weights; BANK_QUALITY.json carries the s
 """
 import gzip
 import json
+import pytest
 
 from tools.coopmwm import replay_bank as rb
 from tools.coopmwm import sumo_verify as sv
 from tools.coopmwm.storage import ledger
 from tools.coopnative.storage import canonical
+
+
+@pytest.fixture(autouse=True)
+def bank_budget(tmp_path):
+    """Use the later bank budget through an authorised additive binding, not by
+    changing the historical acceleration/resume quote shared by other tests."""
+    from .warm_protocol import budget
+    b = budget()
+    b['total'] += 2600000
+    b['allocated'] += 2600000
+    b['phases'] = dict(b['phases'], bank_verification_ext=2600000)
+    (tmp_path/'B_REPLAY_PHASE_RECONCILIATION_0627.json').write_text(json.dumps(
+        dict(budget=b, amendment_sha256='test-bank-budget')))
+    (tmp_path/'AUTHORITY.md').write_text('test-bank-budget')
 
 
 def fp(t, delay):

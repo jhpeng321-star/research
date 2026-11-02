@@ -10,6 +10,7 @@ class RepairTests(unittest.TestCase):
         from pathlib import Path
         from unittest.mock import patch
         from . import capacity_recovery as recovery
+        from . import warm_runner, accel_storage
         with tempfile.TemporaryDirectory() as d:
             root=Path(d)
             for name,value in [('EXACT_OPERATIONAL_BINDING.json',dict(workers=4)),
@@ -17,7 +18,10 @@ class RepairTests(unittest.TestCase):
                 ('AWR_BINDING.json',dict(config=dict(coefficient=1)))]:
                 (root/name).write_text(json.dumps(value))
             b=dict(budget=budget(),repair_plan=dict(worlds=[],precharged_unattempted=['one']))
-            with patch.object(recovery,'binding',return_value=b),patch('tools.coopmwm.warm_health.assert_running'):
+            with patch.object(recovery,'binding',return_value=b),patch('tools.coopmwm.warm_health.assert_running'), \
+                    patch.multiple(warm_runner,verify=warm_runner.verify,budget=warm_runner.budget,
+                                   batch_worlds=warm_runner.batch_worlds), \
+                    patch.object(accel_storage,'_reserve',accel_storage._reserve):
                 wr,_=recovery.install(root)
                 self.assertEqual(wr.verify(root,'B')['workers'],24)
                 self.assertEqual(wr.verify(root,'R')['workers'],4)

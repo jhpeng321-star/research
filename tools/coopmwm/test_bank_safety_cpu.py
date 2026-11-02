@@ -56,4 +56,5 @@ def test_reconcile_runs_missing_diagnostic_solos_once_without_repeating_grades(t
     assert first['admitted'] is False  # collision hard constraint still rejects
     assert first['synergy_diagnostic_required'] is True and first['cooperation']['cooperative'] is True
     assert confirmations(tmp_path, arm)['original'] == first
+    assert rb.confirmations(tmp_path, arm)['original'] == first
     assert original == __import__('json').loads(old_path.read_text())

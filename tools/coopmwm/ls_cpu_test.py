@@ -31,10 +31,12 @@ def run(root):
         selection=root/'LS_RELEASE_TESTS.json'
         paths=([str(root/'pytools/tools/coopmwm'/(n+'.py')) for n in json.loads(selection.read_text())]
             if selection.exists() else sorted(str(p) for p in (root/'pytools/tools/coopmwm').glob('test_*cpu.py')))
+        settings=root/'LS_CPU_SELECTION.json'
+        extra=json.loads(settings.read_text()) if settings.exists() else {}
         with patch('subprocess.Popen',side_effect=AssertionError('CPU qualification forbids physics/inference')):
-            code=pytest.main(paths+['-v','--tb=short','-p','no:cacheprovider'],plugins=[c])
+            code=pytest.main(paths+['-v','--tb=short','-p','no:cacheprovider']+extra.get('pytest_args',[]),plugins=[c])
         v=dict(pass_=code==0,tests=c.tests,skips=c.skips,sim_s=0,wall_s=time.monotonic()-start,root=str(root),
-            source_hashes=json.loads((root/'LS_SOURCE_HASHES.json').read_text()))
+            selection=extra,source_hashes=json.loads((root/'LS_SOURCE_HASHES.json').read_text()))
         with (root/'LS_CPU_RESULT.json').open('x') as f:json.dump(v,f)
         print(json.dumps({k:v[k] for k in ('pass_','tests','skips','sim_s','wall_s','root')}),flush=True)
 

@@ -3,10 +3,19 @@ from types import SimpleNamespace
 from . import replay_ops
 
 
+def test_durable_cpu_runner_compiles():
+    p = replay_ops.ops.LOCAL/'tools/coopmwm/ls_cpu_test.py'
+    compile(p.read_text(encoding='utf-8'), str(p), 'exec')
+
+
 def test_integrated_release_payload_compiles_without_remote_dispatch(monkeypatch):
     monkeypatch.setattr(replay_ops,'release_status',lambda:dict(ready=True,integrated=True,release=dict(commit='abc')))
     monkeypatch.setattr(replay_ops,'checked',lambda p:SimpleNamespace(read_text=lambda **kw:'# CPU stub'))
     def remote(host,code,**kwargs):
+        if host=='gpuA':
+            assert 'phys_code_22cc32f65a80' in code
+            assert "'wms/control/alwayscmd.py' in files" in code
+            return json.dumps({'wms/control/alwayscmd.py':'# frozen source'})
         assert host=='cpuQ'
         compile(code,'<ready-release-qualification>','exec')
         assert 'DELEGATED_RELEASE.json' in code
