@@ -1,5 +1,17 @@
 # S-RB-DECIDE handoff
 
+## Resume verified — 2026-11-03 02:05 +08
+
+- Preserved clean HEAD `1b4ebe6c`; implementation, CPU verification, saved-output
+  publications and final integration delivery were already complete.
+- Rechecked the owner registration, requested background documents, matching
+  collector claim/terminal receipt, final INT publication and morning report.
+  Final routing below remains authoritative. Receipt:
+  `docs/paper_results/wmdecide/RESUME_VERIFIED_20261103.md`.
+- The registered switching gate remains FAIL; the implemented owner0.8 rule
+  does not establish calibrated action probabilities. Existing completed tests
+  remain applicable. This resume adds documentation only.
+
 ## FINAL routing — fresh-session reconciliation 2026-11-01 17:03 +08
 
 - DECIDE collector PID4984 **completed** at09:01:23+08 at its registered deadline;
