@@ -1,5 +1,14 @@
 # S-COOPBANDIT-LEARN -> S-COOPBANDIT handoff (2026-11-01)
 
+## ADDENDUM 3 2026-11-03: fresh-session verification, nothing new to do
+
+A fresh session resumed after the prior one froze; read git log/status and this
+file, verified the tree is clean at 81a04120 with all artifacts present, and
+re-ran the 17 CPU tests green on 2026-11-03 (unittest, 125 s). No work was
+redone, no analyses re-run, no jobs duplicated. This task is COMPLETE from my
+side; the ball is in S-COOPBANDIT's court (live test with `runtime.py` +
+`policy.json`).
+
 ## Resume check 2026-11-03: nothing outstanding
 
 Fresh session resumed from `81a04120` (clean tree). Your worktree is closed
