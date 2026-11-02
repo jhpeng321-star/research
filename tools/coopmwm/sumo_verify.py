@@ -239,7 +239,8 @@ def verify(snapshot, candidates, runner, charge, proposer='wm', workers=None, ro
         except Exception as e:  # e.g. full disk writing SNAPSHOT.pt: one decision, never the episode
             body.update(status='failed', chosen=None, chosen_plan=None, grade_veh_s=None, J_policy_veh_s=None,
                         J_candidates_veh_s=None, branches=[], charged_sim_s=charged, actual_sim_s=0,
-                        reason='prepare failed before physics: '+repr(e))
+                        reason='prepare or startup smoke failed: '+repr(e))
+            body['actual_sim_s'] = getattr(runner, 'prepare_actual_sim_s', 0)
             return _finish(body, started, root)
     branches = run_parallel(specs, snapshot, runner, workers)
     status, best, reason = choose(branches, candidates)

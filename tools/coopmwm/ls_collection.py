@@ -103,15 +103,34 @@ def label(root,envelope,response,config):
     if not candidates or len(candidates)!=8:
         raise ValueError('collection search lacks the eight original final candidate profiles')
     snapshot=complete_snapshot(root,envelope)
-    runner=SubprocessBranchRunner(root/'branches',workers=9,timeout_s=3600)
+    generation=config.get('label_generation')
+    attempt=root/'label_attempts'/generation if generation else root
+    (attempt/'label_charges').mkdir(parents=True,exist_ok=True)
+    (root/'label_voids').mkdir(exist_ok=True)
+    target=root/'labels'/(key+('_'+generation if generation else '')+'.json')
+    if generation:
+        from .ls_label_runtime import SmokeBranchRunner
+        runner=SmokeBranchRunner(attempt/'branches',workers=9,timeout_s=3600,
+            smoke_path=root/('LABEL_SUMO_SMOKE_'+generation+'.json'))
+    else:runner=SubprocessBranchRunner(root/'branches',workers=9,timeout_s=3600)
     def charge(vid,specs):
         # Complete worst-case nine-branch charge was made BEFORE the search.
         reservation=json.loads((root/'admissions'/(key+'.json')).read_text())
         assert len(specs)==9 and sum(s['sim_s'] for s in specs)<=reservation['charged_sim_s']
-        immutable(root/'label_charges'/(key+'.json'),dict(verification_id=vid,
+        previous=root/'labels'/(key+'.json')
+        if generation and previous.exists():
+            from .ls_label_runtime import void_environment_failure
+            from .accel_storage import reserve
+            old=json.loads(previous.read_text());assert void_environment_failure(old),'not an authorized no-physics retry'
+            immutable(root/'label_voids'/(key+'.json'),dict(original_label_sha256=digest(old),
+                original_receipt_sha256=old['verification']['receipt_sha256'],actual_sim_s=0,
+                no_outcome=True,charges_retained=True,reason='SUMO environment missing; MAIN23:32'))
+            reserve(Path(config['run_root']),[dict(id='lslabel_'+key+'_'+generation,
+                sim_s=sum(s['sim_s'] for s in specs))],'sumo_verification')
+        immutable(attempt/'label_charges'/(key+'.json'),dict(verification_id=vid,
             reservation=reservation,branches=specs,no_double_charge=True))
-    result=verify(snapshot,candidates,runner,charge,'wm',workers=9,root=root/'verification')
-    immutable(root/'labels'/(key+'.json'),dict(search_id=key,world_id=envelope['world_id'],
+    result=verify(snapshot,candidates,runner,charge,'wm',workers=9,root=attempt/'verification')
+    immutable(target,dict(search_id=key,world_id=envelope['world_id'],
         record_sha256=digest(envelope['record']),verification=result,
         policy_frozen_u3=True,plans_executed_during_collection=False))
     return result
@@ -143,7 +162,17 @@ def supervise(root):
         config.update(json.loads((root/'LS_RECOVERY_CONFIG.json').read_text()))
     if (root/'LS_VALIDITY_CONFIG.json').exists():
         config.update(json.loads((root/'LS_VALIDITY_CONFIG.json').read_text()))
+    if (root/'LS_LABEL_CONFIG.json').exists():
+        config.update(json.loads((root/'LS_LABEL_CONFIG.json').read_text()))
     main=Path(config['run_root']);install_accounting(main,config['budget'])
+    if config.get('operational_spend_cap'):
+        from . import accel_storage
+        from .accel_protocol import SUPERSEDED_CHARGE
+        accel_storage._reserve.__globals__['CAP']=min(accel_storage._reserve.__globals__['CAP'],
+            config['operational_spend_cap']-SUPERSEDED_CHARGE)
+    if config.get('sumo_home'):
+        from .ls_label_runtime import sumo_environment
+        os.environ.update(sumo_environment(config['sumo_home']))
     with (root/'SUPERVISOR.claim').open('a') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
         signal.signal(signal.SIGHUP,signal.SIG_IGN)
@@ -219,7 +248,8 @@ def supervise(root):
                         immutable(root/'requests'/(key+'.json'),r)
                         immutable(main/'requests'/(key+'.json'),r)
                 for key in sorted(answered):
-                    if key in grading or (root/'labels'/(key+'.json')).exists() or (root/'label_failures'/(key+'.json')).exists():continue
+                    from .ls_label_runtime import label_path
+                    if key in grading or label_path(root,key,config.get('label_generation')).exists() or (root/'label_failures'/(key+'.json')).exists():continue
                     response=read(main/'responses'/(key+'.json'))
                     if response.get('query_error'):
                         immutable(root/'label_failures'/(key+'.json'),dict(error=response['query_error'],
@@ -228,7 +258,8 @@ def supervise(root):
                     receipt=response.get('proposer_receipt')
                     if receipt is None:raise ValueError('collection response has no full-pool receipt')
                     immutable(root/'proposer_receipts'/(key+'.json'),receipt)
-                    if len(grading)<2:
+                    limit=1 if config.get('label_generation') and not (root/('LABEL_SUMO_SMOKE_'+config['label_generation']+'.json')).exists() else 2
+                    if len(grading)<limit:
                         envelope=json.loads(gzip.decompress(Path(pending[key]['path']).read_bytes()))
                         grading[key]=grades.submit(label,root,envelope,response,config)
                 now=time.time()
@@ -240,7 +271,8 @@ def supervise(root):
                         worlds=sorted({pending[k]['world_id'] for k in answered}),
                         admitted_worlds=sorted({pending[k]['world_id'] for k in admitted}),
                         episode_worlds=sorted(w['seed'] for w in config['worlds'] if (main/'jobs'/f'lscollect1_B3_{w["seed"]}'/'RESULT.json').exists()),
-                        verified_lists=len(labels),label_failures=len(list((root/'label_failures').glob('*.json'))),
+                         verified_lists=sum(x['verification']['status'] in ('accepted','rejected') for x in labels),
+                         label_failures=len(list((root/'label_failures').glob('*.json'))),
                         verification_statuses=[x['verification']['status'] for x in labels],grading_inflight=len(grading),
                         charged_collection_sim_s=sum(c['sim_s'] for c in ledger(main) if c['id'].startswith(('lscollect1_','lslabel_'))),
                         budget_capacity_searches=config['max_searches'],training_paused=True,mirror_active=False,
