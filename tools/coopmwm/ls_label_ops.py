@@ -181,6 +181,14 @@ focus=lambda x:x['verification']['episode']['world']['demand'] in (2400,2700) an
 confirmed=[]
 for p in (Path({ROOT!r})/'replay_bank/B/confirmations').glob('*.json'):
  x=json.loads(p.read_text());verify_sealed(x,'confirmation_sha256');confirmed.append(x)
+legacy_confirmed=list(confirmed)
+overlays=Path({ROOT!r})/'replay_bank/B/confirmations_safety0426'
+for i,x in enumerate(confirmed):
+ p=overlays/(x['verification_id']+'.json')
+ if p.exists():
+  v=json.loads(p.read_text());verify_sealed(v,'confirmation_sha256')
+  assert v['original_confirmation_sha256']==x['confirmation_sha256']
+  confirmed[i]=v
 admitted=[x for x in confirmed if x['admitted']]
 null_lists=[dict(search_id=x['search_id'],world_id=x['world_id'],
  all_eight_delay_equal_policy=len(x['verification'].get('J_candidates_veh_s') or [])==8 and
@@ -195,7 +203,8 @@ print(json.dumps(dict(unix=time.time(),arm='B',policy_update=3,entries=len(label
  void_attempts=len(list((c/'label_voids').glob('*.json'))),training_paused=True,
    prerequisite_positive_entries=10,prerequisite_met=len(admitted)>=10,
    prerequisite_contract='MAIN00:40 ten confirmed/admitted positive B entries; raw best-of-eight positives are not admissions; qualified release also required',
-   selected_positive_lists=len(positive),confirmed_entries=len(confirmed),admitted_positive_entries=len(admitted),
+    selected_positive_lists=len(positive),confirmed_entries=len(confirmed),admitted_positive_entries=len(admitted),
+    safety_rule='MAIN2026-11-03 04:26',legacy_admitted_positive_entries=sum(x['admitted'] for x in legacy_confirmed),
   exact_delay_null_lists=sum(x['all_eight_delay_equal_policy'] for x in null_lists),
   exact_delay_null_rate=sum(x['all_eight_delay_equal_policy'] for x in null_lists)/len(null_lists) if null_lists else None,
   per_label_null_flags=null_lists,null_definition='all eight complete candidate team delays exactly equal policy; no tolerance or trajectory-equivalence inference',
@@ -207,6 +216,137 @@ print(json.dumps(dict(unix=time.time(),arm='B',policy_update=3,entries=len(label
     print(json.dumps(value));return value
 
 
+def variation_summary(rows):
+    """Describe exact labelled slates; missing post-release data stays missing."""
+    groups={key:[] for key in ('before_release','niches1','niches4')}
+    for row in rows:
+        mode=row.get('niches')
+        key='niches'+str(mode) if row.get('search_clamp_enabled') and mode in (1,4) else 'before_release'
+        groups[key].append(row)
+    result={}
+    for key,xs in groups.items():
+        complete=[x for x in xs if x.get('candidate_count')==8 and x.get('exact_null') is not None]
+        nulls=sum(x['exact_null'] for x in complete)
+        distances=[x['mean_pairwise_distance'] for x in xs if x.get('mean_pairwise_distance') is not None]
+        occupancy=[x['occupied_niches'] for x in xs if x.get('occupied_niches') is not None]
+        signs=[x['share_with_net_deceleration'] for x in xs if x.get('share_with_net_deceleration') is not None]
+        result[key]=dict(labelled_lists=len(xs),complete_eight_lists=len(complete),
+            exact_null_lists=nulls,exact_null_rate=nulls/len(complete) if complete else None,
+            partial_or_unmeasured_lists=len(xs)-len(complete),
+            inactionable_skipped=sum(x['status']=='inactionable' for x in xs),
+            mean_pairwise_distance=sum(distances)/len(distances) if distances else None,
+            diversity_observed_lists=len(distances),
+            mean_occupied_niches=sum(occupancy)/len(occupancy) if occupancy else None,
+            mean_share_with_net_deceleration=sum(signs)/len(signs) if signs else None,
+            mirror_active=any(x.get('mirror_active',False) for x in xs))
+    return result
+
+
+def variation():
+    """Read saved TRAIN labels/responses only; zero new search/SUMO or control."""
+    import time
+    value=json.loads(remote('cpuQ',f'''from pathlib import Path
+import json,time,hashlib
+c=Path({COLLECTION!r});r=Path({ROOT!r});rows=[]
+for p in (c/'labels').glob('*.json'):
+ x=json.loads(p.read_text());v=x['verification']
+ if v['status'] not in ('accepted','rejected','inactionable'):continue
+ response=r/'responses'/(x['search_id']+'.json')
+ a=json.loads(response.read_text()) if response.exists() else {{}}
+ variation=x.get('variation') or a.get('variation') or {{}}
+ config=x.get('search_config') or a.get('search_config') or {{}}
+ req=c/'requests'/(x['search_id']+'.json')
+ request=json.loads(req.read_text()).get('search_config',{{}}) if req.exists() else {{}}
+ costs=v.get('J_candidates_veh_s') or [];policy=v.get('J_policy_veh_s')
+ null=(all(j==policy for j in costs) if len(costs)==8 and policy is not None and all(j is not None for j in costs) else None)
+ rows.append(dict(search_id=x['search_id'],world_id=x['world_id'],status=v['status'],
+  label_sha256=hashlib.sha256(p.read_bytes()).hexdigest(),
+  search_config=config,niches=variation.get('niches',request.get('niches')),
+  search_clamp_enabled=(x.get('nullfix') or a.get('nullfix') or {{}}).get('enabled',False),
+  label_gate_enabled='feasibility' in x,mirror_active=False,candidate_count=len(costs),
+  exact_null=null,best_margin_veh_s=v.get('best_margin_veh_s'),
+  mean_pairwise_distance=variation.get('mean_pairwise_distance'),occupied_niches=variation.get('occupied_niches'),
+  share_with_net_deceleration=variation.get('share_with_net_deceleration')))
+print(json.dumps(dict(unix=time.time(),rows=rows,new_sumo_sim_s=0,new_wm_calls=0)))'''))
+    value['cohorts']=variation_summary(value['rows'])
+    value['contract']='exact delay equality only for complete eight-candidate lists; partial/skipped lists excluded from null-rate denominator; no post-release observations means null, not zero'
+    write(ops.EVIDENCE/f'NULL_DIVERSITY_{time.time_ns()}.json',value)
+    target=ops.EVIDENCE/'NULL_DIVERSITY_BY_CONFIG.json'
+    tmp=target.with_name(f'.NULL_DIVERSITY.{time.time_ns()}.publishing')
+    with tmp.open('w',encoding='utf-8') as f:json.dump(value,f)
+    __import__('os').replace(tmp,target)
+    print(json.dumps(dict(unix=value['unix'],cohorts=value['cohorts'],new_sumo_sim_s=0)));return value
+
+
+def failures():
+    value=json.loads(remote('cpuQ',f'''from pathlib import Path
+import json,time
+c=Path({COLLECTION!r});out=[]
+for p in (c/'labels').glob('*.json'):
+ x=json.loads(p.read_text());v=x['verification']
+ if v['status']!='failed':continue
+ out.append(dict(file=p.name,world=x['world_id'],reason=v.get('reason'),actual_sim_s=v.get('actual_sim_s'),
+  timing=v.get('timing'),branches=[{{k:b.get(k) for k in ('id','status','reason','actual_sim_s','job_path')}} for b in v.get('branches',[])]))
+targets=['/home/ubuntu/mappospeed/production2/policy_00169.pt','/home/ubuntu/miniconda3/lib/python3.10/site-packages/sumo/bin/sumo','/home/ubuntu/e3final/runtime']
+print(json.dumps(dict(unix=time.time(),failed_labels=out,required_path_exists={{p:Path(p).exists() for p in targets}})))'''))
+    write(ops.EVIDENCE/f'LS_LABEL_FAILURES_{__import__("time").time_ns()}.json',value)
+    print(json.dumps(value));return value
+
+
+def failure_sources():
+    print(remote('cpuQ',f'''from pathlib import Path
+import ast,json
+c=Path({COLLECTION!r});s=Path(json.loads((c/'LS_FOCUS_CONFIG.json').read_text())['source_root'])
+p=s/'pytools/tools/leverprobe/backend.py';text=p.read_text();tree=ast.parse(text)
+for node in tree.body:
+ if isinstance(node,ast.FunctionDef) and node.name=='setup':print(ast.get_source_segment(text,node))
+ if isinstance(node,ast.ClassDef) and node.name=='Backend':
+  for child in node.body:
+   if isinstance(child,ast.FunctionDef) and child.name=='__init__':print(ast.get_source_segment(text,child))
+'''))
+
+
+def failure_paths():
+    print(remote('cpuQ',f'''from pathlib import Path
+import json,re
+c=Path({COLLECTION!r});cfg=json.loads((c/'LS_COLLECT_BINDING.json').read_text())
+r=Path(cfg['runtime']);p=r/'runtime/SOURCE_MANIFEST.json'
+blocked=re.compile(r'sealed|holdout|heldout|cal_split|chunk5|j4b|inc1|hetdata_truth|vehicle_params|driver_params|vtype',re.I)
+entries=json.loads(p.read_text()) if p.exists() else {{}}
+missing=[name for name in entries if not blocked.search(name) and not (r/'runtime'/name).exists()]
+print(json.dumps(dict(runtime=str(r),manifest=str(p),manifest_exists=p.exists(),checkpoint=cfg['checkpoint'],checkpoint_exists=Path(cfg['checkpoint']).exists(),missing_allowed_runtime_paths=missing,metadata_only=True)))'''))
+
+
+def policy_load_probe():
+    print(remote('cpuQ',f'''from pathlib import Path
+import os,sys,json,traceback
+from unittest.mock import patch
+sys.dont_write_bytecode=True
+c=Path({COLLECTION!r});cfg=json.loads((c/'LS_COLLECT_BINDING.json').read_text());r=Path(cfg['runtime'])
+os.nice(19);os.environ.update(CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
+sys.path[:0]=[str(r/'runtime/src'),str(r/'runtime')]
+try:
+ with patch('subprocess.Popen',side_effect=AssertionError('diagnostic cannot launch physics')):
+  from wms.control.policy import load_policy_fn
+  policy=load_policy_fn(cfg['checkpoint'],device='cpu');policy.reset()
+ print(json.dumps(dict(pass_=True,new_sumo_sim_s=0)))
+except Exception as error:print(json.dumps(dict(pass_=False,error=repr(error),filename=getattr(error,'filename',None),traceback=traceback.format_exc(),new_sumo_sim_s=0)))'''))
+
+
+def env_failure_sources():
+    print(remote('cpuQ',f'''from pathlib import Path
+import ast,json
+c=Path({COLLECTION!r});r=Path(json.loads((c/'LS_COLLECT_BINDING.json').read_text())['runtime'])/'runtime'
+paths=[r/'traffic_shepherd/c4/env.py',r/'src/traffic_shepherd/c4/env.py']
+p=next(p for p in paths if p.exists());text=p.read_text();tree=ast.parse(text)
+for node in tree.body:
+ if isinstance(node,ast.ClassDef) and node.name=='CavSumoEnv':
+  for child in node.body:
+   if isinstance(child,ast.FunctionDef) and child.name in ('__init__','reset','_start_sumo','_launch_sumo'):
+    print(ast.get_source_segment(text,child))
+'''))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('qualify','result','register','deploy','status','publish','bank_status'))
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('qualify','result','register','deploy','status','publish','bank_status','variation','failures','failure_sources','failure_paths','policy_load_probe','env_failure_sources'))
     globals()[p.parse_args().action]()

@@ -4,6 +4,17 @@ from unittest.mock import Mock, patch
 from . import ls_validity_ops as ops
 
 
+def test_remote_status_payload_compiles_before_observing(monkeypatch,tmp_path):
+    monkeypatch.setattr(ops.ops,'EVIDENCE',tmp_path)
+    def remote(host,code,**kwargs):
+        assert host=='cpuQ'
+        compile(code,'<read-only-live-status>','exec')
+        assert "'_NICHENULL1'" in code
+        return '{}'
+    monkeypatch.setattr(ops,'remote',remote)
+    assert ops.status()=={}
+
+
 class ObserverTests(unittest.TestCase):
     def test_fast_observer_reused_pid_is_never_signalled(self):
         owner=Mock();owner.create_time.return_value=200.

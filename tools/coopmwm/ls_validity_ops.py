@@ -155,6 +155,8 @@ def gpu_status(host):
             d=read(replacement);rows=[d if x['root']==d['root'] else x for x in rows]
     for replacement in sorted(ops.EVIDENCE.glob('LS_FAST_DISPATCH_'+host+'_*.json'),key=lambda p:read(p)['unix']):
         d=read(replacement);rows=[d if x['root']==d['root'] else x for x in rows]
+    for replacement in sorted(ops.EVIDENCE.glob('LS_NICHENULL_DISPATCH_'+host+'_*.json'),key=lambda p:read(p)['unix']):
+        d=read(replacement);rows=[d if x['root']==d['root'] else x for x in rows]
     out=remote(host,f'''from pathlib import Path
 import json,time,subprocess
 workers=[]
@@ -280,7 +282,7 @@ def status():
 import json,time,os,shutil
 c=Path({COLLECTION!r});r=Path({ROOT!r});v=dict(unix=time.time(),owners={{}},disk_free=shutil.disk_usage(c).free,load=os.getloadavg(),training_paused=all(not (r/(a+'_checkpoint_004.pt')).exists() for a in ('B','R')))
 for name in ('BROKER','SUPERVISOR'):
- suffix=next(s for s in ('_FASTK2V2','_FASTK2','_SUMOFOCUS1','_SUMODISK1','_SUMOENV1','_VALIDITY1') if (c/(name+'_DISPATCH'+s+'.json')).exists())
+ suffix=next(s for s in ('_NICHENULL1','_FASTK2V2','_FASTK2','_SUMOFOCUS1','_SUMODISK1','_SUMOENV1','_VALIDITY1') if (c/(name+'_DISPATCH'+s+'.json')).exists())
  d=json.loads((c/(name+'_DISPATCH'+suffix+'.json')).read_text());p=Path('/proc',str(d['pid']));st=(p/'stat').read_text().split() if p.exists() else None
  assert not st or st[21]==d['start_ticks']
  v['owners'][name]=dict(d,state=st[2] if st else 'exited',log_tail=(c/(name+suffix+'.log')).read_text()[-1800:])
@@ -419,13 +421,35 @@ def throughput():
         burn_contract='full precharges including retained failures; not actual executed sim seconds',
         actual_sim_s_per_hour=None,training_paused=v['training_paused'])
     extra=json.loads(remote('cpuQ',f'''from pathlib import Path
-import json
+import json,sys
+sys.path.insert(0,{SOURCE!r}+'/pytools')
 c=Path({COLLECTION!r});labels=[json.loads(p.read_text()) for p in (c/'labels').glob('*.json')]
 positive=[x for x in labels if x['verification']['status']=='accepted' and (x['verification'].get('grade_veh_s') or 0)>0]
 recent=[x for x in positive if {before['unix']!r}<x['verification']['timing']['finished_unix']<={v['unix']!r}]
-print(json.dumps(dict(positive_lists=len(positive),positives_per_hour=len(recent)/{hours!r} if {hours!r} else None,positive_contract='exact-positive verified best-of-eight B lists; R collection not active')))
+from tools.coopmwm.exact_grade import _bootstrap_mean
+variation={{}}
+requests={{p.stem:json.loads(p.read_text()).get('search_config',{{}}).get('niches') for p in (c/'requests').glob('*.json')}}
+for mode in (1,4):
+ xs=[x for x in labels if x.get('variation',{{}}).get('niches')==mode and x['verification']['status'] in ('accepted','rejected')]
+ values=[x['verification']['best_margin_veh_s'] for x in xs]
+ mean,ci=_bootstrap_mean(values,[x['world_id'] for x in xs],10000,20261101) if xs else (None,None)
+ distances=[x['variation']['mean_pairwise_distance'] for x in xs if x['variation']['mean_pairwise_distance'] is not None]
+ keys=[k for k,m in requests.items() if m==mode]
+ completed=[json.loads((c/'broker_completed'/(k+'.json')).read_text()) for k in keys if (c/'broker_completed'/(k+'.json')).exists()]
+ walls=[x['inference_wall_s'] for x in completed if x.get('inference_wall_s') is not None]
+ variation[str(mode)]=dict(verified_lists=len(xs),worlds=sorted({{x['world_id'] for x in xs}}),
+  requested=len(keys),responses_received=sum((Path({ROOT!r})/'responses'/(k+'.json')).exists() for k in keys),
+  label_failures=sum((c/'label_failures'/(k+'.json')).exists() for k in keys),
+  search_wall_s_mean=sum(walls)/len(walls) if walls else None,
+  best_sumo_margin_mean_veh_s=mean,world_bootstrap_ci95=ci,
+  mean_top8_pairwise_distance=sum(distances)/len(distances) if distances else None)
+print(json.dumps(dict(positive_lists=len(positive),positives_per_hour=len(recent)/{hours!r} if {hours!r} else None,positive_contract='exact-positive verified best-of-eight B lists; R collection not active',VARIATION=variation)))
 '''))
     out.update(extra)
+    from .ls_label_ops import variation
+    with contextlib.redirect_stdout(io.StringIO()):null_diversity=variation()
+    out['NULL_DIVERSITY_BY_CONFIG']=null_diversity['cohorts']
+    out['null_diversity_receipt']='NULL_DIVERSITY_BY_CONFIG.json'
     samples={h:[] for h in ('gpuA','gpuR')}
     for h in samples:
         for p in ops.EVIDENCE.glob('LS_VALIDITY_GPU_'+h+'_*.json'):
@@ -525,7 +549,7 @@ def focus_watch_dispatch():
 def fast_watch_dispatch(generation=7):
     """Observe rolling successors by exact owner identity; never launch inference."""
     import psutil,subprocess,sys,time
-    assert generation in (7,8,9,10)
+    assert generation in (7,8,9,10,11)
     p=ops.EVIDENCE/f'LS_VALIDITY_OBSERVER_DISPATCH_V{generation}.json'
     if p.exists():print(json.dumps(read(p)));return
     assert (ops.EVIDENCE/'LS_FAST_BROKER_DISPATCH_V2.json').exists()
@@ -557,6 +581,11 @@ def qualified_watch_dispatch():
     fast_watch_dispatch(10)
 
 
+def niche_watch_dispatch():
+    assert (ops.EVIDENCE/'LS_NICHENULL_BROKER_DISPATCH.json').exists()
+    fast_watch_dispatch(11)
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=['qualify','cpu_result','register','gpu','gpu_status','cpu','admit','status','watch','watch_dispatch','focus_watch_dispatch','fast_watch_dispatch','bank_watch_dispatch','roll_watch_dispatch','qualified_watch_dispatch','cap_register','throughput','support','recover_secondary','recover_primary']);p.add_argument('--host',choices=['gpuA','gpuR'])
+    p=argparse.ArgumentParser();p.add_argument('action',choices=['qualify','cpu_result','register','gpu','gpu_status','cpu','admit','status','watch','watch_dispatch','focus_watch_dispatch','fast_watch_dispatch','bank_watch_dispatch','roll_watch_dispatch','qualified_watch_dispatch','niche_watch_dispatch','cap_register','throughput','support','recover_secondary','recover_primary']);p.add_argument('--host',choices=['gpuA','gpuR'])
     a=p.parse_args();globals()[a.action](a.host) if a.action in ('gpu','gpu_status','support') else globals()[a.action]()

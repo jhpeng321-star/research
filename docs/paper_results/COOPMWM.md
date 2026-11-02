@@ -1,5 +1,21 @@
 # S-COOPMWM — live checks
 
+## Nov3 06:03 UTC+8 — bank refresh and explicit null/diversity cohorts
+- Bank owner2388293 remains alive: **25 confirmed /6 admitted /3 cooperative**,
+  zero pending/incomplete. Old-rule disclosure:4 admitted/12 safety rejected.
+  Mean admitted replicated advantage711.063 veh-s, decision-bootstrap95% CI
+  [72.149,1806.164]; conditional bank descriptives, not policy-learning evidence.
+- Saved-label-only report `NULL_DIVERSITY_BY_CONFIG.json`: before joint release,
+  **14/53 complete eight-candidate lists are exact delay-null (26.42%)**. Neither
+  niches1 nor niches4 has post-release labels yet, so their null/diversity values
+  are explicitly unobserved. Historical labels lack diversity measurements.
+- Partial/slate-skipped decisions are counted separately and cannot dilute the
+  complete-eight null denominator. No trajectory-equivalence claim follows from
+  exact delay equality. Command mirror remains OFF after its retained failed gate.
+- Twelve targeted reporting/ownership/rollout tests PASS (0.53s). New observer
+ 7664 replaces only creation/argv-verified8472 and publishes the per-config report
+  hourly. Existing bank, collection and GPU owners are retained. B/R remainu3.
+
 ## Nov3 05:49:23 UTC+8 — complete dependency smoke and fresh worker generation
 - PATH2 also exited before gates: `ls_fast_worker` had existed only in the old
   overlay and was missing from the new package. Both failed owners/logs remain.
