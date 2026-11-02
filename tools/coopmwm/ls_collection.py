@@ -141,6 +141,8 @@ def supervise(root):
     root=Path(root);config=json.loads((root/'LS_COLLECT_BINDING.json').read_text())
     if (root/'LS_RECOVERY_CONFIG.json').exists():
         config.update(json.loads((root/'LS_RECOVERY_CONFIG.json').read_text()))
+    if (root/'LS_VALIDITY_CONFIG.json').exists():
+        config.update(json.loads((root/'LS_VALIDITY_CONFIG.json').read_text()))
     main=Path(config['run_root']);install_accounting(main,config['budget'])
     with (root/'SUPERVISOR.claim').open('a') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
@@ -198,7 +200,9 @@ def supervise(root):
                     counts={}
                     for k in admitted:
                         w=pending[k]['world_id'];counts[w]=counts.get(w,0)+1
+                    from .ls_validity import feasible
                     todo=[e for k,e in pending.items() if k not in admitted and
+                        (not config.get('arrival_admission') or feasible(e['time_s'],config['arrival_admission'])) and
                         (Path(e['episode_path'])/'RESULT.json').exists()]
                     for _ in range(min(8-len(inflight),config['max_searches']-len(admitted),len(todo))):
                         e=min(todo,key=lambda e:coverage_order(e,counts));todo.remove(e)
@@ -229,6 +233,7 @@ def supervise(root):
                         grading[key]=grades.submit(label,root,envelope,response,config)
                 now=time.time()
                 if now-last_status>=30:
+                    from .ls_validity import exclusion_counts
                     labels=[json.loads(p.read_text()) for p in (root/'labels').glob('*.json')]
                     v=dict(unix=now,start_unix=started,episodes_completed=sum(f.done() for f in episodes)+len(jobs)-len(episodes),
                         snapshot_queries=len(pending),searches_requested=len(admitted),searches_finished=len(answered),
@@ -238,7 +243,9 @@ def supervise(root):
                         verified_lists=len(labels),label_failures=len(list((root/'label_failures').glob('*.json'))),
                         verification_statuses=[x['verification']['status'] for x in labels],grading_inflight=len(grading),
                         charged_collection_sim_s=sum(c['sim_s'] for c in ledger(main) if c['id'].startswith(('lscollect1_','lslabel_'))),
-                        budget_capacity_searches=config['max_searches'],training_paused=True,mirror_active=False)
+                        budget_capacity_searches=config['max_searches'],training_paused=True,mirror_active=False,
+                        arrival_admission=config.get('arrival_admission'),
+                        excluded_by_time_bucket=exclusion_counts(pending,config['arrival_admission']) if config.get('arrival_admission') else {})
                     tmp=root/'LS_COLLECT_STATUS.publishing'
                     with tmp.open('w') as f:json.dump(v,f)
                     os.replace(tmp,root/'LS_COLLECT_STATUS.json');print(json.dumps(v),flush=True);last_status=now

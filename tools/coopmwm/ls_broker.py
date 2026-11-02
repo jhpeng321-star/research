@@ -19,6 +19,8 @@ def owner_matches(status,expected):
 def run(root):
     import fcntl,signal
     root=Path(root);cfg=json.loads((root/'LS_RECOVERY_CONFIG.json').read_text())
+    if (root/'LS_VALIDITY_CONFIG.json').exists():
+        cfg.update(json.loads((root/'LS_VALIDITY_CONFIG.json').read_text()))
     main=Path(cfg['run_root']);suffix=cfg['receipt_suffix']
     lock=(root/'BROKER.claim').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     signal.signal(signal.SIGHUP,signal.SIG_IGN)

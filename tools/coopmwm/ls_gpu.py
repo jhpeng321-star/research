@@ -39,10 +39,13 @@ def capture_search(search,label_list8=False):
     return wrapped
 
 
-def run(root,old,deadline,amendment,recover=False):
+def run(root,old,deadline,amendment,recover=False,generation=None,overlay=None):
     import os,sys,time,json,signal,hashlib,fcntl
     from pathlib import Path
     root=Path(root);sys.path.insert(0,str(root/'pytools'))
+    if overlay:
+        import tools.coopmwm
+        tools.coopmwm.__path__.insert(0,str(Path(overlay)))
     from tools.coopmwm.warm_spool import immutable,SpoolInput
     def owned():
         boot=Path('/proc/sys/kernel/random/boot_id').read_text().strip()
@@ -82,7 +85,7 @@ def run(root,old,deadline,amendment,recover=False):
         os.replace(tmp,p)
     owner=dict(pid=os.getpid(),start_ticks=Path('/proc/self/stat').read_text().split()[21],boot_id=old['boot_id'],unix=time.time(),new_sumo_sim_s=0)
     replace(root/'SPOOL_OWNER.json',owner)
-    suffix='_RECOVERY1' if recover else ''
+    suffix=generation or ('_RECOVERY1' if recover else '')
     immutable(root/('LS_GPU_RESTART'+suffix+'.json'),dict(old=old,new=owner,amendment_sha256=amendment,inference_replayed=False))
     signal.signal(signal.SIGHUP,signal.SIG_IGN);sys.stdin=SpoolInput(root,deadline)
     from tools.coopmwm import warm_service,plan_service,mppi_search,plans
@@ -91,8 +94,13 @@ def run(root,old,deadline,amendment,recover=False):
     plans.family_seeds=lambda rows,group,*a,**kw:[] if len(group) not in (2,3) else families(rows,group,*a,**kw)
     mppi_search.search=capture_search(mppi_search.search,label_list8=True)
     binding=dict(binding,deadline_unix=deadline,gpu_deadline=deadline)
-    binding['adopted_startup_gates']=dict(receipts={n:hashlib.sha256((root/n).read_bytes()).hexdigest() for n in warm_service.ADOPTABLE},
-        numerical_hashes={n:binding['hashes'][n] for n in warm_service.NUMERICAL})
+    if not generation:
+        binding['adopted_startup_gates']=dict(receipts={n:hashlib.sha256((root/n).read_bytes()).hexdigest() for n in warm_service.ADOPTABLE},
+            numerical_hashes={n:binding['hashes'][n] for n in warm_service.NUMERICAL})
+    else:
+        # A new per-query error boundary requires ALL eight fresh gates.
+        # Overlay SHA is registered separately; immutable original sources stay intact.
+        binding.pop('adopted_startup_gates',None)
     previous=plan_service.read
     warm_service.read=plan_service.read=lambda p:binding if p==root/'GPU_BINDING.json' else previous(p)
     exclusive=plan_service.write
