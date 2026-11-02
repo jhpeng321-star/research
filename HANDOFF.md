@@ -16,10 +16,9 @@ No inference/fitting/remote dispatch. Keep-right qualification remains unresolve
   preserved. Local clock is already beyond the November 1 09:00 continuation
   deadline. Observer completion records zero new publications; exact local
   PID3316 is absent on the November 2 check. No observer restart is required.
-- FIT has since published `lane_raw_5a5b15ef118c` at November 2 09:04:39+08.
-  Consume its verified counts/source binding next; this is a later publication,
-  not a result available to the closed overnight observer. Existing panels14–16
-  and their per-motivation scores remain the primary LANE results.
+- Consumed FIT's `lane_raw_5a5b15ef118c` publication (November 2 09:04:39+08):
+  all three physical-source hashes match the current worktree. Receipt below.
+  Existing panels14–16 and their per-motivation scores remain primary.
 
 ## Integration contract
 - `ModelSpec(lane_model="lc2013",lane_head="off",merge_decision="hazard")`.
@@ -58,17 +57,19 @@ No inference/fitting/remote dispatch. Keep-right qualification remains unresolve
   Actual motivation labels absent; contributions use all recorded events.
   Historical MOBIL1.4% has a different panel/contract.
 
-### Newly consumed FIT LC result (separate frozen source, not adopted)
-- Reused completed `lane_raw_c5602102891e` verified32native-world counts; no
-  fitter, model inference or dispatch. Posterior435.844 expected positive steps,
-  60.852 exact directed matches/626events: ratio-of-expectations precision13.962%,
-  recall9.721%. Same-cache source-default262/12382:2.116%/41.853%.
-- This is a precision/recall tradeoff, not solved lane behaviour. Its source
-  SHA1bb1c761 differs from current; pooled IDM/settings also differ from above.
-  EventBrier alone obscures the missed events. Learned population puts94.256%
-  mass atlcKeepRight0; this was inferred upstream, not hand-disabled by LANE.
-- Exact provenance/checksums/world-sum arithmetic in `FIT_RAW_C560_PRECISION.json`.
+### Latest verified FIT LC result (current source, not adopted)
+- Reused completed `lane_raw_5a5b15ef118c` verified32native-world counts; no
+  fitter, model inference or dispatch. Posterior435.655 expected positive steps,
+  60.983 exact directed matches/626events: ratio-of-expectations precision13.998%,
+  recall9.742%. Same-cache source-default263/12383:2.124%/42.013%.
+- Source hashes for LC/geometry/config all MATCH current; pooled IDM/settings
+  and native-only contract differ from the primary panels above. This remains
+  a precision/recall tradeoff; EventBrier obscures the missed~90% of events.
+  Learned population puts94.549% mass atlcKeepRight0, inferred upstream.
+- `FIT_RAW_5A5B_PRECISION_20261102.json` pins checksums/world-sum arithmetic.
   Motivation counts absent upstream; do not invent them or replace panels14–16.
+  Earlier different-source13.962%/9.721% receipt `FIT_RAW_C560_PRECISION.json`
+  is retained separately. No qualification or mixture adoption is claimed.
 
 ## Engineering proofs / receipts
 - **69 targeted CPU tests PASS**, CPU_URGENCY_MESSAGES.xml. Three default-OFF
