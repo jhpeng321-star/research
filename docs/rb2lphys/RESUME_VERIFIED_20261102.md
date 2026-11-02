@@ -27,3 +27,23 @@
 - Final integrated comparison, replicated-stratum CIs and teacher authorization
   remain with S-RB2-INT. Worker report remains 37 lines at
   `docs/paper_results/RB2_LPHYS.md`; complete before/after CSV remains in `comparison/`.
+
+## Subsequent recovery from d6292802
+
+- Clean branch/worktree and prior delivery commits preserved. Re-read original
+  INT morning/handoff/noon publication and worker report/results/QA/audit/table.
+- Fresh artifact/archive lineage verifier PASS, without fitting or inference:
+  `C:/Users/jpeng/Miniconda3/python.exe -B -m tools.rb2lphys.verify_delivery --out E:/Temp/opencode/rb2lphys_resume_d6292802_audit.json`.
+  Canonical parameter SHA256 and all evaluated-source equivalences are unchanged.
+- New coordination fact from INT's `docs/rb2int/RECOVERY_20261102_1020.md`:
+  the bounded collector25240/publisher23664 EXITED INCOMPLETE at deadline;
+  31/216 new jobs collected, 185 unadmitted, twelve matched v5/v4 worlds.
+  Its read-only audit records zero active INT evaluations and preserved gpuA514854
+  in stateT. These are INT's recorded observations, not a new worker process audit.
+- MAIN's admission/resource hold remains recorded; no explicit INT RESUME release
+  was found by INT. No replacement, standby restart or PID action is authorized
+  by this recovery. Frozen sourceb2df7458/recipes remain engineering READY only.
+- Final four-model gate is still NOT ESTABLISHED. Preserve the completed LP
+  development ablation and default-OFF recommendation; no refit after exposure.
+- This recovery changes only worker coordination receipts. No new data exposure,
+  fitting, scoring, inference, dispatch, signals or peer-file changes occurred.
