@@ -17,6 +17,24 @@ from .warm_health import assert_running
 from . import quota_admission as quota
 
 
+def _checked(value,r):
+    if value['record_sha256']!=digest(r):raise ValueError('parallel plan response identity mismatch')
+    if value['accepted'] and value['plan']['members']!=r['group']:
+        raise ValueError('parallel plan response group mismatch')
+    return value
+
+
+def withdraw(root,record,job_id):
+    """Client-side marker: this decision no longer needs the request.
+
+    Infrastructure-only (never a forecast). The broker may decline it while no
+    worker holds it; an already assigned search still finishes once, unchanged.
+    """
+    folder=Path(root)/'request_withdrawals';folder.mkdir(exist_ok=True)
+    immutable(folder/(record['state_id']+'.json'),dict(state_id=record['state_id'],
+        record_sha256=digest(record),job=job_id,reason='decided by earlier accepted group in inherited order'))
+
+
 def query(job,generator,history,rows,commands,now,sample,groups,traffic,workers):
     root=Path(job['queue_root'])
     pending=sum(not (root/'responses'/p.name).exists() for p in (root/'requests').glob('*.json'))
@@ -43,29 +61,42 @@ def query(job,generator,history,rows,commands,now,sample,groups,traffic,workers)
     quota.bind_group_batch(reservation,records)
     start=time.monotonic()
     for r in records:immutable(root/'requests'/(r['state_id']+'.json'),r)
-    results=[]
-    for r in records:
+    # HARDEN-3: wait in inherited group order and STOP at the first accepted
+    # response. The selection rule is unchanged (first accepted in inherited
+    # order), but the episode no longer idles until EVERY group of the batch is
+    # answered: before this fix an accepted response could not reach the
+    # blocking SUMO verification while later groups were still queued behind
+    # other episodes' searches (B u4 17:10-18:33 stall). Later groups that are
+    # already answered are recorded as before; unanswered ones are recorded as
+    # pending and WITHDRAWN so the broker may decline them while unassigned.
+    results=[None]*len(records);selected=None
+    for i,r in enumerate(records):
         response=root/'responses'/(r['state_id']+'.json')
         while not response.exists():
             assert_running(root,job['arm'])
             if time.time()>job['gpu_deadline']:raise ValueError('registered GPU deadline exceeded')
             time.sleep(.5)
-        value=read(response)
-        if value['record_sha256']!=digest(r):raise ValueError('parallel plan response identity mismatch')
-        if value['accepted'] and value['plan']['members']!=r['group']:
-            raise ValueError('parallel plan response group mismatch')
-        results.append(value)
-    selected=next((i for i,v in enumerate(results) if v['accepted']),0)
+        results[i]=_checked(read(response),r)
+        if results[i]['accepted']:selected=i;break
+    withdrawn=[]
+    for i,r in enumerate(records):
+        if results[i] is not None:continue
+        response=root/'responses'/(r['state_id']+'.json')
+        if response.exists():results[i]=_checked(read(response),r);continue
+        withdraw(root,r,job['id'])
+        withdrawn.append(r['state_id'])
+        results[i]=dict(accepted=None,pending=True,withdrawn=True,candidates_searched=0,imagined_futures=0)
+    if selected is None:selected=0
     result=copy.deepcopy(results[selected]);r=records[selected]
     summaries=[dict(state_id=q['state_id'],record_sha256=digest(q),members=q['group'],
-        accepted=v['accepted'],selected=i==selected and v['accepted'],
+        accepted=v['accepted'],selected=i==selected and bool(v['accepted']),pending=bool(v.get('pending')),
         expected_saving=v.get('expected_saving'),candidates_searched=v.get('candidates_searched',0),
         imagined_futures=v.get('imagined_futures',0)) for i,(q,v) in enumerate(zip(records,results))]
     result.update(query_wall_s=time.monotonic()-start,quota_reservation=reservation,
         parallel_queries=summaries,parallel_selection='first accepted in inherited group order; one start per tick')
     b.update(queried_option=result.get('option'),proposal_accepted=result['accepted'],
         query_wall_s=result['query_wall_s'],parallel_query_counts=dict(queries=len(results),
-            accepted=sum(v['accepted'] for v in results),candidates_searched=sum(v.get('candidates_searched') or 0 for v in results)))
+            accepted=sum(bool(v['accepted']) for v in results),withdrawn_pending=len(withdrawn),candidates_searched=sum(v.get('candidates_searched') or 0 for v in results)))
     if result['accepted']:
         result['history']=r['history']
         b.update(option=result['option'],proposal_members=result['plan']['members'],

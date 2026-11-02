@@ -81,12 +81,43 @@ def pending(root):
                 if time.time()-p.stat().st_mtime<30:continue
                 raise
             items.append((kind,record))
+    order=batch_order(root)
+    # HARDEN-3: within the same (dense-first, sim-time) priority, keep each
+    # episode's parallel batch contiguous and in its inherited group order.
+    # The previous hash (state_id) tie-break interleaved the 4-6 group queries
+    # of ~10 episodes that all reach t%10==0 at the same sim time, so no
+    # episode received its first-in-order answer until most of the whole
+    # queue was searched (all SUMO episodes idle meanwhile).
     items.sort(key=lambda v:(v[0]=='centre',v[1].get('mode')=='diagnostic',
-        regime(v[1]['rows'])!='merge-dense',v[1]['time_s'],v[1]['state_id']))
+        regime(v[1]['rows'])!='merge-dense',v[1]['time_s'])+order.get(v[1]['state_id'],(float('inf'),0))+(v[1]['state_id'],))
     return items
 
 
-def capacity_declines(items,assigned,slots,blocking=(),drain=False):
+_BATCH_CACHE={}
+
+
+def batch_order(root):
+    """state_id -> (reservation unix, inherited index) from immutable quota receipts."""
+    out={}
+    for p in Path(root).glob('quota_requests/u*/*_REQUEST.json'):
+        key=str(p)
+        if key not in _BATCH_CACHE:
+            try:
+                value=json.loads(p.read_text())
+                reserve=json.loads(p.with_name(p.name.replace('_REQUEST','_RESERVE')).read_text())
+            except (OSError,json.JSONDecodeError):continue
+            _BATCH_CACHE[key]={r['state_id']:(reserve.get('unix',0.),i)
+                for i,r in enumerate(value.get('records',[value]))}
+        out.update(_BATCH_CACHE[key])
+    return out
+
+
+def withdrawn(root):
+    folder=Path(root)/'request_withdrawals'
+    return {p.stem for p in folder.glob('*.json')} if folder.is_dir() else set()
+
+
+def capacity_declines(items,assigned,slots,blocking=(),drain=False,withdrawn=()):
     """Keep enough unassigned requests for free slots; preserve ALL old claims."""
     busy={assigned[r['state_id']]['slot'] for _,r in items if r['state_id'] in assigned}
     free=max(0,len(set(slots)-busy));declines=[]
@@ -94,7 +125,9 @@ def capacity_declines(items,assigned,slots,blocking=(),drain=False):
         if r['state_id'] in assigned:continue
         # Diagnostic/centre requests wait, never become fabricated model outputs.
         if kind!='plan' or r.get('mode')=='diagnostic':continue
-        if drain:
+        # HARDEN-3: the requesting decision is already resolved (an earlier
+        # inherited-order group was accepted); never spend a slot on it.
+        if drain or r['state_id'] in withdrawn:
             declines.append(r);continue
         # MAIN05:48 quota reservations wait for real inference even while all
         # slots are occupied; they are never fabricated capacity declines.
@@ -106,13 +139,15 @@ def capacity_declines(items,assigned,slots,blocking=(),drain=False):
     return declines,busy
 
 
-def decline(root,record,slots,busy,amendment,drain=False):
+def decline(root,record,slots,busy,amendment,drain=False,withdrawn=False):
     key=record['state_id']
     admission=dict(stage='live broker boundary',available=False,
-        wm_admission_probability=0.,capacity_predicate=('registered old-wave boundary drain; existing assigned searches finish once' if drain else 'all registered slots occupied or reserved by earlier requests'),
+        wm_admission_probability=0.,capacity_predicate=('registered old-wave boundary drain; existing assigned searches finish once' if drain else
+            'client withdrew: decision already resolved by an earlier inherited-order group' if withdrawn else 'all registered slots occupied or reserved by earlier requests'),
         slots=sorted(slots),busy_slots=sorted(busy),amendment_sha256=amendment,
         legacy_query_probability_unchanged=True,unix=time.time())
-    result=dict(accepted=False,reason='boundary drain; policy continues' if drain else 'capacity unavailable; policy continues',
+    result=dict(accepted=False,reason='boundary drain; policy continues' if drain else
+        'withdrawn by client; decision already resolved' if withdrawn else 'capacity unavailable; policy continues',
         record_sha256=digest(record),query_admission=admission,
         candidates_searched=0,imagined_futures=0)
     immutable(root/'capacity_declines'/(key+'.json'),dict(key=key,**admission))
@@ -185,6 +220,9 @@ def run(root,config_path):
                     # this slot, even when the new request is dense/preferred.
                     assigned_items=[v for v in items if (assignments/(v[1]['state_id']+'.json')).exists()]
                     new_items=[v for v in items if not (assignments/(v[1]['state_id']+'.json')).exists()]
+                    if config.get('decline_withdrawn',True):
+                        gone=withdrawn(root)
+                        new_items=[v for v in new_items if v[0]!='plan' or v[1]['state_id'] not in gone]
                     if drain_active(root,config):
                         new_items=[v for v in new_items if v[0]!='plan' or v[1].get('mode')=='diagnostic']
                     new_items=new_item_order(new_items,last_kind,config.get('pipeline_centre_fairness',False))
@@ -247,8 +285,9 @@ def run(root,config_path):
                 blocking={p.stem for p in (root/'quota_admissions').glob('*.json')
                     if json.loads(p.read_text()).get('blocking')}
                 drain=drain_active(root,config)
-                declines,busy=capacity_declines(items,assigned,endpoints,blocking,drain)
-                for r in declines:decline(root,r,endpoints,busy,config['amendment_sha256'],drain)
+                gone=withdrawn(root) if config.get('decline_withdrawn',True) else set()
+                declines,busy=capacity_declines(items,assigned,endpoints,blocking,drain,gone)
+                for r in declines:decline(root,r,endpoints,busy,config['amendment_sha256'],drain,r['state_id'] in gone)
                 slots=tuple(sorted(endpoints))
                 if slots!=last_slots:
                     # Existing live clients dynamically read this file; truthful
