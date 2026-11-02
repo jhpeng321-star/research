@@ -1,5 +1,29 @@
 # S-COOPMWM — live checks
 
+## MAIN21:27/21:29 — arrival-phase recovery deployed
+- All four recovery workers exited on the same fitted-arrival-bound error. The
+  observable-arrival artifact ends at **1200 s**; an interrupted request at t860
+  plus H420 exceeded that phase. Original failure receipts and claims are retained.
+- Registered amendment **f89fe3bf…** derives admission from the model metadata:
+  **t0 ≤ 780 s**, with unchanged **K4/H300 screen, K8/H420 maximum final**.
+  No look-ahead reduction. Late snapshots remain stored; exclusions by 100 s
+  time bucket: 700→255, 800→2443, 900→233.
+- Frozen `lsvalidcpu3`: **218 CPU PASS, zero skips, 42.672 s, zero sim-s**.
+  Per-query validation/arrival-bound/OOM errors decline with tracebacks; named
+  safety/physics/accounting/parity invariants remain fatal.
+- All **72 completed episodes / 14,534 snapshots** adopted. Seven invalid or
+  interrupted admissions are terminal declines, never inference retries; their
+  charges remain. One valid unassigned request is retained.
+- CPU broker/supervisor **1485244/1485245** are durable. New GPU owners
+  **7429/7430 (gpuA), 491842/491843 (gpuR)** are running **eight fresh gates each**
+  before admission. Original numerical files and bindings remain unchanged;
+  the error-boundary overlay is separately SHA-registered.
+- At unix1793629401: **0 actual finished searches / 0 gold lists**. The legacy
+  raw response count of seven consists of terminal declines. The new observer
+  distinguishes those counts and will publish the first genuine full-pool response.
+- **A48/B3/R3 retained; no u4 PPO update.** B-REPLAY remains inactive pending its
+  delegated integration and the registered bank-entry prerequisite.
+
 ## LS-COLLECT engineering recovery — frozen B-u3, training paused
 - Fresh session read **all 485 brief lines**, adopted commit `341e9417` and prior
   uncommitted work. The latest MAIN18:58/19:12/19:56 collection order is active.

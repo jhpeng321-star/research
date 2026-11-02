@@ -1,4 +1,32 @@
-# S-COOPMWM continuation — MAIN19:12 pause confirmed
+# S-COOPMWM continuation — MAIN21:29 collection recovery
+
+Freshresume read ALL518brief lines. Original warm/u0/library qualifications adopted;
+latest21:29 ONLY restore collection, B-REPLAY integration delegated/notactive.
+Inherited harden-int15542a51 merge resolvedbyprioragent, preserved6ba4c419;
+WindowsnoTorch/replaycpu1testselectionmissingfile failures retained, noactivation.
+ALLFOUR lsrecovery GPUowners died on arrivalphase boundary (not justgpuR):
+fitobserved_phase_end_s1200, originalinterruptedqueryt860+420=1280. NEVERreplay.
+NEW lsvalidcpu3 218CPU PASS0skips42.672s/zeroSUMO; original205CPUqualification
+adopted. Failedcpu2oldtestexpectation retained; correctedtestmatchesMAINperquery
+declineauthority. Registrationf89fe3bfe9c5b1c229cac91081aea93477aaebe568126b18acead688e34c567a.
+Admission t0<=780 derivedfromartifactSHA; SAMEscreenK4H300/finalK8H420 worstcase,
+nohorizoncut. Excludedcounts700bucket255/800bucket2443/900bucket233; snapshotskept.
+NEWCPUmetadataowners1485244/1485245/start64300803/4 since1793628730. Onlyoriginal
+receiptverifiedmetadataownersTERM; episodejob/GPU/final/graderPIDsnotsignalled.
+SEVENinvalid/interruptedadmissions terminaldeclined(noqueryreplay/chargesretained);
+onevalidunassignedkept. Existing72episodes/14534snapshotsADOPTED. 15requests,
+ZEROactualsuccessfulsearches at1793629401 (raw7finishedcountsdeclines;donotmisreport).
+FourGPUfresh8gatequalifiers launchedONCE A7429/7430 R491842/491843;
+LS_VALIDITY_GPU_DISPATCH_gpuA/gpuR.json adopt, NEVERredispatch. OriginalGPUfiles/
+bindingskept; SHAregisteredplan_service/query_errorsoverlay only, ALL8freshgates.
+CPUbrokerwaitsNEWqualifiedendpoints. Localobserve-only34636dispatched1793629346;
+retired16664verifiedcreation+argvbeforeTERM. NewwatcherONLYobserves/publishes/
+admitsalreadydispatched8gateREADYslots; cannotlaunchphysics/training/workers.
+Use `python -X utf8 -m tools.coopmwm.ls_validity_ops status` andgpu_status FIRST.
+WatchautomaticallyadmitsreadyslotsandwritesLS_FIRST_SEARCH_VALIDITY1.json onfirst
+actualfullpoolresponse; doNOTmistake7terminaldeclinesforsearches. Needfirstfinished
+searchandexactk8labels; currentcap11900000/LSenvelopeunchanged, trainingB/Ru3.
+GPUgatecommandmirroralreadyFAILED/OFF; noregateoractivation. No sealedpathsopened.
 
 FRESH RESUME through ALL485 prompt lines (latest MAIN19:56): B/R remainu3,
 NOtrainingresume. Adopted 341e9417 + uncommitted work. LS-COLLECT episodes

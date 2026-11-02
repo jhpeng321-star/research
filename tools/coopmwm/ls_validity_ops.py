@@ -185,7 +185,7 @@ cfg=dict(run_root=str(r),source_root=str(s),cpu=reg['cpu'],amendment_sha256={h!r
 immutable(c/'LS_VALIDITY_CONFIG.json',cfg)
 registered=c/'LS_VALIDITY_REGISTERED.json'
 if not registered.exists():
- with (r/'AUTHORITY.md').open('a') as f:f.write(reg['line']+'amendmentSHA'+{h!r}+'\n')
+ with (r/'AUTHORITY.md').open('a') as f:f.write(reg['line']+'amendmentSHA'+{h!r}+chr(10))
  immutable(registered,dict(amendment_sha256={h!r},unix=time.time()))
 boot=Path('/proc/sys/kernel/random/boot_id').read_text().strip()
 for component,module in (('BROKER','ls_broker'),('SUPERVISOR','ls_collection')):
@@ -284,6 +284,57 @@ print(json.dumps(v))''')
     print(out);return v
 
 
+def watch():
+    """Only observe/publish and admit these already-dispatched gated owners."""
+    import contextlib,io,msvcrt,os,time
+    lock=(ops.EVIDENCE/'LS_VALIDITY_OBSERVER.claim').open('a+b');lock.seek(0)
+    if not lock.read(1):lock.write(b'1');lock.flush()
+    lock.seek(0);msvcrt.locking(lock.fileno(),msvcrt.LK_NBLCK,1)
+    admitted=set();last_publish=0
+    while time.time()<1793894340.:
+        try:
+            with contextlib.redirect_stdout(io.StringIO()):
+                gpus={h:gpu_status(h) for h in ('gpuA','gpuR')}
+                ready={w['owner']['root'] for g in gpus.values() for w in g['workers'] if w['ready']}
+                if ready and ready!=admitted:admit();admitted=ready
+                cpu=status()
+            assert cpu['training_paused'],'observer cannot resume training'
+            now=time.time()
+            print(json.dumps(dict(unix=now,ready_slots=len(ready),successful_searches=cpu['successful_searches'],
+                verified_lists=cpu['collection']['verified_lists'],owners={n:d['state'] for n,d in cpu['owners'].items()})),flush=True)
+            if now-last_publish>=1800 or (cpu['successful_searches'] and not (ops.EVIDENCE/'LS_FIRST_SEARCH_VALIDITY1.json').exists()):
+                v=dict(cpu['collection'],observed_unix=now,owners=cpu['owners'],gpu=gpus,
+                    responses_received=cpu['collection']['searches_finished'],searches_finished=cpu['successful_searches'],
+                    terminal_declines=cpu['terminal_declines'],broker_completed=cpu['broker_completed'],
+                    first_searches=cpu['first_searches'],no_training_resume=True,
+                    gpu_busy_share_contract='point-in-time nvidia-smi samples; not exact duty cycle')
+                target=ops.EVIDENCE/'LS_COLLECT_STATUS.json';tmp=target.with_suffix('.validitypublishing')
+                with tmp.open('w',encoding='utf-8') as f:json.dump(v,f,sort_keys=True);f.flush();os.fsync(f.fileno())
+                os.replace(tmp,target)
+                write(ops.EVIDENCE/f'LS_VALIDITY_PUBLISH_{int(now)}.json',v)
+                if cpu['successful_searches'] and not (ops.EVIDENCE/'LS_FIRST_SEARCH_VALIDITY1.json').exists():
+                    write(ops.EVIDENCE/'LS_FIRST_SEARCH_VALIDITY1.json',v)
+                last_publish=now
+        except Exception as error:
+            write(ops.EVIDENCE/f'LS_VALIDITY_OBSERVER_ERROR_{time.time_ns()}.json',dict(unix=time.time(),error=repr(error),remote_owners_untouched=True))
+            print('ALERT '+repr(error),flush=True)
+        time.sleep(60)
+
+
+def watch_dispatch():
+    import subprocess,sys,time
+    p=ops.EVIDENCE/'LS_VALIDITY_OBSERVER_DISPATCH.json'
+    if p.exists():print(json.dumps(read(p)));return
+    with (ops.EVIDENCE/'LS_VALIDITY_OBSERVER.log').open('x',encoding='utf-8') as log:
+        child=subprocess.Popen([sys.executable,'-X','utf8','-u','-m','tools.coopmwm.ls_validity_ops','watch'],
+            cwd=ops.LOCAL,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+    d=dict(pid=child.pid,unix=time.time(),source_sha256=sha(ops.LOCAL/'tools/coopmwm/ls_validity_ops.py'),
+        retired_observer=dict(pid=16664,unix=1793624187.9987535,verified_creation=True,verified_command='tools.coopmwm.ls_recover watch'),
+        mode='observe/publish; admit already-dispatched eight-fresh-gate slots only; no worker/training/physics dispatch')
+    write(p,d);print(json.dumps(d))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=['qualify','cpu_result','register','gpu','gpu_status','cpu','admit','status']);p.add_argument('--host',choices=['gpuA','gpuR'])
+    p=argparse.ArgumentParser();p.add_argument('action',choices=['qualify','cpu_result','register','gpu','gpu_status','cpu','admit','status','watch','watch_dispatch']);p.add_argument('--host',choices=['gpuA','gpuR'])
     a=p.parse_args();globals()[a.action](a.host) if a.action in ('gpu','gpu_status') else globals()[a.action]()

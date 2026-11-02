@@ -1,4 +1,4 @@
-# S-COOPMWM — frozen B-u3 LS-COLLECT; B/R training paused pending MAIN
+# S-COOPMWM — frozen B-u3 collection recovery; B-REPLAY integration pending
 1. Ownercap11900000: original9500000 + restricted INACTIVE sumo_verification_k8=1500000 + interim_u8_test900000; LS envelope2419200 uses existing train/verification only, remaining training re-quote before MAIN resume; phaseguardsSTOP/ALERT.
 2. A/B/R fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
@@ -40,7 +40,7 @@
 39. TRAIN4/dev16 reportingonly; primaryA24/B24/R24,secondaryA48. Finalspawnfault375800sim-squarantined; MAIN1556approvedreplacement; source4/89CPU PASS explicitcheckpoint/SHA+final-onlycaps; B/Rcontinue.
 40. Final detector-first discovery uses unchanged COOPBEHAV detectors and complete exact twins.
 41. Learning checks report team return/value/KL/gradient, beta, proposal routes/acceptance/O1-O4 counts.
-42. A48complete,B/Rpausedu3/noU4update; frozenB3 LS-COLLECT72TRAINepisodes completed/14534snapshots adopted; recovery205CPU PASS0skips42.859s; fourfresh+fouradoptedGPUgates before service; MAIN-only learned resume.
+42. A48complete,B/Ru3/noU4update; 72episodes/14534snapshots adopted; MAIN2127 lsvalidcpu3 218CPU PASS0skips42.672s; ALL8freshGPUgates/worker; modelarrivalphase1200=>t0<=780, SAMEscreenH300/final<=420; B-REPLAY delegated/pending20positiveBbank entries.
 43. Recoverycap7500000: superseded811640,train2811600,checks432000,dev201600,final576000,Rtest115200,coldB28800,failedA14400; exact-plan-grades760000.
 44. Mechanics3600,calibration57600,discovery138200,pairedbranches1297400,reusecheck600; train2852400 inclMAIN1651 tenfresh-ID DNS replacements12000; allfailedchargesretained; verification2800000/exactgrade55360 plusinactivek8phase1500000.
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.
