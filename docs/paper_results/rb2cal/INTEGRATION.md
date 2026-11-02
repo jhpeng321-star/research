@@ -100,3 +100,9 @@ python -B -m tools.rbcal.probability --report REPORT/physical --out NEW_MAP
 - `COMPLETION.json` and `DEVELOPMENT_PHYSICAL_V1_CPU.md` are produced only after
   the finite collector sees all96 complete fresh physical tasks. Their absence
   means fresh physical outcome calibration has not completed.
+- Nov3 cache-only recovery: `PARTIAL_COMPLETION.json` and
+  `DEVELOPMENT_PHYSICAL_V1_CPU_PARTIAL.md` publish the owner-stopped57/96-task
+  run, scoring only six complete K8 development worlds. This is not the96-task
+  completion contract. Paired90% coverage51.7/51.7/50.0% remains inadequate;
+  wider marginal spread alone has not qualified action confidence. Frozen
+  physical/map versions remain unchanged; no partial-sample map was refitted.

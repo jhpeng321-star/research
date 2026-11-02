@@ -1,4 +1,4 @@
-# S-RB2-CAL — 2026-11-01 (active)
+# S-RB2-CAL — partial development delivery, recovered 2026-11-03
 
 ## RECOVERED Nov3 03:17 +08 — owner-stopped; cache-only completion
 
@@ -14,7 +14,14 @@ No new inference/dispatch, signals or fit. Partial cached evidence is published 
 Physical v1 paired90%coverage120/300/600=51.7/51.7/50.0%; raw selected0.8calls
 win68.8/70.0/85.7% vs forecast96.1/96.3/95.5%, n16/10/14. Still overconfident;
 no outcome-coverage qualification. CPU-vs-GPU comparison is descriptive only.
-New recovery admission tests4PASS; RuffPASS. Full dev12 qualification incomplete.
+Final receipt `rb2cal/PARTIAL_COMPLETION.json`; concise full-metric report
+`rb2cal/DEVELOPMENT_PHYSICAL_V1_CPU_PARTIAL.md`. Recovery evidence813ee355,
+auditc6f49148. Verification:57taskhashes/48population-conservation checks PASS;
+complete-world support/frozen artifact match/allCIs suppressed PASS. Combined
+calibration+recovery20CPU PASS38.84s(one thread); RuffPASS. Physical v1 and original
+FULL-v4 probability map stay FROZEN/unqualified; no new map.39missing tasks need
+renewed MAIN resource/admission authority and source/claim/deadline reconciliation.
+Full dev12 qualification remains incomplete; no replacement collector is running.
 
 Branch `c4/rb2-cal`, base frozen FULL-v4 `22cc32f6`. Design frozen before fit:
 `docs/paper_results/RB2_CAL_DESIGN.md`. Physical v1 IMPLEMENTED; parameters:
