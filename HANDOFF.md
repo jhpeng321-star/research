@@ -1,5 +1,21 @@
 # S-SELMAPPO fleet-picker integration handoff
 
+## Fresh resume — 2026-11-03 05:46 +08:00
+- Existing design/build/CPU gates/training and fleet evaluation remain COMPLETE.
+  Historical169updates/7,728new episodes/6,998,400charged sim-s unchanged;
+  local14,400evaluation reservation remains UNSTARTED, exact cap7,012,800.
+- Fresh cpuQ probe: original645235 and training root absent after registered owner
+  cleanup; free18,421,030,912bytes. Local3668/44716 also absent; no restart needed.
+- Surviving gpuR final169 at the checkpoint path below still matches checkpoint
+  SHA256be0bb66d...457ddc and frozen receipt9dee8c4f...7a90cb. Prior CPU-load and
+  full-runtime PASS retained; this resume only repeated read-only artifact hashes.
+- Latest peer status1793654980.5579967 retains COMPLETE fleet16worlds/480decisions/
+  96oraclebranches/79,800charged=actual. Full paired WM/BB/per-CAV comparison remains
+  incomplete; no primary efficacy CI. Peer still owns all evaluation/statistics work.
+- Evidence: `docs/paper_results/selmappo/RESUME_20261103_0546.json`.
+  Shared registration reviewed through05:38; peer notices preserved. No new dispatch,
+  observer, simulation, inference or signals; fleet supervision has already ended.
+
 ## Fresh resume — 2026-11-03 03:20 +08:00
 - Existing design/build/CPU gates/training remain complete; historical169updates,
   7,728new production episodes and6,998,400charged sim-s unchanged.
