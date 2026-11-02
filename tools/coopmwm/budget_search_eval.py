@@ -32,6 +32,10 @@ CONFIGS = {
     'it2': dict(iterations=2),                                # population x1, 2 iterations
     'pop50_it2': dict(pop_min=16, pop_per_dim=1, iterations=2),
 }
+# v2 (BUDGET_SEARCH_PREREG_V2.md): + screen K2 (alone / with pop x0.5 / with 2 iterations)
+CONFIGS_V2 = dict(CONFIGS, K2=dict(screen_K=2), K2_pop50=dict(screen_K=2, pop_min=16, pop_per_dim=1),
+                  it2_K2=dict(iterations=2, screen_K=2))
+ALPHA_V2 = None     # dev-calibrated noise multiplier (set in the v2 registration)
 SEARCH_WALL_S = {2: 559.567, 3: 794.766, 4: 1029.964, 5: 964.120, 6: 898.275}   # COOPMWM.md measured
 SEED = 20261102
 
@@ -43,6 +47,8 @@ def futures(m, config):
 
 
 def noisy_replay(receipt, sur, sigma, config, tag):
+    """sigma = K4 screen noise sd; the screen uses sigma*sqrt(4/screen_K), the K8 final sigma/sqrt(2)."""
+    sk = dict(ms.REGISTERED, **(config or {}))['screen_K']
     group = le._group(receipt); m = len(group['members'])
     policy = np.zeros((m, ms.REGISTERED['max_duration_s'])); regime = receipt.get('regime') or 'unknown'
     record = dict(state_id=str(receipt.get('search_id')), rows=receipt['rows'],
@@ -53,7 +59,7 @@ def noisy_replay(receipt, sur, sigma, config, tag):
 
     def screen(rec, grp, cands):
         t = sur([c['perturbation_canonical'] for c in cands], [c['duration_s'] for c in cands])
-        noisy = t+sigma*rng.standard_normal(len(t))
+        noisy = t+sigma*math.sqrt(4./sk)*rng.standard_normal(len(t))
         screened.extend(dict(id=c['id'], truth=float(a), screen=float(b), z=np.asarray(c['perturbation_canonical'], float),
                              D=int(c['duration_s'])) for c, a, b in zip(cands, t, noisy))
         return -noisy
@@ -69,7 +75,9 @@ def noisy_replay(receipt, sur, sigma, config, tag):
     return screened, final
 
 
-def evaluate_configs(heldout, configs=CONFIGS, bootstraps=2000, collapse_ratio=.75):
+def evaluate_configs(heldout, configs=CONFIGS, bootstraps=2000, collapse_ratio=.75, alpha=1., unit='plain_best'):
+    """unit: 'plain_best' (v1: divide by plain's best-of-8 gain) or 'pool_sd' (v2: sd of the
+    surrogate truth over the recorded pool). alpha multiplies the noise sd (v2: dev-calibrated)."""
     rows, agree = [], []
     for r in heldout:
         sur = le.surrogate_for(r)
@@ -77,7 +85,7 @@ def evaluate_configs(heldout, configs=CONFIGS, bootstraps=2000, collapse_ratio=.
             continue
         rec_sav = np.array([c['saving_vs_policy'] for c in r['candidates'] if c.get('stage', 'screen') == 'screen'
                             and c.get('saving_vs_policy') is not None], float)
-        sigma = math.sqrt(max(0., 1-sur.loo_r2))*float(rec_sav.std())
+        sigma = alpha*math.sqrt(max(0., 1-sur.loo_r2))*float(rec_sav.std())
         m = len(r['members']); base = float(sur([np.zeros((m, ms.canonical_knots()))], [300])[0])
         out = {}
         for name, cfg in configs.items():
@@ -94,7 +102,11 @@ def evaluate_configs(heldout, configs=CONFIGS, bootstraps=2000, collapse_ratio=.
             fin = sorted(final, key=lambda f: -f['final'])[:8]
             return max(f['truth'] for f in fin), fin[0]['truth']
         b8p, _ = best8_top1(out['plain'][1])
-        scale = b8p-base
+        if unit == 'pool_sd':
+            pool = [c for c in r['candidates'] if c.get('stage', 'screen') == 'screen' and c.get('perturbation_canonical') is not None]
+            scale = float(np.std(sur([c['perturbation_canonical'] for c in pool], [c['duration_s'] for c in pool])))
+        else:
+            scale = b8p-base
         if not scale > 0:
             continue
         spacing = ld.nn_spacing([s['z'] for s in out['plain'][0]])
