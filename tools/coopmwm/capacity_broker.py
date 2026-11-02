@@ -11,7 +11,7 @@ import os
 from pathlib import Path
 import threading
 import time
-from .warm_broker import Remote,worker_endpoints
+from .warm_broker import Remote,worker_endpoints,WorkerNotReady
 from .warm_spool import immutable
 from .warm_health import assert_running,HealthPause
 from .protocol import digest
@@ -192,8 +192,14 @@ def run(root,config_path):
     for name in ('broker_completed','capacity_declines','capacity_admissions'):(root/name).mkdir(exist_ok=True)
     stop=threading.Event();mutex=threading.Lock();inflight=set();errors=[];quarantined=set()
 
+    def record_stop(value):
+        # One STOP receipt; later threads observing it must not die on a conflict.
+        with mutex:
+            if not stop_path.exists():immutable(stop_path,value)
+
     def worker(endpoint):
         try:
+          try:
             remote=Remote(root,endpoint)
             check_worker(root,endpoint,remote.call(dict(action='status')))
             remote.verify()
@@ -243,6 +249,12 @@ def run(root,config_path):
                     inference_wall_s=payload['wall_s'],delivery_wall_s=time.monotonic()-begin,unix=time.time()))
                 last_kind=kind
                 with mutex:inflight.remove(key)
+          except WorkerNotReady as error:
+            # A worker found dead/unqualified while (re)verifying the endpoint,
+            # e.g. after a transport retry: same per-slot path as a dead worker
+            # (fatal invariants still raise ValueError inside check_worker).
+            check_worker(root,endpoint,error.status)
+            raise WorkerUnavailable(endpoint['slot']) from error
         except WorkerUnavailable:
             # This slot is quarantined until an explicit owned replacement is
             # admitted. Other slots and policy/SUMO episodes remain independent.
@@ -252,8 +264,8 @@ def run(root,config_path):
             return
         except BaseException as error:
             errors.append(repr(error));stop.set()
-            if not isinstance(error,HealthPause) and not stop_path.exists():
-                immutable(stop_path,dict(error=repr(error),source='capacity broker',unix=time.time()))
+            if not isinstance(error,HealthPause):
+                record_stop(dict(error=repr(error),source='capacity broker',unix=time.time()))
 
     threads={};endpoints={};last_slots=None
     try:
@@ -282,8 +294,7 @@ def run(root,config_path):
             stop.wait(.1)
     except BaseException as error:
         errors.append(repr(error));stop.set()
-        if not stop_path.exists():
-            immutable(stop_path,dict(error=repr(error),source='capacity broker control',unix=time.time()))
+        record_stop(dict(error=repr(error),source='capacity broker control',unix=time.time()))
     finally:
         for t in threads.values():t.join()
         lock.close()

@@ -47,7 +47,7 @@ def verify(root,arm):
         for name,h in runtime['hashes'].items():assert sha(source/name)==h,arm+' runtime source '+name
         if v3.exists():
             awr=read(root/'AWR_BINDING.json');assert awr['amendment_sha256'] in text
-            b=dict(b,**runtime['operational'],awr=awr['config'])
+            b=dict(b,**dict(runtime['operational'],awr=awr['config']))  # no duplicate-keyword TypeError
     install_accounting()
     return b
 

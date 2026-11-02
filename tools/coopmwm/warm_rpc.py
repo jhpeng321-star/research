@@ -8,11 +8,16 @@ from .warm_spool import key_of,submit
 GATES=('STARTUP_WARM_BATCH_SINGLE_K4_H120.json','STARTUP_WARM_BATCH_SINGLE_K8_H300.json',
     'STARTUP_PARITY_K4_H120.json','STARTUP_PARITY_K8_H300.json',
     'STARTUP_WARM_PARITY_K4_H120.json','STARTUP_WARM_PARITY_K8_H300.json')
+# Concurrent-plan background gates: exposed for hot-add admission (hotadd.GATES
+# requires them; a route on this module alone stalled the 14:24 gpuA hot-add on
+# 'missing/nonexact new-worker gate STARTUP_COMMITTED_K4_H300.json'). They do not
+# change this module's 'ready' predicate.
+EXTRA_GATES=('STARTUP_COMMITTED_K4_H300.json','STARTUP_COMMITTED_K8_H420.json')
 
 
 def status(root):
     root=Path(root);receipts={}
-    for name in (*GATES,'SERVICE_OWNER.json','SPOOL_OWNER.json','SPOOL_FAILED.json'):
+    for name in (*GATES,*EXTRA_GATES,'SERVICE_OWNER.json','SPOOL_OWNER.json','SPOOL_FAILED.json'):
         p=root/name
         if p.exists():receipts[name]=json.loads(p.read_text())
     d=receipts.get('SPOOL_OWNER.json');state=None

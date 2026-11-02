@@ -18,6 +18,12 @@ from .protocol import digest
 from .warm_rpc import GATES
 
 
+class WorkerNotReady(ValueError):
+    """The endpoint answered but its worker is dead/unqualified (status attached)."""
+    def __init__(self,message,status):
+        super().__init__(message);self.status=status
+
+
 class Remote:
     def __init__(self,root,endpoint):
         self.root=Path(root);self.endpoint=endpoint;self.owner=None;self.receipts={}
@@ -39,7 +45,7 @@ class Remote:
 
     def verify(self):
         s=self.raw(dict(action='status'))
-        if not s['alive'] or s['failed'] or not s['ready']:raise ValueError('GPU worker not alive/qualified')
+        if not s['alive'] or s['failed'] or not s['ready']:raise WorkerNotReady('GPU worker not alive/qualified',s)
         owner=s['receipts']['SPOOL_OWNER.json']
         if self.owner is not None and owner!=self.owner:raise ValueError('GPU worker ownership changed')
         for name,previous in self.receipts.items():
