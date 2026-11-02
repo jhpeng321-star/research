@@ -6,9 +6,9 @@ fits are now COMPLETE on all32FIT worlds, with owned PIDs exited. Recovery recei
 in progress. Existing IDM delivery remains ready.
 
 <!-- LC-CONTINUATION:BEGIN -->
-Latest verified `lane_raw_c5602102891e` (2026-11-01T04:37:13+08:00); LC SHA1bb1c7612a5a, snapshotv2;3130driver posteriors.
-Raw physical expected changes435.8 vs626recorded; eventBrier0.002308. Likelihood-emission Brier0.361091 is a separate diagnostic. **NOT ADOPTED**; no free-running/action-effect qualification.
-Boundary-aware LC sampler required; weights already conditioned. Inverse temperature=0.2827399160173885; IDM preferred delivery remains `shrinkage_v1`. Live receipts:LC_WATCH_0128_STATE.json.
+Latest verified `lane_source_da190640f0ca` (2026-11-02T09:01:41+08:00); LC SHA9650e67676e6, snapshotv2;3130driver posteriors.
+Raw physical expected changes5388.3 vs626recorded; eventBrier0.007397. Likelihood-emission Brier0.002341 is a separate diagnostic. **NOT ADOPTED**; no free-running/action-effect qualification.
+Boundary-aware LC sampler required; weights already conditioned. Inverse temperature=not applicable; IDM preferred delivery remains `shrinkage_v1`. Live receipts:LC_WATCH_0128_STATE.json.
 <!-- LC-CONTINUATION:END -->
 
 
