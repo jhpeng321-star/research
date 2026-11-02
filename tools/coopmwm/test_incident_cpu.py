@@ -37,6 +37,7 @@ class IncidentTests(unittest.TestCase):
         def fault():raise KeyError('bad code')
         value=execute(record,fault);validate_response(record,value)
         self.assertFalse(value['accepted']);self.assertIn('KeyError',value['query_error']['traceback'])
+        self.assertTrue(value['compute_counts_unknown']);self.assertNotIn('candidates_searched',value)
         self.assertEqual(execute(record,lambda:dict(accepted=True)),dict(accepted=True))
 
     def test_physics_parity_accounting_validation_faults_remain_fatal(self):
@@ -48,6 +49,24 @@ class IncidentTests(unittest.TestCase):
         def fault():raise KeyError('bad')
         value=execute({'a':1},fault)
         with self.assertRaises(ValueError):validate_response({'a':2},value)
+
+    def test_dead_worker_requests_only_its_replacement_without_stop_or_retry(self):
+        import tempfile
+        import json
+        from pathlib import Path
+        from .capacity_broker import check_worker,WorkerUnavailable
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);endpoint=dict(slot='gpuA@0')
+            with self.assertRaises(WorkerUnavailable):
+                check_worker(root,endpoint,dict(alive=False,failed=True),'a'*64)
+            values=list((root/'worker_restart_requests').glob('*.json'))
+            self.assertEqual(len(values),1)
+            self.assertEqual(json.loads(values[0].read_text())['slot'],'gpuA@0')
+            self.assertFalse(list(root.glob('*STOP*')))
+            check_worker(root,dict(slot='gpuR@0'),dict(alive=True,failed=False))
+            with self.assertRaises(ValueError):
+                check_worker(root,endpoint,dict(alive=False,failed=True,
+                    receipts={'SPOOL_FAILED.json':dict(error='parity failed')}))
 
 
 if __name__=='__main__':unittest.main()

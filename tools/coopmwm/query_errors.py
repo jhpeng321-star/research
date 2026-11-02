@@ -10,7 +10,7 @@ def execute(record,call):
         # ValueError/AssertionError/RuntimeError include validation, parity,
         # accounting, physics and CUDA failures: deliberately propagate those.
         return dict(accepted=False,reason='per-query code error; policy continues',
-            record_sha256=digest(record),candidates_searched=0,imagined_futures=0,
+            record_sha256=digest(record),compute_counts_unknown=True,
             query_error=dict(kind='code',error=repr(error),traceback=traceback.format_exc(),
                 inference_retry=False))
 

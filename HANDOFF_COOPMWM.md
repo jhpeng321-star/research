@@ -1,5 +1,25 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+MAIN0944INCIDENT: full303linebrief read; B/R/broker/graderEXIT afterGPUA596572
+posthocfamilylabellingcrashat1793583692, STOP_V2at1793583695. OriginalA48/B2/R1.
+B-u3=14complete10interrupted;R-u2=3complete11interrupted10neverclaimed.
+DO NOTredispatchclaimedepisodes/queries oroverwriteanyreceipt. NoSUMOstateexists
+for21interruptedjobs(CLAIM+CLOSE/noRESULT);new25200chargewouldraiseallocation
+7495040->7520240/cap7500000,SHORT20240after4960spare. MAINallocationdecision
+requestedcanonicalREGISTRATION+E:/agent-work/_sol/COOPMWM_MAIN0944_BUDGET_ALERT.md.
+Noreservecut/refund/newphysicsmade. Source1CPU97PASS/source2CPU98PASS0skips/0SUMO.
+4/5/6acceptedruntimepathsfixed(posthocnew/unlabelled);querycodeerrortracebackdecline;
+source2brokerquarantinesdeadslot/requestsonlyitsreplacement,noglobalSTOP;fatal
+invariantsstillSTOP. SOURCE2NOTDEPLOYED. GPUAprimaryREPLACEMENT759743/start896453815
+launchedONCEunix1793584324/09:52:04UTC+8, root/root/coopmwm20261102_incident1,
+frozenCPU1; fresh8startupgatesRUNNING/notyetREADY. Other3oldGPUworkersretained.
+Use`python -X utf8 -m tools.coopmwm.incident_ops gpu_status`FIRST;NEVERredispatch.
+OriginalfailedA0claim18ec963b...preserved/noinference replay. Amend452d096bregistered.
+Existinglocalobservers20516/24140nowABSENT; finalwaiting3316828/3604109andreporter
+3746050stilllive. Awaitwithin-capMAINdecisionBEFOREphysics;qualificationcontinues.
+Originaldeadline18:07:02unchanged/charged3481850. Warmqualification/originalu0start/
+7sameBseedexactpositivelibraryadopted;noreset. Bu4..6viabilitypending/NOsuccessclaim.
+
 FRESH ADOPTION 09:34UTC+8/unix1793583292: full298linebrief read; original
 A48/B2/R1, current B3946079/R3551874/broker3893211/grader3427015 allLIVE;
 noactiveSTOP/pause/failure. Neverredispatch. Localobserve-only20516/V9 and

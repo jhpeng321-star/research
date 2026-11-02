@@ -5,7 +5,7 @@ from . import ops
 from .storage import read,write
 from .warm_deploy import ROOT
 
-SOURCE='/home/ubuntu/coopmwm20261102_incidentcpu1'
+SOURCE='/home/ubuntu/coopmwm20261102_incidentcpu2'
 OVERLAYS=('mppi_runtime','query_errors','plan_service','capacity_broker','incident_ops','test_incident_cpu')
 GPU='/root/coopmwm20261102_incident1'
 
@@ -99,7 +99,7 @@ with patch('subprocess.Popen',side_effect=AssertionError('no SUMO/inference duri
  result=unittest.TextTestRunner(stream=sys.stdout,verbosity=2).run(suite)
 print(json.dumps(dict(pass_=result.wasSuccessful(),tests=result.testsRun,skips=len(result.skipped),sim_s=0,root={SOURCE!r},wall_s=time.monotonic()-start)))''',timeout=90)
     print(out);value=json.loads(out.strip().splitlines()[-1]);value['source_hashes']=staged['hashes']
-    write(ops.EVIDENCE/'CPU_coopmwm20261102_incidentcpu1.json',value)
+    write(ops.EVIDENCE/('CPU_'+SOURCE.rsplit('/',1)[1]+'.json'),value)
     assert value['pass_'] and value['sim_s']==value['skips']==0
 
 

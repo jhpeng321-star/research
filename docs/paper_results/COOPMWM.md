@@ -1,5 +1,33 @@
 # S-COOPMWM — live checks
 
+## MAIN09:44 incident — labelling fixed; physics recovery budget blocked
+- The gpuA primary failed at unix1793583692 on the legacy2/3-member family
+  validator, called **after** a4–6-member winner had been selected. Broker STOP
+  at1793583695 then interrupted B-u3/R-u2 and the exact grader. A48 is complete.
+- The unsupported-size labeller now returns `new`; other label failures return
+  `unlabelled` plus traceback. The actual4/5/6-member runtime paths pass CPU tests.
+  Source1 **97PASS**, source2 **98PASS**, zero skips/SUMO/inference. Source2 also
+  records worker-scoped restart requests without globally stopping healthy slots;
+  safety/physics/parity/accounting failures remain fatal. Per-query code faults
+  decline with traceback; partial compute counts are unknown, never imputed zero.
+- Registered amendment **452d096b…**. Replacement gpuA primary **759743**, start
+  **896453815**, launched once at unix1793584324 (**09:52:04UTC+8**) in isolated
+  `incident1`. Fresh eight exact-zero startup gates are running; READY/admission
+  is not yet claimed. Other three GPU workers remain live/qualified. The original
+  failed inference claim is retained and has not been replayed. Source2 broker
+  refinements are CPU-qualified, not deployed; GPU worker runs frozen source1.
+- Read-only census1793584192: B-u3 **14 completed/10 interrupted**; R-u2
+  **3 completed/11 interrupted/10 never claimed**. Original B2/R1 checkpoints and
+  all completed episodes remain. Interrupted jobs have no RESULT or durable SUMO
+  checkpoint. Their original25,200sim-s charge stays; replacements need another
+  **25,200sim-s**, against only4,960 unallocated. Full quote **7,520,240** exceeds
+  owner cap7,500,000 by **20,240sim-s**. MAIN allocation decision requested in
+  canonical registration and `_sol/COOPMWM_MAIN0944_BUDGET_ALERT.md`; no reserve
+  cut, refund or replacement physics has been silently authorised.
+- **B/R remain stopped** pending qualification, registered recovery allocation
+  and deployment. Charged3,481,850 unchanged; original18:07:02 GPU deadline
+  retained. B-u4–6 viability remains pending; latest exact marginal CI includes0.
+
 ## 09:34 continuation — owners adopted; parallel-wait reporting corrected
 - Fresh session read the complete298-line brief and recovered receipts. At
   unix1793583292: **A48/B2/R1**, current B/R/broker/exact-grader live, no active

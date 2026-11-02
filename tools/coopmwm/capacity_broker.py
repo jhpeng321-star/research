@@ -17,6 +17,24 @@ from .warm_health import assert_running,HealthPause
 from .protocol import digest
 
 
+class WorkerUnavailable(RuntimeError):
+    """A dead worker needs an owned replacement, not a global training STOP."""
+
+
+def check_worker(root,endpoint,status,key=None):
+    if status['alive'] and not status['failed']:return
+    failure=status.get('receipts',{}).get('SPOOL_FAILED.json',{}).get('error','')
+    if any(word in failure.lower() for word in ('parity','immutable','accounting','physics','safety','budget')):
+        raise ValueError('fatal worker invariant: '+failure)
+    # Preserve a failed in-flight claim. A replacement must never recompute it.
+    value=dict(slot=endpoint['slot'],key=key,status=status,unix=time.time(),
+        action='replace only this verified dead worker; qualify before admission; never replay inference claim',
+        new_sumo_sim_s=0)
+    target=root/'worker_restart_requests';target.mkdir(exist_ok=True)
+    immutable(target/(digest(value)+'.json'),value)
+    raise WorkerUnavailable(endpoint['slot'])
+
+
 def pending(root):
     from .exploration import regime
     items=[]
@@ -115,7 +133,9 @@ def run(root,config_path):
 
     def worker(endpoint):
         try:
-            remote=Remote(root,endpoint);remote.verify()
+            remote=Remote(root,endpoint)
+            check_worker(root,endpoint,remote.call(dict(action='status')))
+            remote.verify()
             last_kind='plan'
             while not stop.is_set():
                 assert_running(root,'B')
@@ -149,7 +169,7 @@ def run(root,config_path):
                 while True:
                     value=remote.call(dict(action='forecast',key=key))
                     if value['forecast'] is not None:break
-                    if not value['status']['alive'] or value['status']['failed']:raise ValueError('GPU failed; no inference retry')
+                    check_worker(root,endpoint,value['status'],key)
                     assert_running(root,'B');stop.wait(3)
                 payload=value['forecast']
                 from .query_errors import validate_response
@@ -162,6 +182,10 @@ def run(root,config_path):
                     inference_wall_s=payload['wall_s'],delivery_wall_s=time.monotonic()-begin,unix=time.time()))
                 last_kind=kind
                 with mutex:inflight.remove(key)
+        except WorkerUnavailable:
+            # This slot is quarantined until an explicit owned replacement is
+            # admitted. Other slots and policy/SUMO episodes remain independent.
+            return
         except BaseException as error:
             errors.append(repr(error));stop.set()
             if not isinstance(error,HealthPause) and not stop_path.exists():
