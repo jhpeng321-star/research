@@ -392,16 +392,19 @@ def continue_roll():
 def roll_dispatch():
     import subprocess,sys,psutil
     from .protocol import REGISTRY
-    target=ops.EVIDENCE/'LS_NICHENULL_ROLL_DISPATCH_V2.json'
+    target=ops.EVIDENCE/'LS_NICHENULL_ROLL_DISPATCH_V3.json'
     if target.exists():
         d=read(target)
         if psutil.pid_exists(d['pid']):
             p=psutil.Process(d['pid']);assert abs(p.create_time()-d['unix'])<5
             assert p.cmdline()[-3:]==['-m','tools.coopmwm.niche_roll','continue_roll']
         print(json.dumps(dict(adopted=d)));return
-    reg=ops.EVIDENCE/'NICHE_ROLL_CONTROLLER_REGISTRATION_V2.json'
+    reg=ops.EVIDENCE/'NICHE_ROLL_CONTROLLER_REGISTRATION_V3.json'
     if not reg.exists():
-        line=('\nS-COOPMWM joint-release controller V2 engineering amendment: adopt live '
+        line=('\nS-COOPMWM joint-release controller V3 engineering amendment: V2 exited '
+            'after successful first-slot admission on same-second local receipt collision. '
+            'Serialize remote endpoint admission and use per-writer unique publishing '
+            'and nanosecond local receipts; no numerical/GPU source changes. Adopt live '
             'source-qualified NICHENULL3 successor; retain stopped V1 fault receipt; finish registered Asecond/Rfirst/Rsecond drained '
             'handovers ONE qualifier globally. Preserve requests/claims/forecasts; '
             'no inference replay or SUMO/PPO dispatch. Source-bound dependency package '
@@ -410,9 +413,9 @@ def roll_dispatch():
             'separate after all4ready; other slots keep serving.\n')
         write(reg,dict(line=line,source_sha256=sha(ops.LOCAL/'tools/coopmwm/niche_roll.py'),new_sumo_sim_s=0))
         with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line+'amendmentSHA'+sha(reg)+'\n')
-    old=read(ops.EVIDENCE/'LS_NICHENULL_ROLL_DISPATCH.json')
+    old=read(ops.EVIDENCE/'LS_NICHENULL_ROLL_DISPATCH_V2.json')
     assert not psutil.pid_exists(old['pid']),'adopt original controller until exited'
-    with (ops.EVIDENCE/'LS_NICHENULL_ROLL_V2.log').open('x',encoding='utf-8') as log:
+    with (ops.EVIDENCE/'LS_NICHENULL_ROLL_V3.log').open('x',encoding='utf-8') as log:
         p=subprocess.Popen([sys.executable,'-X','utf8','-u','-m','tools.coopmwm.niche_roll','continue_roll'],
             cwd=ops.LOCAL,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)

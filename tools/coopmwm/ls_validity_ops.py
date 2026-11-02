@@ -2,6 +2,7 @@
 import argparse
 import base64
 import json
+import time
 import zlib
 from . import ops
 from .protocol import checked, sha, REGISTRY
@@ -260,21 +261,22 @@ def admit():
     assert workers,'no eight-gate-qualified slots yet'
     h=sha(ops.EVIDENCE/'LS_VALIDITY_REGISTRATION.json')
     out=remote('cpuQ',f'''from pathlib import Path
-import json,sys,time,os
+import json,sys,time,os,fcntl
 c=Path({COLLECTION!r});sys.path.insert(0,{SOURCE!r}+'/pytools')
 from tools.coopmwm.warm_broker import Remote
 from tools.coopmwm.ls_broker import owner_matches
+lock=(c/'LS_ENDPOINT_ADMISSION.claim').open('a');fcntl.flock(lock,fcntl.LOCK_EX)
 endpoints=json.loads((c/'LS_ENDPOINT_CANDIDATES.json').read_text())['endpoints'];admitted=[]
 for w in {workers!r}:
  d=w['owner'];slot={{'/root/coopmwm20261102_incident1':'gpuA@incident1','/root/coopmwm20261102_deadlineA2':'gpuA@resource1651','/root/coopmwm20261102_concurrent3':'gpuR@0','/root/coopmwm20261102_deadlineR2':'gpuR@resource1651'}}[d['root']]
  e=next(e for e in endpoints if e['slot']==slot)
  assert owner_matches(Remote(c,e).call(dict(action='status')),d),slot
  admitted.append(dict(endpoint=e,owner=d,fresh_gates=w['gates']))
-value=dict(workers=admitted,amendment_sha256={h!r},unix=time.time());target=c/'LS_ENDPOINTS.json';tmp=c/'LS_VALIDITY_ENDPOINTS.publishing'
+value=dict(workers=admitted,amendment_sha256={h!r},unix=time.time());target=c/'LS_ENDPOINTS.json';tmp=c/('LS_VALIDITY_ENDPOINTS.'+str(os.getpid())+'.'+str(time.time_ns())+'.publishing')
 with tmp.open('x') as f:json.dump(value,f);f.flush();os.fsync(f.fileno())
 os.replace(tmp,target)
 print(json.dumps(dict(admitted_slots=[w['endpoint']['slot'] for w in admitted],unix=value['unix'],amendment_sha256={h!r})))''',timeout=120)
-    v=json.loads(out);write(ops.EVIDENCE/f'LS_VALIDITY_ADMISSION_{int(v["unix"])}.json',v);print(out)
+    v=json.loads(out);write(ops.EVIDENCE/f'LS_VALIDITY_ADMISSION_{time.time_ns()}.json',v);print(out)
 
 
 def status():

@@ -1,5 +1,19 @@
 # S-COOPMWM — live checks
 
+## Nov3 07:01:51 UTC+8 — first slot READY; metadata collision recovered
+- First joint-release worker237704 passed all8 checks and became READY at
+  unix1793659944.3873818. Its completed checks are adopted; no repeated gate.
+- Rollout V2 exited after successful admission because its local receipt name
+  collided with the observer's same-second admission receipt. GPU/search and
+  collection owners continued. Original log and receipt remain intact.
+- Serialized remote endpoint admissions plus per-writer publishing names and
+  nanosecond local receipt names remove the collision. Nine targeted CPU tests
+  PASS (0.35s), including two same-second admissions with both receipts retained.
+- Engineering amendment `0a62515b26ffe14d…` registers replacement controller
+  **10452/create1793660511.9570189**. It adopts the qualified first slot and
+  continues only the registered sequential drained-boundary rollout. Existing
+  activation waiter and observer are retained; zero SUMO/PPO dispatch.
+
 ## Nov3 06:56 UTC+8 — latest cap reconciled; exact phase shortage reported
 - MAIN06:27 supersedes the stale fresh6M guard with **14,500,000 sim-s**.
   Append-only phase reconciliation is registered locally/canonically and on cpuQ,
