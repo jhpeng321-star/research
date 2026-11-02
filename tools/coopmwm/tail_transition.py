@@ -109,9 +109,9 @@ def handover(root,frozen,plan):
     return value
 
 
-def watch(root):
+def watch(root,plan_name='TAIL_PLAN_BINDING.json'):
     import fcntl
-    root=Path(root);plan=json.loads((root/'TAIL_PLAN_BINDING.json').read_text())
+    root=Path(root);plan=json.loads((root/plan_name).read_text())
     assert plan['amendment_sha256'] in (root/'AUTHORITY.md').read_text()
     from .protocol import sha
     for name,h in plan['cpu']['source_hashes'].items():assert sha(Path(plan['source_root'])/name)==h,name
@@ -119,7 +119,8 @@ def watch(root):
     signal.signal(signal.SIGHUP,signal.SIG_IGN)
     deadline=json.loads((root/'WARM_REMOTE_BINDING.json').read_text())['deadline_unix']
     try:
-        frozen=None
+        frozen=json.loads((root/'TAIL_PARENT_FROZEN.json').read_text()) if (root/'TAIL_PARENT_FROZEN.json').exists() else None
+        if frozen:assert state(frozen['owner'],'tools.coopmwm.quota_runtime')=='T','adopt only the original frozen parent'
         while frozen is None:
             assert_running(root,'B')
             if time.time()>deadline:raise ValueError('original deadline')

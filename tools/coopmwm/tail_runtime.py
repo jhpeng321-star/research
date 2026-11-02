@@ -15,9 +15,10 @@ def restore_progress(root,arm,resume,worlds,seed):
     Trust and library are the exact immutable previous-update receipts.
     """
     from .accel_learner import evidence
+    from .accel_storage import read
     root=Path(root);running=[];rng=np.random.default_rng(seed);count=0
     for u in range(1,resume+1):
-        episodes=[json.loads((root/'jobs'/f'warm_u{u:03}_{arm}_{w["seed"]}'/'RESULT.json').read_text()) for w in worlds(u)]
+        episodes=[read(root/'jobs'/f'warm_u{u:03}_{arm}_{w["seed"]}'/'RESULT.json') for w in worlds(u)]
         episodes.sort(key=lambda e:(e['world']['seed'],e['arm']))
         running.extend(evidence(episodes))
         if arm=='B':

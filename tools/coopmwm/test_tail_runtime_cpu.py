@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 import tempfile
 import signal
+import time
 import unittest
 from unittest.mock import patch,call
 import numpy as np
@@ -31,6 +32,17 @@ class TailRuntimeTests(unittest.TestCase):
         self.assertEqual(v['running'],[3,10]);self.assertEqual(v['beta'],dict(beta=.7,graded=13))
         self.assertEqual(v['learned']['library'],['qualified']);self.assertEqual(v['exact_count'],12)
         self.assertEqual(v['exact_rng_state'],rng.bit_generator.state)
+
+    def test_restore_uses_real_lossless_compressed_result_reader(self):
+        from .accel_storage import write
+        ep=dict(world=dict(seed=986000),arm='B',steps=[dict(time_s=300,sample=dict(behaviour=dict(plan_start=True)))])
+        write(self.root/'jobs/warm_u001_B_986000/RESULT.json',ep)
+        self.assertIn('encoding',json.loads((self.root/'jobs/warm_u001_B_986000/RESULT.json').read_text()))
+        immutable(self.root/'B_UPDATE_001.json',dict(trust=dict(beta=.9)))
+        immutable(self.root/'B_SEARCH_LEARNING_001.json',dict(arm='B',library=['verified']))
+        with patch('tools.coopmwm.accel_learner.evidence',return_value=['diagnostic']):
+            v=t.restore_progress(self.root,'B',1,lambda u:[dict(seed=986000)],20261101)
+        self.assertEqual(v['exact_count'],1);self.assertEqual(v['running'],['diagnostic'])
 
     def test_busy_intervals_are_clipped_unioned_per_slot_with_pending_censored(self):
         immutable(self.root/'quota_requests/u002/a_REQUEST.json',dict(records=[dict(state_id=k) for k in ('a','b','c')]))
@@ -92,6 +104,17 @@ class TailRuntimeTests(unittest.TestCase):
         with patch.object(transition,'terminate') as terminate,patch.object(transition.subprocess,'Popen') as launch:
             with self.assertRaises(AssertionError):transition.handover(self.root,dict(adopt_update=1),{})
             terminate.assert_not_called();launch.assert_not_called()
+
+    def test_repair_controller_adopts_existing_frozen_wave_without_refreezing(self):
+        from . import tail_transition as transition
+        frozen=dict(owner=dict(pid=123),adopt_update=2,resume_update=1)
+        immutable(self.root/'TAIL_PARENT_FROZEN.json',frozen)
+        immutable(self.root/'TAIL_PLAN_BINDING_V2.json',dict(amendment_sha256='registered',cpu=dict(source_hashes={}),source_root='/unused'))
+        immutable(self.root/'WARM_REMOTE_BINDING.json',dict(deadline_unix=time.time()+60))
+        (self.root/'AUTHORITY.md').write_text('registered')
+        with patch.object(transition,'freeze',side_effect=AssertionError('already frozen')),patch.object(transition,'completed',return_value=True),patch.object(transition,'state',return_value='T'),patch.object(transition,'assert_running'),patch.object(transition.signal,'signal'),patch.object(transition,'handover',return_value=dict(pid=999)) as handover:
+            self.assertEqual(transition.watch(self.root,'TAIL_PLAN_BINDING_V2.json'),dict(pid=999))
+            self.assertEqual(handover.call_args.args[1],frozen)
 
 
 if __name__=='__main__':unittest.main()
