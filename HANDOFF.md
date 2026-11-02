@@ -3,6 +3,15 @@
 Updated: 2026-11-01 ~00:45. Status: DONE (deliverable shipped to
 `E:/agent-work/rb-shared/setdata/`, see DONE.md there).
 
+RESUME VERIFICATION 2026-11-02 (fresh session, no rework): 6/6 CPU tests
+pass (`python -m pytest tools/rbsetdata/tests -q`, 11.8 s); rb-shared copies
+byte-identical to commit cdcc7c1a (sha256 match on all 5 code/doc files +
+tests); npz loads clean (58 arrays, 32 worlds, 2 831 segments, 256 527
+ticks, schema `setdata_hdv_histories/1`); manifest sha256s present;
+per-driver CSV 2 798 rows (population + per-driver modes); summary JSON
+headline matches DONE.md (v0=29.87, T=0.753, a=0.701, b=1.687, s0=1.91,
+sigma=0.178 m/s, n=226 431 cf tick pairs). No changes to deliverables.
+
 ## What exists (new files only, no shared file touched)
 
 * `tools/rbsetdata/extract_hdv_histories.py` — per-driver observable 60 s
