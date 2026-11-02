@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 from .storage import read,write
 
-SOURCE='/home/ubuntu/coopmwm20261102_verifybeta9'
+SOURCE='/home/ubuntu/coopmwm20261102_verifybeta11'
 RESOURCE_DEADLINE=1793894340.0  # 2026-11-05 23:59:00 +08, MAIN16:34
 
 
@@ -68,8 +68,8 @@ def _resource_gpu_main(root,deadline,amendment):
         assert (p/'stat').read_text().split()[21]==old['start_ticks'];time.sleep(.1)
     else:raise ValueError('old idle worker did not exit; no second signal')
     claim=(root/'SPOOL_WORKER.claim').open('a');fcntl.flock(claim,fcntl.LOCK_EX|fcntl.LOCK_NB)
-    b.update(deadline_unix=deadline,gpu_deadline=deadline,resource_extension_amendment=amendment)
-    replace(root/'GPU_BINDING.json',b)
+    # Binding and completed qualification receipts remain byte-for-byte unchanged.
+    b=dict(b,deadline_unix=deadline,gpu_deadline=deadline,resource_extension_amendment=amendment)
     owner=dict(pid=os.getpid(),start_ticks=Path('/proc/self/stat').read_text().split()[21],
         boot_id=old['boot_id'],unix=time.time(),new_sumo_sim_s=0)
     replace(root/'SPOOL_OWNER.json',owner)
@@ -78,15 +78,29 @@ def _resource_gpu_main(root,deadline,amendment):
     signal.signal(signal.SIGHUP,signal.SIG_IGN)
     sys.stdin=SpoolInput(root,deadline)
     from tools.coopmwm import warm_service,plan_service
+    # Four source-identical gates adopted; the four full/fast cold/warm gates
+    # still run fresh in the new process before SERVICE_OWNER is published.
+    b['adopted_startup_gates']=dict(
+        receipts={n:hashlib.sha256((root/n).read_bytes()).hexdigest() for n in warm_service.ADOPTABLE},
+        numerical_hashes={n:b['hashes'][n] for n in warm_service.NUMERICAL})
+    previous_read=plan_service.read
+    def config_read(path):
+        return b if path==root/'GPU_BINDING.json' else previous_read(path)
+    warm_service.read=plan_service.read=config_read
     exclusive=plan_service.write
     def metadata_write(path,value):
         # Only the snapshotted startup/owner pointers may be replaced. Inference
         # forecasts retain the original exclusive-create semantics.
-        if path.parent==root and path.name in original and (path.name.startswith('STARTUP_') or path.name=='SERVICE_OWNER.json'):
-            return replace(path,value)
+        if path.parent==root and path.name in original:
+            if path.name.startswith('STARTUP_'):
+                return exclusive(root/(path.stem+'_RESOURCE1651.json'),value)
+            if path.name=='SERVICE_OWNER.json':return replace(path,value)
         return exclusive(path,value)
     warm_service.write=plan_service.write=metadata_write
-    warm_service.main(root)  # Same frozen numerics; eight fresh startup gates.
+    try:warm_service.main(root)  # Same numerics; four adopted + four fresh gates.
+    except BaseException as error:
+        immutable(root/'SPOOL_FAILED.json',dict(owner=owner,error=repr(error),unix=time.time(),
+            inference_retry=False,new_sumo_sim_s=0));raise
 
 
 def extend_register():
@@ -648,10 +662,143 @@ def resume_serve(root):
         immutable(root/'DNS_RECOVERY_FAILED_1651.json',dict(unix=time.time(),error=repr(e)));raise
 
 
+def gpu_register():
+    from . import ops
+    from .protocol import checked,REGISTRY,sha
+    from .warm_deploy import ROOT
+    target=ops.EVIDENCE/'GPU_RESOURCE_REGISTRATION_1651.json'
+    cpu=read(ops.EVIDENCE/('CPU_'+SOURCE.rsplit('/',1)[1]+'.json'))
+    assert cpu['pass_'] and cpu['sim_s']==cpu['skips']==0
+    line='\nS-COOPMWM MAIN1651 GPU CACHED-CLOCK HANDOVER REGISTERED: controller freezes only receipt-verified DNS broker; each of four owned spools finishes ALL inbox claims/forecasts before old idle process exits by verified PID. Preserve original GPU_BINDING and startup receipts byte-identically; additive restart/qualification receipts, snapshot original owner pointers, replace owner pointers only. Same frozen numeric source, four exact source-bound startup gates adopted and four cold/warm full-fast gates rerun per fresh process before service READY. Explicit in-memory deadline2026-11-05 23:59+08; no inference replay, zero SUMO. Broker restarted once with fresh owner baseline after all four services READY. CPU'+str(cpu['tests'])+'PASS.\n'
+    value=dict(line=line,cpu=cpu,new_sim_s=0)
+    if target.exists():assert read(target)==value,'registration differs'
+    else:
+        write(target,value)
+        with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line+'amendmentSHA'+sha(target)+'\n')
+    h=sha(target)
+    out=ops.ssh.remote('cpuQ',f'''import pathlib,json,time,os,signal
+r=pathlib.Path({ROOT!r});d=json.loads((r/'DNS_BROKER_DISPATCH_1651.json').read_text())
+assert d['boot_id']==pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+p=pathlib.Path('/proc',str(d['pid']));st=(p/'stat').read_text().split();assert st[21]==d['start_ticks'] and st[2] in ('S','R')
+argv=[x.decode() for x in (p/'cmdline').read_bytes().split(bytes([0])) if x]
+assert argv==['/home/ubuntu/miniconda3/bin/python','-B','-u','-m','tools.coopmwm.capacity_broker',str(r),str(r/'DNS_BROKER_CONFIG_1651.json')]
+assert not (r/'GPU_RESOURCE_BINDING_1651.json').exists()
+with (r/'AUTHORITY.md').open('a') as f:f.write({(line+'amendmentSHA'+h+chr(10))!r})
+v=dict(amendment_sha256={h!r},gpu_deadline={RESOURCE_DEADLINE!r},broker=d,unix=time.time(),controller_source={SOURCE!r})
+with (r/'GPU_RESOURCE_BINDING_1651.json').open('x') as f:json.dump(v,f)
+os.kill(d['pid'],signal.SIGSTOP)
+print(json.dumps(v))''',timeout=30)
+    write(ops.EVIDENCE/'GPU_RESOURCE_BINDING_1651.json',json.loads(out));print(out)
+
+
+def gpu_workers(host):
+    """Fresh-process qualification only; always adopt an existing dispatch first."""
+    import inspect
+    from . import ops
+    reg=read(ops.EVIDENCE/'GPU_RESOURCE_BINDING_1651.json')
+    roots=dict(gpuA=('/root/coopmwm20261102_incident1','/root/coopmwm20261102_second1'),
+               gpuR=('/root/coopmwm20261102_concurrent3','/root/coopmwm20261102_second1'))
+    stage='/root/coopmwm20261102_deadlineops2'
+    script=inspect.getsource(_resource_gpu_main)+'\nimport sys\n_resource_gpu_main(sys.argv[1],float(sys.argv[2]),sys.argv[3])\n'
+    ops.stage(host,stage,{'restart.py':script})
+    out=ops.ssh.remote(host,f'''import pathlib,json,os,sys,time,subprocess
+s=pathlib.Path({stage!r});out=[]
+for name in {roots[host]!r}:
+ r=pathlib.Path(name);assert r.is_dir()
+ old=json.loads((r/'RESOURCE_EXTENSION_DISPATCH_1634.json').read_text())
+ p=pathlib.Path('/proc',str(old['pid']))
+ assert old['boot_id']==pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+ assert not p.exists() or (p/'stat').read_text().split()[21]==old['start_ticks'] and (p/'stat').read_text().split()[2]=='Z','first helper still live'
+ assert "can't open file" in (r/'RESOURCE_EXTENSION_1634.log').read_text()
+ assert not (r/'RESOURCE_EXTENSION_DISPATCH_1651_V2.json').exists(),'adopt existing second helper'
+ env=dict(os.environ,OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',PYTHONPATH=str(r/'pytools'))
+ assert (s/'restart.py').is_file()
+ with (r/'RESOURCE_EXTENSION_1651_V2.log').open('x') as log:
+  p=subprocess.Popen([sys.executable,'-B','-u',str(s/'restart.py'),str(r),str({RESOURCE_DEADLINE!r}),{reg['amendment_sha256']!r}],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+ st=pathlib.Path('/proc',str(p.pid),'stat').read_text().split();d=dict(pid=p.pid,start_ticks=st[21],boot_id=pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip(),root=str(r),unix=time.time(),host={host!r})
+ with (r/'RESOURCE_EXTENSION_DISPATCH_1651_V2.json').open('x') as f:json.dump(d,f)
+ out.append(d)
+print(json.dumps(out))''',timeout=40)
+    write(ops.EVIDENCE/f'GPU_RESOURCE_DISPATCH_{host}_1651_V2.json',json.loads(out));print(out)
+
+
+def gpu_dispatch():
+    from . import ops
+    from .warm_deploy import ROOT
+    out=ops.ssh.remote('cpuQ',f'''import pathlib,json,os,sys,time,subprocess
+r=pathlib.Path({ROOT!r});s=pathlib.Path({SOURCE!r});sys.path.insert(0,str(s/'pytools'))
+from tools.coopmwm.warm_spool import immutable
+assert not (r/'GPU_RESOURCE_CONTROLLER_1651_V2.json').exists()
+old=json.loads((r/'GPU_RESOURCE_CONTROLLER_1651.json').read_text());p=pathlib.Path('/proc',str(old['pid']))
+assert old['boot_id']==pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip()
+st=(p/'stat').read_text().split();assert st[21]==old['start_ticks']
+argv=[x.decode() for x in (p/'cmdline').read_bytes().split(bytes([0])) if x]
+assert argv==['/home/ubuntu/miniconda3/bin/python','-B','-u','-m','tools.coopmwm.verification_beta_ops','gpu_serve','--root',str(r)]
+__import__('os').kill(old['pid'],__import__('signal').SIGTERM)
+for _ in range(150):
+ if not p.exists() or (p/'stat').read_text().split()[2]=='Z':break
+ assert (p/'stat').read_text().split()[21]==old['start_ticks'];time.sleep(.1)
+else:raise ValueError('old observer controller did not exit')
+env=dict(os.environ,PYTHONPATH=str(s/'pytools')+':/home/ubuntu/e3final/runtime/src:/home/ubuntu/e3final/runtime',CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
+with (r/'GPU_RESOURCE_1651_V2.log').open('x') as log:
+ p=subprocess.Popen(['nice','-n','19',sys.executable,'-B','-u','-m','tools.coopmwm.verification_beta_ops','gpu_serve','--root',str(r)],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+st=pathlib.Path('/proc',str(p.pid),'stat').read_text().split();d=dict(pid=p.pid,start_ticks=st[21],boot_id=pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip(),source=str(s),root=str(r),unix=time.time())
+immutable(r/'GPU_RESOURCE_CONTROLLER_1651_V2.json',d);print(json.dumps(d))''',timeout=30)
+    write(ops.EVIDENCE/'GPU_RESOURCE_CONTROLLER_1651_V2.json',json.loads(out));print(out)
+
+
+def gpu_serve(root):
+    import os,signal,sys,subprocess
+    from .warm_broker import Remote,worker_endpoints
+    from .warm_spool import immutable
+    try:
+        v=read(root/'GPU_RESOURCE_BINDING_1651.json');old=v['broker']
+        assert v['amendment_sha256'] in (root/'AUTHORITY.md').read_text()
+        endpoints=worker_endpoints(root,read(root/'WARM_REMOTE_BINDING.json'),{})
+        ready={}
+        while len(ready)<len(endpoints):
+            for slot,e in endpoints.items():
+                if slot in ready:continue
+                s=Remote(root,e).call(dict(action='status'))
+                owner=s['receipts'].get('SPOOL_OWNER.json',{});service=s['receipts'].get('SERVICE_OWNER.json',{})
+                if s['failed'] and not s['alive']:
+                    # An already-dead worker/claim is never replayed or resurrected.
+                    # capacity_broker will quarantine it while healthy slots serve.
+                    ready[slot]=dict(quarantined=True,original_owner=owner,
+                        failure=s['receipts'].get('SPOOL_FAILED.json'));continue
+                # SERVICE_OWNER is published only after all fresh gates pass.
+                if s['alive'] and s['ready'] and not s['failed'] and owner.get('unix',0)>v['unix'] and service.get('pid')==owner.get('pid'):
+                    ready[slot]=owner
+            if time.time()>RESOURCE_DEADLINE:raise ValueError('extended resource deadline')
+            time.sleep(5)
+        p=Path('/proc',str(old['pid']));st=(p/'stat').read_text().split()
+        assert old['boot_id']==Path('/proc/sys/kernel/random/boot_id').read_text().strip() and st[21]==old['start_ticks'] and st[2]=='T'
+        argv=[x.decode() for x in (p/'cmdline').read_bytes().split(bytes([0])) if x]
+        assert argv[-3:]==['tools.coopmwm.capacity_broker',str(root),str(root/'DNS_BROKER_CONFIG_1651.json')]
+        os.kill(old['pid'],signal.SIGKILL)
+        for _ in range(150):
+            if not p.exists() or (p/'stat').read_text().split()[2]=='Z':break
+            assert (p/'stat').read_text().split()[21]==old['start_ticks'];time.sleep(.1)
+        else:raise ValueError('old broker failed to exit')
+        cfg=read(root/'DNS_BROKER_CONFIG_1651.json');cfg['receipt_tag']='_DNS1651_DL'
+        immutable(root/'GPU_RESOURCE_BROKER_CONFIG_1651.json',cfg)
+        source=read(root/'RESOURCE_EXTENSION_1651.json')['source_root']
+        env=dict(os.environ,PYTHONPATH=source+'/pytools:/home/ubuntu/e3final/runtime/src:/home/ubuntu/e3final/runtime')
+        with (root/'GPU_RESOURCE_BROKER_1651.log').open('x') as log:
+            p=subprocess.Popen(['nice','-n','19',sys.executable,'-B','-u','-m','tools.coopmwm.capacity_broker',str(root),str(root/'GPU_RESOURCE_BROKER_CONFIG_1651.json')],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+        st=Path('/proc',str(p.pid),'stat').read_text().split()
+        immutable(root/'GPU_RESOURCE_BROKER_DISPATCH_1651.json',dict(pid=p.pid,start_ticks=st[21],boot_id=old['boot_id'],source=source,root=str(root),component='broker',unix=time.time()))
+        immutable(root/'GPU_RESOURCE_COMPLETE_1651.json',dict(unix=time.time(),workers=ready,gpu_deadline=RESOURCE_DEADLINE,no_inference_replay=True))
+    except BaseException as e:
+        immutable(root/'GPU_RESOURCE_FAILED_1651.json',dict(unix=time.time(),error=repr(e)));raise
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('status','cpu','dispatch','serve','recover','repair_wait','extend_register','extend_dispatch','extend_gpu','extend_serve','resume_register','resume_dispatch','resume_serve'));p.add_argument('--root',type=Path);p.add_argument('--config',default='VERIFICATION_BETA_TRANSITION_CONFIG.json')
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('status','cpu','dispatch','serve','recover','repair_wait','resume_register','resume_dispatch','resume_serve','gpu_register','gpu_workers','gpu_dispatch','gpu_serve'));p.add_argument('--root',type=Path);p.add_argument('--config',default='VERIFICATION_BETA_TRANSITION_CONFIG.json');p.add_argument('--host',choices=('gpuA','gpuR'))
     a=p.parse_args()
     if a.mode=='serve':serve(a.root,a.config)
     elif a.mode=='extend_serve':extend_serve(a.root)
     elif a.mode=='resume_serve':resume_serve(a.root)
+    elif a.mode=='gpu_serve':gpu_serve(a.root)
+    elif a.mode=='gpu_workers':gpu_workers(a.host)
     else:globals()[a.mode]()

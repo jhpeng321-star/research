@@ -11,7 +11,7 @@ from .storage import read,write
 DISPATCHES={'grader':'EXACT_GRADER_DISPATCH.json','broker':'WARM_REMOTE_BROKER_DISPATCH.json',
             'B':'WARM_B_DISPATCH_V4.json','R':'WARM_R_DISPATCH_V4.json'}
 TAG='EXACT_OBSERVER_V2'
-OBSERVE_ONLY=('EXACT_OBSERVER_V6','EXACT_OBSERVER_V7','EXACT_OBSERVER_V8','EXACT_OBSERVER_V9','EXACT_OBSERVER_V10','EXACT_OBSERVER_V11')
+OBSERVE_ONLY=('EXACT_OBSERVER_V6','EXACT_OBSERVER_V7','EXACT_OBSERVER_V8','EXACT_OBSERVER_V9','EXACT_OBSERVER_V10','EXACT_OBSERVER_V11','EXACT_OBSERVER_V12')
 
 
 def adopt(cpu):
@@ -88,6 +88,15 @@ def run():
         for name,v in previous.get('cpu',{}).get('owners',{}).items():assert c['owners'][name]['owner']==v['owner']
     try:
         while time.time()<binding['deadline_unix']:
+            if TAG=='EXACT_OBSERVER_V12':
+                from .warm_watch import state
+                # Read-only metadata rechecks are themselves safe to repeat.
+                # New source-bound owner receipts may appear during a handover;
+                # state checks each receipt's boot/start identity, not old owners.
+                current=retry(state,state,record)
+                write(ops.EVIDENCE/f'EXACT_CURRENT_STATE_{int(current["unix"])}.json',current)
+                retry(publish,state,record);commit()
+                time.sleep(60);continue
             gpus,cpu=retry(exact_ops.status,verify,record)
             previous.update(gpu=gpus,cpu=cpu)
             if any(v['failed'] for v in gpus.values()):raise ValueError('source-bound GPU failure; preserve/no inference replay')
@@ -108,6 +117,14 @@ def run():
 
 def dispatch():
     target=ops.EVIDENCE/(TAG+'_DISPATCH.json');assert not target.exists()
+    if TAG=='EXACT_OBSERVER_V12':
+        from .protocol import checked,REGISTRY,sha
+        previous=read(ops.EVIDENCE/'EXACT_OBSERVER_V11_DISPATCH.json')
+        live=subprocess.check_output(['powershell','-NoProfile','-Command',
+            f"Get-CimInstance Win32_Process -Filter 'ProcessId={int(previous['pid'])}' | ConvertTo-Json -Compress"],text=True)
+        assert not live.strip(),'previous observer still live; adopt, never duplicate'
+        line='\nS-COOPMWM MAIN1651 OBSERVE-ONLY REFRESH REGISTERED: priorV11 verifiedabsent; V12 only reads current DNS/resource dispatch receipts with boot/start checks, publishes TRAIN receipts/commits; never calls launcher or GPU service; reports pauses without resuming. Deadline2026-11-05 23:59+08; current-owner payload11CPU PASS; no new SUMO/inference.\n'
+        with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
     if TAG=='EXACT_OBSERVER_V11':
         from .protocol import checked,REGISTRY,sha
         previous=read(ops.EVIDENCE/'EXACT_OBSERVER_V10_DISPATCH.json')
@@ -219,6 +236,7 @@ def dispatch():
         with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
     binding=dict(deadline_unix=read(ops.EVIDENCE/'WARM_A48_BINDING.json')['gpu_deadline'],
         contract='observe/publish only; repaired owners already dispatched; never launch physics/inference' if TAG in OBSERVE_ONLY else 'observe/publish; adopt existing owners; once8EXACT0 gates per host, register and launch grader/broker/B/R once; no physics retry')
+    if TAG=='EXACT_OBSERVER_V12':binding['deadline_unix']=1793894340.
     write(ops.EVIDENCE/(TAG+'_BINDING.json'),binding)
     with (ops.EVIDENCE/(TAG+'.log')).open('x',encoding='utf-8') as log:
         p=subprocess.Popen([sys.executable,'-X','utf8','-u','-m','tools.coopmwm.exact_watch','run','--tag',TAG],cwd=ops.LOCAL,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT)

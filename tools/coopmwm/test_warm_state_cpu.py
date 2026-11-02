@@ -13,6 +13,22 @@ from . import warm_health  # Bind its real pathlib.Path before the transport stu
 
 
 class WarmStateTests(unittest.TestCase):
+    def test_dns_recovery_owner_precedence_and_new_failures_remain_visible(self):
+        files={'DNS_B_DISPATCH_1651.json':self.owner(),
+            'BETA_B_DISPATCH.json':self.owner(22),
+            'DNS_GRADER_DISPATCH_1651.json':self.owner(),
+            'VERIFIED_GRADER_DISPATCH.json':self.owner(22),
+            'GPU_RESOURCE_BROKER_DISPATCH_1651.json':self.owner(),
+            'DNS_BROKER_DISPATCH_1651.json':self.owner(22),
+            'DNS_RECOVERY_STARTED_1651.json':{},'WARM_R_FAILED_SB1.json':{'error':'old DNS stop'}}
+        v=self.collect(files)
+        self.assertEqual(v['owners']['B']['dispatch_receipt'],'DNS_B_DISPATCH_1651.json')
+        self.assertEqual(v['service_owners']['broker']['dispatch_receipt'],'GPU_RESOURCE_BROKER_DISPATCH_1651.json')
+        self.assertEqual(v['service_owners']['grader']['dispatch_receipt'],'DNS_GRADER_DISPATCH_1651.json')
+        self.assertIsNone(v['stop'])
+        files['WARM_B_FAILED_DNS1651.json']={'error':'fresh fault'}
+        self.assertIsNotNone(self.collect(files)['stop'])
+
     def collect(self, files, *, boot='fixture-boot', start='123'):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp);proc=root/'proc';proc.mkdir()
