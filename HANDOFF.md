@@ -3,13 +3,23 @@
 Branch `c4/rb-lane`, base `f0db3c82`. **Current engineering source80541278**;
 scored decision source52d2df5c, decision-equivalent message completion certified.
 All prior work retained. **Keep-right precision is NOT solved; no distributional
-qualification. Prior inference jobs exited; publication-only observer active.** Morning report:
+qualification. Prior inference jobs exited; publication-only observer completed.** Morning report:
 `docs/paper_results/RB_LANE_20261101.md`; full iteration/receipts diary preserved.
 
 <!-- LANE-FIT-PRECISION:BEGIN -->
 Closed 2026-11-01T09:00:00.219934+08:00 at the09:00 deadline; 0new verified FIT summaries published.
 No inference/fitting/remote dispatch. Keep-right qualification remains unresolved.
 <!-- LANE-FIT-PRECISION:END -->
+
+## Fresh-session reconciliation — 2026-11-02
+- Resumed clean `8f229cd5`; all implementation, iterations and score receipts
+  preserved. Local clock is already beyond the November 1 09:00 continuation
+  deadline. Observer completion records zero new publications; exact local
+  PID3316 is absent on the November 2 check. No observer restart is required.
+- FIT has since published `lane_raw_5a5b15ef118c` at November 2 09:04:39+08.
+  Consume its verified counts/source binding next; this is a later publication,
+  not a result available to the closed overnight observer. Existing panels14–16
+  and their per-motivation scores remain the primary LANE results.
 
 ## Integration contract
 - `ModelSpec(lane_model="lc2013",lane_head="off",merge_decision="hazard")`.
