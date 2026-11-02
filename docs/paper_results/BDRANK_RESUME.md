@@ -40,3 +40,22 @@
   is recorded here. All STOP items and inference estimates remain unchanged.
 - No analysis rerun, SUMO, training, inference, dispatch, process signals, peer
   writes, extra registration, deletion or push. Only this receipt was updated.
+
+## Subsequent fresh-session verification — 2026-11-03
+
+- Recovery started with clean Git status and log at `19467f82`; analysis commit
+  `7655c0db` and both earlier verification receipts were preserved. Re-read the
+  required source reports, registered detector method and BDRANK contract.
+- Ran only `python -B tools/bdrank/verify.py`: PASS for every check listed above,
+  including 173 input hashes, 300 decision/regret identities and exactly one
+  shared registration line. Git status remained clean after verification; the
+  55-line primary report and all saved evidence bytes were unchanged.
+- Metadata-only read of round-2 `CURRENT_JOBS.md` found its newer Nov3 01:23 +08
+  verification: unchanged HOLD, 31/216 new jobs collected, 185 unadmitted,
+  12 matched K8 v5/v4 worlds; collector/publisher exited incomplete and zero
+  active INT evaluations. The full comparison remains incomplete. No partial
+  panel outcomes or prediction caches were opened or scored.
+- Existing STOP items and inference estimates remain unchanged. No completed
+  analysis was rerun and no SUMO, training, inference, dispatch, process signals,
+  peer writes, additional registration, deletion or push occurred. This appended
+  resume receipt is the only change.
