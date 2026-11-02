@@ -119,10 +119,12 @@ def run_arm(root,arm):
             if b.get('parallel_fanout_factor') and arm=='B':extra['parallel_fanout_factor']=b['parallel_fanout_factor']
             if b.get('health_guards'):extra.update(health_guards=True,safety_reference=b['safety_reference'])
             if arm=='B':extra['search_learning']=learned
+            replay=bool(b.get('b_replay')) and arm in ('B','R')
+            if replay:extra['b_replay']=True  # MAIN B-REPLAY: plain PPO episodes, bank imitation only
             # HARDEN-3 opt-in (MAIN decision): R update u may match B's PREVIOUS
             # completed update (lag 1) so R runs concurrently with B update u.
             quota_u=u-1 if arm=='R' and b.get('r_concurrent_lag1_quota') else u
-            if arm=='R':
+            if arm=='R' and not replay:
                 wait(root,root/f'B_RANDOM_QUOTA_{quota_u:03}.json',b['gpu_deadline'],arm)
                 extra['random_quota']=str(root/f'B_RANDOM_QUOTA_{quota_u:03}.json')
             eps=wave(root,dict(b,beta=beta),{arm:policy},batch_worlds(u),'train',f'warm_u{u:03}','train',False,extra)
@@ -134,21 +136,27 @@ def run_arm(root,arm):
                 from .quota_admission import first_update_deviation
                 deviation=first_update_deviation(root,arm,u,routes['executed'],b['N_exec'])
             matching=None
-            if arm=='R':
+            if arm=='R' and not replay:
                 from .r_matching import report
                 quota=read(root/f'B_RANDOM_QUOTA_{quota_u:03}.json')
                 matching=report(quota['tickets'],routes['durations'])
                 if quota_u!=u:matching=dict(matching,matched_B_update=quota_u,rule='lag-1 concurrent R (opt-in)')
             ev=evidence(eps);running+=ev
             exact_receipts=[];weights=None;pairs=[]
-            if arm in ('B','R'):
+            if replay:
+                from .replay_bank import bank_pairs
+                replay_beta=float(b.get('replay_beta',1.))
+                pairs,weights=bank_pairs(root,arm,SEED,beta=replay_beta)
+                tr=dict(beta=replay_beta,graded=weights['counts']['positive'],bank=weights['counts'],
+                    mode='B-REPLAY: no executed plans; trust/beta fixed by binding')
+            elif arm in ('B','R'):
                 from . import exact_runtime as xr
                 for ep in eps:xr.enqueue(root,b,ep,u,arm,beta)
                 exact_receipts,weights,pairs,tr=xr.evidence(root,arm,beta)
             else:tr=dict(beta=0.)
             if b.get('health_guards'):
                 before_update(root,arm,u,routes,
-                    [dict(executed=True)]*tr['graded'] if arm in ('B','R') else running,tr,b['N_exec'],
+                    [dict(executed=True)]*tr['graded'] if arm in ('B','R') else running,tr,0 if replay else b['N_exec'],
                     effective_guide_beta=(b.get('sumo_verify') or {}).get('guide_beta'))
                 if arm in ('B','R'):
                     a_records=[]
@@ -168,7 +176,7 @@ def run_arm(root,arm):
             if arm in ('B','R'):
                 from .exact_grade import exact_update,lag_report
                 metrics=exact_update(policy,opt,eps,rng,pairs,b['awr']['coefficient'])
-                grade_lag=lag_report(xr.queue(root),u)
+                grade_lag=None if replay else lag_report(xr.queue(root),u)
             else:
                 metrics=update(policy,opt,eps,rng,**({'awr':b['awr']} if 'awr' in b else {}));grade_lag=None
             save(root/f'{arm}_checkpoint_{u:03}.pt',policy,opt,rng,u,charged(root))

@@ -157,6 +157,10 @@ def forecast_result(kind,record,payload):
             raise ValueError('forecast identity/shape mismatch')
         if kind=='plan' and record.get('mode')!='diagnostic' and not isinstance(result.get('accepted'),bool):
             raise ValueError('forecast lacks accepted flag')
+        if kind=='plan' and record.get('mode')!='diagnostic':
+            from .query_errors import plan_shape
+            problem=plan_shape(record,result)
+            if problem:raise ValueError('forecast plan shape: '+problem)
         validate_response(record,result)
         return result,None
     except (KeyError,TypeError,ValueError) as error:

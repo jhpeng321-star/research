@@ -489,7 +489,7 @@ def _check_worlds():
     return worlds('check')[:3]
 
 
-def child_install():
+def child_install(parent=False):
     """Installed by the rehearsal sitecustomize in EVERY child (episodes, branch workers)."""
     _install_fcntl()
     _fake_leverprobe()
@@ -503,20 +503,22 @@ def child_install():
     if os.environ.get('H3_LEGACY_REF'):
         _install_legacy(os.environ['H3_LEGACY_REF'])
     crash = os.environ.get('H3_BRANCH_CRASH_DIR')
-    if crash and not hasattr(sumo_verify.LocalBranchRunner.run, 'harness'):
-        original = sumo_verify.LocalBranchRunner.run
+    if crash and not parent and not hasattr(accel_plant.episode, 'harness'):
+        # Branch workers run ``-m tools.coopmwm.sumo_verify`` (a separate __main__ module),
+        # so inject at the shared accel_plant.episode used by LocalBranchRunner.
+        original = accel_plant.episode
 
-        def run(self, spec, snapshot):
-            if spec['branch'] != 'policy':
+        def episode(job):
+            if job.get('branch') and not str(job['id']).endswith('_policy'):
                 for i in range(int(os.environ.get('H3_BRANCH_CRASH_N', '1'))):
                     try:
                         os.close(os.open(os.path.join(crash, f'crash_{i}'), os.O_CREAT | os.O_EXCL))
                     except FileExistsError:
                         continue
                     raise RuntimeError('rehearsal: SUMO branch worker crashed (TraCI connection lost)')
-            return original(self, spec, snapshot)
-        run.harness = True
-        sumo_verify.LocalBranchRunner.run = run
+            return original(job)
+        episode.harness = True
+        accel_plant.episode = episode
 
 
 def _child_environment(base, cfg):
@@ -539,7 +541,7 @@ def install_runtime(root, cfg, layout):
     from . import warm_runner as wr, runner, exact_runtime
     from .warm_protocol import install_accounting
     from . import mppi_runtime, centre_service  # noqa: F401
-    child_install()
+    child_install(parent=True)
     mppi_runtime.evaluate = fake_evaluate
     _platform_shims(root)
     _memoize_interp()
@@ -564,6 +566,8 @@ def install_runtime(root, cfg, layout):
                  sumo_verify=dict(root=str(r/'sumo_verification'), run_root=str(r),
                                   phase='sumo_verification_k8' if k == 8 else 'sumo_verification',
                                   k=k, workers=cfg.get('verify_workers') or k+1, timeout_s=3600, guide_beta=1.))
+        if cfg.get('b_replay'):
+            b.update(b_replay=True, replay_beta=1., slots=cfg['slots'])
         if cfg.get('fanout_factor'):
             b['parallel_fanout_factor'] = cfg['fanout_factor']
         if cfg.get('r_concurrent') and a == 'R':
@@ -634,6 +638,33 @@ def run_scenario(name, cfg, workdir):
             outcome['broker'] = 'stopped: '+repr(error)[:400]
     threads = {a: threading.Thread(target=arm_thread, args=(a,), daemon=True, name='arm-'+a) for a in ('B', 'R')}
     bt = threading.Thread(target=broker_thread, daemon=True, name='broker');bt.start()
+    collectors = {}
+    if cfg.get('b_replay'):
+        from . import replay_bank
+        from .accel_protocol import worlds
+        train = [w for w in worlds('train') if w not in sum(layout['plans'].values(), [])]
+        done = threading.Event()
+
+        def collector(arm, rounds):
+            try:
+                b = wr.verify(root, arm)
+                st = replay_bank.collect(root, arm, b, train[(0 if arm == 'B' else 7):], lambda: done.is_set(),
+                                         episodes_per_round=cfg['collect_episodes'],
+                                         verify_workers=cfg.get('verify_workers'), rounds=rounds)
+                outcome.setdefault('collector_'+arm, []).append(dict(rounds=rounds, statuses=st))
+            except BaseException as error:
+                outcome.setdefault('collector_'+arm, []).append('failed: '+repr(error))
+                event('collector_failed', arm=arm, error=repr(error), tb=traceback.format_exc())
+        warm = [threading.Thread(target=collector, args=(a, cfg['bank_warmup_rounds']), daemon=True) for a in ('B', 'R')]
+        for t in warm:
+            t.start()
+        for t in warm:
+            t.join()
+        event('bank_warmup_done', bank=bank_state(root))
+        collectors = {a: threading.Thread(target=collector, args=(a, None), daemon=True) for a in ('B', 'R')}
+        for t in collectors.values():
+            t.start()
+        started = time.time()
     for t in threads.values():
         t.start()
     last, last_change, deadlock = None, time.time(), False
@@ -649,7 +680,12 @@ def run_scenario(name, cfg, workdir):
         if time.time()-started > cfg['timeout_s']:
             event('harness_timeout');break
     wall = time.time()-started
+    if collectors:
+        done.set()
+        for t in collectors.values():
+            t.join(600)
     state = diagnose(root, cfg, gpus)
+    state['bank'] = bank_state(root)
     # End the broker deterministically (registered health-pause path, never a STOP).
     (root/'PAUSE_HARNESS_END.json').write_text(json.dumps(dict(harness=True)))
     bt.join(30)
@@ -677,6 +713,22 @@ def _install_legacy(ref):
     capacity_broker.capacity_declines = lambda items, assigned, slots, blocking=(), drain=False, withdrawn=():         legacy(items, assigned, slots, blocking, drain)
 
 
+def bank_state(root):
+    out = {}
+    for arm in ('B', 'R'):
+        d = root/'replay_bank'/arm
+        st = {}
+        for p in (d/'sumo_verification'/'verifications').glob('*.json'):
+            v = json.loads(p.read_text());st[v['status']] = st.get(v['status'], 0)+1
+        out[arm] = dict(snapshots=sum(1 for _ in (d/'snapshots').glob('*.json')), verifications=st,
+                        skipped=sum(1 for _ in (d/'skipped').glob('*.json')),
+                        charged_check=[json.loads(p.read_text())['charged_sim_s'] ==
+                                       (json.loads(p.read_text())['k']+1)*json.loads(p.read_text())['window']['end_s']
+                                       for p in (d/'sumo_verification'/'verifications').glob('*.json')
+                                       if json.loads(p.read_text())['charged_sim_s']].count(False) == 0)
+    return out
+
+
 def progress_signature(root):
     count = lambda pattern: sum(1 for _ in root.glob(pattern))
     ticks = 0
@@ -685,7 +737,8 @@ def progress_signature(root):
             ticks += p.stat().st_size
         except OSError:
             pass
-    return (count('sumo_verification/branches/*/*.result.json'), count('jobs/*/CLAIM.json'), count('responses/*.json'), count('centre_responses/*.json'), count('sumo_verification/verifications/*.json'),
+    return (count('replay_bank/*/sumo_verification/branches/*/*.result.json'), count('replay_bank/*/snapshots/*.json'),
+            count('sumo_verification/branches/*/*.result.json'), count('jobs/*/CLAIM.json'), count('responses/*.json'), count('centre_responses/*.json'), count('sumo_verification/verifications/*.json'),
             count('jobs/*/RESULT.json'), count('*_checkpoint_*.pt'), count('broker_completed/*.json'), ticks,
             count('sumo_verification/branches/*/*/RESULT.json'))
 
@@ -719,6 +772,9 @@ def diagnose(root, cfg, gpus):
                                             graded=v['trust'].get('graded'), wall_s=round(v['wall_s'], 1),
                                             query_wait_wall_s=round(v['proposal_routing'].get('query_wait_wall_s', 0.), 1),
                                             eligible_windows=v['proposal_routing'].get('eligible_query_windows'),
+                                            bank=v['trust'].get('bank'),
+                                            imitation_steps=sum(m.get('exact_imitation_steps', 0) for m in v['ppo']),
+                                            ppo_steps=len(v['ppo']),
                                             random_matching=v.get('random_matching'),
                                             verifications=sum(1 for x in verifs if x['arm'] == arm and x['update'] == u))
     req = sum(1 for _ in root.glob('requests/*.json'))
@@ -756,7 +812,9 @@ def tiny_proposer(base):
 
 DEFAULTS = dict(k=8, N_exec=10, slots=4, workers=12, episodes_per_update=6, last_update=5, latency_s=1.,
                 stall_s=240., timeout_s=3600., transport_errors=0, malformed=0, branch_crash=0,
-                die_slot=None, die_after=1, decline_withdrawn=True, parallel_groups=True)
+                die_slot=None, die_after=1, decline_withdrawn=True, parallel_groups=True,
+                fanout_factor=2, r_concurrent=True,   # resume config (MAIN, harden-int)
+                b_replay=True, collect_episodes=2, bank_warmup_rounds=1)   # MAIN B-REPLAY
 
 SCENARIOS = dict(
     a_clean=dict(),
@@ -767,8 +825,8 @@ SCENARIOS = dict(
     e_malformed=dict(malformed=1),
     f_branch_crash=dict(branch_crash=1),
     g_legacy_wait_all=dict(legacy_wait_all=True, latency_s=20.),
-    h_r_concurrent=dict(r_concurrent=True),
-    i_bounded_fanout=dict(fanout_factor=2),
+    h_r_pipelined_legacy=dict(r_concurrent=False),
+    i_unbounded_fanout=dict(fanout_factor=None),
 )
 
 

@@ -50,3 +50,21 @@ def validate_response(record,result):
             error.get('inference_retry') is not False or result.get('accepted') is not False or
             result.get('record_sha256')!=digest(record)):
         raise ValueError('invalid per-query error response')
+
+
+def plan_shape(record,result):
+    """HARDEN-3: reason if an ACCEPTED plan result breaks the client ABI, else None.
+
+    Shape only (never a value threshold): the client indexes plan['members'],
+    duration_s, the per-second profile and the top-k candidates (k=8 verification).
+    """
+    if not result.get('accepted'):return None
+    plan=result.get('plan')
+    if not isinstance(plan,dict) or 'id' not in plan or plan.get('members')!=record['group']:
+        return 'accepted plan missing or not for the requested group'
+    if not isinstance(plan.get('duration_s'),int) or 'profile' not in plan:return 'accepted plan duration/profile'
+    top=result.get('topk')
+    if top is not None and (not isinstance(top,list) or any(not isinstance(c,dict) or 'id' not in c or
+            c.get('members')!=record['group'] or not isinstance(c.get('duration_s'),int) for c in top)):
+        return 'topk candidates malformed'
+    return None

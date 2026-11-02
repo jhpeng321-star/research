@@ -98,6 +98,10 @@ def install(root,arm=None):
             workers=24 if a=='B' else 4,quota_aware_admission=True,parallel_group_queries=a=='B',
              precharged_unattempted=b['plans'][a]['precharged_unattempted'])
         result['job_id_overrides']=b.get('job_id_overrides',{})
+        # MAIN (harden-int, 2026-11-02 evening): resume with bounded fan-out (2 x slots
+        # in flight) and R concurrent with B on B's previous completed quota (lag 1).
+        result.update(parallel_fanout_factor=b.get('parallel_fanout_factor',2),
+            r_concurrent_lag1_quota=b.get('r_concurrent_lag1_quota',True))
         if a in b.get('stop_after_update',{}):result['stop_after_update']=b['stop_after_update'][a]
         if b.get('sumo_verify'):result['sumo_verify']=copy.deepcopy(b['sumo_verify'])
         return result
