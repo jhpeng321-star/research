@@ -357,3 +357,68 @@ class NoveltyAndEntropy(unittest.TestCase):
         self.assertGreaterEqual(row['proposer_mode_distance'], 0.)
         rep = pp.novelty_report([row, dict(row, posthoc_label='O1', origin='proposer')])
         self.assertEqual(rep['label_counts'], {'O1': 1, 'new': 1}); self.assertEqual(rep['new_fraction'], .5)
+
+
+class GoldLabels(unittest.TestCase):
+    def _rec(self, n=60, worlds=12):
+        rec = pp.synthetic_receipts(n, worlds, seed=13, sizes=(2, 3), population=16)
+        ver = pp.synthetic_verification(rec, seed=2)
+        self.assertEqual(pp.attach_verification(rec, ver), len(ver))
+        return rec, ver
+
+    def test_join_targets_and_sumo_negative_exclusion(self):
+        rec, ver = self._rec(10, 2)
+        r = next(x for x in rec if x.get('sumo_verification'))
+        sv = r['sumo_verification']
+        s, why = pp.build_search(r)
+        self.assertIsNone(why); self.assertTrue(s['verified'])
+        self.assertEqual(len(s['rank']), len(sv['candidate_ids'])+1)
+        self.assertTrue(s['rank'][0]['policy']); self.assertEqual(s['rank'][0]['gold'], 0.)
+        gold = {c: sv['J_policy_veh_s']-j for c, j in zip(sv['candidate_ids'], sv['J_candidates_veh_s'])}
+        gw = sum(t['w'] for t in s['targets'] if t['source'] == 'gold')
+        self.assertAlmostEqual(gw, pp.REGISTERED['gold_weight'] if any(g > 0 for g in gold.values()) else 0.)
+        # a candidate that lost in exact SUMO is never a WM likelihood target
+        r2 = copy.deepcopy(r); lost = sv['candidate_ids'][0]
+        r2['sumo_verification']['J_candidates_veh_s'][0] = sv['J_policy_veh_s']+50.
+        s2, _ = pp.build_search(r2)
+        z_lost = next(c for c in r2['candidates'] if c['id'] == lost)['perturbation_canonical']
+        for t in s2['targets']:
+            self.assertFalse(np.allclose(t['z']*pp.Z_SCALE, z_lost))
+        # arm-R / ungraded verifications are never joined
+        r3 = copy.deepcopy(r); r3.pop('sumo_verification')
+        self.assertEqual(pp.attach_verification([r3], [dict(v, proposer='random') for v in ver]), 0)
+        self.assertEqual(pp.attach_verification([r3], [dict(v, status='stopped') for v in ver]), 0)
+
+    def test_rank_loss_and_verification_check(self):
+        rec, _ = self._rec()
+        S, _ = pp.build_dataset(rec)
+        model = pp.ProposerNet(dict(pp.REGISTERED, d_model=32))
+        rl = pp.rank_loss(model, S)
+        self.assertTrue(torch.isfinite(rl)); rl.backward()
+        self.assertIsNone(pp.rank_loss(model, [dict(s, rank=[]) for s in S]))
+        res = pp.verification_check(model, S, dict(bootstraps=100))
+        self.assertEqual(res['lists'], sum(1 for s in S if len({r['gold'] for r in s['rank']}) > 1))
+        self.assertFalse(res['enough_data'] and res['passed'] and res['exact_best_loglik_gain'] is None)
+        m2, info = pp.train(S, FAST)                      # gold-only/rank lists are trainable
+        self.assertGreater(info['train_searches'], 0)
+
+    def test_service_embedded_pool_mirror_and_prefix_weights(self):
+        rec, _ = self._rec(4, 2)
+        r = rec[0]
+        request = dict(state_id=r['search_id'], world_id=986001, rows=r['rows'], group=r['members'])
+        embedded = {k: v for k, v in r.items() if k not in ('world_id', 'rows')}
+        got, why = pp.receipt_from_service(request, dict(key='k', unix=1.,
+                                           result=dict(accepted=False, record_sha256='sha', proposer_receipt=embedded)))
+        self.assertIsNone(why); self.assertEqual(got['search_id'], r['search_id']); self.assertEqual(got['world_id'], 986001)
+        self.assertFalse(got['service']['command_mirror'])
+        post, _ = pp.receipt_from_service(request, dict(accepted=False, record_sha256='sha', final_chain=True,
+                                                        proposer_receipt=embedded))
+        self.assertTrue(post['service']['command_mirror'])
+        pre = dict(got, search_id='pre'); post['search_id'] = 'post'
+        S, _ = pp.build_dataset([pre, post])
+        w = {s['id']: sum(t['w'] for t in s['targets']) for s in S}
+        self.assertAlmostEqual(w['pre'], pp.REGISTERED['pre_fix_weight']*w['post'], places=6)
+        S2, skipped = pp.build_dataset([pre, post], post_fix_only=True)
+        self.assertEqual([s['id'] for s in S2], ['post']); self.assertEqual(len(skipped), 1)
+        S3, _ = pp.build_dataset([pre])                    # no post-fix data: weights unchanged
+        self.assertAlmostEqual(sum(t['w'] for t in S3[0]['targets']), w['post'], places=6)

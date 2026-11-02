@@ -67,7 +67,15 @@ REGISTERED = dict(
     sumo_bonus=1., elites_frac=.25, eval_samples=16, bootstraps=2000,
     min_heldout_worlds=8, min_heldout_searches=40, threads=1, inner_frac=.2, inner_min_worlds=5, eval_every=100,
     min_pool=16, generic_share=.2, novelty_share=.1, novelty_oversample=4,
-    entropy_floor=.5*math.log(4), entropy_weight=1.)
+    entropy_floor=.5*math.log(4), entropy_weight=1.,
+    gold_weight=2., rank_weight=2., pre_fix_weight=.25, rank_noninferiority=.05)
+# Owner/MAIN 2026-11-02: exact SUMO verification branches (top-4 candidates + 'policy
+# continues', same state, same window) are GOLD labels: a listwise ranking loss on
+# exact outcomes plus likelihood targets for exactly-positive candidates, each
+# weighted ``gold_weight``/``rank_weight`` (> the unit WM weight of a search).
+# Post-safety command mirror (clipping fix): searches scored with the mirror ON are
+# 'post-fix'; while any post-fix search exists, pre-fix searches get ``pre_fix_weight``.
+MIRROR_KEYS = ('command_mirror', 'final_chain', 'post_safety_mirror')
 
 FEATURES = 41
 
@@ -219,10 +227,28 @@ def receipt_from_service(request, response, arm='B'):
         return None, 'unreadable request/response'
     if result.get('random_match') or 'centre_contract' in result:
         return None, 'arm R / unscored plan (never proposer data)'
-    if not result.get('topk'):
-        return None, 'search without scored perturbations (rejected or unavailable)'
     if request.get('rows') is None:
         return None, 'request without observable rows'
+    mirror = next((result[k] for k in MIRROR_KEYS if k in result), None)
+    service = dict(unix=response.get('unix') if isinstance(response, dict) else None, command_mirror=mirror)
+    embedded = result.get('proposer_receipt')
+    if isinstance(embedded, dict) and embedded.get('schema') == SCHEMA:
+        # live mppi_runtime embeds the full RecordingEvaluator pool (accepted AND rejected)
+        rec = dict(embedded)
+        for k in ('world_id', 'rows'):
+            if rec.get(k) is None:
+                rec[k] = request.get(k)
+        rec['regime'] = rec.get('regime') or result.get('regime') or request.get('regime')
+        rec['members'] = rec.get('members') or (result.get('group') or {}).get('members') or request.get('group')
+        # keep the embedded id (= request state_id) so GPU-side proposer_receipts copies dedupe
+        rec['search_id'] = rec.get('search_id') or request.get('state_id') or result.get('record_sha256')
+        rec['state_id'] = request.get('state_id')
+        rec['service'] = service
+        if not rec['members']:
+            return None, 'no group members'
+        return rec, None
+    if not result.get('topk'):
+        return None, 'search without scored perturbations (rejected or unavailable)'
     cov = None
     learning = request.get('search_learning')
     regime = result.get('regime') or request.get('regime')
@@ -233,9 +259,40 @@ def receipt_from_service(request, response, arm='B'):
         except (KeyError, ValueError, TypeError):
             cov = None
     rec = receipt_from_search(dict(request, regime=regime), result, None, arm, cov)
+    rec['state_id'] = request.get('state_id'); rec['service'] = service
     if not rec['members']:
         return None, 'no group members'
     return rec, None
+
+
+def attach_verification(receipts, verifications):
+    """Join exact SUMO verification receipts (``sumo_verify`` schema v1) to searches.
+
+    Only arm-B ('wm' proposer) verifications with status accepted/rejected and
+    complete J values are used; the join is by candidate ids (the verified
+    candidates are the search's own top-k). Arm-R ('random') receipts are never used.
+    Returns the number attached.
+    """
+    by_cand = {}
+    for r in receipts:
+        for cid in {c.get('id') for c in r.get('candidates') or []}:
+            by_cand.setdefault(cid, []).append(r)
+    n = 0
+    for v in verifications:
+        if v.get('proposer') != 'wm' or v.get('status') not in ('accepted', 'rejected'):
+            continue
+        ids, J = v.get('candidate_ids') or [], v.get('J_candidates_veh_s')
+        if not ids or J is None or len(J) != len(ids) or v.get('J_policy_veh_s') is None:
+            continue
+        hits = [r for r in by_cand.get(ids[0], []) if set(ids) <= {c.get('id') for c in r.get('candidates') or []}]
+        if len(hits) != 1:
+            continue
+        hits[0]['sumo_verification'] = dict(verification_id=v.get('verification_id'), candidate_ids=list(ids),
+                                            J_candidates_veh_s=[float(x) for x in J],
+                                            J_policy_veh_s=float(v['J_policy_veh_s']), status=v.get('status'),
+                                            window=v.get('window'), t0=v.get('t0'))
+        n += 1
+    return n
 
 
 def log_receipt(root, record, result, recorder, arm='B'):
@@ -354,6 +411,13 @@ def build_search(receipt, cfg=REGISTERED):
     ex = receipt.get('executed') or {}
     sumo = ex.get('sumo_realized_advantage')
     lost = ex.get('plan_id') if sumo is not None and sumo <= 0 else None
+    # exact SUMO verification: saving_i = J_policy - J_i (veh-s, > 0 = beat 'policy continues')
+    sv = receipt.get('sumo_verification') or {}
+    gold = {}
+    if sv.get('J_candidates_veh_s') is not None:
+        gold = {cid: float(sv['J_policy_veh_s'])-float(j) for cid, j in zip(sv['candidate_ids'], sv['J_candidates_veh_s'])
+                if cid in cands}
+    sumo_lost = {cid for cid, g in gold.items() if g <= 0} | ({lost} if lost else set())
     screen = [dict(c, **c['screen']) for c in cands.values() if 'screen' in c]
     full_pool = len(screen) >= cfg['min_pool']
     if full_pool:
@@ -364,12 +428,12 @@ def build_search(receipt, cfg=REGISTERED):
         ranked = sorted(screen, key=lambda c: (-c['u'], c['id']))
         E = max(1, int(math.ceil(cfg['elites_frac']*len(screen)/ms.REGISTERED['iterations'])))
         thr = ranked[E]['u'] if len(ranked) > E else ranked[-1]['u']
-        good = [dict(c, gain=c['u']-thr) for c in ranked[:E] if c['id'] != lost]
+        good = [dict(c, gain=c['u']-thr) for c in ranked[:E] if c['id'] not in sumo_lost]
     else:
         # top-k-only receipt: candidates with positive predicted saving vs the policy
         scored = [dict(c, **c.get('final', c.get('screen'))) for c in cands.values()]
         good = [dict(c, gain=c['saving']) for c in sorted(scored, key=lambda c: (-c['saving'], c['id']))
-                if c['saving'] > 0 and c['id'] != lost]         # plans that lost in SUMO are never imitated
+                if c['saving'] > 0 and c['id'] not in sumo_lost]   # plans that lost in SUMO are never imitated
     cov0 = initial_covariance(receipt, m); cache = {}
     def item(c, **kw):
         return dict(z=c['z'], d=duration_index(c['D'], durations), D=c['D'],
@@ -380,22 +444,45 @@ def build_search(receipt, cfg=REGISTERED):
         w = np.array([max(0., c['gain']) for c in good])
         w = w/w.sum() if w.sum() > 0 else np.full(len(good), 1/len(good))
         targets = [item(c, w=float(wi), source='wm') for c, wi in zip(good, w)]
-    if sumo is not None and sumo > 0 and ex.get('plan_id') in cands:
+    if sumo is not None and sumo > 0 and ex.get('plan_id') in cands and ex.get('plan_id') not in sumo_lost:
         targets.append(item(cands[ex['plan_id']], w=float(cfg['sumo_bonus']), source='sumo'))
+    pos = {cid: g for cid, g in gold.items() if g > 0}
+    if pos:   # exactly-positive verified candidates: likelihood targets, weight above the WM unit
+        tot = sum(pos.values())
+        targets += [item(cands[cid], w=float(cfg['gold_weight'])*g/tot, source='gold') for cid, g in sorted(pos.items())]
+    rank = []
+    if gold:  # listwise ranking over the verified candidates + the 'policy continues' branch
+        zero = dict(z=np.zeros((m, n)), D=ms.REGISTERED['max_duration_s'])
+        rank = [dict(item(zero), gold=0., policy=True)]+[dict(item(cands[cid]), gold=g, policy=False)
+                                                           for cid, g in gold.items()]
     topk = set(receipt.get('topk') or [])
     elites = good if full_pool else [c for c in good if c['id'] in topk and 'final' in c] or good
     return dict(id=str(receipt.get('search_id')), world=str(receipt.get('world_id')), regime=regime, m=m,
+                rank=rank, verified=bool(gold), gold_saving=gold,
+                post_fix=bool((receipt.get('service') or {}).get('command_mirror')),
                 full_pool=full_pool, accepted=bool(any(c[k]['u'] > 0 for c in cands.values() for k in ('screen', 'final')
                                                        if k in c)),
                 x=x, targets=targets, elites=[item(c) for c in elites],
                 cov0=cov0, n_candidates=len(cands)), None
 
 
-def build_dataset(receipts, cfg=REGISTERED):
+def build_dataset(receipts, cfg=REGISTERED, post_fix_only=False):
+    """Searches + skip reasons. While any post-fix (command mirror ON) search exists,
+    pre-fix searches are down-weighted by ``pre_fix_weight`` (or dropped with
+    ``post_fix_only``); with no post-fix search every weight is unchanged."""
     searches, skipped = [], []
     for r in receipts:
         s, why = build_search(r, cfg)
         (searches.append(s) if s else skipped.append(why))
+    if any(s['post_fix'] for s in searches):
+        if post_fix_only:
+            skipped += ['pre-fix (command mirror OFF)']*sum(not s['post_fix'] for s in searches)
+            searches = [s for s in searches if s['post_fix']]
+        else:
+            for s in searches:
+                if not s['post_fix']:
+                    s['targets'] = [dict(t, w=t['w']*cfg['pre_fix_weight']) for t in s['targets']]
+                    s['rank_scale'] = cfg['pre_fix_weight']
     return searches, skipped
 
 
@@ -506,10 +593,36 @@ def _set_determinism(cfg):
     return prev
 
 
+def rank_loss(model, searches, cfg=REGISTERED):
+    """Listwise (ListNet) loss on exact SUMO outcomes; None if no verified search.
+
+    Per verified search the k+1 items (top-k candidates + 'policy continues' = zero
+    perturbation) get target probabilities softmax(gold / T), T = std of that list's
+    exact savings (scale-free; uniform if all equal), and the proposer's
+    log-likelihoods are pushed to the same ordering: cross-entropy against
+    softmax(log-likelihood). Weighted ``rank_weight`` per list (x ``rank_scale``).
+    """
+    lists = [s for s in searches if s.get('rank')]
+    if not lists:
+        return None
+    ll, _ = log_likelihood(model, lists, 'rank')
+    i, out, wsum = 0, 0., 0.
+    for s in lists:
+        k = len(s['rank']); g = np.array([r['gold'] for r in s['rank']], float); i0 = i; i += k
+        T = float(g.std()) or 1.
+        p = torch.tensor(np.exp((g-g.max())/T)/np.exp((g-g.max())/T).sum(), dtype=ll.dtype)
+        w = float(cfg['rank_weight'])*float(s.get('rank_scale', 1.))
+        out = out-w*(p*torch.log_softmax(ll[i0:i], 0)).sum(); wsum += w
+    return out/max(wsum, 1e-12)
+
+
 def _weighted_nll(model, searches, entropy=False):
     """Weighted NLL; with ``entropy`` adds the registered mixture-entropy floor
     penalty  weight * mean_s relu(floor - H(pi_s))  so the proposer cannot
     collapse onto a single plan type (floor = 0.5 log M)."""
+    searches = [x for x in searches if x['targets']]
+    if not searches:
+        return torch.zeros(())
     ll, w, logpi = log_likelihood(model, searches, return_logpi=True)
     loss = -(w*ll).sum()/w.sum()
     if entropy and model.cfg.get('entropy_weight', 0) > 0:
@@ -527,7 +640,7 @@ def train(searches, cfg=REGISTERED):
     best state is restored. Held-out (validation) searches are never consulted.
     """
     cfg = dict(REGISTERED, **cfg)
-    usable = [s for s in searches if s['targets']]
+    usable = [s for s in searches if s['targets'] or s.get('rank')]
     if not usable:
         raise ValueError('no search with a positive-saving target')
     fit, inner = usable, []
@@ -542,7 +655,11 @@ def train(searches, cfg=REGISTERED):
         for step in range(cfg['steps']):
             model.train()
             idx = torch.randint(len(fit), (min(cfg['batch'], len(fit)),), generator=g).tolist()
-            loss = _weighted_nll(model, [fit[i] for i in idx], entropy=True)
+            batch = [fit[i] for i in idx]
+            loss = _weighted_nll(model, batch, entropy=True)
+            rl = rank_loss(model, batch, cfg)
+            if rl is not None:
+                loss = loss+rl
             opt.zero_grad(); loss.backward()
             nn.utils.clip_grad_norm_(model.parameters(), 5.)
             opt.step()
@@ -853,6 +970,79 @@ def offline_check(model, searches, cfg=REGISTERED):
                 win_rate_distance=float(np.mean([d < 0 for d in ddist])), per_search=rows)
 
 
+@torch.no_grad()
+def verification_check(model, searches, cfg=REGISTERED):
+    """Offline check on held-out VERIFICATION-labelled searches (exact SUMO outcomes).
+
+    Per list (top-k + 'policy continues'): pairwise ordering accuracy of the
+    proposer log-likelihood vs the exact savings, compared with the search's own
+    initial distribution's log-density (same items). Also the log-likelihood gain
+    on the exact-best candidate when it beat the policy. World-cluster bootstrap.
+    PASS iff >= min_heldout_worlds worlds, >= min_heldout_searches lists, the
+    exact-best log-likelihood gain CI lower bound > 0 AND the pairwise-accuracy gain
+    is non-inferior (CI lower bound > -``rank_noninferiority``, registered 0.05).
+    """
+    cfg = dict(REGISTERED, **cfg)
+    ev = [s for s in searches if s.get('rank')]
+    if not ev:
+        return dict(passed=False, enough_data=False, lists=0, worlds=0, reason='no held-out verification-labelled search')
+    ll, _ = log_likelihood(model, ev, 'rank'); ll = ll.double().numpy()
+    i, acc_gain, best_gain, worlds, rows = 0, [], [], [], []
+    for s in ev:
+        k = len(s['rank']); lp = ll[i:i+k]; i += k
+        lp0 = np.array([r['lp0'] for r in s['rank']]); g = np.array([r['gold'] for r in s['rank']])
+        pairs = [(a, b) for a in range(k) for b in range(k) if g[a] > g[b]]
+        if not pairs:
+            continue
+        acc = float(np.mean([lp[a] > lp[b] for a, b in pairs])); acc0 = float(np.mean([lp0[a] > lp0[b] for a, b in pairs]))
+        acc_gain.append(acc-acc0); worlds.append(s['world'])
+        j = int(np.argmax(g))
+        bg = float(lp[j]-lp0[j]) if g[j] > 0 and not s['rank'][j]['policy'] else None
+        best_gain.append(bg)
+        rows.append(dict(id=s['id'], world=s['world'], pairs=len(pairs), acc_proposer=acc, acc_initial=acc0, best_ll_gain=bg))
+    if not rows:
+        return dict(passed=False, enough_data=False, lists=0, worlds=0, reason='no list with distinct exact outcomes')
+    A = _bootstrap_ci(acc_gain, worlds, cfg['bootstraps'], cfg['seed']+7)
+    bw = [(b, w) for b, w in zip(best_gain, worlds) if b is not None]
+    B = _bootstrap_ci([b for b, _ in bw], [w for _, w in bw], cfg['bootstraps'], cfg['seed']+8) if bw else None
+    nw = len(set(worlds))
+    enough = nw >= cfg['min_heldout_worlds'] and len(rows) >= cfg['min_heldout_searches']
+    ok = B is not None and B[1] > 0 and A[1] > -cfg['rank_noninferiority']
+    return dict(passed=bool(enough and ok), enough_data=enough, lists=len(rows), worlds=nw,
+                pairwise_accuracy_proposer=float(np.mean([r['acc_proposer'] for r in rows])),
+                pairwise_accuracy_initial=float(np.mean([r['acc_initial'] for r in rows])),
+                pairwise_accuracy_gain=dict(mean=A[0], ci95=[A[1], A[2]]),
+                exact_best_loglik_gain=None if B is None else dict(mean=B[0], ci95=[B[1], B[2]], n=len(bw)),
+                per_list=rows)
+
+
+def synthetic_verification(receipts, seed=0, sumo_noise=.5, policy_noise=.5):
+    """Attach synthetic exact-SUMO verifications to synthetic receipts (tests/curves).
+
+    Exact J for each top-k candidate = planted noise-free cost (scaled like the WM
+    savings) + independent SUMO noise; 'policy continues' = zero perturbation.
+    """
+    rng = np.random.default_rng(seed); out = []
+    for r in receipts:
+        if not r.get('topk'):
+            continue
+        x = member_features(r['rows'], r['members'], r['regime'])
+        zstar, Dstar = r.get('_planted') or planted_direction(x, r['regime'])
+        zstar = np.asarray(zstar, float); durations = durations_registered()
+        byid = {c['id']: c for c in r['candidates']}
+
+        def J(z, D):
+            dur_pen = .02*abs(durations.index(D)-durations.index(Dstar))
+            return float(((np.asarray(z)/Z_SCALE*knot_mask(D)-zstar)**2).mean()+dur_pen)*100.
+        ids = list(r['topk'])
+        Jp = J(np.zeros_like(zstar), 300)+policy_noise*100*rng.standard_normal()*.05
+        Jc = [J(byid[i]['perturbation_canonical'], byid[i]['duration_s'])+sumo_noise*100*rng.standard_normal()*.05
+              for i in ids]
+        out.append(dict(proposer='wm', status='accepted' if min(Jc) < Jp else 'rejected', candidate_ids=ids,
+                        J_candidates_veh_s=Jc, J_policy_veh_s=Jp, verification_id='sv_syn_'+str(r['search_id'])))
+    return out
+
+
 # --------------------------------------------------------------------------- synthetic receipts (tests / data-need curve)
 
 def planted_direction(x, regime):
@@ -927,7 +1117,8 @@ def synthetic_receipts(n_searches, n_worlds, seed=0, sizes=(2, 3, 4, 5, 6), topk
             ex = next(c for c in final if c['id'] == topk[0])
             executed = dict(plan_id=ex['id'], sumo_realized_advantage=float(ex['saving_vs_policy']/100.
                                                                              + .3*rng.standard_normal()))
-        out.append(dict(schema=SCHEMA, search_id=f'syn{seed}-{k}', world_id=f'W{w}', arm='B', regime=regime,
+        out.append(dict(_planted=(zstar.tolist(), Dstar), schema=SCHEMA, search_id=f'syn{seed}-{k}', world_id=f'W{w}',
+                        arm='B', regime=regime,
                         rows=rows, members=members, canonical=dict(n_knots=n, span_s=300),
                         durations_s=durations, initial=dict(sigma=Z_SCALE, length_knots=1., covariance=None),
                         candidates=cand_list, topk=topk, executed=executed))

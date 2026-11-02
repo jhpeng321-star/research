@@ -41,10 +41,13 @@ from . import plan_proposer as pp
 FORBIDDEN = ('sealed', 'holdout', 'heldout', 'cal_split', 'chunk5', 'j4b', 'inc1')
 TRAIN_WORLDS = range(986000, 986072)
 SOURCES = dict(
-    cpuQ=dict(roots=['/home/ubuntu'], dirs=['requests', 'responses', 'proposer_receipts'], name_glob='coopmwm2026*'),
+    cpuQ=dict(roots=['/home/ubuntu'], dirs=['requests', 'responses', 'proposer_receipts', 'verifications'],
+              name_glob='coopmwm2026*'),
     gpuA=dict(roots=['/root'], dirs=['proposer_receipts'], name_glob='coopmwm2026*'),
     gpuR=dict(roots=['/root'], dirs=['proposer_receipts'], name_glob='coopmwm2026*'))
 MIN_FULL_POOL = 48
+REGISTERED_MIN = dict(full_pool=160, worlds=32)       # PLAN_PROPOSER_PREREG.md (7)
+SKIP_DIRS = ('smoke',)                                 # qualification smoke receipts are not training data
 MIN_TRAIN_INFO = dict(searches=24, worlds=4)          # below this: counts only, no training
 SSH = ['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=20', '-o', 'ServerAliveInterval=15']
 CONN_ERRORS = ('Connection closed', 'Connection reset', 'Connection timed out', 'timed out',
@@ -75,7 +78,8 @@ def remote_dirs(host, src):
     roots = ' '.join(shlex.quote(r) for r in src['roots'])
     cmd = (f"find {roots} -mindepth 1 -maxdepth 4 \\( {prune} \\) -prune -o -type d \\( {names} \\) "
            f"-path {shlex.quote('*/'+src['name_glob']+'/*')} -print 2>/dev/null; true")
-    return [d for d in ssh(host, cmd).decode().split() if d and not _forbidden(d)]
+    return [d for d in ssh(host, cmd).decode().split()
+            if d and not _forbidden(d) and not any(x in d.lower() for x in SKIP_DIRS)]
 
 
 def fetch(host, remote, cache):
@@ -141,6 +145,20 @@ def load_cache(cache, train_worlds=TRAIN_WORLDS):
         (out.append(r) if ok else stats.__setitem__('non_train', stats['non_train']+1))
     pp.attach_sumo(out, list(entries.values()))
     stats['sumo_entries'] = len(entries)
+    verifs = []
+    for d in sorted(cache.rglob('verifications')):
+        if _forbidden(d) or any(x in str(d).lower() for x in SKIP_DIRS):
+            continue
+        for f in sorted(d.glob('*.json')):
+            try:
+                verifs.append(json.loads(f.read_text()))
+            except ValueError:
+                pass
+    stats['verifications'] = len(verifs)
+    stats['verifications_wm_graded'] = sum(v.get('proposer') == 'wm' and v.get('status') in ('accepted', 'rejected')
+                                           for v in verifs)
+    stats['verifications_attached'] = pp.attach_verification(out, verifs)
+    stats['post_fix_receipts'] = sum(bool((r.get('service') or {}).get('command_mirror')) for r in out)
     return out, stats
 
 
@@ -160,17 +178,27 @@ def run(cache, report, fetch_remote=True):
                full_pool_receipts=len(full), searches=len(searches), searches_with_elites=len(with_elites),
                worlds=len({s['world'] for s in searches}), dataset_skips=len(why),
                activation='NOT ACTIVATED: requires registered minimum + offline PASS + explicit owner approval via MAIN')
+    res.update(full_pool_searches=sum(s['full_pool'] for s in searches),
+               verified_searches=sum(s['verified'] for s in searches),
+               verified_worlds=len({s['world'] for s in searches if s['verified']}),
+               post_fix_searches=sum(s['post_fix'] for s in searches),
+               command_mirror=('ON for some searches' if any(s['post_fix'] for s in searches) else
+                               'OFF: no receipt carries a command-mirror flag (live evaluate final_chain=False; '
+                               'handoff: command mirror still OFF) -> all searches pre-fix, weights unchanged'))
     if len(searches) >= MIN_TRAIN_INFO['searches'] and res['worlds'] >= MIN_TRAIN_INFO['worlds']:
         tr, va, vw = pp.world_split(searches)
         model, info = pp.train(tr)
-        check = pp.offline_check(model, va)
+        check = pp.offline_check(model, [s for s in va if s['full_pool']])
+        vcheck = pp.verification_check(model, va)
+        res['verification_check'] = {k: v for k, v in vcheck.items() if k != 'per_list'}
         ck = pp.save_checkpoint(model, dict(validation_worlds=vw, dataset_sha256=pp._digest(
             sorted(r['search_id'] for r in receipts)), offline_check={k: v for k, v in check.items() if k != 'per_search'}),
             cache/'checkpoints'/f'proposer_{when[:19].replace(":", "")}')
         res.update(train=dict(train_searches=info['train_searches'], selected_step=info['selected_step']),
                    offline_check={k: v for k, v in check.items() if k != 'per_search'},
                    checkpoint=dict(pt_sha256=ck['pt_sha256'], json_sha256=ck['json_sha256']),
-                   registered_minimum_met=len(with_elites) >= 200 and res['worlds'] >= 32)
+                   registered_minimum_met=res['full_pool_searches'] >= REGISTERED_MIN['full_pool']
+                   and res['worlds'] >= REGISTERED_MIN['worlds'])
         if len(full) >= MIN_FULL_POOL:
             held = [r for r in full if str(r.get('world_id')) in set(vw)]
             curve = le.evaluations_curve(model, held)
@@ -201,7 +229,11 @@ def write_report(res, path):
          f"(skipped {res['load']['skipped'] or 'none'}; non-TRAIN dropped {res['load']['non_train']}); "
          f"SUMO entries {res['load']['sumo_entries']}.",
          f"- Searches {res['searches']} ({res['searches_with_elites']} with elites) from {res['worlds']} worlds; "
-         f"full-pool receipts {res['full_pool_receipts']} (curve needs >= {MIN_FULL_POOL}).", '']
+         f"full-pool receipts {res['full_pool_receipts']} (curve needs >= {MIN_FULL_POOL}).",
+         f"- Exact SUMO verifications: {res['load'].get('verifications', 0)} receipts, "
+         f"{res['load'].get('verifications_wm_graded', 0)} arm-B graded, {res['load'].get('verifications_attached', 0)} "
+         f"joined -> {res.get('verified_searches', 0)} verification-labelled searches from {res.get('verified_worlds', 0)} worlds.",
+         f"- Post-safety command mirror: {res.get('command_mirror')}; post-fix searches {res.get('post_fix_searches', 0)}.", '']
     if isinstance(res.get('train'), str):
         L += ['## Training / offline check', f"- {res['train']}.", '']
     else:
@@ -216,6 +248,12 @@ def write_report(res, path):
               f"{c.get('nearest_elite_distance_change', {}).get('ci95')}; vs centre "
               f"{_fmt(c.get('distance_change_vs_centre', {}).get('mean'))} CI {c.get('distance_change_vs_centre', {}).get('ci95')}.",
               f"- Checkpoint (local cache) .pt SHA256 `{res['checkpoint']['pt_sha256']}`.", '']
+        v = res.get('verification_check') or {}
+        L += ['## Offline check on VERIFICATION-labelled held-out searches (exact SUMO outcomes; separate)',
+              f"- Lists {v.get('lists', 0)} / worlds {v.get('worlds', 0)}; enough data: {v.get('enough_data')}; "
+              f"PASS: **{v.get('passed')}**." + (f" Pairwise accuracy proposer {_fmt(v.get('pairwise_accuracy_proposer'))} "
+              f"vs initial {_fmt(v.get('pairwise_accuracy_initial'))} (gain CI {v.get('pairwise_accuracy_gain', {}).get('ci95')}); "
+              f"exact-best LL gain {v.get('exact_best_loglik_gain')}." if v.get('lists') else f" {v.get('reason', '')}"), '']
         ev = res.get('evaluations_curve')
         L += ['## Evaluations needed to reach the plain search\'s final elite quality (surrogate replay)']
         if isinstance(ev, str) or not ev or not ev.get('summary'):
@@ -244,6 +282,9 @@ def write_report(res, path):
           'search efficiency, not SUMO benefit.',
           '- Top-k-only service receipts carry no screened pool; the evaluations curve needs `RecordingEvaluator` logging '
           '(`<queue_root>/proposer_receipts/<state_id>.json`).',
+          '- WM-pool check uses held-out full-pool searches only; the verification check uses held-out searches '
+          'with exact SUMO branch outcomes (top-4 + policy continues) only. Exact outcomes also train the proposer '
+          '(listwise ranking + gold likelihood targets, weight 2 per search vs 1 for WM pools).',
           '- The script never activates the proposer and never writes to remote hosts.']
     path.write_text('\n'.join(L)+'\n')
 

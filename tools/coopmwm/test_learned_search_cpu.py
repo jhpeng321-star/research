@@ -99,6 +99,11 @@ class ReportPath(unittest.TestCase):
         for k, r in enumerate(full):
             r['world_id'] = 986010+k % 12
             (root/'proposer_receipts'/f'f{k}.json').write_text(json.dumps(r))
+        ver = pp.synthetic_verification(full, seed=1)[:10]
+        for sub in ('sumo_verification/verifications', 'sumo_verification_smoke/verifications'):
+            (root/sub).mkdir(parents=True)
+            for i, v in enumerate(ver):
+                (root/sub/f'v{i}.json').write_text(json.dumps(v))
         bad = Path(d)/'cpuQ'/'home/ubuntu/coopmwm20261103_sealed'/'proposer_receipts'
         bad.mkdir(parents=True)
         (bad/'x.json').write_text(json.dumps(dict(full[0], search_id='SEALED', world_id=986001)))
@@ -114,6 +119,9 @@ class ReportPath(unittest.TestCase):
             self.assertNotIn('SEALED', {r['search_id'] for r in rec})
             self.assertEqual(sum(lr.is_full_pool(r) for r in rec), 60)
             self.assertEqual(len(rec), 62)
+            self.assertEqual(stats['verifications'], 10)                  # smoke receipts skipped
+            self.assertEqual(stats['verifications_attached'], 10)
+            self.assertEqual(sum(bool(r.get('sumo_verification')) for r in rec), 10)
 
     def test_run_writes_report_without_activation(self):
         import tempfile
