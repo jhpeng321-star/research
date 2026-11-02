@@ -131,7 +131,7 @@ immutable(dest,d);print(json.dumps(d))''',timeout=60))
 def status():
     value=json.loads(remote('cpuQ',f'''from pathlib import Path
 import json,time,shutil
-c=Path({COLLECTION!r});suffix='SUMODISK1' if (c/'SUPERVISOR_DISPATCH_SUMODISK1.json').exists() else 'SUMOENV1'
+c=Path({COLLECTION!r});suffix=next(s for s in ('SUMOFOCUS1','SUMODISK1','SUMOENV1') if (c/('SUPERVISOR_DISPATCH_'+s+'.json')).exists())
 d=json.loads((c/('SUPERVISOR_DISPATCH_'+suffix+'.json')).read_text());p=Path('/proc',str(d['pid']))
 assert not p.exists() or (p/'stat').read_text().split()[21]==d['start_ticks']
 labels=[json.loads(p.read_text()) for p in (c/'labels').glob('*_SUMOENV1.json')]

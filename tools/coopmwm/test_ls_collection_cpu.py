@@ -105,6 +105,31 @@ class CollectionTests(unittest.TestCase):
         self.assertEqual(result['config']['top_k'],8)
         self.assertEqual(result['final'],dict(K=8,H=420))
 
+    def test_focus_allocation_repays_existing_deficit_without_dropping_worlds(self):
+        worlds=[dict(seed=w,demand=d,penetration=p) for w,d,p in
+            ((986000,1900,.05),(986001,2400,.2),(986002,2700,.4))]
+        xs=[dict(world_id=w['seed'],time_s=t,group_index=0,key=f'{w["seed"]}_{t}')
+            for w in worlds for t in (300,600,700)]
+        counts={986000:2};chosen=[]
+        while xs:
+            e=min(xs,key=lambda e:ls.focus_order(e,counts,worlds,.5));xs.remove(e)
+            chosen.append((e['world_id'],e['time_s']))
+            counts[e['world_id']]=counts.get(e['world_id'],0)+1
+        self.assertEqual(chosen[:2],[(986001,300),(986002,300)])
+        self.assertEqual(len(chosen),9)
+        self.assertEqual(set(w for w,t in chosen),{w['seed'] for w in worlds})
+
+    def test_focus_allocation_is_at_least_half_with_ordinary_tiebreak_and_no_outcomes(self):
+        worlds=[dict(seed=986000,demand=1900,penetration=.05),
+            dict(seed=986048,demand=2400,penetration=.2)]
+        xs=[dict(world_id=w['seed'],time_s=t,group_index=0,key=f'{w["seed"]}_{t}')
+            for w in worlds for t in (300,400,500,600)]
+        counts={}
+        while xs:
+            e=min(xs,key=lambda e:ls.focus_order(e,counts,worlds,.5));xs.remove(e)
+            counts[e['world_id']]=counts.get(e['world_id'],0)+1
+            self.assertGreaterEqual(counts.get(986048,0),sum(counts.values())*.5)
+
     def test_collection_hook_is_opt_in_and_precedes_history_priming(self):
         from . import accel_plant
         import inspect

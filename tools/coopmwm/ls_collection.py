@@ -96,6 +96,16 @@ def coverage_order(e,counts):
     return n,abs(e['time_s']-target),e['group_index'],e['world_id'],e['key']
 
 
+def focus_order(e,counts,worlds,fraction):
+    """Registered focus allocation, then unchanged coverage within each stratum."""
+    focus={w['seed'] for w in worlds if w['demand'] in (2400,2700) and
+        w['penetration'] in (.2,.4)}
+    assert 0<=fraction<=1 and focus
+    total=sum(counts.values());allocated=sum(n for w,n in counts.items() if w in focus)
+    prefer_focus=allocated<fraction*(total+1)
+    return (int((e['world_id'] in focus)!=prefer_focus),)+coverage_order(e,counts)
+
+
 def label(root,envelope,response,config):
     from .sumo_verify import verify,SubprocessBranchRunner
     key=envelope['record']['state_id'];root=Path(root)
@@ -167,6 +177,8 @@ def supervise(root):
         config.update(json.loads((root/'LS_LABEL_CONFIG.json').read_text()))
     if (root/'LS_LABEL_DISK_CONFIG.json').exists():
         config.update(json.loads((root/'LS_LABEL_DISK_CONFIG.json').read_text()))
+    if (root/'LS_FOCUS_CONFIG.json').exists():
+        config.update(json.loads((root/'LS_FOCUS_CONFIG.json').read_text()))
     main=Path(config['run_root']);install_accounting(main,config['budget'])
     if config.get('operational_spend_cap'):
         from . import accel_storage
@@ -237,7 +249,8 @@ def supervise(root):
                         (not config.get('arrival_admission') or feasible(e['time_s'],config['arrival_admission'])) and
                         (Path(e['episode_path'])/'RESULT.json').exists()]
                     for _ in range(min(8-len(inflight),config['max_searches']-len(admitted),len(todo))):
-                        e=min(todo,key=lambda e:coverage_order(e,counts));todo.remove(e)
+                        order=(lambda e:focus_order(e,counts,config['worlds'],config['focus_fraction'])) if 'focus_fraction' in config else (lambda e:coverage_order(e,counts))
+                        e=min(todo,key=order);todo.remove(e)
                         counts[e['world_id']]=counts.get(e['world_id'],0)+1
                         envelope=json.loads(gzip.decompress(Path(e['path']).read_bytes()))
                         r=envelope['record'];key=r['state_id'];charge=9*min(1200,r['time_s']+420)
