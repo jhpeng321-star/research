@@ -30,7 +30,19 @@ def dependency_files():
         'traffic_shepherd/__init__.py','traffic_shepherd/c4/__init__.py',
         'traffic_shepherd/c4/geometry.py')} | {
         'pytools/tools/coopmwm/'+n+'.py':checked(ops.LOCAL/('tools/coopmwm/'+n+'.py')).read_text(encoding='utf-8')
-        for n in ('ls_fast_worker','resource_config','query_errors')}
+         for n in ('ls_fast_worker','resource_config','query_errors')}
+
+
+def frozen_rollout_files(names):
+    """Deploy the registered CPU snapshot, never an evolving integration checkout."""
+    paths=['pytools/tools/coopmwm/'+n+'.py' for n in names]+['FROZEN_GEOMETRY_SOURCE.py']
+    return json.loads(remote('cpuQ',f'''from pathlib import Path
+import json,base64,hashlib
+r=Path('/home/ubuntu/coopmwm20261103_nichenullcpu7')
+manifest=json.loads((r/'LS_SOURCE_HASHES.json').read_text())
+names={paths!r}+['FROZEN_NETWORK.net.xml.gz']
+for n in names:assert hashlib.sha256((r/n).read_bytes()).hexdigest()==manifest[n],n
+print(json.dumps(dict(files={{n:(r/n).read_text() for n in {paths!r}}},network=base64.b64encode((r/'FROZEN_NETWORK.net.xml.gz').read_bytes()).decode())))''',timeout=40))
 
 
 def broker():
@@ -120,12 +132,12 @@ else:
     reg=read(ops.EVIDENCE/REG);expected=dict(reg['cpu']['source_hashes'],**recovery['source_hashes'])
     names=('mppi_search','mppi_runtime','plan_service','ls_gpu','niche_collect','feasible',
            'sumo_verify','nullfix_geometry','niche_worker')
-    files={f'pytools/tools/coopmwm/{n}.py':(ops.LOCAL/f'tools/coopmwm/{n}.py').read_text(encoding='utf-8') for n in names}
-    files['FROZEN_GEOMETRY_SOURCE.py']=(ops.LOCAL/'traffic_shepherd/c4/geometry.py').read_text(encoding='utf-8')
+    frozen=frozen_rollout_files(names)
+    files=frozen['files']
     import hashlib
     for n,text in files.items():assert hashlib.sha256(text.encode()).hexdigest()==expected[n],n
     files.update(dependency_files())
-    net=(ops.LOCAL/'assets/research/highway_merge_shepherd_long/osm.net.xml.gz').read_bytes()
+    net=base64.b64decode(frozen['network'])
     assert hashlib.sha256(net).hexdigest()==expected['FROZEN_NETWORK.net.xml.gz']
     packed=base64.b64encode(zlib.compress(json.dumps(files).encode())).decode()
     value=json.loads(remote(host,f'''from pathlib import Path
@@ -392,19 +404,21 @@ def continue_roll():
 def roll_dispatch():
     import subprocess,sys,psutil
     from .protocol import REGISTRY
-    target=ops.EVIDENCE/'LS_NICHENULL_ROLL_DISPATCH_V3.json'
+    target=ops.EVIDENCE/'LS_NICHENULL_ROLL_DISPATCH_V4.json'
     if target.exists():
         d=read(target)
         if psutil.pid_exists(d['pid']):
             p=psutil.Process(d['pid']);assert abs(p.create_time()-d['unix'])<5
             assert p.cmdline()[-3:]==['-m','tools.coopmwm.niche_roll','continue_roll']
         print(json.dumps(dict(adopted=d)));return
-    reg=ops.EVIDENCE/'NICHE_ROLL_CONTROLLER_REGISTRATION_V3.json'
+    reg=ops.EVIDENCE/'NICHE_ROLL_CONTROLLER_REGISTRATION_V4.json'
     if not reg.exists():
-        line=('\nS-COOPMWM joint-release controller V3 engineering amendment: V2 exited '
-            'after successful first-slot admission on same-second local receipt collision. '
-            'Serialize remote endpoint admission and use per-writer unique publishing '
-            'and nanosecond local receipts; no numerical/GPU source changes. Adopt live '
+        line=('\nS-COOPMWM joint-release controller V4 engineering amendment: V3 correctly '
+            'refused newly merged local sumo_verify bytes before changing the drained '
+            'second slot. Fetch numerical files/network from original immutable CPU7 '
+            'snapshot with complete registered SHA checks; never mutable integration '
+            'checkout. Same qualified source/all8fresh gates, no numerical change. '
+            'Retain all earlier controller faults and original workers/requests. Adopt live '
             'source-qualified NICHENULL3 successor; retain stopped V1 fault receipt; finish registered Asecond/Rfirst/Rsecond drained '
             'handovers ONE qualifier globally. Preserve requests/claims/forecasts; '
             'no inference replay or SUMO/PPO dispatch. Source-bound dependency package '
@@ -413,9 +427,9 @@ def roll_dispatch():
             'separate after all4ready; other slots keep serving.\n')
         write(reg,dict(line=line,source_sha256=sha(ops.LOCAL/'tools/coopmwm/niche_roll.py'),new_sumo_sim_s=0))
         with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line+'amendmentSHA'+sha(reg)+'\n')
-    old=read(ops.EVIDENCE/'LS_NICHENULL_ROLL_DISPATCH_V2.json')
+    old=read(ops.EVIDENCE/'LS_NICHENULL_ROLL_DISPATCH_V3.json')
     assert not psutil.pid_exists(old['pid']),'adopt original controller until exited'
-    with (ops.EVIDENCE/'LS_NICHENULL_ROLL_V3.log').open('x',encoding='utf-8') as log:
+    with (ops.EVIDENCE/'LS_NICHENULL_ROLL_V4.log').open('x',encoding='utf-8') as log:
         p=subprocess.Popen([sys.executable,'-X','utf8','-u','-m','tools.coopmwm.niche_roll','continue_roll'],
             cwd=ops.LOCAL,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)

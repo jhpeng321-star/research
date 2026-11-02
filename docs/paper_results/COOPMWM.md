@@ -1,5 +1,17 @@
 # S-COOPMWM — live checks
 
+## Nov3 07:12:10 UTC+8 — frozen rollout source retained during replay integration
+- V3 correctly refused the newly merged local `sumo_verify.py` hash before
+  altering the drained second GPU slot. Completed first-slot gates and all
+  serving workers/requests are preserved; no inference or qualification replay.
+- The deployment loader now reads numerical files/network from the original
+  immutable CPU7 snapshot and verifies its manifest plus the registered hashes.
+  Evolving replay-integration files cannot enter the separate rolling release.
+- Seventeen local metadata/registration checks PASS (0.27s). Amendment
+  `1fb0b448cfd3d008…` precedes replacement controller **24476/create1793661130.675497**.
+  It continues the existing drains one slot at a time; all untouched slots still
+  require all8 fresh gates. Existing activation waiter/observer retained.
+
 ## Nov3 07:01:51 UTC+8 — first slot READY; metadata collision recovered
 - First joint-release worker237704 passed all8 checks and became READY at
   unix1793659944.3873818. Its completed checks are adopted; no repeated gate.

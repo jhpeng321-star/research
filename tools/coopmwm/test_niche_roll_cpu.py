@@ -3,6 +3,18 @@ import json
 from . import niche_roll as nr
 
 
+def test_rollout_source_is_immutable_cpu7_not_current_checkout(monkeypatch):
+    def remote(host,code,**kwargs):
+        assert host=='cpuQ'
+        compile(code,'<frozen-rollout-source>','exec')
+        assert '/home/ubuntu/coopmwm20261103_nichenullcpu7' in code
+        assert 'LS_SOURCE_HASHES.json' in code and 'hashlib.sha256' in code
+        assert 'pytools/tools/coopmwm/sumo_verify.py' in code
+        return '{"files":{},"network":""}'
+    monkeypatch.setattr(nr,'remote',remote)
+    assert nr.frozen_rollout_files(['sumo_verify'])==dict(files={},network='')
+
+
 def test_one_qualifier_across_hosts_and_failed_owner_blocks_roll():
     import pytest
     def worker(host,suffix,generation='FASTK2V5',ready=True,state='R',failure=None):
@@ -76,6 +88,7 @@ def test_broker_payload_compiles_without_process_control(monkeypatch,tmp_path):
 
 
 def test_gpu_dispatch_payload_compiles_and_preserves_original_binding(monkeypatch,tmp_path):
+    import base64
     monkeypatch.setattr(nr.ops,'EVIDENCE',tmp_path)
     names=('mppi_search','mppi_runtime','plan_service','ls_gpu','niche_collect','feasible',
            'sumo_verify','nullfix_geometry','niche_worker')
@@ -85,6 +98,10 @@ def test_gpu_dispatch_payload_compiles_and_preserves_original_binding(monkeypatc
         (nr.ops.LOCAL/'traffic_shepherd/c4/geometry.py').read_text(encoding='utf-8').encode()).hexdigest()
     hashes['FROZEN_NETWORK.net.xml.gz']=hashlib.sha256(
         (nr.ops.LOCAL/'assets/research/highway_merge_shepherd_long/osm.net.xml.gz').read_bytes()).hexdigest()
+    files={f'pytools/tools/coopmwm/{n}.py':(nr.ops.LOCAL/f'tools/coopmwm/{n}.py').read_text(encoding='utf-8') for n in names}
+    files['FROZEN_GEOMETRY_SOURCE.py']=(nr.ops.LOCAL/'traffic_shepherd/c4/geometry.py').read_text(encoding='utf-8')
+    network=base64.b64encode((nr.ops.LOCAL/'assets/research/highway_merge_shepherd_long/osm.net.xml.gz').read_bytes()).decode()
+    monkeypatch.setattr(nr,'frozen_rollout_files',lambda names:dict(files=files,network=network))
     (tmp_path/nr.REG).write_text(json.dumps(dict(cpu=dict(source_hashes=hashes))))
     (tmp_path/'NICHE_DEPENDENCY_RECOVERY3.json').write_text(json.dumps(dict(source_hashes={})))
     seen=[]
