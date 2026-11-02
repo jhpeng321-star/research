@@ -1,5 +1,5 @@
 # S-COOPMWM — frozen B-u3 collection recovery; B-REPLAY integration pending
-1. Ownercap11900000: original9500000 + restricted INACTIVE sumo_verification_k8=1500000 + interim_u8_test900000; LS envelope2419200 uses existing train/verification only, remaining training re-quote before MAIN resume; phaseguardsSTOP/ALERT.
+1. Ownercap14500000: prior11900000 + MAIN2232 restrictedbank_verification_ext2600000; priorrestrictedk8training1500000/interim900000 unchanged; liveLSenvelope2419200 uses existing train/verification only, remainingtrainingre-quote before resume; phaseguardsSTOP/ALERT.
 2. A/B/R fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
 4. A: PPO shared team reward=-J, road speed deficit plus source waiting.

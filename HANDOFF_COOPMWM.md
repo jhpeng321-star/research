@@ -1,5 +1,16 @@
 # S-COOPMWM continuation — MAIN21:29 collection recovery
 
+MAIN23:14/full545linesread. BothA7429/7430nowREADY8EXACT0; THREEslotsadmitted
+1793632663/23:17:43+08 (Aincident1/Aresource/Rresource), preservedoriginalendpoints.
+Rprimary491842hadALSOdiedonthemetadataimportBEFOREsupportdeployment(at1793630418);
+diagnosisconfirmed, onlythatabsentownerreplaced23:15:06 by500795/start4225909358,
+VALIDITY2/fresh8gates; LS_VALIDITY_GPU_REPLACEMENT_gpuR_primary.json. Newprimary
+needsmanualgpu_status+admitwhenREADY(orobserverrefresh); V2observeronlyknowssecondary
+replacement, butwillnotremovealreadyadmittedprimaryifreadyslotsetstaysstable.
+REALqueryabf17661... startedonR494955 at1793631717/t380/world986004/n2; at
+23:22 ownPIDCPUadvanced5.0s/5s => CPUlaunch-bound, NOTdead/wedged. Noforecastyet;
+NEVERreplayit. Allotherassignedqueriescontinue. Firstactualsearch+labelpending.
+
 FIRSTREADY slot gpuR@resource1651(494955/VALIDITY2) ADMITTED1793631713/23:01:53+08,
 ALL8freshEXACT0 gates. Otherqualifierscontinue; doNOTlaunchmoreworkers. Metadata
 SSH40stimeouts censorobserverpolls, never stop remoteowners; existingcollection

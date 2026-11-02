@@ -13,7 +13,7 @@ SOURCE='/home/ubuntu/coopmwm20261102_lsvalidcpu3'
 SUFFIX='_VALIDITY1'
 
 
-def remote(host, code, timeout=40):
+def remote(host, code, timeout=90):
     from .warm_transport import retry
     return retry(lambda:ops.ssh.remote(host,code,timeout=timeout),lambda:None,
         lambda v:write(ops.EVIDENCE/f'LS_VALIDITY_TRANSPORT_{__import__("time").time_ns()}.json',v))
@@ -149,9 +149,10 @@ print(json.dumps(dict(host={host!r},owners=owners)))''')
 
 def gpu_status(host):
     rows=read(ops.EVIDENCE/('LS_VALIDITY_GPU_DISPATCH_'+host+'.json'))['owners']
-    replacement=ops.EVIDENCE/('LS_VALIDITY_GPU_REPLACEMENT_'+host+'.json')
-    if replacement.exists():
-        d=read(replacement);rows=[d if x['root']==d['root'] else x for x in rows]
+    for name in ('LS_VALIDITY_GPU_REPLACEMENT_'+host+'.json','LS_VALIDITY_GPU_REPLACEMENT_'+host+'_primary.json'):
+        replacement=ops.EVIDENCE/name
+        if replacement.exists():
+            d=read(replacement);rows=[d if x['root']==d['root'] else x for x in rows]
     out=remote(host,f'''from pathlib import Path
 import json,time,subprocess
 workers=[]
@@ -352,9 +353,9 @@ print(json.dumps(dict(host={host!r},support_registered=True,source_sha256={h!r},
     print(out)
 
 
-def recover_secondary():
+def recover_secondary(primary=False):
     rows=read(ops.EVIDENCE/'LS_VALIDITY_GPU_DISPATCH_gpuR.json')['owners']
-    d=next(x for x in rows if x['root'].endswith('deadlineR2'))
+    d=next(x for x in rows if x['root'].endswith('concurrent3' if primary else 'deadlineR2'))
     amendment=sha(ops.EVIDENCE/'LS_VALIDITY_SUPPORT_REGISTRATION.json')
     out=remote('gpuR',f'''from pathlib import Path
 import json,os,time,subprocess,hashlib
@@ -375,9 +376,22 @@ else:
  st=Path('/proc',str(p.pid),'stat').read_text().split();v=dict(d,pid=p.pid,start_ticks=st[21],unix=time.time(),generation='VALIDITY2',amendment_sha256={amendment!r})
  with target.open('x') as f:json.dump(v,f)
  print(json.dumps(v))''')
-    v=json.loads(out);p=ops.EVIDENCE/'LS_VALIDITY_GPU_REPLACEMENT_gpuR.json'
+    v=json.loads(out);p=ops.EVIDENCE/('LS_VALIDITY_GPU_REPLACEMENT_gpuR_primary.json' if primary else 'LS_VALIDITY_GPU_REPLACEMENT_gpuR.json')
     if not p.exists():write(p,v)
     print(out)
+
+
+def recover_primary():
+    p=ops.EVIDENCE/'LS_VALIDITY_PRIMARY_RECOVERY_REGISTRATION.json'
+    if not p.exists():
+        line=('\nS-COOPMWM MAIN22:42 follow-up: gpuRprimary491842 also exited on missing '
+            'resource_config at1793630418 BEFORE the support deployment. Retain its four '
+            'fresh gates/failure; replace only this exited receipt-verified owner with same '
+            'supported overlay, eight fresh gates, no inference/episode replay, zero new SUMO. '
+            'Secondary494955 already serves one valid t380 query; leave it running.\n')
+        write(p,dict(line=line,authority='MAIN22:42 engineering recovery',new_sim_s=0))
+        with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line+'amendmentSHA'+sha(p)+'\n')
+    recover_secondary(primary=True)
 
 
 def throughput():
@@ -478,5 +492,5 @@ def watch_dispatch():
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=['qualify','cpu_result','register','gpu','gpu_status','cpu','admit','status','watch','watch_dispatch','cap_register','throughput','support','recover_secondary']);p.add_argument('--host',choices=['gpuA','gpuR'])
+    p=argparse.ArgumentParser();p.add_argument('action',choices=['qualify','cpu_result','register','gpu','gpu_status','cpu','admit','status','watch','watch_dispatch','cap_register','throughput','support','recover_secondary','recover_primary']);p.add_argument('--host',choices=['gpuA','gpuR'])
     a=p.parse_args();globals()[a.action](a.host) if a.action in ('gpu','gpu_status','support') else globals()[a.action]()
