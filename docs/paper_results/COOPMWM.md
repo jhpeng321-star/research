@@ -1,5 +1,17 @@
 # S-COOPMWM — live checks
 
+## Nov3 00:39 UTC+8 — disk blocker cleared; existing grading resumed
+- Read all **578** brief lines; adopted `520fdf4b` and existing uncommitted work.
+- cpuQ free space is **14,236,557,312 bytes**, above the requested 10GiB target.
+  Approved archival sources were checked by existence only. No archive, deletion,
+  replacement supervisor or duplicate dispatch was needed in this session.
+- Existing grading owner **1728233** passes boot/start/argv verification and reports
+  `disk_blocked=false`. **Six** complete real nine-branch labels are now present;
+  three have strictly positive exact grades. Current grading threads are active.
+- Evidence: `coopmwm/LS_LABEL_STATUS_1793637526.json`. Collection's cached counters
+  lag the complete label files. **A48/B3/R3** remain unchanged; bank qualification
+  and the delegated B-REPLAY release are still prerequisites for training.
+
 ## Nov3 00:32 UTC+8 — grading stall diagnosed as disk admission wait
 - Adopted the existing supervisor **1728233**, verified boot/start/command line.
   Both grading futures are sleeping in the registered pre-claim disk wait;
