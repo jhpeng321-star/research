@@ -1,5 +1,21 @@
 # Resume here — INT owned development jobs, sourceb2df7458
 
+## VERIFIED Nov3 01:23 +08 — unchanged HOLD and incomplete bounded pass
+
+Current read-only audit: `RECOVERY_20261103.md` and its LOCAL/GPUA/GPUR receipts.
+No MAIN release found. Collector25240/publisher23664 remain EXITED INCOMPLETE;
+no replacement launched. Zero active INT evaluations. gpuA514854 remains exact
+original incarnation/command/source in stateT; the other three capped/late owners
+are absent. Preserve all31claims/results and the paused process unsignalled.
+
+31/216new jobs collected,185unadmitted,12matched K8v5/v4worlds; all hold-time
+children collected. Report hash matched the prior verification before the status
+refresh; scientific sections are unchanged. No analysis or inference replay.
+Both GPUs are heavily occupied. Missing-task
+continuation requires explicit MAIN release and new operational reconciliation,
+including finite deadlines. Historical LIVE/automatic-standby notes below do not
+authorize continuation. Engineering READY bindings and frozen source are unchanged.
+
 ## AUTHORITATIVE Nov2 10:20 +08 — HOLD; local bounded pass EXITED INCOMPLETE
 
 Supersedes all historical LIVE/ongoing-publication notes below. Collector25240

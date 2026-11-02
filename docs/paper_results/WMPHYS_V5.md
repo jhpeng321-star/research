@@ -5,7 +5,7 @@
 See the interval-supported detailed results below. This is an available-data
 diagnostic, not model selection or a planner/cooperation switching authorization.
 
-**Status verified Nov2 10:20 +08: the bounded collection/publication pass has
+**Status verified Nov3 01:23 +08: the bounded collection/publication pass has
 EXITED INCOMPLETE.** Both local owners retain incomplete-at-deadline receipts.
 The saved replicated interim shows worse v5 delay CRPS at all three horizons;
 the full four-model gate and switching eligibility remain NOT ESTABLISHED.
@@ -19,7 +19,8 @@ remains incomplete; this is not final delivery. The reserved8 and separate
 ten-world/five-replicated-cell interims below are the latest completed scientific
 snapshots. No publisher is currently running. Remaining185jobs require explicit
 MAIN release and ownership/source/resource/deadline reconciliation. Recovery
-receipts: `../rb2int/RECOVERY_20261102_1020.md`. No inference is redispatched.
+receipts: `../rb2int/RECOVERY_20261103.md`. The saved scientific report matched
+the prior verified hash before this operational-status refresh; no rescoring.
 
 FULL-v5 and FULL-v5-LP remain engineering-ready at frozen sourceb2df7458.
 All four fixes and the all-five-arm600s development canaries are preserved.

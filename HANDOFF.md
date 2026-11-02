@@ -1,5 +1,29 @@
 # S-RB2-INT — round 2 active, 2026-11-01 ~12:00 +08
 
+## RECOVERED Nov3 01:23 +08 — HOLD; saved report verified unchanged
+
+Fresh-session authority and direct ownership receipts:
+`docs/rb2int/RECOVERY_20261103.md` and its LOCAL/GPUA/GPUR JSON files.
+
+- No explicit MAIN `S-RB2-INT RESUME` release found. Both local publication owners
+  remain EXITED INCOMPLETE. No replacement collector, publisher or dispatch.
+- 31/216 new world jobs collected, 185 unadmitted, 12 matched v5/v4 K8 worlds;
+  all hold-time children collected. Zero active INT evaluations on either GPU.
+  gpuA514854 is still its exact original command/source/incarnation in stateT;
+  the other three capped/late owners remain absent. No process signals.
+- nvidia-smi snapshots: gpuA97% utilization/100MiB free; gpuR81%/45MiB free.
+  The admission hold and Nov2 resource priority remain controlling.
+- Report hash matched the Nov2 verified publication before this status refresh;
+  scientific sections are unchanged. Reserved8 and ten-world/five-replicated-cell
+  interims retained without rescoring; replicated
+  v5 delay CRPS is worse at120/300/600s. Full gate/switching NOT ESTABLISHED.
+- S-WMTEACH: FULL-v5 and FULL-v5-LP remain engineering READY at frozen source
+  `b2df7458`, with unchanged exact recipes/canaries below and the shared READY
+  note. This is model availability, not quality or resource authorization.
+- Missing-task continuation requires MAIN release plus exact owner/claim/source/
+  resource/deadline reconciliation. Old Nov4 bounds do not authorize a restart.
+  Reuse saved work; do not refit exposed candidates or duplicate registration.
+
 ## RECOVERED Nov2 10:20 +08 — bounded pass EXITED INCOMPLETE; HOLD intact
 
 Supersedes all historical LIVE/ongoing-publication assertions below. Read
