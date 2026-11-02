@@ -80,5 +80,34 @@ class EpisodeProgressTests(unittest.TestCase):
             self.assertTrue(current['episodes'][0]['closed'])
             self.assertFalse(current['episodes'][1]['claimed'])
 
+    def test_recovery_schedule_excludes_retired_jobs_and_requests(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);evidence=root/'evidence';evidence.mkdir()
+            (root/'requests').mkdir();(root/'centre_requests').mkdir()
+            (root/'B_UPDATE_002.json').write_text('{}');(root/'R_UPDATE_001.json').write_text('{}')
+            binding=dict(resume=dict(B=2,R=1),budget=dict(updates=dict(B=24,R=24)),
+                plans=dict(B=dict(worlds=[dict(seed=986005)]),R=dict(worlds=[dict(seed=986009)])))
+            (root/'INCIDENT_RECOVERY_BINDING.json').write_text(json.dumps(binding))
+            (root/'INCIDENT_RETIRED_JOBS.json').write_text(json.dumps(dict(jobs=['retired'],query_keys=['stale'])))
+            job=root/'jobs/warm_u003_B_986005';job.mkdir(parents=True)
+            (job/'CLAIM.json').write_text('{"pid":99999999}')
+            for key in ('stale','live'):
+                (root/'requests'/(key+'.json')).write_text(json.dumps(dict(world_id=986005,time_s=310,state_id=key)))
+            batches=types.ModuleType('tools.coopmwm.warm_protocol');batches.batch_worlds=lambda u:[dict(seed=986004)]
+            store=types.ModuleType('tools.coopmwm.accel_storage');store.read=lambda p:json.loads(p.read_text())
+            paths=types.ModuleType('pathlib');paths.Path=lambda *a:root if a==(ep.ROOT,) else Path(*a)
+            def remote(host,source,timeout):
+                out=io.StringIO();saved=sys.path[:]
+                try:
+                    with patch.dict(sys.modules,{'pathlib':paths,'tools.coopmwm.warm_protocol':batches,'tools.coopmwm.accel_storage':store}),patch.object(os,'getloadavg',return_value=(0,0,0),create=True),contextlib.redirect_stdout(out):exec(source,{})
+                finally:sys.path[:]=saved
+                return out.getvalue()
+            with patch.object(ep.ops.ssh,'remote',side_effect=remote),patch.object(ep.ops,'EVIDENCE',evidence),patch.object(ep,'write'),contextlib.redirect_stdout(io.StringIO()):
+                value=ep.collect(current=True)
+            self.assertEqual([e['id'] for e in value['episodes']],['warm_u003_B_986005','warm_u002_R_986009'])
+            self.assertEqual(value['episodes'][0]['pending_query_count'],1)
+            self.assertEqual(value['episodes'][0]['pending_queries'][0]['key'],'live')
+            self.assertIn('retired',value['superseded_jobs'])
+
 
 if __name__=='__main__':unittest.main()

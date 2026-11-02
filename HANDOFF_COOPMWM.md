@@ -1,5 +1,24 @@
 # S-COOPMWM live continuation — WARM B/R STARTED
 
+MAIN1030 FRESH: full322linebrief read, originalwarmqualification/start/library
+adopted/noSUMO-GPUdispatch/PIDcontrol. CurrentA48/B2/R1; B4146203/R4146817/
+broker4145985/grader4146093 LIVE/noSTOP at1793587436; charge3507050. NEVERredispatch.
+gpuA759743 nowREADY8EXACT0; worker readiness ONLY, recovery stilldisablesoldslot,
+admission/routingreplacement NOTperformed. Original18:07:02deadline unchanged.
+Verifier8ff759fdcherrypicked26466498; trust-beforeverification/singledraw and
+durableduplicateguardsCPUqualified82PASS/0skips/22.574s/zeroSUMO inverifycpu2,
+commit37110c22. CPU1harnessfailurekept. NOTLIVE/no real smoke/grade-reuse/common
+boundaryswitch. Freshresume6000000 vs completebrief/canonicalOWNER9500000
+CONFLICT explicitlyawaitsconfirmation beforeNEWverificationphysics; recovery
+binding7028840allocation/7500000cap retained. DoNOTsilentlyclaimverifierlive.
+Observe-onlyV10 local9636/start1793587515.739 restoredonce(afterV9verifiedabsent),
+18CPU/PASS+firstrealpoll/publicationPASS, cannotdispatchtraining; NEVERduplicate.
+CurrentprogresstoolNOWadoptsincidentreplacementworlds/excludesretiredqueries,
+3CPU/PASS+real1793587611: Bu3claimed24/closed14/tenopenT300..470/waits1129..1139s;
+Ru2claimed8/closed4/fouropenT410..570/waits114..1136s. Earlier1793587542report
+usesretiredworlds/issuperseded; keepreceipt. B-u4..6pending/noVIABILITYclaim.
+FinalsupervisorsstillneedqualifiedA24/B24/R24gate/A48secondarymigration.
+
 MAIN1022 FRESH: full316linebrief read/latestcap9500000adopted; primaryA24/B24/R24,
 A48secondary. Recoverycpu1/118CPU/PASS0skips/21.287s/zeroSUMO qualified5053eec2.
 ExistingMAIN1011plan/registration adopted7028840allocated/7.5Mbinding/471160spare,

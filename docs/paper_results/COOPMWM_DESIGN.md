@@ -1,5 +1,5 @@
 # S-COOPMWM — warm MPPI training live; frozen-policy evaluation precompute registered
-1. Cap7500000/allocation7495040/free4960; all failed charges retained. MAIN0944 interruption needs25200 additionalsim-s/20240allocation decision before B/R physics recovery; no reserve cut authorised.
+1. Recovery binding cap7500000/allocation7028840/free471160, failed charges retained; canonical owner cap9500000 vs fresh resume6000000 unresolved, no new verifier physics authorised by this session.
 2. A/B/R fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
 4. A: PPO shared team reward=-J, road speed deficit plus source waiting.
@@ -37,16 +37,16 @@
 36. Check986072..986083,one/cell; TRAIN50%focus,12focus+12other; MAIN0508 B/Ru1 same-cell ascending-seed replacements for18failedBjobs plus6neverclaimed originals; later schedule unchanged.
 37. Every4updates checks A/B/R vs once-only MAPPO controls, J600/J900/safety; forced counts/type and SNR.
 38. Dev984000..984023 every16updates A/B/R; existing24bitwise MAPPO bytes reused; no MAPPO dev rerun.
-39. TRAIN4/dev16 reporting only; final checkpoints fixedA/B48,R24; A completed balancedu1..4/check/Adam/RNG retained, focus startsA-u5.
+39. TRAIN4/dev16 reporting only; latest fixed primaryA24/B24/R24, secondaryA48; existing final supervisors still need qualified endpoint migration before release.
 40. Final detector-first discovery uses unchanged COOPBEHAV detectors and complete exact twins.
 41. Learning checks report team return/value/KL/gradient, beta, proposal routes/acceptance/O1-O4 counts.
-42. FixedA/B48,R24 x24episodes x1200; MAIN02:34 auto-continue under health guards, publish u4 viability without owner-review pause; seed2 dropped.
-43. Cap7500000: superseded811640,train3477600,checks432000,dev201600,final460800,Rtest115200,coldB28800,failedA14400; exact-plan-grades1000000.
-44. Mechanics3600,calibration57600,discovery200000,pairedbranches691200,reusecheck600; allocated7495040/free4960 not auto-spent; complete-grade precharge or STOP.
+42. A48complete,B/R24 endpoints x24episodes x1200; health guards active, u4 viability publication without owner-review pause; seed2 dropped. MAIN1030 verifier integrated CPU-only/not live.
+43. Recoverycap7500000: superseded811640,train2811600,checks432000,dev201600,final576000,Rtest115200,coldB28800,failedA14400; exact-plan-grades760000.
+44. Mechanics3600,calibration57600,discovery179000,pairedbranches1036800,reusecheck600; allocated7028840/free471160; new verifier phase requires cap resolution/registration/smoke before physics.
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.
 46. All failures/warmup/twins precharged/no refunds or automatic retries; af8b16e5 permits one qualified new-ID attempt per missing failed diagnostic branch, complete originals adopted, whole missing group charged inside discovery200000.
 47. A48complete; B24/R4/grader4nice19; MAIN0423 up to24 CPU-only precompute workers SCHED_IDLE/nice19, grade-queue priority/load<28/MemAvailable+RAMfree8GiB/disk2GiB gates; no retries.
-48. MAIN0944 failedgpuAprimary596572 replaced759743/incident1,8freshgatespending; other3READYworkersretained. Posthocunsupportedgroup=>new/labelerror=>unlabelled; same search/deadline. Source2CPU98PASS querycodefaultdecline/worker-scopedrestartrequest notyetdeployed.
+48. Recovery B4146203/R4146817/broker4145985/grader4146093 live/sourceCPU118PASS; gpuA759743/incident1 READY8EXACT0, other3workersretained; preserve original claims, original18:07:02deadline. V10 observation only.
 49. GPU CPU helpers disabled until separate frozen parity qualification; own PIDs only.
 50. Both seed guards, fresh-name exposure, immutable sources/cache/approval bindings before physics.
 51. No prohibited inputs/newenv/push; OWNER20:35 opaque v2archive+SHA256-gated literal source removal only; commit eachstep.
@@ -58,7 +58,7 @@
 57. Same-group CRN removes shared hidden-driver/arrival variation only to extent model supports it.
 58. Nexec>=10/update; MAIN0548 permits retainedu1shortfall with explicitdeviation/noextraSUMO, later unmet=>STOP; bothGPUqueue saturated beyondmin; independentR(u) matches finalB(u) count/regime/size/duration concurrently withB(u+1).
 59. FINAL96=989600..989635 plus fresh990600..990659,8/cell; SHAd74f685ef75a819248bbe7bb0bef89cf0295037ff3b03b334b13ccec75c40bcc.
-60. Precharge4x96x1200=460800 +Ru24=115200; MAIN0423 afterA48 precomputeMAPPO/native/A48+Abranches,691800incl600reusecheck within existingphases; status/SHAonly until allfixedA48/B48/R24,then B/R episodes+Bbranches+analysis once; no Rbranches.
+60. Precharged opaqueMAPPO/native/A48 jobs retained; add primaryA24 episode+branches460800 under recovery quote; final primary gateA24/B24/R24,A48secondary, no Rbranches; live completion-hook migration pending.
 61. BranchesT300/500/700/900,H300; exact same MAPPO prefix, mismatchSTOP; MAPPO-reuse600 check first; failure+115200 needs MAIN approval.
 62. Final paired world-bootstrap95CI B-MAPPO/B-A/B-R/A-MAPPO J600/J900; percell/safety; controls reused.
 63. First12executedBstarts RNG20261101 + final detector-first twins share200000reserve; complete n+2 full-prefix reruns before any attempt.
