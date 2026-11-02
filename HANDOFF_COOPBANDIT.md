@@ -83,3 +83,15 @@ Rechecked the shared COMPLETE registration and both completion receipts, then
 independently verified all 11 manifest hashes and the 300 unique states / 60 worlds /
 4,500 labels / 240 credit rows / 1,452 data-charge rows. All checks PASS.
 The task is complete; this resume started no simulations or dispatches.
+
+Fresh owner-requested resume on 2026-11-03 started from clean `f70f2c46`.
+Reconciled the shared COMPLETE registration, DATA_COMPLETE/LIVE_COMPLETE and live
+summary. All 11 original-byte EXAM/live-report SHA256 hashes PASS; independently
+counted 300 unique states / 60 TRAIN worlds / 4,500 labels / 240 credit rows.
+Verified 1,452 unique successful-data charges and 72 unique live charges;
+including retained failed attempts/diagnostics gives 1,567,326 actual / 1,569,840
+conservative charged sim-s, within the 1,600,000 cap. Main report remains 59/70 lines.
+The first local verification encountered Windows' default GBK decoding on report
+text; explicit UTF-8 verification passed without changing any artifact bytes.
+All four steps were already complete; this resume started no simulations or
+dispatches and preserved the existing completed results and handoffs.
