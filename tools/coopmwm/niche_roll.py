@@ -102,7 +102,7 @@ import json
 r=Path({d['root']!r});p=Path('/proc',{str(d['pid'])!r})
 st=(p/'stat').read_text().split() if p.exists() else None
 assert st is None or st[21]=={d['start_ticks']!r}
-g=[json.loads(p.read_text()) for p in r.glob('STARTUP_*_LSCOLLECT_NICHENULL1.json')]
+g=[json.loads(p.read_text()) for p in r.glob('STARTUP_*_LSCOLLECT_'+{d.get('generation','NICHENULL1')!r}+'.json')]
 print(json.dumps(dict(qualifying=st is not None and st[2] in ('R','S','D') and not(len(g)==8 and all(x['pass_'] and x['max_cost_error']==0 for x in g)))))'''))
         if state['qualifying']:
             print(json.dumps(dict(wait=True,reason='another slot qualifying',owner=d)));return
@@ -160,7 +160,7 @@ net=r/'FROZEN_NETWORK.net.xml.gz';net.write_bytes(base64.b64decode({base64.b64en
 deps={{n:hashlib.sha256(text.encode()).hexdigest() for n,text in files.items() if n.startswith('pytools/traffic_shepherd/') or n.endswith('/ls_fast_worker.py')}}
 with (r/'NICHENULL_DEPENDENCY_HASHES.json').open('x') as f:json.dump(deps,f)
 binding.pop('adopted_startup_gates',None)
-binding.update(deadline_unix=1793894340.,gpu_deadline=1793894340.,niche_comparison=True,effective_amendment_sha256={sha(ops.EVIDENCE/REG)!r})
+binding.update(deadline_unix=1793894340.,gpu_deadline=1793894340.,niche_comparison=True,effective_amendment_sha256={sha(ops.EVIDENCE/'NICHE_DEPENDENCY_RECOVERY2.json')!r})
 if {host!r}=='gpuR':binding['batch_widths']={{'1':1,'2':1,'4':1,'8':1}}
 for n in ('SPOOL_OWNER.json','SERVICE_OWNER.json'):
  if (r/n).exists():shutil.copy2(r/n,backup/n)
@@ -317,9 +317,86 @@ print(json.dumps(d))''',timeout=60))
     print(json.dumps(value))
 
 
+def roll_target(gpus):
+    workers=[w for g in gpus.values() for w in g['workers']]
+    if any(w['owner'].get('generation','').startswith('NICHENULL') and
+            w['state'] in ('S','R','D') and not w['failure'] and not w['ready'] for w in workers):
+        return None
+    for host,suffix in (('gpuA','incident1'),('gpuA','deadlineA2'),
+                        ('gpuR','concurrent3'),('gpuR','deadlineR2')):
+        root='/root/coopmwm20261102_'+suffix
+        w=next(w for w in gpus[host]['workers'] if w['owner']['root']==root)
+        if w['owner'].get('generation')=='NICHENULL2':
+            if not w['ready']:raise ValueError('joint-release qualifier failed; diagnose retained receipt before replacement')
+        else:return host,root
+    return None
+
+
+def continue_roll():
+    """Finish only registered drained-boundary handovers; never dispatch SUMO/PPO."""
+    import contextlib,io,msvcrt
+    from .ls_validity_ops import gpu_status,admit
+    lock=(ops.EVIDENCE/'LS_NICHENULL_ROLL.claim').open('a+b');lock.seek(0)
+    if not lock.read(1):lock.write(b'1');lock.flush()
+    lock.seek(0);msvcrt.locking(lock.fileno(),msvcrt.LK_NBLCK,1)
+    while time.time()<1793894340:
+        try:
+            with contextlib.redirect_stdout(io.StringIO()):
+                gpus={h:gpu_status(h) for h in ('gpuA','gpuR')}
+                target=roll_target(gpus)
+                if target:
+                    host,root=target
+                    drain(host,root);gpu(host,root)
+                ready=[w for g in gpus.values() for w in g['workers']
+                    if w['ready'] and w['owner'].get('generation')=='NICHENULL2']
+                if ready:admit()
+            print(json.dumps(dict(unix=time.time(),ready=[w['owner']['root'] for w in ready],
+                target=target,training_paused=True,no_sumo_dispatch=True)),flush=True)
+            if len(ready)==4:
+                path=ops.EVIDENCE/'NICHE_NULLFIX_FOUR_WORKERS_READY.json'
+                if not path.exists():write(path,dict(unix=time.time(),workers=gpus,
+                    amendment_sha256=sha(ops.EVIDENCE/'NICHE_DEPENDENCY_RECOVERY2.json'),
+                    new_sumo_sim_s=0,collector_activation_pending=True))
+                return
+        except Exception as error:
+            write(ops.EVIDENCE/f'NICHE_ROLL_ERROR_{time.time_ns()}.json',dict(error=repr(error),unix=time.time(),no_inference_replay=True))
+            raise
+        time.sleep(60)
+
+
+def roll_dispatch():
+    import subprocess,sys,psutil
+    from .protocol import REGISTRY
+    target=ops.EVIDENCE/'LS_NICHENULL_ROLL_DISPATCH.json'
+    if target.exists():
+        d=read(target)
+        if psutil.pid_exists(d['pid']):
+            p=psutil.Process(d['pid']);assert abs(p.create_time()-d['unix'])<5
+            assert p.cmdline()[-3:]==['-m','tools.coopmwm.niche_roll','continue_roll']
+        print(json.dumps(dict(adopted=d)));return
+    reg=ops.EVIDENCE/'NICHE_ROLL_CONTROLLER_REGISTRATION.json'
+    if not reg.exists():
+        line=('\nS-COOPMWM joint-release controller engineering amendment: adopt live '
+            'A qualifier220668, then finish registered Asecond/Rfirst/Rsecond drained '
+            'handovers ONE qualifier globally. Preserve requests/claims/forecasts; '
+            'no inference replay or SUMO/PPO dispatch. Source-bound dependency package '
+            'and all8fresh gates per slot before admission. Stop controller on code '
+            'fault; bounded existing transport retries. Collector activation remains '
+            'separate after all4ready; other slots keep serving.\n')
+        write(reg,dict(line=line,source_sha256=sha(ops.LOCAL/'tools/coopmwm/niche_roll.py'),new_sumo_sim_s=0))
+        with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line+'amendmentSHA'+sha(reg)+'\n')
+    with (ops.EVIDENCE/'LS_NICHENULL_ROLL.log').open('x',encoding='utf-8') as log:
+        p=subprocess.Popen([sys.executable,'-X','utf8','-u','-m','tools.coopmwm.niche_roll','continue_roll'],
+            cwd=ops.LOCAL,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
+            creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
+    value=dict(pid=p.pid,unix=time.time(),source_sha256=sha(ops.LOCAL/'tools/coopmwm/niche_roll.py'),
+        amendment_sha256=sha(reg),mode='registered sequential GPU rollout only; no SUMO/PPO')
+    write(target,value);print(json.dumps(value))
+
+
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=('broker','drain','gpu','recover','recover2'))
+    p=argparse.ArgumentParser();p.add_argument('action',choices=('broker','drain','gpu','recover','recover2','continue_roll','roll_dispatch'))
     p.add_argument('--host',choices=('gpuA','gpuR'));p.add_argument('--root')
     a=p.parse_args()
-    if a.action=='broker':broker()
+    if a.action in ('broker','continue_roll','roll_dispatch'):globals()[a.action]()
     else:globals()[a.action](a.host,a.root)

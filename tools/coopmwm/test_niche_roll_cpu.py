@@ -3,6 +3,20 @@ import json
 from . import niche_roll as nr
 
 
+def test_one_qualifier_across_hosts_and_failed_owner_blocks_roll():
+    import pytest
+    def worker(host,suffix,generation='FASTK2V5',ready=True,state='R',failure=None):
+        return dict(owner=dict(root='/root/coopmwm20261102_'+suffix,generation=generation),
+            ready=ready,state=state,failure=failure)
+    gpus={'gpuA':dict(workers=[worker('gpuA','incident1','NICHENULL2',False),worker('gpuA','deadlineA2')]),
+          'gpuR':dict(workers=[worker('gpuR','concurrent3'),worker('gpuR','deadlineR2')])}
+    assert nr.roll_target(gpus) is None
+    gpus['gpuA']['workers'][0]['ready']=True
+    assert nr.roll_target(gpus)==('gpuA','/root/coopmwm20261102_deadlineA2')
+    gpus['gpuA']['workers'][0].update(ready=False,state='exited',failure={'error':'fault'})
+    with pytest.raises(ValueError,match='diagnose'):nr.roll_target(gpus)
+
+
 def test_worker_checks_additive_dependency_before_import(tmp_path):
     import sys
     import types
