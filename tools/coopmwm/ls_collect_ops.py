@@ -429,6 +429,49 @@ print(json.dumps(dict(host={host!r},unix=time.time(),workers=out,gpu=subprocess.
     v=json.loads(out);write(ops.EVIDENCE/f'LS_COLLECT_GPU_STATUS_{host}_{int(v["unix"])}.json',v);print(out)
 
 
+def launch_collection():
+    out=ops.ssh.remote('cpuQ',f'''import pathlib,json,os,time,subprocess,hashlib,shutil
+r=pathlib.Path({ROOT!r});c=pathlib.Path({COLLECTION!r});cfg=json.loads((c/'LS_COLLECT_BINDING.json').read_text());s=pathlib.Path(cfg['source_root']);dest=c/'DISPATCH.json'
+if dest.exists():print(dest.read_text())
+else:
+ assert cfg['amendment_sha256'] in (r/'AUTHORITY.md').read_text()
+ for n,h in cfg['cpu']['source_hashes'].items():assert hashlib.sha256((s/n).read_bytes()).hexdigest()==h,n
+ for a in ('B','R'):
+  assert not (r/(a+'_checkpoint_004.pt')).exists()
+  assert hashlib.sha256((r/(a+'_checkpoint_003.pt')).read_bytes()).hexdigest()==cfg['checkpoints'][a]
+ assert (c/'BROKER_FROZEN.json').exists()
+ mem={{line.split(':')[0]:int(line.split()[1])*1024 for line in pathlib.Path('/proc/meminfo').read_text().splitlines() if line.startswith(('MemAvailable:','MemFree:'))}}
+ assert os.getloadavg()[0]<28 and mem['MemAvailable']>=8*1024**3
+ assert shutil.disk_usage(c).free>=2*1024**3 and shutil.disk_usage('/dev/shm').free>=8*1024**3
+ home='/home/ubuntu/miniconda3/lib/python3.10/site-packages/sumo'
+ env=dict(os.environ,CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',PYTHONPATH=str(s/'pytools')+':/home/ubuntu/e3final/runtime/src:/home/ubuntu/e3final/runtime',SUMO_HOME=home,PATH=home+'/bin:'+os.environ['PATH'])
+ with (c/'SUPERVISOR.log').open('x') as log:
+  p=subprocess.Popen(['nice','-n','19','/home/ubuntu/miniconda3/bin/python','-B','-u','-m','tools.coopmwm.ls_collection',str(c)],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+ st=pathlib.Path('/proc',str(p.pid),'stat').read_text().split()
+ v=dict(pid=p.pid,start_ticks=st[21],boot_id=pathlib.Path('/proc/sys/kernel/random/boot_id').read_text().strip(),unix=time.time(),source=str(s),root=str(c),mode='frozen B3 snapshots; no plans/no optimizer')
+ with dest.open('x') as f:json.dump(v,f)
+ print(json.dumps(v))''',timeout=30)
+    v=json.loads(out);p=ops.EVIDENCE/'LS_COLLECT_DISPATCH.json'
+    if not p.exists():write(p,v)
+    print(out)
+
+
+def collection_status():
+    out=ops.ssh.remote('cpuQ',f'''import pathlib,json,time,os,shutil
+r=pathlib.Path({ROOT!r});c=pathlib.Path({COLLECTION!r});d=json.loads((c/'DISPATCH.json').read_text());p=pathlib.Path('/proc',str(d['pid']));st=(p/'stat').read_text().split() if p.exists() else None
+assert not st or st[21]==d['start_ticks']
+v=dict(unix=time.time(),owner=d,state=st[2] if st else 'exited',load=os.getloadavg(),disk_free=shutil.disk_usage(c).free,no_u4_update=all(not (r/(a+'_checkpoint_004.pt')).exists() for a in ('B','R')))
+for n in ('LS_COLLECT_STATUS.json','LS_COLLECT_FAILED.json'):
+ if (c/n).exists():v[n]=json.loads((c/n).read_text())
+v['log_tail']=(c/'SUPERVISOR.log').read_text()[-6000:]
+v['episodes_claimed']=len(list((r/'jobs').glob('lscollect1_B3_*/CLAIM.json')))
+v['episodes_completed']=len(list((r/'jobs').glob('lscollect1_B3_*/RESULT.json')))
+v['snapshot_queries']=len(list((c/'pending').glob('*.json.gz')))
+print(json.dumps(v))''',timeout=30)
+    v=json.loads(out);write(ops.EVIDENCE/f'LS_COLLECT_STATUS_{int(v["unix"])}.json',v)
+    print(out)
+
+
 def pause():
     target = ops.EVIDENCE/'LS_COLLECT_PAUSE_REGISTRATION.json'
     if target.exists():
@@ -455,7 +498,7 @@ def pause():
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser();p.add_argument('action', choices=['pause','pause_latest','audit','qualify','cpu_result','register_collection','freeze_broker','gpu_collect','collection_gpu_status'])
+    p = argparse.ArgumentParser();p.add_argument('action', choices=['pause','pause_latest','audit','qualify','cpu_result','register_collection','freeze_broker','gpu_collect','collection_gpu_status','launch_collection','collection_status'])
     p.add_argument('--host',choices=('gpuA','gpuR'))
     a = p.parse_args()
     if a.action in ('gpu_collect','collection_gpu_status'):globals()[a.action](a.host)
