@@ -1,5 +1,27 @@
 # S-COOPMWM — live checks
 
+## Both GPU clocks migrated; collection status — 18:10 UTC+8
+- Both primary GPU services passed four fresh **EXACT0** full/fast cold/warm
+  gates plus four source/SHA-adopted gates. Original bindings and startup receipts
+  remain intact. Queue service resumed **17:48:57 UTC+8**, deadline Nov5 23:59.
+- Broker `verifybeta13`: **155 CPU PASS**, zero skips, **35.240s**, zero physics;
+  owner **927733/start62785248**. A dead legacy worker's assigned plan query is
+  terminally declined on CPU so its episode continues on policy. Its inference
+  claim remains unreplayed; diagnostic values are never fabricated.
+- The known unsupported post-hoc-family label bug also remains in legacy gpuR
+  sources. Fixed-source empty replacement spools are qualifying on both hosts;
+  eight fresh exact gates are required before separate hot-add. The R replacement
+  drains the already-running old second-worker query before taking its memory.
+  Existing primary services continue. No search/horizon/learning change.
+- Current B-u4: **14/24 complete**; ten fresh-ID episodes at sim t300–390 wait
+  for answers. Oldest unresolved request ages **3,624–3,635s**, including the
+  migration/queue interval and still censored. **R-u4 has zero claims**, waiting
+  for B-u4's final matching quota. No finite steady-state u4/u24 ETA is justified
+  yet; no B-u4–6 viability claim. Receipt `EPISODE_PROGRESS_1793614233.json`.
+- Read-only progress now resolves additive bindings and fresh-ID overrides;
+  **22 local CPU checks pass**. Registered charge remains **4,450,130 sim-s**
+  at the latest check. Fixed final outputs remain closed.
+
 ## Command-mirror CUDA gate FAILED — MAIN16:39 disposition
 - `COMMAND_MIRROR_GPU_GATE_1651.json`: actual WM callback CPU/CUDA trace parity
   **exact0**, but absolute member-vs-existing-SUMO trajectory errors are nonzero.
