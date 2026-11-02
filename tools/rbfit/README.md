@@ -191,6 +191,17 @@ restarts; staged user work/edited handoffs block automatic publication commits.
 Live status is `receipts/LC_WATCH_0128_STATE.json`; terminal failures preserve
 source/logs and require manual reconciliation. No automatic adoption occurs.
 
+Fresh-session recovery after the original window uses `recover_lc.py --key KEY`
+(optional `--name lane_raw`). It requires a previously receipted, completed,
+exited owned job, obtains the same singleton lock, verifies and commits each
+publication without dispatching work. Prior SSH blockers remain in recovery
+history. Latest published physical candidate is `lane_raw_5a5b15ef118c`, bound
+to LANE80541278. `verify_lc_delivery.py --lane DIRECTORY --idm SHRUNK_IDM
+--adapter src/wms/physics/lc_fit_for_unc.py --out NEW_RECEIPT` validates hashes,
+all driver draws, and paired/replayed actual UNC planning; it also reports exact
+directed precision/recall separately from rare-event Brier. Requires existing
+committed UNC imports in PYTHONPATH; accesses no tapes. No adoption implied.
+
 The explicit boundary adapter is now available without changing UNC's default
 reader or peer files:
 

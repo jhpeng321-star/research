@@ -1,0 +1,56 @@
+{
+  "status": "PASS",
+  "drivers_drawn": 3130,
+  "paired_replayed_futures": 16,
+  "global_rng_unchanged": true,
+  "population_keep_right_zero_mass": 0.9454928091384812,
+  "scores": {
+    "raw_physics_population": {
+      "n": 258691,
+      "events": 626,
+      "categorical_brier_sum": 1199.284133800411,
+      "event_brier_sum": 599.6420669002055,
+      "negative_log_sum": 135856.33846927198,
+      "expected_event_count": 549.1719626443486,
+      "expected_correct_direction_event_count": 63.69631104950481,
+      "categorical_brier": 0.004635971617877742,
+      "event_brier": 0.002317985808938871,
+      "negative_log_score": 0.5251683996322717,
+      "ratio_of_expectations_precision": 0.11598609430604787,
+      "exact_directed_recall": 0.1017512956062377
+    },
+    "raw_physics_shrunk_posterior": {
+      "n": 258691,
+      "events": 626,
+      "categorical_brier_sum": 1193.865415027431,
+      "event_brier_sum": 596.9327075137155,
+      "negative_log_sum": 135887.24138308284,
+      "expected_event_count": 435.654937240321,
+      "expected_correct_direction_event_count": 60.98286147426663,
+      "categorical_brier": 0.004615024933327526,
+      "event_brier": 0.002307512466663763,
+      "negative_log_score": 0.525287858422144,
+      "ratio_of_expectations_precision": 0.13997973226371715,
+      "exact_directed_recall": 0.09741671162023423
+    },
+    "raw_physics_source_default": {
+      "n": 258691,
+      "events": 626,
+      "categorical_brier_sum": 24966.0,
+      "event_brier_sum": 12483.0,
+      "negative_log_sum": 8842912.492538251,
+      "expected_event_count": 12383.0,
+      "expected_correct_direction_event_count": 263.0,
+      "categorical_brier": 0.09650896243008067,
+      "event_brier": 0.048254481215040335,
+      "negative_log_score": 34.18330167086698,
+      "ratio_of_expectations_precision": 0.02123879512234515,
+      "exact_directed_recall": 0.42012779552715657
+    }
+  },
+  "adopted": false,
+  "qualification": "Conditional FIT engineering/sampler only; no autonomous traffic gate",
+  "verification_sha256": "8fbdb9f7ad5744479707f02fadad5e1ba4d96f625a2cb84df4e480fa41d4ac54",
+  "adapter_sha256": "c532fe57b57123f4ba8bec808e3df081a62102f7e203ddcf432a22f305a6fbec",
+  "verifier_sha256": "58d2f73f93489d7543d03c46d6bf3549e0a894cf9b1c39cfded2263f6d9ba797"
+}

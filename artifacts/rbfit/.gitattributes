@@ -4,3 +4,8 @@ lane_v2/** -text
 finite_mixture_v4/idm_population.json -text
 receipts/ADDENDUM*.json -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 receipts/CPU_ADDENDUM.xml -text
+# Continuation exports and frozen source bundles carry raw-byte SHA256 receipts.
+lane_source_*/** -text
+lane_raw_*/** -text
+source_versions/** -text
+receipts/LC_DELIVERY_20261102.json -text

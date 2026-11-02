@@ -260,7 +260,57 @@
           "previous_blocker": "{\"argv\": [\"ssh\", \"cpuQ\", \"/home/ubuntu/miniconda3/bin/python /home/ubuntu/rbfit20261101_lc_boundaries/continuation_remote.py --root /home/ubuntu/rbfit20261101_lc_source_5a5b15ef118c --name lane_fit inspect\"], \"returncode\": 255, \"stdout\": \"\", \"stderr\": \"Connection closed by 1.15.42.207 port 22\\n\"}"
         }
       ],
-      "published_commit": "bc115e80bf95c59ff50c2dd390db1e86319e151b"
+      "published_commit": "bc115e80bf95c59ff50c2dd390db1e86319e151b",
+      "raw_dispatched": true
+    },
+    {
+      "root": "/home/ubuntu/rbfit20261101_lc_source_5a5b15ef118c",
+      "name": "lane_raw",
+      "publication": "lane_raw_5a5b15ef118c",
+      "key": "5a5b15ef118c",
+      "recoveries": [
+        {
+          "timestamp": "2026-11-02T09:04:26.118394+08:00",
+          "status": {
+            "root": "/home/ubuntu/rbfit20261101_lc_source_5a5b15ef118c",
+            "name": "lane_raw",
+            "claimed": true,
+            "pid": 3951028,
+            "running": false,
+            "pid_reused": false,
+            "complete": true,
+            "verified": true,
+            "observation_worlds": 32,
+            "frozen_bootstrap_sha256": {
+              "config.py": "28a064562878bbcfcb508106ddb67520acde798ba043220f0be105b446bc4f32",
+              "secure_gap.py": "22b406dd8753e989829bf27a417fec506d627635f8da29ad0b1e8df0fd7dc438",
+              "mobil.py": "f786dbe67836cf8f66a50644691ca12375f3cd8ce610588a07128cd6ede5ff81",
+              "neighbours.py": "16667d7278e68d5796fb7349487ef3ef9f7c766ef21c4509597313d2ee129a0d",
+              "batched.py": "95da75d003f24ab77e06af7754c2126348ea4062b0707b48403763616dd335bd"
+            }
+          },
+          "previous_blocker": null
+        }
+      ],
+      "last_status": {
+        "root": "/home/ubuntu/rbfit20261101_lc_source_5a5b15ef118c",
+        "name": "lane_raw",
+        "claimed": true,
+        "pid": 3951028,
+        "running": false,
+        "pid_reused": false,
+        "complete": true,
+        "verified": true,
+        "observation_worlds": 32,
+        "frozen_bootstrap_sha256": {
+          "config.py": "28a064562878bbcfcb508106ddb67520acde798ba043220f0be105b446bc4f32",
+          "secure_gap.py": "22b406dd8753e989829bf27a417fec506d627635f8da29ad0b1e8df0fd7dc438",
+          "mobil.py": "f786dbe67836cf8f66a50644691ca12375f3cd8ce610588a07128cd6ede5ff81",
+          "neighbours.py": "16667d7278e68d5796fb7349487ef3ef9f7c766ef21c4509597313d2ee129a0d",
+          "batched.py": "95da75d003f24ab77e06af7754c2126348ea4062b0707b48403763616dd335bd"
+        }
+      },
+      "published_commit": "c69ed199b79e8e47bee0350a4b6fd57c81eca835"
     }
   ],
   "errors": [
@@ -311,22 +361,22 @@
   ],
   "heartbeat": "2026-11-01T09:00:10.796389+08:00",
   "latest_publication": {
-    "timestamp": "2026-11-02T09:02:05+08:00",
-    "commit": "bc115e80bf95c59ff50c2dd390db1e86319e151b",
-    "directory": "E:\\agent-work\\c4-rb-fit\\artifacts\\rbfit\\lane_source_5a5b15ef118c",
+    "timestamp": "2026-11-02T09:04:39+08:00",
+    "commit": "c69ed199b79e8e47bee0350a4b6fd57c81eca835",
+    "directory": "E:\\agent-work\\c4-rb-fit\\artifacts\\rbfit\\lane_raw_5a5b15ef118c",
     "adopted": false,
     "source_sha256": "e61f897c5e7adadde9db2683a5657874399737b572f4cec4892cbe766ad35b2d",
     "raw_physical_scores": {
       "n": 258691,
       "events": 626,
-      "categorical_brier_sum": 3827.06562004969,
-      "event_brier_sum": 1913.5328100248446,
-      "negative_log_sum": 138803.99000120116,
-      "expected_event_count": 5388.26939366196,
-      "expected_correct_direction_event_count": 194.89275748787716,
-      "categorical_brier": 0.014793965078219536,
-      "event_brier": 0.007396982539109766,
-      "negative_log_score": 0.5365628877742216
+      "categorical_brier_sum": 1193.865415027431,
+      "event_brier_sum": 596.9327075137155,
+      "negative_log_sum": 135887.24138308284,
+      "expected_event_count": 435.654937240321,
+      "expected_correct_direction_event_count": 60.98286147426663,
+      "categorical_brier": 0.004615024933327526,
+      "event_brier": 0.002307512466663763,
+      "negative_log_score": 0.525287858422144
     },
     "idm_preferred_directory": "E:\\agent-work\\c4-rb-fit\\artifacts\\rbfit\\shrinkage_v1",
     "boundary_reader_required": true,
