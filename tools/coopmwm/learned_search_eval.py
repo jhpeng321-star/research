@@ -140,7 +140,7 @@ def replay(receipt, surrogate, mode, model=None, cfg=REGISTERED, config=None, du
         kw['extra_seeds'] = pp.proposal_seeds(record, group, policy, cfg['n_seeds'], model, WIDE, regime=regime)
     if mode in ('warm', 'both') or mode in ITERATIONS:
         cov0 = (receipt.get('initial') or {}).get('covariance')
-        kw['warm_start'] = pp.warm_start(record, group, model, regime, cov0=cov0)
+        kw['warm_start'] = pp.warm_start(record, group, model, regime, cov0=cov0, **cfg.get('warm_kw', {}))
     seed = int(ms._digest([cfg['seed'], receipt.get('search_id')]+(['alt'] if mode == 'plain_alt' else []))[:15], 16)
     ms.search(record, group, policy, WIDE, evaluate, regime, seed=seed, config=config, **kw)
     return [v for c in calls[:-1] for v in c[0]], [z for c in calls[:-1] for z in c[1]]

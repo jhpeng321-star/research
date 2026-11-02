@@ -806,7 +806,7 @@ def proposal_seeds(record, group, policy_traj, n, proposer, bounds, regime=None,
 
 
 @torch.no_grad()
-def mixture_moments(model, x, cov0=None):
+def mixture_moments(model, x, cov0=None, std_scale=1., mean_scale=1., prior_cov=False):
     """Moment-matched single Gaussian of the defensive proposer mixture for tokens x.
 
     Returns (mean m*n, cov (m*n)^2) in canonical m/s^2 and duration probabilities.
@@ -822,8 +822,11 @@ def mixture_moments(model, x, cov0=None):
     eps = float(model.cfg.get('defensive', 0.))
     w = (1-eps)*logpi[0].exp().double().numpy()
     c0 = ms.isotropic_covariance(m, Z_SCALE, n)/Z_SCALE**2 if cov0 is None else np.asarray(cov0, float)
+    mu = mu*mean_scale; var = var*std_scale**2      # track-A diagnostics (defaults = registered)
     mean = w@mu
     cov = sum(w[k]*(np.diag(var[k])+np.outer(mu[k], mu[k])) for k in range(len(w)))+eps*c0-np.outer(mean, mean)
+    if prior_cov:
+        cov = c0.copy()
     cov = (cov+cov.T)/2+1e-6*np.eye(len(mean))
     pd = (w@logdur[0].exp().double().numpy())+eps/nd
     return mean*Z_SCALE, cov*Z_SCALE**2, pd/pd.sum()
@@ -852,7 +855,7 @@ def novelty_scorer(model, x, rank='ratio'):
     return score
 
 
-def warm_start(record, group, proposer, regime=None, cov0=None):
+def warm_start(record, group, proposer, regime=None, cov0=None, **moments):
     """Learned-search hook: ``mppi_search.search(..., warm_start=warm_start(...))``.
 
     The proposer's (moment-matched, defensive) distribution replaces the
@@ -868,7 +871,7 @@ def warm_start(record, group, proposer, regime=None, cov0=None):
     model = proposer[0] if isinstance(proposer, tuple) else proposer
     regime = regime or record.get('regime') or 'unknown'
     x = member_features(record.get('rows') or group['rows'], group['members'], regime)
-    mean, cov, pd = mixture_moments(model, x, None if cov0 is None else np.asarray(cov0, float)/Z_SCALE**2)
+    mean, cov, pd = mixture_moments(model, x, None if cov0 is None else np.asarray(cov0, float)/Z_SCALE**2, **moments)
     cfg = dict(REGISTERED, **model.cfg)
     return dict(mean=mean.tolist(), cov=cov.tolist(), duration_probs=pd.tolist(), source='plan_proposer',
                 generic_share=float(cfg['generic_share']), novelty_share=float(cfg['novelty_share']),
