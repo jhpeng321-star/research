@@ -1,0 +1,3408 @@
+# S-COOPMWM — live checks
+
+## MAIN21:27/21:29 — arrival-phase recovery deployed
+- All four recovery workers exited on the same fitted-arrival-bound error. The
+  observable-arrival artifact ends at **1200 s**; an interrupted request at t860
+  plus H420 exceeded that phase. Original failure receipts and claims are retained.
+- Registered amendment **f89fe3bf…** derives admission from the model metadata:
+  **t0 ≤ 780 s**, with unchanged **K4/H300 screen, K8/H420 maximum final**.
+  No look-ahead reduction. Late snapshots remain stored; exclusions by 100 s
+  time bucket: 700→255, 800→2443, 900→233.
+- Frozen `lsvalidcpu3`: **218 CPU PASS, zero skips, 42.672 s, zero sim-s**.
+  Per-query validation/arrival-bound/OOM errors decline with tracebacks; named
+  safety/physics/accounting/parity invariants remain fatal.
+- All **72 completed episodes / 14,534 snapshots** adopted. Seven invalid or
+  interrupted admissions are terminal declines, never inference retries; their
+  charges remain. One valid unassigned request is retained.
+- CPU broker/supervisor **1485244/1485245** are durable. New GPU owners
+  **7429/7430 (gpuA), 491842/491843 (gpuR)** are running **eight fresh gates each**
+  before admission. Original numerical files and bindings remain unchanged;
+  the error-boundary overlay is separately SHA-registered.
+- At unix1793629401: **0 actual finished searches / 0 gold lists**. The legacy
+  raw response count of seven consists of terminal declines. The new observer
+  distinguishes those counts and will publish the first genuine full-pool response.
+- **A48/B3/R3 retained; no u4 PPO update.** B-REPLAY remains inactive pending its
+  delegated integration and the registered bank-entry prerequisite.
+
+## LS-COLLECT engineering recovery — frozen B-u3, training paused
+- Fresh session read **all 485 brief lines**, adopted commit `341e9417` and prior
+  uncommitted work. The latest MAIN18:58/19:12/19:56 collection order is active.
+- **72/72 TRAIN collection episodes completed**, **14,534 observable snapshots**
+  retained. Completed episodes are adopted without another episode simulation.
+- The original CPU supervisor exited without a failure receipt; retaining full
+  history/policy payloads in its queue is a suspected memory cause, not a proven
+  diagnosis. Recovery retains only queue metadata in RAM and loads payloads on demand.
+- Four original GPU handovers drained their work and terminated old workers, then
+  failed an exact command-line assertion during process exit. Recovery treats an
+  empty command line with the same boot/start identity as exiting, never a signal
+  target; changed identities still fail. Original claims and receipts remain intact.
+- Frozen `coopmwm20261102_lsrecoverycpu1`: **205 CPU PASS**, **0 skips**,
+  **42.859 s**, **0 sim-s**. The top-eight label wrapper preserves the original
+  eight finalist WM calls and keeps negative predictions, per MAIN19:56.
+- Registered recovery SHA
+  `f4ea0e3d3c70d66e779e8ad718636336160edaeb85c5decf543f2c8cf752111b`.
+  CPU broker/supervisor **1297398/1297399** are durable. Four replacement GPU
+  owners **986989/986990** and **474268/474269** are qualifying with four fresh
+  exact gates plus four source-identical adopted gates apiece; no READY claim yet.
+- At unix1793623759: all episodes adopted; **8 precharged searches**, **0 finished
+  collection searches / 0 gold lists**. Initial admitted worlds are 986004/986005;
+  subsequent admissions rotate new worlds before repeats, then middle/late states.
+- Registered collection envelope and **11,900,000 sim-s cap** are unchanged;
+  restricted interim/k8-training phases are unused. **B/R remain u3, no u4 update**.
+  Command mirror remains off after its failed gate; learned training awaits MAIN.
+
+## LS-COLLECT registered before collection physics
+- Registration SHA `edacc2b85b04b8c122c5827077be940e6582fe021f18c4b6094b7df507fac7aa`.
+- **201 CPU PASS**, zero skips, **42.334 s**, zero simulation; frozen release
+  `coopmwm20261102_lsreleasecpu2`. Harden-3 is integrated with MAIN18:54
+  breadth-first scheduling and compatibility with existing withdrawal markers.
+- Frozen B-u3 collection spans the **72 registered TRAIN worlds**. Episodes
+  snapshot eligible groups without waiting and execute policy actions only.
+- Registered envelope: **86,400 train sim-s** plus up to **2,332,800 verification
+  sim-s** (216 lists × eight original finalists + policy, worst-case full prefixes).
+  Each complete list is precharged before search; all failures retain charges.
+- Cap **11,900,000** includes the new restricted 900,000 interim phase. Collection
+  uses existing train/verification allocations. Remaining training will need a
+  fresh quote before MAIN authorizes learned-search resume.
+- Four existing GPU slots are adopted; a logging-only profile-capture handover
+  drains their current claims and requires fresh startup parity before serving.
+  Search arithmetic, horizons, population, iterations and Thompson choice stay fixed.
+
+## MAIN19:12 latest-order pause confirmed
+- B/R remain at durable **u3**, with **no u4 checkpoint or PPO update**.
+- The superseded FAST1844 wave is closed: **10 B + 12 R claimed attempts**,
+  including eight completed R results preserved. None may be replayed.
+- Only dispatch/boot/start/argv-verified B/R owners and descendants were signalled;
+  the post-pause audit finds **zero remaining owned descendants**. GPU searches,
+  broker, grader and final coordinator were retained.
+- Closed-wave charges: **26,400 sim-s**, retained; total charged **4,490,930 sim-s**
+  at unix1793618754. No new simulation during this pause. Registration and
+  `LS_COLLECT_PAUSED_1912.json` preserve hashes and the process tree.
+- Next is non-blocking frozen-B-u3 LS-COLLECT under MAIN18:58/19:12. The latest
+  cap is **11,900,000 sim-s**, including the restricted interim allocation.
+  Training resumes only on MAIN's learned-search resume addendum.
+
+## MAIN18:38 adopted — B/R paused for LS-COLLECT
+- Durable B/R checkpoints remain **u3**; **no u4 PPO update**. The ten stalled
+  `warmdns1651_u004_B_*` attempts are closed permanently, with all charges kept.
+- `LS_COLLECT_PAUSED.json` records checkpoint hashes and the exact verified
+  process tree. GPU searches, completed responses and full-pool receipts remain
+  preserved. No new SUMO was launched during the pause.
+- Next is the registered frozen-B-u3, non-blocking TRAIN collection; training
+  resumes only on MAIN's subsequent addendum. Latest owner cap is **11,000,000
+  sim-s**. The command-mirror gate has already failed and remains off.
+
+## Both GPU clocks migrated; collection status — 18:10 UTC+8
+- Both primary GPU services passed four fresh **EXACT0** full/fast cold/warm
+  gates plus four source/SHA-adopted gates. Original bindings and startup receipts
+  remain intact. Queue service resumed **17:48:57 UTC+8**, deadline Nov5 23:59.
+- Broker `verifybeta13`: **155 CPU PASS**, zero skips, **35.240s**, zero physics;
+  owner **927733/start62785248**. A dead legacy worker's assigned plan query is
+  terminally declined on CPU so its episode continues on policy. Its inference
+  claim remains unreplayed; diagnostic values are never fabricated.
+- The known unsupported post-hoc-family label bug also remains in legacy gpuR
+  sources. Fixed-source empty replacement spools are qualifying on both hosts;
+  eight fresh exact gates are required before separate hot-add. The R replacement
+  drains the already-running old second-worker query before taking its memory.
+  Existing primary services continue. No search/horizon/learning change.
+- Current B-u4: **14/24 complete**; ten fresh-ID episodes at sim t300–390 wait
+  for answers. Oldest unresolved request ages **3,624–3,635s**, including the
+  migration/queue interval and still censored. **R-u4 has zero claims**, waiting
+  for B-u4's final matching quota. No finite steady-state u4/u24 ETA is justified
+  yet; no B-u4–6 viability claim. Receipt `EPISODE_PROGRESS_1793614233.json`.
+- Read-only progress now resolves additive bindings and fresh-ID overrides;
+  **22 local CPU checks pass**. Registered charge remains **4,450,130 sim-s**
+  at the latest check. Fixed final outputs remain closed.
+
+## Command-mirror CUDA gate FAILED — MAIN16:39 disposition
+- `COMMAND_MIRROR_GPU_GATE_1651.json`: actual WM callback CPU/CUDA trace parity
+  **exact0**, but absolute member-vs-existing-SUMO trajectory errors are nonzero.
+- World986051: maximum position **0.8599243164 m**, speed **0.3810596466 m/s**.
+  World986070: **0.0787963867 m**, **0.0550899506 m/s**. The prototype produces
+  the same errors as the old chain on these two null fixtures.
+- Background half-steps are law-reconstructed from observable 1s endpoints, with
+  roster/lane ambiguities retained. This is a failed necessary observable gate,
+  **not a full-road/true-half-step SUMO parity pass**. No new SUMO was run.
+  **Command mirror remains OFF for BOTH B and R**, per the owner's failure rule.
+
+## Final resource handover completed — 17:24:48 UTC+8
+- Frozen `finalendpoint5`: **90 CPU PASS**, zero skips, **23.806s**, zero physics.
+  Regression verifies opaque result bytes are hashed without JSON decoding.
+- All **480 A24v2** episode/branch completions and **673 original** opaque receipts
+  are adopted. Old waiting owner689787 was identity-verified with no physics
+  children and replaced by **852974/start62576671**. No completed job was rerun.
+- Additive config/suffix uses the authorized Nov5 resource clock and current
+  phase caps. Final outcomes remain closed until fixed B24/R24 endpoints.
+
+## MAIN16:51 DNS recovery — durable supervisors restarted 17:09:20 UTC+8
+- The transient DNS V4 STOP closed the ten remaining B-u4 attempts without a
+  result. Fourteen completed episodes are retained and adopted; ten replacement
+  attempts use fresh `warmdns1651_u004_B_*` IDs on the same registered TRAIN
+  worlds and original noise wave. Every original charge and receipt is retained.
+- Frozen `verifybeta9`: **153 CPU PASS**, zero skips, **36.388 s**, zero physics.
+  Live preflight restored u3 for both arms and checked the original binding SHAs.
+  The extension is a new `RESOURCE_EXTENSION_1651.json`; originals are unchanged.
+- SSH metadata transport now retries DNS/connection/reset/timeout/exit255 errors
+  at most six times over 300 s, rechecking owner/gate receipts before identical
+  delivery. Code/parity/physics faults remain fatal. Only the exact diagnosed
+  DNS-stop SHA is released; a fresh V5 STOP remains fatal.
+- Registered **12,000 sim-s** transfer: discovery150,200→138,200 and
+  train2,840,400→2,852,400. Latest ordered cap11,000,000 includes a separately
+  restricted **1,500,000** k8-verification phase, still inactive pending activation.
+- New detached owners at unix1793610560: **B821013/R821014/broker821011/grader821012**.
+  Effective verified guide beta=1. R waits for B-u4's final matching quota. Initial
+  logs are empty. The registration SSH timed out after remote completion; all
+  additive receipts were verified and adopted before launch, without repeating it.
+- New CPU runtime reads the extended deadline **2026-11-05 23:59 +08**. Existing
+  GPU processes and final coordinator still cache the original deadline and need
+  a qualified handover. Command mirror remains off pending its full trajectory/GPU
+  gate; learned search/k8 verification remain inactive. **B-u4–6 viability pending.**
+
+## MAIN16:07 verified-guidance correction — durable boundary adoption
+- Warm memory, fast-path parity, MAPPO-u0 restarts, library and the original
+  five-branch SUMO verification smoke are completed work and retained.
+- **Effective guide beta=1 for B and R under exact verification** is registered.
+  The adaptive exact-grade trust curve remains reporting-only. The Controller
+  preserves the verifier's effective beta/query probability and consumes exactly
+  one original beta/pad draw; exact-positive plans alone execute and enter AWR.
+  Count-starvation, safety, harmful-plan and learning checks remain active;
+  reporting-only trust reaching zero cannot itself starve verified guidance.
+- Frozen numerical `verifybeta2`: **131 CPU PASS**, zero skips/physics,34.463s.
+  Includes both arms at tracked beta0, exact-positive acceptance/negative rejection,
+  actual episode-loop/five-branch continuation and grade reuse. The initial
+  qualification failure is retained (missing fake-world seed and optional branch
+  behaviour metadata); corrected before release.
+- **R736732** restored u3 Adam/RNG/trust, configured fixed guide beta1 and waiting
+  for B-u4's final matching quota; **no R-u4 claim yet** at unix1793608384.
+  R-u2/u3 had zero executed plans because legacy beta was0; disclosed deviation.
+- **B598899 parent deliberately T**, children continue existing u4 SUMO/GPU work.
+  Registered detached controller **748938/start62256954** waits for all24 current
+  replacement RESULT+CLOSE receipts, then adopts u3 plus this collected wave and
+  applies u4 exactly once. At unix1793608384: **24 claimed/14 complete**, ten open.
+  Existing B-u4 episodes retain pre-correction trust; no claimed episode is replayed.
+  Fixed beta applies to B's subsequent fresh decisions; this timing is disclosed.
+- Controller-only `verifybeta5`: **133 CPU PASS**, zero skips/physics,36.649s.
+  Prior controller failures are preserved: Linux empty-argv exit race after the
+  child-free R parent was killed, then a missing deadline key before B handover.
+  Partial R handover was adopted without re-signalling or redispatching R.
+  Current V3 controller is live with an empty log; numerical source2 is unchanged.
+- Same 9,500,000 cap/MAIN15:56 allocation; no additional handover physics charged.
+  Original **18:07:02 UTC+8** resource deadline retained, not implicitly extended.
+  Final outcomes remain closed. **B-u4–6 viability is still pending.**
+
+## Approved final-only recovery live — 16:04:22 UTC+8
+- MAIN15:56 allocation registered as `758ad384…`, commit `ca2a1022`:
+  **375,800 sim-s** transferred from remaining separate exact grading
+  (431,160→55,360); final-test allocation **691,200**, paired-branch **1,297,400**.
+  Total stays **9,500,000**; training/discovery/verification allocations retained.
+  This uses the remaining freed extended-B grading allocation; B-u25–48 training
+  had already been released and is not counted a second time.
+- The source3 checkpoint repair is retained. A final-only accounting adapter was
+  needed because it otherwise loads the old immutable training binding's phase
+  caps. Frozen `finalendpoint4`: **89 CPU PASS**, zero skips, **23.55 s**, zero
+  SUMO/inference, commit `f037d749`. Training bindings and supervisors retained.
+- New detached final coordinator **689787/start62093997** is live. Its held
+  predecessor was never resumed: all386 invalid jobs were closed, no physics
+  descendants remained, and only its identity-verified idle pool and parent
+  were terminated. All charges and original673 opaque receipts remain retained.
+- At unix1793606718: **23 corrected A24v2 jobs complete**. Published checkpoint
+  metadata verifies actual **A-u24 SHA**; no failure or outcome opening. Final
+  analysis remains gated on B-u24 and R-u24. No final outcome values were read.
+- B/R collection, four GPU slots, exact grader and observe-only publisher continue.
+  Original resource deadline **18:07:02 UTC+8** still needs registered continuation.
+
+## Final-only engineering hold — spawned-worker checkpoint authority
+- **Final coordinator625637 is deliberately frozen**, before any outcome opening.
+  B/R training, four GPU workers, exact grader and observer continue.
+- Code inspection found that spawned final workers import the original u48
+  budget; they do not inherit the coordinator's in-memory u24 override. The
+  A24-labelled specs lacked explicit checkpoint authority, so they loaded A48.
+  This invalidates those attempted primary jobs; no outcome values were read.
+- **386 reserved jobs / 375,800 sim-s** completed and are quarantined with every
+  original charge retained. The original 673 opaque precompute receipts remain
+  intact. No invalid job is reused as an A24 result.
+- Registered incident `078cf357…`; frozen corrected `finalendpoint3` passes
+  **88 CPU tests**, zero skips, **23.115 s**, zero physics. Each serialized policy
+  spec now carries `checkpoint_update`; missing authority fails closed, workers
+  load the exact checkpoint and publish its SHA. The regression simulates a
+  fresh u48 worker import consuming a serialized u24 spec. Fresh A24v2 IDs and
+  separate continuation markers preserve every prior artifact.
+- **Replacement final physics awaits MAIN allocation approval:** 375,800 exceeds
+  the delegated 50,000 limit. Proposed within the existing9.5M cap: exact-grade
+  allocation431,160→55,360; final-test +115,200; paired-branch +260,600. No
+  transfer has been applied. See `_sol/COOPMWM_FINAL_SPAWN_BUDGET_ALERT.md`.
+- Current B-u4 replacement schedule at unix1793605168: **24 claimed /14 closed**;
+  ten windows t300–390 await WM responses (oldest unresolved ages950–962s,
+  censored). R-u4 waits for B's final quota. Four search slots assigned,38queued;
+  gpuA sample95% utilisation/45,083MiB/171.92W. No finite update ETA yet.
+- MAIN14:59 clarification: disk recovery used cache cleanup and SHA-verified
+  in-place gzip; the relay archive was stopped. Earlier relay attribution is
+  superseded. This continuation performed no deletion. Original GPU/service
+  deadline18:07:02 remains unchanged; resource continuation requested.
+
+## Fixed-u24 final hooks migrated; opaque precompute retained
+- Frozen `finalendpoint1`: **87 CPU PASS**, zero skips, **22.584 s**, zero
+  SUMO/inference during qualification. Registered amendment `0b877c48…`.
+- Detached coordinator **625637**, start61917851, replaces only the two verified
+  waiting final/discovery owners. All **673** original MAPPO/native/A48/reuse
+  receipts remain adopted and opaque. The sole old child was Python's owned
+  resource tracker; no episode/branch worker was active and no child was signalled.
+- Frozen A24 episodes/branches use fresh `fixedfinal_A24_…` / `fixedbranch_A24_…`
+  identities inside the already registered 460,800 sim-s allocation. Primary
+  comparisons use A24/B24/R24; A48 episode/branch results are separately labelled
+  secondary. No checkpoint selection, panel change or duplicate precompute.
+- B24/R24 completion still gates outcome opening and registered analysis, then
+  detector-first B24 n+2 twins under the remaining discovery allocation.
+  At unix1793604918: coordinator live, no failure, **outcomes still closed**.
+- Observe-only V11 **11640** restored after V10 was verified absent. **21 CPU
+  checks pass**; first publication recovered eight immutable TRAIN receipts.
+  Existing training/GPU owners and original resource deadline retained.
+
+## SUMO VERIFICATION LIVE — common update 4
+- Actual B/R continuation starts **15:23:20 / 15:23:31 UTC+8**; durable live
+  publication **15:25:29**. Frozen `verifycpu12`: **105 CPU PASS**, zero skips,
+  28.041 s. Both arms adopt their u3 checkpoints, optimizer/RNG and trust state.
+- B takes up to four WM candidates; R takes four random candidates. Trust is
+  drawn first. Exact SUMO picks a strict improvement over policy, and its grade
+  is reused for trust/imitation. R's existing beta is **0** after its three
+  legacy exact grades, so its trust draws currently select policy; not reset.
+- Detached owners: **B598899/R599343/grader598089**. Broker545008 and all four
+  qualified GPU workers retained. Both supervisors have fixed **u24** endpoints.
+  Latest state has no active STOP/health pause.
+- Activation preflight found all 24 old B-u4 attempts had warmed to t300 after
+  disk admission recovered, then stopped on the pre-existing V3. No RESULTs or
+  control outcomes exist. All original charges remain. Registered amendment
+  `e84d10e6…` funds **28,800 sim-s** same-cell TRAIN replacements from discovery
+  (179,000→150,200, above the 120,000 floor), within the unchanged 9.5M cap.
+- The transient SSH closure did not cancel the remote binder: its completed
+  receipt was adopted before dispatch. No duplicate binder or episode replay.
+- Final primary A24/B24/R24 hook migration and B-u4–6 viability remain pending.
+
+## Real five-branch verification smoke passed — 15:13:08 UTC+8
+- Pre-registered first eligible B-u3 TRAIN decision: world986000 at t470.
+  **All five exact branches pass prefix and CRN checks.** SUMO rejected all four
+  candidates; the live policy continuation matches the policy branch at all
+  **11 fingerprints, t470–480**. Original smoke cost **3,730 sim-s**.
+- The first helper wrongly required an accepted candidate to pass. Registered
+  engineering amendment `4dc2f2f6…` makes the gate outcome-independent: compare
+  the accepted candidate branch, or the policy branch on rejection. No repeated
+  SUMO, inference or charge; the original completed receipts were rechecked.
+- Frozen `verifycpu11`: **105 CPU PASS**, zero skips, **28.153 s**, zero physics.
+  Original `verifycpu10` and the failed helper log remain preserved. Smoke SHA
+  `ca3a470c04a5ced54e473973b78c66906636847e1d4588a9bd26589fa3241342`.
+- Owner-approved **9.5M sim-s** allocation registered (`5f73c1e3…`): 2.8M
+  verification phase; separate exact grading 431,160, retaining all spent grades.
+  Variable acceptance can exhaust a phase: accounting blockers remain binding.
+- R-u2 applied with **0/12 requested matches**, fully reported; R-u3 collecting.
+  **SUMO VERIFICATION LIVE is not yet claimed:** common-u4 activation is next.
+
+## MAIN14:47 recovery — completed R episodes adopted; matching is best effort
+- Frozen `matchcpu1`: **125 CPU PASS**, zero skips, **21.715 s**, zero SUMO/GPU
+  inference. Amendment `d54fbc440e931a9eec1e192e98fc1c4dab8d69d69fa634045fd41d72641c2967`
+  registered before continuation.
+- All **24 R-u2 replacement episodes** completed before the assertion. They are
+  adopted with the original R-u1 optimizer/RNG; no completed episode is rerun.
+- Matching now prefers the same regime and nearest eligible group size within
+  ±1, retains the ticket duration, and records missing/extra strata explicitly.
+  A shortfall cannot stop the update. R remains an unscored random proposer.
+- Exact SHA/authority release covers only the diagnosed V3 matching assertion;
+  fresh V4 faults and all health pauses remain fatal. Original receipts retained.
+- Restored detached cpuQ owners: grader **544875**, broker **545008**, R **545912**.
+  First logs are empty and no fresh STOP at unix1793602747. R resumes through u3
+  to reach the common u4 verification boundary. B remains at durable u3.
+- B's old supervisor naturally exited on V3 at **14:57:15 UTC+8**. Its 24 B-u4
+  jobs have no claims and retain their existing precharges. No signal was sent.
+- Disk recovered to **3,404,877,824 bytes** after MAIN's relay archive; the
+  existing 2 GiB guard is retained. This continuation performed no archive deletion.
+- **Real verification smoke and matched activation remain pending.** Latest
+  owner cap is 9.5M sim-s; verification-phase allocation still needs registration.
+
+## MAIN14:24 recovery — both GPUs serving all four slots
+- At **14:28:10 UTC+8**, the existing gpuA replacement **759743** was admitted
+  as `gpuA@incident1`. All eight startup gates were already **EXACT0**.
+- The admission fault was visibility: the legacy restricted RPC returned only
+  six gates. The original CPU26-qualified `hotadd_rpc` exposes both additional
+  committed-plan receipts; its source SHA was checked before installation.
+  Four focused local CPU tests pass. Fresh restricted credentials remain on cpuQ.
+- Broker receipt unix1793600899 confirms **four admitted slots, four assigned
+  queries, no unassigned queue**, with failed `gpuA@0` still disabled. Existing
+  workers, queries, numerical source and original deadline were retained.
+- No qualification or episode was repeated. Admission SHA:
+  `4aaa6fdd665bf4c873f3cd5dd8dd1ff1506703f1a1103118fb0ac3612e23777f`.
+- Next prescribed steps: finish existing B-u3/R-u2, real five-branch verification
+  smoke, then matched activation. The latest owner cap **9,500,000 sim-s** in the
+  complete brief supersedes earlier resume figures; old cap-block notes are historical.
+
+### B-u3 complete; cpuQ disk blocks the next cohort
+- B-u3 durable update timestamp **14:27:12 UTC+8**: **10 executed plans**,
+  34 query records, 26 accepted forecasts. Exact-grading lag mean **10.51 s**,
+  max **19.06 s**, with no pending/running/failed grades at update publication.
+- Recorded collection-inclusive wall time **19,446.06 s** includes the incident
+  and prolonged replacement-admission outage. Its linear ETA is not a forecast
+  of the restored four-worker service.
+- At unix1793601294, R-u2's registered replacement schedule has **17/24 completed**,
+  four active episodes at sim t350–660, three still unclaimed. Existing owners
+  continue. B-u4 has **zero claims** and is waiting on disk admission.
+- cpuQ free disk at unix1793601042: **2,069,700,608 bytes**, below the existing
+  **2 GiB** guard. The only approved SHA-gated archive was already completed and
+  its source removed; its receipt is retained. Additional disk capacity or explicit
+  additional own-source archive/removal authority is needed. Alert sent through
+  canonical registration and `_sol/COOPMWM_MAIN1424_DISK_ALERT.md`.
+- Real SUMO verification smoke and matched-boundary activation remain pending.
+
+## 11:18 continuation — verifier grade reuse CPU-qualified
+- Original warm-memory qualification, MAPPO-u0 starts, same-arm/seed library and
+  remote owners adopted. At unix1793589133: **A48/B2/R1**, B/R/broker/grader
+  live, no active STOP or pause receipts; charged **3,507,050sim-s**.
+- **100 CPU PASS, zero skips,27.928785s, zero SUMO/GPU inference**, frozen
+  `verifycpu9`, commit `afbb1082`. Replay now retains pre-verification beta and
+  R-sampler draws even after own-policy/rejected decisions. Legacy draws unchanged.
+- The actual CPU episode/controller loop passes five-branch verification and
+  chosen-branch/live fingerprints through the next query window. Exact source
+  grades import into trust/AWR with no new branch/charge; concurrent importers
+  adopt one receipt. A truncated plan instead queues its executed-portion grade.
+- Reused grades are explicitly **decision-local exact verification** on the
+  common max-candidate-duration+120 window, with unknown future proposals absent;
+  they are not relabelled as later marginal grades of the completed live episode.
+- **Not live:** no real smoke, common B/R boundary switch or endpoint-supervisor
+  migration. Fresh6M versus canonical9.5M cap clarification remains outstanding
+  before new verification spending. Original live training and observers retained.
+- Qualification detail/failures: `coopmwm/VERIFIER_CONTINUATION_CPU_20261102.md`.
+  No new viability claim; B-u4–6 learning checks remain pending.
+
+## MAIN10:30 continuation — verifier CPU-qualified; current owners retained
+- Full322-line brief read; original warm-memory qualification and MAPPO-u0
+  starts adopted. Recovery B/R/broker/grader remain live, no active STOP/pause.
+  At unix1793587436: **A48/B2/R1**, charged **3,507,050sim-s**.
+- gpuA replacement759743 is now **READY, all eight retained gates EXACT0**;
+  no qualification was repeated. This is worker readiness, not an admission claim.
+- Landed verifier8ff759fd integrated. Pre-verification trust now draws once;
+  own-policy draws launch no branches, verified winners execute without a second
+  draw. Durable decision claims block duplicate charge/physics and preserve
+  interrupted claims. Explicit run-root accounting installed.
+- **82CPU PASS,0skips,0SUMO/inference,22.574s**, frozen `verifycpu2`.
+  First failed harness receipt retained; no tests skipped. Integration details:
+  `coopmwm/SUMO_VERIFY_INTEGRATION_CPU_20261102.md`. **Not activated**: real smoke,
+  exact-grade reuse, matched B/R update boundary and final-hook migration pending.
+- **Budget clarification required before new verification physics:** fresh
+  resume says6M, supplied later addenda and canonical owner approvals say9.5M.
+  Current adopted recovery allocation7,028,840 is bound under7.5M. No new
+  SUMO/GPU dispatch or PID control was performed by this continuation.
+- Observe-onlyV10 **PID9636**, startedunix1793587515.739, original18:07:02
+  deadline retained;18CPU observer/state/publication checks PASS. First live
+  poll/publication succeeded. It cannot launch training or inference.
+- Corrected `episode_progress --current` to use the incident replacement
+  schedule and exclude retired query keys. Earlier snapshot1793587542 showed
+  retired original jobs; retain it as superseded observation, not current waits.
+  Three actual-payload CPU tests PASS. Corrected snapshot1793587611:
+  B-u3 **24claimed/14closed**, ten active episodes att300–470, oldest request
+  ages1129–1139s; R-u2 **8claimed/4closed**, four active att410–570, request
+  ages114–1136s. Queue waits are censored; no post-recovery update ETA yet.
+- Latest published B exact marginal evidence remains15plans,mean+145.2veh-s,
+  95%CI[−60.80,+487.82]. **Viability is not established**; B-u4–6 pending.
+
+## MAIN10:22 fresh recovery — B/R continued from durable checkpoints
+- Complete316-line brief and canonical registration adopted. Latest owner cap
+  **9,500,000sim-s**; primary final checkpoints **A24/B24/R24**, A48 secondary.
+  Both B and R receive exact SUMO candidate selection at the same update index
+  once the delegated verifier is integrated and qualified.
+- Recovered incident source **118 CPU PASS**, zero skips/SUMO/inference,
+ 21.287s. Existing recovery allocation **7,028,840sim-s** is registered under
+  its7.5M binding;179,000discovery reserve after the explicit21,000transfer.
+  Verification allocation under the higher cap is a separate pending registration.
+- Recovery binding completed remotely after the observer SSH timed out; its
+  four durable binding/release/config receipts were verified before launch.
+  No duplicate binder or episode dispatch. Completed episodes and original
+  B-u2/R-u1 optimizer/RNG/library state adopted; only21registered interrupted
+  attempts replaced, failed charges retained,10unclaimed R precharges adopted.
+- **TRAINING CONTINUED B/R at10:27:22/10:27:30UTC+8** (unix1793586442/6450).
+  Remote detached owners: B4146203/start60072070, R4146817/start60072842,
+  broker4145985/start60071018, grader4146093/start60071516. All four live,
+  empty logs and no fresh STOP at unix1793586457. Frozen `recoverycpu1`.
+- gpuA replacement759743 remains in its already-running final startup gate;
+  seven retained exact-zero gates observed. Other three qualified workers retained.
+  Original failed inference is never replayed. Warm qualification/original restart
+  retained; command-mirror OFF pending genuine trajectory parity.
+- B-u4–6 viability remains pending; latest published exact marginal evidence
+  **15plans,+145.2veh-s,95%CI[−60.80,+487.82]** does not establish viability.
+
+## MAIN09:44 incident — labelling fixed; physics recovery budget blocked
+- The gpuA primary failed at unix1793583692 on the legacy2/3-member family
+  validator, called **after** a4–6-member winner had been selected. Broker STOP
+  at1793583695 then interrupted B-u3/R-u2 and the exact grader. A48 is complete.
+- The unsupported-size labeller now returns `new`; other label failures return
+  `unlabelled` plus traceback. The actual4/5/6-member runtime paths pass CPU tests.
+  Source1 **97PASS**, source2 **98PASS**, zero skips/SUMO/inference. Source2 also
+  records worker-scoped restart requests without globally stopping healthy slots;
+  safety/physics/parity/accounting failures remain fatal. Per-query code faults
+  decline with traceback; partial compute counts are unknown, never imputed zero.
+- Registered amendment **452d096b…**. Replacement gpuA primary **759743**, start
+  **896453815**, launched once at unix1793584324 (**09:52:04UTC+8**) in isolated
+  `incident1`. Fresh eight exact-zero startup gates are running; READY/admission
+  is not yet claimed. Other three GPU workers remain live/qualified. The original
+  failed inference claim is retained and has not been replayed. Source2 broker
+  refinements are CPU-qualified, not deployed; GPU worker runs frozen source1.
+- Read-only census1793584192: B-u3 **14 completed/10 interrupted**; R-u2
+  **3 completed/11 interrupted/10 never claimed**. Original B2/R1 checkpoints and
+  all completed episodes remain. Interrupted jobs have no RESULT or durable SUMO
+  checkpoint. Their original25,200sim-s charge stays; replacements need another
+  **25,200sim-s**, against only4,960 unallocated. Full quote **7,520,240** exceeds
+  owner cap7,500,000 by **20,240sim-s**. MAIN allocation decision requested in
+  canonical registration and `_sol/COOPMWM_MAIN0944_BUDGET_ALERT.md`; no reserve
+  cut, refund or replacement physics has been silently authorised.
+- **B/R remain stopped** pending qualification, registered recovery allocation
+  and deployment. Charged3,481,850 unchanged; original18:07:02 GPU deadline
+  retained. B-u4–6 viability remains pending; latest exact marginal CI includes0.
+
+## 09:34 continuation — owners adopted; parallel-wait reporting corrected
+- Fresh session read the complete298-line brief and recovered receipts. At
+  unix1793583292: **A48/B2/R1**, current B/R/broker/exact-grader live, no active
+  STOP/pause/failure. The existing local observe-only V9 and telemetry V3 remain
+  live. Original warm qualification/restart and all assigned work were adopted.
+- B-u3 has24 episodes claimed/14 closed; ten quota windows submitted33 parallel
+  TRAIN searches. R-u2 has7 claimed/3 closed. All four existing GPU workers are
+  ready with eight retained exact-zero startup gates each; no gates were rerun.
+  Individual GPU samples: gpuA83–84%, gpuR89–95%. No post-fan-out update has
+  completed yet, so the old B-u2 ETA is not a new-rate forecast.
+- **Reporting correction**: `episode_progress` had summed concurrent query ages,
+  producing13,098s for an approximately1,637s episode wait. It now reports the
+  oldest unresolved request age as `current_query_wait_s`, with separate pending
+  count and aggregate request-age effort. At unix1793583125 the ten blocked B
+  episodes are at sim t300–380 with oldest pending ages1725–1736s. Waits include
+  admission/queue time and remain censored. Two actual-payload CPU tests pass;
+  real remote observation passes. Amendment and old receipts retained; commit
+  `dd1e00d9`. This is an observation-only correction.
+- Exact grader at unix1793583156:18 receipts across both arms, no pending/running
+  grades, smoke passed. All12 repaired registered n+2 exact diagnostic receipts
+  000–011 have now been published alongside the retained failed attempts. These
+  diagnostics use their registered MAPPO background; marginal training grades
+  preserve other plans/current-policy background and are a different contrast.
+- Latest B exact marginal evidence remains **15 plans, mean+145.2veh-s,
+  95% world-cluster CI[−60.80,+487.82]**. **Viability is not established**;
+  the B-u4–6 curves/package and full WM diagnostic comparison remain pending.
+- Charged3,481,850sim-s; allocation7,495,040/cap7,500,000,4,960 unallocated.
+  Existing remote training and publication supervisors continue under the
+  registered guards; original GPU deadline18:07:02UTC+8 retained.
+
+## TRAINING CONTINUED — parallel-group fan-out is live
+- **B continuation started2026-11-02 09:01:19UTC+8**, owned supervisor
+  **3946079/start59555725**, immutable `tailcpu3`. All24 original B-u2 results
+  were adopted and the exact u1 checkpoint/Adam/RNG restored; no original episode
+  or completed update was rerun. Original warm qualification/start are retained.
+- **B-u2 completed with12 executed plans. B-u3 is running**: at unix1793581947,
+  all24 episodes claimed/14 closed,10 quota windows submitted33 training searches.
+  All four registered GPU slots are assigned. One utilisation sample at
+  unix179358149x gives gpuA75%,gpuR96%; this is not a steady-state rate claim.
+  **R-u2 runs concurrently**,6 claimed/2 closed, using original matching/no library.
+- Current broker3893211 retained all assigned original forecasts. The one-time
+  old-wave drain automatically ended at `TAIL_HANDOVER_COMPLETE.json` before
+  B-u3; ordinary quota-aware admission is restored. Old supervisor/transition
+  owners exited; current B/R/broker/grader are live, no active STOP/pause.
+- Same-B/seed20261101 **winning library now contains7 exact-positive entries**.
+  Warm memory, K4/H300, K8/Hfinal, full search/top-k/Thompson, exact-only learning,
+  horizons and budget remain as registered. Source3 CPU141PASS; broker48PASS.
+- B-u2 collection-inclusive wall time **9838.6425s** (2h44m), next beta0.7509695;
+  exact-grade lag mean11.756/max17.956s, no pending/running/failed grades at update.
+  The printed125.716h remaining estimate extrapolates the old pre-fan-out u2;
+  post-amendment timing awaits a complete new update. No completion ETA is invented.
+- **Query metadata correction** (`coopmwm/TAIL_QUERY_CENSUS_002.json`,3 CPU tests
+  plus real read-only census):122 bound queries =22 completed WM inferences +100
+  resolved capacity declines,15 accepted forecasts,0 pending responses/unknowns.
+  Raw routing93 counts legacy visible query routes; queries hidden by continuing
+  plan routes explain why it is not a WM-call census. Raw `gpu_busy.pending_queries`
+  100 incorrectly counts resolved zero-compute declines as missing broker-completion
+  receipts. Use this supplement; original update/grade data are retained. Completed
+  inference-interval fractions themselves remain labelled, not GPU hardware util.
+- Latest published exact marginal evidence: **15 plans,mean+145.2veh-s,95% CI
+  [−60.80,+487.82]** (`B_EXACT_VIABILITY_99cf50a5…`). **Viability is not established**;
+  B-u4–6 learning curves and the registered package remain pending. The existing
+  isolated diagnostic repair is completing the same registered sample alongside B.
+- Observe-only **20516/V9** replaced only verified local1372/V8; **23 CPU tests
+  PASS**, current TAIL owner/failure schemas loaded. Telemetry24140/V3 remains live.
+  Allocation7,495,040/cap7,500,000sim-s,4,960 spare; charged3,481,850 at snapshot.
+  Original GPU deadline18:07:02UTC+8 remains. Depth diagnostics await spare GPU
+  capacity; the unqualified command-mirror prototype stays disabled.
+
+### Tail release continuation — real checkpoint preflight passed
+- Real CPU preflight caught a continuation-only fault **before any new B launch**:
+  `restore_progress` read compressed `RESULT.json` completion markers as raw
+  episodes. Only the owned transition controller was held; existing SUMO/GPU,
+  broker, grader and R continued. The original checkpoint and all results remain.
+- Fixed reader to use the existing digest-verified lossless `accel_storage.read`.
+  Immutable **tailcpu3:141 CPU PASS**, zero skips,27.091s, zero SUMO/GPU jobs;
+  adds a real compressed-result fixture and adoption of the already-frozen wave.
+  Repaired transition **3907544/start59459454** is live since unix1793580316;
+  old held controller3874249 was identity-verified and terminated.
+- Real preflight at unix1793580384 passes: exact u1 checkpoint SHA6606191e940…,
+  exact generator state,17 Adam parameter states,1226 cumulative diagnostic
+  records,3 prior diagnostic selections, and **two same-B/seed library entries**.
+  Restored-state SHA1853bfb4d653… matches the prior successful read. The earlier
+  preflight's `library_entries=1` counted the library container key; its state
+  equality was correct and the reporting field is now corrected to2.
+- The one-time quota-complete admission drain is live under broker
+  **3893211/start59424477**, registered V2, **48 CPU PASS**. Its first launcher
+  refused before signalling because the rootless `serve` entry point has no root
+  argv; exact argv + boot/start + source PYTHONPATH now qualify its owned identity.
+  Original broker/config/receipts retained; all assigned inference claims adopted.
+- At unix1793580332: **A48/B1/R1**, B-u2 all24 claimed/22 closed, quota10 executed
+  plus2 in-flight. The two original GPU-R searches remain incomplete and owned;
+  no cancellation or inference replay. Transition/broker logs empty, active STOP
+  null. The controller waits for both episodes, adopts all24 results and continues
+  the exact checkpoint. Ordinary admission restores before new B-u3 fan-out.
+- Latest published exact marginal evidence remains11 B plans/10 worlds,
+  +224.8358veh-s with95% world-cluster CI[−35.3982,+596.7440]. **Viability is not
+  established**; the B-u4–6 package is pending. Allocation/deadline unchanged.
+
+## MAIN08:18 — quota-tail concurrent group admission qualified and registered
+- Recovery adopted completed **WARM MEMORY QUALIFIED**, the existing B/R restart,
+  and exact-positive same-B/seed library; no qualification or training was redone.
+- Immutable `tailcpu2`: **139 CPU tests PASS**, zero skips,27.055s, zero SUMO/GPU
+  launches. Includes actual frozen MAPPO parity, own-step PPO/exact-only grade
+  learning, exact CRN draws, concurrency reservations and safe continuation tests.
+  Initial `tailcpu1` fixture failures are retained. Local generated observer and
+  publisher payload suites: **15 PASS**; real guard state passes/no active STOP.
+- Amendment **e9af582e914d8a44…** registered before deployment: admitted windows
+  while the execution quota is unmet publish searches for **all eligible groups
+  before waiting**. Results resolve in inherited spatial order, first accepted;
+  one plan starts per control tick. All other forecasts are logged as searched,
+  not executed. One Bernoulli/window and one possible beta draw preserve the
+  existing exact-grader CRN contract. One batch reserves one executable window.
+- Each query keeps the same warm history, policy centre, search population,
+  K4/H300 screen, K8/Hfinal, top-k/Thompson and exact-only learning. R continues
+  the existing count/regime/size/duration matching. After executed quota10 the
+  original single-group nonblocking admission applies.
+- Detached transition **3874249/start59377221** dispatched once at
+  unix1793579494. It pauses only original B supervisor3551873, while all current
+  SUMO/GPU searches, broker3706352, grader3427015 and R3551874 continue. At
+  unix1793579500: **A48/B1/R1; B-u2 22/24 closed**. It waits for the two original
+  episodes, adopts all24 results, and resumes from exact u1 checkpoint/Adam/RNG,
+  trust/library and diagnostic-selection state. New fan-out applies to the next
+  wave. Never redispatch the transition or those already-owned searches.
+- New update receipts include collection wall time from original claim times and
+  per-slot completed-inference busy fractions (pending work censored). No new
+  simulation allocation: **7,495,040/7,500,000sim-s;4,960 unallocated**. Original
+  GPU deadline remains18:07:02UTC+8. B-u4–6 viability is still pending.
+- Follow-up at unix1793579645: the two original episodes remain t350/t340 and
+  keep opening new free-slot queries after quota10. A one-time old-wave boundary
+  drain is CPU-qualified (**45 PASS**,0.862s,zero SUMO), pending registration:
+  finish every assigned query, decline only new unassigned old-wave requests
+  after executed quota10, and restore ordinary admission automatically before
+  new B-u3 work. This creates a finite deployment boundary without cancelling
+  existing physics/searches. Per-slot R-centre fairness remains unchanged.
+- Observation-only telemetryV3 **24140** replaced only verified localV2 **28752**
+  at unix1793579639, loading the previously qualified bounded-git helper;12 CPU
+  tests pass. Existing learning-check observer1372 remains live.
+
+## 08:12 continuation — Windows publication failure repaired
+- Fresh session adopted A48/B1/R1 and every existing remote owner; no training,
+  search or physics job was restarted. At unix1793578141 B-u2 has22/24 episodes
+  closed; both remaining worlds have advanced to new, already-owned searches.
+  R-u2 awaits B-u2's final matching quota. No finite completion ETA is asserted.
+- Local observer46108 exited at unix1793578179 with Windows error206. Its log
+  identifies an unbounded `git diff --stat` argument list: immutable receipt names
+  accumulated across polls. Remote B/R, broker, grading and GPU work survived.
+- Repair `0fc421c3`: intersect intended paths with changed/untracked filenames,
+  bound diff command lines to16000 characters, and stage literal NUL-delimited
+  pathspecs through stdin. Existing operator-staged work still defers publication.
+  **Eight CPU tests PASS**, including1500 long receipt names and an actual
+  observe-only run that cannot launch training; real Git stdin dry-run passes.
+- Registered `coopmwm/EXACT_OBSERVER_COMMAND_LENGTH_RECOVERY.json`; replacement
+  **observe-only1372/V8** started2026-11-02 08:12:36UTC+8 after46108 was verified
+  absent. Its first real status/publication/commit cycle passed (`b830163f`).
+  Existing telemetry28752 remains live. Original GPU deadline is unchanged.
+- At unix1793578173:13 current B executed starts; exact grader14 receipts,
+  pending/running0, smoke passed. Receipt count includes both arms and is not a
+  count of B-qualified effects. Charged3338010sim-s; allocated7495040/cap7500000,
+  spare4960 unchanged under the later owner-approved addenda.
+- Warm qualification, original restart, exact-positive same-arm/seed library and
+  covariance integration are adopted, not rerun. The command-mirror prototype is
+  still disabled: completed CPU callback checks do not establish absolute
+  trajectory/GPU parity. B-u4–6 viability remains pending; no new scientific claim.
+
+## Fresh continuation — independent command audit and live evidence
+- Read-only guard/status compatibility now includes the **current fairness broker
+  and exact grader** with newest-dispatch precedence and boot/start identity.
+  A dead newest owner is reported as dead rather than hidden by an older live
+  owner. **12 CPU tests PASS**, including actual generated transport payloads;
+  real cpuQ verifies broker3706352/grader3427015 live, active STOPnull. Existing
+  local observers and all remote jobs continue; receipt
+  `coopmwm/WARM_STATE_SERVICE_OWNERS_REPAIR.json`.
+- Existing A48/B1/R1 training owners and observers adopted; no redispatch. At
+  unix1793576973 B-u2 has22/24 closed episodes; R-u2 waits for its final B quota.
+  No active STOP/pause; grader queue pending/running0 at unix1793576976.
+- Latest published exact report at unix1793576889 contains **11 B plans across
+  10 TRAIN worlds**, mean **+224.8358veh-s**, world-cluster95% CI
+  **[−35.3982,+596.7440]**. Five positive grades. B-u2 physical nulls are3/8
+  qualified grades; all zeros and losses retained. **Viability is not established.**
+  Full rank/type/group breakdown is in
+  `coopmwm/warm_live/B_EXACT_VIABILITY_f1d3fd1e73331c00e1ce9476a7ec8f4933728b3aed82117e089eb608441244ff.json`.
+- Independent actual-callback CPU check propagates the named groups continuously
+  and derives intermediate background speed from observable endpoints using the
+  frozen semi-implicit Euler law. **Three new CPU tests PASS**, also on the GPU-A
+  host with subprocess launches prohibited; runtime0.715s, zero SUMO/GPU jobs.
+  Both named plan-versus-own-policy trajectories remain **exactly identical**,
+  with both original and prototype chains. The prototype does not reduce absolute
+  errors (position/speed maxima0.859924m/0.381060m/s and0.078796m/0.055090m/s).
+  Receipt `coopmwm/COMMAND_CHAIN_KINEMATIC_CALLBACK_PROBE.json` discloses unresolved
+  roster/lane changes and interpolation fallbacks. Law-derived rows are not genuine
+  sensed half-step records. **Full trajectory/GPU qualification remains unpassed;
+  mirror stays disabled.** No acceptance, horizon, training or budget change.
+
+## MAIN07:18 clarification and command-chain audit
+- **R-u1 completed** after the centre-fairness repair. A48/B1/R1 at
+  unix1793576017; B-u2 has20/24 closed episodes and four still collecting.
+  Original B/R and grader owners continue with no active STOP or health pause.
+- **Per-update physical-null census is live** under report-only owner3746050/
+  start59055744, immutable `nullreport1`, amendment `ae657cfe…`, **9 CPU tests
+  PASS/zero skips/zero SUMO**. Only the old receipt-owned evidence reporter was
+  replaced; it never changes training, exact grades, trust or library inputs.
+  Initial report is `warm_live/B_EXACT_VIABILITY_a4449fdbeb2d139a7389dd860a754e6bc074192b912825009c097b0cf9b5384e.json`.
+- At unix1793576283: **9 qualified B grades across8 TRAIN worlds**, mean
+  **+275.2106veh-s**, whole-world95% CI **[−44.2595,+705.3209]**. Four positive
+  grades; the interval includes zero. **No general viability conclusion.**
+- B-u1:0/3 physical nulls; B-u2: **3/6 exact-graded plans are confirmed physical
+  nulls**. All three exact-zero tapes were checked over their complete420s
+  windows; identical sensed rosters/motion/rewards. The newly checked third case
+  is world986002/t380, also `origin=centre`, predicted versus own-policy **0.0**,
+  versus MAPPO **+113.1611veh-s**. Counts use graded plans as denominator; pending
+  plans are not imputed. All zeros/losses remain in the exact evidence.
+- Post-safety mirror prototype: **48 CPU tests PASS/zero skips/zero SUMO** in
+  immutable `commandcpu3`, including exact float64 agreement with the real
+  `CommandOwnership` writer on the four named members and speed-bound/stop
+  fixtures. It mirrors one-second `direct_target` and `slowDown` interpolation
+  before the inherited half-step speedMode27 cap. **Default remains disabled.**
+- CPU replay of the **actual frozen WM CAV callback** on both named observable
+  tapes gives **identical plan-versus-own-policy member motion on every active
+  half-step callback**, for both original and prototype chains. This independently
+  corroborates the already-zero WM own-policy contrast. No GPU process changed.
+  The tapes contain only integer-second neighbours: the interpolation-based
+  check has absolute speed residuals up to0.208864/0.055090m/s against SUMO,
+  unchanged by the prototype. This is **not an exact full-trajectory parity
+  pass** and therefore does not authorize a numerical hot-swap. Receipt
+  `COMMAND_CHAIN_NULL_CALLBACK_PROBE.json` retains every error and the stated
+  limited observation contract. Earlier CPU1/2 harness failures (missing test
+  environment/newer GPU runtime) are retained; no physics/inference retries.
+- Fresh-session inspection of the **original K8/H420 forecasts** shows both named
+  physical-null plans predicted **0.0 saving versus own-policy continuation** and
+  `centre_open_loop_gap=0.0`. Their +164.1375/+26.2245veh-s predictions compare
+  against whole-road MAPPO. Every returned top-k plan has zero predicted saving
+  versus own-policy in these two searches. Exact zero marginal SUMO grades agree
+  with that relevant contrast; the larger numbers are not marginal plan errors.
+- The registered later MAIN22:39 top-k rule permits mean-positive versus MAPPO;
+  it does not require strict improvement versus own-policy. That scientific
+  acceptance rule is retained. The distinction has been recorded in the central
+  registration log for MAIN. No nulls, losses or quota executions are removed.
+- Independently auditing the exact final command chain: the inherited WM already
+  applies `alwayscmd.inferred_cap` (SUMO IDM speedMode27/allowed-speed ceiling),
+  while plant `CommandOwnership.direct_target` and the one-second `slowDown`
+  target need explicit parity checks. No numerical hot-swap is claimed yet.
+  `COMMAND_CHAIN_SOURCE_{gpuA,cpuQ}.json`, `COMMAND_CHAIN_LAWS_gpuA.json` and
+  `COMMAND_CHAIN_NULL_FIXTURES.json` pin public runtime code/observable TRAIN
+  receipts only; collection launches neither SUMO nor WM inference.
+- Recovered pipeline-starvation repair was already CPU-qualified and registered.
+  It is now deployed as broker3706352/start58959212 at unix1793575314: original
+  four assigned searches adopted, stable per-slot centre/plan interleaving at
+  boundaries. B/R/grader and GPU owners retained. No horizon/search/budget change.
+
+## MAIN06:58 DIAGNOSIS — two exact-zero grades are physical nulls
+- Read-only diagnosis at unix1793574387, receipt
+  `coopmwm/ZERO_GRADE_DIAGNOSIS_986051_986070.json`; no new SUMO or WM calls.
+  Both are B-u2, t300, two-member nominal300s plans, exact window300–720s.
+- **Both selected `origin=centre`**, with all generic perturbation knots exactly0
+  and **predicted saving versus current policy0**. Predicted savings versus MAPPO
+  were164.1375 and26.2245veh-s. These are policy-centre executions, not evidence
+  that a new cooperative perturbation was discovered. The registered top-k rule
+  permits mean-positive versus MAPPO; the two contrasts are explicitly distinct.
+- Independent original and without-plan tapes have **identical sensed vehicle
+  rosters, positions, speeds and lanes across all420 recorded seconds**, identical
+  observable fingerprints and every per-second reward. Whole-window totals
+  independently agree:56395.37730018104 and49187.82654237546veh-s, respectively.
+- The without-plan controller executed **zero plan steps**. Requests really differ:
+  max raw-command changes per member are0.21710/0.69096m/s² (986051) and
+  0.13606/0.22765m/s² (986070). Some post-safety commands differ too, yet these
+  did not produce observable motion or reward changes before the members left.
+  Members are present for only2/4s and1/3s after start, respectively; a nominal
+  long commitment therefore did not imply a long physical intervention here.
+- **Verdict: genuine exact physical-null effects; no grading artifact found.**
+  Prefix/CRN checks pass. Zeros remain registered exact trust evidence and enter
+  neither positive-only imitation nor the winning-plan library. No outcome-based
+  filtering, behavioural threshold, retry or search change was introduced.
+- Flags/rate at unix1793574641: **2 confirmed physical-null plans /6 exact-graded
+  B plans (33.3%)**, a case-driven descriptive fraction. Both still count as
+  executed. The trace's acceleration field is **before CommandOwnership**;
+  final ownership speed-bound clipping can erase its command differences.
+  Strict final-issued-action equality is therefore not established by these
+  tapes. `ZERO_GRADE_NOOP_CLASSIFICATION.json` distinguishes physical-null,
+  raw-request equality and pre-ownership command equality instead of treating
+  them as interchangeable no-op definitions. No observations were filtered out.
+
+### MAIN guard state compatibility repaired
+- `warm_watch state` now resolves current A/V3 and B/R QUOTA owners with boot/PID
+  start identity, uses the existing registered health guard for active STOPs,
+  exposes health pauses/current supervisor failures, and retains the released old
+  SSH STOP separately as historical evidence. **11 CPU tests PASS**; real cpuQ
+  state has A48/B1/R0, original B/R alive, active STOPnull, no health pause.
+  Registered receipt `coopmwm/WARM_STATE_CURRENT_OWNERS_REPAIR.json`.
+
+## Current continuation snapshot — 06:49:19UTC+8
+- A48 complete; B-u2 and R-u1 are collecting concurrently, **24/24 jobs claimed
+  for each**. B-u2 has two confirmed plan starts plus eight unresolved potential
+  executions toward Nexec10. No active health/engineering STOP at this snapshot.
+- Winning-plan seeding is verified in the durable B-u1 receipt: **two library
+  entries**, both exact-positive grades from B/seed20261101; covariance buckets
+  ordinary|3 and ordinary|4. **R has no search library.**
+- Observe-only local46108 (V7) is live with successful repeated status/publication
+  cycles; telemetry28752 is retained. Detached training, grading and diagnostic
+  owners remain live. All three repaired exact-synergy results below are published.
+- Allocated **7,495,040/7,500,000sim-s**,4,960 unallocated; latest charged
+  3,331,280 includes retained failures and registered diagnostic repair attempts.
+  Original GPU deadline **Nov2 18:07:02UTC+8** is retained. The B-u4–6 viability
+  package and a quota-compliant full-run timing estimate are still pending.
+
+## First three complete exact-synergy diagnostics
+- Isolated diagnostic owner3589919 has completed the same registered first three
+  n+2 groups after the departed-roster repair. Successful original branches are
+  adopted; all failed-attempt charges remain. Full receipts000/001/002 are now
+  published under `coopmwm/warm_live/ACCEL_EXACT_PLAN_00*.json`.
+- **H300 C_G**, in registered sample order: **−868.1767, +0.3667, −2015.2881veh-s**.
+  H600: **−6459.3298, +5.8709, −3877.9212veh-s**. These first three diagnostics
+  do **not** show consistent positive synergy. No result was dropped or imputed.
+- These E2 contrasts use the registered MAPPO background; the exact marginal
+  grades above compare against own-policy continuation while retaining other
+  recorded plans. Their different contrasts must not be conflated. WM paired
+  predictions/variance are queued at diagnostic priority and do not gate PPO.
+- The same qualified replay guard is now bound to the still-waiting final
+  discovery executor: owner3604109, immutable `finaldiscovery2`, **84 CPU tests
+  PASS/zero skips/22.73s/zero SUMO**, amendment `a62810d6…`. Detector/sampling,
+  budget and fixed-endpoint/outcome-opening gates are unchanged. Hash-only status
+  confirms all673 precompute artifacts remain closed; no final values were read.
+
+### Publication recovery — timing metadata is not an update
+- Our added `B_UPDATE_001_TIMING.json` matched an older broad status glob and
+  stopped local observer41116 at unix1793571681 on `int('TIMING')`. Remote
+  training, grading and diagnostic workers continued; the receipt is retained.
+- Numeric update indices now require exactly three digits. **Six local CPU tests
+  PASS**, including execution of the actual generated status payload with timing
+  metadata present; real remote status and one-shot publication also pass.
+  QUOTA owners and Q1 failures are now visible. Adopted-u1 partial-stopwatch ETA
+  is suppressed in new formatting. Observation-only V7 restart is next.
+
+### Departed-roster diagnostic repair qualified and registered
+- Isolated `diagrepaircpu1`: **242 CPU tests PASS, zero skips,38.96s, zero SUMO**.
+  Only recorded counterfactual replay at/after the registered branch time may
+  ignore a vehicle absent from current command IDs. Live control and the common
+  prefix remain strict; common-roster requests are unchanged. Regression tests
+  reproduce the departed-member failure and verify the guarded replay.
+- Amendment `af8b16e5…` keeps the **same first12 registered random executed-plan
+  sample**. It waits for the original failed pool to settle, adopts every completed
+  original branch after world/prefix/all-horizon checks, then permits one explicitly
+  registered repaired attempt for each missing branch under a fresh job ID.
+  Any further fault stops this diagnostic sidecar; no completed branch is rerun.
+- All old charges remain. The entire missing branch set must fit and be charged
+  together inside the existing200,000 discovery phase before physics. Full task
+  allocation remains7,495,040/7,500,000. No grading/final allocation is borrowed.
+  Running training/search/exact grades/trust/imitation/library are unchanged.
+- The deferred final-discovery executor needs this same qualified replay guard
+  bound before its future physics; its current waiting owner is retained.
+
+## B-u1 complete; quota-aware B-u2 and pipelined R-u1 live
+- **B-u1 completed2026-11-02 06:19:04UTC+8.** The retained24-episode wave was
+  adopted once. Its registered engineering deviation is3 executed plan-starts
+  against Nexec10; no extra episodes. All24 B-u2 jobs are now claimed; ten
+  quota-reserved queries were observed, four assigned and six queued. R-u1 is
+  collecting independently (six claims at the timing snapshot).
+- **Eight actual WM searches, three accepted/executed plans.** The171 logged
+  query attempts also include explicit zero-compute capacity/boundary declines.
+  Search sizes included2/3/4/6 members; K4/H300 and K8/Hfinal were retained.
+  `B_QUERY_VOLUME_001.json` keeps every completed WM call and its effort/timing.
+- Three qualified exact marginal grades across **two TRAIN worlds**: two positive,
+  one negative. Mean **+862.8525veh-s**; registered world-cluster bootstrap95% CI
+  **[+6.6664,+1290.9455]veh-s**. With only two worlds this is very sparse,
+  selection-conditional evidence; it does not establish population performance.
+  Rank1: two positive grades; rank3: one negative grade. All are ordinary-regime
+  MPPI plans, tagged“new” by the existing matcher; a missing matching prototype
+  alone is not proof of novel behaviour. Full type/regime/rank/group breakdown:
+  `warm_live/B_EXACT_VIABILITY_08bc9c74435ce8b6fd1e10f5a29cfa890d4303ed5c1860dd689915bb0612c110.json`.
+- Exact-only trust next beta **0.75097**. Only the two exact-positive plans enter
+  imitation/library; the losing plan is retained as trust evidence and is not
+  imitated. Uniform AWR weights remain in effect before20 grades. Grade lag
+  mean12.18s/max15.69s, no pending/orphan/failed grades at the update snapshot.
+  Up to two plans were concurrently active; one overlap re-check, no truncation.
+- **Timing correction:** full elapsed from current collection dispatch through
+  u1 completion is **3047.69s (50m48s)**. The adopted-wave stopwatch is93.53s;
+  its automatic1.22h final ETA is **invalid** because it omits collection.
+  `B_UPDATE_001_TIMING.json` preserves both and marks the raw ETA invalid. A
+  full-run ETA awaits a quota-compliant update; the original GPU deadline remains
+  Nov2 18:07:02UTC+8.
+- Continuation owners B3551873/R3551874 started06:17:29UTC+8 from immutable
+  `quotacpu4`; broker3514272/grader3427015 and all original GPUs are retained.
+  Old transition failure is historical, followed by the registered repair and
+  `MAIN0548_HANDOVER_COMPLETE.json`; no active health/engineering STOP.
+- Separate n+2 diagnostic twins000/001 failed on a departed recorded vehicle
+  (`KeyError mainline.158/.137`). Their charges/failures are retained. This is
+  the diagnostic open-loop replay path, not the exact marginal grader; the latter
+  passed its prefix/CRN gates. Isolated diagnostic repair is being qualified.
+
+### DIAGNOSIS — completed-wave parent-exit race repaired
+- All24 current B-u1 episodes closed once; no queries remained. The handover
+  watcher stopped at unix1793571197 because Linux cleared a verified exiting
+  supervisor's command line before its `/proc` entry disappeared. No B optimizer
+  update or new B/R supervisor had been launched. All results/failure receipts kept.
+- Qualified immutable `quotacpu4`: **234 CPU tests PASS, zero skips,39.22s,
+  zero SUMO**. Same boot/start-tick identity remains mandatory; an empty command
+  line is polled as“exiting” without another signal. Wrong nonempty commands stop.
+  Real complete-result-adoption/checkpoint0 Adam/RNG preflight also passes.
+- Registered engineering amendment `5693f169…`; original GPU owners, broker and
+  grader retained. No traffic rerun, new physics charge or search-design change.
+
+## First qualified exact TRAIN plan grade — descriptive only
+- Existing detached reporter published
+  `warm_live/B_EXACT_VIABILITY_dccf60491b28433e4500845a95addb7fd0debe0792e7b71f6bef9c65e00b8d5a.json`.
+  World986025, B-u1, t320: a3-member,180s ordinary-regime MPPI plan,
+  predicted rank1, post-hoc label“new” (no prototype on these members).
+- Exact marginal SUMO saving **+6.6664veh-s** over executed duration+120s;
+  qualified deterministic prefix/CRN, first successful real grade reused as smoke.
+  The corresponding WM prediction was **+240.9659veh-s** at its registered final
+  horizon. These are different registered estimands/horizons and are both shown.
+- **One plan, one world: CI unavailable.** This is selection-conditional exact
+  evidence for that execution, not a B-vs-A learning result or a general viability
+  claim. Losing/unresolved/ungraded plans remain subject to the registered rules.
+  No sealed outcomes are involved. Further exact evidence publishes automatically.
+
+## MAIN05:48 quota-aware admission — qualified and registered
+- **DEPLOYED:** quota broker3514272/start58480523 and detached handover
+  supervisor3514691/start58480999 are alive/no errors at unix1793570536.
+  Original GPU searches and grader3427015 continue. The watcher automatically
+  adopts the closed B-u1 wave, then starts B/R once with the qualified runtime;
+  its receipts are exposed by `tools.coopmwm.quota_ops status`.
+- At unix1793570600, one formerly waiting episode had resumed SUMO to t648;
+  three admitted queries remained pending. Four completed current-release queries
+  measured769.08–1194.88s across2/3/4-member groups. One plan start, zero exact
+  grades: these are small inference samples, not steady-state throughput or
+  evidence of beneficial SUMO cooperation. A finite u1 ETA is not yet established.
+- Full recovery adopted the existing owners and completed warm-memory evidence.
+  A is at fixed u48. At unix1793570244,20/24 current B episodes were closed;
+  the other four had admitted queries at t300/310/320/320. R had no claims.
+- **231 CPU tests PASS, zero skips,37.49s, zero SUMO**, immutable
+  `coopmwm20261102_quotacpu3`. Tests include24-way serialized quota reservation,
+  rejected/trust-rejected query release, no double-counting a confirmed start,
+  exclusion of superseded starts, unchanged GPU request identity, existing-claim
+  adoption, boundary drain, identity-checked parent controls and one-use dispatch.
+- Registered plan `981e496c…`, runtime `bfef6422…`: queue eligible queries while
+  executed plus potentially executable in-flight queries is below10; thereafter
+  use free-slot-only admission. Probability and queue predicate are recorded.
+  R(u) consumes B(u)'s final matching quota independently of B(u+1).
+- Only the verified B/R supervisor parents were frozen before optimization.
+  Their SUMO children and GPU searches continue. Safe migration finishes every
+  already assigned search once, declines further unassigned old-wave queries,
+  adopts all24 completed B results and preserves checkpoint0 Adam/RNG. MAIN's
+  permitted u1 shortfall will be explicit; no extra traffic episodes are added.
+- The failed CPU1 missing-directory receipt is retained; CPU2 passed227 tests.
+  Allocation remains **7,495,040 /7,500,000 sim-s**,4,960 unallocated.
+  First-update/exact-grade viability evidence is pending at this entry.
+
+## MAIN05:08 nonblocking admission — repaired release live
+- Latest05:40:54UTC+8 snapshot:20/24 B episodes closed; the four admitted searches
+  are still running, with747.8–750.3s waits. Fresh-release completed searches,
+  executed starts and exact grades were all0 at the preceding05:39:12 poll.
+  Search-time observations are censored, so no completed-search rate or u1 ETA
+  is claimed. Per-episode receipt: `coopmwm/EPISODE_PROGRESS_1793569254.json`.
+- Observation restored: local41116 is **observe/publish only**; telemetry28752
+  replaces only its receipt-owned predecessor after PID/creation/command checks.
+  Six publication/observer tests and four telemetry tests pass. Restart rates
+  exclude superseded engineering queries/starts; completed receipts remain intact.
+- Opaque final precompute is complete:673jobs/691,800sim-s, MAPPO-reuse gate PASS.
+  Outcomes remain closed; no final outcome values or summaries were read. Original
+  completion/discovery supervisors wait for fixed A48/B48/R24 endpoints.
+- **B/R collection restarted 2026-11-02 05:28:17 UTC+8**, retaining the qualified
+  warm-memory/fast-path WM and all four independently qualified GPU processes.
+  A has completed its fixed u48. B3432378/R3432791, broker3426521/grader3427015
+  are detached and identity-verified; status1793568612 has no active STOP/pause.
+- B now launches **24 episodes concurrently**. At1793568595, **20/24 have closed**;
+  four are waiting for genuinely admitted searches at simulation t300/300/300/310,
+  with current query waits88.8–91.4s. Each episode's progress/wait is recorded in
+  `coopmwm/EPISODE_PROGRESS_1793568595.json`; incomplete gzip tails are censored.
+- Busy eligible windows execute the policy with query probability0; free capacity
+  uses the registered0.95 Bernoulli draw. Simultaneous-client races receive an
+  explicit zero-compute capacity decline. Admitted queries wait for their actual
+  forecast. The old pre-query capacity-wait loop is removed. K4/H300, K8/Hfinal,
+  MPPI population/iterations and Nexec10 are unchanged.
+- R is alive but awaits B's final exact matching quota: it has no episode claims.
+  Its shared current-policy-centre extraction uses the WM at lower priority;
+  its random plans are never WM-scored and have no library/covariance learning.
+  Exact matching prevents claiming concurrent R episode collection at this point.
+- No completed new B update/exact grades yet. New-release plan acceptance and
+  steady-state four-worker throughput are not measured; a finite u1/u48 ETA is
+  not established. Per-update wall-time/ETA remains automatic once u1 closes.
+  The original service deadline stays Nov2 18:07:02UTC+8.
+
+### DIAGNOSIS — failed handover and charged recovery
+- The first admission-broker release read a legacy request after file creation
+  but before JSON writing finished. Its engineering STOP fired; **18 attempted
+  B episodes became incomplete, six reserved jobs had never been claimed**.
+  No B optimizer update had occurred. This was our newly introduced metadata-read
+  race, not a WM ranking result. All failures, requests, forecasts and charges
+  remain on disk. GPU searches were not restarted or recomputed.
+- Fix: new requests publish atomically; a legacy in-progress JSON file gets a
+  bounded30s metadata grace, while a persistent malformed request still stops.
+  Old assignment/admission receipts are adopted, the first STOP is SHA-released
+  under a registered engineering amendment, and any new fault has a fresh STOP_V2.
+- **216 CPU tests PASS/zero skips/zero SUMO** cover the full inherited release
+  plus admission, partial-request and same-cell recovery tests. A separate launch
+  merge error was caught before any new claim/physics; its repair passed
+  **19 focused CPU tests** and a real production-binding/u0 Adam/RNG preflight.
+- Recovery adopts only the six never-claimed jobs and selects18 different
+  registered TRAIN worlds by ascending unused seed within the same cells.
+  The exact24-episode,12focus/12other mix remains. **21,600 additional sim-s**
+  were registered before collection; no failed world is replayed. Allocation is
+  now **7,495,040 /7,500,000**, **4,960 unallocated**; exact-grade/discovery/final
+  liabilities are unchanged. Amendments `e70b67aa5e429cdb…` and `a073c07b5daf9904…`.
+- Receipts: `MAIN0508_REPAIR_REGISTRATION.json`, `CAPACITY_LAUNCH_PREFLIGHT.json`,
+  `WARM_{B,R}_DISPATCH_V6.json`, `CAPACITY_REPAIR_STATUS_1793568520.json`.
+
+## Early exact-plan viability publication armed
+- Detached cpuQ reporter3357311 is live, immutable `viabilityreport1`; registered
+  amendment `1c66899ddbce10f2cbb99c2117aa3686b528a64a4351b6367028dd23af8da0bb`.
+  **5 CPU tests PASS / zero skips / 0.066s / zero SUMO**. It reads only qualified
+  B/seed20261101 TRAIN grades, verifies receipt/plan SHA and prefix/CRN gates,
+  keeps losing plans, excludes unresolved/ungraded plans without imputation.
+- As exact grades arrive, the existing observer publishes the overall exact
+  marginal saving plus full by-type/regime/predicted-rank/new-vs-known/group-size
+  and update results in immutable `B_EXACT_VIABILITY_<hash>.json` receipts.
+  Inference uses10,000 whole-world cluster resamples; with one world the CI is
+  unavailable. This report is observational and never enters training or search.
+- Status1793566596: reporter alive, no errors, no exact-evidence report yet.
+  Exact-C_G twins and B-vs-A TRAIN checks continue under their existing schedules.
+
+## Fresh-resume live snapshot — MAIN04:23 continuation
+- A has completed u46; latest registered TRAIN check u44 gives J900 A−MAPPO
+  **−952.147 veh-s**, 95% world-bootstrap CI **[−3413.962,1424.270]**, point
+  delay reduction1.05%. The interval includes zero; this does not establish a gain.
+  B/R are still collecting their first update; the B-vs-A curve is not available.
+- Progress1793565861: seven completed TRAIN searches, five executed plan starts;
+  no completed exact grades/smoke. The pending grades cannot seed imitation,
+  trust, covariance or the winning-plan library. No SUMO plan-benefit claim yet.
+- gpuR second worker56877 passed **all8EXACT0** and was hot-added automatically
+  at unix1793566045.8605 (04:47:25UTC+8). Original workers/searches continue.
+  gpuA617099 remains qualifying; the1vs2 capacity comparison awaits new completed
+  searches and keeps qualification/boundary overlaps separate.
+- Original service deadline is still **2026-11-02 18:07:02 UTC+8**. It has not
+  been reset. Full-run resource continuation needs an outcome-blind registered
+  resolution before that deadline; the first completed B-update and post-admission
+  throughput are still needed for a credible end-to-end forecast.
+- Search-depth diagnostics remain deferred under MAIN23:04 while both GPUs serve
+  training/qualification. Warm qualification and03:53UTC+8 B/R restart are retained.
+
+## MAIN04:23 frozen-policy precompute — CPU qualified and registered
+- Detector-first final continuation is also registered (`bcbbbacb3a73b49cf141d959c8b7a01d17bd221b1528faedf645414b96eb6c94`),
+  detached cpuQ3338335. **6 CPU tests PASS / zero skips / 0.064s / zero SUMO**.
+  It waits for all fixed endpoints and final outcome opening/analysis, then uses
+  unchanged detectors and observable2–6-member components for complete n+2 exact
+  twins within the remaining200,000 discovery reserve. No legacy pair-only gate,
+  new detector threshold, partial-group spending or outcome-based selection.
+- Dedicated local telemetry observer6216 records TRAIN search throughput/GPU use,
+  admission and hash-only final status every300s. Qualification-overlap queries
+  are reported separately from one-worker/two-worker operation; unfinished
+  searches are disclosed as censored. Existing learning-check observer34356 stays
+  live. Both retain the original GPU deadline.
+- Detached supervisor **cpuQ3316828/start57982222** is running; status1793565552
+  confirms STARTED, zero evaluation jobs while waiting for A48, outcomes closed.
+- **22 CPU tests PASS / zero skips / 1.148s / zero SUMO** in the existing cpuQ
+  environment, immutable `coopmwm20261102_finalcpu1`. Covers fixed endpoints,
+  exact panel/phase liabilities, no partial-job retry, hash-only publication,
+  complete MAPPO branch-continuation equivalence and registered branch/Holm tests.
+  True-native and MAPPO constructor/state-schema preflights also pass.
+- Registered amendment `598cd74d59194ce14bf78c92151061d1bc603d674a29afcbcc9de9f61b7c1946`.
+  Once A48 completes, precompute MAPPO/native/A48 episodes and A branches, with
+  the one-world/one-branch 600s MAPPO reuse check first. **691,800 sim-s** comes
+  entirely from existing final/branch/reuse allocations; total remains
+  **7,473,440 / 7,500,000**, 26,560 unallocated.
+- Up to24 cpuQ workers use **nice19 and Linux SCHED_IDLE**, inherited by SUMO;
+  B/R and exact grading retain priority. New submissions wait while grading is
+  active or load/memory/storage guards bind. Existing training/GPU owners persist.
+- During training only status, job identities and artifact SHA receipts are exposed.
+  No outcome summary or analysis is opened until fixed A48/B48/R24 completion.
+  The continuation then evaluates the remaining B/R episodes and B branches once,
+  followed by the registered paired episode and comparator-specific Holm analyses.
+  Detector-first discovery retains its separately registered reserve.
+
+## MAIN04:19 additional search workers — qualification running
+- Detached cpuQ admission monitors3287007/3287221 now wait for all eight exact
+  gates and hot-add slotsgpuA@1/gpuR@1 to the original broker automatically.
+  Restricted private keys stay on cpuQ; connection-only retries are bounded.
+  Second-root full-pool exporters618085/57740 are live (logging only).
+  During qualification total GPU utilisation rose to92%/99%, memory32.0/16.5GB;
+  this is a health observation, not a search-throughput claim.
+- Registered source-identical second search workers before dispatch; original
+  GPU workers and all in-flight B searches continue. New owned GPU PIDs
+  **gpuA617099 / gpuR56877**; roots `coopmwm20261102_second1` on each host.
+- **26 CPU tests PASS / zero skips / 0.785s / zero SUMO** on cpuQ, including
+  owner identity, all-eight-exact-gate admission, immutable search/deadline,
+  restricted RPC, transport, durable inference and broker hot-add tests.
+  A local combined-suite attempt had one missing-torch environment error;
+  the complete suite passed in the existing qualified remote environment.
+- GPU-A new worker cap42%, widths18/10; GPU-R cap34%, widths4/4 to fit alongside
+  the existing model. Both run all eight fresh source-bound exact startup gates.
+  Neither is admitted to the broker until READY/all8EXACT0; no inherited gates.
+- Same registered MPPI population/iterations, K4/H300, K8/Hfinal, warm history,
+  Nexec10 and original GPU deadline. No learned proposer activation or new SUMO.
+  Throughput comparison is pending live two-worker searches, not inferred from
+  GPU utilisation. Receipts `coopmwm/SECOND_{STAGE,REGISTRATION,DISPATCH}_*.json`.
+
+## MAIN04:13 full-pool logging export — deployed without search interruption
+- **DIAGNOSIS:** immutable live mppi_runtime already uses RecordingEvaluator and
+  embeds complete screened pools in every B forecast. The missing standalone
+  proposer_receipts directory caused the apparent missing-pool report.
+- Registered logging-only amendment
+  `a2a729c1c243b22f2f2ee84ba66e062c72f2da820afa75f3e68c147ec4fb50aa`.
+  Detached exporters gpuA614389/gpuR54031 write the embedded receipts into each
+  GPU root's proposer_receipts directory, including rejected searches. Running
+  model/search sources and in-flight queries are preserved; no learned seeds or
+  warm-start activation. Same original GPU deadline; zero new WM/SUMO calls.
+- **4 CPU tests PASS on each GPU host**, zero skips/SUMO. First five real recorded
+  forecasts export with byte-identical search output (SHA audits): gpuA3 pools,
+  gpuR2 pools; complete screen counts120 or240,128–252 candidate records including
+  finalists. Export is idempotent; conflicting/incomplete pools stop the exporter.
+- Receipts: `coopmwm/POOL_EXPORT_REGISTRATION.json`, `POOL_EXPORT_STATUS_*`.
+
+## Warm restart live — 2026-11-02 03:53:05 UTC+8
+- **TRAINING STARTED B/R**, MAPPOu0, immutable exactcpu5 (204CPU PASS/0skips).
+  B3209145, R3209416, grader3208762, broker3208897 detached on cpuQ; original
+  A2998262 continues (u35 at restart). Both GPU owners have8source-bound EXACT0
+  startup gates; prior warm qualification/E2 labels retained without repetition.
+- Registered cap7500000/allocation7473440/free26560; exact-only marginal SUMO
+  grades, K4H300 always, K8Hfinal and Nexec10. The library/covariance use only
+  same-B-seed exact-positive complete plans; R has neither. Proposer logging only,
+  activation requires explicit OWNER approval as well as the offline check.
+- **First live timing** (EXACT_PROGRESS_1793563243): gpuA 2-CAV query445.607s,
+  8.079queries/inference-hour for ONE query, accepted0/executed0. This is not
+  steady-state throughput or an executed-plan ETA. No exact grades yet.
+- **First executed plan** (EXACT_PROGRESS_1793563560): gpuR 2-CAV query542.437s,
+  6.637queries/inference-hour for ONE query, accepted1/executed1. B world986024,
+  t300, ramp.29/ramp.32,90s,120screened candidates/3iterations, predictedrank2,
+  posthoc-new, beta1. Predicted saving18.754veh-s is a WM estimate only. The exact
+  marginal SUMO grade/smoke awaits the completed episode; no benefit claim yet.
+- Source/registration/owners: `coopmwm/EXACT_RUNTIME_REGISTRATION.json`,
+  `EXACT_TRAINING_STARTED.json`; observerV2 43408 publishes minute-by-minute.
+
+## MAIN03:03 exact-grader integration — CPU qualified
+- Final runtime snapshot **exactcpu4:203PASS,0skips,38.11s,zeroSUMO**. Two live-binding
+  regressions additionally verify SHA-authorized budget adoption and the exact
+  registered `exact_plan_grading` phase. Grader supervision is exclusive and its
+  status receipts are append-only. A remains on its original immutable runtime.
+- **201 CPU tests PASS, zero skips, 38.25 s, zero SUMO** on cpuQ, immutable
+  `/home/ubuntu/coopmwm20261102_exactcpu3`; failed CPU1/CPU2 receipts retained.
+- Integrated landed grader526465de: only exact marginal SUMO grades drive plan
+  imitation, trust and B's same-seed winning-plan library/covariance. Own-step PPO,
+  all-step critic; positive-plan weights uniform until20grades, then frozen
+  first20-grade RMS temperature, clip20, whole positive buffer each update.
+- **DIAGNOSIS:** concurrent plan execution overwrote eligible-query metadata when
+  a new query was declined while an older plan continued. That hid RNG draws and
+  broke exact common-random-number replay. Preserve query metadata; both B/R
+  independent-oracle tests now pass bitwise. Grader now replays OTHER groups during
+  the graded plan, grades truncated executed portions, and selects imitation
+  members by plan-execution records. Unlabelled truncated tails do not seed search.
+- First successful real B grade will be reused as the one-plan smoke; no grade
+  enters learning before its prefix/CRN gates pass. Grading remains asynchronous;
+  no automatic physics replay. CPU capacity: B8/R8/grader8 plus original A4.
+- Existing concurrent GPU qualifiers596572/36740 are adopted; their source-bound
+  background/recheck gates are still running. B/R remain unstarted at this entry.
+- Latest approved budget remains **7,473,440 /7,500,000sim-s**,26,560spare.
+
+## Fresh resume — full brief through MAIN02:43
+- Original detached A2998262 remains running: **u21 complete, 496/504 jobs
+  closed, 1,592,840 sim-s charged**. B/R/broker unstarted; no active pause/STOP.
+- Both original GPU spools are alive/READY with all six startup gates EXACT0;
+  the already-published warm qualification is retained without rerunning it.
+- Exact-only asynchronous grading and concurrent-plan WM backgrounds remain
+  pre-launch integration work. Delegated grader implementation is in progress.
+  Latest cap7.5M/allocation7,473,440 and fixed H300 screen are adopted.
+- Recovery receipt: `coopmwm/RESUME_MAIN0243_20261102.md`; zero new dispatch.
+
+## Latest budget/control registered before B/R outcomes
+- **7,473,440 allocated / 7,500,000 cap / 26,560 unallocated**, including a
+  1,000,000 sim-s exact-plan-grade reserve. Complete prefix+horizon precharge
+  required per grade; failures retained. Budget/transport contracts: **11 PASS**,
+  zero SUMO. Budget amendment `4dc4d875e0730e3c5a71f58e7c2cdc1c5c72259c1d77e129ab991f3aabe1c977`.
+- Control amendment `cf82885ccdfd6f842fe4b6722f85a4df4406bd274a4d53ab68873a2a610f4cee`
+  fixes K4/H300 screen, K8/Hfinal, auto-continue A/B48,R24 under health guards,
+  and nonblocking asynchronous exact grading. Ungraded plans cannot enter
+  imitation/trust/library/covariance. No B/R physics authorized by this alone.
+
+## Fresh resume — full brief through MAIN02:36
+- Original detached A2998262 is running: **u20 complete, 458/480 jobs closed,
+  1,564,040 sim-s charged**. B/R/broker unstarted, no pending request or active pause.
+- Original GPU spools both READY, all six startup gates each EXACT0. Completed
+  qualification is adopted. Delegated exact grader has not landed (clean e6581008).
+- **MAIN02:36 revokes the cheaper screen:** K4/H300 always; K8/Hfinal unchanged.
+  Auto-continue A/B48,R24 under health guards; asynchronous exact-only plan grades.
+  Cap7,500,000/allocation7,473,440. Receipt `coopmwm/RESUME_MAIN0236_20261102.md`.
+
+## Fresh resume — full brief through MAIN02:34
+- Original detached A2998262 is running; **u19 complete, 444/444 jobs closed,
+  1,520,840 sim-s charged**. B/R/broker unstarted; no pending request or pause.
+- Both original detached GPU spools are now **READY: all six startup gates each
+  EXACT0**, including warm batch/single and full/fast trajectory parity. Existing
+  qualifications are adopted without replay.
+- Latest owner scope: cap7,500,000; every-plan exact SUMO grading; asynchronous
+  grading never blocks own-action PPO. Auto-continue A/B48,R24 under health guards;
+  conditional cheaper screen after first B update if executed-plan rate<20/hour.
+- Delegated exact-grader module has not landed; its integration and prospective
+  runtime registration remain. Recovery receipt `coopmwm/RESUME_MAIN0234_20261102.md`.
+
+## Fresh resume — full brief through MAIN02:30
+- Preserved HEADe6581008 and existing receipts/claims. A's original detached
+  owner2998262 is running; **u18 complete, 420/420 jobs closed, 1492040sim-s charged**.
+  B/R and broker remain unstarted; no pending request or active pause/STOP.
+- Both original GPU workers are alive and have **five startup gates each EXACT0**;
+  their final warm full-fast gate continues on the existing processes.
+- Owner cap7500000 and exact grades for every executed plan adopted. Delegated
+  grader has not landed; integration/qualification and budget registration remain.
+- MAIN02:30 full-resource sizing will be based on measured capacity and existing
+  worker identities. No duplicate job, new physics or process-control action here.
+
+## Fresh resume — MAIN02:24 exact-grading amendment adopted
+- Complete239-line brief read; preserved HEADbdcddfed and recovered work.
+  A's existing detached V3 owner is running, u17 complete;396/396 jobs closed,
+  1,463,240 sim-s charged. B/R and the remote broker have no dispatch.
+- Both original GPU workers remain alive; warm K4/H120 and K8/H300
+  batched/single startup checks are EXACT0. Remaining gates continue unchanged.
+- Latest owner cap is7,500,000 sim-s. Exact same-state SUMO grades for EVERY
+  executed B/R plan supersede critic-based plan imitation/trust/library evidence.
+  Implementation, qualification and prospective registration are pending.
+- No new physics or inference job was dispatched during recovery.
+
+## A exact-u16 continuation started — detached remote supervision
+- A V3 PID2998262/start57133822, cpuQ boot identity verified; dispatch unix1793557060.492315.
+  Exact u16 checkpoint/Adam/RNG retained, now collecting u17; fixed final48 unchanged.
+- Fresh status1793557149: processS, no failure or active transportSTOP; 360/372 new
+  jobs closed, 1,434,440 sim-s conservatively charged. B/R still unstarted.
+- Both persistent GPU workers pass their first warm K4/H120 batched/single EXACT0
+  gate; remaining startup gates run on the same owned processes. No duplicate search.
+
+## Durable runtime and health guards — CPU qualified, remote gates running
+- **160 CPU tests PASS, zero skips, 8.99s, zero SUMO**. Health pauses are integrated
+  into live guided episodes, pre-update checks and paired learning checks. A remains
+  independent of B/R health pauses. The original transport STOP is SHA-bound and
+  preserved; completed A-u16/check/dev/Adam/RNG were verified, all348 new jobs closed.
+- Detached GPU workers dispatched once: gpuA588981/start893707080 and
+  gpuR29230/start4218346888. Six exact source-bound startup gates precede READY.
+  The unchanged registered warm MPPI search and original deadline are retained.
+- Real cpuQ→bothGPU restricted RPC route probes pass; task-only private key stays
+  on cpuQ. GPU model processes and forecasts now survive local/SSH disconnects.
+- Registered runtime amendment `dc9879ebb44596573c8520a8291809903b737795548afa800129fb513b70e10b`.
+  Source `/home/ubuntu/coopmwm20261102_durablecpu2`; V3 learner bindings enforce
+  MAIN02:01. A resumes exactu16; B/R await full GPU gates and release registration.
+- Retained failed durablecpu1 receipt: its sole failure was a stale test asserting
+  the superseded6M cap; latest6.5M boundary is tested in durablecpu2. One SSH reset
+  while staging was retried once; no physics or inference was repeated.
+
+## MAIN02:01 learner correction — CPU qualified and registered
+- **133 CPU tests PASS, zero skips, 8.86s, zero SUMO** on cpuQ, including 7 new
+  AWR semantic tests. Committed plan steps are never policy-scored or ratioed;
+  PPO uses standard own-action ratios, including rejected/declined query steps.
+- The critic trains on all steps. Only completed plans with positive realized
+  discounted SUMO advantage become imitation targets; negative/incomplete plans
+  contribute zero imitation. AWR weights=min(20,exp(A/T)), coefficient1, no beta.
+- Baseline-only temperature **T=4.822766875237093** learner units, frozen from
+  RMS MAPPO TRAIN-check(J900−J600)/10000. No A/B/R outcomes used for this scale.
+- Registered amendment `0bb2f157cea8d3f5d65d7e7927f5e8460a873d62b8a7bbe64864434e4aed7ef4`.
+  A/B seed1 u24 is a fixed secondary point only if later 24-update replications
+  are approved. Finals A/B48,R24 and the approved budget remain unchanged.
+- Receipt `coopmwm/MAIN0201_AWR_REGISTRATION.json`; runtime binding/restart pending.
+
+## Fresh resume — MAIN02:01 correction adopted before B/R outcomes
+- Preserved HEAD73a42ad1 and all recovered edits. A is at u16/exited; 288/288 warm
+  jobs closed, zero pending WM requests, 1,405,640 sim-s charged. B/R unstarted.
+- Both original qual4 jobs completed: warm K4/H120, K8/H420 full/fast parity and
+  empty-history/cold equality all exactly 0.0. Reused group2/4/6 timings are
+  559.567/1029.964/898.275 s per query (6.434/3.495/4.008 plans/hour).
+- Latest MAIN02:01 requires own-action-only PPO, positive completed-plan SUMO
+  advantage-weighted imitation, critic on all steps. Implementation/CPU tests and
+  registration precede B/R restart. Durable broker/health/startup gates remain.
+- Approved allocation6,473,440/cap6,500,000; no duplicate job or new SUMO in recovery.
+
+## MAIN01:53 cap confirmation adopted — recovery verified
+- Owner-approved cap **6,500,000 sim-s** supersedes earlier 6,000,000 resume figures
+  (full brief through line225; shared registry lines6011/6053/6054). The approved
+  **6,473,440 allocation leaves26,560**; earlier budget-block receipts are superseded.
+- Fresh status: A preserved at **u16/exited**, **288/288 warm jobs closed**, no
+  pending requests, **1,405,640 sim-s charged**; B/R have no dispatch.
+- Both original qual4 jobs remain identity-verified running with warm K4/H120,
+  K8/H420 and empty-history/cold **EXACT0** gates. Group4/6 timing is pending.
+- Remaining launch work: durable remote service/broker, health pauses and persistent
+  worker startup gates. No duplicate qualifier or new SUMO was launched in recovery.
+
+## Warm GPU gates passed; restart budget-blocked
+- Both original qual4 jobs now pass **K4/H120 and K8/H420 warm fast-path parity
+  with exactly 0.0 cost error**, plus **empty-history == cold, exactly 0.0**.
+  Their boot/PID/start identities were reverified. Group4/6 search timing is still
+  running; completed 2-member timing remains **559.567 s/query, 6.434 plans/h**.
+- No duplicate qualifier, service or SUMO job was launched. The detached spool
+  probe completed normally; its 9 CPU tests and lifecycle evidence are retained.
+- Fresh receipt-only re-quote confirms **6,473,440 sim-s** for the registered
+  full plan, **473,440 above the explicit 6,000,000 resume cap**. The brief's
+  later 6,500,000 cap would leave 26,560. No training/test allocation was changed.
+  Receipt: `coopmwm/RESUME_CAP6000000_BLOCK_20261102.json`.
+- A remains preserved at u16; B/R have not started. Full warm qualification still
+  requires the remaining timing and persistent-service startup gates. MAIN01:38
+  health pauses and durable-spool broker integration remain pre-launch work.
+  **WARM MEMORY QUALIFIED / TRAINING STARTED B/R are not yet claimed.**
+
+## Remote-worker durability engineering — MAIN01:33
+- Added a disk-spool input adapter around the unchanged warm GPU service. A
+  detached worker can retain its model process, request claim and completed
+  forecast across SSH/Windows disconnects. Search/model settings are unchanged.
+- **17 local CPU tests PASS** (9 spool lifecycle + 8 existing transport), zero
+  skips/SUMO. Remote cpuQ: **9 PASS**, plus a real detached process that processed
+  its request after the launching SSH session ended, with stdin disconnected.
+  Three identical deliveries produced exactly one inference claim and forecast.
+- Conflicting inputs, changed completed requests, interrupted inference and wrong
+  result identities stop without replay. Durable receipts:
+  `coopmwm/WARM_SPOOL_QUALIFICATION.json` and `WARM_SPOOL_REGISTRATION.json`.
+- This qualifies transport lifecycle only. Source-bound GPU startup parity and
+  broker wiring are still required before activation. Both original qual4 GPU
+  jobs continue; zero new SUMO. A direct cpuQ→gpuA alias probe failed DNS, so
+  remote broker connectivity is not assumed or advertised as working.
+
+## Fresh resume — 2026-11-02 ~01:40
+- Complete brief read through MAIN01:38. Fresh status verifies A at u16/exited,
+  **288/288 warm jobs closed, zero pending requests, 1,405,640 sim-s charged**;
+  B/R have no dispatch. Original SSH-failure STOP and all checkpoints are preserved.
+- Both original qual4 GPU jobs are identity-verified running, each with causal
+  memory, reused cold/warm E2 and H120 parity receipts. H420/group timing remains
+  pending; no replacement qualification or new physics was launched.
+- Recovered transport qualification is already registered: **8 CPU tests PASS,
+  zero skips/SUMO**, bounded connection-only recovery with identity/receipt checks.
+  Remote supervision and MAIN01:38 health pauses remain launch requirements.
+- Explicit resume cap **6,000,000** conflicts with the registered full allocation
+  **6,473,440**. Dispatch is guarded pending cap/scope resolution; inference-only
+  engineering continues. Warm qualification and B/R restart are not yet claimed.
+
+## Fresh recovery — 2026-11-02 ~01:32 host time
+- A completed update16 and exited at the durable SSH-failure STOP; all288 warm
+  jobs are closed, no pending WM requests, **1405640 sim-s conservatively charged**.
+  B/R have no dispatch. Existing checkpoints, failures, labels and charges retained.
+- Both GPUs are idle; no local warm bridge/observer remains. GPU A's completed
+  group2 timing is reused; its group6 geometry failed. GPU R's qual3 passed H420
+  exact parity, then failed H300 screening memory admission. Recovered qual4 edits
+  had not been staged or dispatched; they remain unqualified engineering work.
+- MAIN01:29 permits bounded retries of SSH connection failures only, with identity
+  and receipt reverification. This repair is pending; original STOP stays durable.
+- Explicit resume cap6000000 versus latest brief6473440/cap6500000 is unresolved.
+  New SUMO dispatch remains gated; inference qualification can proceed without SUMO.
+
+## Pre-outcome MPPI/R integration corrections — CPU8 qualified
+- **126 CPU tests PASS, zero skips, 10.01s, zero SUMO**. Found and fixed a real
+  bookkeeping bug before B/R updates: adding MPPI expanded the type/regime buckets
+  from8 to10, while trust still used8-bucket column offsets. MPPI evidence would
+  alias own-policy controls. Dimensions/offsets now derive from the actual bucket
+  and regime counts; the regression exercises both MPPI regimes and distinct controls.
+- R's held-current-command centre proxy would confound the intended B-R comparison.
+  It now uses the **same current-policy trajectory extractor as B** (warm K1/H300,
+  current R weights), then samples an unscored generic perturbation: **zero candidate
+  WM scores/rankings**, no library/covariance learning. Tests enforce both properties.
+  The baseline-only helper is scheduled after B-u4's registered pause to preserve
+  primary B capacity. This shared nuisance-centre computation is disclosed WM use;
+  R's proposer has no WM candidate knowledge.
+- Both corrections are registered before any B/R update; CPU8 per-armV2 source
+  bindings supersede the unstarted older runtime. A's preserved CPU6 training is
+  unaffected. Full allocation6473440/cap6500000 is unchanged.
+- Warm2CAV full-medium search: **559.567s/query, 6.434plans/hour** on gpuA;
+  centre open-loop vs K4 closed-loop mean cost gap−52.302veh-s (different future
+  draws, not a direct execution-parity test). Group4/6 timings remain pending.
+- GPU R H420 failed its65% allocator admission despite7.83GiB free physical memory;
+  all failed receipts retained. Registered qual3 uses80%, reuses completed E2/H120,
+  and has now passed H420 EXACT0 plus empty-history equality. No new SUMO.
+
+## A continuation active; warm qualification progresses
+- Final CPU6: **123 PASS, zero skips, 8.87s, zero SUMO**, including nonzero imagined
+  actor vs observable plant actor, warmup-history priming, A-u4→u48 resume and
+  exact prospective focus/budget/branch-family contracts. Speed2's frozen-WM
+  bridge test requires its GPU-host runtime; the retained CPU5 environment failure
+  does not substitute for GPU qualification.
+- A resumed once, owned PID2767879/start56464482, from exact preservedu4/Adam/RNG.
+  Its u5 update has completed. New root `coopmwm20261102_warm1`; A continues to48,
+  checks4/dev16; B/R remain qualification-held. All988040prior charges are retained.
+- Storage amendment is nondestructive: new unclaimed output paths use an owned
+  RAM root (27.22GB free at admission); existing48paths stay in place. No deletion
+  or move. Closed observable/results/claim/close files receive digest-verified GPU
+  backups; scenario/truth files are excluded from traversal and backup.
+- GPU A has passed warm H120/H420 full-vs-fast parity and empty-history equality.
+  GPU R's first fixture used nonconnected CAVs and stopped before search; replacement
+ 11430 reuses both completed E2 measurements and chooses connected groups. Original
+  GPU A group2 timing continues; group4/6 timing is pending. Qualification/restart
+  announcements remain gated on complete evidence.
+
+## Integrated warm MPPI — qualification running
+- `dd06b2aa`: **117 CPU tests PASS, zero skips, 8.66s, zero SUMO**. Real frozen
+  MAPPO parity, observable-history guards, landed MPPI/branch modules and extended
+  profile/transfer integration are covered. Failed CPU2/3 receipts are retained.
+- Fixed legacy integration-test mocks for group-components; the stochastic long-hold
+  test now checks reuse/release of a verified long library plan rather than assuming
+  a finite search finds a global optimum for every LAPACK basis. Sampling uses a
+  unique Cholesky factor for the positive-definite covariance (same distribution).
+- One source-bound inference-only qualifier per GPU: gpuA573068, gpuR9694.
+  Existing exact-labelled E2 windows00/01 and genuine archived60s observable
+  histories are reused. Causal posterior preparation and cold/warm comparisons
+  are running; batch exact parity and group2/4/6 timing follow, no new SUMO.
+- **Full scope registered before B/R training**, amendment
+  `b03f152870331ac6e56f2b692cb5b02682c2bd3d677259dc2b80aece487a9a21`:
+  6473440/6500000 allocation, fixed A/B48,R24, TRAIN4/dev16, discovery200000,
+  R branches deferred; four branch moments, comparator-specific Holm families.
+  Existing COOPBANDIT lines7–23/COOPPLAN73–102 are SHA-pinned for the owner focus
+  hypothesis; prospective TRAIN batches contain12focus+12other existing worlds.
+  A completedu1..4/Adam/RNG/check is retained; emphasis starts prospectivelyu5.
+
+## Latest resume — MAIN23:54 budget resolution adopted
+- Full206-line brief read, including all ordered addenda. MAIN22:58/23:54 supersede
+  the earlier6M cap and the23:36 blocker: **6500000 cap**, TRAIN every4/dev every16,
+  discovery reserve200000; R paired branches deferred, R episode test retained.
+- Fresh `WARM_RECOVERY_1793548586.json`: original supervisor2477255 and all24 held
+  B identities remain T; A accelerationu1..4/check retained; **988040sim-s charged**.
+- Expected prospective allocation6473440/free26560; exact quote/registration next.
+  No new physics or dispatch; warm/MPPI release qualification remains pending.
+
+## 23:36 — resume verified; latest full plan BLOCKED by budget
+- Read the complete 201-line brief through MAIN23:30. Recovered runtime/actor/
+  library integration is preserved in `3f70f405`; it remains release-unqualified.
+- Fresh identity receipt `WARM_RECOVERY_1793547096.json`: original supervisor
+  2477255 and all24 held B worker/SUMO identities remain T. A continuation2611888
+  has exited after its registered u4 pause; all four acceleration updates and
+  the completed u4 TRAIN check survive. **988040sim-s conservatively charged.**
+- Latest scope is A48/B48/R24, 24episodes/update,96-world episode test plus
+  four branch moments300/500/700/900 with300s continuation and later R branches.
+  Original mechanics/calibration/discovery reserves and every failed/superseded
+  reservation remain charged. MAPPO branch reuse is assumed to pass.
+- `RESUME_BUDGET_BLOCK_1793547402.json` records all prescribed reductions in order:
+  checks4/dev8:7089440; checks4/dev16:6859040; checks8/dev16:**6657440sim-s**.
+  The last includes the already-completed A-u4 check14400 rather than refunding it.
+- Explicit resume cap**6000000**: shortfall**657440sim-s**. Even the brief's
+  6500000cap is short157440. Seed2 was already dropped. A failed MAPPO-reuse
+  equivalence check would additionally require115200sim-s, not included above.
+- **STOP before new physics**, as required by the budget rule. No new dispatch,
+  job duplication, process-control action or final-panel outcome access occurred.
+  Existing S-WMSPEED2 GPU experiments are preserved. A is at its existing pause;
+  B/R stay held. Full-plan registration/restart needs an owner budget/scope decision.
+- End-to-end MPPI/warm decision-quality/restart qualification remains incomplete;
+  **WARM MEMORY QUALIFIED and a restart time are not claimed**. Pre-start depth
+  diagnostic is deferred under MAIN23:04; existing qualification receipts are retained.
+
+## 22:37 — fresh recovery; A continuation preflight failure identified
+- Original B/R hold identities remain stopped; all prior work and charges retained.
+- A-only continuation PID2576197 exited before acquiring a claim or launching physics:
+  inherited global verification rejected the existing bridge `No module named 'torch'` STOP.
+- No A acceleration optimizer update exists; conservative charge remains872840sim-s.
+  A source-bound, registered release scoped to this exact bridge STOP is being qualified;
+  the original STOP remains durable. Both GPUs are currently empty; S-WMSPEED2 has
+  independent CPU qualification processes whose jobs are preserved.
+
+## 22:11 — OWNER22:08 warm-memory hold recorded
+- Verified cpuQ supervisor2477255/start55545604 and stopped its shared optimizer
+  scheduling; separately stopped only its twelve B workers and their SUMO children
+  after ancestry/start-time checks. No acceleration optimizer update exists.
+- Twelve A episodes are complete and preserved; remaining A reservations can be
+  adopted once by an A-only continuation. B/R cold runs are superseded engineering
+  work; **872840sim-s conservatively charged**,51reservations, no refunds.
+- Registered engineering amendment
+  `082dc02b3c443b83a228ae2000be719eb2a1297e1d9cf4cb23b7895c14b1863e`.
+  B/R restart from MAPPOu0 requires C1 observable60s history, learned FULL-v4
+  per-driver posteriors, CPU/empty-history tests, both-GPU parity and timed
+  cold/warm decision comparison on registered exact-labelled diagnostic states.
+- Qualification pending; **WARM MEMORY QUALIFIED is not yet claimed**. No new
+  physics or sealed-panel access during recovery.
+
+## 21:49 — fastest qualified capacity admitted for early viability
+- Fixed4 two-worker searches are slower than one: gpuA4.6604vs5.3373plans/hour;
+  gpuR4.7692vs5.1416. All workers reproduce the complete reference search exactly.
+- Capacity amendment SHA `780fa80741ef2f573c79ee8eb377e3c4f07c20c41e5d3554b3a6a0ac1b4ad38b`
+  admits the faster already-qualified **one wide34/10 worker/GPU**, aggregate
+  **16.6654plans/hour /8132.71imagined futures/hour**, same medium search.
+- Verified/stopped only the owned inference supervisor/descendant trees; both
+  GPUs now have no compute processes. Completed1/2timings retained; incomplete
+  four-worker trials marked deferred, not counted as completed measurements.
+- Deferred4/8trials resume as new inference-only jobs **after** the u4 PPO pause,
+  retaining completed1/2measurements and source-bound full-search reference.
+- **CPU37 79PASS/zero skips/2.26s/zero SUMO**; both30-dependency audits match the
+  actual completed wide-probe source. Startup single/batch parity is once per
+  persistent worker under its final admitted memory cap.
+- Final release amendment SHA `4b0709ee6ce986d050aa57a244c45cf3ca89b137adcda6f65a9fc907d48c70b8`.
+  Nexec10, R matching, fixedu4pause,4280840allocation/6Mcap and sealed96 unchanged.
+
+## 21:29 — persistent-worker memory admission finalized
+- **CPU36 79PASS/zero skips/2.26s/zero SUMO**. Worker allocator fractions are now
+  applied after the inherited WM bootstrap (which installs its own8GiB cap), so
+  the registered service limit min(.65,.80/N) is actually enforced. CPU regression
+  checks ordering; each persistent worker still qualifies K4/K8 parity once.
+- Original CPU33 scale jobs continue unchanged and report actual measured peaks
+  under the inherited8GiB cap. No running search was cancelled or duplicated.
+- Both30-dependency audits PASS: CPU36 forecast/search/WMTEACH/frozen-cost hashes
+  are identical to the original CPU33 scale source. Both SSH environments select
+  the frozen FULL-v4 default; no v5 switch was made.
+- Latest prospective amendment SHA
+  `63ac5e1f9248a658a42ab6ce99e2ee82131f1503141c535bcb035bd5232d8b66`.
+  Numerical quota10, u4pause, all budgets and sealed-panel rules unchanged.
+
+## 21:14 — random-arm matching bookkeeping qualified before restart
+- **CPU35 78PASS/zero skips/2.28s/zero SUMO**. Corrected the random-arm sampling
+  denominator: estimate B's query probability over ex-ante eligible, uncommitted
+  decisions, excluding the many1s committed-plan records and unavailable windows.
+- R returns to the own-policy route with p0 after its matched regime tickets are
+  exhausted; empty proposals cannot manufacture extra query atoms or lose PPO data.
+- Amended registration SHA `d3d30eeed563b4844121d6e851bd1d23a5fb542647627baa64cb2eb09f0161ad`;
+  quota10/update, medium search, budget, fixedu4pause and sealed rules unchanged.
+  The old observer was identity-verified/quiesced before any training binding.
+- All original smoke/probes/scaling jobs continue/reuse their completed results.
+  GPU model/search source and full WMTEACH dependency hashes must match the CPU35
+  service binding; the new qualification does not dispatch duplicate GPU work.
+
+## 21:04 — disk admission restored; original A/B/R smoke PASS
+- Opaque archive **3119974400bytes** is durable on gpuA at
+  `/root/autodl-tmp/archive_cpuQ_20261101/coopmwm20261101_v2.tar`.
+  Source-stream and independently rehashed destination SHA256 both
+  `5b3b74cf25f6bc3e09f8be0b0c676436f102925292e5112d9dfe5c4add8dc1bc`.
+- Only after that exact match, removed the owner-approved literal superseded v2
+  source root; no peer directory or PID touched. cpuQ free **5200531456bytes**.
+- Existing smoke2280552 then completed once: **A/B/R PASS**,3600charged sim-s,
+  zero new MAPPO simulation; all three metrics match the reused baseline and
+  final-state fingerprints match. Total conservative charge stays **815240**.
+- CPU34 and numeric viability registration are complete. Acceleration optimizer
+  updates remain held solely for the registered two-GPU concurrency qualification.
+
+## 21:00 — full-population batch qualification complete on both GPUs
+- Original probe3 completed once: K4/H120width34 and K8/H300width10 single-vs-batch
+  parity **0.0veh-s on both GPUs**, including nonzero nongroup/afterplan residuals.
+- Same96candidate/3iteration/488future medium search now takes gpuA424.835s,
+  **8.4739plans/hour,4135.26imagined futures/hour**; gpuR439.479s,
+  **8.1915plans/hour,3997.46imagined futures/hour**. Peak allocation13.666GB each.
+- Aggregate16.6654plans/hour is a single-wide-worker measurement, not executed
+  plan throughput. Registered fixed4 multiworker scaling is running on both hosts;
+  its measured best concurrency will determine service sizing. Search unchanged.
+- Existing smoke/charges are preserved. The bounded viability observer38380 polls
+  every30s and will publish each qualification/check, adopt the original smoke,
+  bind/release the registered restart once, and stop after the four-update package.
+  Old superseded observer1116 was identity-verified and stopped before replacement.
+
+## 20:57 — OWNER20:35 viability registration; CPU76 PASS
+- Preserved all recovered code, checkpoints, jobs and charges. CPU33 74PASS and
+  final **CPU34 76PASS/zero skips/2.25s/zero SUMO** qualify the new source snapshot.
+- Fixed a pre-training augmented-behaviour logging bug: a committed plan crossing
+  an otherwise eligible10s decision tick retained the policy-route label. It now
+  remains an executed plan atom with zero policy-route importance mass at **every**
+  committed step. The regression covers the tick boundary and all plan steps.
+- Registered amendment SHA `4d8a37137b052224cbe81def95d406307d18a9694e25412f0eaa272c705b18f2`:
+  **Nexec10 minimum/update**, medium32x3/elite8/K4H120/top8K8H300 search unchanged,
+  A/Bu1..4 first then count/regime/duration-matchedRu1..4, durable owner-review pause.
+- At the prior measured11.1728queries/hour,10accepted starts has a **0.895h capacity
+  floor** per update if acceptance were100%. Actual acceptance/latency is unknown;
+  this is not an execution ETA. Both GPUs stay busy beyond the minimum when possible.
+- Concurrency supervisors are owned gpuA542616/gpuR977289; each waits for the
+  original probe3 to finish, then measures A1/2/4/8 and R1/2/4 workers. The best
+  aggregate medium-search capacity is selected without training outcome input.
+- Four-update viability maximum450000sim-s includes the already-reserved3600smoke;
+  with811640superseded charges, maximum1261640. Full allocation remains
+  **4280840/6000000**, free1719160; sealed96-world test awaits the full run.
+- Episode tapes now use digest-checked, lossless gzip storage; identical decoded
+  optimizer/exact-twin inputs. Real-SUMO diagnostics run asynchronously and do not
+  gate optimizer updates. A logs comparable eligible-group SUMO noise without queries.
+- Approved opaque archive transfer is in progress (2.38GB at20:57); no extraction
+  or scenario-content inspection. Source removal still requires matching SHA256.
+
+## 20:28 — first measured medium-CEM throughput; full-population batches qualifying
+- Complete fixed-width4 search: **gpuA635.987s =5.6605plans/hour**;
+  **gpuR653.082s =5.5123plans/hour**. Each searches96candidate slots over3CEM
+  iterations, K4/H120screen then top8K8/H300; peak allocated2.978/2.981GB.
+- Original receipts report2,626/2,558candidate futures/hour (their numerator
+  excludes the24screen-comparator futures). Including all comparator futures,
+  each query evaluates488real futures; subsequent receipts count all488.
+- This capacity is not sufficient for50executed starts/update within the original
+  GPU-time quote: even100%acceptance would require~107service-wall-hours for1200
+  primary B starts. This is a capacity lower bound, **not a training ETA**.
+- Registered probe3 retains the medium search and full1600roster, widens to34
+  screening candidates/10finalists per batch, and qualifies both K4/H120 and
+  K8/H300 on nonzero own-policy residuals. New owned PIDs gpuA539643/gpuR974432;
+  earlier probes are complete, not duplicated. Numeric quota/re-quote still pending.
+- CPU32 **72PASS/zero skips/2.14s/zeroSUMO** adds exact/WM profile-reversion algebra,
+  MAPPO background matching, conditional-noise accounting and world-cluster scale
+  checks. No guidance/training reward uses a WM number.
+
+## 20:18 — exact GPU plan parity PASS; registered smoke waits on disk
+- Both GPUs pass full1600-slot/fixed-four-candidate K8 parity with **0.0veh-s
+  maximum error**. Large acceleration profiles change futures/costs by up to
+  **1,281.163veh-s** on the registered engineering geometry. Compact-forward
+  candidate's318.494veh-s parity failure is retained/rejected.
+- CPU31 **71PASS / zero skips /2.15s /zero SUMO** adds full1s fake-plant
+  orchestration, actual frozen MAPPO command parity, exact Adam/RNG resume,
+  singular-mixture likelihood, per-member committed profiles, nongroup/postcommit
+  own-policy continuation and duplicate-CEM-ID regression.
+- Medium CEM end-to-end throughput remains pending on both original probe2 PIDs;
+  no throughput or training ETA is inferred from the parity timing alone.
+- Acceleration smoke registered/bound once; owned cpuQ supervisor2280552,
+  start54957271, reserves **3,600sim-s for A/B/R**. Total conservative charge
+  **815,240sim-s**. No new SUMO: all three jobs remain unclaimed at disk admission.
+- cpuQ free2,105,962,496bytes is below unchanged2,147,483,648-byte guard;
+  memory54,077,566,976bytes/load<1 are clear. No deletion/guard weakening/retry.
+  Receipt `coopmwm/CPUQ_DISK_ADMISSION_BLOCK.json`. Training remains held.
+
+## 19:56 — acceleration CPU and enlarged-panel registration
+- CPU29 **65 PASS / zero skips / zero SUMO**, including real frozen MAPPO
+  executor byte parity at1s, AR conditional density, committed acceleration
+  profiles, Thompson dual-comparator gate and all96worlds through both seed guards.
+- Fresh60metadata worlds **990600–990659**, five/cell, augment original36 to
+  **96worlds/eight per cell**. Registry+539safe protocol files and all admitted
+  host filename audits have **zero exposures**. cpuP remains excluded.
+- Panel SHA256 `d74f685ef75a819248bbe7bb0bef89cf0295037ff3b03b334b13ccec75c40bcc`.
+  Primary MAPPO/native/A/B once after fixedu24, R later once; no outcome access yet.
+- Registered allocation **4,280,840 /6,000,000sim-s**, including all811,640 old
+  charges;1,719,160 remains unallocated. Seed2 dropped under owner19:38:
+  retaining both replications with required checks/dev/test costs6,239,240.
+- Medium quality-first search registered:32population,3CEM iterations,elite8,
+  K4/H120screen then top8K8/H300, shared-future-bootstrap Thompson selection.
+  Numerical guidance quota and end-to-end plan throughput still await qualification;
+  **all arms remain held**. No acceleration training or efficacy result is claimed.
+
+## 19:41 — fresh-session recovery; OWNER19:38 pending qualification
+- Owned A supervisor2146725 boot/start identity verified, state **T**.672/678
+  jobs closed; six remaining update20 reservations never CLAIMed. All **811,640
+  sim-s** retained, including these reservations. No new physics or dispatch.
+- Both GPUs have no task process and no occupied compute memory at inventory.
+- Latest requested experiment is common1s acceleration-residual A/B/R from MAPPOu0,
+  committed joint acceleration plans with Thompson selection,96 sealed test worlds.
+  Old set-point sources/results remain superseded; training stays held pending
+  corrected parity, CPU qualification, panel exposure audit, exact re-quote and registration.
+- Recovery receipt: `coopmwm/RECOVERY_ACCEL_1938.json`.
+
+## OWNER19:34 — acceleration-space restart HOLD (fresh recovery)
+- Verified cpuQ supervisor2146725 boot/start identity and SIGSTOPed that owned
+  supervisor. A reached update19; eighteen update20 jobs remain incomplete at the
+  snapshot and may drain. All A/B set-point results are superseded engineering runs.
+- **811,640sim-s charged/678 reserved jobs**, retained in full. B/R remain held;
+  no new physics or duplicate dispatch. Receipt `HOLD_ACCEL_1934.json`.
+- New common A/B/R policy must use1s acceleration residuals on frozen MAPPO,
+  unchanged safe_accel/CommandOwnership; B needs committed group acceleration plans.
+- Probe6 trailing-slot trimming FAILED forecast parity: max1912.604veh-s on gpuA;
+  both failed receipts retained. No trimmed implementation is admitted to training.
+- Restart awaits corrected batch parity, CPU qualification, measured plan capacity,
+  and a prospective exact budget/quota registration including superseded A charges.
+
+## 19:14 — A resumed independently; B/R volume qualification remains held
+- CPU25 **55PASS/zero skips/1.72s/zero SUMO**, including private multi-window
+  forwarding, exact gate-to-closed-episode matching, R regime quotas, p=0 own-route
+  density, restart checkpoint isolation, and never-attempted precharge adoption.
+- Registered A-only amendment; **5,005,200 allocated/6,000,000 cap**,994,800 free.
+  The extra86,400 retains all original B-u1..3 training charges; no refund.
+- Owned old supervisor quiesced after all attempted jobs closed. Twelve reserved
+  A-dev jobs had never CLAIMed and were adopted exactly once without recharge.
+  Owned A-only supervisor2146725 now continues from existing checkpoints; B/R held.
+- B/R quota/mixture/matching code is CPU-qualified, but guided release remains gated
+  on measured GPU capacity and prospective numeric registration. No efficacy claim.
+- Fused1600-slot two-window K8 parity passes both hosts (max0.0000749veh-s), but
+  capacity is31.06/28.65queries/hour. gpuR four-windowK8 OOM is retained.
+  A960-slot source-capacity candidate changed paired costs by3.506veh-s and was
+  **rejected before training**. Next registered probe retains source draws/capacity,
+  trims universally absent trailing slots only during the one-step model forward,
+  and restores them before inherited insertion/observer. Original deadline retained.
+
+## OWNER18:54 — guidance-volume HOLD (18:55 recovery)
+- Verified owned cpuQ supervisor1945256 boot/start and paused it before B update4.
+  A has update4; B updates1–3 are superseded engineering runs (all bytes/charges retained).
+  R has not started. The shared supervisor pause temporarily also holds A scheduling.
+- Charge307,640sim-s/258 reserved jobs at hold;24 already-reserved A dev jobs may drain.
+  No new SUMO dispatch. `HOLD_1854.json` records the outstanding job identities.
+- Both existing owned GPU services remain (gpuA520375/gpuR954996); no duplicate service.
+  The preserved K8 whole-future batch probe passed max cost error0.00065279veh-s,
+  peak allocated2.43GB. Multi-window throughput qualification/gating is next.
+- Latest18:54 amendment supersedes the earlier continuation: B/R restart at MAPPO u0
+  only after registered execution-count gating, measured batch capacity and matched R counts.
+
+## DIAGNOSIS — 2026-11-01 18:47, OWNER18:38 fast path
+**No action-injection/roster/reversion bug found; release the engineering hold.**
+Window01 `.139` has target-minus-MAPPO speed **+5.70434m/s**, tau−0.000249751s;
+`.154` −0.076919m/s, tau−0.202225s. Window00 `ramp.72` −3.53868m/s,
+tau+0.279726s; `.214` +0.477607m/s, tau+0.00685912s. Thus targets are not uniformly
+tiny. The decoded requests reach the inherited WM callback, with both members
+present/CAV. For `.139`, initial bounded raw action2.60000 vs MAPPO2.59707m/s²
+becomes **the same safe action−0.265855m/s²**; all traced12s positions/speeds
+remain identical despite differing raw requests. This is safety/plant saturation,
+not a missing action. Non-requested CAVs run the frozen deterministic MAPPO
+bridge, not native/IDM; a real CPU callback test verifies standalone MAPPO equality
+and nonzero speed/position response to an unsaturated braking set-point.
+Inherited available O1/O3/O4 proposals DO alter `.139` trajectories (maximum12s
+position difference8.569/8.228/8.228m); H60 single-draw costs are distinct from
+policy/MAPPO (O3/O4 legitimately coincide in this geometry). O2 is unavailable
+here and retains its availability mask. Window00 also responds (ramp12s maximum
+position difference1.146m), with no inherited upstream option available.
+`ACTION_DELTAS_1838.json`, `ACTION_PROBE2_RESULT_00/01.json`, `DIAGNOSIS_1838.json`
+retain decoded requests, every0.5s accel/speed/position and before/after-safety
+values. **CPU WM regression1PASS/0skips, CUDA disabled, SUMO forbidden.** CPU22's
+wrong-runtime fixture failure and first focused fixture failure are preserved;
+the qualified WM library fixture passes in `CPU_WM_ACTION_RESPONSE2_1838.json`.
+Exact twins and original K8 results are reused; these diagnostic rerolls add0SUMO.
+The late exact-SUMO divergence (H60/H120 near0; H300/H600 +1699/+5723veh-s)
+is compatible with amplification of small execution differences, but two windows
+do not establish an empirical variance reduction or WM accuracy/scale CI.
+Conditional WM variance alone cannot support the paper's noise-reduction claim.
+
+### Suggestion-rate diagnosis and prospective release
+Original B-u1 used1/900 dense and1/3600 ordinary query probability, before
+availability was known: **1 query,0 accepted,0 executed**. Both GPUs' real available
+H300 K8+canary calls took213.67/234.79s (aggregate32.18queries/hour), explaining
+the throughput constraint. Outcome-independent numeric fit raises the shared
+B/R dense rate to**0.0022449262636300934**, ordinary**0.0005612315659075234**
+(2.02× historical rates). It uses309dense+219ordinary eligible B-u1 windows and
+274.0465s original48-episode span scaled4→12workers; no efficacy-based sampling.
+Numeric registration/binding completed; **18:48 same owned supervisor resumed**
+(`RELEASE_1838.json`, identity checked, stateS), preserving original u1
+optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918,800/6,000,000sim-s,
+1,081,200unallocated; current charge83,200. All final-test/checkpoint rules remain.
+
+## OWNER18:34 — engineering HOLD (fresh-session recovery)
+- Verified supervisor PID1945256 boot/start identity; paused it with SIGSTOP at the
+  update-2 sampling gate. B/R are held at update1/not-started respectively. The
+  interleaved supervisor also pauses A until safe arm-independent continuation exists.
+- All70 jobs are closed;83,200sim-s charged. No new SUMO, duplicated job or checkpoint
+  replacement. Existing GPU inference/exact receipts are retained for wiring diagnosis.
+- `coopmwm/HOLD_1834.json` records the owned pause. No numeric sampling binding will
+  release learning before action-response regression and a registered repair amendment.
+
+## 2026-11-01 18:31 — source-prior ABI qualified; primary checkpoints preserved
+- CPU21: **50PASS/zero skips/1.71s/zero SUMO**, including non300-clock integer source
+  sufficient statistics, real frozen MAPPO parity and per-future proposal parity.
+- First availability-qualified H300 probe exposed a pre-rollout integer-count API fault;
+  failed dual1 services ended. Both remote inventories verified no surviving task GPU process.
+- Fresh immutable dual2 services: gpuA ownedPID520375/gpuR ownedPID954996; original
+  GPU deadline retained. They now qualify/timestamp an actual available K8 H300 proposal.
+- Source encoding uses rounded FIT-prior rate×current-clock pseudo-counts, NOT measured
+  source requests. This current-clock pseudo-exposure is weaker than retaining the
+  donor posterior exposure; no causal/full-history source-conditioning claim is made.
+- All u1 weights/Adam/RNG, original queue, completed forecasts and exact twins are kept.
+  **83,200sim-s charged /70closedjobs**, no physical duplicate; u2 remains gated on
+  numeric registered sampling. Allocated4,918,800/cap6,000,000 is unchanged.
+- Owned30s publisherPID1116 will publish and commit E2 windows/full agreement CIs,
+  every UPDATE, every4-update TRAIN check, dev/final and STOP receipts for up to24h.
+
+## 2026-11-01 18:10 — owner17:55 dual-GPU amendment active
+- Registered unchanged **4,918,800 allocated /6,000,000 cap**,1,081,200 unallocated.
+- CPU18/19: **47PASS/zero skips/zero SUMO**; finalCPU19 2.87s. Design remains70lines.
+- Both immutable FULL-v4 services are ready: gpuA ownedPID516897, gpuR ownedPID951313;
+  each has an8GiB cap. Original failed bridge/startup receipts remain untouched.
+- Same registered first-window K8 diagnostic is running on both GPUs for cross-host
+  parity; next is one H300 proposal timing per host and outcome-independent sampling fit.
+- cpuQ will adopt all62finished jobs/74,400charged;12nice19training workers plus2E2
+  workers, shared serialized accounting. E2 now runs beside PPO and cannot gate learning.
+- A/B/R final checkpoints, primary-first once-only test and remaining seed2 plan unchanged.
+
+### 18:15 — first-update ETA
+- Both primaryu1 checkpoints/UPDATE receipts exist; supervisor ownedPID1945256 is alive.
+  The62closed jobs were adopted without new SUMO;74,400sim-s remains charged.
+- B u1 query1/accepted0/executed0; no learned-cooperation efficacy claim.
+- Initial48-episode rollout closes span254.33s with4workers;12worker CPU scaling plus
+  PPO/check overhead gives a provisional **1–3h after numeric u2 sampling release**
+  for both primaryu24 checkpoints. This is a planning range, not measured end-to-end
+  throughput; update after u2 elapsed time and WM queue latency are available.
+- u2 cannot launch physics until the outcome-independent sampling fit is numerically
+  registered and hash-bound. First dual-GPU E2 forecast is still running; no agreement result yet.
+
+## 2026-11-01 18:01 — fresh recovery and frozen reducer repair
+- Recovered all62 closed jobs /74,400sim-s; no live task supervisor or GPU service.
+- Prior GPU startup failed because `inspect` resolved an exec-created reducer against
+  the producer's shared synthetic filename. Explicit qualified22cc32f6 reducer source
+  is now frozen and bytecode-matched before adapting only the horizon tuple.
+- CPU17: **44 PASS / zero skips /1.72s / zero SUMO**, including the actual frozen
+  reducer, incorrect-source rejection and MAPPO command parity. Failure receipts retained.
+- Owner17:55 dual-GPU service/sampling amendment is next; no finished physics repeated.
+
+## 2026-11-01 17:48 — recovery and random-guide amendment
+- Registered owner17:42 arm R before any UPDATE/E2 outcome; registration and exact quote
+  preserved in `BUDGET_AMENDMENT_1742.json` and commit `bb9d6fdb`.
+- Revised allocation **4,918,800 / 6,000,000 sim-s**, unallocated1,081,200; A/B seeds1+2,
+  R primary only, fixedu24; seed3 dropped. Primary A/B test still precedes R/replications.
+- Recovered owned supervisor1877910; let all **62/62 jobs close** before controlled adoption.
+  **74,400 sim-s charged** includes smoke,12TRAIN-check controls and48initial A/B episodes.
+- At the E2 forecast wait, verified boot/start identity and no active/queued physics;
+  stopped only that supervisor. Original jobs/checkpoints/charge ledger/WM queue survive.
+  Receipt `QUIESCE_1742.json`; existing GPU bridge retained, no duplicate dispatch.
+- R implementation/CPU qualification underway; no training update or R physics yet.
+
+### 17:53 — arm R CPU qualification PASS
+- CPU15/16 both **43 PASS / zero skips / zero SUMO**; final CPU16 took1.66s.
+- Covers actual frozen MAPPO parity; uniform available inherited options without WM;
+  mixture mass/imitation/SUMO-only reward; per-type/regime trust; safe completed-job reuse;
+  fixed R final-test one-use gate, reused primary controls and paired B-R bootstrap.
+- Final70-line design SHA `02879dd48ed26b466575891df920c1cbfad9da848a841c26af56c26777466cea`.
+- Noise diagnostics report C_G, each D_i, sum D_i and D_G variance from the original K8
+  draws. No superseded reward-combination weight is used; no inference is repeated.
+- GPUA snapshot17:50:1,359MiB/49,140MiB,32%util; original service waiting on admission,
+  WMPLAN priority retained. E2/first-update results and a measured ETA are still pending.
+- Exact registered allocation remains4,918,800/6M; `READINESS_1742.json` binds CPU/design.
+
+## 2026-11-01 17:41 — full-episode zero-update smoke PASS
+- Owned cpuQ smoke PID1872644 finished; both registered1200s episodes closed.
+- A and B metrics exactly equal reused bitwise MAPPO baseline at J600/J900;
+  A/B final full-state fingerprints equal. **2,400 sim-s charged**, new MAPPO simulation0.
+- Collisions0, teleports0 in both episodes; this is mechanics/parity, not learned performance.
+- One-use CPU dispatch, GPU bridge PID41056 and immutable bindings are preserved;
+  no training update yet. Primary paired training dispatch follows this receipt.
+- E2 agreement/noise is diagnostic only; it will use preselected initial TRAIN windows.
+
+## 17:27 refinement — CPU qualification and prospective registration
+- Recovered at17:29: no task runtime/jobs/services on cpuQ/gpuA/gpuR; no duplicate dispatch.
+- CPU13: **40 PASS, zero skips, 1.36 s, zero SUMO**; CPU11/12 failed receipts preserved.
+- Eight option-type x observable-regime trust buckets use normal-means empirical Bayes:
+  between-bucket variance and bootstrap uncertainty determine shrinkage toward pooled evidence.
+- Independent random query precedes winner-type selection; execute with that bucket's beta.
+  PPO uses the logged query measure, including rejected/declined query atoms; reward remains SUMO-only.
+- Observable merge-dense rule projects the union of LEVERPROBE's four recorded upper-quartile
+  bands, with ramp and cross-lane CAV pair; no true demand/share input or new behavioural cutoff.
+- Trust evidence is a critic-based selected-type residual contrast against own actions in the
+  same regime. It is **not** an exact type-specific causal effect; nonquery winner labels are unobserved.
+- Cap remains **6,000,000 sim-s**, allocated5,738,400, unallocated261,600. Three paired training
+  seeds and all primary/replication final-test liabilities remain protected.
+- Source/design hashes are frozen in CPU13; exact amendment: `coopmwm/BUDGET_AMENDMENT_1727.json`.
+- CPU14 repeats40PASS/0skips/1.35s; deployment now copies the tested immutable snapshot,
+  avoiding concurrently changing peer tooling. Initial v1 staging failure was before binding/SUMO.
+- Bound cpuQ `/home/ubuntu/coopmwm20261101_v2` and gpuA `/root/coopmwm20261101_v2`;
+  source/cache/runtime/checkpoint hashes verified;4nice19workers, task simulation still0 at binding.
+- Next: one full-episode zero-update parity smoke per arm, then primary training/E2.
+
+## 17:12 redesign — implementation CPU-verified before physics
+- Arm B now uses WM-guided exploration and **SUMO-only team reward/advantage**.
+- FULL-v4 K8 H300 compares inherited O1–O4 set-point proposals with policy/MAPPO.
+- Logged random routing permits exact importance correction on the augmented
+  behaviour mixture, including deterministic proposal atoms; imitation weight is beta.
+- Beta starts at1 and uses a monotone, scale-free world-bootstrap SUMO-evidence rule.
+- Primary A/B episodes share an interleaved admitted worker pool; fixed primary u24
+  test precedes replications, with MAPPO/native final-panel controls reused.
+- CPU9: **36 PASS, zero skips, 1.32 s, zero SUMO**, including actual frozen MAPPO
+  parity, proposal-mixture mass, SUMO reward isolation, adaptive trust and leakage checks.
+- CPU8's failed syntax/roundoff checks are preserved; fixed before CPU9 and physics.
+- E2 agreement/variance remains diagnostic; historical reward-credit gates below are superseded.
+- Registration/runtime deployment is next; no task simulation or update dispatched yet.
+
+## 17:07 amendment — registered before physics
+- MAIN excludes unreachable cpuP; existing registry/protocol and cpuQ/gpuA/gpuR audits qualify.
+- Recovery found no task runtime, training jobs or GPU services on admitted hosts; SUMO remains zero.
+- Stopped the superseded metadata-only waiter by verified owned PID46700.
+- Primary A/B train first in parallel. Run primary four-arm final panel once at both u24 checkpoints;
+  train replications afterwards and evaluate A/B once per seed with MAPPO/native reused.
+- Added replication-test liability172,800: allocated **5,738,400 / 6,000,000**, unallocated261,600.
+- `BUDGET_AMENDMENT_1707.json` and the shared registry record this prospective amendment.
+- Historical entries below describe the prior gate/order; the 17:07 amendment supersedes them.
+
+## Recovery and prospective registration — 2026-11-01
+- Preserved recovered work in `0a3df807`; previous CPU5 sources matched 108 staged files.
+- No COOPMWM runtime or processes existed at recovery; task SUMO/training updates: zero.
+- CPU6: **29 PASS, zero skips, 1.35 s, zero SUMO**, with simulator subprocess creation forbidden.
+- Includes real speed-only MAPPO169 `d9042cc5` command parity; WM/exact credit fixture algebra;
+  fixed ramp; observable-only/no-leakage checks; dual seed guards and three-seed/final-panel roles.
+- Exact prospective plan appended to the shared `REGISTRATION.md` before any outcome.
+- Three independent training seeds fit: 24 PPO updates per arm per seed; 4,147,200 training sim-s.
+- Total allocated 5,565,600 / 6,000,000 sim-s; 434,400 remains unallocated, not automatically spent.
+- Final-test liability **172,800 sim-s precharged**: fresh 989600–989635, 36 worlds, four arms.
+- Panel canonical SHA256: `69b8a300eab45fb8208bd4bc66cefd32c6ebd16c71c23b5aac8567d41ee3c182`.
+- Final checkpoints fixed to primary-seed update24; additional seeds are replications, never selectors.
+- Panel stays unopened for outcomes until all training ends; one complete evaluation, no reruns.
+- Registry/protocol audit: 538 safe files, no conflicts. Available execution-host filename audits:
+  cpuQ 337,849; gpuA 895,554; gpuR 328,139; all zero exposures.
+- Additional cpuP audit could not complete: SSH connection closed. cpuP is not admitted;
+  full cross-host exposure qualification is pending resolution before physics.
+
+## Registered credit/noise check
+- FULL-v4 `22cc32f6`, original WMTEACH K8 paired-future executor, H60/120/300/600.
+- Twelve randomly selected initial TRAIN windows, one per cell, selected before credit outcomes.
+- Report D_i/C_G sign agreement, world-bootstrap 95% CIs and learned credit scale immediately.
+- Every horizon must pass both sign lower bounds >0.5; primary H300 if admitted.
+- No passing horizon stops B. Calibration/weights remain frozen for all three training seeds.
+- Compare per-window K8 variance of the same joint-action team-return advantage with paired replay
+  credit variance, in veh-s². A fixed critic baseline does not change the conditional variance.
+- CRN pairing may cancel shared hidden-driver/arrival noise; this is a hypothesis to measure,
+  not an observed noise reduction. Conditional WM variance is not empirical SUMO variance.
+- Report actual across-TRAIN PPO advantage variance separately; no noise/performance result yet.
+
+## Next checks
+- Immutable final runtime/CPU/source binding and complete exposure admission.
+- One full-episode smoke per arm, against the reused bitwise MAPPO cache.
+- WM/exact gate, then every-four-update TRAIN-cell checks and first registered dev check.
+
+## CPU7 — final workflow implementation
+- **30 PASS, zero skips, 1.28 s, zero SUMO**; receipt `coopmwm/CPU_coopmwm20261101_cpu7.json`.
+- Runner now namespaces all three training-seed checkpoint/job/check receipts and fixes
+  seed0/update24 for the final test. The final-test gate requires all training completions;
+  missing B finals produce an explicit incomplete test, never a fallback checkpoint.
+- Native reference reuses the genuine native plant. Final paired bootstrap supports all36 worlds.
+- H600 uses the original producer with H600/1600 entrant capacity and four indexed K2 batches
+  assembled into complete paired K8. Draw identities/executor/reducer are retained; actual GPU
+  memory/forecast parity remains a pre-inference check, not established by structural CPU tests.
+- Actual team-only GAE variance is logged separately from conditional WM credit noise.
+- cpuP SSH still closes at the second bounded metadata-only probe. No runtime binding,
+  owned training/GPU service, smoke, credit agreement or learning update has been dispatched.
+
+## Live publication — 2026-11-01T10:15:00.034770+00:00
+- Charged 74,400/6,000,000 sim-s; closed jobs 62/62; pending WM 1.
+
+### S0_A_UPDATE_001.json
+- A update1, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
+- Per-bucket trust: .
+- TRAIN GAE variance 4.66493e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_001.json`.
+
+### S0_B_UPDATE_001.json
+- B update1, seed20261101; SUMO-only reward; queries/accepted/executed 1/0/0; next pooled beta 1.0.
+- Per-bucket trust: O1|merge-dense=1; O1|ordinary=1; O2|merge-dense=1; O2|ordinary=1; O3|merge-dense=1; O3|ordinary=1; O4|merge-dense=1; O4|ordinary=1.
+- TRAIN GAE variance 4.69666e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_B_UPDATE_001.json`.
+
+## Live publication — 2026-11-01T10:20:31.236333+00:00
+- Charged 79,200/6,000,000 sim-s; closed jobs 66/66; pending WM 7.
+
+### CREDIT_WINDOW_00.json
+- E2 window world986000 t600: exact quartet complete.
+- H120 conditional WM K8 variance: joint-team advantage 801277, paired C_G 0 veh-s²; not empirical SUMO noise.
+- H300 conditional WM K8 variance: joint-team advantage 9.8999e+06, paired C_G 0 veh-s²; not empirical SUMO noise.
+- H60 conditional WM K8 variance: joint-team advantage 86872.7, paired C_G 0 veh-s²; not empirical SUMO noise.
+- H600 conditional WM K8 variance: joint-team advantage 5.84757e+07, paired C_G 0 veh-s²; not empirical SUMO noise.
+
+## Live publication — 2026-11-01T10:29:51.501844+00:00
+- Charged 83,200/6,000,000 sim-s; closed jobs 70/70; pending WM 7.
+
+### CREDIT_WINDOW_01.json
+- E2 window world986007 t400: exact quartet complete.
+- H120 conditional WM K8 variance: joint-team advantage 265240, paired C_G 0 veh-s²; not empirical SUMO noise.
+- H120 WM/exact C_G 0/-7.09977e-07; D_i [0.0, -0.001434922218322754]/[-0.07634644157951698, 7.099770300555974e-07]; zero C_G is a tie, not sign evidence.
+- H300 conditional WM K8 variance: joint-team advantage 3.5524e+06, paired C_G 0 veh-s²; not empirical SUMO noise.
+- H300 WM/exact C_G 0/-7.52552e-07; D_i [0.0, -0.001447141170501709]/[1698.600333714603, 7.525522960349917e-07]; zero C_G is a tie, not sign evidence.
+- H60 conditional WM K8 variance: joint-team advantage 31878, paired C_G 0 veh-s²; not empirical SUMO noise.
+- H60 WM/exact C_G 0/9.01442e-07; D_i [0.0, -0.0004132091999053955]/[0.11916434977320023, -9.014420356834307e-07]; zero C_G is a tie, not sign evidence.
+- H600 conditional WM K8 variance: joint-team advantage 4.016e+07, paired C_G 0 veh-s²; not empirical SUMO noise.
+- H600 WM/exact C_G 0/-7.52567e-07; D_i [0.0, -0.001447141170501709]/[5723.486351683328, 7.525668479502201e-07]; zero C_G is a tie, not sign evidence.
+
+## Live publication — 2026-11-01T10:49:25.085948+00:00
+- Charged 145,600/6,000,000 sim-s; closed jobs 98/122; pending WM 1.
+
+### CREDIT_WINDOW_02.json
+- E2 window world986012 t600: exact quartet complete.
+- H120 conditional WM K8 variance: joint-team advantage 1.02526e+06, paired C_G 1.81899e-12 veh-s²; not empirical SUMO noise.
+- H120 WM/exact C_G 4.76837e-07/0; D_i [0.0046305060386657715, 0.0]/[-0.008384575048694387, 0.0]; zero C_G is a tie, not sign evidence.
+- H300 conditional WM K8 variance: joint-team advantage 1.10728e+07, paired C_G 1.81899e-12 veh-s²; not empirical SUMO noise.
+- H300 WM/exact C_G 4.76837e-07/0; D_i [0.004627645015716553, 0.0]/[-0.008384783359360881, 0.0]; zero C_G is a tie, not sign evidence.
+- H60 conditional WM K8 variance: joint-team advantage 96105.6, paired C_G 1.81899e-12 veh-s²; not empirical SUMO noise.
+- H60 WM/exact C_G 4.76837e-07/0; D_i [0.004109740257263184, 0.0]/[0.00042830735037568957, 0.0]; zero C_G is a tie, not sign evidence.
+- H600 conditional WM K8 variance: joint-team advantage 7.85469e+07, paired C_G 1.81899e-12 veh-s²; not empirical SUMO noise.
+- H600 WM/exact C_G 4.76837e-07/0; D_i [0.004627645015716553, 0.0]/[6.07445183393429, 0.0]; zero C_G is a tie, not sign evidence.
+
+## Live publication — 2026-11-01T10:50:27.621315+00:00
+- Charged 145,600/6,000,000 sim-s; closed jobs 122/122; pending WM 1.
+
+### S0_A_UPDATE_002.json
+- A update2, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
+- Per-bucket trust: .
+- TRAIN GAE variance 4.70697e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_002.json`.
+
+## Live publication — 2026-11-01T10:51:00.705174+00:00
+- Charged 203,200/6,000,000 sim-s; closed jobs 128/170; pending WM 1.
+
+### S0_B_UPDATE_002.json
+- B update2, seed20261101; SUMO-only reward; queries/accepted/executed 2/0/0; next pooled beta 1.0.
+- Per-bucket trust: O1|merge-dense=1; O1|ordinary=1; O2|merge-dense=1; O2|ordinary=1; O3|merge-dense=1; O3|ordinary=1; O4|merge-dense=1; O4|ordinary=1.
+- TRAIN GAE variance 4.77848e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_B_UPDATE_002.json`.
+
+## Live publication — 2026-11-01T10:52:34.609181+00:00
+- Charged 203,200/6,000,000 sim-s; closed jobs 170/170; pending WM 1.
+
+### S0_A_UPDATE_003.json
+- A update3, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
+- Per-bucket trust: .
+- TRAIN GAE variance 4.429e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_003.json`.
+
+## Live publication — 2026-11-01T10:53:06.635788+00:00
+- Charged 260,800/6,000,000 sim-s; closed jobs 172/218; pending WM 1.
+
+### S0_B_UPDATE_003.json
+- B update3, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 1.0.
+- Per-bucket trust: O1|merge-dense=1; O1|ordinary=1; O2|merge-dense=1; O2|ordinary=1; O3|merge-dense=1; O3|ordinary=1; O4|merge-dense=1; O4|ordinary=1.
+- TRAIN GAE variance 4.50958e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_B_UPDATE_003.json`.
+
+## Live publication — 2026-11-01T10:54:40.121508+00:00
+- Charged 264,440/6,000,000 sim-s; closed jobs 222/222; pending WM 1.
+
+### CREDIT_WINDOW_03.json
+- E2 window world986019 t310: exact quartet complete.
+- H120 conditional WM K8 variance: joint-team advantage 966381, paired C_G 7.21099e-12 veh-s²; not empirical SUMO noise.
+- H120 WM/exact C_G -1.19209e-06/0; D_i [8.344650268554688e-07, 4.76837158203125e-07]/[0.0, 0.0]; zero C_G is a tie, not sign evidence.
+- H300 conditional WM K8 variance: joint-team advantage 1.51445e+07, paired C_G 7.21099e-12 veh-s²; not empirical SUMO noise.
+- H300 WM/exact C_G -1.19209e-06/0; D_i [8.344650268554688e-07, 4.76837158203125e-07]/[0.0, 0.0]; zero C_G is a tie, not sign evidence.
+- H60 conditional WM K8 variance: joint-team advantage 55320.5, paired C_G 7.21099e-12 veh-s²; not empirical SUMO noise.
+- H60 WM/exact C_G -1.19209e-06/0; D_i [8.344650268554688e-07, 4.76837158203125e-07]/[0.0, 0.0]; zero C_G is a tie, not sign evidence.
+- H600 conditional WM K8 variance: joint-team advantage 1.31309e+08, paired C_G 7.21099e-12 veh-s²; not empirical SUMO noise.
+- H600 WM/exact C_G -1.19209e-06/0; D_i [8.344650268554688e-07, 4.76837158203125e-07]/[0.0, 0.0]; zero C_G is a tie, not sign evidence.
+
+## Live publication — 2026-11-01T10:55:12.537480+00:00
+- Charged 278,840/6,000,000 sim-s; closed jobs 225/234; pending WM 1.
+
+### S0_A_UPDATE_004.json
+- A update4, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
+- Per-bucket trust: .
+- TRAIN GAE variance 5.03716e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_004.json`.
+
+## Live publication — 2026-11-01T11:15:29.022889+00:00
+- Charged 336,440/6,000,000 sim-s; closed jobs 258/282; pending WM 0.
+
+### S0_A_CHECK_004.json
+- A_minus_MAPPO: {"bootstrap":"10000 whole-world paired resamples; RNG20261101; negative delay is better","learned_minus":"mappo","metrics":{"600_collisions":{"ci95":[0.0,0.0],"mean":0.0},"600_hard_brake":{"ci95":[-2.7510416666666657,7.5],"mean":2.2083333333333335},"600_team_delay_vs":{"ci95":[-1249.1101470572473,3372.3958383866448],"mean":1203.3873745997926},"600_teleports":{"ci95":[0.0,0.0],"mean":0.0},"600_ttc_below_3_vs":{"ci95":[-11.709375,97.91770833333332],"mean":44.0},"900_collisions":{"ci95":[0.0,0.0],"mean":0.0},"900_hard_brake":{"ci95":[-7.5,4.583333333333333],"mean":-1.875},"900_team_delay_vs":{"ci95":[-1868.5913824377792,4332.582430582843],"mean":1372.7795884038114},"900_teleports":{"ci95":[0.0,0.0],"mean":0.0},"900_ttc_below_3_vs":{"ci95":[-55.21041666666667,109.5],"mean":28.833333333333332}},"worlds":12}
+
+### S0_A_DEV_004.json
+- A_minus_MAPPO: {"bootstrap":"10000 whole-world paired resamples; RNG20261101; negative delay is better","learned_minus":"mappo","metrics":{"600_collisions":{"ci95":[0.0,0.0],"mean":0.0},"600_hard_brake":{"ci95":[-4.645833333333333,2.625],"mean":-0.875},"600_team_delay_vs":{"ci95":[-2008.6695155343664,953.7011788286733],"mean":-526.333169436575},"600_teleports":{"ci95":[0.0,0.0],"mean":0.0},"600_ttc_below_3_vs":{"ci95":[-90.14583333333333,9.750520833333326],"mean":-40.354166666666664},"900_collisions":{"ci95":[0.0,0.0],"mean":0.0},"900_hard_brake":{"ci95":[-4.083333333333333,4.416666666666667],"mean":0.2916666666666667},"900_team_delay_vs":{"ci95":[-2525.7345253020353,2240.0123362352256],"mean":-184.73109833748217},"900_teleports":{"ci95":[0.0,0.0],"mean":0.0},"900_ttc_below_3_vs":{"ci95":[-107.08333333333333,23.75104166666665],"mean":-43.104166666666664}},"worlds":24}
+
+## Live publication — 2026-11-01T11:16:31.748572+00:00
+- Charged 365,240/6,000,000 sim-s; closed jobs 282/306; pending WM 0.
+
+### S0_A_UPDATE_005.json
+- A update5, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
+- Per-bucket trust: .
+- TRAIN GAE variance 4.64449e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_005.json`.
+
+## Live publication — 2026-11-01T11:18:05.307340+00:00
+- Charged 394,040/6,000,000 sim-s; closed jobs 307/330; pending WM 0.
+
+### S0_A_UPDATE_006.json
+- A update6, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
+- Per-bucket trust: .
+- TRAIN GAE variance 4.62821e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_006.json`.
+
+## Live publication — 2026-11-01T11:19:08.132519+00:00
+- Charged 422,840/6,000,000 sim-s; closed jobs 330/354; pending WM 0.
+
+### S0_A_UPDATE_007.json
+- A update7, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
+- Per-bucket trust: .
+- TRAIN GAE variance 4.70447e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_007.json`.
+
+## Live publication — 2026-11-01T11:20:10.926285+00:00
+- Charged 437,240/6,000,000 sim-s; closed jobs 354/366; pending WM 0.
+
+### S0_A_UPDATE_008.json
+- A update8, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
+- Per-bucket trust: .
+- TRAIN GAE variance 4.90423e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_008.json`.
+
+## Live publication — 2026-11-01T11:21:13.725511+00:00
+- Charged 466,040/6,000,000 sim-s; closed jobs 368/390; pending WM 0.
+
+### S0_A_CHECK_008.json
+- A_minus_MAPPO: {"bootstrap":"10000 whole-world paired resamples; RNG20261101; negative delay is better","learned_minus":"mappo","metrics":{"600_collisions":{"ci95":[0.0,0.0],"mean":0.0},"600_hard_brake":{"ci95":[-1.9166666666666667,8.0],"mean":3.2083333333333335},"600_team_delay_vs":{"ci95":[-2134.4230452651373,2514.0648813466746],"mean":366.9245178487299},"600_teleports":{"ci95":[0.0,0.0],"mean":0.0},"600_ttc_below_3_vs":{"ci95":[-39.376041666666666,84.3770833333333],"mean":23.458333333333332},"900_collisions":{"ci95":[0.0,0.0],"mean":0.0},"900_hard_brake":{"ci95":[-6.375,8.0],"mean":1.1666666666666667},"900_team_delay_vs":{"ci95":[-2310.9142790688265,4254.126301910809],"mean":1194.8769365963044},"900_teleports":{"ci95":[0.0,0.0],"mean":0.0},"900_ttc_below_3_vs":{"ci95":[-61.833333333333336,125.25],"mean":36.375}},"worlds":12}
+
+## Live publication — 2026-11-01T11:22:16.980124+00:00
+- Charged 494,840/6,000,000 sim-s; closed jobs 390/414; pending WM 0.
+
+### S0_A_UPDATE_009.json
+- A update9, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
+- Per-bucket trust: .
+- TRAIN GAE variance 4.50355e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_009.json`.
+
+## Live publication — 2026-11-01T11:23:19.724350+00:00
+- Charged 523,640/6,000,000 sim-s; closed jobs 414/438; pending WM 0.
+
+### S0_A_UPDATE_010.json
+- A update10, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
+- Per-bucket trust: .
+- TRAIN GAE variance 5.15375e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_010.json`.
+
+## Live publication — 2026-11-01T11:24:56.588634+00:00
+- Charged 552,440/6,000,000 sim-s; closed jobs 442/462; pending WM 0.
+
+### S0_A_UPDATE_011.json
+- A update11, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
+- Per-bucket trust: .
+- TRAIN GAE variance 5.05183e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_011.json`.
+
+## Live publication — 2026-11-01T11:25:59.568360+00:00
+- Charged 566,840/6,000,000 sim-s; closed jobs 462/474; pending WM 0.
+
+### S0_A_UPDATE_012.json
+- A update12, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
+- Per-bucket trust: .
+- TRAIN GAE variance 4.69977e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_012.json`.
+
+## Live publication — 2026-11-01T11:26:31.329316+00:00
+- Charged 595,640/6,000,000 sim-s; closed jobs 474/498; pending WM 0.
+
+### S0_A_CHECK_012.json
+- A_minus_MAPPO: {"bootstrap":"10000 whole-world paired resamples; RNG20261101; negative delay is better","learned_minus":"mappo","metrics":{"600_collisions":{"ci95":[0.0,0.0],"mean":0.0},"600_hard_brake":{"ci95":[-3.2083333333333335,4.583333333333333],"mean":0.375},"600_team_delay_vs":{"ci95":[-661.2338917042277,2949.737879335951],"mean":1282.3524654967944},"600_teleports":{"ci95":[0.0,0.0],"mean":0.0},"600_ttc_below_3_vs":{"ci95":[6.833333333333333,98.54270833333332],"mean":50.083333333333336},"900_collisions":{"ci95":[0.0,0.0],"mean":0.0},"900_hard_brake":{"ci95":[-6.208333333333333,4.6260416666666515],"mean":-1.125},"900_team_delay_vs":{"ci95":[-41.61367904337277,4606.31203827328],"mean":2363.594791228685},"900_teleports":{"ci95":[0.0,0.0],"mean":0.0},"900_ttc_below_3_vs":{"ci95":[-31.46145833333333,117.54166666666667],"mean":42.791666666666664}},"worlds":12}
+
+## Live publication — 2026-11-01T11:28:05.670888+00:00
+- Charged 624,440/6,000,000 sim-s; closed jobs 499/522; pending WM 0.
+
+### S0_A_UPDATE_013.json
+- A update13, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
+- Per-bucket trust: .
+- TRAIN GAE variance 5.2456e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_013.json`.
+
+## Live publication — 2026-11-01T11:29:09.162719+00:00
+- Charged 653,240/6,000,000 sim-s; closed jobs 522/546; pending WM 0.
+
+### S0_A_UPDATE_014.json
+- A update14, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
+- Per-bucket trust: .
+- TRAIN GAE variance 5.09244e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_014.json`.
+
+## Live publication — 2026-11-01T11:30:12.024242+00:00
+- Charged 682,040/6,000,000 sim-s; closed jobs 546/570; pending WM 0.
+
+### S0_A_UPDATE_015.json
+- A update15, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
+- Per-bucket trust: .
+- TRAIN GAE variance 4.82592e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_015.json`.
+
+## Live publication — 2026-11-01T11:31:47.424047+00:00
+- Charged 696,440/6,000,000 sim-s; closed jobs 570/582; pending WM 0.
+
+### S0_A_UPDATE_016.json
+- A update16, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
+- Per-bucket trust: .
+- TRAIN GAE variance 5.15962e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_016.json`.
+
+## Live publication — 2026-11-01T11:32:19.359481+00:00
+- Charged 725,240/6,000,000 sim-s; closed jobs 582/606; pending WM 0.
+
+### S0_A_CHECK_016.json
+- A_minus_MAPPO: {"bootstrap":"10000 whole-world paired resamples; RNG20261101; negative delay is better","learned_minus":"mappo","metrics":{"600_collisions":{"ci95":[0.0,0.0],"mean":0.0},"600_hard_brake":{"ci95":[0.041666666666666664,9.25],"mean":4.125},"600_team_delay_vs":{"ci95":[-78.65468623970786,3459.082650857894],"mean":1686.0698296149446},"600_teleports":{"ci95":[0.0,0.0],"mean":0.0},"600_ttc_below_3_vs":{"ci95":[-10.626041666666666,101.25],"mean":43.291666666666664},"900_collisions":{"ci95":[0.0,0.0],"mean":0.0},"900_hard_brake":{"ci95":[-3.3333333333333335,7.2093749999999845],"mean":1.25},"900_team_delay_vs":{"ci95":[331.8738344183094,6951.7146298653915],"mean":3346.086848854511},"900_teleports":{"ci95":[0.0,0.0],"mean":0.0},"900_ttc_below_3_vs":{"ci95":[-27.0,99.08437499999998],"mean":29.291666666666668}},"worlds":12}
+
+## Live publication — 2026-11-01T11:33:53.736644+00:00
+- Charged 754,040/6,000,000 sim-s; closed jobs 612/630; pending WM 0.
+
+### S0_A_UPDATE_017.json
+- A update17, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
+- Per-bucket trust: .
+- TRAIN GAE variance 5.19562e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_017.json`.
+
+## Live publication — 2026-11-01T11:34:58.261814+00:00
+- Charged 782,840/6,000,000 sim-s; closed jobs 631/654; pending WM 0.
+
+### S0_A_UPDATE_018.json
+- A update18, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
+- Per-bucket trust: .
+- TRAIN GAE variance 4.75876e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_018.json`.
+
+## Live publication — 2026-11-01T11:36:01.920162+00:00
+- Charged 811,640/6,000,000 sim-s; closed jobs 654/678; pending WM 0.
+
+### S0_A_UPDATE_019.json
+- A update19, seed20261101; SUMO-only reward; queries/accepted/executed 0/0/0; next pooled beta 0.0.
+- Per-bucket trust: .
+- TRAIN GAE variance 5.30598e+08 veh-s²; cooperative-move residual/SNR and PPO details in `S0_A_UPDATE_019.json`.
+
+## Acceleration viability — 2026-11-01T12:59:38.429998+00:00
+
+### SCALE_gpuA_FIXED4_K4_H120.json
+- SCALE_gpuA_FIXED4_K4_H120.json: {"H":120,"K":4,"max_cost_error":0.0,"pass_":true,"width":4}
+
+## Acceleration viability — 2026-11-01T12:59:40.615520+00:00
+
+### SCALE_gpuR_FIXED4_K4_H120.json
+- SCALE_gpuR_FIXED4_K4_H120.json: {"H":120,"K":4,"max_cost_error":0.0,"pass_":true,"width":4}
+
+## Acceleration viability — 2026-11-01T13:01:21.640167+00:00
+
+### SCALE_gpuA_FIXED4_K8_H300.json
+- SCALE_gpuA_FIXED4_K8_H300.json: {"H":300,"K":8,"max_cost_error":0.0,"pass_":true,"width":4}
+
+## Acceleration viability — 2026-11-01T13:02:35.562746+00:00
+
+### SCALE_gpuR_FIXED4_K8_H300.json
+- SCALE_gpuR_FIXED4_K8_H300.json: {"H":300,"K":8,"max_cost_error":0.0,"pass_":true,"width":4}
+
+## Acceleration viability — 2026-11-01T13:03:17.429398+00:00
+
+### ARCHIVE2035_COMPLETE.json
+- ARCHIVE2035_COMPLETE.json: {"archive":{"destination":{"bytes":3119974400,"path":"/root/autodl-tmp/archive_cpuQ_20261101/coopmwm20261101_v2.tar","sha256":"5b3b74cf25f6bc3e09f8be0b0c676436f102925292e5112d9dfe5c4add8dc1bc"},"new_sumo_sim_s":0,"source":"/home/ubuntu/coopmwm20261101_v2","source_stream":{"bytes":3119974400,"sha256":"5b3b74cf25f6bc3e09f8be0b0c676436f102925292e5112d9dfe5c4add8dc1bc"},"transport":"opaque tar stream via existing cpuQ/gpuA SSH keys; no extraction/content inspection","unix":1793538181.6069808,"verified":true},"disk_free":5200531456,"new_sumo_sim_s":0,"source_removed":true,"unix":1793538196.7923505}
+
+## Acceleration viability — 2026-11-01T13:04:31.100800+00:00
+
+### SMOKE.json
+- SMOKE.json: {"arms":["A","B","R"],"new_MAPPO_sim_s":0,"pass_":true,"sim_s":3600,"timestamp_utc":"2026-11-01T13:04:03.970616+00:00"}
+
+## Acceleration viability — 2026-11-01T13:16:39.800621+00:00
+
+### SCALE_gpuA_CONCURRENCY_1.json
+- SCALE_gpuA_CONCURRENCY_1.json: {"final_width":4,"host":"gpuA","imagined_futures":488,"imagined_futures_per_hour":2604.6138264975925,"new_sumo_sim_s":0,"pass_":true,"peak_worker_allocated_bytes":3486505472,"plans_per_hour":5.337323414954083,"screen_width":4,"source_bound_full_search_parity":true,"unix":1793538723.0724921,"wall_s":674.4953828193247,"workers":1}
+
+## Acceleration viability — 2026-11-01T13:16:41.556657+00:00
+
+### SCALE_gpuR_CONCURRENCY_1.json
+- SCALE_gpuR_CONCURRENCY_1.json: {"final_width":4,"host":"gpuR","imagined_futures":488,"imagined_futures_per_hour":2509.0930862791824,"new_sumo_sim_s":0,"pass_":true,"peak_worker_allocated_bytes":3431991808,"plans_per_hour":5.141584193195046,"screen_width":4,"source_bound_full_search_parity":true,"unix":1793538828.7716107,"wall_s":700.1733054891229,"workers":1}
+
+## Acceleration viability — 2026-11-01T13:38:28.216313+00:00
+
+### SCALE_gpuA_CONCURRENCY_2.json
+- SCALE_gpuA_CONCURRENCY_2.json: {"final_width":4,"host":"gpuA","imagined_futures":488,"imagined_futures_per_hour":2274.278974195577,"new_sumo_sim_s":0,"pass_":true,"peak_worker_allocated_bytes":2970765312,"plans_per_hour":4.660407734007331,"screen_width":4,"source_bound_full_search_parity":true,"unix":1793540275.9209359,"wall_s":1544.9292016793042,"workers":2}
+
+## Acceleration viability — 2026-11-01T13:39:43.755261+00:00
+
+### SCALE_gpuR_CONCURRENCY_2.json
+- SCALE_gpuR_CONCURRENCY_2.json: {"final_width":4,"host":"gpuR","imagined_futures":488,"imagined_futures_per_hour":2327.3484840710466,"new_sumo_sim_s":0,"pass_":true,"peak_worker_allocated_bytes":2973430272,"plans_per_hour":4.769156729653784,"screen_width":4,"source_bound_full_search_parity":true,"unix":1793540350.4746027,"wall_s":1509.7008565962315,"workers":2}
+
+## Acceleration viability — 2026-11-01T13:53:29.877407+00:00
+
+### TRAINING_STARTED.json
+- TRAINING_STARTED.json: {"N_exec":10,"charged_sim_s":815240,"eta_primary_hours":{"acceptance_unknown":true,"capacity_lower_bound":14.401095344890471},"search":{"elite":8,"final_H":300,"final_K":8,"finalists":8,"iterations":3,"knot_s":10,"max_duration_s":60,"population":32,"screen_H":120,"screen_K":4},"timestamp_utc":"2026-11-01T13:52:59.130144+00:00"}
+
+## Acceleration viability — 2026-11-01T13:53:31.481315+00:00
+
+### VIABILITY2035v4_TRAIN_DISPATCH.json
+- VIABILITY2035v4_TRAIN_DISPATCH.json: {"boot_id":"b8bc1fcb-c656-4e1e-a43d-4543118c834e","pid":2477255,"root":"/home/ubuntu/coopmwm20261101_accel1","source":"/home/ubuntu/coopmwm20261101_acceltrain1","start_ticks":"55545604","unix":1793541178.313232}
+
+### VIABILITY2035v4_BRIDGE_DISPATCH.json
+- VIABILITY2035v4_BRIDGE_DISPATCH.json: {"pid":8760,"root":"/home/ubuntu/coopmwm20261101_accel1","unix":1793541179.244051}
+
+## Acceleration viability — 2026-11-01T14:12:01.672729+00:00
+
+### STOP.json
+- STOP.json: {"error":"No module named 'torch'","source":"owned plan bridge; no retry"}
+
+## Warm live publication — 2026-11-01T17:00:51.040221+00:00
+- Conservatively charged 1247240/6500000 sim-s.
+
+### Warm continuation — A_CHECK_008.json
+- A_minus_MAPPO: J600 Δ=-848.095 [-2162.494,342.381] veh-s; delay reduction 1.67%; J900 Δ=-1649.653 [-3661.632,97.574] veh-s; delay reduction 1.82%. Negative Δ is better; 95% whole-world bootstrap.
+- Reporting-only check, never checkpoint selection. Full safety/per-cell results in the linked immutable receipt.
+- Receipt: `coopmwm/warm_live/A_CHECK_008.json`.
+<!-- warm-receipt:A_CHECK_008.json:eb8c205599f3cc583a3e406e345b901b9a33a37108489a9dd565f4620b556a0c -->
+
+### Warm continuation — A_CHECK_PRESERVED_004.json
+- A_minus_MAPPO: J600 Δ=-773.934 [-1947.182,457.898] veh-s; delay reduction 1.53%; J900 Δ=-510.387 [-3105.952,2048.194] veh-s; delay reduction 0.563%. Negative Δ is better; 95% whole-world bootstrap.
+- Reporting-only check, never checkpoint selection. Full safety/per-cell results in the linked immutable receipt.
+- Receipt: `coopmwm/warm_live/A_CHECK_PRESERVED_004.json`.
+<!-- warm-receipt:A_CHECK_PRESERVED_004.json:b4cbad934935fbda76a371ccdfc1d01a6550d900966c5133625ad2f19129ae13 -->
+
+### Warm continuation — A_UPDATE_001.json
+- A u1: queries/accepted/executed 0/0/0; wall 134.1s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_001.json`.
+<!-- warm-receipt:A_UPDATE_001.json:24d95608dcdf11b8d8b7c76077244e7a0b7ac61fadf6d1c4f001b629467651f3 -->
+
+### Warm continuation — A_UPDATE_002.json
+- A u2: queries/accepted/executed 0/0/0; wall 155.8s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_002.json`.
+<!-- warm-receipt:A_UPDATE_002.json:006c8ee1844a0092edd168b1aadd96f16f81cfceee7a9d0ce03a72f52323118d -->
+
+### Warm continuation — A_UPDATE_003.json
+- A u3: queries/accepted/executed 0/0/0; wall 152.5s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_003.json`.
+<!-- warm-receipt:A_UPDATE_003.json:ed00946e9842cbeebb3c2092eb06e36a9e179435cb410108fb95ea09f1b4ffea -->
+
+### Warm continuation — A_UPDATE_004.json
+- A u4: queries/accepted/executed 0/0/0; wall 157.1s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_004.json`.
+<!-- warm-receipt:A_UPDATE_004.json:37d336c70f60602d83805dc1f5fc7b8c0af09bb6e886e2acfcec60b76e37e2f5 -->
+
+### Warm continuation — A_UPDATE_005.json
+- A u5: queries/accepted/executed 0/0/0; wall 250.7s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_005.json`.
+<!-- warm-receipt:A_UPDATE_005.json:8174be3a23eeec1e951365bde6cdd37f2c3dc03d72f18de51b42934bc4f68e10 -->
+
+### Warm continuation — A_UPDATE_006.json
+- A u6: queries/accepted/executed 0/0/0; wall 246s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_006.json`.
+<!-- warm-receipt:A_UPDATE_006.json:bebd0f521303cdb2645fa1a39ee5abd45b112b9b18de9d5484aad9a78a897ddb -->
+
+### Warm continuation — A_UPDATE_007.json
+- A u7: queries/accepted/executed 0/0/0; wall 253.7s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_007.json`.
+<!-- warm-receipt:A_UPDATE_007.json:7316866ad0b28601331c125c78a6d267a3ed4cc5602bfe947edc7f254ef2bef2 -->
+
+### Warm continuation — A_UPDATE_008.json
+- A u8: queries/accepted/executed 0/0/0; wall 245.5s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_008.json`.
+<!-- warm-receipt:A_UPDATE_008.json:d9589c46c3ab8071cec49000a99cfa4ab062bd11d2bfe1f7aabd5e85d410b115 -->
+
+### Warm continuation — A_UPDATE_009.json
+- A u9: queries/accepted/executed 0/0/0; wall 251.8s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_009.json`.
+<!-- warm-receipt:A_UPDATE_009.json:33e89021e39010f991e3fefeafc7c350dfbc50f603447068d1634b844c074f48 -->
+
+### Warm continuation — A_UPDATE_010.json
+- A u10: queries/accepted/executed 0/0/0; wall 249.4s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_010.json`.
+<!-- warm-receipt:A_UPDATE_010.json:080a82141559b3b60345d9dc7542879cf497e9f99ca5143b5c044742e2786255 -->
+
+### Warm continuation — A_UPDATE_011.json
+- A u11: queries/accepted/executed 0/0/0; wall 253.1s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_011.json`.
+<!-- warm-receipt:A_UPDATE_011.json:2e34651f2d23fece5d3fbfbe26836cfed594d6c7d0218621035fce69d38387a2 -->
+
+### Warm continuation — A_UPDATE_012.json
+- A u12: queries/accepted/executed 0/0/0; wall 243.3s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_012.json`.
+<!-- warm-receipt:A_UPDATE_012.json:22c41d0678b2ed5c5cdc360b6ad56d22e5a44a4ad9162d41a26e116022aa5832 -->
+
+### Warm continuation — A_VIABILITY_005.json
+- A u5: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_005.json`.
+<!-- warm-receipt:A_VIABILITY_005.json:cd3a18299aa7d3cac4696ec86690593a81a108ccca5c0f6bd89a8091b07a0f05 -->
+
+### Warm continuation — A_VIABILITY_006.json
+- A u6: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_006.json`.
+<!-- warm-receipt:A_VIABILITY_006.json:c65ede6084ab6a01656299be6dc22433a77496e5671639bc7eb73ccb42c64081 -->
+
+### Warm continuation — A_VIABILITY_007.json
+- A u7: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_007.json`.
+<!-- warm-receipt:A_VIABILITY_007.json:2fe83674e9d0ca83c05920f8fd4ca1a982a2fb0eb30ddf72566e18cf0c497784 -->
+
+### Warm continuation — A_VIABILITY_008.json
+- A u8: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_008.json`.
+<!-- warm-receipt:A_VIABILITY_008.json:33b24bc0a55f0ed2f332fad49b5a812c538dddd285b5ff05a26a40d176774303 -->
+
+### Warm continuation — A_VIABILITY_009.json
+- A u9: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_009.json`.
+<!-- warm-receipt:A_VIABILITY_009.json:23683b33d083a4112bd1f2f6d7facd7e275503b1a42cf33c7d35ca47e8a51986 -->
+
+### Warm continuation — A_VIABILITY_010.json
+- A u10: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_010.json`.
+<!-- warm-receipt:A_VIABILITY_010.json:7402480142ca38aa6ffd10b7ce36de98e25d65076d9526a45aaae864057386d0 -->
+
+### Warm continuation — A_VIABILITY_011.json
+- A u11: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_011.json`.
+<!-- warm-receipt:A_VIABILITY_011.json:76386e6fd9d98b244c714e85d92dd86cbaa67ef6ff4151f37dfa078850c4ae41 -->
+
+### Warm continuation — A_VIABILITY_012.json
+- A u12: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_012.json`.
+<!-- warm-receipt:A_VIABILITY_012.json:c6d86d9ca9a568571a6a745cec2327befae4134addc91acc220545984270a8fc -->
+
+## Warm memory diagnostic — 2026-11-01T17:15:47.304839+00:00
+- 2 CAVs, gpuA: **559.567s/query, 6.434plans/hour**, 120 candidates/584 futures; screen `{'H': 300, 'K': 4}`, final `{'H': 300, 'K': 8}`; open-loop centre cost gap -52.302veh-s (future0 centre vs K4 closed-loop comparison).
+- cold E2 query times: `[85.88906374387443, 89.05008675158024]`s.
+- cold H60: D_i sign `{'sign_agreement': 0.5, 'n': 2, 'ties': 2, 'ci95': [0.0, 1.0], 'wilson_ci95': [0.09453120573423074, 0.9054687942657693]}`; C_G sign `{'sign_agreement': None, 'n': 0, 'ties': 2, 'ci95': [0.0, 0.0], 'wilson_ci95': [0.0, 1.0]}`.
+- cold H120: D_i sign `{'sign_agreement': 0.0, 'n': 2, 'ties': 2, 'ci95': [0.0, 0.0], 'wilson_ci95': [0.0, 0.6576197724933469]}`; C_G sign `{'sign_agreement': None, 'n': 0, 'ties': 2, 'ci95': [0.0, 0.0], 'wilson_ci95': [0.0, 1.0]}`.
+- cold H300: D_i sign `{'sign_agreement': 0.5, 'n': 2, 'ties': 2, 'ci95': [0.0, 1.0], 'wilson_ci95': [0.09453120573423074, 0.9054687942657693]}`; C_G sign `{'sign_agreement': None, 'n': 0, 'ties': 2, 'ci95': [0.0, 0.0], 'wilson_ci95': [0.0, 1.0]}`.
+- cold H600: D_i sign `{'sign_agreement': 0.5, 'n': 2, 'ties': 2, 'ci95': [0.0, 1.0], 'wilson_ci95': [0.09453120573423074, 0.9054687942657693]}`; C_G sign `{'sign_agreement': None, 'n': 0, 'ties': 2, 'ci95': [0.0, 0.0], 'wilson_ci95': [0.0, 1.0]}`.
+- cold exact-labelled chosen-action savings: `[{'world': 986000, 'horizons': {'120': {'chosen': 'joint', 'exact_labelled_saving': -4.001776687800884e-11, 'predicted_saving': 4.868022978305817}, '300': {'chosen': 'joint', 'exact_labelled_saving': 6.548361852765083e-11, 'predicted_saving': 5.789575934410095}, '60': {'chosen': 'joint', 'exact_labelled_saving': -3.992681740783155e-09, 'predicted_saving': 1.8523305654525757}, '600': {'chosen': 'joint', 'exact_labelled_saving': 6.548361852765083e-11, 'predicted_saving': 86.09206318855286}}}, {'world': 986007, 'horizons': {'120': {'chosen': 'all', 'exact_labelled_saving': 0.0, 'predicted_saving': 0.0}, '300': {'chosen': 'all', 'exact_labelled_saving': 0.0, 'predicted_saving': 0.0}, '60': {'chosen': 'all', 'exact_labelled_saving': 0.0, 'predicted_saving': 0.0}, '600': {'chosen': 'all', 'exact_labelled_saving': 0.0, 'predicted_saving': 0.0}}}]`.
+- warm E2 query times: `[86.10405902191997, 84.69402858614922]`s.
+- warm H60: D_i sign `{'sign_agreement': 0.5, 'n': 2, 'ties': 2, 'ci95': [0.0, 1.0], 'wilson_ci95': [0.09453120573423074, 0.9054687942657693]}`; C_G sign `{'sign_agreement': None, 'n': 0, 'ties': 2, 'ci95': [0.0, 0.0], 'wilson_ci95': [0.0, 1.0]}`.
+- warm H120: D_i sign `{'sign_agreement': 1.0, 'n': 2, 'ties': 2, 'ci95': [1.0, 1.0], 'wilson_ci95': [0.34238022750665303, 1.0]}`; C_G sign `{'sign_agreement': None, 'n': 0, 'ties': 2, 'ci95': [0.0, 0.0], 'wilson_ci95': [0.0, 1.0]}`.
+- warm H300: D_i sign `{'sign_agreement': 0.5, 'n': 2, 'ties': 2, 'ci95': [0.0, 1.0], 'wilson_ci95': [0.09453120573423074, 0.9054687942657693]}`; C_G sign `{'sign_agreement': None, 'n': 0, 'ties': 2, 'ci95': [0.0, 0.0], 'wilson_ci95': [0.0, 1.0]}`.
+- warm H600: D_i sign `{'sign_agreement': 0.5, 'n': 2, 'ties': 2, 'ci95': [0.0, 1.0], 'wilson_ci95': [0.09453120573423074, 0.9054687942657693]}`; C_G sign `{'sign_agreement': None, 'n': 0, 'ties': 2, 'ci95': [0.0, 0.0], 'wilson_ci95': [0.0, 1.0]}`.
+- warm exact-labelled chosen-action savings: `[{'world': 986000, 'horizons': {'120': {'chosen': 'all', 'exact_labelled_saving': 0.0, 'predicted_saving': 0.0}, '300': {'chosen': 'all', 'exact_labelled_saving': 0.0, 'predicted_saving': 0.0}, '60': {'chosen': 'all', 'exact_labelled_saving': 0.0, 'predicted_saving': 0.0}, '600': {'chosen': 'all', 'exact_labelled_saving': 0.0, 'predicted_saving': 0.0}}}, {'world': 986007, 'horizons': {'120': {'chosen': 'joint', 'exact_labelled_saving': -0.07634644157951698, 'predicted_saving': 1.1913661062717438}, '300': {'chosen': 'joint', 'exact_labelled_saving': 1698.600333714603, 'predicted_saving': 1.368777722120285}, '60': {'chosen': 'joint', 'exact_labelled_saving': 0.11916434977320023, 'predicted_saving': 0.5568383932113647}, '600': {'chosen': 'joint', 'exact_labelled_saving': 5723.486351683328, 'predicted_saving': 1.3687926232814789}}}]`.
+- two registered near-parity set-point windows, not novel MPPI plan labels; ties separate, two-world CIs uninformative; no established warm decision-quality improvement. All original exact SUMO labels reused; qualification adds0SUMO.
+- Immutable complete receipt: `coopmwm/WARM_MEMORY_DIAGNOSTIC_1ebc1e2bcdb28522.json`.
+
+## Warm live publication — 2026-11-01T17:29:19.610782+00:00
+- Conservatively charged 1405640/6500000 sim-s.
+
+### Warm continuation — A_CHECK_012.json
+- A_minus_MAPPO: J600 Δ=-11.643 [-1397.644,1337.034] veh-s; delay reduction 0.023%; J900 Δ=847.227 [-1205.672,2963.049] veh-s; delay reduction -0.934%. Negative Δ is better; 95% whole-world bootstrap.
+- Reporting-only check, never checkpoint selection. Full safety/per-cell results in the linked immutable receipt.
+- Receipt: `coopmwm/warm_live/A_CHECK_012.json`.
+<!-- warm-receipt:A_CHECK_012.json:52d09325ea3147d53eaf57e69bc272b8731f0af16f0491d36f8d9f7d9d8ec36b -->
+
+### Warm continuation — A_CHECK_016.json
+- A_minus_MAPPO: J600 Δ=-416.815 [-1811.617,918.673] veh-s; delay reduction 0.822%; J900 Δ=-417.853 [-2879.691,1910.328] veh-s; delay reduction 0.461%. Negative Δ is better; 95% whole-world bootstrap.
+- Reporting-only check, never checkpoint selection. Full safety/per-cell results in the linked immutable receipt.
+- Receipt: `coopmwm/warm_live/A_CHECK_016.json`.
+<!-- warm-receipt:A_CHECK_016.json:365cf59c3c1d444837024b8d8577df9b4a302025a78c9ad9d8cc5c2bcea9bda8 -->
+
+### Warm continuation — A_DEV_016.json
+- A_minus_MAPPO: J600 Δ=53.955 [-622.870,744.081] veh-s; delay reduction -0.0974%; J900 Δ=804.504 [-533.098,2296.395] veh-s; delay reduction -0.819%. Negative Δ is better; 95% whole-world bootstrap.
+- Reporting-only check, never checkpoint selection. Full safety/per-cell results in the linked immutable receipt.
+- Receipt: `coopmwm/warm_live/A_DEV_016.json`.
+<!-- warm-receipt:A_DEV_016.json:c4ea062098cb65d11b2a485b0998f4f56be9435203f52d2fd64dc06875faa047 -->
+
+### Warm continuation — A_UPDATE_013.json
+- A u13: queries/accepted/executed 0/0/0; wall 255.2s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_013.json`.
+<!-- warm-receipt:A_UPDATE_013.json:784fa7060ed4a902f0232359099b865b5a59ae7c242bcba78324295f7c3e00f6 -->
+
+### Warm continuation — A_UPDATE_014.json
+- A u14: queries/accepted/executed 0/0/0; wall 249.4s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_014.json`.
+<!-- warm-receipt:A_UPDATE_014.json:ea13d124960eb7322c2402f767a59b105d5595982b0ce3e4aba028507a7b5f36 -->
+
+### Warm continuation — A_UPDATE_015.json
+- A u15: queries/accepted/executed 0/0/0; wall 254.2s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_015.json`.
+<!-- warm-receipt:A_UPDATE_015.json:4f35c675667539f2158118919a8d9400e76c04c5e6922e3ccb04397b0e0b72e4 -->
+
+### Warm continuation — A_UPDATE_016.json
+- A u16: queries/accepted/executed 0/0/0; wall 249.3s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_016.json`.
+<!-- warm-receipt:A_UPDATE_016.json:237a19c2da948a35738bff9afe3e486d0d3d13f6203b53dd45d19a191b0bfb64 -->
+
+### Warm continuation — A_VIABILITY_013.json
+- A u13: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_013.json`.
+<!-- warm-receipt:A_VIABILITY_013.json:acb908a340073e082f80a223a0fbbef206c257a6538e7bcd6acd3829386206e4 -->
+
+### Warm continuation — A_VIABILITY_014.json
+- A u14: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_014.json`.
+<!-- warm-receipt:A_VIABILITY_014.json:6268dcdb5dd3688522f804c5043f808ea616c609f6dce07d9d3fe43d92fb1b3f -->
+
+### Warm continuation — A_VIABILITY_015.json
+- A u15: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_015.json`.
+<!-- warm-receipt:A_VIABILITY_015.json:ddb34bf89c60c3630f382da5bda8436b3f3bae32c3849c6e7f64d4f860e09967 -->
+
+### Warm continuation — A_VIABILITY_016.json
+- A u16: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_016.json`.
+<!-- warm-receipt:A_VIABILITY_016.json:d623d8870effff5ee581e902166b9907616117327d94a1244f26d359a21c8cec -->
+
+### Warm continuation — STOP.json
+- `{"error": "Connection closed by 1.15.42.207 port 22\n", "source": "owned warm bridge; no automatic retry"}`
+- Receipt: `coopmwm/warm_live/STOP.json`.
+<!-- warm-receipt:STOP.json:a9d41ffc12f5fb372065076f27f18401645865453a3a71678d6ef794419492b0 -->
+
+### Warm continuation — WARM_A_FAILED.json
+- `{"error": "ValueError('durable warm STOP before next wave')", "timestamp_utc": "2026-11-01T17:22:37.917523+00:00"}`
+- Receipt: `coopmwm/warm_live/WARM_A_FAILED.json`.
+<!-- warm-receipt:WARM_A_FAILED.json:6b5d32e58c957eaac717b3af8662087d3027ae48f71271ee3fb5f9e72cf21e8d -->
+
+## WARM MEMORY QUALIFIED — 2026-11-01T18:42:03.622059+00:00
+- 2 CAVs, gpuA: **559.567s/query, 6.434plans/hour**, 120 candidates/584 futures; screen `{'H': 300, 'K': 4}`, final `{'H': 300, 'K': 8}`; open-loop centre cost gap -52.302veh-s (future0 centre vs K4 closed-loop comparison).
+- 4 CAVs, gpuR: **1029.964s/query, 3.495plans/hour**, 240 candidates/1064 futures; screen `{'H': 300, 'K': 4}`, final `{'H': 360, 'K': 8}`; open-loop centre cost gap 0.134veh-s (future0 centre vs K4 closed-loop comparison).
+- 6 CAVs, gpuA: **898.275s/query, 4.008plans/hour**, 360 candidates/1544 futures; screen `{'H': 300, 'K': 4}`, final `{'H': 420, 'K': 8}`; open-loop centre cost gap -0.003veh-s (future0 centre vs K4 closed-loop comparison).
+- cold E2 query times: `[85.88906374387443, 89.05008675158024]`s.
+- cold H60: D_i sign `{'sign_agreement': 0.5, 'n': 2, 'ties': 2, 'ci95': [0.0, 1.0], 'wilson_ci95': [0.09453120573423074, 0.9054687942657693]}`; C_G sign `{'sign_agreement': None, 'n': 0, 'ties': 2, 'ci95': [0.0, 0.0], 'wilson_ci95': [0.0, 1.0]}`.
+- cold H120: D_i sign `{'sign_agreement': 0.0, 'n': 2, 'ties': 2, 'ci95': [0.0, 0.0], 'wilson_ci95': [0.0, 0.6576197724933469]}`; C_G sign `{'sign_agreement': None, 'n': 0, 'ties': 2, 'ci95': [0.0, 0.0], 'wilson_ci95': [0.0, 1.0]}`.
+- cold H300: D_i sign `{'sign_agreement': 0.5, 'n': 2, 'ties': 2, 'ci95': [0.0, 1.0], 'wilson_ci95': [0.09453120573423074, 0.9054687942657693]}`; C_G sign `{'sign_agreement': None, 'n': 0, 'ties': 2, 'ci95': [0.0, 0.0], 'wilson_ci95': [0.0, 1.0]}`.
+- cold H600: D_i sign `{'sign_agreement': 0.5, 'n': 2, 'ties': 2, 'ci95': [0.0, 1.0], 'wilson_ci95': [0.09453120573423074, 0.9054687942657693]}`; C_G sign `{'sign_agreement': None, 'n': 0, 'ties': 2, 'ci95': [0.0, 0.0], 'wilson_ci95': [0.0, 1.0]}`.
+- cold exact-labelled chosen-action savings: `[{'world': 986000, 'horizons': {'120': {'chosen': 'joint', 'exact_labelled_saving': -4.001776687800884e-11, 'predicted_saving': 4.868022978305817}, '300': {'chosen': 'joint', 'exact_labelled_saving': 6.548361852765083e-11, 'predicted_saving': 5.789575934410095}, '60': {'chosen': 'joint', 'exact_labelled_saving': -3.992681740783155e-09, 'predicted_saving': 1.8523305654525757}, '600': {'chosen': 'joint', 'exact_labelled_saving': 6.548361852765083e-11, 'predicted_saving': 86.09206318855286}}}, {'world': 986007, 'horizons': {'120': {'chosen': 'all', 'exact_labelled_saving': 0.0, 'predicted_saving': 0.0}, '300': {'chosen': 'all', 'exact_labelled_saving': 0.0, 'predicted_saving': 0.0}, '60': {'chosen': 'all', 'exact_labelled_saving': 0.0, 'predicted_saving': 0.0}, '600': {'chosen': 'all', 'exact_labelled_saving': 0.0, 'predicted_saving': 0.0}}}]`.
+- warm E2 query times: `[86.10405902191997, 84.69402858614922]`s.
+- warm H60: D_i sign `{'sign_agreement': 0.5, 'n': 2, 'ties': 2, 'ci95': [0.0, 1.0], 'wilson_ci95': [0.09453120573423074, 0.9054687942657693]}`; C_G sign `{'sign_agreement': None, 'n': 0, 'ties': 2, 'ci95': [0.0, 0.0], 'wilson_ci95': [0.0, 1.0]}`.
+- warm H120: D_i sign `{'sign_agreement': 1.0, 'n': 2, 'ties': 2, 'ci95': [1.0, 1.0], 'wilson_ci95': [0.34238022750665303, 1.0]}`; C_G sign `{'sign_agreement': None, 'n': 0, 'ties': 2, 'ci95': [0.0, 0.0], 'wilson_ci95': [0.0, 1.0]}`.
+- warm H300: D_i sign `{'sign_agreement': 0.5, 'n': 2, 'ties': 2, 'ci95': [0.0, 1.0], 'wilson_ci95': [0.09453120573423074, 0.9054687942657693]}`; C_G sign `{'sign_agreement': None, 'n': 0, 'ties': 2, 'ci95': [0.0, 0.0], 'wilson_ci95': [0.0, 1.0]}`.
+- warm H600: D_i sign `{'sign_agreement': 0.5, 'n': 2, 'ties': 2, 'ci95': [0.0, 1.0], 'wilson_ci95': [0.09453120573423074, 0.9054687942657693]}`; C_G sign `{'sign_agreement': None, 'n': 0, 'ties': 2, 'ci95': [0.0, 0.0], 'wilson_ci95': [0.0, 1.0]}`.
+- warm exact-labelled chosen-action savings: `[{'world': 986000, 'horizons': {'120': {'chosen': 'all', 'exact_labelled_saving': 0.0, 'predicted_saving': 0.0}, '300': {'chosen': 'all', 'exact_labelled_saving': 0.0, 'predicted_saving': 0.0}, '60': {'chosen': 'all', 'exact_labelled_saving': 0.0, 'predicted_saving': 0.0}, '600': {'chosen': 'all', 'exact_labelled_saving': 0.0, 'predicted_saving': 0.0}}}, {'world': 986007, 'horizons': {'120': {'chosen': 'joint', 'exact_labelled_saving': -0.07634644157951698, 'predicted_saving': 1.1913661062717438}, '300': {'chosen': 'joint', 'exact_labelled_saving': 1698.600333714603, 'predicted_saving': 1.368777722120285}, '60': {'chosen': 'joint', 'exact_labelled_saving': 0.11916434977320023, 'predicted_saving': 0.5568383932113647}, '600': {'chosen': 'joint', 'exact_labelled_saving': 5723.486351683328, 'predicted_saving': 1.3687926232814789}}}]`.
+- two registered near-parity set-point windows, not novel MPPI plan labels; ties separate, two-world CIs uninformative; no established warm decision-quality improvement. All original exact SUMO labels reused; qualification adds0SUMO.
+- Immutable complete receipt: `coopmwm/WARM_MEMORY_QUALIFIED.json`.
+
+## Warm live publication — 2026-11-01T19:20:10.179755+00:00
+- Conservatively charged 1823240/7500000 sim-s.
+
+### Warm continuation — A_CHECK_020.json
+- A_minus_MAPPO: J600 Δ=-864.562 [-2221.630,394.301] veh-s; delay reduction 1.71%; J900 Δ=-1287.859 [-3601.466,775.920] veh-s; delay reduction 1.42%. Negative Δ is better; 95% whole-world bootstrap.
+- Reporting-only check, never checkpoint selection. Full safety/per-cell results in the linked immutable receipt.
+- Receipt: `coopmwm/warm_live/A_CHECK_020.json`.
+<!-- warm-receipt:A_CHECK_020.json:dfcb3e906bcc9f894ed4d816136605f5b2fe1709db41ba6c476dee519476c6be -->
+
+### Warm continuation — A_CHECK_024.json
+- A_minus_MAPPO: J600 Δ=-692.848 [-1941.644,428.910] veh-s; delay reduction 1.37%; J900 Δ=-826.567 [-2940.192,1241.208] veh-s; delay reduction 0.911%. Negative Δ is better; 95% whole-world bootstrap.
+- Reporting-only check, never checkpoint selection. Full safety/per-cell results in the linked immutable receipt.
+- Receipt: `coopmwm/warm_live/A_CHECK_024.json`.
+<!-- warm-receipt:A_CHECK_024.json:6a4b7b4b1699e96d3b789f7e9c75f6008150e6c1d43428c09436373770450d51 -->
+
+### Warm continuation — A_CHECK_028.json
+- A_minus_MAPPO: J600 Δ=-368.845 [-1619.405,837.426] veh-s; delay reduction 0.728%; J900 Δ=-988.170 [-2587.751,564.361] veh-s; delay reduction 1.09%. Negative Δ is better; 95% whole-world bootstrap.
+- Reporting-only check, never checkpoint selection. Full safety/per-cell results in the linked immutable receipt.
+- Receipt: `coopmwm/warm_live/A_CHECK_028.json`.
+<!-- warm-receipt:A_CHECK_028.json:8cd553bddaf3aadaab6587a9b9e736e7ebe3adc8d34a7f3119f78eaf32d6f0d0 -->
+
+### Warm continuation — A_UPDATE_017.json
+- A u17: queries/accepted/executed 0/0/0; wall 277.8s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_017.json`.
+<!-- warm-receipt:A_UPDATE_017.json:102043a7581dc28fd0bf59de15f92d72cab0b76e9bbae7cd6bef576420f1f353 -->
+
+### Warm continuation — A_UPDATE_018.json
+- A u18: queries/accepted/executed 0/0/0; wall 272.9s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_018.json`.
+<!-- warm-receipt:A_UPDATE_018.json:b6d4e9787563f39ac42be976b5964c56efc776f51f8c903b151d06317e1dabd8 -->
+
+### Warm continuation — A_UPDATE_019.json
+- A u19: queries/accepted/executed 0/0/0; wall 281.4s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_019.json`.
+<!-- warm-receipt:A_UPDATE_019.json:e2415732959cba8a576906b1204f22687c32202d70a5e137106a6eea356c9811 -->
+
+### Warm continuation — A_UPDATE_020.json
+- A u20: queries/accepted/executed 0/0/0; wall 275.1s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_020.json`.
+<!-- warm-receipt:A_UPDATE_020.json:3b6c0a351de5265a86f5442d789b65d0ff3eefe384e9eb286e10f738b5a26602 -->
+
+### Warm continuation — A_UPDATE_021.json
+- A u21: queries/accepted/executed 0/0/0; wall 281.3s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_021.json`.
+<!-- warm-receipt:A_UPDATE_021.json:c45734c1e5ffbdc8d95ff1ca960e249671bf4ff1a1479dbb1e63f188ac3b64ab -->
+
+### Warm continuation — A_UPDATE_022.json
+- A u22: queries/accepted/executed 0/0/0; wall 275s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_022.json`.
+<!-- warm-receipt:A_UPDATE_022.json:a0b4b4c202c2fe4f55f3a5daaeaa82948184955fae14d4ec4d4a1f40acb38809 -->
+
+### Warm continuation — A_UPDATE_023.json
+- A u23: queries/accepted/executed 0/0/0; wall 280.5s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_023.json`.
+<!-- warm-receipt:A_UPDATE_023.json:a09ccd5e1cd165624d1eeaf912f919ffeb19f65875f2fc69d6d230107677afa1 -->
+
+### Warm continuation — A_UPDATE_024.json
+- A u24: queries/accepted/executed 0/0/0; wall 270.1s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_024.json`.
+<!-- warm-receipt:A_UPDATE_024.json:be33c3f9e330778dc99dc596e2fbd23312e0b8ef7844a1f3872d51df81ac4c91 -->
+
+### Warm continuation — A_UPDATE_025.json
+- A u25: queries/accepted/executed 0/0/0; wall 276.8s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_025.json`.
+<!-- warm-receipt:A_UPDATE_025.json:c6f059d58167c14f770907597a5d0352bc31d1b945c8fd02313dfea68a5e86b0 -->
+
+### Warm continuation — A_UPDATE_026.json
+- A u26: queries/accepted/executed 0/0/0; wall 273.1s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_026.json`.
+<!-- warm-receipt:A_UPDATE_026.json:8343a92edbc08269af60efec26d4179e70ab965598153d79ede14ec485078994 -->
+
+### Warm continuation — A_UPDATE_027.json
+- A u27: queries/accepted/executed 0/0/0; wall 280.5s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_027.json`.
+<!-- warm-receipt:A_UPDATE_027.json:baa111266216da2af1a11b0f6204e8d5a365e9bb2da7940b135f5384bae13a8c -->
+
+### Warm continuation — A_UPDATE_028.json
+- A u28: queries/accepted/executed 0/0/0; wall 271.3s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_028.json`.
+<!-- warm-receipt:A_UPDATE_028.json:a03577ab1711b81a2891e6a5f48ced3bd1395a1d82237b6374ca0ed633382c2c -->
+
+### Warm continuation — A_VIABILITY_017.json
+- A u17: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_017.json`.
+<!-- warm-receipt:A_VIABILITY_017.json:13bb4a4889b1929d337db5cdee97036838bcd086b9fb309ba438ab3b63e4942c -->
+
+### Warm continuation — A_VIABILITY_018.json
+- A u18: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_018.json`.
+<!-- warm-receipt:A_VIABILITY_018.json:587e3d04809143e2a04f89a8992ee36b1aeda4b494eb7820c31de5766513a81c -->
+
+### Warm continuation — A_VIABILITY_019.json
+- A u19: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_019.json`.
+<!-- warm-receipt:A_VIABILITY_019.json:b53e5da7976de67af6cb7deafdd410aea88758a96e4b8abf92360ba66244a900 -->
+
+### Warm continuation — A_VIABILITY_020.json
+- A u20: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_020.json`.
+<!-- warm-receipt:A_VIABILITY_020.json:f8efacb8cbb80a4117d6d3035c48b780a69a0915207adac84cdf8d0c481410b2 -->
+
+### Warm continuation — A_VIABILITY_021.json
+- A u21: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_021.json`.
+<!-- warm-receipt:A_VIABILITY_021.json:cbe2d413f561c7d7fa5a7ae77bc7589da58a6026a432cdf2ab76dabd1bd93484 -->
+
+### Warm continuation — A_VIABILITY_022.json
+- A u22: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_022.json`.
+<!-- warm-receipt:A_VIABILITY_022.json:65c32d60e07eb854d8185a03f7160b5226d1f1e298fd4df5f145ae5b8d90bf55 -->
+
+### Warm continuation — A_VIABILITY_023.json
+- A u23: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_023.json`.
+<!-- warm-receipt:A_VIABILITY_023.json:12de8095aebbe7dfec5694f128375eb1b820af6dc454efa0a7ea2b5bd3f57730 -->
+
+### Warm continuation — A_VIABILITY_024.json
+- A u24: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_024.json`.
+<!-- warm-receipt:A_VIABILITY_024.json:8f99b681be32b0bac81cb2af0d45f93a8585a618e010f2f8bc624775f4865592 -->
+
+### Warm continuation — A_VIABILITY_025.json
+- A u25: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_025.json`.
+<!-- warm-receipt:A_VIABILITY_025.json:d3d643fb7be6939f8aa9498c46272a4ba86115130e434c8984c85c1479725e2b -->
+
+### Warm continuation — A_VIABILITY_026.json
+- A u26: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_026.json`.
+<!-- warm-receipt:A_VIABILITY_026.json:44e9609ab8f9c5502cd16a72af1ddcc69f719f8fe78cf94ffb7629fe917f1c12 -->
+
+### Warm continuation — A_VIABILITY_027.json
+- A u27: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_027.json`.
+<!-- warm-receipt:A_VIABILITY_027.json:5e3afa12e4d7dc1667751c2ecc135c582d863d638fef4ff6889e4b7d16fadc05 -->
+
+### Warm continuation — A_VIABILITY_028.json
+- A u28: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_028.json`.
+<!-- warm-receipt:A_VIABILITY_028.json:db7e0dc6d54f891576144453aa2ee9ac5ec685444052c1a6947ecd62a3ee91ee -->
+
+### Warm continuation — A_VIABILITY_029.json
+- A u29: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_029.json`.
+<!-- warm-receipt:A_VIABILITY_029.json:6d322c6817821a7aba7ccd12c96c95798753af31278af29553d811a50d7b4ae0 -->
+
+## Warm live publication — 2026-11-01T19:31:59.561631+00:00
+- Conservatively charged 1909640/7500000 sim-s.
+
+### Warm continuation — A_UPDATE_029.json
+- A u29: queries/accepted/executed 0/0/0; wall 282.2s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_029.json`.
+<!-- warm-receipt:A_UPDATE_029.json:2f3b869815f19d08fce5babdc84885969b000dd2eac588e8a77d7759e4573b4d -->
+
+### Warm continuation — A_UPDATE_030.json
+- A u30: queries/accepted/executed 0/0/0; wall 272.5s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_030.json`.
+<!-- warm-receipt:A_UPDATE_030.json:18943f8964427e9fded020a3beb8c1744bd7742f35adb85825eff8095eed4ded -->
+
+### Warm continuation — A_UPDATE_031.json
+- A u31: queries/accepted/executed 0/0/0; wall 277.4s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_031.json`.
+<!-- warm-receipt:A_UPDATE_031.json:4b937c971ddfef2515402a912f249a0b0eb4eeb8a3f37d138f494f9a9ec8274c -->
+
+### Warm continuation — A_VIABILITY_030.json
+- A u30: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_030.json`.
+<!-- warm-receipt:A_VIABILITY_030.json:19e97f1a35607c5ebd56a3f8ae252f830a4662b8efd348d7c2ec7d4444c64363 -->
+
+### Warm continuation — A_VIABILITY_031.json
+- A u31: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_031.json`.
+<!-- warm-receipt:A_VIABILITY_031.json:f60e91651700d8e2201d9ca1337c681ccf506c82b6dfd427707c6a826d389c29 -->
+
+## Warm live publication — 2026-11-01T19:34:10.064374+00:00
+- Conservatively charged 1909640/7500000 sim-s.
+
+### Warm continuation — A_VIABILITY_032.json
+- A u32: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_032.json`.
+<!-- warm-receipt:A_VIABILITY_032.json:bc95b4d5348aaf907be171b8f485079d352d64ca03774058a413f5c13ad4eb86 -->
+
+## Warm live publication — 2026-11-01T19:43:07.553121+00:00
+- Conservatively charged 1981640/7500000 sim-s.
+
+### Warm continuation — A_CHECK_032.json
+- A_minus_MAPPO: J600 Δ=-549.992 [-2046.123,975.998] veh-s; delay reduction 1.09%; J900 Δ=-1327.428 [-3635.620,971.740] veh-s; delay reduction 1.46%. Negative Δ is better; 95% whole-world bootstrap.
+- Reporting-only check, never checkpoint selection. Full safety/per-cell results in the linked immutable receipt.
+- Receipt: `coopmwm/warm_live/A_CHECK_032.json`.
+<!-- warm-receipt:A_CHECK_032.json:131dabdaaa0cc041baa3ef0969ed38142c9cb72af4e82dea08fb682e8d3797df -->
+
+### Warm continuation — A_DEV_032.json
+- A_minus_MAPPO: J600 Δ=133.616 [-1000.154,1230.670] veh-s; delay reduction -0.241%; J900 Δ=1007.088 [-1208.128,3045.616] veh-s; delay reduction -1.03%. Negative Δ is better; 95% whole-world bootstrap.
+- Reporting-only check, never checkpoint selection. Full safety/per-cell results in the linked immutable receipt.
+- Receipt: `coopmwm/warm_live/A_DEV_032.json`.
+<!-- warm-receipt:A_DEV_032.json:c0742a14c116a49c94afcefc328e44942fc79009103a864582057cefbc1f998a -->
+
+### Warm continuation — A_UPDATE_032.json
+- A u32: queries/accepted/executed 0/0/0; wall 272.6s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_032.json`.
+<!-- warm-receipt:A_UPDATE_032.json:567e2158e7ed7b45661f182283314b7d193a8f720744aedc96939edb8c9266da -->
+
+### Warm continuation — A_VIABILITY_033.json
+- A u33: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_033.json`.
+<!-- warm-receipt:A_VIABILITY_033.json:f46ff03a040041597dbe9c2d9b8c4e388cef640a528a743858735302abc8359e -->
+
+## Warm live publication — 2026-11-01T19:44:12.538520+00:00
+- Conservatively charged 2010440/7500000 sim-s.
+
+### Warm continuation — A_UPDATE_033.json
+- A u33: queries/accepted/executed 0/0/0; wall 277.5s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_033.json`.
+<!-- warm-receipt:A_UPDATE_033.json:c9c13306ed08a627569648d007c774d4367a8056f760e1e4337c985870c553e4 -->
+
+## Warm live publication — 2026-11-01T19:47:28.417678+00:00
+- Conservatively charged 2010440/7500000 sim-s.
+
+### Warm continuation — A_VIABILITY_034.json
+- A u34: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_034.json`.
+<!-- warm-receipt:A_VIABILITY_034.json:3ce300370e626f7692e63f72792aebe45e22fba2c74a43301ade3005bec54ce3 -->
+
+## Warm live publication — 2026-11-01T19:48:33.756570+00:00
+- Conservatively charged 2039240/7500000 sim-s.
+
+### Warm continuation — A_UPDATE_034.json
+- A u34: queries/accepted/executed 0/0/0; wall 270.7s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_034.json`.
+<!-- warm-receipt:A_UPDATE_034.json:cd52931a7a863acd476aa6cb19473c13c0a92a3acb1cdc0ce57cd362d821fbe4 -->
+
+## Warm live publication — 2026-11-01T19:51:50.018016+00:00
+- Conservatively charged 2039240/7500000 sim-s.
+
+### Warm continuation — A_VIABILITY_035.json
+- A u35: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_035.json`.
+<!-- warm-receipt:A_VIABILITY_035.json:1924b86d6d05098e864e0bd2b1e27643c0a3ee76cd4c62ae2e453bb47506b4ec -->
+
+## TRAINING STARTED B/R — 2026-11-01T19:53:05.522558+00:00
+- MAPPOu0, immutable exactcpu5; B/R and exact grader/broker detached on cpuQ.
+- WARM MEMORY QUALIFIED retained; both concurrent GPU workers pass8source-bound EXACT0 gates.
+- K4/H300 screen, K8/Hfinal, Nexec10; no look-ahead reduction. Exact grades only for trust/imitation/library, asynchronous.
+- R centre requests retain lower priority until B finishes; no candidate scoring/library for R.
+- First-update executed-plan rate/ETA pending. Owners: `coopmwm/EXACT_TRAINING_STARTED.json`.
+
+## Warm live publication — 2026-11-01T19:53:06.574668+00:00
+- Conservatively charged 2096840/7500000 sim-s.
+
+### Warm continuation — A_UPDATE_035.json
+- A u35: queries/accepted/executed 0/0/0; wall 276.3s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_035.json`.
+<!-- warm-receipt:A_UPDATE_035.json:361218349f22807025846448d433d89032aaf576f52596b7268ab99ca4bd1593 -->
+
+## Warm live publication — 2026-11-01T19:56:23.824685+00:00
+- Conservatively charged 2096840/7500000 sim-s.
+
+### Warm continuation — A_VIABILITY_036.json
+- A u36: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_036.json`.
+<!-- warm-receipt:A_VIABILITY_036.json:6a8ffd5ea3b6eef3c8f019707720d874fca4c66dd6979d4b60f133ec0ff50f6e -->
+
+## Warm live publication — 2026-11-01T19:57:29.338947+00:00
+- Conservatively charged 2111240/7500000 sim-s.
+
+### Warm continuation — A_UPDATE_036.json
+- A u36: queries/accepted/executed 0/0/0; wall 274s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_036.json`.
+<!-- warm-receipt:A_UPDATE_036.json:7a3949c4801a0826128440c142bbd5d2eeb2433622d44df87bef2c1ed1049126 -->
+
+## Warm live publication — 2026-11-01T19:59:40.744307+00:00
+- Conservatively charged 2140040/7500000 sim-s.
+
+### Warm continuation — A_CHECK_036.json
+- A_minus_MAPPO: J600 Δ=-306.217 [-1580.705,815.006] veh-s; delay reduction 0.604%; J900 Δ=-756.662 [-3226.879,1594.933] veh-s; delay reduction 0.834%. Negative Δ is better; 95% whole-world bootstrap.
+- Reporting-only check, never checkpoint selection. Full safety/per-cell results in the linked immutable receipt.
+- Receipt: `coopmwm/warm_live/A_CHECK_036.json`.
+<!-- warm-receipt:A_CHECK_036.json:01e954fedaa7fed16c29a3d5b5c4207cf3d8e84a42a1a0fd2c11e87616634e65 -->
+
+## Warm live publication — 2026-11-01T20:01:51.538925+00:00
+- Conservatively charged 2140040/7500000 sim-s.
+
+### Warm continuation — A_VIABILITY_037.json
+- A u37: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_037.json`.
+<!-- warm-receipt:A_VIABILITY_037.json:bb25af20d5d20aaf5c6ba1b58f18d951b597d23d54856d918f9917adc97f32cb -->
+
+## Warm live publication — 2026-11-01T20:04:02.989872+00:00
+- Conservatively charged 2168840/7500000 sim-s.
+
+### Warm continuation — A_UPDATE_037.json
+- A u37: queries/accepted/executed 0/0/0; wall 278.9s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_037.json`.
+<!-- warm-receipt:A_UPDATE_037.json:84e2bb51d9ddb493b840b5d57a4d1d0ebe0ce597ddcd74a63293ec38485f4cc7 -->
+
+## Warm live publication — 2026-11-01T20:06:14.273186+00:00
+- Conservatively charged 2168840/7500000 sim-s.
+
+### Warm continuation — A_VIABILITY_038.json
+- A u38: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_038.json`.
+<!-- warm-receipt:A_VIABILITY_038.json:f9272573db90d15ec0bc07d27ee5e17c175a5e6e532511031e57363f1a2ec9d9 -->
+
+## Warm live publication — 2026-11-01T20:08:25.108222+00:00
+- Conservatively charged 2197640/7500000 sim-s.
+
+### Warm continuation — A_UPDATE_038.json
+- A u38: queries/accepted/executed 0/0/0; wall 277.3s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_038.json`.
+<!-- warm-receipt:A_UPDATE_038.json:6c7fbab07104782799cb47ee386b967079d3544ac123f075c9a4970203274e9f -->
+
+## Warm live publication — 2026-11-01T20:11:42.096674+00:00
+- Conservatively charged 2197640/7500000 sim-s.
+
+### Warm continuation — A_VIABILITY_039.json
+- A u39: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_039.json`.
+<!-- warm-receipt:A_VIABILITY_039.json:dfae5e0e7265cc5b03b1683572e04fe4a875cc7115cbaf3b216bd4b7f60a1ad8 -->
+
+## Warm live publication — 2026-11-01T20:12:48.085828+00:00
+- Conservatively charged 2226440/7500000 sim-s.
+
+### Warm continuation — A_UPDATE_039.json
+- A u39: queries/accepted/executed 0/0/0; wall 281.2s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_039.json`.
+<!-- warm-receipt:A_UPDATE_039.json:bd6ffa39d7b83f3e96bc2b10855fd6aebdb92d41dfa71163b4b38907781d754d -->
+
+## Warm live publication — 2026-11-01T20:16:01.697981+00:00
+- Conservatively charged 2226440/7500000 sim-s.
+
+### Warm continuation — A_VIABILITY_040.json
+- A u40: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_040.json`.
+<!-- warm-receipt:A_VIABILITY_040.json:85a44dc47d44ab0ad05a2b58c28ba9fa0d2f5ab1dc0d61919f6457ad21e6347b -->
+
+## Warm live publication — 2026-11-01T20:18:14.500393+00:00
+- Conservatively charged 2240840/7500000 sim-s.
+
+### Warm continuation — A_UPDATE_040.json
+- A u40: queries/accepted/executed 0/0/0; wall 271s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_040.json`.
+<!-- warm-receipt:A_UPDATE_040.json:b74d2edb9e1690fb001669b082e50239ce3cd36f93c980a47362b63daff6538b -->
+
+## Warm live publication — 2026-11-01T20:19:19.350717+00:00
+- Conservatively charged 2269640/7500000 sim-s.
+
+### Warm continuation — A_CHECK_040.json
+- A_minus_MAPPO: J600 Δ=-166.208 [-1606.067,1356.448] veh-s; delay reduction 0.328%; J900 Δ=-631.564 [-2851.264,1587.848] veh-s; delay reduction 0.696%. Negative Δ is better; 95% whole-world bootstrap.
+- Reporting-only check, never checkpoint selection. Full safety/per-cell results in the linked immutable receipt.
+- Receipt: `coopmwm/warm_live/A_CHECK_040.json`.
+<!-- warm-receipt:A_CHECK_040.json:559ad6cbbbc424a3cdc7190b6dc29480b13b39cbf794719c828aa72bb93ea2e4 -->
+
+## Warm live publication — 2026-11-01T20:21:26.507075+00:00
+- Conservatively charged 2269640/7500000 sim-s.
+
+### Warm continuation — A_VIABILITY_041.json
+- A u41: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_041.json`.
+<!-- warm-receipt:A_VIABILITY_041.json:ea1b12c678678bfac66d7cc55569efcd11fffc9cf4857b5afa096ad00c1a032b -->
+
+## Warm live publication — 2026-11-01T20:31:58.229602+00:00
+- Conservatively charged 2327240/7500000 sim-s.
+
+### Warm continuation — A_UPDATE_041.json
+- A u41: queries/accepted/executed 0/0/0; wall 277.3s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_041.json`.
+<!-- warm-receipt:A_UPDATE_041.json:1dda282394530f02a1dfff1c084077e75d5752bfa2702131768d265162f71133 -->
+
+### Warm continuation — A_UPDATE_042.json
+- A u42: queries/accepted/executed 0/0/0; wall 269.1s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_042.json`.
+<!-- warm-receipt:A_UPDATE_042.json:dc1b2356b24a7dfc1330c199a5b5549fe243890be11017f282001fab0eeac25d -->
+
+### Warm continuation — A_VIABILITY_042.json
+- A u42: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_042.json`.
+<!-- warm-receipt:A_VIABILITY_042.json:e66ac23dbb764bcfba6d62e4426e2bf9bd958bb109d5e3e38f2454ef44afde0a -->
+
+### Warm continuation — A_VIABILITY_043.json
+- A u43: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_043.json`.
+<!-- warm-receipt:A_VIABILITY_043.json:4a0aa010e0514563ea325251ce661555f436ed317d2d40c7870ba340bd873bd6 -->
+
+## Warm live publication — 2026-11-01T20:33:04.260454+00:00
+- Conservatively charged 2356040/7500000 sim-s.
+
+### Warm continuation — A_UPDATE_043.json
+- A u43: queries/accepted/executed 0/0/0; wall 280s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_043.json`.
+<!-- warm-receipt:A_UPDATE_043.json:6274b793a761c6465bc1bc4140970963461b9fd2b2ef6bee5d42784ae1e15e63 -->
+
+## Warm live publication — 2026-11-01T20:35:16.019579+00:00
+- Conservatively charged 2356040/7500000 sim-s.
+
+### Warm continuation — A_VIABILITY_044.json
+- A u44: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_044.json`.
+<!-- warm-receipt:A_VIABILITY_044.json:9019195ee5f67d488e1cbfa53ebc666f1c8cfcd9a08b43ed6db1a241e41c096d -->
+
+## Warm live publication — 2026-11-01T20:37:24.400178+00:00
+- Conservatively charged 2370440/7500000 sim-s.
+
+### Warm continuation — A_UPDATE_044.json
+- A u44: queries/accepted/executed 0/0/0; wall 273.5s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_044.json`.
+<!-- warm-receipt:A_UPDATE_044.json:0fb9ff83813c3f8b49350cc24fc8fdf3b33d4ce620d2d55c5f14f51484e3a9a9 -->
+
+## Warm live publication — 2026-11-01T20:38:28.431693+00:00
+- Conservatively charged 2399240/7500000 sim-s.
+
+### Warm continuation — A_CHECK_044.json
+- A_minus_MAPPO: J600 Δ=-713.607 [-1867.982,279.454] veh-s; delay reduction 1.41%; J900 Δ=-952.147 [-3413.962,1424.270] veh-s; delay reduction 1.05%. Negative Δ is better; 95% whole-world bootstrap.
+- Reporting-only check, never checkpoint selection. Full safety/per-cell results in the linked immutable receipt.
+- Receipt: `coopmwm/warm_live/A_CHECK_044.json`.
+<!-- warm-receipt:A_CHECK_044.json:7b77302c4c00b5f936211286602ef5e309c174de96822cd22381f2914dbcd733 -->
+
+## Warm live publication — 2026-11-01T20:41:41.647424+00:00
+- Conservatively charged 2399240/7500000 sim-s.
+
+### Warm continuation — A_VIABILITY_045.json
+- A u45: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_045.json`.
+<!-- warm-receipt:A_VIABILITY_045.json:c68d90ed05a06eac259c0b59743084190d31df5f54ef9a4bd2496cdf66f73141 -->
+
+## Warm live publication — 2026-11-01T20:43:51.187344+00:00
+- Conservatively charged 2428040/7500000 sim-s.
+
+### Warm continuation — A_UPDATE_045.json
+- A u45: queries/accepted/executed 0/0/0; wall 276.7s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_045.json`.
+<!-- warm-receipt:A_UPDATE_045.json:4c819aa351e41905488277c6721f5a13697aa3cce88af134e341d036e50efc9e -->
+
+## Warm live publication — 2026-11-01T20:46:01.571030+00:00
+- Conservatively charged 2428040/7500000 sim-s.
+
+### Warm continuation — A_VIABILITY_046.json
+- A u46: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_046.json`.
+<!-- warm-receipt:A_VIABILITY_046.json:d7e10980cfe678b1e5f17a96f246252a95ad6f303eeda39ce56c3fd59896f4aa -->
+
+## Warm live publication — 2026-11-01T20:48:10.120956+00:00
+- Conservatively charged 2456840/7500000 sim-s.
+
+### Warm continuation — A_UPDATE_046.json
+- A u46: queries/accepted/executed 0/0/0; wall 276s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_046.json`.
+<!-- warm-receipt:A_UPDATE_046.json:e5cd40c1458b7a737cd1adbbd14629b88b87c3e263322efea32e58d0f2e9e93c -->
+
+## Warm live publication — 2026-11-01T20:50:23.571628+00:00
+- Conservatively charged 2456840/7500000 sim-s.
+
+### Warm continuation — A_VIABILITY_047.json
+- A u47: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_047.json`.
+<!-- warm-receipt:A_VIABILITY_047.json:f77d304a49cc41c4f5ef70e9273590a354353cbcad7a4c51f2511c6216f25239 -->
+
+## Warm live publication — 2026-11-01T20:52:35.564718+00:00
+- Conservatively charged 2485640/7500000 sim-s.
+
+### Warm continuation — A_UPDATE_047.json
+- A u47: queries/accepted/executed 0/0/0; wall 276.9s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_047.json`.
+<!-- warm-receipt:A_UPDATE_047.json:b7fe9109954ab7519294257eea003ded6f477775c556cd39e2cb1df44293d680 -->
+
+## Warm live publication — 2026-11-01T20:55:49.077658+00:00
+- Conservatively charged 2485640/7500000 sim-s.
+
+### Warm continuation — A_VIABILITY_048.json
+- A u48: executed-plan vs own-action SUMO H300 critic residual NA veh-s, 95% CI `None`; new/known-like plans 0/0.
+- Selection-conditional critic contrast, not a same-state causal effect; type/rank/noise details remain in the receipt.
+- Receipt: `coopmwm/warm_live/A_VIABILITY_048.json`.
+<!-- warm-receipt:A_VIABILITY_048.json:b48f2c1cdc38fdd952f4e30f352150c74c5113af336ad00beca2dc98af048f02 -->
+
+## Warm live publication — 2026-11-01T21:07:17.489483+00:00
+- Conservatively charged 2919640/7500000 sim-s.
+
+### Warm continuation — A_CHECK_048.json
+- A_minus_MAPPO: J600 Δ=-16.713 [-1461.458,1462.350] veh-s; delay reduction 0.033%; J900 Δ=500.964 [-2369.329,3196.457] veh-s; delay reduction -0.552%. Negative Δ is better; 95% whole-world bootstrap.
+- Reporting-only check, never checkpoint selection. Full safety/per-cell results in the linked immutable receipt.
+- Receipt: `coopmwm/warm_live/A_CHECK_048.json`.
+<!-- warm-receipt:A_CHECK_048.json:8efc4c0ed6ec7fc2935a193b708e77fd3a7f9348b09e1b29fd560c119e0fcd05 -->
+
+### Warm continuation — A_DEV_048.json
+- A_minus_MAPPO: J600 Δ=-763.695 [-1999.903,326.983] veh-s; delay reduction 1.38%; J900 Δ=-536.708 [-2002.688,902.116] veh-s; delay reduction 0.547%. Negative Δ is better; 95% whole-world bootstrap.
+- Reporting-only check, never checkpoint selection. Full safety/per-cell results in the linked immutable receipt.
+- Receipt: `coopmwm/warm_live/A_DEV_048.json`.
+<!-- warm-receipt:A_DEV_048.json:77a91f06e148dc591d931dd2105d332877ea36d653257181d2b108179a922771 -->
+
+### Warm continuation — A_UPDATE_048.json
+- A u48: queries/accepted/executed 0/0/0; wall 273.4s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Receipt: `coopmwm/warm_live/A_UPDATE_048.json`.
+<!-- warm-receipt:A_UPDATE_048.json:a0c4d732b834d5fa039028f1aa6db48ef33ff3826fc940436a97c209847923c5 -->
+
+### Warm continuation — WARM_A_PAUSED.json
+- `{"charged_sim_s": 2528840, "full_endpoint": 48, "reason": "A fixedu48 complete; wait for B48 before final panel", "timestamp_utc": "2026-11-01T21:00:22.741918+00:00", "update": 48}`
+- Receipt: `coopmwm/warm_live/WARM_A_PAUSED.json`.
+<!-- warm-receipt:WARM_A_PAUSED.json:24bdd81f07433591de0aaad97516dbc2697e6f2fa58acba29059fd6d0e61d47d -->
+
+## Warm live publication — 2026-11-01T21:33:33.987705+00:00
+- Conservatively charged 3242240/7500000 sim-s.
+
+### Warm continuation — WARM_B_FAILED_V3.json
+- `{"error": "ValueError('durable guided engineering STOP')", "timestamp_utc": "2026-11-01T21:18:18.617196+00:00"}`
+- Receipt: `coopmwm/warm_live/WARM_B_FAILED_V3.json`.
+<!-- warm-receipt:WARM_B_FAILED_V3.json:ba05b928d9a3277eb9baab66d4c2600544cac2f139201c511c5b1be921ed4386 -->
+
+### Warm continuation — WARM_GUIDED_STOP.json
+- `{"error": "JSONDecodeError('Expecting value: line 1 column 1 (char 0)')", "source": "capacity broker control", "unix": 1793567885.634367}`
+- Receipt: `coopmwm/warm_live/WARM_GUIDED_STOP.json`.
+<!-- warm-receipt:WARM_GUIDED_STOP.json:6bb256081946b912414cdfafa30321e2dbcc46a732ff96557ea621d65faa187d -->
+
+### Warm continuation — WARM_R_FAILED_V3.json
+- `{"error": "ValueError('durable guided engineering STOP')", "timestamp_utc": "2026-11-01T21:18:06.783912+00:00"}`
+- Receipt: `coopmwm/warm_live/WARM_R_FAILED_V3.json`.
+<!-- warm-receipt:WARM_R_FAILED_V3.json:e17365eccd47e54e7c26ac5aee1bf8024f0bbb3ace135399d1b681a62c9d3fb8 -->
+
+## Warm live publication — 2026-11-01T22:07:13.978197+00:00
+- Conservatively charged 3242860/7500000 sim-s.
+
+### Warm continuation — B_EXACT_VIABILITY_dccf60491b28433e4500845a95addb7fd0debe0792e7b71f6bef9c65e00b8d5a.json
+- B u1: exact paired SUMO plan saving mean 6.666 veh-s, 95% world-cluster CI `None`, 1 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_dccf60491b28433e4500845a95addb7fd0debe0792e7b71f6bef9c65e00b8d5a.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_dccf60491b28433e4500845a95addb7fd0debe0792e7b71f6bef9c65e00b8d5a.json:2571b2ee336a7c888cf8223afb8ff229f2b3c8e11f6944d3d6625442cef1b7fc -->
+
+## Warm live publication — 2026-11-01T22:11:35.001477+00:00
+- Conservatively charged 3244070/7500000 sim-s.
+
+### Warm continuation — B_EXACT_VIABILITY_08bc9c74435ce8b6fd1e10f5a29cfa890d4303ed5c1860dd689915bb0612c110.json
+- B u1: exact paired SUMO plan saving mean 862.9 veh-s, 95% world-cluster CI `[6.666416322528676, 1290.9455121911988]`, 3 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_08bc9c74435ce8b6fd1e10f5a29cfa890d4303ed5c1860dd689915bb0612c110.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_08bc9c74435ce8b6fd1e10f5a29cfa890d4303ed5c1860dd689915bb0612c110.json:7b05fb7de1c2c56958933b5e59f7774ef17f3ac19600d33e483557fc6835ae1d -->
+
+## Warm live publication — 2026-11-01T22:18:03.981180+00:00
+- Conservatively charged 3244070/7500000 sim-s.
+
+### Warm continuation — B_VIABILITY_001.json
+- B u1: exact paired SUMO plan saving mean 862.9 veh-s, 95% world-cluster CI `[6.666416322528676, 1290.9455121911988]`, 3 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_VIABILITY_001.json`.
+<!-- warm-receipt:B_VIABILITY_001.json:6fa161521a1ea9e8ffd58abcb6613082d17183a029a2fec50cdc84184bc4d189 -->
+
+## Warm live publication — 2026-11-01T22:19:13.310595+00:00
+- Conservatively charged 3306220/7500000 sim-s.
+
+### Warm continuation — B_UPDATE_001.json
+- B u1: queries/accepted/executed 171/3/3; wall 93.53s; next beta 0.751. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 3, "executed": 3, "queries": 3}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Exact-grade queue/lag: `{"failed": 0, "graded": 3, "max_lag_s": 15.68671441078186, "mean_lag_s": 12.17886463801066, "orphaned": 0, "overlap_unresolved": 0, "pending": 0, "running": 0, "stopped": 0, "update": 1}`; final ETA 1.221h.
+- Receipt: `coopmwm/warm_live/B_UPDATE_001.json`.
+<!-- warm-receipt:B_UPDATE_001.json:3edcfbe3fe2f0fbef8be8aa7ee026a2b33e5d7873ba79ab13994170f0d7b1fa9 -->
+
+## Warm live publication — 2026-11-01T22:20:17.473903+00:00
+- Conservatively charged 3316220/7500000 sim-s.
+
+### Warm continuation — ACCEL_EXACT_PLAN_000_FAILED.json
+- Exact executed-plan twins: `{}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_000_FAILED.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_000_FAILED.json:b5d3fd1294c58c0ee1e7f4d6275565da004cf49bdbcf29a943b3d265a085fcbb -->
+
+### Warm continuation — ACCEL_EXACT_PLAN_001_FAILED.json
+- Exact executed-plan twins: `{}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_001_FAILED.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_001_FAILED.json:ec5c2dace890b0b8e481f7a1b63cb46a25649ddf078c8b23218309ad0af09057 -->
+
+## Warm live publication — 2026-11-01T22:41:51.293380+00:00
+- Conservatively charged 3331280/7500000 sim-s.
+
+### Warm continuation — ACCEL_EXACT_PLAN_000.json
+- Exact executed-plan twins: `{"120": {"C_G": 53.17882023977927, "D_G": 6.57300294097513, "D_i": [0.10668684939628292, 19.595361023921214, -66.30786517212164]}, "300": {"C_G": -868.1767234589606, "D_G": 1042.1523691190523, "D_i": [0.114493582801515, 1812.8935004434134, 97.32109855179806]}, "60": {"C_G": 6.2103093511809675, "D_G": -3.061505717970249, "D_i": [0.2528922868045811, -1.982097747957141, -7.542609607998656]}, "600": {"C_G": -6459.329807218768, "D_G": 266.37194287207967, "D_i": [0.11983589885494439, 5633.5996205810225, 1091.9822936109704]}}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_000.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_000.json:67fcf65f9aa005bc1b158c7584ae6d13a54e17c62e495ba0a20d98c40852097a -->
+
+### Warm continuation — ACCEL_EXACT_PLAN_001.json
+- Exact executed-plan twins: `{"120": {"C_G": 8.554533997084945e-05, "D_G": 3.044738833149495, "D_i": [-0.0772545429172169, -1.8969694792758673e-07, 3.121908020423689]}, "300": {"C_G": 0.36667844047406106, "D_G": 12.062233908927738, "D_i": [-0.44386971215863014, 1.3139204384060577e-05, 12.139412041407923]}, "60": {"C_G": 0.003699239289289835, "D_G": 0.5022742682449461, "D_i": [-0.08090635090547948, -2.3617531041963957e-07, 0.5794816160364462]}, "600": {"C_G": 5.8708897903052275, "D_G": -245.68730165935995, "D_i": [-5.948102965368889, 2.4539200239814818e-05, -245.61011302349652]}}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_001.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_001.json:43930167b84d68eac731232210d827bc6504d085bff42759a66a6829accd9022 -->
+
+### Warm continuation — ACCEL_EXACT_PLAN_002.json
+- Exact executed-plan twins: `{"120": {"C_G": 323.14976656404633, "D_G": 51.94878721373425, "D_i": [-178.7850831113292, -61.435964183475335, -30.976000006536196, -0.003932048971364566]}, "300": {"C_G": -2015.288082288851, "D_G": -387.9573838097531, "D_i": [-448.6201439672368, -337.26579334696, 2413.2205122709784, -0.0038764776836615056]}, "60": {"C_G": 4.878723412531144, "D_G": 6.778537182067339, "D_i": [2.52286761295818, -0.9676864238149392, 0.34711848917459065, -0.002485908781636681]}, "600": {"C_G": -3877.9211828140687, "D_G": -5380.062628581938, "D_i": [-2753.352061770296, -3652.751319996758, 4903.965868840714, -0.0039328415296040475]}}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_002.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_002.json:29e8797c3fc3ccbdd75db68e3de8e7fd6aeb559f981e476b77bcb182dec2b73e -->
+
+### Warm continuation — ACCEL_EXACT_PLAN_002_FAILED.json
+- Exact executed-plan twins: `{}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_002_FAILED.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_002_FAILED.json:b9852045f9918ee39b77c38791a59eab2abe6ccbd26b6eb1e0d9eb2331a37ca2 -->
+
+### Warm continuation — B_EXACT_VIABILITY_0c40c7b9c10e3da061f60f02d832269ac712fb969ee703f8a080cd5267aac28d.json
+- B u2: exact paired SUMO plan saving mean 650.4 veh-s, 95% world-cluster CI `[6.666416322528676, 1290.9455121911988]`, 4 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_0c40c7b9c10e3da061f60f02d832269ac712fb969ee703f8a080cd5267aac28d.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_0c40c7b9c10e3da061f60f02d832269ac712fb969ee703f8a080cd5267aac28d.json:fc63cc1e92cffab2fa092355ad470494a0647fe95103d4d46dd51a5cdfdf8cc8 -->
+
+## Warm live publication — 2026-11-01T22:51:46.862946+00:00
+- Conservatively charged 3332720/7500000 sim-s.
+
+### Warm continuation — B_EXACT_VIABILITY_be5d56ed3ddcb8d9ec6857124c703778a2ada7f233594620f930bb630f8c8ec5.json
+- B u2: exact paired SUMO plan saving mean 433.6 veh-s, 95% world-cluster CI `[1.333283264505735, 969.8162260524452]`, 6 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_be5d56ed3ddcb8d9ec6857124c703778a2ada7f233594620f930bb630f8c8ec5.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_be5d56ed3ddcb8d9ec6857124c703778a2ada7f233594620f930bb630f8c8ec5.json:a445bfe79082a5fc9328cba29128c0af7a63d2ae134878b84ea173481c7c5715 -->
+
+## Warm live publication — 2026-11-01T23:12:18.761471+00:00
+- Conservatively charged 3333180/7500000 sim-s.
+
+### Warm continuation — B_EXACT_VIABILITY_24e9412867374bcf340358ee85286db93608021f0a5d68faba1650d322c6b30a.json
+- B u2: exact paired SUMO plan saving mean 371.6 veh-s, 95% world-cluster CI `[1.1145700291757141, 862.0635351249571]`, 7 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_24e9412867374bcf340358ee85286db93608021f0a5d68faba1650d322c6b30a.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_24e9412867374bcf340358ee85286db93608021f0a5d68faba1650d322c6b30a.json:f2efc93c62b39fc3e73075a32d5159746c73813845bb4719e59c0dfd9339d1f4 -->
+
+## Warm live publication — 2026-11-01T23:27:28.364748+00:00
+- Conservatively charged 3335130/7500000 sim-s.
+
+### Warm continuation — B_EXACT_VIABILITY_609079e15490a9e0ff58184ddc0b4786e3dfe5f94da6d1f55fe0c23d9df21bf1.json
+- B u2: exact paired SUMO plan saving mean 309.6 veh-s, 95% world-cluster CI `[-50.58229688374455, 775.8550812272088]`, 8 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_609079e15490a9e0ff58184ddc0b4786e3dfe5f94da6d1f55fe0c23d9df21bf1.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_609079e15490a9e0ff58184ddc0b4786e3dfe5f94da6d1f55fe0c23d9df21bf1.json:4216b9c68e9d279ddd94aef803f5e0d5e3377b90240cc8b4e6db94922759d7d9 -->
+
+## Warm live publication — 2026-11-01T23:29:36.731538+00:00
+- Conservatively charged 3336950/7500000 sim-s.
+
+### Warm continuation — R_VIABILITY_001.json
+- R u1: exact paired SUMO plan saving mean -132.4 veh-s, 95% world-cluster CI `[-264.77152655943064, -0.08526310693014238]`, 2 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/R_VIABILITY_001.json`.
+<!-- warm-receipt:R_VIABILITY_001.json:8dcb4f2400ed86e8d8eeb6cd9428527e6285a55e6e072d21842e226e106fdecb -->
+
+## Warm live publication — 2026-11-01T23:30:41.094243+00:00
+- Conservatively charged 3336950/7500000 sim-s.
+
+### Warm continuation — R_UPDATE_001.json
+- R u1: queries/accepted/executed 3/3/3; wall 4370s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 3, "executed": 3, "queries": 3}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Exact-grade queue/lag: `{"failed": 0, "graded": 6, "max_lag_s": 19.90656304359436, "mean_lag_s": 13.826808452606201, "orphaned": 0, "overlap_unresolved": 0, "pending": 0, "running": 0, "stopped": 0, "update": 1}`; final ETA 27.92h.
+- Receipt: `coopmwm/warm_live/R_UPDATE_001.json`.
+<!-- warm-receipt:R_UPDATE_001.json:8cc72c87a0ad82ec69e37247c90d6a2e783eca948c31572b02cce6bcd3f5a885 -->
+
+## Warm live publication — 2026-11-01T23:31:47.063278+00:00
+- Conservatively charged 3336950/7500000 sim-s.
+
+### Warm continuation — B_EXACT_VIABILITY_5628d6582e2b51d75a30e3c7bc6eb5541e450dd3f471eae3ed8f8709c780dc18.json
+- B u2: exact paired SUMO plan saving mean 275.2 veh-s, 95% world-cluster CI `[-44.25950977327648, 705.3208916745057]`, 9 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_5628d6582e2b51d75a30e3c7bc6eb5541e450dd3f471eae3ed8f8709c780dc18.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_5628d6582e2b51d75a30e3c7bc6eb5541e450dd3f471eae3ed8f8709c780dc18.json:1ede4a277240e882bae056f32591738d6206ff022648794627f8c480e82918fe -->
+
+## Warm live publication — 2026-11-01T23:38:21.464369+00:00
+- Conservatively charged 3336950/7500000 sim-s.
+
+### Warm continuation — B_EXACT_VIABILITY_a4449fdbeb2d139a7389dd860a754e6bc074192b912825009c097b0cf9b5384e.json
+- B u2: exact paired SUMO plan saving mean 275.2 veh-s, 95% world-cluster CI `[-44.25950977327648, 705.3208916745057]`, 9 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_a4449fdbeb2d139a7389dd860a754e6bc074192b912825009c097b0cf9b5384e.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_a4449fdbeb2d139a7389dd860a754e6bc074192b912825009c097b0cf9b5384e.json:d507138106acce5e45df61b08c29c3db3ebac98a2d9b5ce09cef38f5eb6bfa63 -->
+
+## Warm live publication — 2026-11-01T23:43:42.489770+00:00
+- Conservatively charged 3338010/7500000 sim-s.
+
+### Warm continuation — B_EXACT_VIABILITY_8bc3da306ed1cc000bd35089dc4f8f490185ccd8c21f76b03b3d5c84bff68657.json
+- B u2: exact paired SUMO plan saving mean 247.7 veh-s, 95% world-cluster CI `[-38.65403159252047, 646.5537876101174]`, 10 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_8bc3da306ed1cc000bd35089dc4f8f490185ccd8c21f76b03b3d5c84bff68657.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_8bc3da306ed1cc000bd35089dc4f8f490185ccd8c21f76b03b3d5c84bff68657.json:dd8ce1d2d0a70adaf730ce401837a4f076d1b93663e69ea72486bcf6acd9da4f -->
+
+## Warm live publication — 2026-11-01T23:49:06.319561+00:00
+- Conservatively charged 3338010/7500000 sim-s.
+
+### Warm continuation — B_EXACT_VIABILITY_f1d3fd1e73331c00e1ce9476a7ec8f4933728b3aed82117e089eb608441244ff.json
+- B u2: exact paired SUMO plan saving mean 224.8 veh-s, 95% world-cluster CI `[-35.39819642332041, 596.7440008949391]`, 11 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_f1d3fd1e73331c00e1ce9476a7ec8f4933728b3aed82117e089eb608441244ff.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_f1d3fd1e73331c00e1ce9476a7ec8f4933728b3aed82117e089eb608441244ff.json:88f26b0dcb5598d32cc6d58d149dbef3c02fae0848e0a938fe2e45dfa2b8a924 -->
+
+## Warm live publication — 2026-11-02T00:54:05.428442+00:00
+- Conservatively charged 3339010/7500000 sim-s.
+
+### Warm continuation — B_EXACT_VIABILITY_95f658a887c5263e52165505ce17127ceabec465a9bdcfa6ef92f65f594a6559.json
+- B u2: exact paired SUMO plan saving mean 190.2 veh-s, 95% world-cluster CI `[-29.51649880329449, 545.5074550050579]`, 13 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_95f658a887c5263e52165505ce17127ceabec465a9bdcfa6ef92f65f594a6559.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_95f658a887c5263e52165505ce17127ceabec465a9bdcfa6ef92f65f594a6559.json:a31edfb168e94833eb3355b3120e3d961a18bba3dd3c580949a1f5474259f681 -->
+
+## Warm live publication — 2026-11-02T01:02:49.123728+00:00
+- Conservatively charged 3340270/7500000 sim-s.
+
+### Warm continuation — B_VIABILITY_002.json
+- B u2: exact paired SUMO plan saving mean 145.2 veh-s, 95% world-cluster CI `[-59.979113030558544, 479.8055757232458]`, 15 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_VIABILITY_002.json`.
+<!-- warm-receipt:B_VIABILITY_002.json:52176300eae65e80b012a3d3d54da4e1a9dbd815f23d2773e7f0a8d38d6de39f -->
+
+## Warm live publication — 2026-11-02T01:03:54.208857+00:00
+- Conservatively charged 3414470/7500000 sim-s.
+
+### Warm continuation — ACCEL_EXACT_PLAN_003_FAILED.json
+- Exact executed-plan twins: `{}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_003_FAILED.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_003_FAILED.json:ef6452a96db97502e476028361280bd68886cd4222877450b3571a380fc2b33a -->
+
+### Warm continuation — B_UPDATE_002.json
+- B u2: queries/accepted/executed 93/15/12; wall 9839s; next beta 0.751. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 15, "executed": 12, "queries": 14}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Exact-grade queue/lag: `{"failed": 0, "graded": 12, "max_lag_s": 17.956080436706543, "mean_lag_s": 11.755984206994375, "orphaned": 0, "overlap_unresolved": 0, "pending": 0, "running": 0, "stopped": 0, "update": 2}`; final ETA 125.7h.
+- Receipt: `coopmwm/warm_live/B_UPDATE_002.json`.
+<!-- warm-receipt:B_UPDATE_002.json:89ebeceb585f0139702643c5b4216ffe88d469024aa793f6f64d9f05901b0caf -->
+
+## Warm live publication — 2026-11-02T01:05:00.834516+00:00
+- Conservatively charged 3426740/7500000 sim-s.
+
+### Warm continuation — ACCEL_EXACT_PLAN_004_FAILED.json
+- Exact executed-plan twins: `{}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_004_FAILED.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_004_FAILED.json:007bc8ea9688cc7aba35ab1749353d33600ee6ed7d04b91feb2df295c9a48e8c -->
+
+### Warm continuation — ACCEL_EXACT_PLAN_005_FAILED.json
+- Exact executed-plan twins: `{}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_005_FAILED.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_005_FAILED.json:63243f3992fef9b7ee8b06bd1380592e5bbd7ad6ec0112f84d859d24333820c7 -->
+
+### Warm continuation — ACCEL_EXACT_PLAN_006_FAILED.json
+- Exact executed-plan twins: `{}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_006_FAILED.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_006_FAILED.json:56eda232125b706f2a7ba6d3da0da4c88d1ced6ffb396888e8f3c33b71eaf579 -->
+
+### Warm continuation — B_EXACT_VIABILITY_99cf50a5c7abc1694be3d527c9ee6cc65d900cea0a353767d86da2594cbdb73c.json
+- B u2: exact paired SUMO plan saving mean 145.2 veh-s, 95% world-cluster CI `[-60.80176778292476, 487.8205913035406]`, 15 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_99cf50a5c7abc1694be3d527c9ee6cc65d900cea0a353767d86da2594cbdb73c.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_99cf50a5c7abc1694be3d527c9ee6cc65d900cea0a353767d86da2594cbdb73c.json:d1a48a5473159954368b4347245c2daa1ffbd11e487c3f1d02593d822501a5b1 -->
+
+## Warm live publication — 2026-11-02T01:06:05.898788+00:00
+- Conservatively charged 3449020/7500000 sim-s.
+
+### Warm continuation — ACCEL_EXACT_PLAN_003.json
+- Exact executed-plan twins: `{"120": {"C_G": -5.606213562714402e-06, "D_G": -5.018876527174143e-05, "D_i": [0.0, 2.053314346994739e-06, -4.2315060454711784e-05, -4.320805601309985e-06, 0.0]}, "300": {"C_G": 0.0001282441990042571, "D_G": -4.351610186859034e-05, "D_i": [0.0, -6.464272883022204e-05, -3.5602570278570056e-05, -7.151500176405534e-05, 0.0]}, "60": {"C_G": 4.793837433680892e-07, "D_G": -4.866109520662576e-05, "D_i": [0.0, -1.959032942977501e-06, -4.6629252210550476e-05, -5.521937964658719e-07, 0.0]}, "600": {"C_G": 0.00022405739582609385, "D_G": 2.9864830139558762e-05, "D_i": [0.0, -0.00012245139805600047, 5.373297608457506e-05, -0.00012547414371510968, 0.0]}}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_003.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_003.json:d55b108ad083bdffe9c080e02f72cdf7c36ab55aa4bbcadbbc2a21439107adc8 -->
+
+### Warm continuation — ACCEL_EXACT_PLAN_004.json
+- Exact executed-plan twins: `{"120": {"C_G": 0.13067381548944468, "D_G": 6.178846435998366, "D_i": [0.3218793296973672, 5.7262932908115545]}, "300": {"C_G": 0.05758131807851896, "D_G": 9.010734297089584, "D_i": [0.3218792337229388, 8.631273745288127]}, "60": {"C_G": 0.10886161458029164, "D_G": 3.420459787325399, "D_i": [0.32186853271718974, 2.9897296400279174]}, "600": {"C_G": 0.13743175230410998, "D_G": 9.143711409749812, "D_i": [0.3218792337283958, 8.684400423717307]}}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_004.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_004.json:e5f0cde12eaf3a610044bf5fca11e201d0ef1a7a756bccaff22c9609f1e81bae -->
+
+### Warm continuation — ACCEL_EXACT_PLAN_007_FAILED.json
+- Exact executed-plan twins: `{}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_007_FAILED.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_007_FAILED.json:c5e8d1a65b6df060f47d2ec0142e97481b38cb74a8915dbcf05a629c2a18e36a -->
+
+### Warm continuation — ACCEL_EXACT_PLAN_008_FAILED.json
+- Exact executed-plan twins: `{}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_008_FAILED.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_008_FAILED.json:db65d973974eae969f4422e3d936957084b097ea37e9f22e578ac370248273dc -->
+
+### Warm continuation — ACCEL_EXACT_PLAN_009_FAILED.json
+- Exact executed-plan twins: `{}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_009_FAILED.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_009_FAILED.json:5770e344353ba01ee2b890dff0e2980cafec1076a6c8e8cdfcb2e26ee8ccaea2 -->
+
+## Warm live publication — 2026-11-02T01:07:15.120833+00:00
+- Conservatively charged 3462290/7500000 sim-s.
+
+### Warm continuation — ACCEL_EXACT_PLAN_005.json
+- Exact executed-plan twins: `{"120": {"C_G": 0.0, "D_G": 0.0, "D_i": [0.0, 0.0]}, "300": {"C_G": 0.0, "D_G": 0.0, "D_i": [0.0, 0.0]}, "60": {"C_G": 0.0, "D_G": 0.0, "D_i": [0.0, 0.0]}, "600": {"C_G": 0.0, "D_G": 0.0, "D_i": [0.0, 0.0]}}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_005.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_005.json:f2a928d688bc5b7369a11b7cc97cb37ddb88429112b6dd880bda10ab1fc84bbc -->
+
+### Warm continuation — ACCEL_EXACT_PLAN_006.json
+- Exact executed-plan twins: `{"120": {"C_G": 0.0, "D_G": 0.0, "D_i": [0.0, 0.0]}, "300": {"C_G": 0.0, "D_G": 0.0, "D_i": [0.0, 0.0]}, "60": {"C_G": 0.0, "D_G": 0.0, "D_i": [0.0, 0.0]}, "600": {"C_G": 0.0, "D_G": 0.0, "D_i": [0.0, 0.0]}}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_006.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_006.json:d1251e9dc9a3af439459fc738fb5ed6e093b3007d348f2980fc4671b092cf2aa -->
+
+### Warm continuation — ACCEL_EXACT_PLAN_010_FAILED.json
+- Exact executed-plan twins: `{}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_010_FAILED.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_010_FAILED.json:334e98728cf2c7f1dcad3c350e0c728bbea51d50061518cbc1d1c58ab74f0fb4 -->
+
+### Warm continuation — ACCEL_EXACT_PLAN_011_FAILED.json
+- Exact executed-plan twins: `{}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_011_FAILED.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_011_FAILED.json:1c2bf23ef13ae3b0c11b696b2e38fe5db6dde810047597169d0ca5ce98d0f097 -->
+
+## Warm live publication — 2026-11-02T01:08:19.506646+00:00
+- Conservatively charged 3469570/7500000 sim-s.
+
+### Warm continuation — ACCEL_EXACT_PLAN_007.json
+- Exact executed-plan twins: `{"120": {"C_G": -70.79773344534988, "D_G": -82.06016380201527, "D_i": [-4.3038726289523765e-06, -0.09971551787475619, -11.162710534918006]}, "300": {"C_G": -70.84277842292977, "D_G": -82.11204705923774, "D_i": [-4.306133632780984e-06, -0.09970040885127673, -11.16956392132306]}, "60": {"C_G": -62.951096260510894, "D_G": -68.52203141533664, "D_i": [-4.638513928512111e-06, -0.05034652445738175, -5.520583991854437]}, "600": {"C_G": -70.84741214476526, "D_G": -82.11596088526858, "D_i": [-4.306133632780984e-06, -0.09991234323751996, -11.168632091132167]}}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_007.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_007.json:a3e1d31b8814f17d277555b6b15f3ad53bc28d643c414e096673cfdb38806e0f -->
+
+## Warm live publication — 2026-11-02T01:09:18.539981+00:00
+- Conservatively charged 3473570/7500000 sim-s.
+
+### Warm continuation — ACCEL_EXACT_PLAN_008.json
+- Exact executed-plan twins: `{"120": {"C_G": -0.00020298262097639963, "D_G": -0.032811252434839844, "D_i": [2.7288624551147223e-06, -1.974938641069457e-06, 0.00030393097404157743, 0.004067536177899456, 3.747612936422229e-06, -0.036984238502554945]}, "300": {"C_G": -0.00017034033226082101, "D_G": -0.034062605060171336, "D_i": [2.477740781614557e-05, 2.2219930542632937e-05, 0.0002907063317252323, 0.003958963512559421, 7.822556653991342e-06, -0.03819675446720794]}, "60": {"C_G": 0.0003675223006212036, "D_G": 0.05693955406877649, "D_i": [2.0816778487642296e-06, 5.224700544204097e-06, 0.00015328077734011458, 0.0017959473434530082, 5.503825377672911e-07, 0.054614946886431426]}, "600": {"C_G": -17.07724909040553, "D_G": -12.377576812825282, "D_i": [3.742568152185413, 3.7167922478402033, 8.118825157231186, 0.5129231108730892, 0.006844088624347933, -11.398280479173991]}}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_008.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_008.json:bfb63a6f6767ebf4ca2dbdde28760634ad861ccbeb627644390d3b12de409de4 -->
+
+## Warm live publication — 2026-11-02T01:10:23.502682+00:00
+- Conservatively charged 3481850/7500000 sim-s.
+
+### Warm continuation — ACCEL_EXACT_PLAN_009.json
+- Exact executed-plan twins: `{"120": {"C_G": 0.0, "D_G": 0.0, "D_i": [0.0, 0.0]}, "300": {"C_G": 0.0, "D_G": 0.0, "D_i": [0.0, 0.0]}, "60": {"C_G": 0.0, "D_G": 0.0, "D_i": [0.0, 0.0]}, "600": {"C_G": 0.0, "D_G": 0.0, "D_i": [0.0, 0.0]}}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_009.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_009.json:4fb44a40f49731a78b52c31a1f181037f9bad5b091ffc22c469352486ef13d5d -->
+
+### Warm continuation — ACCEL_EXACT_PLAN_010.json
+- Exact executed-plan twins: `{"120": {"C_G": -0.000137253902721568, "D_G": 2.2410635638625536, "D_i": [2.2403303424471233, 0.0008704753181518754]}, "300": {"C_G": -0.000686486888298532, "D_G": -53.89407006950205, "D_i": [-53.89346310379551, 7.952118176035583e-05]}, "60": {"C_G": 0.0, "D_G": 0.0, "D_i": [0.0, 0.0]}, "600": {"C_G": -0.000686478684656322, "D_G": 1363.1895355773158, "D_i": [1363.1901425434626, 7.951253792271018e-05]}}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_010.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_010.json:63ec92c63617cd1f016471745d7a78a9546a79bd331d2ee0a5efaf0121424b26 -->
+
+## Warm live publication — 2026-11-02T01:11:32.946959+00:00
+- Conservatively charged 3481850/7500000 sim-s.
+
+### Warm continuation — ACCEL_EXACT_PLAN_011.json
+- Exact executed-plan twins: `{"120": {"C_G": 3.601599019020796e-06, "D_G": 0.0034052084456561715, "D_i": [0.0, 0.0, 0.0034016068466371507]}, "300": {"C_G": 3.407079930184409e-06, "D_G": 0.0035613359286799096, "D_i": [0.0, 0.0, 0.003557928848749725]}, "60": {"C_G": 5.020457592763705e-06, "D_G": 0.006628526091390086, "D_i": [0.0, 0.0, 0.006623505633797322]}, "600": {"C_G": 3.407079930184409e-06, "D_G": 0.003558316548151197, "D_i": [0.0, 0.0, 0.0035549094682210125]}}`.
+- Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_011.json`.
+<!-- warm-receipt:ACCEL_EXACT_PLAN_011.json:881c18e02701857965e8e1d35d14dd5cd73868a445c358c1abde89e607d76006 -->
+
+## Warm live publication — 2026-11-02T02:45:21.526009+00:00
+- Conservatively charged 3507050/7500000 sim-s.
+
+### Warm continuation — WARM_B_FAILED_T1.json
+- `{"error": "ValueError('new durable guided engineering STOP')", "timestamp_utc": "2026-11-02T01:41:36.626856+00:00"}`
+- Receipt: `coopmwm/warm_live/WARM_B_FAILED_T1.json`.
+<!-- warm-receipt:WARM_B_FAILED_T1.json:dba3c8766171161a1344f6334433f8855d915df45f5ecfb680aadec782fa007e -->
+
+### Warm continuation — WARM_GUIDED_STOP_V2.json
+- `{"error": "ValueError('GPU failed; no inference retry')", "source": "capacity broker", "unix": 1793583695.5195312}`
+- Receipt: `coopmwm/warm_live/WARM_GUIDED_STOP_V2.json`.
+<!-- warm-receipt:WARM_GUIDED_STOP_V2.json:75fc7070edf55a16763460b72afd20094720ee369df51b27d6dd8a218ddf6f02 -->
+
+### Warm continuation — WARM_R_FAILED_Q1.json
+- `{"error": "ValueError('new durable guided engineering STOP')", "timestamp_utc": "2026-11-02T01:41:45.322047+00:00"}`
+- Receipt: `coopmwm/warm_live/WARM_R_FAILED_Q1.json`.
+<!-- warm-receipt:WARM_R_FAILED_Q1.json:da0aeaabe12c92d6b41685790c3d97a46fe5a7c2607902fd8051f7e9c0e25245 -->
+
+## Warm live publication — 2026-11-02T06:36:14.116206+00:00
+- Conservatively charged 3541050/7500000 sim-s.
+
+### Warm continuation — B_EXACT_VIABILITY_0c8958f6326cb646c9e79c01203898110ddc2b43c690fa291e7776dda5c7ff3e.json
+- B u3: exact paired SUMO plan saving mean 136.1 veh-s, 95% world-cluster CI `[-56.946541822816314, 456.72515283199084]`, 16 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_0c8958f6326cb646c9e79c01203898110ddc2b43c690fa291e7776dda5c7ff3e.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_0c8958f6326cb646c9e79c01203898110ddc2b43c690fa291e7776dda5c7ff3e.json:3ca2ad711d6f43be090adc92a8d8ba586b2bf5314788c4db6be57e2442df0e7e -->
+
+### Warm continuation — B_EXACT_VIABILITY_2c4fde9b4d1caff8568aebfcbc7d01052cc337806741799b2c7b50da4aaf2fcf.json
+- B u3: exact paired SUMO plan saving mean 130.7 veh-s, 95% world-cluster CI `[-33.564138422912364, 391.64083244841953]`, 20 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_2c4fde9b4d1caff8568aebfcbc7d01052cc337806741799b2c7b50da4aaf2fcf.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_2c4fde9b4d1caff8568aebfcbc7d01052cc337806741799b2c7b50da4aaf2fcf.json:33c5f3ef424dd378f20c791638459b2d469fc6f7b259adacb02e9d4e6a77032e -->
+
+### Warm continuation — B_EXACT_VIABILITY_4170a33317214d9cbd24173b30c7da2507b03967c266de28cc533b05a4dc54df.json
+- B u3: exact paired SUMO plan saving mean 108.9 veh-s, 95% world-cluster CI `[-43.85938748656751, 347.3596921264801]`, 22 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_4170a33317214d9cbd24173b30c7da2507b03967c266de28cc533b05a4dc54df.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_4170a33317214d9cbd24173b30c7da2507b03967c266de28cc533b05a4dc54df.json:2cc80066096668f792456196f6dd6fab7af5980f8ee650d435df1c506c5153e9 -->
+
+### Warm continuation — B_EXACT_VIABILITY_42010834abe6a6f57ae77e4389afaf04c0c8c47052775cf64347f55010d8fb74.json
+- B u3: exact paired SUMO plan saving mean 96.94 veh-s, 95% world-cluster CI `[-44.60122551151658, 319.7964441086416]`, 24 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_42010834abe6a6f57ae77e4389afaf04c0c8c47052775cf64347f55010d8fb74.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_42010834abe6a6f57ae77e4389afaf04c0c8c47052775cf64347f55010d8fb74.json:5e8a9019f2813a5dfeb85b070010185d5e7837d66ef494e39d5f4e4bfef1c5ab -->
+
+### Warm continuation — B_EXACT_VIABILITY_4eb06ac1d63bf1f522fe30eae36ee93491b5b8a89b59cafa8a67f30f81d92893.json
+- B u3: exact paired SUMO plan saving mean 137.4 veh-s, 95% world-cluster CI `[-41.11234860466027, 424.1336676226603]`, 18 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_4eb06ac1d63bf1f522fe30eae36ee93491b5b8a89b59cafa8a67f30f81d92893.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_4eb06ac1d63bf1f522fe30eae36ee93491b5b8a89b59cafa8a67f30f81d92893.json:dc5b53087c204e577f3bfbe18623d8167e8b4bb68b54d0cb101d58e19cc72607 -->
+
+### Warm continuation — B_EXACT_VIABILITY_52feb3bc5373c7e5c2bf34dad70cb784dfd2ee387e2b8b70bb01127cfc300ff4.json
+- B u3: exact paired SUMO plan saving mean 137.5 veh-s, 95% world-cluster CI `[-35.693173042451086, 409.1304890657517]`, 19 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_52feb3bc5373c7e5c2bf34dad70cb784dfd2ee387e2b8b70bb01127cfc300ff4.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_52feb3bc5373c7e5c2bf34dad70cb784dfd2ee387e2b8b70bb01127cfc300ff4.json:482a63485e1adb15b2125a8ce7c9aa1e8df166423100a34e54849630f54b4087 -->
+
+### Warm continuation — B_EXACT_VIABILITY_a61d6b15e89623d46fc290a1ed0a240ec1502ecfe7b6df3dbf6ade28f3a01849.json
+- B u3: exact paired SUMO plan saving mean 123.4 veh-s, 95% world-cluster CI `[-33.00448622954187, 372.1497608971724]`, 21 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_a61d6b15e89623d46fc290a1ed0a240ec1502ecfe7b6df3dbf6ade28f3a01849.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_a61d6b15e89623d46fc290a1ed0a240ec1502ecfe7b6df3dbf6ade28f3a01849.json:c6bd151efd887adf880e1837a279fb24f497decd64db4b62a530ebd050f8ed69 -->
+
+### Warm continuation — B_EXACT_VIABILITY_c9674081b758a5ed2173956c653eb43d4b2b66ac706beb3a373a72dce8915b53.json
+- B u3: exact paired SUMO plan saving mean 109.4 veh-s, 95% world-cluster CI `[-37.67019314200868, 339.57944210475034]`, 23 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_c9674081b758a5ed2173956c653eb43d4b2b66ac706beb3a373a72dce8915b53.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_c9674081b758a5ed2173956c653eb43d4b2b66ac706beb3a373a72dce8915b53.json:ba5ecbc8d85201274facdbee30dd9d56e0ea191756b1724d477ffbc60d18dcc7 -->
+
+### Warm continuation — B_EXACT_VIABILITY_d1cbca5a52a9b461174bb28ec9258818f09c66c595d1478e445caf4cbdbe7b95.json
+- B u3: exact paired SUMO plan saving mean 128.1 veh-s, 95% world-cluster CI `[-52.51988902238005, 430.9817550540364]`, 17 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_d1cbca5a52a9b461174bb28ec9258818f09c66c595d1478e445caf4cbdbe7b95.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_d1cbca5a52a9b461174bb28ec9258818f09c66c595d1478e445caf4cbdbe7b95.json:c96a9c93204cec478b7e4af55223db5c42ca51bba5387eb4a346ae9e4d2bbfc1 -->
+
+### Warm continuation — B_EXACT_VIABILITY_fc40713c0db7757fb38449adffbee7c2884fa69a2f2f6fae927d2cc1986b83f3.json
+- B u3: exact paired SUMO plan saving mean 93.06 veh-s, 95% world-cluster CI `[-43.75592948832516, 310.2947246887355]`, 25 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_fc40713c0db7757fb38449adffbee7c2884fa69a2f2f6fae927d2cc1986b83f3.json`.
+<!-- warm-receipt:B_EXACT_VIABILITY_fc40713c0db7757fb38449adffbee7c2884fa69a2f2f6fae927d2cc1986b83f3.json:60d90fa2c6aecfec7c1e55ea8f5ac5affc3aa023986d4fb7d95d9057c47bdc29 -->
+
+### Warm continuation — B_UPDATE_003.json
+- B u3: queries/accepted/executed 34/26/10; wall 1.945e+04s; next beta 0.751. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 26, "executed": 10, "queries": 34}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Exact-grade queue/lag: `{"failed": 0, "graded": 10, "max_lag_s": 19.058584928512573, "mean_lag_s": 10.514461827278136, "orphaned": 0, "overlap_unresolved": 0, "pending": 0, "running": 0, "stopped": 0, "update": 3}`; final ETA 113.4h.
+- Receipt: `coopmwm/warm_live/B_UPDATE_003.json`.
+<!-- warm-receipt:B_UPDATE_003.json:acec7dd6327cba304dcdb21e4e971e3f0b518a4c87a6bf9e3d97d1301cac463f -->
+
+### Warm continuation — B_VIABILITY_003.json
+- B u3: exact paired SUMO plan saving mean 96.94 veh-s, 95% world-cluster CI `[-45.644077496616276, 321.15091081315353]`, 24 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_VIABILITY_003.json`.
+<!-- warm-receipt:B_VIABILITY_003.json:830efd4034f651202b8db61d2b47ad1bae0b65a36f694c4ebaa9d5ca94f97ca6 -->
+
+## Warm live publication — 2026-11-02T07:29:17.592528+00:00
+- Conservatively charged 3601530/7500000 sim-s.
+
+### Warm continuation — R_UPDATE_002.json
+- R u2: queries/accepted/executed 114/114/0; wall 91.67s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 114, "executed": 0, "queries": 114}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Exact-grade queue/lag: `{"failed": 0, "graded": 12, "max_lag_s": 17.956080436706543, "mean_lag_s": 11.755984206994375, "orphaned": 0, "overlap_unresolved": 0, "pending": 0, "running": 0, "stopped": 0, "update": 2}`; final ETA 0.5602h.
+- Receipt: `coopmwm/warm_live/R_UPDATE_002.json`.
+<!-- warm-receipt:R_UPDATE_002.json:14e99afd71c27c362e8c5859f87cffa726b86464b57cb90563af854351d88468 -->
+
+### Warm continuation — R_UPDATE_003.json
+- R u3: queries/accepted/executed 13/13/0; wall 533.7s; next beta 0. SUMO-only reward.
+- Executions by type/regime: `{"MPPI|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "MPPI|ordinary": {"accepted": 13, "executed": 0, "queries": 13}, "O1|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O1|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O2|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O2|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O3|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O3|ordinary": {"accepted": 0, "executed": 0, "queries": 0}, "O4|merge-dense": {"accepted": 0, "executed": 0, "queries": 0}, "O4|ordinary": {"accepted": 0, "executed": 0, "queries": 0}}`.
+- Exact-grade queue/lag: `{"failed": 0, "graded": 10, "max_lag_s": 19.058584928512573, "mean_lag_s": 10.514461827278136, "orphaned": 0, "overlap_unresolved": 0, "pending": 0, "running": 0, "stopped": 0, "update": 3}`; final ETA 3.113h.
+- Receipt: `coopmwm/warm_live/R_UPDATE_003.json`.
+<!-- warm-receipt:R_UPDATE_003.json:bb314cdb79ce8f6c206408f40dc4989ed9b901d40bcf1a45106bcb72d76dcd4a -->
+
+### Warm continuation — R_VIABILITY_002.json
+- R u2: exact paired SUMO plan saving mean -1046 veh-s, 95% world-cluster CI `[-2873.630369603925, -0.08526310693014238]`, 3 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/R_VIABILITY_002.json`.
+<!-- warm-receipt:R_VIABILITY_002.json:256b1784d11f1c42b561f1feaf2fb24f31032036734552de1f9f3ef83c97707e -->
+
+### Warm continuation — R_VIABILITY_003.json
+- R u3: exact paired SUMO plan saving mean -1046 veh-s, 95% world-cluster CI `[-2873.630369603925, -0.08526310693014238]`, 3 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/R_VIABILITY_003.json`.
+<!-- warm-receipt:R_VIABILITY_003.json:fb04669f66a74de7d3792ac65704599f191b34ed85653adb509abab67dfaf047 -->
+
+### Warm continuation — WARM_B_FAILED_I1.json
+- `{"error": "ValueError('new durable guided engineering STOP')", "timestamp_utc": "2026-11-02T06:57:15.276917+00:00"}`
+- Receipt: `coopmwm/warm_live/WARM_B_FAILED_I1.json`.
+<!-- warm-receipt:WARM_B_FAILED_I1.json:ac490f96553656a328e87434b74860d8c7d3452dcfb22c488e84ab335a0ad9ab -->
+
+### Warm continuation — WARM_GUIDED_STOP_V3.json
+- `{"arm": "R", "error": "AssertionError('R count/regime/group-size/duration gate')", "timestamp_utc": "2026-11-02T06:43:03.905193+00:00"}`
+- Receipt: `coopmwm/warm_live/WARM_GUIDED_STOP_V3.json`.
+<!-- warm-receipt:WARM_GUIDED_STOP_V3.json:d0e9bca2ff5bccfddd740d4be7961ea0886663a423505cdcfc2814d3669149a9 -->
+
+### Warm continuation — WARM_R_FAILED_I1.json
+- `{"error": "AssertionError('R count/regime/group-size/duration gate')", "timestamp_utc": "2026-11-02T06:43:03.902197+00:00"}`
+- Receipt: `coopmwm/warm_live/WARM_R_FAILED_I1.json`.
+<!-- warm-receipt:WARM_R_FAILED_I1.json:e280d2737807b5f6339c1dd87ae3f94fbe57a48fddc64653294f4986ece75a40 -->
+
+### Warm continuation — WARM_R_PAUSED.json
+- `{"charged_sim_s": 3572730, "full_endpoint": 24, "reason": "registered checkpoint boundary complete; final evaluation waits for fixed primary endpoints", "timestamp_utc": "2026-11-02T07:09:25.480589+00:00", "update": 3}`
+- Receipt: `coopmwm/warm_live/WARM_R_PAUSED.json`.
+<!-- warm-receipt:WARM_R_PAUSED.json:a74c3613d6e5eedcb89a64b452a4e44c517b5f8b8d7be0e70a9e053357d26e3e -->
