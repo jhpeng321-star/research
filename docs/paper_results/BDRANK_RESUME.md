@@ -21,3 +21,22 @@
 - No analysis rerun, new SUMO, training, inference, dispatch, process signals,
   peer-worktree writes, additional registration line, deletion or push occurred.
 - This receipt is the only resume change; the completed analysis is preserved.
+
+## Fresh-session verification — 2026-11-03
+
+- Began with Git status/log and these saved receipts: clean `c4/bdrank` at
+  `60e6e205`; completed analysis remains `7655c0db`. Re-read all four required
+  source reports, the registered detector method and the BDRANK analysis contract.
+- Re-ran only `python -B tools/bdrank/verify.py`: PASS with the same check counts
+  above, including all 173 input hashes and exactly one shared registration line.
+  Post-check Git status was clean; all report, CSV and verification bytes match.
+- Read only `c4-rb2-int/docs/rb2int/CURRENT_JOBS.md` for current availability.
+  Its authoritative Nov2 10:20 +08 receipt supersedes the earlier recovery:
+  31/216 new jobs collected, 185 unadmitted, 12 matched complete-K8 v5/v4 worlds;
+  collector and publisher exited incomplete, zero active INT evaluations, explicit
+  hold with no resume release. The full registered comparison remains incomplete.
+  No partial-panel efficacy or v5 prediction cache was opened or scored.
+- Preserve the original report's frozen availability snapshot; current metadata
+  is recorded here. All STOP items and inference estimates remain unchanged.
+- No analysis rerun, SUMO, training, inference, dispatch, process signals, peer
+  writes, extra registration, deletion or push. Only this receipt was updated.
