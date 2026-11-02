@@ -6,10 +6,13 @@
 \usepackage{textcomp}
 \usepackage{xcolor}
 \usepackage{booktabs}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 
 \newcommand{\tbf}{\textcolor{red}{[to be filled in]}}
 \newcommand{\tbc}[1]{\textcolor{blue}{#1}} % values to confirm against the registered design / network files
 \newcommand{\phbox}[1]{\fbox{\parbox[c][#1][c]{0.95\columnwidth}{\centering\Large \textcolor{red}{[to be filled in]}}}}
+% Implementation source for Sec. IV: E:/agent-work/c4-coopnative docs/paper_results/COOPMWM_DESIGN.md (items cited as D#), EXACT_GRADE_README.md, tools/coopmwm/{exact_grade,exploration,r_matching}.py
 
 \begin{document}
 
@@ -20,8 +23,8 @@
 \maketitle
 
 \begin{abstract}
-Connected and automated vehicles (CAVs) could reduce congestion at merges by cooperating, for example by slowing down together to meter traffic or by opening gaps for merging vehicles. Standard multi-agent reinforcement learning (MARL) rarely learns such behavior: in our tests, MAPPO shows no significant cooperation between CAVs. We first show, with exact simulator replays, that cooperation can beat MAPPO, but that helpful opportunities are rare and pay off only minutes later, which makes them hard to learn from a noisy team reward. % COOPPLAN.md; COOPBANDIT.md (45/300)
-We then propose World-Model-Guided Exploration (WGE). During training, a physics-informed traffic world model imagines coordinated driving plans for groups of nearby CAVs and suggests the most promising ones. The CAVs try these plans in the simulator, and the policy learns only from the simulator's outcome, never from the model's predictions. Trust in the suggestions fades as the policy improves, so the final policy drives without the world model. On 96 held-out traffic scenarios, the WGE policy \tbf.
+Connected and automated vehicles (CAVs) can reduce merge congestion by coordinating, for example by slowing together to meter inflow or by opening gaps for merging vehicles. In our experiments, a MAPPO baseline did not exhibit statistically significant positive synergy between CAVs, although exact simulator replays show that coordinated maneuvers can reduce delay relative to MAPPO. % COOPAUDIT.md; COOPPLAN.md
+We propose World-Model-Guided Exploration (WGE) to improve the discovery of coordinated behavior. During training, a physics-informed traffic model searches for joint acceleration plans for groups of CAVs around the current policy; candidate plans are checked by short exact simulator branches, and the executed plans and their measured outcomes are used for reinforcement learning and selective imitation. The world model guides data collection but supplies no rewards. We evaluate the final policy with guidance disabled on 96 held-out scenarios: \tbf.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -31,202 +34,218 @@ Connected automated vehicles, mixed traffic, multi-agent reinforcement learning,
 %% =====================================================================
 \section{Introduction}
 
-Connected and automated vehicles (CAVs) can improve traffic not only by driving well on their own, but by acting together. At a highway on-ramp, a few CAVs that slow down at the same time can limit how many vehicles reach the merge at once. Others can open gaps for merging vehicles, or form a slow ``wall'' across lanes that keeps the merge from breaking down. These are only the behaviors we can think of. A group of CAVs can combine who slows, who holds and who yields in many more ways, and some of the useful combinations are likely ones no designer would think of. We therefore want a learning method that \emph{discovers} cooperation rather than one that picks from behaviors we designed.
+At highway on-ramps, CAVs can improve traffic not only by driving well individually but by coordinating: several CAVs can slow down together to meter inflow, open gaps for merging vehicles, or hold speed across lanes so that the merge does not break down. Methods that select from a fixed library of such maneuvers restrict the joint actions that can be considered. We study whether coordinated behavior can be learned directly in the space of joint acceleration profiles.
 
-Multi-agent reinforcement learning (MARL), and MAPPO in particular~\cite{yu_mappo2022}, is the standard way to learn CAV control~\cite{chen_merge2021,wu_flow2022}. Earlier studies report cooperative behaviors such as yielding at merges, ramp-metering-like control and coalition forming~\cite{chen_merge2021,vinitsky_lagrangian2018,toghi_social2022,guo_mappopis2024}. In those studies, however, cooperation is usually built in through the reward, shared intentions or the choice of control zone, and it is shown with examples rather than measured. It is rarely tested whether a learned policy improves traffic through joint behavior or simply because each vehicle drives better. When we measure this for MAPPO, we find no significant cooperation between its CAVs. % COOPAUDIT.md J600: C_G +67.679 [-1179.061,+1154.090]; D_G 893.181, sumD_i 825.502
+Multi-agent reinforcement learning (MARL), in particular MAPPO~\cite{yu_mappo2022}, is widely used for CAV control~\cite{chen_merge2021,wu_flow2022}. Coordinated maneuvers are hard for it to discover: they help only in specific traffic states, their effect appears minutes later in a team reward shared by all vehicles, and independent per-vehicle exploration noise rarely produces a sustained joint maneuver. Consistent with this, the MAPPO baseline we use did not exhibit statistically significant positive synergy in the evaluated scenarios, while a planner with exact simulator look-ahead reduced delay relative to it (Sec.~VI-A).
 
-We argue that the problem is learning, not opportunity. Using exact replays of the SUMO simulator~\cite{lopez_sumo2018}, we show that coordinated group moves do beat MAPPO, and often achieve more together than their members achieve alone. But such moves help only in specific situations (about 15\% of the states we tested), and their benefit appears minutes later. By then it is mixed into a team reward that depends on every vehicle on the road. Standard MARL explores by adding independent random noise to each vehicle's action. It rarely produces a sustained, coordinated group maneuver, and when it does, the reward is too noisy to recognize it.
-
-We propose \emph{World-Model-Guided Exploration} (WGE). Its principle is simple: \emph{the world model proposes, the simulator decides}. During training, a physics-informed traffic world model looks at a group of nearby CAVs and imagines many joint driving plans, starting from what the current policy would do. It suggests the few plans it expects to work best, and the CAVs try one of them in the simulator. The policy then learns from what actually happened in the simulator, and copies a plan only if the simulator shows it helped. This design matters because learned world models become less accurate as they predict further ahead, and policies trained inside them learn to exploit their errors~\cite{egorov_mamba2022,hansen_tdmpc2_2024}. WGE never trains on imagined outcomes, so the world model only needs to rank plans better than chance. As the policy improves, it relies on the suggestions less and less, and the final policy drives without the world model.
+We propose World-Model-Guided Exploration (WGE) to improve the discovery of coordinated CAV behavior. During training, a physics-informed traffic model searches for joint acceleration plans around the current policy. A short list of candidates is checked by exact simulator branches, the selected plan is executed in SUMO, and its measured outcome supports policy learning through reinforcement learning and selective imitation. The world model therefore guides data collection without supplying synthetic rewards. We evaluate whether the resulting policy reduces delay and exhibits positive counterfactual synergy when guidance is disabled.
 
 Our contributions are:
 \begin{itemize}
-\item \textbf{Measured cooperation (C1).} To our knowledge, the first together-versus-alone measurement of learned CAV cooperation. Using exact simulator replays, we show that cooperation can reduce delay beyond MAPPO, while MAPPO itself shows no significant cooperation.
-\item \textbf{WGE (C2).} A training method in which a world model suggests coordinated group plans and the simulator alone judges them, so that an imperfect world model is sufficient.
-\item \textbf{Cooperation without the guide (C3).} The final policy drives without the world model. On 96 held-out scenarios, compared with MAPPO, an equal-budget control and a random guide: \tbf.
-\item \textbf{Discovered behavior (C4).} An analysis of the group behaviors the policy learned, checked with exact together-versus-alone replays: \tbf.
+\item \textbf{Counterfactual evaluation of cooperation.} A together-versus-alone measure of CAV cooperation computed from exact simulator replays, applied to a planner with exact look-ahead, to MAPPO, and to learned policies.
+\item \textbf{WGE.} A training method in which a physics-informed world model proposes coordinated group plans around the current policy, exact simulator branches select and grade them, and the policy learns from executed outcomes with PPO and advantage-filtered imitation.
+\item \textbf{Empirical evidence.} On 96 held-out scenarios with guidance disabled, comparisons with MAPPO, an equal-budget unguided control and a random-guide ablation, together with an analysis of learned group behavior: \tbf.
 \end{itemize}
 
 %% =====================================================================
 \section{Related Work}
 
-\textbf{Learning cooperation between CAVs.} MARL is widely used for CAV control in mixed traffic, including on-ramp merging~\cite{chen_merge2021,guo_mappopis2024}. To make learning easier, these methods often give each vehicle a reward based on its neighbors, which discourages sacrifices that only pay off for the group. Other work builds cooperation in directly: through altruistic or social rewards~\cite{toghi_social2022,schwarting_svo2019}, through the choice of where vehicles are controlled~\cite{vinitsky_lagrangian2018}, or through hand-designed controllers~\cite{lee_circles2024}. In all of these, the form of cooperation is chosen in advance or shown only through examples. We instead let cooperation be discovered, and we measure it directly.
+\textbf{Learning CAV cooperation.} MARL has been applied to on-ramp merging and mixed-traffic control~\cite{chen_merge2021,guo_mappopis2024,wu_flow2022}. These methods differ in what they constrain: neighbor-averaged rewards that limit credit to local outcomes~\cite{chen_merge2021}; shared intentions communicated between agents~\cite{guo_mappopis2024}; altruistic or social-value objectives that change what agents optimize~\cite{toghi_social2022,schwarting_svo2019}; control restricted to selected road segments~\cite{vinitsky_lagrangian2018}; and hand-designed controllers~\cite{lee_circles2024}. Cooperation in these works is usually evaluated through aggregate traffic metrics and examples. We add an exact together-versus-alone measure and a training method that explores joint plans directly.
 
-\textbf{Credit and guided exploration.} Counterfactual methods estimate how much each agent contributed to a shared reward, for example difference rewards~\cite{wolpert_tumer2002,castellini_drreinforce} and COMA~\cite{foerster_coma2018}. Our cooperation measure applies the same idea to groups, using exact replays for evaluation only. Cooperative exploration methods encourage agents to explore together~\cite{liu_cmae2021}, but have no model of which joint actions will pay off. Guide-based methods let an existing policy steer early training and then hand over control~\cite{uchendu_jsrl2023,torrey_advising2013}, usually on a fixed schedule. In WGE the guide is a model-based planner, and its influence fades according to what the simulator shows.
+\textbf{Credit and guided exploration.} Difference rewards~\cite{wolpert_tumer2002,castellini_drreinforce} and COMA~\cite{foerster_coma2018} estimate an agent's contribution to a shared reward; our synergy measure applies the same counterfactual logic to groups, using exact replays. Cooperative exploration methods~\cite{liu_cmae2021} encourage joint exploration without a predictive model. Guide-based methods let a prior policy steer early training~\cite{uchendu_jsrl2023,torrey_advising2013}; in WGE the guide is a model-based planner whose use adapts to measured outcomes.
 
-\textbf{Planning and world models.} Combining look-ahead search with learning, where search finds better actions and the policy learns from them, is the basis of expert iteration~\cite{anthony_exit2017} and AlphaZero/MuZero~\cite{silver_alphazero2018,schrittwieser_muzero2020}. In continuous control, sampling-based planners such as MPPI~\cite{williams_mppi2017} play a similar role together with learned models~\cite{hansen_tdmpc2_2024,levine_gps2013}. Multi-agent world models instead train policies on imagined rollouts~\cite{egorov_mamba2022,zhang_marie2024}, and the closest traffic work does so offline with a physics-informed model~\cite{liu_physics_wm2026}. WGE differs in that it never learns from imagination: the world model only searches for coordinated plans to try, and the simulator provides every learning signal.
+\textbf{Planning and world models.} Expert iteration and AlphaZero/MuZero improve a policy with look-ahead search~\cite{anthony_exit2017,silver_alphazero2018,schrittwieser_muzero2020}; MPPI and related planners combine sampling-based search with learned models~\cite{williams_mppi2017,hansen_tdmpc2_2024,levine_gps2013}. Multi-agent world models~\cite{egorov_mamba2022,zhang_marie2024} and a physics-informed model for offline mixed-traffic control~\cite{liu_physics_wm2026} train policies on imagined rollouts. WGE uses the model only to propose plans; all learning signals come from executed simulator trajectories.
 
 %% =====================================================================
 \section{Problem Formulation}
 
 \subsection{Setting}
-We study a highway segment with an on-ramp, simulated in SUMO with human-driven vehicles (HDVs) and CAVs. HDVs follow SUMO's car-following model (IDM~\cite{treiber_idm2000}) and lane-change model (LC2013), each with its own unobserved settings. Every 1\,s, each CAV chooses an acceleration, which passes through a safety filter; lane changes are left to SUMO. The simulation advances in 0.5\,s steps. Each CAV observes itself and the vehicles around it. A roadside unit (RSU) also observes the merge and ramp areas and the number of vehicles entering, and can broadcast a short message to the CAVs. No vehicle observes the drivers' settings or future arrivals.
+We study a highway segment with an on-ramp in SUMO~\cite{lopez_sumo2018}, with human-driven vehicles (HDVs) and CAVs. HDVs follow IDM~\cite{treiber_idm2000} car following and LC2013 lane changing with individual, unobserved parameters. Every 1\,s each CAV outputs a longitudinal acceleration that passes through a safety filter; lane changes are left to SUMO; the simulator step is 0.5\,s. Each CAV observes its own state and nearby vehicles; a roadside unit (RSU) observes the merge and ramp zones and entrance counts and broadcasts a learned 4-dimensional message. % D9
+No agent observes driver parameters or future arrivals.
 
-\subsection{Objective}
-We measure performance by total delay over a time window $H$ after a warm-up period:
+\subsection{Objective and reward}
+Team delay over $[t_0,t_1]$ is
 \begin{equation}
-J_H = \sum_{t}\Big[\sum_{v}\frac{v^{\mathrm{free}}_v - v_{v,t}}{v^{\mathrm{free}}_v} + N^{\mathrm{wait}}_t\Big]\Delta t ,
+J[t_0,t_1] = \sum_{t=t_0}^{t_1}\Big[\sum_{v}\frac{v^{\mathrm{free}}_v - v_{v,t}}{v^{\mathrm{free}}_v} + N^{\mathrm{wait}}_t\Big]\Delta t ,
 \end{equation}
 % exact normalisation to be matched to the comparator reducer in tools/coopnative/comparator.py
-where the first term is each vehicle's speed shortfall and $N^{\mathrm{wait}}_t$ is the number of vehicles waiting to enter the road. Counting waiting vehicles prevents a controller from looking good by holding traffic back. We report differences between policies in vehicle-seconds (veh-s); negative means less delay.
+the speed shortfall of vehicles on the road plus vehicles waiting to enter (veh-s). Lower is better. The shared per-step reward is $r_t = -(J[0,t+1]-J[0,t])$. % D4
+Differences between policies are reported as policy minus reference; negative values mean less delay.
 
-\subsection{Measuring cooperation}
-Consider a group $G$ of CAVs at a traffic state $s$. We compare three replays from the same state: all members carry out a joint plan, only member $i$ carries out its part, and no member deviates from the base policy. The \emph{group effect} $D_G$ is the delay saved when all members act, and the \emph{member effect} $D_i$ is the delay saved when only member $i$ acts. We define the \emph{synergy}
+\subsection{Counterfactual cooperation}
+For a group $G$ at state $s$, let $J_\varnothing$, $J_i$ and $J_G$ be the team delay over a common window when no member deviates from a reference policy, when only member $i$ executes its part of a joint plan, and when all members execute it. The member and group effects are $D_i = J_\varnothing - J_i$ and $D_G = J_\varnothing - J_G$, and the synergy is
 \begin{equation}
 C_G = D_G - \sum_{i\in G} D_i .
 \end{equation}
-A positive synergy means the group achieved more together than the sum of its members acting alone. This is cooperation in a strict sense, beyond each vehicle simply driving well. SUMO is deterministic given its state, so these replays are exact. We use them only to evaluate cooperation, never for training.
+Positive $C_G$ alone does not imply that the group helps: individual effects can be negative. We call a group behavior \emph{beneficial cooperation} if $D_G>0$ and $C_G>0$, and report both quantities. Computing them requires $|G|+2$ exact runs from an identical prefix; SUMO is deterministic given its state. Each audit states its reference policy (Sec.~VI). These replays are used for evaluation only.
 
 \subsection{Goal}
-We seek a policy that (i) reduces delay compared with MAPPO and (ii) does so through group behavior with positive synergy, without specifying that behavior in advance.
+We seek a policy that reduces $J$ relative to MAPPO when deployed without guidance, and whose group behaviors show beneficial cooperation.
 
 %% =====================================================================
 \section{Method}
 
-Fig.~\ref{fig:method} summarizes WGE. Training runs in the simulator as usual. At selected moments, the world model searches for a better joint plan for a group of CAVs (Sec.~IV-C). The group may then follow that plan (Sec.~IV-D), and the policy learns from the simulator's outcome (Sec.~IV-E).
-
 \begin{figure}[t]
 \centering
-\phbox{4.5cm}
-\caption{WGE overview: the world model proposes coordinated group plans, the simulator decides which ones help, and trust in the proposals fades as the policy learns.}
+\phbox{4.2cm}
+\caption{WGE overview.}
 \label{fig:method}
 \end{figure}
 
-\subsection{Policy}
-All policies start from a trained MAPPO policy for speed control~\cite{yu_mappo2022}, which stays fixed. Every 1\,s, each CAV adds a learned correction to MAPPO's acceleration command. A zero correction gives exactly MAPPO, so training starts from MAPPO's performance. The correction network uses the CAV's own observations and the RSU message. A shared critic, used only during training, estimates future delay from the RSU's view of the road over a long time scale (\tbc{about 400\,s}), so that delayed effects can be credited. Exploration noise is smooth over time (\tbc{AR(1)}) and partly shared between nearby CAVs. This policy is identical in every method we compare; only the exploration differs.
+\subsection{Policy and critic}
+Each CAV's action is $a_{i,t}=a^{\mathrm{M}}_{i,t}+u_{i,t}$, where $a^{\mathrm{M}}$ is the command of a frozen MAPPO actor~\cite{yu_mappo2022} and $u_{i,t}$ is a learned residual; $u=0$ reproduces MAPPO exactly. The residual network uses local telemetry, sensed neighbors and the RSU message. Exploration noise is an AR(1) process ($\phi=e^{-1/5}$ per step, $\sigma=0.5$\,m/s$^2$) with a component shared by nearby CAVs (correlation $0.5$); the PPO likelihood uses the conditional Gaussian density of each action given the previous noise state. % D11
+A centralized critic pools CAV features with 12 RSU zone observations. We use PPO with 4 epochs, Adam ($3\times10^{-4}$), clip 0.2, a KL limit of 0.045, $\gamma=e^{-1/600}$ and $\lambda=e^{-1/1200}$ per 1\,s step. % D12, D13
 
 \subsection{World model}
-The world model predicts how traffic will evolve from what the CAVs and RSU can sense: the position, speed, lane and type of each sensed vehicle, and the vehicles waiting to enter. It advances all vehicles in 0.5\,s steps. CAVs follow the plan being evaluated, through the same safety filter as in the simulator. HDVs follow the Intelligent Driver Model~\cite{treiber_idm2000},
+The world model rolls traffic forward from what the CAVs and RSU sense (position, speed, lane and type of each sensed vehicle, and entrance queues) in 0.5\,s steps. CAVs follow the evaluated plan through the same safety filter; HDVs follow IDM,
 \begin{equation}
 \dot v = a_{\max}\Big[1-\big(\tfrac{v}{v_0}\big)^{\delta}-\big(\tfrac{s^*}{s}\big)^2\Big],\quad
 s^* = s_0 + vT + \tfrac{v\,\Delta v}{2\sqrt{a_{\max} b}},
 \end{equation}
-with each driver's desired speed $v_0$, time headway $T$, minimum gap $s_0$, maximum acceleration $a_{\max}$ and comfortable braking $b$. Lane changes and merging follow SUMO's rules. Two things cannot be observed and are therefore learned. First, each driver's settings are estimated from that driver's last 60\,s of observed motion; drivers with little history are pulled toward the population average. This estimator is trained only to predict observed motion, without any driver labels. Second, the rate of future arrivals is learned from entrance counts. One prediction draws a sample of these unknowns and plays out the physics. We use $K$ predictions with different samples. Competing plans are scored on the same $K$ samples, so that differences between them come from the plans rather than from the samples. The world model is not expected to be exactly right; it only needs to rank plans.
+and SUMO's lane-change and merge rules. Each HDV's parameters $(v_0,T,s_0,a_{\max},b)$ are drawn from a posterior inferred from that driver's last 60\,s of sensed motion, shrunk toward a learned population prior when history is short; the encoder is trained on prediction error only, without driver labels. Arrival rates are inferred from entrance counts. A forecast averages $K$ rollouts with independent draws of these unknowns; competing plans share the same $K$ draws. % D17, D18
 
-\subsection{Searching for group plans}
-\emph{Groups.} At a decision moment, CAVs anywhere on the road (all lanes and the ramp) that are within 100\,m of one another form a group of 2 to 6 vehicles.
+\subsection{Group plans and search}
+At a decision step, CAVs anywhere on the road (all lanes and the ramp) are chained into groups of 2--6 members if they are within 100\,m of one another. % D19
+A plan assigns each member an acceleration profile of duration $D\in\{30,60,\dots,180,240,300\}$\,s, parameterized by at most 10 piecewise-linear knots and bounded by the vehicle limits. % D69
+The search is centered on the current policy. The model first rolls out the policy's own trajectory for the group; a cross-entropy/MPPI search~\cite{williams_mppi2017} then samples $N=\max(32, 20|G|)$ joint perturbations of that trajectory per iteration, smooth in time and correlated across members, screens them with $K=4$ rollouts over 300\,s, keeps the best $\lceil N/4\rceil$ and resamples, for 3 iterations. Eight finalists are re-scored with $K=8$ over $H=\min(600,\max(300,D+120))$\,s. The search uses no hand-designed maneuvers. The top four finalists with positive predicted saving over MAPPO form the shortlist. % D21, D22
+The perturbation covariance is updated from plans that later receive positive simulator grades (Sec.~IV-E); maneuver families are used only to label results afterward.
 
-\emph{Plans.} A plan gives each group member an acceleration profile for up to 300\,s, described by a few control points (at most 10 per vehicle).
+\subsection{Selection, execution and grading}
+At an eligible decision step, a guided group follows a plan with probability $\beta$ (the trust, Sec.~IV-F), drawn before any further computation. If it follows, the shortlist and the policy's own continuation are evaluated by five exact SUMO branches from the identical prefix with common random numbers, over a common window ending $\max D+120$\,s later, and the best branch is executed; if that branch is the policy itself, no plan is executed. % D42, D64
+Executed plans run to completion or to the episode end, and are recorded as truncated in the latter case.
 
-\emph{Search.} The world model first predicts what happens if the current policy keeps driving, and what happens under plain MAPPO. It then tries many variations of the policy's own plan, changing the group members' accelerations together and smoothly over time. Each variation is scored by its predicted delay on a few samples (\tbc{$K=4$}). The best variations are kept and new ones are drawn around them, and this is repeated \tbc{3} times~\cite{williams_mppi2017}. The final candidates are scored again on more samples ($K=8$) and over a longer window that covers what happens after the plan ends. The search uses no hand-designed maneuvers; we compare its plans to known maneuvers only afterwards, to describe what it found. Plans that later prove helpful in the simulator are remembered, and future searches start partly from them.
+Each executed plan $p$ starting at $t_0$ with duration $D$ receives an exact grade
+\begin{equation}
+g_p = J^{\text{without}}[t_0,t_e] - J^{\text{with}}[t_0,t_e],\qquad t_e=\min(t_0+D+120,\,1200),
+\end{equation}
+where ``with'' is the executed episode and ``without'' is an exact rerun from the identical prefix in which the plan's members follow the policy's own stochastic actions (same noise draws) and every other executed plan in the window is replayed as recorded. Plans that share members with another plan in the window are excluded from grading. % EXACT_GRADE_README.md
+These training branches (selection and grading) are counted in the simulation budget (Sec.~V-C).
 
-\subsection{Trying a plan}
-The world model returns the best few plans (\tbc{four}) that it predicts will beat MAPPO. One of them is picked at random, with each plan's chance equal to the model's estimated probability that it is the best. The model's top choice is usually picked, and a close second sometimes is, which adds useful variety when the model is unsure. With probability $\beta$ (the current trust), the group then follows the picked plan to the end in the simulator; otherwise it follows the policy.
-
-\subsection{Learning from the simulator}
-The reward is always the simulator's delay. The policy learns in two ways:
-\begin{itemize}
-\item \textbf{Its own decisions.} On steps where the policy chose its own action, it is updated with standard PPO. Steps where a plan was being followed are left out of this update, because the policy did not choose those actions.
-\item \textbf{Plans that worked.} When a plan ends, we estimate from the simulator how much better it did than the policy would have done. If it did better, the policy is trained to copy the plan, with more weight for larger gains, as in advantage-weighted regression~\cite{peng_awr2019}. Plans that did worse are never copied.
-\end{itemize}
-The critic learns from all steps. As a result, the world model affects which plans are tried, but not the reward and not which plans the policy copies. Algorithm~1 gives the full procedure.
-
-\begin{figure}[t]
-\centering
-\phbox{3.5cm}
-\caption{Algorithm 1: WGE training loop.}
-\label{alg:main}
-\end{figure}
+\subsection{Learning}
+The actor loss is the standard clipped PPO objective over steps at which the policy chose its own action, including steps where a plan was considered but not executed. Steps inside an executed plan contribute no PPO ratio. The critic is fit to the observed returns on all steps. The advantages of policy steps are computed by GAE on the observed trajectory, so for steps preceding an intervention they include the effect of the executed plan; we report this as a limitation of the current estimator. % D27, D28
+In addition, executed plans with positive grade contribute a weighted imitation loss: the negative log-likelihood of each member's plan accelerations under the policy, with weight 1 until 20 grades are available and $w_p=\min(20, \exp(g_p/\tau))$ thereafter, where $\tau=\max(1, \mathrm{RMS}(g_{1..20}))$ is fixed from the first 20 grades. Only plans with $g_p>0$ contribute; the full positive buffer is used at every update. This is a filtered variant of advantage-weighted regression~\cite{peng_awr2019}. % D28
 
 \subsection{Trust}
-Trust $\beta$ starts at 1, so early on the group always follows the suggested plan. For each type of traffic situation, we track whether suggested plans did better in the simulator than the policy's own actions. When they stop doing better, either because the policy has learned the behavior or because the model is wrong there, trust is reduced. Over training, fewer and fewer actions come from the world model, and the final policy drives on its own. Any cooperation it still shows is therefore learned.
+For each bucket of traffic regime (merge-dense or ordinary, defined from observable CAV-pair geometry and CAV/density bands; \tbc{exact definition to add}), let $m$ and $[L,U]$ be the mean and 95\% world-clustered bootstrap interval of the exact grades so far, and $e=\max(|m-L|,|U-m|)$. After each update,
+\begin{equation}
+\beta \leftarrow \min\Big(\beta,\ \frac{\max(0,U)}{|m|+e}\Big),
+\end{equation}
+with empirical-Bayes shrinkage of bucket estimates toward the pooled estimate; $\beta$ starts at 1, requires grades from at least two worlds, and does not increase. Training pauses if at least 30 grades have $U<0$. % D65, D66; exact_grade.trust_evidence
+This rule reduces guidance under uncertain or negative evidence but does not force $\beta$ to zero. At evaluation, guidance is disabled.
 
-\subsection{Random-guide comparison}
-To test whether the world model's judgment matters, a second guided policy uses the same kind of plan variations but picks one at random instead of using the world model. It follows the same number of plans, with the same group sizes and lengths.
+\subsection{Random-guide ablation}
+The random guide (R) uses the same policy-centered perturbation distribution, exact selection branches, grading, imitation and trust rule, but its candidates are sampled without world-model scoring. Its executed plans are matched to those of WGE update by update: by regime first, then by group size within one member, with the same durations; shortfalls are reported. % D16; r_matching.py
+WGE versus R therefore isolates the contribution of model-based candidate generation; WGE versus the unguided control (A) measures the full method, whose learning objective additionally includes the imitation term.
+
+\begin{algorithm}[t]
+\caption{WGE training (one update)}
+\label{alg:wge}
+\small
+\begin{algorithmic}[1]
+\For{each of 24 training episodes}
+  \For{each 1\,s decision step}
+    \If{an eligible group exists and a plan is requested (prob.\ $\beta$)}
+      \State shortlist $\gets$ policy-centered world-model search
+      \State select best of shortlist $\cup$ \{policy\} by 5 exact branches
+      \State execute selected plan to completion (or episode end)
+    \Else \State act with the policy (residual on MAPPO)
+    \EndIf
+  \EndFor
+\EndFor
+\State grade executed plans exactly (Eq.~5)
+\State update actor (PPO on own steps), critic (all steps), imitation (plans with $g_p>0$)
+\State update $\beta$ (Eq.~6), search covariance and plan library
+\end{algorithmic}
+\end{algorithm}
 
 %% =====================================================================
 \section{Experimental Setup}
 
 \subsection{Road and traffic}
-We use SUMO~1.27.1~\cite{lopez_sumo2018} on a highway segment with an on-ramp (\tbc{about 3.2\,km; lane counts to confirm}). Traffic scenarios combine three mainline demands (1900, 2400 and 2700\,veh/h) with four CAV shares (5, 10, 20 and 40\%), giving 12 traffic types. Each episode lasts 1200\,s: 300\,s of warm-up, then 900\,s of control. CAVs sense nearby vehicles (\tbc{100\,m}).
+SUMO~1.27.1 simulates a highway segment with an on-ramp (\tbc{length and lane counts to confirm}). Scenarios combine mainline demand $\{1900,2400,2700\}$\,veh/h with CAV penetration $\{5,10,20,40\}\%$ (12 traffic types). Episodes last 1200\,s: 300\,s warm-up, then 900\,s of control. CAV sensing range: \tbc{100\,m}.
 
 \subsection{Compared policies}
-\textbf{Native}: SUMO's default driving.
-\textbf{MAPPO}: speed-control MAPPO trained for 169 updates (about 4.7\,M simulated seconds of control). % COOPNATIVE_DESIGN.md: 169x46x600=4,664,400
-\textbf{Control}: MAPPO plus the same learned correction and training, without guidance.
-\textbf{WGE}: our method.
-\textbf{Random guide}: WGE with plans picked at random (Sec.~IV-G).
-The control, WGE and random guide start from the same MAPPO policy and use the same network, training scenarios and simulation budget.
+\textbf{Native}: SUMO default driving. \textbf{MAPPO}: speed-control MAPPO trained for 169 updates ($\approx$4.7\,M controlled simulation-seconds). % COOPNATIVE_DESIGN.md: 169x46x600
+\textbf{Control (A)}: MAPPO plus the same residual network trained with PPO, without guidance. \textbf{WGE (B)}: Sec.~IV. \textbf{Random guide (R)}: Sec.~IV-G. A, B and R start from the same MAPPO policy and use the same network, training scenarios and episodes per update.
 
-\subsection{Training}
-The learned policies train on 72 scenarios (6 per traffic type), separate from all test scenarios. Each update uses 24 episodes; about half come from near-capacity traffic with many CAVs (2400--2700\,veh/h, 20--40\% CAVs), where cooperation is most likely to help. The control and WGE train for 48 updates, and the random guide for \tbf\ updates, each with one training run. We track progress on 12 separate scenarios that are never used to choose a model.
+\subsection{Training and budget}
+Learned policies train on 72 scenarios (6 per traffic type) separate from all test scenarios. Each update uses 24 episodes, half from near-capacity, high-penetration types (2400--2700\,veh/h, 20--40\% CAVs). A, B and R are trained for 24 updates with one training seed each; A is additionally continued to 48 updates as a secondary result. Each B and R update requires at least 10 executed plans. Simulation budgets, including selection and grading branches, and world-model GPU time are reported for every arm: \tbf. % D44, D58
+Progress is tracked on 12 separate scenarios that are never used for model selection.
 
 \subsection{Evaluation}
-All final results use 96 new scenarios (8 per traffic type) that were set aside before training and are evaluated once, with each policy's final version and without the world model. Our two main tests are:
+All final results use 96 held-out scenarios (8 per traffic type) registered before training and evaluated once with the final (update-24) checkpoint of each policy, with guidance disabled. % D59, D39
 \begin{itemize}
-\item \textbf{Paired branch test.} At four fixed times in each scenario (300, 500, 700 and 900\,s), every policy continues from the same traffic state for 300\,s. Starting all policies from the same state removes most of the run-to-run variation that otherwise hides differences between learned policies.
-\item \textbf{Near-capacity test.} The same comparison in the near-capacity, high-CAV scenarios (32 of the 96), chosen in advance from earlier results.
+\item \textbf{Paired branch test.} At $t=300,500,700,900$\,s every policy continues for 300\,s from the same state, reached by MAPPO driving up to that time. The outcome is paired 300\,s team delay. % D61
+\item \textbf{Near-capacity subset.} The same comparison on the 32 near-capacity, high-penetration scenarios, selected in advance from earlier evidence.
 \end{itemize}
-We correct for running two tests (Holm method). We also report delay over full episodes, results per traffic type, percentage delay reduction and safety (collisions, close encounters and hard braking). Confidence intervals are 95\%, computed by resampling scenarios 10{,}000 times. Cooperation is measured by synergy (Sec.~III-C) for a random sample of plans followed during training and for group behaviors of the final policy.
+Intervals are 95\% bootstrap intervals with 10{,}000 resamples of whole scenarios, keeping all four branches of a scenario together. Holm correction is applied in two families, one per comparison (B$-$MAPPO and B$-$A), each over the two tests above at $\alpha=0.05$; B$-$R and A$-$MAPPO are secondary. % D67
+Secondary outcomes are full-episode delay over 600 and 900\,s, per-type results, percentage reduction and safety (collisions, time-to-collision events, hard braking). Beneficial cooperation (Sec.~III-C) is evaluated for a random sample of executed plans and for group behaviors detected in the final policy.
 
 %% =====================================================================
 \section{Results}
 
-\subsection{Cooperation beyond MAPPO exists (E1)}
-\emph{Cooperation can beat MAPPO.} We first test a planner that uses the simulator itself to look ahead. Every 60\,s, it replays several group maneuvers exactly from the current state and uses one only if it beats MAPPO. On 36 new scenarios covering all 12 traffic types, it reduces delay compared with MAPPO by 648\,veh-s per scenario over 600\,s (95\% CI [210, 1174]) and by 1584\,veh-s over 900\,s ([588, 2765]). % COOPPLAN.md Pooled36: J600 +648.407 [209.699,1173.616]; J900 +1583.821 [588.246,2765.414]
-Of the 52 group maneuvers it used, 24 had positive synergy. In one case the joint maneuver reduced delay even though each member acting alone would have increased it. With a longer look-ahead, the planner also formed walls across lanes, one with a synergy of $+182$\,veh-s. % COOPPLAN.md H300 amendment: C_G +181.571
-Averaged over all maneuvers, synergy is positive but not significant: cooperation pays off in specific situations, not everywhere.
+\subsection{Cooperation above MAPPO (E1)}
+\emph{Exact look-ahead planner.} Every 60\,s, a planner replays candidate group maneuvers exactly from the current state and executes one only if it beats MAPPO (reference: MAPPO). On 36 new scenarios covering all traffic types, it reduces delay relative to MAPPO by 648\,veh-s per scenario over 600\,s (95\% CI [210, 1174]) and by 1584\,veh-s over 900\,s ([588, 2765]). % COOPPLAN.md Pooled36: J600 +648.407 [209.699,1173.616]; J900 +1583.821 [588.246,2765.414]
+Of 52 executed group maneuvers, 24 have $C_G>0$, including one whose joint execution reduced delay although each member's part alone increased it; one cross-lane wall had $C_G=+182$\,veh-s. % COOPPLAN.md H300 amendment: C_G +181.571
+Mean synergy across maneuvers is positive but not significant.
 
-\emph{MAPPO shows no significant cooperation.} In exact replays of 21 scenarios with pairs of nearby CAVs, MAPPO's synergy is $+68$\,veh-s over 600\,s (95\% CI [$-1179$, $+1154$]), which is not significantly different from zero. Most of its group effect (825 of 893\,veh-s, a point estimate) comes from the members acting alone. In these replays a member acting ``alone'' means the other members switch to native driving. % COOPAUDIT.md Team J600 mappo
+\emph{MAPPO.} In exact replays of 21 scenarios with pairs of nearby CAVs, with native driving as the reference for each member, MAPPO's synergy is $+68$\,veh-s over 600\,s (95\% CI [$-1179$, $+1154$]); we did not detect significant positive synergy. In point estimate, 825 of its 893\,veh-s group effect comes from individual effects. % COOPAUDIT.md Team J600 mappo
 
-\emph{Cooperation is hard to learn.} Among 300 training states, our search found a helpful cooperative maneuver in only 15\% (95\% CI [10\%, 20\%]). On average, every maneuver type increased delay (by 1000--1700\,veh-s), even though the best cases saved up to 17{,}000\,veh-s. % COOPBANDIT.md: 45/300 [10%,20.33%]; mean effects -1176/-1153/-1736/-1022; best +14992/+9917/+6338/+17154
-Two simple learning approaches failed. A learned selector never chose a maneuver, because it was never confident enough. A policy trained to copy the planner agreed with it on 85\% of decisions, but on none of the 45 decisions where cooperation helped. % COOPBANDIT.md; DISTILL.md (teacher agreement 84.67%, helpful-teacher agreement 0/45)
-Helpful cooperation is rare and easy to miss, which is the gap WGE targets.
+\emph{Rarity.} Among 300 training states, our maneuver search found a helpful option in 15\% (95\% CI [10\%, 20\%]); averaged over all states, each maneuver type increased delay by 1000--1700\,veh-s, while the best cases saved up to 17{,}000\,veh-s. % COOPBANDIT.md: 45/300 [10%,20.33%]; mean effects -1176/-1153/-1736/-1022; best +14992/+9917/+6338/+17154
+A learned maneuver selector never acted, and a policy distilled from the planner agreed with it on 85\% of decisions but on none of the 45 helpful ones. % COOPBANDIT.md; DISTILL.md (teacher agreement 84.67%, helpful-teacher agreement 0/45)
 
 \begin{figure}[t]
 \centering
-\phbox{4.5cm}
-\caption{Cooperation beyond MAPPO. (a) Planner's delay saving over MAPPO per scenario; (b) synergy of the planner's group maneuvers; (c) MAPPO's group effect split into individual effects and synergy.}
+\phbox{4.2cm}
+\caption{Cooperation above MAPPO: (a) planner saving per scenario; (b) $C_G$ and $D_G$ of planner maneuvers; (c) MAPPO's group effect decomposition.}
 \label{fig:opportunity}
 \end{figure}
 
-\subsection{How well the world model ranks plans (E2)}
-The world model only needs to rank plans correctly. On states where the true outcome is known, it puts pairs of maneuvers in the right order 66\% of the time when looking 120\,s ahead and 76\% when looking 300\,s ahead. Ranking by predicted delay works better than ranking by the predicted chance of a traffic breakdown, which is nearly always predicted as likely and therefore rarely separates plans (ties in 112 of 120 cases). % BDRANK.md: v4 option delay-pair concordance 65.5/75.9%; ties 112/120
-How the predicted gains of followed plans compare with their actual gains in the simulator: \tbf.
+\subsection{World-model selection quality (E2)}
+On 12 states with exact labels (58 candidate pairs per horizon), the model orders pairs of maneuvers correctly in 65.5\% of cases at 120\,s (Wilson 95\% interval [53\%, 76\%]) and 75.9\% at 300\,s ([64\%, 85\%]); pairs within a state are not independent. % BDRANK.md: 58 pairs/horizon; intervals computed from n=58, ignore clustering
+Ranking by predicted delay outperforms ranking by predicted breakdown probability, which rarely separates plans (ties in 112 of 120 cases). % BDRANK.md
+More directly, we report the exact grade of executed plans (Eq.~5) relative to the current policy, by update and by predicted rank: \tbf.
 
 \subsection{Main comparison (E3)}
 \tbf
 
 \begin{table}[t]
-\caption{Delay difference compared with each reference (veh-s, 95\% CI; negative is better).}
+\caption{Delay difference relative to each reference (veh-s, 95\% CI; negative is better).}
 \label{tab:main}
 \centering
-\phbox{3.5cm}
+\phbox{3.2cm}
 \end{table}
 
 \begin{figure}[t]
 \centering
-\phbox{4.5cm}
-\caption{Training progress, trust and share of actions from the world model.}
+\phbox{4.2cm}
+\caption{Training progress, trust $\beta$ and executed plans per update.}
 \label{fig:curves}
 \end{figure}
 
-\subsection{Discovered cooperation (E4)}
+\subsection{Learned group behavior (E4)}
 \tbf
 
 \begin{figure}[t]
 \centering
-\phbox{4.5cm}
-\caption{A cooperative behavior learned by the WGE policy.}
+\phbox{4.2cm}
+\caption{A group behavior of the final WGE policy and its counterfactual replays.}
 \label{fig:behavior}
 \end{figure}
-
-\subsection{Additional analyses (E5)}
-\tbf
 
 %% =====================================================================
 \section{Discussion and Limitations}
 
-Our results show that cooperation between CAVs is available but not learned by standard MARL: exact replays find cooperation that beats MAPPO, while MAPPO itself shows no significant cooperation. \tbf. The world model's errors grow with the prediction horizon, which limits how often its suggestions help. These errors can affect which plans are tried, but not the reward or which plans the policy copies, because both are decided by the simulator.
+In our experiments, exact look-ahead found coordinated maneuvers that reduce delay relative to MAPPO, while the MAPPO baseline showed no significant synergy. \tbf.
 
-\textbf{Limitations.} All experiments are in simulation, and SUMO's human drivers are more predictable than real ones; field data is needed to confirm the results. We study one highway on-ramp, and other road layouts may favor different behaviors. Our MAPPO baseline is our own implementation, the learned policies are trained for a limited number of updates, and each has one training run. The world model is fitted to this road and is less accurate for long plans. The synergy measure needs exact simulator replays, so it is a tool for evaluation, not for deployment. Searching for group plans is the main training cost, although the final policy runs without the world model.
+\textbf{Limitations.} Results are from simulation with SUMO's driver models on one on-ramp; other layouts and real drivers may differ. Each policy has one training run, so variation across training seeds is not measured. MAPPO is our implementation. WGE's training uses exact simulator branches for selection and grading, which require a resettable simulator; the deployed policy does not. The PPO advantages of steps preceding an intervention include the intervention's effect. WGE and the control differ in their learning objective as well as in data collection; the random guide shares WGE's objective. The trust rule does not increase $\beta$ once reduced. The world model is fitted to this road and is less accurate for long plans.
 
-\textbf{Future work} includes other road layouts and real data, learning to propose plans directly, more training runs, and world models fitted to real trajectories.
+\textbf{Future work} includes multiple training seeds, an unguided control with comparable self-imitation, intervention-aware advantage estimation, other road layouts and real trajectories.
 
 %% =====================================================================
 \section{Conclusion}
 
-CAVs can reduce congestion by cooperating, but standard multi-agent reinforcement learning rarely learns to do so, because helpful opportunities are rare and pay off late. Using exact simulator replays, we showed that cooperation can beat MAPPO and that MAPPO itself shows no significant cooperation. We proposed World-Model-Guided Exploration (WGE), in which a world model suggests coordinated group plans, the simulator decides which ones help, and the policy relies on the suggestions less as it learns. \tbf. An imperfect world model can thus show a policy where to explore, without being trusted to decide what it learns.
+We studied whether coordinated CAV behavior can be learned in the space of joint acceleration plans. Exact replays showed coordinated maneuvers that reduce delay relative to a MAPPO baseline without detectable synergy. WGE uses a physics-informed world model to propose group plans around the current policy, checks and grades them in the simulator, and learns from the executed outcomes. \tbf.
 
 \section*{Acknowledgment}
 To be added.
