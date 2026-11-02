@@ -111,7 +111,7 @@ The search is centered on the current policy. The model first rolls out the poli
 The perturbation covariance is updated from plans that later receive positive simulator grades (Sec.~IV-E); maneuver families are used only to label results afterward.
 
 \subsection{Selection, execution and grading}
-At an eligible decision step, a guided group follows a plan with probability $\beta$ (the trust, Sec.~IV-F), drawn before any further computation. If it follows, the shortlist and the policy's own continuation are evaluated by five exact SUMO branches from the identical prefix with common random numbers, over a common window ending $\max D+120$\,s later, and the best branch is executed; if that branch is the policy itself, no plan is executed. % D42, D64
+At an eligible decision step, a guided group requests a plan with probability $\beta$ (Sec.~IV-F), drawn before any further computation. If it follows, the shortlist and the policy's own continuation are evaluated by five exact SUMO branches from the identical prefix with common random numbers, over a common window ending $\max D+120$\,s later, and the best branch is executed; if that branch is the policy itself, no plan is executed. % D42, D64
 Executed plans run to completion or to the episode end, and are recorded as truncated in the latter case.
 
 Each executed plan $p$ starting at $t_0$ with duration $D$ receives an exact grade
@@ -126,16 +126,13 @@ These training branches (selection and grading) are counted in the simulation bu
 The actor loss is the standard clipped PPO objective over steps at which the policy chose its own action, including steps where a plan was considered but not executed. Steps inside an executed plan contribute no PPO ratio. The critic is fit to the observed returns on all steps. The advantages of policy steps are computed by GAE on the observed trajectory, so for steps preceding an intervention they include the effect of the executed plan; we report this as a limitation of the current estimator. % D27, D28
 In addition, executed plans with positive grade contribute a weighted imitation loss: the negative log-likelihood of each member's plan accelerations under the policy, with weight 1 until 20 grades are available and $w_p=\min(20, \exp(g_p/\tau))$ thereafter, where $\tau=\max(1, \mathrm{RMS}(g_{1..20}))$ is fixed from the first 20 grades. Only plans with $g_p>0$ contribute; the full positive buffer is used at every update. This is a filtered variant of advantage-weighted regression~\cite{peng_awr2019}. % D28
 
-\subsection{Trust}
-For each bucket of traffic regime (merge-dense or ordinary, defined from observable CAV-pair geometry and CAV/density bands; \tbc{exact definition to add}), let $m$ and $[L,U]$ be the mean and 95\% world-clustered bootstrap interval of the exact grades so far, and $e=\max(|m-L|,|U-m|)$. After each update,
-\begin{equation}
-\beta \leftarrow \min\Big(\beta,\ \frac{\max(0,U)}{|m|+e}\Big),
-\end{equation}
-with empirical-Bayes shrinkage of bucket estimates toward the pooled estimate; $\beta$ starts at 1, requires grades from at least two worlds, and does not increase. Training pauses if at least 30 grades have $U<0$. % D65, D66; exact_grade.trust_evidence
-This rule reduces guidance under uncertain or negative evidence but does not force $\beta$ to zero. At evaluation, guidance is disabled.
+\subsection{Guidance rate}
+With exact selection (Sec.~IV-D), a plan is executed only when it beats the policy's own continuation in the simulator, so guidance cannot replace the policy's action with one that is worse on the selection window. During training we therefore request a plan at every eligible decision step ($\beta=1$). % MAIN1607 verified-guide correction (REGISTRATION.md)
+As a diagnostic we also report an adaptive trust statistic computed from the exact grades: for each traffic regime, with mean $m$ and 95\% world-clustered bootstrap interval $[L,U]$ of the grades and $e=\max(|m-L|,|U-m|)$, $\tilde\beta = \max(0,U)/(|m|+e)$. % D65
+Training pauses if at least 30 grades have $U<0$. In the first updates, before exact selection was introduced, the guidance rate followed this statistic; we report these updates separately. At evaluation, guidance is disabled.
 
 \subsection{Random-guide ablation}
-The random guide (R) uses the same policy-centered perturbation distribution, exact selection branches, grading, imitation and trust rule, but its candidates are sampled without world-model scoring. Its executed plans are matched to those of WGE update by update: by regime first, then by group size within one member, with the same durations; shortfalls are reported. % D16; r_matching.py
+The random guide (R) uses the same policy-centered perturbation distribution, exact selection branches, grading, imitation and guidance rate, but its candidates are sampled without world-model scoring. Its executed plans are matched to those of WGE update by update: by regime first, then by group size within one member, with the same durations; shortfalls are reported. % D16; r_matching.py
 WGE versus R therefore isolates the contribution of model-based candidate generation; WGE versus the unguided control (A) measures the full method, whose learning objective additionally includes the imitation term.
 
 \begin{algorithm}[t]
@@ -145,7 +142,7 @@ WGE versus R therefore isolates the contribution of model-based candidate genera
 \begin{algorithmic}[1]
 \For{each of 24 training episodes}
   \For{each 1\,s decision step}
-    \If{an eligible group exists and a plan is requested (prob.\ $\beta$)}
+    \If{an eligible group exists and a plan is requested}
       \State shortlist $\gets$ policy-centered world-model search
       \State select best of shortlist $\cup$ \{policy\} by 5 exact branches
       \State execute selected plan to completion (or episode end)
@@ -155,7 +152,7 @@ WGE versus R therefore isolates the contribution of model-based candidate genera
 \EndFor
 \State grade executed plans exactly (Eq.~5)
 \State update actor (PPO on own steps), critic (all steps), imitation (plans with $g_p>0$)
-\State update $\beta$ (Eq.~6), search covariance and plan library
+\State update search covariance and plan library; report trust statistic
 \end{algorithmic}
 \end{algorithm}
 
@@ -239,7 +236,7 @@ More directly, we report the exact grade of executed plans (Eq.~5) relative to t
 
 In our experiments, exact look-ahead found coordinated maneuvers that reduce delay relative to MAPPO, while the MAPPO baseline showed no significant synergy. \tbf.
 
-\textbf{Limitations.} Results are from simulation with SUMO's driver models on one on-ramp; other layouts and real drivers may differ. Each policy has one training run, so variation across training seeds is not measured. MAPPO is our implementation. WGE's training uses exact simulator branches for selection and grading, which require a resettable simulator; the deployed policy does not. The PPO advantages of steps preceding an intervention include the intervention's effect. WGE and the control differ in their learning objective as well as in data collection; the random guide shares WGE's objective. The trust rule does not increase $\beta$ once reduced. The world model is fitted to this road and is less accurate for long plans.
+\textbf{Limitations.} Results are from simulation with SUMO's driver models on one on-ramp; other layouts and real drivers may differ. Each policy has one training run, so variation across training seeds is not measured. MAPPO is our implementation. WGE's training uses exact simulator branches for selection and grading, which require a resettable simulator; the deployed policy does not. The PPO advantages of steps preceding an intervention include the intervention's effect. WGE and the control differ in their learning objective as well as in data collection; the random guide shares WGE's objective. The world model is fitted to this road and is less accurate for long plans.
 
 \textbf{Future work} includes multiple training seeds, an unguided control with comparable self-imitation, intervention-aware advantage estimation, other road layouts and real trajectories.
 
