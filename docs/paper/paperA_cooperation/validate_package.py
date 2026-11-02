@@ -36,7 +36,7 @@ def main():
                     "P-WIN", "P-INTERACT", "P-WALL", "P-TRANSFER", "N-BANDIT", "N-FREE",
                      "W-TEACH", "N-DISTILL", "W-CORE", "M-CREDIT", "W-GUIDE",
                        "W-NOISE", "W-RANK", "W-V5", "W-WARM", "W-EVAL",
-                        "W-BANK", "W-SEARCH"):
+                         "W-BANK", "W-SEARCH", "M-BESTSOLO"):
         assert re.search(r"^### " + claim + r"\b", docs["CLAIMS.md"], re.MULTILINE), claim
     for name in ("OUTLINE.md", "FIGURES.md", "THREATS.md", "README.md"):
         assert "WMVALUE" in docs[name], name
