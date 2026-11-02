@@ -650,7 +650,8 @@ def run_scenario(name, cfg, workdir):
                 b = wr.verify(root, arm)
                 st = replay_bank.collect(root, arm, b, train[(0 if arm == 'B' else 7):], lambda: done.is_set(),
                                          episodes_per_round=cfg['collect_episodes'],
-                                         verify_workers=cfg.get('verify_workers'), rounds=rounds)
+                                         verify_workers=cfg.get('verify_workers'), rounds=rounds,
+                                         verify_per_round=cfg.get('verify_per_round'))
                 outcome.setdefault('collector_'+arm, []).append(dict(rounds=rounds, statuses=st))
             except BaseException as error:
                 outcome.setdefault('collector_'+arm, []).append('failed: '+repr(error))
@@ -814,7 +815,7 @@ DEFAULTS = dict(k=8, N_exec=10, slots=4, workers=12, episodes_per_update=6, last
                 stall_s=240., timeout_s=3600., transport_errors=0, malformed=0, branch_crash=0,
                 die_slot=None, die_after=1, decline_withdrawn=True, parallel_groups=True,
                 fanout_factor=2, r_concurrent=True,   # resume config (MAIN, harden-int)
-                b_replay=True, collect_episodes=2, bank_warmup_rounds=1)   # MAIN B-REPLAY
+                b_replay=True, collect_episodes=1, bank_warmup_rounds=1, verify_per_round=2)   # MAIN B-REPLAY
 
 SCENARIOS = dict(
     a_clean=dict(),

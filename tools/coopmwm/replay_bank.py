@@ -155,7 +155,7 @@ def candidates_for(root, arm, meta, bounds, k=K):
     return sv.random_candidates(meta['group'], v['policy_traj'], tuple(bounds), meta['regime'], seed, k), 'random'
 
 
-def verify_pending(root, arm, bounds, runner, charge, workers, decided):
+def verify_pending(root, arm, bounds, runner, charge, workers, decided, limit=None):
     """Verify every answered snapshot once; returns the statuses of new receipts.
 
     R decision i uses the available_k of B decision i (issue order); it waits for it.
@@ -182,6 +182,8 @@ def verify_pending(root, arm, bounds, runner, charge, workers, decided):
             (bank/'skipped'/(meta['state_id']+'.json')).write_text(json.dumps(dict(meta, reason=how)))
             continue
         todo.append((meta, cands, how, match))
+        if limit is not None and len(todo) >= limit:
+            break       # remaining answered snapshots are verified in later rounds
 
     def one(item):
         meta, cands, how, match = item
@@ -200,7 +202,8 @@ def verify_pending(root, arm, bounds, runner, charge, workers, decided):
         return list(pool.map(one, todo))
 
 
-def collect(root, arm, binding, worlds, stop, episodes_per_round=2, verify_workers=None, rounds=None):
+def collect(root, arm, binding, worlds, stop, episodes_per_round=2, verify_workers=None, rounds=None,
+            verify_per_round=None):
     """Continuous collector for one arm (until ``stop()`` or budget blocked)."""
     from concurrent.futures import ProcessPoolExecutor
     import multiprocessing
@@ -235,14 +238,16 @@ def collect(root, arm, binding, worlds, stop, episodes_per_round=2, verify_worke
         reserve(root, jobs, binding.get('collect_phase', 'train'))
         with ProcessPoolExecutor(max_workers=len(jobs), mp_context=multiprocessing.get_context('spawn')) as pool:
             list(pool.map(episode, jobs))
-        statuses += verify_pending(root, arm, binding['accel_bounds'], runner, charge, verify_workers, decided)
+        statuses += verify_pending(root, arm, binding['accel_bounds'], runner, charge, verify_workers, decided,
+                                   verify_per_round)
         n += 1
         if 'budget_blocked' in statuses:
             break
     # Drain: answered requests issued by the final round.
     deadline = time.time()+binding.get('drain_s', 0)
     while time.time() < deadline:
-        statuses += verify_pending(root, arm, binding['accel_bounds'], runner, charge, verify_workers, decided)
+        statuses += verify_pending(root, arm, binding['accel_bounds'], runner, charge, verify_workers, decided,
+                                   verify_per_round)
         time.sleep(2)
     return statuses
 
