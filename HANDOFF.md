@@ -59,6 +59,24 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**Nov2 20:37 fresh-session reconciliation1793622925:** all recorded owned CPU
+supervisors and all six original/continuation GPU services are EXITED; no new
+dispatch, inference or physics. Observer20260 EXITED normally after its original
+Nov2 noon deadline (`WATCH_OWNER2014/COMPLETE.json`, Unix1793600580); preserve its
+claims and final admission status, do not replace it automatically. Exact totals
+remain250980charged/250660closedactualsim-s and27787.12987509556GPU-s. Completed:
+112fixed/random episodes, fleet16episodes+96oracles, WM6episodes+36oracles,
+per-CAV2episodes. All historical STOPs/charges remain intact. OWNER20:14GPUhold
+ACTIVE; registry checked through Nov2 20:36, no later MAIN GPU RESUME or per-CAV
+continuation authority found. Original CPU-only continuation request remains
+76840sim-s/GPU0 for9cpuQ+3gpuR whollyunstarted episodeworlds plus original branches
+of2successfulcpuQepisodes; excludes failed969138/969139 and every completed job.
+Await explicit MAIN scope authority before staging/dispatching that continuation;
+GPU resume also needs terminal-scope authority, not merely free memory. cpuQfree
+2330767360bytes/own366348334bytes, uptime7.375days. Primary full paired WM-vs-RL
+panel remains incomplete/no primary efficacyCI. Receipt
+`tools/c1switch2/evidence/RESUME_RECONCILIATION_1793622925.json`; STATUS_CURRENT's
+legacy status label is superseded by its concrete EXITED process/observer fields.
 **Nov2 01:46 final supervision1793555179:** unchanged250980charged/
 250660closedactualsim-s and finalized27787.12987509556GPU-s; no new science.
 Owned observer20260 identity confirmed Windows creationNov1 20:29:58,
