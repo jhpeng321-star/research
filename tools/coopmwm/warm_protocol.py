@@ -51,7 +51,7 @@ def install_accounting(root=None,budget_override=None):
         r=Path(root)
         from .resource_config import NAME
         p=next((r/n for n in ('B_REPLAY_BINDING.json',
-            'B_REPLAY_PHASE_RECONCILIATION_0627.json',NAME) if (r/n).exists()),r/NAME)
+            'B_REPLAY_PHASE_TRANSFER_0706.json','B_REPLAY_PHASE_RECONCILIATION_0627.json',NAME) if (r/n).exists()),r/NAME)
         if not p.exists():p=r/'VERIFICATION_CONTINUATION_BINDING.json'
         if not p.exists():p=r/'VERIFICATION_RUNTIME_BINDING.json'
         if not p.exists():p=r/'INCIDENT_RECOVERY_BINDING.json'

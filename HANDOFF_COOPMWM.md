@@ -1,5 +1,48 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+CURRENT Nov3 07:29+08 (unix1793662173): READ ALL664brief lines. Latest MAIN07:06
+phasefundingRESOLVED: checks->train144000, SHA b6c1b8bf12d228e5c923efc5d02e0803f0870a8c123a479d0fadd07bea4b5c28;
+train3008400/charged1798800/remaining1209600 exactlyB/Ru4-u24 PPO; total14.5M,
+old6MrestartblockSUPERSEDED. OldB/Rlearningchecks replacedbylessons(bankext),
+interimseparate. No newphysics/reservation inreconciliation/transfer.
+
+DelegatedREADYd51051a9 NOWINTEGRATED3cc4d0ab. FULLLinuxreplayreleasecpu6
+696checksPASS/0skips82.961s/zeroSUMO; CPUreceiptcommitted. Source5realLSreadPASS:
+63decisions/8admitted/3cooperative/990fullimitationpairs, diagnosticunitweights/
+noTwrite/nooptimizer. Fixedactualintegrationbugs: readSHA-linked safety0426
+overlays; LS labelgenerationtapes resolve label_attempts/GEN/branches while
+snapshotsremainoriginalcollectionroot. No branchrerun. Historicalaccel/resume
+quotesimmutable; laterbankbudgetsadditive. Failedcpu2/3/4 artifactsretained.
+
+At1793662173: builder2388293/start66646196 LIVE;65usable/33confirmedpositive/
+8admitted/3cooperative/0pending. B/RSTILLu3. Ten-admissionstartgateUNMET.
+ProductionB-REPLAYbinding/queue+current-policycollectors and launch handover
+are NOT dispatched by replay_ops.qualify; they remain the next integration step
+after the admission gate. Must use latest transferbudget, source6, exactu3
+Adam/RNGrestore, NEWu4jobIDs (all old closedu4 attempts NEVERreplay).
+
+GPUroll CONTINUES: firstA237704READY8+1completednewclampsearch; secondA
+261418/start904211550 since1793661901 qualifyingALL8fresh/noFAIL. OtherRslots
+keepserving. ACTIVEcontrollerV5=40408/create1793661876.0802872,
+activationwaiterV3=39660/create1793662027.9718082, observer40668/create
+1793658957.771496; allcreation+argvverifiedLIVE, NEVERduplicate. CPUbroker2472252/
+grading1834956 retained. V2controllerexitedsame-secondreceiptcollision; serialize
+remoteadmissions/uniqueperwriterreceipts. V3correctlyrefusednewlocalmergebytes;
+deployONLYimmutableCPU7numericalfiles. V4retiredonlydrainedAsecond thenrefused
+stalebinding: deadlineA2per-filepytoolssymlinkstoAincident1. V5atomicentryinstalls
+detachaliases/preserveoriginalbytes+linkmetadata/SHA; neverwritethroughpeerpaths;
+acceptoldbindingORexactincomingqualifiedbytes only. Allfaultlogskept, noqueryredo.
+Activationwaiterloads14.5M/transferbudgetexplicitly, stillrequiresFOURready and
+no-active-gradeboundary; collectoractionablegate/niches1vs4NOTyetfullylive.
+Currentgate/clampwithoutnicheconfig reportedasintermediatecohort.19localmetadata/
+budget/installtestsPASS. CommandmirrorstillOFF/oldabsoluteFAILadopted.
+
+NEXT: adoptLS_NICHENULL_ROLL_DISPATCH_V5 / NICHE_ACTIVATION_WATCH_DISPATCH_V3;
+observeA261418gates, keeponequalifierglobally, thenRslots; no repeatedgates.
+ContinuebuilderALLnewpositives, publishBANK_QUALITY/NULL_DIVERSITY. When10admitted,
+finishregisteredproductionB-REPLAYhandover/fromu3 andpublishTRAININGSTARTED;
+no falsePPO/viabilityclaim. No sealedoutcomesopened, no deletions/push/reset.
+
 06:40:12+08/unix1793659212 CHECKPOINT: A237704 ALIVE/5checks(4SHA-adopted+
 1fresh)/noFAIL, gpuA100%/29203MiB. Controller12200/activation32220/observer40668
 creationverifiedLIVE; other3slotsREADY. LS58successful/58usable,28confirmed/
@@ -1907,3 +1950,13 @@ GPU A83%/45,083MiB and GPU R91%/23,878MiB, each with two other compute owners.
 No GPU probe admitted or repeated. Release `fcc50296`, its manifest and exact
 startup/hot-swap recipe remain qualified; numerical source is unchanged.
 Existing single registration verified; no new training/SUMO or PID changes.
+
+### S-WMSPEED2 recovery 2026-11-03 05:47 — qualified release preserved
+
+Inventories committed in c4/wmspeed2 `714f9189`: no live WMSPEED2 jobs;
+GPU A26%/18,182MiB with one other compute owner, GPU R84%/20,396MiB with two.
+No further GPU experiment admitted. Numerical source still matches `fcc50296`;
+the exact cold/warm transfer release, manifest, startup gate and drained-boundary
+recipe above remain current (details: c4-wmspeed2/docs/paper_results/WMSPEED2.md).
+Integrated warm H120 4.529x and cold H300 2.496x receipts rechecked: EXACT0
+costs/trajectories and identical ranks/draws. Single registration preserved.

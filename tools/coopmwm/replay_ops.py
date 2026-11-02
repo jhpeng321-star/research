@@ -8,7 +8,7 @@ from .protocol import checked
 from .storage import read,write
 BASE='/home/ubuntu/coopmwm20261103_nichenullcpu7'
 
-SOURCE='/home/ubuntu/coopmwm20261103_replayreleasecpu5'
+SOURCE='/home/ubuntu/coopmwm20261103_replayreleasecpu6'
 
 
 def release_status():

@@ -1,5 +1,30 @@
 # S-COOPMWM — live checks
 
+## Nov3 07:29 UTC+8 — qualified latest budget semantics; rolling handover continues
+- Latest frozen replay source `coopmwm20261103_replayreleasecpu6` passes
+  **696 Linux CPU checks, zero failures/skips,82.961s, zero SUMO**. It loads
+  the authorized07:06 transfer before older budgets and suppresses the superseded
+  B/R every4-update checks; registered per-update lesson checks remain.
+- The next GPU-slot handover exposed per-file symlinks into the first slot's
+  package. V4 retained its failure after retiring only the already-drained
+  second owner. New atomic destination-entry installation preserves old bytes,
+  link metadata and hashes, and cannot write through an alias into a serving
+  peer. Only original-binding or exact incoming CPU7-qualified bytes are accepted.
+- Amendment `1182388c8925820a…`: controller **40408/create1793661876.0802872**
+  adopts completed drains and gates. Second gpuA qualifier **261418/start904211550**
+  is alive with no failure; first slot237704 remains READY8 and has completed a
+  genuine clamp-enabled search. All numerical search sources still come from
+  immutable CPU7; remaining slots require all8 fresh gates, one qualifier globally.
+- Nineteen targeted metadata/budget/install checks PASS (0.39s). New local
+  activation waiter **39660/create1793662027.9718082** replaces only verified32220
+  and explicitly carries the approved14.5M budget into the future collector
+  configuration. It still waits for four READY slots and a no-active-grade boundary.
+- At unix1793662173, bank builder2388293 is alive: **65 usable decisions,
+  33 confirmed positives,8 admitted /3 cooperative**, zero pending. Mean admitted
+  replicated advantage533.302 veh-s, decision-bootstrap95% CI[54.101,1373.853];
+  these are conditional bank descriptives. B/R remainu3; no policy-learning or
+  training-start claim. Existing collection, confirmations and observer continue.
+
 ## Nov3 07:19 UTC+8 — MAIN07:06 train-phase transfer registered
 - Latest addendum authorizes144,000 sim-s **checks→train**. All of it fits the
   unspent checks balance; sumo_verification contribution is0. Total remains14.5M.

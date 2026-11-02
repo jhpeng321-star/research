@@ -81,6 +81,15 @@ print(json.dumps(d))''',timeout=60)
 
 def drain(host,root):
     slot=SLOTS[root.rsplit('_',1)[1]]
+    remembered=json.loads(remote('cpuQ',f'''from pathlib import Path
+import json
+c=Path({COLLECTION!r});p=c/'niche_roll/drains'/({digest(slot)!r}+'.json')
+if p.exists():
+ d=json.loads(p.read_text());done=c/'gpu_drained_v2'/(d['drain_key']+'.json')
+ print(json.dumps(dict(adopted=True,drained=done.exists(),**d)))
+else:print('{{}}')''',timeout=40))
+    if remembered:
+        print(json.dumps(remembered));return
     owner=json.loads(remote(host,f'''from pathlib import Path
 import json
 r=Path({root!r});d=json.loads((r/'SPOOL_OWNER.json').read_text());p=Path('/proc',str(d['pid']))
@@ -106,6 +115,9 @@ print(json.dumps(dict(owner=owner,drained=done.exists(),drain_key=key)))'''))
 
 
 def gpu(host,root):
+    import inspect
+    from .source_install import install_source
+    installer=inspect.getsource(install_source)
     for path in ops.EVIDENCE.glob('LS_NICHENULL_DISPATCH_*.json'):
         d=read(path)
         if d['root']==root:
@@ -160,16 +172,15 @@ if p.exists():
 probe=(r/'SPOOL_WORKER.claim').open('a');fcntl.flock(probe,fcntl.LOCK_EX|fcntl.LOCK_NB);fcntl.flock(probe,fcntl.LOCK_UN);probe.close()
 binding=json.loads((r/'GPU_BINDING.json').read_text());backup=r/'PRE_NICHENULL1'
 files=json.loads(zlib.decompress(base64.b64decode({packed!r})))
+exec({installer!r})
+source_records=[]
 for n,text in files.items():
  target=r/n;prior=backup/n
- if target.exists() and not prior.exists():
-  old_hash=hashlib.sha256(target.read_bytes()).hexdigest()
-  if n in binding['hashes']:assert old_hash==binding['hashes'][n],n
-  prior.parent.mkdir(parents=True,exist_ok=True);shutil.copy2(target,prior)
-  assert hashlib.sha256(prior.read_bytes()).hexdigest()==old_hash,n
- target.parent.mkdir(parents=True,exist_ok=True);target.write_text(text)
+ target.parent.mkdir(parents=True,exist_ok=True)
+ source_records.append(install_source(target,prior,text.encode(),binding['hashes'].get(n)))
  binding['hashes'][n]=hashlib.sha256(target.read_bytes()).hexdigest()
-net=r/'FROZEN_NETWORK.net.xml.gz';net.write_bytes(base64.b64decode({base64.b64encode(net).decode()!r}));binding['hashes'][net.name]=hashlib.sha256(net.read_bytes()).hexdigest()
+net=r/'FROZEN_NETWORK.net.xml.gz';source_records.append(install_source(net,backup/net.name,base64.b64decode({base64.b64encode(net).decode()!r}),binding['hashes'].get(net.name)));binding['hashes'][net.name]=hashlib.sha256(net.read_bytes()).hexdigest()
+with (r/'NICHENULL_SOURCE_INSTALL.json').open('x') as f:json.dump(source_records,f)
 deps={{n:hashlib.sha256(text.encode()).hexdigest() for n,text in files.items() if n.startswith('pytools/traffic_shepherd/') or any(n.endswith('/'+q+'.py') for q in ('ls_fast_worker','resource_config','query_errors'))}}
 with (r/'NICHENULL_DEPENDENCY_HASHES.json').open('x') as f:json.dump(deps,f)
 binding.pop('adopted_startup_gates',None)
@@ -404,20 +415,23 @@ def continue_roll():
 def roll_dispatch():
     import subprocess,sys,psutil
     from .protocol import REGISTRY
-    target=ops.EVIDENCE/'LS_NICHENULL_ROLL_DISPATCH_V4.json'
+    target=ops.EVIDENCE/'LS_NICHENULL_ROLL_DISPATCH_V5.json'
     if target.exists():
         d=read(target)
         if psutil.pid_exists(d['pid']):
             p=psutil.Process(d['pid']);assert abs(p.create_time()-d['unix'])<5
             assert p.cmdline()[-3:]==['-m','tools.coopmwm.niche_roll','continue_roll']
         print(json.dumps(dict(adopted=d)));return
-    reg=ops.EVIDENCE/'NICHE_ROLL_CONTROLLER_REGISTRATION_V4.json'
+    reg=ops.EVIDENCE/'NICHE_ROLL_CONTROLLER_REGISTRATION_V5.json'
     if not reg.exists():
-        line=('\nS-COOPMWM joint-release controller V4 engineering amendment: V3 correctly '
-            'refused newly merged local sumo_verify bytes before changing the drained '
-            'second slot. Fetch numerical files/network from original immutable CPU7 '
-            'snapshot with complete registered SHA checks; never mutable integration '
-            'checkout. Same qualified source/all8fresh gates, no numerical change. '
+        line=('\nS-COOPMWM joint-release controller V5 engineering amendment: V4 retired '
+            'the drained Asecond then refused stale binding hashes: its per-file '
+            'source symlinks point at the already-qualified Afirst package. Install '
+            'owned destination entries ATOMICALLY (detach aliases, never write through '
+            'to a serving peer); preserve original bytes and link metadata with SHA. '
+            'Accept prior-binding bytes OR exact incoming CPU7-qualified bytes only. '
+            'Numerical files/network still from immutable CPU7 with full hashes. '
+            'Same qualified source/all8fresh gates, no numerical change. '
             'Retain all earlier controller faults and original workers/requests. Adopt live '
             'source-qualified NICHENULL3 successor; retain stopped V1 fault receipt; finish registered Asecond/Rfirst/Rsecond drained '
             'handovers ONE qualifier globally. Preserve requests/claims/forecasts; '
@@ -427,9 +441,9 @@ def roll_dispatch():
             'separate after all4ready; other slots keep serving.\n')
         write(reg,dict(line=line,source_sha256=sha(ops.LOCAL/'tools/coopmwm/niche_roll.py'),new_sumo_sim_s=0))
         with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line+'amendmentSHA'+sha(reg)+'\n')
-    old=read(ops.EVIDENCE/'LS_NICHENULL_ROLL_DISPATCH_V3.json')
+    old=read(ops.EVIDENCE/'LS_NICHENULL_ROLL_DISPATCH_V4.json')
     assert not psutil.pid_exists(old['pid']),'adopt original controller until exited'
-    with (ops.EVIDENCE/'LS_NICHENULL_ROLL_V4.log').open('x',encoding='utf-8') as log:
+    with (ops.EVIDENCE/'LS_NICHENULL_ROLL_V5.log').open('x',encoding='utf-8') as log:
         p=subprocess.Popen([sys.executable,'-X','utf8','-u','-m','tools.coopmwm.niche_roll','continue_roll'],
             cwd=ops.LOCAL,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
@@ -449,7 +463,9 @@ def activate():
     if len(workers)!=4 or not all(w['ready'] and w['owner'].get('generation')=='NICHENULL3' for w in workers):
         print(json.dumps(dict(wait=True,reason='all four source-bound GPU gates required')));return False
     cpu=read(ops.EVIDENCE/'LS_LABEL_CPU_coopmwm20261103_nichenullcpu7.json')
-    reg=ops.EVIDENCE/'NICHE_COLLECTOR_ACTIVATION_REGISTRATION.json'
+    transfer=read(ops.EVIDENCE/'B_REPLAY_PHASE_TRANSFER_0706.json')
+    assert transfer['funding_complete'] and transfer['budget']['total']==14500000
+    reg=ops.EVIDENCE/'NICHE_COLLECTOR_ACTIVATION_REGISTRATION_0706.json'
     if not reg.exists():
         line=('\nS-COOPMWM joint niche/nullfix collector activation: all4 source-bound '
             'eight-gate GPU workers required. Metadata supervisor handover only at '
@@ -460,7 +476,9 @@ def activate():
             'new immutable LS_NULLFIX_CONFIG from271CPU-qualified source6 enables '
             'observable actionable gate before verification and B-only prospective '
             'niches1/4 admission alternation. Same it2_K2/K8 final/horizons/N, '
-            'same existing precharges/phases and6M operational guard. R/PPO unchanged.\n')
+            'same existing precharges; MAIN06:27/07:06 operationalcap14500000 and '
+            'authorized checks->train transfer loaded explicitly in new metadata '
+            'config, original immutable bindings retained. R/PPO unchanged.\n')
         write(reg,dict(line=line,cpu=cpu,parent_sha256=sha(ops.EVIDENCE/'NICHE_DEPENDENCY_RECOVERY3.json'),new_sumo_sim_s=0))
         with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line+'amendmentSHA'+sha(reg)+'\n')
     value=json.loads(remote('cpuQ',f'''from pathlib import Path
@@ -499,7 +517,8 @@ for _ in range(100):
 else:raise ValueError('old metadata supervisor did not exit')
 cfg=dict(source_root=str(s),receipt_suffix='_NICHENULL2',nullfix_active=True,
  niche_alternation=dict(start_admission_count=len(list((c/'admissions').glob('*.json')))),
- operational_spend_cap=6000000,amendment_sha256={sha(reg)!r})
+  operational_spend_cap=14500000,budget={transfer['budget']!r},
+  budget_amendment_sha256={sha(ops.EVIDENCE/'B_REPLAY_PHASE_TRANSFER_0706.json')!r},amendment_sha256={sha(reg)!r})
 with (c/'LS_NULLFIX_CONFIG.json').open('x') as f:json.dump(cfg,f)
 env=dict(os.environ,PYTHONPATH=str(s/'pytools')+':/home/ubuntu/e3final/runtime/src:/home/ubuntu/e3final/runtime',CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
 code='from pathlib import Path;from tools.coopmwm.nullfix_geometry import install;install('+repr(str(s/'FROZEN_GEOMETRY_SOURCE.py'))+','+repr(str(s/'FROZEN_NETWORK.net.xml.gz'))+');from tools.coopmwm.ls_collection import supervise;supervise(Path('+repr(str(c))+'))'
@@ -529,14 +548,24 @@ def activation_watch():
 
 def activation_dispatch():
     import subprocess,sys,psutil
-    target=ops.EVIDENCE/'NICHE_ACTIVATION_WATCH_DISPATCH_V2.json'
+    target=ops.EVIDENCE/'NICHE_ACTIVATION_WATCH_DISPATCH_V3.json'
     if target.exists():print(json.dumps(dict(adopted=read(target))));return
-    old=read(ops.EVIDENCE/'NICHE_ACTIVATION_WATCH_DISPATCH.json')
+    reg=ops.EVIDENCE/'NICHE_ACTIVATION_BUDGET_WATCH_0706.json'
+    if not reg.exists():
+        from .protocol import REGISTRY
+        line=('\nS-COOPMWM MAIN06:27/07:06 activation-waiter metadata amendment: '
+            'new collector config explicitly loads approved14.5M cap and SHA-bound '
+            'checks->train transfer after all4workersREADY/no-active-grade boundary. '
+            'Retain old bindings and precharges; no new search/physics/PPO, same '
+            'qualified numerical source. Replace only identity-verified local waiter.\n')
+        write(reg,dict(line=line,budget_sha256=sha(ops.EVIDENCE/'B_REPLAY_PHASE_TRANSFER_0706.json'),new_sumo_sim_s=0))
+        with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line+'amendmentSHA'+sha(reg)+'\n')
+    old=read(ops.EVIDENCE/'NICHE_ACTIVATION_WATCH_DISPATCH_V2.json')
     if psutil.pid_exists(old['pid']):
         p=psutil.Process(old['pid']);assert abs(p.create_time()-old['unix'])<5
         assert p.cmdline()[-3:]==['-m','tools.coopmwm.niche_roll','activation_watch']
         p.terminate();p.wait(timeout=15)
-    with (ops.EVIDENCE/'NICHE_ACTIVATION_WATCH_V2.log').open('x',encoding='utf-8') as log:
+    with (ops.EVIDENCE/'NICHE_ACTIVATION_WATCH_V3.log').open('x',encoding='utf-8') as log:
         proc=subprocess.Popen([sys.executable,'-X','utf8','-u','-m','tools.coopmwm.niche_roll','activation_watch'],
             cwd=ops.LOCAL,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)

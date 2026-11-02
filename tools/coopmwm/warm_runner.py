@@ -256,7 +256,7 @@ def run_arm(root,arm):
                 for i in exact_rng.permutation(len(candidates))[:max(0,12-exact_count)]:
                     e,s=candidates[int(i)]
                     diagnostics.submit(diagnostic_task,root,b,state,e,s,exact_count);exact_count+=1
-            if u%4==0:check(root,b,arm,policy,u)
+            if u%4==0 and not replay:check(root,b,arm,policy,u)
             if u%16==0:
                 dev=wave(root,b,{arm:policy},worlds('dev'),'dev',f'warmdev{u:03}_{arm}','dev')
                 panel_report(root,f'{arm}_DEV_{u:03}.json',dev,read(root/'MAPPO_DEV.json')['records'],'dev')

@@ -3,7 +3,7 @@
 2. A/B/R fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
 4. A: PPO shared team reward=-J, road speed deficit plus source waiting.
-5. B: same SUMO-only reward/advantage, WM-guided exploration; no WM or behavioural bonus.
+5. LatestB-REPLAY: own-policy SUMO PPO episodes/no executedplans or WMwait; plus AWRfromsame-arm exact-positive replicated/later-safe bank; Rownrandombank. Aunchanged. No WM/behaviour reward.
 6. All live CAVs choose1s acceleration residuals added to MAPPO raw commands; no gap/speed action coordinates.
 7. Exact zero abstains before unchanged safety: actual frozen MAPPO executor bitwise parity CPU-tested.
 8. Reuse COOPFREE pre-safety injection, unchanged safety/CommandOwnership; MAIN1639 CUDAcallbackgate CPU/GPU EXACT0 but absoluteobservabletrajectoryFAIL(.860m/.381mps max); mirrorOFF botharms/no full-road parity claim.
@@ -40,7 +40,7 @@
 39. TRAIN4/dev16 reportingonly; primaryA24/B24/R24,secondaryA48. Finalspawnfault375800sim-squarantined; MAIN1556approvedreplacement; source4/89CPU PASS explicitcheckpoint/SHA+final-onlycaps; B/Rcontinue.
 40. Final detector-first discovery uses unchanged COOPBEHAV detectors and complete exact twins.
 41. Learning checks report team return/value/KL/gradient, beta, proposal routes/acceptance/O1-O4 counts.
-42. A48/B3/R3;72episodes/14534snapshotsadopted. CPU7jointrelease273LinuxPASS;A237704READY8;controller24476continuesoriginalCPU7snapshotroll/onequalifierglobally. Delegatedreplayintegrated3cc4d0ab;replayreleasecpu5 full694LinuxPASS/0skips83.664s/noSUMO. RealLSreadPASS63decisions/8admitted/3cooperative/990samples; amendedsafetyoverlays+generationtapes adopted, notrerun. PPOphasefundingresolvedb6c1b8bf; B-REPLAY stillrequires10admissions.
+42. A48/B3/R3;72episodes/14534snapshotsadopted. CPU7jointrelease273LinuxPASS;A237704READY8/A261418qualifying;controller40408 continuesoriginalCPU7source/atomicowned-entryinstalls/onequalifierglobally. Replayintegrated3cc4d0ab;replayreleasecpu6 full696LinuxPASS/0skips82.961s/noSUMO. RealLSreadPASS8admitted/3cooperative/990samples; amendedoverlays/generationtapesadopted. PPOphasefundingresolvedb6c1b8bf; B-REPLAY stillrequires10admissions.
 43. Recoverycap7500000: superseded811640,train2811600,checks432000,dev201600,final576000,Rtest115200,coldB28800,failedA14400; exact-plan-grades760000.
 44. Mechanics3600,calibration57600,discovery138200,pairedbranches1297400,reusecheck600; train2852400 inclMAIN1651 tenfresh-ID DNS replacements12000; allfailedchargesretained; verification2800000/exactgrade55360 plusinactivek8phase1500000.
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.

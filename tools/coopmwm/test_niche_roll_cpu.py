@@ -15,6 +15,18 @@ def test_rollout_source_is_immutable_cpu7_not_current_checkout(monkeypatch):
     assert nr.frozen_rollout_files(['sumo_verify'])==dict(files={},network='')
 
 
+def test_completed_drain_adopted_after_original_owner_exits(monkeypatch):
+    calls=[]
+    def remote(host,code,**kwargs):
+        calls.append(host)
+        assert host=='cpuQ'
+        compile(code,'<adopt-original-drain>','exec')
+        return '{"adopted":true,"drained":true,"owner":{"pid":1}}'
+    monkeypatch.setattr(nr,'remote',remote)
+    nr.drain('gpuA','/root/coopmwm20261102_deadlineA2')
+    assert calls==['cpuQ']
+
+
 def test_one_qualifier_across_hosts_and_failed_owner_blocks_roll():
     import pytest
     def worker(host,suffix,generation='FASTK2V5',ready=True,state='R',failure=None):
@@ -43,14 +55,17 @@ def test_activation_payload_compiles_and_waits_on_any_incomplete_claim(monkeypat
     monkeypatch.setattr(nr.ops,'EVIDENCE',tmp_path)
     monkeypatch.setattr(vo,'gpu_status',lambda host:dict(workers=[dict(ready=True,owner=dict(generation='NICHENULL3'))]*2))
     (tmp_path/'LS_LABEL_CPU_coopmwm20261103_nichenullcpu7.json').write_text('{}')
-    (tmp_path/'NICHE_COLLECTOR_ACTIVATION_REGISTRATION.json').write_text('{}')
+    (tmp_path/'NICHE_COLLECTOR_ACTIVATION_REGISTRATION_0706.json').write_text('{}')
+    (tmp_path/'B_REPLAY_PHASE_TRANSFER_0706.json').write_text(json.dumps(
+        dict(funding_complete=True,budget=dict(total=14500000))))
     def remote(host,code,**kwargs):
         assert host=='cpuQ'
         compile(code,'<collector-no-grade-boundary>','exec')
         assert "open_claims" in code and "signal.SIGCONT" in code
         assert "label_attempts/SUMOENV1/verification/claims" in code
         assert "resource_tracker" in code
-        assert "operational_spend_cap=6000000" in code
+        assert "operational_spend_cap=14500000" in code
+        assert "budget_amendment_sha256=" in code
         return '{"wait":true,"open_claims":["original-grade"]}'
     monkeypatch.setattr(nr,'remote',remote)
     assert nr.activate() is False

@@ -60,3 +60,19 @@ def test_authorized_transfer_funds_ppo_without_touching_restricted_phases(monkey
     for p in ('bank_verification_ext','final_test','paired_branch','interim_u8_test','sumo_verification_k8'):
         assert v['budget']['phases'][p]==b['phases'][p]
     assert json.loads((tmp_path/bo.NAME).read_text())==parent
+
+
+def test_live_loader_prefers_authorized_transfer_over_older_reconciliation(monkeypatch,tmp_path):
+    import json
+    from . import warm_protocol,accel_storage
+    b,_=fixture();new=copy.deepcopy(b)
+    new['phases']['other']-=144000;new['phases']['train']+=144000
+    (tmp_path/'AUTHORITY.md').write_text('older newer')
+    (tmp_path/'B_REPLAY_PHASE_RECONCILIATION_0627.json').write_text(json.dumps(
+        dict(budget=b,amendment_sha256='older')))
+    (tmp_path/'B_REPLAY_PHASE_TRANSFER_0706.json').write_text(json.dumps(
+        dict(budget=new,amendment_sha256='newer')))
+    monkeypatch.setattr(accel_storage,'_reserve',accel_storage._reserve)
+    warm_protocol.install_accounting(tmp_path)
+    assert accel_storage._reserve.__globals__['CAP']==CAP-811640
+    assert accel_storage._reserve.__globals__['CAPS']['train']==3008400
