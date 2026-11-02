@@ -457,8 +457,9 @@ def build_root(root, cfg):
         policy = Policy();opt = torch.optim.Adam(policy.parameters(), lr=3e-4)
         rng = torch.Generator().manual_seed(SEED)
         save(root/f'{arm}_checkpoint_003.pt', policy, opt, rng, 3, 0)
-    budget = dict(total=11_000_000, phases=dict(superseded=811640, train=3_000_000, checks=500_000, dev=500_000,
+    budget = dict(total=13_600_000, phases=dict(superseded=811640, train=3_000_000, checks=500_000, dev=500_000,
                                                 sumo_verification=1_000_000, sumo_verification_k8=1_500_000,
+                                                bank_verification_ext=2_600_000,          # MAIN 2026-11-02 22:32
                                                 exact_plan_grading=500_000, discovery=138_200))
     budget['allocated'] = sum(budget['phases'].values());budget['unallocated'] = budget['total']-budget['allocated']
     budget.update(updates=dict(A=48, B=24, R=24))

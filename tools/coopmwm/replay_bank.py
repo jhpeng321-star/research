@@ -220,7 +220,7 @@ def collect(root, arm, binding, worlds, stop, episodes_per_round=2, verify_worke
     runner = sv.SubprocessBranchRunner(vroot/'branches', workers=cfg.get('workers', K+1),
                                        timeout_s=cfg.get('timeout_s', 3600))
     charge = sv.accel_charge(str(root), cfg.get('phase', 'sumo_verification_k8'))
-    confirm_charge = sv.accel_charge(str(root), 'sumo_verification')     # MAIN: confirmation budget phase
+    confirm_phase = cfg.get('confirm_phase', 'bank_verification_ext')    # MAIN 2026-11-02 22:32 allowance
 
     def runner_for(work):
         return sv.SubprocessBranchRunner(Path(work)/'branches', workers=2, timeout_s=cfg.get('timeout_s', 3600))
@@ -248,7 +248,7 @@ def collect(root, arm, binding, worlds, stop, episodes_per_round=2, verify_worke
             list(pool.map(episode, jobs))
         statuses += verify_pending(root, arm, binding['accel_bounds'], runner, charge, verify_workers, decided,
                                    verify_per_round)
-        confirm_pending(root, arm, runner_for, confirm_charge, workers=2,
+        confirm_pending(root, arm, runner_for, str(root), confirm_phase, workers=2,
                         sources=binding.get('replay_sources', {}).get(arm, ()), limit=verify_per_round)
         bank_quality(root, arm, binding.get('replay_sources', {}).get(arm, ()))
         n += 1
@@ -436,13 +436,25 @@ def _safety(receipt, branches_dir):
     return deltas, all(v <= 0 for v in deltas.values())
 
 
-def confirm(root, arm, receipt, snapshot, runner_for, charge, workers=2, version=None):
+def _confirm_charge(run_root, phase, kind):
+    """Confirmation-branch charge in the registered extension phase (MAIN 2026-11-02 22:32).
+
+    The ledger ids embed the attempt kind: replication and extended branches of one decision
+    share the verification_id (episode/t0/candidate digest), so unqualified ids would hit the
+    duplicate-charge guard and the second branch could never run."""
+    inner = sv.accel_charge(run_root, phase)
+    return lambda vid, specs: inner(f'{kind}_{vid}', specs)
+
+
+def confirm(root, arm, receipt, snapshot, runner_for, run_root, phase, workers=2, version=None):
     """Run (a) replication and (b) extended-window confirmations for one first-seed positive decision."""
     bank = bank_root(root, arm);best = receipt['chosen_plan'];vid = receipt['verification_id']
     rep_root, ext_root = bank/'confirm_replication', bank/'confirm_extended'
-    rep = sv.verify(replicate(snapshot, vid), [best], runner_for(rep_root), charge, receipt['proposer'],
+    rep = sv.verify(replicate(snapshot, vid), [best], runner_for(rep_root),
+                    _confirm_charge(run_root, phase, 'confirm_replication'), receipt['proposer'],
                     workers=workers, root=rep_root)
-    ext = sv.verify(snapshot, [best], runner_for(ext_root), charge, receipt['proposer'], workers=workers,
+    ext = sv.verify(snapshot, [best], runner_for(ext_root),
+                    _confirm_charge(run_root, phase, 'confirm_extended'), receipt['proposer'], workers=workers,
                     root=ext_root, tail_s=EXTENDED_TAIL_S)
     out = dict(verification_id=vid, arm=arm, policy_version=version, t0=receipt['t0'],
                duration_s=int(best['duration_s']), first_seed_advantage_veh_s=receipt['grade_veh_s'],
@@ -487,7 +499,7 @@ def _ls_snapshot(src, key):
     return s
 
 
-def confirm_pending(root, arm, runner_for, charge, workers=2, sources=(), limit=None):
+def confirm_pending(root, arm, runner_for, run_root, phase, workers=2, sources=(), limit=None):
     """Confirm every first-seed positive decision (own bank and, for B, live LS labels) once."""
     bank = bank_root(root, arm);done = {p.stem for p in (bank/'confirmations').glob('*.json')}
     by_vid = {}
@@ -507,7 +519,8 @@ def confirm_pending(root, arm, runner_for, charge, workers=2, sources=(), limit=
         else:
             snap = torch.load(bank/'snapshots'/(by_vid[r['verification_id']]['state_id']+'.pt'), weights_only=False)
         receipt = {k: v for k, v in r.items() if not k.startswith('_')}
-        statuses.append(confirm(root, arm, receipt, snap, runner_for, charge, workers, r['_policy_version'])['admitted'])
+        statuses.append(confirm(root, arm, receipt, snap, runner_for, run_root, phase, workers,
+                                r['_policy_version'])['admitted'])
     return statuses
 
 

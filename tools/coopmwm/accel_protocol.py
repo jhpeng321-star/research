@@ -8,7 +8,8 @@ SEED=20261101
 ORIGINAL_WORLDS=old.worlds
 PHASES=dict(superseded=SUPERSEDED_CHARGE, train=2073600, checks=259200,
             dev=259200, mechanics=3600, calibration=57600, discovery=240000,
-            final_test=460800, random_guide_test=115200)
+            final_test=460800, random_guide_test=115200,
+            bank_verification_ext=2600000)  # MAIN 2026-11-02 22:32: owner cap raise +2.6M, confirmed-plan-bank grading only
 
 
 def worlds(role='train', training_seed=0):
