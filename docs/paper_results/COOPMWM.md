@@ -1,5 +1,22 @@
 # S-COOPMWM — live checks
 
+## Nov3 00:41 UTC+8 — command-mirror gate adopted; activation remains blocked
+- Rechecked source hashes against the completed 48-test CPU qualification and
+  adopted the existing GPU receipt; zero new inference or SUMO calls.
+- CPU/CUDA callback traces agree exactly, but absolute observable member-motion
+  errors remain **0.859924 m / 0.381060 m/s** (986051) and
+  **0.078796 m / 0.055090 m/s** (986070). Both old/prototype paths have the same
+  errors and lack genuine half-step observations. This gate **failed**; the mirror
+  remains off under the registered rule. Repeating unchanged code adds no evidence.
+- `coopmwm/COMMAND_MIRROR_ADOPTED_1793637654.json` pins the original gate SHA
+  and current numerical hashes. The inherited read-only status helper is preserved.
+- Grading has caught up to **14 complete lists / 5 exact positives**; null-delay
+  lists are **3/14** (all eight candidate delays exactly equal policy, no tolerance).
+  `BANK_STATUS_1793637666.json` records these flags. These are bank-selection
+  diagnostics, not a training-viability result; B/R remain u3.
+- The delegated harden-int worker is still active; its READY receipt is absent.
+  Its running CPU rehearsals are adopted rather than duplicated.
+
 ## Nov3 00:39 UTC+8 — disk blocker cleared; existing grading resumed
 - Read all **578** brief lines; adopted `520fdf4b` and existing uncommitted work.
 - cpuQ free space is **14,236,557,312 bytes**, above the requested 10GiB target.

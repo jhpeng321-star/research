@@ -158,6 +158,35 @@ print(json.dumps(v))''',timeout=90)
     print(json.dumps(dict(v,cases=[{k:x for k,x in c.items() if k not in ('trace','errors','unresolved_half_steps')} for c in v['cases']])))
 
 
+def mirror_status():
+    """Adopt the completed exact gate; never re-run failed work unchanged."""
+    from .storage import read
+    from .protocol import sha
+    import hashlib
+    import time
+    source=ops.EVIDENCE/'COMMAND_MIRROR_GPU_GATE_1651.json'
+    gate=read(source)
+    cpu=read(ops.EVIDENCE/'CPU_coopmwm20261102_commandcpu3.json')
+    numerical_hashes={name:hashlib.sha256((ops.LOCAL/'tools/coopmwm'/(name+'.py')).read_text(encoding='utf-8').encode()).hexdigest()
+        for name in ('command_chain','plan_wm')}
+    assert all(value==cpu['source_hashes']['pytools/tools/coopmwm/'+name+'.py']
+        for name,value in numerical_hashes.items()), 'numerical sources changed since completed gate'
+    result=dict(unix=time.time(),source_receipt=str(source),source_sha256=sha(source),
+        cpu_qualification={key:cpu[key] for key in ('pass_','tests','skips','sim_s','wall_s')},
+        current_numerical_hashes=numerical_hashes,
+        pass_=gate['pass_'],cpu_gpu_max_trace_error=gate['cpu_gpu_max_trace_error'],
+        activation=False,new_sumo_sim_s=0,new_gpu_calls=0,
+        reason=gate['reason'],cases=[dict(world=c['world'],final_chain=c['final_chain'],
+            max_position_error_m=c['max_position_error'],max_speed_error_mps=c['max_speed_error'],
+            unresolved_half_steps=len(c['unresolved_half_steps']),
+            nonidentical_plan_policy_steps=c['nonidentical_plan_policy_steps'])
+            for c in gate['cuda']['cases']])
+    assert not result['pass_'], 'passing gate needs a separately registered activation boundary'
+    target=ops.EVIDENCE/f'COMMAND_MIRROR_ADOPTED_{int(result["unix"])}.json'
+    write(target,result)
+    print(json.dumps(result))
+
+
 def gpu_gate():
     """Attempt the observable null-case gate on CUDA; mismatch forbids activation."""
     from .storage import read
@@ -190,5 +219,5 @@ print(json.dumps(dict(unix=time.time(),pass_=passed,cpu_gpu_max_trace_error=max(
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('mode',choices=('sources','show','laws','fixtures','contrast','qualify','probe','probe_kinematic','gpu_gate'))
+    p=argparse.ArgumentParser();p.add_argument('mode',choices=('sources','show','laws','fixtures','contrast','qualify','probe','probe_kinematic','gpu_gate','mirror_status'))
     globals()[p.parse_args().mode]()

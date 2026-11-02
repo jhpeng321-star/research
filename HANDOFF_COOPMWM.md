@@ -1,5 +1,11 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+00:41/unix1793637666: disk recovery commitcfd9e1eb. Bank now14real lists/5positive,
+3/14 exact-delay-null; bank_status tested against live receipts. Mirror original
+FAIL adopted with source hashes/zero WM or SUMO (COMMAND_MIRROR_ADOPTED_1793637654);
+OFF per registered rule. Harden-int opencode13928 stillACTIVE since1793635298,
+CPUrehearsal child32036 observed; HARDEN_INT_READY absent. NEVERduplicate its work.
+
 RESUME Nov3 00:39+08/unix1793637526: read ALL578 prompt lines; adopted520fdf4b
 and all uncommitted work. Latest disk-first order now SATISFIED externally:
 cpuQ free14236557312B (>10GiB), old selmappo20261031/wmdata20261031 absent;
