@@ -60,16 +60,16 @@ Our contributions are:
 \section{Problem Formulation}
 
 \subsection{Setting}
-We study a highway segment with an on-ramp in SUMO~\cite{lopez_sumo2018}, with human-driven vehicles (HDVs) and CAVs. HDVs follow IDM~\cite{treiber_idm2000} car following and LC2013 lane changing with individual, unobserved parameters. Every 1\,s each CAV outputs a longitudinal acceleration that passes through a safety filter; lane changes are left to SUMO; the simulator step is 0.5\,s. Each CAV observes its own state and nearby vehicles; a roadside unit (RSU) observes the merge and ramp zones and entrance counts and broadcasts a learned 4-dimensional message. % D9
+We study a highway segment with an on-ramp in SUMO~\cite{lopez_sumo2018}, with human-driven vehicles (HDVs) and CAVs. HDVs follow IDM~\cite{treiber_idm2000} car following and LC2013 lane changing with individual, unobserved parameters. Every 1\,s each CAV outputs a longitudinal acceleration that passes through a safety filter; lane changes are left to SUMO; the simulator step is 0.5\,s. Each CAV observes its own position, speed and lane and, for every lane, the nearest leader and follower within $\pm100$\,m along the road. A roadside unit (RSU) observes the merge zone (from 100\,m upstream to the end of the merge section) with, per lane, the vehicle count, mean speed, mean position and CAV count, plus entrance counts, and broadcasts a learned 4-dimensional message. % tools/coopnative/policy.py encode(); D9
 No agent observes driver parameters or future arrivals.
 
 \subsection{Objective and reward}
 Team delay over $[t_0,t_1]$ is
 \begin{equation}
-J[t_0,t_1] = \sum_{t=t_0}^{t_1}\Big[\sum_{v}\frac{v^{\mathrm{free}}_v - v_{v,t}}{v^{\mathrm{free}}_v} + N^{\mathrm{wait}}_t\Big]\Delta t ,
+J[t_0,t_1] = \sum_{t=t_0}^{t_1}\Big[\sum_{v}\max\Big(0,\,1-\frac{v_{v,t}}{v_{\lim}}\Big) + N^{\mathrm{wait}}_t\Big]\Delta t ,
 \end{equation}
-% exact normalisation to be matched to the comparator reducer in tools/coopnative/comparator.py
-the speed shortfall of vehicles on the road plus vehicles waiting to enter (veh-s). Lower is better. The shared per-step reward is $r_t = -(J[0,t+1]-J[0,t])$. % D4
+% traffic_shepherd/c4/env.py: speed_deficit += 0.5*sum(max(0,1-s/SPEED_LIMIT_MPS)), SPEED_LIMIT_MPS=31.29; source wait from the insertion ledger; tools/coopnative/protocol.py team_delay
+with $\Delta t=0.5$\,s and $v_{\lim}=31.29$\,m/s: the normalized speed shortfall of vehicles on the road plus the number of vehicles waiting to enter, in veh-s. Lower is better. The shared per-step reward is $r_t = -(J[0,t+1]-J[0,t])$. % D4
 Differences between policies are reported as policy minus reference; negative values mean less delay.
 
 \subsection{Counterfactual cooperation}
@@ -112,7 +112,7 @@ The perturbation covariance is updated from plans that later receive positive si
 
 \subsection{Selection, execution and grading}
 At an eligible decision step, a guided group requests a plan with probability $\beta$ (Sec.~IV-F), drawn before any further computation. If it follows, the shortlist and the policy's own continuation are evaluated by five exact SUMO branches from the identical prefix with common random numbers, over a common window ending $\max D+120$\,s later, and the best branch is executed; if that branch is the policy itself, no plan is executed. % D42, D64
-Executed plans run to completion or to the episode end, and are recorded as truncated in the latter case.
+Executed plans run for their duration $D$; a member that leaves the road simply drops out while the others continue, and a plan cut off by the episode end is recorded as truncated. All commands still pass through the safety filter. % tools/coopmwm/acceleration.py Controller: accelerations applied only to members present
 
 Each executed plan $p$ starting at $t_0$ with duration $D$ receives an exact grade
 \begin{equation}
@@ -128,7 +128,8 @@ In addition, executed plans with positive grade contribute a weighted imitation 
 
 \subsection{Guidance rate}
 With exact selection (Sec.~IV-D), a plan is executed only when it beats the policy's own continuation in the simulator, so guidance cannot replace the policy's action with one that is worse on the selection window. During training we therefore request a plan at every eligible decision step ($\beta=1$). % MAIN1607 verified-guide correction (REGISTRATION.md)
-As a diagnostic we also report an adaptive trust statistic computed from the exact grades: for each traffic regime, with mean $m$ and 95\% world-clustered bootstrap interval $[L,U]$ of the grades and $e=\max(|m-L|,|U-m|)$, $\tilde\beta = \max(0,U)/(|m|+e)$. % D65
+As a diagnostic we also report an adaptive trust statistic computed from the exact grades. Traffic regimes are \emph{merge-dense} when, inside the RSU zone, a ramp vehicle is present, two upstream CAVs occupy different mainline lanes, and the CAV count and density exceed one of four upper-quartile bands recorded in earlier data; all other states are \emph{ordinary}. % tools/coopmwm/exploration.py regime(); tools/leverprobe/selection.py features(); HIGH_BANDS
+For each regime, with mean $m$ and 95\% world-clustered bootstrap interval $[L,U]$ of the grades and $e=\max(|m-L|,|U-m|)$, $\tilde\beta = \max(0,U)/(|m|+e)$. % D65
 Training pauses if at least 30 grades have $U<0$. In the first updates, before exact selection was introduced, the guidance rate followed this statistic; we report these updates separately. At evaluation, guidance is disabled.
 
 \subsection{Random-guide ablation}
@@ -160,7 +161,8 @@ WGE versus R therefore isolates the contribution of model-based candidate genera
 \section{Experimental Setup}
 
 \subsection{Road and traffic}
-SUMO~1.27.1 simulates a highway segment with an on-ramp (\tbc{length and lane counts to confirm}). Scenarios combine mainline demand $\{1900,2400,2700\}$\,veh/h with CAV penetration $\{5,10,20,40\}\%$ (12 traffic types). Episodes last 1200\,s: 300\,s warm-up, then 900\,s of control. CAV sensing range: \tbc{100\,m}.
+SUMO~1.27.1 simulates a two-lane mainline of 3.12\,km (speed limit 31.29\,m/s) followed by a 75\,m three-lane merge section, where a single-lane, 379\,m on-ramp (speed limit 22.2\,m/s) joins. % assets/research/highway_merge_shepherd_long/osm.net.xml.gz: edges 1191554636 (2 lanes, 2644.2 m), 1487606178 (2, 477.9 m), 1487606179 (3, 75.4 m), ramp 11553048#1 (1, 378.7 m)
+Scenarios combine mainline demand $\{1900,2400,2700\}$\,veh/h with CAV penetration $\{5,10,20,40\}\%$ (12 traffic types). Episodes last 1200\,s: 300\,s warm-up, then 900\,s of control.
 
 \subsection{Compared policies}
 \textbf{Native}: SUMO default driving. \textbf{MAPPO}: speed-control MAPPO trained for 169 updates ($\approx$4.7\,M controlled simulation-seconds). % COOPNATIVE_DESIGN.md: 169x46x600
