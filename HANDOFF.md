@@ -59,6 +59,26 @@ backend contexts before EACH pick, including entrant/re-entry resets and retirem
 No WM-PHYS activation without its independently hashed S-RB-EVAL qualification receipt.
 
 ## Current execution state
+**Nov3 00:39 fresh-session reconciliation1793637493 (93755bb9):** all recorded
+owned CPU supervisors, six GPU services and observer20260 remain EXITED; original
+observer deadline completed normally. No new dispatch or replacement supervisor.
+Exact totals unchanged250980charged/250660closedactualsim-s and
+27787.12987509556GPU-s;112fixed/random episodes, fleet16episodes+96oracles and
+WM36oracles COMPLETE, WM6episodes/per-CAV2episodes only. OWNER20:14GPUhold ACTIVE;
+registry through Nov3 00:36 contains no later MAIN GPU RESUME or approval of the
+requested per-CAV continuation. cpuQfree14309675008bytes (~13.3GiB), own outputs
+366348334bytes unchanged, uptime7.544days: former cpuQ disk blocker has cleared,
+but resource availability grants no terminal-scope authority. MAIN ACTION remains
+explicit approval ONLY of76840sim-s/GPU0 (cpuQ62460/gpuR14380):9+3 whollyunstarted
+episodeworlds plus original unstarted branches of2successfulcpuQepisodes; exclude
+failed969138/969139 and allcompletedjobs. Original89900arm/base468380sim-s/19GPUh
+caps retained. Immutable plan/no-prior-charge/newhostCPU/resource gates must precede
+any authorized dispatch; nice19 below S-COOPMWM. Terminal WM/BB work additionally
+requires explicit scope authority and reconciled GPU resume. No scope armed.
+Design58lines/build/CPU156PASS already complete and preserved. No primary paired
+efficacyCI; STATUS_CURRENT's legacy SUPERVISED label is superseded by concrete
+EXITED process/observer fields. Receipt
+`tools/c1switch2/evidence/RESUME_RECONCILIATION_1793637493.json`; MAIN notice refreshed.
 **Nov2 20:37 fresh-session reconciliation1793622925:** all recorded owned CPU
 supervisors and all six original/continuation GPU services are EXITED; no new
 dispatch, inference or physics. Observer20260 EXITED normally after its original
