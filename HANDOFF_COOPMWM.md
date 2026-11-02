@@ -1,5 +1,17 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+MAIN04:06NOWREAD/overrideswaitingforREADYforOFFLINEconfirmationONLY.
+Newfrozen/home/ubuntu/coopmwm20261103_bankcpu1:59LinuxCPU PASS0skips22.650s,
+zeroSUMO; delegated4f090b76 replay_bank/sumo_verify/phasecode+offlineadapter.
+Initial14positiveTRAIN/u3 decisions quoted87840sim-s UPPER inclconditional
+allmemberSOLOpairs; chargedbefore5055590 =>5143430<fresh6M. Registered
+685e691af95df8c3... inBANK_BUILDER_REGISTRATION_0406.json/canonicalregistry.
+NEXT `python -X utf8 -m tools.coopmwm.bank_builder_ops launch` ONCE;
+checkDISPATCH/OWNER firstiftransportfailure. NoGPU/collectionhandover/PPOrestart.
+AdapterprechargesALLrep/ext/conditional-solos atomicallyperdecision; existing
+delegatedconfirm usescheckedprechargehook; unusedchargesretained. Newlabels
+continuous; per-claimnoreplay; BANK_QUALITY_B.jsonpublish via status.
+
 REPLAYoperatorpreparation: preserved/completedinheritedreplay_ops.py readinessguard;
 NEWfuturefrozenroot/home/ubuntu/coopmwm20261103_replayreleasecpu1 cannotdispatch
 untilHARDEN_INT_READYexistsANDitscommitisanancestorofcoopnativeHEAD.

@@ -1,5 +1,19 @@
 # S-COOPMWM — live checks
 
+## Nov3 04:19 UTC+8 — offline bank confirmation qualified and registered
+- MAIN04:06 authorizes confirmation now without the full B-REPLAY release.
+  Frozen `coopmwm20261103_bankcpu1` pins delegated revision4f090b76 and its
+  confirmation/synergy path: **59 Linux CPU PASS, zero skips,22.650s, zero SUMO**.
+- Fourteen existing positive B/u3 TRAIN decisions quote **87,840 sim-s upper
+  bound**, including replication, extended-window and all conditional member-solo
+  pairs. Charged snapshot5,055,590 plus that bound is **5,143,430 <6,000,000**.
+  Amendment `685e691af95df8c3…` is registered before physics.
+- The isolated adapter reserves each complete decision atomically in
+  `bank_verification_ext`; unneeded conditional-solo charges remain charged.
+  Confirmation/synergy decisions use the delegated code, with a checked
+  precharge hook. Existing collection/GPU workers and PPO checkpoints are retained.
+  Dispatch and real admission evidence follow separately.
+
 ## Nov3 04:02:49 UTC+8 — first completed it2_K2 searches verified
 - `coopmwm/IT2_K2_LIVE_TIMING_1793649769525748300.json` reads four completed,
   hash-pinned forecasts. Every receipt records **iterations2/screenK2/H300,
