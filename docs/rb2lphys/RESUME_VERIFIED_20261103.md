@@ -27,3 +27,23 @@
 - No outstanding worker-owned implementation or development-scoring job found.
   No refit, new tape exposure, scoring, inference, dispatch, process signal or
   peer-file change. This recovery updates coordination receipts only.
+
+## Subsequent fresh-session verification from ae6293ef
+
+- Recovered clean at `ae6293ef`; read status/log before common rules and required
+  round-1 report, handoff and final noon publication. Preserved completed work.
+- Re-read worker plan, shared parameter ownership, report, before/after CSV and
+  QA receipt. The agreed scope assigns departure parameters to LP, per-driver
+  IDM/LC to FIT/LANE and physical spread to CAL; no new fitting is outstanding.
+- Fresh lineage verifier PASS:
+  `C:/Users/jpeng/Miniconda3/python.exe -B -m tools.rb2lphys.verify_delivery --out E:/Temp/opencode/rb2lphys_resume_ae6293ef_audit.json`.
+  Parameter hash, development allowlists, exact two-field recipe difference and
+  historical evaluated-source/canary byte lineage remain verified.
+- Newer INT receipt `docs/rb2int/RECOVERY_20261103_0330.md` records no explicit
+  MAIN release through its Nov3 03:26 registration read, zero active INT
+  evaluations, both local owners exited incomplete, and unchanged 31/216 jobs.
+  Its Nov3 03:32 handoff preserves the admission HOLD and frozen `b2df7458`.
+  Those resource/process facts are INT observations, not a fresh LP remote audit.
+- Completed numerical results and default-OFF recommendation stand. Full gate
+  qualification remains NOT ESTABLISHED; continuation is INT/MAIN-owned.
+  No tests, scoring, fit, inference or dispatch repeated; no GPU/process action.
