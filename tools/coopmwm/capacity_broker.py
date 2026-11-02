@@ -53,14 +53,21 @@ def settle_unavailable(root,slot,items):
     """A failed model claim is terminally declined, never recomputed or scored."""
     settled=[]
     for kind,record in items:
-        if kind!='plan' or record.get('mode')=='diagnostic':continue
+        if record.get('mode')=='diagnostic':continue
         key=record['state_id'];assignment=Path(root)/'broker_assignments'/(key+'.json')
-        target=Path(root)/'responses'/(key+'.json')
+        target=Path(root)/('centre_responses' if kind=='centre' else 'responses')/(key+'.json')
         if target.exists() or not assignment.exists():continue
         if json.loads(assignment.read_text())['slot']!=slot:continue
-        immutable(target,dict(accepted=False,reason='assigned worker unavailable; policy continues; inference never replayed',
-            record_sha256=digest(record),compute_counts_unknown=True,
-            worker_unavailable=dict(slot=slot,key=key,inference_retry=False)))
+        unavailable=dict(slot=slot,key=key,inference_retry=False)
+        if kind=='centre':
+            # HARDEN-3: an R centre claimed by a dead slot was never re-assignable
+            # (assignments are slot-sticky), so its R episode waited to the deadline.
+            from .query_errors import declined
+            immutable(target,declined('centre',record,'assigned worker unavailable; inference never replayed',
+                worker_unavailable=unavailable))
+        else:
+            immutable(target,dict(accepted=False,reason='assigned worker unavailable; policy continues; inference never replayed',
+                record_sha256=digest(record),compute_counts_unknown=True,worker_unavailable=unavailable))
         settled.append(key)
     return settled
 
@@ -248,8 +255,13 @@ def run(root,config_path):
                     check_worker(root,endpoint,value['status'],key)
                     assert_running(root,'B');stop.wait(3)
                 payload=value['forecast']
-                from .query_errors import validate_response
-                validate_response(record,payload['result'])
+                from .query_errors import validate_response,malformed,declined
+                bad=malformed(kind,record,payload['result'])
+                if bad:
+                    # HARDEN-3: a malformed result is a per-query decline, never a STOP.
+                    remote.event(dict(event='malformed_response_declined',key=key,kind=kind,reason=bad,global_stop=False))
+                    payload=dict(payload,result=declined(kind,record,'malformed GPU response: '+bad))
+                else:validate_response(record,payload['result'])
                 if payload['result'].get('query_error'):
                     remote.event(dict(event='query_code_declined',key=key,
                         query_error=payload['result']['query_error'],global_stop=False))
