@@ -2875,3 +2875,21 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - Exact executed-plan twins: `{"120": {"C_G": 3.601599019020796e-06, "D_G": 0.0034052084456561715, "D_i": [0.0, 0.0, 0.0034016068466371507]}, "300": {"C_G": 3.407079930184409e-06, "D_G": 0.0035613359286799096, "D_i": [0.0, 0.0, 0.003557928848749725]}, "60": {"C_G": 5.020457592763705e-06, "D_G": 0.006628526091390086, "D_i": [0.0, 0.0, 0.006623505633797322]}, "600": {"C_G": 3.407079930184409e-06, "D_G": 0.003558316548151197, "D_i": [0.0, 0.0, 0.0035549094682210125]}}`.
 - Receipt: `coopmwm/warm_live/ACCEL_EXACT_PLAN_011.json`.
 <!-- warm-receipt:ACCEL_EXACT_PLAN_011.json:881c18e02701857965e8e1d35d14dd5cd73868a445c358c1abde89e607d76006 -->
+
+## Warm live publication — 2026-11-02T02:45:21.526009+00:00
+- Conservatively charged 3507050/7500000 sim-s.
+
+### Warm continuation — WARM_B_FAILED_T1.json
+- `{"error": "ValueError('new durable guided engineering STOP')", "timestamp_utc": "2026-11-02T01:41:36.626856+00:00"}`
+- Receipt: `coopmwm/warm_live/WARM_B_FAILED_T1.json`.
+<!-- warm-receipt:WARM_B_FAILED_T1.json:dba3c8766171161a1344f6334433f8855d915df45f5ecfb680aadec782fa007e -->
+
+### Warm continuation — WARM_GUIDED_STOP_V2.json
+- `{"error": "ValueError('GPU failed; no inference retry')", "source": "capacity broker", "unix": 1793583695.5195312}`
+- Receipt: `coopmwm/warm_live/WARM_GUIDED_STOP_V2.json`.
+<!-- warm-receipt:WARM_GUIDED_STOP_V2.json:75fc7070edf55a16763460b72afd20094720ee369df51b27d6dd8a218ddf6f02 -->
+
+### Warm continuation — WARM_R_FAILED_Q1.json
+- `{"error": "ValueError('new durable guided engineering STOP')", "timestamp_utc": "2026-11-02T01:41:45.322047+00:00"}`
+- Receipt: `coopmwm/warm_live/WARM_R_FAILED_Q1.json`.
+<!-- warm-receipt:WARM_R_FAILED_Q1.json:da0aeaabe12c92d6b41685790c3d97a46fe5a7c2607902fd8051f7e9c0e25245 -->
