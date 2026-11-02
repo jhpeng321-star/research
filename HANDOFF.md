@@ -5,6 +5,18 @@ Original advance-approved exact cap7,012,800; designSHA09499f2af60311b3690a940dc
 
 ## Current state
 
+**Nov3 07:07+08 fresh-session reconciliation:** original final collection SHA and
+explicit build/PID/final169 analysis PASS: COMPLETE/169updates/7774production,
+6997800actual/6998400reserved; local/peer final handoff bytes and retained169-row
+CSV/SVG hashes match. Exact local PID lookups find neither watcher12432 nor
+noon supervisor46520. Training supervision through final169 is complete.
+Newer peer receipt1793654998 (SHA`cbd6d1a17318341f9f768cef10d196d2cf643dedf1b68646aa2c2bf9a632f755`)
+still reports both per-CAV scopes EXITED,2/16episodes/3300charged/2980closedactual;
+no complete panel manifest exists. This is peer-published status, not fresh SSH
+here. The76840sim-s/GPU0 request remains MAIN-dependent. Surviving gpuR checkpoint
+location/hash verification below remains the last remote artifact inspection.
+Evidence `selmappo2/RESUME_20261103_0707.json`; existing work/receipts preserved.
+
 **Nov3 final-location / evaluation reconciliation:** fresh read-only cpuQ check
 Unix1793644605 finds original606968 absent; original build directory exists but
 `training/checkpoint_169.pt` is absent. Do not treat the old checkpoint path as

@@ -2,6 +2,19 @@
 
 ## Status (reconciled 2026-11-03)
 
+**07:07+08 resume verification:** retained final collection SHA and explicit
+continuation build/PID/final169 analysis PASS: COMPLETE/169updates/7774production,
+6997800actual/6998400reserved sim-s. Local/peer final handoff bytes match; retained
+final169-row CSV/SVG hashes validate. Exact local PID checks find watcher12432
+and noon supervisor46520 absent; training supervision through final169 is complete.
+Newer C1SWITCH2 receipt1793654998 still has2/16complete per-CAV episodes,
+3300charged/2980closedactualsim-s, both evaluation scopes EXITED, and no complete
+panel manifest. These are peer-published remote observations, not fresh SSH here.
+Its76840sim-s/GPU0 continuation request remains pending explicit MAIN scope
+authority and immutable admission gates. A future complete panel requires explicit
+byte-pinned offline import. Evidence: `selmappo2/RESUME_20261103_0707.json`.
+The checkpoint-location inspection below remains the last remote artifact check.
+
 **Final checkpoint location verified Nov3:** original cpuQ606968 is absent;
 the historical build directory exists but its `training/checkpoint_169.pt` is
 absent at fresh inspection Unix1793644605. The genuine final169 survives at
