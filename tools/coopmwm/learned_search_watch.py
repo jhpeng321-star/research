@@ -45,6 +45,7 @@ NONINFERIOR = -.05     # quality - plain_alt CI lower bound for a mode to count 
 # MAIN 2026-11-02 evening: B/R paused for LS-COLLECT (frozen B u3 policy on TRAIN worlds, plain
 # search logging full pools on 4 GPU slots, exact SUMO branches for top-8 + policy = k=8 gold).
 REGISTRATION_NAME = 'LS_COLLECT_REGISTRATION.json'
+BANK_NAME = 'BANK_STATUS.json'          # B-REPLAY verified-plan bank (MAIN 2026-11-02 evening)
 LOCAL_REGISTRATION_ROOTS = ('E:/agent-work/c4-coopnative/docs/paper_results', 'E:/agent-work/_sol')
 DEADLINE = dt.datetime(2026, 11, 3, 10, 0, tzinfo=dt.timezone(dt.timedelta(hours=8)))
 REFRESH_S = 3600.
@@ -190,6 +191,29 @@ def ls_sources(registration):
 def merged_sources(cache):
     reg, where = find_registration(cache)
     src = {h: dict(v, roots=list(v['roots']), dirs=list(v['dirs'])) for h, v in lr.SOURCES.items()}
+    try:   # B-REPLAY bank: its directory (and anything it lists) is a collection root
+        prune = ' -o '.join(f"-iname '*{f}*'" for f in lr.FORBIDDEN)
+        banks = lr.ssh('cpuQ', f"find /home/ubuntu -maxdepth 3 \( {prune} \) -prune -o -name {BANK_NAME} -print "
+                               f"2>/dev/null; true").decode().split()
+        for b in banks:
+            root = b.rsplit('/', 1)[0]
+            extra = {}
+            try:
+                extra = json.loads(lr.ssh('cpuQ', f"cat '{b}'").decode('utf-8'))
+            except (RuntimeError, ValueError):
+                pass
+            src.setdefault('cpuQ#bank', dict(host='cpuQ', roots=[], dirs=DIRS, name_glob='*'))
+            for path in [root]+[p for p in sorted(_paths(extra, set())) if p.startswith('/home/ubuntu')]:
+                path = path.rsplit('/', 1)[0] if path.endswith('.json') else path
+                if path not in src['cpuQ#bank']['roots']:
+                    src['cpuQ#bank']['roots'].append(path)
+            for h in ('gpuA', 'gpuR'):
+                roots = [p for p in sorted(_paths(extra, set())) if p.startswith('/root')]
+                if roots:
+                    src[h+'#bank'] = dict(host=h, roots=roots, dirs=DIRS, name_glob='*')
+            where = (where or '')+f' bank:{b}'
+    except RuntimeError:
+        pass
     if reg:
         for h, v in ls_sources(reg).items():
             # registered LS-COLLECT roots are searched under their own path (any name)

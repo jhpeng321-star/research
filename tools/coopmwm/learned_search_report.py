@@ -167,6 +167,26 @@ def load_cache(cache, train_worlds=TRAIN_WORLDS):
     return out, stats
 
 
+def noise_ceiling(receipts):
+    """Screen (K4/H300) vs final (K8/H_final) agreement among each search's finalists."""
+    import numpy as np
+    rho, top = [], []
+    for r in receipts:
+        sc, fi = {}, {}
+        for c in r.get('candidates') or []:
+            if c.get('saving_vs_policy') is not None:
+                (fi if c.get('stage') == 'final' else sc)[c['id']] = c['saving_vs_policy']
+        ids = [i for i in fi if i in sc]
+        if len(ids) < 6:
+            continue
+        a = np.array([sc[i] for i in ids]); b = np.array([fi[i] for i in ids])
+        rho.append(float(np.corrcoef(np.argsort(np.argsort(a)), np.argsort(np.argsort(b)))[0, 1]))
+        top.append(float(np.argmax(a) == np.argmax(b)))
+    return dict(searches=len(rho), spearman_screen_vs_final=float(np.mean(rho)) if rho else None,
+                top1_agreement=float(np.mean(top)) if top else None,
+                note='among the K8 finalists of each search; the top of the K4 screen is largely noise')
+
+
 def is_full_pool(r):
     return any(c.get('stage', 'screen') == 'screen' for c in r.get('candidates') or [])
 
@@ -182,7 +202,8 @@ def run(cache, report, fetch_remote=True, sources=None):
     searches, why = pp.build_dataset(receipts)
     with_elites = [s for s in searches if s['elites']]
     full = [r for r in receipts if is_full_pool(r)]
-    res = dict(generated_utc=when, cache=str(cache), fetch=fetch_log, load=stats, receipts=len(receipts),
+    nc = noise_ceiling(receipts)
+    res = dict(noise_ceiling=nc, generated_utc=when, cache=str(cache), fetch=fetch_log, load=stats, receipts=len(receipts),
                full_pool_receipts=len(full), searches=len(searches), searches_with_elites=len(with_elites),
                worlds=len({s['world'] for s in searches}), dataset_skips=len(why),
                activation='NOT ACTIVATED: requires registered minimum + offline PASS + explicit owner approval via MAIN')
@@ -246,7 +267,9 @@ def write_report(res, path):
          f"- Exact SUMO verifications: {res['load'].get('verifications', 0)} receipts, "
          f"{res['load'].get('verifications_wm_graded', 0)} arm-B graded, {res['load'].get('verifications_attached', 0)} "
          f"joined -> {res.get('verified_searches', 0)} verification-labelled searches from {res.get('verified_worlds', 0)} worlds.",
-         f"- Post-safety command mirror: {res.get('command_mirror')}; post-fix searches {res.get('post_fix_searches', 0)}.", '']
+         f"- Post-safety command mirror: {res.get('command_mirror')}; post-fix searches {res.get('post_fix_searches', 0)}.",
+         f"- NOISE CEILING (screen K4/H300 vs final K8/H_final among finalists): {res.get('noise_ceiling')}.",
+         '- Learned-screen / pre-filter / budget-reduced search results: docs/paper_results/LEARNED_SCREEN_RESULTS.md.', '']
     if isinstance(res.get('train'), str):
         L += ['## Training / offline check', f"- {res['train']}.", '']
     else:
