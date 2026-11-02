@@ -570,3 +570,21 @@ only the inventory helper differs under `tools/coopmwm`. Existing CPU 79+7 passi
 evidence applies. The single canonical engineering-amendment entry and owner's
 release/hot-swap handoff were verified and preserved. No completed test or probe
 was repeated, no inference/training was launched, and no process was changed.
+
+### Fresh-session recovery — 2026-11-03 05:47 host time
+
+The clean worktree resumed at `a7c4adf1`. New inventories committed as `714f9189`
+find **no live WMSPEED2 jobs**. GPU A has one other compute process, 26%
+utilization and 18,182 MiB allocated; GPU R has two other compute processes, 84%
+utilization and 20,396 MiB allocated. Neither passes the existing idle-device
+admission check. Receipts are
+`coopmwm/WMSPEED2_gpu{A,R}_resume20261103_inventory.json`.
+
+The numerical source still matches recommended release `fcc50296`; only the
+inventory helper differs under `tools/coopmwm`. The integrated warm H120/K4/w34
+and cold H300/K8/w10 receipts again confirm 4.529x and 2.496x speed-ups with
+0.0 cost/trajectory errors and identical rankings/draw IDs. Existing CPU 79+7
+passing evidence, the single canonical registration, and the appended owner
+hot-swap handoff remain present. No completed comparison was rerun. Further GPU
+experiments remain capacity-blocked; the exact release recipe above is ready for
+the owner's separately admitted activation.
