@@ -1,0 +1,33 @@
+{
+  "schema": "wmfix_es_stop_resume_audit/1",
+  "resume_head": "5efa2228",
+  "authorization": "MAIN 2026-10-31 17:53: finish generation 2, stop ES, release CPUs, do not dispatch A/B",
+  "status": "PREVIOUS_COMPLETION_VERIFIED",
+  "cpuQ": {
+    "process_audit_utc": "2026-11-02T19:39:58.3376197Z",
+    "matching_es_processes": [],
+    "process_match": "tools[./]wmfixmerge[./]es or /home/ubuntu/wmfix_es",
+    "original_run_directory_exists": false,
+    "note": "Original run directory is absent at audit time; prior committed receipts retained. Empty es_status results alone were not treated as liveness proof; independent ps audit found no matching ES processes."
+  },
+  "gpuA": {
+    "process_audit_utc": "2026-11-02T19:40:10.8179179Z",
+    "matching_es_processes": [],
+    "process_match": "tools[./]wmfixmerge[./]es or /root/autodl-tmp/c4/wmfixmerge20261031/es_cpu_v3/es_run_full",
+    "completed_generations": [0, 1, 2],
+    "generation_3": "partial cell counts unchanged from FINAL_STOP_gpuA.json; no GEN_003 completion",
+    "selected_checkpoint": "/root/autodl-tmp/c4/wmfixmerge20261031/es_cpu_v3/es_run_full/generation_001.pt",
+    "selected_checkpoint_sha256_reverified": "4683f0b7e6dbd9a03e5405e88e1114206d44d4e9440b342ff61c7e9f02d99056"
+  },
+  "local": {
+    "collector_audit_utc": "2026-11-02T19:40:36.7634105Z",
+    "matching_python_es_collect_processes": []
+  },
+  "new_dispatches": 0,
+  "signals_sent": 0,
+  "AB_dispatched_by_resume": false,
+  "verdict": "NOT_RUN_NOT_ADOPTABLE",
+  "recommendation": "Retain WM2; stop generic physics-scalar sweeps.",
+  "previous_final_receipt": "WMFIX_ES_FINAL.json",
+  "no_push": true
+}

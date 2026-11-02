@@ -57,3 +57,4 @@
 - Recommendation: STOP generic physics-scalar sweeps and retain WM2: fitness/J diverge.
 - Receipts: `wmfix_es_receipts/{GEN_002,*STOP_MAIN_1753,FINAL_STOP_*}.json`;
   final: `wmfix_es_receipts/WMFIX_ES_FINAL.json`; registration: root `REGISTRATION.md`.
+- Resume 2026-11-03 +08: no ES jobs/collectors; selected SHA reverified; cpuQ run directory absent. Audit: `wmfix_es_receipts/RESUME_STOP_VERIFIED_20261103.json`.

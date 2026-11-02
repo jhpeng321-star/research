@@ -155,3 +155,14 @@
   either host. Local collectors 18420/25836 were already absent (CIM checked).
 - CPU allocations released; no foreign process signalled, no A/B verdict launch.
   GEN_002.json retained locally; selected candidate remains generation 1/c1.
+
+## Completed-task verification — 2026-11-03 +08
+- Resumed clean at 5efa2228; final report, shutdown receipts and registration were
+  already committed. Required design/runtime documents read; no work repeated.
+- Read-only host process audits find zero matching ES processes; local Python
+  collector audit also empty. No dispatch or signal issued by this resume.
+- gpuA generation 0–2 summaries and partial g3 counts match the shutdown receipt;
+  selected generation_001.pt SHA256 reverified exactly. cpuQ's original run
+  directory is now absent; committed receipts retained, no reconstruction launched.
+- MAIN stop remains final: no A/B verdict; retain WM2. Fresh audit receipt:
+  `wmfix_es_receipts/RESUME_STOP_VERIFIED_20261103.json`. Report remains <=60 lines.
