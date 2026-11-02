@@ -54,17 +54,18 @@ for arm in ('B','R'):
         process_state=state,observed_sim_time_s=1200 if result else last,
         progress_censored=not result,queries=len(qs),pending_queries=pending,
         completed_query_inference_s=sum(q['completion']['inference_wall_s'] for q in qs if q['completion']),
-        current_query_wait_s=sum(q['age_s'] for q in pending)))
+        current_query_wait_s=max([0.]+[q['age_s'] for q in pending]),
+        pending_query_count=len(pending),pending_query_age_sum_s=sum(q['age_s'] for q in pending)))
 quota=r/f'B_RANDOM_QUOTA_{{collections["R"]:03}}.json'
 print(json.dumps(dict(unix=now,collections=collections,episodes=episodes,R_quota_ready=quota.exists(),load=os.getloadavg(),
  superseded_jobs=plan['failed_jobs'] if plan else [],
- note='trace has buffered/incomplete tail; pending-query time is exact stopped decision; completed inference time excludes admission waits')))
+ note='trace has buffered/incomplete tail; pending-query time is exact stopped decision; current_query_wait_s is oldest unresolved request age (max, not sum), includes queue/admission time and is censored until response; pending_query_age_sum_s is aggregate concurrent request age, not episode wall time; completed inference time excludes admission waits')))
 ''',timeout=60))
     path=ops.EVIDENCE/f'EPISODE_PROGRESS_{int(value["unix"])}.json'
     write(path,value)
     print(json.dumps(dict(receipt=str(path),unix=value['unix'],R_quota_ready=value['R_quota_ready'],
-        B=[{k:e[k] for k in ('id','claimed','closed','observed_sim_time_s','current_query_wait_s')} for e in value['episodes'] if e['arm']=='B'],
-        R=[{k:e[k] for k in ('id','claimed','closed','observed_sim_time_s','current_query_wait_s')} for e in value['episodes'] if e['arm']=='R'])))
+        B=[{k:e[k] for k in ('id','claimed','closed','observed_sim_time_s','current_query_wait_s','pending_query_count','pending_query_age_sum_s')} for e in value['episodes'] if e['arm']=='B'],
+        R=[{k:e[k] for k in ('id','claimed','closed','observed_sim_time_s','current_query_wait_s','pending_query_count','pending_query_age_sum_s')} for e in value['episodes'] if e['arm']=='R'])))
     return value
 
 

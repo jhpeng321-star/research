@@ -1,0 +1,6 @@
+# Parallel-query elapsed-wait reporting correction
+
+- Evidence: `EPISODE_PROGRESS_1793583029.json` reports B-u3 waits up to13,098s although that wave began only about1,750s earlier. The reporter adds the ages of simultaneous pending group searches. This is aggregate queue effort, not elapsed episode waiting.
+- Correction: `current_query_wait_s = max(age_s)` across unresolved requests from the episode's current claim; retain the sum explicitly as `pending_query_age_sum_s`, add `pending_query_count`, and describe unresolved waits as censored. Completed-query inference effort remains additive and separate.
+- Two actual-transport CPU tests pass, including parallel pending requests, an already-resolved response, exclusion of pre-claim requests, empty pending sets, and numeric update selection. `python -X utf8 -m unittest tools.coopmwm.test_episode_progress_cpu -v`:2PASS,0skips,0.030s; zero SUMO/inference launches.
+- Observation-only local command update. Existing B/R/broker/grader/GPU/observer owners, assigned jobs, search, execution, learning, grades, budgets and original deadline are retained. Existing progress receipts stay immutable. Subsequent observations use the corrected schema; no policy or service deployment is required.
