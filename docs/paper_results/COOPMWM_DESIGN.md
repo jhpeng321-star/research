@@ -1,5 +1,5 @@
 # S-COOPMWM — warm MPPI training live; frozen-policy evaluation precompute registered
-1. MAIN0508 engineering repair cap7500000/allocation7495040/free4960; +21600 fresh TRAIN sim-s, all failed reservations retained; original1000000 exact-grade reserve unchanged.
+1. Cap7500000/allocation7495040/free4960; all failed charges retained. MAIN0944 interruption needs25200 additionalsim-s/20240allocation decision before B/R physics recovery; no reserve cut authorised.
 2. A/B/R fork update0 from frozen speed-only MAPPO169 d9042cc5; native lanes.
 3. Frozen MAPPO actor/memory executor plus trainable zero-mean residual adapter.
 4. A: PPO shared team reward=-J, road speed deficit plus source waiting.
@@ -46,7 +46,7 @@
 45. Calibration/discovery reserve complete groups/prefixes before SUMO; insufficient phase=>STOP.
 46. All failures/warmup/twins precharged/no refunds or automatic retries; af8b16e5 permits one qualified new-ID attempt per missing failed diagnostic branch, complete originals adopted, whole missing group charged inside discovery200000.
 47. A48complete; B24/R4/grader4nice19; MAIN0423 up to24 CPU-only precompute workers SCHED_IDLE/nice19, grade-queue priority/load<28/MemAvailable+RAMfree8GiB/disk2GiB gates; no retries.
-48. OriginalGPU widths34/10 READY8EXACT0; MAIN0419 secondworkers .42cap18/10(A),.34cap4/4(R),fresh8EXACT0 before hotadd; same search/deadline, measure1vs2throughput.
+48. MAIN0944 failedgpuAprimary596572 replaced759743/incident1,8freshgatespending; other3READYworkersretained. Posthocunsupportedgroup=>new/labelerror=>unlabelled; same search/deadline. Source2CPU98PASS querycodefaultdecline/worker-scopedrestartrequest notyetdeployed.
 49. GPU CPU helpers disabled until separate frozen parity qualification; own PIDs only.
 50. Both seed guards, fresh-name exposure, immutable sources/cache/approval bindings before physics.
 51. No prohibited inputs/newenv/push; OWNER20:35 opaque v2archive+SHA256-gated literal source removal only; commit eachstep.
