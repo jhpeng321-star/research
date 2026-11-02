@@ -1,5 +1,27 @@
 # S-COOPMWM continuation — MAIN21:29 collection recovery
 
+FIRSTREADY slot gpuR@resource1651(494955/VALIDITY2) ADMITTED1793631713/23:01:53+08,
+ALL8freshEXACT0 gates. Otherqualifierscontinue; doNOTlaunchmoreworkers. Metadata
+SSH40stimeouts censorobserverpolls, never stop remoteowners; existingcollection
+brokerconsumesnewslotindependently. Actualfirstsearch/labelstillneedsverification.
+
+UpdateMAIN22:42/full543linesread: NEWcap14500000 REGISTERED8571ab38e61b3994...
+BANK_VERIFICATION_CAP_2232 boundcpuQ,+2600000restrictedbank_verification_ext,
+existingLSbudgetunchanged/noextspending. COLLECT_THROUGHPUT hourly viaobserverV2,
+prechargedburnNOTactualphysicsrate; zeroactualsearches/labelsatlast22:55sample.
+Rsecondary491843failedAFTER4gates on missingresource_config METADATAdependency.
+CPU218qualifiedsameSHA supportaddedtoBOTHoverlays(4f8265da...), noWMmathchange;
+other3qualifierscontinue. NEW R494955/start4225719147 VALIDITY2 unix1793630604,
+newimmutableLS_VALIDITY_GPU_REPLACEMENT_gpuR receipt, neverredispatch.
+Observe-onlyV2local25264 since1793631295 recognizesreplacement/ALL8gateadmission;
+old34636creation+argvverifiedTERM. SSHbanner/dispatchtimeoutreadretry13CPU PASS
+1.50s (initialpluginrunprinted13PASSbuttimedout; hermeticrerunexit0).
+At22:55gpuA7429/7430had4/8and5/8gates, stillqualifying/notservingsearches;
+original4brokerassignmentsareterminaloldwork,NOTnewrunningsearches. MAINalert
+E:/agent-work/_sol/COOPMWM_COLLECTION_RECOVERY_2250.md. Pendingfirstrealsearch+
+labelTHENharden-intintegration. MAIN22:18speedhooksnotactivated;22:37triagecan
+onlyusecachedowncentre(noextraWMcall); currentpendingstateshavenocentrecosts.
+
 Freshresume read ALL518brief lines. Original warm/u0/library qualifications adopted;
 latest21:29 ONLY restore collection, B-REPLAY integration delegated/notactive.
 Inherited harden-int15542a51 merge resolvedbyprioragent, preserved6ba4c419;

@@ -149,6 +149,9 @@ print(json.dumps(dict(host={host!r},owners=owners)))''')
 
 def gpu_status(host):
     rows=read(ops.EVIDENCE/('LS_VALIDITY_GPU_DISPATCH_'+host+'.json'))['owners']
+    replacement=ops.EVIDENCE/('LS_VALIDITY_GPU_REPLACEMENT_'+host+'.json')
+    if replacement.exists():
+        d=read(replacement);rows=[d if x['root']==d['root'] else x for x in rows]
     out=remote(host,f'''from pathlib import Path
 import json,time,subprocess
 workers=[]
@@ -156,14 +159,15 @@ for d in {rows!r}:
  r=Path(d['root']);p=Path('/proc',str(d['pid']));st=(p/'stat').read_text().split() if p.exists() else None
  assert Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']
  assert not st or st[21]==d['start_ticks']
- gates={{p.name:json.loads(p.read_text()) for p in r.glob('STARTUP_*_LSCOLLECT_VALIDITY1.json')}}
- service=json.loads((r/'SERVICE_OWNER.json').read_text());failure=r/'LS_GPU_FAILED_VALIDITY1.json'
+ generation=d.get('generation','VALIDITY1')
+ gates={{p.name:json.loads(p.read_text()) for p in r.glob('STARTUP_*_LSCOLLECT_'+generation+'.json')}}
+ service=json.loads((r/'SERVICE_OWNER.json').read_text());failure=r/('LS_GPU_FAILED_'+generation+'.json')
  ready=st is not None and st[2] in ('S','R','D') and not failure.exists() and len(gates)==8 and all(x['pass_'] and x['max_cost_error']==0 for x in gates.values()) and all(service[k]==d[k] for k in ('pid','start_ticks','boot_id'))
  completed=[json.loads(p.read_text()) for p in (r/'forecasts').glob('*.json') if p.stat().st_mtime>=d['unix']]
  workers.append(dict(owner=d,state=st[2] if st else 'exited',ready=ready,gates=gates,
   failure=json.loads(failure.read_text()) if failure.exists() else None,
   new_forecasts=len(completed),successful_searches=sum(x['result'].get('proposer_receipt') is not None for x in completed),
-  log_tail=(r/'LS_GPU_VALIDITY1.log').read_text()[-1800:]))
+  log_tail=(r/('LS_GPU_'+generation+'.log')).read_text()[-1800:]))
 print(json.dumps(dict(host={host!r},unix=time.time(),workers=workers,gpu=subprocess.check_output(['nvidia-smi','--query-gpu=utilization.gpu,memory.used,power.draw','--format=csv,noheader'],text=True))))''')
     v=json.loads(out);write(ops.EVIDENCE/f'LS_VALIDITY_GPU_{host}_{int(v["unix"])}.json',v)
     print(json.dumps(dict(host=host,gpu=v['gpu'],workers=[dict(owner=w['owner'],state=w['state'],ready=w['ready'],gates=len(w['gates']),failure=w['failure'],successful_searches=w['successful_searches'],log_tail=w['log_tail']) for w in v['workers']])))
@@ -284,13 +288,148 @@ print(json.dumps(v))''')
     print(out);return v
 
 
+def cap_register():
+    import copy
+    p=ops.EVIDENCE/'BANK_VERIFICATION_CAP_2232.json'
+    if not p.exists():
+        old=read(ops.EVIDENCE/'LS_COLLECT_REGISTRATION.json')['config']['budget']
+        b=copy.deepcopy(old);assert b['total']==11900000
+        assert 'bank_verification_ext' not in b['phases']
+        b['total']=b['allocated']=14500000;b['phases']['bank_verification_ext']=2600000
+        assert sum(b['phases'].values())==b['total']
+        assert all(b['phases'][k]==v for k,v in old['phases'].items())
+        line=('\nS-COOPMWM MAIN22:32 OWNER CAP AMENDMENT:11900000->14500000 sim-s; '
+            '+2600000 restricted solely to bank_verification_ext for B/R verified-plan-bank '
+            'k8+policy and confirmation branches(second seed/extended window). '
+            'All other phase caps unchanged; failed charges retained; unspent stays unspent. '
+            'Existing LS collection still uses its prior train/sumo_verification phases; '
+            'no extra physics, search activation, training restart or sealed access authorized by this record.\n')
+        write(p,dict(authority='MAIN2026-11-02 22:32',line=line,budget=b,new_sim_s=0,
+            restriction='B/R bank grading only; unspent stays unspent',existing_live_collection_budget_unchanged=True))
+        with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line+'amendmentSHA'+sha(p)+'\n')
+    v=read(p);h=sha(p)
+    out=remote('cpuQ',f'''from pathlib import Path
+import json,sys,time
+r=Path({ROOT!r});sys.path.insert(0,{SOURCE!r}+'/pytools')
+from tools.coopmwm.warm_spool import immutable
+value=json.loads({json.dumps(v)!r});value['amendment_sha256']={h!r}
+target=r/'BANK_VERIFICATION_CAP_2232.json'
+if not target.exists():
+ with (r/'AUTHORITY.md').open('a') as f:f.write(value['line']+'amendmentSHA'+{h!r}+chr(10))
+immutable(target,value)
+print(json.dumps(dict(bound=True,cap=value['budget']['total'],phase='bank_verification_ext',phase_cap=2600000,amendment_sha256={h!r},new_sim_s=0)))''')
+    print(out)
+
+
+def support(host):
+    """Supply a SHA-qualified metadata dependency before pending gates use it."""
+    import hashlib
+    text=checked(ops.LOCAL/'tools/coopmwm/resource_config.py').read_text(encoding='utf-8')
+    reg=read(ops.EVIDENCE/'LS_VALIDITY_REGISTRATION.json')
+    h=hashlib.sha256(text.encode()).hexdigest()
+    assert h==reg['cpu']['source_hashes']['pytools/tools/coopmwm/resource_config.py']
+    target=ops.EVIDENCE/'LS_VALIDITY_SUPPORT_REGISTRATION.json'
+    if not target.exists():
+        line=('\nS-COOPMWM COLLECTION PACKAGING FIX: plan_service metadata-only resource_config '
+            'dependency was absent from legacy GPU pytools; gpuR secondary failed AFTER4freshgates, '
+            'before serve/bootstrap. Add CPU218-qualified resource_config to the registered overlay '
+            'on both hosts; other qualifiers continue unchanged. No WM arithmetic/search/clock '
+            'change, no new SUMO, no replay; retain the failed owner and all completed gates.\n')
+        write(target,dict(line=line,source_sha256=h,parent_amendment_sha256=sha(ops.EVIDENCE/'LS_VALIDITY_REGISTRATION.json'),new_sim_s=0))
+        with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line+'amendmentSHA'+sha(target)+'\n')
+    packed=base64.b64encode(text.encode()).decode();amendment=sha(target)
+    out=remote(host,f'''from pathlib import Path
+import hashlib,base64,json
+r=Path('/root/coopmwm20261102_lsvalidops1');assert r.is_dir();p=r/'resource_config.py';text=base64.b64decode({packed!r}).decode()
+assert hashlib.sha256(text.encode()).hexdigest()=={h!r}
+if p.exists():assert p.read_text()==text
+else:p.write_text(text)
+target=r/'SUPPORT_REGISTERED.json';value=dict(source_sha256={h!r},amendment_sha256={amendment!r})
+if target.exists():assert json.loads(target.read_text())==value
+else:
+ with target.open('x') as f:json.dump(value,f)
+print(json.dumps(dict(host={host!r},support_registered=True,source_sha256={h!r},amendment_sha256={amendment!r})))''')
+    print(out)
+
+
+def recover_secondary():
+    rows=read(ops.EVIDENCE/'LS_VALIDITY_GPU_DISPATCH_gpuR.json')['owners']
+    d=next(x for x in rows if x['root'].endswith('deadlineR2'))
+    amendment=sha(ops.EVIDENCE/'LS_VALIDITY_SUPPORT_REGISTRATION.json')
+    out=remote('gpuR',f'''from pathlib import Path
+import json,os,time,subprocess,hashlib
+d={d!r};r=Path(d['root']);base=Path('/root/coopmwm20261102_lsvalidops1');target=r/'LS_GPU_DISPATCH_VALIDITY2.json'
+if target.exists():print(target.read_text())
+else:
+ assert Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']
+ p=Path('/proc',str(d['pid']))
+ if p.exists():
+  st=(p/'stat').read_text().split();assert st[21]==d['start_ticks'] and st[2]=='Z','adopt live owner, never duplicate'
+ failed=json.loads((r/'LS_GPU_FAILED_VALIDITY1.json').read_text());assert 'ModuleNotFoundError' in failed['error'] and 'tools.coopmwm.resource_config' in failed['error']
+ assert (base/'SUPPORT_REGISTERED.json').exists()
+ assert all((r/'forecasts'/p.name).exists() for p in (r/'inference_claims').glob('*.json'))
+ code='import sys;sys.path.insert(0,'+repr(str(base))+');from ls_gpu import run;run('+repr(str(r))+','+repr(dict(d,argv=''))+',1793894340.,'+repr({amendment!r})+',recover=True,generation="_VALIDITY2",overlay='+repr(str(base))+')'
+ env=dict(os.environ,PYTHONPATH=str(r/'pytools'),WMTEACH_BACKEND='FULL-v4',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1',PYTORCH_CUDA_ALLOC_CONF='expandable_segments:True')
+ with (r/'LS_GPU_VALIDITY2.log').open('x') as log:
+  p=subprocess.Popen(['nice','-n','19','/root/miniconda3/bin/python','-B','-u','-c',code],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+ st=Path('/proc',str(p.pid),'stat').read_text().split();v=dict(d,pid=p.pid,start_ticks=st[21],unix=time.time(),generation='VALIDITY2',amendment_sha256={amendment!r})
+ with target.open('x') as f:json.dump(v,f)
+ print(json.dumps(v))''')
+    v=json.loads(out);p=ops.EVIDENCE/'LS_VALIDITY_GPU_REPLACEMENT_gpuR.json'
+    if not p.exists():write(p,v)
+    print(out)
+
+
+def throughput():
+    """Accounted burn, not an invented estimate of actual physical progress."""
+    import contextlib,io,time
+    with contextlib.redirect_stdout(io.StringIO()):v=status()
+    xs=[]
+    for p in ops.EVIDENCE.glob('LS_VALIDITY_STATUS_*.json'):
+        x=read(p)
+        if x['unix']<=v['unix']:xs.append(x)
+    before=min((x for x in xs if x['unix']>=v['unix']-3600),key=lambda x:x['unix'])
+    hours=(v['unix']-before['unix'])/3600
+    c=v['collection'];old=before['collection']
+    out=dict(unix=v['unix'],window_start_unix=before['unix'],window_hours=hours,
+        searches=v['successful_searches'],verified_lists=c['verified_lists'],
+        searches_per_hour=(v['successful_searches']-before['successful_searches'])/hours if hours else None,
+        verified_lists_per_hour=(c['verified_lists']-old['verified_lists'])/hours if hours else None,
+        charged_sim_s=c['charged_collection_sim_s'],
+        charged_sim_s_per_hour=(c['charged_collection_sim_s']-old['charged_collection_sim_s'])/hours if hours else None,
+        burn_contract='full precharges including retained failures; not actual executed sim seconds',
+        actual_sim_s_per_hour=None,training_paused=v['training_paused'])
+    extra=json.loads(remote('cpuQ',f'''from pathlib import Path
+import json
+c=Path({COLLECTION!r});labels=[json.loads(p.read_text()) for p in (c/'labels').glob('*.json')]
+positive=[x for x in labels if x['verification'].get('grade_veh_s',0)>0 and x['verification']['status']=='accepted']
+recent=[x for x in positive if {before['unix']!r}<x['verification']['timing']['finished_unix']<={v['unix']!r}]
+print(json.dumps(dict(positive_lists=len(positive),positives_per_hour=len(recent)/{hours!r} if {hours!r} else None,positive_contract='exact-positive verified best-of-eight B lists; R collection not active')))
+'''))
+    out.update(extra)
+    samples={h:[] for h in ('gpuA','gpuR')}
+    for h in samples:
+        for p in ops.EVIDENCE.glob('LS_VALIDITY_GPU_'+h+'_*.json'):
+            x=read(p)
+            if before['unix']<=x['unix']<=v['unix']:
+                samples[h].append(float(x['gpu'].split('%')[0].strip())>0)
+    out['sampled_gpu_busy_share']={h:sum(a)/len(a) if a else None for h,a in samples.items()}
+    out['gpu_busy_share_contract']='fraction of periodic samples with nonzero GPU utilization, includes fresh startup qualification'
+    target=ops.EVIDENCE/'COLLECT_THROUGHPUT.json'
+    tmp=target.with_suffix('.publishing')
+    with tmp.open('w',encoding='utf-8') as f:json.dump(out,f,sort_keys=True)
+    __import__('os').replace(tmp,target)
+    write(ops.EVIDENCE/f'COLLECT_THROUGHPUT_{int(v["unix"])}.json',out)
+    print(json.dumps(out));return out
+
+
 def watch():
     """Only observe/publish and admit these already-dispatched gated owners."""
     import contextlib,io,msvcrt,os,time
     lock=(ops.EVIDENCE/'LS_VALIDITY_OBSERVER.claim').open('a+b');lock.seek(0)
     if not lock.read(1):lock.write(b'1');lock.flush()
     lock.seek(0);msvcrt.locking(lock.fileno(),msvcrt.LK_NBLCK,1)
-    admitted=set();last_publish=0
+    admitted=set();last_publish=0;last_throughput=0
     while time.time()<1793894340.:
         try:
             with contextlib.redirect_stdout(io.StringIO()):
@@ -315,6 +454,9 @@ def watch():
                 if cpu['successful_searches'] and not (ops.EVIDENCE/'LS_FIRST_SEARCH_VALIDITY1.json').exists():
                     write(ops.EVIDENCE/'LS_FIRST_SEARCH_VALIDITY1.json',v)
                 last_publish=now
+            if now-last_throughput>=3600:
+                with contextlib.redirect_stdout(io.StringIO()):throughput()
+                last_throughput=now
         except Exception as error:
             write(ops.EVIDENCE/f'LS_VALIDITY_OBSERVER_ERROR_{time.time_ns()}.json',dict(unix=time.time(),error=repr(error),remote_owners_untouched=True))
             print('ALERT '+repr(error),flush=True)
@@ -323,18 +465,18 @@ def watch():
 
 def watch_dispatch():
     import subprocess,sys,time
-    p=ops.EVIDENCE/'LS_VALIDITY_OBSERVER_DISPATCH.json'
+    p=ops.EVIDENCE/'LS_VALIDITY_OBSERVER_DISPATCH_V2.json'
     if p.exists():print(json.dumps(read(p)));return
-    with (ops.EVIDENCE/'LS_VALIDITY_OBSERVER.log').open('x',encoding='utf-8') as log:
+    with (ops.EVIDENCE/'LS_VALIDITY_OBSERVER_V2.log').open('x',encoding='utf-8') as log:
         child=subprocess.Popen([sys.executable,'-X','utf8','-u','-m','tools.coopmwm.ls_validity_ops','watch'],
             cwd=ops.LOCAL,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,
             creationflags=subprocess.CREATE_NEW_PROCESS_GROUP)
     d=dict(pid=child.pid,unix=time.time(),source_sha256=sha(ops.LOCAL/'tools/coopmwm/ls_validity_ops.py'),
-        retired_observer=dict(pid=16664,unix=1793624187.9987535,verified_creation=True,verified_command='tools.coopmwm.ls_recover watch'),
+        retired_observer=dict(pid=34636,unix=1793629346.4150927,verified_creation=True,verified_command='tools.coopmwm.ls_validity_ops watch'),
         mode='observe/publish; admit already-dispatched eight-fresh-gate slots only; no worker/training/physics dispatch')
     write(p,d);print(json.dumps(d))
 
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('action',choices=['qualify','cpu_result','register','gpu','gpu_status','cpu','admit','status','watch','watch_dispatch']);p.add_argument('--host',choices=['gpuA','gpuR'])
-    a=p.parse_args();globals()[a.action](a.host) if a.action in ('gpu','gpu_status') else globals()[a.action]()
+    p=argparse.ArgumentParser();p.add_argument('action',choices=['qualify','cpu_result','register','gpu','gpu_status','cpu','admit','status','watch','watch_dispatch','cap_register','throughput','support','recover_secondary']);p.add_argument('--host',choices=['gpuA','gpuR'])
+    a=p.parse_args();globals()[a.action](a.host) if a.action in ('gpu','gpu_status','support') else globals()[a.action]()

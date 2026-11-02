@@ -28,3 +28,11 @@ def test_arrival_bound_error_is_one_query_decline_not_worker_death():
     assert not out['accepted'] and not out['query_error']['inference_retry']
     assert 'fitted demand phase' in out['query_error']['traceback']
     assert execute(r, lambda:dict(accepted=True)) == dict(accepted=True)
+
+
+def test_observed_ssh_transport_variants_retry_but_code_faults_do_not():
+    from .warm_transport import connection_error
+    for text in ('ssh_dispatch_run_fatal: Connection to 1.15.42.207 port 22: Connection timed out',
+                 'Connection timed out during banner exchange\nConnection to 1.15.42.207 port 22 timed out'):
+        assert connection_error(RuntimeError(text))
+        assert not connection_error(RuntimeError('Traceback\n'+text))

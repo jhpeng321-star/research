@@ -1,5 +1,28 @@
 # S-COOPMWM — live checks
 
+## MAIN22:32 restricted budget amendment; qualification packaging follow-up
+- **23:01:53 UTC+8:** gpuR secondary replacement **494955** passed all eight fresh
+  **EXACT0** gates and was admitted as `gpuR@resource1651`. The durable broker
+  can now serve collection independently of local SSH observation drops.
+- Cap **14,500,000 sim-s**, amendment **8571ab38…**, registered and bound on cpuQ.
+  The extra **2,600,000** belongs only to `bank_verification_ext` (B/R k8+policy
+  bank grades and confirmation branches). Existing phase caps and live collection
+  budget are unchanged; no extra allocation has been spent.
+- `COLLECT_THROUGHPUT.json` reports successful searches, verified lists, exact
+  positives and accounted sim-s per hour. Burn means **full precharges, including
+  retained failures**, not an inferred actual execution rate. Startup GPU samples
+  are labelled as such; utilization is not evidence of finished searches.
+- gpuR secondary491843 completed four fresh gates, then failed because the legacy
+  spool lacked the metadata-only `resource_config` import required by its overlay.
+  That CPU-qualified dependency is now SHA-bound on both hosts (**4f8265da…**).
+  Other three qualifiers continued; replacement **494955** runs fresh-generation
+  gates. No interrupted inference, episode or physics job was replayed.
+- Observer V2 **25264** recognizes this replacement and publishes hourly throughput.
+  The prior observer alone was identity-verified and terminated. Transport-only
+  banner/dispatch timeout handling passes **13 local CPU checks (1.50 s)**.
+- Qualification remains in progress; the first genuine search and exact label
+  are still pending. B/R remain u3.
+
 ## MAIN21:27/21:29 — arrival-phase recovery deployed
 - All four recovery workers exited on the same fitted-arrival-bound error. The
   observable-arrival artifact ends at **1200 s**; an interrupted request at t860
