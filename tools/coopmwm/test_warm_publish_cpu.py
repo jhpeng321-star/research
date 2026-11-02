@@ -16,7 +16,8 @@ class PublishTests(unittest.TestCase):
 
     def test_actual_reports_and_health_receipts_remain_publishable(self):
         for n in ('A_UPDATE_048.json','AB_CHECK_004.json','A_CHECK_PRESERVED_004.json',
-                  'B_EXACT_VIABILITY_'+'a'*64+'.json','WARM_A_PAUSED.json','PAUSE_HARMFUL_PLANS.json'):
+                  'B_EXACT_VIABILITY_'+'a'*64+'.json','WARM_A_PAUSED.json','PAUSE_HARMFUL_PLANS.json',
+                  'WARM_B_FAILED_I1.json','WARM_R_FAILED_I1.json','WARM_GUIDED_STOP_V3.json'):
             self.assertTrue(p.publishable(n),n)
 
     def test_cached_but_unpublished_receipt_is_adopted_without_overwrite(self):

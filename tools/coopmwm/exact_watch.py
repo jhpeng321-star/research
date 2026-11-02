@@ -11,7 +11,7 @@ from .storage import read,write
 DISPATCHES={'grader':'EXACT_GRADER_DISPATCH.json','broker':'WARM_REMOTE_BROKER_DISPATCH.json',
             'B':'WARM_B_DISPATCH_V4.json','R':'WARM_R_DISPATCH_V4.json'}
 TAG='EXACT_OBSERVER_V2'
-OBSERVE_ONLY=('EXACT_OBSERVER_V6','EXACT_OBSERVER_V7','EXACT_OBSERVER_V8','EXACT_OBSERVER_V9')
+OBSERVE_ONLY=('EXACT_OBSERVER_V6','EXACT_OBSERVER_V7','EXACT_OBSERVER_V8','EXACT_OBSERVER_V9','EXACT_OBSERVER_V10')
 
 
 def adopt(cpu):
@@ -108,6 +108,22 @@ def run():
 
 def dispatch():
     target=ops.EVIDENCE/(TAG+'_DISPATCH.json');assert not target.exists()
+    if TAG=='EXACT_OBSERVER_V10':
+        from .protocol import checked,REGISTRY,sha
+        previous=read(ops.EVIDENCE/'EXACT_OBSERVER_V9_DISPATCH.json')
+        live=subprocess.check_output(['powershell','-NoProfile','-Command',
+            f"Get-CimInstance Win32_Process -Filter 'ProcessId={int(previous['pid'])}' | ConvertTo-Json -Compress"],text=True)
+        assert not live.strip(),'previous observer exists; never duplicate'
+        receipt=ops.EVIDENCE/'EXACT_OBSERVER_INCIDENT_RECOVERY.json';assert not receipt.exists()
+        value=dict(previous=previous,previous_verified_absent=True,
+            purpose='observe current INCIDENT B/R/broker/grader and replacement gpuA; no training dispatch',
+            status_sha256=sha(ops.LOCAL/'tools/coopmwm/exact_ops.py'),
+            state_sha256=sha(ops.LOCAL/'tools/coopmwm/warm_watch.py'),
+            observer_sha256=sha(ops.LOCAL/'tools/coopmwm/exact_watch.py'),
+            new_sumo_sim_s=0,dispatches_training=False,original_deadline_retained=True)
+        write(receipt,value)
+        line='\nS-COOPMWM INCIDENT OBSERVATION REFRESH REGISTERED amendmentSHA'+sha(receipt)+': receipt-owned V9 verified absent; V10 observe-only current INCIDENT B/R/broker/grader and qualified replacement gpuA, SHA-authorised historical failures only; CPU observer/state gates PASS, zero SUMO/inference/PID control, no training dispatch or deadline change.\n'
+        with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line)
     if TAG=='EXACT_OBSERVER_V9':
         from .protocol import checked,REGISTRY,sha
         previous=read(ops.EVIDENCE/'EXACT_OBSERVER_V8_DISPATCH.json')

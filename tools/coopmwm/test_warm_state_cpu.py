@@ -92,6 +92,29 @@ class WarmStateTests(unittest.TestCase):
         v=self.collect({'WARM_R_FAILED_Q1.json':dict(error='executor fault')})
         self.assertEqual(v['stop']['error'],'current training supervisor failure')
 
+    def test_recovery_owners_and_only_authorised_old_failures_adopted(self):
+        import hashlib
+        old=dict(error="ValueError('GPU failed; no inference retry')")
+        files={'INCIDENT_RECOVERY_BINDING.json':dict(source_root='/fixture/recovery'),
+            'INCIDENT_GUIDED_RELEASE.json':dict(original_stop_sha256=hashlib.sha256(json.dumps(old).encode()).hexdigest(),amendment_sha256='registered'),
+            'AUTHORITY.md':'registered','WARM_GUIDED_STOP_V2.json':old,
+            'WARM_B_FAILED_T1.json':dict(error='old incident'),
+            'WARM_R_FAILED_Q1.json':dict(error='old incident'),
+            'INCIDENT_B_DISPATCH.json':self.owner(),
+            'TAIL_B_DISPATCH.json':self.owner(22),
+            'INCIDENT_BROKER_DISPATCH.json':self.owner(),
+            'INCIDENT_GRADER_DISPATCH.json':self.owner()}
+        v=self.collect(files)
+        self.assertIsNone(v['stop']);self.assertEqual(v['failures'],{})
+        self.assertEqual(v['owners']['B']['dispatch_receipt'],'INCIDENT_B_DISPATCH.json')
+        self.assertEqual(v['service_owners']['grader']['dispatch_receipt'],'INCIDENT_GRADER_DISPATCH.json')
+        files['WARM_B_FAILED_I1.json']=dict(error='fresh recovery fault')
+        v=self.collect(files)
+        self.assertIsNotNone(v['stop']);self.assertIn('WARM_B_FAILED_I1.json',v['failures'])
+        del files['WARM_B_FAILED_I1.json']
+        files['INCIDENT_GUIDED_RELEASE.json']['original_stop_sha256']='wrong'
+        self.assertIsNotNone(self.collect(files)['stop'])
+
     def test_fair_broker_and_latest_grader_override_historical_owners(self):
         v=self.collect({'CENTRE_FAIR_BROKER_DISPATCH.json':self.owner(),
             'QUOTA_broker_DISPATCH.json':self.owner(22),

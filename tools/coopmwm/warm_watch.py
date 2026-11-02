@@ -29,12 +29,12 @@ def state():
     return json.loads(ops.ssh.remote('cpuQ',f'''import pathlib,json,time,shutil,sys
 r=pathlib.Path({ROOT!r});assert r.is_dir();owners={{}}
 source='/home/ubuntu/coopmwm20261102_exactcpu5'
-for name in ('TAIL_RUNTIME_BINDING.json','MAIN0548_RUNTIME_BINDING_V2.json','MAIN0548_RUNTIME_BINDING.json','MAIN0508_REPAIR_BINDING_V2.json'):
+for name in ('INCIDENT_RECOVERY_BINDING.json','TAIL_RUNTIME_BINDING.json','MAIN0548_RUNTIME_BINDING_V2.json','MAIN0548_RUNTIME_BINDING.json','MAIN0508_REPAIR_BINDING_V2.json'):
  if (r/name).exists():source=json.loads((r/name).read_text())['source_root'];break
 sys.path.insert(0,source+'/pytools')
 from tools.coopmwm.warm_health import assert_running,HealthPause
 for arm in ('A','B','R'):
- names=[f'TAIL_{{arm}}_DISPATCH.json',f'QUOTA_{{arm}}_DISPATCH.json']+[f'WARM_{{arm}}_DISPATCH{{suffix}}.json' for suffix in ('_V6','_V4','_V3','2','')]
+ names=[f'INCIDENT_{{arm}}_DISPATCH.json',f'TAIL_{{arm}}_DISPATCH.json',f'QUOTA_{{arm}}_DISPATCH.json']+[f'WARM_{{arm}}_DISPATCH{{suffix}}.json' for suffix in ('_V6','_V4','_V3','2','')]
  p=next((r/name for name in names if (r/name).exists()),None)
  if p is None:continue
  d=json.loads(p.read_text());q=pathlib.Path('/proc')/str(d['pid']);s=(q/'stat').read_text().split() if (q/'stat').exists() else None
@@ -42,8 +42,8 @@ for arm in ('A','B','R'):
  assert not s or s[21]==d['start_ticks'],'owner PID reused'
  owners[arm]=dict(owner=d,state=s[2] if s else 'exited',dispatch_receipt=p.name)
 services={{}}
-for component,names in {{'broker':('TAIL_DRAIN_BROKER_DISPATCH.json','CENTRE_FAIR_BROKER_DISPATCH.json','QUOTA_broker_DISPATCH.json','CAPACITY_BROKER_DISPATCH_V2.json','WARM_REMOTE_BROKER_DISPATCH.json'),
-                        'grader':('EXACT_GRADER_DISPATCH_V2.json','EXACT_GRADER_DISPATCH.json')}}.items():
+for component,names in {{'broker':('INCIDENT_BROKER_DISPATCH.json','TAIL_DRAIN_BROKER_DISPATCH.json','CENTRE_FAIR_BROKER_DISPATCH.json','QUOTA_broker_DISPATCH.json','CAPACITY_BROKER_DISPATCH_V2.json','WARM_REMOTE_BROKER_DISPATCH.json'),
+                        'grader':('INCIDENT_GRADER_DISPATCH.json','EXACT_GRADER_DISPATCH_V2.json','EXACT_GRADER_DISPATCH.json')}}.items():
  p=next((r/name for name in names if (r/name).exists()),None)
  if p is None:continue
  d=json.loads(p.read_text());q=pathlib.Path('/proc')/str(d['pid']);s=(q/'stat').read_text().split() if (q/'stat').exists() else None
@@ -54,7 +54,9 @@ stop=None
 try:assert_running(r,'B')
 except (ValueError,HealthPause) as error:stop=dict(error=str(error),source='current registered warm_health guard')
 pauses=sorted(p.name for p in r.glob('PAUSE_*.json'))
-failures={{p.name:json.loads(p.read_text()) for pattern in ('WARM_*_FAILED_Q1.json','WARM_*_FAILED_V5.json','WARM_*_FAILED_T1.json') for p in r.glob(pattern)}}
+failures={{p.name:json.loads(p.read_text()) for pattern in ('WARM_*_FAILED_Q1.json','WARM_*_FAILED_V5.json','WARM_*_FAILED_T1.json','WARM_*_FAILED_I1.json') for p in r.glob(pattern)}}
+if (r/'INCIDENT_RECOVERY_BINDING.json').exists() and stop is None:
+ for name in ('WARM_B_FAILED_T1.json','WARM_R_FAILED_Q1.json'):failures.pop(name,None)
 if failures and stop is None:stop=dict(error='current training supervisor failure',receipts=failures)
 charges=[json.loads(x) for x in (r/'CHARGES.jsonl').read_text().splitlines()]
 print(json.dumps(dict(unix=time.time(),owners=owners,service_owners=services,stop=stop,

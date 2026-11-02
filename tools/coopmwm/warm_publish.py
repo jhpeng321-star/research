@@ -13,7 +13,7 @@ def number(value):return 'NA' if value is None else f'{value:.4g}'
 
 PUBLIC_RULES=(r'(?:A|B|R|AB)_(?:UPDATE|CHECK|DEV|VIABILITY)_(?:PRESERVED_)?[0-9]{3}\.json',
               r'B_EXACT_VIABILITY_[0-9a-f]{64}\.json',r'ACCEL_EXACT_PLAN_[0-9]{3}(?:_FAILED)?\.json',
-              r'WARM_[ABR]_(?:FAILED(?:_V[35]|_Q1|_T1)?|PAUSED)\.json',r'(?:WARM_GUIDED_STOP(?:_V2)?|STOP)\.json',
+              r'WARM_[ABR]_(?:FAILED(?:_V[35]|_Q1|_T1|_I1)?|PAUSED)\.json',r'(?:WARM_GUIDED_STOP(?:_V[23])?|STOP)\.json',
               r'PAUSE_[A-Za-z0-9_]+\.json')
 
 
@@ -71,7 +71,7 @@ def publish():
 r=pathlib.Path({ROOT!r});assert r.is_dir();sys.path.insert(0,str(r/'pytools'))
 from tools.coopmwm.accel_storage import read,charged
 known=set(json.loads({json.dumps(known)!r}));out={{}};rules=json.loads({json.dumps(PUBLIC_RULES)!r})
-patterns=('*_UPDATE_*.json','*_CHECK_*.json','*_DEV_*.json','*_VIABILITY_*.json','ACCEL_EXACT_PLAN_*.json','WARM_*_FAILED.json','WARM_*_FAILED_V3.json','WARM_*_FAILED_V5.json','WARM_*_FAILED_Q1.json','WARM_*_FAILED_T1.json','WARM_*_PAUSED.json','PAUSE_*.json','WARM_GUIDED_STOP*.json','STOP.json')
+patterns=('*_UPDATE_*.json','*_CHECK_*.json','*_DEV_*.json','*_VIABILITY_*.json','ACCEL_EXACT_PLAN_*.json','WARM_*_FAILED.json','WARM_*_FAILED_V3.json','WARM_*_FAILED_V5.json','WARM_*_FAILED_Q1.json','WARM_*_FAILED_T1.json','WARM_*_FAILED_I1.json','WARM_*_PAUSED.json','PAUSE_*.json','WARM_GUIDED_STOP*.json','STOP.json')
 for pattern in patterns:
  for p in r.glob(pattern):
   if p.name in known or not any(re.fullmatch(rule,p.name) for rule in rules):continue
