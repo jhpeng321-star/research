@@ -202,8 +202,12 @@ print(json.dumps(dict(unix=time.time(),owner=d,state=st[2] if st else 'ABSENT',q
         __import__('os').replace(tmp, target)
     path=ops.EVIDENCE/f'BANK_BUILDER_STATUS_{time.time_ns()}.json'
     write(path, value)
+    quality=value['quality']
+    if quality is not None:
+        quality={k:v for k,v in quality.items() if k not in
+            ('synergy_twins','old_new_verdicts','synergy_diagnostic_twins')}
     print(json.dumps(dict(receipt=str(path),unix=value['unix'],owner=value['owner'],
-        state=value['state'],quality=value['quality'],
+        state=value['state'],quality=quality,
         first_batch_complete=value['first_batch_complete'] is not None,
         attempt_statuses={s:sum(a['status']==s for a in value['attempts'])
             for s in sorted({a['status'] for a in value['attempts']})})))

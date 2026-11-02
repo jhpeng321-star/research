@@ -1,5 +1,19 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+MAIN04:26LIVE/COMPLETE04:51:37(unix1793652697):new2388293/start66646196,
+bank_builder_0426/sourcebankcpu2; OLD2332488gracefullyEXIT/no signals.
+17confirmed/5admitted/3cooperative/0pendingrevalidation/0incomplete; oldrule
+17confirmed/3admitted/8safetyrejections retained. FIRST_BATCH_COMPLETEexists.
+986016NOWadmittedbutNOTcooperative:group522.037/bestsolo560.037(ramp.26)
+=>-38.000297 synergy; combinedsafetydeltas-17/-89,collision/teleport0.
+Meanadmitted853.276CI[86.605,2096.231]decisionbootstrap. Sourceall68CPU PASS;
+reusedSAVEDrep/ext + prechargedunusedsolos; originalSHA-linkedrecordsunchanged.
+`bank_builder_ops status` authoritativeamendedBANK_QUALITY_B.json; oldobserver
+BANK_STATUSstilllegacyreaderuntilrefreshed, doNOTuseitfornewadmissioncounts.
+NEWNULLFIXjointCPU3=267PASS0skips55.300s, noSUMO. GPUactivationNOTDONE;
+all4oldit2_K2slotsserve. Nextregisteredone-slotrollout mustinclude sourcebound
+geometry/netdependency, no secondqualifier, R memory-safe gating; noPPOrestart.
+
 MAIN04:26safetyamendmentCPUQUAL/REGISTERED:bankcpu2 68LinuxCPU PASS0skips
 23.486s; 6b39e1ff55df45bf... canonicalBEFORErevalidation.16positiveexisting
 decisions/ALLrep-ext-solojobsalreadyprecharged, NEWchargeupper0; charged5197130.

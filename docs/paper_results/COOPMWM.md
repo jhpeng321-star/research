@@ -1,5 +1,29 @@
 # S-COOPMWM — live checks
 
+## Nov3 04:51:37 UTC+8 — amended safety revalidation and required solos complete
+- Durable replacement **2388293/start66646196** started04:43:04 after the old
+  builder's graceful exit. `BANK_BUILDER_DISPATCH_0426.json` pins its source.
+  All original confirmation receipts remain intact; no replication/extended
+  branch was repeated. Existing conditional precharges funded the missing solos.
+- Current bank: **17 confirmed /5 admitted /3 cooperative**, zero incomplete,
+  **0 pending safety revalidations**. Original-rule disclosure:17 confirmed,
+  3 admitted,8 safety rejections. New-rule overlapping rejections: replication7,
+  later harm3,safety5. All replication/later-harm passes have diagnostic solos,
+  including safety-rejected entries; full rows are in `BANK_QUALITY_B.json`.
+- Required986016 diagnostic: group saving **+522.037019**, best solo
+  **+560.037316** (ramp.26), cooperation gain **−38.000297 veh-s**. It is now
+  admitted under the authorized combined-safety rule, **not cooperative**.
+  Combined event deltas are−17 (replication) and−89 (extended); collision and
+  teleport deltas remain0. The original rejection remains disclosed.
+- Mean replicated saving among5 admitted entries: **853.276 veh-s**,
+  decision-bootstrap95% CI[86.605,2096.231]. Mean cooperation gain over those
+  entries1070.153, CI[−15.205,2842.195]. Conditional bank descriptives only;
+  ten-admission restart gate remains unmet and B/R stayu3.
+- Collector nullfix/clamp **not yet live**. Combined niche/nullfix source has
+  completed267 Linux CPU checks (zero skips,55.300s,zero SUMO); source-bound
+  per-slot GPU qualification/deployment remains required. All4 existing it2_K2
+  slots continue serving; mirror remains OFF.
+
 ## Nov3 04:41 UTC+8 — MAIN04:26 safety amendment qualified and registered
 - New shared B/R bank rule: no collision/teleport increase, and no increase in
   hard-brake+trace TTC<1.5 event totals in either confirmation window. Old
