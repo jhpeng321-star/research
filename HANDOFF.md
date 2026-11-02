@@ -20,6 +20,19 @@ sample 95% conformal radius, no option's OOF prediction clears uncertainty;
 the honest STEP 3 answer is "O0 everywhere, headroom 588 veh-s", not a
 policy that cooperates. All 17 CPU tests re-verified green on 2026-11-02.
 
+## ADDENDUM 2 2026-11-02: independent direct rerun, artifacts committed here
+
+A second session instance re-ran the CLI directly on the same full export
+(no helper mediation) and committed the artifacts in THIS worktree at
+`docs/paper_results/coopbandit_learn_full/` (commit a76da843): report.json,
+SUMMARY.md, importance/PDP csv+png, and the stageable `policy.json`.
+Cross-check against the helper run: every statistic identical (RMSE, radii,
+regret 588.48, CI [295.05, 961.64], cooperate rate 0.000); `policy.json`
+differs ONLY in its `created_utc` field (tree arrays, radius, feature order
+byte-identical), `report.json` only in wall-clock `seconds` and the policy
+hash that inherits the timestamp. Either `policy.json` is fine for your live
+test; quote the helper copies in your worktree as canonical if you prefer.
+
 STEP 3 tooling is READY. It consumes your EXAM v1 export format directly
 (`tools/coopbandit/export.py` output, verified against your `export.py` and
 `learn.py` in `E:/agent-work/c4-coopbandit`); it was built and tested against a
