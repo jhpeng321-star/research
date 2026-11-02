@@ -1,5 +1,23 @@
 # Fleet PPO controller-selector training status
 
+## Latest reconciliation — 2026-11-03 02:06 +08:00
+- Training and fleet evaluation remain complete under the existing receipts below.
+- Owner cleanup removed the original cpuQ training directory (REGISTRATION.md Nov3
+  00:38); original645235 is absent. Full-ledger validation cannot be freshly repeated
+  at the old path. Historical completion/accounting receipts remain committed.
+- Surviving final169 checkpoint on gpuR:
+  `/root/c1switch2_selector_fleet_bb77eb9ce7fc1dd4/checkpoint.pt`.
+  Its SHA256 is `be0bb66dba7ec2059de9d7ca57993731d8383a0a5bf69c52cbfcafc10c457ddc`.
+  Fresh verification matched all27copy-receipt files; CPU weights-only load confirmed
+  iteration169 and finite model state. Prior full selector-runtime probe remains PASS;
+  a standalone import here lacked wms on PYTHONPATH and was not a new inference pass.
+- Latest peer status (verified Unix1793637481.76109) retains complete16-world fleet
+  evaluation; full WM/BB/per-CAV comparison and primary CI remain incomplete.
+- Evidence: `selmappo/RESUME_20261103_0206.json` (commit `3b574c28`).
+  New simulation/GPU/dispatches/signals:0. Exact cap/accounting unchanged.
+
+## Historical completion verification
+
 Observed UTC: 2026-11-01T12:34:34.486780+00:00
 - cpuQ supervisor: 645235; alive=False; nice=None.
 - Genuine completed PPO updates: 169/169; final169 eligible=True.

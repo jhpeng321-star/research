@@ -1,5 +1,25 @@
 # S-SELMAPPO fleet-picker integration handoff
 
+## Fresh resume — 2026-11-03 02:06 +08:00
+- Fleet work remains COMPLETE: historical receipts bind169updates/7,728new episodes,
+  6,998,400charged sim-s; local14,400evaluation reservation remains UNSTARTED.
+- OriginalcpuQ645235 is absent. Original `/home/ubuntu/selmappo20261031` is also absent,
+  consistent with OWNER cleanup recorded in REGISTRATION.md at Nov3 00:38.
+  Old training paths in immutable handoff receipts are historical; fresh full-ledger
+  validation is unavailable at that location. No training restart is required.
+- Final169 SURVIVES on gpuR at
+  `/root/c1switch2_selector_fleet_bb77eb9ce7fc1dd4/checkpoint.pt`.
+  Fresh SHA256 matches `be0bb66dba7ec2059de9d7ca57993731d8383a0a5bf69c52cbfcafc10c457ddc`;
+  all27files in peer SELECTOR_COPY receipt match, including frozen receipt9dee8c4f.
+  CPU weights-only deserialization/iteration169/finite model-state checks PASS.
+  Standalone selector import lacks wms on PYTHONPATH; existing full runtime CPU probe
+  remains the prior peer PASS, not a fresh full-inference result.
+- Peer Nov3 00:38 status still records fleet16episodes/480decisions/96oracle branches
+  COMPLETE,79,800charged=actual. Broader WM/BB/per-CAV comparison remains incomplete.
+- cpuQ free20,539,994,112bytes at probe. No new dispatch, observer, simulation, GPU
+  allocation or process signal. Evidence committed `3b574c28`:
+  `docs/paper_results/selmappo/RESUME_20261103_0206.json`.
+
 ## Fresh resume verified — 2026-11-01 20:34 +08:00
 - Re-read git log/status, shared registration and task receipts before acting.
 - Existing final169/source/finite-policy/ledger validation PASS on cpuQ; peer handoff
