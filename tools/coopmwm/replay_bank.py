@@ -25,6 +25,14 @@ advantage(group) - max_m advantage(solo m); the entry is tagged cooperative iff 
 is > 0 (single-CAV plans: cooperative=False). The imitation batch oversamples cooperative
 entries up to 50% of the imitation samples (weights unchanged); BANK_QUALITY.json carries
 the cooperative count, the mean gain with CI and the group-vs-best-solo synergy twins.
+
+LESSON-LEARNED CHECK (MAIN 2026-11-03 01:22), after EVERY B and R update in B-REPLAY: on a
+FIXED list of up to 12 admitted bank snapshots (the first admitted, sealed/frozen once chosen)
+run ONE exact SUMO branch of the NEW policy continuing from each snapshot (same window, same
+CRN prefix/generator state). recapture = (J_policy_u3 - J_new_policy) / (J_policy_u3 - J_best_plan)
+per entry plus the mean with CI - how much of each verified win the policy now achieves on its
+own - and the imitation action error (m/s^2) of the new policy vs the plan actions on the chosen
+branch tape. LESSON_CHECK_u<k>_<arm>.json; charges lesson_u<k>-prefixed in bank_verification_ext.
 """
 import json
 import os
@@ -42,6 +50,7 @@ K = 8
 EXTENDED_TAIL_S = 600        # MAIN confirmation (b): window to min(episode end, t0+D+600)
 TTC_EVENT_S = 1.5            # MAIN confirmation (c): TTC<1.5 s vehicle-second events
 SAFETY_KEYS = ('collisions', 'teleports', 'hard_brake')
+LESSON_N = 12                # MAIN 2026-11-03 01:22: fixed lesson list cap
 
 
 def bank_root(root, arm):
@@ -604,6 +613,20 @@ def _ls_snapshot(src, key):
     return s
 
 
+def _decision_snapshot(root, arm, r, by_vid):
+    """The decision-time snapshot of a first-seed positive decision (own bank or live LS label)."""
+    bank = bank_root(root, arm)
+    link = by_vid.get(r['verification_id'])
+    if link is None:
+        if r['_policy_version'] != 'u3':
+            raise ValueError('no decision link for '+r['verification_id'])
+        src = Path(r['_branches']).parent
+        key = next(json.loads(p.read_text())['search_id'] for p in (src/'labels').glob('*.json')
+                   if json.loads(p.read_text())['verification']['verification_id'] == r['verification_id'])
+        return _ls_snapshot(src, key)
+    return torch.load(bank/'snapshots'/(link['state_id']+'.pt'), weights_only=False)
+
+
 def confirm_pending(root, arm, runner_for, run_root, phase, workers=2, sources=(), limit=None):
     """Confirm every first-seed positive decision (own bank and, for B, live LS labels) once."""
     bank = bank_root(root, arm);done = {p.stem for p in (bank/'confirmations').glob('*.json')}
@@ -616,13 +639,7 @@ def confirm_pending(root, arm, runner_for, run_root, phase, workers=2, sources=(
             continue
         if limit is not None and len(statuses) >= limit:
             break
-        if r['_policy_version'] == 'u3' and r['verification_id'] not in by_vid:
-            src = Path(r['_branches']).parent
-            key = next(json.loads(p.read_text())['search_id'] for p in (src/'labels').glob('*.json')
-                       if json.loads(p.read_text())['verification']['verification_id'] == r['verification_id'])
-            snap = _ls_snapshot(src, key)
-        else:
-            snap = torch.load(bank/'snapshots'/(by_vid[r['verification_id']]['state_id']+'.pt'), weights_only=False)
+        snap = _decision_snapshot(root, arm, r, by_vid)
         receipt = {k: v for k, v in r.items() if not k.startswith('_')}
         statuses.append(confirm(root, arm, receipt, snap, runner_for, run_root, phase, workers,
                                 r['_policy_version'])['admitted'])
@@ -676,3 +693,145 @@ def bank_quality(root, arm, sources=()):
     path = bank_root(root, arm)/'BANK_QUALITY.json';tmp = path.with_name(path.name+'.publishing')
     tmp.write_text(json.dumps(q, indent=1));os.replace(tmp, path)
     return q
+
+
+# ---------------------------------------------------------------- lesson check (MAIN 2026-11-03 01:22)
+
+def lesson_list(root, arm, sources=()):
+    """The FIXED lesson list: the first admitted bank decisions of this arm (receipt finish
+    order, up to LESSON_N), sealed once chosen; every later update measures recapture on
+    exactly the same entries (never re-chosen, never extended)."""
+    path = bank_root(root, arm)/f'LESSON_LIST_{arm}.json'
+    if path.exists():
+        v = json.loads(path.read_text());xg.verify_sealed(v, 'lesson_list_sha256');return v
+    conf = confirmations(root, arm)
+    admitted = [r['verification_id'] for r in bank_decisions(root, arm, sources=sources)
+                if r['status'] == 'accepted' and (r['grade_veh_s'] or 0) > 0
+                and conf.get(r['verification_id'], {}).get('admitted')]
+    if not admitted:
+        return None
+    rec = dict(arm=arm, rule='first admitted decisions in receipt finish order, up to 12, frozen once chosen',
+               verification_ids=admitted[:LESSON_N], chosen_unix=time.time())
+    xg._write_new(path, xg._seal(rec, 'lesson_list_sha256'))
+    return rec
+
+
+def _action_error(policy, r, best):
+    """Mean |policy action - plan action| (m/s^2) of the NEW policy over the chosen branch's
+    committed plan steps (the same member-index rule as the imitation loss)."""
+    import numpy as np
+    branch = r['branches'][r['chosen']+1]
+    from .accel_storage import read
+    tape = read(Path(r['_branches'])/r['verification_id']/branch['branch']/'RESULT.json')
+    if branch.get('result_sha256') and digest(tape) != branch['result_sha256']:
+        raise ValueError('bank branch tape differs from its sealed verification receipt')
+    pairs = xg.imitation_pairs(tape, dict(start_s=r['t0'], duration_s=int(best['duration_s']),
+                                          plan_id=best['id'], weight=1.))
+    errs = []
+    with torch.no_grad():
+        for sample, _w in pairs:
+            mean, _ = policy(sample['context'])
+            act = torch.tensor(sample['action']).reshape(-1, 1)
+            idx = [sample['context']['members'].index(v) for v in sample['behaviour']['proposal_members']
+                   if v in sample['context']['members']]
+            if idx:
+                errs.append(float((mean[idx]-act[idx].reshape(-1)).abs().mean()))
+    return float(np.mean(errs)) if errs else None
+
+
+def lesson_check(root, arm, policy, run_root, update, runner_for, workers=2, sources=(),
+                 phase='bank_verification_ext'):
+    """LESSON-LEARNED CHECK after an update (never raises; the training run must not depend on it).
+
+    For each FROZEN lesson entry: ONE exact SUMO branch of the NEW policy continuing from the
+    decision snapshot - same window, same CRN (identical prefix tape and generator state), only
+    the policy weights differ. recapture = (J_policy_u3 - J_new_policy)/(J_policy_u3 - J_best_plan)
+    per entry plus the mean (95% bootstrap CI); plus the imitation action error (m/s^2) on the
+    bank states. Charges are lesson_u<k>-prefixed (the same entry is re-measured every update,
+    so unqualified ids would hit the duplicate-charge guard from the second update on)."""
+    import numpy as np
+    bank = bank_root(root, arm);stamp = f'lesson_u{int(update):03}'
+    out = dict(arm=arm, update=int(update), unix=time.time(), phase=phase,
+               rule='recapture = (J_policy_u3 - J_new_policy) / (J_policy_u3 - J_best_plan); '
+                    '1.0 = the new policy achieves the whole verified win on its own',
+               list_size=0, entries=[])
+    try:
+        lst = lesson_list(root, arm, sources)
+        if lst is None:
+            out['reason'] = 'no admitted entries yet; the lesson list is still empty'
+            return out
+        out.update(list_file=f'LESSON_LIST_{arm}.json', list_size=len(lst['verification_ids']),
+                   list_rule=lst['rule'])
+        by_vid = {}
+        for p in (bank/'decisions').glob('*.json'):
+            v = json.loads(p.read_text());by_vid[v['verification_id']] = v
+        receipts = {r['verification_id']: r for r in bank_decisions(root, arm, sources=sources)}
+        runner = runner_for(bank/'lesson_check'/stamp/'branches')
+        charge = _confirm_charge(run_root, phase, stamp)
+        weights = {k: v.detach().cpu().clone() for k, v in policy.state_dict().items()}
+        new_sha = sv._state_sha(weights)
+        for vid in lst['verification_ids']:
+            e = dict(verification_id=vid)
+            r = receipts.get(vid)
+            if r is None or r['status'] != 'accepted' or r.get('chosen') is None:
+                e.update(status='missing_or_ungraded', recapture=None)
+                out['entries'].append(e);continue
+            try:
+                snap = _decision_snapshot(root, arm, r, by_vid)
+            except Exception as err:
+                e.update(status='snapshot_error', reason=repr(err), recapture=None)
+                out['entries'].append(e);continue
+            J_u3 = float(r['branches'][0]['J_veh_s'])
+            J_best = float(r['branches'][r['chosen']+1]['J_veh_s'])
+            new_snap = dict(snap)
+            new_snap['weights'] = weights
+            new_snap['policy'] = dict(state_dict_sha256=new_sha)
+            best = r['chosen_plan']
+            spec = sv.build_branches(new_snap, [best], r['proposer'])[0]   # branch 0: NEW policy continues
+            try:
+                charge(vid, [spec])        # before physics, like every branch charge
+            except sv.BudgetBlocked as err:
+                e.update(status='budget_blocked', reason=str(err), recapture=None)
+                out['entries'].append(e);continue
+            res = sv.run_branch(spec, new_snap, runner)
+            e.update(status=res['status'], J_policy_u3_veh_s=J_u3, J_best_plan_veh_s=J_best,
+                     new_policy_branch=dict(verification_id=spec['verification_id'],
+                                            snapshot_sha256=spec['snapshot_sha256'],
+                                            window=spec['window'], reason=res.get('reason')))
+            if res['status'] == 'graded':
+                J_new = float(res['J_veh_s'])
+                e['J_new_policy_veh_s'] = J_new
+                denom = J_u3-J_best
+                rec = (J_u3-J_new)/denom if denom > 0 else None
+                e['recapture'] = rec
+                if rec is not None:
+                    out.setdefault('recaptures', []).append(rec)
+                try:
+                    aerr = _action_error(policy, r, best)
+                except Exception as err:
+                    aerr = None;e['action_error_reason'] = repr(err)
+                if aerr is not None:
+                    e['imitation_action_error_mps2'] = aerr
+                    out.setdefault('action_errors_mps2', []).append(aerr)
+            out['entries'].append(e)
+        recaptures = out.get('recaptures', []);errs = out.get('action_errors_mps2', [])
+        out.update(recapture_mean=(float(np.mean(recaptures)) if recaptures else None),
+                   recapture_ci95=_boot_ci(recaptures), graded_entries=len(recaptures),
+                   imitation_action_error_mean_mps2=(float(np.mean(errs)) if errs else None),
+                   imitation_action_error_ci95=_boot_ci(errs))
+    except Exception as err:   # the update must survive any lesson-check failure
+        out['error'] = repr(err)
+    return out
+
+
+def record_lesson(root, arm, policy, run_root, update, runner_for, workers=2, sources=(),
+                  phase='bank_verification_ext'):
+    """Run the lesson check and write LESSON_CHECK_u<k>_<arm>.json (arm-suffixed: B and R share
+    the run root; the check runs after every update of both arms). Atomic replace, so an exact
+    resume that re-applies update k re-measures instead of failing on an existing file."""
+    out = lesson_check(root, arm, policy, run_root, update, runner_for, workers, sources, phase)
+    path = Path(root)/f'LESSON_CHECK_u{int(update):03}_{arm}.json'
+    tmp = path.with_name(path.name+'.writing')
+    tmp.write_text(json.dumps(xg._seal(out, 'lesson_check_sha256'), indent=1))
+    os.replace(tmp, path)
+    return out

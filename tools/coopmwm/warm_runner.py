@@ -196,6 +196,21 @@ def run_arm(root,arm):
             else:
                 metrics=update(policy,opt,eps,rng,**({'awr':b['awr']} if 'awr' in b else {}));grade_lag=None
             save(root/f'{arm}_checkpoint_{u:03}.pt',policy,opt,rng,u,charged(root))
+            lesson=None
+            if replay:
+                # MAIN 2026-11-03 01:22: LESSON-LEARNED CHECK after every B/R update in B-REPLAY.
+                # Never fatal for the run; charges bank_verification_ext (lesson_u<k>-prefixed).
+                from .replay_bank import record_lesson
+                cfg=b.get('sumo_verify') or {}
+                def lesson_runner(work):
+                    from .sumo_verify import SubprocessBranchRunner
+                    return SubprocessBranchRunner(Path(work),workers=cfg.get('workers'),
+                        timeout_s=cfg.get('timeout_s',3600))
+                try:
+                    lesson=record_lesson(root,arm,policy,root,u,lesson_runner,
+                        sources=b.get('replay_sources',{}).get(arm,()))
+                except Exception as error:
+                    lesson=dict(arm=arm,update=u,error=repr(error),list_size=0,entries=[])
             raw=[v*UNIT for e in eps for v,_ in advantages(e['steps'])]
             gpu_busy=None
             if b.get('parallel_group_queries') and arm=='B':
