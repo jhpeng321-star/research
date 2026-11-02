@@ -53,6 +53,7 @@ METRIC = 'team_delay_vs'
 POLICY = 'policy'
 TOP_K = 4
 STATUSES = ('accepted', 'rejected', 'stopped', 'failed', 'budget_blocked')
+MIN_FREE_BYTES = 2*1024**3  # the registered cpuQ '2 GiB' disk admission guard (MAIN 14:47)
 PROPOSERS = ('wm', 'random')
 
 
@@ -163,16 +164,26 @@ def run_parallel(specs, snapshot, runner, workers=None):
 
 
 def choose(branches, candidates):
-    """Pure decision rule. Returns (status, chosen index or None, reason)."""
+    """Pure decision rule. Returns (status, chosen index or None, reason).
+
+    MAIN (harden-int): a crashed CANDIDATE branch no longer voids the decision. If the
+    'policy continues' branch is graded, the best among the successfully graded candidates
+    is chosen and the missing ones are recorded (graded_candidates / missing_candidates in
+    the receipt). If the policy branch failed, or any branch hit a prefix mismatch
+    (integrity), or no candidate was graded, the decision is void (never imputed).
+    """
     bad = [b for b in branches if b['status'] != 'graded']
-    if bad:
-        status = 'stopped' if any(b['status'] == 'stopped' for b in bad) else 'failed'
+    stopped = [b for b in bad if b['status'] == 'stopped']
+    if stopped or branches[0]['status'] != 'graded' or len(bad) == len(branches)-1:
+        status = 'stopped' if stopped else 'failed'
         return status, None, f'{status}: '+'; '.join(f'{b["branch"]}: {b.get("reason")}' for b in bad)
     J_policy = branches[0]['J_veh_s']
-    best = min(range(1, len(branches)), key=lambda i: (branches[i]['J_veh_s'], i))
+    graded = [i for i in range(1, len(branches)) if branches[i]['status'] == 'graded']
+    best = min(graded, key=lambda i: (branches[i]['J_veh_s'], i))
+    missing = '' if not bad else f' ({len(bad)} candidate branch(es) failed, excluded: '+', '.join(b['branch'] for b in bad)+')'
     if branches[best]['J_veh_s'] < J_policy:
-        return 'accepted', best, 'best candidate beats policy continues'
-    return 'rejected', None, 'no candidate beats policy continues'
+        return 'accepted', best, 'best graded candidate beats policy continues'+missing
+    return 'rejected', None, 'no graded candidate beats policy continues'+missing
 
 
 def verify(snapshot, candidates, runner, charge, proposer='wm', workers=None, root=None):
@@ -206,26 +217,46 @@ def verify(snapshot, candidates, runner, charge, proposer='wm', workers=None, ro
             verification_id=vid, snapshot_sha256=body['snapshot_sha256'],
             candidate_plan_sha256=body['candidate_plan_sha256'],
             pid=os.getpid(), host=socket.gethostname(), unix=started))
+    blocked = runner.admit(specs) if hasattr(runner, 'admit') else None
+    if blocked:  # local resource guard: no charge, no physics, the group follows its policy
+        body.update(status='failed', chosen=None, chosen_plan=None, grade_veh_s=None, J_policy_veh_s=None,
+                    J_candidates_veh_s=None, branches=[], charged_sim_s=0, reason='resource guard: '+blocked)
+        return _finish(body, started, root)
     try:
         charge(vid, specs)
     except BudgetBlocked as e:
         body.update(status='budget_blocked', chosen=None, chosen_plan=None, grade_veh_s=None, J_policy_veh_s=None,
                     J_candidates_veh_s=None, branches=[], charged_sim_s=0, reason='BudgetBlocked: '+str(e))
+        if root is not None:  # MAIN (d): a blocked verification budget must never be silent
+            alert = Path(root)/'alerts'/f'BUDGET_BLOCKED_{vid}.json'
+            if not alert.exists():
+                _write_new(alert, dict(alert='sumo verification budget blocked; group follows its policy',
+                                       verification_id=vid, phase_reason=str(e), unix=started))
         return _finish(body, started, root)
     if hasattr(runner, 'prepare'):
-        runner.prepare(specs, snapshot)
+        try:
+            runner.prepare(specs, snapshot)
+        except Exception as e:  # e.g. full disk writing SNAPSHOT.pt: one decision, never the episode
+            body.update(status='failed', chosen=None, chosen_plan=None, grade_veh_s=None, J_policy_veh_s=None,
+                        J_candidates_veh_s=None, branches=[], charged_sim_s=charged, actual_sim_s=0,
+                        reason='prepare failed before physics: '+repr(e))
+            return _finish(body, started, root)
     branches = run_parallel(specs, snapshot, runner, workers)
     status, best, reason = choose(branches, candidates)
     J_policy = branches[0]['J_veh_s']
     J = [b['J_veh_s'] for b in branches[1:]]
+    ok = [i for i, x in enumerate(J) if x is not None]
+    done = status in ('accepted', 'rejected')
     body.update(status=status, reason=reason, branches=branches, charged_sim_s=charged,
                 branch_sim_s=specs[0]['sim_s'], n_branches=len(specs),
                 actual_sim_s=sum(b.get('actual_sim_s') or 0 for b in branches),
-                J_policy_veh_s=J_policy, J_candidates_veh_s=J if status in ('accepted', 'rejected') else None,
-                best_index=(min(range(len(J)), key=lambda i: (J[i], i)) if status in ('accepted', 'rejected') else None),
+                J_policy_veh_s=J_policy, J_candidates_veh_s=J if done else None,
+                graded_candidates=len(ok), missing_candidates=[b['branch'] for b in branches[1:] if b['status'] != 'graded'],
+                available_k=len(candidates),
+                best_index=(min(ok, key=lambda i: (J[i], i)) if done else None),
                 chosen=(best-1 if best else None), chosen_plan=(copy.deepcopy(candidates[best-1]) if best else None),
                 grade_veh_s=(J_policy-J[best-1] if best else None),
-                best_margin_veh_s=(J_policy-min(J) if status in ('accepted', 'rejected') else None))
+                best_margin_veh_s=(J_policy-min(J[i] for i in ok) if done else None))
     return _finish(body, started, root)
 
 
@@ -322,12 +353,55 @@ def random_candidates(group, centre, bounds, regime, base_seed, k=TOP_K, duratio
     from .mppi_search import sample_unscored
     out = [first] if first is not None else []
     i = 0
-    while len(out) < k:
+    while len(out) < k and i < 64*int(k):  # bounded: identical (fully clipped) draws cannot spin forever
         seed = int(digest(dict(base=int(base_seed), i=i))[:8], 16);i += 1
         p = sample_unscored(group, centre, bounds, regime, seed, duration_s=duration_s)
         if all(p['id'] != q['id'] for q in out):
             out.append(p)
     return out
+
+
+# ---------------------------------------------------------------- resume preflight
+
+def resume_preflight(cfg, search_config=None, learned=False):
+    """Static checks of a job['sumo_verify'] binding before a k / proposer switch (no I/O, no SUMO).
+
+    Returns human-readable problems (empty = consistent). Advisory: it never changes a
+    registered setting; MAIN decides. ``search_config`` is the GPU binding's search_config.
+    """
+    import inspect
+    import math
+    from . import mppi_search as ms
+    problems = []
+    k = int(cfg.get('k', TOP_K))
+    top_k = int(dict(ms.REGISTERED, **(search_config or {}))['top_k'])
+    if k > top_k:
+        problems.append(f'B search top_k={top_k} < verification k={k}: B verifies at most {top_k} '
+                        f'candidates (fewer when savings <= 0) while R always gets {k}')
+    workers = cfg.get('workers')
+    if workers is not None and int(workers) < k+1:
+        problems.append(f'workers={workers} < k+1={k+1}: the blocking decision runs '
+                        f'{math.ceil((k+1)/int(workers))} branch waves')
+    if k != TOP_K and cfg.get('phase', 'sumo_verification') != 'sumo_verification_k8':
+        problems.append(f'k={k} charges must use the registered sumo_verification_k8 phase (MAIN 16:43)')
+    if learned:
+        params = inspect.signature(ms.search).parameters
+        for name in ('warm_start', 'extra_seeds'):
+            if name not in params:
+                problems.append(f'mppi_search.search lacks {name}: learned kwargs raise TypeError and '
+                                'query_errors declines EVERY query silently')
+        try:
+            from .plan_proposer import learned_search_kwargs, LEARNED_TOP_K  # noqa: F401
+        except ImportError:
+            problems.append('plan_proposer lacks learned_search_kwargs/LEARNED_TOP_K (c4/plan-proposer not merged)')
+        else:
+            if LEARNED_TOP_K < k:
+                problems.append(f'LEARNED_TOP_K={LEARNED_TOP_K} < k={k}')
+        from . import mppi_runtime
+        if 'learned_search_kwargs' not in inspect.getsource(mppi_runtime.plan):
+            problems.append('mppi_runtime.plan has no learned-search hook; its own config= keyword must be '
+                            'merged with the learned config (a second config= is a TypeError)')
+    return problems
 
 
 # ---------------------------------------------------------------- live integration hook
@@ -387,6 +461,10 @@ def verified_guide(guide, verifier, controller, prefixes, job, generator, k=TOP_
             candidates = random_proposer(proposal, k)
         else:
             candidates = list(proposal.get('topk') or [proposal['plan']])[:k]
+        # k=8 switch: the plain search returns at most its registered top_k (4) and
+        # only positive-saving finalists, so B may verify fewer than k. Record it
+        # per decision; the B/R count match is a live owner check, not imputed.
+        proposal['behaviour']['verify_k'] = dict(requested=int(k), available=len(candidates))
         from .exploration import bucket_beta
         b = proposal['behaviour']
         tracked_beta = bucket_beta(getattr(controller, 'beta', 1.),
@@ -422,6 +500,11 @@ def verified_guide(guide, verifier, controller, prefixes, job, generator, k=TOP_
             plan = r['chosen_plan']
             proposal.update(plan=plan, sumo_verified=True, expected_saving=plan.get('saving_vs_mappo'),
                             exact_grade_veh_s=r['grade_veh_s'])
+            if plan.get('overlap_truncated_plan_ids') is not None and proposal.get('overlap_recheck'):
+                # Live truncation follows the chosen candidate's own recheck (as in its branch).
+                proposal['overlap_recheck'] = dict(proposal['overlap_recheck'],
+                                                   truncated_plan_ids=list(plan['overlap_truncated_plan_ids']),
+                                                   per_candidate=True)
             b.update(proposal_members=plan['members'], duration_s=plan['duration_s'],
                      expected_saving=plan.get('saving_vs_mappo'), group_size=len(plan['members']))
             return proposal
@@ -441,7 +524,8 @@ def install(controller, job, prefixes, generator, runner=None, charge=None):
         return controller
     cfg = job['sumo_verify']
     root = Path(cfg['root'])
-    runner = runner or SubprocessBranchRunner(root/'branches', workers=cfg.get('workers', TOP_K+1),
+    k = int(cfg.get('k', TOP_K))
+    runner = runner or SubprocessBranchRunner(root/'branches', workers=cfg.get('workers', k+1),
                                               timeout_s=cfg.get('timeout_s', 3600))
     charge = charge or accel_charge(cfg['run_root'], cfg.get('phase', 'sumo_verification'))
     rp = None
@@ -453,7 +537,7 @@ def install(controller, job, prefixes, generator, runner=None, charge=None):
     verifier = lambda snap, cands, proposer: verify(snap, cands, runner, charge, proposer,
                                                     workers=cfg.get('workers'), root=root)
     controller.guide = verified_guide(controller.guide, verifier, controller, prefixes, job, generator,
-                                      k=cfg.get('k', TOP_K), random_proposer=rp)
+                                      k=k, random_proposer=rp)
     return controller
 
 
@@ -500,7 +584,8 @@ def verify_controller_class():
                 if state_sha != self.snap['rng']['generator_state_sha256']:
                     raise ValueError('verification generator snapshot SHA mismatch')
                 self.audit.update(crn_verified_t0=True, noise_mode_used='crn')
-                ended = set(self.snap.get('truncate_on_accept') or []) if self.cand is not None else set()
+                own = (self.cand or {}).get('overlap_truncated_plan_ids')   # MAIN: per-candidate truncation
+                ended = set(own if own is not None else (self.snap.get('truncate_on_accept') or [])) if self.cand is not None else set()
                 self.active_plans = [dict(plan=copy.deepcopy(c['plan']), start_s=c['start_s'])
                                      for c in self.snap['committed_plans'] if c['plan']['id'] not in ended]
                 if self.cand is not None:
@@ -566,9 +651,19 @@ class SubprocessBranchRunner:
     """One subprocess per branch (nice 19 on POSIX), PIDs logged; only our own Popen objects are ever
     waited on or (on timeout) terminated. Never kills by name."""
 
-    def __init__(self, work_root, workers=TOP_K+1, timeout_s=3600., python=None):
+    def __init__(self, work_root, workers=TOP_K+1, timeout_s=3600., python=None, min_free_bytes=MIN_FREE_BYTES):
         self.work_root, self.workers, self.timeout_s = Path(work_root), workers, float(timeout_s)
         self.python = python or sys.executable
+        self.min_free_bytes = int(min_free_bytes)
+
+    def admit(self, specs):
+        """Existing cpuQ 2 GiB free-disk admission guard, checked before any charge."""
+        import shutil
+        self.work_root.mkdir(parents=True, exist_ok=True)
+        free = shutil.disk_usage(self.work_root).free
+        if free < self.min_free_bytes:
+            return f'free disk {free} B < registered cpuQ admission guard {self.min_free_bytes} B'
+        return None
 
     def prepare(self, specs, snapshot):
         """Write the shared decision snapshot once (before the parallel branches start)."""

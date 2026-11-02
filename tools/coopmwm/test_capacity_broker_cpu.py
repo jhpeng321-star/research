@@ -32,12 +32,17 @@ class CapacityTests(unittest.TestCase):
             with patch('tools.coopmwm.exploration.regime',return_value='ordinary'):
                 self.assertEqual(len(pending(root)),1)
 
-    def test_stale_malformed_request_still_stops(self):
+    def test_stale_malformed_request_is_skipped_with_receipt_not_stop(self):
+        # harden-2: a writer that died mid-write (full disk) has no waiting
+        # client; one malformed file must not STOP every arm (was fatal).
         import os,time
         with tempfile.TemporaryDirectory() as d:
             root=Path(d);(root/'requests').mkdir();(root/'responses').mkdir()
-            p=root/'requests/a.json';p.write_text('');os.utime(p,(time.time()-60,)*2)
-            with self.assertRaises(json.JSONDecodeError):pending(root)
+            p=root/'requests/a.json';p.write_text('{"trunc');os.utime(p,(time.time()-60,)*2)
+            self.assertEqual(pending(root),[])
+            receipt=json.loads((root/'malformed_requests/requests__a.json').read_text())
+            self.assertEqual(receipt['bytes'],7);self.assertFalse((root/'responses/a.json').exists())
+            self.assertEqual(pending(root),[])  # idempotent receipt
 
     def test_busy_declines_only_unassigned(self):
         a=request('a');b=request('b');c=request('c')

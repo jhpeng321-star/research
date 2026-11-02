@@ -25,12 +25,15 @@ def episode(job):
     generator=torch.Generator().manual_seed(job['noise_seed'])
     from .plan_client import guide
     controller=Controller(policy,generator,job['deterministic'],
-        guide=guide(job,generator) if not job['deterministic'] else None,beta=job.get('beta',1.),
+        guide=guide(job,generator) if not job['deterministic'] and not job.get('b_replay') else None,beta=job.get('beta',1.),
         replay=job.get('samples'),branch=job.get('branch'))
     steps=[];metrics={};prefixes={};horizon_totals={};requested=overrides=0
     if job.get('ls_collect'):
         from .ls_collection import install
         install(controller,job,prefixes,generator)
+    if job.get('collect'):
+        from .replay_bank import collector_guide
+        controller.guide=collector_guide(job,generator,controller,prefixes)
     backend=exact.Backend
     if job.get('warm_history'):
         from .warm_plant import observed_backend
@@ -38,7 +41,7 @@ def episode(job):
     b=backend(path,job['world'],job['sim_s'],job['checkpoint'])
     if job.get('warm_history') and controller.guide:
         controller.guide.prime([f for f in b.causal_history.snapshot(300) if f['time_s']<300])
-    if job.get('sumo_verify'):  # owner option 1: blocking exact top-k verification (default off)
+    if job.get('sumo_verify') and not job.get('b_replay'):  # owner option 1: blocking exact top-k verification (default off)
         from .sumo_verify import install
         install(controller,job,prefixes,generator)
     branch=job.get('branch')

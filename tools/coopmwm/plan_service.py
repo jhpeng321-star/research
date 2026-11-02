@@ -42,10 +42,63 @@ def request_memory(rt,record,binding):
     return WarmQuery.from_record(rt,record)
 
 
+def learned_gate_problems(search_fn,kwargs_fn,record,group,policy_traj,bounds,regime,search_config=None,k=8):
+    """MAIN decision (c), harden-2: dry learned search on a fixture with a constant fake
+    evaluator (no GPU, no SUMO). Any exception (e.g. TypeError for a missing ``warm_start``
+    or a duplicate ``config=``), a per-query decline or fewer than k ranked candidates is
+    a problem, so a worker can never go READY and then silently decline every query."""
+    def evaluate(rec,actions,K,H):
+        # Candidates strictly beat both comparators, so an accepted search must rank a topk.
+        return {a['id']:[float(i)+(100. if a['id'] in ('policy','MAPPO') else 0.) for i in range(K)] for a in actions}
+    try:
+        kw=dict(kwargs_fn(record,group,policy_traj,bounds,regime))
+        config=dict(search_config or {},**kw.pop('config',{}))
+        result=search_fn(record,group,policy_traj,bounds,evaluate,regime,config=config,
+            seed=int(digest(record)[:15],16),**kw)
+    except Exception as error:
+        return ['learned search raised '+repr(error)]
+    problems=[]
+    if result.get('query_error'):problems.append('learned search returned a per-query decline')
+    from .mppi_search import REGISTERED
+    top_k=int(dict(REGISTERED,**config)['top_k'])
+    if top_k<k:problems.append(f'learned config top_k={top_k} < verification k={k}')
+    if not isinstance(result.get('topk'),list):problems.append('learned search returned no ranked topk list')
+    return problems
+
+
+def learned_gate(binding,problems):
+    """Fail loudly BEFORE READY when the learned search is bound but not conformant."""
+    if binding.get('learned_search') and problems:
+        raise ValueError('learned-search startup gate failed: '+'; '.join(problems))
+
+
+def startup_learned_problems(root,binding,rt):
+    """Static interface checks + one dry learned search on the worker's own INPUTS fixture."""
+    from . import mppi_search
+    from .sumo_verify import resume_preflight
+    spec=binding['learned_search']
+    problems=resume_preflight(dict(k=spec.get('k',8),phase='sumo_verification_k8'),
+        binding.get('search_config'),learned=True)
+    try:
+        from .plan_proposer import learned_search_kwargs,load_checkpoint
+        proposer=load_checkpoint(spec['checkpoint'])
+    except Exception as error:
+        return problems+['learned proposer unavailable: '+repr(error)]
+    source=read(root/'INPUTS.json')['records'][0]
+    group=next(g for g in mppi_search.group_components(source['rows']) if g['members']==source['group'])
+    bounds=(float(rt.mp.policy.accel_min),float(rt.mp.policy.accel_max))
+    policy=[[0.]*600 for _ in group['members']]
+    return problems+learned_gate_problems(mppi_search.search,
+        lambda r,g,pt,b,reg:learned_search_kwargs(r,g,proposer,reg,mode=spec.get('mode','warm'),policy_traj=pt,bounds=b),
+        source,group,policy,bounds,'ordinary',binding.get('search_config'),k=spec.get('k',8))
+
+
 def main(root):
     import fcntl
     lock=(root/'SERVICE.claim').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     binding=read(root/'GPU_BINDING.json')
+    from .resource_config import clocks
+    binding=clocks(root,binding)  # additive RESOURCE_EXTENSION, never a rewrite
     for name,h in binding['hashes'].items():
         if sha(root/name)!=h:raise ValueError('immutable GPU source mismatch '+name)
     assert binding['qualification']['pass_']
@@ -91,6 +144,8 @@ def main(root):
                 receipt=dict(qualify(rt,warm_record,warm_acts,k,h,width,memory=memory,transfers=transfers),pid=os.getpid(),memory=memory.receipt)
                 write(root/f'STARTUP_WARM_PARITY_K{k}_H{h}.json',receipt)
                 if not receipt['pass_']:raise ValueError('persistent worker warm speed2 parity failed')
+    if binding.get('learned_search'):
+        learned_gate(binding,startup_learned_problems(root,binding,rt))
     def emit(event,**kw):print('COOPMWM_JSON '+json.dumps(dict(event=event,**kw)),flush=True)
     ready=dict(pid=os.getpid(),start_ticks=Path(f'/proc/{os.getpid()}/stat').read_text().split()[21],
         boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),unix=time.time())
@@ -102,22 +157,28 @@ def main(root):
         diagnostic=r.get('mode')=='diagnostic'
         centre=r.get('mode')=='centre'
         if centre:r={k:v for k,v in r.items() if k!='mode'}
-        memory=request_memory(rt,r,binding)
-        from tools.coopnative.policy import encode
-        encode(r['rows'])
-        ids={v['vid'] for v in r['rows'] if v['is_cav']}
-        if not set(r['commands'])<=ids or not set(r['group'])<=ids:raise ValueError('non-CAV request')
+        from .query_errors import execute
+        def prepared(r=r):
+            # Per-request validation (whitelist, warm history, roster) is a
+            # per-query fault for plan/centre requests: decline, never die.
+            memory=request_memory(rt,r,binding)
+            from tools.coopnative.policy import encode
+            encode(r['rows'])
+            ids={v['vid'] for v in r['rows'] if v['is_cav']}
+            if not set(r['commands'])<=ids or not set(r['group'])<=ids:raise ValueError('non-CAV request')
+            return memory
+        if diagnostic:memory=prepared()
         start=time.monotonic()
         if centre:
             from .centre_service import result as centre_result
-            result=centre_result(rt,r,memory)
+            result=execute(r,lambda:centre_result(rt,r,prepared()))
+            if result.get('query_error'):result.update(unavailable=True,candidate_scores=0)
         elif diagnostic:
             from .accel_diagnostic import evaluate as credit
             result=credit(rt,r,speed2=speed2,memory=memory,transfers=transfers)
         else:
             from .mppi_runtime import plan
-            from .query_errors import execute
-            result=execute(r,lambda:plan(rt,r,memory,binding))
+            result=execute(r,lambda:plan(rt,r,prepared(),binding))
         payload=dict(key=key,result=result,wall_s=time.monotonic()-start,unix=time.time())
         write(dest,payload);emit('RESULT',**payload)
 

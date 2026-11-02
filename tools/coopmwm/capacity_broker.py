@@ -11,7 +11,7 @@ import os
 from pathlib import Path
 import threading
 import time
-from .warm_broker import Remote,worker_endpoints
+from .warm_broker import Remote,worker_endpoints,WorkerNotReady
 from .warm_spool import immutable
 from .warm_health import assert_running,HealthPause
 from .protocol import digest
@@ -21,18 +21,50 @@ class WorkerUnavailable(RuntimeError):
     """A dead worker needs an owned replacement, not a global training STOP."""
 
 
-def check_worker(root,endpoint,status,key=None):
-    if status['alive'] and not status['failed']:return
-    failure=status.get('receipts',{}).get('SPOOL_FAILED.json',{}).get('error','')
-    if any(word in failure.lower() for word in ('parity','immutable','accounting','physics','safety','budget')):
-        raise ValueError('fatal worker invariant: '+failure)
-    # Preserve a failed in-flight claim. A replacement must never recompute it.
+FATAL_WORDS=('parity','immutable','accounting','physics','safety','budget')
+# Slot-local RPC faults (harden-2): the remote spool refused a dead/unqualified
+# worker, the worker could not be reverified after a reconnect, or the bounded
+# SSH retries for this ONE endpoint were exhausted. Invariant faults stay global.
+SLOT_LOCAL=('unqualified or dead gpu spool','gpu worker not alive/qualified',
+    'bounded ssh recovery deadline')
+
+
+def slot_local(error):
+    """True only for faults confined to ONE GPU endpoint (quarantine, not STOP)."""
+    from .warm_transport import SSHConnectionError
+    if isinstance(error,(HealthPause,WorkerUnavailable)):return False
+    text=repr(error).lower()
+    if any(word in text for word in FATAL_WORDS):return False
+    if isinstance(error,SSHConnectionError):return True  # bounded retries already exhausted
+    return any(word in text for word in SLOT_LOCAL)
+
+
+def restart_request(root,endpoint,key,status):
     value=dict(slot=endpoint['slot'],key=key,status=status,unix=time.time(),
         action='replace only this verified dead worker; qualify before admission; never replay inference claim',
         new_sumo_sim_s=0)
     target=root/'worker_restart_requests';target.mkdir(exist_ok=True)
     immutable(target/(digest(value)+'.json'),value)
+
+
+def check_worker(root,endpoint,status,key=None):
+    if status['alive'] and not status['failed']:return
+    failure=status.get('receipts',{}).get('SPOOL_FAILED.json',{}).get('error','')
+    if any(word in failure.lower() for word in FATAL_WORDS):
+        raise ValueError('fatal worker invariant: '+failure)
+    # Preserve a failed in-flight claim. A replacement must never recompute it.
+    restart_request(root,endpoint,key,status)
     raise WorkerUnavailable(endpoint['slot'])
+
+
+def capacity_alert(root,slots,quarantined,waiting):
+    """Durable alert when NO admitted GPU slot remains: blocked episodes are idle."""
+    value=dict(alert='no live GPU slot; quota-blocking requests wait for an owned replacement/hot-add',
+        live_slots=sorted(slots),quarantined_slots=sorted(quarantined),waiting_requests=waiting,
+        unix=time.time(),new_sumo_sim_s=0)
+    target=root/'capacity_alerts';target.mkdir(exist_ok=True)
+    immutable(target/(digest(value)+'.json'),value)
+    return value
 
 
 def resource_endpoints(root,endpoints,config):
@@ -53,14 +85,19 @@ def settle_unavailable(root,slot,items):
     """A failed model claim is terminally declined, never recomputed or scored."""
     settled=[]
     for kind,record in items:
-        if kind!='plan' or record.get('mode')=='diagnostic':continue
+        if kind=='plan' and record.get('mode')=='diagnostic':continue
         key=record['state_id'];assignment=Path(root)/'broker_assignments'/(key+'.json')
-        target=Path(root)/'responses'/(key+'.json')
+        target=Path(root)/('centre_responses' if kind=='centre' else 'responses')/(key+'.json')
         if target.exists() or not assignment.exists():continue
         if json.loads(assignment.read_text())['slot']!=slot:continue
-        immutable(target,dict(accepted=False,reason='assigned worker unavailable; policy continues; inference never replayed',
+        target.parent.mkdir(exist_ok=True)
+        value=dict(accepted=False,reason='assigned worker unavailable; policy continues; inference never replayed',
             record_sha256=digest(record),compute_counts_unknown=True,
-            worker_unavailable=dict(slot=slot,key=key,inference_retry=False)))
+            worker_unavailable=dict(slot=slot,key=key,inference_retry=False))
+        # A centre claim on a dead slot is never adopted by another slot, so its
+        # R client would wait forever: settle it as an explicit zero-score decline.
+        if kind=='centre':value.update(unavailable=True,candidate_scores=0)
+        immutable(target,value)
         settled.append(key)
     return settled
 
@@ -79,7 +116,10 @@ def pending(root):
                 # Historical writers create then fill a request (not atomic).
                 # In-progress metadata can be observed but is never a forecast.
                 if time.time()-p.stat().st_mtime<30:continue
-                raise
+                # A writer that died mid-write (e.g. full disk) leaves no waiting
+                # client; one malformed file must never STOP every arm.
+                malformed(root,req,p)
+                continue
             items.append((kind,record))
     order=batch_order(root)
     # MAIN18:54: breadth-first inherited index, then reservation time.
@@ -90,6 +130,44 @@ def pending(root):
     items.sort(key=lambda v:(v[0]=='centre',v[1].get('mode')=='diagnostic',
         regime(v[1]['rows'])!='merge-dense',v[1]['time_s'])+order.get(v[1]['state_id'],(0,float('inf')))+(v[1]['state_id'],))
     return items
+
+
+def malformed(root,folder,path):
+    """Durable skip receipt for a stale unparsable request (never forecast/fabricated)."""
+    import hashlib
+    target=Path(root)/'malformed_requests';target.mkdir(exist_ok=True)
+    receipt=target/(folder+'__'+path.name)
+    if not receipt.exists():
+        immutable(receipt,dict(folder=folder,name=path.name,bytes=path.stat().st_size,
+            sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
+            action='skipped; never forecast or fabricated',new_sumo_sim_s=0))
+
+
+def forecast_result(kind,record,payload):
+    """One malformed/mismatched forecast is a per-query decline, never a global STOP.
+
+    The client checks record identity and would otherwise kill its episode; the
+    forecast is never replayed or scored. Returns (result, problem or None).
+    """
+    from .query_errors import validate_response
+    try:
+        result=payload['result']
+        if not isinstance(result,dict) or result.get('record_sha256')!=digest(record):
+            raise ValueError('forecast identity/shape mismatch')
+        if kind=='plan' and record.get('mode')!='diagnostic' and not isinstance(result.get('accepted'),bool):
+            raise ValueError('forecast lacks accepted flag')
+        if kind=='plan' and record.get('mode')!='diagnostic':
+            from .query_errors import plan_shape
+            problem=plan_shape(record,result)
+            if problem:raise ValueError('forecast plan shape: '+problem)
+        validate_response(record,result)
+        return result,None
+    except (KeyError,TypeError,ValueError) as error:
+        value=dict(accepted=False,reason='malformed forecast; policy continues; inference never replayed',
+            record_sha256=digest(record),compute_counts_unknown=True,
+            malformed_forecast=dict(error=repr(error),inference_retry=False))
+        if kind=='centre':value.update(unavailable=True,candidate_scores=0)
+        return value,repr(error)
 
 
 _BATCH_CACHE={}
@@ -180,6 +258,11 @@ def drain_active(root,config):
     return False
 
 
+def owner_identity(source):
+    return dict(pid=os.getpid(),start_ticks=Path(f'/proc/{os.getpid()}/stat').read_text().split()[21],
+        boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),unix=time.time(),source=source)
+
+
 def run(root,config_path):
     import fcntl
     import signal
@@ -191,8 +274,7 @@ def run(root,config_path):
     assert config['deadline_unix']==binding['deadline_unix']
     lock=(root/'WARM_REMOTE_BROKER.claim').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     signal.signal(signal.SIGHUP,signal.SIG_IGN)
-    owner=dict(pid=os.getpid(),start_ticks=Path(f'/proc/{os.getpid()}/stat').read_text().split()[21],
-        boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),unix=time.time(),source=config['source_root'])
+    owner=owner_identity(config['source_root'])
     tag=config.get('receipt_tag','')
     immutable(root/('CAPACITY_BROKER_OWNER'+tag+'.json'),owner)
     stop_path=root/('WARM_GUIDED_STOP_V5.json' if (root/'DNS_GUIDED_RELEASE_1651.json').exists() else
@@ -203,9 +285,14 @@ def run(root,config_path):
     for name in ('broker_completed','capacity_declines','capacity_admissions'):(root/name).mkdir(exist_ok=True)
     stop=threading.Event();mutex=threading.Lock();inflight=set();errors=[];quarantined=set()
 
+    def record_stop(value):
+        # One STOP receipt; later threads observing it must not die on a conflict.
+        with mutex:
+            if not stop_path.exists():immutable(stop_path,value)
+
     def worker(endpoint):
+        remote=Remote(root,endpoint);key=None
         try:
-            remote=Remote(root,endpoint)
             check_worker(root,endpoint,remote.call(dict(action='status')))
             remote.verify()
             last_kind='plan'
@@ -247,29 +334,35 @@ def run(root,config_path):
                     check_worker(root,endpoint,value['status'],key)
                     assert_running(root,'B');stop.wait(3)
                 payload=value['forecast']
-                from .query_errors import validate_response
-                validate_response(record,payload['result'])
-                if payload['result'].get('query_error'):
+                result,problem=forecast_result(kind,record,payload)
+                if problem:
+                    remote.event(dict(event='malformed_forecast_declined',key=key,problem=problem,global_stop=False))
+                elif result.get('query_error'):
                     remote.event(dict(event='query_code_declined',key=key,
-                        query_error=payload['result']['query_error'],global_stop=False))
-                immutable(root/('centre_responses' if kind=='centre' else 'responses')/(key+'.json'),payload['result'])
+                        query_error=result['query_error'],global_stop=False))
+                immutable(root/('centre_responses' if kind=='centre' else 'responses')/(key+'.json'),result)
                 immutable(root/'broker_completed'/(key+'.json'),dict(slot=endpoint['slot'],kind=kind,key=key,
-                    inference_wall_s=payload['wall_s'],delivery_wall_s=time.monotonic()-begin,unix=time.time()))
+                    inference_wall_s=(payload or {}).get('wall_s') if isinstance(payload,dict) else None,
+                    delivery_wall_s=time.monotonic()-begin,unix=time.time(),malformed=problem))
                 last_kind=kind
                 with mutex:inflight.remove(key)
-        except WorkerUnavailable:
+        except BaseException as error:
+            if not isinstance(error,WorkerUnavailable) and not slot_local(error):
+                errors.append(repr(error));stop.set()
+                if not isinstance(error,HealthPause):
+                    record_stop(dict(error=repr(error),source='capacity broker',unix=time.time()))
+                return
             # This slot is quarantined until an explicit owned replacement is
             # admitted. Other slots and policy/SUMO episodes remain independent.
+            if not isinstance(error,WorkerUnavailable):
+                remote.event(dict(event='slot_local_fault',error=repr(error),global_stop=False,quarantined=True))
+                restart_request(root,endpoint,key,dict(error=repr(error)))
             with mutex:
                 quarantined.add(endpoint['slot'])
-                for key in settle_unavailable(root,endpoint['slot'],pending(root)):inflight.discard(key)
+                for settled in settle_unavailable(root,endpoint['slot'],pending(root)):inflight.discard(settled)
             return
-        except BaseException as error:
-            errors.append(repr(error));stop.set()
-            if not isinstance(error,HealthPause) and not stop_path.exists():
-                immutable(stop_path,dict(error=repr(error),source='capacity broker',unix=time.time()))
 
-    threads={};endpoints={};last_slots=None
+    threads={};endpoints={};last_slots=None;alerted=None
     try:
         while not stop.is_set():
             endpoints=resource_endpoints(root,worker_endpoints(root,binding,endpoints),config)
@@ -288,6 +381,9 @@ def run(root,config_path):
                 declines,busy=capacity_declines(items,assigned,endpoints,blocking,drain,gone)
                 for r in declines:decline(root,r,endpoints,busy,config['amendment_sha256'],drain,r['state_id'] in gone)
                 slots=tuple(sorted(endpoints))
+                if slots:alerted=None
+                elif threads and items and alerted is None:
+                    alerted=capacity_alert(root,slots,quarantined,len(items))
                 if slots!=last_slots:
                     # Existing live clients dynamically read this file; truthful
                     # actual capacity releases their stale two-slot backpressure.
@@ -297,8 +393,7 @@ def run(root,config_path):
             stop.wait(.1)
     except BaseException as error:
         errors.append(repr(error));stop.set()
-        if not stop_path.exists():
-            immutable(stop_path,dict(error=repr(error),source='capacity broker control',unix=time.time()))
+        record_stop(dict(error=repr(error),source='capacity broker control',unix=time.time()))
     finally:
         for t in threads.values():t.join()
         lock.close()

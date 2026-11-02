@@ -71,6 +71,12 @@ def query(job,generator,history,rows,commands,now,sample,groups,traffic,workers)
     if sample.get('committed_plans'):common['committed_plans']=copy.deepcopy(sample['committed_plans'])
     for name in ('policy_state','search_learning'):
         if job.get(name) is not None:common[name]=job[name]
+    factor=job.get('parallel_fanout_factor')
+    if factor:
+        # HARDEN-3 opt-in bounded fan-out: keep about factor x slots requests in
+        # flight; always at least the first group in inherited order.
+        groups=groups[:max(1,int(factor*len(workers))-pending)]
+        b['fanout']=dict(factor=factor,slots=len(workers),pending=pending,submitted=len(groups))
     records=[]
     for group in groups:
         r=dict(common,group=group['members']);r['state_id']=digest(dict(record=r,job=job['id']))

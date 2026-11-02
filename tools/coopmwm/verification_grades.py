@@ -23,18 +23,19 @@ def _enqueue(queue, spec):
             raise ValueError('concurrent grade spec differs; preserve both attempts')
 
 
-def record_smoke(root, verification, live):
-    """Record a real-smoke gate after all five branches and live equivalence pass.
+def record_smoke(root, verification, live, k=sv.TOP_K):
+    """Record a real-smoke gate after all k+1 branches and live equivalence pass.
 
     The caller must supply actual TRAIN receipts; this helper cannot run SUMO.
-    CPU fixtures exercise it only in their isolated temporary roots.
+    CPU fixtures exercise it only in their isolated temporary roots. ``k`` is the
+    registered verification width (4 today; 8 after the learned-search switch).
     """
     gate = sv.check_live_continuation(verification, live)
-    if verification['k'] != 4 or len(verification['branches']) != 5:
-        raise ValueError('real smoke requires four candidates and policy')
+    if verification['k'] != k or len(verification['branches']) != k+1:
+        raise ValueError(f'real smoke requires {k} candidates and policy')
     if any(b['status'] != 'graded' or not (b.get('audit') or {}).get('crn_verified_t0')
            for b in verification['branches']):
-        raise ValueError('real smoke requires five exact-prefix/CRN passes')
+        raise ValueError(f'real smoke requires {k+1} exact-prefix/CRN passes')
     p = checked(Path(root)/'SMOKE_PASSED.json')
     if p.exists():
         old = json.loads(p.read_text(encoding='utf-8'))
@@ -77,8 +78,11 @@ def reuse(queue, spec, original, step, verification_root):
         raise ValueError('truncated plan requires executed-portion marginal grading')
     if verification['grade_veh_s'] <= 0:
         raise ValueError('accepted verification must beat policy')
-    if any(b['status'] != 'graded' or not (b.get('audit') or {}).get('crn_verified_t0')
-           for b in verification['branches']):
+    # MAIN (harden-int): failed CANDIDATE branches are excluded, never imputed; the policy
+    # branch, the chosen branch and every graded branch still need exact prefix/CRN evidence.
+    used = [verification['branches'][0], verification['branches'][verification['chosen']+1]]
+    if any(b['status'] != 'graded' for b in used) or any(
+            not (b.get('audit') or {}).get('crn_verified_t0') for b in verification['branches'] if b['status'] == 'graded'):
         raise ValueError('verification branch prefix/CRN evidence incomplete')
     selected = verification['branches'][verification['chosen']+1]
     policy = verification['branches'][0]
