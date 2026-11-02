@@ -1,4 +1,21 @@
-# S-RB2-BREAK — GPU RELEASED / PAUSED, 2026-11-01 17:41 +08
+# S-RB2-BREAK — GPU PAUSE REVERIFIED, 2026-11-03 05:54 +08
+
+## Fresh-session recovery — HOLD remains controlling
+
+- Read-only audit at05:54:11 confirms workers501141/500921 and all9recorded
+  BREAK queues EXITED; all7saved development task hashes intact,0complete K8worlds.
+  gpuA100%utilized by other jobs. No new inference, dispatch, scoring or PID signal.
+- No MAIN `S-RB2-BREAK RESUME` release found in registration. Keep the GPU pause.
+  Audit committed74ea1ff7: `docs/rb2break/RECOVERY_20261103_GPU_CHECKPOINT.json`.
+  Authority/exposure/coordination receipt committedb7588b6c:
+  `docs/rb2break/RECOVERY_20261103.md`.
+- Current LANE handoff rejects fitted-LC adoption after its separate development
+  free-run test; fitted LC stays OFF here. INT's Nov3handoff retains HOLD and
+  frozenb2df7458, with full qualification unestablished. No frozen candidate refit.
+- Scientific findings and corrected source5947c801 below are preserved. The major
+  congestion/breakdown defect remains unresolved; startup-v3 traffic remains untested.
+
+## Preserved November 1 checkpoint
 
 Branch `c4/rb2-break`, physical baseFULL-v4/22cc32f6. Plan `docs/rb2break/PLAN.md`.
 **The major congestion/breakdown defect is NOT solved. No qualification claimed.**
