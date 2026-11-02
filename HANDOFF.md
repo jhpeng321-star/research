@@ -1,5 +1,16 @@
 # S-RB2-CAL — 2026-11-01 (active)
 
+## RECOVERED Nov3 03:17 +08 — owner-stopped; cache-only completion
+
+Supersedes historical LIVE collector/CPU assertions below. Fresh-session audit:
+`docs/paper_results/rb2cal/RECOVERY_20261103.md`. MAIN registration Nov2 02:28
+records owner-stopping CAL448399/448400 for S-COOPMWM priority. Direct read-only
+gpuA audit: both ABSENT; local33284 absent; original collector terminal is BLOCKED
+after SSH failure. Existing57/96futures fetched/transport-hash checked: six complete
+K8devworlds969420–969425; nine other futures retained but excluded from scoring.
+No new inference/dispatch, signals or fit. Current work is partial cached evidence
+publication; full dev12 coverage/reliability qualification remains incomplete.
+
 Branch `c4/rb2-cal`, base frozen FULL-v4 `22cc32f6`. Design frozen before fit:
 `docs/paper_results/RB2_CAL_DESIGN.md`. Physical v1 IMPLEMENTED; parameters:
 posterior retention=1, Gamma-rate variance=1.667235195661008,
