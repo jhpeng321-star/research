@@ -102,22 +102,28 @@ def main(root):
         diagnostic=r.get('mode')=='diagnostic'
         centre=r.get('mode')=='centre'
         if centre:r={k:v for k,v in r.items() if k!='mode'}
-        memory=request_memory(rt,r,binding)
-        from tools.coopnative.policy import encode
-        encode(r['rows'])
-        ids={v['vid'] for v in r['rows'] if v['is_cav']}
-        if not set(r['commands'])<=ids or not set(r['group'])<=ids:raise ValueError('non-CAV request')
+        from .query_errors import execute
+        def prepared(r=r):
+            # Per-request validation (whitelist, warm history, roster) is a
+            # per-query fault for plan/centre requests: decline, never die.
+            memory=request_memory(rt,r,binding)
+            from tools.coopnative.policy import encode
+            encode(r['rows'])
+            ids={v['vid'] for v in r['rows'] if v['is_cav']}
+            if not set(r['commands'])<=ids or not set(r['group'])<=ids:raise ValueError('non-CAV request')
+            return memory
+        if diagnostic:memory=prepared()
         start=time.monotonic()
         if centre:
             from .centre_service import result as centre_result
-            result=centre_result(rt,r,memory)
+            result=execute(r,lambda:centre_result(rt,r,prepared()))
+            if result.get('query_error'):result.update(unavailable=True,candidate_scores=0)
         elif diagnostic:
             from .accel_diagnostic import evaluate as credit
             result=credit(rt,r,speed2=speed2,memory=memory,transfers=transfers)
         else:
             from .mppi_runtime import plan
-            from .query_errors import execute
-            result=execute(r,lambda:plan(rt,r,memory,binding))
+            result=execute(r,lambda:plan(rt,r,prepared(),binding))
         payload=dict(key=key,result=result,wall_s=time.monotonic()-start,unix=time.time())
         write(dest,payload);emit('RESULT',**payload)
 
