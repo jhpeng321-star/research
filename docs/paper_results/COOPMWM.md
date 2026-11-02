@@ -1,5 +1,44 @@
 # S-COOPMWM — live checks
 
+## TRAINING CONTINUED — parallel-group fan-out is live
+- **B continuation started2026-11-02 09:01:19UTC+8**, owned supervisor
+  **3946079/start59555725**, immutable `tailcpu3`. All24 original B-u2 results
+  were adopted and the exact u1 checkpoint/Adam/RNG restored; no original episode
+  or completed update was rerun. Original warm qualification/start are retained.
+- **B-u2 completed with12 executed plans. B-u3 is running**: at unix1793581947,
+  all24 episodes claimed/14 closed,10 quota windows submitted33 training searches.
+  All four registered GPU slots are assigned. One utilisation sample at
+  unix179358149x gives gpuA75%,gpuR96%; this is not a steady-state rate claim.
+  **R-u2 runs concurrently**,6 claimed/2 closed, using original matching/no library.
+- Current broker3893211 retained all assigned original forecasts. The one-time
+  old-wave drain automatically ended at `TAIL_HANDOVER_COMPLETE.json` before
+  B-u3; ordinary quota-aware admission is restored. Old supervisor/transition
+  owners exited; current B/R/broker/grader are live, no active STOP/pause.
+- Same-B/seed20261101 **winning library now contains7 exact-positive entries**.
+  Warm memory, K4/H300, K8/Hfinal, full search/top-k/Thompson, exact-only learning,
+  horizons and budget remain as registered. Source3 CPU141PASS; broker48PASS.
+- B-u2 collection-inclusive wall time **9838.6425s** (2h44m), next beta0.7509695;
+  exact-grade lag mean11.756/max17.956s, no pending/running/failed grades at update.
+  The printed125.716h remaining estimate extrapolates the old pre-fan-out u2;
+  post-amendment timing awaits a complete new update. No completion ETA is invented.
+- **Query metadata correction** (`coopmwm/TAIL_QUERY_CENSUS_002.json`,3 CPU tests
+  plus real read-only census):122 bound queries =22 completed WM inferences +100
+  resolved capacity declines,15 accepted forecasts,0 pending responses/unknowns.
+  Raw routing93 counts legacy visible query routes; queries hidden by continuing
+  plan routes explain why it is not a WM-call census. Raw `gpu_busy.pending_queries`
+  100 incorrectly counts resolved zero-compute declines as missing broker-completion
+  receipts. Use this supplement; original update/grade data are retained. Completed
+  inference-interval fractions themselves remain labelled, not GPU hardware util.
+- Latest published exact marginal evidence: **15 plans,mean+145.2veh-s,95% CI
+  [−60.80,+487.82]** (`B_EXACT_VIABILITY_99cf50a5…`). **Viability is not established**;
+  B-u4–6 learning curves and the registered package remain pending. The existing
+  isolated diagnostic repair is completing the same registered sample alongside B.
+- Observe-only **20516/V9** replaced only verified local1372/V8; **23 CPU tests
+  PASS**, current TAIL owner/failure schemas loaded. Telemetry24140/V3 remains live.
+  Allocation7,495,040/cap7,500,000sim-s,4,960 spare; charged3,481,850 at snapshot.
+  Original GPU deadline18:07:02UTC+8 remains. Depth diagnostics await spare GPU
+  capacity; the unqualified command-mirror prototype stays disabled.
+
 ### Tail release continuation — real checkpoint preflight passed
 - Real CPU preflight caught a continuation-only fault **before any new B launch**:
   `restore_progress` read compressed `RESULT.json` completion markers as raw
