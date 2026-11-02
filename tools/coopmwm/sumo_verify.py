@@ -164,16 +164,26 @@ def run_parallel(specs, snapshot, runner, workers=None):
 
 
 def choose(branches, candidates):
-    """Pure decision rule. Returns (status, chosen index or None, reason)."""
+    """Pure decision rule. Returns (status, chosen index or None, reason).
+
+    MAIN (harden-int): a crashed CANDIDATE branch no longer voids the decision. If the
+    'policy continues' branch is graded, the best among the successfully graded candidates
+    is chosen and the missing ones are recorded (graded_candidates / missing_candidates in
+    the receipt). If the policy branch failed, or any branch hit a prefix mismatch
+    (integrity), or no candidate was graded, the decision is void (never imputed).
+    """
     bad = [b for b in branches if b['status'] != 'graded']
-    if bad:
-        status = 'stopped' if any(b['status'] == 'stopped' for b in bad) else 'failed'
+    stopped = [b for b in bad if b['status'] == 'stopped']
+    if stopped or branches[0]['status'] != 'graded' or len(bad) == len(branches)-1:
+        status = 'stopped' if stopped else 'failed'
         return status, None, f'{status}: '+'; '.join(f'{b["branch"]}: {b.get("reason")}' for b in bad)
     J_policy = branches[0]['J_veh_s']
-    best = min(range(1, len(branches)), key=lambda i: (branches[i]['J_veh_s'], i))
+    graded = [i for i in range(1, len(branches)) if branches[i]['status'] == 'graded']
+    best = min(graded, key=lambda i: (branches[i]['J_veh_s'], i))
+    missing = '' if not bad else f' ({len(bad)} candidate branch(es) failed, excluded: '+', '.join(b['branch'] for b in bad)+')'
     if branches[best]['J_veh_s'] < J_policy:
-        return 'accepted', best, 'best candidate beats policy continues'
-    return 'rejected', None, 'no candidate beats policy continues'
+        return 'accepted', best, 'best graded candidate beats policy continues'+missing
+    return 'rejected', None, 'no graded candidate beats policy continues'+missing
 
 
 def verify(snapshot, candidates, runner, charge, proposer='wm', workers=None, root=None):
@@ -235,14 +245,18 @@ def verify(snapshot, candidates, runner, charge, proposer='wm', workers=None, ro
     status, best, reason = choose(branches, candidates)
     J_policy = branches[0]['J_veh_s']
     J = [b['J_veh_s'] for b in branches[1:]]
+    ok = [i for i, x in enumerate(J) if x is not None]
+    done = status in ('accepted', 'rejected')
     body.update(status=status, reason=reason, branches=branches, charged_sim_s=charged,
                 branch_sim_s=specs[0]['sim_s'], n_branches=len(specs),
                 actual_sim_s=sum(b.get('actual_sim_s') or 0 for b in branches),
-                J_policy_veh_s=J_policy, J_candidates_veh_s=J if status in ('accepted', 'rejected') else None,
-                best_index=(min(range(len(J)), key=lambda i: (J[i], i)) if status in ('accepted', 'rejected') else None),
+                J_policy_veh_s=J_policy, J_candidates_veh_s=J if done else None,
+                graded_candidates=len(ok), missing_candidates=[b['branch'] for b in branches[1:] if b['status'] != 'graded'],
+                available_k=len(candidates),
+                best_index=(min(ok, key=lambda i: (J[i], i)) if done else None),
                 chosen=(best-1 if best else None), chosen_plan=(copy.deepcopy(candidates[best-1]) if best else None),
                 grade_veh_s=(J_policy-J[best-1] if best else None),
-                best_margin_veh_s=(J_policy-min(J) if status in ('accepted', 'rejected') else None))
+                best_margin_veh_s=(J_policy-min(J[i] for i in ok) if done else None))
     return _finish(body, started, root)
 
 
@@ -486,6 +500,11 @@ def verified_guide(guide, verifier, controller, prefixes, job, generator, k=TOP_
             plan = r['chosen_plan']
             proposal.update(plan=plan, sumo_verified=True, expected_saving=plan.get('saving_vs_mappo'),
                             exact_grade_veh_s=r['grade_veh_s'])
+            if plan.get('overlap_truncated_plan_ids') is not None and proposal.get('overlap_recheck'):
+                # Live truncation follows the chosen candidate's own recheck (as in its branch).
+                proposal['overlap_recheck'] = dict(proposal['overlap_recheck'],
+                                                   truncated_plan_ids=list(plan['overlap_truncated_plan_ids']),
+                                                   per_candidate=True)
             b.update(proposal_members=plan['members'], duration_s=plan['duration_s'],
                      expected_saving=plan.get('saving_vs_mappo'), group_size=len(plan['members']))
             return proposal
@@ -565,7 +584,8 @@ def verify_controller_class():
                 if state_sha != self.snap['rng']['generator_state_sha256']:
                     raise ValueError('verification generator snapshot SHA mismatch')
                 self.audit.update(crn_verified_t0=True, noise_mode_used='crn')
-                ended = set(self.snap.get('truncate_on_accept') or []) if self.cand is not None else set()
+                own = (self.cand or {}).get('overlap_truncated_plan_ids')   # MAIN: per-candidate truncation
+                ended = set(own if own is not None else (self.snap.get('truncate_on_accept') or [])) if self.cand is not None else set()
                 self.active_plans = [dict(plan=copy.deepcopy(c['plan']), start_s=c['start_s'])
                                      for c in self.snap['committed_plans'] if c['plan']['id'] not in ended]
                 if self.cand is not None:

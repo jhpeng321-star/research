@@ -322,10 +322,17 @@ def test_k8_smoke_gate_and_grade_reuse_accept_nine_branches(tmp_path):
             vg.record_smoke(tmp_path, r, {}, k=8)
 
 
-def test_one_crashed_sumo_branch_fails_the_decision_never_the_episode():
+def test_one_crashed_candidate_branch_picks_best_graded_and_records_missing():
+    # MAIN (harden-int): policy graded -> best among graded candidates; missing recorded.
     r = sv.verify(snapshot(), eight(), FakePlant(fail={'cand6'}), charge_log()[1])
+    assert r['status'] == 'accepted' and r['chosen_plan']['id'] == 'h' and r['grade_veh_s'] == 40.
+    assert r['missing_candidates'] == ['cand6'] and r['graded_candidates'] == 7 and r['available_k'] == 8
+    assert r['J_candidates_veh_s'][5] is None
+
+
+def test_crashed_policy_branch_voids_the_decision_never_the_episode():
+    r = sv.verify(snapshot(), eight(), FakePlant(fail={'policy'}), charge_log()[1])
     assert r['status'] == 'failed' and r['chosen_plan'] is None and r['J_candidates_veh_s'] is None
-    assert [b['status'] for b in r['branches']].count('failed') == 1
 
 
 def test_full_disk_snapshot_prepare_fails_decision_not_episode(tmp_path):

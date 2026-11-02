@@ -295,7 +295,7 @@ class FakeGPU:
         from .mppi_runtime import plan
         from .query_errors import execute
         binding = dict(speed2=True, speed2_transfers=False, batch_width_by_K={'4': 34, '8': 10},
-                       search_config=dict(top_k=8))
+                       label_list8=self.cfg.get('label_list8', True))
         out = execute(r, lambda: plan(FakeRT, r, None, binding))
         assert out.get('record_sha256') == digest(r)
         return out

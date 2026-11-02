@@ -73,5 +73,30 @@ class RehearsalSmoke(unittest.TestCase):
             self.assertTrue(v['verifications']['all_within_quote'])
 
 
+
+class LabelList8Tests(unittest.TestCase):
+    def test_top8_unfiltered_from_the_original_final_k8_calls(self):
+        from .mppi_runtime import label_list8_search
+        seen = {}
+
+        def fake_search(record, group, policy, bounds, evaluate, regime, **kw):
+            seen['config'] = kw['config']
+            plans = [dict(id=f'p{i}', profile=[[0.]]) for i in range(9)]
+            acts = plans+[dict(id='policy'), dict(id='MAPPO')]
+            evaluate(record, acts, 4, 300)            # screen call: ignored
+            evaluate(record, acts, 8, 420)            # final K8 call: labelled
+            return dict(accepted=False, plan=plans[0], topk=[])
+
+        def evaluate(record, actions, k, h):
+            # p_i costs 100+i; policy 50 (every candidate LOSES vs policy): still kept.
+            return {a['id']: [dict(team_delay=(50. if a['id'] == 'policy' else 60. if a['id'] == 'MAPPO'
+                                               else 100.+int(a['id'][1:])))]*k for a in actions}
+        out = label_list8_search(fake_search)({}, {}, None, None, evaluate, 'ordinary', config=dict(x=1))
+        self.assertEqual(seen['config'], dict(x=1, top_k=8, finalists_per_k=1))
+        self.assertEqual([p['id'] for p in out['topk']], [f'p{i}' for i in range(8)])
+        self.assertEqual(out['available_k'], 8)
+        self.assertTrue(all(p['saving_vs_policy'] < 0 for p in out['topk']))
+
+
 if __name__ == '__main__':
     unittest.main()

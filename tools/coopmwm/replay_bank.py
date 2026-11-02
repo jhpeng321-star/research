@@ -102,7 +102,16 @@ def collector_guide(job, generator, controller, prefixes):
 
 # ---------------------------------------------------------------- collector loop
 
-def candidates_for(root, arm, meta, bounds):
+def b_available_k(root):
+    """available_k of every B bank decision in issue order (R matches the same count)."""
+    out = []
+    for p in sorted((bank_root(root, 'B')/'decisions').glob('*.json')):
+        v = json.loads(p.read_text())
+        out.append((v['issued_unix'], v['verification_id'], v['available_k']))
+    return [dict(verification_id=vid, available_k=k) for _, vid, k in sorted(out)]
+
+
+def candidates_for(root, arm, meta, bounds, k=K):
     """(candidates, proposer) or (None, reason) once the request is answered."""
     key = meta['state_id']
     if arm == 'B':
@@ -112,7 +121,8 @@ def candidates_for(root, arm, meta, bounds):
         v = json.loads(p.read_text())
         if v.get('record_sha256') != meta['record_sha256']:
             return [], 'response identity mismatch'
-        if not v.get('accepted') or not v.get('topk'):
+        # MAIN: label_list8 top-8, NO positive-saving filter (accepted flag not required).
+        if not v.get('topk') or v.get('query_error'):
             return [], 'no WM candidates'
         return list(v['topk'])[:K], 'wm'
     p = Path(root)/'centre_responses'/(key+'.json')
@@ -124,18 +134,28 @@ def candidates_for(root, arm, meta, bounds):
     if v.get('unavailable') or v.get('query_error') or v.get('worker_unavailable') or v.get('policy_traj') is None:
         return [], 'centre unavailable'
     seed = int(digest(dict(state=key, arm='R'))[:8], 16)
-    return sv.random_candidates(meta['group'], v['policy_traj'], tuple(bounds), meta['regime'], seed, K), 'random'
+    return sv.random_candidates(meta['group'], v['policy_traj'], tuple(bounds), meta['regime'], seed, k), 'random'
 
 
 def verify_pending(root, arm, bounds, runner, charge, workers, decided):
-    """Verify every answered snapshot once; returns the number of new receipts."""
+    """Verify every answered snapshot once; returns the statuses of new receipts.
+
+    R decision i uses the available_k of B decision i (issue order); it waits for it.
+    """
     from concurrent.futures import ThreadPoolExecutor
     bank = bank_root(root, arm);todo = []
+    matched = b_available_k(root) if arm == 'R' else None
+    used = sum(1 for _ in (bank/'decisions').glob('*.json')) if arm == 'R' else 0
     for p in sorted((bank/'snapshots').glob('*.json')):
         meta = json.loads(p.read_text())
         if meta['state_id'] in decided:
             continue
-        cands, how = candidates_for(root, arm, meta, bounds)
+        match = None
+        if arm == 'R':
+            if used+len(todo) >= len(matched):
+                break           # no unmatched B decision yet
+            match = matched[used+len(todo)]
+        cands, how = candidates_for(root, arm, meta, bounds, match['available_k'] if match else K)
         if cands is None:
             continue
         decided.add(meta['state_id'])
@@ -143,20 +163,22 @@ def verify_pending(root, arm, bounds, runner, charge, workers, decided):
             (bank/'skipped').mkdir(exist_ok=True)
             (bank/'skipped'/(meta['state_id']+'.json')).write_text(json.dumps(dict(meta, reason=how)))
             continue
-        todo.append((meta, cands, how))
+        todo.append((meta, cands, how, match))
 
     def one(item):
-        meta, cands, how = item
+        meta, cands, how, match = item
+        issued = time.time()
         snap = torch.load(bank/'snapshots'/(meta['state_id']+'.pt'), weights_only=False)
         r = sv.verify(snap, cands, runner, charge, how, workers=workers, root=bank/'sumo_verification')
         link = dict(state_id=meta['state_id'], verification_id=r['verification_id'], status=r['status'],
-                    policy_update=meta['policy_update'], arm=arm)
+                    policy_update=meta['policy_update'], arm=arm, available_k=len(cands), issued_unix=issued,
+                    matched_B=match)
         (bank/'decisions').mkdir(exist_ok=True)
         (bank/'decisions'/(meta['state_id']+'.json')).write_text(json.dumps(link))
         return r['status']
     if not todo:
         return []
-    with ThreadPoolExecutor(max_workers=max(1, len(todo))) as pool:
+    with ThreadPoolExecutor(max_workers=max(1, min(len(todo), 2))) as pool:
         return list(pool.map(one, todo))
 
 
@@ -179,9 +201,11 @@ def collect(root, arm, binding, worlds, stop, episodes_per_round=2, verify_worke
         path, u = latest_checkpoint(root, arm)
         policy, _, _, _ = load(path)
         jobs = []
+        # Episode index continues across collector restarts: a job id is never reused/retried.
+        start = sum(1 for _ in (root/'jobs').glob(f'collect_{arm}_*'))
         for i in range(episodes_per_round):
-            w = worlds[(n*episodes_per_round+i) % len(worlds)]
-            ident = f'collect_{arm}_u{u:03}_r{n:04d}_{w["seed"]}'
+            w = worlds[(start+i) % len(worlds)]
+            ident = f'collect_{arm}_u{u:03}_e{start+i:05d}_{w["seed"]}'
             jobs.append(dict(id=ident, path=str(root/'jobs'/ident), world=w, role='train', arm=arm,
                              weights=policy.state_dict(), runtime=binding['runtime'], checkpoint=binding['checkpoint'],
                              noise_seed=int(digest(dict(collect=ident))[:15], 16), deterministic=False, sim_s=1200,
@@ -213,7 +237,7 @@ def bank_decisions(root, arm, upto_unix=None):
     for p in sorted((bank_root(root, arm)/'sumo_verification'/'verifications').glob('*.json')):
         r = json.loads(p.read_text())
         xg.verify_sealed(r, 'receipt_sha256')
-        if r['status'] not in ('accepted', 'rejected') or r['k'] != K:
+        if r['status'] not in ('accepted', 'rejected'):
             continue
         if upto_unix is not None and r['timing']['finished_unix'] > upto_unix:
             continue

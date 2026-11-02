@@ -78,8 +78,11 @@ def reuse(queue, spec, original, step, verification_root):
         raise ValueError('truncated plan requires executed-portion marginal grading')
     if verification['grade_veh_s'] <= 0:
         raise ValueError('accepted verification must beat policy')
-    if any(b['status'] != 'graded' or not (b.get('audit') or {}).get('crn_verified_t0')
-           for b in verification['branches']):
+    # MAIN (harden-int): failed CANDIDATE branches are excluded, never imputed; the policy
+    # branch, the chosen branch and every graded branch still need exact prefix/CRN evidence.
+    used = [verification['branches'][0], verification['branches'][verification['chosen']+1]]
+    if any(b['status'] != 'graded' for b in used) or any(
+            not (b.get('audit') or {}).get('crn_verified_t0') for b in verification['branches'] if b['status'] == 'graded'):
         raise ValueError('verification branch prefix/CRN evidence incomplete')
     selected = verification['branches'][verification['chosen']+1]
     policy = verification['branches'][0]

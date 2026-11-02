@@ -132,7 +132,7 @@ def run_arm(root,arm):
                 if b.get('parallel_group_queries') else start_unix)
             routes=routing(eps)
             deviation=None
-            if arm=='B' and routes['executed']<b['N_exec']:
+            if arm=='B' and not replay and routes['executed']<b['N_exec']:
                 from .quota_admission import first_update_deviation
                 deviation=first_update_deviation(root,arm,u,routes['executed'],b['N_exec'])
             matching=None

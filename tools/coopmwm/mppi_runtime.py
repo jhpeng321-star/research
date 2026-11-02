@@ -34,6 +34,37 @@ def imagined_centres(rt,record,memory,width=2,speed2=True,transfers=False):
         source='future0 pre-safety current-policy/MAPPO acceleration',costs=scores)
 
 
+def label_list8_search(run):
+    """Live c4/coopnative ls_gpu.capture_search(label_list8=True), same arithmetic.
+
+    top_k=8 with one finalist per k keeps exactly the original eight final K8 WM calls;
+    'topk' becomes those eight candidates ordered by WM mean cost, UNFILTERED (no
+    positive-saving filter), each labelled with its K8 savings vs MAPPO and policy.
+    """
+    import copy
+
+    def wrapped(*args,**kwargs):
+        values=list(args);evaluate=values[4];last=[]
+        def score(record,actions,k,h):
+            costs=evaluate(record,actions,k,h)
+            if k==8:
+                def mean(key):
+                    xs=costs[key]
+                    return sum(x['team_delay'] if isinstance(x,dict) else x for x in xs)/len(xs)
+                plans=[a for a in actions if 'profile' in a]
+                last[:]=[dict(copy.deepcopy(p),saving_vs_mappo=mean('MAPPO')-mean(p['id']),
+                    saving_vs_policy=mean('policy')-mean(p['id']))
+                    for p in sorted(plans,key=lambda p:(mean(p['id']),p['id']))]
+            return costs
+        values[4]=score
+        kwargs['config']=dict(kwargs.get('config') or {},top_k=8,finalists_per_k=1)
+        out=run(*values,**kwargs)
+        out['collection_top8']=last[:8]
+        out['topk']=copy.deepcopy(last[:8]);out['available_k']=len(out['topk'])
+        return out
+    return wrapped
+
+
 def plan(rt,record,memory,binding):
     from .plan_service import batch_width
     from .committed import members
@@ -51,14 +82,32 @@ def plan(rt,record,memory,binding):
     bounds=(float(rt.mp.policy.accel_min),float(rt.mp.policy.accel_max))
     from .plan_proposer import RecordingEvaluator
     recording=RecordingEvaluator(score)
-    result=search.search(record,group,policy,bounds,recording,regime(record['rows']),
+    run=label_list8_search(search.search) if binding.get('label_list8') else search.search
+    result=run(record,group,policy,bounds,recording,regime(record['rows']),
         mappo_traj=mappo,covariance=covariance,library=library,
         seed=int(digest(record)[:15],16),config=binding.get('search_config'))
     from .plan_proposer import receipt_from_search
-    result['proposer_receipt']=receipt_from_search(record,result,recording,arm='B',
-        initial_covariance=covariance.get(regime(record['rows']),len(record['group'])) if covariance else None)
+    try:
+        result['proposer_receipt']=receipt_from_search(record,result,recording,arm='B',
+            initial_covariance=covariance.get(regime(record['rows']),len(record['group'])) if covariance else None)
+    except Exception as error:
+        # MAIN (harden-int): logging-only receipt, isolated on its own; a logging
+        # failure never discards (declines) a valid search result.
+        import traceback
+        result['proposer_receipt']=None
+        result['proposer_receipt_error']=dict(error=repr(error),traceback=traceback.format_exc())
     from .overlap import recheck
+    searched=result
     result=recheck(record,result,score)
+    if record.get('committed_plans') and result.get('topk'):
+        # MAIN (harden-int): each verified candidate gets the overlap truncation of ITS
+        # OWN recheck (same rule/K8/H), never the Thompson plan's.
+        topk=[]
+        for c in result['topk']:
+            own=recheck(record,dict(searched,plan=c,accepted=True),score)['overlap_recheck']
+            topk.append(dict(c,overlap_truncated_plan_ids=own['truncated_plan_ids'],
+                overlap_keeps_existing=own['chosen']=='overlap_drop_new'))
+        result=dict(result,topk=topk)
     result.update(record_sha256=digest(record),centre_rollout=receipt,
         memory=memory.receipt if memory is not None else {'mode':'cold'})
     if result['accepted']:
