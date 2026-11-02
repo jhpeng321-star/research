@@ -38,6 +38,12 @@ def binding(original,hashes,host):
     return result
 
 
+def receipt_label(config):
+    label=str(config.get('receipt_label',config['host']))
+    if not label.replace('_','').replace('-','').isalnum():raise ValueError('hot-add receipt label must be alphanumeric')
+    return label
+
+
 def run(config_path):
     import fcntl
     import signal
@@ -46,7 +52,11 @@ def run(config_path):
     from .warm_health import assert_running
     from .warm_transport import retry
     config_path=Path(config_path);config=json.loads(config_path.read_text())
-    root=Path(config['run_root']);host=config['host']
+    root=Path(config['run_root'])
+    # Receipt label: default keeps the original one-per-host names; a replacement
+    # for a dead hot-added worker needs its own label (the old OWNER/ADMISSION/
+    # FAILED receipts are immutable and would otherwise conflict forever).
+    host=receipt_label(config)
     lock=(root/f'HOTADD_{host}.claim').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     signal.signal(signal.SIGHUP,signal.SIG_IGN)
     owner=dict(pid=os.getpid(),start_ticks=Path(f'/proc/{os.getpid()}/stat').read_text().split()[21],
