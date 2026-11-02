@@ -1,5 +1,18 @@
 # S-COOPMWM — live checks
 
+## Nov3 03:24 UTC+8 — deleted grading dependency identified
+- Adopted all work through `1a36cd4e` and the existing uncommitted changes.
+- Full missing-path traceback identifies
+  `/home/ubuntu/aq_code/code_r13e_65cc714e/scenarios/idm/driver_routes.rou.xml`.
+  This is the scenario-template dependency in the deleted `aq_code` directory.
+  The diagnostic refuses existing assignment-file contents and runs zero physics.
+- SUMO binary/checkpoint are present; frozen runtime manifest has no missing
+  allowed paths. Grading owner1834956 passes boot/start identity checks and remains
+  live. At unix1793647454 there are27 usable lists and no inflight grading jobs.
+- Next is an opaque git-archive restoration with digest verification, preserving
+  all failed labels and charges, followed by append-only saved-search regrading.
+  Search collection remains under the existing owners; B/R remainu3.
+
 ## Nov3 ~02:35 UTC+8 — qualification-memory recovery; completed checks retained
 - gpuR576918 passed K2/H300 and committed K4/H300, then exhausted memory while
   re-capturing a full1600-slot H420 reference trace beside its live peer. The

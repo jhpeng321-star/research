@@ -1,5 +1,15 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+Nov3 fresh resume through ALL627 brief lines, HEAD1a36cd4e and uncommitted work
+ADOPTED. MAIN03:19 missing path reproduced with FULL traceback, ZERO physics:
+/home/ubuntu/aq_code/code_r13e_65cc714e/scenarios/idm/driver_routes.rou.xml.
+Template dependency only; binary/checkpoint/runtime manifest complete. Assignment
+contents NEVER opened by diagnostic (missing-only open guard). Existing grading
+owner1834956 boot/start verified LIVE,27 usable lists/0inflight at1793647454.
+Preparing opaque git-archive restoration/hash check; NOnewWMsearch/owner dispatch.
+Existing rollingcontroller/observer must be adopted, not duplicated. Fresh6M
+operational guard retained. B/Ru3; no restart/viability claim.
+
 Nov3~02:35 CURRENT recoveryV5: R576918passedK2H300+committedK4H300,
 thenOOMonredundantfull1600-slotH420tracerecapture besidepeer494955;
 failurekept. NEWregistered0f6f5efa/source/home/ubuntu/coopmwm20261103_lsfastcpu5,
