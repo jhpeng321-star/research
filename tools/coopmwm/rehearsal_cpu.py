@@ -116,6 +116,7 @@ def fake_tick(b, controller=None, trace=None):
     desired = controller.apply(rows, commands, now)
     audit = []
     hard_brakes = 0
+    accel = {}
     for c in b.cars:
         if c['is_cav']:
             raw = desired[c['vid']]['requested_raw'] if c['vid'] in desired else commands[c['vid']]
@@ -128,8 +129,21 @@ def fake_tick(b, controller=None, trace=None):
                 audit.append(dict(vid=c['vid'], clamped=bool(a != raw), mappo_safe=commands[c['vid']]))
         else:
             a = float(np.clip(.5*(b.target[c['vid']]-c['v_mps']), *BOUNDS))
-        c['v_mps'] = float(max(0., c['v_mps']+a))
-        c['s_m'] += c['v_mps']
+        accel[c['vid']] = a
+    # Toy car-following: a follower never drives through its leader. Without it, every
+    # faster branch laps the slow traffic and scores TTC<1.5 s pass-through bursts, so
+    # no winning plan could ever pass the confirmation safety check in rehearsal.
+    for lane in sorted({c['lane'] for c in b.cars}):
+        prev = None
+        for c in sorted((x for x in b.cars if x['lane'] == lane), key=lambda x: -x['s_m']):
+            v = float(max(0., c['v_mps']+accel[c['vid']]))
+            s = c['s_m']+v
+            if prev is not None and s > prev['s_new']-5.:
+                s = prev['s_new']-5.
+                v = min(v, prev['v_new'])
+            c['v_mps'], c['s_m'] = v, s
+            prev = dict(s_new=s, v_new=v)
+    for c in b.cars:
         if c['s_m'] > 500.:
             c['s_m'] -= 1400.
     deficit = sum(max(0., 30.-c['v_mps'])/30. for c in b.cars)
