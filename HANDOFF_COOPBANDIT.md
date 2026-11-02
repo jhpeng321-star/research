@@ -95,3 +95,10 @@ The first local verification encountered Windows' default GBK decoding on report
 text; explicit UTF-8 verification passed without changing any artifact bytes.
 All four steps were already complete; this resume started no simulations or
 dispatches and preserved the existing completed results and handoffs.
+
+Fresh owner-requested resume on 2026-11-03 started from clean `037dba23`.
+Read git history/status, shared COMPLETE registration, both completion receipts,
+and the final report/live summary before taking action. Independently hashed all
+11 EXAM/live-report manifest files; every SHA256 matches. Completion and budget
+remain as recorded above. No simulations or dispatches were started; all existing
+artifacts and the 59-line final report are preserved.
