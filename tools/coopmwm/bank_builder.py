@@ -42,6 +42,7 @@ def run(control):
     from .warm_spool import immutable
     from .ls_label_runtime import sumo_environment
     from .storage import ledger
+    from . import bank_safety as bs
     control = Path(control)
     config = json.loads((control/'BINDING.json').read_text())
     root = Path(config['run_root'])
@@ -63,11 +64,14 @@ def run(control):
         (control/'attempts').mkdir(exist_ok=True)
         original_charge = rb._confirm_charge
         while time.time() < config['deadline_unix'] and not (control/'STOP.json').exists():
-            done = rb.confirmations(root, 'B')
+            originals = bs.legacy(root, 'B')
+            done = bs.confirmations(root, 'B')
             decisions = rb.bank_decisions(root, 'B', sources=config['sources'])
             for r in decisions:
                 vid = r['verification_id']
-                if r['status'] != 'accepted' or not (r['grade_veh_s'] or 0) > 0 or vid in done:
+                if r['status'] != 'accepted' or not (r['grade_veh_s'] or 0) > 0:
+                    continue
+                if vid in done and done[vid].get('safety_rule') == bs.RULE:
                     continue
                 attempt = control/'attempts'/(vid+'.json')
                 claim = control/'attempts'/(vid+'.claim.json')
@@ -79,14 +83,15 @@ def run(control):
                     continue
                 snapshot = rb._decision_snapshot(root, 'B', r, {})
                 jobs = quoted_jobs(snapshot, r['chosen_plan'], sv.build_branches, rb.solo_candidate)
-                try:
-                    accel_storage.reserve(root, jobs, PHASE)
-                except ValueError as error:
-                    alert = control/f'BUDGET_WAIT_{time.time_ns()}.json'
-                    immutable(alert, dict(unix=time.time(), verification_id=vid,
-                        required_sim_s=sum(j['sim_s'] for j in jobs), error=repr(error),
-                        new_sumo_sim_s=0, action='wait before claim; no partial confirmation'))
-                    break
+                if vid not in originals:
+                    try:
+                        accel_storage.reserve(root, jobs, PHASE)
+                    except ValueError as error:
+                        alert = control/f'BUDGET_WAIT_{time.time_ns()}.json'
+                        immutable(alert, dict(unix=time.time(), verification_id=vid,
+                            required_sim_s=sum(j['sim_s'] for j in jobs), error=repr(error),
+                            new_sumo_sim_s=0, action='wait before claim; no partial confirmation'))
+                        break
                 immutable(claim, dict(unix=time.time(), verification_id=vid, jobs=jobs,
                     precharged_sim_s=sum(j['sim_s'] for j in jobs),
                     conditional_unused_solo_charges_retained=True))
@@ -97,10 +102,15 @@ def run(control):
                     def runner_for(work):
                         return sv.SubprocessBranchRunner(Path(work)/'branches', workers=2,
                             timeout_s=config['branch_timeout_s'])
-                    out = rb.confirm(root, 'B', receipt, snapshot, runner_for, str(root),
-                        PHASE, workers=2, version=r['_policy_version'])
+                    if vid not in originals:
+                        rb.confirm(root, 'B', receipt, snapshot, runner_for, str(root),
+                            PHASE, workers=2, version=r['_policy_version'])
+                    original = bs.legacy(root, 'B')[vid]
+                    out = bs.reconcile(root, 'B', original,
+                        dict(snapshot=snapshot,first_seed_receipt=receipt), runner_for, PHASE)
                     result = dict(unix=time.time(), verification_id=vid, status='complete',
                         admitted=out['admitted'], confirmation=out,
+                        new_precharge_sim_s=0 if vid in originals else sum(j['sim_s'] for j in jobs),
                         precharged_sim_s=sum(j['sim_s'] for j in jobs))
                 except Exception as error:
                     result = dict(unix=time.time(), verification_id=vid, status='failed',
@@ -109,14 +119,15 @@ def run(control):
                 finally:
                     rb._confirm_charge = original_charge
                 immutable(attempt, result)
-                quality = rb.bank_quality(root, 'B', sources=config['sources'])
+                quality = bs.quality(root, 'B', sources=config['sources'])
                 print(json.dumps(dict(result=result, bank_quality=quality)), flush=True)
                 initial = set(config['initial_verification_ids'])
-                settled = set(rb.confirmations(root, 'B'))
+                settled = {vid for vid,c in bs.confirmations(root,'B').items()
+                    if c.get('safety_rule') == bs.RULE}
                 if initial <= settled and not (control/'FIRST_BATCH_COMPLETE.json').exists():
                     immutable(control/'FIRST_BATCH_COMPLETE.json', dict(unix=time.time(),
                         initial_verification_ids=sorted(initial), bank_quality=quality))
-            rb.bank_quality(root, 'B', sources=config['sources'])
+            bs.quality(root, 'B', sources=config['sources'])
             time.sleep(config['poll_s'])
 
 

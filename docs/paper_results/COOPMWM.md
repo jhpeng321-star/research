@@ -1,5 +1,20 @@
 # S-COOPMWM — live checks
 
+## Nov3 04:41 UTC+8 — MAIN04:26 safety amendment qualified and registered
+- New shared B/R bank rule: no collision/teleport increase, and no increase in
+  hard-brake+trace TTC<1.5 event totals in either confirmation window. Old
+  confirmations remain immutable; additive SHA-linked verdicts retain both rules.
+- Frozen `bankcpu2`: **68 Linux CPU PASS, zero skips,23.486s, zero sim-s**.
+  Amendment `6b39e1ff55df45bf…` is registered before revalidation.
+- All16 current positive decisions already have their full conditional-solo
+  charges: **0 new sim-s reservation** for revalidation/diagnostics. Charged
+  snapshot5,197,130 remains below the6M operational guard. Existing replication,
+  extended-window and completed-solo results will be reused; unused precharged
+  solos run for every replication/later-harm pass, including986016.
+- Old bank owner receives a graceful boundary STOP only. The new owner may
+  start only after that process has exited; collection/GPU/PPO owners retained.
+  The original first14 summary above remains disclosed under the old rule.
+
 ## Nov3 04:29:53 UTC+8 — FIRST14 BANK CONFIRMATIONS COMPLETE
 - `BANK_BUILDER_STATUS_1793651394415117200.json` preserves the remote
   `FIRST_BATCH_COMPLETE.json`: all14 original positive decisions confirmed,

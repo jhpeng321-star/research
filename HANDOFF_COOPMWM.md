@@ -1,5 +1,16 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+MAIN04:26safetyamendmentCPUQUAL/REGISTERED:bankcpu2 68LinuxCPU PASS0skips
+23.486s; 6b39e1ff55df45bf... canonicalBEFORErevalidation.16positiveexisting
+decisions/ALLrep-ext-solojobsalreadyprecharged, NEWchargeupper0; charged5197130.
+Oldbuilder2332488requestedgracefulSTOP.json/NOsignals; mustbeEXITbeforelaunch.
+NEXT `bank_builder_ops launch` nowusesNEWcontrolbank_builder_0426/SOURCEbankcpu2,
+adoptsoldconfirmations/grades, writesSHA-linkedconfirmations_safety0426 overlays;
+preservesoldverdicts andrunsunusedsolosforeachrep/laterpass evenifnotadmitted.
+Sharedbank_safety appliesIDENTICALLYB/R; currentofflineworkerBonly/Rbankabsent.
+NOreplication/extendedrerun/charges, noPPO/GPU/collectionchange. LaunchONCE/adopt
+DISPATCHaftertransportfault. FullB-REPLAYfutureMUSTuseamendedreader, notlegacy.
+
 MAIN04:06FIRST14DONEat1793651393/04:29:53+08. BANK_BUILDER_STATUS_
 1793651394415117200.json pinsFIRST_BATCH_COMPLETE:14confirmed/3admitted/
 2cooperative/0incomplete. meanadmitted169.935CI[.0101,509.667]decisionbootstrap.

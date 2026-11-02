@@ -11,9 +11,10 @@ from .ls_validity_ops import remote
 from .protocol import checked, REGISTRY, sha
 from .storage import read, write
 
-SOURCE = '/home/ubuntu/coopmwm20261103_bankcpu1'
-BASE = '/home/ubuntu/coopmwm20261103_lspathcpu1'
-CONTROL = COLLECTION+'/bank_builder_0406'
+GENERATION = '0426'
+SOURCE = '/home/ubuntu/coopmwm20261103_bankcpu2'
+BASE = '/home/ubuntu/coopmwm20261103_bankcpu1'
+CONTROL = COLLECTION+'/bank_builder_0426'
 REVISION = '4f090b76'
 
 
@@ -22,7 +23,7 @@ def qualify():
              'test_replay_bank_confirm_cpu', 'test_replay_bank_lesson_cpu')
     files = {n: subprocess.check_output(['git', 'show',
         f'{REVISION}:tools/coopmwm/{n}.py'], cwd=ops.LOCAL).decode('utf-8') for n in names}
-    for n in ('bank_builder', 'test_bank_builder_cpu'):
+    for n in ('bank_builder', 'test_bank_builder_cpu', 'bank_safety', 'test_bank_safety_cpu'):
         files[n] = checked(ops.LOCAL/f'tools/coopmwm/{n}.py').read_text(encoding='utf-8')
     packed = base64.b64encode(zlib.compress(json.dumps(files).encode())).decode()
     print(remote('cpuQ', f'''from pathlib import Path
@@ -35,7 +36,7 @@ if not r.exists():
  for n,text in files.items():(r/'pytools/tools/coopmwm'/(n+'.py')).write_text(text)
  hashes={{str(p.relative_to(r)):hashlib.sha256(p.read_bytes()).hexdigest() for p in (r/'pytools').rglob('*.py')}}
  with (r/'LS_SOURCE_HASHES.json').open('x') as f:json.dump(hashes,f)
- tests=['test_replay_bank_confirm_cpu','test_replay_bank_lesson_cpu','test_bank_builder_cpu','test_sumo_verify_cpu','test_exact_grade_cpu','test_awr_cpu']
+ tests=['test_replay_bank_confirm_cpu','test_replay_bank_lesson_cpu','test_bank_builder_cpu','test_bank_safety_cpu','test_sumo_verify_cpu','test_exact_grade_cpu','test_awr_cpu']
  with (r/'LS_RELEASE_TESTS.json').open('x') as f:json.dump(tests,f)
 for n,text in files.items():assert (r/'pytools/tools/coopmwm'/(n+'.py')).read_text()==text,n
 done=r/'LS_CPU_RESULT.json';dispatch=r/'LS_CPU_DISPATCH.json'
@@ -56,7 +57,7 @@ import json
 r=Path({SOURCE!r});p=r/'LS_CPU_RESULT.json'
 print(p.read_text() if p.exists() else json.dumps(dict(pending=True,log=(r/'LS_CPU.log').read_text()[-8000:])))'''))
     if not value.get('pending'):
-        path = ops.EVIDENCE/'BANK_BUILDER_CPU_0406.json'
+        path = ops.EVIDENCE/f'BANK_BUILDER_CPU_{GENERATION}.json'
         if not path.exists():write(path, value)
         print(json.dumps({k: value[k] for k in ('pass_', 'tests', 'skips', 'sim_s', 'wall_s', 'root')}))
         if not value['pass_']:
@@ -70,21 +71,23 @@ import json,sys,time
 sys.path.insert(0,{SOURCE!r}+'/pytools')
 from tools.coopmwm import replay_bank as rb,sumo_verify as sv
 from tools.coopmwm.bank_builder import quoted_jobs
-from tools.coopmwm.accel_storage import charged
+from tools.coopmwm.accel_storage import charged,ledger
 c=Path({COLLECTION!r});r=Path({ROOT!r})
 cfg=json.loads((c/'LS_COLLECT_BINDING.json').read_text())
 for n in ('LS_LABEL_CONFIG','LS_FOCUS_CONFIG'):
  p=c/(n+'.json')
  if p.exists():cfg.update(json.loads(p.read_text()))
 cap=json.loads((r/'BANK_VERIFICATION_CAP_2232.json').read_text())
-items=[]
+items=[];charges={{e['id']:e for e in ledger(r)}}
 for x in rb.bank_decisions(r,'B',sources=[str(c)]):
  if x['status']!='accepted' or not (x['grade_veh_s'] or 0)>0:continue
  snap=rb._decision_snapshot(r,'B',x,{{}})
  jobs=quoted_jobs(snap,x['chosen_plan'],sv.build_branches,rb.solo_candidate)
- items.append(dict(verification_id=x['verification_id'],world=x['episode']['world'],t0=x['t0'],members=x['chosen_plan']['members'],duration_s=x['chosen_plan']['duration_s'],jobs=jobs,upper_sim_s=sum(j['sim_s'] for j in jobs)))
+ missing=[j for j in jobs if j['id'] not in charges]
+ assert not missing or len(missing)==len(jobs),'partial original whole-decision precharge'
+ items.append(dict(verification_id=x['verification_id'],world=x['episode']['world'],t0=x['t0'],members=x['chosen_plan']['members'],duration_s=x['chosen_plan']['duration_s'],jobs=jobs,upper_sim_s=sum(j['sim_s'] for j in missing),existing_precharged_sim_s=sum(j['sim_s'] for j in jobs if j['id'] in charges)))
 print(json.dumps(dict(unix=time.time(),items=items,total_upper_sim_s=sum(x['upper_sim_s'] for x in items),charged_before=charged(r),operational_cap=6000000,budget=cap['budget'],sumo_home=cfg['sumo_home'],runtime=cfg['runtime'])))''', timeout=60))
-    path = ops.EVIDENCE/'BANK_BUILDER_PLAN_0406.json'
+    path = ops.EVIDENCE/f'BANK_BUILDER_PLAN_{GENERATION}.json'
     if not path.exists():write(path, value)
     else:assert read(path)['items'] == value['items'], 'adopt existing plan; do not replace'
     print(json.dumps({k: value[k] for k in ('unix', 'total_upper_sim_s', 'charged_before', 'operational_cap')}))
@@ -92,25 +95,32 @@ print(json.dumps(dict(unix=time.time(),items=items,total_upper_sim_s=sum(x['uppe
 
 
 def register():
-    cpu = read(ops.EVIDENCE/'BANK_BUILDER_CPU_0406.json')
-    quote = read(ops.EVIDENCE/'BANK_BUILDER_PLAN_0406.json')
+    cpu = read(ops.EVIDENCE/f'BANK_BUILDER_CPU_{GENERATION}.json')
+    quote = read(ops.EVIDENCE/f'BANK_BUILDER_PLAN_{GENERATION}.json')
     assert cpu['pass_'] and cpu['skips'] == cpu['sim_s'] == 0
     assert quote['charged_before']+quote['total_upper_sim_s'] <= quote['operational_cap']
-    path = ops.EVIDENCE/'BANK_BUILDER_REGISTRATION_0406.json'
+    path = ops.EVIDENCE/f'BANK_BUILDER_REGISTRATION_{GENERATION}.json'
     if not path.exists():
-        line = ('\nS-COOPMWM MAIN2026-11-03 04:06 OFFLINE BANK BUILDER: delegated '
+        line = ('\nS-COOPMWM MAIN2026-11-03 04:26 OFFLINE BANK SAFETY AMENDMENT: '
+            'B/R identical rule: collisions/teleports cannot increase; combined hard-brake '
+            '+trace TTC<1.5 event delta cannot increase. Keep old confirmations immutable '
+            'and write SHA-linked additive verdicts, old-rule counts and both verdicts. '
+            'Reapply ALL existing confirmations from SAVED replication/extended grades; '
+            'NEVER rerun them. Diagnostic solos for EVERY replication/later-harm pass, '
+            'including986016 and irrespective of safety admission, adopt completed solos '
+            'and use previously precharged conditional pairs. Delegated '
             'replay_bank/confirmation/synergy from4f090b76 (f023f10c,b58ca5b2,62b80987), '
             'CPU-qualified isolated source; NO full B-REPLAY activation or GPU/collection '
             'handover. Existing B/u3 TRAIN LS labels only; confirm second CRN seed, '
-            'extended min(end,t0+D+600), no safety regression (collision/teleport/hard '
-            'brake/trace TTC<1.5); admitted multi-member plans get every solo. '
+            'extended min(end,t0+D+600), combined safety rule as above. '
             'All replication/extended/conditional-solo pairs precharged atomically in '
             'bank_verification_ext BEFORE physics; unused conditional charges retained, '
             'no refund or job replay. Shared ledger lock and fresh operational6M hardcap '
             'retained; previously registered phase cap2.6M. New accepted labels processed '
             'continuously by the SAME owned remote builder; budget shortage waits before '
-            'claim, no partial group. Existing owner/GPU/PPO jobs untouched. '
-            f'Initial{len(quote["items"])} decisions quoted upper{quote["total_upper_sim_s"]} '
+            'claim, no partial group. Existing collection/GPU/PPO owners untouched; '
+            'bank-only registered graceful boundary handover. '
+            f'Initial{len(quote["items"])} decisions quoted NEW upper{quote["total_upper_sim_s"]} '
             'sim-s; exact grades and synergy published BANK_QUALITY_B.json; no sealed access.\n')
         write(path, dict(line=line, cpu=cpu, quote=quote, revision=REVISION,
             sources=[COLLECTION], run_root=ROOT, source_root=SOURCE,
@@ -118,19 +128,23 @@ def register():
             operational_cap=quote['operational_cap'], budget=quote['budget'],
             sumo_home=quote['sumo_home'], runtime=quote['runtime'],
             source_hashes=cpu['source_hashes'], branch_timeout_s=3600, poll_s=30,
-            deadline_unix=1793894340, authority='MAIN2026-11-03 04:06'))
+            deadline_unix=1793894340, authority='MAIN2026-11-03 04:26',
+            safety_rule='MAIN2026-11-03 04:26'))
         with checked(REGISTRY).open('a', encoding='utf-8') as f:f.write(line+'amendmentSHA'+sha(path)+'\n')
     print(json.dumps(dict(amendment_sha256=sha(path), initial_upper_sim_s=quote['total_upper_sim_s'])))
 
 
 def launch():
-    config = read(ops.EVIDENCE/'BANK_BUILDER_REGISTRATION_0406.json')
-    h = sha(ops.EVIDENCE/'BANK_BUILDER_REGISTRATION_0406.json')
+    config = read(ops.EVIDENCE/f'BANK_BUILDER_REGISTRATION_{GENERATION}.json')
+    h = sha(ops.EVIDENCE/f'BANK_BUILDER_REGISTRATION_{GENERATION}.json')
     value = json.loads(remote('cpuQ', f'''from pathlib import Path
 import json,sys,os,time,subprocess,hashlib
 s=Path({SOURCE!r});c=Path({CONTROL!r});assert c.parent.is_dir()
 if c.exists() and (c/'DISPATCH.json').exists():print((c/'DISPATCH.json').read_text());raise SystemExit
 cfg=json.loads({json.dumps(config)!r});cfg['amendment_sha256']={h!r}
+old=Path({COLLECTION!r})/'bank_builder_0406';d=json.loads((old/'DISPATCH.json').read_text());p=Path('/proc',str(d['pid']))
+st=(p/'stat').read_text().split() if p.exists() else None
+assert st is None or (st[21]==d['start_ticks'] and st[2]=='Z'),'old owned builder must finish boundary stop'
 for n,h in cfg['source_hashes'].items():assert hashlib.sha256((s/n).read_bytes()).hexdigest()==h,n
 c.mkdir(exist_ok=True)
 with (c/'BINDING.json').open('x') as f:json.dump(cfg,f)
@@ -141,9 +155,34 @@ with (c/'BUILDER.log').open('x') as log:
 d=dict(pid=p.pid,start_ticks=Path('/proc',str(p.pid),'stat').read_text().split()[21],boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),unix=time.time(),source_root=str(s),control_root=str(c),amendment_sha256=cfg['amendment_sha256'])
 with (c/'DISPATCH.json').open('x') as f:json.dump(d,f)
 print(json.dumps(d))''', timeout=60))
-    path = ops.EVIDENCE/'BANK_BUILDER_DISPATCH_0406.json'
+    path = ops.EVIDENCE/f'BANK_BUILDER_DISPATCH_{GENERATION}.json'
     if not path.exists():write(path, value)
     print(json.dumps(value))
+
+
+def quiesce():
+    """MAIN04:26: graceful owned boundary stop; retain every existing branch/result."""
+    path=ops.EVIDENCE/'BANK_BUILDER_HANDOVER_0426.json'
+    if not path.exists():
+        line=('\nS-COOPMWM MAIN04:26 BANK SAFETY HANDOVER: graceful boundary stop '
+            'of registered builder2332488 only, no signals or branch interruption; '
+            'retain ALL original verdicts/charges. Prepare shared B/R combined '
+            'hard-brake+TTC safety rule, collisions/teleports hard constraints, '
+            'reapply every confirmation from saved grades and run unused precharged '
+            'solos for every replication/later-harm pass. No replication or extended '
+            'rerun, no PPO/GPU/collection change. New qualified owner before revalidation.\n')
+        write(path,dict(line=line,authority='MAIN2026-11-03 04:26',new_sumo_sim_s=0))
+        with checked(REGISTRY).open('a',encoding='utf-8') as f:f.write(line+'amendmentSHA'+sha(path)+'\n')
+    print(remote('cpuQ',f'''from pathlib import Path
+import json,time
+c=Path({COLLECTION!r})/'bank_builder_0406';owner=json.loads((c/'DISPATCH.json').read_text())
+p=Path('/proc',str(owner['pid']));st=(p/'stat').read_text().split() if p.exists() else None
+assert st is None or st[21]==owner['start_ticks']
+assert Path('/proc/sys/kernel/random/boot_id').read_text().strip()==owner['boot_id']
+target=c/'STOP.json'
+if not target.exists():
+ with target.open('x') as f:json.dump(dict(unix=time.time(),reason='MAIN04:26 safety amendment boundary handover',amendment_sha256={sha(path)!r},owner=owner),f)
+print(json.dumps(dict(owner=owner,state=st[2] if st else 'ABSENT',boundary_stop_requested=True,signals_sent=0)))'''))
 
 
 def status():
@@ -171,5 +210,5 @@ print(json.dumps(dict(unix=time.time(),owner=d,state=st[2] if st else 'ABSENT',q
 
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser();p.add_argument('action', choices=('qualify','cpu_result','plan','register','launch','status'))
+    p = argparse.ArgumentParser();p.add_argument('action', choices=('qualify','cpu_result','plan','register','launch','status','quiesce'))
     globals()[p.parse_args().action]()
