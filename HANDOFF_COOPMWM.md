@@ -1,5 +1,18 @@
 # S-COOPMWM continuation — MAIN23:32 SUMO label environment recovery
 
+MAIN03:19 SAVEDREGRADE LIVE unix1793648036/03:33:56+08: new owned2225116/
+start66231393, source/home/ubuntu/coopmwm20261103_lspathcpu1. 229LinuxCPU
+PASS0skips43.132s/zeroSUMO+3localPASS. Amendment06de06f4 registersTENfailed
+SUMOENV1prephysicslabels->SUMOPATH1 freshattempts,64800sumo_verification
+precharged,total5037230<6M, originalchargeskept. NEVERduplicate/relaunch;
+`ls_path_recovery regrade_status` adoptsowner. FIRSTreal9branchlistPASS986048
+at1793648075,6480actualsim-s; policy PREFIXsmokePASSthrough300/reused720s.
+Alloldlabels kept; savedcandidatesonly/ZEROnewWMsearch. Existingcollection
+1834956/broker1941060/GPUowners untouched. Localcontroller33124ABSENT:
+LS_FAST_ROLL_V4.log shows transportRuntimeError after firsttierREADY; inspect
+remainingtierdispatches BEFORE any successorcontroller (observer8472stillLIVE).
+DelegatedHARDEN6104stillLIVE; doNOTduplicate. Niche41564nowABSENT/READYlanded.
+
 MAIN03:19 RESTORED unix1793647712(03:28:32+08): exact original65cc714e gitblob
 9bbbe41c79eb4df4903be80753001a1b960b4199, SHA2567b060d35fe1cf66c...,
 opaque git-archive transfer ONLY/no template contents inspected. Amendment

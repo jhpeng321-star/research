@@ -1,5 +1,20 @@
 # S-COOPMWM — live checks
 
+## Nov3 03:34 UTC+8 — real grading recovered; saved retries underway
+- Frozen `lspathcpu1`: **229 Linux CPU PASS**, zero skips, **43.132 s**, zero
+  sim-s. Three local selection/duplicate-prevention tests also pass.
+- Amendment `06de06f4…` registers ten saved prephysics failures as new `SUMOPATH1`
+  attempts. **64,800 sim-s** precharged in `sumo_verification`; total charged
+  **5,037,230 < 6,000,000**. Old failure receipts and charges remain intact.
+- New durable regrading-only owner **2225116/start66231393** processes lists
+  serially, preserving all existing collection/broker/GPU owners.
+- **First complete retry passed**: world986048, nine SUMO branches, **6,480 actual
+  sim-s**, completed unix1793648075. The real policy-prefix smoke passed through
+  t300 and was reused in that list (720 s, no extra smoke charge). No WM search
+  was repeated. The remaining saved retries continue under the same owner.
+- B/R remainu3. Bank selection positives still require confirmation/admission
+  before the registered B-REPLAY restart; this is infrastructure recovery evidence.
+
 ## Nov3 03:28:32 UTC+8 — original scenario dependency restored
 - Registered amendment `4fde4697…` before restoring the missing template opaquely
   from original revision `65cc714e`. Git blob matches exactly:

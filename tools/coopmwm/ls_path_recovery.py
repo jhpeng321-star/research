@@ -16,6 +16,8 @@ RESTORE=ops.EVIDENCE/'LS_TEMPLATE_RESTORE_LF_REGISTRATION.json'
 ARCHIVE=Path('E:/Temp/opencode/coopmwm_template_65cc714e_lf.tar')
 TEMPLATE_ROOT='/home/ubuntu/aq_code/code_r13e_65cc714e'
 BLOB='9bbbe41c79eb4df4903be80753001a1b960b4199'
+SOURCE='/home/ubuntu/coopmwm20261103_lspathcpu1'
+REGRADE=ops.EVIDENCE/'LS_SAVED_REGRADE_REGISTRATION_0319.json'
 
 
 def diagnose():
@@ -160,7 +162,153 @@ print(json.dumps(out))''',timeout=60))
     print(json.dumps(value))
 
 
+def qualify():
+    from .ls_validity_ops import payload
+    packed=payload(('ls_saved_regrade','test_ls_saved_regrade_cpu'))
+    print(remote('cpuQ',f'''from pathlib import Path
+import json,os,shutil,hashlib,subprocess,time,base64,zlib
+c=Path({COLLECTION!r});base=Path(json.loads((c/'LS_FOCUS_CONFIG.json').read_text())['source_root'])
+r=Path({SOURCE!r});assert r.parent.is_dir()
+files=json.loads(zlib.decompress(base64.b64decode({packed!r})))
+if not r.exists():
+ r.mkdir();shutil.copytree(base/'pytools',r/'pytools',ignore=shutil.ignore_patterns('__pycache__'))
+ for name in ('FROZEN_COSTS.json','FROZEN_MOTION_SOURCE.py'):shutil.copy2(base/name,r/name)
+ for n,text in files.items():(r/'pytools/tools/coopmwm'/(n+'.py')).write_text(text)
+ hashes={{str(p.relative_to(r)):hashlib.sha256(p.read_bytes()).hexdigest() for p in (r/'pytools').rglob('*.py')}}
+ with (r/'LS_SOURCE_HASHES.json').open('x') as f:json.dump(hashes,f)
+ tests=json.loads((base/'LS_RELEASE_TESTS.json').read_text())+['test_ls_saved_regrade_cpu']
+ with (r/'LS_RELEASE_TESTS.json').open('x') as f:json.dump(sorted(set(tests)),f)
+for n,text in files.items():assert (r/'pytools/tools/coopmwm'/(n+'.py')).read_text()==text,n
+done=r/'LS_CPU_RESULT.json';dispatch=r/'LS_CPU_DISPATCH.json'
+if done.exists():print(done.read_text())
+elif dispatch.exists():print(dispatch.read_text())
+else:
+ env=dict(os.environ,PYTHONPATH=str(r/'pytools')+':/home/ubuntu/e3final/runtime/src:/home/ubuntu/e3final/runtime')
+ with (r/'LS_CPU.log').open('x') as log:
+  p=subprocess.Popen(['/home/ubuntu/miniconda3/bin/python','-B','-u','-m','tools.coopmwm.ls_cpu_test',str(r)],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+ d=dict(pid=p.pid,start_ticks=Path('/proc',str(p.pid),'stat').read_text().split()[21],boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),unix=time.time())
+ with dispatch.open('x') as f:json.dump(d,f)
+ print(json.dumps(d))''',timeout=60))
+
+
+def cpu_result():
+    value=json.loads(remote('cpuQ',f'''from pathlib import Path
+import json
+r=Path({SOURCE!r});p=r/'LS_CPU_RESULT.json'
+print(p.read_text() if p.exists() else json.dumps(dict(pending=True,log=(r/'LS_CPU.log').read_text()[-4000:])))''',timeout=60))
+    if value.get('pending'):print(json.dumps(value));return
+    path=ops.EVIDENCE/'LS_SAVED_REGRADE_CPU_0319.json'
+    if not path.exists():write(path,value)
+    print(json.dumps({k:value[k] for k in ('pass_','tests','skips','sim_s','wall_s','root')}))
+
+
+def regrade_plan():
+    value=json.loads(remote('cpuQ',f'''from pathlib import Path
+import json,sys,time,gzip
+sys.path.insert(0,{SOURCE!r}+'/pytools')
+from tools.coopmwm.ls_saved_regrade import select,GENERATION
+from tools.coopmwm.protocol import digest
+from tools.coopmwm.accel_storage import read,charged
+c=Path({COLLECTION!r});cfg=json.loads((c/'LS_COLLECT_BINDING.json').read_text())
+for name in ('LS_RECOVERY_CONFIG','LS_VALIDITY_CONFIG','LS_LABEL_CONFIG','LS_LABEL_DISK_CONFIG','LS_FOCUS_CONFIG'):
+ p=c/(name+'.json')
+ if p.exists():cfg.update(json.loads(p.read_text()))
+labels=[dict(json.loads(p.read_text()),_file=p.name) for p in (c/'labels').glob('*.json')]
+items=[];m=Path(cfg['run_root'])
+for x in select(labels):
+ file=x.pop('_file');key=x['search_id'];p=c/'pending'/(key+'.json.gz')
+ assert p.exists() and (m/'responses'/(key+'.json')).exists(),key
+ reservation=json.loads((c/'admissions'/(key+'.json')).read_text())
+ assert not (c/'labels'/(key+'.json')).exists()
+ items.append(dict(search_id=key,file=file,world_id=x['world_id'],original_label_sha256=digest(x),
+  pending_path=str(p),response_sha256=digest(read(m/'responses'/(key+'.json'))),sim_s=reservation['charged_sim_s']))
+print(json.dumps(dict(unix=time.time(),items=items,total_sim_s=sum(x['sim_s'] for x in items),
+ charged_before=charged(m),operational_spend_cap=6000000,generation=GENERATION,config=cfg)))''',timeout=60))
+    path=ops.EVIDENCE/'LS_SAVED_REGRADE_PLAN_0319.json'
+    if path.exists():assert json.loads(path.read_text())['items']==value['items']
+    else:write(path,value)
+    print(json.dumps({k:value[k] for k in ('unix','items','total_sim_s','charged_before','operational_spend_cap')}))
+
+
+def register_regrade():
+    cpu=json.loads((ops.EVIDENCE/'LS_SAVED_REGRADE_CPU_0319.json').read_text())
+    assert cpu['pass_'] and cpu['skips']==cpu['sim_s']==0
+    plan=json.loads((ops.EVIDENCE/'LS_SAVED_REGRADE_PLAN_0319.json').read_text())
+    assert plan['charged_before']+plan['total_sim_s']<=6000000
+    if not REGRADE.exists():
+        line=('\nS-COOPMWM MAIN03:19 SAVED-SEARCH REGRADE ENGINEERING AMENDMENT: '
+            'missing aq_code template restored to original65cc714e blob; '
+            'ten prephysics FileNotFoundError labels get NEW SUMOPATH1 attempts, '
+            'same saved observable snapshots and original8 candidates, ZEROnewWMsearches. '
+            'Originalfailedlabels/chargesretained; no successful label replay. '
+            'Precharge upper bound64800sim-s in sumo_verification before any physics; '
+            'current4972430+64800=5037230<fresh operational6000000 cap, '
+            'also recheck live atomic total+phase guard. Serial9branchlists/nice19, '
+            'each policybranch real smoke/prefix passes before candidates; new claim IDs '
+            'never replayed if interrupted. All metadata/broker/GPU owners retained. '
+            'Frozen lspathcpu1:229Linux CPU PASS0skips43.132s/zeroSUMO. '
+            'B/Rremainu3, mirrorOFF, no training or search change.\n')
+        write(REGRADE,dict(plan,line=line,cpu=cpu,source_root=SOURCE,restore_sha256=sha(RESTORE)))
+        with checked(REGISTRY).open('a',encoding='utf-8') as f:
+            f.write(line+'amendmentSHA'+sha(REGRADE)+'\n')
+    print(json.dumps(dict(amendment_sha256=sha(REGRADE),cpu_tests=cpu['tests'],retry_sim_s=plan['total_sim_s'])))
+
+
+def deploy_regrade():
+    reg=json.loads(REGRADE.read_text());h=sha(REGRADE)
+    value=json.loads(remote('cpuQ',f'''from pathlib import Path
+import json,os,sys,time,subprocess,hashlib
+c=Path({COLLECTION!r});s=Path({SOURCE!r});reg=json.loads({json.dumps(reg)!r})
+sys.path.insert(0,str(s/'pytools'))
+from tools.coopmwm.warm_spool import immutable
+from tools.coopmwm.warm_protocol import install_accounting
+from tools.coopmwm import accel_storage
+from tools.coopmwm.accel_protocol import SUPERSEDED_CHARGE
+from tools.coopmwm.ls_label_runtime import sumo_environment
+dest=c/'SAVED_REGRADE_DISPATCH_0319.json'
+if dest.exists():print(dest.read_text());raise SystemExit
+for n,h in reg['cpu']['source_hashes'].items():assert hashlib.sha256((s/n).read_bytes()).hexdigest()==h,n
+assert json.loads((c/'TEMPLATE_RESTORED_0319.json').read_text())['git_blob']=={BLOB!r}
+assert all(not (Path(reg['config']['run_root'])/(a+'_checkpoint_004.pt')).exists() for a in ('B','R'))
+config=reg['config'];main=Path(config['run_root']);install_accounting(main,config['budget'])
+accel_storage._reserve.__globals__['CAP']=min(accel_storage._reserve.__globals__['CAP'],6000000-SUPERSEDED_CHARGE)
+jobs=[dict(id='lslabel_'+x['search_id']+'_'+reg['generation'],sim_s=x['sim_s']) for x in reg['items']]
+existing={{x['id'] for x in accel_storage.ledger(main)}}
+if not any(j['id'] in existing for j in jobs):accel_storage.reserve(main,jobs,'sumo_verification')
+else:assert all(j['id'] in existing for j in jobs),'partial charge, never retry blindly'
+immutable(c/'SAVED_REGRADE_REGISTRATION_0319.json',reg)
+bound=c/'SAVED_REGRADE_REGISTERED_0319.json'
+if not bound.exists():
+ with (main/'AUTHORITY.md').open('a') as f:f.write(reg['line']+'amendmentSHA'+{h!r}+chr(10))
+ immutable(bound,dict(amendment_sha256={h!r},unix=time.time()))
+env=sumo_environment(config['sumo_home'])
+env.update(PYTHONPATH=str(s/'pytools')+':/home/ubuntu/e3final/runtime/src:/home/ubuntu/e3final/runtime',CUDA_VISIBLE_DEVICES='',OMP_NUM_THREADS='1',MKL_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1')
+with (c/'SAVED_REGRADE_0319.log').open('x') as log:
+ p=subprocess.Popen(['nice','-n','19','/home/ubuntu/miniconda3/bin/python','-B','-u','-m','tools.coopmwm.ls_saved_regrade',str(c)],env=env,stdin=subprocess.DEVNULL,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
+d=dict(pid=p.pid,start_ticks=Path('/proc',str(p.pid),'stat').read_text().split()[21],boot_id=Path('/proc/sys/kernel/random/boot_id').read_text().strip(),unix=time.time(),source_root=str(s),amendment_sha256={h!r},charged_total_sim_s=accel_storage.charged(main),new_wm_searches=0)
+immutable(dest,d);print(json.dumps(d))''',timeout=60))
+    path=ops.EVIDENCE/'LS_SAVED_REGRADE_DISPATCH_0319.json'
+    if not path.exists():write(path,value)
+    print(json.dumps(value))
+
+
+def regrade_status():
+    value=json.loads(remote('cpuQ',f'''from pathlib import Path
+import json,time
+c=Path({COLLECTION!r});d=json.loads((c/'SAVED_REGRADE_DISPATCH_0319.json').read_text());p=Path('/proc',str(d['pid']))
+identity=p.exists() and (p/'stat').read_text().split()[21]==d['start_ticks'] and Path('/proc/sys/kernel/random/boot_id').read_text().strip()==d['boot_id']
+rows=[]
+for path in (c/'labels').glob('*_SUMOPATH1.json'):
+ v=json.loads(path.read_text());r=v['verification'];rows.append(dict(key=v['search_id'],status=r['status'],branches=len(r.get('branches',[])),actual_sim_s=r.get('actual_sim_s'),reason=r.get('reason')))
+print(json.dumps(dict(unix=time.time(),owner=d,identity_verified=identity,state=(p/'stat').read_text().split()[2] if p.exists() else 'exited',
+ labels=rows,complete=(c/'saved_regrade_0319/COMPLETE.json').exists(),
+ smoke=json.loads((c/'LABEL_SUMO_SMOKE_SUMOPATH1.json').read_text()) if (c/'LABEL_SUMO_SMOKE_SUMOPATH1.json').exists() else None,
+ log=(c/'SAVED_REGRADE_0319.log').read_text()[-4000:])))''',timeout=60))
+    write(ops.EVIDENCE/f'LS_SAVED_REGRADE_STATUS_{time.time_ns()}.json',value)
+    print(json.dumps(value))
+
+
 if __name__ == '__main__':
     parser=argparse.ArgumentParser()
-    parser.add_argument('action', choices=('diagnose','sources','candidates','register_restore','restore'))
+    parser.add_argument('action', choices=('diagnose','sources','candidates','register_restore','restore','qualify','cpu_result','regrade_plan','register_regrade','deploy_regrade','regrade_status'))
     globals()[parser.parse_args().action]()
