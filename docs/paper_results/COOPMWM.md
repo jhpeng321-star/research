@@ -1,5 +1,36 @@
 # S-COOPMWM — live checks
 
+## MAIN10:30 continuation — verifier CPU-qualified; current owners retained
+- Full322-line brief read; original warm-memory qualification and MAPPO-u0
+  starts adopted. Recovery B/R/broker/grader remain live, no active STOP/pause.
+  At unix1793587436: **A48/B2/R1**, charged **3,507,050sim-s**.
+- gpuA replacement759743 is now **READY, all eight retained gates EXACT0**;
+  no qualification was repeated. This is worker readiness, not an admission claim.
+- Landed verifier8ff759fd integrated. Pre-verification trust now draws once;
+  own-policy draws launch no branches, verified winners execute without a second
+  draw. Durable decision claims block duplicate charge/physics and preserve
+  interrupted claims. Explicit run-root accounting installed.
+- **82CPU PASS,0skips,0SUMO/inference,22.574s**, frozen `verifycpu2`.
+  First failed harness receipt retained; no tests skipped. Integration details:
+  `coopmwm/SUMO_VERIFY_INTEGRATION_CPU_20261102.md`. **Not activated**: real smoke,
+  exact-grade reuse, matched B/R update boundary and final-hook migration pending.
+- **Budget clarification required before new verification physics:** fresh
+  resume says6M, supplied later addenda and canonical owner approvals say9.5M.
+  Current adopted recovery allocation7,028,840 is bound under7.5M. No new
+  SUMO/GPU dispatch or PID control was performed by this continuation.
+- Observe-onlyV10 **PID9636**, startedunix1793587515.739, original18:07:02
+  deadline retained;18CPU observer/state/publication checks PASS. First live
+  poll/publication succeeded. It cannot launch training or inference.
+- Corrected `episode_progress --current` to use the incident replacement
+  schedule and exclude retired query keys. Earlier snapshot1793587542 showed
+  retired original jobs; retain it as superseded observation, not current waits.
+  Three actual-payload CPU tests PASS. Corrected snapshot1793587611:
+  B-u3 **24claimed/14closed**, ten active episodes att300–470, oldest request
+  ages1129–1139s; R-u2 **8claimed/4closed**, four active att410–570, request
+  ages114–1136s. Queue waits are censored; no post-recovery update ETA yet.
+- Latest published B exact marginal evidence remains15plans,mean+145.2veh-s,
+  95%CI[−60.80,+487.82]. **Viability is not established**; B-u4–6 pending.
+
 ## MAIN10:22 fresh recovery — B/R continued from durable checkpoints
 - Complete316-line brief and canonical registration adopted. Latest owner cap
   **9,500,000sim-s**; primary final checkpoints **A24/B24/R24**, A48 secondary.
