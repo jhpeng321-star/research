@@ -43,7 +43,7 @@ class ParallelGroupTests(unittest.TestCase):
         self.assertEqual([r['group'] for r in seen],[g['members'] for g in self.groups])
         self.assertEqual(result['plan']['id'],'1')
         self.assertEqual([r['selected'] for r in result['parallel_queries']],[False,True,False])
-        self.assertEqual(result['behaviour']['parallel_query_counts'],dict(queries=3,accepted=2,candidates_searched=303))
+        self.assertEqual(result['behaviour']['parallel_query_counts'],dict(queries=3,accepted=2,candidates_searched=303,pending=0))
         self.assertEqual(q.state(self.root,2),dict(executed=0,inflight=1))
         q.resolved(result['quota_reservation'],True)
         immutable(self.root/'guided_starts/u002'/(result['record_sha256']+'.json'),dict(job=self.job['id']))
@@ -98,6 +98,41 @@ class ParallelGroupTests(unittest.TestCase):
         self.assertEqual(len(report['durations']),1)
         self.assertEqual(report['candidates_searched'],303)
         self.assertEqual(report['query_wait_wall_s'],result['query_wall_s'])
+
+    def partial(self,answers):
+        """Only the listed group indices are ever answered (shared GPU queue backlog)."""
+        seen=[];sleeps=[]
+        def publish(path,value):
+            immutable(path,value)
+            if path.parent.name!='requests':return
+            seen.append(value)
+            if len(seen)==len(self.groups):
+                for i,accepted in answers.items():
+                    r=seen[i];result=dict(record_sha256=digest(r),accepted=accepted,candidates_searched=10)
+                    if accepted:result.update(plan=dict(id=str(i),members=r['group'],duration_s=60),option='MPPI')
+                    immutable(self.root/'responses'/(r['state_id']+'.json'),result)
+        def sleep(_):
+            sleeps.append(1)
+            if len(sleeps)>3:raise AssertionError('episode blocked on a group that cannot change the selection')
+        with patch.object(pg,'immutable',side_effect=publish),patch.object(pg,'assert_running'),patch.object(pg.time,'sleep',side_effect=sleep):
+            return pg.query(self.job,torch.Generator().manual_seed(0),ObservableHistory(),[],{},300,self.sample,self.groups,'ordinary',[1,2,3,4])
+
+    def test_u4_stall_first_accepted_group_returns_without_later_answers(self):
+        # 17:09-18:35 B u4: episodes held 6 accepted answers but waited for every
+        # other group of their fan-out, so SUMO sat at 0 CPU and no verification ran.
+        result=self.partial({0:True})
+        self.assertEqual(result['plan']['id'],'0')
+        self.assertEqual([q['selected'] for q in result['parallel_queries']],[True,False,False])
+        self.assertEqual([q.get('pending',False) for q in result['parallel_queries']],[False,True,True])
+        self.assertEqual(result['behaviour']['parallel_query_counts'],dict(queries=3,accepted=1,candidates_searched=10,pending=2))
+
+    def test_u4_stall_selection_still_waits_for_earlier_groups_in_order(self):
+        result=self.partial({0:False,1:True})
+        self.assertEqual(result['plan']['id'],'1')
+        self.assertEqual([q['selected'] for q in result['parallel_queries']],[False,True,False])
+
+    def test_u4_stall_unanswered_earlier_group_still_blocks(self):
+        with self.assertRaises(AssertionError):self.partial({1:True})  # group 0 unanswered: must wait
 
 
 if __name__=='__main__':unittest.main()

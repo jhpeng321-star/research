@@ -65,6 +65,28 @@ def settle_unavailable(root,slot,items):
     return settled
 
 
+_BATCH_CACHE={}
+
+
+def batch_positions(root):
+    """state_id -> index inside its parallel-group batch (immutable REQUEST files).
+
+    Fan-out queries of one window are served group-0-first across episodes, so
+    every waiting episode gets its first (inherited-order) answer before any
+    episode's later groups; a pure state_id order scattered answers and left
+    every episode blocked on an unanswered group (B u4 17:09-18:35).
+    """
+    positions={}
+    for p in Path(root).glob('quota_requests/*/*_REQUEST.json'):
+        key=str(p)
+        if key not in _BATCH_CACHE:
+            try:value=json.loads(p.read_text())
+            except json.JSONDecodeError:continue  # being written; next poll
+            _BATCH_CACHE[key]=[r['state_id'] for r in value.get('records',[value])]
+        for i,state_id in enumerate(_BATCH_CACHE[key]):positions[state_id]=i
+    return positions
+
+
 def pending(root):
     from .exploration import regime
     items=[]
@@ -81,8 +103,9 @@ def pending(root):
                 if time.time()-p.stat().st_mtime<30:continue
                 raise
             items.append((kind,record))
+    position=batch_positions(root)
     items.sort(key=lambda v:(v[0]=='centre',v[1].get('mode')=='diagnostic',
-        regime(v[1]['rows'])!='merge-dense',v[1]['time_s'],v[1]['state_id']))
+        regime(v[1]['rows'])!='merge-dense',position.get(v[1]['state_id'],0),v[1]['time_s'],v[1]['state_id']))
     return items
 
 

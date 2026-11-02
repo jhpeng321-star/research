@@ -27,6 +27,21 @@ class CapacityTests(unittest.TestCase):
             p=root/'requests/a.json';p.write_text('');os.utime(p,(time.time()-60,)*2)
             with self.assertRaises(json.JSONDecodeError):pending(root)
 
+    def test_u4_stall_broker_serves_group_zero_of_every_batch_first(self):
+        from . import capacity_broker as cb
+        from .warm_spool import immutable
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);(root/'requests').mkdir();(root/'responses').mkdir()
+            folder=root/'quota_requests/u004';folder.mkdir(parents=True)
+            batches={'tA':['f1','a2','b3'],'tB':['e1','c2','d3']}
+            for token,keys in batches.items():
+                immutable(folder/(token+'_REQUEST.json'),dict(records=[dict(state_id=k,record_sha256='x') for k in keys]))
+                for k in keys:immutable(root/'requests'/(k+'.json'),dict(state_id=k,rows=[],time_s=300))
+            with patch('tools.coopmwm.exploration.regime',return_value='ordinary'):
+                order=[r['state_id'] for _,r in cb.pending(root)]
+            self.assertEqual(order[:2],['e1','f1'])  # every episode's first group first
+            self.assertEqual(order,['e1','f1','a2','c2','b3','d3'])
+
     def test_busy_declines_only_unassigned(self):
         a=request('a');b=request('b');c=request('c')
         rejected,busy=capacity_declines([a,b,c],{'a':{'slot':'gpuA@0'},'b':{'slot':'gpuR@0'}},['gpuA@0','gpuR@0'])

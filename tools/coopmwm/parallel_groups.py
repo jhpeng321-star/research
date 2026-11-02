@@ -43,29 +43,43 @@ def query(job,generator,history,rows,commands,now,sample,groups,traffic,workers)
     quota.bind_group_batch(reservation,records)
     start=time.monotonic()
     for r in records:immutable(root/'requests'/(r['state_id']+'.json'),r)
-    results=[]
-    for r in records:
+    def load(r):
+        value=read(root/'responses'/(r['state_id']+'.json'))
+        if value['record_sha256']!=digest(r):raise ValueError('parallel plan response identity mismatch')
+        if value['accepted'] and value['plan']['members']!=r['group']:
+            raise ValueError('parallel plan response group mismatch')
+        return value
+    # The selection is the FIRST accepted group in inherited order, so it is
+    # decided as soon as groups 0..i are answered and group i accepted. Waiting
+    # for later groups changes nothing but blocked the episode (and its SUMO
+    # process) until every fan-out search had drained the shared GPU queue
+    # (B u4 17:09-18:35 stall). Later searches still finish and stay recorded.
+    results=[None]*len(records)
+    for i,r in enumerate(records):
         response=root/'responses'/(r['state_id']+'.json')
         while not response.exists():
             assert_running(root,job['arm'])
             if time.time()>job['gpu_deadline']:raise ValueError('registered GPU deadline exceeded')
             time.sleep(.5)
-        value=read(response)
-        if value['record_sha256']!=digest(r):raise ValueError('parallel plan response identity mismatch')
-        if value['accepted'] and value['plan']['members']!=r['group']:
-            raise ValueError('parallel plan response group mismatch')
-        results.append(value)
-    selected=next((i for i,v in enumerate(results) if v['accepted']),0)
+        results[i]=load(r)
+        if results[i]['accepted']:break
+    for i,r in enumerate(records):  # already-answered later groups, observed without waiting
+        if results[i] is None and (root/'responses'/(r['state_id']+'.json')).exists():results[i]=load(r)
+    known=[v for v in results if v is not None]
+    selected=next((i for i,v in enumerate(results) if v is not None and v['accepted']),0)
     result=copy.deepcopy(results[selected]);r=records[selected]
     summaries=[dict(state_id=q['state_id'],record_sha256=digest(q),members=q['group'],
         accepted=v['accepted'],selected=i==selected and v['accepted'],
         expected_saving=v.get('expected_saving'),candidates_searched=v.get('candidates_searched',0),
-        imagined_futures=v.get('imagined_futures',0)) for i,(q,v) in enumerate(zip(records,results))]
+        imagined_futures=v.get('imagined_futures',0)) if v is not None else
+        dict(state_id=q['state_id'],record_sha256=digest(q),members=q['group'],accepted=None,
+            selected=False,pending=True) for i,(q,v) in enumerate(zip(records,results))]
     result.update(query_wall_s=time.monotonic()-start,quota_reservation=reservation,
         parallel_queries=summaries,parallel_selection='first accepted in inherited group order; one start per tick')
     b.update(queried_option=result.get('option'),proposal_accepted=result['accepted'],
         query_wall_s=result['query_wall_s'],parallel_query_counts=dict(queries=len(results),
-            accepted=sum(v['accepted'] for v in results),candidates_searched=sum(v.get('candidates_searched') or 0 for v in results)))
+            accepted=sum(v['accepted'] for v in known),candidates_searched=sum(v.get('candidates_searched') or 0 for v in known),
+            pending=len(results)-len(known)))
     if result['accepted']:
         result['history']=r['history']
         b.update(option=result['option'],proposal_members=result['plan']['members'],
