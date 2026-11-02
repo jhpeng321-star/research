@@ -2619,3 +2619,11 @@ optimizer/RNG/checkpoints and existing GPU queues. Exact allocation remains4,918
 - B u2: exact paired SUMO plan saving mean 190.2 veh-s, 95% world-cluster CI `[-29.51649880329449, 545.5074550050579]`, 13 graded plans. Positive saving is better. Ungraded plans excluded.
 - Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_EXACT_VIABILITY_95f658a887c5263e52165505ce17127ceabec465a9bdcfa6ef92f65f594a6559.json`.
 <!-- warm-receipt:B_EXACT_VIABILITY_95f658a887c5263e52165505ce17127ceabec465a9bdcfa6ef92f65f594a6559.json:a31edfb168e94833eb3355b3120e3d961a18bba3dd3c580949a1f5474259f681 -->
+
+## Warm live publication — 2026-11-02T01:02:49.123728+00:00
+- Conservatively charged 3340270/7500000 sim-s.
+
+### Warm continuation — B_VIABILITY_002.json
+- B u2: exact paired SUMO plan saving mean 145.2 veh-s, 95% world-cluster CI `[-59.979113030558544, 479.8055757232458]`, 15 graded plans. Positive saving is better. Ungraded plans excluded.
+- Critic diagnostics are labelled separately in the receipt and never grade plans. Receipt: `coopmwm/warm_live/B_VIABILITY_002.json`.
+<!-- warm-receipt:B_VIABILITY_002.json:52176300eae65e80b012a3d3d54da4e1a9dbd815f23d2773e7f0a8d38d6de39f -->
