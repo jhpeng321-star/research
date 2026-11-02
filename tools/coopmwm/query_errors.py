@@ -3,19 +3,32 @@ import traceback
 from .protocol import digest
 
 
-# ValueErrors naming an invariant stay fatal (worker death -> slot quarantine).
-FATAL_WORDS=('parity','immutable','accounting','physics','safety','budget','deadline','cuda','identity')
+# Worker/run invariants that must stay fatal even when raised inside one query.
+FATAL_WORDS=('parity','immutable','accounting','physics','safety','budget','deadline','identity','duplicate','cuda')
 
 
 def per_query(error):
-    """Owner 17:26: any per-query error is a decline, never a worker death.
+    """True for a fault confined to this query (decline it), False to propagate.
 
-    AssertionError/RuntimeError (CUDA, executor) still propagate; a ValueError is
-    per-query unless its message names a numerical/accounting invariant.
+    MAIN17:26: any per-query error is a decline, never a worker death. Plan/group
+    validation ValueError/AssertionError (e.g. the 4-6 member family_seeds
+    'complete observable group of two or three required') is per-query; the
+    named invariants above stay fatal. A CUDA OOM of one large group is released
+    and declined; other RuntimeErrors (CUDA context faults) still propagate.
     """
-    if isinstance(error,(KeyError,TypeError,AttributeError,NameError,NotImplementedError,
-            IndexError,ZeroDivisionError,StopIteration)):return True
-    return type(error) is ValueError and not any(w in str(error).lower() for w in FATAL_WORDS)
+    if isinstance(error,(KeyError,TypeError,AttributeError,NameError,NotImplementedError,IndexError,ZeroDivisionError,StopIteration)):
+        return True
+    if type(error).__name__=='OutOfMemoryError':
+        try:
+            import torch
+            torch.cuda.empty_cache()
+        except Exception:
+            pass
+        return True
+    if isinstance(error,(ValueError,AssertionError)) and not isinstance(error,UnicodeError):
+        text=(type(error).__name__+' '+str(error)).lower()
+        return not any(word in text for word in FATAL_WORDS)
+    return False
 
 
 def execute(record,call):

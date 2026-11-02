@@ -46,6 +46,8 @@ def main(root):
     import fcntl
     lock=(root/'SERVICE.claim').open('a');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     binding=read(root/'GPU_BINDING.json')
+    from .resource_config import clocks
+    binding=clocks(root,binding)  # additive RESOURCE_EXTENSION, never a rewrite
     for name,h in binding['hashes'].items():
         if sha(root/name)!=h:raise ValueError('immutable GPU source mismatch '+name)
     assert binding['qualification']['pass_']
