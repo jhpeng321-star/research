@@ -520,3 +520,20 @@ duplicate entry. Recovery status was appended to
 `E:/agent-work/c4-coopnative/HANDOFF_COOPMWM.md`; that was the only file changed
 in the training owner's worktree. The existing source-bound hot-swap recipe above
 remains the deliverable for its separately registered activation.
+
+### Follow-up recovery — 2026-11-02 16:22 host time
+
+Fresh owner inventories again show **no live WMSPEED2 jobs** on either host.
+GPU A is 83% utilized with 45,083 MiB allocated to two other compute processes;
+GPU R is 91% utilized with 23,878 MiB allocated to two other compute processes.
+Neither device qualifies for another GPU experiment. Receipts are
+`coopmwm/WMSPEED2_gpu{A,R}_resume20261102b_inventory.json`, committed as `bb840a69`.
+
+The source diff against `fcc50296` still contains only the inventory helper in
+`speed2_ops.py`; numerical evaluator, runtime, memory, transfers and startup gate
+are unchanged. The integrated GPU qualification receipts were rechecked: warm
+H120/K4/w34 is 4.529x and cold H300/K8/w10 is 2.496x, both with 0.0 cost/trajectory
+errors and identical ranks/draw IDs. Existing CPU 79+7 passing evidence applies.
+The single registration entry and appended owner hot-swap handoff are present.
+No completed probe was rerun, no new inference job was dispatched, and no process
+was changed. The recommended release and exact activation recipe remain above.
