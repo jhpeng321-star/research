@@ -17,4 +17,8 @@ def trajectory(root,record,deadline):
     value=read(response)
     if value['record_sha256']!=digest(record):raise ValueError('centre response identity mismatch')
     if value['candidate_scores']!=0:raise ValueError('R must never score a candidate with the WM')
+    if value.get('unavailable'):
+        # Dead slot / malformed forecast / per-query error: the R window falls
+        # back to its policy (never a recomputed or imputed centre).
+        return None,dict(unavailable=True,reason=value.get('reason'))
     return value['policy_traj'],value['receipt']

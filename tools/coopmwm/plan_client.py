@@ -116,6 +116,13 @@ def guide(job,generator):
             # Random choice/covariance/library remain independent of WM rankings.
             from .centre_client import trajectory
             centre,centre_receipt=trajectory(root,r,job['gpu_deadline'])
+            if centre is None:
+                # Releases the matched ticket via completed(executed=False).
+                result=dict(accepted=False,reason='R centre unavailable; policy continues',record_sha256=digest(r),
+                    random_match=dict(path=str(match),key=r['state_id']),centre_receipt=centre_receipt)
+                b.update(queried_option=None,proposal_accepted=False,query_wall_s=0.)
+                result['behaviour']=b
+                return result
             plan=sample_unscored(chosen_group,centre,bounds,traffic,
                 int(torch.randint(2**31,(),generator=generator)),duration_s=selected_ticket['duration_s'])
             result=dict(accepted=True,plan=plan,option=plan['family'],expected_saving=None,

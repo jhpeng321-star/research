@@ -55,17 +55,36 @@ def query(job,generator,history,rows,commands,now,sample,groups,traffic,workers)
         if value['accepted'] and value['plan']['members']!=r['group']:
             raise ValueError('parallel plan response group mismatch')
         results.append(value)
+        # The selection (first accepted in inherited order) is final once this
+        # prefix is resolved; later groups can no longer change it. Waiting for
+        # them left accepted plans unconsumed and SUMO idle (MAIN18:33).
+        if value['accepted']:break
     selected=next((i for i,v in enumerate(results) if v['accepted']),0)
     result=copy.deepcopy(results[selected]);r=records[selected]
+    # Later siblings are reported if already answered (never waited for); the
+    # rest let the broker release them unsearched. Assigned searches finish.
+    for q in records[len(results):]:
+        response=root/'responses'/(q['state_id']+'.json')
+        value=read(response) if response.exists() else None
+        if value is not None and value['record_sha256']!=digest(q):raise ValueError('parallel plan response identity mismatch')
+        if value is None:
+            (root/'superseded').mkdir(exist_ok=True)
+            immutable(root/'superseded'/(q['state_id']+'.json'),dict(state_id=q['state_id'],
+                selected_state_id=r['state_id'],reason='earlier group in this window accepted'))
+        results.append(value)
+    answered=[v for v in results if v is not None]
     summaries=[dict(state_id=q['state_id'],record_sha256=digest(q),members=q['group'],
-        accepted=v['accepted'],selected=i==selected and v['accepted'],
-        expected_saving=v.get('expected_saving'),candidates_searched=v.get('candidates_searched',0),
-        imagined_futures=v.get('imagined_futures',0)) for i,(q,v) in enumerate(zip(records,results))]
+        accepted=v['accepted'] if v is not None else None,selected=i==selected and v is not None and v['accepted'],
+        unresolved_at_selection=v is None,
+        expected_saving=(v or {}).get('expected_saving'),candidates_searched=(v or {}).get('candidates_searched',0),
+        imagined_futures=(v or {}).get('imagined_futures',0)) for i,(q,v) in enumerate(zip(records,results))]
     result.update(query_wall_s=time.monotonic()-start,quota_reservation=reservation,
         parallel_queries=summaries,parallel_selection='first accepted in inherited group order; one start per tick')
+    counts=dict(queries=len(records),accepted=sum(v['accepted'] for v in answered),
+        candidates_searched=sum(v.get('candidates_searched') or 0 for v in answered))
+    if len(answered)<len(records):counts['unresolved_at_selection']=len(records)-len(answered)
     b.update(queried_option=result.get('option'),proposal_accepted=result['accepted'],
-        query_wall_s=result['query_wall_s'],parallel_query_counts=dict(queries=len(results),
-            accepted=sum(v['accepted'] for v in results),candidates_searched=sum(v.get('candidates_searched') or 0 for v in results)))
+        query_wall_s=result['query_wall_s'],parallel_query_counts=counts)
     if result['accepted']:
         result['history']=r['history']
         b.update(option=result['option'],proposal_members=result['plan']['members'],
